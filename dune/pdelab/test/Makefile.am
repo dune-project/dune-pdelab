@@ -1,6 +1,6 @@
 # $Id: Makefile.am 586 2006-04-28 13:41:31Z mblatt $
 
-NORMALTESTS = testcountingptr
+NORMALTESTS = testcountingptr testmultitypetree
 
 # list of tests to run
 TESTS = $(NORMALTESTS)
@@ -11,6 +11,10 @@ check_PROGRAMS = $(NORMALTESTS)
 testcountingptr_SOURCES = testcountingptr.cc
 testcountingptr_CXXFLAGS = $(MPI_CPPFLAGS)
 testcountingptr_LDADD = $(MPI_LDFLAGS) $(MPI_LDFLAGS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+
+testmultitypetree_SOURCES = testmultitypetree.cc
+testmultitypetree_CXXFLAGS = $(MPI_CPPFLAGS)
+testmultitypetree_LDADD = $(MPI_LDFLAGS) $(MPI_LDFLAGS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
 
 include $(top_srcdir)/am/global-rules
 
