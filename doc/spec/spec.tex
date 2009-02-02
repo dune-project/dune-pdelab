@@ -1,0 +1,937 @@
+\documentclass[11pt,a4paper,DIV11,%draft,%
+notitlepage,oneside,abstracton,%
+bibtotoc]{scrartcl}
+
+%encoding
+\usepackage[utf8]{inputenc}
+
+% only for the article version
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{fullpage}
+%\setlength{\parindent}{0pt}
+%\setlength{\parskip}{1.3ex plus 0.5ex minus 0.2ex}
+
+
+% all after
+\usepackage{graphicx}
+%\usepackage{multimedia}
+\usepackage{psfrag}
+\usepackage{listings}
+\lstset{language=C++, basicstyle=\small\ttfamily,
+  stringstyle=\ttfamily, commentstyle=\it, extendedchars=true}
+\usepackage{curves}
+\usepackage{epic}
+\usepackage{calc}
+\usepackage{fancybox}
+\usepackage{xspace}
+\usepackage{enumerate}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{hyperref}
+
+\title{DUNE PDELab\\
+Specification Document}
+\author{\textsc{Peter Bastian}\\
+Interdisziplinäres Zentrum für Wissenschaftliches Rechnen,\\
+ Universität Heidelberg, Im Neuenheimer Feld 368, \\
+D-69120 Heidelberg\\
+email: \texttt{Peter.Bastian@iwr.uni-heidelberg.de}
+}
+\date{Version: \today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+PDELab is a C++ library for the generic construction of finite element
+spaces and operatorors based on the DUNE framework.
+\end{abstract}
+
+\cleardoublepage
+\tableofcontents
+
+\cleardoublepage
+\section{Notes}
+
+\begin{enumerate}[1)]
+\item \textbf{19.01.09}: Can we implement the type trees in seperate
+  class templates? The
+  same construction is used in global fields, local fields and grid
+  functions. Moreover a mechanism checking the same structure of trees
+  would be quite useful. Yes we should do that!
+\item \textbf{19.01.09}: Should the LocalSingleField export an entity
+  reference, or better an EntitiyGeometry? 
+  This would parallel the global field that exports a grid
+  view reference.
+\item \textbf{19.01.09}: Don't forget about time-dependent functions
+  and constraints.
+\item \textbf{19.01.09}: Introduce namespace PDELab within Dune?
+\end{enumerate}
+
+\section{Global Fields}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{GlobalFieldInterface}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Barton-Nackman type interface for a field representing a single or
+multi field finite element space. This class collects the common parts
+of single and multi-field spaces.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{GlobalSingleFieldInterface}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Barton-Nackman type interface for a field representing a single finite
+element space. 
+
+\subsubsection{Derived From}
+
+\begin{enumerate}[1)]
+\item GlobalFieldInterface
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{GlobalMultiFieldInterface}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Barton-Nackman type interface for a field consisting of 
+a hierarchically structured composition of finite element spaces.
+
+\subsubsection{Derived From}
+
+\begin{enumerate}[1)]
+\item GlobalFieldInterface
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{GlobalSingleField}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Provides all information about a finite element space, i.e. local
+basis functions, local to global map of indices, dimension.
+This type is the basis for bottom up construction of multi-field
+function spaces.
+
+
+\subsubsection{Template Parameter}
+
+\begin{enumerate}[1)]
+\item Type implementing LocalFiniteElementMapInterface. This
+  type provides the local finite element (a type defined in
+  \lstinline|dune-localfunctions|). 
+\item Type that is a model of GridView interface (a type exported
+  by \lstinline|dune-grid|). 
+\item Type implementing VectorBackendInterface.
+\item Type allowing the selection of restricted mode where the number
+  of degrees of freedom per entity depends only on the
+  codimension. This template parameter might be given a default value.
+\end{enumerate}
+
+\subsubsection{Derived From}
+
+\begin{enumerate}[1)]
+\item GlobalSingleFieldInterface
+\item ReferenceCountable
+\end{enumerate}
+
+
+\subsubsection{Enums}
+
+\begin{enumerate}[1)]
+\item isSingle = true : allows to determine end of recursion in
+  template metaprograms for multi-field finite element spaces.
+\end{enumerate}
+
+\subsubsection{Exported Types}
+
+\begin{enumerate}[1)]
+\item GridViewType
+\item BackendType
+\item SizeType, a shortcut for BackendType::SizeType
+\item IndexType, a shortcut for BackendType::IndexType
+\item LocalFieldType parametrized with the GlobalSingleField (i.e. itself)
+\item template$<$typename E$>$ VectorContainer::Type exports the type of a Vector
+  (defined in the backend) where each element is of type E.
+\item LocalFiniteElementMapType
+\item CoefficientType. This is the RangeFieldType from the local finite element.
+\item RowType = std::map$<$IndexType,CoefficientType$>$.
+\item TransformationType = std::map$<$IndexType,RowType$>$. Type to
+  represent the basis transformation in the
+  constraints. Transformation works as follows:
+
+  The unconstrained space is defined by a basis
+  $\Phi=\{\phi_j\,:\,j\in J\}$. The constrained space is characterized
+  by the basis $\tilde\Phi=\{\tilde\phi_j\,:\,j\in \tilde{J}\}$ where
+  $\tilde{J}\subseteq J$ and $\bar{J}=J\setminus\tilde{J}$ are the
+  constrained indices. Thus $J$ is partitioned into $J =
+  \tilde{J}\cup\bar{J}$. 
+
+  The new basis functions $\tilde{\phi}_j$ are constructed as linear
+  combinations from old basis functions via
+  \begin{equation}
+    j\in\tilde{J} \quad : \quad \tilde\phi_j = \phi_j +
+    \sum_{k\in\bar{J}} (S^T)_{jk} \phi_k.
+  \end{equation} 
+  where the $S\in\mathbb{R}^{\bar{J}\times\tilde{J}}$ is a sparse,
+  rectangular matrix. 
+  Note that only combinations with basis functions from the
+  constrained nodes are allowed. Introducing the finite element
+  isomorphisms we have
+\begin{equation}
+\begin{split}
+FE_{\tilde\Phi}(x) &= \sum_{j\in\tilde{J}} x_j \tilde\phi_j = 
+\sum_{j\in\tilde{J}} x_j\left(\phi_j +
+    \sum_{k\in\bar{J}} (S^T)_{jk} \phi_k\right)\\
+&= \sum_{j\in\tilde{J}} x_j\phi_j + \sum_{k\in\bar{J}} \left(
+    \sum_{j\in\tilde{J}} (S)_{kj} x_j\right) \phi_k \\
+&= FE_{\Phi}(\tilde{R}^T x) + FE_{\Phi}(\bar{R}^TS\tilde{R}x )\\
+&= FE_{\Phi}(\tilde{R}^T x + \bar{R}^TS\tilde{R}x)
+\end{split}
+\end{equation}
+\end{enumerate}
+where the restriction matrices are rectangular matrices $\tilde{R} :
+\mathbb{R}^J \to \mathbb{R}^{\tilde{J}}$ and $\bar{R} :
+\mathbb{R}^J \to \mathbb{R}^{\bar{J}}$ given by
+\begin{align}
+j\in\tilde{J} \,:\, (\tilde{R}x)_j &= x_j &
+j\in\bar{J} \,:\, (\bar{R}x)_j &= x_j.
+\end{align}
+
+The TransformationType stores both the sparse matrix $S$ in a row-wise
+fashion and the constrained
+index set $\bar{J}$. If the TransformationType object (which is a map)
+contains an entry for the index $j$, then we have $j\in\bar{J}$. It
+it is also allowed that a row of $S$ is contains only zeroes. In that
+case an empty RowType object is stored for that row. This corresponds
+to Dirichlet constraints. For hanging nodes or other types of
+constraints (e.g. functions with zero mean) non-empty rows are stored. 
+
+\subsubsection{Methods}
+
+\begin{enumerate}[1)]
+\item Constructor(GridViewType\&, LocalFiniteElementMapType\&) : store
+  references to grid view and local finite element map. The latter
+  will be reference counted.
+\item GridViewType\& gridView(). Return the grid view 
+  the field is built upon.
+\item SizeType globalSize(). Return the size (dimension) of the
+  finite element space.  
+\item SizeType maxLocalSize(). Return the maximum size (number of
+  coefficients) of the local finite element space at any entity of the
+  grid view.
+\item IndexType upMap(IndexType). This is the identity here. Maps
+  indices from this field to a global field.
+\item globalIndices(const LocalFiniteElementType\&, std::vector$<$IndexType$>$\&).
+  Determine the global indices of the
+  coefficients at the given entity. This method is normally used by a
+  LocalSingleFieldType object.
+\item LocalFiniteElementMapType\& localFiniteElementMap(). Retrieves
+  the map from entity to local finite element.
+\item const TransformationType\& transformation(). Access to
+  coefficients of basis transformation used to implement the constraints.
+\end{enumerate}
+
+\subsubsection{Hints}
+
+\begin{enumerate}[1)]
+\item A pointer to the LocalFiniteElementMap object must be
+  stored. Use reference counting with  
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{LocalFiniteElementMapInterface}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Models of this type provide a local finite element for a given
+entity. 
+
+\subsubsection{Template Parameter}
+
+\begin{enumerate}[1)]
+\item T1 : a type providing the typües to be exported.
+\item T2 : a type providing the implementation to be called in
+  Barton-Nackman style.
+\end{enumerate}
+
+\subsubsection{Exported Types}
+
+\begin{enumerate}[1)]
+\item LocalFiniteElementType
+\end{enumerate}
+
+\subsubsection{Methods}
+
+\begin{enumerate}[1)]
+\item template$<$E$>$ const LocalFiniteElementType\& find (const E\&)
+  : return local finite element for the given entity.
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{ConstrainedGlobalSingleField}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Proxy class that uses a GlobalSingleField object and extends it by
+constraints. 
+
+We still have to define how exactly the callback works.
+
+\subsubsection{Template Parameter}
+
+\begin{enumerate}[1)]
+\item T1 = a type implementing the GlobalSingleFieldInterface.
+\item T2 = a type containing callbacks to assemble the constraints.
+\end{enumerate}
+
+This type copies the interface from T1 and uses a reference to a T1
+object to implement it. 
+
+\subsubsection{Derived From}
+
+\begin{enumerate}[1)]
+\item GlobalSingleFieldInterface
+\item ReferenceCountable
+\end{enumerate}
+
+
+\subsubsection{Methods}
+
+\begin{enumerate}[1)]
+\item Constructor(T1\&, T2\&) : store references to underlying global
+  field and construction callback.
+\item const TransformationType\& transformation(). This method
+  overwrites the method with the same name from the base class
+\end{enumerate}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{ConstraintCreationInterface}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+A model of this type has to be provided in
+ConstrainedGlobalSingleField to set up the constraints.
+Barton-Nackman style 
+
+\subsubsection{Template Parameter}
+
+\begin{enumerate}[1)]
+\item T1 : type traits
+\item T2 : implementation.
+\end{enumerate}
+
+\subsubsection{Enums}
+
+\begin{enumerate}[1)]
+\item A number specifiying which terms (volume, boundary, skeleton)
+  are present in the implementation. This allows the caller to remove
+  unnecessary calls at compile time.
+\end{enumerate}
+
+\subsubsection{Exported Types}
+
+\begin{enumerate}[1)]
+\item CoefficientType. This is the RangeFieldType from the local finite element.
+\item RowType = std::map$<$IndexType,CoefficientType$>$.
+\item TransformationType = std::map$<$IndexType,RowType$>$. Type to
+\end{enumerate}
+
+\subsubsection{Methods}
+
+\begin{enumerate}[1)]
+\item template$<$EG,LF$>$ void constraintsVolume (EG\&,
+  LF\&, TransformationType\&) : add constraints for an element. EG is
+  a model of ElementGeometryInterface.
+\item template$<$IG,LF$>$ void constraintsBoundary (EG\&,
+  LF\&, TransformationType\&) : add constraints for boundary
+  intersection. IG is a model of IntersectionGeometryInterface.
+\item template$<$IG,LF$>$ void constraintsSkeleton (IG\&,
+  LF\&, LF\&, TransformationType\&) : add constraints for an
+  interior intersection. IG is a model of IntersectionGeometryInterface.
+\end{enumerate}
+
+\subsubsection{Hints}
+
+Implementations will be parametrized with a hierarchic function where
+the user provides boundary conditions. Thus the specific way how
+e.g. a Dirichlet boundary condition is specified is left to the
+implementation. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{ElementGeometryInterface}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Type providing geometry of a codim 0 entity.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{IntersectionGeometryInterface}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Type providing geometry of an intersection. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{GlobalPowerField}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Collects a compile-time given number of fields of identical type (although there might
+be different objects) into a multi-field finite element space. 
+Multi-field finite element spaces are represented by a tree.
+
+All subfields must have the same GridViewType since a finite element
+space is constructed for a single grid view.
+
+\subsubsection{Template Parameter}
+
+\begin{enumerate}[1)]
+\item typename T1 = Type implementing GlobalFieldInterface, i.e. we may combine any type
+  of finite element space.
+\item integer ncomp specifying number of components.
+\item Type allowing the selection of blockwise or lexicographic
+  ordering. Lexicographic might be the default as it is always possible.
+\end{enumerate}
+
+\subsubsection{Derived From}
+
+\begin{enumerate}[1)]
+\item MultiFieldInterface
+\item ReferenceCountable
+\end{enumerate}
+
+\subsubsection{Enums}
+
+\begin{enumerate}[1)]
+\item isSingle = false : allows to determine end of recursion in
+  template metaprograms for multi-field finite element spaces.
+\item COMP = ncomp. Export number of components for template
+  metaprograms recurring over the type tree.
+\end{enumerate}
+
+\subsubsection{Exported Types}
+
+\begin{enumerate}[1)]
+\item GridViewType 
+\item BackendType
+\item SizeType, a shortcut for BackendType::SizeType
+\item IndexType, a shortcut for BackendType::IndexType
+\item LocalFieldType parametrized with the GlobalPowerField (i.e. itself)
+\item template$<$typename E$>$ VectorContainer::Type exports the type of a Vector
+  (defined in the backend) where each element is of type E.
+\item template$<$int k$>$ struct SubField::Type exports the type of
+  the k'th component
+\end{enumerate}
+
+\subsubsection{Methods}
+
+\begin{enumerate}[1)]
+\item Constructor(T1\&) : identical field is used for all the components. 
+\item Constructor(T1\&, \ldots , T1\&) : ncomp fields of the same type
+\item GridViewType\& gridView(). Return the grid view 
+  the field is built upon. It is ensured that all components are built
+  on the same grid view object.
+\item SizeType globalSize(). Return the size (dimension) of the
+  composite finite element space.  
+\item SizeType maxLocalSize(). Return the maximum size (number of
+  coefficients) of the local composite finite element space at any entity of the
+  grid view.
+\item IndexType upMap(IndexType). This is the identity here. Maps
+  indices from this field to a global field.
+\item SubField$<$k$>$::Type\& subField$<$k$>$(). Get the k'th component.
+\item IndexType subMap$<$k$>$(IndexType). Map index from the global
+  index set of component k to the global index set of the composite space.
+\end{enumerate}
+
+\subsubsection{Hints}
+
+In the power field the types of all components are the same. This does
+not mean that all components must have the same size! Blockwise
+ordering is only possible if all components do have the same size,
+otherwise only lexicographic ordering is possible.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{GlobalCompositeField}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Collects a compile-time given number of fields of different types into
+a multi-field finite element space. 
+Multi-field finite element spaces are represented by a tree.
+
+All subfields must have the same GridViewType since a finite element
+space is constructed for a single grid view.
+
+\subsubsection{Template Parameter}
+
+\begin{enumerate}[1)]
+\item typename T1,\ldots,Tk = Types implementing FieldInterface, 
+i.e. we may combine any type of finite element space. 
+\item Type allowing the selection of blockwise or lexicographic
+  ordering. Lexicographic might be the default as it is always possible.
+\end{enumerate}
+
+\subsubsection{Derived From}
+
+\begin{enumerate}[1)]
+\item MultiFieldInterface
+\item ReferenceCountable
+\end{enumerate}
+
+\subsubsection{Enums}
+
+\begin{enumerate}[1)]
+\item isSingle = false : allows to determine end of recursion in
+  template metaprograms for multi-field finite element spaces.
+\item COMP. Export number of components for template
+  metaprograms recurring over the type tree.
+\end{enumerate}
+
+\subsubsection{Exported Types}
+
+\begin{enumerate}[1)]
+\item GridViewType 
+\item BackendType
+\item SizeType, a shortcut for BackendType::SizeType
+\item IndexType, a shortcut for BackendType::IndexType
+\item LocalFieldType parametrized with the GlobalPowerField (i.e. itself)
+\item template$<$typename E$>$ VectorContainer::Type exports the type of a Vector
+  (defined in the backend) where each element is of type E.
+\item template$<$int k$>$ struct SubField::Type exports the type of
+  the k'th component
+\end{enumerate}
+
+\subsubsection{Methods}
+
+\begin{enumerate}[1)]
+\item Constructor(T1\&, \ldots , Tk\&) : Store all the subfields.
+\item GridViewType\& gridView(). Return the grid view 
+  the field is built upon. It is ensured that all components are built
+  on the same grid view object.
+\item SizeType globalSize(). Return the size (dimension) of the
+  composite finite element space.  
+\item SizeType maxLocalSize(). Return the maximum size (number of
+  coefficients) of the local composite finite element space at any entity of the
+  grid view.
+\item IndexType upMap(IndexType). This is the identity here. Maps
+  indices from this field to a global field.
+\item SubField$<$k$>$::Type\& subField$<$k$>$(). Get the k'th component.
+\item IndexType subMap$<$k$>$(IndexType). Map index from the global
+  index set of component k to the global index set of the composite space.
+\end{enumerate}
+
+\subsubsection{Hints}
+
+In the composite field the types of all components might be different,
+due to compiler limitations the number of components is limited to
+9. Naturally the size of the components is usually different. Blockwise
+ordering is only possible if all components do have the same size,
+otherwise only lexicographic ordering is possible.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{GlobalSubField}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Allows to select a descendent of a given node in the multi-field
+tree. Provides upward mapping of indices.
+
+Idea (to be deleted) : Gets a multi-field and an integer k as template
+parameter. Derives from the k'th component of the multi-field and
+overwrites the globalSize() method and the upMap() method. This should
+be it. As GlobalSubField is derived from the destination field the
+LocalField can be used as before. Do we need upMap and globalSize
+virtual to ensure that the LocalField uses the right methods?
+
+What happens when this field is used as a component in a
+power/composite field which is perfectly allowed! 
+
+\section{Local Fields}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{LocalSingleField}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Provides all information about a finite element space at a given codim
+0 entity. This type is the basis for bottom-up construction of
+multi-field finite element spaces.
+
+\subsubsection{Template Parameter}
+
+\begin{enumerate}[1)]
+\item GlobalSingleFieldType : Type that exports this
+  LocalSingleField. Provides access to LocalFiniteElementMapType.
+\end{enumerate}
+
+\subsubsection{Derived From}
+
+\subsubsection{Enums}
+
+\begin{enumerate}[1)]
+\item isSingle = true : allows to determine end of recursion in
+  template metaprograms for multi-field finite element spaces.
+\item COMP = 0 : there are no subfields.
+\end{enumerate}
+
+\subsubsection{Exported Types}
+
+\begin{enumerate}[1)]
+\item The LocalFiniteElementType
+\end{enumerate}
+
+\subsubsection{Local Classes}
+
+\subsubsection{Friends}
+
+\subsubsection{Methods}
+
+\begin{enumerate}[1)]
+\item Constructor (GlobalSingleFieldType\&) : argument allows
+  allocation of index vector with correct maximum size. Reference is
+  stored using shared pointer.
+\item bind(const entity\&) : Fill object with all information for the
+  given element.
+\item size\_type size() : return number of local coefficients.
+\item size\_type maxSize() : return maximum number of local
+  coefficients for any entity.
+\item getLocalFiniteElement() : return a reference to the local finite
+  element for the entity this object is bound to.
+\item vread(const GlobalContainer\&, LocalContainer\&) : read
+  coefficients from global container into local container. The local
+  container is a random access container with size() components.
+\item vwrite(LocalContainer\&, const GlobalContainer\&) : write
+  coefficients from local container into global container. The local
+  container is a random access container with size() components.
+\item vadd(LocalContainer\&, const GlobalContainer\&) : add
+  coefficients from local container into global container. The local
+  container is a random access container with size() components.
+\item mread(const GlobalContainer\&, LocalContainer\&) : read
+  coefficients from global container into local container. The local
+  and global containers are each a map of maps. Used for accumulation
+  of constraints.
+\item mwrite(LocalContainer\&, const GlobalContainer\&) : write
+  coefficients from local container into global container. The local
+  and global containers are each a map of maps.  Used for accumulation
+  of constraints.
+\item madd(LocalContainer\&, const GlobalContainer\&) : add
+  coefficients from local container into global container. The local
+  and global containers are each a map of maps. Addition means
+  addition of sets here!  Used for accumulation
+  of constraints.
+ \end{enumerate}
+
+\subsubsection{Attributes}
+
+\subsubsection{Use Cases}
+
+\paragraph{Evaluate a finite element function} \mbox{}
+
+\begin{lstlisting}
+typedef P1LFEM<double,double> LFEM; // Holds Local finite element
+                                    // for each entity
+typedef GlobalSingleField<GridView, // Constructs global 
+       LFEM,StdVectorBackend> Field;// information
+
+LFEM p1lfem;                     // make finite element map
+Field gsf(gridview,p1lfem);      // make single field
+Field::LocalFieldType lf(gsf);   // make local field 
+Field::VectorContainer<double>::Type x(gsf); // make global vector
+std::vector<double> lx(gsf.maxLocalSize());  // make local vector
+
+// loop over entities and construct local finite element function
+for (iterator i=gridview.begin(); i!=gridview.end(); ++i)
+{
+  lf.bind(*i);                   // bind to entity
+  lf.vread(x,lx);                 // read local coefficients
+  // now you can do \Sum coefficent*basisfunction(position)
+} 
+\end{lstlisting}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{LocalPowerField}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Collects a compile-time given number of fields of identical type (although it might
+be different objects) into a multi-field finite element space. 
+Multi-field finite element spaces are represented by a tree.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{LocalCompositeField}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Collects a compile-time given number of fields of different types into
+a multi-field finite element space. 
+Multi-field finite element spaces are represented by a tree.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{LocalSubField}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Allows to navigate to a descendend of a given node in the multi-field
+tree.
+
+\section{Hierarchic Functions}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{SingleGridFunctionInterface}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Barton-Nackman type interface for
+functions that can be evaluated using either global coordinates
+or local coordinates within elements.
+
+\subsubsection{Template Parameter}
+
+\begin{enumerate}[1)]
+\item Type providing the implementation.
+\end{enumerate}
+
+\subsubsection{Enums}
+
+\begin{enumerate}[1)]
+\item isSingle = true : allows to determine end of recursion in
+  template metaprograms for multi-field functions.
+\end{enumerate}
+
+\subsubsection{Methods}
+
+\begin{enumerate}[1)]
+\item template$<$typename DT, typename RT$>$ void evalGlobal (const
+  DT\& x, RT\& y) : x map x to y where x is given in global
+  coordinates.
+\item template$<$typename E, typename DT, typename RT$>$ void
+  evalLocal (const E\& e, const DT\& x, RT\& y) : map x to y where e
+  is an entity and x is in local coordinates of that entity.
+\end{enumerate}
+
+\subsubsection{Hints}
+
+The template parameters are assumed to provide a random access
+operator. Typically FieldVector is used.
+
+The derived types should be reference countable.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{SingleAnalyticGridFunctionInterface}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Subclass of SingleGridFunctionInterface that provides local evaluation
+based on global evaluation. Useful for user-defined analytic functions.
+
+\subsubsection{Template Parameter}
+
+\begin{enumerate}[1)]
+\item Type providing the implementation.
+\end{enumerate}
+
+\subsubsection{Derived From}
+
+\begin{enumerate}[1)]
+\item SingleGridFunctionInterface.
+\end{enumerate}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{PowerGridFunction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Allows to combine several grid functions of the same type into a
+combined grid function.
+
+\subsubsection{Template Parameter}
+
+\begin{enumerate}[1)]
+\item typename T1.
+\item integer ncomp specifying number of components.
+\end{enumerate}
+
+\subsubsection{Derived From}
+
+\begin{enumerate}[1)]
+\item ReferenceCountable
+\end{enumerate}
+
+\subsubsection{Enums}
+
+\begin{enumerate}[1)]
+\item isSingle = false : allows to determine end of recursion in
+  template metaprograms for multi-field finite element spaces.
+\item COMP = ncomp. Export number of components for template
+  metaprograms recurring over the type tree.
+\end{enumerate}
+
+\subsubsection{Exported Types}
+
+\begin{enumerate}[1)]
+\item template$<$int k$>$ struct SubField::Type exports the type of
+  the k'th component
+\end{enumerate}
+
+\subsubsection{Methods}
+
+\begin{enumerate}[1)]
+\item Constructor(T1\&) : identical field is used for all the components. 
+\item Constructor(T1\&, \ldots , T1\&) : ncomp fields of the same type
+\item SubField$<$k$>$::Type\& subField$<$k$>$(). Get the k'th component.
+\end{enumerate}
+
+\subsubsection{Hints}
+
+References to components are stored using SharedPtr.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{CompositeGridFunction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Allows to combine several grid functions of different types into a
+combined grid function.
+
+\subsubsection{Template Parameter}
+
+\begin{enumerate}[1)]
+\item typename T1,\ldots,Tk.
+\end{enumerate}
+
+\subsubsection{Derived From}
+
+\begin{enumerate}[1)]
+\item ReferenceCountable
+\end{enumerate}
+
+\subsubsection{Enums}
+
+\begin{enumerate}[1)]
+\item isSingle = false : allows to determine end of recursion in
+  template metaprograms for multi-field finite element spaces.
+\item COMP = ncomp. Export number of components for template
+  metaprograms recurring over the type tree.
+\end{enumerate}
+
+\subsubsection{Exported Types}
+
+\begin{enumerate}[1)]
+\item template$<$int k$>$ struct SubField::Type exports the type of
+  the k'th component
+\end{enumerate}
+
+\subsubsection{Methods}
+
+\begin{enumerate}[1)]
+\item Constructor(T1\&, \ldots , T1\&) : ncomp fields of the same type
+\item SubField$<$k$>$::Type\& subField$<$k$>$(). Get the k'th component.
+\end{enumerate}
+
+\subsubsection{Hints}
+
+References to components are stored using SharedPtr.
+
+\section{Solver Backend}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{VectorBackendInterface}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Allows parametrization of PDELab with different linear algebra
+implementations. This one can assemble and solve linear systems for a
+variety of different solver packages.
+
+
+\section{Reference Counting}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{ReferenceCountable}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+A base class that provides reference counting. Objects referencing a
+ReferenceCountable object increase and decrease the reference counter
+enabling the ReferenceCountable object to determine whether reference
+still exits when it is destructed.
+
+This implementation does not include automatic memory management. Thus
+a specific use pattern (new/delete or automatic variables on the
+stack) is not imposed on the user.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{SharedPtr}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+
+Pointer class to be used with ReferenceCountable
+objects. Automatically increments an decrements reference counters
+upon assignment and destruction.
+
+Does not manage the memory for the ReferenceCountable object.
+
+
+\section{Appendix : Template for class specification}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Class Name}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Synopsis}
+\subsubsection{Template Parameter}
+\subsubsection{Derived From}
+\subsubsection{Enums}
+\subsubsection{Exported Types}
+\subsubsection{Local Classes}
+\subsubsection{Friends}
+\subsubsection{Methods}
+\subsubsection{Attributes}
+\subsubsection{Hints}
+
+
+\bibliographystyle{alpha}
+\bibliography{lit}
+
+\end{document}
