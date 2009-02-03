@@ -3,6 +3,13 @@
 
 #include <iostream>
 
+#include <dune/common/static_assert.hh>
+#include <dune/common/typetraits.hh>
+
+#include"countingptr.hh"
+#include"multitypetree.hh"
+#include"cpstoragepolicy.hh"
+
 namespace Dune {
   namespace PDELab {
 
@@ -191,6 +198,395 @@ namespace Dune {
 	  const typename Traits::ElementType& e;
 	};
 
+	// Function tree
+
+	// leaf of a function tree
+	template<class T, class Imp>
+	class LeafGridFunction : public GridFunctionInterface<T,Imp>, 
+							 public Countable, 
+							 public LeafNode
+	{
+	public:
+	  typedef typename T::GridViewType GridViewType;
+	};
+
+
+	// product of identical functions
+	template<class T, int k>
+	class PowerGridFunction : public PowerNode<T,k,CountingPointerStoragePolicy>,
+							  public Countable
+	{
+	public:
+	  typedef typename T::GridViewType GridViewType;
+
+	  PowerGridFunction (T& t) : PowerNode<T,k,CountingPointerStoragePolicy>(t) {}
+
+	  PowerGridFunction (T** t) : PowerNode<T,k,CountingPointerStoragePolicy>(t) {}
+	};
+
+	template<class T>
+	class PowerGridFunction<T,2> : public PowerNode<T,2,CountingPointerStoragePolicy>,
+								   public Countable
+	{
+	public:
+	  typedef typename T::GridViewType GridViewType;
+
+	  PowerGridFunction (T& t) 
+		: PowerNode<T,2,CountingPointerStoragePolicy>(t) 
+	  {}
+
+	  PowerGridFunction (T& t0, T& t1) 
+		: PowerNode<T,2,CountingPointerStoragePolicy>(t0,t1) 
+	  {}
+	};
+
+	template<class T>
+	class PowerGridFunction<T,3> : public PowerNode<T,3,CountingPointerStoragePolicy>,
+								   public Countable
+	{
+	public:
+	  typedef typename T::GridViewType GridViewType;
+
+	  PowerGridFunction (T& t) 
+		: PowerNode<T,3,CountingPointerStoragePolicy>(t) 
+	  {}
+
+	  PowerGridFunction (T& t0, T& t1, T& t2) 
+		: PowerNode<T,3,CountingPointerStoragePolicy>(t0,t1,t2) 
+	  {}
+	};
+
+	template<class T>
+	class PowerGridFunction<T,4> : public PowerNode<T,4,CountingPointerStoragePolicy>,
+								   public Countable
+	{
+	public:
+	  typedef typename T::GridViewType GridViewType;
+
+	  PowerGridFunction (T& t) 
+		: PowerNode<T,4,CountingPointerStoragePolicy>(t) 
+	  {}
+
+	  PowerGridFunction (T& t0, T& t1, T& t2, T& t3) 
+		: PowerNode<T,4,CountingPointerStoragePolicy>(t0,t1,t2,t3) 
+	  {}
+	};
+
+	template<class T>
+	class PowerGridFunction<T,5> : public PowerNode<T,5,CountingPointerStoragePolicy>,
+								   public Countable
+	{
+	public:
+	  typedef typename T::GridViewType GridViewType;
+
+	  PowerGridFunction (T& t) 
+		: PowerNode<T,5,CountingPointerStoragePolicy>(t) 
+	  {}
+
+	  PowerGridFunction (T& t0, T& t1, T& t2, T& t3, T& t4) 
+		: PowerNode<T,5,CountingPointerStoragePolicy>(t0,t1,t2,t3,t4) 
+	  {}
+	};
+
+	template<class T>
+	class PowerGridFunction<T,6> : public PowerNode<T,6,CountingPointerStoragePolicy>,
+								   public Countable
+	{
+	public:
+	  typedef typename T::GridViewType GridViewType;
+
+	  PowerGridFunction (T& t) 
+		: PowerNode<T,6,CountingPointerStoragePolicy>(t) 
+	  {}
+
+	  PowerGridFunction (T& t0, T& t1, T& t2, T& t3, T& t4, T& t5) 
+		: PowerNode<T,6,CountingPointerStoragePolicy>(t0,t1,t2,t3,t4,t5) 
+	  {}
+	};
+
+	template<class T>
+	class PowerGridFunction<T,7> : public PowerNode<T,7,CountingPointerStoragePolicy>,
+								   public Countable
+	{
+	public:
+	  typedef typename T::GridViewType GridViewType;
+
+	  PowerGridFunction (T& t) 
+		: PowerNode<T,7,CountingPointerStoragePolicy>(t) 
+	  {}
+
+	  PowerGridFunction (T& t0, T& t1, T& t2, T& t3, T& t4, T& t5, T& t6) 
+		: PowerNode<T,7,CountingPointerStoragePolicy>(t0,t1,t2,t3,t4,t5,t6) 
+	  {}
+	};
+
+	template<class T>
+	class PowerGridFunction<T,8> : public PowerNode<T,8,CountingPointerStoragePolicy>,
+								   public Countable
+	{
+	public:
+	  typedef typename T::GridViewType GridViewType;
+
+	  PowerGridFunction (T& t) 
+		: PowerNode<T,8,CountingPointerStoragePolicy>(t) 
+	  {}
+
+	  PowerGridFunction (T& t0, T& t1, T& t2, T& t3, T& t4, T& t5, T& t6, T& t7) 
+		: PowerNode<T,8,CountingPointerStoragePolicy>(t0,t1,t2,t3,t4,t5,t6,t7) 
+	  {}
+	};
+
+	template<class T>
+	class PowerGridFunction<T,9> : public PowerNode<T,9,CountingPointerStoragePolicy>,
+								   public Countable
+	{
+	  typedef typename T::GridViewType GridViewType;
+
+	public:
+	  PowerGridFunction (T& t) 
+		: PowerNode<T,9,CountingPointerStoragePolicy>(t) 
+	  {}
+
+	  PowerGridFunction (T& t0, T& t1, T& t2, T& t3, T& t4, T& t5, T& t6, T& t7, T& t8) 
+		: PowerNode<T,9,CountingPointerStoragePolicy>(t0,t1,t2,t3,t4,t5,t6,t7,t8) 
+	  {}
+	};
+
+	// composite functions
+	template<typename T0, typename T1, typename T2=EmptyChild, typename T3=EmptyChild,
+			 typename T4=EmptyChild, typename T5=EmptyChild, typename T6=EmptyChild,
+			 typename T7=EmptyChild, typename T8=EmptyChild>
+	class CompositeGridFunction
+	  : public CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8>,
+		public Countable
+	{
+	public:
+	  typedef typename T0::GridViewType GridViewType;
+
+	  CompositeGridFunction (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, 
+							 T5& t5, T6& t6, T7& t7, T8& t8)
+		: CompositeNode<CountingPointerStoragePolicy,
+						T0,T1,T2,T3,T4,T5,T6,T7,T8>(t0,t1,t2,t3,t4,t5,t6,t7,t8)
+	  {
+		dune_static_assert((is_same<typename T0::GridViewType,typename T1::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T2::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T3::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T4::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T5::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T6::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T7::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T8::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+	  } 
+	};
+
+
+	template<typename T0, typename T1> // 2 children
+	class CompositeGridFunction<T0,T1,EmptyChild,EmptyChild,EmptyChild,
+								EmptyChild,EmptyChild,EmptyChild,EmptyChild>
+	  : public CompositeNode<CountingPointerStoragePolicy,
+							 T0,T1,EmptyChild,EmptyChild,EmptyChild,
+							 EmptyChild,EmptyChild,EmptyChild,EmptyChild>,
+		public Countable
+
+	{
+	public:
+	  typedef typename T0::GridViewType GridViewType;
+
+	  CompositeGridFunction (T0& t0, T1& t1)
+		: CompositeNode<CountingPointerStoragePolicy,
+						T0,T1,EmptyChild,EmptyChild,EmptyChild,
+						EmptyChild,EmptyChild,EmptyChild,EmptyChild>(t0,t1)
+	  {
+		dune_static_assert((is_same<typename T0::GridViewType,typename T1::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+	  } 
+	};
+	
+	template<typename T0, typename T1, typename T2> // 3 children
+	class CompositeGridFunction<T0,T1,T2,EmptyChild,EmptyChild,
+								EmptyChild,EmptyChild,EmptyChild,EmptyChild>
+	  : public CompositeNode<CountingPointerStoragePolicy,
+							 T0,T1,T2,EmptyChild,EmptyChild,
+							 EmptyChild,EmptyChild,EmptyChild,EmptyChild>,
+		public Countable
+
+	{
+	public:
+	  typedef typename T0::GridViewType GridViewType;
+
+	  CompositeGridFunction (T0& t0, T1& t1, T2& t2)
+		: CompositeNode<CountingPointerStoragePolicy,
+						T0,T1,T2,EmptyChild,EmptyChild,
+						EmptyChild,EmptyChild,EmptyChild,EmptyChild>(t0,t1,t2)
+	  {
+		dune_static_assert((is_same<typename T0::GridViewType,typename T1::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T2::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+	  } 
+	};
+	
+	template<typename T0, typename T1, typename T2, typename T3> // 4 children
+	class CompositeGridFunction<T0,T1,T2,T3,EmptyChild,
+								EmptyChild,EmptyChild,EmptyChild,EmptyChild>
+	  : public CompositeNode<CountingPointerStoragePolicy,
+							 T0,T1,T2,T3,EmptyChild,
+							 EmptyChild,EmptyChild,EmptyChild,EmptyChild>,
+		public Countable
+
+	{
+	public:
+	  typedef typename T0::GridViewType GridViewType;
+
+	  CompositeGridFunction (T0& t0, T1& t1, T2& t2, T3& t3)
+		: CompositeNode<CountingPointerStoragePolicy,
+						T0,T1,T2,T3,EmptyChild,
+						EmptyChild,EmptyChild,EmptyChild,EmptyChild>(t0,t1,t2,t3)
+	  {
+		dune_static_assert((is_same<typename T0::GridViewType,typename T1::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T2::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T3::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+	  } 
+	};
+	
+	template<typename T0, typename T1, typename T2, typename T3, typename T4> // 5 children
+	class CompositeGridFunction<T0,T1,T2,T3,T4,
+								EmptyChild,EmptyChild,EmptyChild,EmptyChild>
+	  : public CompositeNode<CountingPointerStoragePolicy,
+							 T0,T1,T2,T3,T4,
+							 EmptyChild,EmptyChild,EmptyChild,EmptyChild>,
+		public Countable
+
+	{
+	public:
+	  typedef typename T0::GridViewType GridViewType;
+
+	  CompositeGridFunction (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4)
+		: CompositeNode<CountingPointerStoragePolicy,
+						T0,T1,T2,T3,T4,
+						EmptyChild,EmptyChild,EmptyChild,EmptyChild>(t0,t1,t2,t3,t4)
+	  {
+		dune_static_assert((is_same<typename T0::GridViewType,typename T1::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T2::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T3::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T4::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+	  } 
+	};
+	
+	template<typename T0, typename T1, typename T2, typename T3, typename T4,
+			 typename T5> // 6 children
+	class CompositeGridFunction<T0,T1,T2,T3,T4,
+								T5,EmptyChild,EmptyChild,EmptyChild>
+	  : public CompositeNode<CountingPointerStoragePolicy,
+							 T0,T1,T2,T3,T4,
+							 T5,EmptyChild,EmptyChild,EmptyChild>,
+		public Countable
+
+	{
+	public:
+	  typedef typename T0::GridViewType GridViewType;
+
+	  CompositeGridFunction (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5)
+		: CompositeNode<CountingPointerStoragePolicy,
+						T0,T1,T2,T3,T4,
+						T5,EmptyChild,EmptyChild,EmptyChild>(t0,t1,t2,t3,t4,t5)
+	  {
+		dune_static_assert((is_same<typename T0::GridViewType,typename T1::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T2::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T3::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T4::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T5::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+	  } 
+	};
+	
+	template<typename T0, typename T1, typename T2, typename T3, typename T4,
+			 typename T5, typename T6> // 7 children
+	class CompositeGridFunction<T0,T1,T2,T3,T4,
+								T5,T6,EmptyChild,EmptyChild>
+	  : public CompositeNode<CountingPointerStoragePolicy,
+							 T0,T1,T2,T3,T4,
+							 T5,T6,EmptyChild,EmptyChild>,
+		public Countable
+
+	{
+	public:
+	  typedef typename T0::GridViewType GridViewType;
+
+	  CompositeGridFunction (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6)
+		: CompositeNode<CountingPointerStoragePolicy,
+						T0,T1,T2,T3,T4,
+						T5,T6,EmptyChild,EmptyChild>(t0,t1,t2,t3,t4,t5,t6)
+	  {
+		dune_static_assert((is_same<typename T0::GridViewType,typename T1::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T2::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T3::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T4::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T5::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T6::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+	  } 
+	};
+	
+	template<typename T0, typename T1, typename T2, typename T3, typename T4,
+			 typename T5, typename T6, typename T7> // 8 children
+	class CompositeGridFunction<T0,T1,T2,T3,T4,
+								T5,T6,T7,EmptyChild>
+	  : public CompositeNode<CountingPointerStoragePolicy,
+							 T0,T1,T2,T3,T4,
+							 T5,T6,T7,EmptyChild>,
+		public Countable
+
+	{
+	public:
+	  typedef typename T0::GridViewType GridViewType;
+
+	  CompositeGridFunction (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6, T7& t7)
+		: CompositeNode<CountingPointerStoragePolicy,
+						T0,T1,T2,T3,T4,
+						T5,T6,T7,EmptyChild>(t0,t1,t2,t3,t4,t5,t6,t7)
+	  {
+		dune_static_assert((is_same<typename T0::GridViewType,typename T1::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T2::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T3::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T4::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T5::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T6::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+		dune_static_assert((is_same<typename T0::GridViewType,typename T7::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function");
+	  } 
+	};
+	
   }
 }
 

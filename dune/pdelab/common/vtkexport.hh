@@ -45,6 +45,8 @@ namespace Dune {
 	  std::string s;
 	};
 
+	// just for fun: a template meta program for grid function trees
+
   }
 }
 

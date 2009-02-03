@@ -84,8 +84,92 @@ void testvtkexport (const GV& gv, const T& t)
   Dune::PDELab::VTKGridFunctionAdapter<GF> vtkf(gf,"blub");
 
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<GF>(gf,"blub"));
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<GF>(gf,"blub")); // VTKWriter takes control of the object!
   vtkwriter.write("blub",Dune::VTKOptions::ascii);
+}
+
+// a grid function
+template<typename G, typename T>
+class L : public Dune::PDELab::LeafGridFunction<
+  Dune::PDELab::GridFunctionTraits<G,T,2,Dune::FieldVector<T,2>,
+								   T,1,Dune::FieldVector<T,1> >,
+  L<G,T> >
+{
+  typedef typename G::Traits::template Codim<0>::Entity ElementType;
+public:
+  L (const G& g_) : g(g_) {}
+
+  inline void evaluate (const Dune::FieldVector<T,2>& x, 
+						Dune::FieldVector<T,1>& y) const
+  {  
+	y = sin(3*3.1415*x[0])*cos(7*3.1415*x[1]);
+  }
+
+  inline void evaluate (const ElementType& e, 
+						const Dune::FieldVector<T,2>& x, 
+						Dune::FieldVector<T,1>& y) const
+  {  
+	evaluate(e.geometry().global(x),y);
+  }
+
+  inline const G& getGridView ()
+  {
+	return g;
+  }
+  
+private:
+  const G& g;
+};
+
+
+// test function trees
+template<class GV> 
+void testfunctiontree (const GV& gv)
+{
+  // a leaf function
+  typedef L<GV,typename GV::Grid::ctype> A;
+  A a(gv);
+
+  // test power
+  typedef Dune::PDELab::PowerGridFunction<A,10> B10;
+  B10 b10(a);
+  typedef Dune::PDELab::PowerGridFunction<A,2> B2;
+  B2 b2(a,a);
+  typedef Dune::PDELab::PowerGridFunction<A,3> B3;
+  B3 b3(a,a,a);
+  typedef Dune::PDELab::PowerGridFunction<A,4> B4;
+  B4 b4(a,a,a,a);
+  typedef Dune::PDELab::PowerGridFunction<A,5> B5;
+  B5 b5(a,a,a,a,a);
+  typedef Dune::PDELab::PowerGridFunction<A,6> B6;
+  B6 b6(a,a,a,a,a,a);
+  typedef Dune::PDELab::PowerGridFunction<A,7> B7;
+  B7 b7(a,a,a,a,a,a,a);
+  typedef Dune::PDELab::PowerGridFunction<A,8> B8;
+  B8 b8(a,a,a,a,a,a,a,a);
+  typedef Dune::PDELab::PowerGridFunction<A,9> B9;
+  B9 b9(a,a,a,a,a,a,a,a,a);
+
+  // test composite
+  typedef Dune::PDELab::CompositeGridFunction<A,A,A,A,A,A,A,A,A> C9;
+  C9 c9(a,a,a,a,a,a,a,a,a);
+  typedef Dune::PDELab::CompositeGridFunction<B10,B2> C2;
+  C2 c2(b10,b2);
+  typedef Dune::PDELab::CompositeGridFunction<B10,B2,B3> C3;
+  C3 c3(b10,b2,b3);
+  typedef Dune::PDELab::CompositeGridFunction<B10,B2,B3,B4> C4;
+  C4 c4(b10,b2,b3,b4);
+  typedef Dune::PDELab::CompositeGridFunction<B10,B2,B3,B4,B5> C5;
+  C5 c5(b10,b2,b3,b4,b5);
+  typedef Dune::PDELab::CompositeGridFunction<B10,B2,B3,B4,B5,B6> C6;
+  C6 c6(b10,b2,b3,b4,b5,b6);
+  typedef Dune::PDELab::CompositeGridFunction<B10,B2,B3,B4,B5,B6,B7> C7;
+  C7 c7(b10,b2,b3,b4,b5,b6,b7);
+  typedef Dune::PDELab::CompositeGridFunction<B10,B2,B3,B4,B5,B6,B7,B8> C8;
+  C8 c8(b10,b2,b3,b4,b5,b6,b7,b8);
+
+  typedef Dune::PDELab::CompositeGridFunction<C2,C9> T;
+  T t(c2,c9);
 }
 
 int main(int argc, char** argv)
@@ -122,6 +206,8 @@ int main(int argc, char** argv)
 	// run algorithm on a grid
 	std::cout << "testing vtk output" << std::endl;
 	testvtkexport(grid.leafView(),F<Dune::YaspGrid<2,2>::ctype>());
+
+	testfunctiontree(grid.leafView());
 
 	// test passed
 	return 0;
