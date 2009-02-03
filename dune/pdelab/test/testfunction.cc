@@ -10,6 +10,7 @@
 #include<dune/grid/yaspgrid.hh>
 
 #include"../common/function.hh"
+#include"../common/vtkexport.hh"
 
 // an analytic scalar function
 template<typename T>
@@ -47,9 +48,6 @@ public:
 template<class GV, class T> 
 void testgridfunction (const GV& gv, const T& t)
 {
-  const int dim = GV::dimension;
-  typedef typename GV::Grid::ctype DF;
-
   // make a grid function from the analytic function
   typedef Dune::PDELab::FunctionToGridFunctionAdapter<GV,T> GF;
   GF gf(gv,t);
@@ -74,6 +72,21 @@ void testgridfunction (const GV& gv, const T& t)
 	}
 }
 
+// iterate over grid view and use analytic function as grid function through adapter
+template<class GV, class T> 
+void testvtkexport (const GV& gv, const T& t)
+{
+  // make a grid function from the analytic function
+  typedef Dune::PDELab::FunctionToGridFunctionAdapter<GV,T> GF;
+  GF gf(gv,t);
+
+  // make a VTKFunction from grid function
+  Dune::PDELab::VTKGridFunctionAdapter<GF> vtkf(gf,"blub");
+
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<GF>(gf,"blub"));
+  vtkwriter.write("blub",Dune::VTKOptions::ascii);
+}
 
 int main(int argc, char** argv)
 {
@@ -100,12 +113,15 @@ int main(int argc, char** argv)
 	Dune::FieldVector<int,2> N(1);
 	Dune::FieldVector<bool,2> B(false);
 	Dune::YaspGrid<2,2> grid(L,N,B,0);
-    grid.globalRefine(3);
-
-	std::cout << "instantiate grid functions on a grid" << std::endl;
+    grid.globalRefine(7);
 
 	// run algorithm on a grid
+	std::cout << "instantiate grid functions on a grid" << std::endl;
 	testgridfunction(grid.leafView(),F<Dune::YaspGrid<2,2>::ctype>());
+
+	// run algorithm on a grid
+	std::cout << "testing vtk output" << std::endl;
+	testvtkexport(grid.leafView(),F<Dune::YaspGrid<2,2>::ctype>());
 
 	// test passed
 	return 0;
