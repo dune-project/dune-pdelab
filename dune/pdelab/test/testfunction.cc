@@ -1,0 +1,116 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"     
+#endif
+#include <iostream>
+
+#include <dune/common/mpihelper.hh>
+#include <dune/common/exceptions.hh>
+#include <dune/common/fvector.hh>
+
+#include<dune/grid/yaspgrid.hh>
+
+#include"../common/function.hh"
+
+// an analytic scalar function
+template<typename T>
+class F : public Dune::PDELab::FunctionInterface<
+  Dune::PDELab::FunctionTraits<T,2,Dune::FieldVector<T,2>,
+							   T,1,Dune::FieldVector<T,1> >,
+  F<T> >
+{
+public:
+  inline void evaluate (const Dune::FieldVector<T,2>& x, 
+						Dune::FieldVector<T,1>& y) const
+  {  
+	y = sin(3*3.1415*x[0])*cos(7*3.1415*x[1]);
+  }
+};
+
+// an analytic vector-valued function
+template<typename T>
+class G : public Dune::PDELab::FunctionInterface<
+  Dune::PDELab::FunctionTraits<T,2,Dune::FieldVector<T,2>,
+							   T,2,Dune::FieldVector<T,2> >,
+  G<T> >
+{
+public:
+  inline void evaluate (const Dune::FieldVector<T,2>& x, 
+						Dune::FieldVector<T,2>& y) const
+  {  
+	y[0] =  x.two_norm()*x[1];
+	y[1] = -x.two_norm()*x[0];
+  }
+};
+
+
+// iterate over grid and use analytic function as grid function through adapter
+template<class GV, class T> 
+void testgridfunction (const GV& gv, const T& t)
+{
+  const int dim = GV::dimension;
+  typedef typename GV::Grid::ctype DF;
+
+  // make a grid function from the analytic function
+  typedef Dune::PDELab::FunctionToGridFunctionAdapter<T> GF;
+  GF gf(t);
+
+  typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
+  for (ElementIterator it = gv.template begin<0>();
+	   it!=gv.template end<0>(); ++it)
+	{
+	  typename T::Traits::DomainType x(0.0);
+	  typename T::Traits::RangeType y;
+	  gf.evaluate(*it,x,y);
+
+	  // make a function in local coordinates from the grid function
+	  Dune::PDELab::GridFunctionToLocalFunctionAdapter<GF,typename ElementIterator::Entity>
+		lf(gf,*it);
+	  lf.evaluate(x,y);
+
+	  // make a function in local coordinates from the global function
+	  Dune::PDELab::GlobalFunctionToLocalFunctionAdapter<T,typename ElementIterator::Entity>
+		lg(t,*it);
+	  lg.evaluate(x,y);
+	}
+}
+
+
+int main(int argc, char** argv)
+{
+  try{
+    //Maybe initialize Mpi
+    Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
+
+	// instantiate F and evaluate
+	F<float> f;
+	Dune::FieldVector<float,2> x;
+	x[0] = 1.0; x[1] = 2.0;
+	Dune::FieldVector<float,1> y;
+	f.evaluate(x,y);
+
+	// instantiate G and evaluate
+	G<float> g;
+	Dune::FieldVector<float,2> u;
+	g.evaluate(x,u);
+
+	// need a grid in order to test grid functions
+	Dune::FieldVector<double,2> L(1.0);
+	Dune::FieldVector<int,2> N(1);
+	Dune::FieldVector<bool,2> B(false);
+	Dune::YaspGrid<2,2> grid(L,N,B,0);
+    grid.globalRefine(3);
+
+	// run algorithm on a grid
+	testgridfunction(grid.leafView(),F<Dune::YaspGrid<2,2>::ctype>());
+
+	// test passed
+	return 0;
+
+  }
+  catch (Dune::Exception &e){
+    std::cerr << "Dune reported error: " << e << std::endl;
+  }
+  catch (...){
+    std::cerr << "Unknown exception thrown!" << std::endl;
+  }
+} 
