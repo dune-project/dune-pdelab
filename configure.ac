@@ -26,6 +26,9 @@ LIBS="$DUNE_LIBS"
 
 AC_CONFIG_FILES([
   Makefile
+  doc/Makefile
+  doc/doxygen/Makefile
+  doc/doxygen/Doxyfile
   m4/Makefile
   dune/Makefile
   dune/pdelab/Makefile
