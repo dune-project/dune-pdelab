@@ -127,13 +127,11 @@ namespace Dune {
 
 	  Countable () : counter(0) 
 	  {
-		std::cout << "creating object at " << this << std::endl;
 	  }
 
 	  // copy constructor: new object, no pointer exists
 	  Countable (const Countable& x)
 	  {
-		std::cout << "creating object at " << this << std::endl;
 		counter = 0;
 	  } 
 
