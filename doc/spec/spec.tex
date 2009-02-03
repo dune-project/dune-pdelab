@@ -62,7 +62,7 @@ spaces and operatorors based on the DUNE framework.
   same construction is used in global fields, local fields and grid
   functions. Moreover a mechanism checking the same structure of trees
   would be quite useful. Yes we should do that!
-\item \textbf{19.01.09}: Should the LocalSingleField export an entity
+\item \textbf{19.01.09}: Should the LocalSingleGridFunctionSpace export an entity
   reference, or better an EntitiyGeometry? 
   This would parallel the global field that exports a grid
   view reference.
@@ -71,10 +71,26 @@ spaces and operatorors based on the DUNE framework.
 \item \textbf{19.01.09}: Introduce namespace PDELab within Dune?
 \end{enumerate}
 
-\section{Global Fields}
+\section{Synopsis}
+
+\begin{description}
+\item[Function] A map $x\mapsto y$. Here, $x\in D$ can be either in local
+  coordinates with respect to a reference element or in global
+  coordinates. The result $y\in R$ may be in any set.
+\item[Function signature] Description of domain and range of a
+  function. In general we assume $D=K^m$ and $R=L^n$, so the signature
+  is given by $n, m$ and the types for $K, R, L$ and $R$.
+\item[Grid function] A map $(e,x)\mapsto y$ where $e$ is an entity and
+  $x$ is a position in the reference element of $e$.
+\item[(Discrete) Grid function space] All information required to construct a
+  grid function from a coefficient vector.
+\end{description}
+
+
+\section{Grid Function Spaces}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{GlobalFieldInterface}
+\subsection{GlobalGridFunctionSpaceInterface}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Synopsis}
@@ -84,7 +100,7 @@ multi field finite element space. This class collects the common parts
 of single and multi-field spaces.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{GlobalSingleFieldInterface}
+\subsection{GlobalSingleGridFunctionSpaceInterface}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Synopsis}
@@ -95,11 +111,11 @@ element space.
 \subsubsection{Derived From}
 
 \begin{enumerate}[1)]
-\item GlobalFieldInterface
+\item GlobalGridFunctionSpaceInterface
 \end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{GlobalMultiFieldInterface}
+\subsection{GlobalMultiGridFunctionSpaceInterface}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Synopsis}
@@ -110,11 +126,11 @@ a hierarchically structured composition of finite element spaces.
 \subsubsection{Derived From}
 
 \begin{enumerate}[1)]
-\item GlobalFieldInterface
+\item GlobalGridFunctionSpaceInterface
 \end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{GlobalSingleField}
+\subsection{GlobalSingleGridFunctionSpace}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Synopsis}
@@ -123,6 +139,26 @@ Provides all information about a finite element space, i.e. local
 basis functions, local to global map of indices, dimension.
 This type is the basis for bottom up construction of multi-field
 function spaces.
+
+A grid function $u: \Omega \to R$ has the general form
+\begin{equation}
+u(x) = \sum_{e\in E_h} \sum_{i=0}^{n_e-1} \left[ c_{g(e,i)} \hat\phi_i^e(\mu_e^{-1}(x)) 
+  \right]\chi_e(x)
+\end{equation}
+where $E_h$ is the set of codimension 0 entities in the grid, $c$ is
+the coefficient vector, $g(e,i)$ is the local to global map,
+$\hat\phi_i^e$ is the $i$'th local basis function in entity $e$,
+$\mu_e$ is the transformation from the reference element of $e$ to
+the domain $\Omega$ and $\chi_e$ is the characteristic function of the
+entity $e$ (which is put here because the map $\mu_e^{-1}$ may not be
+defined outside entity $e$).
+
+The transformation $\mu_e$ is part of the DUNE grid interface and the
+local functions $\hat\phi$ for a specific type of finite element are
+given by the local functions module. The main purpose of the
+Global{\ldots}GridFunctionSpace classes is to provide the local to
+global map $g$ and to collect all the information needed to evaluate a
+grid function for a given coefficient vector.  
 
 
 \subsubsection{Template Parameter}
@@ -142,7 +178,7 @@ function spaces.
 \subsubsection{Derived From}
 
 \begin{enumerate}[1)]
-\item GlobalSingleFieldInterface
+\item GlobalSingleGridFunctionSpaceInterface
 \item ReferenceCountable
 \end{enumerate}
 
@@ -161,7 +197,7 @@ function spaces.
 \item BackendType
 \item SizeType, a shortcut for BackendType::SizeType
 \item IndexType, a shortcut for BackendType::IndexType
-\item LocalFieldType parametrized with the GlobalSingleField (i.e. itself)
+\item LocalGridFunctionSpaceType parametrized with the GlobalSingleGridFunctionSpace (i.e. itself)
 \item template$<$typename E$>$ VectorContainer::Type exports the type of a Vector
   (defined in the backend) where each element is of type E.
 \item LocalFiniteElementMapType
@@ -236,7 +272,7 @@ constraints (e.g. functions with zero mean) non-empty rows are stored.
 \item globalIndices(const LocalFiniteElementType\&, std::vector$<$IndexType$>$\&).
   Determine the global indices of the
   coefficients at the given entity. This method is normally used by a
-  LocalSingleFieldType object.
+  LocalSingleGridFunctionSpaceType object.
 \item LocalFiniteElementMapType\& localFiniteElementMap(). Retrieves
   the map from entity to local finite element.
 \item const TransformationType\& transformation(). Access to
@@ -281,12 +317,12 @@ entity.
 \end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{ConstrainedGlobalSingleField}
+\subsection{ConstrainedGlobalSingleGridFunctionSpace}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Synopsis}
 
-Proxy class that uses a GlobalSingleField object and extends it by
+Proxy class that uses a GlobalSingleGridFunctionSpace object and extends it by
 constraints. 
 
 We still have to define how exactly the callback works.
@@ -294,7 +330,7 @@ We still have to define how exactly the callback works.
 \subsubsection{Template Parameter}
 
 \begin{enumerate}[1)]
-\item T1 = a type implementing the GlobalSingleFieldInterface.
+\item T1 = a type implementing the GlobalSingleGridFunctionSpaceInterface.
 \item T2 = a type containing callbacks to assemble the constraints.
 \end{enumerate}
 
@@ -304,7 +340,7 @@ object to implement it.
 \subsubsection{Derived From}
 
 \begin{enumerate}[1)]
-\item GlobalSingleFieldInterface
+\item GlobalSingleGridFunctionSpaceInterface
 \item ReferenceCountable
 \end{enumerate}
 
@@ -326,7 +362,7 @@ object to implement it.
 \subsubsection{Synopsis}
 
 A model of this type has to be provided in
-ConstrainedGlobalSingleField to set up the constraints.
+ConstrainedGlobalSingleGridFunctionSpace to set up the constraints.
 Barton-Nackman style 
 
 \subsubsection{Template Parameter}
@@ -394,7 +430,7 @@ Type providing geometry of an intersection.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{GlobalPowerField}
+\subsection{GlobalPowerGridFunctionSpace}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Synopsis}
@@ -409,7 +445,7 @@ space is constructed for a single grid view.
 \subsubsection{Template Parameter}
 
 \begin{enumerate}[1)]
-\item typename T1 = Type implementing GlobalFieldInterface, i.e. we may combine any type
+\item typename T1 = Type implementing GlobalGridFunctionSpaceInterface, i.e. we may combine any type
   of finite element space.
 \item integer ncomp specifying number of components.
 \item Type allowing the selection of blockwise or lexicographic
@@ -419,7 +455,7 @@ space is constructed for a single grid view.
 \subsubsection{Derived From}
 
 \begin{enumerate}[1)]
-\item MultiFieldInterface
+\item MultiGridFunctionSpaceInterface
 \item ReferenceCountable
 \end{enumerate}
 
@@ -428,7 +464,7 @@ space is constructed for a single grid view.
 \begin{enumerate}[1)]
 \item isSingle = false : allows to determine end of recursion in
   template metaprograms for multi-field finite element spaces.
-\item COMP = ncomp. Export number of components for template
+\item CHILDREN = ncomp. Export number of components for template
   metaprograms recurring over the type tree.
 \end{enumerate}
 
@@ -439,10 +475,10 @@ space is constructed for a single grid view.
 \item BackendType
 \item SizeType, a shortcut for BackendType::SizeType
 \item IndexType, a shortcut for BackendType::IndexType
-\item LocalFieldType parametrized with the GlobalPowerField (i.e. itself)
+\item LocalGridFunctionSpaceType parametrized with the GlobalPowerGridFunctionSpace (i.e. itself)
 \item template$<$typename E$>$ VectorContainer::Type exports the type of a Vector
   (defined in the backend) where each element is of type E.
-\item template$<$int k$>$ struct SubField::Type exports the type of
+\item template$<$int k$>$ struct Child::Type exports the type of
   the k'th component
 \end{enumerate}
 
@@ -461,7 +497,7 @@ space is constructed for a single grid view.
   grid view.
 \item IndexType upMap(IndexType). This is the identity here. Maps
   indices from this field to a global field.
-\item SubField$<$k$>$::Type\& subField$<$k$>$(). Get the k'th component.
+\item Child$<$k$>$::Type\& getChild$<$k$>$(). Get the k'th component.
 \item IndexType subMap$<$k$>$(IndexType). Map index from the global
   index set of component k to the global index set of the composite space.
 \end{enumerate}
@@ -474,7 +510,7 @@ ordering is only possible if all components do have the same size,
 otherwise only lexicographic ordering is possible.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{GlobalCompositeField}
+\subsection{GlobalCompositeGridFunctionSpace}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Synopsis}
@@ -489,7 +525,7 @@ space is constructed for a single grid view.
 \subsubsection{Template Parameter}
 
 \begin{enumerate}[1)]
-\item typename T1,\ldots,Tk = Types implementing FieldInterface, 
+\item typename T1,\ldots,Tk = Types implementing GridFunctionSpaceInterface, 
 i.e. we may combine any type of finite element space. 
 \item Type allowing the selection of blockwise or lexicographic
   ordering. Lexicographic might be the default as it is always possible.
@@ -498,7 +534,7 @@ i.e. we may combine any type of finite element space.
 \subsubsection{Derived From}
 
 \begin{enumerate}[1)]
-\item MultiFieldInterface
+\item MultiGridFunctionSpaceInterface
 \item ReferenceCountable
 \end{enumerate}
 
@@ -507,7 +543,7 @@ i.e. we may combine any type of finite element space.
 \begin{enumerate}[1)]
 \item isSingle = false : allows to determine end of recursion in
   template metaprograms for multi-field finite element spaces.
-\item COMP. Export number of components for template
+\item CHILDREN. Export number of components for template
   metaprograms recurring over the type tree.
 \end{enumerate}
 
@@ -518,10 +554,10 @@ i.e. we may combine any type of finite element space.
 \item BackendType
 \item SizeType, a shortcut for BackendType::SizeType
 \item IndexType, a shortcut for BackendType::IndexType
-\item LocalFieldType parametrized with the GlobalPowerField (i.e. itself)
+\item LocalGridFunctionSpaceType parametrized with the GlobalPowerGridFunctionSpace (i.e. itself)
 \item template$<$typename E$>$ VectorContainer::Type exports the type of a Vector
   (defined in the backend) where each element is of type E.
-\item template$<$int k$>$ struct SubField::Type exports the type of
+\item template$<$int k$>$ struct Child::Type exports the type of
   the k'th component
 \end{enumerate}
 
@@ -539,7 +575,7 @@ i.e. we may combine any type of finite element space.
   grid view.
 \item IndexType upMap(IndexType). This is the identity here. Maps
   indices from this field to a global field.
-\item SubField$<$k$>$::Type\& subField$<$k$>$(). Get the k'th component.
+\item Child$<$k$>$::Type\& getChild$<$k$>$(). Get the k'th component.
 \item IndexType subMap$<$k$>$(IndexType). Map index from the global
   index set of component k to the global index set of the composite space.
 \end{enumerate}
@@ -554,7 +590,7 @@ otherwise only lexicographic ordering is possible.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{GlobalSubField}
+\subsection{GlobalSubSpace}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Synopsis}
@@ -565,18 +601,18 @@ tree. Provides upward mapping of indices.
 Idea (to be deleted) : Gets a multi-field and an integer k as template
 parameter. Derives from the k'th component of the multi-field and
 overwrites the globalSize() method and the upMap() method. This should
-be it. As GlobalSubField is derived from the destination field the
-LocalField can be used as before. Do we need upMap and globalSize
-virtual to ensure that the LocalField uses the right methods?
+be it. As GlobalSubSpace is derived from the destination field the
+LocalGridFunctionSpace can be used as before. Do we need upMap and globalSize
+virtual to ensure that the LocalGridFunctionSpace uses the right methods?
 
 What happens when this field is used as a component in a
 power/composite field which is perfectly allowed! 
 
-\section{Local Fields}
+\section{Local Grid Function Spaces}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{LocalSingleField}
+\subsection{LocalSingleGridFunctionSpace}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Synopsis}
@@ -588,8 +624,8 @@ multi-field finite element spaces.
 \subsubsection{Template Parameter}
 
 \begin{enumerate}[1)]
-\item GlobalSingleFieldType : Type that exports this
-  LocalSingleField. Provides access to LocalFiniteElementMapType.
+\item GlobalSingleGridFunctionSpaceType : Type that exports this
+  LocalSingleGridFunctionSpace. Provides access to LocalFiniteElementMapType.
 \end{enumerate}
 
 \subsubsection{Derived From}
@@ -599,7 +635,7 @@ multi-field finite element spaces.
 \begin{enumerate}[1)]
 \item isSingle = true : allows to determine end of recursion in
   template metaprograms for multi-field finite element spaces.
-\item COMP = 0 : there are no subfields.
+\item CHILDREN = 0 : there are no subfields.
 \end{enumerate}
 
 \subsubsection{Exported Types}
@@ -615,7 +651,7 @@ multi-field finite element spaces.
 \subsubsection{Methods}
 
 \begin{enumerate}[1)]
-\item Constructor (GlobalSingleFieldType\&) : argument allows
+\item Constructor (GlobalSingleGridFunctionSpaceType\&) : argument allows
   allocation of index vector with correct maximum size. Reference is
   stored using shared pointer.
 \item bind(const entity\&) : Fill object with all information for the
@@ -658,12 +694,12 @@ multi-field finite element spaces.
 \begin{lstlisting}
 typedef P1LFEM<double,double> LFEM; // Holds Local finite element
                                     // for each entity
-typedef GlobalSingleField<GridView, // Constructs global 
+typedef GlobalSingleGridFunctionSpace<GridView, // Constructs global 
        LFEM,StdVectorBackend> Field;// information
 
 LFEM p1lfem;                     // make finite element map
 Field gsf(gridview,p1lfem);      // make single field
-Field::LocalFieldType lf(gsf);   // make local field 
+Field::LocalGridFunctionSpaceType lf(gsf);   // make local field 
 Field::VectorContainer<double>::Type x(gsf); // make global vector
 std::vector<double> lx(gsf.maxLocalSize());  // make local vector
 
@@ -678,7 +714,7 @@ for (iterator i=gridview.begin(); i!=gridview.end(); ++i)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{LocalPowerField}
+\subsection{LocalPowerGridFunctionSpace}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Synopsis}
@@ -688,7 +724,7 @@ be different objects) into a multi-field finite element space.
 Multi-field finite element spaces are represented by a tree.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{LocalCompositeField}
+\subsection{LocalCompositeGridFunctionSpace}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Synopsis}
@@ -699,7 +735,7 @@ Multi-field finite element spaces are represented by a tree.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{LocalSubField}
+\subsection{LocalSubSpace}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Synopsis}
@@ -710,7 +746,7 @@ tree.
 \section{Hierarchic Functions}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{SingleGridFunctionInterface}
+\subsection{SingleGridFunctionSpaceInterface}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Synopsis}
@@ -751,12 +787,12 @@ operator. Typically FieldVector is used.
 The derived types should be reference countable.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{SingleAnalyticGridFunctionInterface}
+\subsection{SingleAnalyticGridFunctionSpaceInterface}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Synopsis}
 
-Subclass of SingleGridFunctionInterface that provides local evaluation
+Subclass of SingleGridFunctionSpaceInterface that provides local evaluation
 based on global evaluation. Useful for user-defined analytic functions.
 
 \subsubsection{Template Parameter}
@@ -768,12 +804,12 @@ based on global evaluation. Useful for user-defined analytic functions.
 \subsubsection{Derived From}
 
 \begin{enumerate}[1)]
-\item SingleGridFunctionInterface.
+\item SingleGridFunctionSpaceInterface.
 \end{enumerate}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{PowerGridFunction}
+\subsection{PowerGridFunctionSpace}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Synopsis}
@@ -799,14 +835,14 @@ combined grid function.
 \begin{enumerate}[1)]
 \item isSingle = false : allows to determine end of recursion in
   template metaprograms for multi-field finite element spaces.
-\item COMP = ncomp. Export number of components for template
+\item CHILDREN = ncomp. Export number of components for template
   metaprograms recurring over the type tree.
 \end{enumerate}
 
 \subsubsection{Exported Types}
 
 \begin{enumerate}[1)]
-\item template$<$int k$>$ struct SubField::Type exports the type of
+\item template$<$int k$>$ struct Child::Type exports the type of
   the k'th component
 \end{enumerate}
 
@@ -815,7 +851,7 @@ combined grid function.
 \begin{enumerate}[1)]
 \item Constructor(T1\&) : identical field is used for all the components. 
 \item Constructor(T1\&, \ldots , T1\&) : ncomp fields of the same type
-\item SubField$<$k$>$::Type\& subField$<$k$>$(). Get the k'th component.
+\item Child$<$k$>$::Type\& getChild$<$k$>$(). Get the k'th component.
 \end{enumerate}
 
 \subsubsection{Hints}
@@ -823,7 +859,7 @@ combined grid function.
 References to components are stored using SharedPtr.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{CompositeGridFunction}
+\subsection{CompositeGridFunctionSpace}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Synopsis}
@@ -848,14 +884,14 @@ combined grid function.
 \begin{enumerate}[1)]
 \item isSingle = false : allows to determine end of recursion in
   template metaprograms for multi-field finite element spaces.
-\item COMP = ncomp. Export number of components for template
+\item CHILDREN = ncomp. Export number of components for template
   metaprograms recurring over the type tree.
 \end{enumerate}
 
 \subsubsection{Exported Types}
 
 \begin{enumerate}[1)]
-\item template$<$int k$>$ struct SubField::Type exports the type of
+\item template$<$int k$>$ struct Child::Type exports the type of
   the k'th component
 \end{enumerate}
 
@@ -863,7 +899,7 @@ combined grid function.
 
 \begin{enumerate}[1)]
 \item Constructor(T1\&, \ldots , T1\&) : ncomp fields of the same type
-\item SubField$<$k$>$::Type\& subField$<$k$>$(). Get the k'th component.
+\item Child$<$k$>$::Type\& getChild$<$k$>$(). Get the k'th component.
 \end{enumerate}
 
 \subsubsection{Hints}

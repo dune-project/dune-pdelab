@@ -1,0 +1,108 @@
+\section{General construction of finite element spaces}
+
+Linear finite element spaces are constructed in a generic and
+systematic way. It therefore desirable to implement as much as
+possible of this construction in a reusable form. In order to identify
+which pieces can be reused we now describe the general construction in
+detail. 
+
+We begin with the shape functions which we also call
+local basis functions. These are functions defined
+on a reference element $\hat\Omega$:
+\begin{equation}
+\hat\phi_i : \hat\Omega \to \mathbb{K}^m, \qquad 0\leq i < N.
+\end{equation}
+Here $\mathbb{K}^m$ is the $m$-dimensional vector space based on the
+field $\mathbb{K}$ where $\mathbb{K}=\mathbb{R}, \mathbb{C}$.
+Typically, shape functions are componentwise polynomials of a given
+order. 
+A local finite element function 
+\begin{equation*}
+\hat{u}(x) = \sum_{i=0}^{N-1} \hat{c}_i \hat\phi_i(x) .
+\end{equation*}
+is then a linear combination of those
+local basis functions.
+
+To define a function on a general transformed element $e$ we introduce
+the transformation 
+\begin{equation}
+\mu_e : \hat\Omega_e \to \Omega_e, \qquad e\in E^0
+\end{equation}
+which is assumed to be continuous and invertible.
+Here $\hat\Omega_e$ is the reference element associated with element
+$e$ and $\Omega_e$ is the domain occupied by element $e$. Note also
+that every element may in principle have a different reference element.
+
+Using the transformation we can define the transformed shape functions
+\begin{equation}
+\phi_i^e : \Omega_e \to \mathbb{K}^m, \qquad \phi_i^e =
+\hat\phi_i^e\circ \mu_e^{-1}, \qquad 0\leq i < N_e.
+\end{equation}
+and a function on the transformed element
+\begin{equation}
+u_e(x) = \sum_{i=0}^{N_e-1} \hat{c}_i^e \hat\phi_i^e(\mu_e^{-1}(x)) .
+\end{equation}
+
+The domain $\Omega$ is assumed to be subdivided into elements
+\begin{equation}
+\bar{\Omega} = \bigcup_{e\in E^0} \bar\Omega_e, \qquad
+\Omega_e\cap\Omega_f = \emptyset \text{ for $e\neq f$}.
+\end{equation}
+A global finite element function $$u : \Omega \to \mathbb{K}^m$$ is then
+constructed out of the local pieces:
+\begin{equation}
+u(x) = \sum_{e\in E^0} \left( \sum_{i=0}^{N_e-1} \hat{c}_i^e
+\hat\phi_i^e(\mu_e^{-1}(x)) \right) \chi_{\Omega_e}(x), 
+\qquad x\in \bigcup_{e\in E^0} \Omega_e
+\end{equation}
+where $\chi_{\Omega_e}$ denotes the characteristic function of the
+domain $\Omega_e$. Note that:
+\begin{itemize}
+\item Each element still has its own set of coefficients.
+\item Functions are not defined at element boundaries.
+\item If the local functions coincide on element boundaries then $u$
+  can be extended to all of $\Omega$, otherwise $u$ may be extended to
+  be set-valued on the \textit{internal skeleton}
+\begin{equation}
+\Gamma = \bigcup_{e,f\in E^0} \left( \partial\Omega_e \cap
+\partial\Omega_f \right) \setminus \partial\Omega .
+\end{equation}
+\end{itemize}
+
+Typically finite element functions exhibit some form of continuity
+across the element boundaries. This is achieved by (1) using specific
+shape functions and (2) identifying coefficients of intersection
+elements, i.e.~ when $\partial\Omega_e\cap\partial\Omega_f\neq\emptyset$.
+
+The identification of coefficients can be written as
+\begin{equation}
+\hat{c}_i^e = c_{\alpha(e,i)}
+\end{equation}
+where $\alpha$ is the local-to-global-map.
+The local-to-global-map can be constructed by identifying coefficients
+with geometric entities of higher codimension, i.~e.
+\begin{equation}
+\hat{c}_i^e = c_{j(e,i)}^{s(e,i)}
+\end{equation}
+where $e'=s(e,i)\in E^{c(e,i)}$ is an entity of codimension $c(e,i)$
+which is a subentity of $e$ and
+$j(e,i)$ is an index within that entity, in case several
+coefficients are identified with $e'$. Thus it is sufficient to
+provide a map 
+\begin{equation}
+(e,i) \mapsto (s,c,j), \qquad e\in E^0, 0\leq i < N_e.
+\end{equation}
+Such a map will be called a local layout map. Using a suitable
+ordering of the triples $(s,c,j)$ the local-to-global-map $\alpha$ can
+be constructed. Using the identification of coefficients the class of
+finite element functions treated in \texttt{dune-pdelab} can be
+written as
+\begin{equation}
+u(x) = \sum_{e\in E^0} \left( \sum_{i=0}^{N_e-1} c_{j(e,i)}^{s(e,i)}
+\hat\phi_i^e(\mu_e^{-1}(x)) \right) \chi_{\Omega_e}(x), 
+\qquad x\in \bigcup_{e\in E^0} \Omega_e .
+\end{equation}
+Note these function may still be discontinuous at element boundaries. 
+\newpage
+
+\cite{BrennerScott}

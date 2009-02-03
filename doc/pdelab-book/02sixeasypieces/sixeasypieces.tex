@@ -1,0 +1,42 @@
+\documentclass[12pt,a4paper,DIV11,%draft,%
+notitlepage,normalheadings,oneside,abstracton,%
+bibtotoc]{scrartcl}
+
+\input{style.tex}
+
+\title{SIX EASY PIECES}
+\author{\textsc{Peter Bastian}\\
+Institut für Parallele und Verteilte Systeme --- SgS\\
+Universität Stuttgart, Universitätsstraße 38,
+D-70569 Stuttgart\\
+email: \texttt{Peter.Bastian@ipvs.uni-stuttgart.de}
+}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+%\tableofcontents
+
+\input{sixeasypieces-main.tex}
+
+\bibliographystyle{alpha}
+\bibliography{lit}
+
+\end{document}
+
+\begin{abstract}
+This article is the first of  series that 
+explains how discretization schemes for partial
+differential equations can be built in a generic way using the 
+``Distributed and Unified Numerics Environment (DUNE)'', see {P. Bastian, M. Blatt,
+A. Dedner, C. Engwer, R. Klöfkorn, M. Ohlberger, O. Sander:} {\itshape
+  A Generic
+Grid Interface for Parallel and Adaptive Scientific Computing. Part I:
+Abstract Framework.} Accepted for publication in  Computing. 
+
+Here we
+show the construction of finite element function spaces and treat six
+different discretization schemes for solving the stationary diffusion
+equation. 
+\end{abstract}

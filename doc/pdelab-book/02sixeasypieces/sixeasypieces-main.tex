@@ -1,0 +1,425 @@
+\section{Abstract problem formulation}
+
+
+\subsection{Continuous problem.}
+
+Let $U$ and $V$ be linear function spaces. Then the residual based unconstrained
+continuous problem reads 
+\begin{equation}
+\label{Eq:UnconstrainedContinuous}
+u\in U \,: \qquad r(u,v) = 0 \qquad \forall v\in V .
+\end{equation}
+The mapping $r : U\times V \to \mathbb{K}$  is non-linear in its first argument but
+linear in its second argument. 
+
+In some cases a solution of problem \eqref{Eq:UnconstrainedContinuous}
+exists but is not unique. Then additional constraints have to be
+given, i.e. the problem is to be solved in a subspace. 
+To that end let $\tilde{U}\subseteq U$ and
+$\tilde{V}\subseteq V$. For a given function $w\in U$ we define the
+affine subspace
+\begin{equation*}
+\text{``$w+\tilde{U}$''} = \{u\in U \,:\, u = w + \tilde{u}, \tilde{u}\in\tilde{U} \}.
+\end{equation*}
+Then the constrained continuous problem reads
+\begin{equation}
+u\in w+\tilde{U} \,: \qquad r(u,v) = 0 \qquad \forall v\in\tilde{V} .
+\end{equation}
+
+\begin{Exm}\label{exm:EllipticModelProblem}
+Consider the elliptic model problem 
+\begin{align*}
+-\Delta u + a_0(x) u &= f &&\text{in $\Omega$},\\
+u &= g && \text{on $\Gamma_D$},\\
+-\nabla u\cdot\nu &= \mu && \text{on $\Gamma_N$},
+\end{align*}
+where $\partial\Omega = \Gamma_D \cup \Gamma_N$,
+$\Gamma_D\cap\Gamma_N=\emptyset$ and $\nu$ denotes the outer unit
+normal.
+
+Appropriate function spaces for the weak formulation are $U = V =
+H^1(\Omega)$ and the residual is 
+\begin{equation*}
+r(u,v) = \int\limits_{\Omega} \nabla u \cdot \nabla v + a_0 uv \,dx 
++ \int\limits_{\Gamma_N} \mu v \,ds - \int\limits_{\Omega} fv \,dx.
+\end{equation*}
+For $\Gamma_N=\partial\Omega$ and $a_0(x)\leq \alpha_0 > 0$ everywhere 
+the unconstrained problem has a unique solution. 
+For $\Gamma_N=\partial\Omega$, $a_0\equiv 0$ and
+suitable $f$ the solution
+is only defined up to a constant. The solution is unique in the
+subspace
+\begin{equation*}
+\tilde{U} = \tilde{V} = \left\{ u\in H^1(\Omega) \,:\, 
+\int_{\Omega} u \,dx = 0\right\} .
+\end{equation*}
+In the case of Dirichlet boundary conditions with
+$\text{meas}\Gamma_D\neq 0$ the problem is unique in the subspace
+\begin{equation*}
+\tilde{U} = \tilde{V} = \left\{ u\in H^1(\Omega) \,:\, 
+\text{$u = 0$ on $\Gamma_D$ in the sense of traces} \right\} .
+\end{equation*}
+\hfill$\square$
+\end{Exm}
+
+\subsection{Unconstrained Discrete Problem}
+
+Let $U_h$ and $V_h$ be finite-dimensional linear function spaces
+approximating $U$ and $V$ respectively. Note that we do not require that
+$\tilde{U}_h\subseteq U_h$ and $\tilde{V}_h\subseteq V_h$.  
+Then the unconstrained discrete problem reads:
+\begin{equation}
+u_h\in U_h \,: \qquad r_h(u_h,v) = 0 \qquad \forall v\in V_h .
+\end{equation}
+The residual $r_h : U_h \times V_h \to \mathbb{K}$ need not be
+identical to $r$ in the case of non-conforming methods. 
+We claim that a sufficiently large class of discretization schemes can be
+formulated in this way.
+
+Given a basis of the discrete function spaces we can reduce the
+problem to its algebraic form. The basis is denoted by
+\begin{align*}
+U_h &= \text{span} \Phi_h, & \Phi_h &= \{\phi_j \,:\, j\in J\}, &
+J\subset \mathbb{N}_0,\\
+V_h &= \text{span} \Psi_h, & \Psi_h &= \{\psi_i \,:\, i\in I\}, &
+I\subset \mathbb{N}_0,\\
+\end{align*}
+where $I, J$ are appropriate index sets. All functions can then be
+represented with coefficients with respect to the basis:
+\begin{align*}
+\mathbf{U} &= \mathbb{K}^J, & \text{FE}_\Phi &: \mathbf{U} \to U_h, &
+ \text{FE}_\Phi(\mathbf{u}) = \sum\limits_{j\in J} \mathbf{u}_j \phi_j,\\
+\mathbf{V} &= \mathbb{K}^I, & \text{FE}_\Psi &: \mathbf{V} \to V_h, &
+ \text{FE}_\Psi(\mathbf{v}) = \sum\limits_{i\in I} \mathbf{v}_i \psi_i.
+\end{align*}
+Then the unconstrained algebraic problem reads
+\begin{align*}
+\mathbf{u}\in\mathbf{U}\ &: & r_h(\text{FE}_\Phi(\mathbf{u}),
+\text{FE}_\Psi(\mathbf{v})) &= 0 &&\mathbf{v}\in\mathbf{V}\\
+&\Leftrightarrow & r_h(\text{FE}_\Phi(\mathbf{u}),
+\psi_i) &= 0 &&i\in I.
+\end{align*}
+By setting 
+\begin{align*}
+\mathcal{R} &: \tilde{\mathbf{U}}\to\tilde{\mathbf{V}}, &
+\left(\mathcal{R}(\mathbf{u})\right)_i &= r_h(\text{FE}_\Phi(\mathbf{u}),\psi_i),
+\end{align*}
+the unconstrained discrete problem can be written as a nonlinear
+algebraic system 
+\begin{equation}
+\mathbf{u}\in\mathbf{U} \,: \qquad 
+\mathcal{R}(\mathbf{u}) = \mathbf{0}.
+\end{equation}
+The solution of this system might be computed by Newton's method which
+reads in that case
+\begin{equation}
+\mathbf{u}^{k+1} = \mathbf{u}^{k} -
+\left(\nabla\mathcal{R}(\mathbf{u}^{k})\right)^{-1}\mathcal{R}(\mathbf{u}^{k}) .
+\end{equation}
+Here $\nabla\mathcal{R}(\mathbf{u}^{k})$ denotes the Jacobian of the
+map $\mathcal{R}$ which is defined as 
+\begin{equation*}
+\left(\nabla\mathcal{R}(\mathbf{u}^{k})\right)_{i,j} = \frac{\partial
+  r_h(\text{FE}_\Phi(\mathbf{u}^k),\psi_i)}{\partial \mathbf{u}_j} .
+\end{equation*}
+
+\subsection{Constrained Discrete Problem}
+
+As in the continuous case the solution of the unconstrained discrete
+problem might not be unique. To achieve uniqueness the problem needs
+to be constrained to subspaces $\tilde{U}_h \subset U_h$, $\tilde{V}_h
+\subset V_h$. Then the constrained discrete problem reads:
+\begin{equation}\label{eq:ConstrainedDiscreteProblem1}
+u_h\in w+\tilde{U}_h \,: \qquad r_h(u_h,v) = 0 \qquad \forall v\in \tilde{V}_h .
+\end{equation}
+
+\begin{Exm}\label{exm:ConstrainedDiskreteSpaces}
+We extend example \ref{exm:EllipticModelProblem}. Let $\mathcal{T}(\Omega)$
+denote a triangulation of the domain.
+\begin{enumerate}[a)]
+\item Assume that $\mathcal{T}(\Omega)$ is conforming. Then the space
+  of piecewise linear finite elements is given by
+\begin{equation*}
+U_h = V_h = \left\{ u\in C^0(\Omega) \,:\, \text{$u|_t$ is linear on each
+  $t\in\mathcal{T}(\Omega)$} \right\} .
+\end{equation*}
+In the case of pure Neumann boundaries we then take, as in the
+continuous case:
+\begin{equation*}
+\tilde{U}_h = \tilde{V}_h = \left\{ u\in U_h \,:\, 
+\int_{\Omega} u \,dx = 0\right\} .
+\end{equation*}
+\item In the case of Dirichlet boundary condition we simply take
+\begin{equation*}
+\tilde{U}_h = \tilde{V}_h = \left\{ u\in U_h \,:\, 
+\text{$u = 0$ on $\Gamma_D$} \right\} .
+\end{equation*}
+\item As a third case we consider hanging nodes. In that case
+  $\mathcal{T}(\Omega)$ is a non-conforming triangulation and we set
+\begin{equation*}
+U_h = V_h = \left\{ u\in L_2(\Omega) \,:\, \text{$u|_t$ is linear on each
+  $t\in\mathcal{T}(\Omega)$} \right\} .
+\end{equation*}
+The constrained spaces then are $\tilde{U}_h = \tilde{V}_h = U_h \cap
+C^0(\Omega)$. \hfill$\square$
+\end{enumerate}
+\end{Exm} 
+
+\paragraph{Basis Transformation.} For the algebraic formulation of the
+discrete constrained problem we chose new sets of basis functions
+$\tilde{\Phi}_h$, $\tilde{\Psi}_h$ generating the spaces $U_h$ and
+$V_h$. The finite element isomorphism then is
+\begin{align*}
+\text{FE}_{\tilde\Phi} &: \mathbf{U} \to U_h, &
+ \text{FE}_{\tilde\Phi}(\tilde{\mathbf{u}}) &= \sum\limits_{j\in J}
+ \tilde{\mathbf{u}}_j \tilde\phi_j,\\ 
+\text{FE}_{\tilde\Psi} &: \mathbf{V} \to V_h, &
+ \text{FE}_{\tilde\Psi}(\tilde{\mathbf{v}}) &= \sum\limits_{i\in I}
+ \tilde{\mathbf{v}}_i \tilde\psi_i. 
+\end{align*}
+
+The new basis functions are chosen in such a way that for
+$\tilde{J}\subset J$ and $\tilde{I}\subset I$ we have
+\begin{align*}
+\tilde{U}_h &= \text{span} \left\{\tilde\phi_j \,:\, j\in\tilde{J}\right\},  &
+\tilde{V}_h &= \text{span} \left\{\tilde\psi_i \,:\, i\in\tilde{I}\right\}.
+\end{align*}
+
+Morevover, the new basis functions can be represented in terms of the
+basis functions of the unconstrained problem with the help of the coefficient matrices
+$\mathbf{S}\in\mathbb{K}^{J\times J}$ and
+$\mathbf{T}\in\mathbb{K}^{I\times I}$:
+\begin{align*}
+\tilde\phi_j &= \sum_{l\in J} \mathbf{S}_{j,l} \phi_l, &
+\tilde\psi_i &= \sum_{k\in I} \mathbf{T}_{i,k} \phi_k.
+\end{align*}
+Thus one can verify 
+\begin{align*}
+\text{FE}_{\tilde\Phi}(\tilde{\mathbf{u}}) &=
+\text{FE}_{\Phi}(\mathbf{S}^T\tilde{\mathbf{u}}), &
+\text{FE}_{\tilde\Psi}(\tilde{\mathbf{v}}) &=
+\text{FE}_{\Psi}(\mathbf{T}^T\tilde{\mathbf{v}}).
+\end{align*}
+The matrix $\mathbf{S}^T$ transforms a coefficient vector with respect
+to the new basis $\tilde\Phi_h$ into a coefficient vector with respect
+to the old basis $\Phi_h$. Similarly, $\mathbf{T}^T$ provides the
+basis transformation from $\tilde\Psi_h$ to $\Psi_h$.
+
+\begin{Exm}\label{exm:BasisTransformation}
+We extend the example \ref{exm:ConstrainedDiskreteSpaces}.
+Consider $J = \{0,\ldots,n-1\}$ and let $\Phi_h$ denote the standard
+  nodal basis functions.
+\begin{enumerate}[a)]
+\item In the pure Neumann case we set $\tilde{J} = J \setminus
+  \{n-1\}$ and 
+\begin{equation*}
+\tilde\phi_j = \left\{\begin{array}{ll}
+\phi_j - \phi_{n-1} & j \in \tilde{J}\\
+\phi_0 + \ldots + \phi_{n-1} & \text{else}
+\end{array}\right. .
+\end{equation*}
+\item Dirichlet case. Let $\tilde{J}\subset J$ be the indices
+  corresponding to nodes that are \textit{not} on the Dirichlet
+  boundary and set $\tilde\phi_j = \phi_j$ for all $j\in J$. This
+  means $\tilde\Phi_h = \tilde\Phi$ in that case.
+\item Hanging node case. Denote by $\tilde{J}$ the indices of the
+  nodes that are \textit{not} hanging nodes. Consequently
+  $J\setminus\tilde{J}$ is the index set of the hanging nodes. Then we
+  have 
+\begin{equation*}
+\tilde\phi_j = \left\{\begin{array}{ll}
+\phi_j + \sum_{l\in J\setminus\tilde{J}} \mathbf{S}_{j,l} \phi_{l} & j \in \tilde{J}\\
+\phi_j & \text{else}
+\end{array}\right. .
+\end{equation*}
+The coefficients $\mathbf{S}_{j,l}$, $j \in \tilde{J}$, $l\in
+J\setminus\tilde{J}$ are chosen in such a way that $\phi_j$ is
+continuous. This is very similar to a hierarchical basis
+representation. \hfill$\square$
+\end{enumerate}
+\end{Exm}
+
+\paragraph{Orthogonal Projection.}
+We introduce a projection $Q_h : U_h \to \tilde{U}_h$ in the following way:
+\begin{equation*}
+Q_h \tilde\phi_j = \left\{\begin{array}{ll}
+\tilde\phi_j & j\in\tilde{J},\\
+0 & \text{else}.
+\end{array}\right.
+\end{equation*}
+One easily verifies the following properties:
+\begin{enumerate}[i)]
+\item $\text{im}(Q_h) = \tilde{U}_h$,
+\item $Q_h^2 = Q_h$,
+\item $\text{ker}(Q_h) = \text{im}(I-Q_h)$.
+\item $U_h = \text{im}(Q_h) \oplus \text{ker}(Q_h)$.
+\end{enumerate}
+
+\begin{Ass} In order to simplify things we assume that the affine shift
+  fulfills $w\in\text{ker}(Q_h)$.
+\hfill$\square$
+\end{Ass}
+
+Then problem \eqref{eq:ConstrainedDiscreteProblem1} can be rewritten
+as
+\begin{subequations}\label{eq:ConstrainedDiscreteProblem2}
+\begin{align}
+u\in U_h \quad : && r_h( u_h , v ) &= 0 \quad \forall v \in
+\tilde{V}_h, \\
+&& (I-Q_h) u_h &= w .
+\end{align}
+\end{subequations}
+
+The advantage of this formulation is that it fixes a unique element in
+the unconstrained space $U_h$ by stating an additional equation.
+Note that the projection $Q_h$ need not be formed in the
+implementation. It is only introduced to derive the algebraic
+formulation. 
+
+The effect of the projection in terms of coefficients is easy to
+compute. By defining 
+\begin{equation*}
+\mathbf{Q} : \mathbf{U} \to \mathbf{U}, \qquad
+(\mathbf{Q}\mathbf{u})_j = \left\{\begin{array}{ll}
+(\mathbf{u})_j & j\in \tilde{J},\\
+0 & \text{else},
+\end{array}\right.
+\end{equation*}
+we have
+\begin{align*}
+Q_h \text{FE}_{\tilde\Phi}(\tilde{\mathbf{u}}) &=
+Q_h \left(\sum_{j\in J} (\mathbf{u})_j \tilde\phi_j \right) = 
+\sum_{j\in J} (\mathbf{u})_j Q_h \tilde\phi_j = 
+\sum_{j\in \tilde{J}} (\mathbf{u})_j Q_h \tilde\phi_j \\
+&= \text{FE}_{\tilde\Phi}(\mathbf{Q} \tilde{\mathbf{u}}).
+\end{align*}
+Accordingly we have $(I-Q_h)
+\text{FE}_{\tilde\Phi}(\tilde{\mathbf{u}}) = 
+\text{FE}_{\tilde\Phi}((\mathbf{I}-\mathbf{Q})\tilde{\mathbf{u}})$.
+
+Assuming $\mathbf{Q}\tilde{\mathbf{w}}=\mathbf{0}$ we can rewrite
+\eqref{eq:ConstrainedDiscreteProblem2} in algebraic form:
+\begin{subequations}
+\begin{align*}
+\tilde{\mathbf{u}}\in\mathbf{U} \quad : &&
+r_h(\text{FE}_{\tilde\Phi}(\tilde{\mathbf{u}}),\tilde\psi_i) &= 0 \quad \forall i \in
+\tilde{I}, \\
+&& (\mathbf{I}-\mathbf{Q})\tilde{\mathbf{u}} &= \tilde{\mathbf{w}} .
+\end{align*}
+\end{subequations}
+Note that the solution is a vector of coefficients with respect to the
+basis $\tilde\Phi_h$. Using the basis transformation we obtain
+\begin{equation*}
+r_h(\text{FE}_{\tilde\Phi}(\tilde{\mathbf{u}}),\tilde\psi_i) = 
+r_h\left(\text{FE}_{\Phi}(\mathbf{S}^T\tilde{\mathbf{u}}),\sum_{k\in
+  I}\mathbf{T}_{i,k}\psi_k\right)
+= \sum_{k\in I} \mathbf{T}_{i,k}
+\, r_h\left(\text{FE}_{\Phi}(\mathbf{S}^T\tilde{\mathbf{u}}),\psi_k\right) .
+\end{equation*}
+Introducing the $\mathbb{K}^{\tilde{I}\times I}$ submatrix of
+$\mathbf{T}$
+\begin{equation*}
+\left(\tilde{\mathbf{T}}\right)_{i,k} = \left(\mathbf{T}\right)_{i,k}
+\qquad \forall (i,k) \in \tilde{I}\times I ,
+\end{equation*}
+the algebraic problem can be written as
+\begin{subequations}
+\begin{align}\label{eq:ConstrainedDiscreteProblem3}
+\tilde{\mathbf{u}}\in\mathbf{U} \quad : &&
+\tilde{\mathbf{T}} \mathcal{R}(\mathbf{S}^T\tilde{\mathbf{u}}) = \mathbf{0} \\
+&& (\mathbf{I}-\mathbf{Q})\tilde{\mathbf{u}} &= \tilde{\mathbf{w}} .
+\end{align}
+\end{subequations}
+
+Solving this using
+Newon's method we seek a new iterate $\tilde{\mathbf{u}}^{k+1} =
+\tilde{\mathbf{u}}^{k} + \tilde{\mathbf{z}}^{k}$ where
+\begin{align*}
+\tilde{\mathbf{T}}\mathcal{R}(\mathbf{S}^T\tilde{\mathbf{u}}^k)
+ + \tilde{\mathbf{T}}
+ \nabla\mathcal{R}(\mathbf{S}^T\tilde{\mathbf{u}}^k)\mathbf{S}^T\tilde{\mathbf{z}}^{k}
+ &= \mathbf{0} \\
+(\mathbf{I}-\mathbf{Q})(\tilde{\mathbf{u}}^{k} +
+ \tilde{\mathbf{z}}^{k}) &= \tilde{\mathbf{w}}  .
+\end{align*}
+Assuming that the current iterate fulfills
+$(\mathbf{I}-\mathbf{Q})\tilde{\mathbf{u}}^k = \tilde{\mathbf{w}}$ and
+rearranging the first equation we obtain
+\begin{align*}
+\tilde{\mathbf{T}}
+ \nabla\mathcal{R}(\mathbf{S}^T\tilde{\mathbf{u}}^k)\mathbf{S}^T\tilde{\mathbf{z}}^{k}
+ &= - \tilde{\mathbf{T}}\mathcal{R}(\mathbf{S}^T\tilde{\mathbf{u}}^k) \\
+(\mathbf{I}-\mathbf{Q}) \tilde{\mathbf{z}}^{k} &= \mathbf{0} .
+\end{align*}
+In order to solve this system we introduce
+\begin{align*}
+\mathbf{U}_{\tilde{J}} &= \mathbb{K}^{\tilde{J}}, &
+\mathbf{R}_{\tilde{J}}
+  &:  \mathbf{U} \to \mathbf{U}_{\tilde{J}}, &
+  (\mathbf{R}_{\tilde{J}}\mathbf{u})_j &= (\mathbf{u})_j \quad \forall
+j\in\tilde{J},\\ 
+\mathbf{U}_{J\setminus\tilde{J}} &= \mathbb{K}^{J\setminus\tilde{J}}, &
+\mathbf{R}_{J\setminus\tilde{J}}
+  &:  \mathbf{U} \to \mathbf{U}_{J\setminus\tilde{J}}, &
+  (\mathbf{R}_{J\setminus\tilde{J}}\mathbf{u})_j &= (\mathbf{u})_j
+\quad \forall j\in J\setminus\tilde{J}
+\end{align*}
+and split the coefficient vector into two parts
+$\mathbf{u}_{\tilde{J}} = \mathbf{R}_{\tilde{J}} \mathbf{u}$
+and $\mathbf{u}_{J\setminus\tilde{J}} = \mathbf{R}_{J\setminus\tilde{J}} \mathbf{u}$. 
+Finally introducing the $\mathbb{K}^{\tilde{J}\times J}$ submatrix of
+$\mathbf{S}$
+\begin{equation*}
+\left(\tilde{\mathbf{S}}\right)_{j,l} = \left(\mathbf{T}\right)_{j,l}
+\qquad \forall (j,l) \in \tilde{J}\times J ,
+\end{equation*}
+the linear system for the update can be written as
+\begin{align*}
+\tilde{\mathbf{T}}
+ \nabla\mathcal{R}(\mathbf{S}^T\tilde{\mathbf{u}}^k)
+ \tilde{\mathbf{S}}^T\tilde{\mathbf{z}}^{k}_{\tilde{J}}  
+ &= - \tilde{\mathbf{T}}\mathcal{R}(\mathbf{S}^T\tilde{\mathbf{u}}^k) \\
+\tilde{\mathbf{z}}^{k}_{J\setminus\tilde{J}} &= \mathbf{0} .
+\end{align*}
+
+The complete Newton' scheme for the solution of the algebraic
+constrained problem then reads as follows. Given an initial guess with
+$(\mathbf{I}-\mathbf{Q})\tilde{\mathbf{u}}^0 = \tilde{\mathbf{w}}$ iterate
+\begin{equation*}
+\tilde{\mathbf{u}}^{k+1} = \tilde{\mathbf{u}}^{k} - 
+\mathbf{R}_{\tilde{J}}^T \left (\tilde{\mathbf{T}}
+ \nabla\mathcal{R}(\mathbf{S}^T\tilde{\mathbf{u}}^k)
+ \tilde{\mathbf{S}}^T \right)^{-1}
+ \tilde{\mathbf{T}}\mathcal{R}(\mathbf{S}^T\tilde{\mathbf{u}}^k) .
+\end{equation*}
+Applying the basis transformation yields
+\begin{equation*}
+\mathbf{S}^T\tilde{\mathbf{u}}^{k+1} = \mathbf{S}^T\tilde{\mathbf{u}}^{k} - 
+\mathbf{S}^T\mathbf{R}_{\tilde{J}}^T \left (\tilde{\mathbf{T}}
+ \nabla\mathcal{R}(\mathbf{S}^T\tilde{\mathbf{u}}^k)
+ \tilde{\mathbf{S}}^T \right)^{-1}
+ \tilde{\mathbf{T}}\mathcal{R}(\mathbf{S}^T\tilde{\mathbf{u}}^k) .
+\end{equation*}
+
+In algorithmic form this can be written as follows. Given an initial
+iterate $\mathbf{u}^0$ with $Q_h \text{FE}_{\Phi}(\mathbf{u}^0) = 0$
+do for $k=0,1,\ldots$ :
+\begin{enumerate}[1)]
+\item Compute residual $\mathbf{r}_{\tilde{J}} =
+  \tilde{\mathbf{T}}\mathcal{R}(\mathbf{u}^k)$. 
+\item Solve the linear system 
+\begin{equation*}
+\left(\begin{array}{cc}
+\tilde{\mathbf{T}}
+ \nabla\mathcal{R}(\mathbf{u}^k)
+ \tilde{\mathbf{S}}^T & \mathbf{0}\\
+\mathbf{0} & \mathbf{I}
+\end{array}\right)
+\tilde{\mathbf{z}} = \left(\begin{array}{cc}
+\mathbf{r}_{\tilde{J}}\\
+\mathbf{0}
+\end{array}\right) .
+\end{equation*}
+\item Update using basis transformation: $\mathbf{u}^{k+1} =
+  \mathbf{u}^{k} + \mathbf{S}^T \tilde{\mathbf{z}}$.
+\end{enumerate}

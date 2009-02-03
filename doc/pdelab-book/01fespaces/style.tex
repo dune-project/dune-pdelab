@@ -1,0 +1,69 @@
+%encoding
+\usepackage[latin1]{inputenc}
+
+% only for the article version
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+%\usepackage{euler}
+\usepackage{fullpage}
+%\setlength{\parindent}{0pt}
+%\setlength{\parskip}{1.3ex plus 0.5ex minus 0.2ex}
+
+
+% all after
+\usepackage{graphicx}
+%\usepackage{multimedia}
+\usepackage{psfrag}
+\usepackage{listings}
+\lstset{language=C++, basicstyle=\small\ttfamily,
+  stringstyle=\ttfamily, commentstyle=\it, extendedchars=true}
+\usepackage{curves}
+\usepackage{epic}
+\usepackage{calc}
+\usepackage{fancybox}
+\usepackage{xspace}
+\usepackage{enumerate}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{hyperref}
+
+%fonts
+%\setkomafont{sectioning}{\normalfont\normalcolor\rmfamily}
+%\setkomafont{title}{\huge\bfseries}
+%\setkomafont{part}{\Huge\bfseries}
+%\setkomafont{partnumber}{\huge\bfseries}
+%\setkomafont{chapter}{\LARGE\bfseries}
+%\setkomafont{section}{\large\scshape}
+%\setkomafont{subsection}{\large\itshape}
+%\setkomafont{subsubsection}{\normalsize\slshape}
+%\setkomafont{paragraph}{\normalsize\slshape}
+%\setkomafont{subparagraph}{\normalsize\slshape}
+
+%The theorems
+%\newtheoremstyle{mystyle}%
+%{3pt}%
+%{3pt}%
+%{}%
+%{}%
+%{\normalfont\normalcolor\rmfamily\scshape}%
+%{.}%
+%{.5em}%
+%{}%
+%\theoremstyle{mystyle}
+
+\newtheorem{Def}{Definiton}[section]
+\newtheorem{Exm}[Def]{Example}
+\newtheorem{Lem}[Def]{Lemma}
+\newtheorem{Rem}[Def]{Remark}
+\newtheorem{Rul}[Def]{Rule}
+\newtheorem{Thm}[Def]{Theorem}
+\newtheorem{Cor}[Def]{Corollary}
+\newtheorem{Obs}[Def]{Observation}
+\newtheorem{Ass}[Def]{Assumption}
+
+% number equations within sections in article mode
+\numberwithin{equation}{section}
+
+% math symbols
+\newcommand{\diffd}{\,d}
