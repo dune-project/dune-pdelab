@@ -84,8 +84,8 @@ void testvtkexport (const GV& gv, const T& t)
   Dune::PDELab::VTKGridFunctionAdapter<GF> vtkf(gf,"blub");
 
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<GF>(gf,"blub")); // VTKWriter takes control of the object!
-  vtkwriter.write("blub",Dune::VTKOptions::ascii);
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<GF>(gf,"blub")); // VTKWriter takes control
+  vtkwriter.write("single",Dune::VTKOptions::ascii);
 }
 
 // a grid function
@@ -170,6 +170,14 @@ void testfunctiontree (const GV& gv)
 
   typedef Dune::PDELab::CompositeGridFunction<C2,C9> T;
   T t(c2,c9);
+
+  std::cout << "number of nodes in T is " << Dune::PDELab::count_nodes(t) << std::endl;
+  std::cout << "number of leaves in T is " << Dune::PDELab::count_leaves(t) << std::endl;
+  Dune::PDELab::print_paths(t);
+
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::PDELab::vtkwriter_tree_addvertexdata(vtkwriter,t);
+  vtkwriter.write("multi",Dune::VTKOptions::ascii);
 }
 
 int main(int argc, char** argv)
@@ -197,7 +205,7 @@ int main(int argc, char** argv)
 	Dune::FieldVector<int,2> N(1);
 	Dune::FieldVector<bool,2> B(false);
 	Dune::YaspGrid<2,2> grid(L,N,B,0);
-    grid.globalRefine(7);
+    grid.globalRefine(6);
 
 	// run algorithm on a grid
 	std::cout << "instantiate grid functions on a grid" << std::endl;

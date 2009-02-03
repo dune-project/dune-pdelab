@@ -2,6 +2,8 @@
 #define DUNE_PDELAB_MULTITYPETREE_HH
 
 #include <iostream>
+#include <string>
+#include <sstream>
 
 #include <dune/common/tuples.hh>
 
@@ -611,6 +613,113 @@ namespace Dune {
 			P::convert(t5),P::convert(t6),P::convert(t7))
 	  {} 
 	};
+
+
+	//==========================
+	// template metaprograms
+	//==========================
+
+	template<typename T, bool isleaf>
+	struct MultiTypeTreeVisitNodeMetaProgram;
+
+	template<typename T, int n, int i>
+	struct MultiTypeTreeVisitChildMetaProgram // visit child of inner node
+	{
+	  static int count_nodes (const T& t)
+	  {
+		typedef typename T::template Child<i>::Type C;
+		return MultiTypeTreeVisitNodeMetaProgram<C,C::isLeaf>::count_nodes(t.template getChild<i>())
+		  + MultiTypeTreeVisitChildMetaProgram<T,n,i+1>::count_nodes(t);
+	  }
+	  static int count_leaves (const T& t)
+	  {
+		typedef typename T::template Child<i>::Type C;
+		return MultiTypeTreeVisitNodeMetaProgram<C,C::isLeaf>::count_leaves(t.template getChild<i>())
+		  + MultiTypeTreeVisitChildMetaProgram<T,n,i+1>::count_leaves(t);
+	  }
+	  static void print_paths (const T& t, std::string s)
+	  {
+		typedef typename T::template Child<i>::Type C;
+		std::string cs(s);
+		std::stringstream out;
+		out << i;
+		cs += out.str();
+		cs += "/";
+		MultiTypeTreeVisitNodeMetaProgram<C,C::isLeaf>::print_paths(t.template getChild<i>(),cs);
+		MultiTypeTreeVisitChildMetaProgram<T,n,i+1>::print_paths(t,s);
+	  }
+	};
+
+	template<typename T, int n>
+	struct MultiTypeTreeVisitChildMetaProgram<T,n,n> // end of child recursion
+	{
+	  static int count_nodes (const T& t)
+	  {
+		return 0;
+	  }
+	  static int count_leaves (const T& t)
+	  {
+		return 0;
+	  }
+	  static void print_paths (const T& t, std::string s)
+	  {
+		return;
+	  }
+	};
+
+	template<typename T, bool isleaf> 
+	struct MultiTypeTreeVisitNodeMetaProgram // visit inner node
+	{
+	  static int count_nodes (const T& t)
+	  {
+		return 1+MultiTypeTreeVisitChildMetaProgram<T,T::CHILDREN,0>::count_nodes(t);
+	  }
+	  static int count_leaves (const T& t)
+	  {
+		return MultiTypeTreeVisitChildMetaProgram<T,T::CHILDREN,0>::count_leaves(t);
+	  }
+	  static void print_paths (const T& t, std::string s)
+	  {
+		MultiTypeTreeVisitChildMetaProgram<T,T::CHILDREN,0>::print_paths(t,s);
+	  }
+	};
+
+	template<typename T> 
+	struct MultiTypeTreeVisitNodeMetaProgram<T,true> // visit leaf node 
+	{
+	  static int count_nodes (const T& t)
+	  {
+		return 1;
+	  }
+	  static int count_leaves (const T& t)
+	  {
+		return 1;
+	  }
+	  static void print_paths (const T& t, std::string s)
+	  {
+		std::cout << s << std::endl;
+	  }
+	};
+
+	template<typename T> // T is a multi type tree
+	int count_nodes (const T& t)
+	{
+	  return MultiTypeTreeVisitNodeMetaProgram<T,T::isLeaf>::count_nodes(t);
+	}
+
+	template<typename T> // T is a multi type tree
+	int count_leaves (const T& t)
+	{
+	  return MultiTypeTreeVisitNodeMetaProgram<T,T::isLeaf>::count_leaves(t);
+	}
+
+	template<typename T> // T is a multi type tree
+	void print_paths (const T& t)
+	{
+	  std::string s="/";
+	  MultiTypeTreeVisitNodeMetaProgram<T,T::isLeaf>::print_paths(t,s);
+	}
+
   }
 }
 
