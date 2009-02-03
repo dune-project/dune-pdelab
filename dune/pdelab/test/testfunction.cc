@@ -43,7 +43,7 @@ public:
 };
 
 
-// iterate over grid and use analytic function as grid function through adapter
+// iterate over grid view and use analytic function as grid function through adapter
 template<class GV, class T> 
 void testgridfunction (const GV& gv, const T& t)
 {
@@ -51,8 +51,8 @@ void testgridfunction (const GV& gv, const T& t)
   typedef typename GV::Grid::ctype DF;
 
   // make a grid function from the analytic function
-  typedef Dune::PDELab::FunctionToGridFunctionAdapter<T> GF;
-  GF gf(t);
+  typedef Dune::PDELab::FunctionToGridFunctionAdapter<GV,T> GF;
+  GF gf(gv,t);
 
   typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
   for (ElementIterator it = gv.template begin<0>();
@@ -63,7 +63,7 @@ void testgridfunction (const GV& gv, const T& t)
 	  gf.evaluate(*it,x,y);
 
 	  // make a function in local coordinates from the grid function
-	  Dune::PDELab::GridFunctionToLocalFunctionAdapter<GF,typename ElementIterator::Entity>
+	  Dune::PDELab::GridFunctionToLocalFunctionAdapter<GF>
 		lf(gf,*it);
 	  lf.evaluate(x,y);
 
@@ -80,6 +80,8 @@ int main(int argc, char** argv)
   try{
     //Maybe initialize Mpi
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
+
+	std::cout << "instantiate and evaluate some functions" << std::endl;
 
 	// instantiate F and evaluate
 	F<float> f;
@@ -99,6 +101,8 @@ int main(int argc, char** argv)
 	Dune::FieldVector<bool,2> B(false);
 	Dune::YaspGrid<2,2> grid(L,N,B,0);
     grid.globalRefine(3);
+
+	std::cout << "instantiate grid functions on a grid" << std::endl;
 
 	// run algorithm on a grid
 	testgridfunction(grid.leafView(),F<Dune::YaspGrid<2,2>::ctype>());
