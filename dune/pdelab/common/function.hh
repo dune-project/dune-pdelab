@@ -61,6 +61,17 @@ namespace Dune {
 	};
 
 
+	// traits class holding function signature, same as in local function
+	template<class G, class DF, int n, class D, class RF, int m, class R>
+	struct GridFunctionTraits : public FunctionTraits<DF,n,D,RF,m,R>
+	{
+	  //! \brief Export grid view type in addition
+	  typedef G GridViewType;
+	  
+	  //! \brief codim 0 entity
+	  typedef typename G::Traits::template Codim<0>::Entity ElementType;
+	};
+
 	// a GridFunction maps x in DomainType to y in RangeType
 	template<class T, class Imp>
 	class GridFunctionInterface
@@ -74,11 +85,16 @@ namespace Dune {
 		  Evaluates all shape functions at the given position and returns 
 		  these values in a vector.
 	  */
-	  template<typename E>
-	  inline void evaluate (const E& e, const typename Traits::DomainType& x,
+	  inline void evaluate (const typename Traits::ElementType& e, 
+							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
 	  {  
 		asImp().evaluate(e,x,y);
+	  }
+
+	  inline const typename Traits::GridViewType& getGridView ()
+	  {
+		return asImp().getGridView();
 	  }
 
 	private:
@@ -86,31 +102,53 @@ namespace Dune {
 	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
 	};
 
+
 	// make a GridFunction from a Function
-	template<typename T>
+	template<typename G, typename T>
 	class FunctionToGridFunctionAdapter : 
-	  public GridFunctionInterface<typename T::Traits,FunctionToGridFunctionAdapter<T> >
+	  public GridFunctionInterface<GridFunctionTraits<
+									 G,
+									 typename T::Traits::DomainFieldType,
+									 T::Traits::dimDomain,
+									 typename T::Traits::DomainType,
+									 typename T::Traits::RangeFieldType,
+									 T::Traits::dimRange,
+									 typename T::Traits::RangeType>,
+								   FunctionToGridFunctionAdapter<G,T> >
 	{
 	public:
-	  typedef typename T::Traits Traits;
+	  typedef GridFunctionTraits<G,
+								 typename T::Traits::DomainFieldType,
+								 T::Traits::dimDomain,
+								 typename T::Traits::DomainType,
+								 typename T::Traits::RangeFieldType,
+								 T::Traits::dimRange,
+								 typename T::Traits::RangeType> Traits;
+	  
+	  FunctionToGridFunctionAdapter (const G& g_, const T& t_) : g(g_), t(t_) {}
 
-	  FunctionToGridFunctionAdapter (const T& t_) : t(t_) {}
-
-	  template<typename E>
-	  inline void evaluate (const E& e, const typename Traits::DomainType& x,
+	  inline void evaluate (const typename Traits::ElementType& e,
+							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
 	  {  
 		t.evaluate(e.geometry().global(x),y);
 	  }
 
+	  inline const typename Traits::GridViewType& getGridView ()
+	  {
+		return g;
+	  }
+
 	private:
-	  const T& t; // store reference
+	  const G& g;
+	  const T& t;
 	};
 
 	// make a Function in local coordinates from a Function in global coordinates
 	template<typename T, typename E>
 	class GlobalFunctionToLocalFunctionAdapter : 
-	  public FunctionInterface<typename T::Traits,GlobalFunctionToLocalFunctionAdapter<T,E> >
+	  public FunctionInterface<typename T::Traits,
+							   GlobalFunctionToLocalFunctionAdapter<T,E> >
 	{
 	public:
 	  typedef typename T::Traits Traits;
@@ -130,14 +168,17 @@ namespace Dune {
 
 
 	// make a Function from GridFunction using local coordinates
-	template<typename T, typename E> // T: GridFunction, E: Entity
+	template<typename T> // T: GridFunction, E: Entity
 	class GridFunctionToLocalFunctionAdapter : 
-	  public FunctionInterface<typename T::Traits,GridFunctionToLocalFunctionAdapter<T,E> >
+	  public FunctionInterface<typename T::Traits,
+							   GridFunctionToLocalFunctionAdapter<T> >
 	{
 	public:
 	  typedef typename T::Traits Traits;
 
-	  GridFunctionToLocalFunctionAdapter (const T& t_, const E& e_) : t(t_), e(e_) {}
+	  GridFunctionToLocalFunctionAdapter (const T& t_, 
+										  const typename Traits::ElementType& e_) 
+		: t(t_), e(e_) {}
 
 	  inline void evaluate (const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
@@ -147,7 +188,7 @@ namespace Dune {
 
 	private:
 	  const T& t;
-	  const E& e;
+	  const typename Traits::ElementType& e;
 	};
 
   }
