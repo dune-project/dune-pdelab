@@ -214,7 +214,6 @@ int main(int argc, char** argv)
 	// run algorithm on a grid
 	std::cout << "testing vtk output" << std::endl;
 	testvtkexport(grid.leafView(),F<Dune::YaspGrid<2,2>::ctype>());
-
 	testfunctiontree(grid.leafView());
 
 	// test passed

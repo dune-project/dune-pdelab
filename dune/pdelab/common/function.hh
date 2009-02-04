@@ -590,6 +590,47 @@ namespace Dune {
 	  } 
 	};
 	
+	//=======================================
+	// helper template for analytic functions
+	//=======================================
+
+	// function signature for analytic functions on a grid
+	template<typename GV, typename DF, int m>
+	struct AnalyticLeafGridFunctionTraits 
+	  : public GridFunctionTraits<GV,typename GV::Grid::ctype,GV::dimension,
+								  Dune::FieldVector<typename GV::Grid::ctype,GV::dimension>,
+								  DF,m,Dune::FieldVector<DF,m> >
+	{
+	};
+
+	// an analytic grid function
+	template<typename T, typename Imp>
+	class AnalyticLeafGridFunctionBase 
+	  : public LeafGridFunction<T,AnalyticLeafGridFunctionBase<T,Imp> >
+	{
+	public:
+	  typedef T Traits;
+
+	  AnalyticLeafGridFunctionBase (const typename Traits::GridViewType& g_) : g(g_) {}
+
+	  inline void evaluate (const typename Traits::ElementType& e, 
+							const typename Traits::DomainType& x, 
+							typename Traits::RangeType& y) const
+	  {  
+		asImp().evaluateGlobal(e.geometry().global(x),y);
+	  }
+
+	  inline const typename Traits::GridViewType& getGridView ()
+	  {
+		return g;
+	  }
+  
+	private:
+	  const typename Traits::GridViewType& g;
+	  Imp& asImp () {return static_cast<Imp &> (*this);}
+	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
+	};
+
 
 	//==========================
 	// template metaprograms

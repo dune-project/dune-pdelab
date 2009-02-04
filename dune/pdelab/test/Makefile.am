@@ -1,6 +1,6 @@
 # $Id: Makefile.am 586 2006-04-28 13:41:31Z mblatt $
 
-NORMALTESTS = testcountingptr testmultitypetree testfunction
+NORMALTESTS = testcountingptr testmultitypetree testfunction testanalytic
 
 # list of tests to run
 TESTS = $(NORMALTESTS)
@@ -19,6 +19,10 @@ testmultitypetree_LDADD = $(MPI_LDFLAGS) $(MPI_LDFLAGS) $(DUNE_LDFLAGS) $(DUNE_L
 testfunction_SOURCES = testfunction.cc
 testfunction_CXXFLAGS = $(MPI_CPPFLAGS)
 testfunction_LDADD = $(MPI_LDFLAGS) $(MPI_LDFLAGS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+
+testanalytic_SOURCES = testanalytic.cc
+testanalytic_CXXFLAGS = $(MPI_CPPFLAGS)
+testanalytic_LDADD = $(MPI_LDFLAGS) $(MPI_LDFLAGS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
 
 include $(top_srcdir)/am/global-rules
 
