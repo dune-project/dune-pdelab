@@ -5,8 +5,8 @@
 #include<set>
 #include<map>
 
+#include<dune/common/exceptions.hh>
 #include<dune/grid/common/referenceelements.hh>
-#include<dune/grid/common/exception.hh>
 
 #include"../common/countingptr.hh"
 #include"../common/multitypetree.hh"
@@ -198,23 +198,24 @@ namespace Dune {
 						  std::vector<typename Traits::SizeType>& global) const
 	  {
 		// get layout of entity
-// 		LocalLayout layout;
-// 		llm.find(entity,layout);
-// 		global.resize(layout.size());
+		const typename Traits::LocalFiniteElementType::Traits::LocalCoefficientsType&
+		  lc = (plfem->find(e)).localCoefficients();
+		global.resize(lc.size());
 
-// 		for (unsigned int i=0; i<layout.size(); ++i)
-// 		  {
-// 			// get geometry type of subentity 
-// 			Dune::GeometryType gt=Dune::ReferenceElements<double,GV::Grid::dimension>
-// 			  ::general(entity.type()).type(layout[i].subentity(),layout[i].codim());
+		for (unsigned int i=0; i<lc.size(); ++i)
+		  {
+			// get geometry type of subentity 
+			Dune::GeometryType gt=Dune::ReferenceElements<double,GV::Grid::dimension>
+			  ::general(e.type()).type(lc.localIndex(i).subentity(),lc.localIndex(i).codim());
 
-// 			// evaluate consecutive index of subentity
-// 			int index = eval_subindex<GV::Grid::dimension>(gv.indexSet(),
-// 														   entity,layout[i].subentity(),layout[i].codim());
+			// evaluate consecutive index of subentity
+			int index = eval_subindex<GV::Grid::dimension>(gv.indexSet(),e,
+														   lc.localIndex(i).subentity(),
+														   lc.localIndex(i).codim());
 		
-// 			// now compute 
-// 			global[i] = offset[ (gtoffset.find(gt)->second)+index ] + layout[i].index();
-//		  }
+			// now compute 
+			global[i] = offset[(gtoffset.find(gt)->second)+index]+lc.localIndex(i).index();
+		  }
 	  }
 
 	private:
@@ -231,8 +232,8 @@ namespace Dune {
 			 it!=gv.template end<0>(); ++it)
 		  {
 			// check geometry type
-			if ((plfem->find(*it)).type!=it->type())
-			  throw CountableException(counter);
+			if ((plfem->find(*it)).type()!=it->type())
+			  DUNE_THROW(Exception, "geometry type mismatch in LeafGridFunctionSpace");
 
 			// get local coefficients for this entity
 			const typename Traits::LocalFiniteElementType::Traits::LocalCoefficientsType&
@@ -284,7 +285,6 @@ namespace Dune {
 				unsigned int index = gtoffset[gt]
 				  +eval_subindex<GV::Grid::dimension>(is,*it,lc.localIndex(i).subentity(),lc.localIndex(i).codim());
 				offset[index] = std::max(offset[index],lc.localIndex(i).index()+1);
-				std::cout << "offset["<<index<<"] = " << offset[index] << std::endl;
 			  }
 		  }
 
@@ -293,12 +293,9 @@ namespace Dune {
 		for (typename std::vector<typename Traits::SizeType>::iterator i=offset.begin(); 
 			 i!=offset.end(); ++i)
 		  {
-			std::cout << "nglobal_in=" << nglobal;
 			typename Traits::SizeType size = *i;
-			std::cout << " size=" << size;
 			*i = nglobal;
 			nglobal += size;
-			std::cout << " nglobal_out=" << nglobal << std::endl;
 		  }
 		std::cout << "total number of dofs is " << nglobal << std::endl;
 	  }
