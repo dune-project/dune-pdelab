@@ -1,6 +1,6 @@
 # $Id: Makefile.am 586 2006-04-28 13:41:31Z mblatt $
 
-NORMALTESTS = testcountingptr testmultitypetree testfunction testanalytic
+NORMALTESTS = testcountingptr testmultitypetree testfunction testanalytic testfiniteelementmap
 
 # list of tests to run
 TESTS = $(NORMALTESTS)
@@ -23,6 +23,10 @@ testfunction_LDADD = $(MPI_LDFLAGS) $(MPI_LDFLAGS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
 testanalytic_SOURCES = testanalytic.cc
 testanalytic_CXXFLAGS = $(MPI_CPPFLAGS)
 testanalytic_LDADD = $(MPI_LDFLAGS) $(MPI_LDFLAGS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+
+testfiniteelementmap_SOURCES = testfiniteelementmap.cc
+testfiniteelementmap_CXXFLAGS = $(MPI_CPPFLAGS)
+testfiniteelementmap_LDADD = $(MPI_LDFLAGS) $(MPI_LDFLAGS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
 
 include $(top_srcdir)/am/global-rules
 
