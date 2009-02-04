@@ -18,7 +18,7 @@ namespace Dune {
 
 	//! collect types exported by a leaf grid function space
 	template<typename G, class L, typename B>
-	struct LeafGridFunctionSpaceTraits
+	struct GridFunctionSpaceTraits
 	{
 	  //! \brief the grid view where grid function is defined upon
 	  typedef G GridViewType;
@@ -138,7 +138,7 @@ namespace Dune {
 
 	// this class may be used to pass compile-time
 	// parameters to the implementation 
-	struct LeafGridFunctionGeneralMapper
+	struct GridFunctionGeneralMapper
 	{
 	  enum {dummy=0} ;
 	};
@@ -150,11 +150,11 @@ namespace Dune {
 	// B : Backend type
 	// P : Parameter type
 	template<typename GV, typename LFEM, typename B=StdVectorBackend, 
-			 typename P=LeafGridFunctionGeneralMapper>
-	class LeafGridFunctionSpace : public Countable, public LeafNode
+			 typename P=GridFunctionGeneralMapper>
+	class GridFunctionSpace : public Countable, public LeafNode
 	{
 	public:
-	  typedef LeafGridFunctionSpaceTraits<GV,LFEM,B> Traits;
+	  typedef GridFunctionSpaceTraits<GV,LFEM,B> Traits;
 	  typedef typename GV::Traits::template Codim<0>::Entity Element;
 	  typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
 
@@ -163,11 +163,11 @@ namespace Dune {
 	  struct VectorContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef typename B::template VectorContainer<LeafGridFunctionSpace,T> Type;	
+		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;	
 	  };
 
 	  // constructor
-	  LeafGridFunctionSpace (const GV& gridview, const LFEM& lfem) 
+	  GridFunctionSpace (const GV& gridview, const LFEM& lfem) 
 		: gv(gridview), plfem(&lfem)
 	  {
 		update();
@@ -231,7 +231,7 @@ namespace Dune {
 	  // update information, e.g. when grid has changed
 	  void update ()
 	  {
-		std::cout << "LeafGridFunctionSpace(general version):" << std::endl;
+		std::cout << "GridFunctionSpace(general version):" << std::endl;
 
 		// determine which geometry types are used
 		// needs one traversal of the grid
@@ -242,7 +242,7 @@ namespace Dune {
 		  {
 			// check geometry type
 			if ((plfem->find(*it)).type()!=it->type())
-			  DUNE_THROW(Exception, "geometry type mismatch in LeafGridFunctionSpace");
+			  DUNE_THROW(Exception, "geometry type mismatch in GridFunctionSpace");
 
 			// get local coefficients for this entity
 			const typename Traits::LocalFiniteElementType::Traits::LocalCoefficientsType&
@@ -323,7 +323,7 @@ namespace Dune {
 
 	// this class may be used to pass compile-time
 	// parameters to the implementation 
-	struct LeafGridFunctionRestrictedMapper
+	struct GridFunctionRestrictedMapper
 	{
 	  enum {dummy=1} ;
 	};
@@ -334,11 +334,11 @@ namespace Dune {
 	// FEM  : Type implementing LocalFiniteElementMapInterface
 	// B : Backend type
 	template<typename GV, typename LFEM, typename B> 
-	class LeafGridFunctionSpace<GV,LFEM,B,LeafGridFunctionRestrictedMapper> : 
+	class GridFunctionSpace<GV,LFEM,B,GridFunctionRestrictedMapper> : 
 	  public Countable, public LeafNode
 	{
 	public:
-	  typedef LeafGridFunctionSpaceTraits<GV,LFEM,B> Traits;
+	  typedef GridFunctionSpaceTraits<GV,LFEM,B> Traits;
 	  typedef typename GV::Traits::template Codim<0>::Entity Element;
 	  typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
 
@@ -347,11 +347,11 @@ namespace Dune {
 	  struct VectorContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef typename B::template VectorContainer<LeafGridFunctionSpace,T> Type;	
+		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;	
 	  };
 
 	  // constructor
-	  LeafGridFunctionSpace (const GV& gridview, const LFEM& lfem) 
+	  GridFunctionSpace (const GV& gridview, const LFEM& lfem) 
 		: gv(gridview), plfem(&lfem)
 	  {
 		update();
@@ -415,7 +415,7 @@ namespace Dune {
 	  // update information, e.g. when grid has changed
 	  void update ()
 	  {
-		std::cout << "LeafGridFunctionSpace(restricted version):" << std::endl;
+		std::cout << "GridFunctionSpace(restricted version):" << std::endl;
 
 		// clear counters
 		dofcountmap.clear();
@@ -427,7 +427,7 @@ namespace Dune {
 		  {
 			// check geometry type
 			if ((plfem->find(*it)).type()!=it->type())
-			  DUNE_THROW(Exception, "geometry type mismatch in LeafGridFunctionSpace");
+			  DUNE_THROW(Exception, "geometry type mismatch in GridFunctionSpace");
 
 			// get local coefficients for this entity
 			const typename Traits::LocalFiniteElementType::Traits::LocalCoefficientsType&

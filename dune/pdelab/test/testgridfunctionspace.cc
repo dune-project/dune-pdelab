@@ -25,14 +25,14 @@ void testleafgridfunction (const GV& gv)
   EdgeR12DFEM edger12dfem;
   
   // make a grid function space
-  typedef Dune::PDELab::LeafGridFunctionSpace<GV,Q12DFEM> GFS1; 
+  typedef Dune::PDELab::GridFunctionSpace<GV,Q12DFEM> GFS1; 
   GFS1 gfs1(gv,q12dfem);
-  typedef Dune::PDELab::LeafGridFunctionSpace<GV,Q22DFEM> GFS2;
+  typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> GFS2;
   GFS2 gfs2(gv,q22dfem);
-  typedef Dune::PDELab::LeafGridFunctionSpace<GV,Q22DFEM,Dune::PDELab::StdVectorBackend,
-	Dune::PDELab::LeafGridFunctionRestrictedMapper> GFS3;
+  typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM,Dune::PDELab::StdVectorBackend,
+	Dune::PDELab::GridFunctionRestrictedMapper> GFS3;
   GFS3 gfs3(gv,q22dfem);
-  typedef Dune::PDELab::LeafGridFunctionSpace<GV,EdgeR12DFEM> GFS4;
+  typedef Dune::PDELab::GridFunctionSpace<GV,EdgeR12DFEM> GFS4;
   GFS4 gfs4(gv,edger12dfem);
 
   // make coefficent Vectors
