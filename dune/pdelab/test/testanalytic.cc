@@ -12,12 +12,12 @@
 // beautiful version for analytic functions
 template<typename GV, typename RF>
 class Velocity 
-  : public Dune::PDELab::AnalyticLeafGridFunctionBase<Dune::PDELab::AnalyticLeafGridFunctionTraits<GV,RF,3>,
+  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,3>,
 													  Velocity<GV,RF> >
 {
 public:
-  typedef Dune::PDELab::AnalyticLeafGridFunctionTraits<GV,RF,3> Traits;
-  typedef Dune::PDELab::AnalyticLeafGridFunctionBase<Traits,Velocity<GV,RF> > BaseT;
+  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,3> Traits;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,Velocity<GV,RF> > BaseT;
 
   Velocity (const GV& gv) : BaseT(gv) {}
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
@@ -31,12 +31,12 @@ public:
 
 template<typename GV, typename RF>
 class Pressure 
-  : public Dune::PDELab::AnalyticLeafGridFunctionBase<Dune::PDELab::AnalyticLeafGridFunctionTraits<GV,RF,1>,
+  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
 													  Pressure<GV,RF> >
 {
 public:
-  typedef Dune::PDELab::AnalyticLeafGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticLeafGridFunctionBase<Traits,Pressure<GV,RF> > BaseT;
+  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,Pressure<GV,RF> > BaseT;
 
   Pressure (const GV& gv) : BaseT(gv) {}
   inline void evaluateGlobal (const typename Traits::DomainType& x, 

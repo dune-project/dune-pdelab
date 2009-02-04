@@ -90,7 +90,7 @@ void testvtkexport (const GV& gv, const T& t)
 
 // a grid function
 template<typename G, typename T>
-class L : public Dune::PDELab::LeafGridFunction<
+class L : public Dune::PDELab::GridFunctionBase<
   Dune::PDELab::GridFunctionTraits<G,T,2,Dune::FieldVector<T,2>,
 								   T,1,Dune::FieldVector<T,1> >,
   L<G,T> >
