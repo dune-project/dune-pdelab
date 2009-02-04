@@ -1,4 +1,4 @@
 pdelabdir = $(includedir)/dune/pdelab
-SUBDIRS = common test
+SUBDIRS = common test finiteelementmap gridfunctionspace
 
 include $(top_srcdir)/am/global-rules
