@@ -247,7 +247,7 @@ namespace Dune {
 
 	// leaf of a function tree
 	template<class T, class Imp>
-	class LeafGridFunction : public GridFunctionInterface<T,Imp>, 
+	class GridFunctionBase : public GridFunctionInterface<T,Imp>, 
 							 public Countable, 
 							 public LeafNode
 	{
@@ -646,7 +646,7 @@ namespace Dune {
 
 	// function signature for analytic functions on a grid
 	template<typename GV, typename DF, int m>
-	struct AnalyticLeafGridFunctionTraits 
+	struct AnalyticGridFunctionTraits 
 	  : public GridFunctionTraits<GV,typename GV::Grid::ctype,GV::dimension,
 								  Dune::FieldVector<typename GV::Grid::ctype,GV::dimension>,
 								  DF,m,Dune::FieldVector<DF,m> >
@@ -655,13 +655,13 @@ namespace Dune {
 
 	// an analytic grid function
 	template<typename T, typename Imp>
-	class AnalyticLeafGridFunctionBase 
-	  : public LeafGridFunction<T,AnalyticLeafGridFunctionBase<T,Imp> >
+	class AnalyticGridFunctionBase 
+	  : public GridFunctionBase<T,AnalyticGridFunctionBase<T,Imp> >
 	{
 	public:
 	  typedef T Traits;
 
-	  AnalyticLeafGridFunctionBase (const typename Traits::GridViewType& g_) : g(g_) {}
+	  AnalyticGridFunctionBase (const typename Traits::GridViewType& g_) : g(g_) {}
 
 	  inline void evaluate (const typename Traits::ElementType& e, 
 							const typename Traits::DomainType& x, 
