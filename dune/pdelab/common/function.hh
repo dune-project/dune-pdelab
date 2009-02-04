@@ -45,7 +45,7 @@ namespace Dune {
 	};
 
 
-	// a Function maps x in DomainType to y in RangeType
+	//! a Function maps x in DomainType to y in RangeType
 	template<class T, class Imp>
 	class FunctionInterface
 	{
@@ -70,7 +70,7 @@ namespace Dune {
 	};
 
 
-	// traits class holding function signature, same as in local function
+	//! traits class holding function signature, same as in local function
 	template<class G, class DF, int n, class D, class RF, int m, class R>
 	struct GridFunctionTraits : public FunctionTraits<DF,n,D,RF,m,R>
 	{
@@ -81,7 +81,7 @@ namespace Dune {
 	  typedef typename G::Traits::template Codim<0>::Entity ElementType;
 	};
 
-	// a GridFunction maps x in DomainType to y in RangeType
+	//! a GridFunction maps x in DomainType to y in RangeType
 	template<class T, class Imp>
 	class GridFunctionInterface
 	{
@@ -89,10 +89,14 @@ namespace Dune {
 	  //! \brief Export type traits
 	  typedef T Traits;  
 
-	  /** \brief Evaluate all basis function at given position
+	  /** \brief Evaluate the GridFunction at given position
 
-		  Evaluates all shape functions at the given position and returns 
-		  these values in a vector.
+		  Evaluates components of the grid function at the given position and
+		  returns these values in a vector.
+
+          \param[in]  e The entity to evaluate on
+          \param[in]  x The position in entity-local coordinates
+          \param[out] y The result of the evaluation
 	  */
 	  inline void evaluate (const typename Traits::ElementType& e, 
 							const typename Traits::DomainType& x,
@@ -101,6 +105,7 @@ namespace Dune {
 		asImp().evaluate(e,x,y);
 	  }
 
+      //! get a reference to the GridView
 	  inline const typename Traits::GridViewType& getGridView ()
 	  {
 		return asImp().getGridView();
@@ -112,7 +117,11 @@ namespace Dune {
 	};
 
 
-	// make a GridFunction from a Function
+	/** \brief make a GridFunction from a Function
+     *
+     *  \tparam G The GridView type
+     *  \tparam T The function type
+     */
 	template<typename G, typename T>
 	class FunctionToGridFunctionAdapter : 
 	  public GridFunctionInterface<GridFunctionTraits<
@@ -134,6 +143,11 @@ namespace Dune {
 								 T::Traits::dimRange,
 								 typename T::Traits::RangeType> Traits;
 	  
+      /** \brief Create a FunctionToGridFunctionAdapter
+       *
+       *  \param g_ The GridView
+       *  \param t_ The function
+       */
 	  FunctionToGridFunctionAdapter (const G& g_, const T& t_) : g(g_), t(t_) {}
 
 	  inline void evaluate (const typename Traits::ElementType& e,
@@ -153,7 +167,11 @@ namespace Dune {
 	  const T& t;
 	};
 
-	// make a Function in local coordinates from a Function in global coordinates
+	/** \brief make a Function in local coordinates from a Function in global coordinates
+     *
+     *  \tparam T Type of the global function
+     *  \tparam E Type of the grid's element
+     */
 	template<typename T, typename E>
 	class GlobalFunctionToLocalFunctionAdapter : 
 	  public FunctionInterface<typename T::Traits,
@@ -162,8 +180,18 @@ namespace Dune {
 	public:
 	  typedef typename T::Traits Traits;
 
+      /** \brief Create a GlobalFunctionToLocalFunctionAdapter
+       *
+       *  \param t_ Global function
+       *  \param e_ Grid's element where the local function is defined
+       */
 	  GlobalFunctionToLocalFunctionAdapter (const T& t_, const E& e_) : t(t_), e(e_) {}
 	  
+	  /** \brief Evaluate the local function at the given position
+
+          \param[in]  x The position in local coordinates
+          \param[out] y The result of the evaluation
+	  */
 	  inline void evaluate (const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
 	  {  
@@ -176,7 +204,10 @@ namespace Dune {
 	};
 
 
-	// make a Function from GridFunction using local coordinates
+    /** \brief make a LocalFunction from a GridFunction using local coordinates
+     *
+     *  \tparam T type of the GridFunction
+     */
 	template<typename T> // T: GridFunction, E: Entity
 	class GridFunctionToLocalFunctionAdapter : 
 	  public FunctionInterface<typename T::Traits,
@@ -185,10 +216,20 @@ namespace Dune {
 	public:
 	  typedef typename T::Traits Traits;
 
+      /** \brief Create a GridFunctionToLocalFunctionAdapter
+       *
+       *  \param t_ GridFunction
+       *  \param e_ Grid's element where the local function is defined
+       */
 	  GridFunctionToLocalFunctionAdapter (const T& t_, 
 										  const typename Traits::ElementType& e_) 
 		: t(t_), e(e_) {}
 
+	  /** \brief Evaluate the local function at the given position
+
+          \param[in]  x The position in local coordinates
+          \param[out] y The result of the evaluation
+	  */
 	  inline void evaluate (const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
 	  {  
@@ -228,6 +269,7 @@ namespace Dune {
 	  PowerGridFunction (T** t) : PowerNode<T,k,CountingPointerStoragePolicy>(t) {}
 	};
 
+    // for k=2
 	template<class T>
 	class PowerGridFunction<T,2> : public PowerNode<T,2,CountingPointerStoragePolicy>,
 								   public Countable
@@ -244,6 +286,7 @@ namespace Dune {
 	  {}
 	};
 
+    // for k=3
 	template<class T>
 	class PowerGridFunction<T,3> : public PowerNode<T,3,CountingPointerStoragePolicy>,
 								   public Countable
@@ -260,6 +303,7 @@ namespace Dune {
 	  {}
 	};
 
+    // for k=4
 	template<class T>
 	class PowerGridFunction<T,4> : public PowerNode<T,4,CountingPointerStoragePolicy>,
 								   public Countable
@@ -276,6 +320,7 @@ namespace Dune {
 	  {}
 	};
 
+    // for k=5
 	template<class T>
 	class PowerGridFunction<T,5> : public PowerNode<T,5,CountingPointerStoragePolicy>,
 								   public Countable
@@ -292,6 +337,7 @@ namespace Dune {
 	  {}
 	};
 
+    // for k=6
 	template<class T>
 	class PowerGridFunction<T,6> : public PowerNode<T,6,CountingPointerStoragePolicy>,
 								   public Countable
@@ -308,6 +354,7 @@ namespace Dune {
 	  {}
 	};
 
+    // for k=7
 	template<class T>
 	class PowerGridFunction<T,7> : public PowerNode<T,7,CountingPointerStoragePolicy>,
 								   public Countable
@@ -324,6 +371,7 @@ namespace Dune {
 	  {}
 	};
 
+    // for k=8
 	template<class T>
 	class PowerGridFunction<T,8> : public PowerNode<T,8,CountingPointerStoragePolicy>,
 								   public Countable
@@ -340,6 +388,7 @@ namespace Dune {
 	  {}
 	};
 
+    // for k=9
 	template<class T>
 	class PowerGridFunction<T,9> : public PowerNode<T,9,CountingPointerStoragePolicy>,
 								   public Countable

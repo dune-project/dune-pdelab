@@ -1,3 +1,4 @@
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_LEAFGRIDFUNCTIONSPACE_HH
 #define DUNE_PDELAB_LEAFGRIDFUNCTIONSPACE_HH
 
@@ -15,7 +16,7 @@
 namespace Dune {
   namespace PDELab {
 
-	// collect types exported by a leaf grid function space
+	//! collect types exported by a leaf grid function space
 	template<typename G, class L, typename B>
 	struct LeafGridFunctionSpaceTraits
 	{
@@ -45,11 +46,11 @@ namespace Dune {
 	};
 
 
-	// Simple Backend for std::vector
+	//! Simple Backend for std::vector
 	class StdVectorBackend
 	{
 	public:
-	  // container construction
+	  //! container construction
 	  template<typename T, typename E>
 	  class VectorContainer : public std::vector<E>
 	  {
@@ -67,10 +68,11 @@ namespace Dune {
 		}
 	  };
 
-	  // extract type of container element 
+	  //! extract type of container element 
 	  template<class C>
 	  struct Value
 	  {
+        //! type of a container element
 		typedef typename C::value_type Type;
 	  };
 

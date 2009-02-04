@@ -1,3 +1,4 @@
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_VTKEXPORT_HH
 #define DUNE_PDELAB_VTKEXPORT_HH
 
