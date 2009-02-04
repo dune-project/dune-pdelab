@@ -8,6 +8,7 @@
 #include<dune/grid/yaspgrid.hh>
 #include"../finiteelementmap/q12dfem.hh"
 #include"../finiteelementmap/q22dfem.hh"
+#include"../finiteelementmap/edger12dfem.hh"
 #include"../gridfunctionspace/leafgridfunctionspace.hh"
 
 // test function trees
@@ -19,6 +20,8 @@ void testleafgridfunction (const GV& gv)
   Q12DFEM q12dfem;
   typedef Dune::PDELab::Q22DLocalFiniteElementMap<float,double> Q22DFEM;
   Q22DFEM q22dfem;
+  typedef Dune::PDELab::EdgeR12DLocalFiniteElementMap<float,double> EdgeR12DFEM;
+  EdgeR12DFEM edger12dfem;
   
   // make a grid function space
   typedef Dune::PDELab::LeafGridFunctionSpace<GV,Q12DFEM> GFS1; 
@@ -28,6 +31,8 @@ void testleafgridfunction (const GV& gv)
   typedef Dune::PDELab::LeafGridFunctionSpace<GV,Q22DFEM,Dune::PDELab::StdVectorBackend,
 	Dune::PDELab::LeafGridFunctionRestrictedMapper> GFS3;
   GFS3 gfs3(gv,q22dfem);
+  typedef Dune::PDELab::LeafGridFunctionSpace<GV,EdgeR12DFEM> GFS4;
+  GFS4 gfs4(gv,edger12dfem);
 
   // make coefficent Vectors
   typedef typename GFS1::template VectorContainer<double>::Type V1;
@@ -36,6 +41,9 @@ void testleafgridfunction (const GV& gv)
   typedef typename GFS2::template VectorContainer<double>::Type V2;
   V2 x2(gfs2);
   x2 = 0.0;
+  typedef typename GFS4::template VectorContainer<double>::Type V4;
+  V4 x4(gfs4);
+  x4 = 0.0;
 }
 
 int main(int argc, char** argv)

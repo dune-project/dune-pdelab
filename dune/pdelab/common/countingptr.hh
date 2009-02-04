@@ -47,6 +47,7 @@ namespace Dune {
 	  }
 	};
 
+	template<typename T, typename P=NondeletingMemoryManagementPolicy>
     /** @brief Pointer with a reference count in the pointed-to object
      *
      *  @tparam T The type of the pointed-to object.  Must be derived from
@@ -69,7 +70,6 @@ namespace Dune {
      *  pointed to object.  Finally, CP objects may be compared using == and
      *  != to find out whether they point to the same object.
      */
-	template<typename T, typename P=NondeletingMemoryManagementPolicy>
 	class CP
 	{
 	  T* p;

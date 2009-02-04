@@ -1,3 +1,4 @@
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_FUNCTION_HH
 #define DUNE_PDELAB_FUNCTION_HH
 
@@ -14,7 +15,7 @@
 namespace Dune {
   namespace PDELab {
 
-	// traits class holding function signature, same as in local function
+	//! traits class holding function signature, same as in local function
 	template<class DF, int n, class D, class RF, int m, class R>
 	struct FunctionTraits
 	{
