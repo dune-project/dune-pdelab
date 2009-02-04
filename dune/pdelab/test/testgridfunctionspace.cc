@@ -10,7 +10,7 @@
 #include"../finiteelementmap/q12dfem.hh"
 #include"../finiteelementmap/q22dfem.hh"
 #include"../finiteelementmap/edger12dfem.hh"
-#include"../gridfunctionspace/leafgridfunctionspace.hh"
+#include"../gridfunctionspace/gridfunctionspace.hh"
 
 // test function trees
 template<class GV> 
