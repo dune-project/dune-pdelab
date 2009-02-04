@@ -1,6 +1,8 @@
 #ifndef DUNE_PDELAB_FINITELEMENTMAP_HH
 #define DUNE_PDELAB_FINITELEMENTMAP_HH
 
+#include"../common/countingptr.hh"
+
 namespace Dune {
   namespace PDELab {
 
@@ -41,7 +43,8 @@ namespace Dune {
 	template<class Imp>
 	class SimpleLocalFiniteElementMap : 
 	  public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits<Imp>, 
-											SimpleLocalFiniteElementMap<Imp> >
+											SimpleLocalFiniteElementMap<Imp> >,
+	  public Countable
 	{
 	public:
 	  //! \brief export type of the signature
