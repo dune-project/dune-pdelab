@@ -21,8 +21,21 @@ void testleafgridfunction (const GV& gv)
   Q22DFEM q22dfem;
   
   // make a grid function space
-  Dune::PDELab::LeafGridFunctionSpace<GV,Q12DFEM> gfs1(gv,q12dfem);
-  Dune::PDELab::LeafGridFunctionSpace<GV,Q22DFEM> gfs2(gv,q22dfem);
+  typedef Dune::PDELab::LeafGridFunctionSpace<GV,Q12DFEM> GFS1; 
+  GFS1 gfs1(gv,q12dfem);
+  typedef Dune::PDELab::LeafGridFunctionSpace<GV,Q22DFEM> GFS2;
+  GFS2 gfs2(gv,q22dfem);
+  typedef Dune::PDELab::LeafGridFunctionSpace<GV,Q22DFEM,Dune::PDELab::StdVectorBackend,
+	Dune::PDELab::LeafGridFunctionRestrictedMapper> GFS3;
+  GFS3 gfs3(gv,q22dfem);
+
+  // make coefficent Vectors
+  typedef typename GFS1::template VectorContainer<double>::Type V1;
+  V1 x1(gfs1);
+  x1 = 0.0;
+  typedef typename GFS2::template VectorContainer<double>::Type V2;
+  V2 x2(gfs2);
+  x2 = 0.0;
 }
 
 int main(int argc, char** argv)

@@ -57,9 +57,9 @@ namespace Dune {
 	  public:
 		typedef E ElementType;
 
-		VectorContainer (const T& t) : BaseT(t.globaldimension()) {}
-		VectorContainer (const T& t, const E& e) : BaseT(t.globaldimension(),e) {}
-		VectorContainer& operator= (const E& e)
+		VectorContainer (const T& t) : BaseT(t.globalSize()) {}
+		VectorContainer (const T& t, const E& e) : BaseT(t.globalSize(),e) {}
+		VectorContainer& operator= (const E& e) // set all elements to same value
 		{
 		  for (typename BaseT::size_type i=0; i<BaseT::size(); i++)
 			(*this)[i] = e;
@@ -156,6 +156,14 @@ namespace Dune {
 	  typedef typename GV::Traits::template Codim<0>::Entity Element;
 	  typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
 
+	  // extract type of container storing Es
+	  template<typename T>
+	  struct VectorContainer
+	  {
+		//! \brief define Type as the Type of a container of E's
+		typedef typename B::template VectorContainer<LeafGridFunctionSpace,T> Type;	
+	  };
+
 	  // constructor
 	  LeafGridFunctionSpace (const GV& gridview, const LFEM& lfem) 
 		: gv(gridview), plfem(&lfem)
@@ -170,10 +178,10 @@ namespace Dune {
 	  }
 
 	  // get finite element map, I think we dont need it
-// 	  const LFEM& localFiniteElementMap () const
-// 	  {
-// 		return *plfem;
-// 	  }
+	  const LFEM& localFiniteElementMap () const
+	  {
+		return *plfem;
+	  }
 
 	  // get dimension of finite element space
 	  typename Traits::SizeType globalSize () const
@@ -218,8 +226,7 @@ namespace Dune {
 		  }
 	  }
 
-	private:
-	  // update information needed to do mapping
+	  // update information, e.g. when grid has changed
 	  void update ()
 	  {
 		std::cout << "LeafGridFunctionSpace(general version):" << std::endl;
@@ -300,6 +307,7 @@ namespace Dune {
 		std::cout << "total number of dofs is " << nglobal << std::endl;
 	  }
 
+	private:
 	  const GV& gv;
 	  CP<LFEM const> plfem;
 	  typename Traits::SizeType nlocal;
@@ -311,7 +319,187 @@ namespace Dune {
 
 
 
-	
+	// this class may be used to pass compile-time
+	// parameters to the implementation 
+	struct LeafGridFunctionRestrictedMapper
+	{
+	  enum {dummy=1} ;
+	};
+
+
+	// specialization with restricted mapper
+	// GV : Type implementing GridView
+	// FEM  : Type implementing LocalFiniteElementMapInterface
+	// B : Backend type
+	template<typename GV, typename LFEM, typename B> 
+	class LeafGridFunctionSpace<GV,LFEM,B,LeafGridFunctionRestrictedMapper> : 
+	  public Countable, public LeafNode
+	{
+	public:
+	  typedef LeafGridFunctionSpaceTraits<GV,LFEM,B> Traits;
+	  typedef typename GV::Traits::template Codim<0>::Entity Element;
+	  typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
+
+	  // extract type of container storing Es
+	  template<typename T>
+	  struct VectorContainer
+	  {
+		//! \brief define Type as the Type of a container of E's
+		typedef typename B::template VectorContainer<LeafGridFunctionSpace,T> Type;	
+	  };
+
+	  // constructor
+	  LeafGridFunctionSpace (const GV& gridview, const LFEM& lfem) 
+		: gv(gridview), plfem(&lfem)
+	  {
+		update();
+	  }
+
+	  // get grid view
+	  const GV& gridview () const
+	  {
+		return gv;
+	  }
+
+	  // get finite element map, I think we dont need it
+	  const LFEM& localFiniteElementMap () const
+	  {
+		return *plfem;
+	  }
+
+	  // get dimension of finite element space
+	  typename Traits::SizeType globalSize () const
+	  {
+		return nglobal;
+	  }
+
+	  // get max dimension of shape function space
+	  typename Traits::SizeType maxLocalSize () const
+	  {
+		return nlocal;
+	  }
+
+	  // map index [0,globalSize-1] to root index set
+	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
+	  {
+		return i;
+	  }
+
+	  // compute global indices for one element
+	  void globalIndices (const Element& e, 
+						  std::vector<typename Traits::SizeType>& global) const
+	  {
+		// get local coefficients for this entity
+		const typename Traits::LocalFiniteElementType::Traits::LocalCoefficientsType&
+		  lc = (plfem->find(*e)).localCoefficients();
+		global.resize(lc.size());
+
+		for (unsigned int i=0; i<lc.size(); ++i)
+		  {
+			// get geometry type of subentity 
+			Dune::GeometryType gt=Dune::ReferenceElements<double,GV::Grid::dimension>
+			  ::general(e.type()).type(lc.localIndex(i).subentity(),lc.localIndex(i).codim());
+
+			// evaluate consecutive index of subentity
+			int index = eval_subindex<GV::Grid::dimension>(gv.indexSet(),e,
+														   lc.localIndex(i).subentity(),
+														   lc.localIndex(i).codim());
+		
+			// now compute 
+			global[i] = offset.find(gt)->second+index*dofcountmap.find(gt)->second+lc.localIndex(i).index();
+		  }
+	  }
+
+	  // update information, e.g. when grid has changed
+	  void update ()
+	  {
+		std::cout << "LeafGridFunctionSpace(restricted version):" << std::endl;
+
+		// clear counters
+		dofcountmap.clear();
+		nlocal = 0;
+
+		// count number of dofs in each subentity
+		for (ElementIterator it = gv.template begin<0>();
+			 it!=gv.template end<0>(); ++it)
+		  {
+			// check geometry type
+			if ((plfem->find(*it)).type()!=it->type())
+			  DUNE_THROW(Exception, "geometry type mismatch in LeafGridFunctionSpace");
+
+			// get local coefficients for this entity
+			const typename Traits::LocalFiniteElementType::Traits::LocalCoefficientsType&
+			  lc = (plfem->find(*it)).localCoefficients();
+
+			// compute maximum number of degrees of freedom per element
+			nlocal = std::max(nlocal,static_cast<typename Traits::SizeType>(lc.size()));
+
+			// store count for each subentity in a map
+			typedef Dune::tuple<unsigned int, unsigned int> SubentityType;
+			typedef std::map<SubentityType,unsigned int> CountMapType;
+			CountMapType countmap;
+
+			// assume that key within each subentity is unique
+			for (unsigned int i=0; i<lc.size(); ++i)
+			  {
+				SubentityType subentity(lc.localIndex(i).subentity(),lc.localIndex(i).codim());
+				if (countmap.find(subentity)==countmap.end())
+				  countmap[subentity] = 1;
+				else
+				  (countmap[subentity])++;
+			  }
+
+			// traverse the map and compare #dofs per geometry type
+			for (typename CountMapType::iterator i=countmap.begin(); i!=countmap.end(); ++i)
+			  {
+				Dune::GeometryType gt=Dune::ReferenceElements<double,GV::Grid::dimension>
+				  ::general(it->type()).type(Dune::get<0>(i->first),Dune::get<1>(i->first));
+				typename DofCountMapType::iterator j=dofcountmap.find(gt);
+				if (j==dofcountmap.end())
+				  {
+					dofcountmap[gt] = i->second;
+					continue;
+				  }
+				if (j->second != i->second)
+				  {
+					DUNE_THROW(Dune::NotImplemented, "non constant # dofs per geometry type, use general version instead");
+				  }
+			  }
+		  }
+		std::cout << "max local number of dofs = " << nlocal << std::endl;
+
+		// print result
+		for (typename DofCountMapType::iterator i=dofcountmap.begin(); i!=dofcountmap.end(); ++i)
+		  {
+			std::cout << i->first << " has " << i->second << " degrees of freedom" << std::endl;
+		  }
+
+		// compute offsets
+		nglobal = 0;
+		offset.clear();
+		const typename GV::IndexSet& is=gv.indexSet();
+		for (typename DofCountMapType::iterator i=dofcountmap.begin(); i!=dofcountmap.end(); ++i)
+		  {
+			offset[i->first] = nglobal;
+			nglobal += is.size(i->first)*(i->second); 
+			std::cout << i->first << " offset now " << nglobal << std::endl;
+		  }
+		std::cout << "total number of dofs = " << nglobal << std::endl;
+	  }
+
+	private:
+	  const GV& gv;
+	  CP<LFEM const> plfem;
+
+	  typename Traits::SizeType nlocal;
+	  typename Traits::SizeType nglobal;
+
+	  typedef std::map<Dune::GeometryType,typename Traits::SizeType> DofCountMapType;
+	  DofCountMapType dofcountmap; // number of degrees of freedom per geometry type
+	  std::map<Dune::GeometryType,typename Traits::SizeType> offset; // offset in vector for given geometry type
+	};
+
+
   }
 }
 
