@@ -16,44 +16,78 @@ namespace Dune {
 	// LeafNode
 	//==========================
 
+    /** \brief Base class for leaf nodes in the MultiTypeTree
+     *
+     *  Every leaf type in the MultiTypeTree should be derived from this class
+     */
 	class LeafNode
 	{
 	public:
-	  enum { isLeaf = true };
-	  enum { CHILDREN = 0 };
+      //! Mark this class as a leaf in the MultiTypeTree
+	  enum { isLeaf = true /**< */ };
+      //! Leafs have no children in the MultiTypeTree
+	  enum { CHILDREN = 0 /**< */ };
 	};
 
 	//==========================
 	// StoragePolicy
 	//==========================
 
+    /** \brief Default storage policy for the MultiTypeTree
+     *
+     *  This class determines that elements of the MultiTypeTree are stored as
+     *  copies.  For an alternative look at CountingPointerStoragePolicy, it
+     *  will all make much more sense then.
+     *
+     *  In general, there is an object t of type T which should be stored
+     *  somehow.  We use a storage object s ("store" for short) of type S to
+     *  store t.  In the CopyStoragePolicy T==S, so each store for t will have
+     *  its own copy of t.  Other possibilities are S==T& where each store
+     *  holds a reference to the original t, or S==T* where each store holds a
+     *  pointer to the original t.  It gets interesting when use
+     *  S==shared_ptr<T> or, in the case of the MultiTypeTree, S=CP<T> (which
+     *  is implemented in CountingPointerStoragePolicy).
+     */
 	class CopyStoragePolicy
 	{
 	public:
+      /** \brief Determine the storage type S for an object of type T
+       *
+       * \tparam T The type of the object you want to store
+       */
 	  template<typename T>
 	  struct Storage
 	  {
+        //! The storage type S for an object of type T
 		typedef T Type;
 	  };
 
+      //! convert an object of type T to something assignable to its storage type
 	  template<typename T>
-	  static T& convert (T& t) // convert to something assignable to storage type
+	  static T& convert (T& t)
 	  {
 		return t;
 	  }
 	  
+      /** \brief set a store from an object
+       *
+       *  \param[out] s The store to assign to
+       *  \param[in]  t The object to assign
+       */
 	  template<typename T>
 	  static void set (T& s, T& t)
 	  {
 		s = t;
 	  }
 	  
+      //! get the object from a store
 	  template<typename T>
 	  static T& get (T& s)
 	  {
 		return s;
 	  }
 
+      //! get the const object from a const store
 	  template<typename T>
 	  static const T& get (const T& s)
 	  {
@@ -106,21 +140,49 @@ namespace Dune {
 	  typename P::template Storage<T>::Type c[k];
 	};
 
+    /** \brief Collect k instances of type T within a MultiTypeTree
+     *
+     *  \tparam T The base type
+     *  \tparam k The number of instances this node should collect
+     *  \tparam P The StoragePolicy to use
+     */
 	template<typename T, int k, typename P>
 	class PowerNode : public PowerNodeBase<T,k,P>
 	{
 	public:
+      //! initialize all children with the same object t
 	  PowerNode (T& t)
 	  {
 		for (int i=0; i<k; i++)
 		  P::set(this->c[i],t);
 	  }
 
+      /** \brief Initialize all children with different objects
+       *
+       *  This constructor is only available in the non-specialized version
+       *
+       *  \param t Points to an array of pointers to objects of type t.  The
+       *           object pointed to by the first pointer will be used to
+       *           initialize the first child, the second pointer for the
+       *           second child and so on.
+       */
 	  PowerNode (T** t)
 	  {
 		for (int i=0; i<k; i++)
 		  P::set(this->c[i],*(t[i]));
 	  }
+
+#ifdef DOXYGEN
+      /** \brief Initialize all children with different objects
+       *
+       *  Currently there exist specializations for 2 <= k <= 10.  Each
+       *  specialization has a constructor which takes the initializers for
+       *  its children as arguments.
+       *
+       *  @param tn The initializer for the nth child.
+       */
+      PowerNode (T& t0, T& t1, ...);
+#endif // DOXYGEN
 	};
 
 	template<typename T, typename P>
