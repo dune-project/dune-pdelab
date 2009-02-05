@@ -361,6 +361,7 @@ namespace Dune {
 			 typename T4=EmptyChild, typename T5=EmptyChild, typename T6=EmptyChild,
 			 typename T7=EmptyChild, typename T8=EmptyChild>
 	class CompositeNode 
+#ifndef DOXYGEN
 	  : public CompositeNodeBase<P,
 								 Dune::tuple<T0,T1,T2,T3,T4,T5,T6,T7,T8>,
 								 Dune::tuple<typename P::template Storage<T0>::Type,
@@ -372,8 +373,10 @@ namespace Dune {
 											 typename P::template Storage<T6>::Type,
 											 typename P::template Storage<T7>::Type,
 											 typename P::template Storage<T8>::Type> >
+#endif //!DOXYGEN
 	{
 	  typedef Dune::tuple<T0,T1,T2,T3,T4,T5,T6,T7,T8> OT;
+#ifndef DOXYGEN
 	  typedef Dune::tuple<typename P::template Storage<T0>::Type,
 						  typename P::template Storage<T1>::Type,
 						  typename P::template Storage<T2>::Type,
@@ -383,6 +386,7 @@ namespace Dune {
 						  typename P::template Storage<T6>::Type,
 						  typename P::template Storage<T7>::Type,
 						  typename P::template Storage<T8>::Type> ST;
+#endif //!DOXYGEN
 	typedef CompositeNodeBase<P,OT,ST> BaseT;
 
 	ST c;
@@ -395,7 +399,6 @@ namespace Dune {
 			P::convert(t5),P::convert(t6),P::convert(t7),P::convert(t8))
 	  {} 
 	};
-
 
 	// 2 children
 	template<typename P,
