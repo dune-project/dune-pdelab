@@ -11,21 +11,30 @@
 namespace Dune {
   namespace PDELab {
 
+    /** \addtogroup MultiTypeTree MultiTypeTree
+     *  \{
+     *
+     *  A \ref MultiTypeTree is used to collect different types or multiple
+     *  copies of the same time in a tree structure.
+     */
 
 	//==========================
 	// LeafNode
 	//==========================
 
-    /** \brief Base class for leaf nodes in the MultiTypeTree
+    /** \brief Base class for leaf nodes in the \ref MultiTypeTree
      *
-     *  Every leaf type in the MultiTypeTree should be derived from this class
+     *  Every leaf type in the \ref MultiTypeTree should be derived from this
+     *  class.
+     *
+     *  A LeafNode models a \ref MultiTypeTree
      */
 	class LeafNode
 	{
 	public:
-      //! Mark this class as a leaf in the MultiTypeTree
+      //! Mark this class as a leaf in the \ref MultiTypeTree
 	  enum { isLeaf = true /**< */ };
-      //! Leafs have no children in the MultiTypeTree
+      //! Leafs have no children in the \ref MultiTypeTree
 	  enum { CHILDREN = 0 /**< */ };
 	};
 
@@ -33,11 +42,11 @@ namespace Dune {
 	// StoragePolicy
 	//==========================
 
-    /** \brief Default storage policy for the MultiTypeTree
+    /** \brief Default storage policy for the \ref MultiTypeTree
      *
-     *  This class determines that elements of the MultiTypeTree are stored as
-     *  copies.  For an alternative look at CountingPointerStoragePolicy, it
-     *  will all make much more sense then.
+     *  This class determines that elements of the \ref MultiTypeTree are
+     *  stored as copies.  For an alternative look at
+     *  CountingPointerStoragePolicy, it will all make much more sense then.
      *
      *  In general, there is an object t of type T which should be stored
      *  somehow.  We use a storage object s ("store" for short) of type S to
@@ -45,8 +54,8 @@ namespace Dune {
      *  its own copy of t.  Other possibilities are S==T& where each store
      *  holds a reference to the original t, or S==T* where each store holds a
      *  pointer to the original t.  It gets interesting when use
-     *  S==shared_ptr<T> or, in the case of the MultiTypeTree, S=CP<T> (which
-     *  is implemented in CountingPointerStoragePolicy).
+     *  S==shared_ptr<T> or, in the case of the \ref MultiTypeTree, S=CP<T>
+     *  (which is implemented in CountingPointerStoragePolicy).
      */
 	class CopyStoragePolicy
 	{
@@ -140,7 +149,9 @@ namespace Dune {
 	  typename P::template Storage<T>::Type c[k];
 	};
 
-    /** \brief Collect k instances of type T within a MultiTypeTree
+    /** \brief Collect k instances of type T within a \ref MultiTypeTree
+     *
+     *  A PowerNode models a \ref MultiTypeTree
      *
      *  \tparam T The base type
      *  \tparam k The number of instances this node should collect
@@ -181,7 +192,9 @@ namespace Dune {
        *
        *  @param tn The initializer for the nth child.
        */
-      PowerNode (T& t0, T& t1, ...);
+      PowerNode (T& t0, T& t1, ...)
+      {
+      }
 #endif // DOXYGEN
 	};
 
@@ -418,6 +431,16 @@ namespace Dune {
 	  ST& c;
 	};
 
+    /** \brief Collect instances of possibly different types Tn within a \ref
+     *         MultiTypeTree
+     *
+     *  A CompositeNode models a \ref MultiTypeTree
+     *
+     *  \tparam P  The StoragePolicy to use
+     *  \tparam Tn The base types.  Tn==EmptyChild means that slot n is
+     *             unused.  Currently, up to 9 slots are supported, making 8
+     *             the maximum n.
+     */
 	template<typename P,
 			 typename T0, typename T1, typename T2=EmptyChild, typename T3=EmptyChild,
 			 typename T4=EmptyChild, typename T5=EmptyChild, typename T6=EmptyChild,
@@ -460,6 +483,17 @@ namespace Dune {
 		  c(P::convert(t0),P::convert(t1),P::convert(t2),P::convert(t3),P::convert(t4),
 			P::convert(t5),P::convert(t6),P::convert(t7),P::convert(t8))
 	  {} 
+
+#ifdef DOXYGEN
+      /** \brief Initialize all children
+       *
+       *  @param tn The initializer for the nth child.
+       *
+       *  The actual number of arguments for this constructor corresponds to
+       *  the number of slots used in the template parameter list of the class.
+       */
+	  CompositeNode (T0& t0, T1& t1, ...) {}
+#endif //DOXYGEN
 	};
 
 	// 2 children
@@ -767,24 +801,41 @@ namespace Dune {
 	  }
 	};
 
-	template<typename T> // T is a multi type tree
+    /** \brief Count the number of nodes in a \ref MultiTypeTree
+     *
+     *  \tparam T A \ref MultiTypeTree
+     *  \param  t An object of type T
+     */
+	template<typename T>
 	int count_nodes (const T& t)
 	{
 	  return MultiTypeTreeVisitNodeMetaProgram<T,T::isLeaf>::count_nodes(t);
 	}
 
-	template<typename T> // T is a multi type tree
+    /** \brief Count the number of leaves in a \ref MultiTypeTree
+     *
+     *  \tparam T A \ref MultiTypeTree
+     *  \param  t An object of type T
+     */
+	template<typename T>
 	int count_leaves (const T& t)
 	{
 	  return MultiTypeTreeVisitNodeMetaProgram<T,T::isLeaf>::count_leaves(t);
 	}
 
-	template<typename T> // T is a multi type tree
+    /** \brief Print the paths leading to all subtrees in a \ref MultiTypeTree
+     *
+     *  \tparam T A \ref MultiTypeTree
+     *  \param  t An object of type T
+     */
+	template<typename T>
 	void print_paths (const T& t)
 	{
 	  std::string s="/";
 	  MultiTypeTreeVisitNodeMetaProgram<T,T::isLeaf>::print_paths(t,s);
 	}
+
+    //! \}
 
   }
 }
