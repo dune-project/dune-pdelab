@@ -42,11 +42,8 @@ namespace Dune {
 	// StoragePolicy
 	//==========================
 
-    /** \brief Default storage policy for the \ref MultiTypeTree
-     *
-     *  This class determines that elements of the \ref MultiTypeTree are
-     *  stored as copies.  For an alternative look at
-     *  CountingPointerStoragePolicy, it will all make much more sense then.
+    /** \addtogroup StoragePolicy StoragePolicy
+     *  \{
      *
      *  In general, there is an object t of type T which should be stored
      *  somehow.  We use a storage object s ("store" for short) of type S to
@@ -56,6 +53,13 @@ namespace Dune {
      *  pointer to the original t.  It gets interesting when use
      *  S==shared_ptr<T> or, in the case of the \ref MultiTypeTree, S=CP<T>
      *  (which is implemented in CountingPointerStoragePolicy).
+     */
+
+    /** \brief Default storage policy for the \ref MultiTypeTree
+     *
+     *  This class determines that elements of the \ref MultiTypeTree are
+     *  stored as copies.  For an alternative look at
+     *  CountingPointerStoragePolicy, it will all make much more sense then.
      */
 	class CopyStoragePolicy
 	{
@@ -67,7 +71,7 @@ namespace Dune {
 	  template<typename T>
 	  struct Storage
 	  {
-        //! The storage type S for an object of type T
+        //! The storage type S for an object of type T is the type T itself
 		typedef T Type;
 	  };
 
@@ -104,6 +108,7 @@ namespace Dune {
 	  }
 	};
 
+    //! \} group StoragePolicy
 
 	//==========================
 	// PowerNode
@@ -835,7 +840,7 @@ namespace Dune {
 	  MultiTypeTreeVisitNodeMetaProgram<T,T::isLeaf>::print_paths(t,s);
 	}
 
-    //! \}
+    //! \} group MultiTypeTree
 
   }
 }
