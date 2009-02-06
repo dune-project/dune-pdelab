@@ -16,6 +16,10 @@
 namespace Dune {
   namespace PDELab {
 
+    //! \addtogroup GridFunctionSpace
+    //! \ingroup PDELab
+    //! \{
+
     //=======================================
     // grid function space
     //=======================================
@@ -83,16 +87,20 @@ namespace Dune {
 	  //! The size type
 	  typedef std::vector<int>::size_type size_type;
 
-	  // get const_reference to container element
-	  // we can assume C to be std::vector<T>
+	  /** \brief get const_reference to container element
+       *
+       *  we can assume C to be std::vector<T>
+       */
 	  template<typename C>
 	  static const typename C::value_type& const_access (const C& c, size_type i)
 	  {
 		return c.operator[](i);
 	  }
 
-	  // get non const_reference to container element 
-	  // note: this method does not depend on T!
+	  /** \brief get non const_reference to container element 
+       *
+       *  note: this method does not depend on T!
+       */
 	  template<typename C>
 	  static typename C::value_type& access (C& c, size_type i)
 	  {
@@ -174,7 +182,7 @@ namespace Dune {
 	  };
 
       // define local function space parametrized by self 
-      typedef LocalFunctionSpace<GridFunctionSpace> LocalFunctionSpace;
+      typedef Dune::PDELab::LocalFunctionSpace<GridFunctionSpace> LocalFunctionSpace;
 
 	  // constructor
 	  GridFunctionSpace (const GV& gridview, const LFEM& lfem) 
@@ -223,7 +231,7 @@ namespace Dune {
 		  lc = lfe.localCoefficients();
 		global.resize(lc.size());
 
-		for (unsigned int i=0; i<lc.size(); ++i)
+		for (int i=0; i<lc.size(); ++i)
 		  {
 			// get geometry type of subentity 
 			Dune::GeometryType gt=Dune::ReferenceElements<double,GV::Grid::dimension>
@@ -468,7 +476,7 @@ namespace Dune {
 			CountMapType countmap;
 
 			// assume that key within each subentity is unique
-			for (unsigned int i=0; i<lc.size(); ++i)
+			for (int i=0; i<lc.size(); ++i)
 			  {
 				SubentityType subentity(lc.localIndex(i).subentity(),lc.localIndex(i).codim());
 				if (countmap.find(subentity)==countmap.end())
@@ -793,7 +801,7 @@ namespace Dune {
       void debug () const
       {
         std::cout << n << " indices = (";
-        for (int k=0; k<n; k++)
+        for (typename Traits::IndexContainer::size_type k=0; k<n; k++)
           std::cout << i[k] << " ";
         std::cout << ")" << std::endl;
       }
@@ -805,7 +813,8 @@ namespace Dune {
       const typename Traits::LocalFiniteElementType* plfem;
     };
 
-  }
-}
+    //! \} group GridFunctionSpace
+  } // namespace PDELab
+} // namespace Dune
 
 #endif
