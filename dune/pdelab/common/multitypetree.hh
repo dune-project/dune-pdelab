@@ -167,6 +167,10 @@ namespace Dune {
 	class PowerNode : public PowerNodeBase<T,k,P>
 	{
 	public:
+      //! constructor without arguments
+	  PowerNode ()
+	  {}
+
       //! initialize all children with the same object t
 	  PowerNode (T& t)
 	  {
@@ -208,6 +212,9 @@ namespace Dune {
 	class PowerNode<T,2,P> : public PowerNodeBase<T,2,P>
 	{
 	public:
+	  PowerNode ()
+	  {}
+
 	  PowerNode (T& t)
 	  {
 		for (int i=0; i<2; i++)
@@ -225,6 +232,9 @@ namespace Dune {
 	class PowerNode<T,3,P> : public PowerNodeBase<T,3,P>
 	{
 	public:
+	  PowerNode ()
+	  {}
+
 	  PowerNode (T& t)
 	  {
 		for (int i=0; i<3; i++)
@@ -243,6 +253,9 @@ namespace Dune {
 	class PowerNode<T,4,P> : public PowerNodeBase<T,4,P>
 	{
 	public:
+	  PowerNode ()
+	  {}
+
 	  PowerNode (T& t)
 	  {
 		for (int i=0; i<4; i++)
@@ -262,6 +275,9 @@ namespace Dune {
 	class PowerNode<T,5,P> : public PowerNodeBase<T,5,P>
 	{
 	public:
+	  PowerNode ()
+	  {}
+
 	  PowerNode (T& t)
 	  {
 		for (int i=0; i<5; i++)
@@ -282,6 +298,9 @@ namespace Dune {
 	class PowerNode<T,6,P> : public PowerNodeBase<T,6,P>
 	{
 	public:
+	  PowerNode ()
+	  {}
+
 	  PowerNode (T& t)
 	  {
 		for (int i=0; i<6; i++)
@@ -303,6 +322,9 @@ namespace Dune {
 	class PowerNode<T,7,P> : public PowerNodeBase<T,7,P>
 	{
 	public:
+	  PowerNode ()
+	  {}
+
 	  PowerNode (T& t)
 	  {
 		for (int i=0; i<7; i++)
@@ -325,6 +347,9 @@ namespace Dune {
 	class PowerNode<T,8,P> : public PowerNodeBase<T,8,P>
 	{
 	public:
+	  PowerNode ()
+	  {}
+
 	  PowerNode (T& t)
 	  {
 		for (int i=0; i<8; i++)
@@ -348,6 +373,9 @@ namespace Dune {
 	class PowerNode<T,9,P> : public PowerNodeBase<T,9,P>
 	{
 	public:
+	  PowerNode ()
+	  {}
+
 	  PowerNode (T& t)
 	  {
 		for (int i=0; i<9; i++)
@@ -372,6 +400,9 @@ namespace Dune {
 	class PowerNode<T,10,P> : public PowerNodeBase<T,10,P>
 	{
 	public:
+	  PowerNode ()
+	  {}
+
 	  PowerNode (T& t)
 	  {
 		for (int i=0; i<10; i++)

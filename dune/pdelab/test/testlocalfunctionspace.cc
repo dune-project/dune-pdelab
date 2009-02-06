@@ -20,26 +20,30 @@ void test (const GV& gv)
   Q22DFEM q22dfem;
   
   // make a grid function space
-  typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> GFS;
-  GFS gfs(gv,q22dfem);
+  typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> P2GFS;
+  P2GFS p2gfs(gv,q22dfem);
+
+  // power grid function space
+  typedef Dune::PDELab::PowerGridFunctionSpace<P2GFS,2> PowerGFS;
+  PowerGFS powergfs(p2gfs);
 
   // make coefficent Vectors
-  typedef typename GFS::template VectorContainer<double>::Type V;
-  V x(gfs);
+  typedef typename P2GFS::template VectorContainer<double>::Type V;
+  V x(p2gfs);
   x = 0.0;
 
   // make local function space object
-  typename GFS::LocalFunctionSpace lfs(gfs);
-  std::vector<double> xl(lfs.maxSize());
+  typename P2GFS::LocalFunctionSpace p2lfs(p2gfs);
+  std::vector<double> xl(p2lfs.maxSize());
 
   // loop over elements
   typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
   for (ElementIterator it = gv.template begin<0>();
 	   it!=gv.template end<0>(); ++it)
 	{
-      lfs.bind(*it);
-      lfs.debug();
-      lfs.vread(x,xl);
+      p2lfs.bind(*it);
+      p2lfs.debug();
+      p2lfs.vread(x,xl);
 	}
 }
 
