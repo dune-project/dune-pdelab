@@ -1,3 +1,4 @@
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_Q12DFEM_HH
 #define DUNE_PDELAB_Q12DFEM_HH
 
@@ -7,7 +8,8 @@
 namespace Dune {
   namespace PDELab {
 
-	// wrap up element from local functions
+	//! wrap up element from local functions
+    //! \ingroup FiniteElementMap
 	template<class D, class R>
 	class Q12DLocalFiniteElementMap
 	  : public SimpleLocalFiniteElementMap< Dune::Q12DLocalFiniteElement<D,R> >

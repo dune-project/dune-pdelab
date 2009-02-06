@@ -10,6 +10,7 @@ namespace Dune {
   namespace PDELab {
 
 	//! Finite element map for EdgeR12D local finite elements
+    //! \ingroup FiniteElementMap
 	template<class D, class R>
 	class EdgeR12DLocalFiniteElementMap
 	  : public SimpleLocalFiniteElementMap< Dune::EdgeR12DLocalFiniteElement<D,R> >
