@@ -177,7 +177,7 @@ namespace Dune {
        *
        *  This constructor is only available in the non-specialized version
        *
-       *  \param t Points to an array of pointers to objects of type t.  The
+       *  \param t Points to an array of pointers to objects of type T.  The
        *           object pointed to by the first pointer will be used to
        *           initialize the first child, the second pointer for the
        *           second child and so on.

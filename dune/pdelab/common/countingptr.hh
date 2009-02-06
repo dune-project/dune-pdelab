@@ -197,6 +197,7 @@ namespace Dune {
 	  //! number of pointers does not change
 	  Countable& operator= (const Countable& x)
 	  {
+        return *this;
 	  } 
 
       //! increment reference counter
