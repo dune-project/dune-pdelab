@@ -7,6 +7,7 @@
 namespace Dune {
   namespace PDELab {
 
+    //! wrap a GridFunction so it can be used with the VTKWriter from dune-grid.
 	template<typename T> // T is a grid function
 	class VTKGridFunctionAdapter
 	  : public Dune::VTKWriter<typename T::Traits::GridViewType>::VTKFunction

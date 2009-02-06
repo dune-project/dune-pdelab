@@ -12,6 +12,7 @@ namespace Dune {
   namespace PDELab {
 
     /** \addtogroup MultiTypeTree MultiTypeTree
+     *  \ingroup PDELab
      *  \{
      *
      *  A \ref MultiTypeTree is used to collect different types or multiple

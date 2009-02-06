@@ -5,6 +5,7 @@
 #include <iostream>
 
 /** @defgroup CP Counting Pointer
+ *  @ingroup PDELab
  *  @{
  */
 

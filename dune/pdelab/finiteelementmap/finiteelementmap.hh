@@ -1,3 +1,4 @@
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_FINITELEMENTMAP_HH
 #define DUNE_PDELAB_FINITELEMENTMAP_HH
 
@@ -6,7 +7,11 @@
 namespace Dune {
   namespace PDELab {
 
-	// collect types exported by a finite element map
+    //! \addtogroup FiniteElementMap
+    //! \ingroup PDELab
+    //! \{
+
+	//! collect types exported by a finite element map
 	template<class T>
 	struct LocalFiniteElementMapTraits
 	{
@@ -14,7 +19,7 @@ namespace Dune {
 	  typedef T LocalFiniteElementType;
 	};
 
-	// interface for a finite element map
+	//! interface for a finite element map
 	template<class T, class Imp>
 	class LocalFiniteElementMapInterface
 	{
@@ -39,7 +44,7 @@ namespace Dune {
 	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
 	};
 
-	// simple implementation where all entities have the same finite element
+	//! simple implementation where all entities have the same finite element
 	template<class Imp>
 	class SimpleLocalFiniteElementMap : 
 	  public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits<Imp>, 
@@ -69,7 +74,9 @@ namespace Dune {
 	  Imp imp; // create once
 	};
 
-  }
-}
+    //! \} group FiniteElementMap
+
+  } // namespace PDELab
+} // namespace Dune
 
 #endif

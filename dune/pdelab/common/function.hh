@@ -15,6 +15,10 @@
 namespace Dune {
   namespace PDELab {
 
+    //! \addtogroup PDELab_Function Function
+    //! \ingroup PDELab
+    //! \{
+
 	//! traits class holding function signature, same as in local function
 	template<class DF, int n, class D, class RF, int m, class R>
 	struct FunctionTraits
@@ -815,13 +819,21 @@ namespace Dune {
 	  }
 	};
 
+    /** \brief add vertex data from a \ref GridFunctionTree to a VTKWriter
+     *
+     *  \tparam GV The GridView for the VTKWriter
+     *  \tparam T  The \ref GridFunctionTree
+     */
 	template<typename GV, typename T> 
 	void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t)
 	{
 	  std::string s="data";
 	  GridFunctionTreeVisitNodeMetaProgram<T,T::isLeaf>::vtkwriter_tree_addvertexdata(w,t,s);
 	}
-  }
-}
+
+    //! \} Function
+
+  } // namespace PDELab
+} // namespace Dune
 
 #endif
