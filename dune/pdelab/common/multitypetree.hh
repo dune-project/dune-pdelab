@@ -151,6 +151,16 @@ namespace Dune {
 		P::set(c[i],t);
 	  }
 
+	  const T& operator[] (int i) const
+	  {
+		return P::get(c[i]);
+	  }
+
+	  T& operator[] (int i)
+	  {
+		return P::get(c[i]);
+	  }
+
 	private:
 	  typename P::template Storage<T>::Type c[k];
 	};

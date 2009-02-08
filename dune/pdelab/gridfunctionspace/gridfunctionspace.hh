@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_LEAFGRIDFUNCTIONSPACE_HH
-#define DUNE_PDELAB_LEAFGRIDFUNCTIONSPACE_HH
+#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_HH
+#define DUNE_PDELAB_GRIDFUNCTIONSPACE_HH
 
 #include<vector>
 #include<set>
@@ -13,6 +13,8 @@
 #include"../common/multitypetree.hh"
 #include"../common/cpstoragepolicy.hh"
 
+#include"localfunctionspace.hh"
+
 namespace Dune {
   namespace PDELab {
 
@@ -21,7 +23,7 @@ namespace Dune {
     //! \{
 
     //=======================================
-    // grid function space
+    // grid function space : single component case
     //=======================================
 
 	//! collect types exported by a multi-component grid function space
@@ -573,13 +575,19 @@ namespace Dune {
 	  }
 	};
 
+	template<typename T, int k, typename P>
+	class PowerGridFunctionSpace;
+
     // product of identical grid function spaces
     // base class that holds implementation of the methods
+    // this is the default version with lexicographic ordering
 	template<typename T, int k, typename P>
 	class PowerGridFunctionSpaceBase 
       : public PowerNode<T,k,CountingPointerStoragePolicy>,
         public Countable
 	{
+      friend class PowerGridFunctionSpace<T,k,P>;
+
 	public:
       typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
                                                     typename T::Traits::BackendType>
@@ -589,7 +597,8 @@ namespace Dune {
       // setting of the children is then done by the constructors
       // of the specialized derived classes
       PowerGridFunctionSpaceBase ()
-      {}
+      {
+      }
 
 	  // get grid view
 	  const typename Traits::GridViewType& gridview () const
@@ -602,14 +611,14 @@ namespace Dune {
 	  {
         // this is bullshit all children may have different
         // size although they have the same type ...
-		return k*this->template getChild<0>().globalSize();
+		return offset[k];
 	  }
 
 	  // get max dimension of shape function space
 	  typename Traits::SizeType maxLocalSize () const
 	  {
         // this is bullshit !
-		return k*this->template getChild<0>().maxLocalSize();
+		return maxlocalsize;
 	  }
 
 	  // map index [0,globalSize-1] to root index set
@@ -618,7 +627,45 @@ namespace Dune {
 		return i;
 	  }
 
+	  // map index [0,globalSize-1] to root index set
+      template<int i>
+	  typename Traits::SizeType subMap (typename Traits::SizeType j) const
+	  {
+		return offset[i]+j;
+	  }
+
+      // recalculate sizes
+      void update ()
+      {
+         for (int i=0; i<k; i++)
+           (*this)[i].update();
+         setup();
+      }
+
+    private:
+      void setup ()
+      {
+        std::cout << "power grid function space(lexicographic version):" << std::endl;
+        std::cout << "( ";
+        offset[0] = 0;
+        maxlocalsize = 0;
+        for (int i=0; i<k; i++)
+          {
+            childSize[i] = (*this)[i].globalSize();
+            std::cout << childSize[i] << " ";
+            offset[i+1] = offset[i]+childSize[i];
+            maxlocalsize += (*this)[i].maxLocalSize();
+          }
+        std::cout << ") total size = " << offset[k]
+                  << " max local size = " << maxlocalsize 
+                  << std::endl;
+      }
+
+      typename Traits::SizeType childSize[k];
+      typename Traits::SizeType offset[k+1];
+      typename Traits::SizeType maxlocalsize;
 	};
+
 
     // product of identical grid function spaces
     // the specializations of this class just set the members
@@ -635,12 +682,17 @@ namespace Dune {
       //! Construct a PowerGridFunction with k clones of the function t
 	  PowerGridFunctionSpace (T& t)
       {
-        // need template metaprogram here
+        for (int i=0; i<k; i++)
+          (*this)[i] = t;
+        PowerGridFunctionSpaceBase<T,k,P>::setup();
       }
 
 	  PowerGridFunctionSpace (T** t)  
       {
-      }
+         for (int i=0; i<k; i++)
+           (*this)[i] = *(t[i]);
+        PowerGridFunctionSpaceBase<T,k,P>::setup();
+     }
 
 	};
 
@@ -658,6 +710,7 @@ namespace Dune {
       {
         this->template setChild<0>(t);
         this->template setChild<1>(t);
+        PowerGridFunctionSpaceBase<T,2,P>::setup();
       }
 
       //! Construct a PowerGridFunction with k clones of the function t
@@ -665,6 +718,7 @@ namespace Dune {
       {
         this->template setChild<0>(t0);
         this->template setChild<1>(t1);
+        PowerGridFunctionSpaceBase<T,2,P>::setup();
       }
 	};
 
@@ -683,6 +737,7 @@ namespace Dune {
         this->template setChild<0>(t);
         this->template setChild<1>(t);
         this->template setChild<2>(t);
+        PowerGridFunctionSpaceBase<T,3,P>::setup();
       }
 
       //! Construct a PowerGridFunction with k clones of the function t
@@ -691,286 +746,10 @@ namespace Dune {
         this->template setChild<0>(t0);
         this->template setChild<1>(t1);
         this->template setChild<2>(t2);
+        PowerGridFunctionSpaceBase<T,3,P>::setup();
       }
 	};
 
-
-    //=======================================
-    // local function space
-    //=======================================
-
-	template<typename T, bool isleaf, typename E, typename It, typename Int>
-	struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
-
-	template<typename T, typename E, typename It, typename Int, int n, int i>
-	struct LocalFunctionSpaceBaseVisitChildMetaProgram // visit child of inner node
-	{
-	  static void bind_localfunctionspace_to_element (T& t, const E& e, It begin, Int& offset)
-	  {
-        // vist children of node t in order
-		typedef typename T::template Child<i>::Type C;
-        LocalFunctionSpaceBaseVisitNodeMetaProgram<C,C::isLeaf,E,It,Int>::
-          bind_localfunctionspace_to_element(t.template getChild<i>(),e,begin,offset);
-        LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,n,i+1>::
-          bind_localfunctionspace_to_element(t,e,begin,offset);
-	  }
-	};
-
-	template<typename T, typename E, typename It, typename Int, int n>
-	struct LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,n,n> // end of child recursion
-	{
-	  static void bind_localfunctionspace_to_element (T& t, const E& e, It begin, Int& offset)
-	  {
-        return;
-	  }
-	};
-
-	template<typename T, bool isleaf, typename E, typename It, typename Int> 
-	struct LocalFunctionSpaceBaseVisitNodeMetaProgram // visit inner node
-	{
-	  static void bind_localfunctionspace_to_element (T& t, const E& e, It begin, Int& offset)
-	  {
-        // now we are at a multi component local function space
-        Int initial_offset = offset; // remember initial offset to compute size later
-        t.i = begin+initial_offset; // begin is always the first entry in the vector
-		LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,T::CHILDREN,0>::
-          bind_localfunctionspace_to_element(t,e,begin,offset);
-        t.n = offset-initial_offset;
-	  }
-	};
-
-	template<typename T, typename E, typename It, typename Int> 
-	struct LocalFunctionSpaceBaseVisitNodeMetaProgram<T,true,E,It,Int> // visit leaf node 
-	{
-	  static void bind_localfunctionspace_to_element (T& t, const E& e, It begin, Int& offset)
-	  {
-        // now we are at a single component local function space
-        // which is part of a multi component local function space
-        t.i = begin+offset; // begin is always the first entry in the vector
-        t.plfem = &(((t.pgfs)->localFiniteElementMap()).find(e));
-        t.n = t.plfem->localBasis().size(); // determine size of this chunk
-        std::vector<typename T::Traits::GridFunctionSpaceType::Traits::SizeType> global(t.n);
-        t.pgfs->globalIndices(*(t.plfem),e,global); // get global indices for this finite element
-        for (Int i=0; i<t.n; i++) t.i[i]=t.pgfs->upMap(global[i]); 
-        offset += t.n; // append this chunk
-	  }
-	};
-
-
-    // implementation of local function space needs
-    // to be specialized for interior and leaves
-    template<typename GFS, bool isleaf> class LocalFunctionSpaceBase;
-
-    // local function space description that can be bound to an element
-    // depends on a grid function space
-    template<typename GFS>
-    class LocalFunctionSpace : public LocalFunctionSpaceBase<GFS,GFS::isLeaf>
-    {
-      typedef LocalFunctionSpaceBase<GFS,GFS::isLeaf> BaseT;
-
-    public:
-      typedef typename BaseT::Traits Traits;
-
-      LocalFunctionSpace (const GFS& gfs) 
-        : BaseT(gfs), global(gfs.maxLocalSize())
-      {}
-
-      //! \brief bind local function space to entity
-      void bind (const typename Traits::Element& e)
-      {
-        typename BaseT::Traits::IndexContainer::size_type offset=0;
-
-        // is implemented as a template metaprogram over BaseT
-        LocalFunctionSpaceBaseVisitNodeMetaProgram<BaseT,BaseT::isLeaf,
-          typename Traits::Element,
-          typename BaseT::Traits::IndexContainer::iterator,
-          typename BaseT::Traits::IndexContainer::size_type>::
-          bind_localfunctionspace_to_element(*this,e,global.begin(),offset);
-        global.resize(offset); // now the size is known
-      }
-
-    private:
-      typename BaseT::Traits::IndexContainer global;
-    };
-
-
-	//! traits for multi component local function space
-	template<typename GFS, bool isleaf>	
-    struct LocalFunctionSpaceTraits
-    {
-	  //! \brief the grid view where grid function is defined upon
-	  typedef GFS GridFunctionSpaceType;
-
-	  //! \brief Type to store indices from Backend
-      typedef typename GFS::Traits::GridViewType GridViewType;
-
-      //! \brief Type of codim 0 entity in the grid
-      typedef typename GridViewType::Traits::template Codim<0>::Entity Element;
-
-	  //! \brief Type to store indices from Backend
-      typedef typename GFS::Traits::SizeType SizeType;
-
-	  //! \brief Type of container to store indices
-      typedef typename std::vector<SizeType> IndexContainer;
-    };
-
-    // implementation for multi component local function space
-    template<typename GFS, bool isleaf> 
-    class LocalFunctionSpaceBase
-    {
-      template<typename T, bool b, typename E, typename It, typename Int> 
-      friend struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
-      template<typename T, typename E, typename It, typename Int, int n, int i>
-      friend struct LocalFunctionSpaceBaseVisitChildMetaProgram;
-
-      typedef typename GFS::Traits::BackendType B;
- 	  typedef typename GFS::Traits::GridViewType::Traits::template Codim<0>::Entity Element;
-
-    public:
-      typedef LocalFunctionSpaceTraits<GFS,false> Traits;
-
-      //! \brief initialize with grid function space
-      LocalFunctionSpaceBase (const GFS& gfs) : pgfs(&gfs)
-      {
-      }
-
-      //! \brief get current size 
-      typename Traits::IndexContainer::size_type size () const
-      {
-        return n;
-      }
-
-      //! \brief get maximum possible size (which is maxLocalSize from grid function space)
-      typename Traits::IndexContainer::size_type maxSize () const
-      {
-        return pgfs->maxLocalSize();
-      }
-
-      /** \brief extract coefficients for one element from container */  
-      template<typename GC, typename LC>
-      void vread (const GC& globalcontainer, LC& localcontainer) const
-      {
-        localcontainer.resize(n);
-        for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          localcontainer[k] = B::const_access(globalcontainer,i[k]);
-      }
-
-      /** \brief write back coefficients for one element to container */  
-      template<typename GC, typename LC>
-      void vwrite (const LC& localcontainer, GC& globalcontainer) const
-      {
-        for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          B::access(globalcontainer,i[k]) = localcontainer[k];
-      }
-
-      /** \brief add coefficients for one element to container */  
-      template<typename GC, typename LC>
-      void vadd (const LC& localcontainer, GC& globalcontainer) const
-      {
-        for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          B::access(globalcontainer,i[k]) += localcontainer[k];
-      }
-
-      void debug () const
-      {
-        std::cout << n << " indices = (";
-        for (int k=0; k<n; k++)
-          std::cout << i[k] << " ";
-        std::cout << ")" << std::endl;
-      }
-
-    private:
-	  CP<GFS const> pgfs;
-      typename Traits::IndexContainer::iterator i;
-      typename Traits::IndexContainer::size_type n;
-    };
-
-	//! traits for single component local function space
-	template<typename GFS>	
-	struct LocalFunctionSpaceTraits<GFS,true> : public LocalFunctionSpaceTraits<GFS,false>
-	{
-	  //! \brief Type of local finite element
-      typedef typename GFS::Traits::LocalFiniteElementType LocalFiniteElementType;
-	};
-
-    // implementation for leaf nodes
-    template<typename GFS> 
-    class LocalFunctionSpaceBase<GFS,true>
-      : public LeafNode
-    {
-      template<typename T, bool b, typename E, typename It, typename Int> 
-      friend struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
-      template<typename T, typename E, typename It, typename Int, int n, int i>
-      friend struct LocalFunctionSpaceBaseVisitChildMetaProgram;
-
-      typedef typename GFS::Traits::BackendType B;
- 	  typedef typename GFS::Traits::GridViewType::Traits::template Codim<0>::Entity Element;
-
-   public:
-      typedef LocalFunctionSpaceTraits<GFS,true> Traits;
-
-      //! \brief initialize with grid function space
-      LocalFunctionSpaceBase (const GFS& gfs) : pgfs(&gfs)
-      {
-      }
-
-      //! \brief get current size 
-      typename Traits::IndexContainer::size_type size () const
-      {
-        return n;
-      }
-
-      //! \brief get maximum possible size (which is maxLocalSize from grid function space)
-      typename Traits::IndexContainer::size_type maxSize () const
-      {
-        return pgfs->maxLocalSize();
-      }
-
-      //! \brief get local finite element
-      const typename Traits::LocalFiniteElementType& localFiniteElement () const
-      {
-        return *plfem;
-      }
-
-      /** \brief extract coefficients for one element from container */  
-      template<typename GC, typename LC>
-      void vread (const GC& globalcontainer, LC& localcontainer) const
-      {
-        localcontainer.resize(n);
-        for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          localcontainer[k] = B::const_access(globalcontainer,i[k]);
-      }
-
-      /** \brief write back coefficients for one element to container */  
-      template<typename GC, typename LC>
-      void vwrite (const LC& localcontainer, GC& globalcontainer) const
-      {
-        for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          B::access(globalcontainer,i[k]) = localcontainer[k];
-      }
-
-      /** \brief add coefficients for one element to container */  
-      template<typename GC, typename LC>
-      void vadd (const LC& localcontainer, GC& globalcontainer) const
-      {
-        for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          B::access(globalcontainer,i[k]) += localcontainer[k];
-      }
-
-      void debug () const
-      {
-        std::cout << n << " indices = (";
-        for (typename Traits::IndexContainer::size_type k=0; k<n; k++)
-          std::cout << i[k] << " ";
-        std::cout << ")" << std::endl;
-      }
-
-    private:
-	  CP<GFS const> pgfs;
-      typename Traits::IndexContainer::iterator i;
-      typename Traits::IndexContainer::size_type n;
-      const typename Traits::LocalFiniteElementType* plfem;
-    };
 
     //! \} group GridFunctionSpace
   } // namespace PDELab
