@@ -24,7 +24,7 @@ void test (const GV& gv)
   P2GFS p2gfs(gv,q22dfem);
 
   // power grid function space
-  typedef Dune::PDELab::PowerGridFunctionSpace<P2GFS,2> PowerGFS;
+  typedef Dune::PDELab::PowerGridFunctionSpace<P2GFS,10> PowerGFS;
   PowerGFS powergfs(p2gfs);
 
   // make coefficent Vectors

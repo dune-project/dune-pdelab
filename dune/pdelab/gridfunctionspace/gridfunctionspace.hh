@@ -651,10 +651,10 @@ namespace Dune {
         maxlocalsize = 0;
         for (int i=0; i<k; i++)
           {
-            childSize[i] = (*this)[i].globalSize();
+            childSize[i] = this->getChild(i).globalSize();
             std::cout << childSize[i] << " ";
             offset[i+1] = offset[i]+childSize[i];
-            maxlocalsize += (*this)[i].maxLocalSize();
+            maxlocalsize += this->getChild(i).maxLocalSize();
           }
         std::cout << ") total size = " << offset[k]
                   << " max local size = " << maxlocalsize 
@@ -683,17 +683,16 @@ namespace Dune {
 	  PowerGridFunctionSpace (T& t)
       {
         for (int i=0; i<k; i++)
-          (*this)[i] = t;
+          setChild(i,t);
         PowerGridFunctionSpaceBase<T,k,P>::setup();
       }
 
 	  PowerGridFunctionSpace (T** t)  
       {
          for (int i=0; i<k; i++)
-           (*this)[i] = *(t[i]);
-        PowerGridFunctionSpaceBase<T,k,P>::setup();
+           setChild(i,*(t[i]));
+         PowerGridFunctionSpaceBase<T,k,P>::setup();
      }
-
 	};
 
 	template<typename T, typename P>

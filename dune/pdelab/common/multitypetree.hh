@@ -151,14 +151,14 @@ namespace Dune {
 		P::set(c[i],t);
 	  }
 
-	  const T& operator[] (int i) const
+	  const T& getChild (int i) const
 	  {
 		return P::get(c[i]);
 	  }
 
-	  T& operator[] (int i)
+	  void setChild (int i, T& t)
 	  {
-		return P::get(c[i]);
+		P::set(c[i],t);
 	  }
 
 	private:
