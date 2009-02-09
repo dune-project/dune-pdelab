@@ -1,6 +1,6 @@
 # $Id: Makefile.am 586 2006-04-28 13:41:31Z mblatt $
 
-NORMALTESTS = testcountingptr testmultitypetree testfunction testanalytic testfiniteelementmap testgridfunctionspace testlocalfunctionspace
+NORMALTESTS = testcountingptr testmultitypetree testfunction testanalytic testfiniteelementmap testgridfunctionspace testlocalfunctionspace testutilities
 
 # list of tests to run
 TESTS = $(NORMALTESTS)
@@ -35,6 +35,10 @@ testgridfunctionspace_LDADD = $(MPI_LDFLAGS) $(MPI_LDFLAGS) $(DUNE_LDFLAGS) $(DU
 testlocalfunctionspace_SOURCES = testlocalfunctionspace.cc
 testlocalfunctionspace_CXXFLAGS = $(MPI_CPPFLAGS)
 testlocalfunctionspace_LDADD = $(MPI_LDFLAGS) $(MPI_LDFLAGS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+
+testutilities_SOURCES = testutilities.cc
+testutilities_CXXFLAGS = $(MPI_CPPFLAGS)
+testutilities_LDADD = $(MPI_LDFLAGS) $(MPI_LDFLAGS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
 
 include $(top_srcdir)/am/global-rules
 
