@@ -89,7 +89,7 @@ namespace Dune {
        *  \param[in]  t The object to assign
        */
 	  template<typename T>
-	  static void set (T& s, T& t)
+	  static void set (T& s, const T& t)
 	  {
 		s = t;
 	  }
@@ -151,12 +151,23 @@ namespace Dune {
 		P::set(c[i],t);
 	  }
 
+	  template<int i>
+	  void setChild (const T& t)
+	  {
+		P::set(c[i],t);
+	  }
+
 	  const T& getChild (int i) const
 	  {
 		return P::get(c[i]);
 	  }
 
 	  void setChild (int i, T& t)
+	  {
+		P::set(c[i],t);
+	  }
+
+	  void setChild (int i, const T& t)
 	  {
 		P::set(c[i],t);
 	  }
@@ -183,6 +194,12 @@ namespace Dune {
 
       //! initialize all children with the same object t
 	  PowerNode (T& t)
+	  {
+		for (int i=0; i<k; i++)
+		  P::set(this->c[i],t);
+	  }
+
+	  PowerNode (const T& t)
 	  {
 		for (int i=0; i<k; i++)
 		  P::set(this->c[i],t);
@@ -231,7 +248,19 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
+	  PowerNode (const T& t)
+	  {
+		for (int i=0; i<2; i++)
+		  P::set(this->c[i],t);
+	  }
+
 	  PowerNode (T& t0, T& t1)
+	  {
+		P::set(this->c[0],t0);
+		P::set(this->c[1],t1);
+	  }
+
+	  PowerNode (const T& t0, const T& t1)
 	  {
 		P::set(this->c[0],t0);
 		P::set(this->c[1],t1);
@@ -251,7 +280,20 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
+	  PowerNode (const T& t)
+	  {
+		for (int i=0; i<3; i++)
+		  P::set(this->c[i],t);
+	  }
+
 	  PowerNode (T& t0, T& t1, T& t2)
+	  {
+		P::set(this->c[0],t0);
+		P::set(this->c[1],t1);
+		P::set(this->c[2],t2);
+	  }
+
+	  PowerNode (const T& t0, const T& t1, const T& t2)
 	  {
 		P::set(this->c[0],t0);
 		P::set(this->c[1],t1);
@@ -272,7 +314,21 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
+	  PowerNode (const T& t)
+	  {
+		for (int i=0; i<4; i++)
+		  P::set(this->c[i],t);
+	  }
+
 	  PowerNode (T& t0, T& t1, T& t2, T& t3)
+	  {
+		P::set(this->c[0],t0);
+		P::set(this->c[1],t1);
+		P::set(this->c[2],t2);
+		P::set(this->c[3],t3);
+	  }
+
+	  PowerNode (const T& t0, const T& t1, const T& t2, const T& t3)
 	  {
 		P::set(this->c[0],t0);
 		P::set(this->c[1],t1);
@@ -294,7 +350,22 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
+	  PowerNode (const T& t)
+	  {
+		for (int i=0; i<5; i++)
+		  P::set(this->c[i],t);
+	  }
+
 	  PowerNode (T& t0, T& t1, T& t2, T& t3, T& t4)
+	  {
+		P::set(this->c[0],t0);
+		P::set(this->c[1],t1);
+		P::set(this->c[2],t2);
+		P::set(this->c[3],t3);
+		P::set(this->c[4],t4);
+	  }
+
+	  PowerNode (const T& t0, const T& t1, const T& t2, const T& t3, const T& t4)
 	  {
 		P::set(this->c[0],t0);
 		P::set(this->c[1],t1);
@@ -317,7 +388,23 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
+	  PowerNode (const T& t)
+	  {
+		for (int i=0; i<6; i++)
+		  P::set(this->c[i],t);
+	  }
+
 	  PowerNode (T& t0, T& t1, T& t2, T& t3, T& t4, T& t5)
+	  {
+		P::set(this->c[0],t0);
+		P::set(this->c[1],t1);
+		P::set(this->c[2],t2);
+		P::set(this->c[3],t3);
+		P::set(this->c[4],t4);
+		P::set(this->c[5],t5);
+	  }
+
+	  PowerNode (const T& t0, const T& t1, const T& t2, const T& t3, const T& t4, const T& t5)
 	  {
 		P::set(this->c[0],t0);
 		P::set(this->c[1],t1);
@@ -341,7 +428,25 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
+	  PowerNode (const T& t)
+	  {
+		for (int i=0; i<7; i++)
+		  P::set(this->c[i],t);
+	  }
+
 	  PowerNode (T& t0, T& t1, T& t2, T& t3, T& t4, T& t5, T& t6)
+	  {
+		P::set(this->c[0],t0);
+		P::set(this->c[1],t1);
+		P::set(this->c[2],t2);
+		P::set(this->c[3],t3);
+		P::set(this->c[4],t4);
+		P::set(this->c[5],t5);
+		P::set(this->c[6],t6);
+	  }
+
+	  PowerNode (const T& t0, const T& t1, const T& t2, const T& t3, const T& t4, 
+                 const T& t5, const T& t6)
 	  {
 		P::set(this->c[0],t0);
 		P::set(this->c[1],t1);
@@ -366,7 +471,26 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
+	  PowerNode (const T& t)
+	  {
+		for (int i=0; i<8; i++)
+		  P::set(this->c[i],t);
+	  }
+
 	  PowerNode (T& t0, T& t1, T& t2, T& t3, T& t4, T& t5, T& t6, T& t7)
+	  {
+		P::set(this->c[0],t0);
+		P::set(this->c[1],t1);
+		P::set(this->c[2],t2);
+		P::set(this->c[3],t3);
+		P::set(this->c[4],t4);
+		P::set(this->c[5],t5);
+		P::set(this->c[6],t6);
+		P::set(this->c[7],t7);
+	  }
+
+	  PowerNode (const T& t0, const T& t1, const T& t2, const T& t3, const T& t4, 
+                 const T& t5, const T& t6, const T& t7)
 	  {
 		P::set(this->c[0],t0);
 		P::set(this->c[1],t1);
@@ -392,7 +516,27 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
+	  PowerNode (const T& t)
+	  {
+		for (int i=0; i<9; i++)
+		  P::set(this->c[i],t);
+	  }
+
 	  PowerNode (T& t0, T& t1, T& t2, T& t3, T& t4, T& t5, T& t6, T& t7, T& t8)
+	  {
+		P::set(this->c[0],t0);
+		P::set(this->c[1],t1);
+		P::set(this->c[2],t2);
+		P::set(this->c[3],t3);
+		P::set(this->c[4],t4);
+		P::set(this->c[5],t5);
+		P::set(this->c[6],t6);
+		P::set(this->c[7],t7);
+		P::set(this->c[8],t8);
+	  }
+
+	  PowerNode (const T& t0, const T& t1, const T& t2, const T& t3, const T& t4, 
+                 const T& t5, const T& t6, const T& t7, const T& t8)
 	  {
 		P::set(this->c[0],t0);
 		P::set(this->c[1],t1);
@@ -419,7 +563,28 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
+	  PowerNode (const T& t)
+	  {
+		for (int i=0; i<10; i++)
+		  P::set(this->c[i],t);
+	  }
+
 	  PowerNode (T& t0, T& t1, T& t2, T& t3, T& t4, T& t5, T& t6, T& t7, T& t8, T& t9)
+	  {
+		P::set(this->c[0],t0);
+		P::set(this->c[1],t1);
+		P::set(this->c[2],t2);
+		P::set(this->c[3],t3);
+		P::set(this->c[4],t4);
+		P::set(this->c[5],t5);
+		P::set(this->c[6],t6);
+		P::set(this->c[7],t7);
+		P::set(this->c[8],t8);
+		P::set(this->c[9],t9);
+	  }
+
+	  PowerNode (const T& t0, const T& t1, const T& t2, const T& t3, const T& t4, 
+                 const T& t5, const T& t6, const T& t7, const T& t8, const T& t9)
 	  {
 		P::set(this->c[0],t0);
 		P::set(this->c[1],t1);

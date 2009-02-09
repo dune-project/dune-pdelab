@@ -116,10 +116,6 @@ namespace Dune {
 	};
 
 
-    // forward declaration of local function space
-    template<typename GFS> class LocalFunctionSpace;
-
-
 	// template metaprogram to evaluate subindex without compile-time codim parameter
 	// C : codimension
 	template<int C, typename IS, typename E>
@@ -383,6 +379,9 @@ namespace Dune {
 		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;	
 	  };
 
+      // define local function space parametrized by self 
+      typedef Dune::PDELab::LocalFunctionSpace<GridFunctionSpace> LocalFunctionSpace;
+
 	  // constructor
 	  GridFunctionSpace (const GV& gridview, const LFEM& lfem) 
 		: gv(gridview), plfem(&lfem)
@@ -550,29 +549,16 @@ namespace Dune {
 
 	// this class may be used to pass compile-time
 	// parameters to the implementation 
-	struct PowerGridFunctionSpaceLexicographicMapper
+	struct GridFunctionSpaceLexicographicMapper
 	{
 	  enum {dummy=0} ;
 	};
 
 	// this class may be used to pass compile-time
 	// parameters to the implementation 
-	struct PowerGridFunctionSpaceBlockwiseMapper
+	struct GridFunctionSpaceBlockwiseMapper
 	{
 	  enum {dummy=0} ;
-	};
-
-	template<typename T, int n, int i>
-	struct PowerGridFunctionSpaceBaseVisitChildMetaProgram // visit child of inner node
-	{
-	};
-
-	template<typename T, int n>
-	struct PowerGridFunctionSpaceBaseVisitChildMetaProgram<T,n,n> // end of child recursion
-	{
-	  static void bind_localfunctionspace_to_element ()
-	  {
-	  }
 	};
 
 	template<typename T, int k, typename P>
@@ -592,6 +578,18 @@ namespace Dune {
       typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
                                                     typename T::Traits::BackendType>
       Traits;
+
+	  // extract type of container storing Es
+	  template<typename E>
+	  struct VectorContainer
+	  {
+		//! \brief define Type as the Type of a container of E's
+		typedef typename Traits::BackendType::template VectorContainer<PowerGridFunctionSpaceBase,E> Type;	
+	  };
+
+      // define local function space parametrized by self 
+      typedef Dune::PDELab::PowerLocalFunctionSpace<PowerGridFunctionSpaceBase> LocalFunctionSpace;
+
 
       // it is part of the trick to have a constructor without arguments
       // setting of the children is then done by the constructors
@@ -668,9 +666,112 @@ namespace Dune {
 
 
     // product of identical grid function spaces
+    // base class that holds implementation of the methods
+    // specialization for blockwise ordering
+	template<typename T, int k>
+	class PowerGridFunctionSpaceBase<T,k,GridFunctionSpaceBlockwiseMapper> 
+      : public PowerNode<T,k,CountingPointerStoragePolicy>,
+        public Countable
+	{
+      friend class PowerGridFunctionSpace<T,k,GridFunctionSpaceBlockwiseMapper>;
+
+	public:
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+                                                    typename T::Traits::BackendType>
+      Traits;
+
+	  // extract type of container storing Es
+	  template<typename E>
+	  struct VectorContainer
+	  {
+		//! \brief define Type as the Type of a container of E's
+		typedef typename Traits::BackendType::template VectorContainer<PowerGridFunctionSpaceBase,E> Type;	
+	  };
+
+      // define local function space parametrized by self 
+      typedef Dune::PDELab::PowerLocalFunctionSpace<PowerGridFunctionSpaceBase> LocalFunctionSpace;
+      
+      // it is part of the trick to have a constructor without arguments
+      // setting of the children is then done by the constructors
+      // of the specialized derived classes
+      PowerGridFunctionSpaceBase ()
+      {
+      }
+
+	  // get grid view
+	  const typename Traits::GridViewType& gridview () const
+	  {
+		return this->template getChild<0>().gridview();
+	  }
+
+	  // get dimension of finite element space
+	  typename Traits::SizeType globalSize () const
+	  {
+        // this is bullshit all children may have different
+        // size although they have the same type ...
+		return offset[k];
+	  }
+
+	  // get max dimension of shape function space
+	  typename Traits::SizeType maxLocalSize () const
+	  {
+        // this is bullshit !
+		return maxlocalsize;
+	  }
+
+	  // map index [0,globalSize-1] to root index set
+	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
+	  {
+		return i;
+	  }
+
+	  // map index [0,globalSize-1] to root index set
+      template<int i>
+	  typename Traits::SizeType subMap (typename Traits::SizeType j) const
+	  {
+		return j*k+i;
+	  }
+
+      // recalculate sizes
+      void update ()
+      {
+         for (int i=0; i<k; i++)
+           (*this)[i].update();
+         setup();
+      }
+
+    private:
+      void setup ()
+      {
+        std::cout << "power grid function space(blockwise version):" << std::endl;
+        std::cout << "( ";
+        offset[0] = 0;
+        maxlocalsize = 0;
+        for (int i=0; i<k; i++)
+          {
+            childSize[i] = this->getChild(i).globalSize();
+            std::cout << childSize[i] << " ";
+            offset[i+1] = offset[i]+childSize[i];
+            maxlocalsize += this->getChild(i).maxLocalSize();
+          }
+        std::cout << ") total size = " << offset[k]
+                  << " max local size = " << maxlocalsize 
+                  << std::endl;
+        for (int i=1; i<k; i++)
+          if (childSize[i]!=childSize[0])
+            DUNE_THROW(Exception, "components must be of equal size");
+      }
+
+      typename Traits::SizeType childSize[k];
+      typename Traits::SizeType offset[k+1];
+      typename Traits::SizeType maxlocalsize;
+	};
+
+
+    // product of identical grid function spaces
     // the specializations of this class just set the members
     // all the methods are generic in the implementation
-	template<typename T, int k, typename P=PowerGridFunctionSpaceLexicographicMapper>
+	template<typename T, int k, typename P=GridFunctionSpaceLexicographicMapper>
 	class PowerGridFunctionSpace 
       : public PowerGridFunctionSpaceBase<T,k,P>
  	{
@@ -749,6 +850,276 @@ namespace Dune {
       }
 	};
 
+	template<typename T, typename P>
+	class PowerGridFunctionSpace<T,4,P> 
+      : public PowerGridFunctionSpaceBase<T,4,P>
+	{
+	public:
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+                                                    typename T::Traits::BackendType>
+      Traits;
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  PowerGridFunctionSpace (T& t)
+      {
+        this->template setChild<0>(t);
+        this->template setChild<1>(t);
+        this->template setChild<2>(t);
+        this->template setChild<3>(t);
+        PowerGridFunctionSpaceBase<T,4,P>::setup();
+      }
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  PowerGridFunctionSpace (T& t0, T& t1, T& t2, T& t3)
+      {
+        this->template setChild<0>(t0);
+        this->template setChild<1>(t1);
+        this->template setChild<2>(t2);
+        this->template setChild<3>(t3);
+        PowerGridFunctionSpaceBase<T,4,P>::setup();
+      }
+	};
+
+	template<typename T, typename P>
+	class PowerGridFunctionSpace<T,5,P> 
+      : public PowerGridFunctionSpaceBase<T,5,P>
+	{
+	public:
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+                                                    typename T::Traits::BackendType>
+      Traits;
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  PowerGridFunctionSpace (T& t)
+      {
+        this->template setChild<0>(t);
+        this->template setChild<1>(t);
+        this->template setChild<2>(t);
+        this->template setChild<3>(t);
+        this->template setChild<4>(t);
+        PowerGridFunctionSpaceBase<T,5,P>::setup();
+      }
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  PowerGridFunctionSpace (T& t0, T& t1, T& t2, T& t3, T& t4)
+      {
+        this->template setChild<0>(t0);
+        this->template setChild<1>(t1);
+        this->template setChild<2>(t2);
+        this->template setChild<3>(t3);
+        this->template setChild<4>(t4);
+        PowerGridFunctionSpaceBase<T,5,P>::setup();
+      }
+	};
+
+	template<typename T, typename P>
+	class PowerGridFunctionSpace<T,6,P> 
+      : public PowerGridFunctionSpaceBase<T,6,P>
+	{
+	public:
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+                                                    typename T::Traits::BackendType>
+      Traits;
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  PowerGridFunctionSpace (T& t)
+      {
+        this->template setChild<0>(t);
+        this->template setChild<1>(t);
+        this->template setChild<2>(t);
+        this->template setChild<3>(t);
+        this->template setChild<4>(t);
+        this->template setChild<5>(t);
+        PowerGridFunctionSpaceBase<T,6,P>::setup();
+      }
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  PowerGridFunctionSpace (T& t0, T& t1, T& t2, T& t3, T& t4, T& t5)
+      {
+        this->template setChild<0>(t0);
+        this->template setChild<1>(t1);
+        this->template setChild<2>(t2);
+        this->template setChild<3>(t3);
+        this->template setChild<4>(t4);
+        this->template setChild<5>(t5);
+        PowerGridFunctionSpaceBase<T,6,P>::setup();
+      }
+	};
+
+	template<typename T, typename P>
+	class PowerGridFunctionSpace<T,7,P> 
+      : public PowerGridFunctionSpaceBase<T,7,P>
+	{
+	public:
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+                                                    typename T::Traits::BackendType>
+      Traits;
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  PowerGridFunctionSpace (T& t)
+      {
+        this->template setChild<0>(t);
+        this->template setChild<1>(t);
+        this->template setChild<2>(t);
+        this->template setChild<3>(t);
+        this->template setChild<4>(t);
+        this->template setChild<5>(t);
+        this->template setChild<6>(t);
+        PowerGridFunctionSpaceBase<T,7,P>::setup();
+      }
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  PowerGridFunctionSpace (T& t0, T& t1, T& t2, T& t3, T& t4, T& t5, T& t6)
+      {
+        this->template setChild<0>(t0);
+        this->template setChild<1>(t1);
+        this->template setChild<2>(t2);
+        this->template setChild<3>(t3);
+        this->template setChild<4>(t4);
+        this->template setChild<5>(t5);
+        this->template setChild<6>(t6);
+        PowerGridFunctionSpaceBase<T,7,P>::setup();
+      }
+	};
+
+	template<typename T, typename P>
+	class PowerGridFunctionSpace<T,8,P> 
+      : public PowerGridFunctionSpaceBase<T,8,P>
+	{
+	public:
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+                                                    typename T::Traits::BackendType>
+      Traits;
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  PowerGridFunctionSpace (T& t)
+      {
+        this->template setChild<0>(t);
+        this->template setChild<1>(t);
+        this->template setChild<2>(t);
+        this->template setChild<3>(t);
+        this->template setChild<4>(t);
+        this->template setChild<5>(t);
+        this->template setChild<6>(t);
+        this->template setChild<7>(t);
+        PowerGridFunctionSpaceBase<T,8,P>::setup();
+      }
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  PowerGridFunctionSpace (T& t0, T& t1, T& t2, T& t3, T& t4, T& t5, T& t6, T& t7)
+      {
+        this->template setChild<0>(t0);
+        this->template setChild<1>(t1);
+        this->template setChild<2>(t2);
+        this->template setChild<3>(t3);
+        this->template setChild<4>(t4);
+        this->template setChild<5>(t5);
+        this->template setChild<6>(t6);
+        this->template setChild<7>(t7);
+        PowerGridFunctionSpaceBase<T,8,P>::setup();
+      }
+	};
+
+	template<typename T, typename P>
+	class PowerGridFunctionSpace<T,9,P> 
+      : public PowerGridFunctionSpaceBase<T,9,P>
+	{
+	public:
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+                                                    typename T::Traits::BackendType>
+      Traits;
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  PowerGridFunctionSpace (T& t)
+      {
+        this->template setChild<0>(t);
+        this->template setChild<1>(t);
+        this->template setChild<2>(t);
+        this->template setChild<3>(t);
+        this->template setChild<4>(t);
+        this->template setChild<5>(t);
+        this->template setChild<6>(t);
+        this->template setChild<7>(t);
+        this->template setChild<8>(t);
+        PowerGridFunctionSpaceBase<T,9,P>::setup();
+      }
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  PowerGridFunctionSpace (T& t0, T& t1, T& t2, T& t3, T& t4, T& t5, T& t6, T& t7, T& t8)
+      {
+        this->template setChild<0>(t0);
+        this->template setChild<1>(t1);
+        this->template setChild<2>(t2);
+        this->template setChild<3>(t3);
+        this->template setChild<4>(t4);
+        this->template setChild<5>(t5);
+        this->template setChild<6>(t6);
+        this->template setChild<7>(t7);
+        this->template setChild<8>(t8);
+        PowerGridFunctionSpaceBase<T,9,P>::setup();
+      }
+	};
+
+	template<typename T, typename P>
+	class PowerGridFunctionSpace<T,10,P> 
+      : public PowerGridFunctionSpaceBase<T,10,P>
+	{
+	public:
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+                                                    typename T::Traits::BackendType>
+      Traits;
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  PowerGridFunctionSpace (T& t)
+      {
+        this->template setChild<0>(t);
+        this->template setChild<1>(t);
+        this->template setChild<2>(t);
+        this->template setChild<3>(t);
+        this->template setChild<4>(t);
+        this->template setChild<5>(t);
+        this->template setChild<6>(t);
+        this->template setChild<7>(t);
+        this->template setChild<8>(t);
+        this->template setChild<9>(t);
+        PowerGridFunctionSpaceBase<T,10,P>::setup();
+      }
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  PowerGridFunctionSpace (T& t0, T& t1, T& t2, T& t3, T& t4, T& t5, T& t6, T& t7, T& t8, T& t9)
+      {
+        this->template setChild<0>(t0);
+        this->template setChild<1>(t1);
+        this->template setChild<2>(t2);
+        this->template setChild<3>(t3);
+        this->template setChild<4>(t4);
+        this->template setChild<5>(t5);
+        this->template setChild<6>(t6);
+        this->template setChild<7>(t7);
+        this->template setChild<8>(t8);
+        this->template setChild<9>(t9);
+        PowerGridFunctionSpaceBase<T,10,P>::setup();
+      }
+	};
+
+
+    //=======================================
+    // composite grid function space
+    //=======================================
+
+
+	template<typename T, int n, int i>
+	struct CompositeGridFunctionSpaceBaseVisitChildMetaProgram // visit child of inner node
+	{
+	};
+
+	template<typename T, int n>
+	struct CompositeGridFunctionSpaceBaseVisitChildMetaProgram<T,n,n> // end of child recursion
+	{
+	  static void bind_localfunctionspace_to_element ()
+	  {
+	  }
+	};
 
     //! \} group GridFunctionSpace
   } // namespace PDELab

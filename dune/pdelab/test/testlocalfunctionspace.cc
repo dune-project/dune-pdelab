@@ -9,6 +9,7 @@
 #include<dune/common/fvector.hh>
 #include<dune/grid/yaspgrid.hh>
 #include"../finiteelementmap/q22dfem.hh"
+#include"../finiteelementmap/q12dfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
 
 // test function trees
@@ -18,23 +19,33 @@ void test (const GV& gv)
   // instantiate finite element maps
   typedef Dune::PDELab::Q22DLocalFiniteElementMap<float,double> Q22DFEM;
   Q22DFEM q22dfem;
+  typedef Dune::PDELab::Q12DLocalFiniteElementMap<float,double> Q12DFEM;
+  Q12DFEM q12dfem;
   
   // make a grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> P2GFS;
   P2GFS p2gfs(gv,q22dfem);
+  typedef Dune::PDELab::GridFunctionSpace<GV,Q12DFEM> Q1GFS;
+  Q1GFS q1gfs(gv,q12dfem);
 
   // power grid function space
-  typedef Dune::PDELab::PowerGridFunctionSpace<P2GFS,10> PowerGFS;
-  PowerGFS powergfs(p2gfs);
+  typedef Dune::PDELab::PowerGridFunctionSpace<Q1GFS,2,
+    Dune::PDELab::GridFunctionSpaceLexicographicMapper> PowerGFS;
+  PowerGFS powergfs(q1gfs);
 
   // make coefficent Vectors
   typedef typename P2GFS::template VectorContainer<double>::Type V;
   V x(p2gfs);
   x = 0.0;
+  typedef typename PowerGFS::template VectorContainer<double>::Type VP;
+  VP xp(powergfs);
+  xp = 0.0;
 
   // make local function space object
   typename P2GFS::LocalFunctionSpace p2lfs(p2gfs);
   std::vector<double> xl(p2lfs.maxSize());
+  typename PowerGFS::LocalFunctionSpace powerlfs(powergfs);
+  std::vector<double> xlp(powerlfs.maxSize());
 
   // loop over elements
   typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
@@ -44,6 +55,10 @@ void test (const GV& gv)
       p2lfs.bind(*it);
       p2lfs.debug();
       p2lfs.vread(x,xl);
+
+      powerlfs.bind(*it);
+      powerlfs.debug();
+      powerlfs.vread(xp,xlp);
 	}
 }
 

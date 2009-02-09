@@ -35,6 +35,29 @@ void testleafgridfunction (const GV& gv)
   typedef Dune::PDELab::GridFunctionSpace<GV,EdgeR12DFEM> GFS4;
   GFS4 gfs4(gv,edger12dfem);
 
+  typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,2> PGFS2;
+  PGFS2 pgfs2(gfs2,gfs2);
+  typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,3> PGFS3;
+  PGFS3 pgfs3(gfs2,gfs2,gfs2);
+  typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,4> PGFS4;
+  PGFS4 pgfs4(gfs2,gfs2,gfs2,gfs2);
+  typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,5> PGFS5;
+  PGFS5 pgfs5(gfs2,gfs2,gfs2,gfs2,gfs2);
+  typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,6> PGFS6;
+  PGFS6 pgfs6(gfs2,gfs2,gfs2,gfs2,gfs2,gfs2);
+  typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,7> PGFS7;
+  PGFS7 pgfs7(gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2);
+  typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,8> PGFS8;
+  PGFS8 pgfs8(gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2);
+  typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,9> PGFS9;
+  PGFS9 pgfs9(gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2);
+  typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,10> PGFS10;
+  PGFS10 pgfs10(gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2);
+  typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,17> PGFS17;
+  PGFS17 pgfs17(gfs2);
+  typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,17,Dune::PDELab::GridFunctionSpaceBlockwiseMapper> PGFS17B;
+  PGFS17B pgfs17b(gfs2);
+
   // make coefficent Vectors
   typedef typename GFS1::template VectorContainer<double>::Type V1;
   V1 x1(gfs1);

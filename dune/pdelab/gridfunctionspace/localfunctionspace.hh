@@ -15,21 +15,24 @@ namespace Dune {
     //! \{
 
     //=======================================
-    // local function space
+    // local function space base: metaprograms
     //=======================================
 
 	template<typename T, bool isleaf, typename E, typename It, typename Int>
 	struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
 
 	template<typename T, typename E, typename It, typename Int, int n, int i>
-	struct LocalFunctionSpaceBaseVisitChildMetaProgram // visit child of inner node
+	struct LocalFunctionSpaceBaseVisitChildMetaProgram // visit i'th child of inner node
 	{
 	  static void bind_localfunctionspace_to_element (T& t, const E& e, It begin, Int& offset)
 	  {
         // vist children of node t in order
 		typedef typename T::template Child<i>::Type C;
+        Int initial_offset = offset; // remember initial offset to compute size later
         LocalFunctionSpaceBaseVisitNodeMetaProgram<C,C::isLeaf,E,It,Int>::
           bind_localfunctionspace_to_element(t.template getChild<i>(),e,begin,offset);
+        for (int j=initial_offset; j<offset; j++)
+          begin[j] = t.pgfs->template subMap<i>(begin[j]);
         LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,n,i+1>::
           bind_localfunctionspace_to_element(t,e,begin,offset);
 	  }
@@ -75,50 +78,19 @@ namespace Dune {
 	  }
 	};
 
-
-    // implementation of local function space needs
-    // to be specialized for interior and leaves
-    template<typename GFS, bool isleaf> class LocalFunctionSpaceBase;
-
-    // local function space description that can be bound to an element
-    // depends on a grid function space
-    template<typename GFS>
-    class LocalFunctionSpace : public LocalFunctionSpaceBase<GFS,GFS::isLeaf>
-    {
-      typedef LocalFunctionSpaceBase<GFS,GFS::isLeaf> BaseT;
-
-    public:
-      typedef typename BaseT::Traits Traits;
-
-      LocalFunctionSpace (const GFS& gfs) 
-        : BaseT(gfs), global(gfs.maxLocalSize())
-      {}
-
-      //! \brief bind local function space to entity
-      void bind (const typename Traits::Element& e)
-      {
-        typename BaseT::Traits::IndexContainer::size_type offset=0;
-
-        // is implemented as a template metaprogram over BaseT
-        LocalFunctionSpaceBaseVisitNodeMetaProgram<BaseT,BaseT::isLeaf,
-          typename Traits::Element,
-          typename BaseT::Traits::IndexContainer::iterator,
-          typename BaseT::Traits::IndexContainer::size_type>::
-          bind_localfunctionspace_to_element(*this,e,global.begin(),offset);
-        global.resize(offset); // now the size is known
-      }
-
-    private:
-      typename BaseT::Traits::IndexContainer global;
-    };
-
+    //=======================================
+    // local function space base: power implementation
+    //=======================================
 
 	//! traits for multi component local function space
-	template<typename GFS, bool isleaf>	
-    struct LocalFunctionSpaceTraits
+	template<typename GFS, typename N>	
+    struct PowerCompositeLocalFunctionSpaceTraits
     {
 	  //! \brief the grid view where grid function is defined upon
 	  typedef GFS GridFunctionSpaceType;
+
+      //! type of local function space node
+      typedef N NodeType;
 
 	  //! \brief Type to store indices from Backend
       typedef typename GFS::Traits::GridViewType GridViewType;
@@ -133,9 +105,12 @@ namespace Dune {
       typedef typename std::vector<SizeType> IndexContainer;
     };
 
-    // implementation for multi component local function space
-    template<typename GFS, bool isleaf> 
-    class LocalFunctionSpaceBase
+
+    // local function space for a power grid function space
+    template<typename GFS> 
+    class PowerLocalFunctionSpaceNode 
+      : public PowerNode<typename GFS::template Child<0>::Type::LocalFunctionSpace::Traits::NodeType,
+                         GFS::CHILDREN,CopyStoragePolicy>
     {
       template<typename T, bool b, typename E, typename It, typename Int> 
       friend struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
@@ -145,12 +120,28 @@ namespace Dune {
       typedef typename GFS::Traits::BackendType B;
  	  typedef typename GFS::Traits::GridViewType::Traits::template Codim<0>::Entity Element;
 
-    public:
-      typedef LocalFunctionSpaceTraits<GFS,false> Traits;
+      typedef typename GFS::template Child<0>::Type::LocalFunctionSpace::Traits::NodeType NodeType;
+      typedef PowerNode<NodeType,GFS::CHILDREN,CopyStoragePolicy> BaseT;
+
+   public:
+      typedef PowerCompositeLocalFunctionSpaceTraits<GFS,PowerLocalFunctionSpaceNode> Traits;
+
+      //! \brief empty constructor
+      PowerLocalFunctionSpaceNode ()
+      {
+      }
 
       //! \brief initialize with grid function space
-      LocalFunctionSpaceBase (const GFS& gfs) : pgfs(&gfs)
+      PowerLocalFunctionSpaceNode (const GFS& gfs)  : pgfs(&gfs)
       {
+        setup(gfs);
+      }
+
+      //! \brief initialize with grid function space
+      void setup (const GFS& gfs) const
+      {
+        for (int i=0; i<GFS::CHILDREN; i++)
+          this->getChild(i).setup(pgfs->getChild(i));
       }
 
       //! \brief get current size 
@@ -193,7 +184,7 @@ namespace Dune {
       void debug () const
       {
         std::cout << n << " indices = (";
-        for (int k=0; k<n; k++)
+        for (typename Traits::IndexContainer::size_type k=0; k<n; k++)
           std::cout << i[k] << " ";
         std::cout << ")" << std::endl;
       }
@@ -202,20 +193,56 @@ namespace Dune {
 	  CP<GFS const> pgfs;
       typename Traits::IndexContainer::iterator i;
       typename Traits::IndexContainer::size_type n;
+     };
+
+
+    // local function space description that can be bound to an element
+    // depends on a grid function space
+    template<typename GFS>
+    class PowerLocalFunctionSpace : public PowerLocalFunctionSpaceNode<GFS>
+    {
+      typedef PowerLocalFunctionSpaceNode<GFS> BaseT;
+
+    public:
+      typedef typename BaseT::Traits Traits;
+
+      PowerLocalFunctionSpace (const GFS& gfs) 
+        : BaseT(gfs), global(gfs.maxLocalSize())
+      {}
+
+      //! \brief bind local function space to entity
+      void bind (const typename Traits::Element& e)
+      {
+        typename Traits::IndexContainer::size_type offset=0;
+
+        // is implemented as a template metaprogram over BaseT
+        LocalFunctionSpaceBaseVisitNodeMetaProgram<BaseT,BaseT::isLeaf,
+          typename Traits::Element,
+          typename Traits::IndexContainer::iterator,
+          typename Traits::IndexContainer::size_type>::
+          bind_localfunctionspace_to_element(*this,e,global.begin(),offset);
+        global.resize(offset); // now the size is known
+      }
+
+    private:
+      typename BaseT::Traits::IndexContainer global;
     };
 
+
+    //=======================================
+    // local function space base: single component implementation
+    //=======================================
+
 	//! traits for single component local function space
-	template<typename GFS>	
-	struct LocalFunctionSpaceTraits<GFS,true> : public LocalFunctionSpaceTraits<GFS,false>
+	template<typename GFS, typename N>	
+	struct LocalFunctionSpaceTraits : public PowerCompositeLocalFunctionSpaceTraits<GFS,N>
 	{
 	  //! \brief Type of local finite element
       typedef typename GFS::Traits::LocalFiniteElementType LocalFiniteElementType;
 	};
 
-    // implementation for leaf nodes
     template<typename GFS> 
-    class LocalFunctionSpaceBase<GFS,true>
-      : public LeafNode
+    class LocalFunctionSpaceNode : public LeafNode
     {
       template<typename T, bool b, typename E, typename It, typename Int> 
       friend struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
@@ -226,11 +253,22 @@ namespace Dune {
  	  typedef typename GFS::Traits::GridViewType::Traits::template Codim<0>::Entity Element;
 
    public:
-      typedef LocalFunctionSpaceTraits<GFS,true> Traits;
+      typedef LocalFunctionSpaceTraits<GFS,LocalFunctionSpaceNode> Traits;
+
+      //! \brief empty constructor
+      LocalFunctionSpaceNode ()
+      {
+      }
 
       //! \brief initialize with grid function space
-      LocalFunctionSpaceBase (const GFS& gfs) : pgfs(&gfs)
+      LocalFunctionSpaceNode (const GFS& gfs) : pgfs(&gfs)
       {
+      }
+
+      //! \brief initialize with grid function space
+      void setup (const GFS& gfs) const
+      {
+        pgfs = &gfs;
       }
 
       //! \brief get current size 
@@ -285,10 +323,43 @@ namespace Dune {
       }
 
     private:
-	  CP<GFS const> pgfs;
+	  mutable CP<GFS const> pgfs;
       typename Traits::IndexContainer::iterator i;
       typename Traits::IndexContainer::size_type n;
       const typename Traits::LocalFiniteElementType* plfem;
+    };
+
+
+    // local function space description that can be bound to an element
+    // depends on a grid function space
+    template<typename GFS>
+    class LocalFunctionSpace : public LocalFunctionSpaceNode<GFS>
+    {
+      typedef LocalFunctionSpaceNode<GFS> BaseT;
+
+    public:
+      typedef typename BaseT::Traits Traits;
+
+      LocalFunctionSpace (const GFS& gfs) 
+        : BaseT(gfs), global(gfs.maxLocalSize())
+      {}
+
+      //! \brief bind local function space to entity
+      void bind (const typename Traits::Element& e)
+      {
+        typename Traits::IndexContainer::size_type offset=0;
+
+        // is implemented as a template metaprogram over BaseT
+        LocalFunctionSpaceBaseVisitNodeMetaProgram<BaseT,BaseT::isLeaf,
+          typename Traits::Element,
+          typename Traits::IndexContainer::iterator,
+          typename Traits::IndexContainer::size_type>::
+          bind_localfunctionspace_to_element(*this,e,global.begin(),offset);
+        global.resize(offset); // now the size is known
+      }
+
+    private:
+      typename BaseT::Traits::IndexContainer global;
     };
 
     //! \} group GridFunctionSpace
