@@ -23,42 +23,52 @@ void test (const GV& gv)
   Q12DFEM q12dfem;
   
   // make a grid function space
-  typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> P2GFS;
-  P2GFS p2gfs(gv,q22dfem);
+  typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> Q2GFS;
+  Q2GFS q2gfs(gv,q22dfem);
   typedef Dune::PDELab::GridFunctionSpace<GV,Q12DFEM> Q1GFS;
   Q1GFS q1gfs(gv,q12dfem);
 
   // power grid function space
-  typedef Dune::PDELab::PowerGridFunctionSpace<Q1GFS,2,
+  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,2,
     Dune::PDELab::GridFunctionSpaceLexicographicMapper> PowerGFS;
-  PowerGFS powergfs(q1gfs);
+  PowerGFS powergfs(q2gfs);
+
+  // composite grid function space
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::GridFunctionSpaceLexicographicMapper,
+    PowerGFS,Q1GFS> CompositeGFS;
+  CompositeGFS compositegfs(powergfs,q1gfs);
 
   // make coefficent Vectors
-  typedef typename P2GFS::template VectorContainer<double>::Type V;
-  V x(p2gfs);
+  typedef typename Q2GFS::template VectorContainer<double>::Type V;
+  V x(q2gfs);
   x = 0.0;
   typedef typename PowerGFS::template VectorContainer<double>::Type VP;
   VP xp(powergfs);
   xp = 0.0;
 
   // make local function space object
-  typename P2GFS::LocalFunctionSpace p2lfs(p2gfs);
-  std::vector<double> xl(p2lfs.maxSize());
+  typename Q2GFS::LocalFunctionSpace q2lfs(q2gfs);
+  std::vector<double> xl(q2lfs.maxSize());
   typename PowerGFS::LocalFunctionSpace powerlfs(powergfs);
   std::vector<double> xlp(powerlfs.maxSize());
+  typename CompositeGFS::LocalFunctionSpace compositelfs(compositegfs);
+  //  std::vector<double> xlc(compositelfs.maxSize());
 
   // loop over elements
   typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
   for (ElementIterator it = gv.template begin<0>();
 	   it!=gv.template end<0>(); ++it)
 	{
-      p2lfs.bind(*it);
-      p2lfs.debug();
-      p2lfs.vread(x,xl);
+      q2lfs.bind(*it);
+      q2lfs.debug();
+      q2lfs.vread(x,xl);
 
       powerlfs.bind(*it);
       powerlfs.debug();
       powerlfs.vread(xp,xlp);
+
+      compositelfs.bind(*it);
+      compositelfs.debug();
 	}
 }
 

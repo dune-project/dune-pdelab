@@ -1111,15 +1111,709 @@ namespace Dune {
 	template<typename T, int n, int i>
 	struct CompositeGridFunctionSpaceBaseVisitChildMetaProgram // visit child of inner node
 	{
+      template<typename Int>
+	  static void setup (T& t, Int childGlobalSize[], Int childLocalSize[])
+	  {
+        childGlobalSize[i] = t.template getChild<i>().globalSize();
+        childLocalSize[i] = t.template getChild<i>().maxLocalSize();
+        CompositeGridFunctionSpaceBaseVisitChildMetaProgram<T,n,i+1>::
+          setup(t,childGlobalSize,childLocalSize);
+	  }
+ 	  static void update (T& t)
+	  {
+        t.template getChild<i>().update();
+        CompositeGridFunctionSpaceBaseVisitChildMetaProgram<T,n,i+1>::update(t);
+	  }
 	};
 
 	template<typename T, int n>
 	struct CompositeGridFunctionSpaceBaseVisitChildMetaProgram<T,n,n> // end of child recursion
 	{
-	  static void bind_localfunctionspace_to_element ()
+      template<typename Int>
+	  static void setup (T& t, Int childGlobalSize[], Int childLocalSize[])
+	  {
+	  }
+ 	  static void update (T& t)
 	  {
 	  }
 	};
+
+	template<typename P, typename T0, typename T1, typename T2, typename T3,
+			 typename T4, typename T5, typename T6, typename T7, typename T8>
+	class CompositeGridFunctionSpace;
+
+
+    // tupel of grid function spaces
+    // base class that holds implementation of the methods
+    // this is the default version with lexicographic ordering
+    // P is the ordering parameter
+    // Ti are all grid function spaces
+	template<typename P, typename T0, typename T1, typename T2=EmptyChild, typename T3=EmptyChild,
+			 typename T4=EmptyChild, typename T5=EmptyChild, typename T6=EmptyChild,
+			 typename T7=EmptyChild, typename T8=EmptyChild>
+	class CompositeGridFunctionSpaceBase
+	  : public CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8>,
+		public Countable
+	{
+      friend class CompositeGridFunctionSpace<P,T0,T1,T2,T3,T4,T5,T6,T7,T8>; // for setup
+
+      typedef CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8> BaseT;
+
+	public:
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T0::Traits::GridViewType, 
+                                                    typename T0::Traits::BackendType>
+      Traits;
+
+	  // extract type of container storing Es
+	  template<typename E>
+	  struct VectorContainer
+	  {
+		//! \brief define Type as the Type of a container of E's
+		typedef typename Traits::BackendType::template VectorContainer<CompositeGridFunctionSpaceBase,E> Type;	
+	  };
+
+      // define local function space parametrized by self 
+      typedef Dune::PDELab::CompositeLocalFunctionSpace<CompositeGridFunctionSpaceBase> LocalFunctionSpace;
+
+
+      // it is part of the trick to have a constructor without arguments
+      // setting of the children is then done by the constructors
+      // of the specialized derived classes
+      CompositeGridFunctionSpaceBase ()
+      {
+      }
+
+	  // get grid view
+	  const typename Traits::GridViewType& gridview () const
+	  {
+		return this->template getChild<0>().gridview();
+	  }
+
+	  // get dimension of finite element space
+	  typename Traits::SizeType globalSize () const
+	  {
+        // this is bullshit all children may have different
+        // size although they have the same type ...
+		return offset[BaseT::CHILDREN];
+	  }
+
+	  // get max dimension of shape function space
+	  typename Traits::SizeType maxLocalSize () const
+	  {
+        // this is bullshit !
+		return maxlocalsize;
+	  }
+
+	  // map index [0,globalSize-1] to root index set
+	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
+	  {
+		return i;
+	  }
+
+	  // map index [0,globalSize-1] to root index set
+      template<int i>
+	  typename Traits::SizeType subMap (typename Traits::SizeType j) const
+	  {
+		return offset[i]+j;
+	  }
+
+      // recalculate sizes
+      void update ()
+      {
+        CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
+          update(*this);
+        setup();
+      }
+
+    private:
+      void setup ()
+      {
+        std::cout << "composite grid function space(lexicographic version):" << std::endl;
+
+        CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
+          setup(*this,childGlobalSize,childLocalSize);
+
+        std::cout << "( ";
+        offset[0] = 0;
+        maxlocalsize = 0;
+        for (int i=0; i<BaseT::CHILDREN; i++)
+          {
+            std::cout << childGlobalSize[i] << " ";
+            offset[i+1] = offset[i]+childGlobalSize[i];
+            maxlocalsize += childLocalSize[i];
+          }
+        std::cout << ") total size = " << offset[BaseT::CHILDREN]
+                  << " max local size = " << maxlocalsize 
+                  << std::endl;
+      }
+
+      typename Traits::SizeType childGlobalSize[BaseT::CHILDREN];
+      typename Traits::SizeType childLocalSize[BaseT::CHILDREN];
+      typename Traits::SizeType offset[BaseT::CHILDREN+1];
+      typename Traits::SizeType maxlocalsize;
+	};
+
+
+    // tupel of grid function spaces
+    // base class that holds implementation of the methods
+    // specialization for blockwise ordering
+    // P is the ordering parameter
+    // Ti are all grid function spaces
+	template<typename T0, typename T1, typename T2, typename T3,
+			 typename T4, typename T5, typename T6,
+			 typename T7, typename T8>
+	class CompositeGridFunctionSpaceBase<GridFunctionSpaceBlockwiseMapper,T0,T1,T2,T3,T4,T5,T6,T7,T8>
+	  : public CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8>,
+		public Countable
+	{
+      friend class CompositeGridFunctionSpace<GridFunctionSpaceBlockwiseMapper,
+                                              T0,T1,T2,T3,T4,T5,T6,T7,T8>; // for setup
+
+      typedef CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8> BaseT;
+
+	public:
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T0::Traits::GridViewType, 
+                                                    typename T0::Traits::BackendType>
+      Traits;
+
+	  // extract type of container storing Es
+	  template<typename E>
+	  struct VectorContainer
+	  {
+		//! \brief define Type as the Type of a container of E's
+		typedef typename Traits::BackendType::template VectorContainer<CompositeGridFunctionSpaceBase,E> Type;	
+	  };
+
+      // define local function space parametrized by self 
+      typedef Dune::PDELab::CompositeLocalFunctionSpace<CompositeGridFunctionSpaceBase> LocalFunctionSpace;
+
+      // it is part of the trick to have a constructor without arguments
+      // setting of the children is then done by the constructors
+      // of the specialized derived classes
+      CompositeGridFunctionSpaceBase ()
+      {
+      }
+
+	  // get grid view
+	  const typename Traits::GridViewType& gridview () const
+	  {
+		return this->template getChild<0>().gridview();
+	  }
+
+	  // get dimension of finite element space
+	  typename Traits::SizeType globalSize () const
+	  {
+        // this is bullshit all children may have different
+        // size although they have the same type ...
+		return offset[BaseT::CHILDREN];
+	  }
+
+	  // get max dimension of shape function space
+	  typename Traits::SizeType maxLocalSize () const
+	  {
+        // this is bullshit !
+		return maxlocalsize;
+	  }
+
+	  // map index [0,globalSize-1] to root index set
+	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
+	  {
+		return i;
+	  }
+
+	  // map index [0,globalSize-1] to root index set
+      template<int i>
+	  typename Traits::SizeType subMap (typename Traits::SizeType j) const
+	  {
+		return j*BaseT::CHILDREN+i;
+	  }
+
+      // recalculate sizes
+      void update ()
+      {
+        CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
+          update(*this);
+        setup();
+      }
+
+    private:
+      void setup ()
+      {
+        std::cout << "composite grid function space(blockwise version):" << std::endl;
+
+        CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
+          setup(*this,childGlobalSize,childLocalSize);
+
+        for (int i=1; i<BaseT::CHILDREN; i++)
+          if (childGlobalSize[i]!=childGlobalSize[0])
+            DUNE_THROW(Exception, "components must be of equal size");
+
+        std::cout << "( ";
+        offset[0] = 0;
+        maxlocalsize = 0;
+        for (int i=0; i<BaseT::CHILDREN; i++)
+          {
+            std::cout << childGlobalSize[i] << " ";
+            offset[i+1] = offset[i]+childGlobalSize[i];
+            maxlocalsize += childLocalSize[i];
+          }
+        std::cout << ") total size = " << offset[BaseT::CHILDREN]
+                  << " max local size = " << maxlocalsize 
+                  << std::endl;
+      }
+
+      typename Traits::SizeType childGlobalSize[BaseT::CHILDREN];
+      typename Traits::SizeType childLocalSize[BaseT::CHILDREN];
+      typename Traits::SizeType offset[BaseT::CHILDREN+1];
+      typename Traits::SizeType maxlocalsize;
+	};
+
+
+
+
+    // composite grid function space primary template
+	template<typename P, typename T0, typename T1, typename T2=EmptyChild, typename T3=EmptyChild,
+			 typename T4=EmptyChild, typename T5=EmptyChild, typename T6=EmptyChild,
+			 typename T7=EmptyChild, typename T8=EmptyChild>
+	class CompositeGridFunctionSpace : 
+      public CompositeGridFunctionSpaceBase<P,T0,T1,T2,T3,T4,T5,T6,T7,T8>
+    {
+      typedef CompositeGridFunctionSpaceBase<P,T0,T1,T2,T3,T4,T5,T6,T7,T8> BaseT;
+
+	public:
+      typedef typename BaseT::Traits Traits;
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  CompositeGridFunctionSpace (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6, T7& t7, T8& t8)
+      {
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T1::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T1::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T2::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T2::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T3::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T3::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T4::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T4::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T5::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T5::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T6::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T6::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T7::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T7::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T8::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T8::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+
+        this->template setChild<0>(t0);
+        this->template setChild<1>(t1);
+        this->template setChild<2>(t2);
+        this->template setChild<3>(t3);
+        this->template setChild<4>(t4);
+        this->template setChild<5>(t5);
+        this->template setChild<6>(t6);
+        this->template setChild<7>(t7);
+        this->template setChild<8>(t8);
+
+        BaseT::setup();
+      }
+    };
+
+
+	template<typename P, typename T0, typename T1>
+	class CompositeGridFunctionSpace<P,T0,T1> 
+      : public CompositeGridFunctionSpaceBase<P,T0,T1,EmptyChild,EmptyChild,EmptyChild,
+                                              EmptyChild,EmptyChild,EmptyChild,EmptyChild>
+	{
+      typedef CompositeGridFunctionSpaceBase<P,T0,T1,EmptyChild,EmptyChild,EmptyChild,
+                                             EmptyChild,EmptyChild,EmptyChild,EmptyChild> BaseT;
+	public:
+      typedef typename BaseT::Traits Traits;
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  CompositeGridFunctionSpace (T0& t0, T1& t1)
+      {
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T1::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T1::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+        this->template setChild<0>(t0);
+        this->template setChild<1>(t1);
+        BaseT::setup();
+      }
+	};
+
+	template<typename P, typename T0, typename T1, typename T2>
+	class CompositeGridFunctionSpace<P,T0,T1,T2> 
+      : public CompositeGridFunctionSpaceBase<P,T0,T1,T2,EmptyChild,EmptyChild,
+                                              EmptyChild,EmptyChild,EmptyChild,EmptyChild>
+	{
+      typedef CompositeGridFunctionSpaceBase<P,T0,T1,T2,EmptyChild,EmptyChild,
+                                             EmptyChild,EmptyChild,EmptyChild,EmptyChild> BaseT;
+	public:
+      typedef typename BaseT::Traits Traits;
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  CompositeGridFunctionSpace (T0& t0, T1& t1, T2& t2)
+      {
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T1::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T1::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T2::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T2::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+        this->template setChild<0>(t0);
+        this->template setChild<1>(t1);
+        this->template setChild<2>(t2);
+        BaseT::setup();
+      }
+	};
+
+	template<typename P, typename T0, typename T1, typename T2, typename T3>
+	class CompositeGridFunctionSpace<P,T0,T1,T2,T3> 
+      : public CompositeGridFunctionSpaceBase<P,T0,T1,T2,T3,EmptyChild,
+                                              EmptyChild,EmptyChild,EmptyChild,EmptyChild>
+	{
+      typedef CompositeGridFunctionSpaceBase<P,T0,T1,T2,T3,EmptyChild,
+                                             EmptyChild,EmptyChild,EmptyChild,EmptyChild> BaseT;
+	public:
+      typedef typename BaseT::Traits Traits;
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  CompositeGridFunctionSpace (T0& t0, T1& t1, T2& t2, T3& t3)
+      {
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T1::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T1::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T2::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T2::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T3::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T3::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+        this->template setChild<0>(t0);
+        this->template setChild<1>(t1);
+        this->template setChild<2>(t2);
+        this->template setChild<3>(t3);
+
+        BaseT::setup();
+      }
+	};
+
+	template<typename P, typename T0, typename T1, typename T2, typename T3, typename T4>
+	class CompositeGridFunctionSpace<P,T0,T1,T2,T3,T4> 
+      : public CompositeGridFunctionSpaceBase<P,T0,T1,T2,T3,T4,
+                                              EmptyChild,EmptyChild,EmptyChild,EmptyChild>
+	{
+      typedef CompositeGridFunctionSpaceBase<P,T0,T1,T2,T3,T4,
+                                             EmptyChild,EmptyChild,EmptyChild,EmptyChild> BaseT;
+	public:
+      typedef typename BaseT::Traits Traits;
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  CompositeGridFunctionSpace (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4)
+      {
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T1::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T1::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T2::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T2::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T3::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T3::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T4::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T4::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+        this->template setChild<0>(t0);
+        this->template setChild<1>(t1);
+        this->template setChild<2>(t2);
+        this->template setChild<3>(t3);
+        this->template setChild<4>(t4);
+
+        BaseT::setup();
+      }
+	};
+
+	template<typename P, typename T0, typename T1, typename T2, typename T3, typename T4,
+             typename T5>
+	class CompositeGridFunctionSpace<P,T0,T1,T2,T3,T4,T5> 
+      : public CompositeGridFunctionSpaceBase<P,T0,T1,T2,T3,T4,
+                                              T5,EmptyChild,EmptyChild,EmptyChild>
+	{
+      typedef CompositeGridFunctionSpaceBase<P,T0,T1,T2,T3,T4,
+                                             T5,EmptyChild,EmptyChild,EmptyChild> BaseT;
+	public:
+      typedef typename BaseT::Traits Traits;
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  CompositeGridFunctionSpace (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5)
+      {
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T1::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T1::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T2::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T2::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T3::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T3::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T4::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T4::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T5::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T5::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+        this->template setChild<0>(t0);
+        this->template setChild<1>(t1);
+        this->template setChild<2>(t2);
+        this->template setChild<3>(t3);
+        this->template setChild<4>(t4);
+        this->template setChild<5>(t5);
+
+        BaseT::setup();
+      }
+	};
+
+	template<typename P, typename T0, typename T1, typename T2, typename T3, typename T4,
+             typename T5, typename T6>
+	class CompositeGridFunctionSpace<P,T0,T1,T2,T3,T4,T5,T6> 
+      : public CompositeGridFunctionSpaceBase<P,T0,T1,T2,T3,T4,
+                                              T5,T6,EmptyChild,EmptyChild>
+	{
+      typedef CompositeGridFunctionSpaceBase<P,T0,T1,T2,T3,T4,
+                                             T5,T6,EmptyChild,EmptyChild> BaseT;
+	public:
+      typedef typename BaseT::Traits Traits;
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  CompositeGridFunctionSpace (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6)
+      {
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T1::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T1::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T2::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T2::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T3::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T3::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T4::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T4::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T5::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T5::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T6::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T6::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+        this->template setChild<0>(t0);
+        this->template setChild<1>(t1);
+        this->template setChild<2>(t2);
+        this->template setChild<3>(t3);
+        this->template setChild<4>(t4);
+        this->template setChild<5>(t5);
+        this->template setChild<6>(t6);
+
+        BaseT::setup();
+      }
+	};
+
+	template<typename P, typename T0, typename T1, typename T2, typename T3, typename T4,
+             typename T5, typename T6, typename T7>
+	class CompositeGridFunctionSpace<P,T0,T1,T2,T3,T4,T5,T6,T7> 
+      : public CompositeGridFunctionSpaceBase<P,T0,T1,T2,T3,T4,
+                                              T5,T6,T7,EmptyChild>
+	{
+      typedef CompositeGridFunctionSpaceBase<P,T0,T1,T2,T3,T4,
+                                             T5,T6,T7,EmptyChild> BaseT;
+	public:
+      typedef typename BaseT::Traits Traits;
+
+      //! Construct a PowerGridFunction with k clones of the function t
+	  CompositeGridFunctionSpace (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6, T7& t7)
+      {
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T1::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T1::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T2::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T2::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T3::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T3::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T4::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T4::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T5::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T5::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T6::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T6::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+		dune_static_assert((is_same<typename T0::Traits::GridViewType,
+                            typename T7::Traits::GridViewType>::value),  
+						   "GridViewType must be equal in all components of composite grid function space");
+		dune_static_assert((is_same<typename T0::Traits::BackendType,
+                            typename T7::Traits::BackendType>::value),  
+						   "BackendType must be equal in all components of composite grid function space");
+
+        this->template setChild<0>(t0);
+        this->template setChild<1>(t1);
+        this->template setChild<2>(t2);
+        this->template setChild<3>(t3);
+        this->template setChild<4>(t4);
+        this->template setChild<5>(t5);
+        this->template setChild<6>(t6);
+        this->template setChild<7>(t7);
+
+        BaseT::setup();
+      }
+	};
+
+
 
     //! \} group GridFunctionSpace
   } // namespace PDELab

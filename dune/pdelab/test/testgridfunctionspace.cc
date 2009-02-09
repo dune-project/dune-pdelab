@@ -35,6 +35,7 @@ void testleafgridfunction (const GV& gv)
   typedef Dune::PDELab::GridFunctionSpace<GV,EdgeR12DFEM> GFS4;
   GFS4 gfs4(gv,edger12dfem);
 
+  // test power
   typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,2> PGFS2;
   PGFS2 pgfs2(gfs2,gfs2);
   typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,3> PGFS3;
@@ -68,6 +69,33 @@ void testleafgridfunction (const GV& gv)
   typedef typename GFS4::template VectorContainer<double>::Type V4;
   V4 x4(gfs4);
   x4 = 0.0;
+
+  // test composite
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::GridFunctionSpaceLexicographicMapper,
+    GFS1,PGFS2> CGFS2;
+  CGFS2 cgfs2(gfs1,pgfs2);
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::GridFunctionSpaceLexicographicMapper,
+    GFS1,PGFS2,CGFS2> CGFS3;
+  CGFS3 cgfs3(gfs1,pgfs2,cgfs2);
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::GridFunctionSpaceLexicographicMapper,
+    GFS1,PGFS2,CGFS2,CGFS3> CGFS4;
+  CGFS4 cgfs4(gfs1,pgfs2,cgfs2,cgfs3);
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::GridFunctionSpaceLexicographicMapper,
+    GFS1,PGFS2,CGFS2,CGFS3,CGFS4> CGFS5;
+  CGFS5 cgfs5(gfs1,pgfs2,cgfs2,cgfs3,cgfs4);
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::GridFunctionSpaceLexicographicMapper,
+    GFS1,PGFS2,CGFS2,CGFS3,CGFS4,CGFS5> CGFS6;
+  CGFS6 cgfs6(gfs1,pgfs2,cgfs2,cgfs3,cgfs4,cgfs5);
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::GridFunctionSpaceLexicographicMapper,
+    GFS1,PGFS2,CGFS2,CGFS3,CGFS4,CGFS5,CGFS6> CGFS7;
+  CGFS7 cgfs7(gfs1,pgfs2,cgfs2,cgfs3,cgfs4,cgfs5,cgfs6);
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::GridFunctionSpaceLexicographicMapper,
+    GFS1,PGFS2,CGFS2,CGFS3,CGFS4,CGFS5,CGFS6,CGFS7> CGFS8;
+  CGFS8 cgfs8(gfs1,pgfs2,cgfs2,cgfs3,cgfs4,cgfs5,cgfs6,cgfs7);
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::GridFunctionSpaceLexicographicMapper,
+    GFS1,PGFS2,CGFS2,CGFS3,CGFS4,CGFS5,CGFS6,CGFS7,CGFS8> CGFS9;
+  CGFS9 cgfs9(gfs1,pgfs2,cgfs2,cgfs3,cgfs4,cgfs5,cgfs6,cgfs7,cgfs8);
+  
 }
 
 int main(int argc, char** argv)

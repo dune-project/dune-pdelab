@@ -157,6 +157,11 @@ namespace Dune {
 		P::set(c[i],t);
 	  }
 
+	  T& getChild (int i)
+	  {
+		return P::get(c[i]);
+	  }
+
 	  const T& getChild (int i) const
 	  {
 		return P::get(c[i]);
@@ -689,6 +694,8 @@ namespace Dune {
 	ST c;
 
 	public:
+	  CompositeNode () : BaseT(c) {}
+
 	  CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, 
 					 T5& t5, T6& t6, T7& t7, T8& t8)
 		: BaseT(c), 
@@ -726,6 +733,8 @@ namespace Dune {
 	  ST c;
 
     public:
+	  CompositeNode () : BaseT(c) {}
+
 	  CompositeNode (T0& t0, T1& t1)
 		: BaseT(c), 
 		  c(P::convert(t0),P::convert(t1))
@@ -752,7 +761,9 @@ namespace Dune {
 	  ST c;
 
     public:
-	CompositeNode (T0& t0, T1& t1, T2& t2)
+	  CompositeNode () : BaseT(c) {}
+      
+      CompositeNode (T0& t0, T1& t1, T2& t2)
 		: BaseT(c), 
 		  c(P::convert(t0),P::convert(t1),P::convert(t2))
 	  {} 
@@ -780,7 +791,9 @@ namespace Dune {
 	  ST c;
 
     public:
-	CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3)
+	  CompositeNode () : BaseT(c) {}
+      
+      CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3)
 		: BaseT(c), 
 		  c(P::convert(t0),P::convert(t1),P::convert(t2),P::convert(t3))
 	  {} 
@@ -810,7 +823,9 @@ namespace Dune {
 	  ST c;
 
     public:
-	CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4)
+	  CompositeNode () : BaseT(c) {}
+      
+      CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4)
 		: BaseT(c), 
 		  c(P::convert(t0),P::convert(t1),P::convert(t2),P::convert(t3),P::convert(t4))
 	  {} 
@@ -843,7 +858,9 @@ namespace Dune {
 	  ST c;
 
     public:
-	CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5)
+	  CompositeNode () : BaseT(c) {}
+      
+      CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5)
 		: BaseT(c), 
 		  c(P::convert(t0),P::convert(t1),P::convert(t2),P::convert(t3),P::convert(t4),
 			P::convert(t5))
@@ -879,7 +896,9 @@ namespace Dune {
 	  ST c;
 
     public:
-	CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, 
+	  CompositeNode () : BaseT(c) {}
+      
+      CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, 
 				   T5& t5, T6& t6)
 		: BaseT(c), 
 		  c(P::convert(t0),P::convert(t1),P::convert(t2),P::convert(t3),P::convert(t4),
@@ -918,8 +937,10 @@ namespace Dune {
 	  ST c;
 
     public:
-	CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, 
-				   T5& t5, T6& t6, T7& t7)
+	  CompositeNode () : BaseT(c) {}
+      
+      CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, 
+                     T5& t5, T6& t6, T7& t7)
 		: BaseT(c), 
 		  c(P::convert(t0),P::convert(t1),P::convert(t2),P::convert(t3),P::convert(t4),
 			P::convert(t5),P::convert(t6),P::convert(t7))
