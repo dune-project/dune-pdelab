@@ -293,7 +293,7 @@ namespace Dune {
 		for (typename GtUsedSetType::iterator i=gtused.begin(); i!=gtused.end(); ++i)
 		  {
 			gtoffset[*i] = nentities;
-			std::cout << *i << ": " << is.size(*i) << " entries at "
+			std::cout << *i << ": " << is.size(*i) << " entries in offset vector at "
 					  << nentities << std::endl;
 			nentities += is.size(*i);
 		  }
