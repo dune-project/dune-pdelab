@@ -28,6 +28,7 @@ namespace Dune {
 	  {
         // vist children of node t in order
 		typedef typename T::template Child<i>::Type C;
+        t.offset = offset;
         Int initial_offset = offset; // remember initial offset to compute size later
         LocalFunctionSpaceBaseVisitNodeMetaProgram<C,C::isLeaf,E,It,Int>::
           fill_indices(t.template getChild<i>(),e,begin,offset);
@@ -66,6 +67,7 @@ namespace Dune {
 	  static void fill_indices (T& t, const E& e, It begin, Int& offset)
 	  {
         // now we are at a multi component local function space
+        t.offset = offset;
         Int initial_offset = offset; // remember initial offset to compute size later
         t.i = begin+initial_offset; // begin is always the first entry in the vector
 		LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,T::CHILDREN,0>::
@@ -88,6 +90,7 @@ namespace Dune {
 	  {
         // now we are at a single component local function space
         // which is part of a multi component local function space
+        t.offset = offset;
         t.i = begin+offset; // begin is always the first entry in the vector
         std::vector<typename T::Traits::GridFunctionSpaceType::Traits::SizeType> global(t.n);
         t.pgfs->globalIndices(*(t.plfem),e,global); // get global indices for this finite element
@@ -186,6 +189,18 @@ namespace Dune {
         return pgfs->maxLocalSize();
       }
 
+      // map index in this local function space to root local function space
+      typename Traits::IndexContainer::size_type localIndex (typename Traits::IndexContainer::size_type& index)
+      {
+        return offset+index;
+      }
+
+      // map index in this local function space to global index space
+      typename Traits::SizeType globalIndex (typename Traits::IndexContainer::size_type& index)
+      {
+        return i[index];
+      }
+
       /** \brief extract coefficients for one element from container */  
       template<typename GC, typename LC>
       void vread (const GC& globalcontainer, LC& localcontainer) const
@@ -223,6 +238,7 @@ namespace Dune {
 	  CP<GFS const> pgfs;
       typename Traits::IndexContainer::iterator i;
       typename Traits::IndexContainer::size_type n;
+      typename Traits::IndexContainer::size_type offset;
      };
 
 
@@ -448,6 +464,18 @@ namespace Dune {
         return pgfs->maxLocalSize();
       }
 
+      // map index in this local function space to root local function space
+      typename Traits::IndexContainer::size_type localIndex (typename Traits::IndexContainer::size_type& index)
+      {
+        return offset+index;
+      }
+
+      // map index in this local function space to global index space
+      typename Traits::SizeType globalIndex (typename Traits::IndexContainer::size_type& index)
+      {
+        return i[index];
+      }
+
       /** \brief extract coefficients for one element from container */  
       template<typename GC, typename LC>
       void vread (const GC& globalcontainer, LC& localcontainer) const
@@ -485,6 +513,7 @@ namespace Dune {
 	  CP<GFS const> pgfs;
       typename Traits::IndexContainer::iterator i;
       typename Traits::IndexContainer::size_type n;
+      typename Traits::IndexContainer::size_type offset;
      };
 
 
@@ -598,6 +627,18 @@ namespace Dune {
         return *plfem;
       }
 
+      // map index in this local function space to root local function space
+      typename Traits::IndexContainer::size_type localIndex (typename Traits::IndexContainer::size_type& index)
+      {
+        return offset+index;
+      }
+
+      // map index in this local function space to global index space
+      typename Traits::SizeType globalIndex (typename Traits::IndexContainer::size_type& index)
+      {
+        return i[index];
+      }
+
       /** \brief extract coefficients for one element from container */  
       template<typename GC, typename LC>
       void vread (const GC& globalcontainer, LC& localcontainer) const
@@ -635,6 +676,7 @@ namespace Dune {
 	  CP<GFS const> pgfs;
       typename Traits::IndexContainer::iterator i;
       typename Traits::IndexContainer::size_type n;
+      typename Traits::IndexContainer::size_type offset;
       const typename Traits::LocalFiniteElementType* plfem;
     };
 

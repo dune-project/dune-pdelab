@@ -21,28 +21,29 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
+    //===============================================================
+    // output: convert grid function space to discrete grid function
+    //===============================================================
+
+
 	// convert a single component function space into a grid function
+    // the functions can be vector-valued
+    // this is just an intermediate solution to provide VTK output
 	template<typename T, typename X>
 	class DiscreteGridFunction
+	  : public GridFunctionInterface<GridFunctionTraits<typename T::Traits::GridViewType,
+														typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+														T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::dimRange,
+														typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeType>,
+									 DiscreteGridFunction<T,X> >
 	{
-	};
+	  typedef T GFS;
 
-	// 
-	template<typename GV, typename LFEM, typename B, typename P, typename X>
-	class DiscreteGridFunction<GridFunctionSpace<GV,LFEM,B,P>,X>
-	  : public GridFunctionInterface<GridFunctionTraits<GV,
-														typename LFEM::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
-														LFEM::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::dimRange,
-														typename LFEM::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeType>,
-									 DiscreteGridFunction<GridFunctionSpace<GV,LFEM,B,P>,X> >
-	{
-	  typedef GridFunctionSpace<GV,LFEM,B,P> GFS;
-
-	  typedef GridFunctionInterface<GridFunctionTraits<GV,
-													   typename LFEM::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
-													   LFEM::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::dimRange,
-													   typename LFEM::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeType>,
-									DiscreteGridFunction<GridFunctionSpace<GV,LFEM,B,P>,X> > BaseT;
+	  typedef GridFunctionInterface<GridFunctionTraits<typename T::Traits::GridViewType,
+														typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+														T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::dimRange,
+														typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeType>,
+                                    DiscreteGridFunction<T,X> > BaseT;
 	
 	public:
 	  typedef typename BaseT::Traits Traits;
@@ -79,8 +80,65 @@ namespace Dune {
 	};
 
 
+	// convert a power function space of scalar function spaces into a vector-valued grid function
+    // this is just an intermediate solution to provide VTK output
+	template<typename T, typename X>
+	class VectorDiscreteGridFunction
+	  : public GridFunctionInterface<GridFunctionTraits<typename T::Traits::GridViewType,
+                typename T::template Child<0>::Type::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+                T::CHILDREN,
+                Dune::FieldVector<typename T::template Child<0>::Type::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,T::CHILDREN> >,
+			   VectorDiscreteGridFunction<T,X> >
+	{
+	  typedef T GFS;
 
-    //! \} group GridFunctionSpace
+      typedef GridFunctionInterface<GridFunctionTraits<typename T::Traits::GridViewType,
+                typename T::template Child<0>::Type::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+                T::CHILDREN,
+                Dune::FieldVector<typename T::template Child<0>::Type::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,T::CHILDREN> >,
+                                    VectorDiscreteGridFunction<T,X> > BaseT;
+
+	public:
+	  typedef typename BaseT::Traits Traits;
+      typedef typename T::template Child<0>::Type ChildType;
+      typedef typename ChildType::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType RF;
+      typedef typename ChildType::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeType RT;
+	  
+	  VectorDiscreteGridFunction (const GFS& gfs, const X& x_)
+		: pgfs(&gfs), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
+	  {
+	  }
+
+	  inline void evaluate (const typename Traits::ElementType& e, 
+							const typename Traits::DomainType& x,
+							typename Traits::RangeType& y) const
+	  {  
+		lfs.bind(e);
+		lfs.vread(xg,xl);
+        for (int k=0; k<T::CHILDREN; k++)
+          {
+            lfs.getChild(k).localFiniteElement().localBasis().evaluateFunction(x,yb);
+            y[k] = 0.0;
+            for (unsigned int i=0; i<yb.size(); i++)
+              y[k] += xl[lfs.getChild(k).localIndex(i)]*yb[i];
+          }
+	  }
+
+      //! get a reference to the GridView
+	  inline const typename Traits::GridViewType& getGridView ()
+	  {
+		return pgfs->gridview();
+	  }
+
+	private:
+	  CP<GFS const> pgfs;
+	  const X& xg;
+	  mutable typename GFS::LocalFunctionSpace lfs;
+	  mutable std::vector<RF> xl;
+	  mutable std::vector<RT> yb;
+	};
+
+   //! \} group GridFunctionSpace
   } // namespace PDELab
 } // namespace Dune
 

@@ -1814,6 +1814,304 @@ namespace Dune {
 	};
 
 
+    //=======================================
+    // Subspace construction
+    //=======================================
+
+    template<typename GFS, int k, typename CGFS> // primary template, only specializations are used !
+    class GridFunctionSubSpaceBase
+    {
+    };
+
+
+    // CGFS is a composite
+	template<typename GFS, int k, typename P, typename T0, typename T1, typename T2, typename T3,
+			 typename T4, typename T5, typename T6, typename T7, typename T8>
+    class GridFunctionSubSpaceBase<GFS,k, CompositeGridFunctionSpace<P,T0,T1,T2,T3,T4,T5,T6,T7,T8> >
+      : public Countable // behave like child k of gfs which is a composite grid function space
+    {
+      typedef CompositeGridFunctionSpace<P,T0,T1,T2,T3,T4,T5,T6,T7,T8> CGFS;
+
+    public:
+	  typedef typename CGFS::Traits Traits;
+
+      GridFunctionSubSpaceBase (const GFS& gfs)
+        : pgfs(&gfs), pcgfs(&gfs.template getChild<k>())
+      {
+      }
+
+	  enum { isLeaf = CGFS::isLeaf };
+	  enum { isPower = CGFS::isPower /**< */ };
+	  enum { isComposite = CGFS::isComposite /**< */ };
+	  enum { CHILDREN = CGFS::CHILDREN };
+
+	  template<int i>
+	  struct Child
+	  {
+		typedef typename CGFS::template Child<i>::Type Type;
+	  };
+
+	  template<int i>
+	  const typename CGFS::template Child<i>::Type& getChild () const
+	  {
+		return pcgfs->template getChild<i>();
+	  }
+
+	  // extract type of container storing Es
+	  template<typename E>
+	  struct VectorContainer
+	  {
+		//! \brief define Type as the Type of a container of E's
+		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;	
+	  };
+
+      // define local function space parametrized by self 
+      typedef CompositeLocalFunctionSpace<GridFunctionSubSpaceBase> LocalFunctionSpace;
+
+	  // get grid view
+	  const typename Traits::GridViewType& gridview () const
+	  {
+		return pgfs->gridview();
+	  }
+
+	  // get dimension of finite element space
+	  typename Traits::SizeType globalSize () const
+	  {
+        return pgfs->globalSize();
+	  }
+
+	  // get max dimension of shape function space
+	  typename Traits::SizeType maxLocalSize () const
+	  {
+		return pcgfs->maxLocalSize();
+	  }
+
+	  // map from gfs.child<k> to gfs
+	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
+	  {
+		return pgfs->upMap(pgfs->template subMap<k>(i));
+	  }
+
+	  // map from gfs.child<k>.child<i> to gfs.child<k>
+      template<int i>
+	  typename Traits::SizeType subMap (typename Traits::SizeType j) const
+	  {
+		return pcgfs->template subMap<i>(j);
+	  }
+
+    private:
+      CP<GFS const> pgfs;
+      CP<CGFS const> pcgfs;
+    };
+
+
+    // CGFS is a power
+	template<typename GFS, int k, typename T, int l, typename P>
+    class GridFunctionSubSpaceBase<GFS,k, PowerGridFunctionSpace<T,l,P> >
+      : public Countable // behave like child k of gfs which is a composite grid function space
+    {
+      typedef PowerGridFunctionSpace<T,l,P> CGFS;
+
+    public:
+	  typedef typename CGFS::Traits Traits;
+
+      GridFunctionSubSpaceBase (const GFS& gfs)
+        : pgfs(&gfs), pcgfs(&gfs.template getChild<k>())
+      {
+      }
+
+	  enum { isLeaf = CGFS::isLeaf };
+	  enum { isPower = CGFS::isPower /**< */ };
+	  enum { isComposite = CGFS::isComposite /**< */ };
+	  enum { CHILDREN = CGFS::CHILDREN };
+
+	  template<int i>
+	  struct Child
+	  {
+		typedef typename CGFS::template Child<i>::Type Type;
+	  };
+
+	  template<int i>
+	  const typename CGFS::template Child<i>::Type& getChild () const
+	  {
+		return pcgfs->template getChild<i>();
+	  }
+
+	  const T& getChild (int i) const
+	  {
+		return pcgfs->getChild(i);
+	  }
+
+	  // extract type of container storing Es
+	  template<typename E>
+	  struct VectorContainer
+	  {
+		//! \brief define Type as the Type of a container of E's
+		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;	
+	  };
+
+      // define local function space parametrized by self 
+      typedef PowerLocalFunctionSpace<GridFunctionSubSpaceBase> LocalFunctionSpace;
+
+	  // get grid view
+	  const typename Traits::GridViewType& gridview () const
+	  {
+		return pgfs->gridview();
+	  }
+
+	  // get dimension of finite element space
+	  typename Traits::SizeType globalSize () const
+	  {
+        return pgfs->globalSize();
+	  }
+
+	  // get max dimension of shape function space
+	  typename Traits::SizeType maxLocalSize () const
+	  {
+		return pcgfs->maxLocalSize();
+	  }
+
+	  // map from gfs.child<k> to gfs
+	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
+	  {
+		return pgfs->upMap(pgfs->template subMap<k>(i));
+	  }
+
+	  // map from gfs.child<k>.child<i> to gfs.child<k>
+      template<int i>
+	  typename Traits::SizeType subMap (typename Traits::SizeType j) const
+	  {
+		return pcgfs->template subMap<i>(j);
+	  }
+
+    private:
+      CP<GFS const> pgfs;
+      CP<CGFS const> pcgfs;
+    };
+
+
+    // CGFS is a leaf
+	template<typename GFS, int k, typename GV, typename LFEM, typename B, typename P>
+    class GridFunctionSubSpaceBase<GFS,k, GridFunctionSpace<GV,LFEM,B,P> >
+      : public Countable // behave like child k of GFS which is a grid function space
+    {
+      typedef GridFunctionSpace<GV,LFEM,B,P> CGFS;
+
+    public:
+	  typedef typename CGFS::Traits Traits;
+	  typedef typename GV::Traits::template Codim<0>::Entity Element;
+
+      GridFunctionSubSpaceBase (const GFS& gfs)
+        : pgfs(&gfs), pcgfs(&gfs.template getChild<k>())
+      {
+      }
+
+	  enum { isLeaf = CGFS::isLeaf };
+	  enum { isPower = CGFS::isPower /**< */ };
+	  enum { isComposite = CGFS::isComposite /**< */ };
+	  enum { CHILDREN = CGFS::CHILDREN };
+
+	  // extract type of container storing Es
+	  template<typename E>
+	  struct VectorContainer
+	  {
+		//! \brief define Type as the Type of a container of E's
+		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;	
+	  };
+
+      // define local function space parametrized by self 
+      typedef LocalFunctionSpace<GridFunctionSubSpaceBase> LocalFunctionSpace;
+
+	  // get grid view
+	  const typename Traits::GridViewType& gridview () const
+	  {
+		return pcgfs->gridview();
+	  }
+
+	  // get finite element map
+	  const LFEM& localFiniteElementMap () const
+	  {
+		return pcgfs->localFiniteElementMap();
+	  }
+
+	  // get dimension of finite element space
+	  typename Traits::SizeType globalSize () const
+	  {
+        return pgfs->globalSize();
+	  }
+
+	  // get max dimension of shape function space
+	  typename Traits::SizeType maxLocalSize () const
+	  {
+		return pcgfs->maxLocalSize();
+	  }
+
+	  // map from gfs.child<k> to gfs
+	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
+	  {
+		return pgfs->upMap(pgfs->template subMap<k>(i));
+	  }
+
+	  // compute global indices for one element
+	  void globalIndices (const typename Traits::LocalFiniteElementType& lfe, 
+                          const Element& e, 
+						  std::vector<typename Traits::SizeType>& global) const
+	  {
+        pcgfs->globalIndices(lfe,e,global);
+	  }
+
+      // global Indices from element, needs additional finite element lookup
+	  void globalIndices (const Element& e,
+						  std::vector<typename Traits::SizeType>& global) const
+      {
+        pcgfs->globalIndices(e,global);
+      }
+
+    private:
+      CP<GFS const> pgfs;
+      CP<CGFS const> pcgfs;
+    };
+
+    // ensure that GFS is not a leaf
+    template<typename GFS, int k, int isleaf>
+    class GridFunctionSubSpaceIntermediateBase 
+      : public GridFunctionSubSpaceBase<GFS,k,typename GFS::template Child<k>::Type>
+    {
+      typedef GridFunctionSubSpaceBase<GFS,k,typename GFS::template Child<k>::Type> BaseT;
+    public:
+      GridFunctionSubSpaceIntermediateBase (const GFS& gfs) : BaseT(gfs)
+      {
+      }
+    };
+
+
+    // compilation error if subspace from a leaf is taken
+    template<typename GFS, int k>
+    class GridFunctionSubSpaceIntermediateBase<GFS,k,true> : public Countable
+    {
+    public:
+      GridFunctionSubSpaceIntermediateBase (const GFS& gfs)
+      {
+ 		dune_static_assert((static_cast<int>(GFS::isLeaf)==0),"subspace cannot be taken from a leaf");
+      }
+    };
+
+
+
+
+    template<typename GFS, int k>
+    class GridFunctionSubSpace : public GridFunctionSubSpaceIntermediateBase<GFS,k,GFS::isLeaf>
+    {
+    public:
+      GridFunctionSubSpace (const GFS& gfs) 
+        : GridFunctionSubSpaceIntermediateBase<GFS,k,GFS::isLeaf>(gfs)
+      {
+        std::cout << "grid function subspace:" << std::endl;
+        std::cout << "root space size = " << gfs.globalSize()
+                  << " max local size = " << this->maxLocalSize() << std::endl;
+      }
+    };
+
 
     //! \} group GridFunctionSpace
   } // namespace PDELab
