@@ -79,6 +79,8 @@ namespace Dune {
 						   "specialization only for power");
 		dune_static_assert((static_cast<int>(LFS::template Child<0>::Type::isLeaf)==1),  
 						   "children must be leaves");
+		dune_static_assert((static_cast<int>(F::Traits::dimRange)==static_cast<int>(LFS::CHILDREN)),  
+						   "number of components must coincide with number of children");
         for (int k=0; k<LFS::CHILDREN; k++)
           {
             // allocate vector where to store coefficients from basis
