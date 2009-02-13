@@ -7,6 +7,7 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/grid/yaspgrid.hh>
+#include"../finiteelementmap/p0fem.hh"
 #include"../finiteelementmap/q12dfem.hh"
 #include"../finiteelementmap/q22dfem.hh"
 #include"../finiteelementmap/edger12dfem.hh"
@@ -17,6 +18,8 @@ template<class GV>
 void testleafgridfunction (const GV& gv)
 {
   // instantiate finite element maps
+  typedef Dune::PDELab::P0LocalFiniteElementMap<float,double,GV::dimension> P0FEM;
+  P0FEM p0fem(Dune::GeometryType::cube);
   typedef Dune::PDELab::Q12DLocalFiniteElementMap<float,double> Q12DFEM;
   Q12DFEM q12dfem;
   typedef Dune::PDELab::Q22DLocalFiniteElementMap<float,double> Q22DFEM;
@@ -25,6 +28,8 @@ void testleafgridfunction (const GV& gv)
   EdgeR12DFEM edger12dfem;
   
   // make a grid function space
+  typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS; 
+  P0GFS p0gfs(gv,p0fem);
   typedef Dune::PDELab::GridFunctionSpace<GV,Q12DFEM> GFS1; 
   GFS1 gfs1(gv,q12dfem);
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> GFS2;
