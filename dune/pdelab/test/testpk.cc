@@ -11,6 +11,7 @@
 #include<dune/grid/yaspgrid.hh>
 #include"../finiteelementmap/p0fem.hh"
 #include"../finiteelementmap/p12dfem.hh"
+#include"../finiteelementmap/pk2dfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include"../gridfunctionspace/interpolate.hh"
@@ -46,18 +47,23 @@ void testpk (const GV& gv)
 {
   typedef typename GV::Grid::ctype DF;
   const int dim = GV::dimension;
+  const int k = 5;
 
   // instantiate finite element maps
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,double,dim> P0FEM;
   P0FEM p0fem(Dune::GeometryType::simplex);
   typedef Dune::PDELab::P12DLocalFiniteElementMap<DF,double> P1FEM;
   P1FEM p1fem;
+  typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> PkFEM;
+  PkFEM pkfem(gv);
   
   // make a grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS; 
   P0GFS p0gfs(gv,p0fem);
   typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM> P1GFS; 
   P1GFS p1gfs(gv,p1fem);
+  typedef Dune::PDELab::GridFunctionSpace<GV,PkFEM> PkGFS; 
+  PkGFS pkgfs(gv,pkfem);
 
   // make coefficent Vectors
   typedef typename P0GFS::template VectorContainer<double>::Type P0V;
@@ -66,6 +72,9 @@ void testpk (const GV& gv)
   typedef typename P1GFS::template VectorContainer<double>::Type P1V;
   P1V p1xg(p1gfs);
   p1xg = 0.0;
+  typedef typename PkGFS::template VectorContainer<double>::Type PkV;
+  PkV pkxg(pkgfs);
+  pkxg = 0.0;
 
   // construct a grid function
   typedef F<GV,double> FType;
@@ -74,17 +83,21 @@ void testpk (const GV& gv)
   // do interpolation
   Dune::PDELab::interpolate(f,p0gfs,p0xg);
   Dune::PDELab::interpolate(f,p1gfs,p1xg);
+  Dune::PDELab::interpolate(f,pkgfs,pkxg);
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<P0GFS,P0V> P0DGF;
   P0DGF p0dgf(p0gfs,p0xg);
   typedef Dune::PDELab::DiscreteGridFunction<P1GFS,P1V> P1DGF;
   P1DGF p1dgf(p1gfs,p1xg);
+  typedef Dune::PDELab::DiscreteGridFunction<PkGFS,PkV> PkDGF;
+  PkDGF pkdgf(pkgfs,pkxg);
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
   vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P0DGF>(p0dgf,"p0"));
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<P1DGF>(p1dgf,"p1"));
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PkDGF>(pkdgf,"pk"));
   vtkwriter.write("testpk",Dune::VTKOptions::ascii);
 }
 
