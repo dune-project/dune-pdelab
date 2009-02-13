@@ -35,6 +35,10 @@ namespace Dune {
 	public:
       //! Mark this class as a leaf in the \ref MultiTypeTree
 	  enum { isLeaf = true /**< */ };
+      //! Mark this class as a non power in the \ref MultiTypeTree
+	  enum { isPower = false /**< */ };
+      //! Mark this class as a non composite in the \ref MultiTypeTree
+	  enum { isComposite = false /**< */ };
       //! Leafs have no children in the \ref MultiTypeTree
 	  enum { CHILDREN = 0 /**< */ };
 	};
@@ -125,6 +129,8 @@ namespace Dune {
 	  friend class PowerNode<T,k,P>;
 
 	  enum { isLeaf = false };
+	  enum { isPower = true /**< */ };
+	  enum { isComposite = false /**< */ };
 	  enum { CHILDREN = k };
 
 	  template<int i>
@@ -616,6 +622,8 @@ namespace Dune {
 	public:
 
 	  enum { isLeaf = false };
+	  enum { isPower = false /**< */ };
+	  enum { isComposite = true /**< */ };
 	  enum { CHILDREN = Dune::tuple_size<OT>::value };
 
 	  CompositeNodeBase (ST& c_) : c(c_) {}

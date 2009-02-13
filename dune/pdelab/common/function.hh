@@ -6,6 +6,7 @@
 
 #include <dune/common/static_assert.hh>
 #include <dune/common/typetraits.hh>
+#include <dune/common/fvector.hh>
 
 #include"countingptr.hh"
 #include"multitypetree.hh"
@@ -253,6 +254,44 @@ namespace Dune {
 	  const T& t;
 	  const typename Traits::ElementType& e;
 	};
+
+
+	//! a Function maps x in DomainType to y in RangeType
+	template<class T>
+	class SelectComponentAdapter : public FunctionInterface<FunctionTraits<typename T::Traits::DomainFieldType,T::Traits::dimDomain,typename T::Traits::DomainType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> > , SelectComponentAdapter<T> >
+	{
+      typedef FunctionInterface<FunctionTraits<typename T::Traits::DomainFieldType,T::Traits::dimDomain,typename T::Traits::DomainType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> > , SelectComponentAdapter<T> > BaseT;
+	public:
+	  //! \brief Export type traits
+	  typedef typename BaseT::Traits Traits;  
+
+      SelectComponentAdapter (const T& t_, int k_) : t(t_), k(k_) {}
+
+	  /** \brief Evaluate all basis function at given position
+
+		  Evaluates all shape functions at the given position and returns 
+		  these values in a vector.
+	  */
+	  inline void evaluate (const typename Traits::DomainType& x,
+							typename Traits::RangeType& y) const
+	  {  
+        typename T::Traits::RangeType Y;
+        t.evaluate(x,Y);
+        y = Y[k];
+	  }
+
+      //! set component to be selected
+      void select (int k_)
+      {
+        k = k_;
+      }
+
+	private:
+      const T& t;
+      int k;
+	};
+
+
 
 	//============================
 	// Function tree
