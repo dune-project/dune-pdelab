@@ -2020,7 +2020,7 @@ namespace Dune {
 	  };
 
       // define local function space parametrized by self 
-      typedef LocalFunctionSpace<GridFunctionSubSpaceBase> LocalFunctionSpace;
+      typedef Dune::PDELab::LocalFunctionSpace<GridFunctionSubSpaceBase> LocalFunctionSpace;
 
 	  // get grid view
 	  const typename Traits::GridViewType& gridview () const

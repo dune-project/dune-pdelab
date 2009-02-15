@@ -300,7 +300,7 @@ void testtaylorhood (const GV& gv)
   Dune::PDELab::interpolate(alternativeth,thgfs,xg);
 
   // check entries of global vector
-  for (int i=0; i<xg.size(); i++)
+  for (typename V::size_type i=0; i<xg.size(); i++)
     std::cout << "[" << i << ":" << xg[i] << "] ";
   std::cout << std::endl;
 

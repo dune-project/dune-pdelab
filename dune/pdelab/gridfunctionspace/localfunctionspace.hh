@@ -32,7 +32,7 @@ namespace Dune {
         Int initial_offset = offset; // remember initial offset to compute size later
         LocalFunctionSpaceBaseVisitNodeMetaProgram<C,C::isLeaf,E,It,Int>::
           fill_indices(t.template getChild<i>(),e,begin,offset);
-        for (int j=initial_offset; j<offset; j++)
+        for (Int j=initial_offset; j<offset; j++)
           begin[j] = t.pgfs->template subMap<i>(begin[j]);
         LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,n,i+1>::
           fill_indices(t,e,begin,offset);
@@ -253,7 +253,7 @@ namespace Dune {
       typedef typename BaseT::Traits Traits;
 
       PowerLocalFunctionSpace (const GFS& gfs)
-        : BaseT(gfs), global(gfs.maxLocalSize()), pgfs(&gfs)
+        : BaseT(gfs), pgfs(&gfs), global(gfs.maxLocalSize())
       {}
 
       //! \brief bind local function space to entity
@@ -528,7 +528,7 @@ namespace Dune {
       typedef typename BaseT::Traits Traits;
 
       CompositeLocalFunctionSpace (const GFS& gfs)
-        : BaseT(gfs), global(gfs.maxLocalSize()), pgfs(&gfs)
+        : BaseT(gfs), pgfs(&gfs), global(gfs.maxLocalSize())
       {}
 
       //! \brief bind local function space to entity
@@ -692,7 +692,7 @@ namespace Dune {
       typedef typename BaseT::Traits Traits;
 
       LocalFunctionSpace (const GFS& gfs)
-        : BaseT(gfs), global(gfs.maxLocalSize()), pgfs(&gfs)
+        : BaseT(gfs), pgfs(&gfs), global(gfs.maxLocalSize())
       {}
 
       //! \brief bind local function space to entity
