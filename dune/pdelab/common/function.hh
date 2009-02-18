@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include <dune/common/static_assert.hh>
+#include <dune/common/exceptions.hh>
 #include <dune/common/typetraits.hh>
 #include <dune/common/fvector.hh>
 
@@ -290,6 +291,8 @@ namespace Dune {
       const T& t;
       int k;
 	};
+
+
 
 
 
@@ -802,6 +805,104 @@ namespace Dune {
 	  Imp& asImp () {return static_cast<Imp &> (*this);}
 	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
 	};
+
+
+    // Adapter takes a vector-valued grid function and provides evaluation
+    // of normal flux on the interior of faces. 
+    template<typename T>
+    class NormalFluxGridFunctionAdapter
+      : public Dune::PDELab::GridFunctionInterface<Dune::PDELab::GridFunctionTraits<typename T::Traits::GridViewType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> >,
+                                                   NormalFluxGridFunctionAdapter<T> >,
+                                                                                     public Dune::PDELab::LeafNode, public Dune::PDELab::Countable
+    {
+    public:
+      typedef Dune::PDELab::GridFunctionTraits<typename T::Traits::GridViewType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> > Traits;
+      typedef Dune::PDELab::GridFunctionInterface<Traits,NormalFluxGridFunctionAdapter<T> > BaseT;
+
+      NormalFluxGridFunctionAdapter (const T& t_) : t(&t_) {}
+
+
+      inline void evaluate (const typename Traits::ElementType& e, 
+                            const typename Traits::DomainType& x,
+                            typename Traits::RangeType& y) const
+      {  
+        // ensure correct size
+        dune_static_assert((static_cast<int>(T::Traits::GridViewType::dimension)==static_cast<int>(T::Traits::dimRange)),"number of components must equal dimension"); 
+
+        // evaluate velocity
+        typename T::Traits::RangeType v;
+        t->evaluate(e,x,v);
+
+        // implementation only handles triangles so far
+        if (!e.geometry().type().isTriangle())
+          DUNE_THROW(Dune::NotImplemented, "only implemented for triangles"); 
+
+        // start and end corner in local numbering
+        int n0, n1;
+
+        typename Traits::DomainType nu;
+
+        // determine outer unit normal
+        if (std::abs(x[0])<1E-10) 
+          {
+            // edge 1
+            n0 = 2;
+            n1 = 0;
+
+            nu = e.geometry()[n1];
+            nu -= e.geometry()[n0];
+            typename Traits::DomainFieldType temp = nu[0];
+            nu[0] = nu[1]; 
+            nu[1] = -temp;
+            nu /= nu.two_norm();
+            y = v[0]*nu[0]+v[1]*nu[1];
+            return;
+          }
+
+        if (std::abs(x[1])<1E-10)
+          { 
+            // edge 2
+            n0 = 0;
+            n1 = 1;
+
+            nu = e.geometry()[n1];
+            nu -= e.geometry()[n0];
+            typename Traits::DomainFieldType temp = nu[0];
+            nu[0] = nu[1]; 
+            nu[1] = -temp;
+            nu /= nu.two_norm();
+            y = v[0]*nu[0]+v[1]*nu[1];
+            return;
+          }
+
+        if (std::abs(x[0]+x[1]-1.0)<1E-10)
+          { 
+            // edge 0
+            n0 = 1;
+            n1 = 2;
+
+            nu = e.geometry()[n1];
+            nu -= e.geometry()[n0];
+            typename Traits::DomainFieldType temp = nu[0];
+            nu[0] = nu[1]; 
+            nu[1] = -temp;
+            nu /= nu.two_norm();
+            y = v[0]*nu[0]+v[1]*nu[1];
+            return;
+          }
+          
+        DUNE_THROW(Dune::Exception, "x needs to be on an edge"); 
+      }
+
+      //! get a reference to the GridView
+      inline const typename Traits::GridViewType& getGridView () const
+      {
+        return t->getGridView();
+      }
+
+    private:
+      CP<T const> t;
+    };
 
 
 	//==========================
