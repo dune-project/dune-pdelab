@@ -63,6 +63,68 @@ namespace Dune {
 		y = 0;
 		for (unsigned int i=0; i<yb.size(); i++)
 		  y.axpy(xl[i],yb[i]);
+ 	  }
+
+      //! get a reference to the GridView
+	  inline const typename Traits::GridViewType& getGridView ()
+	  {
+		return pgfs->gridview();
+	  }
+
+	private:
+	  CP<GFS const> pgfs;
+	  const X& xg;
+	  mutable typename GFS::LocalFunctionSpace lfs;
+	  mutable std::vector<typename Traits::RangeFieldType> xl;
+	  mutable std::vector<typename Traits::RangeType> yb;
+	};
+
+    // Piola transformation 
+	template<typename T, typename X>
+	class DiscreteGridFunctionPiola
+	  : public GridFunctionInterface<GridFunctionTraits<typename T::Traits::GridViewType,
+														typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+														T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::dimRange,
+														typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeType>,
+									 DiscreteGridFunctionPiola<T,X> >
+	{
+	  typedef T GFS;
+
+	  typedef GridFunctionInterface<GridFunctionTraits<typename T::Traits::GridViewType,
+														typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+														T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::dimRange,
+														typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeType>,
+                                    DiscreteGridFunctionPiola<T,X> > BaseT;
+	
+	public:
+	  typedef typename BaseT::Traits Traits;
+	  
+	  DiscreteGridFunctionPiola (const GFS& gfs, const X& x_)
+		: pgfs(&gfs), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
+	  {
+	  }
+
+	  inline void evaluate (const typename Traits::ElementType& e, 
+							const typename Traits::DomainType& x,
+							typename Traits::RangeType& y) const
+	  { 
+        // evaluate shape function on the reference element as before
+		lfs.bind(e);
+		lfs.vread(xg,xl);
+		lfs.localFiniteElement().localBasis().evaluateFunction(x,yb);
+        typename Traits::RangeType yhat;
+        yhat = 0;
+		for (unsigned int i=0; i<yb.size(); i++)
+		  yhat.axpy(xl[i],yb[i]);
+
+        // apply Piola transformation
+        Dune::FieldMatrix<typename Traits::DomainFieldType,
+          GFS::Traits::GridViewType::dimension,GFS::Traits::GridViewType::dimension>
+          J = e.geometry().jacobianInverseTransposed(x);
+        J.invert();
+        y = 0;
+        J.umtv(yhat,y);
+        y /= J.determinant();
 	  }
 
       //! get a reference to the GridView
