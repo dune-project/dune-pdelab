@@ -41,7 +41,7 @@ public:
 };
 
 template<typename GV, typename RF>
-class V
+class V 
   : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,2>,
 													  V<GV,RF> >
 {
@@ -53,12 +53,12 @@ public:
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const
   {  
-	y[0] = 1.0;
-	y[1] = 0.0;
+	y[0] = x[0]/sqrt(2.0);
+	y[1] = x[1]/sqrt(2.0);
   }
 };
 
-// generate a Q1 function and output it
+
 template<class GV> 
 void testrt0 (const GV& gv)
 {
@@ -90,21 +90,23 @@ void testrt0 (const GV& gv)
   FType f(gv);
   typedef V<GV,double> VType;
   VType v(gv);
+  typedef Dune::PDELab::NormalFluxGridFunctionAdapter<VType> QType;
+  QType q(v);
 
   // do interpolation
   Dune::PDELab::interpolate(f,p0gfs,p0xg);
-  Dune::PDELab::interpolate(v,rt0gfs,rt0xg);
+  Dune::PDELab::interpolate(q,rt0gfs,rt0xg);
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<P0GFS,P0V> P0DGF;
   P0DGF p0dgf(p0gfs,p0xg);
-  typedef Dune::PDELab::DiscreteGridFunction<RT0GFS,RT0V> RT0DGF;
+  typedef Dune::PDELab::DiscreteGridFunctionPiola<RT0GFS,RT0V> RT0DGF;
   RT0DGF rt0dgf(rt0gfs,rt0xg);
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
   vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P0DGF>(p0dgf,"p0"));
-  vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<RT0DGF>(rt0dgf,"rt0"));
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<RT0DGF>(rt0dgf,"rt0"));
   vtkwriter.write("testrt0",Dune::VTKOptions::ascii);
 }
 
@@ -128,7 +130,7 @@ int main(int argc, char** argv)
 
 #if HAVE_ALUGRID
  	ALUUnitSquare alugrid;
-  	alugrid.globalRefine(1);
+  	alugrid.globalRefine(5);
     testrt0(alugrid.leafView());
 #endif
 
