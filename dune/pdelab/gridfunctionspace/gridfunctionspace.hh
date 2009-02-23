@@ -154,19 +154,23 @@ namespace Dune {
 	  return index;
 	}
 
-	// this class may be used to pass compile-time
-	// parameters to the implementation 
+	/** \brief class used to pass compile-time parameters to the implementation
+     *
+     *  This is the dummy default class which does nothing
+     */
 	struct GridFunctionGeneralMapper
 	{
 	  enum {dummy=0} ;
 	};
 
 
-	// mapper for layouts with arbitrary number of entries per entity
-	// GV : Type implementing GridView
-	// FEM  : Type implementing LocalFiniteElementMapInterface
-	// B : Backend type
-	// P : Parameter type
+	/** \brief mapper for layouts with arbitrary number of entries per entity
+     *
+     *  \tparam GV   Type implementing GridView
+     *  \tparam LFEM Type implementing LocalFiniteElementMapInterface
+     *  \tparam B    Backend type
+     *  \tparam P    Parameter type
+     */
 	template<typename GV, typename LFEM, typename B=StdVectorBackend, 
 			 typename P=GridFunctionGeneralMapper>
 	class GridFunctionSpace : public Countable, public LeafNode
@@ -176,7 +180,7 @@ namespace Dune {
 	  typedef typename GV::Traits::template Codim<0>::Entity Element;
 	  typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
 
-	  // extract type of container storing Es
+	  //! extract type of container storing Es
 	  template<typename T>
 	  struct VectorContainer
 	  {
@@ -184,17 +188,17 @@ namespace Dune {
 		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;	
 	  };
 
-      // define local function space parametrized by self 
+      //! define local function space parametrized by self 
       typedef Dune::PDELab::LocalFunctionSpace<GridFunctionSpace> LocalFunctionSpace;
 
-	  // constructor
+	  //! constructor
 	  GridFunctionSpace (const GV& gridview, const LFEM& lfem) 
 		: gv(gridview), plfem(&lfem)
 	  {
 		update();
 	  }
 
-	  // get grid view
+	  //! get grid view
 	  const GV& gridview () const
 	  {
 		return gv;
@@ -206,25 +210,25 @@ namespace Dune {
 		return *plfem;
 	  }
 
-	  // get dimension of finite element space
+	  //! get dimension of finite element space
 	  typename Traits::SizeType globalSize () const
 	  {
 		return nglobal;
 	  }
 
-	  // get max dimension of shape function space
+	  //! get max dimension of shape function space
 	  typename Traits::SizeType maxLocalSize () const
 	  {
 		return nlocal;
 	  }
 
-	  // map index [0,globalSize-1] to root index set
+	  //! map index [0,globalSize-1] to root index set
 	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
 	  {
 		return i;
 	  }
 
-	  // compute global indices for one element
+	  //! compute global indices for one element
 	  void globalIndices (const typename Traits::LocalFiniteElementType& lfe, 
                           const Element& e, 
 						  std::vector<typename Traits::SizeType>& global) const
