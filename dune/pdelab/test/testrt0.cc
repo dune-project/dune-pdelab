@@ -53,8 +53,16 @@ public:
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const
   {  
-	y[0] = x[0]/sqrt(2.0);
-	y[1] = x[1]/sqrt(2.0);
+    if (x[0]<0.5)
+      {
+        y[0] = x[0]/sqrt(2.0);
+        y[1] = x[1]/sqrt(2.0);
+      }
+    else
+      {
+        y[0] = x[0]/sqrt(2.0);
+        y[1] = -x[1]/sqrt(2.0);
+      }
   }
 };
 
@@ -90,12 +98,12 @@ void testrt0 (const GV& gv)
   FType f(gv);
   typedef V<GV,double> VType;
   VType v(gv);
-  typedef Dune::PDELab::NormalFluxGridFunctionAdapter<VType> QType;
-  QType q(v);
+  typedef Dune::PDELab::PiolaBackwardAdapter<VType> RVType;
+  RVType rv(v);
 
   // do interpolation
   Dune::PDELab::interpolate(f,p0gfs,p0xg);
-  Dune::PDELab::interpolate(q,rt0gfs,rt0xg);
+  Dune::PDELab::interpolate(rv,rt0gfs,rt0xg);
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<P0GFS,P0V> P0DGF;
@@ -133,7 +141,6 @@ int main(int argc, char** argv)
   	alugrid.globalRefine(5);
     testrt0(alugrid.leafView());
 #endif
-
 
 	// test passed
 	return 0;

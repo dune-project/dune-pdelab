@@ -8,6 +8,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/typetraits.hh>
 #include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
 
 #include"countingptr.hh"
 #include"multitypetree.hh"
@@ -849,8 +850,8 @@ namespace Dune {
             n0 = 2;
             n1 = 0;
 
-            nu = e.geometry()[n1];
-            nu -= e.geometry()[n0];
+            nu = e.geometry().corner(n1);
+            nu -= e.geometry().corner(n0);
             typename Traits::DomainFieldType temp = nu[0];
             nu[0] = nu[1]; 
             nu[1] = -temp;
@@ -865,8 +866,8 @@ namespace Dune {
             n0 = 0;
             n1 = 1;
 
-            nu = e.geometry()[n1];
-            nu -= e.geometry()[n0];
+            nu = e.geometry().corner(n1);
+            nu -= e.geometry().corner(n0);
             typename Traits::DomainFieldType temp = nu[0];
             nu[0] = nu[1]; 
             nu[1] = -temp;
@@ -881,8 +882,8 @@ namespace Dune {
             n0 = 1;
             n1 = 2;
 
-            nu = e.geometry()[n1];
-            nu -= e.geometry()[n0];
+            nu = e.geometry().corner(n1);
+            nu -= e.geometry().corner(n0);
             typename Traits::DomainFieldType temp = nu[0];
             nu[0] = nu[1]; 
             nu[1] = -temp;
@@ -892,6 +893,46 @@ namespace Dune {
           }
           
         DUNE_THROW(Dune::Exception, "x needs to be on an edge"); 
+      }
+
+      //! get a reference to the GridView
+      inline const typename Traits::GridViewType& getGridView () const
+      {
+        return t->getGridView();
+      }
+
+    private:
+      CP<T const> t;
+    };
+
+    // Adapter takes a vector-valued grid function and applies
+    // backward Piola transformation on each element
+    template<typename T>
+    class PiolaBackwardAdapter
+      : public Dune::PDELab::GridFunctionInterface<typename T::Traits,PiolaBackwardAdapter<T> >,
+        public Dune::PDELab::LeafNode, public Dune::PDELab::Countable
+    {
+    public:
+      typedef typename T::Traits Traits;
+      typedef Dune::PDELab::GridFunctionInterface<Traits,PiolaBackwardAdapter<T> > BaseT;
+
+      PiolaBackwardAdapter (const T& t_) : t(&t_) {}
+
+
+      inline void evaluate (const typename Traits::ElementType& e, 
+                            const typename Traits::DomainType& x,
+                            typename Traits::RangeType& y) const
+      {  
+        // evaluate velocity
+        typename T::Traits::RangeType v;
+        t->evaluate(e,x,v);
+
+        // apply Piola transformation
+        Dune::FieldMatrix<typename Traits::DomainFieldType,Traits::dimRange,Traits::dimRange>
+          J = e.geometry().jacobianInverseTransposed(x);
+        y = 0;
+        J.umtv(v,y);
+        y *= J.determinant();
       }
 
       //! get a reference to the GridView

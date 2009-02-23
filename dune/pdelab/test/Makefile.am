@@ -1,6 +1,6 @@
 # $Id: Makefile.am 586 2006-04-28 13:41:31Z mblatt $
 
-NORMALTESTS = testcountingptr testmultitypetree testfunction testanalytic testfiniteelementmap testgridfunctionspace testlocalfunctionspace testutilities testpk testrt0
+NORMALTESTS = testcountingptr testmultitypetree testfunction testanalytic testfiniteelementmap testgridfunctionspace testlocalfunctionspace testutilities testpk testrt0 testconstraints
 
 # list of tests to run
 TESTS = $(NORMALTESTS)
@@ -47,6 +47,10 @@ testpk_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LD
 testrt0_SOURCES = testrt0.cc
 testrt0_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
 testrt0_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+
+testconstraints_SOURCES = testconstraints.cc
+testconstraints_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
+testconstraints_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
 
 include $(top_srcdir)/am/global-rules
 
