@@ -63,18 +63,7 @@ public:
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
   {  
-    typedef Dune::PDELab::IntersectionGeometry<I> IG;
-
-    // map from local coordinates in intersection to global coordinates
-    Dune::FieldVector<typename IG::ctype,IG::Geometry::coorddimension> 
-      xg = ig.intersectionGlobal().global(x);
-
-    // set boundary condition according to coordinates
-    // here we could also use boundaryid etc.
-    if (xg[0]<1E-6)
-      y = 1; // Dirichlet boundary
-    else
-      y = 0;
+    y = 1; // all is Dirichlet boundary
   }
 
   //! get a reference to the GridView
@@ -156,7 +145,7 @@ void testp1 (const GV& gv)
   Dune::PDELab::constraints(b,p1gfs,p1cg);
 
   // set Dirichlet nodes to zero
-  Dune::PDELab::set(p1cg,0.0,p1xg);
+  Dune::PDELab::set_nonconstrained_dofs(p1cg,0.0,p1xg);
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<P1GFS,P1V> P1DGF;
@@ -272,7 +261,7 @@ void testpowerp1 (const GV& gv)
   Dune::PDELab::constraints(bm,p1mgfs,p1mcg);
 
   // set Dirichlet nodes to zero
-  Dune::PDELab::set(p1mcg,0.0,p1mxg);
+  Dune::PDELab::set_constrained_dofs(p1mcg,0.0,p1mxg);
 
   // subspaces
   typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,0> SUB0GFS;
