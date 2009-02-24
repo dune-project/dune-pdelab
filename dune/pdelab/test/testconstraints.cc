@@ -43,24 +43,44 @@ public:
   }
 };
 
-// define some grid functions to interpolate from
+// define some boundary grid functions to define boundary conditions
 template<typename GV>
 class B
-  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,int,1>,
+  : public Dune::PDELab::BoundaryGridFunctionBase<Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,
+                                                                                           Dune::FieldVector<int,1> >,
                                                   B<GV> >
 {
-public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,int,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,B<GV> > BaseT;
+  const GV& gv;
 
-  B (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
-							  typename Traits::RangeType& y) const
-  {
-    if (x[0]<1E-6)
+public:
+  typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> > Traits;
+  typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,B<GV> > BaseT;
+
+  B (const GV& gv_) : gv(gv_) {}
+
+  template<typename I>
+  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
+                        const typename Traits::DomainType& x,
+                        typename Traits::RangeType& y) const
+  {  
+    typedef Dune::PDELab::IntersectionGeometry<I> IG;
+
+    // map from local coordinates in intersection to global coordinates
+    Dune::FieldVector<typename IG::ctype,IG::Geometry::coorddimension> 
+      xg = ig.intersectionGlobal().global(x);
+
+    // set boundary condition according to coordinates
+    // here we could also use boundaryid etc.
+    if (xg[0]<1E-6)
       y = 1; // Dirichlet boundary
     else
       y = 0;
+  }
+
+  //! get a reference to the GridView
+  inline const GV& getGridView ()
+  {
+    return gv;
   }
 };
 
@@ -81,15 +101,11 @@ public:
   void boundary (const F& f, const IG& ig, const LFS& lfs, T& trafo) const
   {
     // 2D here, get midpoint of edge
-    typedef typename IG::LocalGeometry::ctype ctype;
-    typedef Dune::FieldVector<ctype,IG::LocalGeometry::mydimension> ILPoint;
-    typedef Dune::FieldVector<ctype,IG::LocalGeometry::coorddimension> ELPoint;
-    ILPoint ip(0.5);
-    ELPoint ep = ig.intersectionSelfLocal().global(ip);
+    typename F::Traits::DomainType ip(0.5);
 
     // determine type of boundary condition
 	typename F::Traits::RangeType bctype;
-    f.evaluate(ep,bctype);
+    f.evaluate(ig,ip,bctype);
 
     // if dirichlet boundary, the two end nodes of the edge are constrained
     if (bctype>0)
@@ -149,7 +165,7 @@ void testpk (const GV& gv)
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<P1DGF>(p1dgf,"p1"));
-  vtkwriter.write("testconstraints",Dune::VTKOptions::ascii);
+  vtkwriter.write("testconstraintsp1",Dune::VTKOptions::ascii);
 }
 
 int main(int argc, char** argv)
