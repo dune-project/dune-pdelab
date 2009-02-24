@@ -577,6 +577,9 @@ namespace Dune {
 	{
 	  //! \brief Type of local finite element
       typedef typename GFS::Traits::LocalFiniteElementType LocalFiniteElementType;
+
+	  //! \brief Type of constraints engine
+      typedef typename GFS::Traits::ConstraintsType ConstraintsType;
 	};
 
     template<typename GFS> 
@@ -627,6 +630,12 @@ namespace Dune {
         return *plfem;
       }
 
+      //! \brief get constraints engine
+      const typename Traits::ConstraintsType& constraints () const
+      {
+        return pgfs->constraints();
+      }
+
       // map index in this local function space to root local function space
       typename Traits::IndexContainer::size_type localIndex (typename Traits::IndexContainer::size_type index)
       {
@@ -662,6 +671,31 @@ namespace Dune {
       {
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
           B::access(globalcontainer,i[k]) += localcontainer[k];
+      }
+
+
+      /** \brief write back coefficients for one element to container */  
+      template<typename GC, typename LC>
+      void mwrite (const LC& lc, GC& gc) const
+      {
+        // LC and GC are maps of maps
+        typedef typename LC::const_iterator local_col_iterator;
+        typedef typename LC::value_type::second_type local_row_type;
+        typedef typename local_row_type::const_iterator local_row_iterator;
+        typedef typename GC::iterator global_col_iterator;
+        typedef typename GC::value_type::second_type global_row_type;
+
+        for (local_col_iterator cit=lc.begin(); cit!=lc.end(); ++cit)
+          {
+            // insert empty row in global container if necessary
+            global_col_iterator gcit = gc.find(i[cit->first]);
+            if (gcit==gc.end())
+              gc[i[cit->first]] = global_row_type();
+              
+            // copy row to global container with transformed indices
+            for (local_row_iterator rit=(cit->second).begin(); rit!=(cit->second).end(); ++rit)
+              gc[i[cit->first]][i[rit->first]] = rit->second;
+          }
       }
 
       void debug () const

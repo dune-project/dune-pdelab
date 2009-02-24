@@ -41,7 +41,7 @@ struct test<2> {
     GFS1 gfs1(gv,q12dfem);
     typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> GFS2;
     GFS2 gfs2(gv,q22dfem);
-    typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM,Dune::PDELab::DefaultConstraintsAssembler,
+    typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM,Dune::PDELab::DefaultConstraints,
       Dune::PDELab::StdVectorBackend,
       Dune::PDELab::GridFunctionRestrictedMapper> GFS3;
     GFS3 gfs3(gv,q22dfem);

@@ -107,12 +107,6 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
 
-#if HAVE_ALUGRID
- 	ALUUnitSquare alugrid;
-  	alugrid.globalRefine(4);
-    testpk(alugrid.leafView());
-#endif
-
 #if HAVE_UG
  	UGLDomain uggrid;
   	uggrid.globalRefine(4);
@@ -123,6 +117,12 @@ int main(int argc, char** argv)
  	AlbertaLDomain albertagrid;
   	albertagrid.globalRefine(4);
     testpk(albertagrid.leafView());
+#endif
+
+#if HAVE_ALUGRID
+ 	ALUUnitSquare alugrid;
+  	alugrid.globalRefine(4);
+    testpk(alugrid.leafView());
 #endif
 
 	// test passed
