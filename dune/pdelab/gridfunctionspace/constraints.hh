@@ -108,7 +108,7 @@ namespace Dune {
 		CG cl;
 
 		// iterate over boundary, need intersection iterator
-		lfs.constraints().boundary(GridFunctionToLocalFunctionAdapter<F>(f,e),ig,lfs,cl);
+		lfs.constraints().boundary(f,ig,lfs,cl);
 
 		// write coefficients into local vector 
 		lfs.mwrite(cl,cg);

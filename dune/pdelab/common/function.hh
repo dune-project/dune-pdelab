@@ -14,6 +14,7 @@
 #include"multitypetree.hh"
 #include"cpstoragepolicy.hh"
 #include"vtkexport.hh"
+#include"geometrywrapper.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -114,6 +115,56 @@ namespace Dune {
 							typename Traits::RangeType& y) const
 	  {  
 		asImp().evaluate(e,x,y);
+	  }
+
+      //! get a reference to the GridView
+	  inline const typename Traits::GridViewType& getGridView ()
+	  {
+		return asImp().getGridView();
+	  }
+
+	private:
+	  Imp& asImp () {return static_cast<Imp &> (*this);}
+	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
+	};
+
+	//! traits class holding function signature, same as in local function
+	template<class GV, class RF, int m, class R>
+	struct BoundaryGridFunctionTraits
+	  : public FunctionTraits<typename GV::Grid::ctype, GV::dimension-1,
+				    		  Dune::FieldVector<typename GV::Grid::ctype,
+                                                GV::dimension-1>,
+							  RF, m, R>
+	{
+	  //! \brief Export grid view type in addition
+	  typedef GV GridViewType;
+	};
+
+
+	//! a BoundaryGridFunction allows evaluation on boundary intersections
+    // T are BoundaryGridFunctionTraits
+	template<class T, class Imp>
+	class BoundaryGridFunctionInterface
+	{
+	public:
+	  //! \brief Export type traits
+	  typedef T Traits;  
+
+	  /** \brief Evaluate the GridFunction at given position
+
+		  Evaluates components of the grid function at the given position and
+		  returns these values in a vector.
+
+          \param[in]  ig geometry of intersection with boundary
+          \param[in]  x The position in entity-local coordinates
+          \param[out] y The result of the evaluation
+	  */
+      template<typename I>
+	  inline void evaluate (const IntersectionGeometry<I>& ig, 
+							const typename Traits::DomainType& x,
+							typename Traits::RangeType& y) const
+	  {  
+		asImp().evaluate(ig,x,y);
 	  }
 
       //! get a reference to the GridView
@@ -311,6 +362,25 @@ namespace Dune {
      */
 	template<class T, class Imp>
 	class GridFunctionBase : public GridFunctionInterface<T,Imp>, 
+							 public Countable, 
+							 public LeafNode
+	{
+	public:
+      //! Type of the GridView
+	  typedef typename T::GridViewType GridViewType;
+	};
+
+
+	/** \brief leaf of a function tree
+     *
+     *  Classes derived from this class implement a \ref GridFunctionTree.
+     *
+     *  \tparam T   Traits class holding the functions signature
+     *  \tparam Imp Class implementing the function.  Imp must be derived from
+     *              GridFunctionBase in some way (Barton-Nackman-Trick).
+     */
+	template<class T, class Imp>
+	class BoundaryGridFunctionBase : public BoundaryGridFunctionInterface<T,Imp>, 
 							 public Countable, 
 							 public LeafNode
 	{
