@@ -23,76 +23,74 @@ namespace Dune {
 	template<typename F, typename LFS, int n, int i> 
 	struct ConstraintsVisitChildMetaProgram // visit i'th child of inner node
 	{
-// 	  template<typename CG, typename E>
-// 	  static void interpolate (const F& f, const LFS& lfs, CG& cg, const E& e)
-// 	  {
-//         // vist children of both nodes in pairs
-// 		typedef typename F::template Child<i>::Type FC;
-// 		typedef typename LFS::template Child<i>::Type LFSC;
+	  template<typename CG, typename E, typename IG>
+	  static void boundary (const F& f, const LFS& lfs, CG& cg, const E& e, const IG& ig)
+	  {
+        // vist children of both nodes in pairs
+		typedef typename F::template Child<i>::Type FC;
+		typedef typename LFS::template Child<i>::Type LFSC;
 
-//         const FC& fc=f.template getChild<i>();
-//         const LFSC& lfsc=lfs.template getChild<i>();
+        const FC& fc=f.template getChild<i>();
+        const LFSC& lfsc=lfs.template getChild<i>();
 
-//         ConstraintsVisitNodeMetaProgram<FC,FC::isLeaf,LFSC,LFSC::isLeaf>::interpolate(fc,lfsc,cg,e);
-// 		ConstraintsVisitChildMetaProgram<F,LFS,n,i+1>::interpolate(f,lfs,cg,e);
-// 	  }
+        ConstraintsVisitNodeMetaProgram<FC,FC::isLeaf,LFSC,LFSC::isLeaf>::boundary(fc,lfsc,cg,e,ig);
+		ConstraintsVisitChildMetaProgram<F,LFS,n,i+1>::boundary(f,lfs,cg,e,ig);
+	  }
 	};
 
 	template<typename F, typename LFS, int n> 
 	struct ConstraintsVisitChildMetaProgram<F,LFS,n,n> // end of child recursion
 	{
-//       // end of child recursion
-// 	  template<typename CG, typename E>
-// 	  static void interpolate (const F& f, const LFS& lfs, CG& cg, const E& e)
-// 	  {
-//         return;
-// 	  }
+      // end of child recursion
+	  template<typename CG, typename E, typename IG>
+	  static void boundary (const F& f, const LFS& lfs, CG& cg, const E& e, const IG& ig)
+	  {
+        return;
+	  }
 	};
 
 	template<typename F, bool FisLeaf, typename LFS, bool LFSisLeaf> 
 	struct ConstraintsVisitNodeMetaProgram // visit inner node
 	{
-// 	  template<typename CG, typename E>
-// 	  static void interpolate (const F& f, const LFS& lfs, CG& cg, const E& e)
-// 	  {
-//         // both are inner nodes, visit all children
-//         // check that both have same number of children
-// 		dune_static_assert((static_cast<int>(F::CHILDREN)==static_cast<int>(LFS::CHILDREN)),  
-// 						   "both nodes must have same number of children");
+	  template<typename CG, typename E, typename IG>
+	  static void boundary (const F& f, const LFS& lfs, CG& cg, const E& e, const IG& ig)
+	  {
+        // both are inner nodes, visit all children
+        // check that both have same number of children
+		dune_static_assert((static_cast<int>(F::CHILDREN)==static_cast<int>(LFS::CHILDREN)),  
+						   "both nodes must have same number of children");
  
-//         // start child recursion
-// 		ConstraintsVisitChildMetaProgram<F,LFS,F::CHILDREN,0>::interpolate(f,lfs,cg,e);
-// 	  }
+        // start child recursion
+		ConstraintsVisitChildMetaProgram<F,LFS,F::CHILDREN,0>::boundary(f,lfs,cg,e,ig);
+	  }
 	};
 
 	template<typename F, typename LFS> 
 	struct ConstraintsVisitNodeMetaProgram<F,true,LFS,false> // try to interpolate components from vector valued function
 	{
-// 	  template<typename CG, typename E>
-// 	  static void interpolate (const F& f, const LFS& lfs, CG& cg, const E& e)
-// 	  {
-// 		dune_static_assert((static_cast<int>(LFS::isPower)==1),  
-// 						   "specialization only for power");
-// 		dune_static_assert((static_cast<int>(LFS::template Child<0>::Type::isLeaf)==1),  
-// 						   "children must be leaves");
-// 		dune_static_assert((static_cast<int>(F::Traits::dimRange)==static_cast<int>(LFS::CHILDREN)),  
-// 						   "number of components must coincide with number of children");
-//         for (int k=0; k<LFS::CHILDREN; k++)
-//           {
-//             // allocate vector where to store coefficients from basis
-//             std::vector<typename CG::ElementType> xl(lfs.getChild(k).size());
+	  template<typename CG, typename E, typename IG>
+	  static void boundary (const F& f, const LFS& lfs, CG& cg, const E& e, const IG& ig)
+	  {
+		dune_static_assert((static_cast<int>(LFS::isPower)==1),  
+						   "specialization only for power");
+		dune_static_assert((static_cast<int>(LFS::template Child<0>::Type::isLeaf)==1),  
+						   "children must be leaves");
+		dune_static_assert((static_cast<int>(F::Traits::dimRange)==static_cast<int>(LFS::CHILDREN)),  
+						   "number of components must coincide with number of children");
+        for (int k=0; k<LFS::CHILDREN; k++)
+          {
+            // allocate empty local constraints map
+            CG cl;
 
-//             // call interpolate for the basis
-//             typedef GridFunctionToLocalFunctionAdapter<F> LF;
-//             LF localf(f,e);
-//             typedef SelectComponentAdapter<LF> LFCOMP;
-//             LFCOMP localfcomp(localf,k);
-//             lfs.getChild(k).localFiniteElement().localInterpolation().interpolate(localfcomp,xl);
+            // call boundary condition evaluation of child k with component k
+            typedef BoundaryGridFunctionSelectComponentAdapter<F> FCOMP;
+            FCOMP fcomp(f,k);
+            lfs.getChild(k).constraints().boundary(fcomp,ig,lfs.getChild(k),cl);
 
-//             // write coefficients into local vector 
-//             lfs.getChild(k).vwrite(xl,cg);
-//           }
-// 	  }
+            // write coefficients into local vector 
+            lfs.getChild(k).mwrite(cl,cg);
+          }
+	  }
 	};
 
 	template<typename F, typename LFS> 
@@ -156,13 +154,15 @@ namespace Dune {
 	  typedef typename CG::value_type::second_type global_row_type;
 	  typedef typename global_row_type::iterator global_row_iterator;
 	  
-	  for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
-		{
-		  std::cout << cit->first << ": ";
-		  for (global_row_iterator rit=(cit->second).begin(); rit!=(cit->second).end(); ++rit)
-			std::cout << "(" << rit->first << "," << rit->second << ") ";
-		  std::cout << std::endl;
-		}
+      std::cout << cg.size() << " constrained degrees of freedom" << std::endl;
+
+// 	  for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
+// 		{
+// 		  std::cout << cit->first << ": ";
+// 		  for (global_row_iterator rit=(cit->second).begin(); rit!=(cit->second).end(); ++rit)
+// 			std::cout << "(" << rit->first << "," << rit->second << ") ";
+// 		  std::cout << std::endl;
+// 		}
 	}
 
     // construct constraints from given boundary condition function

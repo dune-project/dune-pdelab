@@ -347,6 +347,60 @@ namespace Dune {
 
 
 
+	//! Takes a BoundaryGridFunction and acts as a single component
+	template<class T>
+	class BoundaryGridFunctionSelectComponentAdapter 
+      : public BoundaryGridFunctionInterface<BoundaryGridFunctionTraits<typename T::Traits::GridViewType, 
+                                                                        typename T::Traits::RangeFieldType,1,
+                                                                        Dune::FieldVector<typename T::Traits::RangeFieldType,1> > , 
+                                             BoundaryGridFunctionSelectComponentAdapter<T> >
+	{
+      typedef BoundaryGridFunctionInterface<BoundaryGridFunctionTraits<typename T::Traits::GridViewType, 
+                                                                       typename T::Traits::RangeFieldType,1,
+                                                                       Dune::FieldVector<typename T::Traits::RangeFieldType,1> > , 
+                                            BoundaryGridFunctionSelectComponentAdapter<T> > BaseT;
+    public:
+	  //! \brief Export type traits
+	  typedef typename BaseT::Traits Traits;  
+
+      BoundaryGridFunctionSelectComponentAdapter (const T& t_, int k_) : t(t_), k(k_) {}
+
+	  /** \brief Evaluate all basis function at given position
+
+		  Evaluates all shape functions at the given position and returns 
+		  these values in a vector.
+	  */
+      template<typename I>
+	  inline void evaluate (const IntersectionGeometry<I>& ig, 
+							const typename Traits::DomainType& x,
+							typename Traits::RangeType& y) const
+	  {  
+        typename T::Traits::RangeType Y;
+        t.evaluate(ig,x,Y);
+        y = Y[k];
+	  }
+
+      //! get a reference to the GridView
+	  inline const typename Traits::GridViewType& getGridView ()
+	  {
+		return t.getGridView();
+	  }
+
+
+      //! set component to be selected
+      void select (int k_)
+      {
+        k = k_;
+      }
+
+	private:
+      const T& t;
+      int k;
+	};
+
+
+
+
 
 	//============================
 	// Function tree

@@ -122,7 +122,7 @@ public:
 
 // generate a P1 function and output it
 template<class GV> 
-void testpk (const GV& gv)
+void testp1 (const GV& gv)
 {
   typedef typename GV::Grid::ctype DF;
   const int dim = GV::dimension;
@@ -168,22 +168,159 @@ void testpk (const GV& gv)
   vtkwriter.write("testconstraintsp1",Dune::VTKOptions::ascii);
 }
 
+
+// define m component function
+template<typename GV, typename RF, int m>
+class Fm
+  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,m>,
+                                                  Fm<GV,RF,m> >
+{
+public:
+  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,m> Traits;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,Fm<GV,RF,m> > BaseT;
+
+  Fm (const GV& gv) : BaseT(gv) {}
+
+  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+							  typename Traits::RangeType& y) const
+  {
+    for (int i=0; i<m; i++)
+      y[i] = i*x.two_norm();
+  }
+};
+
+// define m component boundary condition function
+template<typename GV, int m>
+class Bm
+  : public Dune::PDELab::BoundaryGridFunctionBase<Dune::PDELab::BoundaryGridFunctionTraits<GV,int,m,
+                                                                                           Dune::FieldVector<int,m> >,
+                                                  Bm<GV,m> >
+{
+  const GV& gv;
+
+public:
+  typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,m,Dune::FieldVector<int,m> > Traits;
+  typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,Bm<GV,m> > BaseT;
+
+  Bm (const GV& gv_) : gv(gv_) {}
+
+  template<typename I>
+  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
+                        const typename Traits::DomainType& x,
+                        typename Traits::RangeType& y) const
+  {  
+    typedef Dune::PDELab::IntersectionGeometry<I> IG;
+
+    // map from local coordinates in intersection to global coordinates
+    Dune::FieldVector<typename IG::ctype,IG::Geometry::coorddimension> 
+      xg = ig.intersectionGlobal().global(x);
+
+    // set boundary condition according to coordinates
+    // here we could also use boundaryid etc.
+    for (int i=0; i<m; i++)
+      if (xg[i%2]>1.0-1E-6)
+        y[i] = 1; // Dirichlet boundary
+      else
+        y[i] = 0;
+  }
+
+  //! get a reference to the GridView
+  inline const GV& getGridView ()
+  {
+    return gv;
+  }
+};
+
+
+// generate a P1 function and output it
+template<class GV> 
+void testpowerp1 (const GV& gv)
+{
+  typedef typename GV::Grid::ctype DF;
+  const int dim = GV::dimension;
+  const int m=5;
+
+  // instantiate finite element map
+  typedef Dune::PDELab::P12DLocalFiniteElementMap<DF,double> P1FEM;
+  P1FEM p1fem;
+  
+  // make constrained space
+  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,P12DConstraints> P1GFS; 
+  P1GFS p1gfs(gv,p1fem);
+
+  // make m components of type P1
+  typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,m> P1mGFS;
+  P1mGFS p1mgfs(p1gfs);
+
+  // make coefficent Vector
+  typedef typename P1mGFS::template VectorContainer<double>::Type P1mV;
+  P1mV p1mxg(p1mgfs);
+  p1mxg = 0.0;
+
+  // make constraints map
+  typedef typename P1mGFS::template ConstraintsContainer<double>::Type P1mC;
+  P1mC p1mcg;
+
+  // interpolate from grid function
+  typedef Fm<GV,double,m> FmType;
+  FmType fm(gv);
+  Dune::PDELab::interpolate(fm,p1mgfs,p1mxg);
+
+  // set up constraints from boundary condition function
+  typedef Bm<GV,m> BmType;
+  BmType bm(gv);
+  Dune::PDELab::constraints(bm,p1mgfs,p1mcg);
+
+  // set Dirichlet nodes to zero
+  Dune::PDELab::set(p1mcg,0.0,p1mxg);
+
+  // subspaces
+  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,0> SUB0GFS;
+  SUB0GFS sub0gfs(p1mgfs);
+  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,1> SUB1GFS;
+  SUB1GFS sub1gfs(p1mgfs);
+  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,2> SUB2GFS;
+  SUB2GFS sub2gfs(p1mgfs);
+  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,3> SUB3GFS;
+  SUB3GFS sub3gfs(p1mgfs);
+  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,4> SUB4GFS;
+  SUB4GFS sub4gfs(p1mgfs);
+
+  // make discrete function objects (this is not yet generic enough
+  typedef Dune::PDELab::DiscreteGridFunction<SUB0GFS,P1mV> SUB0DGF;
+  SUB0DGF sub0dgf(sub0gfs,p1mxg);
+  typedef Dune::PDELab::DiscreteGridFunction<SUB1GFS,P1mV> SUB1DGF;
+  SUB1DGF sub1dgf(sub1gfs,p1mxg);
+  typedef Dune::PDELab::DiscreteGridFunction<SUB2GFS,P1mV> SUB2DGF;
+  SUB2DGF sub2dgf(sub2gfs,p1mxg);
+  typedef Dune::PDELab::DiscreteGridFunction<SUB3GFS,P1mV> SUB3DGF;
+  SUB3DGF sub3dgf(sub3gfs,p1mxg);
+  typedef Dune::PDELab::DiscreteGridFunction<SUB4GFS,P1mV> SUB4DGF;
+  SUB4DGF sub4dgf(sub4gfs,p1mxg);
+
+  // output grid function with VTKWriter
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<SUB0DGF>(sub0dgf,"comp 0"));
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<SUB1DGF>(sub1dgf,"comp 1"));
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<SUB2DGF>(sub2dgf,"comp 2"));
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<SUB3DGF>(sub3dgf,"comp 3"));
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<SUB4DGF>(sub4dgf,"comp 4"));
+  vtkwriter.write("testconstraintspowerp1",Dune::VTKOptions::ascii);
+}
+
+
+
 int main(int argc, char** argv)
 {
   try{
     //Maybe initialize Mpi
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
 
-#if HAVE_ALUGRID
-//  	ALUUnitSquare alugrid;
-//   	alugrid.globalRefine(3);
-//     testpk(alugrid.leafView());
-#endif
-
 #if HAVE_UG
  	UGUnitSquare uggrid;
-  	uggrid.globalRefine(3);
-    testpk(uggrid.leafView());
+  	uggrid.globalRefine(4);
+    testp1(uggrid.leafView());
+    testpowerp1(uggrid.leafView());
 #endif
 
 	// test passed
