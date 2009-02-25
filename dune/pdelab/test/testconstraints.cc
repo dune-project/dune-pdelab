@@ -74,41 +74,6 @@ public:
 };
 
 
-// Parameter class for grid function space that assembles constraints
-class P12DConstraints
-{
-public:
-  enum { assembleBoundary = true };
-  enum { assembleIntersection = false };
-
-  // boundary constraints
-  // F : grid function returning boundary condition type
-  // IG : intersection geometry
-  // LFS : local function space
-  // T : TransformationType
-  template<typename F, typename IG, typename LFS, typename T>
-  void boundary (const F& f, const IG& ig, const LFS& lfs, T& trafo) const
-  {
-    // 2D here, get midpoint of edge
-    typename F::Traits::DomainType ip(0.5);
-
-    // determine type of boundary condition
-	typename F::Traits::RangeType bctype;
-    f.evaluate(ig,ip,bctype);
-
-    // if dirichlet boundary, the two end nodes of the edge are constrained
-    if (bctype>0)
-      {
-        // determine the constrained nodes (requires knowledge about reference element)
-        typename T::RowType empty;
-        int edge = ig.numberInSelf();
-        trafo[(edge+1)%3] = empty; // first node
-        trafo[(edge+2)%3] = empty; // second node
-      }
-  }
-};
-
-
 // generate a P1 function and output it
 template<class GV> 
 void testp1 (const GV& gv)
@@ -121,7 +86,7 @@ void testp1 (const GV& gv)
   P1FEM p1fem;
   
   // make constrained space
-  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,P12DConstraints> P1GFS; 
+  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,Dune::PDELab::P12DConstraints> P1GFS; 
   P1GFS p1gfs(gv,p1fem);
 
   // make coefficent Vectors
@@ -234,7 +199,7 @@ void testpowerp1 (const GV& gv)
   P1FEM p1fem;
   
   // make constrained space
-  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,P12DConstraints> P1GFS; 
+  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,Dune::PDELab::P12DConstraints> P1GFS; 
   P1GFS p1gfs(gv,p1fem);
 
   // make m components of type P1

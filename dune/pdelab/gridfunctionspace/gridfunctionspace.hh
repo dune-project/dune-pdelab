@@ -12,6 +12,7 @@
 #include"../common/countingptr.hh"
 #include"../common/multitypetree.hh"
 #include"../common/cpstoragepolicy.hh"
+#include"../common/geometrywrapper.hh"
 
 #include"localfunctionspace.hh"
 
@@ -172,8 +173,26 @@ namespace Dune {
     class DefaultConstraints
     {
     public:
-      enum { assembleBoundary = false };
-      enum { assembleIntersection = false };
+      enum { doBoundary = false };
+      enum { doSkeleton = false };
+      enum { doVolume = false }; // might be necessary for cell-centered in parallel
+
+      // methods are here just to show interfaces; they are never called because doX are false above
+      template<typename F, typename I, typename LFS, typename T>
+      void boundary (const F& f, const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo) const
+      {
+      }
+
+      template<typename I, typename LFS, typename T>
+      void skeleton (const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo) const
+      {
+      }
+
+      template<typename E, typename LFS, typename T>
+      void volume (const ElementGeometry<E>& eg, const LFS& lfs, T& trafo) const
+      {
+      }
+
     };
 
 
