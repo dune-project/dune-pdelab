@@ -1,108 +1,581 @@
-\section{General construction of finite element spaces}
+\section{General construction of discrete function spaces}\label{Sec:General}
 
-Linear finite element spaces are constructed in a generic and
-systematic way. It therefore desirable to implement as much as
-possible of this construction in a reusable form. In order to identify
-which pieces can be reused we now describe the general construction in
-detail. 
+\subsection{Unconstrained Spaces}
 
-We begin with the shape functions which we also call
-local basis functions. These are functions defined
-on a reference element $\hat\Omega$:
-\begin{equation}
-\hat\phi_i : \hat\Omega \to \mathbb{K}^m, \qquad 0\leq i < N.
-\end{equation}
-Here $\mathbb{K}^m$ is the $m$-dimensional vector space based on the
-field $\mathbb{K}$ where $\mathbb{K}=\mathbb{R}, \mathbb{C}$.
-Typically, shape functions are componentwise polynomials of a given
-order. 
-A local finite element function 
-\begin{equation*}
-\hat{u}(x) = \sum_{i=0}^{N-1} \hat{c}_i \hat\phi_i(x) .
-\end{equation*}
-is then a linear combination of those
-local basis functions.
+When solving partial differential equations with grid-based
+methods we deal with finite-dimensional function spaces constructed
+from a given set of local functions defined on reference elements.
+In the following $\Omega$ denotes an open and connected subset of
+$\mathbb{R}^n$, $n\geq 1$, which is partition into a set of elements by the grid
+$\mathbb{T}_h$.
 
-To define a function on a general transformed element $e$ we introduce
-the transformation 
-\begin{equation}
-\mu_e : \hat\Omega_e \to \Omega_e, \qquad e\in E^0
+\begin{definition}[Finite-dimensional function space]\label{Def:Vh}
+ A finite dimensional function space $U_h(\mathbb{T}_h)$ has the
+ following generic form: 
+\begin{equation}\label{Eq:GenericFESpace}
+\begin{split}
+U_h(\mathbb{T}_h) = \Biggl\{ & u_h(x) : \bigcup_{e\in E_h^0}\Omega_e
+ \to \mathbb{K}^m\,\Bigg| \\
+&\quad u_h(x) = \sum_{e\in E_h^0}\sum_{i=0}^{k(e)-1} (\mathbf{u})_{g(e,i)}
+\, \pi_e(\hat{x}) \, \hat\phi_{e,i}(\hat{x}) \, \chi_e(x); \, \hat{x}=\mu_e^{-1}(x) 
+ \Biggr\}
+\end{split}
 \end{equation}
-which is assumed to be continuous and invertible.
-Here $\hat\Omega_e$ is the reference element associated with element
-$e$ and $\Omega_e$ is the domain occupied by element $e$. Note also
-that every element may in principle have a different reference element.
-
-Using the transformation we can define the transformed shape functions
-\begin{equation}
-\phi_i^e : \Omega_e \to \mathbb{K}^m, \qquad \phi_i^e =
-\hat\phi_i^e\circ \mu_e^{-1}, \qquad 0\leq i < N_e.
-\end{equation}
-and a function on the transformed element
-\begin{equation}
-u_e(x) = \sum_{i=0}^{N_e-1} \hat{c}_i^e \hat\phi_i^e(\mu_e^{-1}(x)) .
-\end{equation}
-
-The domain $\Omega$ is assumed to be subdivided into elements
-\begin{equation}
-\bar{\Omega} = \bigcup_{e\in E^0} \bar\Omega_e, \qquad
-\Omega_e\cap\Omega_f = \emptyset \text{ for $e\neq f$}.
-\end{equation}
-A global finite element function $$u : \Omega \to \mathbb{K}^m$$ is then
-constructed out of the local pieces:
-\begin{equation}
-u(x) = \sum_{e\in E^0} \left( \sum_{i=0}^{N_e-1} \hat{c}_i^e
-\hat\phi_i^e(\mu_e^{-1}(x)) \right) \chi_{\Omega_e}(x), 
-\qquad x\in \bigcup_{e\in E^0} \Omega_e
-\end{equation}
-where $\chi_{\Omega_e}$ denotes the characteristic function of the
-domain $\Omega_e$. Note that:
+where
 \begin{itemize}
-\item Each element still has its own set of coefficients.
-\item Functions are not defined at element boundaries.
-\item If the local functions coincide on element boundaries then $u$
-  can be extended to all of $\Omega$, otherwise $u$ may be extended to
-  be set-valued on the \textit{internal skeleton}
-\begin{equation}
-\Gamma = \bigcup_{e,f\in E^0} \left( \partial\Omega_e \cap
-\partial\Omega_f \right) \setminus \partial\Omega .
-\end{equation}
+\item $\mathbb{K}$ is either the set of real numbers $\mathbb{R}$ or
+  the set of complex numbers $\mathbb{C}$ and $m\geq 1$ also includes
+  vector-valued function spaces. 
+\item $E_h^0=\{e_0, e_1, \ldots, e_{N_h^0-1}\}$ is the set of entities of
+codimension 0, the elements for short. With each element we
+associate a subdomain $\Omega_e$ such that $\overline{\Omega}
+= \bigcup_{e\in E_h^0} \overline{\Omega}_e$ and $\Omega_e\cap\Omega_f=\emptyset$ for $e\neq f$. 
+\item With each element $e$ we also associate a reference element
+  $\hat\Omega_e$ and define the map $\mu_e : \overline{\hat\Omega}_e \to
+  \overline{\Omega}_e$. This includes curved elements.
+\item $\hat\Phi_e = \left\{\hat\phi_{e,i}\,|\,0\leq i < k(e)\right\}$ is
+  the set of local basis functions for element $e$. Local basis
+  functions are defined on the reference element $\hat\phi_{e,i} :
+  \overline{\hat\Omega}_e \to \mathbb{R}^{m'}$.
+\item $\pi_e(\hat{x})\in\mathbb{R}^{m\times m'}$ is a transformation
+  needed for some finite element spaces such as the Piola
+  transformation \cite{BrezziFortin} in Raviart-Thomas spaces
+\begin{equation*}
+\pi_e(\hat{x}) = \frac{1}{\text{det}\  \mu_e(\hat{x})} \nabla \mu_e(\hat{x})
+\end{equation*}
+where $\nabla \mu_e$ denotes the Jacobian of the map $\mu_e$. For most
+finite element spaces $\pi_e$ is just the identity and we have $m'=m$.
+\item $g : L \to \mathbb{N}$ where $L=\left\{ (e,i)\in E_h^0 \times
+  \mathbb{N} \,|\, 0\leq i < k(e)\right\}$ is the local to global map
+  and $\mathcal{I}_{U_h} = \text{im}\ g$ is the associated global index set.
+\item $\mathbf{u}\in \mathbf{U}=\mathbb{K}^{\mathcal{I}_{U_h}}$ is a coefficient vector.
+\item $\chi_e : \Omega_e \to \{0,1\}$ is the characteristic function
+  of $\Omega_e$ which is one if $x\in\Omega_e$ and zero elsewhere. 
+\hfill$\square$
 \end{itemize}
+\end{definition}
 
-Typically finite element functions exhibit some form of continuity
-across the element boundaries. This is achieved by (1) using specific
-shape functions and (2) identifying coefficients of intersection
-elements, i.e.~ when $\partial\Omega_e\cap\partial\Omega_f\neq\emptyset$.
+Setting $l(j) = \left\{ (e,i)\in L \,|\, g(e,i)=j \right\}$ one can
+introduce global basis functions
+\begin{equation*}
+\phi_j(x) = \sum_{(e,i)\in l(j)} \pi_e(\hat{x}) \,
+\hat\phi_{e,i}(\hat{x}) \, \chi_e(x); \ \hat{x}=\mu_e^{-1}(x).
+\end{equation*} 
+The global basis functions form the global basis
+\begin{equation}
+\Phi_{U_h} = \{\phi_i \,|\, i\in \mathcal{I}_{U_h}\}, \qquad U_h = \text{span}\ \Phi_{U_h}.
+\end{equation}
+Finally we define the finite element isomorphism
+\begin{equation}\label{Eq:FiniteElementIsomorphism}
+\text{FE}_{\Phi_{U_h}} : \mathbf{U} \to U_h, \qquad \text{FE}_{\Phi_{U_h}}(\mathbf{u}) = \sum_{i\in\mathcal{I}_{U_h}} (\mathbf{u})_i \phi_i \ .
+\end{equation} 
 
-The identification of coefficients can be written as
-\begin{equation}
-\hat{c}_i^e = c_{\alpha(e,i)}
-\end{equation}
-where $\alpha$ is the local-to-global-map.
-The local-to-global-map can be constructed by identifying coefficients
-with geometric entities of higher codimension, i.~e.
-\begin{equation}
-\hat{c}_i^e = c_{j(e,i)}^{s(e,i)}
-\end{equation}
-where $e'=s(e,i)\in E^{c(e,i)}$ is an entity of codimension $c(e,i)$
-which is a subentity of $e$ and
-$j(e,i)$ is an index within that entity, in case several
-coefficients are identified with $e'$. Thus it is sufficient to
-provide a map 
-\begin{equation}
-(e,i) \mapsto (s,c,j), \qquad e\in E^0, 0\leq i < N_e.
-\end{equation}
-Such a map will be called a local layout map. Using a suitable
-ordering of the triples $(s,c,j)$ the local-to-global-map $\alpha$ can
-be constructed. Using the identification of coefficients the class of
-finite element functions treated in \texttt{dune-pdelab} can be
-written as
-\begin{equation}
-u(x) = \sum_{e\in E^0} \left( \sum_{i=0}^{N_e-1} c_{j(e,i)}^{s(e,i)}
-\hat\phi_i^e(\mu_e^{-1}(x)) \right) \chi_{\Omega_e}(x), 
-\qquad x\in \bigcup_{e\in E^0} \Omega_e .
-\end{equation}
-Note these function may still be discontinuous at element boundaries. 
-\newpage
+Note that Definition \ref{Def:Vh} allows for functions that are
+discontinuous at element boundaries. Formally, functions $u_h\in
+U_h(\mathbb{T}_h)$ are only defined on $\bigcup_ {e\in E_h^0} \Omega_e$
+but not on the skeleton $\Gamma_h = \Omega\setminus \bigcup_ {e\in
+  E_h^0} \Omega_e$. It is understood that $u_h$ is extended in a
+unique way to $\overline{\Omega}$ if limits are the same on $\Gamma_h$ from
+the interior of the adjacent elements.
 
-\cite{BrennerScott}
+\subsection{Constrained Spaces}
+
+Often we have the situation that problems have to be solved in a
+subspace $\tilde{U}_h\subset U_h$ or even an affine subspace
+$w_h+\tilde{U}_h$, where $w_h\in U_h$.
+
+\paragraph{Basis transformation} In order to describe general
+constraints we first introduce a basis transformation. So let
+$\Phi_{U_h}'=\{\phi_i'\,|\, i\in \mathcal{I}_{U_h}\}$ be an alternative basis of $U_h$,
+i.~e.~$U_h=\text{span}\ \Phi_{U_h}'$. The new basis functions are
+given with respect to the old basis functions by the transformation
+matrix $\mathbf{T}_{U_h}$:
+\begin{equation}
+\phi_i' = \sum_{j\in\mathcal{I}_{U_h}}
+\left(\mathbf{T}_{U_h}\right)_{i,j} \phi_j, \qquad i\in \mathcal{I}_{U_h}.
+\end{equation}
+Formally we define a new coefficient space
+$\mathbf{U}'=\mathbb{K}^{\mathcal{I}_{U_h}}$ and again have an
+isomorphism with respect to the new basis:
+$\text{FE}_{\Phi_{U_h}'}(\mathbf{u}') = \sum_{i\in\mathcal{I}_{U_h}}
+(\mathbf{u}')_i \phi_i'$. For the representation of a function $u_h$
+we get
+\begin{equation}
+\begin{split}
+u_h = \text{FE}_{\Phi_{U_h}'}(\mathbf{u}') &= 
+\sum_{j\in\mathcal{I}_{\tilde{U}_h}} (\mathbf{u}')_j \phi'_j = 
+\sum_{j\in\mathcal{I}_{U_h}} (\mathbf{u}')_j \left (
+\sum_{i\in\mathcal{I}_{U_h}}
+\left(\mathbf{T}_{U_h}\right)_{j,i} \phi_i \right)\\
+&= \sum_{i\in \mathcal{I}_{U_h}} \left (\sum_{j\in\mathcal{I}_{U_h}}
+\left(\mathbf{T}^T_{U_h}\right)_{i,j} (\mathbf{u}')_j \right ) \phi_i\\
+&= \text{FE}_{\Phi_{U_h}}\left( \mathbf{T}^T_{U_h} \mathbf{u}' \right) .
+\end{split}
+\end{equation}
+
+\paragraph{Splitting} Subspaces are now introduced by a splitting of
+the index set into unconstrained and constrained indices:
+\begin{equation*}
+\mathcal{I}_{U_h} = \tilde{\mathcal{I}}_{U_h} \cup
+\bar{\mathcal{I}}_{U_h}, \qquad  \tilde{\mathcal{I}}_{U_h} \cap
+\bar{\mathcal{I}}_{U_h} = \emptyset.
+\end{equation*}
+With respect to this splitting we obtain the subspaces
+\begin{align*}
+\tilde{U}_h' &= \text{span}\ \{\phi_i'\,|\,
+i\in\tilde{\mathcal{I}}_{U_h}\}, &
+\bar{U}_h' &= \text{span}\ \{\phi_i'\,|\,
+i\in\bar{\mathcal{I}}_{U_h}\}
+\end{align*}
+and the corresponding coefficient spaces
+\begin{align*}
+\tilde{\mathbf{U}}' &=
+\mathbb{K}^{\tilde{\mathcal{I}}_{U_h}}, &
+\bar{\mathbf{U}}' &=
+\mathbb{K}^{\bar{\mathcal{I}}_{U_h}},
+\end{align*}
+where $U_h'$ actually is the subspace where we will seek the solution
+of the constrained problem.
+
+The transformation matrix $\mathbf{T}_{U_h}$ can be written in block
+form 
+\begin{equation*}
+\mathbf{T}_{U_h} = \left(\begin{array}{cc}
+\mathbf{T}_{\tilde{U}_h,\tilde{U}_h} & \mathbf{T}_{\tilde{U}_h,\bar{U}_h}\\
+\mathbf{T}_{\bar{U}_h,\tilde{U}_h} & \mathbf{T}_{\bar{U}_h,\bar{U}_h}
+\end{array}\right)
+\end{equation*}
+according to the splitting. In the following we consider only a
+special class of transformations which have the form
+\begin{equation}\label{Eq:StructureTransformation}
+\mathbf{T}_{U_h} = \left(\begin{array}{cc}
+\mathbf{I} & \mathbf{T}_{\tilde{U}_h,\bar{U}_h}\\
+\mathbf{0} & \mathbf{I}
+\end{array}\right).
+\end{equation}
+The $\tilde{\mathcal{I}}_{U_h} \times \bar{\mathcal{I}}_{U_h}$  matrix
+$\mathbf{T}_{\tilde{U}_h,\bar{U}_h}$ will usually be sparse.  If constraints only consist
+of Dirichlet boundary conditions this matrix is even zero.
+
+\paragraph{Restrictions} Below we will make use of the following restriction operators
+\begin{align}
+\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'} &: \mathbf{U}' \to \tilde{\mathbf{U}}', & 
+(\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'}\mathbf{u}')_i &= 
+(\mathbf{u}')_i \quad \forall i\in \tilde{\mathcal{I}}_{U_h},\\
+\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} &: \mathbf{U}' \to \bar{\mathbf{U}}', & 
+(\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'}\mathbf{u}')_i &= 
+(\mathbf{u}')_i \quad \forall i\in \bar{\mathcal{I}}_{U_h}.
+\end{align}
+
+ 
+\section{General construction of discrete problems}\label{Sec:Problems}
+
+\subsection{Formulation in function space}
+
+\paragraph{Unconstrained problem}
+
+Let $r_h : U_h \times V_h \to \mathbb{K}$ be a map that is linear in its
+second argument but not necessarily in its first argument. 
+Then the unconstrained problem \textit{in residual formulation} reads
+\begin{equation}\label{Eq:UnconstrainedProblem}
+u_h\in U_h\ : \qquad r_h(u_h,v) = 0 \quad \forall v\in V_h.
+\end{equation}
+
+\paragraph{Constrained problem}
+
+Often this problem is posed in its constrained form which reads
+\begin{equation}\label{Eq:ConstrainedProblem}
+u_h\in w_h + \tilde{U}'_h\ : \qquad r_h(u_h,v) = 0 \quad \forall v\in \tilde{V}'_h
+\end{equation}
+where the constrained spaces $\tilde{U}'_h, \tilde{V}'_h$ are
+generated via a basis transformation as described above. 
+We assume that Problem \eqref{Eq:ConstrainedProblem} is uniquely
+solvable. 
+
+\paragraph{Reformulation in unconstrained space}
+
+We now seek a reformulation of Problem \eqref{Eq:ConstrainedProblem}
+which seeks a solution in the unconstrained space $U_h$ and
+incorporates the constraint by stating an additional constraint
+equation. This is useful in practice where one does not want to change
+the solution space when e.~g.~a change in boundary conditions takes
+place. 
+
+\begin{lemma}
+ Let $P_h : U_h \to \tilde{U}_h$ be a projection,
+i.~e.~$P_h^2 = P_h$ and assume that the affine shift is such that 
+$P_h w_h = 0$. Then 
+\begin{equation}\label{Eq:ConstrainedProblemReformII}
+u_h\in U_h\ : \qquad \left\{\begin{array}{ll}
+r_h(u_h,v) = 0 \quad \forall v\in \tilde{V}_h'\\
+(I-P_h)u_h = w_h
+\end{array}\right. 
+\end{equation}
+is equivalent to \eqref{Eq:ConstrainedProblem}.\\
+\textit{Proof}. Assume that \eqref{Eq:ConstrainedProblem} holds and
+$P_h w_h = 0$. Since $u_h$ solves \eqref{Eq:ConstrainedProblem}
+the first equation in \eqref{Eq:ConstrainedProblemReformII} clearly holds.
+Moreover, we have $u_h = w_h + \tilde{u}_h$ with $\tilde{u}_h\in
+\tilde{U}_h'$ which allows us to write $u_h = w_h + P_h v_h$ for some
+$v_h\in U_h$. When we can prove that $v_h=u_h$ we obtain the desired
+$(I-P_h)u_h = w_h$. We now show that $v_h=u_h$:
+Applying $P_h$ to both sides of the identity $u_h = w_h + P_h v_h$ yields
+$P_h u_h = P_h w_h + P_h^2 v_h$. Using $P_h w_h = 0$ and $P_h^2 = P_h$
+yields $P_h u_h = P_h v_h$. Thus we may identify $v_h$ and $u_h$ as
+$v_h$ was arbitrary.\\
+Assume now that \eqref{Eq:ConstrainedProblemReformII} holds. The first
+equation of \eqref{Eq:ConstrainedProblemReformII} is the same as 
+\eqref{Eq:ConstrainedProblem}. From the
+second equation we conclude $u_h = w_h + P_h u_h$, i.~e.~ $u_h\in w_h
++ \tilde{U}_h'$. \hfill$\square$
+\end{lemma}
+
+\subsection{Formulation in coefficient space}
+
+In practice the discrete problems are solved in coefficient space
+using a basis representation. 
+
+\paragraph{Unconstrained problem}
+
+We begin with problem \eqref{Eq:UnconstrainedProblem} in the
+original basis. Denote the basis of $U_h$ by
+$\Phi_{U_h}=\{\phi_i\,|\, i\in\mathcal{I}_{U_h}\}$ and that of $V_h$
+by $\Phi_{V_h}=\{\psi_i\,|\, i\in\mathcal{I}_{V_h}\}$.
+The unconstrained problem in coefficient space results in a nonlinear
+algebraic system
+\begin{equation}
+\begin{split}
+\mathbf{u}\in\mathbf{U} : \qquad
+& r_h\left(\text{FE}_{\Phi_{U_h}}(\mathbf{u}),\psi_i\right) = 0, \quad
+i\in\mathcal{I}_{V_h} \\
+\Leftrightarrow \  & \mathcal{R}(\mathbf{u}) = \mathbf{0}
+\end{split}
+\end{equation}
+where we introduced the nonlinear residual map $\mathcal{R} :
+\mathbf{U} \to \mathbb{K}^{\mathcal{I}_{V_h}}$ defined as 
+\begin{equation}
+\left(
+\mathcal{R}(\mathbf{u})\right)_i =
+r_h(\text{FE}_{U_h}(\mathbf{u}),\psi_i).
+\end{equation}
+
+We may introduce basis transformations $\mathbf{T}_{U_h}$,
+$\mathbf{T}_{V_h}$ for trial and test space which gives us
+\begin{equation}\label{Eq:TransformedUnconstrainedProblem}
+\begin{split}
+\mathbf{u}'\in\mathbf{U}' : \qquad 
+& r_h\left(\text{FE}_{\Phi'_{U_h}}(\mathbf{u}'),\psi_i'\right) = 0, \quad
+i\in\mathcal{I}_{V_h}\\
+\Leftrightarrow \  &
+r_h\left(\text{FE}_{\Phi_{U_h}}(\mathbf{T}^T_{U_h}\mathbf{u}'),
+\sum_{j\in\mathcal{I}_{V_h}}\left(\mathbf{T}_{V_h}\right)_{i,j}\psi_j\right) = 0, \quad
+i\in\mathcal{I}_{V_h}\\
+\Leftrightarrow \  &
+\sum_{j\in\mathcal{I}_{V_h}} \left(\mathbf{T}_{V_h}\right)_{i,j} 
+r_h\left(\text{FE}_{\Phi_{U_h}}(\mathbf{T}^T_{U_h}\mathbf{u}'),
+\psi_j\right) = 0, \quad
+i\in\mathcal{I}_{V_h}\\
+\Leftrightarrow \  &
+\mathbf{T}_{V_h} \mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}'\right)
+= \mathbf{0} .
+\end{split}
+\end{equation}
+Note how we used the linearity with respect to the second argument of
+the residual formulation.
+
+\paragraph{Newton solver}
+
+We now solve \eqref{Eq:TransformedUnconstrainedProblem} using Newton's
+method. Assume that a current iterate $\mathbf{u}_k'$ is given. We
+seek an update $\mathbf{z}'_k$ such that $\mathbf{u}'_{k+1} = \mathbf{u}_k'
++ \mathbf{z}'_k$ and use the linearized form of the equation
+\begin{equation*}
+\mathbf{T}_{V_h}\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}'_{k+1}\right) \approx 
+\mathbf{T}_{V_h}\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}'_{k}\right) +
+\mathbf{T}_{V_h}\nabla\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}'_{k}\right) 
+\mathbf{T}^T_{U_h} \mathbf{z}'_{k} = \mathbf{0}
+\end{equation*}
+to get the linear system for the update
+\begin{equation}\label{eq:UnconstrainedUpdate}
+\mathbf{T}_{V_h}\nabla\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}'_{k}\right) 
+\mathbf{T}^T_{U_h} \mathbf{z}'_{k} = -
+\mathbf{T}_{V_h}\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}'_{k}\right) .
+\end{equation}
+Here $\nabla\mathcal{R}\left(\mathbf{u}_{k}\right)$ denotes the
+Jacobian matrix of the map $\mathcal{R}$. Multiplying the update
+equation with $\mathbf{T}^T_{U_h}$ from the left yields
+\begin{equation}\label{eq:OriginalUpdate}
+\mathbf{T}^T_{U_h}\mathbf{u}'_{k+1} = \mathbf{T}^T_{U_h}\mathbf{u}_k' +
+\mathbf{T}^T_{U_h}\mathbf{z}'_k .
+\end{equation}
+Setting $\mathbf{u}_{k} := \mathbf{T}^T_{U_h}\mathbf{u}_k'$ allows us
+now to write the Newton scheme with respect to the original basis.
+
+\begin{algo}[Newton's method for unconstrained problem]
+Given the initial guess $\mathbf{u}_{0}$ iterate until convergence
+\begin{enumerate}[i)]
+\item Compute residual:
+  $\mathbf{r}_k=-\mathcal{R}\left(\mathbf{u}_{k}\right)$.
+\item Transform residual: $\mathbf{r}_k' = \mathbf{T}_{V_h}
+  \mathbf{r}_k$.
+\item Solve update equation:
+  $\mathbf{T}_{V_h}\nabla\mathcal{R}\left(\mathbf{u}_{k}\right)  
+\mathbf{T}^T_{U_h} \mathbf{z}'_{k} =  \mathbf{r}_k'$.
+\item Transform update: $\mathbf{z}_{k} =
+  \mathbf{T}^T_{U_h}\mathbf{z}'_k$.
+\item Update: $\mathbf{u}_{k+1} = \mathbf{u}_k
++ \mathbf{z}_k$.
+\end{enumerate}
+Note that two applications of the basis transformation, for the
+residual and the update, are necessary in each step. These
+transformations are cheap due to the structure of the transformation
+\eqref{Eq:StructureTransformation}. In step (iii) the transformed
+Jacobian system is required. \hfill$\square$
+\end{algo}
+
+\paragraph{Constrained problem} We now seek to solve problem
+\eqref{Eq:ConstrainedProblemReformII} in coefficient space. The
+projection $P_h$ is taken from the follwing commutative diagram:
+\begin{equation*}
+\begin{CD}
+U_h @>{P_h = \text{FE}_{\Phi'_{U_h}}
+\mathbf{R}^T_{\tilde{\mathbf{U}}',\mathbf{U}'}
+\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'} 
+\text{FE}_{\Phi'_{U_h}}^{-1}}>> \tilde{U}_h'\\
+@A{\text{FE}_{\Phi'_{U_h}}}AA @AA{\text{FE}_{\Phi'_{U_h}}
+\mathbf{R}^T_{\tilde{\mathbf{U}}'\mathbf{U}'}}A\\
+\mathbf{U}' @>{\qquad\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'}\qquad}>> \tilde{\mathbf{U}}' 
+\end{CD}
+\end{equation*}
+Using this definition of the projection we obtain for the second
+equation in \eqref{Eq:ConstrainedProblemReformII}  
+\begin{equation}\label{Eq:SideConditionCoefficient}
+\begin{split}
+&(I-P_h) u_h = w_h \\
+\Leftrightarrow \quad & 
+\left(\text{FE}_{\Phi'_{U_h}}\text{FE}_{\Phi'_{U_h}}^{-1}
+- \text{FE}_{\Phi'_{U_h}}
+\mathbf{R}^T_{\tilde{\mathbf{U}}',\mathbf{U}'}
+\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'} 
+\text{FE}_{\Phi'_{U_h}}^{-1}\right)\text{FE}_{\Phi'_{U_h}}\mathbf{u}'
+= \text{FE}_{\Phi'_{U_h}}
+\mathbf{R}^T_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{w}'\\
+\Leftrightarrow \quad &
+\left( \mathbf{I} - \mathbf{R}^T_{\tilde{\mathbf{U}}',\mathbf{U}'}
+\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'}\right) \mathbf{u}' =
+\mathbf{R}^T_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{w}' \\
+\Leftrightarrow \quad &
+\mathbf{R}^T_{\bar{\mathbf{U}}',\mathbf{U}'}
+\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}' =
+\mathbf{R}^T_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{w}'\\
+\Leftrightarrow \quad &
+\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}' = \mathbf{w}' .
+\end{split}
+\end{equation}
+For the first equation in \eqref{Eq:ConstrainedProblemReformII} 
+we proceed as in \eqref{Eq:TransformedUnconstrainedProblem}
+\begin{equation}\label{Eq:TransformedConstrainedProblem2}
+\begin{split}
+\mathbf{u}'\in\mathbf{U}' : \qquad 
+& r_h\left(\text{FE}_{\Phi'_{U_h}}(\mathbf{u}'),\psi_i'\right) = 0, \quad
+i\in\tilde{\mathcal{I}}_{V_h}\\
+\Leftrightarrow \  &
+r_h\left(\text{FE}_{\Phi_{U_h}}(\mathbf{T}^T_{U_h}\mathbf{u}'),
+\sum_{j\in\mathcal{I}_{V_h}}\left(\mathbf{T}_{V_h}\right)_{i,j}\psi_j\right) = 0, \quad
+i\in\tilde{\mathcal{I}}_{V_h}\\
+\Leftrightarrow \  &
+\sum_{j\in\mathcal{I}_{V_h}} \left(\mathbf{T}_{V_h}\right)_{i,j} 
+r_h\left(\text{FE}_{\Phi_{U_h}}(\mathbf{T}^T_{U_h}\mathbf{u}'),
+\psi_j\right) = 0, \quad
+i\in\tilde{\mathcal{I}}_{V_h}\\
+\Leftrightarrow \  &
+\underbrace{\left(\mathbf{R}_{\tilde{\mathbf{V}}',\mathbf{V}'} +
+\mathbf{T}_{\tilde{V}_h,\bar{V}_h}\mathbf{R}_{\bar{\mathbf{V}}',\mathbf{V}'}
+\right)}_{\mathbf{S}_{\tilde{\mathbf{V}}'}}\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}'\right)=
+\mathbf{S}_{\tilde{\mathbf{V}}'} \mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}'\right)
+= \mathbf{0} .
+\end{split}
+\end{equation}
+Here we made use of \eqref{Eq:StructureTransformation} in the final line.
+
+The equivalent formulation of
+\eqref{Eq:ConstrainedProblemReformII} in coefficient space then reads
+\begin{equation}\label{Eq:ConstrainedProblemInCoefficientSpace}
+\mathbf{u}'\in\mathbf{U}' : \qquad \left\{\begin{array}{rcl}
+\mathbf{S}_{\tilde{\mathbf{V}}'}
+\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}'\right)
+& = & \mathbf{0}\\
+\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}' & = & \mathbf{w}'
+\end{array}\right. 
+\end{equation}
+The idea in this formulation is that with respect to the transformed
+basis the affine shift (for Dirichlet boundary conditions) can be
+``encoded'' in the constrained degrees of freedom
+$\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}'$. This is
+possible because the subspace $\tilde{U}_h'$ is the image
+of the unconstrained degrees of freedom
+$\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'} \mathbf{u}'$ 
+and the decomposition is orthogonal
+(i.~e.~$\mathbf{R}^T_{\bar{\mathbf{U}}',\mathbf{U}'}
+\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'}$ and
+$\mathbf{R}^T_{\tilde{\mathbf{U}}',\mathbf{U}'}
+\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'}$ are orthogonal
+projections). 
+
+
+
+
+
+\paragraph{Newton's method for constrained problem}
+
+Now we need to solve \eqref{Eq:ConstrainedProblemInCoefficientSpace}
+with Newton's method. Let some $\mathbf{u}_{k}'$, set
+$\mathbf{u}_{k+1}' = \mathbf{u}_{k}' + \mathbf{z}_{k}'$ and
+seek an equation for the update $\mathbf{z}_{k}'$. 
+
+Inserting $\mathbf{u}_{k+1}'$ into the second equation of
+\eqref{Eq:ConstrainedProblemInCoefficientSpace} yields
+\begin{equation}\label{Eq:SideCond}
+\begin{split}
+& \mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}_{k+1}'
+= \mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}_{k}' +
+\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{z}_{k}'
+ =  \bar{\mathbf{w}}'\\ 
+\Leftrightarrow\qquad &
+\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{z}_{k}' = 
+\bar{\mathbf{w}}' - \mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'}
+\mathbf{u}_{k}' = \mathbf{0}\\
+\Leftrightarrow\qquad &
+\bar{\mathbf{z}}_{k}' = \mathbf{0}
+\end{split}
+\end{equation}
+where we introduced $\mathbf{z}_{k}' =
+\mathbf{R}^T_{\bar{\mathbf{U}}',\mathbf{U}'}
+\bar{\mathbf{z}}_{k}'$ and used $\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'}
+\mathbf{R}^T_{\bar{\mathbf{U}}',\mathbf{U}'}=\mathbf{I}$. 
+Note that the affine shift is not changed during the iteration
+\begin{equation}
+\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'}\mathbf{u}_{k+1}' =
+\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}_{k}' +
+\underbrace{\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'}
+  \mathbf{z}_{k}'}_{= \mathbf{0}} =
+\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}_{k}'
+\end{equation}
+and it is thus sufficient to satisfy the affine shift in the initial
+guess $\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{u}_{0}' =
+\bar{\mathbf{w}}'$.
+
+Now insert  $\mathbf{u}_{k+1}'$ into the first equation of
+\eqref{Eq:ConstrainedProblemInCoefficientSpace}:
+\begin{equation}
+\begin{split}
+\mathbf{S}_{\tilde{\mathbf{V}}'}
+&\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k+1}'\right) \\
+&= \mathbf{S}_{\tilde{\mathbf{V}}'}
+\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}' +
+\mathbf{T}^T_{U_h}\mathbf{z}_{k}' \right)\\
+&= \mathbf{S}_{\tilde{\mathbf{V}}'}
+\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}' +
+\mathbf{T}^T_{U_h} \left(\mathbf{R}^T_{\bar{\mathbf{U}}',\mathbf{U}'}
+\underbrace{\mathbf{R}_{\bar{\mathbf{U}}',\mathbf{U}'}
+  \mathbf{z}_{k}'}_{=\mathbf{0}, \text{ cf.\eqref{Eq:SideCond}}} +
+\mathbf{R}^T_{\tilde{\mathbf{U}}',\mathbf{U}'} 
+\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'} \mathbf{z}_{k}' \right)
+\right)\\
+&= \mathbf{S}_{\tilde{\mathbf{V}}'}
+\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}' +
+\mathbf{T}^T_{U_h} \mathbf{R}^T_{\tilde{\mathbf{U}}',\mathbf{U}'} 
+\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'} \mathbf{z}_{k}' \right)\\
+&= \mathbf{S}_{\tilde{\mathbf{V}}'}
+\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}' +
+\underbrace{\left(\mathbf{R}^T_{\tilde{\mathbf{U}}',\mathbf{U}'} +
+\mathbf{R}^T_{\bar{\mathbf{U}}',\mathbf{U}'} \mathbf{T}^T_{\tilde{U}_h,\bar{U}_h}
+\right)}_{=: \,\mathbf{S}^T_{\tilde{\mathbf{U}}'}}
+\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'} \mathbf{z}_{k}' 
+\right) \\
+&= 
+\mathbf{S}_{\tilde{\mathbf{V}}'}
+\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}' + 
+\mathbf{S}^T_{\tilde{\mathbf{U}}'}
+\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'}
+\mathbf{R}^T_{\tilde{\mathbf{U}}',\mathbf{U}'} \tilde{\mathbf{z}}_{k}'
+\right)
+=
+\mathbf{S}_{\tilde{\mathbf{V}}'}
+\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}' + 
+\mathbf{S}^T_{\tilde{\mathbf{U}}'} \tilde{\mathbf{z}}_{k}'\right)
+\end{split}
+\end{equation}
+where we introduced $\mathbf{z}_{k}' =
+\mathbf{R}^T_{\tilde{\mathbf{U}}',\mathbf{U}'}
+\tilde{\mathbf{z}}_{k}'$ and used $\mathbf{R}_{\tilde{\mathbf{U}}',\mathbf{U}'}
+\mathbf{R}^T_{\tilde{\mathbf{U}}',\mathbf{U}'}=\mathbf{I}$. 
+Linearization now gives
+\begin{equation}
+\mathbf{S}_{\tilde{\mathbf{V}}'}
+\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}' + 
+\mathbf{S}^T_{\tilde{\mathbf{U}}'} \tilde{\mathbf{z}}_{k}'\right)
+\approx \mathbf{S}_{\tilde{\mathbf{V}}'}
+\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}'\right) 
++ \mathbf{S}_{\tilde{\mathbf{V}}'} \nabla
+\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}'\right)
+\mathbf{S}^T_{\tilde{\mathbf{U}}'} \tilde{\mathbf{z}}_{k}' = \mathbf{0}.
+\end{equation}
+Thus the equation for the update reads
+\begin{equation}
+\mathbf{S}_{\tilde{\mathbf{V}}'} \nabla
+\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}'\right)
+\mathbf{S}^T_{\tilde{\mathbf{U}}'} \tilde{\mathbf{z}}_{k}'
+= - \mathbf{S}_{\tilde{\mathbf{V}}'}
+\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}'\right) .
+\end{equation}
+
+We are now in a position to give the full algorithm for the
+constrained problem. As in the unconstrained version we make use of
+\eqref{eq:OriginalUpdate} to hold the iterates with respect to the
+original basis and only compute the update in the transformed basis. 
+
+\begin{algo}[Newton's method for constrained problem]
+Let the initial guess $\mathbf{u}_{0}$ with
+$\text{FE}_{\Phi_{U_h}}(\mathbf{u}_{0}) \in w_h + \tilde{U}_h'$ be given. 
+Iterate until convergence
+\begin{enumerate}[i)]
+\item Compute residual:
+  $\mathbf{r}_k=-\mathcal{R}\left(\mathbf{u}_{k}\right)$.
+\item Transform residual: $\mathbf{r}_k' = \mathbf{S}_{\tilde{\mathbf{V}}'}
+  \mathbf{r}_k$.
+\item Solve update equation:
+\begin{equation*}
+\left(\begin{array}{cc}
+\mathbf{S}_{\tilde{\mathbf{V}}'} \nabla
+\mathcal{R}\left(\mathbf{T}^T_{U_h}\mathbf{u}_{k}'\right)
+\mathbf{S}^T_{\tilde{\mathbf{U}}'} & \mathbf{0}\\
+\mathbf{0} & \mathbf{I}
+\end{array}\right) 
+\left(\begin{array}{c}
+\tilde{\mathbf{z}}_{k}'\\
+\bar{\mathbf{z}}_{k}'
+\end{array}\right) =
+\left(\begin{array}{c}
+\mathbf{r}_k'\\
+\mathbf{0}
+\end{array}\right) 
+\end{equation*}
+and set $\mathbf{z}'_{k} =
+\mathbf{R}^T_{\tilde{\mathbf{U}}',\mathbf{U}'} \tilde{\mathbf{z}}_{k}'$.
+\item Transform update: $\mathbf{z}_{k} =
+  \mathbf{T}^T_{U_h}\mathbf{z}'_k$. (This is where interpolation to
+  hanging nodes is done).
+\item Update: $\mathbf{u}_{k+1} = \mathbf{u}_k
++ \mathbf{z}_k$. \hfill$\square$
+\end{enumerate}
+\end{algo}
+
+
+\section{Local functions}
+
+\section{Grid function space}
+
+\section{Constraints}
+
+\section{Composite function spaces}
