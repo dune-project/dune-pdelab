@@ -1,4 +1,4 @@
 commondir = $(includedir)/dune/pdelab/backend
-common_HEADERS = istlflatmatrixbackend.hh istlflatvectorbackend.hh
+common_HEADERS = istlmatrixbackend.hh istlvectorbackend.hh
 
 include $(top_srcdir)/am/global-rules

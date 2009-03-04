@@ -14,6 +14,7 @@
 #include"../finiteelementmap/q1fem.hh"
 #include"../finiteelementmap/edger12dfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
+#include"../backend/istlvectorbackend.hh"
 
 // test function trees
 template<int dim>
@@ -42,7 +43,7 @@ struct test<2> {
     typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> GFS2;
     GFS2 gfs2(gv,q22dfem);
     typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM,Dune::PDELab::DefaultConstraints,
-      Dune::PDELab::StdVectorBackend,
+      Dune::PDELab::ISTLVectorBackend<1>,
       Dune::PDELab::GridFunctionRestrictedMapper> GFS3;
     GFS3 gfs3(gv,q22dfem);
     typedef Dune::PDELab::GridFunctionSpace<GV,EdgeR12DFEM> GFS4;

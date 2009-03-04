@@ -45,14 +45,14 @@ namespace Dune {
 	template<typename G, typename L, typename C, typename B>
 	struct GridFunctionSpaceTraits : public PowerCompositeGridFunctionSpaceTraits<G,B>
 	{
-	  //! \brief local finite element
+	  //! \brief local finite element map
 	  typedef L LocalFiniteElementMapType;
 
 	  //! \brief local finite element
-	  typedef C ConstraintsType;
-
-	  //! \brief local finite element
 	  typedef typename L::Traits::LocalFiniteElementType LocalFiniteElementType;
+
+	  //! \brief type representing constraints
+	  typedef C ConstraintsType;
 	};
 
 
