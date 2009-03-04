@@ -1,4 +1,4 @@
 commondir = $(includedir)/dune/pdelab/localoperator
-common_HEADERS = p12dpoisson.hh
+common_HEADERS = laplacedirichletp12d.hh
 
 include $(top_srcdir)/am/global-rules

@@ -15,8 +15,7 @@ namespace Dune {
 	// a local operator for solving the Poisson equation
 	// - \Delta u = f in \Omega, u = g on \partial\Omega
 	// with P1 conforming finite elements on triangles
-	template<typename B>
-	class P12DLaplaceDirichlet
+	class LaplaceDirichletP12D
 	{
 	  typedef typename B::Traits::JacobianType JacobianType;
 	  typedef typename B::Traits::DomainFieldType DomainFieldType;
