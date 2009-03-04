@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_P12DLAPLACE_HH
-#define DUNE_PDELAB_P12DLAPLACE_HH
+#ifndef DUNE_PDELAB_LAPLACEDIRICHLETP12D_HH
+#define DUNE_PDELAB_LAPLACEDIRICHLETP12D_HH
 
 #include<dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
