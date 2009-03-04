@@ -1,0 +1,60 @@
+#ifndef DUNE_ISTLFLATVECTORBACKEND_HH
+#define DUNE_ISTLFLATVECTORBACKEND_HH
+
+#include<dune/common/fmatrix.hh>
+#include<dune/istl/bvector.hh>
+
+// ISTL backend for FlatFunctionSpace
+template<int BLOCKSIZE=1>
+class ISTLFlatVectorBackend
+{
+public:
+  // container construction
+  template<typename T, typename E>
+  class VectorContainer : public Dune::BlockVector< Dune::FieldVector<E,BLOCKSIZE> >
+  {
+	typedef Dune::BlockVector< Dune::FieldVector<E,BLOCKSIZE> > BaseT;
+  public:
+	typedef E ElementType;
+
+	VectorContainer (const T& t) : BaseT(t.globaldimension()/BLOCKSIZE) 
+	{}
+	VectorContainer (const T& t, const E& e) : BaseT(t.globaldimension()/BLOCKSIZE) 
+	{
+	  BaseT::operator=(e);
+	}
+	VectorContainer& operator= (const E& e)
+	{
+	  BaseT::operator=(e);
+	  return *this;
+	}
+  };
+
+  // extract type of container element 
+  template<class C>
+  struct Value
+  {
+	typedef typename C::block_type::block_type Type;
+  };
+
+  //! The size type
+  typedef typename Dune::BlockVector< Dune::FieldVector<float,BLOCKSIZE> >::size_type size_type;
+
+  // get const_reference to container element
+  // note: this method does not depend on T!
+  template<typename C>
+  static const typename C::field_type& const_access (const C& c, size_type i)
+  {
+	return c[i/BLOCKSIZE][i%BLOCKSIZE];
+  }
+
+  // get non const_reference to container element 
+  // note: this method does not depend on T!
+  template<typename C>
+  static typename C::field_type& access (C& c, size_type i)
+  {
+	return c[i/BLOCKSIZE][i%BLOCKSIZE];
+  }
+};
+
+#endif
