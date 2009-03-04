@@ -1,5 +1,5 @@
-#ifndef DUNE_ISTLFLATMATRIXBACKEND_HH
-#define DUNE_ISTLFLATMATRIXBACKEND_HH
+#ifndef DUNE_ISTLMATRIXBACKEND_HH
+#define DUNE_ISTLMATRIXBACKEND_HH
 
 #include<utility>
 #include<vector>
@@ -11,9 +11,9 @@
 
 #include"../operatorspace.hh"
 
-// ISTL backend for FlatLinearOperatorSpace
+// ISTL backend for LinearOperatorSpace
 template<int ROWBLOCKSIZE, int COLBLOCKSIZE>
-class ISTLFlatBCRSMatrixBackend
+class ISTLBCRSMatrixBackend
 {
 public:
   //! The size type
@@ -30,9 +30,7 @@ public:
   public:
 	typedef E ElementType;
 
-    friend class ISTLFlatBCRSMatrixBackend;
-
-	Matrix (const T& t) 
+ 	Matrix (const T& t) 
       : BaseT(t.rfs().globaldimension()/ROWBLOCKSIZE,t.dfs().globaldimension()/COLBLOCKSIZE,
               Dune::BCRSMatrix<M>::random) 
     {

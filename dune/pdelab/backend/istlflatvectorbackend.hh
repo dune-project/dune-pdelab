@@ -1,12 +1,12 @@
-#ifndef DUNE_ISTLFLATVECTORBACKEND_HH
-#define DUNE_ISTLFLATVECTORBACKEND_HH
+#ifndef DUNE_ISTLVECTORBACKEND_HH
+#define DUNE_ISTLVECTORBACKEND_HH
 
 #include<dune/common/fmatrix.hh>
 #include<dune/istl/bvector.hh>
 
-// ISTL backend for FlatFunctionSpace
+// ISTL backend for FunctionSpace
 template<int BLOCKSIZE=1>
-class ISTLFlatVectorBackend
+class ISTLVectorBackend
 {
 public:
   // container construction
