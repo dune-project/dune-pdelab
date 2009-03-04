@@ -34,18 +34,18 @@ namespace Dune {
 		typedef E ElementType;
 
 		Matrix (const T& t) 
-		  : BaseT(t.rfs().globaldimension()/ROWBLOCKSIZE,t.dfs().globaldimension()/COLBLOCKSIZE,
+		  : BaseT(t.rfs().globalSize()/ROWBLOCKSIZE,t.dfs().globalSize()/COLBLOCKSIZE,
 				  Dune::BCRSMatrix<M>::random) 
 		{
-		  Pattern pattern(t.rfs().globaldimension(),t.dfs().globaldimension());
+		  Pattern pattern(t.rfs().globalSize(),t.dfs().globalSize());
 		  t.fill_pattern(pattern);
 
 		  // first dummy code: build full matrix
-		  for (int i=0; i<t.rfs().globaldimension(); ++i)
+		  for (int i=0; i<t.rfs().globalSize(); ++i)
 			this->setrowsize(i,pattern[i].size());
 		  this->endrowsizes();
 
-		  for (int i=0; i<t.rfs().globaldimension(); ++i)
+		  for (int i=0; i<t.rfs().globalSize(); ++i)
 			{
 			  for (typename std::set<size_type>::iterator it=pattern[i].begin(); 
 				   it!=pattern[i].end(); ++it)
@@ -54,12 +54,12 @@ namespace Dune {
 		  this->endindices();
 
 		  // code for full matrix
-		  //       for (int i=0; i<t.rfs().globaldimension(); ++i)
-		  //         this->setrowsize(i,t.dfs().globaldimension());
+		  //       for (int i=0; i<t.rfs().globalSize(); ++i)
+		  //         this->setrowsize(i,t.dfs().globalSize());
 		  //       this->endrowsizes();
 
-		  //       for (int i=0; i<t.rfs().globaldimension(); ++i)
-		  //         for (int j=0; j<t.dfs().globaldimension(); ++j)
+		  //       for (int i=0; i<t.rfs().globalSize(); ++i)
+		  //         for (int j=0; j<t.dfs().globalSize(); ++j)
 		  //           this->addindex(i,j);
 		  //       this->endindices();
 

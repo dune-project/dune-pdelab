@@ -19,9 +19,9 @@ namespace Dune {
 	  public:
 		typedef E ElementType;
 
-		VectorContainer (const T& t) : BaseT(t.globaldimension()/BLOCKSIZE) 
+		VectorContainer (const T& t) : BaseT(t.globalSize()/BLOCKSIZE) 
 		{}
-		VectorContainer (const T& t, const E& e) : BaseT(t.globaldimension()/BLOCKSIZE) 
+		VectorContainer (const T& t, const E& e) : BaseT(t.globalSize()/BLOCKSIZE) 
 		{
 		  BaseT::operator=(e);
 		}

@@ -7,6 +7,7 @@
 #include <dune/common/static_assert.hh>
 
 #include"../common/geometrywrapper.hh"
+#include"../gridoperatorspace/gridoperatorspaceutilities.hh"
 
 
 namespace Dune {
@@ -15,12 +16,8 @@ namespace Dune {
 	// a local operator for solving the Poisson equation
 	// - \Delta u = f in \Omega, u = g on \partial\Omega
 	// with P1 conforming finite elements on triangles
-	class LaplaceDirichletP12D
+	class LaplaceDirichletP12D : public NumericalJacobianVolumeApply<LaplaceDirichletP12D>
 	{
-	  typedef typename B::Traits::JacobianType JacobianType;
-	  typedef typename B::Traits::DomainFieldType DomainFieldType;
-	  typedef typename B::Traits::RangeType RangeType;
-
 	public:
 
 	  // export assembler type
@@ -63,7 +60,7 @@ namespace Dune {
 		// compute gradient of solution at integration point
 		Dune::FieldVector<RF,2> gradu(0.0);
 		for (int i=0; i<3; i++)
-		  gradu.axpy(x[lfs.localIndex(i)],gradphi[i]);
+		  gradu.axpy(x[lfsu.localIndex(i)],gradphi[i]);
 
 		// integrate grad u * grad phi_i (0.5 is the area of the reference element)
 		RF area = 0.5*eg.geometry().integrationElement(integrationpoint);
@@ -76,3 +73,5 @@ namespace Dune {
     //! \} group GridFunctionSpace
   } // namespace PDELab
 } // namespace Dune
+
+#endif

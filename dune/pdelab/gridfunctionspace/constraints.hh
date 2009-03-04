@@ -354,6 +354,15 @@ namespace Dune {
 
     // construct constraints from given boundary condition function
     template<typename CG, typename XG>
+    void copy_constrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
+    {
+	  typedef typename CG::const_iterator global_col_iterator;	  
+	  for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
+		xgout[cit->first] = xgin[cit->first];
+	}
+
+    // construct constraints from given boundary condition function
+    template<typename CG, typename XG>
     void set_nonconstrained_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
     {
       for (typename XG::size_type i=0; i<xg.size(); ++i)

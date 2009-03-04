@@ -190,13 +190,13 @@ namespace Dune {
       }
 
       // map index in this local function space to root local function space
-      typename Traits::IndexContainer::size_type localIndex (typename Traits::IndexContainer::size_type index)
+      typename Traits::IndexContainer::size_type localIndex (typename Traits::IndexContainer::size_type index) const
       {
         return offset+index;
       }
 
       // map index in this local function space to global index space
-      typename Traits::SizeType globalIndex (typename Traits::IndexContainer::size_type index)
+      typename Traits::SizeType globalIndex (typename Traits::IndexContainer::size_type index) const
       {
         return i[index];
       }
@@ -465,13 +465,13 @@ namespace Dune {
       }
 
       // map index in this local function space to root local function space
-      typename Traits::IndexContainer::size_type localIndex (typename Traits::IndexContainer::size_type index)
+      typename Traits::IndexContainer::size_type localIndex (typename Traits::IndexContainer::size_type index) const
       {
         return offset+index;
       }
 
       // map index in this local function space to global index space
-      typename Traits::SizeType globalIndex (typename Traits::IndexContainer::size_type index)
+      typename Traits::SizeType globalIndex (typename Traits::IndexContainer::size_type index) const
       {
         return i[index];
       }
@@ -637,13 +637,13 @@ namespace Dune {
       }
 
       // map index in this local function space to root local function space
-      typename Traits::IndexContainer::size_type localIndex (typename Traits::IndexContainer::size_type index)
+      typename Traits::IndexContainer::size_type localIndex (typename Traits::IndexContainer::size_type index) const
       {
         return offset+index;
       }
 
       // map index in this local function space to global index space
-      typename Traits::SizeType globalIndex (typename Traits::IndexContainer::size_type index)
+      typename Traits::SizeType globalIndex (typename Traits::IndexContainer::size_type index) const
       {
         return i[index];
       }
