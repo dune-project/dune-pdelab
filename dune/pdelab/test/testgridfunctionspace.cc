@@ -42,7 +42,7 @@ struct test<2> {
     GFS1 gfs1(gv,q12dfem);
     typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> GFS2;
     GFS2 gfs2(gv,q22dfem);
-    typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM,Dune::PDELab::DefaultConstraints,
+    typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM,Dune::PDELab::NoConstraints,
       Dune::PDELab::ISTLVectorBackend<1>,
       Dune::PDELab::GridFunctionRestrictedMapper> GFS3;
     GFS3 gfs3(gv,q22dfem);
@@ -149,7 +149,7 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
 
-    // 3D
+    // 2D
     {
       std::cout << "2D tests" << std::endl;
       // need a grid in order to test grid functions

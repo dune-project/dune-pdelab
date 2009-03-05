@@ -15,6 +15,7 @@
 #include<dune/istl/solvers.hh>
 #include<dune/istl/preconditioners.hh>
 #include<dune/istl/io.hh>
+//#include<dune/istl/paamg/amg.hh>
 
 #include"../finiteelementmap/p0fem.hh"
 #include"../finiteelementmap/p12dfem.hh"
@@ -96,7 +97,7 @@ void testp1 (const GV& gv)
   typedef Dune::PDELab::P12DLocalFiniteElementMap<DF,double> P1FEM;
   P1FEM p1fem;
   
-  // make constrained space
+  // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,
     Dune::PDELab::P12DConstraints,Dune::PDELab::ISTLVectorBackend<1> > P1GFS; 
   P1GFS p1gfs(gv,p1fem);
@@ -127,6 +128,7 @@ void testp1 (const GV& gv)
   // represent operator as a matrix
   typedef typename P1OP::template MatrixContainer<double>::Type P1M;
   P1M p1m(p1op);
+  p1m = 0.0;
   p1op.jacobian(x0,p1m);
   //  Dune::printmatrix(std::cout,p1m.base(),"global stiffness matrix","row",9,1);
 
@@ -142,7 +144,20 @@ void testp1 (const GV& gv)
   Dune::SeqSSOR<P1M,P1V,P1V> ssor(p1m,1,1.0);
   Dune::SeqILU0<P1M,P1V,P1V> ilu0(p1m,1.0);
   Dune::Richardson<P1V,P1V> richardson(1.0);
-  Dune::CGSolver<P1V> solvera(opa,ssor,1E-10,5000,2);
+
+//   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<P1M,
+//     Dune::Amg::FirstDiagonal> > Criterion;
+//   typedef Dune::SeqSSOR<P1M,P1V,P1V> Smoother;
+//   typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments SmootherArgs;
+//   SmootherArgs smootherArgs;
+//   smootherArgs.iterations = 2;
+//   int maxlevel = 20, coarsenTarget = 100;
+//   Criterion criterion(maxlevel, coarsenTarget);
+//   criterion.setMaxDistance(2);
+//   typedef Dune::Amg::AMG<Dune::MatrixAdapter<P1M,P1V,P1V>,P1V,Smoother> AMG;
+//   AMG amg(opa,criterion,smootherArgs,1,1);
+
+  Dune::CGSolver<P1V> solvera(opa,ilu0,1E-10,5000,2);
   Dune::CGSolver<P1V> solverb(opb,richardson,1E-10,5000,2);
   Dune::InverseOperatorResult stat;
 
@@ -170,13 +185,12 @@ int main(int argc, char** argv)
 
 #if HAVE_UG
  	UGUnitSquare uggrid;
-  	uggrid.globalRefine(8);
+  	uggrid.globalRefine(4);
     testp1(uggrid.leafView());
 #endif
 
 	// test passed
 	return 0;
-
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;

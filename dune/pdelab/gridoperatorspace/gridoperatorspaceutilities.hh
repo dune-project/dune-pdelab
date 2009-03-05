@@ -175,16 +175,48 @@ namespace Dune {
     template<typename LA, bool doIt>
     struct LocalAssemblerCallSwitch
     {
+      template<typename LFSU, typename LFSV>
+      static void pattern_volume (const LA& la, const LFSU& lfsu, const LFSV& lfsv, LocalSparsityPattern& pattern)
+      {
+      }
+      template<typename LFSU, typename LFSV>
+      static void pattern_skeleton (const LA& la, const LFSU& lfsu_s, const LFSV& lfsv_s, 
+                                  const LFSU& lfsu_n, const LFSV& lfsv_n, 
+                                  LocalSparsityPattern& pattern_sn, LocalSparsityPattern& pattern_ns)
+      {
+      }
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
 	  static void alpha_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r)
 	  {
 	  }
+	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+	  static void alpha_skeleton (const LA& la, const IG& ig, 
+                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+                           R& r_s, R& r_n)
+      {
+      }
+	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+	  static void alpha_boundary (const LA& la, const IG& ig, 
+                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                           R& r_s)
+      {
+      }
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
-	  static void jacobian_volume_apply (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
+	  static void jacobian_apply_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
 	  {
 	  }
-      template<typename EG, typename LFSU, typename LFSV>
-      static void pattern_volume (const LA& la, const EG& eg, const LFSU& lfsu, const LFSV& lfsv, LocalSparsityPattern& pattern)
+	  template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+	  static void jacobian_apply_skeleton (const LA& la, const IG& ig, 
+                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+                           Y& y_s, Y& y_n)
+      {
+      }
+	  template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+	  static void jacobian_apply_boundary (const LA& la, const IG& ig, 
+                                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                           Y& y_s)
       {
       }
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
@@ -195,21 +227,61 @@ namespace Dune {
     template<typename LA>
     struct LocalAssemblerCallSwitch<LA,true>
     {
+      template<typename LFSU, typename LFSV>
+      static void pattern_volume (const LA& la, const LFSU& lfsu, const LFSV& lfsv, LocalSparsityPattern& pattern)
+      {
+        la.pattern_volume(lfsu,lfsv,pattern);
+      }
+      template<typename LFSU, typename LFSV>
+      static void pattern_skeleton (const LA& la, const LFSU& lfsu_s, const LFSV& lfsv_s, 
+                                  const LFSU& lfsu_n, const LFSV& lfsv_n, 
+                                  LocalSparsityPattern& pattern_sn, LocalSparsityPattern& pattern_ns)
+      {
+        la.pattern_skeleton(lfsu_s,lfsv_n,lfsu_n,lfsv_n,pattern_sn,pattern_ns);
+      }
+
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
 	  static void alpha_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r)
 	  {
 		la.alpha_volume(eg,lfsu,x,lfsv,r);
 	  }
-	  template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
-	  static void jacobian_volume_apply (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
-	  {
-		la.jacobian_volume_apply(eg,lfsu,x,lfsv,y);
-	  }
-      template<typename EG, typename LFSU, typename LFSV>
-      static void pattern_volume (const LA& la, const EG& eg, const LFSU& lfsu, const LFSV& lfsv, LocalSparsityPattern& pattern)
+	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+	  static void alpha_skeleton (const LA& la, const IG& ig, 
+                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+                           R& r_s, R& r_n)
       {
-        la.pattern_volume(eg,lfsu,lfsv,pattern);
+        la.alpha_skeleton(ig,lfsu_s,x_s,lfsv_s,lfsu_n,x_n,lfsv_n,r_s,r_n);
       }
+	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+	  static void alpha_boundary (const LA& la, const IG& ig, 
+                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                           R& r_s)
+      {
+        la.alpha_boundary(ig,lfsu_s,x_s,lfsv_s,r_s);
+      }
+
+	  template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+	  static void jacobian_apply_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
+	  {
+		la.jacobian_apply_volume(eg,lfsu,x,lfsv,y);
+	  }
+	  template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+	  static void jacobian_apply_skeleton (const LA& la, const IG& ig, 
+                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+                           Y& y_s, Y& y_n)
+      {
+        la.jacobian_apply_skeleton(ig,lfsu_s,x_s,lfsv_s,lfsu_n,x_n,lfsv_n,y_s,y_n);
+      }
+	  template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+	  static void jacobian_apply_boundary (const LA& la, const IG& ig, 
+                                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                           Y& y_s)
+      {
+        la.jacobian_apply_boundary(ig,lfsu_s,x_s,lfsv_s,y_s);
+      }
+
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
 	  static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, LocalMatrix<R>& mat)
       {
@@ -234,7 +306,6 @@ namespace Dune {
         X u(x);
         std::vector<R> down(m,0.0),up(m);
 
-        mat.resize(m,n);
         asImp().alpha_volume(eg,lfsu,u,lfsv,down);	
         for (int j=0; j<n; j++) // loop over columns
           {
@@ -255,12 +326,12 @@ namespace Dune {
 
 	// derive from this class to add numerical evaluation of jacobian apply
 	template<typename Imp>
-	class NumericalJacobianVolumeApply
+	class NumericalJacobianApplyVolume
 	{
 	public:
 
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
-	  void jacobian_volume_apply (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y) const
+	  void jacobian_apply_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y) const
 	  {
 		typedef typename X::value_type R;
 		const R epsilon=1E-8; // problem: this depends on data type R!
@@ -270,7 +341,6 @@ namespace Dune {
 		X u(x);
 		std::vector<R> down(m,0.0),up(m);
 
-		y.resize(m);
 		asImp().alpha_volume(eg,lfsu,u,lfsv,down);
 		for (int j=0; j<n; j++) // loop over columns
 		  {
@@ -281,6 +351,110 @@ namespace Dune {
 			for (int i=0; i<m; i++)
 			  y[i] += ((up[i]-down[i])/delta)*x[j];
 			u[j] = x[j];
+		  }
+	  }
+
+	private:
+	  Imp& asImp () {return static_cast<Imp &> (*this);}
+	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
+	};
+
+	// derive from this class to add numerical evaluation of jacobian apply
+	template<typename Imp>
+	class NumericalJacobianApplySkeleton
+	{
+	public:
+
+
+	  template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+	  void jacobian_apply_skeleton (const IG& ig, 
+                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+                           Y& y_s, Y& y_n) const
+	  {
+		typedef typename X::value_type R;
+		const R epsilon=1E-8; // problem: this depends on data type R!
+		const int m_s=lfsv_s.size();
+		const int m_n=lfsv_n.size();
+		const int n_s=lfsu_s.size();
+		const int n_n=lfsu_n.size();
+
+		X u_s(x_s);
+        X u_n(x_n);
+		std::vector<R> down_s(m_s,0.0),up_s(m_s);
+		std::vector<R> down_n(m_n,0.0),up_n(m_n);
+
+        // base line
+		asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,down_s,down_n);
+
+        // jiggle in self
+		for (int j=0; j<n_s; j++)
+		  {
+			for (int k=0; k<m_s; k++) up_s[k]=0.0;
+			for (int k=0; k<m_n; k++) up_n[k]=0.0;
+			R delta = epsilon*(1.0+std::abs(u_s[j]));
+			u_s[j] += delta;
+            asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,up_s,up_n);
+			for (int i=0; i<m_s; i++)
+			  y_s[i] += ((up_s[i]-down_s[i])/delta)*x_s[j];
+			for (int i=0; i<m_n; i++)
+			  y_n[i] += ((up_n[i]-down_n[i])/delta)*x_s[j];
+			u_s[j] = x_s[j];
+		  }
+
+        // jiggle in neighbor
+		for (int j=0; j<n_n; j++)
+		  {
+			for (int k=0; k<m_s; k++) up_s[k]=0.0;
+			for (int k=0; k<m_n; k++) up_n[k]=0.0;
+			R delta = epsilon*(1.0+std::abs(u_s[j]));
+			u_n[j] += delta;
+            asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,up_s,up_n);
+			for (int i=0; i<m_s; i++)
+			  y_s[i] += ((up_s[i]-down_s[i])/delta)*x_n[j];
+			for (int i=0; i<m_n; i++)
+			  y_n[i] += ((up_n[i]-down_n[i])/delta)*x_n[j];
+			u_n[j] = x_n[j];
+		  }
+	  }
+
+	private:
+	  Imp& asImp () {return static_cast<Imp &> (*this);}
+	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
+	};
+
+	// derive from this class to add numerical evaluation of jacobian apply
+	template<typename Imp>
+	class NumericalJacobianApplyBoundary
+	{
+	public:
+
+	  template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+	  void jacobian_apply_boundary (const IG& ig, 
+                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                           Y& y_s) const
+	  {
+		typedef typename X::value_type R;
+		const R epsilon=1E-8; // problem: this depends on data type R!
+		const int m_s=lfsv_s.size();
+		const int n_s=lfsu_s.size();
+
+		X u_s(x_s);
+		std::vector<R> down_s(m_s,0.0),up_s(m_s);
+
+        // base line
+		asImp().alpha_boundary(ig,lfsu_s,u_s,lfsv_s,down_s);
+
+        // jiggle in self
+		for (int j=0; j<n_s; j++)
+		  {
+			for (int k=0; k<m_s; k++) up_s[k]=0.0;
+			R delta = epsilon*(1.0+std::abs(u_s[j]));
+			u_s[j] += delta;
+            asImp().alpha_boundary(ig,lfsu_s,u_s,lfsv_s,up_s);
+			for (int i=0; i<m_s; i++)
+			  y_s[i] += ((up_s[i]-down_s[i])/delta)*x_s[j];
+			u_s[j] = x_s[j];
 		  }
 	  }
 

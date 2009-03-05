@@ -18,13 +18,16 @@ namespace Dune {
 	// a local operator for solving the Poisson equation
 	// - \Delta u = f in \Omega, u = g on \partial\Omega
 	// with P1 conforming finite elements on triangles
-	class LaplaceDirichletP12D : public NumericalJacobianVolumeApply<LaplaceDirichletP12D>,
+	class LaplaceDirichletP12D : public NumericalJacobianApplyVolume<LaplaceDirichletP12D>,
                                  public NumericalJacobianVolume<LaplaceDirichletP12D>,
                                  public FullVolumePattern
 	{
 	public:
+      // pattern assembly flags
+      enum { doPatternVolume = true };
+      enum { doPatternSkeleton = false };
 
-	  // export assembler type
+	  // residual assembly flags
       enum { doAlphaVolume = true };
       enum { doAlphaSkeleton = false };
       enum { doAlphaBoundary = false };

@@ -2,7 +2,10 @@
 #ifndef DUNE_PDELAB_GRIDOPERATORSPACE_HH
 #define DUNE_PDELAB_GRIDOPERATORSPACE_HH
 
+#include<map>
+
 #include<dune/common/exceptions.hh>
+#include<dune/common/geometrytype.hh>
 
 #include"../common/geometrywrapper.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
@@ -43,14 +46,17 @@ namespace Dune {
 	};
 
 
+    class EmptyTransformation : public ConstraintsTransformation<int,float>
+    {
+    };
 
 	// The generic assembler ...
 	// GFSU, GFSV : grid function spaces
 	// LP : local pattern assembler (provided by user)
 	// LA : local operator assembler (provided by user)
 	template<typename GFSU, typename GFSV, typename LA,
-			 typename CU=ConstraintsTransformation<int,float>,
-			 typename CV=ConstraintsTransformation<int,float>,
+			 typename CU=EmptyTransformation,
+			 typename CV=EmptyTransformation,
 			 typename B=StdVectorFlatMatrixBackend>
 	class GridOperatorSpace 
 	{
@@ -124,25 +130,48 @@ namespace Dune {
 			lfsv.bind(*it);
 
             // get local pattern of operator
-            LocalSparsityPattern localpattern;
-            LocalAssemblerCallSwitch<LA,LA::doPatternVolume>::
-              pattern_volume(la,ElementGeometry<Element>(*it),lfsu,lfsv,localpattern);
- 
-			// skeleton and boundary pattern
-			if (LA::doPatternSkeleton||LA::doPatternBoundary)
-			  {
-				IntersectionIterator endit = gfsu.gridview().iend(*it);
-				for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
-					 iit!=endit; ++iit)
-				  {
-                    localpattern.clear();
-				  }
-			  }
+            {
+              LocalSparsityPattern localpattern;
+              LocalAssemblerCallSwitch<LA,LA::doPatternVolume>::
+                pattern_volume(la,lfsu,lfsv,localpattern);
+              
+              // translate local to global indices and add to global pattern
+              for (int k=0; k<localpattern.size(); ++k)
+                globalpattern.add_link(lfsv.globalIndex(localpattern[k].i()),
+                                       lfsu.globalIndex(localpattern[k].j()));
+            }
 
-            // translate local to global indices and add to global pattern
-            for (int k=0; k<localpattern.size(); ++k)
-              globalpattern.add_link(lfsv.globalIndex(localpattern[k].i()),
-                                     lfsu.globalIndex(localpattern[k].j()));
+            // skeleton and boundary pattern
+            if (!LA::doPatternSkeleton) continue;
+
+            // local function spaces in neighbor
+            LFSU lfsun(gfsu);
+            LFSV lfsvn(gfsv);
+
+            IntersectionIterator endit = gfsu.gridview().iend(*it);
+            for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
+                 iit!=endit; ++iit)
+              {
+                // skip if there is no neighbor
+                if (!iit->neighbor()) continue;
+                
+                // bind local function spaces to neighbor element
+                lfsun.bind(*(iit->outside()));
+                lfsvn.bind(*(iit->outside()));
+                
+                // get pattern
+                LocalSparsityPattern localpattern_sn, localpattern_ns;
+                LocalAssemblerCallSwitch<LA,LA::doPatternSkeleton>::
+                  pattern_skeleton(la,lfsu,lfsv,lfsun,lfsvn,localpattern_sn,localpattern_ns);
+
+                // translate local to global indices and add to global pattern
+                for (int k=0; k<localpattern_sn.size(); ++k)
+                  globalpattern.add_link(lfsv.globalIndex(localpattern_sn[k].i()),
+                                         lfsun.globalIndex(localpattern_sn[k].j()));
+                for (int k=0; k<localpattern_ns.size(); ++k)
+                  globalpattern.add_link(lfsvn.globalIndex(localpattern_ns[k].i()),
+                                         lfsu.globalIndex(localpattern_ns[k].j()));
+			  }
           }
       }
 
@@ -151,6 +180,12 @@ namespace Dune {
 	  template<typename X, typename R> 
 	  void residual (const X& x, R& r) const
 	  {
+        // visit each face only once
+        const int chunk=1<<28;
+        int offset = 0;
+        const typename GV::IndexSet& is=gfsu.gridview().indexSet();
+        std::map<Dune::GeometryType,int> gtoffset;
+
 		// make local function spaces
 		typedef typename GFSU::LocalFunctionSpace LFSU;
 		LFSU lfsu(gfsu);
@@ -161,6 +196,16 @@ namespace Dune {
 		for (ElementIterator it = gfsu.gridview().template begin<0>();
 			 it!=gfsu.gridview().template end<0>(); ++it)
 		  {
+            // assign offset for geometry type;
+            if (gtoffset.find(it->type())==gtoffset.end())
+              {
+                gtoffset[it->type()] = offset;
+                offset += chunk;
+              }
+
+            // compute unique id
+            int id = is.index(*it)+gtoffset[it->type()];
+
 			// bind local function spaces to element
 			lfsu.bind(*it);
 			lfsv.bind(*it);
@@ -175,15 +220,63 @@ namespace Dune {
 			// volume evaluation
 			LocalAssemblerCallSwitch<LA,LA::doAlphaVolume>::alpha_volume(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl);
 
-			// skeleton and boundary evaluation
-			if (LA::doAlphaSkeleton||LA::doAlphaBoundary||LA::doLambdaSkeleton||LA::doLambdaBoundary)
-			  {
-				IntersectionIterator endit = gfsu.gridview().iend(*it);
-				for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
-					 iit!=endit; ++iit)
-				  {
-				  }
-			  }
+			// skip if no intersection iterator is needed
+ 			if (LA::doAlphaSkeleton||LA::doAlphaBoundary||LA::doLambdaSkeleton||LA::doLambdaBoundary)
+              {
+                // local function spaces in neighbor
+                LFSU lfsun(gfsu);
+                LFSV lfsvn(gfsv);
+
+                // traverse intersections
+                IntersectionIterator endit = gfsu.gridview().iend(*it);
+                for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
+                     iit!=endit; ++iit)
+                  {
+                    // skeleton term
+                    if (iit->neighbor())
+                      {
+                        // assign offset for geometry type;
+                        Dune::GeometryType gtn = iit->outside()->type();
+                        if (gtoffset.find(gtn)==gtoffset.end())
+                          {
+                            gtoffset[gtn] = offset;
+                            offset += chunk;
+                          }
+                        
+                        // compute unique id for neighbor
+                        int idn = is.index(*(iit->outside()))+gtoffset[gtn];
+                          
+                        // unique vist of intersection
+                        if (id>idn)
+                          {
+                            // bind local function spaces to neighbor element
+                            lfsun.bind(*(iit->outside()));
+                            lfsvn.bind(*(iit->outside()));
+                            
+                            // allocate local data container
+                            std::vector<typename X::ElementType> xn(lfsun.size());
+                            std::vector<typename R::ElementType> rn(lfsvn.size(),0.0);
+                            
+                            // read coefficents
+                            lfsun.vread(x,xn);
+                            
+                            // skeleton evaluation
+                            LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
+                              alpha_skeleton(la,IntersectionGeometry<Intersection>(*iit),lfsu,xl,lfsv,lfsun,xn,lfsvn,rl,rn);
+                            
+                            // accumulate result (note: r needs to be cleared outside)
+                            lfsvn.vadd(rn,r);
+                          }
+                      }
+               
+                    // boundary term
+                    if (iit->boundary())
+                      {
+                        LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
+                          alpha_boundary(la,IntersectionGeometry<Intersection>(*iit),lfsu,xl,lfsv,rl);
+                      }
+                  }
+              }
 
 			// accumulate result (note: r needs to be cleared outside)
 			lfsv.vadd(rl,r);
@@ -197,6 +290,12 @@ namespace Dune {
 	  template<typename X, typename Y> 
 	  void jacobian_apply (const X& x, Y& y) const
 	  {
+        // visit each face only once
+        const int chunk=1<<28;
+        int offset = 0;
+        const typename GV::IndexSet& is=gfsu.gridview().indexSet();
+        std::map<Dune::GeometryType,int> gtoffset;
+
 		// make local function spaces
 		typedef typename GFSU::LocalFunctionSpace LFSU;
 		LFSU lfsu(gfsu);
@@ -207,6 +306,16 @@ namespace Dune {
 		for (ElementIterator it = gfsu.gridview().template begin<0>();
 			 it!=gfsu.gridview().template end<0>(); ++it)
 		  {
+            // assign offset for geometry type;
+            if (gtoffset.find(it->type())==gtoffset.end())
+              {
+                gtoffset[it->type()] = offset;
+                offset += chunk;
+              }
+
+            // compute unique id
+            int id = is.index(*it)+gtoffset[it->type()];
+
 			// bind local function spaces to element
 			lfsu.bind(*it);
 			lfsv.bind(*it);
@@ -220,15 +329,62 @@ namespace Dune {
 
 			// volume evaluation
 			LocalAssemblerCallSwitch<LA,LA::doAlphaVolume>::
-			  jacobian_volume_apply(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,yl);
+			  jacobian_apply_volume(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,yl);
 
 			// skeleton and boundary evaluation
 			if (LA::doAlphaSkeleton||LA::doAlphaBoundary)
 			  {
+                // local function spaces in neighbor
+                LFSU lfsun(gfsu);
+                LFSV lfsvn(gfsv);
+
 				IntersectionIterator endit = gfsu.gridview().iend(*it);
 				for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
 					 iit!=endit; ++iit)
 				  {
+                    // skeleton term
+                    if (iit->neighbor())
+                      {
+                        // assign offset for geometry type;
+                        Dune::GeometryType gtn = iit->outside()->type();
+                        if (gtoffset.find(gtn)==gtoffset.end())
+                          {
+                            gtoffset[gtn] = offset;
+                            offset += chunk;
+                          }
+                        
+                        // compute unique id for neighbor
+                        int idn = is.index(*(iit->outside()))+gtoffset[gtn];
+                          
+                        // unique vist of intersection
+                        if (id>idn)
+                          {
+                            // bind local function spaces to neighbor element
+                            lfsun.bind(*(iit->outside()));
+                            lfsvn.bind(*(iit->outside()));
+                            
+                            // allocate local data container
+                            std::vector<typename X::ElementType> xn(lfsun.size());
+                            std::vector<typename Y::ElementType> yn(lfsvn.size(),0.0);
+                            
+                            // read coefficents
+                            lfsun.vread(x,xn);
+                            
+                            // skeleton evaluation
+                            LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
+                              jacobian_apply_skeleton(la,IntersectionGeometry<Intersection>(*iit),lfsu,xl,lfsv,lfsun,xn,lfsvn,yl,yn);
+
+                            // accumulate result (note: r needs to be cleared outside)
+                            lfsvn.vadd(yn,y);
+                          }
+                      }
+
+                    // boundary term
+                    if (iit->boundary())
+                      {
+                        LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
+                          jacobian_apply_boundary(la,IntersectionGeometry<Intersection>(*iit),lfsu,xl,lfsv,yl);
+                      }
 				  }
 			  }
 

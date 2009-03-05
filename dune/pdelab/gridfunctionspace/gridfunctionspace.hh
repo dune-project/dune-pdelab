@@ -7,6 +7,7 @@
 #include<map>
 
 #include<dune/common/exceptions.hh>
+#include<dune/common/geometrytype.hh>
 #include<dune/grid/common/referenceelements.hh>
 
 #include"../common/countingptr.hh"
@@ -170,7 +171,7 @@ namespace Dune {
 
 
     // Empty constraints assembler class
-    class DefaultConstraints
+    class NoConstraints
     {
     public:
       enum { doBoundary = false };
@@ -204,7 +205,7 @@ namespace Dune {
      *  \tparam B    Backend type
      *  \tparam P    Parameter type
      */
-	template<typename GV, typename LFEM, typename CE=DefaultConstraints, 
+	template<typename GV, typename LFEM, typename CE=NoConstraints, 
              typename B=StdVectorBackend, typename P=GridFunctionGeneralMapper>
 	class GridFunctionSpace : public Countable, public LeafNode
 	{
