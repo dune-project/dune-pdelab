@@ -400,6 +400,12 @@ namespace Dune {
 	  template<typename X, typename A> 
 	  void jacobian (const X& x, A& a) const
 	  {
+        // visit each face only once
+        const int chunk=1<<28;
+        int offset = 0;
+        const typename GV::IndexSet& is=gfsu.gridview().indexSet();
+        std::map<Dune::GeometryType,int> gtoffset;
+
 		// make local function spaces
 		typedef typename GFSU::LocalFunctionSpace LFSU;
 		LFSU lfsu(gfsu);
@@ -410,6 +416,16 @@ namespace Dune {
 		for (ElementIterator it = gfsu.gridview().template begin<0>();
 			 it!=gfsu.gridview().template end<0>(); ++it)
 		  {
+            // assign offset for geometry type;
+            if (gtoffset.find(it->type())==gtoffset.end())
+              {
+                gtoffset[it->type()] = offset;
+                offset += chunk;
+              }
+
+            // compute unique id
+            int id = is.index(*it)+gtoffset[it->type()];
+
 			// bind local function spaces to element
 			lfsu.bind(*it);
 			lfsv.bind(*it);
@@ -428,15 +444,67 @@ namespace Dune {
 			// skeleton and boundary evaluation
 			if (LA::doAlphaSkeleton||LA::doAlphaBoundary)
 			  {
+                // local function spaces in neighbor
+                LFSU lfsun(gfsu);
+                LFSV lfsvn(gfsv);
+                
 				IntersectionIterator endit = gfsu.gridview().iend(*it);
 				for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
 					 iit!=endit; ++iit)
 				  {
+                    // skeleton term
+                    if (iit->neighbor())
+                      {
+                        // assign offset for geometry type;
+                        Dune::GeometryType gtn = iit->outside()->type();
+                        if (gtoffset.find(gtn)==gtoffset.end())
+                          {
+                            gtoffset[gtn] = offset;
+                            offset += chunk;
+                          }
+                        
+                        // compute unique id for neighbor
+                        int idn = is.index(*(iit->outside()))+gtoffset[gtn];
+                          
+                        // unique vist of intersection
+                        if (id>idn)
+                          {
+                            // bind local function spaces to neighbor element
+                            lfsun.bind(*(iit->outside()));
+                            lfsvn.bind(*(iit->outside()));
+                            
+                            // allocate local data container
+                            std::vector<typename X::ElementType> xn(lfsun.size());
+                            LocalMatrix<typename A::ElementType> al_sn(lfsv.size() ,lfsun.size(),0.0);
+                            LocalMatrix<typename A::ElementType> al_ns(lfsvn.size(),lfsu.size() ,0.0);
+                            LocalMatrix<typename A::ElementType> al_nn(lfsvn.size(),lfsun.size(),0.0);
+                            
+                            // read coefficents
+                            lfsun.vread(x,xn);
+                            
+                            // skeleton evaluation
+                            LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
+                              jacobian_skeleton(la,IntersectionGeometry<Intersection>(*iit),
+                                                lfsu,xl,lfsv,lfsun,xn,lfsvn,al,al_sn,al_ns,al_nn);
+
+                            // accumulate result
+                            eadd(lfsv,lfsun,al_sn,a);
+                            eadd(lfsvn,lfsu,al_ns,a);
+                            eadd(lfsvn,lfsun,al_nn,a);
+                          }
+                      }
+
+                    // boundary term
+                    if (iit->boundary())
+                      {
+                        LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
+                          jacobian_boundary(la,IntersectionGeometry<Intersection>(*iit),lfsu,xl,lfsv,al);
+                      }
 				  }
 			  }
 
 			// accumulate result (note: r needs to be cleared outside)
-			eadd(lfsu,lfsv,al,a);
+			eadd(lfsv,lfsu,al,a);
 		  }
 
 		// eliminate constrained rows
@@ -449,8 +517,8 @@ namespace Dune {
 	private:
 
       /** \brief read local stiffness matrix for entity */  
-      template<typename LFSU, typename LFSV, typename GC, typename T>
-      void eread (const LFSU& lfsu, const LFSV& lfsv, const GC& globalcontainer, 
+      template<typename LFSV, typename LFSU, typename GC, typename T>
+      void eread (const LFSV& lfsv, const LFSU& lfsu, const GC& globalcontainer, 
                   LocalMatrix<T>& localcontainer) const
       {
         for (int i=0; i<lfsv.size(); i++)
@@ -459,8 +527,8 @@ namespace Dune {
       }
 
       /** \brief write local stiffness matrix for entity */  
-      template<typename LFSU, typename LFSV, typename T, typename GC>
-      void ewrite (const LFSU& lfsu, const LFSV& lfsv, const LocalMatrix<T>& localcontainer, GC& globalcontainer) const
+      template<typename LFSV, typename LFSU, typename T, typename GC>
+      void ewrite (const LFSV& lfsv, const LFSU& lfsu, const LocalMatrix<T>& localcontainer, GC& globalcontainer) const
       {
         for (int i=0; i<lfsv.size(); i++)
           for (int j=0; j<lfsu.size(); j++)
@@ -468,8 +536,8 @@ namespace Dune {
       }
 
       /** \brief write local stiffness matrix for entity */  
-      template<typename LFSU, typename LFSV, typename T, typename GC>
-      void eadd (const LFSU& lfsu, const LFSV& lfsv, const LocalMatrix<T>& localcontainer, GC& globalcontainer) const
+      template<typename LFSV, typename LFSU, typename T, typename GC>
+      void eadd (const LFSV& lfsv, const LFSU& lfsu, const LocalMatrix<T>& localcontainer, GC& globalcontainer) const
       {
         for (int i=0; i<lfsv.size(); i++)
           for (int j=0; j<lfsu.size(); j++)

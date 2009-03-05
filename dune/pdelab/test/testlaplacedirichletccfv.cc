@@ -120,9 +120,8 @@ void test (const GV& gv)
   typedef typename GOS::template MatrixContainer<RF>::Type M;
   M m(gos);
   m = 0.0;
-  //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
-
-//   p1op.jacobian(x0,p1m);
+  gos.jacobian(x0,m);
+  //Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
   // evaluate residual w.r.t initial guess
   V r(gfs);
@@ -130,20 +129,20 @@ void test (const GV& gv)
   gos.residual(x0,r);
 
   // make ISTL solver
-  //Dune::MatrixAdapter<P1M,P1V,P1V> opa(p1m);
+  Dune::MatrixAdapter<M,V,V> opa(m);
   typedef Dune::PDELab::OnTheFlyOperator<V,V,GOS> ISTLOnTheFlyOperator;
   ISTLOnTheFlyOperator opb(gos);
-  //Dune::SeqSSOR<M,V,V> ssor(p1m,1,1.0);
-  //Dune::SeqILU0<M,V,V> ilu0(p1m,1.0);
+  Dune::SeqSSOR<M,V,V> ssor(m,1,1.0);
+  Dune::SeqILU0<M,V,V> ilu0(m,1.0);
   Dune::Richardson<V,V> richardson(1.0);
-  //Dune::CGSolver<V> solvera(opa,ilu0,1E-10,5000,2);
+  Dune::CGSolver<V> solvera(opa,ilu0,1E-10,5000,2);
   Dune::CGSolver<V> solverb(opb,richardson,1E-10,5000,2);
   Dune::InverseOperatorResult stat;
 
   // solve the jacobian system
   r *= -1.0; // need -residual
   V x(gfs,0.0);
-  solverb.apply(x,r,stat);
+  solvera.apply(x,r,stat);
   x += x0;
 
   // make discrete function object
@@ -151,8 +150,8 @@ void test (const GV& gv)
   DGF dgf(gfs,x);
   
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
-  vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"u"));
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming);
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"u"));
   vtkwriter.write("testlaplacedirichletccfv",Dune::VTKOptions::ascii);
 }
 

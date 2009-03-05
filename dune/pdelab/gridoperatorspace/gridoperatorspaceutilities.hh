@@ -223,6 +223,20 @@ namespace Dune {
 	  static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, LocalMatrix<R>& mat)
       {
       }
+	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+	  static void jacobian_skeleton (const LA& la, const IG& ig, 
+                              const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                              const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+                              LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn, 
+                              LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn)
+      {
+      }
+	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+	  static void jacobian_boundary (const LA& la, const IG& ig, 
+                                     const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                     LocalMatrix<R>& mat_ss)
+      {
+      }
     };
     template<typename LA>
     struct LocalAssemblerCallSwitch<LA,true>
@@ -287,7 +301,24 @@ namespace Dune {
       {
         la.jacobian_volume(eg,lfsu,x,lfsv,mat);
       }
-    };
+ 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+	  static void jacobian_skeleton (const LA& la, const IG& ig, 
+                              const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                              const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+                              LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn, 
+                              LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn)
+      {
+        la.jacobian_skeleton(ig,lfsu_s,x_s,lfsv_s,lfsu_n,x_n,lfsv_n,
+                             mat_ss, mat_sn, mat_ns, mat_nn);
+      }
+	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+	  static void jacobian_boundary (const LA& la, const IG& ig, 
+                                     const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                     LocalMatrix<R>& mat_ss)
+      {
+        la.jacobian_boundary(ig,lfsu_s,x_s,lfsv_s,mat_ss);
+      }
+   };
 
 
     // derive from this class to add numerical jacobian for volume
@@ -297,7 +328,8 @@ namespace Dune {
     public:
 
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, LocalMatrix<R>& mat) const
+	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
+                            LocalMatrix<R>& mat) const
       {
         const R epsilon=1E-8; // problem: this depends on data type R!
         const int m=lfsv.size();
@@ -314,7 +346,7 @@ namespace Dune {
             u[j] += delta;
             asImp().alpha_volume(eg,lfsu,u,lfsv,up);
             for (int i=0; i<m; i++)
-              mat(i,j) = (up[i]-down[i])/delta;
+              mat(i,j) += (up[i]-down[i])/delta;
             u[j] = x[j];
           }
       }
@@ -323,6 +355,108 @@ namespace Dune {
       Imp& asImp () {return static_cast<Imp &> (*this);}
       const Imp& asImp () const {return static_cast<const Imp &>(*this);}
     };
+
+	// derive from this class to add numerical evaluation of jacobian
+	template<typename Imp>
+	class NumericalJacobianSkeleton
+	{
+	public:
+
+	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+	  void jacobian_skeleton (const IG& ig, 
+                              const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                              const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+                              LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn, 
+                              LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn) const
+	  {
+		const R epsilon=1E-8; // problem: this depends on data type R!
+		const int m_s=lfsv_s.size();
+		const int m_n=lfsv_n.size();
+		const int n_s=lfsu_s.size();
+		const int n_n=lfsu_n.size();
+
+		X u_s(x_s);
+        X u_n(x_n);
+		std::vector<R> down_s(m_s,0.0),up_s(m_s);
+		std::vector<R> down_n(m_n,0.0),up_n(m_n);
+
+        // base line
+		asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,down_s,down_n);
+
+        // jiggle in self
+		for (int j=0; j<n_s; j++)
+		  {
+			for (int k=0; k<m_s; k++) up_s[k]=0.0;
+			for (int k=0; k<m_n; k++) up_n[k]=0.0;
+			R delta = epsilon*(1.0+std::abs(u_s[j]));
+			u_s[j] += delta;
+            asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,up_s,up_n);
+			for (int i=0; i<m_s; i++)
+			  mat_ss(i,j) += (up_s[i]-down_s[i])/delta;
+			for (int i=0; i<m_n; i++)
+			  mat_ns(i,j) += (up_n[i]-down_n[i])/delta;
+			u_s[j] = x_s[j];
+		  }
+
+        // jiggle in neighbor
+		for (int j=0; j<n_n; j++)
+		  {
+			for (int k=0; k<m_s; k++) up_s[k]=0.0;
+			for (int k=0; k<m_n; k++) up_n[k]=0.0;
+			R delta = epsilon*(1.0+std::abs(u_s[j]));
+			u_n[j] += delta;
+            asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,up_s,up_n);
+			for (int i=0; i<m_s; i++)
+			  mat_sn(i,j) += (up_s[i]-down_s[i])/delta;
+			for (int i=0; i<m_n; i++)
+			  mat_nn(i,j) += (up_n[i]-down_n[i])/delta;
+			u_n[j] = x_n[j];
+		  }
+	  }
+
+	private:
+	  Imp& asImp () {return static_cast<Imp &> (*this);}
+	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
+	};
+
+	// derive from this class to add numerical evaluation of jacobian apply
+	template<typename Imp>
+	class NumericalJacobianBoundary
+	{
+	public:
+
+	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+	  void jacobian_boundary (const IG& ig, 
+                              const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                              LocalMatrix<R>& mat_ss) const
+	  {
+		const R epsilon=1E-8; // problem: this depends on data type R!
+		const int m_s=lfsv_s.size();
+		const int n_s=lfsu_s.size();
+
+		X u_s(x_s);
+		std::vector<R> down_s(m_s,0.0),up_s(m_s);
+
+        // base line
+		asImp().alpha_boundary(ig,lfsu_s,u_s,lfsv_s,down_s);
+
+        // jiggle in self
+		for (int j=0; j<n_s; j++)
+		  {
+			for (int k=0; k<m_s; k++) up_s[k]=0.0;
+			R delta = epsilon*(1.0+std::abs(u_s[j]));
+			u_s[j] += delta;
+            asImp().alpha_boundary(ig,lfsu_s,u_s,lfsv_s,up_s);
+			for (int i=0; i<m_s; i++)
+			  mat_ss(i,j) += (up_s[i]-down_s[i])/delta;
+			u_s[j] = x_s[j];
+		  }
+	  }
+
+	private:
+	  Imp& asImp () {return static_cast<Imp &> (*this);}
+	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
+	};
 
 	// derive from this class to add numerical evaluation of jacobian apply
 	template<typename Imp>

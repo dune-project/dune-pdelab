@@ -23,7 +23,10 @@ namespace Dune {
     template<typename G>
 	class LaplaceDirichletCCFV : public NumericalJacobianApplySkeleton<LaplaceDirichletCCFV<G> >,
                                  public NumericalJacobianApplyBoundary<LaplaceDirichletCCFV<G> >,
-                                 public FullSkeletonPattern, public FullVolumePattern
+                                 public NumericalJacobianSkeleton<LaplaceDirichletCCFV<G> >,
+                                 public NumericalJacobianBoundary<LaplaceDirichletCCFV<G> >,
+                                 public FullSkeletonPattern, 
+                                 public FullVolumePattern
 	{
 	public:
       // pattern assembly flags
