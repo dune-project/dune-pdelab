@@ -15,8 +15,9 @@
 namespace Dune {
   namespace PDELab {
 
-	// a local operator for solving the Poisson equation
-	// - \Delta u = f in \Omega, u = g on \partial\Omega
+	// a local operator for solving the Laplace equation with Dirichlet boundary conditions
+	//     - \Delta u = 0 in \Omega, 
+    //              u = g on \partial\Omega
 	// with P1 conforming finite elements on triangles
 	class LaplaceDirichletP12D : public NumericalJacobianApplyVolume<LaplaceDirichletP12D>,
                                  public NumericalJacobianVolume<LaplaceDirichletP12D>,

@@ -16,9 +16,10 @@
 namespace Dune {
   namespace PDELab {
 
-	// a local operator for solving the Poisson equation
-	// - \Delta u = f in \Omega, u = g on \partial\Omega
-	// with P1 conforming finite elements on triangles
+	// a local operator for solving the Laplace equation with Dirichlet boundary conditions
+	//     - \Delta u = 0 in \Omega, 
+    //              u = g on \partial\Omega
+	// with cell centered finite volumes on axiparallel cube grids
     // G : grid function for Dirichlet boundary conditions
     template<typename G>
 	class LaplaceDirichletCCFV : public NumericalJacobianApplySkeleton<LaplaceDirichletCCFV<G> >,
