@@ -7,7 +7,9 @@
 #include <dune/common/static_assert.hh>
 
 #include"../common/geometrywrapper.hh"
+#include"../gridoperatorspace/gridoperatorspace.hh"
 #include"../gridoperatorspace/gridoperatorspaceutilities.hh"
+#include"pattern.hh"
 
 
 namespace Dune {
@@ -16,7 +18,9 @@ namespace Dune {
 	// a local operator for solving the Poisson equation
 	// - \Delta u = f in \Omega, u = g on \partial\Omega
 	// with P1 conforming finite elements on triangles
-	class LaplaceDirichletP12D : public NumericalJacobianVolumeApply<LaplaceDirichletP12D>
+	class LaplaceDirichletP12D : public NumericalJacobianVolumeApply<LaplaceDirichletP12D>,
+                                 public NumericalJacobianVolume<LaplaceDirichletP12D>,
+                                 public FullVolumePattern
 	{
 	public:
 
@@ -68,7 +72,6 @@ namespace Dune {
 		  r[lfsv.localIndex(i)] += (gradu*gradphi[i])*area;
 	  }
 	};
-
 
     //! \} group GridFunctionSpace
   } // namespace PDELab

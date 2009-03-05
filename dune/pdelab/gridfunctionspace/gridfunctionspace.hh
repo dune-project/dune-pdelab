@@ -219,6 +219,8 @@ namespace Dune {
 	  {
 		//! \brief define Type as the Type of a container of E's
 		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;	
+      private:
+        VectorContainer () {}
 	  };
 
  	  //! extract type for storing constraints
@@ -227,6 +229,8 @@ namespace Dune {
 	  {
 		//! \brief define Type as the Type of a container of E's
 		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+      private:
+        ConstraintsContainer () {}
 	  };
 
       //! define local function space parametrized by self 
@@ -429,6 +433,8 @@ namespace Dune {
 	  {
 		//! \brief define Type as the Type of a container of E's
 		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;	
+      private:
+        VectorContainer () {}
 	  };
 
  	  //! extract type for storing constraints
@@ -437,6 +443,8 @@ namespace Dune {
 	  {
 		//! \brief define Type as the Type of a container of E's
 		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+      private:
+        ConstraintsContainer () {}
 	  };
 
       // define local function space parametrized by self 
@@ -652,6 +660,8 @@ namespace Dune {
 	  {
 		//! \brief define Type as the Type of a container of E's
 		typedef typename Traits::BackendType::template VectorContainer<PowerGridFunctionSpaceBase,E> Type;	
+      private:
+        VectorContainer () {}
 	  };
 
  	  //! extract type for storing constraints
@@ -660,6 +670,8 @@ namespace Dune {
 	  {
 		//! \brief define Type as the Type of a container of E's
 		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+      private:
+        ConstraintsContainer () {}
 	  };
 
       // define local function space parametrized by self 
@@ -761,6 +773,8 @@ namespace Dune {
 	  {
 		//! \brief define Type as the Type of a container of E's
 		typedef typename Traits::BackendType::template VectorContainer<PowerGridFunctionSpaceBase,E> Type;	
+      private:
+        VectorContainer () {}
 	  };
 
  	  //! extract type for storing constraints
@@ -769,6 +783,8 @@ namespace Dune {
 	  {
 		//! \brief define Type as the Type of a container of E's
 		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+      private:
+        ConstraintsContainer () {}
 	  };
 
       // define local function space parametrized by self 
@@ -1253,6 +1269,8 @@ namespace Dune {
 	  {
 		//! \brief define Type as the Type of a container of E's
 		typedef typename Traits::BackendType::template VectorContainer<CompositeGridFunctionSpaceBase,E> Type;	
+      private:
+        VectorContainer () {}
 	  };
 
   	  //! extract type for storing constraints
@@ -1261,6 +1279,8 @@ namespace Dune {
 	  {
 		//! \brief define Type as the Type of a container of E's
 		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+      private:
+        ConstraintsContainer () {}
 	  };
 
       // define local function space parametrized by self 
@@ -1373,6 +1393,8 @@ namespace Dune {
 	  {
 		//! \brief define Type as the Type of a container of E's
 		typedef typename Traits::BackendType::template VectorContainer<CompositeGridFunctionSpaceBase,E> Type;	
+      private:
+        VectorContainer () {}
 	  };
 
  	  //! extract type for storing constraints
@@ -1381,6 +1403,8 @@ namespace Dune {
 	  {
 		//! \brief define Type as the Type of a container of E's
 		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+      private:
+        ConstraintsContainer () {}
 	  };
 
       // define local function space parametrized by self 
@@ -1962,6 +1986,8 @@ namespace Dune {
 	  {
 		//! \brief define Type as the Type of a container of E's
 		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;	
+      private:
+        VectorContainer () {}
 	  };
 
   	  //! extract type for storing constraints
@@ -1970,6 +1996,8 @@ namespace Dune {
 	  {
 		//! \brief define Type as the Type of a container of E's
 		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+      private:
+        ConstraintsContainer () {}
 	  };
 
       // define local function space parametrized by self 
@@ -2055,6 +2083,8 @@ namespace Dune {
 	  {
 		//! \brief define Type as the Type of a container of E's
 		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;	
+      private:
+        VectorContainer () {}
 	  };
 
  	  //! extract type for storing constraints
@@ -2063,6 +2093,8 @@ namespace Dune {
 	  {
 		//! \brief define Type as the Type of a container of E's
 		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+      private:
+        ConstraintsContainer () {}
 	  };
 
       // define local function space parametrized by self 
@@ -2132,6 +2164,8 @@ namespace Dune {
 	  {
 		//! \brief define Type as the Type of a container of E's
 		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;	
+      private:
+        VectorContainer () {}
 	  };
 
   	  //! extract type for storing constraints
@@ -2140,6 +2174,8 @@ namespace Dune {
 	  {
 		//! \brief define Type as the Type of a container of E's
 		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+      private:
+        ConstraintsContainer () {}
 	  };
 
       // define local function space parametrized by self 

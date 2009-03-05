@@ -9,7 +9,7 @@
 #include<dune/istl/bvector.hh>
 #include<dune/istl/bcrsmatrix.hh>
 
-#include"../operatorspace.hh"
+#include"../gridoperatorspace/localmatrix.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -34,18 +34,18 @@ namespace Dune {
 		typedef E ElementType;
 
 		Matrix (const T& t) 
-		  : BaseT(t.rfs().globalSize()/ROWBLOCKSIZE,t.dfs().globalSize()/COLBLOCKSIZE,
+		  : BaseT(t.globalSizeV()/ROWBLOCKSIZE,t.globalSizeU()/COLBLOCKSIZE,
 				  Dune::BCRSMatrix<M>::random) 
 		{
-		  Pattern pattern(t.rfs().globalSize(),t.dfs().globalSize());
+		  Pattern pattern(t.globalSizeV(),t.globalSizeU());
 		  t.fill_pattern(pattern);
 
 		  // first dummy code: build full matrix
-		  for (int i=0; i<t.rfs().globalSize(); ++i)
+		  for (int i=0; i<t.globalSizeV(); ++i)
 			this->setrowsize(i,pattern[i].size());
 		  this->endrowsizes();
 
-		  for (int i=0; i<t.rfs().globalSize(); ++i)
+		  for (int i=0; i<t.globalSizeV(); ++i)
 			{
 			  for (typename std::set<size_type>::iterator it=pattern[i].begin(); 
 				   it!=pattern[i].end(); ++it)
@@ -54,12 +54,12 @@ namespace Dune {
 		  this->endindices();
 
 		  // code for full matrix
-		  //       for (int i=0; i<t.rfs().globalSize(); ++i)
-		  //         this->setrowsize(i,t.dfs().globalSize());
+		  //       for (int i=0; i<t.globalSizeV(); ++i)
+		  //         this->setrowsize(i,t.globalSizeU());
 		  //       this->endrowsizes();
 
-		  //       for (int i=0; i<t.rfs().globalSize(); ++i)
-		  //         for (int j=0; j<t.dfs().globalSize(); ++j)
+		  //       for (int i=0; i<t.globalSizeV(); ++i)
+		  //         for (int j=0; j<t.globalSizeU(); ++j)
 		  //           this->addindex(i,j);
 		  //       this->endindices();
 
@@ -132,53 +132,52 @@ namespace Dune {
 	  // submatrix access
 	  //=================
 
+// 	  // read a submatrix given by global indices
+// 	  // we can assume C to be std::vector
+// 	  template<typename C, typename RI, typename CI, typename T>
+// 	  static void read (const C& c, 
+// 						const RI& row_index, const CI& col_index, 
+// 						LocalMatrix<T>& submatrix)
+// 	  {
+// 		submatrix.resize(row_index.size(),col_index.size());
+// 		for (int j=0; j<col_index.size(); j++)
+// 		  for (int i=0; i<row_index.size(); i++)
+// 			{
+// 			  int I = row_index[i];
+// 			  int J = col_index[j];
+// 			  submatrix(i,j) = c[I/ROWBLOCKSIZE][J/COLBLOCKSIZE][I%ROWBLOCKSIZE][J%COLBLOCKSIZE];
+// 			}
+// 	  }
 
-	  // read a submatrix given by global indices
-	  // we can assume C to be std::vector
-	  template<typename C, typename RI, typename CI, typename T>
-	  static void read (const C& c, 
-						const std::vector<RI>& row_index, const std::vector<CI>& col_index, 
-						LocalMatrix<T>& submatrix)
-	  {
-		submatrix.resize(row_index.size(),col_index.size());
-		for (int j=0; j<col_index.size(); j++)
-		  for (int i=0; i<row_index.size(); i++)
-			{
-			  int I = row_index[i];
-			  int J = col_index[j];
-			  submatrix(i,j) = c[I/ROWBLOCKSIZE][J/COLBLOCKSIZE][I%ROWBLOCKSIZE][J%COLBLOCKSIZE];
-			}
-	  }
+// 	  // write a submatrix given by global indices
+// 	  // we can assume C to be std::vector
+// 	  template<typename C, typename RI, typename CI, typename T>
+// 	  static void write (const RI& row_index, const CI& col_index, 
+// 						 const LocalMatrix<T>& submatrix, C& c)
+// 	  {
+// 		for (int j=0; j<col_index.size(); j++)
+// 		  for (int i=0; i<row_index.size(); i++)
+// 			{
+// 			  int I = row_index[i];
+// 			  int J = col_index[j];
+// 			  c[I/ROWBLOCKSIZE][J/COLBLOCKSIZE][I%ROWBLOCKSIZE][J%COLBLOCKSIZE] = submatrix(i,j);
+// 			}
+// 	  }
 
-	  // write a submatrix given by global indices
-	  // we can assume C to be std::vector
-	  template<typename C, typename RI, typename CI, typename T>
-	  static void write (const std::vector<RI>& row_index, const std::vector<CI>& col_index, 
-						 const LocalMatrix<T>& submatrix, C& c)
-	  {
-		for (int j=0; j<col_index.size(); j++)
-		  for (int i=0; i<row_index.size(); i++)
-			{
-			  int I = row_index[i];
-			  int J = col_index[j];
-			  c[I/ROWBLOCKSIZE][J/COLBLOCKSIZE][I%ROWBLOCKSIZE][J%COLBLOCKSIZE] = submatrix(i,j);
-			}
-	  }
-
-	  // write a submatrix given by global indices
-	  // we can assume C to be std::vector
-	  template<typename C, typename RI, typename CI, typename T>
-	  static void add (const std::vector<RI>& row_index, const std::vector<CI>& col_index, 
-					   const LocalMatrix<T>& submatrix, C& c)
-	  {
-		for (int j=0; j<col_index.size(); j++)
-		  for (int i=0; i<row_index.size(); i++)
-			{
-			  int I = row_index[i];
-			  int J = col_index[j];
-			  c[I/ROWBLOCKSIZE][J/COLBLOCKSIZE][I%ROWBLOCKSIZE][J%COLBLOCKSIZE] += submatrix(i,j);
-			}
-	  }
+// 	  // write a submatrix given by global indices
+// 	  // we can assume C to be std::vector
+// 	  template<typename C, typename RI, typename CI, typename T>
+// 	  static void add (const RI& row_index, const CI& col_index, 
+// 					   const LocalMatrix<T>& submatrix, C& c)
+// 	  {
+// 		for (int j=0; j<col_index.size(); j++)
+// 		  for (int i=0; i<row_index.size(); i++)
+// 			{
+// 			  int I = row_index[i];
+// 			  int J = col_index[j];
+// 			  c[I/ROWBLOCKSIZE][J/COLBLOCKSIZE][I%ROWBLOCKSIZE][J%COLBLOCKSIZE] += submatrix(i,j);
+// 			}
+// 	  }
 
 	  // clear one row of the matrix
 	  template<typename C, typename RI>

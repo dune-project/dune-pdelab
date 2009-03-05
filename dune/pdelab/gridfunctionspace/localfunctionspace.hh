@@ -673,7 +673,6 @@ namespace Dune {
           B::access(globalcontainer,i[k]) += localcontainer[k];
       }
 
-
       /** \brief write back coefficients for one element to container */  
       template<typename GC, typename LC>
       void mwrite (const LC& lc, GC& gc) const
