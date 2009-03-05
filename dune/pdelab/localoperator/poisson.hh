@@ -2,6 +2,8 @@
 #ifndef DUNE_PDELAB_POISSON_HH
 #define DUNE_PDELAB_POISSON_HH
 
+#include<vector>
+
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
@@ -13,7 +15,6 @@
 #include"../gridoperatorspace/gridoperatorspace.hh"
 #include"../gridoperatorspace/gridoperatorspaceutilities.hh"
 #include"pattern.hh"
-
 
 namespace Dune {
   namespace PDELab {
@@ -44,7 +45,7 @@ namespace Dune {
       enum { doLambdaSkeleton = false };
       enum { doLambdaBoundary = true };
 
-      Poisson (const F& f_ const B& b_ const J& j)
+      Poisson (const F& f_, const B& b_, const J& j_)
         : f(f_), b(b_), j(j_)
       {}
 
@@ -57,35 +58,43 @@ namespace Dune {
 		  Traits::LocalBasisType::Traits::DomainFieldType DF;
 		typedef typename LFSU::Traits::LocalFiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
-
-		// define integration point (hard coded quadrature)
-		Dune::FieldVector<DF,2> integrationpoint(1.0/3.0);
-
-		// gradient of shape functions at integration point
 		typedef typename LFSU::Traits::LocalFiniteElementType::
-		  Traits::LocalBasisType::Traits::JacobianType JT;
-		std::vector<JT> gradients;
-		lfsu.localFiniteElement().localBasis().evaluateJacobian(integrationpoint,gradients);
+		  Traits::LocalBasisType::Traits::JacobianType JacobianType;
 
-		// transformation of gradients to real element
-		const Dune::FieldMatrix<DF,2,2> 
-		  jac = eg.geometry().jacobianInverseTransposed(integrationpoint);
-		Dune::FieldVector<RF,2> gradphi[3];
-		for (int i=0; i<3; i++)
-		  {
-			gradphi[i] = 0.0;
-			jac.umv(gradients[i][0],gradphi[i]);
-		  }
+        // dimensions
+        const int dim = EG::Geometry::dimension;
+        const int dimw = EG::Geometry::dimensionworld;
 
-		// compute gradient of solution at integration point
-		Dune::FieldVector<RF,2> gradu(0.0);
-		for (int i=0; i<3; i++)
-		  gradu.axpy(x[lfsu.localIndex(i)],gradphi[i]);
+        // select quadrature rule
+        Dune::GeometryType gt = eg.geometry().type();
+        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
-		// integrate grad u * grad phi_i (0.5 is the area of the reference element)
-		RF area = 0.5*eg.geometry().integrationElement(integrationpoint);
-		for (int i=0; i<3; i++)
-		  r[lfsv.localIndex(i)] += (gradu*gradphi[i])*area;
+        // loop over quadrature points
+        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+          {
+            // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
+            std::vector<JacobianType> js;
+            lfsu.localFiniteElement().localBasis().evaluateJacobian(it->position(),js);
+
+            // transform gradient to real element
+            const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
+            std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
+            for (int i=0; i<lfsu.size(); i++)
+              {
+                gradphi[i] = 0.0;
+                jac.umv(js[i][0],gradphi[i]);
+              }
+
+            // compute gradient of u
+            Dune::FieldVector<RF,dim> gradu(0.0);
+            for (int i=0; i<lfsu.size(); i++)
+              gradu.axpy(x[i],gradphi[i]);
+
+            // integrate grad u * grad phi_i
+            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+            for (int i=0; i<lfsu.size(); i++)
+              r[i] += (gradu*gradphi[i])*factor;
+          }
 	  }
 
  	  // volume integral depending only on test functions
@@ -93,11 +102,11 @@ namespace Dune {
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
 		// domain and range field type
-		typedef typename LFSU::Traits::LocalFiniteElementType::
+		typedef typename LFSV::Traits::LocalFiniteElementType::
 		  Traits::LocalBasisType::Traits::DomainFieldType DF;
-		typedef typename LFSU::Traits::LocalFiniteElementType::
+		typedef typename LFSV::Traits::LocalFiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
-		typedef typename LFSU::Traits::LocalFiniteElementType::
+		typedef typename LFSV::Traits::LocalFiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
 
         // dimensions
@@ -113,7 +122,7 @@ namespace Dune {
           {
             // evaluate shape functions 
             std::vector<RangeType> phi;
-            lfsv.evaluateFunction(it->position(),phi);
+            lfsv.localFiniteElement().localBasis().evaluateFunction(it->position(),phi);
 
             // evaluate right hand side parameter function
             typename F::Traits::RangeType y;
@@ -126,16 +135,16 @@ namespace Dune {
           }
       }
 
-      // boundary integral
+      // boundary integral independen of ansatz functions
  	  template<typename IG, typename LFSV, typename R>
       void lambda_boundary (const IG& ig, const LFSV& lfsv, R& r) const
-       {
+      {
 		// domain and range field type
-		typedef typename LFSU::Traits::LocalFiniteElementType::
+		typedef typename LFSV::Traits::LocalFiniteElementType::
 		  Traits::LocalBasisType::Traits::DomainFieldType DF;
-		typedef typename LFSU::Traits::LocalFiniteElementType::
+		typedef typename LFSV::Traits::LocalFiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
-		typedef typename LFSU::Traits::LocalFiniteElementType::
+		typedef typename LFSV::Traits::LocalFiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
 
         // dimensions
@@ -161,7 +170,7 @@ namespace Dune {
 
             // evaluate test shape functions 
             std::vector<RangeType> phi;
-            lfsv.evaluateFunction(local,phi);
+            lfsv.localFiniteElement().localBasis().evaluateFunction(local,phi);
             
             // evaluate flux boundary condition
             typename J::Traits::RangeType y;

@@ -218,7 +218,10 @@ namespace Dune {
 			lfsu.vread(x,xl);
 
 			// volume evaluation
-			LocalAssemblerCallSwitch<LA,LA::doAlphaVolume>::alpha_volume(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl);
+			LocalAssemblerCallSwitch<LA,LA::doAlphaVolume>::
+              alpha_volume(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl);
+			LocalAssemblerCallSwitch<LA,LA::doLambdaVolume>::
+              lambda_volume(la,ElementGeometry<Element>(*it),lfsv,rl);
 
 			// skip if no intersection iterator is needed
  			if (LA::doAlphaSkeleton||LA::doAlphaBoundary||LA::doLambdaSkeleton||LA::doLambdaBoundary)
@@ -274,6 +277,8 @@ namespace Dune {
                       {
                         LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
                           alpha_boundary(la,IntersectionGeometry<Intersection>(*iit),lfsu,xl,lfsv,rl);
+                        LocalAssemblerCallSwitch<LA,LA::doLambdaBoundary>::
+                          lambda_boundary(la,IntersectionGeometry<Intersection>(*iit),lfsv,rl);
                       }
                   }
               }

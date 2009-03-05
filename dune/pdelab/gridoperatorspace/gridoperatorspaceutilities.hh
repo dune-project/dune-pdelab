@@ -202,6 +202,16 @@ namespace Dune {
                            R& r_s)
       {
       }
+
+	  template<typename EG, typename LFSV, typename R>
+      static void lambda_volume (const LA& la, const EG& eg, const LFSV& lfsv, R& r)
+      {
+      }
+ 	  template<typename IG, typename LFSV, typename R>
+      static void lambda_boundary (const LA& la, const IG& ig, const LFSV& lfsv, R& r)
+      {
+      }
+
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
 	  static void jacobian_apply_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
 	  {
@@ -273,6 +283,17 @@ namespace Dune {
                            R& r_s)
       {
         la.alpha_boundary(ig,lfsu_s,x_s,lfsv_s,r_s);
+      }
+
+	  template<typename EG, typename LFSV, typename R>
+      static void lambda_volume (const LA& la, const EG& eg, const LFSV& lfsv, R& r)
+      {
+        la.lambda_volume(eg,lfsv,r);
+      }
+ 	  template<typename IG, typename LFSV, typename R>
+      static void lambda_boundary (const LA& la, const IG& ig, const LFSV& lfsv, R& r)
+      {
+        la.lambda_boundary(ig,lfsv,r);
       }
 
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
