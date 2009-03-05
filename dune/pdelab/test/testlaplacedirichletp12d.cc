@@ -37,15 +37,15 @@
 
 // define some grid functions to interpolate from
 template<typename GV, typename RF>
-class F
+class G
   : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  F<GV,RF> >
+                                                  G<GV,RF> >
 {
 public:
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,F<GV,RF> > BaseT;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,G<GV,RF> > BaseT;
 
-  F (const GV& gv) : BaseT(gv) {}
+  G (const GV& gv) : BaseT(gv) {}
   inline void evaluateGlobal (const typename Traits::DomainType& x, 
 							  typename Traits::RangeType& y) const
   {
@@ -94,86 +94,86 @@ void testp1 (const GV& gv)
   const int dim = GV::dimension;
 
   // instantiate finite element maps
-  typedef Dune::PDELab::P12DLocalFiniteElementMap<DF,double> P1FEM;
-  P1FEM p1fem;
+  typedef Dune::PDELab::P12DLocalFiniteElementMap<DF,double> FEM;
+  FEM fem;
   
   // make function space
-  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,
-    Dune::PDELab::P12DConstraints,Dune::PDELab::ISTLVectorBackend<1> > P1GFS; 
-  P1GFS p1gfs(gv,p1fem);
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
+    Dune::PDELab::P12DConstraints,Dune::PDELab::ISTLVectorBackend<1> > GFS; 
+  GFS gfs(gv,fem);
 
   // make constraints map and initialize it from a function
-  typedef typename P1GFS::template ConstraintsContainer<double>::Type P1C;
-  P1C p1cg;
-  p1cg.clear();
+  typedef typename GFS::template ConstraintsContainer<double>::Type C;
+  C cg;
+  cg.clear();
   typedef B<GV> BType;
   BType b(gv);
-  Dune::PDELab::constraints(b,p1gfs,p1cg);
+  Dune::PDELab::constraints(b,gfs,cg);
 
   // make coefficent Vector and initialize it from a function
-  typedef typename P1GFS::template VectorContainer<double>::Type P1V;
-  P1V x0(p1gfs);
+  typedef typename GFS::template VectorContainer<double>::Type V;
+  V x0(gfs);
   x0 = 0.0;
-  typedef F<GV,double> FType;
-  FType f(gv);
-  Dune::PDELab::interpolate(f,p1gfs,x0);
-  Dune::PDELab::set_nonconstrained_dofs(p1cg,0.0,x0);
+  typedef G<GV,double> GType;
+  GType g(gv);
+  Dune::PDELab::interpolate(g,gfs,x0);
+  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
 
   // make grid function operator
   Dune::PDELab::LaplaceDirichletP12D la;
-  typedef Dune::PDELab::GridOperatorSpace<P1GFS,P1GFS,
-    Dune::PDELab::LaplaceDirichletP12D,P1C,P1C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > P1OP;
-  P1OP p1op(p1gfs,p1cg,p1gfs,p1cg,la);
+  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
+    Dune::PDELab::LaplaceDirichletP12D,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
+  GOS gos(gfs,cg,gfs,cg,la);
 
   // represent operator as a matrix
-  typedef typename P1OP::template MatrixContainer<double>::Type P1M;
-  P1M p1m(p1op);
-  p1m = 0.0;
-  p1op.jacobian(x0,p1m);
-  //  Dune::printmatrix(std::cout,p1m.base(),"global stiffness matrix","row",9,1);
+  typedef typename GOS::template MatrixContainer<double>::Type M;
+  M m(gos);
+  m = 0.0;
+  gos.jacobian(x0,m);
+  //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
   // evaluate residual w.r.t initial guess
-  P1V r(p1gfs);
+  V r(gfs);
   r = 0.0;
-  p1op.residual(x0,r);
+  gos.residual(x0,r);
 
   // make ISTL solver
-  Dune::MatrixAdapter<P1M,P1V,P1V> opa(p1m);
-  typedef Dune::PDELab::OnTheFlyOperator<P1V,P1V,P1OP> ISTLOnTheFlyOperator;
-  ISTLOnTheFlyOperator opb(p1op);
-  Dune::SeqSSOR<P1M,P1V,P1V> ssor(p1m,1,1.0);
-  Dune::SeqILU0<P1M,P1V,P1V> ilu0(p1m,1.0);
-  Dune::Richardson<P1V,P1V> richardson(1.0);
+  Dune::MatrixAdapter<M,V,V> opa(m);
+  typedef Dune::PDELab::OnTheFlyOperator<V,V,GOS> ISTLOnTheFlyOperator;
+  ISTLOnTheFlyOperator opb(gos);
+  Dune::SeqSSOR<M,V,V> ssor(m,1,1.0);
+  Dune::SeqILU0<M,V,V> ilu0(m,1.0);
+  Dune::Richardson<V,V> richardson(1.0);
 
-//   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<P1M,
+//   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<M,
 //     Dune::Amg::FirstDiagonal> > Criterion;
-//   typedef Dune::SeqSSOR<P1M,P1V,P1V> Smoother;
+//   typedef Dune::SeqSSOR<M,V,V> Smoother;
 //   typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments SmootherArgs;
 //   SmootherArgs smootherArgs;
 //   smootherArgs.iterations = 2;
 //   int maxlevel = 20, coarsenTarget = 100;
 //   Criterion criterion(maxlevel, coarsenTarget);
 //   criterion.setMaxDistance(2);
-//   typedef Dune::Amg::AMG<Dune::MatrixAdapter<P1M,P1V,P1V>,P1V,Smoother> AMG;
+//   typedef Dune::Amg::AMG<Dune::MatrixAdapter<M,V,V>,V,Smoother> AMG;
 //   AMG amg(opa,criterion,smootherArgs,1,1);
 
-  Dune::CGSolver<P1V> solvera(opa,ilu0,1E-10,5000,2);
-  Dune::CGSolver<P1V> solverb(opb,richardson,1E-10,5000,2);
+  Dune::CGSolver<V> solvera(opa,ilu0,1E-10,5000,2);
+  Dune::CGSolver<V> solverb(opb,richardson,1E-10,5000,2);
   Dune::InverseOperatorResult stat;
 
   // solve the jacobian system
   r *= -1.0; // need -residual
-  P1V x(p1gfs,0.0);
+  V x(gfs,0.0);
   solvera.apply(x,r,stat);
   x += x0;
 
   // make discrete function object
-  typedef Dune::PDELab::DiscreteGridFunction<P1GFS,P1V> P1DGF;
-  P1DGF p1dgf(p1gfs,x);
+  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+  DGF dgf(gfs,x);
   
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<P1DGF>(p1dgf,"p1"));
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"p1"));
   vtkwriter.write("testlaplacedirichletp12d",Dune::VTKOptions::ascii);
 }
 
@@ -185,7 +185,7 @@ int main(int argc, char** argv)
 
 #if HAVE_UG
  	UGUnitSquare uggrid;
-  	uggrid.globalRefine(4);
+  	uggrid.globalRefine(3);
     testp1(uggrid.leafView());
 #endif
 
