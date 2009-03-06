@@ -73,7 +73,7 @@ namespace Dune {
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
-            std::vector<JacobianType> js;
+            std::vector<JacobianType> js(lfsu.size());
             lfsu.localFiniteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradient to real element
