@@ -1,9 +1,11 @@
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_GRIDEXAMPLES_HH
 #define DUNE_PDELAB_GRIDEXAMPLES_HH
 
 #include<dune/grid/yaspgrid.hh>
 #if HAVE_ALBERTA
 #include<dune/grid/albertagrid.hh>
+#include <dune/grid/albertagrid/dgfparser.hh>
 #endif
 #if HAVE_UG 
 #include<dune/grid/uggrid.hh>
@@ -27,7 +29,15 @@ class ALUUnitSquare : public Dune::ALUSimplexGrid<2,2>
 public:
   ALUUnitSquare () : Dune::ALUSimplexGrid<2,2>("grids/2dsimplex.alu") {}
 };
-#endif
+
+class ALUReentrantCorner : public Dune::GridPtr<Dune::ALUSimplexGrid<2,2> >
+{
+public:
+  ALUReentrantCorner()
+    : Dune::GridPtr<Dune::ALUSimplexGrid<2,2> >("grids/2dreentrantcorner.dgf")
+  { }
+};
+#endif //HAVE_ALUGRID
 
 
 #if HAVE_ALBERTA
@@ -41,6 +51,14 @@ class AlbertaUnitSquare : public Dune::AlbertaGrid<2,2>
 {
 public:
   AlbertaUnitSquare () : Dune::AlbertaGrid<2,2>("grids/2dgrid.al") {}
+};
+
+class AlbertaReentrantCorner : public Dune::GridPtr<Dune::AlbertaGrid<2,2> >
+{
+public:
+  AlbertaReentrantCorner()
+    : Dune::GridPtr<Dune::AlbertaGrid<2,2> >("grids/2dreentrantcorner.dgf")
+  { }
 };
 #endif
 
@@ -120,6 +138,6 @@ public:
 	this->createEnd();
   }
 };
-#endif
+#endif // HAVE_UG
 
 #endif

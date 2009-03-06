@@ -117,6 +117,10 @@ int main(int argc, char** argv)
  	AlbertaLDomain albertagrid;
   	albertagrid.globalRefine(4);
     testpk(albertagrid.leafView());
+
+ 	AlbertaReentrantCorner albertagridr;
+  	albertagridr->globalRefine(4);
+    testpk(albertagridr->leafView());
 #endif
 
 #if HAVE_ALUGRID
