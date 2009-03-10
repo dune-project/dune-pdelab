@@ -49,10 +49,10 @@ namespace Dune {
             int face = ig.numberInSelf();
             for (size_t i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)
               {
-                unsigned int codim = lfs.localFiniteElement().localCoefficients().localIndex(i).codim();
+                unsigned int codim = lfs.localFiniteElement().localCoefficients().localKey(i).codim();
                 if (codim==0) continue;
                 for (int j=0; j<refelem.size(face,1,codim); j++)
-                  if (lfs.localFiniteElement().localCoefficients().localIndex(i).subentity()==refelem.subEntity(face,1,j,codim))
+                  if (lfs.localFiniteElement().localCoefficients().localKey(i).subentity()==refelem.subEntity(face,1,j,codim))
                     trafo[i] = empty;
               }
           }

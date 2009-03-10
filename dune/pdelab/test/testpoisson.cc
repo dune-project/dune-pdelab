@@ -16,7 +16,7 @@
 #include<dune/istl/solvers.hh>
 #include<dune/istl/preconditioners.hh>
 #include<dune/istl/io.hh>
-//#include<dune/istl/paamg/amg.hh>
+#include<dune/istl/paamg/amg.hh>
 
 #include"../finiteelementmap/p0fem.hh"
 #include"../finiteelementmap/p12dfem.hh"

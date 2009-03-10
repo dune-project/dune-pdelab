@@ -15,9 +15,9 @@ namespace Dune {
 	  template<typename T, typename E>
 	  class VectorContainer : public Dune::BlockVector< Dune::FieldVector<E,BLOCKSIZE> >
 	  {
-		typedef Dune::BlockVector< Dune::FieldVector<E,BLOCKSIZE> > BaseT;
 	  public:
 		typedef E ElementType;
+		typedef Dune::BlockVector< Dune::FieldVector<E,BLOCKSIZE> > BaseT;
 
 		VectorContainer (const T& t) : BaseT(t.globalSize()/BLOCKSIZE) 
 		{}
@@ -28,6 +28,17 @@ namespace Dune {
 		VectorContainer& operator= (const E& e)
 		{
 		  BaseT::operator=(e);
+		  return *this;
+		}
+
+		// for debugging and AMG access
+		BaseT& base ()
+		{
+		  return *this;
+		}
+
+		const BaseT& base () const
+		{
 		  return *this;
 		}
 	  };

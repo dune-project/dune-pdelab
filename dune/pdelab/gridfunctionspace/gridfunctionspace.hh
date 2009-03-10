@@ -294,15 +294,15 @@ namespace Dune {
 		  {
 			// get geometry type of subentity 
 			Dune::GeometryType gt=Dune::ReferenceElements<double,GV::Grid::dimension>
-			  ::general(lfe.type()).type(lc.localIndex(i).subentity(),lc.localIndex(i).codim());
+			  ::general(lfe.type()).type(lc.localKey(i).subentity(),lc.localKey(i).codim());
 
 			// evaluate consecutive index of subentity
 			int index = eval_subindex<GV::Grid::dimension>(gv.indexSet(),e,
-														   lc.localIndex(i).subentity(),
-														   lc.localIndex(i).codim());
+														   lc.localKey(i).subentity(),
+														   lc.localKey(i).codim());
 		
 			// now compute 
-			global[i] = offset[(gtoffset.find(gt)->second)+index]+lc.localIndex(i).index();
+			global[i] = offset[(gtoffset.find(gt)->second)+index]+lc.localKey(i).index();
 		  }
 	  }
 
@@ -337,7 +337,7 @@ namespace Dune {
 			for (int i=0; i<lc.size(); ++i)
 			  {
 				Dune::GeometryType gt=Dune::ReferenceElements<double,GV::Grid::dimension>
-				  ::general(it->type()).type(lc.localIndex(i).subentity(),lc.localIndex(i).codim());
+				  ::general(it->type()).type(lc.localKey(i).subentity(),lc.localKey(i).codim());
 				gtused.insert(gt);
 			  }
 		  }
@@ -375,10 +375,10 @@ namespace Dune {
 			for (int i=0; i<lc.size(); ++i)
 			  {
 				Dune::GeometryType gt=Dune::ReferenceElements<double,GV::Grid::dimension>
-				  ::general(it->type()).type(lc.localIndex(i).subentity(),lc.localIndex(i).codim());
+				  ::general(it->type()).type(lc.localKey(i).subentity(),lc.localKey(i).codim());
 				unsigned int index = gtoffset[gt]
-				  +eval_subindex<GV::Grid::dimension>(is,*it,lc.localIndex(i).subentity(),lc.localIndex(i).codim());
-				offset[index] = std::max(offset[index],lc.localIndex(i).index()+1);
+				  +eval_subindex<GV::Grid::dimension>(is,*it,lc.localKey(i).subentity(),lc.localKey(i).codim());
+				offset[index] = std::max(offset[index],lc.localKey(i).index()+1);
 			  }
 		  }
 
@@ -508,15 +508,15 @@ namespace Dune {
 		  {
 			// get geometry type of subentity 
 			Dune::GeometryType gt=Dune::ReferenceElements<double,GV::Grid::dimension>
-			  ::general(lfe.type()).type(lc.localIndex(i).subentity(),lc.localIndex(i).codim());
+			  ::general(lfe.type()).type(lc.localKey(i).subentity(),lc.localKey(i).codim());
 
 			// evaluate consecutive index of subentity
 			int index = eval_subindex<GV::Grid::dimension>(gv.indexSet(),e,
-														   lc.localIndex(i).subentity(),
-														   lc.localIndex(i).codim());
+														   lc.localKey(i).subentity(),
+														   lc.localKey(i).codim());
 		
 			// now compute 
-			global[i] = offset.find(gt)->second+index*dofcountmap.find(gt)->second+lc.localIndex(i).index();
+			global[i] = offset.find(gt)->second+index*dofcountmap.find(gt)->second+lc.localKey(i).index();
 		  }
 	  }
 
@@ -559,7 +559,7 @@ namespace Dune {
 			// assume that key within each subentity is unique
 			for (int i=0; i<lc.size(); ++i)
 			  {
-				SubentityType subentity(lc.localIndex(i).subentity(),lc.localIndex(i).codim());
+				SubentityType subentity(lc.localKey(i).subentity(),lc.localKey(i).codim());
 				if (countmap.find(subentity)==countmap.end())
 				  countmap[subentity] = 1;
 				else

@@ -27,11 +27,11 @@ namespace Dune {
 	  class Matrix : public Dune::BCRSMatrix< Dune::FieldMatrix<E,ROWBLOCKSIZE,COLBLOCKSIZE> >
 	  {
 		typedef Dune::FieldMatrix<E,ROWBLOCKSIZE,COLBLOCKSIZE> M;
-		typedef Dune::BCRSMatrix<M> BaseT;
-		typedef typename Dune::BCRSMatrix<M>::size_type size_type;
 
 	  public:
+		typedef typename Dune::BCRSMatrix<M>::size_type size_type;
 		typedef E ElementType;
+		typedef Dune::BCRSMatrix<M> BaseT;
 
 		Matrix (const T& t) 
 		  : BaseT(t.globalSizeV()/ROWBLOCKSIZE,t.globalSizeU()/COLBLOCKSIZE,
@@ -71,7 +71,7 @@ namespace Dune {
 		  return *this;
 		}
 
-		// for debugging
+		// for debugging and AMG access
 		BaseT& base ()
 		{
 		  return *this;

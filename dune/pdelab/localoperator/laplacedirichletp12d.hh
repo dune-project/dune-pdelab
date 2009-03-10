@@ -68,12 +68,12 @@ namespace Dune {
 		// compute gradient of solution at integration point
 		Dune::FieldVector<RF,2> gradu(0.0);
 		for (int i=0; i<3; i++)
-		  gradu.axpy(x[lfsu.localIndex(i)],gradphi[i]);
+		  gradu.axpy(x[i],gradphi[i]);
 
 		// integrate grad u * grad phi_i (0.5 is the area of the reference element)
 		RF area = 0.5*eg.geometry().integrationElement(integrationpoint);
 		for (int i=0; i<3; i++)
-		  r[lfsv.localIndex(i)] += (gradu*gradphi[i])*area;
+		  r[i] += (gradu*gradphi[i])*area;
 	  }
 	};
 
