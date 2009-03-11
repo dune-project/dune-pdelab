@@ -30,13 +30,6 @@ public:
   ALUUnitSquare () : Dune::ALUSimplexGrid<2,2>("grids/2dsimplex.alu") {}
 };
 
-class ALUReentrantCorner : public Dune::GridPtr<Dune::ALUSimplexGrid<2,2> >
-{
-public:
-  ALUReentrantCorner()
-    : Dune::GridPtr<Dune::ALUSimplexGrid<2,2> >("grids/2dreentrantcorner.dgf")
-  { }
-};
 #endif //HAVE_ALUGRID
 
 

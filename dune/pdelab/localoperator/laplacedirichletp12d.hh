@@ -52,7 +52,7 @@ namespace Dune {
 		// gradient of shape functions at integration point
 		typedef typename LFSU::Traits::LocalFiniteElementType::
 		  Traits::LocalBasisType::Traits::JacobianType JT;
-		std::vector<JT> gradients;
+		std::vector<JT> gradients(lfsu.size());
 		lfsu.localFiniteElement().localBasis().evaluateJacobian(integrationpoint,gradients);
 
 		// transformation of gradients to real element
