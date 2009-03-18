@@ -378,7 +378,8 @@ namespace Dune {
 				  ::general(it->type()).type(lc.localKey(i).subentity(),lc.localKey(i).codim());
 				unsigned int index = gtoffset[gt]
 				  +eval_subindex<GV::Grid::dimension>(is,*it,lc.localKey(i).subentity(),lc.localKey(i).codim());
-				offset[index] = std::max(offset[index],lc.localKey(i).index()+1);
+				offset[index] = std::max(offset[index], 
+                                         typename Traits::SizeType(lc.localKey(i).index()+1));
 			  }
 		  }
 
