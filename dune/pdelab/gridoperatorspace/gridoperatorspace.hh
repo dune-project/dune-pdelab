@@ -236,7 +236,7 @@ namespace Dune {
                      iit!=endit; ++iit)
                   {
                     // skeleton term
-                    if (iit->neighbor())
+                    if (iit->neighbor() && (LA::doAlphaSkeleton||LA::doLambdaSkeleton) )
                       {
                         // assign offset for geometry type;
                         Dune::GeometryType gtn = iit->outside()->type();
@@ -348,7 +348,7 @@ namespace Dune {
 					 iit!=endit; ++iit)
 				  {
                     // skeleton term
-                    if (iit->neighbor())
+                    if (iit->neighbor() && LA::doAlphaSkeleton )
                       {
                         // assign offset for geometry type;
                         Dune::GeometryType gtn = iit->outside()->type();
@@ -458,7 +458,7 @@ namespace Dune {
 					 iit!=endit; ++iit)
 				  {
                     // skeleton term
-                    if (iit->neighbor())
+                    if (iit->neighbor() && LA::doAlphaSkeleton )
                       {
                         // assign offset for geometry type;
                         Dune::GeometryType gtn = iit->outside()->type();

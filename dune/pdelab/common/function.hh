@@ -1037,6 +1037,7 @@ namespace Dune {
         public Dune::PDELab::LeafNode, public Dune::PDELab::Countable
     {
     public:
+      typedef typename T::Traits::GridViewType GridViewType;
       typedef typename T::Traits Traits;
       typedef Dune::PDELab::GridFunctionInterface<Traits,PiolaBackwardAdapter<T> > BaseT;
 
@@ -1056,7 +1057,7 @@ namespace Dune {
           J = e.geometry().jacobianInverseTransposed(x);
         y = 0;
         J.umtv(v,y);
-        y *= J.determinant();
+        y *= e.geometry().integrationElement(x);
       }
 
       //! get a reference to the GridView

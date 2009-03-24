@@ -121,7 +121,7 @@ namespace Dune {
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
             // evaluate shape functions 
-            std::vector<RangeType> phi;
+            std::vector<RangeType> phi(lfsv.size());
             lfsv.localFiniteElement().localBasis().evaluateFunction(it->position(),phi);
 
             // evaluate right hand side parameter function
@@ -169,7 +169,7 @@ namespace Dune {
             Dune::FieldVector<DF,dim> local = ig.intersectionSelfLocal().global(it->position());
 
             // evaluate test shape functions 
-            std::vector<RangeType> phi;
+            std::vector<RangeType> phi(lfsv.size());
             lfsv.localFiniteElement().localBasis().evaluateFunction(local,phi);
             
             // evaluate flux boundary condition

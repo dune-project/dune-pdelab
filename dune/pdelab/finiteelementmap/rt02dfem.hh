@@ -2,6 +2,7 @@
 #ifndef DUNE_PDELAB_RT02DFEM_HH
 #define DUNE_PDELAB_RT02DFEM_HH
 
+#include<vector>
 #include<dune/finiteelements/rt02d.hh>
 #include"finiteelementmap.hh"
 
@@ -25,31 +26,47 @@ namespace Dune {
 	  typedef LocalFiniteElementMapTraits<FE> Traits;  
 
 	  //! \brief Use when Imp has a standard constructor
-	  RT02DLocalFiniteElementMap (const GV& gv_) : is(gv_.indexSet())
+	  RT02DLocalFiniteElementMap (const GV& gv_) 
+        : gv(gv_), is(gv_.indexSet()), orient(gv_.size(0))
 	  {
         // create all variants 
         for (int i=0; i<8; i++)
           variant[i] = FE(i);
+
+        // compute orientation for all elements
+        typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
+        typedef typename GV::IntersectionIterator IntersectionIterator;
+
+        // loop once over the grid
+        for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
+          {
+            int myid = is.template index<0>(*it);
+            orient[myid] = 0;
+
+            IntersectionIterator endit = gv.iend(*it);
+            for (IntersectionIterator iit = gv.ibegin(*it); iit!=endit; ++iit)
+              if (iit->neighbor())
+                {
+                  if (is.template index<0>(*(iit->outside()))>myid)
+                    orient[myid] += 1<<iit->numberInSelf();
+                }
+
+            int o=orient[myid];
+          }
       }
 
 	  //! \brief get local basis functions for entity
 	  template<class EntityType>
 	  const typename Traits::LocalFiniteElementType& find (const EntityType& e) const
 	  {
-        unsigned int n0,n1,n2;
-        n0 = is.template subIndex<2>(e,0);
-        n1 = is.template subIndex<2>(e,1);
-        n2 = is.template subIndex<2>(e,2);
-        unsigned int j=0;
-        if (n1>n2) j += 1;
-        if (n0>n2) j += 2;
-        if (n0>n1) j += 4;
-		return variant[j];
+        return variant[orient[is.template index<0>(e)]];
 	  }
 
 	private:
+      const GV& gv;
       FE variant[8];
       const IndexSet& is;
+      std::vector<unsigned char> orient;
     };
 
   }
