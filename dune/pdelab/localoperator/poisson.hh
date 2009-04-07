@@ -18,15 +18,22 @@
 
 namespace Dune {
   namespace PDELab {
+    //! \addtogroup LocalOperator
+    //! \ingroup PDELab
+    //! \{
 
-	// a local operator for solving the Poisson equation
-	//           - \Delta u = f in \Omega, 
-    //                    u = g on \partial\Omega_D
-    //  -\nabla u \cdot \nu = j on \partial\Omega_N
-	// with conforming finite elements on all types of grids in any dimension
-    // F : grid function type giving f
-    // B : grid function type selecting boundary condition
-    // J : grid function type giving j
+    /** a local operator for solving the Poisson equation
+     *
+     * \f{eqnarray*}
+     *           - \Delta u &=& f \mbox{ in } \Omega,          \\
+     *                    u &=& g \mbox{ on } \partial\Omega_D \\
+     *  -\nabla u \cdot \nu &=& j \mbox{ on } \partial\Omega_N \\
+     * \f}
+     * with conforming finite elements on all types of grids in any dimension
+     * \tparam F grid function type giving f
+     * \tparam B grid function type selecting boundary condition
+     * \tparam J grid function type giving j
+     */
     template<typename F, typename B, typename J, int qorder=1>
 	class Poisson : public NumericalJacobianApplyVolume<Poisson<F,B,J,qorder> >,
                     public NumericalJacobianVolume<Poisson<F,B,J,qorder> >,
@@ -189,7 +196,7 @@ namespace Dune {
       const J& j;
 	};
 
-    //! \} group GridFunctionSpace
+    //! \} group LocalOperator
   } // namespace PDELab
 } // namespace Dune
 
