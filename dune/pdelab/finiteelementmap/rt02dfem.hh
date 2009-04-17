@@ -48,7 +48,7 @@ namespace Dune {
               if (iit->neighbor())
                 {
                   if (is.template index<0>(*(iit->outside()))>myid)
-                    orient[myid] += 1<<iit->numberInSelf();
+                    orient[myid] += 1<<iit->indexInInside();
                 }
 
             int o=orient[myid];
