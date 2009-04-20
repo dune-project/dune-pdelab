@@ -3,7 +3,6 @@
 #define DUNE_PDELAB_CONSTRAINTS_HH
 
 #include<dune/common/exceptions.hh>
-#include<dune/grid/common/referenceelements.hh>
 
 #include"../common/function.hh"
 #include"../common/geometrywrapper.hh"

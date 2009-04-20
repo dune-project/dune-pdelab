@@ -41,11 +41,11 @@ namespace Dune {
 		  t.fill_pattern(pattern);
 
 		  // first dummy code: build full matrix
-		  for (int i=0; i<t.globalSizeV(); ++i)
+		  for (size_t i=0; i<t.globalSizeV(); ++i)
 			this->setrowsize(i,pattern[i].size());
 		  this->endrowsizes();
 
-		  for (int i=0; i<t.globalSizeV(); ++i)
+		  for (size_t i=0; i<t.globalSizeV(); ++i)
 			{
 			  for (typename std::set<size_type>::iterator it=pattern[i].begin(); 
 				   it!=pattern[i].end(); ++it)

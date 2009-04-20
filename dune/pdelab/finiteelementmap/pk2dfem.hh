@@ -39,9 +39,9 @@ namespace Dune {
 	  const typename Traits::LocalFiniteElementType& find (const EntityType& e) const
 	  {
         unsigned int n0,n1,n2;
-        n0 = is.template subIndex<2>(e,0);
-        n1 = is.template subIndex<2>(e,1);
-        n2 = is.template subIndex<2>(e,2);
+        n0 = is.subIndex(e,0,2);
+        n1 = is.subIndex(e,1,2);
+        n2 = is.subIndex(e,2,2);
         unsigned int j=0;
         if (n1>n2) j += 1;
         if (n0>n2) j += 2;

@@ -8,7 +8,7 @@
 
 #include<dune/common/exceptions.hh>
 #include<dune/common/geometrytype.hh>
-#include<dune/grid/common/referenceelements.hh>
+#include<dune/grid/common/genericreferenceelements.hh>
 
 #include"../common/countingptr.hh"
 #include"../common/multitypetree.hh"
@@ -133,7 +133,7 @@ namespace Dune {
 	  {
 		if (c==C)
 		  {
-			index = is.template subIndex<C>(e,i);
+              index = is.subIndex(e,i,C);
 			return;
 		  }
 		EvalSubIndexMetaProgram<C-1,IS,E>::subIndex(is,e,i,c,index);	
@@ -293,12 +293,12 @@ namespace Dune {
 		for (int i=0; i<lc.size(); ++i)
 		  {
 			// get geometry type of subentity 
-			Dune::GeometryType gt=Dune::ReferenceElements<double,GV::Grid::dimension>
-			  ::general(lfe.type()).type(lc.localKey(i).subentity(),lc.localKey(i).codim());
+			Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
+			  ::general(lfe.type()).type(lc.localKey(i).subEntity(),lc.localKey(i).codim());
 
 			// evaluate consecutive index of subentity
 			int index = eval_subindex<GV::Grid::dimension>(gv.indexSet(),e,
-														   lc.localKey(i).subentity(),
+														   lc.localKey(i).subEntity(),
 														   lc.localKey(i).codim());
 		
 			// now compute 
@@ -336,8 +336,8 @@ namespace Dune {
 			// insert geometry type of all subentities into set
 			for (int i=0; i<lc.size(); ++i)
 			  {
-				Dune::GeometryType gt=Dune::ReferenceElements<double,GV::Grid::dimension>
-				  ::general(it->type()).type(lc.localKey(i).subentity(),lc.localKey(i).codim());
+				Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
+				  ::general(it->type()).type(lc.localKey(i).subEntity(),lc.localKey(i).codim());
 				gtused.insert(gt);
 			  }
 		  }
@@ -374,10 +374,10 @@ namespace Dune {
 			// compute maximum size for each subentity
 			for (int i=0; i<lc.size(); ++i)
 			  {
-				Dune::GeometryType gt=Dune::ReferenceElements<double,GV::Grid::dimension>
-				  ::general(it->type()).type(lc.localKey(i).subentity(),lc.localKey(i).codim());
+				Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
+				  ::general(it->type()).type(lc.localKey(i).subEntity(),lc.localKey(i).codim());
 				unsigned int index = gtoffset[gt]
-				  +eval_subindex<GV::Grid::dimension>(is,*it,lc.localKey(i).subentity(),lc.localKey(i).codim());
+				  +eval_subindex<GV::Grid::dimension>(is,*it,lc.localKey(i).subEntity(),lc.localKey(i).codim());
 				offset[index] = std::max(offset[index], 
                                          typename Traits::SizeType(lc.localKey(i).index()+1));
 			  }
@@ -508,12 +508,12 @@ namespace Dune {
 		for (unsigned int i=0; i<lc.size(); ++i)
 		  {
 			// get geometry type of subentity 
-			Dune::GeometryType gt=Dune::ReferenceElements<double,GV::Grid::dimension>
-			  ::general(lfe.type()).type(lc.localKey(i).subentity(),lc.localKey(i).codim());
+			Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
+			  ::general(lfe.type()).type(lc.localKey(i).subEntity(),lc.localKey(i).codim());
 
 			// evaluate consecutive index of subentity
 			int index = eval_subindex<GV::Grid::dimension>(gv.indexSet(),e,
-														   lc.localKey(i).subentity(),
+														   lc.localKey(i).subEntity(),
 														   lc.localKey(i).codim());
 		
 			// now compute 
@@ -560,7 +560,7 @@ namespace Dune {
 			// assume that key within each subentity is unique
 			for (int i=0; i<lc.size(); ++i)
 			  {
-				SubentityType subentity(lc.localKey(i).subentity(),lc.localKey(i).codim());
+				SubentityType subentity(lc.localKey(i).subEntity(),lc.localKey(i).codim());
 				if (countmap.find(subentity)==countmap.end())
 				  countmap[subentity] = 1;
 				else
@@ -570,7 +570,7 @@ namespace Dune {
 			// traverse the map and compare #dofs per geometry type
 			for (typename CountMapType::iterator i=countmap.begin(); i!=countmap.end(); ++i)
 			  {
-				Dune::GeometryType gt=Dune::ReferenceElements<double,GV::Grid::dimension>
+				Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
 				  ::general(it->type()).type(Dune::get<0>(i->first),Dune::get<1>(i->first));
 				typename DofCountMapType::iterator j=dofcountmap.find(gt);
 				if (j==dofcountmap.end())

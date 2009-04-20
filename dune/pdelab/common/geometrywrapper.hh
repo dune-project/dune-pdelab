@@ -87,10 +87,11 @@ namespace Dune {
 		local coordinates of the intersection to local coordinates of the
 		inside() entity.
 	  */
-	  const LocalGeometry& intersectionSelfLocal () const
+	  const LocalGeometry& geometryInInside () const
 	  {
-		return i.intersectionSelfLocal();
+		return i.geometryInInside();
 	  }
+
 	  /*! @brief geometrical information about this intersection in local
 		coordinates of the outside() entity.
 
@@ -98,9 +99,9 @@ namespace Dune {
 		local coordinates of the intersection to local coordinates of the
 		outside() entity.
 	  */
-	  const LocalGeometry& intersectionNeighborLocal () const
+	  const LocalGeometry& geometryInOutside () const
 	  {
-		return i.intersectionNeighborLocal();
+		return i.geometryInOutside();
 	  }
 
 	  /*! @brief geometrical information about this intersection in global coordinates.
@@ -108,21 +109,21 @@ namespace Dune {
 		This method returns a Geometry object that provides a mapping from
 		local coordinates of the intersection to global (world) coordinates.
 	  */
-	  const Geometry& intersectionGlobal () const
+	  const Geometry& geometry () const
 	  {
-		return i.intersectionGlobal();
+		return i.geometry();
 	  }
 
 	  //! Local number of codim 1 entity in the inside() Entity where intersection is contained in
-	  int numberInSelf () const
+	  int indexInInside () const
 	  {
-		return i.numberInSelf ();
+		return i.indexInInside ();
 	  }
 
 	  //! Local number of codim 1 entity in outside() Entity where intersection is contained in
-	  int numberInNeighbor () const
+	  int indexInOutside () const
 	  {
-		return i.numberInNeighbor ();
+		return i.indexInOutside ();
 	  }
 
 	  /*! @brief Return an outer normal (length not necessarily 1)

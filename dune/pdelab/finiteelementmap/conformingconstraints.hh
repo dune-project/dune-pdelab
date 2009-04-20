@@ -3,7 +3,7 @@
 #define DUNE_PDELAB_CONFORMINGCONSTRAINTS_HH
 
 #include<dune/common/exceptions.hh>
-#include<dune/grid/common/referenceelements.hh>
+#include<dune/grid/common/genericreferenceelements.hh>
 #include<dune/common/geometrytype.hh>
 
 namespace Dune {
@@ -44,15 +44,14 @@ namespace Dune {
             Dune::GeometryType gt = ig.inside()->type();
             typedef typename IntersectionGeometry<I>::ctype DT;
             const int dim = IntersectionGeometry<I>::Entity::Geometry::dimension;
-            const int dimw = IntersectionGeometry<I>::Entity::Geometry::dimensionworld;
-            const Dune::ReferenceElement<DT,dim>& refelem = Dune::ReferenceElements<DT,dim>::general(gt);
-            int face = ig.numberInSelf();
+            const Dune::GenericReferenceElement<DT,dim>& refelem = Dune::GenericReferenceElements<DT,dim>::general(gt);
+            int face = ig.indexInInside();
             for (size_t i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)
               {
                 unsigned int codim = lfs.localFiniteElement().localCoefficients().localKey(i).codim();
                 if (codim==0) continue;
                 for (int j=0; j<refelem.size(face,1,codim); j++)
-                  if (lfs.localFiniteElement().localCoefficients().localKey(i).subentity()==refelem.subEntity(face,1,j,codim))
+                  if (lfs.localFiniteElement().localCoefficients().localKey(i).subEntity()==refelem.subEntity(face,1,j,codim))
                     trafo[i] = empty;
               }
           }

@@ -24,8 +24,8 @@ namespace Dune {
       void pattern_volume (const LFSU& lfsu, const LFSV& lfsv, 
                            LocalSparsityPattern& pattern) const
       {
-        for (int i=0; i<lfsv.size(); ++i)
-          for (int j=0; j<lfsu.size(); ++j)
+        for (size_t i=0; i<lfsv.size(); ++i)
+          for (size_t j=0; j<lfsu.size(); ++j)
             pattern.push_back(SparsityLink(i,j));
       }
    };

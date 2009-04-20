@@ -167,7 +167,7 @@ public:
 
     // map from local coordinates in intersection to global coordinates
     Dune::FieldVector<typename IG::ctype,IG::Geometry::coorddimension> 
-      xg = ig.intersectionGlobal().global(x);
+      xg = ig.geometry().global(x);
 
     // set boundary condition according to coordinates
     // here we could also use boundaryid etc.

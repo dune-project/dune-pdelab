@@ -8,7 +8,6 @@
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
 #include<dune/common/geometrytype.hh>
-#include<dune/grid/common/referenceelements.hh>
 #include<dune/grid/common/quadraturerules.hh>
 
 #include"../common/geometrywrapper.hh"
@@ -86,7 +85,7 @@ namespace Dune {
             // transform gradient to real element
             const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
-            for (int i=0; i<lfsu.size(); i++)
+            for (size_t i=0; i<lfsu.size(); i++)
               {
                 gradphi[i] = 0.0;
                 jac.umv(js[i][0],gradphi[i]);
@@ -94,12 +93,12 @@ namespace Dune {
 
             // compute gradient of u
             Dune::FieldVector<RF,dim> gradu(0.0);
-            for (int i=0; i<lfsu.size(); i++)
+            for (size_t i=0; i<lfsu.size(); i++)
               gradu.axpy(x[i],gradphi[i]);
 
             // integrate grad u * grad phi_i
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
-            for (int i=0; i<lfsu.size(); i++)
+            for (size_t i=0; i<lfsu.size(); i++)
               r[i] += (gradu*gradphi[i])*factor;
           }
 	  }
@@ -118,7 +117,6 @@ namespace Dune {
 
         // dimensions
         const int dim = EG::Geometry::dimension;
-        const int dimw = EG::Geometry::dimensionworld;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -137,7 +135,7 @@ namespace Dune {
 
             // integrate f
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
-            for (int i=0; i<lfsv.size(); i++)
+            for (size_t i=0; i<lfsv.size(); i++)
               r[i] -= y*phi[i]*factor;
           }
       }
@@ -156,10 +154,9 @@ namespace Dune {
 
         // dimensions
         const int dim = IG::dimension;
-        const int dimw = IG::dimensionworld;
 
         // select quadrature rule
-        Dune::GeometryType gtface = ig.intersectionSelfLocal().type();
+        Dune::GeometryType gtface = ig.geometryInInside().type();
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // loop over quadrature points and integrate normal flux
@@ -173,7 +170,7 @@ namespace Dune {
             if (bctype>0) continue;
 
             // position of quadrature point in local coordinates of element 
-            Dune::FieldVector<DF,dim> local = ig.intersectionSelfLocal().global(it->position());
+            Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
 
             // evaluate test shape functions 
             std::vector<RangeType> phi(lfsv.size());
@@ -184,8 +181,8 @@ namespace Dune {
             j.evaluate(*(ig.inside()),local,y);
             
             // integrate J
-            RF factor = it->weight()*ig.intersectionGlobal().integrationElement(it->position());
-            for (int i=0; i<lfsv.size(); i++)
+            RF factor = it->weight()*ig.geometry().integrationElement(it->position());
+            for (size_t i=0; i<lfsv.size(); i++)
               r[i] += y*phi[i]*factor;
           }
       }
