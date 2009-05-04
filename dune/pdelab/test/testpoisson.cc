@@ -96,7 +96,7 @@ public:
                         typename Traits::RangeType& y) const
   {  
     Dune::FieldVector<typename GV::Grid::ctype,GV::dimension> 
-      xg = ig.intersectionGlobal().global(x);
+      xg = ig.geometry().global(x);
 
     if (xg[1]<1E-6 || xg[1]>1.0-1E-6)
       {

@@ -114,7 +114,7 @@ namespace Dune {
         Dune::FieldVector<DF,IG::dimension> 
           inside_global = ig.inside()->geometry().global(inside_local);
         Dune::FieldVector<DF,IG::dimension> 
-          outside_global = ig.intersectionGlobal().global(face_local);
+          outside_global = ig.geometry().global(face_local);
         inside_global -= outside_global;
         RF distance = inside_global.two_norm();
 
