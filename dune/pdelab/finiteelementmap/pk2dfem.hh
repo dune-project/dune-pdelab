@@ -43,9 +43,9 @@ namespace Dune {
         n1 = is.subIndex(e,1,2);
         n2 = is.subIndex(e,2,2);
         unsigned int j=0;
-        if (n1>n2) j += 1;
+        if (n0>n1) j += 1;
         if (n0>n2) j += 2;
-        if (n0>n1) j += 4;
+        if (n1>n2) j += 4;
 		return variant[j];
 	  }
 

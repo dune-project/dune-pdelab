@@ -47,8 +47,8 @@ namespace Dune {
             // determine the constrained nodes (requires knowledge about reference element)
             typename T::RowType empty;
             int edge = ig.indexInInside();
-            trafo[(edge+1)%3] = empty; // first node
-            trafo[(edge+2)%3] = empty; // second node
+            trafo[edge>1] = empty; // first node
+            trafo[!!edge+1] = empty; // second node
           }
       }
     };
