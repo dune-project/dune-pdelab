@@ -64,7 +64,7 @@ namespace Dune {
 
         // face volume for integration
         RF face_volume = ig.geometry().integrationElement(face_local)
-          *Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.geometry().type()).volume();
+          *Dune::GenericReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).volume();
 
         // cell centers in references elements
         const Dune::FieldVector<DF,IG::dimension>& 
@@ -104,7 +104,7 @@ namespace Dune {
 
         // face volume for integration
         RF face_volume = ig.geometry().integrationElement(face_local)
-          *Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.geometry().type()).volume();
+          *Dune::GenericReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).volume();
         
         // cell center in reference element
         const Dune::FieldVector<DF,IG::dimension>& 
