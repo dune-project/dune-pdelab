@@ -40,7 +40,7 @@ namespace Dune {
         // loop once over the grid
         for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
           {
-            int myid = is.template index<0>(*it);
+            unsigned int myid = is.template index<0>(*it);
             orient[myid] = 0;
 
             IntersectionIterator endit = gv.iend(*it);
@@ -48,10 +48,8 @@ namespace Dune {
               if (iit->neighbor())
                 {
                   if (is.template index<0>(*(iit->outside()))>myid)
-                    orient[myid] += 1<<iit->indexInInside();
+                    orient[myid] |= 1<<iit->indexInInside();
                 }
-
-            int o=orient[myid];
           }
       }
 
