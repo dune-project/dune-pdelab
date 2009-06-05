@@ -1,6 +1,9 @@
 # $Id: Makefile.am 586 2006-04-28 13:41:31Z mblatt $
 
-NORMALTESTS = testcountingptr testmultitypetree testfunction testanalytic testfiniteelementmap testgridfunctionspace testlocalfunctionspace testutilities testpk testrt0 testconstraints testlaplacedirichletp12d testlaplacedirichletccfv testpoisson
+NORMALTESTS = testcountingptr testedges02d testmultitypetree testfunction \
+	testanalytic testfiniteelementmap testgridfunctionspace \
+	testlocalfunctionspace testutilities testpk testrt0 testconstraints \
+	testlaplacedirichletp12d testlaplacedirichletccfv testpoisson
 
 # list of tests to run
 TESTS = $(NORMALTESTS)
@@ -11,6 +14,10 @@ check_PROGRAMS = $(NORMALTESTS)
 testcountingptr_SOURCES = testcountingptr.cc
 testcountingptr_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
 testcountingptr_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+
+testedges02d_SOURCES = testedges02d.cc
+testedges02d_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
+testedges02d_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
 
 testmultitypetree_SOURCES = testmultitypetree.cc
 testmultitypetree_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
