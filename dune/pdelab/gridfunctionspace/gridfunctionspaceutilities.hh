@@ -25,9 +25,15 @@ namespace Dune {
     //===============================================================
 
 
-	// convert a single component function space into a grid function
-    // the functions can be vector-valued
-    // this is just an intermediate solution to provide VTK output
+	/** \brief convert a single component function space into a grid function
+     *
+     * The functions can be vector-valued.
+     *
+     * This is just an intermediate solution to provide VTK output.
+     *
+     * \tparam T Type of GridFunctionSpace
+     * \tparam X Type of coefficients vector
+     */
 	template<typename T, typename X>
 	class DiscreteGridFunction
 	  : public GridFunctionInterface<
@@ -55,11 +61,17 @@ namespace Dune {
 	public:
 	  typedef typename BaseT::Traits Traits;
 	  
+      /** \brief Construct a DiscreteGridFunction
+       *
+       * \param gfs The GridFunctionsSpace
+       * \param x_  The coefficients vector
+       */
 	  DiscreteGridFunction (const GFS& gfs, const X& x_)
 		: pgfs(&gfs), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
 	  {
 	  }
 
+      // Evaluate
 	  inline void evaluate (const typename Traits::ElementType& e, 
 							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
@@ -86,7 +98,10 @@ namespace Dune {
 	  mutable std::vector<typename Traits::RangeType> yb;
 	};
 
-    // Piola transformation 
+    /** \brief DiscreteGridFunction with Piola transformation 
+     *
+     * \copydetails DiscreteGridFunction
+     */
 	template<typename T, typename X>
 	class DiscreteGridFunctionPiola
 	  : public GridFunctionInterface<
@@ -114,6 +129,10 @@ namespace Dune {
 	public:
 	  typedef typename BaseT::Traits Traits;
 	  
+      /** \brief Construct a DiscreteGridFunctionPiola
+       *
+       * \copydetails DiscreteGridFunction::DiscreteGridFunction(const GFS&,const X&)
+       */
 	  DiscreteGridFunctionPiola (const GFS& gfs, const X& x_)
 		: pgfs(&gfs), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
 	  {
