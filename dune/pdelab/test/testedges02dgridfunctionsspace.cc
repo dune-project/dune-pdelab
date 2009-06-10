@@ -10,9 +10,17 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/mpihelper.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+#ifdef HAVE_ALBERTA
 #include <dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/gridfactory.hh>
+#endif
+#ifdef HAVE_ALUGRID
 #include <dune/grid/alugrid.hh>
+#endif
+#ifdef HAVE_UG
+#include <dune/grid/uggrid.hh>
+#include <dune/grid/uggrid/uggridfactory.hh>
+#endif
 
 #include "../common/vtkexport.hh"
 #include "../gridfunctionspace/gridfunctionspace.hh"
@@ -41,7 +49,7 @@ void edgeS02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
   X x(gfs,0.0);                       // make coefficient vector
   x[2] = 1.0;                         // set a component
 
-  typedef Dune::PDELab::DiscreteGridFunctionPiola<GFS,X> DGF;
+  typedef Dune::PDELab::DiscreteGridFunctionEdge<GFS,X> DGF;
   DGF dgf(gfs,x);                     // make a grid function
 
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);  // plot result
@@ -75,19 +83,18 @@ int main(int argc, char** argv)
       type.makeTriangle();
       std::vector<unsigned int> vid(3);
 
-      vid[0] = 2; vid[1] = 1; vid[2] = 0; gf.insertElement(type, vid);
+      vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
       //vid[0] = 1; vid[1] = 3; vid[2] = 2; gf.insertElement(type, vid);
 
       Grid *grid = gf.createGrid("AlbertaGrid", true);
       //grid->globalRefine(1);
 
-      edgeS02DGridFunctionSpace(grid->leafView(), "albreta");
+      edgeS02DGridFunctionSpace(grid->leafView(), "alberta");
 
       Dune::GridFactory<Grid>::destroyGrid(grid);
     }
     result = 0;
 #endif // HAVE_ALBERTA
-
 
 #ifdef HAVE_ALUGRID
     {
@@ -100,6 +107,34 @@ int main(int argc, char** argv)
     }
     result = 0;
 #endif // HAVE_ALUGRID
+
+#ifdef HAVE_UG
+    {
+      typedef Dune::UGGrid<2> Grid;
+      Dune::GridFactory<Grid> gf;
+      Dune::FieldVector<Grid::ctype, 2> pos;
+
+      pos[0] = 0; pos[1] = 0; gf.insertVertex(pos);
+      pos[0] = 1; pos[1] = 0; gf.insertVertex(pos);
+      pos[0] = 0; pos[1] = 1; gf.insertVertex(pos);
+      //pos[0] = 1; pos[1] = 1; gf.insertVertex(pos);
+
+      Dune::GeometryType type;
+      type.makeTriangle();
+      std::vector<unsigned int> vid(3);
+
+      vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
+      //vid[0] = 1; vid[1] = 3; vid[2] = 2; gf.insertElement(type, vid);
+
+      Grid *grid = gf.createGrid();
+      //grid->globalRefine(1);
+
+      edgeS02DGridFunctionSpace(grid->leafView(), "ug");
+
+      delete grid;
+    }
+    result = 0;
+#endif // HAVE_ALBERTA
 
     return result;
   }

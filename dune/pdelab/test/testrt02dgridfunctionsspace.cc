@@ -10,9 +10,17 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/mpihelper.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+#ifdef HAVE_ALBERTA
 #include <dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/gridfactory.hh>
+#endif
+#ifdef HAVE_ALUGRID
 #include <dune/grid/alugrid.hh>
+#endif
+#ifdef HAVE_UG
+#include <dune/grid/uggrid.hh>
+#include <dune/grid/uggrid/uggridfactory.hh>
+#endif
 
 #include "../common/vtkexport.hh"
 #include "../gridfunctionspace/gridfunctionspace.hh"
@@ -61,6 +69,7 @@ int main(int argc, char** argv)
     int result = 77;
 
 #ifdef HAVE_ALBERTA
+    std::cout << "Alberta" << std::endl;
     {
       typedef Dune::AlbertaGrid<2, 2> Grid;
       Dune::GridFactory<Grid> gf;
@@ -75,7 +84,7 @@ int main(int argc, char** argv)
       type.makeTriangle();
       std::vector<unsigned int> vid(3);
 
-      vid[0] = 2; vid[1] = 1; vid[2] = 0; gf.insertElement(type, vid);
+      vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
       //vid[0] = 1; vid[1] = 3; vid[2] = 2; gf.insertElement(type, vid);
 
       Grid *grid = gf.createGrid("AlbertaGrid", true);
@@ -90,6 +99,7 @@ int main(int argc, char** argv)
 
 
 #ifdef HAVE_ALUGRID
+    std::cout << "ALU" << std::endl;
     {
       typedef Dune::ALUSimplexGrid<2, 2> Grid;
 
@@ -100,6 +110,35 @@ int main(int argc, char** argv)
     }
     result = 0;
 #endif // HAVE_ALUGRID
+
+#ifdef HAVE_UG
+    std::cout << "UG" << std::endl;
+    {
+      typedef Dune::UGGrid<2> Grid;
+      Dune::GridFactory<Grid> gf;
+      Dune::FieldVector<Grid::ctype, 2> pos;
+
+      pos[0] = 0; pos[1] = 0; gf.insertVertex(pos);
+      pos[0] = 1; pos[1] = 0; gf.insertVertex(pos);
+      pos[0] = 0; pos[1] = 1; gf.insertVertex(pos);
+      //pos[0] = 1; pos[1] = 1; gf.insertVertex(pos);
+
+      Dune::GeometryType type;
+      type.makeTriangle();
+      std::vector<unsigned int> vid(3);
+
+      vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
+      //vid[0] = 1; vid[1] = 3; vid[2] = 2; gf.insertElement(type, vid);
+
+      Grid *grid = gf.createGrid();
+      //grid->globalRefine(1);
+
+      rt02DGridFunctionSpace(grid->leafView(), "ug");
+
+      delete grid;
+    }
+    result = 0;
+#endif // HAVE_ALBERTA
 
     return result;
   }
