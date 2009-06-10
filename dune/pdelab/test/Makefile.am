@@ -3,7 +3,8 @@
 NORMALTESTS = testcountingptr testedges02d testedges02dgridfunctionsspace \
 	testmultitypetree testfunction \
 	testanalytic testfiniteelementmap testgridfunctionspace \
-	testlocalfunctionspace testutilities testpk testrt0 testconstraints \
+	testlocalfunctionspace testutilities testpk \
+	testrt0 testrt02dgridfunctionsspace testconstraints \
 	testlaplacedirichletp12d testlaplacedirichletccfv testpoisson
 
 # list of tests to run
@@ -63,6 +64,14 @@ testpk_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LD
 testrt0_SOURCES = testrt0.cc
 testrt0_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
 testrt0_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+
+testrt02dgridfunctionsspace_SOURCES = testrt02dgridfunctionsspace.cc
+testrt02dgridfunctionsspace_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) \
+	$(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
+testrt02dgridfunctionsspace_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) \
+	$(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) \
+	$(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) \
+	$(DUNE_LDFLAGS) $(DUNE_LIBS)
 
 testconstraints_SOURCES = testconstraints.cc
 testconstraints_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)

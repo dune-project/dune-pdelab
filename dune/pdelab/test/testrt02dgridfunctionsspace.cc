@@ -17,23 +17,23 @@
 #include "../common/vtkexport.hh"
 #include "../gridfunctionspace/gridfunctionspace.hh"
 #include "../gridfunctionspace/gridfunctionspaceutilities.hh"
-#include "../finiteelementmap/edges02dfem.hh"
+#include "../finiteelementmap/rt02dfem.hh"
 
 template<typename GV>
-void edgeS02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
+void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
 {
   typedef typename GV::Grid::ctype D; // domain type
   typedef double R;                   // range type
 
   std::ostringstream filename;
-  filename << "edges02dgridfunctionspace";
+  filename << "rt02dgridfunctionspace";
   if(suffix != "") filename << "-" << suffix;
 
-  Dune::PDELab::EdgeS02DLocalFiniteElementMap<GV,D,R> fem(gv);   // maps entity to finite element
+  Dune::PDELab::RT02DLocalFiniteElementMap<GV,D,R> fem(gv);   // maps entity to finite element
 
   typedef Dune::PDELab::GridFunctionSpace<
     GV,
-    Dune::PDELab::EdgeS02DLocalFiniteElementMap<GV,D,R>
+    Dune::PDELab::RT02DLocalFiniteElementMap<GV,D,R>
     > GFS;
   GFS gfs(gv,fem);                    // make grid function space
 
@@ -45,7 +45,7 @@ void edgeS02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
   DGF dgf(gfs,x);                     // make a grid function
 
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);  // plot result
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"edges02d"));
+  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"rt02d"));
   vtkwriter.write(filename.str(),Dune::VTKOptions::ascii);
 }
 
@@ -81,7 +81,7 @@ int main(int argc, char** argv)
       Grid *grid = gf.createGrid("AlbertaGrid", true);
       //grid->globalRefine(1);
 
-      edgeS02DGridFunctionSpace(grid->leafView(), "albreta");
+      rt02DGridFunctionSpace(grid->leafView(), "alberta");
 
       Dune::GridFactory<Grid>::destroyGrid(grid);
     }
@@ -96,7 +96,7 @@ int main(int argc, char** argv)
       Grid grid("grids/2dtriangle.alu");
       //grid->globalRefine(1);
 
-      edgeS02DGridFunctionSpace(grid.leafView(), "alu");
+      rt02DGridFunctionSpace(grid.leafView(), "alu");
     }
     result = 0;
 #endif // HAVE_ALUGRID
