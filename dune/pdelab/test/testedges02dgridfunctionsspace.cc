@@ -37,17 +37,17 @@ void edgeS02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
   filename << "edges02dgridfunctionspace";
   if(suffix != "") filename << "-" << suffix;
 
-  Dune::PDELab::EdgeS02DLocalFiniteElementMap<GV,D,R> fem(gv);   // maps entity to finite element
+  Dune::PDELab::EdgeS02DLocalFiniteElementMap<GV,R> fem(gv);   // maps entity to finite element
 
   typedef Dune::PDELab::GridFunctionSpace<
     GV,
-    Dune::PDELab::EdgeS02DLocalFiniteElementMap<GV,D,R>
+    Dune::PDELab::EdgeS02DLocalFiniteElementMap<GV,R>
     > GFS;
   GFS gfs(gv,fem);                    // make grid function space
 
   typedef typename GFS::template VectorContainer<R>::Type X;
   X x(gfs,0.0);                       // make coefficient vector
-  x[2] = 1.0;                         // set a component
+  x[0] = 1.0;                         // set a component
 
   typedef Dune::PDELab::DiscreteGridFunctionEdge<GFS,X> DGF;
   DGF dgf(gfs,x);                     // make a grid function
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
       //vid[0] = 1; vid[1] = 3; vid[2] = 2; gf.insertElement(type, vid);
 
       Grid *grid = gf.createGrid("AlbertaGrid", true);
-      //grid->globalRefine(1);
+      grid->globalRefine(1);
 
       edgeS02DGridFunctionSpace(grid->leafView(), "alberta");
 
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
       typedef Dune::ALUSimplexGrid<2, 2> Grid;
 
       Grid grid("grids/2dtriangle.alu");
-      //grid->globalRefine(1);
+      grid.globalRefine(1);
 
       edgeS02DGridFunctionSpace(grid.leafView(), "alu");
     }
@@ -127,7 +127,7 @@ int main(int argc, char** argv)
       //vid[0] = 1; vid[1] = 3; vid[2] = 2; gf.insertElement(type, vid);
 
       Grid *grid = gf.createGrid();
-      //grid->globalRefine(1);
+      grid->globalRefine(1);
 
       edgeS02DGridFunctionSpace(grid->leafView(), "ug");
 
