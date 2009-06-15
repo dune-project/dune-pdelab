@@ -9,6 +9,9 @@
 
 #include <dune/common/fvector.hh>
 #include <dune/common/mpihelper.hh>
+#include <dune/common/smartpointer.hh>
+#include <dune/common/static_assert.hh>
+
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #ifdef HAVE_ALBERTA
 #include <dune/grid/albertagrid.hh>
@@ -28,7 +31,7 @@
 #include "../finiteelementmap/edges02dfem.hh"
 
 template<typename GV>
-void edgeS02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
+void edgeS02DGridFunctionSpace (const GV& gv, const std::string &suffix = "", unsigned int index = 0)
 {
   typedef typename GV::Grid::ctype D; // domain type
   typedef double R;                   // range type
@@ -47,7 +50,7 @@ void edgeS02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
 
   typedef typename GFS::template VectorContainer<R>::Type X;
   X x(gfs,0.0);                       // make coefficient vector
-  x[0] = 1.0;                         // set a component
+  x[index % gfs.globalSize()] = 1.0;  // set a component
 
   typedef Dune::PDELab::DiscreteGridFunctionEdge<GFS,X> DGF;
   DGF dgf(gfs,x);                     // make a grid function
@@ -57,6 +60,90 @@ void edgeS02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
   vtkwriter.write(filename.str(),Dune::VTKOptions::ascii);
 }
 
+// UnitTriangle
+
+template<typename Grid>
+class UnitTriangleMaker {
+  dune_static_assert(Grid::dimension == 2, "Dimension of grid must be 2");
+  dune_static_assert(Grid::dimensionworld == 2, "Dimension of world must be 2");
+public:
+  static Dune::SmartPointer<Grid> create() {
+    Dune::GridFactory<Grid> gf;
+    Dune::FieldVector<typename Grid::ctype, 2> pos;
+
+    pos[0] = 0; pos[1] = 0; gf.insertVertex(pos);
+    pos[0] = 1; pos[1] = 0; gf.insertVertex(pos);
+    pos[0] = 0; pos[1] = 1; gf.insertVertex(pos);
+
+    Dune::GeometryType type;
+    type.makeTriangle();
+    std::vector<unsigned int> vid(3);
+
+    vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
+
+    return gf.createGrid();
+  }
+};
+
+#ifdef HAVE_ALUGRID
+template<>
+class UnitTriangleMaker<Dune::ALUSimplexGrid<2,2> > {
+  typedef Dune::ALUSimplexGrid<2,2> Grid;
+public:
+  static Dune::SmartPointer<Grid> create() {
+    return new Grid("grids/2dtriangle.alu");
+  }
+};
+#endif // HAVE_ALUGRID
+
+// TriangulatedUnitSquare
+
+template<typename Grid>
+class TriangulatedUnitSquareMaker {
+  dune_static_assert(Grid::dimension == 2, "Dimension of grid must be 2");
+  dune_static_assert(Grid::dimensionworld == 2, "Dimension of world must be 2");
+public:
+  static Dune::SmartPointer<Grid> create() {
+    Dune::GridFactory<Grid> gf;
+    Dune::FieldVector<typename Grid::ctype, 2> pos;
+
+    pos[0] = 0; pos[1] = 0; gf.insertVertex(pos);
+    pos[0] = 1; pos[1] = 0; gf.insertVertex(pos);
+    pos[0] = 0; pos[1] = 1; gf.insertVertex(pos);
+    pos[0] = 1; pos[1] = 1; gf.insertVertex(pos);
+
+    Dune::GeometryType type;
+    type.makeTriangle();
+    std::vector<unsigned int> vid(3);
+
+    vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
+    vid[0] = 1; vid[1] = 2; vid[2] = 3; gf.insertElement(type, vid);
+
+    return gf.createGrid();
+  }
+};
+
+#ifdef HAVE_ALUGRID
+template<>
+class TriangulatedUnitSquareMaker<Dune::ALUSimplexGrid<2,2> > {
+  typedef Dune::ALUSimplexGrid<2,2> Grid;
+public:
+  static Dune::SmartPointer<Grid> create() {
+    return new Grid("grids/2dsimplex.alu");
+  }
+};
+#endif // HAVE_ALUGRID
+
+template<typename Grid>
+void test(Dune::SmartPointer<Grid> grid, unsigned int index, int &result, std::string name = "", unsigned int refine = 0)
+{
+  grid->globalRefine(refine);
+
+  if(name == "") name = grid->name();
+
+  edgeS02DGridFunctionSpace(grid->leafView(), name);
+  result = 0;
+}
 
 int main(int argc, char** argv)
 {
@@ -69,71 +156,24 @@ int main(int argc, char** argv)
     int result = 77;
 
 #ifdef HAVE_ALBERTA
-    {
-      typedef Dune::AlbertaGrid<2, 2> Grid;
-      Dune::GridFactory<Grid> gf;
-      Dune::FieldVector<Grid::ctype, 2> pos;
-
-      pos[0] = 0; pos[1] = 0; gf.insertVertex(pos);
-      pos[0] = 1; pos[1] = 0; gf.insertVertex(pos);
-      pos[0] = 0; pos[1] = 1; gf.insertVertex(pos);
-      //pos[0] = 1; pos[1] = 1; gf.insertVertex(pos);
-
-      Dune::GeometryType type;
-      type.makeTriangle();
-      std::vector<unsigned int> vid(3);
-
-      vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
-      //vid[0] = 1; vid[1] = 3; vid[2] = 2; gf.insertElement(type, vid);
-
-      Grid *grid = gf.createGrid("AlbertaGrid", true);
-      grid->globalRefine(1);
-
-      edgeS02DGridFunctionSpace(grid->leafView(), "alberta");
-
-      Dune::GridFactory<Grid>::destroyGrid(grid);
-    }
-    result = 0;
-#endif // HAVE_ALBERTA
+    test(UnitTriangleMaker          <Dune::AlbertaGrid<2, 2>    >::create(),
+         0, result, "alberta-triangle", 2);
+    test(TriangulatedUnitSquareMaker<Dune::AlbertaGrid<2, 2>    >::create(),
+         0, result, "alberta-square",   2);
+#endif
 
 #ifdef HAVE_ALUGRID
-    {
-      typedef Dune::ALUSimplexGrid<2, 2> Grid;
-
-      Grid grid("grids/2dtriangle.alu");
-      grid.globalRefine(1);
-
-      edgeS02DGridFunctionSpace(grid.leafView(), "alu");
-    }
-    result = 0;
+    test(UnitTriangleMaker          <Dune::ALUSimplexGrid<2, 2> >::create(),
+         0, result, "alu-triangle",     2);
+    test(TriangulatedUnitSquareMaker<Dune::ALUSimplexGrid<2, 2> >::create(),
+         0, result, "alu-square",       2);
 #endif // HAVE_ALUGRID
 
 #ifdef HAVE_UG
-    {
-      typedef Dune::UGGrid<2> Grid;
-      Dune::GridFactory<Grid> gf;
-      Dune::FieldVector<Grid::ctype, 2> pos;
-
-      pos[0] = 0; pos[1] = 0; gf.insertVertex(pos);
-      pos[0] = 1; pos[1] = 0; gf.insertVertex(pos);
-      pos[0] = 0; pos[1] = 1; gf.insertVertex(pos);
-      //pos[0] = 1; pos[1] = 1; gf.insertVertex(pos);
-
-      Dune::GeometryType type;
-      type.makeTriangle();
-      std::vector<unsigned int> vid(3);
-
-      vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
-      //vid[0] = 1; vid[1] = 3; vid[2] = 2; gf.insertElement(type, vid);
-
-      Grid *grid = gf.createGrid();
-      grid->globalRefine(1);
-
-      edgeS02DGridFunctionSpace(grid->leafView(), "ug");
-
-      delete grid;
-    }
-    result = 0;
+    test(UnitTriangleMaker          <Dune::UGGrid<2>            >::create(),
+         0, result, "ug-triangle",      2);
+    test(TriangulatedUnitSquareMaker<Dune::UGGrid<2>            >::create(),
+         0, result, "ug-square",        2);
 #endif // HAVE_ALBERTA
 
     return result;
