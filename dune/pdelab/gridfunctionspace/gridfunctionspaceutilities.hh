@@ -98,6 +98,81 @@ namespace Dune {
 	  mutable std::vector<typename Traits::RangeType> yb;
 	};
 
+	//! \brief convert a single component function space with experimental
+	//! global finite elements into a grid function
+    /**
+     * The functions can be vector-valued.
+     *
+     * This is just an intermediate solution to provide VTK output.
+     *
+     * \tparam T Type of GridFunctionSpace.  The LocalBasis must provide the
+     *           evaluateFunctionGlobal() method.
+     * \tparam X Type of coefficients vector
+     */
+	template<typename T, typename X>
+	class DiscreteGridFunctionGlobal
+	  : public GridFunctionInterface<
+          GridFunctionTraits<
+            typename T::Traits::GridViewType,
+            typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+            T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::dimRange,
+            typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeType
+            >,
+          DiscreteGridFunctionGlobal<T,X>
+          >
+	{
+	  typedef T GFS;
+
+	  typedef GridFunctionInterface<
+        GridFunctionTraits<
+          typename T::Traits::GridViewType,
+          typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+          T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::dimRange,
+          typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeType
+          >,
+        DiscreteGridFunctionGlobal<T,X>
+        > BaseT;
+	
+	public:
+	  typedef typename BaseT::Traits Traits;
+	  
+      /** \brief Construct a DiscreteGridFunctionGlobal
+       *
+       * \param gfs The GridFunctionsSpace
+       * \param x_  The coefficients vector
+       */
+	  DiscreteGridFunctionGlobal (const GFS& gfs, const X& x_)
+		: pgfs(&gfs), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
+	  {
+	  }
+
+      // Evaluate
+	  inline void evaluate (const typename Traits::ElementType& e, 
+							const typename Traits::DomainType& x,
+							typename Traits::RangeType& y) const
+	  {  
+		lfs.bind(e);
+		lfs.vread(xg,xl);
+		lfs.localFiniteElement().localBasis().evaluateFunctionGlobal(x,yb,e.geometry());
+		y = 0;
+		for (unsigned int i=0; i<yb.size(); i++)
+		  y.axpy(xl[i],yb[i]);
+ 	  }
+
+      //! get a reference to the GridView
+	  inline const typename Traits::GridViewType& getGridView ()
+	  {
+		return pgfs->gridview();
+	  }
+
+	private:
+	  CP<GFS const> pgfs;
+	  const X& xg;
+	  mutable typename GFS::LocalFunctionSpace lfs;
+	  mutable std::vector<typename Traits::RangeFieldType> xl;
+	  mutable std::vector<typename Traits::RangeType> yb;
+	};
+
     /** \brief DiscreteGridFunction with Piola transformation 
      *
      * \copydetails DiscreteGridFunction

@@ -52,7 +52,7 @@ void edgeS02DGridFunctionSpace (const GV& gv, const std::string &suffix = "", un
   X x(gfs,0.0);                       // make coefficient vector
   x[index % gfs.globalSize()] = 1.0;  // set a component
 
-  typedef Dune::PDELab::DiscreteGridFunctionEdge<GFS,X> DGF;
+  typedef Dune::PDELab::DiscreteGridFunctionGlobal<GFS,X> DGF;
   DGF dgf(gfs,x);                     // make a grid function
 
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);  // plot result
