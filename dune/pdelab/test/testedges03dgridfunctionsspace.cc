@@ -51,7 +51,7 @@ void edgeS03DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
   typedef typename GFS::template VectorContainer<R>::Type X;
   std::vector<Dune::SmartPointer<X> > x(gfs.globalSize(),0);
 
-  typedef Dune::PDELab::DiscreteGridFunctionEdge<GFS,X> DGF;
+  typedef Dune::PDELab::DiscreteGridFunctionGlobal<GFS,X> DGF;
   std::vector<Dune::SmartPointer<DGF> > dgf(gfs.globalSize(),0);
 
 //   typedef Dune::PDELab::DiscreteGridFunctionGlobalCurl<GFS,X> CurlGF;
