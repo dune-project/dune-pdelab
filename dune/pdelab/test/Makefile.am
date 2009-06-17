@@ -1,7 +1,7 @@
 # $Id: Makefile.am 586 2006-04-28 13:41:31Z mblatt $
 
 NORMALTESTS = testcountingptr testedges02d testedges02dgridfunctionsspace \
-	testmultitypetree testfunction \
+	testedges03dgridfunctionsspace testmultitypetree testfunction \
 	testanalytic testfiniteelementmap testgridfunctionspace \
 	testlocalfunctionspace testutilities testpk \
 	testrt0 testrt02dgridfunctionsspace testconstraints \
@@ -25,6 +25,14 @@ testedges02dgridfunctionsspace_SOURCES = testedges02dgridfunctionsspace.cc
 testedges02dgridfunctionsspace_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) \
 	$(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
 testedges02dgridfunctionsspace_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) \
+	$(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) \
+	$(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) \
+	$(DUNE_LDFLAGS) $(DUNE_LIBS)
+
+testedges03dgridfunctionsspace_SOURCES = testedges03dgridfunctionsspace.cc
+testedges03dgridfunctionsspace_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) \
+	$(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
+testedges03dgridfunctionsspace_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) \
 	$(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) \
 	$(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) \
 	$(DUNE_LDFLAGS) $(DUNE_LIBS)
