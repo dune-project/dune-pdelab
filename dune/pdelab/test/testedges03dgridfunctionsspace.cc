@@ -161,10 +161,13 @@ int main(int argc, char** argv)
     int result = 77;
 
 #ifdef HAVE_ALBERTA
-//     test(UnitTetrahedronMaker     <Dune::AlbertaGrid<3, 3>    >::create(),
-//          result, "alberta-tetrahedron", 0);
-//     test(TriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
-//          result, "alberta-cube",        0);
+#if (ALBERTA_DIM != 3)
+#error ALBERTA_DIM is not set to 3 -- please check the Makefile.am
+#endif
+    test(UnitTetrahedronMaker     <Dune::AlbertaGrid<3, 3>    >::create(),
+         result, "alberta-tetrahedron", 0);
+    test(TriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
+         result, "alberta-cube",        0);
 #endif
 
 #ifdef HAVE_ALUGRID

@@ -170,6 +170,9 @@ int main(int argc, char** argv)
     int result = 77;
 
 #ifdef HAVE_ALBERTA
+#if (ALBERTA_DIM != 2)
+#error ALBERTA_DIM is not set to 2 -- please check the Makefile.am
+#endif
     test(UnitTriangleMaker          <Dune::AlbertaGrid<2, 2>    >::create(),
          result, "alberta-triangle", 2);
     test(TriangulatedUnitSquareMaker<Dune::AlbertaGrid<2, 2>    >::create(),
