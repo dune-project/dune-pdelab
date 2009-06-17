@@ -31,7 +31,7 @@
 #include "../finiteelementmap/edges02dfem.hh"
 
 template<typename GV>
-void edgeS02DGridFunctionSpace (const GV& gv, const std::string &suffix = "", unsigned int index = 0)
+void edgeS02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
 {
   typedef typename GV::Grid::ctype D; // domain type
   typedef double R;                   // range type
@@ -149,7 +149,7 @@ public:
 #endif // HAVE_ALUGRID
 
 template<typename Grid>
-void test(Dune::SmartPointer<Grid> grid, unsigned int index, int &result, std::string name = "", unsigned int refine = 0)
+void test(Dune::SmartPointer<Grid> grid, int &result, std::string name = "", unsigned int refine = 0)
 {
   grid->globalRefine(refine);
 
@@ -171,23 +171,23 @@ int main(int argc, char** argv)
 
 #ifdef HAVE_ALBERTA
     test(UnitTriangleMaker          <Dune::AlbertaGrid<2, 2>    >::create(),
-         0, result, "alberta-triangle", 2);
+         result, "alberta-triangle", 2);
     test(TriangulatedUnitSquareMaker<Dune::AlbertaGrid<2, 2>    >::create(),
-         0, result, "alberta-square",   2);
+         result, "alberta-square",   2);
 #endif
 
 #ifdef HAVE_ALUGRID
     test(UnitTriangleMaker          <Dune::ALUSimplexGrid<2, 2> >::create(),
-         0, result, "alu-triangle",     2);
+         result, "alu-triangle",     2);
     test(TriangulatedUnitSquareMaker<Dune::ALUSimplexGrid<2, 2> >::create(),
-         0, result, "alu-square",       2);
+         result, "alu-square",       2);
 #endif // HAVE_ALUGRID
 
 #ifdef HAVE_UG
     test(UnitTriangleMaker          <Dune::UGGrid<2>            >::create(),
-         0, result, "ug-triangle",      2);
+         result, "ug-triangle",      2);
     test(TriangulatedUnitSquareMaker<Dune::UGGrid<2>            >::create(),
-         0, result, "ug-square",        2);
+         result, "ug-square",        2);
 #endif // HAVE_ALBERTA
 
     return result;
