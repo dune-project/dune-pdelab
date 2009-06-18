@@ -10,25 +10,24 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/mpihelper.hh>
 #include <dune/common/smartpointer.hh>
-#include <dune/common/static_assert.hh>
 
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #ifdef HAVE_ALBERTA
 #include <dune/grid/albertagrid.hh>
-#include <dune/grid/albertagrid/gridfactory.hh>
 #endif
 #ifdef HAVE_ALUGRID
 #include <dune/grid/alugrid.hh>
 #endif
 #ifdef HAVE_UG
 #include <dune/grid/uggrid.hh>
-#include <dune/grid/uggrid/uggridfactory.hh>
 #endif
 
 #include "../common/vtkexport.hh"
 #include "../gridfunctionspace/gridfunctionspace.hh"
 #include "../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include "../finiteelementmap/edges02dfem.hh"
+
+#include "stddomains.hh"
 
 template<typename GV>
 void edgeS02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
@@ -74,80 +73,6 @@ void edgeS02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
   vtkwriter.write(filename.str(),Dune::VTKOptions::ascii);
 }
 
-// UnitTriangle
-
-template<typename Grid>
-class UnitTriangleMaker {
-  dune_static_assert(Grid::dimension == 2, "Dimension of grid must be 2");
-  dune_static_assert(Grid::dimensionworld == 2, "Dimension of world must be 2");
-public:
-  static Dune::SmartPointer<Grid> create() {
-    Dune::GridFactory<Grid> gf;
-    Dune::FieldVector<typename Grid::ctype, 2> pos;
-
-    pos[0] = 0; pos[1] = 0; gf.insertVertex(pos);
-    pos[0] = 1; pos[1] = 0; gf.insertVertex(pos);
-    pos[0] = 0; pos[1] = 1; gf.insertVertex(pos);
-
-    Dune::GeometryType type;
-    type.makeTriangle();
-    std::vector<unsigned int> vid(3);
-
-    vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
-
-    return gf.createGrid();
-  }
-};
-
-#ifdef HAVE_ALUGRID
-template<>
-class UnitTriangleMaker<Dune::ALUSimplexGrid<2,2> > {
-  typedef Dune::ALUSimplexGrid<2,2> Grid;
-public:
-  static Dune::SmartPointer<Grid> create() {
-    return new Grid("grids/2dtriangle.alu");
-  }
-};
-#endif // HAVE_ALUGRID
-
-// TriangulatedUnitSquare
-
-template<typename Grid>
-class TriangulatedUnitSquareMaker {
-  dune_static_assert(Grid::dimension == 2, "Dimension of grid must be 2");
-  dune_static_assert(Grid::dimensionworld == 2, "Dimension of world must be 2");
-public:
-  static Dune::SmartPointer<Grid> create() {
-    Dune::GridFactory<Grid> gf;
-    Dune::FieldVector<typename Grid::ctype, 2> pos;
-
-    pos[0] = 0; pos[1] = 0; gf.insertVertex(pos);
-    pos[0] = 1; pos[1] = 0; gf.insertVertex(pos);
-    pos[0] = 0; pos[1] = 1; gf.insertVertex(pos);
-    pos[0] = 1; pos[1] = 1; gf.insertVertex(pos);
-
-    Dune::GeometryType type;
-    type.makeTriangle();
-    std::vector<unsigned int> vid(3);
-
-    vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
-    vid[0] = 1; vid[1] = 2; vid[2] = 3; gf.insertElement(type, vid);
-
-    return gf.createGrid();
-  }
-};
-
-#ifdef HAVE_ALUGRID
-template<>
-class TriangulatedUnitSquareMaker<Dune::ALUSimplexGrid<2,2> > {
-  typedef Dune::ALUSimplexGrid<2,2> Grid;
-public:
-  static Dune::SmartPointer<Grid> create() {
-    return new Grid("grids/2dsimplex.alu");
-  }
-};
-#endif // HAVE_ALUGRID
-
 template<typename Grid>
 void test(Dune::SmartPointer<Grid> grid, int &result, std::string name = "", unsigned int refine = 0)
 {
@@ -161,6 +86,9 @@ void test(Dune::SmartPointer<Grid> grid, int &result, std::string name = "", uns
 
 int main(int argc, char** argv)
 {
+  using Dune::PDELab::UnitTriangleMaker;
+  using Dune::PDELab::TriangulatedUnitSquareMaker;
+
   try{
     //Maybe initialize Mpi
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
