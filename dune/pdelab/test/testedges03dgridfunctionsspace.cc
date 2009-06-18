@@ -54,14 +54,14 @@ void edgeS03DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
   typedef Dune::PDELab::DiscreteGridFunctionGlobal<GFS,X> DGF;
   std::vector<Dune::SmartPointer<DGF> > dgf(gfs.globalSize(),0);
 
-//   typedef Dune::PDELab::DiscreteGridFunctionGlobalCurl<GFS,X> CurlGF;
-//   std::vector<Dune::SmartPointer<CurlGF> > curlgf(gfs.globalSize(),0);
+  typedef Dune::PDELab::DiscreteGridFunctionGlobalCurl<GFS,X> CurlGF;
+  std::vector<Dune::SmartPointer<CurlGF> > curlgf(gfs.globalSize(),0);
 
   for(unsigned int i = 0; i < gfs.globalSize(); ++i) {
     x[i] = new X(gfs,0.0);
     (*x[i])[i] = 1.0;
     dgf[i] = new DGF(gfs,*x[i]);            // make a grid function
-//     curlgf[i] = new CurlGF(gfs,*x[i]);      // make a grid function of the curl
+    curlgf[i] = new CurlGF(gfs,*x[i]);      // make a grid function of the curl
   }
 
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);  // plot result
@@ -69,7 +69,7 @@ void edgeS03DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
     std::ostringstream num;
     num << i;
     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(*dgf[i],"edges03d_"+num.str()));
-//     vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<CurlGF>(*curlgf[i],"curl_edges03d_"+num.str()));
+    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<CurlGF>(*curlgf[i],"curl_edges03d_"+num.str()));
   }
   vtkwriter.write(filename.str(),Dune::VTKOptions::ascii);
 }

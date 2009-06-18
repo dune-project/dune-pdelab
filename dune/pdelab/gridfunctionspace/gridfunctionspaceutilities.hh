@@ -175,14 +175,100 @@ namespace Dune {
 	};
 
 	//! \brief convert a single component function space with experimental
-	//! global finite elements into a grid function
+	//! global finite elements into a grid function representing the curl
     /**
-     * The functions can be vector-valued.
+     * The function values should be 3-component vectors.  The Curl will be a
+     * 3-component function.
      *
      * This is just an intermediate solution to provide VTK output.
      *
      * \tparam T Type of GridFunctionSpace.  The LocalBasis must provide the
-     *           evaluateFunctionGlobal() method.
+     *           evaluateJacobianGlobal() method.
+     * \tparam X Type of coefficients vector
+     */
+	template<typename T, typename X>
+	class DiscreteGridFunctionGlobalCurl
+	  : public GridFunctionInterface<
+          GridFunctionTraits<
+            typename T::Traits::GridViewType,
+            typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+            T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::dimRange,
+            typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeType
+            >,
+          DiscreteGridFunctionGlobalCurl<T,X>
+          >
+	{
+      dune_static_assert(
+        T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::dimRange == 3,
+        "Range dimension of localbasis must be 3 for DiscreteGridFunctionGlobalCurl");
+      dune_static_assert(
+        T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::dimDomain == 3,
+        "Domain dimension of localbasis must be 3 for DiscreteGridFunctionGlobalCurl");
+	  typedef T GFS;
+	  typedef GridFunctionInterface<
+        GridFunctionTraits<
+          typename T::Traits::GridViewType,
+          typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+          T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::dimRange,
+          typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeType
+          >,
+        DiscreteGridFunctionGlobalCurl<T,X>
+        > BaseT;
+
+	public:
+	  typedef typename BaseT::Traits Traits;
+	  
+      /** \brief Construct a DiscreteGridFunctionGlobalCurl
+       *
+       * \param gfs The GridFunctionsSpace
+       * \param x_  The coefficients vector
+       */
+	  DiscreteGridFunctionGlobalCurl (const GFS& gfs, const X& x_)
+		: pgfs(&gfs), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), J(gfs.maxLocalSize())
+	  {
+	  }
+
+      // Evaluate
+	  inline void evaluate (const typename Traits::ElementType& e, 
+							const typename Traits::DomainType& x,
+							typename Traits::RangeType& y) const
+	  {
+		lfs.bind(e);
+		lfs.vread(xg,xl);
+		lfs.localFiniteElement().localBasis().evaluateJacobianGlobal(x,J,e.geometry());
+        y = 0;
+		for (unsigned int i=0; i<J.size(); i++) {
+		  y[0] += xl[i]*(J[i][2][1] - J[i][1][2]);
+		  y[1] += xl[i]*(J[i][0][2] - J[i][2][0]);
+		  y[2] += xl[i]*(J[i][1][0] - J[i][0][1]);
+        }
+ 	  }
+
+      //! get a reference to the GridView
+	  inline const typename Traits::GridViewType& getGridView ()
+	  {
+		return pgfs->gridview();
+	  }
+
+	private:
+	  CP<GFS const> pgfs;
+	  const X& xg;
+	  mutable typename GFS::LocalFunctionSpace lfs;
+	  mutable std::vector<typename Traits::RangeFieldType> xl;
+      mutable std::vector<typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::JacobianType> J;
+	};
+
+	//! global finite elements into a grid function representing the curl
+    /**
+     * The function values should be 2-component vectors.  The Curl will be a
+     * 1-component function.  (If the function itself has values in the
+     * x-y-plane, the curl will point in z-direction).  It is assumed the the
+     * container used to aggregate the components is a FieldVector.
+     *
+     * This is just an intermediate solution to provide VTK output.
+     *
+     * \tparam T Type of GridFunctionSpace.  The LocalBasis must provide the
+     *           evaluateJacobianGlobal() method.
      * \tparam X Type of coefficients vector
      */
 	template<typename T, typename X>
@@ -223,7 +309,7 @@ namespace Dune {
 	public:
 	  typedef typename BaseT::Traits Traits;
 	  
-      /** \brief Construct a DiscreteGridFunctionGlobal
+      /** \brief Construct a DiscreteGridFunctionGlobalCurl2D
        *
        * \param gfs The GridFunctionsSpace
        * \param x_  The coefficients vector
