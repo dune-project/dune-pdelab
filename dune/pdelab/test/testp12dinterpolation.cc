@@ -74,7 +74,7 @@ double l2difference (const GV & gv, const U& u, const V &v, int qorder=1)
     const Dune::QuadratureRule<ct,dim>& 
       rule = Dune::QuadratureRules<ct,dim>::rule(gt,qorder);
 
-    for (typename Dune::QuadratureRule<ct,dim>::const_iterator qit=rule.begin(); 
+    for (typename Dune::QuadratureRule<ct,dim>::const_iterator qit=rule.begin();
          qit!=rule.end(); ++qit)
     {
       // evaluate the given grid functions at integration point
@@ -94,7 +94,7 @@ double l2difference (const GV & gv, const U& u, const V &v, int qorder=1)
 }
 
 template<typename GV, typename FEM>
-void interpolationerror (const GV& gv, const FEM &fem)
+double interpolationerror (const GV& gv, const FEM &fem)
 {
   typedef typename FEM::Traits::LocalFiniteElementType::Traits
     ::LocalBasisType::Traits::DomainFieldType D; // domain type
@@ -112,28 +112,50 @@ void interpolationerror (const GV& gv, const FEM &fem)
 
   Dune::PDELab::DiscreteGridFunction<GFS, X> v(gfs,x);
 
-  std::cout.precision(8);
-  std::cout << "interpolation error: " 
-            << std::setw(8) << gv.size(0) << " elements " 
-            << std::scientific << l2difference(gv,u,v,4) << std::endl;
+  return l2difference(gv,u,v,4);
 }
 
 template<typename Grid>
-void test(Dune::SmartPointer<Grid> grid, int &result, std::string name = "")
+void test(Dune::SmartPointer<Grid> grid, int &result, unsigned int maxelements, std::string name = "")
 {
   if(name == "") name = grid->name();
-  name = "p12dinterpolation-"+name;
+
+  std::cout << std::endl
+            << "Testing P12D interpolation with " << name << std::endl;
 
   typedef Dune::PDELab::P12DLocalFiniteElementMap<typename Grid::ctype, double> FEM;
   FEM fem;
 
-  for (int l=0; l<5; l++)
-  {
-    interpolationerror(grid->leafView(), fem);
-    grid->globalRefine(1);
-  }
+  std::cout << "interpolation level 0" << std::endl;
+  double error0 = interpolationerror(grid->leafView(), fem);
+  double h0 = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
+  std::cout << "interpolation error: " 
+            << std::setw(8) << grid->leafView().size(0) << " elements, h=" 
+            << std::scientific << h0 << ", error="
+            << std::scientific << error0 << std::endl;
 
-  result = 0;
+  while((unsigned int)(grid->leafView().size(0)) < maxelements)
+    grid->globalRefine(1);
+
+  std::cout << "interpolation level " << grid->maxLevel() << std::endl;
+  double errorf = interpolationerror(grid->leafView(), fem);
+  double hf = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
+  std::cout << "interpolation error: " 
+            << std::setw(8) << grid->leafView().size(0) << " elements, h=" 
+            << std::scientific << hf << ", error="
+            << std::scientific << errorf << std::endl;
+
+  double total_convergence = std::log(errorf/error0)/std::log(hf/h0);
+  std::cout << "interpolation total convergence: "
+            << std::scientific << total_convergence << std::endl;
+
+  if(result != 1)
+    result = 0;
+
+  if(total_convergence < 1.7) {
+    std::cout << "Error: interpolation total convergence < 1.7" << std::endl;
+    result = 1;
+  }
 }
 
 int main(int argc, char** argv)
@@ -142,9 +164,6 @@ int main(int argc, char** argv)
   using Dune::PDELab::TriangulatedUnitSquareMaker;
 
   try{
-    //Maybe initialize Mpi
-    Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
-
     // default exitcode 77 (=skipped); returned in case none of the supported
     // Grids were found
     int result = 77;
@@ -154,23 +173,23 @@ int main(int argc, char** argv)
 #error ALBERTA_DIM is not set to 2 -- please check the Makefile.am
 #endif
     test(UnitTriangleMaker          <Dune::AlbertaGrid<2, 2>    >::create(),
-         result, "alberta-triangle");
+         result, 250000, "alberta-triangle");
     test(TriangulatedUnitSquareMaker<Dune::AlbertaGrid<2, 2>    >::create(),
-         result, "alberta-square");
+         result, 250000, "alberta-square");
 #endif
 
 #ifdef HAVE_ALUGRID
     test(UnitTriangleMaker          <Dune::ALUSimplexGrid<2, 2> >::create(),
-         result, "alu-triangle");
+         result, 250000, "alu-triangle");
     test(TriangulatedUnitSquareMaker<Dune::ALUSimplexGrid<2, 2> >::create(),
-         result, "alu-square");
+         result, 250000, "alu-square");
 #endif // HAVE_ALUGRID
 
 #ifdef HAVE_UG
     test(UnitTriangleMaker          <Dune::UGGrid<2>            >::create(),
-         result, "ug-triangle");
+         result, 250000, "ug-triangle");
     test(TriangulatedUnitSquareMaker<Dune::UGGrid<2>            >::create(),
-         result, "ug-square");
+         result, 250000, "ug-square");
 #endif // HAVE_ALBERTA
 
     return result;
