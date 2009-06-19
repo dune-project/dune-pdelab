@@ -1,6 +1,7 @@
 # $Id: Makefile.am 586 2006-04-28 13:41:31Z mblatt $
 
-NORMALTESTS = testcountingptr testedges02d testedges02dgridfunctionsspace \
+NORMALTESTS = testcountingptr testedges02d \
+	testedges02dgridfunctionsspace testedges02dinterpolation \
 	testedges03dgridfunctionsspace testmultitypetree \
 	testp12dinterpolation testfunction \
 	testanalytic testfiniteelementmap testgridfunctionspace \
@@ -33,6 +34,17 @@ testedges02dgridfunctionsspace_LDFLAGS = $(AM_LDFLAGS) $(MPI_LDFLAGS)    \
 	$(ALBERTA_LDFLAGS) $(AMIRAMESH_LDFLAGS) $(UG_LDFLAGS)            \
 	$(ALUGRID_LDFLAGS) $(DUNE_LDFLAGS)
 testedges02dgridfunctionsspace_LDADD = -lalberta_2d $(ALBERTA_BASE_LIBS) \
+	$(AMIRAMESH_LIBS) $(UG_LIBS) $(ALUGRID_LIBS) $(DUNE_LIBS)
+
+testedges02dinterpolation_SOURCES = testedges02dinterpolation.cc
+testedges02dinterpolation_CPPFLAGS = $(AM_CPPFLAGS)                      \
+	$(ALBERTA_INCLUDE_CPPFLAGS) -DALBERTA_DIM=2 -DENABLE_ALBERTA     \
+	$(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS)             \
+	$(ALUGRID_CPPFLAGS)
+testedges02dinterpolation_LDFLAGS = $(AM_LDFLAGS) $(MPI_LDFLAGS)         \
+	$(ALBERTA_LDFLAGS) $(AMIRAMESH_LDFLAGS) $(UG_LDFLAGS)            \
+	$(ALUGRID_LDFLAGS) $(DUNE_LDFLAGS)
+testedges02dinterpolation_LDADD = -lalberta_2d $(ALBERTA_BASE_LIBS)      \
 	$(AMIRAMESH_LIBS) $(UG_LIBS) $(ALUGRID_LIBS) $(DUNE_LIBS)
 
 testedges03dgridfunctionsspace_SOURCES = testedges03dgridfunctionsspace.cc
