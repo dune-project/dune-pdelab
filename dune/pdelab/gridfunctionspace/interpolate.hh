@@ -20,14 +20,26 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-	template<typename F, bool FisLeaf, typename LFS, bool LFSisLeaf> 
+    // Backend for standard local interpolation
+    struct InterpolateBackendStandard
+    {
+      template<typename LFE, typename LF, typename XL>
+      void interpolate(const LFE &lfe, const LF &lf, XL &xl) const
+      {
+		lfe.localInterpolation().interpolate(lf,xl);
+      }
+    };
+
+    // Forward declaration of the metaprogram for visiting *nodes*
+	template<typename IB, typename F, bool FisLeaf, typename LFS, bool LFSisLeaf> 
 	struct InterpolateVisitNodeMetaProgram;
 
-	template<typename F, typename LFS, int n, int i> 
+    // metaprogram for visiting *children*
+	template<typename IB, typename F, typename LFS, int n, int i> 
 	struct InterpolateVisitChildMetaProgram // visit i'th child of inner node
 	{
 	  template<typename XG, typename E>
-	  static void interpolate (const F& f, const LFS& lfs, XG& xg, const E& e)
+	  static void interpolate (const IB &ib, const F& f, const LFS& lfs, XG& xg, const E& e)
 	  {
         // vist children of both nodes in pairs
 		typedef typename F::template Child<i>::Type FC;
@@ -36,27 +48,27 @@ namespace Dune {
         const FC& fc=f.template getChild<i>();
         const LFSC& lfsc=lfs.template getChild<i>();
 
-        InterpolateVisitNodeMetaProgram<FC,FC::isLeaf,LFSC,LFSC::isLeaf>::interpolate(fc,lfsc,xg,e);
-		InterpolateVisitChildMetaProgram<F,LFS,n,i+1>::interpolate(f,lfs,xg,e);
+        InterpolateVisitNodeMetaProgram<IB, FC,FC::isLeaf,LFSC,LFSC::isLeaf>::interpolate(ib, fc,lfsc,xg,e);
+		InterpolateVisitChildMetaProgram<IB, F,LFS,n,i+1>::interpolate(ib, f,lfs,xg,e);
 	  }
 	};
 
-	template<typename F, typename LFS, int n> 
-	struct InterpolateVisitChildMetaProgram<F,LFS,n,n> // end of child recursion
+	template<typename IB, typename F, typename LFS, int n> 
+	struct InterpolateVisitChildMetaProgram<IB, F,LFS,n,n> // end of child recursion
 	{
       // end of child recursion
 	  template<typename XG, typename E>
-	  static void interpolate (const F& f, const LFS& lfs, XG& xg, const E& e)
+	  static void interpolate (const IB &ib, const F& f, const LFS& lfs, XG& xg, const E& e)
 	  {
         return;
 	  }
 	};
 
-	template<typename F, bool FisLeaf, typename LFS, bool LFSisLeaf> 
+	template<typename IB, typename F, bool FisLeaf, typename LFS, bool LFSisLeaf> 
 	struct InterpolateVisitNodeMetaProgram // visit inner node
 	{
 	  template<typename XG, typename E>
-	  static void interpolate (const F& f, const LFS& lfs, XG& xg, const E& e)
+	  static void interpolate (const IB &ib, const F& f, const LFS& lfs, XG& xg, const E& e)
 	  {
         // both are inner nodes, visit all children
         // check that both have same number of children
@@ -64,15 +76,15 @@ namespace Dune {
 						   "both nodes must have same number of children");
  
         // start child recursion
-		InterpolateVisitChildMetaProgram<F,LFS,F::CHILDREN,0>::interpolate(f,lfs,xg,e);
+		InterpolateVisitChildMetaProgram<IB,F,LFS,F::CHILDREN,0>::interpolate(ib,f,lfs,xg,e);
 	  }
 	};
 
-	template<typename F, typename LFS> 
-	struct InterpolateVisitNodeMetaProgram<F,true,LFS,false> // try to interpolate components from vector valued function
+	template<typename IB, typename F, typename LFS> 
+	struct InterpolateVisitNodeMetaProgram<IB,F,true,LFS,false> // try to interpolate components from vector valued function
 	{
 	  template<typename XG, typename E>
-	  static void interpolate (const F& f, const LFS& lfs, XG& xg, const E& e)
+	  static void interpolate (const IB &ib, const F& f, const LFS& lfs, XG& xg, const E& e)
 	  {
 		dune_static_assert((static_cast<int>(LFS::isPower)==1),  
 						   "specialization only for power");
@@ -90,7 +102,7 @@ namespace Dune {
             LF localf(f,e);
             typedef SelectComponentAdapter<LF> LFCOMP;
             LFCOMP localfcomp(localf,k);
-            lfs.getChild(k).localFiniteElement().localInterpolation().interpolate(localfcomp,xl);
+            ib.interpolate(lfs.getChild(k).localFiniteElement(), localfcomp, xl);
 
             // write coefficients into local vector 
             lfs.getChild(k).vwrite(xl,xg);
@@ -98,11 +110,11 @@ namespace Dune {
 	  }
 	};
 
-	template<typename F, typename LFS> 
-	struct InterpolateVisitNodeMetaProgram<F,true,LFS,true> // leaf node node in both trees 
+	template<typename IB, typename F, typename LFS> 
+	struct InterpolateVisitNodeMetaProgram<IB,F,true,LFS,true> // leaf node node in both trees 
 	{
 	  template<typename XG, typename E>
-	  static void interpolate (const F& f, const LFS& lfs, XG& xg, const E& e)
+	  static void interpolate (const IB &ib, const F& f, const LFS& lfs, XG& xg, const E& e)
 	  {
         // now we are at a single component local function space
         // which is part of a multi component local function space
@@ -111,7 +123,7 @@ namespace Dune {
 		std::vector<typename XG::ElementType> xl(lfs.size());
 
 		// call interpolate for the basis
-		lfs.localFiniteElement().localInterpolation().interpolate(GridFunctionToLocalFunctionAdapter<F>(f,e),xl);
+		ib.interpolate(lfs.localFiniteElement(), GridFunctionToLocalFunctionAdapter<F>(f,e), xl);
 
 		// write coefficients into local vector 
 		lfs.vwrite(xl,xg);
@@ -141,7 +153,8 @@ namespace Dune {
           lfs.bind(*it);
 
           // call interpolate
-		  InterpolateVisitNodeMetaProgram<F,F::isLeaf,LFS,LFS::isLeaf>::interpolate(f,lfs,xg,*it);
+		  InterpolateVisitNodeMetaProgram<InterpolateBackendStandard,F,F::isLeaf,LFS,LFS::isLeaf>
+            ::interpolate(InterpolateBackendStandard(),f,lfs,xg,*it);
         }
     }
 
