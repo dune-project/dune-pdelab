@@ -125,9 +125,9 @@ int main(int argc, char** argv)
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
 
 #if HAVE_UG
- 	UGLDomain uggrid;
-  	uggrid.globalRefine(4);
-    testrt0(uggrid.leafView());
+    Dune::SmartPointer<Dune::UGGrid<2> > uggrid(TriangulatedLDomainMaker<Dune::UGGrid<2> >::create());
+  	uggrid->globalRefine(4);
+    testrt0(uggrid->leafView());
 #endif
 
 #if HAVE_ALBERTA

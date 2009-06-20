@@ -12,7 +12,7 @@
 #include"../finiteelementmap/q12dfem.hh"
 #include"../finiteelementmap/q22dfem.hh"
 #include"../finiteelementmap/q1fem.hh"
-#include"../finiteelementmap/edger12dfem.hh"
+#include"../finiteelementmap/edger02dfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../backend/istlvectorbackend.hh"
 
@@ -32,8 +32,8 @@ struct test<2> {
     Q12DFEM q12dfem;
     typedef Dune::PDELab::Q22DLocalFiniteElementMap<float,double> Q22DFEM;
     Q22DFEM q22dfem;
-    typedef Dune::PDELab::EdgeR12DLocalFiniteElementMap<float,double> EdgeR12DFEM;
-    EdgeR12DFEM edger12dfem;
+    typedef Dune::PDELab::EdgeR02DLocalFiniteElementMap<float,double> EdgeR02DFEM;
+    EdgeR02DFEM edger12dfem;
   
     // make a grid function space
     typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS; 
@@ -46,7 +46,7 @@ struct test<2> {
       Dune::PDELab::ISTLVectorBackend<1>,
       Dune::PDELab::GridFunctionRestrictedMapper> GFS3;
     GFS3 gfs3(gv,q22dfem);
-    typedef Dune::PDELab::GridFunctionSpace<GV,EdgeR12DFEM> GFS4;
+    typedef Dune::PDELab::GridFunctionSpace<GV,EdgeR02DFEM> GFS4;
     GFS4 gfs4(gv,edger12dfem);
 
     // test power
@@ -156,7 +156,7 @@ int main(int argc, char** argv)
       Dune::FieldVector<double,2> L(1.0);
       Dune::FieldVector<int,2> N(1);
       Dune::FieldVector<bool,2> B(false);
-      Dune::YaspGrid<2,2> grid(L,N,B,0);
+      Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(1);
       
       testleafgridfunction(grid.leafView());

@@ -2,6 +2,8 @@
 #ifndef DUNE_PDELAB_FINITELEMENTMAP_HH
 #define DUNE_PDELAB_FINITELEMENTMAP_HH
 
+#include <dune/grid/common/genericreferenceelements.hh>
+
 #include"../common/countingptr.hh"
 
 namespace Dune {

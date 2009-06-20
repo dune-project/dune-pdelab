@@ -10,7 +10,9 @@ NORMALTESTS = testcountingptr testedges02d \
 	testrt0 testrt02dgridfunctionsspace testconstraints \
 	testlaplacedirichletp12d testlaplacedirichletccfv testpoisson
 
-noinst_HEADERS = stddomains.hh
+noinst_HEADERS = gridexamples.hh stddomains.hh
+
+MOSTLYCLEANFILES =
 
 # list of tests to run
 TESTS = $(NORMALTESTS)
@@ -25,6 +27,7 @@ testcountingptr_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMI
 testedges02d_SOURCES = testedges02d.cc
 testedges02d_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
 testedges02d_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+MOSTLYCLEANFILES += testedges02d.vtu
 
 testedges02dgridfunctionsspace_SOURCES = testedges02dgridfunctionsspace.cc
 testedges02dgridfunctionsspace_CPPFLAGS = $(AM_CPPFLAGS)                 \
@@ -36,6 +39,7 @@ testedges02dgridfunctionsspace_LDFLAGS = $(AM_LDFLAGS) $(MPI_LDFLAGS)    \
 	$(ALUGRID_LDFLAGS) $(DUNE_LDFLAGS)
 testedges02dgridfunctionsspace_LDADD = -lalberta_2d $(ALBERTA_BASE_LIBS) \
 	$(AMIRAMESH_LIBS) $(UG_LIBS) $(ALUGRID_LIBS) $(DUNE_LIBS)
+MOSTLYCLEANFILES += edges02dgridfunctionspace-*.vtu
 
 testedges02dinterpolation_SOURCES = testedges02dinterpolation.cc
 testedges02dinterpolation_CPPFLAGS = $(AM_CPPFLAGS)                      \
@@ -47,6 +51,7 @@ testedges02dinterpolation_LDFLAGS = $(AM_LDFLAGS) $(MPI_LDFLAGS)         \
 	$(ALUGRID_LDFLAGS) $(DUNE_LDFLAGS)
 testedges02dinterpolation_LDADD = -lalberta_2d $(ALBERTA_BASE_LIBS)      \
 	$(AMIRAMESH_LIBS) $(UG_LIBS) $(ALUGRID_LIBS) $(DUNE_LIBS)
+MOSTLYCLEANFILES += edges02dinterpolation-*.vtu
 
 testedges02dinterpolationglobal_SOURCES = testedges02dinterpolationglobal.cc
 testedges02dinterpolationglobal_CPPFLAGS = $(AM_CPPFLAGS)                 \
@@ -58,6 +63,7 @@ testedges02dinterpolationglobal_LDFLAGS = $(AM_LDFLAGS) $(MPI_LDFLAGS)    \
 	$(ALUGRID_LDFLAGS) $(DUNE_LDFLAGS)
 testedges02dinterpolationglobal_LDADD = -lalberta_2d $(ALBERTA_BASE_LIBS) \
 	$(AMIRAMESH_LIBS) $(UG_LIBS) $(ALUGRID_LIBS) $(DUNE_LIBS)
+MOSTLYCLEANFILES += edges02dinterpolationglobal-*.vtu
 
 testedges03dgridfunctionsspace_SOURCES = testedges03dgridfunctionsspace.cc
 testedges03dgridfunctionsspace_CPPFLAGS = $(AM_CPPFLAGS)                 \
@@ -69,6 +75,7 @@ testedges03dgridfunctionsspace_LDFLAGS = $(AM_LDFLAGS) $(MPI_LDFLAGS)    \
 	$(ALUGRID_LDFLAGS) $(DUNE_LDFLAGS)
 testedges03dgridfunctionsspace_LDADD = -lalberta_3d $(ALBERTA_BASE_LIBS) \
 	$(AMIRAMESH_LIBS) $(UG_LIBS) $(ALUGRID_LIBS) $(DUNE_LIBS)
+MOSTLYCLEANFILES += edges03dgridfunctionspace-*.vtu
 
 testmultitypetree_SOURCES = testmultitypetree.cc
 testmultitypetree_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
@@ -88,10 +95,12 @@ testp12dinterpolation_LDADD = -lalberta_2d $(ALBERTA_BASE_LIBS)          \
 testfunction_SOURCES = testfunction.cc
 testfunction_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
 testfunction_LDADD = $(MPI_LDFLAGS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS)  $(DUNE_LDFLAGS) $(DUNE_LIBS)
+MOSTLYCLEANFILES += multi.vtu single.vtu
 
 testanalytic_SOURCES = testanalytic.cc
 testanalytic_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
 testanalytic_LDADD = $(MPI_LDFLAGS) $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS)  $(DUNE_LDFLAGS) $(DUNE_LIBS)
+MOSTLYCLEANFILES += channel.vtu
 
 testfiniteelementmap_SOURCES = testfiniteelementmap.cc
 testfiniteelementmap_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
@@ -108,14 +117,17 @@ testlocalfunctionspace_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS
 testutilities_SOURCES = testutilities.cc
 testutilities_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
 testutilities_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+MOSTLYCLEANFILES += edger.vtu interpolated.vtu q1.vtu taylorhood.vtu
 
 testpk_SOURCES = testpk.cc
 testpk_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
 testpk_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+MOSTLYCLEANFILES += testpk.vtu
 
 testrt0_SOURCES = testrt0.cc
 testrt0_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
 testrt0_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+MOSTLYCLEANFILES += testrt0.vtu
 
 testrt02dgridfunctionsspace_SOURCES = testrt02dgridfunctionsspace.cc
 testrt02dgridfunctionsspace_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) \
@@ -124,22 +136,33 @@ testrt02dgridfunctionsspace_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) \
 	$(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) \
 	$(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) \
 	$(DUNE_LDFLAGS) $(DUNE_LIBS)
+MOSTLYCLEANFILES += rt02dgridfunctionspace-*.vtu
 
 testconstraints_SOURCES = testconstraints.cc
 testconstraints_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
 testconstraints_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+MOSTLYCLEANFILES += testconstraintsp1.vtu testconstraintspowerp1.vtu
 
 testlaplacedirichletp12d_SOURCES = testlaplacedirichletp12d.cc
 testlaplacedirichletp12d_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
 testlaplacedirichletp12d_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+MOSTLYCLEANFILES += testlaplacedirichletp12d.vtu
 
 testlaplacedirichletccfv_SOURCES = testlaplacedirichletccfv.cc
 testlaplacedirichletccfv_CXXFLAGS = $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
 testlaplacedirichletccfv_LDADD = $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+MOSTLYCLEANFILES += testlaplacedirichletccfv.vtu
 
 testpoisson_SOURCES = testpoisson.cc
-testpoisson_CXXFLAGS = $(AM_CPPFLAGS) $(SUPERLU_CPPFLAGS) $(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
-testpoisson_LDADD = $(AM_LDFLAGS) $(SUPERLU_LDFLAGS) $(MPI_LDFLAGS)  $(ALBERTA_LDFLAGS) $(ALBERTA_LIBS) $(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS) $(UG_LDFLAGS) $(UG_LIBS) $(MPI_LDFLAGS) $(ALUGRID_LDFLAGS) $(ALUGRID_LIBS) $(DUNE_LDFLAGS) $(DUNE_LIBS)
+testpoisson_CPPFLAGS = $(AM_CPPFLAGS)                                    \
+	$(SUPERLU_CPPFLAGS) $(MPI_CPPFLAGS) $(UG_CPPFLAGS)               \
+	$(AMIRAMESH_CPPFLAGS) $(ALBERTA_CPPFLAGS) $(ALUGRID_CPPFLAGS)
+testpoisson_LDFLAGS = $(AM_LDFLAGS) $(MPI_LDFLAGS)    \
+	$(ALBERTA_LDFLAGS) $(AMIRAMESH_LDFLAGS) $(UG_LDFLAGS)            \
+	$(ALUGRID_LDFLAGS) $(DUNE_LDFLAGS) $(SUPERLU_LDFLAGS) 
+testpoisson_LDADD = $(ALBERTA_LIBS) $(AMIRAMESH_LIBS) $(UG_LIBS)         \
+	$(ALUGRID_LIBS) $(DUNE_LIBS)
+MOSTLYCLEANFILES += poisson_*.vtu
 
 include $(top_srcdir)/am/global-rules
 

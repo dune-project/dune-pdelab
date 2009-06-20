@@ -76,7 +76,7 @@ void testedges02d (const GV& gv)
   // instantiate finite element maps
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,double,dim> P0FEM;
   P0FEM p0fem(Dune::GeometryType::simplex);
-  typedef Dune::PDELab::EdgeS02DLocalFiniteElementMap<GV,DF,double> EdgeS02DFEM;
+  typedef Dune::PDELab::EdgeS02DLocalFiniteElementMap<GV,double> EdgeS02DFEM;
   EdgeS02DFEM edges02dfem(gv);
   
   // make a grid function space
@@ -98,17 +98,15 @@ void testedges02d (const GV& gv)
   FType f(gv);
   typedef V<GV,double> VType;
   VType v(gv);
-  typedef Dune::PDELab::PiolaBackwardAdapter<VType> RVType;
-  RVType rv(v);
 
   // do interpolation
   Dune::PDELab::interpolate(f,p0gfs,p0xg);
-  Dune::PDELab::interpolate(rv,edges02dgfs,edges02dxg);
+  Dune::PDELab::interpolateEdge(v,edges02dgfs,edges02dxg);
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<P0GFS,P0V> P0DGF;
   P0DGF p0dgf(p0gfs,p0xg);
-  typedef Dune::PDELab::DiscreteGridFunctionPiola<EdgeS02DGFS,EdgeS02DV> EdgeS02DDGF;
+  typedef Dune::PDELab::DiscreteGridFunctionEdge<EdgeS02DGFS,EdgeS02DV> EdgeS02DDGF;
   EdgeS02DDGF edges02ddgf(edges02dgfs,edges02dxg);
 
   // output grid function with VTKWriter
@@ -125,9 +123,9 @@ int main(int argc, char** argv)
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
 
 #if HAVE_UG
- 	UGLDomain uggrid;
-  	uggrid.globalRefine(4);
-    testedges02d(uggrid.leafView());
+    Dune::SmartPointer<Dune::UGGrid<2> > uggrid(TriangulatedLDomainMaker<Dune::UGGrid<2> >::create());
+  	uggrid->globalRefine(4);
+    testedges02d(uggrid->leafView());
 #endif
 
 #if HAVE_ALBERTA

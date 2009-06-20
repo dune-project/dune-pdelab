@@ -203,16 +203,16 @@ int main(int argc, char** argv)
 	Dune::FieldVector<double,2> L(1.0);
 	Dune::FieldVector<int,2> N(1);
 	Dune::FieldVector<bool,2> B(false);
-	Dune::YaspGrid<2,2> grid(L,N,B,0);
+	Dune::YaspGrid<2> grid(L,N,B,0);
     grid.globalRefine(6);
 
 	// run algorithm on a grid
 	std::cout << "instantiate grid functions on a grid" << std::endl;
-	testgridfunction(grid.leafView(),F<Dune::YaspGrid<2,2>::ctype>());
+	testgridfunction(grid.leafView(),F<Dune::YaspGrid<2>::ctype>());
 
 	// run algorithm on a grid
 	std::cout << "testing vtk output" << std::endl;
-	testvtkexport(grid.leafView(),F<Dune::YaspGrid<2,2>::ctype>());
+	testvtkexport(grid.leafView(),F<Dune::YaspGrid<2>::ctype>());
 	testfunctiontree(grid.leafView());
 
 	// test passed

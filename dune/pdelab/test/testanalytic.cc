@@ -71,7 +71,7 @@ int main(int argc, char** argv)
 	Dune::FieldVector<double,3> L3(1.0); L3[0] = 4;
 	Dune::FieldVector<int,3> N3(1); N3[0] = 4;
 	Dune::FieldVector<bool,3> B3(false);
-	Dune::YaspGrid<3,3> grid(L3,N3,B3,0);
+	Dune::YaspGrid<3> grid(L3,N3,B3,0);
     grid.globalRefine(4);
 	testuserfriendly(grid.leafView());
 

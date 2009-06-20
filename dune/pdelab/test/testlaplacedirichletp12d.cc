@@ -33,6 +33,7 @@
 #include"../backend/istlsolverbackend.hh"
 
 #include"gridexamples.hh"
+#include "stddomains.hh"
 
 
 // define some grid functions to interpolate from
@@ -91,7 +92,6 @@ template<class GV>
 void testp1 (const GV& gv)
 {
   typedef typename GV::Grid::ctype DF;
-  const int dim = GV::dimension;
 
   // instantiate finite element maps
   typedef Dune::PDELab::P12DLocalFiniteElementMap<DF,double> FEM;
@@ -184,9 +184,9 @@ int main(int argc, char** argv)
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
 
 #if HAVE_UG
- 	UGUnitSquare uggrid;
-  	uggrid.globalRefine(3);
-    testp1(uggrid.leafView());
+    Dune::SmartPointer<Dune::UGGrid<2> > uggrid(Dune::PDELab::TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
+  	uggrid->globalRefine(3);
+    testp1(uggrid->leafView());
 #endif
 
 	// test passed

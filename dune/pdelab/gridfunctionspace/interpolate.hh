@@ -53,10 +53,10 @@ namespace Dune {
         {
           typename Traits::RangeType yt;
           t.evaluate(x,yt);
-          FieldMatrix<typename Geometry::ctype, Geometry::mydimension,
-            Geometry::coorddimension> JT = geometry.jacobianTransposed(x);
-          JT.mv(yt,y);
-          y /= JT.determinant();
+          FieldMatrix<typename Geometry::ctype, Geometry::coorddimension,
+            Geometry::mydimension> JTInv = geometry.jacobianInverseTransposed(x);
+          JTInv.solve(y,yt);
+          y *= JTInv.determinant();
         }
 
       private:

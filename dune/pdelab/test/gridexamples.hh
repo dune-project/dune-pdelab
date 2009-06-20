@@ -6,9 +6,10 @@
 #if HAVE_ALBERTA
 #include<dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/dgfparser.hh>
+#include <dune/grid/albertagrid/gridfactory.hh>
 #endif
 #if HAVE_UG 
-#include<dune/grid/uggrid.hh>
+#include <dune/grid/uggrid/uggridfactory.hh>
 #endif
 #if HAVE_ALUGRID
 #include<dune/grid/alugrid.hh>
@@ -53,84 +54,37 @@ public:
     : Dune::GridPtr<Dune::AlbertaGrid<2,2> >("grids/2dreentrantcorner.dgf")
   { }
 };
-#endif
+#endif //HAVE_ALBERTA
 
-#if HAVE_UG 
-class UGUnitSquare : public Dune::UGGrid<2>
-{
+template<typename Grid>
+class TriangulatedLDomainMaker {
+  dune_static_assert(Grid::dimension == 2, "Dimension of grid must be 2");
+  dune_static_assert(Grid::dimensionworld == 2, "Dimension of world must be 2");
 public:
-  UGUnitSquare (unsigned int heapSize=100) : Dune::UGGrid<2>(heapSize)
-  {
-	this->createBegin();
-	Dune::FieldVector<double,2> pos;
-	pos[0] = 0;  pos[1] = 0;
-	this->insertVertex(pos);
-	pos[0] = 1;  pos[1] = 0;
-	this->insertVertex(pos);
-	pos[0] = 0;  pos[1] = 1;
-	this->insertVertex(pos);
-	pos[0] = 1;  pos[1] = 1;
-	this->insertVertex(pos);
-	std::vector<unsigned int> cornerIDs(3);
-	cornerIDs[0] = 0;  cornerIDs[1] = 1;  cornerIDs[2] = 2;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
-	cornerIDs[0] = 2;  cornerIDs[1] = 1;  cornerIDs[2] = 3;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
-	this->createEnd();
+  static Dune::SmartPointer<Grid> create() {
+    Dune::GridFactory<Grid> gf;
+
+    Dune::FieldVector<typename Grid::ctype, 2> pos;
+	pos[0] =-1.0;  pos[1] =-1.0; gf.insertVertex(pos);
+	pos[0] = 0.0;  pos[1] =-1.0; gf.insertVertex(pos);
+	pos[0] =-1.0;  pos[1] = 0.0; gf.insertVertex(pos);
+	pos[0] = 0.0;  pos[1] = 0.0; gf.insertVertex(pos);
+	pos[0] = 1.0;  pos[1] = 0.0; gf.insertVertex(pos);
+	pos[0] =-1.0;  pos[1] = 1.0; gf.insertVertex(pos);
+	pos[0] = 0.0;  pos[1] = 1.0; gf.insertVertex(pos);
+	pos[0] = 1.0;  pos[1] = 1.0; gf.insertVertex(pos);
+
+    Dune::GeometryType type; type.makeTriangle();
+	std::vector<unsigned int> vid(3);
+	vid[0] = 0;  vid[1] = 1;  vid[2] = 2; gf.insertElement(type, vid);
+	vid[0] = 2;  vid[1] = 1;  vid[2] = 3; gf.insertElement(type, vid);
+	vid[0] = 2;  vid[1] = 3;  vid[2] = 5; gf.insertElement(type, vid);
+	vid[0] = 5;  vid[1] = 3;  vid[2] = 6; gf.insertElement(type, vid);
+	vid[0] = 3;  vid[1] = 4;  vid[2] = 6; gf.insertElement(type, vid);
+	vid[0] = 6;  vid[1] = 4;  vid[2] = 7; gf.insertElement(type, vid);
+
+    return gf.createGrid();
   }
 };
-
-class UGUnitTriangle : public Dune::UGGrid<2>
-{
-public:
-  UGUnitTriangle (unsigned int heapSize=100) : Dune::UGGrid<2>(heapSize)
-  {
-	this->createBegin();
-	Dune::FieldVector<double,2> pos;
-	pos[0] = 0;  pos[1] = 0;
-	this->insertVertex(pos);
-	pos[0] = 1;  pos[1] = 0;
-	this->insertVertex(pos);
-	pos[0] = 0;  pos[1] = 1;
-	this->insertVertex(pos);
-	std::vector<unsigned int> cornerIDs(3);
-	cornerIDs[0] = 0;  cornerIDs[1] = 1;  cornerIDs[2] = 2;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
-	this->createEnd();
-  }
-};
-
-class UGLDomain : public Dune::UGGrid<2>
-{
-public:
-  UGLDomain (unsigned int heapSize=100) : Dune::UGGrid<2>(heapSize)
-  {
-	this->createBegin();
-	Dune::FieldVector<double,2> pos;
-	pos[0] =-1.0;  pos[1] =-1.0; this->insertVertex(pos);
-	pos[0] = 0.0;  pos[1] =-1.0; this->insertVertex(pos);
-	pos[0] =-1.0;  pos[1] = 0.0; this->insertVertex(pos);
-	pos[0] = 0.0;  pos[1] = 0.0; this->insertVertex(pos);
-	pos[0] = 1.0;  pos[1] = 0.0; this->insertVertex(pos);
-	pos[0] =-1.0;  pos[1] = 1.0; this->insertVertex(pos);
-	pos[0] = 0.0;  pos[1] = 1.0; this->insertVertex(pos);
-	pos[0] = 1.0;  pos[1] = 1.0; this->insertVertex(pos);
-	std::vector<unsigned int> cornerIDs(3);
-	cornerIDs[0] = 0;  cornerIDs[1] = 1;  cornerIDs[2] = 2;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
-	cornerIDs[0] = 2;  cornerIDs[1] = 1;  cornerIDs[2] = 3;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
-	cornerIDs[0] = 2;  cornerIDs[1] = 3;  cornerIDs[2] = 5;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
-	cornerIDs[0] = 5;  cornerIDs[1] = 3;  cornerIDs[2] = 6;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
-	cornerIDs[0] = 3;  cornerIDs[1] = 4;  cornerIDs[2] = 6;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
-	cornerIDs[0] = 6;  cornerIDs[1] = 4;  cornerIDs[2] = 7;
-	this->insertElement(Dune::GeometryType(Dune::GeometryType::simplex,2), cornerIDs);
-	this->createEnd();
-  }
-};
-#endif // HAVE_UG
 
 #endif

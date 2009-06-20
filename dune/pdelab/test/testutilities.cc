@@ -10,7 +10,7 @@
 #include<dune/grid/yaspgrid.hh>
 #include"../finiteelementmap/q22dfem.hh"
 #include"../finiteelementmap/q12dfem.hh"
-#include"../finiteelementmap/edger12dfem.hh"
+#include"../finiteelementmap/edger02dfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include"../gridfunctionspace/interpolate.hh"
@@ -50,12 +50,12 @@ template<class GV>
 void testedger (const GV& gv)
 {
   // instantiate finite element maps
-  typedef Dune::PDELab::EdgeR12DLocalFiniteElementMap<typename GV::Grid::ctype,double> EdgeR12DFEM;
-  EdgeR12DFEM edger12dfem;
+  typedef Dune::PDELab::EdgeR02DLocalFiniteElementMap<typename GV::Grid::ctype,double> EdgeR02DFEM;
+  EdgeR02DFEM edger02dfem;
   
   // make a grid function space
-  typedef Dune::PDELab::GridFunctionSpace<GV,EdgeR12DFEM> EGFS;
-  EGFS egfs(gv,edger12dfem);
+  typedef Dune::PDELab::GridFunctionSpace<GV,EdgeR02DFEM> EGFS;
+  EGFS egfs(gv,edger02dfem);
 
   // make coefficent Vectors
   typedef typename EGFS::template VectorContainer<double>::Type V;
@@ -356,7 +356,7 @@ int main(int argc, char** argv)
 	Dune::FieldVector<double,2> L(1.0);
 	Dune::FieldVector<int,2> N(1);
 	Dune::FieldVector<bool,2> B(false);
-	Dune::YaspGrid<2,2> grid(L,N,B,0);
+	Dune::YaspGrid<2> grid(L,N,B,0);
     grid.globalRefine(5);
 
 	testq1(grid.leafView());

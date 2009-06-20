@@ -82,7 +82,7 @@ int main(int argc, char** argv)
 	Dune::FieldVector<double,2> L(1.0);
 	Dune::FieldVector<int,2> N(1);
 	Dune::FieldVector<bool,2> B(false);
-	Dune::YaspGrid<2,2> grid(L,N,B,0);
+	Dune::YaspGrid<2> grid(L,N,B,0);
     grid.globalRefine(1);
 
 	test(grid.leafView());
