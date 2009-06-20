@@ -162,8 +162,8 @@ void test(Dune::SmartPointer<Grid> grid, int &result, unsigned int maxelements, 
   if(result != 1)
     result = 0;
 
-  if(total_convergence < 0.9) {
-    std::cout << "Error: interpolation total convergence < 0.9" << std::endl;
+  if(total_convergence < 0.85) {
+    std::cout << "Error: interpolation total convergence < 0.85" << std::endl;
     result = 1;
   }
 }
