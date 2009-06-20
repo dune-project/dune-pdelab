@@ -109,9 +109,9 @@ double interpolationerror (const GV& gv, const FEM &fem, const std::string &name
 
   typedef U<GV,R> AFunc;
   AFunc u(gv);                      // make analytic function object
-  Dune::PDELab::interpolateEdge(u,gfs,x); // make x interpolate u
+  Dune::PDELab::interpolateGlobal(u,gfs,x); // make x interpolate u
 
-  typedef Dune::PDELab::DiscreteGridFunctionEdge<GFS, X> IFunc;
+  typedef Dune::PDELab::DiscreteGridFunctionGlobal<GFS, X> IFunc;
   IFunc v(gfs,x);
 
   if(name != "") {
@@ -132,7 +132,7 @@ void test(Dune::SmartPointer<Grid> grid, int &result, unsigned int maxelements, 
   std::cout << std::endl
             << "Testing EdgeS02D interpolation with " << name << std::endl;
 
-  name = "edges02dinterpolation-" + name;
+  name = "edges02dinterpolationglobal-" + name;
 
   typedef Dune::PDELab::EdgeS02DLocalFiniteElementMap<typename Grid::LeafGridView, double> FEM;
 

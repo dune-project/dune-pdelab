@@ -2,6 +2,7 @@
 
 NORMALTESTS = testcountingptr testedges02d \
 	testedges02dgridfunctionsspace testedges02dinterpolation \
+	testedges02dinterpolationglobal \
 	testedges03dgridfunctionsspace testmultitypetree \
 	testp12dinterpolation testfunction \
 	testanalytic testfiniteelementmap testgridfunctionspace \
@@ -9,7 +10,7 @@ NORMALTESTS = testcountingptr testedges02d \
 	testrt0 testrt02dgridfunctionsspace testconstraints \
 	testlaplacedirichletp12d testlaplacedirichletccfv testpoisson
 
-noinst_HEADERS = stddomain.hh
+noinst_HEADERS = stddomains.hh
 
 # list of tests to run
 TESTS = $(NORMALTESTS)
@@ -45,6 +46,17 @@ testedges02dinterpolation_LDFLAGS = $(AM_LDFLAGS) $(MPI_LDFLAGS)         \
 	$(ALBERTA_LDFLAGS) $(AMIRAMESH_LDFLAGS) $(UG_LDFLAGS)            \
 	$(ALUGRID_LDFLAGS) $(DUNE_LDFLAGS)
 testedges02dinterpolation_LDADD = -lalberta_2d $(ALBERTA_BASE_LIBS)      \
+	$(AMIRAMESH_LIBS) $(UG_LIBS) $(ALUGRID_LIBS) $(DUNE_LIBS)
+
+testedges02dinterpolationglobal_SOURCES = testedges02dinterpolationglobal.cc
+testedges02dinterpolationglobal_CPPFLAGS = $(AM_CPPFLAGS)                 \
+	$(ALBERTA_INCLUDE_CPPFLAGS) -DALBERTA_DIM=2 -DENABLE_ALBERTA      \
+	$(MPI_CPPFLAGS) $(UG_CPPFLAGS) $(AMIRAMESH_CPPFLAGS)              \
+	$(ALUGRID_CPPFLAGS)
+testedges02dinterpolationglobal_LDFLAGS = $(AM_LDFLAGS) $(MPI_LDFLAGS)    \
+	$(ALBERTA_LDFLAGS) $(AMIRAMESH_LDFLAGS) $(UG_LDFLAGS)             \
+	$(ALUGRID_LDFLAGS) $(DUNE_LDFLAGS)
+testedges02dinterpolationglobal_LDADD = -lalberta_2d $(ALBERTA_BASE_LIBS) \
 	$(AMIRAMESH_LIBS) $(UG_LIBS) $(ALUGRID_LIBS) $(DUNE_LIBS)
 
 testedges03dgridfunctionsspace_SOURCES = testedges03dgridfunctionsspace.cc
