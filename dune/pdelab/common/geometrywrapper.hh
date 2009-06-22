@@ -5,22 +5,31 @@
 namespace Dune {
   namespace PDELab {
 
+    //! Wrap element
+    /**
+     * \todo Please doc me!
+     */
 	template<typename E>
 	class ElementGeometry
 	{
 	public:
+      //! \todo Please doc me!
 	  typedef typename E::Geometry Geometry;
+      //! \todo Please doc me!
 	  typedef E Entity;
 
+      //! \todo Please doc me!
 	  ElementGeometry (const E& e_)
 		: e(e_)
 	  {}
 
+      //! \todo Please doc me!
 	  const Geometry& geometry () const
 	  {
 		return e.geometry();
 	  }
 
+      //! \todo Please doc me!
 	  const Entity& entity () const
 	  {
 		return e;
@@ -31,18 +40,30 @@ namespace Dune {
 	};
 
 
+    //! Wrap intersection
+    /**
+     * \todo Please doc me!
+     */
 	template<typename I>
 	class IntersectionGeometry
 	{
 	public:
+      //! \todo Please doc me!
 	  typedef typename I::Geometry Geometry;
+      //! \todo Please doc me!
 	  typedef typename I::LocalGeometry LocalGeometry;
+      //! \todo Please doc me!
 	  typedef typename I::Entity Entity;
+      //! \todo Please doc me!
 	  typedef typename I::EntityPointer EntityPointer;
+      //! \todo Please doc me!
 	  typedef typename Entity::ctype ctype;
+      //! \todo Please doc me!
 	  enum { dimension=Entity::dimension };
+      //! \todo Please doc me!
 	  enum { dimensionworld=Entity::dimensionworld };
 
+      //! \todo Please doc me!
 	  IntersectionGeometry (const I& i_)
 		: i(i_)
 	  {}
