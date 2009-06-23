@@ -24,7 +24,7 @@ namespace Dune {
 
     /** a local operator for solving the diffusion equation
      *
-     * \f{eqnarray*}
+     * \f{align*}{
      * - \nabla\cdot\{K(x) \nabla u\} + a_0 u &=& f \mbox{ in } \Omega,          \ \
      *                                      u &=& g \mbox{ on } \partial\Omega_D \\
      *              -(K(x)\nabla u) \cdot \nu &=& j \mbox{ on } \partial\Omega_N \\

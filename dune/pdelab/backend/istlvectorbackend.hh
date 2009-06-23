@@ -6,12 +6,12 @@
 namespace Dune {
   namespace PDELab {
 
-	// ISTL backend for FunctionSpace
+	//! ISTL backend for FunctionSpace
 	template<int BLOCKSIZE=1>
 	class ISTLVectorBackend
 	{
 	public:
-	  // container construction
+	  //! container construction
 	  template<typename T, typename E>
 	  class VectorContainer : public Dune::BlockVector< Dune::FieldVector<E,BLOCKSIZE> >
 	  {

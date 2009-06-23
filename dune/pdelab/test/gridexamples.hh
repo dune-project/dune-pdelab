@@ -35,6 +35,7 @@ public:
 
 
 #if HAVE_ALBERTA
+#  if ALBERTA_DIM == 2
 class AlbertaLDomain : public Dune::AlbertaGrid<2,2>
 {
 public:
@@ -54,6 +55,7 @@ public:
     : Dune::GridPtr<Dune::AlbertaGrid<2,2> >("grids/2dreentrantcorner.dgf")
   { }
 };
+#  endif //ALBERTA_DIM == 2
 #endif //HAVE_ALBERTA
 
 template<typename Grid>
@@ -82,6 +84,41 @@ public:
 	vid[0] = 5;  vid[1] = 3;  vid[2] = 6; gf.insertElement(type, vid);
 	vid[0] = 3;  vid[1] = 4;  vid[2] = 6; gf.insertElement(type, vid);
 	vid[0] = 6;  vid[1] = 4;  vid[2] = 7; gf.insertElement(type, vid);
+
+    return gf.createGrid();
+  }
+};
+
+// Kuhn triangulation with 6 tets, does not contain unit tet, all tets have
+// (0,7) as a common edge
+template<typename Grid>
+class KuhnTriangulatedUnitCubeMaker {
+  dune_static_assert(Grid::dimension == 3, "Dimension of grid must be 3");
+  dune_static_assert(Grid::dimensionworld == 3, "Dimension of world must be 3");
+public:
+  static Dune::SmartPointer<Grid> create() {
+    Dune::GridFactory<Grid> gf;
+    Dune::FieldVector<typename Grid::ctype, 3> pos;
+
+    pos[0] = 0; pos[1] = 0; pos[2] = 0; gf.insertVertex(pos);
+    pos[0] = 1; pos[1] = 0; pos[2] = 0; gf.insertVertex(pos);
+    pos[0] = 0; pos[1] = 1; pos[2] = 0; gf.insertVertex(pos);
+    pos[0] = 1; pos[1] = 1; pos[2] = 0; gf.insertVertex(pos);
+    pos[0] = 0; pos[1] = 0; pos[2] = 1; gf.insertVertex(pos);
+    pos[0] = 1; pos[1] = 0; pos[2] = 1; gf.insertVertex(pos);
+    pos[0] = 0; pos[1] = 1; pos[2] = 1; gf.insertVertex(pos);
+    pos[0] = 1; pos[1] = 1; pos[2] = 1; gf.insertVertex(pos);
+
+    Dune::GeometryType type;
+    type.makeTetrahedron();
+    std::vector<unsigned int> vid(4);
+
+    vid[0] = 0; vid[1] = 1; vid[2] = 3; vid[3] = 7; gf.insertElement(type, vid);
+    vid[0] = 0; vid[1] = 1; vid[2] = 5; vid[3] = 7; gf.insertElement(type, vid);
+    vid[0] = 0; vid[1] = 4; vid[2] = 5; vid[3] = 7; gf.insertElement(type, vid);
+    vid[0] = 0; vid[1] = 4; vid[2] = 6; vid[3] = 7; gf.insertElement(type, vid);
+    vid[0] = 0; vid[1] = 2; vid[2] = 6; vid[3] = 7; gf.insertElement(type, vid);
+    vid[0] = 0; vid[1] = 2; vid[2] = 3; vid[3] = 7; gf.insertElement(type, vid);
 
     return gf.createGrid();
   }

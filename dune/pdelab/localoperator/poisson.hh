@@ -23,7 +23,7 @@ namespace Dune {
 
     /** a local operator for solving the Poisson equation
      *
-     * \f{eqnarray*}
+     * \f{align*}{
      *           - \Delta u &=& f \mbox{ in } \Omega,          \\
      *                    u &=& g \mbox{ on } \partial\Omega_D \\
      *  -\nabla u \cdot \nu &=& j \mbox{ on } \partial\Omega_N \\

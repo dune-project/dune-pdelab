@@ -284,7 +284,7 @@ namespace Dune {
 	};
 
 
-    // construct constraints from given boundary condition function
+    //! construct constraints from given boundary condition function
     template<typename F, typename GFS, typename CG>
     void constraints (F& f, const GFS& gfs, CG& cg)
     {
