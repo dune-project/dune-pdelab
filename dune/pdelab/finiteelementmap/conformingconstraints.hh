@@ -47,12 +47,12 @@ namespace Dune {
             const int dim = IntersectionGeometry<I>::Entity::Geometry::dimension;
             const Dune::GenericReferenceElement<DT,dim>& refelem = Dune::GenericReferenceElements<DT,dim>::general(gt);
             int face = ig.indexInInside();
-            for (size_t i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)
+            for (int i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)
               {
                 unsigned int codim = lfs.localFiniteElement().localCoefficients().localKey(i).codim();
                 if (codim==0) continue;
                 for (int j=0; j<refelem.size(face,1,codim); j++)
-                  if (lfs.localFiniteElement().localCoefficients().localKey(i).subEntity()==refelem.subEntity(face,1,j,codim))
+                    if ((int)lfs.localFiniteElement().localCoefficients().localKey(i).subEntity()==refelem.subEntity(face,1,j,codim))
                     trafo[i] = empty;
               }
           }
