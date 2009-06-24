@@ -39,7 +39,6 @@
 #include"../localoperator/poisson.hh"
 
 #include"gridexamples.hh"
-#include"stddomains.hh"
 
 //===============================================================
 //===============================================================
@@ -345,7 +344,7 @@ int main(int argc, char** argv)
 #if HAVE_UG
     {
       // make grid 
-      Dune::SmartPointer<Dune::UGGrid<2> > grid(Dune::PDELab::TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
+      Dune::SmartPointer<Dune::UGGrid<2> > grid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
       grid->globalRefine(4);
 
       // get view

@@ -32,7 +32,7 @@
 #include "../gridoperatorspace/gridoperatorspace.hh"
 #include "../localoperator/electrostatic.hh"
 
-#include"stddomains.hh"
+#include "gridexamples.hh"
 
 
 //===============================================================
@@ -247,7 +247,7 @@ int main(int argc, char** argv)
 #ifdef HAVE_ALBERTA
     {
       typedef Dune::AlbertaGrid<3,3> Grid;
-      Dune::SmartPointer<Grid> grid = Dune::PDELab::UnitTetrahedronMaker<Grid>::create();
+      Dune::SmartPointer<Grid> grid = UnitTetrahedronMaker<Grid>::create();
       //grid->globalRefine(1);
 
       // get view

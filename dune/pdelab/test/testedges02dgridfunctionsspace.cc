@@ -27,7 +27,7 @@
 #include "../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include "../finiteelementmap/edges02dfem.hh"
 
-#include "stddomains.hh"
+#include "gridexamples.hh"
 
 template<typename GV>
 void edgeS02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
@@ -86,9 +86,6 @@ void test(Dune::SmartPointer<Grid> grid, int &result, std::string name = "", uns
 
 int main(int argc, char** argv)
 {
-  using Dune::PDELab::UnitTriangleMaker;
-  using Dune::PDELab::TriangulatedUnitSquareMaker;
-
   try{
     //Maybe initialize Mpi
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);

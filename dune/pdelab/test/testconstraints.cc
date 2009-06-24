@@ -20,7 +20,6 @@
 #include"../common/function.hh"
 #include"../common/vtkexport.hh"
 #include"gridexamples.hh"
-#include "stddomains.hh"
 
 
 // define some grid functions to interpolate from
@@ -270,7 +269,7 @@ int main(int argc, char** argv)
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
 
 #if HAVE_UG
-    Dune::SmartPointer<Dune::UGGrid<2> > uggrid(Dune::PDELab::TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
+    Dune::SmartPointer<Dune::UGGrid<2> > uggrid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
   	uggrid->globalRefine(4);
     testp1(uggrid->leafView());
     testpowerp1(uggrid->leafView());

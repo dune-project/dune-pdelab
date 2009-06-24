@@ -29,7 +29,7 @@
 #include "../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include "../gridfunctionspace/interpolate.hh"
 
-#include "stddomains.hh"
+#include "gridexamples.hh"
 
 
 template<typename GV, typename RF>
@@ -170,9 +170,6 @@ void test(Dune::SmartPointer<Grid> grid, int &result, unsigned int maxelements, 
 
 int main(int argc, char** argv)
 {
-  using Dune::PDELab::UnitTriangleMaker;
-  using Dune::PDELab::TriangulatedUnitSquareMaker;
-
   try{
     // default exitcode 77 (=skipped); returned in case none of the supported
     // Grids were found

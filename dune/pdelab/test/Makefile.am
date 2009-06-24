@@ -23,7 +23,7 @@ LIBS = @LIBS@					\
 	$(MPI_LDFLAGS) $(MPILIBS)		\
 	$(UG_LDFLAGS) $(UG_LIBS)
 
-noinst_HEADERS = gridexamples.hh stddomains.hh
+noinst_HEADERS = gridexamples.hh
 
 
 NORMALTESTS += testanalytic
