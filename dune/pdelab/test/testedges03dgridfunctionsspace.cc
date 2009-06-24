@@ -98,23 +98,23 @@ int main(int argc, char** argv)
 #if (ALBERTA_DIM != 3)
 #error ALBERTA_DIM is not set to 3 -- please check the Makefile.am
 #endif
-    test(UnitTetrahedronMaker     <Dune::AlbertaGrid<3, 3>    >::create(),
+    test(UnitTetrahedronMaker         <Dune::AlbertaGrid<3, 3>    >::create(),
          result, "alberta-tetrahedron", 0);
-    test(TriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
+    test(KuhnTriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
          result, "alberta-cube",        0);
 #endif
 
 #ifdef HAVE_ALUGRID
-    test(UnitTetrahedronMaker     <Dune::ALUSimplexGrid<3, 3> >::create(),
+    test(UnitTetrahedronMaker         <Dune::ALUSimplexGrid<3, 3> >::create(),
          result, "alu-tetrahedron",     0);
-    test(TriangulatedUnitCubeMaker<Dune::ALUSimplexGrid<3, 3> >::create(),
+    test(TriangulatedUnitCubeMaker    <Dune::ALUSimplexGrid<3, 3> >::create(),
          result, "alu-cube",            0);
 #endif // HAVE_ALUGRID
 
 #ifdef HAVE_UG
-    test(UnitTetrahedronMaker     <Dune::UGGrid<3>            >::create(),
+    test(UnitTetrahedronMaker         <Dune::UGGrid<3>            >::create(),
          result, "ug-tetrahedron",      0);
-    test(TriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
+    test(TriangulatedUnitCubeMaker    <Dune::UGGrid<3>            >::create(),
          result, "ug-cube",             0);
 #endif // HAVE_ALBERTA
 

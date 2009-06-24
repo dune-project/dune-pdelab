@@ -212,6 +212,7 @@ public:
 //
 
 // Minimal triangulation with 5 tets, does contain unit tet
+// AlbertaSimplexGrid<3,3> cannot refine this, see Flyspry#569
 template<typename Grid>
 class TriangulatedUnitCubeMaker {
   dune_static_assert(Grid::dimension == 3, "Dimension of grid must be 3");
@@ -248,6 +249,20 @@ public:
     return gf.createGrid();
   }
 };
+
+#ifdef HAVE_ALBERTA
+# if ALBERTA_DIM == 3
+#  ifndef ALLOW_ALBERTA_MINIMAL_TRIANGULATED_CUBE
+// AlbertaSimplexGrid<3,3> cannot refine the minimal triangulated cube, see
+// Flyspry#569.  If you want to use it nevertheless, define
+// ALLOW_ALBERTA_MINIMAL_TRIANGULATED_CUBE before including gridexamples.hh.
+// specialize the template to make any attempt to use the create() method fail.
+template<>
+class TriangulatedUnitCubeMaker<Dune::AlbertaGrid<3,3> >
+{};
+#  endif //ALLOW_ALBERTA_MINIMAL_TRIANGULATED_CUBE
+# endif //ALBERTA_DIM == 3
+#endif //HAVE_ALBERTA
 
 //////////////////////////////////////////////////////////////////////
 //
