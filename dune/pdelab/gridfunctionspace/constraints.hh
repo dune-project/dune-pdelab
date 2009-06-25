@@ -311,7 +311,7 @@ namespace Dune {
     // CG : Type implementing the model
     // GridFunctionSpace::ConstraintsContainer::Type
     template<typename F, typename GFS, typename CG>
-    void constraints (F& f, const GFS& gfs, CG& cg)
+    void constraints (F& f, const GFS& gfs, CG& cg, const bool verbose = false)
     {
       // clear global constraints
 	  cg.clear();
@@ -380,20 +380,22 @@ namespace Dune {
 		}
 
 	  // print result
-	  std::cout << "constraints:" << std::endl;
-	  typedef typename CG::iterator global_col_iterator;
-	  typedef typename CG::value_type::second_type global_row_type;
-	  typedef typename global_row_type::iterator global_row_iterator;
+      if(verbose){
+        std::cout << "constraints:" << std::endl;
+        typedef typename CG::iterator global_col_iterator;
+        typedef typename CG::value_type::second_type global_row_type;
+        typedef typename global_row_type::iterator global_row_iterator;
 	  
-      std::cout << cg.size() << " constrained degrees of freedom" << std::endl;
+        std::cout << cg.size() << " constrained degrees of freedom" << std::endl;
 
-	  for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
-		{
-		  std::cout << cit->first << ": ";
-		  for (global_row_iterator rit=(cit->second).begin(); rit!=(cit->second).end(); ++rit)
-			std::cout << "(" << rit->first << "," << rit->second << ") ";
-		  std::cout << std::endl;
-		}
+        for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
+          {
+            std::cout << cit->first << ": ";
+            for (global_row_iterator rit=(cit->second).begin(); rit!=(cit->second).end(); ++rit)
+              std::cout << "(" << rit->first << "," << rit->second << ") ";
+            std::cout << std::endl;
+          }
+      }
 
 	} // constraints
 
