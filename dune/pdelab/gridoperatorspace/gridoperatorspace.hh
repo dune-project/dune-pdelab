@@ -137,8 +137,10 @@ namespace Dune {
               
               // translate local to global indices and add to global pattern
               for (size_t k=0; k<localpattern.size(); ++k)
-                globalpattern.add_link(lfsv.globalIndex(localpattern[k].i()),
-                                       lfsu.globalIndex(localpattern[k].j()));
+                add_entry(globalpattern,
+                          lfsv.globalIndex(localpattern[k].i()),
+                          lfsu.globalIndex(localpattern[k].j())
+                          );
             }
 
             // skeleton and boundary pattern
@@ -166,11 +168,16 @@ namespace Dune {
 
                 // translate local to global indices and add to global pattern
                 for (size_t k=0; k<localpattern_sn.size(); ++k)
-                  globalpattern.add_link(lfsv.globalIndex(localpattern_sn[k].i()),
-                                         lfsun.globalIndex(localpattern_sn[k].j()));
+                  add_entry(globalpattern,
+                            lfsv.globalIndex(localpattern_sn[k].i()),
+                            lfsun.globalIndex(localpattern_sn[k].j())
+                            );
+
                 for (size_t k=0; k<localpattern_ns.size(); ++k)
-                  globalpattern.add_link(lfsvn.globalIndex(localpattern_ns[k].i()),
-                                         lfsu.globalIndex(localpattern_ns[k].j()));
+                  add_entry(globalpattern,
+                            lfsvn.globalIndex(localpattern_ns[k].i()),
+                            lfsu.globalIndex(localpattern_ns[k].j())
+                            );
 			  }
           }
       }
@@ -288,12 +295,12 @@ namespace Dune {
 		  }
 
 		// set residual to zero on constrained dofs
-		Dune::PDELab::set_constrained_dofs(*pconstraintsu,0.0,r);
+		Dune::PDELab::constrain_residual(*pconstraintsv,r);
 	  }
 
 	  // generic evaluation of residual
 	  template<typename X, typename Y> 
-	  void jacobian_apply (const X& x, Y& y) const
+	  void jacobian_apply (X& x, Y& y) const
 	  {
         // visit each face only once
         const int chunk=1<<28;
@@ -493,9 +500,9 @@ namespace Dune {
                                                 lfsu,xl,lfsv,lfsun,xn,lfsvn,al,al_sn,al_ns,al_nn);
 
                             // accumulate result
-                            eadd(lfsv,lfsun,al_sn,a);
-                            eadd(lfsvn,lfsu,al_ns,a);
-                            eadd(lfsvn,lfsun,al_nn,a);
+                            etadd(lfsv,lfsun,al_sn,a);
+                            etadd(lfsvn,lfsu,al_ns,a);
+                            etadd(lfsvn,lfsun,al_nn,a);
                           }
                       }
 
@@ -509,15 +516,68 @@ namespace Dune {
 			  }
 
 			// accumulate result (note: r needs to be cleared outside)
-			eadd(lfsv,lfsu,al,a);
+			etadd(lfsv,lfsu,al,a);
 		  }
 
-		// eliminate constrained rows
-        typedef typename CV::const_iterator global_row_iterator;	  
-        for (global_row_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit)
-          constrain_row(cit->first,a);
+		
+         typedef typename CV::const_iterator global_row_iterator;	  
+         for (global_row_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit)
+           set_trivial_row(cit->first,cit->second,a);
  	  }
 
+      /** \brief Transforms a vector /f$ \boldsymbol{x} /f$ from /f$
+          V/f$ to /f$ V'/f$. If postrestrict == true then
+          /f$\boldsymbol{R}^T_{\tilde \boldsymbol{U}', \boldsymbol{U}'}
+          \boldsymbol{S}_{\tilde \boldsymbol{V}}/f$ is applied
+           instead of the full transformation.  */
+      template<typename X>
+      void forwardtransform(X & x, const bool postrestrict = false)
+      {
+        typedef typename CV::const_iterator global_col_iterator;	  
+        for (global_col_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit){
+          typedef typename global_col_iterator::value_type::first_type GlobalIndex;
+          const GlobalIndex & contributor = cit->first;
+
+          typedef typename global_col_iterator::value_type::second_type ContributedMap;
+          typedef typename ContributedMap::const_iterator global_row_iterator;
+          const ContributedMap & contributed = cit->second;
+          global_row_iterator it  = contributed.begin();
+          global_row_iterator eit = contributed.end();
+          
+          for(;it!=eit;++it)
+            x[it->first] += it->second * x[contributor];
+        }
+
+        if(postrestrict)
+          for (global_col_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit)
+            x[cit->first]=0.;
+      }
+
+      /** \brief Transforms a vector /f$ \boldsymbol{x} /f$ from /f$
+          V'/f$ to /f$ V/f$. If prerestrict == true then
+          /f$\boldsymbol{S}^T_{\tilde \boldsymbol{U}}/f$ is applied
+           instead of the full transformation.  */
+      template<typename X>
+      void backtransform(X & x, const bool prerestrict = false)
+      {
+        typedef typename CV::const_iterator global_col_iterator;	  
+        for (global_col_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit){
+          typedef typename global_col_iterator::value_type::first_type GlobalIndex;
+          const GlobalIndex & contributor = cit->first;
+
+          typedef typename global_col_iterator::value_type::second_type ContributedMap;
+          typedef typename ContributedMap::const_iterator global_row_iterator;
+          const ContributedMap & contributed = cit->second;
+          global_row_iterator it  = contributed.begin();
+          global_row_iterator eit = contributed.end();
+          
+          if(prerestrict)
+            x[contributor] = 0.;
+
+          for(;it!=eit;++it)
+            x[contributor] += it->second * x[it->first];
+        }
+      }
 
 	private:
 
@@ -549,15 +609,178 @@ namespace Dune {
             B::access(globalcontainer,lfsv.globalIndex(i),lfsu.globalIndex(j)) += localcontainer(i,j);
       }
 
-      /** \brief insert dirichlet constraints for row
+      /** \brief Add local matrix /f$m/f$ to global Jacobian /f$J/f$
+          and apply constraints transformation. Hence we perform: /f$
+          \boldsymbol{J} := \boldsymbol{J} + \boldsymbol{S}_{\tilde
+          \boldsymbol{V}} m \boldsymbol{S}^T_{\tilde
+          \boldsymbol{\tilde U}} /f$*/  
+      template<typename LFSV, typename LFSU, typename T, typename GC>
+      void etadd (const LFSV& lfsv, const LFSU& lfsu, const LocalMatrix<T>& localcontainer, GC& globalcontainer) const
+      {
 
-          This is only temporary code ...
+        for (size_t i=0; i<lfsv.size(); i++)
+          for (size_t j=0; j<lfsu.size(); j++){
+            typename Traits::SizeType gi = lfsv.globalIndex(i);
+            typename Traits::SizeType gj = lfsu.globalIndex(j);
+            
+            // Get global constraints containers for test and ansatz space
+            const CV & cv = *pconstraintsv;
+            const CU & cu = *pconstraintsu;
+
+            typedef typename CV::const_iterator global_vcol_iterator;
+            typedef typename global_vcol_iterator::value_type::second_type global_vrow_type;
+            typedef typename global_vrow_type::const_iterator global_vrow_iterator;
+
+            typedef typename CU::const_iterator global_ucol_iterator;
+            typedef typename global_ucol_iterator::value_type::second_type global_urow_type;
+            typedef typename global_urow_type::const_iterator global_urow_iterator;
+
+            // Check whether the global indices are constrained indices
+            global_vcol_iterator gvcit = cv.find(gi);
+            global_ucol_iterator gucit = cu.find(gj);
+
+            // Set constrained_v true if gi is constrained dof
+            bool constrained_v(false);
+            global_vrow_iterator gvrit;
+            if(gvcit!=cv.end()){
+              gvrit = gvcit->second.begin();              
+              constrained_v = true;
+            }
+
+            double vf = 1;
+            do{
+              // if gi is index of constrained dof
+              if(constrained_v){
+                // then break if it is a dirichlet dof
+                if(gvrit == gvcit->second.end())
+                  break;
+
+                // otherwise set gi to an index to a contributed dof
+                // and set vf to the contribution weight
+                gi = gvrit->first;
+                vf = gvrit->second;
+              }
+
+            // Set constrained_u true if gj is constrained dof
+              bool constrained_u(false);
+              global_urow_iterator gurit;
+              if(gucit!=cu.end()){
+                gurit = gucit->second.begin();
+                constrained_u = true;
+              }
+
+              double uf = 1;
+              do{
+                // if gj is index of constrained dof
+                if(constrained_u){
+                  // then break if it is a dirichlet dof
+                  if(gurit == gucit->second.end())
+                    break;
+
+                  // otherwise set gj to an index to a contributed dof
+                  // and set uf to the contribution weight
+                  gj = gurit->first;
+                  uf = gurit->second;
+                }
+
+                // add weighted local entry to global matrix
+                B::access(globalcontainer,gi,gj) += localcontainer(i,j) * uf * vf;
+
+                if(constrained_u && gurit != gucit->second.end())
+                  ++gurit;
+                else 
+                  break;
+
+              }while(true);
+
+              if(constrained_v && gvrit != gvcit->second.end())
+                ++gvrit;
+              else
+                break;
+
+            }while(true);
+
+          }
+      }
+
+      /** \brief Adding matrix entry to pattern with respect to the
+       constraints contributions. This assembles the entries addressed
+       by etadd(..). See the documentation there for more information
+       about the matrix pattern. */
+      template<typename GI, typename P>
+      void add_entry(P & globalpattern, GI gi, GI gj) const
+      {
+        const CV & cv = *pconstraintsv;
+        const CU & cu = *pconstraintsu;
+
+        typedef typename CV::const_iterator global_vcol_iterator;
+        typedef typename global_vcol_iterator::value_type::second_type global_vrow_type;
+        typedef typename global_vrow_type::const_iterator global_vrow_iterator;
+
+        typedef typename CU::const_iterator global_ucol_iterator;
+        typedef typename global_ucol_iterator::value_type::second_type global_urow_type;
+        typedef typename global_urow_type::const_iterator global_urow_iterator;
+            
+        global_vcol_iterator gvcit = cv.find(gi);
+        global_ucol_iterator gucit = cu.find(gj);
+
+        if(gi==gj)
+          globalpattern.add_link(gi,gj);
+
+        bool constrained_v(false);
+        global_vrow_iterator gvrit;
+        if(gvcit!=cv.end()){
+          gvrit = gvcit->second.begin();              
+          constrained_v = true;
+        }
+
+        do{
+          if(constrained_v){
+            if(gvrit == gvcit->second.end())
+              break;
+            gi = gvrit->first;
+          }
+
+          bool constrained_u(false);
+          global_urow_iterator gurit;
+          if(gucit!=cu.end()){
+            gurit = gucit->second.begin();
+            constrained_u = true;
+          }
+
+          do{
+            if(constrained_u){
+              if(gurit == gucit->second.end())
+                break;
+              gj = gurit->first;
+            }
+                
+            globalpattern.add_link(gi,gj);
+
+            if(constrained_u && gurit != gucit->second.end())
+              ++gurit;
+            else 
+              break;
+
+          }while(true);
+
+          if(constrained_v && gvrit != gvcit->second.end())
+            ++gvrit;
+          else
+            break;
+
+        }while(true);
+
+      }
+
+      /** \brief insert dirichlet constraints for row and assemble
+          T^T_U in constrained rows
       */  
-      template<typename GI, typename GC>
-      void constrain_row (GI i, GC& globalcontainer) const
+      template<typename GI, typename GC, typename CG>
+      void set_trivial_row (GI i, const CG & cv_i, GC& globalcontainer) const
       {
         // set all entries in row i to zero
-        B::clear_row(i,globalcontainer);
+         B::clear_row(i,globalcontainer);
 
         // set diagonal element to 1
         B::access(globalcontainer,i,i) = 1;
