@@ -28,34 +28,43 @@ namespace Dune {
       void boundary (const F& f, const IntersectionGeometry<I>& ig, 
                      const LFS& lfs, T& trafo) const
       {
-        // 2D here, get midpoint of edge
-        typename F::Traits::DomainType ip(0.5); // OK, its 2D here
-
-        // determine type of boundary condition FOR WHOLE FACE IN THE MIDPOINT
         typename F::Traits::RangeType bctype;
-        f.evaluate(ig,ip,bctype);
 
-        // if dirichlet boundary constrain all dofs on that face
-        if (bctype>0)
+        const int face = ig.indexInInside();
+
+        // find all local indices of this face
+        Dune::GeometryType gt = ig.inside()->type();
+        typedef typename IntersectionGeometry<I>::ctype DT;
+        const int dim = IntersectionGeometry<I>::Entity::Geometry::dimension;
+        const Dune::GenericReferenceElement<DT,dim>& refelem = Dune::GenericReferenceElements<DT,dim>::general(gt);
+
+	    const Dune::GenericReferenceElement<DT,dim-1> & 
+	      face_refelem = Dune::GenericReferenceElements<DT,dim-1>::general(ig.geometry().type()); 
+
+        // empty map means Dirichlet constraint
+        typename T::RowType empty;
+
+        for (int i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)
           {
-            // empty map indicates Dirichlet constraint
-            typename T::RowType empty;
+            // The codim to which this dof is attached to
+            unsigned int codim = lfs.localFiniteElement().localCoefficients().localKey(i).codim();
 
-            // find all local indices of this face
-            Dune::GeometryType gt = ig.inside()->type();
-            typedef typename IntersectionGeometry<I>::ctype DT;
-            const int dim = IntersectionGeometry<I>::Entity::Geometry::dimension;
-            const Dune::GenericReferenceElement<DT,dim>& refelem = Dune::GenericReferenceElements<DT,dim>::general(gt);
-            int face = ig.indexInInside();
-            for (int i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)
-              {
-                unsigned int codim = lfs.localFiniteElement().localCoefficients().localKey(i).codim();
-                if (codim==0) continue;
-                for (int j=0; j<refelem.size(face,1,codim); j++)
-                    if ((int)lfs.localFiniteElement().localCoefficients().localKey(i).subEntity()==refelem.subEntity(face,1,j,codim))
-                    trafo[i] = empty;
-              }
+            if (codim==0) continue;
+
+            for (int j=0; j<refelem.size(face,1,codim); j++){
+              
+              // test point to check whether we have dirichlet or neumann
+              const typename F::Traits::DomainType testpoint 
+                = face_refelem.position(j,codim-1);
+              f.evaluate(ig,testpoint,bctype);
+
+              if (bctype > 0 && (int) lfs.localFiniteElement().localCoefficients().localKey(i).subEntity()
+                  ==
+                  refelem.subEntity(face,1,j,codim))
+                trafo[i] = empty;
+            }
           }
+
       }
     };
 
