@@ -582,6 +582,7 @@ namespace Dune {
       typedef typename GFS::Traits::ConstraintsType ConstraintsType;
 	};
 
+    //! single component local function space
     template<typename GFS> 
     class LocalFunctionSpaceNode : public LeafNode
     {
@@ -714,8 +715,9 @@ namespace Dune {
     };
 
 
-    // local function space description that can be bound to an element
-    // depends on a grid function space
+    //! local function space description that can be bound to an element
+    /** depends on a grid function space
+     */
     template<typename GFS>
     class LocalFunctionSpace : public LocalFunctionSpaceNode<GFS>
     {
@@ -724,6 +726,7 @@ namespace Dune {
     public:
       typedef typename BaseT::Traits Traits;
 
+      //! \todo please doc me!
       LocalFunctionSpace (const GFS& gfs)
         : BaseT(gfs), pgfs(&gfs), global(gfs.maxLocalSize())
       {}
