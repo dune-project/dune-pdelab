@@ -4,6 +4,8 @@
 #endif
 
 #include <cmath>
+#include <cstdlib>
+#include <fstream>
 #include <string>
 #include <sstream>
 
@@ -32,7 +34,91 @@
 
 #include "gridexamples.hh"
 
+//
+//  CONFIGURATION
+//
 
+// default limit for the total convergence
+// (alberta with the triangulated unit cube uses a limit derived from this
+// since albertas refinement algorithm seem to produce bad results)
+const double conv_limit = 0.85;
+
+// stop refining after the grid has more than this many elements (that means
+// in 3D that the fine grid may have up to 8 times as may elements)
+const unsigned maxelements = 10000;
+
+// whether to measure the error after every refinement, or just once at the
+// beginning and once at the end
+const bool measure_after_every_refinement = false;
+
+//
+//  CODE
+//
+
+class GnuplotGraph
+{
+public:
+  GnuplotGraph(const std::string &filename_)
+    : mode(command)
+    , filename(filename_)
+    , stream(filename.c_str())
+  {}
+
+  void addCommand(const std::string &cmd)
+  {
+    commandMode();
+    stream << cmd << std::endl;
+  }
+
+  void addPlot(const std::string &plotstuff)
+  {
+    plotMode();
+    stream << plotDelim << plotstuff;
+    plotDelim = ", \\\n     ";
+  }
+
+  ~GnuplotGraph()
+  {
+    commandMode();
+    stream.close();
+    std::ostringstream command;
+    command << "gnuplot " << filename;
+    std::system(command.str().c_str());
+  }
+
+private:
+  void commandMode()
+  {
+    switch(mode) {
+    case command:
+      break;
+    case plot:
+      stream << std::endl;
+      break;
+    }
+    mode = command;
+  }
+  
+  void plotMode()
+  {
+    switch(mode) {
+    case command:
+      plotDelim = "plot \\\n     ";
+      break;
+    case plot:
+      break;
+    }
+    mode = plot;
+  }
+
+  enum Mode { command, plot };
+
+  Mode mode;
+  std::string filename;
+  std::ofstream stream;
+  std::string plotDelim;
+};
+  
 template<typename GV, typename RF>
 class U
   : public Dune::PDELab::AnalyticGridFunctionBase<
@@ -130,24 +216,32 @@ double interpolationerror (const GV& gv, const FEM &fem, const std::string &name
 }
 
 template<typename Grid>
-void test(Dune::SmartPointer<Grid> grid, int &result, unsigned int maxelements, std::string name = "")
+void test(Dune::SmartPointer<Grid> grid, int &result, GnuplotGraph &graph, double conv_limit, std::string name = "")
 {
   if(name == "") name = grid->name();
 
   std::cout << std::endl
             << "Testing EdgeS03D interpolation with " << name << std::endl;
 
-  name = "edges03dinterpolationglobal-" + name;
+  std::string filename = "edges03dinterpolationglobal-" + name;
+  std::ostringstream plot;
+  plot << "'" << filename << ".dat' title '" << name << "' with linespoints";
+  graph.addPlot(plot.str());
+
+  std::ofstream dat((filename+".dat").c_str());
+  dat << "#h\terror" << std::endl;
+  dat.precision(8);
 
   typedef Dune::PDELab::EdgeS03DLocalFiniteElementMap<typename Grid::LeafGridView, double> FEM;
 
   std::cout << "interpolation level 0" << std::endl;
-  double error0 = interpolationerror(grid->leafView(), FEM(grid->leafView()), name+"-coarse");
-  double h0 = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
+  double error0 = interpolationerror(grid->leafView(), FEM(grid->leafView()), filename+"-coarse");
+  double mean_h0 = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
   std::cout << "interpolation error: " 
-            << std::setw(8) << grid->leafView().size(0) << " elements, h=" 
-            << std::scientific << h0 << ", error="
+            << std::setw(8) << grid->leafView().size(0) << " elements, <h>=" 
+            << std::scientific << mean_h0 << ", error="
             << std::scientific << error0 << std::endl;
+  dat << mean_h0 << "\t" << error0 << std::endl;
 
   if(Dune::FloatCmp::eq(error0, 0.0)) {
     std::cerr << "Error: The analytic function was perfectly interpolated." << std::endl
@@ -158,26 +252,42 @@ void test(Dune::SmartPointer<Grid> grid, int &result, unsigned int maxelements, 
     return;
   }
 
-  while((unsigned int)(grid->leafView().size(0)) < maxelements)
+  while(1) {
     grid->globalRefine(1);
 
-  std::cout << "interpolation level " << grid->maxLevel() << std::endl;
-  double errorf = interpolationerror(grid->leafView(), FEM(grid->leafView()), name+"-fine");
-  double hf = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
-  std::cout << "interpolation error: " 
-            << std::setw(8) << grid->leafView().size(0) << " elements, h=" 
-            << std::scientific << hf << ", error="
-            << std::scientific << errorf << std::endl;
+    if((unsigned int)(grid->leafView().size(0)) >= maxelements)
+      break;
 
-  double total_convergence = std::log(errorf/error0)/std::log(hf/h0);
+    if(measure_after_every_refinement) {
+      std::cout << "interpolation level " << grid->maxLevel() << std::endl;
+      double error = interpolationerror(grid->leafView(), FEM(grid->leafView()));
+      double mean_h = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
+      std::cout << "interpolation error: " 
+                << std::setw(8) << grid->leafView().size(0) << " elements, <h>=" 
+                << std::scientific << mean_h << ", error="
+                << std::scientific << error << std::endl;
+      dat << mean_h << "\t" << error << std::endl;
+    }
+  }
+
+  std::cout << "interpolation level " << grid->maxLevel() << std::endl;
+  double errorf = interpolationerror(grid->leafView(), FEM(grid->leafView()), filename+"-fine");
+  double mean_hf = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
+  std::cout << "interpolation error: " 
+            << std::setw(8) << grid->leafView().size(0) << " elements, <h>=" 
+            << std::scientific << mean_hf << ", error="
+            << std::scientific << errorf << std::endl;
+  dat << mean_hf << "\t" << errorf << std::endl;
+
+  double total_convergence = std::log(errorf/error0)/std::log(mean_hf/mean_h0);
   std::cout << "interpolation total convergence: "
             << std::scientific << total_convergence << std::endl;
 
   if(result != 1)
     result = 0;
 
-  if(total_convergence < 0.85) {
-    std::cout << "Error: interpolation total convergence < 0.85" << std::endl;
+  if(total_convergence < conv_limit) {
+    std::cout << "Error: interpolation total convergence < " << conv_limit << std::endl;
     result = 1;
   }
 }
@@ -189,28 +299,38 @@ int main(int argc, char** argv)
     // Grids were found
     int result = 77;
 
+    GnuplotGraph graph("testedges03dinterpolationglobal.gnuplot");
+    graph.addCommand("set logscale xy");
+    graph.addCommand("set xlabel '<h>'");
+    graph.addCommand("set ylabel 'L2 error'");
+    graph.addCommand("set key left top reverse Left");
+    graph.addCommand("");
+    graph.addCommand("set terminal postscript eps color solid");
+    graph.addCommand("set output 'edges03dinterpolationglobal.eps'");
+    graph.addCommand("");
+
 #ifdef HAVE_ALBERTA
 #if (ALBERTA_DIM != 3)
 #error ALBERTA_DIM is not set to 3 -- please check the Makefile.am
 #endif
     test(UnitTetrahedronMaker         <Dune::AlbertaGrid<3, 3>    >::create(),
-         result, 50000, "alberta-tetrahedron");
+         result, graph, conv_limit,    "alberta-tetrahedron");
     test(KuhnTriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
-          result, 50000, "alberta-cube");
+         result, graph, .7*conv_limit, "alberta-triangulated-cube-6");
 #endif
 
 #ifdef HAVE_ALUGRID
     test(UnitTetrahedronMaker         <Dune::ALUSimplexGrid<3, 3> >::create(),
-         result, 10000, "alu-tetrahedron");
+         result, graph, conv_limit,    "alu-tetrahedron");
     test(KuhnTriangulatedUnitCubeMaker<Dune::ALUSimplexGrid<3, 3> >::create(),
-         result, 10000, "alu-cube");
+         result, graph, conv_limit,    "alu-triangulated-cube-6");
 #endif // HAVE_ALUGRID
 
 #ifdef HAVE_UG
     test(UnitTetrahedronMaker         <Dune::UGGrid<3>            >::create(),
-         result, 10000, "ug-tetrahedron");
+         result, graph, conv_limit,    "ug-tetrahedron");
     test(KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
-         result, 10000, "ug-cube");
+         result, graph, conv_limit,    "ug-triangulated-cube-6");
 #endif // HAVE_ALBERTA
 
     return result;

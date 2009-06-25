@@ -95,7 +95,10 @@ testedges03dinterpolationglobal_CPPFLAGS = $(AM_CPPFLAGS)		\
 	$(ALBERTA_INCLUDE_CPPFLAGS) -DALBERTA_DIM=3 -DENABLE_ALBERTA
 testedges03dinterpolationglobal_LDADD = 			\
 	$(ALBERTA_LDFLAGS) -lalberta_3d $(ALBERTA_BASE_LIBS)
-MOSTLYCLEANFILES += edges03dinterpolationglobal-*.vtu
+MOSTLYCLEANFILES += edges03dinterpolationglobal-*.vtu	\
+	edges03dinterpolationglobal-*.dat		\
+	edges03dinterpolationglobal.eps			\
+	testedges03dinterpolationglobal.gnuplot
 
 NORMALTESTS += testelectrostatic
 testelectrostatic_SOURCES = testelectrostatic.cc
