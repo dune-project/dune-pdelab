@@ -436,7 +436,7 @@ namespace Dune {
               }
 
             // compute unique id
-            int id = is.index(*it)+gtoffset[it->type()];
+            const typename GV::IndexSet::IndexType id = is.index(*it)+gtoffset[it->type()];
 
 			// bind local function spaces to element
 			lfsu.bind(*it);
@@ -476,7 +476,7 @@ namespace Dune {
                           }
                         
                         // compute unique id for neighbor
-                        int idn = is.index(*(iit->outside()))+gtoffset[gtn];
+                        const typename GV::IndexSet::IndexType idn = is.index(*(iit->outside()))+gtoffset[gtn];
                           
                         // unique vist of intersection
                         if (id>idn)
