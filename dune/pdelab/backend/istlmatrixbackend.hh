@@ -1,3 +1,4 @@
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifndef DUNE_ISTLMATRIXBACKEND_HH
 #define DUNE_ISTLMATRIXBACKEND_HH
 
@@ -14,7 +15,7 @@
 namespace Dune {
   namespace PDELab {
 
-	// ISTL backend for LinearOperatorSpace
+	//! ISTL backend for LinearOperatorSpace
 	template<int ROWBLOCKSIZE, int COLBLOCKSIZE>
 	class ISTLBCRSMatrixBackend
 	{
@@ -22,7 +23,7 @@ namespace Dune {
 	  //! The size type
 	  typedef typename Dune::BCRSMatrix< Dune::FieldMatrix<float,1,1> >::size_type size_type;
 
-	  // container construction
+	  //! container construction
 	  template<typename T, typename E>
 	  class Matrix : public Dune::BCRSMatrix< Dune::FieldMatrix<E,ROWBLOCKSIZE,COLBLOCKSIZE> >
 	  {
@@ -33,6 +34,7 @@ namespace Dune {
 		typedef E ElementType;
 		typedef Dune::BCRSMatrix<M> BaseT;
 
+        //! construct container
 		Matrix (const T& t) 
 		  : BaseT(t.globalSizeV()/ROWBLOCKSIZE,t.globalSizeU()/COLBLOCKSIZE,
 				  Dune::BCRSMatrix<M>::random) 
@@ -65,32 +67,34 @@ namespace Dune {
 
 		}
 
+        //! set from element
 		Matrix& operator= (const E& x)
 		{
 		  BaseT::operator=(x);
 		  return *this;
 		}
 
-		// for debugging and AMG access
+		//! for debugging and AMG access
 		BaseT& base ()
 		{
 		  return *this;
 		}
 
+		//! for debugging and AMG access
 		const BaseT& base () const
 		{
 		  return *this;
 		}
 	  };
 
-	  // extract type of container element 
+	  //! extract type of container element 
 	  template<class C>
 	  struct Value
 	  {
 		typedef typename C::field_type Type;
 	  };
 
-	  // type to store sparsity pattern of block indices
+	  //! type to store sparsity pattern of block indices
 	  class Pattern : public std::vector< std::set<size_type> >
 	  {
 		typedef std::vector< std::set<size_type> > BaseT;
@@ -111,16 +115,20 @@ namespace Dune {
 	  //==========================
 
 
-	  // get const_reference to container element
-	  // note: this method does not depend on T!
+	  //! get const_reference to container element
+	  /**
+           * \note this method does not depend on T!
+           */
 	  template<typename C>
 	  static const typename C::field_type& const_access (const C& c, size_type i, size_type j)
 	  {
 		return c[i/ROWBLOCKSIZE][j/COLBLOCKSIZE][i%ROWBLOCKSIZE][j%COLBLOCKSIZE];
 	  }
 
-	  // get non const_reference to container element 
-	  // note: this method does not depend on T!
+	  //! get non const_reference to container element 
+	  /**
+           * \note this method does not depend on T!
+           */
 	  template<typename C>
 	  static typename C::field_type& access (C& c, size_type i, size_type j)
 	  {
@@ -179,7 +187,7 @@ namespace Dune {
 // 			}
 // 	  }
 
-	  // clear one row of the matrix
+	  //! clear one row of the matrix
 	  template<typename C, typename RI>
 	  static void clear_row (RI i, C& c)
 	  {

@@ -50,10 +50,13 @@ namespace Dune {
     {
     };
 
-	// The generic assembler ...
-	// GFSU, GFSV : grid function spaces
-	// LP : local pattern assembler (provided by user)
-	// LA : local operator assembler (provided by user)
+	//! The generic assembler ...
+    /**
+     * \tparam GFSU GridFunctionSpace for ansatz functions
+     * \tparam GFSV GridFunctionSpace for test functions
+     * \tparam LP   local pattern assembler (provided by user)
+     * \tparam LA   local operator assembler (provided by user)
+     */
 	template<typename GFSU, typename GFSV, typename LA,
 			 typename CU=EmptyTransformation,
 			 typename CV=EmptyTransformation,
@@ -79,6 +82,7 @@ namespace Dune {
         MatrixContainer () {}
       };
 
+      //! construct GridOperatorSpace
 	  GridOperatorSpace (const GFSU& gfsu_, const GFSV& gfsv_, const LA& la_) 
 		: gfsu(gfsu_), gfsv(gfsv_), la(la_)
 	  {
@@ -86,6 +90,7 @@ namespace Dune {
 		pconstraintsv = &emptyconstraintsv;
 	  }
 
+      //! construct GridOperatorSpace, with constraints
 	  GridOperatorSpace (const GFSU& gfsu_, const CU& cu,
 						 const GFSV& gfsv_, const CV& cv,
 						 const LA& la_) 
@@ -183,7 +188,10 @@ namespace Dune {
       }
 
 
-	  // generic evaluation of residual
+	  //! generic evaluation of residual
+      /**
+       * \param r residual (needs to be cleared before this method is called)
+       */
 	  template<typename X, typename R> 
 	  void residual (const X& x, R& r) const
 	  {
@@ -298,7 +306,7 @@ namespace Dune {
 		Dune::PDELab::constrain_residual(*pconstraintsv,r);
 	  }
 
-	  // generic evaluation of residual
+	  //! generic application of Jacobian
 	  template<typename X, typename Y> 
 	  void jacobian_apply (X& x, Y& y) const
 	  {
@@ -408,7 +416,11 @@ namespace Dune {
 		Dune::PDELab::copy_constrained_dofs(*pconstraintsu,x,y);
 	  }
 
-	  // generic assembly of Jacobian
+	  //! generic assembly of Jacobian
+      /**
+       * \param x Where (in the space spanned by the dofs) to evaluate the Jacobian
+       * \param a Jacobian (needs to be cleared before passed to this method)
+       */
 	  template<typename X, typename A> 
 	  void jacobian (const X& x, A& a) const
 	  {
@@ -515,7 +527,7 @@ namespace Dune {
 				  }
 			  }
 
-			// accumulate result (note: r needs to be cleared outside)
+			// accumulate result (note: a needs to be cleared outside)
 			etadd(lfsv,lfsu,al,a);
 		  }
 
@@ -525,10 +537,10 @@ namespace Dune {
            set_trivial_row(cit->first,cit->second,a);
  	  }
 
-      /** \brief Transforms a vector /f$ \boldsymbol{x} /f$ from /f$
-          V/f$ to /f$ V'/f$. If postrestrict == true then
-          /f$\boldsymbol{R}^T_{\tilde \boldsymbol{U}', \boldsymbol{U}'}
-          \boldsymbol{S}_{\tilde \boldsymbol{V}}/f$ is applied
+      /** \brief Transforms a vector \f$ \boldsymbol{x} \f$ from \f$
+          V\f$ to \f$ V'\f$. If postrestrict == true then
+          \f$\boldsymbol{R}^T_{\boldsymbol{\tilde U}', \boldsymbol{U}'}
+          \boldsymbol{S}_{\boldsymbol{\tilde V}}\f$ is applied
            instead of the full transformation.  */
       template<typename X>
       void forwardtransform(X & x, const bool postrestrict = false)
@@ -553,9 +565,9 @@ namespace Dune {
             x[cit->first]=0.;
       }
 
-      /** \brief Transforms a vector /f$ \boldsymbol{x} /f$ from /f$
-          V'/f$ to /f$ V/f$. If prerestrict == true then
-          /f$\boldsymbol{S}^T_{\tilde \boldsymbol{U}}/f$ is applied
+      /** \brief Transforms a vector \f$ \boldsymbol{x} \f$ from \f$
+          V'\f$ to \f$ V\f$. If prerestrict == true then
+          \f$\boldsymbol{S}^T_{\boldsymbol{\tilde U}}\f$ is applied
            instead of the full transformation.  */
       template<typename X>
       void backtransform(X & x, const bool prerestrict = false)
@@ -609,11 +621,11 @@ namespace Dune {
             B::access(globalcontainer,lfsv.globalIndex(i),lfsu.globalIndex(j)) += localcontainer(i,j);
       }
 
-      /** \brief Add local matrix /f$m/f$ to global Jacobian /f$J/f$
-          and apply constraints transformation. Hence we perform: /f$
-          \boldsymbol{J} := \boldsymbol{J} + \boldsymbol{S}_{\tilde
-          \boldsymbol{V}} m \boldsymbol{S}^T_{\tilde
-          \boldsymbol{\tilde U}} /f$*/  
+      /** \brief Add local matrix \f$m\f$ to global Jacobian \f$J\f$
+          and apply constraints transformation. Hence we perform: \f$
+          \boldsymbol{J} := \boldsymbol{J} + \boldsymbol{S}_{
+          \boldsymbol{\tilde V}} m \boldsymbol{S}^T_{
+          \boldsymbol{\tilde U}} \f$*/  
       template<typename LFSV, typename LFSU, typename T, typename GC>
       void etadd (const LFSV& lfsv, const LFSU& lfsu, const LocalMatrix<T>& localcontainer, GC& globalcontainer) const
       {
