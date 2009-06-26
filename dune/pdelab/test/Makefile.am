@@ -81,13 +81,13 @@ testedges02dinterpolationglobal_LDADD = 			\
 	$(ALBERTA_LDFLAGS) -lalberta_2d $(ALBERTA_BASE_LIBS)
 MOSTLYCLEANFILES += edges02dinterpolationglobal-*.vtu
 
-NORMALTESTS += testedges03dgridfunctionsspace
-testedges03dgridfunctionsspace_SOURCES = testedges03dgridfunctionsspace.cc
-testedges03dgridfunctionsspace_CPPFLAGS = $(AM_CPPFLAGS)		\
+NORMALTESTS += testedges03dgridfunctionsspaceglobal
+testedges03dgridfunctionsspaceglobal_SOURCES = testedges03dgridfunctionsspaceglobal.cc
+testedges03dgridfunctionsspaceglobal_CPPFLAGS = $(AM_CPPFLAGS)		\
 	$(ALBERTA_INCLUDE_CPPFLAGS) -DALBERTA_DIM=3 -DENABLE_ALBERTA
-testedges03dgridfunctionsspace_LDADD =				\
+testedges03dgridfunctionsspaceglobal_LDADD =				\
 	$(ALBERTA_LDFLAGS) -lalberta_3d $(ALBERTA_BASE_LIBS)
-MOSTLYCLEANFILES += edges03dgridfunctionspace-*.vtu
+MOSTLYCLEANFILES += edges03dgridfunctionspaceglobal-*.vtu
 
 NORMALTESTS += testedges03dinterpolationglobal
 testedges03dinterpolationglobal_SOURCES = testedges03dinterpolationglobal.cc
@@ -103,9 +103,11 @@ MOSTLYCLEANFILES += edges03dinterpolationglobal-*.vtu	\
 NORMALTESTS += testelectrostatic
 testelectrostatic_SOURCES = testelectrostatic.cc
 testelectrostatic_CPPFLAGS = $(AM_CPPFLAGS)				\
-	$(ALBERTA_INCLUDE_CPPFLAGS) -DALBERTA_DIM=3 -DENABLE_ALBERTA
+	$(ALBERTA_INCLUDE_CPPFLAGS) -DALBERTA_DIM=3 -DENABLE_ALBERTA	\
+	$(SUPERLU_CPPFLAGS)
 testelectrostatic_LDADD =					\
-	$(ALBERTA_LDFLAGS) -lalberta_3d $(ALBERTA_BASE_LIBS)
+	$(ALBERTA_LDFLAGS) -lalberta_3d $(ALBERTA_BASE_LIBS)	\
+	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)
 MOSTLYCLEANFILES += electrostatic_*.vtu
 
 NORMALTESTS += testfiniteelementmap

@@ -16,6 +16,7 @@
 #include <dune/istl/operators.hh>
 #include <dune/istl/preconditioners.hh>
 #include <dune/istl/solvers.hh>
+#include <dune/istl/superlu.hh>
 
 #include "../backend/istlmatrixbackend.hh"
 #include "../backend/istlsolverbackend.hh"
@@ -170,7 +171,6 @@ void electrostatic (const GV& gv, const FEM& fem, std::string filename)
   Dune::PDELab::interpolateGlobal(g,gfs,x0);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
 
-#if 0
   // make grid function operator
   typedef Mu<GV,R> MuType;
   MuType mu(gv);
@@ -183,52 +183,37 @@ void electrostatic (const GV& gv, const FEM& fem, std::string filename)
   // represent operator as a matrix
   typedef typename GOS::template MatrixContainer<R>::Type M;
   M m(gos);
-  m = 0.0;
+  m = 0;
   gos.jacobian(x0,m);
-  //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
+  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
   // evaluate residual w.r.t initial guess
-  V r(gfs);
-  r = 0.0;
-  gos.residual(x0,r);
+  V rhs(gfs);
+  rhs = 0.0;
+  gos.residual(x0,rhs);
+  rhs *= -1;
 
-  // make ISTL solver
-  Dune::MatrixAdapter<M,V,V> opa(m);
-  typedef Dune::PDELab::OnTheFlyOperator<V,V,GOS> ISTLOnTheFlyOperator;
-  ISTLOnTheFlyOperator opb(gos);
-  Dune::SeqSSOR<M,V,V> ssor(m,1,1.0);
-  Dune::SeqILU0<M,V,V> ilu0(m,1.0);
-  Dune::Richardson<V,V> richardson(1.0);
-
-//   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<M,
-//     Dune::Amg::FirstDiagonal> > Criterion;
-//   typedef Dune::SeqSSOR<M,V,V> Smoother;
-//   typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments SmootherArgs;
-//   SmootherArgs smootherArgs;
-//   smootherArgs.iterations = 2;
-//   int maxlevel = 20, coarsenTarget = 100;
-//   Criterion criterion(maxlevel, coarsenTarget);
-//   criterion.setMaxDistance(2);
-//   typedef Dune::Amg::AMG<Dune::MatrixAdapter<M,V,V>,V,Smoother> AMG;
-//   AMG amg(opa,criterion,smootherArgs,1,1);
-
-  Dune::CGSolver<V> solvera(opa,ilu0,1E-10,5000,2);
-  Dune::CGSolver<V> solverb(opb,richardson,1E-10,5000,2);
+  typedef Dune::SuperLU<typename M::BaseT> SLUSolver;
+  SLUSolver sluSolver(m);
   Dune::InverseOperatorResult stat;
 
-  // solve the jacobian system
-  r *= -1.0; // need -residual
-#endif
-  V x(gfs,0.0);
-//  solvera.apply(x,r,stat);
-  x += x0;
+  V x(gfs);
+  x = 0.0;
+  sluSolver.apply(x,rhs,stat);
+  std::cout << "SuperLU results:" << std::endl
+            << "  iterations: " << stat.iterations << std::endl
+            << "  reduction:  " << stat.reduction << std::endl
+            << "  converged:  " << stat.converged << std::endl
+            << "  conv_rate:  " << stat.conv_rate << std::endl
+            << "  elapsed:    " << stat.elapsed << std::endl;
+  x += x0;  // set constrained dofs???
 
   // make discrete function object
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+  typedef Dune::PDELab::DiscreteGridFunctionGlobal<GFS,V> DGF;
   DGF dgf(gfs,x);
   
   // output grid function with VTKWriter
-  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,1);
+  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,0);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
   vtkwriter.write(filename,Dune::VTKOptions::ascii);
 }
@@ -247,8 +232,8 @@ int main(int argc, char** argv)
 #ifdef HAVE_ALBERTA
     {
       typedef Dune::AlbertaGrid<3,3> Grid;
-      Dune::SmartPointer<Grid> grid = UnitTetrahedronMaker<Grid>::create();
-      //grid->globalRefine(1);
+      Dune::SmartPointer<Grid> grid = KuhnTriangulatedUnitCubeMaker<Grid>::create();
+      //grid->globalRefine(3);
 
       // get view
       typedef Grid::LeafGridView GV;

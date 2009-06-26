@@ -30,13 +30,13 @@
 #include "gridexamples.hh"
 
 template<typename GV>
-void edgeS03DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
+void edgeS03DGridFunctionSpaceGlobal (const GV& gv, const std::string &suffix = "")
 {
   typedef typename GV::Grid::ctype D; // domain type
   typedef double R;                   // range type
 
   std::ostringstream filename;
-  filename << "edges03dgridfunctionspace";
+  filename << "edges03dgridfunctionspaceglobal";
   if(suffix != "") filename << "-" << suffix;
 
   Dune::PDELab::EdgeS03DLocalFiniteElementMap<GV,R> fem(gv);   // maps entity to finite element
@@ -80,7 +80,7 @@ void test(Dune::SmartPointer<Grid> grid, int &result, std::string name = "", uns
 
   if(name == "") name = grid->name();
 
-  edgeS03DGridFunctionSpace(grid->leafView(), name);
+  edgeS03DGridFunctionSpaceGlobal(grid->leafView(), name);
   result = 0;
 }
 
