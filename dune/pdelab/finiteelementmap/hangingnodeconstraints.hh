@@ -90,7 +90,7 @@ namespace Dune {
               const unsigned int fi[16] = {0,1,2,3, 1,0,3,2, 2,0,3,1, 3,1,2,0};
 
               // Only hanging nodes have contribution to other nodes
-              if(nodeState[m[j]].isHanging() && !nodeState[m[j]].isBoundary()){
+              if(nodeState[m[j]].isHanging()){
 
                 const SizeType node_coeff_index = mapEntityCoeff[m[j]];
                 
