@@ -12,7 +12,7 @@ namespace Dune {
     {
     private:
       enum{ verbosity = 1 };
-      typedef typename Grid::GlobalIdSet::IdType IdType;
+      typedef typename Grid::LeafIndexSet::IndexType IndexType;
 
       // Codim 0 Mapper
       template<int dim>
@@ -122,13 +122,13 @@ namespace Dune {
 	  const unsigned short level = it->level();
       
 	  // number of vertices in this element
-	  const IdType v_size = reference_element.size(dim);
+	  const IndexType v_size = reference_element.size(dim);
 
 	  // update minimum_level and maximum_level for vertices in this
 	  // cell
-	  for(IdType i=0; i<v_size; ++i){
+	  for(IndexType i=0; i<v_size; ++i){
 	    const VertexEntityPointer vertex = it->template subEntity<dim>(i);
-	    const IdType v_globalindex = vertex_mapper.map( *vertex );
+	    const IndexType v_globalindex = vertex_mapper.map( *vertex );
 	    unsigned short & min = node_info[v_globalindex].minimum_level;
 	    unsigned short & max = node_info[v_globalindex].maximum_level;
 	    if (level < min) min = level;
@@ -158,7 +158,7 @@ namespace Dune {
 	      for(int i=0; i<e_v_size;++i){
 		const int e_v_index = reference_element.subEntity(eLocalIndex,1,i,dim);
 		const VertexEntityPointer vertex = it->template subEntity<dim>(e_v_index);
-		const IdType v_globalindex = vertex_mapper.map( *vertex );
+		const IndexType v_globalindex = vertex_mapper.map( *vertex );
 
 		const FacePoint facelocal_position = reference_face_element.position(i,dim-1);
 		typename BoundaryFunction::Traits::RangeType boundary_value;
@@ -194,7 +194,7 @@ namespace Dune {
 	    for(int i=0; i<e_v_size;++i){
 	      const int e_v_index = reference_element.subEntity(eLocalIndex,1,i,dim);
 	      const VertexEntityPointer vertex = it->template subEntity<dim>(e_v_index);
-	      const IdType v_globalindex = vertex_mapper.map( *vertex );
+	      const IndexType v_globalindex = vertex_mapper.map( *vertex );
 	      unsigned short & min = node_info[v_globalindex].minimum_touching_level;
 	      if( f_level < min) min = f_level;
 	    }
@@ -219,16 +219,16 @@ namespace Dune {
 	  Dune::GenericReferenceElements<double,dim>::general(e->geometry().type()); 
 
 	// number of vertices in this element
-	const IdType v_size = reference_element.size(dim);
+	const IndexType v_size = reference_element.size(dim);
 
 	// make sure the return array is big enough
 	is_hanging.resize(v_size);
 
 	// update minimum_level and maximum_level for vertices in this
 	// cell
-	for(IdType i=0; i<v_size; ++i){
+	for(IndexType i=0; i<v_size; ++i){
 	  const VertexEntityPointer & vertex = e->template subEntity<dim>(i);
-	  const IdType v_globalindex = vertex_mapper.map( *vertex );
+	  const IndexType v_globalindex = vertex_mapper.map( *vertex );
 
 	  // here we make use of the fact that a node is hanging if and
 	  // only if it touches a cell of a level smaller than the
@@ -281,13 +281,13 @@ namespace Dune {
 
 	    const unsigned short level = it->level();
 	    // number of vertices in this element
-	    const IdType v_size = reference_element.size(dim);
+	    const IndexType v_size = reference_element.size(dim);
 
 	    // update minimum_level and maximum_level for vertices in this
 	    // cell
-	    for(IdType i=0; i<v_size; ++i){
+	    for(IndexType i=0; i<v_size; ++i){
 	      const VertexEntityPointer & vertex = it->template subEntity<dim>(i);
-	      const IdType v_globalindex = vertex_mapper.map( *vertex );
+	      const IndexType v_globalindex = vertex_mapper.map( *vertex );
 	      const NodeInfo & v_info = node_info[v_globalindex];
 
 	      const unsigned short level_diff = v_info.maximum_level - level;
