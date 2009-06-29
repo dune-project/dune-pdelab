@@ -4,17 +4,14 @@
 #endif
 
 #include <cmath>
-#include <cstdlib>
 #include <fstream>
 #include <string>
 #include <sstream>
 
 #include <dune/common/float_cmp.hh>
 #include <dune/common/fvector.hh>
-#include <dune/common/geometrytype.hh>
 #include <dune/common/smartpointer.hh>
 
-#include <dune/grid/common/quadraturerules.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #ifdef HAVE_ALBERTA
 #include <dune/grid/albertagrid.hh>
@@ -32,7 +29,9 @@
 #include "../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include "../gridfunctionspace/interpolate.hh"
 
+#include "gnuplotgraph.hh"
 #include "gridexamples.hh"
+#include "l2difference.hh"
 
 //
 //  CONFIGURATION
@@ -55,70 +54,6 @@ const bool measure_after_every_refinement = false;
 //  CODE
 //
 
-class GnuplotGraph
-{
-public:
-  GnuplotGraph(const std::string &filename_)
-    : mode(command)
-    , filename(filename_)
-    , stream(filename.c_str())
-  {}
-
-  void addCommand(const std::string &cmd)
-  {
-    commandMode();
-    stream << cmd << std::endl;
-  }
-
-  void addPlot(const std::string &plotstuff)
-  {
-    plotMode();
-    stream << plotDelim << plotstuff;
-    plotDelim = ", \\\n     ";
-  }
-
-  ~GnuplotGraph()
-  {
-    commandMode();
-    stream.close();
-    std::ostringstream command;
-    command << "gnuplot " << filename;
-    std::system(command.str().c_str());
-  }
-
-private:
-  void commandMode()
-  {
-    switch(mode) {
-    case command:
-      break;
-    case plot:
-      stream << std::endl;
-      break;
-    }
-    mode = command;
-  }
-  
-  void plotMode()
-  {
-    switch(mode) {
-    case command:
-      plotDelim = "plot \\\n     ";
-      break;
-    case plot:
-      break;
-    }
-    mode = plot;
-  }
-
-  enum Mode { command, plot };
-
-  Mode mode;
-  std::string filename;
-  std::ofstream stream;
-  std::string plotDelim;
-};
-  
 template<typename GV, typename RF>
 class U
   : public Dune::PDELab::AnalyticGridFunctionBase<
@@ -142,43 +77,6 @@ public:
     y = exp(-3.0*center.two_norm2());
   }
 };
-
-template<typename GV, typename U, typename V> 
-double l2difference (const GV & gv, const U& u, const V &v, int qorder=1)
-{
-  // constants and types
-  const int dim = GV::Grid::dimension;
-  typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
-  typedef typename GV::Grid::ctype ct;
-  
-  // loop over grid view
-  double sum = 0.0;
-  for (ElementIterator eit = gv.template begin<0>();
-       eit!=gv.template end<0>(); ++eit)
-  {
-
-    Dune::GeometryType gt = eit->geometry().type();
-    const Dune::QuadratureRule<ct,dim>& 
-      rule = Dune::QuadratureRules<ct,dim>::rule(gt,qorder);
-
-    for (typename Dune::QuadratureRule<ct,dim>::const_iterator qit=rule.begin();
-         qit!=rule.end(); ++qit)
-    {
-      // evaluate the given grid functions at integration point
-      typename U::Traits::RangeType u_val;
-      u.evaluate(*eit,qit->position(),u_val);
-
-      typename V::Traits::RangeType v_val;
-      v.evaluate(*eit,qit->position(),v_val);
-
-      // accumulate error
-      v_val -= u_val;
-      sum += v_val.two_norm2()*qit->weight()*
-        eit->geometry().integrationElement(qit->position());
-    }
-  }
-  return std::sqrt(sum);
-}
 
 template<typename GV, typename FEM>
 double interpolationerror (const GV& gv, const FEM &fem, const std::string &name = "")

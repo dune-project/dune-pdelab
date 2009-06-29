@@ -103,7 +103,7 @@ namespace Dune {
           {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType> J(lfsu.size());
-            lfsu.localFiniteElement().localBasis().evaluateJacobian(it->position(),J);
+            lfsu.localFiniteElement().localBasis().evaluateJacobianGlobal(it->position(),J,eg.geometry());
 
             std::vector<D> rotphi(lfsu.size(),D(0));
             for(unsigned i = 0; i < lfsu.size(); ++i)
@@ -162,7 +162,7 @@ namespace Dune {
 
           // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
           std::vector<JacobianType> J(lfsu_s.size());
-          lfsu_s.localFiniteElement().localBasis().evaluateJacobian(pos,J);
+          lfsu_s.localFiniteElement().localBasis().evaluateJacobianGlobal(pos,J,ig.inside()->geometry());
 
           std::vector<D> rotphi(lfsu_s.size(),D(0));
           for(unsigned i = 0; i < lfsu_s.size(); ++i)
@@ -182,7 +182,7 @@ namespace Dune {
           mu.evaluate(*ig.inside(), pos, muval);
 
           std::vector<D> phi(lfsu_s.size());
-          lfsu_s.localFiniteElement().localBasis().evaluateFunction(pos,phi);
+          lfsu_s.localFiniteElement().localBasis().evaluateFunctionGlobal(pos,phi,ig.inside()->geometry());
 
           // integrate v * (n x rot E)
           RF factor = it->weight() * ig.geometry().integrationElement(it->position()) / muval;

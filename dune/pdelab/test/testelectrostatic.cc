@@ -33,7 +33,9 @@
 #include "../gridoperatorspace/gridoperatorspace.hh"
 #include "../localoperator/electrostatic.hh"
 
+#include "gnuplotgraph.hh"
 #include "gridexamples.hh"
+#include "l2difference.hh"
 
 
 //===============================================================
@@ -43,6 +45,27 @@
 //                 n x (n x E) = g on \partial\Omega_D
 //===============================================================
 //===============================================================
+
+//
+//  CONFIGURATION
+//
+
+// default limit for the total convergence
+// (alberta with the triangulated unit cube uses a limit derived from this
+// since albertas refinement algorithm seem to produce bad results)
+const double conv_limit = 0.85;
+
+// stop refining after the grid has more than this many elements (that means
+// in 3D that the fine grid may have up to 8 times as may elements)
+const unsigned maxelements = 10000;
+
+// whether to measure the error after every refinement, or just once at the
+// beginning and once at the end
+const bool measure_after_every_refinement = false;
+
+//
+//  CODE
+//
 
 //===============================================================
 // Define parameter function mu
@@ -66,8 +89,12 @@ public:
   evaluateGlobal (const typename Traits::DomainType& x, 
                   typename Traits::RangeType& y) const
   {
-    y = 1.0;
+//     typename Traits::DomainType myx(0.5);
+//     myx -= x;
+//     y = 1+exp(-3.0*myx.two_norm2());
+    y = 1;
   }
+
 };
 
 // boundary grid function selecting boundary conditions 
@@ -129,7 +156,12 @@ public:
   evaluateGlobal (const typename Traits::DomainType& x, 
                   typename Traits::RangeType& y) const
   {
-    y = prescribedE;
+    typename Traits::DomainType center(0.5); center[0] = -0.5;
+    y = x;
+    y -= center;
+    y /= std::pow(y.two_norm(),3);
+
+//     y = prescribedE;
   }
 
 private:
@@ -142,7 +174,7 @@ private:
 
 // generate a P1 function and output it
 template<typename GV, typename FEM, typename CON, int q> 
-void electrostatic (const GV& gv, const FEM& fem, std::string filename)
+double electrostatic (const GV& gv, const FEM& fem, const std::string &filename = "")
 {
   // constants and types
   typedef typename GV::Grid::ctype DF;
@@ -185,7 +217,7 @@ void electrostatic (const GV& gv, const FEM& fem, std::string filename)
   M m(gos);
   m = 0;
   gos.jacobian(x0,m);
-  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
+  //Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
   // evaluate residual w.r.t initial guess
   V rhs(gfs);
@@ -212,11 +244,101 @@ void electrostatic (const GV& gv, const FEM& fem, std::string filename)
   typedef Dune::PDELab::DiscreteGridFunctionGlobal<GFS,V> DGF;
   DGF dgf(gfs,x);
   
-  // output grid function with VTKWriter
-  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,0);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-  vtkwriter.write(filename,Dune::VTKOptions::ascii);
+  if(filename != "") {
+    // output grid function with VTKWriter
+    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,0);
+    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
+    vtkwriter.write(filename,Dune::VTKOptions::ascii);
+  }
+
+  return l2difference(gv,g,dgf,4);
 }
+
+template<typename Grid>
+void test(Dune::SmartPointer<Grid> grid, int &result, GnuplotGraph &graph, double conv_limit, std::string name = "")
+{
+  typedef typename Grid::LeafGridView GV;
+
+  if(name == "") name = grid->name();
+
+  std::cout << std::endl
+            << "Testing Electrostatic problem with EdgeS03D and " << name << std::endl;
+
+  std::string filename = "electrostatic-" + name;
+  std::ostringstream plot;
+  plot << "'" << filename << ".dat' title '" << name << "' with linespoints";
+  graph.addPlot(plot.str());
+
+  std::ofstream dat((filename+".dat").c_str());
+  dat << "#h\terror" << std::endl;
+  dat.precision(8);
+
+  typedef Dune::PDELab::EdgeS03DLocalFiniteElementMap<typename Grid::LeafGridView, double> FEM;
+
+  std::cout << "electrostatic level 0" << std::endl;
+  double error0 = electrostatic
+    <GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>
+    (grid->leafView(), FEM(grid->leafView()), filename+"-coarse");
+  double mean_h0 = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
+  std::cout << "L2 error: " 
+            << std::setw(8) << grid->leafView().size(0) << " elements, <h>=" 
+            << std::scientific << mean_h0 << ", error="
+            << std::scientific << error0 << std::endl;
+  dat << mean_h0 << "\t" << error0 << std::endl;
+
+//   if(Dune::FloatCmp::eq(error0, 0.0)) {
+//     std::cerr << "Error: The analytic function was perfectly interpolated." << std::endl
+//               << "Error: This makes the interpolation convergence test meaningless." << std::endl
+//               << "Error: Please change this test program to use an analyting function which cannot be" << std::endl
+//               << "Error: represented exacly by this basis, i.e. something containing exp()" << std::endl;
+//     result = 1;
+//     return;
+//   }
+
+  while(1) {
+    grid->globalRefine(1);
+
+    if((unsigned int)(grid->leafView().size(0)) >= maxelements)
+      break;
+
+    if(measure_after_every_refinement) {
+      std::cout << "electrostatic level " << grid->maxLevel() << std::endl;
+      double error = electrostatic
+        <GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>
+        (grid->leafView(), FEM(grid->leafView()));
+      double mean_h = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
+      std::cout << "L2 error: " 
+                << std::setw(8) << grid->leafView().size(0) << " elements, <h>=" 
+                << std::scientific << mean_h << ", error="
+                << std::scientific << error << std::endl;
+      dat << mean_h << "\t" << error << std::endl;
+    }
+  }
+
+  std::cout << "electrostatic level " << grid->maxLevel() << std::endl;
+  double errorf = electrostatic
+    <GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>
+    (grid->leafView(), FEM(grid->leafView()), filename+"-fine");
+  double mean_hf = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
+  std::cout << "L2 error: " 
+            << std::setw(8) << grid->leafView().size(0) << " elements, <h>=" 
+            << std::scientific << mean_hf << ", error="
+            << std::scientific << errorf << std::endl;
+  dat << mean_hf << "\t" << errorf << std::endl;
+
+  double total_convergence = std::log(errorf/error0)/std::log(mean_hf/mean_h0);
+  std::cout << "electrostatic total convergence: "
+            << std::scientific << total_convergence << std::endl;
+
+  if(result != 1)
+    result = 0;
+
+  if(total_convergence < conv_limit) {
+    std::cout << "Error: electrostatic total convergence < " << conv_limit << std::endl;
+    result = 1;
+  }
+}
+
 
 //===============================================================
 // Main program with grid setup
@@ -229,28 +351,25 @@ int main(int argc, char** argv)
     // supported grids were available
     int result = 77;
 
+    GnuplotGraph graph("testelectrostatic.gnuplot");
+    graph.addCommand("set logscale xy");
+    graph.addCommand("set xlabel '<h>'");
+    graph.addCommand("set ylabel 'L2 error'");
+    graph.addCommand("set key left top reverse Left");
+    graph.addCommand("");
+    graph.addCommand("set terminal postscript eps color solid");
+    graph.addCommand("set output 'electrostatic.eps'");
+    graph.addCommand("");
+
 #ifdef HAVE_ALBERTA
-    {
-      typedef Dune::AlbertaGrid<3,3> Grid;
-      Dune::SmartPointer<Grid> grid = KuhnTriangulatedUnitCubeMaker<Grid>::create();
-      //grid->globalRefine(3);
-
-      // get view
-      typedef Grid::LeafGridView GV;
-      const GV& gv=grid->leafView(); 
-
-      // make finite element map
-      typedef Grid::ctype DF;
-      typedef Dune::PDELab::EdgeS03DLocalFiniteElementMap<GV,double> FEM;
-      FEM fem(gv);
-  
-      // solve problem
-      electrostatic
-        <GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>
-        (gv,fem,"electrostatic_alberta");
-    }
-    result = 0;
-#endif // HAVE_ALBERTA
+#if (ALBERTA_DIM != 3)
+#error ALBERTA_DIM is not set to 3 -- please check the Makefile.am
+#endif
+//     test(UnitTetrahedronMaker         <Dune::AlbertaGrid<3, 3>    >::create(),
+//          result, graph, conv_limit,    "alberta-tetrahedron");
+    test(KuhnTriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
+         result, graph, .7*conv_limit, "alberta-triangulated-cube-6");
+#endif
 
 	return result;
   }

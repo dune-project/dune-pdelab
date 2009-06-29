@@ -23,7 +23,10 @@ LIBS = @LIBS@					\
 	$(MPI_LDFLAGS) $(MPILIBS)		\
 	$(UG_LDFLAGS) $(UG_LIBS)
 
-noinst_HEADERS = gridexamples.hh
+noinst_HEADERS =				\
+	gnuplotgraph.hh				\
+	gridexamples.hh				\
+	l2difference.hh
 
 
 NORMALTESTS += testanalytic
@@ -57,11 +60,11 @@ testedges02d_LDADD =				\
 	$(ALBERTA_LDFLAGS) $(ALBERTA_LIBS)
 MOSTLYCLEANFILES += testedges02d.vtu
 
-NORMALTESTS += testedges02dgridfunctionsspace
-testedges02dgridfunctionsspace_SOURCES = testedges02dgridfunctionsspace.cc
-testedges02dgridfunctionsspace_CPPFLAGS = $(AM_CPPFLAGS)		\
+NORMALTESTS += testedges02dgridfunctionspace
+testedges02dgridfunctionspace_SOURCES = testedges02dgridfunctionspace.cc
+testedges02dgridfunctionspace_CPPFLAGS = $(AM_CPPFLAGS)		\
 	$(ALBERTA_INCLUDE_CPPFLAGS) -DALBERTA_DIM=2 -DENABLE_ALBERTA
-testedges02dgridfunctionsspace_LDADD =				\
+testedges02dgridfunctionspace_LDADD =				\
 	$(ALBERTA_LDFLAGS) -lalberta_2d $(ALBERTA_BASE_LIBS)
 MOSTLYCLEANFILES += edges02dgridfunctionspace-*.vtu
 
@@ -81,11 +84,11 @@ testedges02dinterpolationglobal_LDADD = 			\
 	$(ALBERTA_LDFLAGS) -lalberta_2d $(ALBERTA_BASE_LIBS)
 MOSTLYCLEANFILES += edges02dinterpolationglobal-*.vtu
 
-NORMALTESTS += testedges03dgridfunctionsspaceglobal
-testedges03dgridfunctionsspaceglobal_SOURCES = testedges03dgridfunctionsspaceglobal.cc
-testedges03dgridfunctionsspaceglobal_CPPFLAGS = $(AM_CPPFLAGS)		\
+NORMALTESTS += testedges03dgridfunctionspaceglobal
+testedges03dgridfunctionspaceglobal_SOURCES = testedges03dgridfunctionspaceglobal.cc
+testedges03dgridfunctionspaceglobal_CPPFLAGS = $(AM_CPPFLAGS)		\
 	$(ALBERTA_INCLUDE_CPPFLAGS) -DALBERTA_DIM=3 -DENABLE_ALBERTA
-testedges03dgridfunctionsspaceglobal_LDADD =				\
+testedges03dgridfunctionspaceglobal_LDADD =				\
 	$(ALBERTA_LDFLAGS) -lalberta_3d $(ALBERTA_BASE_LIBS)
 MOSTLYCLEANFILES += edges03dgridfunctionspaceglobal-*.vtu
 
@@ -108,7 +111,11 @@ testelectrostatic_CPPFLAGS = $(AM_CPPFLAGS)				\
 testelectrostatic_LDADD =					\
 	$(ALBERTA_LDFLAGS) -lalberta_3d $(ALBERTA_BASE_LIBS)	\
 	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)
-MOSTLYCLEANFILES += electrostatic_*.vtu
+MOSTLYCLEANFILES += 					\
+	electrostatic-alberta-triangulated-cube-6-*.vtu	\
+	electrostatic-alberta-triangulated-cube-6.dat	\
+	electrostatic.eps				\
+	testelectrostatic.gnuplot
 
 NORMALTESTS += testfiniteelementmap
 testfiniteelementmap_SOURCES = testfiniteelementmap.cc
@@ -195,11 +202,11 @@ testrt0_LDADD = 				\
 	$(ALBERTA_LDFLAGS) $(ALBERTA_LIBS)
 MOSTLYCLEANFILES += testrt0.vtu
 
-NORMALTESTS += testrt02dgridfunctionsspace
-testrt02dgridfunctionsspace_SOURCES = testrt02dgridfunctionsspace.cc
-testrt02dgridfunctionsspace_CPPFLAGS = $(AM_CPPFLAGS)	\
+NORMALTESTS += testrt02dgridfunctionspace
+testrt02dgridfunctionspace_SOURCES = testrt02dgridfunctionspace.cc
+testrt02dgridfunctionspace_CPPFLAGS = $(AM_CPPFLAGS)	\
 	$(ALBERTA_CPPFLAGS)
-testrt02dgridfunctionsspace_LDADD = 		\
+testrt02dgridfunctionspace_LDADD = 		\
 	$(ALBERTA_LDFLAGS) $(ALBERTA_LIBS)
 MOSTLYCLEANFILES += rt02dgridfunctionspace-*.vtu
 
