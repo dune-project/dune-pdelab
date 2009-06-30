@@ -28,6 +28,8 @@ noinst_HEADERS =				\
 	gridexamples.hh				\
 	l2difference.hh
 
+noinst_SCRIPTS =				\
+	make_pvd.sh
 
 NORMALTESTS += testanalytic
 testanalytic_SOURCES = testanalytic.cc
@@ -102,6 +104,20 @@ MOSTLYCLEANFILES += edges03dinterpolationglobal-*.vtu	\
 	edges03dinterpolationglobal-*.dat		\
 	edges03dinterpolationglobal.eps			\
 	testedges03dinterpolationglobal.gnuplot
+
+NORMALTESTS += testelectrodynamic
+testelectrodynamic_SOURCES = testelectrodynamic.cc
+testelectrodynamic_CPPFLAGS = $(AM_CPPFLAGS)				\
+	$(ALBERTA_INCLUDE_CPPFLAGS) -DALBERTA_DIM=3 -DENABLE_ALBERTA	\
+	$(SUPERLU_CPPFLAGS)
+testelectrodynamic_LDADD =					\
+	$(ALBERTA_LDFLAGS) -lalberta_3d $(ALBERTA_BASE_LIBS)	\
+	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)
+MOSTLYCLEANFILES +=						\
+	electrodynamic-alberta-triangulated-cube-6-*.vtu	\
+	electrodynamic-alberta-triangulated-cube-6.dat		\
+	electrodynamic.eps					\
+	testelectrodynamic.gnuplot
 
 NORMALTESTS += testelectrostatic
 testelectrostatic_SOURCES = testelectrostatic.cc

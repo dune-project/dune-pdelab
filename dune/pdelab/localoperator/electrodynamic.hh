@@ -74,13 +74,14 @@ namespace Dune {
      */
     template<typename Mu, typename GCV, int qorder=1>
 	class Electrodynamic
-      : public NumericalJacobianApplyVolume<Electrodynamic<Mu, qorder> >
-      , public NumericalJacobianVolume<Electrodynamic<Mu, qorder> >
-      , public NumericalJacobianApplyBoundary<Electrodynamic<Mu, qorder> >
-      , public NumericalJacobianBoundary<Electrodynamic<Mu, qorder> >
+      : public NumericalJacobianApplyVolume<Electrodynamic<Mu, GCV, qorder> >
+      , public NumericalJacobianVolume<Electrodynamic<Mu, GCV, qorder> >
+      , public NumericalJacobianApplyBoundary<Electrodynamic<Mu, GCV, qorder> >
+      , public NumericalJacobianBoundary<Electrodynamic<Mu, GCV, qorder> >
       , public FullVolumePattern
 	{
 	public:
+
       // pattern assembly flags
       enum { doPatternVolume = true };
       enum { doPatternSkeleton = false };
@@ -133,9 +134,11 @@ namespace Dune {
         // Tvec = x - 2*xcur + xprev, just what is needed to right-multiply to the matrix T
         X Tvec;
         lfsu.vread(*Ecur, Tvec);
-        Tvec *= -2;
-        Tvec += x;
-        Tvec += xprev;
+        for(unsigned i = 0; i < lfsu.size(); ++i) {
+          Tvec[i] *= -2;
+          Tvec[i] += x[i];
+          Tvec[i] += xprev[i];
+        }
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -148,16 +151,16 @@ namespace Dune {
             std::vector<RangeType> phi(lfsu.size());
             lfsu.localFiniteElement().localBasis().evaluateFunctionGlobal(it->position(),phi,eg.geometry());
 
-            RangeType E(0);
+            RangeType timeDeriv2E(0);
             for(unsigned i = 0; i < lfsu.size(); ++i)
-              E.axpy(xprev[i], phi[i]);
+              timeDeriv2E.axpy(Tvec[i], phi[i]);
             
             Dune::FieldVector<RF,1> epsval = 1;
             //epsilon.evaluate(eg.entity(), it->position(), epsval);
 
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position()) * epsval;
+            RF factor = it->weight() * eg.geometry().integrationElement(it->position()) * epsval * Delta_t * Delta_t;
             for (size_t j=0; j<lfsu.size(); j++)
-              r[j] += (phi[j]*E)*factor;
+              r[j] += (phi[j]*timeDeriv2E)*factor;
             
             // evaluate T * (u[n+1] - 2*u[n] + u[n-1])
             std::vector<JacobianType> J(lfsu.size());
@@ -176,22 +179,36 @@ namespace Dune {
               rotE.axpy(x[i], rotphi[i]);
             
             // integrate grad u * grad phi_i
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position()) / muval;
+            factor = it->weight() * eg.geometry().integrationElement(it->position()) / muval;
             for (size_t j=0; j<lfsu.size(); j++)
               r[j] += (rotphi[j]*rotE)*factor;
           }
 	  }
 
-      //! update the parameters
+      //! set Eprev
+      /**
+       * \param Eprev_   The coefficients of the electric field for time step n-1
+       */
+      void setEprev(const GCV &Eprev_)
+      {
+        Eprev = &Eprev_;
+      }
+
+      //! set Ecur
       /**
        * \param Ecur_    The coefficients of the electric field for time step n
-       * \param Eprev_   The coefficients of the electric field for time step n-1
-       * \param Delta_t_ The time step
        */
-      void updateParams(const GCV &Ecur_, const GCV &Eprev_, double Delta_t_ = Delta_t)
+      void setEcur(const GCV &Ecur_)
       {
         Ecur = &Ecur_;
-        Eprev = &Eprev_;
+      }
+
+      //! set Delta_t
+      /**
+       * \param Delta_t_ The time step
+       */
+      void setDelta_t(double Delta_t_)
+      {
         Delta_t = Delta_t_;
       }
 

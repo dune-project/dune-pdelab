@@ -253,7 +253,7 @@ namespace Dune {
 
     // interpolation from a given grid function, using the global interface of the local finite element
     template<typename F, typename GFS, typename XG>
-    void interpolateGlobal(F& f, const GFS& gfs, XG& xg)
+    void interpolateGlobal(const F& f, const GFS& gfs, XG& xg)
     {
       // this is the leaf version now
 
