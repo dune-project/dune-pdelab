@@ -3,6 +3,8 @@
 #include "config.h"     
 #endif
 
+#define DISABLE_LOCAL_INTERFACE
+
 #include <iostream>
 #include <string>
 
@@ -57,7 +59,7 @@ const double conv_limit = 0.85;
 
 // stop refining after the grid has more than this many elements (that means
 // in 3D that the fine grid may have up to 8 times as may elements)
-const unsigned maxelements = 10000;
+const unsigned maxelements = 1000;
 
 // whether to measure the error after every refinement, or just once at the
 // beginning and once at the end
@@ -152,10 +154,9 @@ public:
   evaluateGlobal (const typename Traits::DomainType& x, 
                   typename Traits::RangeType& y) const
   {
+    y = 0;
     if((x-center).two_norm2() < radius2)
-      y = 1;
-    else
-      y = 0;
+      y[0] = 1;
   }
 
 private:
@@ -221,7 +222,8 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
   typedef typename GFS::template VectorContainer<R>::Type V;
   Dune::SmartPointer<V> xprev(new V(gfs));
   *xprev = 0.0;
-  Dune::PDELab::interpolateGlobal(Init<GV,double>(gv),gfs,*xprev);
+  Dune::PDELab::interpolateGlobal(Init<GV,double>(gv,1),gfs,*xprev);
+  //Dune::PDELab::set_nonconstrained_dofs(cg,1.0,*xprev);
   Dune::PDELab::set_constrained_dofs(cg,0.0,*xprev);
   // we're using dirichlet 0 everywhere, simply leave everything as 0
   //Dune::PDELab::interpolateGlobal(g,gfs,*xprev);
@@ -246,9 +248,14 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
   lop.setEprev(*xprev);
   lop.setEcur(*xcur);
   gos.jacobian(*xcur,m);
-  //Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
-  typedef Dune::SuperLU<typename M::BaseT> SLUSolver;
-  SLUSolver sluSolver(m);
+//   Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
+//   Dune::Richardson<V,V> prec(1.0);
+  Dune::SeqILU0<M,V,V> prec(m,1.0);
+  Dune::MatrixAdapter<M,V,V> op(m);
+  Dune::CGSolver<V> solver(op,prec,1E-10,5000,0);
+
+//   typedef Dune::SuperLU<typename M::BaseT> Solver;
+//   Solver solver(m);
 
   // used to get the rhs from the residual
   V zero(gfs);
@@ -286,8 +293,8 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
 
     xnext = new V(gfs);
     *xnext = *xcur; // copy values to have a better start value for the solver
-    sluSolver.apply(*xnext,rhs,stat);
-    std::cout << "SuperLU results:" << std::endl
+    solver.apply(*xnext,rhs,stat);
+    std::cout << "Solver results:" << std::endl
               << "  iterations: " << stat.iterations << std::endl
               << "  reduction:  " << stat.reduction << std::endl
               << "  converged:  " << stat.converged << std::endl
@@ -379,7 +386,7 @@ void test(Dune::SmartPointer<Grid> grid, int &result, GnuplotGraph &graph, doubl
 
   std::cout << "electrodynamic level " << grid->maxLevel() << std::endl;
   Delta_t = smallestEdge(grid->leafView())/std::sqrt(double(Grid::dimension));
-  steps = 1/Delta_t;
+  steps = 1/Delta_t*10;
   double errorf = electrodynamic
     <GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>
     (grid->leafView(), FEM(grid->leafView()), Delta_t, steps, filename+"-fine");
@@ -432,10 +439,23 @@ int main(int argc, char** argv)
 #endif
 //     test(UnitTetrahedronMaker         <Dune::AlbertaGrid<3, 3>    >::create(),
 //          result, graph, conv_limit,    "alberta-tetrahedron");
-    test(KuhnTriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
-         result, graph, .7*conv_limit, "alberta-triangulated-cube-6");
+//     test(KuhnTriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
+//          result, graph, .7*conv_limit, "alberta-triangulated-cube-6");
 #endif
 
+#ifdef HAVE_ALUGRID
+//     test(UnitTetrahedronMaker         <Dune::ALUSimplexGrid<3, 3> >::create(),
+//          result, graph, conv_limit,    "alu-tetrahedron");
+    test(KuhnTriangulatedUnitCubeMaker<Dune::ALUSimplexGrid<3, 3> >::create(),
+         result, graph, conv_limit,    "alu-triangulated-cube-6");
+#endif // HAVE_ALUGRID
+
+#ifdef HAVE_UG
+//     test(UnitTetrahedronMaker         <Dune::UGGrid<3>            >::create(),
+//          result, graph, conv_limit,    "ug-tetrahedron");
+//     test(KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
+//          result, graph, conv_limit,    "ug-triangulated-cube-6");
+#endif // HAVE_ALBERTA
 	return result;
   }
   catch (Dune::Exception &e){

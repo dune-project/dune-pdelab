@@ -147,22 +147,24 @@ namespace Dune {
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
-            // evaluate Delta_t^2 * S * u[n-1]
+            // evaluate T * (u[n+1] - 2*u[n] + u[n-1])
+            //          T_{ij} = \int epsilon N_i . N_j dV
             std::vector<RangeType> phi(lfsu.size());
             lfsu.localFiniteElement().localBasis().evaluateFunctionGlobal(it->position(),phi,eg.geometry());
 
-            RangeType timeDeriv2E(0);
+            RangeType dt2E(0);
             for(unsigned i = 0; i < lfsu.size(); ++i)
-              timeDeriv2E.axpy(Tvec[i], phi[i]);
+              dt2E.axpy(Tvec[i], phi[i]);
             
             Dune::FieldVector<RF,1> epsval = 1;
             //epsilon.evaluate(eg.entity(), it->position(), epsval);
 
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position()) * epsval * Delta_t * Delta_t;
+            RF factor = it->weight() * eg.geometry().integrationElement(it->position()) * epsval;
             for (size_t j=0; j<lfsu.size(); j++)
-              r[j] += (phi[j]*timeDeriv2E)*factor;
+              r[j] += (phi[j]*dt2E)*factor;
             
-            // evaluate T * (u[n+1] - 2*u[n] + u[n-1])
+            // evaluate Delta_t^2 * S * u[n-1]
+            //          S_{ij} = \int 1/mu rot N_i . rot N_j dV
             std::vector<JacobianType> J(lfsu.size());
             lfsu.localFiniteElement().localBasis().evaluateJacobianGlobal(it->position(),J,eg.geometry());
 
@@ -179,7 +181,7 @@ namespace Dune {
               rotE.axpy(x[i], rotphi[i]);
             
             // integrate grad u * grad phi_i
-            factor = it->weight() * eg.geometry().integrationElement(it->position()) / muval;
+            factor = it->weight() * eg.geometry().integrationElement(it->position()) / muval * Delta_t * Delta_t;
             for (size_t j=0; j<lfsu.size(); j++)
               r[j] += (rotphi[j]*rotE)*factor;
           }
