@@ -619,6 +619,214 @@ namespace Dune {
 	};
 
 
+
+	// Pass this class as last template argument to GridFunctionSpace
+	// to select specialization for fixed number of degrees of freedom in intersections
+    template<typename IIS=int>
+	struct GridFunctionStaticSize
+	{
+	  enum {dummy=2} ;
+      typedef IIS IntersectionIndexSet;
+	};
+
+
+	// specialization with restricted mapper
+	// GV : Type implementing GridView
+	// FEM  : Type implementing LocalFiniteElementMapInterface
+	// B : Backend type
+	template<typename GV, typename LFEM, typename CE, typename B, typename IIS> 
+	class GridFunctionSpace<GV,LFEM,CE,B,GridFunctionStaticSize<IIS> > : 
+	  public Countable, public LeafNode
+	{
+      typedef std::map<unsigned int,unsigned int> DofPerCodimMapType;
+
+	public:
+	  typedef GridFunctionSpaceTraits<GV,LFEM,CE,B> Traits;
+	  typedef typename GV::Traits::template Codim<0>::Entity Element;
+	  typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
+
+	  // extract type of container storing Es
+	  template<typename T>
+	  struct VectorContainer
+	  {
+		//! \brief define Type as the Type of a container of E's
+		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;	
+      private:
+        VectorContainer () {}
+	  };
+
+ 	  //! extract type for storing constraints
+	  template<typename E>
+	  struct ConstraintsContainer
+	  {
+		//! \brief define Type as the Type of a container of E's
+		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+      private:
+        ConstraintsContainer () {}
+	  };
+
+      // define local function space parametrized by self 
+      typedef Dune::PDELab::LocalFunctionSpace<GridFunctionSpace> LocalFunctionSpace;
+
+	  // constructors
+	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const IIS& iis_, const CE& ce_=CE()) 
+		: gv(gridview), plfem(&lfem), iis(iis_), ce(ce_)
+	  {
+		update();
+	  }
+
+	  // get grid view
+	  const GV& gridview () const
+	  {
+		return gv;
+	  }
+
+	  // get finite element map, I think we dont need it
+	  const LFEM& localFiniteElementMap () const
+	  {
+		return *plfem;
+	  }
+
+	  // get dimension of finite element space
+	  typename Traits::SizeType globalSize () const
+	  {
+		return nglobal;
+	  }
+
+	  // get max dimension of shape function space
+	  typename Traits::SizeType maxLocalSize () const
+	  {
+		return nlocal;
+	  }
+
+	  // map index [0,globalSize-1] to root index set
+	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
+	  {
+		return i;
+	  }
+
+      // return constraints engine
+      const typename Traits::ConstraintsType& constraints () const
+      {
+        return ce;
+      }
+
+	  // compute global indices for one element
+	  void globalIndices (const typename Traits::LocalFiniteElementType& lfe,
+                          const Element& e,
+						  std::vector<typename Traits::SizeType>& global) const
+	  {
+		// get local coefficients for this entity
+		const typename Traits::LocalFiniteElementType::Traits::LocalCoefficientsType&
+		  lc = lfe.localCoefficients();
+		global.resize(lc.size());
+
+		for (unsigned int i=0; i<lc.size(); ++i)
+		  {
+            typename GV::IndexSet::IndexType index;
+            unsigned int cd = lc.localKey(i).codim();
+            unsigned int se = lc.localKey(i).subEntity();
+
+			// evaluate consecutive index of subentity
+            if (cd==Dune::intersectionCodim)
+              index = iis.subIndex(e,se);
+            else
+              index = eval_subindex<GV::Grid::dimension>(gv.indexSet(),e,se,cd);
+
+			// now compute 
+			global[i] = offset[cd] + index*dofpercodim[cd] + lc.localKey(i).index();
+		  }
+	  }
+
+      // global Indices from element, needs additional finite element lookup
+	  void globalIndices (const Element& e,
+						  std::vector<typename Traits::SizeType>& global) const
+      {
+        globalIndices(plfem->find(e),e,global);
+      }
+
+	  // update information, e.g. when grid has changed
+	  void update ()
+	  {
+		std::cout << "GridFunctionSpace(intersection version):" << std::endl;
+
+        // analyse local coefficients of first element
+
+        // check geometry type
+        ElementIterator it = gv.template begin<0>();
+        if ((plfem->find(*it)).type()!=it->type())
+          DUNE_THROW(Exception, "geometry type mismatch in GridFunctionSpace");
+
+        // get local coefficients for this entity
+        const typename Traits::LocalFiniteElementType::Traits::LocalCoefficientsType&
+          lc = (plfem->find(*it)).localCoefficients();
+
+        // extract number of degrees of freedom per element
+        nlocal = static_cast<typename Traits::SizeType>(lc.size());
+
+        // count number of degrees of freedom per subentity (including intersections)
+        typedef Dune::tuple<unsigned int, unsigned int> SubentityType;
+        typedef std::map<SubentityType,unsigned int> CountMapType;
+        CountMapType countmap;
+        for (int i=0; i<lc.size(); ++i)
+          {
+            SubentityType subentity(lc.localKey(i).subEntity(),lc.localKey(i).codim());
+            if (countmap.find(subentity)==countmap.end())
+              countmap[subentity] = 1;
+            else
+              (countmap[subentity])++;
+          }
+       
+        // compute number of degrees of freedom per codim
+        dofpercodim.clear();
+        for (typename CountMapType::iterator i=countmap.begin(); i!=countmap.end(); ++i)
+          {
+            unsigned int cd = Dune::get<1>(i->first);
+            typename DofPerCodimMapType::iterator j=dofpercodim.find(cd);
+            if (j==dofpercodim.end())
+              {
+                dofpercodim[cd] = i->second;
+              }
+            else if (j->second != i->second)
+              {
+                DUNE_THROW(Dune::NotImplemented, "non constant # dofs per codim in static size grid function space");
+              }
+          }
+        for (typename DofPerCodimMapType::iterator j=dofpercodim.begin(); j!=dofpercodim.end(); ++j)
+          std::cout << " " << j->second << " degrees of freedom in codim " << j->first << std::endl;
+
+        // now compute global size
+        nglobal = 0;
+        offset.clear();
+        for (typename DofPerCodimMapType::iterator j=dofpercodim.begin(); j!=dofpercodim.end(); ++j)
+          {
+            typename Traits::SizeType n;
+            offset[j->first] = nglobal;
+            if (j->first==Dune::intersectionCodim)
+              n = j->second*iis.size();
+            else
+              n = j->second*gv.size(j->first);
+            std::cout << "codim=" << j->first << " offset=" << nglobal << " size=" << n << std::endl;
+            nglobal += n;
+            if (j->first!=Dune::intersectionCodim)
+              std::cout << "WARNING: cannot handle multiple geometry types in static size grid function space" << std::endl;;
+          }
+	  }
+
+	private:
+	  const GV& gv;
+	  CP<LFEM const> plfem;
+      const IIS& iis;
+
+	  typename Traits::SizeType nlocal;
+	  typename Traits::SizeType nglobal;
+      CE ce;
+
+      DofPerCodimMapType dofpercodim;
+      std::map<unsigned int,typename Traits::SizeType> offset; 
+	};
+
+
     //=======================================
     // power grid function space
     //=======================================
