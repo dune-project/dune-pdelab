@@ -10,6 +10,8 @@
 #include<dune/common/geometrytype.hh>
 #include<dune/grid/common/genericreferenceelements.hh>
 
+#include<dune/finiteelements/common/localcoefficients.hh>
+
 #include"../common/countingptr.hh"
 #include"../common/multitypetree.hh"
 #include"../common/cpstoragepolicy.hh"
@@ -622,13 +624,52 @@ namespace Dune {
 
 	// Pass this class as last template argument to GridFunctionSpace
 	// to select specialization for fixed number of degrees of freedom in intersections
-    template<typename IIS=int>
+    template<typename IIS>
 	struct GridFunctionStaticSize
 	{
 	  enum {dummy=2} ;
       typedef IIS IntersectionIndexSet;
 	};
 
+    // dummy index set for intersection; used to have static size
+    // grid function space without DOFs in intersections
+    class DummyIntersectionIndexSet
+    {
+    public:
+      typedef int IndexType;
+ 
+      // number of intersections in index set 
+      // (intersections do not have a geometry type)
+      IndexType size () const
+      {
+        DUNE_THROW(Dune::Exception,"need IntersectionIndexSet for DOFs in intersections");
+      }
+
+      // number of intersections associated with given element
+      template<typename Element>
+      IndexType size (const Element& element) const
+      {
+        DUNE_THROW(Dune::Exception,"need IntersectionIndexSet for DOFs in intersections");
+      }
+
+      // get index assigned to intersection
+      template<typename Intersection>
+      IndexType index (const Intersection& intersection) const
+      {
+        DUNE_THROW(Dune::Exception,"need IntersectionIndexSet for DOFs in intersections");
+      }
+
+      // get index of i'th intersection of element 
+      // (in order they are visited by intersection iterator)
+      template<typename Element>
+      IndexType subIndex (const Element& element, int i) const
+      {
+        DUNE_THROW(Dune::Exception,"need IntersectionIndexSet for DOFs in intersections");
+      }
+    };
+
+    // define type that can be used for static sized GFS without DOFS in intersections
+    typedef GridFunctionStaticSize<DummyIntersectionIndexSet> SimpleGridFunctionStaticSize;
 
 	// specialization with restricted mapper
 	// GV : Type implementing GridView
@@ -671,6 +712,12 @@ namespace Dune {
 	  // constructors
 	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const IIS& iis_, const CE& ce_=CE()) 
 		: gv(gridview), plfem(&lfem), iis(iis_), ce(ce_)
+	  {
+		update();
+	  }
+
+	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_=CE()) 
+		: gv(gridview), plfem(&lfem), iis(dummyiis), ce(ce_)
 	  {
 		update();
 	  }
@@ -734,7 +781,7 @@ namespace Dune {
               index = eval_subindex<GV::Grid::dimension>(gv.indexSet(),e,se,cd);
 
 			// now compute 
-			global[i] = offset[cd] + index*dofpercodim[cd] + lc.localKey(i).index();
+			global[i] = offset.find(cd)->second + index * dofpercodim.find(cd)->second + lc.localKey(i).index();
 		  }
 	  }
 
@@ -748,7 +795,7 @@ namespace Dune {
 	  // update information, e.g. when grid has changed
 	  void update ()
 	  {
-		std::cout << "GridFunctionSpace(intersection version):" << std::endl;
+		std::cout << "GridFunctionSpace(static size version):" << std::endl;
 
         // analyse local coefficients of first element
 
@@ -814,6 +861,7 @@ namespace Dune {
 	  }
 
 	private:
+      DummyIntersectionIndexSet dummyiis; // for version without intersection DOFs
 	  const GV& gv;
 	  CP<LFEM const> plfem;
       const IIS& iis;
@@ -823,7 +871,7 @@ namespace Dune {
       CE ce;
 
       DofPerCodimMapType dofpercodim;
-      std::map<unsigned int,typename Traits::SizeType> offset; 
+      std::map<unsigned int,typename Traits::SizeType> offset;
 	};
 
 
