@@ -680,7 +680,6 @@ namespace Dune {
 	  public Countable, public LeafNode
 	{
       typedef std::map<unsigned int,unsigned int> DofPerCodimMapType;
-
 	public:
 	  typedef GridFunctionSpaceTraits<GV,LFEM,CE,B> Traits;
 	  typedef typename GV::Traits::template Codim<0>::Entity Element;
@@ -2396,11 +2395,11 @@ namespace Dune {
 
 
     // CGFS is a leaf
-	template<typename GFS, int k, typename GV, typename LFEM, typename B, typename P>
-    class GridFunctionSubSpaceBase<GFS,k, GridFunctionSpace<GV,LFEM,B,P> >
+	template<typename GFS, int k, typename GV, typename LFEM, typename CE, typename B, typename P>
+    class GridFunctionSubSpaceBase<GFS,k, GridFunctionSpace<GV,LFEM,CE,B,P> >
       : public Countable // behave like child k of GFS which is a grid function space
     {
-      typedef GridFunctionSpace<GV,LFEM,B,P> CGFS;
+      typedef GridFunctionSpace<GV,LFEM,CE,B,P> CGFS;
 
     public:
 	  typedef typename CGFS::Traits Traits;
