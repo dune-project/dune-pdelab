@@ -33,6 +33,7 @@ namespace Dune {
 		typedef typename Dune::BCRSMatrix<M>::size_type size_type;
 		typedef E ElementType;
 		typedef Dune::BCRSMatrix<M> BaseT;
+        typedef ISTLBCRSMatrixBackend<ROWBLOCKSIZE,COLBLOCKSIZE> Backend;
 
         //! construct container
 		Matrix (const T& t) 

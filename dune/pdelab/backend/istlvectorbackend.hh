@@ -18,6 +18,7 @@ namespace Dune {
 	  public:
 		typedef E ElementType;
 		typedef Dune::BlockVector< Dune::FieldVector<E,BLOCKSIZE> > BaseT;
+		typedef ISTLVectorBackend<BLOCKSIZE> Backend;
 
 		VectorContainer (const T& t) : BaseT(t.globalSize()/BLOCKSIZE) 
 		{}

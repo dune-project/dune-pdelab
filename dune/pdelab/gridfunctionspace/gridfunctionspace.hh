@@ -67,7 +67,7 @@ namespace Dune {
     public:
       typedef T ElementType;
       typedef std::map<S,T> RowType;
-   };
+    };
 
 	//! Simple Backend for std::vector
 	class StdVectorBackend
@@ -80,6 +80,7 @@ namespace Dune {
 		typedef std::vector<E> BaseT;
 	  public:
 		typedef E ElementType;
+        typedef StdVectorBackend Backend;
 
 		VectorContainer (const T& t) : BaseT(t.globalSize()) {}
 		VectorContainer (const T& t, const E& e) : BaseT(t.globalSize(),e) {}

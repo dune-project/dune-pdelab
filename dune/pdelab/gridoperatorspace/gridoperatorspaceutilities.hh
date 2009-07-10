@@ -79,6 +79,7 @@ namespace Dune {
 		friend class StdVectorFlatMatrixBackend; // for access to line length
 
 		typedef E ElementType;
+        typedef StdVectorFlatMatrixBackend Backend;
 
 		Matrix (const T& t) 
 		  : n(t.globalSizeU()), 
