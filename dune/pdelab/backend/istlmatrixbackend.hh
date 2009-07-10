@@ -40,15 +40,18 @@ namespace Dune {
 		  : BaseT(t.globalSizeV()/ROWBLOCKSIZE,t.globalSizeU()/COLBLOCKSIZE,
 				  Dune::BCRSMatrix<M>::random) 
 		{
-		  Pattern pattern(t.globalSizeV(),t.globalSizeU());
+		  Pattern pattern(t.globalSizeV()/ROWBLOCKSIZE,t.globalSizeU()/COLBLOCKSIZE);
 		  t.fill_pattern(pattern);
 
 		  // first dummy code: build full matrix
-		  for (size_t i=0; i<t.globalSizeV(); ++i)
-			this->setrowsize(i,pattern[i].size());
+		  for (size_t i=0; i<pattern.size(); ++i)
+            {
+              //              std::cout << i << " row size " << pattern[i].size() << std::endl;
+              this->setrowsize(i,pattern[i].size());
+            }
 		  this->endrowsizes();
 
-		  for (size_t i=0; i<t.globalSizeV(); ++i)
+		  for (size_t i=0; i<pattern.size(); ++i)
 			{
 			  for (typename std::set<size_type>::iterator it=pattern[i].begin(); 
 				   it!=pattern[i].end(); ++it)
@@ -107,6 +110,7 @@ namespace Dune {
 
 		void add_link (size_type i, size_type j)
 		{
+          //std::cout<<"adding index " << i << "," << j << " (" << i/ROWBLOCKSIZE << "," << j/COLBLOCKSIZE << ")" << std::endl;
 		  (*this)[i/ROWBLOCKSIZE].insert(j/COLBLOCKSIZE);
 		}
 	  };

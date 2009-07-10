@@ -196,6 +196,13 @@ namespace Dune {
 		return i.outside();
 	  }
 
+      //! \todo Please doc me!
+	  const I& intersection () const
+	  {
+		return i;
+	  }
+  
+
 	private:
 	  const I& i;
 	};
