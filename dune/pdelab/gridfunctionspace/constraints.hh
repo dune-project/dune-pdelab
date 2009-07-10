@@ -403,9 +403,10 @@ namespace Dune {
     template<typename CG, typename XG>
     void set_constrained_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
     {
+      typedef typename XG::Backend B;
 	  typedef typename CG::const_iterator global_col_iterator;
 	  for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
-		xg[cit->first] = x;
+        B::access(xg,cit->first) = x;
 	}
 
     // transform residual into transformed basis: r -> r~
@@ -414,44 +415,48 @@ namespace Dune {
     {
 	  typedef typename CG::const_iterator global_col_iterator;
       typedef typename CG::value_type::second_type::const_iterator global_row_iterator;
+      typedef typename XG::Backend B;
 
 	  for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
         for(global_row_iterator rit = cit->second.begin(); rit!=cit->second.end(); ++rit)
-          xg[rit->first] += rit->second * xg[cit->first];
+          B::access(xg,rit->first) += rit->second * B::access(xg,cit->first);
 
       // extra loop because constrained dofs might have contributions
       // to constrained dofs
 	  for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
-        xg[cit->first] = 0;
+        B::access(xg,cit->first) = 0;
 	}
 
     // construct constraints from given boundary condition function
     template<typename CG, typename XG>
     void copy_constrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
     {
+      typedef typename XG::Backend B;
 	  typedef typename CG::const_iterator global_col_iterator;	  
 	  for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
-		xgout[cit->first] = xgin[cit->first];
+        B::access(xgout,cit->first) = B::const_access(xgin,cit->first);
 	}
 
     // construct constraints from given boundary condition function
     template<typename CG, typename XG>
     void set_nonconstrained_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
     {
+      typedef typename XG::Backend B;
       for (typename XG::size_type i=0; i<xg.size(); ++i)
         if (cg.find(i)==cg.end())
-          xg[i] = x;
+          B::access(xg,i) = x;
 	}
 
     // construct constraints from given boundary condition function
     template<typename CG, typename XG>
     void set_shifted_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
     {
+      typedef typename XG::Backend B;
 	  typedef typename CG::const_iterator global_col_iterator;
       for (typename XG::size_type i=0; i<xg.size(); ++i){
         global_col_iterator it = cg.find(i);
         if (it == cg.end() || it->second.size() > 0)
-          xg[i] = x;
+          B::access(xg,i) = x;
       }
 	}
 
