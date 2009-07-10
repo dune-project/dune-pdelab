@@ -39,6 +39,7 @@ AC_CONFIG_FILES([
   dune/pdelab/gridoperatorspace/Makefile
   dune/pdelab/backend/Makefile
   dune/pdelab/localoperator/Makefile
+  dune/pdelab/newton/Makefile
   dune-pdelab.pc
 ])
 AC_OUTPUT

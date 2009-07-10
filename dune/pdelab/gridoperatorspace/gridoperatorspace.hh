@@ -112,6 +112,18 @@ namespace Dune {
 		return gfsv.globalSize();
 	  }
 
+      //! get the trial grid function space
+      const GFSU& trialGridFunctionSpace() const
+      {
+        return gfsu;
+      }
+
+      //! get the test grid function space
+      const GFSV& testGridFunctionSpace() const
+      {
+        return gfsv;
+      }
+
 
       /**\brief Construct global sparsity pattern from local description
 
