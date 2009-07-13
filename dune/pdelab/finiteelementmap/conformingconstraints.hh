@@ -16,6 +16,7 @@ namespace Dune {
     {
     public:
       enum { doBoundary = true };
+      enum { doProcessor = false };
       enum { doSkeleton = false };
       enum { doVolume = false };
 

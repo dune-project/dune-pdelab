@@ -178,12 +178,18 @@ namespace Dune {
     {
     public:
       enum { doBoundary = false };
+      enum { doProcessor = false }; // added ParallelStuff
       enum { doSkeleton = false };
       enum { doVolume = false }; // might be necessary for cell-centered in parallel
 
       // methods are here just to show interfaces; they are never called because doX are false above
       template<typename F, typename I, typename LFS, typename T>
       void boundary (const F& f, const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo) const
+      {
+      }
+
+      template<typename I, typename LFS, typename T>
+      void processor (const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo) const
       {
       }
 

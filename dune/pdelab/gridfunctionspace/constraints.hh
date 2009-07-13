@@ -27,6 +27,14 @@ namespace Dune {
       }
     };
     template<typename C, bool doIt>
+    struct ConstraintsCallProcessor
+    {
+      template<typename I, typename LFS, typename T>
+      static void processor (const C& c, const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo)
+      {
+      }
+    };
+    template<typename C, bool doIt>
     struct ConstraintsCallSkeleton
     {
       template<typename I, typename LFS, typename T>
@@ -53,6 +61,15 @@ namespace Dune {
       static void boundary (const C& c, const F& f, const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo)
       {
         c.boundary(f,ig,lfs,trafo);
+      }
+    };
+    template<typename C>
+    struct ConstraintsCallProcessor<C,true>
+    {
+      template<typename I, typename LFS, typename T>
+      static void processor (const C& c, const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo)
+      {
+        c.processor(ig,lfs,trafo);
       }
     };
     template<typename C>
@@ -193,6 +210,15 @@ namespace Dune {
 	struct ConstraintsVisitChildMetaProgram2 // visit i'th child of inner node
 	{
 	  template<typename CG, typename I>
+	  static void processor (const LFS& lfs, CG& cg, const IntersectionGeometry<I>& ig)
+	  {
+		typedef typename LFS::template Child<i>::Type LFSC;
+        const LFSC& lfsc=lfs.template getChild<i>();
+
+        ConstraintsVisitNodeMetaProgram2<LFSC,LFSC::isLeaf>::processor(lfsc,cg,ig);
+		ConstraintsVisitChildMetaProgram2<LFS,n,i+1>::processor(lfs,cg,ig);
+	  }
+	  template<typename CG, typename I>
 	  static void skeleton (const LFS& lfs_e, const LFS& lfs_f, CG& cg, 
                             const IntersectionGeometry<I>& ig)
 	  {
@@ -218,6 +244,11 @@ namespace Dune {
 	struct ConstraintsVisitChildMetaProgram2<LFS,n,n> // end of child recursion
 	{
  	  template<typename CG, typename I>
+	  static void processor (const LFS& lfs, CG& cg, const IntersectionGeometry<I>& ig)
+	  {
+        return;
+	  }
+ 	  template<typename CG, typename I>
 	  static void skeleton (const LFS& lfs_e, const LFS& lfs_f, CG& cg,
                             const IntersectionGeometry<I>& ig)
 	  {
@@ -234,6 +265,12 @@ namespace Dune {
 	template<typename LFS, bool LFSisLeaf> 
 	struct ConstraintsVisitNodeMetaProgram2 // visit inner node
 	{
+	  template<typename CG, typename I>
+	  static void processor (const LFS& lfs, CG& cg, const IntersectionGeometry<I>& ig)
+	  {
+        // start child recursion
+		ConstraintsVisitChildMetaProgram2<LFS,LFS::CHILDREN,0>::processor(lfs,cg,ig);
+	  }
 	  template<typename CG, typename I>
 	  static void skeleton (const LFS& lfs_e, const LFS& lfs_f, CG& cg,
                             const IntersectionGeometry<I>& ig)
@@ -253,6 +290,24 @@ namespace Dune {
 	template<typename LFS> 
 	struct ConstraintsVisitNodeMetaProgram2<LFS,true> // leaf node
 	{
+	  template<typename CG, typename I>
+	  static void processor (const LFS& lfs, CG& cg, const IntersectionGeometry<I>& ig)
+	  {
+        // now we are at a single component local function space
+        // which is part of a multi component local function space
+
+		// allocate local constraints map
+		CG cl;
+
+        // extract constraints type 
+        typedef typename LFS::Traits::ConstraintsType C;
+
+		// iterate over boundary, need intersection iterator
+        ConstraintsCallProcessor<C,C::doProcessor>::processor(lfs.constraints(),ig,lfs,cl);
+
+		// write coefficients into local vector 
+		lfs.mwrite(cl,cg);
+	  }
 	  template<typename CG, typename I>
 	  static void skeleton (const LFS& lfs_e, const LFS& lfs_f, CG& cg,
                             const IntersectionGeometry<I>& ig)
@@ -362,6 +417,12 @@ namespace Dune {
 			  if (iit->boundary())
 				ConstraintsVisitNodeMetaProgram<F,F::isLeaf,LFS,LFS::isLeaf>
 				  ::boundary(f,lfs_e,cg,IntersectionGeometry<Intersection>(*iit));
+
+              // ParallelStuff: BEGIN support for processor boundaries.
+			  if ((!iit->boundary()) && (!iit->neighbor()))
+				ConstraintsVisitNodeMetaProgram2<LFS,LFS::isLeaf>
+				  ::processor(lfs_e,cg,IntersectionGeometry<Intersection>(*iit));
+              // END support for processor boundaries.
 
 			  if (iit->neighbor()){
 
