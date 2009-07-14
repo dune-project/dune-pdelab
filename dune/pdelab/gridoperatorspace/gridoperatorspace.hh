@@ -675,7 +675,7 @@ namespace Dune {
             do{
               // if gi is index of constrained dof
               if(constrained_v){
-                // then break if it is a dirichlet dof
+
                 if(gvrit == gvcit->second.end())
                   break;
 
@@ -691,13 +691,15 @@ namespace Dune {
               if(gucit!=cu.end()){
                 gurit = gucit->second.begin();
                 constrained_u = true;
+                if(gurit == gucit->second.end())
+                  B::access(globalcontainer,gi,gj) += localcontainer(i,j) * vf;
               }
 
               double uf = 1;
               do{
                 // if gj is index of constrained dof
                 if(constrained_u){
-                  // then break if it is a dirichlet dof
+
                   if(gurit == gucit->second.end())
                     break;
 
@@ -770,12 +772,15 @@ namespace Dune {
           if(gucit!=cu.end()){
             gurit = gucit->second.begin();
             constrained_u = true;
+            if(gurit == gucit->second.end())
+              globalpattern.add_link(gi,gj);
           }
 
           do{
             if(constrained_u){
               if(gurit == gucit->second.end())
                 break;
+
               gj = gurit->first;
             }
                 
