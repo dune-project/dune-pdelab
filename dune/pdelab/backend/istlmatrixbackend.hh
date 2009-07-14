@@ -197,7 +197,8 @@ namespace Dune {
 	  static void clear_row (RI i, C& c)
 	  {
 		typedef typename C::ColIterator coliterator;
-		for (coliterator j=c[i].begin(); j!=c[i].end(); ++j)
+        coliterator end=c[i/ROWBLOCKSIZE].end();
+		for (coliterator j=c[i/ROWBLOCKSIZE].begin(); j!=end; ++j)
 		  for (int jj=0; jj<COLBLOCKSIZE; jj++)
 			(*j)[i%ROWBLOCKSIZE][jj] = 0;
 	  }

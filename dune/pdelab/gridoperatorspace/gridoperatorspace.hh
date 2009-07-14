@@ -461,7 +461,8 @@ namespace Dune {
 
             // compute unique id
             const typename GV::IndexSet::IndexType id = is.index(*it)+gtoffset[it->type()];
-
+            //            std::cout << "[" << gfsu.gridview().comm().rank() << "] " << " element: " << id << std::endl;
+ 
 			// bind local function spaces to element
 			lfsu.bind(*it);
 			lfsv.bind(*it);
@@ -540,7 +541,7 @@ namespace Dune {
 			  }
 
 			// accumulate result (note: a needs to be cleared outside)
-			etadd(lfsv,lfsu,al,a);
+            etadd(lfsv,lfsu,al,a);
 		  }
 
 		
@@ -808,6 +809,7 @@ namespace Dune {
       template<typename GI, typename GC, typename CG>
       void set_trivial_row (GI i, const CG & cv_i, GC& globalcontainer) const
       {
+        //std::cout << "clearing row " << i << std::endl;
         // set all entries in row i to zero
          B::clear_row(i,globalcontainer);
 
