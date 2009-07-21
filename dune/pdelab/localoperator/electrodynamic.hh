@@ -178,7 +178,7 @@ namespace Dune {
 
             RangeType rotE(0);
             for(unsigned i = 0; i < lfsu.size(); ++i)
-              rotE.axpy(x[i], rotphi[i]);
+              rotE.axpy(xprev[i], rotphi[i]);
             
             // integrate grad u * grad phi_i
             factor = it->weight() * eg.geometry().integrationElement(it->position()) / muval * Delta_t * Delta_t;
