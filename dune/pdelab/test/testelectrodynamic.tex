@@ -1,0 +1,450 @@
+\documentclass{scrartcl}
+
+\usepackage{dsfont}
+\usepackage{amsmath}
+\usepackage{tikz}
+
+\usetikzlibrary{calc}
+
+\newenvironment{Matrix}[1]{\left(\mspace{-6mu}\begin{array}{*{#1}{r}}}{\end{array}\mspace{-6mu}\right)}
+\newenvironment{Matrix3}{\begin{Matrix}3}{\end{Matrix}}
+\newenvironment{Matrix6}{\begin{Matrix}6}{\end{Matrix}}
+\newenvironment{Vector}{\begin{Matrix}1}{\end{Matrix}}
+
+\newcommand\psqrt{\phantom{\sqrt0}}
+
+\begin{document}
+
+\title{The Electrodynamic Test Problem}
+
+\maketitle
+
+\section{Domain: Kuhn Triangulated Cube}
+
+The domain is a $1\times1\times1$ cube with the vertices
+\begin{align}
+  \xi^0&=\begin{pmatrix}0\\0\\0\end{pmatrix} &
+  \xi^1&=\begin{pmatrix}1\\0\\0\end{pmatrix} &
+  \xi^2&=\begin{pmatrix}0\\1\\0\end{pmatrix} &
+  \xi^3&=\begin{pmatrix}1\\1\\0\end{pmatrix} \\
+  \xi^4&=\begin{pmatrix}0\\0\\1\end{pmatrix} &
+  \xi^5&=\begin{pmatrix}1\\0\\1\end{pmatrix} &
+  \xi^6&=\begin{pmatrix}0\\1\\1\end{pmatrix} &
+  \xi^7&=\begin{pmatrix}1\\1\\1\end{pmatrix}.
+\end{align}
+It is triangulated into 6 tetrahedrons with the vertices
+\begin{align}
+  \mathbf x^0_{\Omega_0}&=\xi^0 &
+  \mathbf x^1_{\Omega_0}&=\xi^1 &
+  \mathbf x^2_{\Omega_0}&=\xi^3 &
+  \mathbf x^3_{\Omega_0}&=\xi^7 \\
+  \mathbf x^0_{\Omega_1}&=\xi^0 &
+  \mathbf x^1_{\Omega_1}&=\xi^2 &
+  \mathbf x^2_{\Omega_1}&=\xi^3 &
+  \mathbf x^3_{\Omega_1}&=\xi^7 \\
+  \mathbf x^0_{\Omega_2}&=\xi^0 &
+  \mathbf x^1_{\Omega_2}&=\xi^2 &
+  \mathbf x^2_{\Omega_2}&=\xi^6 &
+  \mathbf x^3_{\Omega_2}&=\xi^7 \\
+  \mathbf x^0_{\Omega_3}&=\xi^0 &
+  \mathbf x^1_{\Omega_3}&=\xi^4 &
+  \mathbf x^2_{\Omega_3}&=\xi^6 &
+  \mathbf x^3_{\Omega_3}&=\xi^7 \\
+  \mathbf x^0_{\Omega_4}&=\xi^0 &
+  \mathbf x^1_{\Omega_4}&=\xi^4 &
+  \mathbf x^2_{\Omega_4}&=\xi^5 &
+  \mathbf x^3_{\Omega_4}&=\xi^7 \\
+  \mathbf x^0_{\Omega_5}&=\xi^0 &
+  \mathbf x^1_{\Omega_5}&=\xi^1 &
+  \mathbf x^2_{\Omega_5}&=\xi^5 &
+  \mathbf x^3_{\Omega_5}&=\xi^7.
+\end{align}
+There are the following 19 edges
+\begin{align}
+  \mathcal E^0   &=\overline{\xi^0\xi^1} &
+  \mathcal E^1   &=\overline{\xi^0\xi^2} &
+  \mathcal E^2   &=\overline{\xi^0\xi^3} &
+  \mathcal E^3   &=\overline{\xi^0\xi^4} \\
+  \mathcal E^4   &=\overline{\xi^0\xi^5} &
+  \mathcal E^5   &=\overline{\xi^0\xi^6} &
+  \mathcal E^6   &=\overline{\xi^0\xi^7} &
+  \mathcal E^7   &=\overline{\xi^1\xi^3} \\
+  \mathcal E^8   &=\overline{\xi^1\xi^5} &
+  \mathcal E^9   &=\overline{\xi^1\xi^7} &
+  \mathcal E^{10}&=\overline{\xi^2\xi^3} &
+  \mathcal E^{11}&=\overline{\xi^2\xi^6} \\
+  \mathcal E^{12}&=\overline{\xi^2\xi^7} &
+  \mathcal E^{13}&=\overline{\xi^3\xi^7} &
+  \mathcal E^{14}&=\overline{\xi^4\xi^5} &
+  \mathcal E^{15}&=\overline{\xi^4\xi^6} \\
+  \mathcal E^{16}&=\overline{\xi^4\xi^7} &
+  \mathcal E^{17}&=\overline{\xi^5\xi^7} &
+  \mathcal E^{18}&=\overline{\xi^6\xi^7}.
+\end{align}
+The mapping of local and global edge numbers is as follows:
+\begin{center}\begin{tabular}{c|c|c|c|c|c|c}
+Tet & Edge 0 & Edge 1 & Edge 2 & Edge 3 & Edge 4 & Edge 5 \\
+\hline
+ 0  &    0   &    2   &    7   &    6   &    9   &   13   \\
+ 1  &    1   &    2   &   10   &    6   &   12   &   13   \\
+ 2  &    1   &    5   &   11   &    6   &   12   &   18   \\
+ 3  &    3   &    5   &   15   &    6   &   16   &   18   \\
+ 4  &    3   &    4   &   14   &    6   &   16   &   17   \\
+ 5  &    0   &    4   &    8   &    6   &    9   &   17
+\end{tabular}\end{center}
+
+\section{Boundary Conditions}
+
+We use PEC boundary conditions everywhere, i.e. $\mathbf{\hat n}\times\mathbf
+E=0$ on $\partial\Omega$.  That leaves only one non-constrained degree of
+freedom: 6, which coincides with edge 3 in all tets.
+
+\section{Matrix}
+
+The residual form is
+\begin{equation}
+  r=T(u^{n+1}-2u^n+u^{n-1})+(\Delta t)^2Su^{n-1}\stackrel!=0,
+\end{equation}
+which leads to the linear equation system
+\begin{align}
+  Ax&=b \\
+  A_{ij}&=\begin{cases}
+    T_{ij}     &\text{for both $i$ and $j$ non-constrained} \\
+    \delta_{ij}&\text{otherwise}
+  \end{cases} \\
+  b_i&=
+  \begin{cases}
+    (2Tu^n-(T+(\Delta t)^2S)u^{n-1})_i&\text{for $i$ non-constrained} \\
+    0                                &\text{otherwise}
+  \end{cases}
+\end{align}
+For $A$ we are currently only interested in the entry $A_{66}$ which is the
+non-constrained one.
+\begin{equation}
+  T_{ij}=\int_\Omega\epsilon\psi_i\cdot\psi_jdV
+\end{equation}
+
+\section{Shape Functions}
+
+So we need $\psi_6=\sum_{i=0}^5\hat\psi^i_3\chi^i$.
+
+\subsection{\ldots in $\Omega_0$}
+\begin{align}
+  \mathbf x^0_{\Omega_0}&=\begin{pmatrix}0\\0\\0\end{pmatrix} &
+  \mathbf x^1_{\Omega_0}&=\begin{pmatrix}1\\0\\0\end{pmatrix} &
+  \mathbf x^2_{\Omega_0}&=\begin{pmatrix}1\\1\\0\end{pmatrix} &
+  \mathbf x^3_{\Omega_0}&=\begin{pmatrix}1\\1\\1\end{pmatrix}
+\end{align}
+This yields
+\begin{equation}
+  M_{\Omega_0}=\begin{Matrix6}
+     0 &  0 &  0 & 1 & 0 & 0 \\
+     0 &  0 &  0 & 1 & 1 & 0 \\
+    -1 &  0 &  0 & 0 & 1 & 0 \\
+     0 &  0 &  0 & 1 & 1 & 1 \\
+    -1 & -1 &  0 & 0 & 1 & 1 \\
+     0 & -1 & -1 & 0 & 0 & 1
+  \end{Matrix6},
+\end{equation}
+and, with the help of maxima
+\begin{equation}
+  M_{\Omega_0}^{-1}=\begin{Matrix6}
+    -1 &  1 & -1 & 0 &  0 &  0 \\
+     0 & -1 &  1 & 1 & -1 &  0 \\
+     0 &  0 & -1 & 0 &  1 & -1 \\
+     1 &  0 &  0 & 0 &  0 &  0 \\
+    -1 &  1 &  0 & 0 &  0 &  0 \\
+     0 & -1 &  0 & 1 &  0 &  0
+  \end{Matrix6}.
+\end{equation}
+I'm primarily interested in the shape function corresponding to the long
+diagonal, which has the right hand side
+\begin{align}
+  r_{\Omega_0}^0&=\begin{pmatrix} 1 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \end{pmatrix} &
+  r_{\Omega_0}^1&=\begin{pmatrix} 0 \\ \sqrt2 \\ 0 \\ 0 \\ 0 \\ 0 \end{pmatrix} &
+  r_{\Omega_0}^2&=\begin{pmatrix} 0 \\ 0 \\ 1 \\ 0 \\ 0 \\ 0 \end{pmatrix} \\
+  r_{\Omega_0}^3&=\begin{pmatrix} 0 \\ 0 \\ 0 \\ \sqrt3 \\ 0 \\ 0 \end{pmatrix} &
+  r_{\Omega_0}^4&=\begin{pmatrix} 0 \\ 0 \\ 0 \\ 0 \\ \sqrt2 \\ 0 \end{pmatrix} &
+  r_{\Omega_0}^5&=\begin{pmatrix} 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 1 \end{pmatrix}.
+\end{align}
+This yields the coefficients
+\begin{align}
+  \mathrm A_{\Omega_0}^0&=\psqrt\begin{Matrix3}
+     0 & -1 &  0 \\
+     1 &  0 &  0 \\
+     0 &  0 &  0
+  \end{Matrix3} & 
+  \mathbf a_{\Omega_0}^0&=\psqrt\begin{Vector}  1 \\ -1 \\  0 \end{Vector}
+\\
+  \mathrm A_{\Omega_0}^1&=\sqrt2\begin{Matrix3}
+     0 &  1 & -1 \\
+    -1 &  0 &  0 \\
+     1 &  0 &  0
+  \end{Matrix3} & 
+  \mathbf a_{\Omega_0}^1&=\sqrt2\begin{Vector}  0 \\  1 \\ -1 \end{Vector}
+\\
+  \mathrm A_{\Omega_0}^2&=\psqrt\begin{Matrix3}
+     0 & -1 &  1 \\
+     1 &  0 & -1 \\
+    -1 &  1 &  0
+  \end{Matrix3} & 
+  \mathbf a_{\Omega_0}^2&=\psqrt\begin{Vector}  0 \\  0 \\  0 \end{Vector}
+\\
+  \mathrm A_{\Omega_0}^3&=\sqrt3\begin{Matrix3}
+     0 &  0 &  1 \\
+     0 &  0 &  0 \\
+    -1 &  0 &  0
+  \end{Matrix3} & 
+  \mathbf a_{\Omega_0}^3&=\sqrt3\begin{Vector}  0 \\  0 \\  1 \end{Vector}
+\\
+  \mathrm A_{\Omega_0}^4&=\sqrt2\begin{Matrix3}
+     0 &  0 & -1 \\
+     0 &  0 &  1 \\
+     1 & -1 &  0
+  \end{Matrix3} & 
+  \mathbf a_{\Omega_0}^4&=\sqrt2\begin{Vector}  0 \\  0 \\  0 \end{Vector}
+\\
+  \mathrm A_{\Omega_0}^5&=\psqrt\begin{Matrix3}
+     0 &  0 &  0 \\
+     0 &  0 & -1 \\
+     0 &  1 &  0
+  \end{Matrix3} & 
+  \mathbf a_{\Omega_0}^5&=\psqrt\begin{Vector}  0 \\  0 \\  0 \end{Vector}
+\end{align}
+with the resulting shape functions
+\begin{align}
+  \psi_{\Omega_0}^0(\mathbf x)
+    &=\psqrt\begin{pmatrix} 1-x_1 \\ x_0-1 \\ 0 \end{pmatrix} &
+  \nabla\times\psi_{\Omega_0}^0
+    &=\psqrt\begin{Vector}  0 \\  0 \\  2 \end{Vector}
+\\
+  \psi_{\Omega_0}^1(\mathbf x)
+    &=\sqrt2\begin{pmatrix} x_1-x_2 \\ 1-x_0 \\ x_0-1 \end{pmatrix} &
+  \nabla\times\psi_{\Omega_0}^1
+    &=\sqrt2\begin{Vector}  0 \\ -2 \\ -2 \end{Vector}
+\\
+  \psi_{\Omega_0}^2(\mathbf x)
+    &=\psqrt\begin{pmatrix} x_2-x_1 \\ x_0-x_2 \\ x_1-x_0 \end{pmatrix} &
+  \nabla\times\psi_{\Omega_0}^2
+    &=\psqrt\begin{Vector}  2 \\  2 \\  2 \end{Vector}
+\\
+  \psi_{\Omega_0}^3(\mathbf x)
+    &=\sqrt3\begin{pmatrix} x_2 \\ 0 \\ 1-x_0 \end{pmatrix} &
+  \nabla\times\psi_{\Omega_0}^3
+    &=\sqrt3\begin{Vector}  0 \\  2 \\  0 \end{Vector}
+\\
+  \psi_{\Omega_0}^4(\mathbf x)
+    &=\sqrt2\begin{pmatrix} -x_2 \\ x_2 \\ x_0-x_1 \end{pmatrix} &
+  \nabla\times\psi_{\Omega_0}^4
+    &=\sqrt2\begin{Vector} -2 \\ -2 \\  0 \end{Vector}
+\\
+  \psi_{\Omega_0}^5(\mathbf x)
+    &=\psqrt\begin{pmatrix} 0 \\ -x_2 \\ x_1 \end{pmatrix} &
+  \nabla\times\psi_{\Omega_0}^5
+    &=\psqrt\begin{Vector}  2 \\  0 \\  0 \end{Vector}
+\end{align}
+To integrate arbitrary second order functions over tetrahedron 0 we use
+$\int_{\Omega_0}dV\cdots=\int_0^1dx_0\int_0^{x_0}dx_1\int_0^{x_1}dx_2\cdots$.
+That yields (with the help of maxima) the following contributions
+\begin{align}
+  T_{ 0, 0;\Omega_0}=\int_{\Omega_0}dV(\psi^0_{\Omega_0})^2
+  &=\frac1{15} &
+  S_{ 0, 0;\Omega_0}=\int_{\Omega_0}dV(\nabla\times\psi^0_{\Omega_0})^2
+  &=\frac23 \\
+  T_{ 2, 2;\Omega_0}=\int_{\Omega_0}dV(\psi^1_{\Omega_0})^2
+  &=\frac1{10} &
+  S_{ 2, 2;\Omega_0}=\int_{\Omega_0}dV(\nabla\times\psi^1_{\Omega_0})^2
+  &=\frac83 \\
+  T_{ 7, 7;\Omega_0}=\int_{\Omega_0}dV(\psi^2_{\Omega_0})^2
+  &=\frac1{12} &
+  S_{ 7, 7;\Omega_0}=\int_{\Omega_0}dV(\nabla\times\psi^2_{\Omega_0})^2
+  &=2 \\
+  T_{ 6, 6;\Omega_0}=\int_{\Omega_0}dV(\psi^3_{\Omega_0})^2
+  &=\frac1{10} &
+  S_{ 6, 6;\Omega_0}=\int_{\Omega_0}dV(\nabla\times\psi^3_{\Omega_0})^2
+  &=2 \\
+  T_{ 9, 9;\Omega_0}=\int_{\Omega_0}dV(\psi^4_{\Omega_0})^2
+  &=\frac1{10} &
+  S_{ 9, 9;\Omega_0}=\int_{\Omega_0}dV(\nabla\times\psi^4_{\Omega_0})^2
+  &=\frac83 \\
+  T_{13,13;\Omega_0}=\int_{\Omega_0}dV(\psi^5_{\Omega_0})^2
+  &=\frac1{15} &
+  S_{13,13;\Omega_0}=\int_{\Omega_0}dV(\nabla\times\psi^5_{\Omega_0})^2
+  &=\frac23
+\end{align}
+
+Assuming the other tetrahedra yield the same figure (which is likely because
+of symmetry) we get $T_{66}=0.6$, which is just what the code yields as well.
+So this seems to be correct.
+
+\subsection{\ldots in $\Omega_1$}
+\begin{align}
+  \mathbf x^0_{\Omega_0}&=\begin{pmatrix}0\\0\\0\end{pmatrix} &
+  \mathbf x^1_{\Omega_0}&=\begin{pmatrix}0\\1\\0\end{pmatrix} &
+  \mathbf x^2_{\Omega_0}&=\begin{pmatrix}1\\1\\0\end{pmatrix} &
+  \mathbf x^3_{\Omega_0}&=\begin{pmatrix}1\\1\\1\end{pmatrix}
+\end{align}
+This yields
+\begin{equation}
+  M_{\Omega_0}=\begin{Matrix6}
+     0 &  0 &  0 & 1 & 0 & 0 \\
+     0 &  0 &  0 & 1 & 1 & 0 \\
+    -1 &  0 &  0 & 0 & 1 & 0 \\
+     0 &  0 &  0 & 1 & 1 & 1 \\
+    -1 & -1 &  0 & 0 & 1 & 1 \\
+     0 & -1 & -1 & 0 & 0 & 1
+  \end{Matrix6},
+\end{equation}
+and, with the help of maxima
+\begin{equation}
+  M_{\Omega_0}^{-1}=\begin{Matrix6}
+    -1 &  1 & -1 & 0 &  0 &  0 \\
+     0 & -1 &  1 & 1 & -1 &  0 \\
+     0 &  0 & -1 & 0 &  1 & -1 \\
+     1 &  0 &  0 & 0 &  0 &  0 \\
+    -1 &  1 &  0 & 0 &  0 &  0 \\
+     0 & -1 &  0 & 1 &  0 &  0
+  \end{Matrix6}.
+\end{equation}
+I'm primarily interested in the shape function corresponding to the long
+diagonal, which has the right hand side
+\begin{align}
+  r_{\Omega_0}^0&=\begin{pmatrix} 1 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \end{pmatrix} &
+  r_{\Omega_0}^1&=\begin{pmatrix} 0 \\ \sqrt2 \\ 0 \\ 0 \\ 0 \\ 0 \end{pmatrix} &
+  r_{\Omega_0}^2&=\begin{pmatrix} 0 \\ 0 \\ 1 \\ 0 \\ 0 \\ 0 \end{pmatrix} \\
+  r_{\Omega_0}^3&=\begin{pmatrix} 0 \\ 0 \\ 0 \\ \sqrt3 \\ 0 \\ 0 \end{pmatrix} &
+  r_{\Omega_0}^4&=\begin{pmatrix} 0 \\ 0 \\ 0 \\ 0 \\ \sqrt2 \\ 0 \end{pmatrix} &
+  r_{\Omega_0}^5&=\begin{pmatrix} 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 1 \end{pmatrix}.
+\end{align}
+This yields the coefficients
+\begin{align}
+  \mathrm A_{\Omega_0}^0&=\psqrt\begin{Matrix3}
+     0 & -1 &  0 \\
+     1 &  0 &  0 \\
+     0 &  0 &  0
+  \end{Matrix3} & 
+  \mathbf a_{\Omega_0}^0&=\psqrt\begin{Vector}  1 \\ -1 \\  0 \end{Vector}
+\\
+  \mathrm A_{\Omega_0}^1&=\sqrt2\begin{Matrix3}
+     0 &  1 & -1 \\
+    -1 &  0 &  0 \\
+     1 &  0 &  0
+  \end{Matrix3} & 
+  \mathbf a_{\Omega_0}^1&=\sqrt2\begin{Vector}  0 \\  1 \\ -1 \end{Vector}
+\\
+  \mathrm A_{\Omega_0}^2&=\psqrt\begin{Matrix3}
+     0 & -1 &  1 \\
+     1 &  0 & -1 \\
+    -1 &  1 &  0
+  \end{Matrix3} & 
+  \mathbf a_{\Omega_0}^2&=\psqrt\begin{Vector}  0 \\  0 \\  0 \end{Vector}
+\\
+  \mathrm A_{\Omega_0}^3&=\sqrt3\begin{Matrix3}
+     0 &  0 &  1 \\
+     0 &  0 &  0 \\
+    -1 &  0 &  0
+  \end{Matrix3} & 
+  \mathbf a_{\Omega_0}^3&=\sqrt3\begin{Vector}  0 \\  0 \\  1 \end{Vector}
+\\
+  \mathrm A_{\Omega_0}^4&=\sqrt2\begin{Matrix3}
+     0 &  0 & -1 \\
+     0 &  0 &  1 \\
+     1 & -1 &  0
+  \end{Matrix3} & 
+  \mathbf a_{\Omega_0}^4&=\sqrt2\begin{Vector}  0 \\  0 \\  0 \end{Vector}
+\\
+  \mathrm A_{\Omega_0}^5&=\psqrt\begin{Matrix3}
+     0 &  0 &  0 \\
+     0 &  0 & -1 \\
+     0 &  1 &  0
+  \end{Matrix3} & 
+  \mathbf a_{\Omega_0}^5&=\psqrt\begin{Vector}  0 \\  0 \\  0 \end{Vector}
+\end{align}
+with the resulting shape functions
+\begin{align}
+  \psi_{\Omega_0}^0(\mathbf x)
+    &=\psqrt\begin{pmatrix} 1-x_1 \\ x_0-1 \\ 0 \end{pmatrix} &
+  \nabla\times\psi_{\Omega_0}^0
+    &=\psqrt\begin{Vector}  0 \\  0 \\  2 \end{Vector}
+\\
+  \psi_{\Omega_0}^1(\mathbf x)
+    &=\sqrt2\begin{pmatrix} x_1-x_2 \\ 1-x_0 \\ x_0-1 \end{pmatrix} &
+  \nabla\times\psi_{\Omega_0}^1
+    &=\sqrt2\begin{Vector}  0 \\ -2 \\ -2 \end{Vector}
+\\
+  \psi_{\Omega_0}^2(\mathbf x)
+    &=\psqrt\begin{pmatrix} x_2-x_1 \\ x_0-x_2 \\ x_1-x_0 \end{pmatrix} &
+  \nabla\times\psi_{\Omega_0}^2
+    &=\psqrt\begin{Vector}  2 \\  2 \\  2 \end{Vector}
+\\
+  \psi_{\Omega_0}^3(\mathbf x)
+    &=\sqrt3\begin{pmatrix} x_2 \\ 0 \\ 1-x_0 \end{pmatrix} &
+  \nabla\times\psi_{\Omega_0}^3
+    &=\sqrt3\begin{Vector}  0 \\  2 \\  0 \end{Vector}
+\\
+  \psi_{\Omega_0}^4(\mathbf x)
+    &=\sqrt2\begin{pmatrix} -x_2 \\ x_2 \\ x_0-x_1 \end{pmatrix} &
+  \nabla\times\psi_{\Omega_0}^4
+    &=\sqrt2\begin{Vector} -2 \\ -2 \\  0 \end{Vector}
+\\
+  \psi_{\Omega_0}^5(\mathbf x)
+    &=\psqrt\begin{pmatrix} 0 \\ -x_2 \\ x_1 \end{pmatrix} &
+  \nabla\times\psi_{\Omega_0}^5
+    &=\psqrt\begin{Vector}  2 \\  0 \\  0 \end{Vector}
+\end{align}
+To integrate arbitrary second order functions over tetrahedron 0 we use
+$\int_{\Omega_0}dV\cdots=\int_0^1dx_0\int_0^{x_0}dx_1\int_0^{x_1}dx_2\cdots$.
+That yields (with the help of maxima) the following contributions
+\begin{align}
+  T_{ 0, 0;\Omega_0}=\int_{\Omega_0}dV(\psi^0_{\Omega_0})^2
+  &=\frac1{15} &
+  S_{ 0, 0;\Omega_0}=\int_{\Omega_0}dV(\nabla\times\psi^0_{\Omega_0})^2
+  &=\frac23 \\
+  T_{ 2, 2;\Omega_0}=\int_{\Omega_0}dV(\psi^1_{\Omega_0})^2
+  &=\frac1{10} &
+  S_{ 2, 2;\Omega_0}=\int_{\Omega_0}dV(\nabla\times\psi^1_{\Omega_0})^2
+  &=\frac83 \\
+  T_{ 7, 7;\Omega_0}=\int_{\Omega_0}dV(\psi^2_{\Omega_0})^2
+  &=\frac1{12} &
+  S_{ 7, 7;\Omega_0}=\int_{\Omega_0}dV(\nabla\times\psi^2_{\Omega_0})^2
+  &=2 \\
+  T_{ 6, 6;\Omega_0}=\int_{\Omega_0}dV(\psi^3_{\Omega_0})^2
+  &=\frac1{10} &
+  S_{ 6, 6;\Omega_0}=\int_{\Omega_0}dV(\nabla\times\psi^3_{\Omega_0})^2
+  &=2 \\
+  T_{ 9, 9;\Omega_0}=\int_{\Omega_0}dV(\psi^4_{\Omega_0})^2
+  &=\frac1{10} &
+  S_{ 9, 9;\Omega_0}=\int_{\Omega_0}dV(\nabla\times\psi^4_{\Omega_0})^2
+  &=\frac83 \\
+  T_{13,13;\Omega_0}=\int_{\Omega_0}dV(\psi^5_{\Omega_0})^2
+  &=\frac1{15} &
+  S_{13,13;\Omega_0}=\int_{\Omega_0}dV(\nabla\times\psi^5_{\Omega_0})^2
+  &=\frac23
+\end{align}
+
+\section{The Right Hand Side}
+
+The right hand side is
+\begin{equation}
+  b_i=\begin{cases}
+    (2Tu^n-(T+(\Delta t)^2S)u^{n-1})_i&\text{for $i$ non-constrained} \\
+    0                                &\text{otherwise},
+  \end{cases}
+\end{equation}
+with
+\begin{align}
+  T_{ij}&=\int_\Omega\epsilon\psi_i\cdot\psi_jdV \\
+  S_{ij}&=\int_\Omega\mu^{-1}(\nabla\times\psi_i)\cdot(\nabla\times\psi_j)dV.
+\end{align}
+As noted above, we assume $\epsilon=1$, and from here on also $\mu=1$.
+
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% mode: TeX-PDF
+%%% mode: auto-fill
+%%% TeX-master: t
+%%% mode: flyspell
+%%% ispell-local-dictionary: "american"
+%%% End: 
