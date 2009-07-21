@@ -759,6 +759,8 @@ namespace Dune {
         if(gvcit!=cv.end()){
           gvrit = gvcit->second.begin();              
           constrained_v = true;
+          if(gvrit == gvcit->second.end())
+            globalpattern.add_link(gi,gj);
         }
 
         do{
