@@ -156,7 +156,7 @@ public:
   {
     y = 0;
     if((x-center).two_norm2() < radius2)
-      y[0] = 1;
+      y[0] = -1;
   }
 
 private:
@@ -225,11 +225,14 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
   Dune::PDELab::interpolateGlobal(Init<GV,double>(gv,1),gfs,*xprev);
   //Dune::PDELab::set_nonconstrained_dofs(cg,1.0,*xprev);
   Dune::PDELab::set_constrained_dofs(cg,0.0,*xprev);
-  // we're using dirichlet 0 everywhere, simply leave everything as 0
-  //Dune::PDELab::interpolateGlobal(g,gfs,*xprev);
-  //Dune::PDELab::set_nonconstrained_dofs(cg,0.0,*xprev);
   Dune::SmartPointer<V> xcur(xprev);
   Dune::SmartPointer<V> xnext(0);
+
+  // we're using dirichlet 0 everywhere, simply leave everything as 0
+  V affineShift(gfs);
+  affineShift = 0.0;
+  //Dune::PDELab::interpolateGlobal(g,gfs,affineShift);
+  //Dune::PDELab::set_nonconstrained_dofs(cg,0.0,affineShift);
 
   // make grid function operator
   typedef Mu<GV,R> MuType;
@@ -247,19 +250,18 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
   // just use some values here
   lop.setEprev(*xprev);
   lop.setEcur(*xcur);
-  gos.jacobian(*xcur,m);
-//   Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
-//   Dune::Richardson<V,V> prec(1.0);
-  Dune::SeqILU0<M,V,V> prec(m,1.0);
+  gos.jacobian(affineShift,m);
+  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
+  Dune::Richardson<V,V> prec(1.0);
+//   Dune::SeqILU0<M,V,V> prec(m,1.0);
   Dune::MatrixAdapter<M,V,V> op(m);
   Dune::CGSolver<V> solver(op,prec,1E-10,5000,0);
 
 //   typedef Dune::SuperLU<typename M::BaseT> Solver;
 //   Solver solver(m);
 
-  // used to get the rhs from the residual
-  V zero(gfs);
-  zero = 0.0;
+  std::cout << "u[-1]\n" << *xprev << std::endl;
+  std::cout << "u[0]\n" << *xcur << std::endl;
 
   std::cout << "Number of steps " << steps << std::endl;
   for(unsigned step = 0; step < steps; ++step) {
@@ -286,13 +288,16 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
     // evaluate residual w.r.t initial guess
     V rhs(gfs);
     rhs = 0.0;
-    gos.residual(zero,rhs);
+    gos.residual(affineShift,rhs);
     rhs *= -1;
+
+    std::cout << "RHS\n" << rhs << std::endl;
 
     Dune::InverseOperatorResult stat;
 
     xnext = new V(gfs);
     *xnext = *xcur; // copy values to have a better start value for the solver
+    *xnext -= affineShift;
     solver.apply(*xnext,rhs,stat);
     std::cout << "Solver results:" << std::endl
               << "  iterations: " << stat.iterations << std::endl
@@ -303,7 +308,10 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
     if(!stat.converged)
       DUNE_THROW(Dune::Exception, "Solver did not converge");
 
-    //x += x0;  // set constrained dofs
+    *xnext += affineShift;
+
+    std::cout << "u[" << step+1 << "]\n" << *xnext << std::endl;
+
 
     xprev = xcur;
     xcur = xnext;
@@ -361,7 +369,8 @@ void test(Dune::SmartPointer<Grid> grid, int &result, GnuplotGraph &graph, doubl
             << std::scientific << error0 << std::endl;
   dat << mean_h0 << "\t" << error0 << std::endl;
 
-  while(1) {
+  //grid->globalRefine(1);
+  while(0) {
     grid->globalRefine(1);
 
     if((unsigned int)(grid->leafView().size(0)) >= maxelements)
