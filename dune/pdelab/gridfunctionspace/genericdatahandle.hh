@@ -79,6 +79,78 @@ namespace Dune {
 	};
 
 
+	// implement a data handle with a grid function space
+	// GFS: a grid function space
+	// V:   a vector container associated with the GFS
+	// T:   gather/scatter methods
+	template<class GFS, class V, class T>
+	class GenericDataHandle2
+	  : public Dune::CommDataHandleIF<GenericDataHandle2<GFS,V,T>,typename V::ElementType>
+	{
+	  typedef typename GFS::Traits::BackendType B;
+
+	public:
+	  GenericDataHandle2 (const GFS& gfs_, V& v_, T t_) 
+		: gfs(gfs_), v(v_), t(t_), global(gfs.maxLocalSize())
+	  {}
+
+	  //! export type of data for message buffer
+	  typedef typename V::ElementType DataType;
+
+	  //! returns true if data for this codim should be communicated
+	  bool contains (int dim, int codim) const
+	  {
+		return gfs.dataHandleContains(dim,codim);
+	  }
+
+	  //! returns true if size per entity of given dim and codim is a constant
+	  bool fixedsize (int dim, int codim) const
+	  {
+		return gfs.dataHandleFixedSize(dim,codim);
+	  }
+
+	  /*! how many objects of type DataType have to be sent for a given entity
+
+		Note: Only the sender side needs to know this size. 
+	  */
+	  template<class EntityType>
+	  size_t size (EntityType& e) const
+	  {
+		return gfs.dataHandleSize(e);
+	  }
+
+	  //! pack data from user to message buffer
+	  template<class MessageBuffer, class EntityType>
+	  void gather (MessageBuffer& buff, const EntityType& e) const
+	  {
+		gfs.dataHandleGlobalIndices(e,global);
+		for (size_t i=0; i<global.size(); ++i)
+		  t.gather(buff,e,B::access(v,global[i]));
+	  }
+
+	  /*! unpack data from message buffer to user
+
+		n is the number of objects sent by the sender
+	  */
+	  template<class MessageBuffer, class EntityType>
+	  void scatter (MessageBuffer& buff, const EntityType& e, size_t n)
+	  {
+		gfs.dataHandleGlobalIndices(e,global);
+		if (global.size()!=n)
+          DUNE_THROW(Exception,"size mismatch in generic data handle");
+		for (size_t i=0; i<global.size(); ++i)
+		  t.scatter(buff,e,B::access(v,global[i]));
+	  }
+
+	private:
+	  const GFS& gfs;
+	  V& v;
+	  mutable T t;
+	  mutable std::vector<typename GFS::Traits::SizeType> global;
+	};
+
+
+
 	class AddGatherScatter
 	{
 	public:
