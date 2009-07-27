@@ -171,7 +171,7 @@ namespace Dune {
             std::vector<RangeType> rotphi(lfsu.size(),RangeType(0));
             for(unsigned i = 0; i < lfsu.size(); ++i)
               for(unsigned j = 0; j < 3; ++j)
-                rotphi[i] += J[i][(j+2)%3][(j+1)%3] - J[i][(j+1)%3][(j+2)%3];
+                rotphi[i][j] += J[i][(j+2)%3][(j+1)%3] - J[i][(j+1)%3][(j+2)%3];
 
             Dune::FieldVector<RF,1> muval;
             mu.evaluate(eg.entity(), it->position(), muval);

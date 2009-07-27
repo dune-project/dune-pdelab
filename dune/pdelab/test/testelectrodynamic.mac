@@ -13,6 +13,18 @@ I12: matrix([ 0, 0, 0],
 
 I: [I01, I02, I12];
 
+/* permutation for each tet */
+tet_permutation: [[1,2,3],
+                  [2,1,3],
+                  [2,3,1],
+                  [3,2,1],
+                  [3,1,2],
+                  [1,3,2]];
+tet_permute(tet, x):= [x[tet_permutation[tet][1]],x[tet_permutation[tet][2]],x[tet_permutation[tet][3]]];
+
+/* unit vectors */
+unit_vector: makelist(ematrix(3,1, 1, i,1),i,1,3);
+
 /* define vertices of cube */
 xi: [matrix([0], [0], [0]),
      matrix([1], [0], [0]),
@@ -21,111 +33,218 @@ xi: [matrix([0], [0], [0]),
      matrix([0], [0], [1]),
      matrix([1], [0], [1]),
      matrix([0], [1], [1]),
-     matrix([1], [1], [1])
-     ];
+     matrix([1], [1], [1])];
+
+/* tet_coords[tet][i] = coords of the i'th vertex of tet tet */
+tet_coords: makelist(makelist(zeromatrix(3,1),i,1,4),tet,1,6)$
+for tet: 1 thru 6 do
+  for i: 1 thru 3 do
+    tet_coords[tet][i+1]: tet_coords[tet][i]+unit_vector[tet_permutation[tet][i]]$
+tet_coords;
+
+/* */
+lindex(l, v) := block(
+  for i: 1 thru length(l) do
+    if equal(l[i], v) then return(i)
+  );
+
+/* mapping local->global vertex numbers */
+tet_vertex: makelist(makelist(lindex(xi,tet_coords[tet][i]),i,1,4),tet,1,6);
+
+/* the local edges, including ordering */
+local_edge: [[1,2], [1,3], [2,3], [1,4], [2,4], [3,4]];
 
 /* define table of edges */
-edges: [[0,1], [0,2], [0,3], [0,4], [0,5], [0,6], [0,7],
-        [1,3], [1,5], [1,7],
-        [2,3], [2,6], [2,7],
-        [3,7],
-        [4,5], [4,6], [4,7],
-        [5,7],
-        [6,7]];
+edges: unique(sort(apply(append, makelist(makelist(sort(makelist(tet_vertex[tet][l],l,local_edge[e])),e,1,6),tet,1,6))));
 
-/* define tet -> edge mapping */
-tet_edge: [[ 0, 2, 7, 6, 9,13],
-           [ 1, 2,10, 6,12,13],
-           [ 1, 5,11, 6,12,18],
-           [ 3, 5,15, 6,16,18],
-           [ 3, 4,14, 6,16,17],
-           [ 0, 4, 8, 6, 9,17]];
-
-/* define tet -> vertex mapping */
-tet_vertex: makelist(sort(unique(apply(append,makelist(edges[i+1],i,tet_edge[j+1])))),j,0,5);
-
-local_edge: [[0,1], [0,2], [1,2], [0,3], [1,3], [2,3]];
-
-/* tet_coords[j+1][i+1] = coords of the i'th vertex of tet j */
-tet_coords: makelist(makelist(xi[i+1],i,tet_vertex[j+1]),j,0,5);
+/* define tet/edge -> global edge mapping */
+tet_edges: makelist(/* tet tet */
+  makelist(/* edge e */
+    lindex(
+      edges,
+      sort(
+        makelist(
+          tet_vertex[tet][l],
+          l,
+          local_edge[e]))),
+    e,1,6),
+  tet,1,6);
 
 /* define matrices, one for each tet */
-M: makelist(/* tet j */
-            apply(matrix,
-                  makelist(/* row r */
-                           append(makelist(tet_coords[j+1][local_edge[r+1][2]+1].myI.tet_coords[j+1][local_edge[r+1][1]+1],
-                                           myI,I),
-                                  makelist((tet_coords[j+1][local_edge[r+1][2]+1]-tet_coords[j+1][local_edge[r+1][1]+1])[i+1][1],
-                                           i,0,2)),
-                           r,0,5)
-                  ),
-            j,0,5);
+M: makelist(/* tet tet */
+  block([coords],
+    coords: tet_coords[tet],
+    apply(
+      matrix,
+      makelist(/* row r */
+        block([edge, x1, x2],
+          edge: local_edge[r],
+          x1: coords[edge[1]],
+          x2: coords[edge[2]],
+          append(
+            makelist(
+              x2.myI.x1,
+              myI,I),
+            makelist(
+              (x2-x1)[i][1],
+              i,
+              1,3))),
+        r,1,6))),
+  tet,1,6);
 
 Minv: makelist(invert(m),m,M);
 
 /* right hand sides */
+r: makelist(/* tet tet */
+  block([coords],
+    coords: tet_coords[tet],
+    makelist(/* edge e */
+      block([edge, x1, x2],
+          edge: local_edge[e],
+          x1: coords[edge[1]],
+          x2: coords[edge[2]],
+        ematrix(
+          6,1,
+          sqrt((x2-x1)^^2)[1][1],
+          e,1)),
+      e,1,6)),
+  tet,1,6);
 
-r: makelist(/* tet j */
-            makelist(/* edge i */
-                     ematrix(6,1,
-                             sqrt((tet_coords[j+1][local_edge[i+1][2]+1]-tet_coords[j+1][local_edge[i+1][1]+1])^^2)[1][1],
-                             i+1,1),
-                     i,0,5
-                     ),
-            j,0,5
-            );
+/* coefficient vector for the shape functions */
+coeff: makelist(/* tet tet */
+  makelist(/* edge e */
+    Minv[tet].r[tet][e],
+    e,1,6),
+  tet,1,6);
 
-coeff: makelist(/* tet j */
-                makelist(/* edge i */
-                         Minv[j+1].r[j+1][i+1],
-                         i,0,5
-                         ),
-                j,0,5
-                );
 
-A: makelist(/* tet j */
-            makelist(/* edge i */
-                     coeff[j+1][i+1][1][1]*I01+coeff[j+1][i+1][2][1]*I02+coeff[j+1][i+1][3][1]*I12,
-                     i,0,5
-                     ),
-            j,0,5
-            );
 
-a: makelist(/* tet j */
-  makelist(/* edge i */
-    submatrix(1,2,3,coeff[j+1][i+1]),
-    i,0,5),
-  j,0,5);
+/* coefficient matrices */
+A: makelist(/* tet tet */
+  block([tc],
+    tc: coeff[tet],
+    makelist(/* edge e */
+      block([ec],
+        ec: tc[e],
+        sum(
+          ec[i][1]*I[i],
+          i,1,3)),
+      e,1,6)),
+  tet,1,6);
 
-psihat: makelist(makelist(apply(lambda, [[x], A[j+1][i+1].matrix([x[1][1]],[x[2][1]],[x[3][1]])+a[j+1][i+1]]),i,0,5),j,0,5);
+
+a: makelist(/* tet tet */
+  makelist(/* edge e */
+    submatrix(1,2,3,coeff[tet][e]),
+    e,1,6),
+  tet,1,6);
+
+assert_vector(x) := matrix([x[1][1]],[x[2][1]],[x[3][1]]);
+
+psihat: makelist(/* tet tet */
+  block([tA, ta],
+    tA: A[tet],
+    ta: a[tet],
+    makelist(/* edge e */
+      block([eA, ea],
+        eA: tA[e],
+        ea: ta[e],
+        apply(
+          lambda,
+          [[x],
+           eA.assert_vector(x)+ea])),
+      e,1,6)),
+  tet,1,6);
 
 rot(f):=matrix(
   [diff(f(x)[3][1],x[2][1])-diff(f(x)[2][1],x[3][1])],
   [diff(f(x)[1][1],x[3][1])-diff(f(x)[3][1],x[1][1])],
   [diff(f(x)[2][1],x[1][1])-diff(f(x)[1][1],x[2][1])]);
 
-rotpsihat: makelist(makelist(rot(psihat[j+1][i+1]),i,0,5),j,0,5);
+rotpsihat: makelist(/* tet tet */
+  makelist(/* edge e */
+    rot(psihat[tet][e]),
+    e,1,6),
+  tet,1,6);
 
-tet_permutation: [
-  [0,1,2],
-  [1,0,2],
-  [1,2,0],
-  [2,1,0],
-  [2,0,1],
-  [0,2,1]];
+tet_integrate: makelist(/* tet tet */
+  block([p,x,xp],
+    p: tet_permutation[tet],
+    x: matrix(['x1],['x2],['x3]),
+    xp: makelist(x[i][1],i,p),
+    apply(
+      lambda,
+      [[f],
+      integrate(
+        integrate(
+          integrate(
+            f(x),
+            xp[3],0,xp[2]),
+          xp[2],0,xp[1]),
+        xp[1],0,1)])),
+  tet,1,6);
 
-tet_permute(tet, x):= [x[tet_permutation[tet+1][1]+1],x[tet_permutation[tet+1][2]+1],x[tet_permutation[tet+1][3]+1]];
-
-tet_integrate: makelist(apply(lambda, [[f], integrate(integrate(integrate(f(apply(matrix,tet_permute(i,[[x0],[x1],[x2]]))),x2,0,x1),x1,0,x0),x0,0,1)]),i,0,5);
-
-T_tet: makelist(zeromatrix(length(edges), length(edges)), i, 0, 5);
-for el: 0 thru 5 do for ed1: 0 thru 5 do for ed2: 0 thru 5 do
-  setelmx(
-    ev(tet_integrate[el+1](lambda([x], psihat[el+1][ed1+1](x).psihat[el+1][ed2+1](x))),nouns),
-    tet_edge[el+1][ed1+1]+1, tet_edge[el+1][ed2+1]+1,
-    T_tet[el+1]);
-
+T_tet: makelist(zeromatrix(length(edges), length(edges)), tet, 1, 6);
+for tet: 1 thru 6 do block([ti,tpsi,te,tT],
+  ti: tet_integrate[tet],
+  tpsi: psihat[tet],
+  te: tet_edges[tet],
+  tT: T_tet[tet],
+  for e1: 1 thru 6 do
+    for e2: 1 thru 6 do block([integrand],
+      integrand(x) := tpsi[e1](x).tpsi[e2](x),
+      setelmx(
+        ev(ti(integrand),nouns),
+        te[e1], te[e2],
+        tT)));
 T: lsum(t,t,T_tet)$
-
 ev(T,float);
 
+S_tet: makelist(zeromatrix(length(edges), length(edges)), tet, 1, 6);
+for tet: 1 thru 6 do block([ti,tpsi,te,tS],
+  ti: tet_integrate[tet],
+  trotpsi: rotpsihat[tet],
+  te: tet_edges[tet],
+  tS: S_tet[tet],
+  for e1: 1 thru 6 do
+    for e2: 1 thru 6 do block([integrand],
+      integrand(x) := trotpsi[e1].trotpsi[e2],
+      setelmx(
+        ev(ti(integrand),nouns),
+        te[e1], te[e2],
+        tS)));
+S: lsum(t,t,S_tet)$
+ev(S,float);
+
+nonconstrained: {7};
+constrained: setdifference(setify(makelist(e,e,1,length(edges))),nonconstrained);
+
+Jac: copy(T);
+for i in constrained do block(
+  for j: 1 thru length(Jac) do block(
+    Jac[i][j]: 0,
+    Jac[j][i]: 0),
+  Jac[i][i]: 1);
+
+affine_shift: zeromatrix(length(Jac),1);
+
+xprev: copy(affine_shift)$
+xprev[7][1]: 1/sqrt(3)$
+xprev;
+
+xcur: copy(xprev);
+
+Delta_t: sqrt(1/3);
+
+rhs: -copy(T.(affine_shift-2*xcur+xprev)+Delta_t^2*S.xprev)$
+for i in constrained do
+  rhs[i][1]: 0$
+rhs;
+
+R(u) := block([tmp],
+  tmp: copy(T.(u-2*xcur+xprev)+Delta_t^2*S.xprev),
+  for i in constrained do
+    tmp[i][1]: 0,
+  tmp);
+
+R(affine_shift);
