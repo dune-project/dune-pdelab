@@ -322,6 +322,50 @@ namespace Dune {
         globalIndices(plfem->find(e),e,global);
       }
 
+      //------------------------------
+      // generic data handle interface
+      //------------------------------
+
+      //! returns true if data for this codim should be communicated
+      bool dataHandleContains (int dim, int codim) const
+      {
+        return (codimUsed.find(codim)!=codimUsed.end());
+      }
+      
+      //! returns true if size per entity of given dim and codim is a constant
+      bool dataHandleFixedSize (int dim, int codim) const
+      {
+        return false;
+      }
+      
+      /*! how many objects of type DataType have to be sent for a given entity
+        
+        Note: Only the sender side needs to know this size. 
+      */
+      template<class EntityType>
+      size_t dataHandleSize (const EntityType& e) const
+      {
+        Dune::GeometryType gt=e.type();
+        typename GV::IndexSet::IndexType index = gtoffset.find(gt)->second + gv.indexSet().index(e);
+        return offset[index+1]-offset[index];
+      }
+
+      //! return vector of global indices associated with the given entity
+      template<class EntityType>
+      void dataHandleGlobalIndices (const EntityType& e, 
+                                    std::vector<typename Traits::SizeType>& global) const
+      {
+        Dune::GeometryType gt=e.type();
+        typename GV::IndexSet::IndexType index = gtoffset.find(gt)->second + gv.indexSet().index(e);
+        unsigned int n = offset[index+1]-offset[index];
+		global.resize(n);
+        for (int i=0; i<n; i++) 
+          global[i] = offset[index]+i;
+      }
+
+      //------------------------------
+
+
 	  // update information, e.g. when grid has changed
 	  void update ()
 	  {
@@ -331,6 +375,7 @@ namespace Dune {
 		// needs one traversal of the grid
 		typedef std::set<Dune::GeometryType> GtUsedSetType;
 		GtUsedSetType gtused;
+        codimUsed.clear();
 		for (ElementIterator it = gv.template begin<0>();
 			 it!=gv.template end<0>(); ++it)
 		  {
@@ -348,6 +393,7 @@ namespace Dune {
 				Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
 				  ::general(it->type()).type(lc.localKey(i).subEntity(),lc.localKey(i).codim());
 				gtused.insert(gt);
+                codimUsed.insert(GV::Grid::dimension-gt.dim());
 			  }
 		  }
 
@@ -362,6 +408,7 @@ namespace Dune {
 					  << nentities << std::endl;
 			nentities += is.size(*i);
 		  }
+        nentities++; // add one additional dummy entry; this allows to compute size of last entity.
 		offset.resize(nentities);
 		for (typename std::vector<typename Traits::SizeType>::iterator i=offset.begin(); i!=offset.end(); ++i)
 		  *i = 0;
@@ -413,6 +460,7 @@ namespace Dune {
 
 	  std::map<Dune::GeometryType,typename Traits::SizeType> gtoffset; // offset in vector for given geometry type
 	  std::vector<typename Traits::SizeType> offset; // offset into big vector for each entity;
+      std::set<unsigned int> codimUsed;
 	};
 
 
@@ -537,6 +585,49 @@ namespace Dune {
         globalIndices(plfem->find(e),e,global);
       }
 
+
+      //------------------------------
+      // generic data handle interface
+      //------------------------------
+
+      //! returns true if data for this codim should be communicated
+      bool dataHandleContains (int dim, int codim) const
+      {
+        return (codimUsed.find(codim)!=codimUsed.end());
+      }
+      
+      //! returns true if size per entity of given dim and codim is a constant
+      bool dataHandleFixedSize (int dim, int codim) const
+      {
+        return true;
+      }
+      
+      /*! how many objects of type DataType have to be sent for a given entity
+        
+        Note: Only the sender side needs to know this size. 
+      */
+      template<class EntityType>
+      size_t dataHandleSize (const EntityType& e) const
+      {
+        Dune::GeometryType gt=e.type();
+        return dofcountmap.find(gt)->second;
+      }
+
+      //! return vector of global indices associated with the given entity
+      template<class EntityType>
+      void dataHandleGlobalIndices (const EntityType& e, 
+                                    std::vector<typename Traits::SizeType>& global) const
+      {
+        Dune::GeometryType gt=e.type();
+        typename GV::IndexSet::IndexType index = gv.indexSet().index(e);
+        unsigned int n = dofcountmap.find(gt)->second;
+		global.resize(n);
+        for (int i=0; i<n; i++) 
+          global[i] = offset.find(gt)->second + index*n + i;
+      }
+
+      //------------------------------
+
 	  // update information, e.g. when grid has changed
 	  void update ()
 	  {
@@ -545,6 +636,8 @@ namespace Dune {
 		// clear counters
 		dofcountmap.clear();
 		nlocal = 0;
+        codimUsed.clear();
+
 
 		// count number of dofs in each subentity
 		for (ElementIterator it = gv.template begin<0>();
@@ -584,6 +677,7 @@ namespace Dune {
 				typename DofCountMapType::iterator j=dofcountmap.find(gt);
 				if (j==dofcountmap.end())
 				  {
+                    codimUsed.insert(GV::Grid::dimension-gt.dim());
 					dofcountmap[gt] = i->second;
 					continue;
 				  }
@@ -625,6 +719,7 @@ namespace Dune {
 	  typedef std::map<Dune::GeometryType,typename Traits::SizeType> DofCountMapType;
 	  DofCountMapType dofcountmap; // number of degrees of freedom per geometry type
 	  std::map<Dune::GeometryType,typename Traits::SizeType> offset; // offset in vector for given geometry type
+      std::set<unsigned int> codimUsed;
 	};
 
 
@@ -797,6 +892,56 @@ namespace Dune {
       {
         globalIndices(plfem->find(e),e,global);
       }
+
+
+      //------------------------------
+      // generic data handle interface
+      //------------------------------
+
+      //! returns true if data for this codim should be communicated
+      bool dataHandleContains (int dim, int codim) const
+      {
+        return (dofpercodim.find(codim)!=dofpercodim.end());
+      }
+      
+      //! returns true if size per entity of given dim and codim is a constant
+      bool dataHandleFixedSize (int dim, int codim) const
+      {
+        return true;
+      }
+      
+      /*! how many objects of type DataType have to be sent for a given entity
+        
+        Note: Only the sender side needs to know this size. 
+      */
+      template<class EntityType>
+      size_t dataHandleSize (const EntityType& e) const
+      {
+        const int cd = EntityType::codimension;
+        return dofpercodim.find(cd)->second;
+      }
+
+      //! return vector of global indices associated with the given entity
+      template<class EntityType>
+      void dataHandleGlobalIndices (const EntityType& e, 
+                                    std::vector<typename Traits::SizeType>& global) const
+      {
+        const int cd = EntityType::codimension;
+        typename GV::IndexSet::IndexType o = offset.find(cd)->second;
+        typename GV::IndexSet::IndexType index = gv.indexSet().index(e);
+        unsigned int n = dofpercodim.find(cd)->second;
+		global.resize(n);
+        for (int i=0; i<n; i++) 
+          global[i] = o + index*n + i;
+//         std::cout << "[" << gv.grid().comm().rank() << "]: "
+//                   << " global indices " 
+//                   << " offset=" << o
+//                   << " index=" << index
+//                   << " n=" << n
+//                   << std::endl;
+      }
+
+      //------------------------------
 
 	  // update information, e.g. when grid has changed
 	  void update ()
@@ -983,6 +1128,62 @@ namespace Dune {
 		return offset[i]+j;
 	  }
 
+      //------------------------------
+      // generic data handle interface
+      //------------------------------
+
+      //! returns true if data for this codim should be communicated
+      bool dataHandleContains (int dim, int codim) const
+      {
+        for (int i=0; i<k; i++)
+          if (this->getChild(i).dataHandleContains(dim,codim))
+            return true;
+        return false;
+      }
+      
+      //! returns true if size per entity of given dim and codim is a constant
+      bool dataHandleFixedSize (int dim, int codim) const
+      {
+        for (int i=0; i<k; i++)
+          if (!this->getChild(i).dataHandleFixedSize(dim,codim))
+            return false;
+        return true;
+      }
+      
+      /*! how many objects of type DataType have to be sent for a given entity
+        
+        Note: Only the sender side needs to know this size. 
+      */
+      template<class EntityType>
+      size_t dataHandleSize (const EntityType& e) const
+      {
+        size_t n=0;
+        for (int i=0; i<k; i++)
+          n += this->getChild(i).dataHandleSize(e);
+        return n;
+      }
+
+      //! return vector of global indices associated with the given entity
+      template<class EntityType>
+      void dataHandleGlobalIndices (const EntityType& e, 
+                                    std::vector<typename Traits::SizeType>& global) const
+      {
+        size_t n=0;
+        for (int i=0; i<k; i++)
+          n += this->getChild(i).dataHandleSize(e);
+        global.resize(n);
+        n = 0;
+        for (int i=0; i<k; i++)
+          {
+            this->getChild(i).dataHandleGlobalIndices(e,childglobal);
+            for (size_t j=0; j<childglobal.size(); j++)
+              global[n+j] = offset[i]+childglobal[j];
+            n += childglobal.size();
+          }          
+      }
+
+      //------------------------------
+
       // recalculate sizes
       void update ()
       {
@@ -1008,11 +1209,13 @@ namespace Dune {
         std::cout << ") total size = " << offset[k]
                   << " max local size = " << maxlocalsize 
                   << std::endl;
+        childglobal.resize(maxlocalsize);
       }
 
       typename Traits::SizeType childSize[k];
       typename Traits::SizeType offset[k+1];
       typename Traits::SizeType maxlocalsize;
+      mutable std::vector<typename Traits::SizeType> childglobal;
 	};
 
 
@@ -1095,6 +1298,62 @@ namespace Dune {
 		return j*k+i;
 	  }
 
+      //------------------------------
+      // generic data handle interface
+      //------------------------------
+
+      //! returns true if data for this codim should be communicated
+      bool dataHandleContains (int dim, int codim) const
+      {
+        for (int i=0; i<k; i++)
+          if (this->getChild(i).dataHandleContains(dim,codim))
+            return true;
+        return false;
+      }
+      
+      //! returns true if size per entity of given dim and codim is a constant
+      bool dataHandleFixedSize (int dim, int codim) const
+      {
+        for (int i=0; i<k; i++)
+          if (!this->getChild(i).dataHandleFixedSize(dim,codim))
+            return false;
+        return true;
+      }
+      
+      /*! how many objects of type DataType have to be sent for a given entity
+        
+        Note: Only the sender side needs to know this size. 
+      */
+      template<class EntityType>
+      size_t dataHandleSize (const EntityType& e) const
+      {
+        size_t n=0;
+        for (int i=0; i<k; i++)
+          n += this->getChild(i).dataHandleSize(e);
+        return n;
+      }
+
+      //! return vector of global indices associated with the given entity
+      template<class EntityType>
+      void dataHandleGlobalIndices (const EntityType& e, 
+                                    std::vector<typename Traits::SizeType>& global) const
+      {
+        size_t n=0;
+        for (int i=0; i<k; i++)
+          n += this->getChild(i).dataHandleSize(e);
+        global.resize(n);
+        n = 0;
+        for (int i=0; i<k; i++)
+          {
+            this->getChild(i).dataHandleGlobalIndices(e,childglobal);
+            for (size_t j=0; j<childglobal.size(); j++)
+              global[n+j] = childglobal[j]*k+i;
+            n += childglobal.size();
+          }          
+      }
+
+      //------------------------------
+
       // recalculate sizes
       void update ()
       {
@@ -1123,11 +1382,13 @@ namespace Dune {
         for (int i=1; i<k; i++)
           if (childSize[i]!=childSize[0])
             DUNE_THROW(Exception, "components must be of equal size");
+        childglobal.resize(maxlocalsize);
       }
 
       typename Traits::SizeType childSize[k];
       typename Traits::SizeType offset[k+1];
       typename Traits::SizeType maxlocalsize;
+      mutable std::vector<typename Traits::SizeType> childglobal;
 	};
 
 
@@ -1487,6 +1748,32 @@ namespace Dune {
         t.template getChild<i>().update();
         CompositeGridFunctionSpaceBaseVisitChildMetaProgram<T,n,i+1>::update(t);
 	  }
+      static bool dataHandleContains (const T& t, int dim, int codim)
+      {
+        return t.template getChild<i>().dataHandleContains(dim,codim) || 
+          CompositeGridFunctionSpaceBaseVisitChildMetaProgram<T,n,i+1>::dataHandleContains(t,dim,codim);
+      }
+      static bool dataHandleFixedSize (const T& t, int dim, int codim)
+      {
+        return t.template getChild<i>().dataHandleFixedSize(dim,codim) && 
+          CompositeGridFunctionSpaceBaseVisitChildMetaProgram<T,n,i+1>::dataHandleFixedSize(t,dim,codim);
+      }
+      template<class EntityType>
+      static size_t dataHandleSize (const T& t, const EntityType& e)
+      {
+        return t.template getChild<i>().dataHandleSize(e) + 
+          CompositeGridFunctionSpaceBaseVisitChildMetaProgram<T,n,i+1>::dataHandleSize(t,e);
+      }
+      template<class EntityType, class C>
+      static void dataHandleGlobalIndices (const T& t, const EntityType& e, C& global, size_t ng, C& childglobal)
+      {
+        size_t nc=t.template getChild<i>().dataHandleSize(e);
+        childglobal.resize(nc);
+        t.template getChild<i>().dataHandleGlobalIndices(e,childglobal);
+        for (size_t j=0; j<childglobal.size(); j++)
+          global[ng+j] = t.template subMap<i>(childglobal[j]);
+        CompositeGridFunctionSpaceBaseVisitChildMetaProgram<T,n,i+1>::dataHandleGlobalIndices(t,e,global,ng+nc,childglobal);
+      }
 	};
 
 	template<typename T, int n>
@@ -1499,6 +1786,23 @@ namespace Dune {
  	  static void update (T& t)
 	  {
 	  }
+      static bool dataHandleContains (const T& t, int dim, int codim)
+      {
+        return false;
+      }
+      static bool dataHandleFixedSize (const T& t, int dim, int codim)
+      {
+        return true;
+      }
+      template<class EntityType>
+      static size_t dataHandleSize (const T& t, const EntityType& e)
+      {
+        return 0;
+      }
+      template<class EntityType, class C>
+      static void dataHandleGlobalIndices (const T& t, const EntityType& e, C& global, size_t n, C& childglobal)
+      {
+      }
 	};
 
 	template<typename P, typename T0, typename T1, typename T2, typename T3,
@@ -1592,6 +1896,51 @@ namespace Dune {
 		return offset[i]+j;
 	  }
 
+
+      //------------------------------
+      // generic data handle interface
+      //------------------------------
+
+      //! returns true if data for this codim should be communicated
+      bool dataHandleContains (int dim, int codim) const
+      {
+        return CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
+          dataHandleContains(*this,dim,codim);
+      }
+      
+      //! returns true if size per entity of given dim and codim is a constant
+      bool dataHandleFixedSize (int dim, int codim) const
+      {
+        return CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
+          dataHandleFixedSize(*this,dim,codim);
+      }
+      
+      /*! how many objects of type DataType have to be sent for a given entity
+        
+        Note: Only the sender side needs to know this size. 
+      */
+      template<class EntityType>
+      size_t dataHandleSize (const EntityType& e) const
+      {
+        return CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
+          dataHandleSize(*this,e);
+      }
+
+      //! return vector of global indices associated with the given entity
+      template<class EntityType>
+      void dataHandleGlobalIndices (const EntityType& e, 
+                                    std::vector<typename Traits::SizeType>& global) const
+      {
+        size_t n=dataHandleSize(e);
+        global.resize(n);
+        CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
+          dataHandleGlobalIndices(*this,e,global,0,childglobal);
+      }
+
+      //------------------------------
+
+
+
       // recalculate sizes
       void update ()
       {
@@ -1620,12 +1969,14 @@ namespace Dune {
         std::cout << ") total size = " << offset[BaseT::CHILDREN]
                   << " max local size = " << maxlocalsize 
                   << std::endl;
+        childglobal.resize(maxlocalsize);
       }
 
       typename Traits::SizeType childGlobalSize[BaseT::CHILDREN];
       typename Traits::SizeType childLocalSize[BaseT::CHILDREN];
       typename Traits::SizeType offset[BaseT::CHILDREN+1];
       typename Traits::SizeType maxlocalsize;
+      mutable std::vector<typename Traits::SizeType> childglobal;
 	};
 
 
@@ -1715,6 +2066,48 @@ namespace Dune {
 		return j*BaseT::CHILDREN+i;
 	  }
 
+      //------------------------------
+      // generic data handle interface
+      //------------------------------
+
+      //! returns true if data for this codim should be communicated
+      bool dataHandleContains (int dim, int codim) const
+      {
+        return CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
+          dataHandleContains(*this,dim,codim);
+      }
+      
+      //! returns true if size per entity of given dim and codim is a constant
+      bool dataHandleFixedSize (int dim, int codim) const
+      {
+        return CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
+          dataHandleFixedSize(*this,dim,codim);
+      }
+      
+      /*! how many objects of type DataType have to be sent for a given entity
+        
+        Note: Only the sender side needs to know this size. 
+      */
+      template<class EntityType>
+      size_t dataHandleSize (const EntityType& e) const
+      {
+        return CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
+          dataHandleSize(*this,e);
+      }
+
+      //! return vector of global indices associated with the given entity
+      template<class EntityType>
+      void dataHandleGlobalIndices (const EntityType& e, 
+                                    std::vector<typename Traits::SizeType>& global) const
+      {
+        size_t n=dataHandleSize(e);
+        global.resize(n);
+        CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
+          dataHandleGlobalIndices(*this,e,global,0,childglobal);
+      }
+
+      //------------------------------
+
       // recalculate sizes
       void update ()
       {
@@ -1747,12 +2140,14 @@ namespace Dune {
         std::cout << ") total size = " << offset[BaseT::CHILDREN]
                   << " max local size = " << maxlocalsize 
                   << std::endl;
+        childglobal.resize(maxlocalsize);
       }
 
       typename Traits::SizeType childGlobalSize[BaseT::CHILDREN];
       typename Traits::SizeType childLocalSize[BaseT::CHILDREN];
       typename Traits::SizeType offset[BaseT::CHILDREN+1];
       typename Traits::SizeType maxlocalsize;
+      mutable std::vector<typename Traits::SizeType> childglobal;
 	};
 
 
