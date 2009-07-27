@@ -11,22 +11,22 @@ namespace Dune
         class NewtonLineSearchError : public NewtonError {};
 
         // Status information of a linear solver
-        template<class TestRF>
+        template<class RFType>
         struct LinearSolverResult
         {
             bool converged;            // Solver converged
             unsigned int iterations;   // number of iterations
             double elapsed;            // total user time in seconds
-            TestRF reduction;          // defect reduction
+            RFType reduction;          // defect reduction
         };
 
         // Status information of Newton's method
-        template<class TestRF>
-        struct NewtonResult : LinearSolverResult<TestRF>
+        template<class RFType>
+        struct NewtonResult : LinearSolverResult<RFType>
         {
-            TestRF conv_rate;          // average reduction per Newton iteration
-            TestRF first_defect;       // the first defect
-            TestRF defect;             // the final defect
+            RFType conv_rate;          // average reduction per Newton iteration
+            RFType first_defect;       // the first defect
+            RFType defect;             // the final defect
         };
 
         // Traits class for NewtonSolver
@@ -39,26 +39,28 @@ namespace Dune
         };
         
         // Default traits for NewtonSolver
-        template<class TestRF> class NewtonTerminate;
-        template<class TestRF> class NewtonPrepareStep;
-        template<class TestRF> class NewtonLineSearch;
+        template<class RFType> class NewtonTerminate;
+        template<class RFType> class NewtonPrepareStep;
+        template<class RFType> class NewtonLineSearch;
 
-        template<class GOS>
+        template<class TestVector>
         struct NewtonSolverDefaultTraits
         {
-            typedef typename GOS::Traits::TestGridFunctionSpace::Traits::LocalFiniteElementType
-                ::Traits::LocalBasisType::Traits::RangeFieldType TestRF;
+            typedef typename TestVector::ElementType RFType;
 
-            typedef NewtonTerminate<TestRF> Terminate;
-            typedef NewtonPrepareStep<TestRF> PrepareStep;
-            typedef NewtonLineSearch<TestRF> LineSearch;
+            typedef NewtonTerminate<RFType> Terminate;
+            typedef NewtonPrepareStep<RFType> PrepareStep;
+            typedef NewtonLineSearch<RFType> LineSearch;
         };
 
-        template<class GOS, class S, class NST = NewtonSolverDefaultTraits<GOS> >
+        template<class GOS, class S, class TrlV, class TstV = TrlV,
+                 class NST = NewtonSolverDefaultTraits<TstV> >
         class NewtonSolver
         {
             typedef GOS GridOperator;
             typedef S Solver;
+            typedef TrlV TrialVector;
+            typedef TstV TestVector;
             typedef NST Traits;
 
             typedef typename Traits::Terminate Terminate;
@@ -69,20 +71,12 @@ namespace Dune
             friend class Traits::PrepareStep;
             friend class Traits::LineSearch;
 
-            typedef typename GOS::Traits::TrialGridFunctionSpace TrialGridFunctionSpace;
-            typedef typename TrialGridFunctionSpace::Traits::LocalFiniteElementType
-                ::Traits::LocalBasisType::Traits::RangeFieldType TrialRF;
-            typedef typename TrialGridFunctionSpace::template VectorContainer<TrialRF>::Type TrialVector;
+            typedef typename TestVector::ElementType RFType;
 
-            typedef typename GOS::Traits::TestGridFunctionSpace TestGridFunctionSpace;
-            typedef typename TestGridFunctionSpace::Traits::LocalFiniteElementType
-                ::Traits::LocalBasisType::Traits::RangeFieldType TestRF;
-            typedef typename TestGridFunctionSpace::template VectorContainer<TestRF>::Type TestVector;
-
-            typedef typename GOS::template MatrixContainer<TestRF>::Type Matrix;
+            typedef typename GOS::template MatrixContainer<RFType>::Type Matrix;
 
         public:
-            typedef NewtonResult<TestRF> Result;
+            typedef NewtonResult<RFType> Result;
 
             NewtonSolver(GridOperator& go, TrialVector& u_, Solver& solver_,
                          const Terminate& terminate_ = Terminate(),
@@ -135,12 +129,12 @@ namespace Dune
             bool result_valid;
             unsigned int verbosity_level;
 
-            TestRF prev_defect;
-            TestRF linear_reduction;
+            RFType prev_defect;
+            RFType linear_reduction;
         };
 
-        template<class GOS, class S, class NST>
-        void NewtonSolver<GOS,S,NST>::apply()
+        template<class GOS, class S, class TrlV, class TstV, class NST>
+        void NewtonSolver<GOS,S,TrlV,TstV,NST>::apply()
         {
             res.iterations = 0;
             res.converged = false;
@@ -200,12 +194,12 @@ namespace Dune
             res.elapsed = timer.elapsed();
         }
 
-        template<class TestRF>
+        template<class RFType>
         class NewtonTerminate
         {
         public:
-            NewtonTerminate(TestRF reduction_ = 1e-8, unsigned int maxit_ = 40,
-                            bool force_iteration_ = false, TestRF abs_limit_ = 1e-12)
+            NewtonTerminate(RFType reduction_ = 1e-8, unsigned int maxit_ = 40,
+                            bool force_iteration_ = false, RFType abs_limit_ = 1e-12)
                 : reduction(reduction_), maxit(maxit_),
                   force_iteration(force_iteration_), abs_limit(abs_limit_)
             {}
@@ -221,18 +215,18 @@ namespace Dune
             }
 
         private:
-            TestRF reduction;
+            RFType reduction;
             unsigned int maxit;
             bool force_iteration;
-            TestRF abs_limit;
+            RFType abs_limit;
         };
 
-        template<class TestRF>
+        template<class RFType>
         class NewtonPrepareStep
         {
         public:
-            NewtonPrepareStep(TestRF min_linear_reduction_ = 1e-3,
-                              TestRF reassemble_threshold_ = 0.8)
+            NewtonPrepareStep(RFType min_linear_reduction_ = 1e-3,
+                              RFType reassemble_threshold_ = 0.8)
                 : min_linear_reduction(min_linear_reduction_),
                   reassemble_threshold(reassemble_threshold_)
             {}
@@ -258,20 +252,20 @@ namespace Dune
             }
 
         private:
-            TestRF min_linear_reduction;
-            TestRF reassemble_threshold;
+            RFType min_linear_reduction;
+            RFType reassemble_threshold;
         };
 
-        template<class TestRF>
+        template<class RFType>
         class NewtonLineSearch
         {
         public:
             enum Strategy { noLineSearch,
-                            HackbuschReusken,
-                            HackbuschReuskenAcceptBest };
+                            hackbuschReusken,
+                            hackbuschReuskenAcceptBest };
 
-            NewtonLineSearch(Strategy strategy_ = HackbuschReusken, unsigned int maxit_ = 10,
-                             TestRF damping_factor_ = 0.5)
+            NewtonLineSearch(Strategy strategy_ = hackbuschReusken, unsigned int maxit_ = 10,
+                             RFType damping_factor_ = 0.5)
                 : strategy(strategy_), maxit(maxit_), damping_factor(damping_factor_)
             {}
 
@@ -286,9 +280,9 @@ namespace Dune
                     return;
                 }
 
-                TestRF lambda = 1.0;
-                TestRF best_lambda = 0.0;
-                TestRF best_defect = newton.res.defect;
+                RFType lambda = 1.0;
+                RFType best_lambda = 0.0;
+                RFType best_defect = newton.res.defect;
                 typename Newton::TrialVector prev_u(newton.u);  // TODO: vector interface
                 unsigned int i = 0;
                 while (1)
@@ -310,14 +304,14 @@ namespace Dune
                     {
                         switch (strategy)
                         {
-                        case HackbuschReusken:
+                        case hackbuschReusken:
                             newton.u = prev_u;
                             newton.defect(r);
                             DUNE_THROW(NewtonLineSearchError,
                                        "NewtonLineSearch::operator(): line search failed, "
                                        "max iteration count reached, "
                                        "defect did not improve enough");
-                        case HackbuschReuskenAcceptBest:
+                        case hackbuschReuskenAcceptBest:
                             if (best_lambda == 0.0)
                                 DUNE_THROW(NewtonLineSearchError,
                                            "NewtonLineSearch::operator(): line search failed, "
@@ -329,6 +323,8 @@ namespace Dune
                                 newton.u.axpy(-best_lambda, z);
                                 newton.defect(r);
                             }
+                            break;
+                        case noLineSearch:
                             break;
                         }
                         break;
@@ -342,7 +338,7 @@ namespace Dune
         private:
             Strategy strategy;
             unsigned int maxit;
-            TestRF damping_factor;
+            RFType damping_factor;
         };
     }
 }
