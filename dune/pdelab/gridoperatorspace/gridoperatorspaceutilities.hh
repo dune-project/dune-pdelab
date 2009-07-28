@@ -190,6 +190,10 @@ namespace Dune {
 	  static void alpha_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r)
 	  {
 	  }
+	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+	  static void alpha_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r)
+	  {
+	  }
 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
 	  static void alpha_skeleton (const LA& la, const IG& ig, 
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
@@ -208,6 +212,10 @@ namespace Dune {
       static void lambda_volume (const LA& la, const EG& eg, const LFSV& lfsv, R& r)
       {
       }
+	  template<typename EG, typename LFSV, typename R>
+      static void lambda_volume_post_skeleton (const LA& la, const EG& eg, const LFSV& lfsv, R& r)
+      {
+      }
  	  template<typename IG, typename LFSV, typename R>
       static void lambda_boundary (const LA& la, const IG& ig, const LFSV& lfsv, R& r)
       {
@@ -215,6 +223,10 @@ namespace Dune {
 
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
 	  static void jacobian_apply_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
+	  {
+	  }
+	  template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+	  static void jacobian_apply_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
 	  {
 	  }
 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
@@ -232,6 +244,10 @@ namespace Dune {
       }
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
 	  static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, LocalMatrix<R>& mat)
+      {
+      }
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+	  static void jacobian_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, LocalMatrix<R>& mat)
       {
       }
 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
@@ -270,6 +286,11 @@ namespace Dune {
 	  {
 		la.alpha_volume(eg,lfsu,x,lfsv,r);
 	  }
+	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+	  static void alpha_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r)
+	  {
+		la.alpha_volume_post_skeleton(eg,lfsu,x,lfsv,r);
+	  }
 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
 	  static void alpha_skeleton (const LA& la, const IG& ig, 
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
@@ -291,6 +312,11 @@ namespace Dune {
       {
         la.lambda_volume(eg,lfsv,r);
       }
+	  template<typename EG, typename LFSV, typename R>
+      static void lambda_volume_post_skeleton (const LA& la, const EG& eg, const LFSV& lfsv, R& r)
+      {
+        la.lambda_volume_post_skeleton(eg,lfsv,r);
+      }
  	  template<typename IG, typename LFSV, typename R>
       static void lambda_boundary (const LA& la, const IG& ig, const LFSV& lfsv, R& r)
       {
@@ -301,6 +327,11 @@ namespace Dune {
 	  static void jacobian_apply_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
 	  {
 		la.jacobian_apply_volume(eg,lfsu,x,lfsv,y);
+	  }
+	  template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+	  static void jacobian_apply_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
+	  {
+		la.jacobian_apply_volume_post_skeleton(eg,lfsu,x,lfsv,y);
 	  }
 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
 	  static void jacobian_apply_skeleton (const LA& la, const IG& ig, 
@@ -322,6 +353,11 @@ namespace Dune {
 	  static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, LocalMatrix<R>& mat)
       {
         la.jacobian_volume(eg,lfsu,x,lfsv,mat);
+      }
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+	  static void jacobian_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, LocalMatrix<R>& mat)
+      {
+        la.jacobian_volume_post_skeleton(eg,lfsu,x,lfsv,mat);
       }
  	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
 	  static void jacobian_skeleton (const LA& la, const IG& ig, 
@@ -367,6 +403,41 @@ namespace Dune {
             R delta = epsilon*(1.0+std::abs(u[j]));
             u[j] += delta;
             asImp().alpha_volume(eg,lfsu,u,lfsv,up);
+            for (int i=0; i<m; i++)
+              mat(i,j) += (up[i]-down[i])/delta;
+            u[j] = x[j];
+          }
+      }
+
+    private:
+      Imp& asImp () {return static_cast<Imp &> (*this);}
+      const Imp& asImp () const {return static_cast<const Imp &>(*this);}
+    };
+
+    // derive from this class to add numerical jacobian for volume
+    template<typename Imp>
+    class NumericalJacobianVolumePostSkeleton
+    {
+    public:
+
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+	  void jacobian_volume_post_skeleton (const EG& eg, const LFSU& lfsu, const X& x,
+                                          const LFSV& lfsv, LocalMatrix<R>& mat) const
+      {
+        const R epsilon=1E-7; // problem: this depends on data type R!
+        const int m=lfsv.size();
+        const int n=lfsu.size();
+
+        X u(x);
+        std::vector<R> down(m,0.0),up(m);
+
+        asImp().alpha_volume_post_skeleton(eg,lfsu,u,lfsv,down);
+        for (int j=0; j<n; j++) // loop over columns
+          {
+            for (int k=0; k<m; k++) up[k]=0.0;
+            R delta = epsilon*(1.0+std::abs(u[j]));
+            u[j] += delta;
+            asImp().alpha_volume_post_skeleton(eg,lfsu,u,lfsv,up);
             for (int i=0; i<m; i++)
               mat(i,j) += (up[i]-down[i])/delta;
             u[j] = x[j];
@@ -487,7 +558,8 @@ namespace Dune {
 	public:
 
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
-	  void jacobian_apply_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y) const
+	  void jacobian_apply_volume (const EG& eg, const LFSU& lfsu, const X& x,
+                                  const LFSV& lfsv, Y& y) const
 	  {
 		typedef typename X::value_type R;
 		const R epsilon=1E-7; // problem: this depends on data type R!
@@ -504,6 +576,42 @@ namespace Dune {
 			R delta = epsilon*(1.0+std::abs(u[j]));
 			u[j] += delta;
 			asImp().alpha_volume(eg,lfsu,u,lfsv,up);
+			for (int i=0; i<m; i++)
+			  y[i] += ((up[i]-down[i])/delta)*x[j];
+			u[j] = x[j];
+		  }
+	  }
+
+	private:
+	  Imp& asImp () {return static_cast<Imp &> (*this);}
+	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
+	};
+
+	// derive from this class to add numerical evaluation of jacobian apply
+	template<typename Imp>
+	class NumericalJacobianApplyVolumePostSkeleton
+	{
+	public:
+
+	  template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+	  void jacobian_apply_volume_post_skeleton (const EG& eg, const LFSU& lfsu, const X& x,
+                                                const LFSV& lfsv, Y& y) const
+	  {
+		typedef typename X::value_type R;
+		const R epsilon=1E-7; // problem: this depends on data type R!
+		const int m=lfsv.size();
+		const int n=lfsu.size();
+
+		X u(x);
+		std::vector<R> down(m,0.0),up(m);
+
+		asImp().alpha_volume_post_skeleton(eg,lfsu,u,lfsv,down);
+		for (int j=0; j<n; j++) // loop over columns
+		  {
+			for (int k=0; k<m; k++) up[k]=0.0;
+			R delta = epsilon*(1.0+std::abs(u[j]));
+			u[j] += delta;
+			asImp().alpha_volume_post_skeleton(eg,lfsu,u,lfsv,up);
 			for (int i=0; i<m; i++)
 			  y[i] += ((up[i]-down[i])/delta)*x[j];
 			u[j] = x[j];

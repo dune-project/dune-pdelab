@@ -277,7 +277,7 @@ namespace Dune {
                         int idn = is.index(*(iit->outside()))+gtoffset[gtn];
                           
                         // unique vist of intersection
-                        if (id>idn)
+                        if (LA::doSkeletonTwoSided || id>idn)
                           {
                             // bind local function spaces to neighbor element
                             lfsun.bind(*(iit->outside()));
@@ -309,6 +309,11 @@ namespace Dune {
                       }
                   }
               }
+
+			LocalAssemblerCallSwitch<LA,LA::doAlphaVolumePostSkeleton>::
+              alpha_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl);
+			LocalAssemblerCallSwitch<LA,LA::doLambdaVolumePostSkeleton>::
+              lambda_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsv,rl);
 
 			// accumulate result (note: r needs to be cleared outside)
 			lfsv.vadd(rl,r);
@@ -389,7 +394,7 @@ namespace Dune {
                         int idn = is.index(*(iit->outside()))+gtoffset[gtn];
                           
                         // unique vist of intersection
-                        if (id>idn)
+                        if (LA::doSkeletonTwoSided || id>idn)
                           {
                             // bind local function spaces to neighbor element
                             lfsun.bind(*(iit->outside()));
@@ -419,6 +424,9 @@ namespace Dune {
                       }
 				  }
 			  }
+
+			LocalAssemblerCallSwitch<LA,LA::doAlphaVolumePostSkeleton>::
+			  jacobian_apply_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,yl);
 
 			// accumulate result (note: r needs to be cleared outside)
 			lfsv.vadd(yl,y);
@@ -504,7 +512,7 @@ namespace Dune {
                         const typename GV::IndexSet::IndexType idn = is.index(*(iit->outside()))+gtoffset[gtn];
                           
                         // unique vist of intersection
-                        if (id>idn)
+                        if (LA::doSkeletonTwoSided || id>idn)
                           {
                             // bind local function spaces to neighbor element
                             lfsun.bind(*(iit->outside()));
@@ -539,6 +547,9 @@ namespace Dune {
                       }
 				  }
 			  }
+
+			LocalAssemblerCallSwitch<LA,LA::doAlphaVolumePostSkeleton>::
+			  jacobian_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,al);
 
 			// accumulate result (note: a needs to be cleared outside)
             etadd(lfsv,lfsu,al,a);

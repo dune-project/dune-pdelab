@@ -14,6 +14,7 @@
 #include"../gridoperatorspace/gridoperatorspace.hh"
 #include"../gridoperatorspace/gridoperatorspaceutilities.hh"
 #include"pattern.hh"
+#include"flags.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -36,19 +37,16 @@ namespace Dune {
     template<typename F, typename B, typename J, int qorder=1>
 	class Poisson : public NumericalJacobianApplyVolume<Poisson<F,B,J,qorder> >,
                     public NumericalJacobianVolume<Poisson<F,B,J,qorder> >,
-                    public FullVolumePattern
+                    public FullVolumePattern,
+                    public LocalOperatorDefaultFlags
 	{
 	public:
       // pattern assembly flags
       enum { doPatternVolume = true };
-      enum { doPatternSkeleton = false };
 
 	  // residual assembly flags
       enum { doAlphaVolume = true };
-      enum { doAlphaSkeleton = false };
-      enum { doAlphaBoundary = false };
       enum { doLambdaVolume = true };
-      enum { doLambdaSkeleton = false };
       enum { doLambdaBoundary = true };
 
       Poisson (const F& f_, const B& b_, const J& j_)

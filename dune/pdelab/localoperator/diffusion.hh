@@ -15,6 +15,7 @@
 #include"../gridoperatorspace/gridoperatorspace.hh"
 #include"../gridoperatorspace/gridoperatorspaceutilities.hh"
 #include"pattern.hh"
+#include"flags.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -36,20 +37,17 @@ namespace Dune {
      */
     template<typename K, typename A0, typename F, typename B, typename J, int qorder=1>
 	class Diffusion : public NumericalJacobianApplyVolume<Diffusion<K,A0,F,B,J,qorder> >,
-                      public FullVolumePattern
+                      public FullVolumePattern,
+                      public LocalOperatorDefaultFlags
       //,public NumericalJacobianVolume<Diffusion<K,A0,F,B,J,qorder> >
 	{
 	public:
       // pattern assembly flags
       enum { doPatternVolume = true };
-      enum { doPatternSkeleton = false };
 
 	  // residual assembly flags
       enum { doAlphaVolume = true };
-      enum { doAlphaSkeleton = false };
-      enum { doAlphaBoundary = false };
       enum { doLambdaVolume = true };
-      enum { doLambdaSkeleton = false };
       enum { doLambdaBoundary = true };
 
       Diffusion (const K& k_, const A0& a0_, const F& f_, const B& b_, const J& j_)

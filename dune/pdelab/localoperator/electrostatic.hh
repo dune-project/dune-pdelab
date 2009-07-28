@@ -15,6 +15,7 @@
 #include"../gridoperatorspace/gridoperatorspace.hh"
 #include"../gridoperatorspace/gridoperatorspaceutilities.hh"
 #include"pattern.hh"
+#include"flags.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -50,19 +51,15 @@ namespace Dune {
       , public NumericalJacobianApplyBoundary<Electrostatic<Mu, qorder> >
       , public NumericalJacobianBoundary<Electrostatic<Mu, qorder> >
       , public FullVolumePattern
+      , public LocalOperatorDefaultFlags
 	{
 	public:
       // pattern assembly flags
       enum { doPatternVolume = true };
-      enum { doPatternSkeleton = false };
 
 	  // residual assembly flags
       enum { doAlphaVolume = true };
-      enum { doAlphaSkeleton = false };
       enum { doAlphaBoundary = true };
-      enum { doLambdaVolume = false };
-      enum { doLambdaSkeleton = false };
-      enum { doLambdaBoundary = false };
 
       Electrostatic (const Mu& mu_)
         : mu(mu_)

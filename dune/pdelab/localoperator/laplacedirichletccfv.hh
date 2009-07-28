@@ -11,6 +11,7 @@
 #include"../gridoperatorspace/gridoperatorspace.hh"
 #include"../gridoperatorspace/gridoperatorspaceutilities.hh"
 #include"pattern.hh"
+#include"flags.hh"
 
 
 namespace Dune {
@@ -26,21 +27,18 @@ namespace Dune {
                                  public NumericalJacobianApplyBoundary<LaplaceDirichletCCFV<G> >,
                                  public NumericalJacobianSkeleton<LaplaceDirichletCCFV<G> >,
                                  public NumericalJacobianBoundary<LaplaceDirichletCCFV<G> >,
-                                 public FullSkeletonPattern, 
-                                 public FullVolumePattern
-	{
+                                 public FullSkeletonPattern,
+                                 public FullVolumePattern,
+                                 public LocalOperatorDefaultFlags
+    {
 	public:
       // pattern assembly flags
       enum { doPatternVolume = true };
       enum { doPatternSkeleton = true };
 
 	  // residual assembly flags
-      enum { doAlphaVolume    = false };
       enum { doAlphaSkeleton  = true };
       enum { doAlphaBoundary  = true };
-      enum { doLambdaVolume   = false };
-      enum { doLambdaSkeleton = false };
-      enum { doLambdaBoundary = false };
 
       LaplaceDirichletCCFV (const G& g_) : g(g_) {}
 

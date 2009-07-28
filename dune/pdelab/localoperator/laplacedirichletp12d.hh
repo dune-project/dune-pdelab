@@ -10,6 +10,7 @@
 #include"../gridoperatorspace/gridoperatorspace.hh"
 #include"../gridoperatorspace/gridoperatorspaceutilities.hh"
 #include"pattern.hh"
+#include"flags.hh"
 
 
 namespace Dune {
@@ -21,20 +22,15 @@ namespace Dune {
 	// with P1 conforming finite elements on triangles
 	class LaplaceDirichletP12D : public NumericalJacobianApplyVolume<LaplaceDirichletP12D>,
                                  public NumericalJacobianVolume<LaplaceDirichletP12D>,
-                                 public FullVolumePattern
+                                 public FullVolumePattern,
+                                 public LocalOperatorDefaultFlags
 	{
 	public:
       // pattern assembly flags
       enum { doPatternVolume = true };
-      enum { doPatternSkeleton = false };
 
 	  // residual assembly flags
       enum { doAlphaVolume = true };
-      enum { doAlphaSkeleton = false };
-      enum { doAlphaBoundary = false };
-      enum { doLambdaVolume = false };
-      enum { doLambdaSkeleton = false };
-      enum { doLambdaBoundary = false };
 
 	  // volume integral depending on test and ansatz functions
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
