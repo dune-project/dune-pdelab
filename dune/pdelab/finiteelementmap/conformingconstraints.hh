@@ -69,6 +69,50 @@ namespace Dune {
       }
     };
 
+    // extend constraints class by processor boundary 
+    class OverlappingConformingDirichletConstraints : public ConformingDirichletConstraints
+    {
+    public:
+      enum { doProcessor = true };
+      
+      // boundary constraints
+      // IG : intersection geometry
+      // LFS : local function space
+      // T : TransformationType
+      template<typename I, typename LFS, typename T>
+      void processor (const Dune::PDELab::IntersectionGeometry<I>& ig, 
+                      const LFS& lfs, T& trafo) const
+      {
+        // determine face
+        const int face = ig.indexInInside();
+
+        // find all local indices of this face
+        Dune::GeometryType gt = ig.inside()->type();
+        typedef typename Dune::PDELab::IntersectionGeometry<I>::ctype DT;
+        const int dim = Dune::PDELab::IntersectionGeometry<I>::Entity::Geometry::dimension;
+
+
+        const Dune::GenericReferenceElement<DT,dim>& refelem = Dune::GenericReferenceElements<DT,dim>::general(gt);
+        const Dune::GenericReferenceElement<DT,dim-1>& 
+          face_refelem = Dune::GenericReferenceElements<DT,dim-1>::general(ig.geometry().type()); 
+
+        // empty map means Dirichlet constraint
+        typename T::RowType empty;
+
+        // loop over all degrees of freedom and check if it is on given face
+        for (size_t i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)
+          {
+            // The codim to which this dof is attached to
+            unsigned int codim = lfs.localFiniteElement().localCoefficients().localKey(i).codim();
+
+            if (codim==0) continue;
+
+            for (int j=0; j<refelem.size(face,1,codim); j++)
+              if (lfs.localFiniteElement().localCoefficients().localKey(i).subEntity()==refelem.subEntity(face,1,j,codim))
+                trafo[i] = empty;
+          }
+      }
+    };
 
   }
 }
