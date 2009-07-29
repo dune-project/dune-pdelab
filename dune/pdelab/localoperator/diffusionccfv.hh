@@ -11,6 +11,7 @@
 #include"../gridoperatorspace/gridoperatorspace.hh"
 #include"../gridoperatorspace/gridoperatorspaceutilities.hh"
 #include"pattern.hh"
+#include"flags.hh"
 
 
 namespace Dune {
@@ -35,7 +36,9 @@ namespace Dune {
                           public NumericalJacobianBoundary<DiffusionCCFV<K,A0,F,B,J,G> >,
                           public NumericalJacobianVolume<DiffusionCCFV<K,A0,F,B,J,G> >,
                           public FullSkeletonPattern, 
-                          public FullVolumePattern
+                          public FullVolumePattern,
+                          public LocalOperatorDefaultFlags
+
 	{
 	public:
       // pattern assembly flags
