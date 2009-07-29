@@ -35,11 +35,11 @@ namespace Dune {
      * \tparam B grid function type selecting boundary condition
      * \tparam J grid function type giving j
      */
-    template<typename K, typename A0, typename F, typename B, typename J, int qorder=1>
-	class Diffusion : public NumericalJacobianApplyVolume<Diffusion<K,A0,F,B,J,qorder> >,
+    template<typename K, typename A0, typename F, typename B, typename J>
+	class Diffusion : public NumericalJacobianApplyVolume<Diffusion<K,A0,F,B,J> >,
                       public FullVolumePattern,
                       public LocalOperatorDefaultFlags
-      //,public NumericalJacobianVolume<Diffusion<K,A0,F,B,J,qorder> >
+      //,public NumericalJacobianVolume<Diffusion<K,A0,F,B,J> >
 	{
 	public:
       // pattern assembly flags
@@ -50,8 +50,8 @@ namespace Dune {
       enum { doLambdaVolume = true };
       enum { doLambdaBoundary = true };
 
-      Diffusion (const K& k_, const A0& a0_, const F& f_, const B& b_, const J& j_)
-        : k(k_), a0(a0_), f(f_), b(b_), j(j_)
+      Diffusion (const K& k_, const A0& a0_, const F& f_, const B& b_, const J& j_, int intorder_=1)
+        : k(k_), a0(a0_), f(f_), b(b_), j(j_), intorder(intorder_)
       {}
 
 	  // volume integral depending on test and ansatz functions
@@ -76,7 +76,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
+        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename K::Traits::RangeType tensor;
@@ -150,7 +150,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
+        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename K::Traits::RangeType tensor;
@@ -213,7 +213,7 @@ namespace Dune {
         
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
+        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
 
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -252,7 +252,7 @@ namespace Dune {
         
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
-        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
+        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
 
         // loop over quadrature points and integrate normal flux
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -288,6 +288,7 @@ namespace Dune {
       const F& f;
       const B& b;
       const J& j;
+      int intorder;
 	};
 
     //! \} group LocalOperator
