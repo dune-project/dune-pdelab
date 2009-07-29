@@ -1,4 +1,5 @@
 #include <dune/common/exceptions.hh>
+#include <dune/common/timer.hh>
 
 namespace Dune
 {
@@ -29,62 +30,62 @@ namespace Dune
             RFType defect;             // the final defect
         };
 
-        // Traits class for NewtonSolver
-        template<class T, class PS, class LS>
-        struct NewtonSolverTraits
-        {
-            typedef T Terminate;
-            typedef PS PrepareStep;
-            typedef LS LineSearch;
-        };
-        
-        // Default traits for NewtonSolver
-        template<class RFType> class NewtonTerminate;
-        template<class RFType> class NewtonPrepareStep;
-        template<class RFType> class NewtonLineSearch;
-
-        template<class TestVector>
-        struct NewtonSolverDefaultTraits
-        {
-            typedef typename TestVector::ElementType RFType;
-
-            typedef NewtonTerminate<RFType> Terminate;
-            typedef NewtonPrepareStep<RFType> PrepareStep;
-            typedef NewtonLineSearch<RFType> LineSearch;
-        };
-
-        template<class GOS, class S, class TrlV, class TstV = TrlV,
-                 class NST = NewtonSolverDefaultTraits<TstV> >
-        class NewtonSolver
+        template<class GOS, class TrlV, class TstV>
+        class NewtonBase
         {
             typedef GOS GridOperator;
-            typedef S Solver;
             typedef TrlV TrialVector;
             typedef TstV TestVector;
-            typedef NST Traits;
-
-            typedef typename Traits::Terminate Terminate;
-            typedef typename Traits::PrepareStep PrepareStep;
-            typedef typename Traits::LineSearch LineSearch;
-
-            friend class Traits::Terminate;
-            friend class Traits::PrepareStep;
-            friend class Traits::LineSearch;
 
             typedef typename TestVector::ElementType RFType;
+            typedef typename GOS::template MatrixContainer<RFType>::Type Matrix;
 
+            typedef NewtonResult<RFType> Result;
+
+        public:
+            void setVerbosityLevel(unsigned int verbosity_level_)
+            {
+                verbosity_level = verbosity_level_;
+            }
+
+        protected:
+            GridOperator& gridoperator;
+            TrialVector& u;
+            Result res;
+            unsigned int verbosity_level;
+            RFType prev_defect;
+            RFType linear_reduction;
+
+            NewtonBase(GridOperator& go, TrialVector& u_)
+                : gridoperator(go)
+                , u(u_)
+                , verbosity_level(1)
+            {}
+
+            virtual bool terminate() = 0;
+            virtual void prepare_step(Matrix& A) = 0;
+            virtual void line_search(TrialVector& z, TestVector& r) = 0;
+            virtual void defect(TestVector& r) = 0;
+        };
+
+        template<class GOS, class S, class TrlV, class TstV>
+        class NewtonSolver : public virtual NewtonBase<GOS,TrlV,TstV>
+        {
+            typedef S Solver;
+            typedef GOS GridOperator;
+            typedef TrlV TrialVector;
+            typedef TstV TestVector;
+
+            typedef typename TestVector::ElementType RFType;
             typedef typename GOS::template MatrixContainer<RFType>::Type Matrix;
 
         public:
             typedef NewtonResult<RFType> Result;
 
-            NewtonSolver(GridOperator& go, TrialVector& u_, Solver& solver_,
-                         const Terminate& terminate_ = Terminate(),
-                         const PrepareStep& prepare_step_ = PrepareStep(),
-                         const LineSearch& line_search_ = LineSearch())
-                : gridoperator(go), u(u_), solver(solver_), terminate(terminate_),
-                  prepare_step(prepare_step_), line_search(line_search_),
-                  result_valid(false), verbosity_level(1)
+            NewtonSolver(GridOperator& go, TrialVector& u_, Solver& solver_)
+                : NewtonBase<GOS,TrlV,TstV>(go,u_)
+                , solver(solver_)
+                , result_valid(false)
             {}
 
             void apply();
@@ -94,124 +95,142 @@ namespace Dune
                 if (!result_valid)
                     DUNE_THROW(NewtonError,
                                "NewtonSolver::result() called before NewtonSolver::solve()");
-                return res;
+                return this->res;
             }
 
-        private:
-            void defect(TestVector& r)
+        protected:
+            virtual void defect(TestVector& r)
             {
                 r = 0.0;                                        // TODO: vector interface
-                gridoperator.residual(u, r);
-                res.defect = solver.norm(r);                    // TODO: solver interface
-                if (!std::isfinite(res.defect))
+                this->gridoperator.residual(this->u, r);
+                this->res.defect = this->solver.norm(r);                    // TODO: solver interface
+                if (!std::isfinite(this->res.defect))
                     DUNE_THROW(NewtonDefectError,
                                "NewtonSolver::defect(): Non-linear defect is NaN or Inf");
             }
 
+        private:
             void linearSolve(const Matrix& A, TrialVector& z, TestVector& r) const
             {
-                if (verbosity_level >= 1)
+                if (this->verbosity_level >= 1)
                     std::cout << "      Solving linear system..." << std::endl;
-                solver.apply(A, z, r, linear_reduction);        // TODO: solver interface
-                if (!solver.result().converged)                 // TODO: solver interface
+                z = 0.0;                                        // TODO: vector interface
+                this->solver.apply(A, z, r, this->linear_reduction);        // TODO: solver interface
+                if (!this->solver.result().converged)                 // TODO: solver interface
                     DUNE_THROW(NewtonLinearSolverError,
                                "NewtonSolver::linearSolve(): Linear solver did not converge "
-                               "in iteration" << res.iterations);
+                               "in iteration" << this->res.iterations);
             }
 
-            GridOperator& gridoperator;
-            TrialVector& u;
             Solver& solver;
-            Terminate terminate;
-            PrepareStep prepare_step;
-            LineSearch line_search;
-            Result res;
             bool result_valid;
-            unsigned int verbosity_level;
-
-            RFType prev_defect;
-            RFType linear_reduction;
         };
 
-        template<class GOS, class S, class TrlV, class TstV, class NST>
-        void NewtonSolver<GOS,S,TrlV,TstV,NST>::apply()
+        template<class GOS, class S, class TrlV, class TstV>
+        void NewtonSolver<GOS,S,TrlV,TstV>::apply()
         {
-            res.iterations = 0;
-            res.converged = false;
-            res.reduction = 1.0;
-            res.conv_rate = 1.0;
-            res.elapsed = 0.0;
+            this->res.iterations = 0;
+            this->res.converged = false;
+            this->res.reduction = 1.0;
+            this->res.conv_rate = 1.0;
+            this->res.elapsed = 0.0;
             result_valid = true;
             Timer timer;
 
             try
             {
-                TestVector r(gridoperator.testGridFunctionSpace());
-                defect(r);
-                res.first_defect = res.defect;
-                prev_defect = res.defect;
+                TestVector r(this->gridoperator.testGridFunctionSpace());
+                this->defect(r);
+                this->res.first_defect = this->res.defect;
+                this->prev_defect = this->res.defect;
 
-                if (verbosity_level >= 1)
+                if (this->verbosity_level >= 1)
                     std::cout << "  Initial defect: "
                               << std::setw(12) << std::setprecision(4) << std::scientific
-                              << res.defect << std::endl;
+                              << this->res.defect << std::endl;
 
-                Matrix A(gridoperator);
-                TrialVector z(gridoperator.trialGridFunctionSpace());
+                Matrix A(this->gridoperator);
+                TrialVector z(this->gridoperator.trialGridFunctionSpace());
 
-                while (!terminate(*this))
+                while (!this->terminate())
                 {
-                    if (verbosity_level >= 1)
-                        std::cout << "  Newton iteration " << res.iterations
+                    if (this->verbosity_level >= 1)
+                        std::cout << "  Newton iteration " << this->res.iterations
                                   << " --------------------------" << std::endl;
 
-                    prepare_step(*this, A);
+                    this->prepare_step(A);
 
-                    linearSolve(A, z, r);
+                    this->linearSolve(A, z, r);
 
-                    prev_defect = res.defect;
+                    this->prev_defect = this->res.defect;
 
-                    line_search(*this, z, r);
+                    this->line_search(z, r);
 
-                    res.reduction = res.defect/res.first_defect;
-                    res.iterations++;
-                    res.conv_rate = std::pow(res.reduction, 1.0/res.iterations);
+                    this->res.reduction = this->res.defect/this->res.first_defect;
+                    this->res.iterations++;
+                    this->res.conv_rate = std::pow(this->res.reduction, 1.0/this->res.iterations);
 
-                    if (verbosity_level >= 1)
+                    if (this->verbosity_level >= 1)
                         std::cout << "      defect reduction (this iteration):"
                                   << std::setw(12) << std::setprecision(4) << std::scientific
-                                  << res.defect/prev_defect << std::endl
+                                  << this->res.defect/this->prev_defect << std::endl
                                   << "      defect reduction (total):         "
                                   << std::setw(12) << std::setprecision(4) << std::scientific
-                                  << res.reduction << std::endl;
+                                  << this->res.reduction << std::endl;
                 }
             }
             catch(...)
             {
-                res.elapsed = timer.elapsed();
+                this->res.elapsed = timer.elapsed();
                 throw;
             }
-            res.elapsed = timer.elapsed();
-        }
+            this->res.elapsed = timer.elapsed();
+        };
 
-        template<class RFType>
-        class NewtonTerminate
+        template<class GOS, class TrlV, class TstV>
+        class NewtonTerminate : public virtual NewtonBase<GOS,TrlV,TstV>
         {
+            typedef GOS GridOperator;
+            typedef TrlV TrialVector;
+
+            typedef typename TstV::ElementType RFType;
+
         public:
-            NewtonTerminate(RFType reduction_ = 1e-8, unsigned int maxit_ = 40,
-                            bool force_iteration_ = false, RFType abs_limit_ = 1e-12)
-                : reduction(reduction_), maxit(maxit_),
-                  force_iteration(force_iteration_), abs_limit(abs_limit_)
+            NewtonTerminate(GridOperator& go, TrialVector& u_)
+                : NewtonBase<GOS,TrlV,TstV>(go,u_)
+                , reduction(1e-8)
+                , maxit(40)
+                , force_iteration(false)
+                , abs_limit(1e-12)
             {}
 
-            template<class Newton>
-            bool operator()(Newton& newton)
+            void setReduction(RFType reduction_)
             {
-                if (force_iteration && newton.res.iterations == 0)
+                reduction = reduction_;
+            }
+
+            void setMaxIterations(unsigned int maxit_)
+            {
+                maxit = maxit_;
+            }
+
+            void setForceIteration(bool force_iteration_)
+            {
+                force_iteration = force_iteration_;
+            }
+
+            void setAbsoluteLimit(RFType abs_limit_)
+            {
+                abs_limit = abs_limit_;
+            }
+
+            virtual bool terminate()
+            {
+                if (force_iteration && this->res.iterations == 0)
                     return false;
-                newton.res.converged = newton.res.defect < abs_limit
-                    || newton.res.defect < newton.res.first_defect * reduction;
-                return newton.res.iterations >= maxit || newton.res.converged;
+                this->res.converged = this->res.defect < abs_limit
+                    || this->res.defect < this->res.first_defect * reduction;
+                return this->res.iterations >= maxit || this->res.converged;
             }
 
         private:
@@ -221,34 +240,49 @@ namespace Dune
             RFType abs_limit;
         };
 
-        template<class RFType>
-        class NewtonPrepareStep
+        template<class GOS, class TrlV, class TstV>
+        class NewtonPrepareStep : public virtual NewtonBase<GOS,TrlV,TstV>
         {
+            typedef GOS GridOperator;
+            typedef TrlV TrialVector;
+
+            typedef typename TstV::ElementType RFType;
+            typedef typename GOS::template MatrixContainer<RFType>::Type Matrix;
+
         public:
-            NewtonPrepareStep(RFType min_linear_reduction_ = 1e-3,
-                              RFType reassemble_threshold_ = 0.8)
-                : min_linear_reduction(min_linear_reduction_),
-                  reassemble_threshold(reassemble_threshold_)
+            NewtonPrepareStep(GridOperator& go, TrialVector& u_)
+                : NewtonBase<GOS,TrlV,TstV>(go,u_)
+                , min_linear_reduction(1e-3)
+                , reassemble_threshold(0.8)
             {}
 
-            template<class Newton>
-            void operator()(Newton& newton, typename Newton::Matrix& A)
+            void setMinLinearReduction(RFType min_linear_reduction_)
             {
-                if (newton.res.defect/newton.prev_defect > reassemble_threshold)
+                min_linear_reduction = min_linear_reduction_;
+            }
+
+            void setReassembleThreshold(RFType reassemble_threshold_)
+            {
+                reassemble_threshold = reassemble_threshold_;
+            }
+
+            virtual void prepare_step(Matrix& A)
+            {
+                if (this->res.defect/this->prev_defect > reassemble_threshold)
                 {
-                    if (newton.verbosity_level >= 1)
+                    if (this->verbosity_level >= 1)
                         std::cout << "      Reassembling matrix..." << std::endl;
                     A = 0.0;                                    // TODO: Matrix interface
-                    newton.gridoperator.jacobian(newton.u, A);
+                    this->gridoperator.jacobian(this->u, A);
                 }
 
-                newton.linear_reduction = std::min(min_linear_reduction,
-                                                   newton.res.defect*newton.res.defect/
-                                                   (newton.prev_defect*newton.prev_defect));
-                if (newton.verbosity_level >= 1)
+                this->linear_reduction = std::min(min_linear_reduction,
+                                                   this->res.defect*this->res.defect/
+                                                   (this->prev_defect*this->prev_defect));
+                if (this->verbosity_level >= 1)
                     std::cout << "      linear reduction:                 "
                               << std::setw(12) << std::setprecision(4) << std::scientific
-                              << newton.linear_reduction << std::endl;
+                              << this->linear_reduction << std::endl;
             }
 
         private:
@@ -256,47 +290,68 @@ namespace Dune
             RFType reassemble_threshold;
         };
 
-        template<class RFType>
-        class NewtonLineSearch
+        template<class GOS, class TrlV, class TstV>
+        class NewtonLineSearch : public virtual NewtonBase<GOS,TrlV,TstV>
         {
+            typedef GOS GridOperator;
+            typedef TrlV TrialVector;
+            typedef TstV TestVector;
+
+            typedef typename TestVector::ElementType RFType;
+
         public:
             enum Strategy { noLineSearch,
                             hackbuschReusken,
                             hackbuschReuskenAcceptBest };
 
-            NewtonLineSearch(Strategy strategy_ = hackbuschReusken, unsigned int maxit_ = 10,
-                             RFType damping_factor_ = 0.5)
-                : strategy(strategy_), maxit(maxit_), damping_factor(damping_factor_)
+            NewtonLineSearch(GridOperator& go, TrialVector& u_)
+                : NewtonBase<GOS,TrlV,TstV>(go,u_)
+                , strategy(hackbuschReusken)
+                , maxit(10)
+                , damping_factor(0.5)
             {}
 
-            template<class Newton>
-            void operator()(Newton& newton, typename Newton::TrialVector& z,
-                            typename Newton::TestVector& r)
+            void setLineSearchStrategy(Strategy strategy_)
+            {
+                strategy = strategy_;
+            }
+
+            void setLineSearchMaxIterations(unsigned int maxit_)
+            {
+                maxit = maxit_;
+            }
+
+            void setLineSearchDampingFactor(RFType damping_factor_)
+            {
+                damping_factor = damping_factor_;
+            }
+
+            virtual void line_search(TrialVector& z, TestVector& r)
             {
                 if (strategy == noLineSearch)
                 {
-                    newton.u.axpy(-1.0, z);                     // TODO: vector interface
-                    newton.defect(r);
+                    this->u.axpy(-1.0, z);                     // TODO: vector interface
+                    this->defect(r);
                     return;
                 }
 
                 RFType lambda = 1.0;
                 RFType best_lambda = 0.0;
-                RFType best_defect = newton.res.defect;
-                typename Newton::TrialVector prev_u(newton.u);  // TODO: vector interface
+                RFType best_defect = this->res.defect;
+                TrialVector prev_u(this->u);  // TODO: vector interface
                 unsigned int i = 0;
                 while (1)
                 {
-                    newton.u.axpy(-lambda, z);                  // TODO: vector interface
-                    try { newton.defect(r); }
+                    this->u.axpy(-lambda, z);                  // TODO: vector interface
+                    try { this->defect(r); }
                     catch (NewtonDefectError) {}
 
-                    if (newton.res.defect <= (1.0 - lambda/4) * newton.prev_defect)
+                    if (this->res.defect <= (1.0 - lambda/4) * this->prev_defect)
                         break;
 
-                    if (newton.res.defect < best_defect)
+                    if (this->res.defect < best_defect)
                     {
-                        best_defect = newton.res.defect;
+                        best_defect = this->res.defect;
                         best_lambda = lambda;
                     }
 
@@ -305,23 +360,23 @@ namespace Dune
                         switch (strategy)
                         {
                         case hackbuschReusken:
-                            newton.u = prev_u;
-                            newton.defect(r);
+                            this->u = prev_u;
+                            this->defect(r);
                             DUNE_THROW(NewtonLineSearchError,
-                                       "NewtonLineSearch::operator(): line search failed, "
+                                       "NewtonLineSearch::line_search(): line search failed, "
                                        "max iteration count reached, "
                                        "defect did not improve enough");
                         case hackbuschReuskenAcceptBest:
                             if (best_lambda == 0.0)
                                 DUNE_THROW(NewtonLineSearchError,
-                                           "NewtonLineSearch::operator(): line search failed, "
+                                           "NewtonLineSearch::line_search(): line search failed, "
                                            "max iteration count reached, "
                                            "defect did not improve in any of the iterations");
                             if (best_lambda != lambda)
                             {
-                                newton.u = prev_u;
-                                newton.u.axpy(-best_lambda, z);
-                                newton.defect(r);
+                                this->u = prev_u;
+                                this->u.axpy(-best_lambda, z);
+                                this->defect(r);
                             }
                             break;
                         case noLineSearch:
@@ -331,7 +386,7 @@ namespace Dune
                     }
 
                     lambda *= damping_factor;
-                    newton.u = prev_u;                          // TODO: vector interface
+                    this->u = prev_u;                          // TODO: vector interface
                 }
             }
 
@@ -339,6 +394,26 @@ namespace Dune
             Strategy strategy;
             unsigned int maxit;
             RFType damping_factor;
+        };
+
+        template<class GOS, class S, class TrlV, class TstV = TrlV>
+        class Newton : public NewtonSolver<GOS,S,TrlV,TstV>
+                     , public NewtonTerminate<GOS,TrlV,TstV>
+                     , public NewtonLineSearch<GOS,TrlV,TstV>
+                     , public NewtonPrepareStep<GOS,TrlV,TstV>
+        {
+            typedef GOS GridOperator;
+            typedef S Solver;
+            typedef TrlV TrialVector;
+
+        public:
+            Newton(GridOperator& go, TrialVector& u_, Solver& solver_)
+                : NewtonBase<GOS,TrlV,TstV>(go,u_)
+                , NewtonSolver<GOS,S,TrlV,TstV>(go,u_,solver_)
+                , NewtonTerminate<GOS,TrlV,TstV>(go,u_)
+                , NewtonLineSearch<GOS,TrlV,TstV>(go,u_)
+                , NewtonPrepareStep<GOS,TrlV,TstV>(go,u_)
+            {}
         };
     }
 }
