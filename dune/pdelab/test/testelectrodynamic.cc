@@ -198,7 +198,7 @@ typename GV::Grid::ctype smallestEdge(const GV& gv)
 
 // generate a P1 function and output it
 template<typename GV, typename FEM, typename CON, int q> 
-double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned steps, const std::string &filename, std::ostream &dat)
+double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned steps, const std::string &filename = "")
 {
   // constants and types
   typedef typename GV::Grid::ctype DF;
@@ -261,9 +261,7 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
 //   Solver solver(m);
 
   std::cout << "u[-1]\n" << *xprev << std::endl;
-  dat << "-1\t" << (*xprev)[3] << "\n";
   std::cout << "u[0]\n" << *xcur << std::endl;
-  dat << "0\t" << (*xcur)[3] << "\n";
 
   std::cout << "Number of steps " << steps << std::endl;
   for(unsigned step = 0; step < steps; ++step) {
@@ -313,7 +311,6 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
     *xnext += affineShift;
 
     std::cout << "u[" << step+1 << "]\n" << *xnext << std::endl;
-    dat << step+1 << "\t" << (*xnext)[3] << "\n";
 
 
     xprev = xcur;
@@ -336,93 +333,6 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
   return 0; //l2difference(gv,g,dgf,4);
 }
 
-// template<typename Grid>
-// void test(Dune::SmartPointer<Grid> grid, int &result, GnuplotGraph &graph, double conv_limit, std::string name = "")
-// {
-//   typedef typename Grid::LeafGridView GV;
-
-//   if(name == "") name = grid->name();
-
-//   std::cout << std::endl
-//             << "Testing Electrodynamic problem with EdgeS03D and " << name << std::endl;
-
-//   std::string filename = "electrodynamic-" + name;
-//   std::ostringstream plot;
-//   plot << "'" << filename << ".dat' title '" << name << "' with linespoints";
-//   graph.addPlot(plot.str());
-
-//   std::ofstream dat((filename+".dat").c_str());
-//   dat << "#h\terror" << std::endl;
-//   dat.precision(8);
-
-//   typedef Dune::PDELab::EdgeS03DLocalFiniteElementMap<typename Grid::LeafGridView, double> FEM;
-
-//   std::cout << "electrodynamic level 0" << std::endl;
-//   // time step
-//   double Delta_t = smallestEdge(grid->leafView())/std::sqrt(double(Grid::dimension))/10;
-//   unsigned steps = 10/Delta_t;
-//   double error0 = electrodynamic
-//     <GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>
-//     (grid->leafView(), FEM(grid->leafView()), Delta_t, steps, filename+"-coarse");
-//   double mean_h0 = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
-//   std::cout << "L2 error: " 
-//             << std::setw(8) << grid->leafView().size(0) << " elements, <h>=" 
-//             << std::scientific << mean_h0 << ", Delta t="
-//             << std::scientific << Delta_t << ", error="
-//             << std::scientific << error0 << std::endl;
-//   dat << mean_h0 << "\t" << error0 << std::endl;
-
-//   //grid->globalRefine(1);
-//   while(0) {
-//     grid->globalRefine(1);
-
-//     if((unsigned int)(grid->leafView().size(0)) >= maxelements)
-//       break;
-
-//     if(measure_after_every_refinement) {
-//       std::cout << "electrodynamic level " << grid->maxLevel() << std::endl;
-//       Delta_t = smallestEdge(grid->leafView())/std::sqrt(double(Grid::dimension));
-//       steps = 1/Delta_t;
-//       double error = electrodynamic
-//         <GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>
-//         (grid->leafView(), FEM(grid->leafView()), Delta_t, steps);
-//       double mean_h = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
-//       std::cout << "L2 error: " 
-//                 << std::setw(8) << grid->leafView().size(0) << " elements, <h>=" 
-//                 << std::scientific << mean_h << ", Delta t="
-//                 << std::scientific << Delta_t << ", error="
-//                 << std::scientific << error << std::endl;
-//       dat << mean_h << "\t" << error << std::endl;
-//     }
-//   }
-
-//   std::cout << "electrodynamic level " << grid->maxLevel() << std::endl;
-//   Delta_t = smallestEdge(grid->leafView())/std::sqrt(double(Grid::dimension))/10;
-//   steps = 10/Delta_t;
-//   double errorf = electrodynamic
-//     <GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>
-//     (grid->leafView(), FEM(grid->leafView()), Delta_t, steps, filename+"-fine");
-//   double mean_hf = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
-//   std::cout << "L2 error: " 
-//             << std::setw(8) << grid->leafView().size(0) << " elements, <h>=" 
-//             << std::scientific << mean_hf << ", Delta t="
-//             << std::scientific << Delta_t << ", error="
-//             << std::scientific << errorf << std::endl;
-//   dat << mean_hf << "\t" << errorf << std::endl;
-
-//   double total_convergence = std::log(errorf/error0)/std::log(mean_hf/mean_h0);
-//   std::cout << "electrodynamic total convergence: "
-//             << std::scientific << total_convergence << std::endl;
-
-//   if(result != 1)
-//     result = 0;
-
-//   if(total_convergence < conv_limit) {
-//     std::cout << "Error: electrodynamic total convergence < " << conv_limit << std::endl;
-//     result = 1;
-//   }
-// }
-
 template<typename Grid>
 void test(Dune::SmartPointer<Grid> grid, int &result, GnuplotGraph &graph, double conv_limit, std::string name = "")
 {
@@ -434,6 +344,9 @@ void test(Dune::SmartPointer<Grid> grid, int &result, GnuplotGraph &graph, doubl
             << "Testing Electrodynamic problem with EdgeS03D and " << name << std::endl;
 
   std::string filename = "electrodynamic-" + name;
+  std::ostringstream plot;
+  plot << "'" << filename << ".dat' title '" << name << "' with linespoints";
+  graph.addPlot(plot.str());
 
   std::ofstream dat((filename+".dat").c_str());
   dat << "#h\terror" << std::endl;
@@ -444,24 +357,67 @@ void test(Dune::SmartPointer<Grid> grid, int &result, GnuplotGraph &graph, doubl
   std::cout << "electrodynamic level 0" << std::endl;
   // time step
   double Delta_t = smallestEdge(grid->leafView())/std::sqrt(double(Grid::dimension));
-  unsigned steps = 10/Delta_t;
-  for(unsigned level = 0; level < 10; ++level) {
-    std::ostringstream plot;
-    plot << "'" << filename << ".dat' index " << level << " using ($1*" << Delta_t << "):2 title 'timestep=" << Delta_t << " steps=" << steps << "' with lines";
-    graph.addPlot(plot.str());
+  unsigned steps = 1/Delta_t;
+  double error0 = electrodynamic
+    <GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>
+    (grid->leafView(), FEM(grid->leafView()), Delta_t, steps, filename+"-coarse");
+  double mean_h0 = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
+  std::cout << "L2 error: " 
+            << std::setw(8) << grid->leafView().size(0) << " elements, <h>=" 
+            << std::scientific << mean_h0 << ", Delta t="
+            << std::scientific << Delta_t << ", error="
+            << std::scientific << error0 << std::endl;
+  dat << mean_h0 << "\t" << error0 << std::endl;
 
-    electrodynamic
-      <GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>
-      (grid->leafView(), FEM(grid->leafView()), Delta_t, steps, filename+"-coarse", dat);
-    dat << "\n\n";
+  //grid->globalRefine(1);
+  while(0) {
+    grid->globalRefine(1);
 
-    Delta_t /= 2;
-    steps = 10/Delta_t;
+    if((unsigned int)(grid->leafView().size(0)) >= maxelements)
+      break;
+
+    if(measure_after_every_refinement) {
+      std::cout << "electrodynamic level " << grid->maxLevel() << std::endl;
+      Delta_t = smallestEdge(grid->leafView())/std::sqrt(double(Grid::dimension));
+      steps = 1/Delta_t;
+      double error = electrodynamic
+        <GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>
+        (grid->leafView(), FEM(grid->leafView()), Delta_t, steps);
+      double mean_h = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
+      std::cout << "L2 error: " 
+                << std::setw(8) << grid->leafView().size(0) << " elements, <h>=" 
+                << std::scientific << mean_h << ", Delta t="
+                << std::scientific << Delta_t << ", error="
+                << std::scientific << error << std::endl;
+      dat << mean_h << "\t" << error << std::endl;
+    }
   }
+
+  std::cout << "electrodynamic level " << grid->maxLevel() << std::endl;
+  Delta_t = smallestEdge(grid->leafView())/std::sqrt(double(Grid::dimension));
+  steps = 1/Delta_t*10;
+  double errorf = electrodynamic
+    <GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>
+    (grid->leafView(), FEM(grid->leafView()), Delta_t, steps, filename+"-fine");
+  double mean_hf = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
+  std::cout << "L2 error: " 
+            << std::setw(8) << grid->leafView().size(0) << " elements, <h>=" 
+            << std::scientific << mean_hf << ", Delta t="
+            << std::scientific << Delta_t << ", error="
+            << std::scientific << errorf << std::endl;
+  dat << mean_hf << "\t" << errorf << std::endl;
+
+  double total_convergence = std::log(errorf/error0)/std::log(mean_hf/mean_h0);
+  std::cout << "electrodynamic total convergence: "
+            << std::scientific << total_convergence << std::endl;
 
   if(result != 1)
     result = 0;
 
+  if(total_convergence < conv_limit) {
+    std::cout << "Error: electrodynamic total convergence < " << conv_limit << std::endl;
+    result = 1;
+  }
 }
 
 
@@ -477,10 +433,10 @@ int main(int argc, char** argv)
     int result = 77;
 
     GnuplotGraph graph("testelectrodynamic.gnuplot");
-    graph.addCommand("set xlabel 'time'");
-    graph.addCommand("set ylabel 'E(.5,.5,.5)'");
+    graph.addCommand("set logscale xy");
+    graph.addCommand("set xlabel '<h>'");
+    graph.addCommand("set ylabel 'L2 error'");
     graph.addCommand("set key left top reverse Left");
-    graph.addCommand("set yrange [-10:10]");
     graph.addCommand("");
     graph.addCommand("set terminal postscript eps color solid");
     graph.addCommand("set output 'electrodynamic.eps'");
