@@ -229,7 +229,7 @@ for i in constrained do block(
 affine_shift: zeromatrix(length(Jac),1);
 
 xprev: copy(affine_shift)$
-xprev[7][1]: 1/sqrt(3)$
+xprev[7][1]: -1/sqrt(3)$
 xprev;
 
 xcur: copy(xprev);
