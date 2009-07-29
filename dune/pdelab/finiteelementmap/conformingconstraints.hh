@@ -45,6 +45,9 @@ namespace Dune {
         // empty map means Dirichlet constraint
         typename T::RowType empty;
 
+        const typename F::Traits::DomainType testpoint = face_refelem.position(0,0);
+        f.evaluate(ig,testpoint,bctype);
+
         for (int i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)
           {
             // The codim to which this dof is attached to
@@ -57,7 +60,7 @@ namespace Dune {
               // test point to check whether we have dirichlet or neumann
               const typename F::Traits::DomainType testpoint 
                 = face_refelem.position(j,codim-1);
-              f.evaluate(ig,testpoint,bctype);
+              //      f.evaluate(ig,testpoint,bctype);
 
               if (bctype > 0 && (int) lfs.localFiniteElement().localCoefficients().localKey(i).subEntity()
                   ==
@@ -65,7 +68,6 @@ namespace Dune {
                 trafo[i] = empty;
             }
           }
-
       }
     };
 

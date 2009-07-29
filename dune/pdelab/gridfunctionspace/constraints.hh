@@ -415,8 +415,10 @@ namespace Dune {
 		  for (IntersectionIterator iit = gfs.gridview().ibegin(*it); iit!=endit; ++iit)
 			{
 			  if (iit->boundary())
-				ConstraintsVisitNodeMetaProgram<F,F::isLeaf,LFS,LFS::isLeaf>
-				  ::boundary(f,lfs_e,cg,IntersectionGeometry<Intersection>(*iit));
+                {
+                  ConstraintsVisitNodeMetaProgram<F,F::isLeaf,LFS,LFS::isLeaf>
+                    ::boundary(f,lfs_e,cg,IntersectionGeometry<Intersection>(*iit));
+                }
 
               // ParallelStuff: BEGIN support for processor boundaries.
 			  if ((!iit->boundary()) && (!iit->neighbor()))
