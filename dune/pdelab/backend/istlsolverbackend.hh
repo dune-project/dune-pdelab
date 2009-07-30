@@ -9,6 +9,7 @@
 #include <dune/istl/io.hh>
 #include<dune/istl/superlu.hh>
 
+#include "../gridfunctionspace/constraints.hh"
 #include "../gridfunctionspace/genericdatahandle.hh"
 
 namespace Dune {
