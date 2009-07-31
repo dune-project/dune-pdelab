@@ -50,7 +50,7 @@ namespace Dune {
       enum { doLambdaVolume = true };
       enum { doLambdaBoundary = true };
 
-      Diffusion (const K& k_, const A0& a0_, const F& f_, const B& b_, const J& j_, int intorder_=1)
+      Diffusion (const K& k_, const A0& a0_, const F& f_, const B& b_, const J& j_, int intorder_=2)
         : k(k_), a0(a0_), f(f_), b(b_), j(j_), intorder(intorder_)
       {}
 
