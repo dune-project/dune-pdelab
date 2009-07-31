@@ -275,6 +275,79 @@ namespace Dune {
 	  {}
 	};
 
+    // assign degrees of freedoms to processors
+    // owner is never a ghost
+    class PartitionGatherScatter
+    {
+    public:
+      template<class MessageBuffer, class EntityType, class DataType>
+      void gather (MessageBuffer& buff, const EntityType& e, DataType& data)
+      {
+        if (e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity)
+          data = (1<<24);
+        buff.write(data);
+      }
+  
+      template<class MessageBuffer, class EntityType, class DataType>
+      void scatter (MessageBuffer& buff, const EntityType& e, DataType& data)
+      {
+		DataType x; 
+		buff.read(x);
+		data = std::min(data,x);
+      }
+    };
+
+	template<class GFS, class V>
+	class PartitionDataHandle
+	  : public GenericDataHandle2<GFS,V,PartitionGatherScatter>
+	{
+	  typedef GenericDataHandle2<GFS,V,PartitionGatherScatter> BaseT;
+
+	public:
+
+	  PartitionDataHandle (const GFS& gfs_, V& v_) 
+		: BaseT(gfs_,v_,PartitionGatherScatter())
+	  {
+        v_ = gfs_.gridview().comm().rank();
+      }
+	};
+
+    // compute dofs assigned to ghost entities
+	class GhostGatherScatter
+	{
+	public:
+      template<class MessageBuffer, class EntityType, class DataType>
+      void gather (MessageBuffer& buff, const EntityType& e, DataType& data)
+	  {
+        if (e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity)
+          data = 1;
+        buff.write(data);
+	  }
+	  
+      template<class MessageBuffer, class EntityType, class DataType>
+      void scatter (MessageBuffer& buff, const EntityType& e, DataType& data)
+	  {
+		DataType x; 
+		buff.read(x);
+	  }
+	};
+	
+	template<class GFS, class V>
+	class GhostDataHandle
+	  : public Dune::PDELab::GenericDataHandle2<GFS,V,GhostGatherScatter>
+	{
+	  typedef Dune::PDELab::GenericDataHandle2<GFS,V,GhostGatherScatter> BaseT;
+
+	public:
+
+	  GhostDataHandle (const GFS& gfs_, V& v_) 
+		: BaseT(gfs_,v_,GhostGatherScatter())
+	  {
+        v_ = 0;
+      }
+	};
+
+
   }
 }
 #endif
