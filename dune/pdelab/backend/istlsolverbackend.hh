@@ -73,6 +73,8 @@ namespace Dune {
 		{
 		  DataType x; 
 		  buff.read(x);
+		  if (e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity)
+			data = (1<<24);
 		}
 	  };
 
@@ -92,7 +94,10 @@ namespace Dune {
 		{
 		  DataType x; 
 		  buff.read(x);
-		  data = std::min(data,x);
+		  if (e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity)
+			data = x;
+		  else
+			data = std::min(data,x);
 		}
 	  };
 
@@ -105,11 +110,13 @@ namespace Dune {
 	  {
 		// find out about ghosts
 		Dune::PDELab::GenericDataHandle2<GFS,V,GhostGatherScatter> gdh(gfs,v,GhostGatherScatter());
-		gfs.gridview().communicate(gdh,Dune::All_All_Interface,Dune::ForwardCommunication);
+		if (gfs.gridview().comm().size()>1)
+		  gfs.gridview().communicate(gdh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
 
 		// partition interior/border
 		Dune::PDELab::GenericDataHandle2<GFS,V,InteriorBorderGatherScatter> dh(gfs,v,InteriorBorderGatherScatter());
-		gfs.gridview().communicate(dh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
+		if (gfs.gridview().comm().size()>1)
+		  gfs.gridview().communicate(dh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
 
 		// convert vector into mask vector
 		for (typename V::size_type i=0; i<v.N(); ++i)
@@ -172,7 +179,8 @@ namespace Dune {
 
 		// accumulate y on border
 		Dune::PDELab::AddDataHandle<GFS,Y> adddh(gfs,y);
-		gfs.gridview().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
+		if (gfs.gridview().comm().size()>1)
+		  gfs.gridview().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
 	  }
   
 	  //! apply operator to x, scale and add:  \f$ y = y + \alpha A(x) \f$
@@ -183,7 +191,8 @@ namespace Dune {
 
 		// accumulate y on border
 		Dune::PDELab::AddDataHandle<GFS,Y> adddh(gfs,y);
-		gfs.gridview().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
+		if (gfs.gridview().comm().size()>1)
+		  gfs.gridview().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
 	  }
   
 	  //! get matrix via *
@@ -293,7 +302,8 @@ namespace Dune {
 		v = d;
 		helper.mask(v);
 		Dune::PDELab::AddDataHandle<GFS,X> adddh(gfs,v);
-		gfs.gridview().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
+		if (gfs.gridview().comm().size()>1)
+		  gfs.gridview().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
 	  }
 
 	  /*!
@@ -456,7 +466,8 @@ namespace Dune {
 		set_constrained_dofs(cc,0.0,dd);
 		prec.apply(v,dd);
 		Dune::PDELab::AddDataHandle<GFS,domain_type> adddh(gfs,v);
-		gfs.gridview().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
+		if (gfs.gridview().comm().size()>1)
+		  gfs.gridview().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
 	  }
 
 	  /*!
@@ -528,7 +539,8 @@ namespace Dune {
 		Y b(d); // need copy, since solver overwrites right hand side
 		solver.apply(v,b,stat);
 		Dune::PDELab::AddDataHandle<GFS,X> adddh(gfs,v);
-		gfs.gridview().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
+		if (gfs.gridview().comm().size()>1)
+		  gfs.gridview().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
 	  }
 
 	  /*!
@@ -596,7 +608,8 @@ namespace Dune {
 		solver.apply(v,b,stat);
 		helper.mask(v);
 		Dune::PDELab::AddDataHandle<GFS,X> adddh(gfs,v);
-		gfs.gridview().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+		if (gfs.gridview().comm().size()>1)
+		  gfs.gridview().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
 	  }
 
 	  /*!

@@ -293,7 +293,10 @@ namespace Dune {
       {
 		DataType x; 
 		buff.read(x);
-		data = std::min(data,x);
+        if (e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity)
+          data = x;
+        else
+          data = std::min(data,x);
       }
     };
 
@@ -329,6 +332,8 @@ namespace Dune {
 	  {
 		DataType x; 
 		buff.read(x);
+        if (e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity)
+          data = 1;
 	  }
 	};
 	
