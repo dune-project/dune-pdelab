@@ -57,46 +57,59 @@ namespace Dune {
 	template<typename GFS>
 	class ParallelISTLHelper
 	{
-	  class InteriorBorderGatherScatter
+	  class GhostGatherScatter
 	  {
 	  public:
-		InteriorBorderGatherScatter (int rank_)
-		  : rank(rank_)
-		{
-		}
-
 		template<class MessageBuffer, class EntityType, class DataType>
 		void gather (MessageBuffer& buff, const EntityType& e, DataType& data)
 		{
+		  if (e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity)
+			data = (1<<24);
 		  buff.write(data);
 		}
   
 		template<class MessageBuffer, class EntityType, class DataType>
 		void scatter (MessageBuffer& buff, const EntityType& e, DataType& data)
 		{
-		  DataType x; buff.read(x);
-		  if (e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity)
-			data = -1.0;
+		  DataType x; 
+		  buff.read(x);
 		}
-	  private:
-		int rank;
+	  };
+
+	  class InteriorBorderGatherScatter
+	  {
+	  public:
+		template<class MessageBuffer, class EntityType, class DataType>
+		void gather (MessageBuffer& buff, const EntityType& e, DataType& data)
+		{
+		  if (e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity)
+			data = (1<<24);
+		  buff.write(data);
+		}
+  
+		template<class MessageBuffer, class EntityType, class DataType>
+		void scatter (MessageBuffer& buff, const EntityType& e, DataType& data)
+		{
+		  DataType x; 
+		  buff.read(x);
+		  data = std::min(data,x);
+		}
 	  };
 
 	  typedef typename GFS::template VectorContainer<double>::Type V;
-	  
+
 	public:
 
 	  ParallelISTLHelper (const GFS& gfs_)
-		: gfs(gfs_), v(gfs_,(double)gfs.gridview().comm().rank())
+		: gfs(gfs_), v(gfs,(double)gfs.gridview().comm().rank())
 	  {
-		// fill interior/border DOFS with rank
-		InteriorBorderGatherScatter gs(gfs.gridview().comm().rank());
-		Dune::PDELab::GenericDataHandle2<GFS,V,InteriorBorderGatherScatter> dh(gfs,v,gs);
-		gfs.gridview().communicate(dh,Dune::All_All_Interface,Dune::ForwardCommunication);
+		// find out about ghosts
+		Dune::PDELab::GenericDataHandle2<GFS,V,GhostGatherScatter> gdh(gfs,v,GhostGatherScatter());
+		gfs.gridview().communicate(gdh,Dune::All_All_Interface,Dune::ForwardCommunication);
 
-		// compute minimum rank for each interior/border DOF
-		Dune::PDELab::MinDataHandle<GFS,V> mindh(gfs,v);
-		gfs.gridview().communicate(mindh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
+		// partition interior/border
+		Dune::PDELab::GenericDataHandle2<GFS,V,InteriorBorderGatherScatter> dh(gfs,v,InteriorBorderGatherScatter());
+		gfs.gridview().communicate(dh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
 
 		// convert vector into mask vector
 		for (typename V::size_type i=0; i<v.N(); ++i)
@@ -105,14 +118,6 @@ namespace Dune {
 			  v[i][j] = 1.0;
 			else
 			  v[i][j] = 0.0;
-
-// 		for (typename V::size_type i=0; i<v.N(); ++i)
-// 		  for (typename V::size_type j=0; j<v[i].N(); ++j)
-// 			std::cout << "/" << gfs.gridview().comm().rank() 
-// 					  << "/: i=" << i
-// 					  << " j=" << j
-// 					  << " v=" << v[i][j]
-// 					  << std::endl;
 	  }
 
 	  // keep only DOFs assigned to this processor
@@ -288,7 +293,7 @@ namespace Dune {
 		v = d;
 		helper.mask(v);
 		Dune::PDELab::AddDataHandle<GFS,X> adddh(gfs,v);
-		gfs.gridview().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+		gfs.gridview().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
 	  }
 
 	  /*!

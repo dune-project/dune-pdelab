@@ -20,9 +20,9 @@ namespace Dune {
 		typedef Dune::BlockVector< Dune::FieldVector<E,BLOCKSIZE> > BaseT;
 		typedef ISTLVectorBackend<BLOCKSIZE> Backend;
 
-		VectorContainer (const T& t) : BaseT(t.globalSize()/BLOCKSIZE) 
+		VectorContainer (const T& t_) : BaseT(t_.globalSize()/BLOCKSIZE)
 		{}
-		VectorContainer (const T& t, const E& e) : BaseT(t.globalSize()/BLOCKSIZE) 
+		VectorContainer (const T& t_, const E& e) : BaseT(t_.globalSize()/BLOCKSIZE)
 		{
 		  BaseT::operator=(e);
 		}
@@ -41,6 +41,24 @@ namespace Dune {
 		const BaseT& base () const
 		{
 		  return *this;
+		}
+
+		template<typename X>
+		void std_copy_to (std::vector<X>& x) const
+		{
+		  size_t n = this->size()*BLOCKSIZE;
+		  x.resize(n);
+		  for (size_t i=0; i<n; i++)
+			x[i] = (*this)[i/BLOCKSIZE][i%BLOCKSIZE];
+		}
+
+		template<typename X>
+		void std_copy_from (const std::vector<X>& x)
+		{
+		  size_t n = this->size()*BLOCKSIZE;
+		  x.resize(n);
+		  for (size_t i=0; i<n; i++)
+			(*this)[i/BLOCKSIZE][i%BLOCKSIZE] = x[i];
 		}
 	  };
 
