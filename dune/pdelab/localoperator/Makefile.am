@@ -6,6 +6,7 @@ common_HEADERS =				\
 	diffusion.hh				\
 	diffusionccfv.hh				\
 	diffusionmixed.hh				\
+	diffusiondg.hh				\
 	pattern.hh				\
 	poisson.hh				\
 	laplacedirichletccfv.hh
