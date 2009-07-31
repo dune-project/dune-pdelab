@@ -60,7 +60,7 @@ namespace Dune {
 	template<typename GFSU, typename GFSV, typename LA,
 			 typename CU=EmptyTransformation,
 			 typename CV=EmptyTransformation,
-			 typename B=StdVectorFlatMatrixBackend>
+			 typename B=StdVectorFlatMatrixBackend, bool nonoverlapping_mode=false>
 	class GridOperatorSpace 
 	{
 	  // extract useful types
@@ -233,6 +233,10 @@ namespace Dune {
             // compute unique id
             int id = is.index(*it)+gtoffset[it->type()];
 
+            // skip ghost and overlap
+            if (nonoverlapping_mode && it->partitionType()!=Dune::InteriorEntity)
+              continue; 
+
 			// bind local function spaces to element
 			lfsu.bind(*it);
 			lfsv.bind(*it);
@@ -277,7 +281,8 @@ namespace Dune {
                         int idn = is.index(*(iit->outside()))+gtoffset[gtn];
                           
                         // unique vist of intersection
-                        if (LA::doSkeletonTwoSided || id>idn)
+                        if (LA::doSkeletonTwoSided || id>idn || 
+                            (nonoverlapping_mode && (iit->inside())->partitionType()!=Dune::InteriorEntity) )
                           {
                             // bind local function spaces to neighbor element
                             lfsun.bind(*(iit->outside()));
@@ -353,6 +358,10 @@ namespace Dune {
             // compute unique id
             int id = is.index(*it)+gtoffset[it->type()];
 
+            // skip ghost and overlap
+            if (nonoverlapping_mode && it->partitionType()!=Dune::InteriorEntity)
+              continue; 
+
 			// bind local function spaces to element
 			lfsu.bind(*it);
 			lfsv.bind(*it);
@@ -394,7 +403,8 @@ namespace Dune {
                         int idn = is.index(*(iit->outside()))+gtoffset[gtn];
                           
                         // unique vist of intersection
-                        if (LA::doSkeletonTwoSided || id>idn)
+                        if (LA::doSkeletonTwoSided || id>idn ||
+                            (nonoverlapping_mode && (iit->inside())->partitionType()!=Dune::InteriorEntity))
                           {
                             // bind local function spaces to neighbor element
                             lfsun.bind(*(iit->outside()));
@@ -470,6 +480,10 @@ namespace Dune {
             // compute unique id
             const typename GV::IndexSet::IndexType id = is.index(*it)+gtoffset[it->type()];
             //            std::cout << "[" << gfsu.gridview().comm().rank() << "] " << " element: " << id << std::endl;
+
+            // skip ghost and overlap
+            if (nonoverlapping_mode && it->partitionType()!=Dune::InteriorEntity)
+              continue; 
  
 			// bind local function spaces to element
 			lfsu.bind(*it);
@@ -512,7 +526,8 @@ namespace Dune {
                         const typename GV::IndexSet::IndexType idn = is.index(*(iit->outside()))+gtoffset[gtn];
                           
                         // unique vist of intersection
-                        if (LA::doSkeletonTwoSided || id>idn)
+                        if (LA::doSkeletonTwoSided || id>idn ||
+                            (nonoverlapping_mode && (iit->inside())->partitionType()!=Dune::InteriorEntity) )
                           {
                             // bind local function spaces to neighbor element
                             lfsun.bind(*(iit->outside()));
