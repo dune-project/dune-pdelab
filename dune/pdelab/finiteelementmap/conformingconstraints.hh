@@ -4,6 +4,7 @@
 
 #include<dune/common/exceptions.hh>
 #include<dune/grid/common/genericreferenceelements.hh>
+#include<dune/grid/common/grid.hh>
 #include<dune/common/geometrytype.hh>
 #include<dune/pdelab/common/geometrywrapper.hh>
 
@@ -116,6 +117,39 @@ namespace Dune {
       }
     };
 
+    // extend constraints class by processor boundary
+    class NonoverlappingConformingDirichletConstraints : public ConformingDirichletConstraints
+    {
+    public:
+      enum { doVolume = true };
+
+      NonoverlappingConformingDirichletConstraints (const std::vector<int>& ghost_)
+        : ghost(ghost_)
+      {}
+
+      template<typename E, typename LFS, typename T>
+      void volume (const Dune::PDELab::ElementGeometry<E>& eg, const LFS& lfs, T& trafo) const
+      {
+        // nothing to do for interior entities
+        if (eg.entity().partitionType()==Dune::InteriorEntity)
+          return;
+
+        // empty map means Dirichlet constraint
+        typename T::RowType empty;
+
+		typedef typename LFS::Traits::GridFunctionSpaceType::Traits::BackendType B;
+
+        // loop over all degrees of freedom and check if it is not owned by this processor
+        for (size_t i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)
+          {
+            if (ghost[lfs.globalIndex(i)])
+              trafo[i] = empty;
+          }
+      }
+
+    private:
+      const std::vector<int>& ghost;
+    };
   }
 }
 
