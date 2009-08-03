@@ -251,7 +251,7 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
   lop.setEprev(*xprev);
   lop.setEcur(*xcur);
   gos.jacobian(affineShift,m);
-  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
+//   Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
   Dune::Richardson<V,V> prec(1.0);
 //   Dune::SeqILU0<M,V,V> prec(m,1.0);
   Dune::MatrixAdapter<M,V,V> op(m);
@@ -354,6 +354,7 @@ void test(Dune::SmartPointer<Grid> grid, int &result, GnuplotGraph &graph, doubl
 
   typedef Dune::PDELab::EdgeS03DLocalFiniteElementMap<typename Grid::LeafGridView, double> FEM;
 
+  //grid->globalRefine(3);
   std::cout << "electrodynamic level 0" << std::endl;
   // time step
   double Delta_t = smallestEdge(grid->leafView())/std::sqrt(double(Grid::dimension));

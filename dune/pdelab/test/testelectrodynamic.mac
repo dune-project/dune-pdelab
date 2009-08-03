@@ -3,15 +3,15 @@
 /* define antisymmetric matrices */
 I01: matrix([ 0, 1, 0],
             [-1, 0, 0],
-            [ 0, 0, 0]);
+            [ 0, 0, 0])$
 I02: matrix([ 0, 0, 1],
             [ 0, 0, 0],
-            [-1, 0, 0]);
+            [-1, 0, 0])$
 I12: matrix([ 0, 0, 0],
             [ 0, 0, 1],
-            [ 0,-1, 0]);
+            [ 0,-1, 0])$
 
-I: [I01, I02, I12];
+I: [I01, I02, I12]$
 
 /* permutation for each tet */
 tet_permutation: [[1,2,3],
@@ -19,11 +19,11 @@ tet_permutation: [[1,2,3],
                   [2,3,1],
                   [3,2,1],
                   [3,1,2],
-                  [1,3,2]];
-tet_permute(tet, x):= [x[tet_permutation[tet][1]],x[tet_permutation[tet][2]],x[tet_permutation[tet][3]]];
+                  [1,3,2]]$
+tet_permute(tet, x):= [x[tet_permutation[tet][1]],x[tet_permutation[tet][2]],x[tet_permutation[tet][3]]]$
 
 /* unit vectors */
-unit_vector: makelist(ematrix(3,1, 1, i,1),i,1,3);
+unit_vector: makelist(ematrix(3,1, 1, i,1),i,1,3)$
 
 /* define vertices of cube */
 xi: [matrix([0], [0], [0]),
@@ -33,29 +33,27 @@ xi: [matrix([0], [0], [0]),
      matrix([0], [0], [1]),
      matrix([1], [0], [1]),
      matrix([0], [1], [1]),
-     matrix([1], [1], [1])];
+     matrix([1], [1], [1])]$
 
 /* tet_coords[tet][i] = coords of the i'th vertex of tet tet */
 tet_coords: makelist(makelist(zeromatrix(3,1),i,1,4),tet,1,6)$
 for tet: 1 thru 6 do
   for i: 1 thru 3 do
     tet_coords[tet][i+1]: tet_coords[tet][i]+unit_vector[tet_permutation[tet][i]]$
-tet_coords;
 
 /* */
 lindex(l, v) := block(
   for i: 1 thru length(l) do
-    if equal(l[i], v) then return(i)
-  );
+    if equal(l[i], v) then return(i))$
 
 /* mapping local->global vertex numbers */
-tet_vertex: makelist(makelist(lindex(xi,tet_coords[tet][i]),i,1,4),tet,1,6);
+tet_vertex: makelist(makelist(lindex(xi,tet_coords[tet][i]),i,1,4),tet,1,6)$
 
 /* the local edges, including ordering */
-local_edge: [[1,2], [1,3], [2,3], [1,4], [2,4], [3,4]];
+local_edge: [[1,2], [1,3], [2,3], [1,4], [2,4], [3,4]]$
 
 /* define table of edges */
-edges: unique(sort(apply(append, makelist(makelist(sort(makelist(tet_vertex[tet][l],l,local_edge[e])),e,1,6),tet,1,6))));
+edges: unique(sort(apply(append, makelist(makelist(sort(makelist(tet_vertex[tet][l],l,local_edge[e])),e,1,6),tet,1,6))))$
 
 /* define tet/edge -> global edge mapping */
 tet_edges: makelist(/* tet tet */
@@ -68,7 +66,7 @@ tet_edges: makelist(/* tet tet */
           l,
           local_edge[e]))),
     e,1,6),
-  tet,1,6);
+  tet,1,6)$
 
 /* define matrices, one for each tet */
 M: makelist(/* tet tet */
@@ -90,9 +88,9 @@ M: makelist(/* tet tet */
               i,
               1,3))),
         r,1,6))),
-  tet,1,6);
+  tet,1,6)$
 
-Minv: makelist(invert(m),m,M);
+Minv: makelist(invert(m),m,M)$
 
 /* right hand sides */
 r: makelist(/* tet tet */
@@ -108,14 +106,14 @@ r: makelist(/* tet tet */
           sqrt((x2-x1)^^2)[1][1],
           e,1)),
       e,1,6)),
-  tet,1,6);
+  tet,1,6)$
 
 /* coefficient vector for the shape functions */
 coeff: makelist(/* tet tet */
   makelist(/* edge e */
     Minv[tet].r[tet][e],
     e,1,6),
-  tet,1,6);
+  tet,1,6)$
 
 
 
@@ -130,16 +128,16 @@ A: makelist(/* tet tet */
           ec[i][1]*I[i],
           i,1,3)),
       e,1,6)),
-  tet,1,6);
+  tet,1,6)$
 
 
 a: makelist(/* tet tet */
   makelist(/* edge e */
     submatrix(1,2,3,coeff[tet][e]),
     e,1,6),
-  tet,1,6);
+  tet,1,6)$
 
-assert_vector(x) := matrix([x[1][1]],[x[2][1]],[x[3][1]]);
+assert_vector(x) := matrix([x[1][1]],[x[2][1]],[x[3][1]])$
 
 psihat: makelist(/* tet tet */
   block([tA, ta],
@@ -154,18 +152,18 @@ psihat: makelist(/* tet tet */
           [[x],
            eA.assert_vector(x)+ea])),
       e,1,6)),
-  tet,1,6);
+  tet,1,6)$
 
 rot(f):=matrix(
   [diff(f(x)[3][1],x[2][1])-diff(f(x)[2][1],x[3][1])],
   [diff(f(x)[1][1],x[3][1])-diff(f(x)[3][1],x[1][1])],
-  [diff(f(x)[2][1],x[1][1])-diff(f(x)[1][1],x[2][1])]);
+  [diff(f(x)[2][1],x[1][1])-diff(f(x)[1][1],x[2][1])])$
 
 rotpsihat: makelist(/* tet tet */
   makelist(/* edge e */
     rot(psihat[tet][e]),
     e,1,6),
-  tet,1,6);
+  tet,1,6)$
 
 tet_integrate: makelist(/* tet tet */
   block([p,x,xp],
@@ -182,9 +180,9 @@ tet_integrate: makelist(/* tet tet */
             xp[3],0,xp[2]),
           xp[2],0,xp[1]),
         xp[1],0,1)])),
-  tet,1,6);
+  tet,1,6)$
 
-T_tet: makelist(zeromatrix(length(edges), length(edges)), tet, 1, 6);
+T_tet: makelist(zeromatrix(length(edges), length(edges)), tet, 1, 6)$
 for tet: 1 thru 6 do block([ti,tpsi,te,tT],
   ti: tet_integrate[tet],
   tpsi: psihat[tet],
@@ -196,11 +194,10 @@ for tet: 1 thru 6 do block([ti,tpsi,te,tT],
       setelmx(
         ev(ti(integrand),nouns),
         te[e1], te[e2],
-        tT)));
+        tT)))$
 T: lsum(t,t,T_tet)$
-ev(T,float);
 
-S_tet: makelist(zeromatrix(length(edges), length(edges)), tet, 1, 6);
+S_tet: makelist(zeromatrix(length(edges), length(edges)), tet, 1, 6)$
 for tet: 1 thru 6 do block([ti,tpsi,te,tS],
   ti: tet_integrate[tet],
   trotpsi: rotpsihat[tet],
@@ -214,37 +211,49 @@ for tet: 1 thru 6 do block([ti,tpsi,te,tS],
         te[e1], te[e2],
         tS)));
 S: lsum(t,t,S_tet)$
-ev(S,float);
 
-nonconstrained: {7};
-constrained: setdifference(setify(makelist(e,e,1,length(edges))),nonconstrained);
+nonconstrained: {7}$
+constrained: setdifference(setify(makelist(e,e,1,length(edges))),nonconstrained)$
 
-Jac: copy(T);
+Jac: copy(T)$
 for i in constrained do block(
   for j: 1 thru length(Jac) do block(
     Jac[i][j]: 0,
     Jac[j][i]: 0),
-  Jac[i][i]: 1);
+  Jac[i][i]: 1)$
 
-affine_shift: zeromatrix(length(Jac),1);
+affine_shift: zeromatrix(length(Jac),1)$
 
 xprev: copy(affine_shift)$
 xprev[7][1]: -1/sqrt(3)$
-xprev;
 
-xcur: copy(xprev);
+xcur: copy(xprev)$
 
-Delta_t: sqrt(1/3);
+Delta_t: sqrt(1/3)$
+
+steps: floor(10/Delta_t)$
+
+result: [copy(xprev), copy(xcur)]$
 
 rhs: -copy(T.(affine_shift-2*xcur+xprev)+Delta_t^2*S.xprev)$
 for i in constrained do
   rhs[i][1]: 0$
-rhs;
 
-R(u) := block([tmp],
-  tmp: copy(T.(u-2*xcur+xprev)+Delta_t^2*S.xprev),
-  for i in constrained do
-    tmp[i][1]: 0,
-  tmp);
+dJac: apply(submatrix, append(listify(constrained), [Jac], listify(constrained)))$
 
-R(affine_shift);
+dJinv: invert(dJac)$
+
+for s: 1 thru steps do block([rhs, drhs, dxnext, xnext, j],
+  rhs: -copy(T.(affine_shift-2*xcur+xprev)+Delta_t^2*S.xprev),
+  drhs: apply(submatrix, append(listify(constrained), [rhs])),
+  dxnext: dJinv.drhs,
+  xnext: copy(affine_shift),
+  j: 1,
+  for i in nonconstrained do block(
+    xnext[i]: xnext[i]+dxnext[j],
+    j=j+1),
+  result: endcons(xnext, result),
+  xprev: xcur,
+  xcur: xnext)$
+
+makelist(apply(submatrix, append(listify(constrained), [x])),x,result);
