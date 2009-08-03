@@ -56,14 +56,14 @@ namespace Dune {
      *    \mathbf E &= \sum_iu_i\mathbf N_i
      * \f}
      *
-     * The time scheme is central differences from Jin (12.16).  With the
-     * simplifications we have don above it looks like
+     * The time scheme is central differences from Jin (12.29).  With the
+     * simplifications we have done above it looks like
      * \f[
-     *    Tu^{n+1}=2Tu^n-Tu^{n-1}-(\Delta t)^2Su^{n-1} = 0
+     *    Tu^{n+1}=2Tu^n-Tu^{n-1}-(\Delta t)^2Su^n = 0
      * \f]
      * Bringing this into the residual formulation we get
      * \f[
-     *    r=T(u^{n+1}-2u^n+u^{n-1})+(\Delta t)^2Su^{n-1}
+     *    r=T(u^{n+1}-2u^n+u^{n-1})+(\Delta t)^2Su^n
      * \f]
      *
      * \note Currently \f$\epsilon\f$ is fixed to 1.
@@ -98,10 +98,12 @@ namespace Dune {
       {}
 
 	  //! volume integral depending on test and ansatz functions
+      /**
+       * We support only Galerkin method lfsu==lfsv
+       */
 	  template<typename EG, typename LFS, typename X, typename R>
 	  void alpha_volume (const EG& eg, const LFS& lfsu, const X& x, const LFS& lfsv, R& r) const
 	  {
-        // We support only Galerkin method lfsu==lfsv
 		dune_static_assert(LFS::Traits::LocalFiniteElementType::
                            Traits::LocalBasisType::Traits::dimRange == 3,
                            "Works only in 3D");
@@ -127,14 +129,13 @@ namespace Dune {
         X xprev;
         lfsu.vread(*Eprev, xprev);
         
+        X xcur;
+        lfsu.vread(*Ecur, xcur);
+
         // Tvec = x - 2*xcur + xprev, just what is needed to right-multiply to the matrix T
-        X Tvec;
-        lfsu.vread(*Ecur, Tvec);
-        for(unsigned i = 0; i < lfsu.size(); ++i) {
-          Tvec[i] *= -2;
-          Tvec[i] += x[i];
-          Tvec[i] += xprev[i];
-        }
+        X Tvec(lfsu.size());
+        for(unsigned i = 0; i < lfsu.size(); ++i)
+          Tvec[i] = x[i] - 2*xcur[i] + xprev[i];
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -159,7 +160,7 @@ namespace Dune {
             for (size_t j=0; j<lfsu.size(); j++)
               r[j] += (phi[j]*dt2E)*factor;
             
-            // evaluate Delta_t^2 * S * u[n-1]
+            // evaluate Delta_t^2 * S * u[n]
             //          S_{ij} = \int 1/mu rot N_i . rot N_j dV
             std::vector<JacobianType> J(lfsu.size());
             lfsu.localFiniteElement().localBasis().evaluateJacobianGlobal(it->position(),J,eg.geometry());
@@ -174,7 +175,7 @@ namespace Dune {
 
             RangeType rotE(0);
             for(unsigned i = 0; i < lfsu.size(); ++i)
-              rotE.axpy(xprev[i], rotphi[i]);
+              rotE.axpy(xcur[i], rotphi[i]);
             
             // integrate grad u * grad phi_i
             factor = it->weight() * eg.geometry().integrationElement(it->position()) / muval * Delta_t * Delta_t;
