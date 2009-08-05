@@ -27,9 +27,9 @@ namespace Dune {
     class DiffusionDG :
       public LocalOperatorDefaultFlags,
       public FullSkeletonPattern, public FullVolumePattern
-      //,public NumericalJacobianVolume<DgObb<K, F, B, G, J> >
-      //,public NumericalJacobianSkeleton<DgObb<K, F, B, G, J> >
-      //,public NumericalJacobianBoundary<DgObb<K, F, B, G, J> >
+      //,public NumericalJacobianVolume<DiffusionDG<K, F, B, G, J> >
+      //,public NumericalJacobianSkeleton<DiffusionDG<K, F, B, G, J> >
+      //,public NumericalJacobianBoundary<DiffusionDG<K, F, B, G, J> >
     {
     public:
       // pattern assembly flags
@@ -95,8 +95,8 @@ namespace Dune {
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename K::Traits::RangeType tensor(0.0);
-        const Dune::FieldVector<DF,dim> localcenter(0.5);
-        k.evaluate(eg.entity(),eg.geometry().global(localcenter),tensor);
+        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
+        k.evaluate(eg.entity(),localcenter,tensor);
 
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -164,12 +164,15 @@ namespace Dune {
         const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
             
         // evaluate diffusion tensor at elements' centers, assume they are constant over elements
-        const Dune::FieldVector<DF,dim> localcenter(0.5);
-        //typename K::Traits::RangeType permeability(0.0);
+        const Dune::FieldVector<DF,IG::dimension>& 
+          inside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+        const Dune::FieldVector<DF,IG::dimension>& 
+          outside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
         typename K::Traits::RangeType permeability_s(0.0);
         typename K::Traits::RangeType permeability_n(0.0);
-        k.evaluate(*ig.inside(),ig.inside()->geometry().global(localcenter),permeability_s);
-        k.evaluate(*ig.outside(),ig.outside()->geometry().global(localcenter),permeability_n);
+        k.evaluate(*(ig.inside()),inside_local,permeability_s);
+        k.evaluate(*(ig.outside()),outside_local,permeability_n);
+
         /*for (unsigned int i = 0; i < K::Traits::GridViewType::dimension; ++i)
           {
           for (unsigned int j = 0; j < K::Traits::GridViewType::dimension; ++j)
@@ -255,7 +258,7 @@ namespace Dune {
               }
 
             // jump and average for u
-            RF u_jump = -u_n + u_s;
+            RF u_jump = u_s - u_n;
 
             // average on intersection of K * grad u * normal
             RF kgradunormal_average = (kgradu_s + kgradu_n)*normal * 0.5;
@@ -265,11 +268,11 @@ namespace Dune {
             std::vector<Dune::FieldVector<RF,dim> > kgradphi_n(lfsu_n.size());
             for (size_t i=0; i<lfsu_s.size(); i++)
               {
-                permeability_s.umv(gradphi_s[i],kgradphi_s[i]);
+                permeability_s.mv(gradphi_s[i],kgradphi_s[i]);
               }
             for (size_t i=0; i<lfsu_n.size(); i++)
               {
-                permeability_n.umv(gradphi_n[i],kgradphi_n[i]);
+                permeability_n.mv(gradphi_n[i],kgradphi_n[i]);
               }
 
             // integrate what needed
@@ -288,7 +291,7 @@ namespace Dune {
                 r_n[i] += penalty_weight_n * u_jump*(-phi_n[i])*factor;
                 // epsilon * <Kgradv*my>[u] - [v]<Kgradu*my>
                 r_n[i] += epsilon*(kgradphi_n[i]*normal)*0.5*u_jump*factor;
-                r_n[i] -= -phi_n[i]*kgradunormal_average*factor;
+                r_n[i] -= (-phi_n[i])*kgradunormal_average*factor;
               }
           }
       }
@@ -329,9 +332,10 @@ namespace Dune {
             const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
 
             // evaluate diffusion tensor at cell center, assume it is constant over elements
-            const Dune::FieldVector<DF,dim> localcenter(0.5);
+            const Dune::FieldVector<DF,IG::dimension>
+              localcenter = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
             typename K::Traits::RangeType tensor(0.0);
-            k.evaluate(*ig.inside(),ig.inside()->geometry().global(localcenter),tensor);
+            k.evaluate(*ig.inside(),localcenter,tensor);
 
             // penalty weight for NIPG / SIPG
             RF penalty_weight = sigma / pow(ig.inside()->geometry().volume(), beta);
@@ -496,9 +500,10 @@ namespace Dune {
             // outer normal, assuming it is constant over whole intersection
             const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
             // evaluate diffusion tensor at cell center, assume it is constant over elements
-            const Dune::FieldVector<DF,IG::dimension> localcenter(0.5);
+            const Dune::FieldVector<DF,IG::dimension>
+              localcenter = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
             typename K::Traits::RangeType tensor(0.0);
-            k.evaluate(*ig.inside(),ig.inside()->geometry().global(localcenter),tensor);
+            k.evaluate(*ig.inside(),localcenter,tensor);
             // penalty weight for NIPG / SIPG
             RF penalty_weight = sigma / pow(ig.inside()->geometry().volume(), beta);
 
@@ -573,8 +578,8 @@ namespace Dune {
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename K::Traits::RangeType tensor;
-        const Dune::FieldVector<DF,dim> localcenter(0.5);
-        k.evaluate(eg.entity(),eg.geometry().global(localcenter),tensor);
+        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
+        k.evaluate(eg.entity(),localcenter,tensor);
 
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -644,12 +649,14 @@ namespace Dune {
         const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
-        const Dune::FieldVector<DF,dim> localcenter(0.5);
-        //typename K::Traits::RangeType permeability(0.0);
+        const Dune::FieldVector<DF,IG::dimension>& 
+          inside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+        const Dune::FieldVector<DF,IG::dimension>& 
+          outside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
         typename K::Traits::RangeType permeability_s(0.0);
         typename K::Traits::RangeType permeability_n(0.0);
-        k.evaluate(*ig.inside(),ig.inside()->geometry().global(localcenter),permeability_s);
-        k.evaluate(*ig.outside(),ig.outside()->geometry().global(localcenter),permeability_n);
+        k.evaluate(*(ig.inside()),inside_local,permeability_s);
+        k.evaluate(*(ig.outside()),outside_local,permeability_n);
         /*for (unsigned int i = 0; i < K::Traits::GridViewType::dimension; ++i)
           {
           for (unsigned int j = 0; j < K::Traits::GridViewType::dimension; ++j)
@@ -739,11 +746,11 @@ namespace Dune {
             std::vector<Dune::FieldVector<RF,dim> > kgradphi_n(lfsu_n.size());
             for (size_t i=0; i<lfsu_s.size(); i++)
               {
-                permeability_s.umv(gradphi_s[i],kgradphi_s[i]);
+                permeability_s.mv(gradphi_s[i],kgradphi_s[i]);
               }
             for (size_t i=0; i<lfsu_n.size(); i++)
               {
-                permeability_n.umv(gradphi_n[i],kgradphi_n[i]);
+                permeability_n.mv(gradphi_n[i],kgradphi_n[i]);
               }
 
             // integrate what needed
@@ -822,11 +829,12 @@ namespace Dune {
               Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
             // outer normal, assuming it is constant over whole intersection
             const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
-            const Dune::FieldVector<DF,IG::dimension> localcenter(0.5);
 
             // evaluate diffusion tensor at cell center, assume it is constant over elements
+            const Dune::FieldVector<DF,IG::dimension>
+              localcenter = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
             typename K::Traits::RangeType tensor(0.0);
-            k.evaluate(*ig.inside(),ig.inside()->geometry().global(localcenter),tensor);
+            k.evaluate(*ig.inside(),localcenter,tensor);
 
             // penalty weight for NIPG / SIPG
             RF penalty_weight = sigma / pow(ig.inside()->geometry().volume(), beta);
@@ -865,7 +873,7 @@ namespace Dune {
                 std::vector<Dune::FieldVector<RF,dim> > kgradphi(lfsu.size());
                 for (size_t i=0; i<lfsu.size(); i++)
                   {
-                    tensor.umv(gradphi[i],kgradphi[i]);
+                    tensor.mv(gradphi[i],kgradphi[i]);
                   }
 
                 // integrate
