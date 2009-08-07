@@ -73,12 +73,12 @@ namespace Dune {
      *                pointers to \f$u^n\f$ and \f$u^{n-1}\f$
      * \tparam qorder Order of quadratures to use
      */
-    template<typename Mu, typename GCV, int qorder=1>
+    template<typename Eps, typename Mu, typename GCV>
 	class Electrodynamic
-      : public NumericalJacobianApplyVolume<Electrodynamic<Mu, GCV, qorder> >
-      , public NumericalJacobianVolume<Electrodynamic<Mu, GCV, qorder> >
-      , public NumericalJacobianApplyBoundary<Electrodynamic<Mu, GCV, qorder> >
-      , public NumericalJacobianBoundary<Electrodynamic<Mu, GCV, qorder> >
+      : public NumericalJacobianApplyVolume<Electrodynamic<Eps, Mu, GCV> >
+      , public NumericalJacobianVolume<Electrodynamic<Eps, Mu, GCV> >
+      , public NumericalJacobianApplyBoundary<Electrodynamic<Eps, Mu, GCV> >
+      , public NumericalJacobianBoundary<Electrodynamic<Eps, Mu, GCV> >
       , public FullVolumePattern
       , public LocalOperatorDefaultFlags
 	{
@@ -90,11 +90,13 @@ namespace Dune {
 	  // residual assembly flags
       enum { doAlphaVolume = true };
 
-      Electrodynamic (const Mu& mu_, double Delta_t_ = 0)
-        : mu(mu_)
+      Electrodynamic (const Eps &eps_, const Mu& mu_, double Delta_t_ = 0, int qorder_ = 2)
+        : eps(eps_)
+        , mu(mu_)
         , Ecur(0)
         , Eprev(0)
         , Delta_t(Delta_t_)
+        , qorder(qorder_)
       {}
 
 	  //! volume integral depending on test and ansatz functions
@@ -153,8 +155,8 @@ namespace Dune {
             for(unsigned i = 0; i < lfsu.size(); ++i)
               dt2E.axpy(Tvec[i], phi[i]);
             
-            Dune::FieldVector<RF,1> epsval = 1;
-            //epsilon.evaluate(eg.entity(), it->position(), epsval);
+            Dune::FieldVector<RF,1> epsval;
+            eps.evaluate(eg.entity(), it->position(), epsval);
 
             RF factor = it->weight() * eg.geometry().integrationElement(it->position()) * epsval;
             for (size_t j=0; j<lfsu.size(); j++)
@@ -212,10 +214,12 @@ namespace Dune {
       }
 
     private:
+      const Eps &eps;
       const Mu &mu;
       const GCV *Ecur;
       const GCV *Eprev;
       double Delta_t;
+      const int qorder;
 	};
 
     //! \} group LocalOperator

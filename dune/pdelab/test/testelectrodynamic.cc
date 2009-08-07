@@ -65,6 +65,14 @@ const unsigned maxelements = 1000;
 // beginning and once at the end
 const bool measure_after_every_refinement = false;
 
+const double pi = 3.1415926535897932384626433832795;
+
+const double c0 = 299792458.0;
+
+const double mu0 = 4e-7 * pi;
+
+const double eps0 = 1/(mu0*c0*c0);
+
 //
 //  CODE
 //
@@ -75,28 +83,30 @@ const bool measure_after_every_refinement = false;
 
 // function for defining the source term
 template<typename GV, typename RF>
-class Mu
+class ConstFunc
   : public Dune::PDELab::AnalyticGridFunctionBase<
       Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-      Mu<GV,RF>
+      ConstFunc<GV,RF>
     >
 {
 public:
   typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,Mu<GV,RF> > BaseT;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,ConstFunc<GV,RF> > BaseT;
 
-  Mu (const GV& gv) : BaseT(gv) {}
+  ConstFunc (const GV& gv, RF val_ = 1)
+    : BaseT(gv)
+    , val(val_)
+  {}
 
   inline void
   evaluateGlobal (const typename Traits::DomainType& x, 
                   typename Traits::RangeType& y) const
   {
-//     typename Traits::DomainType myx(0.5);
-//     myx -= x;
-//     y = 1+exp(-3.0*myx.two_norm2());
-    y = 1;
+    y = val;
   }
 
+private:
+  RF val;
 };
 
 // boundary grid function selecting boundary conditions 
@@ -235,10 +245,12 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
   //Dune::PDELab::set_nonconstrained_dofs(cg,0.0,affineShift);
 
   // make grid function operator
-  typedef Mu<GV,R> MuType;
-  MuType mu(gv);
-  typedef Dune::PDELab::Electrodynamic<MuType,V,q> LOP; 
-  LOP lop(mu, Delta_t);
+  typedef ConstFunc<GV,R> MuType;
+  MuType mu(gv,mu0);
+  typedef ConstFunc<GV,R> EpsType;
+  EpsType eps(gv,eps0);
+  typedef Dune::PDELab::Electrodynamic<EpsType,MuType,V> LOP; 
+  LOP lop(eps, mu, Delta_t, q);
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
     LOP,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
@@ -262,7 +274,7 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
 
   std::cout << "u[-1]\n" << *xprev << std::endl;
   dat << "-1\t" << (*xprev)[3] << "\n";
-  std::cout << "u[0]\n" << *xcur << std::endl;
+//   std::cout << "u[0]\n" << *xcur << std::endl;
   dat << "0\t" << (*xcur)[3] << "\n";
 
   std::cout << "Number of steps " << steps << std::endl;
@@ -293,7 +305,7 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
     gos.residual(affineShift,rhs);
     rhs *= -1;
 
-    std::cout << "RHS\n" << rhs << std::endl;
+//     std::cout << "RHS\n" << rhs << std::endl;
 
     Dune::InverseOperatorResult stat;
 
@@ -308,11 +320,12 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
               << "  conv_rate:  " << stat.conv_rate << std::endl
               << "  elapsed:    " << stat.elapsed << std::endl;
     if(!stat.converged)
-      DUNE_THROW(Dune::Exception, "Solver did not converge");
+//       DUNE_THROW(Dune::Exception, "Solver did not converge");
+      return 0;
 
     *xnext += affineShift;
 
-    std::cout << "u[" << step+1 << "]\n" << *xnext << std::endl;
+//     std::cout << "u[" << step+1 << "]\n" << *xnext << std::endl;
     dat << step+1 << "\t" << (*xnext)[3] << "\n";
 
 
@@ -354,12 +367,12 @@ void test(Dune::SmartPointer<Grid> grid, int &result, GnuplotGraph &graph, doubl
 
   typedef Dune::PDELab::EdgeS03DLocalFiniteElementMap<typename Grid::LeafGridView, double> FEM;
 
-  //grid->globalRefine(3);
+  grid->globalRefine(0);
   std::cout << "electrodynamic level 0" << std::endl;
   // time step
-  double Delta_t = smallestEdge(grid->leafView())/std::sqrt(double(Grid::dimension));
-  unsigned steps = 10/Delta_t;
-  for(unsigned level = 0; level < 10; ++level) {
+  double Delta_t = smallestEdge(grid->leafView())/std::sqrt(double(Grid::dimension))/c0;
+  unsigned steps = 10/c0/Delta_t;
+  for(unsigned level = 0; level < 3; ++level) {
     std::ostringstream plot;
     plot << "'" << filename << ".dat' index " << level << " using ($1*" << Delta_t << "):2 title 'timestep=" << Delta_t << " steps=" << steps << "' with lines";
     graph.addPlot(plot.str());
@@ -370,7 +383,7 @@ void test(Dune::SmartPointer<Grid> grid, int &result, GnuplotGraph &graph, doubl
     dat << "\n\n";
 
     Delta_t /= 2;
-    steps = 10/Delta_t;
+    steps = 10/c0/Delta_t;
   }
 
   if(result != 1)
