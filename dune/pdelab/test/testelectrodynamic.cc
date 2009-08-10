@@ -15,6 +15,14 @@
 #include <dune/grid/albertagrid/agrid.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 
+#ifdef HAVE_ALUGRID
+#include <dune/grid/io/file/dgfparser/dgfalu.hh>
+#endif
+
+#ifdef HAVE_ALBERTA
+#include <dune/grid/albertagrid/dgfparser.hh>
+#endif
+
 #include <dune/istl/operators.hh>
 #include <dune/istl/preconditioners.hh>
 #include <dune/istl/solvers.hh>
@@ -267,7 +275,7 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
   Dune::Richardson<V,V> prec(1.0);
 //   Dune::SeqILU0<M,V,V> prec(m,1.0);
   Dune::MatrixAdapter<M,V,V> op(m);
-  Dune::CGSolver<V> solver(op,prec,1E-10,5000,0);
+  Dune::CGSolver<V> solver(op,prec,1E-10,1000,0);
 
 //   typedef Dune::SuperLU<typename M::BaseT> Solver;
 //   Solver solver(m);
@@ -349,12 +357,24 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
   return 0; //l2difference(gv,g,dgf,4);
 }
 
+template<typename P>
+struct GridPtrTraits;
+template<typename G>
+struct GridPtrTraits<Dune::SmartPointer<G> > {
+  typedef G Grid;
+};
+template<typename G>
+struct GridPtrTraits<Dune::GridPtr<G> > {
+  typedef G Grid;
+};
+
+
 template<typename Grid>
-void test(Dune::SmartPointer<Grid> grid, int &result, GnuplotGraph &graph, double conv_limit, std::string name = "")
+void test(Grid &grid, int &result, GnuplotGraph &graph, double conv_limit, std::string name = "")
 {
   typedef typename Grid::LeafGridView GV;
 
-  if(name == "") name = grid->name();
+  if(name == "") name = grid.name();
 
   std::cout << std::endl
             << "Testing Electrodynamic problem with EdgeS03D and " << name << std::endl;
@@ -367,19 +387,19 @@ void test(Dune::SmartPointer<Grid> grid, int &result, GnuplotGraph &graph, doubl
 
   typedef Dune::PDELab::EdgeS03DLocalFiniteElementMap<typename Grid::LeafGridView, double> FEM;
 
-  grid->globalRefine(0);
+  grid.globalRefine(4);
   std::cout << "electrodynamic level 0" << std::endl;
   // time step
-  double Delta_t = smallestEdge(grid->leafView())/std::sqrt(double(Grid::dimension))/c0;
+  double Delta_t = smallestEdge(grid.leafView())/std::sqrt(double(Grid::dimension))/c0/4;
   unsigned steps = 10/c0/Delta_t;
-  for(unsigned level = 0; level < 3; ++level) {
+  for(unsigned level = 2; level < 3; ++level) {
     std::ostringstream plot;
     plot << "'" << filename << ".dat' index " << level << " using ($1*" << Delta_t << "):2 title 'timestep=" << Delta_t << " steps=" << steps << "' with lines";
     graph.addPlot(plot.str());
 
     electrodynamic
       <GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>
-      (grid->leafView(), FEM(grid->leafView()), Delta_t, steps, filename+"-coarse", dat);
+      (grid.leafView(), FEM(grid.leafView()), Delta_t, steps, filename+"-coarse", dat);
     dat << "\n\n";
 
     Delta_t /= 2;
@@ -421,13 +441,18 @@ int main(int argc, char** argv)
 //          result, graph, conv_limit,    "alberta-tetrahedron");
 //     test(KuhnTriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
 //          result, graph, .7*conv_limit, "alberta-triangulated-cube-6");
+    {
+      Dune::GridPtr<Dune::AlbertaGrid<3, 3> > gridptr("grids/brick.dgf");
+      test(*gridptr,
+           result, graph, conv_limit,    "alu-triangulated-brick-6");
+    }
 #endif
 
 #ifdef HAVE_ALUGRID
 //     test(UnitTetrahedronMaker         <Dune::ALUSimplexGrid<3, 3> >::create(),
 //          result, graph, conv_limit,    "alu-tetrahedron");
-    test(KuhnTriangulatedUnitCubeMaker<Dune::ALUSimplexGrid<3, 3> >::create(),
-         result, graph, conv_limit,    "alu-triangulated-cube-6");
+//     test(KuhnTriangulatedUnitCubeMaker<Dune::ALUSimplexGrid<3, 3> >::create(),
+//          result, graph, conv_limit,    "alu-triangulated-cube-6");
 #endif // HAVE_ALUGRID
 
 #ifdef HAVE_UG

@@ -1,0 +1,13 @@
+DGF
+% a brick shaped domain with relatively prime edge lengths to avoid degeneration of solutions
+
+Interval
+0 0 0
+2 3 5
+5 8 13
+#
+simplex 
+#
+Boundarydomain
+default 1
+#
