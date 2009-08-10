@@ -79,7 +79,7 @@ namespace Dune {
     /** \brief implementation for finite elements requiring oriented edges
      *
      * This is for edge elements. It works for one type of Geometry only, and
-     * the requirements fot the local finite element are:
+     * the requirements for the local finite element are:
      *
      *  - The default orientation of the shape functions on the edges must be
      *    from the vertex with the lower index within the reference element to
@@ -119,6 +119,8 @@ namespace Dune {
         const GenericReferenceElement<ct, dim> &refElem =
           GenericReferenceElements<ct, dim>::general(FE().type());
 
+        const typename GV::Grid::GlobalIdSet &idSet = gv.grid().globalIdSet();
+
         // create all variants
         variant.resize(1 << refElem.size(dim-1));
         for (unsigned int i=0; i<variant.size(); i++)
@@ -134,9 +136,9 @@ namespace Dune {
             unsigned int elemid = is.template index<0>(*it);
             orient[elemid] = 0;
 
-            std::vector<unsigned int> vid(refElem.size(dim));
+            std::vector<typename GV::Grid::GlobalIdSet::IdType> vid(refElem.size(dim));
             for(unsigned int i = 0; i < vid.size(); ++i)
-              vid[i] = is.subIndex(*it, i, dim);
+              vid[i] = idSet.subId(*it, i, dim);
 
             // loop over all edges of the element
             for(int i = 0; i < refElem.size(dim-1); ++i) {
