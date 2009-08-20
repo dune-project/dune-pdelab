@@ -278,29 +278,37 @@ class KuhnTriangulatedUnitCubeMaker {
 public:
   static Dune::SmartPointer<Grid> create() {
     Dune::GridFactory<Grid> gf;
-    Dune::FieldVector<typename Grid::ctype, 3> pos;
 
-    pos[0] = 0; pos[1] = 0; pos[2] = 0; gf.insertVertex(pos);
-    pos[0] = 1; pos[1] = 0; pos[2] = 0; gf.insertVertex(pos);
-    pos[0] = 0; pos[1] = 1; pos[2] = 0; gf.insertVertex(pos);
-    pos[0] = 1; pos[1] = 1; pos[2] = 0; gf.insertVertex(pos);
-    pos[0] = 0; pos[1] = 0; pos[2] = 1; gf.insertVertex(pos);
-    pos[0] = 1; pos[1] = 0; pos[2] = 1; gf.insertVertex(pos);
-    pos[0] = 0; pos[1] = 1; pos[2] = 1; gf.insertVertex(pos);
-    pos[0] = 1; pos[1] = 1; pos[2] = 1; gf.insertVertex(pos);
+    int fake_argc = 0;
+    char **fake_argv = NULL;
 
-    Dune::GeometryType type;
-    type.makeTetrahedron();
-    std::vector<unsigned int> vid(4);
+    if(Dune::MPIHelper::instance(fake_argc, fake_argv).rank() == 0) {
+      Dune::FieldVector<typename Grid::ctype, 3> pos;
 
-    vid[0] = 0; vid[1] = 1; vid[2] = 3; vid[3] = 7; gf.insertElement(type, vid);
-    vid[0] = 0; vid[1] = 1; vid[2] = 5; vid[3] = 7; gf.insertElement(type, vid);
-    vid[0] = 0; vid[1] = 4; vid[2] = 5; vid[3] = 7; gf.insertElement(type, vid);
-    vid[0] = 0; vid[1] = 4; vid[2] = 6; vid[3] = 7; gf.insertElement(type, vid);
-    vid[0] = 0; vid[1] = 2; vid[2] = 6; vid[3] = 7; gf.insertElement(type, vid);
-    vid[0] = 0; vid[1] = 2; vid[2] = 3; vid[3] = 7; gf.insertElement(type, vid);
+      pos[0] = 0; pos[1] = 0; pos[2] = 0; gf.insertVertex(pos);
+      pos[0] = 1; pos[1] = 0; pos[2] = 0; gf.insertVertex(pos);
+      pos[0] = 0; pos[1] = 1; pos[2] = 0; gf.insertVertex(pos);
+      pos[0] = 1; pos[1] = 1; pos[2] = 0; gf.insertVertex(pos);
+      pos[0] = 0; pos[1] = 0; pos[2] = 1; gf.insertVertex(pos);
+      pos[0] = 1; pos[1] = 0; pos[2] = 1; gf.insertVertex(pos);
+      pos[0] = 0; pos[1] = 1; pos[2] = 1; gf.insertVertex(pos);
+      pos[0] = 1; pos[1] = 1; pos[2] = 1; gf.insertVertex(pos);
 
-    return gf.createGrid();
+      Dune::GeometryType type;
+      type.makeTetrahedron();
+      std::vector<unsigned int> vid(4);
+
+      vid[0] = 0; vid[1] = 1; vid[2] = 3; vid[3] = 7; gf.insertElement(type, vid);
+      vid[0] = 0; vid[1] = 1; vid[2] = 5; vid[3] = 7; gf.insertElement(type, vid);
+      vid[0] = 0; vid[1] = 4; vid[2] = 5; vid[3] = 7; gf.insertElement(type, vid);
+      vid[0] = 0; vid[1] = 4; vid[2] = 6; vid[3] = 7; gf.insertElement(type, vid);
+      vid[0] = 0; vid[1] = 2; vid[2] = 6; vid[3] = 7; gf.insertElement(type, vid);
+      vid[0] = 0; vid[1] = 2; vid[2] = 3; vid[3] = 7; gf.insertElement(type, vid);
+    }
+
+    Dune::SmartPointer<Grid> gp(gf.createGrid());
+    gp->loadBalance();
+    return gp;
   }
 };
 
