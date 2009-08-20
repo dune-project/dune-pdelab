@@ -2,6 +2,8 @@
 #ifndef DUNE_PDELAB_CONFORMINGCONSTRAINTS_HH
 #define DUNE_PDELAB_CONFORMINGCONSTRAINTS_HH
 
+#include <cstddef>
+
 #include<dune/common/exceptions.hh>
 #include<dune/grid/common/genericreferenceelements.hh>
 #include<dune/grid/common/grid.hh>
@@ -49,7 +51,7 @@ namespace Dune {
         const typename F::Traits::DomainType testpoint = face_refelem.position(0,0);
         f.evaluate(ig,testpoint,bctype);
 
-        for (int i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)
+        for (std::size_t i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)
           {
             // The codim to which this dof is attached to
             unsigned int codim = lfs.localFiniteElement().localCoefficients().localKey(i).codim();
@@ -96,8 +98,6 @@ namespace Dune {
 
 
         const Dune::GenericReferenceElement<DT,dim>& refelem = Dune::GenericReferenceElements<DT,dim>::general(gt);
-        const Dune::GenericReferenceElement<DT,dim-1>& 
-          face_refelem = Dune::GenericReferenceElements<DT,dim-1>::general(ig.geometry().type()); 
 
         // empty map means Dirichlet constraint
         typename T::RowType empty;
