@@ -8,12 +8,15 @@
 #include <iostream>
 #include <string>
 
+#include <unistd.h>
+
 #include <dune/common/exceptions.hh>
+#include <dune/common/float_cmp.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/smartpointer.hh>
 
 #include <dune/grid/albertagrid/agrid.hh>
-#include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+#include <dune/grid/io/file/vtk/vtksequencewriter.hh>
 
 #ifdef HAVE_ALUGRID
 #include <dune/grid/io/file/dgfparser/dgfalu.hh>
@@ -57,6 +60,21 @@
 //===============================================================
 
 //
+//  PHYSICAL CONSTANTS
+//
+
+const double pi = 3.1415926535897932384626433832795;
+
+// free space velocity of light
+const double c0 = 299792458.0;
+
+// vacuum permeability
+const double mu0 = 4e-7 * pi;
+
+// vacuum permittivity
+const double eps0 = 1/(mu0*c0*c0);
+
+//
 //  CONFIGURATION
 //
 
@@ -67,19 +85,22 @@ const double conv_limit = 0.85;
 
 // stop refining after the grid has more than this many elements (that means
 // in 3D that the fine grid may have up to 8 times as may elements)
-const unsigned maxelements = 1000;
+const unsigned maxelements = 2<<8;
 
 // whether to measure the error after every refinement, or just once at the
 // beginning and once at the end
 const bool measure_after_every_refinement = false;
 
-const double pi = 3.1415926535897932384626433832795;
+// multiplier for the stepsize obtained from the FDTD criterion
+const double stepadjust = 0.25;
 
-const double c0 = 299792458.0;
+// how long to run the simulation
+const double duration = 5/c0;
 
-const double mu0 = 4e-7 * pi;
-
-const double eps0 = 1/(mu0*c0*c0);
+// whether to run the check for all levels of refinement.  If false, will run
+// the check only for the first and the last level.  Running the check for all
+// levels is useful when debugging.
+const bool do_all_levels = true;
 
 //
 //  CODE
@@ -210,18 +231,158 @@ typename GV::Grid::ctype smallestEdge(const GV& gv)
   return min;
 }
 
+
+//======================================================================
+// Analytic solution
+//======================================================================
+
+template<typename GV, typename RF>
+class ResonatorSolution
+  : public Dune::PDELab::AnalyticGridFunctionBase<
+      Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,GV::dimension>,
+      ResonatorSolution<GV,RF>
+    >
+{
+public:
+  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,GV::dimension> Traits;
+
+private:
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,ResonatorSolution<GV,RF> > BaseT;
+
+public:
+
+  ResonatorSolution (const GV& gv,
+                     const typename Traits::DomainType &k_,
+                     const typename Traits::RangeType &amp_,
+                     const typename Traits::DomainType &origin_ = typename Traits::DomainType(0))
+    : BaseT(gv)
+    , k(k_)
+    , amp(amp_)
+    , origin(origin_)
+  {}
+
+  inline void
+  evaluateGlobal (const typename Traits::DomainType& x, 
+                  typename Traits::RangeType& y) const
+  {
+    y = amp;
+    for(unsigned i = 0; i < Traits::dimDomain; ++i)
+      for(unsigned j = 0; j < Traits::dimDomain; ++j)
+        if(i == j)
+          y[i] *= std::cos(k[j]*x[j]);
+        else
+          y[i] *= std::sin(k[j]*x[j]);
+  }
+
+private:
+  typename Traits::DomainType k;
+  typename Traits::RangeType amp;
+  typename Traits::DomainType origin;
+  
+};
+
+
+template<typename GV, typename RF>
+class ResonatorSolutionFactory
+{
+public:
+  typedef ResonatorSolution<GV, RF> Function;
+
+private:
+  typedef typename Function::Traits Traits;
+
+  // return a unit vector along cartesian axis dir
+  static typename Traits::RangeType
+  makeUnitVector(unsigned dir = 0)
+  {
+    typename Traits::RangeType u(0);
+    u[dir] = 1;
+    return u;
+  }
+
+  // return a modes vector describing the lowest mode when the field points in direction dir
+  static Dune::FieldVector<unsigned, Traits::dimDomain>
+  makeModesVector(unsigned dir = 0)
+  {
+    Dune::FieldVector<unsigned, Traits::dimDomain> m(1);
+    m[dir] = 0;
+    return m;
+  }
+
+public:
+  ResonatorSolutionFactory
+  (const Dune::FieldVector<unsigned, Traits::dimDomain> &modes = makeModesVector(),
+   typename Traits::DomainFieldType time0_ = 0,
+   const typename Traits::DomainType &size = typename Traits::DomainType(1),
+   const typename Traits::RangeType &amp_ = makeUnitVector(),
+   const typename Traits::DomainType &origin_ = typename Traits::DomainType(0),
+   bool forceAmp = true)
+    : time0(time0_)
+    , amp(amp_)
+    , origin(origin_)
+  {
+    unsigned zeros = 0; // count zero entries
+    for(unsigned i = 0; i < Traits::dimDomain; ++i)
+      if(modes[i] == 0)
+        ++zeros;
+    if(zeros > 1)
+      DUNE_THROW(Dune::Exception, "Invalid mode selected: at most one mode-number may be zero.  Mode is: " << modes);
+
+    for(unsigned i = 0; i < Traits::dimDomain; ++i)
+      k[i] = pi*modes[i]/size[i];
+    typename Traits::DomainFieldType k_norm = k.two_norm();
+    typename Traits::DomainType unit_k(k);
+    unit_k /= k_norm;
+
+    typename Traits::RangeFieldType amp_longitudinal = amp*unit_k;
+    if(!forceAmp &&
+       Dune::FloatCmp::eq<typename Traits::RangeFieldType, Dune::FloatCmp::absolute>(amp_longitudinal*amp.two_norm(), 0))
+      DUNE_THROW(Dune::Exception, "Amplitude (" << amp << ") must be perpendicular to wave number k (" << k << ")");
+
+    // residual longitudinal part is below our threshold or forceAmp is set
+    amp.axpy(-amp_longitudinal, unit_k);
+  }
+
+  Dune::SmartPointer<Function> function(const GV &gv, typename Traits::DomainFieldType time) const
+  {
+    typename Traits::RangeFieldType freq = c0*k.two_norm();
+    typename Traits::RangeType amp_with_time(amp);
+    amp_with_time *= std::sin(freq*(time-time0));
+    return new Function(gv, k, amp_with_time, origin);
+  }
+
+private:
+  typename Traits::DomainFieldType time0;
+  typename Traits::DomainType k;
+  typename Traits::RangeType amp;
+  typename Traits::DomainType origin;
+};
+
 //===============================================================
 // Problem setup and solution 
 //===============================================================
 
+template<typename Writer, typename Solution, typename Reference>
+void writeFunction(Writer &writer, const Solution &solution, const Reference &reference,
+                   double time)
+{
+  writer.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<Solution>(solution,"solution"));
+  writer.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<Reference>(reference,"reference"));
+  writer.write(time,Dune::VTKOptions::binaryappended);
+  writer.clear();
+}
+
 // generate a P1 function and output it
-template<typename GV, typename FEM, typename CON, int q> 
-double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned steps, const std::string &filename, std::ostream &dat)
+template<typename GV, typename FEM, typename CON, typename ReferenceFactory> 
+double electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
+                       const ReferenceFactory &referenceFactory,
+                       double Delta_t, unsigned steps,
+                       const std::string filename, std::ostream &dat)
 {
   // constants and types
   typedef typename GV::Grid::ctype DF;
   typedef typename FEM::Traits::LocalFiniteElementType::Traits::
-    LocalBasisType::Traits::RangeFieldType R;
+    LocalBasisType::Traits::RangeFieldType RangeField;
 
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,
@@ -229,7 +390,7 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
   GFS gfs(gv,fem);
 
   // make constraints map and initialize it from a function
-  typedef typename GFS::template ConstraintsContainer<R>::Type C;
+  typedef typename GFS::template ConstraintsContainer<RangeField>::Type C;
   C cg;
   cg.clear();
   typedef B<GV> BType;
@@ -237,13 +398,23 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
   Dune::PDELab::constraints(b,gfs,cg);
 
   // make coefficent Vector and initialize it from a function
-  typedef typename GFS::template VectorContainer<R>::Type V;
+  typedef typename GFS::template VectorContainer<RangeField>::Type V;
+  typedef Dune::PDELab::DiscreteGridFunctionGlobal<GFS,V> DGF;
+
+  //initial solution for time-step -1
   Dune::SmartPointer<V> xprev(new V(gfs));
   *xprev = 0.0;
-  Dune::PDELab::interpolateGlobal(Init<GV,double>(gv,1),gfs,*xprev);
-  //Dune::PDELab::set_nonconstrained_dofs(cg,1.0,*xprev);
+  Dune::PDELab::interpolateGlobal(*referenceFactory.function(gv, -Delta_t),gfs,*xprev);
+  // actually, it is an error if any constrained dof is != 0, but set it here nevertheless
   Dune::PDELab::set_constrained_dofs(cg,0.0,*xprev);
-  Dune::SmartPointer<V> xcur(xprev);
+
+  //initial solution for time-step 0
+  Dune::SmartPointer<V> xcur(new V(gfs));
+  *xcur = 0.0;
+  Dune::PDELab::interpolateGlobal(*referenceFactory.function(gv, 0),gfs,*xcur);
+  // actually, it is an error if any constrained dof is != 0, but set it here nevertheless
+  Dune::PDELab::set_constrained_dofs(cg,0.0,*xcur);
+
   Dune::SmartPointer<V> xnext(0);
 
   // we're using dirichlet 0 everywhere, simply leave everything as 0
@@ -253,18 +424,18 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
   //Dune::PDELab::set_nonconstrained_dofs(cg,0.0,affineShift);
 
   // make grid function operator
-  typedef ConstFunc<GV,R> MuType;
+  typedef ConstFunc<GV,RangeField> MuType;
   MuType mu(gv,mu0);
-  typedef ConstFunc<GV,R> EpsType;
+  typedef ConstFunc<GV,RangeField> EpsType;
   EpsType eps(gv,eps0);
   typedef Dune::PDELab::Electrodynamic<EpsType,MuType,V> LOP; 
-  LOP lop(eps, mu, Delta_t, q);
+  LOP lop(eps, mu, Delta_t, integrationOrder);
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
     LOP,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
 
   // represent operator as a matrix
-  typedef typename GOS::template MatrixContainer<R>::Type M;
+  typedef typename GOS::template MatrixContainer<RangeField>::Type M;
   M m(gos);
   m = 0;
   // just use some values here
@@ -280,27 +451,17 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
 //   typedef Dune::SuperLU<typename M::BaseT> Solver;
 //   Solver solver(m);
 
-  std::cout << "u[-1]\n" << *xprev << std::endl;
+  Dune::VTKSequenceWriter<GV> vtkwriter(gv,filename,".","", Dune::VTKOptions::nonconforming);
+
+  writeFunction(vtkwriter, DGF(gfs,*xprev), *referenceFactory.function(gv,-Delta_t), -Delta_t);
+//  std::cout << "u[-1]\n" << *xprev << std::endl;
   dat << "-1\t" << (*xprev)[3] << "\n";
+  writeFunction(vtkwriter, DGF(gfs,*xcur), *referenceFactory.function(gv,0), 0);
 //   std::cout << "u[0]\n" << *xcur << std::endl;
   dat << "0\t" << (*xcur)[3] << "\n";
 
   std::cout << "Number of steps " << steps << std::endl;
-  for(unsigned step = 0; step < steps; ++step) {
-    if(filename != "") {
-      // make discrete function object
-      typedef Dune::PDELab::DiscreteGridFunctionGlobal<GFS,V> DGF;
-      DGF dgf(gfs,*xcur);
-
-      std::ostringstream s;
-      s << filename << "." << step;
-
-      // output grid function with VTKWriter
-      Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,0);
-      vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-      vtkwriter.write(s.str(),Dune::VTKOptions::ascii);
-    }
-
+  for(unsigned step = 1; step <= steps; ++step) {
     std::cout << "Doing step " << step << std::endl;
 
 
@@ -328,33 +489,19 @@ double electrodynamic (const GV& gv, const FEM& fem, double Delta_t, unsigned st
               << "  conv_rate:  " << stat.conv_rate << std::endl
               << "  elapsed:    " << stat.elapsed << std::endl;
     if(!stat.converged)
-//       DUNE_THROW(Dune::Exception, "Solver did not converge");
-      return 0;
+      DUNE_THROW(Dune::Exception, "Solver did not converge");
 
     *xnext += affineShift;
 
-//     std::cout << "u[" << step+1 << "]\n" << *xnext << std::endl;
-    dat << step+1 << "\t" << (*xnext)[3] << "\n";
-
+    writeFunction(vtkwriter, DGF(gfs,*xnext), *referenceFactory.function(gv,Delta_t*step), Delta_t*step);
+//     std::cout << "u[" << step << "]\n" << *xnext << std::endl;
+    dat << step << "\t" << (*xnext)[3] << "\n";
 
     xprev = xcur;
     xcur = xnext;
   }
 
-  // make discrete function object
-  typedef Dune::PDELab::DiscreteGridFunctionGlobal<GFS,V> DGF;
-  DGF dgf(gfs,*xcur);
-
-  if(filename != "") {
-    std::ostringstream s;
-    s << filename << "." << steps;
-
-    // output grid function with VTKWriter
-    Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,0);
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-    vtkwriter.write(s.str(),Dune::VTKOptions::ascii);
-  }
-  return 0; //l2difference(gv,g,dgf,4);
+  return l2difference(gv,DGF(gfs,*xcur),*referenceFactory.function(gv, steps*Delta_t),integrationOrder);
 }
 
 template<typename P>
@@ -369,6 +516,45 @@ struct GridPtrTraits<Dune::GridPtr<G> > {
 };
 
 
+template<typename GV>
+void testLevel(const GV &gv, unsigned level, const std::string &prefix, std::ostream &dat,
+               double &error, double &mean_h)
+{
+  typedef Dune::PDELab::EdgeS03DLocalFiniteElementMap<GV, double> FEM;
+  std::ostringstream levelprefix;
+  levelprefix << prefix << ".level" << level;
+
+  std::ofstream dummystream;
+
+  std::cout << "electrodynamic level " << level << std::endl;
+  // time step
+  double Delta_t = stepadjust*smallestEdge(gv)/std::sqrt(double(GV::dimension))/c0;
+  unsigned steps = duration/Delta_t;
+  if(Delta_t*steps < duration) {
+    //adjust such that duration is hit exactly
+    ++steps;
+    Delta_t = duration/steps;
+  }
+  error = electrodynamic
+    <GV,FEM,Dune::PDELab::OverlappingConformingDirichletConstraints,ResonatorSolutionFactory<GV,double> >
+    (gv, FEM(gv), 2,
+     ResonatorSolutionFactory<GV,double>(),
+     Delta_t, steps, levelprefix.str(), dummystream);
+  mean_h = std::pow(1/double(gv.size(0)), 1/double(GV::dimension));
+  std::cout << "L2 error: " 
+            << std::setw(8) << gv.size(0) << " elements, <h>=" 
+            << std::scientific << mean_h << ", error="
+            << std::scientific << error << std::endl;
+  dat << mean_h << "\t" << error << std::endl;
+}
+template<typename GV>
+void testLevel(const GV &gv, unsigned level, const std::string &prefix, std::ostream &dat)
+{
+  double error, mean_h;
+  testLevel(gv, level, prefix, dat, error, mean_h);
+}
+
+
 template<typename Grid>
 void test(Grid &grid, int &result, GnuplotGraph &graph, double conv_limit, std::string name = "")
 {
@@ -380,35 +566,43 @@ void test(Grid &grid, int &result, GnuplotGraph &graph, double conv_limit, std::
             << "Testing Electrodynamic problem with EdgeS03D and " << name << std::endl;
 
   std::string filename = "electrodynamic-" + name;
+  {
+    std::ostringstream plot;
+    plot << "'" << filename << ".dat' title '" << name << "' with linespoints";
+    graph.addPlot(plot.str());
+  }
 
   std::ofstream dat((filename+".dat").c_str());
-  dat << "#h\terror" << std::endl;
+  dat << "#<h>\terror" << std::endl;
   dat.precision(8);
 
-  typedef Dune::PDELab::EdgeS03DLocalFiniteElementMap<typename Grid::LeafGridView, double> FEM;
+  unsigned level = 0;
+  double error0, mean_h0;
+  testLevel(grid.leafView(), level, filename, dat, error0, mean_h0);
 
-  grid.globalRefine(4);
-  std::cout << "electrodynamic level 0" << std::endl;
-  // time step
-  double Delta_t = smallestEdge(grid.leafView())/std::sqrt(double(Grid::dimension))/c0/4;
-  unsigned steps = 10/c0/Delta_t;
-  for(unsigned level = 2; level < 3; ++level) {
-    std::ostringstream plot;
-    plot << "'" << filename << ".dat' index " << level << " using ($1*" << Delta_t << "):2 title 'timestep=" << Delta_t << " steps=" << steps << "' with lines";
-    graph.addPlot(plot.str());
+  while(true) {
+    ++level;
+    grid.globalRefine(1);
+    if(unsigned(grid.leafView().size(0)) >= maxelements) break;
 
-    electrodynamic
-      <GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>
-      (grid.leafView(), FEM(grid.leafView()), Delta_t, steps, filename+"-coarse", dat);
-    dat << "\n\n";
-
-    Delta_t /= 2;
-    steps = 10/c0/Delta_t;
+    if(do_all_levels)
+      testLevel(grid.leafView(), level, filename, dat);
   }
+  
+  double errorf, mean_hf;
+  testLevel(grid.leafView(), level, filename, dat, errorf, mean_hf);
+
+  double total_convergence = std::log(errorf/error0)/std::log(mean_hf/mean_h0);
+  std::cout << "electrodynamic total convergence: "
+            << std::scientific << total_convergence << std::endl;
 
   if(result != 1)
     result = 0;
 
+  if(total_convergence < conv_limit) {
+    std::cout << "Error: electrodynamic total convergence < " << conv_limit << std::endl;
+    result = 1;
+  }
 }
 
 
@@ -418,16 +612,26 @@ void test(Grid &grid, int &result, GnuplotGraph &graph, double conv_limit, std::
 
 int main(int argc, char** argv)
 {
+  Dune::MPIHelper &mpiHelper = Dune::MPIHelper::instance(argc, argv);
+  if(mpiHelper.rank() == 0)
+    std::cout << "Number of processes: " << mpiHelper.size() << std::endl;
+  std::cout << "Rank: " << mpiHelper.rank() << std::endl;
+//   if(mpiHelper.rank() == 1) {
+//     int i = 0;
+//     std::cout << "PID " << getpid() << " ready for attach\n", getpid();
+//     while (0 == i)
+//       sleep(5);
+//   }
   try{
     // 77 is special and means "test was skipped".  Return that if non of the
     // supported grids were available
     int result = 77;
 
     GnuplotGraph graph("testelectrodynamic.gnuplot");
-    graph.addCommand("set xlabel 'time'");
-    graph.addCommand("set ylabel 'E(.5,.5,.5)'");
+    graph.addCommand("set logscale xy");
+    graph.addCommand("set xlabel '<h>'");
+    graph.addCommand("set ylabel 'L2 error'");
     graph.addCommand("set key left top reverse Left");
-    graph.addCommand("set yrange [-10:10]");
     graph.addCommand("");
     graph.addCommand("set terminal postscript eps color solid");
     graph.addCommand("set output 'electrodynamic.eps'");
@@ -441,25 +645,25 @@ int main(int argc, char** argv)
 //          result, graph, conv_limit,    "alberta-tetrahedron");
 //     test(KuhnTriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
 //          result, graph, .7*conv_limit, "alberta-triangulated-cube-6");
-    {
-      Dune::GridPtr<Dune::AlbertaGrid<3, 3> > gridptr("grids/brick.dgf");
-      test(*gridptr,
-           result, graph, conv_limit,    "alu-triangulated-brick-6");
-    }
+//     {
+//       Dune::GridPtr<Dune::AlbertaGrid<3, 3> > gridptr("grids/brick.dgf");
+//       test(*gridptr,
+//            result, graph, conv_limit,    "alu-triangulated-brick-6");
+//     }
 #endif
 
 #ifdef HAVE_ALUGRID
 //     test(UnitTetrahedronMaker         <Dune::ALUSimplexGrid<3, 3> >::create(),
 //          result, graph, conv_limit,    "alu-tetrahedron");
-//     test(KuhnTriangulatedUnitCubeMaker<Dune::ALUSimplexGrid<3, 3> >::create(),
+//     test(*KuhnTriangulatedUnitCubeMaker<Dune::ALUSimplexGrid<3, 3> >::create(),
 //          result, graph, conv_limit,    "alu-triangulated-cube-6");
 #endif // HAVE_ALUGRID
 
 #ifdef HAVE_UG
 //     test(UnitTetrahedronMaker         <Dune::UGGrid<3>            >::create(),
 //          result, graph, conv_limit,    "ug-tetrahedron");
-//     test(KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
-//          result, graph, conv_limit,    "ug-triangulated-cube-6");
+    test(*KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
+         result, graph, conv_limit,    "ug-triangulated-cube-6");
 #endif // HAVE_ALBERTA
 	return result;
   }

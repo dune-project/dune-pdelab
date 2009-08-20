@@ -113,10 +113,12 @@ testelectrodynamic_CPPFLAGS = $(AM_CPPFLAGS)				\
 testelectrodynamic_LDADD =					\
 	$(ALBERTA_LDFLAGS) -lalberta_3d $(ALBERTA_BASE_LIBS)	\
 	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)
-MOSTLYCLEANFILES +=				\
-	electrodynamic-*.vtu			\
-	electrodynamic-*.dat			\
-	electrodynamic.eps			\
+MOSTLYCLEANFILES +=							\
+	electrodynamic-ug-triangulated-cube-6.dat			\
+	electrodynamic-ug-triangulated-cube-6.level*.pvd		\
+	s0001:electrodynamic-ug-triangulated-cube-6.level*-*.pvtu	\
+	s0001:p0000:electrodynamic-ug-triangulated-cube-6.level*-*.vtu	\
+	testelectrodynamic						\
 	testelectrodynamic.gnuplot
 
 NORMALTESTS += testelectrostatic
