@@ -2,6 +2,7 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_HH
 
+#include <cstddef>
 #include<vector>
 #include<set>
 #include<map>
@@ -299,7 +300,7 @@ namespace Dune {
 		  lc = lfe.localCoefficients();
 		global.resize(lc.size());
 
-		for (int i=0; i<lc.size(); ++i)
+		for (std::size_t i=0; i<lc.size(); ++i)
 		  {
 			// get geometry type of subentity 
 			Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
@@ -388,7 +389,7 @@ namespace Dune {
 			  lc = (plfem->find(*it)).localCoefficients();
 
 			// insert geometry type of all subentities into set
-			for (int i=0; i<lc.size(); ++i)
+			for (std::size_t i=0; i<lc.size(); ++i)
 			  {
 				Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
 				  ::general(it->type()).type(lc.localKey(i).subEntity(),lc.localKey(i).codim());
@@ -428,7 +429,7 @@ namespace Dune {
 			nlocal = std::max(nlocal,static_cast<typename Traits::SizeType>(lc.size()));
 
 			// compute maximum size for each subentity
-			for (int i=0; i<lc.size(); ++i)
+			for (std::size_t i=0; i<lc.size(); ++i)
 			  {
 				Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
 				  ::general(it->type()).type(lc.localKey(i).subEntity(),lc.localKey(i).codim());
