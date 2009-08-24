@@ -67,7 +67,7 @@ public:
   }
 
   //! get a reference to the GridView
-  inline const GV& getGridView ()
+  inline const GV& getGridView () const
   {
     return gv;
   }
@@ -178,7 +178,7 @@ public:
   }
 
   //! get a reference to the GridView
-  inline const GV& getGridView ()
+  inline const GV& getGridView () const
   {
     return gv;
   }

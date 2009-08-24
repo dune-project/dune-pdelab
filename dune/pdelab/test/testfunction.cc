@@ -111,7 +111,7 @@ public:
 	evaluate(e.geometry().global(x),y);
   }
 
-  inline const G& getGridView ()
+  inline const G& getGridView () const
   {
 	return g;
   }
