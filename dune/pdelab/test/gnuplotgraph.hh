@@ -9,10 +9,11 @@
 class GnuplotGraph
 {
 public:
-  GnuplotGraph(const std::string &filename_)
+  GnuplotGraph(const std::string &prefix)
     : mode(command)
-    , filename(filename_)
+    , filename(prefix+".gnuplot")
     , stream(filename.c_str())
+    , datname_(prefix+".dat")
   {}
 
   void addCommand(const std::string &cmd)
@@ -32,9 +33,20 @@ public:
   {
     commandMode();
     stream.close();
+    datstream.close();
     std::ostringstream command;
     command << "gnuplot " << filename;
     std::system(command.str().c_str());
+  }
+
+  const std::string &datname() const {
+    return datname_;
+  }
+
+  std::ostream &dat() {
+    if(!datstream.is_open())
+      datstream.open(datname_.c_str());
+    return datstream;
   }
 
 private:
@@ -67,6 +79,8 @@ private:
   Mode mode;
   std::string filename;
   std::ofstream stream;
+  std::string datname_;
+  std::ofstream datstream;
   std::string plotDelim;
 };
   

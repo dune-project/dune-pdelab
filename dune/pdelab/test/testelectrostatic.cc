@@ -265,13 +265,10 @@ void test(Dune::SmartPointer<Grid> grid, int &result, GnuplotGraph &graph, doubl
             << "Testing Electrostatic problem with EdgeS03D and " << name << std::endl;
 
   std::string filename = "electrostatic-" + name;
-  std::ostringstream plot;
-  plot << "'" << filename << ".dat' title '" << name << "' with linespoints";
-  graph.addPlot(plot.str());
+  graph.addPlot("'" + graph.datname() + "' title '" + name + "' with linespoints");
 
-  std::ofstream dat((filename+".dat").c_str());
-  dat << "#h\terror" << std::endl;
-  dat.precision(8);
+  graph.dat() << "#h\terror" << std::endl;
+  graph.dat().precision(8);
 
   typedef Dune::PDELab::EdgeS03DLocalFiniteElementMap<typename Grid::LeafGridView, double> FEM;
 
@@ -284,7 +281,7 @@ void test(Dune::SmartPointer<Grid> grid, int &result, GnuplotGraph &graph, doubl
             << std::setw(8) << grid->leafView().size(0) << " elements, <h>=" 
             << std::scientific << mean_h0 << ", error="
             << std::scientific << error0 << std::endl;
-  dat << mean_h0 << "\t" << error0 << std::endl;
+  graph.dat() << mean_h0 << "\t" << error0 << std::endl;
 
 //   if(Dune::FloatCmp::eq(error0, 0.0)) {
 //     std::cerr << "Error: The analytic function was perfectly interpolated." << std::endl
@@ -311,7 +308,7 @@ void test(Dune::SmartPointer<Grid> grid, int &result, GnuplotGraph &graph, doubl
                 << std::setw(8) << grid->leafView().size(0) << " elements, <h>=" 
                 << std::scientific << mean_h << ", error="
                 << std::scientific << error << std::endl;
-      dat << mean_h << "\t" << error << std::endl;
+      graph.dat() << mean_h << "\t" << error << std::endl;
     }
   }
 
@@ -324,7 +321,7 @@ void test(Dune::SmartPointer<Grid> grid, int &result, GnuplotGraph &graph, doubl
             << std::setw(8) << grid->leafView().size(0) << " elements, <h>=" 
             << std::scientific << mean_hf << ", error="
             << std::scientific << errorf << std::endl;
-  dat << mean_hf << "\t" << errorf << std::endl;
+  graph.dat() << mean_hf << "\t" << errorf << std::endl;
 
   double total_convergence = std::log(errorf/error0)/std::log(mean_hf/mean_h0);
   std::cout << "electrostatic total convergence: "
@@ -351,7 +348,7 @@ int main(int argc, char** argv)
     // supported grids were available
     int result = 77;
 
-    GnuplotGraph graph("testelectrostatic.gnuplot");
+    GnuplotGraph graph("testelectrostatic");
     graph.addCommand("set logscale xy");
     graph.addCommand("set xlabel '<h>'");
     graph.addCommand("set ylabel 'L2 error'");
