@@ -10,6 +10,8 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/fmatrix.hh>
 
+#include <dune/grid/utility/hierarchicsearch.hh>
+
 #include"countingptr.hh"
 #include"multitypetree.hh"
 #include"cpstoragepolicy.hh"
@@ -233,6 +235,44 @@ namespace Dune {
 	  const G& g;
 	  const T& t;
 	};
+
+	/** \brief make a Function from a GridFunction
+     *
+     *  \tparam GF The GridFunction type
+     */
+	template<typename GF>
+	class GridFunctionToFunctionAdapter
+      : public FunctionInterface<typename GF::Traits, GridFunctionToFunctionAdapter<GF> >
+	{
+	public:
+	  //! \brief Export type traits
+	  typedef typename GF::Traits Traits;
+
+      //! make a GridFunctionToFunctionAdapter
+      GridFunctionToFunctionAdapter(const GF &gf_)
+        : gf(gf_)
+        , hsearch(gf.getGridView().grid(), gf.getGridView().indexSet())
+      { }
+
+	  /** \brief Evaluate all basis function at given position
+
+		  Evaluates all shape functions at the given position and returns 
+		  these values in a vector.
+	  */
+	  inline void evaluate (const typename Traits::DomainType& x,
+							typename Traits::RangeType& y) const
+	  {
+        typename Traits::GridViewType::Grid::Traits::template Codim<0>::EntityPointer
+          ep = hsearch.findEntity(x);
+        gf.evaluate(*ep, ep->geometry().local(x), y);
+	  }
+
+	private:
+      const GF &gf;
+      const Dune::HierarchicSearch<typename Traits::GridViewType::Grid,
+                                   typename Traits::GridViewType::IndexSet> hsearch;
+	};
+
 
 	/** \brief make a Function in local coordinates from a Function in global coordinates
      *
