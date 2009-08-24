@@ -163,17 +163,21 @@ testgridfunctionspace_LDADD = 			\
 NORMALTESTS += testlaplacedirichletccfv
 testlaplacedirichletccfv_SOURCES = testlaplacedirichletccfv.cc
 testlaplacedirichletccfv_CPPFLAGS = $(AM_CPPFLAGS)	\
-	$(ALBERTA_CPPFLAGS)
+	$(ALBERTA_CPPFLAGS)				\
+	$(SUPERLU_CPPFLAGS)
 testlaplacedirichletccfv_LDADD =		\
-	$(ALBERTA_LDFLAGS) $(ALBERTA_LIBS)
+	$(ALBERTA_LDFLAGS) $(ALBERTA_LIBS)	\
+	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)
 MOSTLYCLEANFILES += testlaplacedirichletccfv.vtu
 
 NORMALTESTS += testlaplacedirichletp12d
 testlaplacedirichletp12d_SOURCES = testlaplacedirichletp12d.cc
 testlaplacedirichletp12d_CPPFLAGS = $(AM_CPPFLAGS)	\
-	$(ALBERTA_CPPFLAGS)
+	$(ALBERTA_CPPFLAGS)				\
+	$(SUPERLU_CPPFLAGS)
 testlaplacedirichletp12d_LDADD =		\
-	$(ALBERTA_LDFLAGS) $(ALBERTA_LIBS)
+	$(ALBERTA_LDFLAGS) $(ALBERTA_LIBS)	\
+	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)
 MOSTLYCLEANFILES += testlaplacedirichletp12d.vtu
 
 NORMALTESTS += testlocalfunctionspace
