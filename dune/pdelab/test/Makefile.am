@@ -10,12 +10,15 @@ TESTS = $(NORMALTESTS)
 # programs just to build when "make check" is used
 check_PROGRAMS = $(NORMALTESTS)
 
-AM_CPPFLAGS = @AM_CPPFLAGS@			\
-	$(ALUGRID_CPPFLAGS)			\
-	$(AMIRAMESH_CPPFLAGS)			\
-	$(DUNE_CPPFLAGS)			\
-	$(MPI_CPPFLAGS)				\
-	$(UG_CPPFLAGS)
+# UG flags must be in front of ALUGrid flags, else when
+# dune/grid/uggrid/ugincludes.hh does #include "parallel.h",
+# ALUGrid-1.14-inst/include/serial/parallel.h will be included...
+AM_CPPFLAGS = @AM_CPPFLAGS@				\
+	$(UG_CPPFLAGS)					\
+	$(ALUGRID_CPPFLAGS)				\
+	$(AMIRAMESH_CPPFLAGS)				\
+	$(DUNE_CPPFLAGS)				\
+	$(MPI_CPPFLAGS)
 LIBS = @LIBS@					\
 	$(ALUGRID_LDFLAGS) $(ALUGRID_LIBS)	\
 	$(AMIRAMESH_LDFLAGS) $(AMIRAMESH_LIBS)	\
