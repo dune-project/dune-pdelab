@@ -4,6 +4,7 @@
 
 #include <iostream>
 
+#include <dune/common/deprecated.hh>
 #include <dune/common/static_assert.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/typetraits.hh>
@@ -120,7 +121,15 @@ namespace Dune {
 	  }
 
       //! get a reference to the GridView
+      /* \note This is deprecated in favor of "getGridView() const" */
+      DUNE_DEPRECATED
 	  inline const typename Traits::GridViewType& getGridView ()
+	  {
+		return asImp().getGridView();
+	  }
+
+      //! get a reference to the GridView
+	  inline const typename Traits::GridViewType& getGridView () const
 	  {
 		return asImp().getGridView();
 	  }
@@ -170,7 +179,7 @@ namespace Dune {
 	  }
 
       //! get a reference to the GridView
-	  inline const typename Traits::GridViewType& getGridView ()
+	  inline const typename Traits::GridViewType& getGridView () const
 	  {
 		return asImp().getGridView();
 	  }
@@ -226,7 +235,7 @@ namespace Dune {
 		t.evaluate(e.geometry().global(x),y);
 	  }
 
-	  inline const typename Traits::GridViewType& getGridView ()
+	  inline const typename Traits::GridViewType& getGridView () const
 	  {
 		return g;
 	  }
@@ -421,7 +430,7 @@ namespace Dune {
 	  }
 
       //! get a reference to the GridView
-	  inline const typename Traits::GridViewType& getGridView ()
+	  inline const typename Traits::GridViewType& getGridView () const
 	  {
 		return t.getGridView();
 	  }
@@ -960,7 +969,7 @@ namespace Dune {
 		asImp().evaluateGlobal(e.geometry().global(x),y);
 	  }
 
-	  inline const typename Traits::GridViewType& getGridView ()
+	  inline const typename Traits::GridViewType& getGridView () const
 	  {
 		return g;
 	  }

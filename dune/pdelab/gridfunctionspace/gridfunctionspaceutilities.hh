@@ -86,7 +86,7 @@ namespace Dune {
  	  }
 
       //! get a reference to the GridView
-	  inline const typename Traits::GridViewType& getGridView ()
+	  inline const typename Traits::GridViewType& getGridView () const
 	  {
 		return pgfs->gridview();
 	  }
@@ -161,7 +161,7 @@ namespace Dune {
  	  }
 
       //! get a reference to the GridView
-	  inline const typename Traits::GridViewType& getGridView ()
+	  inline const typename Traits::GridViewType& getGridView () const
 	  {
 		return pgfs->gridview();
 	  }
@@ -245,7 +245,7 @@ namespace Dune {
  	  }
 
       //! get a reference to the GridView
-	  inline const typename Traits::GridViewType& getGridView ()
+	  inline const typename Traits::GridViewType& getGridView () const
 	  {
 		return pgfs->gridview();
 	  }
@@ -333,7 +333,7 @@ namespace Dune {
  	  }
 
       //! get a reference to the GridView
-	  inline const typename Traits::GridViewType& getGridView ()
+	  inline const typename Traits::GridViewType& getGridView () const
 	  {
 		return pgfs->gridview();
 	  }
@@ -410,7 +410,7 @@ namespace Dune {
 	  }
 
       //! get a reference to the GridView
-	  inline const typename Traits::GridViewType& getGridView ()
+	  inline const typename Traits::GridViewType& getGridView () const
 	  {
 		return pgfs->gridview();
 	  }
@@ -488,7 +488,7 @@ namespace Dune {
 	  }
 
       //! get a reference to the GridView
-	  inline const typename Traits::GridViewType& getGridView ()
+	  inline const typename Traits::GridViewType& getGridView () const
 	  {
 		return pgfs->gridview();
 	  }
@@ -567,7 +567,7 @@ namespace Dune {
 	  }
 
       //! get a reference to the GridView
-	  inline const typename Traits::GridViewType& getGridView ()
+	  inline const typename Traits::GridViewType& getGridView () const
 	  {
 		return pgfs->gridview();
 	  }
