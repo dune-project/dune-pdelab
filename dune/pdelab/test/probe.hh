@@ -130,6 +130,10 @@ namespace Dune {
       template<typename GV>
       struct Traits : public Base::template Traits<GV> {};
 
+      LevelProbeFactoryPair(SmartPointer<LPF1> lpf1_, SmartPointer<LPF2> lpf2_)
+        : lpf1(lpf1_), lpf2(lpf2_)
+      { }
+
       template<typename GV>
       SmartPointer<typename Traits<GV>::TimeStepProbe>
       timeStepProbe(const GV &gv, unsigned level)
@@ -171,6 +175,10 @@ namespace Dune {
     public:
       template<typename G>
       struct Traits : public Base::template Traits<G> {};
+
+      GridProbeFactoryPair(SmartPointer<GPF1> &gpf1_, SmartPointer<GPF2> &gpf2_)
+        : gpf1(gpf1_), gpf2(gpf2_)
+      { }
 
       template<typename G>
       SmartPointer<typename Traits<G>::LevelProbeFactory>
@@ -308,9 +316,6 @@ namespace Dune {
         graph.addCommand("set terminal postscript eps color solid");
         graph.addCommand("set output '"+fileprefix+".eps'");
         graph.addCommand("");
-        graph.addCommand("set logscale xy");
-        graph.addCommand("set xlabel '<h>'");
-        graph.addCommand("set ylabel 'L2 error'");
         graph.addCommand("set key left top reverse Left");
         graph.addCommand("");
       }
