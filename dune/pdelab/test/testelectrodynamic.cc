@@ -49,6 +49,7 @@
 #include "gnuplotgraph.hh"
 #include "gridexamples.hh"
 #include "l2difference.hh"
+#include "probe.hh"
 
 
 //===============================================================
@@ -85,22 +86,30 @@ const double conv_limit = 0.85;
 
 // stop refining after the grid has more than this many elements (that means
 // in 3D that the fine grid may have up to 8 times as may elements)
-const unsigned maxelements = 2<<8;
-
-// whether to measure the error after every refinement, or just once at the
-// beginning and once at the end
-const bool measure_after_every_refinement = false;
+const unsigned maxelements = 2<<7;
 
 // multiplier for the stepsize obtained from the FDTD criterion
 const double stepadjust = 0.25;
 
 // how long to run the simulation
-const double duration = 5/c0;
+const double duration = 1/c0;
 
 // whether to run the check for all levels of refinement.  If false, will run
 // the check only for the first and the last level.  Running the check for all
 // levels is useful when debugging.
 const bool do_all_levels = true;
+
+// Order of quadrature rules to use
+const unsigned int quadrature_order = 3;
+
+// Whether to write computed and exact solution as vtk files after each step
+const bool do_vtk_output = false;
+
+// where to place a probe to measure the E-field
+const double probe_location[] = {0.5, 0.5, 0.5};
+
+// probe_location as FieldVector, initialized from probe_location in main()
+Dune::FieldVector<double, 3> probe_location_fv;
 
 //
 //  CODE
@@ -167,7 +176,7 @@ public:
   }
 
   //! get a reference to the GridView
-  inline const GV& getGridView ()
+  inline const GV& getGridView () const
   {
     return gv;
   }
@@ -363,21 +372,24 @@ private:
 //===============================================================
 
 template<typename Writer, typename Solution, typename Reference>
-void writeFunction(Writer &writer, const Solution &solution, const Reference &reference,
+void writeFunction(Dune::SmartPointer<Writer> &writer, const Solution &solution, const Reference &reference,
                    double time)
 {
-  writer.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<Solution>(solution,"solution"));
-  writer.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<Reference>(reference,"reference"));
-  writer.write(time,Dune::VTKOptions::binaryappended);
-  writer.clear();
+  if(&*writer != 0) {
+    writer->addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<Solution>(solution,"solution"));
+    writer->addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<Reference>(reference,"reference"));
+    writer->write(time,Dune::VTKOptions::binaryappended);
+    writer->clear();
+  }
 }
 
 // generate a P1 function and output it
-template<typename GV, typename FEM, typename CON, typename ReferenceFactory> 
+template<typename GV, typename FEM, typename CON, typename ReferenceFactory,
+         typename TSP, typename EP> 
 double electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
                        const ReferenceFactory &referenceFactory,
                        double Delta_t, unsigned steps,
-                       const std::string filename, std::ostream &dat)
+                       const std::string filename, TSP &tsp, EP &ep)
 {
   // constants and types
   typedef typename GV::Grid::ctype DF;
@@ -451,14 +463,18 @@ double electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
 //   typedef Dune::SuperLU<typename M::BaseT> Solver;
 //   Solver solver(m);
 
-  Dune::VTKSequenceWriter<GV> vtkwriter(gv,filename,".","", Dune::VTKOptions::nonconforming);
+  Dune::SmartPointer<Dune::VTKSequenceWriter<GV> > vtkwriter(0);
+  if(do_vtk_output)
+    vtkwriter = new Dune::VTKSequenceWriter<GV>(gv,filename,".","", Dune::VTKOptions::nonconforming);
 
   writeFunction(vtkwriter, DGF(gfs,*xprev), *referenceFactory.function(gv,-Delta_t), -Delta_t);
+  tsp.measure(DGF(gfs, *xprev), -Delta_t);
 //  std::cout << "u[-1]\n" << *xprev << std::endl;
-  dat << "-1\t" << (*xprev)[3] << "\n";
   writeFunction(vtkwriter, DGF(gfs,*xcur), *referenceFactory.function(gv,0), 0);
+  tsp.measure(DGF(gfs, *xcur), 0);
 //   std::cout << "u[0]\n" << *xcur << std::endl;
-  dat << "0\t" << (*xcur)[3] << "\n";
+
+  double errsum = 0;
 
   std::cout << "Number of steps " << steps << std::endl;
   for(unsigned step = 1; step <= steps; ++step) {
@@ -493,15 +509,18 @@ double electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
 
     *xnext += affineShift;
 
+    errsum += l2difference2(gv,DGF(gfs,*xnext),*referenceFactory.function(gv, steps*Delta_t),integrationOrder);
     writeFunction(vtkwriter, DGF(gfs,*xnext), *referenceFactory.function(gv,Delta_t*step), Delta_t*step);
+    tsp.measure(DGF(gfs, *xnext), Delta_t*step);
 //     std::cout << "u[" << step << "]\n" << *xnext << std::endl;
-    dat << step << "\t" << (*xnext)[3] << "\n";
 
     xprev = xcur;
     xcur = xnext;
   }
+  
+  ep.measure(DGF(gfs, *xcur), Delta_t*steps);
 
-  return l2difference(gv,DGF(gfs,*xcur),*referenceFactory.function(gv, steps*Delta_t),integrationOrder);
+  return std::sqrt(errsum/steps);
 }
 
 template<typename P>
@@ -516,15 +535,18 @@ struct GridPtrTraits<Dune::GridPtr<G> > {
 };
 
 
-template<typename GV>
+template<typename GV, typename LPF>
 void testLevel(const GV &gv, unsigned level, const std::string &prefix, std::ostream &dat,
-               double &error, double &mean_h)
+               LPF &lpf, double &error, double &mean_h)
 {
   typedef Dune::PDELab::EdgeS03DLocalFiniteElementMap<GV, double> FEM;
   std::ostringstream levelprefix;
   levelprefix << prefix << ".level" << level;
 
-  std::ofstream dummystream;
+  typedef typename LPF::template Traits<GV>::TimeStepProbe TSP;
+  typedef typename LPF::template Traits<GV>::EndProbe EP;
+  Dune::SmartPointer<TSP> tsp(lpf.timeStepProbe(gv, level));
+  Dune::SmartPointer<EP> ep(lpf.endProbe(gv, level));
 
   std::cout << "electrodynamic level " << level << std::endl;
   // time step
@@ -536,10 +558,10 @@ void testLevel(const GV &gv, unsigned level, const std::string &prefix, std::ost
     Delta_t = duration/steps;
   }
   error = electrodynamic
-    <GV,FEM,Dune::PDELab::OverlappingConformingDirichletConstraints,ResonatorSolutionFactory<GV,double> >
-    (gv, FEM(gv), 2,
+    <GV,FEM,Dune::PDELab::OverlappingConformingDirichletConstraints,ResonatorSolutionFactory<GV,double>,TSP,EP>
+    (gv, FEM(gv), quadrature_order,
      ResonatorSolutionFactory<GV,double>(),
-     Delta_t, steps, levelprefix.str(), dummystream);
+     Delta_t, steps, levelprefix.str(), *tsp, *ep);
   mean_h = std::pow(1/double(gv.size(0)), 1/double(GV::dimension));
   std::cout << "L2 error: " 
             << std::setw(8) << gv.size(0) << " elements, <h>=" 
@@ -547,38 +569,38 @@ void testLevel(const GV &gv, unsigned level, const std::string &prefix, std::ost
             << std::scientific << error << std::endl;
   dat << mean_h << "\t" << error << std::endl;
 }
-template<typename GV>
-void testLevel(const GV &gv, unsigned level, const std::string &prefix, std::ostream &dat)
+template<typename GV, typename LPF>
+void testLevel(const GV &gv, unsigned level, const std::string &prefix, std::ostream &dat,
+               LPF &lpf)
 {
   double error, mean_h;
-  testLevel(gv, level, prefix, dat, error, mean_h);
+  testLevel(gv, level, prefix, dat, lpf, error, mean_h);
 }
 
 
-template<typename Grid>
-void test(Grid &grid, int &result, GnuplotGraph &graph, double conv_limit, std::string name = "")
+template<typename Grid, typename GPF>
+void test(Grid &grid, int &result, GnuplotGraph &graph, GPF &gpf,
+          double conv_limit, std::string name = "")
 {
   typedef typename Grid::LeafGridView GV;
 
   if(name == "") name = grid.name();
 
+  typedef typename GPF::template Traits<Grid>::LevelProbeFactory LPF;
+  Dune::SmartPointer<LPF> lpf(gpf.levelProbeFactory(grid, name));
+
   std::cout << std::endl
             << "Testing Electrodynamic problem with EdgeS03D and " << name << std::endl;
 
   std::string filename = "electrodynamic-" + name;
-  {
-    std::ostringstream plot;
-    plot << "'" << filename << ".dat' title '" << name << "' with linespoints";
-    graph.addPlot(plot.str());
-  }
+  graph.addPlot("'" + graph.datname() + "' title '" + name + "' with linespoints");
 
-  std::ofstream dat((filename+".dat").c_str());
-  dat << "#<h>\terror" << std::endl;
-  dat.precision(8);
+  graph.dat() << "#<h>\terror" << std::endl;
+  graph.dat().precision(8);
 
   unsigned level = 0;
   double error0, mean_h0;
-  testLevel(grid.leafView(), level, filename, dat, error0, mean_h0);
+  testLevel(grid.leafView(), level, filename, graph.dat(), *lpf, error0, mean_h0);
 
   while(true) {
     ++level;
@@ -586,11 +608,11 @@ void test(Grid &grid, int &result, GnuplotGraph &graph, double conv_limit, std::
     if(unsigned(grid.leafView().size(0)) >= maxelements) break;
 
     if(do_all_levels)
-      testLevel(grid.leafView(), level, filename, dat);
+      testLevel(grid.leafView(), level, filename, graph.dat(), *lpf);
   }
   
   double errorf, mean_hf;
-  testLevel(grid.leafView(), level, filename, dat, errorf, mean_hf);
+  testLevel(grid.leafView(), level, filename, graph.dat(), *lpf, errorf, mean_hf);
 
   double total_convergence = std::log(errorf/error0)/std::log(mean_hf/mean_h0);
   std::cout << "electrodynamic total convergence: "
@@ -622,12 +644,19 @@ int main(int argc, char** argv)
 //     while (0 == i)
 //       sleep(5);
 //   }
+
   try{
     // 77 is special and means "test was skipped".  Return that if non of the
     // supported grids were available
     int result = 77;
 
-    GnuplotGraph graph("testelectrodynamic.gnuplot");
+    // Initialize probe_location_fv from probe_location
+    for(unsigned i = 0; i < 3; ++i)
+      probe_location_fv[i] = probe_location[i];
+    typedef Dune::PDELab::GnuplotGridProbeFactory<Dune::FieldVector<double, 3> > PF1;
+    Dune::SmartPointer<PF1> pf1 = new PF1("electrodynamic-probe", probe_location_fv);
+      
+    GnuplotGraph graph("testelectrodynamic");
     graph.addCommand("set logscale xy");
     graph.addCommand("set xlabel '<h>'");
     graph.addCommand("set ylabel 'L2 error'");
@@ -641,9 +670,9 @@ int main(int argc, char** argv)
 #if (ALBERTA_DIM != 3)
 #error ALBERTA_DIM is not set to 3 -- please check the Makefile.am
 #endif
-//     test(UnitTetrahedronMaker         <Dune::AlbertaGrid<3, 3>    >::create(),
+//     test(*UnitTetrahedronMaker         <Dune::AlbertaGrid<3, 3>    >::create(),
 //          result, graph, conv_limit,    "alberta-tetrahedron");
-//     test(KuhnTriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
+//     test(*KuhnTriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
 //          result, graph, .7*conv_limit, "alberta-triangulated-cube-6");
 //     {
 //       Dune::GridPtr<Dune::AlbertaGrid<3, 3> > gridptr("grids/brick.dgf");
@@ -653,17 +682,17 @@ int main(int argc, char** argv)
 #endif
 
 #ifdef HAVE_ALUGRID
-//     test(UnitTetrahedronMaker         <Dune::ALUSimplexGrid<3, 3> >::create(),
+//     test(*UnitTetrahedronMaker         <Dune::ALUSimplexGrid<3, 3> >::create(),
 //          result, graph, conv_limit,    "alu-tetrahedron");
 //     test(*KuhnTriangulatedUnitCubeMaker<Dune::ALUSimplexGrid<3, 3> >::create(),
 //          result, graph, conv_limit,    "alu-triangulated-cube-6");
 #endif // HAVE_ALUGRID
 
 #ifdef HAVE_UG
-//     test(UnitTetrahedronMaker         <Dune::UGGrid<3>            >::create(),
+//     test(*UnitTetrahedronMaker         <Dune::UGGrid<3>            >::create(),
 //          result, graph, conv_limit,    "ug-tetrahedron");
     test(*KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
-         result, graph, conv_limit,    "ug-triangulated-cube-6");
+         result, graph, *pf1, conv_limit,    "ug-triangulated-cube-6");
 #endif // HAVE_ALBERTA
 	return result;
   }
