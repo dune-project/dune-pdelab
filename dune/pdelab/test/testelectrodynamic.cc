@@ -469,6 +469,38 @@ void test(Grid &grid, int &result, GPF &gpf, EGPF &egpf,
 // Main program with grid setup
 //===============================================================
 
+template<typename GPF, typename EGPF>
+void testAll(int &result, GPF &gpf, EGPF &egpf) {
+#ifdef HAVE_ALBERTA
+#if (ALBERTA_DIM != 3)
+#error ALBERTA_DIM is not set to 3 -- please check the Makefile.am
+#endif
+//   test(*UnitTetrahedronMaker         <Dune::AlbertaGrid<3, 3>    >::create(),
+//        result, graph, conv_limit,    "alberta-tetrahedron");
+//   test(*KuhnTriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
+//        result, graph, .7*conv_limit, "alberta-triangulated-cube-6");
+//   {
+//     Dune::GridPtr<Dune::AlbertaGrid<3, 3> > gridptr("grids/brick.dgf");
+//     test(*gridptr,
+//          result, graph, conv_limit,    "alu-triangulated-brick-6");
+//   }
+#endif
+
+#ifdef HAVE_ALUGRID
+//   test(*UnitTetrahedronMaker         <Dune::ALUSimplexGrid<3, 3> >::create(),
+//        result, graph, conv_limit,    "alu-tetrahedron");
+//   test(*KuhnTriangulatedUnitCubeMaker<Dune::ALUSimplexGrid<3, 3> >::create(),
+//        result, graph, conv_limit,    "alu-triangulated-cube-6");
+#endif // HAVE_ALUGRID
+
+#ifdef HAVE_UG
+//   test(*UnitTetrahedronMaker         <Dune::UGGrid<3>            >::create(),
+//        result, graph, conv_limit,    "ug-tetrahedron");
+  test(*KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
+       result, gpf, egpf, conv_limit,    "ug-triangulated-cube-6");
+#endif // HAVE_ALBERTA
+}
+
 int main(int argc, char** argv)
 {
   Dune::MPIHelper &mpiHelper = Dune::MPIHelper::instance(argc, argv);
@@ -490,49 +522,26 @@ int main(int argc, char** argv)
     // Initialize probe_location_fv from probe_location
     for(unsigned i = 0; i < 3; ++i)
       probe_location_fv[i] = probe_location[i];
-    typedef Dune::PDELab::GnuplotGridProbeFactory<Dune::FieldVector<double, 3> > PF1;
-    Dune::SmartPointer<PF1> pf1 = new PF1("electrodynamic-probe", probe_location_fv);
+    typedef Dune::PDELab::GnuplotGridProbeFactory<Dune::FieldVector<double, 3> > PointPF;
+    Dune::SmartPointer<PointPF>
+      pointPF(new PointPF("electrodynamic-probe", probe_location_fv));
 
-    typedef ResonatorVTKGridProbeFactory<double> PF2;
-    Dune::SmartPointer<PF2> pf2 = new PF2("electrodynamic");
+    typedef ResonatorVTKGridProbeFactory<double> VTKOutput;
+    Dune::SmartPointer<VTKOutput>
+      vtkOutput(new VTKOutput("electrodynamic"));
 
-    typedef ResonatorGlobalErrorGridProbeFactory<double> PF3;
-    Dune::SmartPointer<PF3> pf3 = new PF3("electrodynamic-globalerror", quadrature_order);
+    typedef ResonatorGlobalErrorGridProbeFactory<double> GlobalError;
+    Dune::SmartPointer<GlobalError>
+      globalError(new GlobalError("electrodynamic-globalerror", quadrature_order));
 
-    typedef Dune::PDELab::GridProbeFactoryListTraits<PF1, PF2>::GPF PFList;
-    Dune::SmartPointer<PFList> pflist
-      = makeGridProbeFactoryList(pf1, pf2);
+    typedef ResonatorL2ErrorGridProbeFactory L2Error;
+    Dune::SmartPointer<L2Error>
+      l2Error(new L2Error("electrodynamic-l2error", quadrature_order));
 
-    Dune::SmartPointer<PF3> &epf = pf3;
-      
-#ifdef HAVE_ALBERTA
-#if (ALBERTA_DIM != 3)
-#error ALBERTA_DIM is not set to 3 -- please check the Makefile.am
-#endif
-//     test(*UnitTetrahedronMaker         <Dune::AlbertaGrid<3, 3>    >::create(),
-//          result, graph, conv_limit,    "alberta-tetrahedron");
-//     test(*KuhnTriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
-//          result, graph, .7*conv_limit, "alberta-triangulated-cube-6");
-//     {
-//       Dune::GridPtr<Dune::AlbertaGrid<3, 3> > gridptr("grids/brick.dgf");
-//       test(*gridptr,
-//            result, graph, conv_limit,    "alu-triangulated-brick-6");
-//     }
-#endif
+    testAll(result,
+            *makeGridProbeFactoryList(pointPF, vtkOutput, globalError),
+            *l2Error);
 
-#ifdef HAVE_ALUGRID
-//     test(*UnitTetrahedronMaker         <Dune::ALUSimplexGrid<3, 3> >::create(),
-//          result, graph, conv_limit,    "alu-tetrahedron");
-//     test(*KuhnTriangulatedUnitCubeMaker<Dune::ALUSimplexGrid<3, 3> >::create(),
-//          result, graph, conv_limit,    "alu-triangulated-cube-6");
-#endif // HAVE_ALUGRID
-
-#ifdef HAVE_UG
-//     test(*UnitTetrahedronMaker         <Dune::UGGrid<3>            >::create(),
-//          result, graph, conv_limit,    "ug-tetrahedron");
-    test(*KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
-         result, *pflist, *epf, conv_limit,    "ug-triangulated-cube-6");
-#endif // HAVE_ALBERTA
 	return result;
   }
   catch (Dune::Exception &e){

@@ -337,6 +337,122 @@ public:
     lastplot = plotconstruct.str();
     return new typename Traits<G>::LevelProbeFactory(graph.dat(), integrationOrder);
   }
+};
+
+//
+// L2ErrorProbe
+//
+
+class ResonatorL2ErrorProbe
+  : public Dune::PDELab::DummyProbe
+{
+  std::ostream &dat;
+  unsigned integrationOrder;
+
+  const double mean_h;
+  double error;
+
+public:
+  template<typename GV>
+  ResonatorL2ErrorProbe(std::ostream &dat_, unsigned integrationOrder_, const GV &gv)
+    : dat(dat_), integrationOrder(integrationOrder_)
+    , mean_h(std::pow(1.0/gv.size(0), 1.0/GV::dimension)), error(0)
+  { }
+
+  double get_error() const
+  { return error; }
+
+  template<typename GF>
+  void measureFinal(const GF &gf, double time = 0) {
+    typedef ResonatorSolutionFactory<
+      typename GF::Traits::GridViewType,
+      typename GF::Traits::RangeFieldType> RSF;
+
+    error = l2difference(gf.getGridView(),
+                         gf, *RSF().function(gf.getGridView(), time),
+                         integrationOrder);
+    dat << std::setprecision(8) << mean_h << "\t" << error << std::endl;
+  }
+};
+
+class ResonatorL2ErrorLevelProbeFactory
+{
+  std::ostream &dat;
+  unsigned integrationOrder;
+
+public:
+  template<typename GV>
+  struct Traits {
+    typedef ResonatorL2ErrorProbe Probe;
+  };
+
+  ResonatorL2ErrorLevelProbeFactory(std::ostream &dat_, unsigned integrationOrder_)
+    : dat(dat_), integrationOrder(integrationOrder_)
+  { }
+
+  template<typename GV>
+  Dune::SmartPointer<typename Traits<GV>::Probe>
+  getProbe(const GV &gv, unsigned level)
+  {
+    dat << "# level " << level << std::endl;
+    return new typename Traits<GV>::Probe(dat, integrationOrder, gv);
+  }
+};
+
+class ResonatorL2ErrorGridProbeFactory
+{
+  GnuplotGraph graph;
+  const unsigned integrationOrder;
+  unsigned index;
+  std::ostream::pos_type lastpos;
+  std::string lastplot;
+
+public:
+  template<typename G>
+  struct Traits {
+    typedef ResonatorL2ErrorLevelProbeFactory LevelProbeFactory;
+  };
+
+  ResonatorL2ErrorGridProbeFactory(const std::string &fileprefix,
+                                       const unsigned integrationOrder_)
+    : graph(fileprefix), integrationOrder(integrationOrder_)
+    , index(0), lastpos(graph.dat().tellp()), lastplot("")
+  {
+    graph.addCommand("set terminal postscript eps color solid");
+    graph.addCommand("set output '"+fileprefix+".eps'");
+    graph.addCommand("");
+    graph.addCommand("set key left top reverse Left");
+    graph.addCommand("set logscale xy");
+    graph.addCommand("set title 'L2 Error'");
+    graph.addCommand("set xlabel '<h>'");
+    graph.addCommand("set ylabel 'Error'");
+    graph.addCommand("");
+  }
+
+  ~ResonatorL2ErrorGridProbeFactory() {
+    if(lastpos != graph.dat().tellp())
+      graph.addPlot(lastplot);
+  }
+
+  template<typename G>
+  Dune::SmartPointer<typename Traits<G>::LevelProbeFactory>
+  levelProbeFactory(const G &grid, const std::string &tag)
+  {
+    if(lastpos != graph.dat().tellp()) {
+      graph.addPlot(lastplot);
+      graph.dat() << "\n\n";
+      ++index;
+    }
+    graph.dat() << "# " << tag << std::endl;
+    lastpos = graph.dat().tellp();
+    std::ostringstream plotconstruct;
+    plotconstruct << "'" << graph.datname() << "'"
+                  << " index " << index
+                  << " title '" << tag << "'"
+                  << " with linespoints pt 1";
+    lastplot = plotconstruct.str();
+    return new typename Traits<G>::LevelProbeFactory(graph.dat(), integrationOrder);
+  }
 
 };
 
