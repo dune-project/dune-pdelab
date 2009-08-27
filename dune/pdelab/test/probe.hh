@@ -176,7 +176,7 @@ namespace Dune {
       template<typename G>
       struct Traits : public Base::template Traits<G> {};
 
-      GridProbeFactoryPair(SmartPointer<GPF1> &gpf1_, SmartPointer<GPF2> &gpf2_)
+      GridProbeFactoryPair(SmartPointer<GPF1> gpf1_, SmartPointer<GPF2> gpf2_)
         : gpf1(gpf1_), gpf2(gpf2_)
       { }
 
@@ -190,6 +190,66 @@ namespace Dune {
 
     };
     
+    template<typename GPF0, typename GPF1 = int, typename GPF2 = int, typename GPF3 = int,
+             typename GPF4 = int, typename GPF5 = int, typename GPF6 = int,
+             typename GPF7 = int, typename GPF8 = int, typename GPF9 = int>
+    struct GridProbeFactoryListTraits;
+
+    template<typename GPF0>
+    struct GridProbeFactoryListTraits<GPF0> {
+      typedef GPF0 GPF;
+    };
+
+    template<typename GPF0, typename GPF1, typename GPF2, typename GPF3,
+             typename GPF4, typename GPF5, typename GPF6,
+             typename GPF7, typename GPF8, typename GPF9>
+    struct GridProbeFactoryListTraits {
+      typedef GridProbeFactoryPair<
+        GPF0,
+        typename GridProbeFactoryListTraits<
+          GPF1, GPF2, GPF3, GPF4, GPF5, GPF6, GPF7, GPF8, GPF9,
+          int>::GPF> GPF;
+    };
+
+    template<typename GPF0>
+    SmartPointer<GPF0> makeGridProbeFactoryList(SmartPointer<GPF0> gpf0,
+                                                SmartPointer<int> = 0,
+                                                SmartPointer<int> = 0,
+                                                SmartPointer<int> = 0,
+                                                SmartPointer<int> = 0,
+                                                SmartPointer<int> = 0,
+                                                SmartPointer<int> = 0,
+                                                SmartPointer<int> = 0,
+                                                SmartPointer<int> = 0,
+                                                SmartPointer<int> = 0)
+    {
+      return gpf0;
+    }
+
+    template<typename GPF0, typename GPF1, typename GPF2 = int, typename GPF3 = int,
+             typename GPF4 = int, typename GPF5 = int, typename GPF6 = int,
+             typename GPF7 = int, typename GPF8 = int, typename GPF9 = int>
+    SmartPointer<
+      typename GridProbeFactoryListTraits<
+        GPF0, GPF1, GPF2, GPF3, GPF4, GPF5, GPF6, GPF7, GPF8, GPF9>::GPF>
+      makeGridProbeFactoryList(SmartPointer<GPF0> gpf0,
+                               SmartPointer<GPF1> gpf1,
+                               SmartPointer<GPF2> gpf2 = 0,
+                               SmartPointer<GPF3> gpf3 = 0,
+                               SmartPointer<GPF4> gpf4 = 0,
+                               SmartPointer<GPF5> gpf5 = 0,
+                               SmartPointer<GPF6> gpf6 = 0,
+                               SmartPointer<GPF7> gpf7 = 0,
+                               SmartPointer<GPF8> gpf8 = 0,
+                               SmartPointer<GPF9> gpf9 = 0)
+    {
+      return new
+        typename GridProbeFactoryListTraits<
+          GPF0, GPF1, GPF2, GPF3, GPF4, GPF5, GPF6, GPF7, GPF8, GPF9
+        >::GPF(gpf0,
+               makeGridProbeFactoryList(gpf1, gpf2, gpf3, gpf4, gpf5, gpf6, gpf7, gpf8, gpf9));
+    }
+
     //
     // Gnuplot
     //

@@ -502,14 +502,12 @@ int main(int argc, char** argv)
     typedef ResonatorVTKGridProbeFactory<double> PF2;
     Dune::SmartPointer<PF2> pf2 = new PF2("electrodynamic");
 
-    typedef Dune::PDELab::GridProbeFactoryPair<PF1, PF2> PFP1;
-    Dune::SmartPointer<PFP1> pfp1 = new PFP1(pf1, pf2);
-      
     typedef ResonatorGlobalErrorGridProbeFactory<double> PF3;
     Dune::SmartPointer<PF3> pf3 = new PF3("electrodynamic-globalerror", quadrature_order);
 
-    typedef Dune::PDELab::GridProbeFactoryPair<PFP1, PF3> PFP2;
-    Dune::SmartPointer<PFP2> pfp2 = new PFP2(pfp1, pf3);
+    typedef Dune::PDELab::GridProbeFactoryListTraits<PF1, PF2, PF3>::GPF PFList;
+    Dune::SmartPointer<PFList> pflist
+      = makeGridProbeFactoryList(pf1, pf2, pf3);
       
     GnuplotGraph graph("testelectrodynamic");
     graph.addCommand("set logscale xy");
@@ -547,7 +545,7 @@ int main(int argc, char** argv)
 //     test(*UnitTetrahedronMaker         <Dune::UGGrid<3>            >::create(),
 //          result, graph, conv_limit,    "ug-tetrahedron");
     test(*KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
-         result, graph, *pfp2, conv_limit,    "ug-triangulated-cube-6");
+         result, graph, *pflist, conv_limit,    "ug-triangulated-cube-6");
 #endif // HAVE_ALBERTA
 	return result;
   }
