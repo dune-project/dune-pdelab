@@ -538,8 +538,12 @@ int main(int argc, char** argv)
     Dune::SmartPointer<L2Error>
       l2Error(new L2Error("electrodynamic-l2error", quadrature_order));
 
+    typedef ResonatorL2ErrorEvolutionGridProbeFactory L2Evolution;
+    Dune::SmartPointer<L2Evolution>
+      l2Evolution(new L2Evolution("electrodynamic-l2evolution", quadrature_order));
+
     testAll(result,
-            *makeGridProbeFactoryList(pointPF, vtkOutput, globalError),
+            *makeGridProbeFactoryList(pointPF, vtkOutput, globalError, l2Evolution),
             *l2Error);
 
 	return result;
