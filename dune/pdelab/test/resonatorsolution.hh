@@ -7,6 +7,7 @@
 
 #include "../common/vtkexport.hh"
 
+#include "l2difference.hh"
 #include "physicalconstants.hh"
 #include "probe.hh"
 
@@ -137,7 +138,7 @@ private:
 };
 
 //
-// VTK
+// VTKProbe
 //
 
 template<typename GV, typename RF>
@@ -249,6 +250,160 @@ public:
   levelProbeFactory(const G &grid, const std::string &tag)
   {
     return new typename Traits<G>::LevelProbeFactory(fileprefix + "-" + tag, timeStretch);
+  }
+
+};
+
+//
+// GlobalErrorProbe
+//
+
+template<typename GV, typename RF>
+class ResonatorGlobalErrorProbe
+  : public Dune::PDELab::ProbeInterface<ResonatorGlobalErrorProbe<GV, RF> >
+{
+  const ResonatorSolutionFactory<GV, RF> rf;
+  std::ostream &dat;
+  unsigned integrationOrder;
+
+  unsigned nsamples;
+  double sum;
+  double mean_h;
+
+public:
+  ResonatorGlobalErrorProbe(std::ostream &dat_, unsigned integrationOrder_, const GV &gv)
+    : rf(), dat(dat_), integrationOrder(integrationOrder_), nsamples(0), sum(0)
+    , mean_h(std::pow(1.0/gv.size(0), 1.0/GV::dimension))
+  { }
+
+  ~ResonatorGlobalErrorProbe() {
+    dat << std::setprecision(8) << mean_h << "\t" << std::sqrt(sum/nsamples) << std::endl;
+  }
+
+  template<typename GF>
+  void measure(const GF &gf, double time = 0) {
+    sum += l2difference2(gf.getGridView(),
+                         gf, *rf.function(gf.getGridView(), time),
+                         integrationOrder);
+    ++nsamples;
+  }
+
+};
+
+template<typename RF>
+struct ResonatorGlobalErrorLevelProbeFactoryTraits {
+  template<typename GV>
+  struct T {
+    typedef ResonatorGlobalErrorProbe<GV, RF> TimeStepProbe;
+    typedef Dune::PDELab::DummyProbe EndProbe;
+  };
+};
+
+template<typename RF>
+class ResonatorGlobalErrorLevelProbeFactory
+  : public Dune::PDELab::LevelProbeFactoryInterface<
+      ResonatorGlobalErrorLevelProbeFactoryTraits<RF>::template T,
+      ResonatorGlobalErrorLevelProbeFactory<RF> >
+{
+  typedef Dune::PDELab::LevelProbeFactoryInterface<
+    ResonatorGlobalErrorLevelProbeFactoryTraits<RF>::template T,
+    ResonatorGlobalErrorLevelProbeFactory<RF> > Base;
+
+  std::ostream &dat;
+  unsigned integrationOrder;
+
+public:
+  template<typename GV>
+  struct Traits : public Base::template Traits<GV> {};
+
+  ResonatorGlobalErrorLevelProbeFactory(std::ostream &dat_, unsigned integrationOrder_)
+    : dat(dat_), integrationOrder(integrationOrder_)
+  { }
+
+  template<typename GV>
+  Dune::SmartPointer<typename Traits<GV>::TimeStepProbe>
+  timeStepProbe(const GV &gv, unsigned level)
+  {
+    dat << "# level " << level << std::endl;
+    return new typename Traits<GV>::TimeStepProbe(dat, integrationOrder, gv);
+  }
+      
+  template<typename GV>
+  Dune::SmartPointer<typename Traits<GV>::EndProbe>
+  endProbe(const GV &gv, unsigned level)
+  {
+    return new typename Traits<GV>::EndProbe();
+  }
+
+};
+
+template<typename RF>
+struct ResonatorGlobalErrorGridProbeFactoryTraits {
+  template<typename G>
+  struct T {
+    typedef ResonatorGlobalErrorLevelProbeFactory<RF> LevelProbeFactory;
+  };
+};
+
+template<typename RF>
+class ResonatorGlobalErrorGridProbeFactory
+  : public Dune::PDELab::GridProbeFactoryInterface<
+      ResonatorGlobalErrorGridProbeFactoryTraits<RF>::template T,
+      ResonatorGlobalErrorGridProbeFactory<RF> >
+{
+  typedef Dune::PDELab::GridProbeFactoryInterface<
+    ResonatorGlobalErrorGridProbeFactoryTraits<RF>::template T,
+    ResonatorGlobalErrorGridProbeFactory<RF> > Base;
+
+  GnuplotGraph graph;
+  const unsigned integrationOrder;
+  unsigned index;
+  std::ostream::pos_type lastpos;
+  std::string lastplot;
+
+public:
+  template<typename G>
+  struct Traits : public Base::template Traits<G> {};
+
+  ResonatorGlobalErrorGridProbeFactory(const std::string &fileprefix,
+                                       const unsigned integrationOrder_)
+    : graph(fileprefix), integrationOrder(integrationOrder_)
+    , index(0), lastpos(graph.dat().tellp()), lastplot("")
+  {
+    graph.addCommand("set terminal postscript eps color solid");
+    graph.addCommand("set output '"+fileprefix+".eps'");
+    graph.addCommand("");
+    graph.addCommand("set key left top reverse Left");
+    graph.addCommand("set logscale xy");
+    graph.addCommand("set title 'GlobalError'");
+    graph.addCommand("set xlabel '<h>'");
+    graph.addCommand("set ylabel 'Error'");
+    graph.addCommand("");
+  }
+
+  ~ResonatorGlobalErrorGridProbeFactory() {
+    if(lastpos != graph.dat().tellp())
+      graph.addPlot(lastplot);
+  }
+
+  template<typename G>
+  Dune::SmartPointer<typename Traits<G>::LevelProbeFactory>
+  levelProbeFactory(const G &grid, const std::string &tag)
+  {
+    if(lastpos != graph.dat().tellp()) {
+      graph.addPlot(lastplot);
+      graph.dat() << "\n\n";
+      ++index;
+    }
+    graph.dat() << "# " << tag << std::endl;
+    lastpos = graph.dat().tellp();
+    std::ostringstream plotconstruct;
+    plotconstruct << "'" << graph.datname() << "'"
+                  << " index " << index
+                  << " title '" << tag << "'"
+                  << " with linespoints pt 1";
+    lastplot = plotconstruct.str();
+    return new typename Traits<G>::LevelProbeFactory(graph.dat(), integrationOrder);
   }
 
 };
