@@ -231,11 +231,11 @@ typename GV::Grid::ctype smallestEdge(const GV& gv)
 
 // generate a P1 function and output it
 template<typename GV, typename FEM, typename CON, typename ReferenceFactory,
-         typename TSP, typename EP> 
+         typename Probe> 
 double electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
                        const ReferenceFactory &referenceFactory,
                        double Delta_t, unsigned steps,
-                       const std::string filename, TSP &tsp, EP &ep)
+                       const std::string filename, Probe &probe)
 {
   // constants and types
   typedef typename GV::Grid::ctype DF;
@@ -313,9 +313,9 @@ double electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
   if(do_vtk_output)
     vtkwriter = new Dune::VTKSequenceWriter<GV>(gv,filename,".","", Dune::VTKOptions::nonconforming);
 
-  tsp.measure(DGF(gfs, *xprev), -Delta_t);
+  probe.measure(DGF(gfs, *xprev), -Delta_t);
 //  std::cout << "u[-1]\n" << *xprev << std::endl;
-  tsp.measure(DGF(gfs, *xcur), 0);
+  probe.measure(DGF(gfs, *xcur), 0);
 //   std::cout << "u[0]\n" << *xcur << std::endl;
 
   double errsum = 0;
@@ -354,14 +354,14 @@ double electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
     *xnext += affineShift;
 
     errsum += l2difference2(gv,DGF(gfs,*xnext),*referenceFactory.function(gv, steps*Delta_t),integrationOrder);
-    tsp.measure(DGF(gfs, *xnext), Delta_t*step);
+    probe.measure(DGF(gfs, *xnext), Delta_t*step);
 //     std::cout << "u[" << step << "]\n" << *xnext << std::endl;
 
     xprev = xcur;
     xcur = xnext;
   }
   
-  ep.measure(DGF(gfs, *xcur), Delta_t*steps);
+  probe.measureFinal(DGF(gfs, *xcur), Delta_t*steps);
 
   return std::sqrt(errsum/steps);
 }
@@ -386,10 +386,8 @@ void testLevel(const GV &gv, unsigned level, const std::string &prefix, std::ost
   std::ostringstream levelprefix;
   levelprefix << prefix << ".level" << level;
 
-  typedef typename LPF::template Traits<GV>::TimeStepProbe TSP;
-  typedef typename LPF::template Traits<GV>::EndProbe EP;
-  Dune::SmartPointer<TSP> tsp(lpf.timeStepProbe(gv, level));
-  Dune::SmartPointer<EP> ep(lpf.endProbe(gv, level));
+  typedef typename LPF::template Traits<GV>::Probe Probe;
+  Dune::SmartPointer<Probe> probe(lpf.getProbe(gv, level));
 
   std::cout << "electrodynamic level " << level << std::endl;
   // time step
@@ -401,10 +399,10 @@ void testLevel(const GV &gv, unsigned level, const std::string &prefix, std::ost
     Delta_t = duration/steps;
   }
   error = electrodynamic
-    <GV,FEM,Dune::PDELab::OverlappingConformingDirichletConstraints,ResonatorSolutionFactory<GV,double>,TSP,EP>
+    <GV,FEM,Dune::PDELab::OverlappingConformingDirichletConstraints,ResonatorSolutionFactory<GV,double>,Probe>
     (gv, FEM(gv), quadrature_order,
      ResonatorSolutionFactory<GV,double>(),
-     Delta_t, steps, levelprefix.str(), *tsp, *ep);
+     Delta_t, steps, levelprefix.str(), *probe);
   mean_h = std::pow(1/double(gv.size(0)), 1/double(GV::dimension));
   std::cout << "L2 error: " 
             << std::setw(8) << gv.size(0) << " elements, <h>=" 

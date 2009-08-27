@@ -16,27 +16,27 @@ namespace Dune {
     // Interface
     //
 
-    template<typename Imp>
     class ProbeInterface
     {
     public:
       template<typename GF>
-      void measure(const GF &gf, double time = 0) { asImp().measure(gf, time); }
-      
-    private:
-      Imp& asImp() { return static_cast<Imp &> (*this); }
-      const Imp& asImp () const { return static_cast<const Imp &>(*this); }
+      void measure(const GF &gf, double time = 0);
+
+      template<typename GF>
+      void measureFinal(const GF &gf, double time = 0);
     };
 
     class DummyProbe
-      : public ProbeInterface<DummyProbe>
     {
     public:
       template<typename GF>
       void measure(const GF &gf, double time = 0) { /* do nothing */ }
+
+      template<typename GF>
+      void measureFinal(const GF &gf, double time = 0) { /* do nothing */ }
     };
 
-    template<template<typename> class T, typename Imp>
+    template<template<typename GridView> class T>
     class LevelProbeFactoryInterface
     {
     public:
@@ -44,42 +44,21 @@ namespace Dune {
       struct Traits : public T<GV> {};
 
       template<typename GV>
-      SmartPointer<typename Traits<GV>::TimeStepProbe>
-      timeStepProbe(const GV &gv, unsigned level)
-      { return asImp().timeStepProbe(gv, level); }
-      
-      template<typename GV>
-      SmartPointer<typename Traits<GV>::EndProbe>
-      endProbe(const GV &gv, unsigned level)
-      { return asImp().endProbe(gv, level); }
-      
-    private:
-      Imp& asImp() { return static_cast<Imp &> (*this); }
-      const Imp& asImp () const { return static_cast<const Imp &>(*this); }
+      SmartPointer<typename Traits<GV>::Probe>
+      getProbe(const GV &gv, unsigned level);
     };
 
-    template<template<typename> class T, typename Imp>
+    template<template<typename Grid> class T>
     class GridProbeFactoryInterface
     {
     public:
-      template<typename G> struct Traits;
+      template<typename G>
+      struct Traits : public T<G> {};
 
       template<typename G>
       SmartPointer<typename Traits<G>::LevelProbeFactory>
-      levelProbeFactory(const G &grid, const std::string &tag)
-      { return asImp().levelProbeFactory(grid, tag); }
-      
-    private:
-      Imp& asImp() { return static_cast<Imp &> (*this); }
-      const Imp& asImp () const { return static_cast<const Imp &>(*this); }
+      levelProbeFactory(const G &grid, const std::string &tag);
     };
-
-    template<template<typename> class T, typename Imp>
-    template<typename G>
-    struct GridProbeFactoryInterface<T,Imp>::Traits
-      : public T<G>
-    {};
-
 
     //
     // Pair
@@ -87,7 +66,6 @@ namespace Dune {
 
     template<typename P1, typename P2>
     class ProbePair
-      : public ProbeInterface<ProbePair<P1, P2> >
     {
       SmartPointer<P1> p1;
       SmartPointer<P2> p2;
@@ -102,79 +80,53 @@ namespace Dune {
         p1->measure(gf, time);
         p2->measure(gf, time);
       }
-    };
 
-    template<typename LPF1, typename LPF2>
-    struct LevelProbeFactoryPairTraits {
-      template<typename GV>
-      struct T {
-        typedef ProbePair<typename LPF1::template Traits<GV>::TimeStepProbe,
-                          typename LPF2::template Traits<GV>::TimeStepProbe> TimeStepProbe;
-        typedef ProbePair<typename LPF1::template Traits<GV>::EndProbe,
-                          typename LPF2::template Traits<GV>::EndProbe> EndProbe;
-      };
+      template<typename GF>
+      void measureFinal(const GF &gf, double time = 0) {
+        p1->measureFinal(gf, time);
+        p2->measureFinal(gf, time);
+      }
     };
 
     template<typename LPF1, typename LPF2>
     class LevelProbeFactoryPair
-      : public LevelProbeFactoryInterface<LevelProbeFactoryPairTraits<LPF1, LPF2>::template T,
-                                          LevelProbeFactoryPair<LPF1, LPF2> >
     {
-      typedef LevelProbeFactoryInterface<
-        LevelProbeFactoryPairTraits<LPF1, LPF2>::template T,
-        LevelProbeFactoryPair<LPF1, LPF2> > Base;
       SmartPointer<LPF1> lpf1;
       SmartPointer<LPF2> lpf2;
 
     public:
       template<typename GV>
-      struct Traits : public Base::template Traits<GV> {};
+      struct Traits {
+        typedef ProbePair<typename LPF1::template Traits<GV>::Probe,
+                          typename LPF2::template Traits<GV>::Probe> Probe;
+      };
 
       LevelProbeFactoryPair(SmartPointer<LPF1> lpf1_, SmartPointer<LPF2> lpf2_)
         : lpf1(lpf1_), lpf2(lpf2_)
       { }
 
       template<typename GV>
-      SmartPointer<typename Traits<GV>::TimeStepProbe>
-      timeStepProbe(const GV &gv, unsigned level)
+      SmartPointer<typename Traits<GV>::Probe>
+      getProbe(const GV &gv, unsigned level)
       {
-        return new typename Traits<GV>::TimeStepProbe(lpf1->timeStepProbe(gv, level),
-                                                      lpf2->timeStepProbe(gv, level));
+        return new typename Traits<GV>::Probe(lpf1->getProbe(gv, level),
+                                              lpf2->getProbe(gv, level));
       }
-      
-      template<typename GV>
-      SmartPointer<typename Traits<GV>::EndProbe>
-      endProbe(const GV &gv, unsigned level)
-      {
-        return new typename Traits<GV>::EndProbe(lpf1->endProbe(gv, level),
-                                                 lpf2->endProbe(gv, level));
-      }
-
-    };
-
-    template<typename GPF1, typename GPF2>
-    struct GridProbeFactoryPairTraits {
-      template<typename G>
-      struct T {
-        typedef LevelProbeFactoryPair<
-          typename GPF1::template Traits<G>::LevelProbeFactory,
-          typename GPF2::template Traits<G>::LevelProbeFactory> LevelProbeFactory;
-      };
     };
 
     template<typename GPF1, typename GPF2>
     class GridProbeFactoryPair
-      : public GridProbeFactoryInterface<GridProbeFactoryPairTraits<GPF1, GPF2>::template T,
-                                         GridProbeFactoryPair<GPF1, GPF2> >
     {
       SmartPointer<GPF1> gpf1;
       SmartPointer<GPF2> gpf2;
-      typedef GridProbeFactoryInterface<GridProbeFactoryPairTraits<GPF1, GPF2>::template T,
-                                        GridProbeFactoryPair<GPF1, GPF2> > Base;
 
     public:
       template<typename G>
-      struct Traits : public Base::template Traits<G> {};
+      struct Traits {
+        typedef LevelProbeFactoryPair<
+          typename GPF1::template Traits<G>::LevelProbeFactory,
+          typename GPF2::template Traits<G>::LevelProbeFactory> LevelProbeFactory;
+      };
 
       GridProbeFactoryPair(SmartPointer<GPF1> gpf1_, SmartPointer<GPF2> gpf2_)
         : gpf1(gpf1_), gpf2(gpf2_)
@@ -256,7 +208,7 @@ namespace Dune {
 
     template<typename D>
     class GnuplotProbe
-      : public ProbeInterface<GnuplotProbe<D> >
+      : public DummyProbe
     {
       std::ostream &data;
       D x;
@@ -277,21 +229,8 @@ namespace Dune {
     };
 
     template<typename D>
-    struct GnuplotLevelProbeFactoryTraits {
-      template<typename GV>
-      struct T {
-        typedef GnuplotProbe<D> TimeStepProbe;
-        typedef DummyProbe EndProbe;
-      };
-    };
-
-    template<typename D>
     class GnuplotLevelProbeFactory
-      : public LevelProbeFactoryInterface<GnuplotLevelProbeFactoryTraits<D>::template T,
-                                          GnuplotLevelProbeFactory<D> >
     {
-      typedef LevelProbeFactoryInterface<GnuplotLevelProbeFactoryTraits<D>::template T,
-                                         GnuplotLevelProbeFactory<D> > Base;
       GnuplotGraph &graph;
       D x;
       std::ostream::pos_type datapos;
@@ -301,7 +240,9 @@ namespace Dune {
 
     public:
       template<typename GV>
-      struct Traits : public Base::template Traits<GV> {};
+      struct Traits {
+        typedef GnuplotProbe<D> Probe;
+      };
 
       GnuplotLevelProbeFactory(GnuplotGraph &graph_, const D &x_, unsigned &index_,
                                const std::string &tag_)
@@ -317,8 +258,8 @@ namespace Dune {
       }
 
       template<typename GV>
-      SmartPointer<typename Traits<GV>::TimeStepProbe>
-      timeStepProbe(const GV &gv, unsigned level)
+      SmartPointer<typename Traits<GV>::Probe>
+      getProbe(const GV &gv, unsigned level)
       {
         if(datapos != graph.dat().tellp()) {
           graph.dat() << "\n\n";
@@ -333,42 +274,22 @@ namespace Dune {
                       << " title '" << tag << " level " << level << "'"
                       << " with linespoints pt 1";
         lastplot = plotconstruct.str();
-        return new typename Traits<GV>::TimeStepProbe(graph.dat(), x);
+        return new typename Traits<GV>::Probe(graph.dat(), x);
       }
-      
-      template<typename GV>
-      SmartPointer<typename Traits<GV>::EndProbe>
-      endProbe(const GV &gv, unsigned level)
-      {
-        return new typename Traits<GV>::EndProbe();
-      }
-
-    };
-
-    template<typename D>
-    struct GnuplotGridProbeFactoryTraits {
-      template<typename G>
-      struct T {
-        typedef GnuplotLevelProbeFactory<D> LevelProbeFactory;
-      };
     };
 
     template<typename D>
     class GnuplotGridProbeFactory
-      : public GridProbeFactoryInterface<GnuplotGridProbeFactoryTraits<D>::template T,
-                                         GnuplotGridProbeFactory<D> >
     {
-      typedef GridProbeFactoryInterface<
-        GnuplotGridProbeFactoryTraits<D>::template T,
-        GnuplotGridProbeFactory<D> > Base;
-
       const D x;
       GnuplotGraph graph;
       unsigned index;
 
     public:
       template<typename G>
-      struct Traits : public Base::template Traits<G> {};
+      struct Traits {
+        typedef GnuplotLevelProbeFactory<D> LevelProbeFactory;
+      };
 
       GnuplotGridProbeFactory(const std::string &fileprefix, const D &x_)
         : x(x_), graph(fileprefix), index(0)
@@ -386,7 +307,6 @@ namespace Dune {
       {
         return new typename Traits<G>::LevelProbeFactory(graph, x, index, tag);
       }
-
     };
     
   } // namespace PDELab

@@ -143,7 +143,7 @@ private:
 
 template<typename GV, typename RF>
 class ResonatorVTKProbe
-  : public Dune::PDELab::ProbeInterface<ResonatorVTKProbe<GV, RF> >
+  : public Dune::PDELab::DummyProbe
 {
   Dune::VTKSequenceWriter<GV> writer;
   const ResonatorSolutionFactory<GV, RF> rf;
@@ -169,77 +169,42 @@ public:
 };
 
 template<typename RF>
-struct ResonatorVTKLevelProbeFactoryTraits {
-  template<typename GV>
-  struct T {
-    typedef ResonatorVTKProbe<GV, RF> TimeStepProbe;
-    typedef Dune::PDELab::DummyProbe EndProbe;
-  };
-};
-
-template<typename RF>
 class ResonatorVTKLevelProbeFactory
-  : public Dune::PDELab::LevelProbeFactoryInterface<
-      ResonatorVTKLevelProbeFactoryTraits<RF>::template T,
-      ResonatorVTKLevelProbeFactory<RF> >
 {
-  typedef Dune::PDELab::LevelProbeFactoryInterface<
-    ResonatorVTKLevelProbeFactoryTraits<RF>::template T,
-    ResonatorVTKLevelProbeFactory<RF> > Base;
-
   const std::string tag;
   const double timeStretch;
 
 public:
   template<typename GV>
-  struct Traits : public Base::template Traits<GV> {};
+  struct Traits {
+    typedef ResonatorVTKProbe<GV, RF> Probe;
+  };
 
   ResonatorVTKLevelProbeFactory(const std::string &tag_, const double timeStretch_)
     : tag(tag_), timeStretch(timeStretch_)
   { }
 
   template<typename GV>
-  Dune::SmartPointer<typename Traits<GV>::TimeStepProbe>
-  timeStepProbe(const GV &gv, unsigned level)
+  Dune::SmartPointer<typename Traits<GV>::Probe>
+  getProbe(const GV &gv, unsigned level)
   {
     std::ostringstream nameconstruct;
     nameconstruct << tag << ".level" << level;
-    return new typename Traits<GV>::TimeStepProbe(gv, nameconstruct.str(), timeStretch);
+    return new typename Traits<GV>::Probe(gv, nameconstruct.str(), timeStretch);
   }
-      
-  template<typename GV>
-  Dune::SmartPointer<typename Traits<GV>::EndProbe>
-  endProbe(const GV &gv, unsigned level)
-  {
-    return new typename Traits<GV>::EndProbe();
-  }
-
-};
-
-template<typename RF>
-struct ResonatorVTKGridProbeFactoryTraits {
-  template<typename G>
-  struct T {
-    typedef ResonatorVTKLevelProbeFactory<RF> LevelProbeFactory;
-  };
 };
 
 template<typename RF>
 class ResonatorVTKGridProbeFactory
-  : public Dune::PDELab::GridProbeFactoryInterface<
-      ResonatorVTKGridProbeFactoryTraits<RF>::template T,
-      ResonatorVTKGridProbeFactory<RF> >
 {
-  typedef Dune::PDELab::GridProbeFactoryInterface<
-    ResonatorVTKGridProbeFactoryTraits<RF>::template T,
-    ResonatorVTKGridProbeFactory<RF> > Base;
-
   const std::string fileprefix;
   const double timeStretch;
 
 public:
   template<typename G>
-  struct Traits : public Base::template Traits<G> {};
+  struct Traits {
+    typedef ResonatorVTKLevelProbeFactory<RF> LevelProbeFactory;
+  };
 
   ResonatorVTKGridProbeFactory(const std::string &fileprefix_, const double timeStretch_ = 1)
     : fileprefix(fileprefix_), timeStretch(timeStretch_)
@@ -260,7 +225,7 @@ public:
 
 template<typename GV, typename RF>
 class ResonatorGlobalErrorProbe
-  : public Dune::PDELab::ProbeInterface<ResonatorGlobalErrorProbe<GV, RF> >
+  : public Dune::PDELab::DummyProbe
 {
   const ResonatorSolutionFactory<GV, RF> rf;
   std::ostream &dat;
@@ -287,74 +252,36 @@ public:
                          integrationOrder);
     ++nsamples;
   }
-
-};
-
-template<typename RF>
-struct ResonatorGlobalErrorLevelProbeFactoryTraits {
-  template<typename GV>
-  struct T {
-    typedef ResonatorGlobalErrorProbe<GV, RF> TimeStepProbe;
-    typedef Dune::PDELab::DummyProbe EndProbe;
-  };
 };
 
 template<typename RF>
 class ResonatorGlobalErrorLevelProbeFactory
-  : public Dune::PDELab::LevelProbeFactoryInterface<
-      ResonatorGlobalErrorLevelProbeFactoryTraits<RF>::template T,
-      ResonatorGlobalErrorLevelProbeFactory<RF> >
 {
-  typedef Dune::PDELab::LevelProbeFactoryInterface<
-    ResonatorGlobalErrorLevelProbeFactoryTraits<RF>::template T,
-    ResonatorGlobalErrorLevelProbeFactory<RF> > Base;
-
   std::ostream &dat;
   unsigned integrationOrder;
 
 public:
   template<typename GV>
-  struct Traits : public Base::template Traits<GV> {};
+  struct Traits {
+    typedef ResonatorGlobalErrorProbe<GV, RF> Probe;
+  };
 
   ResonatorGlobalErrorLevelProbeFactory(std::ostream &dat_, unsigned integrationOrder_)
     : dat(dat_), integrationOrder(integrationOrder_)
   { }
 
   template<typename GV>
-  Dune::SmartPointer<typename Traits<GV>::TimeStepProbe>
-  timeStepProbe(const GV &gv, unsigned level)
+  Dune::SmartPointer<typename Traits<GV>::Probe>
+  getProbe(const GV &gv, unsigned level)
   {
     dat << "# level " << level << std::endl;
-    return new typename Traits<GV>::TimeStepProbe(dat, integrationOrder, gv);
+    return new typename Traits<GV>::Probe(dat, integrationOrder, gv);
   }
-      
-  template<typename GV>
-  Dune::SmartPointer<typename Traits<GV>::EndProbe>
-  endProbe(const GV &gv, unsigned level)
-  {
-    return new typename Traits<GV>::EndProbe();
-  }
-
-};
-
-template<typename RF>
-struct ResonatorGlobalErrorGridProbeFactoryTraits {
-  template<typename G>
-  struct T {
-    typedef ResonatorGlobalErrorLevelProbeFactory<RF> LevelProbeFactory;
-  };
 };
 
 template<typename RF>
 class ResonatorGlobalErrorGridProbeFactory
-  : public Dune::PDELab::GridProbeFactoryInterface<
-      ResonatorGlobalErrorGridProbeFactoryTraits<RF>::template T,
-      ResonatorGlobalErrorGridProbeFactory<RF> >
 {
-  typedef Dune::PDELab::GridProbeFactoryInterface<
-    ResonatorGlobalErrorGridProbeFactoryTraits<RF>::template T,
-    ResonatorGlobalErrorGridProbeFactory<RF> > Base;
-
   GnuplotGraph graph;
   const unsigned integrationOrder;
   unsigned index;
@@ -363,7 +290,9 @@ class ResonatorGlobalErrorGridProbeFactory
 
 public:
   template<typename G>
-  struct Traits : public Base::template Traits<G> {};
+  struct Traits {
+    typedef ResonatorGlobalErrorLevelProbeFactory<RF> LevelProbeFactory;
+  };
 
   ResonatorGlobalErrorGridProbeFactory(const std::string &fileprefix,
                                        const unsigned integrationOrder_)
