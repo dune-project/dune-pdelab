@@ -26,16 +26,6 @@ namespace Dune {
       void measureFinal(const GF &gf, double time = 0);
     };
 
-    class DummyProbe
-    {
-    public:
-      template<typename GF>
-      void measure(const GF &gf, double time = 0) { /* do nothing */ }
-
-      template<typename GF>
-      void measureFinal(const GF &gf, double time = 0) { /* do nothing */ }
-    };
-
     template<template<typename GridView> class T>
     class LevelProbeFactoryInterface
     {
@@ -58,6 +48,34 @@ namespace Dune {
       template<typename G>
       SmartPointer<typename Traits<G>::LevelProbeFactory>
       levelProbeFactory(const G &grid, const std::string &tag);
+    };
+
+    //
+    // ErrorProbe
+    //
+
+    // A probe which extracts some kind of error measure from the solution,
+    // and provides this information afterwards
+
+    class ErrorProbeInterface
+      : public ProbeInterface
+    {
+    public:
+      double get_error() const;
+    };
+
+    //
+    // DummyProbe
+    //
+
+    class DummyProbe
+    {
+    public:
+      template<typename GF>
+      void measure(const GF &gf, double time = 0) { /* do nothing */ }
+
+      template<typename GF>
+      void measureFinal(const GF &gf, double time = 0) { /* do nothing */ }
     };
 
     //

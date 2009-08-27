@@ -232,7 +232,7 @@ typename GV::Grid::ctype smallestEdge(const GV& gv)
 // generate a P1 function and output it
 template<typename GV, typename FEM, typename CON, typename ReferenceFactory,
          typename Probe> 
-double electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
+void electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
                        const ReferenceFactory &referenceFactory,
                        double Delta_t, unsigned steps,
                        const std::string filename, Probe &probe)
@@ -318,8 +318,6 @@ double electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
   probe.measure(DGF(gfs, *xcur), 0);
 //   std::cout << "u[0]\n" << *xcur << std::endl;
 
-  double errsum = 0;
-
   std::cout << "Number of steps " << steps << std::endl;
   for(unsigned step = 1; step <= steps; ++step) {
     std::cout << "Doing step " << step << std::endl;
@@ -353,7 +351,6 @@ double electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
 
     *xnext += affineShift;
 
-    errsum += l2difference2(gv,DGF(gfs,*xnext),*referenceFactory.function(gv, steps*Delta_t),integrationOrder);
     probe.measure(DGF(gfs, *xnext), Delta_t*step);
 //     std::cout << "u[" << step << "]\n" << *xnext << std::endl;
 
@@ -362,8 +359,6 @@ double electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
   }
   
   probe.measureFinal(DGF(gfs, *xcur), Delta_t*steps);
-
-  return std::sqrt(errsum/steps);
 }
 
 template<typename P>
@@ -378,9 +373,9 @@ struct GridPtrTraits<Dune::GridPtr<G> > {
 };
 
 
-template<typename GV, typename LPF>
-void testLevel(const GV &gv, unsigned level, const std::string &prefix, std::ostream &dat,
-               LPF &lpf, double &error, double &mean_h)
+template<typename GV, typename LPF, typename ELPF>
+void testLevel(const GV &gv, unsigned level, const std::string &prefix,
+               LPF &lpf, ELPF &elpf, double &error, double &mean_h)
 {
   typedef Dune::PDELab::EdgeS03DLocalFiniteElementMap<GV, double> FEM;
   std::ostringstream levelprefix;
@@ -388,6 +383,12 @@ void testLevel(const GV &gv, unsigned level, const std::string &prefix, std::ost
 
   typedef typename LPF::template Traits<GV>::Probe Probe;
   Dune::SmartPointer<Probe> probe(lpf.getProbe(gv, level));
+
+  typedef typename ELPF::template Traits<GV>::Probe EProbe;
+  Dune::SmartPointer<EProbe> eprobe(elpf.getProbe(gv, level));
+
+  typedef Dune::PDELab::ProbePair<Probe, EProbe> ProbePair;
+  Dune::SmartPointer<ProbePair> probepair(new ProbePair(probe, eprobe));
 
   std::cout << "electrodynamic level " << level << std::endl;
   // time step
@@ -398,29 +399,25 @@ void testLevel(const GV &gv, unsigned level, const std::string &prefix, std::ost
     ++steps;
     Delta_t = duration/steps;
   }
-  error = electrodynamic
-    <GV,FEM,Dune::PDELab::OverlappingConformingDirichletConstraints,ResonatorSolutionFactory<GV,double>,Probe>
+  electrodynamic
+    <GV,FEM,Dune::PDELab::OverlappingConformingDirichletConstraints,ResonatorSolutionFactory<GV,double>,ProbePair>
     (gv, FEM(gv), quadrature_order,
      ResonatorSolutionFactory<GV,double>(),
-     Delta_t, steps, levelprefix.str(), *probe);
+     Delta_t, steps, levelprefix.str(), *probepair);
   mean_h = std::pow(1/double(gv.size(0)), 1/double(GV::dimension));
-  std::cout << "L2 error: " 
-            << std::setw(8) << gv.size(0) << " elements, <h>=" 
-            << std::scientific << mean_h << ", error="
-            << std::scientific << error << std::endl;
-  dat << mean_h << "\t" << error << std::endl;
+  error = eprobe->get_error();
 }
-template<typename GV, typename LPF>
-void testLevel(const GV &gv, unsigned level, const std::string &prefix, std::ostream &dat,
-               LPF &lpf)
+template<typename GV, typename LPF, typename ELPF>
+void testLevel(const GV &gv, unsigned level, const std::string &prefix,
+               LPF &lpf, ELPF &elpf)
 {
   double error, mean_h;
-  testLevel(gv, level, prefix, dat, lpf, error, mean_h);
+  testLevel(gv, level, prefix, lpf, elpf, error, mean_h);
 }
 
 
-template<typename Grid, typename GPF>
-void test(Grid &grid, int &result, GnuplotGraph &graph, GPF &gpf,
+template<typename Grid, typename GPF, typename EGPF>
+void test(Grid &grid, int &result, GPF &gpf, EGPF &egpf,
           double conv_limit, std::string name = "")
 {
   typedef typename Grid::LeafGridView GV;
@@ -430,18 +427,17 @@ void test(Grid &grid, int &result, GnuplotGraph &graph, GPF &gpf,
   typedef typename GPF::template Traits<Grid>::LevelProbeFactory LPF;
   Dune::SmartPointer<LPF> lpf(gpf.levelProbeFactory(grid, name));
 
+  typedef typename EGPF::template Traits<Grid>::LevelProbeFactory ELPF;
+  Dune::SmartPointer<ELPF> elpf(egpf.levelProbeFactory(grid, name));
+
   std::cout << std::endl
             << "Testing Electrodynamic problem with EdgeS03D and " << name << std::endl;
 
   std::string filename = "electrodynamic-" + name;
-  graph.addPlot("'" + graph.datname() + "' title '" + name + "' with linespoints");
-
-  graph.dat() << "#<h>\terror" << std::endl;
-  graph.dat().precision(8);
 
   unsigned level = 0;
   double error0, mean_h0;
-  testLevel(grid.leafView(), level, filename, graph.dat(), *lpf, error0, mean_h0);
+  testLevel(grid.leafView(), level, filename, *lpf, *elpf, error0, mean_h0);
 
   while(true) {
     ++level;
@@ -449,11 +445,11 @@ void test(Grid &grid, int &result, GnuplotGraph &graph, GPF &gpf,
     if(unsigned(grid.leafView().size(0)) >= maxelements) break;
 
     if(do_all_levels)
-      testLevel(grid.leafView(), level, filename, graph.dat(), *lpf);
+      testLevel(grid.leafView(), level, filename, *lpf, *elpf);
   }
   
   double errorf, mean_hf;
-  testLevel(grid.leafView(), level, filename, graph.dat(), *lpf, errorf, mean_hf);
+  testLevel(grid.leafView(), level, filename, *lpf, *elpf, errorf, mean_hf);
 
   double total_convergence = std::log(errorf/error0)/std::log(mean_hf/mean_h0);
   std::cout << "electrodynamic total convergence: "
@@ -503,20 +499,12 @@ int main(int argc, char** argv)
     typedef ResonatorGlobalErrorGridProbeFactory<double> PF3;
     Dune::SmartPointer<PF3> pf3 = new PF3("electrodynamic-globalerror", quadrature_order);
 
-    typedef Dune::PDELab::GridProbeFactoryListTraits<PF1, PF2, PF3>::GPF PFList;
+    typedef Dune::PDELab::GridProbeFactoryListTraits<PF1, PF2>::GPF PFList;
     Dune::SmartPointer<PFList> pflist
-      = makeGridProbeFactoryList(pf1, pf2, pf3);
-      
-    GnuplotGraph graph("testelectrodynamic");
-    graph.addCommand("set logscale xy");
-    graph.addCommand("set xlabel '<h>'");
-    graph.addCommand("set ylabel 'L2 error'");
-    graph.addCommand("set key left top reverse Left");
-    graph.addCommand("");
-    graph.addCommand("set terminal postscript eps color solid");
-    graph.addCommand("set output 'electrodynamic.eps'");
-    graph.addCommand("");
+      = makeGridProbeFactoryList(pf1, pf2);
 
+    Dune::SmartPointer<PF3> &epf = pf3;
+      
 #ifdef HAVE_ALBERTA
 #if (ALBERTA_DIM != 3)
 #error ALBERTA_DIM is not set to 3 -- please check the Makefile.am
@@ -543,7 +531,7 @@ int main(int argc, char** argv)
 //     test(*UnitTetrahedronMaker         <Dune::UGGrid<3>            >::create(),
 //          result, graph, conv_limit,    "ug-tetrahedron");
     test(*KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
-         result, graph, *pflist, conv_limit,    "ug-triangulated-cube-6");
+         result, *pflist, *epf, conv_limit,    "ug-triangulated-cube-6");
 #endif // HAVE_ALBERTA
 	return result;
   }

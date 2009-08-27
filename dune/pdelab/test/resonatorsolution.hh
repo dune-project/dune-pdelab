@@ -242,8 +242,11 @@ public:
   { }
 
   ~ResonatorGlobalErrorProbe() {
-    dat << std::setprecision(8) << mean_h << "\t" << std::sqrt(sum/nsamples) << std::endl;
+    dat << std::setprecision(8) << mean_h << "\t" << get_error() << std::endl;
   }
+
+  double get_error() const
+  { return std::sqrt(sum/nsamples); }
 
   template<typename GF>
   void measure(const GF &gf, double time = 0) {
