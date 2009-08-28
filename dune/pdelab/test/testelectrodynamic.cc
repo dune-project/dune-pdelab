@@ -70,13 +70,13 @@ const double conv_limit = 0.85;
 
 // stop refining after the grid has more than this many elements (that means
 // in 3D that the fine grid may have up to 8 times as may elements)
-const unsigned maxelements = 2<<7;
+const unsigned maxelements = 2<<10;
 
 // multiplier for the stepsize obtained from the FDTD criterion
 const double stepadjust = 0.25;
 
 // how long to run the simulation
-const double duration = 1/c0;
+const double duration = 3/c0;
 
 // whether to run the check for all levels of refinement.  If false, will run
 // the check only for the first and the last level.  Running the check for all
@@ -90,7 +90,7 @@ const unsigned int quadrature_order = 3;
 const bool do_vtk_output = false;
 
 // where to place a probe to measure the E-field
-const double probe_location[] = {0.5, 0.5, 0.5};
+const double probe_location[] = {1.0/3, 1.0/5, 1.0/7};
 
 // probe_location as FieldVector, initialized from probe_location in main()
 Dune::FieldVector<double, 3> probe_location_fv;
@@ -530,7 +530,7 @@ int main(int argc, char** argv)
     Dune::SmartPointer<VTKOutput>
       vtkOutput(new VTKOutput("electrodynamic"));
 
-    typedef ResonatorGlobalErrorGridProbeFactory<double> GlobalError;
+    typedef ResonatorGlobalErrorGridProbeFactory GlobalError;
     Dune::SmartPointer<GlobalError>
       globalError(new GlobalError("electrodynamic-globalerror", quadrature_order));
 
@@ -543,7 +543,7 @@ int main(int argc, char** argv)
       l2Evolution(new L2Evolution("electrodynamic-l2evolution", quadrature_order));
 
     testAll(result,
-            *makeGridProbeFactoryList(pointPF, vtkOutput, globalError, l2Evolution),
+            *makeGridProbeFactoryList(pointPF, /*vtkOutput, */globalError, l2Evolution),
             *l2Error);
 
 	return result;

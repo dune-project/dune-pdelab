@@ -223,11 +223,9 @@ public:
 // GlobalErrorProbe
 //
 
-template<typename GV, typename RF>
 class ResonatorGlobalErrorProbe
   : public Dune::PDELab::DummyProbe
 {
-  const ResonatorSolutionFactory<GV, RF> rf;
   std::ostream &dat;
   unsigned integrationOrder;
 
@@ -236,8 +234,9 @@ class ResonatorGlobalErrorProbe
   double mean_h;
 
 public:
+  template<typename GV>
   ResonatorGlobalErrorProbe(std::ostream &dat_, unsigned integrationOrder_, const GV &gv)
-    : rf(), dat(dat_), integrationOrder(integrationOrder_), nsamples(0), sum(0)
+    : dat(dat_), integrationOrder(integrationOrder_), nsamples(0), sum(0)
     , mean_h(std::pow(1.0/gv.size(0), 1.0/GV::dimension))
   { }
 
@@ -250,14 +249,16 @@ public:
 
   template<typename GF>
   void measure(const GF &gf, double time = 0) {
+    typedef ResonatorSolutionFactory<
+      typename GF::Traits::GridViewType,
+      typename GF::Traits::RangeFieldType> RF;
     sum += l2difference2(gf.getGridView(),
-                         gf, *rf.function(gf.getGridView(), time),
+                         gf, *RF().function(gf.getGridView(), time),
                          integrationOrder);
     ++nsamples;
   }
 };
 
-template<typename RF>
 class ResonatorGlobalErrorLevelProbeFactory
 {
   std::ostream &dat;
@@ -266,7 +267,7 @@ class ResonatorGlobalErrorLevelProbeFactory
 public:
   template<typename GV>
   struct Traits {
-    typedef ResonatorGlobalErrorProbe<GV, RF> Probe;
+    typedef ResonatorGlobalErrorProbe Probe;
   };
 
   ResonatorGlobalErrorLevelProbeFactory(std::ostream &dat_, unsigned integrationOrder_)
@@ -282,7 +283,6 @@ public:
   }
 };
 
-template<typename RF>
 class ResonatorGlobalErrorGridProbeFactory
 {
   GnuplotGraph graph;
@@ -294,7 +294,7 @@ class ResonatorGlobalErrorGridProbeFactory
 public:
   template<typename G>
   struct Traits {
-    typedef ResonatorGlobalErrorLevelProbeFactory<RF> LevelProbeFactory;
+    typedef ResonatorGlobalErrorLevelProbeFactory LevelProbeFactory;
   };
 
   ResonatorGlobalErrorGridProbeFactory(const std::string &fileprefix,
