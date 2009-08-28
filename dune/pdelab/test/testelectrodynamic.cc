@@ -532,7 +532,7 @@ int main(int argc, char** argv)
 
     typedef ResonatorGlobalErrorGridProbeFactory GlobalError;
     Dune::SmartPointer<GlobalError>
-      globalError(new GlobalError("electrodynamic-globalerror", quadrature_order));
+      globalError(new GlobalError(quadrature_order, "electrodynamic-globalerror", "electrodynamic-globalevolution"));
 
     typedef ResonatorL2ErrorGridProbeFactory L2Error;
     Dune::SmartPointer<L2Error>

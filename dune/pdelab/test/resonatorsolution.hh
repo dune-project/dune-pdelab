@@ -226,22 +226,25 @@ public:
 class ResonatorGlobalErrorProbe
   : public Dune::PDELab::DummyProbe
 {
-  std::ostream &dat;
   unsigned integrationOrder;
-
+  double mean_h;
   unsigned nsamples;
   double sum;
-  double mean_h;
+
+  std::ostream *dat;
+
+  std::ostream *evodat;
 
 public:
   template<typename GV>
-  ResonatorGlobalErrorProbe(std::ostream &dat_, unsigned integrationOrder_, const GV &gv)
-    : dat(dat_), integrationOrder(integrationOrder_), nsamples(0), sum(0)
-    , mean_h(std::pow(1.0/gv.size(0), 1.0/GV::dimension))
+  ResonatorGlobalErrorProbe(const GV &gv, unsigned integrationOrder_, std::ostream *dat_, std::ostream *evodat_)
+    : integrationOrder(integrationOrder_), mean_h(std::pow(1.0/gv.size(0), 1.0/GV::dimension)), nsamples(0), sum(0)
+    , dat(dat_), evodat(evodat_)
   { }
 
   ~ResonatorGlobalErrorProbe() {
-    dat << std::setprecision(8) << mean_h << "\t" << get_error() << std::endl;
+    if(dat)
+      *dat << std::setprecision(8) << mean_h << "\t" << get_error() << std::endl;
   }
 
   double get_error() const
@@ -256,13 +259,23 @@ public:
                          gf, *RF().function(gf.getGridView(), time),
                          integrationOrder);
     ++nsamples;
+
+    if(evodat)
+      *evodat << std::setprecision(8) << time << "\t" << get_error() << std::endl;
   }
 };
 
 class ResonatorGlobalErrorLevelProbeFactory
 {
-  std::ostream &dat;
   unsigned integrationOrder;
+
+  std::ostream *dat;
+
+  GnuplotGraph *evograph;
+  std::ostream::pos_type evodatapos;
+  unsigned &evoindex;
+  std::string evolastplot;
+  const std::string tag;
 
 public:
   template<typename GV>
@@ -270,26 +283,69 @@ public:
     typedef ResonatorGlobalErrorProbe Probe;
   };
 
-  ResonatorGlobalErrorLevelProbeFactory(std::ostream &dat_, unsigned integrationOrder_)
-    : dat(dat_), integrationOrder(integrationOrder_)
-  { }
+  ResonatorGlobalErrorLevelProbeFactory(unsigned integrationOrder_,
+                                        std::ostream *dat_,
+                                        GnuplotGraph *evograph_, unsigned &evoindex_,
+                                        const std::string &tag_)
+    : integrationOrder(integrationOrder_)
+    , dat(dat_)
+    , evograph(evograph_), evodatapos(0), evoindex(evoindex_), evolastplot("")
+    , tag(tag_)
+  { 
+    if(evograph)
+      evodatapos = evograph->dat().tellp();
+  }
+
+  ~ResonatorGlobalErrorLevelProbeFactory() {
+    if(evograph)
+      if(evodatapos != evograph->dat().tellp()) {
+        evograph->dat() << "\n\n";
+        evograph->addPlot(evolastplot);
+        ++evoindex;
+      }
+  }
 
   template<typename GV>
   Dune::SmartPointer<typename Traits<GV>::Probe>
   getProbe(const GV &gv, unsigned level)
   {
-    dat << "# level " << level << std::endl;
-    return new typename Traits<GV>::Probe(dat, integrationOrder, gv);
+    if(dat)
+      *dat << "# level " << level << std::endl;
+
+    if(evograph) {
+      if(evodatapos != evograph->dat().tellp()) {
+        evograph->dat() << "\n\n";
+        evograph->addPlot(evolastplot);
+        ++evoindex;
+      }
+      evograph->dat() << "# LEVEL" << level << std::endl;
+      evodatapos = evograph->dat().tellp();
+      std::ostringstream plotconstruct;
+      plotconstruct << "'" << evograph->datname() << "'"
+                    << " index " << evoindex
+                    << " title '" << tag << " level " << level << "'"
+                    << " with linespoints pt 1";
+      evolastplot = plotconstruct.str();
+    }
+      
+    return new typename Traits<GV>::Probe(gv, integrationOrder,
+                                          dat,
+                                          evograph ? &evograph->dat() : 0);
   }
 };
 
 class ResonatorGlobalErrorGridProbeFactory
 {
-  GnuplotGraph graph;
   const unsigned integrationOrder;
+
+  Dune::SmartPointer<GnuplotGraph> graph;
   unsigned index;
   std::ostream::pos_type lastpos;
   std::string lastplot;
+
+  bool do_evolution;
+  Dune::SmartPointer<GnuplotGraph> evograph;
+  unsigned evoindex;
 
 public:
   template<typename G>
@@ -297,45 +353,71 @@ public:
     typedef ResonatorGlobalErrorLevelProbeFactory LevelProbeFactory;
   };
 
-  ResonatorGlobalErrorGridProbeFactory(const std::string &fileprefix,
-                                       const unsigned integrationOrder_)
-    : graph(fileprefix), integrationOrder(integrationOrder_)
-    , index(0), lastpos(graph.dat().tellp()), lastplot("")
+  ResonatorGlobalErrorGridProbeFactory(const unsigned integrationOrder_,
+                                       const std::string &convergencePrefix,
+                                       const std::string &evolutionPrefix = "")
+    : integrationOrder(integrationOrder_)
+    , graph(0), index(0), lastpos(0), lastplot("")
+    , evograph(0), evoindex(0)
   {
-    graph.addCommand("set terminal postscript eps color solid");
-    graph.addCommand("set output '"+fileprefix+".eps'");
-    graph.addCommand("");
-    graph.addCommand("set key left top reverse Left");
-    graph.addCommand("set logscale xy");
-    graph.addCommand("set title 'GlobalError'");
-    graph.addCommand("set xlabel '<h>'");
-    graph.addCommand("set ylabel 'Error'");
-    graph.addCommand("");
+    if(convergencePrefix != "") {
+      graph = new GnuplotGraph(convergencePrefix);
+      lastpos = graph->dat().tellp();
+
+      graph->addCommand("set terminal postscript eps color solid");
+      graph->addCommand("set output '"+convergencePrefix+".eps'");
+      graph->addCommand("");
+      graph->addCommand("set key left top reverse Left");
+      graph->addCommand("set logscale xy");
+      graph->addCommand("set title 'GlobalError'");
+      graph->addCommand("set xlabel '<h>'");
+      graph->addCommand("set ylabel 'Error'");
+      graph->addCommand("");
+    }
+
+    if(evolutionPrefix != "") {
+      evograph = new GnuplotGraph(evolutionPrefix);
+
+      evograph->addCommand("set terminal postscript eps color solid");
+      evograph->addCommand("set output '"+evolutionPrefix+".eps'");
+      evograph->addCommand("");
+      evograph->addCommand("set key left top reverse Left");
+      evograph->addCommand("set logscale y");
+      evograph->addCommand("set title 'Global Error Evolution'");
+      evograph->addCommand("set xlabel 't'");
+      evograph->addCommand("set ylabel 'Error'");
+      evograph->addCommand("");
+    }
   }
 
   ~ResonatorGlobalErrorGridProbeFactory() {
-    if(lastpos != graph.dat().tellp())
-      graph.addPlot(lastplot);
+    if(&*graph)
+      if(lastpos != graph->dat().tellp())
+        graph->addPlot(lastplot);
   }
 
   template<typename G>
   Dune::SmartPointer<typename Traits<G>::LevelProbeFactory>
   levelProbeFactory(const G &grid, const std::string &tag)
   {
-    if(lastpos != graph.dat().tellp()) {
-      graph.addPlot(lastplot);
-      graph.dat() << "\n\n";
-      ++index;
+    if(&*graph) {
+      if(lastpos != graph->dat().tellp()) {
+        graph->addPlot(lastplot);
+        graph->dat() << "\n\n";
+        ++index;
+      }
+      graph->dat() << "# " << tag << std::endl;
+      lastpos = graph->dat().tellp();
+      std::ostringstream plotconstruct;
+      plotconstruct << "'" << graph->datname() << "'"
+                    << " index " << index
+                    << " title '" << tag << "'"
+                    << " with linespoints pt 1";
+      lastplot = plotconstruct.str();
     }
-    graph.dat() << "# " << tag << std::endl;
-    lastpos = graph.dat().tellp();
-    std::ostringstream plotconstruct;
-    plotconstruct << "'" << graph.datname() << "'"
-                  << " index " << index
-                  << " title '" << tag << "'"
-                  << " with linespoints pt 1";
-    lastplot = plotconstruct.str();
-    return new typename Traits<G>::LevelProbeFactory(graph.dat(), integrationOrder);
+    return new typename Traits<G>::LevelProbeFactory(integrationOrder,
+                                                     &*graph ? &graph->dat() : 0,
+                                                     &*evograph, evoindex, tag);
   }
 };
 
