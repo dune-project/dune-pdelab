@@ -182,36 +182,176 @@ namespace Dune {
     };
 
     template<typename GPF0>
-    SmartPointer<GPF0> makeGridProbeFactoryList(SmartPointer<GPF0> gpf0,
-                                                SmartPointer<int> = 0,
-                                                SmartPointer<int> = 0,
-                                                SmartPointer<int> = 0,
-                                                SmartPointer<int> = 0,
-                                                SmartPointer<int> = 0,
-                                                SmartPointer<int> = 0,
-                                                SmartPointer<int> = 0,
-                                                SmartPointer<int> = 0,
-                                                SmartPointer<int> = 0)
+    SmartPointer<typename GridProbeFactoryListTraits<
+                   GPF0
+                   >::GPF>
+    makeGridProbeFactoryList(SmartPointer<GPF0> gpf0)
     {
       return gpf0;
     }
 
-    template<typename GPF0, typename GPF1, typename GPF2 = int, typename GPF3 = int,
-             typename GPF4 = int, typename GPF5 = int, typename GPF6 = int,
-             typename GPF7 = int, typename GPF8 = int, typename GPF9 = int>
-    SmartPointer<
-      typename GridProbeFactoryListTraits<
-        GPF0, GPF1, GPF2, GPF3, GPF4, GPF5, GPF6, GPF7, GPF8, GPF9>::GPF>
-      makeGridProbeFactoryList(SmartPointer<GPF0> gpf0,
-                               SmartPointer<GPF1> gpf1,
-                               SmartPointer<GPF2> gpf2 = 0,
-                               SmartPointer<GPF3> gpf3 = 0,
-                               SmartPointer<GPF4> gpf4 = 0,
-                               SmartPointer<GPF5> gpf5 = 0,
-                               SmartPointer<GPF6> gpf6 = 0,
-                               SmartPointer<GPF7> gpf7 = 0,
-                               SmartPointer<GPF8> gpf8 = 0,
-                               SmartPointer<GPF9> gpf9 = 0)
+    template<typename GPF0, typename GPF1>
+    SmartPointer<typename GridProbeFactoryListTraits<
+                   GPF0, GPF1
+                   >::GPF>
+    makeGridProbeFactoryList(SmartPointer<GPF0> gpf0,
+                             SmartPointer<GPF1> gpf1)
+    {
+      return new
+        typename GridProbeFactoryListTraits<
+          GPF0, GPF1
+        >::GPF(gpf0, gpf1);
+    }
+
+    template<typename GPF0, typename GPF1, typename GPF2>
+    SmartPointer<typename GridProbeFactoryListTraits<
+                   GPF0, GPF1, GPF2
+                   >::GPF>
+    makeGridProbeFactoryList(SmartPointer<GPF0> gpf0,
+                             SmartPointer<GPF1> gpf1,
+                             SmartPointer<GPF2> gpf2)
+    {
+      return new
+        typename GridProbeFactoryListTraits<
+          GPF0, GPF1, GPF2
+        >::GPF(gpf0,
+               makeGridProbeFactoryList(gpf1, gpf2));
+    }
+
+    template<typename GPF0, typename GPF1, typename GPF2, typename GPF3>
+    SmartPointer<typename GridProbeFactoryListTraits<
+                   GPF0, GPF1, GPF2, GPF3
+                   >::GPF>
+    makeGridProbeFactoryList(SmartPointer<GPF0> gpf0,
+                             SmartPointer<GPF1> gpf1,
+                             SmartPointer<GPF2> gpf2,
+                             SmartPointer<GPF3> gpf3)
+    {
+      return new
+        typename GridProbeFactoryListTraits<
+          GPF0, GPF1, GPF2, GPF3
+        >::GPF(gpf0,
+               makeGridProbeFactoryList(gpf1, gpf2, gpf3));
+    }
+
+    template<typename GPF0, typename GPF1, typename GPF2, typename GPF3,
+             typename GPF4>
+    SmartPointer<typename GridProbeFactoryListTraits<
+                   GPF0, GPF1, GPF2, GPF3, GPF4
+                   >::GPF>
+    makeGridProbeFactoryList(SmartPointer<GPF0> gpf0,
+                             SmartPointer<GPF1> gpf1,
+                             SmartPointer<GPF2> gpf2,
+                             SmartPointer<GPF3> gpf3,
+                             SmartPointer<GPF4> gpf4)
+    {
+      return new
+        typename GridProbeFactoryListTraits<
+          GPF0, GPF1, GPF2, GPF3, GPF4
+        >::GPF(gpf0,
+               makeGridProbeFactoryList(gpf1, gpf2, gpf3, gpf4));
+    }
+
+    template<typename GPF0, typename GPF1, typename GPF2, typename GPF3,
+             typename GPF4, typename GPF5>
+    SmartPointer<typename GridProbeFactoryListTraits<
+                   GPF0, GPF1, GPF2, GPF3, GPF4, GPF5
+                   >::GPF>
+    makeGridProbeFactoryList(SmartPointer<GPF0> gpf0,
+                             SmartPointer<GPF1> gpf1,
+                             SmartPointer<GPF2> gpf2,
+                             SmartPointer<GPF3> gpf3,
+                             SmartPointer<GPF4> gpf4,
+                             SmartPointer<GPF5> gpf5)
+    {
+      return new
+        typename GridProbeFactoryListTraits<
+          GPF0, GPF1, GPF2, GPF3, GPF4, GPF5
+        >::GPF(gpf0,
+               makeGridProbeFactoryList(gpf1, gpf2, gpf3, gpf4, gpf5));
+    }
+
+    template<typename GPF0, typename GPF1, typename GPF2, typename GPF3,
+             typename GPF4, typename GPF5, typename GPF6>
+    SmartPointer<typename GridProbeFactoryListTraits<
+                   GPF0, GPF1, GPF2, GPF3, GPF4, GPF5, GPF6
+                   >::GPF>
+    makeGridProbeFactoryList(SmartPointer<GPF0> gpf0,
+                             SmartPointer<GPF1> gpf1,
+                             SmartPointer<GPF2> gpf2,
+                             SmartPointer<GPF3> gpf3,
+                             SmartPointer<GPF4> gpf4,
+                             SmartPointer<GPF5> gpf5,
+                             SmartPointer<GPF6> gpf6)
+    {
+      return new
+        typename GridProbeFactoryListTraits<
+          GPF0, GPF1, GPF2, GPF3, GPF4, GPF5, GPF6
+        >::GPF(gpf0,
+               makeGridProbeFactoryList(gpf1, gpf2, gpf3, gpf4, gpf5, gpf6));
+    }
+
+    template<typename GPF0, typename GPF1, typename GPF2, typename GPF3,
+             typename GPF4, typename GPF5, typename GPF6,
+             typename GPF7>
+    SmartPointer<typename GridProbeFactoryListTraits<
+                   GPF0, GPF1, GPF2, GPF3, GPF4, GPF5, GPF6, GPF7
+                   >::GPF>
+    makeGridProbeFactoryList(SmartPointer<GPF0> gpf0,
+                             SmartPointer<GPF1> gpf1,
+                             SmartPointer<GPF2> gpf2,
+                             SmartPointer<GPF3> gpf3,
+                             SmartPointer<GPF4> gpf4,
+                             SmartPointer<GPF5> gpf5,
+                             SmartPointer<GPF6> gpf6,
+                             SmartPointer<GPF7> gpf7)
+    {
+      return new
+        typename GridProbeFactoryListTraits<
+          GPF0, GPF1, GPF2, GPF3, GPF4, GPF5, GPF6, GPF7
+        >::GPF(gpf0,
+               makeGridProbeFactoryList(gpf1, gpf2, gpf3, gpf4, gpf5, gpf6, gpf7));
+    }
+
+    template<typename GPF0, typename GPF1, typename GPF2, typename GPF3,
+             typename GPF4, typename GPF5, typename GPF6,
+             typename GPF7, typename GPF8>
+    SmartPointer<typename GridProbeFactoryListTraits<
+                   GPF0, GPF1, GPF2, GPF3, GPF4, GPF5, GPF6, GPF7, GPF8
+                   >::GPF>
+    makeGridProbeFactoryList(SmartPointer<GPF0> gpf0,
+                             SmartPointer<GPF1> gpf1,
+                             SmartPointer<GPF2> gpf2,
+                             SmartPointer<GPF3> gpf3,
+                             SmartPointer<GPF4> gpf4,
+                             SmartPointer<GPF5> gpf5,
+                             SmartPointer<GPF6> gpf6,
+                             SmartPointer<GPF7> gpf7,
+                             SmartPointer<GPF8> gpf8)
+    {
+      return new
+        typename GridProbeFactoryListTraits<
+          GPF0, GPF1, GPF2, GPF3, GPF4, GPF5, GPF6, GPF7, GPF8
+        >::GPF(gpf0,
+               makeGridProbeFactoryList(gpf1, gpf2, gpf3, gpf4, gpf5, gpf6, gpf7, gpf8));
+    }
+
+    template<typename GPF0, typename GPF1, typename GPF2, typename GPF3,
+             typename GPF4, typename GPF5, typename GPF6,
+             typename GPF7, typename GPF8, typename GPF9>
+    SmartPointer<typename GridProbeFactoryListTraits<
+                   GPF0, GPF1, GPF2, GPF3, GPF4, GPF5, GPF6, GPF7, GPF8, GPF9
+                   >::GPF>
+    makeGridProbeFactoryList(SmartPointer<GPF0> gpf0,
+                             SmartPointer<GPF1> gpf1,
+                             SmartPointer<GPF2> gpf2,
+                             SmartPointer<GPF3> gpf3,
+                             SmartPointer<GPF4> gpf4,
+                             SmartPointer<GPF5> gpf5,
+                             SmartPointer<GPF6> gpf6,
+                             SmartPointer<GPF7> gpf7,
+                             SmartPointer<GPF8> gpf8,
+                             SmartPointer<GPF9> gpf9)
     {
       return new
         typename GridProbeFactoryListTraits<
