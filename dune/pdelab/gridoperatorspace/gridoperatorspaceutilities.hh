@@ -278,7 +278,7 @@ namespace Dune {
                                   const LFSU& lfsu_n, const LFSV& lfsv_n, 
                                   LocalSparsityPattern& pattern_sn, LocalSparsityPattern& pattern_ns)
       {
-        la.pattern_skeleton(lfsu_s,lfsv_n,lfsu_n,lfsv_n,pattern_sn,pattern_ns);
+        la.pattern_skeleton(lfsu_s,lfsv_s,lfsu_n,lfsv_n,pattern_sn,pattern_ns);
       }
 
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
