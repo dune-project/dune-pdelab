@@ -27,18 +27,18 @@ namespace Dune {
 	  template<typename T, typename E>
 	  class Matrix : public Dune::BCRSMatrix< Dune::FieldMatrix<E,ROWBLOCKSIZE,COLBLOCKSIZE> >
 	  {
-		typedef Dune::FieldMatrix<E,ROWBLOCKSIZE,COLBLOCKSIZE> M;
+		typedef Dune::FieldMatrix<E,ROWBLOCKSIZE,COLBLOCKSIZE> FM;
 
 	  public:
-		typedef typename Dune::BCRSMatrix<M>::size_type size_type;
+		typedef typename Dune::BCRSMatrix<FM>::size_type size_type;
 		typedef E ElementType;
-		typedef Dune::BCRSMatrix<M> BaseT;
+		typedef Dune::BCRSMatrix<FM> BaseT;
         typedef ISTLBCRSMatrixBackend<ROWBLOCKSIZE,COLBLOCKSIZE> Backend;
 
         //! construct container
 		Matrix (const T& t) 
 		  : BaseT(t.globalSizeV()/ROWBLOCKSIZE,t.globalSizeU()/COLBLOCKSIZE,
-				  Dune::BCRSMatrix<M>::random) 
+				  Dune::BCRSMatrix<FM>::random) 
 		{
 		  Pattern pattern(t.globalSizeV()/ROWBLOCKSIZE,t.globalSizeU()/COLBLOCKSIZE);
 		  t.fill_pattern(pattern);
