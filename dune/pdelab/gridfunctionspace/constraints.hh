@@ -411,19 +411,20 @@ namespace Dune {
             ::volume(lfs_e,cg,ElementGeometry<Element>(*it));
           
 		  // iterate over intersections and call metaprogram
+          unsigned int intersection_index = 0;
 		  IntersectionIterator endit = gfs.gridview().iend(*it);
-		  for (IntersectionIterator iit = gfs.gridview().ibegin(*it); iit!=endit; ++iit)
+		  for (IntersectionIterator iit = gfs.gridview().ibegin(*it); iit!=endit; ++iit, ++intersection_index)
 			{
 			  if (iit->boundary())
                 {
                   ConstraintsVisitNodeMetaProgram<F,F::isLeaf,LFS,LFS::isLeaf>
-                    ::boundary(f,lfs_e,cg,IntersectionGeometry<Intersection>(*iit));
+                      ::boundary(f,lfs_e,cg,IntersectionGeometry<Intersection>(*iit,intersection_index));
                 }
 
               // ParallelStuff: BEGIN support for processor boundaries.
 			  if ((!iit->boundary()) && (!iit->neighbor()))
 				ConstraintsVisitNodeMetaProgram2<LFS,LFS::isLeaf>
-				  ::processor(lfs_e,cg,IntersectionGeometry<Intersection>(*iit));
+				  ::processor(lfs_e,cg,IntersectionGeometry<Intersection>(*iit,intersection_index));
               // END support for processor boundaries.
 
 			  if (iit->neighbor()){
@@ -436,7 +437,7 @@ namespace Dune {
                   lfs_f.bind( *(iit->outside()) );
 
                   ConstraintsVisitNodeMetaProgram2<LFS,LFS::isLeaf>
-                    ::skeleton(lfs_e,lfs_f,cg,IntersectionGeometry<Intersection>(*iit));
+                    ::skeleton(lfs_e,lfs_f,cg,IntersectionGeometry<Intersection>(*iit,intersection_index));
                 }
               }
 			}

@@ -64,8 +64,8 @@ namespace Dune {
 	  enum { dimensionworld=Entity::dimensionworld };
 
       //! \todo Please doc me!
-	  IntersectionGeometry (const I& i_)
-		: i(i_)
+      IntersectionGeometry (const I& i_, unsigned int index_)
+        : i(i_), index(index_)
 	  {}
 
 
@@ -201,10 +201,15 @@ namespace Dune {
 	  {
 		return i;
 	  }
-  
+
+      unsigned int intersectionIndex() const
+      {
+        return index;
+      }
 
 	private:
 	  const I& i;
+      const unsigned int index;
 	};
 
   }

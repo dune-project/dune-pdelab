@@ -168,8 +168,7 @@ namespace Dune {
             LFSV lfsvn(gfsv);
 
             IntersectionIterator endit = gfsu.gridview().iend(*it);
-            for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
-                 iit!=endit; ++iit)
+            for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); iit!=endit; ++iit)
               {
                 // skip if there is no neighbor
                 if (!iit->neighbor()) continue;
@@ -262,9 +261,10 @@ namespace Dune {
                 LFSV lfsvn(gfsv);
 
                 // traverse intersections
+                unsigned int intersection_index = 0;
                 IntersectionIterator endit = gfsu.gridview().iend(*it);
                 for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
-                     iit!=endit; ++iit)
+                     iit!=endit; ++iit, ++intersection_index)
                   {
                     // skeleton term
                     if (iit->neighbor() && (LA::doAlphaSkeleton||LA::doLambdaSkeleton) )
@@ -297,7 +297,7 @@ namespace Dune {
                             
                             // skeleton evaluation
                             LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
-                              alpha_skeleton(la,IntersectionGeometry<Intersection>(*iit),lfsu,xl,lfsv,lfsun,xn,lfsvn,rl,rn);
+                              alpha_skeleton(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,lfsun,xn,lfsvn,rl,rn);
                             
                             // accumulate result (note: r needs to be cleared outside)
                             lfsvn.vadd(rn,r);
@@ -308,9 +308,9 @@ namespace Dune {
                     if (iit->boundary())
                       {
                         LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
-                          alpha_boundary(la,IntersectionGeometry<Intersection>(*iit),lfsu,xl,lfsv,rl);
+                          alpha_boundary(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,rl);
                         LocalAssemblerCallSwitch<LA,LA::doLambdaBoundary>::
-                          lambda_boundary(la,IntersectionGeometry<Intersection>(*iit),lfsv,rl);
+                          lambda_boundary(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsv,rl);
                       }
                   }
               }
@@ -384,9 +384,10 @@ namespace Dune {
                 LFSU lfsun(gfsu);
                 LFSV lfsvn(gfsv);
 
+                unsigned int intersection_index = 0;
 				IntersectionIterator endit = gfsu.gridview().iend(*it);
 				for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
-					 iit!=endit; ++iit)
+					 iit!=endit; ++iit, ++intersection_index)
 				  {
                     // skeleton term
                     if (iit->neighbor() && LA::doAlphaSkeleton )
@@ -419,7 +420,7 @@ namespace Dune {
                             
                             // skeleton evaluation
                             LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
-                              jacobian_apply_skeleton(la,IntersectionGeometry<Intersection>(*iit),lfsu,xl,lfsv,lfsun,xn,lfsvn,yl,yn);
+                              jacobian_apply_skeleton(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,lfsun,xn,lfsvn,yl,yn);
 
                             // accumulate result (note: r needs to be cleared outside)
                             lfsvn.vadd(yn,y);
@@ -430,7 +431,7 @@ namespace Dune {
                     if (iit->boundary())
                       {
                         LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
-                          jacobian_apply_boundary(la,IntersectionGeometry<Intersection>(*iit),lfsu,xl,lfsv,yl);
+                          jacobian_apply_boundary(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,yl);
                       }
 				  }
 			  }
@@ -507,6 +508,7 @@ namespace Dune {
                 LFSU lfsun(gfsu);
                 LFSV lfsvn(gfsv);
                 
+                unsigned int intersection_index = 0;
 				IntersectionIterator endit = gfsu.gridview().iend(*it);
 				for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
 					 iit!=endit; ++iit)
@@ -544,7 +546,7 @@ namespace Dune {
                             
                             // skeleton evaluation
                             LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
-                              jacobian_skeleton(la,IntersectionGeometry<Intersection>(*iit),
+                              jacobian_skeleton(la,IntersectionGeometry<Intersection>(*iit,intersection_index),
                                                 lfsu,xl,lfsv,lfsun,xn,lfsvn,al,al_sn,al_ns,al_nn);
 
                             // accumulate result
@@ -558,7 +560,7 @@ namespace Dune {
                     if (iit->boundary())
                       {
                         LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
-                          jacobian_boundary(la,IntersectionGeometry<Intersection>(*iit),lfsu,xl,lfsv,al);
+                          jacobian_boundary(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,al);
                       }
 				  }
 			  }
@@ -698,7 +700,7 @@ namespace Dune {
               constrained_v = true;
             }
 
-            double vf = 1;
+            T vf = 1;
             do{
               // if gi is index of constrained dof
               if(constrained_v){
@@ -718,11 +720,14 @@ namespace Dune {
               if(gucit!=cu.end()){
                 gurit = gucit->second.begin();
                 constrained_u = true;
-                if(gurit == gucit->second.end())
-                  B::access(globalcontainer,gi,gj) += localcontainer(i,j) * vf;
+                if(gurit == gucit->second.end()){
+                  T t = localcontainer(i,j) * vf;
+//                   if(t != 0.0)                 // entry might not be present in the matrix
+                    B::access(globalcontainer,gi,gj) += t;
+                }
               }
 
-              double uf = 1;
+              T uf = 1;
               do{
                 // if gj is index of constrained dof
                 if(constrained_u){
@@ -737,7 +742,9 @@ namespace Dune {
                 }
 
                 // add weighted local entry to global matrix
-                B::access(globalcontainer,gi,gj) += localcontainer(i,j) * uf * vf;
+                T t = localcontainer(i,j) * uf * vf;
+//                 if (t != 0.0)                 // entry might not be present in the matrix
+                  B::access(globalcontainer,gi,gj) += t;
 
                 if(constrained_u && gurit != gucit->second.end())
                   ++gurit;

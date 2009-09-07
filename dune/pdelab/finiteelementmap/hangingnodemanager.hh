@@ -137,12 +137,13 @@ namespace Dune {
 
 	  // Now we still have to update minimum_touching_level for this
 	  // cell
-      
+
+          unsigned int intersection_index = 0;
 	  IntersectionIterator fit = gv.ibegin(*it);
 	  IntersectionIterator efit = gv.iend(*it);
 	  typedef typename IntersectionIterator::Intersection Intersection;
 
-	  for(;fit!=efit;++fit){
+	  for(;fit!=efit;++fit,++intersection_index){
 
 	    const Dune::GenericReferenceElement<double,dim-1> & 
 	      reference_face_element = 
@@ -163,7 +164,8 @@ namespace Dune {
 		const FacePoint facelocal_position = reference_face_element.position(i,dim-1);
 		typename BoundaryFunction::Traits::RangeType boundary_value;
 
-		boundaryFunction.evaluate(IntersectionGeometry<Intersection>(*fit),facelocal_position,boundary_value);
+		boundaryFunction.evaluate(IntersectionGeometry<Intersection>(*fit,intersection_index),
+                                          facelocal_position,boundary_value);
 
 		if(boundary_value)
 		  node_info[v_globalindex].is_boundary=true;
