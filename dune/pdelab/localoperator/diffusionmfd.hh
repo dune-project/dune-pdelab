@@ -31,7 +31,6 @@ namespace Dune
         template<class Data, class WBuilder = MimeticBrezziW<typename Data::ctype,Data::dimension> >
         class DiffusionMFD
             : public FullVolumePattern
-            , public FullSkeletonPattern
             , public LocalOperatorDefaultFlags
         {
             static const unsigned int dim = Data::dimension;
@@ -41,7 +40,7 @@ namespace Dune
         public:
             // pattern assembly flags
             enum { doPatternVolume = true };
-            enum { doPatternSkeleton = true };
+            enum { doPatternSkeleton = false };
 
             // residual assembly flags
             enum { doAlphaVolume = true };
