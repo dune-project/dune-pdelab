@@ -9,6 +9,8 @@
 #include <dune/common/tuples.hh>
 #include <dune/pdelab/common/function.hh>
 
+#include "gnuplotgraph.hh"
+
 namespace Dune {
   namespace PDELab {
 

@@ -44,6 +44,7 @@
 #include "../gridoperatorspace/gridoperatorspace.hh"
 #include "../localoperator/electrodynamic.hh"
 
+#include "electricenergy-probe.hh"
 #include "gnuplotgraph.hh"
 #include "gridexamples.hh"
 #include "l2difference.hh"
@@ -73,10 +74,10 @@ const double conv_limit = 0.85;
 const unsigned maxelements = 2<<10;
 
 // multiplier for the stepsize obtained from the FDTD criterion
-const double stepadjust = 0.25;
+const double stepadjust = 1.0/4;
 
 // how long to run the simulation
-const double duration = 3/c0;
+const double duration = 10/c0;
 
 // whether to run the check for all levels of refinement.  If false, will run
 // the check only for the first and the last level.  Running the check for all
@@ -90,7 +91,7 @@ const unsigned int quadrature_order = 3;
 const bool do_vtk_output = false;
 
 // where to place a probe to measure the E-field
-const double probe_location[] = {1.0/3, 1.0/5, 1.0/7};
+const double probe_location[3] = {1.0/3, 1.0/5, 1.0/7};
 
 // probe_location as FieldVector, initialized from probe_location in main()
 Dune::FieldVector<double, 3> probe_location_fv;
@@ -542,8 +543,12 @@ int main(int argc, char** argv)
     Dune::SmartPointer<L2Evolution>
       l2Evolution(new L2Evolution("electrodynamic-l2evolution", quadrature_order));
 
+    typedef ElectricEnergyGridProbeFactory EnergyEvolution;
+    Dune::SmartPointer<EnergyEvolution>
+      energyEvolution(new EnergyEvolution("electrodynamic-electricenergy-evolution", quadrature_order));
+
     testAll(result,
-            *makeGridProbeFactoryList(pointPF, /*vtkOutput, */globalError, l2Evolution),
+            *makeGridProbeFactoryList(pointPF, vtkOutput, globalError, l2Evolution, energyEvolution),
             *l2Error);
 
 	return result;
