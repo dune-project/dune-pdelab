@@ -139,6 +139,37 @@ MOSTLYCLEANFILES +=							\
 	s0001:p0000:electrodynamic-ug-triangulated-cube-6.level*-*.vtu	\
 	testelectrodynamic
 
+NORMALTESTS += testelectrodynamic-newmark
+testelectrodynamic_newmark_SOURCES = testelectrodynamic-newmark.cc
+testelectrodynamic_newmark_CPPFLAGS = $(AM_CPPFLAGS)			\
+	$(ALBERTA_INCLUDE_CPPFLAGS) -DALBERTA_DIM=3 -DENABLE_ALBERTA	\
+	$(SUPERLU_CPPFLAGS)
+testelectrodynamic_newmark_LDADD =				\
+	$(ALBERTA_LDFLAGS) -lalberta_3d $(ALBERTA_BASE_LIBS)	\
+	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)
+MOSTLYCLEANFILES +=								\
+	electrodynamic-newmark-electricenergy-evolution.dat			\
+	electrodynamic-newmark-electricenergy-evolution.gnuplot			\
+	electrodynamic-newmark-globalerror.dat					\
+	electrodynamic-newmark-globalerror.eps					\
+	electrodynamic-newmark-globalerror.gnuplot				\
+	electrodynamic-newmark-globalevolution.dat				\
+	electrodynamic-newmark-globalevolution.eps				\
+	electrodynamic-newmark-globalevolution.gnuplot				\
+	electrodynamic-newmark-l2error.dat					\
+	electrodynamic-newmark-l2error.eps					\
+	electrodynamic-newmark-l2error.gnuplot					\
+	electrodynamic-newmark-l2evolution.dat					\
+	electrodynamic-newmark-l2evolution.eps					\
+	electrodynamic-newmark-l2evolution.gnuplot				\
+	electrodynamic-newmark-probe.dat					\
+	electrodynamic-newmark-probe.eps					\
+	electrodynamic-newmark-probe.gnuplot					\
+	electrodynamic-newmark-ug-triangulated-cube-6.level*.pvd		\
+	s0001:electrodynamic-newmark-ug-triangulated-cube-6.level*-*.pvtu	\
+	s0001:p0000:electrodynamic-newmark-ug-triangulated-cube-6.level*-*.vtu	\
+	testelectrodynamic-newmark
+
 NORMALTESTS += testfiniteelementmap
 testfiniteelementmap_SOURCES = testfiniteelementmap.cc
 testfiniteelementmap_CPPFLAGS = $(AM_CPPFLAGS)	\

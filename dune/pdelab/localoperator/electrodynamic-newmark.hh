@@ -76,10 +76,10 @@ namespace Dune {
      */
     template<typename Eps, typename Mu, typename GCV>
 	class ElectrodynamicNewmark
-      : public NumericalJacobianApplyVolume<Electrodynamic<Eps, Mu, GCV> >
-      , public NumericalJacobianVolume<Electrodynamic<Eps, Mu, GCV> >
-      , public NumericalJacobianApplyBoundary<Electrodynamic<Eps, Mu, GCV> >
-      , public NumericalJacobianBoundary<Electrodynamic<Eps, Mu, GCV> >
+      : public NumericalJacobianApplyVolume<ElectrodynamicNewmark<Eps, Mu, GCV> >
+      , public NumericalJacobianVolume<ElectrodynamicNewmark<Eps, Mu, GCV> >
+      , public NumericalJacobianApplyBoundary<ElectrodynamicNewmark<Eps, Mu, GCV> >
+      , public NumericalJacobianBoundary<ElectrodynamicNewmark<Eps, Mu, GCV> >
       , public FullVolumePattern
       , public LocalOperatorDefaultFlags
 	{
@@ -139,11 +139,10 @@ namespace Dune {
         // dimensions
         const int dim = EG::Geometry::dimension;
 
-        Matrix<FieldMatrix<DF, 1, 1> > T(lfsu.size(), lfsu.size());
-        Matrix<FieldMatrix<DF, 1, 1> > S(lfsu.size(), lfsu.size());
-        for(unsigned i = 0; i < lfsu.size(); ++i)
-          for(unsigned j = 0; j < lfsu.size(); ++j)
-            T[i][j] = S[i][j] = 0;
+        std::vector<std::vector<DF> >
+          T(lfsu.size(), std::vector<DF>(lfsu.size(), 0));
+        std::vector<std::vector<DF> >
+          S(lfsu.size(), std::vector<DF>(lfsu.size(), 0));
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -196,14 +195,17 @@ namespace Dune {
         X xcur;
         lfsu.vread(*Ecur, xcur);
 
-        // v1 = x - 2*xcur + xprev, just what is needed to right-multiply to the matrix
-        //     { T + beta * Deltat^2 * S } in the first term
+        // v1 = x - 2*xcur + xprev, just what is needed to right-multiply to
+        //     the matrix { T + beta * Deltat^2 * S } in the first term
         X v1(lfsu.size());
         for(unsigned i = 0; i < lfsu.size(); ++i)
-          Tvec[i] = x[i] - 2*xcur[i] + xprev[i];
+          v1[i] = x[i] - 2*xcur[i] + xprev[i];
 
         // !!! modify S -> Delta_t^2*S
-        S *= Delta_t*Delta_t;
+        double Delta_t2 = Delta_t*Delta_t;
+        for(unsigned i = 0; i < lfsu.size(); ++i)
+          for(unsigned j = 0; j < lfsu.size(); ++j)
+            S[i][j] *= Delta_t2;
         // !!! modify T -> T + beta * Delta_t^2 * S
         for(unsigned i = 0; i < lfsu.size(); ++i)
           for(unsigned j = 0; j < lfsu.size(); ++j)
