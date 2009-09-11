@@ -139,21 +139,6 @@ MOSTLYCLEANFILES +=							\
 	s0001:p0000:electrodynamic-ug-triangulated-cube-6.level*-*.vtu	\
 	testelectrodynamic
 
-
-NORMALTESTS += testelectrostatic
-testelectrostatic_SOURCES = testelectrostatic.cc
-testelectrostatic_CPPFLAGS = $(AM_CPPFLAGS)				\
-	$(ALBERTA_INCLUDE_CPPFLAGS) -DALBERTA_DIM=3 -DENABLE_ALBERTA	\
-	$(SUPERLU_CPPFLAGS)
-testelectrostatic_LDADD =					\
-	$(ALBERTA_LDFLAGS) -lalberta_3d $(ALBERTA_BASE_LIBS)	\
-	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)
-MOSTLYCLEANFILES += 					\
-	electrostatic-alberta-triangulated-cube-6-*.vtu	\
-	electrostatic-alberta-triangulated-cube-6.dat	\
-	electrostatic.eps				\
-	testelectrostatic.gnuplot
-
 NORMALTESTS += testfiniteelementmap
 testfiniteelementmap_SOURCES = testfiniteelementmap.cc
 testfiniteelementmap_CPPFLAGS = $(AM_CPPFLAGS)	\
