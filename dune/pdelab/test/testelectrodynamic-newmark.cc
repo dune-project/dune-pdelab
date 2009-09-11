@@ -65,7 +65,7 @@
 //
 
 // The beta parameter for the Newmark-beta method
-const double beta = 0.0;
+const double beta = 0.25;
 
 // default limit for the total convergence
 // (alberta with the triangulated unit cube uses a limit derived from this

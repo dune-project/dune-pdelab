@@ -69,7 +69,7 @@ public:
     plotconstruct << "'" << graph.datname() << "'"
                   << " index " << index
                   << " title '" << tag << " level " << level << "'"
-                  << " with linespoints pt 1";
+                  << " with lines";
     lastplot = plotconstruct.str();
     return new typename Traits<GV>::Probe(graph.dat(), integrationOrder);
   }
@@ -95,8 +95,7 @@ public:
     graph.addCommand("set output '"+fileprefix+".eps'");
     graph.addCommand("");
     graph.addCommand("set key left top reverse Left");
-    graph.addCommand("set logscale y");
-    graph.addCommand("set title 'Energy Evolution'");
+    graph.addCommand("set title 'Electric Energy Evolution'");
     graph.addCommand("set xlabel 't'");
     graph.addCommand("set ylabel 'Energy'");
     graph.addCommand("");

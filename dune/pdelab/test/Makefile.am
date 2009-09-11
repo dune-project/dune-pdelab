@@ -117,6 +117,7 @@ testelectrodynamic_LDADD =					\
 	$(ALBERTA_LDFLAGS) -lalberta_3d $(ALBERTA_BASE_LIBS)	\
 	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)
 MOSTLYCLEANFILES +=							\
+	electrodynamic-electricenergy-evolution.eps			\
 	electrodynamic-electricenergy-evolution.dat			\
 	electrodynamic-electricenergy-evolution.gnuplot			\
 	electrodynamic-globalerror.dat					\
@@ -132,7 +133,7 @@ MOSTLYCLEANFILES +=							\
 	electrodynamic-l2evolution.eps					\
 	electrodynamic-l2evolution.gnuplot				\
 	electrodynamic-probe.dat					\
-	electrodynamic-probe.eps					\
+	electrodynamic-probe-*.eps					\
 	electrodynamic-probe.gnuplot					\
 	electrodynamic-ug-triangulated-cube-6.level*.pvd		\
 	s0001:electrodynamic-ug-triangulated-cube-6.level*-*.pvtu	\
@@ -148,6 +149,7 @@ testelectrodynamic_newmark_LDADD =				\
 	$(ALBERTA_LDFLAGS) -lalberta_3d $(ALBERTA_BASE_LIBS)	\
 	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)
 MOSTLYCLEANFILES +=								\
+	electrodynamic-newmark-electricenergy-evolution.eps			\
 	electrodynamic-newmark-electricenergy-evolution.dat			\
 	electrodynamic-newmark-electricenergy-evolution.gnuplot			\
 	electrodynamic-newmark-globalerror.dat					\
@@ -163,7 +165,7 @@ MOSTLYCLEANFILES +=								\
 	electrodynamic-newmark-l2evolution.eps					\
 	electrodynamic-newmark-l2evolution.gnuplot				\
 	electrodynamic-newmark-probe.dat					\
-	electrodynamic-newmark-probe.eps					\
+	electrodynamic-newmark-probe-*.eps					\
 	electrodynamic-newmark-probe.gnuplot					\
 	electrodynamic-newmark-ug-triangulated-cube-6.level*.pvd		\
 	s0001:electrodynamic-newmark-ug-triangulated-cube-6.level*-*.pvtu	\

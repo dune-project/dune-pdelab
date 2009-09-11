@@ -372,9 +372,12 @@ namespace Dune {
     {
       std::ostream &data;
       D x;
+      unsigned &max_elems;
 
     public:
-      GnuplotProbe(std::ostream &data_, const D &x_) : data(data_), x(x_) {}
+      GnuplotProbe(std::ostream &data_, const D &x_, unsigned &max_elems_)
+        : data(data_), x(x_), max_elems(max_elems_)
+      {}
 
       template<typename GF>
       void measure(const GF &gf, double time = 0) {
@@ -384,6 +387,7 @@ namespace Dune {
         for(unsigned i = 0; i < GF::Traits::dimDomain; ++i)
           data << "\t" << y[i];
         data << std::endl;
+        if(max_elems < GF::Traits::dimDomain) max_elems = GF::Traits::dimDomain;
       }
 
     };
@@ -391,12 +395,34 @@ namespace Dune {
     template<typename D>
     class GnuplotLevelProbeFactory
     {
+      struct PlotLine {
+        PlotLine(const std::string prefix_ = "", const std::string suffix_ = "")
+          : prefix(prefix_), suffix(suffix_), max_elems(0)
+        {}
+
+        std::string prefix;
+        std::string suffix;
+        unsigned max_elems;
+      };
+
       GnuplotGraph &graph;
       D x;
       std::ostream::pos_type datapos;
       unsigned &index;
-      std::string lastplot;
+      PlotLine lastplot;
+      std::vector<PlotLine> plots;
+      unsigned max_elems;
+      const std::string fileprefix;
       const std::string tag;
+
+      void finishPlot() {
+        if(datapos != graph.dat().tellp()) {
+          graph.dat() << "\n\n";
+          plots.push_back(lastplot);
+          if(lastplot.max_elems > max_elems) max_elems = lastplot.max_elems;
+          ++index;
+        }
+      }
 
     public:
       template<typename GV>
@@ -404,16 +430,30 @@ namespace Dune {
         typedef GnuplotProbe<D> Probe;
       };
 
-      GnuplotLevelProbeFactory(GnuplotGraph &graph_, const D &x_, unsigned &index_,
+      GnuplotLevelProbeFactory(GnuplotGraph &graph_, const D &x_,
+                               unsigned &index_,
+                               const std::string &fileprefix_,
                                const std::string &tag_)
-        : graph(graph_), x(x_), datapos(graph.dat().tellp()), index(index_), lastplot(""), tag(tag_)
+        : graph(graph_), x(x_), datapos(graph.dat().tellp()), index(index_)
+        , lastplot(), plots(), max_elems(0), fileprefix(fileprefix_), tag(tag_)
       { }
       ~GnuplotLevelProbeFactory()
       {
-        if(datapos != graph.dat().tellp()) {
-          graph.dat() << "\n\n";
-          graph.addPlot(lastplot);
-          ++index;
+        finishPlot();
+
+        for(unsigned comp = 0; comp < max_elems; ++comp) {
+          std::ostringstream s;
+          s << comp;
+          graph.addCommand("set output '"+fileprefix+"-"+s.str()+".eps'");
+          graph.addCommand("set ylabel 'u_{"+s.str()+"}'");
+          for(unsigned i = 0; i < plots.size(); ++i) 
+            if(plots[i].max_elems > comp) {
+              std::ostringstream plotline;
+              plotline << plots[i].prefix
+                       << " using 1:" << comp+2
+                       << plots[i].suffix;
+              graph.addPlot(plotline.str());
+            }
         }
       }
 
@@ -421,20 +461,23 @@ namespace Dune {
       SmartPointer<typename Traits<GV>::Probe>
       getProbe(const GV &gv, unsigned level)
       {
-        if(datapos != graph.dat().tellp()) {
-          graph.dat() << "\n\n";
-          graph.addPlot(lastplot);
-          ++index;
-        }
+        finishPlot();
         graph.dat() << "# LEVEL" << level << std::endl;
         datapos = graph.dat().tellp();
-        std::ostringstream plotconstruct;
-        plotconstruct << "'" << graph.datname() << "'"
-                      << " index " << index
-                      << " title '" << tag << " level " << level << "'"
-                      << " with linespoints pt 1";
-        lastplot = plotconstruct.str();
-        return new typename Traits<GV>::Probe(graph.dat(), x);
+        {
+          std::ostringstream plotconstruct;
+          plotconstruct << "'" << graph.datname() << "'"
+                        << " index " << index;
+          lastplot.prefix = plotconstruct.str();
+        }
+        {
+          std::ostringstream plotconstruct;
+          plotconstruct << " title '" << tag << " level " << level << "'"
+                        << " with lines";
+          lastplot.suffix = plotconstruct.str();
+        }
+        lastplot.max_elems = 0;
+        return new typename Traits<GV>::Probe(graph.dat(), x, lastplot.max_elems);
       }
     };
 
@@ -442,6 +485,7 @@ namespace Dune {
     class GnuplotGridProbeFactory
     {
       const D x;
+      std::string fileprefix;
       GnuplotGraph graph;
       unsigned index;
 
@@ -451,13 +495,22 @@ namespace Dune {
         typedef GnuplotLevelProbeFactory<D> LevelProbeFactory;
       };
 
-      GnuplotGridProbeFactory(const std::string &fileprefix, const D &x_)
-        : x(x_), graph(fileprefix), index(0)
+      GnuplotGridProbeFactory(const std::string &fileprefix_, const D &x_)
+        : x(x_), fileprefix(fileprefix_), graph(fileprefix_), index(0)
       {
-        graph.addCommand("set terminal postscript eps color solid");
-        graph.addCommand("set output '"+fileprefix+".eps'");
+        graph.addCommand("set terminal postscript eps color enhanced solid");
         graph.addCommand("");
         graph.addCommand("set key left top reverse Left");
+        graph.addCommand("set xlabel 't'");
+        {
+          std::ostringstream s;
+          s << "set title 'Probe at (";
+          if(x.size > 0) s << x[0];
+          for(unsigned i = 1; i < x.size; ++i)
+            s << ", " << x[i];
+          s << ")'";
+          graph.addCommand(s.str());
+        }
         graph.addCommand("");
       }
 
@@ -465,7 +518,7 @@ namespace Dune {
       SmartPointer<typename Traits<G>::LevelProbeFactory>
       levelProbeFactory(const G &grid, const std::string &tag)
       {
-        return new typename Traits<G>::LevelProbeFactory(graph, x, index, tag);
+        return new typename Traits<G>::LevelProbeFactory(graph, x, index, fileprefix, tag);
       }
     };
     

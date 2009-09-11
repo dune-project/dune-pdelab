@@ -324,7 +324,7 @@ public:
       plotconstruct << "'" << evograph->datname() << "'"
                     << " index " << evoindex
                     << " title '" << tag << " level " << level << "'"
-                    << " with linespoints pt 1";
+                    << " with lines";
       evolastplot = plotconstruct.str();
     }
       
@@ -610,7 +610,7 @@ public:
     plotconstruct << "'" << graph.datname() << "'"
                   << " index " << index
                   << " title '" << tag << " level " << level << "'"
-                  << " with linespoints pt 1";
+                  << " with lines";
     lastplot = plotconstruct.str();
     return new typename Traits<GV>::Probe(graph.dat(), integrationOrder);
   }
