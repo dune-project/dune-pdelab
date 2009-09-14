@@ -11,6 +11,7 @@
 #include<dune/grid/yaspgrid.hh>
 #include"../finiteelementmap/p0fem.hh"
 #include"../finiteelementmap/rt02dfem.hh"
+#include"../finiteelementmap/rt0q2dfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include"../gridfunctionspace/interpolate.hh"
@@ -76,7 +77,9 @@ void testrt0 (const GV& gv)
   // instantiate finite element maps
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,double,dim> P0FEM;
   P0FEM p0fem(Dune::GeometryType::simplex);
+  //P0FEM p0fem(Dune::GeometryType::cube);
   typedef Dune::PDELab::RT02DLocalFiniteElementMap<GV,DF,double> RT0FEM;
+  //typedef Dune::PDELab::RT0Q2DLocalFiniteElementMap<GV,DF,double> RT0FEM;
   RT0FEM rt0fem(gv);
   
   // make a grid function space
@@ -123,6 +126,17 @@ int main(int argc, char** argv)
   try{
     //Maybe initialize Mpi
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
+
+    if (false)
+    {
+      Dune::FieldVector<double,2> L(1.0);
+      Dune::FieldVector<int,2> N(1);
+      Dune::FieldVector<bool,2> B(false);
+      Dune::YaspGrid<2> grid(L,N,B,0);
+      grid.globalRefine(5);
+      testrt0(grid.leafView());
+      return 0;
+    }
 
 #if HAVE_UG
     Dune::SmartPointer<Dune::UGGrid<2> > uggrid(TriangulatedLDomainMaker<Dune::UGGrid<2> >::create());
