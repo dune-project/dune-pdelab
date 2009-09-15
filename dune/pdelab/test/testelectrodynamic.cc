@@ -478,8 +478,8 @@ void testAll(int &result, GPF &gpf, EGPF &egpf) {
 #endif
 //   test(*UnitTetrahedronMaker         <Dune::AlbertaGrid<3, 3>    >::create(),
 //        result, graph, conv_limit,    "alberta-tetrahedron");
-//   test(*KuhnTriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
-//        result, graph, .7*conv_limit, "alberta-triangulated-cube-6");
+  test(*KuhnTriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
+       result, gpf, egpf, .7*conv_limit, "alberta-triangulated-cube-6");
 //   {
 //     Dune::GridPtr<Dune::AlbertaGrid<3, 3> > gridptr("grids/brick.dgf");
 //     test(*gridptr,
@@ -490,16 +490,16 @@ void testAll(int &result, GPF &gpf, EGPF &egpf) {
 #ifdef HAVE_ALUGRID
 //   test(*UnitTetrahedronMaker         <Dune::ALUSimplexGrid<3, 3> >::create(),
 //        result, graph, conv_limit,    "alu-tetrahedron");
-//   test(*KuhnTriangulatedUnitCubeMaker<Dune::ALUSimplexGrid<3, 3> >::create(),
-//        result, graph, conv_limit,    "alu-triangulated-cube-6");
+  // test(*KuhnTriangulatedUnitCubeMaker<Dune::ALUSimplexGrid<3, 3> >::create(),
+  //      result, gpf, egpf, conv_limit,    "alu-triangulated-cube-6");
 #endif // HAVE_ALUGRID
 
 #ifdef HAVE_UG
 //   test(*UnitTetrahedronMaker         <Dune::UGGrid<3>            >::create(),
 //        result, graph, conv_limit,    "ug-tetrahedron");
-  test(*KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
-       result, gpf, egpf, conv_limit,    "ug-triangulated-cube-6");
-#endif // HAVE_ALBERTA
+//  test(*KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
+//       result, gpf, egpf, conv_limit,    "ug-triangulated-cube-6");
+#endif // HAVE_UG
 }
 
 int main(int argc, char** argv)

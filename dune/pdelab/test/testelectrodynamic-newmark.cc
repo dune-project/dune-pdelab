@@ -65,7 +65,7 @@
 //
 
 // The beta parameter for the Newmark-beta method
-const double beta = 0.25;
+const double beta = 0.5;
 
 // default limit for the total convergence
 // (alberta with the triangulated unit cube uses a limit derived from this
@@ -74,7 +74,7 @@ const double conv_limit = 0.85;
 
 // stop refining after the grid has more than this many elements (that means
 // in 3D that the fine grid may have up to 8 times as may elements)
-const unsigned maxelements = 2<<7;
+const unsigned maxelements = 2<<10;
 
 // multiplier for the stepsize obtained from the FDTD criterion
 const double stepadjust = 1.0/4;
@@ -544,7 +544,7 @@ int main(int argc, char** argv)
       energyEvolution(new EnergyEvolution("electrodynamic-newmark-electricenergy-evolution", quadrature_order));
 
     testAll(result,
-            *makeGridProbeFactoryList(pointPF, /* vtkOutput, */globalError, l2Evolution, energyEvolution),
+            *makeGridProbeFactoryList(pointPF, vtkOutput, globalError, l2Evolution, energyEvolution),
             *l2Error);
 
 	return result;
