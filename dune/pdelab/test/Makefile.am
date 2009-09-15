@@ -117,8 +117,10 @@ testelectrodynamic_LDADD =					\
 	$(ALBERTA_LDFLAGS) -lalberta_3d $(ALBERTA_BASE_LIBS)	\
 	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)
 MOSTLYCLEANFILES +=							\
-	electrodynamic-electricenergy-evolution.eps			\
+	electrodynamic-alberta-triangulated-cube-6.level*.pvd		\
+	electrodynamic-alu-triangulated-cube-6.level*.pvd		\
 	electrodynamic-electricenergy-evolution.dat			\
+	electrodynamic-electricenergy-evolution.eps			\
 	electrodynamic-electricenergy-evolution.gnuplot			\
 	electrodynamic-globalerror.dat					\
 	electrodynamic-globalerror.eps					\
@@ -132,11 +134,15 @@ MOSTLYCLEANFILES +=							\
 	electrodynamic-l2evolution.dat					\
 	electrodynamic-l2evolution.eps					\
 	electrodynamic-l2evolution.gnuplot				\
-	electrodynamic-probe.dat					\
 	electrodynamic-probe-*.eps					\
+	electrodynamic-probe.dat					\
 	electrodynamic-probe.gnuplot					\
 	electrodynamic-ug-triangulated-cube-6.level*.pvd		\
+	s0001:electrodynamic-alberta-triangulated-cube-6.level*-*.pvtu	\
+	s0001:electrodynamic-alu-triangulated-cube-6.level*-*.pvtu	\
 	s0001:electrodynamic-ug-triangulated-cube-6.level*-*.pvtu	\
+	s0001:p0000:electrodynamic-alberta-triangulated-cube-6.level*-*.vtu \
+	s0001:p0000:electrodynamic-alu-triangulated-cube-6.level*-*.vtu	\
 	s0001:p0000:electrodynamic-ug-triangulated-cube-6.level*-*.vtu	\
 	testelectrodynamic
 
