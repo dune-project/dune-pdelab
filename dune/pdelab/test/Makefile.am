@@ -108,6 +108,13 @@ MOSTLYCLEANFILES += edges03dinterpolationglobal-*.vtu	\
 	edges03dinterpolationglobal.eps			\
 	testedges03dinterpolationglobal.gnuplot
 
+NORMALTESTS += testedges03dfem
+testedges03dfem_SOURCES = testedges03dfem.cc
+testedges03dfem_CPPFLAGS = $(AM_CPPFLAGS)				\
+	$(ALBERTA_INCLUDE_CPPFLAGS) -DALBERTA_DIM=3 -DENABLE_ALBERTA
+testedges03dfem_LDADD =						\
+	$(ALBERTA_LDFLAGS) -lalberta_3d $(ALBERTA_BASE_LIBS)
+
 NORMALTESTS += testelectrodynamic
 testelectrodynamic_SOURCES = testelectrodynamic.cc
 testelectrodynamic_CPPFLAGS = $(AM_CPPFLAGS)				\
