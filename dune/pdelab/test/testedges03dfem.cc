@@ -32,17 +32,19 @@ const unsigned refine_limit = 100;
 template<typename T, int n>
 std::string fmt(const Dune::FieldVector<T, n>& v) {
   std::ostringstream s;
+  s << "(";
   if(n > 0)
     s << v[0];
   for(unsigned i = 1; i < n; ++i)
     s << ", " << v[i];
+  s << ")";
   return s.str();
 }
 
 template<typename U, typename V>
 std::string fmt(const std::pair<U, V>& p) {
   std::ostringstream s;
-  s << p.first << ", " << p.second;
+  s << "("<< p.first << ", " << p.second << ")";
   return s.str();
 }
 
@@ -111,7 +113,7 @@ bool testFEM(const GV& gv, const std::string indent = "")
 
     for(unsigned i = 0; i < nEdges; ++i) {
       bool edge_printed = false;
-      localBasis.evaluateFunctionGlobal(edgeCenters[i], result, geo);
+      localBasis.evaluateFunctionGlobal(ref.position(i,dimDomain-1), result, geo);
       for(unsigned j = 0; j < nEdges; ++j) {
         RF tComp = edgeTangents[i]*result[j];
         if(j == i)
@@ -121,17 +123,17 @@ bool testFEM(const GV& gv, const std::string indent = "")
             if(!element_printed) {
               std::cout << indent
                         << "Element " << elemIndex
-                        << " @(" << fmt(geo.global(ref.position(0,0))) << ")"
+                        << " center " << fmt(geo.global(ref.position(0,0)))
                         << std::endl;
               element_printed = true;
             }
             if(!edge_printed) {
               std::cout << indent << "  "
                         << "Edge " << i
-                        << " local vertices (" << fmt(edgesLocal[i]) << ")"
-                        << " global vertices (" << fmt(edges[i]) << ")"
-                        << " center (" << fmt(edgeCenters[i]) << ")"
-                        << " tangent (" << fmt(edgeTangents[i]) << ")"
+                        << " local vertices " << fmt(edgesLocal[i])
+                        << " global vertices " << fmt(edges[i])
+                        << " center " << fmt(edgeCenters[i])
+                        << " tangent " << fmt(edgeTangents[i])
                         << std::endl;
               edge_printed = true;
             }
