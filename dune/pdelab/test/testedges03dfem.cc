@@ -27,7 +27,7 @@
 
 const double eps = 1e-10;
 
-const unsigned refine_limit = 100;
+const unsigned refine_limit = 100000;
 
 template<typename T, int n>
 std::string fmt(const Dune::FieldVector<T, n>& v) {
@@ -70,7 +70,9 @@ bool testFEM(const GV& gv, const std::string indent = "")
   // a map containing a for each edge a list of (element index, tangential
   // value) pairs.  An edge is identified by a the vertex indices of its end
   // points, where first vertex index < second vertex index.
-  std::map<std::pair<unsigned, unsigned>, std::list<std::pair<unsigned, RF> > > values;
+  typedef std::list<std::pair<unsigned, RF> > List;
+  typedef std::map<std::pair<unsigned, unsigned>, List> Map;
+  Map values;
 
   std::vector<R> result;
   std::vector<D> edgeCenters;
@@ -145,6 +147,34 @@ bool testFEM(const GV& gv, const std::string indent = "")
             success = false;
           }
       }
+    }
+  }
+
+  // run through the values map and check that everything matches
+  const typename Map::const_iterator vend = values.end();
+  for(typename Map::const_iterator it = values.begin();
+      it != vend; ++it) {
+    bool good = true;
+    const typename List::const_iterator lend = it->second.end();
+    typename List::const_iterator lit = it->second.begin();
+    if(lit == lend) continue;
+    double tComp = lit->second;
+    for(++lit; lit != lend; ++lit)
+      if(std::abs(tComp - lit->second) >= eps) {
+        good = false;
+        break;
+      }
+    if(!good) {
+      std::cout << indent
+                << "Edge"
+                << " global vertices " << fmt(it->first)
+                << std::endl;
+      for(lit = it->second.begin(); lit != lend; ++lit)
+        std::cout << indent << "  "
+                  << "Element " << lit->first
+                  << " tangential value " << lit->second
+                  << std::endl;
+      success = false;
     }
   }
 
