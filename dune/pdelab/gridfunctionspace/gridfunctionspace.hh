@@ -1801,7 +1801,7 @@ namespace Dune {
         return 0;
       }
       template<class EntityType, class C>
-      static void dataHandleGlobalIndices (const T& t, const EntityType& e, C& global, size_t n, C& childglobal)
+      static void dataHandleGlobalIndices (const T& t, const EntityType& e, C& global, size_t n_, C& childglobal)
       {
       }
 	};
