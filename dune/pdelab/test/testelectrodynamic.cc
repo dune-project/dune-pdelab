@@ -86,9 +86,6 @@ const bool do_all_levels = true;
 // Order of quadrature rules to use
 const unsigned int quadrature_order = 3;
 
-// Whether to write computed and exact solution as vtk files after each step
-const bool do_vtk_output = false;
-
 // where to place a probe to measure the E-field
 const double probe_location[3] = {1.0/3, 1.0/5, 1.0/7};
 
@@ -308,10 +305,6 @@ void electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
 
 //   typedef Dune::SuperLU<typename M::BaseT> Solver;
 //   Solver solver(m);
-
-  Dune::SmartPointer<Dune::VTKSequenceWriter<GV> > vtkwriter(0);
-  if(do_vtk_output)
-    vtkwriter = new Dune::VTKSequenceWriter<GV>(gv,filename,".","", Dune::VTKOptions::nonconforming);
 
   probe.measure(DGF(gfs, *xprev), -Delta_t);
 //  std::cout << "u[-1]\n" << *xprev << std::endl;
@@ -547,7 +540,7 @@ int main(int argc, char** argv)
       energyEvolution(new EnergyEvolution("electrodynamic-electricenergy-evolution", quadrature_order));
 
     testAll(result,
-            *makeGridProbeFactoryList(pointPF, vtkOutput, globalError, l2Evolution, energyEvolution),
+            *Dune::PDELab::makeGridProbeFactoryList(pointPF, vtkOutput, globalError, l2Evolution, energyEvolution),
             *l2Error);
 
 	return result;
