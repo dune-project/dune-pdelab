@@ -163,16 +163,16 @@ namespace Dune {
 	  {
         std::vector<typename Traits::RangeType> in(size);
         unsigned index = 0;
-        evaluate(f0, index, e, y, in);
-        evaluate(f1, index, e, y, in);
-        evaluate(f2, index, e, y, in);
-        evaluate(f3, index, e, y, in);
-        evaluate(f4, index, e, y, in);
-        evaluate(f5, index, e, y, in);
-        evaluate(f6, index, e, y, in);
-        evaluate(f7, index, e, y, in);
-        evaluate(f8, index, e, y, in);
-        evaluate(f9, index, e, y, in);
+        evaluate(f0, index, e, x, in);
+        evaluate(f1, index, e, x, in);
+        evaluate(f2, index, e, x, in);
+        evaluate(f3, index, e, x, in);
+        evaluate(f4, index, e, x, in);
+        evaluate(f5, index, e, x, in);
+        evaluate(f6, index, e, x, in);
+        evaluate(f7, index, e, x, in);
+        evaluate(f8, index, e, x, in);
+        evaluate(f9, index, e, x, in);
         engine.evaluate(y, in);
 	  }
 
