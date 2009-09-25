@@ -47,7 +47,6 @@
 #include "electricenergy-probe.hh"
 #include "gnuplotgraph.hh"
 #include "gridexamples.hh"
-#include "l2difference.hh"
 #include "physicalconstants.hh"
 #include "probe.hh"
 #include "resonatorsolution.hh"

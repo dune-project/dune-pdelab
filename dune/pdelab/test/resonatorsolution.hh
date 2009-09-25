@@ -5,6 +5,7 @@
 
 #include <dune/grid/io/file/vtk/vtksequencewriter.hh>
 
+#include "../common/function.hh"
 #include "../common/vtkexport.hh"
 
 #include "l2difference.hh"
@@ -255,8 +256,7 @@ public:
     typedef ResonatorSolutionFactory<
       typename GF::Traits::GridViewType,
       typename GF::Traits::RangeFieldType> RF;
-    sum += l2difference2(gf.getGridView(),
-                         gf, *RF().function(gf.getGridView(), time),
+    sum += l2difference2(gf, *RF().function(gf.getGridView(), time),
                          integrationOrder);
     ++nsamples;
 
@@ -450,8 +450,7 @@ public:
       typename GF::Traits::GridViewType,
       typename GF::Traits::RangeFieldType> RSF;
 
-    error = l2difference(gf.getGridView(),
-                         gf, *RSF().function(gf.getGridView(), time),
+    error = l2difference(gf, *RSF().function(gf.getGridView(), time),
                          integrationOrder);
     dat << std::setprecision(8) << mean_h << "\t" << error << std::endl;
   }
@@ -559,8 +558,7 @@ public:
       typename GF::Traits::GridViewType,
       typename GF::Traits::RangeFieldType> RSF;
 
-    double error = l2difference(gf.getGridView(),
-                                gf, *RSF().function(gf.getGridView(), time),
+    double error = l2difference(gf, *RSF().function(gf.getGridView(), time),
                                 integrationOrder);
     dat << std::setprecision(8) << time << "\t" << error << std::endl;
   }

@@ -7,11 +7,13 @@
 
 #include <dune/grid/common/quadraturerules.hh>
 
+#include "../common/functionwrappers.hh"
+
 #include "l2norm.hh"
 
 // Calculate the squared L2 differerence of two functions
-template<typename GV, typename U, typename V> 
-double l2difference2 (const GV & gv, const U& u, const V &v, int qorder=1)
+template<typename U, typename V> 
+double l2difference2 (const U& u, const V &v, int qorder=1)
 {
   return l2norm2
     (Dune::PDELab::makePointwiseGridFunctionAdapter
@@ -25,10 +27,10 @@ double l2difference2 (const GV & gv, const U& u, const V &v, int qorder=1)
 }
 
 // Calculate the L2 differerence of two functions
-template<typename GV, typename U, typename V> 
-double l2difference (const GV & gv, const U& u, const V &v, int qorder=1)
+template<typename U, typename V> 
+double l2difference (const U& u, const V &v, int qorder=1)
 {
-  return std::sqrt(l2difference2(gv, u, v, qorder));
+  return std::sqrt(l2difference2(u, v, qorder));
 }
 
 #endif // DUNE_PDELAB_TEST_L2DIFFERENCE_HH

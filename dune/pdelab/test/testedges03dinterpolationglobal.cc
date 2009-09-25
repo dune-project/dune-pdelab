@@ -110,7 +110,7 @@ double interpolationerror (const GV& gv, const FEM &fem, const std::string &name
     vtkwriter.write(name,Dune::VTKOptions::ascii);
   }
 
-  return l2difference(gv,u,v,4);
+  return l2difference(u,v,4);
 }
 
 template<typename Grid>

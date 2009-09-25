@@ -30,7 +30,7 @@
 #include "../gridfunctionspace/interpolate.hh"
 
 #include "gridexamples.hh"
-
+#include "l2difference.hh"
 
 template<typename GV, typename RF>
 class U
@@ -56,43 +56,6 @@ public:
   }
 };
 
-template<typename GV, typename U, typename V> 
-double l2difference (const GV & gv, const U& u, const V &v, int qorder=1)
-{
-  // constants and types
-  const int dim = GV::Grid::dimension;
-  typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
-  typedef typename GV::Grid::ctype ct;
-  
-  // loop over grid view
-  double sum = 0.0;
-  for (ElementIterator eit = gv.template begin<0>();
-       eit!=gv.template end<0>(); ++eit)
-  {
-
-    Dune::GeometryType gt = eit->geometry().type();
-    const Dune::QuadratureRule<ct,dim>& 
-      rule = Dune::QuadratureRules<ct,dim>::rule(gt,qorder);
-
-    for (typename Dune::QuadratureRule<ct,dim>::const_iterator qit=rule.begin();
-         qit!=rule.end(); ++qit)
-    {
-      // evaluate the given grid functions at integration point
-      typename U::Traits::RangeType u_val;
-      u.evaluate(*eit,qit->position(),u_val);
-
-      typename V::Traits::RangeType v_val;
-      v.evaluate(*eit,qit->position(),v_val);
-
-      // accumulate error
-      v_val -= u_val;
-      sum += v_val.two_norm2()*qit->weight()*
-        eit->geometry().integrationElement(qit->position());
-    }
-  }
-  return std::sqrt(sum);
-}
-
 template<typename GV, typename FEM>
 double interpolationerror (const GV& gv, const FEM &fem)
 {
@@ -112,7 +75,7 @@ double interpolationerror (const GV& gv, const FEM &fem)
 
   Dune::PDELab::DiscreteGridFunction<GFS, X> v(gfs,x);
 
-  return l2difference(gv,u,v,4);
+  return l2difference(u,v,4);
 }
 
 template<typename Grid>
