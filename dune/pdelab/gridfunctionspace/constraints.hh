@@ -358,13 +358,17 @@ namespace Dune {
 
 
     //! construct constraints from given boundary condition function
-    //
-    // F : Type implementing a boundary condition function 
-    //
-    // GFS : Type implementing the model GridFunctionSpace
-    //
-    // CG : Type implementing the model
-    // GridFunctionSpace::ConstraintsContainer::Type
+    /**
+     * \tparam F   Type implementing a boundary condition function 
+     * \tparam GFS Type implementing the model GridFunctionSpace
+     * \tparam CG  Type implementing the model
+     *             GridFunctionSpace::ConstraintsContainer::Type
+     *
+     * \param f       The boundary condition function
+     * \param gfs     The gridfunctionspace
+     * \param cg      The constraints container
+     * \param verbose Print information about the constaints at the end
+     */
     template<typename F, typename GFS, typename CG>
     void constraints (F& f, const GFS& gfs, CG& cg, const bool verbose = false)
     {
