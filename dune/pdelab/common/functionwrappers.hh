@@ -248,7 +248,7 @@ namespace Dune {
       void evaluate(Range& out,
                     const std::vector<Domain>& in) const {
         assert(in.size() == 1);
-        out = in[1];
+        out = in[0];
         out *= scale;
       }
     };
