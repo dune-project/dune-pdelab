@@ -68,10 +68,10 @@ namespace Dune {
      *
      * \note Currently \f$\epsilon\f$ is fixed to 1.
      *
+     * \tparam Eps    Type of function to evaluate \f$\epsilon\f$
      * \tparam Mu     Type of function to evaluate \f$\mu\f$
      * \tparam GCV    Type of the global coefficient vector, used for storing
      *                pointers to \f$u^n\f$ and \f$u^{n-1}\f$
-     * \tparam qorder Order of quadratures to use
      */
     template<typename Eps, typename Mu, typename GCV>
 	class Electrodynamic
@@ -127,6 +127,55 @@ namespace Dune {
         // dimensions
         const int dim = EG::Geometry::dimension;
 
+        std::vector<std::vector<DF> >
+          T(lfsu.size(), std::vector<DF>(lfsu.size(), 0));
+        std::vector<std::vector<DF> >
+          S(lfsu.size(), std::vector<DF>(lfsu.size(), 0));
+
+        // select quadrature rule
+        Dune::GeometryType gt = eg.geometry().type();
+        const Dune::QuadratureRule<DF,dim>&
+          rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
+
+        // loop over quadrature points
+        for(typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin();
+            it!=rule.end(); ++it) {
+          // calculate T
+          std::vector<RangeType> phi(lfsu.size());
+          lfsu.localFiniteElement().localBasis()
+            .evaluateFunctionGlobal(it->position(),phi,eg.geometry());
+
+          Dune::FieldVector<RF,1> epsval;
+          eps.evaluate(eg.entity(), it->position(), epsval);
+
+          RF factor = it->weight()
+            * eg.geometry().integrationElement(it->position()) * epsval;
+
+          for(unsigned i = 0; i < lfsu.size(); ++i)
+            for(unsigned j = 0; j < lfsu.size(); ++j)
+              T[i][j] += factor * (phi[i] * phi[j]);
+
+          // calculate S
+          std::vector<JacobianType> J(lfsu.size());
+          lfsu.localFiniteElement().localBasis()
+            .evaluateJacobianGlobal(it->position(),J,eg.geometry());
+
+          std::vector<RangeType> rotphi(lfsu.size(),RangeType(0));
+          for(unsigned i = 0; i < lfsu.size(); ++i)
+            for(unsigned j = 0; j < 3; ++j)
+              rotphi[i][j] += J[i][(j+2)%3][(j+1)%3] - J[i][(j+1)%3][(j+2)%3];
+
+          Dune::FieldVector<RF,1> muval;
+          mu.evaluate(eg.entity(), it->position(), muval);
+
+          factor = it->weight()
+            * eg.geometry().integrationElement(it->position()) / muval;
+            
+          for(unsigned i = 0; i < lfsu.size(); ++i)
+            for(unsigned j = 0; j < lfsu.size(); ++j)
+              S[i][j] += factor * (rotphi[i] * rotphi[j]);
+        }
+
         // get coefficients from Ecur and Eprev
         X xprev;
         lfsu.vread(*Eprev, xprev);
@@ -134,56 +183,22 @@ namespace Dune {
         X xcur;
         lfsu.vread(*Ecur, xcur);
 
-        // Tvec = x - 2*xcur + xprev, just what is needed to right-multiply to the matrix T
-        X Tvec(lfsu.size());
+        // v1 = x - 2*xcur + xprev, just what is needed to right-multiply to
+        //     the matrix T in the first term
+        X v1(lfsu.size());
         for(unsigned i = 0; i < lfsu.size(); ++i)
-          Tvec[i] = x[i] - 2*xcur[i] + xprev[i];
+          v1[i] = x[i] - 2*xcur[i] + xprev[i];
 
-        // select quadrature rule
-        Dune::GeometryType gt = eg.geometry().type();
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
+        // !!! modify S -> Delta_t^2*S
+        double Delta_t2 = Delta_t*Delta_t;
+        for(unsigned i = 0; i < lfsu.size(); ++i)
+          for(unsigned j = 0; j < lfsu.size(); ++j)
+            S[i][j] *= Delta_t2;
 
-        // loop over quadrature points
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
-          {
-            // evaluate T * (u[n+1] - 2*u[n] + u[n-1])
-            //          T_{ij} = \int epsilon N_i . N_j dV
-            std::vector<RangeType> phi(lfsu.size());
-            lfsu.localFiniteElement().localBasis().evaluateFunctionGlobal(it->position(),phi,eg.geometry());
-
-            RangeType dt2E(0);
-            for(unsigned i = 0; i < lfsu.size(); ++i)
-              dt2E.axpy(Tvec[i], phi[i]);
-            
-            Dune::FieldVector<RF,1> epsval;
-            eps.evaluate(eg.entity(), it->position(), epsval);
-
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position()) * epsval;
-            for (size_t j=0; j<lfsu.size(); j++)
-              r[j] += (phi[j]*dt2E)*factor;
-            
-            // evaluate Delta_t^2 * S * u[n]
-            //          S_{ij} = \int 1/mu rot N_i . rot N_j dV
-            std::vector<JacobianType> J(lfsu.size());
-            lfsu.localFiniteElement().localBasis().evaluateJacobianGlobal(it->position(),J,eg.geometry());
-
-            std::vector<RangeType> rotphi(lfsu.size(),RangeType(0));
-            for(unsigned i = 0; i < lfsu.size(); ++i)
-              for(unsigned j = 0; j < 3; ++j)
-                rotphi[i][j] += J[i][(j+2)%3][(j+1)%3] - J[i][(j+1)%3][(j+2)%3];
-
-            Dune::FieldVector<RF,1> muval;
-            mu.evaluate(eg.entity(), it->position(), muval);
-
-            RangeType rotE(0);
-            for(unsigned i = 0; i < lfsu.size(); ++i)
-              rotE.axpy(xcur[i], rotphi[i]);
-            
-            // integrate grad u * grad phi_i
-            factor = it->weight() * eg.geometry().integrationElement(it->position()) / muval * Delta_t * Delta_t;
-            for (size_t j=0; j<lfsu.size(); j++)
-              r[j] += (rotphi[j]*rotE)*factor;
-          }
+        // calculate residual
+        for(unsigned i = 0; i < lfsu.size(); ++i)
+          for(unsigned j = 0; j < lfsu.size(); ++j)
+            r[i] += T[i][j] * v1[j] + S[i][j] * xcur[j];
 	  }
 
       //! set Eprev
