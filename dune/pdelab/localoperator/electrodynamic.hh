@@ -82,6 +82,28 @@ namespace Dune {
       , public FullVolumePattern
       , public LocalOperatorDefaultFlags
 	{
+      //! size of FieldVector for holding the curl
+      template <unsigned d>
+      struct CurlTraits {
+        static const unsigned dim =
+          d == 1 ? 2 :
+          d == 2 ? 1 :
+          /*else*/ 3;
+      };
+
+      template<typename RF>
+      static void jacobianToCurl(FieldVector<RF, 1> &curl,
+                                 const FieldVector<FieldVector<RF, 2>, 2> &jacobian)
+      {
+        curl[0] = jacobian[1][0] - jacobian[0][1];
+      }
+      template<typename RF>
+      static void jacobianToCurl(FieldVector<RF, 3> &curl,
+                                 const FieldVector<FieldVector<RF, 3>, 3> &jacobian)
+      {
+        for(unsigned i = 0; i < 3; ++i)
+          curl[i] += jacobian[(i+2)%3][(i+1)%3] - jacobian[(i+1)%3][(i+2)%3];
+      }
 	public:
 
       // pattern assembly flags
@@ -107,8 +129,10 @@ namespace Dune {
 	  void alpha_volume (const EG& eg, const LFS& lfsu, const X& x, const LFS& lfsv, R& r) const
 	  {
 		dune_static_assert(LFS::Traits::LocalFiniteElementType::
-                           Traits::LocalBasisType::Traits::dimRange == 3,
-                           "Works only in 3D");
+                           Traits::LocalBasisType::Traits::dimRange == 3 ||
+                           LFS::Traits::LocalFiniteElementType::
+                           Traits::LocalBasisType::Traits::dimRange == 2,
+                           "Works only in 2D or 3D");
 
 		// domain and range field type
 		typedef typename LFS::Traits::LocalFiniteElementType::
@@ -121,8 +145,11 @@ namespace Dune {
 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
 		typedef typename LFS::Traits::LocalFiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
+		static const unsigned dimRange = LFS::Traits::LocalFiniteElementType::
+		  Traits::LocalBasisType::Traits::dimRange;
 		typedef typename LFS::Traits::LocalFiniteElementType::
 		  Traits::LocalBasisType::Traits::JacobianType JacobianType;
+        typedef FieldVector<RF, CurlTraits<dimRange>::dim> CurlType;
 
         // dimensions
         const int dim = EG::Geometry::dimension;
@@ -162,8 +189,7 @@ namespace Dune {
 
           std::vector<RangeType> rotphi(lfsu.size(),RangeType(0));
           for(unsigned i = 0; i < lfsu.size(); ++i)
-            for(unsigned j = 0; j < 3; ++j)
-              rotphi[i][j] += J[i][(j+2)%3][(j+1)%3] - J[i][(j+1)%3][(j+2)%3];
+            jacobianToCurl(rotphi[i], J[i]);
 
           Dune::FieldVector<RF,1> muval;
           mu.evaluate(eg.entity(), it->position(), muval);
