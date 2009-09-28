@@ -392,7 +392,7 @@ namespace Dune {
 
     };
 
-    template<typename D>
+    template<typename DF>
     class GnuplotLevelProbeFactory
     {
       struct PlotLine {
@@ -406,7 +406,7 @@ namespace Dune {
       };
 
       GnuplotGraph &graph;
-      D x;
+      std::string x;
       std::ostream::pos_type datapos;
       unsigned &index;
       PlotLine lastplot;
@@ -424,13 +424,20 @@ namespace Dune {
         }
       }
 
+      template<int dim>
+      void xAsFV(Dune::FieldVector<DF, dim>& xFV) {
+        std::istringstream s(x);
+        for(unsigned i = 0; i < dim; ++i)
+          s >> x[i];
+      }
+
     public:
       template<typename GV>
       struct Traits {
-        typedef GnuplotProbe<D> Probe;
+        typedef GnuplotProbe<Dune::FieldVector<DF, GV::dimension> > Probe;
       };
 
-      GnuplotLevelProbeFactory(GnuplotGraph &graph_, const D &x_,
+      GnuplotLevelProbeFactory(GnuplotGraph &graph_, const std::string &x_,
                                unsigned &index_,
                                const std::string &fileprefix_,
                                const std::string &tag_)
@@ -461,6 +468,8 @@ namespace Dune {
       SmartPointer<typename Traits<GV>::Probe>
       getProbe(const GV &gv, unsigned level)
       {
+        Dune::FieldVector<DF, GV::dimension> xFV;
+        xAsFV(xFV);
         finishPlot();
         graph.dat() << "# LEVEL" << level << std::endl;
         datapos = graph.dat().tellp();
@@ -477,14 +486,16 @@ namespace Dune {
           lastplot.suffix = plotconstruct.str();
         }
         lastplot.max_elems = 0;
-        return new typename Traits<GV>::Probe(graph.dat(), x, lastplot.max_elems);
+        return new typename Traits<GV>::Probe(graph.dat(),
+                                              xFV,
+                                              lastplot.max_elems);
       }
     };
 
-    template<typename D>
+    template<typename DF>
     class GnuplotGridProbeFactory
     {
-      const D x;
+      const std::string x;
       std::string fileprefix;
       GnuplotGraph graph;
       unsigned index;
@@ -492,10 +503,11 @@ namespace Dune {
     public:
       template<typename G>
       struct Traits {
-        typedef GnuplotLevelProbeFactory<D> LevelProbeFactory;
+        typedef GnuplotLevelProbeFactory<DF> LevelProbeFactory;
       };
 
-      GnuplotGridProbeFactory(const std::string &fileprefix_, const D &x_)
+      GnuplotGridProbeFactory(const std::string &fileprefix_,
+                              const std::string &x_)
         : x(x_), fileprefix(fileprefix_), graph(fileprefix_), index(0)
       {
         graph.addCommand("set terminal postscript eps color enhanced solid");
@@ -504,11 +516,7 @@ namespace Dune {
         graph.addCommand("set xlabel 't'");
         {
           std::ostringstream s;
-          s << "set title 'Probe at (";
-          if(x.size > 0) s << x[0];
-          for(unsigned i = 1; i < x.size; ++i)
-            s << ", " << x[i];
-          s << ")'";
+          s << "set title 'Probe at (" << x << ")'";
           graph.addCommand(s.str());
         }
         graph.addCommand("");

@@ -144,13 +144,15 @@ MOSTLYCLEANFILES +=							\
 	electrodynamic-probe-*.eps					\
 	electrodynamic-probe.dat					\
 	electrodynamic-probe.gnuplot					\
-	electrodynamic-ug-triangulated-cube-6.level*.pvd		\
+	electrodynamic-ug-*.level*.pvd					\
 	s0001:electrodynamic-alberta-triangulated-cube-6.level*-*.pvtu	\
 	s0001:electrodynamic-alu-triangulated-cube-6.level*-*.pvtu	\
 	s0001:electrodynamic-ug-triangulated-cube-6.level*-*.pvtu	\
+	s0001:electrodynamic-ug-triangulated-square.level*-*.pvtu	\
 	s0001:p0000:electrodynamic-alberta-triangulated-cube-6.level*-*.vtu \
 	s0001:p0000:electrodynamic-alu-triangulated-cube-6.level*-*.vtu	\
 	s0001:p0000:electrodynamic-ug-triangulated-cube-6.level*-*.vtu	\
+	s0001:p0000:electrodynamic-ug-triangulated-square.level*-*.vtu	\
 	testelectrodynamic
 
 NORMALTESTS += testelectrodynamic-newmark

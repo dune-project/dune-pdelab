@@ -36,6 +36,7 @@
 #include "../common/function.hh"
 #include "../common/geometrywrapper.hh"
 #include "../finiteelementmap/conformingconstraints.hh"
+#include "../finiteelementmap/edges02dfem.hh"
 #include "../finiteelementmap/edges03dfem.hh"
 #include "../gridfunctionspace/constraints.hh"
 #include "../gridfunctionspace/gridfunctionspace.hh"
@@ -70,7 +71,7 @@ const double conv_limit = 0.85;
 
 // stop refining after the grid has more than this many elements (that means
 // in 3D that the fine grid may have up to 8 times as may elements)
-const unsigned maxelements = 2<<10;
+const unsigned maxelements = 2<<7;
 
 // multiplier for the stepsize obtained from the FDTD criterion
 const double stepadjust = 1.0/4;
@@ -87,7 +88,7 @@ const bool do_all_levels = true;
 const unsigned int quadrature_order = 3;
 
 // where to place a probe to measure the E-field
-const double probe_location[3] = {1.0/3, 1.0/5, 1.0/7};
+const std::string probe_location = ".33333333333333333333 .2 .14285714285714285714";
 
 // probe_location as FieldVector, initialized from probe_location in main()
 Dune::FieldVector<double, 3> probe_location_fv;
@@ -365,12 +366,24 @@ struct GridPtrTraits<Dune::GridPtr<G> > {
   typedef G Grid;
 };
 
+template<typename GV, typename RF, unsigned dimDomain = GV::dimension>
+struct FEMTraits;
+template<typename GV, typename RF>
+struct FEMTraits<GV, RF, 2>
+{
+  typedef Dune::PDELab::EdgeS02DLocalFiniteElementMap<GV, RF> FEM;
+};
+template<typename GV, typename RF>
+struct FEMTraits<GV, RF, 3>
+{
+  typedef Dune::PDELab::EdgeS03DLocalFiniteElementMap<GV, RF> FEM;
+};
 
 template<typename GV, typename LPF, typename ELPF>
 void testLevel(const GV &gv, unsigned level, const std::string &prefix,
                LPF &lpf, ELPF &elpf, double &error, double &mean_h)
 {
-  typedef Dune::PDELab::EdgeS03DLocalFiniteElementMap<GV, double> FEM;
+  typedef typename FEMTraits<GV, double>::FEM FEM;
   std::ostringstream levelprefix;
   levelprefix << prefix << ".level" << level;
 
@@ -470,8 +483,8 @@ void testAll(int &result, GPF &gpf, EGPF &egpf) {
 #endif
 //   test(*UnitTetrahedronMaker         <Dune::AlbertaGrid<3, 3>    >::create(),
 //        result, graph, conv_limit,    "alberta-tetrahedron");
-  test(*KuhnTriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
-       result, gpf, egpf, .7*conv_limit, "alberta-triangulated-cube-6");
+  // test(*KuhnTriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
+  //      result, gpf, egpf, .7*conv_limit, "alberta-triangulated-cube-6");
 //   {
 //     Dune::GridPtr<Dune::AlbertaGrid<3, 3> > gridptr("grids/brick.dgf");
 //     test(*gridptr,
@@ -489,8 +502,10 @@ void testAll(int &result, GPF &gpf, EGPF &egpf) {
 #ifdef HAVE_UG
 //   test(*UnitTetrahedronMaker         <Dune::UGGrid<3>            >::create(),
 //        result, graph, conv_limit,    "ug-tetrahedron");
-//  test(*KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
-//       result, gpf, egpf, conv_limit,    "ug-triangulated-cube-6");
+  // test(*KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
+  //      result, gpf, egpf, conv_limit,    "ug-triangulated-cube-6");
+  test(*TriangulatedUnitSquareMaker<Dune::UGGrid<2>            >::create(),
+       result, gpf, egpf, conv_limit,    "ug-triangulated-square");
 #endif // HAVE_UG
 }
 
@@ -513,11 +528,9 @@ int main(int argc, char** argv)
     int result = 77;
 
     // Initialize probe_location_fv from probe_location
-    for(unsigned i = 0; i < 3; ++i)
-      probe_location_fv[i] = probe_location[i];
-    typedef Dune::PDELab::GnuplotGridProbeFactory<Dune::FieldVector<double, 3> > PointPF;
+    typedef Dune::PDELab::GnuplotGridProbeFactory<double> PointPF;
     Dune::SmartPointer<PointPF>
-      pointPF(new PointPF("electrodynamic-probe", probe_location_fv));
+      pointPF(new PointPF("electrodynamic-probe", probe_location));
 
     typedef ResonatorVTKGridProbeFactory<double> VTKOutput;
     Dune::SmartPointer<VTKOutput>
