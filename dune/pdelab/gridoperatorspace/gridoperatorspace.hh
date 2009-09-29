@@ -722,7 +722,7 @@ namespace Dune {
                 constrained_u = true;
                 if(gurit == gucit->second.end()){
                   T t = localcontainer(i,j) * vf;
-//                   if(t != 0.0)                 // entry might not be present in the matrix
+                  if(t != 0.0)                 // entry might not be present in the matrix
                     B::access(globalcontainer,gi,gj) += t;
                 }
               }
@@ -743,7 +743,7 @@ namespace Dune {
 
                 // add weighted local entry to global matrix
                 T t = localcontainer(i,j) * uf * vf;
-//                 if (t != 0.0)                 // entry might not be present in the matrix
+                if (t != 0.0)                 // entry might not be present in the matrix
                   B::access(globalcontainer,gi,gj) += t;
 
                 if(constrained_u && gurit != gucit->second.end())
