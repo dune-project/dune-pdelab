@@ -40,7 +40,6 @@ namespace Dune
         public:
             // pattern assembly flags
             enum { doPatternVolume = true };
-            enum { doPatternSkeleton = false };
 
             // residual assembly flags
             enum { doAlphaVolume = true };
@@ -170,6 +169,64 @@ namespace Dune
                 // Helmholtz term
                 mat(cell_space.localIndex(0), cell_space.localIndex(0))
                     += data.a_0(eg.entity(), localcenter);
+            }
+
+            // jacobian_apply **************************************
+
+            template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+            void jacobian_apply_volume(const EG& eg, const LFSU& lfsu, const X& x,
+                                       const LFSV& lfsv, Y& y) const
+            {
+                cell.init(eg.entity());
+            }
+
+            template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+            void jacobian_apply_skeleton(const IG& ig,
+                                         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
+                                         Y& y_s, Y& y_n) const
+            {
+                cell.add_face(ig.intersection());
+            }
+
+            template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+            void jacobian_apply_boundary(const IG& ig, const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                         Y& y_s) const
+            {
+                cell.add_face(ig.intersection());
+            }
+
+            template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+            void jacobian_apply_volume_post_skeleton(const EG& eg, const LFSU& lfsu, const X& x,
+                                                     const LFSV& lfsv, Y& y) const
+            {
+                // extract subspaces
+                typedef typename LFSU::template Child<0>::Type CellUnknowns;
+                const CellUnknowns& cell_space = lfsu.template getChild<0>();
+                typedef typename LFSU::template Child<1>::Type FaceUnknowns;
+                const FaceUnknowns& face_space = lfsu.template getChild<1>();
+
+                // get permeability for current cell
+                GeometryType gt = eg.geometry().type();
+                FieldVector<ctype,dim> localcenter = GenericReferenceElements<ctype,dim>::general(gt).position(0,0);
+                FieldMatrix<rtype,dim,dim> K = data.K(eg.entity(), localcenter);
+
+                // build matrix W
+                wbuilder.build_W(cell, K, W);
+
+                // Compute residual
+                for(int e = 0, m = 0; e < cell.num_faces; ++e)
+                    for(int f = 0; f < cell.num_faces; ++f, ++m)
+                    {
+                        y[cell_space.localIndex(0)] += W[m] * x[cell_space.localIndex(0)];
+                        y[cell_space.localIndex(0)] -= W[m] * x[face_space.localIndex(f)];
+                        y[face_space.localIndex(f)] -= W[m] * x[cell_space.localIndex(0)];
+                        y[face_space.localIndex(f)] += W[m] * x[face_space.localIndex(f)];
+                    }
+
+                // Helmholtz term
+                y[cell_space.localIndex(0)] += data.a_0(eg.entity(), localcenter)
+                    * x[cell_space.localIndex(0)];
             }
 
             // lambda **********************************************
