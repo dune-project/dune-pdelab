@@ -34,6 +34,10 @@ noinst_HEADERS =				\
 noinst_SCRIPTS =				\
 	make_pvd.sh
 
+# scripts are not distributed automatically
+# but since this is need for make all:
+EXTRA_DIST = make_pvd.sh
+
 NORMALTESTS += testanalytic
 testanalytic_SOURCES = testanalytic.cc
 testanalytic_CPPFLAGS = $(AM_CPPFLAGS)		\
