@@ -49,6 +49,7 @@
 #include "electricenergy-probe.hh"
 #include "gnuplotgraph.hh"
 #include "gridexamples.hh"
+#include "l2norm-probe.hh"
 #include "physicalconstants.hh"
 #include "probe.hh"
 #include "resonatorsolution.hh"
@@ -230,11 +231,11 @@ typename GV::Grid::ctype smallestEdge(const GV& gv)
 
 // generate a P1 function and output it
 template<typename GV, typename FEM, typename CON, typename ReferenceFactory,
-         typename Probe> 
+         typename FProbe, typename CProbe> 
 void electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
                        const ReferenceFactory &referenceFactory,
                        double Delta_t, unsigned steps,
-                       const std::string filename, Probe &probe)
+                       const std::string filename, FProbe &fprobe, CProbe &cprobe)
 {
   // constants and types
   typedef typename GV::Grid::ctype DF;
@@ -257,6 +258,7 @@ void electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
   // make coefficent Vector and initialize it from a function
   typedef typename GFS::template VectorContainer<RangeField>::Type V;
   typedef Dune::PDELab::DiscreteGridFunctionGlobal<GFS,V> DGF;
+  typedef Dune::PDELab::DiscreteGridFunctionGlobalCurl<GFS,V> CDGF;
 
   //initial solution for time-step -1
   Dune::SmartPointer<V> xprev(new V(gfs));
@@ -308,9 +310,11 @@ void electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
 //   typedef Dune::SuperLU<typename M::BaseT> Solver;
 //   Solver solver(m);
 
-  probe.measure(DGF(gfs, *xprev), -Delta_t);
+  fprobe.measure(DGF(gfs, *xprev), -Delta_t);
+  cprobe.measure(CDGF(gfs, *xprev), -Delta_t);
 //  std::cout << "u[-1]\n" << *xprev << std::endl;
-  probe.measure(DGF(gfs, *xcur), 0);
+  fprobe.measure(DGF(gfs, *xcur), 0);
+  cprobe.measure(CDGF(gfs, *xcur), 0);
 //   std::cout << "u[0]\n" << *xcur << std::endl;
 
   std::cout << "Number of steps " << steps << std::endl;
@@ -346,14 +350,16 @@ void electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
 
     *xnext += affineShift;
 
-    probe.measure(DGF(gfs, *xnext), Delta_t*step);
+    fprobe.measure(DGF(gfs, *xnext), Delta_t*step);
+    cprobe.measure(CDGF(gfs, *xnext), Delta_t*step);
 //     std::cout << "u[" << step << "]\n" << *xnext << std::endl;
 
     xprev = xcur;
     xcur = xnext;
   }
   
-  probe.measureFinal(DGF(gfs, *xcur), Delta_t*steps);
+  fprobe.measureFinal(DGF(gfs, *xcur), Delta_t*steps);
+  cprobe.measureFinal(CDGF(gfs, *xcur), Delta_t*steps);
 }
 
 template<typename P>
@@ -380,9 +386,9 @@ struct FEMTraits<GV, RF, 3>
   typedef Dune::PDELab::EdgeS03DLocalFiniteElementMap<GV, RF> FEM;
 };
 
-template<typename GV, typename LPF, typename ELPF>
+template<typename GV, typename LPF, typename CLPF, typename ELPF>
 void testLevel(const GV &gv, unsigned level, const std::string &prefix,
-               LPF &lpf, ELPF &elpf, double &error, double &mean_h)
+               LPF &lpf, CLPF &clpf, ELPF &elpf, double &error, double &mean_h)
 {
   typedef typename FEMTraits<GV, double>::FEM FEM;
   std::ostringstream levelprefix;
@@ -391,11 +397,14 @@ void testLevel(const GV &gv, unsigned level, const std::string &prefix,
   typedef typename LPF::template Traits<GV>::Probe Probe;
   Dune::SmartPointer<Probe> probe(lpf.getProbe(gv, level));
 
+  typedef typename CLPF::template Traits<GV>::Probe CProbe;
+  Dune::SmartPointer<CProbe> cprobe(clpf.getProbe(gv, level));
+
   typedef typename ELPF::template Traits<GV>::Probe EProbe;
   Dune::SmartPointer<EProbe> eprobe(elpf.getProbe(gv, level));
 
-  typedef Dune::PDELab::ProbePair<Probe, EProbe> ProbePair;
-  Dune::SmartPointer<ProbePair> probepair(new ProbePair(probe, eprobe));
+  typedef Dune::PDELab::ProbePair<Probe, EProbe> FProbe;
+  Dune::SmartPointer<FProbe> fprobe(new FProbe(probe, eprobe));
 
   std::cout << "electrodynamic level " << level << std::endl;
   // time step
@@ -407,24 +416,24 @@ void testLevel(const GV &gv, unsigned level, const std::string &prefix,
     Delta_t = duration/steps;
   }
   electrodynamic
-    <GV,FEM,Dune::PDELab::OverlappingConformingDirichletConstraints,ResonatorSolutionFactory<GV,double>,ProbePair>
+    <GV,FEM,Dune::PDELab::OverlappingConformingDirichletConstraints,ResonatorSolutionFactory<GV,double>,FProbe,CProbe>
     (gv, FEM(gv), quadrature_order,
      ResonatorSolutionFactory<GV,double>(),
-     Delta_t, steps, levelprefix.str(), *probepair);
+     Delta_t, steps, levelprefix.str(), *fprobe, *cprobe);
   mean_h = std::pow(1/double(gv.size(0)), 1/double(GV::dimension));
   error = eprobe->get_error();
 }
-template<typename GV, typename LPF, typename ELPF>
+template<typename GV, typename LPF, typename CLPF, typename ELPF>
 void testLevel(const GV &gv, unsigned level, const std::string &prefix,
-               LPF &lpf, ELPF &elpf)
+               LPF &lpf, CLPF &clpf, ELPF &elpf)
 {
   double error, mean_h;
-  testLevel(gv, level, prefix, lpf, elpf, error, mean_h);
+  testLevel(gv, level, prefix, lpf, clpf, elpf, error, mean_h);
 }
 
 
-template<typename Grid, typename GPF, typename EGPF>
-void test(Grid &grid, int &result, GPF &gpf, EGPF &egpf,
+template<typename Grid, typename GPF, typename CGPF, typename EGPF>
+void test(Grid &grid, int &result, GPF &gpf, CGPF &cgpf, EGPF &egpf,
           double conv_limit, std::string name = "")
 {
   typedef typename Grid::LeafGridView GV;
@@ -433,6 +442,9 @@ void test(Grid &grid, int &result, GPF &gpf, EGPF &egpf,
 
   typedef typename GPF::template Traits<Grid>::LevelProbeFactory LPF;
   Dune::SmartPointer<LPF> lpf(gpf.levelProbeFactory(grid, name));
+
+  typedef typename CGPF::template Traits<Grid>::LevelProbeFactory CLPF;
+  Dune::SmartPointer<CLPF> clpf(cgpf.levelProbeFactory(grid, name));
 
   typedef typename EGPF::template Traits<Grid>::LevelProbeFactory ELPF;
   Dune::SmartPointer<ELPF> elpf(egpf.levelProbeFactory(grid, name));
@@ -444,7 +456,7 @@ void test(Grid &grid, int &result, GPF &gpf, EGPF &egpf,
 
   unsigned level = 0;
   double error0, mean_h0;
-  testLevel(grid.leafView(), level, filename, *lpf, *elpf, error0, mean_h0);
+  testLevel(grid.leafView(), level, filename, *lpf, *clpf, *elpf, error0, mean_h0);
 
   while(true) {
     ++level;
@@ -452,11 +464,11 @@ void test(Grid &grid, int &result, GPF &gpf, EGPF &egpf,
     if(unsigned(grid.leafView().size(0)) >= maxelements) break;
 
     if(do_all_levels)
-      testLevel(grid.leafView(), level, filename, *lpf, *elpf);
+      testLevel(grid.leafView(), level, filename, *lpf, *clpf, *elpf);
   }
   
   double errorf, mean_hf;
-  testLevel(grid.leafView(), level, filename, *lpf, *elpf, errorf, mean_hf);
+  testLevel(grid.leafView(), level, filename, *lpf, *clpf, *elpf, errorf, mean_hf);
 
   double total_convergence = std::log(errorf/error0)/std::log(mean_hf/mean_h0);
   std::cout << "electrodynamic total convergence: "
@@ -476,8 +488,8 @@ void test(Grid &grid, int &result, GPF &gpf, EGPF &egpf,
 // Main program with grid setup
 //===============================================================
 
-template<typename GPF, typename EGPF>
-void testAll(int &result, GPF &gpf, EGPF &egpf) {
+template<typename GPF, typename CGPF, typename EGPF>
+void testAll(int &result, GPF &gpf, CGPF & cgpf, EGPF &egpf) {
 #ifdef HAVE_ALBERTA
 #if (ALBERTA_DIM != 3)
 #error ALBERTA_DIM is not set to 3 -- please check the Makefile.am
@@ -485,7 +497,7 @@ void testAll(int &result, GPF &gpf, EGPF &egpf) {
 //   test(*UnitTetrahedronMaker         <Dune::AlbertaGrid<3, 3>    >::create(),
 //        result, graph, conv_limit,    "alberta-tetrahedron");
   // test(*KuhnTriangulatedUnitCubeMaker<Dune::AlbertaGrid<3, 3>    >::create(),
-  //      result, gpf, egpf, .7*conv_limit, "alberta-triangulated-cube-6");
+  //      result, gpf, cgpf, egpf, .7*conv_limit, "alberta-triangulated-cube-6");
 //   {
 //     Dune::GridPtr<Dune::AlbertaGrid<3, 3> > gridptr("grids/brick.dgf");
 //     test(*gridptr,
@@ -497,16 +509,16 @@ void testAll(int &result, GPF &gpf, EGPF &egpf) {
 //   test(*UnitTetrahedronMaker         <Dune::ALUSimplexGrid<3, 3> >::create(),
 //        result, graph, conv_limit,    "alu-tetrahedron");
   // test(*KuhnTriangulatedUnitCubeMaker<Dune::ALUSimplexGrid<3, 3> >::create(),
-  //      result, gpf, egpf, conv_limit,    "alu-triangulated-cube-6");
+  //      result, gpf, cgpf, egpf, conv_limit,    "alu-triangulated-cube-6");
 #endif // HAVE_ALUGRID
 
 #ifdef HAVE_UG
 //   test(*UnitTetrahedronMaker         <Dune::UGGrid<3>            >::create(),
 //        result, graph, conv_limit,    "ug-tetrahedron");
   // test(*KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
-  //      result, gpf, egpf, conv_limit,    "ug-triangulated-cube-6");
+  //      result, gpf, cgpf, egpf, conv_limit,    "ug-triangulated-cube-6");
   test(*TriangulatedUnitSquareMaker<Dune::UGGrid<2>            >::create(),
-       result, gpf, egpf, conv_limit,    "ug-triangulated-square");
+       result, gpf, cgpf, egpf, conv_limit,    "ug-triangulated-square");
 #endif // HAVE_UG
 }
 
@@ -559,8 +571,20 @@ int main(int argc, char** argv)
       (new DivergenceEvolution
        ("electrodynamic-divergence-evolution", quadrature_order));
 
+    typedef L2NormGridProbeFactory L2NormEvolution;
+    Dune::SmartPointer<L2NormEvolution>
+      curlEvolution
+      (new L2NormEvolution
+       ("electrodynamic-curl-evolution", "Curl", quadrature_order));
+
     testAll(result,
-            *Dune::PDELab::makeGridProbeFactoryList(pointPF, vtkOutput, globalError, l2Evolution, energyEvolution, divergenceEvolution),
+            *Dune::PDELab::makeGridProbeFactoryList(pointPF,
+                                                    vtkOutput,
+                                                    globalError,
+                                                    l2Evolution,
+                                                    energyEvolution,
+                                                    divergenceEvolution),
+            *Dune::PDELab::makeGridProbeFactoryList(curlEvolution),
             *l2Error);
 
 	return result;
