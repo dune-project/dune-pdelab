@@ -45,6 +45,7 @@
 #include "../gridoperatorspace/gridoperatorspace.hh"
 #include "../localoperator/electrodynamic.hh"
 
+#include "divergence-probe.hh"
 #include "electricenergy-probe.hh"
 #include "gnuplotgraph.hh"
 #include "gridexamples.hh"
@@ -552,8 +553,14 @@ int main(int argc, char** argv)
     Dune::SmartPointer<EnergyEvolution>
       energyEvolution(new EnergyEvolution("electrodynamic-electricenergy-evolution", quadrature_order));
 
+    typedef DivergenceGridProbeFactory DivergenceEvolution;
+    Dune::SmartPointer<DivergenceEvolution>
+      divergenceEvolution
+      (new DivergenceEvolution
+       ("electrodynamic-divergence-evolution", quadrature_order));
+
     testAll(result,
-            *Dune::PDELab::makeGridProbeFactoryList(pointPF, vtkOutput, globalError, l2Evolution, energyEvolution),
+            *Dune::PDELab::makeGridProbeFactoryList(pointPF, vtkOutput, globalError, l2Evolution, energyEvolution, divergenceEvolution),
             *l2Error);
 
 	return result;

@@ -27,9 +27,15 @@ LIBS = @LIBS@					\
 	$(UG_LDFLAGS) $(UG_LIBS)
 
 noinst_HEADERS =				\
+	divergence-probe.hh			\
+	electricenergy-probe.hh			\
 	gnuplotgraph.hh				\
 	gridexamples.hh				\
-	l2difference.hh
+	l2difference.hh				\
+	l2norm.hh				\
+	physicalconstants.hh			\
+	probe.hh				\
+	resonatorsolution.hh
 
 noinst_SCRIPTS =				\
 	make_pvd.sh
