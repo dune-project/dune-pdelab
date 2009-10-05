@@ -33,6 +33,7 @@ noinst_HEADERS =				\
 	gridexamples.hh				\
 	l2difference.hh				\
 	l2norm.hh				\
+	l2norm-probe.hh				\
 	physicalconstants.hh			\
 	probe.hh				\
 	resonatorsolution.hh
