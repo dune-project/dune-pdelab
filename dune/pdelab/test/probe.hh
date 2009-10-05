@@ -430,7 +430,7 @@ namespace Dune {
         double val;
         int extractions;
         while(pos != x.size()) {
-          extractions = std::sscanf(x.c_str()+pos, "%g%n", &val, &nchars);
+          extractions = std::sscanf(x.c_str()+pos, "%lg%n", &val, &nchars);
           if(extractions == 2) { // success
             t = val;
             pos += nchars;
