@@ -187,7 +187,7 @@ namespace Dune {
           lfsu.localFiniteElement().localBasis()
             .evaluateJacobianGlobal(it->position(),J,eg.geometry());
 
-          std::vector<RangeType> rotphi(lfsu.size(),RangeType(0));
+          std::vector<CurlType> rotphi(lfsu.size());
           for(unsigned i = 0; i < lfsu.size(); ++i)
             jacobianToCurl(rotphi[i], J[i]);
 
