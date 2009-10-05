@@ -1,6 +1,7 @@
 #ifndef DUNE_PDELAB_RESONATORSOLUTION_HH
 #define DUNE_PDELAB_RESONATORSOLUTION_HH
 
+#include <dune/common/float_cmp.hh>
 #include <dune/common/smartpointer.hh>
 
 #include <dune/grid/io/file/vtk/vtksequencewriter.hh>
