@@ -168,7 +168,7 @@ public:
     graph.addCommand("set key left top reverse Left");
     graph.addCommand("set title 'Divergence Evolution'");
     graph.addCommand("set xlabel 't'");
-    graph.addCommand("set ylabel 'Energy'");
+    graph.addCommand("set ylabel 'Divergence'");
     graph.addCommand("");
   }
 
