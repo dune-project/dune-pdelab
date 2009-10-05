@@ -424,11 +424,48 @@ namespace Dune {
         }
       }
 
+      template<typename T>
+      bool get(T& t, unsigned& pos) {
+        int nchars;
+        double val;
+        int extractions;
+        while(pos != x.size()) {
+          extractions = std::scanf(x.c_str()+pos, "%g%n", &val, &nchars);
+          if(extractions == 2) { // success
+            t = val;
+            pos += nchars;
+            return true;
+          } else // didn't match
+            ++pos;
+        }
+        return false;
+      }
+
+      void xAsVector(std::vector<DF>& xVector) {
+        xVector.clear();
+        unsigned pos = 0;
+        DF val;
+        while(get(val, pos)) xVector.push_back(val);
+      }
+
       template<int dim>
       void xAsFV(Dune::FieldVector<DF, dim>& xFV) {
-        std::istringstream s(x);
+        xFV = 0;
+        unsigned pos = 0;
         for(unsigned i = 0; i < dim; ++i)
-          s >> x[i];
+          get(xFV[i], pos);
+      }
+
+      template<typename T>
+      static std::string fmt(const std::vector<T> &v) {
+        std::ostringstream s;
+        s << "(";
+        if(v.size() > 0)
+          s << v[0];
+        for(unsigned i = 1; i < v.size(); ++i)
+          s << ", " << v[i];
+        s << ")";
+        return s.str();
       }
 
     public:
@@ -448,9 +485,14 @@ namespace Dune {
       {
         finishPlot();
 
+        std::vector<DF> xVector;
+        xAsVector(xVector);
+        xVector.resize(max_elems, 0);
+
         for(unsigned comp = 0; comp < max_elems; ++comp) {
           std::ostringstream s;
           s << comp;
+          graph.addCommand("set title 'Probe at " + fmt(xVector) + "'");
           graph.addCommand("set output '"+fileprefix+"-"+s.str()+".eps'");
           graph.addCommand("set ylabel 'u_{"+s.str()+"}'");
           for(unsigned i = 0; i < plots.size(); ++i) 
@@ -514,11 +556,6 @@ namespace Dune {
         graph.addCommand("");
         graph.addCommand("set key left top reverse Left");
         graph.addCommand("set xlabel 't'");
-        {
-          std::ostringstream s;
-          s << "set title 'Probe at (" << x << ")'";
-          graph.addCommand(s.str());
-        }
         graph.addCommand("");
       }
 
