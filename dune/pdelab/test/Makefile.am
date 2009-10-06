@@ -36,7 +36,8 @@ noinst_HEADERS =				\
 	l2norm-probe.hh				\
 	physicalconstants.hh			\
 	probe.hh				\
-	resonatorsolution.hh
+	resonatorsolution.hh			\
+	vtk-probe.hh
 
 noinst_SCRIPTS =				\
 	make_pvd.sh

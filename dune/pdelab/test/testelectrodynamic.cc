@@ -1,4 +1,5 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// vi: set et ts=4 sw=2 sts=2:
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif
@@ -53,6 +54,7 @@
 #include "physicalconstants.hh"
 #include "probe.hh"
 #include "resonatorsolution.hh"
+#include "vtk-probe.hh"
 
 //===============================================================
 //===============================================================
@@ -73,7 +75,7 @@ const double conv_limit = 0.85;
 
 // stop refining after the grid has more than this many elements (that means
 // in 3D that the fine grid may have up to 8 times as may elements)
-const unsigned maxelements = 2<<10;
+const unsigned maxelements = 2<<4;
 
 // multiplier for the stepsize obtained from the FDTD criterion
 const double stepadjust = 1.0/4;
@@ -523,10 +525,10 @@ void testAll(int &result, GPF &gpf, CGPF & cgpf, EGPF &egpf) {
 #ifdef HAVE_UG
 //   test(*UnitTetrahedronMaker         <Dune::UGGrid<3>            >::create(),
 //        result, graph, conv_limit,    "ug-tetrahedron");
-  test(*KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
-       result, gpf, cgpf, egpf, conv_limit,    "ug-triangulated-cube-6");
-  // test(*TriangulatedUnitSquareMaker<Dune::UGGrid<2>            >::create(),
-  //      result, gpf, cgpf, egpf, conv_limit,    "ug-triangulated-square");
+  // test(*KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
+  //      result, gpf, cgpf, egpf, conv_limit,    "ug-triangulated-cube-6");
+  test(*TriangulatedUnitSquareMaker<Dune::UGGrid<2>            >::create(),
+       result, gpf, cgpf, egpf, conv_limit,    "ug-triangulated-square");
 #endif // HAVE_UG
 }
 
@@ -553,7 +555,7 @@ int main(int argc, char** argv)
     Dune::SmartPointer<PointPF>
       pointPF(new PointPF("electrodynamic-probe", probe_location));
 
-    typedef ResonatorVTKGridProbeFactory<double> VTKOutput;
+    typedef ResonatorVTKGridProbeFactory VTKOutput;
     Dune::SmartPointer<VTKOutput>
       vtkOutput(new VTKOutput("electrodynamic"));
 

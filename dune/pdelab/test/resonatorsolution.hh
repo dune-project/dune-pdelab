@@ -4,10 +4,7 @@
 #include <dune/common/float_cmp.hh>
 #include <dune/common/smartpointer.hh>
 
-#include <dune/grid/io/file/vtk/vtksequencewriter.hh>
-
 #include "../common/function.hh"
-#include "../common/vtkexport.hh"
 
 #include "l2difference.hh"
 #include "physicalconstants.hh"
@@ -137,88 +134,6 @@ private:
   typename Traits::DomainType k;
   typename Traits::RangeType amp;
   typename Traits::DomainType origin;
-};
-
-//
-// VTKProbe
-//
-
-template<typename GV, typename RF>
-class ResonatorVTKProbe
-  : public Dune::PDELab::DummyProbeDefault<ResonatorVTKProbe<GV, RF> >
-{
-  Dune::VTKSequenceWriter<GV> writer;
-  const ResonatorSolutionFactory<GV, RF> rf;
-  double timeStretch;
-
-public:
-  ResonatorVTKProbe(const GV &gv, const std::string &name, double timeStretch_ = 1)
-    : writer(gv, name, ".", "", Dune::VTKOptions::nonconforming)
-    , rf(), timeStretch(timeStretch_)
-  {}
-
-  template<typename GF>
-  void measure(const GF &gf, double time = 0) {
-    typedef typename ResonatorSolutionFactory<GV, RF>::Function Ref;
-
-    Dune::SmartPointer<Ref> reference(rf.function(gf.getGridView(), time));
-    writer.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<GF>(gf,"solution"));
-    writer.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<Ref>(*reference,"reference"));
-    writer.write(time*timeStretch,Dune::VTKOptions::binaryappended);
-    writer.clear();
-  }
-
-};
-
-template<typename RF>
-class ResonatorVTKLevelProbeFactory
-{
-  const std::string tag;
-  const double timeStretch;
-
-public:
-  template<typename GV>
-  struct Traits {
-    typedef ResonatorVTKProbe<GV, RF> Probe;
-  };
-
-  ResonatorVTKLevelProbeFactory(const std::string &tag_, const double timeStretch_)
-    : tag(tag_), timeStretch(timeStretch_)
-  { }
-
-  template<typename GV>
-  Dune::SmartPointer<typename Traits<GV>::Probe>
-  getProbe(const GV &gv, unsigned level)
-  {
-    std::ostringstream nameconstruct;
-    nameconstruct << tag << ".level" << level;
-    return new typename Traits<GV>::Probe(gv, nameconstruct.str(), timeStretch);
-  }
-};
-
-template<typename RF>
-class ResonatorVTKGridProbeFactory
-{
-  const std::string fileprefix;
-  const double timeStretch;
-
-public:
-  template<typename G>
-  struct Traits {
-    typedef ResonatorVTKLevelProbeFactory<RF> LevelProbeFactory;
-  };
-
-  ResonatorVTKGridProbeFactory(const std::string &fileprefix_, const double timeStretch_ = 1)
-    : fileprefix(fileprefix_), timeStretch(timeStretch_)
-  { }
-
-  template<typename G>
-  Dune::SmartPointer<typename Traits<G>::LevelProbeFactory>
-  levelProbeFactory(const G &grid, const std::string &tag)
-  {
-    return new typename Traits<G>::LevelProbeFactory(fileprefix + "-" + tag, timeStretch);
-  }
-
 };
 
 //
