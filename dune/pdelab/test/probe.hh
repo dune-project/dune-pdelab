@@ -425,13 +425,13 @@ namespace Dune {
       }
 
       template<typename T>
-      bool get(T& t, unsigned& pos) {
+      bool get(T& t, unsigned& pos) const {
         int nchars;
         double val;
         int extractions;
         while(pos != x.size()) {
           extractions = std::sscanf(x.c_str()+pos, "%lg%n", &val, &nchars);
-          if(extractions == 2) { // success
+          if(extractions == 1) { // success
             t = val;
             pos += nchars;
             return true;
@@ -441,7 +441,7 @@ namespace Dune {
         return false;
       }
 
-      void xAsVector(std::vector<DF>& xVector) {
+      void xAsVector(std::vector<DF>& xVector) const {
         xVector.clear();
         unsigned pos = 0;
         DF val;
@@ -449,7 +449,7 @@ namespace Dune {
       }
 
       template<int dim>
-      void xAsFV(Dune::FieldVector<DF, dim>& xFV) {
+      void xAsFV(Dune::FieldVector<DF, dim>& xFV) const {
         xFV = 0;
         unsigned pos = 0;
         for(unsigned i = 0; i < dim; ++i)
