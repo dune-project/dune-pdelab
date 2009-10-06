@@ -48,8 +48,10 @@
 
 #include "divergence-probe.hh"
 #include "electricenergy-probe.hh"
+#include "globalerror-probe.hh"
 #include "gnuplotgraph.hh"
 #include "gridexamples.hh"
+#include "l2error-probe.hh"
 #include "l2norm-probe.hh"
 #include "physicalconstants.hh"
 #include "probe.hh"
@@ -555,19 +557,19 @@ int main(int argc, char** argv)
     Dune::SmartPointer<PointPF>
       pointPF(new PointPF("electrodynamic-probe", probe_location));
 
-    typedef ResonatorVTKGridProbeFactory VTKOutput;
+    typedef VTKGridProbeFactory VTKOutput;
     Dune::SmartPointer<VTKOutput>
       vtkOutput(new VTKOutput("electrodynamic"));
 
-    typedef ResonatorGlobalErrorGridProbeFactory GlobalError;
+    typedef GlobalErrorGridProbeFactory GlobalError;
     Dune::SmartPointer<GlobalError>
       globalError(new GlobalError(quadrature_order, "electrodynamic-globalerror", "electrodynamic-globalevolution"));
 
-    typedef ResonatorL2ErrorGridProbeFactory L2Error;
+    typedef L2ErrorGridProbeFactory L2Error;
     Dune::SmartPointer<L2Error>
       l2Error(new L2Error("electrodynamic-l2error", quadrature_order));
 
-    typedef ResonatorL2ErrorEvolutionGridProbeFactory L2Evolution;
+    typedef L2ErrorEvolutionGridProbeFactory L2Evolution;
     Dune::SmartPointer<L2Evolution>
       l2Evolution(new L2Evolution("electrodynamic-l2evolution", quadrature_order));
 

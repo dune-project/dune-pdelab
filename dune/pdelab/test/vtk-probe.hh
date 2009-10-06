@@ -16,14 +16,14 @@
 //
 
 template<typename GV>
-class ResonatorVTKProbe
-  : public Dune::PDELab::DummyProbeDefault<ResonatorVTKProbe<GV> >
+class VTKProbe
+  : public Dune::PDELab::DummyProbeDefault<VTKProbe<GV> >
 {
   Dune::VTKSequenceWriter<GV> writer;
   double timeStretch;
 
 public:
-  ResonatorVTKProbe(const GV &gv, const std::string &name, double timeStretch_ = 1)
+  VTKProbe(const GV &gv, const std::string &name, double timeStretch_ = 1)
     : writer(gv, name, ".", "", Dune::VTKOptions::nonconforming)
     , timeStretch(timeStretch_)
   {}
@@ -47,7 +47,7 @@ public:
   }
 };
 
-class ResonatorVTKLevelProbeFactory
+class VTKLevelProbeFactory
 {
   const std::string tag;
   const double timeStretch;
@@ -55,10 +55,10 @@ class ResonatorVTKLevelProbeFactory
 public:
   template<typename GV>
   struct Traits {
-    typedef ResonatorVTKProbe<GV> Probe;
+    typedef VTKProbe<GV> Probe;
   };
 
-  ResonatorVTKLevelProbeFactory(const std::string &tag_, const double timeStretch_)
+  VTKLevelProbeFactory(const std::string &tag_, const double timeStretch_)
     : tag(tag_), timeStretch(timeStretch_)
   { }
 
@@ -72,7 +72,7 @@ public:
   }
 };
 
-class ResonatorVTKGridProbeFactory
+class VTKGridProbeFactory
 {
   const std::string fileprefix;
   const double timeStretch;
@@ -80,10 +80,10 @@ class ResonatorVTKGridProbeFactory
 public:
   template<typename G>
   struct Traits {
-    typedef ResonatorVTKLevelProbeFactory LevelProbeFactory;
+    typedef VTKLevelProbeFactory LevelProbeFactory;
   };
 
-  ResonatorVTKGridProbeFactory(const std::string &fileprefix_, const double timeStretch_ = 1)
+  VTKGridProbeFactory(const std::string &fileprefix_, const double timeStretch_ = 1)
     : fileprefix(fileprefix_), timeStretch(timeStretch_)
   { }
 
