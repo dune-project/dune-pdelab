@@ -56,11 +56,11 @@ divergencel2norm2 (const U& u, int qorder=2)
       {
         // evaluate the given grid functions at integration point
         u.evaluate(*eit,
-                   iit->intersectionSelfLocal().global(qit->position()),
+                   iit->geometryInInside().global(qit->position()),
                    u_val);
         if(iit->neighbor()) {
           u.evaluate(*iit->outside(),
-                     iit->intersectionNeighborLocal().global(qit->position()),
+                     iit->geometryInOutside().global(qit->position()),
                      u_val_other);
           u_val -= u_val_other;
         }

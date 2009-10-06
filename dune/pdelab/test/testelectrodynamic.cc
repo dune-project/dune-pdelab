@@ -73,7 +73,7 @@ const double conv_limit = 0.85;
 
 // stop refining after the grid has more than this many elements (that means
 // in 3D that the fine grid may have up to 8 times as may elements)
-const unsigned maxelements = 2<<7;
+const unsigned maxelements = 2<<10;
 
 // multiplier for the stepsize obtained from the FDTD criterion
 const double stepadjust = 1.0/4;
