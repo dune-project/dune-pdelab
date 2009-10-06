@@ -18,14 +18,25 @@ namespace Dune {
     // Interface
     //
 
+    template<typename Imp>
     class ProbeInterface
     {
     public:
       template<typename GF>
       void measure(const GF &gf, double time = 0);
+      //! function + exact solution
+      template<typename GF, typename EGF>
+      void measureExact(const GF& gf, const EGF& egf, double time = 0)
+      { asImp().measure(gf, time); }
 
       template<typename GF>
       void measureFinal(const GF &gf, double time = 0);
+      template<typename GF, typename EGF>
+      void measureFinalExact(const GF &gf, const EGF &egf, double time = 0)
+      { asImp().measureFinal(gf, time); }
+    protected:
+      Imp& asImp () {return static_cast<Imp &> (*this);}
+      const Imp& asImp () const {return static_cast<const Imp &>(*this);}
     };
 
     template<template<typename GridView> class T>
@@ -59,8 +70,9 @@ namespace Dune {
     // A probe which extracts some kind of error measure from the solution,
     // and provides this information afterwards
 
+    template<typename Imp>
     class ErrorProbeInterface
-      : public ProbeInterface
+      : public ProbeInterface<Imp>
     {
     public:
       double get_error() const;
@@ -70,7 +82,9 @@ namespace Dune {
     // DummyProbe
     //
 
-    class DummyProbe
+    template<typename Imp>
+    class DummyProbeDefault
+      : public ProbeInterface<Imp>
     {
     public:
       template<typename GF>
@@ -80,12 +94,17 @@ namespace Dune {
       void measureFinal(const GF &gf, double time = 0) { /* do nothing */ }
     };
 
+    class DummyProbe
+      : public DummyProbeDefault<DummyProbe>
+    {};
+
     //
     // Pair
     //
 
     template<typename P1, typename P2>
     class ProbePair
+      : public ProbeInterface<ProbePair<P1, P2> >
     {
       SmartPointer<P1> p1;
       SmartPointer<P2> p2;
@@ -100,11 +119,21 @@ namespace Dune {
         p1->measure(gf, time);
         p2->measure(gf, time);
       }
+      template<typename GF, typename EGF>
+      void measureExact(const GF &gf, const EGF &egf, double time = 0) {
+        p1->measureExact(gf, egf, time);
+        p2->measureExact(gf, egf, time);
+      }
 
       template<typename GF>
       void measureFinal(const GF &gf, double time = 0) {
         p1->measureFinal(gf, time);
         p2->measureFinal(gf, time);
+      }
+      template<typename GF, typename EGF>
+      void measureFinalExact(const GF &gf, const EGF &egf, double time = 0) {
+        p1->measureFinalExact(gf, egf, time);
+        p2->measureFinalExact(gf, egf, time);
       }
     };
 
@@ -368,7 +397,7 @@ namespace Dune {
 
     template<typename D>
     class GnuplotProbe
-      : public DummyProbe
+      : public DummyProbeDefault<GnuplotProbe<D> >
     {
       std::ostream &data;
       D x;

@@ -9,7 +9,7 @@
 //
 
 class L2NormProbe
-  : public Dune::PDELab::DummyProbe
+  : public Dune::PDELab::DummyProbeDefault<L2NormProbe>
 {
   std::ostream &dat;
   unsigned integrationOrder;

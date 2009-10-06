@@ -78,7 +78,7 @@ divergencel2norm2 (const U& u, int qorder=2)
 //
 
 class DivergenceProbe
-  : public Dune::PDELab::DummyProbe
+  : public Dune::PDELab::DummyProbeDefault<DivergenceProbe>
 {
   std::ostream &dat;
   unsigned integrationOrder;

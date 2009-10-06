@@ -310,10 +310,14 @@ void electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
 //   typedef Dune::SuperLU<typename M::BaseT> Solver;
 //   Solver solver(m);
 
-  fprobe.measure(DGF(gfs, *xprev), -Delta_t);
+  fprobe.measureExact(DGF(gfs, *xprev),
+                      *referenceFactory.function(gv, -Delta_t),
+                      -Delta_t);
   cprobe.measure(CDGF(gfs, *xprev), -Delta_t);
 //  std::cout << "u[-1]\n" << *xprev << std::endl;
-  fprobe.measure(DGF(gfs, *xcur), 0);
+  fprobe.measureExact(DGF(gfs, *xcur),
+                      *referenceFactory.function(gv, 0),
+                      0);
   cprobe.measure(CDGF(gfs, *xcur), 0);
 //   std::cout << "u[0]\n" << *xcur << std::endl;
 
@@ -350,7 +354,9 @@ void electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
 
     *xnext += affineShift;
 
-    fprobe.measure(DGF(gfs, *xnext), Delta_t*step);
+    fprobe.measureExact(DGF(gfs, *xnext),
+                        *referenceFactory.function(gv, Delta_t*step),
+                        Delta_t*step);
     cprobe.measure(CDGF(gfs, *xnext), Delta_t*step);
 //     std::cout << "u[" << step << "]\n" << *xnext << std::endl;
 
@@ -358,7 +364,9 @@ void electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
     xcur = xnext;
   }
   
-  fprobe.measureFinal(DGF(gfs, *xcur), Delta_t*steps);
+  fprobe.measureFinalExact(DGF(gfs, *xcur),
+                           *referenceFactory.function(gv, Delta_t*steps),
+                           Delta_t*steps);
   cprobe.measureFinal(CDGF(gfs, *xcur), Delta_t*steps);
 }
 

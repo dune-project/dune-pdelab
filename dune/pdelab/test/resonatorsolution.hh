@@ -145,7 +145,7 @@ private:
 
 template<typename GV, typename RF>
 class ResonatorVTKProbe
-  : public Dune::PDELab::DummyProbe
+  : public Dune::PDELab::DummyProbeDefault<ResonatorVTKProbe<GV, RF> >
 {
   Dune::VTKSequenceWriter<GV> writer;
   const ResonatorSolutionFactory<GV, RF> rf;
@@ -226,7 +226,7 @@ public:
 //
 
 class ResonatorGlobalErrorProbe
-  : public Dune::PDELab::DummyProbe
+  : public Dune::PDELab::DummyProbeDefault<ResonatorGlobalErrorProbe>
 {
   unsigned integrationOrder;
   double mean_h;
@@ -427,7 +427,7 @@ public:
 //
 
 class ResonatorL2ErrorProbe
-  : public Dune::PDELab::DummyProbe
+  : public Dune::PDELab::DummyProbeDefault<ResonatorL2ErrorProbe>
 {
   std::ostream &dat;
   unsigned integrationOrder;
@@ -543,7 +543,7 @@ public:
 //
 
 class ResonatorL2ErrorEvolutionProbe
-  : public Dune::PDELab::DummyProbe
+  : public Dune::PDELab::DummyProbeDefault<ResonatorL2ErrorEvolutionProbe>
 {
   std::ostream &dat;
   unsigned integrationOrder;

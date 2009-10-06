@@ -9,7 +9,7 @@
 //
 
 class ElectricEnergyProbe
-  : public Dune::PDELab::DummyProbe
+  : public Dune::PDELab::DummyProbeDefault<ElectricEnergyProbe>
 {
   std::ostream &dat;
   unsigned integrationOrder;
