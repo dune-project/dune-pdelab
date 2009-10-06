@@ -137,6 +137,12 @@ testelectrodynamic_LDADD =					\
 MOSTLYCLEANFILES +=							\
 	electrodynamic-alberta-triangulated-cube-6.level*.pvd		\
 	electrodynamic-alu-triangulated-cube-6.level*.pvd		\
+	electrodynamic-curl-evolution.dat				\
+	electrodynamic-curl-evolution.eps				\
+	electrodynamic-curl-evolution.gnuplot				\
+	electrodynamic-divergence-evolution.dat				\
+	electrodynamic-divergence-evolution.eps				\
+	electrodynamic-divergence-evolution.gnuplot			\
 	electrodynamic-electricenergy-evolution.dat			\
 	electrodynamic-electricenergy-evolution.eps			\
 	electrodynamic-electricenergy-evolution.gnuplot			\
