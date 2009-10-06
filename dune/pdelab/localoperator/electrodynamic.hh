@@ -102,7 +102,7 @@ namespace Dune {
                                  const FieldVector<FieldVector<RF, 3>, 3> &jacobian)
       {
         for(unsigned i = 0; i < 3; ++i)
-          curl[i] += jacobian[(i+2)%3][(i+1)%3] - jacobian[(i+1)%3][(i+2)%3];
+          curl[i] = jacobian[(i+2)%3][(i+1)%3] - jacobian[(i+1)%3][(i+2)%3];
       }
 	public:
 

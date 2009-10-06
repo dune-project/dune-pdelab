@@ -515,10 +515,10 @@ void testAll(int &result, GPF &gpf, CGPF & cgpf, EGPF &egpf) {
 #ifdef HAVE_UG
 //   test(*UnitTetrahedronMaker         <Dune::UGGrid<3>            >::create(),
 //        result, graph, conv_limit,    "ug-tetrahedron");
-  // test(*KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
-  //      result, gpf, cgpf, egpf, conv_limit,    "ug-triangulated-cube-6");
-  test(*TriangulatedUnitSquareMaker<Dune::UGGrid<2>            >::create(),
-       result, gpf, cgpf, egpf, conv_limit,    "ug-triangulated-square");
+  test(*KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
+       result, gpf, cgpf, egpf, conv_limit,    "ug-triangulated-cube-6");
+  // test(*TriangulatedUnitSquareMaker<Dune::UGGrid<2>            >::create(),
+  //      result, gpf, cgpf, egpf, conv_limit,    "ug-triangulated-square");
 #endif // HAVE_UG
 }
 
