@@ -33,6 +33,7 @@ noinst_HEADERS =				\
 	gnuplotgraph.hh				\
 	gridexamples.hh				\
 	l2difference.hh				\
+	l2error-probe.hh			\
 	l2norm.hh				\
 	l2norm-probe.hh				\
 	physicalconstants.hh			\
