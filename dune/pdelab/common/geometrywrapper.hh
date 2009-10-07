@@ -2,6 +2,8 @@
 #ifndef DUNE_PDELAB_GEOMETRYWRAPPER_HH
 #define DUNE_PDELAB_GEOMETRYWRAPPER_HH
 
+#include <dune/common/fvector.hh>
+
 namespace Dune {
   namespace PDELab {
 

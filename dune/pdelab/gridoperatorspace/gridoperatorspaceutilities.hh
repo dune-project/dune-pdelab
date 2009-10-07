@@ -3,6 +3,8 @@
 #define DUNE_PDELAB_GRIDOPERATORSPACEUTILITIES_HH
 
 #include<dune/common/exceptions.hh>
+#include<dune/common/tuples.hh>
+
 #include"../common/geometrywrapper.hh"
 #include"localmatrix.hh"
 

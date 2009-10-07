@@ -1,6 +1,9 @@
 #ifndef DUNE_ISTLVECTORBACKEND_HH
 #define DUNE_ISTLVECTORBACKEND_HH
 
+#include<vector>
+
+#include<dune/common/fvector.hh>
 #include<dune/istl/bvector.hh>
 
 namespace Dune {

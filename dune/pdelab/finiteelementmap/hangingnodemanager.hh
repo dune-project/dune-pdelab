@@ -2,7 +2,10 @@
 #define HANGINGNODEMANAGER_HH
 
 #include<dune/grid/common/grid.hh>
+#include<dune/grid/common/mcmgmapper.hh>
 #include<dune/common/float_cmp.hh>
+
+#include"../common/geometrywrapper.hh"
 
 namespace Dune {
   namespace PDELab {
