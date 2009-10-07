@@ -401,22 +401,54 @@ namespace Dune {
     {
       std::ostream &data;
       D x;
-      unsigned &max_elems;
+      unsigned &elems;
+      bool &have_reference;
 
     public:
-      GnuplotProbe(std::ostream &data_, const D &x_, unsigned &max_elems_)
-        : data(data_), x(x_), max_elems(max_elems_)
+      GnuplotProbe(std::ostream &data_, const D &x_, unsigned &elems_,
+                   bool& have_reference_)
+        : data(data_), x(x_), elems(elems_), have_reference(have_reference_)
       {}
 
       template<typename GF>
       void measure(const GF &gf, double time = 0) {
+        if(elems == 0) elems = GF::Traits::dimDomain;
+        if(elems != GF::Traits::dimDomain)
+          DUNE_THROW(Dune::Exception,
+                     "Don't feed functions of different dimensions to the "
+                     "same Gnuplot probe");
+
         typename GF::Traits::RangeType y;
         GridFunctionToFunctionAdapter<GF>(gf).evaluate(x, y);
         data << time;
         for(unsigned i = 0; i < GF::Traits::dimDomain; ++i)
           data << "\t" << y[i];
         data << std::endl;
-        if(max_elems < GF::Traits::dimDomain) max_elems = GF::Traits::dimDomain;
+      }
+
+      template<typename GF, typename EGF>
+      void measureExact(const GF &gf, const EGF &egf, double time = 0) {
+        if(elems == 0) elems = GF::Traits::dimDomain;
+        if(elems != GF::Traits::dimDomain)
+          DUNE_THROW(Dune::Exception,
+                     "Don't feed functions of different dimensions to the "
+                     "same Gnuplot probe");
+        have_reference = true;
+
+        data << time;
+        {
+          typename GF::Traits::RangeType y;
+          GridFunctionToFunctionAdapter<GF>(gf).evaluate(x, y);
+          for(unsigned i = 0; i < GF::Traits::dimDomain; ++i)
+            data << "\t" << y[i];
+        }
+        {
+          typename EGF::Traits::RangeType y;
+          GridFunctionToFunctionAdapter<EGF>(egf).evaluate(x, y);
+          for(unsigned i = 0; i < EGF::Traits::dimDomain; ++i)
+            data << "\t" << y[i];
+        }
+        data << std::endl;
       }
 
     };
@@ -425,13 +457,13 @@ namespace Dune {
     class GnuplotLevelProbeFactory
     {
       struct PlotLine {
-        PlotLine(const std::string prefix_ = "", const std::string suffix_ = "")
-          : prefix(prefix_), suffix(suffix_), max_elems(0)
+        PlotLine(unsigned index_ = 0, unsigned level_ = 0)
+          : index(index_), level(level_), have_reference(false)
         {}
 
-        std::string prefix;
-        std::string suffix;
-        unsigned max_elems;
+        unsigned index;
+        unsigned level;
+        bool have_reference;
       };
 
       GnuplotGraph &graph;
@@ -440,7 +472,7 @@ namespace Dune {
       unsigned &index;
       PlotLine lastplot;
       std::vector<PlotLine> plots;
-      unsigned max_elems;
+      unsigned elems;
       const std::string fileprefix;
       const std::string tag;
 
@@ -448,7 +480,6 @@ namespace Dune {
         if(datapos != graph.dat().tellp()) {
           graph.dat() << "\n\n";
           plots.push_back(lastplot);
-          if(lastplot.max_elems > max_elems) max_elems = lastplot.max_elems;
           ++index;
         }
       }
@@ -508,7 +539,7 @@ namespace Dune {
                                const std::string &fileprefix_,
                                const std::string &tag_)
         : graph(graph_), x(x_), datapos(graph.dat().tellp()), index(index_)
-        , lastplot(), plots(), max_elems(0), fileprefix(fileprefix_), tag(tag_)
+        , lastplot(), plots(), elems(0), fileprefix(fileprefix_), tag(tag_)
       { }
       ~GnuplotLevelProbeFactory()
       {
@@ -516,21 +547,38 @@ namespace Dune {
 
         std::vector<DF> xVector;
         xAsVector(xVector);
-        xVector.resize(max_elems, 0);
+        xVector.resize(elems, 0);
 
-        for(unsigned comp = 0; comp < max_elems; ++comp) {
+        for(unsigned comp = 0; comp < elems; ++comp) {
           std::ostringstream s;
-          s << comp;
           graph.addCommand("set title 'Probe at " + fmt(xVector) + "'");
-          graph.addCommand("set output '"+fileprefix+"-"+s.str()+".eps'");
-          graph.addCommand("set ylabel 'u_{"+s.str()+"}'");
-          for(unsigned i = 0; i < plots.size(); ++i) 
-            if(plots[i].max_elems > comp) {
-              std::ostringstream plotline;
-              plotline << plots[i].prefix
-                       << " using 1:" << comp+2
-                       << plots[i].suffix;
-              graph.addPlot(plotline.str());
+
+          s << "set output '" << fileprefix << "-" << comp << ".eps'";
+          graph.addCommand(s.str());
+          s.str("");
+
+          s << "set ylabel 'u_{"<< comp << "}'";
+          graph.addCommand(s.str());
+          s.str("");
+
+          for(unsigned i = 0; i < plots.size(); ++i) {
+            s << "'" << graph.datname() << "'"
+              << " index " << plots[i].index
+              << " using 1:" << comp+2
+              << " title '" << tag << " level " << plots[i].level << "'"
+              << " with lines";
+            graph.addPlot(s.str());
+            s.str("");
+          }
+          if(plots.size() > 0)
+            if(plots[plots.size()-1].have_reference) {
+              s << "'" << graph.datname() << "'"
+                << " index " << plots[plots.size()-1].index
+                << " using 1:" << comp+elems+2
+                << " title '" << tag << " reference'"
+                << " with lines ls -1";
+              graph.addPlot(s.str());
+              s.str("");
             }
         }
       }
@@ -544,22 +592,11 @@ namespace Dune {
         finishPlot();
         graph.dat() << "# LEVEL" << level << std::endl;
         datapos = graph.dat().tellp();
-        {
-          std::ostringstream plotconstruct;
-          plotconstruct << "'" << graph.datname() << "'"
-                        << " index " << index;
-          lastplot.prefix = plotconstruct.str();
-        }
-        {
-          std::ostringstream plotconstruct;
-          plotconstruct << " title '" << tag << " level " << level << "'"
-                        << " with lines";
-          lastplot.suffix = plotconstruct.str();
-        }
-        lastplot.max_elems = 0;
+        lastplot = PlotLine(index, level);
         return new typename Traits<GV>::Probe(graph.dat(),
                                               xFV,
-                                              lastplot.max_elems);
+                                              elems,
+                                              lastplot.have_reference);
       }
     };
 
