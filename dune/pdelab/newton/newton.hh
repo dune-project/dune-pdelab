@@ -1,3 +1,14 @@
+// -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=8 sw=4 sts=4:
+#ifndef DUNE_PDELAB_NEWTON_HH
+#define DUNE_PDELAB_NEWTON_HH
+
+#include <iostream>
+#include <iomanip>
+#include <cmath>
+
+#include <math.h>
+
 #include <dune/common/exceptions.hh>
 #include <dune/common/timer.hh>
 
@@ -104,7 +115,7 @@ namespace Dune
                 r = 0.0;                                        // TODO: vector interface
                 this->gridoperator.residual(this->u, r);
                 this->res.defect = this->solver.norm(r);                    // TODO: solver interface
-                if (!std::isfinite(this->res.defect))
+                if (!isfinite(this->res.defect))
                     DUNE_THROW(NewtonDefectError,
                                "NewtonSolver::defect(): Non-linear defect is NaN or Inf");
             }
@@ -417,3 +428,5 @@ namespace Dune
         };
     }
 }
+
+#endif // DUNE_PDELAB_NEWTON_HH
