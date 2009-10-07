@@ -28,57 +28,62 @@ namespace Dune {
      * Solve the equation
      * \f{align*}{
      *    \nabla\times\mu^{-1}\nabla\times\mathbf E
-     *    +\epsilon\partial_t^2\mathbf E &= 0
+     *    +\epsilon\partial_t^2\mathbf E &= -\partial_t\mathbf J
      *    \qquad\text{in }\Omega \\
      *    \mathbf{\hat n}\times\mathbf E &= 0
      *    \qquad\text{on }\partial\Omega
      * \f}
-     * (i.e. \f$\sigma=0\f$, no impressed currents and PEC boundary conditions
+     * (i.e. \f$\sigma=0\f$, impressed current \f$\mathbf J\f$ and PEC
+     * boundary conditions
      * everywhere).  This leads to the following weak formulation:
      *
      * \f[
      *    \int_\Omega\{
      *       \mu^{-1}(\nabla\times\mathbf v)\cdot(\nabla\times\mathbf E)
      *       +\mathbf v\cdot\epsilon\partial_t^2\mathbf E
+     *       +\mathbf v\cdot\partial_t\mathbf J
      *    \}dV = 0\qquad \forall \mathbf v
      * \f]
      * The boundary integral from the greens theorem vanishes because we will
      * impress dirichlet boundarycondition everywhere.  Inserting a base
      * \f$\{\mathbf N_i\}\f$ into \f$\mathbf v\f$ and \f$\mathbf E\f$:
      * \f[
-     *    \sum_i(\partial_t^2u_i)T_{ij}+\sum_iu_iS_{ij}=0 \qquad\forall j
+     *    \sum_jT_{ij}(\partial_t^2u_j)+\sum_jS_{ij}u_j+f_i=0 \qquad\forall j
      * \f]
      * with
      * \f{align*}{
      *    T_{ij}&=\int_\Omega\epsilon\mathbf N_i\cdot\mathbf N_jdV \\
      *    S_{ij}&=\int_\Omega\mu^{-1}(\nabla\times\mathbf N_i)\cdot
      *                               (\nabla\times\mathbf N_j)dV   \\
+     *    f_i&=\int_\Omega\mathbf N_i\cdot\partial_t\mathbf JdV    \\
      *    \mathbf E &= \sum_iu_i\mathbf N_i
      * \f}
      *
      * The time scheme is central differences from Jin (12.29).  With the
      * simplifications we have done above it looks like
      * \f[
-     *    Tu^{n+1}=2Tu^n-Tu^{n-1}-(\Delta t)^2Su^n = 0
+     *    Tu^{n+1}=2Tu^n-Tu^{n-1}-(\Delta t)^2Su^n-(\Delta t)^2f^n = 0
      * \f]
      * Bringing this into the residual formulation we get
      * \f[
-     *    r=T(u^{n+1}-2u^n+u^{n-1})+(\Delta t)^2Su^n
+     *    r=T(u^{n+1}-2u^n+u^{n-1})+(\Delta t)^2Su^n+(\Delta t)^2f^n
      * \f]
      *
      * \note Currently \f$\epsilon\f$ is fixed to 1.
      *
      * \tparam Eps    Type of function to evaluate \f$\epsilon\f$
      * \tparam Mu     Type of function to evaluate \f$\mu\f$
+     * \tparam DtJ    Type of function to evaluate \f$\partial_t\mathbf J\f$
      * \tparam GCV    Type of the global coefficient vector, used for storing
      *                pointers to \f$u^n\f$ and \f$u^{n-1}\f$
      */
-    template<typename Eps, typename Mu, typename GCV>
+    template<typename Eps, typename Mu, typename DtJ, typename GCV>
 	class Electrodynamic
-      : public NumericalJacobianApplyVolume<Electrodynamic<Eps, Mu, GCV> >
-      , public NumericalJacobianVolume<Electrodynamic<Eps, Mu, GCV> >
-      , public NumericalJacobianApplyBoundary<Electrodynamic<Eps, Mu, GCV> >
-      , public NumericalJacobianBoundary<Electrodynamic<Eps, Mu, GCV> >
+      : public NumericalJacobianApplyVolume<Electrodynamic<Eps, Mu, DtJ, GCV> >
+      , public NumericalJacobianVolume<Electrodynamic<Eps, Mu, DtJ, GCV> >
+      , public NumericalJacobianApplyBoundary<Electrodynamic<Eps, Mu, DtJ,
+                                                             GCV> >
+      , public NumericalJacobianBoundary<Electrodynamic<Eps, Mu, DtJ, GCV> >
       , public FullVolumePattern
       , public LocalOperatorDefaultFlags
 	{
@@ -112,9 +117,25 @@ namespace Dune {
 	  // residual assembly flags
       enum { doAlphaVolume = true };
 
-      Electrodynamic (const Eps &eps_, const Mu& mu_, double Delta_t_ = 0, int qorder_ = 2)
+      //! Construct an Electrodynamic localoperator
+      /**
+       * \param eps_     Reference to function object to evaluate
+       *                 \f$\epsilon\f$.
+       * \param mu_      Reference to function object to evaluate \f$\mu\f$.
+       * \param dtJ_     Reference to function object to evaluate
+       *                 \f$\partial_t\mathbf J\f$, the time derivative of the
+       *                 impressed current.
+       * \param Delta_t_ Size of time step.
+       * \param qorder_  Quadrature order to use.
+       *
+       * \note The references the the function objects should be valid for as
+       *       long as this localoperators residual() method is used.
+       */
+      Electrodynamic(const Eps &eps_, const Mu& mu_, const DtJ& dtJ_,
+                     double Delta_t_ = 0, int qorder_ = 2)
         : eps(eps_)
         , mu(mu_)
+        , dtJ(dtJ_)
         , Ecur(0)
         , Eprev(0)
         , Delta_t(Delta_t_)
@@ -158,6 +179,8 @@ namespace Dune {
           T(lfsu.size(), std::vector<DF>(lfsu.size(), 0));
         std::vector<std::vector<DF> >
           S(lfsu.size(), std::vector<DF>(lfsu.size(), 0));
+        std::vector<DF>
+          f(lfsu.size(), 0);
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -167,11 +190,21 @@ namespace Dune {
         // loop over quadrature points
         for(typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin();
             it!=rule.end(); ++it) {
-          // calculate T
+          // values of basefunctions
           std::vector<RangeType> phi(lfsu.size());
           lfsu.localFiniteElement().localBasis()
             .evaluateFunctionGlobal(it->position(),phi,eg.geometry());
 
+          // curl of the basefunctions
+          std::vector<JacobianType> J(lfsu.size());
+          lfsu.localFiniteElement().localBasis()
+            .evaluateJacobianGlobal(it->position(),J,eg.geometry());
+
+          std::vector<CurlType> rotphi(lfsu.size());
+          for(unsigned i = 0; i < lfsu.size(); ++i)
+            jacobianToCurl(rotphi[i], J[i]);
+
+          // calculate T
           Dune::FieldVector<RF,1> epsval;
           eps.evaluate(eg.entity(), it->position(), epsval);
 
@@ -183,14 +216,6 @@ namespace Dune {
               T[i][j] += factor * (phi[i] * phi[j]);
 
           // calculate S
-          std::vector<JacobianType> J(lfsu.size());
-          lfsu.localFiniteElement().localBasis()
-            .evaluateJacobianGlobal(it->position(),J,eg.geometry());
-
-          std::vector<CurlType> rotphi(lfsu.size());
-          for(unsigned i = 0; i < lfsu.size(); ++i)
-            jacobianToCurl(rotphi[i], J[i]);
-
           Dune::FieldVector<RF,1> muval;
           mu.evaluate(eg.entity(), it->position(), muval);
 
@@ -200,6 +225,16 @@ namespace Dune {
           for(unsigned i = 0; i < lfsu.size(); ++i)
             for(unsigned j = 0; j < lfsu.size(); ++j)
               S[i][j] += factor * (rotphi[i] * rotphi[j]);
+
+          // calculate f
+          typename DtJ::Traits::RangeType dtJval;
+          dtJ.evaluate(eg.entity(), it->position(), epsval);
+
+          factor = it->weight()
+            * eg.geometry().integrationElement(it->position());
+
+          for(unsigned i = 0; i < lfsu.size(); ++i)
+            f[i] += factor * (phi[i] * dtJval);
         }
 
         // get coefficients from Ecur and Eprev
@@ -215,16 +250,20 @@ namespace Dune {
         for(unsigned i = 0; i < lfsu.size(); ++i)
           v1[i] = x[i] - 2*xcur[i] + xprev[i];
 
-        // !!! modify S -> Delta_t^2*S
         double Delta_t2 = Delta_t*Delta_t;
+        // !!! modify S -> Delta_t^2*S
         for(unsigned i = 0; i < lfsu.size(); ++i)
           for(unsigned j = 0; j < lfsu.size(); ++j)
             S[i][j] *= Delta_t2;
 
+        // !!! modify f -> Delta_t^2*f
+        for(unsigned i = 0; i < lfsu.size(); ++i)
+          f[i] *= Delta_t2;
+
         // calculate residual
         for(unsigned i = 0; i < lfsu.size(); ++i)
           for(unsigned j = 0; j < lfsu.size(); ++j)
-            r[i] += T[i][j] * v1[j] + S[i][j] * xcur[j];
+            r[i] += T[i][j] * v1[j] + S[i][j] * xcur[j] + f[i];
 	  }
 
       //! set Eprev
@@ -257,6 +296,7 @@ namespace Dune {
     private:
       const Eps &eps;
       const Mu &mu;
+      const DtJ &dtJ;
       const GCV *Ecur;
       const GCV *Eprev;
       double Delta_t;
