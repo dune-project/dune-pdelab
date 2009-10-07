@@ -77,7 +77,7 @@ const double conv_limit = 0.85;
 
 // stop refining after the grid has more than this many elements (that means
 // in 3D that the fine grid may have up to 8 times as may elements)
-const unsigned maxelements = 2<<4;
+const unsigned maxelements = 1<<11;
 
 // multiplier for the stepsize obtained from the FDTD criterion
 const double stepadjust = 1.0/4;
@@ -96,8 +96,9 @@ const unsigned int quadrature_order = 3;
 // where to place a probe to measure the E-field
 const std::string probe_location = ".33333333333333333333 .2 .14285714285714285714";
 
-// probe_location as FieldVector, initialized from probe_location in main()
-Dune::FieldVector<double, 3> probe_location_fv;
+// whether to use the exact solution directly as reference solution or to
+// interpolate it into a discrete grid function first
+const bool use_interpolated_reference = false;
 
 //
 //  CODE
@@ -108,18 +109,20 @@ Dune::FieldVector<double, 3> probe_location_fv;
 //===============================================================
 
 // function for defining the source term
-template<typename GV, typename RF>
+template<typename GV, typename RF, unsigned dimRange = 1>
 class ConstFunc
   : public Dune::PDELab::AnalyticGridFunctionBase<
-      Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-      ConstFunc<GV,RF>
+      Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,dimRange>,
+      ConstFunc<GV,RF,dimRange>
     >
 {
 public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,ConstFunc<GV,RF> > BaseT;
+  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,dimRange> Traits;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<
+    Traits,
+    ConstFunc<GV,RF, dimRange> > BaseT;
 
-  ConstFunc (const GV& gv, RF val_ = 1)
+  ConstFunc (const GV& gv, const typename Traits::RangeType& val_ = 1)
     : BaseT(gv)
     , val(val_)
   {}
@@ -132,7 +135,7 @@ public:
   }
 
 private:
-  RF val;
+  typename Traits::RangeType val;
 };
 
 // boundary grid function selecting boundary conditions 
@@ -291,8 +294,10 @@ void electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
   MuType mu(gv,mu0);
   typedef ConstFunc<GV,RangeField> EpsType;
   EpsType eps(gv,eps0);
-  typedef Dune::PDELab::Electrodynamic<EpsType,MuType,V> LOP; 
-  LOP lop(eps, mu, Delta_t, integrationOrder);
+  typedef ConstFunc<GV,RangeField,GV::dimensionworld> DtJType;
+  DtJType dtJ(gv,typename DtJType::Traits::RangeType(0));
+  typedef Dune::PDELab::Electrodynamic<EpsType,MuType,DtJType,V> LOP;
+  LOP lop(eps, mu, dtJ, Delta_t, integrationOrder);
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
     LOP,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
@@ -314,14 +319,32 @@ void electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
 //   typedef Dune::SuperLU<typename M::BaseT> Solver;
 //   Solver solver(m);
 
-  fprobe.measureExact(DGF(gfs, *xprev),
-                      *referenceFactory.function(gv, -Delta_t),
-                      -Delta_t);
+  if(use_interpolated_reference) {
+    Dune::SmartPointer<V> ref(new V(gfs));
+    *ref = 0.0;
+    Dune::PDELab::interpolateGlobal(*referenceFactory.function(gv, -Delta_t),
+                                    gfs,*ref);
+    fprobe.measureExact(DGF(gfs, *xprev),
+                        DGF(gfs, *ref),
+                        -Delta_t);
+  } else
+    fprobe.measureExact(DGF(gfs, *xprev),
+                        *referenceFactory.function(gv, -Delta_t),
+                        -Delta_t);
   cprobe.measure(CDGF(gfs, *xprev), -Delta_t);
 //  std::cout << "u[-1]\n" << *xprev << std::endl;
-  fprobe.measureExact(DGF(gfs, *xcur),
-                      *referenceFactory.function(gv, 0),
-                      0);
+  if(use_interpolated_reference) {
+    Dune::SmartPointer<V> ref(new V(gfs));
+    *ref = 0.0;
+    Dune::PDELab::interpolateGlobal(*referenceFactory.function(gv, 0),
+                                    gfs,*ref);
+    fprobe.measureExact(DGF(gfs, *xcur),
+                        DGF(gfs, *ref),
+                        0);
+  } else
+    fprobe.measureExact(DGF(gfs, *xcur),
+                        *referenceFactory.function(gv, 0),
+                        0);
   cprobe.measure(CDGF(gfs, *xcur), 0);
 //   std::cout << "u[0]\n" << *xcur << std::endl;
 
@@ -358,9 +381,19 @@ void electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
 
     *xnext += affineShift;
 
-    fprobe.measureExact(DGF(gfs, *xnext),
-                        *referenceFactory.function(gv, Delta_t*step),
-                        Delta_t*step);
+    if(use_interpolated_reference) {
+      Dune::SmartPointer<V> ref(new V(gfs));
+      *ref = 0.0;
+      Dune::PDELab::interpolateGlobal(*referenceFactory.function
+                                      (gv, Delta_t*step),
+                                      gfs, *ref);
+      fprobe.measureExact(DGF(gfs, *xnext),
+                          DGF(gfs, *ref),
+                          Delta_t*step);
+    } else
+      fprobe.measureExact(DGF(gfs, *xnext),
+                          *referenceFactory.function(gv, Delta_t*step),
+                          Delta_t*step);
     cprobe.measure(CDGF(gfs, *xnext), Delta_t*step);
 //     std::cout << "u[" << step << "]\n" << *xnext << std::endl;
 
@@ -368,9 +401,19 @@ void electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
     xcur = xnext;
   }
   
-  fprobe.measureFinalExact(DGF(gfs, *xcur),
-                           *referenceFactory.function(gv, Delta_t*steps),
-                           Delta_t*steps);
+  if(use_interpolated_reference) {
+    Dune::SmartPointer<V> ref(new V(gfs));
+    *ref = 0.0;
+    Dune::PDELab::interpolateGlobal(*referenceFactory.function
+                                    (gv, Delta_t*steps),
+                                    gfs, *ref);
+    fprobe.measureFinalExact(DGF(gfs, *xcur),
+                             DGF(gfs, *ref),
+                             Delta_t*steps);
+  } else
+    fprobe.measureFinalExact(DGF(gfs, *xcur),
+                             *referenceFactory.function(gv, Delta_t*steps),
+                             Delta_t*steps);
   cprobe.measureFinal(CDGF(gfs, *xcur), Delta_t*steps);
 }
 
@@ -527,10 +570,10 @@ void testAll(int &result, GPF &gpf, CGPF & cgpf, EGPF &egpf) {
 #ifdef HAVE_UG
 //   test(*UnitTetrahedronMaker         <Dune::UGGrid<3>            >::create(),
 //        result, graph, conv_limit,    "ug-tetrahedron");
-  // test(*KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
-  //      result, gpf, cgpf, egpf, conv_limit,    "ug-triangulated-cube-6");
-  test(*TriangulatedUnitSquareMaker<Dune::UGGrid<2>            >::create(),
-       result, gpf, cgpf, egpf, conv_limit,    "ug-triangulated-square");
+  test(*KuhnTriangulatedUnitCubeMaker<Dune::UGGrid<3>            >::create(),
+       result, gpf, cgpf, egpf, conv_limit,    "ug-triangulated-cube-6");
+  // test(*TriangulatedUnitSquareMaker<Dune::UGGrid<2>            >::create(),
+  //      result, gpf, cgpf, egpf, conv_limit,    "ug-triangulated-square");
 #endif // HAVE_UG
 }
 
