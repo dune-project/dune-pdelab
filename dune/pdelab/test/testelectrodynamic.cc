@@ -48,6 +48,7 @@
 
 #include "divergence-probe.hh"
 #include "electricenergy-probe.hh"
+#include "fmt.hh"
 #include "globalerror-probe.hh"
 #include "gnuplotgraph.hh"
 #include "gridexamples.hh"
@@ -99,6 +100,10 @@ const std::string probe_location = ".33333333333333333333 .2 .142857142857142857
 // whether to use the exact solution directly as reference solution or to
 // interpolate it into a discrete grid function first
 const bool use_interpolated_reference = false;
+
+const double excitation_sigma = .5/c0;
+const double excitation_t0 = 2/c0;
+const double excitation_amp[] = {1, 0, 0};
 
 //
 //  CODE
@@ -231,6 +236,85 @@ typename GV::Grid::ctype smallestEdge(const GV& gv)
   return min;
 }
 
+// find an edge near the given position
+/*
+ * \tparam GFS The GridFunctionSpace
+ *
+ * \param [in]     gfs The GridFunctionSpace.
+ * \param [in,out] pos On entry: the position where to find an edge.  On exit:
+ *                 the center of the edge actually found.
+ * \returns The index of the edge found within the GridFunctionSpace.
+ */
+template<typename GFS>
+unsigned edge_dof_near_pos
+(const GFS& gfs,
+ Dune::FieldVector<typename GFS::Traits::GridViewType::ctype,
+                   GFS::Traits::GridViewType::dimensionworld>& pos)
+{
+  typedef typename GFS::Traits::GridViewType GV;
+  typedef typename GFS::LocalFunctionSpace LFS;
+  typedef typename GV::ctype DF;
+  static const unsigned dimD = GV::dimensionworld;
+  typedef Dune::FieldVector<DF, dimD> D;
+  typedef typename GV::template Codim<0>::EntityPointer EP;
+  typedef Dune::GenericReferenceElements<DF, dimD> REs;
+  typedef Dune::GenericReferenceElement<DF, dimD> RE;
+
+  Dune::HierarchicSearch<typename GV::Grid, typename GV::IndexSet>
+    hsearch(gfs.gridview().grid(), gfs.gridview().indexSet());
+  EP ep = hsearch.findEntity(pos);
+  const typename GV::template Codim<0>::Geometry& geo = ep->geometry();
+  const RE& re = REs::general(geo.type());
+
+  D bestpos = geo.global(re.position(0,dimD-1));
+  unsigned best_edge = 0;
+  DF bestdist2 = (pos-bestpos).two_norm2();
+
+  for(unsigned i = 1; i < re.size(dimD-1); ++i) {
+    D thispos = geo.global(re.position(i,dimD-1));
+    DF thisdist2 = (pos-thispos).two_norm2();
+    if(thisdist2 < bestdist2) {
+      bestpos = thispos;
+      bestdist2 = thisdist2;
+      best_edge = i;
+    }
+  }
+
+  pos = bestpos;
+  LFS lfs(gfs);
+  lfs.bind(*ep);
+  return lfs.globalIndex(best_edge);
+}
+
+template<typename RF, unsigned dimR>
+class Excitation {
+  const double t0;
+  const double sigma;
+  const Dune::FieldVector<RF, dimR> amp;
+
+  static Dune::FieldVector<RF, dimR> default_amp() {
+    Dune::FieldVector<RF, dimR> amp;
+    std::copy(&excitation_amp[0], &excitation_amp[dimR], amp.begin());
+    return amp;
+  }
+
+public:
+  Excitation(const Dune::FieldVector<RF, dimR>& amp_ = default_amp(),
+             double sigma_ = excitation_sigma,
+             double t0_ = excitation_t0)
+    : t0(t0_), sigma(sigma_), amp(amp_)
+  {}
+
+  Dune::FieldVector<RF, dimR>
+  operator()(double t) const {
+    t -= t0;
+    Dune::FieldVector<RF, dimR> result = amp;
+
+    result *= (-t/std::sqrt(2*pi)/sigma/sigma/sigma*
+               std::exp(-t*t/2/sigma/sigma));
+    return result;
+  }
+};
 
 //===============================================================
 // Problem setup and solution 
@@ -245,7 +329,9 @@ void electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
                        const std::string filename, FProbe &fprobe, CProbe &cprobe)
 {
   // constants and types
-  typedef typename GV::Grid::ctype DF;
+  typedef typename GV::ctype DF;
+  static const unsigned dimD = GV::dimensionworld;
+  typedef Dune::FieldVector<DF, dimD> D;
   typedef typename FEM::Traits::LocalFiniteElementType::Traits::
     LocalBasisType::Traits::RangeFieldType RangeField;
 
@@ -297,10 +383,14 @@ void electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
   typedef ConstFunc<GV,RangeField,GV::dimensionworld> DtJType;
   DtJType dtJ(gv,typename DtJType::Traits::RangeType(0));
   typedef Dune::PDELab::Electrodynamic<EpsType,MuType,DtJType,V> LOP;
-  LOP lop(eps, mu, dtJ, Delta_t, integrationOrder);
+  D dtJPos(0.5);
+  LOP lop(eps, mu, dtJ, edge_dof_near_pos(gfs, dtJPos), Delta_t,
+          integrationOrder);
+  std::cout << "Setting dipole at " << fmt(dtJPos) << std::endl;
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
     LOP,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
+  Excitation<DF, dimD> excitation;
 
   // represent operator as a matrix
   typedef typename GOS::template MatrixContainer<RangeField>::Type M;
@@ -309,6 +399,7 @@ void electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
   // just use some values here
   lop.setEprev(*xprev);
   lop.setEcur(*xcur);
+  lop.setDtJPCur(excitation(0));
   gos.jacobian(affineShift,m);
 //   Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
   Dune::Richardson<V,V> prec(1.0);
@@ -355,6 +446,7 @@ void electrodynamic (const GV& gv, const FEM& fem, unsigned integrationOrder,
 
     lop.setEprev(*xprev);
     lop.setEcur(*xcur);
+    lop.setDtJPCur(excitation(Delta_t*(step-1)));
 
     // evaluate residual w.r.t initial guess
     V rhs(gfs);

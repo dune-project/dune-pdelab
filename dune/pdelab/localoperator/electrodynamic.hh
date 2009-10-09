@@ -1,4 +1,5 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// vi: set et ts=4 sw=2 sts=2:
 #ifndef DUNE_PDELAB_ELECTRODYNAMIC_HH
 #define DUNE_PDELAB_ELECTRODYNAMIC_HH
 
@@ -131,11 +132,14 @@ namespace Dune {
        * \note The references the the function objects should be valid for as
        *       long as this localoperators residual() method is used.
        */
-      Electrodynamic(const Eps &eps_, const Mu& mu_, const DtJ& dtJ_,
+      Electrodynamic(const Eps &eps_, const Mu& mu_,
+                     const DtJ& dtJ_, unsigned dtJPIndex_,
                      double Delta_t_ = 0, int qorder_ = 2)
         : eps(eps_)
         , mu(mu_)
         , dtJ(dtJ_)
+        , dtJPIndex(dtJPIndex_)
+        , dtJPCur(0)
         , Ecur(0)
         , Eprev(0)
         , Delta_t(Delta_t_)
@@ -162,6 +166,8 @@ namespace Dune {
                            "Grids ctype and Finite Elements DomainFieldType must match");
 		typedef typename LFS::Traits::LocalFiniteElementType::
 		  Traits::LocalBasisType::Traits::DomainType D;
+        static const unsigned dimD = LFS::Traits::LocalFiniteElementType::
+          Traits::LocalBasisType::Traits::dimDomain;
 		typedef typename LFS::Traits::LocalFiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
 		typedef typename LFS::Traits::LocalFiniteElementType::
@@ -171,6 +177,8 @@ namespace Dune {
 		typedef typename LFS::Traits::LocalFiniteElementType::
 		  Traits::LocalBasisType::Traits::JacobianType JacobianType;
         typedef FieldVector<RF, CurlTraits<dimRange>::dim> CurlType;
+        typedef GenericReferenceElements<DF, dimD> REs;
+        typedef GenericReferenceElement<DF, dimD> RE;
 
         // dimensions
         const int dim = EG::Geometry::dimension;
@@ -228,7 +236,7 @@ namespace Dune {
 
           // calculate f
           typename DtJ::Traits::RangeType dtJval;
-          dtJ.evaluate(eg.entity(), it->position(), epsval);
+          dtJ.evaluate(eg.entity(), it->position(), dtJval);
 
           factor = it->weight()
             * eg.geometry().integrationElement(it->position());
@@ -236,6 +244,17 @@ namespace Dune {
           for(unsigned i = 0; i < lfsu.size(); ++i)
             f[i] += factor * (phi[i] * dtJval);
         }
+
+        // the value of dtJ for certain DoFs
+        for(unsigned i = 0; i < lfsu.size(); ++i)
+          if(lfsu.globalIndex(i) == dtJPIndex) {
+            std::vector<RangeType> phi(lfsu.size());
+            lfsu.localFiniteElement().localBasis()
+              .evaluateFunctionGlobal(REs::general(eg.geometry().type())
+                                        .position(i,dimD-1),
+                                      phi,eg.geometry());
+            f[i] += phi[i] * dtJPCur;
+          }
 
         // get coefficients from Ecur and Eprev
         X xprev;
@@ -293,10 +312,21 @@ namespace Dune {
         Delta_t = Delta_t_;
       }
 
+      //! set the point value of \f$\partial_t\mathbf J\f$
+      /**
+       * \param dtJPCur_ The value to set.
+       */
+      void setDtJPCur(const typename DtJ::Traits::RangeType& dtJPCur_)
+      {
+        dtJPCur = dtJPCur_;
+      }
+
     private:
       const Eps &eps;
       const Mu &mu;
       const DtJ &dtJ;
+      const unsigned dtJPIndex;
+      typename DtJ::Traits::RangeType dtJPCur;
       const GCV *Ecur;
       const GCV *Eprev;
       double Delta_t;
