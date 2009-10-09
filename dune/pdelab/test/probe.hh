@@ -9,6 +9,7 @@
 #include <dune/common/tuples.hh>
 #include <dune/pdelab/common/function.hh>
 
+#include "fmt.hh"
 #include "gnuplotgraph.hh"
 
 namespace Dune {
@@ -514,18 +515,6 @@ namespace Dune {
         unsigned pos = 0;
         for(unsigned i = 0; i < dim; ++i)
           get(xFV[i], pos);
-      }
-
-      template<typename T>
-      static std::string fmt(const std::vector<T> &v) {
-        std::ostringstream s;
-        s << "(";
-        if(v.size() > 0)
-          s << v[0];
-        for(unsigned i = 1; i < v.size(); ++i)
-          s << ", " << v[i];
-        s << ")";
-        return s.str();
       }
 
     public:
