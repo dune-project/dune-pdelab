@@ -29,6 +29,7 @@ LIBS = @LIBS@					\
 noinst_HEADERS =				\
 	divergence-probe.hh			\
 	electricenergy-probe.hh			\
+	fmt.hh					\
 	globalerror-probe.hh			\
 	gnuplotgraph.hh				\
 	gridexamples.hh				\

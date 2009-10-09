@@ -23,30 +23,12 @@
 
 #include "../finiteelementmap/edges03dfem.hh"
 
+#include "fmt.hh"
 #include "gridexamples.hh"
 
 const double eps = 1e-10;
 
 const unsigned refine_limit = 100000;
-
-template<typename T, int n>
-std::string fmt(const Dune::FieldVector<T, n>& v) {
-  std::ostringstream s;
-  s << "(";
-  if(n > 0)
-    s << v[0];
-  for(unsigned i = 1; i < n; ++i)
-    s << ", " << v[i];
-  s << ")";
-  return s.str();
-}
-
-template<typename U, typename V>
-std::string fmt(const std::pair<U, V>& p) {
-  std::ostringstream s;
-  s << "("<< p.first << ", " << p.second << ")";
-  return s.str();
-}
 
 template<typename GV>
 bool testFEM(const GV& gv, const std::string indent = "")
