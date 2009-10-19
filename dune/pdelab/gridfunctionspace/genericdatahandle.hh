@@ -6,7 +6,7 @@
 #include <vector>
 
 #include<dune/common/exceptions.hh>
-#include<grid/common/datahandleif.hh>
+#include <dune/grid/common/datahandleif.hh>
 #include <dune/grid/common/gridenums.hh>
 
 namespace Dune {
