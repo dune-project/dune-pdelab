@@ -24,12 +24,11 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-
     //! Contruct matrix T for the Electrodynamic operator
     /**
      * Construct the matrix
      * \f[
-     *    T_{ij}&=\int_\Omega\epsilon\mathbf N_i\cdot\mathbf N_jdV
+     *    T_{ij}=\int_\Omega\epsilon\mathbf N_i\cdot\mathbf N_jdV
      * \f]
      * which appears inside the Electrodynamic operator.
      *
@@ -45,7 +44,9 @@ namespace Dune {
       // pattern assembly flags
       enum { doPatternVolume = true };
 
-      //! Construct an Electrodynamic localoperator
+      enum { doAlphaVolume = true };
+
+      //! Construct an Electrodynamic_T localoperator
       /**
        * \param eps_    Reference to function object to evaluate
        * \param qorder_ Quadrature order to use.
@@ -113,6 +114,133 @@ namespace Dune {
 
     private:
       const Eps &eps;
+      const int qorder;
+    };
+
+    //! Contruct matrix S for the Electrodynamic operator
+    /**
+     * Construct the matrix
+     * \f[
+     *    S_{ij}=\int_\Omega\mu^{-1}(\nabla\times\mathbf N_i)\cdot
+     *                              (\nabla\times\mathbf N_j)dV
+     * \f]
+     * which appears inside the Electrodynamic operator.
+     *
+     * \tparam Mu    Type of function to evaluate \f$\mu\f$
+     */
+    template<typename Mu>
+    class Electrodynamic_S
+      : public FullVolumePattern
+      , public LocalOperatorDefaultFlags
+    {
+      //! size of FieldVector for holding the curl
+      template <unsigned d>
+      struct CurlTraits {
+        static const unsigned dim =
+          d == 1 ? 2 :
+          d == 2 ? 1 :
+          /*else*/ 3;
+      };
+
+      template<typename RF>
+      static void
+      jacobianToCurl(FieldVector<RF, 1> &curl,
+                     const FieldVector<FieldVector<RF, 2>, 2> &jacobian)
+      {
+        curl[0] = jacobian[1][0] - jacobian[0][1];
+      }
+      template<typename RF>
+      static void
+      jacobianToCurl(FieldVector<RF, 3> &curl,
+                     const FieldVector<FieldVector<RF, 3>, 3> &jacobian)
+      {
+        for(unsigned i = 0; i < 3; ++i)
+          curl[i] = jacobian[(i+2)%3][(i+1)%3] - jacobian[(i+1)%3][(i+2)%3];
+      }
+
+    public:
+
+      // pattern assembly flags
+      enum { doPatternVolume = true };
+
+      enum { doAlphaVolume = true };
+
+      //! Construct an Electrodynamic_S localoperator
+      /**
+       * \param mu_     Reference to function object to evaluate
+       * \param qorder_ Quadrature order to use.
+       *
+       * \note The references the the function objects should be valid for as
+       *       long as this localoperators residual() method is used.
+       */
+      Electrodynamic_S(const Mu &mu_, int qorder_ = 2)
+        : mu(mu_)
+        , qorder(qorder_)
+      {}
+
+      /**
+       * \note We support only Galerkin method lfsu==lfsv
+       */
+      template<typename EG, typename LFS, typename X, typename R>
+      void jacobian_volume (const EG& eg, const LFS& lfsu, const X& x,
+                            const LFS& lfsv, LocalMatrix<R>& mat) const
+      {
+        // domain and range field type
+        typedef typename LFS::Traits::LocalFiniteElementType::
+          Traits::LocalBasisType::Traits LBTraits;
+
+        typedef typename LBTraits::DomainFieldType DF;
+        typedef typename LBTraits::DomainType Domain;
+        static const unsigned dimD = LBTraits::dimDomain;
+
+        typedef typename LBTraits::RangeFieldType RF;
+        typedef typename LBTraits::RangeType Range;
+        static const unsigned dimR = LBTraits::dimRange;
+
+        typedef typename LBTraits::JacobianType Jacobian;
+        typedef FieldVector<RF, CurlTraits<dimR>::dim> Curl;
+
+        // static checks
+        dune_static_assert(dimR == 3 || dimR == 2,
+                           "Works only in 2D or 3D");
+        dune_static_assert
+          ((Dune::is_same<typename EG::Geometry::ctype, DF>::value),
+           "Grids ctype and Finite Elements DomainFieldType must match");
+
+        // select quadrature rule
+        typedef Dune::QuadratureRule<DF,dimD> QR;
+        typedef Dune::QuadratureRules<DF,dimD> QRs;
+        Dune::GeometryType gt = eg.geometry().type();
+        const QR& rule = QRs::rule(gt,qorder);
+
+        // loop over quadrature points
+        for(typename QR::const_iterator it=rule.begin();
+            it!=rule.end(); ++it) {
+          // curl of the basefunctions
+          std::vector<Jacobian> J(lfsu.size());
+          lfsu.localFiniteElement().localBasis()
+            .evaluateJacobianGlobal(it->position(),J,eg.geometry());
+
+          std::vector<Curl> rotphi(lfsu.size());
+          for(unsigned i = 0; i < lfsu.size(); ++i)
+            jacobianToCurl(rotphi[i], J[i]);
+
+          // calculate S
+          typename Mu::Traits::RangeType muval;
+          mu.evaluate(eg.entity(), it->position(), muval);
+
+          RF factor = it->weight()
+            * eg.geometry().integrationElement(it->position()) / muval;
+
+          for(unsigned i = 0; i < lfsu.size(); ++i)
+            for(unsigned j = 0; j < lfsu.size(); ++j)
+              mat(i,j) += factor * (rotphi[i] * rotphi[j]);
+
+        }
+      }
+
+    private:
+      const Mu &mu;
       const int qorder;
     };
 
