@@ -3,6 +3,7 @@
 #define DUNE_PDELAB_CONSTRAINTS_HH
 
 #include<dune/common/exceptions.hh>
+#include <dune/common/float_cmp.hh>
 
 #include"../common/function.hh"
 #include"../common/geometrywrapper.hh"
@@ -467,15 +468,54 @@ namespace Dune {
 
 	} // constraints
 
-    // construct constraints from given boundary condition function
+    //! construct constraints from given boundary condition function
+    /**
+     * \tparam CG Type of ConstraintsContainer
+     * \tparam XG Type of coefficients container
+     *
+     * \param cg The ConstraintsContainer
+     * \param x  The value to assign
+     * \param xg The container with the coefficients
+     */
     template<typename CG, typename XG>
-    void set_constrained_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
+    void set_constrained_dofs(const CG& cg, typename XG::ElementType x,
+                              XG& xg)
     {
       typedef typename XG::Backend B;
 	  typedef typename CG::const_iterator global_col_iterator;
 	  for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
         B::access(xg,cit->first) = x;
 	}
+
+    //! check that constrained dofs match a certain value
+    /**
+     * as if they were set by set_constrained_dofs()
+     *
+     * \tparam CG  Type of ConstraintsContainer
+     * \tparam XG  Type of coefficients container
+     * \tparam Cmp Type of Comparison object to use (something with the
+     *             interface of Dune::FloatCmpOps)
+     *
+     * \param cg  The ConstraintsContainer
+     * \param x   The value to compare with
+     * \param xg  The container with the coefficients
+     * \param cmp The comparison object to use.
+     *
+     * \returns true if all constrained dofs match the given value, false
+     *          otherwise.
+     */
+    template<typename CG, typename XG,
+             typename Cmp = FloatCmpOps<typename XG::ElementType> >
+    bool check_constrained_dofs(const CG& cg, typename XG::ElementType x,
+                                XG& xg, const Cmp& cmp = Cmp())
+    {
+      typedef typename XG::Backend B;
+      typedef typename CG::const_iterator global_col_iterator;
+      for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
+        if(cmp.ne(B::access(xg,cit->first), x))
+          return false;
+      return true;
+    }
 
     // transform residual into transformed basis: r -> r~
     template<typename CG, typename XG>

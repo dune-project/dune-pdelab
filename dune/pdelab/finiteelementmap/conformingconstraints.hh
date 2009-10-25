@@ -23,11 +23,13 @@ namespace Dune {
       enum { doSkeleton = false };
       enum { doVolume = false };
 
-      // boundary constraints
-      // F : grid function returning boundary condition type
-      // IG : intersection geometry
-      // LFS : local function space
-      // T : TransformationType
+      //! boundary constraints
+      /**
+       * \tparam F   grid function returning boundary condition type
+       * \tparam IG  intersection geometry
+       * \tparam LFS local function space
+       * \tparam T   TransformationType
+       */
       template<typename F, typename I, typename LFS, typename T>
       void boundary (const F& f, const IntersectionGeometry<I>& ig, 
                      const LFS& lfs, T& trafo) const

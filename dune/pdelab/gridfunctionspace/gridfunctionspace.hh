@@ -61,13 +61,15 @@ namespace Dune {
 	};
 
 
-    // a class holding transformation for constrained spaces
+    //! a class holding transformation for constrained spaces
     template<typename S, typename T>
     class ConstraintsTransformation 
       : public std::map<S,std::map<S,T> >
     {
     public:
+      //! export ElementType
       typedef T ElementType;
+      //! export RowType
       typedef std::map<S,T> RowType;
     };
 
