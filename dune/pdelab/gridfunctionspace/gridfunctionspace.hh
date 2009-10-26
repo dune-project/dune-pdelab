@@ -4,12 +4,14 @@
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_HH
 
 #include <cstddef>
-#include<vector>
-#include<set>
 #include<map>
+#include <ostream>
+#include<set>
+#include<vector>
 
 #include<dune/common/exceptions.hh>
 #include<dune/common/geometrytype.hh>
+#include<dune/common/stdstreams.hh>
 #include<dune/grid/common/genericreferenceelements.hh>
 
 #include<dune/finiteelements/common/localcoefficients.hh>
@@ -374,7 +376,7 @@ namespace Dune {
 	  // update information, e.g. when grid has changed
 	  void update ()
 	  {
-		std::cout << "GridFunctionSpace(general version):" << std::endl;
+        Dune::dinfo << "GridFunctionSpace(general version):" << std::endl;
 
 		// determine which geometry types are used
 		// needs one traversal of the grid
@@ -409,15 +411,17 @@ namespace Dune {
 		for (typename GtUsedSetType::iterator i=gtused.begin(); i!=gtused.end(); ++i)
 		  {
 			gtoffset[*i] = nentities;
-			std::cout << *i << ": " << is.size(*i) << " entries in offset vector at "
-					  << nentities << std::endl;
+            Dune::dinfo << *i << ": " << is.size(*i)
+                        << " entries in offset vector at " << nentities
+                        << std::endl;
 			nentities += is.size(*i);
 		  }
         nentities++; // add one additional dummy entry; this allows to compute size of last entity.
 		offset.resize(nentities);
 		for (typename std::vector<typename Traits::SizeType>::iterator i=offset.begin(); i!=offset.end(); ++i)
 		  *i = 0;
-		std::cout << "allocated offset vector with size " << offset.size() << std::endl;
+        Dune::dinfo << "allocated offset vector with size " << offset.size()
+                    << std::endl;
 
 		// now compute the number of entries for each entity
 		// requires second grid traversal
@@ -453,7 +457,7 @@ namespace Dune {
 			*i = nglobal;
 			nglobal += size;
 		  }
-		std::cout << "total number of dofs is " << nglobal << std::endl;
+        Dune::dinfo << "total number of dofs is " << nglobal << std::endl;
 	  }
 
 	private:
@@ -637,7 +641,7 @@ namespace Dune {
 	  // update information, e.g. when grid has changed
 	  void update ()
 	  {
-		std::cout << "GridFunctionSpace(restricted version):" << std::endl;
+        Dune::dinfo << "GridFunctionSpace(restricted version):" << std::endl;
 
 		// clear counters
 		dofcountmap.clear();
@@ -693,13 +697,12 @@ namespace Dune {
 				  }
 			  }
 		  }
-		std::cout << "max local number of dofs = " << nlocal << std::endl;
+        Dune::dinfo << "max local number of dofs = " << nlocal << std::endl;
 
 		// print result
 		for (typename DofCountMapType::iterator i=dofcountmap.begin(); i!=dofcountmap.end(); ++i)
-		  {
-			std::cout << i->first << " has " << i->second << " degrees of freedom" << std::endl;
-		  }
+          Dune::dinfo << i->first << " has " << i->second
+                      << " degrees of freedom" << std::endl;
 
 		// compute offsets
 		nglobal = 0;
@@ -709,9 +712,9 @@ namespace Dune {
 		  {
 			offset[i->first] = nglobal;
 			nglobal += is.size(i->first)*(i->second); 
-			std::cout << i->first << " offset now " << nglobal << std::endl;
+            Dune::dinfo << i->first << " offset now " << nglobal << std::endl;
 		  }
-		std::cout << "total number of dofs = " << nglobal << std::endl;
+        Dune::dinfo << "total number of dofs = " << nglobal << std::endl;
 	  }
 
 	private:
@@ -940,12 +943,12 @@ namespace Dune {
 		global.resize(n);
         for (int i=0; i<n; i++) 
           global[i] = o + index*n + i;
-//         std::cout << "[" << gv.grid().comm().rank() << "]: "
-//                   << " global indices " 
-//                   << " offset=" << o
-//                   << " index=" << index
-//                   << " n=" << n
-//                   << std::endl;
+//         Dune::dinfo << "[" << gv.grid().comm().rank() << "]: "
+//                     << " global indices "
+//                     << " offset=" << o
+//                     << " index=" << index
+//                     << " n=" << n
+//                     << std::endl;
       }
 
       //------------------------------
@@ -953,7 +956,7 @@ namespace Dune {
 	  // update information, e.g. when grid has changed
 	  void update ()
 	  {
-		std::cout << "GridFunctionSpace(static size version):" << std::endl;
+        Dune::dinfo << "GridFunctionSpace(static size version):" << std::endl;
 
         // analyse local coefficients of first element
 
@@ -998,7 +1001,8 @@ namespace Dune {
               }
           }
         for (typename DofPerCodimMapType::iterator j=dofpercodim.begin(); j!=dofpercodim.end(); ++j)
-          std::cout << " " << j->second << " degrees of freedom in codim " << j->first << std::endl;
+          Dune::dinfo << " " << j->second << " degrees of freedom in codim "
+                      << j->first << std::endl;
 
         // now compute global size
         nglobal = 0;
@@ -1011,10 +1015,13 @@ namespace Dune {
               n = j->second*iis.size();
             else
               n = j->second*gv.size(j->first);
-            std::cout << "codim=" << j->first << " offset=" << nglobal << " size=" << n << std::endl;
+            Dune::dinfo << "codim=" << j->first << " offset=" << nglobal
+                        << " size=" << n << std::endl;
             nglobal += n;
             if (j->first!=Dune::intersectionCodim)
-              std::cout << "WARNING: cannot handle multiple geometry types in static size grid function space" << std::endl;;
+              Dune::dwarn << "WARNING: cannot handle multiple geometry types "
+                          << "in static size grid function space"
+                          << std::endl;;
           }
 	  }
 
@@ -1203,20 +1210,21 @@ namespace Dune {
     private:
       void setup ()
       {
-        std::cout << "power grid function space(lexicographic version):" << std::endl;
-        std::cout << "( ";
+        Dune::dinfo << "power grid function space(lexicographic version):"
+                    << std::endl;
+        Dune::dinfo << "( ";
         offset[0] = 0;
         maxlocalsize = 0;
         for (int i=0; i<k; i++)
           {
             childSize[i] = this->getChild(i).globalSize();
-            std::cout << childSize[i] << " ";
+            Dune::dinfo << childSize[i] << " ";
             offset[i+1] = offset[i]+childSize[i];
             maxlocalsize += this->getChild(i).maxLocalSize();
           }
-        std::cout << ") total size = " << offset[k]
-                  << " max local size = " << maxlocalsize 
-                  << std::endl;
+        Dune::dinfo << ") total size = " << offset[k]
+                    << " max local size = " << maxlocalsize
+                    << std::endl;
         childglobal.resize(maxlocalsize);
       }
 
@@ -1374,20 +1382,21 @@ namespace Dune {
     private:
       void setup ()
       {
-        std::cout << "power grid function space(blockwise version):" << std::endl;
-        std::cout << "( ";
+        Dune::dinfo << "power grid function space(blockwise version):"
+                    << std::endl;
+        Dune::dinfo << "( ";
         offset[0] = 0;
         maxlocalsize = 0;
         for (int i=0; i<k; i++)
           {
             childSize[i] = this->getChild(i).globalSize();
-            std::cout << childSize[i] << " ";
+            Dune::dinfo << childSize[i] << " ";
             offset[i+1] = offset[i]+childSize[i];
             maxlocalsize += this->getChild(i).maxLocalSize();
           }
-        std::cout << ") total size = " << offset[k]
-                  << " max local size = " << maxlocalsize 
-                  << std::endl;
+        Dune::dinfo << ") total size = " << offset[k]
+                    << " max local size = " << maxlocalsize
+                    << std::endl;
         for (int i=1; i<k; i++)
           if (childSize[i]!=childSize[0])
             DUNE_THROW(Exception, "components must be of equal size");
@@ -1972,23 +1981,24 @@ namespace Dune {
     private:
       void setup ()
       {
-        std::cout << "composite grid function space(lexicographic version):" << std::endl;
+        Dune::dinfo << "composite grid function space(lexicographic version):"
+                    << std::endl;
 
         CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
           setup(*this,childGlobalSize,childLocalSize);
 
-        std::cout << "( ";
+        Dune::dinfo << "( ";
         offset[0] = 0;
         maxlocalsize = 0;
         for (int i=0; i<BaseT::CHILDREN; i++)
           {
-            std::cout << childGlobalSize[i] << " ";
+            Dune::dinfo << childGlobalSize[i] << " ";
             offset[i+1] = offset[i]+childGlobalSize[i];
             maxlocalsize += childLocalSize[i];
           }
-        std::cout << ") total size = " << offset[BaseT::CHILDREN]
-                  << " max local size = " << maxlocalsize 
-                  << std::endl;
+        Dune::dinfo << ") total size = " << offset[BaseT::CHILDREN]
+                    << " max local size = " << maxlocalsize
+                    << std::endl;
         childglobal.resize(maxlocalsize);
       }
 
@@ -2140,7 +2150,8 @@ namespace Dune {
     private:
       void setup ()
       {
-        std::cout << "composite grid function space(blockwise version):" << std::endl;
+        Dune::dinfo << "composite grid function space(blockwise version):"
+                    << std::endl;
 
         CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
           setup(*this,childGlobalSize,childLocalSize);
@@ -2149,18 +2160,18 @@ namespace Dune {
           if (childGlobalSize[i]!=childGlobalSize[0])
             DUNE_THROW(Exception, "components must be of equal size");
 
-        std::cout << "( ";
+        Dune::dinfo << "( ";
         offset[0] = 0;
         maxlocalsize = 0;
         for (int i=0; i<BaseT::CHILDREN; i++)
           {
-            std::cout << childGlobalSize[i] << " ";
+            Dune::dinfo << childGlobalSize[i] << " ";
             offset[i+1] = offset[i]+childGlobalSize[i];
             maxlocalsize += childLocalSize[i];
           }
-        std::cout << ") total size = " << offset[BaseT::CHILDREN]
-                  << " max local size = " << maxlocalsize 
-                  << std::endl;
+        Dune::dinfo << ") total size = " << offset[BaseT::CHILDREN]
+                    << " max local size = " << maxlocalsize
+                    << std::endl;
         childglobal.resize(maxlocalsize);
       }
 
@@ -2956,12 +2967,12 @@ namespace Dune {
       GridFunctionSubSpace (const GFS& gfs) 
         : GridFunctionSubSpaceIntermediateBase<GFS,k,GFS::isLeaf>(gfs)
       {
-        std::cout << "grid function subspace:" << std::endl;
-        std::cout << "root space size = " << gfs.globalSize()
-                  << " max local size = " << this->maxLocalSize() << std::endl;
+        Dune::dinfo << "grid function subspace:" << std::endl;
+        Dune::dinfo << "root space size = " << gfs.globalSize()
+                    << " max local size = " << this->maxLocalSize()
+                    << std::endl;
       }
     };
-
 
     //! \} group GridFunctionSpace
   } // namespace PDELab
