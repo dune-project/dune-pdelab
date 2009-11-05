@@ -504,8 +504,7 @@ namespace Dune {
      * \returns true if all constrained dofs match the given value, false
      *          otherwise.
      */
-    template<typename CG, typename XG,
-             typename Cmp = FloatCmpOps<typename XG::ElementType> >
+    template<typename CG, typename XG, typename Cmp>
     bool check_constrained_dofs(const CG& cg, typename XG::ElementType x,
                                 XG& xg, const Cmp& cmp = Cmp())
     {
@@ -515,6 +514,28 @@ namespace Dune {
         if(cmp.ne(B::access(xg,cit->first), x))
           return false;
       return true;
+    }
+    //! check that constrained dofs match a certain value
+    /**
+     * This just calls check_constrained_dofs(cg, x, xg, cmp) with a default
+     * comparison object FloatCmpOps<typename XG::ElementType>().
+     *
+     * \tparam CG  Type of ConstraintsContainer
+     * \tparam XG  Type of coefficients container
+     *
+     * \param cg  The ConstraintsContainer
+     * \param x   The value to compare with
+     * \param xg  The container with the coefficients
+     *
+     * \returns true if all constrained dofs match the given value, false
+     *          otherwise.
+     */
+    template<typename CG, typename XG>
+    bool check_constrained_dofs(const CG& cg, typename XG::ElementType x,
+                                XG& xg)
+    {
+      return check_constrained_dofs(cg, x, xg,
+                                    FloatCmpOps<typename XG::ElementType>());
     }
 
     // transform residual into transformed basis: r -> r~
