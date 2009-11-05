@@ -2,7 +2,7 @@
 #ifndef DUNE_PDELAB_P12DFEM_HH
 #define DUNE_PDELAB_P12DFEM_HH
 
-#include<dune/finiteelements/p12d.hh>
+#include<dune/finiteelements/p1.hh>
 #include"../common/geometrywrapper.hh"
 #include"finiteelementmap.hh"
 
@@ -13,7 +13,7 @@ namespace Dune {
     //! \ingroup FiniteElementMap
 	template<class D, class R>
 	class P12DLocalFiniteElementMap
-	  : public SimpleLocalFiniteElementMap< Dune::P12DLocalFiniteElement<D,R> >
+	  : public SimpleLocalFiniteElementMap< Dune::P1LocalFiniteElement<D,R,2> >
 	{};
 
 

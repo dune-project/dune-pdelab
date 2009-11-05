@@ -2,7 +2,7 @@
 #ifndef DUNE_PDELAB_Q12DFEM_HH
 #define DUNE_PDELAB_Q12DFEM_HH
 
-#include<dune/finiteelements/q12d.hh>
+#include<dune/finiteelements/q1.hh>
 #include"finiteelementmap.hh"
 
 namespace Dune {
@@ -12,7 +12,7 @@ namespace Dune {
     //! \ingroup FiniteElementMap
 	template<class D, class R>
 	class Q12DLocalFiniteElementMap
-	  : public SimpleLocalFiniteElementMap< Dune::Q12DLocalFiniteElement<D,R> >
+	  : public SimpleLocalFiniteElementMap< Dune::Q1LocalFiniteElement<D,R,2> >
 	{};
 
   }
