@@ -185,7 +185,7 @@ namespace Dune {
           }
       }
 
-    private:
+    protected:
       const F& f;
       const B& b;
       const J& j;
