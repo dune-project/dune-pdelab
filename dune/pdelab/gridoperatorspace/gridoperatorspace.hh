@@ -511,7 +511,7 @@ namespace Dune {
                 unsigned int intersection_index = 0;
 				IntersectionIterator endit = gfsu.gridview().iend(*it);
 				for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
-					 iit!=endit; ++iit)
+					 iit!=endit; ++iit, ++intersection_index)
 				  {
                     // skeleton term
                     if (iit->neighbor() && LA::doAlphaSkeleton )
