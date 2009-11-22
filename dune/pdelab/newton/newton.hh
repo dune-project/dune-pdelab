@@ -66,6 +66,7 @@ namespace Dune
             unsigned int verbosity_level;
             RFType prev_defect;
             RFType linear_reduction;
+            bool reassembled;
 
             NewtonBase(GridOperator& go, TrialVector& u_)
                 : gridoperator(go)
@@ -115,7 +116,7 @@ namespace Dune
                 r = 0.0;                                        // TODO: vector interface
                 this->gridoperator.residual(this->u, r);
                 this->res.defect = this->solver.norm(r);                    // TODO: solver interface
-                if (!isfinite(this->res.defect))
+                if (!std::isfinite(this->res.defect))
                     DUNE_THROW(NewtonDefectError,
                                "NewtonSolver::defect(): Non-linear defect is NaN or Inf");
             }
@@ -131,6 +132,12 @@ namespace Dune
                     DUNE_THROW(NewtonLinearSolverError,
                                "NewtonSolver::linearSolve(): Linear solver did not converge "
                                "in iteration" << this->res.iterations);
+                if (this->verbosity_level >= 1)
+                    std::cout << "          linear solver iterations:     "
+                              << std::setw(12) << solver.result().iterations << std::endl
+                              << "          linear defect reduction:      "
+                              << std::setw(12) << std::setprecision(4) << std::scientific
+                              << solver.result().reduction << std::endl;
             }
 
             Solver& solver;
@@ -167,15 +174,24 @@ namespace Dune
                 {
                     if (this->verbosity_level >= 1)
                         std::cout << "  Newton iteration " << this->res.iterations
-                                  << " --------------------------" << std::endl;
+                                  << " --------------------------------" << std::endl;
 
                     this->prepare_step(A);
 
                     this->linearSolve(A, z, r);
 
-                    this->prev_defect = this->res.defect;
-
-                    this->line_search(z, r);
+                    try
+                    {
+                        this->line_search(z, r);
+                    }
+                    catch (NewtonLineSearchError)
+                    {
+                        if (this->reassembled)
+                            throw;
+                        if (this->verbosity_level >= 1)
+                            std::cout << "      line search failed - try again with reassembled matrix" << std::endl;
+                        continue;
+                    }
 
                     this->res.reduction = this->res.defect/this->res.first_defect;
                     this->res.iterations++;
@@ -187,7 +203,10 @@ namespace Dune
                                   << this->res.defect/this->prev_defect << std::endl
                                   << "      defect reduction (total):         "
                                   << std::setw(12) << std::setprecision(4) << std::scientific
-                                  << this->res.reduction << std::endl;
+                                  << this->res.reduction << std::endl
+                                  << "      new defect:                       "
+                                  << std::setw(12) << std::setprecision(4) << std::scientific
+                                  << this->res.defect << std::endl;
                 }
             }
             catch(...)
@@ -279,17 +298,22 @@ namespace Dune
 
             virtual void prepare_step(Matrix& A)
             {
+                this->reassembled = false;
                 if (this->res.defect/this->prev_defect > reassemble_threshold)
                 {
                     if (this->verbosity_level >= 1)
                         std::cout << "      Reassembling matrix..." << std::endl;
                     A = 0.0;                                    // TODO: Matrix interface
                     this->gridoperator.jacobian(this->u, A);
+                    this->reassembled = true;
                 }
 
                 this->linear_reduction = std::min(min_linear_reduction,
                                                    this->res.defect*this->res.defect/
                                                    (this->prev_defect*this->prev_defect));
+
+                this->prev_defect = this->res.defect;
+
                 if (this->verbosity_level >= 1)
                     std::cout << "      linear reduction:                 "
                               << std::setw(12) << std::setprecision(4) << std::scientific
@@ -355,7 +379,7 @@ namespace Dune
                 {
                     this->u.axpy(-lambda, z);                  // TODO: vector interface
                     try { this->defect(r); }
-                    catch (NewtonDefectError) {}
+                    catch (NewtonDefectError) {}       // ignore NaNs and try again with lower lambda
 
                     if (this->res.defect <= (1.0 - lambda/4) * this->prev_defect)
                         break;
@@ -379,10 +403,14 @@ namespace Dune
                                        "defect did not improve enough");
                         case hackbuschReuskenAcceptBest:
                             if (best_lambda == 0.0)
+                            {
+                                this->u = prev_u;
+                                this->defect(r);
                                 DUNE_THROW(NewtonLineSearchError,
                                            "NewtonLineSearch::line_search(): line search failed, "
                                            "max iteration count reached, "
                                            "defect did not improve in any of the iterations");
+                            }
                             if (best_lambda != lambda)
                             {
                                 this->u = prev_u;
