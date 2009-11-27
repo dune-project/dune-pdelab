@@ -250,6 +250,15 @@ namespace Dune {
 		return sqrt(static_cast<double>(this->dot(x,x)));
 	  }
 
+	  /*! \brief make additive vector consistent
+	  */
+	  void make_consistent (X& x) const
+	  {
+ 		Dune::PDELab::AddDataHandle<GFS,X> adddh(gfs,x);
+ 		if (gfs.gridview().comm().size()>1)
+ 		  gfs.gridview().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
+	  }
+
 	private:
 	  const GFS& gfs;
 	  const ParallelISTLHelper<GFS>& helper;
@@ -300,10 +309,11 @@ namespace Dune {
 	  virtual void apply (X& v, const Y& d)
 	  {
 		v = d;
-		helper.mask(v);
-		Dune::PDELab::AddDataHandle<GFS,X> adddh(gfs,v);
-		if (gfs.gridview().comm().size()>1)
-		  gfs.gridview().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
+		// no communication is necessary here because defect is already consistent!
+// 		helper.mask(v);
+// 		Dune::PDELab::AddDataHandle<GFS,X> adddh(gfs,v);
+// 		if (gfs.gridview().comm().size()>1)
+// 		  gfs.gridview().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
 	  }
 
 	  /*!
