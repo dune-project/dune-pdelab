@@ -186,6 +186,38 @@ namespace Dune {
 	  {}
 	};
 
+	class AddClearGatherScatter
+	{
+	public:
+	  template<class MessageBuffer, class DataType>
+	  void gather (MessageBuffer& buff, DataType& data)
+	  {
+		buff.write(data);
+        data = (DataType) 0;
+	  }
+	  
+	  template<class MessageBuffer, class DataType>
+	  void scatter (MessageBuffer& buff, DataType& data)
+	  {
+		DataType x; 
+		buff.read(x);
+		data += x;
+	  }
+	};
+	
+	template<class GFS, class V>
+	class AddClearDataHandle
+	  : public GenericDataHandle<GFS,V,AddClearGatherScatter>
+	{
+	  typedef GenericDataHandle<GFS,V,AddClearGatherScatter> BaseT;
+
+	public:
+
+	  AddClearDataHandle (const GFS& gfs_, V& v_) 
+		: BaseT(gfs_,v_,AddClearGatherScatter())
+	  {}
+	};
+
 	class CopyGatherScatter
 	{
 	public:
@@ -352,7 +384,7 @@ namespace Dune {
 	  GhostDataHandle (const GFS& gfs_, V& v_) 
 		: BaseT(gfs_,v_,GhostGatherScatter())
 	  {
-        v_ = 0;
+        v_ = static_cast<typename V::ElementType>(0);
       }
 	};
 
