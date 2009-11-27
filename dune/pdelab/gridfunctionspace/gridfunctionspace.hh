@@ -96,6 +96,25 @@ namespace Dune {
 			(*this)[i] = e;
 		  return *this;
 		}
+
+        template<typename X>
+        void std_copy_to (std::vector<X>& x) const
+        {
+          size_type n = this->size();
+          x.resize(n);
+          for (size_t i=0; i<n; i++)
+            x[i] = (*this)[i];
+        }
+        
+        template<typename X>
+        void std_copy_from (const std::vector<X>& x)
+        {
+          size_t n = this->size();
+          x.resize(n);
+          for (size_t i=0; i<n; i++)
+            (*this)[i] = x[i];
+        }
+
 	  };
 
 	  //! extract type of container element 
@@ -254,8 +273,15 @@ namespace Dune {
       typedef Dune::PDELab::LocalFunctionSpace<GridFunctionSpace> LocalFunctionSpace;
 
 	  //! constructor
-	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_=CE()) 
+	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_) 
 		: gv(gridview), plfem(&lfem), ce(ce_)
+	  {
+		update();
+	  }
+
+	  //! constructor
+	  GridFunctionSpace (const GV& gridview, const LFEM& lfem) 
+		: ce(defaultce), gv(gridview), plfem(&lfem)
 	  {
 		update();
 	  }
@@ -461,11 +487,12 @@ namespace Dune {
 	  }
 
 	private:
+      CE defaultce;
 	  const GV& gv;
 	  CP<LFEM const> plfem;
 	  typename Traits::SizeType nlocal;
 	  typename Traits::SizeType nglobal;
-      CE ce;
+      const CE& ce;
 
 	  std::map<Dune::GeometryType,typename Traits::SizeType> gtoffset; // offset in vector for given geometry type
 	  std::vector<typename Traits::SizeType> offset; // offset into big vector for each entity;
@@ -520,8 +547,15 @@ namespace Dune {
       typedef Dune::PDELab::LocalFunctionSpace<GridFunctionSpace> LocalFunctionSpace;
 
 	  // constructor
-	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_=CE()) 
+	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_) 
 		: gv(gridview), plfem(&lfem), ce(ce_)
+	  {
+		update();
+	  }
+
+	  // constructor
+	  GridFunctionSpace (const GV& gridview, const LFEM& lfem) 
+		: gv(gridview), plfem(&lfem), ce(defaultce)
 	  {
 		update();
 	  }
@@ -723,7 +757,8 @@ namespace Dune {
 
 	  typename Traits::SizeType nlocal;
 	  typename Traits::SizeType nglobal;
-      CE ce;
+      CE defaultce;
+      const CE& ce;
 
 	  typedef std::map<Dune::GeometryType,typename Traits::SizeType> DofCountMapType;
 	  DofCountMapType dofcountmap; // number of degrees of freedom per geometry type
@@ -821,14 +856,26 @@ namespace Dune {
       typedef Dune::PDELab::LocalFunctionSpace<GridFunctionSpace> LocalFunctionSpace;
 
 	  // constructors
-	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const IIS& iis_, const CE& ce_=CE()) 
+	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const IIS& iis_, const CE& ce_) 
 		: gv(gridview), plfem(&lfem), iis(iis_), ce(ce_)
 	  {
 		update();
 	  }
 
-	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_=CE()) 
+	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const IIS& iis_) 
+		: gv(gridview), plfem(&lfem), iis(iis_), ce(defaultce)
+	  {
+		update();
+	  }
+
+	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_) 
 		: gv(gridview), plfem(&lfem), iis(dummyiis), ce(ce_)
+	  {
+		update();
+	  }
+
+	  GridFunctionSpace (const GV& gridview, const LFEM& lfem) 
+		: gv(gridview), plfem(&lfem), iis(dummyiis), ce(defaultce)
 	  {
 		update();
 	  }
@@ -1033,7 +1080,8 @@ namespace Dune {
 
 	  typename Traits::SizeType nlocal;
 	  typename Traits::SizeType nglobal;
-      CE ce;
+      CE defaultce;
+      const CE& ce;
 
       DofPerCodimMapType dofpercodim;
       std::map<unsigned int,typename Traits::SizeType> offset;
