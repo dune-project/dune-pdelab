@@ -274,7 +274,7 @@ namespace Dune {
 
 	  //! constructor
 	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_) 
-		: gv(gridview), plfem(&lfem), ce(ce_)
+		: defaultce(ce_), gv(gridview), plfem(&lfem), ce(ce_)
 	  {
 		update();
 	  }
@@ -548,7 +548,7 @@ namespace Dune {
 
 	  // constructor
 	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_) 
-		: gv(gridview), plfem(&lfem), ce(ce_)
+		: defaultce(ce_), gv(gridview), plfem(&lfem), ce(ce_)
 	  {
 		update();
 	  }
@@ -857,7 +857,7 @@ namespace Dune {
 
 	  // constructors
 	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const IIS& iis_, const CE& ce_) 
-		: gv(gridview), plfem(&lfem), iis(iis_), ce(ce_)
+		: defaultce(ce_), gv(gridview), plfem(&lfem), iis(iis_), ce(ce_)
 	  {
 		update();
 	  }
@@ -869,7 +869,7 @@ namespace Dune {
 	  }
 
 	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_) 
-		: gv(gridview), plfem(&lfem), iis(dummyiis), ce(ce_)
+		: defaultce(ce_), gv(gridview), plfem(&lfem), iis(dummyiis), ce(ce_)
 	  {
 		update();
 	  }
