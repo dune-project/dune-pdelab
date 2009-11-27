@@ -56,7 +56,10 @@ namespace Dune
         public:
             void setVerbosityLevel(unsigned int verbosity_level_)
             {
-                verbosity_level = verbosity_level_;
+                if (gridoperator.trialGridFunctionSpace().gridview().comm().rank()>0)
+                    verbosity_level = 0;
+                else
+                    verbosity_level = verbosity_level_;
             }
 
         protected:
@@ -72,7 +75,10 @@ namespace Dune
                 : gridoperator(go)
                 , u(u_)
                 , verbosity_level(1)
-            {}
+            {
+                if (gridoperator.trialGridFunctionSpace().gridview().comm().rank()>0)
+                    verbosity_level = 0;
+            }
 
             virtual bool terminate() = 0;
             virtual void prepare_step(Matrix& A) = 0;
@@ -121,6 +127,7 @@ namespace Dune
                                "NewtonSolver::defect(): Non-linear defect is NaN or Inf");
             }
 
+
         private:
             void linearSolve(const Matrix& A, TrialVector& z, TestVector& r) const
             {
@@ -147,7 +154,7 @@ namespace Dune
         template<class GOS, class S, class TrlV, class TstV>
         void NewtonSolver<GOS,S,TrlV,TstV>::apply()
         {
-            this->res.iterations = 0;
+            this->res.iterations = 1;
             this->res.converged = false;
             this->res.reduction = 1.0;
             this->res.conv_rate = 1.0;
@@ -378,7 +385,9 @@ namespace Dune
                 while (1)
                 {
                     this->u.axpy(-lambda, z);                  // TODO: vector interface
-                    try { this->defect(r); }
+                    try { 
+                        this->defect(r); 
+                    }
                     catch (NewtonDefectError) {}       // ignore NaNs and try again with lower lambda
 
                     if (this->res.defect <= (1.0 - lambda/4) * this->prev_defect)
