@@ -9,6 +9,8 @@
 #include<dune/grid/common/grid.hh>
 #include<dune/common/geometrytype.hh>
 #include<dune/pdelab/common/geometrywrapper.hh>
+#include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -125,10 +127,6 @@ namespace Dune {
     public:
       enum { doVolume = true };
 
-      NonoverlappingConformingDirichletConstraints (const std::vector<int>& ghost_)
-        : ghost(ghost_)
-      {}
-
       template<typename E, typename LFS, typename T>
       void volume (const Dune::PDELab::ElementGeometry<E>& eg, const LFS& lfs, T& trafo) const
       {
@@ -144,14 +142,39 @@ namespace Dune {
         // loop over all degrees of freedom and check if it is not owned by this processor
         for (size_t i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)
           {
-            if (ghost[lfs.globalIndex(i)])
-              trafo[i] = empty;
+            if (gh[lfs.globalIndex(i)]!=0)
+              {
+                trafo[i] = empty;
+              }
           }
       }
 
+      template<class GFS>
+      void compute_ghosts (const GFS& gfs)
+      {
+        typedef typename GFS::template VectorContainer<int>::Type V;
+        V ighost(gfs);
+        Dune::PDELab::GhostDataHandle<GFS,V> gdh(gfs,ighost);
+        if (gfs.gridview().comm().size()>1)
+          gfs.gridview().communicate(gdh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+        ighost.std_copy_to(gh);
+        rank = gfs.gridview().comm().rank();
+      }
+
+      void print ()
+      {
+        std::cout << "/" << rank << "/ " << "ghost size=" 
+                  << gh.size() << std::endl; 
+        for (std::size_t i=0; i<gh.size(); i++)
+          std::cout << "/" << rank << "/ " << "ghost[" << i << "]=" 
+                    << gh[i] << std::endl;
+      } 
+      
     private:
-      const std::vector<int>& ghost;
+      int rank;
+      std::vector<int> gh;
     };
+
   }
 }
 
