@@ -15,7 +15,7 @@ namespace Dune {
 	// implement a data handle with a grid function space
 	// GFS: a grid function space
 	// V:   a vector container associated with the GFS
-	// T:   gather/scatter methods
+	// T:   gather/scatter methods with argumemts buffer, and data
 	template<class GFS, class V, class T>
 	class GenericDataHandle
 	  : public Dune::CommDataHandleIF<GenericDataHandle<GFS,V,T>,typename V::ElementType>
@@ -84,9 +84,11 @@ namespace Dune {
 
 
 	// implement a data handle with a grid function space
+    // The difference to GenericDataHandle is that this
+    // the signature of the gather and scatter methods is different
 	// GFS: a grid function space
 	// V:   a vector container associated with the GFS
-	// T:   gather/scatter methods
+	// T:   gather/scatter methods  with argumemts buffer, entity, and data
 	template<class GFS, class V, class T>
 	class GenericDataHandle2
 	  : public Dune::CommDataHandleIF<GenericDataHandle2<GFS,V,T>,typename V::ElementType>
