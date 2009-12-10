@@ -4,11 +4,12 @@ common_HEADERS =				\
 	electrodynamic-newmark.hh		\
 	laplacedirichletp12d.hh			\
 	diffusion.hh				\
-	diffusionccfv.hh				\
-	diffusionmixed.hh				\
+	diffusionccfv.hh			\
+	diffusionmixed.hh			\
 	diffusiondg.hh				\
 	pattern.hh				\
 	poisson.hh				\
+	convectiondiffusion.hh			\
 	laplacedirichletccfv.hh                 \
 	flags.hh laplacedirichletccfv.hh        \
 	laplacedirichletp12d.hh mfdcommon.hh    \
