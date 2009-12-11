@@ -131,7 +131,7 @@ namespace Dune
         private:
             void linearSolve(const Matrix& A, TrialVector& z, TestVector& r) const
             {
-                if (this->verbosity_level >= 1)
+                if (this->verbosity_level >= 4)
                     std::cout << "      Solving linear system..." << std::endl;
                 z = 0.0;                                        // TODO: vector interface
                 this->solver.apply(A, z, r, this->linear_reduction);        // TODO: solver interface
@@ -139,7 +139,7 @@ namespace Dune
                     DUNE_THROW(NewtonLinearSolverError,
                                "NewtonSolver::linearSolve(): Linear solver did not converge "
                                "in iteration" << this->res.iterations);
-                if (this->verbosity_level >= 1)
+                if (this->verbosity_level >= 4)
                     std::cout << "          linear solver iterations:     "
                               << std::setw(12) << solver.result().iterations << std::endl
                               << "          linear defect reduction:      "
@@ -169,7 +169,7 @@ namespace Dune
                 this->res.first_defect = this->res.defect;
                 this->prev_defect = this->res.defect;
 
-                if (this->verbosity_level >= 1)
+                if (this->verbosity_level >= 2)
                     std::cout << "  Initial defect: "
                               << std::setw(12) << std::setprecision(4) << std::scientific
                               << this->res.defect << std::endl;
@@ -179,7 +179,7 @@ namespace Dune
 
                 while (!this->terminate())
                 {
-                    if (this->verbosity_level >= 1)
+                    if (this->verbosity_level >= 3)
                         std::cout << "  Newton iteration " << this->res.iterations
                                   << " --------------------------------" << std::endl;
 
@@ -195,7 +195,7 @@ namespace Dune
                     {
                         if (this->reassembled)
                             throw;
-                        if (this->verbosity_level >= 1)
+                        if (this->verbosity_level >= 3)
                             std::cout << "      line search failed - try again with reassembled matrix" << std::endl;
                         continue;
                     }
@@ -204,7 +204,7 @@ namespace Dune
                     this->res.iterations++;
                     this->res.conv_rate = std::pow(this->res.reduction, 1.0/this->res.iterations);
 
-                    if (this->verbosity_level >= 1)
+                    if (this->verbosity_level >= 3)
                         std::cout << "      defect reduction (this iteration):"
                                   << std::setw(12) << std::setprecision(4) << std::scientific
                                   << this->res.defect/this->prev_defect << std::endl
@@ -214,6 +214,14 @@ namespace Dune
                                   << "      new defect:                       "
                                   << std::setw(12) << std::setprecision(4) << std::scientific
                                   << this->res.defect << std::endl;
+                    if (this->verbosity_level == 2)
+                        std::cout << "  Newton iteration " << std::setw(2) << this->res.iterations
+                                  << ".  Reduction (this): "
+                                  << std::setw(12) << std::setprecision(4) << std::scientific
+                                  << this->res.defect/this->prev_defect
+                                  << ".  Reduction (total): "
+                                  << std::setw(12) << std::setprecision(4) << std::scientific
+                                  << this->res.reduction << std::endl;
                 }
             }
             catch(...)
@@ -222,6 +230,18 @@ namespace Dune
                 throw;
             }
             this->res.elapsed = timer.elapsed();
+            if (this->verbosity_level == 1)
+            {
+                std::cout << "  Newton ";
+                if (!this->res.converged)
+                    std::cout << "NOT ";
+                std::cout << "converged after " << std::setw(2) << this->res.iterations
+                          << " iterations.  Reduction: "
+                          << std::setw(12) << std::setprecision(4) << std::scientific
+                          << this->res.reduction
+                          << "   (" << std::setprecision(4) << this->res.elapsed << "s)"
+                          << std::endl;
+            }
         };
 
         template<class GOS, class TrlV, class TstV>
@@ -290,7 +310,7 @@ namespace Dune
             NewtonPrepareStep(GridOperator& go, TrialVector& u_)
                 : NewtonBase<GOS,TrlV,TstV>(go,u_)
                 , min_linear_reduction(1e-3)
-                , reassemble_threshold(0.8)
+                , reassemble_threshold(0.0)
             {}
 
             void setMinLinearReduction(RFType min_linear_reduction_)
@@ -308,7 +328,7 @@ namespace Dune
                 this->reassembled = false;
                 if (this->res.defect/this->prev_defect > reassemble_threshold)
                 {
-                    if (this->verbosity_level >= 1)
+                    if (this->verbosity_level >= 3)
                         std::cout << "      Reassembling matrix..." << std::endl;
                     A = 0.0;                                    // TODO: Matrix interface
                     this->gridoperator.jacobian(this->u, A);
@@ -321,8 +341,8 @@ namespace Dune
 
                 this->prev_defect = this->res.defect;
 
-                if (this->verbosity_level >= 1)
-                    std::cout << "      linear reduction:                 "
+                if (this->verbosity_level >= 4)
+                    std::cout << "      requested linear reduction:       "
                               << std::setw(12) << std::setprecision(4) << std::scientific
                               << this->linear_reduction << std::endl;
             }
@@ -377,6 +397,8 @@ namespace Dune
                     return;
                 }
 
+                if (this->verbosity_level >= 4)
+                    std::cout << "      Performing line search..." << std::endl;
                 RFType lambda = 1.0;
                 RFType best_lambda = 0.0;
                 RFType best_defect = this->res.defect;
@@ -436,6 +458,10 @@ namespace Dune
                     lambda *= damping_factor;
                     this->u = prev_u;                          // TODO: vector interface
                 }
+                if (this->verbosity_level >= 4)
+                    std::cout << "          line search damping factor:   "
+                              << std::setw(12) << std::setprecision(4) << std::scientific
+                              << lambda << std::endl;
             }
 
         private:
