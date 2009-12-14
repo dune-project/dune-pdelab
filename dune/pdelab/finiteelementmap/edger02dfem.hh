@@ -2,7 +2,7 @@
 #ifndef DUNE_PDELAB_EDGER02DFEM_HH
 #define DUNE_PDELAB_EDGER02DFEM_HH
 
-#include<dune/finiteelements/edger02d.hh>
+#include<dune/localfunctions/edger02d.hh>
 
 #include"finiteelementmap.hh"
 

@@ -14,7 +14,7 @@
 #include<dune/common/stdstreams.hh>
 #include<dune/grid/common/genericreferenceelements.hh>
 
-#include<dune/finiteelements/common/localcoefficients.hh>
+#include<dune/localfunctions/common/localcoefficients.hh>
 
 #include"../common/countingptr.hh"
 #include"../common/multitypetree.hh"

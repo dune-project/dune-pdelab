@@ -3,7 +3,7 @@
 
 #include<dune/common/exceptions.hh>
 
-#include<dune/finiteelements/pk3d.hh>
+#include<dune/localfunctions/pk3d.hh>
 #include"finiteelementmap.hh"
 
 namespace Dune

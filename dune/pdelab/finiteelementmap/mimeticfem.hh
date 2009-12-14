@@ -5,7 +5,7 @@
 #include<vector>
 #include<dune/common/geometrytype.hh>
 
-#include<dune/finiteelements/mimetic.hh>
+#include<dune/localfunctions/mimetic.hh>
 #include"finiteelementmap.hh"
 
 namespace Dune {

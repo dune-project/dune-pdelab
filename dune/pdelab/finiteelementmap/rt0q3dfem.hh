@@ -3,7 +3,7 @@
 #define DUNE_PDELAB_RT0Q3DFEM_HH
 
 #include<vector>
-#include<dune/finiteelements/rt0q3d.hh>
+#include<dune/localfunctions/rt0q3d.hh>
 #include"finiteelementmap.hh"
 
 namespace Dune {

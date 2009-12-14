@@ -2,7 +2,7 @@
 #ifndef DUNE_PDELAB_P1FEM_HH
 #define DUNE_PDELAB_P1FEM_HH
 
-#include<dune/finiteelements/p1.hh>
+#include<dune/localfunctions/p1.hh>
 #include"finiteelementmap.hh"
 
 namespace Dune {

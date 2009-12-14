@@ -4,7 +4,7 @@
 
 #include<dune/common/exceptions.hh>
 
-#include<dune/finiteelements/pk2d.hh>
+#include<dune/localfunctions/pk2d.hh>
 #include"finiteelementmap.hh"
 
 namespace Dune {

@@ -4,7 +4,7 @@
 
 #include <dune/common/geometrytype.hh>
 
-#include<dune/finiteelements/monom.hh>
+#include<dune/localfunctions/monom.hh>
 #include"finiteelementmap.hh"
 
 namespace Dune {
