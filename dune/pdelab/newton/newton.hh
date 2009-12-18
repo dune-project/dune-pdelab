@@ -154,7 +154,7 @@ namespace Dune
         template<class GOS, class S, class TrlV, class TstV>
         void NewtonSolver<GOS,S,TrlV,TstV>::apply()
         {
-            this->res.iterations = 1;
+            this->res.iterations = 0;
             this->res.converged = false;
             this->res.reduction = 1.0;
             this->res.conv_rate = 1.0;
