@@ -392,7 +392,7 @@ namespace Dune {
         typename GV::IndexSet::IndexType index = gtoffset.find(gt)->second + gv.indexSet().index(e);
         unsigned int n = offset[index+1]-offset[index];
 		global.resize(n);
-        for (int i=0; i<n; i++) 
+        for (unsigned i=0; i<n; i++)
           global[i] = offset[index]+i;
       }
 
