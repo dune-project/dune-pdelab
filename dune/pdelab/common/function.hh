@@ -928,6 +928,55 @@ namespace Dune {
 	  } 
 	};
 	
+    //========================================================
+    // helper template to turn an ordinary GridFunction into a
+    // GridFunctionTree leaf
+    //========================================================
+    //! Turn an ordinary GridFunction into a GridFunctionTree leaf
+    /**
+     *  \tparam Imp Class implementing the function.
+     */
+    template<class Imp>
+    class GridFunctionBaseAdapter
+      : public GridFunctionBase<typename Imp::Traits,
+                                GridFunctionBaseAdapter<Imp> >
+    {
+      const Imp &imp;
+
+    public:
+      //! construct a GridFunctionBaseAdapter
+      /**
+       * \param imp_ The underlying ordinary GridFunction.  A reference to
+       *             this Object is stored, so the object must be valid for as
+       *             long as this GridFunctionBaseAdapter is used.
+       */
+      GridFunctionBaseAdapter(const Imp& imp_)
+        : imp(imp_)
+      { }
+
+      //! Evaluate the GridFunction at given position
+      /**
+       * Evaluates components of the grid function at the given position and
+       * returns these values in a vector.
+       *
+       * \param[in]  e The entity to evaluate on
+       * \param[in]  x The position in entity-local coordinates
+       * \param[out] y The result of the evaluation
+       */
+      inline void evaluate (const typename Imp::Traits::ElementType& e,
+                            const typename Imp::Traits::DomainType& x,
+                            typename Imp::Traits::RangeType& y) const
+      {
+        imp.evaluate(e,x,y);
+      }
+
+      //! get a reference to the GridView
+      inline const typename Imp::Traits::GridViewType& getGridView () const
+      {
+        return imp.getGridView();
+      }
+    };
+
 	//=======================================
 	// helper template for analytic functions
 	//=======================================
