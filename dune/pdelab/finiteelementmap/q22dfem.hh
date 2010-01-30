@@ -2,7 +2,7 @@
 #ifndef DUNE_PDELAB_Q22DFEM_HH
 #define DUNE_PDELAB_Q22DFEM_HH
 
-#include<dune/localfunctions/q22d.hh>
+#include<dune/localfunctions/lagrange/q22d.hh>
 #include"finiteelementmap.hh"
 
 namespace Dune {

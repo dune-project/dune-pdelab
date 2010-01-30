@@ -4,7 +4,7 @@
 
 #include <dune/common/geometrytype.hh>
 
-#include<dune/localfunctions/p0.hh>
+#include<dune/localfunctions/lagrange/p0.hh>
 #include"finiteelementmap.hh"
 
 namespace Dune {

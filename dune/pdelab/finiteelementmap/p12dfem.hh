@@ -2,7 +2,7 @@
 #ifndef DUNE_PDELAB_P12DFEM_HH
 #define DUNE_PDELAB_P12DFEM_HH
 
-#include<dune/localfunctions/p1.hh>
+#include<dune/localfunctions/lagrange/p1.hh>
 #include"../common/geometrywrapper.hh"
 #include"finiteelementmap.hh"
 
