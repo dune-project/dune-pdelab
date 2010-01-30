@@ -2,7 +2,7 @@
 #ifndef DUNE_PDELAB_RANNACHER_TUREK2DFEM_HH
 #define DUNE_PDELAB_RANNACHER_TUREK2DFEM_HH
 
-#include<dune/localfunctions/rannacher_turek2d.hh>
+#include<dune/localfunctions/rannacherturek.hh>
 #include"finiteelementmap.hh"
 
 namespace Dune {
