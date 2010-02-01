@@ -3,7 +3,7 @@
 #define DUNE_PDELAB_RT02DFEM_HH
 
 #include<vector>
-#include<dune/localfunctions/rt02d.hh>
+#include<dune/localfunctions/raviartthomas/raviartthomas02d.hh>
 #include"finiteelementmap.hh"
 
 namespace Dune {
