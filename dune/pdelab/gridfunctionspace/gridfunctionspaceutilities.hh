@@ -186,7 +186,7 @@ namespace Dune {
      *                         the curl of, a.k.a. th dimRange of the basis.
      *
      * \note This the non-specialized version of the
-     *       DiscreteGridFunctionCurlTraits template.  It mußt be specialized
+     *       DiscreteGridFunctionCurlTraits template.  It must be specialized
      *       for different values of dimRangeOfBasis.  If this non-specialized
      *       version is instantiated, dune_static_assert() will be triggered.
      */
