@@ -339,6 +339,104 @@ namespace Dune {
       mutable std::vector<typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::JacobianType> J;
 	};
 
+    //! \brief convert a single component function space with a grid function
+    //! representing the gradient
+    /**
+     * The function values should be single-component vectors.  The Gradien
+     * will be a dimDomain-component function.
+     *
+     * \tparam T Type of GridFunctionSpace.  The LocalBasis must provide the
+     *           evaluateJacobian() method.
+     * \tparam X Type of coefficients vector
+     */
+    template<typename T, typename X>
+    class DiscreteGridFunctionGradient
+      : public GridFunctionInterface<
+          GridFunctionTraits<
+            typename T::Traits::GridViewType,
+            typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType
+              ::Traits::RangeFieldType,
+            T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits
+              ::dimDomain,
+            FieldVector<
+              typename T::Traits::LocalFiniteElementType::Traits
+                ::LocalBasisType::Traits::RangeFieldType,
+              T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits
+              ::dimDomain> >,
+          DiscreteGridFunctionGradient<T,X> >
+    {
+      typedef T GFS;
+      typedef typename GFS::Traits::LocalFiniteElementType::Traits::
+        LocalBasisType::Traits LBTraits;
+
+    public:
+      typedef GridFunctionTraits<
+        typename GFS::Traits::GridViewType,
+        typename LBTraits::RangeFieldType,
+        LBTraits::dimDomain,
+        FieldVector<
+          typename LBTraits::RangeFieldType,
+          LBTraits::dimDomain> > Traits;
+
+    private:
+      typedef GridFunctionInterface<
+        Traits,
+        DiscreteGridFunctionGradient<T,X> > BaseT;
+
+    public:
+      /** \brief Construct a DiscreteGridFunctionGradient
+       *
+       * \param gfs The GridFunctionsSpace
+       * \param x_  The coefficients vector
+       */
+      DiscreteGridFunctionGradient (const GFS& gfs, const X& x_)
+        : pgfs(&gfs), xg(x_)
+      { }
+
+      // Evaluate
+      inline void evaluate (const typename Traits::ElementType& e,
+                            const typename Traits::DomainType& x,
+                            typename Traits::RangeType& y) const
+      {
+        // get and bind local functions space
+        typename GFS::LocalFunctionSpace lfs(pgfs);
+        lfs.bind(e);
+
+        // get local coefficients
+        std::vector<typename Traits::RangeFieldType> xl(lfs.size());
+        lfs.vread(xg,xl);
+
+        // get Jacobian of geometry
+        const typename Traits::ElementType::Geometry::Jacobian&
+          JgeoIT = e.geometry.jacobianInverseTransposed(x);
+
+        // get local Jacobians/gradients of the shape functions
+        std::vector<typename LBTraits::JacobianType> J(lfs.size());
+        lfs.localFiniteElement().localBasis().evaluateJacobian(x,J);
+
+        typename Traits::RangeType gradphi;
+        y = 0;
+        for(unsigned i = 0; i < lfs.size(); ++i) {
+          // compute global gradient of shape function i
+          gradphi = 0;
+          JgeoIT.umv(J[i][0], gradphi);
+
+          // sum up global gradients, weighting them with the appropriate coeff
+          y.axpy(xl[i], gradphi);
+        }
+      }
+
+      //! get a reference to the GridView
+      inline const typename Traits::GridViewType& getGridView () const
+      {
+        return pgfs->gridview();
+      }
+
+    private:
+      CP<GFS const> pgfs;
+      const X& xg;
+    };
+
 	//! global finite elements into a grid function representing the curl
     /**
      * \deprecated This class template is deprecated in favor of
