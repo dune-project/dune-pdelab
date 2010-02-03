@@ -399,7 +399,7 @@ namespace Dune {
                             typename Traits::RangeType& y) const
       {
         // get and bind local functions space
-        typename GFS::LocalFunctionSpace lfs(pgfs);
+        typename GFS::LocalFunctionSpace lfs(*pgfs);
         lfs.bind(e);
 
         // get local coefficients
@@ -408,7 +408,7 @@ namespace Dune {
 
         // get Jacobian of geometry
         const typename Traits::ElementType::Geometry::Jacobian&
-          JgeoIT = e.geometry.jacobianInverseTransposed(x);
+          JgeoIT = e.geometry().jacobianInverseTransposed(x);
 
         // get local Jacobians/gradients of the shape functions
         std::vector<typename LBTraits::JacobianType> J(lfs.size());
