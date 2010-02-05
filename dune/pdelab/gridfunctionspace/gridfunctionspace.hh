@@ -149,45 +149,6 @@ namespace Dune {
 	  }
 	};
 
-
-	// template metaprogram to evaluate subindex without compile-time codim parameter
-	// C : codimension
-	template<int C, typename IS, typename E>
-	class EvalSubIndexMetaProgram
-	{
-	public:
-	  static void subIndex (const IS& is, const E& e, unsigned int i, 
-							unsigned int c, unsigned int& index)
-	  {
-		if (c==C)
-		  {
-              index = is.subIndex(e,i,C);
-			return;
-		  }
-		EvalSubIndexMetaProgram<C-1,IS,E>::subIndex(is,e,i,c,index);	
-	  }
-	};
-
-	template<typename IS, typename E>
-	class EvalSubIndexMetaProgram<0,IS,E>
-	{
-	public:
-	  static void subIndex (const IS& is, const E& e, unsigned int i, 
-							unsigned int c, unsigned int& index)
-	  {
-		if (c==0)
-		  index = is.index(e); // there is only one codim 0 entity
-	  }
-	};
-
-	template<int DIM, typename IS, typename E>
-	unsigned int eval_subindex (const IS& is, const E& e, unsigned int i, unsigned int c)
-	{
-	  unsigned int index=0;
-	  EvalSubIndexMetaProgram<DIM,IS,E>::subIndex(is,e,i,c,index);
-	  return index;
-	}
-
 	/** \brief class used to pass compile-time parameters to the implementation
      *
      *  This is the dummy default class which does nothing
@@ -339,9 +300,8 @@ namespace Dune {
 			  ::general(lfe.type()).type(lc.localKey(i).subEntity(),lc.localKey(i).codim());
 
 			// evaluate consecutive index of subentity
-			int index = eval_subindex<GV::Grid::dimension>(gv.indexSet(),e,
-														   lc.localKey(i).subEntity(),
-														   lc.localKey(i).codim());
+            int index = gv.indexSet().subIndex(e, lc.localKey(i).subEntity(),
+                                               lc.localKey(i).codim());
 		
 			// now compute 
 			global[i] = offset[(gtoffset.find(gt)->second)+index]+lc.localKey(i).index();
@@ -467,8 +427,9 @@ namespace Dune {
 			  {
 				Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
 				  ::general(it->type()).type(lc.localKey(i).subEntity(),lc.localKey(i).codim());
-				unsigned int index = gtoffset[gt]
-				  +eval_subindex<GV::Grid::dimension>(is,*it,lc.localKey(i).subEntity(),lc.localKey(i).codim());
+                unsigned int index = gtoffset[gt] +
+                  is.subIndex(*it, lc.localKey(i).subEntity(),
+                              lc.localKey(i).codim());
 				offset[index] = std::max(offset[index], 
                                          typename Traits::SizeType(lc.localKey(i).index()+1));
 			  }
@@ -613,9 +574,8 @@ namespace Dune {
 			  ::general(lfe.type()).type(lc.localKey(i).subEntity(),lc.localKey(i).codim());
 
 			// evaluate consecutive index of subentity
-			int index = eval_subindex<GV::Grid::dimension>(gv.indexSet(),e,
-														   lc.localKey(i).subEntity(),
-														   lc.localKey(i).codim());
+            int index = gv.indexSet().subIndex(e, lc.localKey(i).subEntity(),
+                                               lc.localKey(i).codim());
 		
 			// now compute 
 			global[i] = offset.find(gt)->second+index*dofcountmap.find(gt)->second+lc.localKey(i).index();
@@ -936,7 +896,7 @@ namespace Dune {
             if (cd==Dune::intersectionCodim)
               index = iis.subIndex(e,se);
             else
-              index = eval_subindex<GV::Grid::dimension>(gv.indexSet(),e,se,cd);
+              index = gv.indexSet().subIndex(e,se,cd);
 
 			// now compute 
 			global[i] = offset.find(cd)->second + index * dofpercodim.find(cd)->second + lc.localKey(i).index();
