@@ -12,7 +12,6 @@
 #include"../finiteelementmap/q12dfem.hh"
 #include"../finiteelementmap/q22dfem.hh"
 #include"../finiteelementmap/q1fem.hh"
-#include"../finiteelementmap/edger02dfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../backend/istlvectorbackend.hh"
 
@@ -32,8 +31,6 @@ struct test<2> {
     Q12DFEM q12dfem;
     typedef Dune::PDELab::Q22DLocalFiniteElementMap<float,double> Q22DFEM;
     Q22DFEM q22dfem;
-    typedef Dune::PDELab::EdgeR02DLocalFiniteElementMap<float,double> EdgeR02DFEM;
-    EdgeR02DFEM edger12dfem;
   
     // make a grid function space
     typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS; 
@@ -46,8 +43,6 @@ struct test<2> {
       Dune::PDELab::ISTLVectorBackend<1>,
       Dune::PDELab::GridFunctionRestrictedMapper> GFS3;
     GFS3 gfs3(gv,q22dfem);
-    typedef Dune::PDELab::GridFunctionSpace<GV,EdgeR02DFEM> GFS4;
-    GFS4 gfs4(gv,edger12dfem);
 
     // test power
     typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,2> PGFS2;
@@ -80,9 +75,6 @@ struct test<2> {
     typedef typename GFS2::template VectorContainer<double>::Type V2;
     V2 x2(gfs2);
     x2 = 0.0;
-    typedef typename GFS4::template VectorContainer<double>::Type V4;
-    V4 x4(gfs4);
-    x4 = 0.0;
 
     // test composite
     typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::GridFunctionSpaceLexicographicMapper,

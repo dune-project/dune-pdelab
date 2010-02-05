@@ -225,10 +225,6 @@ MOSTLYCLEANFILES += multi.vtu single.vtu
 
 NORMALTESTS += testgridfunctionspace
 testgridfunctionspace_SOURCES = testgridfunctionspace.cc
-testgridfunctionspace_CPPFLAGS = $(AM_CPPFLAGS)	\
-	$(ALBERTA_CPPFLAGS)
-testgridfunctionspace_LDADD = 			\
-	$(ALBERTA_LDFLAGS) $(ALBERTA_LIBS)
 
 NORMALTESTS += testlaplacedirichletccfv
 testlaplacedirichletccfv_SOURCES = testlaplacedirichletccfv.cc
