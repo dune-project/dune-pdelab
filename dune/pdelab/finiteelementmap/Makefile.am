@@ -1,5 +1,6 @@
 finiteelementmapdir = $(includedir)/dune/pdelab/finiteelementmap
-finiteelementmap_HEADERS = rt0constraints.hh edger02dfem.hh \
+finiteelementmap_HEADERS =					\
+	rt0constraints.hh					\
 	edges02dfem.hh edges03dfem.hh finiteelementmap.hh \
 	hangingnodeconstraints.hh hangingnodemanager.hh \
 	mfdconstraints.hh p0constraints.hh p0fem.hh p1fem.hh \
