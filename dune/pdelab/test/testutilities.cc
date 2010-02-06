@@ -10,7 +10,6 @@
 #include<dune/grid/yaspgrid.hh>
 #include"../finiteelementmap/q22dfem.hh"
 #include"../finiteelementmap/q12dfem.hh"
-#include"../finiteelementmap/edger02dfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include"../gridfunctionspace/interpolate.hh"
@@ -43,33 +42,6 @@ void testq1 (const GV& gv)
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"test"));
   vtkwriter.write("q1",Dune::VTKOptions::ascii);
-}
-
-// generate an edge element function and output it
-template<class GV> 
-void testedger (const GV& gv)
-{
-  // instantiate finite element maps
-  typedef Dune::PDELab::EdgeR02DLocalFiniteElementMap<typename GV::Grid::ctype,double> EdgeR02DFEM;
-  EdgeR02DFEM edger02dfem;
-  
-  // make a grid function space
-  typedef Dune::PDELab::GridFunctionSpace<GV,EdgeR02DFEM> EGFS;
-  EGFS egfs(gv,edger02dfem);
-
-  // make coefficent Vectors
-  typedef typename EGFS::template VectorContainer<double>::Type V;
-  V x(egfs);
-  x = 1.0;
-
-  // make discrete function object
-  typedef Dune::PDELab::DiscreteGridFunction<EGFS,V> DGF;
-  DGF dgf(egfs,x);
-
-  // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
-  vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"test"));
-  vtkwriter.write("edger",Dune::VTKOptions::ascii);
 }
 
 // define some grid functions to interpolate from
@@ -360,7 +332,6 @@ int main(int argc, char** argv)
     grid.globalRefine(5);
 
 	testq1(grid.leafView());
-	testedger(grid.leafView());
     testinterpolate(grid.leafView());
     testtaylorhood(grid.levelView(1));
 
