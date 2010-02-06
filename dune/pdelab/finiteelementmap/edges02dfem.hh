@@ -3,7 +3,7 @@
 #define DUNE_PDELAB_EDGES02DFEM_HH
 
 #include<vector>
-#include<dune/localfunctions/edges02d.hh>
+#include<dune/localfunctions/whitney/edges02d.hh>
 #include"finiteelementmap.hh"
 
 namespace Dune {
