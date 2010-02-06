@@ -166,7 +166,7 @@ testedges03dfem_CPPFLAGS = $(AM_CPPFLAGS)				\
 testedges03dfem_LDFLAGS = $(AM_LDFLAGS)		\
 	$(ALBERTA3D_LDFLAGS)
 testedges03dfem_LDADD =						\
-	$(ALBERTA3D_LDFLAGS)			\
+	$(ALBERTA3D_LIBS)			\
 	$(LDADD)
 
 NORMALTESTS += testelectrodynamic
