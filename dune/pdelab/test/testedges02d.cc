@@ -101,12 +101,12 @@ void testedges02d (const GV& gv)
 
   // do interpolation
   Dune::PDELab::interpolate(f,p0gfs,p0xg);
-  Dune::PDELab::interpolateEdge(v,edges02dgfs,edges02dxg);
+  Dune::PDELab::interpolateGlobal(v,edges02dgfs,edges02dxg);
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<P0GFS,P0V> P0DGF;
   P0DGF p0dgf(p0gfs,p0xg);
-  typedef Dune::PDELab::DiscreteGridFunctionEdge<EdgeS02DGFS,EdgeS02DV> EdgeS02DDGF;
+  typedef Dune::PDELab::DiscreteGridFunctionGlobal<EdgeS02DGFS,EdgeS02DV> EdgeS02DDGF;
   EdgeS02DDGF edges02ddgf(edges02dgfs,edges02dxg);
 
   // output grid function with VTKWriter

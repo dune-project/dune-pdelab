@@ -72,9 +72,9 @@ double interpolationerror (const GV& gv, const FEM &fem, const std::string &name
 
   typedef U<GV,R> AFunc;
   AFunc u(gv);                      // make analytic function object
-  Dune::PDELab::interpolateEdge(u,gfs,x); // make x interpolate u
+  Dune::PDELab::interpolateGlobal(u,gfs,x); // make x interpolate u
 
-  typedef Dune::PDELab::DiscreteGridFunctionEdge<GFS, X> IFunc;
+  typedef Dune::PDELab::DiscreteGridFunctionGlobal<GFS, X> IFunc;
   IFunc v(gfs,x);
 
   if(name != "") {
