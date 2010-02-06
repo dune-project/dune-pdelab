@@ -6,6 +6,7 @@
 #include<vector>
 
 #include<dune/common/exceptions.hh>
+#include<dune/common/fmatrix.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/geometrytype.hh>
 #include<dune/common/static_assert.hh>
@@ -145,14 +146,14 @@ namespace Dune {
       template<typename RF>
       static void
       jacobianToCurl(FieldVector<RF, 1> &curl,
-                     const FieldVector<FieldVector<RF, 2>, 2> &jacobian)
+                     const FieldMatrix<RF, 2, 2> &jacobian)
       {
         curl[0] = jacobian[1][0] - jacobian[0][1];
       }
       template<typename RF>
       static void
       jacobianToCurl(FieldVector<RF, 3> &curl,
-                     const FieldVector<FieldVector<RF, 3>, 3> &jacobian)
+                     const FieldMatrix<RF, 3, 3> &jacobian)
       {
         for(unsigned i = 0; i < 3; ++i)
           curl[i] = jacobian[(i+2)%3][(i+1)%3] - jacobian[(i+1)%3][(i+2)%3];
@@ -319,13 +320,13 @@ namespace Dune {
 
       template<typename RF>
       static void jacobianToCurl(FieldVector<RF, 1> &curl,
-                                 const FieldVector<FieldVector<RF, 2>, 2> &jacobian)
+                                 const FieldMatrix<RF, 2, 2> &jacobian)
       {
         curl[0] = jacobian[1][0] - jacobian[0][1];
       }
       template<typename RF>
       static void jacobianToCurl(FieldVector<RF, 3> &curl,
-                                 const FieldVector<FieldVector<RF, 3>, 3> &jacobian)
+                                 const FieldMatrix<RF, 3, 3> &jacobian)
       {
         for(unsigned i = 0; i < 3; ++i)
           curl[i] = jacobian[(i+2)%3][(i+1)%3] - jacobian[(i+1)%3][(i+2)%3];
