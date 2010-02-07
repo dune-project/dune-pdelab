@@ -259,11 +259,17 @@ namespace Dune {
 		return *plfem;
 	  }
 
-	  //! get dimension of finite element space
+      //! get dimension of root finite element space
 	  typename Traits::SizeType globalSize () const
 	  {
 		return nglobal;
 	  }
+
+      //! get dimension of this finite element space
+      typename Traits::SizeType size () const
+      {
+        return nglobal;
+      }
 
 	  //! get max dimension of shape function space
 	  typename Traits::SizeType maxLocalSize () const
@@ -271,7 +277,7 @@ namespace Dune {
 		return nlocal;
 	  }
 
-	  //! map index [0,globalSize-1] to root index set
+      //! map index from our index set [0,size()-1] to root index set
 	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
 	  {
 		return i;
@@ -533,11 +539,17 @@ namespace Dune {
 		return *plfem;
 	  }
 
-	  // get dimension of finite element space
+      //! get dimension of root finite element space
 	  typename Traits::SizeType globalSize () const
 	  {
 		return nglobal;
 	  }
+
+      //! get dimension of this finite element space
+      typename Traits::SizeType size () const
+      {
+        return nglobal;
+      }
 
 	  // get max dimension of shape function space
 	  typename Traits::SizeType maxLocalSize () const
@@ -545,7 +557,7 @@ namespace Dune {
 		return nlocal;
 	  }
 
-	  // map index [0,globalSize-1] to root index set
+      // map index [0,size()-1] to root index set
 	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
 	  {
 		return i;
@@ -852,11 +864,17 @@ namespace Dune {
 		return *plfem;
 	  }
 
-	  // get dimension of finite element space
+      //! get dimension of root finite element space
 	  typename Traits::SizeType globalSize () const
 	  {
 		return nglobal;
 	  }
+
+      //! get dimension of this finite element space
+      typename Traits::SizeType size () const
+      {
+        return nglobal;
+      }
 
 	  // get max dimension of shape function space
 	  typename Traits::SizeType maxLocalSize () const
@@ -864,7 +882,7 @@ namespace Dune {
 		return nlocal;
 	  }
 
-	  // map index [0,globalSize-1] to root index set
+      //! map index from our index set [0,size()-1] to root index set
 	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
 	  {
 		return i;
@@ -1123,13 +1141,21 @@ namespace Dune {
 		return this->template getChild<0>().gridview();
 	  }
 
-	  // get dimension of finite element space
+      //! get dimension of root finite element space
 	  typename Traits::SizeType globalSize () const
 	  {
         // this is bullshit all children may have different
         // size although they have the same type ...
+        // [Jö] well, it does happen for the elements I use for the Yee FDTD
+        //      scheme, at least
 		return offset[k];
 	  }
+
+      //! get dimension of this finite element space
+      typename Traits::SizeType size () const
+      {
+        return offset[k];
+      }
 
 	  // get max dimension of shape function space
 	  typename Traits::SizeType maxLocalSize () const
@@ -1138,13 +1164,13 @@ namespace Dune {
 		return maxlocalsize;
 	  }
 
-	  // map index [0,globalSize-1] to root index set
+      //! map index from our index set [0,size()-1] to root index set
 	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
 	  {
 		return i;
 	  }
 
-	  // map index [0,globalSize-1] to root index set
+      //! map index from child i's index set into our index set
       template<int i>
 	  typename Traits::SizeType subMap (typename Traits::SizeType j) const
 	  {
@@ -1295,13 +1321,21 @@ namespace Dune {
 		return this->template getChild<0>().gridview();
 	  }
 
-	  // get dimension of finite element space
+      //! get dimension of root finite element space
 	  typename Traits::SizeType globalSize () const
 	  {
         // this is bullshit all children may have different
         // size although they have the same type ...
+        // [Jö] well, it does happen for the elements I use for the Yee FDTD
+        //      scheme, at least
 		return offset[k];
 	  }
+
+      //! get dimension of this finite element space
+      typename Traits::SizeType size () const
+      {
+        return offset[k];
+      }
 
 	  // get max dimension of shape function space
 	  typename Traits::SizeType maxLocalSize () const
@@ -1310,13 +1344,13 @@ namespace Dune {
 		return maxlocalsize;
 	  }
 
-	  // map index [0,globalSize-1] to root index set
+      //! map index from our index set [0,size()-1] to root index set
 	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
 	  {
 		return i;
 	  }
 
-	  // map index [0,globalSize-1] to root index set
+      //! map index from child i's index set into our index set
       template<int i>
 	  typename Traits::SizeType subMap (typename Traits::SizeType j) const
 	  {
@@ -1905,13 +1939,17 @@ namespace Dune {
 		return this->template getChild<0>().gridview();
 	  }
 
-	  // get dimension of finite element space
+      //! get dimension of root finite element space
 	  typename Traits::SizeType globalSize () const
 	  {
-        // this is bullshit all children may have different
-        // size although they have the same type ...
 		return offset[BaseT::CHILDREN];
 	  }
+
+      //! get dimension of this finite element space
+      typename Traits::SizeType size () const
+      {
+        return offset[BaseT::CHILDREN];
+      }
 
 	  // get max dimension of shape function space
 	  typename Traits::SizeType maxLocalSize () const
@@ -1920,13 +1958,13 @@ namespace Dune {
 		return maxlocalsize;
 	  }
 
-	  // map index [0,globalSize-1] to root index set
+      //! map index from our index set [0,size()-1] to root index set
 	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
 	  {
 		return i;
 	  }
 
-	  // map index [0,globalSize-1] to root index set
+      //! map index from child i's index set into our index set
       template<int i>
 	  typename Traits::SizeType subMap (typename Traits::SizeType j) const
 	  {
@@ -2077,13 +2115,17 @@ namespace Dune {
 		return this->template getChild<0>().gridview();
 	  }
 
-	  // get dimension of finite element space
+      //! get dimension of root finite element space
 	  typename Traits::SizeType globalSize () const
 	  {
-        // this is bullshit all children may have different
-        // size although they have the same type ...
 		return offset[BaseT::CHILDREN];
 	  }
+
+      //! get dimension of this finite element space
+      typename Traits::SizeType size () const
+      {
+        return offset[BaseT::CHILDREN];
+      }
 
 	  // get max dimension of shape function space
 	  typename Traits::SizeType maxLocalSize () const
@@ -2092,13 +2134,13 @@ namespace Dune {
 		return maxlocalsize;
 	  }
 
-	  // map index [0,globalSize-1] to root index set
+      //! map index from our index set [0,size()-1] to root index set
 	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
 	  {
 		return i;
 	  }
 
-	  // map index [0,globalSize-1] to root index set
+      //! map index from child i's index set into our index set
       template<int i>
 	  typename Traits::SizeType subMap (typename Traits::SizeType j) const
 	  {
@@ -2717,11 +2759,17 @@ namespace Dune {
 		return pgfs->gridview();
 	  }
 
-	  // get dimension of finite element space
+      //! get dimension of root finite element space
 	  typename Traits::SizeType globalSize () const
 	  {
         return pgfs->globalSize();
 	  }
+
+      //! get dimension of this finite element space
+      typename Traits::SizeType size () const
+      {
+        return pcgfs->globalSize();
+      }
 
 	  // get max dimension of shape function space
 	  typename Traits::SizeType maxLocalSize () const
@@ -2729,13 +2777,13 @@ namespace Dune {
 		return pcgfs->maxLocalSize();
 	  }
 
-	  // map from gfs.child<k> to gfs
+      //! map index from our index set [0,size()-1] to root index set
 	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
 	  {
 		return pgfs->upMap(pgfs->template subMap<k>(i));
 	  }
 
-	  // map from gfs.child<k>.child<i> to gfs.child<k>
+      //! map index from child i's index set into our index set
       template<int i>
 	  typename Traits::SizeType subMap (typename Traits::SizeType j) const
 	  {
@@ -2815,11 +2863,17 @@ namespace Dune {
 		return pgfs->gridview();
 	  }
 
-	  // get dimension of finite element space
+      //! get dimension of root finite element space
 	  typename Traits::SizeType globalSize () const
 	  {
         return pgfs->globalSize();
 	  }
+
+      //! get dimension of this finite element space
+      typename Traits::SizeType size () const
+      {
+        return pcgfs->globalSize();
+      }
 
 	  // get max dimension of shape function space
 	  typename Traits::SizeType maxLocalSize () const
@@ -2827,13 +2881,13 @@ namespace Dune {
 		return pcgfs->maxLocalSize();
 	  }
 
-	  // map from gfs.child<k> to gfs
+      //! map index from our index set [0,size()-1] to root index set
 	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
 	  {
 		return pgfs->upMap(pgfs->template subMap<k>(i));
 	  }
 
-	  // map from gfs.child<k>.child<i> to gfs.child<k>
+      //! map index from child i's index set into our index set
       template<int i>
 	  typename Traits::SizeType subMap (typename Traits::SizeType j) const
 	  {
@@ -2903,11 +2957,17 @@ namespace Dune {
 		return pcgfs->localFiniteElementMap();
 	  }
 
-	  // get dimension of finite element space
+      //! get dimension of root finite element space
 	  typename Traits::SizeType globalSize () const
 	  {
         return pgfs->globalSize();
 	  }
+
+      //! get dimension of this finite element space
+      typename Traits::SizeType size () const
+      {
+        return pcgfs->globalSize();
+      }
 
 	  // get max dimension of shape function space
 	  typename Traits::SizeType maxLocalSize () const
@@ -2915,7 +2975,7 @@ namespace Dune {
 		return pcgfs->maxLocalSize();
 	  }
 
-	  // map from gfs.child<k> to gfs
+      //! map from our index set [0..size()-1] into root index set
 	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
 	  {
 		return pgfs->upMap(pgfs->template subMap<k>(i));
