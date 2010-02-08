@@ -39,6 +39,12 @@ namespace Dune {
 		return m[j*rows+i];
 	  }
 
+      LocalMatrix& operator *= (const T& x)
+      {
+        for (size_t i=0; i<m.size(); ++i) m[i] *= x;
+        return *this;
+      }
+
 	  int nrows () const
 	  {
 		return rows;
