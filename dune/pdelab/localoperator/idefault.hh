@@ -12,51 +12,48 @@ namespace Dune
         //! \{
 
         //! Default class for additional methods in instationary local operators
-        template<class R>
+        template<class R = double>
         class InstationaryLocalOperatorDefaultMethods
         {
         public:
-            //! set stage for subsequent evaluation
-            void set_stage (int r)
-            {
-                stage = r;
-            }
-
-            //! get current stage
-            int get_stage () const
-            {
-                return stage;
-            }
+            typedef R RealType;
 
             //! set time for subsequent evaluation
-            void set_time (R t_)
+            void setTime (R t_)
             {
                 t = t_;
             }
 
             //! get current time
-            R get_time () const
+            R getTime () const
             {
                 return t;
             }
 
             //! to be called once before each time step
-            void pre_step ()
+            void preStep ()
             {
             }
 
             //! to be called once at the end of each time step
-            void post_step ()
+            void postStep ()
             {
             }
 
             //! to be called once before each stage
-            void pre_stage ()
+            void preStage (int r)
             {
+                stage = r;
+            }
+
+            //! get current stage
+            int getStage () const
+            {
+                return stage;
             }
 
             //! to be called once at the end of each stage
-            void post_stage ()
+            void postStage ()
             {
             }
 

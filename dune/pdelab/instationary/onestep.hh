@@ -15,6 +15,7 @@ namespace Dune {
     class OneStepParameterInterface
     {
     public:
+      typedef R RealType;
       
       /*! \brief Return true if method is implicit
       */
