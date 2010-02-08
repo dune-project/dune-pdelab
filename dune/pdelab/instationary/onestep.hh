@@ -341,6 +341,74 @@ namespace Dune {
       Dune::FieldMatrix<R,2,3> B;
     };
 
+    template<class R> 
+    class FractionalStepParameter : public OneStepParameterInterface<R>
+    {
+    public:
+      
+      FractionalStepParameter ()
+      {
+	theta = 1.0 - 0.5*sqrt(2.0);
+	thetap = 1.0-2.0*theta;
+	alpha = 2.0-sqrt(2.0);
+	beta = 1.0-alpha;
+
+	D[0] = 0.0;     D[1] = theta;     D[2] = 1.0-theta; D[3] = 1.0;
+
+	A[0][0] = -1.0; A[0][1] = 1.0; A[0][2] = 0.0; A[0][3] = 0.0;
+	A[1][0] = 0.0; A[1][1] = -1.0; A[1][2] = 1.0; A[1][3] = 0.0;
+	A[2][0] = 0.0; A[2][1] = 0.0; A[2][2] = -1.0; A[2][3] = 1.0;
+
+	B[0][0] =  beta*theta; B[0][1] = alpha*theta;  B[0][2] = 0.0; B[0][3] = 0.0;
+	B[1][0] =  0.0; B[1][1] = alpha*thetap;  B[1][2] = alpha*theta; B[1][3] = 0.0;
+	B[2][0] =  0.0; B[2][1] = 0.0; B[2][2] = beta*theta;  B[2][3] = alpha*theta; 
+      }
+
+      /*! \brief Return true if method is implicit
+      */
+      virtual bool implicit () const
+      {
+	return true;
+      }
+      
+      /*! \brief Return number of stages s of the method
+      */
+      virtual int s () const
+      {
+	return 3;
+      }
+      
+      /*! \brief Return entries of the A matrix
+	Note that r \in 1,...,s and i \in 0,...,r
+      */
+      virtual R a (int r, int i) const
+      {
+	return A[r-1][i];
+      }
+      
+      /*! \brief Return entries of the B matrix
+	Note that r \in 1,...,s and i \in 0,...,r
+      */
+      virtual R b (int r, int i) const
+      {
+	return B[r-1][i];
+      }
+      
+      /*! \brief Return entries of the d Vector
+	i runs from 0,...,s
+      */
+      virtual R d (int i) const
+      {
+	return D[i];
+      }
+      
+    private:
+      R alpha, theta, thetap, beta;
+      Dune::FieldVector<R,4> D;
+      Dune::FieldMatrix<R,3,4> A;
+      Dune::FieldMatrix<R,3,4> B;
+    };
+
   } // namespace PDELab
 } // namespace Dune
 
