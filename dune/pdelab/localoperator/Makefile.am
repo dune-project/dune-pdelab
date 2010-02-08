@@ -4,6 +4,7 @@ common_HEADERS =				\
 	electrodynamic-newmark.hh		\
 	laplacedirichletp12d.hh			\
 	diffusion.hh				\
+	l2.hh					\
 	diffusionccfv.hh			\
 	diffusionmixed.hh			\
 	diffusiondg.hh				\
