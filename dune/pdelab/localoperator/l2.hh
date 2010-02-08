@@ -16,6 +16,7 @@
 #include"../gridoperatorspace/gridoperatorspaceutilities.hh"
 #include"pattern.hh"
 #include"flags.hh"
+#include"idefault.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -31,7 +32,8 @@ namespace Dune {
      */
 	class L2 : public NumericalJacobianApplyVolume<L2>,
                public FullVolumePattern,
-               public LocalOperatorDefaultFlags
+               public LocalOperatorDefaultFlags,
+               public InstationaryLocalOperatorDefaultMethods<double>
 	{
 	public:
       // pattern assembly flags
