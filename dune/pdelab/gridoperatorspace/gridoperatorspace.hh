@@ -22,34 +22,6 @@ namespace Dune {
 	// The operator
 	//================================================
 
-	//! collect types exported by a grid operator space
-	template<typename GFSU, typename GFSV, typename B, 
-			 typename CU, typename CV>
-	struct GridOperatorSpaceTraits
-	{
-	  typedef GFSU TrialGridFunctionSpace;
-
-	  typedef CU TrialConstraintsType;
-
-	  typedef GFSV TestGridFunctionSpace;
-
-	  typedef CV TestConstraintsType;
-
-	  //! \brief the grid view where grid function is defined upon
-	  typedef typename GFSU::Traits::GridViewType GridViewType;
-
-	  //! \brief vector backend
-	  typedef B BackendType;
-
-	  //! \brief short cut for size type exported by Backend
-	  typedef typename B::size_type SizeType;
-	};
-
-
-    class EmptyTransformation : public ConstraintsTransformation<int,float>
-    {
-    };
-
 	//! The generic assembler ...
     /**
      * \tparam GFSU GridFunctionSpace for ansatz functions
