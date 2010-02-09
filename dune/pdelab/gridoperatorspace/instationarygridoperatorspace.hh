@@ -7,12 +7,14 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/geometrytype.hh>
 
+//#include<dune/istl/io.hh>
+
 #include"../common/geometrywrapper.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../gridfunctionspace/constraints.hh"
+#include"../instationary/onestep.hh"
 #include"localmatrix.hh"
 #include"gridoperatorspaceutilities.hh"
-
 
 namespace Dune {
   namespace PDELab {
@@ -22,7 +24,7 @@ namespace Dune {
 	//================================================
 	//! The generic assembler for time-dependent problems
     /**
-     * \tparam T type to represent time values (and coefficients of time-stepping schemes)
+     * \tparam TReal type to represent time values (and coefficients of time-stepping schemes)
      * \tparam R type that stores a residual vector
      * \tparam GFSU GridFunctionSpace for ansatz functions
      * \tparam GFSV GridFunctionSpace for test functions
@@ -33,12 +35,12 @@ namespace Dune {
      * \tparam B    linear algebra backend
      * \tparam nonoverlapping_mode switch to assemble for nonoverlapping grids
      */
-	template<typename T,
+	template<typename TReal,
              typename R,
              typename GFSU, 
              typename GFSV, 
              typename LA, 
-             typename LM
+             typename LM,
 			 typename CU=EmptyTransformation,
 			 typename CV=EmptyTransformation,
 			 typename B=StdVectorFlatMatrixBackend, 
@@ -59,24 +61,25 @@ namespace Dune {
       struct MatrixContainer
       {
         //! \brief define Type as the Type of a Matrix of E's
-        typedef typename B::template Matrix<GridOperatorSpace,E> Type;
+        typedef typename B::template Matrix<InstationaryGridOperatorSpace,E> Type;
       private:
         MatrixContainer () {}
       };
 
-      //! construct GridOperatorSpace
-	  InstationaryGridOperatorSpace (const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) 
-		: gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_)
+      //! construct 
+	  InstationaryGridOperatorSpace (const OneStepParameterInterface<TReal>& method_, 
+                                     const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) 
+		: method(&method_), gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_)
 	  {
 		pconstraintsu = &emptyconstraintsu;
 		pconstraintsv = &emptyconstraintsv;
 	  }
 
-      //! construct GridOperatorSpace, with constraints
-	  InstationaryGridOperatorSpace (const GFSU& gfsu_, const CU& cu,
-						 const GFSV& gfsv_, const CV& cv,
+      //! construct, with constraints
+	  InstationaryGridOperatorSpace (const OneStepParameterInterface<TReal>& method_, const GFSU& gfsu_, const CU& cu,
+                                     const GFSV& gfsv_, const CV& cv,
                                      LA& la_, LM& lm_) 
-		: gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_)
+		: method(&method_), gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_)
 	  {
 		pconstraintsu = &cu;
 		pconstraintsv = &cv;
@@ -220,9 +223,16 @@ namespace Dune {
       }
 
       //! parametrize assembler with a time-stepping method
-      void preStep (OneStepParameterInterface<T>& method_, T time_, T dt_)
+      void preStep (const OneStepParameterInterface<TReal>& method_, TReal time_, TReal dt_)
       {
-        method = *method_;
+        method = &method_;
+        time = time_;
+        dt = dt_;
+      }
+
+      //! parametrize assembler with a time-stepping method
+      void preStep (TReal time_, TReal dt_)
+      {
         time = time_;
         dt = dt_;
       }
@@ -250,14 +260,16 @@ namespace Dune {
 		LFSV lfsv(gfsv);
 
         // extract coefficients of time stepping scheme
-        std::vector<T> a(stage);
+        std::vector<TReal> a(stage);
         for (size_t i=0; i<stage; ++i) a[i] = method->a(stage,i);
-        std::vector<T> b(stage);
-        for (size_t i=0; i<stage; ++i) b[i] = method->a(stage,i);
-        std::vector<T> d(stage);
+        std::vector<TReal> b(stage);
+        for (size_t i=0; i<stage; ++i) b[i] = method->b(stage,i);
+        std::vector<TReal> d(stage);
         for (size_t i=0; i<stage; ++i) d[i] = method->d(i);
 
         bool needsSkeleton = LA::doAlphaSkeleton||LA::doAlphaBoundary||LA::doLambdaSkeleton||LA::doLambdaBoundary;
+
+        //std::cout << "preStage: stage " << stage << std::endl;
 
 		// traverse grid view
 		for (ElementIterator it = gfsu.gridview().template begin<0>();
@@ -288,6 +300,7 @@ namespace Dune {
                 la.setTime(time+d[i]*dt);
                 lm.setTime(time+d[i]*dt);
 
+
                 // allocate local data container
                 std::vector<typename X::ElementType> xl(lfsu.size());
                 std::vector<typename R::ElementType> rl_a(lfsv.size(),0.0);
@@ -297,6 +310,9 @@ namespace Dune {
                 lfsu.vread(*x[i],xl);
                 bool doM = a[i]>1E-6 || a[i]<-1E-6;
                 bool doA = b[i]>1E-6;
+
+                //std::cout << "R0 " << "stage=" << i << " time=" << time << " d_i*dt=" << d[i]*dt 
+                //          << " doM=" << doM << " doA=" << doA << " skel=" << needsSkeleton << std::endl;
 
                 // volume evaluation
                 if (doA)
@@ -353,7 +369,7 @@ namespace Dune {
                                 std::vector<typename R::ElementType> rn(lfsvn.size(),0.0);
                             
                                 // read coefficents
-                                lfsun.vread(x,xn);
+                                lfsun.vread(*x[i],xn);
                             
                                 // skeleton evaluation
                                 LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
@@ -389,11 +405,13 @@ namespace Dune {
                   }
                 if (doM)
                   {
-                    for (size_t k=0; k<rl_a.size(); ++k) rl_a[k] *= a[i]; 
+                    for (size_t k=0; k<rl_m.size(); ++k) rl_m[k] *= a[i]; 
                     lfsv.vadd(rl_m,r);
                   }
               }
           }
+
+        //Dune::printvector(std::cout,r.base(),"const residual","row",4,9,1);
       }
 
 	  //! generic evaluation of residual
@@ -403,6 +421,8 @@ namespace Dune {
 	  template<typename X> 
 	  void residual (const X& x, R& r) const
 	  {
+        //Dune::printvector(std::cout,x.base(),"x on entry to residual","row",4,9,1);
+
         // copy constant part of residual
         r = *r0; // assumes assignment operator on vectors.
 
@@ -419,8 +439,8 @@ namespace Dune {
 		LFSV lfsv(gfsv);
 
         // extract coefficients of time stepping scheme
-        T b_rr = method->b(stage,stage);
-        T d_r = method->d(stage);
+        TReal b_rr = method->b(stage,stage);
+        TReal d_r = method->d(stage);
         bool implicit = method->implicit();
 
         // set time in local operators for evaluation
@@ -467,6 +487,9 @@ namespace Dune {
               }
 			LocalAssemblerCallSwitch<LM,LM::doAlphaVolume>::
               alpha_volume(lm,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_m);
+
+            //std::cout << "residual " << "stage=" << stage << " time=" << time << " d_i*dt=" << d_r*dt 
+            //          << " b_rr=" << b_rr << " implicit=" << implicit << std::endl;
 
 			// skip if no intersection iterator is needed
  			if (implicit&&(LA::doAlphaSkeleton||LA::doAlphaBoundary||LA::doLambdaSkeleton||LA::doLambdaBoundary))
@@ -548,6 +571,8 @@ namespace Dune {
 
 		// set residual to zero on constrained dofs
 		Dune::PDELab::constrain_residual(*pconstraintsv,r);
+
+        //Dune::printvector(std::cout,r.base(),"residual","row",4,9,1);
 	  }
 
 
@@ -568,8 +593,8 @@ namespace Dune {
 		LFSV lfsv(gfsv);
 
         // extract coefficients of time stepping scheme
-        T b_rr = method->b(stage,stage);
-        T d_r = method->d(stage);
+        TReal b_rr = method->b(stage,stage);
+        TReal d_r = method->d(stage);
         bool implicit = method->implicit();
 
         // set time in local operators for evaluation
@@ -712,8 +737,8 @@ namespace Dune {
 		LFSV lfsv(gfsv);
 
         // extract coefficients of time stepping scheme
-        T b_rr = method->b(stage,stage);
-        T d_r = method->d(stage);
+        TReal b_rr = method->b(stage,stage);
+        TReal d_r = method->d(stage);
         bool implicit = method->implicit();
 
         // set time in local operators for evaluation
@@ -839,6 +864,8 @@ namespace Dune {
          typedef typename CV::const_iterator global_row_iterator;	  
          for (global_row_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit)
            set_trivial_row(cit->first,cit->second,a);
+
+         //printmatrix(std::cout,a.base(),"global stiffness matrix","row",9,1);
  	  }
 
       /** \brief Transforms a vector \f$ \boldsymbol{x} \f$ from \f$
@@ -1124,8 +1151,8 @@ namespace Dune {
 	  const CV* pconstraintsv;
 	  CU emptyconstraintsu;
 	  CV emptyconstraintsv;
-      OneStepParameterInterface<T> *method;
-      T time, dt;
+      const OneStepParameterInterface<TReal> *method;
+      TReal time, dt;
       int stage;
       R *r0;
 	};

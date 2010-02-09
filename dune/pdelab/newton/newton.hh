@@ -64,7 +64,7 @@ namespace Dune
 
         protected:
             GridOperator& gridoperator;
-            TrialVector& u;
+            TrialVector *u;
             Result res;
             unsigned int verbosity_level;
             RFType prev_defect;
@@ -73,7 +73,16 @@ namespace Dune
 
             NewtonBase(GridOperator& go, TrialVector& u_)
                 : gridoperator(go)
-                , u(u_)
+                , u(&u_)
+                , verbosity_level(1)
+            {
+                if (gridoperator.trialGridFunctionSpace().gridview().comm().rank()>0)
+                    verbosity_level = 0;
+            }
+
+            NewtonBase(GridOperator& go)
+                : gridoperator(go)
+                , u(0)
                 , verbosity_level(1)
             {
                 if (gridoperator.trialGridFunctionSpace().gridview().comm().rank()>0)
@@ -106,7 +115,15 @@ namespace Dune
                 , result_valid(false)
             {}
 
+            NewtonSolver(GridOperator& go, Solver& solver_)
+                : NewtonBase<GOS,TrlV,TstV>(go)
+                , solver(solver_)
+                , result_valid(false)
+            {}
+
             void apply();
+
+            void apply(TrialVector& u_);
 
             const Result& result() const
             {
@@ -120,7 +137,7 @@ namespace Dune
             virtual void defect(TestVector& r)
             {
                 r = 0.0;                                        // TODO: vector interface
-                this->gridoperator.residual(this->u, r);
+                this->gridoperator.residual(*this->u, r);
                 this->res.defect = this->solver.norm(r);                    // TODO: solver interface
                 if (!std::isfinite(this->res.defect))
                     DUNE_THROW(NewtonDefectError,
@@ -150,6 +167,13 @@ namespace Dune
             Solver& solver;
             bool result_valid;
         };
+
+        template<class GOS, class S, class TrlV, class TstV>
+        void NewtonSolver<GOS,S,TrlV,TstV>::apply(TrlV& u_)
+        {
+            this->u = &u_;
+            apply();
+        }
 
         template<class GOS, class S, class TrlV, class TstV>
         void NewtonSolver<GOS,S,TrlV,TstV>::apply()
@@ -261,6 +285,14 @@ namespace Dune
                 , abs_limit(1e-12)
             {}
 
+            NewtonTerminate(GridOperator& go)
+                : NewtonBase<GOS,TrlV,TstV>(go)
+                , reduction(1e-8)
+                , maxit(40)
+                , force_iteration(false)
+                , abs_limit(1e-12)
+            {}
+
             void setReduction(RFType reduction_)
             {
                 reduction = reduction_;
@@ -313,6 +345,12 @@ namespace Dune
                 , reassemble_threshold(0.0)
             {}
 
+            NewtonPrepareStep(GridOperator& go)
+                : NewtonBase<GOS,TrlV,TstV>(go)
+                , min_linear_reduction(1e-3)
+                , reassemble_threshold(0.0)
+            {}
+
             void setMinLinearReduction(RFType min_linear_reduction_)
             {
                 min_linear_reduction = min_linear_reduction_;
@@ -331,7 +369,7 @@ namespace Dune
                     if (this->verbosity_level >= 3)
                         std::cout << "      Reassembling matrix..." << std::endl;
                     A = 0.0;                                    // TODO: Matrix interface
-                    this->gridoperator.jacobian(this->u, A);
+                    this->gridoperator.jacobian(*this->u, A);
                     this->reassembled = true;
                 }
 
@@ -373,6 +411,13 @@ namespace Dune
                 , damping_factor(0.5)
             {}
 
+            NewtonLineSearch(GridOperator& go)
+                : NewtonBase<GOS,TrlV,TstV>(go)
+                , strategy(hackbuschReusken)
+                , maxit(10)
+                , damping_factor(0.5)
+            {}
+
             void setLineSearchStrategy(Strategy strategy_)
             {
                 strategy = strategy_;
@@ -392,7 +437,7 @@ namespace Dune
             {
                 if (strategy == noLineSearch)
                 {
-                    this->u.axpy(-1.0, z);                     // TODO: vector interface
+                    this->u->axpy(-1.0, z);                     // TODO: vector interface
                     this->defect(r);
                     return;
                 }
@@ -402,11 +447,11 @@ namespace Dune
                 RFType lambda = 1.0;
                 RFType best_lambda = 0.0;
                 RFType best_defect = this->res.defect;
-                TrialVector prev_u(this->u);  // TODO: vector interface
+                TrialVector prev_u(*this->u);  // TODO: vector interface
                 unsigned int i = 0;
                 while (1)
                 {
-                    this->u.axpy(-lambda, z);                  // TODO: vector interface
+                    this->u->axpy(-lambda, z);                  // TODO: vector interface
                     try { 
                         this->defect(r); 
                     }
@@ -426,7 +471,7 @@ namespace Dune
                         switch (strategy)
                         {
                         case hackbuschReusken:
-                            this->u = prev_u;
+                            *this->u = prev_u;
                             this->defect(r);
                             DUNE_THROW(NewtonLineSearchError,
                                        "NewtonLineSearch::line_search(): line search failed, "
@@ -435,7 +480,7 @@ namespace Dune
                         case hackbuschReuskenAcceptBest:
                             if (best_lambda == 0.0)
                             {
-                                this->u = prev_u;
+                                *this->u = prev_u;
                                 this->defect(r);
                                 DUNE_THROW(NewtonLineSearchError,
                                            "NewtonLineSearch::line_search(): line search failed, "
@@ -444,8 +489,8 @@ namespace Dune
                             }
                             if (best_lambda != lambda)
                             {
-                                this->u = prev_u;
-                                this->u.axpy(-best_lambda, z);
+                                *this->u = prev_u;
+                                this->u->axpy(-best_lambda, z);
                                 this->defect(r);
                             }
                             break;
@@ -456,7 +501,7 @@ namespace Dune
                     }
 
                     lambda *= damping_factor;
-                    this->u = prev_u;                          // TODO: vector interface
+                    *this->u = prev_u;                          // TODO: vector interface
                 }
                 if (this->verbosity_level >= 4)
                     std::cout << "          line search damping factor:   "
@@ -487,6 +532,13 @@ namespace Dune
                 , NewtonTerminate<GOS,TrlV,TstV>(go,u_)
                 , NewtonLineSearch<GOS,TrlV,TstV>(go,u_)
                 , NewtonPrepareStep<GOS,TrlV,TstV>(go,u_)
+            {}
+            Newton(GridOperator& go, Solver& solver_)
+                : NewtonBase<GOS,TrlV,TstV>(go)
+                , NewtonSolver<GOS,S,TrlV,TstV>(go,solver_)
+                , NewtonTerminate<GOS,TrlV,TstV>(go)
+                , NewtonLineSearch<GOS,TrlV,TstV>(go)
+                , NewtonPrepareStep<GOS,TrlV,TstV>(go)
             {}
         };
     }

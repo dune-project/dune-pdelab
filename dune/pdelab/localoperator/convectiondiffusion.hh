@@ -234,7 +234,8 @@ namespace Dune {
       public NumericalJacobianVolume<ConvectionDiffusion<T> >,
       public NumericalJacobianBoundary<ConvectionDiffusion<T> >,
       public FullVolumePattern,
-      public LocalOperatorDefaultFlags
+      public LocalOperatorDefaultFlags,
+      public InstationaryLocalOperatorDefaultMethods<double>
 	{
 	public:
       // pattern assembly flags

@@ -1,6 +1,11 @@
 #ifndef DUNE_PDELAB_ONESTEP_HH
 #define DUNE_PDELAB_ONESTEP_HH
 
+#include <iostream>
+#include <iomanip>
+
+#include <stdio.h>
+
 #include<dune/common/fvector.hh>
 #include<dune/common/fmatrix.hh>
 
@@ -408,6 +413,140 @@ namespace Dune {
       Dune::FieldVector<R,4> D;
       Dune::FieldMatrix<R,3,4> A;
       Dune::FieldMatrix<R,3,4> B;
+    };
+
+    //! Do one step of a time-stepping scheme
+    /**
+     * \tparam T          type to represent time values
+     * \tparam IGOS       assembler for instationary problems
+     * \tparam PDESOLVER  solver problem in each step (typically Newton)
+     * \tparam TrlV       vector type to represent coefficients of solutions
+     * \tparam TstV       vector type to represent residuals
+     */
+    template<class T, class IGOS, class PDESOLVER, class TrlV, class TstV = TrlV>
+    class OneStepMethod
+    {
+    public:
+      //! construct a new one step scheme
+      OneStepMethod(const OneStepParameterInterface<T>& method_, IGOS& igos_, PDESOLVER& pdesolver_)
+	: method(&method_), igos(igos_), pdesolver(pdesolver_), verbosityLevel(1), step(1)
+      {
+      }
+
+      //! change verbosity level; 0 means completely quiet
+      void setVerbosityLevel (int level)
+      {
+	verbosityLevel = level;
+      }
+
+      //! redefine the method to be used; can be done before every step
+      void setMethod (const OneStepParameterInterface<T>& method_)
+      {
+	method = &method;
+      }
+
+      //! do one step;
+      /*
+       * \param[in]  xold value at begin of time step
+       * \param[out] xnew value at end of time step; contains initial guess for first substep on entry
+       */
+      void apply (T time, T dt, TrlV& xold, TrlV& xnew)
+      {
+	std::vector<TrlV*> x(1); // vector of pointers to all steps
+	x[0] = &xold;            // initially we have only one
+	TstV residual0(igos.testGridFunctionSpace()); // stores constant part of residual
+
+	if (verbosityLevel>=1)
+	  std::cout << "TIME STEP " << std::setw(6) << step
+		    << " time (from): "
+		    << std::setw(12) << std::setprecision(4) << std::scientific
+		    << time
+		    << " dt: "
+		    << std::setw(12) << std::setprecision(4) << std::scientific
+		    << dt
+		    << " time (to): "
+		    << std::setw(12) << std::setprecision(4) << std::scientific
+		    << time+dt
+		    << std::endl;
+
+	// prepare assembler
+	igos.preStep(*method,time,dt);
+
+	// loop over all stages
+	for (int r=1; r<=method->s(); ++r)
+	  {
+	    if (verbosityLevel>=2)
+	      std::cout << "STAGE " << r << std::endl;
+	      
+	    // prepare stage
+	    residual0 = 0.0;
+	    igos.preStage(r,x,residual0);
+
+	    // get vector for current stage
+	    if (r==method->s())
+	      {
+		// last stage
+		x.push_back(&xnew);
+		if (r>1) xnew = *(x[r-1]); // if r=1 then xnew has already initial guess
+	      }
+	    else
+	      {
+		// intermediate step
+		x.push_back(new TrlV(igos.trialGridFunctionSpace()));
+		if (r>1)
+		  *(x[r]) = *(x[r-1]); // use result of last stage as initial guess
+		else
+		  *(x[r]) = xnew;
+	      }
+
+	    // solve stage
+	    pdesolver.apply(*x[r]);
+	  }
+
+	// delete intermediate steps
+	for (int i=1; i<method->s(); ++i) delete x[i];
+
+	step++;
+      }
+
+    private:
+      const OneStepParameterInterface<T> *method;
+      IGOS& igos;
+      PDESOLVER pdesolver;
+      int verbosityLevel;
+      int step;
+    };
+
+    class FilenameHelper 
+    {
+    public:
+      FilenameHelper(const char *basename_, int i_=0)
+	: i(i_)
+      {
+	sprintf(basename,"%s",basename_);
+      }
+
+      const char *getName (int i_)
+      {
+	sprintf(fname,"%s-%05d",basename,i_);
+	return fname;
+      }
+
+      const char *getName ()
+      {
+	sprintf(fname,"%s-%05d",basename,i);
+	return fname;
+      }
+
+      void increment ()
+      {
+	i++;
+      }
+
+    private:
+      char fname[255];
+      char basename[255];
+      int i;
     };
 
   } // namespace PDELab
