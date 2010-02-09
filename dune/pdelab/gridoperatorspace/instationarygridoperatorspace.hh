@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_ONESTEPGRIDOPERATORSPACE_HH
-#define DUNE_PDELAB_ONESTEPGRIDOPERATORSPACE_HH
+#ifndef DUNE_PDELAB_INSTATIONARYGRIDOPERATORSPACE_HH
+#define DUNE_PDELAB_INSTATIONARYGRIDOPERATORSPACE_HH
 
 #include<map>
 
@@ -20,7 +20,7 @@ namespace Dune {
 	//================================================
 	// The operator
 	//================================================
-	//! The generic assembler ...
+	//! The generic assembler for time-dependent problems
     /**
      * \tparam T type to represent time values (and coefficients of time-stepping schemes)
      * \tparam R type that stores a residual vector
@@ -43,7 +43,7 @@ namespace Dune {
 			 typename CV=EmptyTransformation,
 			 typename B=StdVectorFlatMatrixBackend, 
              bool nonoverlapping_mode=false>
-	class OneStepGridOperatorSpace 
+	class InstationaryGridOperatorSpace 
 	{
 	  // extract useful types
 	  typedef typename GFSU::Traits::GridViewType GV;
@@ -65,7 +65,7 @@ namespace Dune {
       };
 
       //! construct GridOperatorSpace
-	  OneStepGridOperatorSpace (const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) 
+	  InstationaryGridOperatorSpace (const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) 
 		: gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_)
 	  {
 		pconstraintsu = &emptyconstraintsu;
@@ -73,7 +73,7 @@ namespace Dune {
 	  }
 
       //! construct GridOperatorSpace, with constraints
-	  OneStepGridOperatorSpace (const GFSU& gfsu_, const CU& cu,
+	  InstationaryGridOperatorSpace (const GFSU& gfsu_, const CU& cu,
 						 const GFSV& gfsv_, const CV& cv,
                                      LA& la_, LM& lm_) 
 		: gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_)
@@ -227,7 +227,7 @@ namespace Dune {
         dt = dt_;
       }
 
-      //! set stage number to do next; assemble constant part of residual
+      //! set stage number to do next; assemble constant part of residual; r is empty on entry
 	  template<typename X> 
       void preStage (int stage_, std::vector<X*> x, R& r)
       {
@@ -256,13 +256,8 @@ namespace Dune {
         for (size_t i=0; i<stage; ++i) b[i] = method->a(stage,i);
         std::vector<T> d(stage);
         for (size_t i=0; i<stage; ++i) d[i] = method->d(i);
-        bool implicit = method->implicit();
 
-
-        ///////////
-        // continue HERE !
-        process stages 0,...,stage-1 on each element
-        ///////////
+        bool needsSkeleton = LA::doAlphaSkeleton||LA::doAlphaBoundary||LA::doLambdaSkeleton||LA::doLambdaBoundary;
 
 		// traverse grid view
 		for (ElementIterator it = gfsu.gridview().template begin<0>();
@@ -286,105 +281,119 @@ namespace Dune {
 			lfsu.bind(*it);
 			lfsv.bind(*it);
 
-			// allocate local data container
-			std::vector<typename X::ElementType> xl(lfsu.size());
-			std::vector<typename R::ElementType> rl_a(lfsv.size(),0.0);
-			std::vector<typename R::ElementType> rl_m(lfsv.size(),0.0);
-
-			// read coefficents
-			lfsu.vread(x,xl);
-
-			// volume evaluation
-            if (implicit)
+            // loop over all previous time steps
+            for (int i=0; i<stage; ++i)
               {
-                LocalAssemblerCallSwitch<LA,LA::doAlphaVolume>::
-                  alpha_volume(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_a);
-                LocalAssemblerCallSwitch<LA,LA::doLambdaVolume>::
-                  lambda_volume(la,ElementGeometry<Element>(*it),lfsv,rl_a);
-              }
-			LocalAssemblerCallSwitch<LM,LM::doAlphaVolume>::
-              alpha_volume(lm,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_m);
+                // set time in local operators for evaluation
+                la.setTime(time+d[i]*dt);
+                lm.setTime(time+d[i]*dt);
 
-			// skip if no intersection iterator is needed
- 			if (implicit&&(LA::doAlphaSkeleton||LA::doAlphaBoundary||LA::doLambdaSkeleton||LA::doLambdaBoundary))
-              {
-                // local function spaces in neighbor
-                LFSU lfsun(gfsu);
-                LFSV lfsvn(gfsv);
+                // allocate local data container
+                std::vector<typename X::ElementType> xl(lfsu.size());
+                std::vector<typename R::ElementType> rl_a(lfsv.size(),0.0);
+                std::vector<typename R::ElementType> rl_m(lfsv.size(),0.0);
 
-                // traverse intersections
-                unsigned int intersection_index = 0;
-                IntersectionIterator endit = gfsu.gridview().iend(*it);
-                for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
-                     iit!=endit; ++iit, ++intersection_index)
+                // read coefficents
+                lfsu.vread(*x[i],xl);
+                bool doM = a[i]>1E-6 || a[i]<-1E-6;
+                bool doA = b[i]>1E-6;
+
+                // volume evaluation
+                if (doA)
                   {
-                    // skeleton term
-                    if (iit->neighbor() && (LA::doAlphaSkeleton||LA::doLambdaSkeleton) )
+                    LocalAssemblerCallSwitch<LA,LA::doAlphaVolume>::
+                      alpha_volume(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_a);
+                    LocalAssemblerCallSwitch<LA,LA::doLambdaVolume>::
+                      lambda_volume(la,ElementGeometry<Element>(*it),lfsv,rl_a);
+                  }
+                if (doM)
+                  {
+                    LocalAssemblerCallSwitch<LM,LM::doAlphaVolume>::
+                      alpha_volume(lm,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_m);
+                  }
+
+                // skip if no intersection iterator is needed
+                // note: LM has no skeleton and boundary terms !
+                if (doA && needsSkeleton)
+                  {
+                    // local function spaces in neighbor
+                    LFSU lfsun(gfsu);
+                    LFSV lfsvn(gfsv);
+
+                    // traverse intersections
+                    unsigned int intersection_index = 0;
+                    IntersectionIterator endit = gfsu.gridview().iend(*it);
+                    for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
+                         iit!=endit; ++iit, ++intersection_index)
                       {
-                        // assign offset for geometry type;
-                        Dune::GeometryType gtn = iit->outside()->type();
-                        if (gtoffset.find(gtn)==gtoffset.end())
+                        // skeleton term
+                        if (iit->neighbor() && (LA::doAlphaSkeleton||LA::doLambdaSkeleton) )
                           {
-                            gtoffset[gtn] = offset;
-                            offset += chunk;
-                          }
+                            // assign offset for geometry type;
+                            Dune::GeometryType gtn = iit->outside()->type();
+                            if (gtoffset.find(gtn)==gtoffset.end())
+                              {
+                                gtoffset[gtn] = offset;
+                                offset += chunk;
+                              }
                         
-                        // compute unique id for neighbor
-                        int idn = is.index(*(iit->outside()))+gtoffset[gtn];
+                            // compute unique id for neighbor
+                            int idn = is.index(*(iit->outside()))+gtoffset[gtn];
                           
-                        // unique vist of intersection
-                        if (LA::doSkeletonTwoSided || id>idn || 
-                            (nonoverlapping_mode && (iit->inside())->partitionType()!=Dune::InteriorEntity) )
-                          {
-                            // bind local function spaces to neighbor element
-                            lfsun.bind(*(iit->outside()));
-                            lfsvn.bind(*(iit->outside()));
+                            // unique vist of intersection
+                            if (LA::doSkeletonTwoSided || id>idn || 
+                                (nonoverlapping_mode && (iit->inside())->partitionType()!=Dune::InteriorEntity) )
+                              {
+                                // bind local function spaces to neighbor element
+                                lfsun.bind(*(iit->outside()));
+                                lfsvn.bind(*(iit->outside()));
                             
-                            // allocate local data container
-                            std::vector<typename X::ElementType> xn(lfsun.size());
-                            std::vector<typename R::ElementType> rn(lfsvn.size(),0.0);
+                                // allocate local data container
+                                std::vector<typename X::ElementType> xn(lfsun.size());
+                                std::vector<typename R::ElementType> rn(lfsvn.size(),0.0);
                             
-                            // read coefficents
-                            lfsun.vread(x,xn);
+                                // read coefficents
+                                lfsun.vread(x,xn);
                             
-                            // skeleton evaluation
-                            LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
-                              alpha_skeleton(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,lfsun,xn,lfsvn,rl_a,rn);
+                                // skeleton evaluation
+                                LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
+                                  alpha_skeleton(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,lfsun,xn,lfsvn,rl_a,rn);
                             
-                            // accumulate result (note: r needs to be cleared outside)
-                            for (size_t i=0; i<rn.size(); ++i) rn[i] *= b_rr*dt;
-                            lfsvn.vadd(rn,r);
+                                // accumulate result (note: r needs to be cleared outside)
+                                for (size_t k=0; k<rn.size(); ++k) rn[k] *= b[i]*dt;
+                                lfsvn.vadd(rn,r);
+                              }
                           }
-                      }
                
-                    // boundary term
-                    if (iit->boundary())
-                      {
-                        LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
-                          alpha_boundary(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,rl_a);
-                        LocalAssemblerCallSwitch<LA,LA::doLambdaBoundary>::
-                          lambda_boundary(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsv,rl_a);
+                        // boundary term
+                        if (iit->boundary())
+                          {
+                            LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
+                              alpha_boundary(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,rl_a);
+                            LocalAssemblerCallSwitch<LA,LA::doLambdaBoundary>::
+                              lambda_boundary(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsv,rl_a);
+                          }
                       }
                   }
+
+                if (doA)
+                  {
+                    LocalAssemblerCallSwitch<LA,LA::doAlphaVolumePostSkeleton>::
+                      alpha_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_a);
+                    LocalAssemblerCallSwitch<LA,LA::doLambdaVolumePostSkeleton>::
+                      lambda_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsv,rl_a);
+                    
+                    // accumulate result (note: r needs to be cleared outside)
+                    for (size_t k=0; k<rl_a.size(); ++k) rl_a[k] *= b[i]*dt; 
+                    lfsv.vadd(rl_a,r);
+                  }
+                if (doM)
+                  {
+                    for (size_t k=0; k<rl_a.size(); ++k) rl_a[k] *= a[i]; 
+                    lfsv.vadd(rl_m,r);
+                  }
               }
-
-            if (implicit)
-              {
-                LocalAssemblerCallSwitch<LA,LA::doAlphaVolumePostSkeleton>::
-                  alpha_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_a);
-                LocalAssemblerCallSwitch<LA,LA::doLambdaVolumePostSkeleton>::
-                  lambda_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsv,rl_a);
-
-                // accumulate result (note: r needs to be cleared outside)
-                for (size_t i=0; i<rl_a.size(); ++i) rl_a[i] *= b_rr*dt; 
-                lfsv.vadd(rl_a,r);
-              }
- 
-			lfsv.vadd(rl_m,r); // scheme is normalized !
-		  }
-
-		// set residual to zero on constrained dofs
-		Dune::PDELab::constrain_residual(*pconstraintsv,r);
+          }
       }
 
 	  //! generic evaluation of residual
