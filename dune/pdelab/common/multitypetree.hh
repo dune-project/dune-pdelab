@@ -16,7 +16,39 @@ namespace Dune {
      *  \{
      *
      *  A \ref MultiTypeTree is used to collect different types or multiple
-     *  copies of the same time in a tree structure.
+     *  copies of the same type in a tree structure.  This is an invasive
+     *  procedure: Types in the tree must be classes or structs derived from
+     *  certain base classes, depending on the type of node they represent.
+     *
+     *  There a three node types:
+     *  \li LeafNode is the base class for nodes at the tree's leaf, which do
+     *      not have any children.
+     *  \li PowerNode is the base class for nodes where all children are of
+     *      the same type.
+     *  \li CompositeNode is the base class for nodes where the children have
+     *      possibly different types.
+     *
+     *  Because the way the tree is build up from subtrees, child nodes have
+     *  no information about their parents.  In fact, as far as the type
+     *  system is concerned, a particular node can be a child of multiple
+     *  other nodes, or can even be a child of the same node multiple times
+     *  (this is the case with the PowerNode).  If needed, this kind of
+     *  functionality can be provided on top of the MultiTypeTree, for
+     *  instance the GridFunctionSubSpace does something like that.
+     *
+     *  The MultiTypeTree is more than a simple tree of C++ types -- it can
+     *  also store data.  Each non-leaf node can store objects of the types of
+     *  its child classes.  How exactly this storing is done is determined by
+     *  a StoragePolicy.  For instance, the CopyStoragePolicy stores a copy of
+     *  each child object.  The CountingPointerStoragePolicy stores a pointer
+     *  to each child object -- multiple child pointers can point to the same
+     *  object, saving space.
+     *
+     *  For storing data the stored child types must be copy-constructible.
+     *  The StoragePolicy may add other requirements: CopyStoragePolicy
+     *  requires that the children are assignable,
+     *  CountingPointerStoragePolicy requires that the children are derived
+     *  from Countable.
      */
 
 	//==========================
