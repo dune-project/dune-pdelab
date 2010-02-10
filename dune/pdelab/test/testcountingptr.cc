@@ -18,6 +18,10 @@ public:
   {
 	std::cout << "object of class A" << std::endl;
   }
+  void hello ()
+  {
+    std::cout << "object of const class A" << std::endl;
+  }
 };
 
 int main(int argc, char** argv)
@@ -31,6 +35,8 @@ int main(int argc, char** argv)
 	std::cout << "reference count is " << a.get_reference_counter() << std::endl;
 	if (a.get_reference_counter()!=0)
 	  return 1;
+
+    // mutable stuff
 
 	// make first pointer
 	Dune::PDELab::CP<A> cp1(&a);
@@ -50,6 +56,53 @@ int main(int argc, char** argv)
 	std::cout << "reference count is " << a.get_reference_counter() << std::endl;
 	if (a.get_reference_counter()!=1)
 	  return 4;
+
+    // assign mutable pointer from mutable pointer
+    cp1 = cp2;
+    std::cout << "reference count is " << a.get_reference_counter()
+              << std::endl;
+    if (a.get_reference_counter()!=2)
+      return 4;
+
+    // const stuff
+
+    // make pointer to const from mutable object
+    Dune::PDELab::CP<const A> ccp1(&a);
+    std::cout << "reference count is " << a.get_reference_counter()
+              << std::endl;
+    if (a.get_reference_counter()!=3)
+      return 5;
+
+    const A ca;
+
+    // make pointer to const from const object
+    Dune::PDELab::CP<const A> ccp2(&ca);
+    std::cout << "reference count is " << ca.get_reference_counter()
+              << std::endl;
+    if (ca.get_reference_counter()!=1)
+      return 6;
+
+    // assign a const pointer from a const pointer
+    ccp1 = ccp2;
+    std::cout << "reference count is " << a.get_reference_counter()
+              << std::endl;
+    if (a.get_reference_counter()!=2)
+      return 7;
+    std::cout << "reference count is " << ca.get_reference_counter()
+              << std::endl;
+    if (ca.get_reference_counter()!=2)
+      return 8;
+
+    // assign a const pointer from a mutable pointer
+    ccp1 = cp2;
+    std::cout << "reference count is " << a.get_reference_counter()
+              << std::endl;
+    if (a.get_reference_counter()!=3)
+      return 9;
+    std::cout << "reference count is " << ca.get_reference_counter()
+              << std::endl;
+    if (ca.get_reference_counter()!=1)
+      return 10;
 
 	// test passed
 	return 0;

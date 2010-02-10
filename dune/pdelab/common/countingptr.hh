@@ -98,6 +98,11 @@ namespace Dune {
 		  p->reference_counter_increment();
 	  }
 
+      //! Conversion to CP<const T>
+      operator CP<const T>() const {
+        return CP<const T>(p);
+      }
+
       //! Destructor
 	  ~CP ()
 	  {
