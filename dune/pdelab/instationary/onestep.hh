@@ -446,7 +446,7 @@ namespace Dune {
       //! redefine the method to be used; can be done before every step
       void setMethod (const OneStepParameterInterface<T>& method_)
       {
-	method = &method;
+        method = &method_;
       }
 
       //! do one step;
