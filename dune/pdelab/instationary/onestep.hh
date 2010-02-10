@@ -450,6 +450,10 @@ namespace Dune {
       Dune::FieldMatrix<R,3,4> B;
     };
 
+    //! Parameters specifying the Alexander3 scheme
+    /**
+     * \tparam R C++ type of the floating point parameters
+     */
     template<class R> 
     class Alexander3Parameter : public OneStepParameterInterface<R>
     {
@@ -499,7 +503,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the A matrix
-	Note that r \in 1,...,s and i \in 0,...,r
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R a (int r, int i) const
       {
@@ -507,7 +511,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the B matrix
-	Note that r \in 1,...,s and i \in 0,...,r
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R b (int r, int i) const
       {
@@ -515,7 +519,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the d Vector
-	i runs from 0,...,s
+        \note that i ∈ 0,...,s
       */
       virtual R d (int i) const
       {
@@ -542,6 +546,16 @@ namespace Dune {
     {
     public:
       //! construct a new one step scheme
+      /**
+       * \param method_    Parameter object.
+       * \param igos_      Assembler object (instationary grid operator space).
+       * \param pdesolver_ solver object (typically Newton).
+       *
+       * The contructed method object stores references to the object it is
+       * constructed with, so these objects should be valid for as long as the
+       * constructed object is used (or until setMethod() is called, see
+       * there).
+       */
       OneStepMethod(const OneStepParameterInterface<T>& method_, IGOS& igos_, PDESOLVER& pdesolver_)
 	: method(&method_), igos(igos_), pdesolver(pdesolver_), verbosityLevel(1), step(1)
       {
@@ -554,6 +568,13 @@ namespace Dune {
       }
 
       //! redefine the method to be used; can be done before every step
+      /**
+       * \param method_ Parameter object.
+       *
+       * The OneStepMethod object stores a reference to the method_ object.
+       * The old method object is no longer referenced after this member
+       * function returns.
+       */
       void setMethod (const OneStepParameterInterface<T>& method_)
       {
         method = &method_;
