@@ -58,6 +58,15 @@ int main(int argc, char** argv)
    	if (tree.getChild<1>().number()!=17)
 	  return 1;
 
+    // power node with const members
+    Dune::PDELab::PowerNode<const A,2,
+      Dune::PDELab::CountingPointerStoragePolicy> ctree(a,a);
+    std::cout << "made power node with 2 const children" << std::endl;
+    if (ctree.getChild<0>().number()!=17)
+      return 1;
+    if (ctree.getChild<1>().number()!=17)
+      return 1;
+
 	// composite node 
 	Dune::PDELab::CompositeNode<Dune::PDELab::CountingPointerStoragePolicy,
 	  A,B,A,B,A,B,A,B,A> composite(a,b,a,b,a,b,a,b,a);
@@ -91,7 +100,7 @@ int main(int argc, char** argv)
 	Dune::PDELab::CompositeNode<Dune::PDELab::CountingPointerStoragePolicy,
 	  A,B,A,B,A,B,A,B,A> composite9(a,b,a,b,a,b,a,b,a);
   	std::cout << "made composite node with 9 children" << std::endl;
-	if (a.get_reference_counter()!=31)
+    if (a.get_reference_counter()!=33)
 	  return 5;
 
 	// test passed

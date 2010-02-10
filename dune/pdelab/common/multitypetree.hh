@@ -7,6 +7,7 @@
 #include <sstream>
 
 #include <dune/common/tuples.hh>
+#include <dune/common/typetraits.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -189,8 +190,9 @@ namespace Dune {
 		P::set(c[i],t);
 	  }
 
-	  template<int i>
-	  void setChild (const T& t)
+      template<int i, typename U = T>
+      typename enable_if<!IsConst<U>::value>::type
+      setChild (const T& t)
 	  {
 		P::set(c[i],t);
 	  }
@@ -210,7 +212,9 @@ namespace Dune {
 		P::set(c[i],t);
 	  }
 
-	  void setChild (int i, const T& t)
+      template<typename U = T>
+      typename enable_if<!IsConst<U>::value>::type
+      setChild (int i, const T& t)
 	  {
 		P::set(c[i],t);
 	  }
@@ -242,7 +246,8 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
-	  PowerNode (const T& t)
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t)
 	  {
 		for (int i=0; i<k; i++)
 		  P::set(this->c[i],t);
@@ -291,7 +296,8 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
-	  PowerNode (const T& t)
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t)
 	  {
 		for (int i=0; i<2; i++)
 		  P::set(this->c[i],t);
@@ -303,7 +309,9 @@ namespace Dune {
 		P::set(this->c[1],t1);
 	  }
 
-	  PowerNode (const T& t0, const T& t1)
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t0,
+                 const T& t1)
 	  {
 		P::set(this->c[0],t0);
 		P::set(this->c[1],t1);
@@ -323,7 +331,8 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
-	  PowerNode (const T& t)
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t)
 	  {
 		for (int i=0; i<3; i++)
 		  P::set(this->c[i],t);
@@ -336,7 +345,9 @@ namespace Dune {
 		P::set(this->c[2],t2);
 	  }
 
-	  PowerNode (const T& t0, const T& t1, const T& t2)
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t0,
+                 const T& t1, const T& t2)
 	  {
 		P::set(this->c[0],t0);
 		P::set(this->c[1],t1);
@@ -357,7 +368,8 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
-	  PowerNode (const T& t)
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t)
 	  {
 		for (int i=0; i<4; i++)
 		  P::set(this->c[i],t);
@@ -371,7 +383,9 @@ namespace Dune {
 		P::set(this->c[3],t3);
 	  }
 
-	  PowerNode (const T& t0, const T& t1, const T& t2, const T& t3)
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t0,
+                 const T& t1, const T& t2, const T& t3)
 	  {
 		P::set(this->c[0],t0);
 		P::set(this->c[1],t1);
@@ -393,7 +407,8 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
-	  PowerNode (const T& t)
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t)
 	  {
 		for (int i=0; i<5; i++)
 		  P::set(this->c[i],t);
@@ -408,7 +423,9 @@ namespace Dune {
 		P::set(this->c[4],t4);
 	  }
 
-	  PowerNode (const T& t0, const T& t1, const T& t2, const T& t3, const T& t4)
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t0,
+                 const T& t1, const T& t2, const T& t3, const T& t4)
 	  {
 		P::set(this->c[0],t0);
 		P::set(this->c[1],t1);
@@ -431,7 +448,8 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
-	  PowerNode (const T& t)
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t)
 	  {
 		for (int i=0; i<6; i++)
 		  P::set(this->c[i],t);
@@ -447,7 +465,10 @@ namespace Dune {
 		P::set(this->c[5],t5);
 	  }
 
-	  PowerNode (const T& t0, const T& t1, const T& t2, const T& t3, const T& t4, const T& t5)
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t0,
+                 const T& t1, const T& t2, const T& t3, const T& t4,
+                 const T& t5)
 	  {
 		P::set(this->c[0],t0);
 		P::set(this->c[1],t1);
@@ -471,7 +492,8 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
-	  PowerNode (const T& t)
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t)
 	  {
 		for (int i=0; i<7; i++)
 		  P::set(this->c[i],t);
@@ -488,7 +510,9 @@ namespace Dune {
 		P::set(this->c[6],t6);
 	  }
 
-	  PowerNode (const T& t0, const T& t1, const T& t2, const T& t3, const T& t4, 
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t0,
+                 const T& t1, const T& t2, const T& t3, const T& t4,
                  const T& t5, const T& t6)
 	  {
 		P::set(this->c[0],t0);
@@ -514,7 +538,8 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
-	  PowerNode (const T& t)
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t)
 	  {
 		for (int i=0; i<8; i++)
 		  P::set(this->c[i],t);
@@ -532,7 +557,9 @@ namespace Dune {
 		P::set(this->c[7],t7);
 	  }
 
-	  PowerNode (const T& t0, const T& t1, const T& t2, const T& t3, const T& t4, 
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t0,
+                 const T& t1, const T& t2, const T& t3, const T& t4,
                  const T& t5, const T& t6, const T& t7)
 	  {
 		P::set(this->c[0],t0);
@@ -559,7 +586,8 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
-	  PowerNode (const T& t)
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t)
 	  {
 		for (int i=0; i<9; i++)
 		  P::set(this->c[i],t);
@@ -578,7 +606,9 @@ namespace Dune {
 		P::set(this->c[8],t8);
 	  }
 
-	  PowerNode (const T& t0, const T& t1, const T& t2, const T& t3, const T& t4, 
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t0,
+                 const T& t1, const T& t2, const T& t3, const T& t4,
                  const T& t5, const T& t6, const T& t7, const T& t8)
 	  {
 		P::set(this->c[0],t0);
@@ -606,7 +636,8 @@ namespace Dune {
 		  P::set(this->c[i],t);
 	  }
 
-	  PowerNode (const T& t)
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t)
 	  {
 		for (int i=0; i<10; i++)
 		  P::set(this->c[i],t);
@@ -626,7 +657,9 @@ namespace Dune {
 		P::set(this->c[9],t9);
 	  }
 
-	  PowerNode (const T& t0, const T& t1, const T& t2, const T& t3, const T& t4, 
+      template<typename U = T>
+      PowerNode (typename enable_if<!IsConst<U>::value, const T>::type& t0,
+                 const T& t1, const T& t2, const T& t3, const T& t4,
                  const T& t5, const T& t6, const T& t7, const T& t8, const T& t9)
 	  {
 		P::set(this->c[0],t0);
