@@ -103,6 +103,47 @@ int main(int argc, char** argv)
     if (a.get_reference_counter()!=33)
 	  return 5;
 
+    // composite node (const members)
+    Dune::PDELab::CompositeNode<Dune::PDELab::CountingPointerStoragePolicy,
+      const A,const B,const A,const B,const A,const B,const A,const B,const A>
+      const_composite(a,b,a,b,a,b,a,b,a);
+    std::cout << "made composite node with 9 const children" << std::endl;
+    if (const_composite.getChild<0>().number()!=17)
+      return 3;
+    if (const_composite.getChild<1>().number()!=33)
+      return 4;
+
+    Dune::PDELab::CompositeNode<Dune::PDELab::CountingPointerStoragePolicy,
+      const A,const B> const_composite2(a,b);
+    std::cout << "made composite node with 2 const children" << std::endl;
+    Dune::PDELab::CompositeNode<Dune::PDELab::CountingPointerStoragePolicy,
+      const A,const B,const A> const_composite3(a,b,a);
+    std::cout << "made composite node with 3 const children" << std::endl;
+    Dune::PDELab::CompositeNode<Dune::PDELab::CountingPointerStoragePolicy,
+      const A,const B,const A,const B> const_composite4(a,b,a,b);
+    std::cout << "made composite node with 4 const children" << std::endl;
+    Dune::PDELab::CompositeNode<Dune::PDELab::CountingPointerStoragePolicy,
+      const A,const B,const A,const B,const A> const_composite5(a,b,a,b,a);
+    std::cout << "made composite node with 5 const children" << std::endl;
+    Dune::PDELab::CompositeNode<Dune::PDELab::CountingPointerStoragePolicy,
+      const A,const B,const A,const B,const A,const B>
+      const_composite6(a,b,a,b,a,b);
+    std::cout << "made composite node with 6 const children" << std::endl;
+    Dune::PDELab::CompositeNode<Dune::PDELab::CountingPointerStoragePolicy,
+      const A,const B,const A,const B,const A,const B,const A>
+      const_composite7(a,b,a,b,a,b,a);
+    std::cout << "made composite node with 7 const children" << std::endl;
+    Dune::PDELab::CompositeNode<Dune::PDELab::CountingPointerStoragePolicy,
+      const A,const B,const A,const B,const A,const B,const A,const B>
+      const_composite8(a,b,a,b,a,b,a,b);
+    std::cout << "made composite node with 8 const children" << std::endl;
+    Dune::PDELab::CompositeNode<Dune::PDELab::CountingPointerStoragePolicy,
+      const A,const B,const A,const B,const A,const B,const A,const B,const A>
+      const_composite9(a,b,a,b,a,b,a,b,a);
+    std::cout << "made composite node with 9 const children" << std::endl;
+    if (a.get_reference_counter()!=62)
+      return 6;
+
 	// test passed
 	return 0;
   }
