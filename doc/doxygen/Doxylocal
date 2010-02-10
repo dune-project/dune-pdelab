@@ -1,0 +1,4 @@
+INPUT   += @srcdir@/mainpage \
+           @srcdir@/modules \
+           @top_srcdir@/dune
+EXCLUDE += @top_srcdir@/dune/pdelab/test

@@ -5,7 +5,6 @@ BASEDIR=../..
 CURDIR=doc/doxygen
 WHAT=
 
-doxygendir = $(datadir)/doc/dune-pdelab/doxygen
 doxygen_DATA = $(WHAT)
 
 #we need this in the distribution
