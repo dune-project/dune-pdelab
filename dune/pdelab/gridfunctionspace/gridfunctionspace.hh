@@ -911,7 +911,7 @@ namespace Dune {
             unsigned int se = lc.localKey(i).subEntity();
 
 			// evaluate consecutive index of subentity
-            if (cd==Dune::intersectionCodim)
+            if (cd==Dune::LocalKey::intersectionCodim)
               index = iis.subIndex(e,se);
             else
               index = gv.indexSet().subIndex(e,se,cd);
@@ -1036,14 +1036,14 @@ namespace Dune {
           {
             typename Traits::SizeType n;
             offset[j->first] = nglobal;
-            if (j->first==Dune::intersectionCodim)
+            if (j->first==Dune::LocalKey::intersectionCodim)
               n = j->second*iis.size();
             else
               n = j->second*gv.size(j->first);
             Dune::dinfo << "codim=" << j->first << " offset=" << nglobal
                         << " size=" << n << std::endl;
             nglobal += n;
-            if (j->first!=Dune::intersectionCodim)
+            if (j->first!=Dune::LocalKey::intersectionCodim)
               Dune::dwarn << "WARNING: cannot handle multiple geometry types "
                           << "in static size grid function space"
                           << std::endl;;
