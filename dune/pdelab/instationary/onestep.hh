@@ -20,6 +20,10 @@ namespace Dune {
     // Interface class for parameters of one step methods
     //===============================================================
 
+    //! Base parameter class for one step schemes
+    /**
+     * \tparam R C++ type of the floating point parameters
+     */
     template<class R> 
     class OneStepParameterInterface
     {
@@ -35,17 +39,17 @@ namespace Dune {
       virtual int s () const = 0;
       
       /*! \brief Return entries of the A matrix
-	Note that r \in 1,...,s and i \in 0,...,r
+	\note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R a (int r, int i) const = 0;
       
       /*! \brief Return entries of the B matrix
-	Note that r \in 1,...,s and i \in 0,...,r
+	\note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R b (int r, int i) const = 0;
       
       /*! \brief Return entries of the d Vector
-	Note that i \in 0,...,r
+	\note that i ∈ 0,...,r
       */
       virtual R d (int r) const = 0;
       
@@ -55,6 +59,10 @@ namespace Dune {
 
     // some implementations of this interface
 
+    //! Parameters specifying implicit euler
+    /**
+     * \tparam R C++ type of the floating point parameters
+     */
     template<class R> 
     class ImplicitEulerParameter : public OneStepParameterInterface<R>
     {
@@ -82,7 +90,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the A matrix
-	Note that r \in 1,...,s and i \in 0,...,r
+	\note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R a (int r, int i) const
       {
@@ -90,7 +98,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the B matrix
-	Note that r \in 1,...,s and i \in 0,...,r
+	\note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R b (int r, int i) const
       {
@@ -98,7 +106,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the d Vector
-	i runs from 0,...,s
+	\note that i ∈ 0,...,s
       */
       virtual R d (int i) const
       {
@@ -111,6 +119,10 @@ namespace Dune {
       Dune::FieldMatrix<R,1,2> B;
     };
 
+    //! Parameters specifying explicit euler
+    /**
+     * \tparam R C++ type of the floating point parameters
+     */
     template<class R> 
     class ExplicitEulerParameter : public OneStepParameterInterface<R>
     {
@@ -138,7 +150,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the A matrix
-	Note that r \in 1,...,s and i \in 0,...,r
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R a (int r, int i) const
       {
@@ -146,7 +158,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the B matrix
-	Note that r \in 1,...,s and i \in 0,...,r
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R b (int r, int i) const
       {
@@ -154,7 +166,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the d Vector
-	i runs from 0,...,s
+        \note that i ∈ 0,...,s
       */
       virtual R d (int i) const
       {
@@ -167,11 +179,18 @@ namespace Dune {
       Dune::FieldMatrix<R,1,2> B;
     };
 
+    //! Parameters specifying the one step theta scheme
+    /**
+     * \tparam R C++ type of the floating point parameters
+     */
     template<class R> 
     class OneStepThetaParameter : public OneStepParameterInterface<R>
     {
+      //! hide default constructor, otherwise theta will be undefined
+      OneStepThetaParameter();
+
     public:
-      
+      //! construct OneStepThetaParameter class
       OneStepThetaParameter (R theta_)
 	: theta(theta_)
       {
@@ -198,7 +217,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the A matrix
-	Note that r \in 1,...,s and i \in 0,...,r
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R a (int r, int i) const
       {
@@ -206,7 +225,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the B matrix
-	Note that r \in 1,...,s and i \in 0,...,r
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R b (int r, int i) const
       {
@@ -214,7 +233,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the d Vector
-	i runs from 0,...,s
+        \note that i ∈ 0,...,s
       */
       virtual R d (int i) const
       {
@@ -228,6 +247,10 @@ namespace Dune {
       Dune::FieldMatrix<R,1,2> B;
     };
 
+    //! Parameters specifying the Heun scheme
+    /**
+     * \tparam R C++ type of the floating point parameters
+     */
     template<class R> 
     class HeunParameter : public OneStepParameterInterface<R>
     {
@@ -259,7 +282,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the A matrix
-	Note that r \in 1,...,s and i \in 0,...,r
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R a (int r, int i) const
       {
@@ -267,7 +290,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the B matrix
-	Note that r \in 1,...,s and i \in 0,...,r
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R b (int r, int i) const
       {
@@ -275,7 +298,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the d Vector
-	i runs from 0,...,s
+        \note that i ∈ 0,...,s
       */
       virtual R d (int i) const
       {
@@ -288,6 +311,10 @@ namespace Dune {
       Dune::FieldMatrix<R,2,3> B;
     };
 
+    //! Parameters specifying the Alexander scheme
+    /**
+     * \tparam R C++ type of the floating point parameters
+     */
     template<class R> 
     class AlexanderParameter : public OneStepParameterInterface<R>
     {
@@ -321,7 +348,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the A matrix
-	Note that r \in 1,...,s and i \in 0,...,r
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R a (int r, int i) const
       {
@@ -329,7 +356,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the B matrix
-	Note that r \in 1,...,s and i \in 0,...,r
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R b (int r, int i) const
       {
@@ -337,7 +364,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the d Vector
-	i runs from 0,...,s
+        \note that i ∈ 0,...,s
       */
       virtual R d (int i) const
       {
@@ -351,6 +378,10 @@ namespace Dune {
       Dune::FieldMatrix<R,2,3> B;
     };
 
+    //! Parameters specifying the fractional step theta scheme
+    /**
+     * \tparam R C++ type of the floating point parameters
+     */
     template<class R> 
     class FractionalStepParameter : public OneStepParameterInterface<R>
     {
@@ -389,7 +420,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the A matrix
-	Note that r \in 1,...,s and i \in 0,...,r
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R a (int r, int i) const
       {
@@ -397,7 +428,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the B matrix
-	Note that r \in 1,...,s and i \in 0,...,r
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R b (int r, int i) const
       {
@@ -405,7 +436,7 @@ namespace Dune {
       }
       
       /*! \brief Return entries of the d Vector
-	i runs from 0,...,s
+        \note that i ∈ 0,...,s
       */
       virtual R d (int i) const
       {
