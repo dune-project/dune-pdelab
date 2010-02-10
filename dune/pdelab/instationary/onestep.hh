@@ -316,11 +316,11 @@ namespace Dune {
      * \tparam R C++ type of the floating point parameters
      */
     template<class R> 
-    class AlexanderParameter : public OneStepParameterInterface<R>
+    class Alexander2Parameter : public OneStepParameterInterface<R>
     {
     public:
       
-      AlexanderParameter ()
+      Alexander2Parameter ()
       {
 	alpha = 1.0 - 0.5*sqrt(2.0);
 
@@ -389,6 +389,7 @@ namespace Dune {
       
       FractionalStepParameter ()
       {
+	R alpha, theta, thetap, beta;
 	theta = 1.0 - 0.5*sqrt(2.0);
 	thetap = 1.0-2.0*theta;
 	alpha = 2.0-sqrt(2.0);
@@ -437,6 +438,84 @@ namespace Dune {
       
       /*! \brief Return entries of the d Vector
         \note that i ∈ 0,...,s
+      */
+      virtual R d (int i) const
+      {
+	return D[i];
+      }
+      
+    private:
+      Dune::FieldVector<R,4> D;
+      Dune::FieldMatrix<R,3,4> A;
+      Dune::FieldMatrix<R,3,4> B;
+    };
+
+    template<class R> 
+    class Alexander3Parameter : public OneStepParameterInterface<R>
+    {
+    public:
+      
+      Alexander3Parameter ()
+      {
+	R alpha = 0.4358665215;
+
+	// Newton iteration for alpha
+	for (int i=1; i<=10; i++)
+	  {
+	    alpha = alpha - (alpha*(alpha*alpha-3.0*(alpha-0.5))-1.0/6.0)/(3.0*alpha*(alpha-2.0)+1.5);
+// 	    std::cout.precision(16);
+// 	    std::cout << "alpha " 
+// 		      << std::setw(8) << i << "  " 
+// 		      << std::scientific << alpha << std::endl;
+	  }
+
+	R tau2 = (1.0+alpha)*0.5;
+	R b1 = -(6.0*alpha*alpha -16.0*alpha + 1.0)*0.25;
+	R b2 = (6*alpha*alpha - 20.0*alpha + 5.0)*0.25;
+
+	D[0] = 0.0;     D[1] = alpha;     D[2] = tau2; D[3] = 1.0;
+
+	A[0][0] = -1.0; A[0][1] = 1.0; A[0][2] = 0.0; A[0][3] = 0.0;
+	A[1][0] = -1.0; A[1][1] = 0.0; A[1][2] = 1.0; A[1][3] = 0.0;
+	A[2][0] = -1.0; A[2][1] = 0.0; A[2][2] = 0.0; A[2][3] = 1.0;
+
+	B[0][0] =  0.0; B[0][1] = alpha;      B[0][2] = 0.0;   B[0][3] = 0.0;
+	B[1][0] =  0.0; B[1][1] = tau2-alpha; B[1][2] = alpha; B[1][3] = 0.0;
+	B[2][0] =  0.0; B[2][1] = b1;         B[2][2] = b2;    B[2][3] = alpha; 
+      }
+
+      /*! \brief Return true if method is implicit
+      */
+      virtual bool implicit () const
+      {
+	return true;
+      }
+      
+      /*! \brief Return number of stages s of the method
+      */
+      virtual int s () const
+      {
+	return 3;
+      }
+      
+      /*! \brief Return entries of the A matrix
+	Note that r \in 1,...,s and i \in 0,...,r
+      */
+      virtual R a (int r, int i) const
+      {
+	return A[r-1][i];
+      }
+      
+      /*! \brief Return entries of the B matrix
+	Note that r \in 1,...,s and i \in 0,...,r
+      */
+      virtual R b (int r, int i) const
+      {
+	return B[r-1][i];
+      }
+      
+      /*! \brief Return entries of the d Vector
+	i runs from 0,...,s
       */
       virtual R d (int i) const
       {
