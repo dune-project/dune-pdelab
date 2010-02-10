@@ -245,7 +245,7 @@ namespace Dune {
       enum { doAlphaVolume = true };
       enum { doAlphaBoundary = true };
 
-      ConvectionDiffusion (const T& param_, int intorder_=2)
+      ConvectionDiffusion (T& param_, int intorder_=2)
         : param(param_), intorder(intorder_)
       {}
 
@@ -392,8 +392,14 @@ namespace Dune {
           }
       }
 
+      //! set time in parameter class
+      void setTime (double t)
+      {
+        param.setTime(t);
+      }
+
     private:
-      const T& param;
+      T& param;
       int intorder;
 	};
 
