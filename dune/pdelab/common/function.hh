@@ -455,6 +455,9 @@ namespace Dune {
 	// Function tree
 	//============================
 
+    //! \addtogroup GridFunctionTree
+    //! \{
+
 	/** \brief leaf of a function tree
      *
      *  Classes derived from this class implement a \ref GridFunctionTree.
@@ -1234,6 +1237,8 @@ namespace Dune {
 	  std::string s="data";
 	  GridFunctionTreeVisitNodeMetaProgram<T,T::isLeaf>::vtkwriter_tree_addvertexdata(w,t,s);
 	}
+
+    //! \} GridFunctionTree
 
     //! \} Function
 

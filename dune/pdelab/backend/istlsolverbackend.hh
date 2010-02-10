@@ -283,13 +283,7 @@ namespace Dune {
 		category=Dune::SolverCategory::nonoverlapping
 	  };
 
-	  /*! \brief Constructor.
-      
-		Constructor gets all parameters to operate the prec.
-		\param A The matrix to operate on.
-		\param n The number of iterations to perform.
-		\param w The relaxation factor.
-	  */
+          //! \brief Constructor.
 	  NonoverlappingRichardson (const GFS& gfs_, const ParallelISTLHelper<GFS>& helper_)
 		: gfs(gfs_), helper(helper_)
 	  {
@@ -444,13 +438,7 @@ namespace Dune {
 		category=Dune::SolverCategory::overlapping
 	  };
 
-	  /*! \brief Constructor.
-      
-		Constructor gets all parameters to operate the prec.
-		\param A The matrix to operate on.
-		\param n The number of iterations to perform.
-		\param w The relaxation factor.
-	  */
+          //! Constructor.
 	  OverlappingWrappedPreconditioner (const GFS& gfs_, P& prec_, const CC& cc_, 
 										const ParallelISTLHelper<GFS>& helper_)
 		: gfs(gfs_), prec(prec_), cc(cc_), helper(helper_)
