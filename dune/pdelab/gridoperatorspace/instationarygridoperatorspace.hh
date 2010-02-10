@@ -7,7 +7,7 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/geometrytype.hh>
 
-//#include<dune/istl/io.hh>
+#include<dune/istl/io.hh>
 
 #include"../common/geometrywrapper.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
@@ -245,7 +245,9 @@ namespace Dune {
         stage = stage_;
         r0 = &r; // store reference to external residual vector
         if (x.size()!=stage)
-          DUNE_THROW(Exception,"wrong number of solutions in OneStepGridOperatorSpace");
+          DUNE_THROW(Exception,"wrong number of solutions in InstationaryGridOperatorSpace");
+        if (stage<1 || stage>method->s())
+          DUNE_THROW(Exception,"invalid stage number in InstationaryGridOperatorSpace");
  
         // visit each face only once
         const int chunk=1<<28;
@@ -299,7 +301,6 @@ namespace Dune {
                 // set time in local operators for evaluation
                 la.setTime(time+d[i]*dt);
                 lm.setTime(time+d[i]*dt);
-
 
                 // allocate local data container
                 std::vector<typename X::ElementType> xl(lfsu.size());
@@ -425,6 +426,7 @@ namespace Dune {
 
         // copy constant part of residual
         r = *r0; // assumes assignment operator on vectors.
+        //Dune::printvector(std::cout,r.base(),"r after copy in residual","row",4,9,1);
 
         // visit each face only once
         const int chunk=1<<28;
