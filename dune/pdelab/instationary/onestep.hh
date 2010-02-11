@@ -13,49 +13,14 @@
 #include<dune/common/fvector.hh>
 #include<dune/common/fmatrix.hh>
 
+#include"../gridoperatorspace/instationarygridoperatorspace.hh"
+
 namespace Dune {
   namespace PDELab {
 
     //===============================================================
     // Interface class for parameters of one step methods
     //===============================================================
-
-    //! Base parameter class for one step schemes
-    /**
-     * \tparam R C++ type of the floating point parameters
-     */
-    template<class R> 
-    class OneStepParameterInterface
-    {
-    public:
-      typedef R RealType;
-      
-      /*! \brief Return true if method is implicit
-      */
-      virtual bool implicit () const = 0;
-      
-      /*! \brief Return number of stages of the method
-      */
-      virtual int s () const = 0;
-      
-      /*! \brief Return entries of the A matrix
-	\note that r ∈ 1,...,s and i ∈ 0,...,r
-      */
-      virtual R a (int r, int i) const = 0;
-      
-      /*! \brief Return entries of the B matrix
-	\note that r ∈ 1,...,s and i ∈ 0,...,r
-      */
-      virtual R b (int r, int i) const = 0;
-      
-      /*! \brief Return entries of the d Vector
-	\note that i ∈ 0,...,r
-      */
-      virtual R d (int r) const = 0;
-      
-      //! every abstract base class has a virtual destructor
-      virtual ~OneStepParameterInterface () {}
-    };
 
     // some implementations of this interface
 
@@ -64,7 +29,7 @@ namespace Dune {
      * \tparam R C++ type of the floating point parameters
      */
     template<class R> 
-    class ImplicitEulerParameter : public OneStepParameterInterface<R>
+    class ImplicitEulerParameter : public TimeSteppingParameterInterface<R>
     {
     public:
       
@@ -113,6 +78,13 @@ namespace Dune {
 	return D[i];
       }
       
+      /*! \brief Return name of the scheme
+      */
+      virtual std::string name () const
+      {
+        return std::string("implicit Euler");
+      }
+
     private:
       Dune::FieldVector<R,2> D;
       Dune::FieldMatrix<R,1,2> A;
@@ -124,7 +96,7 @@ namespace Dune {
      * \tparam R C++ type of the floating point parameters
      */
     template<class R> 
-    class ExplicitEulerParameter : public OneStepParameterInterface<R>
+    class ExplicitEulerParameter : public TimeSteppingParameterInterface<R>
     {
     public:
       
@@ -173,6 +145,13 @@ namespace Dune {
 	return D[i];
       }
       
+      /*! \brief Return name of the scheme
+      */
+      virtual std::string name () const
+      {
+        return std::string("explicit Euler");
+      }
+
     private:
       Dune::FieldVector<R,2> D;
       Dune::FieldMatrix<R,1,2> A;
@@ -184,7 +163,7 @@ namespace Dune {
      * \tparam R C++ type of the floating point parameters
      */
     template<class R> 
-    class OneStepThetaParameter : public OneStepParameterInterface<R>
+    class OneStepThetaParameter : public TimeSteppingParameterInterface<R>
     {
       //! hide default constructor, otherwise theta will be undefined
       OneStepThetaParameter();
@@ -240,6 +219,13 @@ namespace Dune {
 	return D[i];
       }
       
+      /*! \brief Return name of the scheme
+      */
+      virtual std::string name () const
+      {
+        return std::string("one step theta");
+      }
+
     private:
       R theta;
       Dune::FieldVector<R,2> D;
@@ -252,7 +238,7 @@ namespace Dune {
      * \tparam R C++ type of the floating point parameters
      */
     template<class R> 
-    class HeunParameter : public OneStepParameterInterface<R>
+    class HeunParameter : public TimeSteppingParameterInterface<R>
     {
     public:
       
@@ -305,6 +291,13 @@ namespace Dune {
 	return D[i];
       }
       
+      /*! \brief Return name of the scheme
+      */
+      virtual std::string name () const
+      {
+        return std::string("Heun");
+      }
+
     private:
       Dune::FieldVector<R,3> D;
       Dune::FieldMatrix<R,2,3> A;
@@ -316,7 +309,7 @@ namespace Dune {
      * \tparam R C++ type of the floating point parameters
      */
     template<class R> 
-    class Alexander2Parameter : public OneStepParameterInterface<R>
+    class Alexander2Parameter : public TimeSteppingParameterInterface<R>
     {
     public:
       
@@ -371,6 +364,13 @@ namespace Dune {
 	return D[i];
       }
       
+      /*! \brief Return name of the scheme
+      */
+      virtual std::string name () const
+      {
+        return std::string("Alexander (order 2)");
+      }
+
     private:
       R alpha;
       Dune::FieldVector<R,3> D;
@@ -383,7 +383,7 @@ namespace Dune {
      * \tparam R C++ type of the floating point parameters
      */
     template<class R> 
-    class FractionalStepParameter : public OneStepParameterInterface<R>
+    class FractionalStepParameter : public TimeSteppingParameterInterface<R>
     {
     public:
       
@@ -444,6 +444,13 @@ namespace Dune {
 	return D[i];
       }
       
+      /*! \brief Return name of the scheme
+      */
+      virtual std::string name () const
+      {
+        return std::string("Fractional step theta");
+      }
+
     private:
       Dune::FieldVector<R,4> D;
       Dune::FieldMatrix<R,3,4> A;
@@ -455,7 +462,7 @@ namespace Dune {
      * \tparam R C++ type of the floating point parameters
      */
     template<class R> 
-    class Alexander3Parameter : public OneStepParameterInterface<R>
+    class Alexander3Parameter : public TimeSteppingParameterInterface<R>
     {
     public:
       
@@ -476,6 +483,12 @@ namespace Dune {
 	R tau2 = (1.0+alpha)*0.5;
 	R b1 = -(6.0*alpha*alpha -16.0*alpha + 1.0)*0.25;
 	R b2 = (6*alpha*alpha - 20.0*alpha + 5.0)*0.25;
+
+//         std::cout.precision(16);
+//         std::cout << "alpha " << std::scientific << alpha << std::endl;
+//         std::cout << "tau2  " << std::scientific << tau2 << std::endl;
+//         std::cout << "b1    " << std::scientific << b1 << std::endl;
+//         std::cout << "b2    " << std::scientific << b2 << std::endl;
 
 	D[0] = 0.0;     D[1] = alpha;     D[2] = tau2; D[3] = 1.0;
 
@@ -526,6 +539,13 @@ namespace Dune {
 	return D[i];
       }
       
+      /*! \brief Return name of the scheme
+      */
+      virtual std::string name () const
+      {
+        return std::string("Alexander (claims order 3)");
+      }
+
     private:
       R alpha, theta, thetap, beta;
       Dune::FieldVector<R,4> D;
@@ -556,7 +576,7 @@ namespace Dune {
        * constructed object is used (or until setMethod() is called, see
        * there).
        */
-      OneStepMethod(const OneStepParameterInterface<T>& method_, IGOS& igos_, PDESOLVER& pdesolver_)
+      OneStepMethod(const TimeSteppingParameterInterface<T>& method_, IGOS& igos_, PDESOLVER& pdesolver_)
 	: method(&method_), igos(igos_), pdesolver(pdesolver_), verbosityLevel(1), step(1)
       {
       }
@@ -575,7 +595,7 @@ namespace Dune {
        * The old method object is no longer referenced after this member
        * function returns.
        */
-      void setMethod (const OneStepParameterInterface<T>& method_)
+      void setMethod (const TimeSteppingParameterInterface<T>& method_)
       {
         method = &method_;
       }
@@ -592,7 +612,8 @@ namespace Dune {
 	TstV residual0(igos.testGridFunctionSpace()); // stores constant part of residual
 
 	if (verbosityLevel>=1)
-	  std::cout << "TIME STEP " << std::setw(6) << step
+	  std::cout << "TIME STEP [" << method->name() << "] " 
+                    << std::setw(6) << step
 		    << " time (from): "
 		    << std::setw(12) << std::setprecision(4) << std::scientific
 		    << time
@@ -611,7 +632,12 @@ namespace Dune {
 	for (int r=1; r<=method->s(); ++r)
 	  {
 	    if (verbosityLevel>=2)
-	      std::cout << "STAGE " << r << std::endl;
+	      std::cout << "STAGE " 
+                        << r 
+                        << " time (to): "
+                        << std::setw(12) << std::setprecision(4) << std::scientific
+                        << time+method->d(r)*dt
+                        << "." << std::endl;
 	      
 	    // prepare stage
 	    residual0 = 0.0;
@@ -645,7 +671,7 @@ namespace Dune {
       }
 
     private:
-      const OneStepParameterInterface<T> *method;
+      const TimeSteppingParameterInterface<T> *method;
       IGOS& igos;
       PDESOLVER pdesolver;
       int verbosityLevel;
