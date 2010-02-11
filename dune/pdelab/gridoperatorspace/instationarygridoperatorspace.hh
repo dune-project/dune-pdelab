@@ -12,12 +12,52 @@
 #include"../common/geometrywrapper.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../gridfunctionspace/constraints.hh"
-#include"../instationary/onestep.hh"
 #include"localmatrix.hh"
 #include"gridoperatorspaceutilities.hh"
 
 namespace Dune {
   namespace PDELab {
+
+    //! Base parameter class for time stepping scheme parameters
+    /**
+     * \tparam R C++ type of the floating point parameters
+     */
+    template<class R> 
+    class TimeSteppingParameterInterface
+    {
+    public:
+      typedef R RealType;
+      
+      /*! \brief Return true if method is implicit
+      */
+      virtual bool implicit () const = 0;
+      
+      /*! \brief Return number of stages of the method
+      */
+      virtual int s () const = 0;
+      
+      /*! \brief Return entries of the A matrix
+	\note that r âˆˆ 1,...,s and i âˆˆ 0,...,r
+      */
+      virtual R a (int r, int i) const = 0;
+      
+      /*! \brief Return entries of the B matrix
+	\note that r âˆˆ 1,...,s and i âˆˆ 0,...,r
+      */
+      virtual R b (int r, int i) const = 0;
+      
+      /*! \brief Return entries of the d Vector
+	\note that i âˆˆ 0,...,r
+      */
+      virtual R d (int r) const = 0;
+      
+      /*! \brief Return name of the scheme
+      */
+      virtual std::string name () const = 0;
+      
+      //! every abstract base class has a virtual destructor
+      virtual ~TimeSteppingParameterInterface () {}
+    };
 
 	//================================================
 	// The operator
@@ -67,7 +107,7 @@ namespace Dune {
       };
 
       //! construct 
-	  InstationaryGridOperatorSpace (const OneStepParameterInterface<TReal>& method_, 
+	  InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_, 
                                      const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) 
 		: method(&method_), gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_)
 	  {
@@ -76,7 +116,7 @@ namespace Dune {
 	  }
 
       //! construct, with constraints
-	  InstationaryGridOperatorSpace (const OneStepParameterInterface<TReal>& method_, const GFSU& gfsu_, const CU& cu,
+	  InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_, const GFSU& gfsu_, const CU& cu,
                                      const GFSV& gfsv_, const CV& cv,
                                      LA& la_, LM& lm_) 
 		: method(&method_), gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_)
@@ -223,7 +263,7 @@ namespace Dune {
       }
 
       //! parametrize assembler with a time-stepping method
-      void preStep (const OneStepParameterInterface<TReal>& method_, TReal time_, TReal dt_)
+      void preStep (const TimeSteppingParameterInterface<TReal>& method_, TReal time_, TReal dt_)
       {
         method = &method_;
         time = time_;
@@ -310,7 +350,7 @@ namespace Dune {
                 // read coefficents
                 lfsu.vread(*x[i],xl);
                 bool doM = a[i]>1E-6 || a[i]<-1E-6;
-                bool doA = b[i]>1E-6;
+                bool doA = b[i]>1E-6 || b[i]<-1E-6;
 
                 //std::cout << "R0 " << "stage=" << i << " time=" << time << " d_i*dt=" << d[i]*dt 
                 //          << " doM=" << doM << " doA=" << doA << " skel=" << needsSkeleton << std::endl;
@@ -1153,7 +1193,7 @@ namespace Dune {
 	  const CV* pconstraintsv;
 	  CU emptyconstraintsu;
 	  CV emptyconstraintsv;
-      const OneStepParameterInterface<TReal> *method;
+      const TimeSteppingParameterInterface<TReal> *method;
       TReal time, dt;
       int stage;
       R *r0;
