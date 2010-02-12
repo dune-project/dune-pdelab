@@ -756,7 +756,6 @@ namespace Dune {
      * \tparam IIS type of the index set for the intersections.
      * Use \link DummyIntersectionIndexSet \endlink if no unknowns are associated with intersections.
      */
-	struct G
     template<typename IIS>
 	struct GridFunctionStaticSize
 	{
