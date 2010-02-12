@@ -34,7 +34,7 @@ namespace Dune {
     // grid function space : single component case
     //=======================================
 
-	//! collect types exported by a multi-component grid function space
+	//! \brief collect types exported by a multi-component grid function space
 	template<typename G, typename B>
 	struct PowerCompositeGridFunctionSpaceTraits
 	{
@@ -48,7 +48,7 @@ namespace Dune {
 	  typedef typename B::size_type SizeType;
 	};
 
-	//! collect types exported by a leaf grid function space
+	//! \brief collect types exported by a leaf grid function space
 	template<typename G, typename L, typename C, typename B>
 	struct GridFunctionSpaceTraits : public PowerCompositeGridFunctionSpaceTraits<G,B>
 	{
@@ -63,7 +63,7 @@ namespace Dune {
 	};
 
 
-    //! a class holding transformation for constrained spaces
+    //! \brief a class holding transformation for constrained spaces
     template<typename S, typename T>
     class ConstraintsTransformation 
       : public std::map<S,std::map<S,T> >
@@ -75,7 +75,7 @@ namespace Dune {
       typedef std::map<S,T> RowType;
     };
 
-	//! Simple Backend for std::vector
+	//! \brief Simple Backend for std::vector
 	class StdVectorBackend
 	{
 	public:
@@ -475,6 +475,7 @@ namespace Dune {
 	  enum {dummy=1} ;
 	};
 
+    //! \}
 
 	// specialization with restricted mapper
 	// GV : Type implementing GridView
@@ -738,7 +739,7 @@ namespace Dune {
       std::set<unsigned int> codimUsed;
 	};
 
-
+    //! \addtogroup GridFunctionSpace \{
 
 	// Pass this class as last template argument to GridFunctionSpace
 	// to select specialization for fixed number of degrees of freedom in intersections
@@ -748,6 +749,8 @@ namespace Dune {
 	  enum {dummy=2} ;
       typedef IIS IntersectionIndexSet;
 	};
+
+    //! \}
 
     // dummy index set for intersection; used to have static size
     // grid function space without DOFs in intersections
@@ -1070,20 +1073,33 @@ namespace Dune {
     // power grid function space
     //=======================================
 
+    //! \addtogroup GridFunctionSpace \{
 
-	// this class may be used to pass compile-time
-	// parameters to the implementation 
+    //! \brief Indicates lexicographics ordering of the unknowns for composite
+    //! grid function spaces.
+    //!
+	//! this class may be used to pass compile-time
+	//! parameters to the implementation of 
+    //! \link PowerGridFunctionSpace PowerGridFunctionSpace \endlink or
+    //! \link CompositeGridFunctionSpace CompositeGridFunctionSpace \endlink
 	struct GridFunctionSpaceLexicographicMapper
 	{
 	  enum {dummy=0} ;
 	};
 
-	// this class may be used to pass compile-time
-	// parameters to the implementation 
+    //! \brief Indicates using block-wise ordering of the unknowns for composite
+    //! grid function spaces.
+    //!
+	//! this class may be used to pass compile-time
+	//! parameters to the implementation of 
+    //! \link PowerGridFunctionSpace PowerGridFunctionSpace \endlink or
+    //! \link CompositeGridFunctionSpace CompositeGridFunctionSpace \endlink
 	struct GridFunctionSpaceBlockwiseMapper
 	{
 	  enum {dummy=0} ;
 	};
+
+    //! \}
 
 	template<typename T, int k, typename P>
 	class PowerGridFunctionSpace;
@@ -1451,10 +1467,18 @@ namespace Dune {
       mutable std::vector<typename Traits::SizeType> childglobal;
 	};
 
+    //! \addtogroup GridFunctionSpace \{
 
-    // product of identical grid function spaces
-    // the specializations of this class just set the members
-    // all the methods are generic in the implementation
+    /// \brief product of identical grid function spaces
+    ///
+    /// the specializations of this class just set the members
+    /// all the methods are generic in the implementation
+    /// \tparam T The type of the underlying grid function space
+    /// \tparam k how many identical function space to use in the composition
+    /// \tparam P The type of the mapper used. The mapper maps each degree of freedom
+    /// of each function space to a unique index. Use e.g. 
+    /// \link GridFunctionSpaceLexicographicMapper GridFunctionSpaceLexicographicMapper \endlink
+    /// or \link  GridFunctionSpaceBlockwiseMapper  GridFunctionSpaceBlockwiseMapper \endlink
 	template<typename T, int k, typename P=GridFunctionSpaceLexicographicMapper>
 	class PowerGridFunctionSpace 
       : public PowerGridFunctionSpaceBase<T,k,P>
@@ -1465,7 +1489,8 @@ namespace Dune {
                                                     typename T::Traits::BackendType>
       Traits;
 
-      //! Construct a PowerGridFunction with k clones of the function t
+      //! \brief Construct a PowerGridFunction with k clones of the function t
+      //! \param t grid function space to clone.
 	  PowerGridFunctionSpace (T& t)
       {
         for (int i=0; i<k; i++)
@@ -1473,6 +1498,8 @@ namespace Dune {
         PowerGridFunctionSpaceBase<T,k,P>::setup();
       }
 
+      //! \brief Construct a PowerGridFunction with k clones of the function t
+      //! \param t grid function space to clone.
 	  PowerGridFunctionSpace (T** t)  
       {
          for (int i=0; i<k; i++)
@@ -1480,6 +1507,8 @@ namespace Dune {
          PowerGridFunctionSpaceBase<T,k,P>::setup();
      }
 	};
+
+    //! \}
 
 	template<typename T, typename P>
 	class PowerGridFunctionSpace<T,2,P> 
@@ -1880,11 +1909,14 @@ namespace Dune {
 	class CompositeGridFunctionSpace;
 
 
-    // tupel of grid function spaces
+    // \brief base classe for tuples of grid function spaces
+    //
     // base class that holds implementation of the methods
     // this is the default version with lexicographic ordering
-    // P is the ordering parameter
-    // Ti are all grid function spaces
+    // \tparam P is the ordering parameter. Use e.g. 
+    // \link GridFunctionSpaceLexicographicMapper GridFunctionSpaceLexicographicMapper \endlink
+    // or \link  GridFunctionSpaceBlockwiseMapper  GridFunctionSpaceBlockwiseMapper \endlink
+    // \tparam Ti are all grid function spaces
 	template<typename P, typename T0, typename T1, typename T2=EmptyChild, typename T3=EmptyChild,
 			 typename T4=EmptyChild, typename T5=EmptyChild, typename T6=EmptyChild,
 			 typename T7=EmptyChild, typename T8=EmptyChild>
@@ -2233,9 +2265,15 @@ namespace Dune {
 	};
 
 
+    //! \addtogroup GridFunctionSpace \{
 
-
-    // composite grid function space primary template
+    //! \brief grid function space composed of other grid function spaces
+    //!
+    //! Composes a tuple of arbitray grid function spaces into a grid function space.
+    //! The ordering of the resulting unknowns can be done lexicographically or block-wise.
+    //! \tparam P is the ordering parameter. Use e.g. 
+    /// \link GridFunctionSpaceLexicographicMapper GridFunctionSpaceLexicographicMapper \endlink
+    /// or \link  GridFunctionSpaceBlockwiseMapper  GridFunctionSpaceBlockwiseMapper \endlink
 	template<typename P, typename T0, typename T1, typename T2=EmptyChild, typename T3=EmptyChild,
 			 typename T4=EmptyChild, typename T5=EmptyChild, typename T6=EmptyChild,
 			 typename T7=EmptyChild, typename T8=EmptyChild>
@@ -2322,6 +2360,7 @@ namespace Dune {
       }
     };
 
+    //! \}
 
 	template<typename P, typename T0, typename T1>
 	class CompositeGridFunctionSpace<P,T0,T1> 
@@ -3042,7 +3081,6 @@ namespace Dune {
       }
     };
 
-    //! \} group GridFunctionSpace
   } // namespace PDELab
 } // namespace Dune
 
