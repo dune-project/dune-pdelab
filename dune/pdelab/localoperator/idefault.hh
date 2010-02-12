@@ -31,17 +31,17 @@ namespace Dune
             }
 
             //! to be called once before each time step
-            void preStep ()
+            void preStep (const RealType& time, int stages)
             {
             }
 
             //! to be called once at the end of each time step
-            void postStep ()
+            void postStep (RealType& dt)
             {
             }
 
             //! to be called once before each stage
-            void preStage (int r)
+            void preStage (const RealType& time, int r)
             {
                 stage = r;
             }

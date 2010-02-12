@@ -51,8 +51,6 @@ namespace Dune {
       typename V::ElementType reduction;
     };
 
-
-
   } // namespace PDELab
 } // namespace Dune
 

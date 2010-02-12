@@ -10,6 +10,8 @@
 
 #include <stdio.h>
 
+#include<dune/common/exceptions.hh>
+
 #include<dune/common/fvector.hh>
 #include<dune/common/fmatrix.hh>
 
@@ -674,6 +676,144 @@ namespace Dune {
       PDESOLVER pdesolver;
       int verbosityLevel;
       int step;
+    };
+
+    //! Do one step of an explicit time-stepping scheme
+    /**
+     * \tparam T          type to represent time values
+     * \tparam IGOS       assembler for instationary problems
+     * \tparam LS         backend to solve diagonal linear system
+     * \tparam TrlV       vector type to represent coefficients of solutions
+     * \tparam TstV       vector type to represent residuals
+     */
+    template<class T, class IGOS, class LS, class TrlV, class TstV = TrlV>
+    class ExplicitOneStepMethod
+    {
+      typedef typename TrlV::ElementType Real;
+      typedef typename IGOS::template MatrixContainer<Real>::Type M;
+
+    public:
+      //! construct a new one step scheme
+      /**
+       * \param method_    Parameter object.
+       * \param igos_      Assembler object (instationary grid operator space).
+       * \param pdesolver_ solver object (typically Newton).
+       *
+       * The contructed method object stores references to the object it is
+       * constructed with, so these objects should be valid for as long as the
+       * constructed object is used (or until setMethod() is called, see
+       * there).
+       */
+      ExplicitOneStepMethod(const TimeSteppingParameterInterface<T>& method_, IGOS& igos_, LS& ls_)
+	: method(&method_), igos(igos_), ls(ls_), verbosityLevel(1), step(1), D(igos)
+      {
+        if (method->implicit())
+          DUNE_THROW(Exception,"explicit one step method called with implicit scheme");
+      }
+
+      //! change verbosity level; 0 means completely quiet
+      void setVerbosityLevel (int level)
+      {
+	verbosityLevel = level;
+      }
+
+      //! redefine the method to be used; can be done before every step
+      /**
+       * \param method_ Parameter object.
+       *
+       * The OneStepMethod object stores a reference to the method_ object.
+       * The old method object is no longer referenced after this member
+       * function returns.
+       */
+      void setMethod (const TimeSteppingParameterInterface<T>& method_)
+      {
+        method = &method_;
+        if (method->implicit())
+          DUNE_THROW(Exception,"explicit one step method called with implicit scheme");
+      }
+
+      //! do one step;
+      /*
+       * \param[in]  xold value at begin of time step
+       * \param[out] xnew value at end of time step; contains initial guess for first substep on entry
+       */
+      void apply (T time, T dt, TrlV& xold, TrlV& xnew)
+      {
+	std::vector<TrlV*> x(1); // vector of pointers to all steps
+	x[0] = &xold;         // initially we have only one
+        TstV alpha(igos.testGridFunctionSpace()), beta(igos.testGridFunctionSpace()); // split residual vectors
+
+	if (verbosityLevel>=1)
+	  std::cout << "TIME STEP [" << method->name() << "] " 
+                    << std::setw(6) << step
+		    << " time (from): "
+		    << std::setw(12) << std::setprecision(4) << std::scientific
+		    << time
+		    << " dt: "
+		    << std::setw(12) << std::setprecision(4) << std::scientific
+		    << dt
+		    << " time (to): "
+		    << std::setw(12) << std::setprecision(4) << std::scientific
+		    << time+dt
+		    << std::endl;
+
+	// prepare assembler
+	igos.preStep(*method,time,dt);
+
+	// loop over all stages
+	for (int r=1; r<=method->s(); ++r)
+	  {
+	    if (verbosityLevel>=2)
+	      std::cout << "STAGE " 
+                        << r 
+                        << " time (to): "
+                        << std::setw(12) << std::setprecision(4) << std::scientific
+                        << time+method->d(r)*dt
+                        << "." << std::endl;
+	      
+	    // get vector for current stage
+	    if (r==method->s())
+	      {
+		// last stage
+		x.push_back(&xnew);
+		if (r>1) xnew = *(x[r-1]); // if r=1 then xnew has already initial guess
+	      }
+	    else
+	      {
+		// intermediate step
+		x.push_back(new TrlV(igos.trialGridFunctionSpace()));
+		if (r>1)
+		  *(x[r]) = *(x[r-1]); // use result of last stage as initial guess
+		else
+		  *(x[r]) = xnew;
+	      }
+
+	    // compute residuals and jacobian
+            D = 0.0;
+            alpha = 0.0;
+            beta = 0.0;
+	    igos.explicit_jacobian_residual(r,x,D,alpha,beta);
+
+	    // compute optimal dt (to be done later !!!)
+            alpha.axpy(dt,beta);
+
+            // solve diagonal system
+            ls.apply(D,x[r],alpha,0.99); // dummy reduction
+	  }
+
+	// delete intermediate steps
+	for (int i=1; i<method->s(); ++i) delete x[i];
+
+	step++;
+      }
+
+    private:
+      const TimeSteppingParameterInterface<T> *method;
+      IGOS& igos;
+      LS ls;
+      int verbosityLevel;
+      int step;
+      M D;
     };
 
     class FilenameHelper 

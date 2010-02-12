@@ -688,7 +688,6 @@ namespace Dune {
       bool verbose;
     };
 
-
     class ISTLBackend_SEQ_SuperLU
     {
     public:
@@ -746,6 +745,57 @@ namespace Dune {
       bool verbose;
     };
 
+    //! Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
+    class ISTLBackend_SEQ_ExplicitDiagonal
+    {
+    public:
+      /*! \brief make a linear solver object
+    
+	\param[in] maxiter maximum number of iterations to do
+	\param[in] verbose print messages if true
+      */
+      explicit ISTLBackend_SEQ_ExplicitDiagonal ()
+      {}
+
+      /*! \brief compute global norm of a vector
+    
+	\param[in] v the given vector
+      */
+      template<class V>
+      typename V::ElementType norm(const V& v) const
+      {
+	return v.two_norm();
+      }
+
+      /*! \brief solve the given linear system
+    
+	\param[in] A the given matrix
+	\param[out] z the solution vector to be computed
+	\param[in] r right hand side
+	\param[in] reduction to be achieved
+      */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename W::ElementType reduction)
+      {
+	Dune::SeqJac<M,V,W> jac(A,1,1.0);
+	jac.pre(z,r);
+	jac.apply(z,r);
+	jac.post(z);
+	res.converged  = true;
+	res.iterations = 1;
+	res.elapsed    = 0.0;
+	res.reduction  = reduction;
+      }
+  
+      /*! \brief Return access to result data */
+      const Dune::PDELab::LinearSolverResult<double>& result() const
+      {
+	return res;
+      }
+  
+    private:
+      Dune::PDELab::LinearSolverResult<double> res;
+    };
 
     template<class GFS>
     class ISTLBackend_NOVLP_BCGS_NOPREC

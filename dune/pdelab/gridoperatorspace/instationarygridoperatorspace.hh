@@ -268,6 +268,8 @@ namespace Dune {
         method = &method_;
         time = time_;
         dt = dt_;
+        la.preStep(time,method->s());
+        lm.preStep(time,method->s());
       }
 
       //! parametrize assembler with a time-stepping method
@@ -275,11 +277,26 @@ namespace Dune {
       {
         time = time_;
         dt = dt_;
+        la.preStep(time,method->s());
+        lm.preStep(time,method->s());
+      }
+
+      //! to be called after step is completed
+      void postStep (TReal& dt)
+      {
+        lm.postStep(dt);
+      }
+
+      //! to be called after stage is completed
+      void postStage ()
+      {
+        la.postStage();
+        lm.postStage();
       }
 
       //! set stage number to do next; assemble constant part of residual; r is empty on entry
 	  template<typename X> 
-      void preStage (int stage_, std::vector<X*> x)
+      void preStage (int stage_, const std::vector<X*>& x)
       {
         // process arguments
         stage = stage_;
@@ -314,6 +331,10 @@ namespace Dune {
 
         // clear constant part residual before assembling
         r0 = 0.0;
+
+        // prepare local operators for stage
+        la.preStage(time+method->d(stage)*dt,stage);
+        lm.preStage(time+method->d(stage)*dt,stage);
 
 		// traverse grid view
 		for (ElementIterator it = gfsu.gridview().template begin<0>();
@@ -453,6 +474,239 @@ namespace Dune {
                   }
               }
           }
+
+        //Dune::printvector(std::cout,r.base(),"const residual","row",4,9,1);
+      }
+
+
+      //! set stage number to do next; assemble constant part of residual; r is empty on entry
+      /**
+       * in explicit mode we assume that 
+       *  A) the problem is linear in the d_t term
+       *  B) the jacobian is block diagonal
+       * this means that the system can always be solved by one step of a Jacobi preconditioner
+       * without even checking for the residual.
+       * From B also follows that the time local operator has only alpha_volume
+       * \param[in] stage_ the stage we are in
+       * \param[in] vector of pointers to the solutions in previous stages
+       * \param[out] mat the block diagonal Jacobian to be assembled; we assume it is zero on entry!
+       * \param[out] alpha temporal part of the residual; we assume it is zero on entry!
+       * \param[out] beta spatial part of residual; we assume it is zero on entry!
+       */
+	  template<typename X, typename A> 
+      void explicit_jacobian_residual (int stage_, const std::vector<X*>& x, A& mat, R& alpha, R& beta)
+      {
+        // process arguments
+        stage = stage_;
+        if (x.size()!=stage+1)
+          DUNE_THROW(Exception,"wrong number of solutions in InstationaryGridOperatorSpace");
+        if (stage<1 || stage>method->s())
+          DUNE_THROW(Exception,"invalid stage number in InstationaryGridOperatorSpace");
+        if (method->implicit())
+          DUNE_THROW(Exception,"explicit mode called with implicit scheme");
+ 
+        // visit each face only once
+        const int chunk=1<<28;
+        int offset = 0;
+        const typename GV::IndexSet& is=gfsu.gridview().indexSet();
+        std::map<Dune::GeometryType,int> gtoffset;
+
+		// make local function spaces
+		typedef typename GFSU::LocalFunctionSpace LFSU;
+		LFSU lfsu(gfsu);
+		typedef typename GFSV::LocalFunctionSpace LFSV;
+		LFSV lfsv(gfsv);
+
+        // extract coefficients of time stepping scheme
+        std::vector<TReal> a(stage);
+        for (size_t i=0; i<stage; ++i) a[i] = method->a(stage,i);
+        std::vector<TReal> b(stage);
+        for (size_t i=0; i<stage; ++i) b[i] = method->b(stage,i);
+        std::vector<TReal> d(stage);
+        for (size_t i=0; i<stage; ++i) d[i] = method->d(i);
+        TReal b_rr = method->b(stage,stage);
+        TReal d_r = method->d(stage);
+
+        bool needsSkeleton = LA::doAlphaSkeleton||LA::doAlphaBoundary||LA::doLambdaSkeleton||LA::doLambdaBoundary;
+
+        // prepare local operators for stage
+        la.preStage(time+method->d(stage)*dt,stage);
+        lm.preStage(time+method->d(stage)*dt,stage);
+
+		// traverse grid view
+		for (ElementIterator it = gfsu.gridview().template begin<0>();
+			 it!=gfsu.gridview().template end<0>(); ++it)
+		  {
+            // assign offset for geometry type;
+            if (gtoffset.find(it->type())==gtoffset.end())
+              {
+                gtoffset[it->type()] = offset;
+                offset += chunk;
+              }
+
+            // compute unique id
+            int id = is.index(*it)+gtoffset[it->type()];
+
+            // skip ghost and overlap
+            if (nonoverlapping_mode && it->partitionType()!=Dune::InteriorEntity)
+              continue; 
+
+			// bind local function spaces to element
+			lfsu.bind(*it);
+			lfsv.bind(*it);
+
+            // residual part
+            // loop over all previous time steps (stages)
+            for (int i=0; i<stage; ++i)
+              {
+                // set time in local operators for evaluation
+                la.setTime(time+d[i]*dt);
+                lm.setTime(time+d[i]*dt);
+
+                // allocate local data container
+                std::vector<typename X::ElementType> xl(lfsu.size());
+                std::vector<typename R::ElementType> rl_a(lfsv.size(),0.0);
+                std::vector<typename R::ElementType> rl_m(lfsv.size(),0.0);
+
+                // read coefficents
+                lfsu.vread(*x[i],xl);
+                bool doM = a[i]>1E-6 || a[i]<-1E-6;
+                bool doA = b[i]>1E-6 || b[i]<-1E-6;
+
+                //std::cout << "R0 " << "stage=" << i << " time=" << time << " d_i*dt=" << d[i]*dt 
+                //          << " doM=" << doM << " doA=" << doA << " skel=" << needsSkeleton << std::endl;
+
+                // volume evaluation
+                if (doA)
+                  {
+                    LocalAssemblerCallSwitch<LA,LA::doAlphaVolume>::
+                      alpha_volume(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_a);
+                    LocalAssemblerCallSwitch<LA,LA::doLambdaVolume>::
+                      lambda_volume(la,ElementGeometry<Element>(*it),lfsv,rl_a);
+                  }
+                if (doM)
+                  {
+                    LocalAssemblerCallSwitch<LM,LM::doAlphaVolume>::
+                      alpha_volume(lm,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_m);
+                  }
+
+                // skip if no intersection iterator is needed
+                // note: LM has no skeleton and boundary terms !
+                if (doA && needsSkeleton)
+                  {
+                    // local function spaces in neighbor
+                    LFSU lfsun(gfsu);
+                    LFSV lfsvn(gfsv);
+
+                    // traverse intersections
+                    unsigned int intersection_index = 0;
+                    IntersectionIterator endit = gfsu.gridview().iend(*it);
+                    for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
+                         iit!=endit; ++iit, ++intersection_index)
+                      {
+                        // skeleton term
+                        if (iit->neighbor() && (LA::doAlphaSkeleton||LA::doLambdaSkeleton) )
+                          {
+                            // assign offset for geometry type;
+                            Dune::GeometryType gtn = iit->outside()->type();
+                            if (gtoffset.find(gtn)==gtoffset.end())
+                              {
+                                gtoffset[gtn] = offset;
+                                offset += chunk;
+                              }
+                        
+                            // compute unique id for neighbor
+                            int idn = is.index(*(iit->outside()))+gtoffset[gtn];
+                          
+                            // unique vist of intersection
+                            if (LA::doSkeletonTwoSided || id>idn || 
+                                (nonoverlapping_mode && (iit->inside())->partitionType()!=Dune::InteriorEntity) )
+                              {
+                                // bind local function spaces to neighbor element
+                                lfsun.bind(*(iit->outside()));
+                                lfsvn.bind(*(iit->outside()));
+                            
+                                // allocate local data container
+                                std::vector<typename X::ElementType> xn(lfsun.size());
+                                std::vector<typename R::ElementType> rn(lfsvn.size(),0.0);
+                            
+                                // read coefficents
+                                lfsun.vread(*x[i],xn);
+                            
+                                // skeleton evaluation
+                                LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
+                                  alpha_skeleton(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,lfsun,xn,lfsvn,rl_a,rn);
+                            
+                                // accumulate result (note: r needs to be cleared outside)
+                                for (size_t k=0; k<rn.size(); ++k) rn[k] *= -b[i];
+                                lfsvn.vadd(rn,beta);
+                              }
+                          }
+               
+                        // boundary term
+                        if (iit->boundary())
+                          {
+                            LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
+                              alpha_boundary(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,rl_a);
+                            LocalAssemblerCallSwitch<LA,LA::doLambdaBoundary>::
+                              lambda_boundary(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsv,rl_a);
+                          }
+                      }
+                  }
+
+                if (doA)
+                  {
+                    LocalAssemblerCallSwitch<LA,LA::doAlphaVolumePostSkeleton>::
+                      alpha_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_a);
+                    LocalAssemblerCallSwitch<LA,LA::doLambdaVolumePostSkeleton>::
+                      lambda_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsv,rl_a);
+                    
+                    // accumulate result (note: beta needs to be cleared outside)
+                    for (size_t k=0; k<rl_a.size(); ++k) rl_a[k] *= -b[i]; 
+                    lfsv.vadd(rl_a,beta);
+                  }
+                if (doM)
+                  {
+                    for (size_t k=0; k<rl_m.size(); ++k) rl_m[k] *= -a[i]; 
+                    lfsv.vadd(rl_m,alpha);
+                  }
+              }
+
+            // Jacobian part
+            // Note: 
+            // - we are explicit; there is no spatial part here
+            // - temporal part has only alpha_volume
+
+			// allocate local data container
+			std::vector<typename X::ElementType> xl(lfsu.size());
+			LocalMatrix<typename A::ElementType> ml(lfsv.size(),lfsu.size(),0.0);
+
+            // set time in local operator for evaluation
+            lm.setTime(time+d_r*dt);
+
+            // read coefficents; this is only a dummy since Jacobian should not depend on solution !
+            // but of course it is required to give this parameter
+            lfsu.vread(*x[stage],xl);
+
+            // compute local jacobian
+            LocalAssemblerCallSwitch<LM,LM::doAlphaVolume>::
+              jacobian_volume(lm,ElementGeometry<Element>(*it),lfsu,xl,lfsv,ml);
+
+			// accumulate to global matrix
+            etadd(lfsv,lfsu,ml,mat); // scheme is normalized 
+          }
+
+        // set trivial conditions for constrained degrees of freedom
+        typedef typename CV::const_iterator global_row_iterator;	  
+        for (global_row_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit)
+          set_trivial_row(cit->first,cit->second,a);
+        
+		// set residual to zero on constrained dofs of spatial part (which is scaled by dt)
+		Dune::PDELab::constrain_residual(*pconstraintsv,beta);
+
+		// copy solution on constrained dofs from solution of stage to temporal part (which is not scaled)
+        // this makes the boundary conditions appear in the solution !
+		Dune::PDELab::copy_constrained_dofs(*pconstraintsu,*x[stage],alpha);
 
         //Dune::printvector(std::cout,r.base(),"const residual","row",4,9,1);
       }
@@ -618,7 +872,6 @@ namespace Dune {
 
         //Dune::printvector(std::cout,r.base(),"residual","row",4,9,1);
 	  }
-
 
 	  //! generic application of Jacobian
 	  template<typename X, typename Y> 
