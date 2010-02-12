@@ -149,9 +149,10 @@ namespace Dune {
 	  }
 	};
 
-	/** \brief class used to pass compile-time parameters to the implementation
+	/** \brief Tag indicating an arbitrary number of unkowns per entity.
      *
-     *  This is the dummy default class which does nothing
+     * class used to pass compile-time parameter to the GridFunctionSpace.
+     *
      */
 	struct GridFunctionGeneralMapper
 	{
@@ -192,13 +193,17 @@ namespace Dune {
     };
 
 
-	/** \brief mapper for layouts with arbitrary number of entries per entity
+	/** \brief A grid function space.
      *
      *  \tparam GV   Type implementing GridView
      *  \tparam LFEM Type implementing LocalFiniteElementMapInterface
      *  \tparam CE   Type for constraints assembler
      *  \tparam B    Backend type
-     *  \tparam P    Parameter type
+     *  \tparam P    Parameter type. Possible types are 
+     * \link GridFunctionGeneralMapper \endlink (arbitrary number of unknowns per
+     * entity) or \link GridFunctionRestrictedMapper \endlink (fixed number of unknowns per
+     * entity) or \link GridFunctionStaticSize \endlink (number of unknowns per
+     * entity, known at compile-time)
      */
 	template<typename GV, typename LFEM, typename CE=NoConstraints, 
              typename B=StdVectorBackend, typename P=GridFunctionGeneralMapper>
@@ -468,8 +473,11 @@ namespace Dune {
 
 
 
-	// this class may be used to pass compile-time
-	// parameters to the implementation 
+	/** \brief Tag indicating a fixed number of unkowns per entity (known at compile time).
+     *
+     * class used to pass compile-time parameter to the GridFunctionSpace.
+     *
+     */
 	struct GridFunctionRestrictedMapper
 	{
 	  enum {dummy=1} ;
@@ -741,8 +749,14 @@ namespace Dune {
 
     //! \addtogroup GridFunctionSpace \{
 
-	// Pass this class as last template argument to GridFunctionSpace
-	// to select specialization for fixed number of degrees of freedom in intersections
+    /** \brief Tag indicating a fixed number of unkowns per entity (known at compile time).
+     *
+     * class used to pass compile-time parameter to the GridFunctionSpace.
+     *
+     * \tparam IIS type of the index set for the intersections.
+     * Use \link DummyIntersectionIndexSet \endlink if no unknowns are associated with intersections.
+     */
+	struct G
     template<typename IIS>
 	struct GridFunctionStaticSize
 	{
@@ -750,10 +764,8 @@ namespace Dune {
       typedef IIS IntersectionIndexSet;
 	};
 
-    //! \}
-
-    // dummy index set for intersection; used to have static size
-    // grid function space without DOFs in intersections
+    //!! \brief dummy index set for intersection for grid function spaces with static size
+    //!  but without DOFs in intersections
     class DummyIntersectionIndexSet
     {
     public:
@@ -789,8 +801,10 @@ namespace Dune {
       }
     };
 
-    // define type that can be used for static sized GFS without DOFS in intersections
+    //! \brief type that can be used for static sized GFS without DOFS in intersections
     typedef GridFunctionStaticSize<DummyIntersectionIndexSet> SimpleGridFunctionStaticSize;
+    
+    //! \}
 
 	// specialization with restricted mapper
 	// GV : Type implementing GridView
