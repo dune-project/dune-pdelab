@@ -26,7 +26,7 @@
 namespace Dune {
   namespace PDELab {
 
-    //! \addtogroup GridFunctionSpace
+    //! \addtogroup GridFunctionSpace grid function space
     //! \ingroup PDELab
     //! \{
 
