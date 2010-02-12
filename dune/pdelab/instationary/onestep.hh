@@ -609,7 +609,6 @@ namespace Dune {
       {
 	std::vector<TrlV*> x(1); // vector of pointers to all steps
 	x[0] = &xold;            // initially we have only one
-	TstV residual0(igos.testGridFunctionSpace()); // stores constant part of residual
 
 	if (verbosityLevel>=1)
 	  std::cout << "TIME STEP [" << method->name() << "] " 
@@ -640,8 +639,7 @@ namespace Dune {
                         << "." << std::endl;
 	      
 	    // prepare stage
-	    residual0 = 0.0;
-	    igos.preStage(r,x,residual0);
+	    igos.preStage(r,x);
 
 	    // get vector for current stage
 	    if (r==method->s())

@@ -109,7 +109,7 @@ namespace Dune {
       //! construct 
 	  InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_, 
                                      const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) 
-		: method(&method_), gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_)
+		: method(&method_), gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_), r0(gfsv,0.0)
 	  {
 		pconstraintsu = &emptyconstraintsu;
 		pconstraintsv = &emptyconstraintsv;
@@ -119,7 +119,7 @@ namespace Dune {
 	  InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_, const GFSU& gfsu_, const CU& cu,
                                      const GFSV& gfsv_, const CV& cv,
                                      LA& la_, LM& lm_) 
-		: method(&method_), gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_)
+		: method(&method_), gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_), r0(gfsv,0.0)
 	  {
 		pconstraintsu = &cu;
 		pconstraintsv = &cv;
@@ -279,11 +279,10 @@ namespace Dune {
 
       //! set stage number to do next; assemble constant part of residual; r is empty on entry
 	  template<typename X> 
-      void preStage (int stage_, std::vector<X*> x, R& r)
+      void preStage (int stage_, std::vector<X*> x)
       {
         // process arguments
         stage = stage_;
-        r0 = &r; // store reference to external residual vector
         if (x.size()!=stage)
           DUNE_THROW(Exception,"wrong number of solutions in InstationaryGridOperatorSpace");
         if (stage<1 || stage>method->s())
@@ -312,6 +311,9 @@ namespace Dune {
         bool needsSkeleton = LA::doAlphaSkeleton||LA::doAlphaBoundary||LA::doLambdaSkeleton||LA::doLambdaBoundary;
 
         //std::cout << "preStage: stage " << stage << std::endl;
+
+        // clear constant part residual before assembling
+        r0 = 0.0;
 
 		// traverse grid view
 		for (ElementIterator it = gfsu.gridview().template begin<0>();
@@ -418,7 +420,7 @@ namespace Dune {
                             
                                 // accumulate result (note: r needs to be cleared outside)
                                 for (size_t k=0; k<rn.size(); ++k) rn[k] *= b[i]*dt;
-                                lfsvn.vadd(rn,r);
+                                lfsvn.vadd(rn,r0);
                               }
                           }
                
@@ -442,12 +444,12 @@ namespace Dune {
                     
                     // accumulate result (note: r needs to be cleared outside)
                     for (size_t k=0; k<rl_a.size(); ++k) rl_a[k] *= b[i]*dt; 
-                    lfsv.vadd(rl_a,r);
+                    lfsv.vadd(rl_a,r0);
                   }
                 if (doM)
                   {
                     for (size_t k=0; k<rl_m.size(); ++k) rl_m[k] *= a[i]; 
-                    lfsv.vadd(rl_m,r);
+                    lfsv.vadd(rl_m,r0);
                   }
               }
           }
@@ -465,7 +467,7 @@ namespace Dune {
         //Dune::printvector(std::cout,x.base(),"x on entry to residual","row",4,9,1);
 
         // copy constant part of residual
-        r = *r0; // assumes assignment operator on vectors.
+        r = r0; // assumes assignment operator on vectors.
         //Dune::printvector(std::cout,r.base(),"r after copy in residual","row",4,9,1);
 
         // visit each face only once
@@ -1196,7 +1198,7 @@ namespace Dune {
       const TimeSteppingParameterInterface<TReal> *method;
       TReal time, dt;
       int stage;
-      R *r0;
+      R r0;
 	};
 
     //! \} group GridFunctionSpace
