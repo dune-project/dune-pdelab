@@ -179,6 +179,16 @@ namespace Dune {
 		return i.unitOuterNormal(local);
 	  }
 
+	  /*! @brief Return unit outer normal (length == 1)
+
+		The returned vector may depend on the local position within the intersection.
+		It is scaled to have unit length.
+	  */
+	  Dune::FieldVector<ctype, dimensionworld> centerUnitOuterNormal () const
+	  {
+		return i.centerUnitOuterNormal();
+	  }
+
 	  /*! @brief return EntityPointer to the Entity on the inside of this
 		intersection. That is the Entity where we started this .
 	  */
