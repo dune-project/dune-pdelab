@@ -568,7 +568,7 @@ namespace Dune {
       
       /*! \brief Return name of the scheme
       */
-      virtual RealType selectTimestep (RealType time, RealType givendt) = 0;
+      virtual RealType suggestTimestep (RealType time, RealType givendt) = 0;
       
       //! every abstract base class has a virtual destructor
       virtual ~TimeControllerInterface () {}
@@ -586,7 +586,7 @@ namespace Dune {
       
       /*! \brief Return name of the scheme
       */
-      virtual RealType selectTimestep (RealType time, RealType givendt)
+      virtual RealType suggestTimestep (RealType time, RealType givendt)
       {
         return givendt;
       }
@@ -609,12 +609,9 @@ namespace Dune {
       
       /*! \brief Return name of the scheme
       */
-      virtual RealType selectTimestep (RealType time, RealType givendt)
+      virtual RealType suggestTimestep (RealType time, RealType givendt)
       {
-        if (cfl*igos.selectTimestep(givendt)<givendt)
-          return cfl*igos.selectTimestep(givendt);
-        else
-          return givendt;
+        return cfl*igos.suggestTimestep(givendt);
       }
 
     private:
@@ -649,12 +646,17 @@ namespace Dune {
       OneStepMethod(const TimeSteppingParameterInterface<T>& method_, IGOS& igos_, PDESOLVER& pdesolver_)
 	: method(&method_), igos(igos_), pdesolver(pdesolver_), verbosityLevel(1), step(1)
       {
+        if (igos.trialGridFunctionSpace().gridview().comm().rank()>0)
+          verbosityLevel = 0;
       }
 
       //! change verbosity level; 0 means completely quiet
       void setVerbosityLevel (int level)
       {
-	verbosityLevel = level;
+        if (igos.trialGridFunctionSpace().gridview().comm().rank()>0)
+          verbosityLevel = 0;
+        else
+          verbosityLevel = level;
       }
 
       //! redefine the method to be used; can be done before every step
@@ -788,6 +790,8 @@ namespace Dune {
       {
         if (method->implicit())
           DUNE_THROW(Exception,"explicit one step method called with implicit scheme");
+        if (igos.trialGridFunctionSpace().gridview().comm().rank()>0)
+          verbosityLevel = 0;
       }
 
       //! construct a new one step scheme
@@ -818,7 +822,10 @@ namespace Dune {
       //! change verbosity level; 0 means completely quiet
       void setVerbosityLevel (int level)
       {
-	verbosityLevel = level;
+        if (igos.trialGridFunctionSpace().gridview().comm().rank()>0)
+          verbosityLevel = 0;
+        else
+          verbosityLevel = level;
       }
 
       //! redefine the method to be used; can be done before every step
@@ -899,16 +906,19 @@ namespace Dune {
             beta = 0.0;
 	    igos.explicit_jacobian_residual(r,x,D,alpha,beta);
 
-	    // let time controller compute the optimal dt
-            T newdt = tc->selectTimestep(time,dt);
-            if (verbosityLevel>=2 && newdt!=dt)
+	    // let time controller compute the optimal dt in first stage
+            if (r==1)
               {
-                std::cout << "changed dt to "
-                          << std::setw(12) << std::setprecision(4) << std::scientific
-                          << newdt
-                          << std::endl;
+                T newdt = tc->suggestTimestep(time,dt);
+                if (verbosityLevel>=2 && newdt!=dt)
+                  {
+                    std::cout << "changed dt to "
+                              << std::setw(12) << std::setprecision(4) << std::scientific
+                              << newdt
+                              << std::endl;
+                  }
+                dt = newdt;
               }
-            dt = newdt;
 
             // combine residual with selected dt
             alpha.axpy(dt,beta);

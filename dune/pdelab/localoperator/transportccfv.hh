@@ -319,6 +319,8 @@ namespace Dune {
 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
         const int dim = EG::Geometry::dimension;
 
+        if (!first_stage) return; // time step calculation is only done in first stage
+
         // cell center
         const Dune::FieldVector<DF,dim>& 
           inside_local = Dune::GenericReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
@@ -428,7 +430,12 @@ namespace Dune {
       //! to be called once before each stage
       void preStage (typename TP::Traits::RangeFieldType time, int r)
       {
-        dtmin = 1E100;
+        if (r==1)
+          {
+            first_stage = true;
+            dtmin = 1E100;
+          }
+        else first_stage = false;
       }
 
       //! to be called once at the end of each stage
@@ -437,13 +444,14 @@ namespace Dune {
       }
 
       //! to be called once before each stage
-      typename TP::Traits::RangeFieldType selectTimestep (typename TP::Traits::RangeFieldType dt) const
+      typename TP::Traits::RangeFieldType suggestTimestep (typename TP::Traits::RangeFieldType dt) const
       {
-        if (dtmin<dt) return dtmin; else return dt;
+        return dtmin;
       }
       
 	private:
 	  TP& tp;
+      bool first_stage;
       mutable typename TP::Traits::RangeFieldType dtmin; // accumulate minimum dt here
       mutable typename TP::Traits::RangeFieldType cellinflux;
 	};

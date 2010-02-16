@@ -58,7 +58,7 @@ namespace Dune
             }
 
             //! to be called once before each stage
-            RealType selectTimestep (RealType dt) const
+            RealType suggestTimestep (RealType dt) const
             {
                 return dt;
             }

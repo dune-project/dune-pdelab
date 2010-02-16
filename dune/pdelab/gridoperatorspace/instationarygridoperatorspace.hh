@@ -295,9 +295,12 @@ namespace Dune {
       }
 
       //! to be called once before each stage
-      TReal selectTimestep (TReal dt) const
+      TReal suggestTimestep (TReal dt) const
       {
-        return la.selectTimestep(dt);
+        TReal suggested_dt = la.suggestTimestep(dt);
+        if (gfsu.gridview().comm().size()>1)
+          suggested_dt =  gfsu.gridview().comm().min(suggested_dt);
+        return suggested_dt;
       }
 
       //! set stage number to do next; assemble constant part of residual; r is empty on entry
