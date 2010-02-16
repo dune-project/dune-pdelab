@@ -282,9 +282,9 @@ namespace Dune {
       }
 
       //! to be called after step is completed
-      void postStep (TReal& dt)
+      void postStep ()
       {
-        lm.postStep(dt);
+        lm.postStep();
       }
 
       //! to be called after stage is completed
@@ -292,6 +292,12 @@ namespace Dune {
       {
         la.postStage();
         lm.postStage();
+      }
+
+      //! to be called once before each stage
+      TReal selectTimestep (TReal dt) const
+      {
+        return la.selectTimestep(dt);
       }
 
       //! set stage number to do next; assemble constant part of residual; r is empty on entry
@@ -699,7 +705,7 @@ namespace Dune {
         // set trivial conditions for constrained degrees of freedom
         typedef typename CV::const_iterator global_row_iterator;	  
         for (global_row_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit)
-          set_trivial_row(cit->first,cit->second,a);
+          set_trivial_row(cit->first,cit->second,mat);
         
 		// set residual to zero on constrained dofs of spatial part (which is scaled by dt)
 		Dune::PDELab::constrain_residual(*pconstraintsv,beta);

@@ -219,6 +219,7 @@ namespace Dune {
       enum { doPatternSkeleton = true };
 
 	  // residual assembly flags
+      enum { doAlphaVolume  = true };
       enum { doAlphaSkeleton  = true };
 	  enum { doAlphaVolumePostSkeleton = true };
       enum { doAlphaBoundary  = true };
@@ -230,6 +231,21 @@ namespace Dune {
 		: tp(tp_)
 	  {
 	  }
+
+	  // volume integral depending on test and ansatz functions
+	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+	  {
+        cellinflux = 0.0; // prepare dt computation
+	  }
+
+      // jacobian of volume term
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
+                            LocalMatrix<R>& mat) const
+      {
+        // do nothing; alpha_volume only needed for dt computations
+      }
 
 	  // skeleton integral depending on test and ansatz functions
       // each face is only visited ONCE!
@@ -266,6 +282,8 @@ namespace Dune {
         RF u_upwind=0;
         if (vn>=0) u_upwind = x_s[0]; else u_upwind = x_n[0];
         r_s[0] += (u_upwind*vn)*face_volume;
+        if (vn>=0)
+          cellinflux += vn*face_volume; // dt computation
 
         // evaluate diffusion coefficients
         const Dune::FieldVector<DF,IG::dimension>&
@@ -294,8 +312,21 @@ namespace Dune {
       void alpha_volume_post_skeleton(const EG& eg, const LFSU& lfsu, const X& x,
                                       const LFSV& lfsv, R& r) const
       {
+		// domain and range field type
+		typedef typename LFSU::Traits::LocalFiniteElementType::
+		  Traits::LocalBasisType::Traits::DomainFieldType DF;
 		typedef typename LFSU::Traits::LocalFiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
+        const int dim = EG::Geometry::dimension;
+
+        // cell center
+        const Dune::FieldVector<DF,dim>& 
+          inside_local = Dune::GenericReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+        
+        // compute optimal dt for this cell
+        typename TP::Traits::RangeFieldType cellcapacity = tp.c(eg.entity(),inside_local)*eg.geometry().volume();
+        typename TP::Traits::RangeFieldType celldt = cellcapacity/(cellinflux+1E-30);
+        dtmin = std::min(dtmin,celldt);
       }
 
 	  // skeleton integral depending on test and ansatz functions
@@ -336,6 +367,8 @@ namespace Dune {
 
         // the normal velocity
         RF vn = v*ig.centerUnitOuterNormal();
+        if (vn>=0)
+          cellinflux += vn*face_volume; // dt computation
 
         if (bc==2) // Outflow boundary
           {
@@ -382,8 +415,37 @@ namespace Dune {
         r[0] += q*eg.geometry().volume();
       }
 
+      //! set time in parameter class
+      void setTime (typename TP::Traits::RangeFieldType t)
+      {
+      }
+
+      //! to be called once before each time step
+      void preStep (typename TP::Traits::RangeFieldType time, int stages)
+      {
+      }
+      
+      //! to be called once before each stage
+      void preStage (typename TP::Traits::RangeFieldType time, int r)
+      {
+        dtmin = 1E100;
+      }
+
+      //! to be called once at the end of each stage
+      void postStage ()
+      {
+      }
+
+      //! to be called once before each stage
+      typename TP::Traits::RangeFieldType selectTimestep (typename TP::Traits::RangeFieldType dt) const
+      {
+        if (dtmin<dt) return dtmin; else return dt;
+      }
+      
 	private:
 	  TP& tp;
+      mutable typename TP::Traits::RangeFieldType dtmin; // accumulate minimum dt here
+      mutable typename TP::Traits::RangeFieldType cellinflux;
 	};
 
 

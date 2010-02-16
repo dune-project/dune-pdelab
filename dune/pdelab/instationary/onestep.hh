@@ -555,6 +555,74 @@ namespace Dune {
       Dune::FieldMatrix<R,3,4> B;
     };
 
+
+    //! Interface base class for time controllers
+    /**
+     * \tparam R C++ type of the floating point parameters
+     */
+    template<class R> 
+    class TimeControllerInterface
+    {
+    public:
+      typedef R RealType;
+      
+      /*! \brief Return name of the scheme
+      */
+      virtual RealType selectTimestep (RealType time, RealType givendt) = 0;
+      
+      //! every abstract base class has a virtual destructor
+      virtual ~TimeControllerInterface () {}
+    };
+
+    //! Default time controller; just returns given dt
+    /**
+     * \tparam R C++ type of the floating point parameters
+     */
+    template<class R> 
+    class SimpleTimeController : public TimeControllerInterface<R>
+    {
+    public:
+      typedef R RealType;
+      
+      /*! \brief Return name of the scheme
+      */
+      virtual RealType selectTimestep (RealType time, RealType givendt)
+      {
+        return givendt;
+      }
+    };
+
+
+    //! limit time step to maximum dt * CFL number
+    /**
+     * \tparam R     C++ type of the floating point parameters
+     * \tparam IGOS  instationary grid operator space
+     */
+    template<class R, class IGOS> 
+    class CFLTimeController : public TimeControllerInterface<R>
+    {
+    public:
+      typedef R RealType;
+
+      CFLTimeController (R cfl_, const IGOS& igos_) : cfl(cfl_), igos(igos_)
+      {}
+      
+      /*! \brief Return name of the scheme
+      */
+      virtual RealType selectTimestep (RealType time, RealType givendt)
+      {
+        if (cfl*igos.selectTimestep(givendt)<givendt)
+          return cfl*igos.selectTimestep(givendt);
+        else
+          return givendt;
+      }
+
+    private:
+      R cfl;
+      const IGOS& igos;
+    };
+
+
     //! Do one step of a time-stepping scheme
     /**
      * \tparam T          type to represent time values
@@ -606,8 +674,9 @@ namespace Dune {
       /*
        * \param[in]  xold value at begin of time step
        * \param[out] xnew value at end of time step; contains initial guess for first substep on entry
+       * \return selected time step size
        */
-      void apply (T time, T dt, TrlV& xold, TrlV& xnew)
+      T apply (T time, T dt, TrlV& xold, TrlV& xnew)
       {
 	std::vector<TrlV*> x(1); // vector of pointers to all steps
 	x[0] = &xold;            // initially we have only one
@@ -662,12 +731,19 @@ namespace Dune {
 
 	    // solve stage
 	    pdesolver.apply(*x[r]);
+
+            // stage cleanup
+            igos.postStage();
 	  }
 
 	// delete intermediate steps
 	for (int i=1; i<method->s(); ++i) delete x[i];
 
+        // step cleanup
+        igos.postStep();
+
 	step++;
+        return dt;
       }
 
     private:
@@ -685,8 +761,9 @@ namespace Dune {
      * \tparam LS         backend to solve diagonal linear system
      * \tparam TrlV       vector type to represent coefficients of solutions
      * \tparam TstV       vector type to represent residuals
+     * \tparam TC         time controller class
      */
-    template<class T, class IGOS, class LS, class TrlV, class TstV = TrlV>
+    template<class T, class IGOS, class LS, class TrlV, class TstV = TrlV, class TC = SimpleTimeController<T> >
     class ExplicitOneStepMethod
     {
       typedef typename TrlV::ElementType Real;
@@ -703,12 +780,39 @@ namespace Dune {
        * constructed with, so these objects should be valid for as long as the
        * constructed object is used (or until setMethod() is called, see
        * there).
+       * Use SimpleTimeController that does not control the time step.
        */
       ExplicitOneStepMethod(const TimeSteppingParameterInterface<T>& method_, IGOS& igos_, LS& ls_)
-	: method(&method_), igos(igos_), ls(ls_), verbosityLevel(1), step(1), D(igos)
+	: method(&method_), igos(igos_), ls(ls_), verbosityLevel(1), step(1), D(igos), 
+          tc(new SimpleTimeController<T>()), allocated(true)
       {
         if (method->implicit())
           DUNE_THROW(Exception,"explicit one step method called with implicit scheme");
+      }
+
+      //! construct a new one step scheme
+      /**
+       * \param method_    Parameter object.
+       * \param igos_      Assembler object (instationary grid operator space).
+       * \param pdesolver_ solver object (typically Newton).
+       * \param tc_        a time controller object
+       *
+       * The contructed method object stores references to the object it is
+       * constructed with, so these objects should be valid for as long as the
+       * constructed object is used (or until setMethod() is called, see
+       * there).
+       */
+      ExplicitOneStepMethod(const TimeSteppingParameterInterface<T>& method_, IGOS& igos_, LS& ls_, TC& tc_)
+	: method(&method_), igos(igos_), ls(ls_), verbosityLevel(1), step(1), D(igos), 
+          tc(&tc_), allocated(false)
+      {
+        if (method->implicit())
+          DUNE_THROW(Exception,"explicit one step method called with implicit scheme");
+      }
+
+      ~ExplicitOneStepMethod ()
+      {
+        if (allocated) delete tc;
       }
 
       //! change verbosity level; 0 means completely quiet
@@ -736,8 +840,9 @@ namespace Dune {
       /*
        * \param[in]  xold value at begin of time step
        * \param[out] xnew value at end of time step; contains initial guess for first substep on entry
+       * \return time step size 
        */
-      void apply (T time, T dt, TrlV& xold, TrlV& xnew)
+      T apply (T time, T dt, TrlV& xold, TrlV& xnew)
       {
 	std::vector<TrlV*> x(1); // vector of pointers to all steps
 	x[0] = &xold;         // initially we have only one
@@ -794,17 +899,35 @@ namespace Dune {
             beta = 0.0;
 	    igos.explicit_jacobian_residual(r,x,D,alpha,beta);
 
-	    // compute optimal dt (to be done later !!!)
+	    // let time controller compute the optimal dt
+            T newdt = tc->selectTimestep(time,dt);
+            if (verbosityLevel>=2 && newdt!=dt)
+              {
+                std::cout << "changed dt to "
+                          << std::setw(12) << std::setprecision(4) << std::scientific
+                          << newdt
+                          << std::endl;
+              }
+            dt = newdt;
+
+            // combine residual with selected dt
             alpha.axpy(dt,beta);
 
             // solve diagonal system
-            ls.apply(D,x[r],alpha,0.99); // dummy reduction
+            ls.apply(D,*x[r],alpha,0.99); // dummy reduction
+
+            // stage cleanup
+            igos.postStage();    
 	  }
 
 	// delete intermediate steps
 	for (int i=1; i<method->s(); ++i) delete x[i];
 
+        // step cleanup
+        igos.postStep();
+
 	step++;
+        return dt;
       }
 
     private:
@@ -814,6 +937,8 @@ namespace Dune {
       int verbosityLevel;
       int step;
       M D;
+      TimeControllerInterface<T> *tc;
+      bool allocated;
     };
 
     class FilenameHelper 

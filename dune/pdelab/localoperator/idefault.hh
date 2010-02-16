@@ -31,17 +31,17 @@ namespace Dune
             }
 
             //! to be called once before each time step
-            void preStep (const RealType& time, int stages)
+            void preStep (RealType time, int stages)
             {
             }
 
             //! to be called once at the end of each time step
-            void postStep (RealType& dt)
+            void postStep ()
             {
             }
 
             //! to be called once before each stage
-            void preStage (const RealType& time, int r)
+            void preStage (RealType time, int r)
             {
                 stage = r;
             }
@@ -55,6 +55,12 @@ namespace Dune
             //! to be called once at the end of each stage
             void postStage ()
             {
+            }
+
+            //! to be called once before each stage
+            RealType selectTimestep (RealType dt) const
+            {
+                return dt;
             }
 
         private:
