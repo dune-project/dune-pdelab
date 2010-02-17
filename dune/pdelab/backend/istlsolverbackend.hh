@@ -122,8 +122,8 @@ namespace Dune {
 	  template<typename T>
 	  struct NeighbourGatherScatter
 	  {
-	    NeighbourGatherScatter(T rank_)
-	      : myrank(rank_)
+	    NeighbourGatherScatter(int rank_, std::set<int>& neighbours_)
+	      : myrank(rank_), neighbours(neighbours_)
 	    {}
 	    
 	    template<class MessageBuffer, class DataType>
@@ -141,7 +141,7 @@ namespace Dune {
 	    }
 	    
 	    T myrank;
-	    std::set<int> neighbours;
+	    std::set<int>& neighbours;
 	  };
 	  
 	    
@@ -154,7 +154,8 @@ namespace Dune {
 	    template<class MessageBuffer, class DataType>
 	    void gather (MessageBuffer& buff, DataType& data)
 	    {
-	      buff.write(true);
+	      data=true;
+	      buff.write(data);
 	    }
 	    
 	    template<class MessageBuffer, class DataType>
@@ -180,7 +181,8 @@ namespace Dune {
 	    template<class MessageBuffer, class DataType>
 	    void gather (MessageBuffer& buff, typename B::size_type i, DataType& data)
 	    {
-	      if(B::access(mask, i)>0)
+	      //if(B::access(mask, i)>0)
+	      if(data < std::numeric_limits<DataType>::max())
 		// We now the global index and therefore write it
 		buff.write(data);
 	      else
@@ -376,7 +378,7 @@ namespace Dune {
 	{
 	  --i; // i was already incremented => decrement for correct position
 	  if(i%GFS::Traits::noChilds==0)
-	    BlockProcessorHelper<GFS, true, GFS::Traits::noChilds>::addIndexAndProject(gi, i/GFS::Traits::noChilds,
+	    BlockProcessorHelper<GFS, false, 1>::addIndexAndProject(gi, i/GFS::Traits::noChilds,
 								attr, m, idxset);
 	}
 	
@@ -424,9 +426,12 @@ namespace Dune {
 	  if(v[i][j]==1.0 && sharedDOF[i][j])
 	    ++count;
 
+      //std::cout<<gv.comm().rank()<<": shared count is"<< count.touint()<<std::endl;
+      
       // Maybe divide by block size?
       BlockProcessor<GFS>::postProcessCount(count);
-      
+      //std::cout<<gv.comm().rank()<<": shared block count is"<< count.touint()<<std::endl;
+
       std::vector<GlobalIndex> counts(gfs.gridview().comm().size());
       MPI_Allgather(&count, 1, Generic_MPI_Datatype<GlobalIndex>::get(), &(counts[0]),
 		    1, Generic_MPI_Datatype<GlobalIndex>::get(), 
@@ -436,6 +441,7 @@ namespace Dune {
       GlobalIndex start=0;
       for(int i=0; i<gfs.gridview().comm().rank(); ++i)
 	start=start+counts[i];
+      //std::cout<<gv.comm().rank()<<": start index = "<<start.touint()<<std::endl;
       
       typedef typename GFS::template VectorContainer<GlobalIndex>::Type GIVector;
       GIVector scalarIndices(gfs, std::numeric_limits<GlobalIndex>::max());
@@ -452,7 +458,7 @@ namespace Dune {
       typedef GlobalIndexGatherScatter<typename GFS::Traits::BackendType,V> GIGS;
       Dune::PDELab::GenericDataHandle3<GFS,GIVector,GIGS> gdhgi(gfs, scalarIndices, GIGS(v));  
       if (gfs.gridview().comm().size()>1)
-	gfs.gridview().communicate(gdhgi,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+	gfs.gridview().communicate(gdhgi,Dune::All_All_Interface,Dune::ForwardCommunication);
 
       // Setup the index set
       c.indexSet().beginResize();
@@ -472,15 +478,20 @@ namespace Dune {
 	  }
 	}
       c.indexSet().endResize();
+      //std::cout<<gv.comm().rank()<<": index set size = "<<c.indexSet().size()<<std::endl;
+
       // Compute neighbours using communication
       typedef NeighbourGatherScatter<typename V::ElementType> NeighbourGS;
-      NeighbourGS neighbourGS=
-	NeighbourGS(gfs.gridview().comm().rank());
-      Dune::PDELab::GenericDataHandle<GFS,V,NeighbourGS> gdhn(gfs, v, neighbourGS);
+      std::set<int> neighbours;      
+      Dune::PDELab::GenericDataHandle<GFS,V,NeighbourGS> gdhn(gfs, v, NeighbourGS(gfs.gridview().comm().rank(),
+										  neighbours));
       if (gfs.gridview().comm().size()>1)
-	gfs.gridview().communicate(gdhn,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
-      c.remoteIndices().setNeighbours(neighbourGS.neighbours);
+	gfs.gridview().communicate(gdhn,Dune::All_All_Interface,Dune::ForwardCommunication);
+      c.remoteIndices().setNeighbours(neighbours);
+      //std::cout<<gv.comm().rank()<<": no neighbours="<<neighbours.size()<<std::endl;
+      
       c.remoteIndices().template rebuild<false>();
+      //std::cout<<c.remoteIndices()<<std::endl;
     }
 #endif
     
