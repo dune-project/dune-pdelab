@@ -295,20 +295,24 @@ namespace Dune {
 	};
       };
       
-      template<typename GFS, bool b>
+      template<typename GFS, bool b, int k>
       struct BlockProcessorHelper
+      {};
+      
+      template<typename GFS, bool b>
+      struct BlockProcessorHelper<GFS,b,1>
       {
 	
 	template<typename T>
 	struct AMGVectorTypeSelector
 	{
-	  typedef T Type;
+	  typedef typename T::BaseT  Type;
 	};
 	
 	template<typename T>
 	static typename AMGVectorTypeSelector<T>::Type& getVector(T& t)
 	{
-	  return t;
+	  return t.base();
 	}
 	
 	template<typename G>
@@ -340,8 +344,8 @@ namespace Dune {
 	}
       };
 
-      template<typename GFS>
-      struct BlockProcessorHelper<GFS, true>
+      template<typename GFS, int k>
+      struct BlockProcessorHelper<GFS, true, k>
       {
 	template<typename T>
 	struct AMGVectorTypeSelector
@@ -372,7 +376,7 @@ namespace Dune {
 	{
 	  --i; // i was already incremented => decrement for correct position
 	  if(i%GFS::Traits::noChilds==0)
-	    BlockProcessorHelper<GFS, true>::addIndexAndProject(gi, i/GFS::Traits::noChilds,
+	    BlockProcessorHelper<GFS, true, GFS::Traits::noChilds>::addIndexAndProject(gi, i/GFS::Traits::noChilds,
 								attr, m, idxset);
 	}
 	
@@ -380,7 +384,8 @@ namespace Dune {
 	
       template<typename GFS>
       struct BlockProcessor
-	: public BlockProcessorHelper<GFS, BlockwiseIndices<GFS>::value>
+	: public BlockProcessorHelper<GFS, BlockwiseIndices<GFS>::value,
+				      GFS::Traits::BackendType::BlockSize>
       {};
 
       
@@ -450,6 +455,7 @@ namespace Dune {
 	gfs.gridview().communicate(gdhgi,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
 
       // Setup the index set
+      c.indexSet().beginResize();
       for (typename V::size_type i=0, ii=0; i<v.N(); ++i)
 	for (typename V::size_type j=0; j<v[i].N(); ++j){
 	  Dune::OwnerOverlapCopyAttributeSet::AttributeSet attr;
@@ -465,7 +471,7 @@ namespace Dune {
 	      addIndexAndProject(scalarIndices[i][j], ++ii, attr, m, c.indexSet());
 	  }
 	}
-	 
+      c.indexSet().endResize();
       // Compute neighbours using communication
       typedef NeighbourGatherScatter<typename V::ElementType> NeighbourGS;
       NeighbourGS neighbourGS=

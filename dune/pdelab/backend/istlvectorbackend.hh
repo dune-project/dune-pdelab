@@ -16,6 +16,11 @@ namespace Dune {
 	class ISTLVectorBackend
 	{
 	public:
+      enum{
+        //! \brief export the block size
+        BlockSize = BLOCKSIZE
+      };
+      
 	  //! container construction
 	  template<typename T, typename E>
 	  class VectorContainer : public Dune::BlockVector< Dune::FieldVector<E,BLOCKSIZE> >
