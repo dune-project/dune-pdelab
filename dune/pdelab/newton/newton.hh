@@ -21,6 +21,7 @@ namespace Dune
         class NewtonDefectError : public NewtonError {};
         class NewtonLinearSolverError : public NewtonError {};
         class NewtonLineSearchError : public NewtonError {};
+        class NewtonNotConverged : public NewtonError {};
 
         // Status information of a linear solver
         template<class RFType>
@@ -255,17 +256,12 @@ namespace Dune
             }
             this->res.elapsed = timer.elapsed();
             if (this->verbosity_level == 1)
-            {
-                std::cout << "  Newton ";
-                if (!this->res.converged)
-                    std::cout << "NOT ";
-                std::cout << "converged after " << std::setw(2) << this->res.iterations
+                std::cout << "  Newton converged after " << std::setw(2) << this->res.iterations
                           << " iterations.  Reduction: "
                           << std::setw(12) << std::setprecision(4) << std::scientific
                           << this->res.reduction
                           << "   (" << std::setprecision(4) << this->res.elapsed << "s)"
                           << std::endl;
-            }
         };
 
         template<class GOS, class TrlV, class TstV>
@@ -319,7 +315,10 @@ namespace Dune
                     return false;
                 this->res.converged = this->res.defect < abs_limit
                     || this->res.defect < this->res.first_defect * reduction;
-                return this->res.iterations >= maxit || this->res.converged;
+                if (this->res.iterations >= maxit && !this->res.converged)
+                    DUNE_THROW(NewtonNotConverged,
+                               "NewtonTerminate::terminate(): Maximum iteration count reached");
+                return this->res.converged;
             }
 
         private:
