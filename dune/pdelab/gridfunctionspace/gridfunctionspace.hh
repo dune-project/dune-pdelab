@@ -1059,10 +1059,10 @@ namespace Dune {
             Dune::dinfo << "codim=" << j->first << " offset=" << nglobal
                         << " size=" << n << std::endl;
             nglobal += n;
-            if (j->first!=Dune::LocalKey::intersectionCodim)
-              Dune::dwarn << "WARNING: cannot handle multiple geometry types "
-                          << "in static size grid function space"
-                          << std::endl;;
+//             if (j->first!=Dune::LocalKey::intersectionCodim)
+//               Dune::dwarn << "WARNING: cannot handle multiple geometry types "
+//                           << "in static size grid function space"
+//                           << std::endl;;
           }
 	  }
 
