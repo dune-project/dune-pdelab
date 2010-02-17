@@ -6,6 +6,7 @@
 #include <dune/istl/solvers.hh>
 #include <dune/istl/preconditioners.hh>
 #include <dune/istl/scalarproducts.hh>
+#include <dune/istl/paamg/amg.hh>
 #include <dune/istl/io.hh>
 #include <dune/istl/superlu.hh>
 
@@ -58,6 +59,12 @@ namespace Dune {
 	template<typename GFS>
 	class ParallelISTLHelper
 	{
+	  /**
+	   * @brief Writes 1<<24 to each data item (of the container) that is gathered or scattered 
+	   * and is neither interior nor border.
+	   * 
+	   * Can be used to mark ghost cells.
+	   */
 	  class GhostGatherScatter
 	  {
 	  public:
@@ -79,6 +86,12 @@ namespace Dune {
 		}
 	  };
 
+	  /**
+	   * @brief GatherScatter handle that sets 1<<24 for data items neither associated to
+	   * the interior or border and take the minimum when scattering.
+	   *
+	   * Used to compute an owner rank for each unknown.
+	   */
 	  class InteriorBorderGatherScatter
 	  {
 	  public:
@@ -100,6 +113,88 @@ namespace Dune {
 		  else
 			data = std::min(data,x);
 		}
+	  };
+
+	  /**
+	   * @brief GatherScatter handle for finding out about neighbouring processor ranks.
+	   *
+	   */
+	  template<typename T>
+	  struct NeighbourGatherScatter
+	  {
+	    NeighbourGatherScatter(T rank_)
+	      : myrank(rank_)
+	    {}
+	    
+	    template<class MessageBuffer, class DataType>
+	    void gather (MessageBuffer& buff, DataType& data)
+	    {
+	      buff.write(myrank);
+	    }
+	    
+	    template<class MessageBuffer, class DataType>
+	    void scatter (MessageBuffer& buff, DataType& data)
+	    {
+	      DataType x; 
+	      buff.read(x);
+	      neighbours.insert((int)x);
+	    }
+	    
+	    T myrank;
+	    std::set<int> neighbours;
+	  };
+	  
+	    
+	  /**
+	   * @brief GatherScatter handle for finding out about neighbouring processor ranks.
+	   *
+	   */
+	  struct SharedGatherScatter
+	  {	    
+	    template<class MessageBuffer, class DataType>
+	    void gather (MessageBuffer& buff, DataType& data)
+	    {
+	      buff.write(true);
+	    }
+	    
+	    template<class MessageBuffer, class DataType>
+	    void scatter (MessageBuffer& buff, DataType& data)
+	    {
+	      bool x; 
+	      buff.read(x);
+	      data = data || x;
+	    }
+	  };
+
+	  /**
+	   * @brief GatherScatter handle for finding out about neighbouring processor ranks.
+	   *
+	   */
+	  template<typename B, typename V1>
+	  struct GlobalIndexGatherScatter
+	  {	    
+	    GlobalIndexGatherScatter(const V1& mask_)
+	      : mask(mask_)
+	    {}
+	    
+	    template<class MessageBuffer, class DataType>
+	    void gather (MessageBuffer& buff, typename B::size_type i, DataType& data)
+	    {
+	      if(B::access(mask, i)>0)
+		// We now the global index and therefore write it
+		buff.write(data);
+	      else
+		buff.write(std::numeric_limits<DataType>::max());
+	    }
+	    
+	    template<class MessageBuffer, class DataType>
+	    void scatter (MessageBuffer& buff, typename B::size_type i, DataType& data)
+	    {
+	      DataType x; 
+	      buff.read(x);
+	      data = std::min(data, x);
+	    }
+	    V1 mask;
 	  };
 
 	  typedef typename GFS::template VectorContainer<double>::Type V;
@@ -143,12 +238,246 @@ namespace Dune {
 		return v[i][j];
 	  }
 
+#if HAVE_MPI
+
+	  /**
+	   * @brief Creates a matrix suitable for parallel AMG and the parallel information
+	   *
+	   * It is silently assumed that the unknows are associated with vertices.
+	   *
+	   * @tparam MatrixType The type of the ISTL matrix used.
+	   * @tparam Comm The type of the OwnerOverlapCopyCommunication
+	   * @param m The local matrix.
+	   * @param c The parallel information object providing index set, interfaces and 
+	   * communicators.
+	   */
+	  template<typename MatrixType, typename Comm>
+	  void createIndexSetAndProjectForAMG(MatrixType& m, Comm& c);
+#endif
 	private:
 	  const GFS& gfs;
 	  V v;
 	};
 
 
+    namespace
+    {
+      template<typename GFS, int k>
+      struct BlockwiseIndicesHelper
+      {
+	enum{ value = false };
+      };
+      
+      template<typename M, typename B, int k>
+      struct BlockSizeIsEqual
+      {
+	enum{ value = false };
+      };
+      
+      template<int k>
+      struct BlockSizeIsEqual<GridFunctionSpaceBlockwiseMapper,ISTLVectorBackend<k>,k>
+      {
+	enum{ value = true };
+      };
+
+      template<typename GFS>
+      struct BlockwiseIndicesHelper<GFS,1>
+      {
+	enum{ value =  BlockSizeIsEqual<typename GFS::Traits::MapperType,
+	      typename GFS::Traits::BackendType, GFS::Traits::noChilds>::value};
+      };
+
+      template<typename GFS>
+      struct BlockwiseIndices
+      {
+	enum{ 
+	  value = BlockwiseIndicesHelper<GFS,GFS::Traits::isComposite>::value
+	};
+      };
+      
+      template<typename GFS, bool b>
+      struct BlockProcessorHelper
+      {
+	
+	template<typename T>
+	struct AMGVectorTypeSelector
+	{
+	  typedef T Type;
+	};
+	
+	template<typename T>
+	static typename AMGVectorTypeSelector<T>::Type& getVector(T& t)
+	{
+	  return t;
+	}
+	
+	template<typename G>
+	static void postProcessCount(G& g)
+	{}
+
+	template<typename G>
+	static void increment(G& g, std::size_t i)
+	{
+	  ++g;
+	}
+	template<typename M, typename TI>
+	static void addIndexAndProject(const typename TI::GlobalIndex& gi, std::size_t i, 
+				       typename TI::LocalIndex::Attribute attr, M& m, TI& idxset)
+	{
+	  // Set to Dirichlet boundary
+	  typedef typename M::ColIterator Citer;
+	  Citer diag;
+	  for(Citer c=m[i].begin(); c != m[i].end(); ++c){
+	    if(c.index()==i)
+	      diag=c;
+	    *c=0;
+	  }
+	  for(typename M::size_type j=0; j<diag->N();++j)
+	    (*diag)[j][j]=1.0;
+	  
+	  // Add index
+	  idxset.add(gi, typename TI::LocalIndex(i, attr));
+	}
+      };
+
+      template<typename GFS>
+      struct BlockProcessorHelper<GFS, true>
+      {
+	template<typename T>
+	struct AMGVectorTypeSelector
+	{
+	  typedef typename T::BaseT Type;
+	};
+	
+	template<typename T>
+	static typename AMGVectorTypeSelector<T>::Type& getVector(T& t)
+	{
+	  return t.base();
+	}
+	template<typename G>
+	static void postProcessCount(G& g)
+	{ 
+	  g=g/GFS::Traits::noChilds;
+	}
+
+	template<typename G>
+	static void increment(G& g, std::size_t i)
+	{
+	  if(i%GFS::Traits::noChilds==0)
+	    ++g;
+	}
+	template<typename M, typename TI>
+	static void addIndexAndProject(const typename TI::GlobalIndex& gi, std::size_t i, 
+				       typename TI::LocalIndex::Attribute attr, M& m, TI& idxset)
+	{
+	  --i; // i was already incremented => decrement for correct position
+	  if(i%GFS::Traits::noChilds==0)
+	    BlockProcessorHelper<GFS, true>::addIndexAndProject(gi, i/GFS::Traits::noChilds,
+								attr, m, idxset);
+	}
+	
+      };
+	
+      template<typename GFS>
+      struct BlockProcessor
+	: public BlockProcessorHelper<GFS, BlockwiseIndices<GFS>::value>
+      {};
+
+      
+      
+
+    }// end anonymous namspace
+	
+
+#if HAVE_MPI   
+    template<typename GFS>
+    template<typename M, typename C>
+    void ParallelISTLHelper<GFS>::createIndexSetAndProjectForAMG(M& m, C& c)
+    {
+      typedef typename GFS::Traits::GridViewType GV;
+      const GV& gv = gfs.gridview();
+      static const std::size_t dim = GV::Grid::dimension;
+      if(gv.comm().size()>1 && 	 gv.grid().overlapSize(dim)<1)
+	DUNE_THROW(Dune::InvalidStateException, "ParallelISTLHelper::createIndexSetAndProjectForAMG: "
+		   <<"Only grids with at least one layer of overlap cells are supported");
+
+      // First find out which dofs we share with other processors
+      typedef typename GFS::template VectorContainer<bool>::Type BoolVector;
+      BoolVector sharedDOF(gfs, false);
+      Dune::PDELab::GenericDataHandle<GFS,BoolVector,SharedGatherScatter> gdh(gfs,sharedDOF,SharedGatherScatter());
+
+      if (gfs.gridview().comm().size()>1)
+	gfs.gridview().communicate(gdh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+
+      // Count shared dofs that we own
+      typedef typename C::ParallelIndexSet::GlobalIndex GlobalIndex;
+      GlobalIndex count=0;
+      std::size_t noScalars=0;
+      
+      for (typename V::size_type i=0; i<v.N(); ++i)
+	for (typename V::size_type j=0; j<v[i].N(); ++j, ++noScalars)
+	  if(v[i][j]==1.0 && sharedDOF[i][j])
+	    ++count;
+
+      // Maybe divide by block size?
+      BlockProcessor<GFS>::postProcessCount(count);
+      
+      std::vector<GlobalIndex> counts(gfs.gridview().comm().size());
+      MPI_Allgather(&count, 1, Generic_MPI_Datatype<GlobalIndex>::get(), &(counts[0]),
+		    1, Generic_MPI_Datatype<GlobalIndex>::get(), 
+		    gfs.gridview().comm());
+      
+      // Compute start index start_p = \sum_{i=0}^{i<p} counts_i
+      GlobalIndex start=0;
+      for(int i=0; i<gfs.gridview().comm().rank(); ++i)
+	start=start+counts[i];
+      
+      typedef typename GFS::template VectorContainer<GlobalIndex>::Type GIVector;
+      GIVector scalarIndices(gfs, std::numeric_limits<GlobalIndex>::max());
+      
+      
+      for (typename V::size_type i=0, ii=0; i<v.N(); ++i)
+	for (typename V::size_type j=0; j<v[i].N(); ++j)
+	  if(v[i][j]==1.0 && sharedDOF[i][j]){
+	    scalarIndices[i][j]=start;
+	    BlockProcessor<GFS>::increment(start, ++ii);
+	  }
+
+      // publish global indices for the shared DOFS to other processors.
+      typedef GlobalIndexGatherScatter<typename GFS::Traits::BackendType,V> GIGS;
+      Dune::PDELab::GenericDataHandle3<GFS,GIVector,GIGS> gdhgi(gfs, scalarIndices, GIGS(v));  
+      if (gfs.gridview().comm().size()>1)
+	gfs.gridview().communicate(gdhgi,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+
+      // Setup the index set
+      for (typename V::size_type i=0, ii=0; i<v.N(); ++i)
+	for (typename V::size_type j=0; j<v[i].N(); ++j){
+	  Dune::OwnerOverlapCopyAttributeSet::AttributeSet attr;
+	  if(scalarIndices[i][j]!=std::numeric_limits<GlobalIndex>::max()){
+	    // global index exist in index set
+	    if(v[i][j]>0){
+		// This dof is managed by us.
+		attr = Dune::OwnerOverlapCopyAttributeSet::owner;
+	    }else{
+	      attr = Dune::OwnerOverlapCopyAttributeSet::copy;
+	    }
+	    BlockProcessor<GFS>::
+	      addIndexAndProject(scalarIndices[i][j], ++ii, attr, m, c.indexSet());
+	  }
+	}
+	 
+      // Compute neighbours using communication
+      typedef NeighbourGatherScatter<typename V::ElementType> NeighbourGS;
+      NeighbourGS neighbourGS=
+	NeighbourGS(gfs.gridview().comm().rank());
+      Dune::PDELab::GenericDataHandle<GFS,V,NeighbourGS> gdhn(gfs, v, neighbourGS);
+      if (gfs.gridview().comm().size()>1)
+	gfs.gridview().communicate(gdhn,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+      c.remoteIndices().setNeighbours(neighbourGS.neighbours);
+      c.remoteIndices().template rebuild<false>();
+    }
+#endif
+    
 	//========================================================
 	// Generic support for nonoverlapping grids
 	//========================================================
@@ -1084,6 +1413,94 @@ namespace Dune {
       const GFS& gfs;
     };
 
+
+    template<class GFS, int s=96>
+    class ISTLBackend_BCGS_AMG_SSOR
+    {
+      typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
+      
+    public:
+      ISTLBackend_BCGS_AMG_SSOR(const GFS& gfs_, int smoothsteps=2,
+			      unsigned maxiter_=5000, bool verbose_=true)
+	: gfs(gfs_), phelper(gfs), maxiter(maxiter_), steps(smoothsteps), verbose(verbose_)
+      {}
+      
+      
+      /*! \brief compute global norm of a vector
+    
+	\param[in] v the given vector
+      */
+      template<class V>
+      typename V::ElementType norm (const V& v) const
+      {
+	typedef Dune::PDELab::OverlappingScalarProduct<GFS,V> PSP;
+	PSP psp(gfs,phelper);
+	return psp.norm(v);
+      }
+
+      /*! \brief solve the given linear system
+    
+	\param[in] A the given matrix
+	\param[out] z the solution vector to be computed
+	\param[in] r right hand side
+	\param[in] reduction to be achieved
+      */
+      template<class M, class V>
+      void apply(M& A, V& z, V& r, typename V::ElementType reduction)
+      {
+	typedef typename M::BaseT MatrixType;
+	typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type 
+	  VectorType;
+	typedef typename Dune::OwnerOverlapCopyCommunication<bigunsignedint<s>,int>
+	  Comm;
+  
+	Comm oocc(gfs.gridview().comm());
+	MatrixType mat=A.base();
+	phelper.createIndexSetAndProjectForAMG(mat, oocc);
+	typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
+	  Dune::Amg::FirstDiagonal> >
+	  Criterion;
+	typedef Dune::SeqSSOR<MatrixType,VectorType,VectorType> Smoother;
+	typedef Dune::BlockPreconditioner<VectorType,VectorType,Comm,Smoother> ParSmoother;
+	typedef typename Dune::Amg::SmootherTraits<ParSmoother>::Arguments SmootherArgs;
+	typedef Dune::OverlappingSchwarzOperator<MatrixType,VectorType,VectorType,Comm> Operator;
+	typedef Dune::Amg::AMG<Operator,VectorType,ParSmoother,Comm> AMG;
+	SmootherArgs smootherArgs;
+	smootherArgs.iterations = 1;
+	smootherArgs.relaxationFactor = 1.8;
+  
+	Criterion criterion(15,2000);
+	criterion.setDebugLevel(verbose?2:0);
+	Dune::OverlappingSchwarzScalarProduct<VectorType,Comm> sp(oocc);
+	Operator oop(mat, oocc);
+	AMG amg=AMG(oop, criterion, smootherArgs, 1, steps, steps, false, oocc);
+
+	Dune::InverseOperatorResult stat;
+	int verb=0;
+	if (gfs.gridview().comm().rank()==0) verb=verbose;
+
+	Dune::BiCGSTABSolver<VectorType> solver(oop,sp,amg,reduction,maxiter,verb);
+	solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
+	res.converged  = stat.converged;
+	res.iterations = stat.iterations;
+	res.elapsed    = stat.elapsed;
+	res.reduction  = stat.reduction;
+      }
+      
+      /*! \brief Return access to result data */
+      const Dune::PDELab::LinearSolverResult<double>& result() const
+      {
+	return res;
+      }
+
+    private:
+      const GFS& gfs;
+      PHELPER phelper;
+      Dune::PDELab::LinearSolverResult<double> res;
+      unsigned maxiter;
+      int steps;
+      int verbose;
+    };
 
   } // namespace PDELab
 } // namespace Dune

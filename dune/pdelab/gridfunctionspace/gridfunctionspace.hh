@@ -34,10 +34,38 @@ namespace Dune {
     // grid function space : single component case
     //=======================================
 
-	//! \brief collect types exported by a multi-component grid function space
-	template<typename G, typename B>
+	template<typename G, typename B, typename M, int k>
 	struct PowerCompositeGridFunctionSpaceTraits
 	{
+      enum{ 
+        //! \brief True if this grid function space is composed of others.
+        isComposite = 1,
+        //! \brief number of child spaces
+        noChilds = k
+      };
+      
+	  //! \brief the grid view where grid function is defined upon
+	  typedef G GridViewType;
+
+	  //! \brief vector backend
+	  typedef B BackendType;
+
+      //! \brief mapper
+      typedef M MapperType;
+      
+	  //! \brief short cut for size type exported by Backend
+	  typedef typename B::size_type SizeType;
+	};
+
+	//! \brief collect types exported by a leaf grid function space
+	template<typename G, typename L, typename C, typename B>
+	struct GridFunctionSpaceTraits //: public PowerCompositeGridFunctionSpaceTraits<G,B>
+	{
+      enum{ 
+        //! \brief True if this grid function space is composed of others.
+        isComposite = 0
+      };
+
 	  //! \brief the grid view where grid function is defined upon
 	  typedef G GridViewType;
 
@@ -46,12 +74,7 @@ namespace Dune {
 
 	  //! \brief short cut for size type exported by Backend
 	  typedef typename B::size_type SizeType;
-	};
 
-	//! \brief collect types exported by a leaf grid function space
-	template<typename G, typename L, typename C, typename B>
-	struct GridFunctionSpaceTraits : public PowerCompositeGridFunctionSpaceTraits<G,B>
-	{
 	  //! \brief local finite element map
 	  typedef L LocalFiniteElementMapType;
 
@@ -1130,7 +1153,8 @@ namespace Dune {
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
-                                                    typename T::Traits::BackendType>
+                                                    typename T::Traits::BackendType,
+                                                    P, k>
       Traits;
 
       //! extract type of container storing Es
@@ -1311,7 +1335,8 @@ namespace Dune {
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
-                                                    typename T::Traits::BackendType>
+                                                    typename T::Traits::BackendType,
+                                                    GridFunctionSpaceBlockwiseMapper, k>
       Traits;
 
       //! extract type of container storing Es
@@ -1499,7 +1524,8 @@ namespace Dune {
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
-                                                    typename T::Traits::BackendType>
+                                                    typename T::Traits::BackendType,
+                                                    P, k>
       Traits;
 
       //! \brief Construct a PowerGridFunction with k clones of the function t
@@ -1530,7 +1556,8 @@ namespace Dune {
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
-                                                    typename T::Traits::BackendType>
+                                                    typename T::Traits::BackendType,
+                                                    P, 2>
       Traits;
 
       //! Construct a PowerGridFunction with k clones of the function t
@@ -1557,7 +1584,8 @@ namespace Dune {
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
-                                                    typename T::Traits::BackendType>
+                                                    typename T::Traits::BackendType,
+                                                    P, 3>
       Traits;
 
       //! Construct a PowerGridFunction with k clones of the function t
@@ -1586,7 +1614,8 @@ namespace Dune {
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
-                                                    typename T::Traits::BackendType>
+                                                    typename T::Traits::BackendType,
+                                                    P, 4>
       Traits;
 
       //! Construct a PowerGridFunction with k clones of the function t
@@ -1617,7 +1646,8 @@ namespace Dune {
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
-                                                    typename T::Traits::BackendType>
+                                                    typename T::Traits::BackendType,
+                                                    P, 5>
       Traits;
 
       //! Construct a PowerGridFunction with k clones of the function t
@@ -1650,7 +1680,8 @@ namespace Dune {
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
-                                                    typename T::Traits::BackendType>
+                                                    typename T::Traits::BackendType,
+                                                    P, 6>
       Traits;
 
       //! Construct a PowerGridFunction with k clones of the function t
@@ -1684,8 +1715,9 @@ namespace Dune {
 	{
 	public:
       //! export traits class
-      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
-                                                    typename T::Traits::BackendType>
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType,
+                                                    typename T::Traits::BackendType,
+                                                    P, 7>
       Traits;
 
       //! Construct a PowerGridFunction with k clones of the function t
@@ -1722,7 +1754,8 @@ namespace Dune {
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
-                                                    typename T::Traits::BackendType>
+                                                    typename T::Traits::BackendType,
+                                                    P, 8>
       Traits;
 
       //! Construct a PowerGridFunction with k clones of the function t
@@ -1761,7 +1794,8 @@ namespace Dune {
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
-                                                    typename T::Traits::BackendType>
+                                                    typename T::Traits::BackendType,
+                                                    P, 9>
       Traits;
 
       //! Construct a PowerGridFunction with k clones of the function t
@@ -1802,7 +1836,8 @@ namespace Dune {
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
-                                                    typename T::Traits::BackendType>
+                                                    typename T::Traits::BackendType,
+                                                    P, 10>
       Traits;
 
       //! Construct a PowerGridFunction with k clones of the function t
@@ -1917,6 +1952,76 @@ namespace Dune {
       }
 	};
 
+    namespace
+    {
+      // TMP to count the number of non empty entries
+      template< typename T0, typename T1, typename T2, typename T3,
+			 typename T4, typename T5, typename T6, typename T7, typename T8>
+      struct NonEmptyChilds
+      {
+        enum{ value = 9 };
+      };
+      
+      template< typename T0, typename T1, typename T2, typename T3,
+			 typename T4, typename T5, typename T6, typename T7>
+      struct NonEmptyChilds<T0,T1,T2,T3,T4,T5,T6,T7,EmptyChild>
+      {
+        enum{ value = 8 };
+      };
+
+      template< typename T0, typename T1, typename T2, typename T3,
+			 typename T4, typename T5, typename T6>
+      struct NonEmptyChilds<T0,T1,T2,T3,T4,T5,T6,EmptyChild,EmptyChild>
+      {
+        enum{ value = 7 };
+      };
+      
+      template< typename T0, typename T1, typename T2, typename T3,
+			 typename T4, typename T5>
+      struct NonEmptyChilds<T0,T1,T2,T3,T4,T5,EmptyChild,EmptyChild,EmptyChild>
+      {
+        enum{ value = 6 };
+      };
+
+      template< typename T0, typename T1, typename T2, typename T3,
+			 typename T4>
+      struct NonEmptyChilds<T0,T1,T2,T3,T4,EmptyChild,EmptyChild,EmptyChild,EmptyChild>
+      {
+        enum{ value = 5 };
+      };
+
+      template< typename T0, typename T1, typename T2, typename T3>
+      struct NonEmptyChilds<T0,T1,T2,T3,EmptyChild,EmptyChild,EmptyChild,EmptyChild,EmptyChild>
+      {
+        enum{ value = 4 };
+      };
+      
+      template< typename T0, typename T1, typename T2>
+      struct NonEmptyChilds<T0,T1,T2,EmptyChild,EmptyChild,EmptyChild,EmptyChild,EmptyChild,EmptyChild>
+      {
+        enum{ value = 3 };
+      };
+      
+      template< typename T0, typename T1>
+      struct NonEmptyChilds<T0,T1,EmptyChild,EmptyChild,EmptyChild,EmptyChild,EmptyChild,EmptyChild,EmptyChild>
+      {
+        enum{ value = 2 };
+      };
+           
+      template< typename T0>
+      struct NonEmptyChilds<T0,EmptyChild,EmptyChild,EmptyChild,EmptyChild,EmptyChild,EmptyChild,EmptyChild,EmptyChild>
+      {
+        enum{ value = 1 };
+      };
+     
+      template<>
+      struct NonEmptyChilds<EmptyChild,EmptyChild,EmptyChild,EmptyChild,EmptyChild,EmptyChild,EmptyChild,EmptyChild,EmptyChild>
+      {
+        enum{ value = 1 };
+      };
+    }
+    
+
 	template<typename P, typename T0, typename T1, typename T2, typename T3,
 			 typename T4, typename T5, typename T6, typename T7, typename T8>
 	class CompositeGridFunctionSpace;
@@ -1944,7 +2049,10 @@ namespace Dune {
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T0::Traits::GridViewType, 
-                                                    typename T0::Traits::BackendType>
+                                                    typename T0::Traits::BackendType,
+                                                    P,
+                                                    NonEmptyChilds<T0,T1,T2,T3,T4,T5,
+                                                                   T6,T7,T8>::value>
       Traits;
 
       //! extract type of container storing Es
@@ -2121,7 +2229,10 @@ namespace Dune {
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T0::Traits::GridViewType, 
-                                                    typename T0::Traits::BackendType>
+                                                    typename T0::Traits::BackendType,
+                                                    GridFunctionSpaceBlockwiseMapper,
+                                                    NonEmptyChilds<T0,T1,T2,T3,T4,T5,
+                                                                   T6,T7,T8>::value>
       Traits;
 
       //! extract type of container storing Es
