@@ -13,6 +13,7 @@
 #include "../gridfunctionspace/constraints.hh"
 #include "../gridfunctionspace/genericdatahandle.hh"
 #include "../newton/newton.hh"
+#include "istlvectorbackend.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -369,14 +370,13 @@ namespace Dune {
 	template<typename G>
 	static void increment(G& g, std::size_t i)
 	{
-	  if(i%GFS::Traits::noChilds==0)
+	  if((i+1)%GFS::Traits::noChilds==0)
 	    ++g;
 	}
 	template<typename M, typename TI>
 	static void addIndexAndProject(const typename TI::GlobalIndex& gi, std::size_t i, 
 				       typename TI::LocalIndex::Attribute attr, M& m, TI& idxset)
 	{
-	  --i; // i was already incremented => decrement for correct position
 	  if(i%GFS::Traits::noChilds==0)
 	    BlockProcessorHelper<GFS, false, 1>::addIndexAndProject(gi, i/GFS::Traits::noChilds,
 								attr, m, idxset);
@@ -451,7 +451,7 @@ namespace Dune {
 	for (typename V::size_type j=0; j<v[i].N(); ++j)
 	  if(v[i][j]==1.0 && sharedDOF[i][j]){
 	    scalarIndices[i][j]=start;
-	    BlockProcessor<GFS>::increment(start, ++ii);
+	    BlockProcessor<GFS>::increment(start, ii++);
 	  }
 
       // publish global indices for the shared DOFS to other processors.
@@ -463,7 +463,7 @@ namespace Dune {
       // Setup the index set
       c.indexSet().beginResize();
       for (typename V::size_type i=0, ii=0; i<v.N(); ++i)
-	for (typename V::size_type j=0; j<v[i].N(); ++j){
+	for (typename V::size_type j=0; j<v[i].N(); ++j, ++ii){
 	  Dune::OwnerOverlapCopyAttributeSet::AttributeSet attr;
 	  if(scalarIndices[i][j]!=std::numeric_limits<GlobalIndex>::max()){
 	    // global index exist in index set
@@ -474,11 +474,12 @@ namespace Dune {
 	      attr = Dune::OwnerOverlapCopyAttributeSet::copy;
 	    }
 	    BlockProcessor<GFS>::
-	      addIndexAndProject(scalarIndices[i][j], ++ii, attr, m, c.indexSet());
+	      addIndexAndProject(scalarIndices[i][j], ii, attr, m, c.indexSet());
 	  }
 	}
       c.indexSet().endResize();
       //std::cout<<gv.comm().rank()<<": index set size = "<<c.indexSet().size()<<std::endl;
+      //std::cout<<gv.comm().rank()<<": "<<c.indexSet()<<std::endl;
 
       // Compute neighbours using communication
       typedef NeighbourGatherScatter<typename V::ElementType> NeighbourGS;
@@ -1438,7 +1439,7 @@ namespace Dune {
       
     public:
       ISTLBackend_BCGS_AMG_SSOR(const GFS& gfs_, int smoothsteps=2,
-			      unsigned maxiter_=5000, bool verbose_=true)
+			      unsigned maxiter_=5000, int verbose_=1)
 	: gfs(gfs_), phelper(gfs), maxiter(maxiter_), steps(smoothsteps), verbose(verbose_)
       {}
       
@@ -1487,10 +1488,11 @@ namespace Dune {
 	smootherArgs.relaxationFactor = 1.8;
   
 	Criterion criterion(15,2000);
-	criterion.setDebugLevel(verbose?2:0);
+	criterion.setDebugLevel(verbose?3:0);
 	Dune::OverlappingSchwarzScalarProduct<VectorType,Comm> sp(oocc);
 	Operator oop(mat, oocc);
-	AMG amg=AMG(oop, criterion, smootherArgs, 1, steps, steps, false, oocc);
+	//oocc.copyOwnerToAll(BlockProcessor<GFS>::getVector(r), BlockProcessor<GFS>::getVector(r));
+	AMG amg=AMG(oop, criterion, smootherArgs, 1, 2, 2, false, oocc);
 
 	Dune::InverseOperatorResult stat;
 	int verb=0;
@@ -1502,6 +1504,7 @@ namespace Dune {
 	res.iterations = stat.iterations;
 	res.elapsed    = stat.elapsed;
 	res.reduction  = stat.reduction;
+	//oocc.copyOwnerToAll(BlockProcessor<GFS>::getVector(z), BlockProcessor<GFS>::getVector(z));
       }
       
       /*! \brief Return access to result data */
