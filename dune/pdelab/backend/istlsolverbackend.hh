@@ -1076,7 +1076,7 @@ namespace Dune {
 	res.elapsed    = stat.elapsed;
 	res.reduction  = stat.reduction;
 #else
-#error No superLU support, please install and configure it.
+	std::cout << "No superLU support, please install and configure it." << std::endl;
 #endif
       }
   
@@ -1351,7 +1351,7 @@ namespace Dune {
 	res.elapsed    = stat.elapsed;
 	res.reduction  = stat.reduction;
 #else
-#error No superLU support, please install and configure it.
+	std::cout << "No superLU support, please install and configure it." << std::endl;
 #endif
       }
 
