@@ -604,18 +604,32 @@ namespace Dune {
     public:
       typedef R RealType;
 
-      CFLTimeController (R cfl_, const IGOS& igos_) : cfl(cfl_), igos(igos_)
+      CFLTimeController (R cfl_, const IGOS& igos_) : cfl(cfl_), target(1e100), igos(igos_)
       {}
       
+      CFLTimeController (R cfl_, R target_, const IGOS& igos_) : cfl(cfl_), target(target_), igos(igos_)
+      {}
+      
+      void setTarget (R target_)
+      {
+        target = target_;
+      }
+
       /*! \brief Return name of the scheme
       */
       virtual RealType suggestTimestep (RealType time, RealType givendt)
       {
-        return cfl*igos.suggestTimestep(givendt);
+        RealType suggested = cfl*igos.suggestTimestep(givendt);
+        if (time+2.0*suggested<target)
+          return suggested;
+        if (time+suggested<target)
+          return 0.5*(target-time);
+        return target-time;
       }
 
     private:
       R cfl;
+      R target;
       const IGOS& igos;
     };
 
@@ -901,6 +915,7 @@ namespace Dune {
 	      }
 
 	    // compute residuals and jacobian
+	    if (verbosityLevel>=4) std::cout << "assembling D, alpha, beta ..." << std::endl;
             D = 0.0;
             alpha = 0.0;
             beta = 0.0;
@@ -910,6 +925,14 @@ namespace Dune {
             if (r==1)
               {
                 T newdt = tc->suggestTimestep(time,dt);
+                if (verbosityLevel>=4) 
+                  std::cout << "current dt: "
+                            << std::setw(12) << std::setprecision(4) << std::scientific
+                            << dt
+                            << " suggested dt: "
+                            << std::setw(12) << std::setprecision(4) << std::scientific
+                            << newdt
+                            << std::endl;
                 if (verbosityLevel>=2 && newdt!=dt)
                   {
                     std::cout << "changed dt to "
@@ -921,13 +944,22 @@ namespace Dune {
               }
 
             // combine residual with selected dt
+            if (verbosityLevel>=4) 
+              std::cout << "axpy ..." << std::endl; 
             alpha.axpy(dt,beta);
 
             // solve diagonal system
+            if (verbosityLevel>=4) 
+              std::cout << "solver ..." << std::endl; 
             ls.apply(D,*x[r],alpha,0.99); // dummy reduction
 
             // stage cleanup
-            igos.postStage();    
+            if (verbosityLevel>=4) 
+              std::cout << "postStage ..." << std::endl; 
+            igos.postStage();
+
+            if (verbosityLevel>=4) 
+              std::cout << "stage " << r << " completed." << std::endl; 
 	  }
 
 	// delete intermediate steps
