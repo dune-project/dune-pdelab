@@ -414,7 +414,7 @@ namespace Dune {
         // evaluate source term
         typename TP::Traits::RangeFieldType q = tp.q(eg.entity(),inside_local);
 
-        r[0] += q*eg.geometry().volume();
+        r[0] -= q*eg.geometry().volume();
       }
 
       //! set time in parameter class
@@ -423,7 +423,8 @@ namespace Dune {
       }
 
       //! to be called once before each time step
-      void preStep (typename TP::Traits::RangeFieldType time, int stages)
+      void preStep (typename TP::Traits::RangeFieldType time, typename TP::Traits::RangeFieldType dt,
+                    int stages)
       {
       }
       
@@ -468,7 +469,7 @@ namespace Dune {
 	  typename Traits::RangeFieldType 
 	  c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
 	  {
-		return asImp().q(e,x);
+		return asImp().c(e,x);
 	  }
 
 	private:
