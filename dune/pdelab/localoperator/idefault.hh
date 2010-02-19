@@ -31,7 +31,7 @@ namespace Dune
             }
 
             //! to be called once before each time step
-            void preStep (RealType time, int stages)
+            void preStep (RealType time, RealType dt, int stages)
             {
             }
 
