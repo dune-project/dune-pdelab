@@ -263,13 +263,19 @@ namespace Dune {
       }
 
       //! parametrize assembler with a time-stepping method
+      void setMethod (const TimeSteppingParameterInterface<TReal>& method_)
+      {
+        method = &method_;
+      }
+
+      //! parametrize assembler with a time-stepping method
       void preStep (const TimeSteppingParameterInterface<TReal>& method_, TReal time_, TReal dt_)
       {
         method = &method_;
         time = time_;
         dt = dt_;
-        la.preStep(time,method->s());
-        lm.preStep(time,method->s());
+        la.preStep(time,dt,method->s());
+        lm.preStep(time,dt,method->s());
       }
 
       //! parametrize assembler with a time-stepping method
@@ -277,8 +283,8 @@ namespace Dune {
       {
         time = time_;
         dt = dt_;
-        la.preStep(time,method->s());
-        lm.preStep(time,method->s());
+        la.preStep(time,dt,method->s());
+        lm.preStep(time,dt,method->s());
       }
 
       //! to be called after step is completed
