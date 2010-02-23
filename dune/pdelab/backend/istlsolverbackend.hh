@@ -834,7 +834,7 @@ namespace Dune {
 	};
 
 
-#ifdef HAVE_SUPERLU
+#if HAVE_SUPERLU
 	// exact subdomain solves with SuperLU as preconditioner
 	template<class GFS, class M, class X, class Y>
 	class SuperLUSubdomainSolver : public Dune::Preconditioner<X,Y> 
@@ -1067,7 +1067,7 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::ElementType reduction)
       {
-#ifdef HAVE_SUPERLU
+#if HAVE_SUPERLU
 	typedef typename M::BaseT ISTLM;
 	Dune::SuperLU<ISTLM> solver(A, verbose);
 	Dune::InverseOperatorResult stat;
@@ -1339,7 +1339,7 @@ namespace Dune {
 	POP pop(c,A);
 	typedef Dune::PDELab::OverlappingScalarProduct<GFS,V> PSP;
 	PSP psp(gfs,phelper);
-#ifdef HAVE_SUPERLU
+#if HAVE_SUPERLU
 	typedef Dune::PDELab::SuperLUSubdomainSolver<GFS,M,V,W> PREC;
 	PREC prec(gfs,A);
 	int verb=0;
