@@ -1,6 +1,7 @@
 #ifndef DUNE_ISTLSOLVERBACKEND_HH
 #define DUNE_ISTLSOLVERBACKEND_HH
 
+#include <dune/istl/owneroverlapcopy.hh>
 #include <dune/istl/solvercategory.hh>
 #include <dune/istl/operators.hh>
 #include <dune/istl/solvers.hh>
@@ -1432,6 +1433,8 @@ namespace Dune {
     };
 
 
+// Need MPI for OwnerOverlapCopyCommunication
+#if HAVE_MPI
     template<class GFS, int s=96>
     class ISTLBackend_BCGS_AMG_SSOR
     {
@@ -1521,6 +1524,8 @@ namespace Dune {
       int steps;
       int verbose;
     };
+
+#endif // HAVE_MPI
 
   } // namespace PDELab
 } // namespace Dune
