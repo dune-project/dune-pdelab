@@ -657,7 +657,8 @@ namespace Dune {
        * constructed object is used (or until setMethod() is called, see
        * there).
        */
-      OneStepMethod(const TimeSteppingParameterInterface<T>& method_, IGOS& igos_, PDESOLVER& pdesolver_)
+      OneStepMethod(const TimeSteppingParameterInterface<T>& method_,
+                    IGOS& igos_, const PDESOLVER& pdesolver_)
 	: method(&method_), igos(igos_), pdesolver(pdesolver_), verbosityLevel(1), step(1)
       {
         if (igos.trialGridFunctionSpace().gridview().comm().rank()>0)
