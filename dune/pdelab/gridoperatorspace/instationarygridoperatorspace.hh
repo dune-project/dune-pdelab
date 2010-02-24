@@ -109,7 +109,7 @@ namespace Dune {
       //! construct 
 	  InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_, 
                                      const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) 
-		: method(&method_), gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_), r0(gfsv,0.0)
+		: gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_), method(&method_), r0(gfsv,0.0)
 	  {
 		pconstraintsu = &emptyconstraintsu;
 		pconstraintsv = &emptyconstraintsv;

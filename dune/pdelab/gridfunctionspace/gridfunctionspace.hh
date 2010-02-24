@@ -868,7 +868,7 @@ namespace Dune {
 
 	  // constructors
 	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const IIS& iis_, const CE& ce_) 
-		: defaultce(ce_), gv(gridview), plfem(&lfem), iis(iis_), ce(ce_)
+		: gv(gridview), plfem(&lfem), iis(iis_), defaultce(ce_), ce(ce_)
 	  {
 		update();
 	  }
@@ -880,7 +880,7 @@ namespace Dune {
 	  }
 
 	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_) 
-		: defaultce(ce_), gv(gridview), plfem(&lfem), iis(dummyiis), ce(ce_)
+		: gv(gridview), plfem(&lfem), iis(dummyiis), defaultce(ce_), ce(ce_)
 	  {
 		update();
 	  }
@@ -1005,7 +1005,7 @@ namespace Dune {
         typename GV::IndexSet::IndexType index = gv.indexSet().index(e);
         unsigned int n = dofpercodim.find(cd)->second;
 		global.resize(n);
-        for (int i=0; i<n; i++) 
+        for (unsigned int i=0; i<n; i++) 
           global[i] = o + index*n + i;
 //         Dune::dinfo << "[" << gv.grid().comm().rank() << "]: "
 //                     << " global indices "

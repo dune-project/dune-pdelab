@@ -337,7 +337,7 @@ namespace Dune {
       
       /*! \brief Return number of stages s of the method
       */
-      virtual int s () const
+      virtual unsigned s () const
       {
 	return 2;
       }
@@ -698,7 +698,8 @@ namespace Dune {
 	std::vector<TrlV*> x(1); // vector of pointers to all steps
 	x[0] = &xold;            // initially we have only one
 
-	if (verbosityLevel>=1)
+	if (verbosityLevel>=1){
+          std::ios_base::fmtflags oldflags = std::cout.flags();
 	  std::cout << "TIME STEP [" << method->name() << "] " 
                     << std::setw(6) << step
 		    << " time (from): "
@@ -711,21 +712,26 @@ namespace Dune {
 		    << std::setw(12) << std::setprecision(4) << std::scientific
 		    << time+dt
 		    << std::endl;
-
+          std::cout.flags(oldflags);
+        }
+        
 	// prepare assembler
 	igos.preStep(*method,time,dt);
 
 	// loop over all stages
 	for (unsigned r=1; r<=method->s(); ++r)
 	  {
-	    if (verbosityLevel>=2)
+	    if (verbosityLevel>=2){
+              std::ios_base::fmtflags oldflags = std::cout.flags();
 	      std::cout << "STAGE " 
                         << r 
                         << " time (to): "
                         << std::setw(12) << std::setprecision(4) << std::scientific
                         << time+method->d(r)*dt
                         << "." << std::endl;
-	      
+	      std::cout.flags(oldflags);
+            }
+            
 	    // prepare stage
 	    igos.preStage(r,x);
 
@@ -870,7 +876,8 @@ namespace Dune {
 	x[0] = &xold;         // initially we have only one
         TstV alpha(igos.testGridFunctionSpace()), beta(igos.testGridFunctionSpace()); // split residual vectors
 
-	if (verbosityLevel>=1)
+	if (verbosityLevel>=1){
+          std::ios_base::fmtflags oldflags = std::cout.flags();
 	  std::cout << "TIME STEP [" << method->name() << "] " 
                     << std::setw(6) << step
 		    << " time (from): "
@@ -883,21 +890,26 @@ namespace Dune {
 		    << std::setw(12) << std::setprecision(4) << std::scientific
 		    << time+dt
 		    << std::endl;
-
+          std::cout.flags(oldflags);
+        }
+        
 	// prepare assembler
 	igos.preStep(*method,time,dt);
 
 	// loop over all stages
 	for (int r=1; r<=method->s(); ++r)
 	  {
-	    if (verbosityLevel>=2)
+	    if (verbosityLevel>=2){
+              std::ios_base::fmtflags oldflags = std::cout.flags();
 	      std::cout << "STAGE " 
                         << r 
                         << " time (to): "
                         << std::setw(12) << std::setprecision(4) << std::scientific
                         << time+method->d(r)*dt
                         << "." << std::endl;
-	      
+              std::cout.flags(oldflags);
+            }
+            
 	    // get vector for current stage
 	    if (r==method->s())
 	      {
@@ -926,7 +938,9 @@ namespace Dune {
             if (r==1)
               {
                 T newdt = tc->suggestTimestep(time,dt);
-                if (verbosityLevel>=4) 
+
+                if (verbosityLevel>=4){
+                  std::ios_base::fmtflags oldflags = std::cout.flags();
                   std::cout << "current dt: "
                             << std::setw(12) << std::setprecision(4) << std::scientific
                             << dt
@@ -934,12 +948,17 @@ namespace Dune {
                             << std::setw(12) << std::setprecision(4) << std::scientific
                             << newdt
                             << std::endl;
+                    std::cout.flags(oldflags);
+                }
+
                 if (verbosityLevel>=2 && newdt!=dt)
                   {
+                    std::ios_base::fmtflags oldflags = std::cout.flags();
                     std::cout << "changed dt to "
                               << std::setw(12) << std::setprecision(4) << std::scientific
                               << newdt
                               << std::endl;
+                    std::cout.flags(oldflags);
                   }
                 dt = newdt;
               }
