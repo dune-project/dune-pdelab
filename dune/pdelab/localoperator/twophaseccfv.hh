@@ -352,15 +352,20 @@ namespace Dune {
         RF rho_l_outside = tp.rho_l(*(ig.outside()),outside_cell_center_local,x_n[liquid]);
         RF w_l = (x_s[liquid]-x_n[liquid])/distance + aavg(rho_l_inside,rho_l_outside)*gn; // determines direction
         RF pc_upwind, s_l_upwind, s_g_upwind;
+        RF nu_l = aavg(tp.nu_l(*(ig.inside()),inside_cell_center_local,x_s[liquid]), 
+                       tp.nu_l(*(ig.outside()),outside_cell_center_local,x_n[liquid]));
+        //        RF nu_l=0.0;
         if (w_l>=0) // upwind capillary pressure on face
           {
             pc_upwind = x_s[gas]-x_s[liquid];
             s_l_upwind = tp.s_l(*(ig.inside()),inside_cell_center_local,pc_upwind);
+            //  nu_l = tp.nu_l(*(ig.inside()),inside_cell_center_local,x_s[liquid]);
           }
         else
           {
             pc_upwind = x_n[gas]-x_n[liquid];
             s_l_upwind = tp.s_l(*(ig.outside()),outside_cell_center_local,pc_upwind);
+            //nu_l = tp.nu_l(*(ig.outside()),outside_cell_center_local,x_n[liquid]);
           }
         s_g_upwind = 1-s_l_upwind;
         RF lambda_l_inside = tp.kr_l(*(ig.inside()),inside_cell_center_local,s_l_upwind)/
@@ -368,8 +373,7 @@ namespace Dune {
         RF lambda_l_outside = tp.kr_l(*(ig.outside()),outside_cell_center_local,s_l_upwind)/
           tp.mu_l(*(ig.outside()),outside_cell_center_local,x_n[liquid]);
         RF sigma_l = havg(lambda_l_inside*k_abs_inside,lambda_l_outside*k_abs_outside);
-        RF nu_l = aavg(tp.nu_l(*(ig.inside()),inside_cell_center_local,x_s[liquid]), 
-                       tp.nu_l(*(ig.outside()),outside_cell_center_local,x_n[liquid]));
+
 //         std::cout << "       nu_l = " << nu_l << std::endl;
 //         std::cout << "    sigma_l = " << sigma_l << std::endl;
 //         std::cout << "        w_l = " << w_l << std::endl;
@@ -383,17 +387,22 @@ namespace Dune {
         RF rho_g_inside = tp.rho_g(*(ig.inside()),inside_cell_center_local,x_s[gas]);
         RF rho_g_outside = tp.rho_g(*(ig.outside()),outside_cell_center_local,x_n[gas]);
         RF w_g = (x_s[gas]-x_n[gas])/distance + aavg(rho_g_inside,rho_g_outside)*gn; // determines direction
+        RF nu_g = aavg(tp.nu_g(*(ig.inside()),inside_cell_center_local,x_s[gas]), 
+                       tp.nu_g(*(ig.outside()),outside_cell_center_local,x_n[gas]));
+        //        RF nu_g=0.0;
         if (w_l*w_g<0) // new evaluation necessary only if signs differ
           {
             if (w_g>=0) // upwind capillary pressure on face
               {
                 pc_upwind = x_s[gas]-x_s[liquid];
                 s_l_upwind = tp.s_l(*(ig.inside()),inside_cell_center_local,pc_upwind);
+                //nu_g = tp.nu_g(*(ig.inside()),inside_cell_center_local,x_s[gas]);
               }
             else
               {
                 pc_upwind = x_n[gas]-x_n[liquid];
                 s_l_upwind = tp.s_l(*(ig.outside()),outside_cell_center_local,pc_upwind);
+                //nu_g = tp.nu_g(*(ig.outside()),outside_cell_center_local,x_n[gas]);
               }
             s_g_upwind = 1-s_l_upwind;
          }
@@ -402,8 +411,6 @@ namespace Dune {
         RF lambda_g_outside = tp.kr_g(*(ig.outside()),outside_cell_center_local,s_g_upwind)/
           tp.mu_g(*(ig.outside()),outside_cell_center_local,x_n[gas]);
         RF sigma_g = havg(lambda_g_inside*k_abs_inside,lambda_g_outside*k_abs_outside);
-        RF nu_g = aavg(tp.nu_g(*(ig.inside()),inside_cell_center_local,x_s[gas]), 
-                       tp.nu_g(*(ig.outside()),outside_cell_center_local,x_n[gas]));
 
         r_s[gas] += nu_g * sigma_g * w_g * face_volume;
         r_n[gas] -= nu_g * sigma_g * w_g * face_volume;
@@ -680,11 +687,14 @@ namespace Dune {
 
         // absolute permeability
         RF k_abs_inside = tp.k_abs(e,inside_cell_center_local);
-
+        
         // pressure evaluation
         typename PL::Traits::RangeType pl_inside, pg_inside;
         pl.evaluate(e,inside_cell_center_local,pl_inside);
         pg.evaluate(e,inside_cell_center_local,pg_inside);
+
+        // density
+        RF nu_l_inside = tp.nu_l(e,inside_cell_center_local,pl_inside);
 
         // for coefficient computation
         RF vn[2*dim];    // normal velocities
@@ -730,6 +740,9 @@ namespace Dune {
                 pl.evaluate(*(iit->outside()),outside_cell_center_local,pl_outside);
                 pg.evaluate(*(iit->outside()),outside_cell_center_local,pg_outside);
 
+                // density
+                RF nu_l_outside = tp.nu_l(*(iit->outside()),outside_cell_center_local,pg_outside);
+
                 // liquid phase calculation
                 RF rho_l_inside = tp.rho_l(e,inside_cell_center_local,pl_inside);
                 RF rho_l_outside = tp.rho_l(*(iit->outside()),outside_cell_center_local,pl_outside);
@@ -751,9 +764,10 @@ namespace Dune {
                 RF lambda_l_outside = tp.kr_l(*(iit->outside()),outside_cell_center_local,s_l_upwind)/
                   tp.mu_l(*(iit->outside()),outside_cell_center_local,pl_outside);
                 RF sigma_l = havg(lambda_l_inside*k_abs_inside,lambda_l_outside*k_abs_outside);
+                RF nu_l = aavg(nu_l_inside,nu_l_outside);
 
                 // set coefficient
-                vn[iit->indexInInside()] = sigma_l * w_l;
+                vn[iit->indexInInside()] = nu_l * sigma_l * w_l;
               }
 
             // boundary face
@@ -778,15 +792,14 @@ namespace Dune {
                     RF lambda_l_inside = tp.kr_l(e,inside_cell_center_local,s_l)/
                       tp.mu_l(e,inside_cell_center_local,pl_inside);
                     RF sigma_l = lambda_l_inside*k_abs_inside;
-                    vn[iit->indexInInside()] = sigma_l * w_l;
+                    vn[iit->indexInInside()] = nu_l_inside * sigma_l * w_l;
                   }
 
                 // liquid phase Neumann boundary
                 if (bc_l==0) 
                   {
                     RF j_l = tp.j_l(*iit,face_local,time);
-                    RF nu_l = tp.nu_l(e,inside_cell_center_local,pl_inside);
-                    vn[iit->indexInInside()] = j_l/nu_l;
+                    vn[iit->indexInInside()] = j_l;
                   }
               }
 
@@ -895,7 +908,7 @@ namespace Dune {
       inline void evaluate (const typename Traits::ElementType& e, 
                             const typename Traits::DomainType& x,
                             typename Traits::RangeType& y) const
-      {  
+      { 
         // cell geometry
         const Dune::FieldVector<DF,dim>& 
           inside_cell_center_local = Dune::GenericReferenceElements<DF,dim>::
@@ -910,6 +923,9 @@ namespace Dune {
         typename PL::Traits::RangeType pl_inside, pg_inside;
         pl.evaluate(e,inside_cell_center_local,pl_inside);
         pg.evaluate(e,inside_cell_center_local,pg_inside);
+
+        // density evaluation
+        RF nu_g_inside = tp.nu_g(e,inside_cell_center_local,pg_inside);
 
         // for coefficient computation
         RF vn[2*dim];    // normal velocities
@@ -977,9 +993,11 @@ namespace Dune {
                 RF lambda_g_outside = tp.kr_g(*(iit->outside()),outside_cell_center_local,s_g_upwind)/
                   tp.mu_g(*(iit->outside()),outside_cell_center_local,pg_outside);
                 RF sigma_g = havg(lambda_g_inside*k_abs_inside,lambda_g_outside*k_abs_outside);
- 
+
+                RF nu_g_outside = tp.nu_g(*(iit->outside()),outside_cell_center_local,pg_outside);
+
                 // set coefficient
-                vn[iit->indexInInside()] = sigma_g * w_g;
+                vn[iit->indexInInside()] = aavg(nu_g_inside,nu_g_outside) * sigma_g * w_g;
              }
 
             // boundary face
@@ -1005,15 +1023,15 @@ namespace Dune {
                     RF lambda_g_inside = tp.kr_g(e,inside_cell_center_local,s_g)/
                       tp.mu_g(e,inside_cell_center_local,pg_inside);
                     RF sigma_g = lambda_g_inside*k_abs_inside;
-                    vn[iit->indexInInside()] = sigma_g * w_g;
+
+                    vn[iit->indexInInside()] = nu_g_inside * sigma_g * w_g;
                   }
 
                 // gas phase Neumann boundary
                 if (bc_g==0) 
                   {
                     RF j_g = tp.j_g(*iit,face_local,time);
-                    RF nu_g = tp.nu_g(e,inside_cell_center_local,pg_inside);
-                    vn[iit->indexInInside()] = j_g/nu_g;
+                    vn[iit->indexInInside()] = j_g; /* /nu_g_inside*/;
                   }
               }
 
