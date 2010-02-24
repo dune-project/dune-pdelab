@@ -192,7 +192,7 @@ namespace Dune {
       
       /*! \brief Return number of stages s of the method
       */
-      virtual int s () const
+      virtual unsigned s () const
       {
 	return 1;
       }
@@ -715,7 +715,7 @@ namespace Dune {
 	igos.preStep(*method,time,dt);
 
 	// loop over all stages
-	for (int r=1; r<=method->s(); ++r)
+	for (unsigned r=1; r<=method->s(); ++r)
 	  {
 	    if (verbosityLevel>=2)
 	      std::cout << "STAGE " 
@@ -753,7 +753,7 @@ namespace Dune {
 	  }
 
 	// delete intermediate steps
-	for (int i=1; i<method->s(); ++i) delete x[i];
+        for (unsigned i=1; i<method->s(); ++i) delete x[i];
 
         // step cleanup
         igos.postStep();

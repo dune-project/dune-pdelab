@@ -34,7 +34,7 @@ namespace Dune {
       
       /*! \brief Return number of stages of the method
       */
-      virtual int s () const = 0;
+      virtual unsigned s () const = 0;
       
       /*! \brief Return entries of the A matrix
 	\note that r âˆˆ 1,...,s and i âˆˆ 0,...,r
@@ -119,7 +119,7 @@ namespace Dune {
 	  InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_, const GFSU& gfsu_, const CU& cu,
                                      const GFSV& gfsv_, const CV& cv,
                                      LA& la_, LM& lm_) 
-		: method(&method_), gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_), r0(gfsv,0.0)
+        : gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_), method(&method_), r0(gfsv,0.0)
 	  {
 		pconstraintsu = &cu;
 		pconstraintsv = &cv;
@@ -311,7 +311,7 @@ namespace Dune {
 
       //! set stage number to do next; assemble constant part of residual; r is empty on entry
 	  template<typename X> 
-      void preStage (int stage_, const std::vector<X*>& x)
+      void preStage (unsigned stage_, const std::vector<X*>& x)
       {
         // process arguments
         stage = stage_;
@@ -374,7 +374,7 @@ namespace Dune {
 			lfsv.bind(*it);
 
             // loop over all previous time steps
-            for (int i=0; i<stage; ++i)
+            for (unsigned i=0; i<stage; ++i)
               {
                 // set time in local operators for evaluation
                 la.setTime(time+d[i]*dt);
@@ -509,7 +509,7 @@ namespace Dune {
        * \param[out] beta spatial part of residual; we assume it is zero on entry!
        */
 	  template<typename X, typename A> 
-      void explicit_jacobian_residual (int stage_, const std::vector<X*>& x, A& mat, R& alpha, R& beta)
+      void explicit_jacobian_residual (unsigned stage_, const std::vector<X*>& x, A& mat, R& alpha, R& beta)
       {
         // process arguments
         stage = stage_;
@@ -1465,7 +1465,7 @@ namespace Dune {
 	  CV emptyconstraintsv;
       const TimeSteppingParameterInterface<TReal> *method;
       TReal time, dt;
-      int stage;
+      unsigned stage;
       R r0;
 	};
 
