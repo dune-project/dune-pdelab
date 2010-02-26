@@ -329,20 +329,9 @@ namespace Dune {
 	  ++g;
 	}
 	template<typename M, typename TI>
-	static void addIndexAndProject(const typename TI::GlobalIndex& gi, std::size_t i, 
+	static void addIndex(const typename TI::GlobalIndex& gi, std::size_t i, 
 				       typename TI::LocalIndex::Attribute attr, M& m, TI& idxset)
 	{
-	  // Set to Dirichlet boundary
-	  typedef typename M::ColIterator Citer;
-	  Citer diag;
-	  for(Citer c=m[i].begin(); c != m[i].end(); ++c){
-	    if(c.index()==i)
-	      diag=c;
-	    *c=0;
-	  }
-	  for(typename M::size_type j=0; j<diag->N();++j)
-	    (*diag)[j][j]=1.0;
-	  
 	  // Add index
 	  idxset.add(gi, typename TI::LocalIndex(i, attr));
 	}
@@ -375,12 +364,12 @@ namespace Dune {
 	    ++g;
 	}
 	template<typename M, typename TI>
-	static void addIndexAndProject(const typename TI::GlobalIndex& gi, std::size_t i, 
+	static void addIndex(const typename TI::GlobalIndex& gi, std::size_t i, 
 				       typename TI::LocalIndex::Attribute attr, M& m, TI& idxset)
 	{
 	  if(i%GFS::Traits::noChilds==0)
-	    BlockProcessorHelper<GFS, false, 1>::addIndexAndProject(gi, i/GFS::Traits::noChilds,
-								attr, m, idxset);
+	    BlockProcessorHelper<GFS, false, 1>::addIndex(gi, i/GFS::Traits::noChilds,
+							  attr, m, idxset);
 	}
 	
       };
@@ -475,7 +464,7 @@ namespace Dune {
 	      attr = Dune::OwnerOverlapCopyAttributeSet::copy;
 	    }
 	    BlockProcessor<GFS>::
-	      addIndexAndProject(scalarIndices[i][j], ii, attr, m, c.indexSet());
+	      addIndex(scalarIndices[i][j], ii, attr, m, c.indexSet());
 	  }
 	}
       c.indexSet().endResize();
@@ -1488,7 +1477,7 @@ namespace Dune {
 	typedef Dune::Amg::AMG<Operator,VectorType,ParSmoother,Comm> AMG;
 	SmootherArgs smootherArgs;
 	smootherArgs.iterations = 1;
-	smootherArgs.relaxationFactor = 1.8;
+	smootherArgs.relaxationFactor = 1;
   
 	Criterion criterion(15,2000);
 	criterion.setDebugLevel(verbose?3:0);
