@@ -5,6 +5,7 @@ common_HEADERS =				\
 	function.hh				\
 	functionwrappers.hh			\
 	geometrywrapper.hh			\
+	iostatesaver.hh				\
 	multitypetree.hh			\
 	vtkexport.hh
 
