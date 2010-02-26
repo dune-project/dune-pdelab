@@ -15,6 +15,8 @@
 #include<dune/common/fvector.hh>
 #include<dune/common/fmatrix.hh>
 
+#include <dune/pdelab/common/iostatesaver.hh>
+
 #include"../gridoperatorspace/instationarygridoperatorspace.hh"
 
 namespace Dune {
@@ -695,6 +697,9 @@ namespace Dune {
        */
       T apply (T time, T dt, TrlV& xold, TrlV& xnew)
       {
+        // save formatting attributes
+        ios_base_all_saver format_attribute_saver(std::cout);
+
 	std::vector<TrlV*> x(1); // vector of pointers to all steps
 	x[0] = &xold;            // initially we have only one
 
@@ -872,6 +877,9 @@ namespace Dune {
        */
       T apply (T time, T dt, TrlV& xold, TrlV& xnew)
       {
+        // save formatting attributes
+        ios_base_all_saver format_attribute_saver(std::cout);
+
 	std::vector<TrlV*> x(1); // vector of pointers to all steps
 	x[0] = &xold;         // initially we have only one
         TstV alpha(igos.testGridFunctionSpace()), beta(igos.testGridFunctionSpace()); // split residual vectors
