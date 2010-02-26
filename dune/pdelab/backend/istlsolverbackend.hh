@@ -8,6 +8,7 @@
 #include <dune/istl/preconditioners.hh>
 #include <dune/istl/scalarproducts.hh>
 #include <dune/istl/paamg/amg.hh>
+#include <dune/istl/paamg/pinfo.hh>
 #include <dune/istl/io.hh>
 #include <dune/istl/superlu.hh>
 
@@ -1422,8 +1423,21 @@ namespace Dune {
     };
 
 
+    template<int s, bool isFakeMPIHelper>
+    struct CommSelector
+    {
+      typedef Dune::Amg::SequentialInformation type;
+    };
+    
 // Need MPI for OwnerOverlapCopyCommunication
 #if HAVE_MPI
+    template<int s>
+    struct CommSelector<s,false>
+    {
+      typedef OwnerOverlapCopyCommunication<bigunsignedint<s>,int> type;
+    };
+#endif
+
     template<class GFS, int s=96>
     class ISTLBackend_BCGS_AMG_SSOR
     {
@@ -1461,8 +1475,7 @@ namespace Dune {
 	typedef typename M::BaseT MatrixType;
 	typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type 
 	  VectorType;
-	typedef typename Dune::OwnerOverlapCopyCommunication<bigunsignedint<s>,int>
-	  Comm;
+        typedef typename CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
   
 	Comm oocc(gfs.gridview().comm());
 	MatrixType mat=A.base();
@@ -1513,9 +1526,6 @@ namespace Dune {
       int steps;
       int verbose;
     };
-
-#endif // HAVE_MPI
-
   } // namespace PDELab
 } // namespace Dune
 
