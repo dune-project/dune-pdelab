@@ -371,7 +371,8 @@ namespace Dune {
      * \param verbose Print information about the constaints at the end
      */
     template<typename F, typename GFS, typename CG>
-    void constraints (F& f, const GFS& gfs, CG& cg, const bool verbose = false)
+    void constraints(const F& f, const GFS& gfs, CG& cg,
+                     const bool verbose = false)
     {
       // clear global constraints
 	  cg.clear();
