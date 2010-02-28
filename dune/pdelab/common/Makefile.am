@@ -3,6 +3,7 @@ common_HEADERS =				\
 	countingptr.hh				\
 	cpstoragepolicy.hh			\
 	function.hh				\
+	functionutilities.hh			\
 	functionwrappers.hh			\
 	geometrywrapper.hh			\
 	iostatesaver.hh				\
