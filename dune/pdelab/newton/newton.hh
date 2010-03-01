@@ -450,14 +450,28 @@ namespace Dune
                 unsigned int i = 0;
                 while (1)
                 {
+                    if (this->verbosity_level >= 4)
+                        std::cout << "          trying line search damping factor:   "
+                                  << std::setw(12) << std::setprecision(4) << std::scientific
+                                  << lambda 
+                                  << std::endl;
+
                     this->u->axpy(-lambda, z);                  // TODO: vector interface
                     try { 
                         this->defect(r); 
                     }
-                    catch (NewtonDefectError) {}       // ignore NaNs and try again with lower lambda
+                    catch (NewtonDefectError) 
+                        {
+                            if (this->verbosity_level >= 4)
+                                std::cout << "          Nans detected" << std::endl;
+                        }       // ignore NaNs and try again with lower lambda
 
                     if (this->res.defect <= (1.0 - lambda/4) * this->prev_defect)
-                        break;
+                        {
+                            if (this->verbosity_level >= 4)
+                                std::cout << "          line search converged" << std::endl;
+                            break;
+                        }
 
                     if (this->res.defect < best_defect)
                     {
@@ -467,6 +481,8 @@ namespace Dune
 
                     if (++i >= maxit)
                     {
+                        if (this->verbosity_level >= 4)
+                            std::cout << "          max line search iterations exceeded" << std::endl;
                         switch (strategy)
                         {
                         case hackbuschReusken:
