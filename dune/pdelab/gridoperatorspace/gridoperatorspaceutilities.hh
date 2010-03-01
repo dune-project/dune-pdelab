@@ -420,7 +420,7 @@ namespace Dune {
 	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
                             LocalMatrix<R>& mat) const
       {
-        const R epsilon=1E-7; // problem: this depends on data type R!
+        const R epsilon=1E-11; // problem: this depends on data type R!
         const int m=lfsv.size();
         const int n=lfsu.size();
 
@@ -455,7 +455,7 @@ namespace Dune {
 	  void jacobian_volume_post_skeleton (const EG& eg, const LFSU& lfsu, const X& x,
                                           const LFSV& lfsv, LocalMatrix<R>& mat) const
       {
-        const R epsilon=1E-7; // problem: this depends on data type R!
+        const R epsilon=1E-11; // problem: this depends on data type R!
         const int m=lfsv.size();
         const int n=lfsu.size();
 
@@ -493,7 +493,7 @@ namespace Dune {
                               LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn, 
                               LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn) const
 	  {
-		const R epsilon=1E-7; // problem: this depends on data type R!
+		const R epsilon=1E-11; // problem: this depends on data type R!
 		const int m_s=lfsv_s.size();
 		const int m_n=lfsv_n.size();
 		const int n_s=lfsu_s.size();
@@ -554,7 +554,7 @@ namespace Dune {
                               const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                               LocalMatrix<R>& mat_ss) const
 	  {
-		const R epsilon=1E-7; // problem: this depends on data type R!
+		const R epsilon=1E-11; // problem: this depends on data type R!
 		const int m_s=lfsv_s.size();
 		const int n_s=lfsu_s.size();
 
@@ -593,7 +593,7 @@ namespace Dune {
                                   const LFSV& lfsv, Y& y) const
 	  {
 		typedef typename X::value_type R;
-		const R epsilon=1E-7; // problem: this depends on data type R!
+		const R epsilon=1E-11; // problem: this depends on data type R!
 		const int m=lfsv.size();
 		const int n=lfsu.size();
 
@@ -629,7 +629,7 @@ namespace Dune {
                                                 const LFSV& lfsv, Y& y) const
 	  {
 		typedef typename X::value_type R;
-		const R epsilon=1E-7; // problem: this depends on data type R!
+		const R epsilon=1E-11; // problem: this depends on data type R!
 		const int m=lfsv.size();
 		const int n=lfsu.size();
 
@@ -668,7 +668,7 @@ namespace Dune {
                            Y& y_s, Y& y_n) const
 	  {
 		typedef typename X::value_type R;
-		const R epsilon=1E-7; // problem: this depends on data type R!
+		const R epsilon=1E-11; // problem: this depends on data type R!
 		const int m_s=lfsv_s.size();
 		const int m_n=lfsv_n.size();
 		const int n_s=lfsu_s.size();
@@ -730,7 +730,7 @@ namespace Dune {
                            Y& y_s) const
 	  {
 		typedef typename X::value_type R;
-		const R epsilon=1E-7; // problem: this depends on data type R!
+		const R epsilon=1E-11; // problem: this depends on data type R!
 		const int m_s=lfsv_s.size();
 		const int n_s=lfsu_s.size();
 
