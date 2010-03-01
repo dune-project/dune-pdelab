@@ -259,6 +259,7 @@ namespace Dune {
       enum { liquid = 0 };
       enum { gas = 1 };
 
+      typedef typename TP::Traits::RangeFieldType Real;
 	public:
       // pattern assembly flags
       enum { doPatternVolume = true };
@@ -271,7 +272,9 @@ namespace Dune {
       enum { doLambdaBoundary = true };
 
       //! constructor: pass parameter object
-      TwoPhaseTwoPointFluxOperator (const TP& tp_) : tp(tp_) {}
+      TwoPhaseTwoPointFluxOperator (const TP& tp_, Real scale_l_=1.0, Real scale_g_=1.0) 
+        : tp(tp_), scale_l(scale_l_), scale_g(scale_g_) 
+      {}
 
  	  // volume integral depending only on test functions
 	  template<typename EG, typename LFSV, typename R>
@@ -297,8 +300,8 @@ namespace Dune {
         RF cell_volume = eg.geometry().volume();
 
 		// contribution from source term
-		r[liquid] -= tp.q_l(eg.entity(),cell_center_local,time) * cell_volume;
-		r[gas]    -= tp.q_g(eg.entity(),cell_center_local,time) * cell_volume;
+		r[liquid] -= scale_l * tp.q_l(eg.entity(),cell_center_local,time) * cell_volume;
+		r[gas]    -= scale_g * tp.q_g(eg.entity(),cell_center_local,time) * cell_volume;
 	  }
 
 	  // skeleton integral depending on test and ansatz functions
@@ -380,8 +383,8 @@ namespace Dune {
 //         std::cout << "face_volume = " << face_volume << std::endl;
 //         std::cout << std::endl;
 
-        r_s[liquid] += nu_l * sigma_l * w_l * face_volume;
-        r_n[liquid] -= nu_l * sigma_l * w_l * face_volume;
+        r_s[liquid] += scale_l * nu_l * sigma_l * w_l * face_volume;
+        r_n[liquid] -= scale_l * nu_l * sigma_l * w_l * face_volume;
 
         // gas phase calculation
         RF rho_g_inside = tp.rho_g(*(ig.inside()),inside_cell_center_local,x_s[gas]);
@@ -412,8 +415,8 @@ namespace Dune {
           tp.mu_g(*(ig.outside()),outside_cell_center_local,x_n[gas]);
         RF sigma_g = havg(lambda_g_inside*k_abs_inside,lambda_g_outside*k_abs_outside);
 
-        r_s[gas] += nu_g * sigma_g * w_g * face_volume;
-        r_n[gas] -= nu_g * sigma_g * w_g * face_volume;
+        r_s[gas] += scale_g * nu_g * sigma_g * w_g * face_volume;
+        r_n[gas] -= scale_g * nu_g * sigma_g * w_g * face_volume;
 	  }
 
 	  // skeleton integral depending on test and ansatz functions
@@ -472,7 +475,7 @@ namespace Dune {
               tp.mu_l(*(ig.inside()),inside_cell_center_local,x_s[liquid]);
             RF sigma_l = lambda_l_inside*k_abs_inside;
             RF nu_l = tp.nu_l(*(ig.inside()),inside_cell_center_local,x_s[liquid]);
-            r_s[liquid] += nu_l * sigma_l * w_l * face_volume;
+            r_s[liquid] += scale_l * nu_l * sigma_l * w_l * face_volume;
           }
 
         // gas phase Dirichlet boundary
@@ -487,7 +490,7 @@ namespace Dune {
               tp.mu_g(*(ig.inside()),inside_cell_center_local,x_s[gas]);
             RF sigma_g = lambda_g_inside*k_abs_inside;
             RF nu_g = tp.nu_g(*(ig.inside()),inside_cell_center_local,x_s[gas]);
-            r_s[gas] += nu_g * sigma_g * w_g * face_volume;
+            r_s[gas] += scale_l * nu_g * sigma_g * w_g * face_volume;
           }
       }
 
@@ -521,14 +524,14 @@ namespace Dune {
         if (bc_l==0) 
           {
             RF j_l = tp.j_l(ig.intersection(),face_local,time);
-            r_s[liquid] += j_l * face_volume;
+            r_s[liquid] += scale_l * j_l * face_volume;
           }
  
         // gas phase Neumann boundary
         if (bc_g==0) 
           {
             RF j_g = tp.j_g(ig.intersection(),face_local,time);
-            r_s[gas] += j_g * face_volume;
+            r_s[gas] += scale_g * j_g * face_volume;
           }
       }
 
@@ -541,6 +544,7 @@ namespace Dune {
     private:
       const TP& tp;  // two phase parameter class
 	  typename TP::Traits::RangeFieldType time;
+      Real scale_l, scale_g;
 
       template<typename T>
       T aavg (T a, T b) const
@@ -575,6 +579,8 @@ namespace Dune {
       enum { liquid = 0 };
       enum { gas = 1 };
 
+      typedef typename TP::Traits::RangeFieldType Real;
+
 	public:
       // pattern assembly flags
       enum { doPatternVolume = true };
@@ -582,8 +588,8 @@ namespace Dune {
 	  // residual assembly flags
       enum { doAlphaVolume = true };
 
-      TwoPhaseOnePointTemporalOperator (TP& tp_) 
-		: tp(tp_)
+      TwoPhaseOnePointTemporalOperator (TP& tp_, Real scale_l_=1.0, Real scale_g_=1.0) 
+		: tp(tp_), scale_l(scale_l_), scale_g(scale_g_)
 	  {
 	  }
 
@@ -616,13 +622,14 @@ namespace Dune {
 		RF phi = tp.phi(eg.entity(),cell_center_local);
 		RF s_l = tp.s_l(eg.entity(),cell_center_local,x[gas]-x[liquid]);
 
-		r[liquid] += phi * s_l * tp.nu_l(eg.entity(),cell_center_local,x[liquid]) * cell_volume;
-		r[gas]    += phi * (1-s_l) * tp.nu_g(eg.entity(),cell_center_local,x[gas]) * cell_volume;
+		r[liquid] += scale_l * phi * s_l * tp.nu_l(eg.entity(),cell_center_local,x[liquid]) * cell_volume;
+		r[gas]    += scale_g * phi * (1-s_l) * tp.nu_g(eg.entity(),cell_center_local,x[gas]) * cell_volume;
 	  }
 
 	private:
 	  TP& tp;
       typename TP::Traits::RangeFieldType time;
+      Real scale_l, scale_g;
 	};
 
 
