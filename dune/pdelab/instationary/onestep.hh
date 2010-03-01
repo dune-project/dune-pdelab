@@ -53,7 +53,7 @@ namespace Dune {
       
       /*! \brief Return number of stages s of the method
       */
-      virtual int s () const
+      virtual unsigned s () const
       {
 	return 1;
       }
@@ -120,7 +120,7 @@ namespace Dune {
       
       /*! \brief Return number of stages s of the method
       */
-      virtual int s () const
+      virtual unsigned s () const
       {
 	return 1;
       }
