@@ -151,7 +151,7 @@ namespace Dune {
 
     // interpolation from a given grid function
     template<typename F, typename GFS, typename XG>
-    void interpolate (F& f, const GFS& gfs, XG& xg)
+    void interpolate (const F& f, const GFS& gfs, XG& xg)
     {
       // this is the leaf version now
 
