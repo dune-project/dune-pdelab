@@ -16,6 +16,7 @@
 #include"../gridoperatorspace/gridoperatorspaceutilities.hh"
 #include"pattern.hh"
 #include"flags.hh"
+#include"idefault.hh"
 
 namespace Dune {
   namespace PDELab {
