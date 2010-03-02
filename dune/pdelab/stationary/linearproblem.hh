@@ -25,6 +25,11 @@ namespace Dune {
       {
       }
 
+      StationaryLinearProblemSolver (const GOS& gos_, LS& ls_, V& x_, typename V::ElementType reduction_)
+	: gos(gos_), ls(ls_), x(&x_), reduction(reduction_)
+      {
+      }
+
       StationaryLinearProblemSolver (const GOS& gos_, LS& ls_, typename V::ElementType reduction_)
 	: gos(gos_), ls(ls_), x(0), reduction(reduction_)
       {
@@ -34,6 +39,7 @@ namespace Dune {
         x = &x_;
         apply();
       }
+
       void apply ()
       {
 	// assemble matrix; optional: assemble only on demand!
