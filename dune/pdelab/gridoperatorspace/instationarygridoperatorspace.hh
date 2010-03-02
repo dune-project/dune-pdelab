@@ -6,12 +6,15 @@
 
 #include<dune/common/exceptions.hh>
 #include<dune/common/geometrytype.hh>
+#include<dune/common/fvector.hh>
+#include<dune/common/fmatrix.hh>
 
 #include<dune/istl/io.hh>
 
 #include"../common/geometrywrapper.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../gridfunctionspace/constraints.hh"
+#include"../gridfunctionspace/interpolate.hh"
 #include"localmatrix.hh"
 #include"gridoperatorspaceutilities.hh"
 
@@ -57,6 +60,74 @@ namespace Dune {
       
       //! every abstract base class has a virtual destructor
       virtual ~TimeSteppingParameterInterface () {}
+    };
+
+
+    //! Parameters specifying implicit euler
+    /**
+     * \tparam R C++ type of the floating point parameters
+     */
+    template<class R> 
+    class ImplicitEulerParameter : public TimeSteppingParameterInterface<R>
+    {
+    public:
+      
+      ImplicitEulerParameter ()
+      {
+	D[0] = 0.0;  D[1] = 1.0;
+	A[0][0] = -1.0; A[0][1] = 1.0;
+	B[0][0] = 0.0;  B[0][1] = 1.0;
+      }
+
+      /*! \brief Return true if method is implicit
+      */
+      virtual bool implicit () const
+      {
+	return true;
+      }
+      
+      /*! \brief Return number of stages s of the method
+      */
+      virtual unsigned s () const
+      {
+	return 1;
+      }
+      
+      /*! \brief Return entries of the A matrix
+	\note that r ∈ 1,...,s and i ∈ 0,...,r
+      */
+      virtual R a (int r, int i) const
+      {
+	return A[r-1][i];
+      }
+      
+      /*! \brief Return entries of the B matrix
+	\note that r ∈ 1,...,s and i ∈ 0,...,r
+      */
+      virtual R b (int r, int i) const
+      {
+	return B[r-1][i];
+      }
+      
+      /*! \brief Return entries of the d Vector
+	\note that i ∈ 0,...,s
+      */
+      virtual R d (int i) const
+      {
+	return D[i];
+      }
+      
+      /*! \brief Return name of the scheme
+      */
+      virtual std::string name () const
+      {
+        return std::string("implicit Euler");
+      }
+
+    private:
+      Dune::FieldVector<R,2> D;
+      Dune::FieldMatrix<R,1,2> A;
+      Dune::FieldMatrix<R,1,2> B;
     };
 
 	//================================================
@@ -115,11 +186,29 @@ namespace Dune {
 		pconstraintsv = &emptyconstraintsv;
 	  }
 
+      //! construct using default time stepper
+	  InstationaryGridOperatorSpace (const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) 
+		: gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_), method(&defaultmethod), r0(gfsv,0.0)
+	  {
+		pconstraintsu = &emptyconstraintsu;
+		pconstraintsv = &emptyconstraintsv;
+	  }
+
       //! construct, with constraints
 	  InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_, const GFSU& gfsu_, const CU& cu,
                                      const GFSV& gfsv_, const CV& cv,
                                      LA& la_, LM& lm_) 
         : gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_), method(&method_), r0(gfsv,0.0)
+	  {
+		pconstraintsu = &cu;
+		pconstraintsv = &cv;
+	  }
+
+      //! construct, with constraints and default time stepper
+	  InstationaryGridOperatorSpace (const GFSU& gfsu_, const CU& cu,
+                                     const GFSV& gfsv_, const CV& cv,
+                                     LA& la_, LM& lm_) 
+        : gfsu(gfsu_), gfsv(gfsv_), la(la_), lm(lm_), method(&defaultmethod), r0(gfsv,0.0)
 	  {
 		pconstraintsu = &cu;
 		pconstraintsv = &cv;
@@ -307,6 +396,19 @@ namespace Dune {
         if (gfsu.gridview().comm().size()>1)
           suggested_dt =  gfsu.gridview().comm().min(suggested_dt);
         return suggested_dt;
+      }
+
+	  template<typename F, typename X> 
+      void interpolate (unsigned stage, const X& xold, F& f, X& x) const
+      {
+        // set time in boundary value function
+        f.setTime(time+method->d(stage)*dt);
+
+        // make x obey the boundary values
+        Dune::PDELab::interpolate(f,gfsu,x);
+
+        // copy non-constrained dofs from old time step
+        Dune::PDELab::copy_nonconstrained_dofs(*pconstraintsv,xold,x);
       }
 
       //! set stage number to do next; assemble constant part of residual; r is empty on entry
@@ -1467,6 +1569,7 @@ namespace Dune {
       TReal time, dt;
       unsigned stage;
       R r0;
+      ImplicitEulerParameter<TReal> defaultmethod;
 	};
 
     //! \} group GridFunctionSpace
