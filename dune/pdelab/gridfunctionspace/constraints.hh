@@ -579,6 +579,16 @@ namespace Dune {
 
     // construct constraints from given boundary condition function
     template<typename CG, typename XG>
+    void copy_nonconstrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
+    {
+      typedef typename XG::Backend B;
+      for (typename XG::size_type i=0; i<xgin.size(); ++i)
+        if (cg.find(i)==cg.end())
+          B::access(xgout,i) = B::const_access(xgin,i);
+	}
+
+    // construct constraints from given boundary condition function
+    template<typename CG, typename XG>
     void set_shifted_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
     {
       typedef typename XG::Backend B;
