@@ -1,6 +1,8 @@
 #ifndef DUNE_ISTLSOLVERBACKEND_HH
 #define DUNE_ISTLSOLVERBACKEND_HH
 
+#include <dune/common/mpihelper.hh>
+
 #include <dune/istl/owneroverlapcopy.hh>
 #include <dune/istl/solvercategory.hh>
 #include <dune/istl/operators.hh>
