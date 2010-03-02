@@ -22,79 +22,6 @@
 namespace Dune {
   namespace PDELab {
 
-    //===============================================================
-    // Interface class for parameters of one step methods
-    //===============================================================
-
-    // some implementations of this interface
-
-    //! Parameters specifying implicit euler
-    /**
-     * \tparam R C++ type of the floating point parameters
-     */
-    template<class R> 
-    class ImplicitEulerParameter : public TimeSteppingParameterInterface<R>
-    {
-    public:
-      
-      ImplicitEulerParameter ()
-      {
-	D[0] = 0.0;  D[1] = 1.0;
-	A[0][0] = -1.0; A[0][1] = 1.0;
-	B[0][0] = 0.0;  B[0][1] = 1.0;
-      }
-
-      /*! \brief Return true if method is implicit
-      */
-      virtual bool implicit () const
-      {
-	return true;
-      }
-      
-      /*! \brief Return number of stages s of the method
-      */
-      virtual unsigned s () const
-      {
-	return 1;
-      }
-      
-      /*! \brief Return entries of the A matrix
-	\note that r ∈ 1,...,s and i ∈ 0,...,r
-      */
-      virtual R a (int r, int i) const
-      {
-	return A[r-1][i];
-      }
-      
-      /*! \brief Return entries of the B matrix
-	\note that r ∈ 1,...,s and i ∈ 0,...,r
-      */
-      virtual R b (int r, int i) const
-      {
-	return B[r-1][i];
-      }
-      
-      /*! \brief Return entries of the d Vector
-	\note that i ∈ 0,...,s
-      */
-      virtual R d (int i) const
-      {
-	return D[i];
-      }
-      
-      /*! \brief Return name of the scheme
-      */
-      virtual std::string name () const
-      {
-        return std::string("implicit Euler");
-      }
-
-    private:
-      Dune::FieldVector<R,2> D;
-      Dune::FieldMatrix<R,1,2> A;
-      Dune::FieldMatrix<R,1,2> B;
-    };
-
     //! Parameters specifying explicit euler
     /**
      * \tparam R C++ type of the floating point parameters
@@ -691,6 +618,8 @@ namespace Dune {
 
       //! do one step;
       /*
+       * \param[in]  time start of time step
+       * \param[in]  dt suggested time step size
        * \param[in]  xold value at begin of time step
        * \param[out] xnew value at end of time step; contains initial guess for first substep on entry
        * \return selected time step size
@@ -756,6 +685,94 @@ namespace Dune {
 		else
 		  *(x[r]) = xnew;
 	      }
+
+	    // solve stage
+	    pdesolver.apply(*x[r]);
+
+            // stage cleanup
+            igos.postStage();
+	  }
+
+	// delete intermediate steps
+        for (unsigned i=1; i<method->s(); ++i) delete x[i];
+
+        // step cleanup
+        igos.postStep();
+
+	step++;
+        return dt;
+      }
+
+      //! do one step;
+      /* This is a version which interpolates constraints at the start of each stage
+       *
+       * \param[in]  time start of time step
+       * \param[in]  dt suggested time step size
+       * \param[in]  xold value at begin of time step
+       * \param[in]  f function to interpolate boundary conditions from
+       * \param[out] xnew value at end of time step; contains initial guess for first substep on entry
+       * \return selected time step size
+       */
+      template<typename F>
+      T apply (T time, T dt, TrlV& xold, F& f, TrlV& xnew)
+      {
+        // save formatting attributes
+        ios_base_all_saver format_attribute_saver(std::cout);
+
+	std::vector<TrlV*> x(1); // vector of pointers to all steps
+	x[0] = &xold;            // initially we have only one
+
+	if (verbosityLevel>=1){
+          std::ios_base::fmtflags oldflags = std::cout.flags();
+	  std::cout << "TIME STEP [" << method->name() << "] " 
+                    << std::setw(6) << step
+		    << " time (from): "
+		    << std::setw(12) << std::setprecision(4) << std::scientific
+		    << time
+		    << " dt: "
+		    << std::setw(12) << std::setprecision(4) << std::scientific
+		    << dt
+		    << " time (to): "
+		    << std::setw(12) << std::setprecision(4) << std::scientific
+		    << time+dt
+		    << std::endl;
+          std::cout.flags(oldflags);
+        }
+        
+	// prepare assembler
+	igos.preStep(*method,time,dt);
+
+	// loop over all stages
+	for (unsigned r=1; r<=method->s(); ++r)
+	  {
+	    if (verbosityLevel>=2){
+              std::ios_base::fmtflags oldflags = std::cout.flags();
+	      std::cout << "STAGE " 
+                        << r 
+                        << " time (to): "
+                        << std::setw(12) << std::setprecision(4) << std::scientific
+                        << time+method->d(r)*dt
+                        << "." << std::endl;
+	      std::cout.flags(oldflags);
+            }
+            
+	    // prepare stage
+	    igos.preStage(r,x);
+
+	    // get vector for current stage
+	    if (r==method->s())
+	      {
+		// last stage
+		x.push_back(&xnew);
+	      }
+	    else
+	      {
+		// intermediate step
+		x.push_back(new TrlV(igos.trialGridFunctionSpace()));
+	      }
+
+            // set boundary conditions and initial value 
+            igos.interpolate(r,*x[r-1],f,*x[r]);
 
 	    // solve stage
 	    pdesolver.apply(*x[r]);
