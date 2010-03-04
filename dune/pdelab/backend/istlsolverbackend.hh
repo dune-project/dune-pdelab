@@ -1583,6 +1583,84 @@ namespace Dune {
       int steps;
       int verbose;
     };
+
+    template<class GFS>
+    class ISTLBackend_SEQ_BCGS_AMG_SSOR
+    {
+      
+    public:
+      ISTLBackend_SEQ_BCGS_AMG_SSOR(int smoothsteps=2,
+			      unsigned maxiter_=5000, int verbose_=1)
+	: maxiter(maxiter_), steps(smoothsteps), verbose(verbose_)
+      {}
+      
+      
+      /*! \brief compute global norm of a vector
+    
+	\param[in] v the given vector
+      */
+      template<class V>
+      typename V::ElementType norm (const V& v) const
+      {
+	return v.two_norm();
+      }
+
+      /*! \brief solve the given linear system
+    
+	\param[in] A the given matrix
+	\param[out] z the solution vector to be computed
+	\param[in] r right hand side
+	\param[in] reduction to be achieved
+      */
+      template<class M, class V>
+      void apply(M& A, V& z, V& r, typename V::ElementType reduction)
+      {
+	typedef typename M::BaseT MatrixType;
+	typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type 
+	  VectorType;
+	MatrixType mat=A.base();
+	typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
+	  Dune::Amg::FirstDiagonal> >
+	  Criterion;
+	typedef Dune::SeqSSOR<MatrixType,VectorType,VectorType> Smoother;
+	typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments 
+          SmootherArgs;
+        typedef Dune::MatrixAdapter<MatrixType,VectorType,VectorType> Operator;
+	typedef Dune::Amg::AMG<Operator,VectorType,Smoother> AMG;
+	SmootherArgs smootherArgs;
+	smootherArgs.iterations = 1;
+	smootherArgs.relaxationFactor = 1;
+  
+	Criterion criterion(15,2000);
+	criterion.setDebugLevel(verbose?3:0);
+	Operator oop(mat);
+	AMG amg=AMG(oop, criterion, smootherArgs, 1, 2, 2);
+
+	Dune::InverseOperatorResult stat;
+
+	Dune::BiCGSTABSolver<VectorType> solver(oop,amg,reduction,maxiter,verbose);
+	solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
+	res.converged  = stat.converged;
+	res.iterations = stat.iterations;
+	res.elapsed    = stat.elapsed;
+	res.reduction  = stat.reduction;
+      }
+      
+      /*! \brief Return access to result data */
+      const Dune::PDELab::LinearSolverResult<double>& result() const
+      {
+	return res;
+      }
+
+    private:
+      Dune::PDELab::LinearSolverResult<double> res;
+      unsigned maxiter;
+      int steps;
+      int verbose;
+    };
+
+
+
   } // namespace PDELab
 } // namespace Dune
 
