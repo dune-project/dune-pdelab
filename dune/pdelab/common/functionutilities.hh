@@ -22,7 +22,13 @@ namespace Dune {
     //! Integrate a GridFunction
     /**
      * Integrate a GridFunction over the domain given by the GridFunction's
-     * GridView.
+     * GridView.  In the parallel case, this function integrates over the
+     * Interior_Partition only.  If the accumulated result over all processors
+     * result is required, use something like
+     * \code
+integrateGridFunction(gf, sum);
+gf.getGridView().comm().sum(sum);
+     * \endcode
      *
      * \tparam GF Type of the GridFunction.
      * \param gf     The GridFunction object.
@@ -37,7 +43,8 @@ namespace Dune {
                                typename GF::Traits::RangeType& sum,
                                unsigned qorder = 1) {
       typedef typename GF::Traits::GridViewType GV;
-      typedef typename GV::template Codim<0>::Iterator EIterator;
+      typedef typename GV::template Codim<0>::
+        template Partition<Interior_Partition>::Iterator EIterator;
       typedef typename GV::template Codim<0>::Geometry Geometry;
       typedef typename GF::Traits::RangeType Range;
       typedef typename GF::Traits::DomainFieldType DF;
@@ -48,9 +55,10 @@ namespace Dune {
 
       sum = 0;
       Range val;
-      const EIterator eend = gf.getGridView().template end<0>();
-      for(EIterator eit = gf.getGridView().template begin<0>();
-          eit != eend; ++eit) {
+      const EIterator eend = gf.getGridView().template end<0,
+        Interior_Partition>();
+      for(EIterator eit = gf.getGridView().template begin<0,
+            Interior_Partition>(); eit != eend; ++eit) {
         const Geometry& geo = eit->geometry();
         Dune::GeometryType gt = geo.type();
         const QR& rule = QRs::rule(gt,qorder);
