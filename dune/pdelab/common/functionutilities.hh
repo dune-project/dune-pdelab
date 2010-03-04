@@ -8,6 +8,7 @@
 
 #include <dune/common/geometrytype.hh>
 
+#include <dune/grid/common/gridenums.hh>
 #include <dune/grid/common/quadraturerules.hh>
 #include <dune/grid/utility/hierarchicsearch.hh>
 
@@ -95,7 +96,7 @@ namespace Dune {
        * \param xg  The global coordinate the evaluate at.
        */
       GridFunctionProbe(const GF& gf_, const Domain& xg)
-        : gf(gf_), e(), xl(0), evalRank(0)
+        : gf(gf_), e(), xl(0), evalRank(gf.getGridView().comm().size())
       {
         int myRank = gf.getGridView().comm().rank();
         try {
@@ -103,11 +104,11 @@ namespace Dune {
                   (HierarchicSearch<typename GV::Grid, typename GV::IndexSet>
                    (gf.getGridView().grid(), gf.getGridView().indexSet()).
                    findEntity(xg)));
-          evalRank = myRank;
+          // make sure only interior entities are accepted
+          if((*e)->partitionType() == InteriorEntity)
+            evalRank = myRank;
         }
-        catch(const Dune::GridError&) {
-          evalRank = gf.getGridView().comm().size();
-        }
+        catch(const Dune::GridError&) { /* do nothing */ }
         evalRank = gf.getGridView().comm().min(evalRank);
         if(myRank == evalRank)
           xl = (*e)->geometry().local(xg);
