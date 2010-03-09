@@ -306,8 +306,8 @@ namespace Dune {
       struct BlockProcessorHelper
       {};
       
-      template<typename GFS, bool b>
-      struct BlockProcessorHelper<GFS,b,1>
+      template<typename GFS>
+      struct BlockProcessorHelper<GFS,false,1>
       {
 	
 	template<typename T>
@@ -340,6 +340,11 @@ namespace Dune {
 	}
       };
 
+      template<typename GFS>
+      struct BlockProcessorHelper<GFS,true,1>
+        : public BlockProcessorHelper<GFS,false,1>
+      {};
+      
       template<typename GFS, int k>
       struct BlockProcessorHelper<GFS, true, k>
       {
