@@ -138,7 +138,7 @@ namespace Dune {
 
 	  // get const_reference to container element
 	  template<typename C>
-	  static const typename C::value_type& const_access (const C& c, size_type i, size_type j)
+	  static const typename C::value_type& access (const C& c, size_type i, size_type j)
 	  {
 		return c.operator[](i*c.line()+j);
 	  }

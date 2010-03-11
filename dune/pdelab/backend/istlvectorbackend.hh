@@ -76,7 +76,7 @@ namespace Dune {
 	  template<class C>
 	  struct Value
 	  {
-		typedef typename C::block_type::block_type Type;
+		typedef typename C::field_type Type;
 	  };
 
 	  //! The size type
@@ -85,7 +85,7 @@ namespace Dune {
 	  // get const_reference to container element
 	  // note: this method does not depend on T!
 	  template<typename C>
-	  static const typename C::field_type& const_access (const C& c, size_type i)
+	  static const typename C::field_type& access (const C& c, size_type i)
 	  {
 		return c[i/BLOCKSIZE][i%BLOCKSIZE];
 	  }

@@ -1345,7 +1345,7 @@ namespace Dune {
       {
         for (int i=0; i<lfsv.size(); i++)
           for (int j=0; j<lfsu.size(); j++)
-            localcontainer(i,j) = B::const_access(globalcontainer,lfsv.globalIndex(i),lfsu.globalIndex(j));
+            localcontainer(i,j) = B::access(globalcontainer,lfsv.globalIndex(i),lfsu.globalIndex(j));
       }
 
       /** \brief write local stiffness matrix for entity */  

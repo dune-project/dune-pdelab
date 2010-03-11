@@ -564,7 +564,7 @@ namespace Dune {
       typedef typename XG::Backend B;
 	  typedef typename CG::const_iterator global_col_iterator;	  
 	  for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
-        B::access(xgout,cit->first) = B::const_access(xgin,cit->first);
+        B::access(xgout,cit->first) = B::access(xgin,cit->first);
 	}
 
     // construct constraints from given boundary condition function
@@ -584,7 +584,7 @@ namespace Dune {
       typedef typename XG::Backend B;
       for (typename XG::size_type i=0; i<xgin.size(); ++i)
         if (cg.find(i)==cg.end())
-          B::access(xgout,i) = B::const_access(xgin,i);
+          B::access(xgout,i) = B::access(xgin,i);
 	}
 
     // construct constraints from given boundary condition function

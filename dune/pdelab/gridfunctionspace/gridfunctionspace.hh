@@ -156,7 +156,7 @@ namespace Dune {
        *  we can assume C to be std::vector<T>
        */
 	  template<typename C>
-	  static const typename C::value_type& const_access (const C& c, size_type i)
+	  static const typename C::value_type& access (const C& c, size_type i)
 	  {
 		return c.operator[](i);
 	  }

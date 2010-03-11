@@ -125,7 +125,7 @@ namespace Dune {
            * \note this method does not depend on T!
            */
 	  template<typename C>
-	  static const typename C::field_type& const_access (const C& c, size_type i, size_type j)
+	  static const typename C::field_type& access (const C& c, size_type i, size_type j)
 	  {
 		return c[i/ROWBLOCKSIZE][j/COLBLOCKSIZE][i%ROWBLOCKSIZE][j%COLBLOCKSIZE];
 	  }

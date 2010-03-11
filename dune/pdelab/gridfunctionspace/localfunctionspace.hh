@@ -207,7 +207,7 @@ namespace Dune {
       {
         localcontainer.resize(n);
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          localcontainer[k] = B::const_access(globalcontainer,i[k]);
+          localcontainer[k] = B::access(globalcontainer,i[k]);
       }
 
       /** \brief write back coefficients for one element to container */  
@@ -482,7 +482,7 @@ namespace Dune {
       {
         localcontainer.resize(n);
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          localcontainer[k] = B::const_access(globalcontainer,i[k]);
+          localcontainer[k] = B::access(globalcontainer,i[k]);
       }
 
       /** \brief write back coefficients for one element to container */  
@@ -655,7 +655,7 @@ namespace Dune {
       {
         localcontainer.resize(n);
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          localcontainer[k] = B::const_access(globalcontainer,i[k]);
+          localcontainer[k] = B::access(globalcontainer,i[k]);
       }
 
       /** \brief write back coefficients for one element to container */  
