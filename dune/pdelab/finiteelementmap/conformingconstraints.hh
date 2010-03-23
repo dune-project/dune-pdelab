@@ -27,7 +27,10 @@ namespace Dune {
 
       //! boundary constraints
       /**
-       * \tparam F   grid function returning boundary condition type
+       * \tparam F   Boundary grid function returning boundary condition type.
+       *             If the value of the boundary grid function evaluated at
+       *             the local face center is >0, a dirichlet boundary is
+       *             assumed.
        * \tparam IG  intersection geometry
        * \tparam LFS local function space
        * \tparam T   TransformationType
