@@ -1267,6 +1267,72 @@ namespace Dune {
       int verbose;
     };
 
+    //! Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
+    template<typename GFS>
+    class ISTLBackend_NOVLP_ExplicitDiagonal
+    {
+      typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
+
+      const GFS& gfs;
+      PHELPER phelper;
+      Dune::PDELab::LinearSolverResult<double> res;
+
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] gfs GridFunctionSpace, used to identify DoFs for parallel
+        communication
+      */
+      explicit ISTLBackend_NOVLP_ExplicitDiagonal(const GFS& gfs_)
+        : gfs(gfs_), phelper(gfs)
+      {}
+
+      /*! \brief compute global norm of a vector
+
+        \param[in] v the given vector
+      */
+      template<class V>
+      typename V::ElementType norm (const V& v) const
+      {
+        typedef Dune::PDELab::NonoverlappingScalarProduct<GFS,V> PSP;
+        V x(v); // make a copy because it has to be made consistent
+        PSP psp(gfs,phelper);
+        psp.make_consistent(x);
+        return psp.norm(x);
+      }
+
+      /*! \brief solve the given linear system
+
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename W::ElementType reduction)
+      {
+        Dune::SeqJac<M,V,W> jac(A,1,1.0);
+        jac.pre(z,r);
+        jac.apply(z,r);
+        jac.post(z);
+        if (gfs.gridview().comm().size()>1)
+        {
+          Dune::PDELab::AddDataHandle<GFS,V> adddh(gfs,z);
+          gfs.gridview().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
+        }
+        res.converged  = true;
+        res.iterations = 1;
+        res.elapsed    = 0.0;
+        res.reduction  = reduction;
+      }
+
+      /*! \brief Return access to result data */
+      const Dune::PDELab::LinearSolverResult<double>& result() const
+      {
+        return res;
+      }
+    };
+
 
     template<class GFS, class C>
     class ISTLBackend_OVLP_BCGS_SSORk
