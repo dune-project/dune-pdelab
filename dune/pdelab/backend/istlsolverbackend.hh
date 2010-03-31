@@ -1294,12 +1294,12 @@ namespace Dune {
       template<class V>
       typename V::ElementType norm (const V& v) const
       {
-        DUNE_THROW(NotImplemented,
-                   "ISTLBackend_NOVLP_ExplicitDiagonal::norm() should not be "
-                   "neccessary, so we skipped the testing.  If you have a "
-                   "scenario where you need it, please verify the "
-                   "implementation and remove this exception or report back "
-                   "to us so we can remove it.");
+        dune_static_assert
+          (AlwaysFalse<V>::value,
+           "ISTLBackend_NOVLP_ExplicitDiagonal::norm() should not be "
+           "neccessary, so we skipped the testing.  If you have a scenario "
+           "where you need it, please verify the implementation and remove "
+           "this assert or report back to us so we can remove it.");
 
         typedef Dune::PDELab::NonoverlappingScalarProduct<GFS,V> PSP;
         V x(v); // make a copy because it has to be made consistent
@@ -1517,9 +1517,12 @@ namespace Dune {
       template<class V>
       typename V::ElementType norm(const V& v) const
       {
-        DUNE_THROW(NotImplemented, "ISTLBackend_OVLP_ExplicitDiagonal::norm() "
-                   "should not be neccessary, so we skipped the "
-                   "implementation");
+        dune_static_assert
+          (AlwaysFalse<V>::value,
+           "ISTLBackend_OVLP_ExplicitDiagonal::norm() should not be "
+           "neccessary, so we skipped the implementation.  If you have a "
+           "scenario where you need it, please implement it or report back to "
+           "us.");
       }
 
       /*! \brief solve the given linear system
