@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 
+#include <dune/common/smartpointer.hh>
 #include <dune/common/tuples.hh>
 #include <dune/pdelab/common/function.hh>
 
