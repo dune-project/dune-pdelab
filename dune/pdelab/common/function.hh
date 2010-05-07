@@ -540,6 +540,7 @@ namespace Dune {
 #endif // DOXYGEN
 	};
 
+#ifndef DOXYGEN
     // for k=2
 	template<class T>
 	class PowerGridFunction<T,2> : public PowerNode<T,2,CountingPointerStoragePolicy>,
@@ -675,6 +676,7 @@ namespace Dune {
 		: PowerNode<T,9,CountingPointerStoragePolicy>(t0,t1,t2,t3,t4,t5,t6,t7,t8) 
 	  {}
 	};
+#endif
 
     /** \brief composite functions
      *
@@ -732,6 +734,7 @@ namespace Dune {
 	};
 
 
+#ifndef DOXYGEN
 	template<typename T0, typename T1> // 2 children
 	class CompositeGridFunction<T0,T1,EmptyChild,EmptyChild,EmptyChild,
 								EmptyChild,EmptyChild,EmptyChild,EmptyChild>
@@ -930,6 +933,7 @@ namespace Dune {
 						   "GridViewType must be equal in all components of composite grid function");
 	  } 
 	};
+#endif
 	
     //========================================================
     // helper template to turn an ordinary GridFunction into a
