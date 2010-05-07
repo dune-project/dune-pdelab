@@ -1549,6 +1549,7 @@ namespace Dune {
 
     //! \}
 
+#ifndef DOXYGEN
 	template<typename T, typename P>
 	class PowerGridFunctionSpace<T,2,P> 
       : public PowerGridFunctionSpaceBase<T,2,P>
@@ -1872,7 +1873,7 @@ namespace Dune {
         PowerGridFunctionSpaceBase<T,10,P>::setup();
       }
 	};
-
+#endif // DOXYGEN
 
     //=======================================
     // composite grid function space
