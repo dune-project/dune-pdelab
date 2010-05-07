@@ -1,4 +1,5 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// vi: set et ts=4 sw=2 sts=2:
 #ifndef DUNE_PDELAB_LOCALFUNCTIONSPACE_HH
 #define DUNE_PDELAB_LOCALFUNCTIONSPACE_HH
 
@@ -28,7 +29,8 @@ namespace Dune {
 	  {
         // vist children of node t in order
 		typedef typename T::template Child<i>::Type C;
-        t.offset = offset;
+        if (i == 0)
+          t.offset = offset;
         Int initial_offset = offset; // remember initial offset to compute size later
         LocalFunctionSpaceBaseVisitNodeMetaProgram<C,C::isLeaf,E,It,Int>::
           fill_indices(t.template getChild<i>(),e,begin,offset);
