@@ -4,22 +4,22 @@
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_HH
 
 #include <cstddef>
-#include<map>
+#include <map>
 #include <ostream>
-#include<set>
-#include<vector>
+#include <set>
+#include <vector>
 
-#include<dune/common/exceptions.hh>
-#include<dune/common/geometrytype.hh>
-#include<dune/common/stdstreams.hh>
-#include<dune/grid/common/genericreferenceelements.hh>
+#include <dune/common/exceptions.hh>
+#include <dune/common/geometrytype.hh>
+#include <dune/common/stdstreams.hh>
+#include <dune/grid/common/genericreferenceelements.hh>
 
 #include <dune/localfunctions/common/localkey.hh>
 
-#include"../common/countingptr.hh"
-#include"../common/multitypetree.hh"
-#include"../common/cpstoragepolicy.hh"
-#include"../common/geometrywrapper.hh"
+#include "../common/countingptr.hh"
+#include "../common/multitypetree.hh"
+#include "../common/cpstoragepolicy.hh"
+#include "../common/geometrywrapper.hh"
 
 #include"localfunctionspace.hh"
 
@@ -175,12 +175,8 @@ namespace Dune {
 	/** \brief Tag indicating an arbitrary number of unkowns per entity.
      *
      * class used to pass compile-time parameter to the GridFunctionSpace.
-     *
      */
-	struct GridFunctionGeneralMapper
-	{
-	  enum {dummy=0} ;
-	};
+	struct GridFunctionGeneralMapper {};
 
 
     // Empty constraints assembler class
@@ -494,17 +490,12 @@ namespace Dune {
       std::set<unsigned int> codimUsed;
 	};
 
-
-
 	/** \brief Tag indicating a fixed number of unkowns per entity (known at compile time).
      *
      * class used to pass compile-time parameter to the GridFunctionSpace.
      *
      */
-	struct GridFunctionRestrictedMapper
-	{
-	  enum {dummy=1} ;
-	};
+	struct GridFunctionRestrictedMapper {};
 
     //! \}
 
@@ -782,7 +773,6 @@ namespace Dune {
     template<typename IIS>
 	struct GridFunctionStaticSize
 	{
-	  enum {dummy=2} ;
       typedef IIS IntersectionIndexSet;
 	};
 
@@ -1114,35 +1104,57 @@ namespace Dune {
     //! \brief Indicates lexicographics ordering of the unknowns for composite
     //! grid function spaces.
     //!
-	//! this class may be used to pass compile-time
-	//! parameters to the implementation of 
+    //! this class may be used to pass compile-time
+    //! parameters to the implementation of 
     //! \link PowerGridFunctionSpace PowerGridFunctionSpace \endlink or
     //! \link CompositeGridFunctionSpace CompositeGridFunctionSpace \endlink
-	struct GridFunctionSpaceLexicographicMapper
-	{
-	  enum {dummy=0} ;
-	};
+    struct GridFunctionSpaceLexicographicMapper {};
 
     //! \brief Indicates using block-wise ordering of the unknowns for composite
     //! grid function spaces.
     //!
-	//! this class may be used to pass compile-time
-	//! parameters to the implementation of 
+    //! The exact blocking structure can be passed as template parameters
+    //!
+    //! this class may be used to pass compile-time
+    //! parameters to the implementation of 
     //! \link PowerGridFunctionSpace PowerGridFunctionSpace \endlink or
     //! \link CompositeGridFunctionSpace CompositeGridFunctionSpace \endlink
-	struct GridFunctionSpaceBlockwiseMapper
-	{
-	  enum {dummy=0} ;
-	};
+    template<int s0 = 1, int s1 = 1, int s2 = 1, int s3 = 1, int s4 = 1, int s5 = 1, int s6 = 1, int s7 = 1, int s8 = 1, int s9 = 1>
+    struct GridFunctionSpaceComponentBlockwiseMapper
+    {
+      static const int size[];
+      static const int offset[];
+    };
+    template<int s0, int s1, int s2, int s3, int s4, int s5, int s6, int s7, int s8, int s9>
+    const int GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9>::
+      size[] = { s0, s1, s2, s3, s4, s5, s6, s7, s8, s9 };
+    template<int s0, int s1, int s2, int s3, int s4, int s5, int s6, int s7, int s8, int s9>
+    const int GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9>::
+      offset[] = { 0, s0, s0+s1, s0+s1+s2, s0+s1+s2+s3, s0+s1+s2+s3+s4,
+                   s0+s1+s2+s3+s4+s5, s0+s1+s2+s3+s4+s5+s6, s0+s1+s2+s3+s4+s5+s6+s7,
+                   s0+s1+s2+s3+s4+s5+s6+s7+s8, s0+s1+s2+s3+s4+s5+s6+s7+s8+s9 };
+    
+    //! \brief Indicates using block-wise ordering of the unknowns for composite
+    //! grid function spaces.
+    //!
+    //! this class may be used to pass compile-time
+    //! parameters to the implementation of 
+    //! \link PowerGridFunctionSpace PowerGridFunctionSpace \endlink or
+    //! \link CompositeGridFunctionSpace CompositeGridFunctionSpace \endlink
+    struct GridFunctionSpaceBlockwiseMapper : GridFunctionSpaceComponentBlockwiseMapper<> {};
 
     //! \}
 
 	template<typename T, int k, typename P>
 	class PowerGridFunctionSpace;
 
-    // product of identical grid function spaces
-    // base class that holds implementation of the methods
-    // this is the default version with lexicographic ordering
+    //! product of identical grid function spaces
+    //! base class that holds implementation of the methods
+    //! this is the default version with lexicographic ordering
+    //!
+    //! \tparam T PLEASE DOCUMENT
+    //! \tparam k PLEASE DOCUMENT
+    //! \tparam P PLEASE DOCUMENT
 	template<typename T, int k, typename P>
 	class PowerGridFunctionSpaceBase 
       : public PowerNode<T,k,CountingPointerStoragePolicy>,
@@ -1297,7 +1309,7 @@ namespace Dune {
     private:
       void setup ()
       {
-        Dune::dinfo << "power grid function space(lexicographic version):"
+        Dune::dinfo << "PowerGridFunctionSpace(lexicographic version):"
                     << std::endl;
         Dune::dinfo << "( ";
         offset[0] = 0;
@@ -1325,18 +1337,17 @@ namespace Dune {
     // product of identical grid function spaces
     // base class that holds implementation of the methods
     // specialization for blockwise ordering
-	template<typename T, int k>
-	class PowerGridFunctionSpaceBase<T,k,GridFunctionSpaceBlockwiseMapper> 
+	template<typename T, int k, int s>
+	class PowerGridFunctionSpaceBase<T,k,GridFunctionSpaceComponentBlockwiseMapper<s> >
       : public PowerNode<T,k,CountingPointerStoragePolicy>,
         public Countable
 	{
-      friend class PowerGridFunctionSpace<T,k,GridFunctionSpaceBlockwiseMapper>;
-
+      friend class PowerGridFunctionSpace<T,k,GridFunctionSpaceComponentBlockwiseMapper<s> >;
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
                                                     typename T::Traits::BackendType,
-                                                    GridFunctionSpaceBlockwiseMapper, k>
+                                                    GridFunctionSpaceComponentBlockwiseMapper<s>, k>
       Traits;
 
       //! extract type of container storing Es
@@ -1408,7 +1419,7 @@ namespace Dune {
       template<int i>
 	  typename Traits::SizeType subMap (typename Traits::SizeType j) const
 	  {
-		return j*k+i;
+        return (j%s)+(j/s)*k*s+i*s;
 	  }
 
       //------------------------------
@@ -1478,21 +1489,26 @@ namespace Dune {
     private:
       void setup ()
       {
-        Dune::dinfo << "power grid function space(blockwise version):"
+        Dune::dinfo << "PowerGridFunctionSpace(blockwise version):"
                     << std::endl;
         Dune::dinfo << "( ";
         offset[0] = 0;
         maxlocalsize = 0;
         for (int i=0; i<k; i++)
-          {
-            childSize[i] = this->getChild(i).globalSize();
-            Dune::dinfo << childSize[i] << " ";
-            offset[i+1] = offset[i]+childSize[i];
-            maxlocalsize += this->getChild(i).maxLocalSize();
-          }
+        {
+          childSize[i] = this->getChild(i).globalSize();
+          offset[i+1] = offset[i]+childSize[i];
+          Dune::dinfo << childSize[i] << "[" << offset[i] << "] ";
+          maxlocalsize += this->getChild(i).maxLocalSize();
+        }
         Dune::dinfo << ") total size = " << offset[k]
                     << " max local size = " << maxlocalsize
                     << std::endl;
+        /* check the local block size */
+        if (this->getChild(0).maxLocalSize()%s != 0)
+          DUNE_THROW(Exception,
+            "number of DOFs (" << this->getChild(0).maxLocalSize() << ") per component "
+            "must be a multiple of the BlockSize (" << s << ")");
         for (int i=1; i<k; i++)
           if (childSize[i]!=childSize[0])
             DUNE_THROW(Exception, "components must be of equal size");
@@ -2181,7 +2197,7 @@ namespace Dune {
     private:
       void setup ()
       {
-        Dune::dinfo << "composite grid function space(lexicographic version):"
+        Dune::dinfo << "CompositeGridFunctionSpace(lexicographic version):"
                     << std::endl;
 
         CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
@@ -2216,14 +2232,15 @@ namespace Dune {
     // P is the ordering parameter
     // Ti are all grid function spaces
 	template<typename T0, typename T1, typename T2, typename T3,
-			 typename T4, typename T5, typename T6,
-			 typename T7, typename T8>
-	class CompositeGridFunctionSpaceBase<GridFunctionSpaceBlockwiseMapper,T0,T1,T2,T3,T4,T5,T6,T7,T8>
+			 typename T4, typename T5, typename T6, typename T7, typename T8,
+             int s0, int s1, int s2, int s3, int s4, int s5, int s6, int s7, int s8, int s9>
+	class CompositeGridFunctionSpaceBase<GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9>,
+                                         T0,T1,T2,T3,T4,T5,T6,T7,T8>
 	  : public CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8>,
 		public Countable
 	{
-      friend class CompositeGridFunctionSpace<GridFunctionSpaceBlockwiseMapper,
-                                              T0,T1,T2,T3,T4,T5,T6,T7,T8>; // for setup
+      typedef GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9> BlockwiseMapper;
+      friend class CompositeGridFunctionSpace<BlockwiseMapper, T0,T1,T2,T3,T4,T5,T6,T7,T8>; // for setup
 
       typedef CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8> BaseT;
 
@@ -2231,7 +2248,7 @@ namespace Dune {
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T0::Traits::GridViewType, 
                                                     typename T0::Traits::BackendType,
-                                                    GridFunctionSpaceBlockwiseMapper,
+                                                    BlockwiseMapper,
                                                     NonEmptyChilds<T0,T1,T2,T3,T4,T5,
                                                                    T6,T7,T8>::value>
       Traits;
@@ -2301,7 +2318,15 @@ namespace Dune {
       template<int i>
 	  typename Traits::SizeType subMap (typename Traits::SizeType j) const
 	  {
-		return j*BaseT::CHILDREN+i;
+        // make the block sizes and offsets available in an array
+        static const int blockSize[] = { s0, s1, s2, s3, s4, s5, s6, s7, s8, s9 };
+        static const int blockOffset[] = { 0, s0, s0+s1, s0+s1+s2, s0+s1+s2+s3, s0+s1+s2+s3+s4,
+                                           s0+s1+s2+s3+s4+s5, s0+s1+s2+s3+s4+s5+s6, s0+s1+s2+s3+s4+s5+s6+s7,
+                                           s0+s1+s2+s3+s4+s5+s6+s7+s8, s0+s1+s2+s3+s4+s5+s6+s7+s8+s9 };
+        return (j%BlockwiseMapper::size[i])
+          +(j/BlockwiseMapper::size[i])*BlockwiseMapper::offset[BaseT::CHILDREN]
+          +BlockwiseMapper::offset[i];
+        return (j%blockSize[i])+(j/blockSize[i])*blockOffset[BaseT::CHILDREN]+blockOffset[i];
 	  }
 
       //------------------------------
@@ -2357,15 +2382,24 @@ namespace Dune {
     private:
       void setup ()
       {
-        Dune::dinfo << "composite grid function space(blockwise version):"
+        Dune::dinfo << "CompositeGridFunctionSpace(blockwise version):"
                     << std::endl;
 
         CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
           setup(*this,childGlobalSize,childLocalSize);
 
+        // make the block sizes available in an array
+        static const int blockSize[] = { s0, s1, s2, s3, s4, s5, s6, s7, s8, s9 };
+        // check for compatible sizes
         for (int i=1; i<BaseT::CHILDREN; i++)
-          if (childGlobalSize[i]!=childGlobalSize[0])
+        {
+          if (childLocalSize[i]%blockSize[i]!=0)
+            DUNE_THROW(Exception,
+              "number of DOFs (" << childLocalSize[i] << ") per component "
+              "must be a multiple of the BlockSize (" << blockSize[i] << ")");
+          if (childGlobalSize[i]/blockSize[i]!=childGlobalSize[0]/blockSize[0])
             DUNE_THROW(Exception, "components must be of equal size");
+        }
 
         Dune::dinfo << "( ";
         offset[0] = 0;
@@ -2388,7 +2422,6 @@ namespace Dune {
       typename Traits::SizeType maxlocalsize;
       mutable std::vector<typename Traits::SizeType> childglobal;
 	};
-
 
     //! \addtogroup GridFunctionSpace \{
 
@@ -3199,7 +3232,7 @@ namespace Dune {
       GridFunctionSubSpace (const GFS& gfs) 
         : GridFunctionSubSpaceIntermediateBase<GFS,k,GFS::isLeaf>(gfs)
       {
-        Dune::dinfo << "grid function subspace:" << std::endl;
+        Dune::dinfo << "GridFunctionSubSpace:" << std::endl;
         Dune::dinfo << "root space size = " << gfs.globalSize()
                     << " max local size = " << this->maxLocalSize()
                     << std::endl;
