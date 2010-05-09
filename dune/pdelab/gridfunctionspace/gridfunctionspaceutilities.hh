@@ -31,9 +31,7 @@ namespace Dune {
 
 	/** \brief convert a single component function space into a grid function
      *
-     * The functions can be vector-valued.
-     *
-     * This is just an intermediate solution to provide VTK output.
+     * The functions can _not_ be vector-valued.
      *
      * \tparam T Type of GridFunctionSpace
      * \tparam X Type of coefficients vector
@@ -606,8 +604,15 @@ namespace Dune {
 	  mutable std::vector<typename Traits::RangeType> yb;
 	};
 
-	// convert a power function space of scalar function spaces into a vector-valued grid function
-    // this is just an intermediate solution to provide VTK output
+    /** \brief DiscreteGridFunction for vector-valued functions
+     *
+     * convert a power function space of scalar function spaces into a
+     * vector-valued grid function this is just an intermediate
+     * solution to provide VTK output
+     *
+     * \tparam T Type of PowerGridFunctionSpace
+     * \tparam X Type of coefficients vector
+     */
 	template<typename T, typename X>
 	class VectorDiscreteGridFunction
 	  : public GridFunctionInterface<
