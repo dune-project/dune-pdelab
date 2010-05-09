@@ -296,6 +296,7 @@ namespace Dune {
       }
 
 	  //! get max dimension of shape function space
+      //! \todo What are the exact semantics of maxLocalSize?
 	  typename Traits::SizeType maxLocalSize () const
 	  {
 		return nlocal;
@@ -1030,7 +1031,7 @@ namespace Dune {
         typedef Dune::tuple<unsigned int, unsigned int> SubentityType;
         typedef std::map<SubentityType,unsigned int> CountMapType;
         CountMapType countmap;
-        for (int i=0; i<lc.size(); ++i)
+        for (unsigned int i=0; i<lc.size(); ++i)
           {
             SubentityType subentity(lc.localKey(i).subEntity(),lc.localKey(i).codim());
             if (countmap.find(subentity)==countmap.end())
