@@ -55,6 +55,17 @@ namespace Dune {
 		return cols;
 	  }
 
+      //! y = A x
+      template<class X, class R>
+      void umv (const X& x, R& y) const
+      {
+        for (int i=0; i<rows; ++i)
+        {
+          for (int j=0; j<cols; j++)
+            y[i] += (*this)(i,j) * x[j];
+        }
+      }
+      
 	private:
 	  std::vector<T> m;
 	  int rows, cols;

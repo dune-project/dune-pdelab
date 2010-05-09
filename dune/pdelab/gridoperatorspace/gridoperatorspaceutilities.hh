@@ -757,7 +757,80 @@ namespace Dune {
 	  Imp& asImp () {return static_cast<Imp &> (*this);}
 	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
 	};
+    
+    // derive from this class to add evaluation of alpha_volume based on jacobian_volume
+    template<typename Imp>
+    class JacobianBasedAlphaVolume
+    {
+    public:
 
+      enum { doAlphaVolume    = true };
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+      {
+        LocalMatrix<typename R::value_type> mat(lfsu.size(),lfsu.size());
+        asImp().jacobian_volume(eg, lfsu, x, lfsv, mat);
+        mat.umv(x,r);
+      }
+
+    private:
+      Imp& asImp () { return static_cast<Imp &> (*this); }
+      const Imp& asImp () const { return static_cast<const Imp &>(*this); }
+    };
+    
+    // derive from this class to add evaluation of alpha_skeleton based on jacobian_skeleton
+    template<typename Imp>
+    class JacobianBasedAlphaSkeleton
+    {
+    public:
+
+      enum { doAlphaSkeleton  = true };
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_skeleton (const IG& ig,
+                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
+                           R& r_s, R& r_n) const
+      {
+        LocalMatrix<typename R::value_type> mat_ss(lfsu_s.size(),lfsu_s.size());
+        LocalMatrix<typename R::value_type> mat_sn(lfsu_s.size(),lfsu_n.size());
+        LocalMatrix<typename R::value_type> mat_ns(lfsu_n.size(),lfsu_s.size());
+        LocalMatrix<typename R::value_type> mat_nn(lfsu_n.size(),lfsu_n.size());
+        asImp().jacobian_skeleton(ig,
+          lfsu_s, x_s, lfsv_s,
+          lfsu_n, x_n, lfsv_n,
+          mat_ss, mat_sn, mat_ns, mat_nn);
+        // TODO: Reihenfolge der Multiplikationen!
+        mat_ss.umv(x_s,r_s);
+        mat_ns.umv(x_n,r_s);
+        mat_sn.umv(x_s,r_n);
+        mat_nn.umv(x_n,r_n);
+      }
+
+    private:
+      Imp& asImp () { return static_cast<Imp &> (*this); }
+      const Imp& asImp () const { return static_cast<const Imp &>(*this); }
+    };
+    
+    // derive from this class to add evaluation of alpha_boundary based on jacobian_boundary
+    template<typename Imp>
+    class JacobianBasedAlphaBoundary
+    {
+    public:
+
+      enum { doAlphaBoundary  = true };
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_boundary (const IG& ig, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+      {
+        LocalMatrix<typename R::value_type> mat(lfsu.size(),lfsu.size());
+        asImp().jacobian_boundary(ig, lfsu, x, lfsv, mat);
+        mat.umv(x,r);
+      }
+
+    private:
+      Imp& asImp () { return static_cast<Imp &> (*this); }
+      const Imp& asImp () const { return static_cast<const Imp &>(*this); }
+    };
+    
     //! \} group GridFunctionSpace
   } // namespace PDELab
 } // namespace Dune
