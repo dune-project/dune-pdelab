@@ -243,7 +243,7 @@ namespace Dune {
             b.evaluate(ig,it->position(),bctype);
  
             // skip rest if we are on Neumann boundary
-            if (bctype<=0) continue;
+            if (DiffusionBoundaryCondition::isNeumann(bctype)) continue;
 
             // position of quadrature point in local coordinates of element 
             Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());

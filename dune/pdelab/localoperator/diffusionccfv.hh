@@ -171,7 +171,7 @@ namespace Dune {
         typename B::Traits::RangeType bctype;
         b.evaluate(ig,face_local,bctype);
 
-        if (bctype>0)
+        if (DiffusionBoundaryCondition::isDirichlet(bctype))
           {
             // Dirichlet boundary
             // distance between cell center and face center
@@ -194,7 +194,7 @@ namespace Dune {
             // contribution to residual on inside element
             r_s[0] += k_inside*(x_s[0]-y[0])*face_volume/distance;
           }
-        else
+        else // if (DiffusionBoundaryCondition::isNeumann(bctype))
           {
             // Neumann boundary
             // evaluate flux boundary condition

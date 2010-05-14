@@ -264,7 +264,7 @@ namespace Dune {
             b.evaluate(ig,it->position(),bctype);
  
             // skip rest if we are on Dirichlet boundary
-            if (bctype>0) continue;
+            if (DiffusionBoundaryCondition::isDirichlet(bctype)) continue;
 
             // position of quadrature point in local coordinates of element 
             Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
