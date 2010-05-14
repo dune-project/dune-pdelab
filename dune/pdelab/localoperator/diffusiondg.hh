@@ -8,11 +8,12 @@
 #include<dune/grid/common/quadraturerules.hh>
 #include<dune/grid/common/referenceelements.hh>
 
-#include"../common/geometrywrapper.hh"
-#include"../gridoperatorspace/gridoperatorspace.hh"
-#include"../gridoperatorspace/gridoperatorspaceutilities.hh"
-#include"pattern.hh"
-#include"flags.hh"
+#include "../common/geometrywrapper.hh"
+#include "../gridoperatorspace/gridoperatorspace.hh"
+#include "../gridoperatorspace/gridoperatorspaceutilities.hh"
+#include "pattern.hh"
+#include "flags.hh"
+#include "diffusionparam.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -27,9 +28,21 @@ namespace Dune {
     class DiffusionDG :
       public LocalOperatorDefaultFlags,
       public FullSkeletonPattern, public FullVolumePattern
-      //,public NumericalJacobianVolume<DiffusionDG<K, F, B, G, J> >
-      //,public NumericalJacobianSkeleton<DiffusionDG<K, F, B, G, J> >
-      //,public NumericalJacobianBoundary<DiffusionDG<K, F, B, G, J> >
+// #define JacobianBasedAlphaX
+// #define NumericalJacobianX
+#ifdef JacobianBasedAlphaX
+      ,public JacobianBasedAlphaVolume<DiffusionDG<K, F, B, G, J> >
+      ,public JacobianBasedAlphaSkeleton<DiffusionDG<K, F, B, G, J> >
+      ,public JacobianBasedAlphaBoundary<DiffusionDG<K, F, B, G, J> >
+#endif
+#ifdef NumericalJacobianX
+      #ifdef JacobianBasedAlphaX
+      #error You have provide either the alpha_* or the jacobian_* methods...
+      #endif
+      ,public NumericalJacobianVolume<DiffusionDG<K, F, B, G, J> >
+      ,public NumericalJacobianSkeleton<DiffusionDG<K, F, B, G, J> >
+      ,public NumericalJacobianBoundary<DiffusionDG<K, F, B, G, J> >
+#endif
     {
     public:
       // pattern assembly flags
@@ -45,9 +58,10 @@ namespace Dune {
       enum { doLambdaBoundary = true };
 
       DiffusionDG (const K& k_, const F& f_, const B& b_, const G& g_, const J& j_, 
-                   const int dg_method_, int qorder_=4) :
-        k(k_), f(f_), b(b_), g(g_), j(j_), dg_method(dg_method_), qorder(qorder_)
+                   int dg_method, int qorder_=4) :
+        k(k_), f(f_), b(b_), g(g_), j(j_), qorder(qorder_)
       {
+        
         // OBB
         if (dg_method == 0)
           {
@@ -71,6 +85,7 @@ namespace Dune {
           }
       }
 
+#ifndef JacobianBasedAlphaX
       // volume integral depending on test and ansatz functions
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
@@ -140,6 +155,20 @@ namespace Dune {
                            const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                            R& r_s, R& r_n) const
       {
+        LocalMatrix<typename R::value_type> mat_ss(lfsu_s.size(),lfsu_s.size());
+        LocalMatrix<typename R::value_type> mat_sn(lfsu_s.size(),lfsu_n.size());
+        LocalMatrix<typename R::value_type> mat_ns(lfsu_n.size(),lfsu_s.size());
+        LocalMatrix<typename R::value_type> mat_nn(lfsu_n.size(),lfsu_n.size());
+        jacobian_skeleton(ig,
+          lfsu_s, x_s, lfsv_s,
+          lfsu_n, x_n, lfsv_n,
+          mat_ss, mat_sn, mat_ns, mat_nn);
+        // TODO: Reihenfolge der Multiplikationen!
+        mat_ss.umv(x_s,r_s);
+        mat_ns.umv(x_n,r_s);
+        mat_sn.umv(x_s,r_n);
+        mat_nn.umv(x_n,r_n);
+        return;
         // domain and range field type
         typedef typename LFSU::Traits::LocalFiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
@@ -172,21 +201,6 @@ namespace Dune {
         typename K::Traits::RangeType permeability_n(0.0);
         k.evaluate(*(ig.inside()),inside_local,permeability_s);
         k.evaluate(*(ig.outside()),outside_local,permeability_n);
-
-        /*for (unsigned int i = 0; i < K::Traits::GridViewType::dimension; ++i)
-          {
-          for (unsigned int j = 0; j < K::Traits::GridViewType::dimension; ++j)
-          {
-          if (permeability_s[i][j] * permeability_n[i][j] == 0.0)
-          {
-          permeability[i][j] = 0.0;
-          }
-          else
-          {
-          permeability[i][j] = 2.0 / (1.0/permeability_s[i][j] + 1.0/permeability_n[i][j]);
-          }
-          }
-          }*/
 
         // penalty weight for NIPG / SIPG
         RF penalty_weight_s = sigma / pow(ig.inside()->geometry().volume(), beta);
@@ -300,6 +314,10 @@ namespace Dune {
       template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_boundary (const IG& ig, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
+        LocalMatrix<typename R::value_type> mat(lfsu.size(),lfsu.size());
+        jacobian_boundary(ig, lfsu, x, lfsv, mat);
+        mat.umv(x,r);
+        return;
         // domain and range field type
         typedef typename LFSU::Traits::LocalFiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
@@ -323,7 +341,7 @@ namespace Dune {
         b.evaluate(ig,rule.begin()->position(),bctype);
 
         // Dirichlet boundary condition
-        if (bctype > 0.0)
+        if (DiffusionBoundaryCondition::isDirichlet(bctype))
           {
             // center in face's reference element
             const Dune::FieldVector<DF,IG::dimension-1>& face_center =
@@ -396,6 +414,7 @@ namespace Dune {
               }
           }
       }
+#endif
 
       // volume integral depending only on test functions,
       // contains f on the right hand side
@@ -466,7 +485,7 @@ namespace Dune {
         b.evaluate(ig,rule.begin()->position(),bctype);
 
         // Neumann boundary condition
-        if (bctype == 0.0)
+        if (DiffusionBoundaryCondition::isNeumann(bctype))
           {
             // loop over quadrature points and integrate normal flux
             for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -492,8 +511,12 @@ namespace Dune {
               }
           }
         // Dirichlet boundary condition
-        else if (bctype > 0.0)
+        else
+        if (DiffusionBoundaryCondition::isDirichlet(bctype))
           {
+            /*
+              !!!!!!!! TODO: Warum normale am face center? !!!!!!
+            */
             // center in face's reference element
             const Dune::FieldVector<DF,IG::dimension-1>& face_center =
               Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
@@ -553,6 +576,7 @@ namespace Dune {
           }
       }
 
+#ifndef NumericalJacobianX
       // jacobian of volume term
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
@@ -657,20 +681,6 @@ namespace Dune {
         typename K::Traits::RangeType permeability_n(0.0);
         k.evaluate(*(ig.inside()),inside_local,permeability_s);
         k.evaluate(*(ig.outside()),outside_local,permeability_n);
-        /*for (unsigned int i = 0; i < K::Traits::GridViewType::dimension; ++i)
-          {
-          for (unsigned int j = 0; j < K::Traits::GridViewType::dimension; ++j)
-          {
-          if (permeability_s[i][j] * permeability_n[i][j] == 0.0)
-          {
-          permeability[i][j] = 0.0;
-          }
-          else
-          {
-          permeability[i][j] = 2.0 / (1.0/permeability_s[i][j] + 1.0/permeability_n[i][j]);
-          }
-          }
-          }*/
 
         // penalty weight for NIPG / SIPG
         RF penalty_weight_s = sigma / pow(ig.inside()->geometry().volume(), beta);
@@ -822,7 +832,7 @@ namespace Dune {
         b.evaluate(ig,rule.begin()->position(),bctype);
 
         // Dirichlet boundary condition
-        if (bctype > 0.0)
+        if (DiffusionBoundaryCondition::isDirichlet(bctype))
           {
             // center in face's reference element
             const Dune::FieldVector<DF,IG::dimension-1>& face_center =
@@ -891,6 +901,7 @@ namespace Dune {
               }
           }
       }
+#endif
 
     private:
       const K& k;
@@ -898,8 +909,6 @@ namespace Dune {
       const B& b;
       const G& g;
       const J& j;
-      // select dg method
-      double dg_method;
       // values for NIPG / NIPG
       double epsilon;
       double sigma;
