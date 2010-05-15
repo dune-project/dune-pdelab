@@ -12,6 +12,7 @@
 #include"../gridoperatorspace/gridoperatorspaceutilities.hh"
 #include"pattern.hh"
 #include"flags.hh"
+#include "diffusionparam.hh"
 
 
 namespace Dune {

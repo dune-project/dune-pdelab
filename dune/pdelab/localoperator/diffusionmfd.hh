@@ -6,6 +6,7 @@
 #include "pattern.hh"
 #include "flags.hh"
 #include "mfdcommon.hh"
+#include "diffusionparam.hh"
 
 namespace Dune
 {

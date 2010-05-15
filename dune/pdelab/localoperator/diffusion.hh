@@ -17,6 +17,7 @@
 #include"pattern.hh"
 #include"flags.hh"
 #include"idefault.hh"
+#include "diffusionparam.hh"
 
 namespace Dune {
   namespace PDELab {
