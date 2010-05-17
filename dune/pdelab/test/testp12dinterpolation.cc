@@ -79,10 +79,8 @@ double interpolationerror (const GV& gv, const FEM &fem)
 }
 
 template<typename Grid>
-void test(Dune::SmartPointer<Grid> grid, int &result, unsigned int maxelements, std::string name = "")
+void test(Dune::SmartPointer<Grid> grid, int &result, unsigned int maxelements, std::string name)
 {
-  if(name == "") name = grid->name();
-
   std::cout << std::endl
             << "Testing P12D interpolation with " << name << std::endl;
 
