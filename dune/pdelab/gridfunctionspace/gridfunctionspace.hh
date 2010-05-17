@@ -1344,6 +1344,8 @@ namespace Dune {
         public Countable
 	{
       friend class PowerGridFunctionSpace<T,k,GridFunctionSpaceComponentBlockwiseMapper<s> >;
+      // actually we only want this friend decl for the bocksize==1 version, but I don't know how to accomplish that
+      friend class PowerGridFunctionSpace<T,k,GridFunctionSpaceBlockwiseMapper>;
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
@@ -1522,6 +1524,11 @@ namespace Dune {
       mutable std::vector<typename Traits::SizeType> childglobal;
 	};
 
+    template<typename T, int k>
+    class PowerGridFunctionSpaceBase<T,k,GridFunctionSpaceBlockwiseMapper >
+      : public PowerGridFunctionSpaceBase<T,k,GridFunctionSpaceComponentBlockwiseMapper<1> >
+    {};
+    
     //! \addtogroup GridFunctionSpace \{
 
     /// \brief product of identical grid function spaces
@@ -1533,6 +1540,7 @@ namespace Dune {
     /// \tparam P The type of the mapper used. The mapper maps each degree of freedom
     /// of each function space to a unique index. Use e.g. 
     /// \link GridFunctionSpaceLexicographicMapper GridFunctionSpaceLexicographicMapper \endlink
+    /// or \link  GridFunctionSpaceComponentBlockwiseMapper  GridFunctionSpaceComponentBlockwiseMapper \endlink
     /// or \link  GridFunctionSpaceBlockwiseMapper  GridFunctionSpaceBlockwiseMapper \endlink
 	template<typename T, int k, typename P=GridFunctionSpaceLexicographicMapper>
 	class PowerGridFunctionSpace 
@@ -2051,6 +2059,7 @@ namespace Dune {
     // this is the default version with lexicographic ordering
     // \tparam P is the ordering parameter. Use e.g. 
     // \link GridFunctionSpaceLexicographicMapper GridFunctionSpaceLexicographicMapper \endlink
+    // or \link  GridFunctionSpaceComponentBlockwiseMapper  GridFunctionSpaceComponentBlockwiseMapper \endlink
     // or \link  GridFunctionSpaceBlockwiseMapper  GridFunctionSpaceBlockwiseMapper \endlink
     // \tparam Ti are all grid function spaces
 	template<typename P, typename T0, typename T1, typename T2=EmptyChild, typename T3=EmptyChild,
@@ -2242,6 +2251,8 @@ namespace Dune {
 	{
       typedef GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9> BlockwiseMapper;
       friend class CompositeGridFunctionSpace<BlockwiseMapper, T0,T1,T2,T3,T4,T5,T6,T7,T8>; // for setup
+      // actually we only want this friend decl for the bocksize==1 version, but I don't know how to accomplish that
+      friend class CompositeGridFunctionSpace<GridFunctionSpaceBlockwiseMapper, T0,T1,T2,T3,T4,T5,T6,T7,T8>;
 
       typedef CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8> BaseT;
 
@@ -2424,6 +2435,14 @@ namespace Dune {
       mutable std::vector<typename Traits::SizeType> childglobal;
 	};
 
+	template<typename T0, typename T1, typename T2, typename T3,
+			 typename T4, typename T5, typename T6, typename T7, typename T8>
+	class CompositeGridFunctionSpaceBase<GridFunctionSpaceBlockwiseMapper,
+                                         T0,T1,T2,T3,T4,T5,T6,T7,T8>
+      : public CompositeGridFunctionSpaceBase<GridFunctionSpaceComponentBlockwiseMapper<1>,
+                                              T0,T1,T2,T3,T4,T5,T6,T7,T8>
+    {};
+    
     //! \addtogroup GridFunctionSpace \{
 
     //! \brief grid function space composed of other grid function spaces
