@@ -60,12 +60,12 @@ namespace Dune
                 ++num_faces;
 
                 // construct matrix R
-                for (int i = 0; i < dim; ++i)
+                for (unsigned int i = 0; i < dim; ++i)
                     R.push_back((face_center[i]-center[i]) * face_area);
 
                 // construct matrix N
                 Vector face_normal = is.unitOuterNormal(face_center_local);
-                for (int i = 0; i < dim; ++i)
+                for (unsigned int i = 0; i < dim; ++i)
                     N.push_back(face_normal[i]);
             }
 
@@ -73,7 +73,7 @@ namespace Dune
             {
                 std::cout.precision(3);
                 std::cout << "Cell center (" << center[0];
-                for (int i = 1; i < dim; ++i)
+                for (unsigned int i = 1; i < dim; ++i)
                     std::cout << ", " << center[i];
                 std::cout << "),   volume " << volume << std::endl;
                 std::cout << "face areas " << std::setw(6) << face_areas[0];
@@ -95,39 +95,39 @@ namespace Dune
 
             void build_W_indep(const MimeticCellProperties<ctype,dim>& cell) const
             {
-                int R_max = cell.R.size();
+                unsigned int R_max = cell.R.size();
 
                 // orthonormalize R
                 R_tilde = cell.R;
                 sp.reserve(dim - 1);
-                for(int i = 0; i < dim; ++i)
+                for(unsigned int i = 0; i < dim; ++i)
                 {
                     // orthogonalize
                     sp.clear(); sp.resize(i, 0.0);
-                    for(int j = 0; j < i; ++j)
-                        for(int k = 0; k < R_max; k += dim)
+                    for(unsigned int j = 0; j < i; ++j)
+                        for(unsigned int k = 0; k < R_max; k += dim)
                             sp[j] += R_tilde[k+i] * R_tilde[k+j];
-                    for(int j = 0; j < i; ++j)
-                        for(int k = 0; k < R_max; k += dim)
+                    for(unsigned int j = 0; j < i; ++j)
+                        for(unsigned int k = 0; k < R_max; k += dim)
                             R_tilde[k+i] -= sp[j]*R_tilde[k+j];
 
                     // normalize
                     ctype norm = 0.0;
-                    for(int k = i; k < R_max; k += dim)
+                    for(unsigned int k = i; k < R_max; k += dim)
                         norm += R_tilde[k] * R_tilde[k];
                     norm = 1.0 / std::sqrt(norm);
-                    for(int k = i; k < R_max; k += dim)
+                    for(unsigned int k = i; k < R_max; k += dim)
                         R_tilde[k] *= norm;
                 }
 
                 // construct the part of matrix W that is independent of K
                 W_indep.clear();
                 W_indep.resize(cell.num_faces * cell.num_faces, 0.0);
-                for (unsigned i = 0; i < W_indep.size(); i += cell.num_faces+1)
+                for (unsigned int i = 0; i < W_indep.size(); i += cell.num_faces+1)
                     W_indep[i] = 1.0;
-                for (int i = 0, m = 0; i < R_max; i += dim)
-                    for (int j = 0; j < R_max; j += dim, ++m)
-                        for (int k = 0; k < dim; ++k)
+                for (unsigned int i = 0, m = 0; i < R_max; i += dim)
+                    for (unsigned int j = 0; j < R_max; j += dim, ++m)
+                        for (unsigned int k = 0; k < dim; ++k)
                             W_indep[m] -= R_tilde[i+k] * R_tilde[j+k];
             }
 
@@ -157,12 +157,12 @@ namespace Dune
                     u += K[i][i];
                 u *= 2.0 * alpha / dim;
                 ctype inv_volume = 1.0 / cell.volume;
-                for (int i = 0, m = 0; i < cell.num_faces; ++i)
-                    for (int j = 0; j < cell.num_faces; ++j, ++m)
+                for (unsigned int i = 0, m = 0; i < cell.num_faces; ++i)
+                    for (unsigned int j = 0; j < cell.num_faces; ++j, ++m)
                     {
                         W[m] = u * this->W_indep[m];
-                        for (int k = 0; k < dim; ++k)
-                            for (int l = 0; l < dim; ++l)
+                        for (unsigned int k = 0; k < dim; ++k)
+                            for (unsigned int l = 0; l < dim; ++l)
                                 W[m] += cell.N[i*dim+k] * K[k][l] * cell.N[j*dim+l];
                         W[m] *= cell.face_areas[i] * cell.face_areas[j] * inv_volume;
                     }

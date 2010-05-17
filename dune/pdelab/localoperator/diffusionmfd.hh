@@ -99,8 +99,8 @@ namespace Dune
                 wbuilder.build_W(cell, K, W);
 
                 // Compute residual
-                for(int e = 0, m = 0; e < cell.num_faces; ++e)
-                    for(int f = 0; f < cell.num_faces; ++f, ++m)
+                for(unsigned int e = 0, m = 0; e < cell.num_faces; ++e)
+                    for(unsigned int f = 0; f < cell.num_faces; ++f, ++m)
                     {
                         r[cell_space.localIndex(0)] += W[m]
                             * (x[cell_space.localIndex(0)] - x[face_space.localIndex(f)]);
@@ -158,8 +158,8 @@ namespace Dune
                 wbuilder.build_W(cell, K, W);
 
                 // Compute residual
-                for(int e = 0, m = 0; e < cell.num_faces; ++e)
-                    for(int f = 0; f < cell.num_faces; ++f, ++m)
+                for(unsigned int e = 0, m = 0; e < cell.num_faces; ++e)
+                    for(unsigned int f = 0; f < cell.num_faces; ++f, ++m)
                     {
                         mat(cell_space.localIndex(0), cell_space.localIndex(0)) += W[m];
                         mat(cell_space.localIndex(0), face_space.localIndex(f)) -= W[m];
