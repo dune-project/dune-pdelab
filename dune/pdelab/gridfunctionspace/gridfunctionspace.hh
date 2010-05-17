@@ -1161,8 +1161,6 @@ namespace Dune {
       : public PowerNode<T,k,CountingPointerStoragePolicy>,
         public Countable
 	{
-      friend class PowerGridFunctionSpace<T,k,P>;
-
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
@@ -1307,7 +1305,7 @@ namespace Dune {
          setup();
       }
 
-    private:
+    protected:
       void setup ()
       {
         Dune::dinfo << "PowerGridFunctionSpace(lexicographic version):"
@@ -1328,6 +1326,7 @@ namespace Dune {
         childglobal.resize(maxlocalsize);
       }
 
+    private:
       typename Traits::SizeType childSize[k];
       typename Traits::SizeType offset[k+1];
       typename Traits::SizeType maxlocalsize;
@@ -1343,9 +1342,6 @@ namespace Dune {
       : public PowerNode<T,k,CountingPointerStoragePolicy>,
         public Countable
 	{
-      friend class PowerGridFunctionSpace<T,k,GridFunctionSpaceComponentBlockwiseMapper<s> >;
-      // actually we only want this friend decl for the bocksize==1 version, but I don't know how to accomplish that
-      friend class PowerGridFunctionSpace<T,k,GridFunctionSpaceBlockwiseMapper>;
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
@@ -1489,7 +1485,7 @@ namespace Dune {
          setup();
       }
 
-    private:
+    protected:
       void setup ()
       {
         Dune::dinfo << "PowerGridFunctionSpace(blockwise version):"
@@ -1518,6 +1514,7 @@ namespace Dune {
         childglobal.resize(maxlocalsize);
       }
 
+    private:
       typename Traits::SizeType childSize[k];
       typename Traits::SizeType offset[k+1];
       typename Traits::SizeType maxlocalsize;
@@ -1527,7 +1524,10 @@ namespace Dune {
     template<typename T, int k>
     class PowerGridFunctionSpaceBase<T,k,GridFunctionSpaceBlockwiseMapper >
       : public PowerGridFunctionSpaceBase<T,k,GridFunctionSpaceComponentBlockwiseMapper<1> >
-    {};
+    {
+    protected:
+      using PowerGridFunctionSpaceBase<T,k,GridFunctionSpaceComponentBlockwiseMapper<1> >::setup;
+    };
     
     //! \addtogroup GridFunctionSpace \{
 
@@ -2069,10 +2069,7 @@ namespace Dune {
 	  : public CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8>,
 		public Countable
 	{
-      friend class CompositeGridFunctionSpace<P,T0,T1,T2,T3,T4,T5,T6,T7,T8>; // for setup
-
       typedef CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8> BaseT;
-
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T0::Traits::GridViewType, 
@@ -2204,7 +2201,7 @@ namespace Dune {
         setup();
       }
 
-    private:
+    protected:
       void setup ()
       {
         Dune::dinfo << "CompositeGridFunctionSpace(lexicographic version):"
@@ -2228,6 +2225,7 @@ namespace Dune {
         childglobal.resize(maxlocalsize);
       }
 
+    private:
       typename Traits::SizeType childGlobalSize[BaseT::CHILDREN];
       typename Traits::SizeType childLocalSize[BaseT::CHILDREN];
       typename Traits::SizeType offset[BaseT::CHILDREN+1];
@@ -2250,12 +2248,7 @@ namespace Dune {
 		public Countable
 	{
       typedef GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9> BlockwiseMapper;
-      friend class CompositeGridFunctionSpace<BlockwiseMapper, T0,T1,T2,T3,T4,T5,T6,T7,T8>; // for setup
-      // actually we only want this friend decl for the bocksize==1 version, but I don't know how to accomplish that
-      friend class CompositeGridFunctionSpace<GridFunctionSpaceBlockwiseMapper, T0,T1,T2,T3,T4,T5,T6,T7,T8>;
-
       typedef CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8> BaseT;
-
 	public:
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T0::Traits::GridViewType, 
@@ -2391,7 +2384,7 @@ namespace Dune {
         setup();
       }
 
-    private:
+    protected:
       void setup ()
       {
         Dune::dinfo << "CompositeGridFunctionSpace(blockwise version):"
@@ -2428,6 +2421,7 @@ namespace Dune {
         childglobal.resize(maxlocalsize);
       }
 
+    private:
       typename Traits::SizeType childGlobalSize[BaseT::CHILDREN];
       typename Traits::SizeType childLocalSize[BaseT::CHILDREN];
       typename Traits::SizeType offset[BaseT::CHILDREN+1];
@@ -2441,7 +2435,11 @@ namespace Dune {
                                          T0,T1,T2,T3,T4,T5,T6,T7,T8>
       : public CompositeGridFunctionSpaceBase<GridFunctionSpaceComponentBlockwiseMapper<1>,
                                               T0,T1,T2,T3,T4,T5,T6,T7,T8>
-    {};
+    {
+    protected:
+      using CompositeGridFunctionSpaceBase<GridFunctionSpaceComponentBlockwiseMapper<1>,
+                                           T0,T1,T2,T3,T4,T5,T6,T7,T8>::setup;
+    };
     
     //! \addtogroup GridFunctionSpace \{
 
