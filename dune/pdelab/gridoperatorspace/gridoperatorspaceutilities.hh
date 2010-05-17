@@ -764,7 +764,6 @@ namespace Dune {
     {
     public:
 
-      enum { doAlphaVolume    = true };
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
@@ -784,7 +783,6 @@ namespace Dune {
     {
     public:
 
-      enum { doAlphaSkeleton  = true };
       template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_skeleton (const IG& ig,
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
@@ -817,7 +815,6 @@ namespace Dune {
     {
     public:
 
-      enum { doAlphaBoundary  = true };
       template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_boundary (const IG& ig, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
