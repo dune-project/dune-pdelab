@@ -20,7 +20,7 @@ DUNE_CHECK_ALL
 #AC_SUBST([LOCAL_LIBS], '$(top_builddir)/lib/libpdelab.la')
 
 # implicitly set the Dune-flags everywhere
-AC_SUBST(AM_CPPFLAGS, $DUNE_CPPFLAGS)
+AC_SUBST(AM_CPPFLAGS, '$(DUNE_CPPFLAGS) -I$(top_srcdir)')
 AC_SUBST(AM_LDFLAGS, $DUNE_LDFLAGS)
 AC_SUBST([LDADD], [$DUNE_LIBS])
 
