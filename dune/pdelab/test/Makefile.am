@@ -219,18 +219,6 @@ MOSTLYCLEANFILES +=							\
 	s0001:p0000:electrodynamic-ug-triangulated-square.level*-*.vtu	\
 	testelectrodynamic
 
-NORMALTESTS += testelectrodynamic-newmark
-testelectrodynamic_newmark_SOURCES = testelectrodynamic-newmark.cc
-testelectrodynamic_newmark_CPPFLAGS = $(AM_CPPFLAGS)			\
-	$(ALBERTA3D_CPPFLAGS)			\
-	$(SUPERLU_CPPFLAGS)
-testelectrodynamic_newmark_LDFLAGS = $(AM_LDFLAGS)	\
-	$(ALBERTA3D_LDFLAGS)				\
-	$(SUPERLU_LDFLAGS)
-testelectrodynamic_newmark_LDADD =				\
-	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
-	$(ALBERTA3D_LIBS)			\
-	$(LDADD)
 MOSTLYCLEANFILES +=								\
 	electrodynamic-newmark-electricenergy-evolution.eps			\
 	electrodynamic-newmark-electricenergy-evolution.dat			\
