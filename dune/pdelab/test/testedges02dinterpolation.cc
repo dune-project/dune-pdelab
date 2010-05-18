@@ -9,6 +9,7 @@
 
 #include <dune/common/fvector.hh>
 #include <dune/common/geometrytype.hh>
+#include <dune/common/mpihelper.hh>
 #include <dune/common/smartpointer.hh>
 
 #include <dune/grid/common/quadraturerules.hh>
@@ -134,6 +135,8 @@ void test(Dune::SmartPointer<Grid> grid, int &result, unsigned int maxelements, 
 int main(int argc, char** argv)
 {
   try{
+    Dune::MPIHelper::instance(argc, argv);
+
     // default exitcode 77 (=skipped); returned in case none of the supported
     // Grids were found
     int result = 77;
