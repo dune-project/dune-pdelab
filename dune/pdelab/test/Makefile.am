@@ -34,20 +34,11 @@ LDADD =						\
 	@LDADD@
 
 noinst_HEADERS =				\
-	divergence-probe.hh			\
-	electricenergy-probe.hh			\
 	fmt.hh					\
-	globalerror-probe.hh			\
 	gnuplotgraph.hh				\
 	gridexamples.hh				\
 	l2difference.hh				\
-	l2error-probe.hh			\
-	l2norm.hh				\
-	l2norm-probe.hh				\
-	physicalconstants.hh			\
-	probe.hh				\
-	resonatorsolution.hh			\
-	vtk-probe.hh
+	l2norm.hh
 
 noinst_SCRIPTS =				\
 	make_pvd.sh
