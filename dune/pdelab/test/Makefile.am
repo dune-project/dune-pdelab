@@ -169,56 +169,6 @@ testedges03dfem_LDADD =						\
 	$(ALBERTA3D_LIBS)			\
 	$(LDADD)
 
-NORMALTESTS += testelectrodynamic
-testelectrodynamic_SOURCES = testelectrodynamic.cc
-testelectrodynamic_CPPFLAGS = $(AM_CPPFLAGS)				\
-	$(ALBERTA3D_CPPFLAGS)			\
-	$(SUPERLU_CPPFLAGS)
-testelectrodynamic_LDFLAGS = $(AM_LDFLAGS)	\
-	$(ALBERTA3D_LDFLAGS)			\
-	$(SUPERLU_LDFLAGS)
-testelectrodynamic_LDADD =					\
-	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
-	$(ALBERTA3D_LIBS)			\
-	$(LDADD)
-MOSTLYCLEANFILES +=							\
-	electrodynamic-alberta-triangulated-cube-6.level*.pvd		\
-	electrodynamic-alu-triangulated-cube-6.level*.pvd		\
-	electrodynamic-curl-evolution.dat				\
-	electrodynamic-curl-evolution.eps				\
-	electrodynamic-curl-evolution.gnuplot				\
-	electrodynamic-divergence-evolution.dat				\
-	electrodynamic-divergence-evolution.eps				\
-	electrodynamic-divergence-evolution.gnuplot			\
-	electrodynamic-electricenergy-evolution.dat			\
-	electrodynamic-electricenergy-evolution.eps			\
-	electrodynamic-electricenergy-evolution.gnuplot			\
-	electrodynamic-globalerror.dat					\
-	electrodynamic-globalerror.eps					\
-	electrodynamic-globalerror.gnuplot				\
-	electrodynamic-globalevolution.dat				\
-	electrodynamic-globalevolution.eps				\
-	electrodynamic-globalevolution.gnuplot				\
-	electrodynamic-l2error.dat					\
-	electrodynamic-l2error.eps					\
-	electrodynamic-l2error.gnuplot					\
-	electrodynamic-l2evolution.dat					\
-	electrodynamic-l2evolution.eps					\
-	electrodynamic-l2evolution.gnuplot				\
-	electrodynamic-probe-*.eps					\
-	electrodynamic-probe.dat					\
-	electrodynamic-probe.gnuplot					\
-	electrodynamic-ug-*.level*.pvd					\
-	s0001:electrodynamic-alberta-triangulated-cube-6.level*-*.pvtu	\
-	s0001:electrodynamic-alu-triangulated-cube-6.level*-*.pvtu	\
-	s0001:electrodynamic-ug-triangulated-cube-6.level*-*.pvtu	\
-	s0001:electrodynamic-ug-triangulated-square.level*-*.pvtu	\
-	s0001:p0000:electrodynamic-alberta-triangulated-cube-6.level*-*.vtu \
-	s0001:p0000:electrodynamic-alu-triangulated-cube-6.level*-*.vtu	\
-	s0001:p0000:electrodynamic-ug-triangulated-cube-6.level*-*.vtu	\
-	s0001:p0000:electrodynamic-ug-triangulated-square.level*-*.vtu	\
-	testelectrodynamic
-
 NORMALTESTS += testfiniteelementmap
 testfiniteelementmap_SOURCES = testfiniteelementmap.cc
 testfiniteelementmap_CPPFLAGS = $(AM_CPPFLAGS)	\
