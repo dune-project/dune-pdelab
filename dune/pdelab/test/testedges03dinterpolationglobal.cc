@@ -114,10 +114,8 @@ double interpolationerror (const GV& gv, const FEM &fem, const std::string &name
 }
 
 template<typename Grid>
-void test(Dune::shared_ptr<Grid> grid, int &result, GnuplotGraph &graph, double conv_limit, std::string name = "")
+void test(Dune::shared_ptr<Grid> grid, int &result, GnuplotGraph &graph, double conv_limit, std::string name)
 {
-  if(name == "") name = grid->name();
-
   std::cout << std::endl
             << "Testing EdgeS03D interpolation with " << name << std::endl;
 

@@ -74,11 +74,9 @@ void edgeS02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
 }
 
 template<typename Grid>
-void test(Dune::shared_ptr<Grid> grid, int &result, std::string name = "", unsigned int refine = 0)
+void test(Dune::shared_ptr<Grid> grid, int &result, std::string name, unsigned int refine = 0)
 {
   grid->globalRefine(refine);
-
-  if(name == "") name = grid->name();
 
   edgeS02DGridFunctionSpace(grid->leafView(), name);
   result = 0;

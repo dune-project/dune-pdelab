@@ -89,10 +89,8 @@ double interpolationerror (const GV& gv, const FEM &fem, const std::string &name
 }
 
 template<typename Grid>
-void test(Dune::shared_ptr<Grid> grid, int &result, unsigned int maxelements, std::string name = "")
+void test(Dune::shared_ptr<Grid> grid, int &result, unsigned int maxelements, std::string name)
 {
-  if(name == "") name = grid->name();
-
   std::cout << std::endl
             << "Testing EdgeS02D interpolation with " << name << std::endl;
 

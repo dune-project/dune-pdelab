@@ -165,9 +165,8 @@ bool testFEM(const GV& gv, const std::string indent = "")
 }
 
 template<typename Grid>
-void test(Dune::shared_ptr<Grid> grid, int &result, std::string name = "")
+void test(Dune::shared_ptr<Grid> grid, int &result, std::string name)
 {
-  if(name == "") name = grid->name();
   std::cout << "*** Checking " << name << " ***\n" << std::endl;
 
   for(;
