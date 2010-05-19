@@ -9,7 +9,7 @@
 
 #include <dune/common/fvector.hh>
 #include <dune/common/mpihelper.hh>
-#include <dune/common/smartpointer.hh>
+#include <dune/common/shared_ptr.hh>
 
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #ifdef HAVE_ALBERTA
@@ -48,19 +48,19 @@ void edgeS02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
   GFS gfs(gv,fem);                    // make grid function space
 
   typedef typename GFS::template VectorContainer<R>::Type X;
-  std::vector<Dune::SmartPointer<X> > x(gfs.globalSize(),0);
+  std::vector<Dune::shared_ptr<X> > x(gfs.globalSize());
 
   typedef Dune::PDELab::DiscreteGridFunctionGlobal<GFS,X> DGF;
-  std::vector<Dune::SmartPointer<DGF> > dgf(gfs.globalSize(),0);
+  std::vector<Dune::shared_ptr<DGF> > dgf(gfs.globalSize());
 
   typedef Dune::PDELab::DiscreteGridFunctionGlobalCurl2D<GFS,X> CurlGF;
-  std::vector<Dune::SmartPointer<CurlGF> > curlgf(gfs.globalSize(),0);
+  std::vector<Dune::shared_ptr<CurlGF> > curlgf(gfs.globalSize());
 
   for(unsigned int i = 0; i < gfs.globalSize(); ++i) {
-    x[i] = new X(gfs,0.0);
+    x[i].reset(new X(gfs,0.0));
     (*x[i])[i] = 1.0;
-    dgf[i] = new DGF(gfs,*x[i]);            // make a grid function
-    curlgf[i] = new CurlGF(gfs,*x[i]);      // make a grid function of the curl
+    dgf[i].reset(new DGF(gfs,*x[i]));       // make a grid function
+    curlgf[i].reset(new CurlGF(gfs,*x[i])); // make a grid function of the curl
   }
 
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);  // plot result
@@ -74,7 +74,7 @@ void edgeS02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
 }
 
 template<typename Grid>
-void test(Dune::SmartPointer<Grid> grid, int &result, std::string name = "", unsigned int refine = 0)
+void test(Dune::shared_ptr<Grid> grid, int &result, std::string name = "", unsigned int refine = 0)
 {
   grid->globalRefine(refine);
 

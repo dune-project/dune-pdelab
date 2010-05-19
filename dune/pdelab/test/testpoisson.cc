@@ -9,6 +9,7 @@
 #include<dune/common/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
+#include <dune/common/shared_ptr.hh>
 #include<dune/common/static_assert.hh>
 #include<dune/grid/yaspgrid.hh>
 #include<dune/istl/bvector.hh>
@@ -344,7 +345,7 @@ int main(int argc, char** argv)
 #if HAVE_UG
     {
       // make grid 
-      Dune::SmartPointer<Dune::UGGrid<2> > grid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
+      Dune::shared_ptr<Dune::UGGrid<2> > grid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
       grid->globalRefine(4);
 
       // get view

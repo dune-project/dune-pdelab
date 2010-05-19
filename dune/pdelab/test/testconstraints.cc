@@ -8,6 +8,7 @@
 #include<dune/common/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
+#include <dune/common/shared_ptr.hh>
 #include<dune/common/static_assert.hh>
 #include<dune/grid/yaspgrid.hh>
 #include"../finiteelementmap/p0fem.hh"
@@ -269,7 +270,7 @@ int main(int argc, char** argv)
     Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
 
 #if HAVE_UG
-    Dune::SmartPointer<Dune::UGGrid<2> > uggrid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
+    Dune::shared_ptr<Dune::UGGrid<2> > uggrid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
   	uggrid->globalRefine(4);
     testp1(uggrid->leafView());
     testpowerp1(uggrid->leafView());

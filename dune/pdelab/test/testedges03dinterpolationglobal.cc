@@ -10,7 +10,7 @@
 
 #include <dune/common/float_cmp.hh>
 #include <dune/common/fvector.hh>
-#include <dune/common/smartpointer.hh>
+#include <dune/common/shared_ptr.hh>
 
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #ifdef HAVE_ALBERTA
@@ -114,7 +114,7 @@ double interpolationerror (const GV& gv, const FEM &fem, const std::string &name
 }
 
 template<typename Grid>
-void test(Dune::SmartPointer<Grid> grid, int &result, GnuplotGraph &graph, double conv_limit, std::string name = "")
+void test(Dune::shared_ptr<Grid> grid, int &result, GnuplotGraph &graph, double conv_limit, std::string name = "")
 {
   if(name == "") name = grid->name();
 

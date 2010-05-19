@@ -10,7 +10,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/geometrytype.hh>
 #include <dune/common/mpihelper.hh>
-#include <dune/common/smartpointer.hh>
+#include <dune/common/shared_ptr.hh>
 
 #include <dune/grid/common/quadraturerules.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
@@ -80,7 +80,7 @@ double interpolationerror (const GV& gv, const FEM &fem)
 }
 
 template<typename Grid>
-void test(Dune::SmartPointer<Grid> grid, int &result, unsigned int maxelements, std::string name)
+void test(Dune::shared_ptr<Grid> grid, int &result, unsigned int maxelements, std::string name)
 {
   std::cout << std::endl
             << "Testing P12D interpolation with " << name << std::endl;

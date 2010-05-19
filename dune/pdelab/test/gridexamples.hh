@@ -6,7 +6,7 @@
 
 #include <dune/common/fvector.hh>
 #include <dune/common/geometrytype.hh>
-#include <dune/common/smartpointer.hh>
+#include <dune/common/shared_ptr.hh>
 #include <dune/common/static_assert.hh>
 
 #include<dune/grid/yaspgrid.hh>
@@ -71,7 +71,7 @@ class TriangulatedLDomainMaker {
   dune_static_assert(Grid::dimension == 2, "Dimension of grid must be 2");
   dune_static_assert(Grid::dimensionworld == 2, "Dimension of world must be 2");
 public:
-  static Dune::SmartPointer<Grid> create() {
+  static Dune::shared_ptr<Grid> create() {
     Dune::GridFactory<Grid> gf;
 
     Dune::FieldVector<typename Grid::ctype, 2> pos;
@@ -93,7 +93,7 @@ public:
 	vid[0] = 3;  vid[1] = 4;  vid[2] = 6; gf.insertElement(type, vid);
 	vid[0] = 6;  vid[1] = 4;  vid[2] = 7; gf.insertElement(type, vid);
 
-    return gf.createGrid();
+    return Dune::shared_ptr<Grid>(gf.createGrid());
   }
 };
 
@@ -107,7 +107,7 @@ class UnitTriangleMaker {
   dune_static_assert(Grid::dimension == 2, "Dimension of grid must be 2");
   dune_static_assert(Grid::dimensionworld == 2, "Dimension of world must be 2");
 public:
-  static Dune::SmartPointer<Grid> create() {
+  static Dune::shared_ptr<Grid> create() {
     Dune::GridFactory<Grid> gf;
     Dune::FieldVector<typename Grid::ctype, 2> pos;
 
@@ -121,7 +121,7 @@ public:
 
     vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
 
-    return gf.createGrid();
+    return Dune::shared_ptr<Grid>(gf.createGrid());
   }
 };
 
@@ -130,8 +130,8 @@ template<>
 class UnitTriangleMaker<Dune::ALUSimplexGrid<2,2> > {
   typedef Dune::ALUSimplexGrid<2,2> Grid;
 public:
-  static Dune::SmartPointer<Grid> create() {
-    return new Grid("grids/2dtriangle.alu");
+  static Dune::shared_ptr<Grid> create() {
+    return Dune::shared_ptr<Grid>(new Grid("grids/2dtriangle.alu"));
   }
 };
 #endif // HAVE_ALUGRID
@@ -146,7 +146,7 @@ class TriangulatedUnitSquareMaker {
   dune_static_assert(Grid::dimension == 2, "Dimension of grid must be 2");
   dune_static_assert(Grid::dimensionworld == 2, "Dimension of world must be 2");
 public:
-  static Dune::SmartPointer<Grid> create() {
+  static Dune::shared_ptr<Grid> create() {
     Dune::GridFactory<Grid> gf;
     Dune::FieldVector<typename Grid::ctype, 2> pos;
 
@@ -162,7 +162,7 @@ public:
     vid[0] = 0; vid[1] = 1; vid[2] = 2; gf.insertElement(type, vid);
     vid[0] = 1; vid[1] = 2; vid[2] = 3; gf.insertElement(type, vid);
 
-    return gf.createGrid();
+    return Dune::shared_ptr<Grid>(gf.createGrid());
   }
 };
 
@@ -171,8 +171,8 @@ template<>
 class TriangulatedUnitSquareMaker<Dune::ALUSimplexGrid<2,2> > {
   typedef Dune::ALUSimplexGrid<2,2> Grid;
 public:
-  static Dune::SmartPointer<Grid> create() {
-    return new Grid("grids/2dsimplex.alu");
+  static Dune::shared_ptr<Grid> create() {
+    return Dune::shared_ptr<Grid>(new Grid("grids/2dsimplex.alu"));
   }
 };
 #endif // HAVE_ALUGRID
@@ -187,7 +187,7 @@ class UnitTetrahedronMaker {
   dune_static_assert(Grid::dimension == 3, "Dimension of grid must be 3");
   dune_static_assert(Grid::dimensionworld == 3, "Dimension of world must be 3");
 public:
-  static Dune::SmartPointer<Grid> create() {
+  static Dune::shared_ptr<Grid> create() {
     Dune::GridFactory<Grid> gf;
     Dune::FieldVector<typename Grid::ctype, 3> pos;
 
@@ -202,7 +202,7 @@ public:
 
     vid[0] = 0; vid[1] = 1; vid[2] = 2; vid[3] = 3; gf.insertElement(type, vid);
 
-    return gf.createGrid();
+    return Dune::shared_ptr<Grid>(gf.createGrid());
   }
 };
 
@@ -218,7 +218,7 @@ class TriangulatedUnitCubeMaker {
   dune_static_assert(Grid::dimension == 3, "Dimension of grid must be 3");
   dune_static_assert(Grid::dimensionworld == 3, "Dimension of world must be 3");
 public:
-  static Dune::SmartPointer<Grid> create() {
+  static Dune::shared_ptr<Grid> create() {
     Dune::GridFactory<Grid> gf;
     Dune::FieldVector<typename Grid::ctype, 3> pos;
 
@@ -246,7 +246,7 @@ public:
     // tet at vertex 6
     vid[0] = 2; vid[1] = 4; vid[2] = 6; vid[3] = 7; gf.insertElement(type, vid);
 
-    return gf.createGrid();
+    return Dune::shared_ptr<Grid>(gf.createGrid());
   }
 };
 
@@ -276,7 +276,7 @@ class KuhnTriangulatedUnitCubeMaker {
   dune_static_assert(Grid::dimension == 3, "Dimension of grid must be 3");
   dune_static_assert(Grid::dimensionworld == 3, "Dimension of world must be 3");
 public:
-  static Dune::SmartPointer<Grid> create() {
+  static Dune::shared_ptr<Grid> create() {
     Dune::GridFactory<Grid> gf;
 
     int fake_argc = 0;
@@ -306,7 +306,7 @@ public:
       vid[0] = 0; vid[1] = 2; vid[2] = 3; vid[3] = 7; gf.insertElement(type, vid);
     }
 
-    Dune::SmartPointer<Grid> gp(gf.createGrid());
+    Dune::shared_ptr<Grid> gp(gf.createGrid());
     gp->loadBalance();
     return gp;
   }
