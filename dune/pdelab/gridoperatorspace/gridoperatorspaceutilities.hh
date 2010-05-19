@@ -828,7 +828,6 @@ namespace Dune {
       const Imp& asImp () const { return static_cast<const Imp &>(*this); }
     };
     
-    //! \} group GridFunctionSpace
   } // namespace PDELab
 } // namespace Dune
 
