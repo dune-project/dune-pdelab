@@ -121,7 +121,7 @@ int main(int argc, char** argv)
 {
   try{
     //Maybe initialize Mpi
-    Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
+    Dune::MPIHelper::instance(argc, argv);
 
 #if HAVE_UG
     Dune::shared_ptr<Dune::UGGrid<2> > uggrid(TriangulatedLDomainMaker<Dune::UGGrid<2> >::create());

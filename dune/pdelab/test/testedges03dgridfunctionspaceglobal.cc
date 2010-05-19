@@ -88,7 +88,7 @@ int main(int argc, char** argv)
 {
   try{
     //Maybe initialize Mpi
-    Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
+    Dune::MPIHelper::instance(argc, argv);
 
     // default exitcode 77 (=skipped); returned in case none of the supported
     // Grids were found

@@ -273,7 +273,7 @@ int main(int argc, char** argv)
 {
   try{
     //Maybe initialize Mpi
-    Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
+    Dune::MPIHelper::instance(argc, argv);
 
     // YaspGrid Q1 2D test
     {

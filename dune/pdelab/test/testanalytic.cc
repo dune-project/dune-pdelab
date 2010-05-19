@@ -65,7 +65,7 @@ int main(int argc, char** argv)
 {
   try{
     //Maybe initialize Mpi
-    Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
+    Dune::MPIHelper::instance(argc, argv);
 
 	// need a 3D grid for user friendly version
 	Dune::FieldVector<double,3> L3(1.0); L3[0] = 4;

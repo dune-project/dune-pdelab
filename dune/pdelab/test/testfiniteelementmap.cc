@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 {
   try{
     //Maybe initialize Mpi
-    Dune::MPIHelper& helper = Dune::MPIHelper::instance(argc, argv);
+    Dune::MPIHelper::instance(argc, argv);
 
 	// instantiate finite element maps
 	Dune::PDELab::P12DLocalFiniteElementMap<float,double> p12dmap;
