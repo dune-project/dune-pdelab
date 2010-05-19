@@ -1,6 +1,7 @@
 commondir = $(includedir)/dune/pdelab/localoperator
 common_HEADERS =				\
 	default.hh				\
+	defaultimp.hh				\
 	electrodynamic.hh			\
 	laplacedirichletp12d.hh			\
 	l2.hh					\

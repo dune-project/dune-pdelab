@@ -7,9 +7,10 @@
 #include<dune/common/static_assert.hh>
 #include<dune/grid/common/genericreferenceelements.hh>
 
+#include <dune/pdelab/localoperator/defaultimp.hh>
+
 #include"../common/geometrywrapper.hh"
 #include"../gridoperatorspace/gridoperatorspace.hh"
-#include"../gridoperatorspace/gridoperatorspaceutilities.hh"
 #include"pattern.hh"
 #include"flags.hh"
 
