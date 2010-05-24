@@ -49,7 +49,7 @@ namespace Dune {
             enum { doAlphaSkeleton  = true };
             enum { doAlphaBoundary  = true };
             enum { doLambdaVolume   = true };
-            enum { doAlphaVolumePostSkeleton = true };
+            // enum { doAlphaVolumePostSkeleton = true };
             enum { doLambdaBoundary = true };
 
             StokesDG (const std::string & method,
@@ -215,7 +215,7 @@ namespace Dune {
                     std::vector<JacobianType_v> jac_v_s(vsize);
                     lfsv_v.localFiniteElement().localBasis().evaluateJacobian(local,jac_v_s);
                     // value of velocity shape functions
-                    std::vector<RT> phi_v(psize);
+                    std::vector<RT> phi_v(vsize);
                     lfsv_v.localFiniteElement().localBasis().evaluateFunction(local,phi_v);
 
                     // transform gradient to real element
@@ -235,14 +235,11 @@ namespace Dune {
                     typename B::Traits::RangeType bctype;
                     b.evaluate(ig,flocal,bctype);
                     
-                    // get bc value
-                    typename V::Traits::RangeType u0;
-                    v.evaluateGlobal(global,u0);
-                    typename P::Traits::RangeType p0;
-                    p.evaluateGlobal(global,p0);
-                    
                     if (bctype == BC::VelocityDirichlet)
                     {
+                        typename V::Traits::RangeType u0;
+                        v.evaluateGlobal(global,u0);
+                        
                         //================================================//
                         // TERM: 4
                         // \mu \int \nabla u_0 \cdot v \cdot n
@@ -253,7 +250,40 @@ namespace Dune {
                             const RF val = (grad_phi_v[i]*normal) * factor;
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                r[i+d*vsize] += val * u0[d];
+                                r[i+d*vsize] -= val * u0[d];
+                            }
+                        }
+
+                        // and value of pressure shape functions
+                        std::vector<RT> phi_p(psize);
+                        lfsv_p.localFiniteElement().localBasis().evaluateFunction(local,phi_p);
+
+                        //================================================//
+                        // TERM: 17
+                        // \int q . g . n
+                        //================================================//
+                        for (unsigned int i=0;i<psize;++i) 
+                        {
+                            const RF val = (u0*normal)*phi_p[i]*factor;
+                            r[i+dim*vsize] += val;
+                        }
+                    }
+                    if (bctype == BC::PressureDirichlet)
+                    {
+                        typename P::Traits::RangeType p0;
+                        p.evaluateGlobal(global,p0);
+                    
+                        fixpressure = true;
+                        //================================================//
+                        // TERM: 10
+                        // \int p u n
+                        //================================================//            
+                        for (unsigned int i=0;i<vsize;++i) 
+                        {
+                            for (unsigned int d=0;d<dim;++d)
+                            {
+                                RF val = p0*normal[d]*phi_v[i] * weight;
+                                r[i+d*vsize] += val;
                             }
                         }
                     }
@@ -265,6 +295,7 @@ namespace Dune {
             void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                 LocalMatrix<R>& mat) const
             {
+//                fixpressure = true;
                 // dimensions
                 static const unsigned int dim = EG::Geometry::dimension;
                 static const unsigned int dimw = EG::Geometry::dimensionworld;
@@ -390,12 +421,12 @@ namespace Dune {
 
                 // fix one pressure DOF
                 static int cnt = 0;
-                if (cnt == 0)
-                {
-                    for (unsigned int i=0; i<dim*vsize+psize; i++)
-                        mat(dim*vsize, i) = 0;
-                    mat(dim*vsize, dim*vsize) = 1;
-                }
+                // if (fixpressure && cnt == 0)
+                // {
+                //     for (unsigned int i=0; i<dim*vsize+psize; i++)
+                //         mat(dim*vsize, i) = 0;
+                //     mat(dim*vsize, dim*vsize) = 1;
+                // }
                 cnt++;
             }
             
@@ -455,8 +486,6 @@ namespace Dune {
                     Dune::FieldVector<DF,dim> local_s = ig.geometryInInside().global(it->position());
                     Dune::FieldVector<DF,dim> local_n = ig.geometryInOutside().global(it->position());
 
-                    std::cout << ig.geometry().global(it->position()) << " / " << local_s << " / " << local_n << "\n";
-                    
                     // evaluate gradient of velocity shape functions (we assume Galerkin method lfsu=lfsv)
                     std::vector<JacobianType_v> jac_v_s_s(vsize_s);
                     std::vector<JacobianType_v> jac_v_n_s(vsize_n);
@@ -545,7 +574,7 @@ namespace Dune {
                         }
                     }
                     //================================================//
-                    // TERM: 10
+                    // TERM: 9/12
                     // \int <q> [u] n
                     //================================================//            
                     for (unsigned int i=0;i<vsize_s;++i) 
@@ -595,7 +624,7 @@ namespace Dune {
                 }
             }
 
-            // jacobian of volume term
+            // jacobian of boundary term
             template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
             void jacobian_boundary (const IG& ig,
                 const LFSU& lfsu, const X& x, const LFSV& lfsv,
@@ -671,7 +700,8 @@ namespace Dune {
                     const RF weight = it->weight()*ig.geometry().integrationElement(it->position());
                     
                     // velocity boundary condition
-                    if (bctype == BC::VelocityDirichlet) {
+                    if (bctype == BC::VelocityDirichlet)
+                    {
                         //================================================//
                         // TERM: 4
                         // - (\mu \int \nabla u. normal . v)  
@@ -689,8 +719,6 @@ namespace Dune {
                                 }
                             }
                         }
-                    }
-                    if (bctype == BC::VelocityDirichlet || bctype == BC::PressureDirichlet) {
                         //================================================//
                         // TERM: 10
                         // \int p u n
@@ -702,8 +730,7 @@ namespace Dune {
                                 for (unsigned int d=0;d<dim;++d)
                                 {
                                     RF val = (phi_p[j]*normal[d]*phi_v[i]) * weight;
-                                    mat(i+d*vsize,j+dim*vsize) += val;
-//                                    mat(j+dim*vsize,i+d*vsize) += val;
+                                        mat(i+d*vsize,j+dim*vsize) += val;
                                 }
                             }
                         }
@@ -723,6 +750,8 @@ namespace Dune {
             int    qorder;
             // physical parameters
             double mu;
+            // hack
+            mutable bool fixpressure;
         };
 
         //! \} group GridFunctionSpace
