@@ -10,7 +10,7 @@
 
 #include "../common/geometrywrapper.hh"
 #include "../gridoperatorspace/gridoperatorspace.hh"
-#include "../gridoperatorspace/gridoperatorspaceutilities.hh"
+#include "defaultimp.hh"
 #include "pattern.hh"
 #include "flags.hh"
 
@@ -49,7 +49,7 @@ namespace Dune {
             enum { doAlphaSkeleton  = true };
             enum { doAlphaBoundary  = true };
             enum { doLambdaVolume   = true };
-            // enum { doAlphaVolumePostSkeleton = true };
+            enum { doAlphaVolumePostSkeleton = true };
             enum { doLambdaBoundary = true };
 
             StokesDG (const std::string & method,
@@ -273,7 +273,7 @@ namespace Dune {
                         typename P::Traits::RangeType p0;
                         p.evaluateGlobal(global,p0);
                     
-                        fixpressure = true;
+                        fixpressure = false;
                         //================================================//
                         // TERM: 10
                         // \int p u n
@@ -295,7 +295,7 @@ namespace Dune {
             void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                 LocalMatrix<R>& mat) const
             {
-//                fixpressure = true;
+                fixpressure = true;
                 // dimensions
                 static const unsigned int dim = EG::Geometry::dimension;
                 static const unsigned int dimw = EG::Geometry::dimensionworld;
@@ -421,12 +421,12 @@ namespace Dune {
 
                 // fix one pressure DOF
                 static int cnt = 0;
-                // if (fixpressure && cnt == 0)
-                // {
-                //     for (unsigned int i=0; i<dim*vsize+psize; i++)
-                //         mat(dim*vsize, i) = 0;
-                //     mat(dim*vsize, dim*vsize) = 1;
-                // }
+                if (fixpressure && cnt == 0)
+                {
+                    for (unsigned int i=0; i<dim*vsize+psize; i++)
+                        mat(dim*vsize, i) = 0;
+                    mat(dim*vsize, dim*vsize) = 1;
+                }
                 cnt++;
             }
             
