@@ -6,7 +6,6 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/static_assert.hh>
 #include <dune/grid/common/quadraturerules.hh>
-#include <dune/grid/common/referenceelements.hh>
 
 #include "../common/geometrywrapper.hh"
 #include "../gridoperatorspace/gridoperatorspace.hh"
