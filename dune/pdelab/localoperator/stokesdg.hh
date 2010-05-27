@@ -13,6 +13,9 @@
 #include "pattern.hh"
 #include "flags.hh"
 
+#define VBLOCK 0
+#define PBLOCK 1
+
 namespace Dune {
     namespace PDELab {
 
@@ -47,8 +50,8 @@ namespace Dune {
             enum { doAlphaVolume    = true };
             enum { doAlphaSkeleton  = true };
             enum { doAlphaBoundary  = true };
+            // enum { doAlphaVolumePostSkeleton = true };
             enum { doLambdaVolume   = true };
-            enum { doAlphaVolumePostSkeleton = true };
             enum { doLambdaBoundary = true };
 
             StokesDG (const std::string & method,
@@ -103,8 +106,8 @@ namespace Dune {
 
                 // subspaces
                 dune_static_assert((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
-                typedef typename LFSV::template Child<0>::Type LFSV_vel;
-                const LFSV_vel& lfsv_vel = lfsv.template getChild<0>();
+                typedef typename LFSV::template Child<VBLOCK>::Type LFSV_vel;
+                const LFSV_vel& lfsv_vel = lfsv.template getChild<VBLOCK>();
                 dune_static_assert((LFSV_vel::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
                 // ... we assume all velocity components are the same
                 typedef typename LFSV_vel::template Child<0>::Type LFSV_v;
@@ -172,15 +175,15 @@ namespace Dune {
 
                 // subspaces
                 dune_static_assert((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
-                typedef typename LFSV::template Child<0>::Type LFSV_vel;
-                const LFSV_vel& lfsv_vel = lfsv.template getChild<0>();
+                typedef typename LFSV::template Child<VBLOCK>::Type LFSV_vel;
+                const LFSV_vel& lfsv_vel = lfsv.template getChild<VBLOCK>();
                 dune_static_assert((LFSV_vel::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
                 // ... we assume all velocity components are the same
                 typedef typename LFSV_vel::template Child<0>::Type LFSV_v;
                 const LFSV_v& lfsv_v = lfsv_vel.template getChild<0>();
                 const unsigned int vsize = lfsv_v.size();
-                typedef typename LFSV::template Child<1>::Type LFSV_p;
-                const LFSV_p& lfsv_p = lfsv.template getChild<1>();
+                typedef typename LFSV::template Child<PBLOCK>::Type LFSV_p;
+                const LFSV_p& lfsv_p = lfsv.template getChild<PBLOCK>();
                 const unsigned int psize = lfsv_p.size();
 
                 // domain and range field type
@@ -273,6 +276,7 @@ namespace Dune {
                         p.evaluateGlobal(global,p0);
                     
                         fixpressure = false;
+                        std::cout << "Pdirichlet\n";
                         //================================================//
                         // TERM: 10
                         // \int p u n
@@ -301,15 +305,15 @@ namespace Dune {
 
                 // subspaces
                 dune_static_assert((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
-                typedef typename LFSV::template Child<0>::Type LFSV_vel;
-                const LFSV_vel& lfsv_vel = lfsv.template getChild<0>();
+                typedef typename LFSV::template Child<VBLOCK>::Type LFSV_vel;
+                const LFSV_vel& lfsv_vel = lfsv.template getChild<VBLOCK>();
                 dune_static_assert((LFSV_vel::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
                 // ... we assume all velocity components are the same
                 typedef typename LFSV_vel::template Child<0>::Type LFSV_v;
                 const LFSV_v& lfsv_v = lfsv_vel.template getChild<0>();
                 const unsigned int vsize = lfsv_v.size();
-                typedef typename LFSV::template Child<1>::Type LFSV_p;
-                const LFSV_p& lfsv_p = lfsv.template getChild<1>();
+                typedef typename LFSV::template Child<PBLOCK>::Type LFSV_p;
+                const LFSV_p& lfsv_p = lfsv.template getChild<PBLOCK>();
                 const unsigned int psize = lfsv_p.size();
 
                 // domain and range field type
@@ -407,26 +411,36 @@ namespace Dune {
 
                 // subspaces
                 dune_static_assert((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
-                typedef typename LFSV::template Child<0>::Type LFSV_vel;
-                const LFSV_vel& lfsv_vel = lfsv.template getChild<0>();
+                typedef typename LFSV::template Child<VBLOCK>::Type LFSV_vel;
+                const LFSV_vel& lfsv_vel = lfsv.template getChild<VBLOCK>();
                 dune_static_assert((LFSV_vel::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
                 // ... we assume all velocity components are the same
                 typedef typename LFSV_vel::template Child<0>::Type LFSV_v;
                 const LFSV_v& lfsv_v = lfsv_vel.template getChild<0>();
                 const unsigned int vsize = lfsv_v.size();
-                typedef typename LFSV::template Child<1>::Type LFSV_p;
-                const LFSV_p& lfsv_p = lfsv.template getChild<1>();
+                typedef typename LFSV::template Child<PBLOCK>::Type LFSV_p;
+                const LFSV_p& lfsv_p = lfsv.template getChild<PBLOCK>();
                 const unsigned int psize = lfsv_p.size();
 
-                // fix one pressure DOF
-                static int cnt = 0;
-                if (fixpressure && cnt == 0)
+                for (unsigned int i=0; i<dim*vsize+psize; i++)
                 {
-                    for (unsigned int i=0; i<dim*vsize+psize; i++)
-                        mat(dim*vsize, i) = 0;
-                    mat(dim*vsize, dim*vsize) = 1;
+                    for (unsigned int j=0; j<dim*vsize+psize; j++)
+                        mat(i, j) = 0;
+                    mat(i, i) = 1e-6;
                 }
-                cnt++;
+                return;
+                
+                // for (unsigned int i=0; i<dim*vsize+psize; i++)
+                //     mat(i,i) = 2;
+                // fix one pressure DOF
+                // static int cnt = 0;
+                // if (fixpressure && cnt == 0)
+                // {
+                //     for (unsigned int i=0; i<dim*vsize+psize; i++)
+                //         mat(dim*vsize, i) = 0;
+                //     mat(dim*vsize, dim*vsize) = 1;
+                // }
+                // cnt++;
             }
             
             // jacobian of skeleton term
@@ -443,9 +457,9 @@ namespace Dune {
 
                 // subspaces
                 dune_static_assert((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
-                typedef typename LFSV::template Child<0>::Type LFSV_vel;
-                const LFSV_vel& lfsv_s_vel = lfsv_s.template getChild<0>();
-                const LFSV_vel& lfsv_n_vel = lfsv_n.template getChild<0>();
+                typedef typename LFSV::template Child<VBLOCK>::Type LFSV_vel;
+                const LFSV_vel& lfsv_s_vel = lfsv_s.template getChild<VBLOCK>();
+                const LFSV_vel& lfsv_n_vel = lfsv_n.template getChild<VBLOCK>();
                 dune_static_assert((LFSV_vel::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
                 // ... we assume all velocity components are the same
                 typedef typename LFSV_vel::template Child<0>::Type LFSV_v;
@@ -453,9 +467,9 @@ namespace Dune {
                 const LFSV_v& lfsv_n_v = lfsv_n_vel.template getChild<0>();
                 const unsigned int vsize_s = lfsv_s_v.size();
                 const unsigned int vsize_n = lfsv_n_v.size();
-                typedef typename LFSV::template Child<1>::Type LFSV_p;
-                const LFSV_p& lfsv_s_p = lfsv_s.template getChild<1>();
-                const LFSV_p& lfsv_n_p = lfsv_n.template getChild<1>();
+                typedef typename LFSV::template Child<PBLOCK>::Type LFSV_p;
+                const LFSV_p& lfsv_s_p = lfsv_s.template getChild<PBLOCK>();
+                const LFSV_p& lfsv_n_p = lfsv_n.template getChild<PBLOCK>();
                 const unsigned int psize_s = lfsv_s_p.size();
                 const unsigned int psize_n = lfsv_n_p.size();
 
@@ -635,15 +649,15 @@ namespace Dune {
 
                 // subspaces
                 dune_static_assert((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
-                typedef typename LFSV::template Child<0>::Type LFSV_vel;
-                const LFSV_vel& lfsv_vel = lfsv.template getChild<0>();
+                typedef typename LFSV::template Child<VBLOCK>::Type LFSV_vel;
+                const LFSV_vel& lfsv_vel = lfsv.template getChild<VBLOCK>();
                 dune_static_assert((LFSV_vel::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
                 // ... we assume all velocity components are the same
                 typedef typename LFSV_vel::template Child<0>::Type LFSV_v;
                 const LFSV_v& lfsv_v = lfsv_vel.template getChild<0>();
                 const unsigned int vsize = lfsv_v.size();
-                typedef typename LFSV::template Child<1>::Type LFSV_p;
-                const LFSV_p& lfsv_p = lfsv.template getChild<1>();
+                typedef typename LFSV::template Child<PBLOCK>::Type LFSV_p;
+                const LFSV_p& lfsv_p = lfsv.template getChild<PBLOCK>();
                 const unsigned int psize = lfsv_p.size();
 
                 // domain and range field type
