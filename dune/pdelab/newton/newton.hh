@@ -11,6 +11,7 @@
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/timer.hh>
+#include <dune/common/ios.hh>
 
 namespace Dune
 {
@@ -153,6 +154,9 @@ namespace Dune
                     std::cout << "      Solving linear system..." << std::endl;
                 z = 0.0;                                        // TODO: vector interface
                 this->solver.apply(A, z, r, this->linear_reduction);        // TODO: solver interface
+                
+                IosFlagsRestorer restorer(std::cout); // store old ios flags
+                
                 if (!this->solver.result().converged)                 // TODO: solver interface
                     DUNE_THROW(NewtonLinearSolverError,
                                "NewtonSolver::linearSolve(): Linear solver did not converge "
@@ -194,11 +198,15 @@ namespace Dune
                 this->res.first_defect = this->res.defect;
                 this->prev_defect = this->res.defect;
 
-                if (this->verbosity_level >= 2)
+                                
+
+                if (this->verbosity_level >= 2){
+                    IosFlagsRestorer restorer(std::cout); // store old ios flags
                     std::cout << "  Initial defect: "
                               << std::setw(12) << std::setprecision(4) << std::scientific
                               << this->res.defect << std::endl;
-
+                }
+                
                 Matrix A(this->gridoperator);
                 TrialVector z(this->gridoperator.trialGridFunctionSpace());
 
@@ -229,6 +237,8 @@ namespace Dune
                     this->res.iterations++;
                     this->res.conv_rate = std::pow(this->res.reduction, 1.0/this->res.iterations);
 
+                    IosFlagsRestorer restorer(std::cout); // store old ios flags
+                                    
                     if (this->verbosity_level >= 3)
                         std::cout << "      defect reduction (this iteration):"
                                   << std::setw(12) << std::setprecision(4) << std::scientific
@@ -255,6 +265,9 @@ namespace Dune
                 throw;
             }
             this->res.elapsed = timer.elapsed();
+            
+            IosFlagsRestorer restorer(std::cout); // store old ios flags
+
             if (this->verbosity_level == 1)
                 std::cout << "  Newton converged after " << std::setw(2) << this->res.iterations
                           << " iterations.  Reduction: "
@@ -262,7 +275,7 @@ namespace Dune
                           << this->res.reduction
                           << "   (" << std::setprecision(4) << this->res.elapsed << "s)"
                           << std::endl;
-        };
+        }
 
         template<class GOS, class TrlV, class TstV>
         class NewtonTerminate : public virtual NewtonBase<GOS,TrlV,TstV>
@@ -378,6 +391,8 @@ namespace Dune
 
                 this->prev_defect = this->res.defect;
 
+                IosFlagsRestorer restorer(std::cout); // store old ios flags
+
                 if (this->verbosity_level >= 4)
                     std::cout << "      requested linear reduction:       "
                               << std::setw(12) << std::setprecision(4) << std::scientific
@@ -448,6 +463,8 @@ namespace Dune
                 RFType best_defect = this->res.defect;
                 TrialVector prev_u(*this->u);  // TODO: vector interface
                 unsigned int i = 0;
+                IosFlagsRestorer restorer(std::cout); // store old ios flags
+
                 while (1)
                 {
                     if (this->verbosity_level >= 4)
