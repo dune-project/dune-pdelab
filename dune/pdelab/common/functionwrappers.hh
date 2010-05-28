@@ -184,15 +184,136 @@ namespace Dune {
       
     //! syntactic sugar for easy creation of PointwiseGridFunctionAdapter
     //! objects
-    template<typename Engine, typename F0,
-             typename F1 = Nil, typename F2 = Nil, typename F3 = Nil,
-             typename F4 = Nil, typename F5 = Nil, typename F6 = Nil,
-             typename F7 = Nil, typename F8 = Nil, typename F9 = Nil>
-    PointwiseGridFunctionAdapter<Engine, F0, F1, F2, F3, F4, F5, F6, F7, F8, F9>
+    template<typename Engine, typename F0>
+    PointwiseGridFunctionAdapter<Engine, F0>
+    makePointwiseGridFunctionAdapter(const Engine& engine, const F0& f0)
+    {
+      return PointwiseGridFunctionAdapter
+        <Engine,F0>
+        (engine,f0);
+    }
+
+    //! syntactic sugar for easy creation of PointwiseGridFunctionAdapter
+    //! objects
+    template<typename Engine, typename F0, typename F1>
+    PointwiseGridFunctionAdapter<Engine, F0, F1>
     makePointwiseGridFunctionAdapter(const Engine& engine, const F0& f0,
-                                     const F1& f1 = Nil(), const F2& f2 = Nil(), const F3& f3 = Nil(),
-                                     const F4& f4 = Nil(), const F5& f5 = Nil(), const F6& f6 = Nil(),
-                                     const F7& f7 = Nil(), const F8& f8 = Nil(), const F9& f9 = Nil())
+                                     const F1& f1)
+    {
+      return PointwiseGridFunctionAdapter
+        <Engine,F0,F1>
+        (engine,f0,f1);
+    }
+
+    //! syntactic sugar for easy creation of PointwiseGridFunctionAdapter
+    //! objects
+    template<typename Engine, typename F0, typename F1, typename F2>
+    PointwiseGridFunctionAdapter<Engine, F0, F1, F2>
+    makePointwiseGridFunctionAdapter(const Engine& engine, const F0& f0,
+                                     const F1& f1, const F2& f2)
+    {
+      return PointwiseGridFunctionAdapter
+        <Engine,F0,F1,F2>
+        (engine,f0,f1,f2);
+    }
+
+    //! syntactic sugar for easy creation of PointwiseGridFunctionAdapter
+    //! objects
+    template<typename Engine, typename F0, typename F1, typename F2,
+             typename F3>
+    PointwiseGridFunctionAdapter<Engine, F0, F1, F2, F3>
+    makePointwiseGridFunctionAdapter(const Engine& engine, const F0& f0,
+                                     const F1& f1, const F2& f2, const F3& f3)
+    {
+      return PointwiseGridFunctionAdapter
+        <Engine,F0,F1,F2,F3>
+        (engine,f0,f1,f2,f3);
+    }
+
+    //! syntactic sugar for easy creation of PointwiseGridFunctionAdapter
+    //! objects
+    template<typename Engine, typename F0, typename F1, typename F2,
+             typename F3, typename F4>
+    PointwiseGridFunctionAdapter<Engine, F0, F1, F2, F3, F4>
+    makePointwiseGridFunctionAdapter(const Engine& engine, const F0& f0,
+                                     const F1& f1, const F2& f2, const F3& f3,
+                                     const F4& f4)
+    {
+      return PointwiseGridFunctionAdapter
+        <Engine,F0,F1,F2,F3,F4>
+        (engine,f0,f1,f2,f3,f4);
+    }
+
+    //! syntactic sugar for easy creation of PointwiseGridFunctionAdapter
+    //! objects
+    template<typename Engine, typename F0, typename F1, typename F2,
+             typename F3, typename F4, typename F5>
+    PointwiseGridFunctionAdapter<Engine, F0, F1, F2, F3, F4, F5>
+    makePointwiseGridFunctionAdapter(const Engine& engine, const F0& f0,
+                                     const F1& f1, const F2& f2, const F3& f3,
+                                     const F4& f4, const F5& f5)
+    {
+      return PointwiseGridFunctionAdapter
+        <Engine,F0,F1,F2,F3,F4,F5>
+        (engine,f0,f1,f2,f3,f4,f5);
+    }
+
+    //! syntactic sugar for easy creation of PointwiseGridFunctionAdapter
+    //! objects
+    template<typename Engine, typename F0, typename F1, typename F2,
+             typename F3, typename F4, typename F5, typename F6>
+    PointwiseGridFunctionAdapter<Engine, F0, F1, F2, F3, F4, F5, F6>
+    makePointwiseGridFunctionAdapter(const Engine& engine, const F0& f0,
+                                     const F1& f1, const F2& f2, const F3& f3,
+                                     const F4& f4, const F5& f5, const F6& f6)
+    {
+      return PointwiseGridFunctionAdapter
+        <Engine,F0,F1,F2,F3,F4,F5,F6>
+        (engine,f0,f1,f2,f3,f4,f5,f6);
+    }
+
+    //! syntactic sugar for easy creation of PointwiseGridFunctionAdapter
+    //! objects
+    template<typename Engine, typename F0, typename F1, typename F2,
+             typename F3, typename F4, typename F5, typename F6, typename F7>
+    PointwiseGridFunctionAdapter<Engine, F0, F1, F2, F3, F4, F5, F6, F7>
+    makePointwiseGridFunctionAdapter(const Engine& engine, const F0& f0,
+                                     const F1& f1, const F2& f2, const F3& f3,
+                                     const F4& f4, const F5& f5, const F6& f6,
+                                     const F7& f7)
+    {
+      return PointwiseGridFunctionAdapter
+        <Engine,F0,F1,F2,F3,F4,F5,F6,F7>
+        (engine,f0,f1,f2,f3,f4,f5,f6,f7);
+    }
+
+    //! syntactic sugar for easy creation of PointwiseGridFunctionAdapter
+    //! objects
+    template<typename Engine, typename F0, typename F1, typename F2,
+             typename F3, typename F4, typename F5, typename F6, typename F7,
+             typename F8>
+    PointwiseGridFunctionAdapter<Engine, F0, F1, F2, F3, F4, F5, F6, F7, F8>
+    makePointwiseGridFunctionAdapter(const Engine& engine, const F0& f0,
+                                     const F1& f1, const F2& f2, const F3& f3,
+                                     const F4& f4, const F5& f5, const F6& f6,
+                                     const F7& f7, const F8& f8)
+    {
+      return PointwiseGridFunctionAdapter
+        <Engine,F0,F1,F2,F3,F4,F5,F6,F7,F8>
+        (engine,f0,f1,f2,f3,f4,f5,f6,f7,f8);
+    }
+
+    //! syntactic sugar for easy creation of PointwiseGridFunctionAdapter
+    //! objects
+    template<typename Engine, typename F0, typename F1, typename F2,
+             typename F3, typename F4, typename F5, typename F6, typename F7,
+             typename F8, typename F9>
+    PointwiseGridFunctionAdapter<Engine, F0, F1, F2, F3, F4, F5, F6, F7, F8,
+                                 F9>
+    makePointwiseGridFunctionAdapter(const Engine& engine, const F0& f0,
+                                     const F1& f1, const F2& f2, const F3& f3,
+                                     const F4& f4, const F5& f5, const F6& f6,
+                                     const F7& f7, const F8& f8, const F9& f9)
     {
       return PointwiseGridFunctionAdapter
         <Engine,F0,F1,F2,F3,F4,F5,F6,F7,F8,F9>
