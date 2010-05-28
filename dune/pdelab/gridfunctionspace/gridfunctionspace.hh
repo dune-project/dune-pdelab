@@ -539,7 +539,7 @@ namespace Dune {
 
 	  // constructor
 	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_) 
-		: defaultce(ce_), gv(gridview), plfem(&lfem), ce(ce_)
+        : gv(gridview), plfem(&lfem), defaultce(ce_), ce(ce_)
 	  {
 		update();
 	  }
