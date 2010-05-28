@@ -13,7 +13,7 @@
 #include<dune/common/typetraits.hh>
 #include<dune/grid/common/quadraturerules.hh>
 
-#include <dune/pdelab/localoperator/default.hh>
+#include <dune/pdelab/localoperator/defaultimp.hh>
 
 #include"../common/geometrywrapper.hh"
 #include"../gridoperatorspace/gridoperatorspace.hh"
@@ -41,7 +41,7 @@ namespace Dune {
     class Electrodynamic_T
       : public FullVolumePattern
       , public LocalOperatorDefaultFlags
-      , public AlphaVolumeFromJacobianVolume<Electrodynamic_T<Eps> >
+      , public JacobianBasedAlphaVolume<Electrodynamic_T<Eps> >
     {
     public:
 
@@ -136,7 +136,7 @@ namespace Dune {
     class Electrodynamic_S
       : public FullVolumePattern
       , public LocalOperatorDefaultFlags
-      , public AlphaVolumeFromJacobianVolume<Electrodynamic_S<Mu> >
+      , public JacobianBasedAlphaVolume<Electrodynamic_S<Mu> >
     {
       //! size of FieldVector for holding the curl
       template <unsigned d>
