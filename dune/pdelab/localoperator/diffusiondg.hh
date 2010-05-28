@@ -6,7 +6,7 @@
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
 #include<dune/grid/common/quadraturerules.hh>
-#include<dune/grid/common/referenceelements.hh>
+#include <dune/grid/common/genericreferenceelements.hh>
 
 #include <dune/pdelab/localoperator/defaultimp.hh>
 
@@ -190,7 +190,8 @@ namespace Dune {
 
         // normal of center in face's reference element
         const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-          Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
+          Dune::GenericReferenceElements<DF,IG::dimension-1>::
+          general(ig.geometry().type()).position(0,0);
         const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
             
         // evaluate diffusion tensor at elements' centers, assume they are constant over elements
@@ -346,7 +347,8 @@ namespace Dune {
           {
             // center in face's reference element
             const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-              Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
+              Dune::GenericReferenceElements<DF,IG::dimension-1>::
+              general(ig.geometry().type()).position(0,0);
             // outer normal, assuming it is constant over whole intersection
             const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
 
@@ -520,7 +522,8 @@ namespace Dune {
             */
             // center in face's reference element
             const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-              Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
+              Dune::GenericReferenceElements<DF,IG::dimension-1>::
+              general(ig.geometry().type()).position(0,0);
             // outer normal, assuming it is constant over whole intersection
             const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
             // evaluate diffusion tensor at cell center, assume it is constant over elements
@@ -670,7 +673,8 @@ namespace Dune {
 
         // center in face's reference element
         const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-          Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
+          Dune::GenericReferenceElements<DF,IG::dimension-1>::
+          general(ig.geometry().type()).position(0,0);
         const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
@@ -837,7 +841,8 @@ namespace Dune {
           {
             // center in face's reference element
             const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-              Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
+              Dune::GenericReferenceElements<DF,IG::dimension-1>::
+              general(ig.geometry().type()).position(0,0);
             // outer normal, assuming it is constant over whole intersection
             const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
 
