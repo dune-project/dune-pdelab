@@ -247,8 +247,12 @@ namespace Dune {
 	//! \brief convert a single component function space with experimental
 	//! global finite elements into a grid function representing the curl
     /**
-     * The function values should be 3-component vectors.  The Curl will be a
-     * 3-component function.
+     * For dimDomain=dimRange=3 the curl will be a 3-component function.  For
+     * dimDomain=2 (x- and y-coordinates present) and dimRange=2 (x- and
+     * y-components present) the curl will be a 1-component function
+     * (z-component present).  For dimDomain=2 (x- and y-coordinates present)
+     * and dimRange=1 (z-component present) the curl will be a 2-component
+     * function (x- and y-components present).
      *
      * This is just an intermediate solution to provide VTK output.
      *
