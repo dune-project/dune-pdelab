@@ -53,7 +53,7 @@ void edgeS02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
   typedef Dune::PDELab::DiscreteGridFunctionGlobal<GFS,X> DGF;
   std::vector<Dune::shared_ptr<DGF> > dgf(gfs.globalSize());
 
-  typedef Dune::PDELab::DiscreteGridFunctionGlobalCurl2D<GFS,X> CurlGF;
+  typedef Dune::PDELab::DiscreteGridFunctionGlobalCurl<GFS,X> CurlGF;
   std::vector<Dune::shared_ptr<CurlGF> > curlgf(gfs.globalSize());
 
   for(unsigned int i = 0; i < gfs.globalSize(); ++i) {
