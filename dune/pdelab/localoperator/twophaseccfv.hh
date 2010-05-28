@@ -283,9 +283,7 @@ namespace Dune {
       {
         // select the two components
         typedef typename LFSV::template Child<liquid>::Type PLSpace;
-		const PLSpace& plspace = lfsv.template getChild<liquid>();
         typedef typename LFSV::template Child<gas>::Type PGSpace;
-		const PGSpace& pgspace = lfsv.template getChild<gas>();
 
 		// domain and range field type
 		typedef typename PLSpace::Traits::LocalFiniteElementType::
