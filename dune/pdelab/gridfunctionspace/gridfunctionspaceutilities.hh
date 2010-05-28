@@ -308,7 +308,10 @@ namespace Dune {
 		lfs.localFiniteElement().localBasis().evaluateJacobianGlobal(x,J,e.geometry());
         y = 0;
         for (unsigned int i=0; i<J.size(); i++)
-          switch(Traits::dimRange) {
+          // avoid a "case label value exceeds maximum value for type"
+          // warning: since dimRange is an anonymous enum, its type may
+          // contain only the values 0 and 1, resulting in a warning.
+          switch(unsigned(Traits::dimRange)) {
           case 1:
             y[0] += xl[i] *  J[i][0][1];
             y[1] += xl[i] * -J[i][0][0];
