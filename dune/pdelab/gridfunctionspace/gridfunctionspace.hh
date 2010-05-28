@@ -662,7 +662,7 @@ namespace Dune {
         typename GV::IndexSet::IndexType index = gv.indexSet().index(e);
         unsigned int n = dofcountmap.find(gt)->second;
 		global.resize(n);
-        for (int i=0; i<n; i++) 
+        for(unsigned i=0; i<n; i++)
           global[i] = offset.find(gt)->second + index*n + i;
       }
 
@@ -700,7 +700,7 @@ namespace Dune {
 			CountMapType countmap;
 
 			// assume that key within each subentity is unique
-			for (int i=0; i<lc.size(); ++i)
+			for (unsigned i=0; i<lc.size(); ++i)
 			  {
 				SubentityType subentity(lc.localKey(i).subEntity(),lc.localKey(i).codim());
 				if (countmap.find(subentity)==countmap.end())

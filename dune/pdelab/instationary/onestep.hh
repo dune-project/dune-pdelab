@@ -922,7 +922,7 @@ namespace Dune {
 	igos.preStep(*method,time,dt);
 
 	// loop over all stages
-	for (int r=1; r<=method->s(); ++r)
+        for(unsigned r=1; r<=method->s(); ++r)
 	  {
 	    if (verbosityLevel>=2){
               std::ios_base::fmtflags oldflags = std::cout.flags();
@@ -1008,7 +1008,7 @@ namespace Dune {
 	  }
 
 	// delete intermediate steps
-	for (int i=1; i<method->s(); ++i) delete x[i];
+        for(unsigned i=1; i<method->s(); ++i) delete x[i];
 
         // step cleanup
         igos.postStep();

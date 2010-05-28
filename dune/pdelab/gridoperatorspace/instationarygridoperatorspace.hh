@@ -674,7 +674,7 @@ namespace Dune {
 
             // residual part
             // loop over all previous time steps (stages)
-            for (int i=0; i<stage; ++i)
+            for(unsigned i=0; i<stage; ++i)
               {
                 // set time in local operators for evaluation
                 la.setTime(time+d[i]*dt);

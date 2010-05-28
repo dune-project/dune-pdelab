@@ -40,7 +40,7 @@ namespace Dune {
         // loop once over the grid
         for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
           {
-            unsigned int myid = is.template index<0>(*it);
+            typename IndexSet::IndexType myid = is.template index<0>(*it);
             orient[myid] = 0;
 
             IntersectionIterator endit = gv.iend(*it);
