@@ -3,6 +3,7 @@ SUBDIRS =					\
 	backend					\
 	common					\
 	finiteelementmap			\
+	function				\
 	gridfunctionspace			\
 	gridoperatorspace			\
 	localoperator				\
