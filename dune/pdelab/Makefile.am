@@ -1,5 +1,12 @@
 pdelabdir = $(includedir)/dune/pdelab
-SUBDIRS = common test finiteelementmap gridfunctionspace gridoperatorspace backend newton \
-	localoperator
+SUBDIRS =					\
+	backend					\
+	common					\
+	finiteelementmap			\
+	gridfunctionspace			\
+	gridoperatorspace			\
+	localoperator				\
+	newton					\
+	test
 
 include $(top_srcdir)/am/global-rules
