@@ -41,6 +41,8 @@ namespace Dune
             RFType conv_rate;          // average reduction per Newton iteration
             RFType first_defect;       // the first defect
             RFType defect;             // the final defect
+            double assembler_time;     // Cumulative time for matrix assembly
+            double linear_solver_time; // Cumulative time for linear sovler
         };
 
         template<class GOS, class TrlV, class TstV>
@@ -188,6 +190,8 @@ namespace Dune
             this->res.reduction = 1.0;
             this->res.conv_rate = 1.0;
             this->res.elapsed = 0.0;
+            this->res.assembler_time = 0.0;
+            this->res.linear_solver_time = 0.0;
             result_valid = true;
             Timer timer;
 
@@ -216,9 +220,31 @@ namespace Dune
                         std::cout << "  Newton iteration " << this->res.iterations
                                   << " --------------------------------" << std::endl;
 
-                    this->prepare_step(A);
+                    Timer assembler_timer;
+                    try
+                    {
+                        this->prepare_step(A);
+                    }
+                    catch (...)
+                    {
+                        this->res.assembler_time += assembler_timer.elapsed();
+                        throw;
+                    }
+                    double assembler_time = assembler_timer.elapsed();
+                    this->res.assembler_time += assembler_time;
 
-                    this->linearSolve(A, z, r);
+                    Timer linear_solver_timer;
+                    try
+                    {
+                        this->linearSolve(A, z, r);
+                    }
+                    catch (...)
+                    {
+                        this->res.linear_solver_time += linear_solver_timer.elapsed();
+                        throw;
+                    }
+                    double linear_solver_time = linear_solver_timer.elapsed();
+                    this->res.linear_solver_time += linear_solver_time;
 
                     try
                     {
@@ -229,7 +255,7 @@ namespace Dune
                         if (this->reassembled)
                             throw;
                         if (this->verbosity_level >= 3)
-                            std::cout << "      line search failed - try again with reassembled matrix" << std::endl;
+                            std::cout << "      line search failed - trying again with reassembled matrix" << std::endl;
                         continue;
                     }
 
@@ -241,7 +267,13 @@ namespace Dune
                     ios_base_all_saver restorer(std::cout);
 
                     if (this->verbosity_level >= 3)
-                        std::cout << "      defect reduction (this iteration):"
+                        std::cout << "      matrix assembly time:             "
+                                  << std::setw(12) << std::setprecision(4) << std::scientific
+                                  << assembler_time << std::endl
+                                  << "      linear solver time:               "
+                                  << std::setw(12) << std::setprecision(4) << std::scientific
+                                  << linear_solver_time << std::endl
+                                  << "      defect reduction (this iteration):"
                                   << std::setw(12) << std::setprecision(4) << std::scientific
                                   << this->res.defect/this->prev_defect << std::endl
                                   << "      defect reduction (total):         "
