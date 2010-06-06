@@ -407,7 +407,7 @@ namespace Dune {
 
       // First find out which dofs we share with other processors
       typedef typename GFS::template VectorContainer<bool>::Type BoolVector;
-      BoolVector sharedDOF(gfs, true);
+      BoolVector sharedDOF(gfs, false);
       Dune::PDELab::GenericDataHandle<GFS,BoolVector,SharedGatherScatter> gdh(gfs,sharedDOF,SharedGatherScatter());
 
       if (gfs.gridview().comm().size()>1)
@@ -1632,6 +1632,7 @@ namespace Dune {
         smootherArgs.relaxationFactor = 1;
 
         Criterion criterion(15,2000);
+        criterion.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
         criterion.setDebugLevel(verbose);
         Dune::OverlappingSchwarzScalarProduct<VectorType,Comm> sp(oocc);
         Operator oop(mat, oocc);
