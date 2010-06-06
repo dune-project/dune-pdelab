@@ -364,7 +364,7 @@ namespace Dune {
         template<typename G>
         static void postProcessCount(G& g)
         {
-          g=g/GFS::Traits::noChilds;
+          g=g;
         }
 
         template<typename G>
@@ -407,7 +407,7 @@ namespace Dune {
 
       // First find out which dofs we share with other processors
       typedef typename GFS::template VectorContainer<bool>::Type BoolVector;
-      BoolVector sharedDOF(gfs, false);
+      BoolVector sharedDOF(gfs, true);
       Dune::PDELab::GenericDataHandle<GFS,BoolVector,SharedGatherScatter> gdh(gfs,sharedDOF,SharedGatherScatter());
 
       if (gfs.gridview().comm().size()>1)
