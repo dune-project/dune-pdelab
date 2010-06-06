@@ -1632,7 +1632,7 @@ namespace Dune {
         smootherArgs.relaxationFactor = 1;
 
         Criterion criterion(15,2000);
-        criterion.setDebugLevel(verbose?3:0);
+        criterion.setDebugLevel(verbose);
         Dune::OverlappingSchwarzScalarProduct<VectorType,Comm> sp(oocc);
         Operator oop(mat, oocc);
         //oocc.copyOwnerToAll(BlockProcessor<GFS>::getVector(r), BlockProcessor<GFS>::getVector(r));
