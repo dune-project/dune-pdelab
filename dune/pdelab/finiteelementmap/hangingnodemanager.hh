@@ -20,26 +20,6 @@ namespace Dune {
       enum{ verbosity = 1 };
       typedef typename Grid::LeafIndexSet::IndexType IndexType;
 
-      // Codim 0 Mapper
-      template<int dim>
-      struct Codim0Layout {
-	bool contains (Dune::GeometryType gt) const {
-	  if(gt.dim() == dim)
-	    return true;
-	  return false;
-	}
-      };
-
-      // Codim dim Mapper
-      template<int dim>
-      struct CodimDimLayout {
-	bool contains (Dune::GeometryType gt) const {
-	  if(gt.dim() == 0)
-	    return true;
-	  return false;
-	}
-      };
- 
     private:
       class NodeInfo
       {
@@ -94,8 +74,10 @@ namespace Dune {
       typedef typename Dune::FieldVector<ctype,dim> Point;
       typedef typename Dune::FieldVector<ctype,dim-1> FacePoint;
   
-      typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,Codim0Layout> CellMapper;
-      typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,CodimDimLayout> VertexMapper;
+      typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,
+        MCMGElementLayout> CellMapper;
+      typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,
+        MCMGVertexLayout> VertexMapper;
 
       Grid & grid;
       const BoundaryFunction & boundaryFunction;
