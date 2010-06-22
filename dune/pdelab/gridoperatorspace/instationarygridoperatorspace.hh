@@ -41,17 +41,17 @@ namespace Dune {
       virtual unsigned s () const = 0;
       
       /*! \brief Return entries of the A matrix
-        \note that r âˆˆ 1,...,s and i âˆˆ 0,...,r
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R a (int r, int i) const = 0;
       
       /*! \brief Return entries of the B matrix
-        \note that r âˆˆ 1,...,s and i âˆˆ 0,...,r
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R b (int r, int i) const = 0;
       
       /*! \brief Return entries of the d Vector
-        \note that i âˆˆ 0,...,r
+        \note that i ∈ 0,...,r
       */
       virtual R d (int r) const = 0;
       
