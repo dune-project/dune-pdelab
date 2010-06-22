@@ -3,6 +3,7 @@
 #ifndef DUNE_ISTLSOLVERBACKEND_HH
 #define DUNE_ISTLSOLVERBACKEND_HH
 
+#include <dune/common/deprecated.hh>
 #include <dune/common/mpihelper.hh>
 
 #include <dune/istl/owneroverlapcopy.hh>
@@ -537,10 +538,27 @@ namespace Dune {
        * \deprecated The helper_ parameter is unused.  Use the constructor
        *             without the helper_ parameter instead.
        */
-      NonoverlappingOperator (const GFS& gfs_, const M& A, const ParallelISTLHelper<GFS>& helper_)
-        : gfs(gfs_), _A_(A), helper(helper_)
+      NonoverlappingOperator (const GFS& gfs_, const M& A,
+                              const ParallelISTLHelper<GFS>& helper_)
+        DUNE_DEPRECATED
+        : gfs(gfs_), _A_(A)
       {
       }
+
+      //! Construct a non-overlapping operator
+      /**
+       * \param gfs_ GridFunctionsSpace for the vectors.
+       * \param A    Matrix for this operator.  This should be the locally
+       *             assembled matrix.
+       *
+       * \note The constructed object stores references to all the objects
+       *       given as parameters here.  They should be valid for as long as
+       *       the constructed object is used.  They are not needed to
+       *       destruct the constructed object.
+       */
+      NonoverlappingOperator (const GFS& gfs_, const M& A)
+        : gfs(gfs_), _A_(A)
+      { }
 
       //! apply operator
       /**
@@ -585,7 +603,6 @@ namespace Dune {
     private:
       const GFS& gfs;
       const M& _A_;
-      const ParallelISTLHelper<GFS>& helper;
     };
 
 
@@ -1273,7 +1290,7 @@ namespace Dune {
       void apply(M& A, V& z, W& r, typename V::ElementType reduction)
       {
         typedef Dune::PDELab::NonoverlappingOperator<GFS,M,V,W> POP;
-        POP pop(gfs,A,phelper);
+        POP pop(gfs,A);
         typedef Dune::PDELab::NonoverlappingScalarProduct<GFS,V> PSP;
         PSP psp(gfs,phelper);
         typedef Dune::PDELab::NonoverlappingRichardson<GFS,V,W> PRICH;
