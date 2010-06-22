@@ -41,17 +41,17 @@ namespace Dune {
       virtual unsigned s () const = 0;
       
       /*! \brief Return entries of the A matrix
-	\note that r âˆˆ 1,...,s and i âˆˆ 0,...,r
+        \note that r âˆˆ 1,...,s and i âˆˆ 0,...,r
       */
       virtual R a (int r, int i) const = 0;
       
       /*! \brief Return entries of the B matrix
-	\note that r âˆˆ 1,...,s and i âˆˆ 0,...,r
+        \note that r âˆˆ 1,...,s and i âˆˆ 0,...,r
       */
       virtual R b (int r, int i) const = 0;
       
       /*! \brief Return entries of the d Vector
-	\note that i âˆˆ 0,...,r
+        \note that i âˆˆ 0,...,r
       */
       virtual R d (int r) const = 0;
       
@@ -75,47 +75,47 @@ namespace Dune {
       
       ImplicitEulerParameter ()
       {
-	D[0] = 0.0;  D[1] = 1.0;
-	A[0][0] = -1.0; A[0][1] = 1.0;
-	B[0][0] = 0.0;  B[0][1] = 1.0;
+        D[0] = 0.0;  D[1] = 1.0;
+        A[0][0] = -1.0; A[0][1] = 1.0;
+        B[0][0] = 0.0;  B[0][1] = 1.0;
       }
 
       /*! \brief Return true if method is implicit
       */
       virtual bool implicit () const
       {
-	return true;
+        return true;
       }
       
       /*! \brief Return number of stages s of the method
       */
       virtual unsigned s () const
       {
-	return 1;
+        return 1;
       }
       
       /*! \brief Return entries of the A matrix
-	\note that r ∈ 1,...,s and i ∈ 0,...,r
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R a (int r, int i) const
       {
-	return A[r-1][i];
+        return A[r-1][i];
       }
       
       /*! \brief Return entries of the B matrix
-	\note that r ∈ 1,...,s and i ∈ 0,...,r
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
       */
       virtual R b (int r, int i) const
       {
-	return B[r-1][i];
+        return B[r-1][i];
       }
       
       /*! \brief Return entries of the d Vector
-	\note that i ∈ 0,...,s
+        \note that i ∈ 0,...,s
       */
       virtual R d (int i) const
       {
-	return D[i];
+        return D[i];
       }
       
       /*! \brief Return name of the scheme
