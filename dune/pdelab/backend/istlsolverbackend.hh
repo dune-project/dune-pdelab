@@ -497,26 +497,57 @@ namespace Dune {
     // Generic support for nonoverlapping grids
     //========================================================
 
-    // operator that resets result to zero at nonowned DOFS
+    //! Operator for the non-overlapping parallel case
+    /**
+     * Calculate \f$y:=Ax\f$.
+     *
+     * \tparam GFS The GridFunctionSpace the vectors apply to.
+     * \tparam M   Type of the matrix.  Should be one of the ISTL matrix types.
+     * \tparam X   Type of the vectors the matrix is applied to.
+     * \tparam Y   Type of the result vectors.
+     */
     template<class GFS, class M, class X, class Y>
     class NonoverlappingOperator : public Dune::AssembledLinearOperator<M,X,Y>
     {
     public:
-      //! export types
+      //! export type of matrix
       typedef M matrix_type;
+      //! export type of vectors the matrix is applied to
       typedef X domain_type;
+      //! export type of result vectors
       typedef Y range_type;
+      //! export type of the entries for x
       typedef typename X::field_type field_type;
 
       //redefine the category, that is the only difference
       enum {category=Dune::SolverCategory::nonoverlapping};
 
+      //! Construct a non-overlapping operator
+      /**
+       * \param gfs_    GridFunctionsSpace for the vectors.
+       * \param A       Matrix for this operator.  This should be the locally
+       *                assembled matrix.
+       * \param helper_ Helper for parallel communication (not used).
+       *
+       * \note The constructed object stores references to all the objects
+       *       given as parameters here.  They should be valid for as long as
+       *       the constructed object is used.  They are not needed to
+       *       destruct the constructed object.
+       *
+       * \deprecated The helper_ parameter is unused.  Use the constructor
+       *             without the helper_ parameter instead.
+       */
       NonoverlappingOperator (const GFS& gfs_, const M& A, const ParallelISTLHelper<GFS>& helper_)
         : gfs(gfs_), _A_(A), helper(helper_)
       {
       }
 
-      //! apply operator to x:  \f$ y = A(x) \f$
+      //! apply operator
+      /**
+       * Compute \f$y:=A(x)\f$ on this process, then make y consistent (sum up
+       * corresponding entries of y on the different processes and store the
+       * result back in y on each process).
+       */
       virtual void apply (const X& x, Y& y) const
       {
         // apply local operator; now we have sum y_p = sequential y
@@ -529,6 +560,11 @@ namespace Dune {
       }
 
       //! apply operator to x, scale and add:  \f$ y = y + \alpha A(x) \f$
+      /**
+       * Compute \f$y:=\alpha A(x)\f$ on this process, then make y consistent
+       * (sum up corresponding entries of y on the different processes and
+       * store the result back in y on each process).
+       */
       virtual void applyscaleadd (field_type alpha, const X& x, Y& y) const
       {
         // apply local operator; now we have sum y_p = sequential y
@@ -540,7 +576,7 @@ namespace Dune {
           gfs.gridview().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
       }
 
-      //! get matrix via *
+      //! extract the matrix
       virtual const M& getmat () const
       {
         return _A_;
