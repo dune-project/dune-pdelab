@@ -1,0 +1,183 @@
+\documentclass[11pt,a4paper,DIV11,%draft,%
+notitlepage,oneside,abstracton,%
+bibtotoc]{scrartcl}
+
+%encoding
+\usepackage[utf8]{inputenc}
+
+% only for the article version
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{fullpage}
+%\setlength{\parindent}{0pt}
+%\setlength{\parskip}{1.3ex plus 0.5ex minus 0.2ex}
+
+
+% all after
+\usepackage{graphicx}
+%\usepackage{multimedia}
+\usepackage{psfrag}
+\usepackage{listings}
+\lstset{language=C++, basicstyle=\small\ttfamily,
+  stringstyle=\ttfamily, commentstyle=\it, extendedchars=true}
+\usepackage{curves}
+\usepackage{epic}
+\usepackage{calc}
+\usepackage{fancybox}
+\usepackage{xspace}
+\usepackage{enumerate}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{hyperref}
+
+\title{Multi-Step Methods}
+\author{\textsc{Jö Fahlke}\\
+Interdisziplinäres Zentrum für Wissenschaftliches Rechnen,\\
+ Universität Heidelberg, Im Neuenheimer Feld 368, \\
+D-69120 Heidelberg\\
+email: \texttt{jorrit@jorrit.de}
+}
+\date{Version: \today}
+
+\begin{document}
+
+\maketitle
+
+%\begin{abstract}
+%\end{abstract}
+
+\tableofcontents
+
+\section{Framework}
+
+Consider the $p$'th order ODE
+\begin{equation}
+  f(t,u,\partial_tu,\partial_t^2u,\ldots,\partial_t^pu)=0.
+\end{equation}
+Often, it can be written as a sum of residuals
+\begin{equation}
+  \sum_{j=0}^pr_j(t,\partial_t^ju)=0
+\end{equation}
+We consider $m$-step schemes ($m\geq p$) that can be written in the following
+way to solve for $u^n$:
+\begin{equation}
+  \sum_{i=0}^m\sum_{j=0}^p{\alpha_{ij} \over (\Delta t)^j}r_j(t^{n-i},u^{n-i})=0
+\end{equation}
+
+\section{Particular Schemes}
+
+\subsection{Central Differences}
+
+We consider the vector wave equation from Jin, a second order ODE:
+\begin{equation}
+  T\partial_t^2u+T_\sigma\partial_tu+Su+f=0
+\end{equation}
+Jin gives the central differences time stepping scheme (a two-step scheme) as
+follows:
+\begin{equation}
+  \left\{{1 \over (\Delta t)^2} T + {1 \over 2\Delta t} T_\sigma \right\} u^n
+  +\left\{-{2 \over (\Delta t)^2} T + S \right\} u^{n-1}
+  +\left\{{1 \over (\Delta t)^2} T + {1 \over 2\Delta t} T_\sigma \right\} u^{n-2}
+  +f^{n-1} = 0
+\end{equation}
+We can set the residuals as follows:
+\begin{align}
+  r_0(t,x)&=S(t)x+f(t) \\
+  r_1(t,x)&=T_\sigma(t)x \\
+  r_2(t,x)&=T(t)x
+\end{align}
+The coefficients $\alpha_{ij}$ then have to be
+\begin{align}
+  \alpha_{00}&=0 & \alpha_{01}&=\frac12 & \alpha_{02}&=1 \\
+  \alpha_{10}&=1 & \alpha_{11}&=0       & \alpha_{12}&=-2 \\
+  \alpha_{20}&=0 & \alpha_{21}&=\frac12 & \alpha_{22}&=1
+\end{align}
+
+\subsection{Newmark $\beta$ Method}
+
+We consider the same ODE as for central differences.  The residuals are also
+the same.  Jin gives the Newmark-$\beta$ scheme as follows:
+\begin{multline}
+  \left\{{1 \over (\Delta t)^2}T + {1 \over 2\Delta t}T_\sigma + \beta S \right\} u^n
+  +\left\{-{2 \over (\Delta t)^2}T + (1-2\beta)S \right\} u^{n-1} \\
+  +\left\{{1 \over (\Delta t)^2}T + {1 \over 2\Delta t}T_\sigma + \beta S \right\} u^{n-2}
+  +[\beta f^n + (1-2\beta)f^{n-1} + \beta f^{n-2}] = 0
+\end{multline}
+The coefficients $\alpha_{ij}$ then have to be
+\begin{align}
+  \alpha_{00}&=\beta    & \alpha_{01}&=\frac12 & \alpha_{02}&=1 \\
+  \alpha_{10}&=1-2\beta & \alpha_{11}&=0       & \alpha_{12}&=-2 \\
+  \alpha_{20}&=\beta    & \alpha_{21}&=\frac12 & \alpha_{22}&=1
+\end{align}
+Central differences is identical to Newmark-$\beta$ with $\beta=0$!
+
+\subsection{BDF}
+
+We consider an $m$-step BDF method as given by Wikipedia
+$<$\url{http://en.wikipedia.org/wiki/Backward_differentiation_formula}$>$:
+\begin{equation}
+  {1 \over \Delta t} \sum_{i=0}^m a_i u^{n-i} = b_0 f(t^n,u^n)
+\end{equation}
+for the first oder ODE
+\begin{equation}
+  \partial_tu = f(t,u)
+\end{equation}
+We chose the residuals
+\begin{align}
+  r_0(t,x)&=f(t,x) \\
+  r_1(t,x)&=x
+\end{align}
+and the coefficients $\alpha_{ij}$:
+\begin{equation}\begin{aligned}
+  \alpha_{00}&=b_0 \\
+  \alpha_{i0}&=0    && 1 \leq i \leq m \\
+  \alpha_{i1}&=-a_i && 0 \leq i \leq m
+\end{aligned}\end{equation}
+
+\section{Implementation}
+
+\subsection{\tt MultiStepParameters}
+
+Parameter class providing
+\begin{enumerate}
+\item the number of stages $m$,
+\item the order of the ODE $p \leq m$, and
+\item the coefficients $\alpha_{ij}$, $0 \leq i \leq m$, $0 \leq j \leq p$.
+\end{enumerate}
+
+\subsection{\tt MultiStepGridOperatorSpace}
+
+{\tt GridOperatorSpace} taking a {\tt MultiStepParameters} object and $p+1$
+local operators for the residuals $r_0,\ldots,r_p$.
+\begin{enumerate}
+\item $\Delta t$ and current time $t^n$ are stored internally.
+\item (Private) method {\tt residualAtStep()} takes a step number $i>0$ and a
+  vector of dofs $u^{n-i}$ and computes
+  \begin{equation}
+    \sum_{j=0}^p{\alpha_{ij} \over (\Delta t)^j}r_j(t^{n-i},u^{n-i})
+  \end{equation}
+\item {\tt setTime()} updates the current time $t^n$.
+\item Method {\tt preStep()} receives the dof vectors $u^{n-m},\ldots,u^{n-1}$
+  to compute the constant part of the residual
+  \begin{equation}
+    \sum_{i=1}^m\sum_{j=0}^p{\alpha_{ij} \over (\Delta t)^j}r_j(t^{n-i},u^{n-i})
+  \end{equation}
+  It must be called before calling {\tt residual()} but after {\tt setTime()}.
+\item The {\tt MultiStepGridOperatorSpace} calls {\tt setTime()} on the local
+  operators as necessary.  The local operators should call {\tt setTime()} on
+  any parameter functions they evaluate, as apropriate.
+\item Initially the {\tt MultiStepGridOperatorSpace} may be limited to a
+  certain ODE order $p$, because handling an arbitrary number of local
+  operators of probably different C++ types will be involved.
+\end{enumerate}
+
+\subsection{\tt MultiStepMethod}
+
+This class takes a {\tt MultiStepGridOperatorSpace} object, (possibly) a {\tt
+  MultiStepParameters} object and a solver object (linear or newton) and feed
+the {\tt MultiStepGridOperatorSpace} to the solver.  It will hold the vectors
+of dofs $u^{n-1},\ldots,u^{n-m}$ as shared pointers in a queue and
+automatically handle the management of the queue.
+
+\end{document}
