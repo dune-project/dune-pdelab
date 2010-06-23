@@ -399,6 +399,17 @@ namespace Dune {
         return suggested_dt;
       }
 
+      //! Interpolate constrained values
+      /**
+       * \param stage Stage number in which to evaluate f.
+       * \param xold  Vector with the old values.  Used to obtain the
+       *              non-constrained values.
+       * \param f     Function to evaluate to obtain the contrained values.
+       * \param x     Where to store the combination of xold and the
+       *              interpolated values.
+       *
+       * \note xold and x may not refer to the same object.
+       */
 	  template<typename F, typename X> 
       void interpolate (unsigned stage, const X& xold, F& f, X& x) const
       {
