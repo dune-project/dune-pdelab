@@ -762,7 +762,8 @@ namespace Dune {
       std::set<unsigned int> codimUsed;
 	};
 
-    //! \addtogroup GridFunctionSpace \{
+    //! \addtogroup GridFunctionSpace
+    //! \{
 
     /** \brief Tag indicating a fixed number of unkowns per entity (known at compile time).
      *
@@ -1100,7 +1101,8 @@ namespace Dune {
     // power grid function space
     //=======================================
 
-    //! \addtogroup GridFunctionSpace \{
+    //! \addtogroup GridFunctionSpace
+    //! \{
 
     //! \brief Indicates lexicographics ordering of the unknowns for composite
     //! grid function spaces.
@@ -1529,7 +1531,8 @@ namespace Dune {
       using PowerGridFunctionSpaceBase<T,k,GridFunctionSpaceComponentBlockwiseMapper<1> >::setup;
     };
     
-    //! \addtogroup GridFunctionSpace \{
+    //! \addtogroup GridFunctionSpace
+    //! \{
 
     /// \brief product of identical grid function spaces
     ///
@@ -2441,7 +2444,8 @@ namespace Dune {
                                            T0,T1,T2,T3,T4,T5,T6,T7,T8>::setup;
     };
     
-    //! \addtogroup GridFunctionSpace \{
+    //! \addtogroup GridFunctionSpace
+    //! \{
 
     //! \brief grid function space composed of other grid function spaces
     //!
