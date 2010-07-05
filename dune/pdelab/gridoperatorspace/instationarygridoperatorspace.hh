@@ -359,6 +359,9 @@ namespace Dune {
       }
 
       //! parametrize assembler with a time-stepping method
+      /**
+       * Invokes preStep(start_time, dt, nstages) on each local operator.
+       */
       void preStep (const TimeSteppingParameterInterface<TReal>& method_, TReal time_, TReal dt_)
       {
         method = &method_;
@@ -369,6 +372,9 @@ namespace Dune {
       }
 
       //! parametrize assembler with a time-stepping method
+      /**
+       * Invokes preStep(start_time, dt, nstages) on each local operator.
+       */
       void preStep (TReal time_, TReal dt_)
       {
         time = time_;
@@ -378,12 +384,18 @@ namespace Dune {
       }
 
       //! to be called after step is completed
+      /**
+       * Invokes postStep() on the temporal local operator only.
+       */
       void postStep ()
       {
         lm.postStep();
       }
 
       //! to be called after stage is completed
+      /**
+       * Invokes postStage() on the local operators.
+       */
       void postStage ()
       {
         la.postStage();
@@ -409,6 +421,8 @@ namespace Dune {
        *              interpolated values.
        *
        * \note xold and x may not refer to the same object.
+       *
+       * Invokes setTime(time_of_stage) on f.
        */
 	  template<typename F, typename X> 
       void interpolate (unsigned stage, const X& xold, F& f, X& x) const
@@ -423,7 +437,12 @@ namespace Dune {
         Dune::PDELab::copy_nonconstrained_dofs(*pconstraintsv,xold,x);
       }
 
-      //! set stage number to do next; assemble constant part of residual; r is empty on entry
+      //! set stage number to do next; assemble constant part of residual
+      /**
+       * Must be called before evaluating the residual for a certain stage.
+       * Calls preStage() on the local operators.  Calls setTime() as
+       * necessary on the local operators.
+       */
 	  template<typename X> 
       void preStage (unsigned stage_, const std::vector<X*>& x)
       {
@@ -608,8 +627,12 @@ namespace Dune {
       }
 
 
-      //! set stage number to do next; assemble constant part of residual; r is empty on entry
+      //! set stage number to do next; assemble constant part of residual
       /**
+       * This is essentially a combination of preStage() and residual() for
+       * the case of an explicit jacobian.  It is mainly used to determine the
+       * time step size from the matrix.
+       *
        * in explicit mode we assume that 
        *  A) the problem is linear in the d_t term
        *  B) the jacobian is block diagonal
@@ -621,6 +644,9 @@ namespace Dune {
        * \param[out] mat the block diagonal Jacobian to be assembled; we assume it is zero on entry!
        * \param[out] alpha temporal part of the residual; we assume it is zero on entry!
        * \param[out] beta spatial part of residual; we assume it is zero on entry!
+       *
+       * Calls preStage() on the local operators, and setTime() as
+       * apropriate.  Assumes that preStep() has been called before.
        */
 	  template<typename X, typename A> 
       void explicit_jacobian_residual (unsigned stage_, const std::vector<X*>& x, A& mat, R& alpha, R& beta)
@@ -843,6 +869,10 @@ namespace Dune {
 	  //! generic evaluation of residual
       /**
        * \param r residual (needs to be cleared before this method is called)
+       *
+       * Invokes setTime(time_of_current_stage) on the local operators.
+       * preStage() must have been called before this method to assemble the
+       * constant part of the residual and to set the current stage number.
        */
 	  template<typename X> 
 	  void residual (const X& x, R& r) const
@@ -1003,6 +1033,11 @@ namespace Dune {
 	  }
 
 	  //! generic application of Jacobian
+      /**
+       * Invokes setTime(time_of_current_stage) on the local operators.
+       * preStage() must have been called before this method to set the
+       * current stage number.
+       */
 	  template<typename X, typename Y> 
 	  void jacobian_apply (X& x, Y& y) const
 	  {
@@ -1146,6 +1181,10 @@ namespace Dune {
       /**
        * \param x Where (in the space spanned by the dofs) to evaluate the Jacobian
        * \param a Jacobian (needs to be cleared before passed to this method)
+       *
+       * Invokes setTime(time_of_current_stage) on the local operators.
+       * preStage() must have been called before this method to set the
+       * current stage number.
        */
 	  template<typename X, typename A> 
 	  void jacobian (const X& x, A& a) const
