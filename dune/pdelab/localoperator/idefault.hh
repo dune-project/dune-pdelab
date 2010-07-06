@@ -17,7 +17,7 @@ namespace Dune
          * OneStepMethod to advance one step in time is as follows:
          * <ol>
          * <li>Call the method preStep(start_time_of_step, step_size, nstages)
-         *     or on each localoperator.
+         *     on each localoperator.
          * <li>For each stage1 in [1, nstages]
          *     <ol>
          *     <li>Call preStage(time_of_stage1, number_of_stage1) on each
