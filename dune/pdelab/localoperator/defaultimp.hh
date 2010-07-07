@@ -30,6 +30,13 @@ namespace Dune {
     class NumericalJacobianVolume
     {
     public:
+      NumericalJacobianVolume ()
+        : epsilon(1e-11)
+      {}
+
+      NumericalJacobianVolume (double epsilon_)
+        : epsilon(epsilon_)
+      {}
 
       //! compute local jacobian of the volume term
       template<typename EG, typename LFSU, typename X, typename LFSV,
@@ -39,7 +46,6 @@ namespace Dune {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         LocalMatrix<R>& mat) const
       {
-        const R epsilon=1E-11; // problem: this depends on data type R!
         const int m=lfsv.size();
         const int n=lfsu.size();
 
@@ -60,6 +66,7 @@ namespace Dune {
       }
 
     private:
+      const double epsilon; // problem: this depends on data type R!
       Imp& asImp () { return static_cast<Imp &> (*this); }
       const Imp& asImp () const { return static_cast<const Imp &>(*this); }
     };
@@ -77,6 +84,13 @@ namespace Dune {
     class NumericalJacobianVolumePostSkeleton
     {
     public:
+      NumericalJacobianVolumePostSkeleton ()
+        : epsilon(1e-11)
+      {}
+
+      NumericalJacobianVolumePostSkeleton (double epsilon_)
+        : epsilon(epsilon_)
+      {}
 
       //! compute local post-skeleton jacobian of the volume term
       template<typename EG, typename LFSU, typename X, typename LFSV,
@@ -86,7 +100,6 @@ namespace Dune {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         LocalMatrix<R>& mat) const
       {
-        const R epsilon=1E-11; // problem: this depends on data type R!
         const int m=lfsv.size();
         const int n=lfsu.size();
 
@@ -107,6 +120,7 @@ namespace Dune {
       }
 
     private:
+      const double epsilon; // problem: this depends on data type R!
       Imp& asImp () { return static_cast<Imp &> (*this); }
       const Imp& asImp () const { return static_cast<const Imp &>(*this); }
     };
@@ -122,6 +136,13 @@ namespace Dune {
     class NumericalJacobianSkeleton
     {
     public:
+      NumericalJacobianSkeleton ()
+        : epsilon(1e-11)
+      {}
+
+      NumericalJacobianSkeleton (double epsilon_)
+        : epsilon(epsilon_)
+      {}
 
       //! compute local jacobian of the skeleton term
       template<typename IG, typename LFSU, typename X, typename LFSV,
@@ -133,7 +154,6 @@ namespace Dune {
         LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn,
         LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn) const
       {
-        const R epsilon=1E-11; // problem: this depends on data type R!
         const int m_s=lfsv_s.size();
         const int m_n=lfsv_n.size();
         const int n_s=lfsu_s.size();
@@ -182,6 +202,7 @@ namespace Dune {
       }
 
     private:
+      const double epsilon; // problem: this depends on data type R!
       Imp& asImp () { return static_cast<Imp &> (*this); }
       const Imp& asImp () const { return static_cast<const Imp &>(*this); }
     };
@@ -197,6 +218,13 @@ namespace Dune {
     class NumericalJacobianBoundary
     {
     public:
+      NumericalJacobianBoundary ()
+        : epsilon(1e-11)
+      {}
+
+      NumericalJacobianBoundary (double epsilon_)
+        : epsilon(epsilon_)
+      {}
 
       //! compute local jacobian of the boundary term
       template<typename IG, typename LFSU, typename X, typename LFSV,
@@ -206,7 +234,6 @@ namespace Dune {
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         LocalMatrix<R>& mat_ss) const
       {
-        const R epsilon=1E-11; // problem: this depends on data type R!
         const int m_s=lfsv_s.size();
         const int n_s=lfsu_s.size();
 
@@ -230,6 +257,7 @@ namespace Dune {
       }
 
     private:
+      const double epsilon; // problem: this depends on data type R!
       Imp& asImp () { return static_cast<Imp &> (*this); }
       const Imp& asImp () const { return static_cast<const Imp &>(*this); }
     };
@@ -250,6 +278,13 @@ namespace Dune {
     class NumericalJacobianApplyVolume
     {
     public:
+      NumericalJacobianApplyVolume ()
+        : epsilon(1e-11)
+      {}
+
+      NumericalJacobianApplyVolume (double epsilon_)
+        : epsilon(epsilon_)
+      {}
 
       //! apply local jacobian of the volume term
       template<typename EG, typename LFSU, typename X, typename LFSV,
@@ -260,7 +295,6 @@ namespace Dune {
         Y& y) const
       {
         typedef typename X::value_type R;
-        const R epsilon=1E-11; // problem: this depends on data type R!
         const int m=lfsv.size();
         const int n=lfsu.size();
 
@@ -281,6 +315,7 @@ namespace Dune {
       }
 
     private:
+      const double epsilon; // problem: this depends on data type R!
       Imp& asImp () { return static_cast<Imp &> (*this); }
       const Imp& asImp () const { return static_cast<const Imp &>(*this); }
     };
@@ -298,6 +333,13 @@ namespace Dune {
     class NumericalJacobianApplyVolumePostSkeleton
     {
     public:
+      NumericalJacobianApplyVolumePostSkeleton ()
+        : epsilon(1e-11)
+      {}
+
+      NumericalJacobianApplyVolumePostSkeleton (double epsilon_)
+        : epsilon(epsilon_)
+      {}
 
       //! apply local jacobian of the volume term (post skeleton part)
       template<typename EG, typename LFSU, typename X, typename LFSV,
@@ -308,7 +350,6 @@ namespace Dune {
         Y& y) const
       {
         typedef typename X::value_type R;
-        const R epsilon=1E-11; // problem: this depends on data type R!
         const int m=lfsv.size();
         const int n=lfsu.size();
 
@@ -329,6 +370,7 @@ namespace Dune {
       }
 
     private:
+      const double epsilon; // problem: this depends on data type R!
       Imp& asImp () {return static_cast<Imp &> (*this);}
       const Imp& asImp () const {return static_cast<const Imp &>(*this);}
     };
@@ -344,6 +386,13 @@ namespace Dune {
     class NumericalJacobianApplySkeleton
     {
     public:
+      NumericalJacobianApplySkeleton ()
+        : epsilon(1e-11)
+      {}
+
+      NumericalJacobianApplySkeleton (double epsilon_)
+        : epsilon(epsilon_)
+      {}
 
       //! apply local jacobian of the skeleton term
       template<typename IG, typename LFSU, typename X, typename LFSV,
@@ -355,7 +404,6 @@ namespace Dune {
         Y& y_s, Y& y_n) const
       {
         typedef typename X::value_type R;
-        const R epsilon=1E-11; // problem: this depends on data type R!
         const int m_s=lfsv_s.size();
         const int m_n=lfsv_n.size();
         const int n_s=lfsu_s.size();
@@ -404,6 +452,7 @@ namespace Dune {
       }
 
     private:
+      const double epsilon; // problem: this depends on data type R!
       Imp& asImp () { return static_cast<Imp &> (*this); }
       const Imp& asImp () const { return static_cast<const Imp &>(*this); }
     };
@@ -419,6 +468,13 @@ namespace Dune {
     class NumericalJacobianApplyBoundary
     {
     public:
+      NumericalJacobianApplyBoundary ()
+        : epsilon(1e-11)
+      {}
+
+      NumericalJacobianApplyBoundary (double epsilon_)
+        : epsilon(epsilon_)
+      {}
 
       //! apply local jacobian of the boundaryterm
       template<typename IG, typename LFSU, typename X, typename LFSV,
@@ -429,7 +485,6 @@ namespace Dune {
         Y& y_s) const
       {
         typedef typename X::value_type R;
-        const R epsilon=1E-11; // problem: this depends on data type R!
         const int m_s=lfsv_s.size();
         const int n_s=lfsu_s.size();
 
@@ -453,6 +508,7 @@ namespace Dune {
       }
 
     private:
+      const double epsilon; // problem: this depends on data type R!
       Imp& asImp () { return static_cast<Imp &> (*this); }
       const Imp& asImp () const { return static_cast<const Imp &>(*this); }
     };
