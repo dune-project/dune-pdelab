@@ -539,7 +539,12 @@ namespace Dune {
                                     FloatCmpOps<typename XG::ElementType>());
     }
 
-    // transform residual into transformed basis: r -> r~
+    //! transform residual into transformed basis: r -> r~
+    /**
+     * \code
+#include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * \endcode
+     */
     template<typename CG, typename XG>
     void constrain_residual (const CG& cg, XG& xg)
     {
@@ -557,7 +562,12 @@ namespace Dune {
         B::access(xg,cit->first) = 0;
 	}
 
-    // construct constraints from given boundary condition function
+    //! construct constraints from given boundary condition function
+    /**
+     * \code
+#include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * \endcode
+     */
     template<typename CG, typename XG>
     void copy_constrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
     {
