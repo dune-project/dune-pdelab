@@ -12,35 +12,67 @@ namespace Dune
         //! \{
 
         //! Default flags for all local operators
+        /**
+         * \nosubgrouping
+         */
         class LocalOperatorDefaultFlags
         {
         public:
-            // pattern assembly flags
-            //! \todo
+            //! \name Flags for the sparsity pattern
+            //! \{
+
+            //! \brief Whether to assemble the pattern on the elements,
+            //!        i.e. whether or not pattern_volume() should be called.
             enum { /*! \hideinitializer */ doPatternVolume = false };
-            //! \todo
+            //! \brief Whether to assemble the pattern on the interior
+            //!        intersections, i.e. whether or not pattern_skeleton()
+            //!        should be called.
             enum { /*! \hideinitializer */ doPatternSkeleton = false };
 
-            // residual assembly flags
-            //! \brief Whether not to call the local operators alpha_volume()
-            //!        and jacobian_volume()
+            //! \} Flags for the sparsity pattern
+
+            //! \name Flags for the non-constant part of the residual and the jacobian
+            //! \{
+
+            //! \brief Whether to call the local operator's alpha_volume(),
+            //!        jacobian_apply_volume() and jacobian_volume().
             enum { /*! \hideinitializer */ doAlphaVolume = false };
-            //! \todo
+            //! \brief Whether to call the local operator's
+            //!        alpha_volume_post_skeleton(),
+            //!        jacobian_apply_volume_post_skeleton() and
+            //!        jacobian_volume_post_skeleton().
             enum { /*! \hideinitializer */ doAlphaVolumePostSkeleton = false };
-            //! \todo
+            //! \brief Whether to call the local operator's alpha_skeleton(),
+            //!        jacobian_apply_skeleton() and jacobian_skeleton().
             enum { /*! \hideinitializer */ doAlphaSkeleton = false };
-            //! \todo
+            //! \brief Whether to call the local operator's alpha_boundary(),
+            //!        jacobian_apply_boundary() and jacobian_boundary().
             enum { /*! \hideinitializer */ doAlphaBoundary = false };
-            //! \todo
+
+            //! \} Flags for the non-constant part of the residual and the jacobian
+
+            //! \name Flags for the constant part of the residual
+            //! \{
+
+            //! \brief Whether to call the local operator's lambda_volume().
             enum { /*! \hideinitializer */ doLambdaVolume = false };
-            //! \todo
+            //! \brief Whether to call the local operator's
+            //!        lambda_volume_post_skeleton().
             enum { /*! \hideinitializer */ doLambdaVolumePostSkeleton = false };
-            //! \todo
+            //! \brief Whether to call the local operator's lambda_skeleton().
             enum { /*! \hideinitializer */ doLambdaSkeleton = false };
-            //! \todo
+            //! \brief Whether to call the local operator's lambda_boundary().
             enum { /*! \hideinitializer */ doLambdaBoundary = false };
-            //! \todo
+
+            //! \} Flags for the constant part of the residual
+
+            //! \name Special flags
+            //! \{
+
+            //! \brief Whether to visit the skeleton methods from both sides
             enum { /*! \hideinitializer */ doSkeletonTwoSided = false };
+
+            //! \} Special flags
         };
         //! \} group LocalOperator
     }

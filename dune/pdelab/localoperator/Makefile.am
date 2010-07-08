@@ -10,6 +10,7 @@ common_HEADERS =				\
 	diffusionccfv.hh			\
 	diffusionmixed.hh			\
 	diffusiondg.hh				\
+	interface.hh				\
 	pattern.hh				\
 	poisson.hh				\
 	convectiondiffusion.hh			\
