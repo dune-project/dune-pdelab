@@ -424,11 +424,11 @@ namespace Dune {
           if(v[i][j]==1.0 && sharedDOF[i][j])
             ++count;
 
-      //std::cout<<gv.comm().rank()<<": shared count is"<< count.touint()<<std::endl;
+      std::cout<<gv.comm().rank()<<": shared count is"<< count.touint()<<std::endl;
 
       // Maybe divide by block size?
       BlockProcessor<GFS>::postProcessCount(count);
-      //std::cout<<gv.comm().rank()<<": shared block count is"<< count.touint()<<std::endl;
+      std::cout<<gv.comm().rank()<<": shared block count is"<< count.touint()<<std::endl;
 
       std::vector<GlobalIndex> counts(gfs.gridview().comm().size());
       MPI_Allgather(&count, 1, Generic_MPI_Datatype<GlobalIndex>::get(), &(counts[0]),
@@ -1675,7 +1675,7 @@ namespace Dune {
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
           Dune::Amg::FirstDiagonal> >
           Criterion;
-        typedef Dune::SeqSSOR<MatrixType,VectorType,VectorType> Smoother;
+        typedef SMI<MatrixType,VectorType,VectorType,1> Smoother;
         typedef Dune::BlockPreconditioner<VectorType,VectorType,Comm,Smoother> ParSmoother;
         typedef typename Dune::Amg::SmootherTraits<ParSmoother>::Arguments SmootherArgs;
         typedef Dune::OverlappingSchwarzOperator<MatrixType,VectorType,VectorType,Comm> Operator;
@@ -1690,13 +1690,13 @@ namespace Dune {
         Dune::OverlappingSchwarzScalarProduct<VectorType,Comm> sp(oocc);
         Operator oop(mat, oocc);
         //oocc.copyOwnerToAll(BlockProcessor<GFS>::getVector(r), BlockProcessor<GFS>::getVector(r));
-        AMG amg=AMG(oop, criterion, smootherArgs, 1, 2, 2, false, oocc);
+        AMG amg=AMG(oop, criterion, smootherArgs, 1, steps, steps, false, oocc);
 
         Dune::InverseOperatorResult stat;
         int verb=0;
         if (gfs.gridview().comm().rank()==0) verb=verbose;
 
-        Dune::BiCGSTABSolver<VectorType> solver(oop,sp,amg,reduction,maxiter,verb);
+        SOI<VectorType> solver(oop,sp,amg,reduction,maxiter,verb);
         solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
@@ -1818,7 +1818,7 @@ namespace Dune {
         Criterion criterion(15,2000);
         criterion.setDebugLevel(verbose?3:0);
         Operator oop(mat);
-        AMG amg=AMG(oop, criterion, smootherArgs, 1, 2, 2);
+        AMG amg=AMG(oop, criterion, smootherArgs, 1, steps, steps);
 
         Dune::InverseOperatorResult stat;
 
@@ -1884,6 +1884,60 @@ namespace Dune {
       ISTLBackend_SEQ_BCGS_AMG_SSOR(int smoothsteps=2,
                                     unsigned maxiter_=5000, int verbose_=1)
         : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSSOR, Dune::BiCGSTABSolver>(smoothsteps, maxiter_, verbose_)
+      {}
+    };
+    
+    template<class GFS>
+    class ISTLBackend_SEQ_BCGS_AMG_SOR
+      : public ISTLBackend_SEQ_AMG<GFS, Dune::SeqSOR, Dune::BiCGSTABSolver>
+    {
+
+    public:
+      /**
+       * @brief Constructor
+       * @param smoothsteps The number of steps to use for both pre and post smoothing.
+       * @param maxiter_ The maximum number of iterations allowed.
+       * @param verbose_ The verbosity level to use.
+       */
+      ISTLBackend_SEQ_BCGS_AMG_SOR(int smoothsteps=2,
+                                    unsigned maxiter_=5000, int verbose_=1)
+        : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSOR, Dune::BiCGSTABSolver>(smoothsteps, maxiter_, verbose_)
+      {}
+    };
+
+    template<class GFS>
+    class ISTLBackend_SEQ_LS_AMG_SSOR
+      : public ISTLBackend_SEQ_AMG<GFS, Dune::SeqSSOR, Dune::LoopSolver>
+    {
+
+    public:
+      /**
+       * @brief Constructor
+       * @param smoothsteps The number of steps to use for both pre and post smoothing.
+       * @param maxiter_ The maximum number of iterations allowed.
+       * @param verbose_ The verbosity level to use.
+       */
+      ISTLBackend_SEQ_LS_AMG_SSOR(int smoothsteps=2,
+                                    unsigned maxiter_=5000, int verbose_=1)
+        : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSSOR, Dune::LoopSolver>(smoothsteps, maxiter_, verbose_)
+      {}
+    };
+
+    template<class GFS>
+    class ISTLBackend_SEQ_LS_AMG_SOR
+      : public ISTLBackend_SEQ_AMG<GFS, Dune::SeqSOR, Dune::LoopSolver>
+    {
+
+    public:
+      /**
+       * @brief Constructor
+       * @param smoothsteps The number of steps to use for both pre and post smoothing.
+       * @param maxiter_ The maximum number of iterations allowed.
+       * @param verbose_ The verbosity level to use.
+       */
+      ISTLBackend_SEQ_LS_AMG_SOR(int smoothsteps=2,
+                                    unsigned maxiter_=5000, int verbose_=1)
+        : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSOR, Dune::LoopSolver>(smoothsteps, maxiter_, verbose_)
       {}
     };
   } // namespace PDELab
