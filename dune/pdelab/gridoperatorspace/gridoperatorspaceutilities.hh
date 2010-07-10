@@ -400,12 +400,25 @@ la.pattern_skeleton(lfsu, lfsv, lfsu, lfsv, pattern, pattern, pattern, pattern)
       {
       }
       template<typename LFSU, typename LFSV>
+      static void pattern_volume_post_skeleton
+      ( const LA& la,
+        const LFSU& lfsu, const LFSV& lfsv,
+        LocalSparsityPattern& pattern)
+      {
+      }
+      template<typename LFSU, typename LFSV>
       static void pattern_skeleton (const LA& la, const LFSU& lfsu_s, const LFSV& lfsv_s, 
                                   const LFSU& lfsu_n, const LFSV& lfsv_n, 
                                    LocalSparsityPattern& pattern_ss,
                                    LocalSparsityPattern& pattern_sn,
                                    LocalSparsityPattern& pattern_ns,
                                    LocalSparsityPattern& pattern_nn)
+      {
+      }
+      template<typename LFSU, typename LFSV>
+      static void pattern_boundary(const LA& la,
+                                   const LFSU& lfsu_s, const LFSV& lfsv_s,
+                                   LocalSparsityPattern& pattern_ss)
       {
       }
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
@@ -502,6 +515,14 @@ la.pattern_skeleton(lfsu, lfsv, lfsu, lfsv, pattern, pattern, pattern, pattern)
         la.pattern_volume(lfsu,lfsv,pattern);
       }
       template<typename LFSU, typename LFSV>
+      static void pattern_volume_post_skeleton
+      ( const LA& la,
+        const LFSU& lfsu, const LFSV& lfsv,
+        LocalSparsityPattern& pattern)
+      {
+        la.pattern_volume_post_skeleton(lfsu,lfsv,pattern);
+      }
+      template<typename LFSU, typename LFSV>
       static void pattern_skeleton (const LA& la, const LFSU& lfsu_s, const LFSV& lfsv_s, 
                                   const LFSU& lfsu_n, const LFSV& lfsv_n, 
                                    LocalSparsityPattern& pattern_ss,
@@ -512,6 +533,13 @@ la.pattern_skeleton(lfsu, lfsv, lfsu, lfsv, pattern, pattern, pattern, pattern)
         PatternSkeletonDeprecationCallSwitch<LA, LFSU, LFSV>::
           pattern_skeleton(la, lfsu_s,lfsv_s,lfsu_n,lfsv_n,
                            pattern_ss, pattern_sn, pattern_ns, pattern_nn);
+      }
+      template<typename LFSU, typename LFSV>
+      static void pattern_boundary(const LA& la,
+                                   const LFSU& lfsu_s, const LFSV& lfsv_s,
+                                   LocalSparsityPattern& pattern_ss)
+      {
+        la.pattern_boundary(lfsu_s,lfsv_s,pattern_ss);
       }
 
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>

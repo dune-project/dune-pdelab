@@ -272,8 +272,9 @@ namespace Dune {
               pattern_volume(lm,lfsu,lfsv,localpattern);
 
             // skeleton and boundary pattern
-            if((method->implicit() && LA::doPatternSkeleton) ||
-               LM::doPatternSkeleton)
+            if((method->implicit() && (LA::doPatternSkeleton ||
+                                       LA::doPatternBoundary)) ||
+               LM::doPatternSkeleton || LM::doPatternBoundary)
             {
 
               // local function spaces in neighbor
@@ -284,49 +285,72 @@ namespace Dune {
               for(IntersectionIterator iit = gfsu.gridview().ibegin(*it);
                   iit!=endit; ++iit)
               {
-                // skip if there is no neighbor
-                if (!iit->neighbor()) continue;
-                
-                // bind local function spaces to neighbor element
-                lfsun.bind(*(iit->outside()));
-                lfsvn.bind(*(iit->outside()));
-                
-                LocalSparsityPattern localpattern_sn, localpattern_ns,
-                  localpattern_nn;
-                // spatial part
-                if(method->implicit())
-                  LocalAssemblerCallSwitch<LA,LA::doPatternSkeleton>::
-                    pattern_skeleton(la,lfsu,lfsv,lfsun,lfsvn,
+                // skeleton term
+                if (iit->neighbor() &&
+                    ((method->implicit() && LA::doPatternSkeleton) ||
+                     LM::doPatternSkeleton) )
+                {
+                  // bind local function spaces to neighbor element
+                  lfsun.bind(*(iit->outside()));
+                  lfsvn.bind(*(iit->outside()));
+
+                  LocalSparsityPattern localpattern_sn, localpattern_ns,
+                    localpattern_nn;
+                  // spatial part
+                  if(method->implicit())
+                    LocalAssemblerCallSwitch<LA,LA::doPatternSkeleton>::
+                      pattern_skeleton(la,lfsu,lfsv,lfsun,lfsvn,
+                                       localpattern, localpattern_sn,
+                                       localpattern_ns, localpattern_nn);
+
+                  // temporal part
+                  LocalAssemblerCallSwitch<LM,LM::doPatternSkeleton>::
+                    pattern_skeleton(lm,lfsu,lfsv,lfsun,lfsvn,
                                      localpattern, localpattern_sn,
                                      localpattern_ns, localpattern_nn);
 
-                // temporal part
-                LocalAssemblerCallSwitch<LM,LM::doPatternSkeleton>::
-                  pattern_skeleton(lm,lfsu,lfsv,lfsun,lfsvn,
-                                   localpattern, localpattern_sn,
-                                   localpattern_ns, localpattern_nn);
-                    
-                // translate local to global indices and add to global pattern
-                for (size_t k=0; k<localpattern_sn.size(); ++k)
-                  add_entry(globalpattern,
-                            lfsv.globalIndex(localpattern_sn[k].i()),
-                            lfsun.globalIndex(localpattern_sn[k].j())
-                            );
+                  // translate local to global indices and add to global
+                  // pattern
+                  for (size_t k=0; k<localpattern_sn.size(); ++k)
+                    add_entry(globalpattern,
+                              lfsv.globalIndex(localpattern_sn[k].i()),
+                              lfsun.globalIndex(localpattern_sn[k].j())
+                              );
 
-                for (size_t k=0; k<localpattern_ns.size(); ++k)
-                  add_entry(globalpattern,
-                            lfsvn.globalIndex(localpattern_ns[k].i()),
-                            lfsu.globalIndex(localpattern_ns[k].j())
-                            );
+                  for (size_t k=0; k<localpattern_ns.size(); ++k)
+                    add_entry(globalpattern,
+                              lfsvn.globalIndex(localpattern_ns[k].i()),
+                              lfsu.globalIndex(localpattern_ns[k].j())
+                              );
 
-                for (size_t k=0; k<localpattern_nn.size(); ++k)
-                  add_entry(globalpattern,
-                            lfsvn.globalIndex(localpattern_nn[k].i()),
-                            lfsun.globalIndex(localpattern_nn[k].j())
-                            );
+                  for (size_t k=0; k<localpattern_nn.size(); ++k)
+                    add_entry(globalpattern,
+                              lfsvn.globalIndex(localpattern_nn[k].i()),
+                              lfsun.globalIndex(localpattern_nn[k].j())
+                              );
+                }
+                // boundary term
+                if (iit->boundary()) {
+                  // spatial part
+                  if(method->implicit())
+                    LocalAssemblerCallSwitch<LA,LA::doPatternBoundary>::
+                      pattern_boundary(la,lfsu,lfsv,localpattern);
+
+                  // temporal part
+                  LocalAssemblerCallSwitch<LM,LM::doPatternBoundary>::
+                    pattern_boundary(lm,lfsu,lfsv,localpattern);
+                }
 			  }
             } // if((method->implicit() && LA::doPatternSkeleton) ||
               //    LM::doPatternSkeleton)
+
+            // get local pattern of spatial operator
+            if (method->implicit())
+              LocalAssemblerCallSwitch<LA,LA::doPatternVolumePostSkeleton>::
+                pattern_volume_post_skeleton(la,lfsu,lfsv,localpattern);
+            // add pattern of temporal operator
+            LocalAssemblerCallSwitch<LM,LM::doPatternVolumePostSkeleton>::
+              pattern_volume_post_skeleton(lm,lfsu,lfsv,localpattern);
 
             // translate local to global indices and add to global pattern
             for (size_t k=0; k<localpattern.size(); ++k)

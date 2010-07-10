@@ -96,6 +96,25 @@ namespace Dune {
       //! \{
       //
 
+      //! \brief get an element's contribution to the sparsity pattern after
+      //!        the intersections have been handled
+      /**
+       * \param lfsu    LocalFunctionSpace of the trial GridFunctionSpace.
+       * \param lfsv    LocalFunctionSpace of the test GridFunctionSpace.
+       * \param pattern Local sparsity pattern.
+       *
+       * \note The method should not clear the pattern; it should just add
+       *       its entries to it.
+       *
+       * This method is controlled by the flag \ref doPatternVolume.  For a
+       * given element, it is called *before* the pattern_skeleton() and/or
+       * pattern_boundary() methods are called (if they are called at all).
+       */
+      template<typename LFSU, typename LFSV>
+      void pattern_volume
+      ( const LFSU& lfsu, const LFSV& lfsv,
+        LocalSparsityPattern& pattern);
+
       //! get an element's contribution to the sparsity pattern
       /**
        * \param lfsu    LocalFunctionSpace of the trial GridFunctionSpace.
@@ -105,7 +124,9 @@ namespace Dune {
        * \note The method should not clear the pattern; it should just add
        *       its entries to it.
        *
-       * This method is controlled by the flag \ref doPatternVolume.
+       * This method is controlled by the flag \ref doPatternVolume.  For a
+       * given element, it is called *after* the pattern_skeleton() and/or
+       * pattern_boundary() methods are called (if they are called at all).
        */
       template<typename LFSU, typename LFSV>
       void pattern_volume
@@ -125,15 +146,18 @@ namespace Dune {
        * \param pattern_sn Local sparsity pattern.
        * \param pattern_ns Local sparsity pattern.
        *
-       * \note The method should not clear the pattern; it should just add
-       *       its entries to it.
+       * \note The method should not clear the patterns; it should just add
+       *       its entries to them.
        *
        * \note This method is deprecated, you should implement the
        *       pattern_skeleton() with four pattern arguments instead.  There
        *       should only be either the two-pattern-arguments or the
        *       four-pattern-arguments version be implemented, but not both.
        *
-       * This method is controlled by the flag \ref doPatternSkeleton.
+       * This method is controlled by the flag \ref doPatternSkeleton.  For a
+       * given element, it's calls happen intermingled with the calls to
+       * pattern_boundary(), but after the call to pattern_volume() and before
+       * the call to pattern_volume_post_skeleton().
        */
       template<typename LFSU, typename LFSV>
       void pattern_skeleton
@@ -159,15 +183,18 @@ namespace Dune {
        *                   outside and inside entity.
        * \param pattern_nn Local sparsity pattern for the outside entity.
        *
-       * \note The method should not clear the pattern; it should just add
-       *       its entries to it.
+       * \note The method should not clear the patterns; it should just add
+       *       its entries to them.
        *
        * \note This method superseeds the deprecated pattern_skeleton method
        *       with two pattern arguments.  There should only be either the
        *       two-pattern-arguments or the four-pattern-arguments version be
        *       implemented, but not both.
        *
-       * This method is controlled by the flag \ref doPatternSkeleton.
+       * This method is controlled by the flag \ref doPatternSkeleton.  For a
+       * given element, it's calls happen intermingled with the calls to
+       * pattern_boundary(), but after the call to pattern_volume() and before
+       * the call to pattern_volume_post_skeleton().
        */
       template<typename LFSU, typename LFSV>
       void pattern_skeleton
@@ -175,6 +202,27 @@ namespace Dune {
         const LFSU& lfsu_n, const LFSV& lfsv_n,
         LocalSparsityPattern& pattern_ss, LocalSparsityPattern& pattern_sn,
         LocalSparsityPattern& pattern_ns, LocalSparsityPattern& pattern_nn);
+
+      //! get a boundary intersection's contribution to the sparsity pattern
+      /**
+       * \param lfsu_s     LocalFunctionSpace of the trial GridFunctionSpace
+       *                   in the inside entity.
+       * \param lfsv_s     LocalFunctionSpace of the test GridFunctionSpace
+       *                   in the inside entity.
+       * \param pattern_ss Local sparsity pattern for the inside entity.
+       *
+       * \note The method should not clear the pattern; it should just add
+       *       its entries to it.
+       *
+       * This method is controlled by the flag \ref doPatternBoundary.  For a
+       * given element, it's calls happen intermingled with the calls to
+       * pattern_skeleton(), but after the call to pattern_volume() and before
+       * the call to pattern_volume_post_skeleton().
+       */
+      template<typename LFSU, typename LFSV>
+      void pattern_boundary
+      ( const LFSU& lfsu_s, const LFSV& lfsv_s,
+        LocalSparsityPattern& pattern_ss);
 
       //! \} Methods for the sparsity pattern
 

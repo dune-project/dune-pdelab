@@ -24,10 +24,18 @@ namespace Dune
             //! \brief Whether to assemble the pattern on the elements,
             //!        i.e. whether or not pattern_volume() should be called.
             enum { /*! \hideinitializer */ doPatternVolume = false };
+            //! \brief Whether to assemble the pattern on the elements after
+            //!        the skeleton has been handled, i.e. whether or not
+            //!        pattern_volume_post_skeleton() should be called.
+            enum { /*! \hideinitializer */ doPatternVolumePostSkeleton = false };
             //! \brief Whether to assemble the pattern on the interior
             //!        intersections, i.e. whether or not pattern_skeleton()
             //!        should be called.
             enum { /*! \hideinitializer */ doPatternSkeleton = false };
+            //! \brief Whether to assemble the pattern on the boundary
+            //!        intersections, i.e. whether or not pattern_boundary()
+            //!        should be called.
+            enum { /*! \hideinitializer */ doPatternBoundary = false };
 
             //! \} Flags for the sparsity pattern
 
