@@ -39,7 +39,10 @@ namespace Dune {
       // define sparsity pattern connecting self and neighbor dofs
       template<typename LFSU, typename LFSV>
       void pattern_skeleton (const LFSU& lfsu_s, const LFSV& lfsv_s, const LFSU& lfsu_n, const LFSV& lfsv_n, 
-                             LocalSparsityPattern& pattern_sn, LocalSparsityPattern& pattern_ns) const
+                            LocalSparsityPattern& pattern_ss,
+                            LocalSparsityPattern& pattern_sn,
+                            LocalSparsityPattern& pattern_ns,
+                            LocalSparsityPattern& pattern_nn) const
       {
         for (unsigned int i=0; i<lfsv_s.size(); ++i)
           for (unsigned int j=0; j<lfsu_n.size(); ++j)
