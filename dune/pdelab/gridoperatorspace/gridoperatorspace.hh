@@ -120,28 +120,20 @@ namespace Dune {
 			lfsv.bind(*it);
 
             // get local pattern of operator
-            {
-              LocalSparsityPattern localpattern;
-              LocalAssemblerCallSwitch<LA,LA::doPatternVolume>::
-                pattern_volume(la,lfsu,lfsv,localpattern);
-              
-              // translate local to global indices and add to global pattern
-              for (size_t k=0; k<localpattern.size(); ++k)
-                add_entry(globalpattern,
-                          lfsv.globalIndex(localpattern[k].i()),
-                          lfsu.globalIndex(localpattern[k].j())
-                          );
-            }
+            LocalSparsityPattern localpattern;
+            LocalAssemblerCallSwitch<LA,LA::doPatternVolume>::
+              pattern_volume(la,lfsu,lfsv,localpattern);
 
             // skeleton and boundary pattern
-            if (!LA::doPatternSkeleton) continue;
+            if(LA::doPatternSkeleton) {
 
-            // local function spaces in neighbor
-            LFSU lfsun(gfsu);
-            LFSV lfsvn(gfsv);
+              // local function spaces in neighbor
+              LFSU lfsun(gfsu);
+              LFSV lfsvn(gfsv);
 
-            IntersectionIterator endit = gfsu.gridview().iend(*it);
-            for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); iit!=endit; ++iit)
+              IntersectionIterator endit = gfsu.gridview().iend(*it);
+              for(IntersectionIterator iit = gfsu.gridview().ibegin(*it);
+                  iit!=endit; ++iit)
               {
                 // skip if there is no neighbor
                 if (!iit->neighbor()) continue;
@@ -151,9 +143,12 @@ namespace Dune {
                 lfsvn.bind(*(iit->outside()));
                 
                 // get pattern
-                LocalSparsityPattern localpattern_sn, localpattern_ns;
+                LocalSparsityPattern localpattern_sn, localpattern_ns,
+                  localpattern_nn;
                 LocalAssemblerCallSwitch<LA,LA::doPatternSkeleton>::
-                  pattern_skeleton(la,lfsu,lfsv,lfsun,lfsvn,localpattern_sn,localpattern_ns);
+                  pattern_skeleton(la,lfsu,lfsv,lfsun,lfsvn,
+                                   localpattern, localpattern_sn,
+                                   localpattern_ns, localpattern_nn);
 
                 // translate local to global indices and add to global pattern
                 for (size_t k=0; k<localpattern_sn.size(); ++k)
@@ -167,7 +162,21 @@ namespace Dune {
                             lfsvn.globalIndex(localpattern_ns[k].i()),
                             lfsu.globalIndex(localpattern_ns[k].j())
                             );
+
+                for (size_t k=0; k<localpattern_nn.size(); ++k)
+                  add_entry(globalpattern,
+                            lfsvn.globalIndex(localpattern_nn[k].i()),
+                            lfsun.globalIndex(localpattern_nn[k].j())
+                            );
 			  }
+            } // if(LA::doPatternSkeleton)
+
+            // translate local to global indices and add to global pattern
+            for (size_t k=0; k<localpattern.size(); ++k)
+              add_entry(globalpattern,
+                        lfsv.globalIndex(localpattern[k].i()),
+                        lfsu.globalIndex(localpattern[k].j())
+                        );
           }
       }
 
