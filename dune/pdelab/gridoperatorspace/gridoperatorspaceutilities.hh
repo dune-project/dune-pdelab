@@ -246,9 +246,10 @@ la.pattern_skeleton(lfsu, lfsv, lfsu, lfsv, pattern, pattern)
       // expressions as its arguments.  So we take the function call as the
       // left argument of the comma operator, and some arbitrary value whith a
       // size > 0 as the right argument of the comma operator.  The result is
-      // the right argument, and we can apply the sizeof operator.
+      // the right argument, and we can apply the sizeof operator.  That is
+      // the theory.
       //
-      // That the theory.  In reality, g++ (4.4 at least, svn for 4.6 is
+      // In reality however, g++ (4.4 at least, svn for 4.6 is
       // fixed) has a bug which lets it confuse specializations of this
       // template even for different class names as long as the name of the
       // method (pattern_skeleton in this case) matches.  The workaround is to
