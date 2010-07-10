@@ -586,6 +586,11 @@ namespace Dune {
                                 // skeleton evaluation
                                 LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
                                   alpha_skeleton(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,lfsun,xn,lfsvn,rl_a,rn);
+                                LocalAssemblerCallSwitch<LA,LA::doLambdaSkeleton>::
+                                  lambda_skeleton
+                                  (la,IntersectionGeometry<Intersection>
+                                             (*iit,intersection_index),
+                                   lfsv,lfsvn,rl_a,rn);
                             
                                 // accumulate result (note: r needs to be cleared outside)
                                 for (size_t k=0; k<rn.size(); ++k) rn[k] *= b[i]*dt;
@@ -791,6 +796,11 @@ namespace Dune {
                                 // skeleton evaluation
                                 LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
                                   alpha_skeleton(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,lfsun,xn,lfsvn,rl_a,rn);
+                                LocalAssemblerCallSwitch<LA,LA::doLambdaSkeleton>::
+                                  lambda_skeleton
+                                  (la,IntersectionGeometry<Intersection>
+                                           (*iit,intersection_index),
+                                   lfsv,lfsvn,rl_a,rn);
                             
                                 // accumulate result (note: r needs to be cleared outside)
                                 for (size_t k=0; k<rn.size(); ++k) rn[k] *= -b[i];
@@ -993,6 +1003,11 @@ namespace Dune {
                             // skeleton evaluation
                             LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
                               alpha_skeleton(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,lfsun,xn,lfsvn,rl_a,rn);
+                            LocalAssemblerCallSwitch<LA,LA::doLambdaSkeleton>::
+                              lambda_skeleton
+                              (la,IntersectionGeometry<Intersection>
+                                       (*iit,intersection_index),
+                               lfsv,lfsvn,rl_a,rn);
                             
                             // accumulate result (note: r needs to be cleared outside)
                             for (size_t i=0; i<rn.size(); ++i) rn[i] *= b_rr*dt;

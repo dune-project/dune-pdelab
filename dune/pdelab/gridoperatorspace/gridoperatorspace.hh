@@ -271,6 +271,11 @@ namespace Dune {
                             // skeleton evaluation
                             LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
                               alpha_skeleton(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,lfsun,xn,lfsvn,rl,rn);
+                            LocalAssemblerCallSwitch<LA,LA::doLambdaSkeleton>::
+                              lambda_skeleton
+                              (la,IntersectionGeometry<Intersection>
+                                       (*iit,intersection_index),
+                               lfsv,lfsvn,rl,rn);
                             
                             // accumulate result (note: r needs to be cleared outside)
                             lfsvn.vadd(rn,r);

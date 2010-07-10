@@ -248,6 +248,12 @@ namespace Dune {
       static void lambda_volume_post_skeleton (const LA& la, const EG& eg, const LFSV& lfsv, R& r)
       {
       }
+      template<typename IG, typename LFSV, typename R>
+      static void lambda_skeleton(const LA& la, const IG& ig,
+                                  const LFSV& lfsv_s, const LFSV& lfsv_n,
+                                  R& r_s, R& r_n)
+      {
+      }
  	  template<typename IG, typename LFSV, typename R>
       static void lambda_boundary (const LA& la, const IG& ig, const LFSV& lfsv, R& r)
       {
@@ -348,6 +354,13 @@ namespace Dune {
       static void lambda_volume_post_skeleton (const LA& la, const EG& eg, const LFSV& lfsv, R& r)
       {
         la.lambda_volume_post_skeleton(eg,lfsv,r);
+      }
+      template<typename IG, typename LFSV, typename R>
+      static void lambda_skeleton(const LA& la, const IG& ig,
+                                  const LFSV& lfsv_s, const LFSV& lfsv_n,
+                                  R& r_s, R& r_n)
+      {
+        la.lambda_skeleton(ig, lfsv_s, lfsv_n, r_s, r_n);
       }
  	  template<typename IG, typename LFSV, typename R>
       static void lambda_boundary (const LA& la, const IG& ig, const LFSV& lfsv, R& r)

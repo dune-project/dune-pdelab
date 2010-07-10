@@ -323,6 +323,32 @@ namespace Dune {
       template<typename EG, typename LFSV, typename R>
       void lambda_volume_post_skeleton(const EG& eg, const LFSV& lfsv, R& r);
 
+      //! get an internal intersections's contribution to lambda
+      /**
+       * \param ig     IntersectionGeometry describing the intersection.
+       *               inside entity.
+       * \param lfsv_s LocalFunctionSpace of the test GridFunctionSpace in the
+       *               inside entity.
+       * \param lfsv_n LocalFunctionSpace of the test GridFunctionSpace in the
+       *               outside entity.
+       * \param r_s    Local part of the residual in the inside entity.
+       * \param r_n    Local part of the residual in the outside entity.
+       *
+       * \note \c r_s and \c r_n are of type std::vector.
+       *
+       * \note The method should not clear \c r_s and \c r_n; it should just
+       *       add its entries to them.
+       *
+       * This method is controlled by the flag \ref doLambdaSkeleton.  For a
+       * given element, it's calls happen intermingled with the calls to
+       * lambda_boundary(), but after the call to lambda_volume() and before
+       * the call to lambda_volume_post_skeleton().
+       */
+      template<typename IG, typename LFSV, typename R>
+      void lambda_skeleton(const IG& ig,
+                           const LFSV& lfsv_s, const LFSV& lfsv_n,
+                           R& r_s, R& r_n);
+
       //! get a boundary intersections's contribution to lambda
       /**
        * \param ig     IntersectionGeometry describing the intersection.
