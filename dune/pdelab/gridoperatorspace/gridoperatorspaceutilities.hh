@@ -247,6 +247,15 @@ la.pattern_skeleton(lfsu, lfsv, lfsu, lfsv, pattern, pattern)
       // left argument of the comma operator, and some arbitrary value whith a
       // size > 0 as the right argument of the comma operator.  The result is
       // the right argument, and we can apply the sizeof operator.
+      //
+      // That the theory.  In reality, g++ (4.4 at least, svn for 4.6 is
+      // fixed) has a bug which lets it confuse specializations of this
+      // template even for different class names as long as the name of the
+      // method (pattern_skeleton in this case) matches.  The workaround is to
+      // make the second argument of the comma-operator differ for different
+      // traits classes.  To minimize the likelyhood of some other programmer
+      // writing a traits class testing for a method pattern_skeleton, we use
+      // a random value here.
       typename enable_if<sizeof( static_cast<LA*const>(0)->pattern_skeleton
                                  ( *static_cast<LFSU*const>(0),
                                    *static_cast<LFSV*const>(0),
@@ -254,7 +263,7 @@ la.pattern_skeleton(lfsu, lfsv, lfsu, lfsv, pattern, pattern)
                                    *static_cast<LFSV*const>(0),
                                    *static_cast<LocalSparsityPattern*>(0),
                                    *static_cast<LocalSparsityPattern*>(0)),
-                                 0 )>::type >
+                                 0xd124f21d )>::type >
       : public true_type
     { };
 
@@ -287,15 +296,8 @@ la.pattern_skeleton(lfsu, lfsv, lfsu, lfsv, pattern, pattern, pattern, pattern)
     template<typename LA, typename LFSU, typename LFSV>
     struct LocalOperatorHasNewPatternSkeleton
     < LA, LFSU, LFSV,
-      // The parenthesis after the following sizeof do not enclose an argument
-      // list -- they are for scoping only and enclose a comma-expression.
-      // This is necessary because pattern_skeleton() will most probably yield
-      // an expression of type void, and it is illegal to apply the sizeof
-      // operator to void.  However, the comma operator can have void
-      // expressions as its arguments.  So we take the function call as the
-      // left argument of the comma operator, and some arbitrary value whith a
-      // size > 0 as the right argument of the comma operator.  The result is
-      // the right argument, and we can apply the sizeof operator.
+      // Read the comment in LocalOperatorHasNewPatternSkeleton.  It explains
+      // the construct here and how to work around a related g++ compiler bug.
       typename enable_if<sizeof( static_cast<LA*const>(0)->pattern_skeleton
                                  ( *static_cast<LFSU*const>(0),
                                    *static_cast<LFSV*const>(0),
@@ -305,7 +307,7 @@ la.pattern_skeleton(lfsu, lfsv, lfsu, lfsv, pattern, pattern, pattern, pattern)
                                    *static_cast<LocalSparsityPattern*>(0),
                                    *static_cast<LocalSparsityPattern*>(0),
                                    *static_cast<LocalSparsityPattern*>(0)),
-                                 0 )>::type >
+                                 0xff4bd551 )>::type >
       : public true_type
     { };
 
