@@ -96,8 +96,7 @@ namespace Dune {
       //! \{
       //
 
-      //! \brief get an element's contribution to the sparsity pattern after
-      //!        the intersections have been handled
+      //! get an element's contribution to the sparsity pattern
       /**
        * \param lfsu    LocalFunctionSpace of the trial GridFunctionSpace.
        * \param lfsv    LocalFunctionSpace of the test GridFunctionSpace.
@@ -115,7 +114,8 @@ namespace Dune {
       ( const LFSU& lfsu, const LFSV& lfsv,
         LocalSparsityPattern& pattern);
 
-      //! get an element's contribution to the sparsity pattern
+      //! \brief get an element's contribution to the sparsity pattern after
+      //!        the intersections have been handled
       /**
        * \param lfsu    LocalFunctionSpace of the trial GridFunctionSpace.
        * \param lfsv    LocalFunctionSpace of the test GridFunctionSpace.
@@ -125,11 +125,11 @@ namespace Dune {
        *       its entries to it.
        *
        * This method is controlled by the flag \ref doPatternVolume.  For a
-       * given element, it is called *after* the pattern_skeleton() and/or
+       * given element, it is called *before* the pattern_skeleton() and/or
        * pattern_boundary() methods are called (if they are called at all).
        */
       template<typename LFSU, typename LFSV>
-      void pattern_volume
+      void pattern_volume_post_skeleton
       ( const LFSU& lfsu, const LFSV& lfsv,
         LocalSparsityPattern& pattern);
 
