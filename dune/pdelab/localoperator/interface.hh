@@ -3,8 +3,6 @@
 #ifndef DUNE_PDELAB_LOCALOPERATOR_INTERFACE_HH
 #define DUNE_PDELAB_LOCALOPERATOR_INTERFACE_HH
 
-#include <dune/common/deprecated.hh>
-
 #include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include <dune/pdelab/gridoperatorspace/localmatrix.hh>
 #include <dune/pdelab/localoperator/flags.hh>
@@ -149,11 +147,6 @@ namespace Dune {
        * \note The method should not clear the patterns; it should just add
        *       its entries to them.
        *
-       * \note This method is deprecated, you should implement the
-       *       pattern_skeleton() with four pattern arguments instead.  There
-       *       should only be either the two-pattern-arguments or the
-       *       four-pattern-arguments version be implemented, but not both.
-       *
        * This method is controlled by the flag \ref doPatternSkeleton.  For a
        * given element, it's calls happen intermingled with the calls to
        * pattern_boundary(), but after the call to pattern_volume() and before
@@ -164,44 +157,7 @@ namespace Dune {
       ( const LFSU& lfsu_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const LFSV& lfsv_n,
         LocalSparsityPattern& pattern_sn,
-        LocalSparsityPattern& pattern_ns) DUNE_DEPRECATED;
-
-      //! get an internal intersection's contribution to the sparsity pattern
-      /**
-       * \param lfsu_s     LocalFunctionSpace of the trial GridFunctionSpace
-       *                   in the inside entity.
-       * \param lfsv_s     LocalFunctionSpace of the test GridFunctionSpace
-       *                   in the inside entity.
-       * \param lfsu_n     LocalFunctionSpace of the trial GridFunctionSpace
-       *                   in the outside entity.
-       * \param lfsv_n     LocalFunctionSpace of the test GridFunctionSpace
-       *                   in the outside entity.
-       * \param pattern_ss Local sparsity pattern for the inside entity.
-       * \param pattern_sn Local sparsity pattern for the interaction between
-       *                   inside and outside entity.
-       * \param pattern_ns Local sparsity pattern for the interaction between
-       *                   outside and inside entity.
-       * \param pattern_nn Local sparsity pattern for the outside entity.
-       *
-       * \note The method should not clear the patterns; it should just add
-       *       its entries to them.
-       *
-       * \note This method superseeds the deprecated pattern_skeleton method
-       *       with two pattern arguments.  There should only be either the
-       *       two-pattern-arguments or the four-pattern-arguments version be
-       *       implemented, but not both.
-       *
-       * This method is controlled by the flag \ref doPatternSkeleton.  For a
-       * given element, it's calls happen intermingled with the calls to
-       * pattern_boundary(), but after the call to pattern_volume() and before
-       * the call to pattern_volume_post_skeleton().
-       */
-      template<typename LFSU, typename LFSV>
-      void pattern_skeleton
-      ( const LFSU& lfsu_s, const LFSV& lfsv_s,
-        const LFSU& lfsu_n, const LFSV& lfsv_n,
-        LocalSparsityPattern& pattern_ss, LocalSparsityPattern& pattern_sn,
-        LocalSparsityPattern& pattern_ns, LocalSparsityPattern& pattern_nn);
+        LocalSparsityPattern& pattern_ns);
 
       //! get a boundary intersection's contribution to the sparsity pattern
       /**

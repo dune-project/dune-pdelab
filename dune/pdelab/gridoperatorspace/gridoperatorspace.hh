@@ -142,12 +142,10 @@ namespace Dune {
                   lfsvn.bind(*(iit->outside()));
 
                   // get pattern
-                  LocalSparsityPattern localpattern_sn, localpattern_ns,
-                    localpattern_nn;
+                  LocalSparsityPattern localpattern_sn, localpattern_ns;
                   LocalAssemblerCallSwitch<LA,LA::doPatternSkeleton>::
                     pattern_skeleton(la,lfsu,lfsv,lfsun,lfsvn,
-                                     localpattern, localpattern_sn,
-                                     localpattern_ns, localpattern_nn);
+                                     localpattern_sn, localpattern_ns);
 
                   // translate local to global indices and add to global
                   // pattern
@@ -161,12 +159,6 @@ namespace Dune {
                     add_entry(globalpattern,
                               lfsvn.globalIndex(localpattern_ns[k].i()),
                               lfsu.globalIndex(localpattern_ns[k].j())
-                              );
-
-                  for (size_t k=0; k<localpattern_nn.size(); ++k)
-                    add_entry(globalpattern,
-                              lfsvn.globalIndex(localpattern_nn[k].i()),
-                              lfsun.globalIndex(localpattern_nn[k].j())
                               );
                 }
 

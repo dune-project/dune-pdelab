@@ -5,9 +5,7 @@
 
 #include <vector>
 
-#include <dune/common/static_assert.hh>
 #include <dune/common/tuples.hh>
-#include <dune/common/typetraits.hh>
 
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridoperatorspace/localmatrix.hh>
@@ -204,194 +202,6 @@ namespace Dune {
 	  }
 	};
 
-    //////////////////////////////////////////////////////////////////////
-    //
-    //  Stuff for dealing with pattern_skeleton
-    //
-
-    //! Determine whether a local operator has the old style pattern_skeleton()
-    /**
-     * This template determines whether \c LA has an old style (deprecated)
-     * pattern_skeleton() method, i.e. one which may be called as
-     * \code
-la.pattern_skeleton(lfsu, lfsv, lfsu, lfsv, pattern, pattern)
-     * \endcode
-     * where \c la is of type \c const \c LA, \c lfsu is of type \c const \c
-     * LFSU, \c lfsv is of type \c const \c LFSV, and \c pattern is of type
-     * LocalSparsityPattern.
-     *
-     * If such a method exists, this class derives from true_type, otherwise
-     * it derives from false_type.
-     *
-     * \tparam LA   Type of LocalOperator.
-     * \tparam LFSU Type of trial LocalFunctionSpace.
-     * \tparam LFSV Type of test LocalFunctionSpace.
-     *
-     * \note The last (unnamed) template parameter is an implementation detail
-     *       -- when instanciating this class, you should omit this parameter
-     *       from the template parameter list.
-     */
-    template<typename LA, typename LFSU, typename LFSV, typename = void>
-    struct LocalOperatorHasOldPatternSkeleton
-      : public false_type
-    { };
-    template<typename LA, typename LFSU, typename LFSV>
-    struct LocalOperatorHasOldPatternSkeleton
-    < LA, LFSU, LFSV,
-      // The parenthesis after the following sizeof do not enclose an argument
-      // list -- they are for scoping only and enclose a comma-expression.
-      // This is necessary because pattern_skeleton() will most probably yield
-      // an expression of type void, and it is illegal to apply the sizeof
-      // operator to void.  However, the comma operator can have void
-      // expressions as its arguments.  So we take the function call as the
-      // left argument of the comma operator, and some arbitrary value whith a
-      // size > 0 as the right argument of the comma operator.  The result is
-      // the right argument, and we can apply the sizeof operator.  That is
-      // the theory.
-      //
-      // In reality however, g++ (4.4 at least, svn for 4.6 is
-      // fixed) has a bug which lets it confuse specializations of this
-      // template even for different class names as long as the name of the
-      // method (pattern_skeleton in this case) matches.  The workaround is to
-      // make the second argument of the comma-operator differ for different
-      // traits classes.  To minimize the likelyhood of some other programmer
-      // writing a traits class testing for a method pattern_skeleton, we use
-      // a random value here.
-      typename enable_if<sizeof( static_cast<LA*const>(0)->pattern_skeleton
-                                 ( *static_cast<LFSU*const>(0),
-                                   *static_cast<LFSV*const>(0),
-                                   *static_cast<LFSU*const>(0),
-                                   *static_cast<LFSV*const>(0),
-                                   *static_cast<LocalSparsityPattern*>(0),
-                                   *static_cast<LocalSparsityPattern*>(0)),
-                                 0xd124f21d )>::type >
-      : public true_type
-    { };
-
-    //! Determine whether a local operator has the new style pattern_skeleton()
-    /**
-     * This template determines whether \c LA has an new style
-     * pattern_skeleton() method, i.e. one which may be called as
-     * \code
-la.pattern_skeleton(lfsu, lfsv, lfsu, lfsv, pattern, pattern, pattern, pattern)
-     * \endcode
-     * where \c la is of type \c const \c LA, \c lfsu is of type \c const \c
-     * LFSU, \c lfsv is of type \c const \c LFSV, and \c pattern is of type
-     * LocalSparsityPattern.
-     *
-     * If such a method exists, this class derives from true_type, otherwise
-     * it derives from false_type.
-     *
-     * \tparam LA   Type of LocalOperator.
-     * \tparam LFSU Type of trial LocalFunctionSpace.
-     * \tparam LFSV Type of test LocalFunctionSpace.
-     *
-     * \note The last (unnamed) template parameter is an implementation detail
-     *       -- when instanciating this class, you should omit this parameter
-     *       from the template parameter list.
-     */
-    template<typename LA, typename LFSU, typename LFSV, typename = void>
-    struct LocalOperatorHasNewPatternSkeleton
-      : public false_type
-    { };
-    template<typename LA, typename LFSU, typename LFSV>
-    struct LocalOperatorHasNewPatternSkeleton
-    < LA, LFSU, LFSV,
-      // Read the comment in LocalOperatorHasNewPatternSkeleton.  It explains
-      // the construct here and how to work around a related g++ compiler bug.
-      typename enable_if<sizeof( static_cast<LA*const>(0)->pattern_skeleton
-                                 ( *static_cast<LFSU*const>(0),
-                                   *static_cast<LFSV*const>(0),
-                                   *static_cast<LFSU*const>(0),
-                                   *static_cast<LFSV*const>(0),
-                                   *static_cast<LocalSparsityPattern*>(0),
-                                   *static_cast<LocalSparsityPattern*>(0),
-                                   *static_cast<LocalSparsityPattern*>(0),
-                                   *static_cast<LocalSparsityPattern*>(0)),
-                                 0xff4bd551 )>::type >
-      : public true_type
-    { };
-
-    //! \brief Call the old style or the new style pattern_skeleton(),
-    //!        depending on which is actually present
-    /**
-     * \tparam LA      Type of LocalOperator.
-     * \tparam LFSU    Type of trial LocalFunctionSpace.
-     * \tparam LFSV    Type of test LocalFunctionSpace.
-     * \tparam has_old Whether the Local operator has the old style
-     *                 pattern_skeleton() method.
-     * \tparam has_new Whether the Local operator has the new style
-     *                 pattern_skeleton() method.
-     *
-     * \note \c has_old and \c has_new are implementation details.  You should
-     *       omit them when instanciating this class -- the default values
-     *       already to the right thing.
-     */
-    template<typename LA, typename LFSU, typename LFSV,
-             bool has_old = LocalOperatorHasOldPatternSkeleton<LA, LFSU, LFSV>::value,
-             bool has_new = LocalOperatorHasNewPatternSkeleton<LA, LFSU, LFSV>::value>
-    struct PatternSkeletonDeprecationCallSwitch {
-      //! Call the local operators pattern_skeleton()
-      /**
-       * What happens exactly depends on whether the old style or the new
-       * style methods are present on the local operator:
-       * \li both old style and new style missing: the call is a noop,
-       * \li old style present but new style missing: call the old style
-       *     pattern_skeleton() method, \c pattern_ss and \c pattern_nn sty
-       *     untouched,
-       * \li old style missing but new style present: call the new style
-       *     pattern_skeleton() method, and finally
-       * \li both old style and new style present: throw a static assertion
-       *     since this is most probably and error.
-       */
-      static void pattern_skeleton(const LA& la,
-                                   const LFSU& lfsu_s, const LFSV& lfsv_s,
-                                   const LFSU& lfsu_n, const LFSV& lfsv_n,
-                                   LocalSparsityPattern& pattern_ss,
-                                   LocalSparsityPattern& pattern_sn,
-                                   LocalSparsityPattern& pattern_ns,
-                                   LocalSparsityPattern& pattern_nn)
-      { }
-    };
-
-    template<typename LA, typename LFSU, typename LFSV>
-    struct PatternSkeletonDeprecationCallSwitch<LA, LFSU, LFSV, true, false> {
-      static void pattern_skeleton(const LA& la,
-                                   const LFSU& lfsu_s, const LFSV& lfsv_s,
-                                   const LFSU& lfsu_n, const LFSV& lfsv_n,
-                                   LocalSparsityPattern& pattern_ss,
-                                   LocalSparsityPattern& pattern_sn,
-                                   LocalSparsityPattern& pattern_ns,
-                                   LocalSparsityPattern& pattern_nn)
-        DUNE_DEPRECATED
-      {
-        la.pattern_skeleton(lfsu_s, lfsv_s, lfsu_n, lfsv_n,
-                            pattern_sn, pattern_ns);
-      }
-    };
-
-    template<typename LA, typename LFSU, typename LFSV>
-    struct PatternSkeletonDeprecationCallSwitch<LA, LFSU, LFSV, false, true> {
-      static void pattern_skeleton(const LA& la,
-                                   const LFSU& lfsu_s, const LFSV& lfsv_s,
-                                   const LFSU& lfsu_n, const LFSV& lfsv_n,
-                                   LocalSparsityPattern& pattern_ss,
-                                   LocalSparsityPattern& pattern_sn,
-                                   LocalSparsityPattern& pattern_ns,
-                                   LocalSparsityPattern& pattern_nn)
-      {
-        la.pattern_skeleton(lfsu_s, lfsv_s, lfsu_n, lfsv_n,
-                            pattern_ss, pattern_sn, pattern_ns, pattern_nn);
-      }
-    };
-
-    template<typename LA, typename LFSU, typename LFSV>
-    class PatternSkeletonDeprecationCallSwitch<LA, LFSU, LFSV, true, true> {
-      dune_static_assert(AlwaysFalse<LA>::value, "Both the oldstyle "
-                         "(deprecated) and the newstyle patter_skeleton() "
-                         "methods exist for the local operator");
-    };
-
 	// compile time switching of function call
     template<typename LA, bool doIt>
     struct LocalAssemblerCallSwitch
@@ -410,10 +220,8 @@ la.pattern_skeleton(lfsu, lfsv, lfsu, lfsv, pattern, pattern, pattern, pattern)
       template<typename LFSU, typename LFSV>
       static void pattern_skeleton (const LA& la, const LFSU& lfsu_s, const LFSV& lfsv_s, 
                                   const LFSU& lfsu_n, const LFSV& lfsv_n, 
-                                   LocalSparsityPattern& pattern_ss,
                                    LocalSparsityPattern& pattern_sn,
-                                   LocalSparsityPattern& pattern_ns,
-                                   LocalSparsityPattern& pattern_nn)
+                                   LocalSparsityPattern& pattern_ns)
       {
       }
       template<typename LFSU, typename LFSV>
@@ -526,14 +334,11 @@ la.pattern_skeleton(lfsu, lfsv, lfsu, lfsv, pattern, pattern, pattern, pattern)
       template<typename LFSU, typename LFSV>
       static void pattern_skeleton (const LA& la, const LFSU& lfsu_s, const LFSV& lfsv_s, 
                                   const LFSU& lfsu_n, const LFSV& lfsv_n, 
-                                   LocalSparsityPattern& pattern_ss,
                                    LocalSparsityPattern& pattern_sn,
-                                   LocalSparsityPattern& pattern_ns,
-                                   LocalSparsityPattern& pattern_nn)
+                                   LocalSparsityPattern& pattern_ns)
       {
-        PatternSkeletonDeprecationCallSwitch<LA, LFSU, LFSV>::
-          pattern_skeleton(la, lfsu_s,lfsv_s,lfsu_n,lfsv_n,
-                           pattern_ss, pattern_sn, pattern_ns, pattern_nn);
+        la.pattern_skeleton(lfsu_s,lfsv_s,lfsu_n,lfsv_n,
+                            pattern_sn, pattern_ns);
       }
       template<typename LFSU, typename LFSV>
       static void pattern_boundary(const LA& la,
