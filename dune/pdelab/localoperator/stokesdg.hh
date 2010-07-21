@@ -13,8 +13,10 @@
 #include "pattern.hh"
 #include "flags.hh"
 
+#ifndef VBLOCK
 #define VBLOCK 0
-#define PBLOCK 1
+#endif
+#define PBLOCK (- VBLOCK + 1)
 
 namespace Dune {
     namespace PDELab {
@@ -27,7 +29,13 @@ namespace Dune {
             };
         };
         
-        // a local operator for solving the stokes equation
+        /** \brief a local operator for solving the stokes equation using a DG discretization
+            
+            \tparam F velocity source term function
+            \tparam B boundary condition function
+            \tparam V dirichlet velocity boundary condition function
+            \tparam P dirichlet pressure boundary condition function
+         */
         template<typename F, typename B, typename V, typename P>
         class StokesDG :
             public LocalOperatorDefaultFlags,
@@ -43,20 +51,19 @@ namespace Dune {
             enum { doPatternVolume = true };
             enum { doPatternSkeleton = true };
 
-            //
+            // call the assembler for each face only once
             enum { doSkeletonTwoSided = false };
 
             // residual assembly flags
             enum { doAlphaVolume    = true };
             enum { doAlphaSkeleton  = true };
             enum { doAlphaBoundary  = true };
-            // enum { doAlphaVolumePostSkeleton = true };
             enum { doLambdaVolume   = true };
             enum { doLambdaBoundary = true };
 
             StokesDG (const std::string & method,
-                const F & _f, const B & _b, const V & _v, const P & _p) :
-                f(_f), b(_b), v(_v), p(_p), qorder(4), mu(1)
+                const F & _f, const B & _b, const V & _v, const P & _p, int _qorder=4) :
+                f(_f), b(_b), v(_v), p(_p), qorder(_qorder), mu(1)
             {
                 std::string s = method;
                 std::transform(s.begin(), s.end(), s.begin(), tolower);
@@ -219,6 +226,9 @@ namespace Dune {
                     // value of velocity shape functions
                     std::vector<RT> phi_v(vsize);
                     lfsv_v.localFiniteElement().localBasis().evaluateFunction(local,phi_v);
+                    // and value of pressure shape functions
+                    std::vector<RT> phi_p(psize);
+                    lfsv_p.localFiniteElement().localBasis().evaluateFunction(local,phi_p);
 
                     // transform gradient to real element
                     const Dune::FieldMatrix<DF,dimw,dim> jInvT =
@@ -243,7 +253,6 @@ namespace Dune {
                         v.evaluateGlobal(global,u0);
                         
                         //================================================//
-                        // TERM: 4
                         // \mu \int \nabla u_0 \cdot v \cdot n
                         //================================================//
                         const RF factor = mu * weight;
@@ -255,19 +264,13 @@ namespace Dune {
                                 r[i+d*vsize] -= val * u0[d];
                             }
                         }
-
-                        // and value of pressure shape functions
-                        std::vector<RT> phi_p(psize);
-                        lfsv_p.localFiniteElement().localBasis().evaluateFunction(local,phi_p);
-
                         //================================================//
-                        // TERM: 17
-                        // \int q . g . n
+                        // \int q u_0 n
                         //================================================//
-                        for (unsigned int i=0;i<psize;++i) 
+                        for (unsigned int i=0;i<psize;++i) // test
                         {
-                            const RF val = (u0*normal)*phi_p[i]*factor;
-                            r[i+dim*vsize] += val;
+                            RF val = phi_p[i]*(u0 * normal) * weight;
+                            r[i+dim*vsize] -= val;
                         }
                     }
                     if (bctype == BC::PressureDirichlet)
@@ -275,10 +278,8 @@ namespace Dune {
                         typename P::Traits::RangeType p0;
                         p.evaluateGlobal(global,p0);
                     
-                        fixpressure = false;
                         std::cout << "Pdirichlet\n";
                         //================================================//
-                        // TERM: 10
                         // \int p u n
                         //================================================//            
                         for (unsigned int i=0;i<vsize;++i) 
@@ -298,7 +299,6 @@ namespace Dune {
             void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                 LocalMatrix<R>& mat) const
             {
-                fixpressure = true;
                 // dimensions
                 static const unsigned int dim = EG::Geometry::dimension;
                 static const unsigned int dimw = EG::Geometry::dimensionworld;
@@ -360,7 +360,6 @@ namespace Dune {
                     const RF weight = it->weight() * eg.geometry().integrationElement(it->position());
                     
                     //================================================//
-                    // TERM: 1
                     // \int (mu*grad_u*grad_v)
                     //================================================//
                     const RF factor = mu * weight;
@@ -379,14 +378,13 @@ namespace Dune {
                     }
 
                     //================================================//
-                    // TERM: 8, 11
-                    // - p * div v
                     // - q * div u
+                    // - p * div v
                     //================================================//            
-                    for (size_type j=0; j<psize; j++)
+                    for (size_type j=0; j<psize; j++) // test (q)
                     {
                         RF val = -1.0 * phi_p[j]*weight;
-                        for (size_type i=0; i<vsize; i++)
+                        for (size_type i=0; i<vsize; i++) // ansatz (u)
                         {
                             for (unsigned int d=0; d<dim; d++)
                             {
@@ -398,51 +396,6 @@ namespace Dune {
                 }
             }
 
-            template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-            void alpha_volume_post_skeleton(const EG& eg, const LFSU& lfsu, const X& x,
-                                            const LFSV& lfsv, R& r) const
-            {}
-            template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-            void jacobian_volume_post_skeleton(const EG& eg, const LFSU& lfsu, const X& x,
-                                               const LFSV& lfsv, LocalMatrix<R>& mat) const
-            {
-                // dimensions
-                static const unsigned int dim = EG::Geometry::dimension;
-
-                // subspaces
-                dune_static_assert((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
-                typedef typename LFSV::template Child<VBLOCK>::Type LFSV_vel;
-                const LFSV_vel& lfsv_vel = lfsv.template getChild<VBLOCK>();
-                dune_static_assert((LFSV_vel::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
-                // ... we assume all velocity components are the same
-                typedef typename LFSV_vel::template Child<0>::Type LFSV_v;
-                const LFSV_v& lfsv_v = lfsv_vel.template getChild<0>();
-                const unsigned int vsize = lfsv_v.size();
-                typedef typename LFSV::template Child<PBLOCK>::Type LFSV_p;
-                const LFSV_p& lfsv_p = lfsv.template getChild<PBLOCK>();
-                const unsigned int psize = lfsv_p.size();
-
-                for (unsigned int i=0; i<dim*vsize+psize; i++)
-                {
-                    for (unsigned int j=0; j<dim*vsize+psize; j++)
-                        mat(i, j) = 0;
-                    mat(i, i) = 1e-6;
-                }
-                return;
-                
-                // for (unsigned int i=0; i<dim*vsize+psize; i++)
-                //     mat(i,i) = 2;
-                // fix one pressure DOF
-                // static int cnt = 0;
-                // if (fixpressure && cnt == 0)
-                // {
-                //     for (unsigned int i=0; i<dim*vsize+psize; i++)
-                //         mat(dim*vsize, i) = 0;
-                //     mat(dim*vsize, dim*vsize) = 1;
-                // }
-                // cnt++;
-            }
-            
             // jacobian of skeleton term
             template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
             void jacobian_skeleton (const IG& ig,
@@ -542,24 +495,25 @@ namespace Dune {
                     //================================================//
                     assert(vsize_s == vsize_n);
                     const RF factor = mu * weight;
-                    for (unsigned int i=0;i<vsize_s;++i) 
+                    for (unsigned int i=0;i<vsize_s;++i)
                     {
                         for (unsigned int j=0;j<vsize_s;++j) 
                         {
-                            RF val = (0.5*(grad_phi_v_s[j]*normal)*phi_v_s[i]) * factor;
+                            RF val = (0.5*(grad_phi_v_s[i]*normal)*phi_v_s[j]) * factor;
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                mat_ss(i+d*vsize_s,j+d*vsize_s) -= val;
-                                mat_ss(j+d*vsize_s,i+d*vsize_s) += epsilon*val;
+                                mat_ss(j+d*vsize_s,i+d*vsize_s) -= val;
+                                mat_ss(i+d*vsize_s,j+d*vsize_s) += epsilon*val;
                             }
                         }
                         for (unsigned int j=0;j<vsize_n;++j) 
                         {
-                            RF val = (0.5*(grad_phi_v_n[j]*normal)*phi_v_s[i]) * factor;
+                            // the normal vector flipped, thus the sign flips
+                            RF val = (-0.5*(grad_phi_v_s[i]*normal)*phi_v_n[j]) * factor;
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                mat_sn(i+d*vsize_s,j+d*vsize_n) -= val;
-                                mat_ns(j+d*vsize_n,i+d*vsize_s) += epsilon*val;
+                                mat_ns(j+d*vsize_s,i+d*vsize_n) -= val;
+                                mat_sn(i+d*vsize_n,j+d*vsize_s) += epsilon*val;
                             }
                         }
                     }
@@ -567,28 +521,28 @@ namespace Dune {
                     {
                         for (unsigned int j=0;j<vsize_s;++j) 
                         {
-                            // the normal vector flipped, thus the sign flips
-                            RF val = (-0.5*(grad_phi_v_s[j]*normal)*phi_v_n[i]) * factor;
+                            RF val = (0.5*(grad_phi_v_n[i]*normal)*phi_v_s[j]) * factor;
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                mat_ns(i+d*vsize_n,j+d*vsize_s) -= val;
-                                mat_sn(j+d*vsize_s,i+d*vsize_n) += epsilon*val;
+                                mat_sn(j+d*vsize_n,i+d*vsize_s) -= val;
+                                mat_ns(i+d*vsize_s,j+d*vsize_n) += epsilon*val;
                             }
                         }
                         for (unsigned int j=0;j<vsize_n;++j) 
                         {
                             // the normal vector flipped, thus the sign flips
-                            RF val = (-0.5*(grad_phi_v_n[j]*normal)*phi_v_n[i]) * factor;
+                            RF val = (-0.5*(grad_phi_v_n[i]*normal)*phi_v_n[j]) * factor;
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                mat_nn(i+d*vsize_n,j+d*vsize_n) -= val;
-                                mat_nn(j+d*vsize_n,i+d*vsize_n) += epsilon*val;
+                                mat_nn(j+d*vsize_n,i+d*vsize_n) -= val;
+                                mat_nn(i+d*vsize_n,j+d*vsize_n) += epsilon*val;
                             }
                         }
                     }
                     //================================================//
                     // TERM: 9/12
                     // \int <q> [u] n
+                    // \int <p> [v] n
                     //================================================//            
                     for (unsigned int i=0;i<vsize_s;++i) 
                     {
@@ -720,9 +674,9 @@ namespace Dune {
                         // - (\mu \int \nabla u. normal . v)  
                         //================================================//
                         const RF factor = - mu * weight;
-                        for (unsigned int i=0;i<vsize;++i) 
+                        for (unsigned int i=0;i<vsize;++i) // ansatz
                         {
-                            for (unsigned int j=0;j<vsize;++j) 
+                            for (unsigned int j=0;j<vsize;++j) // test
                             {
                                 RF val = ((grad_phi_v[j]*normal)*phi_v[i]) * factor;
                                 for (unsigned int d=0;d<dim;++d)
@@ -734,16 +688,18 @@ namespace Dune {
                         }
                         //================================================//
                         // TERM: 10
-                        // \int p u n
-                        //================================================//            
-                        for (unsigned int i=0;i<vsize;++i) 
+                        // \int q u n
+                        // \int p v n
+                        //================================================//
+                        for (unsigned int i=0;i<vsize;++i) // ansatz
                         {
-                            for (unsigned int j=0;j<psize;++j) 
+                            for (unsigned int j=0;j<psize;++j) // test
                             {
                                 for (unsigned int d=0;d<dim;++d)
                                 {
                                     RF val = (phi_p[j]*normal[d]*phi_v[i]) * weight;
-                                        mat(i+d*vsize,j+dim*vsize) += val;
+                                    mat(j+dim*vsize,i+d*vsize) += val; // q u n
+                                    mat(i+d*vsize,j+dim*vsize) += val; // p v n
                                 }
                             }
                         }
@@ -763,8 +719,6 @@ namespace Dune {
             int    qorder;
             // physical parameters
             double mu;
-            // hack
-            mutable bool fixpressure;
         };
 
         //! \} group GridFunctionSpace
