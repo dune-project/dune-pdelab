@@ -32,6 +32,9 @@ namespace Dune
             unsigned int iterations;   // number of iterations
             double elapsed;            // total user time in seconds
             RFType reduction;          // defect reduction
+
+            LinearSolverResult() :
+                converged(false), iterations(0), elapsed(0.0), reduction(0.0) {}
         };
 
         // Status information of Newton's method
@@ -43,6 +46,9 @@ namespace Dune
             RFType defect;             // the final defect
             double assembler_time;     // Cumulative time for matrix assembly
             double linear_solver_time; // Cumulative time for linear sovler
+
+            NewtonResult() :
+                conv_rate(0.0), first_defect(0.0), defect(0.0), assembler_time(0.0), linear_solver_time(0.0) {}
         };
 
         template<class GOS, class TrlV, class TstV>
