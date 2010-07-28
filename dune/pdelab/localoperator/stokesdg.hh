@@ -255,13 +255,25 @@ namespace Dune {
                         //================================================//
                         // \mu \int \nabla u_0 \cdot v \cdot n
                         //================================================//
-                        const RF factor = mu * weight;
+                        RF factor = mu * weight;
                         for (unsigned int i=0;i<vsize;++i) 
                         {
                             const RF val = (grad_phi_v[i]*normal) * factor;
                             for (unsigned int d=0;d<dim;++d)
                             {
                                 r[i+d*vsize] -= val * u0[d];
+                            }
+                        }
+                        //================================================//
+                        // \mu \int \sigma / |\gamma|^\beta v u_0
+                        //================================================//
+                        factor = mu * sigma / std::pow(ig.geometry().volume(), beta) * weight;
+                        for (unsigned int i=0;i<vsize;++i) 
+                        {
+                            const RF val = phi_v[i] * factor;
+                            for (unsigned int d=0;d<dim;++d)
+                            {
+                                r[i+d*vsize] += val * u0[d];
                             }
                         }
                         //================================================//
@@ -490,11 +502,10 @@ namespace Dune {
                     const RF weight = it->weight()*ig.geometry().integrationElement(it->position());
                     
                     //================================================//
-                    // TERM: 4
                     // - (\mu \int < \nabla u > . normal . [v])  
                     //================================================//
                     assert(vsize_s == vsize_n);
-                    const RF factor = mu * weight;
+                    RF factor = mu * weight;
                     for (unsigned int i=0;i<vsize_s;++i)
                     {
                         for (unsigned int j=0;j<vsize_s;++j) 
@@ -540,7 +551,52 @@ namespace Dune {
                         }
                     }
                     //================================================//
-                    // TERM: 9/12
+                    // \mu \int \sigma / |\gamma|^\beta v u
+                    //================================================//
+                    factor = mu * sigma / std::pow(ig.geometry().volume(), beta) * weight;
+                    for (unsigned int i=0;i<vsize_s;++i)
+                    {
+                        for (unsigned int j=0;j<vsize_s;++j) 
+                        {
+                            RF val = phi_v_s[i]*phi_v_s[j] * factor;
+                            for (unsigned int d=0;d<dim;++d)
+                            {
+                                mat_ss(j+d*vsize_s,i+d*vsize_s) += val;
+                                mat_ss(i+d*vsize_s,j+d*vsize_s) += val;
+                            }
+                        }
+                        for (unsigned int j=0;j<vsize_n;++j) 
+                        {
+                            RF val = phi_v_s[i]*phi_v_n[j] * factor;
+                            for (unsigned int d=0;d<dim;++d)
+                            {
+                                mat_ns(j+d*vsize_s,i+d*vsize_n) += val;
+                                mat_sn(i+d*vsize_n,j+d*vsize_s) += val;
+                            }
+                        }
+                    }
+                    for (unsigned int i=0;i<vsize_n;++i) 
+                    {
+                        for (unsigned int j=0;j<vsize_s;++j) 
+                        {
+                            RF val = phi_v_n[i]*phi_v_s[j] * factor;
+                            for (unsigned int d=0;d<dim;++d)
+                            {
+                                mat_sn(j+d*vsize_n,i+d*vsize_s) += val;
+                                mat_ns(i+d*vsize_s,j+d*vsize_n) += val;
+                            }
+                        }
+                        for (unsigned int j=0;j<vsize_n;++j) 
+                        {
+                            RF val = phi_v_n[i]*phi_v_n[j] * factor;
+                            for (unsigned int d=0;d<dim;++d)
+                            {
+                                mat_nn(j+d*vsize_n,i+d*vsize_n) += val;
+                                mat_nn(i+d*vsize_n,j+d*vsize_n) += val;
+                            }
+                        }
+                    }
+                    //================================================//
                     // \int <q> [u] n
                     // \int <p> [v] n
                     //================================================//            
@@ -670,7 +726,6 @@ namespace Dune {
                     if (bctype == BC::VelocityDirichlet)
                     {
                         //================================================//
-                        // TERM: 4
                         // - (\mu \int \nabla u. normal . v)  
                         //================================================//
                         const RF factor = - mu * weight;
@@ -687,7 +742,6 @@ namespace Dune {
                             }
                         }
                         //================================================//
-                        // TERM: 10
                         // \int q u n
                         // \int p v n
                         //================================================//
