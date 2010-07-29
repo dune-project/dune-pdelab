@@ -22,3 +22,6 @@ List of reasons why a file is in experimental:
 
  * localoperator/scaled.hh:
    untested, except for "make headercheck".
+
+ * localoperator/sum.hh:
+   untested, except for "make headercheck".
