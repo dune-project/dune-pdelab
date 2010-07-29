@@ -156,20 +156,6 @@ namespace Dune {
                            const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                            R& r_s, R& r_n) const
       {
-        LocalMatrix<typename R::value_type> mat_ss(lfsu_s.size(),lfsu_s.size());
-        LocalMatrix<typename R::value_type> mat_sn(lfsu_s.size(),lfsu_n.size());
-        LocalMatrix<typename R::value_type> mat_ns(lfsu_n.size(),lfsu_s.size());
-        LocalMatrix<typename R::value_type> mat_nn(lfsu_n.size(),lfsu_n.size());
-        jacobian_skeleton(ig,
-          lfsu_s, x_s, lfsv_s,
-          lfsu_n, x_n, lfsv_n,
-          mat_ss, mat_sn, mat_ns, mat_nn);
-        // TODO: Reihenfolge der Multiplikationen!
-        mat_ss.umv(x_s,r_s);
-        mat_ns.umv(x_n,r_s);
-        mat_sn.umv(x_s,r_n);
-        mat_nn.umv(x_n,r_n);
-        return;
         // domain and range field type
         typedef typename LFSU::Traits::LocalFiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
@@ -205,8 +191,7 @@ namespace Dune {
         k.evaluate(*(ig.outside()),outside_local,permeability_n);
 
         // penalty weight for NIPG / SIPG
-        RF penalty_weight_s = sigma / pow(ig.inside()->geometry().volume(), beta);
-        RF penalty_weight_n = sigma / pow(ig.outside()->geometry().volume(), beta);
+        RF penalty_weight = sigma / pow(ig.geometry().volume(), beta);
 
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -296,7 +281,7 @@ namespace Dune {
             for (unsigned int i=0; i<lfsv_s.size(); i++)
               {
                 // NIPG / SIPG penalty term: sigma/|gamma|^beta * [u]*[v]
-                r_s[i] += penalty_weight_s * u_jump*phi_s[i]*factor;
+                r_s[i] += penalty_weight * u_jump*phi_s[i]*factor;
                 // epsilon * <Kgradv*my>[u] - <Kgradu*my>[v]
                 r_s[i] += epsilon*(kgradphi_s[i]*normal)*0.5*u_jump*factor;
                 r_s[i] -= phi_s[i]*kgradunormal_average*factor;
@@ -304,7 +289,7 @@ namespace Dune {
             for (unsigned int i=0; i<lfsv_n.size(); i++)
               {
                 // NIPG / SIPG penalty term: sigma/|gamma|^beta * [u]*[v]
-                r_n[i] += penalty_weight_n * u_jump*(-phi_n[i])*factor;
+                r_n[i] += penalty_weight * u_jump*(-phi_n[i])*factor;
                 // epsilon * <Kgradv*my>[u] - [v]<Kgradu*my>
                 r_n[i] += epsilon*(kgradphi_n[i]*normal)*0.5*u_jump*factor;
                 r_n[i] -= (-phi_n[i])*kgradunormal_average*factor;
@@ -316,10 +301,6 @@ namespace Dune {
       template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_boundary (const IG& ig, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
-        LocalMatrix<typename R::value_type> mat(lfsu.size(),lfsu.size());
-        jacobian_boundary(ig, lfsu, x, lfsv, mat);
-        mat.umv(x,r);
-        return;
         // domain and range field type
         typedef typename LFSU::Traits::LocalFiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
@@ -359,7 +340,7 @@ namespace Dune {
             k.evaluate(*ig.inside(),localcenter,tensor);
 
             // penalty weight for NIPG / SIPG
-            RF penalty_weight = sigma / pow(ig.inside()->geometry().volume(), beta);
+            RF penalty_weight = sigma / pow(ig.geometry().volume(), beta);
 
             // loop over quadrature points and integrate u * phi
             for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -532,7 +513,7 @@ namespace Dune {
             typename K::Traits::RangeType tensor(0.0);
             k.evaluate(*ig.inside(),localcenter,tensor);
             // penalty weight for NIPG / SIPG
-            RF penalty_weight = sigma / pow(ig.inside()->geometry().volume(), beta);
+            RF penalty_weight = sigma / pow(ig.geometry().volume(), beta);
 
             // loop over quadrature points and integrate g * phi
             for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -688,8 +669,7 @@ namespace Dune {
         k.evaluate(*(ig.outside()),outside_local,permeability_n);
 
         // penalty weight for NIPG / SIPG
-        RF penalty_weight_s = sigma / pow(ig.inside()->geometry().volume(), beta);
-        RF penalty_weight_n = sigma / pow(ig.outside()->geometry().volume(), beta);
+        RF penalty_weight = sigma / pow(ig.geometry().volume(), beta);
 
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -777,14 +757,14 @@ namespace Dune {
                     // epsilon*(K*gradient of phi_s_j + K*gradient of phi_n_j)/2*(phi_s_i - phi_n_i) - (phi_s_j - phi_n_j)*(K*gradient of phi_s_i + K*gradient of phi_n_i)/2
                     mat_ss(i,j) += (epsilon*0.5*(kgradphi_s[i]*normal)*(phi_s[j]) - (phi_s[i])*0.5*(kgradphi_s[j]*normal) )*factor;
                     // NIPG / SIPG term: (phi_n_j - phi_s_j)*(phi_n_i - phi_s_i)
-                    mat_ss(i,j) += penalty_weight_s*(phi_s[j])*(phi_s[i]) *factor;
+                    mat_ss(i,j) += penalty_weight*(phi_s[j])*(phi_s[i]) *factor;
                   }
                 for (typename LFSU::Traits::SizeType i=0; i<lfsu_n.size(); i++)
                   {
                     // epsilon*(K*gradient of phi_s_j + K*gradient of phi_n_j)/2*(phi_s_i - phi_n_i) - (phi_s_j - phi_n_j)*(K*gradient of phi_s_i + K*gradient of phi_n_i)/2
                     mat_ns(i,j) += (epsilon*0.5*(kgradphi_n[i]*normal)*(phi_s[j]) - (-phi_n[i])*0.5*(kgradphi_s[j]*normal) )*factor;
                     // NIPG / SIPG term: (phi_n_j - phi_s_j)*(phi_n_i - phi_s_i)
-                    mat_ns(i,j) += penalty_weight_n*(phi_s[j])*(-phi_n[i]) *factor;
+                    mat_ns(i,j) += penalty_weight*(phi_s[j])*(-phi_n[i]) *factor;
                   }
               }
             for (typename LFSU::Traits::SizeType j=0; j<lfsu_n.size(); j++)
@@ -794,21 +774,20 @@ namespace Dune {
                     // epsilon*(K*gradient of phi_s_j + K*gradient of phi_n_j)/2*(phi_s_i - phi_n_i) - (phi_s_j - phi_n_j)*(K*gradient of phi_s_i + K*gradient of phi_n_i)/2
                     mat_sn(i,j) += (epsilon*0.5*(kgradphi_s[i]*normal)*(-phi_n[j]) - (phi_s[i])*0.5*(kgradphi_n[j]*normal) )*factor;
                     // NIPG / SIPG term: (phi_n_j - phi_s_j)*(phi_n_i - phi_s_i)
-                    mat_sn(i,j) += penalty_weight_s*(-phi_n[j])*(phi_s[i]) *factor;
+                    mat_sn(i,j) += penalty_weight*(-phi_n[j])*(phi_s[i]) *factor;
                   }
                 for (typename LFSU::Traits::SizeType i=0; i<lfsu_n.size(); i++)
                   {
                     // epsilon*(K*gradient of phi_s_j + K*gradient of phi_n_j)/2*(phi_s_i - phi_n_i) - (phi_s_j - phi_n_j)*(K*gradient of phi_s_i + K*gradient of phi_n_i)/2
                     mat_nn(i,j) += (epsilon*0.5*(kgradphi_n[i]*normal)*(-phi_n[j]) - (-phi_n[i])*0.5*(kgradphi_n[j]*normal) )*factor;
                     // NIPG / SIPG term: (phi_n_j - phi_s_j)*(phi_n_i - phi_s_i)
-                    mat_nn(i,j) += penalty_weight_n*(-phi_n[j])*(-phi_n[i]) *factor;
+                    mat_nn(i,j) += penalty_weight*(-phi_n[j])*(-phi_n[i]) *factor;
                   }
               }
           }
       }
 
       // jacobian of volume term
-      // TODO: Ist die uebergebene Matrix initialisiert? Bastian nachfragen. ////////////////////////////////////////////////////////////////
       template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
       void jacobian_boundary (const IG& ig,
                               const LFSU& lfsu, const X& x, const LFSV& lfsv,
@@ -853,7 +832,7 @@ namespace Dune {
             k.evaluate(*ig.inside(),localcenter,tensor);
 
             // penalty weight for NIPG / SIPG
-            RF penalty_weight = sigma / pow(ig.inside()->geometry().volume(), beta);
+            RF penalty_weight = sigma / pow(ig.geometry().volume(), beta);
 
             // loop over quadrature points and integrate u * phi
             for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
