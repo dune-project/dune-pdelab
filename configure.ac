@@ -34,6 +34,7 @@ AC_CONFIG_FILES([
   dune/pdelab/Makefile
   dune/pdelab/test/Makefile
   dune/pdelab/common/Makefile
+  dune/pdelab/experimental/Makefile
   dune/pdelab/finiteelementmap/Makefile
   dune/pdelab/function/Makefile
   dune/pdelab/gridfunctionspace/Makefile
