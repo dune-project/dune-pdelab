@@ -17,3 +17,8 @@ following guidelines apply:
 
  * When branching for a release, the whole "experimental" directory is deleted
    from the release branch.
+
+List of reasons why a file is in experimental:
+
+ * localoperator/scaled.hh:
+   untested, except for "make headercheck".
