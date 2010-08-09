@@ -13,6 +13,7 @@
 #include<dune/grid/common/quadraturerules.hh>
 
 #include <dune/pdelab/localoperator/defaultimp.hh>
+#include <dune/pdelab/localoperator/idefault.hh>
 
 #include"../common/geometrywrapper.hh"
 #include"../gridoperatorspace/gridoperatorspace.hh"
@@ -193,6 +194,51 @@ namespace Dune {
       const B& b;
       const J& j;
 	};
+
+    //! \brief a local operator for solving the Poisson equation in
+    //!        instationary problems
+    /**
+     * \f{align*}{
+     *           - \Delta u &=& f \mbox{ in } \Omega,          \\
+     *                    u &=& g \mbox{ on } \partial\Omega_D \\
+     *  -\nabla u \cdot \nu &=& j \mbox{ on } \partial\Omega_N \\
+     * \f}
+     * with conforming finite elements on all types of grids in any dimension
+     *
+     * \tparam F Grid function type giving f
+     * \tparam B Grid function type selecting boundary condition
+     * \tparam J Grid function type giving j
+     *
+     * \note The grid functions need to support the member function setTime().
+     */
+    template<typename Time, typename F, typename B, typename J, int qorder=1>
+    class InstationaryPoisson
+      : public Poisson<F,B,J,qorder>,
+        public InstationaryLocalOperatorDefaultMethods<Time>
+    {
+      typedef Poisson<F,B,J,qorder> Base;
+      typedef InstationaryLocalOperatorDefaultMethods<Time> IDefault;
+
+    protected:
+      // need non-const references for setTime()
+      F& f;
+      B& b;
+      J& j;
+
+    public:
+      //! construct InstationaryPoisson
+      InstationaryPoisson(F& f_, B& b_, J& j_)
+        : Base(f_, b_, j_), f(f_), b(b_), j(j_)
+      {}
+
+      //! set the time for subsequent evaluation on the parameter functions
+      void setTime (Time t) {
+        f.setTime(t);
+        b.setTime(t);
+        j.setTime(t);
+        IDefault::setTime(t);
+      }
+    };
 
     //! \} group LocalOperator
   } // namespace PDELab
