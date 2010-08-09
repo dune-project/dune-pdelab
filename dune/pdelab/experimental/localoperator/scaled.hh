@@ -564,7 +564,7 @@ namespace Dune {
       {
         if(factor != 0) {
           R my_r_s(lfsv_s.size(), 0);
-          bp->lambda_skeleton(ig, lfsv_s, my_r_s);
+          bp->lambda_boundary(ig, lfsv_s, my_r_s);
           for(unsigned i = 0; i < lfsv_s.size(); ++i)
             r_s[i] += factor * my_r_s[i];
         }
