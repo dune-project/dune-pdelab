@@ -172,7 +172,7 @@ namespace Dune {
       template<typename LFSU, typename LFSV>
       void pattern_volume
       ( const LFSU& lfsu, const LFSV& lfsv,
-        LocalSparsityPattern& pattern)
+        LocalSparsityPattern& pattern) const
       {
         if(factor != 0)
           bp->pattern_volume(lfsu, lfsv, pattern);
@@ -195,7 +195,7 @@ namespace Dune {
       template<typename LFSU, typename LFSV>
       void pattern_volume_post_skeleton
       ( const LFSU& lfsu, const LFSV& lfsv,
-        LocalSparsityPattern& pattern)
+        LocalSparsityPattern& pattern) const
       {
         if(factor != 0)
           bp->pattern_volume_post_skeleton(lfsu, lfsv, pattern);
@@ -227,7 +227,7 @@ namespace Dune {
       ( const LFSU& lfsu_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const LFSV& lfsv_n,
         LocalSparsityPattern& pattern_sn,
-        LocalSparsityPattern& pattern_ns)
+        LocalSparsityPattern& pattern_ns) const
       {
         if(factor != 0)
           bp->pattern_skeleton(lfsu_s, lfsv_s, lfsu_n, lfsv_n,
@@ -253,7 +253,7 @@ namespace Dune {
       template<typename LFSU, typename LFSV>
       void pattern_boundary
       ( const LFSU& lfsu_s, const LFSV& lfsv_s,
-        LocalSparsityPattern& pattern_ss)
+        LocalSparsityPattern& pattern_ss) const
       {
         if(factor != 0)
           bp->pattern_boundary(lfsu_s, lfsv_s, pattern_ss);
@@ -294,7 +294,7 @@ namespace Dune {
       void alpha_volume
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        R& r)
+        R& r) const
       {
         if(factor != 0) {
           R my_r(lfsv.size(), 0);
@@ -333,7 +333,7 @@ namespace Dune {
       void alpha_volume_post_skeleton
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        R& r)
+        R& r) const
       {
         if(factor != 0) {
           R my_r(lfsv.size(), 0);
@@ -382,7 +382,7 @@ namespace Dune {
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-        R& r_s, R& r_n)
+        R& r_s, R& r_n) const
       {
         if(factor != 0) {
           R my_r_s(lfsv_s.size(), 0);
@@ -429,7 +429,7 @@ namespace Dune {
       void alpha_boundary
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        R& r_s)
+        R& r_s) const
       {
         if(factor != 0) {
           R my_r_s(lfsv_s.size(), 0);
@@ -463,7 +463,7 @@ namespace Dune {
        * lambda_boundary() methods are called (if they are called at all).
        */
       template<typename EG, typename LFSV, typename R>
-      void lambda_volume(const EG& eg, const LFSV& lfsv, R& r)
+      void lambda_volume(const EG& eg, const LFSV& lfsv, R& r) const
       {
         if(factor != 0) {
           R my_r(lfsv.size(), 0);
@@ -492,7 +492,9 @@ namespace Dune {
        * called (if they are called at all).
        */
       template<typename EG, typename LFSV, typename R>
-      void lambda_volume_post_skeleton(const EG& eg, const LFSV& lfsv, R& r)
+      void lambda_volume_post_skeleton(const EG& eg,
+                                       const LFSV& lfsv,
+                                       R& r) const
       {
         if(factor != 0) {
           R my_r(lfsv.size(), 0);
@@ -526,7 +528,7 @@ namespace Dune {
       template<typename IG, typename LFSV, typename R>
       void lambda_skeleton(const IG& ig,
                            const LFSV& lfsv_s, const LFSV& lfsv_n,
-                           R& r_s, R& r_n)
+                           R& r_s, R& r_n) const
       {
         if(factor != 0) {
           R my_r_s(lfsv_s.size(), 0);
@@ -558,7 +560,7 @@ namespace Dune {
        * the call to lambda_volume_post_skeleton().
        */
       template<typename IG, typename LFSV, typename R>
-      void lambda_boundary(const IG& ig, const LFSV& lfsv_s, R& r_s)
+      void lambda_boundary(const IG& ig, const LFSV& lfsv_s, R& r_s) const
       {
         if(factor != 0) {
           R my_r_s(lfsv_s.size(), 0);
@@ -607,7 +609,7 @@ namespace Dune {
       void jacobian_apply_volume
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        Y& y)
+        Y& y) const
       {
         if(factor != 0) {
           Y my_y(lfsv.size(), 0);
@@ -650,7 +652,7 @@ namespace Dune {
       void jacobian_apply_volume_post_skeleton
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        Y& y)
+        Y& y) const
       {
         if(factor != 0) {
           Y my_y(lfsv.size(), 0);
@@ -704,7 +706,7 @@ namespace Dune {
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-        Y& y_s, Y& y_n)
+        Y& y_s, Y& y_n) const
       {
         if(factor != 0) {
           Y my_y_s(lfsv_s.size(), 0);
@@ -755,7 +757,7 @@ namespace Dune {
       void jacobian_apply_boundary
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        Y& y_s)
+        Y& y_s) const
       {
         if(factor != 0) {
           Y my_y_s(lfsv_s.size(), 0);
@@ -795,7 +797,7 @@ namespace Dune {
       void jacobian_volume
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        LocalMatrix<R>& mat)
+        LocalMatrix<R>& mat) const
       {
         if(factor != 0) {
           LocalMatrix<R> my_mat(lfsu.size(), lfsv.size(), 0);
@@ -829,7 +831,7 @@ namespace Dune {
       void jacobian_volume_post_skeleton
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        LocalMatrix<R>& mat)
+        LocalMatrix<R>& mat) const
       {
         if(factor != 0) {
           LocalMatrix<R> my_mat(lfsu.size(), lfsv.size(), 0);
@@ -882,7 +884,7 @@ namespace Dune {
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
         LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn,
-        LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn)
+        LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn) const
       {
         if(factor != 0) {
           LocalMatrix<R> my_mat_ss(lfsu_s.size(), lfsv_s.size(), 0);
@@ -935,7 +937,7 @@ namespace Dune {
       void jacobian_boundary
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        LocalMatrix<R>& mat_ss)
+        LocalMatrix<R>& mat_ss) const
       {
         if(factor != 0) {
           LocalMatrix<R> my_mat_ss(lfsu_s.size(), lfsv_s.size(), 0);
