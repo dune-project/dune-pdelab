@@ -97,6 +97,18 @@ namespace Dune {
         return gfsv;
       }
 
+      //! get the constraints on the trial grid function space
+      const CU& trialConstraints() const
+      {
+        return *pconstraintsu;
+      }
+
+      //! get the constraints on the test grid function space
+      const CV& testConstraints() const
+      {
+        return *pconstraintsv;
+      }
+
 
       /**\brief Construct global sparsity pattern from local description
 
