@@ -3,6 +3,7 @@
 #ifndef DUNE_PDELAB_MULTISTEP_PARAMETER_HH
 #define DUNE_PDELAB_MULTISTEP_PARAMETER_HH
 
+#include <sstream>
 #include <string>
 
 namespace Dune {
@@ -57,6 +58,60 @@ namespace Dune {
 
       //! every abstract base class has a virtual destructor
       virtual ~MultiStepParameterInterface () {}
+    };
+
+    //////////////////////////////////////////////////////////////////////
+    //
+    //  Newmark-β scheme
+    //
+
+    //! Parameter class for the Newmark-β scheme
+    /**
+     * \tparam value_type C++ type of the floating point parameters
+     */
+    template<typename value_type>
+    class NewmarkBetaParameters
+      : public MultiStepParameterInterface<value_type, 2>
+    {
+      value_type a[3][3];
+      std::string name_;
+
+    public:
+      NewmarkBetaParameters(value_type beta) {
+        a[0][0]=beta;     a[0][1]=0.5; a[0][2]=1;
+        a[1][0]=1-2*beta; a[1][1]=0;   a[1][2]=-2;
+        a[2][0]=beta;     a[2][1]=0.5; a[2][2]=1;
+
+        std::ostringstream s;
+        s << "Newmark-β (β=" << beta << ")";
+        name_ = s.str();
+      }
+
+      //! Return number of steps of the method
+      /**
+       * \returns 2 for Newmark-β
+       */
+      virtual unsigned steps () const { return 2; }
+
+      //! Return alpha coefficients
+      /**
+       * Return \f$\alpha_{\text{\tt step}, \text{\tt deriv}}\f$:
+       * \f{align*}{
+       *   \alpha_{00}&=\beta    & \alpha_{01}&=\frac12 & \alpha_{02}&=1 \\
+       *   \alpha_{10}&=1-2\beta & \alpha_{11}&=0       & \alpha_{12}&=-2 \\
+       *   \alpha_{20}&=\beta    & \alpha_{21}&=\frac12 & \alpha_{22}&=1
+       * \f}
+       *
+       * \note step ∈ [0,...,steps()] and deriv ∈ [0,...,order]
+       */
+      virtual value_type alpha(int step, int deriv) const {
+        return a[step][deriv];
+      }
+
+      //! Return name of the scheme
+      virtual std::string name () const {
+        return name_;
+      }
     };
 
     //! \} group MultiStepMethods
