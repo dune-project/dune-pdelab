@@ -20,6 +20,7 @@ common_HEADERS =				\
 	poisson.hh				\
 	stokesdg.hh				\
 	transportccfv.hh			\
-	twophaseccfv.hh
+	twophaseccfv.hh				\
+	weightedsum.hh
 
 include $(top_srcdir)/am/global-rules
