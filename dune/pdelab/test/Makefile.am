@@ -234,6 +234,10 @@ testmultitypetree_LDADD = 			\
 
 NORMALTESTS += testmultistep
 testmultistep_SOURCES = testmultistep.cc
+MOSTLYCLEANFILES +=					\
+	s0001:p0000:testmultistep_yasp_P1_1d-*.vtp	\
+	s0001:testmultistep_yasp_P1_1d-*.pvtp		\
+	testmultistep_yasp_P1_1d.pvd
 
 NORMALTESTS += testp12dinterpolation
 testp12dinterpolation_SOURCES = testp12dinterpolation.cc
