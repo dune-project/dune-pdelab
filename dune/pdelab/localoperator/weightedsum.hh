@@ -388,7 +388,7 @@ namespace Dune {
             R my_r(lfsv.size(), 0);
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
               tuple_element<i,Args>::type::doAlphaVolume>::
-              alpha_volume(*get<i>(lops), eg, lfsu, x, lfsv, r);
+              alpha_volume(*get<i>(lops), eg, lfsu, x, lfsv, my_r);
             for(unsigned k = 0; k < lfsv.size(); ++k)
               r[k] += weights[i] * my_r[k];
           }
@@ -408,7 +408,9 @@ namespace Dune {
             R my_r(lfsv.size(), 0);
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
               tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
-              alpha_volume_post_skeleton(*get<i>(lops), eg, lfsu, x, lfsv, r);
+              alpha_volume_post_skeleton(*get<i>(lops), eg,
+                                         lfsu, x, lfsv,
+                                         my_r);
             for(unsigned k = 0; k < lfsv.size(); ++k)
               r[k] += weights[i] * my_r[k];
           }
@@ -433,7 +435,7 @@ namespace Dune {
               alpha_skeleton(*get<i>(lops), ig,
                              lfsu_s, x_s, lfsv_s,
                              lfsu_n, x_n, lfsv_n,
-                             r_s, r_n);
+                             my_r_s, my_r_n);
             for(unsigned k = 0; k < lfsv_s.size(); ++k)
               r_s[k] += weights[i] * my_r_s[k];
             for(unsigned k = 0; k < lfsv_n.size(); ++k)
@@ -455,7 +457,7 @@ namespace Dune {
             R my_r_s(lfsv_s.size(), 0);
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
               tuple_element<i,Args>::type::doAlphaBoundary>::
-              alpha_boundary(*get<i>(lops), ig, lfsu_s, x_s, lfsv_s, r_s);
+              alpha_boundary(*get<i>(lops), ig, lfsu_s, x_s, lfsv_s, my_r_s);
             for(unsigned k = 0; k < lfsv_s.size(); ++k)
               r_s[k] += weights[i] * my_r_s[k];
           }
@@ -555,7 +557,7 @@ namespace Dune {
             R my_r(lfsv.size(), 0);
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
               tuple_element<i,Args>::type::doLambdaVolume>::
-              lambda_volume(*get<i>(lops), eg, lfsv, r);
+              lambda_volume(*get<i>(lops), eg, lfsv, my_r);
             for(unsigned k = 0; k < lfsv.size(); ++k)
               r[k] += weights[i] * my_r[k];
           }
@@ -574,7 +576,7 @@ namespace Dune {
             R my_r(lfsv.size(), 0);
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
               tuple_element<i,Args>::type::doLambdaVolumePostSkeleton>::
-              lambda_volume_post_skeleton(*get<i>(lops), eg, lfsv, r);
+              lambda_volume_post_skeleton(*get<i>(lops), eg, lfsv, my_r);
             for(unsigned k = 0; k < lfsv.size(); ++k)
               r[k] += weights[i] * my_r[k];
           }
@@ -595,7 +597,9 @@ namespace Dune {
             R my_r_n(lfsv_n.size(), 0);
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
               tuple_element<i,Args>::type::doLambdaSkeleton>::
-              lambda_skeleton(*get<i>(lops), ig, lfsv_s, lfsv_n, r_s, r_n);
+              lambda_skeleton(*get<i>(lops), ig,
+                              lfsv_s, lfsv_n,
+                              my_r_s, my_r_n);
             for(unsigned k = 0; k < lfsv_s.size(); ++k)
               r_s[k] += weights[i] * my_r_s[k];
             for(unsigned k = 0; k < lfsv_n.size(); ++k)
@@ -616,7 +620,7 @@ namespace Dune {
             R my_r_s(lfsv_s.size(), 0);
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
               tuple_element<i,Args>::type::doLambdaBoundary>::
-              lambda_boundary(*get<i>(lops), ig, lfsv_s, r_s);
+              lambda_boundary(*get<i>(lops), ig, lfsv_s, my_r_s);
             for(unsigned k = 0; k < lfsv_s.size(); ++k)
               r_s[k] += weights[i] * my_r_s[k];
           }
@@ -701,7 +705,7 @@ namespace Dune {
             Y my_y(lfsv.size(), 0);
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
               tuple_element<i,Args>::type::doAlphaVolume>::
-              jacobian_apply_volume(*get<i>(lops), eg, lfsu, x, lfsv, y);
+              jacobian_apply_volume(*get<i>(lops), eg, lfsu, x, lfsv, my_y);
             for(unsigned k = 0; k < lfsv.size(); ++k)
               y[k] += weights[i] * my_y[k];
           }
@@ -723,7 +727,7 @@ namespace Dune {
               tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
               jacobian_apply_volume_post_skeleton(*get<i>(lops), eg,
                                                   lfsu, x, lfsv,
-                                                  y);
+                                                  my_y);
             for(unsigned k = 0; k < lfsv.size(); ++k)
               y[k] += weights[i] * my_y[k];
           }
@@ -748,7 +752,7 @@ namespace Dune {
               jacobian_apply_skeleton(*get<i>(lops), ig,
                                       lfsu_s, x_s, lfsv_s,
                                       lfsu_n, x_n, lfsv_n,
-                                      y_s, y_n);
+                                      my_y_s, my_y_n);
             for(unsigned k = 0; k < lfsv_s.size(); ++k)
               y_s[k] += weights[i] * my_y_s[k];
             for(unsigned k = 0; k < lfsv_n.size(); ++k)
@@ -772,7 +776,7 @@ namespace Dune {
               tuple_element<i,Args>::type::doAlphaBoundary>::
               jacobian_apply_boundary(*get<i>(lops), ig,
                                       lfsu_s, x_s, lfsv_s,
-                                      y_s);
+                                      my_y_s);
             for(unsigned k = 0; k < lfsv_s.size(); ++k)
               y_s[k] += weights[i] * my_y_s[k];
           }
@@ -873,7 +877,7 @@ namespace Dune {
             LocalMatrix<R> my_mat(lfsu.size(), lfsv.size(), 0);
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
               tuple_element<i,Args>::type::doAlphaVolume>::
-              jacobian_volume(*get<i>(lops), eg, lfsu, x, lfsv, mat);
+              jacobian_volume(*get<i>(lops), eg, lfsu, x, lfsv, my_mat);
             for(unsigned k = 0; k < lfsu.size(); ++k)
               for(unsigned l = 0; l < lfsv.size(); ++l)
                 mat(k,l) += weights[i] * my_mat(k,l);
@@ -896,7 +900,7 @@ namespace Dune {
               tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
               jacobian_volume_post_skeleton(*get<i>(lops), eg,
                                             lfsu, x, lfsv,
-                                            mat);
+                                            my_mat);
             for(unsigned k = 0; k < lfsu.size(); ++k)
               for(unsigned l = 0; l < lfsv.size(); ++l)
                 mat(k,l) += weights[i] * my_mat(k,l);
@@ -925,7 +929,7 @@ namespace Dune {
               jacobian_skeleton(*get<i>(lops), ig,
                                 lfsu_s, x_s, lfsv_s,
                                 lfsu_n, x_n, lfsv_n,
-                                mat_ss, mat_sn, mat_ns, mat_nn);
+                                my_mat_ss, my_mat_sn, my_mat_ns, my_mat_nn);
             for(unsigned k = 0; k < lfsu_s.size(); ++k)
               for(unsigned l = 0; l < lfsv_s.size(); ++l)
                 mat_ss(k,l) += weights[i] * my_mat_ss(k,l);
@@ -956,7 +960,7 @@ namespace Dune {
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
               tuple_element<i,Args>::type::doAlphaBoundary>::
               jacobian_boundary(*get<i>(lops), ig,
-                                lfsu_s, x_s, lfsv_s, mat_ss);
+                                lfsu_s, x_s, lfsv_s, my_mat_ss);
             for(unsigned k = 0; k < lfsu_s.size(); ++k)
               for(unsigned l = 0; l < lfsv_s.size(); ++l)
                 mat_ss(k,l) += weights[i] * my_mat_ss(k,l);
