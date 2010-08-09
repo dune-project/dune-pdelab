@@ -362,6 +362,9 @@ namespace Dune {
 
     //! construct constraints from given boundary condition function
     /**
+     * \code
+#include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * \endcode
      * \tparam F   Type implementing a boundary condition function 
      * \tparam GFS Type implementing the model GridFunctionSpace
      * \tparam CG  Type implementing the model
