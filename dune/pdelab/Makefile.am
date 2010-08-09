@@ -7,6 +7,7 @@ SUBDIRS =					\
 	gridfunctionspace			\
 	gridoperatorspace			\
 	localoperator				\
+	multistep				\
 	newton					\
 	test
 
