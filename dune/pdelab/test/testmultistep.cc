@@ -32,8 +32,10 @@
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/geometrywrapper.hh>
 #include <dune/pdelab/common/vtkexport.hh>
+#include <dune/pdelab/experimental/localoperator/scaled.hh>
 #include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include <dune/pdelab/finiteelementmap/p1fem.hh>
+#include <dune/pdelab/function/const.hh>
 #include <dune/pdelab/gridfunctionspace/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
@@ -43,6 +45,7 @@
 #include <dune/pdelab/localoperator/flags.hh>
 #include <dune/pdelab/localoperator/idefault.hh>
 #include <dune/pdelab/localoperator/pattern.hh>
+#include <dune/pdelab/localoperator/poisson.hh>
 #include <dune/pdelab/multistep/gridoperatorspace.hh>
 #include <dune/pdelab/multistep/method.hh>
 #include <dune/pdelab/multistep/parameter.hh>
@@ -71,7 +74,8 @@ class B
           < Dune::PDELab::
             BoundaryGridFunctionTraits<GV,int,1,
                                        Dune::FieldVector<int,1> >,
-            B<GV> >
+            B<GV> >,
+    public Dune::PDELab::InstationaryFunctionDefaults
 {
   const GV& gv;
 
@@ -131,86 +135,6 @@ public:
 //===============================================================
 // Local Operators
 //===============================================================
-
-template<typename Time, typename Scale>
-class R0
-  : public Dune::PDELab::FullVolumePattern
-  , public Dune::PDELab::LocalOperatorDefaultFlags
-  , public Dune::PDELab::JacobianBasedAlphaVolume<R0<Time, Scale> >
-  , public Dune::PDELab::InstationaryLocalOperatorDefaultMethods<Time>
-{
-  Scale scale;
-  unsigned qorder;
-
-public:
-
-  // pattern assembly flags
-  enum { doPatternVolume = true };
-  enum { doAlphaVolume = true };
-
-  R0(Scale scale_, int qorder_ = 2) : scale(scale_), qorder(qorder_) { }
-
-  template<typename EG, typename LFSU, typename X, typename LFSV,
-           typename R>
-  void jacobian_volume(const EG& eg,
-                       const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                       Dune::PDELab::LocalMatrix<R>& mat) const
-  {
-    // domain and range field type
-    typedef typename LFSU::Traits::LocalFiniteElementType LFEU;
-    typedef typename LFEU::Traits::LocalBasisType LBU;
-    typedef typename LBU::Traits::RangeFieldType RFU;
-    typedef typename LBU::Traits::JacobianType JacobianU;
-
-    typedef typename LFSV::Traits::LocalFiniteElementType LFEV;
-    typedef typename LFEV::Traits::LocalBasisType LBV;
-    typedef typename LBV::Traits::RangeFieldType RFV;
-    typedef typename LBV::Traits::JacobianType JacobianV;
-
-    typedef typename LBU::Traits::DomainFieldType DF;
-    static const unsigned dimD = LBU::Traits::dimDomain;
-    typedef typename LBU::Traits::DomainType Domain;
-
-    static const unsigned dimw = EG::Geometry::coorddimension;
-
-    // select quadrature rule
-    typedef Dune::QuadratureRule<DF,dimD> QR;
-    typedef Dune::QuadratureRules<DF,dimD> QRs;
-    Dune::GeometryType gt = eg.geometry().type();
-    const QR& rule = QRs::rule(gt,qorder);
-
-    // loop over quadrature points
-    for(typename QR::const_iterator it=rule.begin();
-        it!=rule.end(); ++it) {
-      std::vector<JacobianU> jsu(lfsu.size());
-      lfsu.localFiniteElement().localBasis()
-        .evaluateJacobian(it->position(),jsu);
-
-      std::vector<JacobianV> jsv(lfsv.size());
-      lfsv.localFiniteElement().localBasis()
-        .evaluateJacobian(it->position(),jsv);
-
-      // transform gradient to real element
-      const Dune::FieldMatrix<DF,dimw,dimD> &jac =
-        eg.geometry().jacobianInverseTransposed(it->position());
-
-      std::vector<Dune::FieldVector<RFU,dimw> > gradphiu(lfsu.size(), 0);
-      for (std::size_t i=0; i<lfsu.size(); i++)
-        jac.umv(jsu[i][0],gradphiu[i]);
-
-      std::vector<Dune::FieldVector<RFV,dimw> > gradphiv(lfsv.size(), 0);
-      for (std::size_t i=0; i<lfsv.size(); i++)
-        jac.umv(jsv[i][0],gradphiv[i]);
-
-      R factor = it->weight()
-        * eg.geometry().integrationElement(it->position()) * scale;
-
-      for(unsigned i = 0; i < lfsu.size(); ++i)
-        for(unsigned j = 0; j < lfsv.size(); ++j)
-          mat(i,j) += factor * (gradphiu[i] * gradphiv[j]);
-    }
-  }
-};
 
 template<typename Time>
 class R1
@@ -323,12 +247,20 @@ void wave (const GV& gv, const FEM& fem, typename GV::ctype dt,
   Dune::PDELab::CentralDifferencesParameters<DF> msParams;
 
   // make grid function operator
-  R0<DF, RF> r0(c, qorder);
+  typedef Dune::PDELab::ConstGridFunction<GV, RF, 1> ZeroFunc;
+  ZeroFunc zeroFunc(gv, 0);
+
+  typedef Dune::PDELab::InstationaryPoisson<DF, ZeroFunc, BType, ZeroFunc,
+    qorder> Poisson;
+  Poisson poisson(zeroFunc, b, zeroFunc);
+
+  typedef Dune::PDELab::ScaledLocalOperator<Poisson, RF, DF> R0;
+  R0 r0(poisson, c*c);
   R1<DF> r1;
   R2<DF> r2(qorder);
 
-  typedef Dune::tuple<R0<DF, RF>, R1<DF>, R2<DF> > LOPs;
-  typedef Dune::tuple<R0<DF, RF>&, R1<DF>&, R2<DF>&> LOPRefs;
+  typedef Dune::tuple<R0, R1<DF>, R2<DF> > LOPs;
+  typedef Dune::tuple<R0&, R1<DF>&, R2<DF>&> LOPRefs;
 
   typedef Dune::PDELab::MultiStepGridOperatorSpace<DF,V,GFS,GFS,
     LOPs,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > MGOS;
