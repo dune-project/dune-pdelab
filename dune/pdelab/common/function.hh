@@ -1,4 +1,4 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
+//-*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_FUNCTION_HH
 #define DUNE_PDELAB_FUNCTION_HH
 
@@ -80,6 +80,25 @@ namespace Dune {
 	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
 	};
 
+    //! Default class for additional methods in instationary functions
+    class InstationaryFunctionDefaults
+    {
+    public:
+      //! set time for subsequent evaluation
+      /**
+       * This method set the time for subsequent calls to any of the
+       * evaluation methods.
+       *
+       * \note This default method does nothing, it just ensures setTime() can
+       *       be called without ill effects.
+       * \note Function implementation are free to restrict the types of
+       *       acceptable parameters.  This should be noted in the function
+       *       classes documentation.
+       */
+      template<typename Time>
+      inline void setTime(Time t)
+      { }
+    };
 
 	//! traits class holding function signature, same as in local function
 	template<class GV, class RF, int m, class R>
