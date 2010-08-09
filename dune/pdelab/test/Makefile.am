@@ -232,6 +232,9 @@ testmultitypetree_LDADD = 			\
 	$(ALBERTA_LIBS)				\
 	$(LDADD)
 
+NORMALTESTS += testmultistep
+testmultistep_SOURCES = testmultistep.cc
+
 NORMALTESTS += testp12dinterpolation
 testp12dinterpolation_SOURCES = testp12dinterpolation.cc
 testp12dinterpolation_CPPFLAGS = $(AM_CPPFLAGS)				\
