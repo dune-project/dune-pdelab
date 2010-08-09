@@ -151,7 +151,18 @@ namespace Dune {
 	};
 
 
-    // interpolation from a given grid function
+    //! interpolation from a given grid function
+    /**
+     * \code
+#include <dune/pdelab/gridfunctionspace/interpolate.hh>
+     * \endcode
+     * \param f   Function to interpolate from.
+     * \param gfs GridFunctionSpace to use for interpoaltion.
+     * \param xg  Global vector of dofs to interpolate into.
+     *
+     * \note \c xg needs to be initialized to the correct size, but there is
+     *       no need to initialize its contents.
+     */
     template<typename F, typename GFS, typename XG>
     void interpolate (const F& f, const GFS& gfs, XG& xg)
     {
