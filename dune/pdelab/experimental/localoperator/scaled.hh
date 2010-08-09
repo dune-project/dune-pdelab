@@ -953,6 +953,8 @@ namespace Dune {
       //! \name Methods for temporal local operators
       //! \{
 
+      typedef Time RealType;
+
       //! set time for subsequent evaluation
       /**
        * This method set the time for subsequent calls to the alpha_*(),
