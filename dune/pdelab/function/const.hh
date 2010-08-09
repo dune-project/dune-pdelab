@@ -19,7 +19,8 @@ namespace Dune {
       : public AnalyticGridFunctionBase<
           AnalyticGridFunctionTraits<GV,RF,dimR>,
           ConstGridFunction<GV,RF,dimR>
-        >
+        >,
+        public InstationaryFunctionDefaults
     {
     public:
       typedef AnalyticGridFunctionTraits<GV,RF,dimR> Traits;
