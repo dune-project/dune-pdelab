@@ -63,6 +63,27 @@ namespace Dune
          *     </ol>
          * <li>Call postStep() on the temporal local operator.
          * </ol>
+         *
+         * The algorithm used by the MultiStepGridOperatorSpace and the
+         * MultiStepMethod to advance one step in time is as follows:
+         * <ol>
+         * <li>Call the method preStep(start_time_of_step, step_size, 1)
+         *     on each localoperator.
+         * <li>Call the method preStage(end_time_of_step, 1) on each local
+         *     operator.
+         * <li>Assemble constant part of residual: For each step in [1,
+         *     number_of_steps]
+         *     <ol>
+         *     <li>Call setTime(end_time_of_step-step_size*number_of_step) for
+         *         each local operator.
+         *     <li>Iterate over grid and evaluate the local operators.
+         *     </ol>
+         * <li>Call setTime(end_time_of_step) for each local operator.
+         * <li>Apply solver: Iterate over grid (possibly multiple times and
+         *     evaluate local operator.
+         * <li>Call postStage() on each local operator.
+         * <li>Call postStep() on each local operator.
+         * </ol>
          */
         template<class R = double>
         class InstationaryLocalOperatorDefaultMethods
@@ -98,11 +119,17 @@ namespace Dune
             /**
              * \param time   Time at beginning of the step.
              * \param dt     Size of time step.
-             * \param stages Number of stages to do in the step.
+             * \param stages Number of stages to do in the step.  For the
+             *               MultiStepMethod this is always 1.
              *
              * \note For ExplicitOneStepMethod the dt given here may be
              *       incorrect, since the time step size is only finally
              *       determined after the first stage has been assembled.
+             *
+             * \note For the MultiStepMethod the number of stages is given as
+             *       1.  Since there are no times of evaluation in the middle
+             *       of the step, a multi-step method is similar to a one step
+             *       method with one stage.
              */
             void preStep (RealType time, RealType dt, int stages)
             {
@@ -110,8 +137,10 @@ namespace Dune
 
             //! to be called once at the end of each time step
             /**
-             * For reasons unknown this is only called for temporal but not
-             * for spatial local operators.
+             * \note With the OneStepMethod and the ExplicitOneStepMetod, for
+             *       reasons unknown this is only called for temporal but not
+             *       for spatial local operators.  With the MultiStepMethod
+             *       this *is* called for all local operators.
              */
             void postStep ()
             {
@@ -128,6 +157,9 @@ namespace Dune
              *       may be incorrect, since the time step size is only
              *       finally determined after the first stage has been
              *       assembled.
+             *
+             * \note For the MultiStepMethod, this is called once after
+             *       preStep() with r=1.
              */
             void preStage (RealType time, int r)
             {
