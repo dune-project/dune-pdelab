@@ -62,6 +62,56 @@ namespace Dune {
 
     //////////////////////////////////////////////////////////////////////
     //
+    //  Central Differences
+    //
+
+    //! Parameter class for the central differences scheme
+    /**
+     * \tparam value_type C++ type of the floating point parameters
+     */
+    template<typename value_type>
+    class CentralDifferencesParameters
+      : public MultiStepParameterInterface<value_type, 2>
+    {
+      static const value_type a[3][3];
+
+    public:
+      //! Return number of steps of the method
+      /**
+       * \returns 2 for central differences
+       */
+      virtual unsigned steps () const { return 2; }
+
+      //! Return alpha coefficients
+      /**
+       * Return \f$\alpha_{\text{\tt step}, \text{\tt deriv}}\f$:
+       * \f{align*}{
+       *   \alpha_{00}&=0 & \alpha_{01}&=\frac12 & \alpha_{02}&=1 \\
+       *   \alpha_{10}&=1 & \alpha_{11}&=0       & \alpha_{12}&=-2 \\
+       *   \alpha_{20}&=0 & \alpha_{21}&=\frac12 & \alpha_{22}&=1
+       * \f}
+       *
+       * \note step ∈ [0,...,steps()] and deriv ∈ [0,...,order]
+       */
+      virtual value_type alpha(int step, int deriv) const {
+        return a[step][deriv];
+      }
+
+      //! Return name of the scheme
+      virtual std::string name () const {
+        return "Central Differences";
+      }
+    };
+
+    template<typename value_type>
+    const value_type CentralDifferencesParameters<value_type>::a[3][3] = {
+      {0, 0.5,  1},
+      {1, 0,   -2},
+      {0, 0.5,  1}
+    };
+
+    //////////////////////////////////////////////////////////////////////
+    //
     //  Newmark-β scheme
     //
 
