@@ -18,6 +18,7 @@ common_HEADERS =				\
 	mfdcommon.hh				\
 	pattern.hh				\
 	poisson.hh				\
+	scaled.hh				\
 	stokesdg.hh				\
 	transportccfv.hh			\
 	twophaseccfv.hh				\

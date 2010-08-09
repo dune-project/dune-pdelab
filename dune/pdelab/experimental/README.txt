@@ -23,8 +23,5 @@ List of reasons why a file is in experimental:
  * common/vtkexport.hh:
    untested, except for "make headercheck".
 
- * localoperator/scaled.hh:
-   untested, except for "make headercheck".
-
  * localoperator/sum.hh:
    untested, except for "make headercheck".

@@ -32,7 +32,6 @@
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/geometrywrapper.hh>
 #include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/experimental/localoperator/scaled.hh>
 #include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include <dune/pdelab/finiteelementmap/p1fem.hh>
 #include <dune/pdelab/function/const.hh>
@@ -46,6 +45,7 @@
 #include <dune/pdelab/localoperator/idefault.hh>
 #include <dune/pdelab/localoperator/pattern.hh>
 #include <dune/pdelab/localoperator/poisson.hh>
+#include <dune/pdelab/localoperator/scaled.hh>
 #include <dune/pdelab/multistep/gridoperatorspace.hh>
 #include <dune/pdelab/multistep/method.hh>
 #include <dune/pdelab/multistep/parameter.hh>
