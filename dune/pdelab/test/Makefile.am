@@ -234,9 +234,17 @@ testmultitypetree_LDADD = 			\
 
 NORMALTESTS += testmultistep
 testmultistep_SOURCES = testmultistep.cc
+testmultistep_CPPFLAGS = $(AM_CPPFLAGS)		\
+	$(DUNEMPICPPFLAGS)
+testmultistep_LDFLAGS = $(AM_LDFLAGS)		\
+	$(DUNEMPILDFLAGS)
+testmultistep_LDADD =				\
+	$(DUNEMPILIBS)				\
+	$(LDADD)
+
 MOSTLYCLEANFILES +=					\
-	s0001:p0000:testmultistep_yasp_P1_1d-*.vtp	\
-	s0001:testmultistep_yasp_P1_1d-*.pvtp		\
+	s*:p*:testmultistep_yasp_P1_1d-*.vtp		\
+	s*:testmultistep_yasp_P1_1d-*.pvtp		\
 	testmultistep_yasp_P1_1d.pvd
 
 NORMALTESTS += testp12dinterpolation

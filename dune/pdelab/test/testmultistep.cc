@@ -263,15 +263,15 @@ void wave (const GV& gv, const FEM& fem, typename GV::ctype dt,
   typedef Dune::tuple<R0&, R1<DF>&, R2<DF>&> LOPRefs;
 
   typedef Dune::PDELab::MultiStepGridOperatorSpace<DF,V,GFS,GFS,
-    LOPs,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > MGOS;
+    LOPs,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1>, true> MGOS;
   MGOS mgos(msParams, gfs,cg,gfs,cg, LOPRefs(r0, r1, r2));
 
 // #if HAVE_SUPERLU
 //   typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS;
 //   LS ls(false);
 // #else
-  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR LS;
-  LS ls(5000,false);
+  typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GFS> LS;
+  LS ls(gfs,5000,2);
   //#endif
 
   // <<<7>>> make Newton for time-dependent problem
@@ -342,10 +342,10 @@ int main(int argc, char** argv)
       typedef Dune::YaspGrid<1> Grid;
       // make grid
       Dune::FieldVector<double,1> L(1.0);
-      Dune::FieldVector<int,1> N(1);
+      Dune::FieldVector<int,1> N(2);
       Dune::FieldVector<bool,1> B(false);
-      Grid grid(L,N,B,0);
-      grid.globalRefine(7);
+      Grid grid(Dune::MPIHelper::getCommunicator(),L,N,B,0);
+      grid.globalRefine(6);
 
       // get view
       typedef Grid::LeafGridView GV;
@@ -357,8 +357,8 @@ int main(int argc, char** argv)
       FEM fem;
 
       // solve problem
-      wave<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>
-        (gv,fem,1.0/(1<<9), 1.0, 1000 ,"testmultistep_yasp_P1_1d");
+      wave<GV,FEM,Dune::PDELab::NonoverlappingConformingDirichletConstraints,2>
+        (gv,fem,1.0/(1<<8), 1.0, 1<<9 ,"testmultistep_yasp_P1_1d");
     }
 
     // test passed
