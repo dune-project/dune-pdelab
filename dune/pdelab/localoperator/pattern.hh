@@ -49,6 +49,22 @@ namespace Dune {
       }
    };
 
+    //! sparsity pattern generator
+    class FullBoundaryPattern
+    {
+    public:
+
+      // define sparsity pattern connecting dofs on boundary elements
+      template<typename LFSU, typename LFSV>
+      void pattern_skeleton (const LFSU& lfsu_s, const LFSV& lfsv_s,
+                            LocalSparsityPattern& pattern_ss) const
+      {
+        for (unsigned int i=0; i<lfsv_s.size(); ++i)
+          for (unsigned int j=0; j<lfsu_s.size(); ++j)
+            pattern_ss.push_back(SparsityLink(i,j));
+      }
+   };
+
     //! \} group GridFunctionSpace
   } // namespace PDELab
 } // namespace Dune
