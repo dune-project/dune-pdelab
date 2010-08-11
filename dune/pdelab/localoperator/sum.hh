@@ -1,7 +1,7 @@
 // -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=8 sw=2 sts=2:
-#ifndef DUNE_PDELAB_EXPERIMENTAL_LOCALOPERATOR_SUM_HH
-#define DUNE_PDELAB_EXPERIMENTAL_LOCALOPERATOR_SUM_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_SUM_HH
+#define DUNE_PDELAB_LOCALOPERATOR_SUM_HH
 
 #include <cstddef>
 
@@ -996,4 +996,4 @@ namespace Dune {
   }
 }
 
-#endif // DUNE_PDELAB_EXPERIMENTAL_LOCALOPERATOR_SUM_HH
+#endif // DUNE_PDELAB_LOCALOPERATOR_SUM_HH

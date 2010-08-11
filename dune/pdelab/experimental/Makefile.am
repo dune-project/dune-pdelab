@@ -1,7 +1,6 @@
 noinst_DATA = README.txt
 
 SUBDIRS =					\
-	common					\
-	localoperator
+	common
 
 include $(top_srcdir)/am/global-rules

@@ -20,6 +20,7 @@ common_HEADERS =				\
 	poisson.hh				\
 	scaled.hh				\
 	stokesdg.hh				\
+	sum.hh					\
 	transportccfv.hh			\
 	twophaseccfv.hh				\
 	weightedsum.hh
