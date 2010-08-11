@@ -23,12 +23,12 @@ namespace Dune {
       typedef typename T::RangeFieldType RF;
 
       RF factor;
-      const GF& gf;
+      GF& gf;
 
     public:
       typedef typename Base::Traits Traits;
 
-      ScalarScaledGridFunctionAdapter(RF factor_, const GF& gf_)
+      ScalarScaledGridFunctionAdapter(RF factor_, GF& gf_)
         : factor(factor_), gf(gf_)
       { }
 
@@ -42,6 +42,9 @@ namespace Dune {
       const typename Traits::GridViewType& getGridView() const {
         return gf.getGridView();
       }
+
+      template<typename Time>
+      void setTime(Time time) { gf.setTime(time); }
     };
 
   } // namspace PDELab
