@@ -27,13 +27,13 @@ namespace Dune {
       typedef GridFunctionBase<T, MinusGridFunctionAdapter<GF1,GF2> >
               Base;
 
-      const GF1& gf1;
-      const GF2& gf2;
+      GF1& gf1;
+      GF2& gf2;
 
     public:
       typedef typename Base::Traits Traits;
 
-      MinusGridFunctionAdapter(const GF1& gf1_, const GF2& gf2_)
+      MinusGridFunctionAdapter(GF1& gf1_, GF2& gf2_)
         : gf1(gf1_), gf2(gf2_)
       { }
 
@@ -48,6 +48,12 @@ namespace Dune {
 
       const typename Traits::GridViewType& getGridView() const {
         return gf1.getGridView();
+      }
+
+      template<typename Time>
+      void setTime(Time time) {
+        gf1.setTime(time);
+        gf2.setTime(time);
       }
     };
 
