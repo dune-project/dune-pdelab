@@ -156,7 +156,7 @@ namespace Dune
 
 
         private:
-            void linearSolve(const Matrix& A, TrialVector& z, TestVector& r) const
+            void linearSolve(Matrix& A, TrialVector& z, TestVector& r) const
             {
                 if (this->verbosity_level >= 4)
                     std::cout << "      Solving linear system..." << std::endl;
