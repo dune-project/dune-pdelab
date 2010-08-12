@@ -1670,7 +1670,7 @@ namespace Dune {
         typedef typename CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
 
         Comm oocc(gfs.gridview().comm());
-        MatrixType mat=A.base();
+        MatrixType& mat=A.base();
         phelper.createIndexSetAndProjectForAMG(mat, oocc);
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
           Dune::Amg::FirstDiagonal> >
@@ -1802,7 +1802,7 @@ namespace Dune {
         typedef typename M::BaseT MatrixType;
         typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type
           VectorType;
-        MatrixType mat=A.base();
+        MatrixType& mat=A.base();
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
           Dune::Amg::FirstDiagonal> >
           Criterion;
