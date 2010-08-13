@@ -57,14 +57,14 @@ namespace Dune {
        * setSummand() before the constructed object is used.
        */
       WeightedSumLocalOperator
-      ( const FieldVector<K, size>& weights_ = FieldVector<K, size>(1))
+      ( const Weights& weights_ = Weights(1))
         : weights(weights_)
       { }
 
       //! construct a WeightedSumLocalOperator from a tuple of local operators
       WeightedSumLocalOperator
       ( const ArgRefs& lops_,
-        const FieldVector<K, size>& weights_ = FieldVector<K, size>(1))
+        const Weights& weights_ = Weights(1))
         : lops(transformTuple<AddPtrTypeEvaluator>(lops_)), weights(weights_)
       { }
 
