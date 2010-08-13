@@ -15,7 +15,9 @@
 #include"../common/geometrywrapper.hh"
 #include"../gridoperatorspace/gridoperatorspace.hh"
 #include"pattern.hh"
+#include"idefault.hh"
 #include"flags.hh"
+#include"l2.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -58,7 +60,8 @@ namespace Dune {
       public NumericalJacobianApplyVolume<TaylorHoodNavierStokes<B,J,P,navier,qorder> >,
       public NumericalJacobianVolume<TaylorHoodNavierStokes<B,J,P,navier,qorder> >,
       public FullVolumePattern,
-      public LocalOperatorDefaultFlags
+      public LocalOperatorDefaultFlags,
+      public InstationaryLocalOperatorDefaultMethods<double>
 	{
 	public:
       // pattern assembly flags
@@ -360,7 +363,6 @@ namespace Dune {
 	    typedef typename LFSU_P::Traits::LocalFiniteElementType::
 	      Traits::LocalBasisType::Traits::RangeType RT_P;
 
-
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
@@ -476,6 +478,65 @@ namespace Dune {
       CT rho() const{ return CT(1.0); }
       CT mu()  const{ return CT(1.0); }
     };
+
+    //! Interface for the parameter class required by the classes
+    //! TaylorHoodNavierStokes and TaylorHoodNavierStokesJacobian.
+    template <class CT>
+    class InstationaryTaylorHoodNavierStokesParameters{
+    public:
+      CT rho() const{ return CT(1.0); }
+      CT mu()  const{ return CT(1.0); }
+      CT tau()  const{ return CT(0.1); }
+      CT time()  const{ return CT(1.0); }
+    };
+
+    //! \addtogroup LocalOperator
+    //! \ingroup PDELab
+    //! \{
+
+    /** a local operator for the mass term corresponding to the
+     * instationary local operator TaylorHoodNavierStokes(Jacobian)
+     *
+     * \f{align*}{
+     \int_\Omega uv dx
+     * \f}
+     */
+	class NavierStokesMass : public NumericalJacobianApplyVolume<NavierStokesMass>,
+                             public FullVolumePattern,
+                             public LocalOperatorDefaultFlags,
+                             public InstationaryLocalOperatorDefaultMethods<double>
+	{
+	public:
+      // pattern assembly flags
+      enum { doPatternVolume = true };
+
+	  // residual assembly flags
+      enum { doAlphaVolume = true };
+
+      NavierStokesMass (int intorder_=4)
+        : intorder(intorder_),
+          scalar_operator(intorder_)
+      {}
+
+	  // volume integral depending on test and ansatz functions
+	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+	  {
+        scalar_operator.alpha_volume(eg,lfsu.template getChild<0>(),x,lfsu.template getChild<0>(),r);
+	  }
+
+      // jacobian of volume term
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
+                            LocalMatrix<R>& mat) const
+      {
+        scalar_operator.jacobian_volume(eg,lfsu.template getChild<0>(),x,lfsu.template getChild<0>(),mat);
+      }
+
+    private:
+      int intorder;
+      PowerL2 scalar_operator;
+	};
 
     //! \} group LocalOperator
   } // namespace PDELab
