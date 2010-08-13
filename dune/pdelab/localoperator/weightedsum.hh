@@ -6,6 +6,7 @@
 #include <cstddef>
 
 #include <dune/common/forloop.hh>
+#include <dune/common/fvector.hh>
 #include <dune/common/static_assert.hh>
 #include <dune/common/tuples.hh>
 #include <dune/common/typetraits.hh>
