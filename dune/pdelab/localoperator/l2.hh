@@ -79,7 +79,7 @@ namespace Dune {
             // evaluate u
             RF u=0.0;
             for (size_type i=0; i<lfsu.size(); i++)
-              u += x[i]*phi[i];
+              u += x[lfsu.localIndex(i)]*phi[i];
 
             // u*phi_i
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
@@ -129,6 +129,55 @@ namespace Dune {
 
     private:
       int intorder;
+	};
+
+    //! \addtogroup LocalOperator
+    //! \ingroup PDELab
+    //! \{
+
+    /** a local operator for the mass operator of a vector valued lfs (L_2 integral)
+     *
+     * \f{align*}{
+     \int_\Omega uv dx
+     * \f}
+     */
+	class PowerL2 : public NumericalJacobianApplyVolume<PowerL2>,
+                    public FullVolumePattern,
+                    public LocalOperatorDefaultFlags,
+                    public InstationaryLocalOperatorDefaultMethods<double>
+	{
+	public:
+      // pattern assembly flags
+      enum { doPatternVolume = true };
+
+	  // residual assembly flags
+      enum { doAlphaVolume = true };
+
+      PowerL2 (int intorder_=2)
+        : intorder(intorder_),
+          scalar_operator(intorder_)
+      {}
+
+	  // volume integral depending on test and ansatz functions
+	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+	  {
+        for(int i=0; i<LFSU::CHILDREN; ++i)
+          scalar_operator.alpha_volume(eg,lfsu.getChild(i),x,lfsv.getChild(i),r);
+	  }
+
+      // jacobian of volume term
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
+                            LocalMatrix<R>& mat) const
+      {
+        for(int i=0; i<LFSU::CHILDREN; ++i)
+          scalar_operator.jacobian_volume(eg,lfsu.getChild(i),x,lfsv.getChild(i),mat);
+      }
+
+    private:
+      int intorder;
+      L2 scalar_operator;
 	};
 
     //! \} group LocalOperator
