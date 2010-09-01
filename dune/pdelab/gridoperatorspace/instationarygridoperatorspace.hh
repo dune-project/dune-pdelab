@@ -684,7 +684,6 @@ namespace Dune {
         for (size_t i=0; i<stage; ++i) b[i] = method->b(stage,i);
         std::vector<TReal> d(stage);
         for (size_t i=0; i<stage; ++i) d[i] = method->d(i);
-        TReal b_rr = method->b(stage,stage);
         TReal d_r = method->d(stage);
 
         bool needsSkeleton = LA::doAlphaSkeleton||LA::doAlphaBoundary||LA::doLambdaSkeleton||LA::doLambdaBoundary;
