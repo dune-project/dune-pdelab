@@ -21,8 +21,23 @@
 namespace Dune {
   namespace PDELab {
 
-    //! Parameters specifying explicit euler
     /**
+     * @defgroup OneStepMethod One-step methods
+     * @ingroup PDELab
+     *
+     * @brief Time stepping with one step methods.
+     * 
+     * Use the class OneStepMethod to create a one step method.
+     * the actual method is chosen by providing the constructor
+     * with the correct parameter class, e.g. ExplicitEulerParameter.
+     *
+     *  @addtogroup OneStepMethod
+     *  @{
+     */
+    /**
+     * \brief Parameters to turn the ExplicitOneStepMethod into an
+     * explicite Euler method.
+     *
      * \tparam R C++ type of the floating point parameters
      */
     template<class R> 
@@ -88,8 +103,12 @@ namespace Dune {
       Dune::FieldMatrix<R,1,2> B;
     };
 
-    //! Parameters specifying the one step theta scheme
     /**
+     * \brief Parameters to turn the OneStepMethod into an
+     * one step theta method.
+     *
+     * For theta=0 this parameter class can be used with the 
+     * ExplicitOneStepMethod
      * \tparam R C++ type of the floating point parameters
      */
     template<class R> 
@@ -163,8 +182,10 @@ namespace Dune {
       Dune::FieldMatrix<R,1,2> B;
     };
 
-    //! Parameters specifying the Heun scheme
     /**
+     * \brief Parameters to turn the ExplicitOneStepMethod into a
+     * Heun scheme.
+     *
      * \tparam R C++ type of the floating point parameters
      */
     template<class R> 
@@ -234,8 +255,10 @@ namespace Dune {
       Dune::FieldMatrix<R,2,3> B;
     };
 
-    //! Parameters specifying the Alexander scheme
     /**
+     * \brief Parameters to turn the OneStepMethod into an
+     * Alexander scheme.
+     *
      * \tparam R C++ type of the floating point parameters
      */
     template<class R> 
@@ -308,8 +331,10 @@ namespace Dune {
       Dune::FieldMatrix<R,2,3> B;
     };
 
-    //! Parameters specifying the fractional step theta scheme
     /**
+     * \brief Parameters to turn the OneStepMethod into a
+     * fractional step theta scheme.
+     *
      * \tparam R C++ type of the floating point parameters
      */
     template<class R> 
@@ -387,8 +412,11 @@ namespace Dune {
       Dune::FieldMatrix<R,3,4> B;
     };
 
-    //! Parameters specifying the Alexander3 scheme
     /**
+       
+     * \brief Parameters to turn the OneStepMethod into an
+     * Alexander3 scheme.
+     *
      * \tparam R C++ type of the floating point parameters
      */
     template<class R> 
@@ -484,8 +512,8 @@ namespace Dune {
     };
 
 
-    //! Interface base class for time controllers
     /**
+     * \brief Controller interface for adaptive time stepping.
      * \tparam R C++ type of the floating point parameters
      */
     template<class R> 
@@ -576,7 +604,8 @@ namespace Dune {
     public:
       //! construct a new one step scheme
       /**
-       * \param method_    Parameter object.
+       * \param method_    Parameter object. This chooses the actual method
+       *                   used.
        * \param igos_      Assembler object (instationary grid operator space).
        * \param pdesolver_ solver object (typically Newton).
        *
@@ -1058,7 +1087,7 @@ namespace Dune {
       char basename[255];
       int i;
     };
-
+    /** @} */
   } // namespace PDELab
 } // namespace Dune
 
