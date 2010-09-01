@@ -827,7 +827,7 @@ namespace Dune {
         std::vector<RT0RangeType> rt0vectors(rt0fe.localBasis().size());
         rt0fe.localBasis().evaluateFunction(x,rt0vectors);
         typename Traits::RangeType yhat(0);
-        for (int i=0; i<rt0fe.localBasis().size(); i++)
+        for (unsigned int i=0; i<rt0fe.localBasis().size(); i++)
           yhat.axpy(coeff[i],rt0vectors[i]);
 
         // apply Piola transformation
@@ -1059,7 +1059,7 @@ namespace Dune {
         std::vector<RT0RangeType> rt0vectors(rt0fe.localBasis().size());
         rt0fe.localBasis().evaluateFunction(x,rt0vectors);
         typename Traits::RangeType yhat(0);
-        for (int i=0; i<rt0fe.localBasis().size(); i++)
+        for (unsigned int i=0; i<rt0fe.localBasis().size(); i++)
           yhat.axpy(coeff[i],rt0vectors[i]);
 
         // apply Piola transformation
