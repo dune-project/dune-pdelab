@@ -1085,6 +1085,116 @@ namespace Dune {
       bool verbose;
     };
 
+    class ISTLBackend_SEQ_BCGS_ILU0
+    {
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] maxiter maximum number of iterations to do
+        \param[in] verbose print messages if true
+      */
+      explicit ISTLBackend_SEQ_BCGS_ILU0 (unsigned maxiter_=5000, bool verbose_=true)
+        : maxiter(maxiter_), verbose(verbose_)
+      {}
+
+      /*! \brief compute global norm of a vector
+
+        \param[in] v the given vector
+      */
+      template<class V>
+      typename V::ElementType norm(const V& v) const
+      {
+        return v.two_norm();
+      }
+
+      /*! \brief solve the given linear system
+
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename W::ElementType reduction)
+      {
+        Dune::MatrixAdapter<M,V,W> opa(A);
+        Dune::SeqILU0<M,V,W> ilu0(A, 1.0);
+        Dune::BiCGSTABSolver<V> solver(opa, ilu0, reduction, maxiter, verbose);
+        Dune::InverseOperatorResult stat;
+        solver.apply(z, r, stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+      }
+
+      /*! \brief Return access to result data */
+      const Dune::PDELab::LinearSolverResult<double>& result() const
+      {
+        return res;
+      }
+
+    private:
+      Dune::PDELab::LinearSolverResult<double> res;
+      unsigned maxiter;
+      bool verbose;
+    };
+
+    class ISTLBackend_SEQ_CG_ILU0
+    {
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] maxiter maximum number of iterations to do
+        \param[in] verbose print messages if true
+      */
+      explicit ISTLBackend_SEQ_CG_ILU0 (unsigned maxiter_=5000, bool verbose_=true)
+        : maxiter(maxiter_), verbose(verbose_)
+      {}
+
+      /*! \brief compute global norm of a vector
+
+        \param[in] v the given vector
+      */
+      template<class V>
+      typename V::ElementType norm(const V& v) const
+      {
+        return v.two_norm();
+      }
+
+      /*! \brief solve the given linear system
+
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename W::ElementType reduction)
+      {
+        Dune::MatrixAdapter<M,V,W> opa(A);
+        Dune::SeqILU0<M,V,W> ilu0(A, 1.0);
+        Dune::CGSolver<V> solver(opa, ilu0, reduction, maxiter, verbose);
+        Dune::InverseOperatorResult stat;
+        solver.apply(z, r, stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+      }
+
+      /*! \brief Return access to result data */
+      const Dune::PDELab::LinearSolverResult<double>& result() const
+      {
+        return res;
+      }
+
+    private:
+      Dune::PDELab::LinearSolverResult<double> res;
+      unsigned maxiter;
+      bool verbose;
+    };
+
     class ISTLBackend_SEQ_CG_SSOR
     {
     public:
