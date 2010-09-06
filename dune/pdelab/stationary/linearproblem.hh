@@ -1,6 +1,8 @@
 #ifndef DUNE_PDELAB_STATIONARYLINEARPROBLEM_HH
 #define DUNE_PDELAB_STATIONARYLINEARPROBLEM_HH
 
+#include<dune/common/timer.hh>
+
 namespace Dune {
   namespace PDELab {
 
@@ -42,14 +44,38 @@ namespace Dune {
 
       void apply ()
       {
+	Dune::Timer watch;
+	double timing;
+
 	// assemble matrix; optional: assemble only on demand!
+	watch.reset();
+
 	M m(gos); 
+
+	timing = watch.elapsed();
+	timing = gos.trialGridFunctionSpace().gridview().comm().max(timing);
+	if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
+	  std::cout << "=== matrix setup (max) " << timing << " s" << std::endl;
+	watch.reset();
+
 	m = 0.0;
 	gos.jacobian(*x,m);
 
+	timing = watch.elapsed();
+	timing = gos.trialGridFunctionSpace().gridview().comm().max(timing);
+	if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
+	  std::cout << "=== matrix assembly (max) " << timing << " s" << std::endl;
+
 	// assemble residual
+	watch.reset();
+
 	W r(gos.testGridFunctionSpace(),0.0);
         gos.residual(*x,r);  // residual is additive
+
+	timing = watch.elapsed();
+	timing = gos.trialGridFunctionSpace().gridview().comm().max(timing);
+	if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
+	  std::cout << "=== residual assembly (max) " << timing << " s" << std::endl;
 
 	// compute correction
 	V z(gos.trialGridFunctionSpace(),0.0);
