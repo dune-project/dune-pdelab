@@ -1580,6 +1580,81 @@ namespace Dune {
       int verbose;
     };
 
+    template<class GFS, class C>
+    class ISTLBackend_OVLP_CG_SSORk
+    {
+      typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
+
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] gfs a grid function space
+        \param[in] c a constraints object
+        \param[in] maxiter maximum number of iterations to do
+        \param[in] kssor number of SSOR steps to apply as inner iteration
+        \param[in] verbose print messages if true
+      */
+      explicit ISTLBackend_OVLP_CG_SSORk (const GFS& gfs_, const C& c_, unsigned maxiter_=5000,
+                                            int kssor_=5, int verbose_=1)
+        : gfs(gfs_), c(c_), phelper(gfs), maxiter(maxiter_), kssor(kssor_), verbose(verbose_)
+      {}
+
+      /*! \brief compute global norm of a vector
+
+        \param[in] v the given vector
+      */
+      template<class V>
+      typename V::ElementType norm (const V& v) const
+      {
+        typedef Dune::PDELab::OverlappingScalarProduct<GFS,V> PSP;
+        PSP psp(gfs,phelper);
+        return psp.norm(v);
+      }
+
+      /*! \brief solve the given linear system
+
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      {
+        typedef Dune::PDELab::OverlappingOperator<C,M,V,W> POP;
+        POP pop(c,A);
+        typedef Dune::PDELab::OverlappingScalarProduct<GFS,V> PSP;
+        PSP psp(gfs,phelper);
+        typedef Dune::SeqSSOR<M,V,W> SeqPrec;
+        SeqPrec seqprec(A,kssor,1.0);
+        typedef Dune::PDELab::OverlappingWrappedPreconditioner<C,GFS,SeqPrec> WPREC;
+        WPREC wprec(gfs,seqprec,c,phelper);
+        int verb=0;
+        if (gfs.gridview().comm().rank()==0) verb=verbose;
+        Dune::CGSolver<V> solver(pop,psp,wprec,reduction,maxiter,verb);
+        Dune::InverseOperatorResult stat;
+        solver.apply(z,r,stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+      }
+
+      /*! \brief Return access to result data */
+      const Dune::PDELab::LinearSolverResult<double>& result() const
+      {
+        return res;
+      }
+
+    private:
+      const GFS& gfs;
+      const C& c;
+      PHELPER phelper;
+      Dune::PDELab::LinearSolverResult<double> res;
+      unsigned maxiter;
+      int kssor;
+      int verbose;
+    };
 
 
     template<class GFS, class C>
@@ -1633,6 +1708,84 @@ namespace Dune {
         int verb=0;
         if (gfs.gridview().comm().rank()==0) verb=verbose;
         Dune::BiCGSTABSolver<V> solver(pop,psp,prec,reduction,maxiter,verb);
+        Dune::InverseOperatorResult stat;
+        solver.apply(z,r,stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+#else
+        std::cout << "No superLU support, please install and configure it." << std::endl;
+#endif
+      }
+
+      /*! \brief Return access to result data */
+      const Dune::PDELab::LinearSolverResult<double>& result() const
+      {
+        return res;
+      }
+
+    private:
+      const GFS& gfs;
+      const C& c;
+      PHELPER phelper;
+      Dune::PDELab::LinearSolverResult<double> res;
+      unsigned maxiter;
+      int verbose;
+    };
+
+
+    template<class GFS, class C>
+    class ISTLBackend_OVLP_CG_SuperLU
+    {
+      typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
+
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] gfs a grid function space
+        \param[in] c a constraints object
+        \param[in] maxiter maximum number of iterations to do
+        \param[in] kssor number of SSOR steps to apply as inner iteration
+        \param[in] verbose print messages if true
+      */
+      explicit ISTLBackend_OVLP_CG_SuperLU (const GFS& gfs_, const C& c_, unsigned maxiter_=5000,
+                                              int verbose_=1)
+        : gfs(gfs_), c(c_), phelper(gfs), maxiter(maxiter_), verbose(verbose_)
+      {}
+
+      /*! \brief compute global norm of a vector
+
+        \param[in] v the given vector
+      */
+      template<class V>
+      typename V::ElementType norm (const V& v) const
+      {
+        typedef Dune::PDELab::OverlappingScalarProduct<GFS,V> PSP;
+        PSP psp(gfs,phelper);
+        return psp.norm(v);
+      }
+
+      /*! \brief solve the given linear system
+
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      {
+        typedef Dune::PDELab::OverlappingOperator<C,M,V,W> POP;
+        POP pop(c,A);
+        typedef Dune::PDELab::OverlappingScalarProduct<GFS,V> PSP;
+        PSP psp(gfs,phelper);
+#if HAVE_SUPERLU
+        typedef Dune::PDELab::SuperLUSubdomainSolver<GFS,M,V,W> PREC;
+        PREC prec(gfs,A);
+        int verb=0;
+        if (gfs.gridview().comm().rank()==0) verb=verbose;
+        Dune::CGSolver<V> solver(pop,psp,prec,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
         solver.apply(z,r,stat);
         res.converged  = stat.converged;
