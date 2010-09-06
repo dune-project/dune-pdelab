@@ -25,7 +25,9 @@ namespace Dune {
                       const LFS& lfs, T& trafo) const
       {
         typename T::RowType empty;
-        trafo[0] = empty;
+        typedef typename LFSU::Traits::SizeType size_type;
+        for (size_type i=0; i<lfs.size(); i++)
+          trafo[lfs.localIndex(i)] = empty;
       }
 
     };
