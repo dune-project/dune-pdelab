@@ -1206,7 +1206,7 @@ namespace Dune {
 	struct GridFunctionTreeVisitChildMetaProgram // visit child of inner node
 	{
 	  template<typename GV> 
-	  static void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t, std::string s)
+	  static void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t, const std::string & s)
 	  {
 		typedef typename T::template Child<i>::Type C;
 		std::string cs(s);
@@ -1223,7 +1223,7 @@ namespace Dune {
 	struct GridFunctionTreeVisitChildMetaProgram<T,n,n> // end of child recursion
 	{
 	  template<typename GV> 
-	  static void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t, std::string s)
+	  static void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t, const std::string & s)
 	  {
 		return;
 	  }
@@ -1233,7 +1233,7 @@ namespace Dune {
 	struct GridFunctionTreeVisitNodeMetaProgram // visit inner node
 	{
 	  template<typename GV> 
-	  static void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t, std::string s)
+	  static void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t, const std::string & s)
 	  {
 		GridFunctionTreeVisitChildMetaProgram<T,T::CHILDREN,0>::vtkwriter_tree_addvertexdata(w,t,s);
 	  }
@@ -1243,7 +1243,7 @@ namespace Dune {
 	struct GridFunctionTreeVisitNodeMetaProgram<T,true> // visit leaf node 
 	{
 	  template<typename GV> 
-	  static void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t, std::string s)
+	  static void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t, const std::string & s)
 	  {
 		w.addVertexData(new VTKGridFunctionAdapter<T>(t,s));
 	  }
