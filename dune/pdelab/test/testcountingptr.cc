@@ -39,13 +39,13 @@ int main(int argc, char** argv)
     // mutable stuff
 
 	// make first pointer
-	Dune::PDELab::CP<A> cp1(&a);
+	Dune::PDELab::CountingPointer<A> cp1(&a);
 	std::cout << "reference count is " << a.get_reference_counter() << std::endl;
 	if (a.get_reference_counter()!=1)
 	  return 2;
 
 	// make a second pointer
-	Dune::PDELab::CP<A> cp2;
+	Dune::PDELab::CountingPointer<A> cp2;
 	cp2 = &a;
 	std::cout << "reference count is " << a.get_reference_counter() << std::endl;
 	if (a.get_reference_counter()!=2)
@@ -67,7 +67,7 @@ int main(int argc, char** argv)
     // const stuff
 
     // make pointer to const from mutable object
-    Dune::PDELab::CP<const A> ccp1(&a);
+    Dune::PDELab::CountingPointer<const A> ccp1(&a);
     std::cout << "reference count is " << a.get_reference_counter()
               << std::endl;
     if (a.get_reference_counter()!=3)
@@ -76,7 +76,7 @@ int main(int argc, char** argv)
     const A ca;
 
     // make pointer to const from const object
-    Dune::PDELab::CP<const A> ccp2(&ca);
+    Dune::PDELab::CountingPointer<const A> ccp2(&ca);
     std::cout << "reference count is " << ca.get_reference_counter()
               << std::endl;
     if (ca.get_reference_counter()!=1)

@@ -1150,7 +1150,7 @@ namespace Dune {
       }
 
     private:
-      CP<T const> t;
+      CountingPointer<T const> t;
     };
 
     // Adapter takes a vector-valued grid function and applies
@@ -1191,7 +1191,7 @@ namespace Dune {
       }
 
     private:
-      CP<T const> t;
+      CountingPointer<T const> t;
     };
 
 

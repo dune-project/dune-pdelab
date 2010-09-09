@@ -90,7 +90,7 @@ namespace Dune {
      *  its own copy of t.  Other possibilities are S==T& where each store
      *  holds a reference to the original t, or S==T* where each store holds a
      *  pointer to the original t.  It gets interesting when use
-     *  S==shared_ptr\<T\> or, in the case of the \ref MultiTypeTree, S=CP\<T\>
+     *  S==shared_ptr\<T\> or, in the case of the \ref MultiTypeTree, S=CountingPointer\<T\>
      *  (which is implemented in CountingPointerStoragePolicy).
      */
 

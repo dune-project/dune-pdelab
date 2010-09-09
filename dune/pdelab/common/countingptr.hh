@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-/** @defgroup CP Counting Pointer
+/** @defgroup CountingPointer Counting Pointer
  *  @ingroup PDELab
  *  @{
  */
@@ -21,7 +21,7 @@ namespace Dune {
 
 	/** @brief Don't delete target if reference count reaches zero
      *
-     *  If this class is given to CP as the memory management policy, the CP
+     *  If this class is given to CountingPointer as the memory management policy, the CountingPointer
      *  objects won't delete the pointed to object if the reference count
      *  reaches zero.
      */
@@ -35,7 +35,7 @@ namespace Dune {
 
 	/** @brief Delete target if reference count reaches zero
      *
-     *  If this class is given to CP as the memory management policy, the CP
+     *  If this class is given to CountingPointer as the memory management policy, the CountingPointer
      *  objects will delete the pointed to object if the reference count
      *  reaches zero.
      */
@@ -60,32 +60,32 @@ namespace Dune {
      *            NondeletingMemoryManagementPolicy (the default) and
      *            DeletingMemoryManagementPolicy.
      *
-     *  An object cp of class CP points to another object of a class derived
+     *  An object cp of class CountingPointer points to another object of a class derived
      *  from Countable, or to 0.  If it does not point to 0, it will keep
-     *  track of how many CP objects point to the same object.  If cp stops
+     *  track of how many CountingPointer objects point to the same object.  If cp stops
      *  pointing to the target object, it will decrement its reference count,
      *  and if the reference count reaches zero may or may not delete the
      *  target object, depending on what the memory managment policy dictates.
      *
      *  cp may be set via assingment from an apropriate C pointer or another
-     *  CP of the same type.  To access the pointed to object, the expressions
+     *  CountingPointer of the same type.  To access the pointed to object, the expressions
      *  *cp and cp->member may be used, where member is a member of the
-     *  pointed to object.  Finally, CP objects may be compared using == and
+     *  pointed to object.  Finally, CountingPointer objects may be compared using == and
      *  != to find out whether they point to the same object.
      */
-	class CP
+	class CountingPointer
 	{
 	  T* p;
 
 	public:
-      //! Construct a CP object which points to 0
-	  CP ()
+      //! Construct a CountingPointer object which points to 0
+	  CountingPointer ()
 	  {
 		p = 0;
 	  }
 
-      //! Construct a CP object which points to p_ (which may be 0)
-	  explicit CP (T* p_)
+      //! Construct a CountingPointer object which points to p_ (which may be 0)
+	  explicit CountingPointer (T* p_)
 	  {
 		p = p_;
 		if (p!=0)
@@ -93,20 +93,20 @@ namespace Dune {
 	  }
 
       //! Copy constructor
-	  CP (const CP<T>& cp)
+	  CountingPointer (const CountingPointer<T>& cp)
 	  {
 		p = cp.p;
 		if (p!=0)
 		  p->reference_counter_increment();
 	  }
 
-      //! Conversion to CP<const T>
-      operator CP<const T>() const {
-        return CP<const T>(p);
+      //! Conversion to CountingPointer<const T>
+      operator CountingPointer<const T>() const {
+        return CountingPointer<const T>(p);
       }
 
       //! Destructor
-	  ~CP ()
+	  ~CountingPointer ()
 	  {
 		if (p!=0)
 		  {
@@ -116,7 +116,7 @@ namespace Dune {
 	  }
 
       //! assignment from a C pointer
-	  CP<T>& operator= (T* p_)
+	  CountingPointer<T>& operator= (T* p_)
 	  {
 		if (p!=p_)
 		  {
@@ -130,7 +130,7 @@ namespace Dune {
 	  }
 
       //! copy operator
-	  CP<T>& operator= (const CP<T>& cp)
+	  CountingPointer<T>& operator= (const CountingPointer<T>& cp)
 	  {
 		if (p!=cp.p)
 		  {
@@ -156,13 +156,13 @@ namespace Dune {
 	  }
 
       //! check whether both point to same target
-	  bool operator== (const CP<T>& cp) const
+	  bool operator== (const CountingPointer<T>& cp) const
 	  {
 		return p==cp.p;
 	  }
 
       //! check whether target have different adress
-	  bool operator!= (const CP<T>& cp) const
+	  bool operator!= (const CountingPointer<T>& cp) const
 	  {
 		return p!=cp.p;
 	  }
@@ -180,10 +180,10 @@ namespace Dune {
 	  }
 	};
 
-    /** @brief Base class for object pointed to by CP
+    /** @brief Base class for object pointed to by CountingPointer
      *
      *  This provides the necessary functionality in the target object for the
-     *  CP template class to work.
+     *  CountingPointer template class to work.
      */
 	class Countable 
 	{
@@ -234,7 +234,7 @@ namespace Dune {
 
       /** @brief Destructor
        *
-       *  Warn if any CP is still pointing to us.
+       *  Warn if any CountingPointer is still pointing to us.
        */
 	  ~Countable ()
 	  {

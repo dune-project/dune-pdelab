@@ -5,8 +5,8 @@
 
 #include<vector>
 
-#include"../common/multitypetree.hh"
-#include"../common/cpstoragepolicy.hh"
+#include "../common/multitypetree.hh"
+#include "../common/cpstoragepolicy.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -134,11 +134,12 @@ namespace Dune {
 
 	  //! \brief Type of container to store indices
       typedef typename std::vector<SizeType> IndexContainer;
+
     };
 
 
     // local function space for a power grid function space
-    template<typename GFS> 
+    template<typename GFS>
     class PowerLocalFunctionSpaceNode 
       : public PowerNode<typename GFS::template Child<0>::Type::LocalFunctionSpace::Traits::NodeType,
                          GFS::CHILDREN,CopyStoragePolicy>
@@ -237,7 +238,7 @@ namespace Dune {
       }
 
     private:
-	  CP<GFS const> pgfs;
+	  CountingPointer<GFS const> pgfs;
       typename Traits::IndexContainer::iterator i;
       typename Traits::IndexContainer::size_type n;
       typename Traits::IndexContainer::size_type offset;
@@ -288,7 +289,7 @@ namespace Dune {
       }
 
     private:
-	  CP<GFS const> pgfs;
+	  CountingPointer<GFS const> pgfs;
       typename BaseT::Traits::IndexContainer global;
     };
 
@@ -512,7 +513,7 @@ namespace Dune {
       }
 
     private:
-	  CP<GFS const> pgfs;
+	  CountingPointer<GFS const> pgfs;
       typename Traits::IndexContainer::iterator i;
       typename Traits::IndexContainer::size_type n;
       typename Traits::IndexContainer::size_type offset;
@@ -563,7 +564,7 @@ namespace Dune {
       }
 
     private:
-	  CP<GFS const> pgfs;
+	  CountingPointer<GFS const> pgfs;
       typename BaseT::Traits::IndexContainer global;
     };
 
@@ -709,7 +710,7 @@ namespace Dune {
       }
 
     private:
-	  CP<GFS const> pgfs;
+	  CountingPointer<GFS const> pgfs;
       typename Traits::IndexContainer::iterator i;
       typename Traits::IndexContainer::size_type n;
       typename Traits::IndexContainer::size_type offset;
@@ -763,7 +764,7 @@ namespace Dune {
       }
 
     private:
-	  CP<GFS const> pgfs;
+	  CountingPointer<GFS const> pgfs;
       typename BaseT::Traits::IndexContainer global;
     };
 

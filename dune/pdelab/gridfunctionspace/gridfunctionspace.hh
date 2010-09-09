@@ -481,7 +481,7 @@ namespace Dune {
 	private:
       CE defaultce;
 	  const GV& gv;
-	  CP<LFEM const> plfem;
+	  CountingPointer<LFEM const> plfem;
 	  typename Traits::SizeType nlocal;
 	  typename Traits::SizeType nglobal;
       const CE& ce;
@@ -749,7 +749,7 @@ namespace Dune {
 
 	private:
 	  const GV& gv;
-	  CP<LFEM const> plfem;
+	  CountingPointer<LFEM const> plfem;
 
 	  typename Traits::SizeType nlocal;
 	  typename Traits::SizeType nglobal;
@@ -1084,7 +1084,7 @@ namespace Dune {
 	private:
       DummyIntersectionIndexSet dummyiis; // for version without intersection DOFs
 	  const GV& gv;
-	  CP<LFEM const> plfem;
+	  CountingPointer<LFEM const> plfem;
       const IIS& iis;
 
 	  typename Traits::SizeType nlocal;
@@ -3010,8 +3010,8 @@ namespace Dune {
 	  }
 
     private:
-      CP<GFS const> pgfs;
-      CP<CGFS const> pcgfs;
+      CountingPointer<GFS const> pgfs;
+      CountingPointer<CGFS const> pcgfs;
     };
 
 
@@ -3114,8 +3114,8 @@ namespace Dune {
 	  }
 
     private:
-      CP<GFS const> pgfs;
-      CP<CGFS const> pcgfs;
+      CountingPointer<GFS const> pgfs;
+      CountingPointer<CGFS const> pcgfs;
     };
 
 
@@ -3216,8 +3216,8 @@ namespace Dune {
       }
 
     private:
-      CP<GFS const> pgfs;
-      CP<CGFS const> pcgfs;
+      CountingPointer<GFS const> pgfs;
+      CountingPointer<CGFS const> pcgfs;
     };
 
     // ensure that GFS is not a leaf

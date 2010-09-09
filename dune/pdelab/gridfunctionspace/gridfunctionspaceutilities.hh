@@ -93,7 +93,7 @@ namespace Dune {
 	  }
 
 	private:
-	  CP<GFS const> pgfs;
+	  CountingPointer<GFS const> pgfs;
 	  const X& xg;
 	  mutable typename GFS::LocalFunctionSpace lfs;
 	  mutable std::vector<typename Traits::RangeFieldType> xl;
@@ -168,7 +168,7 @@ namespace Dune {
 	  }
 
 	private:
-	  CP<GFS const> pgfs;
+	  CountingPointer<GFS const> pgfs;
 	  const X& xg;
 	  mutable typename GFS::LocalFunctionSpace lfs;
 	  mutable std::vector<typename Traits::RangeFieldType> xl;
@@ -337,7 +337,7 @@ namespace Dune {
 	  }
 
 	private:
-	  CP<GFS const> pgfs;
+	  CountingPointer<GFS const> pgfs;
 	  const X& xg;
 	  mutable typename GFS::LocalFunctionSpace lfs;
 	  mutable std::vector<typename Traits::RangeFieldType> xl;
@@ -438,7 +438,7 @@ namespace Dune {
       }
 
     private:
-      CP<GFS const> pgfs;
+      CountingPointer<GFS const> pgfs;
       const X& xg;
     };
 
@@ -512,7 +512,7 @@ namespace Dune {
 	  }
 
 	private:
-	  CP<GFS const> pgfs;
+	  CountingPointer<GFS const> pgfs;
 	  const X& xg;
 	  mutable typename GFS::LocalFunctionSpace lfs;
 	  mutable std::vector<typename Traits::RangeFieldType> xl;
@@ -597,7 +597,7 @@ namespace Dune {
 	  }
 
 	private:
-	  CP<GFS const> pgfs;
+	  CountingPointer<GFS const> pgfs;
 	  const X& xg;
 	  mutable typename GFS::LocalFunctionSpace lfs;
 	  mutable std::vector<RF> xl;

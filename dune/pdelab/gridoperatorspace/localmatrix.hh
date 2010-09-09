@@ -1,4 +1,4 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 #ifndef DUNE_PDELAB_LOCALMATRIX_HH
 #define DUNE_PDELAB_LOCALMATRIX_HH
 
