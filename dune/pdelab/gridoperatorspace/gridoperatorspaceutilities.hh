@@ -88,7 +88,8 @@ namespace Dune {
 
 	/**@ingroup FlatOperatorSpaceGroup
 	   \brief Layout description for a sparse linear operator
-
+       \see SparsityLink
+       
 	   \nosubgrouping
 	*/
 	class LocalSparsityPattern : public std::vector<SparsityLink>
