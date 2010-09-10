@@ -143,6 +143,36 @@ namespace Dune {
       };
 #endif
 
+      /** \brief VisitingFunctor to read all nodes in a MultiTypeTree
+          \tparam store_root   should the root node be stored
+
+          The functor notes all nodes an leafs and stores their path in an
+          \code
+          std::vector<int> path
+          \endcode
+
+          You can derive your own class and obtain the current path from the path member.
+      */
+      template<bool store_root=false>
+      struct ReadPathFunctor : public VisitingFunctor {
+        //! vector storing the current path
+        std::vector<int> path;
+        /** constructor */
+        ReadPathFunctor() {
+          if (store_root)
+            path.push_back(0);
+        }
+        void next() {
+          path.back()++;
+        }
+        void down() {
+          path.push_back(0);
+        }
+        void up() {
+          path.pop_back();
+        }
+      };
+
       /** \brief implement VisitingFunctor for print_paths
 
           \tparam print_root   should the root node be printed?
@@ -150,31 +180,18 @@ namespace Dune {
           \tparam print_after  should inner nodes be printed when entering the node (true), or when leaving the node (false)?
        */
       template<bool print_root=false, bool print_node=false, bool print_after=false>
-      struct PrintPathFunctor : public VisitingFunctor {
-        std::vector<int> path;
+      struct PrintPathFunctor : public ReadPathFunctor<print_root> {
+        using ReadPathFunctor<print_root>::path;
         std::ostream & os;
         /** constructor */
         PrintPathFunctor(std::ostream & os_) : os(os_) {
-          if (print_root)
-            path.push_back(0);
-        }
-        void next() {
-          path.back()++;
-        }
-        void down() {
-          // and move down
-          path.push_back(0);
-        }
-        void up() {
-          // move back up
-          path.pop_back();
         }
         template<typename P> void enter_node(const P& p) {
           // print
           if (print_node && !print_after)
           {
             os << "/";
-            for (std::stack<std::string>::size_type i=0; i<path.size(); i++)
+            for (std::vector<int>::size_type i=0; i<path.size(); i++)
               os << path[i] << "/";
             os << std::endl;
           }
@@ -184,14 +201,14 @@ namespace Dune {
           if (print_node && print_after)
           {
             os << "/";
-            for (std::stack<std::string>::size_type i=0; i<path.size(); i++)
+            for (std::vector<int>::size_type i=0; i<path.size(); i++)
               os << path[i] << "/";
             os << std::endl;
           }
         }
         template<typename P> void visit_leaf(const P& p) {
           os << "/";
-          for (std::stack<std::string>::size_type i=0; i<path.size(); i++)
+          for (std::vector<int>::size_type i=0; i<path.size(); i++)
             os << path[i] << "/";
           os << std::endl;
         }
@@ -210,7 +227,7 @@ namespace Dune {
           if (print_node && !print_after)
           {
             os << "/";
-            for (std::stack<std::string>::size_type i=(ignore_root?1:0);
+            for (std::vector<int>::size_type i=(ignore_root?1:0);
                  i<path.size(); i++)
               os << path[i] << "/";
             os << std::endl;
@@ -225,7 +242,7 @@ namespace Dune {
           if (print_node && print_after)
           {
             os << "/";
-            for (std::stack<std::string>::size_type i=(ignore_root?1:0);
+            for (std::vector<int>::size_type i=(ignore_root?1:0);
                  i<path.size(); i++)
               os << path[i] << "/";
             os << std::endl;
@@ -235,7 +252,7 @@ namespace Dune {
         }
         template<typename N> void visit_leaf(const N& p) {
           os << "/";
-          for (std::stack<std::string>::size_type i=(ignore_root?1:0);
+          for (std::vector<int>::size_type i=(ignore_root?1:0);
                i<path.size(); i++)
             os << path[i] << "/";
           os << std::endl;
