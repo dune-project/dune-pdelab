@@ -5,7 +5,7 @@
 #include "config.h"     
 #endif
 #include <iostream>
-#include <strstream>
+#include <sstream>
 
 #include <dune/common/mpihelper.hh>
 #include <dune/common/exceptions.hh>
