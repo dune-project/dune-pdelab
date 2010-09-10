@@ -490,10 +490,6 @@ namespace Dune {
       CT time()  const{ return CT(1.0); }
     };
 
-    //! \addtogroup LocalOperator
-    //! \ingroup PDELab
-    //! \{
-
     /** a local operator for the mass term corresponding to the
      * instationary local operator TaylorHoodNavierStokes(Jacobian)
      *

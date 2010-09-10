@@ -131,10 +131,6 @@ namespace Dune {
       int intorder;
 	};
 
-    //! \addtogroup LocalOperator
-    //! \ingroup PDELab
-    //! \{
-
     /** a local operator for the mass operator of a vector valued lfs (L_2 integral)
      *
      * \f{align*}{
