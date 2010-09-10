@@ -80,6 +80,13 @@ namespace Dune {
 	};
 
 	//==========================
+	// EmptyChild
+	//==========================
+
+    //! mark an missing type/node, need in the TMP (for internal use)
+	struct EmptyChild {};
+    
+	//==========================
 	// StoragePolicy
 	//==========================
 
@@ -158,75 +165,78 @@ namespace Dune {
 	template<typename T, int k, typename P=CopyStoragePolicy> 
 	class PowerNode;
 
-	template<typename T, int k, typename P=CopyStoragePolicy>
-	class PowerNodeBase
-	{
-	public:
-	  friend class PowerNode<T,k,P>;
+    namespace {
+      //! base class for PowerNode (for internal use)
+      template<typename T, int k, typename P=CopyStoragePolicy>
+      class PowerNodeBase
+      {
+      public:
+        friend class PowerNode<T,k,P>;
+        
+        enum { isLeaf = false };
+        enum { isPower = true /**< */ };
+        enum { isComposite = false /**< */ };
+        enum { CHILDREN = k };
+        
+        template<int i>
+        struct Child
+        {
+          typedef T Type;
+        };
 
-	  enum { isLeaf = false };
-	  enum { isPower = true /**< */ };
-	  enum { isComposite = false /**< */ };
-	  enum { CHILDREN = k };
+        template<int i>
+        T& getChild ()
+        {
+          return P::get(c[i]);
+        }
 
-	  template<int i>
-	  struct Child
-	  {
-		typedef T Type;
-	  };
+        template<int i>
+        const T& getChild () const
+        {
+          return P::get(c[i]);
+        }
 
-	  template<int i>
-	  T& getChild ()
-	  {
-		return P::get(c[i]);
-	  }
+        template<int i>
+        void setChild (T& t)
+        {
+          P::set(c[i],t);
+        }
 
-	  template<int i>
-	  const T& getChild () const
-	  {
-		return P::get(c[i]);
-	  }
-
-	  template<int i>
-	  void setChild (T& t)
-	  {
-		P::set(c[i],t);
-	  }
-
-      template<int i>
-      typename enable_if<AlwaysTrue<integral_constant<int, i> >::Value &&
-                         !IsConst<T>::value>::type
-      setChild (const T& t)
-	  {
-		P::set(c[i],t);
-	  }
-
-	  T& getChild (int i)
-	  {
-		return P::get(c[i]);
-	  }
-
-	  const T& getChild (int i) const
-	  {
-		return P::get(c[i]);
-	  }
-
-	  void setChild (int i, T& t)
-	  {
-		P::set(c[i],t);
-	  }
-
-      template<typename U>
-      typename enable_if<!IsConst<U>::value>::type
-      setChild (int i, const U& t)
-	  {
-		P::set(c[i],t);
-	  }
-
-	private:
-	  typename P::template Storage<T>::Type c[k];
-	};
-
+        template<int i>
+        typename enable_if<AlwaysTrue<integral_constant<int, i> >::Value &&
+                           !IsConst<T>::value>::type
+        setChild (const T& t)
+        {
+          P::set(c[i],t);
+        }
+        
+        T& getChild (int i)
+        {
+          return P::get(c[i]);
+        }
+        
+        const T& getChild (int i) const
+        {
+          return P::get(c[i]);
+        }
+        
+        void setChild (int i, T& t)
+        {
+          P::set(c[i],t);
+        }
+        
+        template<typename U>
+        typename enable_if<!IsConst<U>::value>::type
+        setChild (int i, const U& t)
+        {
+          P::set(c[i],t);
+        }
+        
+      private:
+        typename P::template Storage<T>::Type c[k];
+      };
+    } // end empty namespace
+    
     /** \brief Collect k instances of type T within a \ref MultiTypeTree
      *
      *  A PowerNode models a \ref MultiTypeTree
@@ -279,7 +289,9 @@ namespace Dune {
        *  specialization has a constructor which takes the initializers for
        *  its children as arguments.
        *
-       *  @param tn The initializer for the nth child.
+       *  @param t0 The initializer for the first child.
+       *  @param t1 The initializer for the second child.
+       *
        */
       PowerNode (T& t0, T& t1, ...)
       {
@@ -287,6 +299,7 @@ namespace Dune {
 #endif // DOXYGEN
 	};
 
+#ifndef DOXYGEN
 	template<typename T, typename P>
 	class PowerNode<T,2,P> : public PowerNodeBase<T,2,P>
 	{
@@ -679,52 +692,54 @@ namespace Dune {
 		P::set(this->c[9],t9);
 	  }
 	};
+#endif // DOXYGEN
 
 	//==========================
 	// CompositeNode
 	//==========================
 
-	struct EmptyChild {};
+    namespace {
+      //! base class for CompopsiteNode (for internal use)
+      template<typename P, typename OT, typename ST>
+      class CompositeNodeBase
+      {
+      public:
 
-	template<typename P, typename OT, typename ST>
-	class CompositeNodeBase
-	{
-	public:
+        enum { isLeaf = false };
+        enum { isPower = false /**< */ };
+        enum { isComposite = true /**< */ };
+        enum { CHILDREN = Dune::tuple_size<OT>::value };
 
-	  enum { isLeaf = false };
-	  enum { isPower = false /**< */ };
-	  enum { isComposite = true /**< */ };
-	  enum { CHILDREN = Dune::tuple_size<OT>::value };
+        CompositeNodeBase (ST& c_) : c(c_) {}
 
-	  CompositeNodeBase (ST& c_) : c(c_) {}
+        template<int i>
+        struct Child
+        {
+          typedef typename Dune::tuple_element<i,OT>::type Type;
+        };
 
-	  template<int i>
-	  struct Child
-	  {
-		typedef typename Dune::tuple_element<i,OT>::type Type;
-	  };
+        template<int i>
+        typename Dune::tuple_element<i,OT>::type& getChild ()
+        {
+          return P::get(Dune::get<i>(c));
+        }
 
-	  template<int i>
-	  typename Dune::tuple_element<i,OT>::type& getChild ()
-	  {
-		return P::get(Dune::get<i>(c));
-	  }
+        template<int i>
+        const typename Dune::tuple_element<i,OT>::type& getChild () const
+        {
+          return P::get(Dune::get<i>(c));
+        }
 
-	  template<int i>
-	  const typename Dune::tuple_element<i,OT>::type& getChild () const
-	  {
-		return P::get(Dune::get<i>(c));
-	  }
+        template<int i>
+        void setChild (typename Dune::tuple_element<i,OT>::type& t)
+        {
+          P::set(Dune::get<i>(c),t);
+        }	
 
-	  template<int i>
-	  void setChild (typename Dune::tuple_element<i,OT>::type& t)
-	  {
-		P::set(Dune::get<i>(c),t);
-	  }	
-
-	private:
-	  ST& c;
-	};
+      private:
+        ST& c;
+      };
+    } // end empty namespace
 
     /** \brief Collect instances of possibly different types Tn within a \ref
      *         MultiTypeTree
@@ -732,9 +747,17 @@ namespace Dune {
      *  A CompositeNode models a \ref MultiTypeTree
      *
      *  \tparam P  The StoragePolicy to use
-     *  \tparam Tn The base types.  Tn==EmptyChild means that slot n is
+     *  \tparam T0 first base type.  Tn==EmptyChild means that slot n is
      *             unused.  Currently, up to 9 slots are supported, making 8
      *             the maximum n.
+     *  \tparam T1 second base type
+     *  \tparam T2 third base type
+     *  \tparam T3 4'th base type
+     *  \tparam T4 5'th base type
+     *  \tparam T5 6'th base type
+     *  \tparam T6 7'th base type
+     *  \tparam T7 8'th base type
+     *  \tparam T8 9'th base type
      */
 	template<typename P,
 			 typename T0, typename T1, typename T2=EmptyChild, typename T3=EmptyChild,
@@ -774,25 +797,28 @@ namespace Dune {
 	public:
 	  CompositeNode () : BaseT(c) {}
 
-	  CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, 
-					 T5& t5, T6& t6, T7& t7, T8& t8)
-		: BaseT(c), 
-		  c(P::convert(t0),P::convert(t1),P::convert(t2),P::convert(t3),P::convert(t4),
-			P::convert(t5),P::convert(t6),P::convert(t7),P::convert(t8))
-	  {} 
-
 #ifdef DOXYGEN
       /** \brief Initialize all children
        *
-       *  @param tn The initializer for the nth child.
+       *  @param t0 The initializer for the first child.
+       *  @param t1 The initializer for the second child.
        *
        *  The actual number of arguments for this constructor corresponds to
        *  the number of slots used in the template parameter list of the class.
        */
 	  CompositeNode (T0& t0, T1& t1, ...) {}
+#else
+	  CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, 
+					 T5& t5, T6& t6, T7& t7, T8& t8)
+		: BaseT(c), 
+		  c(P::convert(t0),P::convert(t1),P::convert(t2),P::convert(t3),P::convert(t4),
+			P::convert(t5),P::convert(t6),P::convert(t7),P::convert(t8))
+	  {}
 #endif //DOXYGEN
+      
 	};
 
+#ifndef DOXYGEN
 	// 2 children
 	template<typename P,
 			 typename T0, typename T1>
@@ -1024,6 +1050,7 @@ namespace Dune {
 			P::convert(t5),P::convert(t6),P::convert(t7))
 	  {} 
 	};
+#endif //DOXYGEN
 
     //! \} group MultiTypeTree
 
