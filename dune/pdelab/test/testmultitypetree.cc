@@ -5,6 +5,7 @@
 #include "config.h"     
 #endif
 #include <iostream>
+#include <strstream>
 
 #include <dune/common/mpihelper.hh>
 #include <dune/common/exceptions.hh>
@@ -13,7 +14,7 @@
 #include"../common/multitypetree.hh"
 #include"../common/cpstoragepolicy.hh"
 
-class A : public Dune::PDELab::Countable
+class A : public Dune::PDELab::Countable, public Dune::PDELab::LeafNode
 {
 public:
   void hello () const
@@ -144,6 +145,61 @@ int main(int argc, char** argv)
     if (a.get_reference_counter()!=62)
       return 6;
 
+    // make a real tree
+    /*
+      0
+      C_1--------------
+      |            |  |
+      0            1  2
+      C_0----      B  P_1-
+      |  |  |         |  |
+      0  1  2         0  1
+      A  B  P_0-      A  A
+            |  |
+            0  1
+            B  B
+    */
+    std::string reference_str =
+      "/0/0/"   "\n"
+      "/0/1/"   "\n"
+      "/0/2/0/" "\n"
+      "/0/2/1/" "\n"
+      "/1/"     "\n"
+      "/2/0/"   "\n"
+      "/2/1/"   "\n";
+
+    typedef Dune::PDELab::CountingPointerStoragePolicy Pol;
+    typedef Dune::PDELab::CopyStoragePolicy CpPol;
+    typedef Dune::PDELab::PowerNode<A,2,Pol> P_0;
+    typedef Dune::PDELab::PowerNode<B,2,Pol> P_1;
+    typedef Dune::PDELab::CompositeNode<CpPol, const A, B, P_0> C_0;
+    typedef Dune::PDELab::CompositeNode<CpPol, C_0, B, P_1> C_1;
+    P_0 p_0(a,a);
+    P_1 p_1(b,b);
+    C_0 c_0(a,b,p_0);
+    C_1 c_1(c_0,b,p_1);
+
+    // check TMP
+
+    // check path
+    std::stringstream sstr;
+    print_paths(c_1, sstr);
+    std::cout << sstr.str();
+    if (sstr.str() != reference_str)
+      return 7;
+    
+    // check leaf count
+    int leaves = count_leaves(c_1);
+    std::cout << leaves << " leaves\n";
+    if (7 != leaves)
+      return 8;
+    
+    // check node count
+    int nodes = count_nodes(c_1);
+    std::cout << nodes << " nodes\n";
+    if (11 != nodes)
+      return 9;
+    
 	// test passed
 	return 0;
   }
