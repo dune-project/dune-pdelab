@@ -6,18 +6,19 @@
 
 #include <iostream>
 
-/** @defgroup CountingPointer Counting Pointer
- *  @ingroup PDELab
- *  @{
- */
-
 /** @file
+ *  @addtogroup StoragePolicy
  *  @brief This file implements a counting pointer with configurable memory
  *         management policy
  */
 
 namespace Dune {
   namespace PDELab {
+
+    /**
+     *  @addtogroup StoragePolicy
+     *  @{
+     */
 
 	/** @brief Don't delete target if reference count reaches zero
      *
@@ -248,9 +249,10 @@ namespace Dune {
 	  }
 	};
 
+    /** @} end documentation */
+    
   } // namespace PDELab
 } // namespace Dune
 
-/** @} end documentation */
 
 #endif

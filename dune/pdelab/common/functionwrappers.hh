@@ -9,16 +9,13 @@
 namespace Dune {
   namespace PDELab {
 
-    //! \addtogroup PDELab_Function Function
-    //! \ingroup PDELab
+    //! \ingroup PDELab_FunctionAdapters
     //! \{
 
     //////////////////////////////////////////////////////////////////////
     //
     //  PointwiseGridFunctionAdapter
     //
-
-    struct Nil {};
 
     //! A function wrapper which can map a set of gridfunctions through an
     //! PointwiseAdapterEngine
@@ -28,9 +25,9 @@ namespace Dune {
      *                supported.
      */
     template<typename Engine, typename F0,
-             typename F1 = Nil, typename F2 = Nil, typename F3 = Nil,
-             typename F4 = Nil, typename F5 = Nil, typename F6 = Nil,
-             typename F7 = Nil, typename F8 = Nil, typename F9 = Nil>
+             typename F1 = EmptyChild, typename F2 = EmptyChild, typename F3 = EmptyChild,
+             typename F4 = EmptyChild, typename F5 = EmptyChild, typename F6 = EmptyChild,
+             typename F7 = EmptyChild, typename F8 = EmptyChild, typename F9 = EmptyChild>
     class PointwiseGridFunctionAdapter :
       public GridFunctionInterface<
       typename F0::Traits,
@@ -53,10 +50,10 @@ namespace Dune {
       const F7& f7;
       const F8& f8;
       const F9& f9;
-      //! hold the number of non-Nil functions
+      //! hold the number of non-EmptyChild functions
       unsigned size;
 
-      //! increment a sum (but only if type(*f) != Nil via overloading)
+      //! increment a sum (but only if type(*f) != EmptyChild via overloading)
       /**
        * \tparam F The type of *f
        *
@@ -67,15 +64,15 @@ namespace Dune {
       template<typename F>
       static void inc(unsigned &sum, const F* f)
       { ++sum; }
-      //! increment a sum (well, don't, since type(*f) == Nil)
+      //! increment a sum (well, don't, since type(*f) == EmptyChild)
       /**
        * \param sum The variable to increment (well, not to imcrement)
        * \param f   Dummy parameter, only its type is of importance to select
        *            the correct method from the overloaded set
        */
-      static void inc(unsigned &sum, const Nil* f)
+      static void inc(unsigned &sum, const EmptyChild* f)
       { }
-      //! count the number of non-Nil functions
+      //! count the number of non-EmptyChild functions
       /**
        * uses the inc()-methods
        */
@@ -94,7 +91,7 @@ namespace Dune {
         return sum;
       }
 
-      //! evaluate a function (but only if type(f) != Nil via overloading)
+      //! evaluate a function (but only if type(f) != EmptyChild via overloading)
       /**
        * \tparam F The type of f
        *
@@ -113,9 +110,9 @@ namespace Dune {
         f.evaluate(e, x, y[index]);
         ++index;
       }
-      //! evaluate a function (well, don't, since type(f) == Nil)
+      //! evaluate a function (well, don't, since type(f) == EmptyChild)
       /**
-       * \param f     Dummy argument, only its type Nil is of importance to
+       * \param f     Dummy argument, only its type EmptyChild is of importance to
        *              select the correct method from the overload set.
        * \param index The index to write to in the std::vector y.  Since this
        *              dummy methid doesn't actually write anythin to y, the
@@ -125,7 +122,7 @@ namespace Dune {
        * \param y     Where to write the result of the evaluation.  Well, its
        *              not actually used in this dummy method
        */
-      static void evaluate(const Nil &f, unsigned &index,
+      static void evaluate(const EmptyChild &f, unsigned &index,
                            const typename Traits::ElementType& e,
                            const typename Traits::DomainType& x,
                            std::vector<typename Traits::RangeType>& y)
@@ -136,27 +133,33 @@ namespace Dune {
 	  inline const typename Traits::GridViewType& getGridView ();
 
     public:
+#ifdef DOXYGEN
       //! construct a PointwiseGridFunctionAdapter
       /**
        * \param engine_ A reference to the engine.  The referenced engine
        *                object must live at least as long as this adapter
        *                object is used for evaluation.
-       * \param fN_     References to the functions.  These referenced funtion
+       * \param f0_     Reference to the first function.
+       * \param ...     References to the other functions. These referenced function
        *                objects must live at least as long as this adapter
-       *                object is used for evaluation.  Currently, N up to 9
-       *                is supported.
+       *                object is used for evaluation. Currently, up to 9 functions
+       *                are supported.
        */
+      PointwiseGridFunctionAdapter(const Engine& engine_, const F0& f0_, ...)
+      {}
+#else
       PointwiseGridFunctionAdapter(const Engine& engine_, const F0& f0_,
-                                   const F1& f1_ = Nil(), const F2& f2_ = Nil(), const F3& f3_ = Nil(),
-                                   const F4& f4_ = Nil(), const F5& f5_ = Nil(), const F6& f6_ = Nil(),
-                                   const F7& f7_ = Nil(), const F8& f8_ = Nil(), const F9& f9_ = Nil())
+                                   const F1& f1_ = EmptyChild(), const F2& f2_ = EmptyChild(), const F3& f3_ = EmptyChild(),
+                                   const F4& f4_ = EmptyChild(), const F5& f5_ = EmptyChild(), const F6& f6_ = EmptyChild(),
+                                   const F7& f7_ = EmptyChild(), const F8& f8_ = EmptyChild(), const F9& f9_ = EmptyChild())
         : engine(engine_), f0(f0_)
         , f1(f1_), f2(f2_), f3(f3_)
         , f4(f4_), f5(f5_), f6(f6_)
         , f7(f7_), f8(f8_), f9(f9_)
         , size(count())
       {}
-
+#endif // DOXYGEN
+        
 	  inline void evaluate (const typename Traits::ElementType& e,
 							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const

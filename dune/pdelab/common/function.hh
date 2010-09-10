@@ -208,7 +208,9 @@ namespace Dune {
 	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
 	};
 
-
+    //! \addtogroup PDELab_FunctionAdapters Function Adapters
+    //! \{
+      
 	/** \brief make a GridFunction from a Function
      *
      *  \tparam G The GridView type
@@ -412,9 +414,6 @@ namespace Dune {
       int k;
 	};
 
-
-
-
 	//! Takes a BoundaryGridFunction and acts as a single component
 	template<class T>
 	class BoundaryGridFunctionSelectComponentAdapter 
@@ -466,9 +465,7 @@ namespace Dune {
       int k;
 	};
 
-
-
-
+    //! \}
 
 	//============================
 	// Function tree
@@ -551,7 +548,9 @@ namespace Dune {
        *  specialization has a constructor which takes the initializers for
        *  its children as arguments.
        *
-       *  @param tn The initializer for the nth child.
+       *  @param t0 The initializer for the first child.
+       *  @param t1 The initializer for the second child.
+       *  @param ... more initializers
        */
       PowerGridFunction (T& t0, T& t1, ...)
       {
@@ -743,7 +742,9 @@ namespace Dune {
 #ifdef DOXYGEN
       /** \brief Initialize all children
        *
-       *  @param tn The initializer for the nth child.
+       *  @param t0 The initializer for the first child.
+       *  @param t1 The initializer for the second child.
+       *  @param ... more initializers
        *
        *  The actual number of arguments for this constructor corresponds to
        *  the number of slots used in the template parameter list of the class.

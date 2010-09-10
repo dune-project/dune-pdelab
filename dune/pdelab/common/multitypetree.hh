@@ -291,6 +291,7 @@ namespace Dune {
        *
        *  @param t0 The initializer for the first child.
        *  @param t1 The initializer for the second child.
+       *  @param ... more initializers
        *
        */
       PowerNode (T& t0, T& t1, ...)
@@ -802,6 +803,7 @@ namespace Dune {
        *
        *  @param t0 The initializer for the first child.
        *  @param t1 The initializer for the second child.
+       *  @param ... more initializers
        *
        *  The actual number of arguments for this constructor corresponds to
        *  the number of slots used in the template parameter list of the class.
