@@ -3,6 +3,7 @@
 #define DUNE_PDELAB_FUNCTION_HH
 
 #include <iostream>
+#include <sstream>
 
 #include <dune/common/deprecated.hh>
 #include <dune/common/static_assert.hh>
@@ -1200,55 +1201,21 @@ namespace Dune {
 	// template metaprograms
 	//==========================
 
-	template<typename T, bool isleaf>
-	struct GridFunctionTreeVisitNodeMetaProgram;
-
-	template<typename T, int n, int i>
-	struct GridFunctionTreeVisitChildMetaProgram // visit child of inner node
-	{
-	  template<typename GV> 
-	  static void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t, const std::string & s)
-	  {
-		typedef typename T::template Child<i>::Type C;
-		std::string cs(s);
-		cs += "_";
-		std::stringstream out;
-		out << i;
-		cs += out.str();
-		GridFunctionTreeVisitNodeMetaProgram<C,C::isLeaf>::vtkwriter_tree_addvertexdata(w,t.template getChild<i>(),cs);
-		GridFunctionTreeVisitChildMetaProgram<T,n,i+1>::vtkwriter_tree_addvertexdata(w,t,s);
-	  }
-	};
-
-	template<typename T, int n>
-	struct GridFunctionTreeVisitChildMetaProgram<T,n,n> // end of child recursion
-	{
-	  template<typename GV> 
-	  static void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t, const std::string & s)
-	  {
-		return;
-	  }
-	};
-
-	template<typename T, bool isleaf> 
-	struct GridFunctionTreeVisitNodeMetaProgram // visit inner node
-	{
-	  template<typename GV> 
-	  static void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t, const std::string & s)
-	  {
-		GridFunctionTreeVisitChildMetaProgram<T,T::CHILDREN,0>::vtkwriter_tree_addvertexdata(w,t,s);
-	  }
-	};
-
-	template<typename T> 
-	struct GridFunctionTreeVisitNodeMetaProgram<T,true> // visit leaf node 
-	{
-	  template<typename GV> 
-	  static void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t, const std::string & s)
-	  {
-		w.addVertexData(new VTKGridFunctionAdapter<T>(t,s));
-	  }
-	};
+    //! implement VisitingFunctor for vtkwriter_tree_addvertexdata
+    template<typename GV>
+    struct GridFunctionVertexDataFunctor : public MultiTypeTree::ReadPathFunctor<false> {
+      Dune::VTKWriter<GV>& w;
+      const std::string s;
+      GridFunctionVertexDataFunctor(Dune::VTKWriter<GV>& w_, const std::string & s_) :
+        w(w_), s(s_) {}
+      template<typename T> void visit_leaf(const T& t) {
+		std::stringstream name;
+        name << s;
+        for (std::vector<int>::size_type i=0; i<path.size(); i++)
+          name << "_" << path[i];
+		w.addVertexData(new VTKGridFunctionAdapter<T>(t,name.str()));
+      }
+    };
 
     /** \brief add vertex data from a \ref GridFunctionTree to a VTKWriter
      *
@@ -1256,10 +1223,10 @@ namespace Dune {
      *  \tparam T  The \ref GridFunctionTree
      */
 	template<typename GV, typename T> 
-	void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t)
+	void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t, std::string s = "data")
 	{
-	  std::string s="data";
-	  GridFunctionTreeVisitNodeMetaProgram<T,T::isLeaf>::vtkwriter_tree_addvertexdata(w,t,s);
+      GridFunctionVertexDataFunctor<GV> f(w,s);
+      MultiTypeTree::ForEachNode(f,t);
 	}
 
     //! \} GridFunctionTree
