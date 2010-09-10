@@ -19,6 +19,7 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
+#ifndef DOXYGEN // hide internals
     // do method invocation only if class has the method
 
     template<typename C, bool doIt>
@@ -358,7 +359,8 @@ namespace Dune {
 		lfs.mwrite(cl,cg);
 	  }
 	};
-
+    
+#endif // DOXYGEN
 
     //! construct constraints from given boundary condition function
     /**

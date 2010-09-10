@@ -19,96 +19,120 @@ namespace Dune {
     // local function space base: metaprograms
     //=======================================
 
-	template<typename T, bool isleaf, typename E, typename It, typename Int>
-	struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
+    namespace {
+    
+      template<typename T, bool isleaf, typename E, typename It, typename Int>
+      struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
 
-	template<typename T, typename E, typename It, typename Int, int n, int i>
-	struct LocalFunctionSpaceBaseVisitChildMetaProgram // visit i'th child of inner node
-	{
-	  static void fill_indices (T& t, const E& e, const It & begin, Int& offset)
-	  {
-        // vist children of node t in order
-		typedef typename T::template Child<i>::Type C;
-        if (i == 0)
+      template<typename T, typename E, typename It, typename Int, int n, int i>
+      struct LocalFunctionSpaceBaseVisitChildMetaProgram // visit i'th child of inner node
+      {
+        static void fill_indices (T& t, const E& e, const It & begin, Int& offset)
+        {
+          // vist children of node t in order
+          typedef typename T::template Child<i>::Type C;
+          if (i == 0)
+            t.offset = offset;
+          Int initial_offset = offset; // remember initial offset to compute size later
+          LocalFunctionSpaceBaseVisitNodeMetaProgram<C,C::isLeaf,E,It,Int>::
+            fill_indices(t.template getChild<i>(),e,begin,offset);
+          for (Int j=initial_offset; j<offset; j++)
+            begin[j] = t.pgfs->template subMap<i>(begin[j]);
+          LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,n,i+1>::
+            fill_indices(t,e,begin,offset);
+        }
+        static void reserve (T& t, const E& e, Int& offset)
+        {
+          // vist children of node t in order
+          typedef typename T::template Child<i>::Type C;
+          LocalFunctionSpaceBaseVisitNodeMetaProgram<C,C::isLeaf,E,It,Int>::
+            reserve(t.template getChild<i>(),e,offset);
+          LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,n,i+1>::
+            reserve(t,e,offset);
+        }
+      };
+
+      template<typename T, typename E, typename It, typename Int, int n>
+      struct LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,n,n> // end of child recursion
+      {
+        static void fill_indices (T& t, const E& e, const It & begin, Int& offset)
+        {
+          return;
+        }
+        static void reserve (T& t, const E& e, Int& offset)
+        {
+          return;
+        }
+      };
+
+      template<typename T, bool isleaf, typename E, typename It, typename Int> 
+      struct LocalFunctionSpaceBaseVisitNodeMetaProgram // visit inner node
+      {
+        static void fill_indices (T& t, const E& e, const It & begin, Int& offset)
+        {
+          // now we are at a multi component local function space
           t.offset = offset;
-        Int initial_offset = offset; // remember initial offset to compute size later
-        LocalFunctionSpaceBaseVisitNodeMetaProgram<C,C::isLeaf,E,It,Int>::
-          fill_indices(t.template getChild<i>(),e,begin,offset);
-        for (Int j=initial_offset; j<offset; j++)
-          begin[j] = t.pgfs->template subMap<i>(begin[j]);
-        LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,n,i+1>::
-          fill_indices(t,e,begin,offset);
-	  }
-	  static void reserve (T& t, const E& e, Int& offset)
-	  {
-        // vist children of node t in order
-		typedef typename T::template Child<i>::Type C;
-        LocalFunctionSpaceBaseVisitNodeMetaProgram<C,C::isLeaf,E,It,Int>::
-          reserve(t.template getChild<i>(),e,offset);
-        LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,n,i+1>::
+          Int initial_offset = offset; // remember initial offset to compute size later
+          t.i = begin+initial_offset; // begin is always the first entry in the vector
+          LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,T::CHILDREN,0>::
+            fill_indices(t,e,begin,offset);
+        }
+        static void reserve (T& t, const E& e, Int& offset)
+        {
+          // now we are at a multi component local function space
+          Int initial_offset = offset; // remember initial offset to compute size later
+          LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,T::CHILDREN,0>::
+            reserve(t,e,offset);
+          t.n = offset-initial_offset;
+        }
+      };
+
+      template<typename T, typename E, typename It, typename Int> 
+      struct LocalFunctionSpaceBaseVisitNodeMetaProgram<T,true,E,It,Int> // visit leaf node 
+      {
+        static void fill_indices (T& t, const E& e, const It & begin, Int& offset)
+        {
+          // now we are at a single component local function space
+          // which is part of a multi component local function space
+          t.offset = offset;
+          t.i = begin+offset; // begin is always the first entry in the vector
+          std::vector<typename T::Traits::GridFunctionSpaceType::Traits::SizeType> global(t.n);
+          t.pgfs->globalIndices(*(t.plfem),e,global); // get global indices for this finite element
+          for (Int i=0; i<t.n; i++) t.i[i]=global[i]; 
+          offset += t.n; // append this chunk
+        }
+        static void reserve (T& t, const E& e, Int& offset)
+        {
+          // now we are at a single component local function space
+          // which is part of a multi component local function space
+          t.plfem = &(((t.pgfs)->localFiniteElementMap()).find(e));
+          t.n = t.plfem->localBasis().size(); // determine size of this chunk
+          offset += t.n; // append this chunk
+        }
+      };
+
+      template<typename T, typename E, typename Int>
+      void LFS_reserve(T& t, const E& e, Int& offset)
+      {
+        LocalFunctionSpaceBaseVisitNodeMetaProgram<T,T::isLeaf,
+                                                   typename T::Traits::Element,
+                                                   typename T::Traits::IndexContainer::iterator,
+                                                   typename T::Traits::IndexContainer::size_type>::
           reserve(t,e,offset);
-	  }
-	};
+      }
 
-	template<typename T, typename E, typename It, typename Int, int n>
-	struct LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,n,n> // end of child recursion
-	{
-	  static void fill_indices (T& t, const E& e, const It & begin, Int& offset)
-	  {
-        return;
-	  }
-	  static void reserve (T& t, const E& e, Int& offset)
-	  {
-        return;
-	  }
-	};
-
-	template<typename T, bool isleaf, typename E, typename It, typename Int> 
-	struct LocalFunctionSpaceBaseVisitNodeMetaProgram // visit inner node
-	{
-	  static void fill_indices (T& t, const E& e, const It & begin, Int& offset)
-	  {
-        // now we are at a multi component local function space
-        t.offset = offset;
-        Int initial_offset = offset; // remember initial offset to compute size later
-        t.i = begin+initial_offset; // begin is always the first entry in the vector
-		LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,T::CHILDREN,0>::
+      template<typename T, typename E, typename It, typename Int>
+      void LFS_fill_indices(T& t, const E& e, const It & begin, Int& offset)
+      {
+        LocalFunctionSpaceBaseVisitNodeMetaProgram<T,T::isLeaf,
+                                                   typename T::Traits::Element,
+                                                   typename T::Traits::IndexContainer::iterator,
+                                                   typename T::Traits::IndexContainer::size_type>::
           fill_indices(t,e,begin,offset);
-	  }
-	  static void reserve (T& t, const E& e, Int& offset)
-	  {
-        // now we are at a multi component local function space
-        Int initial_offset = offset; // remember initial offset to compute size later
-		LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,T::CHILDREN,0>::
-          reserve(t,e,offset);
-        t.n = offset-initial_offset;
-	  }
-	};
+      }
 
-	template<typename T, typename E, typename It, typename Int> 
-	struct LocalFunctionSpaceBaseVisitNodeMetaProgram<T,true,E,It,Int> // visit leaf node 
-	{
-	  static void fill_indices (T& t, const E& e, const It & begin, Int& offset)
-	  {
-        // now we are at a single component local function space
-        // which is part of a multi component local function space
-        t.offset = offset;
-        t.i = begin+offset; // begin is always the first entry in the vector
-        std::vector<typename T::Traits::GridFunctionSpaceType::Traits::SizeType> global(t.n);
-        t.pgfs->globalIndices(*(t.plfem),e,global); // get global indices for this finite element
-        for (Int i=0; i<t.n; i++) t.i[i]=global[i]; 
-        offset += t.n; // append this chunk
-	  }
-	  static void reserve (T& t, const E& e, Int& offset)
-	  {
-        // now we are at a single component local function space
-        // which is part of a multi component local function space
-        t.plfem = &(((t.pgfs)->localFiniteElementMap()).find(e));
-        t.n = t.plfem->localBasis().size(); // determine size of this chunk
-        offset += t.n; // append this chunk
-	  }
-	};
-
+    } // end empty namespace
+    
     //=======================================
     // local function space base: power implementation
     //=======================================
@@ -266,22 +290,14 @@ namespace Dune {
         typename Traits::IndexContainer::size_type offset=0;
 
         // compute sizes
-        LocalFunctionSpaceBaseVisitNodeMetaProgram<BaseT,BaseT::isLeaf,
-          typename Traits::Element,
-          typename Traits::IndexContainer::iterator,
-          typename Traits::IndexContainer::size_type>::
-          reserve(*this,e,offset);
-
+        LFS_reserve<BaseT>(*this,e,offset);
+        
         // now reserve space in vector
         global.resize(offset);
 
         // initialize iterators and fill indices
         offset = 0;
-        LocalFunctionSpaceBaseVisitNodeMetaProgram<BaseT,BaseT::isLeaf,
-          typename Traits::Element,
-          typename Traits::IndexContainer::iterator,
-          typename Traits::IndexContainer::size_type>::
-          fill_indices(*this,e,global.begin(),offset);
+        LFS_fill_indices<BaseT>(*this,e,global.begin(),offset);
 
         // apply upMap
         for (typename BaseT::Traits::IndexContainer::size_type i=0; i<offset; i++)
@@ -298,33 +314,41 @@ namespace Dune {
     // local function space base: composite implementation
     //=======================================
 
-	template<typename T, int n, int i>
-	struct CompositeLocalFunctionSpaceNodeVisitChildMetaProgram // visit child of inner node
-	{
-      template<typename GFS>
-	  static void setup (T& t, const GFS& gfs)
-	  {
-        std::cout << "setting up child " << i << " of " << n << std::endl;
-        t.template getChild<i>().setup(gfs.template getChild<i>());
-        CompositeLocalFunctionSpaceNodeVisitChildMetaProgram<T,n,i+1>::
-          setup(t,gfs);
-	  }
-	};
-
-	template<typename T, int n>
-	struct CompositeLocalFunctionSpaceNodeVisitChildMetaProgram<T,n,n> // end of child recursion
-	{
-      template<typename GFS>
-	  static void setup (T& t, const GFS& gfs)
-	  {
-	  }
-	};
+#ifndef DOXYGEN
+    namespace {
+      template<typename T, int n, int i>
+      struct CompositeLocalFunctionSpaceNodeVisitChildMetaProgram // visit child of inner node
+      {
+        template<typename GFS>
+        static void setup (T& t, const GFS& gfs)
+        {
+          std::cout << "setting up child " << i << " of " << n << std::endl;
+          t.template getChild<i>().setup(gfs.template getChild<i>());
+          CompositeLocalFunctionSpaceNodeVisitChildMetaProgram<T,n,i+1>::
+            setup(t,gfs);
+        }
+      };
+      
+      template<typename T, int n>
+      struct CompositeLocalFunctionSpaceNodeVisitChildMetaProgram<T,n,n> // end of child recursion
+      {
+        template<typename GFS>
+        static void setup (T& t, const GFS& gfs)
+        {
+        }
+      };
+    }
+#endif
 
     template<typename GFS, int k>
     struct CompositeLocalFunctionSpaceNodeBaseTypeTraits
     {
+#ifdef DOXYGEN
+      typedef NodeType Type;
+#endif
     };
 
+#ifndef DOXYGEN
     template<typename GFS>
     struct CompositeLocalFunctionSpaceNodeBaseTypeTraits<GFS,2>
     {
@@ -417,6 +441,7 @@ namespace Dune {
                             typename GFS::template Child<8>::Type::LocalFunctionSpace::Traits::NodeType> Type;
      
     };
+#endif
 
     // local function space for a power grid function space
     template<typename GFS> 
@@ -541,22 +566,14 @@ namespace Dune {
         typename Traits::IndexContainer::size_type offset=0;
 
         // compute sizes
-        LocalFunctionSpaceBaseVisitNodeMetaProgram<BaseT,BaseT::isLeaf,
-          typename Traits::Element,
-          typename Traits::IndexContainer::iterator,
-          typename Traits::IndexContainer::size_type>::
-          reserve(*this,e,offset);
+        LFS_reserve<BaseT>(*this,e,offset);
 
         // now reserve space in vector
         global.resize(offset);
 
         // initialize iterators and fill indices
         offset = 0;
-        LocalFunctionSpaceBaseVisitNodeMetaProgram<BaseT,BaseT::isLeaf,
-          typename Traits::Element,
-          typename Traits::IndexContainer::iterator,
-          typename Traits::IndexContainer::size_type>::
-          fill_indices(*this,e,global.begin(),offset);
+        LFS_fill_indices<BaseT>(*this,e,global.begin(),offset);
 
         // apply upMap
         for (typename BaseT::Traits::IndexContainer::size_type i=0; i<offset; i++)
@@ -741,22 +758,14 @@ namespace Dune {
         typename Traits::IndexContainer::size_type offset=0;
 
         // compute sizes
-        LocalFunctionSpaceBaseVisitNodeMetaProgram<BaseT,BaseT::isLeaf,
-          typename Traits::Element,
-          typename Traits::IndexContainer::iterator,
-          typename Traits::IndexContainer::size_type>::
-          reserve(*this,e,offset);
+        LFS_reserve<BaseT>(*this,e,offset);
 
         // now reserve space in vector
         global.resize(offset);
 
         // initialize iterators and fill indices
         offset = 0;
-        LocalFunctionSpaceBaseVisitNodeMetaProgram<BaseT,BaseT::isLeaf,
-          typename Traits::Element,
-          typename Traits::IndexContainer::iterator,
-          typename Traits::IndexContainer::size_type>::
-          fill_indices(*this,e,global.begin(),offset);
+        LFS_fill_indices<BaseT>(*this,e,global.begin(),offset);
 
         // apply upMap
         for (typename BaseT::Traits::IndexContainer::size_type i=0; i<offset; i++)
