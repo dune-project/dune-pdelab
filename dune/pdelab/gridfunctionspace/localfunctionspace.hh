@@ -25,7 +25,7 @@ namespace Dune {
 	template<typename T, typename E, typename It, typename Int, int n, int i>
 	struct LocalFunctionSpaceBaseVisitChildMetaProgram // visit i'th child of inner node
 	{
-	  static void fill_indices (T& t, const E& e, It begin, Int& offset)
+	  static void fill_indices (T& t, const E& e, const It & begin, Int& offset)
 	  {
         // vist children of node t in order
 		typedef typename T::template Child<i>::Type C;
@@ -53,7 +53,7 @@ namespace Dune {
 	template<typename T, typename E, typename It, typename Int, int n>
 	struct LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,n,n> // end of child recursion
 	{
-	  static void fill_indices (T& t, const E& e, It begin, Int& offset)
+	  static void fill_indices (T& t, const E& e, const It & begin, Int& offset)
 	  {
         return;
 	  }
@@ -66,7 +66,7 @@ namespace Dune {
 	template<typename T, bool isleaf, typename E, typename It, typename Int> 
 	struct LocalFunctionSpaceBaseVisitNodeMetaProgram // visit inner node
 	{
-	  static void fill_indices (T& t, const E& e, It begin, Int& offset)
+	  static void fill_indices (T& t, const E& e, const It & begin, Int& offset)
 	  {
         // now we are at a multi component local function space
         t.offset = offset;
@@ -88,7 +88,7 @@ namespace Dune {
 	template<typename T, typename E, typename It, typename Int> 
 	struct LocalFunctionSpaceBaseVisitNodeMetaProgram<T,true,E,It,Int> // visit leaf node 
 	{
-	  static void fill_indices (T& t, const E& e, It begin, Int& offset)
+	  static void fill_indices (T& t, const E& e, const It & begin, Int& offset)
 	  {
         // now we are at a single component local function space
         // which is part of a multi component local function space
@@ -175,7 +175,7 @@ namespace Dune {
         pgfs = &gfs;
         for (int i=0; i<GFS::CHILDREN; i++)
           {
-            //            std::cout << "setting up child " << i << " of " << GFS::CHILDREN << std::endl;
+            std::cout << "setting up child " << i << " of " << GFS::CHILDREN << std::endl;
             this->getChild(i).setup(pgfs->getChild(i));
           }
       }
@@ -304,7 +304,7 @@ namespace Dune {
       template<typename GFS>
 	  static void setup (T& t, const GFS& gfs)
 	  {
-        //        std::cout << "setting up child " << i << " of " << n << std::endl;
+        std::cout << "setting up child " << i << " of " << n << std::endl;
         t.template getChild<i>().setup(gfs.template getChild<i>());
         CompositeLocalFunctionSpaceNodeVisitChildMetaProgram<T,n,i+1>::
           setup(t,gfs);
