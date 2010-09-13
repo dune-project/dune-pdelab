@@ -322,12 +322,13 @@ namespace Dune {
      *  \param  t An object of type T
      *  \param  s output stream
      */
-    template<bool print_root = false,
-             bool print_nodes = false,
-             bool print_after = false,
-             typename T>
+    template<typename T>
 	void print_paths (const T& t, std::ostream & s = std::cout)
 	{
+      static const bool print_root = false;
+      static const bool print_nodes = false;
+      static const bool print_after = false;
+      
       MultiTypeTree::PrintPathFunctor<print_root, print_nodes, print_after> f(s);
       MultiTypeTree::ForEachNode(f,t);
 	}
