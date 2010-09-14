@@ -8,7 +8,7 @@
 
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/tuples.hh>
-#include <dune/common/utility.hh>
+#include <dune/common/tupleutility.hh>
 
 #include <dune/pdelab/gridfunctionspace/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
