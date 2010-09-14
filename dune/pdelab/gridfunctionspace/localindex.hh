@@ -28,13 +28,13 @@ namespace Dune {
     struct LocalIndex
     {
       I i;
-      LocalIndex(const I & _i) : i(_i) {}
+      explicit LocalIndex(const I & _i) : i(_i) {}
     };
 
     /**
        \brief map a given tag from localfunctionspacetags.hh to the matching LocalIndex class
      */
-    template<typename I, TAGENAME TAG>
+    template<typename I, typename TAG>
     struct LocalIndexTraits
     {
       typedef Dune::PDELab::LocalIndex<I, TAG> LocalIndex;
@@ -44,7 +44,7 @@ namespace Dune {
        For AnySpaceTag the LocalIndex is just the raw integer
      */
     template<typename I>
-    struct LocalIndexTraits<AnySpaceTag>
+    struct LocalIndexTraits<I, AnySpaceTag>
     {
       typedef I LocalIndex;
     };
