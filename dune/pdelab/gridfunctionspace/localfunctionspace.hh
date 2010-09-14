@@ -810,6 +810,11 @@ namespace Dune {
       {
         return LocalIndex(BaseT::localIndex(index));
       }
+
+    private:
+      // we don't support getChild yet, so let's hide it!
+      template<int i>
+      void getChild () const;
     };
 
     // specialization for AnySpaceTag
