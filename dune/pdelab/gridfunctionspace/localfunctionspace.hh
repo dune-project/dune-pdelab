@@ -8,6 +8,8 @@
 #include "../common/multitypetree.hh"
 #include "../common/cpstoragepolicy.hh"
 
+#include "localindex.hh"
+
 namespace Dune {
   namespace PDELab {
 
@@ -234,7 +236,7 @@ namespace Dune {
       {
         localcontainer.resize(n);
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          localcontainer[k] = B::access(globalcontainer,i[k]);
+          localcontainer[typename LC::size_type(k)] = B::access(globalcontainer,i[k]);
       }
 
       /** \brief write back coefficients for one element to container */  
@@ -242,7 +244,7 @@ namespace Dune {
       void vwrite (const LC& localcontainer, GC& globalcontainer) const
       {
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          B::access(globalcontainer,i[k]) = localcontainer[k];
+          B::access(globalcontainer,i[k]) = localcontainer[typename LC::size_type(k)];
       }
 
       /** \brief add coefficients for one element to container */  
@@ -250,7 +252,7 @@ namespace Dune {
       void vadd (const LC& localcontainer, GC& globalcontainer) const
       {
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          B::access(globalcontainer,i[k]) += localcontainer[k];
+          B::access(globalcontainer,i[k]) += localcontainer[typename LC::size_type(k)];
       }
 
       void debug () const
@@ -510,7 +512,7 @@ namespace Dune {
       {
         localcontainer.resize(n);
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          localcontainer[k] = B::access(globalcontainer,i[k]);
+          localcontainer[typename LC::size_type(k)] = B::access(globalcontainer,i[k]);
       }
 
       /** \brief write back coefficients for one element to container */  
@@ -518,7 +520,7 @@ namespace Dune {
       void vwrite (const LC& localcontainer, GC& globalcontainer) const
       {
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          B::access(globalcontainer,i[k]) = localcontainer[k];
+          B::access(globalcontainer,i[k]) = localcontainer[typename LC::size_type(k)];
       }
 
       /** \brief add coefficients for one element to container */  
@@ -526,7 +528,7 @@ namespace Dune {
       void vadd (const LC& localcontainer, GC& globalcontainer) const
       {
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          B::access(globalcontainer,i[k]) += localcontainer[k];
+          B::access(globalcontainer,i[k]) += localcontainer[typename LC::size_type(k)];
       }
 
       void debug () const
@@ -675,7 +677,7 @@ namespace Dune {
       {
         localcontainer.resize(n);
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          localcontainer[k] = B::access(globalcontainer,i[k]);
+          localcontainer[typename LC::size_type(k)] = B::access(globalcontainer,i[k]);
       }
 
       /** \brief write back coefficients for one element to container */  
@@ -683,7 +685,7 @@ namespace Dune {
       void vwrite (const LC& localcontainer, GC& globalcontainer) const
       {
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          B::access(globalcontainer,i[k]) = localcontainer[k];
+          B::access(globalcontainer,i[k]) = localcontainer[typename LC::size_type(k)];
       }
 
       /** \brief add coefficients for one element to container */  
@@ -691,7 +693,7 @@ namespace Dune {
       void vadd (const LC& localcontainer, GC& globalcontainer) const
       {
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          B::access(globalcontainer,i[k]) += localcontainer[k];
+          B::access(globalcontainer,i[k]) += localcontainer[typename LC::size_type(k)];
       }
 
       /** \brief write back coefficients for one element to container */  
@@ -775,6 +777,49 @@ namespace Dune {
     private:
 	  CountingPointer<GFS const> pgfs;
       typename BaseT::Traits::IndexContainer global;
+    };
+
+    /**
+       \brief Create a local function space from a global function space
+
+       The local function space can be tagged with on of the tags
+       defined in localfunctionspacetags.hh. This allows to
+       destinguish between trial and test space.
+
+       If no TAG is specified the AnySpaceTag is used, which basicly
+       states, that it is not clear, whether this is a trial of a test
+       space.
+     */
+    template <typename GFS, typename TAG=AnySpaceTag>
+    class LocalFunctionSpace;
+
+    // tagged version
+    template <typename GFS, typename TAG>
+    class LocalFunctionSpace :
+      public GFS::LocalFunctionSpace
+    {
+      typedef typename GFS::LocalFunctionSpace BaseT;
+      typedef typename BaseT::Traits::IndexContainer::size_type I;
+      typedef typename LocalIndexTraits<I,TAG>::LocalIndex LocalIndex;
+    public:
+      typedef typename BaseT::Traits Traits;
+
+      LocalFunctionSpace(const GFS & gfs) : BaseT(gfs) {}
+
+      LocalIndex localIndex (typename Traits::IndexContainer::size_type index) const
+      {
+        return LocalIndex(BaseT::localIndex(index));
+      }
+    };
+
+    // specialization for AnySpaceTag
+    template <typename GFS>
+    class LocalFunctionSpace<GFS, AnySpaceTag> : 
+      public GFS::LocalFunctionSpace
+    {
+      typedef typename GFS::LocalFunctionSpace BaseT;
+    public:
+      LocalFunctionSpace(const GFS & gfs) : BaseT(gfs) {}
     };
 
     //! \} group GridFunctionSpace
