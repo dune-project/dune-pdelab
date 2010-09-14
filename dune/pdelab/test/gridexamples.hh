@@ -10,6 +10,7 @@
 #include <dune/common/static_assert.hh>
 
 #include<dune/grid/yaspgrid.hh>
+#include<dune/grid/common/gridfactory.hh>
 #if HAVE_ALBERTA
 #include<dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/dgfparser.hh>
