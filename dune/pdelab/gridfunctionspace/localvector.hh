@@ -31,7 +31,6 @@ namespace Dune {
     {
     private:
       typedef std::vector<T> BaseT; 
-      LocalVector(const LocalVector &);
     public:
       typedef typename BaseT::value_type  value_type;
       typedef typename BaseT::size_type  v_size_type;
@@ -65,7 +64,6 @@ namespace Dune {
     {
     private:
       typedef std::vector<T> BaseT; 
-      LocalVector(const LocalVector &);
     public:
       typedef typename BaseT::value_type  value_type;
       typedef typename BaseT::size_type    size_type;
@@ -76,8 +74,8 @@ namespace Dune {
 	 \{
 	 pass contructors to the base class
       */
-      LocalVector(v_size_type i) : BaseT(i) {}
-      LocalVector(v_size_type i, const value_type & v) : BaseT(i,v) {}
+      LocalVector(size_type i) : BaseT(i) {}
+      LocalVector(size_type i, const value_type & v) : BaseT(i,v) {}
       /** \} */
     };
 #endif
