@@ -81,27 +81,35 @@ namespace Dune {
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
-            std::vector<JacobianType> js(lfsu.size());
-            lfsu.localFiniteElement().localBasis().evaluateJacobian(it->position(),js);
+            std::vector<JacobianType> jsu(lfsu.size());
+            lfsu.localFiniteElement().localBasis().evaluateJacobian(it->position(),jsu);
+            std::vector<JacobianType> jsv(lfsv.size());
+            lfsv.localFiniteElement().localBasis().evaluateJacobian(it->position(),jsv);
 
-            // transform gradient to real element
+            // transform gradients to real element
             const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
-            std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
+            std::vector<Dune::FieldVector<RF,dim> > gradphiu(lfsu.size());
             for (size_t i=0; i<lfsu.size(); i++)
               {
-                gradphi[i] = 0.0;
-                jac.umv(js[i][0],gradphi[i]);
+                gradphiu[i] = 0.0;
+                jac.umv(jsu[i][0],gradphiu[i]);
+              }
+            std::vector<Dune::FieldVector<RF,dim> > gradphiv(lfsv.size());
+            for (size_t i=0; i<lfsv.size(); i++)
+              {
+                gradphiv[i] = 0.0;
+                jac.umv(jsv[i][0],gradphiv[i]);
               }
 
             // compute gradient of u
             Dune::FieldVector<RF,dim> gradu(0.0);
             for (size_t i=0; i<lfsu.size(); i++)
-              gradu.axpy(x[i],gradphi[i]);
+              gradu.axpy(x[lfsu.localIndex(i)],gradphiu[i]);
 
             // integrate grad u * grad phi_i
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
-            for (size_t i=0; i<lfsu.size(); i++)
-              r[i] += (gradu*gradphi[i])*factor;
+            for (size_t i=0; i<lfsv.size(); i++)
+              r[lfsv.localIndex(i)] += (gradu*gradphiv[i])*factor;
           }
 	  }
 
@@ -138,7 +146,7 @@ namespace Dune {
             // integrate f
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_t i=0; i<lfsv.size(); i++)
-              r[i] -= y*phi[i]*factor;
+              r[lfsv.localIndex(i)] -= y*phi[i]*factor;
           }
       }
 
@@ -185,7 +193,7 @@ namespace Dune {
             // integrate J
             RF factor = it->weight()*ig.geometry().integrationElement(it->position());
             for (size_t i=0; i<lfsv.size(); i++)
-              r[i] += y*phi[i]*factor;
+              r[lfsv.localIndex(i)] += y*phi[i]*factor;
           }
       }
 
