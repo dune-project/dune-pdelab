@@ -593,7 +593,7 @@ namespace Dune {
 
 	//! traits for single component local function space
 	template<typename GFS, typename N>	
-	struct LocalFunctionSpaceTraits : public PowerCompositeLocalFunctionSpaceTraits<GFS,N>
+	struct LeafLocalFunctionSpaceTraits : public PowerCompositeLocalFunctionSpaceTraits<GFS,N>
 	{
 	  //! \brief Type of local finite element
       typedef typename GFS::Traits::LocalFiniteElementType LocalFiniteElementType;
@@ -604,7 +604,7 @@ namespace Dune {
 
     //! single component local function space
     template<typename GFS> 
-    class LocalFunctionSpaceNode : public LeafNode
+    class LeafLocalFunctionSpaceNode : public LeafNode
     {
       template<typename T, bool b, typename E, typename It, typename Int> 
       friend struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
@@ -615,15 +615,15 @@ namespace Dune {
  	  typedef typename GFS::Traits::GridViewType::Traits::template Codim<0>::Entity Element;
 
    public:
-      typedef LocalFunctionSpaceTraits<GFS,LocalFunctionSpaceNode> Traits;
+      typedef LeafLocalFunctionSpaceTraits<GFS,LeafLocalFunctionSpaceNode> Traits;
 
       //! \brief empty constructor
-      LocalFunctionSpaceNode ()
+      LeafLocalFunctionSpaceNode ()
       {
       }
 
       //! \brief initialize with grid function space
-      LocalFunctionSpaceNode (const GFS& gfs) : pgfs(&gfs)
+      LeafLocalFunctionSpaceNode (const GFS& gfs) : pgfs(&gfs)
       {
       }
 
@@ -739,15 +739,15 @@ namespace Dune {
     /** depends on a grid function space
      */
     template<typename GFS>
-    class LocalFunctionSpace : public LocalFunctionSpaceNode<GFS>
+    class LeafLocalFunctionSpace : public LeafLocalFunctionSpaceNode<GFS>
     {
-      typedef LocalFunctionSpaceNode<GFS> BaseT;
+      typedef LeafLocalFunctionSpaceNode<GFS> BaseT;
 
     public:
       typedef typename BaseT::Traits Traits;
 
       //! \todo please doc me!
-      LocalFunctionSpace (const GFS& gfs)
+      LeafLocalFunctionSpace (const GFS& gfs)
         : BaseT(gfs), pgfs(&gfs), global(gfs.maxLocalSize())
       {}
 

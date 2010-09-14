@@ -255,7 +255,7 @@ namespace Dune {
 	  };
 
       //! define local function space parametrized by self 
-      typedef Dune::PDELab::LocalFunctionSpace<GridFunctionSpace> LocalFunctionSpace;
+      typedef Dune::PDELab::LeafLocalFunctionSpace<GridFunctionSpace> LocalFunctionSpace;
 
 	  //! constructor
 	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_) 
@@ -535,7 +535,7 @@ namespace Dune {
 	  };
 
       // define local function space parametrized by self 
-      typedef Dune::PDELab::LocalFunctionSpace<GridFunctionSpace> LocalFunctionSpace;
+      typedef Dune::PDELab::LeafLocalFunctionSpace<GridFunctionSpace> LocalFunctionSpace;
 
 	  // constructor
 	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_) 
@@ -856,7 +856,7 @@ namespace Dune {
 	  };
 
       // define local function space parametrized by self 
-      typedef Dune::PDELab::LocalFunctionSpace<GridFunctionSpace> LocalFunctionSpace;
+      typedef Dune::PDELab::LeafLocalFunctionSpace<GridFunctionSpace> LocalFunctionSpace;
 
 	  // constructors
 	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const IIS& iis_, const CE& ce_) 
@@ -3162,7 +3162,7 @@ namespace Dune {
 	  };
 
       // define local function space parametrized by self 
-      typedef Dune::PDELab::LocalFunctionSpace<GridFunctionSubSpaceBase> LocalFunctionSpace;
+      typedef Dune::PDELab::LeafLocalFunctionSpace<GridFunctionSubSpaceBase> LocalFunctionSpace;
 
 	  // get grid view
 	  const typename Traits::GridViewType& gridview () const
