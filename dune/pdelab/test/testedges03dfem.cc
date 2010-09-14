@@ -4,6 +4,7 @@
 #include "config.h"     
 #endif
 
+#include <map>
 #include <list>
 #include <string>
 #include <sstream>
