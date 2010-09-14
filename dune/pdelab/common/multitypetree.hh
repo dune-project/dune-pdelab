@@ -32,7 +32,7 @@ namespace Dune {
      *  \li CompositeNode is the base class for nodes where the children have
      *      possibly different types.
      *
-     *  Because the way the tree is build up from subtrees, child nodes have
+     *  Because of the way the tree is build up from subtrees, child nodes have
      *  no information about their parents.  In fact, as far as the type
      *  system is concerned, a particular node can be a child of multiple
      *  other nodes, or can even be a child of the same node multiple times
