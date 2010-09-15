@@ -631,6 +631,11 @@ namespace Dune {
           verbosityLevel = level;
       }
 
+      const PDESOLVER & getPDESolver()
+      {
+        return pdesolver;
+      }
+
       //! redefine the method to be used; can be done before every step
       /**
        * \param method_ Parameter object.
@@ -822,7 +827,7 @@ namespace Dune {
     private:
       const TimeSteppingParameterInterface<T> *method;
       IGOS& igos;
-      PDESOLVER pdesolver;
+      PDESOLVER & pdesolver;
       int verbosityLevel;
       int step;
     };
