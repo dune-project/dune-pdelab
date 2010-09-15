@@ -827,7 +827,7 @@ namespace Dune {
     private:
       const TimeSteppingParameterInterface<T> *method;
       IGOS& igos;
-      PDESOLVER & pdesolver;
+      PDESOLVER pdesolver;
       int verbosityLevel;
       int step;
     };
