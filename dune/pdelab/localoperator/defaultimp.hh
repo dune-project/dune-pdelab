@@ -50,21 +50,18 @@ namespace Dune {
         const int n=lfsu.size();
 
         X u(x);
-#warning this code does only work for on the function space root node, otherwise the size of the residual vector is too small
-        LocalVector<R, TestSpaceTag> down(m,0.0),up(m);
+        std::vector<R> down(m,0.0),up(m);
 
         asImp().alpha_volume(eg,lfsu,u,lfsv,down);
         for (int j=0; j<n; j++) // loop over columns
         {
-          up = 0.0;
-          // for (int k=0; k<m; k++) up[k]=0.0;
-          R delta = epsilon*(1.0+std::abs(u[lfsu.localIndex(j)]));
-          u[lfsu.localIndex(j)] += delta;
+          for (int k=0; k<m; k++) up[k]=0.0;
+          R delta = epsilon*(1.0+std::abs(u[j]));
+          u[j] += delta;
           asImp().alpha_volume(eg,lfsu,u,lfsv,up);
           for (int i=0; i<m; i++)
-#warning wenn LocalMatrix angepasst ist, sollte es auch hier krachen
-            mat(i,j) += (up[lfsv.localIndex(i)]-down[lfsv.localIndex(i)])/delta;
-          u[lfsu.localIndex(j)] = x[lfsu.localIndex(j)];
+            mat(i,j) += (up[i]-down[i])/delta;
+          u[j] = x[j];
         }
       }
 
@@ -302,20 +299,18 @@ namespace Dune {
         const int n=lfsu.size();
 
         X u(x);
-#warning this code does only work for on the function space root node, otherwise the size of the residual vector is too small
-        LocalVector<R, TestSpaceTag> down(m,0.0),up(m);
+        std::vector<R> down(m,0.0),up(m);
 
         asImp().alpha_volume(eg,lfsu,u,lfsv,down);
         for (int j=0; j<n; j++) // loop over columns
         {
-          up = 0.0;
-          // for (int k=0; k<m; k++) up[k]=0.0;
-          R delta = epsilon*(1.0+std::abs(u[lfsu.localIndex(j)]));
-          u[lfsu.localIndex(j)] += delta;
+          for (int k=0; k<m; k++) up[k]=0.0;
+          R delta = epsilon*(1.0+std::abs(u[j]));
+          u[j] += delta;
           asImp().alpha_volume(eg,lfsu,u,lfsv,up);
           for (int i=0; i<m; i++)
-            y[lfsv.localIndex(i)] += ((up[lfsv.localIndex(i)]-down[lfsv.localIndex(i)])/delta)*x[lfsu.localIndex(j)];
-          u[lfsu.localIndex(j)] = x[lfsu.localIndex(j)];
+            y[i] += ((up[i]-down[i])/delta)*x[j];
+          u[j] = x[j];
         }
       }
 
