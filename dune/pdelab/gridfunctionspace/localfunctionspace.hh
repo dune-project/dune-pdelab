@@ -113,33 +113,13 @@ namespace Dune {
         }
       };
 
-      template<typename T, typename E, typename Int>
-      void LFS_reserve(T& t, const E& e, Int& offset)
-      {
-        LocalFunctionSpaceBaseVisitNodeMetaProgram<T,T::isLeaf,
-                                                   typename T::Traits::Element,
-                                                   typename T::Traits::IndexContainer::iterator,
-                                                   typename T::Traits::IndexContainer::size_type>::
-          reserve(t,e,offset);
-      }
-
-      template<typename T, typename E, typename It, typename Int>
-      void LFS_fill_indices(T& t, const E& e, const It & begin, Int& offset)
-      {
-        LocalFunctionSpaceBaseVisitNodeMetaProgram<T,T::isLeaf,
-                                                   typename T::Traits::Element,
-                                                   typename T::Traits::IndexContainer::iterator,
-                                                   typename T::Traits::IndexContainer::size_type>::
-          fill_indices(t,e,begin,offset);
-      }
-
     } // end empty namespace
     
     //=======================================
     // local function space base: base class
     //=======================================
 
-    //! traits for multi component local function space
+    //! traits mapping global function space information to local function space
     template<typename GFS>  
     struct LocalFunctionSpaceBaseTraits
     {
@@ -163,7 +143,6 @@ namespace Dune {
     template <typename GFS>
     class LocalFunctionSpaceBaseNode
     {
-
       typedef typename GFS::Traits::BackendType B;
     public:
       typedef LocalFunctionSpaceBaseTraits<GFS> Traits;
@@ -172,7 +151,10 @@ namespace Dune {
       LocalFunctionSpaceBaseNode () {}
       
       //! \brief construct from global function space
-      LocalFunctionSpaceBaseNode (const GFS& gfs) : pgfs(&gfs) {}
+      LocalFunctionSpaceBaseNode (const GFS& gfs) : 
+        pgfs(&gfs), global(gfs.maxLocalSize())
+      {
+      }
       
       //! \brief initialize with grid function space
       void setup (const GFS& gfs)
@@ -238,8 +220,54 @@ namespace Dune {
         std::cout << ")" << std::endl;
       }
 
+      //! \brief bind local function space to entity
+      /**
+
+         This is a generic implementation of the bind function. It is
+         parametrized with the NodeType, which the type of the derived
+         LocalFunctionSpaceNode. Handing the NodeType as a parammeter
+         avoid the need for the CRTP construct, but all derived
+         classes have to add a method bind, which forward to this
+         method.
+
+         \param node reference to the derived node, the address must be the same as this
+         \param e entity to bind to
+       */
+      template<typename NodeType>
+      void bind (NodeType& node, const typename Traits::Element& e)
+      {
+        // we should only call bind on out selfs
+        assert(&node == this);
+
+        // make offset
+        typename Traits::IndexContainer::size_type offset=0;
+
+        // compute sizes
+        LocalFunctionSpaceBaseVisitNodeMetaProgram<NodeType,NodeType::isLeaf,
+                                                   typename Traits::Element,
+                                                   typename Traits::IndexContainer::iterator,
+                                                   typename Traits::IndexContainer::size_type>::
+          reserve(node,e,offset);
+        
+        // now reserve space in vector
+        global.resize(offset);
+
+        // initialize iterators and fill indices
+        offset = 0;
+        LocalFunctionSpaceBaseVisitNodeMetaProgram<NodeType,NodeType::isLeaf,
+                                                   typename Traits::Element,
+                                                   typename Traits::IndexContainer::iterator,
+                                                   typename Traits::IndexContainer::size_type>::
+          fill_indices(node,e,global.begin(),offset);
+
+        // apply upMap
+        for (typename Traits::IndexContainer::size_type i=0; i<offset; i++)
+          global[i] = pgfs->upMap(global[i]);
+      }
+
     protected:
       CountingPointer<GFS const> pgfs;
+      typename Traits::IndexContainer global;
       typename Traits::IndexContainer::iterator i;
       typename Traits::IndexContainer::size_type n;
       typename Traits::IndexContainer::size_type offset;
@@ -265,10 +293,11 @@ namespace Dune {
     class PowerLocalFunctionSpaceNode :
       public LocalFunctionSpaceBaseNode<GFS>,
       public PowerNode<typename GFS::template Child<0>::Type::LocalFunctionSpace::Traits::NodeType,
-                         GFS::CHILDREN,CopyStoragePolicy>
+                       GFS::CHILDREN,CopyStoragePolicy>
     {
       typedef LocalFunctionSpaceBaseNode<GFS> BaseT;
 
+      // friend decl for bind meta program
       template<typename T, bool b, typename E, typename It, typename Int> 
       friend struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
       template<typename T, typename E, typename It, typename Int, int n, int i>
@@ -277,7 +306,7 @@ namespace Dune {
     public:
       typedef PowerCompositeLocalFunctionSpaceTraits<GFS,PowerLocalFunctionSpaceNode> Traits;
 
-      //! \brief empty constructor
+      //! \brief empty constructor (needed for CopyStoragePolicy)
       PowerLocalFunctionSpaceNode ()
       {
       }
@@ -299,6 +328,14 @@ namespace Dune {
             this->getChild(i).setup(this->pgfs->getChild(i));
           }
       }
+
+      //! \brief bind local function space to entity
+      void bind (const typename Traits::Element& e)
+      {
+        // call method on base class, this avoid the barton neckman trick
+        BaseT::bind(*this,e);
+      }
+
     };
 
     // local function space description that can be bound to an element
@@ -307,37 +344,11 @@ namespace Dune {
     class PowerLocalFunctionSpace : public PowerLocalFunctionSpaceNode<GFS>
     {
       typedef PowerLocalFunctionSpaceNode<GFS> BaseT;
-
+      using BaseT::global;
     public:
       typedef typename BaseT::Traits Traits;
-
-      PowerLocalFunctionSpace (const GFS& gfs)
-        : BaseT(gfs), global(gfs.maxLocalSize())
-      {}
-
-      //! \brief bind local function space to entity
-      void bind (const typename Traits::Element& e)
-      {
-        // make offset
-        typename Traits::IndexContainer::size_type offset=0;
-
-        // compute sizes
-        LFS_reserve<BaseT>(*this,e,offset);
-        
-        // now reserve space in vector
-        global.resize(offset);
-
-        // initialize iterators and fill indices
-        offset = 0;
-        LFS_fill_indices<BaseT>(*this,e,global.begin(),offset);
-
-        // apply upMap
-        for (typename BaseT::Traits::IndexContainer::size_type i=0; i<offset; i++)
-          global[i] = this->pgfs->upMap(global[i]);
-      }
-
-    private:
-      typename BaseT::Traits::IndexContainer global;
+      //! create power local function space for corresponding glocal function space
+      PowerLocalFunctionSpace (const GFS& gfs) : BaseT(gfs) {}
     };
 
 
@@ -482,6 +493,7 @@ namespace Dune {
     {
       typedef LocalFunctionSpaceBaseNode<GFS> BaseT;
 
+      // friend decl for bind meta program
       template<typename T, bool b, typename E, typename It, typename Int> 
       friend struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
       template<typename T, typename E, typename It, typename Int, int n, int i>
@@ -490,14 +502,13 @@ namespace Dune {
     public:
       typedef PowerCompositeLocalFunctionSpaceTraits<GFS,CompositeLocalFunctionSpaceNode> Traits;
 
-      //! \brief empty constructor
+      //! \brief empty constructor (needed for CopyStoragePolicy)
       CompositeLocalFunctionSpaceNode ()
       {
       }
 
       //! \brief initialize with grid function space
-      CompositeLocalFunctionSpaceNode (const GFS& gfs)  : 
-        BaseT(gfs)
+      CompositeLocalFunctionSpaceNode (const GFS& gfs)  : BaseT(gfs)
       {
         setup(gfs);
       }
@@ -509,6 +520,14 @@ namespace Dune {
         CompositeLocalFunctionSpaceNodeVisitChildMetaProgram<CompositeLocalFunctionSpaceNode,GFS::CHILDREN,0>::
           setup(*this,gfs);
       }
+
+      //! \brief bind local function space to entity
+      void bind (const typename Traits::Element& e)
+      {
+        // call method on base class, this avoid the barton neckman trick
+        BaseT::bind(*this,e);
+      }
+
     };
 
     // local function space description that can be bound to an element
@@ -517,37 +536,13 @@ namespace Dune {
     class CompositeLocalFunctionSpace : public CompositeLocalFunctionSpaceNode<GFS>
     {
       typedef CompositeLocalFunctionSpaceNode<GFS> BaseT;
-
+      using BaseT::global;
     public:
       typedef typename BaseT::Traits Traits;
-
+      //! create composite local function space for corresponding glocal function space
       CompositeLocalFunctionSpace (const GFS& gfs)
-        : BaseT(gfs), global(gfs.maxLocalSize())
+        : BaseT(gfs)
       {}
-
-      //! \brief bind local function space to entity
-      void bind (const typename Traits::Element& e)
-      {
-        // make offset
-        typename Traits::IndexContainer::size_type offset=0;
-
-        // compute sizes
-        LFS_reserve<BaseT>(*this,e,offset);
-
-        // now reserve space in vector
-        global.resize(offset);
-
-        // initialize iterators and fill indices
-        offset = 0;
-        LFS_fill_indices<BaseT>(*this,e,global.begin(),offset);
-
-        // apply upMap
-        for (typename BaseT::Traits::IndexContainer::size_type i=0; i<offset; i++)
-          global[i] = this->pgfs->upMap(global[i]);
-      }
-
-    private:
-      typename BaseT::Traits::IndexContainer global;
     };
 
 
@@ -575,6 +570,7 @@ namespace Dune {
     {
       typedef LocalFunctionSpaceBaseNode<GFS> BaseT;
 
+      // friend decl for bind meta program
       template<typename T, bool b, typename E, typename It, typename Int> 
       friend struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
       template<typename T, typename E, typename It, typename Int, int n, int i>
@@ -583,14 +579,13 @@ namespace Dune {
     public:
       typedef LeafLocalFunctionSpaceTraits<GFS,LeafLocalFunctionSpaceNode> Traits;
 
-      //! \brief empty constructor
+      //! \brief empty constructor (needed for CopyStoragePolicy)
       LeafLocalFunctionSpaceNode ()
       {
       }
 
       //! \brief initialize with grid function space
-      LeafLocalFunctionSpaceNode (const GFS& gfs) : 
-        BaseT(gfs)
+      LeafLocalFunctionSpaceNode (const GFS& gfs) : BaseT(gfs)
       {
       }
 
@@ -630,6 +625,13 @@ namespace Dune {
           }
       }
 
+      //! \brief bind local function space to entity
+      void bind (const typename Traits::Element& e)
+      {
+        // call method on base class, this avoid the barton neckman trick
+        BaseT::bind(*this,e);
+      }
+
     private:
       const typename Traits::LocalFiniteElementType* plfem;
     };
@@ -641,38 +643,12 @@ namespace Dune {
     class LeafLocalFunctionSpace : public LeafLocalFunctionSpaceNode<GFS>
     {
       typedef LeafLocalFunctionSpaceNode<GFS> BaseT;
-
+      using BaseT::global;
     public:
       typedef typename BaseT::Traits Traits;
-
-      //! \todo please doc me!
-      LeafLocalFunctionSpace (const GFS& gfs)
-        : BaseT(gfs), global(gfs.maxLocalSize())
+      //! create leaf local function space for corresponding glocal function space
+      LeafLocalFunctionSpace (const GFS& gfs) : BaseT(gfs)
       {}
-
-      //! \brief bind local function space to entity
-      void bind (const typename Traits::Element& e)
-      {
-        // make offset
-        typename Traits::IndexContainer::size_type offset=0;
-
-        // compute sizes
-        LFS_reserve<BaseT>(*this,e,offset);
-
-        // now reserve space in vector
-        global.resize(offset);
-
-        // initialize iterators and fill indices
-        offset = 0;
-        LFS_fill_indices<BaseT>(*this,e,global.begin(),offset);
-
-        // apply upMap
-        for (typename BaseT::Traits::IndexContainer::size_type i=0; i<offset; i++)
-          global[i] = this->pgfs->upMap(global[i]);
-      }
-
-    private:
-      typename BaseT::Traits::IndexContainer global;
     };
 
     /**
