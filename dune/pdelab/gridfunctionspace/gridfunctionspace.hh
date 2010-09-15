@@ -255,7 +255,7 @@ namespace Dune {
 	  };
 
       //! define local function space parametrized by self 
-      typedef Dune::PDELab::LeafLocalFunctionSpace<GridFunctionSpace> LocalFunctionSpace;
+      typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSpace> LocalFunctionSpace;
 
 	  //! constructor
 	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_) 
@@ -535,7 +535,7 @@ namespace Dune {
 	  };
 
       // define local function space parametrized by self 
-      typedef Dune::PDELab::LeafLocalFunctionSpace<GridFunctionSpace> LocalFunctionSpace;
+      typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSpace> LocalFunctionSpace;
 
 	  // constructor
 	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_) 
@@ -856,7 +856,7 @@ namespace Dune {
 	  };
 
       // define local function space parametrized by self 
-      typedef Dune::PDELab::LeafLocalFunctionSpace<GridFunctionSpace> LocalFunctionSpace;
+      typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSpace> LocalFunctionSpace;
 
 	  // constructors
 	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const IIS& iis_, const CE& ce_) 
@@ -1191,7 +1191,7 @@ namespace Dune {
 	  };
 
       // define local function space parametrized by self 
-      typedef Dune::PDELab::PowerLocalFunctionSpace<PowerGridFunctionSpaceBase> LocalFunctionSpace;
+      typedef Dune::PDELab::PowerLocalFunctionSpaceNode<PowerGridFunctionSpaceBase> LocalFunctionSpace;
 
 
       // it is part of the trick to have a constructor without arguments
@@ -1372,7 +1372,7 @@ namespace Dune {
 	  };
 
       // define local function space parametrized by self 
-      typedef Dune::PDELab::PowerLocalFunctionSpace<PowerGridFunctionSpaceBase> LocalFunctionSpace;
+      typedef Dune::PDELab::PowerLocalFunctionSpaceNode<PowerGridFunctionSpaceBase> LocalFunctionSpace;
       
       // it is part of the trick to have a constructor without arguments
       // setting of the children is then done by the constructors
@@ -2103,7 +2103,7 @@ namespace Dune {
 	  };
 
       // define local function space parametrized by self 
-      typedef Dune::PDELab::CompositeLocalFunctionSpace<CompositeGridFunctionSpaceBase> LocalFunctionSpace;
+      typedef Dune::PDELab::CompositeLocalFunctionSpaceNode<CompositeGridFunctionSpaceBase> LocalFunctionSpace;
 
 
       // it is part of the trick to have a constructor without arguments
@@ -2282,7 +2282,7 @@ namespace Dune {
 	  };
 
       // define local function space parametrized by self 
-      typedef Dune::PDELab::CompositeLocalFunctionSpace<CompositeGridFunctionSpaceBase> LocalFunctionSpace;
+      typedef Dune::PDELab::CompositeLocalFunctionSpaceNode<CompositeGridFunctionSpaceBase> LocalFunctionSpace;
 
       // it is part of the trick to have a constructor without arguments
       // setting of the children is then done by the constructors
@@ -2970,7 +2970,7 @@ namespace Dune {
 	  };
 
       // define local function space parametrized by self 
-      typedef Dune::PDELab::CompositeLocalFunctionSpace<GridFunctionSubSpaceBase> LocalFunctionSpace;
+      typedef Dune::PDELab::CompositeLocalFunctionSpaceNode<GridFunctionSubSpaceBase> LocalFunctionSpace;
 
 	  // get grid view
 	  const typename Traits::GridViewType& gridview () const
@@ -3074,7 +3074,7 @@ namespace Dune {
 	  };
 
       // define local function space parametrized by self 
-      typedef PowerLocalFunctionSpace<GridFunctionSubSpaceBase> LocalFunctionSpace;
+      typedef PowerLocalFunctionSpaceNode<GridFunctionSubSpaceBase> LocalFunctionSpace;
 
 	  // get grid view
 	  const typename Traits::GridViewType& gridview () const
@@ -3162,7 +3162,7 @@ namespace Dune {
 	  };
 
       // define local function space parametrized by self 
-      typedef Dune::PDELab::LeafLocalFunctionSpace<GridFunctionSubSpaceBase> LocalFunctionSpace;
+      typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSubSpaceBase> LocalFunctionSpace;
 
 	  // get grid view
 	  const typename Traits::GridViewType& gridview () const

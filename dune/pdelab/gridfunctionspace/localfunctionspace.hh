@@ -338,20 +338,6 @@ namespace Dune {
 
     };
 
-    // local function space description that can be bound to an element
-    // depends on a grid function space
-    template<typename GFS>
-    class PowerLocalFunctionSpace : public PowerLocalFunctionSpaceNode<GFS>
-    {
-      typedef PowerLocalFunctionSpaceNode<GFS> BaseT;
-      using BaseT::global;
-    public:
-      typedef typename BaseT::Traits Traits;
-      //! create power local function space for corresponding glocal function space
-      PowerLocalFunctionSpace (const GFS& gfs) : BaseT(gfs) {}
-    };
-
-
     //=======================================
     // local function space base: composite implementation
     //=======================================
@@ -530,23 +516,6 @@ namespace Dune {
 
     };
 
-    // local function space description that can be bound to an element
-    // depends on a grid function space
-    template<typename GFS>
-    class CompositeLocalFunctionSpace : public CompositeLocalFunctionSpaceNode<GFS>
-    {
-      typedef CompositeLocalFunctionSpaceNode<GFS> BaseT;
-      using BaseT::global;
-    public:
-      typedef typename BaseT::Traits Traits;
-      //! create composite local function space for corresponding glocal function space
-      CompositeLocalFunctionSpace (const GFS& gfs)
-        : BaseT(gfs)
-      {}
-    };
-
-
-
     //=======================================
     // local function space base: single component implementation
     //=======================================
@@ -636,20 +605,9 @@ namespace Dune {
       const typename Traits::LocalFiniteElementType* plfem;
     };
 
-    //! local function space description that can be bound to an element
-    /** depends on a grid function space
-     */
-    template<typename GFS>
-    class LeafLocalFunctionSpace : public LeafLocalFunctionSpaceNode<GFS>
-    {
-      typedef LeafLocalFunctionSpaceNode<GFS> BaseT;
-      using BaseT::global;
-    public:
-      typedef typename BaseT::Traits Traits;
-      //! create leaf local function space for corresponding glocal function space
-      LeafLocalFunctionSpace (const GFS& gfs) : BaseT(gfs)
-      {}
-    };
+    //=======================================
+    // local function facade
+    //=======================================
 
     /**
        \brief Create a local function space from a global function space
