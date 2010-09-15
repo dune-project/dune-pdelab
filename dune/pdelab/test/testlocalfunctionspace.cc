@@ -11,6 +11,7 @@
 #include"../finiteelementmap/q22dfem.hh"
 #include"../finiteelementmap/q12dfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
+#include"../gridfunctionspace/localvector.hh"
 
 // test function trees
 template<class GV> 
@@ -47,10 +48,11 @@ void test (const GV& gv)
   xp = 0.0;
 
   // make local function space object
+  typedef Dune::PDELab::AnySpaceTag Tag;
   typename Q2GFS::LocalFunctionSpace q2lfs(q2gfs);
-  std::vector<double> xl(q2lfs.maxSize());
+  Dune::PDELab::LocalVector<double, Tag> xl(q2lfs.maxSize());
   typename PowerGFS::LocalFunctionSpace powerlfs(powergfs);
-  std::vector<double> xlp(powerlfs.maxSize());
+  Dune::PDELab::LocalVector<double, Tag> xlp(powerlfs.maxSize());
   typename CompositeGFS::LocalFunctionSpace compositelfs(compositegfs);
   //  std::vector<double> xlc(compositelfs.maxSize());
 
@@ -69,6 +71,15 @@ void test (const GV& gv)
 
       compositelfs.bind(*it);
       compositelfs.debug();
+
+      assert(powerlfs.size() == 
+             powerlfs.localVectorSize());
+      assert(powerlfs.localVectorSize() == 
+             powerlfs.template getChild<0>().localVectorSize());
+      assert(compositelfs.size() == 
+             compositelfs.localVectorSize());
+      assert(compositelfs.localVectorSize() == 
+             compositelfs.template getChild<0>().localVectorSize());
 	}
 }
 

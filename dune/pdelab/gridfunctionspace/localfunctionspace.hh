@@ -29,19 +29,20 @@ namespace Dune {
       template<typename T, typename E, typename It, typename Int, int n, int i>
       struct LocalFunctionSpaceBaseVisitChildMetaProgram // visit i'th child of inner node
       {
-        static void fill_indices (T& t, const E& e, const It & begin, Int& offset)
+        static void fill_indices (T& t, const E& e, const It & begin, Int& offset, const Int lvsize)
         {
-          // vist children of node t in order
-          typedef typename T::template Child<i>::Type C;
+          t.lvsize = lvsize;
           if (i == 0)
             t.offset = offset;
+          // vist children of node t in order
+          typedef typename T::template Child<i>::Type C;
           Int initial_offset = offset; // remember initial offset to compute size later
           LocalFunctionSpaceBaseVisitNodeMetaProgram<C,C::isLeaf,E,It,Int>::
-            fill_indices(t.template getChild<i>(),e,begin,offset);
+            fill_indices(t.template getChild<i>(),e,begin,offset,lvsize);
           for (Int j=initial_offset; j<offset; j++)
             begin[j] = t.pgfs->template subMap<i>(begin[j]);
           LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,n,i+1>::
-            fill_indices(t,e,begin,offset);
+            fill_indices(t,e,begin,offset,lvsize);
         }
         static void reserve (T& t, const E& e, Int& offset)
         {
@@ -57,7 +58,7 @@ namespace Dune {
       template<typename T, typename E, typename It, typename Int, int n>
       struct LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,n,n> // end of child recursion
       {
-        static void fill_indices (T& t, const E& e, const It & begin, Int& offset)
+        static void fill_indices (T& t, const E& e, const It & begin, Int& offset, const Int lvsize)
         {
           return;
         }
@@ -70,14 +71,15 @@ namespace Dune {
       template<typename T, bool isleaf, typename E, typename It, typename Int> 
       struct LocalFunctionSpaceBaseVisitNodeMetaProgram // visit inner node
       {
-        static void fill_indices (T& t, const E& e, const It & begin, Int& offset)
+        static void fill_indices (T& t, const E& e, const It & begin, Int& offset, const Int lvsize)
         {
           // now we are at a multi component local function space
+          t.lvsize = lvsize;
           t.offset = offset;
           Int initial_offset = offset; // remember initial offset to compute size later
           t.i = begin+initial_offset; // begin is always the first entry in the vector
           LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,T::CHILDREN,0>::
-            fill_indices(t,e,begin,offset);
+            fill_indices(t,e,begin,offset,lvsize);
         }
         static void reserve (T& t, const E& e, Int& offset)
         {
@@ -92,10 +94,11 @@ namespace Dune {
       template<typename T, typename E, typename It, typename Int> 
       struct LocalFunctionSpaceBaseVisitNodeMetaProgram<T,true,E,It,Int> // visit leaf node 
       {
-        static void fill_indices (T& t, const E& e, const It & begin, Int& offset)
+        static void fill_indices (T& t, const E& e, const It & begin, Int& offset, const Int lvsize)
         {
           // now we are at a single component local function space
           // which is part of a multi component local function space
+          t.lvsize = lvsize;
           t.offset = offset;
           t.i = begin+offset; // begin is always the first entry in the vector
           std::vector<typename T::Traits::GridFunctionSpaceType::Traits::SizeType> global(t.n);
@@ -172,6 +175,18 @@ namespace Dune {
       typename Traits::IndexContainer::size_type maxSize () const
       {
         return pgfs->maxLocalSize();
+      }
+
+      //! \brief get size of an appropriate local vector object
+      /**
+         this is the number of dofs of the complete local function
+         space tree, i.e. the size() of the root node. The local
+         vector objects must always have this size and the localIndex
+         method maps into the range [0,localVectorSize()[
+       */
+      typename Traits::IndexContainer::size_type localVectorSize () const
+      {
+        return lvsize;
       }
 
       //! \brief map index in this local function space to root local function space
@@ -251,6 +266,7 @@ namespace Dune {
         
         // now reserve space in vector
         global.resize(offset);
+        lvsize = global.size();
 
         // initialize iterators and fill indices
         offset = 0;
@@ -258,9 +274,10 @@ namespace Dune {
                                                    typename Traits::Element,
                                                    typename Traits::IndexContainer::iterator,
                                                    typename Traits::IndexContainer::size_type>::
-          fill_indices(node,e,global.begin(),offset);
+          fill_indices(node,e,global.begin(),offset,lvsize);
 
         // apply upMap
+        assert(offset == global.size());
         for (typename Traits::IndexContainer::size_type i=0; i<offset; i++)
           global[i] = pgfs->upMap(global[i]);
       }
@@ -271,6 +288,7 @@ namespace Dune {
       typename Traits::IndexContainer::iterator i;
       typename Traits::IndexContainer::size_type n;
       typename Traits::IndexContainer::size_type offset;
+      typename Traits::IndexContainer::size_type lvsize;
     };
 
     //=======================================
