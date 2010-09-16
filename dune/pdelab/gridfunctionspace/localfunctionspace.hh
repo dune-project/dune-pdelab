@@ -342,7 +342,7 @@ namespace Dune {
         BaseT::setup(gfs);
         for (int i=0; i<GFS::CHILDREN; i++)
           {
-            std::cout << "setting up child " << i << " of " << GFS::CHILDREN << std::endl;
+            dinfo << "setting up child " << i << " of " << GFS::CHILDREN << std::endl;
             this->getChild(i).setup(this->pgfs->getChild(i));
           }
       }
@@ -368,7 +368,7 @@ namespace Dune {
         template<typename GFS>
         static void setup (T& t, const GFS& gfs)
         {
-          std::cout << "setting up child " << i << " of " << n << std::endl;
+          dinfo << "setting up child " << i << " of " << n << std::endl;
           t.template getChild<i>().setup(gfs.template getChild<i>());
           CompositeLocalFunctionSpaceNodeVisitChildMetaProgram<T,n,i+1>::
             setup(t,gfs);
