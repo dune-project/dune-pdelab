@@ -18,7 +18,7 @@ namespace Dune {
        
        When compiling a program with 
        \code
-       -DDUNE_PDELAB_STRICT_TRIAL_AND_TEST_SPACE
+       -DDUNE_PDELAB_CHECK_LOCALINDEX
        \endcode
 
        additional checks are enabled. For these checks the
@@ -26,6 +26,12 @@ namespace Dune {
        with TrialSpaceTag or with TestSpaceTag. Usually they are
        tagged with AnySpaceTag, which means that no additional test
        are performed.
+
+       To make code aware of the difference between trial and test space, compile with
+       \code
+       -DDUNE_PDELAB_CHECK_LOCALINDEX_STRICT_TRIAL_AND_TEST_SPACE
+       \endcode
+       note, that this will report errors for all local operators, where lfsu==lfsv is assumed.
      */
 
     /**
@@ -33,15 +39,22 @@ namespace Dune {
      */
     struct AnySpaceTag {};
 
-#if defined DOXYGEN || defined DUNE_PDELAB_STRICT_TRIAL_AND_TEST_SPACE
+#if defined DOXYGEN \
+    || defined DUNE_PDELAB_CHECK_LOCALINDEX \
+    || defined DUNE_PDELAB_CHECK_LOCALINDEX_STRICT_TRIAL_AND_TEST_SPACE
     /**
        Tag to mark a LocalFunctionSpace as trial-space
      */
     struct TrialSpaceTag {};
+#if defined DOXYGEN \
+    || defined DUNE_PDELAB_CHECK_LOCALINDEX_STRICT_TRIAL_AND_TEST_SPACE
     /**
        Tag to mark a LocalFunctionSpace as test-space
      */
     struct TestSpaceTag {};
+#else
+    typedef TrialSpaceTag TestSpaceTag;
+#endif    
 #else
     typedef AnySpaceTag TrialSpaceTag;
     typedef AnySpaceTag TestSpaceTag;
