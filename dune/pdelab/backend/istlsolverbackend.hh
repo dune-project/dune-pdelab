@@ -1098,6 +1098,38 @@ namespace Dune {
       unsigned maxiter;
       bool verbose;
     };
+    
+    template<template<typename> class Solver>
+    class ISTLBackend_SEQ_ILU0 
+      :  public SequentialNorm, public LinearResultStorage
+    {
+    public:
+      explicit ISTLBackend_SEQ_ILU0 (unsigned maxiter_=5000, bool verbose_=true)
+        : maxiter(maxiter_), verbose(verbose_)
+       {}
+      /*! \brief solve the given linear system
+
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename W::ElementType reduction)
+      {
+        Dune::MatrixAdapter<M,V,W> opa(A);
+        Dune::SeqILU0<M,V,W> ilu0(A, 1.0);
+        Solver<V> solver(opa, ilu0, reduction, maxiter, verbose);
+        Dune::InverseOperatorResult stat;
+        solver.apply(z, r, stat);
+        res.converged  = stat.converged;
+        res.reduction  = stat.reduction;
+       }
+    private:
+      unsigned maxiter;
+      bool verbose;
+    };
+    
 
     class ISTLBackend_SEQ_BCGS_SSOR
       : public ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::BiCGSTABSolver>
@@ -1114,7 +1146,7 @@ namespace Dune {
     };
 
     class ISTLBackend_SEQ_BCGS_ILU0
-      : public ISTLBackend_SEQ_Base<Dune::SeqILU0, Dune::BiCGSTABSolver>
+      : public ISTLBackend_SEQ_ILU0<Dune::BiCGSTABSolver>
     {
     public:
       /*! \brief make a linear solver object
@@ -1123,13 +1155,13 @@ namespace Dune {
         \param[in] verbose print messages if true
       */
       explicit ISTLBackend_SEQ_BCGS_ILU0 (unsigned maxiter_=5000, bool verbose_=true)
-        : ISTLBackend_SEQ_Base<Dune::SeqILU0, Dune::BiCGSTABSolver>(maxiter_, verbose_)
+        : ISTLBackend_SEQ_ILU0<Dune::BiCGSTABSolver>(maxiter_, verbose_)
       {}
     };
     
 
     class ISTLBackend_SEQ_CG_ILU0
-      : public ISTLBackend_SEQ_Base<Dune::SeqILU0, Dune::CGSolver>
+      : public ISTLBackend_SEQ_ILU0<Dune::CGSolver>
     {
     public:
       /*! \brief make a linear solver object
@@ -1138,7 +1170,7 @@ namespace Dune {
         \param[in] verbose print messages if true
       */
       explicit ISTLBackend_SEQ_CG_ILU0 (unsigned maxiter_=5000, bool verbose_=true)
-        : ISTLBackend_SEQ_Base<Dune::SeqILU0, Dune::CGSolver>(maxiter_, verbose_)
+        : ISTLBackend_SEQ_ILU0<Dune::CGSolver>(maxiter_, verbose_)
       {}
     };
 
