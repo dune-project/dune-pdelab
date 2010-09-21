@@ -84,7 +84,7 @@ namespace Dune {
             // u*phi_i
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_type i=0; i<lfsu.size(); i++)
-              r[i] += u*phi[i]*factor;
+              r[lfsv.localIndex(i)] += u*phi[i]*factor;
           }
 	  }
 
@@ -123,7 +123,7 @@ namespace Dune {
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_type j=0; j<lfsu.size(); j++)
               for (size_type i=0; i<lfsu.size(); i++)
-                mat(i,j) += phi[j]*phi[i]*factor;
+                mat(lfsv.localIndex(i),lfsu.localIndex(j)) += phi[j]*phi[i]*factor;
           }
       }
 
