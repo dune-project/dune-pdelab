@@ -1065,26 +1065,32 @@ namespace Dune {
     {
     public:
       FilenameHelper(const char *basename_, int i_=0)
-	: i(i_)
+        : i(i_)
       {
-	sprintf(basename,"%s",basename_);
+        sprintf(basename,"%s",basename_);
+      }
+
+      FilenameHelper(const std::string & basename_, int i_=0)
+        : i(i_)
+      {
+        sprintf(basename,"%s",basename_.c_str());
       }
 
       const char *getName (int i_)
       {
-	sprintf(fname,"%s-%05d",basename,i_);
-	return fname;
+        sprintf(fname,"%s-%05d",basename,i_);
+        return fname;
       }
 
       const char *getName ()
       {
-	sprintf(fname,"%s-%05d",basename,i);
-	return fname;
+        sprintf(fname,"%s-%05d",basename,i);
+        return fname;
       }
 
       void increment ()
       {
-	i++;
+        i++;
       }
 
     private:
@@ -1092,6 +1098,7 @@ namespace Dune {
       char basename[255];
       int i;
     };
+
     /** @} */
   } // namespace PDELab
 } // namespace Dune
