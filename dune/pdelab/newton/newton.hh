@@ -238,6 +238,10 @@ namespace Dune
                     }
                     double assembler_time = assembler_timer.elapsed();
                     this->res.assembler_time += assembler_time;
+                    if (this->verbosity_level >= 3)
+                        std::cout << "      matrix assembly time:             "
+                                  << std::setw(12) << std::setprecision(4) << std::scientific
+                                  << assembler_time << std::endl;
 
                     Timer linear_solver_timer;
                     try
@@ -273,10 +277,7 @@ namespace Dune
                     ios_base_all_saver restorer(std::cout);
 
                     if (this->verbosity_level >= 3)
-                        std::cout << "      matrix assembly time:             "
-                                  << std::setw(12) << std::setprecision(4) << std::scientific
-                                  << assembler_time << std::endl
-                                  << "      linear solver time:               "
+                        std::cout << "      linear solver time:               "
                                   << std::setw(12) << std::setprecision(4) << std::scientific
                                   << linear_solver_time << std::endl
                                   << "      defect reduction (this iteration):"
