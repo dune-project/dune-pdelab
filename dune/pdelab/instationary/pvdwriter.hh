@@ -24,8 +24,9 @@ namespace Dune
     public:
 
         PVDWriter(const GridView & gv_, std::string basename_,
+            Dune::VTK::DataMode datamode_ = Dune::VTKOptions::conforming,
             Dune::VTK::OutputType outputtype_ = Dune::VTK::appendedraw) :
-            VTK(gv_,Dune::VTKOptions::conforming), gv(gv_),
+            VTK(gv_,datamode_), gv(gv_),
             basename(basename_), fn(basename_),
             path("vtk"),
             outputtype(outputtype_) {}
