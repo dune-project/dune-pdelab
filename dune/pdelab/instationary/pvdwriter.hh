@@ -44,6 +44,7 @@ namespace Dune
             std::ofstream pvd(pvdname.c_str());
             std::cout << "WRITE PVD FILE " << pvdname << std::endl;
             assert(pvd.is_open());
+            pvd << std::fixed;
             pvd << "<?xml version=\"1.0\"?>\n"
                 << "<VTKFile type=\"Collection\" version=\"0.1\">\n"
                 << "<Collection>\n";
