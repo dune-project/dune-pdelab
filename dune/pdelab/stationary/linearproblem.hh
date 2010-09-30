@@ -22,18 +22,18 @@ namespace Dune {
 
     public:
 
-      StationaryLinearProblemSolver (const GOS& gos_, V& x_, LS& ls_, typename V::ElementType reduction_)
-	: gos(gos_), ls(ls_), x(&x_), reduction(reduction_)
+      StationaryLinearProblemSolver (const GOS& gos_, V& x_, LS& ls_, typename V::ElementType reduction_, typename V::ElementType mindefect_ = 1e-99)
+        : gos(gos_), ls(ls_), x(&x_), reduction(reduction_), mindefect(mindefect_)
       {
       }
 
-      StationaryLinearProblemSolver (const GOS& gos_, LS& ls_, V& x_, typename V::ElementType reduction_)
-	: gos(gos_), ls(ls_), x(&x_), reduction(reduction_)
+      StationaryLinearProblemSolver (const GOS& gos_, LS& ls_, V& x_, typename V::ElementType reduction_, typename V::ElementType mindefect_ = 1e-99)
+        : gos(gos_), ls(ls_), x(&x_), reduction(reduction_), mindefect(mindefect_)
       {
       }
 
-      StationaryLinearProblemSolver (const GOS& gos_, LS& ls_, typename V::ElementType reduction_)
-	: gos(gos_), ls(ls_), x(0), reduction(reduction_)
+      StationaryLinearProblemSolver (const GOS& gos_, LS& ls_, typename V::ElementType reduction_, typename V::ElementType mindefect_ = 1e-99)
+          : gos(gos_), ls(ls_), x(0), reduction(reduction_), mindefect(mindefect_)
       {
       }
 
@@ -44,44 +44,52 @@ namespace Dune {
 
       void apply ()
       {
-	Dune::Timer watch;
-	double timing;
+        Dune::Timer watch;
+        double timing;
 
-	// assemble matrix; optional: assemble only on demand!
-	watch.reset();
+        // assemble matrix; optional: assemble only on demand!
+        watch.reset();
 
-	M m(gos); 
+        M m(gos); 
 
-	timing = watch.elapsed();
-	timing = gos.trialGridFunctionSpace().gridview().comm().max(timing);
-	if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
-	  std::cout << "=== matrix setup (max) " << timing << " s" << std::endl;
-	watch.reset();
+        timing = watch.elapsed();
+        // timing = gos.trialGridFunctionSpace().gridview().comm().max(timing);
+        if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
+          std::cout << "=== matrix setup (max) " << timing << " s" << std::endl;
+        watch.reset();
 
-	m = 0.0;
-	gos.jacobian(*x,m);
+        m = 0.0;
+        gos.jacobian(*x,m);
 
-	timing = watch.elapsed();
-	timing = gos.trialGridFunctionSpace().gridview().comm().max(timing);
-	if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
-	  std::cout << "=== matrix assembly (max) " << timing << " s" << std::endl;
+        timing = watch.elapsed();
+        // timing = gos.trialGridFunctionSpace().gridview().comm().max(timing);
+        if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
+          std::cout << "=== matrix assembly (max) " << timing << " s" << std::endl;
 
-	// assemble residual
-	watch.reset();
+        // assemble residual
+        watch.reset();
 
-	W r(gos.testGridFunctionSpace(),0.0);
+        W r(gos.testGridFunctionSpace(),0.0);
         gos.residual(*x,r);  // residual is additive
 
-	timing = watch.elapsed();
-	timing = gos.trialGridFunctionSpace().gridview().comm().max(timing);
-	if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
-	  std::cout << "=== residual assembly (max) " << timing << " s" << std::endl;
+        timing = watch.elapsed();
+        // timing = gos.trialGridFunctionSpace().gridview().comm().max(timing);
+        if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
+          std::cout << "=== residual assembly (max) " << timing << " s" << std::endl;
 
-	// compute correction
-	V z(gos.trialGridFunctionSpace(),0.0);
-	ls.apply(m,z,r,reduction); // solver makes right hand side consistent
+        typename V::ElementType defect = ls.norm(r);
 
-	// and update
+        // compute correction
+        watch.reset();
+        V z(gos.trialGridFunctionSpace(),0.0);
+        typename V::ElementType red = std::min(reduction,defect/mindefect);
+        std::cout << "=== solving (reduction: " << red << ") ";
+        ls.apply(m,z,r,red); // solver makes right hand side consistent
+        timing = watch.elapsed();
+        // timing = gos.trialGridFunctionSpace().gridview().comm().max(timing);
+        std::cout << timing << " s" << std::endl;
+
+        // and update
         *x -= z;
       }
 
@@ -90,6 +98,7 @@ namespace Dune {
       LS& ls;
       V* x;
       typename V::ElementType reduction;
+      typename V::ElementType mindefect;
     };
 
   } // namespace PDELab
