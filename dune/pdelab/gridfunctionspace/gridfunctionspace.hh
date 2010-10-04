@@ -23,7 +23,7 @@
 #include "../common/multitypetree.hh"
 #include "../common/cpstoragepolicy.hh"
 #include "../common/geometrywrapper.hh"
-#include <dune/pdelab/finiteelement/traits.hh>
+#include <dune/pdelab/finiteelement/interfaceswitch.hh>
 
 #include"localfunctionspace.hh"
 
@@ -376,11 +376,12 @@ namespace Dune {
                           const Element& e, 
 						  std::vector<typename Traits::SizeType>& global) const
 	  {
-        typedef FiniteElementTraits<typename Traits::FiniteElementType>
-          FETraits;
+        typedef FiniteElementInterfaceSwitch<
+          typename Traits::FiniteElementType
+          > FESwitch;
 		// get layout of entity
-        const typename FETraits::Coefficients &coeffs =
-          FETraits::coefficients(fe);
+        const typename FESwitch::Coefficients &coeffs =
+          FESwitch::coefficients(fe);
         global.resize(coeffs.size());
 
         for (std::size_t i=0; i<coeffs.size(); ++i)
@@ -471,10 +472,11 @@ namespace Dune {
 			  DUNE_THROW(Exception, "geometry type mismatch in GridFunctionSpace");
 
 			// get local coefficients for this entity
-            typedef FiniteElementTraits<typename Traits::FiniteElementType>
-              FETraits;
-            const typename FETraits::Coefficients& coeffs =
-              FETraits::coefficients(fe);
+            typedef FiniteElementInterfaceSwitch<
+              typename Traits::FiniteElementType
+              > FESwitch;
+            const typename FESwitch::Coefficients& coeffs =
+              FESwitch::coefficients(fe);
 
 			// insert geometry type of all subentities into set
             for (std::size_t i=0; i<coeffs.size(); ++i)
@@ -515,10 +517,11 @@ namespace Dune {
             const typename Traits::FiniteElementType &fe = pfem->find(*it);
 
 			// get local coefficients for this entity
-            typedef FiniteElementTraits<typename Traits::FiniteElementType>
-              FETraits;
-            const typename FETraits::Coefficients& coeffs =
-              FETraits::coefficients(fe);
+            typedef FiniteElementInterfaceSwitch<
+              typename Traits::FiniteElementType
+              > FESwitch;
+            const typename FESwitch::Coefficients& coeffs =
+              FESwitch::coefficients(fe);
 
 			// compute maximum number of degrees of freedom per element
             nlocal = std::max(nlocal, static_cast<typename Traits::SizeType>
@@ -678,10 +681,11 @@ namespace Dune {
 						  std::vector<typename Traits::SizeType>& global) const
 	  {
 		// get local coefficients for this entity
-        typedef FiniteElementTraits<typename Traits::FiniteElementType>
-          FETraits;
-        const typename FETraits::Coefficients &coeffs =
-          FETraits::coefficients(fe);
+        typedef FiniteElementInterfaceSwitch<
+          typename Traits::FiniteElementType
+          > FESwitch;
+        const typename FESwitch::Coefficients &coeffs =
+          FESwitch::coefficients(fe);
         global.resize(coeffs.size());
 
         for (unsigned int i=0; i<coeffs.size(); ++i)
@@ -774,10 +778,11 @@ namespace Dune {
 			  DUNE_THROW(Exception, "geometry type mismatch in GridFunctionSpace");
 
 			// get local coefficients for this entity
-            typedef FiniteElementTraits<typename Traits::FiniteElementType>
-              FETraits;
-            const typename FETraits::Coefficients &coeffs =
-              FETraits::coefficients(fe);
+            typedef FiniteElementInterfaceSwitch<
+              typename Traits::FiniteElementType
+              > FESwitch;
+            const typename FESwitch::Coefficients &coeffs =
+              FESwitch::coefficients(fe);
 
 			// compute maximum number of degrees of freedom per element
             nlocal = std::max(nlocal, static_cast<typename Traits::SizeType>
@@ -1027,11 +1032,12 @@ namespace Dune {
                           const Element& e,
 						  std::vector<typename Traits::SizeType>& global) const
 	  {
-        typedef FiniteElementTraits<typename Traits::FiniteElementType>
-          FETraits;
+        typedef FiniteElementInterfaceSwitch<
+          typename Traits::FiniteElementType
+          > FESwitch;
 		// get local coefficients for this entity
-        const typename FETraits::Coefficients &coeffs =
-          FETraits::coefficients(fe);
+        const typename FESwitch::Coefficients &coeffs =
+          FESwitch::coefficients(fe);
         global.resize(coeffs.size());
 
         for (unsigned int i=0; i<coeffs.size(); ++i)
@@ -1124,10 +1130,11 @@ namespace Dune {
           DUNE_THROW(Exception, "geometry type mismatch in GridFunctionSpace");
 
         // get local coefficients for this entity
-        typedef FiniteElementTraits<typename Traits::FiniteElementType>
-          FETraits;
-        const typename FETraits::Coefficients &coeffs =
-          FETraits::coefficients(fe);
+        typedef FiniteElementInterfaceSwitch<
+          typename Traits::FiniteElementType
+          > FESwitch;
+        const typename FESwitch::Coefficients &coeffs =
+          FESwitch::coefficients(fe);
 
         // extract number of degrees of freedom per element
         nlocal = static_cast<typename Traits::SizeType>(coeffs.size());

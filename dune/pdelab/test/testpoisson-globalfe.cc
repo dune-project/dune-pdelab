@@ -31,8 +31,8 @@
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/geometrywrapper.hh>
 #include <dune/pdelab/common/vtkexport.hh>
+#include <dune/pdelab/finiteelement/interfaceswitch.hh>
 #include <dune/pdelab/finiteelement/localtoglobaladaptors.hh>
-#include <dune/pdelab/finiteelement/traits.hh>
 #include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include <dune/pdelab/finiteelementmap/global.hh>
 #include <dune/pdelab/gridfunctionspace/constraints.hh>
@@ -185,9 +185,11 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
 {
   // constants and types
   typedef typename GV::Grid::ctype DF;
-  typedef typename Dune::PDELab::BasisTraits<typename Dune::PDELab::
-          FiniteElementTraits<typename FEM::Traits::FiniteElementType>::Basis>
-          ::RangeField R;
+  typedef typename Dune::PDELab::BasisInterfaceSwitch<
+    typename Dune::PDELab::FiniteElementInterfaceSwitch<
+      typename FEM::Traits::FiniteElementType
+      >::Basis
+    >::RangeField R;
 
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,

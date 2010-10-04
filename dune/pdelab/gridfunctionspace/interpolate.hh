@@ -12,7 +12,7 @@
 #include"../common/multitypetree.hh"
 #include"../common/cpstoragepolicy.hh"
 #include"../common/function.hh"
-#include <dune/pdelab/finiteelement/traits.hh>
+#include <dune/pdelab/finiteelement/interfaceswitch.hh>
 
 #include"gridfunctionspace.hh"
 
@@ -30,7 +30,7 @@ namespace Dune {
       void interpolate(const FE &fe, const ElemFunction &elemFunction,
                        XL &xl) const
       {
-        FiniteElementTraits<FE>::interpolation(fe).
+        FiniteElementInterfaceSwitch<FE>::interpolation(fe).
           interpolate(elemFunction,xl);
       }
     };

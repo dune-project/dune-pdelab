@@ -12,7 +12,7 @@
 #include<dune/common/geometrytype.hh>
 #include<dune/grid/common/quadraturerules.hh>
 
-#include <dune/pdelab/finiteelement/traits.hh>
+#include <dune/pdelab/finiteelement/interfaceswitch.hh>
 #include <dune/pdelab/localoperator/defaultimp.hh>
 #include <dune/pdelab/localoperator/idefault.hh>
 
@@ -63,11 +63,14 @@ namespace Dune {
 	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
 	  {
 		// domain and range field type
-        typedef FiniteElementTraits<typename LFSU::Traits::FiniteElementType>
-          FETraits;
-        typedef PDELab::BasisTraits<typename FETraits::Basis> BasisTraits;
-        typedef typename BasisTraits::DomainField DF;
-        typedef typename BasisTraits::RangeField RF;
+        typedef FiniteElementInterfaceSwitch<
+          typename LFSU::Traits::FiniteElementType
+          > FESwitch;
+        typedef PDELab::BasisInterfaceSwitch<
+          typename FESwitch::Basis
+          > BasisSwitch;
+        typedef typename BasisSwitch::DomainField DF;
+        typedef typename BasisSwitch::RangeField RF;
 
         // dimensions
         static const int dimLocal = EG::Geometry::mydimension;
@@ -86,11 +89,11 @@ namespace Dune {
             // (we assume Galerkin method lfsu=lfsv)
             std::vector<Dune::FieldMatrix<RF,1,dimGlobal> >
               gradphiu(lfsu.size());
-            BasisTraits::gradient(FETraits::basis(lfsu.finiteElement()),
+            BasisSwitch::gradient(FESwitch::basis(lfsu.finiteElement()),
                                   eg.geometry(), it->position(), gradphiu);
             std::vector<Dune::FieldMatrix<RF,1,dimGlobal> >
               gradphiv(lfsv.size());
-            BasisTraits::gradient(FETraits::basis(lfsv.finiteElement()),
+            BasisSwitch::gradient(FESwitch::basis(lfsv.finiteElement()),
                                   eg.geometry(), it->position(), gradphiv);
 
             // compute gradient of u
@@ -110,13 +113,16 @@ namespace Dune {
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
 		// domain and range field type
-        typedef FiniteElementTraits<typename LFSV::Traits::FiniteElementType>
-          FETraits;
-        typedef PDELab::BasisTraits<typename FETraits::Basis> BasisTraits;
-        typedef typename BasisTraits::DomainField DF;
-        typedef typename BasisTraits::DomainLocal DomainLocal;
-        typedef typename BasisTraits::RangeField RF;
-        typedef typename BasisTraits::Range Range;
+        typedef FiniteElementInterfaceSwitch<
+          typename LFSV::Traits::FiniteElementType
+          > FESwitch;
+        typedef PDELab::BasisInterfaceSwitch<
+          typename FESwitch::Basis
+          > BasisSwitch;
+        typedef typename BasisSwitch::DomainField DF;
+        typedef typename BasisSwitch::DomainLocal DomainLocal;
+        typedef typename BasisSwitch::RangeField RF;
+        typedef typename BasisSwitch::Range Range;
 
         // dimensions
         static const int dimLocal = EG::Geometry::mydimension;
@@ -132,7 +138,7 @@ namespace Dune {
           {
             // evaluate shape functions 
             std::vector<Range> phi(lfsv.size());
-            FETraits::basis(lfsv.finiteElement()).
+            FESwitch::basis(lfsv.finiteElement()).
               evaluateFunction(it->position(),phi);
 
             // evaluate right hand side parameter function
@@ -151,13 +157,16 @@ namespace Dune {
       void lambda_boundary (const IG& ig, const LFSV& lfsv, R& r) const
       {
 		// domain and range field type
-        typedef FiniteElementTraits<typename LFSV::Traits::FiniteElementType>
-          FETraits;
-        typedef PDELab::BasisTraits<typename FETraits::Basis> BasisTraits;
-        typedef typename BasisTraits::DomainField DF;
-        typedef typename BasisTraits::DomainLocal DomainLocal;
-        typedef typename BasisTraits::RangeField RF;
-        typedef typename BasisTraits::Range Range;
+        typedef FiniteElementInterfaceSwitch<
+          typename LFSV::Traits::FiniteElementType
+          > FESwitch;
+        typedef PDELab::BasisInterfaceSwitch<
+          typename FESwitch::Basis
+          > BasisSwitch;
+        typedef typename BasisSwitch::DomainField DF;
+        typedef typename BasisSwitch::DomainLocal DomainLocal;
+        typedef typename BasisSwitch::RangeField RF;
+        typedef typename BasisSwitch::Range Range;
 
         // dimensions
         static const int dimLocal = IG::Geometry::mydimension;
@@ -184,7 +193,7 @@ namespace Dune {
 
             // evaluate test shape functions 
             std::vector<Range> phi(lfsv.size());
-            FETraits::basis(lfsv.finiteElement()).evaluateFunction(local,phi);
+            FESwitch::basis(lfsv.finiteElement()).evaluateFunction(local,phi);
             
             // evaluate flux boundary condition
             typename J::Traits::RangeType y;

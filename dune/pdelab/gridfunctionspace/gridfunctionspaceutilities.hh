@@ -14,7 +14,7 @@
 #include"../common/multitypetree.hh"
 #include"../common/cpstoragepolicy.hh"
 #include"../common/function.hh"
-#include <dune/pdelab/finiteelement/traits.hh>
+#include <dune/pdelab/finiteelement/interfaceswitch.hh>
 
 #include"gridfunctionspace.hh"
 
@@ -42,26 +42,38 @@ namespace Dune {
 	  : public GridFunctionInterface<
           GridFunctionTraits<
             typename T::Traits::GridViewType,
-            typename BasisTraits<typename FiniteElementTraits<typename T::
-                     Traits::FiniteElementType>::Basis>::RangeField,
-            BasisTraits<typename FiniteElementTraits<typename T::
-                     Traits::FiniteElementType>::Basis>::dimRange,
-            typename BasisTraits<typename FiniteElementTraits<typename T::
-                     Traits::FiniteElementType>::Basis>::Range
+            typename BasisInterfaceSwitch<
+              typename FiniteElementInterfaceSwitch<
+                typename T::Traits::FiniteElementType
+                >::Basis
+              >::RangeField,
+            BasisInterfaceSwitch<
+              typename FiniteElementInterfaceSwitch<
+                typename T::Traits::FiniteElementType
+                >::Basis
+              >::dimRange,
+            typename BasisInterfaceSwitch<
+              typename FiniteElementInterfaceSwitch<
+                typename T::Traits::FiniteElementType
+                >::Basis
+              >::Range
             >,
           DiscreteGridFunction<T,X>
           >
 	{
 	  typedef T GFS;
 
-      typedef typename PDELab::BasisTraits<typename FiniteElementTraits<
-              typename T::Traits::FiniteElementType>::Basis> BasisTraits;
+      typedef typename PDELab::BasisInterfaceSwitch<
+        typename FiniteElementInterfaceSwitch<
+          typename T::Traits::FiniteElementType
+          >::Basis
+        > BasisSwitch;
 	  typedef GridFunctionInterface<
         GridFunctionTraits<
           typename T::Traits::GridViewType,
-          typename BasisTraits::RangeField,
-          BasisTraits::dimRange,
-          typename BasisTraits::Range
+          typename BasisSwitch::RangeField,
+          BasisSwitch::dimRange,
+          typename BasisSwitch::Range
           >,
         DiscreteGridFunction<T,X>
         > BaseT;
@@ -84,11 +96,12 @@ namespace Dune {
 							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
 	  {  
-        typedef FiniteElementTraits<typename GFS::LocalFunctionSpace::Traits::
-                                    LocalFiniteElementType> FETraits;
+        typedef FiniteElementInterfaceSwitch<
+          typename GFS::LocalFunctionSpace::Traits::LocalFiniteElementType
+          > FESwitch;
 		lfs.bind(e);
 		lfs.vread(xg,xl);
-        FETraits::basis(lfs.finiteElement()).evaluateFunction(x,yb);
+        FESwitch::basis(lfs.finiteElement()).evaluateFunction(x,yb);
 		y = 0;
 		for (unsigned int i=0; i<yb.size(); i++)
 		  y.axpy(xl[i],yb[i]);

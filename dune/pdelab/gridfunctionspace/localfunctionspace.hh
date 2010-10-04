@@ -9,7 +9,7 @@
 
 #include "../common/multitypetree.hh"
 #include "../common/cpstoragepolicy.hh"
-#include <dune/pdelab/finiteelement/traits.hh>
+#include <dune/pdelab/finiteelement/interfaceswitch.hh>
 
 #include "localindex.hh"
 
@@ -113,9 +113,9 @@ namespace Dune {
         {
           // now we are at a single component local function space
           // which is part of a multi component local function space
-          T::FETraits::setStore(t.pfe, t.pgfs->finiteElementMap().find(e));
+          T::FESwitch::setStore(t.pfe, t.pgfs->finiteElementMap().find(e));
           // determine size of this chunk
-          t.n = T::FETraits::basis(*t.pfe).size();
+          t.n = T::FESwitch::basis(*t.pfe).size();
           offset += t.n; // append this chunk
         }
       };
@@ -575,7 +575,9 @@ namespace Dune {
       typedef LeafLocalFunctionSpaceTraits<GFS,LeafLocalFunctionSpaceNode> Traits;
 
     private:
-      typedef FiniteElementTraits<typename Traits::FiniteElementType> FETraits;
+      typedef FiniteElementInterfaceSwitch<
+      typename Traits::FiniteElementType
+      > FESwitch;
 
     public:
       //! \brief empty constructor (needed for CopyStoragePolicy)
@@ -639,7 +641,7 @@ namespace Dune {
       }
 
     private:
-      typename FETraits::Store pfe;
+      typename FESwitch::Store pfe;
     };
 
     //=======================================
