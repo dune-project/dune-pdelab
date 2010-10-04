@@ -5,7 +5,9 @@
 #define DUNE_PDELAB_FINITEELEMENT_TRAITS_HH
 
 #include <cstddef>
+#include <vector>
 
+#include <dune/common/fmatrix.hh>
 #include <dune/common/static_assert.hh>
 #include <dune/common/typetraits.hh>
 
@@ -49,7 +51,20 @@ namespace Dune {
     template<class Basis, class = void>
     struct BasisTraits :
       public Basis::Traits
-    { };
+    {
+      typedef typename Basis::Traits::DomainLocal DomainLocal;
+      typedef typename Basis::Traits::RangeField RangeField;
+
+      template<typename Geometry>
+      static void gradient(const Basis& basis, const Geometry& geometry,
+                           const DomainLocal& xl,
+                           std::vector<FieldMatrix<RangeField, 1,
+                               Geometry::coorddimension> >& grad)
+      {
+        grad.resize(basis.size());
+        basis.evaluateJacobian(xl, grad);
+      }
+    };
 
     template<class Basis>
     struct BasisTraits<Basis,
@@ -68,6 +83,23 @@ namespace Dune {
       typedef typename Basis::Traits::JacobianType Jacobian;
 
       static const std::size_t diffOrder = Basis::Traits::diffOrder;
+
+      template<typename Geometry>
+      static void gradient(const Basis& basis, const Geometry& geometry,
+                           const DomainLocal& xl,
+                           std::vector<FieldMatrix<RangeField, 1,
+                               Geometry::coorddimension> >& grad)
+      {
+        std::vector<Jacobian> lgrad(basis.size());
+        basis.evaluateJacobian(xl, lgrad);
+
+        const typename Geometry::Jacobian& jac =
+          geometry.jacobianInverseTransposed(xl);
+
+        grad.resize(basis.size());
+        for(std::size_t i = 0; i < basis.size(); ++i)
+          jac.mv(lgrad[i][0], grad[i][0]);
+      }
     };
 
   } // namespace PDELab
