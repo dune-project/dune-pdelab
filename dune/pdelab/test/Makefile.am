@@ -282,6 +282,20 @@ testpoisson_LDADD =				\
 	$(LDADD)
 MOSTLYCLEANFILES += poisson_*.vtu
 
+NORMALTESTS += testpoisson-globalfe
+testpoisson_globalfe_SOURCES = testpoisson-globalfe.cc
+testpoisson_globalfe_CPPFLAGS = $(AM_CPPFLAGS)	\
+	$(ALBERTA_CPPFLAGS)			\
+	$(SUPERLU_CPPFLAGS)
+testpoisson_globalfe_LDFLAGS = $(AM_LDFLAGS)	\
+	$(ALBERTA_LDFLAGS)			\
+	$(SUPERLU_LDFLAGS)
+testpoisson_globalfe_LDADD =			\
+	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
+	$(ALBERTA_LIBS)				\
+	$(LDADD)
+MOSTLYCLEANFILES += poisson_globalfe_*.vtu
+
 NORMALTESTS += testrt0
 testrt0_SOURCES = testrt0.cc
 testrt0_CPPFLAGS = $(AM_CPPFLAGS)		\
