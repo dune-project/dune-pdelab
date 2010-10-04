@@ -31,7 +31,7 @@
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/geometrywrapper.hh>
 #include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/finiteelement/simplewrapper.hh>
+#include <dune/pdelab/finiteelement/localtoglobaladaptors.hh>
 #include <dune/pdelab/finiteelement/traits.hh>
 #include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include <dune/pdelab/finiteelementmap/global.hh>
@@ -303,7 +303,7 @@ int main(int argc, char** argv)
       typedef GV::Grid::ctype DF;
       typedef Dune::Q1LocalFiniteElement<DF, double, 2> LFE;
       LFE lfe;
-      typedef Dune::PDELab::SimpleLocalFiniteElementWrapperFactory<LFE,
+      typedef Dune::PDELab::ScalarLocalToGlobalFiniteElementAdaptorFactory<LFE,
         GV::Codim<0>::Geometry> Factory;
       Factory factory(lfe);
       typedef Dune::PDELab::GeometryFiniteElementMap<Factory> FEM;
@@ -331,7 +331,7 @@ int main(int argc, char** argv)
       typedef GV::Grid::ctype DF;
       typedef Dune::Q22DLocalFiniteElement<DF, double> LFE;
       LFE lfe;
-      typedef Dune::PDELab::SimpleLocalFiniteElementWrapperFactory<LFE,
+      typedef Dune::PDELab::ScalarLocalToGlobalFiniteElementAdaptorFactory<LFE,
         GV::Codim<0>::Geometry> Factory;
       Factory factory(lfe);
       typedef Dune::PDELab::GeometryFiniteElementMap<Factory> FEM;
@@ -359,7 +359,7 @@ int main(int argc, char** argv)
       typedef GV::Grid::ctype DF;
       typedef Dune::Q1LocalFiniteElement<DF, double, 3> LFE;
       LFE lfe;
-      typedef Dune::PDELab::SimpleLocalFiniteElementWrapperFactory<LFE,
+      typedef Dune::PDELab::ScalarLocalToGlobalFiniteElementAdaptorFactory<LFE,
         GV::Codim<0>::Geometry> Factory;
       Factory factory(lfe);
       typedef Dune::PDELab::GeometryFiniteElementMap<Factory> FEM;

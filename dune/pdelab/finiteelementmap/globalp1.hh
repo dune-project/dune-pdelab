@@ -6,7 +6,7 @@
 
 #include <dune/localfunctions/lagrange/p1.hh>
 
-#include <dune/pdelab/finiteelement/simplewrapper.hh>
+#include <dune/pdelab/finiteelement/localtoglobaladaptors.hh>
 #include <dune/pdelab/finiteelementmap/global.hh>
 
 namespace Dune {
@@ -15,7 +15,7 @@ namespace Dune {
     template<class Geometry, class RangeField>
     class P1FiniteElementMap :
       public GeometryFiniteElementMap
-        <SimpleLocalFiniteElementWrapperFactory<
+        <ScalarLocalToGlobalFiniteElementAdaptorFactory<
            P1LocalFiniteElement<typename Geometry::ctype,
                                 RangeField,
                                 Geometry::mydimension>,
@@ -24,7 +24,7 @@ namespace Dune {
       typedef P1LocalFiniteElement<typename Geometry::ctype,
                                    RangeField,
                                    Geometry::mydimension> LocalFE;
-      typedef SimpleLocalFiniteElementWrapperFactory<LocalFE, Geometry>
+      typedef ScalarLocalToGlobalFiniteElementAdaptorFactory<LocalFE, Geometry>
         Factory;
       typedef GeometryFiniteElementMap<Factory> Base;
 
