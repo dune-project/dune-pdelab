@@ -12,6 +12,7 @@
 #include<dune/common/geometrytype.hh>
 #include<dune/grid/common/quadraturerules.hh>
 
+#include <dune/pdelab/finiteelement/traits.hh>
 #include <dune/pdelab/localoperator/defaultimp.hh>
 #include <dune/pdelab/localoperator/idefault.hh>
 
@@ -62,54 +63,45 @@ namespace Dune {
 	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
 	  {
 		// domain and range field type
-		typedef typename LFSU::Traits::LocalFiniteElementType::
-		  Traits::LocalBasisType::Traits::DomainFieldType DF;
-		typedef typename LFSU::Traits::LocalFiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeFieldType RF;
-		typedef typename LFSU::Traits::LocalFiniteElementType::
-		  Traits::LocalBasisType::Traits::JacobianType JacobianType;
+        typedef FiniteElementTraits<typename LFSU::Traits::FiniteElementType>
+          FETraits;
+        typedef PDELab::BasisTraits<typename FETraits::Basis> BasisTraits;
+        typedef typename BasisTraits::DomainField DF;
+        typedef typename BasisTraits::RangeField RF;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
-        const int dimw = EG::Geometry::dimensionworld;
+        static const int dimLocal = EG::Geometry::mydimension;
+        static const int dimGlobal = EG::Geometry::coorddimension;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
+        const Dune::QuadratureRule<DF,dimLocal>& rule =
+          Dune::QuadratureRules<DF,dimLocal>::rule(gt,qorder);
 
         // loop over quadrature points
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for(typename Dune::QuadratureRule<DF,dimLocal>::const_iterator it =
+              rule.begin(); it!=rule.end(); ++it)
           {
-            // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
-            std::vector<JacobianType> jsu(lfsu.size());
-            lfsu.localFiniteElement().localBasis().evaluateJacobian(it->position(),jsu);
-            std::vector<JacobianType> jsv(lfsv.size());
-            lfsv.localFiniteElement().localBasis().evaluateJacobian(it->position(),jsv);
-
-            // transform gradients to real element
-            const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
-            std::vector<Dune::FieldVector<RF,dim> > gradphiu(lfsu.size());
-            for (size_t i=0; i<lfsu.size(); i++)
-              {
-                gradphiu[i] = 0.0;
-                jac.umv(jsu[i][0],gradphiu[i]);
-              }
-            std::vector<Dune::FieldVector<RF,dim> > gradphiv(lfsv.size());
-            for (size_t i=0; i<lfsv.size(); i++)
-              {
-                gradphiv[i] = 0.0;
-                jac.umv(jsv[i][0],gradphiv[i]);
-              }
+            // evaluate gradient of shape functions
+            // (we assume Galerkin method lfsu=lfsv)
+            std::vector<Dune::FieldMatrix<RF,1,dimGlobal> >
+              gradphiu(lfsu.size());
+            BasisTraits::gradient(FETraits::basis(lfsu.finiteElement()),
+                                  eg.geometry(), it->position(), gradphiu);
+            std::vector<Dune::FieldMatrix<RF,1,dimGlobal> >
+              gradphiv(lfsv.size());
+            BasisTraits::gradient(FETraits::basis(lfsv.finiteElement()),
+                                  eg.geometry(), it->position(), gradphiv);
 
             // compute gradient of u
-            Dune::FieldVector<RF,dim> gradu(0.0);
+            Dune::FieldVector<RF,dimGlobal> gradu(0.0);
             for (size_t i=0; i<lfsu.size(); i++)
-              gradu.axpy(x[lfsu.localIndex(i)],gradphiu[i]);
+              gradu.axpy(x[lfsu.localIndex(i)],gradphiu[0][i]);
 
             // integrate grad u * grad phi_i
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_t i=0; i<lfsv.size(); i++)
-              r[lfsv.localIndex(i)] += (gradu*gradphiv[i])*factor;
+              r[lfsv.localIndex(i)] += (gradu*gradphiv[0][i])*factor;
           }
 	  }
 
@@ -118,26 +110,30 @@ namespace Dune {
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
 		// domain and range field type
-		typedef typename LFSV::Traits::LocalFiniteElementType::
-		  Traits::LocalBasisType::Traits::DomainFieldType DF;
-		typedef typename LFSV::Traits::LocalFiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeFieldType RF;
-		typedef typename LFSV::Traits::LocalFiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeType RangeType;
+        typedef FiniteElementTraits<typename LFSV::Traits::FiniteElementType>
+          FETraits;
+        typedef PDELab::BasisTraits<typename FETraits::Basis> BasisTraits;
+        typedef typename BasisTraits::DomainField DF;
+        typedef typename BasisTraits::DomainLocal DomainLocal;
+        typedef typename BasisTraits::RangeField RF;
+        typedef typename BasisTraits::Range Range;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        static const int dimLocal = EG::Geometry::mydimension;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
+        const Dune::QuadratureRule<DF,dimLocal>& rule =
+          Dune::QuadratureRules<DF,dimLocal>::rule(gt,qorder);
 
         // loop over quadrature points
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (typename Dune::QuadratureRule<DF,dimLocal>::const_iterator it =
+               rule.begin(); it!=rule.end(); ++it)
           {
             // evaluate shape functions 
-            std::vector<RangeType> phi(lfsv.size());
-            lfsv.localFiniteElement().localBasis().evaluateFunction(it->position(),phi);
+            std::vector<Range> phi(lfsv.size());
+            FETraits::basis(lfsv.finiteElement()).
+              evaluateFunction(it->position(),phi);
 
             // evaluate right hand side parameter function
             typename F::Traits::RangeType y;
@@ -155,22 +151,25 @@ namespace Dune {
       void lambda_boundary (const IG& ig, const LFSV& lfsv, R& r) const
       {
 		// domain and range field type
-		typedef typename LFSV::Traits::LocalFiniteElementType::
-		  Traits::LocalBasisType::Traits::DomainFieldType DF;
-		typedef typename LFSV::Traits::LocalFiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeFieldType RF;
-		typedef typename LFSV::Traits::LocalFiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeType RangeType;
+        typedef FiniteElementTraits<typename LFSV::Traits::FiniteElementType>
+          FETraits;
+        typedef PDELab::BasisTraits<typename FETraits::Basis> BasisTraits;
+        typedef typename BasisTraits::DomainField DF;
+        typedef typename BasisTraits::DomainLocal DomainLocal;
+        typedef typename BasisTraits::RangeField RF;
+        typedef typename BasisTraits::Range Range;
 
         // dimensions
-        const int dim = IG::dimension;
+        static const int dimLocal = IG::Geometry::mydimension;
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
-        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
+        const Dune::QuadratureRule<DF,dimLocal>& rule =
+          Dune::QuadratureRules<DF,dimLocal>::rule(gtface,qorder);
 
         // loop over quadrature points and integrate normal flux
-        for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (typename Dune::QuadratureRule<DF,dimLocal>::const_iterator it =
+               rule.begin(); it!=rule.end(); ++it)
           {
             // evaluate boundary condition type
             typename B::Traits::RangeType bctype;
@@ -180,11 +179,12 @@ namespace Dune {
             if (bctype>0) continue;
 
             // position of quadrature point in local coordinates of element 
-            Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
+            const DomainLocal& local =
+              ig.geometryInInside().global(it->position());
 
             // evaluate test shape functions 
-            std::vector<RangeType> phi(lfsv.size());
-            lfsv.localFiniteElement().localBasis().evaluateFunction(local,phi);
+            std::vector<Range> phi(lfsv.size());
+            FETraits::basis(lfsv.finiteElement()).evaluateFunction(local,phi);
             
             // evaluate flux boundary condition
             typename J::Traits::RangeType y;
