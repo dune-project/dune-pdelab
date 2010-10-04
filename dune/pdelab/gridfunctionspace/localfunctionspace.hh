@@ -9,6 +9,7 @@
 
 #include "../common/multitypetree.hh"
 #include "../common/cpstoragepolicy.hh"
+#include <dune/pdelab/finiteelement/traits.hh>
 
 #include "localindex.hh"
 
@@ -104,7 +105,7 @@ namespace Dune {
           t.offset = offset;
           t.i = begin+offset; // begin is always the first entry in the vector
           std::vector<typename T::Traits::GridFunctionSpaceType::Traits::SizeType> global(t.n);
-          t.pgfs->globalIndices(*(t.plfem),e,global); // get global indices for this finite element
+          t.pgfs->globalIndices(*(t.pfe),e,global); // get global indices for this finite element
           for (Int i=0; i<t.n; i++) t.i[i]=global[i]; 
           offset += t.n; // append this chunk
         }
@@ -112,8 +113,9 @@ namespace Dune {
         {
           // now we are at a single component local function space
           // which is part of a multi component local function space
-          t.plfem = &(((t.pgfs)->localFiniteElementMap()).find(e));
-          t.n = t.plfem->localBasis().size(); // determine size of this chunk
+          T::FETraits::setStore(t.pfe, t.pgfs->finiteElementMap().find(e));
+          // determine size of this chunk
+          t.n = T::FETraits::basis(*t.pfe).size();
           offset += t.n; // append this chunk
         }
       };
@@ -544,8 +546,12 @@ namespace Dune {
     template<typename GFS, typename N>  
     struct LeafLocalFunctionSpaceTraits : public PowerCompositeLocalFunctionSpaceTraits<GFS,N>
     {
-      //! \brief Type of local finite element
-      typedef typename GFS::Traits::LocalFiniteElementType LocalFiniteElementType;
+      //! Type of local finite element (deprecated local interface)
+      typedef typename GFS::Traits::FiniteElementType LocalFiniteElementType
+        DUNE_DEPRECATED;
+
+      //! Type of local finite element
+      typedef typename GFS::Traits::FiniteElementType FiniteElementType;
 
       //! \brief Type of constraints engine
       typedef typename GFS::Traits::ConstraintsType ConstraintsType;
@@ -568,6 +574,10 @@ namespace Dune {
     public:
       typedef LeafLocalFunctionSpaceTraits<GFS,LeafLocalFunctionSpaceNode> Traits;
 
+    private:
+      typedef FiniteElementTraits<typename Traits::FiniteElementType> FETraits;
+
+    public:
       //! \brief empty constructor (needed for CopyStoragePolicy)
       LeafLocalFunctionSpaceNode ()
       {
@@ -578,10 +588,17 @@ namespace Dune {
       {
       }
 
-      //! \brief get local finite element
-      const typename Traits::LocalFiniteElementType& localFiniteElement () const
+      //! get finite element
+      const typename Traits::FiniteElementType& finiteElement () const
       {
-        return *plfem;
+        return *pfe;
+      }
+
+      //! \brief get local finite element
+      const typename Traits::FiniteElementType& localFiniteElement () const
+        DUNE_DEPRECATED
+      {
+        return *pfe;
       }
 
       //! \brief get constraints engine
@@ -622,7 +639,7 @@ namespace Dune {
       }
 
     private:
-      const typename Traits::LocalFiniteElementType* plfem;
+      typename FETraits::Store pfe;
     };
 
     //=======================================
