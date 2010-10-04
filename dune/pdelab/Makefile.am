@@ -2,6 +2,7 @@ pdelabdir = $(includedir)/dune/pdelab
 SUBDIRS =					\
 	backend					\
 	common					\
+	finiteelement				\
 	finiteelementmap			\
 	function				\
 	gridfunctionspace			\
