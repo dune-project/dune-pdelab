@@ -12,6 +12,7 @@
 #include"../common/multitypetree.hh"
 #include"../common/cpstoragepolicy.hh"
 #include"../common/function.hh"
+#include <dune/pdelab/finiteelement/traits.hh>
 
 #include"gridfunctionspace.hh"
 
@@ -25,14 +26,16 @@ namespace Dune {
     // Backend for standard local interpolation
     struct InterpolateBackendStandard
     {
-      template<typename LFE, typename LF, typename XL>
-      void interpolate(const LFE &lfe, const LF &lf, XL &xl) const
+      template<typename FE, typename ElemFunction, typename XL>
+      void interpolate(const FE &fe, const ElemFunction &elemFunction,
+                       XL &xl) const
       {
-		lfe.localInterpolation().interpolate(lf,xl);
+        FiniteElementTraits<FE>::interpolation(fe).
+          interpolate(elemFunction,xl);
       }
     };
 
-    // Backend for standard interpolation using the global interface
+    // Backend for standard interpolation using some old global interface
     template<typename Geometry>
     class InterpolateBackendGlobal
     {
@@ -143,7 +146,8 @@ namespace Dune {
 		std::vector<typename XG::ElementType> xl(lfs.size());
 
 		// call interpolate for the basis
-		ib.interpolate(lfs.localFiniteElement(), GridFunctionToLocalFunctionAdapter<F>(f,e), xl);
+        ib.interpolate(lfs.finiteElement(),
+                       GridFunctionToLocalFunctionAdapter<F>(f,e), xl);
 
 		// write coefficients into local vector 
 		lfs.vwrite(xl,xg);
