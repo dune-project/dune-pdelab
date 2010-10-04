@@ -478,6 +478,9 @@ namespace Dune {
 
     //! construct constraints from given boundary condition function
     /**
+     * \code
+#include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * \endcode
      * \tparam CG Type of ConstraintsContainer
      * \tparam XG Type of coefficients container
      *
@@ -498,6 +501,10 @@ namespace Dune {
     //! check that constrained dofs match a certain value
     /**
      * as if they were set by set_constrained_dofs()
+     *
+     * \code
+#include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * \endcode
      *
      * \tparam CG  Type of ConstraintsContainer
      * \tparam XG  Type of coefficients container
@@ -525,6 +532,10 @@ namespace Dune {
     }
     //! check that constrained dofs match a certain value
     /**
+     * \code
+#include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * \endcode
+     *
      * This just calls check_constrained_dofs(cg, x, xg, cmp) with a default
      * comparison object FloatCmpOps<typename XG::ElementType>().
      *
@@ -585,6 +596,11 @@ namespace Dune {
 	}
 
     // construct constraints from given boundary condition function
+    /**
+     * \code
+#include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * \endcode
+     */
     template<typename CG, typename XG>
     void set_nonconstrained_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
     {
@@ -595,6 +611,11 @@ namespace Dune {
 	}
 
     // construct constraints from given boundary condition function
+    /**
+     * \code
+#include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * \endcode
+     */
     template<typename CG, typename XG>
     void copy_nonconstrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
     {
@@ -605,6 +626,11 @@ namespace Dune {
 	}
 
     // construct constraints from given boundary condition function
+    /**
+     * \code
+#include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * \endcode
+     */
     template<typename CG, typename XG>
     void set_shifted_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
     {
