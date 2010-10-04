@@ -14,6 +14,7 @@
 #include"../common/multitypetree.hh"
 #include"../common/cpstoragepolicy.hh"
 #include"../common/function.hh"
+#include <dune/pdelab/finiteelement/traits.hh>
 
 #include"gridfunctionspace.hh"
 
@@ -41,21 +42,26 @@ namespace Dune {
 	  : public GridFunctionInterface<
           GridFunctionTraits<
             typename T::Traits::GridViewType,
-            typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
-            T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::dimRange,
-            typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeType
+            typename BasisTraits<typename FiniteElementTraits<typename T::
+                     Traits::FiniteElementType>::Basis>::RangeField,
+            BasisTraits<typename FiniteElementTraits<typename T::
+                     Traits::FiniteElementType>::Basis>::dimRange,
+            typename BasisTraits<typename FiniteElementTraits<typename T::
+                     Traits::FiniteElementType>::Basis>::Range
             >,
           DiscreteGridFunction<T,X>
           >
 	{
 	  typedef T GFS;
 
+      typedef typename PDELab::BasisTraits<typename FiniteElementTraits<
+              typename T::Traits::FiniteElementType>::Basis> BasisTraits;
 	  typedef GridFunctionInterface<
         GridFunctionTraits<
           typename T::Traits::GridViewType,
-          typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
-          T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::dimRange,
-          typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeType
+          typename BasisTraits::RangeField,
+          BasisTraits::dimRange,
+          typename BasisTraits::Range
           >,
         DiscreteGridFunction<T,X>
         > BaseT;
@@ -78,9 +84,11 @@ namespace Dune {
 							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
 	  {  
+        typedef FiniteElementTraits<typename GFS::LocalFunctionSpace::Traits::
+                                    LocalFiniteElementType> FETraits;
 		lfs.bind(e);
 		lfs.vread(xg,xl);
-		lfs.localFiniteElement().localBasis().evaluateFunction(x,yb);
+        FETraits::basis(lfs.localFiniteElement()).evaluateFunction(x,yb);
 		y = 0;
 		for (unsigned int i=0; i<yb.size(); i++)
 		  y.axpy(xl[i],yb[i]);
@@ -100,8 +108,8 @@ namespace Dune {
 	  mutable std::vector<typename Traits::RangeType> yb;
 	};
 
-	//! \brief convert a single component function space with experimental
-	//! global finite elements into a grid function
+    //! \brief convert a single component function space with deprecated
+    //!        global finite elements into a grid function
     /**
      * The functions can be vector-valued.
      *
