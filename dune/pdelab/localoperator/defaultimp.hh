@@ -311,7 +311,7 @@ namespace Dune {
         asImp().alpha_volume(eg,lfsu,u,lfsv,down);
         for (int j=0; j<n; j++) // loop over columns
         {
-          for (int k=0; k<y.size(); k++) up[k]=0.0;
+          for (unsigned k=0; k<y.size(); k++) up[k]=0.0;
           R delta = epsilon*(1.0+std::abs(u[lfsu.localIndex(j)]));
           u[lfsu.localIndex(j)] += delta;
           asImp().alpha_volume(eg,lfsu,u,lfsv,up);
@@ -430,8 +430,8 @@ namespace Dune {
         // jiggle in self
         for (int j=0; j<n_s; j++)
         {
-          for (int k=0; k<y_s.size(); k++) up_s[k]=0.0;
-          for (int k=0; k<y_n.size(); k++) up_n[k]=0.0;
+          for (unsigned k=0; k<y_s.size(); k++) up_s[k]=0.0;
+          for (unsigned k=0; k<y_n.size(); k++) up_n[k]=0.0;
           R delta = epsilon*(1.0+std::abs(u_s[lfsu_s.localIndex(j)]));
           u_s[lfsu_s.localIndex(j)] += delta;
           asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,up_s,
@@ -448,8 +448,8 @@ namespace Dune {
         // jiggle in neighbor
         for (int j=0; j<n_n; j++)
         {
-          for (int k=0; k<y_s.size(); k++) up_s[k]=0.0;
-          for (int k=0; k<y_n.size(); k++) up_n[k]=0.0;
+          for (unsigned k=0; k<y_s.size(); k++) up_s[k]=0.0;
+          for (unsigned k=0; k<y_n.size(); k++) up_n[k]=0.0;
           R delta = epsilon*(1.0+std::abs(u_s[lfsu_s.localIndex(j)]));
           u_n[lfsu_n.localIndex(j)] += delta;
           asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,up_s,
@@ -508,7 +508,7 @@ namespace Dune {
         // jiggle in self
         for (int j=0; j<n_s; j++)
         {
-          for (int k=0; k<y_s.size(); k++) up_s[k]=0.0;
+          for (unsigned k=0; k<y_s.size(); k++) up_s[k]=0.0;
           R delta = epsilon*(1.0+std::abs(u_s[lfsu_s.localIndex(j)]));
           u_s[lfsu_s.localIndex(j)] += delta;
           asImp().alpha_boundary(ig,lfsu_s,u_s,lfsv_s,up_s);

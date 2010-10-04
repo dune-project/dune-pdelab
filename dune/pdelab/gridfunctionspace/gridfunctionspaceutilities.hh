@@ -88,7 +88,7 @@ namespace Dune {
                                     LocalFiniteElementType> FETraits;
 		lfs.bind(e);
 		lfs.vread(xg,xl);
-        FETraits::basis(lfs.localFiniteElement()).evaluateFunction(x,yb);
+        FETraits::basis(lfs.finiteElement()).evaluateFunction(x,yb);
 		y = 0;
 		for (unsigned int i=0; i<yb.size(); i++)
 		  y.axpy(xl[i],yb[i]);
@@ -163,7 +163,8 @@ namespace Dune {
 	  {  
 		lfs.bind(e);
 		lfs.vread(xg,xl);
-		lfs.localFiniteElement().localBasis().evaluateFunctionGlobal(x,yb,e.geometry());
+        lfs.finiteElement().localBasis().
+          evaluateFunctionGlobal(x,yb,e.geometry());
 		y = 0;
 		for (unsigned int i=0; i<yb.size(); i++)
 		  y.axpy(xl[i],yb[i]);
@@ -313,7 +314,8 @@ namespace Dune {
 	  {
 		lfs.bind(e);
 		lfs.vread(xg,xl);
-		lfs.localFiniteElement().localBasis().evaluateJacobianGlobal(x,J,e.geometry());
+        lfs.finiteElement().localBasis().
+          evaluateJacobianGlobal(x,J,e.geometry());
         y = 0;
         for (unsigned int i=0; i<J.size(); i++)
           // avoid a "case label value exceeds maximum value for type"
@@ -497,7 +499,7 @@ namespace Dune {
         // evaluate shape function on the reference element as before
 		lfs.bind(e);
 		lfs.vread(xg,xl);
-		lfs.localFiniteElement().localBasis().evaluateFunction(x,yb);
+        lfs.finiteElement().localBasis().evaluateFunction(x,yb);
         typename Traits::RangeType yhat;
         yhat = 0;
 		for (unsigned int i=0; i<yb.size(); i++)
@@ -591,7 +593,8 @@ namespace Dune {
 		lfs.vread(xg,xl);
         for (int k=0; k<T::CHILDREN; k++)
           {
-            lfs.getChild(k).localFiniteElement().localBasis().evaluateFunction(x,yb);
+            lfs.getChild(k).finiteElement().localBasis().
+              evaluateFunction(x,yb);
             y[k] = 0.0;
             for (unsigned int i=0; i<yb.size(); i++)
               y[k] += xl[lfs.getChild(k).localIndex(i)]*yb[i];

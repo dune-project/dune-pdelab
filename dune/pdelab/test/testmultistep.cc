@@ -187,12 +187,10 @@ public:
     for(typename QR::const_iterator it=rule.begin();
         it!=rule.end(); ++it) {
       std::vector<RangeU> phiu(lfsu.size());
-      lfsu.localFiniteElement().localBasis()
-        .evaluateFunction(it->position(),phiu);
+      lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phiu);
 
       std::vector<RangeV> phiv(lfsv.size());
-      lfsv.localFiniteElement().localBasis()
-        .evaluateFunction(it->position(),phiv);
+      lfsv.finiteElement().localBasis().evaluateFunction(it->position(),phiv);
 
       R factor = it->weight()
         * eg.geometry().integrationElement(it->position());

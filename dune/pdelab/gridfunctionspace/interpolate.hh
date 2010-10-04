@@ -125,7 +125,7 @@ namespace Dune {
             LF localf(f,e);
             typedef SelectComponentAdapter<LF> LFCOMP;
             LFCOMP localfcomp(localf,k);
-            ib.interpolate(lfs.getChild(k).localFiniteElement(), localfcomp, xl);
+            ib.interpolate(lfs.getChild(k).finiteElement(), localfcomp, xl);
 
             // write coefficients into local vector 
             lfs.getChild(k).vwrite(xl,xg);
