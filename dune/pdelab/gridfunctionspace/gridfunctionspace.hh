@@ -11,7 +11,10 @@
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/geometrytype.hh>
+#include <dune/common/static_assert.hh>
 #include <dune/common/stdstreams.hh>
+#include <dune/common/typetraits.hh>
+
 #include <dune/grid/common/genericreferenceelements.hh>
 
 #include <dune/localfunctions/common/localkey.hh>
@@ -20,6 +23,7 @@
 #include "../common/multitypetree.hh"
 #include "../common/cpstoragepolicy.hh"
 #include "../common/geometrywrapper.hh"
+#include <dune/pdelab/finiteelement/traits.hh>
 
 #include"localfunctionspace.hh"
 
@@ -57,9 +61,50 @@ namespace Dune {
 	  typedef typename B::size_type SizeType;
 	};
 
+    //! collect types exported by a leaf grid function space
+    /**
+     * This is based on a global FiniteElementMap
+     */
+    template<typename G, typename L, typename C, typename B, class = void>
+    struct GridFunctionSpaceTraits
+    {
+      //! True if this grid function space is composed of others.
+      static const bool isComposite = false;
+
+      //! the grid view where grid function is defined upon
+      typedef G GridViewType;
+
+      //! vector backend
+      typedef B BackendType;
+
+      //! short cut for size type exported by Backend
+      typedef typename B::size_type SizeType;
+
+      //! local finite element map
+      typedef L LocalFiniteElementMapType DUNE_DEPRECATED;
+
+      //! finite element map
+      typedef L FiniteElementMapType;
+
+      //! local finite element
+      typedef typename L::Traits::FiniteElementType LocalFiniteElementType
+        DUNE_DEPRECATED;
+
+      //! finite element
+      typedef typename L::Traits::FiniteElementType FiniteElementType;
+
+      //! type representing constraints
+      typedef C ConstraintsType;
+    };
+
 	//! \brief collect types exported by a leaf grid function space
+    /**
+     * This is based on LocalFiniteElementMap
+     */
 	template<typename G, typename L, typename C, typename B>
-	struct GridFunctionSpaceTraits //: public PowerCompositeGridFunctionSpaceTraits<G,B>
+    struct GridFunctionSpaceTraits<G, L, C, B,
+             typename enable_if<AlwaysTrue<typename
+                   L::Traits::LocalFiniteElementType>::value>::type>
 	{
       enum{ 
         //! \brief True if this grid function space is composed of others.
@@ -76,15 +121,21 @@ namespace Dune {
 	  typedef typename B::size_type SizeType;
 
 	  //! \brief local finite element map
-	  typedef L LocalFiniteElementMapType;
+	  typedef L LocalFiniteElementMapType DUNE_DEPRECATED;
+
+      //! \brief finite element map
+      typedef L FiniteElementMapType;
 
 	  //! \brief local finite element
-	  typedef typename L::Traits::LocalFiniteElementType LocalFiniteElementType;
+      typedef typename L::Traits::LocalFiniteElementType LocalFiniteElementType
+        DUNE_DEPRECATED;
+
+      //! \brief finite element
+      typedef typename L::Traits::LocalFiniteElementType FiniteElementType;
 
 	  //! \brief type representing constraints
 	  typedef C ConstraintsType;
 	};
-
 
     //! \brief a class holding transformation for constrained spaces
     template<typename S, typename T>
@@ -215,7 +266,7 @@ namespace Dune {
 	/** \brief A grid function space.
      *
      *  \tparam GV   Type implementing GridView
-     *  \tparam LFEM Type implementing LocalFiniteElementMapInterface
+     *  \tparam FEM  Type implementing FiniteElementMapInterface
      *  \tparam CE   Type for constraints assembler
      *  \tparam B    Backend type
      *  \tparam P    Parameter type. Possible types are 
@@ -224,13 +275,13 @@ namespace Dune {
      * entity) or \link GridFunctionStaticSize \endlink (number of unknowns per
      * entity, known at compile-time)
      */
-	template<typename GV, typename LFEM, typename CE=NoConstraints, 
+    template<typename GV, typename FEM, typename CE=NoConstraints,
              typename B=StdVectorBackend, typename P=GridFunctionGeneralMapper>
 	class GridFunctionSpace : public Countable, public LeafNode
 	{
 	public:
       //! export Traits class
-	  typedef GridFunctionSpaceTraits<GV,LFEM,CE,B> Traits;
+	  typedef GridFunctionSpaceTraits<GV,FEM,CE,B> Traits;
 	  typedef typename GV::Traits::template Codim<0>::Entity Element;
 	  typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
 
@@ -258,15 +309,15 @@ namespace Dune {
       typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSpace> LocalFunctionSpace;
 
 	  //! constructor
-	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_) 
-		: defaultce(ce_), gv(gridview), plfem(&lfem), ce(ce_)
+	  GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_) 
+		: defaultce(ce_), gv(gridview), pfem(&fem), ce(ce_)
 	  {
 		update();
 	  }
 
 	  //! constructor
-	  GridFunctionSpace (const GV& gridview, const LFEM& lfem) 
-        : gv(gridview), plfem(&lfem), ce(defaultce)
+	  GridFunctionSpace (const GV& gridview, const FEM& fem) 
+        : gv(gridview), pfem(&fem), ce(defaultce)
 	  {
 		update();
 	  }
@@ -277,10 +328,16 @@ namespace Dune {
 		return gv;
 	  }
 
+      // get finite element map, I think we dont need it
+      const FEM& finiteElementMap () const
+      {
+        return *pfem;
+      }
+
 	  // get finite element map, I think we dont need it
-	  const LFEM& localFiniteElementMap () const
+      const FEM& localFiniteElementMap () const DUNE_DEPRECATED
 	  {
-		return *plfem;
+        return *pfem;
 	  }
 
       //! get dimension of root finite element space
@@ -315,27 +372,32 @@ namespace Dune {
       }
 
 	  //! compute global indices for one element
-	  void globalIndices (const typename Traits::LocalFiniteElementType& lfe, 
+      void globalIndices (const typename Traits::FiniteElementType& fe,
                           const Element& e, 
 						  std::vector<typename Traits::SizeType>& global) const
 	  {
+        typedef FiniteElementTraits<typename Traits::FiniteElementType>
+          FETraits;
 		// get layout of entity
-		const typename Traits::LocalFiniteElementType::Traits::LocalCoefficientsType&
-		  lc = lfe.localCoefficients();
-		global.resize(lc.size());
+        const typename FETraits::Coefficients &coeffs =
+          FETraits::coefficients(fe);
+        global.resize(coeffs.size());
 
-		for (std::size_t i=0; i<lc.size(); ++i)
+        for (std::size_t i=0; i<coeffs.size(); ++i)
 		  {
 			// get geometry type of subentity 
 			Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
-			  ::general(lfe.type()).type(lc.localKey(i).subEntity(),lc.localKey(i).codim());
+              ::general(fe.type()).type(coeffs.localKey(i).subEntity(),
+                                        coeffs.localKey(i).codim());
 
 			// evaluate consecutive index of subentity
-            int index = gv.indexSet().subIndex(e, lc.localKey(i).subEntity(),
-                                               lc.localKey(i).codim());
+            int index = gv.indexSet().subIndex(e,
+                                               coeffs.localKey(i).subEntity(),
+                                               coeffs.localKey(i).codim());
 		
 			// now compute 
-			global[i] = offset[(gtoffset.find(gt)->second)+index]+lc.localKey(i).index();
+            global[i] = offset[(gtoffset.find(gt)->second)+index]+
+              coeffs.localKey(i).index();
 		  }
 	  }
 
@@ -343,7 +405,7 @@ namespace Dune {
 	  void globalIndices (const Element& e,
 						  std::vector<typename Traits::SizeType>& global) const
       {
-        globalIndices(plfem->find(e),e,global);
+        globalIndices(pfem->find(e),e,global);
       }
 
       //------------------------------
@@ -403,19 +465,23 @@ namespace Dune {
 		for (ElementIterator it = gv.template begin<0>();
 			 it!=gv.template end<0>(); ++it)
 		  {
+            const typename Traits::FiniteElementType &fe = pfem->find(*it);
 			// check geometry type
-			if ((plfem->find(*it)).type()!=it->type())
+            if (fe.type()!=it->type())
 			  DUNE_THROW(Exception, "geometry type mismatch in GridFunctionSpace");
 
 			// get local coefficients for this entity
-			const typename Traits::LocalFiniteElementType::Traits::LocalCoefficientsType&
-			  lc = (plfem->find(*it)).localCoefficients();
+            typedef FiniteElementTraits<typename Traits::FiniteElementType>
+              FETraits;
+            const typename FETraits::Coefficients& coeffs =
+              FETraits::coefficients(fe);
 
 			// insert geometry type of all subentities into set
-			for (std::size_t i=0; i<lc.size(); ++i)
+            for (std::size_t i=0; i<coeffs.size(); ++i)
 			  {
 				Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
-				  ::general(it->type()).type(lc.localKey(i).subEntity(),lc.localKey(i).codim());
+                  ::general(it->type()).type(coeffs.localKey(i).subEntity(),
+                                             coeffs.localKey(i).codim());
 				gtused.insert(gt);
                 codimUsed.insert(GV::Grid::dimension-gt.dim());
 			  }
@@ -446,23 +512,30 @@ namespace Dune {
 		for (ElementIterator it = gv.template begin<0>();
 			 it!=gv.template end<0>(); ++it)
 		  {
+            const typename Traits::FiniteElementType &fe = pfem->find(*it);
+
 			// get local coefficients for this entity
-			const typename Traits::LocalFiniteElementType::Traits::LocalCoefficientsType&
-			  lc = (plfem->find(*it)).localCoefficients();
+            typedef FiniteElementTraits<typename Traits::FiniteElementType>
+              FETraits;
+            const typename FETraits::Coefficients& coeffs =
+              FETraits::coefficients(fe);
 
 			// compute maximum number of degrees of freedom per element
-			nlocal = std::max(nlocal,static_cast<typename Traits::SizeType>(lc.size()));
+            nlocal = std::max(nlocal, static_cast<typename Traits::SizeType>
+                                        (coeffs.size()));
 
 			// compute maximum size for each subentity
-			for (std::size_t i=0; i<lc.size(); ++i)
+            for (std::size_t i=0; i<coeffs.size(); ++i)
 			  {
 				Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
-				  ::general(it->type()).type(lc.localKey(i).subEntity(),lc.localKey(i).codim());
+                  ::general(it->type()).type(coeffs.localKey(i).subEntity(),
+                                             coeffs.localKey(i).codim());
                 unsigned int index = gtoffset[gt] +
-                  is.subIndex(*it, lc.localKey(i).subEntity(),
-                              lc.localKey(i).codim());
+                  is.subIndex(*it, coeffs.localKey(i).subEntity(),
+                              coeffs.localKey(i).codim());
 				offset[index] = std::max(offset[index], 
-                                         typename Traits::SizeType(lc.localKey(i).index()+1));
+                                         typename Traits::SizeType
+                                            (coeffs.localKey(i).index()+1));
 			  }
 		  }
 
@@ -481,7 +554,7 @@ namespace Dune {
 	private:
       CE defaultce;
 	  const GV& gv;
-	  CountingPointer<LFEM const> plfem;
+	  CountingPointer<FEM const> pfem;
 	  typename Traits::SizeType nlocal;
 	  typename Traits::SizeType nglobal;
       const CE& ce;
@@ -502,15 +575,15 @@ namespace Dune {
 
 	// specialization with restricted mapper
 	// GV : Type implementing GridView
-	// FEM  : Type implementing LocalFiniteElementMapInterface
+    // FEM  : Type implementing FiniteElementMapInterface
 	// B : Backend type
-	template<typename GV, typename LFEM, typename CE, typename B> 
-	class GridFunctionSpace<GV,LFEM,CE,B,GridFunctionRestrictedMapper> : 
+    template<typename GV, typename FEM, typename CE, typename B>
+    class GridFunctionSpace<GV,FEM,CE,B,GridFunctionRestrictedMapper> :
 	  public Countable, public LeafNode
 	{
 	public:
       //! export Traits class
-	  typedef GridFunctionSpaceTraits<GV,LFEM,CE,B> Traits;
+	  typedef GridFunctionSpaceTraits<GV,FEM,CE,B> Traits;
 	  typedef typename GV::Traits::template Codim<0>::Entity Element;
 	  typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
 
@@ -538,15 +611,15 @@ namespace Dune {
       typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSpace> LocalFunctionSpace;
 
 	  // constructor
-	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_) 
-        : gv(gridview), plfem(&lfem), defaultce(ce_), ce(ce_)
+      GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_)
+        : gv(gridview), pfem(&fem), defaultce(ce_), ce(ce_)
 	  {
 		update();
 	  }
 
 	  // constructor
-	  GridFunctionSpace (const GV& gridview, const LFEM& lfem) 
-		: gv(gridview), plfem(&lfem), ce(defaultce)
+      GridFunctionSpace (const GV& gridview, const FEM& fem)
+        : gv(gridview), pfem(&fem), ce(defaultce)
 	  {
 		update();
 	  }
@@ -557,10 +630,16 @@ namespace Dune {
 		return gv;
 	  }
 
+      // get finite element map, I think we dont need it
+      const FEM& finiteElementMap () const
+      {
+        return *pfem;
+      }
+
 	  // get finite element map, I think we dont need it
-	  const LFEM& localFiniteElementMap () const
+      const FEM& localFiniteElementMap () const DUNE_DEPRECATED
 	  {
-		return *plfem;
+        return *pfem;
 	  }
 
       //! get dimension of root finite element space
@@ -594,27 +673,33 @@ namespace Dune {
       }
 
 	  // compute global indices for one element
-	  void globalIndices (const typename Traits::LocalFiniteElementType& lfe,
+      void globalIndices (const typename Traits::FiniteElementType& fe,
                           const Element& e,
 						  std::vector<typename Traits::SizeType>& global) const
 	  {
 		// get local coefficients for this entity
-		const typename Traits::LocalFiniteElementType::Traits::LocalCoefficientsType&
-		  lc = lfe.localCoefficients();
-		global.resize(lc.size());
+        typedef FiniteElementTraits<typename Traits::FiniteElementType>
+          FETraits;
+        const typename FETraits::Coefficients &coeffs =
+          FETraits::coefficients(fe);
+        global.resize(coeffs.size());
 
-		for (unsigned int i=0; i<lc.size(); ++i)
+        for (unsigned int i=0; i<coeffs.size(); ++i)
 		  {
 			// get geometry type of subentity 
 			Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
-			  ::general(lfe.type()).type(lc.localKey(i).subEntity(),lc.localKey(i).codim());
+              ::general(fe.type()).type(coeffs.localKey(i).subEntity(),
+                                        coeffs.localKey(i).codim());
 
 			// evaluate consecutive index of subentity
-            int index = gv.indexSet().subIndex(e, lc.localKey(i).subEntity(),
-                                               lc.localKey(i).codim());
+            int index = gv.indexSet().subIndex(e,
+                                               coeffs.localKey(i).subEntity(),
+                                               coeffs.localKey(i).codim());
 		
 			// now compute 
-			global[i] = offset.find(gt)->second+index*dofcountmap.find(gt)->second+lc.localKey(i).index();
+            global[i] =
+              offset.find(gt)->second+index*dofcountmap.find(gt)->second
+              + coeffs.localKey(i).index();
 		  }
 	  }
 
@@ -622,7 +707,7 @@ namespace Dune {
 	  void globalIndices (const Element& e,
 						  std::vector<typename Traits::SizeType>& global) const
       {
-        globalIndices(plfem->find(e),e,global);
+        globalIndices(pfem->find(e),e,global);
       }
 
 
@@ -683,16 +768,20 @@ namespace Dune {
 		for (ElementIterator it = gv.template begin<0>();
 			 it!=gv.template end<0>(); ++it)
 		  {
+            const typename Traits::FiniteElementType &fe = pfem->find(*it);
 			// check geometry type
-			if ((plfem->find(*it)).type()!=it->type())
+            if (fe.type()!=it->type())
 			  DUNE_THROW(Exception, "geometry type mismatch in GridFunctionSpace");
 
 			// get local coefficients for this entity
-			const typename Traits::LocalFiniteElementType::Traits::LocalCoefficientsType&
-			  lc = (plfem->find(*it)).localCoefficients();
+            typedef FiniteElementTraits<typename Traits::FiniteElementType>
+              FETraits;
+            const typename FETraits::Coefficients &coeffs =
+              FETraits::coefficients(fe);
 
 			// compute maximum number of degrees of freedom per element
-			nlocal = std::max(nlocal,static_cast<typename Traits::SizeType>(lc.size()));
+            nlocal = std::max(nlocal, static_cast<typename Traits::SizeType>
+                                       (coeffs.size()));
 
 			// store count for each subentity in a map
 			typedef Dune::tuple<unsigned int, unsigned int> SubentityType;
@@ -700,9 +789,10 @@ namespace Dune {
 			CountMapType countmap;
 
 			// assume that key within each subentity is unique
-			for (unsigned i=0; i<lc.size(); ++i)
+            for (unsigned i=0; i<coeffs.size(); ++i)
 			  {
-				SubentityType subentity(lc.localKey(i).subEntity(),lc.localKey(i).codim());
+                SubentityType subentity(coeffs.localKey(i).subEntity(),
+                                        coeffs.localKey(i).codim());
 				if (countmap.find(subentity)==countmap.end())
 				  countmap[subentity] = 1;
 				else
@@ -749,7 +839,7 @@ namespace Dune {
 
 	private:
 	  const GV& gv;
-	  CountingPointer<LFEM const> plfem;
+      CountingPointer<FEM const> pfem;
 
 	  typename Traits::SizeType nlocal;
 	  typename Traits::SizeType nglobal;
@@ -822,16 +912,16 @@ namespace Dune {
 
 	// specialization with restricted mapper
 	// GV : Type implementing GridView
-	// FEM  : Type implementing LocalFiniteElementMapInterface
+    // FEM  : Type implementing FiniteElementMapInterface
 	// B : Backend type
-	template<typename GV, typename LFEM, typename CE, typename B, typename IIS> 
-	class GridFunctionSpace<GV,LFEM,CE,B,GridFunctionStaticSize<IIS> > : 
+    template<typename GV, typename FEM, typename CE, typename B, typename IIS>
+    class GridFunctionSpace<GV,FEM,CE,B,GridFunctionStaticSize<IIS> > :
 	  public Countable, public LeafNode
 	{
       typedef std::map<unsigned int,unsigned int> DofPerCodimMapType;
 	public:
       //! export traits class
-	  typedef GridFunctionSpaceTraits<GV,LFEM,CE,B> Traits;
+      typedef GridFunctionSpaceTraits<GV,FEM,CE,B> Traits;
 	  typedef typename GV::Traits::template Codim<0>::Entity Element;
 	  typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
 
@@ -859,26 +949,27 @@ namespace Dune {
       typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSpace> LocalFunctionSpace;
 
 	  // constructors
-	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const IIS& iis_, const CE& ce_) 
-		: gv(gridview), plfem(&lfem), iis(iis_), defaultce(ce_), ce(ce_)
+      GridFunctionSpace (const GV& gridview, const FEM& fem, const IIS& iis_,
+                         const CE& ce_)
+        : gv(gridview), pfem(&fem), iis(iis_), defaultce(ce_), ce(ce_)
 	  {
 		update();
 	  }
 
-	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const IIS& iis_) 
-		: gv(gridview), plfem(&lfem), iis(iis_), ce(defaultce)
+      GridFunctionSpace (const GV& gridview, const FEM& fem, const IIS& iis_)
+        : gv(gridview), pfem(&fem), iis(iis_), ce(defaultce)
 	  {
 		update();
 	  }
 
-	  GridFunctionSpace (const GV& gridview, const LFEM& lfem, const CE& ce_) 
-		: gv(gridview), plfem(&lfem), iis(dummyiis), defaultce(ce_), ce(ce_)
+      GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_)
+        : gv(gridview), pfem(&fem), iis(dummyiis), defaultce(ce_), ce(ce_)
 	  {
 		update();
 	  }
 
-	  GridFunctionSpace (const GV& gridview, const LFEM& lfem) 
-		: gv(gridview), plfem(&lfem), iis(dummyiis), ce(defaultce)
+      GridFunctionSpace (const GV& gridview, const FEM& fem)
+        : gv(gridview), pfem(&fem), iis(dummyiis), ce(defaultce)
 	  {
 		update();
 	  }
@@ -889,10 +980,16 @@ namespace Dune {
 		return gv;
 	  }
 
+      // get finite element map, I think we dont need it
+      const FEM& finiteElementMap() const
+      {
+        return *pfem;
+      }
+
 	  // get finite element map, I think we dont need it
-	  const LFEM& localFiniteElementMap () const
+      const FEM& localFiniteElementMap() const DUNE_DEPRECATED
 	  {
-		return *plfem;
+        return *pfem;
 	  }
 
       //! get dimension of root finite element space
@@ -926,20 +1023,22 @@ namespace Dune {
       }
 
 	  // compute global indices for one element
-	  void globalIndices (const typename Traits::LocalFiniteElementType& lfe,
+      void globalIndices (const typename Traits::FiniteElementType& fe,
                           const Element& e,
 						  std::vector<typename Traits::SizeType>& global) const
 	  {
+        typedef FiniteElementTraits<typename Traits::FiniteElementType>
+          FETraits;
 		// get local coefficients for this entity
-		const typename Traits::LocalFiniteElementType::Traits::LocalCoefficientsType&
-		  lc = lfe.localCoefficients();
-		global.resize(lc.size());
+        const typename FETraits::Coefficients &coeffs =
+          FETraits::coefficients(fe);
+        global.resize(coeffs.size());
 
-		for (unsigned int i=0; i<lc.size(); ++i)
+        for (unsigned int i=0; i<coeffs.size(); ++i)
 		  {
             typename GV::IndexSet::IndexType index;
-            unsigned int cd = lc.localKey(i).codim();
-            unsigned int se = lc.localKey(i).subEntity();
+            unsigned int cd = coeffs.localKey(i).codim();
+            unsigned int se = coeffs.localKey(i).subEntity();
 
 			// evaluate consecutive index of subentity
             if (cd==Dune::LocalKey::intersectionCodim)
@@ -948,7 +1047,9 @@ namespace Dune {
               index = gv.indexSet().subIndex(e,se,cd);
 
 			// now compute 
-			global[i] = offset.find(cd)->second + index * dofpercodim.find(cd)->second + lc.localKey(i).index();
+            global[i] =
+              offset.find(cd)->second + index * dofpercodim.find(cd)->second
+              + coeffs.localKey(i).index();
 		  }
 	  }
 
@@ -956,7 +1057,7 @@ namespace Dune {
 	  void globalIndices (const Element& e,
 						  std::vector<typename Traits::SizeType>& global) const
       {
-        globalIndices(plfem->find(e),e,global);
+        globalIndices(pfem->find(e),e,global);
       }
 
 
@@ -1018,23 +1119,27 @@ namespace Dune {
 
         // check geometry type
         ElementIterator it = gv.template begin<0>();
-        if ((plfem->find(*it)).type()!=it->type())
+        typename Traits::FiniteElementType &fe = pfem->find(*it);
+        if (fe.type()!=it->type())
           DUNE_THROW(Exception, "geometry type mismatch in GridFunctionSpace");
 
         // get local coefficients for this entity
-        const typename Traits::LocalFiniteElementType::Traits::LocalCoefficientsType&
-          lc = (plfem->find(*it)).localCoefficients();
+        typedef FiniteElementTraits<typename Traits::FiniteElementType>
+          FETraits;
+        const typename FETraits::Coefficients &coeffs =
+          FETraits::coefficients(fe);
 
         // extract number of degrees of freedom per element
-        nlocal = static_cast<typename Traits::SizeType>(lc.size());
+        nlocal = static_cast<typename Traits::SizeType>(coeffs.size());
 
         // count number of degrees of freedom per subentity (including intersections)
         typedef Dune::tuple<unsigned int, unsigned int> SubentityType;
         typedef std::map<SubentityType,unsigned int> CountMapType;
         CountMapType countmap;
-        for (unsigned int i=0; i<lc.size(); ++i)
+        for (unsigned int i=0; i<coeffs.size(); ++i)
           {
-            SubentityType subentity(lc.localKey(i).subEntity(),lc.localKey(i).codim());
+            SubentityType subentity(coeffs.localKey(i).subEntity(),
+                                    coeffs.localKey(i).codim());
             if (countmap.find(subentity)==countmap.end())
               countmap[subentity] = 1;
             else
@@ -1084,7 +1189,7 @@ namespace Dune {
 	private:
       DummyIntersectionIndexSet dummyiis; // for version without intersection DOFs
 	  const GV& gv;
-	  CountingPointer<LFEM const> plfem;
+      CountingPointer<FEM const> pfem;
       const IIS& iis;
 
 	  typename Traits::SizeType nlocal;
@@ -3120,11 +3225,12 @@ namespace Dune {
 
 
     // CGFS is a leaf
-	template<typename GFS, int k, typename GV, typename LFEM, typename CE, typename B, typename P>
-    class GridFunctionSubSpaceBase<GFS,k, GridFunctionSpace<GV,LFEM,CE,B,P> >
+    template<typename GFS, int k, typename GV, typename FEM, typename CE,
+             typename B, typename P>
+    class GridFunctionSubSpaceBase<GFS,k, GridFunctionSpace<GV,FEM,CE,B,P> >
       : public Countable // behave like child k of GFS which is a grid function space
     {
-      typedef GridFunctionSpace<GV,LFEM,CE,B,P> CGFS;
+      typedef GridFunctionSpace<GV,FEM,CE,B,P> CGFS;
 
     public:
       //! export traits class
@@ -3170,10 +3276,16 @@ namespace Dune {
 		return pcgfs->gridview();
 	  }
 
+      // get finite element map
+      const FEM& finiteElementMap () const
+      {
+        return pcgfs->finiteElementMap();
+      }
+
 	  // get finite element map
-	  const LFEM& localFiniteElementMap () const
+      const FEM& localFiniteElementMap () const DUNE_DEPRECATED
 	  {
-		return pcgfs->localFiniteElementMap();
+        return pcgfs->finiteElementMap();
 	  }
 
       //! get dimension of root finite element space
@@ -3201,11 +3313,11 @@ namespace Dune {
 	  }
 
 	  // compute global indices for one element
-	  void globalIndices (const typename Traits::LocalFiniteElementType& lfe, 
+      void globalIndices (const typename Traits::FiniteElementType& fe,
                           const Element& e, 
 						  std::vector<typename Traits::SizeType>& global) const
 	  {
-        pcgfs->globalIndices(lfe,e,global);
+        pcgfs->globalIndices(fe,e,global);
 	  }
 
       // global Indices from element, needs additional finite element lookup
