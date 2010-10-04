@@ -8,7 +8,9 @@
 #include<dune/grid/common/genericreferenceelements.hh>
 #include<dune/grid/common/grid.hh>
 #include<dune/common/geometrytype.hh>
+
 #include<dune/pdelab/common/geometrywrapper.hh>
+#include <dune/pdelab/finiteelement/traits.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 
@@ -39,6 +41,9 @@ namespace Dune {
       void boundary (const F& f, const IntersectionGeometry<I>& ig, 
                      const LFS& lfs, T& trafo) const
       {
+        typedef FiniteElementTraits<typename LFS::Traits::FiniteElementType>
+          FETraits;
+
         typename F::Traits::RangeType bctype;
 
         const int face = ig.indexInInside();
@@ -58,10 +63,12 @@ namespace Dune {
         const typename F::Traits::DomainType testpoint = face_refelem.position(0,0);
         f.evaluate(ig,testpoint,bctype);
 
-        for (std::size_t i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)
+        for (std::size_t i=0;
+             i<FETraits::coefficients(lfs.finiteElement()).size(); i++)
           {
             // The codim to which this dof is attached to
-            unsigned int codim = lfs.localFiniteElement().localCoefficients().localKey(i).codim();
+            unsigned int codim =
+              FETraits::coefficients(lfs.finiteElement()).localKey(i).codim();
 
             if (codim==0) continue;
 
@@ -72,9 +79,10 @@ namespace Dune {
                 = face_refelem.position(j,codim-1);
               //      f.evaluate(ig,testpoint,bctype);
 
-              if (bctype > 0 && (int) lfs.localFiniteElement().localCoefficients().localKey(i).subEntity()
-                  ==
-                  refelem.subEntity(face,1,j,codim))
+              if (bctype > 0 &&
+                  static_cast<int>(FETraits::coefficients(lfs.finiteElement()).
+                                   localKey(i).subEntity())
+                  == refelem.subEntity(face,1,j,codim))
                 trafo[i] = empty;
             }
           }
@@ -95,6 +103,9 @@ namespace Dune {
       void processor (const Dune::PDELab::IntersectionGeometry<I>& ig, 
                       const LFS& lfs, T& trafo) const
       {
+        typedef FiniteElementTraits<typename LFS::Traits::FiniteElementType>
+          FETraits;
+
         // determine face
         const int face = ig.indexInInside();
 
@@ -110,15 +121,18 @@ namespace Dune {
         typename T::RowType empty;
 
         // loop over all degrees of freedom and check if it is on given face
-        for (size_t i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)
+        for (size_t i=0; i<FETraits::coefficients(lfs.finiteElement()).size();
+             i++)
           {
             // The codim to which this dof is attached to
-            unsigned int codim = lfs.localFiniteElement().localCoefficients().localKey(i).codim();
+            unsigned int codim =
+              FETraits::coefficients(lfs.finiteElement()).localKey(i).codim();
 
             if (codim==0) continue;
 
             for (int j=0; j<refelem.size(face,1,codim); j++)
-              if (lfs.localFiniteElement().localCoefficients().localKey(i).subEntity()==refelem.subEntity(face,1,j,codim))
+              if (FETraits::coefficients(lfs.finiteElement()).localKey(i).
+                  subEntity() == refelem.subEntity(face,1,j,codim))
                 trafo[i] = empty;
           }
       }
@@ -133,6 +147,9 @@ namespace Dune {
       template<typename E, typename LFS, typename T>
       void volume (const Dune::PDELab::ElementGeometry<E>& eg, const LFS& lfs, T& trafo) const
       {
+        typedef FiniteElementTraits<typename LFS::Traits::FiniteElementType>
+          FETraits;
+
         // nothing to do for interior entities
         if (eg.entity().partitionType()==Dune::InteriorEntity)
           return;
@@ -143,7 +160,8 @@ namespace Dune {
 		typedef typename LFS::Traits::GridFunctionSpaceType::Traits::BackendType B;
 
         // loop over all degrees of freedom and check if it is not owned by this processor
-        for (size_t i=0; i<lfs.localFiniteElement().localCoefficients().size(); i++)
+        for (size_t i=0; i<FETraits::coefficients(lfs.finiteElement()).size();
+             i++)
           {
             if (gh[lfs.globalIndex(i)]!=0)
               {
