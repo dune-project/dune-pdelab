@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <dune/common/fmatrix.hh>
+#include <dune/common/shared_ptr.hh>
 #include <dune/common/static_assert.hh>
 #include <dune/common/typetraits.hh>
 
@@ -26,6 +27,10 @@ namespace Dune {
       { return fe.interpolation(); }
       static const Coefficients &coefficients(const FiniteElement& fe)
       { return fe.coefficients(); }
+
+      typedef shared_ptr<const FiniteElement> Store;
+      static void setStore(Store& store, const FiniteElement& fe)
+      { store.reset(new FiniteElement(fe)); }
     };
 
     template<class FiniteElement>
@@ -46,6 +51,10 @@ namespace Dune {
       { return fe.localInterpolation(); }
       static const Coefficients &coefficients(const FiniteElement& fe)
       { return fe.localCoefficients(); }
+
+      typedef const FiniteElement *Store;
+      static void setStore(Store& store, const FiniteElement& fe)
+      { store = &fe; }
     };
 
     template<class Basis, class = void>
