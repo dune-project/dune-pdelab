@@ -2,6 +2,8 @@
 #ifndef DUNE_PDELAB_FINITELEMENTMAP_HH
 #define DUNE_PDELAB_FINITELEMENTMAP_HH
 
+#include <dune/common/deprecated.hh>
+
 #include <dune/grid/common/genericreferenceelements.hh>
 
 #include"../common/countingptr.hh"
@@ -15,11 +17,17 @@ namespace Dune {
 
 	//! collect types exported by a finite element map
 	template<class T>
-	struct LocalFiniteElementMapTraits
+    struct FiniteElementMapTraits
 	{
-	  //! \brief Type of finite element from local functions
-	  typedef T LocalFiniteElementType;
+      //! Type of finite element from local functions (local interface)
+      typedef T LocalFiniteElementType DUNE_DEPRECATED;
+      //! Type of finite element from local functions
+      typedef T FiniteElementType;
 	};
+
+    //! collect types exported by a finite element map
+    template<class T>
+    struct LocalFiniteElementMapTraits : FiniteElementMapTraits<T> {};
 
 	//! interface for a finite element map
 	template<class T, class Imp>
