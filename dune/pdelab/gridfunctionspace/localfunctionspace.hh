@@ -5,6 +5,8 @@
 
 #include<vector>
 
+#include <dune/common/stdstreams.hh>
+
 #include "../common/multitypetree.hh"
 #include "../common/cpstoragepolicy.hh"
 
