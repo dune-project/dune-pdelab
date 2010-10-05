@@ -19,7 +19,7 @@
 namespace Dune {
   namespace PDELab {
 
-    //! algorithm to reduce vertex ordering information
+    //! algorithm to reduce vertex order information
     /**
      * \code
 #include <dune/pdelab/common/vertexorder.hh>
@@ -37,12 +37,13 @@ namespace Dune {
     void reduceOrder(const InIterator& inBegin, const InIterator& inEnd,
                      OutIterator outIt)
     {
-      static const std::less<
+      typedef std::less<
         typename std::iterator_traits<InIterator>::value_type
-        > less;
+        > less_t;
+      static const less_t less = less_t();
 
       for(InIterator inIt = inBegin; inIt != inEnd; ++inIt, ++outIt)
-        *outIt = std::count(inBegin, inEnd, std::bind2nd(less, *inIt));
+        *outIt = std::count_if(inBegin, inEnd, std::bind2nd(less, *inIt));
     }
 
     //! Class providing information on the ordering of vertices
@@ -56,7 +57,7 @@ namespace Dune {
      * including the element itself.
      */
     template<std::size_t dim, class Index = std::size_t>
-    class GeneralVertexOrdering {
+    class GeneralVertexOrder {
       typedef GenericReferenceElement<double, dim> RefElem;
       typedef GenericReferenceElements<double, dim> RefElems;
 
@@ -73,7 +74,7 @@ namespace Dune {
       //! get type of the entity's geometry
       const GeometryType &type() const { return gt; }
 
-      //! construct a GeneralVertexOrdering
+      //! construct a GeneralVertexOrder
       /**
        * \param gt_     Geometry type of the entity we provide information
        *                for.
@@ -84,8 +85,8 @@ namespace Dune {
        * This class stores a reduced copy of the ids, converted to type Index.
        */
       template<class InIterator>
-      GeneralVertexOrdering(const GeometryType& gt_, const InIterator &inBegin,
-                            const InIterator &inEnd) :
+      GeneralVertexOrder(const GeometryType& gt_, const InIterator &inBegin,
+                         const InIterator &inEnd) :
         refelem(RefElems::general(gt_)), gt(gt_),
         vertexOrder(refelem.size(dim))
       {
@@ -130,15 +131,15 @@ namespace Dune {
      * This is a random access iterator with constant \c value_type.
      */
     template<std::size_t dim, class Index>
-    class GeneralVertexOrdering<dim, Index>::iterator :
+    class GeneralVertexOrder<dim, Index>::iterator :
       public RandomAccessIteratorFacade<iterator, const Index>
     {
-      const GeneralVertexOrdering *order;
+      const GeneralVertexOrder *order;
       std::size_t codim;
       std::size_t subEntity;
       std::size_t vertex;
 
-      iterator(const GeneralVertexOrdering &order_, std::size_t codim_,
+      iterator(const GeneralVertexOrder &order_, std::size_t codim_,
                std::size_t subEntity_, std::size_t vertex_ = 0) :
         order(&order_), codim(codim_), subEntity(subEntity_), vertex(vertex_)
       { }
@@ -147,13 +148,17 @@ namespace Dune {
         return order->vertexOrder[order->refelem.subEntity(subEntity, codim,
                                                            vertex, dim)];
       }
+      const Index &elementAt(std::ptrdiff_t n) const {
+        return order->vertexOrder[order->refelem.subEntity(subEntity, codim,
+                                                           vertex+n, dim)];
+      }
       bool equals(const iterator &other) const {
         return order == other.order && codim == other.codim &&
           subEntity == other.subEntity && vertex == other.vertex;
       }
       void increment() { ++vertex; }
       void decrement() { --vertex; }
-      void advance(ptrdiff_t n) { vertex += n; }
+      void advance(std::ptrdiff_t n) { vertex += n; }
       std::ptrdiff_t distanceTo(const iterator &other) const {
         // make sure we reference the same container
         assert(order == other.order && codim == other.codim &&
@@ -163,6 +168,7 @@ namespace Dune {
       }
 
       friend class RandomAccessIteratorFacade<iterator, const Index>;
+      friend class GeneralVertexOrder<dim, Index>;
 
     public:
       //! public default constructor
@@ -174,14 +180,14 @@ namespace Dune {
       iterator() { }
     };
 
-    //! Factory for GeneralVertexOrdering objects using an IdSet
+    //! Factory for GeneralVertexOrder objects using an IdSet
     /**
      * \tparam IdSet Type IdSet used to get the ids of the vertices.
      * \tparam Index Type of the indices provided by the vertex ordering
      *               object.  Must be integral, may be non-negative.
      */
     template<class IdSet, class Index = std::size_t>
-    class VertexOrderingByIdFactory {
+    class VertexOrderByIdFactory {
       const IdSet& idset;
 
     public:
@@ -195,7 +201,7 @@ namespace Dune {
        * singular value is destruction, all other operations will result in
        * undefined behaviour.
        */
-      VertexOrderingByIdFactory(const IdSet &idset_) : idset(idset_) { }
+      VertexOrderByIdFactory(const IdSet &idset_) : idset(idset_) { }
 
       //! construct a vertex ordering object
       /**
@@ -205,7 +211,7 @@ namespace Dune {
        * become singular or has been destroyed.
        */
       template<typename Element>
-      GeneralVertexOrdering<Element::mydimension, Index>
+      GeneralVertexOrder<Element::mydimension, Index>
       make(const Element &e) const {
         typedef GenericReferenceElements<
           typename Element::ctype,
@@ -217,7 +223,7 @@ namespace Dune {
         std::vector<typename IdSet::IdType> ids(size);
         for(std::size_t i = 0; i < size; ++i)
           ids[i] = idset.subId(e, i, Element::mydimension);
-        return GeneralVertexOrdering<Element::mydimension, Index>
+        return GeneralVertexOrder<Element::mydimension, Index>
           (e.type(), ids.begin(), ids.end());
       }
     };
