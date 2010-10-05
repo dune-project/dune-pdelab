@@ -30,9 +30,11 @@
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/geometrywrapper.hh>
+#include <dune/pdelab/common/vertexorder.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/finiteelement/interfaceswitch.hh>
 #include <dune/pdelab/finiteelement/localtoglobaladaptors.hh>
+#include <dune/pdelab/finiteelement/pk2d.hh>
 #include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include <dune/pdelab/finiteelementmap/global.hh>
 #include <dune/pdelab/gridfunctionspace/constraints.hh>
@@ -372,7 +374,6 @@ int main(int argc, char** argv)
         (gv,fem,"poisson_globalfe_yasp_Q1_3d");
     }
 
-#if 0
     // UG Pk 2D test
 #if HAVE_UG
     {
@@ -390,8 +391,17 @@ int main(int argc, char** argv)
       typedef double R;
       const int k=3;
       const int q=2*k;
-      typedef Dune::PDELab::Pk2DFiniteElementMap<GV,DF,double,k> FEM;
-      FEM fem(gv);
+      typedef Dune::PDELab::Pk2DFiniteElementFactory<
+        GV::Codim<0>::Geometry, R, k
+        > FEFactory;
+      FEFactory feFactory;
+      typedef Dune::PDELab::VertexOrderByIdFactory<GV::Grid::GlobalIdSet>
+        VOFactory;
+      VOFactory voFactory(grid->globalIdSet());
+      typedef Dune::PDELab::GeometryVertexOrderFiniteElementMap<
+        FEFactory, VOFactory
+        > FEM;
+      FEM fem(feFactory, voFactory);
 
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>
@@ -399,6 +409,7 @@ int main(int argc, char** argv)
     }
 #endif
 
+#if 0
 #if HAVE_ALBERTA
     {
       // make grid
