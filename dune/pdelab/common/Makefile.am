@@ -7,6 +7,7 @@ common_HEADERS =				\
 	functionwrappers.hh			\
 	geometrywrapper.hh			\
 	multitypetree.hh			\
+	vertexorder.hh				\
 	vtkexport.hh
 
 include $(top_srcdir)/am/global-rules
