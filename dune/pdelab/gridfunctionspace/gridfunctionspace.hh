@@ -1125,7 +1125,7 @@ namespace Dune {
 
         // check geometry type
         ElementIterator it = gv.template begin<0>();
-        typename Traits::FiniteElementType &fe = pfem->find(*it);
+        const typename Traits::FiniteElementType &fe = pfem->find(*it);
         if (fe.type()!=it->type())
           DUNE_THROW(Exception, "geometry type mismatch in GridFunctionSpace");
 
