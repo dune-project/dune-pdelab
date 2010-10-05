@@ -41,7 +41,7 @@ namespace Dune {
         typename std::iterator_traits<InIterator>::value_type
         > less;
 
-      for(InIterator inIt = inBegin; inIt < inEnd; ++inIt, ++outIt)
+      for(InIterator inIt = inBegin; inIt != inEnd; ++inIt, ++outIt)
         *outIt = std::count(inBegin, inEnd, std::bind2nd(less, *inIt));
     }
 
