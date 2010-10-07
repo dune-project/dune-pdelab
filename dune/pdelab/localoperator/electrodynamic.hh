@@ -100,7 +100,7 @@ namespace Dune {
             it!=rule.end(); ++it) {
           // values of basefunctions
           std::vector<Range> phi(lfsu.size());
-          lfsu.localFiniteElement().localBasis()
+          lfsu.finiteElement().localBasis()
             .evaluateFunctionGlobal(it->position(),phi,eg.geometry());
 
           // calculate T
@@ -223,7 +223,7 @@ namespace Dune {
             it!=rule.end(); ++it) {
           // curl of the basefunctions
           std::vector<Jacobian> J(lfsu.size());
-          lfsu.localFiniteElement().localBasis()
+          lfsu.finiteElement().localBasis()
             .evaluateJacobianGlobal(it->position(),J,eg.geometry());
 
           std::vector<Curl> rotphi(lfsu.size());

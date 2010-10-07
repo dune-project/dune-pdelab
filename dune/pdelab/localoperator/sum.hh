@@ -8,8 +8,8 @@
 #include <dune/common/forloop.hh>
 #include <dune/common/static_assert.hh>
 #include <dune/common/tuples.hh>
+#include <dune/common/tupleutility.hh>
 #include <dune/common/typetraits.hh>
-#include <dune/common/utility.hh>
 
 #include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include <dune/pdelab/gridoperatorspace/localmatrix.hh>
