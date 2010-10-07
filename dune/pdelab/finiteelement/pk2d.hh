@@ -112,7 +112,7 @@ namespace Dune {
     struct Pk2DFiniteElementFactory {
       typedef Pk2DFiniteElement<Geometry, RF, k> FiniteElement;
 
-      //! construct ScalarLocalToGlobalFiniteElementAdaptor
+      //! construct Pk2DFiniteElementFactory
       /**
        * \param geometry    The geometry object to use for adaption.
        * \param vertexOrder The global ordering of the vertices within the
