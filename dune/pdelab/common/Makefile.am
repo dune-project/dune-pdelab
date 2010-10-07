@@ -2,6 +2,7 @@ commondir = $(includedir)/dune/pdelab/common
 common_HEADERS =				\
 	countingptr.hh				\
 	cpstoragepolicy.hh			\
+	crossproduct.hh				\
 	function.hh				\
 	functionutilities.hh			\
 	functionwrappers.hh			\
