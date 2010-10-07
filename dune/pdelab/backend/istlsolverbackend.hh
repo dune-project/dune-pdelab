@@ -1362,13 +1362,6 @@ namespace Dune {
       template<class V>
       typename V::ElementType norm (const V& v) const
       {
-        dune_static_assert
-          (AlwaysFalse<V>::value,
-           "ISTLBackend_NOVLP_ExplicitDiagonal::norm() should not be "
-           "neccessary, so we skipped the testing.  If you have a scenario "
-           "where you need it, please verify the implementation and remove "
-           "this assert or report back to us so we can remove it.");
-
         typedef Dune::PDELab::NonoverlappingScalarProduct<GFS,V> PSP;
         V x(v); // make a copy because it has to be made consistent
         PSP psp(gfs,phelper);
