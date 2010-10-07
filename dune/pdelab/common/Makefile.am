@@ -6,6 +6,7 @@ common_HEADERS =				\
 	functionutilities.hh			\
 	functionwrappers.hh			\
 	geometrywrapper.hh			\
+	jacobiantocurl.hh			\
 	multitypetree.hh			\
 	vertexorder.hh				\
 	vtkexport.hh
