@@ -332,6 +332,13 @@ testutilities_LDADD = 				\
 	$(LDADD)
 MOSTLYCLEANFILES += edger.vtu interpolated.vtu q1.vtu taylorhood.vtu
 
+NORMALTESTS += testvectorwave
+testvectorwave_SOURCES = testvectorwave.cc
+MOSTLYCLEANFILES +=				\
+	s*:p*:vectorwave_*.vtu			\
+	s*:vectorwave_*.vtup			\
+	vectorwave_*.pvd
+
 include $(top_srcdir)/am/global-rules
 
 DISTCHECK_CONFIGURE_FLAGS = --with-dune=$(DUNEROOT) CXX="$(CXX)" CC="$(CC)"
