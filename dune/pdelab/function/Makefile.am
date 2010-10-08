@@ -4,6 +4,7 @@ myinc_HEADERS =					\
 	const.hh				\
 	division.hh				\
 	inverse.hh				\
+	memberadaptor.hh			\
 	minus.hh				\
 	scalarscaled.hh				\
 	sqrt.hh
