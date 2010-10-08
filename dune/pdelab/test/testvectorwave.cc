@@ -74,6 +74,7 @@ public:
                      typename Base::Range& y) const
   {
     const typename Base::Domain &xg = e.geometry().global(xl);
+    y = 0;
     y[1] = std::exp(-Dune::SQR(xg[0]-.5+time)/(2*Dune::SQR(0.05)));
   }
 };
