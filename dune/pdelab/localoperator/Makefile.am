@@ -1,5 +1,6 @@
 commondir = $(includedir)/dune/pdelab/localoperator
 common_HEADERS =				\
+	cg_stokes.hh				\
 	convectiondiffusion.hh			\
 	defaultimp.hh				\
 	diffusion.hh				\
@@ -23,7 +24,6 @@ common_HEADERS =				\
 	sum.hh					\
 	transportccfv.hh			\
 	twophaseccfv.hh				\
-	weightedsum.hh              \
-	cg_stokes.hh
+	weightedsum.hh
 
 include $(top_srcdir)/am/global-rules
