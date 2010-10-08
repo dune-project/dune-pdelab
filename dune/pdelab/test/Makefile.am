@@ -336,7 +336,7 @@ NORMALTESTS += testvectorwave
 testvectorwave_SOURCES = testvectorwave.cc
 MOSTLYCLEANFILES +=				\
 	s*:p*:vectorwave_*.vtu			\
-	s*:vectorwave_*.vtup			\
+	s*:vectorwave_*.pvtu			\
 	vectorwave_*.pvd
 
 include $(top_srcdir)/am/global-rules

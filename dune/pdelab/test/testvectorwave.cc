@@ -6,6 +6,7 @@
 #endif
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <deque>
 #include <iostream>
@@ -13,6 +14,7 @@
 
 #include <dune/common/array.hh>
 #include <dune/common/exceptions.hh>
+#include <dune/common/misc.hh>
 #include <dune/common/mpihelper.hh>
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/tuples.hh>
@@ -71,7 +73,8 @@ public:
                      const typename Base::Domain &xl,
                      typename Base::Range& y) const
   {
-    y = 0;
+    const typename Base::Domain &xg = e.geometry().global(xl);
+    y[1] = std::exp(-Dune::SQR(xg[0]-.5+time)/(2*Dune::SQR(0.05)));
   }
 };
 
@@ -214,7 +217,7 @@ int main(int argc, char** argv)
 #if HAVE_UG
     // UG Pk 2D test
     {
-      static const std::size_t elems = 100;
+      static const std::size_t elems = 32;
 
       // make grid
       static const std::size_t dim = 2;
@@ -222,7 +225,7 @@ int main(int argc, char** argv)
       typedef Grid::ctype DF;
       typedef Dune::FieldVector<DF, dim> Domain;
       Dune::array<unsigned, dim> elemCount;
-      std::fill(elemCount.begin(), elemCount.end(), 1);
+      std::fill(elemCount.begin(), elemCount.end(), elems);
 
       Dune::shared_ptr<Grid>grid
         (Dune::StructuredGridFactory<Grid>::createSimplexGrid(Domain(0),
