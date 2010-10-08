@@ -119,12 +119,14 @@ void vectorWave(const GV& gv, const FEM& fem, Time dt, std::size_t steps,
     ( Dune::PDELab::makeMemberFunctionToGridFunctionAdaptor<RF, dimRange>
       (params, &Params::initialValues, gv),
       gfs,*oldvalues.front());
+  Dune::PDELab::set_constrained_dofs(cg, 0, *oldvalues.front());
   oldvalues.push_front(Dune::shared_ptr<V>(new V(gfs)));
   params.setTime(0);
   Dune::PDELab::interpolate
     ( Dune::PDELab::makeMemberFunctionToGridFunctionAdaptor<RF, dimRange>
       (params, &Params::initialValues, gv),
       gfs,*oldvalues.front());
+  Dune::PDELab::set_constrained_dofs(cg, 0, *oldvalues.front());
 
   // make parameters
   Dune::PDELab::CentralDifferencesParameters<DF> msParams;
