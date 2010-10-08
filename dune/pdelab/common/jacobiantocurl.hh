@@ -137,7 +137,7 @@ namespace Dune {
 
     public:
       typedef typename Jacobian::block_type CurlField;
-      static const std::size_t dimCurl = 1;
+      static const std::size_t dimCurl = 3;
       typedef FieldVector<CurlField, dimCurl> Curl;
 
       void operator()(const Jacobian& jacobian, Curl& curl) const {
