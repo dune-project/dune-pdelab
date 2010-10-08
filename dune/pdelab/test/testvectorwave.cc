@@ -166,7 +166,8 @@ void vectorWave(const GV& gv, const FEM& fem, Time dt, std::size_t steps,
   msMethod.setVerbosityLevel(2);
 
   // output grid function with VTKWriter
-  Dune::VTKSequenceWriter<GV> vtkwriter(gv,filename,"","");
+  Dune::VTKSequenceWriter<GV> vtkwriter(gv,filename,"","",
+                                        Dune::VTK::nonconforming);
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
