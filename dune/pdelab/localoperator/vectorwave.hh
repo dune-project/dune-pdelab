@@ -25,33 +25,86 @@ namespace Dune {
     //! \addtogroup LocalOperator
     //! \ingroup PDELab
     //! \{
+
     namespace VectorWave {
 
+      //! Parameter class interface for the vector wave local operators
+      /**
+       * This can also be used as a CRTP base class to implement evaluation by
+       * element and local coordinates when the actual function is given in
+       * global coordinates.
+       *
+       * \tparam Imp   The class derived from this class.  That class should
+       *               either implement the global-coordinate functions or
+       *               overwrite the local-coordinate-plus-element functions.
+       * \tparam GV    Type of GridView to operate on.  Used to extract ctype
+       *               and dimension.
+       * \tparam RF    Field type of the values.
+       * \tparam Time_ Type of temporal values.
+       */
       template<class Imp, class GV, class RF = double, class Time_ = double>
       struct Parameters {
+        //! export type of temporal values
         typedef Time_ Time;
 
+        //! export dimension (both domain and range)
         static const std::size_t dimension = GV::dimension;
 
+        //! field type of domain
         typedef typename GV::ctype DomainField;
+        //! vector type of domain
         typedef FieldVector<DomainField, dimension> Domain;
 
+        //! field type of range
         typedef RF RangeField;
+        //! vector type of range
         typedef FieldVector<RangeField, dimension> Range;
 
+        //! element type of GridView
         typedef typename GV::template Codim<0>::Entity Element;
 
+        //! \brief evaluate dielectric permittivity
+        //!        \f$\varepsilon=\varepsilon_0\varepsilon_r\f$
+        /**
+         * This implementation forwards calls to the derived class, which
+         * should have an accessible member function
+         * \code
+RangeField epsilon(const Domain& xg) const;
+         * \endcode
+         */
         RangeField epsilon(const Element& e, const Domain& xl) const
         { return asImp().epsilonGlobal(e.geometry().global(xl)); }
+        //! evaluate magnetic permeability \f$\mu=\mu_0\mu_r\f$
+        /**
+         * This implementation forwards calls to the derived class, which
+         * should have an accessible member function
+         * \code
+RangeField mu(const Domain& xg) const;
+         * \endcode
+         */
         RangeField mu(const Element& e, const Domain& xl) const
         { return asImp().muGlobal(e.geometry().global(xl)); }
 
+        //! set the time for subsequent evaluation
+        /**
+         * This is a no-op in the default implementation.
+         */
         void setTime(const Time &time) { }
 
       private:
         const Imp &asImp() const { return *static_cast<const Imp*>(this); }
       };
 
+      //! Homogenous parameter class for the vector wave local operators
+      /**
+       * Parameter class with spatially constant \f$\varepsilon\f$ and
+       * \f$\mu\f$.
+       *
+       * \tparam GV    Type of GridView to operate on.  Used to extract ctype
+       *               and dimension.
+       * \tparam RF    Field type of the values.
+       * \tparam Time_ Type of temporal values.
+       */
       template<class GV, class RF = double, class Time = double>
       class ConstantParameters :
         public Parameters<ConstantParameters<GV, RF, Time>, GV, RF, Time>
@@ -68,19 +121,30 @@ namespace Dune {
         RF muGlobal(const Domain &) const { return mu_; }
       };
 
-      //! Construct matrix for a (possibly scaled) curl-of-base product
+      //! \brief Local operator for the vector wave problem,
+      //!        no-temporal-derivatives part
       /**
-       * Construct the matrix
+       * The vector-wave equation in its simplest form:
        * \f[
-       *    S_{ij}=\int_\Omega\alpha
-       *        (\nabla\times\psi_i)\cdot(\nabla\times\psi_j)\,dV
+       *    \partial_t^2(\varepsilon\mathbf E)
+       *    +\nabla\times\mu^{-1}\nabla\times\mathbf E = 0
        * \f]
-       * where "\f$\dcot\f$" denotes the scalar product and \f$\nabla\times\f$
+       *
+       * This local operator implements the part without temporal derivatives
+       * \f[
+       *    \nabla\times\mu^{-1}\nabla\times\mathbf E
+       * \f]
+       * which boils down to the matrix
+       * \f[
+       *    S_{ij}=\int_\Omega\mu^{-1}
+       *        (\nabla\times\varphi_j)\cdot(\nabla\times\psi_i)\,dV
+       * \f]
+       * where \f$\cdot\f$ denotes the scalar product and \f$\nabla\times\f$
        * the curl operator.
        *
-       * \tparam Time  Type used for time values.
-       * \tparam Alpha Type of function to evaluate \f$\alpha\f$.  Must support
-       *               setTime().
+       * \tparam Params Type of parameter class providing the values for
+       *                \f$\mu\f$.  Should conform to the interface of
+       *                Parameters.
        */
       template<class Params>
       class R0 :
@@ -100,13 +164,13 @@ namespace Dune {
         enum { doPatternVolume = true };
         enum { doAlphaVolume = true };
 
-        //! Construct a GlobalVolumeSFunctionRotBaseRotBaseLOP
+        //! Construct a local operator object
         /**
-         * \param alpha_  Reference to function object to evaluate
+         * \param params_ Parameter object providing values for \f$\mu\f$.
          * \param qorder_ Quadrature order to use.
          *
-         * \note The references the the function objects should be valid for as
-         *       long as this localoperators residual() method is used.
+         * \note The reference to the parameter objects should be valid for as
+         *       long as this localoperators is evaluated.
          */
         R0(Params &params_, std::size_t qorder_ = 0) :
           params(params_), qorder(qorder_)
@@ -185,26 +249,31 @@ namespace Dune {
           }
         }
 
-        //! set time on the function object
+        //! set time on the parameter object
         void setTime(typename Params::Time time) {
           params.setTime(time);
           IBase::setTime(time);
         }
       };
 
-      //! Construct matrix for a (possibly scaled) curl-of-base product
+      //! \brief Local operator for the vector wave problem,
+      //!        one-temporal-derivative part
       /**
-       * Construct the matrix
+       * The vector-wave equation in its simplest form:
        * \f[
-       *    S_{ij}=\int_\Omega\alpha
-       *        (\nabla\times\psi_i)\cdot(\nabla\times\psi_j)\,dV
+       *    \partial_t^2(\varepsilon\mathbf E)
+       *    +\nabla\times\mu^{-1}\nabla\times\mathbf E = 0
        * \f]
-       * where "\f$\dcot\f$" denotes the scalar product and \f$\nabla\times\f$
-       * the curl operator.
        *
-       * \tparam Time  Type used for time values.
-       * \tparam Alpha Type of function to evaluate \f$\alpha\f$.  Must support
-       *               setTime().
+       * This local operator implements the part with one temporal derivatives
+       * \f[
+       *    0
+       * \f]
+       * Yes there is no part with only one temporal derivate in the above
+       * equation, so this local operator is a dummy which implements nothing.
+       *
+       * \tparam Params Type of parameter class as for the other local
+       *                operators.  For consistency mostly.
        */
       template<class Params>
       class R1 :
@@ -212,30 +281,39 @@ namespace Dune {
         public InstationaryLocalOperatorDefaultMethods<typename Params::Time>
       {
       public:
-        //! Construct a GlobalVolumeSFunctionRotBaseRotBaseLOP
+        //! Construct a local operator object
         /**
-         * \param alpha_  Reference to function object to evaluate
+         * \param params_ Parameter object providing values for \f$\mu\f$.
          * \param qorder_ Quadrature order to use.
          *
-         * \note The references the the function objects should be valid for as
-         *       long as this localoperators residual() method is used.
+         * \note This constructor does nothing and is present for consistency
+         *       only.
          */
         R1(Params &params_, std::size_t qorder_ = 0) {}
       };
 
-      //! Construct matrix for a (possibly scaled) curl-of-base product
+      //! \brief Local operator for the vector wave problem,
+      //!        second-temporal-derivatives part
       /**
-       * Construct the matrix
+       * The vector-wave equation in its simplest form:
        * \f[
-       *    S_{ij}=\int_\Omega\alpha
-       *        (\nabla\times\psi_i)\cdot(\nabla\times\psi_j)\,dV
+       *    \partial_t^2(\varepsilon\mathbf E)
+       *    +\nabla\times\mu^{-1}\nabla\times\mathbf E = 0
        * \f]
-       * where "\f$\dcot\f$" denotes the scalar product and \f$\nabla\times\f$
-       * the curl operator.
        *
-       * \tparam Time  Type used for time values.
-       * \tparam Alpha Type of function to evaluate \f$\alpha\f$.  Must support
-       *               setTime().
+       * This local operator implements the part with two temporal derivatives
+       * \f[
+       *    \partial_t^2(\varepsilon\mathbf E)
+       * \f]
+       * which boils down to the matrix
+       * \f[
+       *    T_{ij}=\int_\Omega\varepsilon\varphi_j\cdot\psi_i\,dV
+       * \f]
+       * where \f$\cdot\f$ denotes the scalar product.
+       *
+       * \tparam Params Type of parameter class providing the values for
+       *                \f$\varepsilon\f$.  Should conform to the interface of
+       *                Parameters.
        */
       template<class Params>
       class R2 :
@@ -255,13 +333,13 @@ namespace Dune {
         enum { doPatternVolume = true };
         enum { doAlphaVolume = true };
 
-        //! Construct a GlobalVolumeSFunctionRotBaseRotBaseLOP
+        //! Construct a local operator object
         /**
-         * \param alpha_  Reference to function object to evaluate
+         * \param params_ Parameter object providing values for \f$\mu\f$.
          * \param qorder_ Quadrature order to use.
          *
-         * \note The references the the function objects should be valid for as
-         *       long as this localoperators residual() method is used.
+         * \note The reference to the parameter objects should be valid for as
+         *       long as this localoperators is evaluated.
          */
         R2(Params &params_, std::size_t qorder_ = 2)
           : params(params_), qorder(qorder_)
