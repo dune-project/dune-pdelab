@@ -30,9 +30,22 @@ namespace Dune {
     //===============================================================
 
 
-	/** \brief convert a single component function space into a grid function
+    /** \brief convert a grid function space and a coefficient vector into a
+     *         grid function
      *
-     * The functions can _not_ be vector-valued.
+     * If a GridFunctionSpace with local-valued finite elements is used, this
+     * class can only be used for scalar functions, since for vector-valued
+     * local finite elements the values must be transformed, and the
+     * transformation depends on the type of element.  For H(div) elements
+     * (Raviart-Thomas) look at DiscreteGridFunctionPiola.
+     *
+     * If a GridFunctionSpace with finite elements using the new global-valued
+     * interface is used, this class can be used as-is even for vector-valued
+     * functions.
+     *
+     * If you have a GridFunctionSpace tree of 1-component grid-function
+     * spaces, and want to collectively treat them as a vector-valued
+     * grid-function, look at VectorDiscreteGridFunction.
      *
      * \tparam T Type of GridFunctionSpace
      * \tparam X Type of coefficients vector
