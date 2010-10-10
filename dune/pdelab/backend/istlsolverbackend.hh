@@ -1189,6 +1189,7 @@ namespace Dune {
     };
     
 
+#if HAVE_SUPERLU
     class ISTLBackend_SEQ_SuperLU
       : public SequentialNorm, public LinearResultStorage
     {
@@ -1212,7 +1213,6 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::ElementType reduction)
       {
-#if HAVE_SUPERLU
         typedef typename M::BaseT ISTLM;
         Dune::SuperLU<ISTLM> solver(A, verbose);
         Dune::InverseOperatorResult stat;
@@ -1221,14 +1221,12 @@ namespace Dune {
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
         res.reduction  = stat.reduction;
-#else
-        std::cout << "No superLU support, please install and configure it." << std::endl;
-#endif
       }
 
     private:
       bool verbose;
     };
+#endif // HAVE_SUPERLU
 
     //! Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
     class ISTLBackend_SEQ_ExplicitDiagonal
