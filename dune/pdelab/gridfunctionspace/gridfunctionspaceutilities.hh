@@ -14,6 +14,7 @@
 #include"../common/multitypetree.hh"
 #include"../common/cpstoragepolicy.hh"
 #include"../common/function.hh"
+#include <dune/pdelab/common/jacobiantocurl.hh>
 #include <dune/pdelab/finiteelement/interfaceswitch.hh>
 
 #include"gridfunctionspace.hh"
@@ -133,6 +134,85 @@ namespace Dune {
 	  mutable std::vector<typename Traits::RangeFieldType> xl;
 	  mutable std::vector<typename Traits::RangeType> yb;
 	};
+
+    /** \brief convert a grid function space and a coefficient vector into a
+     *         grid function of the curl
+     *
+     * This class works only with a GridFunctionSpace with finite elements
+     * using the new global-valued interface.
+     *
+     * \tparam T Type of GridFunctionSpace
+     * \tparam X Type of coefficients vector
+     */
+    template<typename T, typename X>
+    class DiscreteGridFunctionCurl :
+      public GridFunctionInterface<
+        GridFunctionTraits<
+          typename T::Traits::GridViewType,
+          typename JacobianToCurl<typename T::Traits::FiniteElementType::
+                                  Traits::Basis::Traits::Jacobian>::CurlField,
+          JacobianToCurl<typename T::Traits::FiniteElementType::Traits::Basis::
+                         Traits::Jacobian>::dimCurl,
+          typename JacobianToCurl<typename T::Traits::FiniteElementType::
+                                  Traits::Basis::Traits::Jacobian>::Curl
+          >,
+        DiscreteGridFunctionCurl<T,X>
+        >
+    {
+      typedef T GFS;
+      typedef typename T::Traits::FiniteElementType::Traits::Basis::Traits::
+        Jacobian Jacobian;
+      typedef JacobianToCurl<Jacobian> J2C;
+
+    public:
+      typedef GridFunctionTraits<
+        typename T::Traits::GridViewType,
+          typename J2C::CurlField, J2C::dimCurl, typename J2C::Curl
+        > Traits;
+
+    private:
+      typedef GridFunctionInterface<Traits, DiscreteGridFunctionCurl<T,X> >
+        BaseT;
+
+      const GFS &gfs;
+      const X &xg;
+
+    public:
+      /** \brief Construct a DiscreteGridFunctionCurl
+       *
+       * \param gfs_ The GridFunctionsSpace
+       * \param x_   The coefficients vector
+       */
+      DiscreteGridFunctionCurl(const GFS& gfs_, const X& xg_) :
+        gfs(gfs_), xg(xg_)
+      { }
+
+      // Evaluate
+      void evaluate (const typename Traits::ElementType& e,
+                     const typename Traits::DomainType& x,
+                     typename Traits::RangeType& y) const
+      {
+        static const J2C& j2C = J2C();
+
+        typename GFS::LocalFunctionSpace lfs(gfs);
+        lfs.bind(e);
+        std::vector<typename Traits::RangeFieldType> xl(lfs.size());
+        lfs.vread(xg,xl);
+        std::vector<Jacobian> jacobian(lfs.size());
+        lfs.finiteElement().basis().evaluateJacobian(x,jacobian);
+
+        y = 0;
+        typename Traits::RangeType yb;
+        for (std::size_t i=0; i < lfs.size(); i++) {
+          j2C(jacobian[i], yb);
+          y.axpy(xl[i], yb);
+        }
+      }
+
+      //! get a reference to the GridView
+      const typename Traits::GridViewType& getGridView() const
+      { return gfs.gridview(); }
+    };
 
     //! \brief convert a single component function space with deprecated
     //!        global finite elements into a grid function
