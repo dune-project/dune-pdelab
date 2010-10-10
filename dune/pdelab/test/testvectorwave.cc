@@ -177,14 +177,14 @@ void vectorWave(const GV& gv, const FEM& fem, Time dt, std::size_t steps,
     DGF dgf(gfs,*oldvalues[1]);
     vtkwriter.addVertexData
       (new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-    vtkwriter.write(-dt,Dune::VTKOptions::binary);
+    vtkwriter.write(-dt,Dune::VTK::appendedraw);
     vtkwriter.clear();
   }
   {
     DGF dgf(gfs,*oldvalues[0]);
     vtkwriter.addVertexData
       (new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-    vtkwriter.write(0,Dune::VTKOptions::binary);
+    vtkwriter.write(0,Dune::VTK::appendedraw);
     vtkwriter.clear();
   }
 
@@ -203,7 +203,7 @@ void vectorWave(const GV& gv, const FEM& fem, Time dt, std::size_t steps,
     DGF dgf(gfs,*xnew);
     vtkwriter.addVertexData
       (new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-    vtkwriter.write(time,Dune::VTKOptions::binary);
+    vtkwriter.write(time,Dune::VTK::appendedraw);
     vtkwriter.clear();
   }
 }
