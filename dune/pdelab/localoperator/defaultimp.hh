@@ -554,7 +554,7 @@ namespace Dune {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         R& r) const
       {
-        LocalMatrix<typename R::value_type> mat(lfsu.size(),lfsu.size());
+        LocalMatrix<typename R::value_type> mat(lfsu.size(),lfsu.size(), 0);
         asImp().jacobian_volume(eg, lfsu, x, lfsv, mat);
         mat.umv(x,r);
       }
@@ -590,13 +590,13 @@ namespace Dune {
         R& r_s, R& r_n) const
       {
         LocalMatrix<typename R::value_type> mat_ss(lfsu_s.size(),
-                                                   lfsu_s.size());
+                                                   lfsu_s.size(), 0);
         LocalMatrix<typename R::value_type> mat_sn(lfsu_s.size(),
-                                                   lfsu_n.size());
+                                                   lfsu_n.size(), 0);
         LocalMatrix<typename R::value_type> mat_ns(lfsu_n.size(),
-                                                   lfsu_s.size());
+                                                   lfsu_s.size(), 0);
         LocalMatrix<typename R::value_type> mat_nn(lfsu_n.size(),
-                                                   lfsu_n.size());
+                                                   lfsu_n.size(), 0);
         asImp().jacobian_skeleton(ig,
           lfsu_s, x_s, lfsv_s,
           lfsu_n, x_n, lfsv_n,
@@ -637,7 +637,7 @@ namespace Dune {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         R& r) const
       {
-        LocalMatrix<typename R::value_type> mat(lfsu.size(),lfsu.size());
+        LocalMatrix<typename R::value_type> mat(lfsu.size(),lfsu.size(), 0);
         asImp().jacobian_boundary(ig, lfsu, x, lfsv, mat);
         mat.umv(x,r);
       }
