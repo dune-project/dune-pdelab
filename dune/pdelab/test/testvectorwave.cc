@@ -228,6 +228,7 @@ int main(int argc, char** argv)
     // UG Pk 2D test
     {
       static const std::size_t elems = 32;
+      static const std::size_t time_strech = 4;
 
       // make grid
       static const std::size_t dim = 2;
@@ -262,7 +263,7 @@ int main(int argc, char** argv)
 
       // solve problem
       vectorWave<Dune::PDELab::ConformingDirichletConstraints>
-        (gv,fem,1.0/elems,elems,"vectorwave_UG_EdgeS0.5_2D");
+        (gv,fem,1.0/time_strech/elems,time_strech*elems,"vectorwave_UG_EdgeS0.5_2D");
     }
 #endif
 
