@@ -27,13 +27,10 @@ namespace Dune {
         typename T::RowType empty;
         typedef typename LFS::Traits::SizeType size_type;
         for (size_type i=0; i<lfs.size(); i++){
-          std::size_t si = lfs.localIndex(i);
           trafo[i] = empty;
         }
       }
-
     };
-
   }
 }
 
