@@ -320,7 +320,7 @@ RangeField mu(const Domain& xg) const;
         public FullVolumePattern,
         public LocalOperatorDefaultFlags,
         public InstationaryLocalOperatorDefaultMethods<typename Params::Time>,
-        public JacobianBasedAlphaVolume<R0<Params> >
+        public JacobianBasedAlphaVolume<R2<Params> >
       {
         typedef InstationaryLocalOperatorDefaultMethods<typename Params::Time>
           IBase;
