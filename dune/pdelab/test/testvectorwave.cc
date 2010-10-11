@@ -42,7 +42,7 @@
 #include <dune/pdelab/multistep/gridoperatorspace.hh>
 #include <dune/pdelab/multistep/method.hh>
 #include <dune/pdelab/multistep/parameter.hh>
-#include <dune/pdelab/newton/newton.hh>
+#include <dune/pdelab/stationary/linearproblem.hh>
 
 //===============================================================
 //===============================================================
@@ -155,16 +155,12 @@ void vectorWave(const GV& gv, const FEM& fem, Time dt, std::size_t steps,
   //#endif
 
   // <<<7>>> make Newton for time-dependent problem
-  typedef Dune::PDELab::Newton<MGOS,LS,V> PDESOLVER;
-  PDESOLVER tnewton(mgos,ls);
-  tnewton.setReassembleThreshold(0.0);
-  tnewton.setVerbosityLevel(0);
-  tnewton.setReduction(0.9);
-  tnewton.setMinLinearReduction(1e-9);
+  typedef Dune::PDELab::StationaryLinearProblemSolver<MGOS, LS, V> PDESOLVER;
+  PDESOLVER pdesolver(mgos, ls, 1e-9);
 
   // <<<8>>> time-stepper
   Dune::PDELab::MultiStepMethod<DF,MGOS,PDESOLVER,V,V>
-    msMethod(msParams,mgos,tnewton);
+    msMethod(msParams,mgos,pdesolver);
   msMethod.setVerbosityLevel(2);
 
   // output grid function with VTKWriter
