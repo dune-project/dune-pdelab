@@ -98,6 +98,13 @@ namespace Dune {
       // current time step size
       TReal dt;
 
+      // set the weights for the given step within the multi-step scheme
+      // parameters and dt must have been setup before use.
+      void setWeights(std::size_t step) {
+        for(std::size_t i = 0; i <= order; ++i)
+          sumLOP.setWeight(parameters->alpha(step,i)/std::pow(dt,int(i)), i);
+      }
+
     public:
       //! construct
       /**
@@ -118,8 +125,7 @@ namespace Dune {
       {
         // This may not be the time step that is used in the end, but it is
         // sufficient for fill_pattern() to work
-        for(std::size_t i = 0; i <= order; ++i)
-          sumLOP.setWeight(parameters->alpha(0,i)/std::pow(dt,int(i)), i);
+        setWeights(0);
       }
 
       //! construct
@@ -142,8 +148,7 @@ namespace Dune {
       {
         // This may not be the time step that is used in the end, but it is
         // sufficient for fill_pattern() to work
-        for(std::size_t i = 0; i <= order; ++i)
-          sumLOP.setWeight(parameters->alpha(0,i)/std::pow(dt,int(i)), i);
+        setWeights(0);
       }
 
       //! construct
@@ -187,8 +192,7 @@ namespace Dune {
         parameters = &parameters_;
         // This may not be the time step that is used in the end, but it is
         // sufficient for fill_pattern() to work
-        for(std::size_t i = 0; i <= order; ++i)
-          sumLOP.setWeight(parameters->alpha(0,i)/std::pow(dt,int(i)), i);
+        setWeights(0);
       }
 
       //! prepare for doing a step
@@ -222,15 +226,13 @@ namespace Dune {
         sumLOP.preStage(tn, 1);
 
         for(unsigned step = 1; step <= parameters->steps(); ++step) {
-          for(std::size_t i = 0; i <= order; ++i)
-            sumLOP.setWeight(parameters->alpha(step,i)/std::pow(dt,int(i)), i);
+          setWeights(step);
           sumLOP.setTime(tn-(step-1)*dt);
           // residual is additive
           SGOS::residual(*oldvalues[step-1], *r0);
         }
         // reset weights and time to the end of the step
-        for(std::size_t i = 0; i <= order; ++i)
-          sumLOP.setWeight(parameters->alpha(0,i)/std::pow(dt,int(i)), i);
+        setWeights(0);
         sumLOP.setTime(tn);
       }
 
