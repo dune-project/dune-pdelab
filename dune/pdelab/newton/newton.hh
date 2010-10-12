@@ -291,6 +291,9 @@ namespace Dune
                                   << this->res.defect << std::endl;
                     if (this->verbosity_level == 2)
                         std::cout << "  Newton iteration " << std::setw(2) << this->res.iterations
+                                  << ".  New defect: "
+                                  << std::setw(12) << std::setprecision(4) << std::scientific
+                                  << this->res.defect
                                   << ".  Reduction (this): "
                                   << std::setw(12) << std::setprecision(4) << std::scientific
                                   << this->res.defect/this->prev_defect
