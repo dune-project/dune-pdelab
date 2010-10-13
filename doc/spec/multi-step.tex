@@ -237,4 +237,64 @@ called.  If {\tt changeOccured()} determines that nothing changed, the call to
 {\tt setTime()} and subsequent evaluation calls may be skipped, and old values
 used instead.
 
+\subsection{Implementation}
+
+The implementation consists of a caching {\tt
+  CachedMultiStepGridoperatorSpace} and a companion {\tt MultiStepCache},
+which the user may actually replace by his own class.  The interface for the
+cache class is as follows:
+\begin{lstlisting}
+// Base exception for cache related errors
+class CacheError : public Exception {};
+
+// Exception thrown when a requested item is not in the cache
+class NotInCache : public CacheError {};
+
+// Exception thrown when a stored item is already in the cache
+class AlreadyInCache : public CacheError {};
+
+template<class VectorU, class VectorV, class Matrix, class Step = int>
+struct MultiStepCacheInterface {
+  // methods for the Jacobian of affine operators
+  shared_ptr<const Matrix>
+  getJacobian(std::size_t order, Step step) const;
+
+  shared_ptr<const Matrix>
+  getLatestJacobian(std::size_t order, Step &step) const;
+
+  void setJacobian(Step step, std::size_t order,
+                   const shared_ptr<const Matrix> &jacobian);
+
+  // methods for the zero-residual of affine operators
+  shared_ptr<const VectorV>
+  getZeroResidual(std::size_t order, Step step) const;
+
+  shared_ptr<const VectorV>
+  getLatestZeroResidual(std::size_t order, Step &step) const;
+
+  void setZeroResidual(Step step, std::size_t order,
+                       const shared_ptr<const VectorV> &zeroResidual);
+
+  // methods for non-linear caching
+  shared_ptr<const VectorV>
+  getResidualValue(std::size_t order, Step step) const;
+
+  void setResidualValue(Step step, std::size_t order,
+                        const shared_ptr<const VectorV> &residualValue);
+
+  // methods to access old values of the unknowns
+  shared_ptr<const VectorU> getUnknowns(Step step) const;
+  void setUnknowns(Step step, const shared_ptr<const VectorU> &unknowns_);
+
+  // methods to flush the cache
+  void flushOldKeepLatestAffine(Step stepToKeep);
+  void flushAll();
+};
+\end{lstlisting}
+Note that it is perfectly legal for a cache implementation to silently refuse
+to store a value in the cache.  A caching multi-step grid operator space shall
+never assume it can extract a value from a cache it just stored there, and it
+shall always be prepared to compute (and then store) any value it cannot find
+in the cache.  The exception to this rule are of course the vectors of
+unknowns.
 \end{document}
