@@ -180,4 +180,61 @@ the {\tt MultiStepGridOperatorSpace} to the solver.  It will hold the vectors
 of dofs $u^{n-1},\ldots,u^{n-m}$ as shared pointers in a queue and
 automatically handle the management of the queue.
 
+\section{Caching}
+
+\subsection{Caching across Time Steps}
+
+Consider time step $n$ and $n+1$: In step $n$ we solve
+$\sum_{j=0}^pr_j(t^n,u^n)$ and evaluate $r_j(t^k,u^k)$ for $n<k\leq n-m$.  In
+step $n+1$ we solve $\sum_{j=0}^pr_j(t^{n+1},u^{n+1})$ and evaluate
+$r_j(t^k,u^k)$ for $n+1<k\leq n+1-m$.  In step $n+1$ we can reuse the results
+of the evaluations $r_j(t^k,u^k)$ for $n<k<n-m$ from step $n$, i.e. $m-1$
+evaluations of the operators $r_j$.  This is possible even for non-linear
+operators.
+
+\subsection{Caching for Affine Operators}
+
+For affine operators we assume that $r_j$ can be split into a purely linear
+part $\alpha_j$ and a constant part $\lambda_j$:
+$r_j(t,u)=\alpha_j(t,u)+\lambda(t)$.  A local operator can advertise this by
+giving its member constant {\tt hasPureLinearAlpha} the value {\tt true}.
+This property has the nice consequence that we can write
+$r_j(t,u)=J(r_j|_t)\cdot u+\lambda_j(t)$.  This allows us to evaluate the
+Jacobian and $\lambda_j$ once for a given time $t$ and evaluate $r_j(t,u)$
+many times with different $u$ without iterating over the grid.  This should be
+particularly handy when solving.
+
+Note that there may be operators which are in fact affine, but have {\tt
+  alpha\_*()} methods which (partly) implement the affine shift.  These
+operators can announce that they are affine by giving their member constant
+{\tt isAffine} the value true.  For these operators, extraction of $r_j(t,0)$
+and $J(r_j|_t)$ will be less efficient, the the values obtained can still be
+cached.
+
+It is an error for an operator to have {\tt hasPureLinearAlpha == true} but
+{\tt isAffine == false}.
+
+\subsection{Caching Stationary Parts of Affine Operators}
+
+In the case of affine operators the Jacobian often does not change over time.
+Temporal variability usually comes from boundary conditions, which are either
+applied outside of the operator (Dirichlet) or contribute to the
+$\lambda_j$-term (Neumann).  However, even the Jacobian may show changes over
+time, for instance when material properties change or when it is coupled to a
+different equation.  Even if changes do occur, they may occur apruptly,
+seperated by long periods without changes, as in switching some inflow on or
+off.
+
+To deal with this we introduce the following method on temporal local
+operators:
+\begin{lstlisting}
+void changeOccured(Time timeOfCachedValues, Time timeOfNeededValues,
+                   bool &alphaChanged, bool &lambdaChanged) const;
+\end{lstlisting}
+By default they return true in both bools which inhibits caching.  This method
+is called on a local operator before {\tt setTime(timeOfNeededValues)} is
+called.  If {\tt changeOccured()} determines that nothing changed, the call to
+{\tt setTime()} and subsequent evaluation calls may be skipped, and old values
+used instead.
+
 \end{document}
