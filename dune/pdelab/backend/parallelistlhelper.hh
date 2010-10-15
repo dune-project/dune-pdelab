@@ -463,7 +463,7 @@ namespace Dune {
                                                                                   neighbours));
       if (gfs.gridview().comm().size()>1)
         gfs.gridview().communicate(gdhn,Dune::All_All_Interface,Dune::ForwardCommunication);
-      c.remoteIndices().setNeighbours(neighbours);
+      //c.remoteIndices().setNeighbours(neighbours);
       //std::cout<<gv.comm().rank()<<": no neighbours="<<neighbours.size()<<std::endl;
 
       c.remoteIndices().template rebuild<false>();
