@@ -364,11 +364,8 @@ namespace Dune {
        */
       void preStep (const TimeSteppingParameterInterface<TReal>& method_, TReal time_, TReal dt_)
       {
-        method = &method_;
-        time = time_;
-        dt = dt_;
-        la.preStep(time,dt,method->s());
-        lm.preStep(time,dt,method->s());
+        setMethod(method_);
+        preStep(time_, dt_);
       }
 
       //! parametrize assembler with a time-stepping method
@@ -857,6 +854,7 @@ namespace Dune {
               jacobian_volume(lm,ElementGeometry<Element>(*it),lfsu,xl,lfsv,ml);
 
 			// accumulate to global matrix
+            mat *= 1.0/dt;
             etadd(lfsv,lfsu,ml,mat); // scheme is normalized 
           }
 
