@@ -99,12 +99,12 @@ namespace Dune {
             // compute gradient of u
             Dune::FieldVector<RF,dimGlobal> gradu(0.0);
             for (size_t i=0; i<lfsu.size(); i++)
-              gradu.axpy(x[lfsu.localIndex(i)],gradphiu[0][i]);
+              gradu.axpy(x[lfsu.localIndex(i)],gradphiu[i][0]);
 
             // integrate grad u * grad phi_i
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_t i=0; i<lfsv.size(); i++)
-              r[lfsv.localIndex(i)] += (gradu*gradphiv[0][i])*factor;
+              r[lfsv.localIndex(i)] += (gradu*gradphiv[i][0])*factor;
           }
 	  }
 
