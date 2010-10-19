@@ -200,7 +200,7 @@ namespace Dune {
        * Set the current time, and calculate the constant part of the residual.
        *
        * \param time      Time at beginning of step.
-       * \param dt        Size of step.
+       * \param dt_       Size of step.
        * \param oldvalues The old values.  Must support the expression
        *                  *oldvalues[i] for 0 <= i < steps.  *oldvalues[0]
        *                  should yield a reference to a vector with the values
