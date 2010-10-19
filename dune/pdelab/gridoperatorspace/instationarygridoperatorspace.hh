@@ -854,7 +854,6 @@ namespace Dune {
               jacobian_volume(lm,ElementGeometry<Element>(*it),lfsu,xl,lfsv,ml);
 
 			// accumulate to global matrix
-            mat *= 1.0/dt;
             etadd(lfsv,lfsu,ml,mat); // scheme is normalized 
           }
 
