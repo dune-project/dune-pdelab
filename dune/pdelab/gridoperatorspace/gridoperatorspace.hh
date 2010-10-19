@@ -655,6 +655,136 @@ namespace Dune {
 		Dune::PDELab::constrain_residual(*pconstraintsv,r);
 	  }
 
+      //! \brief Assemble constant part of residual for operators with purely
+      //!        linear alpha_*() methods
+      /**
+       * The result of this method is identical to calling residual() with
+       * parameter \c x initialized to 0.  However, this method works only
+       * when the local operator has purely linear alpha_volume(),
+       * alpha_skeleton(), alpha_boundary() and alpha_volume_post_skeleton()
+       * methods.  Note that this is a stronger demand than requiring the
+       * operator to be affine -- affine operators may still have an affine
+       * shift in their alpha_*() methods.  For this method to work any affine
+       * shift must be implemented in the lambda_*() methods.
+       *
+       * \note This method is meaningless in the context of non-linear
+       *       operators.
+       *
+       * \param r residual (needs to be cleared before this method is called)
+       */
+      template<typename R>
+      void zero_residual(R& r) const {
+        // visit each face only once
+        const int chunk=1<<28;
+        int offset = 0;
+        const typename GV::IndexSet& is=gfsu.gridview().indexSet();
+        std::map<Dune::GeometryType,int> gtoffset;
+
+        // make local function space
+        typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
+        LFSV lfsv(gfsv);
+
+        // traverse grid view
+        for (ElementIterator it = gfsv.gridview().template begin<0>();
+             it!=gfsv.gridview().template end<0>(); ++it)
+        {
+          // assign offset for geometry type;
+          if (gtoffset.find(it->type())==gtoffset.end())
+          {
+            gtoffset[it->type()] = offset;
+            offset += chunk;
+          }
+
+          // compute unique id
+          int id = is.index(*it)+gtoffset[it->type()];
+
+          // skip ghost and overlap
+          if (nonoverlapping_mode && it->partitionType()!=Dune::InteriorEntity)
+            continue;
+
+          // bind local function space to element
+          lfsv.bind(*it);
+
+          // allocate local data container
+          LocalVector<typename R::ElementType, TestSpaceTag> rl(lfsv.size(),
+                                                                0.0);
+
+          // volume evaluation
+          LocalAssemblerCallSwitch<LA,LA::doLambdaVolume>::
+            lambda_volume(la,ElementGeometry<Element>(*it),lfsv,rl);
+
+          // skip if no intersection iterator is needed
+          if(LA::doLambdaSkeleton || LA::doLambdaBoundary) {
+            // local function space in neighbor
+            LFSV lfsvn(gfsv);
+
+            // traverse intersections
+            unsigned int intersection_index = 0;
+            IntersectionIterator endit = gfsv.gridview().iend(*it);
+            for(IntersectionIterator iit = gfsv.gridview().ibegin(*it);
+                iit!=endit; ++iit, ++intersection_index)
+            {
+              // skeleton term
+              if(LA::doLambdaSkeleton && iit->neighbor()) {
+                // assign offset for geometry type;
+                Dune::GeometryType gtn = iit->outside()->type();
+                if (gtoffset.find(gtn)==gtoffset.end())
+                {
+                  gtoffset[gtn] = offset;
+                  offset += chunk;
+                }
+
+                // compute unique id for neighbor
+                int idn = is.index(*(iit->outside()))+gtoffset[gtn];
+
+                // unique twist of intersection
+                if (LA::doSkeletonTwoSided || id>idn ||
+                    ( nonoverlapping_mode &&
+                      iit->inside()->partitionType() != Dune::InteriorEntity) )
+                {
+                  // bind local function space to neighbor element
+                  lfsvn.bind(*(iit->outside()));
+
+                  // allocate local data container
+                  LocalVector<typename R::ElementType, TestSpaceTag>
+                    rn(lfsvn.size(), 0.0);
+
+                  // skeleton evaluation
+                  LocalAssemblerCallSwitch<LA,LA::doLambdaSkeleton>::
+                    lambda_skeleton
+                    ( la,
+                      IntersectionGeometry<Intersection>
+                        (*iit,intersection_index),
+                      lfsv,lfsvn,rl,rn);
+
+                  // accumulate result (note: r needs to be cleared outside)
+                  lfsvn.vadd(rn,r);
+                }
+              }
+
+              // boundary term
+              if (iit->boundary())
+                LocalAssemblerCallSwitch<LA,LA::doLambdaBoundary>::
+                  lambda_boundary
+                  ( la,
+                    IntersectionGeometry<Intersection>
+                      (*iit,intersection_index),
+                    lfsv,rl);
+            }
+          }
+
+          LocalAssemblerCallSwitch<LA,LA::doLambdaVolumePostSkeleton>::
+            lambda_volume_post_skeleton
+            (la,ElementGeometry<Element>(*it),lfsv,rl);
+
+          // accumulate result (note: r needs to be cleared outside)
+          lfsv.vadd(rl,r);
+        }
+
+        // set residual to zero on constrained dofs
+        Dune::PDELab::constrain_residual(*pconstraintsv,r);
+      }
+
 	  //! generic application of Jacobian
 	  template<typename X, typename Y> 
 	  void jacobian_apply (X& x, Y& y) const
