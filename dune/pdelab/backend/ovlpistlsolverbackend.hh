@@ -449,7 +449,7 @@ namespace Dune {
       const C& c;
       unsigned maxiter;
       int steps;
-      bool verbose;
+      int verbose;
     };
     
 
