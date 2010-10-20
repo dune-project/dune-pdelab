@@ -25,6 +25,7 @@ common_HEADERS =				\
 	transportccfv.hh			\
 	twophaseccfv.hh				\
 	vectorwave.hh				\
-	weightedsum.hh
+	weightedsum.hh				\
+	zero.hh
 
 include $(top_srcdir)/am/global-rules
