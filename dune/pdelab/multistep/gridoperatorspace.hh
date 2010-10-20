@@ -245,7 +245,7 @@ namespace Dune {
         sumLOP.postStage();
         sumLOP.postStep();
         // free constant part of residual
-        r0.reset(0);
+        r0.reset();
       }
 
       //! Interpolate constrained values

@@ -106,6 +106,9 @@ namespace Dune {
         // solve
         pdeSolver.apply(xnew);
 
+        // postprocessing in the assembler
+        mgos.postStep();
+
         ++step;
 
         return dt;
@@ -150,11 +153,14 @@ namespace Dune {
         mgos.preStep(time, dt, oldValues);
 
         // set boundary conditions and initial value
-        f.setTime(time);
+        f.setTime(time+dt);
         mgos.interpolate(*oldValues[0],f,xnew);
 
         // solve stage
         pdeSolver.apply(xnew);
+
+        // postprocessing in the assembler
+        mgos.postStep();
 
         step++;
         return dt;
