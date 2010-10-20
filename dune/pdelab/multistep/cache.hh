@@ -60,6 +60,20 @@ namespace Dune {
        * has just been computed.
        */
       Step currentStep;
+      //! The end-time of the step set via preStep().
+      /**
+       * After preStep(), this denotes the end-time of the step currently
+       * being computed.  After postStep(), this denotes the end-time of the
+       * step that has just been computed.
+       */
+      Time endTime;
+      //! Time step size
+      /**
+       * After preStep(), this denotes the size of the step currently being
+       * computed.  After postStep(), this denotes the size of the step that
+       * has just been computed.
+       */
+      Time dt;
 
     public:
       //! any virtual base needs a virtual destructor
@@ -131,16 +145,22 @@ namespace Dune {
        * \param stepsOfScheme_ Number of steps in the scheme: the oldest
        *                       required value is \f$u_{\text{\tt
        *                       step}-\text{\tt stepsOfScheme}}\f$.
-       * \param endTime        \f$t_n\f$, the time at step \c step.
-       * \param dt             Time step size, i.e. \f$t_n-t_{n-1}\f$.
+       * \param endTime_       \f$t_n\f$, the time at step \c step.
+       * \param dt_            Time step size, i.e. \f$t_n-t_{n-1}\f$.
        *
-       * The default implementation saves the parameters \c step and \c
-       * stepsOfScheme_ in the protected member variables \c currentStep and
-       * \c stepsOfScheme, respectively.
+       * The default implementation saves the parameters \c step, \c
+       * stepsOfScheme_, \c endTime_ and \c dt_ in the protected member
+       * variables \c currentStep, \c stepsOfScheme, \c endTime and \c dt,
+       * respectively.
        */
       virtual void preStep(Step step, Step stepsOfScheme_,
-                           Time endTime, Time dt)
-      { currentStep = step; stepsOfScheme = stepsOfScheme_; }
+                           Time endTime_, Time dt_)
+      {
+        currentStep = step;
+        stepsOfScheme = stepsOfScheme_;
+        endTime = endTime_;
+        dt = dt_;
+      }
       //! called after the new values for a time step have been computed
       /** does nothing by default. */
       virtual void postStep() { }
