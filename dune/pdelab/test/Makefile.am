@@ -353,6 +353,13 @@ MOSTLYCLEANFILES +=				\
 	s*:vectorwave_*.pvtu			\
 	vectorwave_*.pvd
 
+NORMALTESTS += testvectorwavecached
+testvectorwavecached_SOURCES = testvectorwavecached.cc
+MOSTLYCLEANFILES +=				\
+	s*:p*:vectorwavecached_*.vtu		\
+	s*:vectorwavecached_*.pvtu		\
+	vectorwavecached_*.pvd
+
 include $(top_srcdir)/am/global-rules
 
 DISTCHECK_CONFIGURE_FLAGS = --with-dune=$(DUNEROOT) CXX="$(CXX)" CC="$(CC)"
