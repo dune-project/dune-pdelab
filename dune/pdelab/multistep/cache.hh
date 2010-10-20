@@ -314,8 +314,9 @@ namespace Dune {
           residualValues.resize(order+1);
         if(!residualValues[order].insert(std::make_pair(step, residualValue))
            .second)
-          DUNE_THROW(Exception, "Residual r_" << order << "(" << step << ", "
-                     "0) is already in the cache!");
+          DUNE_THROW(AlreadyInCache, "Residual value"
+                     "r_" << order << "(t_" << step << ", u_" << step << ") "
+                     "is already in the cache!");
       }
 
       //! \}
@@ -435,8 +436,9 @@ namespace Dune {
           zeroResiduals.resize(order+1);
         if(!zeroResiduals[order].insert(std::make_pair(step, zeroResidual))
            .second)
-          DUNE_THROW(Exception, "Residual r_" << order << "(" << step << ", "
-                     "0) is already in the cache!");
+          DUNE_THROW(AlreadyInCache, "Zero-residual "
+                     "r_" << order << "(t_" << step << ", 0) is already in "
+                     "the cache!");
       }
 
       //! \}
@@ -512,8 +514,8 @@ namespace Dune {
         UnknownIterator it = unknowns.find(step);
         if(it != unknowns.end())
           return it->second;
-        DUNE_THROW(Exception, "Unknowns for time step " << step << " missing "
-                   "in the cache!");
+        DUNE_THROW(NotInCache, "Unknowns u_" << step << " missing in the "
+                   "cache!");
       }
       //! store a vector of unknowns  in the cache
       /**
@@ -525,8 +527,8 @@ namespace Dune {
        */
       void setUnknowns(Step step, const shared_ptr<const VectorU> &unknowns_) {
         if(unknowns[step])
-          DUNE_THROW(Exception, "Unknowns u_" << step << " are already in the "
-                     "cache!");
+          DUNE_THROW(AlreadyInCache, "Unknowns u_" << step << " are already "
+                     "in the cache!");
         unknowns[step] = unknowns_;
       }
 
