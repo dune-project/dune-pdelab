@@ -250,6 +250,20 @@ MOSTLYCLEANFILES +=					\
 	s*:testmultistep_yasp_P1_1d-*.pvtp		\
 	testmultistep_yasp_P1_1d.pvd
 
+NORMALTESTS += testmultistepcached
+testmultistepcached_SOURCES = testmultistepcached.cc
+testmultistepcached_CPPFLAGS = $(AM_CPPFLAGS)	\
+	$(DUNEMPICPPFLAGS)
+testmultistepcached_LDFLAGS = $(AM_LDFLAGS)	\
+	$(DUNEMPILDFLAGS)
+testmultistepcached_LDADD =			\
+	$(DUNEMPILIBS)				\
+	$(LDADD)
+MOSTLYCLEANFILES +=					\
+	s*:p*:testmultistepcached_yasp_P1_1d-*.vtp	\
+	s*:testmultistepcached_yasp_P1_1d-*.pvtp	\
+	testmultistepcached_yasp_P1_1d.pvd
+
 NORMALTESTS += testp12dinterpolation
 testp12dinterpolation_SOURCES = testp12dinterpolation.cc
 testp12dinterpolation_CPPFLAGS = $(AM_CPPFLAGS)				\
