@@ -182,6 +182,56 @@ automatically handle the management of the queue.
 
 \section{Caching}
 
+Caching is done in concert by three classes: A {\tt MultiStepCache}, a {\tt
+  Cached\-Multi\-Step\-Grid\-Operator\-Space} and a {\tt MultiStepCachePolicy}
+object.  The first two are provided generically by PDELab, but the {\tt
+  MultiStepCachePolicy} must be provided by the user und is closely coupled to
+the problem to solve and the local operators used to solve it.  In a sense,
+the {\tt MultiStepCache} provides storage, the {\tt MultiStepCachePolicy}
+determines when it is advisable to store anything and the {\tt
+  Cached\-Multi\-Step\-Grid\-Operator\-Space} does all the work.  The {\tt
+  MultiStepCache} object holds a reference to the {\tt MultiStepCachePolicy}
+and the {\tt Cached\-Multi\-Step\-Grid\-Operator\-Space} holds a reference to
+the {\tt MultiStepCache} object.  This implies that any given instance of {\tt
+  Cached\-Multi\-Step\-Grid\-Operator\-Space} is fixed with respect to the C++
+type of the coefficients.
+
+The Following methods apply to the overall management of the cache and policy
+objects:
+\begin{lstlisting}
+template<class GFSU, class GFSV, class Coeffs, class Step, class Time, ...>
+struct CachedMultiStepGridOperatorSpace {
+  typedef MultiStepCache<
+    typename GFSU::template VectorContainer<Coeffs>::Type,
+    typename GFSV::template VectorContaineR<Coeffs>::Type,
+    typename MatrixContainer<Coeffs>::Type,
+    Step,
+    Time> Cache;
+
+  shared_ptr<Cache> getCache() const;
+  void setCache(const shared_ptr<Cache> &cache);
+};
+
+template<class VectorU, class VectorV, class Matrix,
+         class Step = int, class Time = double>
+struct MultiStepCache {
+  typedef MultiStepCachePolicy<Step, Time> Policy;
+
+  MultiStepCache(const shared_ptr<Policy> &policy = 
+                       shared_ptr<Policy>(new Policy));
+
+  shared_ptr<Policy> getPolicy();
+  shared_ptr<const Policy> getPolicy() const;
+  void setPolicy(const shared_ptr<Policy>& policy);
+};
+
+template<class Step = int, class Time = double>
+struct MultiStepCachePolicy {
+  // any virtual base needs a virtual destructor
+  virtual ~MultiStepCachePolicy() {}
+};
+\end{lstlisting}
+
 \subsection{Caching across Time Steps}
 
 Consider time step $n$ and $n+1$: In step $n$ we solve
@@ -192,27 +242,97 @@ of the evaluations $r_j(t^k,u^k)$ for $n<k<n-m$ from step $n$, i.e. $m-1$
 evaluations of the operators $r_j$.  This is possible even for non-linear
 operators.
 
+From the {\tt MultiStepCache} and the {\tt MultiStepCachePolicy} the following
+methods are applicable:
+\begin{lstlisting}
+template<class VectorU, class VectorV, class Matrix,
+         class Step = int, class Time = double>
+struct MultiStepCache {
+  // methods for non-linear caching
+  shared_ptr<const VectorV>
+  getResidualValue(std::size_t order, Step step) const;
+
+  void setResidualValue(std::size_t order, Step step,
+                        const shared_ptr<const VectorV> &residualValue);
+};
+
+template<class Step = int, class Time = double>
+struct MultiStepCachePolicy {
+  virtual bool cacheResidualValue(std::size_t order, Step step) const;
+};
+\end{lstlisting}
+If {\tt cacheResidualValue()} returns {\tt false} the {\tt
+  Cached\-Multi\-Step\-Grid\-Operator\-Space} will not attempt to store the
+denoted residual value in the cache.  It may still attempt to extract it,
+however.
+
 \subsection{Caching for Affine Operators}
 
-For affine operators we assume that $r_j$ can be split into a purely linear
-part $\alpha_j$ and a constant part $\lambda_j$:
-$r_j(t,u)=\alpha_j(t,u)+\lambda(t)$.  A local operator can advertise this by
-giving its member constant {\tt hasPureLinearAlpha} the value {\tt true}.
-This property has the nice consequence that we can write
-$r_j(t,u)=J(r_j|_t)\cdot u+\lambda_j(t)$.  This allows us to evaluate the
-Jacobian and $\lambda_j$ once for a given time $t$ and evaluate $r_j(t,u)$
-many times with different $u$ without iterating over the grid.  This should be
-particularly handy when solving.
+Affine operators can be split into a purely linear and a constant part:
+\begin{equation}
+  r_j(t,u)=J(r_j|_t)\cdot u+r_j(t,0)
+\end{equation}
+We call the constant part $r_j(t,0)$ the zero-residual.  The Jacobian
+$J(r_j|_t)$ may depend on time $t$ but not on the unknowns $u$.  It is
+meaningful to cache Jacobians and zero-residuals, since they are usually
+needed first in the solver for calculating many applications of $r_j(t_n,u)$
+to find $u_n$, and are then needed in the next time step to compute
+$r_j(t_n,u_n)$.  If the {\tt MultiStepCachePolicy} object decides not to store
+certain residual values, they can also be used to recompute those values
+without another grid traversal.
 
-Note that there may be operators which are in fact affine, but have {\tt
-  alpha\_*()} methods which (partly) implement the affine shift.  These
-operators can announce that they are affine by giving their member constant
-{\tt isAffine} the value true.  For these operators, extraction of $r_j(t,0)$
-and $J(r_j|_t)$ will be less efficient, the the values obtained can still be
-cached.
+From the {\tt MultiStepCache} and the {\tt MultiStepCachePolicy} the following
+methods are applicable:
+\begin{lstlisting}
+template<class VectorU, class VectorV, class Matrix,
+         class Step = int, class Time = double>
+struct MultiStepCache {
+  // methods for the Jacobian of affine operators
+  shared_ptr<const Matrix>
+  getJacobian(std::size_t order, Step step);
+ 
+ void setJacobian(std::size_t order, Step step,
+                   const shared_ptr<const Matrix> &jacobian);
 
-It is an error for an operator to have {\tt hasPureLinearAlpha == true} but
-{\tt isAffine == false}.
+  // methods for the zero-residual of affine operators
+  shared_ptr<const VectorV>
+  getZeroResidual(std::size_t order, Step step);
+
+  void setZeroResidual(std::size_t order, Step step,
+                       const shared_ptr<const VectorV> &zeroResidual);
+};
+
+template<class Step = int, class Time = double>
+struct MultiStepCachePolicy {
+  virtual bool isAffine(std::size_t order, Step step) const;
+  virtual bool hasPureLinearAlpha(std::size_t order, Step step) const;
+
+  virtual bool cacheJacobian(std::size_t order, Step step) const;
+  virtual bool cacheZeroResidual(std::size_t order, Step step) const;
+};
+\end{lstlisting}
+If {\tt cacheJacobian()} or {\tt cacheZeroResidual()} return {\tt false}, the
+{\tt MultiStepCache} object will silently refuse to store the denoted Jacobian
+or zero-residual in the cache.  It may still provide the denoted values when
+they happen to be in the cache and are extracted, however.
+
+{\tt isAffine(j, n)} determines whether $r_j(t_n,u)$ will be treated as affine
+in the argument $u$ by the {\tt CachedMultiStepGridOperatorSpace}.  If the
+given $r_j(t_n,u)$ is not affine, {\em the} Jacobian and {\em the}
+zero-residual do not exist as such, so {\tt CachedMultiStepGridOperatorSpace}
+will use a totally different method to compute the residual value.  As a
+consequence it will not even attempt to store the Jacobian and the
+zero-residual.
+
+{\tt hasPureLinearAlpha(j, n)} determines whether the methods {\tt
+  alpha\_volume()}, {\tt alpha\_skeleton()}, {\tt alpha\_boundary()} and {\tt
+  alpha\_volume\_post\_skeleton()} on the local operators are purely linear.
+In this case, the {\tt CachedMultiStepGridOperatorSpace} can use a somewhat
+more efficient method to compute the zero-residual.
+
+When {\tt isAffine(j, n)} returns {\tt false}, the return values of {\tt
+  hasPureLinearAlpha(j, n)}, {\tt cacheJacobian(j, n)}, and {\tt
+  cache\-Zero\-Residual(j, n)} have no effect.
 
 \subsection{Caching Stationary Parts of Affine Operators}
 
@@ -225,76 +345,251 @@ different equation.  Even if changes do occur, they may occur apruptly,
 seperated by long periods without changes, as in switching some inflow on or
 off.
 
-To deal with this we introduce the following method on temporal local
-operators:
+To take advantage of stationary periods we may re-use a Jacobian or
+zero-residual from another time-step for the current time-step.  Again, there
+is a method on the {\tt MultiStepCachePolicy} object which tells us whether we
+can actually do this:
 \begin{lstlisting}
-void changeOccured(Time timeOfCachedValues, Time timeOfNeededValues,
-                   bool &alphaChanged, bool &lambdaChanged) const;
+template<class Step = int, class Time = double>
+struct MultiStepCachePolicy {
+  virtual bool canReuseJacobian(std::size_t order,
+                                Step requested, Step available) const;
+  virtual bool canReuseZeroResidual(std::size_t order,
+                                    Step requested, Step available) const;
+};
 \end{lstlisting}
-By default they return true in both bools which inhibits caching.  This method
-is called on a local operator before {\tt setTime(timeOfNeededValues)} is
-called.  If {\tt changeOccured()} determines that nothing changed, the call to
-{\tt setTime()} and subsequent evaluation calls may be skipped, and old values
-used instead.
+When a Jacobian or zero-residual is needed but not already present in the
+cache, these methods will be consulted with the {\tt available} parameter set
+to the time step of each other Jacobian or zero-residual for that order in
+turn.  Note that the answer of these methods should be symmetric in the {\tt
+  requested} and {\tt available} arguments -- they form an equivalence
+relation.  Note also that not only the latest available value before the
+requested is considered -- every available value for the given order is a
+potential candidate for re-use, that includes values from later time steps
+than the requested.  This can happen for instance when filling the cache
+initially or when switching between different multi-step methods.
 
-\subsection{Implementation}
+\subsection{Caching for the Complete System Matrix}
 
-The implementation consists of a caching {\tt
-  CachedMultiStepGridoperatorSpace} and a companion {\tt MultiStepCache},
-which the user may actually replace by his own class.  The interface for the
-cache class is as follows:
+\begin{gather}
+  \sum_{j=0}^p\frac{\alpha_{0j}}{(\Delta t)^j}r_j(t^n,u^n)+
+    \sum_{i=1}^m\sum_{j=0}^p\frac{\alpha_{ij}}{(\Delta t)^j}
+             r_j(t^{n-i},u^{n-i})=0 \\
+  \sum_{j=0}^p\frac{\alpha_{0j}}{(\Delta t)^j}
+             \{J(r_j|_{t^n})\cdot u^n+r_j(t_n,0)\}+
+    \sum_{i=1}^m\sum_{j=0}^p\frac{\alpha_{ij}}{(\Delta t)^j}
+             r_j(t^{n-i},u^{n-i})=0 \\
+  \left\{\sum_{j=0}^p\frac{\alpha_{0j}}{(\Delta t)^j}
+             J(r_j|_{t^n})\right\}\cdot u^n+
+    \sum_{j=0}^p\frac{\alpha_{0j}}{(\Delta t)^j}r_j(t_n,0)+
+    \sum_{i=1}^m\sum_{j=0}^p\frac{\alpha_{ij}}{(\Delta t)^j}
+             r_j(t^{n-i},u^{n-i})=0
+\end{gather}
+The part in curly braces is the matrix passed to the solver backend.  When
+none of the Jacobians change from time step $n$ to $n+1$, we can reuse this
+matrix in the next time step.  The {\tt MultiStepCache} does not know however
+how many operators are involved, so the {\tt MultiStepCachePolicy} has to
+provide extra functions to determine this.
+
+Caching the constant part does not make that much sense, since usually the old
+values of the unknowns change from time step to time step and the constant
+part has to be recomputed anyway.
 \begin{lstlisting}
-// Base exception for cache related errors
-class CacheError : public Exception {};
-
-// Exception thrown when a requested item is not in the cache
-class NotInCache : public CacheError {};
-
-// Exception thrown when a stored item is already in the cache
-class AlreadyInCache : public CacheError {};
-
-template<class VectorU, class VectorV, class Matrix, class Step = int>
-struct MultiStepCacheInterface {
-  // methods for the Jacobian of affine operators
+template<class VectorU, class VectorV, class Matrix,
+         class Step = int, class Time = double>
+struct MultiStepCache {
+  // methods for the composed Jacobian of affine operators
   shared_ptr<const Matrix>
-  getJacobian(std::size_t order, Step step) const;
+  getComposedJacobian(Step step);
 
-  shared_ptr<const Matrix>
-  getLatestJacobian(std::size_t order, Step &step) const;
+  void setComposedJacobian(std::size_t order,
+                           const shared_ptr<const Matrix> &jacobian);
+};
 
-  void setJacobian(Step step, std::size_t order,
-                   const shared_ptr<const Matrix> &jacobian);
+template<class Step = int, class Time = double>
+struct MultiStepCachePolicy {
+  virtual bool isComposedAffine(Step step) const;
 
-  // methods for the zero-residual of affine operators
-  shared_ptr<const VectorV>
-  getZeroResidual(std::size_t order, Step step) const;
+  virtual bool cacheComposedJacobian(Step step) const;
+  virtual bool canReuseComposedJacobian(Step requested,
+                                        Step available) const;
+};
+\end{lstlisting}
 
-  shared_ptr<const VectorV>
-  getLatestZeroResidual(std::size_t order, Step &step) const;
+\subsection{Old Values for the Unknowns}
 
-  void setZeroResidual(Step step, std::size_t order,
-                       const shared_ptr<const VectorV> &zeroResidual);
+The cache is a convenient place to store old values for the vectors of
+unknowns.\footnote{Of course, ``unknowns'' is a bit of a misnomer here since
+  the actual values are known by the time the vectors aquire the adjective
+  ``old''.}  No policy applies to storing vectors of unknowns, since this is
+done by the user or the {\tt MultiStepMethod}.
+\begin{lstlisting}
+template<class VectorU, class VectorV, class Matrix,
+         class Step = int, class Time = double>
+struct MultiStepCache {
+  // methods to access old values of the unknowns
+  shared_ptr<const VectorU>
+  getUnknowns(Step step) const;
+
+  void setUnknowns(Step step,
+                   const shared_ptr<const VectorU> &unknowns);
+};
+\end{lstlisting}
+
+\subsection{Flushing the Cache}
+
+At certain points between time steps is is advisable to evict data from the
+cache, since we won't possibly need that data anymore and computer memory is
+limited.  This is done by the {\tt MultiStepCache} at the beginning of the
+time step and triggered by its {\tt preStep()} method.  There is also a {\tt
+  postStep()} method for symmetry.  Both methods are forwarded to the {\tt
+  Multi\-Step\-Cache\-Policy}: {\tt MultiStepCache::preStep()} calls {\tt
+  Multi\-Step\-Cache\-Policy\discretionary{}{}{}::\discretionary{}{}{}pre\-Step()}
+and {\tt MultiStepCache::postStep()} calls {\tt
+  MultiStepCachePolicy::postStep()}.  After the call to {\tt
+  MultiStepCachePolicy::preStep()}, {\tt MultiStepCache::preStep()} will
+iterate over all items in the cache and ask the {\tt MultiStepCachePolicy}
+whether they can be removed.  Finally, there is also a method {\tt flushAll()}
+which unconditionally clears the whole cache, which can be useful in the case
+of grid adaption.
+\begin{lstlisting}
+template<class VectorU, class VectorV, class Matrix,
+         class Step = int, class Time = double>
+struct MultiStepCache {
+  // methods to flush the cache
+  void flushAll();
+
+  // methods for pre-/post-processing
+  void preStep(Step step, Step stepsOfScheme,
+               Time endTime, Time dt);
+  void postStep();
+};
+template<class Step = int, class Time = double>
+struct MultiStepCachePolicy {
+  // methods for pre-/post-processing
+  virtual void preStep(Step step, Step stepsOfScheme,
+                       Time endTime, Time dt);
+  virtual void postStep();
+
+  // methods to determine stale items
+  virtual bool canEvictResidualValue(std::size_t order,
+                                     Step step) const;
+  virtual bool canEvictJacobian(std::size_t order, Step step) const;
+  virtual bool canEvictZeroResidual(std::size_t order,
+                                    Step step) const;
+  virtual bool canEvictUnknowns(Step step) const;
+  virtual bool canEvictComposedJacobian(Step step) const;
+};
+\end{lstlisting}
+
+\subsection{Interface Summary}
+
+\begin{lstlisting}
+template<class GFSU, class GFSV, class Coeffs, class Step, class Time, ...>
+struct CachedMultiStepGridOperatorSpace {
+  typedef MultiStepCache<
+    typename GFSU::template VectorContainer<Coeffs>::Type,
+    typename GFSV::template VectorContaineR<Coeffs>::Type,
+    typename MatrixContainer<Coeffs>::Type,
+    Step,
+    Time> Cache;
+
+  shared_ptr<Cache> getCache() const;
+  void setCache(const shared_ptr<Cache> &cache);
+};
+
+template<class VectorU, class VectorV, class Matrix,
+         class Step = int, class Time = double>
+struct MultiStepCache {
+  typedef MultiStepCachePolicy<Step, Time> Policy;
+
+  MultiStepCache(const shared_ptr<Policy> &policy =
+                       shared_ptr<Policy>(new Policy));
+
+  shared_ptr<Policy> getPolicy();
+  shared_ptr<const Policy> getPolicy() const;
+  void setPolicy(const shared_ptr<Policy>& policy);
 
   // methods for non-linear caching
   shared_ptr<const VectorV>
   getResidualValue(std::size_t order, Step step) const;
 
-  void setResidualValue(Step step, std::size_t order,
+  void setResidualValue(std::size_t order, Step step,
                         const shared_ptr<const VectorV> &residualValue);
 
+  // methods for the Jacobian of affine operators
+  shared_ptr<const Matrix>
+  getJacobian(std::size_t order, Step step);
+
+  void setJacobian(std::size_t order, Step step,
+                   const shared_ptr<const Matrix> &jacobian);
+
+  // methods for the zero-residual of affine operators
+  shared_ptr<const VectorV>
+  getZeroResidual(std::size_t order, Step step);
+
+  void setZeroResidual(std::size_t order, Step step,
+                       const shared_ptr<const VectorV> &zeroResidual);
+
+  // methods for the composed Jacobian of affine operators
+  shared_ptr<const Matrix>
+  getComposedJacobian(Step step);
+
+  void setComposedJacobian(std::size_t order,
+                           const shared_ptr<const Matrix> &jacobian);
+
   // methods to access old values of the unknowns
-  shared_ptr<const VectorU> getUnknowns(Step step) const;
-  void setUnknowns(Step step, const shared_ptr<const VectorU> &unknowns_);
+  shared_ptr<const VectorU>
+  getUnknowns(Step step) const;
+
+  void setUnknowns(Step step,
+                   const shared_ptr<const VectorU> &unknowns_);
 
   // methods to flush the cache
-  void flushOldKeepLatestAffine(Step stepToKeep);
   void flushAll();
+
+  // methods for pre-/post-processing
+  void preStep(Step step, Step stepsOfScheme,
+               Time endTime, Time dt);
+  void postStep();
+};
+
+template<class Step = int, class Time = double>
+struct MultiStepCachePolicy {
+  // any virtual base needs a virtual destructor
+  virtual ~MultiStepCachePolicy() {}
+
+  // methods to determine what to cache
+  virtual bool cacheResidualValue(std::size_t order, Step step) const;
+  virtual bool cacheJacobian(std::size_t order, Step step) const;
+  virtual bool cacheZeroResidual(std::size_t order, Step step) const;
+  virtual bool cacheComposedJacobian(Step step) const;
+
+  // methods to determine properties of the LOPs
+  virtual bool isAffine(std::size_t order, Step step) const;
+  virtual bool isComposedAffine(Step step) const;
+  virtual bool hasPureLinearAlpha(std::size_t order, Step step) const;
+  virtual bool canReuseJacobian(std::size_t order,
+                                Step requested, Step available) const;
+  virtual bool canReuseZeroResidual(std::size_t order,
+                                    Step requested, Step available) const;
+  virtual bool canReuseComposedJacobian(Step requested,
+                                        Step available) const;
+
+  // methods for pre-/post-processing
+  virtual void preStep(Step step, Step stepsOfScheme,
+                       Time endTime, Time dt);
+  virtual void postStep();
+
+  // methods to determine stale items
+  virtual bool canEvictResidualValue(std::size_t order,
+                                     Step step) const;
+  virtual bool canEvictJacobian(std::size_t order, Step step) const;
+  virtual bool canEvictZeroResidual(std::size_t order,
+                                    Step step) const;
+  virtual bool canEvictUnknowns(Step step) const;
+  virtual bool canEvictComposedJacobian(Step step) const;
 };
 \end{lstlisting}
-Note that it is perfectly legal for a cache implementation to silently refuse
-to store a value in the cache.  A caching multi-step grid operator space shall
-never assume it can extract a value from a cache it just stored there, and it
-shall always be prepared to compute (and then store) any value it cannot find
-in the cache.  The exception to this rule are of course the vectors of
-unknowns.
+
 \end{document}
