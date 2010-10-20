@@ -17,6 +17,7 @@
 #include <dune/common/misc.hh>
 #include <dune/common/mpihelper.hh>
 #include <dune/common/shared_ptr.hh>
+#include <dune/common/timer.hh>
 #include <dune/common/tuples.hh>
 
 #include <dune/grid/io/file/vtk/common.hh>
@@ -204,9 +205,14 @@ void vectorWave(const GV& gv, const FEM& fem, Time dt, std::size_t steps,
   DF time = 0;
 
   for(unsigned step = 0; step < steps; ++step) {
+    Dune::Timer allTimer;
+    Dune::Timer subTimer;
+
     Dune::shared_ptr<const V> xnew = msMethod.apply(time, dt);
     time += dt;
 
+    subTimer.reset();
+    std::cout << "== write output" << std::endl;
     // output grid function with VTKWriter
     DGF dgf(gfs,*xnew);
     DGFCurl dgfCurl(gfs,*xnew);
@@ -216,6 +222,11 @@ void vectorWave(const GV& gv, const FEM& fem, Time dt, std::size_t steps,
       (new Dune::PDELab::VTKGridFunctionAdapter<DGFCurl>(dgfCurl,"curl"));
     vtkwriter.write(time,Dune::VTK::appendedraw);
     vtkwriter.clear();
+    std::cout << "== write output (" << subTimer.elapsed() << "s)"
+              << std::endl;
+
+    std::cout << "= time step total time: " << allTimer.elapsed() << "s"
+              << std::endl;
   }
 }
 
