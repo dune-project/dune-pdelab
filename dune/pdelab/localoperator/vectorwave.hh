@@ -4,6 +4,7 @@
 #ifndef DUNE_PDELAB_LOCALOPERATOR_VECTORWAVE_HH
 #define DUNE_PDELAB_LOCALOPERATOR_VECTORWAVE_HH
 
+#include <algorithm>
 #include <cstddef>
 #include <vector>
 
@@ -19,6 +20,7 @@
 #include <dune/pdelab/localoperator/idefault.hh>
 #include <dune/pdelab/localoperator/pattern.hh>
 #include <dune/pdelab/gridoperatorspace/localmatrix.hh>
+#include <dune/pdelab/multistep/cache.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -74,6 +76,13 @@ RangeField epsilon(const Domain& xg) const;
          */
         RangeField epsilon(const Element& e, const Domain& xl) const
         { return asImp().epsilonGlobal(e.geometry().global(xl)); }
+        //! Whether epsilon changes between the given time steps
+        /**
+         * This is used by the policy class to determine when evaluation
+         * values can be reused.  This default implemention always returns
+         * true (change occured) to be on the safe side.
+         */
+        bool epsilonChanged(Time t1, Time t2) const { return true; }
         //! evaluate magnetic permeability \f$\mu=\mu_0\mu_r\f$
         /**
          * This implementation forwards calls to the derived class, which
@@ -84,6 +93,13 @@ RangeField mu(const Domain& xg) const;
          */
         RangeField mu(const Element& e, const Domain& xl) const
         { return asImp().muGlobal(e.geometry().global(xl)); }
+        //! Whether mu changes between the given time steps
+        /**
+         * This is used by the policy class to determine when evaluation
+         * values can be reused.  This default implemention always returns
+         * true (change occured) to be on the safe side.
+         */
+        bool muChanged(Time t1, Time t2) const { return true; }
 
         //! set the time for subsequent evaluation
         /**
@@ -117,8 +133,10 @@ RangeField mu(const Domain& xg) const;
 
         template<typename Domain>
         RF epsilonGlobal(const Domain &) const { return epsilon_; }
+        bool epsilonChanged(Time t1, Time t2) const { return false; }
         template<typename Domain>
         RF muGlobal(const Domain &) const { return mu_; }
+        bool muChanged(Time t1, Time t2) const { return false; }
       };
 
       //! \brief Local operator for the vector wave problem,
@@ -401,6 +419,63 @@ RangeField mu(const Domain& xg) const;
         void setTime(typename Params::Time time) {
           params.setTime(time);
           IBase::setTime(time);
+        }
+      };
+
+      //! MultiStepCachePolicy for VectorWave operators
+      template<class Params, class Step = int, class Time = double>
+      class CachePolicy :
+        public MultiStepCachePolicy<Step, Time>
+      {
+        typedef MultiStepCachePolicy<Step, Time> Base;
+        const Params &params;
+
+      protected:
+        using Base::currentStep;
+        using Base::endTime;
+        using Base::dt;
+
+      public:
+        //! construct a CachePolicy object
+        CachePolicy(const Params &params_) : params(params_) { }
+
+        //! All component operators are affine
+        virtual bool isAffine(std::size_t order, Step step) const
+        { return true; }
+        //! The composed operator is affine
+        virtual bool isComposedAffine(Step step) const
+        { return true; }
+        //! All local operators have pure linear alpha_*()
+        virtual bool hasPureLinearAlpha(std::size_t order, Step step) const
+        { return true; }
+        virtual bool canReuseJacobian(std::size_t order,
+                                      Step requested, Step available) const
+        {
+          Time t1 = endTime - dt*(currentStep-requested);
+          Time t2 = endTime - dt*(currentStep-available);
+          if(t1 > t2) std::swap(t1, t2);
+
+          switch(order) {
+          case 0: return !params.muChanged(t1, t2);
+          case 1: return true;
+          case 2: return !params.epsilonChanged(t1, t2);
+          }
+
+          DUNE_THROW(InvalidStateException,
+                     "VectorWave::CachePolicy::canReuseJacobian(): Invalid "
+                     "temporal derivative order=" << order);
+        }
+        virtual bool canReuseZeroResidual(std::size_t order,
+                                          Step requested, Step available) const
+        { return true; }
+        virtual bool canReuseComposedJacobian(Step requested,
+                                              Step available) const
+        {
+          Time t1 = endTime - dt*(currentStep-requested);
+          Time t2 = endTime - dt*(currentStep-available);
+          if(t1 > t2) std::swap(t1, t2);
+
+          return !params.muChanged(t1, t2) && !params.epsilonChanged(t1, t2);
         }
       };
 
