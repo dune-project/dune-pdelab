@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include <dune/common/ios_state.hh>
+#include <dune/common/shared_ptr.hh>
 
 #include <dune/pdelab/multistep/parameter.hh>
 
@@ -164,6 +165,115 @@ namespace Dune {
 
         step++;
         return dt;
+      }
+
+      //! do one step (with caching)
+      /**
+       * \param time Start of time step
+       * \param dt   Time step size
+       *
+       * \return A shared_ptr to the new value
+       *
+       * The old values are expected in the cache of the GridOperatorSpace.
+       * The computed value is store in the cache as well.
+       */
+      shared_ptr<const TrialV> apply(T time, T dt)
+      {
+        // save formatting attributes
+        ios_base_all_saver format_attribute_saver(std::cout);
+
+        if(verbosity >= 1)
+          std::cout << "TIME STEP [" << parameters->name() << "] "
+                    << std::setw(6) << step
+                    << " time (from): "
+                    << std::setw(12) << std::setprecision(4) << std::scientific
+                    << time
+                    << " dt: "
+                    << std::setw(12) << std::setprecision(4) << std::scientific
+                    << dt
+                    << " time (to): "
+                    << std::setw(12) << std::setprecision(4) << std::scientific
+                    << time+dt
+                    << std::endl;
+
+        // create vector, using last time step as start
+        shared_ptr<TrialV>
+          xnew(new TrialV(*mgos.getCache()->getUnknowns(step-1)));
+
+        // prepare assembler
+        mgos.preStep(step, time, dt);
+
+        // solve
+        pdeSolver.apply(*xnew);
+
+        // postprocessing in the assembler
+        mgos.postStep();
+
+        // store result for next step
+        mgos.getCache()->setUnknowns(step, xnew);
+
+        ++step;
+
+        return xnew;
+      }
+
+      //! do one step (with caching)
+      /**
+       * This is a version which interpolates constraints at the start of each
+       * stage
+       *
+       * \param time Start of time step
+       * \param dt   Time step size
+       * \param f    Function to interpolate boundary conditions from.
+       *             Should support the method setTime().
+       *
+       * \return A shared_ptr to the new value
+       *
+       * The old values are expected in the cache of the GridOperatorSpace.
+       * The computed value is store in the cache as well.
+       */
+      template<typename F>
+      shared_ptr<const TrialV> apply(T time, T dt, F& f)
+      {
+        // save formatting attributes
+        ios_base_all_saver format_attribute_saver(std::cout);
+
+        if(verbosity >= 1)
+          std::cout << "TIME STEP [" << parameters->name() << "] "
+                    << std::setw(6) << step
+                    << " time (from): "
+                    << std::setw(12) << std::setprecision(4) << std::scientific
+                    << time
+                    << " dt: "
+                    << std::setw(12) << std::setprecision(4) << std::scientific
+                    << dt
+                    << " time (to): "
+                    << std::setw(12) << std::setprecision(4) << std::scientific
+                    << time+dt
+                    << std::endl;
+
+        // create vector
+        shared_ptr<TrialV> xnew(new TrialV(mgos.trialGridFunctionSpace()));
+
+        // prepare assembler
+        mgos.preStep(step, time, dt);
+
+        // set boundary conditions and initial value
+        f.setTime(time+dt);
+        mgos.interpolate(*mgos.getCache()->getUnknowns(step-1),f,*xnew);
+
+        // solve stage
+        pdeSolver.apply(*xnew);
+
+        // postprocessing in the assembler
+        mgos.postStep();
+
+        // store result for next step
+        mgos.getCache()->setUnknowns(step, xnew);
+
+        ++step;
+
+        return xnew;
       }
     };
 
