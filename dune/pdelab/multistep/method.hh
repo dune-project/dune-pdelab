@@ -9,6 +9,7 @@
 
 #include <dune/common/ios_state.hh>
 #include <dune/common/shared_ptr.hh>
+#include <dune/common/timer.hh>
 
 #include <dune/pdelab/multistep/parameter.hh>
 
@@ -84,6 +85,9 @@ namespace Dune {
       template<class OldValues>
       T apply(T time, T dt, const OldValues& oldValues, TrialV& xnew)
       {
+        Timer allTimer;
+        Timer subTimer;
+
         // save formatting attributes
         ios_base_all_saver format_attribute_saver(std::cout);
 
@@ -102,15 +106,40 @@ namespace Dune {
                     << std::endl;
 
         // prepare assembler
+        if(verbosity >= 2) {
+          std::cout << "== prepare assembler" << std::endl;
+          subTimer.reset();
+        }
         mgos.preStep(time,dt, oldValues);
+        if(verbosity >= 2)
+          std::cout << "== prepare assembler (" << subTimer.elapsed() << "s)"
+                    << std::endl;
 
         // solve
+        if(verbosity >= 2) {
+          std::cout << "== apply solver" << std::endl;
+          subTimer.reset();
+        }
         pdeSolver.apply(xnew);
+        if(verbosity >= 2)
+          std::cout << "== apply solver (" << subTimer.elapsed() << "s)"
+                    << std::endl;
 
         // postprocessing in the assembler
+        if(verbosity >= 2) {
+          std::cout << "== cleanup assembler" << std::endl;
+          subTimer.reset();
+        }
         mgos.postStep();
+        if(verbosity >= 2)
+          std::cout << "== cleanup assembler (" << subTimer.elapsed() << "s)"
+                    << std::endl;
 
         ++step;
+
+        if(verbosity >= 2)
+          std::cout << "== time step done (" << allTimer.elapsed() << "s)"
+                    << std::endl;
 
         return dt;
       }
@@ -133,6 +162,9 @@ namespace Dune {
       template<typename OldValues, typename F>
       T apply(T time, T dt, const OldValues& oldValues, F& f, TrialV& xnew)
       {
+        Timer allTimer;
+        Timer subTimer;
+
         // save formatting attributes
         ios_base_all_saver format_attribute_saver(std::cout);
 
@@ -151,19 +183,52 @@ namespace Dune {
                     << std::endl;
 
         // prepare assembler
+        if(verbosity >= 2) {
+          std::cout << "== prepare assembler" << std::endl;
+          subTimer.reset();
+        }
         mgos.preStep(time, dt, oldValues);
+        if(verbosity >= 2)
+          std::cout << "== prepare assembler (" << subTimer.elapsed() << "s)"
+                    << std::endl;
 
         // set boundary conditions and initial value
+        if(verbosity >= 2) {
+          std::cout << "== setup result vector" << std::endl;
+          subTimer.reset();
+        }
         f.setTime(time+dt);
         mgos.interpolate(*oldValues[0],f,xnew);
+        if(verbosity >= 2)
+          std::cout << "== setup result vector (" << subTimer.elapsed() << "s)"
+                    << std::endl;
 
         // solve stage
+        if(verbosity >= 2) {
+          std::cout << "== apply solver" << std::endl;
+          subTimer.reset();
+        }
         pdeSolver.apply(xnew);
+        if(verbosity >= 2)
+          std::cout << "== apply solver (" << subTimer.elapsed() << "s)"
+                    << std::endl;
 
         // postprocessing in the assembler
+        if(verbosity >= 2) {
+          std::cout << "== cleanup assembler" << std::endl;
+          subTimer.reset();
+        }
         mgos.postStep();
+        if(verbosity >= 2)
+          std::cout << "== cleanup assembler (" << subTimer.elapsed() << "s)"
+                    << std::endl;
 
         step++;
+
+        if(verbosity >= 2)
+          std::cout << "== time step done (" << allTimer.elapsed() << "s)"
+                    << std::endl;
+
         return dt;
       }
 
@@ -179,6 +244,9 @@ namespace Dune {
        */
       shared_ptr<const TrialV> apply(T time, T dt)
       {
+        Timer allTimer;
+        Timer subTimer;
+
         // save formatting attributes
         ios_base_all_saver format_attribute_saver(std::cout);
 
@@ -196,23 +264,55 @@ namespace Dune {
                     << time+dt
                     << std::endl;
 
+        // prepare assembler
+        if(verbosity >= 2) {
+          std::cout << "== prepare assembler" << std::endl;
+          subTimer.reset();
+        }
+        mgos.preStep(step, time, dt);
+        if(verbosity >= 2)
+          std::cout << "== prepare assembler (" << subTimer.elapsed() << "s)"
+                    << std::endl;
+
         // create vector, using last time step as start
+        if(verbosity >= 2) {
+          std::cout << "== setup result vector" << std::endl;
+          subTimer.reset();
+        }
         shared_ptr<TrialV>
           xnew(new TrialV(*mgos.getCache()->getUnknowns(step-1)));
-
-        // prepare assembler
-        mgos.preStep(step, time, dt);
+        if(verbosity >= 2)
+          std::cout << "== setup result vector (" << subTimer.elapsed() << "s)"
+                    << std::endl;
 
         // solve
+        if(verbosity >= 2) {
+          std::cout << "== apply solver" << std::endl;
+          subTimer.reset();
+        }
         pdeSolver.apply(*xnew);
+        if(verbosity >= 2)
+          std::cout << "== apply solver (" << subTimer.elapsed() << "s)"
+                    << std::endl;
 
         // postprocessing in the assembler
+        if(verbosity >= 2) {
+          std::cout << "== cleanup assembler" << std::endl;
+          subTimer.reset();
+        }
         mgos.postStep();
+        if(verbosity >= 2)
+          std::cout << "== cleanup assembler (" << subTimer.elapsed() << "s)"
+                    << std::endl;
 
         // store result for next step
         mgos.getCache()->setUnknowns(step, xnew);
 
         ++step;
+
+        if(verbosity >= 2)
+          std::cout << "== time step done (" << allTimer.elapsed() << "s)"
+                    << std::endl;
 
         return xnew;
       }
@@ -235,6 +335,9 @@ namespace Dune {
       template<typename F>
       shared_ptr<const TrialV> apply(T time, T dt, F& f)
       {
+        Timer allTimer;
+        Timer subTimer;
+
         // save formatting attributes
         ios_base_all_saver format_attribute_saver(std::cout);
 
@@ -252,26 +355,57 @@ namespace Dune {
                     << time+dt
                     << std::endl;
 
-        // create vector
-        shared_ptr<TrialV> xnew(new TrialV(mgos.trialGridFunctionSpace()));
-
         // prepare assembler
+        if(verbosity >= 2) {
+          std::cout << "== prepare assembler" << std::endl;
+          subTimer.reset();
+        }
         mgos.preStep(step, time, dt);
+        if(verbosity >= 2)
+          std::cout << "== prepare assembler (" << subTimer.elapsed() << "s)"
+                    << std::endl;
 
+        // setup vector
+        if(verbosity >= 2) {
+          std::cout << "== setup result vector" << std::endl;
+          subTimer.reset();
+        }
+        shared_ptr<TrialV> xnew(new TrialV(mgos.trialGridFunctionSpace()));
         // set boundary conditions and initial value
         f.setTime(time+dt);
         mgos.interpolate(*mgos.getCache()->getUnknowns(step-1),f,*xnew);
+        if(verbosity >= 2)
+          std::cout << "== setup result vector (" << subTimer.elapsed() << "s)"
+                    << std::endl;
 
         // solve stage
+        if(verbosity >= 2) {
+          std::cout << "== apply solver" << std::endl;
+          subTimer.reset();
+        }
         pdeSolver.apply(*xnew);
+        if(verbosity >= 2)
+          std::cout << "== apply solver (" << subTimer.elapsed() << "s)"
+                    << std::endl;
 
         // postprocessing in the assembler
+        if(verbosity >= 2) {
+          std::cout << "== cleanup assembler" << std::endl;
+          subTimer.reset();
+        }
         mgos.postStep();
+        if(verbosity >= 2)
+          std::cout << "== cleanup assembler (" << subTimer.elapsed() << "s)"
+                    << std::endl;
 
         // store result for next step
         mgos.getCache()->setUnknowns(step, xnew);
 
         ++step;
+
+        if(verbosity >= 2)
+          std::cout << "== time step done (" << allTimer.elapsed() << "s)"
+                    << std::endl;
 
         return xnew;
       }
