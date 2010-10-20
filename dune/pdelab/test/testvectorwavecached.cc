@@ -161,7 +161,7 @@ void vectorWave(const GV& gv, const FEM& fem, Time dt, std::size_t steps,
 //   typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS;
 //   LS ls(false);
 // #else
-  typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_NOPREC<GFS> LS;
+  typedef Dune::PDELab::ISTLBackend_NOVLP_CG_NOPREC<GFS> LS;
   LS ls(gfs,5000,2);
   //#endif
 
