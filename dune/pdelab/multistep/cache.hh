@@ -312,7 +312,8 @@ namespace Dune {
           return;
         if(order >= residualValues.size())
           residualValues.resize(order+1);
-        if(!residualValues.insert(std::make_pair(step, residualValue)).second)
+        if(!residualValues[order].insert(std::make_pair(step, residualValue))
+           .second)
           DUNE_THROW(Exception, "Residual r_" << order << "(" << step << ", "
                      "0) is already in the cache!");
       }
@@ -371,7 +372,7 @@ namespace Dune {
           return;
         if(order >= jacobians.size())
           jacobians.resize(order+1);
-        if(!jacobians.insert(std::make_pair(step, jacobian)).second)
+        if(!jacobians[order].insert(std::make_pair(step, jacobian)).second)
           DUNE_THROW(AlreadyInCache, "MultiStepCache::setJacobian(): Jacobian "
                      "J(r_" << order << "|_t_" << step << ") is already in "
                      "the cache!");
@@ -432,7 +433,8 @@ namespace Dune {
           return;
         if(order >= zeroResiduals.size())
           zeroResiduals.resize(order+1);
-        if(!zeroResiduals.insert(std::make_pair(step, zeroResidual)).second)
+        if(!zeroResiduals[order].insert(std::make_pair(step, zeroResidual))
+           .second)
           DUNE_THROW(Exception, "Residual r_" << order << "(" << step << ", "
                      "0) is already in the cache!");
       }
