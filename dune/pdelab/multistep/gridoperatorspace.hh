@@ -682,19 +682,26 @@ namespace Dune {
 
       //! get a residual value from a particular stationary GOS
       /**
-       * Does not yet support fetching from the cache (thats what the
-       * otherwise unneeded parameter order is for).
+       * Will try to fetch the value from the cache first.  If the value has
+       * to be computed, will try to store the value in the cache.
        */
       template<typename GOS>
       shared_ptr<const ResidualVector>
       getResidualValue(const GOS& gos, std::size_t order,
-                       unsigned backStep) const {
-        shared_ptr<ResidualVector>
-          result(new ResidualVector(this->testGridFunctionSpace(), 0));
+                       unsigned backStep) const
+      {
+        try {
+          return cache->getResidualValue(order, currentStep-Step(backStep));
+        }
+        catch(const NotInCache&) {
+          shared_ptr<ResidualVector>
+            result(new ResidualVector(this->testGridFunctionSpace(), 0));
 
-        gos.residual(*cache->getUnknowns(currentStep-Step(backStep)), *result);
-
-        return result;
+          gos.residual(*cache->getUnknowns(currentStep-Step(backStep)),
+                       *result);
+          cache->setResidualValue(order, currentStep-Step(backStep), result);
+          return result;
+        }
       }
 
       //! get the composed jacobian
