@@ -8,14 +8,18 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <cstdlib>
 #include <deque>
 #include <iostream>
+#include <limits>
 #include <string>
 
 #include <dune/common/array.hh>
+#include <dune/common/configparser.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/misc.hh>
 #include <dune/common/mpihelper.hh>
+#include <dune/common/parametertree.hh>
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/timer.hh>
 #include <dune/common/tuples.hh>
@@ -54,6 +58,80 @@
 //===============================================================
 
 //===============================================================
+// Easy access structure for program parameters
+//===============================================================
+
+template<class Time_, class DF, class RF, std::size_t dim>
+class Config {
+  template<class T, class ForwardIterator>
+  static T get(const Dune::ParameterTree &params,
+               ForwardIterator it, const ForwardIterator &end,
+               const std::string &name,
+               const T &default_value)
+  {
+    for(; it != end; ++it) {
+      try { return params.get<T>(*it == "" ? name : *it+"."+name); }
+      catch(const Dune::RangeError &) { }
+    }
+    return default_value;
+  }
+
+  template<class T, class Prefixes>
+  static T get(const Dune::ParameterTree &params,
+               const Prefixes &prefixes,
+               const std::string &name,
+               const T &default_value)
+  {
+    return get(params, prefixes.begin(), prefixes.end(), name, default_value);
+  }
+
+  template<std::size_t size, class T>
+  static Dune::array<T, size> make_array(const T& val) {
+    Dune::array<T, size> result;
+    std::fill(result.begin(), result.end(), val);
+    return result;
+  }
+
+  typedef Dune::FieldVector<DF, dim> Domain;
+
+public:
+  typedef Time_ Time;
+
+  RF epsilon;
+  RF mu;
+  Dune::array<unsigned, dim> elems;
+  std::pair<Domain,Domain> bbox;
+  Time start;
+  Time end;
+  Time dt;
+  std::string vtkprefix;
+
+  DF smallest_edge() const {
+    DF smallest = std::numeric_limits<DF>::infinity();
+    for(std::size_t d = 0; d < dim; ++d)
+      smallest = std::min(smallest,
+                          std::abs(bbox.second[d]-bbox.first[d]) / elems[d]);
+    return smallest;
+  }
+
+  template<class Prefixes>
+  Config(const Dune::ParameterTree &params,
+         const Prefixes& prefixes, const std::string &vtkprefix_) :
+    epsilon(get(params, prefixes, "epsilon", RF(1))),
+    mu(get(params, prefixes, "mu", RF(1))),
+    elems(get(params, prefixes, "elems", make_array<dim,unsigned>(32))),
+    bbox(get(params, prefixes, "bbox.lower", Domain(0)),
+         get(params, prefixes, "bbox.upper", Domain(1))),
+    start(get(params, prefixes, "start", Time(0))),
+    end(get(params, prefixes, "end", Time(std::sqrt(mu*epsilon)))),
+    dt(get(params, prefixes, "dt",
+           Time(smallest_edge()*std::sqrt(mu*epsilon/dim)*
+                get(params, prefixes, "dt_stretch", Time(0.35))))),
+    vtkprefix(get(params, prefixes, "vtkprefix", vtkprefix_))
+  { }
+};
+
+//===============================================================
 // Define parameter functions epsilon, mu and initial values
 //===============================================================
 
@@ -66,7 +144,7 @@ class Parameters :
   Time time;
 
 public:
-  Parameters() : Base(1, 1) { }
+  Parameters(RF epsilon, RF mu) : Base(1, 1) { }
 
   void setTime(Time time_) { Base::setTime(time); time = time_; }
 
@@ -86,15 +164,15 @@ public:
 // Problem setup and solution
 //===============================================================
 
-template<class CON, class Time, class GV, class FEM>
-void vectorWave(const GV& gv, const FEM& fem, Time dt, std::size_t steps,
-                std::string filename)
+template<class CON, class Config, class GV, class FEM>
+void vectorWave(const Config &config, const GV& gv, const FEM& fem)
 {
   // constants and types
   typedef typename GV::ctype DF;
   typedef typename FEM::Traits::FiniteElementType::Traits::Basis Basis;
   typedef typename Basis::Traits::RangeField RF;
   static const std::size_t dimRange = Basis::Traits::dimRange;
+  typedef typename Config::Time Time;
 
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,
@@ -110,7 +188,7 @@ void vectorWave(const GV& gv, const FEM& fem, Time dt, std::size_t steps,
   Dune::PDELab::constraints(b,gfs,cg);
 
   typedef Parameters<GV, RF, Time> Params;
-  Params params;
+  Params params(config.epsilon, config.mu);
 
   // make parameters
   Dune::PDELab::CentralDifferencesParameters<DF> msParams;
@@ -141,7 +219,7 @@ void vectorWave(const GV& gv, const FEM& fem, Time dt, std::size_t steps,
     Dune::shared_ptr<V> x;
 
     x.reset(new V(gfs));
-    params.setTime(-dt);
+    params.setTime(config.start-config.dt);
     Dune::PDELab::interpolate
       ( Dune::PDELab::makeMemberFunctionToGridFunctionAdaptor<RF, dimRange>
         (params, &Params::initialValues, gv),
@@ -149,7 +227,7 @@ void vectorWave(const GV& gv, const FEM& fem, Time dt, std::size_t steps,
     mgos.getCache()->setUnknowns(-1, x);
 
     x.reset(new V(gfs));
-    params.setTime(0);
+    params.setTime(config.start);
     Dune::PDELab::interpolate
       ( Dune::PDELab::makeMemberFunctionToGridFunctionAdaptor<RF, dimRange>
         (params, &Params::initialValues, gv),
@@ -175,55 +253,59 @@ void vectorWave(const GV& gv, const FEM& fem, Time dt, std::size_t steps,
   msMethod.setVerbosityLevel(2);
 
   // output grid function with VTKWriter
-  Dune::VTKSequenceWriter<GV> vtkwriter(gv,filename,"","",
-                                        Dune::VTK::nonconforming);
+  Dune::shared_ptr<Dune::VTKSequenceWriter<GV> > vtkwriter;
+  if(config.vtkprefix != "")
+    vtkwriter.reset(new Dune::VTKSequenceWriter<GV>(gv,config.vtkprefix,"","",
+                                                    Dune::VTK::nonconforming));
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
   typedef Dune::PDELab::DiscreteGridFunctionCurl<GFS,V> DGFCurl;
-  {
+  if(vtkwriter) {
     DGF dgf(gfs,*mgos.getCache()->getUnknowns(-1));
     DGFCurl dgfCurl(gfs,*mgos.getCache()->getUnknowns(-1));
-    vtkwriter.addVertexData
+    vtkwriter->addVertexData
       (new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-    vtkwriter.addVertexData
+    vtkwriter->addVertexData
       (new Dune::PDELab::VTKGridFunctionAdapter<DGFCurl>(dgfCurl,"curl"));
-    vtkwriter.write(-dt,Dune::VTK::appendedraw);
-    vtkwriter.clear();
+    vtkwriter->write(config.start-config.dt,Dune::VTK::appendedraw);
+    vtkwriter->clear();
   }
-  {
+  if(vtkwriter) {
     DGF dgf(gfs,*mgos.getCache()->getUnknowns(0));
     DGFCurl dgfCurl(gfs,*mgos.getCache()->getUnknowns(0));
-    vtkwriter.addVertexData
+    vtkwriter->addVertexData
       (new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-    vtkwriter.addVertexData
+    vtkwriter->addVertexData
       (new Dune::PDELab::VTKGridFunctionAdapter<DGFCurl>(dgfCurl,"curl"));
-    vtkwriter.write(0,Dune::VTK::appendedraw);
-    vtkwriter.clear();
+    vtkwriter->write(config.start,Dune::VTK::appendedraw);
+    vtkwriter->clear();
   }
 
-  DF time = 0;
+  DF time = config.start;
 
-  for(unsigned step = 0; step < steps; ++step) {
+  while(time < config.end) {
     Dune::Timer allTimer;
     Dune::Timer subTimer;
 
-    Dune::shared_ptr<const V> xnew = msMethod.apply(time, dt);
-    time += dt;
+    Dune::shared_ptr<const V> xnew = msMethod.apply(time, config.dt);
+    time += config.dt;
 
-    subTimer.reset();
-    std::cout << "== write output" << std::endl;
-    // output grid function with VTKWriter
-    DGF dgf(gfs,*xnew);
-    DGFCurl dgfCurl(gfs,*xnew);
-    vtkwriter.addVertexData
-      (new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-    vtkwriter.addVertexData
-      (new Dune::PDELab::VTKGridFunctionAdapter<DGFCurl>(dgfCurl,"curl"));
-    vtkwriter.write(time,Dune::VTK::appendedraw);
-    vtkwriter.clear();
-    std::cout << "== write output (" << subTimer.elapsed() << "s)"
-              << std::endl;
+    if(vtkwriter) {
+      subTimer.reset();
+      std::cout << "== write output" << std::endl;
+      // output grid function with VTKWriter
+      DGF dgf(gfs,*xnew);
+      DGFCurl dgfCurl(gfs,*xnew);
+      vtkwriter->addVertexData
+        (new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
+      vtkwriter->addVertexData
+        (new Dune::PDELab::VTKGridFunctionAdapter<DGFCurl>(dgfCurl,"curl"));
+      vtkwriter->write(time,Dune::VTK::appendedraw);
+      vtkwriter->clear();
+      std::cout << "== write output (" << subTimer.elapsed() << "s)"
+                << std::endl;
+    }
 
     std::cout << "= time step total time: " << allTimer.elapsed() << "s"
               << std::endl;
@@ -240,31 +322,40 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
+    Dune::ConfigParser paramtree;
+    if(argc > 1)
+      paramtree.parseFile(argv[1]);
+
 #if HAVE_UG
     // UG Pk 2D test
     {
-      static const std::size_t elems = 32;
-      static const std::size_t time_strech = 4;
-
-      // make grid
       static const std::size_t dim = 2;
       typedef Dune::UGGrid<dim> Grid;
       typedef Grid::ctype DF;
+      typedef double RF;
+      typedef DF Time;
+
+      std::vector<std::string> prefixes;
+      prefixes.push_back("ug.2d");
+      prefixes.push_back("ug");
+      prefixes.push_back("2d");
+      prefixes.push_back("");
+
+      Config<Time, DF, RF, dim> config(paramtree, prefixes,
+                                       "vectorwavecached_UG_EdgeS0.5_2D");
+
+      // make grid
       typedef Dune::FieldVector<DF, dim> Domain;
-      Dune::array<unsigned, dim> elemCount;
-      std::fill(elemCount.begin(), elemCount.end(), elems);
 
       Dune::shared_ptr<Grid>grid
-        (Dune::StructuredGridFactory<Grid>::createSimplexGrid(Domain(0),
-                                                              Domain(1),
-                                                              elemCount));
+        (Dune::StructuredGridFactory<Grid>::createSimplexGrid
+         (config.bbox.first, config.bbox.second, config.elems));
 
       // get view
       typedef Grid::LeafGridView GV;
       const GV& gv=grid->leafView();
 
       // make finite element map
-      typedef double RF;
       typedef Dune::PDELab::EdgeS0_5FiniteElementFactory<
         Grid::Codim<0>::Geometry, RF
         > FEFactory;
@@ -279,8 +370,7 @@ int main(int argc, char** argv)
 
       // solve problem
       vectorWave<Dune::PDELab::ConformingDirichletConstraints>
-        (gv,fem,1.0/time_strech/elems,time_strech*elems,
-         "vectorwavecached_UG_EdgeS0.5_2D");
+        (config,gv,fem);
     }
 #endif
 

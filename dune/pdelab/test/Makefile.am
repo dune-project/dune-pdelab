@@ -3,6 +3,7 @@
 #defined empty so we can add to it later
 NORMALTESTS = 
 MOSTLYCLEANFILES =
+check_SCRIPTS = 
 
 # list of tests to run
 TESTS = $(NORMALTESTS)
@@ -353,7 +354,9 @@ MOSTLYCLEANFILES +=				\
 	s*:vectorwave_*.pvtu			\
 	vectorwave_*.pvd
 
-NORMALTESTS += testvectorwavecached
+TESTS += testvectorwavecached.conf
+check_SCRIPTS += testvectorwavecached.conf
+check_PROGRAMS += testvectorwavecached
 testvectorwavecached_SOURCES = testvectorwavecached.cc
 MOSTLYCLEANFILES +=				\
 	s*:p*:vectorwavecached_*.vtu		\
