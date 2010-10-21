@@ -347,7 +347,9 @@ testutilities_LDADD = 				\
 	$(LDADD)
 MOSTLYCLEANFILES += edger.vtu interpolated.vtu q1.vtu taylorhood.vtu
 
-NORMALTESTS += testvectorwave
+TESTS += testvectorwave.conf
+check_SCRIPTS += testvectorwave.conf
+check_PROGRAMS += testvectorwave
 testvectorwave_SOURCES = testvectorwave.cc
 MOSTLYCLEANFILES +=				\
 	s*:p*:vectorwave_*.vtu			\
