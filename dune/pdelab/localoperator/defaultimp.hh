@@ -603,8 +603,8 @@ namespace Dune {
           mat_ss, mat_sn, mat_ns, mat_nn);
         // TODO: Reihenfolge der Multiplikationen!
         mat_ss.umv(x_s,r_s);
-        mat_ns.umv(x_n,r_s);
-        mat_sn.umv(x_s,r_n);
+        mat_ns.umv(x_s,r_n);
+        mat_sn.umv(x_n,r_s);
         mat_nn.umv(x_n,r_n);
       }
 
