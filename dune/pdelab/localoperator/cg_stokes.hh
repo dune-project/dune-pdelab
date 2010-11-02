@@ -127,7 +127,7 @@ namespace Dune {
           {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType_V> js(vsize);
-            lfsu_v_pfs.getChild(0).localFiniteElement().localBasis().evaluateJacobian(it->position(),js);
+            lfsu_v_pfs.getChild(0).finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradient to real element
             const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
@@ -140,13 +140,13 @@ namespace Dune {
 
             // evaluate basis functions
             std::vector<RT_P> psi(psize);
-            lfsu_p.localFiniteElement().localBasis().evaluateFunction(it->position(),psi);
+            lfsu_p.finiteElement().localBasis().evaluateFunction(it->position(),psi);
             
             // compute u (if Navier term enabled)
             Dune::FieldVector<RF,dim> vu(0.0);
             std::vector<RT_V> phi(psize);
             if(navier){
-              lfsu_v_pfs.getChild(0).localFiniteElement().localBasis().evaluateFunction(it->position(),phi);
+              lfsu_v_pfs.getChild(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
 
               for(int d=0; d<dim; ++d){
                 const LFSU_V & lfsu_v = lfsu_v_pfs.getChild(d);
@@ -262,7 +262,7 @@ namespace Dune {
 
             // evaluate basis functions
             std::vector<RT_V> phi(vsize);
-            lfsv_v_pfs.getChild(0).localFiniteElement().localBasis().evaluateFunction(local,phi);
+            lfsv_v_pfs.getChild(0).finiteElement().localBasis().evaluateFunction(local,phi);
 
             // evaluate flux boundary condition. the scalar flux is
             // assumed to be in normal direction
@@ -372,7 +372,7 @@ namespace Dune {
           {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType_V> js(vsize);
-            lfsu_v_pfs.getChild(0).localFiniteElement().localBasis().evaluateJacobian(it->position(),js);
+            lfsu_v_pfs.getChild(0).finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradient to real element
             const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
@@ -385,13 +385,13 @@ namespace Dune {
 
             // evaluate basis functions
             std::vector<RT_P> psi(psize);
-            lfsu_p.localFiniteElement().localBasis().evaluateFunction(it->position(),psi);
+            lfsu_p.finiteElement().localBasis().evaluateFunction(it->position(),psi);
 
             // compute u (if Navier term enabled)
             std::vector<RT_V> phi(psize);
             Dune::FieldVector<RF,dim> vu(0.0);
             if(navier){
-              lfsu_v_pfs.getChild(0).localFiniteElement().localBasis().evaluateFunction(it->position(),phi);
+              lfsu_v_pfs.getChild(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
 
               for(int d = 0; d < dim; ++d){
                 const LFSU_V & lfsv_v = lfsu_v_pfs.getChild(d);
