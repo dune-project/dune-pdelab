@@ -100,6 +100,7 @@ public:
   RF epsilon;
   RF mu;
   Dune::array<unsigned, dim> elems;
+  int globalRefines;
   std::pair<Domain,Domain> bbox;
   Time start;
   Time end;
@@ -111,7 +112,7 @@ public:
     for(std::size_t d = 0; d < dim; ++d)
       smallest = std::min(smallest,
                           std::abs(bbox.second[d]-bbox.first[d]) / elems[d]);
-    return smallest;
+    return smallest / std::pow(2.0, globalRefines);
   }
 
   template<class Prefixes>
@@ -120,6 +121,7 @@ public:
     epsilon(get(params, prefixes, "epsilon", RF(1))),
     mu(get(params, prefixes, "mu", RF(1))),
     elems(get(params, prefixes, "elems", make_array<dim,unsigned>(32))),
+    globalRefines(get(params, prefixes, "global_refines", int(0))),
     bbox(get(params, prefixes, "bbox.lower", Domain(0)),
          get(params, prefixes, "bbox.upper", Domain(1))),
     start(get(params, prefixes, "start", Time(0))),
@@ -350,6 +352,8 @@ int main(int argc, char** argv)
       Dune::shared_ptr<Grid>grid
         (Dune::StructuredGridFactory<Grid>::createSimplexGrid
          (config.bbox.first, config.bbox.second, config.elems));
+
+      grid->globalRefine(config.globalRefines);
 
       // get view
       typedef Grid::LeafGridView GV;
