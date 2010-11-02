@@ -5,6 +5,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/static_assert.hh>
+#include <dune/common/configparser.hh>
 #include <dune/grid/common/quadraturerules.hh>
 
 #include "../common/geometrywrapper.hh"
@@ -21,6 +22,24 @@
 namespace Dune {
     namespace PDELab {
 
+        /**
+           These are the boundary condition types as to be returned by
+           the employed boundary type function. 
+
+           Possible types:
+
+           <ul>
+
+           <li>\a DoNothing : Do not evaluate boundary integrals.
+
+           <li>\a VelocityDirichlet : Dirichlet conditions for velocity.
+
+           <li>\a PressureDirichlet : Natural Neumann conditions for the
+           impulse flux. These are equivalent to a fixed pressure
+           condition \b if \f$ \forall i : n \cdot \nabla v_i = 0 \f$.
+
+           </ul>
+         */
         struct StokesBoundaryCondition {
             enum Type {
                 DoNothing = 0,
@@ -28,6 +47,78 @@ namespace Dune {
                 PressureDirichlet = 2
             };
         };
+
+        /** 
+            \brief This is the default implementation for the interior
+            penalty factor.
+
+            It computes the factor according to \f$
+            \frac{\sigma}{|e|^\beta} \f$ for each face \f$ e \f$. It
+            assumes that the intersection geometries passed to the
+            local assembler allow to compute \f$|e|\f$ via \a
+            ig.geometry().volume().
+        */
+        template <typename RF>
+        class DefaultInteriorPenalty
+        {
+        private:
+            RF beta;
+            RF sigma;
+            RF mu;
+        public:
+
+            DefaultInteriorPenalty(const std::string method, const RF mu_)
+                : mu(mu_)
+            {
+                std::string s = method;
+                std::transform(s.begin(), s.end(), s.begin(), tolower);
+
+                // nipg (epsilon=1) 2d p1 -> Klaus sagt sollte auch sigma 1 klappen
+                if (s.find("nipg") != std::string::npos)
+                {
+                    beta = 1;
+                    if (sscanf(s.c_str(), "nipg %lg", &sigma) != 1)
+                        sigma = 3.9;
+                    return;
+                }
+                // sipg (epsilon=-1) 2d p1 -> Klaus sagt sigma=3.9irgendwas
+                if (s.find("sipg") != std::string::npos)
+                {
+                    beta = 1;
+                    if (sscanf(s.c_str(), "sipg %lg", &sigma) != 1)
+                        sigma = 3.9;
+                    return;
+                }
+                // obb sigma = 0, epsilon = 
+                if (s == "obb")
+                {
+                    beta = 1;
+                    sigma = 0;
+                    return;
+                }
+                // extract parameters
+                {
+                    int epsilon;
+                    if (3 == sscanf(s.c_str(), "%d %lg %lg", &epsilon, &sigma, &beta))
+                        return;
+                }
+                DUNE_THROW(Dune::Exception, "Unknown DG type " << method);
+            }
+
+            DefaultInteriorPenalty(const Dune::ParameterTree & config, const RF mu_)
+                : mu(mu_)
+            {
+                beta = config.get<double>("beta");
+                sigma = config.get<double>("ip_sigma");
+            }
+
+            template<typename I>
+            RF getFaceIP(const I & ig) const
+            {
+                return mu * sigma / std::pow(ig.geometry().volume(),beta);
+            }
+        };
+
         
         /** \brief a local operator for solving the stokes equation using a DG discretization
             
@@ -35,8 +126,10 @@ namespace Dune {
             \tparam B boundary condition function
             \tparam V dirichlet velocity boundary condition function
             \tparam P dirichlet pressure boundary condition function
+            \tparam IP a class providing the interior penalty factor for each face
          */
-        template<typename F, typename B, typename V, typename P>
+        template<typename F, typename B, typename V, typename P, 
+                 typename IP = DefaultInteriorPenalty<typename V::Traits::RangeFieldType> >
         class StokesDG :
             public LocalOperatorDefaultFlags,
             public FullSkeletonPattern, public FullVolumePattern
@@ -62,8 +155,8 @@ namespace Dune {
             enum { doLambdaBoundary = true };
 
             StokesDG (const std::string & method,
-                const F & _f, const B & _b, const V & _v, const P & _p, int _qorder=4) :
-                f(_f), b(_b), v(_v), p(_p), qorder(_qorder), mu(1)
+                      const F & _f, const B & _b, const V & _v, const P & _p, int _qorder=4) :
+                f(_f), b(_b), v(_v), p(_p), qorder(_qorder), mu(1), ip_factor(method,mu)
             {
                 std::string s = method;
                 std::transform(s.begin(), s.end(), s.begin(), tolower);
@@ -72,34 +165,34 @@ namespace Dune {
                 if (s.find("nipg") != std::string::npos)
                 {
                     epsilon = 1;
-                    beta = 1;
-                    if (sscanf(s.c_str(), "nipg %lg", &sigma) != 1)
-                        sigma = 3.9;
                     return;
                 }
                 // sipg (epsilon=-1) 2d p1 -> Klaus sagt sigma=3.9irgendwas
                 if (s.find("sipg") != std::string::npos)
                 {
                     epsilon = -1;
-                    beta = 1;
-                    if (sscanf(s.c_str(), "sipg %lg", &sigma) != 1)
-                        sigma = 3.9;
                     return;
                 }
                 // obb sigma = 0, epsilon = 
                 if (s == "obb")
                 {
                     epsilon = 1;
-                    beta = 1;
-                    sigma = 0;
                     return;
                 }
                 // extract parameters
                 {
+                    double sigma, beta;
                     if (3 == sscanf(s.c_str(), "%d %lg %lg", &epsilon, &sigma, &beta))
                         return;
                 }
                 DUNE_THROW(Dune::Exception, "Unknown DG type " << method);
+            }
+
+            StokesDG (const Dune::ParameterTree & configuration,
+                      const F & _f, const B & _b, const V & _v, const P & _p, int _qorder=4) :
+                f(_f), b(_b), v(_v), p(_p), qorder(_qorder), mu(1), ip_factor(configuration,mu)
+            {
+                epsilon = configuration.get<int>("epsilon");;
             }
 
             // volume integral depending only on test functions,
@@ -216,6 +309,8 @@ namespace Dune {
                 Dune::GeometryType gtface = ig.geometryInInside().type();
                 const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
+                const RF penalty_factor = ip_factor.getFaceIP(ig);
+
                 // loop over quadrature points and integrate normal flux
                 for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
                 {
@@ -263,7 +358,7 @@ namespace Dune {
                         //================================================//
                         // \mu \int \sigma / |\gamma|^\beta v u_0
                         //================================================//
-                        factor = mu * sigma / std::pow(ig.geometry().volume(), beta) * weight;
+                        factor = penalty_factor * weight;
                         for (unsigned int i=0;i<vsize;++i) 
                         {
                             const RF val = phi_v[i] * factor;
@@ -287,7 +382,7 @@ namespace Dune {
                         typename P::Traits::RangeType p0;
                         p.evaluateGlobal(global,p0);
                     
-                        std::cout << "Pdirichlet\n";
+                        //std::cout << "Pdirichlet\n";
                         //================================================//
                         // \int p u n
                         //================================================//            
@@ -449,6 +544,8 @@ namespace Dune {
                 Dune::GeometryType gtface = ig.geometryInInside().type();
                 const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
+                const RF penalty_factor = ip_factor.getFaceIP(ig);
+
                 // loop over quadrature points and integrate normal flux
                 for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
                 {
@@ -537,7 +634,7 @@ namespace Dune {
                     //================================================//
                     // \mu \int \sigma / |\gamma|^\beta v u
                     //================================================//
-                    factor = mu * sigma / std::pow(ig.geometry().volume(), beta) * weight;
+                    factor = penalty_factor * weight;
                     for (unsigned int i=0;i<vsize_s;++i)
                     {
                         for (unsigned int j=0;j<vsize_s;++j) 
@@ -686,6 +783,8 @@ namespace Dune {
                 typename B::Traits::RangeType bctype;
                 b.evaluate(ig,rule.begin()->position(),bctype);
 
+                const RF penalty_factor = ip_factor.getFaceIP(ig);
+
                 // loop over quadrature points and integrate normal flux
                 for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
                 {
@@ -746,12 +845,12 @@ namespace Dune {
                         //================================================//
                         // \mu \int \sigma / |\gamma|^\beta v u
                         //================================================//
-                        const RF ip_factor = mu * sigma / std::pow(ig.geometry().volume(), beta) * weight;
+                        const RF p_factor = penalty_factor * weight;
                         for (unsigned int i=0;i<vsize;++i)
                         {
                             for (unsigned int j=0;j<vsize;++j) 
                             {
-                                RF val = phi_v[i]*phi_v[j] * ip_factor;
+                                RF val = phi_v[i]*phi_v[j] * p_factor;
                                 for (unsigned int d=0;d<dim;++d)
                                 {
                                     const LFSV_V& lfsv_v = lfsv_pfs_v.getChild(d);
@@ -771,11 +870,10 @@ namespace Dune {
             const P& p;
             // values for NIPG / NIPG
             int    epsilon;
-            double sigma;
-            double beta;
             int    qorder;
             // physical parameters
             double mu;
+            IP ip_factor;
         };
 
         //! \} group GridFunctionSpace
