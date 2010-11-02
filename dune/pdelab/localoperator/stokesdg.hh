@@ -311,7 +311,6 @@ namespace Dune {
             {
                 // dimensions
                 static const unsigned int dim = EG::Geometry::dimension;
-                static const unsigned int dimw = EG::Geometry::dimensionworld;
 
                 // subspaces
                 dune_static_assert
