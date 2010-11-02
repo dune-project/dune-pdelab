@@ -134,12 +134,15 @@ namespace Dune {
             public LocalOperatorDefaultFlags,
             public FullSkeletonPattern, public FullVolumePattern
             //
-            ,public JacobianBasedAlphaVolume< StokesDG<F,B,V,P> >
-            ,public JacobianBasedAlphaSkeleton< StokesDG<F,B,V,P> >
-            ,public JacobianBasedAlphaBoundary< StokesDG<F,B,V,P> >
+            ,public JacobianBasedAlphaVolume< StokesDG<F,B,V,P,IP> >
+            ,public JacobianBasedAlphaSkeleton< StokesDG<F,B,V,P,IP> >
+            ,public JacobianBasedAlphaBoundary< StokesDG<F,B,V,P,IP> >
         {
             typedef StokesBoundaryCondition BC;
+            typedef typename V::Traits::RangeFieldType RF;
         public:
+            typedef IP InteriorPenaltyFactor;
+
             // pattern assembly flags
             enum { doPatternVolume = true };
             enum { doPatternSkeleton = true };
@@ -154,9 +157,9 @@ namespace Dune {
             enum { doLambdaVolume   = true };
             enum { doLambdaBoundary = true };
 
-            StokesDG (const std::string & method,
+            StokesDG (const std::string & method, const IP & ip_factor_, const RF mu_,
                       const F & _f, const B & _b, const V & _v, const P & _p, int _qorder=4) :
-                f(_f), b(_b), v(_v), p(_p), qorder(_qorder), mu(1), ip_factor(method,mu)
+                f(_f), b(_b), v(_v), p(_p), qorder(_qorder), mu(mu_), ip_factor(ip_factor_)
             {
                 std::string s = method;
                 std::transform(s.begin(), s.end(), s.begin(), tolower);
@@ -188,11 +191,11 @@ namespace Dune {
                 DUNE_THROW(Dune::Exception, "Unknown DG type " << method);
             }
 
-            StokesDG (const Dune::ParameterTree & configuration,
+            StokesDG (const Dune::ParameterTree & configuration,const IP & ip_factor_, const RF mu_,
                       const F & _f, const B & _b, const V & _v, const P & _p, int _qorder=4) :
-                f(_f), b(_b), v(_v), p(_p), qorder(_qorder), mu(1), ip_factor(configuration,mu)
+                f(_f), b(_b), v(_v), p(_p), qorder(_qorder), mu(mu_), ip_factor(ip_factor_)
             {
-                epsilon = configuration.get<int>("epsilon");;
+                epsilon = configuration.get<int>("epsilon");
             }
 
             // volume integral depending only on test functions,
@@ -873,7 +876,7 @@ namespace Dune {
             int    qorder;
             // physical parameters
             double mu;
-            IP ip_factor;
+            const IP & ip_factor;
         };
 
         //! \} group GridFunctionSpace
