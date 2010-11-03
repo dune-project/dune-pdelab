@@ -177,6 +177,12 @@ namespace Dune {
 		typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
 		LFSV lfsv(gfsv);
 
+        // allocate local data container
+        LocalVector<typename X::ElementType, TrialSpaceTag> xl;
+        LocalVector<typename R::ElementType, TestSpaceTag> rl;
+        LocalVector<typename X::ElementType, TrialSpaceTag> xn;
+        LocalVector<typename R::ElementType, TestSpaceTag> rn;
+        
 		// traverse grid view
 		for (ElementIterator it = gfsu.gridview().template begin<0>();
 			 it!=gfsu.gridview().template end<0>(); ++it)
@@ -200,8 +206,8 @@ namespace Dune {
 			lfsv.bind(*it);
 
 			// allocate local data container
-			LocalVector<typename X::ElementType, TrialSpaceTag> xl(lfsu.size());
-			LocalVector<typename R::ElementType, TestSpaceTag> rl(lfsv.size(),0.0);
+			xl.resize(lfsu.size());
+			rl.assign(lfsv.size(),0.0);
 
 			// read coefficents
 			lfsu.vread(x,xl);
@@ -248,8 +254,8 @@ namespace Dune {
                             lfsvn.bind(*(iit->outside()));
                             
                             // allocate local data container
-                            LocalVector<typename X::ElementType, TrialSpaceTag> xn(lfsun.size());
-                            LocalVector<typename R::ElementType, TestSpaceTag> rn(lfsvn.size(),0.0);
+                            xn.resize(lfsun.size());
+                            rn.assign(lfsvn.size(),0.0);
                             
                             // read coefficents
                             lfsun.vread(x,xn);
@@ -321,6 +327,10 @@ namespace Dune {
         typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
         LFSV lfsv(gfsv);
 
+        // allocate local data container
+        LocalVector<typename R::ElementType, TestSpaceTag> rl;
+        LocalVector<typename R::ElementType, TestSpaceTag> rn;
+        
         // traverse grid view
         for (ElementIterator it = gfsv.gridview().template begin<0>();
              it!=gfsv.gridview().template end<0>(); ++it)
@@ -343,8 +353,7 @@ namespace Dune {
           lfsv.bind(*it);
 
           // allocate local data container
-          LocalVector<typename R::ElementType, TestSpaceTag> rl(lfsv.size(),
-                                                                0.0);
+          rl.assign(lfsv.size(), 0.0);
 
           // volume evaluation
           LocalAssemblerCallSwitch<LA,LA::doLambdaVolume>::
@@ -383,8 +392,7 @@ namespace Dune {
                   lfsvn.bind(*(iit->outside()));
 
                   // allocate local data container
-                  LocalVector<typename R::ElementType, TestSpaceTag>
-                    rn(lfsvn.size(), 0.0);
+                  rn.assign(lfsvn.size(), 0.0);
 
                   // skeleton evaluation
                   LocalAssemblerCallSwitch<LA,LA::doLambdaSkeleton>::
@@ -438,6 +446,12 @@ namespace Dune {
 		typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
 		LFSV lfsv(gfsv);
 
+        // allocate local data container
+        LocalVector<typename X::ElementType, TrialSpaceTag> xl;
+        LocalVector<typename Y::ElementType, TestSpaceTag> yl;
+        LocalVector<typename X::ElementType, TrialSpaceTag> xn;
+        LocalVector<typename Y::ElementType, TestSpaceTag> yn;
+
 		// traverse grid view
 		for (ElementIterator it = gfsu.gridview().template begin<0>();
 			 it!=gfsu.gridview().template end<0>(); ++it)
@@ -461,8 +475,8 @@ namespace Dune {
 			lfsv.bind(*it);
 
 			// allocate local data container
-			LocalVector<typename X::ElementType, TrialSpaceTag> xl(lfsu.size());
-			LocalVector<typename Y::ElementType, TestSpaceTag> yl(lfsv.size(),0.0);
+			xl.resize(lfsu.size());
+			yl.assign(lfsv.size(),0.0);
 
 			// read coefficents
 			lfsu.vread(x,xl);
@@ -506,8 +520,8 @@ namespace Dune {
                             lfsvn.bind(*(iit->outside()));
                             
                             // allocate local data container
-                            LocalVector<typename X::ElementType, TrialSpaceTag> xn(lfsun.size());
-                            LocalVector<typename Y::ElementType, TestSpaceTag> yn(lfsvn.size(),0.0);
+                            xn.resize(lfsun.size());
+                            yn.assign(lfsvn.size(),0.0);
                             
                             // read coefficents
                             lfsun.vread(x,xn);
@@ -561,6 +575,14 @@ namespace Dune {
 		typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
 		LFSV lfsv(gfsv);
 
+        // allocate local data container
+        LocalVector<typename X::ElementType, TrialSpaceTag> xn;
+        LocalVector<typename X::ElementType, TrialSpaceTag> xl;
+        LocalMatrix<typename A::ElementType> al;
+        LocalMatrix<typename A::ElementType> al_sn;
+        LocalMatrix<typename A::ElementType> al_ns;
+        LocalMatrix<typename A::ElementType> al_nn;
+        
 		// traverse grid view
 		for (ElementIterator it = gfsu.gridview().template begin<0>();
 			 it!=gfsu.gridview().template end<0>(); ++it)
@@ -585,8 +607,8 @@ namespace Dune {
 			lfsv.bind(*it);
 
 			// allocate local data container
-			LocalVector<typename X::ElementType, TrialSpaceTag> xl(lfsu.size());
-			LocalMatrix<typename A::ElementType> al(lfsv.size(),lfsu.size(),0.0);
+			xl.resize(lfsu.size());
+			al.assign(lfsv.size(),lfsu.size(),0.0);
 
 			// read coefficents
 			lfsu.vread(x,xl);
@@ -630,10 +652,10 @@ namespace Dune {
                             lfsvn.bind(*(iit->outside()));
                             
                             // allocate local data container
-                            LocalVector<typename X::ElementType, TrialSpaceTag> xn(lfsun.size());
-                            LocalMatrix<typename A::ElementType> al_sn(lfsv.size() ,lfsun.size(),0.0);
-                            LocalMatrix<typename A::ElementType> al_ns(lfsvn.size(),lfsu.size() ,0.0);
-                            LocalMatrix<typename A::ElementType> al_nn(lfsvn.size(),lfsun.size(),0.0);
+                            xn.resize(lfsun.size());
+                            al_sn.assign(lfsv.size() ,lfsun.size(),0.0);
+                            al_ns.assign(lfsvn.size(),lfsu.size() ,0.0);
+                            al_nn.assign(lfsvn.size(),lfsun.size(),0.0);
                             
                             // read coefficents
                             lfsun.vread(x,xn);
