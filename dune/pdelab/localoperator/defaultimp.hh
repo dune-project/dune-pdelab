@@ -193,7 +193,7 @@ namespace Dune {
         {
           for (int k=0; k<mat_ss.nrows(); k++) up_s[k]=0.0;
           for (int k=0; k<mat_nn.nrows(); k++) up_n[k]=0.0;
-          R delta = epsilon*(1.0+std::abs(u_s[lfsu_s.localIndex(j)]));
+          R delta = epsilon*(1.0+std::abs(u_n[lfsu_n.localIndex(j)]));
           u_n[lfsu_n.localIndex(j)] += delta;
           asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,up_s,
                                  up_n);
@@ -450,7 +450,7 @@ namespace Dune {
         {
           for (unsigned k=0; k<y_s.size(); k++) up_s[k]=0.0;
           for (unsigned k=0; k<y_n.size(); k++) up_n[k]=0.0;
-          R delta = epsilon*(1.0+std::abs(u_s[lfsu_s.localIndex(j)]));
+          R delta = epsilon*(1.0+std::abs(u_n[lfsu_n.localIndex(j)]));
           u_n[lfsu_n.localIndex(j)] += delta;
           asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,up_s,
                                  up_n);
