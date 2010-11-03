@@ -238,11 +238,11 @@ namespace Dune {
       template<typename P>
       void fill_pattern (P& globalpattern) const
       {
- 		// make local function spaces
-		typedef typename GFSU::LocalFunctionSpace LFSU;
-		LFSU lfsu(gfsu);
-		typedef typename GFSV::LocalFunctionSpace LFSV;
-		LFSV lfsv(gfsv);
+        // make local function spaces
+        typedef LocalFunctionSpace<GFSU, TrialSpaceTag> LFSU;
+        LFSU lfsu(gfsu);
+        typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
+        LFSV lfsv(gfsv);
 
         for (ElementIterator it = gfsu.gridview().template begin<0>();
              it!=gfsu.gridview().template end<0>(); ++it)
@@ -447,10 +447,10 @@ namespace Dune {
         std::map<Dune::GeometryType,int> gtoffset;
 
 		// make local function spaces
-		typedef typename GFSU::LocalFunctionSpace LFSU;
-		LFSU lfsu(gfsu);
-		typedef typename GFSV::LocalFunctionSpace LFSV;
-		LFSV lfsv(gfsv);
+        typedef LocalFunctionSpace<GFSU, TestSpaceTag> LFSU;
+        LFSU lfsu(gfsu);
+        typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
+        LFSV lfsv(gfsv);
 
         // extract coefficients of time stepping scheme
         std::vector<TReal> a(stage);
@@ -501,9 +501,9 @@ namespace Dune {
                 lm.setTime(time+d[i]*dt);
 
                 // allocate local data container
-                std::vector<typename X::ElementType> xl(lfsu.size());
-                std::vector<typename R::ElementType> rl_a(lfsv.size(),0.0);
-                std::vector<typename R::ElementType> rl_m(lfsv.size(),0.0);
+                LocalVector<typename X::ElementType, TrialSpaceTag> xl(lfsu.size());
+                LocalVector<typename R::ElementType, TestSpaceTag> rl_a(lfsv.size(),0.0);
+                LocalVector<typename R::ElementType, TestSpaceTag> rl_m(lfsv.size(),0.0);
 
                 // read coefficents
                 lfsu.vread(*x[i],xl);
@@ -564,8 +564,8 @@ namespace Dune {
                                 lfsvn.bind(*(iit->outside()));
                             
                                 // allocate local data container
-                                std::vector<typename X::ElementType> xn(lfsun.size());
-                                std::vector<typename R::ElementType> rn(lfsvn.size(),0.0);
+                                LocalVector<typename X::ElementType, TrialSpaceTag> xn(lfsun.size());
+                                LocalVector<typename R::ElementType, TestSpaceTag> rn(lfsvn.size(),0.0);
                             
                                 // read coefficents
                                 lfsun.vread(*x[i],xn);
@@ -659,10 +659,10 @@ namespace Dune {
         std::map<Dune::GeometryType,int> gtoffset;
 
 		// make local function spaces
-		typedef typename GFSU::LocalFunctionSpace LFSU;
-		LFSU lfsu(gfsu);
-		typedef typename GFSV::LocalFunctionSpace LFSV;
-		LFSV lfsv(gfsv);
+        typedef LocalFunctionSpace<GFSU, TestSpaceTag> LFSU;
+        LFSU lfsu(gfsu);
+        typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
+        LFSV lfsv(gfsv);
 
         // extract coefficients of time stepping scheme
         std::vector<TReal> a(stage);
@@ -710,9 +710,9 @@ namespace Dune {
                 lm.setTime(time+d[i]*dt);
 
                 // allocate local data container
-                std::vector<typename X::ElementType> xl(lfsu.size());
-                std::vector<typename R::ElementType> rl_a(lfsv.size(),0.0);
-                std::vector<typename R::ElementType> rl_m(lfsv.size(),0.0);
+                LocalVector<typename X::ElementType, TrialSpaceTag> xl(lfsu.size());
+                LocalVector<typename R::ElementType, TestSpaceTag> rl_a(lfsv.size(),0.0);
+                LocalVector<typename R::ElementType, TestSpaceTag> rl_m(lfsv.size(),0.0);
 
                 // read coefficents
                 lfsu.vread(*x[i],xl);
@@ -773,8 +773,8 @@ namespace Dune {
                                 lfsvn.bind(*(iit->outside()));
                             
                                 // allocate local data container
-                                std::vector<typename X::ElementType> xn(lfsun.size());
-                                std::vector<typename R::ElementType> rn(lfsvn.size(),0.0);
+                                LocalVector<typename X::ElementType, TrialSpaceTag> xn(lfsun.size());
+                                LocalVector<typename R::ElementType, TestSpaceTag> rn(lfsvn.size(),0.0);
                             
                                 // read coefficents
                                 lfsun.vread(*x[i],xn);
@@ -829,8 +829,8 @@ namespace Dune {
             // - temporal part has only alpha_volume
 
 			// allocate local data container
-			std::vector<typename X::ElementType> xl(lfsu.size());
-			LocalMatrix<typename A::ElementType> ml(lfsv.size(),lfsu.size(),0.0);
+            LocalVector<typename X::ElementType, TrialSpaceTag> xl(lfsu.size());
+            LocalMatrix<typename A::ElementType> ml(lfsv.size(),lfsu.size(),0.0);
 
             // set time in local operator for evaluation
             lm.setTime(time+d_r*dt);
@@ -886,10 +886,10 @@ namespace Dune {
         std::map<Dune::GeometryType,int> gtoffset;
 
 		// make local function spaces
-		typedef typename GFSU::LocalFunctionSpace LFSU;
-		LFSU lfsu(gfsu);
-		typedef typename GFSV::LocalFunctionSpace LFSV;
-		LFSV lfsv(gfsv);
+        typedef LocalFunctionSpace<GFSU, TestSpaceTag> LFSU;
+        LFSU lfsu(gfsu);
+        typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
+        LFSV lfsv(gfsv);
 
         // extract coefficients of time stepping scheme
         TReal b_rr = method->b(stage,stage);
@@ -923,9 +923,9 @@ namespace Dune {
 			lfsv.bind(*it);
 
 			// allocate local data container
-			std::vector<typename X::ElementType> xl(lfsu.size());
-			std::vector<typename R::ElementType> rl_a(lfsv.size(),0.0);
-			std::vector<typename R::ElementType> rl_m(lfsv.size(),0.0);
+            LocalVector<typename X::ElementType, TrialSpaceTag> xl(lfsu.size());
+            LocalVector<typename R::ElementType, TestSpaceTag> rl_a(lfsv.size(),0.0);
+            LocalVector<typename R::ElementType, TestSpaceTag> rl_m(lfsv.size(),0.0);
 
 			// read coefficents
 			lfsu.vread(x,xl);
@@ -980,8 +980,8 @@ namespace Dune {
                             lfsvn.bind(*(iit->outside()));
                             
                             // allocate local data container
-                            std::vector<typename X::ElementType> xn(lfsun.size());
-                            std::vector<typename R::ElementType> rn(lfsvn.size(),0.0);
+                            LocalVector<typename X::ElementType, TrialSpaceTag> xn(lfsun.size());
+                            LocalVector<typename R::ElementType, TestSpaceTag> rn(lfsvn.size(),0.0);
                             
                             // read coefficents
                             lfsun.vread(x,xn);
@@ -1049,10 +1049,10 @@ namespace Dune {
         std::map<Dune::GeometryType,int> gtoffset;
 
 		// make local function spaces
-		typedef typename GFSU::LocalFunctionSpace LFSU;
-		LFSU lfsu(gfsu);
-		typedef typename GFSV::LocalFunctionSpace LFSV;
-		LFSV lfsv(gfsv);
+        typedef LocalFunctionSpace<GFSU, TestSpaceTag> LFSU;
+        LFSU lfsu(gfsu);
+        typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
+        LFSV lfsv(gfsv);
 
         // extract coefficients of time stepping scheme
         TReal b_rr = method->b(stage,stage);
@@ -1086,9 +1086,9 @@ namespace Dune {
 			lfsv.bind(*it);
 
 			// allocate local data container
-			std::vector<typename X::ElementType> xl(lfsu.size());
-			std::vector<typename Y::ElementType> yl_a(lfsv.size(),0.0);
-			std::vector<typename Y::ElementType> yl_m(lfsv.size(),0.0);
+            LocalVector<typename X::ElementType, TrialSpaceTag> xl(lfsu.size());
+            LocalVector<typename Y::ElementType, TestSpaceTag> yl_a(lfsv.size(),0.0);
+            LocalVector<typename Y::ElementType, TestSpaceTag> yl_m(lfsv.size(),0.0);
 
 			// read coefficents
 			lfsu.vread(x,xl);
@@ -1137,8 +1137,8 @@ namespace Dune {
                             lfsvn.bind(*(iit->outside()));
                             
                             // allocate local data container
-                            std::vector<typename X::ElementType> xn(lfsun.size());
-                            std::vector<typename Y::ElementType> yn(lfsvn.size(),0.0);
+                            LocalVector<typename X::ElementType, TrialSpaceTag> xn(lfsun.size());
+                            LocalVector<typename Y::ElementType, TestSpaceTag> yn(lfsvn.size(),0.0);
                             
                             // read coefficents
                             lfsun.vread(x,xn);
@@ -1197,10 +1197,10 @@ namespace Dune {
         std::map<Dune::GeometryType,int> gtoffset;
 
 		// make local function spaces
-		typedef typename GFSU::LocalFunctionSpace LFSU;
-		LFSU lfsu(gfsu);
-		typedef typename GFSV::LocalFunctionSpace LFSV;
-		LFSV lfsv(gfsv);
+        typedef LocalFunctionSpace<GFSU, TestSpaceTag> LFSU;
+        LFSU lfsu(gfsu);
+        typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
+        LFSV lfsv(gfsv);
 
         // extract coefficients of time stepping scheme
         TReal b_rr = method->b(stage,stage);
@@ -1235,9 +1235,9 @@ namespace Dune {
 			lfsv.bind(*it);
 
 			// allocate local data container
-			std::vector<typename X::ElementType> xl(lfsu.size());
-			LocalMatrix<typename A::ElementType> al(lfsv.size(),lfsu.size(),0.0);
-			LocalMatrix<typename A::ElementType> ml(lfsv.size(),lfsu.size(),0.0);
+            LocalVector<typename X::ElementType, TrialSpaceTag> xl(lfsu.size());
+            LocalMatrix<typename A::ElementType> al(lfsv.size(),lfsu.size(),0.0);
+            LocalMatrix<typename A::ElementType> ml(lfsv.size(),lfsu.size(),0.0);
 
 			// read coefficents
 			lfsu.vread(x,xl);
@@ -1286,7 +1286,7 @@ namespace Dune {
                             lfsvn.bind(*(iit->outside()));
                             
                             // allocate local data container
-                            std::vector<typename X::ElementType> xn(lfsun.size());
+                            LocalVector<typename X::ElementType, TrialSpaceTag> xn(lfsun.size());
                             LocalMatrix<typename A::ElementType> al_sn(lfsv.size() ,lfsun.size(),0.0);
                             LocalMatrix<typename A::ElementType> al_ns(lfsvn.size(),lfsu.size() ,0.0);
                             LocalMatrix<typename A::ElementType> al_nn(lfsvn.size(),lfsun.size(),0.0);
