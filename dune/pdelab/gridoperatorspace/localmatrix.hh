@@ -29,6 +29,13 @@ namespace Dune {
 		cols = c;
 	  }
 
+	  void assign (int r, int c, const T& t)
+	  {
+		m.assign(r*c,t);
+		rows = r; 
+		cols = c;
+	  }
+
 	  const T& operator() (int i, int j) const
 	  {
 		return m[j*rows+i];
