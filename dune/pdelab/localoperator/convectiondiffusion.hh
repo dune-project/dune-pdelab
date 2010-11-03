@@ -289,7 +289,7 @@ namespace Dune {
           {
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
-            lfsu.localFiniteElement().localBasis().evaluateFunction(it->position(),phi);
+            lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
 
             // evaluate u
             RF u=0.0;
@@ -304,7 +304,7 @@ namespace Dune {
 
              // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType> js(lfsu.size());
-            lfsu.localFiniteElement().localBasis().evaluateJacobian(it->position(),js);
+            lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradients of shape functions to real element
             const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
@@ -376,7 +376,7 @@ namespace Dune {
 
             // evaluate test shape functions 
             std::vector<RangeType> phi(lfsv_s.size());
-            lfsv_s.localFiniteElement().localBasis().evaluateFunction(local,phi);
+            lfsv_s.finiteElement().localBasis().evaluateFunction(local,phi);
 
             // evaluate u
             RF u=0.0;
