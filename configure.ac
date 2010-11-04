@@ -25,29 +25,29 @@ AC_SUBST(AM_LDFLAGS, $DUNE_LDFLAGS)
 AC_SUBST([LDADD], [$DUNE_LIBS])
 
 AC_CONFIG_FILES([
-  Makefile
-  doc/Makefile
-  doc/doxygen/Makefile
   doc/doxygen/Doxyfile
-  m4/Makefile
+  doc/doxygen/Makefile
+  doc/Makefile
+  dune-pdelab.pc
   dune/Makefile
-  dune/pdelab/Makefile
-  dune/pdelab/test/Makefile
+  dune/pdelab/backend/Makefile
   dune/pdelab/common/Makefile
-  dune/pdelab/experimental/Makefile
   dune/pdelab/experimental/common/Makefile
+  dune/pdelab/experimental/Makefile
   dune/pdelab/finiteelement/Makefile
   dune/pdelab/finiteelementmap/Makefile
   dune/pdelab/function/Makefile
   dune/pdelab/gridfunctionspace/Makefile
   dune/pdelab/gridoperatorspace/Makefile
-  dune/pdelab/backend/Makefile
+  dune/pdelab/instationary/Makefile
   dune/pdelab/localoperator/Makefile
+  dune/pdelab/Makefile
   dune/pdelab/multistep/Makefile
   dune/pdelab/newton/Makefile
   dune/pdelab/stationary/Makefile
-  dune/pdelab/instationary/Makefile
-  dune-pdelab.pc
+  dune/pdelab/test/Makefile
+  m4/Makefile
+  Makefile
 ])
 AC_OUTPUT
 # finally print the summary information
