@@ -64,22 +64,31 @@ void test (const GV& gv)
       q2lfs.bind(*it);
       q2lfs.debug();
       q2lfs.vread(x,xl);
+      assert(q2lfs.size() == 
+          q2lfs.localVectorSize());
 
       powerlfs.bind(*it);
       powerlfs.debug();
       powerlfs.vread(xp,xlp);
+      assert(powerlfs.size() == 
+          powerlfs.localVectorSize());
+      assert(powerlfs.localVectorSize() == 
+          powerlfs.template getChild<0>().localVectorSize());
+      assert(powerlfs.localVectorSize() == 
+          powerlfs.template getChild<1>().localVectorSize());
 
       compositelfs.bind(*it);
       compositelfs.debug();
-
-      assert(powerlfs.size() == 
-             powerlfs.localVectorSize());
-      assert(powerlfs.localVectorSize() == 
-             powerlfs.template getChild<0>().localVectorSize());
       assert(compositelfs.size() == 
-             compositelfs.localVectorSize());
+          compositelfs.localVectorSize());
       assert(compositelfs.localVectorSize() == 
-             compositelfs.template getChild<0>().localVectorSize());
+          compositelfs.template getChild<0>().localVectorSize());
+      assert(compositelfs.localVectorSize() == 
+          compositelfs.template getChild<0>().template getChild<0>().localVectorSize());
+      assert(compositelfs.localVectorSize() == 
+          compositelfs.template getChild<0>().template getChild<1>().localVectorSize());
+      assert(compositelfs.localVectorSize() == 
+          compositelfs.template getChild<1>().localVectorSize());
 	}
 }
 
@@ -95,7 +104,7 @@ int main(int argc, char** argv)
 	Dune::FieldVector<bool,2> B(false);
 	Dune::YaspGrid<2> grid(L,N,B,0);
     grid.globalRefine(1);
-
+    
 	test(grid.leafView());
 
 	// test passed
