@@ -40,6 +40,7 @@ AC_CONFIG_FILES([
   dune/pdelab/gridfunctionspace/Makefile
   dune/pdelab/gridoperatorspace/Makefile
   dune/pdelab/instationary/Makefile
+  dune/pdelab/linearsolver/Makefile
   dune/pdelab/localoperator/Makefile
   dune/pdelab/Makefile
   dune/pdelab/multistep/Makefile

@@ -7,6 +7,7 @@ SUBDIRS =					\
 	function				\
 	gridfunctionspace			\
 	gridoperatorspace			\
+	linearsolver				\
 	localoperator				\
 	multistep				\
 	newton					\
