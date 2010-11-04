@@ -330,15 +330,19 @@ int main(int argc, char** argv)
       // make grid
       Dune::shared_ptr<Grid>grid
         (Dune::StructuredGridFactory<Grid>::createSimplexGrid(myParams));
+      if(grid->maxLevel() == 0)
+        grid->globalRefine(myParams.get("global_refines", 0));
 
       // get view
       typedef Grid::LeafGridView GV;
       const GV& gv=grid->leafView();
 
       std::cout << "= Number of elements: " << gv.size(0) << std::endl;
+      DF smallest = smallest_edge(gv);
+      std::cout << "= Smallest edge: " << smallest << std::endl;
 
       // get configuration
-      Config<Time, DF, RF, dim> config(myParams, smallest_edge(gv),
+      Config<Time, DF, RF, dim> config(myParams, smallest,
                                        "vectorwave_UG_EdgeS0.5_2D");
 
       // make finite element map
