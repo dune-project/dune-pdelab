@@ -44,11 +44,11 @@
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
+#include <dune/pdelab/linearsolver/stationarymatrix.hh>
 #include <dune/pdelab/localoperator/vectorwave.hh>
 #include <dune/pdelab/multistep/gridoperatorspace.hh>
 #include <dune/pdelab/multistep/method.hh>
 #include <dune/pdelab/multistep/parameter.hh>
-#include <dune/pdelab/stationary/linearproblem.hh>
 
 //===============================================================
 //===============================================================
@@ -231,7 +231,7 @@ void vectorWave(const Config &config, const GV& gv, const FEM& fem)
   //#endif
 
   // <<<7>>> make Newton for time-dependent problem
-  typedef Dune::PDELab::StationaryLinearProblemSolver<MGOS, LS, V> PDESOLVER;
+  typedef Dune::PDELab::StationaryMatrixLinearSolver<MGOS, LS, RF> PDESOLVER;
   PDESOLVER pdesolver(mgos, ls, 1e-9);
 
   // <<<8>>> time-stepper
