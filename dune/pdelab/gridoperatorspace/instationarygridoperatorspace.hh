@@ -238,12 +238,6 @@ namespace Dune {
       template<typename P>
       void fill_pattern (P& globalpattern) const
       {
-        // make local function spaces
-        typedef LocalFunctionSpace<GFSU, TrialSpaceTag> LFSU;
-        LFSU lfsu(gfsu);
-        typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
-        LFSV lfsv(gfsv);
-
         for (ElementIterator it = gfsu.gridview().template begin<0>();
              it!=gfsu.gridview().template end<0>(); ++it)
           {
@@ -266,11 +260,6 @@ namespace Dune {
                                        LA::doPatternBoundary)) ||
                LM::doPatternSkeleton || LM::doPatternBoundary)
             {
-
-              // local function spaces in neighbor
-              LFSU lfsun(gfsu);
-              LFSV lfsvn(gfsv);
-
               IntersectionIterator endit = gfsu.gridview().iend(*it);
               for(IntersectionIterator iit = gfsu.gridview().ibegin(*it);
                   iit!=endit; ++iit)
@@ -446,12 +435,6 @@ namespace Dune {
         const typename GV::IndexSet& is=gfsu.gridview().indexSet();
         std::map<Dune::GeometryType,int> gtoffset;
 
-        // make local function spaces
-        typedef LocalFunctionSpace<GFSU, TestSpaceTag> LFSU;
-        LFSU lfsu(gfsu);
-        typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
-        LFSV lfsv(gfsv);
-
         // extract coefficients of time stepping scheme
         std::vector<TReal> a(stage);
         for (size_t i=0; i<stage; ++i) a[i] = method->a(stage,i);
@@ -538,10 +521,6 @@ namespace Dune {
                 // note: LM has no skeleton and boundary terms !
                 if (doA && needsSkeleton)
                   {
-                    // local function spaces in neighbor
-                    LFSU lfsun(gfsu);
-                    LFSV lfsvn(gfsv);
-
                     // traverse intersections
                     unsigned int intersection_index = 0;
                     IntersectionIterator endit = gfsu.gridview().iend(*it);
@@ -665,12 +644,6 @@ namespace Dune {
         const typename GV::IndexSet& is=gfsu.gridview().indexSet();
         std::map<Dune::GeometryType,int> gtoffset;
 
-        // make local function spaces
-        typedef LocalFunctionSpace<GFSU, TestSpaceTag> LFSU;
-        LFSU lfsu(gfsu);
-        typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
-        LFSV lfsv(gfsv);
-
         // extract coefficients of time stepping scheme
         std::vector<TReal> a(stage);
         for (size_t i=0; i<stage; ++i) a[i] = method->a(stage,i);
@@ -755,10 +728,6 @@ namespace Dune {
                 // note: LM has no skeleton and boundary terms !
                 if (doA && needsSkeleton)
                   {
-                    // local function spaces in neighbor
-                    LFSU lfsun(gfsu);
-                    LFSV lfsvn(gfsv);
-
                     // traverse intersections
                     unsigned int intersection_index = 0;
                     IntersectionIterator endit = gfsu.gridview().iend(*it);
@@ -900,12 +869,6 @@ namespace Dune {
         const typename GV::IndexSet& is=gfsu.gridview().indexSet();
         std::map<Dune::GeometryType,int> gtoffset;
 
-        // make local function spaces
-        typedef LocalFunctionSpace<GFSU, TestSpaceTag> LFSU;
-        LFSU lfsu(gfsu);
-        typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
-        LFSV lfsv(gfsv);
-
         // extract coefficients of time stepping scheme
         TReal b_rr = method->b(stage,stage);
         TReal d_r = method->d(stage);
@@ -969,10 +932,6 @@ namespace Dune {
             // skip if no intersection iterator is needed
             if (implicit&&(LA::doAlphaSkeleton||LA::doAlphaBoundary||LA::doLambdaSkeleton||LA::doLambdaBoundary))
               {
-                // local function spaces in neighbor
-                LFSU lfsun(gfsu);
-                LFSV lfsvn(gfsv);
-
                 // traverse intersections
                 unsigned int intersection_index = 0;
                 IntersectionIterator endit = gfsu.gridview().iend(*it);
@@ -1070,12 +1029,6 @@ namespace Dune {
         const typename GV::IndexSet& is=gfsu.gridview().indexSet();
         std::map<Dune::GeometryType,int> gtoffset;
 
-        // make local function spaces
-        typedef LocalFunctionSpace<GFSU, TestSpaceTag> LFSU;
-        LFSU lfsu(gfsu);
-        typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
-        LFSV lfsv(gfsv);
-
         // extract coefficients of time stepping scheme
         TReal b_rr = method->b(stage,stage);
         TReal d_r = method->d(stage);
@@ -1134,10 +1087,6 @@ namespace Dune {
             // skeleton and boundary evaluation
             if (implicit&&(LA::doAlphaSkeleton||LA::doAlphaBoundary))
               {
-                // local function spaces in neighbor
-                LFSU lfsun(gfsu);
-                LFSV lfsvn(gfsv);
-
                 unsigned int intersection_index = 0;
                 IntersectionIterator endit = gfsu.gridview().iend(*it);
                 for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
@@ -1225,12 +1174,6 @@ namespace Dune {
         const typename GV::IndexSet& is=gfsu.gridview().indexSet();
         std::map<Dune::GeometryType,int> gtoffset;
 
-        // make local function spaces
-        typedef LocalFunctionSpace<GFSU, TestSpaceTag> LFSU;
-        LFSU lfsu(gfsu);
-        typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
-        LFSV lfsv(gfsv);
-
         // extract coefficients of time stepping scheme
         TReal b_rr = method->b(stage,stage);
         TReal d_r = method->d(stage);
@@ -1292,10 +1235,6 @@ namespace Dune {
             // skeleton and boundary evaluation
             if (implicit&&(LA::doAlphaSkeleton||LA::doAlphaBoundary))
               {
-                // local function spaces in neighbor
-                LFSU lfsun(gfsu);
-                LFSV lfsvn(gfsv);
-                
                 unsigned int intersection_index = 0;
                 IntersectionIterator endit = gfsu.gridview().iend(*it);
                 for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
@@ -1376,6 +1315,11 @@ namespace Dune {
       using Base::gfsv;
       using Base::pconstraintsu;
       using Base::pconstraintsv;
+      using Base::lfsu;
+      using Base::lfsv;
+      using Base::lfsun;
+      using Base::lfsvn;
+
       LA& la;
       LM& lm;
       const TimeSteppingParameterInterface<TReal> *method;
