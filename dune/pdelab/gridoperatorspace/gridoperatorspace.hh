@@ -82,12 +82,6 @@ namespace Dune {
       template<typename P>
       void fill_pattern (P& globalpattern) const
       {
- 		// make local function spaces
-		typedef LocalFunctionSpace<GFSU, TrialSpaceTag> LFSU;
-		LFSU lfsu(gfsu);
-		typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
-		LFSV lfsv(gfsv);
-
         for (ElementIterator it = gfsu.gridview().template begin<0>();
              it!=gfsu.gridview().template end<0>(); ++it)
           {
@@ -102,10 +96,6 @@ namespace Dune {
 
             // skeleton and boundary pattern
             if(LA::doPatternSkeleton || LA::doPatternBoundary) {
-
-              // local function spaces in neighbor
-              LFSU lfsun(gfsu);
-              LFSV lfsvn(gfsv);
 
               IntersectionIterator endit = gfsu.gridview().iend(*it);
               for(IntersectionIterator iit = gfsu.gridview().ibegin(*it);
@@ -171,12 +161,6 @@ namespace Dune {
         const typename GV::IndexSet& is=gfsu.gridview().indexSet();
         std::map<Dune::GeometryType,int> gtoffset;
 
-		// make local function spaces
-		typedef LocalFunctionSpace<GFSU, TrialSpaceTag> LFSU;
-		LFSU lfsu(gfsu);
-		typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
-		LFSV lfsv(gfsv);
-
         // allocate local data container
         LocalVector<typename X::ElementType, TrialSpaceTag> xl;
         LocalVector<typename R::ElementType, TestSpaceTag> rl;
@@ -221,10 +205,6 @@ namespace Dune {
 			// skip if no intersection iterator is needed
  			if (LA::doAlphaSkeleton||LA::doAlphaBoundary||LA::doLambdaSkeleton||LA::doLambdaBoundary)
               {
-                // local function spaces in neighbor
-                LFSU lfsun(gfsu);
-                LFSV lfsvn(gfsv);
-
                 // traverse intersections
                 unsigned int intersection_index = 0;
                 IntersectionIterator endit = gfsu.gridview().iend(*it);
@@ -323,10 +303,6 @@ namespace Dune {
         const typename GV::IndexSet& is=gfsu.gridview().indexSet();
         std::map<Dune::GeometryType,int> gtoffset;
 
-        // make local function space
-        typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
-        LFSV lfsv(gfsv);
-
         // allocate local data container
         LocalVector<typename R::ElementType, TestSpaceTag> rl;
         LocalVector<typename R::ElementType, TestSpaceTag> rn;
@@ -361,9 +337,6 @@ namespace Dune {
 
           // skip if no intersection iterator is needed
           if(LA::doLambdaSkeleton || LA::doLambdaBoundary) {
-            // local function space in neighbor
-            LFSV lfsvn(gfsv);
-
             // traverse intersections
             unsigned int intersection_index = 0;
             IntersectionIterator endit = gfsv.gridview().iend(*it);
@@ -440,12 +413,6 @@ namespace Dune {
         const typename GV::IndexSet& is=gfsu.gridview().indexSet();
         std::map<Dune::GeometryType,int> gtoffset;
 
-		// make local function spaces
-		typedef LocalFunctionSpace<GFSU, TrialSpaceTag> LFSU;
-		LFSU lfsu(gfsu);
-		typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
-		LFSV lfsv(gfsv);
-
         // allocate local data container
         LocalVector<typename X::ElementType, TrialSpaceTag> xl;
         LocalVector<typename Y::ElementType, TestSpaceTag> yl;
@@ -488,10 +455,6 @@ namespace Dune {
 			// skeleton and boundary evaluation
 			if (LA::doAlphaSkeleton||LA::doAlphaBoundary)
 			  {
-                // local function spaces in neighbor
-                LFSU lfsun(gfsu);
-                LFSV lfsvn(gfsv);
-
                 unsigned int intersection_index = 0;
 				IntersectionIterator endit = gfsu.gridview().iend(*it);
 				for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
@@ -569,12 +532,6 @@ namespace Dune {
         const typename GV::IndexSet& is=gfsu.gridview().indexSet();
         std::map<Dune::GeometryType,int> gtoffset;
 
-		// make local function spaces
-		typedef LocalFunctionSpace<GFSU, TrialSpaceTag> LFSU;
-		LFSU lfsu(gfsu);
-		typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
-		LFSV lfsv(gfsv);
-
         // allocate local data container
         LocalVector<typename X::ElementType, TrialSpaceTag> xn;
         LocalVector<typename X::ElementType, TrialSpaceTag> xl;
@@ -620,10 +577,6 @@ namespace Dune {
 			// skeleton and boundary evaluation
 			if (LA::doAlphaSkeleton||LA::doAlphaBoundary)
 			  {
-                // local function spaces in neighbor
-                LFSU lfsun(gfsu);
-                LFSV lfsvn(gfsv);
-                
                 unsigned int intersection_index = 0;
 				IntersectionIterator endit = gfsu.gridview().iend(*it);
 				for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
@@ -700,6 +653,10 @@ namespace Dune {
       using Base::gfsv;
       using Base::pconstraintsu;
       using Base::pconstraintsv;
+      using Base::lfsu;
+      using Base::lfsv;
+      using Base::lfsun;
+      using Base::lfsvn;
 	};
 
     //! \} group GridFunctionSpace

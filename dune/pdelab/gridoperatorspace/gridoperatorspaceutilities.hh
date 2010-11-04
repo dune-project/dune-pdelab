@@ -479,20 +479,18 @@ namespace Dune {
       
       //! construct GridOperatorSpace
 	  GridOperatorBase (const GFSU& gfsu_, const GFSV& gfsv_) 
-		: gfsu(gfsu_), gfsv(gfsv_)
-	  {
-		pconstraintsu = &emptyconstraintsu;
-		pconstraintsv = &emptyconstraintsv;
-	  }
+		: gfsu(gfsu_), gfsv(gfsv_),
+          pconstraintsu(&emptyconstraintsu), pconstraintsv(&emptyconstraintsv),
+          lfsu(gfsu), lfsv(gfsv), lfsun(gfsu), lfsvn(gfsv)
+	  {}
 
       //! construct GridOperatorSpace, with constraints
 	  GridOperatorBase (const GFSU& gfsu_, const CU& cu,
 						 const GFSV& gfsv_, const CV& cv) 
-		: gfsu(gfsu_), gfsv(gfsv_)
-	  {
-		pconstraintsu = &cu;
-		pconstraintsv = &cv;
-	  }
+		: gfsu(gfsu_), gfsv(gfsv_),
+          pconstraintsu(&cu), pconstraintsv(&cv),
+          lfsu(gfsu), lfsv(gfsv), lfsun(gfsu), lfsvn(gfsv)
+	  {}
 
       //! get dimension of space u
 	  typename GFSU::Traits::SizeType globalSizeU () const
@@ -566,7 +564,7 @@ namespace Dune {
       template<typename X>
       void backtransform(X & x, const bool prerestrict = false)
       {
-        typedef typename CV::const_iterator global_col_iterator;	  
+        typedef typename CV::const_iterator global_col_iterator;  
         for (global_col_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit){
           typedef typename global_col_iterator::value_type::first_type GlobalIndex;
           const GlobalIndex & contributor = cit->first;
@@ -799,20 +797,29 @@ namespace Dune {
       {
         //std::cout << "clearing row " << i << std::endl;
         // set all entries in row i to zero
-         B::clear_row(i,globalcontainer);
+        B::clear_row(i,globalcontainer);
 
         // set diagonal element to 1
         B::access(globalcontainer,i,i) = 1;
       }
 
-
+      /* global function spaces */
       const GFSU& gfsu;
-	  const GFSV& gfsv;
-	  const CU* pconstraintsu;
-	  const CV* pconstraintsv;
-	  CU emptyconstraintsu;
-	  CV emptyconstraintsv;
-
+      const GFSV& gfsv;
+      /* constraints */
+      const CU* pconstraintsu;
+      const CV* pconstraintsv;
+      static CU emptyconstraintsu;
+      static CV emptyconstraintsv;
+      /* local function spaces */
+      typedef LocalFunctionSpace<GFSU, TrialSpaceTag> LFSU;
+      typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
+      // local function spaces in local cell
+      mutable LFSU lfsu;
+      mutable LFSV lfsv;
+      // local function spaces in neighbor
+      mutable LFSU lfsun;
+      mutable LFSV lfsvn;
     };
 
   } // namespace PDELab
