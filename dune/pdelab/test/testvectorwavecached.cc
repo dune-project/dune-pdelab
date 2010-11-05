@@ -115,7 +115,7 @@ typename GV::ctype smallest_edge(const GV &gv) {
     }
   }
 
-  return std::sqrt(smallest);
+  return std::sqrt(gv.comm().min(smallest));
 }
 
 //===============================================================
@@ -280,7 +280,8 @@ void vectorWave(const Config &config, const GV& gv, const FEM& fem)
 
     if(vtkwriter) {
       subTimer.reset();
-      std::cout << "== write output" << std::endl;
+      if(gv.comm().rank() == 0)
+        std::cout << "== write output" << std::endl;
       // output grid function with VTKWriter
       DGF dgf(gfs,*xnew);
       DGFCurl dgfCurl(gfs,*xnew);
@@ -290,12 +291,14 @@ void vectorWave(const Config &config, const GV& gv, const FEM& fem)
         (new Dune::PDELab::VTKGridFunctionAdapter<DGFCurl>(dgfCurl,"curl"));
       vtkwriter->write(time,Dune::VTK::appendedraw);
       vtkwriter->clear();
-      std::cout << "== write output (" << subTimer.elapsed() << "s)"
-                << std::endl;
+      if(gv.comm().rank() == 0)
+        std::cout << "== write output (" << subTimer.elapsed() << "s)"
+                  << std::endl;
     }
 
-    std::cout << "= time step total time: " << allTimer.elapsed() << "s"
-              << std::endl;
+    if(gv.comm().rank() == 0)
+      std::cout << "= time step total time: " << allTimer.elapsed() << "s"
+                << std::endl;
   }
 }
 
@@ -330,6 +333,7 @@ int main(int argc, char** argv)
       // make grid
       Dune::shared_ptr<Grid>grid
         (Dune::StructuredGridFactory<Grid>::createSimplexGrid(myParams));
+      grid->loadBalance();
       if(grid->maxLevel() == 0)
         grid->globalRefine(myParams.get("global_refines", 0));
 
@@ -337,9 +341,23 @@ int main(int argc, char** argv)
       typedef Grid::LeafGridView GV;
       const GV& gv=grid->leafView();
 
-      std::cout << "= Number of elements: " << gv.size(0) << std::endl;
+      {
+        int sizes[gv.comm().size()];
+        int mysize = gv.size(0);
+        gv.comm().gather(&mysize, sizes, 1, 0);
+        if(gv.comm().rank() == 0) {
+          int allsize = 0;
+          for(int i = 0; i < gv.comm().size(); ++i)
+            allsize += sizes[i];
+          std::cout << "= Total number of elements: " << allsize << std::endl;
+          for(int i = 0; i < gv.comm().size(); ++i)
+            std::cout << "= Number of elements (rank " << i << "): "
+                      << sizes[i] << std::endl;
+        }
+      }
       DF smallest = smallest_edge(gv);
-      std::cout << "= Smallest edge: " << smallest << std::endl;
+      if(gv.comm().rank() == 0)
+        std::cout << "= Smallest edge: " << smallest << std::endl;
 
       // get configuration
       Config<Time, DF, RF, dim> config(myParams, smallest,
