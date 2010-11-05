@@ -822,6 +822,12 @@ namespace Dune {
       mutable LFSV lfsvn;
     };
 
+	template<typename GFSU, typename GFSV, typename CU, typename CV, typename B>
+    CU GridOperatorBase<GFSU,GFSV,CU,CV,B>::emptyconstraintsu;
+    template<typename GFSU, typename GFSV, typename CU, typename CV, typename B>
+    CV GridOperatorBase<GFSU,GFSV,CU,CV,B>::emptyconstraintsv;
+    
+
   } // namespace PDELab
 } // namespace Dune
 
