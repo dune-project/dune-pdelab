@@ -33,12 +33,12 @@
 #include <dune/pdelab/backend/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/istlsolverbackend.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/common/geometrywrapper.hh>
 #include <dune/pdelab/common/vertexorder.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/finiteelement/edges0.5.hh>
 #include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include <dune/pdelab/finiteelementmap/global.hh>
-#include <dune/pdelab/function/const.hh>
 #include <dune/pdelab/function/memberadaptor.hh>
 #include <dune/pdelab/gridfunctionspace/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
@@ -144,6 +144,17 @@ public:
     y[1] = std::exp(-Dune::SQR(xg[0]-.5+time)/(2*Dune::SQR(0.05)));
     y[0] = std::exp(-Dune::SQR(xg[1]-.5+time)/(2*Dune::SQR(0.05)));
   }
+
+  std::size_t bcType
+  ( const Dune::PDELab::IntersectionGeometry<typename GV::Intersection> &is,
+    const Dune::FieldVector<typename GV::ctype, GV::dimension-1> &xl) const
+  {
+    if(is.boundary() && ! is.neighbor())
+      return 1;
+    else
+      return 0;
+  }
+
 };
 
 
@@ -165,22 +176,23 @@ void vectorWave(const Config &config, const GV& gv, const FEM& fem)
   typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CE;
   CE ce;
 
-  // make function space
+  // make function space and constraints evaluator
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CE,
     Dune::PDELab::ISTLVectorBackend<1> > GFS;
   GFS gfs(gv, fem, ce);
   ce.compute_ghosts(gfs); // con stores indices of ghost dofs
 
+  typedef Parameters<GV, RF, Time> Params;
+  Params params(config.epsilon, config.mu);
+
   // make constraints map and initialize it from a function
   typedef typename GFS::template ConstraintsContainer<RF>::Type C;
   C cg;
   cg.clear();
-  typedef Dune::PDELab::ConstBoundaryGridFunction<GV, std::size_t> BType;
-  BType b(gv, 1);
-  Dune::PDELab::constraints(b,gfs,cg);
-
-  typedef Parameters<GV, RF, Time> Params;
-  Params params(config.epsilon, config.mu);
+  Dune::PDELab::constraints
+    ( Dune::PDELab::make2ArgsMemberFunctionToBoundaryGridFunctionAdaptor
+        <std::size_t, 1>(params, &Params::bcType, gv),
+      gfs, cg);
 
   // make parameters
   Dune::PDELab::CentralDifferencesParameters<DF> msParams;
