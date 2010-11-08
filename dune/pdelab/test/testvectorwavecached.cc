@@ -151,7 +151,7 @@ public:
 // Problem setup and solution
 //===============================================================
 
-template<class CON, class Config, class GV, class FEM>
+template<class Config, class GV, class FEM>
 void vectorWave(const Config &config, const GV& gv, const FEM& fem)
 {
   // constants and types
@@ -161,10 +161,15 @@ void vectorWave(const Config &config, const GV& gv, const FEM& fem)
   static const std::size_t dimRange = Basis::Traits::dimRange;
   typedef typename Config::Time Time;
 
+  // make constraints evaluator
+  typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CE;
+  CE ce;
+
   // make function space
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,
+  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CE,
     Dune::PDELab::ISTLVectorBackend<1> > GFS;
-  GFS gfs(gv,fem);
+  GFS gfs(gv, fem, ce);
+  ce.compute_ghosts(gfs); // con stores indices of ghost dofs
 
   // make constraints map and initialize it from a function
   typedef typename GFS::template ConstraintsContainer<RF>::Type C;
@@ -377,8 +382,7 @@ int main(int argc, char** argv)
       FEM fem(feFactory, voFactory);
 
       // solve problem
-      vectorWave<Dune::PDELab::ConformingDirichletConstraints>
-        (config,gv,fem);
+      vectorWave(config,gv,fem);
     }
 #endif
 
