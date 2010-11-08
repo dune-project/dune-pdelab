@@ -23,7 +23,8 @@ namespace Dune {
      *
      * The member function must support the signature
      * \code
-(obj.*member)(const FieldVector<typename GV::ctype, GV::dimension> &xl,
+(obj.*member)(typename GV::template Codim<0>::Entity &e,
+              const FieldVector<typename GV::ctype, GV::dimension> &xl,
               FieldVector<RF, dimRange> &y) const;
      * \endcode
      */
