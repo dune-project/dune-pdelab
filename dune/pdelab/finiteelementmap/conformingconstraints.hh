@@ -4,15 +4,16 @@
 
 #include <cstddef>
 
-#include<dune/common/exceptions.hh>
-#include<dune/grid/common/genericreferenceelements.hh>
-#include<dune/grid/common/grid.hh>
-#include<dune/common/geometrytype.hh>
+#include <dune/common/exceptions.hh>
+#include <dune/common/geometrytype.hh>
 
-#include<dune/pdelab/common/geometrywrapper.hh>
+#include <dune/grid/common/genericreferenceelements.hh>
+#include <dune/grid/common/grid.hh>
+
+#include <dune/pdelab/common/geometrywrapper.hh>
 #include <dune/pdelab/finiteelement/interfaceswitch.hh>
-#include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
+#include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 
 namespace Dune {
   namespace PDELab {
