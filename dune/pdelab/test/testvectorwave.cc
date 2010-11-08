@@ -25,6 +25,7 @@
 #include <dune/common/tuples.hh>
 
 #include <dune/grid/common/genericreferenceelements.hh>
+#include <dune/grid/common/gridenums.hh>
 #include <dune/grid/io/file/vtk/common.hh>
 #include <dune/grid/io/file/vtk/vtksequencewriter.hh>
 #include <dune/grid/uggrid.hh>
@@ -92,7 +93,8 @@ public:
 template<typename GV>
 typename GV::ctype smallest_edge(const GV &gv) {
   typedef typename GV::ctype DF;
-  typedef typename GV::template Codim<0>::Iterator Iterator;
+  typedef typename GV::template Codim<0>::
+    template Partition<Dune::Interior_Partition>::Iterator Iterator;
   typedef typename GV::template Codim<0>::Geometry Geometry;
   static const std::size_t dim = GV::dimension;
   typedef Dune::FieldVector<DF, GV::dimensionworld> DomainW;
@@ -102,8 +104,10 @@ typename GV::ctype smallest_edge(const GV &gv) {
 
   DF smallest = std::numeric_limits<DF>::infinity();
 
-  const Iterator &end = gv.template end<0>();
-  for(Iterator it = gv.template begin<0>(); it != end; ++it) {
+  const Iterator &end = gv.template end<0, Dune::Interior_Partition>();
+  for(Iterator it = gv.template begin<0, Dune::Interior_Partition>();
+      it != end; ++it)
+  {
     const Refelem & refelem = Refelems::general(it->type());
     const Geometry &geo = it->geometry();
     for(int edge = 0; edge < refelem.size(dim-1); ++edge) {
