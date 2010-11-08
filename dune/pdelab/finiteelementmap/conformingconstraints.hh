@@ -14,8 +14,9 @@
 
 #include <dune/pdelab/common/geometrywrapper.hh>
 #include <dune/pdelab/finiteelement/interfaceswitch.hh>
-#include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/localfunctionspacetags.hh>
+#include <dune/pdelab/gridfunctionspace/localvector.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -179,13 +180,27 @@ namespace Dune {
       template<class GFS>
       void compute_ghosts (const GFS& gfs)
       {
+        typedef typename GFS::Traits::GridViewType GV;
+        typedef typename GV::template Codim<0>::
+          template Partition<Interior_Partition>::Iterator Iterator;
         typedef typename GFS::template VectorContainer<int>::Type V;
-        V ighost(gfs);
-        Dune::PDELab::GhostDataHandle<GFS,V> gdh(gfs,ighost);
-        if (gfs.gridview().comm().size()>1)
-          gfs.gridview().communicate(gdh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+
+        gh.assign(gfs.globalSize(), 1);
+        V ighost(gfs, 1);
+        typename GFS::LocalFunctionSpace lfs(gfs);
+        LocalVector<int,AnySpaceTag> lv(gfs.maxLocalSize(), 0);
+
+        const GV &gv = gfs.gridview();
+        const Iterator &end = gv.template end<0, Interior_Partition>();
+        for(Iterator it = gv.template begin<0, Interior_Partition>();
+            it != end; ++it)
+        {
+          lfs.bind(*it);
+          lfs.vwrite(lv, ighost);
+        }
         ighost.std_copy_to(gh);
-        rank = gfs.gridview().comm().rank();
+
+        rank = gv.comm().rank();
       }
 
       void print ()
