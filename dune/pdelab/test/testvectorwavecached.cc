@@ -364,16 +364,36 @@ int main(int argc, char** argv)
 
       {
         int sizes[gv.comm().size()];
+        int overlapsizes[gv.comm().size()];
+        int ghostsizes[gv.comm().size()];
+
         int mysize = gv.size(0);
         gv.comm().gather(&mysize, sizes, 1, 0);
+        mysize = std::distance(gv.begin<0, Dune::Overlap_Partition>(),
+                               gv.end<0, Dune::Overlap_Partition>());
+        gv.comm().gather(&mysize, overlapsizes, 1, 0);
+        mysize = std::distance(gv.begin<0, Dune::Ghost_Partition>(),
+                               gv.end<0, Dune::Ghost_Partition>());
+        gv.comm().gather(&mysize, ghostsizes, 1, 0);
+
         if(gv.comm().rank() == 0) {
-          int allsize = 0;
-          for(int i = 0; i < gv.comm().size(); ++i)
+          int allsize = 0, alloverlapsize = 0, allghostsize = 0;
+          for(int i = 0; i < gv.comm().size(); ++i) {
             allsize += sizes[i];
-          std::cout << "= Total number of elements: " << allsize << std::endl;
+            alloverlapsize += overlapsizes[i];
+            allghostsize += ghostsizes[i];
+          }
+          std::cout << "= Total number of elements: " << allsize << " "
+                    << "(interior: "
+                    << allsize-alloverlapsize-allghostsize << ", overlap: "
+                    << alloverlapsize << ", ghost: " << allghostsize << ")"
+                    << std::endl;
           for(int i = 0; i < gv.comm().size(); ++i)
             std::cout << "= Number of elements (rank " << i << "): "
-                      << sizes[i] << std::endl;
+                      << sizes[i] << " (interior: "
+                      << sizes[i]-overlapsizes[i]-ghostsizes[i] << ", "
+                      << "overlap: " << overlapsizes[i] << ", ghost: "
+                      << ghostsizes[i] << ")" << std::endl;
         }
       }
       DF smallest = smallest_edge(gv);
