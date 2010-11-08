@@ -9,6 +9,8 @@
 #include <ostream>
 #include <string>
 
+#include <unistd.h>
+
 #include <dune/common/fvector.hh>
 #include <dune/common/ios_state.hh>
 
