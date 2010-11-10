@@ -42,9 +42,11 @@
 #include <dune/pdelab/finiteelementmap/global.hh>
 #include <dune/pdelab/function/memberadaptor.hh>
 #include <dune/pdelab/gridfunctionspace/constraints.hh>
+#include <dune/pdelab/gridfunctionspace/dofinfo.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
+#include <dune/pdelab/gridfunctionspace/printvector.hh>
 #include <dune/pdelab/linearsolver/stationarymatrix.hh>
 #include <dune/pdelab/localoperator/vectorwave.hh>
 #include <dune/pdelab/multistep/gridoperatorspace.hh>
@@ -76,6 +78,10 @@ public:
   Time end;
   Time dt;
   std::string vtkprefix;
+  struct {
+    bool dof_positions;
+    int coord_precision;
+  } debug;
 
   Config(const Dune::ParameterTree &params, DF smallest_edge,
          const std::string &vtkprefix_) :
@@ -87,7 +93,10 @@ public:
                   Time(smallest_edge*std::sqrt(mu*epsilon/dim)*
                        params.get("dt_stretch", Time(0.35))))),
     vtkprefix(params.get("vtkprefix", vtkprefix_))
-  { }
+  {
+    debug.dof_positions = params.get("debug.dof_positions", false);
+    debug.coord_precision = params.get("debug.coord_precision", int(3));
+  }
 };
 
 template<typename GV>
@@ -171,6 +180,8 @@ void vectorWave(const Config &config, const GV& gv, const FEM& fem)
 {
   // constants and types
   typedef typename GV::ctype DF;
+  static const std::size_t dimw = GV::dimensionworld;
+  typedef Dune::FieldVector<DF, dimw> DomainW;
   typedef typename FEM::Traits::FiniteElementType::Traits::Basis Basis;
   typedef typename Basis::Traits::RangeField RF;
   static const std::size_t dimRange = Basis::Traits::dimRange;
@@ -185,6 +196,15 @@ void vectorWave(const Config &config, const GV& gv, const FEM& fem)
     Dune::PDELab::ISTLVectorBackend<1> > GFS;
   GFS gfs(gv, fem, ce);
   ce.compute_ghosts(gfs); // con stores indices of ghost dofs
+
+  if(config.debug.dof_positions) {
+    typedef typename GFS::template VectorContainer<std::size_t>::Type IntV;
+    IntV dummy(gfs);
+    for(std::size_t i = 0; i < gfs.size(); ++i)
+      IntV::Backend::access(dummy, i) = i;
+    Dune::PDELab::printVector(std::cout, gfs, dummy, "dof positions",
+                              config.debug.coord_precision);
+  }
 
   typedef Parameters<GV, RF, Time> Params;
   Params params(config.epsilon, config.mu);
