@@ -7,6 +7,7 @@ gridfunctionspace_HEADERS =			\
 	gridfunctionspaceutilities.hh		\
 	interpolate.hh				\
 	intersectionindexset.hh			\
-	localfunctionspace.hh
+	localfunctionspace.hh			\
+	printvector.hh
 
 include $(top_srcdir)/am/global-rules
