@@ -24,11 +24,11 @@
 #include <dune/common/timer.hh>
 #include <dune/common/tuples.hh>
 
+#include <dune/grid/alugrid.hh>
 #include <dune/grid/common/genericreferenceelements.hh>
 #include <dune/grid/common/gridenums.hh>
 #include <dune/grid/io/file/vtk/common.hh>
 #include <dune/grid/io/file/vtk/vtksequencewriter.hh>
-#include <dune/grid/uggrid.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 
 #include <dune/pdelab/backend/istlmatrixbackend.hh>
@@ -357,18 +357,17 @@ int main(int argc, char** argv)
     if(argc > 1)
       paramtree.parseFile(argv[1]);
 
-#if HAVE_UG
-    // UG Pk 2D test
+#if HAVE_ALUGRID
     {
-      static const std::size_t dim = 2;
-      typedef Dune::UGGrid<dim> Grid;
+      static const std::size_t dim = 3;
+      typedef Dune::ALUSimplexGrid<dim, dim> Grid;
       typedef Grid::ctype DF;
       typedef double RF;
       typedef DF Time;
       typedef Dune::FieldVector<DF, dim> Domain;
 
-      const Dune::ParameterTree &myParams = paramtree.hasSub("ug.2d")
-        ? paramtree.Dune::ParameterTree::sub("ug.2d")
+      const Dune::ParameterTree &myParams = paramtree.hasSub("alu.3d")
+        ? paramtree.Dune::ParameterTree::sub("alu.3d")
         : Dune::ParameterTree();
 
       // make grid
@@ -422,7 +421,7 @@ int main(int argc, char** argv)
 
       // get configuration
       Config<Time, DF, RF, dim> config(myParams, smallest,
-                                       "vectorwavecached_UG_EdgeS0.5_2D");
+                                       "vectorwavecached_ALU_EdgeS0.5_3D");
 
       // make finite element map
       typedef Dune::PDELab::EdgeS0_5FiniteElementFactory<
@@ -440,7 +439,7 @@ int main(int argc, char** argv)
       // solve problem
       vectorWave(config,gv,fem);
     }
-#endif
+#endif // HAVE_ALUGRID
 
     // test passed
     return 0;
