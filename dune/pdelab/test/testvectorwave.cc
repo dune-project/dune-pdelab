@@ -97,7 +97,7 @@ public:
                        params.get("dt_stretch", Time(0.35)))))
   {
     vtkoutput.prefix = params.get("vtkoutput.prefix", vtkprefix_);
-    vtkoutput.min_interval = params.get("vtkoutput.interval", Time(0));
+    vtkoutput.min_interval = params.get("vtkoutput.min_interval", Time(0));
 
     debug.dof_positions = params.get("debug.dof_positions", false);
     debug.coord_precision = params.get("debug.coord_precision", int(3));
