@@ -77,7 +77,10 @@ public:
   Time start;
   Time end;
   Time dt;
-  std::string vtkprefix;
+  struct {
+    std::string prefix;
+    Time min_interval;
+  } vtkoutput;
   struct {
     bool dof_positions;
     int coord_precision;
@@ -91,9 +94,11 @@ public:
     end(params.get("end", Time(std::sqrt(mu*epsilon)))),
     dt(params.get("dt",
                   Time(smallest_edge*std::sqrt(mu*epsilon/dim)*
-                       params.get("dt_stretch", Time(0.35))))),
-    vtkprefix(params.get("vtkprefix", vtkprefix_))
+                       params.get("dt_stretch", Time(0.35)))))
   {
+    vtkoutput.prefix = params.get("vtkoutput.prefix", vtkprefix_);
+    vtkoutput.min_interval = params.get("vtkoutput.min_interval", Time(0));
+
     debug.dof_positions = params.get("debug.dof_positions", false);
     debug.coord_precision = params.get("debug.coord_precision", int(3));
   }
@@ -282,14 +287,16 @@ void vectorWave(const Config &config, const GV& gv, const FEM& fem)
 
   // output grid function with VTKWriter
   Dune::shared_ptr<Dune::VTKSequenceWriter<GV> > vtkwriter;
-  if(config.vtkprefix != "")
-    vtkwriter.reset(new Dune::VTKSequenceWriter<GV>(gv,config.vtkprefix,"","",
+  if(config.vtkoutput.prefix != "")
+    vtkwriter.reset(new Dune::VTKSequenceWriter<GV>(gv,
+                                                    config.vtkoutput.prefix,
+                                                    "","",
                                                     Dune::VTK::nonconforming));
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
   typedef Dune::PDELab::DiscreteGridFunctionCurl<GFS,V> DGFCurl;
-  if(vtkwriter) {
+  if(vtkwriter && config.dt >= config.vtkoutput.min_interval) {
     DGF dgf(gfs,*mgos.getCache()->getUnknowns(-1));
     DGFCurl dgfCurl(gfs,*mgos.getCache()->getUnknowns(-1));
     vtkwriter->addVertexData
@@ -311,6 +318,7 @@ void vectorWave(const Config &config, const GV& gv, const FEM& fem)
   }
 
   Time time = config.start;
+  Time last_planned_vtkoutput = config.start;
 
   while(time < config.end) {
     Dune::Timer allTimer;
@@ -319,7 +327,7 @@ void vectorWave(const Config &config, const GV& gv, const FEM& fem)
     Dune::shared_ptr<const V> xnew = msMethod.apply(time, config.dt);
     time += config.dt;
 
-    if(vtkwriter) {
+    if(vtkwriter && time >= last_planned_vtkoutput) {
       subTimer.reset();
       if(gv.comm().rank() == 0)
         std::cout << "== write output" << std::endl;
@@ -332,6 +340,9 @@ void vectorWave(const Config &config, const GV& gv, const FEM& fem)
         (new Dune::PDELab::VTKGridFunctionAdapter<DGFCurl>(dgfCurl,"curl"));
       vtkwriter->write(time,Dune::VTK::appendedraw);
       vtkwriter->clear();
+
+      last_planned_vtkoutput += config.vtkoutput.min_interval;
+
       if(gv.comm().rank() == 0)
         std::cout << "== write output (" << subTimer.elapsed() << "s)"
                   << std::endl;
