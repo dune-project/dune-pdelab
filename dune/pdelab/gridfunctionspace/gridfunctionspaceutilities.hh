@@ -533,7 +533,7 @@ namespace Dune {
 
         // get local Jacobians/gradients of the shape functions
         std::vector<typename LBTraits::JacobianType> J(lfs.size());
-        lfs.localFiniteElement().localBasis().evaluateJacobian(x,J);
+        lfs.finiteElement().localBasis().evaluateJacobian(x,J);
 
         typename Traits::RangeType gradphi;
         y = 0;
