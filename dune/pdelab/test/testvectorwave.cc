@@ -301,7 +301,7 @@ void vectorWave(const Config &config, const GV& gv, const FEM& fem)
     vtkwriter->clear();
   }
 
-  DF time = config.start;
+  Time time = config.start;
 
   while(time < config.end) {
     Dune::Timer allTimer;
