@@ -26,6 +26,43 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
+    //! Trait class for the multi component grid function spaces
+	template<typename G, typename B, typename M, int k>
+	struct PowerCompositeGridFunctionSpaceTraits
+	{
+      enum{ 
+        //! \brief True if this grid function space is composed of others.
+        isComposite = 1,
+        //! \brief number of child spaces
+        noChilds = k
+      };
+      
+	  //! \brief the grid view where grid function is defined upon
+	  typedef G GridViewType;
+
+	  //! \brief vector backend
+	  typedef B BackendType;
+
+      //! \brief mapper
+      typedef M MapperType;
+      
+	  //! \brief short cut for size type exported by Backend
+	  typedef typename B::size_type SizeType;
+	};
+
+    //! \brief a class holding transformation for constrained spaces
+    template<typename S, typename T>
+    class ConstraintsTransformation 
+      : public std::map<S,std::map<S,T> >
+    {
+    public:
+      //! export ElementType
+      typedef T ElementType;
+      //! export RowType
+      typedef std::map<S,T> RowType;
+    };
+
+
     //===============================================================
     // output: convert grid function space to discrete grid function
     //===============================================================
