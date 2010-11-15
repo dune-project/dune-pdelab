@@ -12,54 +12,6 @@ namespace Dune {
     // power grid function space
     //=======================================
 
-    //! \addtogroup GridFunctionSpace
-    //! \ingroup PDELab
-    //! \{
-
-    //! \brief Indicates lexicographics ordering of the unknowns for composite
-    //! grid function spaces.
-    //!
-    //! this class may be used to pass compile-time
-    //! parameters to the implementation of 
-    //! \link PowerGridFunctionSpace PowerGridFunctionSpace \endlink or
-    //! \link CompositeGridFunctionSpace CompositeGridFunctionSpace \endlink
-    struct GridFunctionSpaceLexicographicMapper {};
-
-    //! \brief Indicates using block-wise ordering of the unknowns for composite
-    //! grid function spaces.
-    //!
-    //! The exact blocking structure can be passed as template parameters
-    //!
-    //! this class may be used to pass compile-time
-    //! parameters to the implementation of 
-    //! \link PowerGridFunctionSpace PowerGridFunctionSpace \endlink or
-    //! \link CompositeGridFunctionSpace CompositeGridFunctionSpace \endlink
-    template<int s0 = 1, int s1 = 1, int s2 = 1, int s3 = 1, int s4 = 1, int s5 = 1, int s6 = 1, int s7 = 1, int s8 = 1, int s9 = 1>
-    struct GridFunctionSpaceComponentBlockwiseMapper
-    {
-      static const int size[];
-      static const int offset[];
-    };
-    template<int s0, int s1, int s2, int s3, int s4, int s5, int s6, int s7, int s8, int s9>
-    const int GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9>::
-    size[] = { s0, s1, s2, s3, s4, s5, s6, s7, s8, s9 };
-    template<int s0, int s1, int s2, int s3, int s4, int s5, int s6, int s7, int s8, int s9>
-    const int GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9>::
-    offset[] = { 0, s0, s0+s1, s0+s1+s2, s0+s1+s2+s3, s0+s1+s2+s3+s4,
-                 s0+s1+s2+s3+s4+s5, s0+s1+s2+s3+s4+s5+s6, s0+s1+s2+s3+s4+s5+s6+s7,
-                 s0+s1+s2+s3+s4+s5+s6+s7+s8, s0+s1+s2+s3+s4+s5+s6+s7+s8+s9 };
-    
-    //! \brief Indicates using block-wise ordering of the unknowns for composite
-    //! grid function spaces.
-    //!
-    //! this class may be used to pass compile-time
-    //! parameters to the implementation of 
-    //! \link PowerGridFunctionSpace PowerGridFunctionSpace \endlink or
-    //! \link CompositeGridFunctionSpace CompositeGridFunctionSpace \endlink
-    struct GridFunctionSpaceBlockwiseMapper : GridFunctionSpaceComponentBlockwiseMapper<> {};
-
-    //! \}
-
     template<typename T, int k, typename P>
     class PowerGridFunctionSpace;
 
@@ -441,6 +393,247 @@ namespace Dune {
     {
     protected:
       using PowerGridFunctionSpaceBase<T,k,GridFunctionSpaceComponentBlockwiseMapper<1> >::setup;
+    };
+
+
+    /** 
+        \brief Tupel of grid function spaces base class that holds
+        implementation of the methods specialization for dynamic
+        blockwise ordering
+    */
+    template<typename T, int k>
+    class PowerGridFunctionSpaceBase<T,k,GridFunctionSpaceDynamicBlockwiseMapper >
+      : public PowerNode<T,k,CountingPointerStoragePolicy>,
+        public Countable
+    {
+    public:
+      //! export traits class
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+                                                    typename T::Traits::BackendType,
+                                                    GridFunctionSpaceDynamicBlockwiseMapper, k>
+      Traits;
+
+      typedef PowerNode<T,k,CountingPointerStoragePolicy> BaseT;
+
+      //! extract type of container storing Es
+      template<typename E>
+      struct VectorContainer
+      {
+        //! \brief define Type as the Type of a container of E's
+        typedef typename Traits::BackendType::template VectorContainer<PowerGridFunctionSpaceBase,E> Type;	
+      private:
+        VectorContainer () {}
+      };
+
+      //! extract type for storing constraints
+      template<typename E>
+      struct ConstraintsContainer
+      {
+        //! \brief define Type as the Type of a container of E's
+        typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+      private:
+        ConstraintsContainer () {}
+      };
+
+      // define local function space parametrized by self 
+      typedef Dune::PDELab::PowerLocalFunctionSpaceNode<PowerGridFunctionSpaceBase> LocalFunctionSpace;
+      
+      // it is part of the trick to have a constructor without arguments
+      // setting of the children is then done by the constructors
+      // of the specialized derived classes
+      PowerGridFunctionSpaceBase ()
+      {
+      }
+
+      // get grid view
+      const typename Traits::GridViewType& gridview () const
+      {
+        return this->template getChild<0>().gridview();
+      }
+
+      //! get dimension of root finite element space
+      typename Traits::SizeType globalSize () const
+      {
+        // this is bullshit all children may have different
+        // size although they have the same type ...
+        // [Jö] well, it does happen for the elements I use for the Yee FDTD
+        //      scheme, at least
+        return offset[k];
+      }
+
+      //! get dimension of this finite element space
+      typename Traits::SizeType size () const
+      {
+        return offset[k];
+      }
+
+      // get max dimension of shape function space
+      typename Traits::SizeType maxLocalSize () const
+      {
+        // this is bullshit !
+        return maxlocalsize;
+      }
+
+      //! map index from our index set [0,size()-1] to root index set
+      typename Traits::SizeType upMap (typename Traits::SizeType i) const
+      {
+        return i;
+      }
+
+      //! map index from child i's index set into our index set
+      template<int i>
+      typename Traits::SizeType subMap (typename Traits::SizeType j) const
+      {
+        BlockIndexRangeIterator & it = blockIndexIterators[i];
+        while(it->first < j)++it;
+        while(it->first > j)--it;
+        const typename Traits::SizeType global_index = it->second + j - it->first;
+        return global_index;
+      }
+
+      //------------------------------
+      // generic data handle interface
+      //------------------------------
+
+      //! returns true if data for this codim should be communicated
+      bool dataHandleContains (int dim, int codim) const
+      {
+        for (int i=0; i<k; i++)
+          if (this->getChild(i).dataHandleContains(dim,codim))
+            return true;
+        return false;
+      }
+      
+      //! returns true if size per entity of given dim and codim is a constant
+      bool dataHandleFixedSize (int dim, int codim) const
+      {
+        for (int i=0; i<k; i++)
+          if (!this->getChild(i).dataHandleFixedSize(dim,codim))
+            return false;
+        return true;
+      }
+      
+      /*! how many objects of type DataType have to be sent for a given entity
+        
+        Note: Only the sender side needs to know this size. 
+      */
+      template<class EntityType>
+      size_t dataHandleSize (const EntityType& e) const
+      {
+        size_t n=0;
+        for (int i=0; i<k; i++)
+          n += this->getChild(i).dataHandleSize(e);
+        return n;
+      }
+
+      //! return vector of global indices associated with the given entity
+      template<class EntityType>
+      void dataHandleGlobalIndices (const EntityType& e, 
+                                    std::vector<typename Traits::SizeType>& global) const
+      {
+        size_t n=0;
+        for (int i=0; i<k; i++)
+          n += this->getChild(i).dataHandleSize(e);
+        global.resize(n);
+        n = 0;
+        for (int i=0; i<k; i++)
+          {
+            this->getChild(i).dataHandleGlobalIndices(e,childglobal);
+            for (size_t j=0; j<childglobal.size(); j++)
+              global[n+j] = childglobal[j]*k+i;
+            n += childglobal.size();
+          }          
+      }
+
+      //------------------------------
+
+      // recalculate sizes
+      void update ()
+      {
+        for (int i=0; i<k; i++)
+          (*this)[i].update();
+        setup();
+      }
+
+    protected:
+      void setup ()
+      {
+        
+        typedef typename Traits::GridViewType GridView;
+        const GridView & gv = gridview();
+
+        // Initialize offset array for each child
+        blockIndices.clear();
+        blockIndices.resize(BaseT::CHILDREN);
+
+        std::vector<std::vector<typename Traits::SizeType> > childOffsets;
+        childOffsets.resize(BaseT::CHILDREN);
+        for(int i=0; i<BaseT::CHILDREN; ++i)
+          childOffsets[i].resize(gv.size(0)+1);
+
+
+        // Iterate grid and determine the offsets for each child
+        typedef typename GridView::template Codim<0>::Iterator Iterator;
+        Iterator it = gv.template begin<0>();
+        const Iterator eit = gv.template end<0>();
+        typename Traits::SizeType running_index(0);
+        for(; it!=eit; ++it){
+          typename Traits::SizeType e_index = gv.indexSet().index(*it);
+
+          // Loop over children (realized by meta-program)
+          DynamicBlockwiseMapperImp::GetChildOffsetsMetaProgram<PowerGridFunctionSpaceBase,BaseT::CHILDREN,0>::
+            getChildOffsets(*this,*it,childOffsets);
+          
+          for(int i=0; i<BaseT::CHILDREN; ++i){
+            if(childOffsets[i][e_index+1] != childOffsets[i][e_index]){
+              // Add new block index range element to list
+              blockIndices[i].push_back(SizeTypePair(childOffsets[i][e_index],running_index));
+
+              // Update running index
+              running_index += childOffsets[i][e_index+1] - childOffsets[i][e_index];
+            }
+          }
+        }
+        
+        // Insert a "stop entry" at end of every list
+        for(int i=0; i<BaseT::CHILDREN; ++i)
+          blockIndices[i].push_back(SizeTypePair(childOffsets[i][gv.size(0)],running_index));
+
+
+        blockIndexIterators.clear();
+        for(int i=0; i<BaseT::CHILDREN; ++i)
+          blockIndexIterators.push_back(blockIndices[i].begin());
+
+
+        Dune::dinfo << "PowerGridFunctionSpace(blockwise version):"
+                    << std::endl;
+        Dune::dinfo << "( ";
+        offset[0] = 0;
+        maxlocalsize = 0;
+        for (int i=0; i<k; i++)
+          {
+            childSize[i] = this->getChild(i).globalSize();
+            offset[i+1] = offset[i]+childSize[i];
+            Dune::dinfo << childSize[i] << "[" << offset[i] << "] ";
+            maxlocalsize += this->getChild(i).maxLocalSize();
+          }
+        Dune::dinfo << ") total size = " << offset[k]
+                    << " max local size = " << maxlocalsize
+                    << std::endl;
+
+        childglobal.resize(maxlocalsize);
+      }
+
+    private:
+      typename Traits::SizeType childSize[k];
+      typename Traits::SizeType offset[k+1];
+      typename Traits::SizeType maxlocalsize;
+      mutable std::vector<typename Traits::SizeType> childglobal;
+      typedef std::pair<typename Traits::SizeType,typename Traits::SizeType> SizeTypePair;
+      typedef std::list<SizeTypePair> BlockIndexRangeList;
+      std::vector<BlockIndexRangeList> blockIndices;
+      typedef typename BlockIndexRangeList::const_iterator BlockIndexRangeIterator;
+      mutable std::vector<BlockIndexRangeIterator> blockIndexIterators;
     };
 
 
