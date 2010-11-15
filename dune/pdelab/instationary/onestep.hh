@@ -996,6 +996,7 @@ namespace Dune {
             if (r==1)
               {
                 T newdt = tc->suggestTimestep(time,dt);
+                newdt = std::min(newdt, dt);
 
                 if (verbosityLevel>=4){
                   std::ios_base::fmtflags oldflags = std::cout.flags();
