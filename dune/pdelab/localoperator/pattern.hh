@@ -45,7 +45,10 @@ namespace Dune {
         for (unsigned int i=0; i<lfsv_s.size(); ++i)
           for (unsigned int j=0; j<lfsu_n.size(); ++j)
             pattern_sn.push_back(SparsityLink(i,j));
-        // other half of the pattern made by the neighboring element
+      
+        for (unsigned int i=0; i<lfsv_n.size(); ++i)
+          for (unsigned int j=0; j<lfsu_s.size(); ++j)
+            pattern_ns.push_back(SparsityLink(i,j));
       }
    };
 
