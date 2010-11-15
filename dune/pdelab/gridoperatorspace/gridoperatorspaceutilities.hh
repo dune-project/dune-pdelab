@@ -203,6 +203,39 @@ namespace Dune {
 	  }
 	};
 
+    template<typename GV>
+    class MultiGeomUniqueIDMapper
+    {
+    private:
+      static const int chunk = 1<<28;
+      int offset;
+      const typename GV::IndexSet & is;
+      std::map<Dune::GeometryType,int> gtoffset;
+      typedef typename GV::template Codim<0>::Entity Entity;
+      typedef typename GV::SizeType SizeType;
+      
+    public:
+      MultiGeomUniqueIDMapper(const GV & gv) 
+        : offset(0), is(gv.indexSet())
+      {}
+
+      SizeType map(const Entity & e)
+      {
+        const Dune::GeometryType & gtype = e.type();
+
+        // assign offset for geometry type;
+        if (gtoffset.find(gtype)==gtoffset.end())
+          {
+            gtoffset[gtype] = offset;
+            offset += chunk;
+          }
+
+        // compute unique id
+        const SizeType id = is.index(e) + gtoffset[gtype];
+        return id;
+      }
+    };
+
 	// compile time switching of function call
     template<typename LA, bool doIt>
     struct LocalAssemblerCallSwitch

@@ -82,12 +82,18 @@ namespace Dune {
       template<typename P>
       void fill_pattern (P& globalpattern) const
       {
+        // map each cell to unique id
+        MultiGeomUniqueIDMapper<GV> cell_mapper(gfsu.gridview());
+
         for (ElementIterator it = gfsu.gridview().template begin<0>();
              it!=gfsu.gridview().template end<0>(); ++it)
           {
  			// bind local function spaces to element
 			lfsu.bind(*it);
 			lfsv.bind(*it);
+
+            // compute unique id
+            typename GV::IndexSet::IndexType id = cell_mapper.map(*it);
 
             // get local pattern of operator
             LocalSparsityPattern localpattern;
@@ -103,29 +109,37 @@ namespace Dune {
               {
                 // skeleton term
                 if(iit->neighbor() && LA::doPatternSkeleton) {
-                  // bind local function spaces to neighbor element
-                  lfsun.bind(*(iit->outside()));
-                  lfsvn.bind(*(iit->outside()));
 
-                  // get pattern
-                  LocalSparsityPattern localpattern_sn, localpattern_ns;
-                  LocalAssemblerCallSwitch<LA,LA::doPatternSkeleton>::
-                    pattern_skeleton(la,lfsu,lfsv,lfsun,lfsvn,
-                                     localpattern_sn, localpattern_ns);
+                  // compute unique id
+                  typename GV::IndexSet::IndexType idn = cell_mapper.map(*(iit->outside()));
 
-                  // translate local to global indices and add to global
-                  // pattern
-                  for (size_t k=0; k<localpattern_sn.size(); ++k)
-                    add_entry(globalpattern,
-                              lfsv.globalIndex(localpattern_sn[k].i()),
-                              lfsun.globalIndex(localpattern_sn[k].j())
-                              );
+                  if (LA::doSkeletonTwoSided || id>idn || 
+                      (nonoverlapping_mode && (iit->inside())->partitionType()!=Dune::InteriorEntity) ){
 
-                  for (size_t k=0; k<localpattern_ns.size(); ++k)
-                    add_entry(globalpattern,
-                              lfsvn.globalIndex(localpattern_ns[k].i()),
-                              lfsu.globalIndex(localpattern_ns[k].j())
-                              );
+                    // bind local function spaces to neighbor element
+                    lfsun.bind(*(iit->outside()));
+                    lfsvn.bind(*(iit->outside()));
+
+                    // get pattern
+                    LocalSparsityPattern localpattern_sn, localpattern_ns;
+                    LocalAssemblerCallSwitch<LA,LA::doPatternSkeleton>::
+                      pattern_skeleton(la,lfsu,lfsv,lfsun,lfsvn,
+                                       localpattern_sn, localpattern_ns);
+
+                    // translate local to global indices and add to global
+                    // pattern
+                    for (size_t k=0; k<localpattern_sn.size(); ++k)
+                      add_entry(globalpattern,
+                                lfsv.globalIndex(localpattern_sn[k].i()),
+                                lfsun.globalIndex(localpattern_sn[k].j())
+                                );
+
+                    for (size_t k=0; k<localpattern_ns.size(); ++k)
+                      add_entry(globalpattern,
+                                lfsvn.globalIndex(localpattern_ns[k].i()),
+                                lfsu.globalIndex(localpattern_ns[k].j())
+                                );
+                  }
                 }
 
                 // boundary term
@@ -155,11 +169,8 @@ namespace Dune {
 	  template<typename X, typename R> 
 	  void residual (const X& x, R& r) const
 	  {
-        // visit each face only once
-        const int chunk=1<<28;
-        int offset = 0;
-        const typename GV::IndexSet& is=gfsu.gridview().indexSet();
-        std::map<Dune::GeometryType,int> gtoffset;
+        // map each cell to unique id
+        MultiGeomUniqueIDMapper<GV> cell_mapper(gfsu.gridview());
 
         // allocate local data container
         LocalVector<typename X::ElementType, TrialSpaceTag> xl;
@@ -171,15 +182,8 @@ namespace Dune {
 		for (ElementIterator it = gfsu.gridview().template begin<0>();
 			 it!=gfsu.gridview().template end<0>(); ++it)
 		  {
-            // assign offset for geometry type;
-            if (gtoffset.find(it->type())==gtoffset.end())
-              {
-                gtoffset[it->type()] = offset;
-                offset += chunk;
-              }
-
             // compute unique id
-            int id = is.index(*it)+gtoffset[it->type()];
+            typename GV::IndexSet::IndexType id = cell_mapper.map(*it);
 
             // skip ghost and overlap
             if (nonoverlapping_mode && it->partitionType()!=Dune::InteriorEntity)
@@ -214,16 +218,8 @@ namespace Dune {
                     // skeleton term
                     if (iit->neighbor() && (LA::doAlphaSkeleton||LA::doLambdaSkeleton) )
                       {
-                        // assign offset for geometry type;
-                        Dune::GeometryType gtn = iit->outside()->type();
-                        if (gtoffset.find(gtn)==gtoffset.end())
-                          {
-                            gtoffset[gtn] = offset;
-                            offset += chunk;
-                          }
-                        
                         // compute unique id for neighbor
-                        int idn = is.index(*(iit->outside()))+gtoffset[gtn];
+                        typename GV::IndexSet::IndexType idn = cell_mapper.map(*(iit->outside()));
                           
                         // unique vist of intersection
                         if (LA::doSkeletonTwoSided || id>idn || 
@@ -297,11 +293,8 @@ namespace Dune {
        */
       template<typename R>
       void zero_residual(R& r) const {
-        // visit each face only once
-        const int chunk=1<<28;
-        int offset = 0;
-        const typename GV::IndexSet& is=gfsu.gridview().indexSet();
-        std::map<Dune::GeometryType,int> gtoffset;
+        // map each cell to unique id
+        MultiGeomUniqueIDMapper<GV> cell_mapper(gfsu.gridview());
 
         // allocate local data container
         LocalVector<typename R::ElementType, TestSpaceTag> rl;
@@ -311,15 +304,8 @@ namespace Dune {
         for (ElementIterator it = gfsv.gridview().template begin<0>();
              it!=gfsv.gridview().template end<0>(); ++it)
         {
-          // assign offset for geometry type;
-          if (gtoffset.find(it->type())==gtoffset.end())
-          {
-            gtoffset[it->type()] = offset;
-            offset += chunk;
-          }
-
           // compute unique id
-          int id = is.index(*it)+gtoffset[it->type()];
+          typename GV::IndexSet::IndexType id = cell_mapper.map(*it);
 
           // skip ghost and overlap
           if (nonoverlapping_mode && it->partitionType()!=Dune::InteriorEntity)
@@ -345,16 +331,9 @@ namespace Dune {
             {
               // skeleton term
               if(LA::doLambdaSkeleton && iit->neighbor()) {
-                // assign offset for geometry type;
-                Dune::GeometryType gtn = iit->outside()->type();
-                if (gtoffset.find(gtn)==gtoffset.end())
-                {
-                  gtoffset[gtn] = offset;
-                  offset += chunk;
-                }
 
                 // compute unique id for neighbor
-                int idn = is.index(*(iit->outside()))+gtoffset[gtn];
+                typename GV::IndexSet::IndexType idn = cell_mapper.map(*(iit->outside()));
 
                 // unique twist of intersection
                 if (LA::doSkeletonTwoSided || id>idn ||
@@ -407,11 +386,8 @@ namespace Dune {
 	  template<typename X, typename Y> 
 	  void jacobian_apply (X& x, Y& y) const
 	  {
-        // visit each face only once
-        const int chunk=1<<28;
-        int offset = 0;
-        const typename GV::IndexSet& is=gfsu.gridview().indexSet();
-        std::map<Dune::GeometryType,int> gtoffset;
+        // map each cell to unique id
+        MultiGeomUniqueIDMapper<GV> cell_mapper(gfsu.gridview());
 
         // allocate local data container
         LocalVector<typename X::ElementType, TrialSpaceTag> xl;
@@ -423,15 +399,8 @@ namespace Dune {
 		for (ElementIterator it = gfsu.gridview().template begin<0>();
 			 it!=gfsu.gridview().template end<0>(); ++it)
 		  {
-            // assign offset for geometry type;
-            if (gtoffset.find(it->type())==gtoffset.end())
-              {
-                gtoffset[it->type()] = offset;
-                offset += chunk;
-              }
-
             // compute unique id
-            int id = is.index(*it)+gtoffset[it->type()];
+            typename GV::IndexSet::IndexType id = cell_mapper.map(*it);
 
             // skip ghost and overlap
             if (nonoverlapping_mode && it->partitionType()!=Dune::InteriorEntity)
@@ -463,16 +432,8 @@ namespace Dune {
                     // skeleton term
                     if (iit->neighbor() && LA::doAlphaSkeleton )
                       {
-                        // assign offset for geometry type;
-                        Dune::GeometryType gtn = iit->outside()->type();
-                        if (gtoffset.find(gtn)==gtoffset.end())
-                          {
-                            gtoffset[gtn] = offset;
-                            offset += chunk;
-                          }
-                        
                         // compute unique id for neighbor
-                        int idn = is.index(*(iit->outside()))+gtoffset[gtn];
+                        typename GV::IndexSet::IndexType idn = cell_mapper.map(*(iit->outside()));
                           
                         // unique vist of intersection
                         if (LA::doSkeletonTwoSided || id>idn ||
@@ -526,11 +487,8 @@ namespace Dune {
 	  template<typename X, typename A> 
 	  void jacobian (const X& x, A& a) const
 	  {
-        // visit each face only once
-        const int chunk=1<<28;
-        int offset = 0;
-        const typename GV::IndexSet& is=gfsu.gridview().indexSet();
-        std::map<Dune::GeometryType,int> gtoffset;
+        // map each cell to unique id
+        MultiGeomUniqueIDMapper<GV> cell_mapper(gfsu.gridview());
 
         // allocate local data container
         LocalVector<typename X::ElementType, TrialSpaceTag> xn;
@@ -544,16 +502,9 @@ namespace Dune {
 		for (ElementIterator it = gfsu.gridview().template begin<0>();
 			 it!=gfsu.gridview().template end<0>(); ++it)
 		  {
-            // assign offset for geometry type;
-            if (gtoffset.find(it->type())==gtoffset.end())
-              {
-                gtoffset[it->type()] = offset;
-                offset += chunk;
-              }
 
             // compute unique id
-            const typename GV::IndexSet::IndexType id = is.index(*it)+gtoffset[it->type()];
-            //            std::cout << "[" << gfsu.gridview().comm().rank() << "] " << " element: " << id << std::endl;
+            const typename GV::IndexSet::IndexType id = cell_mapper.map(*it);
 
             // skip ghost and overlap
             if (nonoverlapping_mode && it->partitionType()!=Dune::InteriorEntity)
@@ -585,16 +536,8 @@ namespace Dune {
                     // skeleton term
                     if (iit->neighbor() && LA::doAlphaSkeleton )
                       {
-                        // assign offset for geometry type;
-                        Dune::GeometryType gtn = iit->outside()->type();
-                        if (gtoffset.find(gtn)==gtoffset.end())
-                          {
-                            gtoffset[gtn] = offset;
-                            offset += chunk;
-                          }
-                        
                         // compute unique id for neighbor
-                        const typename GV::IndexSet::IndexType idn = is.index(*(iit->outside()))+gtoffset[gtn];
+                        const typename GV::IndexSet::IndexType idn = cell_mapper.map(*(iit->outside()));
                           
                         // unique vist of intersection
                         if (LA::doSkeletonTwoSided || id>idn ||
