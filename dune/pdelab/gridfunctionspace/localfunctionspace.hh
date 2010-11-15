@@ -25,98 +25,100 @@ namespace Dune {
     //=======================================
 
     namespace {
-    
-      template<typename T, bool isleaf, typename E, typename It, typename Int>
+      
+      template<typename T, bool isleaf, typename E, typename GC, typename Int = typename GC::size_type>
       struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
 
-      template<typename T, typename E, typename It, typename Int, int n, int i>
+      template<typename T, typename E, typename GC, typename Int, int n, int i>
       struct LocalFunctionSpaceBaseVisitChildMetaProgram // visit i'th child of inner node
       {
-        static void fill_indices (T& t, const E& e, const It & begin, Int& offset, const Int lvsize)
+        typedef typename T::template Child<i>::Type C;
+        LocalFunctionSpaceBaseVisitNodeMetaProgram<C,C::isLeaf,E,GC,Int> childTMP;
+        LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,GC,Int,n,i+1> siblingTMP;
+        void fill_indices (T& t, const E& e, Int& offset, GC * const global)
         {
-          t.lvsize = lvsize;
-          if (i == 0)
-            t.offset = offset;
           // vist children of node t in order
-          typedef typename T::template Child<i>::Type C;
           Int initial_offset = offset; // remember initial offset to compute size later
-          LocalFunctionSpaceBaseVisitNodeMetaProgram<C,C::isLeaf,E,It,Int>::
-            fill_indices(t.template getChild<i>(),e,begin,offset,lvsize);
+          childTMP.fill_indices(t.template getChild<i>(),e,offset,global);
           for (Int j=initial_offset; j<offset; j++)
-            begin[j] = t.pgfs->template subMap<i>(begin[j]);
-          LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,n,i+1>::
-            fill_indices(t,e,begin,offset,lvsize);
+            (*global)[j] = t.pgfs->template subMap<i>((*global)[j]);
+          // visit siblings
+          siblingTMP.fill_indices(t,e,offset,global);
         }
-        static void reserve (T& t, const E& e, Int& offset)
+        void compute_size (T& t, const E& e, Int& size)
         {
+          if (i == 0) // braucht man dieses if?
+            t.offset = size;
+          // now we are at a multi component local function space
           // vist children of node t in order
-          typedef typename T::template Child<i>::Type C;
-          LocalFunctionSpaceBaseVisitNodeMetaProgram<C,C::isLeaf,E,It,Int>::
-            reserve(t.template getChild<i>(),e,offset);
-          LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,n,i+1>::
-            reserve(t,e,offset);
+          Int initial_size = size; // remember initial offset to compute size later
+          childTMP.compute_size(t.template getChild<i>(),e,size);
+          t.n = size-initial_size;
+          // visit siblings
+          siblingTMP.compute_size(t,e,size);
         }
       };
 
-      template<typename T, typename E, typename It, typename Int, int n>
-      struct LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,n,n> // end of child recursion
+      template<typename T, typename E, typename GC, typename Int, int n>
+      struct LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,GC,Int,n,n> // end of child recursion
       {
-        static void fill_indices (T& t, const E& e, const It & begin, Int& offset, const Int lvsize)
+        void fill_indices (T& t, const E& e, Int& offset, GC * const global)
         {
           return;
         }
-        static void reserve (T& t, const E& e, Int& offset)
+        void compute_size (T& t, const E& e, Int& offset)
         {
           return;
         }
       };
 
-      template<typename T, bool isleaf, typename E, typename It, typename Int> 
+      template<typename T, bool isleaf, typename E, typename GC, typename Int> 
       struct LocalFunctionSpaceBaseVisitNodeMetaProgram // visit inner node
       {
-        static void fill_indices (T& t, const E& e, const It & begin, Int& offset, const Int lvsize)
+        LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,GC,Int,T::CHILDREN,0> childTMP;
+        void fill_indices (T& t, const E& e, Int& offset, GC * const global)
         {
+          // std::cout << "OFFSET: " << t.offset << " SIZE: " << t.n << std::endl;
           // now we are at a multi component local function space
-          t.lvsize = lvsize;
-          t.offset = offset;
-          Int initial_offset = offset; // remember initial offset to compute size later
-          t.i = begin+initial_offset; // begin is always the first entry in the vector
-          LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,T::CHILDREN,0>::
-            fill_indices(t,e,begin,offset,lvsize);
+          t.global = global;
+          assert(t.offset == offset);
+          childTMP.fill_indices(t,e,offset,global);
         }
-        static void reserve (T& t, const E& e, Int& offset)
+        void compute_size (T& t, const E& e, Int& size)
         {
+          t.offset = size;
           // now we are at a multi component local function space
-          Int initial_offset = offset; // remember initial offset to compute size later
-          LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,It,Int,T::CHILDREN,0>::
-            reserve(t,e,offset);
-          t.n = offset-initial_offset;
+          Int initial_size = size; // remember initial offset to compute size later
+          childTMP.compute_size(t,e,size);
+          t.n = size-initial_size;
         }
       };
 
-      template<typename T, typename E, typename It, typename Int> 
-      struct LocalFunctionSpaceBaseVisitNodeMetaProgram<T,true,E,It,Int> // visit leaf node 
+      template<typename T, typename E, typename GC, typename Int> 
+      struct LocalFunctionSpaceBaseVisitNodeMetaProgram<T,true,E,GC,Int> // visit leaf node 
       {
-        static void fill_indices (T& t, const E& e, const It & begin, Int& offset, const Int lvsize)
+        std::vector<typename T::Traits::GridFunctionSpaceType::Traits::SizeType> _global;
+        void fill_indices (T& t, const E& e, Int& offset, GC * const global)
         {
+          // std::cout << "OFFSET: " << t.offset << " SIZE: " << t.n << std::endl;
           // now we are at a single component local function space
           // which is part of a multi component local function space
-          t.lvsize = lvsize;
-          t.offset = offset;
-          t.i = begin+offset; // begin is always the first entry in the vector
-          std::vector<typename T::Traits::GridFunctionSpaceType::Traits::SizeType> global(t.n);
-          t.pgfs->globalIndices(*(t.pfe),e,global); // get global indices for this finite element
-          for (Int i=0; i<t.n; i++) t.i[i]=global[i]; 
+          t.global = global;
+          assert(t.offset == offset);
+          _global.resize(t.n);
+          t.pgfs->globalIndices(*(t.pfe),e,_global); // get global indices for this finite element
+          for (Int i=0; i<t.n; i++) (*global)[offset+i]=_global[i]; 
           offset += t.n; // append this chunk
         }
-        static void reserve (T& t, const E& e, Int& offset)
+        void compute_size (T& t, const E& e, Int& size)
         {
+          t.offset = size;
           // now we are at a single component local function space
           // which is part of a multi component local function space
           T::FESwitch::setStore(t.pfe, t.pgfs->finiteElementMap().find(e));
           // determine size of this chunk
           t.n = T::FESwitch::basis(*t.pfe).size();
-          offset += t.n; // append this chunk
+          size += t.n; // append this chunk
         }
       };
 
@@ -159,7 +161,7 @@ namespace Dune {
       
       //! \brief construct from global function space
       LocalFunctionSpaceBaseNode (const GFS& gfs) : 
-        pgfs(&gfs), global(gfs.maxLocalSize())
+        pgfs(&gfs), global_storage(gfs.maxLocalSize()), global(0)
       {
       }
       
@@ -190,7 +192,7 @@ namespace Dune {
        */
       typename Traits::IndexContainer::size_type localVectorSize () const
       {
-        return lvsize;
+        return global->size();
       }
 
       //! \brief map index in this local function space to root local function space
@@ -202,32 +204,35 @@ namespace Dune {
       //! \brief map index in this local function space to global index space
       typename Traits::SizeType globalIndex (typename Traits::IndexContainer::size_type index) const
       {
-        return i[index];
+        return (*global)[offset + index];
       }
 
       //! \brief extract coefficients for one element from container
       template<typename GC, typename LC>
       void vread (const GC& globalcontainer, LC& localcontainer) const
       {
+        // assert(&global_storage == global); // make sure we call this method only on the root node!
         localcontainer.resize(n);
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          localcontainer[typename LC::size_type(k)] = B::access(globalcontainer,i[k]);
+          localcontainer[typename LC::size_type(k)] = B::access(globalcontainer,(*global)[offset + k]);
       }
 
       //! \brief write back coefficients for one element to container
       template<typename GC, typename LC>
       void vwrite (const LC& localcontainer, GC& globalcontainer) const
       {
+        // assert(&global_storage == global); // make sure we call this method only on the root node!
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          B::access(globalcontainer,i[k]) = localcontainer[typename LC::size_type(k)];
+          B::access(globalcontainer,(*global)[offset + k]) = localcontainer[typename LC::size_type(k)];
       }
 
       //! \brief add coefficients for one element to container
       template<typename GC, typename LC>
       void vadd (const LC& localcontainer, GC& globalcontainer) const
       {
+        // assert(&global_storage == global); // make sure we call this method only on the root node!
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          B::access(globalcontainer,i[k]) += localcontainer[typename LC::size_type(k)];
+          B::access(globalcontainer,(*global)[offset + k]) += localcontainer[typename LC::size_type(k)];
       }
 
       //! \brief print debug information about this local function space
@@ -235,10 +240,11 @@ namespace Dune {
       {
         std::cout << n << " indices = (";
         for (typename Traits::IndexContainer::size_type k=0; k<n; k++)
-          std::cout << i[k] << " ";
+          std::cout << (*global)[offset + k] << " ";
         std::cout << ")" << std::endl;
       }
 
+    protected:
       //! \brief bind local function space to entity
       /**
 
@@ -253,48 +259,49 @@ namespace Dune {
          \param e entity to bind to
        */
       template<typename NodeType>
-      void bind (NodeType& node, const typename Traits::Element& e)
-      {
-        // we should only call bind on out selfs
-        assert(&node == this);
+      void bind (NodeType& node, const typename Traits::Element& e);
 
-        // make offset
-        typename Traits::IndexContainer::size_type offset=0;
-
-        // compute sizes
-        LocalFunctionSpaceBaseVisitNodeMetaProgram<NodeType,NodeType::isLeaf,
-                                                   typename Traits::Element,
-                                                   typename Traits::IndexContainer::iterator,
-                                                   typename Traits::IndexContainer::size_type>::
-          reserve(node,e,offset);
-        
-        // now reserve space in vector
-        global.resize(offset);
-        lvsize = global.size();
-
-        // initialize iterators and fill indices
-        offset = 0;
-        LocalFunctionSpaceBaseVisitNodeMetaProgram<NodeType,NodeType::isLeaf,
-                                                   typename Traits::Element,
-                                                   typename Traits::IndexContainer::iterator,
-                                                   typename Traits::IndexContainer::size_type>::
-          fill_indices(node,e,global.begin(),offset,lvsize);
-
-        // apply upMap
-        assert(offset == global.size());
-        for (typename Traits::IndexContainer::size_type i=0; i<offset; i++)
-          global[i] = pgfs->upMap(global[i]);
-      }
-
-    protected:
       CountingPointer<GFS const> pgfs;
-      typename Traits::IndexContainer global;
-      typename Traits::IndexContainer::iterator i;
+      typename Traits::IndexContainer global_storage;
+      typename Traits::IndexContainer* global;
       typename Traits::IndexContainer::size_type n;
       typename Traits::IndexContainer::size_type offset;
-      typename Traits::IndexContainer::size_type lvsize;
     };
 
+    template <typename GFS>
+    template <typename NodeType>
+    void LocalFunctionSpaceBaseNode<GFS>::bind (NodeType& node,
+      const typename LocalFunctionSpaceBaseNode<GFS>::Traits::Element& e)
+    {
+      static
+        LocalFunctionSpaceBaseVisitNodeMetaProgram<NodeType,NodeType::isLeaf,
+                                                    typename Traits::Element,
+                                                    typename Traits::IndexContainer>
+        TMP;
+      // we should only call bind on out selfs
+      assert(&node == this);
+      
+      // make offset
+      typename Traits::IndexContainer::size_type size=0;
+      
+      // compute sizes
+      TMP.compute_size(node,e,size);
+      assert(size == n);
+      
+      // now reserve space in vector
+      global_storage.resize(size);
+      
+      // initialize iterators and fill indices
+      size = 0;
+      TMP.fill_indices(node,e,size,&global_storage);
+      
+      // apply upMap
+      assert(global == &global_storage);
+      assert(size == global_storage.size());
+      for (typename Traits::IndexContainer::size_type i=0; i<size; i++)
+        global_storage[i] = pgfs->upMap(global_storage[i]);
+    }
+    
     //=======================================
     // local function space base: power implementation
     //=======================================
@@ -320,9 +327,9 @@ namespace Dune {
       typedef LocalFunctionSpaceBaseNode<GFS> BaseT;
 
       // friend decl for bind meta program
-      template<typename T, bool b, typename E, typename It, typename Int> 
+      template<typename T, bool b, typename E, typename GC, typename Int> 
       friend struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
-      template<typename T, typename E, typename It, typename Int, int n, int i>
+      template<typename T, typename E, typename GC, typename Int, int n, int i>
       friend struct LocalFunctionSpaceBaseVisitChildMetaProgram;
 
     public:
@@ -502,9 +509,9 @@ namespace Dune {
       typedef LocalFunctionSpaceBaseNode<GFS> BaseT;
 
       // friend decl for bind meta program
-      template<typename T, bool b, typename E, typename It, typename Int> 
+      template<typename T, bool b, typename E, typename GC, typename Int> 
       friend struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
-      template<typename T, typename E, typename It, typename Int, int n, int i>
+      template<typename T, typename E, typename GC, typename Int, int n, int i>
       friend struct LocalFunctionSpaceBaseVisitChildMetaProgram;
 
     public:
@@ -566,9 +573,9 @@ namespace Dune {
       typedef LocalFunctionSpaceBaseNode<GFS> BaseT;
 
       // friend decl for bind meta program
-      template<typename T, bool b, typename E, typename It, typename Int> 
+      template<typename T, bool b, typename E, typename GC, typename Int> 
       friend struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
-      template<typename T, typename E, typename It, typename Int, int n, int i>
+      template<typename T, typename E, typename GC, typename Int, int n, int i>
       friend struct LocalFunctionSpaceBaseVisitChildMetaProgram;
 
     public:
@@ -622,14 +629,15 @@ namespace Dune {
 
         for (local_col_iterator cit=lc.begin(); cit!=lc.end(); ++cit)
           {
+            typename Traits::SizeType i = globalIndex(cit->first);
             // insert empty row in global container if necessary
-            global_col_iterator gcit = gc.find(this->i[cit->first]);
+            global_col_iterator gcit = gc.find(i);
             if (gcit==gc.end())
-              gc[this->i[cit->first]] = global_row_type();
+              gc[i] = global_row_type();
               
             // copy row to global container with transformed indices
             for (local_row_iterator rit=(cit->second).begin(); rit!=(cit->second).end(); ++rit)
-              gc[this->i[cit->first]][this->i[rit->first]] = rit->second;
+              gc[i][i] = rit->second;
           }
       }
 
