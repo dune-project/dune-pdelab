@@ -212,7 +212,7 @@ namespace Dune {
       const typename GV::IndexSet & is;
       std::map<Dune::GeometryType,int> gtoffset;
       typedef typename GV::template Codim<0>::Entity Entity;
-      typedef typename GV::SizeType SizeType;
+      typedef typename GV::IndexSet::IndexType SizeType;
       
     public:
       MultiGeomUniqueIDMapper(const GV & gv) 
