@@ -12,18 +12,33 @@ namespace Dune {
     // power grid function space
     //=======================================
 
-    template<typename T, int k, typename P>
+    template<typename T, int k, typename Mapper>
     class PowerGridFunctionSpace;
+    
+    /** \brief base class for tuples of grid function spaces
+        product of identical grid function spaces
+        base class that holds implementation of the methods
 
-    //! product of identical grid function spaces
-    //! base class that holds implementation of the methods
-    //! this is the default version with lexicographic ordering
-    //!
-    //! \tparam T PLEASE DOCUMENT
-    //! \tparam k PLEASE DOCUMENT
-    //! \tparam P PLEASE DOCUMENT
-    template<typename T, int k, typename P>
-    class PowerGridFunctionSpaceBase 
+        PGFS(T,k) = {T}^k
+        
+        \tparam T the underlying are all grid function spaces
+        \tparam k power factor
+        \tparam Mapper is the ordering parameter. Use e.g. 
+        \link GridFunctionSpaceLexicographicMapper GridFunctionSpaceLexicographicMapper \endlink
+        or \link  GridFunctionSpaceComponentBlockwiseMapper  GridFunctionSpaceComponentBlockwiseMapper \endlink
+        or \link  GridFunctionSpaceBlockwiseMapper  GridFunctionSpaceBlockwiseMapper \endlink
+        or \link  GridFunctionSpaceDynamicBlockwiseMapper  GridFunctionSpaceDynamicBlockwiseMapper \endlink
+    */
+    template<typename T, int k, typename Mapper>
+    class PowerGridFunctionSpaceBase
+    {
+    private:
+      dune_static_assert(AlwaysFalse<Mapper>::value, "You seem to be using an unsupported Mapper");
+    };
+
+    // Specialization for GridFunctionSpaceLexicographicMapper
+    template<typename T, int k>
+    class PowerGridFunctionSpaceBase<T,k,GridFunctionSpaceLexicographicMapper>
       : public PowerNode<T,k,CountingPointerStoragePolicy>,
         public Countable
     {
@@ -31,7 +46,7 @@ namespace Dune {
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
                                                     typename T::Traits::BackendType,
-                                                    P, k>
+                                                    GridFunctionSpaceLexicographicMapper, k>
       Traits;
 
       //! extract type of container storing Es
