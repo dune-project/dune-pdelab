@@ -163,6 +163,10 @@ namespace Dune {
              typename T4, typename T5, typename T6, typename T7, typename T8>
     class CompositeGridFunctionSpace;
 
+    template<typename P, typename T0, typename T1, typename T2=EmptyChild, typename T3=EmptyChild,
+             typename T4=EmptyChild, typename T5=EmptyChild, typename T6=EmptyChild,
+             typename T7=EmptyChild, typename T8=EmptyChild>
+    class CompositeGridFunctionSpaceBase;
 
     // \brief base classe for tuples of grid function spaces
     //
@@ -172,11 +176,12 @@ namespace Dune {
     // \link GridFunctionSpaceLexicographicMapper GridFunctionSpaceLexicographicMapper \endlink
     // or \link  GridFunctionSpaceComponentBlockwiseMapper  GridFunctionSpaceComponentBlockwiseMapper \endlink
     // or \link  GridFunctionSpaceBlockwiseMapper  GridFunctionSpaceBlockwiseMapper \endlink
+    // or \link  GridFunctionSpaceDynamicBlockwiseMapper  GridFunctionSpaceDynamicBlockwiseMapper \endlink
     // \tparam Ti are all grid function spaces
-    template<typename P, typename T0, typename T1, typename T2=EmptyChild, typename T3=EmptyChild,
-             typename T4=EmptyChild, typename T5=EmptyChild, typename T6=EmptyChild,
-             typename T7=EmptyChild, typename T8=EmptyChild>
-    class CompositeGridFunctionSpaceBase
+    template<typename T0, typename T1, typename T2, typename T3,
+             typename T4, typename T5, typename T6, typename T7, typename T8>
+    class CompositeGridFunctionSpaceBase<GridFunctionSpaceLexicographicMapper,
+                                         T0,T1,T2,T3,T4,T5,T6,T7,T8>
       : public CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8>,
         public Countable
     {
@@ -185,7 +190,7 @@ namespace Dune {
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<typename T0::Traits::GridViewType, 
                                                     typename T0::Traits::BackendType,
-                                                    P,
+                                                    GridFunctionSpaceLexicographicMapper,
                                                     NonEmptyChilds<T0,T1,T2,T3,T4,T5,
                                                                    T6,T7,T8>::value>
       Traits;
@@ -355,8 +360,8 @@ namespace Dune {
              int s0, int s1, int s2, int s3, int s4, int s5, int s6, int s7, int s8, int s9>
     class CompositeGridFunctionSpaceBase<GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9>,
                                          T0,T1,T2,T3,T4,T5,T6,T7,T8>
-    : public CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8>,
-      public Countable
+      : public CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8>,
+        public Countable
     {
       typedef GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9> BlockwiseMapper;
       typedef CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8> BaseT;
@@ -540,17 +545,17 @@ namespace Dune {
       mutable std::vector<typename Traits::SizeType> childglobal;
     };
 
-  template<typename T0, typename T1, typename T2, typename T3,
-           typename T4, typename T5, typename T6, typename T7, typename T8>
-  class CompositeGridFunctionSpaceBase<GridFunctionSpaceBlockwiseMapper,
+    template<typename T0, typename T1, typename T2, typename T3,
+             typename T4, typename T5, typename T6, typename T7, typename T8>
+    class CompositeGridFunctionSpaceBase<GridFunctionSpaceBlockwiseMapper,
                                        T0,T1,T2,T3,T4,T5,T6,T7,T8>
-    : public CompositeGridFunctionSpaceBase<GridFunctionSpaceComponentBlockwiseMapper<1>,
+      : public CompositeGridFunctionSpaceBase<GridFunctionSpaceComponentBlockwiseMapper<1>,
                                             T0,T1,T2,T3,T4,T5,T6,T7,T8>
-  {
-  protected:
-    using CompositeGridFunctionSpaceBase<GridFunctionSpaceComponentBlockwiseMapper<1>,
-                                         T0,T1,T2,T3,T4,T5,T6,T7,T8>::setup;
-  };
+    {
+    protected:
+      using CompositeGridFunctionSpaceBase<GridFunctionSpaceComponentBlockwiseMapper<1>,
+                                           T0,T1,T2,T3,T4,T5,T6,T7,T8>::setup;
+    };
 
     /** 
         \brief Tupel of grid function spaces base class that holds
@@ -561,8 +566,8 @@ namespace Dune {
              typename T4, typename T5, typename T6, typename T7, typename T8>
     class CompositeGridFunctionSpaceBase<GridFunctionSpaceDynamicBlockwiseMapper,
                                          T0,T1,T2,T3,T4,T5,T6,T7,T8>
-    : public CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8>,
-      public Countable
+      : public CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8>,
+        public Countable
     {
       typedef GridFunctionSpaceDynamicBlockwiseMapper BlockwiseMapper;
       typedef CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8> BaseT;
