@@ -159,25 +159,25 @@ namespace Dune {
     }
     
 
-    template<typename P, typename T0, typename T1, typename T2, typename T3,
+    template<typename Mapper, typename T0, typename T1, typename T2, typename T3,
              typename T4, typename T5, typename T6, typename T7, typename T8>
     class CompositeGridFunctionSpace;
 
-    template<typename P, typename T0, typename T1, typename T2=EmptyChild, typename T3=EmptyChild,
+    /** \brief base class for tuples of grid function spaces
+        base class that holds implementation of the methods
+        this is the default version with lexicographic ordering
+        \tparam Mapper is the ordering parameter. Use e.g. 
+        \link GridFunctionSpaceLexicographicMapper GridFunctionSpaceLexicographicMapper \endlink
+        or \link  GridFunctionSpaceComponentBlockwiseMapper  GridFunctionSpaceComponentBlockwiseMapper \endlink
+        or \link  GridFunctionSpaceBlockwiseMapper  GridFunctionSpaceBlockwiseMapper \endlink
+        or \link  GridFunctionSpaceDynamicBlockwiseMapper  GridFunctionSpaceDynamicBlockwiseMapper \endlink
+        \tparam Ti are all grid function spaces
+    */
+    template<typename Mapper, typename T0, typename T1, typename T2=EmptyChild, typename T3=EmptyChild,
              typename T4=EmptyChild, typename T5=EmptyChild, typename T6=EmptyChild,
              typename T7=EmptyChild, typename T8=EmptyChild>
     class CompositeGridFunctionSpaceBase;
 
-    // \brief base classe for tuples of grid function spaces
-    //
-    // base class that holds implementation of the methods
-    // this is the default version with lexicographic ordering
-    // \tparam P is the ordering parameter. Use e.g. 
-    // \link GridFunctionSpaceLexicographicMapper GridFunctionSpaceLexicographicMapper \endlink
-    // or \link  GridFunctionSpaceComponentBlockwiseMapper  GridFunctionSpaceComponentBlockwiseMapper \endlink
-    // or \link  GridFunctionSpaceBlockwiseMapper  GridFunctionSpaceBlockwiseMapper \endlink
-    // or \link  GridFunctionSpaceDynamicBlockwiseMapper  GridFunctionSpaceDynamicBlockwiseMapper \endlink
-    // \tparam Ti are all grid function spaces
     template<typename T0, typename T1, typename T2, typename T3,
              typename T4, typename T5, typename T6, typename T7, typename T8>
     class CompositeGridFunctionSpaceBase<GridFunctionSpaceLexicographicMapper,
@@ -793,14 +793,17 @@ namespace Dune {
     //! \addtogroup GridFunctionSpace
     //! \{
 
-    //! \brief grid function space composed of other grid function spaces
-    //!
-    //! Composes a tuple of arbitray grid function spaces into a grid function space.
-    //! The ordering of the resulting unknowns can be done lexicographically or block-wise.
-    //! \tparam P is the ordering parameter. Use e.g. 
-    /// \link GridFunctionSpaceLexicographicMapper GridFunctionSpaceLexicographicMapper \endlink
-    /// or \link  GridFunctionSpaceBlockwiseMapper  GridFunctionSpaceBlockwiseMapper \endlink
-    template<typename P, typename T0, typename T1, typename T2=EmptyChild, typename T3=EmptyChild,
+    /** \brief grid function space composed of other grid function spaces
+        
+        Composes a tuple of arbitray grid function spaces into a grid function space.
+        The ordering of the resulting unknowns can be done lexicographically or block-wise.
+        \tparam Mapper is the ordering parameter. Use e.g. 
+        \link GridFunctionSpaceLexicographicMapper GridFunctionSpaceLexicographicMapper \endlink
+        or \link  GridFunctionSpaceComponentBlockwiseMapper  GridFunctionSpaceComponentBlockwiseMapper \endlink
+        or \link  GridFunctionSpaceBlockwiseMapper  GridFunctionSpaceBlockwiseMapper \endlink
+        or \link  GridFunctionSpaceDynamicBlockwiseMapper  GridFunctionSpaceDynamicBlockwiseMapper \endlink
+    */
+    template<typename Mapper, typename T0, typename T1, typename T2=EmptyChild, typename T3=EmptyChild,
              typename T4=EmptyChild, typename T5=EmptyChild, typename T6=EmptyChild,
              typename T7=EmptyChild, typename T8=EmptyChild>
     class CompositeGridFunctionSpace : 
