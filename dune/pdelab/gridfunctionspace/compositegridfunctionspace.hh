@@ -807,9 +807,9 @@ namespace Dune {
              typename T4=EmptyChild, typename T5=EmptyChild, typename T6=EmptyChild,
              typename T7=EmptyChild, typename T8=EmptyChild>
     class CompositeGridFunctionSpace : 
-      public CompositeGridFunctionSpaceBase<P,T0,T1,T2,T3,T4,T5,T6,T7,T8>
+      public CompositeGridFunctionSpaceBase<Mapper,T0,T1,T2,T3,T4,T5,T6,T7,T8>
     {
-      typedef CompositeGridFunctionSpaceBase<P,T0,T1,T2,T3,T4,T5,T6,T7,T8> BaseT;
+      typedef CompositeGridFunctionSpaceBase<Mapper,T0,T1,T2,T3,T4,T5,T6,T7,T8> BaseT;
 
     public:
       //! export traits class
