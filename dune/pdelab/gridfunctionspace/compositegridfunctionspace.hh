@@ -176,7 +176,11 @@ namespace Dune {
     template<typename Mapper, typename T0, typename T1, typename T2=EmptyChild, typename T3=EmptyChild,
              typename T4=EmptyChild, typename T5=EmptyChild, typename T6=EmptyChild,
              typename T7=EmptyChild, typename T8=EmptyChild>
-    class CompositeGridFunctionSpaceBase;
+    class CompositeGridFunctionSpaceBase
+    {
+    private:
+      dune_static_assert(AlwaysFalse<Mapper>::value, "You seem to be using an unsupported Mapper");
+    };
 
     template<typename T0, typename T1, typename T2, typename T3,
              typename T4, typename T5, typename T6, typename T7, typename T8>
