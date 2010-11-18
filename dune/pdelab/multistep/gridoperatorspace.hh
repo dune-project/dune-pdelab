@@ -362,7 +362,8 @@ namespace Dune {
                                   B, nonoverlapping_mode> GOS;
       public:
         typedef shared_ptr<GOS> Type;
-        static Type apply(const LOP &lop, const GFSU& gfsu, const GFSV& gfsv)
+        static Type apply(const typename remove_reference<LOP>::type &lop,
+                          const GFSU& gfsu, const GFSV& gfsv)
         { return shared_ptr<GOS>(new GOS(gfsu, gfsv, lop)); }
       };
       typedef typename ForEachType<LOPToSharedPtrGOSTypeEvaluator, LOPs>::Type
