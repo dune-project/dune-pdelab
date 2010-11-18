@@ -338,7 +338,7 @@ namespace Dune {
           FESwitch::coefficients(fe);
         global.resize(coeffs.size());
 
-        for (std::size_t i=0; i<coeffs.size(); ++i)
+        for (std::size_t i=0; i<std::size_t(coeffs.size()); ++i)
 		  {
 			// get geometry type of subentity 
 			Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
@@ -433,7 +433,7 @@ namespace Dune {
               FESwitch::coefficients(fe);
 
 			// insert geometry type of all subentities into set
-            for (std::size_t i=0; i<coeffs.size(); ++i)
+            for (std::size_t i=0; i<std::size_t(coeffs.size()); ++i)
 			  {
 				Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
                   ::general(it->type()).type(coeffs.localKey(i).subEntity(),
@@ -482,7 +482,7 @@ namespace Dune {
                                         (coeffs.size()));
 
 			// compute maximum size for each subentity
-            for (std::size_t i=0; i<coeffs.size(); ++i)
+            for (std::size_t i=0; i<std::size_t(coeffs.size()); ++i)
 			  {
 				Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
                   ::general(it->type()).type(coeffs.localKey(i).subEntity(),

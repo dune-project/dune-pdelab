@@ -138,7 +138,7 @@ namespace Dune {
 
             for (int j=0; j<refelem.size(face,1,codim); j++)
               if (FESwitch::coefficients(lfs.finiteElement()).localKey(i).
-                  subEntity() == refelem.subEntity(face,1,j,codim))
+                  subEntity() == std::size_t(refelem.subEntity(face,1,j,codim)))
                 trafo[i] = empty;
           }
       }

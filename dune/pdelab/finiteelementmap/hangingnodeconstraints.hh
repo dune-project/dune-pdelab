@@ -2,6 +2,8 @@
 #ifndef DUNE_PDELAB_HANGINGNODECONSTRAINTS_HH
 #define DUNE_PDELAB_HANGINGNODECONSTRAINTS_HH
 
+#include <cstddef>
+
 #include<dune/common/exceptions.hh>
 #include<dune/grid/common/genericreferenceelements.hh>
 #include<dune/common/geometrytype.hh>
@@ -38,7 +40,7 @@ namespace Dune {
           const CellEntityPointer e = ig.inside();
           const CellEntityPointer f = ! ig.boundary() ? ig.outside() : ig.inside();
 
-          const int dimension = Intersection::dimension;
+          const std::size_t dimension = Intersection::dimension;
 
           typedef Dune::GenericReferenceElement<DT,dimension> GRE;
           const GRE& refelement_e = Dune::GenericReferenceElements<DT,dimension>::general(e->type());
@@ -179,7 +181,8 @@ namespace Dune {
 
         // just to make sure that the hanging node manager is doing
         // what is expected of him
-        assert(refelem_e.size(dimension) == isHangingNode_e.size());
+        assert(std::size_t(refelem_e.size(dimension))
+               == isHangingNode_e.size());
 
         // the LOCAL indices of the faces in the reference element
         const int faceindex_e = ig.indexInInside();
@@ -240,8 +243,10 @@ namespace Dune {
 
         // just to make sure that the hanging node manager is doing
         // what is expected of him
-        assert(refelem_e.size(dimension) == isHangingNode_e.size());
-        assert(refelem_f.size(dimension) == isHangingNode_f.size());
+        assert(std::size_t(refelem_e.size(dimension))
+               == isHangingNode_e.size());
+        assert(std::size_t(refelem_f.size(dimension))
+               == isHangingNode_f.size());
 
         // the LOCAL indices of the faces in the reference element
         const int faceindex_e = ig.indexInInside();

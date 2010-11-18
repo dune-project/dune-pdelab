@@ -2,6 +2,7 @@
 #ifndef DUNE_PDELAB_DIFFUSIONMIXED_HH
 #define DUNE_PDELAB_DIFFUSIONMIXED_HH
 
+#include <cstddef>
 #include<vector>
 
 #include<dune/common/exceptions.hh>
@@ -100,7 +101,7 @@ namespace Dune {
 
             // transform basis vectors
             std::vector<VelocityRangeType> vtransformedbasis(velocityspace.size());
-            for (int i=0; i<velocityspace.size(); i++)
+            for (std::size_t i=0; i<velocityspace.size(); i++)
               {
                 vtransformedbasis[i] = 0.0;
                 jac.umtv(vbasis[i],vtransformedbasis[i]);
@@ -108,7 +109,7 @@ namespace Dune {
 
             // compute sigma
             VelocityRangeType sigma; sigma = 0.0;
-            for (int i=0; i<velocityspace.size(); i++)
+            for (std::size_t i=0; i<velocityspace.size(); i++)
               sigma.axpy(x[velocityspace.localIndex(i)],vtransformedbasis[i]);
 
             // K^{-1} * sigma
@@ -117,7 +118,7 @@ namespace Dune {
 
             // integrate  (K^{-1}*sigma) * phi_i
             RF factor = it->weight() / det;
-            for (int i=0; i<velocityspace.size(); i++)
+            for (std::size_t i=0; i<velocityspace.size(); i++)
               r[velocityspace.localIndex(i)] += (Kinvsigma*vtransformedbasis[i])*factor;
           }
 
@@ -133,7 +134,7 @@ namespace Dune {
 
             // compute u
             PressureRangeType u; u = 0.0;
-            for (int i=0; i<pressurespace.size(); i++)
+            for (std::size_t i=0; i<pressurespace.size(); i++)
               u.axpy(x[pressurespace.localIndex(i)],pbasis[i]);
 
             // evaluate Helmholtz term
@@ -142,26 +143,26 @@ namespace Dune {
 
             // integrate a0 * u * q
             RF factor = it->weight();
-            for (int i=0; i<pressurespace.size(); i++)
+            for (std::size_t i=0; i<pressurespace.size(); i++)
               r[pressurespace.localIndex(i)] -= a0value*u*pbasis[i]*factor;
 
             // compute divergence of velocity basis functions on reference element
             std::vector<RF> divergence(velocityspace.size(),0.0);
-            for (int i=0; i<velocityspace.size(); i++)
+            for (std::size_t i=0; i<velocityspace.size(); i++)
               for (int j=0; j<dim; j++) 
                 divergence[i] += vbasis[i][j][j];
 
             // integrate sigma * phi_i
-            for (int i=0; i<velocityspace.size(); i++)
+            for (std::size_t i=0; i<velocityspace.size(); i++)
               r[velocityspace.localIndex(i)] -= u*divergence[i]*factor;
 
             // compute divergence of sigma
             RF divergencesigma = 0.0;
-            for (int i=0; i<velocityspace.size(); i++)
+            for (std::size_t i=0; i<velocityspace.size(); i++)
               divergencesigma += x[velocityspace.localIndex(i)]*divergence[i];
 
             // integrate div sigma * q
-            for (int i=0; i<pressurespace.size(); i++)
+            for (std::size_t i=0; i<pressurespace.size(); i++)
               r[pressurespace.localIndex(i)] -= divergencesigma*pbasis[i]*factor;
           }
 	  }
@@ -202,7 +203,7 @@ namespace Dune {
 
             // integrate f
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
-            for (int i=0; i<pressurespace.size(); i++)
+            for (std::size_t i=0; i<pressurespace.size(); i++)
               r[pressurespace.localIndex(i)] += y*pbasis[i]*factor;
           }
       }
@@ -256,7 +257,7 @@ namespace Dune {
             
             // transform basis vectors
             std::vector<VelocityRangeType> vtransformedbasis(velocityspace.size());
-            for (int i=0; i<velocityspace.size(); i++)
+            for (std::size_t i=0; i<velocityspace.size(); i++)
               {
                 vtransformedbasis[i] = 0.0;
                 jac.umtv(vbasis[i],vtransformedbasis[i]);
@@ -268,7 +269,7 @@ namespace Dune {
             
             // integrate g v*normal
             RF factor = it->weight()*ig.geometry().integrationElement(it->position())/det;
-            for (int i=0; i<velocityspace.size(); i++)
+            for (std::size_t i=0; i<velocityspace.size(); i++)
               r[velocityspace.localIndex(i)] += y*(vtransformedbasis[i]*ig.unitOuterNormal(it->position()))*factor;
           }
       }
