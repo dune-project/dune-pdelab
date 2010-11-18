@@ -92,7 +92,7 @@ namespace Dune {
           {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType> js(lfsu.size());
-            lfsu.localFiniteElement().localBasis().evaluateJacobian(it->position(),js);
+            lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradient to real element
             const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
@@ -114,7 +114,7 @@ namespace Dune {
 
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
-            lfsu.localFiniteElement().localBasis().evaluateFunction(it->position(),phi);
+            lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
 
             // evaluate u
             RF u=0.0;
@@ -166,7 +166,7 @@ namespace Dune {
           {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType> js(lfsu.size());
-            lfsu.localFiniteElement().localBasis().evaluateJacobian(it->position(),js);
+            lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradient to real element
             const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
@@ -184,7 +184,7 @@ namespace Dune {
             
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
-            lfsu.localFiniteElement().localBasis().evaluateFunction(it->position(),phi);
+            lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
 
             // evaluate Helmholtz term
             typename A0::Traits::RangeType y;
@@ -224,7 +224,7 @@ namespace Dune {
           {
             // evaluate shape functions 
             std::vector<RangeType> phi(lfsv.size());
-            lfsv.localFiniteElement().localBasis().evaluateFunction(it->position(),phi);
+            lfsv.finiteElement().localBasis().evaluateFunction(it->position(),phi);
 
             // evaluate right hand side parameter function
             typename F::Traits::RangeType y;
@@ -273,7 +273,7 @@ namespace Dune {
 
             // evaluate test shape functions 
             std::vector<RangeType> phi(lfsv.size());
-            lfsv.localFiniteElement().localBasis().evaluateFunction(local,phi);
+            lfsv.finiteElement().localBasis().evaluateFunction(local,phi);
             
             // evaluate flux boundary condition
             typename J::Traits::RangeType y;

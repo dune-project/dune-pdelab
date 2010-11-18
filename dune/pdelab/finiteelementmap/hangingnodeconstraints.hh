@@ -51,7 +51,8 @@ namespace Dune {
 
           // Choose local function space etc for element with hanging nodes
           const LFS & lfs = e_has_hangingnodes ? lfs_e : lfs_f;
-          const LocalCoefficientType & localCoefficients = lfs.localFiniteElement().localCoefficients();
+          const LocalCoefficientType & localCoefficients =
+            lfs.finiteElement().localCoefficients();
           assert(localCoefficients.size()==8);
           const int faceindex = e_has_hangingnodes ? ig.indexInInside() : ig.indexInOutside();
           const GRE & refelement = e_has_hangingnodes ? refelement_e : refelement_f;

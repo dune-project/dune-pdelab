@@ -119,7 +119,7 @@ namespace Dune {
           {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType> js(lfsu.size());
-            lfsu.localFiniteElement().localBasis().evaluateJacobian(it->position(),js);
+            lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradient to real element
             const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
@@ -202,9 +202,9 @@ namespace Dune {
 
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType> js_s(lfsv_s.size());
-            lfsv_s.localFiniteElement().localBasis().evaluateJacobian(local_s,js_s);
+            lfsv_s.finiteElement().localBasis().evaluateJacobian(local_s,js_s);
             std::vector<JacobianType> js_n(lfsv_n.size());
-            lfsv_n.localFiniteElement().localBasis().evaluateJacobian(local_n,js_n);
+            lfsv_n.finiteElement().localBasis().evaluateJacobian(local_n,js_n);
 
             // transform gradient to real element
             const Dune::FieldMatrix<DF,dimw,dim> jac_s = ig.inside()->geometry().jacobianInverseTransposed(local_s);
@@ -224,9 +224,9 @@ namespace Dune {
 
             // evaluate test shape functions
             std::vector<RangeType> phi_s(lfsv_s.size());
-            lfsv_s.localFiniteElement().localBasis().evaluateFunction(local_s,phi_s);
+            lfsv_s.finiteElement().localBasis().evaluateFunction(local_s,phi_s);
             std::vector<RangeType> phi_n(lfsv_n.size());
-            lfsv_n.localFiniteElement().localBasis().evaluateFunction(local_n,phi_n);
+            lfsv_n.finiteElement().localBasis().evaluateFunction(local_n,phi_n);
 
             // compute gradient of u
             Dune::FieldVector<RF,dim> gradu_s(0.0);
@@ -350,7 +350,7 @@ namespace Dune {
 
                 // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
                 std::vector<JacobianType> js(lfsv.size());
-                lfsv.localFiniteElement().localBasis().evaluateJacobian(local,js);
+                lfsv.finiteElement().localBasis().evaluateJacobian(local,js);
 
                 // transform gradient to real element
                 const Dune::FieldMatrix<DF,dimw,dim> jac = ig.inside()->geometry().jacobianInverseTransposed(local);
@@ -363,7 +363,7 @@ namespace Dune {
 
                 // evaluate test shape functions
                 std::vector<RangeType> phi(lfsv.size());
-                lfsv.localFiniteElement().localBasis().evaluateFunction(local,phi);
+                lfsv.finiteElement().localBasis().evaluateFunction(local,phi);
 
                 // compute gradient of u
                 Dune::FieldVector<RF,dim> gradu(0.0);
@@ -425,7 +425,7 @@ namespace Dune {
           {
             // evaluate shape functions
             std::vector<RangeType> phi(lfsv.size());
-            lfsv.localFiniteElement().localBasis().evaluateFunction(it->position(),phi);
+            lfsv.finiteElement().localBasis().evaluateFunction(it->position(),phi);
 
             // evaluate right hand side parameter function
             typename F::Traits::RangeType y;
@@ -479,7 +479,7 @@ namespace Dune {
 
                 // evaluate test shape functions
                 std::vector<RangeType> phi(lfsv.size());
-                lfsv.localFiniteElement().localBasis().evaluateFunction(local,phi);
+                lfsv.finiteElement().localBasis().evaluateFunction(local,phi);
 
                 // evaluate flux boundary condition
                 typename J::Traits::RangeType y(0.0);
@@ -523,7 +523,7 @@ namespace Dune {
 
                 // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
                 std::vector<JacobianType> js(lfsv.size());
-                lfsv.localFiniteElement().localBasis().evaluateJacobian(local,js);
+                lfsv.finiteElement().localBasis().evaluateJacobian(local,js);
 
                 // transform gradient to real element
                 const Dune::FieldMatrix<DF,dimw,dim> jac = ig.inside()->geometry().jacobianInverseTransposed(local);
@@ -536,7 +536,7 @@ namespace Dune {
 
                 // evaluate test shape functions
                 std::vector<RangeType> phi(lfsv.size());
-                lfsv.localFiniteElement().localBasis().evaluateFunction(local,phi);
+                lfsv.finiteElement().localBasis().evaluateFunction(local,phi);
 
                 // evaluate Dirichlet boundary condition
                 typename G::Traits::RangeType y;
@@ -595,7 +595,7 @@ namespace Dune {
           {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType> js(lfsu.size());
-            lfsu.localFiniteElement().localBasis().evaluateJacobian(it->position(),js);
+            lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradient to real element
             const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
@@ -680,9 +680,9 @@ namespace Dune {
 
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType> js_s(lfsv_s.size());
-            lfsv_s.localFiniteElement().localBasis().evaluateJacobian(local_s,js_s);
+            lfsv_s.finiteElement().localBasis().evaluateJacobian(local_s,js_s);
             std::vector<JacobianType> js_n(lfsv_n.size());
-            lfsv_n.localFiniteElement().localBasis().evaluateJacobian(local_n,js_n);
+            lfsv_n.finiteElement().localBasis().evaluateJacobian(local_n,js_n);
 
             // transform gradient to real element
             const Dune::FieldMatrix<DF,dimw,dim> jac_s = ig.inside()->geometry().jacobianInverseTransposed(local_s);
@@ -702,9 +702,9 @@ namespace Dune {
 
             // evaluate test shape functions
             std::vector<RangeType> phi_s(lfsv_s.size());
-            lfsv_s.localFiniteElement().localBasis().evaluateFunction(local_s,phi_s);
+            lfsv_s.finiteElement().localBasis().evaluateFunction(local_s,phi_s);
             std::vector<RangeType> phi_n(lfsv_n.size());
-            lfsv_n.localFiniteElement().localBasis().evaluateFunction(local_n,phi_n);
+            lfsv_n.finiteElement().localBasis().evaluateFunction(local_n,phi_n);
 
             // compute gradient of u
             Dune::FieldVector<RF,dim> gradu_s(0.0);
@@ -842,7 +842,7 @@ namespace Dune {
 
                 // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
                 std::vector<JacobianType> js(lfsv.size());
-                lfsv.localFiniteElement().localBasis().evaluateJacobian(local,js);
+                lfsv.finiteElement().localBasis().evaluateJacobian(local,js);
 
                 // transform gradient to real element
                 const Dune::FieldMatrix<DF,dimw,dim> jac = ig.inside()->geometry().jacobianInverseTransposed(local);
@@ -855,7 +855,7 @@ namespace Dune {
 
                 // evaluate test shape functions
                 std::vector<RangeType> phi(lfsv.size());
-                lfsv.localFiniteElement().localBasis().evaluateFunction(local,phi);
+                lfsv.finiteElement().localBasis().evaluateFunction(local,phi);
 
                 // compute gradient of u
                 Dune::FieldVector<RF,dim> gradu(0.0);

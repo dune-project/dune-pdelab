@@ -96,7 +96,7 @@ namespace Dune {
           {
             // evaluate shape functions at ip (this is a Galerkin method)
             std::vector<VelocityRangeType> vbasis(velocityspace.size());
-            velocityspace.localFiniteElement().localBasis().evaluateFunction(it->position(),vbasis);
+            velocityspace.finiteElement().localBasis().evaluateFunction(it->position(),vbasis);
 
             // transform basis vectors
             std::vector<VelocityRangeType> vtransformedbasis(velocityspace.size());
@@ -127,9 +127,9 @@ namespace Dune {
           {
             // evaluate shape functions at ip (this is a Galerkin method)
             std::vector<VelocityJacobianType> vbasis(velocityspace.size());
-            velocityspace.localFiniteElement().localBasis().evaluateJacobian(it->position(),vbasis);
+            velocityspace.finiteElement().localBasis().evaluateJacobian(it->position(),vbasis);
             std::vector<PressureRangeType> pbasis(pressurespace.size());
-            pressurespace.localFiniteElement().localBasis().evaluateFunction(it->position(),pbasis);
+            pressurespace.finiteElement().localBasis().evaluateFunction(it->position(),pbasis);
 
             // compute u
             PressureRangeType u; u = 0.0;
@@ -194,7 +194,7 @@ namespace Dune {
           {
             // evaluate shape functions 
             std::vector<PressureRangeType> pbasis(pressurespace.size());
-            pressurespace.localFiniteElement().localBasis().evaluateFunction(it->position(),pbasis);
+            pressurespace.finiteElement().localBasis().evaluateFunction(it->position(),pbasis);
 
             // evaluate right hand side parameter function
             typename F::Traits::RangeType y;
@@ -252,7 +252,7 @@ namespace Dune {
 
             // evaluate test shape functions 
             std::vector<VelocityRangeType> vbasis(velocityspace.size());
-            velocityspace.localFiniteElement().localBasis().evaluateFunction(local,vbasis);
+            velocityspace.finiteElement().localBasis().evaluateFunction(local,vbasis);
             
             // transform basis vectors
             std::vector<VelocityRangeType> vtransformedbasis(velocityspace.size());
