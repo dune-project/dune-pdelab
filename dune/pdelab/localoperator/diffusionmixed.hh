@@ -62,15 +62,15 @@ namespace Dune {
         const PressureSpace& pressurespace = lfsu.template getChild<1>();
 
 		// domain and range field type
-		typedef typename VelocitySpace::Traits::LocalFiniteElementType::
+        typedef typename VelocitySpace::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::DomainFieldType DF;
-		typedef typename VelocitySpace::Traits::LocalFiniteElementType::
+        typedef typename VelocitySpace::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
-		typedef typename VelocitySpace::Traits::LocalFiniteElementType::
+		typedef typename VelocitySpace::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::JacobianType VelocityJacobianType;
-		typedef typename VelocitySpace::Traits::LocalFiniteElementType::
+        typedef typename VelocitySpace::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeType VelocityRangeType;
-		typedef typename PressureSpace::Traits::LocalFiniteElementType::
+        typedef typename PressureSpace::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeType PressureRangeType;
 
         // dimensions
@@ -175,11 +175,11 @@ namespace Dune {
         const PressureSpace& pressurespace = lfsv.template getChild<1>();
 
 		// domain and range field type
-		typedef typename PressureSpace::Traits::LocalFiniteElementType::
+        typedef typename PressureSpace::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::DomainFieldType DF;
-		typedef typename PressureSpace::Traits::LocalFiniteElementType::
+        typedef typename PressureSpace::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
-		typedef typename PressureSpace::Traits::LocalFiniteElementType::
+        typedef typename PressureSpace::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeType PressureRangeType;
 
         // dimensions
@@ -216,11 +216,11 @@ namespace Dune {
         const VelocitySpace& velocityspace = lfsv.template getChild<0>();
 
 		// domain and range field type
-		typedef typename VelocitySpace::Traits::LocalFiniteElementType::
+        typedef typename VelocitySpace::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::DomainFieldType DF;
-		typedef typename VelocitySpace::Traits::LocalFiniteElementType::
+        typedef typename VelocitySpace::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
-		typedef typename VelocitySpace::Traits::LocalFiniteElementType::
+        typedef typename VelocitySpace::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeType VelocityRangeType;
 
         // dimensions

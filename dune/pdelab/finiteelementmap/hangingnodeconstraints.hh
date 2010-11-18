@@ -29,10 +29,10 @@ namespace Dune {
           typedef typename Intersection::EntityPointer CellEntityPointer;
           typedef typename Intersection::Geometry FaceGeometry;
           typedef typename FaceGeometry::ctype DT;
-          typedef typename LFS::Traits::LocalFiniteElementType LocalFiniteElementType; 
-          typedef typename LocalFiniteElementType::Traits::LocalCoefficientsType LocalCoefficientType;
-          typedef typename LocalFiniteElementType::Traits::LocalBasisType::Traits::DomainFieldType DFT;
-          typedef typename LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType RFT;
+          typedef typename LFS::Traits::FiniteElementType FiniteElementType;
+          typedef typename FiniteElementType::Traits::LocalCoefficientsType LocalCoefficientType;
+          typedef typename FiniteElementType::Traits::LocalBasisType::Traits::DomainFieldType DFT;
+          typedef typename FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType RFT;
           typedef typename LFS::Traits::SizeType SizeType;
 
           const CellEntityPointer e = ig.inside();
@@ -183,9 +183,9 @@ namespace Dune {
         // the LOCAL indices of the faces in the reference element
         const int faceindex_e = ig.indexInInside();
         
-        typedef typename LFS::Traits::LocalFiniteElementType LocalFiniteElementType; 
-        typedef typename LocalFiniteElementType::Traits::LocalCoefficientsType LocalCoefficientType;
-        typedef typename LocalFiniteElementType::Traits::LocalBasisType::Traits::DomainFieldType DFT;
+        typedef typename LFS::Traits::FiniteElementType FiniteElementType; 
+        typedef typename FiniteElementType::Traits::LocalCoefficientsType LocalCoefficientType;
+        typedef typename FiniteElementType::Traits::LocalBasisType::Traits::DomainFieldType DFT;
         typedef typename LFS::Traits::SizeType SizeType;
 
         bool e_has_hangingnodes = false;
@@ -246,9 +246,9 @@ namespace Dune {
         const int faceindex_e = ig.indexInInside();
         const int faceindex_f = ig.indexInOutside();
         
-        typedef typename LFS::Traits::LocalFiniteElementType LocalFiniteElementType; 
-        typedef typename LocalFiniteElementType::Traits::LocalCoefficientsType LocalCoefficientType;
-        typedef typename LocalFiniteElementType::Traits::LocalBasisType::Traits::DomainFieldType DFT;
+        typedef typename LFS::Traits::FiniteElementType FiniteElementType;
+        typedef typename FiniteElementType::Traits::LocalCoefficientsType LocalCoefficientType;
+        typedef typename FiniteElementType::Traits::LocalBasisType::Traits::DomainFieldType DFT;
         typedef typename LFS::Traits::SizeType SizeType;
 
         bool e_has_hangingnodes = false;

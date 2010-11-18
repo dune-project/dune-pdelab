@@ -256,13 +256,13 @@ namespace Dune {
 	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
 	  {
 		// domain and range field type
-		typedef typename LFSU::Traits::LocalFiniteElementType::
+        typedef typename LFSU::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::DomainFieldType DF;
-		typedef typename LFSU::Traits::LocalFiniteElementType::
+        typedef typename LFSU::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
-		typedef typename LFSU::Traits::LocalFiniteElementType::
+        typedef typename LFSU::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::JacobianType JacobianType;
-		typedef typename LFSU::Traits::LocalFiniteElementType::
+        typedef typename LFSU::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSU::Traits::SizeType size_type;
@@ -339,11 +339,11 @@ namespace Dune {
                            R& r_s) const
 	  {
 		// domain and range field type
-		typedef typename LFSV::Traits::LocalFiniteElementType::
+        typedef typename LFSV::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::DomainFieldType DF;
-		typedef typename LFSV::Traits::LocalFiniteElementType::
+        typedef typename LFSV::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
-		typedef typename LFSV::Traits::LocalFiniteElementType::
+        typedef typename LFSV::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSV::Traits::SizeType size_type;

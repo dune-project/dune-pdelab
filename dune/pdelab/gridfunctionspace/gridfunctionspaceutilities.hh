@@ -251,7 +251,7 @@ namespace Dune {
 							typename Traits::RangeType& y) const
 	  {  
         typedef FiniteElementInterfaceSwitch<
-          typename GFS::LocalFunctionSpace::Traits::LocalFiniteElementType
+          typename GFS::LocalFunctionSpace::Traits::FiniteElementType
           > FESwitch;
 		lfs.bind(e);
 		lfs.vread(xg,xl);
@@ -370,9 +370,9 @@ namespace Dune {
 	  : public GridFunctionInterface<
           GridFunctionTraits<
             typename T::Traits::GridViewType,
-            typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
-            T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::dimRange,
-            typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeType
+            typename T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+            T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange,
+            typename T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeType
             >,
           DiscreteGridFunctionGlobal<T,X>
           >
@@ -382,9 +382,9 @@ namespace Dune {
 	  typedef GridFunctionInterface<
         GridFunctionTraits<
           typename T::Traits::GridViewType,
-          typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
-          T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::dimRange,
-          typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeType
+          typename T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+          T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange,
+          typename T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeType
           >,
         DiscreteGridFunctionGlobal<T,X>
         > BaseT;
@@ -520,18 +520,18 @@ namespace Dune {
 	  : public GridFunctionInterface<
           DiscreteGridFunctionCurlTraits<
             typename T::Traits::GridViewType,
-            typename T::Traits::LocalFiniteElementType::Traits::
+            typename T::Traits::FiniteElementType::Traits::
                LocalBasisType::Traits::RangeFieldType,
-            T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::
+            T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::
                dimRange>,
           DiscreteGridFunctionGlobalCurl<T,X> >
 	{
     public:
       typedef DiscreteGridFunctionCurlTraits<
         typename T::Traits::GridViewType,
-        typename T::Traits::LocalFiniteElementType::Traits::
+        typename T::Traits::FiniteElementType::Traits::
           LocalBasisType::Traits::RangeFieldType,
-        T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::
+        T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::
           dimRange> Traits;
 
     private:
@@ -539,7 +539,7 @@ namespace Dune {
 	  typedef GridFunctionInterface<
         Traits,
         DiscreteGridFunctionGlobalCurl<T,X> > BaseT;
-      typedef typename T::Traits::LocalFiniteElementType::Traits::
+      typedef typename T::Traits::FiniteElementType::Traits::
         LocalBasisType::Traits LBTraits;
 
 	public:
@@ -597,7 +597,7 @@ namespace Dune {
 	  const X& xg;
 	  mutable typename GFS::LocalFunctionSpace lfs;
 	  mutable std::vector<typename Traits::RangeFieldType> xl;
-      mutable std::vector<typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::JacobianType> J;
+      mutable std::vector<typename T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::JacobianType> J;
 	};
 
     //! \brief convert a single component function space with a grid function
@@ -615,19 +615,19 @@ namespace Dune {
       : public GridFunctionInterface<
           GridFunctionTraits<
             typename T::Traits::GridViewType,
-            typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType
+            typename T::Traits::FiniteElementType::Traits::LocalBasisType
               ::Traits::RangeFieldType,
-            T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits
+            T::Traits::FiniteElementType::Traits::LocalBasisType::Traits
               ::dimDomain,
             FieldVector<
-              typename T::Traits::LocalFiniteElementType::Traits
+              typename T::Traits::FiniteElementType::Traits
                 ::LocalBasisType::Traits::RangeFieldType,
-              T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits
+              T::Traits::FiniteElementType::Traits::LocalBasisType::Traits
               ::dimDomain> >,
           DiscreteGridFunctionGradient<T,X> >
     {
       typedef T GFS;
-      typedef typename GFS::Traits::LocalFiniteElementType::Traits::
+      typedef typename GFS::Traits::FiniteElementType::Traits::
         LocalBasisType::Traits LBTraits;
 
     public:
@@ -707,9 +707,9 @@ namespace Dune {
 	  : public GridFunctionInterface<
           GridFunctionTraits<
             typename T::Traits::GridViewType,
-            typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
-            T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::dimRange,
-            typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeType
+            typename T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+            T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange,
+            typename T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeType
             >,
           DiscreteGridFunctionPiola<T,X>
           >
@@ -719,9 +719,9 @@ namespace Dune {
 	  typedef GridFunctionInterface<
         GridFunctionTraits<
           typename T::Traits::GridViewType,
-          typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
-          T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::dimRange,
-          typename T::Traits::LocalFiniteElementType::Traits::LocalBasisType::Traits::RangeType
+          typename T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+          T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange,
+          typename T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeType
           >,
         DiscreteGridFunctionPiola<T,X>
         > BaseT;
@@ -789,11 +789,11 @@ namespace Dune {
 	  : public GridFunctionInterface<
           GridFunctionTraits<
             typename T::Traits::GridViewType,
-            typename T::template Child<0>::Type::Traits::LocalFiniteElementType
+            typename T::template Child<0>::Type::Traits::FiniteElementType
                      ::Traits::LocalBasisType::Traits::RangeFieldType,
             T::CHILDREN,
             Dune::FieldVector<
-              typename T::template Child<0>::Type::Traits::LocalFiniteElementType
+              typename T::template Child<0>::Type::Traits::FiniteElementType
                        ::Traits::LocalBasisType::Traits::RangeFieldType,
               T::CHILDREN
               >
@@ -806,11 +806,11 @@ namespace Dune {
       typedef GridFunctionInterface<
         GridFunctionTraits<
           typename T::Traits::GridViewType,
-          typename T::template Child<0>::Type::Traits::LocalFiniteElementType
+          typename T::template Child<0>::Type::Traits::FiniteElementType
                    ::Traits::LocalBasisType::Traits::RangeFieldType,
           T::CHILDREN,
           Dune::FieldVector<
-            typename T::template Child<0>::Type::Traits::LocalFiniteElementType
+            typename T::template Child<0>::Type::Traits::FiniteElementType
                      ::Traits::LocalBasisType::Traits::RangeFieldType,
             T::CHILDREN
             >
@@ -821,9 +821,9 @@ namespace Dune {
 	public:
 	  typedef typename BaseT::Traits Traits;
       typedef typename T::template Child<0>::Type ChildType;
-      typedef typename ChildType::Traits::LocalFiniteElementType
+      typedef typename ChildType::Traits::FiniteElementType
                        ::Traits::LocalBasisType::Traits::RangeFieldType RF;
-      typedef typename ChildType::Traits::LocalFiniteElementType
+      typedef typename ChildType::Traits::FiniteElementType
                        ::Traits::LocalBasisType::Traits::RangeType RT;
 	  
 	  VectorDiscreteGridFunction (const GFS& gfs, const X& x_)

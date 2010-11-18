@@ -165,11 +165,11 @@ public:
                        Dune::PDELab::LocalMatrix<R>& mat) const
   {
     // domain and range field type
-    typedef typename LFSU::Traits::LocalFiniteElementType LFEU;
+    typedef typename LFSU::Traits::FiniteElementType LFEU;
     typedef typename LFEU::Traits::LocalBasisType LBU;
     typedef typename LBU::Traits::RangeType RangeU;
 
-    typedef typename LFSV::Traits::LocalFiniteElementType LFEV;
+    typedef typename LFSV::Traits::FiniteElementType LFEV;
     typedef typename LFEV::Traits::LocalBasisType LBV;
     typedef typename LBV::Traits::RangeType RangeV;
 
@@ -213,7 +213,7 @@ void wave (const GV& gv, const FEM& fem, typename GV::ctype dt,
 {
   // constants and types
   typedef typename GV::Grid::ctype DF;
-  typedef typename FEM::Traits::LocalFiniteElementType::Traits::
+  typedef typename FEM::Traits::FiniteElementType::Traits::
     LocalBasisType::Traits::RangeFieldType RF;
 
   // make function space

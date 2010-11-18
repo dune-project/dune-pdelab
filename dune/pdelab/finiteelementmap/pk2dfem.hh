@@ -36,7 +36,7 @@ namespace Dune {
 
 	  //! \brief get local basis functions for entity
 	  template<class EntityType>
-	  const typename Traits::LocalFiniteElementType& find (const EntityType& e) const
+      const typename Traits::FiniteElementType& find (const EntityType& e) const
 	  {
         unsigned int n0,n1,n2;
         n0 = is.subIndex(e,0,2);

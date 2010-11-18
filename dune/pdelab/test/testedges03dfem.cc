@@ -39,7 +39,7 @@ bool testFEM(const GV& gv, const std::string indent = "")
   static const unsigned dimDomain = GV::dimension;
   typedef double RF;                   // range field type
   typedef Dune::PDELab::EdgeS03DLocalFiniteElementMap<GV,RF> FEM;
-  typedef typename FEM::Traits::LocalFiniteElementType::Traits
+  typedef typename FEM::Traits::FiniteElementType::Traits
     ::LocalBasisType LocalBasis;
   typedef typename LocalBasis::Traits::DomainType D;
   typedef typename LocalBasis::Traits::RangeType R;

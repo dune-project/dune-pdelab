@@ -35,7 +35,7 @@ namespace Dune {
 
       //! \brief get local basis functions for entity
       template<class EntityType>
-      const typename Traits::LocalFiniteElementType& find (const EntityType& e) const
+      const typename Traits::FiniteElementType& find (const EntityType& e) const
       {
         size_t n = static_cast<size_t>(iis.size(e));
         if (n<variant.size())

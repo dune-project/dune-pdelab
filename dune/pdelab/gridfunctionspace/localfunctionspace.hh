@@ -553,10 +553,6 @@ namespace Dune {
     template<typename GFS, typename N>  
     struct LeafLocalFunctionSpaceTraits : public PowerCompositeLocalFunctionSpaceTraits<GFS,N>
     {
-      //! Type of local finite element (deprecated local interface)
-      typedef typename GFS::Traits::FiniteElementType LocalFiniteElementType
-        DUNE_DEPRECATED;
-
       //! Type of local finite element
       typedef typename GFS::Traits::FiniteElementType FiniteElementType;
 

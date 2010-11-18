@@ -57,7 +57,7 @@ namespace Dune
 
             //! \brief get local basis functions for entity
             template<class EntityType>
-            const typename Traits::LocalFiniteElementType& find (const EntityType& e) const
+            const typename Traits::FiniteElementType& find (const EntityType& e) const
             {
                 // get the vertex indices
                 unsigned int vertexmap[4];

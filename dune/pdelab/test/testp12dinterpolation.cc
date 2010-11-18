@@ -60,9 +60,9 @@ public:
 template<typename GV, typename FEM>
 double interpolationerror (const GV& gv, const FEM &fem)
 {
-  typedef typename FEM::Traits::LocalFiniteElementType::Traits
+  typedef typename FEM::Traits::FiniteElementType::Traits
     ::LocalBasisType::Traits::DomainFieldType D; // domain type
-  typedef typename FEM::Traits::LocalFiniteElementType::Traits
+  typedef typename FEM::Traits::FiniteElementType::Traits
     ::LocalBasisType::Traits::RangeFieldType R;  // range type
 
   typedef Dune::PDELab::GridFunctionSpace<GV, FEM> GFS;    

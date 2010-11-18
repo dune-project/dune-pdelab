@@ -100,11 +100,11 @@ namespace Dune {
         const unsigned int vsize = lfsu_v_pfs.getChild(0).size();
 
 		// domain and range field type
-		typedef typename LFSU_V::Traits::LocalFiniteElementType::
+        typedef typename LFSU_V::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
-		typedef typename LFSU_V::Traits::LocalFiniteElementType::
+        typedef typename LFSU_V::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeType RT_V;
-		typedef typename LFSU_V::Traits::LocalFiniteElementType::
+        typedef typename LFSU_V::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::JacobianType JacobianType_V;
         typedef typename LFSU_V::Traits::SizeType size_type;
 
@@ -113,9 +113,9 @@ namespace Dune {
         const LFSU_P& lfsu_p = lfsu.template getChild<1>();
         const unsigned int psize = lfsu_p.size();
 
-		typedef typename LFSU_P::Traits::LocalFiniteElementType::
+        typedef typename LFSU_P::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::DomainFieldType DF;
-		typedef typename LFSU_P::Traits::LocalFiniteElementType::
+        typedef typename LFSU_P::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeType RT_P;
 
         // select quadrature rule
@@ -220,20 +220,20 @@ namespace Dune {
         typedef typename LFSV_V_PFS::template Child<0>::Type LFSV_V;
         const unsigned int vsize = lfsv_v_pfs.getChild(0).size();
 
-		typedef typename LFSV_V::Traits::LocalFiniteElementType::
+        typedef typename LFSV_V::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::JacobianType JacobianType_V;
-		typedef typename LFSV_V::Traits::LocalFiniteElementType::
+        typedef typename LFSV_V::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeType RT_V;
 
 		// the range field type (equal for velocity and pressure)
-		typedef typename LFSV_V::Traits::LocalFiniteElementType::
+        typedef typename LFSV_V::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
 
         // the size type (equal for velocity and pressure)
         typedef typename LFSV_V::Traits::SizeType size_type;
 
 		// the domain field type (equal for velocity and pressure)
-		typedef typename LFSV_V::Traits::LocalFiniteElementType::
+        typedef typename LFSV_V::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::DomainFieldType DF;
 
         // extract velocity boundary function (equal for all
@@ -342,13 +342,13 @@ namespace Dune {
         typedef typename LFSU_V_PFS::template Child<0>::Type LFSU_V;
 
 	    // domain and range field type
-	    typedef typename LFSU_V::Traits::LocalFiniteElementType::
+        typedef typename LFSU_V::Traits::FiniteElementType::
 	      Traits::LocalBasisType::Traits::DomainFieldType DF_V;
-	    typedef typename LFSU_V::Traits::LocalFiniteElementType::
+        typedef typename LFSU_V::Traits::FiniteElementType::
 	      Traits::LocalBasisType::Traits::RangeFieldType RF;
-		typedef typename LFSU_V::Traits::LocalFiniteElementType::
+        typedef typename LFSU_V::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeType RT_V;
-	    typedef typename LFSU_V::Traits::LocalFiniteElementType::
+        typedef typename LFSU_V::Traits::FiniteElementType::
 	      Traits::LocalBasisType::Traits::JacobianType JacobianType_V;
         typedef typename LFSU_V::Traits::SizeType size_type;
 
@@ -357,10 +357,10 @@ namespace Dune {
         const LFSU_P& lfsu_p = lfsu.template getChild<1>();
         const unsigned int psize = lfsu_p.size();
 
-	    typedef typename LFSU_P::Traits::LocalFiniteElementType::
+        typedef typename LFSU_P::Traits::FiniteElementType::
 	      Traits::LocalBasisType::Traits::DomainFieldType DF;
 
-	    typedef typename LFSU_P::Traits::LocalFiniteElementType::
+        typedef typename LFSU_P::Traits::FiniteElementType::
 	      Traits::LocalBasisType::Traits::RangeType RT_P;
 
         // select quadrature rule

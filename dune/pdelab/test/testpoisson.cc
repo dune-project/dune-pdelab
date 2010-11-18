@@ -179,7 +179,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
 {
   // constants and types
   typedef typename GV::Grid::ctype DF;
-  typedef typename FEM::Traits::LocalFiniteElementType::Traits::
+  typedef typename FEM::Traits::FiniteElementType::Traits::
     LocalBasisType::Traits::RangeFieldType R;
 
   // make function space

@@ -60,15 +60,8 @@ namespace Dune {
       //! short cut for size type exported by Backend
       typedef typename B::size_type SizeType;
 
-      //! local finite element map
-      typedef L LocalFiniteElementMapType DUNE_DEPRECATED;
-
       //! finite element map
       typedef L FiniteElementMapType;
-
-      //! local finite element
-      typedef typename L::Traits::FiniteElementType LocalFiniteElementType
-        DUNE_DEPRECATED;
 
       //! finite element
       typedef typename L::Traits::FiniteElementType FiniteElementType;
@@ -100,15 +93,8 @@ namespace Dune {
 	  //! \brief short cut for size type exported by Backend
 	  typedef typename B::size_type SizeType;
 
-	  //! \brief local finite element map
-	  typedef L LocalFiniteElementMapType DUNE_DEPRECATED;
-
       //! \brief finite element map
       typedef L FiniteElementMapType;
-
-	  //! \brief local finite element
-      typedef typename L::Traits::LocalFiniteElementType LocalFiniteElementType
-        DUNE_DEPRECATED;
 
       //! \brief finite element
       typedef typename L::Traits::LocalFiniteElementType FiniteElementType;

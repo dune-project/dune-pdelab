@@ -21,8 +21,6 @@ namespace Dune {
 	template<class T>
     struct FiniteElementMapTraits
 	{
-      //! Type of finite element from local functions (local interface)
-      typedef T LocalFiniteElementType DUNE_DEPRECATED;
       //! Type of finite element from local functions
       typedef T FiniteElementType;
 	};
@@ -46,7 +44,7 @@ namespace Dune {
 		  type must be polymorphic.
 	  */ 
 	  template<class EntityType>
-	  const typename Traits::LocalFiniteElementType& find (const EntityType& e) const
+      const typename Traits::FiniteElementType& find (const EntityType& e) const
 	  {
 		return asImp().find(e);
 	  }
@@ -77,7 +75,7 @@ namespace Dune {
 
 	  //! \brief get local basis functions for entity
 	  template<class EntityType>
-	  const typename Traits::LocalFiniteElementType& find (const EntityType& e) const
+      const typename Traits::FiniteElementType& find (const EntityType& e) const
 	  {
 		return imp;
 	  }
@@ -163,7 +161,7 @@ namespace Dune {
 
 	  //! \brief get local basis functions for entity
 	  template<class EntityType>
-	  const typename Traits::LocalFiniteElementType& find (const EntityType& e) const
+      const typename Traits::FiniteElementType& find (const EntityType& e) const
 	  {
         return variant[orient[is.template index<0>(e)]];
 	  }
