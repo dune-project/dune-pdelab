@@ -99,6 +99,8 @@ namespace Dune
                     verbosity_level = 0;
             }
 
+            virtual ~NewtonBase() { }
+
             virtual bool terminate() = 0;
             virtual void prepare_step(Matrix& A) = 0;
             virtual void line_search(TrialVector& z, TestVector& r) = 0;

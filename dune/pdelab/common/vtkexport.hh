@@ -13,7 +13,7 @@ namespace Dune {
 	template<typename T> // T is a grid function
 	class VTKGridFunctionAdapter
 	  : public Dune::VTKWriter<typename T::Traits::GridViewType>::VTKFunction
-	{
+    {
 	  typedef typename T::Traits::GridViewType::Grid::ctype DF;
 	  enum {n=T::Traits::GridViewType::dimension};
 	  typedef typename T::Traits::GridViewType::Grid::template Codim<0>::Entity Entity;
