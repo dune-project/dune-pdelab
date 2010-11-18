@@ -104,7 +104,8 @@ namespace Dune {
       // parameters and dt must have been setup before use.
       void setWeights(std::size_t step) {
         for(std::size_t i = 0; i <= order; ++i)
-          sumLOP.setWeight(parameters->alpha(step,i)/std::pow(dt,int(i)), i);
+          sumLOP.setWeight(parameters->alpha(step,i) / std::pow(dt, TReal(i)),
+                           i);
       }
 
     public:
@@ -579,7 +580,7 @@ namespace Dune {
           if(mgos.parameters->alpha(backStep, currentElem) != 0.0)
             residual.axpy
               ( mgos.parameters->alpha(backStep, currentElem) /
-                  std::pow(mgos.dt,currentElem),
+                  std::pow(mgos.dt, Time(currentElem)),
                 *mgos.getResidualValue(*gosPtr, currentElem, backStep));
           ++currentElem;
         }
@@ -604,7 +605,7 @@ namespace Dune {
           if(mgos.parameters->alpha(backStep, currentElem) != 0.0)
             composedJacobian.axpy
               ( mgos.parameters->alpha(backStep, currentElem) /
-                  std::pow(mgos.dt,currentElem),
+                  std::pow(mgos.dt, Time(currentElem)),
                 *mgos.getJacobian(*gosPtr, currentElem, backStep));
           ++currentElem;
         }
@@ -628,7 +629,7 @@ namespace Dune {
           if(mgos.parameters->alpha(backStep, currentElem) != 0.0)
             residual.axpy
               ( mgos.parameters->alpha(backStep, currentElem) /
-                  std::pow(mgos.dt,currentElem),
+                  std::pow(mgos.dt, Time(currentElem)),
                 *mgos.getZeroResidual(*gosPtr, currentElem, backStep));
           ++currentElem;
         }
