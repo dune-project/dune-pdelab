@@ -69,7 +69,8 @@ namespace Dune {
         f.evaluate(ig,testpoint,bctype);
 
         for (std::size_t i=0;
-             i<FESwitch::coefficients(lfs.finiteElement()).size(); i++)
+             i<std::size_t(FESwitch::coefficients(lfs.finiteElement()).size());
+             i++)
           {
             // The codim to which this dof is attached to
             unsigned int codim =
