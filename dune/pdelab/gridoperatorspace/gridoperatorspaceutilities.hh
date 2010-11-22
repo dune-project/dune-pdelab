@@ -42,6 +42,140 @@ namespace Dune {
     };
 
 
+    class NoSubTriangulationImp
+    {
+    public:
+      template<class E,class EG>
+      void create_geometries(const E &, const EG &, const bool d = false)
+      {DUNE_THROW(Dune::NotImplemented,"This should never be called.");}
+      template<class E,class EG>
+      void create_edges(const E &, const EG &)
+      {DUNE_THROW(Dune::NotImplemented,"This should never be called.");}
+      template<class E,class EG>
+      void create_boundaries(const E &, const EG &)
+      {DUNE_THROW(Dune::NotImplemented,"This should never be called.");}
+    };
+    
+    template<typename GV>
+    class NoSubTriangulation
+    {
+    public:
+      static const bool hasSubTriangulation = false;
+	  typedef typename GV::Traits::template Codim<0>::Entity Entity;
+	  typedef typename GV::IntersectionIterator IntersectionIterator;
+	  typedef typename IntersectionIterator::Intersection Intersection;
+
+	  typedef ElementGeometry<Entity> SubEntity;
+      typedef std::list<SubEntity> SubEntityList;
+      typedef typename SubEntityList::iterator SubEntityIterator;
+	  
+      typedef IntersectionGeometry<Intersection>  SubIntersection;
+      typedef std::list<SubIntersection> SubIntersectionList;
+
+      struct BindSubEntity{
+        template<typename LFS, typename SE>
+        inline static void rebind(const LFS &, const SE &){}
+      };
+
+      struct BindInsideSubIntersection{
+        template<typename LFS, typename SE>
+        inline static void rebind(const LFS &, const SE &){}
+      };
+
+      struct BindOutsideSubIntersection{
+        template<typename LFS, typename SE>
+        inline static void rebind(const LFS &, const SE &){}
+      };
+
+      struct BindSubIntersection{
+        template<typename LFS, typename SE>
+        inline static void rebind(const LFS &, const SE &){}
+      };
+
+      // The iterator has to wrap the true intersection
+      // iterator. Otherwise a list of entity pointers would have to
+      // be stored.
+      class SubIntersectionIterator
+      {
+      public:
+        SubIntersectionIterator(const IntersectionIterator & it_)
+          : intersection_index(0), it(it_), 
+            sub_intersection(new SubIntersection(*it,intersection_index))
+        {}
+
+        SubIntersectionIterator(const SubIntersectionIterator & sit_)
+          : intersection_index(0),
+            it(sit_.it), sub_intersection(sit_.sub_intersection)
+        {}
+
+        SubIntersectionIterator & operator++()
+        { 
+          ++it;  ++intersection_index; 
+          sub_intersection.reset(new SubIntersection(*it,intersection_index));
+          return *this; 
+        }
+
+        SubIntersection & operator*()
+        {
+          return *sub_intersection;
+        }
+
+        SubIntersection* operator->()
+        {
+          return sub_intersection.get();
+        }
+        
+        bool operator==(const SubIntersectionIterator & at) const
+        {
+          return it == at.it;
+        }
+
+        bool operator!=(const SubIntersectionIterator & at) const
+        {
+          return it != at.it;
+        }
+
+      private: 
+        int intersection_index;
+        IntersectionIterator it;
+        mutable std::auto_ptr<SubIntersection> sub_intersection;
+      };
+      
+      NoSubTriangulation(const GV & gv_, const NoSubTriangulationImp &) 
+        : gv(gv_)
+      {}
+
+      void create(const Entity & e) const
+      {
+        sub_entities.clear();
+        sub_entities.push_back(SubEntity(e));
+      }
+
+      SubEntityIterator begin() const
+      {
+        return sub_entities.begin();
+      }
+
+      SubEntityIterator end() const
+      {
+        return sub_entities.end();
+      }
+
+      SubIntersectionIterator ibegin() const
+      {
+        return SubIntersectionIterator(gv.ibegin(sub_entities.front().entity()));
+      }
+
+      SubIntersectionIterator iend() const
+      {
+        return SubIntersectionIterator(gv.iend(sub_entities.front().entity()));
+      }
+
+    private:
+      const GV & gv;
+      mutable SubEntityList sub_entities;
+    };
+
 	/**@ingroup FlatOperatorSpaceGroup
 	   \brief Entry in sparsity pattern
 
