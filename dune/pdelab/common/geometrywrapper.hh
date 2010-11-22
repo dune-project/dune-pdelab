@@ -36,6 +36,12 @@ namespace Dune {
 	  {
 		return e;
 	  }
+
+      //! \todo Please doc me!
+	  const Entity& hostEntity () const
+	  {
+		return e;
+	  }
   
 	private:
 	  const E& e;
@@ -70,6 +76,17 @@ namespace Dune {
         : i(i_), index(index_)
 	  {}
 
+      int insideDomainIndex() const 
+      {
+        return 0;
+      }
+
+      int outsideDomainIndex() const 
+      { 
+        const bool is_boundary = i.boundary();
+        return 0 - int(is_boundary);
+
+      }
 
 	  //! return true if intersection is with interior or exterior boundary (see the cases above)
 	  bool boundary () const
@@ -197,6 +214,15 @@ namespace Dune {
 		return i.inside();
 	  }
 
+	  /*! @brief return EntityPointer to the Entity on the inside of this
+		intersection. That is the Entity where we started this .
+	  */
+	  EntityPointer insideHostEntity() const
+	  {
+        DUNE_THROW(Dune::Exception,"This should never be called.");
+		return i.inside();
+	  }
+
 	  /*! @brief return EntityPointer to the Entity on the outside of this
 		intersection. That is the neighboring Entity.
 
@@ -219,7 +245,7 @@ namespace Dune {
         return index;
       }
 
-	private:
+    private:
 	  const I& i;
       const unsigned int index;
 	};
