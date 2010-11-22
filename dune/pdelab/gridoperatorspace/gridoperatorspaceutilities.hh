@@ -98,20 +98,21 @@ namespace Dune {
       class SubIntersectionIterator
       {
       public:
-        SubIntersectionIterator(const IntersectionIterator & it_)
-          : intersection_index(0), it(it_), 
+        SubIntersectionIterator(const IntersectionIterator & it_, const IntersectionIterator & eit_)
+          : intersection_index(0), it(it_), eit(eit_),
             sub_intersection(new SubIntersection(*it,intersection_index))
         {}
 
         SubIntersectionIterator(const SubIntersectionIterator & sit_)
           : intersection_index(0),
-            it(sit_.it), sub_intersection(sit_.sub_intersection)
+            it(sit_.it), eit(sit_.eit), sub_intersection(sit_.sub_intersection)
         {}
 
         SubIntersectionIterator & operator++()
         { 
           ++it;  ++intersection_index; 
-          sub_intersection.reset(new SubIntersection(*it,intersection_index));
+          if(it != eit)
+            sub_intersection.reset(new SubIntersection(*it,intersection_index));
           return *this; 
         }
 
@@ -138,11 +139,16 @@ namespace Dune {
       private: 
         int intersection_index;
         IntersectionIterator it;
+        IntersectionIterator eit;
         mutable std::auto_ptr<SubIntersection> sub_intersection;
       };
       
       NoSubTriangulation(const GV & gv_, const NoSubTriangulationImp &) 
         : gv(gv_)
+      {}
+
+      NoSubTriangulation(const NoSubTriangulation & c_) 
+        : gv(c_.gv), sub_entities(c_.sub_entities)
       {}
 
       void create(const Entity & e) const
@@ -163,12 +169,14 @@ namespace Dune {
 
       SubIntersectionIterator ibegin() const
       {
-        return SubIntersectionIterator(gv.ibegin(sub_entities.front().entity()));
+        const Entity & e = sub_entities.front().entity();
+        return SubIntersectionIterator(gv.ibegin(e),gv.iend(e));
       }
 
       SubIntersectionIterator iend() const
       {
-        return SubIntersectionIterator(gv.iend(sub_entities.front().entity()));
+        const Entity & e = sub_entities.front().entity();
+        return SubIntersectionIterator(gv.iend(e),gv.iend(e));
       }
 
     private:
