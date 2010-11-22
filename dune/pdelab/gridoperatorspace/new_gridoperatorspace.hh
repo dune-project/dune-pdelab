@@ -887,7 +887,7 @@ namespace Dune {
 
 	private:
 	  const LA& la;
-      const SubTriangulation & sub_triangulation;
+      const SubTriangulation sub_triangulation;
       using Base::gfsu;
       using Base::gfsv;
       using Base::pconstraintsu;
