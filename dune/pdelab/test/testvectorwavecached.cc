@@ -13,7 +13,9 @@
 #include <iostream>
 #include <limits>
 #include <string>
+#include <utility>
 
+#include <dune/common/array.hh>
 #include <dune/common/configparser.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
@@ -382,11 +384,17 @@ int main(int argc, char** argv)
         : Dune::ParameterTree();
 
       // make grid
+      std::pair<Domain, Domain> bbox;
+      bbox.first = myParams.get("bbox.lower", Domain(0));
+      bbox.second = myParams.get("bbox.upper", Domain(1));
+      Dune::array<unsigned, dim> elements;
+      std::fill(elements.begin(), elements.end(), 1);
+      elements = myParams.get("elements", elements);
       Dune::shared_ptr<Grid>grid
-        (Dune::StructuredGridFactory<Grid>::createSimplexGrid(myParams));
+        ( Dune::StructuredGridFactory<Grid>::createSimplexGrid
+          ( bbox.first, bbox.second, elements));
       grid->loadBalance();
-      if(grid->maxLevel() == 0)
-        grid->globalRefine(myParams.get("global_refines", 0));
+      grid->globalRefine(myParams.get("global_refines", 0));
 
       // get view
       typedef Grid::LeafGridView GV;
