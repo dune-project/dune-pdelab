@@ -58,9 +58,8 @@ namespace Dune {
       enum { doLambdaSkeleton = false };
       enum { doLambdaBoundary = true };
 
-      DiffusionDG (const K& k_, const F& f_, const B& b_, const G& g_, const J& j_, 
-                   int dg_method, int qorder_=4) :
-        k(k_), f(f_), b(b_), g(g_), j(j_), qorder(qorder_)
+      DiffusionDG (const K& k_, const F& f_, const B& b_, const G& g_, const J& j_, int dg_method) :
+        k(k_), f(f_), b(b_), g(g_), j(j_)
       {
         
         // OBB
@@ -107,6 +106,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
+        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0);
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
@@ -172,6 +172,9 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
+        const int qorder = std::max( 0, std::max(
+            2 * ( (int)lfsu_s.finiteElement().localBasis().order() - 1 ),
+            2 * ( (int)lfsu_n.finiteElement().localBasis().order() - 1 )));
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // normal of center in face's reference element
@@ -317,6 +320,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
+        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0);
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // evaluate boundary condition type
@@ -418,6 +422,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
+        const int qorder = std::max ( 2 * ( (int)lfsv.finiteElement().localBasis().order() - 1 ), 0);
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         // loop over quadrature points
@@ -462,6 +467,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
+        const int qorder = std::max ( 2 * ( (int)lfsv.finiteElement().localBasis().order() - 1 ), 0);
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // evaluate boundary condition type
@@ -583,6 +589,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
+        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0);
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
@@ -650,6 +657,9 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
+        const int qorder = std::max( 0, std::max(
+            2 * ( (int)lfsu_s.finiteElement().localBasis().order() - 1 ),
+            2 * ( (int)lfsu_n.finiteElement().localBasis().order() - 1 )));
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // center in face's reference element
@@ -809,6 +819,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
+        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0);
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // evaluate boundary condition type
@@ -898,7 +909,6 @@ namespace Dune {
       double epsilon;
       double sigma;
       double beta;
-      int qorder;
     };
 
     //! \} group GridFunctionSpace
