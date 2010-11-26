@@ -137,7 +137,7 @@ namespace Dune {
       :  public SequentialNorm, public LinearResultStorage
     {
     public:
-      explicit ISTLBackend_SEQ_ILU0 (unsigned maxiter_=5000, bool verbose_=true)
+      explicit ISTLBackend_SEQ_ILU0 (unsigned maxiter_=5000, int verbose_=1)
         : maxiter(maxiter_), verbose(verbose_)
        {}
       /*! \brief solve the given linear system
@@ -160,7 +160,7 @@ namespace Dune {
        }
     private:
       unsigned maxiter;
-      bool verbose;
+      int verbose;
     };
     
 
@@ -187,7 +187,7 @@ namespace Dune {
         \param[in] maxiter maximum number of iterations to do
         \param[in] verbose print messages if true
       */
-      explicit ISTLBackend_SEQ_BCGS_ILU0 (unsigned maxiter_=5000, bool verbose_=true)
+      explicit ISTLBackend_SEQ_BCGS_ILU0 (unsigned maxiter_=5000, int verbose_=1)
         : ISTLBackend_SEQ_ILU0<Dune::BiCGSTABSolver>(maxiter_, verbose_)
       {}
     };
@@ -202,7 +202,7 @@ namespace Dune {
         \param[in] maxiter maximum number of iterations to do
         \param[in] verbose print messages if true
       */
-      explicit ISTLBackend_SEQ_CG_ILU0 (unsigned maxiter_=5000, bool verbose_=true)
+      explicit ISTLBackend_SEQ_CG_ILU0 (unsigned maxiter_=5000, int verbose_=1)
         : ISTLBackend_SEQ_ILU0<Dune::CGSolver>(maxiter_, verbose_)
       {}
     };
