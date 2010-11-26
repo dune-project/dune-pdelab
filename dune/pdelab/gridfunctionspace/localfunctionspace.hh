@@ -100,7 +100,6 @@ namespace Dune {
         std::vector<typename T::Traits::GridFunctionSpaceType::Traits::SizeType> _global;
         void fill_indices (T& t, const E& e, Int& offset, GC * const global)
         {
-          // std::cout << "OFFSET: " << t.offset << " SIZE: " << t.n << std::endl;
           // now we are at a single component local function space
           // which is part of a multi component local function space
           t.global = global;
@@ -156,14 +155,13 @@ namespace Dune {
     public:
       typedef LocalFunctionSpaceBaseTraits<GFS> Traits;
 
-      //! \brief construct without associating a global function space
+      //! \brief empty constructor (needed for CopyStoragePolicy)
       LocalFunctionSpaceBaseNode () {}
       
       //! \brief construct from global function space
       LocalFunctionSpaceBaseNode (const GFS& gfs) : 
-        pgfs(&gfs), global_storage(gfs.maxLocalSize()), global(0)
-      {
-      }
+        pgfs(&gfs), global_storage(gfs.maxLocalSize()), global(0), n(0)
+      {}
       
       //! \brief initialize with grid function space
       void setup (const GFS& gfs)
@@ -287,17 +285,16 @@ namespace Dune {
       // compute sizes
       TMP.compute_size(node,e,size);
       assert(size == n);
-      
-      // now reserve space in vector
-      global_storage.resize(size);
+      assert(n > 0);
       
       // initialize iterators and fill indices
       size = 0;
       TMP.fill_indices(node,e,size,&global_storage);
+      assert(global == &global_storage);
+      assert(size <= global_storage.size());
+      assert(offset == 0);
       
       // apply upMap
-      assert(global == &global_storage);
-      assert(size == global_storage.size());
       for (typename Traits::IndexContainer::size_type i=0; i<size; i++)
         global_storage[i] = pgfs->upMap(global_storage[i]);
     }
