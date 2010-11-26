@@ -170,7 +170,7 @@ namespace Dune
                 if (!this->solver.result().converged)                 // TODO: solver interface
                     DUNE_THROW(NewtonLinearSolverError,
                                "NewtonSolver::linearSolve(): Linear solver did not converge "
-                               "in iteration" << this->res.iterations);
+                               "in " << this->res.iterations << " iterations");
                 if (this->verbosity_level >= 4)
                     std::cout << "          linear solver iterations:     "
                               << std::setw(12) << solver.result().iterations << std::endl
