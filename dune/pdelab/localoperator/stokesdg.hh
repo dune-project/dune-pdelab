@@ -140,6 +140,39 @@ namespace Dune {
         {
             typedef StokesBoundaryCondition BC;
             typedef typename V::Traits::RangeFieldType RF;
+
+            void initFromString(const std::string & method)
+            {
+                std::string s = method;
+                std::transform(s.begin(), s.end(), s.begin(), tolower);
+
+                // nipg (epsilon=1) 2d p1 -> Klaus sagt sollte auch sigma 1 klappen
+                if (s.find("nipg") != std::string::npos)
+                    {
+                        epsilon = 1;
+                        return;
+                    }
+                // sipg (epsilon=-1) 2d p1 -> Klaus sagt sigma=3.9irgendwas
+                if (s.find("sipg") != std::string::npos)
+                    {
+                        epsilon = -1;
+                        return;
+                    }
+                // obb sigma = 0, epsilon = 
+                if (s == "obb")
+                    {
+                        epsilon = 1;
+                        return;
+                    }
+                // extract parameters
+                {
+                    double sigma, beta;
+                    if (3 == sscanf(s.c_str(), "%d %lg %lg", &epsilon, &sigma, &beta))
+                        return;
+                }
+                DUNE_THROW(Dune::Exception, "Unknown DG type " << method);
+            }
+
         public:
             typedef IP InteriorPenaltyFactor;
 
@@ -161,34 +194,7 @@ namespace Dune {
                       const F & _f, const B & _b, const V & _v, const P & _p, int _qorder=4) :
                 f(_f), b(_b), v(_v), p(_p), qorder(_qorder), mu(mu_), ip_factor(ip_factor_)
             {
-                std::string s = method;
-                std::transform(s.begin(), s.end(), s.begin(), tolower);
-
-                // nipg (epsilon=1) 2d p1 -> Klaus sagt sollte auch sigma 1 klappen
-                if (s.find("nipg") != std::string::npos)
-                {
-                    epsilon = 1;
-                    return;
-                }
-                // sipg (epsilon=-1) 2d p1 -> Klaus sagt sigma=3.9irgendwas
-                if (s.find("sipg") != std::string::npos)
-                {
-                    epsilon = -1;
-                    return;
-                }
-                // obb sigma = 0, epsilon = 
-                if (s == "obb")
-                {
-                    epsilon = 1;
-                    return;
-                }
-                // extract parameters
-                {
-                    double sigma, beta;
-                    if (3 == sscanf(s.c_str(), "%d %lg %lg", &epsilon, &sigma, &beta))
-                        return;
-                }
-                DUNE_THROW(Dune::Exception, "Unknown DG type " << method);
+                initFromString(method);
             }
 
             StokesDG (const Dune::ParameterTree & configuration,const IP & ip_factor_, const RF mu_,
@@ -879,6 +885,228 @@ namespace Dune {
             const IP & ip_factor;
         };
 
+        /** \brief a local operator for solving the navier stokes
+            equation using a DG discretization
+            
+            \tparam F velocity source term function
+            \tparam B boundary condition function
+            \tparam V dirichlet velocity boundary condition function
+            \tparam P dirichlet pressure boundary condition function
+            \tparam IP a class providing the interior penalty factor for each face
+         */
+        template<typename F, typename B, typename V, typename P, 
+                 typename IP = DefaultInteriorPenalty<typename V::Traits::RangeFieldType> >
+        class NavierStokesDG : public StokesDG<F,B,V,P,IP>
+        {
+        public:
+            typedef StokesBoundaryCondition BC;
+            typedef typename V::Traits::RangeFieldType RF;
+            typedef IP InteriorPenaltyFactor;
+            typedef StokesDG<F,B,V,P,IP> StokesLocalOperator;
+
+        private:
+            const RF rho;
+            const unsigned int qorder;
+
+        public:
+
+            NavierStokesDG (const std::string & method, const IP & ip_factor_, const RF rho_, const RF mu_,
+                            const F & _f, const B & _b, const V & _v, const P & _p, int _qorder=4) 
+                : StokesLocalOperator(method,ip_factor_,mu_,_f,_b,_v,_p,_qorder), rho(rho_), qorder(_qorder)
+            {}
+
+            NavierStokesDG (const Dune::ParameterTree & configuration,const IP & ip_factor_, const RF rho_, 
+                            const RF mu_, const F & _f, const B & _b, const V & _v, const P & _p, int _qorder=4)
+                : StokesLocalOperator(configuration,ip_factor_,mu_,_f,_b,_v,_p,_qorder), rho(rho_), qorder(_qorder)
+            {}
+
+            template<typename EG, typename LFSU, typename X, typename LFSV,typename R>
+            void jacobian_volume( const EG& eg,const LFSU& lfsu, const X& x, 
+                                  const LFSV& lfsv, LocalMatrix<R>& mat) const
+            {
+                // Assemble the Stokes part of the jacobian
+                StokesLocalOperator::jacobian_volume(eg,lfsu,x,lfsv,mat);
+                if(rho == 0) return;
+                
+                // dimensions
+                static const unsigned int dim = EG::Geometry::dimension;
+
+                // subspaces
+                dune_static_assert
+                    ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
+                typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
+                const LFSV_PFS_V& lfsv_pfs_v = lfsv.template getChild<VBLOCK>();
+                dune_static_assert
+                    ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
+
+                // ... we assume all velocity components are the same
+                typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
+                const LFSV_V& lfsv_v = lfsv_pfs_v.template getChild<0>();
+                const unsigned int vsize = lfsv_v.size();
+                typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
+                const LFSV_P& lfsv_p = lfsv.template getChild<PBLOCK>();
+                const unsigned int psize = lfsv_p.size();
+
+                // domain and range field type
+                typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
+                typedef PDELab::BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+                typedef typename BasisSwitch_V::DomainField DF;
+                typedef typename BasisSwitch_V::Range RT;
+                typedef typename BasisSwitch_V::RangeField RF;
+                typedef typename BasisSwitch_V::Range Range_V;
+                typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
+                typedef PDELab::BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
+                typedef typename BasisSwitch_P::Range Range_P;
+                typedef typename LFSV::Traits::SizeType size_type;
+
+                // select quadrature rule
+                Dune::GeometryType gt = eg.geometry().type();
+                const unsigned int quad_order = qorder + FESwitch_V::basis(lfsv_v.finiteElement()).order()-1;
+                const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,quad_order);
+                
+                // loop over quadrature points
+                for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+                    {
+                        const Dune::FieldVector<DF,dim> local = it->position();
+                    
+                        // and value of pressure shape functions
+                        std::vector<RT> phi_v(psize);
+                        FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
+
+                        // compute gradients
+                        std::vector<Dune::FieldMatrix<RF,1,dim> > grad_phi_v(vsize);
+                        BasisSwitch_V::gradient(FESwitch_V::basis(lfsv_v.finiteElement()),
+                                                eg.geometry(), local, grad_phi_v);
+
+                        const RF weight = it->weight() * eg.geometry().integrationElement(it->position());
+
+                        // compute u (if Navier term enabled)
+                        Dune::FieldVector<RF,dim> vu(0.0);
+                        for(unsigned int d=0; d<dim; ++d){
+                            const LFSV_V & lfsu_v = lfsv_pfs_v.getChild(d);
+                            for (size_t i=0; i<lfsu_v.size(); i++)
+                                vu[d] += x[lfsu_v.localIndex(i)] * phi_v[i];
+                        }
+                        
+                        for(unsigned int dv=0; dv<dim; ++dv){
+                            const LFSV_V & lfsv_v = lfsv_pfs_v.getChild(dv);
+
+                            // compute gradient of u
+                            Dune::FieldVector<RF,dim> gradu(0.0);
+                            for (size_t i=0; i<lfsv_v.size(); i++)
+                                gradu.axpy(x[lfsv_v.localIndex(i)],grad_phi_v[i][0]);
+                            
+                            
+                            for(unsigned int du=0; du < dim; ++du){
+                                const LFSV_V & lfsu_v = lfsv_pfs_v.getChild(du);
+
+                                for (size_t i=0; i<vsize; i++)
+                                    for(size_t j=0; j<vsize; j++)
+                                        mat(lfsv_v.localIndex(i),lfsu_v.localIndex(j))
+                                            += rho * phi_v[j] * gradu[du] * phi_v[i] * weight;
+                            } // du
+
+                            const LFSV_V & lfsu_v = lfsv_pfs_v.getChild(dv);
+                            for(size_t j=0; j<vsize; j++){
+                                const Dune::FieldVector<RF,dim> du(grad_phi_v[j][0]);
+                                for (size_t i=0; i<vsize; i++){
+                                    mat(lfsv_v.localIndex(i),lfsu_v.localIndex(j))
+                                        += rho * (vu * du) * phi_v[i] * weight;
+                                } // j
+                            }// i
+                        } // dv
+                    
+                    }
+            }
+
+            // volume integral depending on test and ansatz functions
+            template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+            void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+            {
+                // Assemble the Stokes part of the residual
+                StokesLocalOperator::alpha_volume(eg,lfsu,x,lfsv,r);
+                if(rho == 0) return;
+
+                // dimensions
+                static const unsigned int dim = EG::Geometry::dimension;
+
+                // subspaces
+                dune_static_assert
+                    ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
+                typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
+                const LFSV_PFS_V& lfsv_pfs_v = lfsv.template getChild<VBLOCK>();
+                dune_static_assert
+                    ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
+
+                // ... we assume all velocity components are the same
+                typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
+                const LFSV_V& lfsv_v = lfsv_pfs_v.template getChild<0>();
+                const unsigned int vsize = lfsv_v.size();
+                typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
+                const LFSV_P& lfsv_p = lfsv.template getChild<PBLOCK>();
+                const unsigned int psize = lfsv_p.size();
+
+                // domain and range field type
+                typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
+                typedef PDELab::BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+                typedef typename BasisSwitch_V::DomainField DF;
+                typedef typename BasisSwitch_V::Range RT;
+                typedef typename BasisSwitch_V::RangeField RF;
+                typedef typename BasisSwitch_V::Range Range_V;
+                typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
+                typedef PDELab::BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
+                typedef typename BasisSwitch_P::Range Range_P;
+                typedef typename LFSV::Traits::SizeType size_type;
+
+                // select quadrature rule
+                Dune::GeometryType gt = eg.geometry().type();
+                const unsigned int quad_order = qorder + FESwitch_V::basis(lfsv_v.finiteElement()).order()-1;
+                const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,quad_order);
+                
+                // loop over quadrature points
+                for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+                    {
+                        const Dune::FieldVector<DF,dim> local = it->position();
+                    
+                        // and value of pressure shape functions
+                        std::vector<RT> phi_v(psize);
+                        FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
+
+                        // compute gradients
+                        std::vector<Dune::FieldMatrix<RF,1,dim> > grad_phi_v(vsize);
+                        BasisSwitch_V::gradient(FESwitch_V::basis(lfsv_v.finiteElement()),
+                                                eg.geometry(), local, grad_phi_v);
+
+                        const RF weight = it->weight() * eg.geometry().integrationElement(it->position());
+
+                        // compute u (if Navier term enabled)
+                        Dune::FieldVector<RF,dim> vu(0.0);
+                        for(unsigned int d=0; d<dim; ++d){
+                            const LFSV_V & lfsu_v = lfsv_pfs_v.getChild(d);
+                            for (size_t i=0; i<lfsu_v.size(); i++)
+                                vu[d] += x[lfsu_v.localIndex(i)] * phi_v[i];
+                        }
+                        
+                        for(unsigned int d=0; d<dim; ++d){
+                            const LFSV_V & lfsu_v = lfsv_pfs_v.getChild(d);
+
+                            // compute gradient of u
+                            Dune::FieldVector<RF,dim> gradu(0.0);
+                            for (size_t i=0; i<lfsu_v.size(); i++)
+                                gradu.axpy(x[lfsu_v.localIndex(i)],grad_phi_v[i][0]);
+                            
+                            //compute u * grad u_d
+                            const RF u_nabla_u = vu * gradu;
+
+                            for (size_t i=0; i<vsize; i++)
+                                r[lfsu_v.localIndex(i)] += rho * u_nabla_u * phi_v[i] * weight;
+                        }
+                    
+                    }
+            }
+
+        };
+
         //! \} group GridFunctionSpace
     } // namespace PDELab
 
@@ -887,7 +1115,7 @@ namespace Dune {
   {
     typedef PDELab::StokesBoundaryCondition::Type field_type;
     typedef PDELab::StokesBoundaryCondition::Type real_type;
-};
+  };
 
 } // namespace Dune
 
