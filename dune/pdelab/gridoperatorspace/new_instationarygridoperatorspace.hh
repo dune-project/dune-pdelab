@@ -1550,11 +1550,11 @@ namespace Dune {
       LA& la;
       LM& lm;
       const TimeSteppingParameterInterface<TReal> *method;
-      const SubTriangulation sub_triangulation;
       TReal time, dt;
       unsigned stage;
       R r0;
       ImplicitEulerParameter<TReal> defaultmethod;
+      const SubTriangulation sub_triangulation;
     };
 
     //! \} group GridFunctionSpace
