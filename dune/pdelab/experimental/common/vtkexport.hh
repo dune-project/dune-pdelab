@@ -4,7 +4,11 @@
 #ifndef DUNE_PDELAB_EXPERIMENTAL_COMMON_VTKEXPORT_HH
 #define DUNE_PDELAB_EXPERIMENTAL_COMMON_VTKEXPORT_HH
 
+#include <limits>
+
 #include<dune/grid/io/file/vtk/skeletonfunction.hh>
+
+#include <dune/pdelab/common/geometrywrapper.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -16,16 +20,15 @@ namespace Dune {
      * \note There is one catch here: PDELabs BoundaryGridFunction is
      *       specified to receive an IntersectionGeometry object instead of an
      *       Intersection.  The class IntersectionGeometry has mostly the some
-     *       methods as the class Intersection, there is however the method
+     *       information as the class Intersection, there is however the method
      *       intersectionIndex() which returns the number of the Intersection
      *       within the Element in iteration order.  This is however a piece
      *       of information which we do not have available in this wrapper
      *       class and which would be quite costly to obtain.
      *       \par
-     *       So instead of an IntersectionGeometry we provide an Intersection
-     *       object to the BoundaryGridFunction.  If the BoundaryGridFunction
-     *       actually requires a real IntersectionGeometry, this will not
-     *       work.
+     *       So instead of the correct intersectionIndex we simply provide
+     *       UINT_MAX here.  If anything actually uses that information, it
+     *       will hopefully break the hard way.
      */
     template<typename Func>
     class VTKBoundaryGridFunctionAdapter
@@ -57,7 +60,9 @@ namespace Dune {
                     typename Traits::Range& result) const
       {
         typename Func::Traits::RangeType val;
-        func.evaluate(c, xl, val);
+        IntersectionGeometry<typename Traits::Cell>
+          ig(c, std::numeric_limits<unsigned>::max());
+        func.evaluate(ig, xl, val);
         result.assign(val.begin(), val.end());
       }
     };
