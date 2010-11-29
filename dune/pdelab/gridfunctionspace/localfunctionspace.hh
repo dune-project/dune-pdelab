@@ -285,7 +285,6 @@ namespace Dune {
       // compute sizes
       TMP.compute_size(node,e,size);
       assert(size == n);
-      assert(n > 0);
       
       // initialize iterators and fill indices
       size = 0;
