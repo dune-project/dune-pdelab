@@ -51,13 +51,18 @@ namespace Dune {
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
 	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
 	  {
+        // Switches between local and global interface
+        typedef FiniteElementInterfaceSwitch<
+          typename LFSU::Traits::FiniteElementType
+          > FESwitch;
+        typedef PDELab::BasisInterfaceSwitch<
+          typename FESwitch::Basis
+          > BasisSwitch;
+
 		// domain and range field type
-        typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeType RangeType;
+        typedef typename BasisSwitch::DomainField DF;
+        typedef typename BasisSwitch::RangeField RF;
+        typedef typename BasisSwitch::Range RangeType;
 
         typedef typename LFSU::Traits::SizeType size_type;
         
@@ -73,7 +78,7 @@ namespace Dune {
           {
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
-            lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
+            FESwitch::basis(lfsu.finiteElement()).evaluateFunction(it->position(),phi);
 
             // evaluate u
             RF u=0.0;
@@ -92,15 +97,18 @@ namespace Dune {
 	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
                             LocalMatrix<R>& mat) const
       {
+        // Switches between local and global interface
+        typedef FiniteElementInterfaceSwitch<
+          typename LFSU::Traits::FiniteElementType
+          > FESwitch;
+        typedef PDELab::BasisInterfaceSwitch<
+          typename FESwitch::Basis
+          > BasisSwitch;
+
 		// domain and range field type
-        typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::JacobianType JacobianType;
-        typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeType RangeType;
+        typedef typename BasisSwitch::DomainField DF;
+        typedef typename BasisSwitch::RangeField RF;
+        typedef typename BasisSwitch::Range RangeType;
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
@@ -115,7 +123,7 @@ namespace Dune {
           {            
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
-            lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
+            FESwitch::basis(lfsu.finiteElement()).evaluateFunction(it->position(),phi);
 
             // integrate phi_j*phi_i
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
