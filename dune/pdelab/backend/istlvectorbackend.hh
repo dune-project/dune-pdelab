@@ -30,6 +30,7 @@ namespace Dune {
 		typedef Dune::BlockVector< Dune::FieldVector<E,BLOCKSIZE> > BaseT;
 		typedef ISTLVectorBackend<BLOCKSIZE> Backend;
         typedef typename FieldTraits<E>::real_type real_type;
+        typedef typename BaseT::field_type field_type;
         
 		VectorContainer (const T& t_) : BaseT(t_.globalSize()/BLOCKSIZE)
 		{}
@@ -99,8 +100,7 @@ namespace Dune {
 		return c[i/BLOCKSIZE][i%BLOCKSIZE];
 	  }
 	};
-
-  } // namespace PDELab
+  } // namespace PDELab    
 } // namespace Dune
 
 #endif

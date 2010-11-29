@@ -881,6 +881,14 @@ namespace Dune {
 
         //! \} group GridFunctionSpace
     } // namespace PDELab
+
+  template<>
+  struct FieldTraits<PDELab::StokesBoundaryCondition::Type>
+  {
+    typedef PDELab::StokesBoundaryCondition::Type field_type;
+    typedef PDELab::StokesBoundaryCondition::Type real_type;
+};
+
 } // namespace Dune
 
 #endif
