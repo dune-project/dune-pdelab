@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <dune/common/deprecated.hh>
-#include <dune/common/ftraits.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -50,13 +49,6 @@ namespace Dune {
     };
     //! \}
   }
-  template<>
-  struct FieldTraits<PDELab::DiffusionBoundaryCondition::Type>
-  {
-    typedef PDELab::DiffusionBoundaryCondition::Type field_type;
-    typedef PDELab::DiffusionBoundaryCondition::Type real_type;
-};
-
 }
 
 #endif // DUNE_PDELAB_DIFFUSIONPARAM_HH
