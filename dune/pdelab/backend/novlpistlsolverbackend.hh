@@ -6,15 +6,15 @@
 #include <dune/common/deprecated.hh>
 #include <dune/common/mpihelper.hh>
 
-#include <dune/istl/owneroverlapcopy.hh>
-#include <dune/istl/solvercategory.hh>
+#include <dune/istl/io.hh>
 #include <dune/istl/operators.hh>
-#include <dune/istl/solvers.hh>
-#include <dune/istl/preconditioners.hh>
-#include <dune/istl/scalarproducts.hh>
+#include <dune/istl/owneroverlapcopy.hh>
 #include <dune/istl/paamg/amg.hh>
 #include <dune/istl/paamg/pinfo.hh>
-#include <dune/istl/io.hh>
+#include <dune/istl/preconditioners.hh>
+#include <dune/istl/scalarproducts.hh>
+#include <dune/istl/solvercategory.hh>
+#include <dune/istl/solvers.hh>
 #include <dune/istl/superlu.hh>
 
 #include "../gridfunctionspace/constraints.hh"
