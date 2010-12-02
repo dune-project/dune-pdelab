@@ -429,6 +429,90 @@ namespace Dune {
       int verbose;
     };
 
+    //! \brief Parallel non-overlapping ISTL solver backend using a CG with
+    //!        Jacobi preconditioner
+    template<class GFS>
+    class ISTLBackend_NOVLP_CG_Jacobi
+    {
+      typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
+
+      const GFS& gfs;
+      PHELPER phelper;
+      LinearSolverResult<double> res;
+      unsigned maxiter;
+      int verbose;
+
+    public:
+      //! make a linear solver object
+      /**
+       * \param gfs_     A grid function space
+       * \param maxiter_ Maximum number of iterations to do.
+       * \param verbose_ Verbosity level, directly handed to the CGSolver.
+       */
+      explicit ISTLBackend_NOVLP_CG_Jacobi(const GFS& gfs_,
+                                           unsigned maxiter_ = 5000,
+                                           int verbose_ = 1) :
+        gfs(gfs_), phelper(gfs), maxiter(maxiter_), verbose(verbose_)
+      {}
+
+      //! compute global norm of a vector
+      /**
+       * \param v The vector to compute the norm of.  Should be an
+       *          inconsistent vector (i.e. the entries corresponding a DoF on
+       *          the border should only contain the summand of this process).
+       */
+      template<class V>
+      typename V::ElementType norm (const V& v) const
+      {
+        V x(v); // make a copy because it has to be made consistent
+        typedef NonoverlappingScalarProduct<GFS,V> PSP;
+        PSP psp(gfs,phelper);
+        psp.make_consistent(x);
+        return psp.norm(x);
+      }
+
+      //! solve the given linear system
+      /**
+       * \param A         The matrix to solve.  Should be a matrix from one of
+       *                  PDELabs ISTL backends (only ISTLBCRSMatrixBackend at
+       *                  the moment).
+       * \param z         The solution vector to be computed
+       * \param r         Right hand side
+       * \param reduction to be achieved
+       *
+       * Solve the linear system A*z=r such that
+       * norm(A*z0-r)/norm(A*z-r) < reduction where z0 is the initial value of
+       * z.
+       */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      {
+        typedef NonoverlappingOperator<GFS,M,V,W> POP;
+        POP pop(gfs,A);
+        typedef NonoverlappingScalarProduct<GFS,V> PSP;
+        PSP psp(gfs,phelper);
+
+        typedef typename M::ElementType MField;
+        typedef typename GFS::template VectorContainer<MField>::Type Diagonal;
+        typedef NonoverlappingJacobi<Diagonal,V,W> PPre;
+        PPre ppre(gfs,A);
+
+        int verb=0;
+        if (gfs.gridview().comm().rank()==0) verb=verbose;
+        CGSolver<V> solver(pop,psp,ppre,reduction,maxiter,verb);
+        InverseOperatorResult stat;
+        solver.apply(z,r,stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+      }
+
+      //! Return access to result data
+      const LinearSolverResult<double>& result() const
+      { return res; }
+    };
+
     template<class GFS>
     class ISTLBackend_NOVLP_BCGS_NOPREC
     {
