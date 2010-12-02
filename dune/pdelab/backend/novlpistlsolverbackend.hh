@@ -3,8 +3,12 @@
 #ifndef DUNE_NOVLPISTLSOLVERBACKEND_HH
 #define DUNE_NOVLPISTLSOLVERBACKEND_HH
 
+#include <cstddef>
+
 #include <dune/common/deprecated.hh>
 #include <dune/common/mpihelper.hh>
+
+#include <dune/grid/common/gridenums.hh>
 
 #include <dune/istl/io.hh>
 #include <dune/istl/operators.hh>
@@ -250,6 +254,106 @@ namespace Dune {
     private:
       const GFS& gfs;
       const ParallelISTLHelper<GFS>& helper;
+    };
+
+    //! parallel non-overlapping Jacobi preconditioner
+    /**
+     * \tparam Diagonal Vector type used to store the diagonal of the matrix
+     * \tparam X        Vector type used to store the result of applying the
+     *                  preconditioner.
+     * \tparam Y        Vector type used to store the defect.
+     *
+     * The Jacobi preconditioner approximates the inverse of a matrix M by
+     * taking the diagonal diag(M) and inverting that.  In the parallel case
+     * the matrix M is assumed to be inconsistent, so diagonal entries for
+     * dofs on the border are summed up over all relevant processes by this
+     * precoditioner before the inverse is computed.
+     */
+    template<class Diagonal, class X, class Y>
+    class NonoverlappingJacobi : public Dune::Preconditioner<X,Y>
+    {
+      typedef typename Diagonal::Backend DBackend;
+
+      std::size_t gfsSize;
+      Diagonal diagonal;
+
+    public:
+      //! The domain type of the operator.
+      /**
+       * The preconditioner is an inverse operator, so this is the output type
+       * of the preconditioner.
+       */
+      typedef X domain_type;
+      //! \brief The range type of the operator.
+      /**
+       * The preconditioner is an inverse operator, so this is the input type
+       * of the preconditioner.
+       */
+      typedef Y range_type;
+      //! \brief The field type of the preconditioner.
+      typedef typename X::ElementType field_type;
+
+      enum {
+        //! \brief The category the preconditioner is part of.
+        category=Dune::SolverCategory::nonoverlapping
+      };
+
+      //! \brief Constructor.
+      /**
+       * \param gfs The GridFunctionSpace the matrix and the vectors live on.
+       * \param m   The matrix whose inverse the preconditioner should
+       *            estimate.  m is assumed to be inconsistent (i.e. rows for
+       *            dofs on the border only contain the contribution of the
+       *            local process).
+       *
+       * The preconditioner does not store any reference to the gfs or the
+       * matrix m.  The diagonal of m is copied, since it has to be made
+       * consistent.
+       */
+      template<class GFS, class Matrix>
+      NonoverlappingJacobi(const GFS& gfs, const Matrix &m) :
+        gfsSize(gfs.size()), diagonal(gfs)
+      {
+        typedef typename Matrix::Backend MBackend;
+
+        for(std::size_t i = 0; i < gfsSize; ++i)
+          DBackend::access(diagonal, i) = MBackend::access(m, i, i);
+
+        AddDataHandle<GFS, Diagonal> addDH(gfs, diagonal);
+        gfs.gridview().communicate(addDH,
+                                   InteriorBorder_InteriorBorder_Interface,
+                                   ForwardCommunication);
+      }
+
+      //! Prepare the preconditioner.
+      /**
+       * \copydoc Preconditioner::pre(X&,Y&)
+       */
+      virtual void pre (X& x, Y& b) {}
+
+      //! Apply the precondioner.
+      /*
+       * \copydoc Preconditioner::apply(X&,const Y&)
+       *
+       * For this preconditioner, this method works with both consistent and
+       * inconsistent vectors: if d is consistent, v will be consistent, if d
+       * is inconsistent, v will be inconsistent.
+       */
+      virtual void apply (X& v, const Y& d)
+      {
+        typedef typename X::Backend XBackend;
+        typedef typename Y::Backend YBackend;
+
+        for(std::size_t i = 0; i < gfsSize; ++i)
+          XBackend::access(v, i) =
+            YBackend::access(d, i) / DBackend::access(diagonal, i);
+      }
+
+      //! Clean up.
+      /*
+       * \copydoc Preconditioner::post(X&)
+       */
+      virtual void post (X& x) {}
     };
 
     template<class GFS>
