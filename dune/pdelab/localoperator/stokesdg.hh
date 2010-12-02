@@ -361,7 +361,7 @@ namespace Dune {
                             for (unsigned int d=0;d<dim;++d)
                             {
                                 const LFSV_V& lfsv_v = lfsv_pfs_v.getChild(d);
-                                r[lfsv_v.localIndex(i)] -= val * u0[d];
+                                r[lfsv_v.localIndex(i)] -= epsilon * val * u0[d];
                             }
                         }
                         //================================================//
@@ -820,7 +820,7 @@ namespace Dune {
                         //================================================//
                         // - (\mu \int \nabla u. normal . v)  
                         //================================================//
-                        const RF factor = - mu * weight;
+                        const RF factor = mu * weight;
                         for (unsigned int i=0;i<vsize;++i) // ansatz
                         {
                             for (unsigned int j=0;j<vsize;++j) // test
@@ -829,8 +829,8 @@ namespace Dune {
                                 for (unsigned int d=0;d<dim;++d)
                                 {
                                     const LFSV_V& lfsv_v = lfsv_pfs_v.getChild(d);
-                                    mat(lfsv_v.localIndex(i),lfsv_v.localIndex(j)) += epsilon * val;
-                                    mat(lfsv_v.localIndex(j),lfsv_v.localIndex(i)) += - val;
+                                    mat(lfsv_v.localIndex(i),lfsv_v.localIndex(j)) += - val;
+                                    mat(lfsv_v.localIndex(j),lfsv_v.localIndex(i)) += epsilon*val;
                                 }
                             }
                         }
