@@ -4,9 +4,8 @@
 #ifndef DUNE_PDELAB_COMMON_FUNCTIONUTILITIES_HH
 #define DUNE_PDELAB_COMMON_FUNCTIONUTILITIES_HH
 
-#include <memory>
-
 #include <dune/common/geometrytype.hh>
+#include <dune/common/shared_ptr.hh>
 
 #include <dune/grid/common/gridenums.hh>
 #include <dune/grid/common/quadraturerules.hh>
@@ -100,28 +99,69 @@ gf.getGridView().comm().sum(sum);
        * global coordinate \c xg.  The is currently not facility to recompute
        * this information later, e.g. after a loadBalance() on the grid.
        *
-       * \param gf_ The GridFunction to probe.
-       * \param xg  The global coordinate the evaluate at.
+       * \param gf The GridFunction to probe, either as a reference, a
+       *           pointer, or a shared_ptr.
+       * \param xg The global coordinate the evaluate at.
        */
-      GridFunctionProbe(const GF& gf_, const Domain& xg)
-        : gf(gf_), e(), xl(0), evalRank(gf.getGridView().comm().size())
+      template<class GFHandle>
+      GridFunctionProbe(const GFHandle& gf, const Domain& xg)
       {
-        int myRank = gf.getGridView().comm().rank();
+        setGridFunction(gf);
+        xl = 0;
+        evalRank = gfp->getGridView().comm().size();
+        int myRank = gfp->getGridView().comm().rank();
         try {
           e.reset(new EPtr
                   (HierarchicSearch<typename GV::Grid, typename GV::IndexSet>
-                   (gf.getGridView().grid(), gf.getGridView().indexSet()).
+                   (gfp->getGridView().grid(), gfp->getGridView().indexSet()).
                    findEntity(xg)));
           // make sure only interior entities are accepted
           if((*e)->partitionType() == InteriorEntity)
             evalRank = myRank;
         }
         catch(const Dune::GridError&) { /* do nothing */ }
-        evalRank = gf.getGridView().comm().min(evalRank);
+        evalRank = gfp->getGridView().comm().min(evalRank);
         if(myRank == evalRank)
           xl = (*e)->geometry().local(xg);
         else
           e.reset();
+      }
+
+      //! Set a new GridFunction
+      /**
+       * This takes the GridFunction as a refence.  The referenced object must
+       * be valid for as long a the GridFunctionProbe is evaluated, or until
+       * setGridFunction() is called again.
+       */
+      void setGridFunction(const GF &gf) {
+        gfsp.reset();
+        gfp = &gf;
+      }
+
+      //! Set a new GridFunction
+      /**
+       * This takes the GridFunction as a pointer.  Ownership of the
+       * GridFunction object is transferred to the GridFunctionProbe.  The
+       * GridFunction object will be deleted by the GridFunctionProbe on
+       * destruction, or the next time setGridFunction is called.
+       */
+      void setGridFunction(const GF *gf) {
+        gfsp.reset(gf);
+        gfp = gf;
+      }
+
+      //! Set a new GridFunction
+      /**
+       * This takes the GridFunction as a shared_ptr.  Ownership of the
+       * GridFunction object is shared with other places in the program, that
+       * hold a shared_ptr to the same GridFunction object.  The GridFunction
+       * object will be deleted by the GridFunctionProbe on destruction, or
+       * the next time setGridFunction is called, if this GridFunctionProbe
+       * holds the last reference at that time.
+       */
+      void setGridFunction(const Dune::shared_ptr<const GF> &gf) {
+        gfsp = gf;
+        gfp = &*gf;
       }
 
       //! evaluate the GridFunction and broadcast result to all ranks
@@ -129,9 +169,9 @@ gf.getGridView().comm().sum(sum);
        * \param val Store the result here.
        */
       void eval_all(Range& val) const {
-        if(gf.getGridView().comm().rank() == evalRank)
-          gf.evaluate(**e, xl, val);
-        gf.getGridView().comm().broadcast(&val,1,evalRank);
+        if(gfp->getGridView().comm().rank() == evalRank)
+          gfp->evaluate(**e, xl, val);
+        gfp->getGridView().comm().broadcast(&val,1,evalRank);
       }
 
       //! evaluate the GridFunction and communicate result to the given rank
@@ -150,8 +190,9 @@ gf.getGridView().comm().sum(sum);
       }
 
     private:
-      const GF& gf;
-      std::auto_ptr<EPtr> e;
+      Dune::shared_ptr<const GF> gfsp;
+      const GF *gfp;
+      Dune::shared_ptr<EPtr> e;
       Domain xl;
       int evalRank;
     };
