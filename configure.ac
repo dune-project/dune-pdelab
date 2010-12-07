@@ -30,6 +30,7 @@ AC_CONFIG_FILES([
   doc/Makefile
   dune-pdelab.pc
   dune/Makefile
+  dune/pdelab/adaptivity/Makefile
   dune/pdelab/backend/Makefile
   dune/pdelab/common/Makefile
   dune/pdelab/experimental/common/Makefile

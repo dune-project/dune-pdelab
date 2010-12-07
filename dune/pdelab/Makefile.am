@@ -1,5 +1,6 @@
 pdelabdir = $(includedir)/dune/pdelab
 SUBDIRS =					\
+	adaptivity				\
 	backend					\
 	common					\
 	finiteelement				\

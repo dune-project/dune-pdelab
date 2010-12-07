@@ -193,7 +193,7 @@ namespace Dune {
      */
 	template<typename T, typename X>
 	class DiscreteGridFunction
-	  : public GridFunctionInterface<
+	  : public LeafNode, GridFunctionInterface<
           GridFunctionTraits<
             typename T::Traits::GridViewType,
             typename BasisInterfaceSwitch<

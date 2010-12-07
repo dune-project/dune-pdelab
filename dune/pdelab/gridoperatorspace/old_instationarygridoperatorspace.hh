@@ -182,27 +182,27 @@ namespace Dune {
       //! construct 
       InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_, 
                                      const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) 
-        : Base(gfsu_,gfsv_), la(la_), lm(lm_), method(&method_), r0(gfsv,0.0)
-      {}
+		: Base(gfsu_,gfsv_), la(la_), lm(lm_), method(&method_), r0(gfsv,0.0), r0CachedSize(gfsv.size())
+	  {}
 
       //! construct using default time stepper
-      InstationaryGridOperatorSpace (const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) 
-        : Base(gfsu_,gfsv_), la(la_), lm(lm_), method(&defaultmethod), r0(gfsv,0.0)
-      {}
+	  InstationaryGridOperatorSpace (const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) 
+		: Base(gfsu_,gfsv_), la(la_), lm(lm_), method(&defaultmethod), r0(gfsv,0.0), r0CachedSize(gfsv.size())
+	  {}
 
       //! construct, with constraints
       InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_, 
                                      const GFSU& gfsu_, const CU& cu,
                                      const GFSV& gfsv_, const CV& cv,
                                      LA& la_, LM& lm_) 
-        : Base(gfsu_,cu,gfsv_,cv), la(la_), lm(lm_), method(&method_), r0(gfsv,0.0)
+        : Base(gfsu_,cu,gfsv_,cv), la(la_), lm(lm_), method(&method_), r0(gfsv,0.0), r0CachedSize(gfsv.size())
       {}
 
       //! construct, with constraints and default time stepper
       InstationaryGridOperatorSpace (const GFSU& gfsu_, const CU& cu,
                                      const GFSV& gfsv_, const CV& cv,
                                      LA& la_, LM& lm_) 
-        : Base(gfsu_,cu,gfsv_,cv), la(la_), lm(lm_), method(&defaultmethod), r0(gfsv,0.0)
+        : Base(gfsu_,cu,gfsv_,cv), la(la_), lm(lm_), method(&defaultmethod), r0(gfsv,0.0), r0CachedSize(gfsv.size())
       {}
 
       //! get dimension of space u
@@ -343,6 +343,13 @@ namespace Dune {
        */
       void preStep (const TimeSteppingParameterInterface<TReal>& method_, TReal time_, TReal dt_)
       {
+        if (r0CachedSize != gfsv.size())
+        {
+          // reset r0 because size of gfsv has changed
+	  r0 = R(gfsv,0.0);
+          r0CachedSize = gfsv.size();
+        }
+
         setMethod(method_);
         preStep(time_, dt_);
       }
@@ -1326,6 +1333,8 @@ namespace Dune {
       TReal time, dt;
       unsigned stage;
       R r0;
+      // remember the current size of the residual so we don't create new vectors unnecessarily
+      typename GFSV::Traits::SizeType r0CachedSize;
       ImplicitEulerParameter<TReal> defaultmethod;
     };
 
