@@ -9,6 +9,7 @@ common_HEADERS =				\
 	geometrywrapper.hh			\
 	jacobiantocurl.hh			\
 	multitypetree.hh			\
+	treepath.hh				\
 	vertexorder.hh				\
 	vtkexport.hh
 
