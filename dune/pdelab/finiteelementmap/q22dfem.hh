@@ -5,8 +5,9 @@
 #define DUNE_PDELAB_Q22DFEM_HH
 
 #include<dune/localfunctions/lagrange/q22d.hh>
-#include"finiteelementmap.hh"
 
+#include"finiteelementmap.hh"
+#include <dune/pdelab/finiteelementmap/global.hh>
 namespace Dune {
   namespace PDELab {
 
@@ -17,6 +18,31 @@ namespace Dune {
 	  : public SimpleLocalFiniteElementMap< Dune::Q22DLocalFiniteElement<D,R> >
 	{};
 
+    //! Global-valued finite element map for Q1 elements
+    /**
+     * \ingroup FiniteElementMap
+     *
+     * \tparam Geometry Type of the geometry od the elements.
+     * \tparam RF       Range field type.
+     */
+    template<class Geometry, class RF>
+    class Q22DFiniteElementMap
+      : public GeometryFiniteElementMap<
+          Q22DFiniteElementFactory<Geometry, RF>
+          >
+    {
+      typedef Q22DFiniteElementFactory<Geometry, RF> FEFactory;
+      typedef GeometryFiniteElementMap<FEFactory> Base;
+
+      static const FEFactory feFactory;
+
+    public:
+      Q22DFiniteElementMap() : Base(feFactory) { }
+    };
+
+    template<class GV, class RF>
+    const typename Q22DFiniteElementMap<GV, RF>::FEFactory
+    Q22DFiniteElementMap<GV, RF>::feFactory;
   }
 }
 
