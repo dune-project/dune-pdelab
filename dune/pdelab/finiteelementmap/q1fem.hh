@@ -4,7 +4,11 @@
 #ifndef DUNE_PDELAB_Q1FEM_HH
 #define DUNE_PDELAB_Q1FEM_HH
 
+#include <cstddef>
+
 #include<dune/localfunctions/lagrange/q1.hh>
+
+#include <dune/pdelab/finiteelementmap/global.hh>
 #include"finiteelementmap.hh"
 
 namespace Dune {
@@ -17,6 +21,31 @@ namespace Dune {
 	  : public SimpleLocalFiniteElementMap< Dune::Q1LocalFiniteElement<D,R,d> >
 	{};
 
+    //! Global-valued finite element map for Q1 elements
+    /**
+     * \ingroup FiniteElementMap
+     *
+     * \tparam Geometry Type of geometries of the elements.  Only used to
+     *                  extract the dimension and the type for the domain
+     *                  field.
+     * \tparam RF       Range field type.
+     */
+    template<class Geometry, class RF>
+    class Q1FiniteElementMap
+      : public GeometryFiniteElementMap<Q1FiniteElementFactory<Geometry, RF> >
+    {
+      typedef Q1FiniteElementFactory<Geometry, RF> FEFactory;
+      typedef GeometryFiniteElementMap<FEFactory> Base;
+
+      static const FEFactory feFactory;
+
+    public:
+      Q1FiniteElementMap() : Base(feFactory) { }
+    };
+
+    template<class GV, class RF>
+    const typename Q1FiniteElementMap<GV, RF>::FEFactory
+    Q1FiniteElementMap<GV, RF>::feFactory;
   }
 }
 
