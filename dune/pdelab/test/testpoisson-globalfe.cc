@@ -16,6 +16,7 @@
 #include <dune/grid/io/file/vtk/common.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include <dune/grid/uggrid.hh>
+#include <dune/grid/utility/vertexorder.hh>
 #include <dune/grid/yaspgrid.hh>
 
 #include <dune/istl/operators.hh>
@@ -27,7 +28,6 @@
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/geometrywrapper.hh>
-#include <dune/pdelab/common/vertexorder.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include <dune/pdelab/finiteelementmap/q1fem.hh>
@@ -370,7 +370,7 @@ int main(int argc, char** argv)
       typedef double R;
       const int k=3;
       const int q=2*k;
-      typedef Dune::PDELab::VertexOrderByIdFactory<GV::Grid::GlobalIdSet>
+      typedef Dune::VertexOrderByIdFactory<GV::Grid::GlobalIdSet>
         VOFactory;
       VOFactory voFactory(grid->globalIdSet());
       typedef Dune::PDELab::Pk2DFiniteElementMap<
@@ -399,7 +399,7 @@ int main(int argc, char** argv)
       typedef double R;
       const int k=3;
       const int q=2*k;
-      typedef Dune::PDELab::VertexOrderByIdFactory<GV::Grid::GlobalIdSet>
+      typedef Dune::VertexOrderByIdFactory<GV::Grid::GlobalIdSet>
         VOFactory;
       VOFactory voFactory(grid.globalIdSet());
       typedef Dune::PDELab::Pk2DFiniteElementMap<
@@ -428,7 +428,7 @@ int main(int argc, char** argv)
       typedef double R;
       const int k=3;
       const int q=2*k;
-      typedef Dune::PDELab::VertexOrderByIdFactory<GV::Grid::GlobalIdSet>
+      typedef Dune::VertexOrderByIdFactory<GV::Grid::GlobalIdSet>
         VOFactory;
       VOFactory voFactory(grid.globalIdSet());
       typedef Dune::PDELab::Pk2DFiniteElementMap<

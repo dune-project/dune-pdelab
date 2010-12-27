@@ -32,12 +32,12 @@
 #include <dune/grid/io/file/vtk/common.hh>
 #include <dune/grid/io/file/vtk/vtksequencewriter.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
+#include <dune/grid/utility/vertexorder.hh>
 
 #include <dune/pdelab/backend/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/istlsolverbackend.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/common/geometrywrapper.hh>
-#include <dune/pdelab/common/vertexorder.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/finiteelementmap/edges0.5fem.hh>
 #include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
@@ -442,7 +442,7 @@ int main(int argc, char** argv)
                                        "vectorwavecached_ALU_EdgeS0.5_3D");
 
       // make finite element map
-      typedef Dune::PDELab::VertexOrderByIdFactory<Grid::GlobalIdSet>
+      typedef Dune::VertexOrderByIdFactory<Grid::GlobalIdSet>
         VOFactory;
       VOFactory voFactory(grid->globalIdSet());
       typedef Dune::PDELab::EdgeS0_5FiniteElementMap<

@@ -10,7 +10,6 @@ common_HEADERS =				\
 	jacobiantocurl.hh			\
 	multitypetree.hh			\
 	treepath.hh				\
-	vertexorder.hh				\
 	vtkexport.hh
 
 include $(top_srcdir)/am/global-rules
