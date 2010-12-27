@@ -5,7 +5,9 @@
 #include<dune/common/exceptions.hh>
 
 #include<dune/localfunctions/lagrange/pk2d.hh>
+
 #include"finiteelementmap.hh"
+#include <dune/pdelab/finiteelementmap/global.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -53,6 +55,40 @@ namespace Dune {
       FE variant[8];
       const IndexSet& is;
     };
+
+    //! Global-valued finite element map for Pk2D elements
+    /**
+     * \ingroup FiniteElementMap
+     *
+     * \tparam Geometry           Type of the geometry od the elements.
+     * \tparam VertexOrderFactory Type of factory for extracting vertex
+     *                            ordering information.
+     * \tparam RF                 Range field type.
+     * \tparam k                  Order of the elements.
+     */
+    template<class Geometry, class VertexOrderFactory, class RF, std::size_t k>
+    class Pk2DFiniteElementMap :
+      public GeometryVertexOrderFiniteElementMap<
+        Pk2DFiniteElementFactory<Geometry, RF, k>, VertexOrderFactory
+        >
+    {
+      typedef Pk2DFiniteElementFactory<Geometry, RF, k> FEFactory;
+      typedef GeometryVertexOrderFiniteElementMap<
+        FEFactory, VertexOrderFactory
+        > Base;
+
+      static const FEFactory feFactory;
+
+    public:
+      Pk2DFiniteElementMap(const VertexOrderFactory &voFactory) :
+        Base(feFactory, voFactory)
+      { }
+    };
+
+    template<class Geometry, class VertexOrderFactory, class RF, std::size_t k>
+    const typename
+    Pk2DFiniteElementMap<Geometry, VertexOrderFactory, RF, k>::FEFactory
+    Pk2DFiniteElementMap<Geometry, VertexOrderFactory, RF, k>::feFactory;
   }
 }
 
