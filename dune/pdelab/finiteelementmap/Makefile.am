@@ -1,6 +1,7 @@
 finiteelementmapdir = $(includedir)/dune/pdelab/finiteelementmap
 finiteelementmap_HEADERS =			\
 	conformingconstraints.hh		\
+	edges0.5fem.hh				\
 	finiteelementmap.hh			\
 	global.hh				\
 	globalp1.hh				\
