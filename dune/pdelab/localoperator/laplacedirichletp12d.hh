@@ -38,16 +38,16 @@ namespace Dune {
 	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
 	  {
 		// domain and range field type
-		typedef typename LFSU::Traits::LocalFiniteElementType::
+        typedef typename LFSU::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::DomainFieldType DF;
-		typedef typename LFSU::Traits::LocalFiniteElementType::
+        typedef typename LFSU::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
 
 		// define integration point (hard coded quadrature)
 		Dune::FieldVector<DF,2> integrationpoint(1.0/3.0);
 
 		// gradient of shape functions at integration point
-		typedef typename LFSU::Traits::LocalFiniteElementType::
+        typedef typename LFSU::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::JacobianType JT;
 		std::vector<JT> gradients(lfsu.size());
         lfsu.finiteElement().localBasis().
