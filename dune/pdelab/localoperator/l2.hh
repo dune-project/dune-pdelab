@@ -8,8 +8,11 @@
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
 #include<dune/common/geometrytype.hh>
+
 #include<dune/grid/common/genericreferenceelements.hh>
 #include<dune/grid/common/quadraturerules.hh>
+
+#include <dune/localfunctions/common/interfaceswitch.hh>
 
 #include <dune/pdelab/localoperator/defaultimp.hh>
 
@@ -55,7 +58,7 @@ namespace Dune {
         typedef FiniteElementInterfaceSwitch<
           typename LFSU::Traits::FiniteElementType
           > FESwitch;
-        typedef PDELab::BasisInterfaceSwitch<
+        typedef BasisInterfaceSwitch<
           typename FESwitch::Basis
           > BasisSwitch;
 
@@ -101,7 +104,7 @@ namespace Dune {
         typedef FiniteElementInterfaceSwitch<
           typename LFSU::Traits::FiniteElementType
           > FESwitch;
-        typedef PDELab::BasisInterfaceSwitch<
+        typedef BasisInterfaceSwitch<
           typename FESwitch::Basis
           > BasisSwitch;
 

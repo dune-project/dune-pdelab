@@ -37,14 +37,14 @@ namespace Dune {
       typedef Q1FiniteElementFactory<Geometry, RF> FEFactory;
       typedef GeometryFiniteElementMap<FEFactory> Base;
 
-      static const FEFactory feFactory;
+      static FEFactory feFactory;
 
     public:
       Q1FiniteElementMap() : Base(feFactory) { }
     };
 
     template<class GV, class RF>
-    const typename Q1FiniteElementMap<GV, RF>::FEFactory
+    typename Q1FiniteElementMap<GV, RF>::FEFactory
     Q1FiniteElementMap<GV, RF>::feFactory;
   }
 }

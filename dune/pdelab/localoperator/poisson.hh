@@ -12,7 +12,8 @@
 #include<dune/common/geometrytype.hh>
 #include<dune/grid/common/quadraturerules.hh>
 
-#include <dune/pdelab/finiteelement/interfaceswitch.hh>
+#include <dune/localfunctions/common/interfaceswitch.hh>
+
 #include <dune/pdelab/localoperator/defaultimp.hh>
 #include <dune/pdelab/localoperator/idefault.hh>
 
@@ -66,7 +67,7 @@ namespace Dune {
         typedef FiniteElementInterfaceSwitch<
           typename LFSU::Traits::FiniteElementType
           > FESwitch;
-        typedef PDELab::BasisInterfaceSwitch<
+        typedef BasisInterfaceSwitch<
           typename FESwitch::Basis
           > BasisSwitch;
         typedef typename BasisSwitch::DomainField DF;
@@ -116,7 +117,7 @@ namespace Dune {
         typedef FiniteElementInterfaceSwitch<
           typename LFSV::Traits::FiniteElementType
           > FESwitch;
-        typedef PDELab::BasisInterfaceSwitch<
+        typedef BasisInterfaceSwitch<
           typename FESwitch::Basis
           > BasisSwitch;
         typedef typename BasisSwitch::DomainField DF;
@@ -160,7 +161,7 @@ namespace Dune {
         typedef FiniteElementInterfaceSwitch<
           typename LFSV::Traits::FiniteElementType
           > FESwitch;
-        typedef PDELab::BasisInterfaceSwitch<
+        typedef BasisInterfaceSwitch<
           typename FESwitch::Basis
           > BasisSwitch;
         typedef typename BasisSwitch::DomainField DF;

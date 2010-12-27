@@ -22,9 +22,6 @@
 #include <dune/istl/preconditioners.hh>
 #include <dune/istl/solvers.hh>
 
-#include <dune/localfunctions/lagrange/q1.hh>
-#include <dune/localfunctions/lagrange/q22d.hh>
-
 #include <dune/pdelab/backend/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/istlsolverbackend.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
@@ -32,11 +29,10 @@
 #include <dune/pdelab/common/geometrywrapper.hh>
 #include <dune/pdelab/common/vertexorder.hh>
 #include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/finiteelement/interfaceswitch.hh>
-#include <dune/pdelab/finiteelement/localtoglobaladaptors.hh>
-#include <dune/pdelab/finiteelement/pk2d.hh>
 #include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
-#include <dune/pdelab/finiteelementmap/global.hh>
+#include <dune/pdelab/finiteelementmap/q1fem.hh>
+#include <dune/pdelab/finiteelementmap/q22dfem.hh>
+#include <dune/pdelab/finiteelementmap/pk2dfem.hh>
 #include <dune/pdelab/gridfunctionspace/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
@@ -187,11 +183,8 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
 {
   // constants and types
   typedef typename GV::Grid::ctype DF;
-  typedef typename Dune::PDELab::BasisInterfaceSwitch<
-    typename Dune::PDELab::FiniteElementInterfaceSwitch<
-      typename FEM::Traits::FiniteElementType
-      >::Basis
-    >::RangeField R;
+  typedef typename FEM::Traits::FiniteElementType::Traits::Basis::Traits::
+    RangeField R;
 
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,
@@ -304,14 +297,9 @@ int main(int argc, char** argv)
       const GV& gv=grid.leafView();
 
       // make finite element map
-      typedef GV::Grid::ctype DF;
-      typedef Dune::Q1LocalFiniteElement<DF, double, 2> LFE;
-      LFE lfe;
-      typedef Dune::PDELab::ScalarLocalToGlobalFiniteElementAdaptorFactory<LFE,
-        GV::Codim<0>::Geometry> Factory;
-      Factory factory(lfe);
-      typedef Dune::PDELab::GeometryFiniteElementMap<Factory> FEM;
-      FEM fem(factory);
+      typedef Dune::PDELab::Q1FiniteElementMap<GV::Codim<0>::Geometry, double>
+        FEM;
+      FEM fem;
 
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>
@@ -332,14 +320,10 @@ int main(int argc, char** argv)
       const GV& gv=grid.leafView();
 
       // make finite element map
-      typedef GV::Grid::ctype DF;
-      typedef Dune::Q22DLocalFiniteElement<DF, double> LFE;
-      LFE lfe;
-      typedef Dune::PDELab::ScalarLocalToGlobalFiniteElementAdaptorFactory<LFE,
-        GV::Codim<0>::Geometry> Factory;
-      Factory factory(lfe);
-      typedef Dune::PDELab::GeometryFiniteElementMap<Factory> FEM;
-      FEM fem(factory);
+      typedef Dune::PDELab::Q22DFiniteElementMap<
+        GV::Codim<0>::Geometry, double
+        > FEM;
+      FEM fem;
 
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>
@@ -360,14 +344,9 @@ int main(int argc, char** argv)
       const GV& gv=grid.leafView();
 
       // make finite element map
-      typedef GV::Grid::ctype DF;
-      typedef Dune::Q1LocalFiniteElement<DF, double, 3> LFE;
-      LFE lfe;
-      typedef Dune::PDELab::ScalarLocalToGlobalFiniteElementAdaptorFactory<LFE,
-        GV::Codim<0>::Geometry> Factory;
-      Factory factory(lfe);
-      typedef Dune::PDELab::GeometryFiniteElementMap<Factory> FEM;
-      FEM fem(factory);
+      typedef Dune::PDELab::Q1FiniteElementMap<GV::Codim<0>::Geometry, double>
+        FEM;
+      FEM fem;
 
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>
@@ -391,17 +370,13 @@ int main(int argc, char** argv)
       typedef double R;
       const int k=3;
       const int q=2*k;
-      typedef Dune::PDELab::Pk2DFiniteElementFactory<
-        GV::Codim<0>::Geometry, R, k
-        > FEFactory;
-      FEFactory feFactory;
       typedef Dune::PDELab::VertexOrderByIdFactory<GV::Grid::GlobalIdSet>
         VOFactory;
       VOFactory voFactory(grid->globalIdSet());
-      typedef Dune::PDELab::GeometryVertexOrderFiniteElementMap<
-        FEFactory, VOFactory
+      typedef Dune::PDELab::Pk2DFiniteElementMap<
+        GV::Codim<0>::Geometry, VOFactory, double, k
         > FEM;
-      FEM fem(feFactory, voFactory);
+      FEM fem(voFactory);
 
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>
@@ -424,17 +399,13 @@ int main(int argc, char** argv)
       typedef double R;
       const int k=3;
       const int q=2*k;
-      typedef Dune::PDELab::Pk2DFiniteElementFactory<
-        GV::Codim<0>::Geometry, R, k
-        > FEFactory;
-      FEFactory feFactory;
       typedef Dune::PDELab::VertexOrderByIdFactory<GV::Grid::GlobalIdSet>
         VOFactory;
       VOFactory voFactory(grid.globalIdSet());
-      typedef Dune::PDELab::GeometryVertexOrderFiniteElementMap<
-        FEFactory, VOFactory
+      typedef Dune::PDELab::Pk2DFiniteElementMap<
+        GV::Codim<0>::Geometry, VOFactory, double, k
         > FEM;
-      FEM fem(feFactory, voFactory);
+      FEM fem(voFactory);
 
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>
@@ -457,17 +428,13 @@ int main(int argc, char** argv)
       typedef double R;
       const int k=3;
       const int q=2*k;
-      typedef Dune::PDELab::Pk2DFiniteElementFactory<
-        GV::Codim<0>::Geometry, R, k
-        > FEFactory;
-      FEFactory feFactory;
       typedef Dune::PDELab::VertexOrderByIdFactory<GV::Grid::GlobalIdSet>
         VOFactory;
       VOFactory voFactory(grid.globalIdSet());
-      typedef Dune::PDELab::GeometryVertexOrderFiniteElementMap<
-        FEFactory, VOFactory
+      typedef Dune::PDELab::Pk2DFiniteElementMap<
+        GV::Codim<0>::Geometry, VOFactory, double, k
         > FEM;
-      FEM fem(feFactory, voFactory);
+      FEM fem(voFactory);
 
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>

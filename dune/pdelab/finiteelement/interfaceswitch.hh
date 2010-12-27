@@ -4,9 +4,13 @@
 #ifndef DUNE_PDELAB_FINITEELEMENT_INTERFACESWITCH_HH
 #define DUNE_PDELAB_FINITEELEMENT_INTERFACESWITCH_HH
 
+#warning This file is deprecated.  Please use
+#warning <dune/localfunctions/common/interfaceswitch.hh> instead.
+
 #include <cstddef>
 #include <vector>
 
+#include <dune/common/deprecated.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/static_assert.hh>
@@ -24,9 +28,13 @@ namespace Dune {
      *
      * \note The local interface is detected by the presence of the type
      *       FiniteElement::Traits::LocalBasisType.
+     *
+     * \deprecated This class has been moved to dune-localfunctions into the
+     *             file <dune/localfunctions/common/interfaceswitch.hh> and
+     *             the namespace \c Dune.
      */
     template<class FiniteElement, class Dummy = void>
-    struct FiniteElementInterfaceSwitch {
+    struct DUNE_DEPRECATED FiniteElementInterfaceSwitch {
       //! export the type of the basis
       typedef typename FiniteElement::Traits::Basis Basis;
       //! export the type of the interpolation
@@ -35,13 +43,15 @@ namespace Dune {
       typedef typename FiniteElement::Traits::Coefficients Coefficients;
 
       //! access basis
-      static const Basis &basis(const FiniteElement& fe)
+      static const Basis &basis(const FiniteElement& fe) DUNE_DEPRECATED
       { return fe.basis(); }
       //! access interpolation
       static const Interpolation &interpolation(const FiniteElement& fe)
+        DUNE_DEPRECATED
       { return fe.interpolation(); }
       //! access coefficients
       static const Coefficients &coefficients(const FiniteElement& fe)
+        DUNE_DEPRECATED
       { return fe.coefficients(); }
 
       //! Type for storing finite elements
@@ -76,6 +86,7 @@ namespace Dune {
        * object with allocation and copy-construction and storing that.
        */
       static void setStore(Store& store, const FiniteElement& fe)
+        DUNE_DEPRECATED
       { store.reset(new FiniteElement(fe)); }
     };
 
@@ -83,7 +94,7 @@ namespace Dune {
     //! \brief Switch for uniform treatment of finite element with either the
     //!        local or the global interface
     template<class FiniteElement>
-    struct FiniteElementInterfaceSwitch
+    struct DUNE_DEPRECATED FiniteElementInterfaceSwitch
       < FiniteElement,
         typename enable_if<AlwaysTrue<typename FiniteElement::Traits::
                                       LocalBasisType>::value>::type>
@@ -98,19 +109,22 @@ namespace Dune {
         Coefficients;
 
       //! access basis
-      static const Basis &basis(const FiniteElement& fe)
+      static const Basis &basis(const FiniteElement& fe) DUNE_DEPRECATED
       { return fe.localBasis(); }
       //! access interpolation
       static const Interpolation &interpolation(const FiniteElement& fe)
+        DUNE_DEPRECATED
       { return fe.localInterpolation(); }
       //! access coefficients
       static const Coefficients &coefficients(const FiniteElement& fe)
+        DUNE_DEPRECATED
       { return fe.localCoefficients(); }
 
       //! Type for storing finite elements
       typedef const FiniteElement *Store;
       //! Store a finite element in the store.
       static void setStore(Store& store, const FiniteElement& fe)
+        DUNE_DEPRECATED
       { store = &fe; }
     };
 #endif // !DOXYGEN
@@ -130,25 +144,32 @@ namespace Dune {
      *
      * \note The local interface is assumed if the constant
      *       Basis::Traits::dimDomain exists and has a value greater than 0.
+     *
+     * \deprecated This class has been moved to dune-localfunctions into the
+     *             file <dune/localfunctions/common/interfaceswitch.hh> and
+     *             the namespace \c Dune.
      */
     template<class Basis, class Dummy = void>
-    struct BasisInterfaceSwitch {
+    struct DUNE_DEPRECATED BasisInterfaceSwitch {
       //! export field types of the coordinates
       typedef typename Basis::Traits::DomainField DomainField;
       //! export dimension of local coordinates
-      static const std::size_t dimDomainLocal = Basis::Traits::dimDomainLocal;
+      static const std::size_t dimDomainLocal DUNE_DEPRECATED
+        = Basis::Traits::dimDomainLocal;
       //! export vector type of the local coordinates
       typedef typename Basis::Traits::DomainLocal DomainLocal;
 
       //! export field type of the values
       typedef typename Basis::Traits::RangeField RangeField;
       //! export dimension of the values
-      static const std::size_t dimRange = Basis::Traits::dimRange;
+      static const std::size_t dimRange DUNE_DEPRECATED
+        = Basis::Traits::dimRange;
       //! export vector type of the values
       typedef typename Basis::Traits::Range Range;
 
       //! export number of supported differentiations
-      static const std::size_t diffOrder = Basis::Traits::diffOrder;
+      static const std::size_t diffOrder DUNE_DEPRECATED
+        = Basis::Traits::diffOrder;
 
       //! Compute global gradient for scalar valued bases
       /**
@@ -162,6 +183,7 @@ namespace Dune {
        * \note This make sense only for a scalar valued basis.
        */
       template<typename Geometry>
+      DUNE_DEPRECATED
       static void gradient(const Basis& basis, const Geometry& geometry,
                            const DomainLocal& xl,
                            std::vector<FieldMatrix<RangeField, 1,
@@ -175,28 +197,32 @@ namespace Dune {
 #ifndef DOXYGEN
     //! Switch for uniform treatment of local and global basis classes
     template<class Basis>
-    struct BasisInterfaceSwitch
+    struct DUNE_DEPRECATED BasisInterfaceSwitch
     < Basis, typename enable_if<Basis::Traits::dimDomain>::type>
     {
       //! export field types of the coordinates
       typedef typename Basis::Traits::DomainFieldType DomainField;
       //! export dimension of local coordinates
-      static const std::size_t dimDomainLocal = Basis::Traits::dimDomain;
+      static const std::size_t dimDomainLocal DUNE_DEPRECATED
+        = Basis::Traits::dimDomain;
       //! export vector type of the local coordinates
       typedef typename Basis::Traits::DomainType DomainLocal;
 
       //! export field type of the values
       typedef typename Basis::Traits::RangeFieldType RangeField;
       //! export dimension of the values
-      static const std::size_t dimRange = Basis::Traits::dimRange;
+      static const std::size_t  dimRange DUNE_DEPRECATED
+        = Basis::Traits::dimRange;
       //! export vector type of the values
       typedef typename Basis::Traits::RangeType Range;
 
       //! export number of supported differentiations
-      static const std::size_t diffOrder = Basis::Traits::diffOrder;
+      static const std::size_t diffOrder DUNE_DEPRECATED
+        = Basis::Traits::diffOrder;
 
       //! Compute global gradient for scalar valued bases
       template<typename Geometry>
+      DUNE_DEPRECATED
       static void gradient(const Basis& basis, const Geometry& geometry,
                            const DomainLocal& xl,
                            std::vector<FieldMatrix<RangeField, 1,

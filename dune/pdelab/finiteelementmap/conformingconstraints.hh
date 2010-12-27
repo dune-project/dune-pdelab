@@ -12,8 +12,9 @@
 #include <dune/grid/common/genericreferenceelements.hh>
 #include <dune/grid/common/grid.hh>
 
+#include <dune/localfunctions/common/interfaceswitch.hh>
+
 #include <dune/pdelab/common/geometrywrapper.hh>
-#include <dune/pdelab/finiteelement/interfaceswitch.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspacetags.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>

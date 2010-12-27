@@ -6,7 +6,10 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/static_assert.hh>
 #include <dune/common/configparser.hh>
+
 #include <dune/grid/common/quadraturerules.hh>
+
+#include <dune/localfunctions/common/interfaceswitch.hh>
 
 #include "../common/geometrywrapper.hh"
 #include "../gridoperatorspace/gridoperatorspace.hh"
@@ -230,7 +233,7 @@ namespace Dune {
 
                 // domain and range field type
                 typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-                typedef PDELab::BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+                typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
                 typedef typename BasisSwitch_V::DomainField DF;
                 typedef typename BasisSwitch_V::Range RT;
                 typedef typename BasisSwitch_V::RangeField RF;
@@ -304,13 +307,13 @@ namespace Dune {
 
                 // domain and range field type
                 typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-                typedef PDELab::BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+                typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
                 typedef typename BasisSwitch_V::DomainField DF;
                 typedef typename BasisSwitch_V::Range RT;
                 typedef typename BasisSwitch_V::RangeField RF;
                 typedef typename BasisSwitch_V::Range Range_V;
                 typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-                typedef PDELab::BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
+                typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
                 typedef typename BasisSwitch_P::Range Range_P;
                 typedef typename LFSV::Traits::SizeType size_type;
 
@@ -434,13 +437,13 @@ namespace Dune {
 
                 // domain and range field type
                 typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-                typedef PDELab::BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+                typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
                 typedef typename BasisSwitch_V::DomainField DF;
                 typedef typename BasisSwitch_V::Range RT;
                 typedef typename BasisSwitch_V::RangeField RF;
                 typedef typename BasisSwitch_V::Range Range_V;
                 typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-                typedef PDELab::BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
+                typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
                 typedef typename BasisSwitch_P::Range Range_P;
                 typedef typename LFSV::Traits::SizeType size_type;
 
@@ -539,13 +542,13 @@ namespace Dune {
 
                 // domain and range field type
                 typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-                typedef PDELab::BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+                typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
                 typedef typename BasisSwitch_V::DomainField DF;
                 typedef typename BasisSwitch_V::Range RT;
                 typedef typename BasisSwitch_V::RangeField RF;
                 typedef typename BasisSwitch_V::Range Range_V;
                 typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-                typedef PDELab::BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
+                typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
                 typedef typename BasisSwitch_P::Range Range_P;
                 typedef typename LFSV::Traits::SizeType size_type;
 
@@ -774,13 +777,13 @@ namespace Dune {
 
                 // domain and range field type
                 typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-                typedef PDELab::BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+                typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
                 typedef typename BasisSwitch_V::DomainField DF;
                 typedef typename BasisSwitch_V::Range RT;
                 typedef typename BasisSwitch_V::RangeField RF;
                 typedef typename BasisSwitch_V::Range Range_V;
                 typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-                typedef PDELab::BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
+                typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
                 typedef typename BasisSwitch_P::Range Range_P;
                 typedef typename LFSV::Traits::SizeType size_type;
 
@@ -949,13 +952,13 @@ namespace Dune {
 
                 // domain and range field type
                 typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-                typedef PDELab::BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+                typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
                 typedef typename BasisSwitch_V::DomainField DF;
                 typedef typename BasisSwitch_V::Range RT;
                 typedef typename BasisSwitch_V::RangeField RF;
                 typedef typename BasisSwitch_V::Range Range_V;
                 typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-                typedef PDELab::BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
+                typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
                 typedef typename BasisSwitch_P::Range Range_P;
                 typedef typename LFSV::Traits::SizeType size_type;
 
@@ -1048,13 +1051,13 @@ namespace Dune {
 
                 // domain and range field type
                 typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
-                typedef PDELab::BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+                typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
                 typedef typename BasisSwitch_V::DomainField DF;
                 typedef typename BasisSwitch_V::Range RT;
                 typedef typename BasisSwitch_V::RangeField RF;
                 typedef typename BasisSwitch_V::Range Range_V;
                 typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-                typedef PDELab::BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
+                typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
                 typedef typename BasisSwitch_P::Range Range_P;
                 typedef typename LFSV::Traits::SizeType size_type;
 

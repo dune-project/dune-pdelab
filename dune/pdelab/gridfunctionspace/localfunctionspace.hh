@@ -7,9 +7,10 @@
 
 #include <dune/common/stdstreams.hh>
 
+#include <dune/localfunctions/common/interfaceswitch.hh>
+
 #include "../common/multitypetree.hh"
 #include "../common/cpstoragepolicy.hh"
-#include <dune/pdelab/finiteelement/interfaceswitch.hh>
 
 #include "localindex.hh"
 

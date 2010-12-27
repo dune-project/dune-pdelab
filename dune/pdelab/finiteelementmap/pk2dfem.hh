@@ -77,18 +77,16 @@ namespace Dune {
         FEFactory, VertexOrderFactory
         > Base;
 
-      static const FEFactory feFactory;
+      static FEFactory &feFactory() {
+        static FEFactory feFactory_;
+        return feFactory_;
+      }
 
     public:
       Pk2DFiniteElementMap(const VertexOrderFactory &voFactory) :
-        Base(feFactory, voFactory)
+        Base(feFactory(), voFactory)
       { }
     };
-
-    template<class Geometry, class VertexOrderFactory, class RF, std::size_t k>
-    const typename
-    Pk2DFiniteElementMap<Geometry, VertexOrderFactory, RF, k>::FEFactory
-    Pk2DFiniteElementMap<Geometry, VertexOrderFactory, RF, k>::feFactory;
   }
 }
 

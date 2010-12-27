@@ -17,13 +17,13 @@
 
 #include <dune/grid/common/genericreferenceelements.hh>
 
+#include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
 
 #include "../common/countingptr.hh"
 #include "../common/multitypetree.hh"
 #include "../common/cpstoragepolicy.hh"
 #include "../common/geometrywrapper.hh"
-#include <dune/pdelab/finiteelement/interfaceswitch.hh>
 
 #include"localfunctionspace.hh"
 #include"gridfunctionspaceutilities.hh"

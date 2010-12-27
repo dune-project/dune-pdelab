@@ -10,12 +10,13 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/static_assert.hh>
 
+#include <dune/localfunctions/common/interfaceswitch.hh>
+
 #include"../common/countingptr.hh"
 #include"../common/multitypetree.hh"
 #include"../common/cpstoragepolicy.hh"
 #include"../common/function.hh"
 #include <dune/pdelab/common/jacobiantocurl.hh>
-#include <dune/pdelab/finiteelement/interfaceswitch.hh>
 
 #include"gridfunctionspace.hh"
 
@@ -217,7 +218,7 @@ namespace Dune {
 	{
 	  typedef T GFS;
 
-      typedef typename PDELab::BasisInterfaceSwitch<
+      typedef typename Dune::BasisInterfaceSwitch<
         typename FiniteElementInterfaceSwitch<
           typename T::Traits::FiniteElementType
           >::Basis

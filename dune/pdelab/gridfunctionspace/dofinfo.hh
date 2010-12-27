@@ -12,9 +12,9 @@
 #include <dune/grid/common/genericreferenceelements.hh>
 #include <dune/grid/common/gridenums.hh>
 
+#include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
 
-#include <dune/pdelab/finiteelement/interfaceswitch.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspacetags.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 

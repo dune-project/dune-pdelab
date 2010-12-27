@@ -8,11 +8,12 @@
 
 #include<dune/common/exceptions.hh>
 
+#include <dune/localfunctions/common/interfaceswitch.hh>
+
 #include"../common/countingptr.hh"
 #include"../common/multitypetree.hh"
 #include"../common/cpstoragepolicy.hh"
 #include"../common/function.hh"
-#include <dune/pdelab/finiteelement/interfaceswitch.hh>
 
 #include"gridfunctionspace.hh"
 

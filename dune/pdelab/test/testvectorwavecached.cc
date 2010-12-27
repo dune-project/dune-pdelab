@@ -39,9 +39,8 @@
 #include <dune/pdelab/common/geometrywrapper.hh>
 #include <dune/pdelab/common/vertexorder.hh>
 #include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/finiteelement/edges0.5.hh>
+#include <dune/pdelab/finiteelementmap/edges0.5fem.hh>
 #include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
-#include <dune/pdelab/finiteelementmap/global.hh>
 #include <dune/pdelab/function/memberadaptor.hh>
 #include <dune/pdelab/gridfunctionspace/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/dofinfo.hh>
@@ -443,17 +442,13 @@ int main(int argc, char** argv)
                                        "vectorwavecached_ALU_EdgeS0.5_3D");
 
       // make finite element map
-      typedef Dune::PDELab::EdgeS0_5FiniteElementFactory<
-        Grid::Codim<0>::Geometry, RF
-        > FEFactory;
-      FEFactory feFactory;
       typedef Dune::PDELab::VertexOrderByIdFactory<Grid::GlobalIdSet>
         VOFactory;
       VOFactory voFactory(grid->globalIdSet());
-      typedef Dune::PDELab::GeometryVertexOrderFiniteElementMap<
-        FEFactory, VOFactory
+      typedef Dune::PDELab::EdgeS0_5FiniteElementMap<
+        Grid::Codim<0>::Geometry, VOFactory, RF
         > FEM;
-      FEM fem(feFactory, voFactory);
+      FEM fem(voFactory);
 
       // solve problem
       vectorWave(config,gv,fem);
