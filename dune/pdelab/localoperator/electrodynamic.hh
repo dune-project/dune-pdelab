@@ -71,16 +71,16 @@ namespace Dune {
                             const LFS& lfsv, LocalMatrix<R>& mat) const
       {
         // domain and range field type
-        typedef typename LFS::Traits::LocalFiniteElementType::
-          Traits::LocalBasisType::Traits LBTraits;
+        typedef typename LFS::Traits::FiniteElementType::
+          Traits::Basis::Traits BasisTraits;
 
-        typedef typename LBTraits::DomainFieldType DF;
-        typedef typename LBTraits::DomainType Domain;
-        static const unsigned dimD = LBTraits::dimDomain;
+        typedef typename BasisTraits::DomainField DF;
+        typedef typename BasisTraits::DomainLocal DomainLocal;
+        static const unsigned dimDLocal = BasisTraits::dimDomainLocal;
 
-        typedef typename LBTraits::RangeFieldType RF;
-        typedef typename LBTraits::RangeType Range;
-        static const unsigned dimR = LBTraits::dimRange;
+        typedef typename BasisTraits::RangeField RF;
+        typedef typename BasisTraits::Range Range;
+        static const unsigned dimR = BasisTraits::dimRange;
 
         // static checks
         dune_static_assert(dimR == 3 || dimR == 2,
@@ -90,8 +90,8 @@ namespace Dune {
            "Grids ctype and Finite Elements DomainFieldType must match");
 
         // select quadrature rule
-        typedef Dune::QuadratureRule<DF,dimD> QR;
-        typedef Dune::QuadratureRules<DF,dimD> QRs;
+        typedef Dune::QuadratureRule<DF,dimDLocal> QR;
+        typedef Dune::QuadratureRules<DF,dimDLocal> QRs;
         Dune::GeometryType gt = eg.geometry().type();
         const QR& rule = QRs::rule(gt,qorder);
 
@@ -100,8 +100,7 @@ namespace Dune {
             it!=rule.end(); ++it) {
           // values of basefunctions
           std::vector<Range> phi(lfsu.size());
-          lfsu.finiteElement().localBasis()
-            .evaluateFunctionGlobal(it->position(),phi,eg.geometry());
+          lfsu.finiteElement().basis().evaluateFunction(it->position(),phi);
 
           // calculate T
           typename Eps::Traits::RangeType epsval;
@@ -191,18 +190,18 @@ namespace Dune {
                             const LFS& lfsv, LocalMatrix<R>& mat) const
       {
         // domain and range field type
-        typedef typename LFS::Traits::LocalFiniteElementType::
-          Traits::LocalBasisType::Traits LBTraits;
+        typedef typename LFS::Traits::FiniteElementType::Traits::Basis::Traits
+          BasisTraits;
 
-        typedef typename LBTraits::DomainFieldType DF;
-        typedef typename LBTraits::DomainType Domain;
-        static const unsigned dimD = LBTraits::dimDomain;
+        typedef typename BasisTraits::DomainField DF;
+        typedef typename BasisTraits::DomainLocal DomainLocal;
+        static const unsigned dimDLocal = BasisTraits::dimDomainLocal;
 
-        typedef typename LBTraits::RangeFieldType RF;
-        typedef typename LBTraits::RangeType Range;
-        static const unsigned dimR = LBTraits::dimRange;
+        typedef typename BasisTraits::RangeField RF;
+        typedef typename BasisTraits::Range Range;
+        static const unsigned dimR = BasisTraits::dimRange;
 
-        typedef typename LBTraits::JacobianType Jacobian;
+        typedef typename BasisTraits::Jacobian Jacobian;
         typedef FieldVector<RF, CurlTraits<dimR>::dim> Curl;
 
         // static checks
@@ -213,8 +212,8 @@ namespace Dune {
            "Grids ctype and Finite Elements DomainFieldType must match");
 
         // select quadrature rule
-        typedef Dune::QuadratureRule<DF,dimD> QR;
-        typedef Dune::QuadratureRules<DF,dimD> QRs;
+        typedef Dune::QuadratureRule<DF,dimDLocal> QR;
+        typedef Dune::QuadratureRules<DF,dimDLocal> QRs;
         Dune::GeometryType gt = eg.geometry().type();
         const QR& rule = QRs::rule(gt,qorder);
 
@@ -223,8 +222,7 @@ namespace Dune {
             it!=rule.end(); ++it) {
           // curl of the basefunctions
           std::vector<Jacobian> J(lfsu.size());
-          lfsu.finiteElement().localBasis()
-            .evaluateJacobianGlobal(it->position(),J,eg.geometry());
+          lfsu.finiteElement().basis().evaluateJacobian(it->position(),J);
 
           std::vector<Curl> rotphi(lfsu.size());
           for(unsigned i = 0; i < lfsu.size(); ++i)
