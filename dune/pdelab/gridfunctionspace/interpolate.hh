@@ -36,24 +36,6 @@ namespace Dune {
       }
     };
 
-    // Backend for standard interpolation using some old global interface
-    template<typename Geometry>
-    class InterpolateBackendGlobal
-    {
-      const Geometry &geometry;
-
-    public:
-      InterpolateBackendGlobal(const Geometry &geometry_)
-        : geometry(geometry_)
-      {}
-
-      template<typename LFE, typename LF, typename XL>
-      void interpolate(const LFE &lfe, const LF &lf, XL &xl) const
-      {
-		lfe.localInterpolation().interpolateGlobal(lf,xl,geometry);
-      }
-    };
-
     // Forward declaration of the metaprogram for visiting *nodes*
 	template<typename IB, typename F, bool FisLeaf, typename LFS, bool LFSisLeaf> 
 	struct InterpolateVisitNodeMetaProgram;
@@ -191,34 +173,6 @@ namespace Dune {
           // call interpolate
 		  InterpolateVisitNodeMetaProgram<InterpolateBackendStandard,F,F::isLeaf,LFS,LFS::isLeaf>
             ::interpolate(InterpolateBackendStandard(),f,lfs,xg,*it);
-        }
-    }
-
-    // interpolation from a given grid function, using the global interface of the local finite element
-    template<typename F, typename GFS, typename XG>
-    void interpolateGlobal(const F& f, const GFS& gfs, XG& xg)
-    {
-      // this is the leaf version now
-
-      // get some types
-      typedef typename GFS::Traits::GridViewType GV;
-      typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
-      typedef InterpolateBackendGlobal<typename GV::Traits::template Codim<0>::Geometry> IB;
-
-      // make local function space
-      typedef typename GFS::LocalFunctionSpace LFS;
-      LFS lfs(gfs);
-
-      // loop once over the grid
-      for (ElementIterator it = gfs.gridview().template begin<0>();
-           it!=gfs.gridview().template end<0>(); ++it)
-        {
-          // bind local function space to element
-          lfs.bind(*it);
-
-          // call interpolate
-		  InterpolateVisitNodeMetaProgram<IB,F,F::isLeaf,LFS,LFS::isLeaf>
-            ::interpolate(IB(it->geometry()),f,lfs,xg,*it);
         }
     }
 
