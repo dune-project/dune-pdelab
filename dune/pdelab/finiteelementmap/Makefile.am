@@ -4,7 +4,6 @@ finiteelementmap_HEADERS =			\
 	edges0.5fem.hh				\
 	finiteelementmap.hh			\
 	global.hh				\
-	globalp1.hh				\
 	hangingnodeconstraints.hh		\
 	hangingnodemanager.hh			\
 	mfdconstraints.hh			\
