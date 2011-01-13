@@ -80,6 +80,17 @@ namespace Dune {
 	  int rows, cols;
 	};
 
+    template<class Stream, class T>
+    Stream &operator<<(Stream &stream, const LocalMatrix<T> &m) {
+      for(int r = 0; r < m.nrows(); ++r) {
+        if(m.ncols() >= 1)
+          stream << m(r, 0);
+        for(int c = 1; c < m.ncols(); ++c)
+          stream << "\t" << m(r, c);
+        stream << "\n";
+      }
+      return stream;
+    }
 
   } // namespace PDELab
 } // namespace Dune
