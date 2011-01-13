@@ -17,10 +17,15 @@ namespace Dune {
 	  : public SimpleLocalFiniteElementMap< Dune::P0LocalFiniteElement<D,R,d> >
 	{
     public:
-      P0LocalFiniteElementMap (Dune::GeometryType::BasicType basicType)
+      P0LocalFiniteElementMap (Dune::GeometryType::BasicType basicType) DUNE_DEPRECATED
         : SimpleLocalFiniteElementMap< Dune::P0LocalFiniteElement<D,R,d> >(Dune::P0LocalFiniteElement<D,R,d>(basicType))
       {
       }
+      P0LocalFiniteElementMap (const Dune::GeometryType& type)
+        : SimpleLocalFiniteElementMap< Dune::P0LocalFiniteElement<D,R,d> >(Dune::P0LocalFiniteElement<D,R,d>(type))
+      {
+      }
+
     };
 
   }

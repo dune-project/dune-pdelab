@@ -23,8 +23,12 @@ namespace Dune {
 	  : public SimpleLocalFiniteElementMap< Dune::MonomLocalFiniteElement<D,R,d,p> >
 	{
     public:
-      MonomLocalFiniteElementMap (Dune::GeometryType::BasicType basicType)
+      MonomLocalFiniteElementMap (Dune::GeometryType::BasicType basicType) DUNE_DEPRECATED
         : SimpleLocalFiniteElementMap< Dune::MonomLocalFiniteElement<D,R,d,p> >(Dune::MonomLocalFiniteElement<D,R,d,p>(basicType))
+      {
+      }
+      MonomLocalFiniteElementMap (const Dune::GeometryType& type)
+        : SimpleLocalFiniteElementMap< Dune::MonomLocalFiniteElement<D,R,d,p> >(Dune::MonomLocalFiniteElement<D,R,d,p>(type))
       {
       }
     };
