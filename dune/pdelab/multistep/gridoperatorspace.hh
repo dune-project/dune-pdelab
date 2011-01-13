@@ -710,7 +710,7 @@ namespace Dune {
       //! get the composed jacobian
       /**
        * fetch it from the cache if possible, otherwise compute it and store
-       * it in teh cache along the way.
+       * it in the cache along the way.
        */
       shared_ptr<const Matrix> getComposedJacobian() const {
         // AFFINE: This method is only meaningful in the affine case, so don't
