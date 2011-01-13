@@ -18,7 +18,7 @@ namespace Dune {
 	  : public SimpleLocalFiniteElementMap< Dune::Q22DLocalFiniteElement<D,R> >
 	{};
 
-    //! Global-valued finite element map for Q1 elements
+    //! Global-valued finite element map for Q22D elements
     /**
      * \ingroup FiniteElementMap
      *
