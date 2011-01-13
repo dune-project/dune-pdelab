@@ -17,6 +17,7 @@ finiteelementmap_HEADERS =			\
 	p1fem.hh				\
 	pk2dfem.hh				\
 	pk3dfem.hh				\
+	powerfem.hh				\
 	q12dfem.hh				\
 	q1fem.hh				\
 	q22dfem.hh				\
