@@ -4,10 +4,14 @@
 #ifndef DUNE_PDELAB_MONOMFEM_HH
 #define DUNE_PDELAB_MONOMFEM_HH
 
+#include <cstddef>
+
 #include <dune/common/geometrytype.hh>
 
 #include<dune/localfunctions/monom.hh>
+
 #include"finiteelementmap.hh"
+#include <dune/pdelab/finiteelementmap/global.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -24,6 +28,33 @@ namespace Dune {
       {
       }
     };
+
+    //! Global-valued finite element map for Monom elements
+    /**
+     * \ingroup FiniteElementMap
+     *
+     * \tparam Geometry Type of the geometry od the elements.
+     * \tparam RF       Range field type.
+     * \tparam p        Maximum polynomial order of the elements.
+     */
+    template<class Geometry, class RF, std::size_t p>
+    class MonomFiniteElementMap
+      : public GeometryFiniteElementMap<
+          MonomFiniteElementFactory<Geometry, RF, p>
+          >
+    {
+      typedef MonomFiniteElementFactory<Geometry, RF, p> FEFactory;
+      typedef GeometryFiniteElementMap<FEFactory> Base;
+
+      static FEFactory feFactory;
+
+    public:
+      MonomFiniteElementMap() : Base(feFactory) { }
+    };
+
+    template<class GV, class RF, std::size_t p>
+    typename MonomFiniteElementMap<GV, RF, p>::FEFactory
+    MonomFiniteElementMap<GV, RF, p>::feFactory;
 
   }
 }
