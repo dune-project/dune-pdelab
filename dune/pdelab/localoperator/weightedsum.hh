@@ -531,7 +531,7 @@ namespace Dune {
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         R& r_s) const
       {
-        ForLoop<AlphaVolumePostSkeletonOperation, 0, size-1>::
+        ForLoop<AlphaBoundaryOperation, 0, size-1>::
           apply(lops, weights, ig, lfsu_s, x_s, lfsv_s, r_s);
       }
 
