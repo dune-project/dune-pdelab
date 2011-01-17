@@ -750,8 +750,9 @@ namespace Dune {
                       lfsv.vadd(rl_m,r0);
                     }
                 }
-              }
-          }
+                
+              } // i - stage
+          } // it - cell
 
         //Dune::printvector(std::cout,r.base(),"const residual","row",4,9,1);
       }
@@ -781,6 +782,12 @@ namespace Dune {
       template<typename X, typename A> 
       void explicit_jacobian_residual (unsigned stage_, const std::vector<X*>& x, A& mat, R& alpha, R& beta)
       {
+
+        const bool has_subtriangulation = ST::hasSubTriangulation;
+        if(has_subtriangulation){
+          DUNE_THROW(Dune::NotImplemented,"This function can not handle unfitted triangulations yet");
+        }
+
         // process arguments
         stage = stage_;
         if (x.size()!=stage+1)
@@ -1147,6 +1154,13 @@ namespace Dune {
                             
                             // read coefficents
                             lfsun.vread(x,xn);
+
+                            // Prepare the local functions for global evaluation 
+                            ST::BindInsideSubIntersection::rebind(lfsu,*iit);
+                            ST::BindOutsideSubIntersection::rebind(lfsun,*iit);
+
+                            ST::BindInsideSubIntersection::rebind(lfsv,*iit);
+                            ST::BindOutsideSubIntersection::rebind(lfsvn,*iit);
                             
                             // skeleton evaluation
                             LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
@@ -1199,6 +1213,7 @@ namespace Dune {
  
               lfsv.vadd(rl_m,r); // scheme is normalized !
             }
+
           }
 
         // set residual to zero on constrained dofs
@@ -1216,6 +1231,12 @@ namespace Dune {
       template<typename X, typename Y> 
       void jacobian_apply (X& x, Y& y) const
       {
+
+        const bool has_subtriangulation = ST::hasSubTriangulation;
+        if(has_subtriangulation){
+          DUNE_THROW(Dune::NotImplemented,"This function can not handle unfitted triangulations yet");
+        }
+
         // visit each face only once
         const int chunk=1<<28;
         int offset = 0;
@@ -1486,6 +1507,13 @@ namespace Dune {
                             
                             // read coefficents
                             lfsun.vread(x,xn);
+
+                            // Prepare the local functions for global evaluation 
+                            ST::BindInsideSubIntersection::rebind(lfsu,*iit);
+                            ST::BindOutsideSubIntersection::rebind(lfsun,*iit);
+
+                            ST::BindInsideSubIntersection::rebind(lfsv,*iit);
+                            ST::BindOutsideSubIntersection::rebind(lfsvn,*iit);
                             
                             // skeleton evaluation
                             LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
