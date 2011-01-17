@@ -605,9 +605,15 @@ namespace Dune {
     void set_nonconstrained_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
     {
       typedef typename XG::Backend B;
-      for (typename XG::size_type i=0; i<xg.size(); ++i)
-        if (cg.find(i)==cg.end())
-          B::access(xg,i) = x;
+      for (typename XG::size_type i=0; i<xg.size(); ++i){
+
+        for (typename XG::size_type j=0; j < B::BlockSize; ++j){
+          const typename XG::size_type flat_index = i * B::BlockSize + j;
+          if (cg.find(flat_index)==cg.end())
+            B::access(xg,flat_index) = x;
+        }
+
+      }
 	}
 
     // construct constraints from given boundary condition function
@@ -620,9 +626,16 @@ namespace Dune {
     void copy_nonconstrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
     {
       typedef typename XG::Backend B;
-      for (typename XG::size_type i=0; i<xgin.size(); ++i)
-        if (cg.find(i)==cg.end())
-          B::access(xgout,i) = B::access(xgin,i);
+      for (typename XG::size_type i=0; i<xgin.size(); ++i){
+
+
+        for (typename XG::size_type j=0; j < B::BlockSize; ++j){
+          const typename XG::size_type flat_index = i * B::BlockSize + j;
+          if (cg.find(flat_index)==cg.end())
+            B::access(xgout,flat_index) = B::access(xgin,flat_index);
+        }
+
+      }
 	}
 
     // construct constraints from given boundary condition function
@@ -637,9 +650,13 @@ namespace Dune {
       typedef typename XG::Backend B;
 	  typedef typename CG::const_iterator global_col_iterator;
       for (typename XG::size_type i=0; i<xg.size(); ++i){
-        global_col_iterator it = cg.find(i);
-        if (it == cg.end() || it->second.size() > 0)
-          B::access(xg,i) = x;
+
+        for (typename XG::size_type j=0; j < B::BlockSize; ++j){
+          const typename XG::size_type flat_index = i * B::BlockSize + j;
+          global_col_iterator it = cg.find(flat_index);
+          if (it == cg.end() || it->second.size() > 0)
+            B::access(xg,flat_index) = x;
+        }
       }
 	}
 
