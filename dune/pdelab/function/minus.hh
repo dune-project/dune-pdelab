@@ -3,6 +3,8 @@
 #ifndef DUNE_PDELAB_FUNCTION_MINUS_HH
 #define DUNE_PDELAB_FUNCTION_MINUS_HH
 
+#include <cstddef>
+
 #include <dune/common/static_assert.hh>
 
 #include <dune/pdelab/common/function.hh>
@@ -20,7 +22,8 @@ namespace Dune {
       : public GridFunctionBase<typename GF1::Traits,
                                 MinusGridFunctionAdapter<GF1,GF2> >
     {
-      dune_static_assert(GF1::Traits::dimRange == GF2::Traits::dimRange,
+      dune_static_assert(std::size_t(GF1::Traits::dimRange) ==
+                         std::size_t(GF2::Traits::dimRange),
                          "Range dimension must match for both operands of a "
                          "MinusGridFunctionAdapter");
       typedef typename GF1::Traits T;
