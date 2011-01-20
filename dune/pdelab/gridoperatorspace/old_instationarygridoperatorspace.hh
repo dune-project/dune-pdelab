@@ -181,15 +181,15 @@ namespace Dune {
 
       //! construct 
       InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_, 
-                                     const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) 
+        const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) 
 		: Base(gfsu_,gfsv_), la(la_), lm(lm_), method(&method_), r0(gfsv,0.0), r0CachedSize(gfsv.size())
-	  {}
-
+      {}
+      
       //! construct using default time stepper
-	  InstationaryGridOperatorSpace (const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) 
-		: Base(gfsu_,gfsv_), la(la_), lm(lm_), method(&defaultmethod), r0(gfsv,0.0), r0CachedSize(gfsv.size())
-	  {}
-
+      InstationaryGridOperatorSpace (const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) 
+        : Base(gfsu_,gfsv_), la(la_), lm(lm_), method(&defaultmethod), r0(gfsv,0.0), r0CachedSize(gfsv.size())
+      {}
+      
       //! construct, with constraints
       InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_, 
                                      const GFSU& gfsu_, const CU& cu,
@@ -346,7 +346,7 @@ namespace Dune {
         if (r0CachedSize != gfsv.size())
         {
           // reset r0 because size of gfsv has changed
-	  r0 = R(gfsv,0.0);
+          r0 = R(gfsv,0.0);
           r0CachedSize = gfsv.size();
         }
 
