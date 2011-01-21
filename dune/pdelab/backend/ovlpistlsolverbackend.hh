@@ -408,7 +408,7 @@ namespace Dune {
         \param[in] gfs a grid function space
         \param[in] c a constraints object
         \param[in] maxiter maximum number of iterations to do
-        \param[in] kssor number of SSOR steps to apply as inner iteration
+        \param[in] steps number of SSOR steps to apply as inner iteration
         \param[in] verbose print messages if true
       */
       explicit ISTLBackend_OVLP_Base (const GFS& gfs_, const C& c_, unsigned maxiter_=5000,
