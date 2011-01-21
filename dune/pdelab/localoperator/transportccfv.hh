@@ -516,7 +516,6 @@ namespace Dune {
 
         // dimensions
         const int dim = EG::Geometry::dimension;
-        const int dimw = EG::Geometry::dimensionworld;
 
         // cell center
         const Dune::FieldVector<DF,dim>& 
@@ -547,7 +546,6 @@ namespace Dune {
 
         // dimensions
         const int dim = EG::Geometry::dimension;
-        const int dimw = EG::Geometry::dimensionworld;
 
         // cell center
         const Dune::FieldVector<DF,dim>& 
