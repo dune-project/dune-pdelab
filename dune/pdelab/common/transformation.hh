@@ -20,8 +20,8 @@ namespace Dune {
       // this struct represents the transformation of a single tree node
       // and has to be specialized for all combinations of source type
       // and transformation
-      template<typename SourceNode, typename Transformation>
-      struct TransformNode;
+      template<typename SourceNode, typename Transformation, typename Tag>
+      void transformNode(const SourceNode& s, const Transformation& t, Tag tag);
 
 
       // external interface to the algorithm
@@ -52,35 +52,42 @@ namespace Dune {
 
       };
 
+      template<typename S, typename T, typename Tag>
+      struct TransformNode
+      {
+        typedef decltype(transformNode(*static_cast<S*>(0),*static_cast<T*>(0),Tag())) type;
+      };
 
       // handle a leaf node - this is easy
       template<typename S, typename T>
       struct TransformTree<S,T,LeafNodeTag>
       {
         // get transformed type from specification
-        typedef typename TransformNode<S,T>::transformed_type transformed_type;
-        typedef typename TransformNode<S,T>::transformed_storage_type transformed_storage_type;
+        typedef typename TransformNode<S,T,typename S::ImplementationTag>::type Transformation;
+
+        typedef typename Transformation::transformed_type transformed_type;
+        typedef typename Transformation::transformed_storage_type transformed_storage_type;
 
         // delegate instance transformation to per-node specification
         static transformed_type transform(const S& s, T& t)
         {
-          return TransformNode<S,T>::transform(s,t);
+          return transformNode(s,t,typename S::ImplementationTag()).transform(s,t);
         }
 
         // delegate instance transformation to per-node specification
         static transformed_type transform(const S& s, const T& t)
         {
-          return TransformNode<S,T>::transform(s,t);
+          return transformNode(s,t,typename S::ImplementationTag()).transform(s,t);
         }
 
         static transformed_storage_type transform_storage(shared_ptr<const S> sp, T& t)
         {
-          return TransformNode<S,T>::transform_storage(sp,t);
+          return transformNode(*sp,t,typename S::ImplementationTag()).transform_storage(sp,t);
         }
 
         static transformed_storage_type transform_storage(shared_ptr<const S> sp, const T& t)
         {
-          return TransformNode<S,T>::transform_storage(sp,t);
+          return transformNode(*sp,t,typename S::ImplementationTag()).transform_storage(sp,t);
         }
 
       };
@@ -97,15 +104,17 @@ namespace Dune {
         // type. So we need to transform the child type and pass the transformed child type to an inner
         // template of the node transformation struct called result (see example of such a specification
         // further down).
-        typedef typename TransformNode<S,T>::template result<typename TransformTree<typename S::ChildType,
-                                                                                    T,
-                                                                                    typename S::ChildType::NodeTag>::transformed_type
-                                                             >::transformed_type transformed_type;
+        typedef typename TransformNode<S,T,typename S::ImplementationTag>::type Transformation;
 
-        typedef typename TransformNode<S,T>::template result<typename TransformTree<typename S::ChildType,
-                                                                                    T,
-                                                                                    typename S::ChildType::NodeTag>::transformed_type
-                                                             >::transformed_storage_type transformed_storage_type;
+        typedef typename Transformation::template result<typename TransformTree<typename S::ChildType,
+                                                                                T,
+                                                                                typename S::ChildType::NodeTag>::transformed_type
+                                                         >::transformed_type transformed_type;
+
+        typedef typename Transformation::template result<typename TransformTree<typename S::ChildType,
+                                                                                T,
+                                                                                typename S::ChildType::NodeTag>::transformed_type
+                                                         >::transformed_storage_type transformed_storage_type;
 
         // Transform an instance of S. For simplicity, this is done by first creating an instance of the
         // new type by calling the factory function node_transform<S,T>::transform<TransformedChild>(s)
@@ -121,7 +130,7 @@ namespace Dune {
             children[k] = TransformTree<typename S::ChildType,T,typename S::ChildType::NodeTag>::transform_storage(s.childStorage(k),t);
           }
           // transform node
-          return TransformNode<S,T>::transform(s,t,children);
+          return transformNode(s,t,typename S::ImplementationTag()).transform(s,t,children);
         }
 
         static transformed_type transform(const S& s, const T& t)
@@ -133,7 +142,7 @@ namespace Dune {
             children[k] = TransformTree<typename S::ChildType,T,typename S::ChildType::NodeTag>::transform_storage(s.childStorage(k),t);
           }
           // transform node
-          return TransformNode<S,T>::transform(s,t,children);
+          return transformNode(s,t,typename S::ImplementationTag()).transform(s,t,children);
         }
 
         static transformed_storage_type transform_storage(shared_ptr<const S> sp, T& t)
@@ -144,7 +153,7 @@ namespace Dune {
           for (std::size_t k = 0; k < transformed_type::CHILDREN; ++k) {
             children[k] = TransformTree<typename S::ChildType,T,typename S::ChildType::NodeTag>::transform_storage(sp->childStorage(k),t);
           }
-          return TransformNode<S,T>::transform_storage(sp,t,children);
+          return transformNode(*sp,t,typename S::ImplementationTag()).transform_storage(sp,t,children);
         }
 
         static transformed_storage_type transform_storage(shared_ptr<const S> sp, const T& t)
@@ -155,7 +164,7 @@ namespace Dune {
           for (std::size_t k = 0; k < transformed_type::CHILDREN; ++k) {
             children[k] = TransformTree<typename S::ChildType,T,typename S::ChildType::NodeTag>::transform_storage(sp->childStorage(k),t);
           }
-          return TransformNode<S,T>::transform_storage(sp,t,children);
+          return transformNode(*sp,t,typename S::ImplementationTag()).transform_storage(sp,t,children);
         }
 
       };
@@ -178,8 +187,9 @@ namespace Dune {
       template<typename S, typename T, typename C0, typename C1, typename C2, typename C3, typename C4, typename C5, typename C6, typename C7, typename C8, typename C9>
       struct transform_composite_node<S,tuple<C0,C1,C2,C3,C4,C5,C6,C7,C8,C9>,T>
       {
+
         // transformed type, using the same nested struct trick as the PowerNode
-        typedef typename TransformNode<S,T>::template result<
+        typedef typename TransformNode<S,T,typename S::ImplementationTag>::type::template result<
           typename TransformTree<C0,T,typename C0::NodeTag>::transformed_type,
           typename TransformTree<C1,T,typename C1::NodeTag>::transformed_type,
           typename TransformTree<C2,T,typename C2::NodeTag>::transformed_type,
@@ -194,69 +204,70 @@ namespace Dune {
 
         typedef typename NodeTransformation::transformed_type transformed_type;
         typedef typename NodeTransformation::transformed_storage_type transformed_storage_type;
+        typedef typename S::ImplementationTag Tag;
 
         static transformed_type transform(const S& s, T& t)
         {
-          return TransformNode<S,T>::transform(s,
-                                               t,
-                                               TransformTree<C0,T,typename C0::NodeTag>::transform_storage(s.template childStorage<0>(),t),
-                                               TransformTree<C1,T,typename C1::NodeTag>::transform_storage(s.template childStorage<1>(),t),
-                                               TransformTree<C2,T,typename C2::NodeTag>::transform_storage(s.template childStorage<2>(),t),
-                                               TransformTree<C3,T,typename C3::NodeTag>::transform_storage(s.template childStorage<3>(),t),
-                                               TransformTree<C4,T,typename C4::NodeTag>::transform_storage(s.template childStorage<4>(),t),
-                                               TransformTree<C5,T,typename C5::NodeTag>::transform_storage(s.template childStorage<5>(),t),
-                                               TransformTree<C6,T,typename C6::NodeTag>::transform_storage(s.template childStorage<6>(),t),
-                                               TransformTree<C7,T,typename C7::NodeTag>::transform_storage(s.template childStorage<7>(),t),
-                                               TransformTree<C8,T,typename C8::NodeTag>::transform_storage(s.template childStorage<8>(),t),
-                                               TransformTree<C9,T,typename C9::NodeTag>::transform_storage(s.template childStorage<9>(),t));
+          return transformNode(s,t,Tag()).transform(s,
+                                                    t,
+                                                    TransformTree<C0,T,typename C0::NodeTag>::transform_storage(s.template childStorage<0>(),t),
+                                                    TransformTree<C1,T,typename C1::NodeTag>::transform_storage(s.template childStorage<1>(),t),
+                                                    TransformTree<C2,T,typename C2::NodeTag>::transform_storage(s.template childStorage<2>(),t),
+                                                    TransformTree<C3,T,typename C3::NodeTag>::transform_storage(s.template childStorage<3>(),t),
+                                                    TransformTree<C4,T,typename C4::NodeTag>::transform_storage(s.template childStorage<4>(),t),
+                                                    TransformTree<C5,T,typename C5::NodeTag>::transform_storage(s.template childStorage<5>(),t),
+                                                    TransformTree<C6,T,typename C6::NodeTag>::transform_storage(s.template childStorage<6>(),t),
+                                                    TransformTree<C7,T,typename C7::NodeTag>::transform_storage(s.template childStorage<7>(),t),
+                                                    TransformTree<C8,T,typename C8::NodeTag>::transform_storage(s.template childStorage<8>(),t),
+                                                    TransformTree<C9,T,typename C9::NodeTag>::transform_storage(s.template childStorage<9>(),t));
         }
 
         static transformed_type transform(const S& s, const T& t)
         {
-          return TransformNode<S,T>::transform(s,
-                                               t,
-                                               TransformTree<C0,T,typename C0::NodeTag>::transform_storage(s.template childStorage<0>(),t),
-                                               TransformTree<C1,T,typename C1::NodeTag>::transform_storage(s.template childStorage<1>(),t),
-                                               TransformTree<C2,T,typename C2::NodeTag>::transform_storage(s.template childStorage<2>(),t),
-                                               TransformTree<C3,T,typename C3::NodeTag>::transform_storage(s.template childStorage<3>(),t),
-                                               TransformTree<C4,T,typename C4::NodeTag>::transform_storage(s.template childStorage<4>(),t),
-                                               TransformTree<C5,T,typename C5::NodeTag>::transform_storage(s.template childStorage<5>(),t),
-                                               TransformTree<C6,T,typename C6::NodeTag>::transform_storage(s.template childStorage<6>(),t),
-                                               TransformTree<C7,T,typename C7::NodeTag>::transform_storage(s.template childStorage<7>(),t),
-                                               TransformTree<C8,T,typename C8::NodeTag>::transform_storage(s.template childStorage<8>(),t),
-                                               TransformTree<C9,T,typename C9::NodeTag>::transform_storage(s.template childStorage<9>(),t));
+          return transformNode(s,t,Tag()).transform(s,
+                                                    t,
+                                                    TransformTree<C0,T,typename C0::NodeTag>::transform_storage(s.template childStorage<0>(),t),
+                                                    TransformTree<C1,T,typename C1::NodeTag>::transform_storage(s.template childStorage<1>(),t),
+                                                    TransformTree<C2,T,typename C2::NodeTag>::transform_storage(s.template childStorage<2>(),t),
+                                                    TransformTree<C3,T,typename C3::NodeTag>::transform_storage(s.template childStorage<3>(),t),
+                                                    TransformTree<C4,T,typename C4::NodeTag>::transform_storage(s.template childStorage<4>(),t),
+                                                    TransformTree<C5,T,typename C5::NodeTag>::transform_storage(s.template childStorage<5>(),t),
+                                                    TransformTree<C6,T,typename C6::NodeTag>::transform_storage(s.template childStorage<6>(),t),
+                                                    TransformTree<C7,T,typename C7::NodeTag>::transform_storage(s.template childStorage<7>(),t),
+                                                    TransformTree<C8,T,typename C8::NodeTag>::transform_storage(s.template childStorage<8>(),t),
+                                                    TransformTree<C9,T,typename C9::NodeTag>::transform_storage(s.template childStorage<9>(),t));
         }
 
         static transformed_storage_type transform_storage(shared_ptr<const S> sp, T& t)
         {
-          return TransformTree<S,T>::transform_storage(sp,
-                                                       t,
-                                                       TransformTree<C0,T,typename C0::NodeTag>::transform_storage(sp->template childStorage<0>(),t),
-                                                       TransformTree<C1,T,typename C1::NodeTag>::transform_storage(sp->template childStorage<1>(),t),
-                                                       TransformTree<C2,T,typename C2::NodeTag>::transform_storage(sp->template childStorage<2>(),t),
-                                                       TransformTree<C3,T,typename C3::NodeTag>::transform_storage(sp->template childStorage<3>(),t),
-                                                       TransformTree<C4,T,typename C4::NodeTag>::transform_storage(sp->template childStorage<4>(),t),
-                                                       TransformTree<C5,T,typename C5::NodeTag>::transform_storage(sp->template childStorage<5>(),t),
-                                                       TransformTree<C6,T,typename C6::NodeTag>::transform_storage(sp->template childStorage<6>(),t),
-                                                       TransformTree<C7,T,typename C7::NodeTag>::transform_storage(sp->template childStorage<7>(),t),
-                                                       TransformTree<C8,T,typename C8::NodeTag>::transform_storage(sp->template childStorage<8>(),t),
-                                                       TransformTree<C9,T,typename C9::NodeTag>::transform_storage(sp->template childStorage<9>(),t));
+          return transformNode(*sp,t,Tag()).transform_storage(sp,
+                                                              t,
+                                                              TransformTree<C0,T,typename C0::NodeTag>::transform_storage(sp->template childStorage<0>(),t),
+                                                              TransformTree<C1,T,typename C1::NodeTag>::transform_storage(sp->template childStorage<1>(),t),
+                                                              TransformTree<C2,T,typename C2::NodeTag>::transform_storage(sp->template childStorage<2>(),t),
+                                                              TransformTree<C3,T,typename C3::NodeTag>::transform_storage(sp->template childStorage<3>(),t),
+                                                              TransformTree<C4,T,typename C4::NodeTag>::transform_storage(sp->template childStorage<4>(),t),
+                                                              TransformTree<C5,T,typename C5::NodeTag>::transform_storage(sp->template childStorage<5>(),t),
+                                                              TransformTree<C6,T,typename C6::NodeTag>::transform_storage(sp->template childStorage<6>(),t),
+                                                              TransformTree<C7,T,typename C7::NodeTag>::transform_storage(sp->template childStorage<7>(),t),
+                                                              TransformTree<C8,T,typename C8::NodeTag>::transform_storage(sp->template childStorage<8>(),t),
+                                                              TransformTree<C9,T,typename C9::NodeTag>::transform_storage(sp->template childStorage<9>(),t));
         }
 
         static transformed_storage_type transform_storage(shared_ptr<const S> sp, const T& t)
         {
-          return TransformTree<S,T>::transform_storage(sp,
-                                                       t,
-                                                       TransformTree<C0,T,typename C0::NodeTag>::transform_storage(sp->template childStorage<0>(),t),
-                                                       TransformTree<C1,T,typename C1::NodeTag>::transform_storage(sp->template childStorage<1>(),t),
-                                                       TransformTree<C2,T,typename C2::NodeTag>::transform_storage(sp->template childStorage<2>(),t),
-                                                       TransformTree<C3,T,typename C3::NodeTag>::transform_storage(sp->template childStorage<3>(),t),
-                                                       TransformTree<C4,T,typename C4::NodeTag>::transform_storage(sp->template childStorage<4>(),t),
-                                                       TransformTree<C5,T,typename C5::NodeTag>::transform_storage(sp->template childStorage<5>(),t),
-                                                       TransformTree<C6,T,typename C6::NodeTag>::transform_storage(sp->template childStorage<6>(),t),
-                                                       TransformTree<C7,T,typename C7::NodeTag>::transform_storage(sp->template childStorage<7>(),t),
-                                                       TransformTree<C8,T,typename C8::NodeTag>::transform_storage(sp->template childStorage<8>(),t),
-                                                       TransformTree<C9,T,typename C9::NodeTag>::transform_storage(sp->template childStorage<9>(),t));
+          return transformNode(*sp,t,Tag()).transform_storage(sp,
+                                                              t,
+                                                              TransformTree<C0,T,typename C0::NodeTag>::transform_storage(sp->template childStorage<0>(),t),
+                                                              TransformTree<C1,T,typename C1::NodeTag>::transform_storage(sp->template childStorage<1>(),t),
+                                                              TransformTree<C2,T,typename C2::NodeTag>::transform_storage(sp->template childStorage<2>(),t),
+                                                              TransformTree<C3,T,typename C3::NodeTag>::transform_storage(sp->template childStorage<3>(),t),
+                                                              TransformTree<C4,T,typename C4::NodeTag>::transform_storage(sp->template childStorage<4>(),t),
+                                                              TransformTree<C5,T,typename C5::NodeTag>::transform_storage(sp->template childStorage<5>(),t),
+                                                              TransformTree<C6,T,typename C6::NodeTag>::transform_storage(sp->template childStorage<6>(),t),
+                                                              TransformTree<C7,T,typename C7::NodeTag>::transform_storage(sp->template childStorage<7>(),t),
+                                                              TransformTree<C8,T,typename C8::NodeTag>::transform_storage(sp->template childStorage<8>(),t),
+                                                              TransformTree<C9,T,typename C9::NodeTag>::transform_storage(sp->template childStorage<9>(),t));
         }
       };
 
@@ -310,23 +321,25 @@ namespace Dune {
       struct transform_variadic_composite_node<S,tuple<C...>,T>
       {
         // transformed type, using the same nested struct trick as the PowerNode
-        typedef typename TransformNode<S,T>::template result<typename TransformTree<C,
-                                                                                    T,
-                                                                                    typename C::NodeTag
-                                                                                    >::transformed_type...
-                                                             >::transformed_type transformed_type;
+        typedef typename S::ImplementationTag Tag;
+        typedef typename TransformNode<S,T,Tag>::type Transformation;
+        typedef typename Transformation::template result<typename TransformTree<C,
+                                                                                T,
+                                                                                typename C::NodeTag
+                                                                                >::transformed_type...
+                                                         >::transformed_type transformed_type;
 
-        typedef typename TransformNode<S,T>::template result<typename TransformTree<C,
-                                                                                    T,
-                                                                                    typename C::NodeTag
-                                                                                    >::transformed_type...
-                                                             >::transformed_storage_type transformed_storage_type;
+        typedef typename Transformation::template result<typename TransformTree<C,
+                                                                                T,
+                                                                                typename C::NodeTag
+                                                                                >::transformed_type...
+                                                         >::transformed_storage_type transformed_storage_type;
 
         template<typename... C2>
         static typename enable_if<(sizeof...(C) == sizeof...(C2)), transformed_type>::type
         transform(const S& s, T& t, C2... children)
         {
-          return TransformNode<S,T>::transform(s,t,TransformTree<C,T,typename C::NodeTag>::transform_storage(children,t)...);
+          return transformNode(s,t,Tag()).transform(s,t,TransformTree<C,T,typename C::NodeTag>::transform_storage(children,t)...);
         }
 
         template<typename... C2>
@@ -340,7 +353,7 @@ namespace Dune {
         static typename enable_if<(sizeof...(C) == sizeof...(C2)), transformed_type>::type
         transform(const S& s, const T& t, C2... children)
         {
-          return TransformNode<S,T>::transform(s,t,TransformTree<C,T,typename C::NodeTag>::transform_storage(children,t)...);
+          return transformNode(s,t,Tag()).transform(s,t,TransformTree<C,T,typename C::NodeTag>::transform_storage(children,t)...);
         }
 
         template<typename... C2>
@@ -354,7 +367,7 @@ namespace Dune {
         static typename enable_if<(sizeof...(C) == sizeof...(C2)), transformed_storage_type>::type
         transform_storage(shared_ptr<const S> sp, T& t, C2... children)
         {
-          return TransformNode<S,T>::transform_storage(sp,TransformTree<C,T,typename C::NodeTag>::transform_storage(children,t)...);
+          return transformNode(*sp,t,Tag()).transform_storage(sp,TransformTree<C,T,typename C::NodeTag>::transform_storage(children,t)...);
         }
 
         template<typename... C2>
@@ -368,7 +381,7 @@ namespace Dune {
         static typename enable_if<(sizeof...(C) == sizeof...(C2)), transformed_storage_type>::type
         transform_storage(shared_ptr<const S> sp, const T& t, C2... children)
         {
-          return TransformNode<S,T>::transform_storage(sp,TransformTree<C,T,typename C::NodeTag>::transform_storage(children,t)...);
+          return transformNode(*sp,t,Tag()).transform_storage(sp,TransformTree<C,T,typename C::NodeTag>::transform_storage(children,t)...);
         }
 
         template<typename... C2>
