@@ -91,38 +91,38 @@ namespace Dune {
 
 #if HAVE_RVALUE_REFERENCES
 
-        template<typename Visitor, typename TreePath>
+        template<typename Visitor>
         static void apply(Node&& node, Visitor&& visitor)
         {
           ApplyToTree<Node,typename Node::NodeTag>::apply(std::forward<Node>(node),
                                                           std::forward<Visitor>(visitor),
-                                                          treePath);
+                                                          TreePath<>());
         }
 
 #else
 
-        template<typename Visitor, typename TreePath>
+        template<typename Visitor>
         static void apply(Node& node, Visitor& visitor)
         {
-          ApplyToTree<Node,typename Node::NodeTag>::apply(node,visitor,treePath);
+          ApplyToTree<Node,typename Node::NodeTag>::apply(node,visitor,TreePath<>());
         }
 
-        template<typename Visitor, typename TreePath>
+        template<typename Visitor>
         static void apply(const Node& node, Visitor& visitor)
         {
-          ApplyToTree<Node,typename Node::NodeTag>::apply(node,visitor,treePath);
+          ApplyToTree<Node,typename Node::NodeTag>::apply(node,visitor,TreePath<>());
         }
 
-        template<typename Visitor, typename TreePath>
+        template<typename Visitor>
         static void apply(Node& node, const Visitor& visitor)
         {
-          ApplyToTree<Node,typename Node::NodeTag>::apply(node,visitor,treePath);
+          ApplyToTree<Node,typename Node::NodeTag>::apply(node,visitor,TreePath<>());
         }
 
-        template<typename Visitor, typename TreePath>
+        template<typename Visitor>
         static void apply(const Node& node, const Visitor& visitor)
         {
-          ApplyToTree<Node,typename Node::NodeTag>::apply(node,visitor,treePath);
+          ApplyToTree<Node,typename Node::NodeTag>::apply(node,visitor,TreePath<>());
         }
 
 #endif // HAVE_RVALUE_REFERENCES
