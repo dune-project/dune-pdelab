@@ -4,8 +4,12 @@
 #ifndef DUNE_PDELAB_COMMON_TYPETREE_VARIADICCOMPOSITENODE_HH
 #define DUNE_PDELAB_COMMON_TYPETREE_VARIADICCOMPOSITENODE_HH
 
+#if !HAVE_VARIADIC_TEMPLATES
+#error The class VariadicCompositeNode requires compiler support for variadic templates, which your compiler lacks.
+#endif
+
 #include <dune/pdelab/common/nodetags.hh>
-#include <dune/common/tuple.hh>
+#include <dune/common/tuples.hh>
 #include <dune/common/deprecated.hh>
 
 namespace Dune {
@@ -23,6 +27,9 @@ namespace Dune {
       {
 
       public:
+
+        //! The type tag that describes a VariadicCompositeNode.
+        typedef VariadicCompositeNodeTag NodeTag;
 
         //! The type used for storing the children.
         typedef tuple<shared_ptr<Children>... > NodeStorage;
@@ -84,7 +91,7 @@ namespace Dune {
          * \returns a reference to the i-th child.
          */
         template<std::size_t k>
-        typename Child<k>::Type& getChild() DUNE_DEPRECATED
+        typename Child<k>::Type& DUNE_DEPRECATED getChild()
         {
           return child<k>();
         }
@@ -94,7 +101,7 @@ namespace Dune {
          * \returns a const reference to the i-th child.
          */
         template<std::size_t k>
-        const typename Child<k>::Type& getChild() const DUNE_DEPRECATED
+        const typename Child<k>::Type& DUNE_DEPRECATED getChild() const
         {
           return child<k>();
         }
@@ -129,7 +136,7 @@ namespace Dune {
           get<k>(_children) = stackobject_to_shared_ptr(child);
         }
 
-        //! Sets the storage of the  i-th child to the passed-in value.
+        //! Sets the storage of the i-th child to the passed-in value.
         template<std::size_t k>
         void setChild(typename Child<k>::storage_type child)
         {
@@ -151,21 +158,31 @@ namespace Dune {
          * will not be usable before its children are set using any of the
          * setChild(...) methods!
          */
-        CompositeNode()
+        VariadicCompositeNode()
         {}
 
+#if HAVE_RVALUE_REFERENCES && HAVE_VARIADIC_CONSTRUCTOR_SFINAE
         //! Initialize all children with the passed-in objects.
-        CompositeNode(Children&&... children)
-          : _children(wrap_stack_object(std::forward<Children>(children))...)
+        template<typename... Args, typename = typename enable_if<(sizeof...(Args) == CHILDREN)>::type>
+        VariadicCompositeNode(Args&&... args)
+          : _children(convert_arg(std::forward<Args>(args))...)
         {}
+
+#else
+
+        VariadicCompositeNode(Children&... children)
+          : _children(convert_arg(children)...)
+        {}
+
+#endif
 
         //! Initialize the VariadicCompositeNode with copies of the passed in Storage objects.
-        CompositeNode(shared_ptr<Children>... children)
+        VariadicCompositeNode(shared_ptr<Children>... children)
           : _children(children...)
         {}
 
         //! Initialize the VariadicCompositeNode with a copy of the passed-in storage type.
-        CompositeNode(const NodeStorage& children)
+        VariadicCompositeNode(const NodeStorage& children)
           : _children(children)
         {}
 
