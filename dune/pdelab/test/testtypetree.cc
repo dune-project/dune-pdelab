@@ -1,8 +1,24 @@
 #include "config.h"
+
+#include "typetreetestswitch.hh"
+
+#if TEST_TYPETREE_INVALID
+
+int main()
+{
+  return 0;
+}
+
+#else
+
 #include <dune/pdelab/common/leafnode.hh>
 #include <dune/pdelab/common/powernode.hh>
-//#include <dune/pdelab/common/compositenode.hh>
+#include <dune/pdelab/common/compositenode.hh>
 #include <dune/pdelab/common/traversal.hh>
+
+#if HAVE_VARIADIC_TEMPLATES
+#include <dune/pdelab/common/variadiccompositenode.hh>
+#endif
 
 #include <iostream>
 
@@ -63,6 +79,15 @@ struct SimpleLeaf
   {
     return "SimpleLeaf";
   }
+
+  SimpleLeaf() {}
+
+  SimpleLeaf(SimpleLeaf&& rhs)
+    : Dune::PDELab::TypeTree::LeafNode(std::move(rhs))
+    , Counter(std::move(rhs))
+  {
+    std::cout << "move ctor" << std::endl;
+  }
 };
 
 template<typename T, typename U>
@@ -85,9 +110,9 @@ struct SimplePower
 
   SimplePower() {}
 
-private:
-  //SimplePower(const SimplePower&);
-public:
+  SimplePower(T& c, bool copy)
+    : BaseT(c,copy)
+  {}
 
 #if HAVE_VARIADIC_TEMPLATES && HAVE_RVALUE_REFERENCES
 
@@ -107,6 +132,62 @@ public:
   {}
 
 #endif
+
+};
+
+#if HAVE_VARIADIC_TEMPLATES && HAVE_RVALUE_REFERENCES
+
+template<typename... Children>
+struct SimpleVariadicComposite
+  : public Dune::PDELab::TypeTree::VariadicCompositeNode<Children...>
+  , public Counter
+{
+
+  static const char* name()
+  {
+    return "SimpleVariadicComposite";
+  }
+
+  typedef Dune::PDELab::TypeTree::VariadicCompositeNode<Children...> BaseT;
+
+#if HAVE_VARIADIC_CONSTRUCTOR_SFINAE
+
+  template<typename... Args, typename = typename std::enable_if<(sizeof...(Args) == BaseT::CHILDREN)>::type>
+  SimpleVariadicComposite(Args&&... args)
+    : BaseT(std::forward<Args>(args)...)
+  {}
+
+#else
+
+  SimpleVariadicComposite(Children&... children)
+    : BaseT(children...)
+  {}
+
+#endif
+
+};
+
+#endif
+
+template<typename C1, typename C2 = Dune::PDELab::TypeTree::EmptyNode, typename C3 = Dune::PDELab::TypeTree::EmptyNode, typename C4 = Dune::PDELab::TypeTree::EmptyNode>
+struct SimpleComposite
+  : public Dune::PDELab::TypeTree::CompositeNode<C1,C2,C3,C4>
+  , public Counter
+{
+
+  static const char* name()
+  {
+    return "SimpleComposite";
+  }
+
+  typedef Dune::PDELab::TypeTree::CompositeNode<C1,C2,C3,C4> BaseT;
+
+  SimpleComposite(C1& c1,
+                  typename Dune::PDELab::TypeTree::OptionalChild<C2>::type c2 = typename Dune::PDELab::TypeTree::OptionalChild<C2>::type(),
+                  typename Dune::PDELab::TypeTree::OptionalChild<C3>::type c3 = typename Dune::PDELab::TypeTree::OptionalChild<C3>::type(),
+                  typename Dune::PDELab::TypeTree::OptionalChild<C4>::type c4 = typename Dune::PDELab::TypeTree::OptionalChild<C4>::type())
+    : BaseT(c1,c2,c3,c4)
+  {}
 
 };
 
@@ -131,23 +212,53 @@ struct TreePrinter
 
 int main(int argc, char** argv)
 {
+
+  // basic tests
+
+  // leaf node
   TreePrinter treePrinter;
   SimpleLeaf sl1;
+
+  Dune::PDELab::TypeTree::applyToTree(sl1,treePrinter);
+
   typedef SimplePower<SimpleLeaf,3> SP1;
-  SimplePower<SimpleLeaf,3> sp1;
-  sp1.setChild(0,sl1);
-  sp1.setChild(1,sl1);
-  sp1.setChild(2,sl1);
-  Dune::PDELab::TypeTree::applyToTree(sp1,TreePrinter());
+  SP1 sp1_1;
+  sp1_1.setChild(0,sl1);
+  sp1_1.setChild(1,sl1);
+  sp1_1.setChild(2,sl1);
+
+  SimpleLeaf sl2;
+  SP1 sp1_2(sl2,false);
+
+  Dune::PDELab::TypeTree::applyToTree(sp1_1,TreePrinter());
+
+  typedef SimpleComposite<SimpleLeaf,SP1,SimpleLeaf> SC1;
+  SC1 sc1_1(sl1,sp1_2,sl2);
+  Dune::PDELab::TypeTree::applyToTree(const_cast<const SC1&>(sc1_1),treePrinter);
+
+#if HAVE_VARIADIC_TEMPLATES
+
 #if HAVE_RVALUE_REFERENCES
-  SimplePower<SimplePower<SimpleLeaf,3>,2> sp2(sp1,const_cast<const SP1&>(sp1));
-  SimplePower<SimplePower<SimpleLeaf,3>,2> sp3(SP1(SimpleLeaf(),SimpleLeaf(),sl1),SP1(sl1,sl1,SimpleLeaf()));
-  Dune::PDELab::TypeTree::applyToTree(sp3,treePrinter);
-#else
-  SimplePower<SimplePower<SimpleLeaf,3>,2> sp2(sp1,sp1);
-  Dune::PDELab::TypeTree::applyToTree(sp2,treePrinter);
+
+  typedef SimpleVariadicComposite<SimpleLeaf,SP1,SimpleLeaf,SC1> SVC1;
+  SVC1 svc1_1(sl1,sp1_1,sl2,sc1_1);
+  Dune::PDELab::TypeTree::applyToTree(svc1_1,treePrinter);
+
+  SP1 sp1_3(SimpleLeaf(),SimpleLeaf(),sl1);
+  Dune::PDELab::TypeTree::applyToTree(sp1_3,TreePrinter());
+
+#if HAVE_VARIADIC_CONSTRUCTOR_SFINAE
+
+  SVC1 svc1_2(SimpleLeaf(),SP1(sp1_2),sl2,const_cast<const SC1&>(sc1_1));
+  Dune::PDELab::TypeTree::applyToTree(svc1_2,TreePrinter());
+
 #endif
-  Dune::PDELab::TypeTree::applyToTree(const_cast<const SimplePower<SimplePower<SimpleLeaf,3>,2>&>(sp2),TreePrinter());
-  Dune::PDELab::TypeTree::applyToTree(const_cast<const SP1&>(sp1),treePrinter);
+
+#endif
+
+#endif
+
   return 0;
 }
+
+#endif

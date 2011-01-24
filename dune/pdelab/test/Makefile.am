@@ -286,12 +286,17 @@ MOSTLYCLEANFILES +=				\
 	s*:vectorwavecached_*.pvtu		\
 	vectorwavecached_*.pvd
 
-check_PROGRAMS += testtypetree
+check_PROGRAMS += testtypetree testtypetree-no-sfinae testtypetree-no-variadic testtypetree-no-rvalue-refs testtypetree-legacy
 testtypetree_SOURCES = testtypetree.cc
-testtypetree_CPPFLAGS = $(AM_CPPFLAGS) -DHAVE_VARIADIC_TEMPLATES=1 -DHAVE_RVALUE_REFERENCES=1
-
-check_PROGRAMS += testtypetreelegacy
-testtypetreelegacy_SOURCES = testtypetree.cc
+testtypetree_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE
+testtypetree_no_sfinae_SOURCES = testtypetree.cc
+testtypetree_no_sfinae_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE_NO_SFINAE
+testtypetree_no_variadic_SOURCES = testtypetree.cc
+testtypetree_no_variadic_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE_NO_VARIADIC
+testtypetree_no_rvalue_refs_SOURCES = testtypetree.cc
+testtypetree_no_rvalue_refs_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE_NO_RVALUE_REFERENCES
+testtypetree_legacy_SOURCES = testtypetree.cc
+testtypetree_legacy_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE_LEGACY
 
 include $(top_srcdir)/am/global-rules
 
