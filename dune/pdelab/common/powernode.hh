@@ -142,7 +142,7 @@ namespace Dune {
          * \returns a reference to the i-th child.
          */
         template<int i>
-        T& getChild () DUNE_DEPRECATED
+        T& DUNE_DEPRECATED getChild ()
         {
           return *_children[i];
         }
@@ -152,7 +152,7 @@ namespace Dune {
          * \returns a const reference to the i-th child.
          */
         template<int i>
-        const T& getChild () const DUNE_DEPRECATED
+        const T& DUNE_DEPRECATED getChild () const
         {
           return *_children[i];
         }
