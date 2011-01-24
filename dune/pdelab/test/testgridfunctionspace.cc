@@ -25,8 +25,10 @@ struct test<2> {
   static void testleafgridfunction(const GV& gv)
   {
     // instantiate finite element maps
+    Dune::GeometryType gt;
+    gt.makeCube(2);
     typedef Dune::PDELab::P0LocalFiniteElementMap<float,double,GV::dimension> P0FEM;
-    P0FEM p0fem(Dune::GeometryType::cube);
+    P0FEM p0fem(gt);
     typedef Dune::PDELab::Q12DLocalFiniteElementMap<float,double> Q12DFEM;
     Q12DFEM q12dfem;
     typedef Dune::PDELab::Q22DLocalFiniteElementMap<float,double> Q22DFEM;
@@ -110,8 +112,10 @@ struct test<3> {
   static void testleafgridfunction(const GV& gv)
   {
     // instantiate finite element maps
+    Dune::GeometryType gt;
+    gt.makeCube(3);
     typedef Dune::PDELab::P0LocalFiniteElementMap<float,double,GV::dimension> P0FEM;
-    P0FEM p0fem(Dune::GeometryType::cube);
+    P0FEM p0fem(gt);
     typedef Dune::PDELab::P1LocalFiniteElementMap<float,double,3> P1FEM;
     P1FEM p1fem;
     typedef Dune::PDELab::Q1LocalFiniteElementMap<float,double,3> Q1FEM;

@@ -95,8 +95,10 @@ void test (const GV& gv)
   const int dim = GV::dimension;
 
   // instantiate finite element maps
+  Dune::GeometryType gt;
+  gt.makeCube(dim);
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,RF,dim> FEM;
-  FEM fem(Dune::GeometryType::cube); // works only for cubes
+  FEM fem(gt); // works only for cubes
   
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,

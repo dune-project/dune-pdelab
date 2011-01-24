@@ -76,8 +76,10 @@ void testrt0 (const GV& gv)
   const int dim = GV::dimension;
 
   // instantiate finite element maps
+  Dune::GeometryType gt;
+    gt.makeSimplex(dim);
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,double,dim> P0FEM;
-  P0FEM p0fem(Dune::GeometryType::simplex);
+  P0FEM p0fem(gt);
   //P0FEM p0fem(Dune::GeometryType::cube);
   typedef Dune::PDELab::RT02DLocalFiniteElementMap<GV,DF,double> RT0FEM;
   //typedef Dune::PDELab::RT0Q2DLocalFiniteElementMap<GV,DF,double> RT0FEM;
