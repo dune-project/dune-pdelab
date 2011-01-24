@@ -265,6 +265,21 @@ namespace Dune {
 
       };
 
+      template<typename S, template<typename...> class TransformedNode>
+      struct DefaultWrappingVariadicCompositeTransformationHelper
+      {
+        template<typename... TC>
+        struct result
+        {
+          typedef TransformedNode<S,TC...> type;
+        };
+      };
+
+      template<typename S, typename T, template<typename...> class TransformedNode>
+      struct DefaultWrappingVariadicCompositeTransformation
+        : public WrappingVariadicCompositeTransformation<S,T,DefaultWrappingVariadicCompositeTransformationHelper<S,TransformedNode>::template result>
+      {};
+
     }
   }
 }
@@ -400,6 +415,7 @@ transformNode(const SP& sp, const TestTransformation& t, SimplePowerTag tag)
 
 
 // register variadic composite node
+/*
 template<typename S>
 struct TransformSimpleVariadicComposite
 {
@@ -415,6 +431,14 @@ Dune::PDELab::TypeTree::WrappingVariadicCompositeTransformation<SVC,TestTransfor
 transformNode(const SVC& svc, const TestTransformation& t, SimpleVariadicCompositeTag tag)
 {
   return Dune::PDELab::TypeTree::WrappingVariadicCompositeTransformation<SVC,TestTransformation,TransformSimpleVariadicComposite<SVC>::template result>();
+}
+*/
+
+template<typename SVC>
+Dune::PDELab::TypeTree::DefaultWrappingVariadicCompositeTransformation<SVC,TestTransformation,TargetVariadicComposite>
+transformNode(const SVC& svc, const TestTransformation& t, SimpleVariadicCompositeTag tag)
+{
+  return Dune::PDELab::TypeTree::DefaultWrappingVariadicCompositeTransformation<SVC,TestTransformation,TargetVariadicComposite>();
 }
 
 
