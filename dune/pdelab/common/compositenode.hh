@@ -296,15 +296,15 @@ namespace Dune {
 
         //! Initializes the CompositeNode with the passed-in child objects.
         CompositeNode(C0& c0,
-                      typename OptionalChild<C1>::type c1 = typename OptionalChild<C1>::type(),
-                      typename OptionalChild<C2>::type c2 = typename OptionalChild<C2>::type(),
-                      typename OptionalChild<C3>::type c3 = typename OptionalChild<C3>::type(),
-                      typename OptionalChild<C4>::type c4 = typename OptionalChild<C4>::type(),
-                      typename OptionalChild<C5>::type c5 = typename OptionalChild<C5>::type(),
-                      typename OptionalChild<C6>::type c6 = typename OptionalChild<C6>::type(),
-                      typename OptionalChild<C7>::type c7 = typename OptionalChild<C7>::type(),
-                      typename OptionalChild<C8>::type c8 = typename OptionalChild<C8>::type(),
-                      typename OptionalChild<C9>::type c9 = typename OptionalChild<C9>::type())
+                      typename OptionalChild<C1>::type c1 = OptionalChild<C1>::default_value(),
+                      typename OptionalChild<C2>::type c2 = OptionalChild<C2>::default_value(),
+                      typename OptionalChild<C3>::type c3 = OptionalChild<C3>::default_value(),
+                      typename OptionalChild<C4>::type c4 = OptionalChild<C4>::default_value(),
+                      typename OptionalChild<C5>::type c5 = OptionalChild<C5>::default_value(),
+                      typename OptionalChild<C6>::type c6 = OptionalChild<C6>::default_value(),
+                      typename OptionalChild<C7>::type c7 = OptionalChild<C7>::default_value(),
+                      typename OptionalChild<C8>::type c8 = OptionalChild<C8>::default_value(),
+                      typename OptionalChild<C9>::type c9 = OptionalChild<C9>::default_value())
           : _children(stackobject_to_shared_ptr(c0),
                       guarded_wrap_object(c1),
                       guarded_wrap_object(c2),

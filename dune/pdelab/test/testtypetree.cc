@@ -184,9 +184,9 @@ struct SimpleComposite
   typedef Dune::PDELab::TypeTree::CompositeNode<C1,C2,C3,C4> BaseT;
 
   SimpleComposite(C1& c1,
-                  typename Dune::PDELab::TypeTree::OptionalChild<C2>::type c2 = typename Dune::PDELab::TypeTree::OptionalChild<C2>::type(),
-                  typename Dune::PDELab::TypeTree::OptionalChild<C3>::type c3 = typename Dune::PDELab::TypeTree::OptionalChild<C3>::type(),
-                  typename Dune::PDELab::TypeTree::OptionalChild<C4>::type c4 = typename Dune::PDELab::TypeTree::OptionalChild<C4>::type())
+                  typename Dune::PDELab::TypeTree::OptionalChild<C2>::type c2 = Dune::PDELab::TypeTree::OptionalChild<C2>::default_value(),
+                  typename Dune::PDELab::TypeTree::OptionalChild<C3>::type c3 = Dune::PDELab::TypeTree::OptionalChild<C3>::default_value(),
+                  typename Dune::PDELab::TypeTree::OptionalChild<C4>::type c4 = Dune::PDELab::TypeTree::OptionalChild<C4>::default_value())
     : BaseT(c1,c2,c3,c4)
   {}
 
@@ -234,7 +234,7 @@ int main(int argc, char** argv)
   Dune::PDELab::TypeTree::applyToTree(sp1_1,TreePrinter());
 
   typedef SimpleComposite<SimpleLeaf,SP1,SimpleLeaf> SC1;
-  SC1 sc1_1(sl1,sp1_2,sl2);
+  SC1 sc1_1(sl1,sp1_2);
   Dune::PDELab::TypeTree::applyToTree(const_cast<const SC1&>(sc1_1),treePrinter);
 
 #if HAVE_VARIADIC_TEMPLATES
