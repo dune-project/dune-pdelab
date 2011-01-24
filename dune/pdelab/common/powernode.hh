@@ -442,6 +442,7 @@ namespace Dune {
                    T& c4,
                    T& c5,
                    T& c6,
+                   T& c7,
                    T& c8)
         {
           _children[0] = stackobject_to_shared_ptr(c0);
@@ -463,6 +464,7 @@ namespace Dune {
                    T& c4,
                    T& c5,
                    T& c6,
+                   T& c7,
                    T& c8,
                    T& c9)
         {

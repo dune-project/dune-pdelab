@@ -132,7 +132,7 @@ namespace Dune {
 
       // LeafNode - again, this is easy: just do all three visits
       template<typename N>
-      struct ApplyToTree<N,LeafTag>
+      struct ApplyToTree<N,LeafNodeTag>
       {
 
 #if HAVE_RVALUE_REFERENCES
@@ -188,10 +188,10 @@ namespace Dune {
           template<typename V, typename TreePath>
           static void apply(N&& n, V&& v, TreePath tp)
           {
-            typedef typename N::template Child<count-inverse_k>::type C;
+            typedef typename N::template Child<count-inverse_k>::Type C;
             ApplyToTree<C,typename C::NodeTag>::apply(n.template child<count-inverse_k>(),
                                                       std::forward<V>(v),
-                                                      TreePathPushBack<TreePath,count-inverse_k>::type());
+                                                      typename TreePathPushBack<TreePath,count-inverse_k>::type());
             v.in(std::forward<N>(n),tp);
             apply_to_children<N,inverse_k-1,count>::apply(std::forward<N>(n),
                                                           std::forward<V>(v),
@@ -203,8 +203,8 @@ namespace Dune {
           template<typename V, typename TreePath>
           static void apply(N& n, V& v, TreePath tp)
           {
-            typedef typename N::template Child<count-inverse_k>::type C;
-            ApplyToTree<C,typename C::NodeTag>::apply(n.template child<count-inverse_k>(),v,TreePathPushBack<TreePath,count-inverse_k>::type());
+            typedef typename N::template Child<count-inverse_k>::Type C;
+            ApplyToTree<C,typename C::NodeTag>::apply(n.template child<count-inverse_k>(),v,typename TreePathPushBack<TreePath,count-inverse_k>::type());
             v.in(n,tp);
             apply_to_children<N,inverse_k-1,count>::apply(n,v,tp);
           }
@@ -212,8 +212,8 @@ namespace Dune {
           template<typename V, typename TreePath>
           static void apply(const N& n, V& v, TreePath tp)
           {
-            typedef typename N::template Child<count-inverse_k>::type C;
-            ApplyToTree<C,typename C::NodeTag>::apply(n.template child<count-inverse_k>(),v,TreePathPushBack<TreePath,count-inverse_k>::type());
+            typedef typename N::template Child<count-inverse_k>::Type C;
+            ApplyToTree<C,typename C::NodeTag>::apply(n.template child<count-inverse_k>(),v,typename TreePathPushBack<TreePath,count-inverse_k>::type());
             v.in(n,tp);
             apply_to_children<N,inverse_k-1,count>::apply(n,v,tp);
           }
@@ -221,8 +221,8 @@ namespace Dune {
           template<typename V, typename TreePath>
           static void apply(N& n, const V& v, TreePath tp)
           {
-            typedef typename N::template Child<count-inverse_k>::type C;
-            ApplyToTree<C,typename C::NodeTag>::apply(n.template child<count-inverse_k>(),v,TreePathPushBack<TreePath,count-inverse_k>::type());
+            typedef typename N::template Child<count-inverse_k>::Type C;
+            ApplyToTree<C,typename C::NodeTag>::apply(n.template child<count-inverse_k>(),v,typename TreePathPushBack<TreePath,count-inverse_k>::type());
             v.in(n,tp);
             apply_to_children<N,inverse_k-1,count>::apply(n,v,tp);
           }
@@ -230,8 +230,8 @@ namespace Dune {
           template<typename V, typename TreePath>
           static void apply(const N& n, const V& v, TreePath tp)
           {
-            typedef typename N::template Child<count-inverse_k>::type C;
-            ApplyToTree<C,typename C::NodeTag>::apply(n.template child<count-inverse_k>(),v,TreePathPushBack<TreePath,count-inverse_k>::type());
+            typedef typename N::template Child<count-inverse_k>::Type C;
+            ApplyToTree<C,typename C::NodeTag>::apply(n.template child<count-inverse_k>(),v,typename TreePathPushBack<TreePath,count-inverse_k>::type());
             v.in(n,tp);
             apply_to_children<N,inverse_k-1,count>::apply(n,v,tp);
           }
@@ -251,10 +251,10 @@ namespace Dune {
           template<typename V, typename TreePath>
           static void apply(N& n, V& v, TreePath tp)
           {
-            typedef typename N::template Child<count-1>::type C;
+            typedef typename N::template Child<count-1>::Type C;
             ApplyToTree<C,typename C::NodeTag>::apply(n.template child<count-1>(),
                                                       std::forward<V>(v),
-                                                      TreePathPushBack<TreePath,count-1>::type());
+                                                      typename TreePathPushBack<TreePath,count-1>::type());
           }
 
 #else
@@ -262,29 +262,29 @@ namespace Dune {
           template<typename V, typename TreePath>
           static void apply(N& n, V& v, TreePath tp)
           {
-            typedef typename N::template Child<count-1>::type C;
-            ApplyToTree<C,typename C::NodeTag>::apply(n.template child<count-1>(),v,TreePathPushBack<TreePath,count-1>::type());
+            typedef typename N::template Child<count-1>::Type C;
+            ApplyToTree<C,typename C::NodeTag>::apply(n.template child<count-1>(),v,typename TreePathPushBack<TreePath,count-1>::type());
           }
 
           template<typename V, typename TreePath>
           static void apply(const N& n, V& v, TreePath tp)
           {
-            typedef typename N::template Child<count-1>::type C;
-            ApplyToTree<C,typename C::NodeTag>::apply(n.template child<count-1>(),v,TreePathPushBack<TreePath,count-1>::type());
+            typedef typename N::template Child<count-1>::Type C;
+            ApplyToTree<C,typename C::NodeTag>::apply(n.template child<count-1>(),v,typename TreePathPushBack<TreePath,count-1>::type());
           }
 
           template<typename V, typename TreePath>
           static void apply(N& n, const V& v, TreePath tp)
           {
-            typedef typename N::template Child<count-1>::type C;
-            ApplyToTree<C,typename C::NodeTag>::apply(n.template child<count-1>(),v,TreePathPushBack<TreePath,count-1>::type());
+            typedef typename N::template Child<count-1>::Type C;
+            ApplyToTree<C,typename C::NodeTag>::apply(n.template child<count-1>(),v,typename TreePathPushBack<TreePath,count-1>::type());
           }
 
           template<typename V, typename TreePath>
           static void apply(const N& n, const V& v, TreePath tp)
           {
-            typedef typename N::template Child<count-1>::type C;
-            ApplyToTree<C,typename C::NodeTag>::apply(n.template child<count-1>(),v,TreePathPushBack<TreePath,count-1>::type());
+            typedef typename N::template Child<count-1>::Type C;
+            ApplyToTree<C,typename C::NodeTag>::apply(n.template child<count-1>(),v,typename TreePathPushBack<TreePath,count-1>::type());
           }
 
 #endif // HAVE_RVALUE_REFERENCES
@@ -383,7 +383,7 @@ namespace Dune {
         : public ApplyToGenericCompositeNode<N>
       {
 
-        using ApplyToGenereicCompositeNode<N>::apply;
+        using ApplyToGenericCompositeNode<N>::apply;
 
       };
 
@@ -394,7 +394,7 @@ namespace Dune {
         : public ApplyToGenericCompositeNode<N>
       {
 
-        using ApplyToGenereicCompositeNode<N>::apply;
+        using ApplyToGenericCompositeNode<N>::apply;
 
       };
 
@@ -405,7 +405,7 @@ namespace Dune {
         : public ApplyToGenericCompositeNode<N>
       {
 
-        using ApplyToGenereicCompositeNode<N>::apply;
+        using ApplyToGenericCompositeNode<N>::apply;
 
       };
 
