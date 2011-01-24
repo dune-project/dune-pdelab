@@ -52,6 +52,8 @@ namespace Dune {
 
       };
 
+#ifndef DOXYGEN // internal per-node implementations of the transformation algorithm
+
       template<typename S, typename T, typename Tag>
       struct TransformNode
       {
@@ -446,6 +448,7 @@ namespace Dune {
         }
       };
 
+#endif // DOXYGEN
 
     } // namespace TypeTree
   } // namespace PDELab
