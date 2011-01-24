@@ -5,6 +5,7 @@
 #define DUNE_PDELAB_COMMON_TYPETREE_TRAVERSAL_HH
 
 #include <dune/pdelab/common/nodetags.hh>
+#include <dune/pdelab/common/treepath.hh>
 
 #if HAVE_RVALUE_REFERENCES
 #include <utility>

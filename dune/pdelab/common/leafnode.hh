@@ -5,6 +5,7 @@
 #define DUNE_PDELAB_COMMON_TYPETREE_LEAFNODE_HH
 
 #include <dune/pdelab/common/nodetags.hh>
+#include <cstddef>
 
 namespace Dune {
   namespace PDELab {
