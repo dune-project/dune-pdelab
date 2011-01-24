@@ -288,6 +288,10 @@ MOSTLYCLEANFILES +=				\
 
 check_PROGRAMS += testtypetree
 testtypetree_SOURCES = testtypetree.cc
+testtypetree_CPPFLAGS = $(AM_CPPFLAGS) -DHAVE_VARIADIC_TEMPLATES=1 -DHAVE_RVALUE_REFERENCES=1
+
+check_PROGRAMS += testtypetreelegacy
+testtypetreelegacy_SOURCES = testtypetree.cc
 
 include $(top_srcdir)/am/global-rules
 
