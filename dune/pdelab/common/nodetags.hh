@@ -42,6 +42,8 @@ namespace Dune {
 
 #endif // DOXYGEN
 
+    //! \} group TypeTree
+
   } // namespace TypeTree
 
   } // namespace PDELab
