@@ -286,6 +286,9 @@ MOSTLYCLEANFILES +=				\
 	s*:vectorwavecached_*.pvtu		\
 	vectorwavecached_*.pvd
 
+check_PROGRAMS += testtypetree
+testtypetree_SOURCES = testtypetree.cc
+
 include $(top_srcdir)/am/global-rules
 
 DISTCHECK_CONFIGURE_FLAGS = --with-dune=$(DUNEROOT) CXX="$(CXX)" CC="$(CC)"
