@@ -22,6 +22,8 @@ namespace Dune {
 
 #if HAVE_VARIADIC_TEMPLATES && HAVE_RVALUE_REFERENCES
 
+#ifndef DOXYGEN
+
       namespace {
 
 
@@ -58,6 +60,8 @@ namespace Dune {
         }
 
       } // anonymous namespace
+
+#endif
 
 #endif
 
@@ -298,8 +302,8 @@ namespace Dune {
         {
           if (distinct_objects)
             {
-              for (NodeStorage::iterator it = _children.begin(); it != _children.end(); ++it)
-                *it = make_shared<T>(t):
+              for (typename NodeStorage::iterator it = _children.begin(); it != _children.end(); ++it)
+                *it = make_shared<T>(t);
             }
           else
             {
