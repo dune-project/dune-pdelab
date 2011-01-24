@@ -298,6 +298,10 @@ testtypetree_no_rvalue_refs_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE_NO_RVALUE_
 testtypetree_legacy_SOURCES = testtypetree.cc
 testtypetree_legacy_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE_LEGACY
 
+check_PROGRAMS += testtypetreetransformation
+testtypetreetransformation_SOURCES = testtypetreetransformation.cc
+testtypetreetransformation_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE
+
 include $(top_srcdir)/am/global-rules
 
 DISTCHECK_CONFIGURE_FLAGS = --with-dune=$(DUNEROOT) CXX="$(CXX)" CC="$(CC)"
