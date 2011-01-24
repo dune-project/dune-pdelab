@@ -13,6 +13,9 @@
 namespace Dune {
   namespace PDELab {
 
+  namespace TypeTree {
+
+
     //! \addtogroup TypeTree
     //! \{
 
@@ -264,6 +267,8 @@ namespace Dune {
 #endif // DOXYGEN
 
     //! \} group TypeTree
+
+  } // namespace TypeTree
 
   } // namespace PDELab
 } //namespace Dune
