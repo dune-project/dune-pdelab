@@ -38,8 +38,9 @@ struct Counter
   }
 
   Counter(Counter&& rhs)
-    : _id(_ids++)
+    : _id(rhs._id)
   {
+    rhs._id = -1;
     std::cout << "Move-Constructed id = " << id() << " from id = " << rhs.id() << std::endl;
   }
 
@@ -65,7 +66,7 @@ struct Counter
     return _id;
   }
 
-  const int _id;
+  int _id;
   static int _ids;
 };
 
