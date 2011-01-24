@@ -47,4 +47,4 @@ namespace Dune {
   } // namespace PDELab
 } //namespace Dune
 
-#endif DUNE_PDELAB_COMMON_TYPETREE_NODETAGS_HH
+#endif // DUNE_PDELAB_COMMON_TYPETREE_NODETAGS_HH

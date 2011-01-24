@@ -58,4 +58,4 @@ namespace Dune {
   } // namespace PDELab
 } //namespace Dune
 
-#endif DUNE_PDELAB_COMMON_TYPETREE_POWERNODE_HH
+#endif // DUNE_PDELAB_COMMON_TYPETREE_POWERNODE_HH
