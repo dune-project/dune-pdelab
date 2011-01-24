@@ -20,33 +20,73 @@ namespace Dune {
        *  \{
        */
 
-      // A default visitor that works on every kind of tree and does nothing.
-      // Can be used as a convenient base class if the implemented visitor only
-      // needs to act on some of the possible callback sites.
+      //! Visitor interface and base class for TypeTree visitors.
+      /**
+       * TypeTreeVisitor defines the interface for visitors that can be applied to a TypeTree
+       * using applyToTree(). Each method of the visitor is passed a node of the tree (either as
+       * a mutable or a const reference, depending on the constness of the tree applyToTree() was
+       * called with). The second argument is of type TreePath and denotes the exact position of the
+       * node within the TypeTree, encoded as child indices starting at the root node.
+       *
+       * \note This class can also be used as a convenient base class if the implemented visitor
+       * only needs to act on some of the possible callback sites, avoiding a lot of boilerplate code.
+       */
       struct TypeTreeVisitor
       {
 
-#if HAVE_RVALUE_REFERENCES
+#if HAVE_RVALUE_REFERENCES || DOXYGEN
 
-        // Method for prefix traversal
+        //! Method for prefix tree traversal.
+        /**
+         * This method gets called when first encountering a non-leaf node and
+         * before visiting any of its children.
+         *
+         * \param t        The node to visit.
+         * \param treePath The position of the node within the TypeTree.
+         */
         template<typename T, typename TreePath>
         void pre(T&& t, TreePath treePath) const {}
 
-        // Method for infix traversal
+        //! Method for infix tree traversal.
+        /**
+         * This method gets called BETWEEN visits of children of a non-leaf node.
+         * That definition implies that this method will only be called for nodes
+         * with at least two children.
+         *
+         * \param t        The node to visit.
+         * \param treePath The position of the node within the TypeTree.
+         */
         template<typename T, typename TreePath>
         void in(T&& t, TreePath treePath) const {}
 
-        // Method for postfix traversal
+        //! Method for postfix traversal.
+        /**
+         * This method gets called after all children of a non-leaf node have
+         * been visited.
+         *
+         * \param t        The node to visit.
+         * \param treePath The position of the node within the TypeTree.
+         */
         template<typename T, typename TreePath>
         void post(T&& t, TreePath treePath) const {}
 
-        // Method for leaf traversal
+        //! Method for leaf traversal.
+        /**
+         * This method gets called when encountering a leaf-node within the TypeTree.
+         *
+         * \param t        The node to visit.
+         * \param treePath The position of the node within the TypeTree.
+         */
         template<typename T, typename TreePath>
         void leaf(T&& t, TreePath treePath) const {}
 
 #else // HAVE_RVALUE_REFERENCES
 
-      // Method for prefix traversal
+        // These are just a repeat of the above if the compiler does not support
+        // rvalue references. In this case, we need variants for const and non-const
+        // nodes.
+
+        // Method for prefix traversal
         template<typename T, typename TreePath>
         void pre(T& t, TreePath treePath) const {}
 
@@ -78,13 +118,13 @@ namespace Dune {
         template<typename T, typename TreePath>
         void leaf(const T& t, TreePath treePath) const {}
 
-#endif // HAVE_RVALUE_REFERENCES
+#endif // HAVE_RVALUE_REFERENCES || DOXYGEN
 
       };
 
-      // the traversal algorithm. Invoke it like the transformation algorithm
-      // by just omitting the third template argument. A full implementation
-      // would require variants for const reference arguments.
+
+#ifndef DOXYGEN // these are all internals and not public API. Only access is using applyToTree().
+
       template<typename tag = StartTag>
       struct ApplyToTree
       {
@@ -406,6 +446,8 @@ namespace Dune {
         using ApplyToGenericCompositeNode::apply;
 
       };
+
+#endif // DOXYGEN
 
 #if HAVE_RVALUE_REFERENCES
 
