@@ -5,6 +5,9 @@
 #define DUNE_PDELAB_COMMON_TYPETREE_COMPOSITENODE_HH
 
 #include <dune/pdelab/common/nodetags.hh>
+#include <dune/pdelab/common/utility.hh>
+#include <dune/common/typetraits.hh>
+#include <dune/common/tuples.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -166,16 +169,16 @@ namespace Dune {
         {}
 
         CompositeNode(C0& c0,
-                      typename optional_child<C1>::type c1 = typename optional_child<C1>::type(),
-                      typename optional_child<C2>::type c2 = typename optional_child<C2>::type(),
-                      typename optional_child<C3>::type c3 = typename optional_child<C3>::type(),
-                      typename optional_child<C4>::type c4 = typename optional_child<C4>::type(),
-                      typename optional_child<C5>::type c5 = typename optional_child<C5>::type(),
-                      typename optional_child<C6>::type c6 = typename optional_child<C6>::type(),
-                      typename optional_child<C7>::type c7 = typename optional_child<C7>::type(),
-                      typename optional_child<C8>::type c8 = typename optional_child<C8>::type(),
-                      typename optional_child<C9>::type c9 = typename optional_child<C9>::type())
-          : _children(wrap_stack_object(c0),
+                      typename OptionalChild<C1>::type c1 = typename OptionalChild<C1>::type(),
+                      typename OptionalChild<C2>::type c2 = typename OptionalChild<C2>::type(),
+                      typename OptionalChild<C3>::type c3 = typename OptionalChild<C3>::type(),
+                      typename OptionalChild<C4>::type c4 = typename OptionalChild<C4>::type(),
+                      typename OptionalChild<C5>::type c5 = typename OptionalChild<C5>::type(),
+                      typename OptionalChild<C6>::type c6 = typename OptionalChild<C6>::type(),
+                      typename OptionalChild<C7>::type c7 = typename OptionalChild<C7>::type(),
+                      typename OptionalChild<C8>::type c8 = typename OptionalChild<C8>::type(),
+                      typename OptionalChild<C9>::type c9 = typename OptionalChild<C9>::type())
+          : _children(stackobject_to_shared_ptr(c0),
                       guarded_wrap_object(c1),
                       guarded_wrap_object(c2),
                       guarded_wrap_object(c3),
