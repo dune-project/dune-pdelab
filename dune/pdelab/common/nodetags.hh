@@ -28,13 +28,13 @@ namespace Dune {
 
 #ifndef DOXYGEN
 
-    //! Special tag used as start value in algorithms
+    //! Special tag used as start value in algorithms.
     struct StartTag {};
 
-    //! Tag designating an empty node in non-variadic composite node.
+    //! Tag designating an empty child node in a non-variadic composite node.
     struct EmptyNodeTag {};
 
-    //! This is a marker to fill empty spaces in composite nodes if support for variadic templates is missing
+    //! This is a marker to fill empty spaces in composite nodes if support for variadic templates is missing.
     struct EmptyNode
     {
       typedef EmptyNodeTag NodeTag;
