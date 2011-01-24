@@ -19,6 +19,74 @@ namespace Dune {
     //! \addtogroup TypeTree
     //! \{
 
+#if HAVE_VARIADIC_TEMPLATES
+
+    template<std::size_t... i>
+    struct TreePath {};
+
+    template<typename>
+    struct TreePathSize;
+
+    template<std::size_t... i>
+    struct TreePathSize<TreePath<i...> >
+      : public std::integral_constant<std::size_t,
+                                      sizeof...(i)>
+    {};
+
+    template<typename,std::size_t>
+    struct TreePathPushBack;
+
+    template<std::size_t k, std::size_t... i>
+    struct TreePathPushBack<TreePath<i...>,k>
+    {
+      typedef TreePath<i...,k> type;
+    };
+
+    template<typename,std::size_t>
+    struct TreePathPushFront;
+
+    template<std::size_t k, std::size_t... i>
+    struct TreePathPushFront<TreePath<i...>,k>
+    {
+      typedef TreePath<k,i...> type;
+    };
+
+    template<typename>
+    struct TreePathBack;
+
+    template<std::size_t k, std::size_t... i>
+    struct TreePathBack<TreePath<i...,k> >
+      : public std::integral_constant<std::size_t,k>
+    {};
+
+    template<typename>
+    struct TreePathFront;
+
+    template<std::size_t k, std::size_t... i>
+    struct TreePathFront<TreePath<k,i...> >
+      : public std::integral_constant<std::size_t,k>
+    {};
+
+    template<typename>
+    struct TreePathPopBack;
+
+    template<std::size_t k, std::size_t... i>
+    struct TreePathPopBack<TreePath<i...,k> >
+    {
+      typedef TreePath<i...> type;
+    };
+
+    template<typename>
+    struct TreePathPopFront;
+
+    template<std::size_t k, std::size_t... i>
+    struct TreePathPopFront<TreePath<k,i...> >
+    {
+      typedef TreePath<i...> type;
+    };
+
+#else
+
     //! number used a dummy child number, similar to Nil
     /**
      * \note This should be used directly, it is an implementation detail of
@@ -265,6 +333,8 @@ namespace Dune {
       public TreePathFront<TP>
     { };
 #endif // DOXYGEN
+
+#endif // HAVE_VARIADIC_TEMPLATES
 
     //! \} group TypeTree
 
