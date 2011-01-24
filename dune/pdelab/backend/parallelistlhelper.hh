@@ -188,10 +188,6 @@ namespace Dune {
           gfs.gridview().communicate(gdh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
 
         g = v;
-//        for(int p=0; p<gfs_.gridview().comm().size(); ++p){
-//          if(p == gfs_.gridview().comm().rank()){
-//            std::cout << "Process " << p << " NOVLP" << std::endl;
-//            Dune::printvector(std::cout, g, "ghosts", "row");}}
 
         // partition interior/border
         Dune::PDELab::GenericDataHandle2<GFS,V,InteriorBorderGatherScatter> dh(gfs,v,InteriorBorderGatherScatter());
@@ -221,6 +217,12 @@ namespace Dune {
       double mask (typename V::size_type i, typename V::size_type j) const
       {
         return v[i][j];
+      }
+
+      // access to ghost vector
+      double ghost (typename V::size_type i, typename V::size_type j) const
+      {
+        return g[i][j];
       }
 
 #if HAVE_MPI
@@ -445,8 +447,14 @@ namespace Dune {
             if(v[i][j]>0){
               // This dof is managed by us.
               attr = Dune::OwnerOverlapCopyAttributeSet::owner;
-            }else{
-                attr = Dune::OwnerOverlapCopyAttributeSet::copy;                
+            }
+            else if ( g[i][j]==(1<<24) && ( c.getSolverCategory() == 
+                                            static_cast<int>(SolverCategory::nonoverlapping)) ){
+              //use attribute overlap for ghosts in novlp grids
+              attr = Dune::OwnerOverlapCopyAttributeSet::overlap;
+            }
+            else {
+              attr = Dune::OwnerOverlapCopyAttributeSet::copy;                
             }
             BlockProcessor<GFS>::
               addIndex(scalarIndices[i][j], ii, attr, m, c.indexSet());
@@ -463,7 +471,7 @@ namespace Dune {
                                                                                   neighbours));
       if (gfs.gridview().comm().size()>1)
         gfs.gridview().communicate(gdhn,Dune::All_All_Interface,Dune::ForwardCommunication);
-      //c.remoteIndices().setNeighbours(neighbours);
+      c.remoteIndices().setNeighbours(neighbours);
       //std::cout<<gv.comm().rank()<<": no neighbours="<<neighbours.size()<<std::endl;
 
       c.remoteIndices().template rebuild<false>();

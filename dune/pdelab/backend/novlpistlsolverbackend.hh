@@ -141,7 +141,6 @@ namespace Dune {
       const M& _A_;
     };
 
-
     // parallel scalar product assuming no overlap
     template<class GFS, class X>
     class NonoverlappingScalarProduct : public Dune::ScalarProduct<X>
@@ -656,18 +655,21 @@ namespace Dune {
     * @tparam GridOperatorSpace The grid operator space to work on.
     * @tparam Scalar The type of the scalar matrix entries.
     */
-    template<class GridOperatorSpace, class Scalar>
+    template<class GridOperatorSpace, class Scalar, class MatrixType>
     class VertexExchanger
     {
+      typedef MatrixType Matrix;
       typedef typename GridOperatorSpace::Traits GridOperatorSpaceTraits;
       typedef typename GridOperatorSpaceTraits::GridViewType GridView;
+      typedef typename GridOperatorSpaceTraits::TrialGridFunctionSpace GFS;
       enum {dim = GridView::dimension};
       typedef typename GridView::Traits::Grid Grid;
-      typedef typename GridOperatorSpace::template MatrixContainer<Scalar>::Type Matrix;
       typedef typename Matrix::block_type BlockType;
       typedef typename GridView::template Codim<dim>::Iterator  VertexIterator;
       typedef typename Grid::Traits::GlobalIdSet IDS;
       typedef typename IDS::IdType IdType;
+      typedef typename Matrix::RowIterator RowIterator;
+      typedef typename Matrix::ColIterator ColIterator;
 
     public:
       /*! \brief Constructor. Sets up the local to global relations.
@@ -699,6 +701,117 @@ namespace Dune {
         }
       }
 
+      //! A DataHandle class to exchange matrix sparsity patterns 
+      class MatPatternExchange
+        : public CommDataHandleIF<MatPatternExchange,IdType> {
+        typedef typename Matrix::RowIterator RowIterator;
+        typedef typename Matrix::ColIterator ColIterator;
+      public:
+        //! Export type of data for message buffer
+        typedef IdType DataType;
+
+        /** @brief Returns true if data for given valid codim should be communicated
+            @copydoc CommDataHandleIF::contains(int, int)
+        */
+        bool contains (int dim, int codim) const
+        {
+          return (codim==dim);
+        }
+
+        /** @brief Returns true if size of data per entity of given dim and codim is a constant
+            @copydoc CommDataHandleIF::fixedsize(int, int)
+        */
+        bool fixedsize (int dim, int codim) const
+        {
+          return false;
+        }
+
+        /** @brief How many objects of type DataType have to be sent for a given entity
+            @copydoc CommDataHandleIF::size(EntityType&)
+        */
+        template<class EntityType>
+        size_t size (EntityType& e) const
+        {
+          int i = gridView_.indexSet().index(e);
+          int n = 0;
+          for (ColIterator j = A_[i].begin(); j != A_[i].end(); ++j)
+            {
+              typename std::map<int,IdType>::const_iterator it = index2GID_.find(j.index());
+              if (it != index2GID_.end())
+                n++;
+            }
+          
+          return n;
+        }
+
+        /** @brief Pack data from user to message buffer
+            @copydoc CommDataHandleIF::gather(MessageBuffer&, const EntityType&)
+        */
+        template<class MessageBuffer, class EntityType>
+        void gather (MessageBuffer& buff, const EntityType& e) const
+        {
+          int i = gridView_.indexSet().index(e);
+          for (ColIterator j = A_[i].begin(); j != A_[i].end(); ++j)
+            {
+              typename std::map<int,IdType>::const_iterator it=index2GID_.find(j.index());
+              if (it != index2GID_.end())
+                buff.write(it->second);
+            }
+        
+        }
+
+        /** @brief Unpack data from message buffer to user
+            @copydoc CommDataHandleIF::scatter(MessageBuffer&, const EntityType&, size_t)
+        */
+        template<class MessageBuffer, class EntityType>
+        void scatter (MessageBuffer& buff, const EntityType& e, size_t n)
+        {
+          int i = gridView_.indexSet().index(e);
+          for (size_t k = 0; k < n; k++)
+            {
+              IdType id;
+              buff.read(id);
+              // only add entries corresponding to border entities
+              typename std::map<IdType,int>::const_iterator it = gid2Index_.find(id);
+              if (it != gid2Index_.end() 
+                  && sparsity_[i].find(it->second) == sparsity_[i].end()
+                  && helper.ghost(it->second,0) != 1<<24)
+                sparsity_[i].insert(it->second);
+            }
+        }
+
+        /**
+         * @brief Get the communicated sparsity pattern
+         * @return the vector with the sparsity pattern
+         */
+        std::vector<std::set<int> >& sparsity ()
+        {
+          return sparsity_;
+        }
+
+        /** @brief Constructor
+            @param[in] gridView Grid view.
+            @param[in] g2i Global to local index map.
+            @param[in] i2g Local to global index map.
+            @param[in] A Matrix to operate on.
+        */
+        MatPatternExchange (const GridView& gridView,
+                            const std::map<IdType,int>& g2i,
+                            const std::map<int,IdType>& i2g, Matrix& A, 
+                            const ParallelISTLHelper<GFS>& helper_)
+          : gridView_(gridView), gid2Index_(g2i), index2GID_(i2g),
+            sparsity_(A.N()), A_(A), helper(helper_)
+        {}
+
+      private:
+        const GridView& gridView_;
+        const std::map<IdType,int>& gid2Index_;
+        const std::map<int,IdType>& index2GID_;
+        std::vector<std::set<int> > sparsity_;
+        Matrix& A_;
+        const ParallelISTLHelper<GFS>& helper;
+      };
+      
       //! Local matrix blocks associated with the global id set
       struct MatEntry
       {
@@ -793,7 +906,7 @@ namespace Dune {
         @param[in] A Matrix to operate on.
         */
         MatEntryExchange (const GridView& gridView, const std::map<IdType,int>& g2i,
-            const std::map<int,IdType>& i2g,
+                          const std::map<int,IdType>& i2g,
                           Matrix& A)
           : gridView_(gridView), gid2Index_(g2i), index2GID_(i2g), A_(A)
         {}
@@ -804,6 +917,47 @@ namespace Dune {
         const std::map<int,IdType>& index2GID_;
         Matrix& A_;
       };
+
+      /** @brief communicates values for the sparsity pattern of the new matrix.
+          @param A Matrix to operate on.
+      */
+      void getextendedmatrix (Matrix& A,const ParallelISTLHelper<GFS>& helper)
+      {
+        if (gridView_.comm().size() > 1) {
+          Matrix tmp(A);
+          std::size_t nnz=0;        
+          // get entries from other processes
+          MatPatternExchange datahandle(gridView_, gid2Index_, index2GID_, A, helper);
+          gridView_.communicate(datahandle, InteriorBorder_InteriorBorder_Interface, ForwardCommunication);
+          std::vector<std::set<int> >& sparsity = datahandle.sparsity();
+          // add own entries, count number of nonzeros
+          for (RowIterator i = A.begin(); i != A.end(); ++i){
+            for (ColIterator j = A[i.index()].begin(); j != A[i.index()].end(); ++j){
+              if (sparsity[i.index()].find(j.index()) == sparsity[i.index()].end())
+                sparsity[i.index()].insert(j.index());
+            }
+            nnz += sparsity[i.index()].size();
+          }
+          int rank;
+          MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+          
+          A.setSize(tmp.N(), tmp.N(), nnz);
+          A.setBuildMode(Matrix::row_wise);
+          typename Matrix::CreateIterator citer = A.createbegin();
+          typedef typename std::vector<std::set<int> >::const_iterator Iter;
+          for (Iter i = sparsity.begin(), end = sparsity.end(); i!=end; ++i, ++citer){
+            typedef typename std::set<int>::const_iterator SIter;
+            for (SIter si = i->begin(), send = i->end(); si!=send; ++si)
+              citer.insert(*si);
+          }
+          // set matrix old values
+          A = 0;
+          for (RowIterator i = tmp.begin(); i != tmp.end(); ++i)
+            for (ColIterator j = tmp[i.index()].begin(); j != tmp[i.index()].end(); ++j){
+              A[i.index()][j.index()] = tmp[i.index()][j.index()];
+            }
+        }
+      }
 
       /** @brief Sums up the entries corresponding to border vertices.
       @param A Matrix to operate on.
@@ -823,77 +977,64 @@ namespace Dune {
       std::map<int,IdType> index2GID_;
     };
       
-    /**
-    * @brief Nonoverlapping parallel BiCGSTAB solver preconditioned by block SSOR.
-    * @tparam GridOperatorSpace The grid operator space to work on.
-    * @tparam Scalar The type of the scalar matrix entries.
-    * @tparam C The communication object.
-    *
-    * The solver uses a NonoverlappingWrappedPreconditioner with underlying
-    * sequential SSOR preconditioner. The crucial step is to add up the matrix entries
-    * corresponding to the border vertices on each process. This is achieved by
-    * performing a VertexExchanger::sumEntries(Matrix&) before constructing the
-    * sequential SSOR.
-    *
-    * Currently the solver is only working for nonoverlapping grids without ghosts 
-    * (YaspGrid, UG with option setGhosts(false) (not yet checked in))
-    */
-    template<class GridOperatorSpace, class Scalar, class C>
-    class ISTLBackend_NOVLP_BCGS_SSORk
+    template<class GOS, class Scalar, 
+             template<class,class,class,int> class Preconditioner,
+             template<class> class Solver>
+    class ISTLBackend_NOVLP_BASE_PREC
     {
-      typedef typename GridOperatorSpace::Traits::TrialGridFunctionSpace GridFunctionSpace;
-      typedef Dune::PDELab::ParallelISTLHelper<GridFunctionSpace> PHELPER;
-      typedef typename GridFunctionSpace::template VectorContainer<Scalar>::Type U;
+      typedef typename GOS::Traits::TrialGridFunctionSpace GFS;
+      typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
       
     public:
       /*! \brief Constructor.
 
-      \param[in] gfs a grid function space
-      \param[in] maxiter maximum number of iterations to do
-      \param[in] kssor iteration count for the SSOR preconditioner
-      \param[in] verbose print messages if true
+        \param[in] gfs a grid function space
+        \param[in] maxiter maximum number of iterations to do
+        \param[in] steps number of preconditioner steps to apply as inner iteration
+        \param[in] verbose print messages if true
       */
-      explicit ISTLBackend_NOVLP_BCGS_SSORk (const GridFunctionSpace& gfs, const C& c_, unsigned maxiter = 5000, unsigned kssor = 5, int verbose = 1)
-        : gfs_(gfs), c(c_), phelper_(gfs_),
-          maxiter_(maxiter), kssor_(kssor), verbose_(verbose), exchanger_(gfs_.gridview())
-      {
-      }
+      explicit ISTLBackend_NOVLP_BASE_PREC (const GFS& gfs_, unsigned maxiter_ = 5000, unsigned steps_ = 5, int verbose_ = 1)
+        : gfs(gfs_), phelper(gfs_),
+          maxiter(maxiter_), steps(steps_), verbose(verbose_)
+      {}
 
       /*! \brief Compute global norm of a vector.
 
-      \param[in] v the given vector
+        \param[in] v the given vector
       */
       template<class Vector>
-     typename Vector::ElementType norm (const Vector& v) const
+      typename Vector::ElementType norm (const Vector& v) const
       {
         Vector x(v); // make a copy because it has to be made consistent
-        typedef Dune::PDELab::NonoverlappingScalarProduct<GridFunctionSpace,Vector> PSP;
-        PSP psp(gfs_,phelper_);
+        typedef Dune::PDELab::NonoverlappingScalarProduct<GFS,Vector> PSP;
+        PSP psp(gfs,phelper);
         psp.make_consistent(x);
         return psp.norm(x);
       }
 
       /*! \brief Solve the given linear system.
 
-      \param[in] A the given matrix
-      \param[out] z the solution vector to be computed
-      \param[in] r right hand side
-      \param[in] reduction to be achieved
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
       */
-      template<class Matrix, class SolVector, class RhsVector>
-      void apply(Matrix& A, SolVector& z, RhsVector& r, typename SolVector::ElementType reduction)
-      { typedef typename Matrix::BaseT MatrixType;
-        typedef typename BlockProcessor<GridFunctionSpace>::template AMGVectorTypeSelector<SolVector>::Type
-          VectorType;
-        typedef typename SolVector::ElementType Scalar;
-        typedef typename GridOperatorSpace::template MatrixContainer<Scalar>::Type M;
-        typedef Dune::SeqSSOR<MatrixType,VectorType,VectorType> SeqPreCond;
-        exchanger_.sumEntries(A);
-        MatrixType& mat=A.base();
-        SeqPreCond seqPreCond(mat, kssor_, 1.0);
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      { 
+        typedef typename M::BaseT MatrixType;
+        typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type VectorType;
+        typedef typename V::ElementType Scalar;
+        typedef VertexExchanger<GOS, Scalar,MatrixType> Exchanger;
         typedef typename CommSelector<96,Dune::MPIHelper::isFake>::type Comm;
-        Comm oocc(gfs_.gridview().comm());
-        phelper_.createIndexSetAndProjectForAMG(mat, oocc);
+        Comm oocc(gfs.gridview().comm(),Dune::SolverCategory::nonoverlapping);
+        Exchanger exchanger(gfs.gridview());
+        MatrixType& mat=A.base();
+        exchanger.getextendedmatrix(mat,phelper);
+        exchanger.sumEntries(mat);
+        phelper.createIndexSetAndProjectForAMG(mat, oocc);
+        typedef Preconditioner<MatrixType,VectorType,VectorType,1> SeqPreCond;
+        SeqPreCond seqPreCond(mat, steps, 1.0);
         typedef Dune::NonoverlappingSchwarzScalarProduct<VectorType,Comm> PSP;
         PSP psp(oocc);      
         typedef Dune::NonoverlappingSchwarzOperator<MatrixType,VectorType,VectorType,Comm> POP;
@@ -901,32 +1042,260 @@ namespace Dune {
         typedef Dune::NonoverlappingBlockPreconditioner<Comm, SeqPreCond> ParPreCond;
         ParPreCond parPreCond(seqPreCond, oocc);
         int verb=0;
-        if (gfs_.gridview().comm().rank()==0) verb=verbose_;
-        Dune::BiCGSTABSolver<VectorType> solver(pop,psp,parPreCond,reduction,maxiter_,verb);
+        if (gfs.gridview().comm().rank()==0) verb=verbose;
+        Solver<VectorType> solver(pop,psp,parPreCond,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
+        //make r consistent
+        oocc.addOwnerCopyToOwnerCopy(r,r);
+        
         solver.apply(z,r,stat);
-        res_.converged  = stat.converged;
-        res_.iterations = stat.iterations;
-        res_.elapsed    = stat.elapsed;
-        res_.reduction  = stat.reduction;
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
       }
 
       /*! \brief Return access to result data. */
       const Dune::PDELab::LinearSolverResult<double>& result() const
       {
-        return res_;
+        return res;
       }
 
     private:
-      const GridFunctionSpace& gfs_;
-      const C& c;
-      PHELPER phelper_;
-      Dune::PDELab::LinearSolverResult<double> res_;
-      unsigned maxiter_;
-      unsigned kssor_;
-      int verbose_;
-      VertexExchanger<GridOperatorSpace, Scalar> exchanger_;
+      const GFS& gfs;
+      PHELPER phelper;
+      Dune::PDELab::LinearSolverResult<double> res;
+      unsigned maxiter;
+      unsigned steps;
+      int verbose;
     };
+
+  /**
+   * @brief Nonoverlapping parallel BiCGSTAB solver preconditioned by block SSOR.
+   * @tparam GridOperatorSpace The grid operator space to work on.
+   * @tparam Scalar The type of the scalar matrix entries.
+   * @tparam C The communication object.
+   *
+   * The solver uses a NonoverlappingBlockPreconditioner with underlying
+   * sequential SSOR preconditioner. The crucial step is to add up the matrix entries
+   * corresponding to the border vertices on each process. This is achieved by
+   * performing a VertexExchanger::sumEntries(Matrix&) before constructing the
+   * sequential SSOR.
+   *
+   * Currently not working with ALU.
+   */
+  template<class GOS, class Scalar>
+  class ISTLBackend_NOVLP_BCGS_SSORk
+    : public ISTLBackend_NOVLP_BASE_PREC<GOS,Scalar,Dune::SeqSSOR, Dune::BiCGSTABSolver>
+  {
+    typedef typename GOS::Traits::TrialGridFunctionSpace GFS;
+    typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
+      
+  public:
+    /*! \brief make a linear solver object
+        
+      \param[in] gfs a grid function space
+      \param[in] maxiter maximum number of iterations to do
+      \param[in] steps number of SSOR steps to apply as inner iteration
+      \param[in] verbose print messages if true
+    */
+    explicit ISTLBackend_NOVLP_BCGS_SSORk (const GFS& gfs, unsigned maxiter=5000,
+                                           int steps=5, int verbose=1)
+      : ISTLBackend_NOVLP_BASE_PREC<GOS,Scalar,Dune::SeqSSOR, Dune::BiCGSTABSolver>(gfs, maxiter, steps, verbose)
+    {}
+  };
+
+  /**
+   * @brief Nonoverlapping parallel CG solver preconditioned by block SSOR.
+   *
+   * Currently not working with ALU.
+   */
+  template<class GOS, class Scalar>
+  class ISTLBackend_NOVLP_CG_SSORk
+    : public ISTLBackend_NOVLP_BASE_PREC<GOS,Scalar,Dune::SeqSSOR, Dune::CGSolver>
+  {
+    typedef typename GOS::Traits::TrialGridFunctionSpace GFS;
+    typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
+      
+  public:
+    /*! \brief make a linear solver object
+        
+      \param[in] gfs a grid function space
+      \param[in] maxiter maximum number of iterations to do
+      \param[in] steps number of SSOR steps to apply as inner iteration
+      \param[in] verbose print messages if true
+    */
+    explicit ISTLBackend_NOVLP_CG_SSORk (const GFS& gfs, unsigned maxiter=5000,
+                                         int steps=5, int verbose=1)
+      : ISTLBackend_NOVLP_BASE_PREC<GOS,Scalar,Dune::SeqSSOR, Dune::CGSolver>(gfs, maxiter, steps, verbose)
+    {}
+  };
+    
+  template<class GOS, class Scalar, int s, template<class,class,class,int> class SMI, template<class> class SOI>
+  class ISTLBackend_AMG_NOVLP
+  {
+    typedef typename GOS::Traits::TrialGridFunctionSpace GFS;
+    typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
+    typedef typename GFS::template VectorContainer<Scalar>::Type U;
+ 
+  public:
+    ISTLBackend_AMG_NOVLP(const GFS& gfs_, int smoothsteps=2,
+                          unsigned maxiter_=5000, int verbose_=1)
+      : gfs(gfs_), phelper(gfs), maxiter(maxiter_), steps(smoothsteps), verbose(verbose_)
+    {}
+ 
+ 
+    /*! \brief compute global norm of a vector
+        
+      \param[in] v the given vector
+    */
+    template<class V>
+    typename V::ElementType norm (const V& v) const
+    {
+      V x(v); // make a copy because it has to be made consistent
+      typedef Dune::PDELab::NonoverlappingScalarProduct<GFS,V> PSP;
+      PSP psp(gfs,phelper);
+      psp.make_consistent(x);
+      return psp.norm(x);
+    }
+ 
+    /*! \brief solve the given linear system
+ 
+      \param[in] A the given matrix
+      \param[out] z the solution vector to be computed
+      \param[in] r right hand side
+      \param[in] reduction to be achieved
+    */
+    template<class M, class V>
+    void apply(M& A, V& z, V& r, typename V::ElementType reduction)
+    {
+      typedef typename M::BaseT MatrixType;
+      typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type VectorType;
+      typedef typename CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
+      typedef VertexExchanger<GOS, Scalar,MatrixType> Exchanger;
+      Exchanger exchanger(gfs.gridview());
+      MatrixType& mat=A.base();
+      exchanger.getextendedmatrix(mat,phelper);
+      exchanger.sumEntries(mat);        
+      Comm oocc(gfs.gridview().comm(),Dune::SolverCategory::nonoverlapping);
+      phelper.createIndexSetAndProjectForAMG(mat, oocc);
+      typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
+        Dune::Amg::FirstDiagonal> >
+        Criterion;
+      typedef SMI<MatrixType,VectorType,VectorType,1> Smoother;
+      typedef Dune::NonoverlappingBlockPreconditioner<Comm,Smoother> ParSmoother;
+      typedef typename Dune::Amg::SmootherTraits<ParSmoother>::Arguments SmootherArgs;
+      typedef Dune::NonoverlappingSchwarzOperator<MatrixType,VectorType,VectorType,Comm> Operator;
+      typedef Dune::Amg::AMG<Operator,VectorType,ParSmoother,Comm> AMG;
+      SmootherArgs smootherArgs;
+      smootherArgs.iterations = 1;
+      smootherArgs.relaxationFactor = 1;
+      //use noAccu or atOnceAccu
+      Criterion criterion(15,2000,1.2,1.6,Dune::Amg::AccumulationMode::atOnceAccu);
+      Dune::NonoverlappingSchwarzScalarProduct<VectorType,Comm> sp(oocc);
+      Operator oop(mat, oocc);
+      AMG amg=AMG(oop, criterion, smootherArgs, 1, steps, steps, false, oocc);
+      Dune::InverseOperatorResult stat;
+      int verb=0;
+      if (gfs.gridview().comm().rank()==0) verb=verbose;
+      oocc.addOwnerCopyToOwnerCopy(r,r);
+      SOI<VectorType> solver(oop,sp,amg,reduction,maxiter,verb);
+      solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
+      res.converged  = stat.converged;
+      res.iterations = stat.iterations;
+      res.elapsed    = stat.elapsed;
+      res.reduction  = stat.reduction;
+    }
+ 
+    /*! \brief Return access to result data */
+    const Dune::PDELab::LinearSolverResult<double>& result() const
+    {
+      return res;
+    }
+ 
+  private:
+    const GFS& gfs;
+    PHELPER phelper;
+    Dune::PDELab::LinearSolverResult<double> res;
+    unsigned maxiter;
+    int steps;
+    int verbose;
+  };
+ 
+  /**
+   * @brief Parallel conjugate gradient solver preconditioned with AMG smoothed by SSOR
+   * @tparam GFS The type of the grid functions space.
+   * @tparam s The bits to use for the global index.
+   */
+  template<class GOS, class Scalar, int s=96>
+  class ISTLBackend_NOVLP_CG_AMG_SSOR
+    : public ISTLBackend_AMG_NOVLP<GOS, Scalar, s, Dune::SeqSSOR, Dune::CGSolver>
+  {
+    typedef typename GOS::Traits::TrialGridFunctionSpace GFS;
+      
+  public:
+    /**
+     * @brief Constructor
+     * @param gfs_ The grid function space used.
+     * @param smoothsteps The number of steps to use for both pre and post smoothing.
+     * @param maxiter_ The maximum number of iterations allowed.
+     * @param verbose_ The verbosity level to use.
+     */
+    ISTLBackend_NOVLP_CG_AMG_SSOR(const GFS& gfs_,int smoothsteps=2,
+                                  unsigned maxiter_=5000, int verbose_=1)
+      : ISTLBackend_AMG_NOVLP<GOS, Scalar, s, Dune::SeqSSOR, Dune::CGSolver>(gfs_,smoothsteps, maxiter_,verbose_)
+    {}
+  };
+
+  /**
+   * @brief Parallel BiCGStab solver preconditioned with AMG smoothed by SSOR
+   * @tparam GFS The type of the grid functions space.
+   * @tparam s The bits to use for the global index.
+   */
+  template<class GOS, class Scalar, int s=96>
+  class ISTLBackend_NOVLP_BCGS_AMG_SSOR
+    : public ISTLBackend_AMG_NOVLP<GOS, Scalar, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>
+  {
+    typedef typename GOS::Traits::TrialGridFunctionSpace GFS;
+      
+  public:
+    /**
+     * @brief Constructor
+     * @param gfs_ The grid function space used.
+     * @param smoothsteps The number of steps to use for both pre and post smoothing.
+     * @param maxiter_ The maximum number of iterations allowed.
+     * @param verbose_ The verbosity level to use.
+     */
+    ISTLBackend_NOVLP_BCGS_AMG_SSOR(const GFS& gfs_,int smoothsteps=2,
+                                    unsigned maxiter_=5000, int verbose_=1)
+      : ISTLBackend_AMG_NOVLP<GOS, Scalar, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>(gfs_,smoothsteps, maxiter_,verbose_)
+    {}
+  };
+
+  /**
+   * @brief Parallel AMG Loop Solver smoothed by SSOR
+   * @tparam GFS The type of the grid functions space.
+   * @tparam s The bits to use for the global index.
+   */
+  template<class GOS, class Scalar, int s=96>
+  class ISTLBackend_NOVLP_LS_AMG_SSOR
+    : public ISTLBackend_AMG_NOVLP<GOS, Scalar, s, Dune::SeqSSOR, Dune::LoopSolver>
+  {
+    typedef typename GOS::Traits::TrialGridFunctionSpace GFS;
+      
+  public:
+    /**
+     * @brief Constructor
+     * @param gfs_ The grid function space used.
+     * @param smoothsteps The number of steps to use for both pre and post smoothing.
+     * @param maxiter_ The maximum number of iterations allowed.
+     * @param verbose_ The verbosity level to use.
+     */
+    ISTLBackend_NOVLP_LS_AMG_SSOR(const GFS& gfs_,int smoothsteps=2,
+                                  unsigned maxiter_=5000, int verbose_=1)
+      : ISTLBackend_AMG_NOVLP<GOS, Scalar, s, Dune::SeqSSOR, Dune::LoopSolver>(gfs_,smoothsteps, maxiter_,verbose_)
+    {}
+  };
 
   } // namespace PDELab
 } // namespace Dune
