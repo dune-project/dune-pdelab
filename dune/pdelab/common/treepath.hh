@@ -13,7 +13,7 @@
 namespace Dune {
   namespace PDELab {
 
-    //! \addtogroup TreePath
+    //! \addtogroup TypeTree
     //! \{
 
     //! number used a dummy child number, similar to Nil
@@ -263,7 +263,7 @@ namespace Dune {
     { };
 #endif // DOXYGEN
 
-    //! \} group TreePath
+    //! \} group TypeTree
 
   } // namespace PDELab
 } //namespace Dune
