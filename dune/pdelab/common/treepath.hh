@@ -16,7 +16,8 @@ namespace Dune {
   namespace TypeTree {
 
 
-    //! \addtogroup TypeTree
+    //! \addtogroup TreePath
+    //! \ingroup TypeTree
     //! \{
 
 #if HAVE_VARIADIC_TEMPLATES
@@ -344,4 +345,3 @@ namespace Dune {
 } //namespace Dune
 
 #endif // DUNE_PDELAB_COMMON_TREEPATH_HH
-
