@@ -5,11 +5,11 @@
 #define DUNE_PDELAB_COMMON_TYPETREE_POWERNODE_HH
 
 #include <dune/common/deprecated.hh>
-#include <dune/common/shared_ptr.hh>
 #include <dune/common/array.hh>
 #include <dune/common/typetraits.hh>
 
 #include <dune/pdelab/common/nodetags.hh>
+#include <dune/pdelab/common/utility.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -25,25 +25,6 @@ namespace Dune {
 #ifndef DOXYGEN
 
       namespace {
-
-        template<typename T>
-        shared_ptr<T> convert_arg(const T& t)
-        {
-          return make_shared<T>(t);
-        }
-
-        template<typename T>
-        shared_ptr<T> convert_arg(T& t)
-        {
-          return stackobject_to_shared_ptr(t);
-        }
-
-        // only bind to real rvalues
-        template<typename T>
-        typename enable_if<!std::is_lvalue_reference<T>::value,shared_ptr<T> >::type convert_arg(T&& t)
-        {
-          return make_shared<T>(t);
-        }
 
         // prototype and end of recursion
         template<typename T, typename It, typename... Args>
