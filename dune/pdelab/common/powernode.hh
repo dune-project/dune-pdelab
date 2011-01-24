@@ -26,30 +26,35 @@ namespace Dune {
 
       namespace {
 
-
-        template<typename T, typename It, typename... Args>
-        void assign_reference_pack_to_shared_ptr_array_unpack(It it, Args&&... args);
-
-        template<typename T, typename It, typename Arg, typename... Args>
-        void assign_reference_pack_to_shared_ptr_array_unpack(It it, const Arg& arg, Args&&... args)
+        template<typename T>
+        shared_ptr<T> convert_arg(const T& t)
         {
-          static_assert(is_same<Arg,typename remove_reference<T>::type>::value,"type mismatch during array conversion");
-          *it = stackobject_to_shared_ptr(std::forward<Arg>(arg));
-          assign_reference_pack_to_shared_ptr_array_unpack<T>(++it,std::forward<Args>(args)...);
+          return make_shared<T>(t);
         }
+
+        template<typename T>
+        shared_ptr<T> convert_arg(T& t)
+        {
+          return stackobject_to_shared_ptr(t);
+        }
+
+        // only bind to real rvalues
+        template<typename T>
+        typename enable_if<!std::is_lvalue_reference<T>::value,shared_ptr<T> >::type convert_arg(T&& t)
+        {
+          return make_shared<T>(t);
+        }
+
+        // prototype and end of recursion
+        template<typename T, typename It, typename... Args>
+        void assign_reference_pack_to_shared_ptr_array_unpack(It it, Args&&... args) {}
 
         template<typename T, typename It, typename Arg, typename... Args>
         void assign_reference_pack_to_shared_ptr_array_unpack(It it, Arg&& arg, Args&&... args)
         {
-          static_assert(is_same<Arg,typename remove_reference<T>::type>::value,"type mismatch during array conversion");
-          *it = make_shared<Arg>(std::forward<Arg>(arg));
+          static_assert(is_same<T,typename remove_const<typename remove_reference<Arg>::type>::type>::value,"type mismatch during array conversion");
+          *it = convert_arg(std::forward<Arg>(arg));
           assign_reference_pack_to_shared_ptr_array_unpack<T>(++it,std::forward<Args>(args)...);
-        }
-
-        template<typename T, typename It>
-        void assign_reference_pack_to_shared_ptr_array_unpack(It it)
-        {
-          // end of recursion
         }
 
         template<typename T, std::size_t n, typename... Args>
