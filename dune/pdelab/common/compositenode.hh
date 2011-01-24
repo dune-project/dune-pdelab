@@ -88,8 +88,8 @@ namespace Dune {
         //! Method providing a default value for empty children.
         static T default_value()
         {
-          dune_static_assert((AlwaysFalse<T>::value), "You must provide a constructor parameter for non-empty children!");
-          DUNE_THROW(NotImplemented,"You must provide a constructor parameter for non-empty children!");
+          dune_static_assert((AlwaysFalse<T>::value), "You must provide a constructor parameter for every non-empty child!");
+          DUNE_THROW(NotImplemented,"You must provide a constructor parameter for every non-empty child!");
         }
       };
 
