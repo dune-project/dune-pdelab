@@ -8,6 +8,8 @@
 #include <dune/pdelab/common/utility.hh>
 #include <dune/common/typetraits.hh>
 #include <dune/common/tuples.hh>
+#include <dune/common/static_assert.hh>
+#include <dune/common/exceptions.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -86,8 +88,8 @@ namespace Dune {
         //! Method providing a default value for empty children.
         static T default_value()
         {
-          dune_static_assert((<AlwaysFalse<T>::value), "You must provide a constructor parameter for non-empty children!");
-          DUNE_THROW(InvalidArgument,"You must provide a constructor parameter for non-empty children!");
+          dune_static_assert((AlwaysFalse<T>::value), "You must provide a constructor parameter for non-empty children!");
+          DUNE_THROW(NotImplemented,"You must provide a constructor parameter for non-empty children!");
         }
       };
 
