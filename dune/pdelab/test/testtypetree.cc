@@ -11,15 +11,7 @@ int main()
 
 #else
 
-#include <dune/pdelab/common/leafnode.hh>
-#include <dune/pdelab/common/powernode.hh>
-#include <dune/pdelab/common/compositenode.hh>
-#include <dune/pdelab/common/traversal.hh>
-
-#if HAVE_VARIADIC_TEMPLATES
-#include <dune/pdelab/common/variadiccompositenode.hh>
-#endif
-
+#include <dune/pdelab/common/typetree.hh>
 #include <iostream>
 
 struct Counter
@@ -234,7 +226,7 @@ int main(int argc, char** argv)
   Dune::PDELab::TypeTree::applyToTree(sp1_1,TreePrinter());
 
   typedef SimpleComposite<SimpleLeaf,SP1,SimpleLeaf> SC1;
-  SC1 sc1_1(sl1,sp1_2);
+  SC1 sc1_1(sl1,sp1_2,sl2);
   Dune::PDELab::TypeTree::applyToTree(const_cast<const SC1&>(sc1_1),treePrinter);
 
 #if HAVE_VARIADIC_TEMPLATES

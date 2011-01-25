@@ -11,15 +11,7 @@ int main()
 
 #else
 
-#include <dune/pdelab/common/leafnode.hh>
-#include <dune/pdelab/common/powernode.hh>
-#include <dune/pdelab/common/compositenode.hh>
-#include <dune/pdelab/common/traversal.hh>
-#include <dune/pdelab/common/transformation.hh>
-
-#if HAVE_VARIADIC_TEMPLATES
-#include <dune/pdelab/common/variadiccompositenode.hh>
-#endif
+#include <dune/pdelab/common/typetree.hh>
 
 #include <iostream>
 
