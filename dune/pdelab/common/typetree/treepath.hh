@@ -90,8 +90,8 @@ namespace Dune {
 
     //! number used a dummy child number, similar to Nil
     /**
-     * \note This should be used directly, it is an implementation detail of
-     *       class TreePath.
+     * \note This should not be used directly, it is an implementation detail
+     *       of class TreePath.
      */
     static const std::size_t noChildIndex = ~std::size_t(0);
 
