@@ -64,6 +64,11 @@ testanalytic_LDADD =				\
 	$(LDADD)
 MOSTLYCLEANFILES += channel.vtu
 
+if ALUGRID
+NORMALTESTS += test-composed-iis-gfs
+test_composed_iis_gfs_SOURCES = test-composed-iis-gfs.cc
+endif ALUGRID
+
 NORMALTESTS += testconstraints
 testconstraints_SOURCES = testconstraints.cc
 testconstraints_CPPFLAGS = $(AM_CPPFLAGS)	\
