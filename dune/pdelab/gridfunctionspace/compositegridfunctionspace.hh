@@ -17,47 +17,158 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-    template<typename Entity, typename Container>
-    struct DataHandleGlobalIndicesVisitor
-      : public TypeTree::TreeVisitor
+    //! Mixin class providing DataHandle support for composite and power GridFunctionSpaces.
+    template<typename GridFunctionSpace>
+    class PowerCompositeDataHandleProvider
     {
 
-      template<typename Node, typename TreePath>
-      void leaf(const Node& node, TreePath treePath)
+      //! Functor for dataHandleFixedSize()
+      struct DataHandleFixedSize
       {
-        pos += node.dataHandleGlobalIndices(e,g,pos,false);
+
+        template<typename Node, typename TreePath>
+        bool operator()(const Node& node, TreePath treePath) const
+        {
+          return node.dataHandleFixedSize(dim,codim);
+        }
+
+        DataHandleFixedSize(int dimension, int codimension)
+          : dim(dimension)
+          , codim(codimension)
+        {}
+
+        const int dim;
+        const int codim;
+
+      };
+
+      //! Functor for dataHandleContains()
+      struct DataHandleContains
+      {
+
+        template<typename Node, typename TreePath>
+        bool operator()(const Node& node, TreePath treePath) const
+        {
+          return node.dataHandleContains(dim,codim);
+        }
+
+        DataHandleContains(int dimension, int codimension)
+          : dim(dimension)
+          , codim(codimension)
+        {}
+
+        const int dim;
+        const int codim;
+
+      };
+
+      //! Functor for dataHandleSize()
+      template<typename Entity>
+      struct DataHandleSize
+      {
+
+        template<typename Node, typename TreePath>
+        bool operator()(const Node& node, TreePath treePath) const
+        {
+          return node.dataHandleSize(e);
+        }
+
+        DataHandleSize(const Entity& entity)
+          : e(entity)
+        {}
+
+        const Entity& e;
+
+      };
+
+      //! Visitor for retrieving the global DOF indices of a given entity.
+      template<typename Entity, typename Container>
+      struct DataHandleGlobalIndicesVisitor
+        : public TypeTree::TreeVisitor
+      {
+
+        template<typename Node, typename TreePath>
+        void leaf(const Node& node, TreePath treePath)
+        {
+          pos += node.dataHandleGlobalIndices(e,g,pos,false);
+        }
+
+        template<typename CompositeGFS, typename Child, typename TreePath, typename ChildIndex>
+        void beforeChild(CompositeGFS& cgfs, const Child& child, TreePath treePath, ChildIndex childIndex)
+        {
+          offsets.push_back(pos);
+        }
+
+        template<typename CompositeGFS, typename Child, typename TreePath, typename ChildIndex>
+        void afterChild(CompositeGFS& cgfs, const Child& child, TreePath treePath, ChildIndex childIndex)
+        {
+          std::size_t offset = offsets.back();
+          offsets.pop_back();
+          for (std::size_t i = offset; i < pos; ++i)
+            g[i] = cgfs.template subMap<ChildIndex::value>(g[i]);
+        }
+
+        DataHandleGlobalIndicesVisitor(const Entity& entity, Container& global)
+          : e(entity)
+          , g(global)
+          , pos(0)
+        {
+          // a reasonable upper bound for the tree depth - this way, we avoid reallocations
+          offsets.reserve(16);
+        }
+
+        const Entity& e;
+        Container& g;
+        std::size_t pos;
+        std::vector<std::size_t> offsets;
+
+      };
+
+      const GridFunctionSpace& gfs() const
+      {
+        return static_cast<const GridFunctionSpace&>(*this);
       }
 
-      template<typename CompositeGFS, typename Child, typename TreePath, typename ChildIndex>
-      void beforeChild(CompositeGFS& cgfs, const Child& child, TreePath treePath, ChildIndex childIndex)
+    public:
+
+      //------------------------------
+      // generic data handle interface
+      //------------------------------
+
+      //! returns true if data for this codim should be communicated
+      bool dataHandleContains (int dim, int codim) const
       {
-        offsets.push_back(pos);
+        return TypeTree::reduceOverLeafs(gfs(),DataHandleContains(dim,codim),std::logical_or<bool>(),false);
       }
 
-      template<typename CompositeGFS, typename Child, typename TreePath, typename ChildIndex>
-      void afterChild(CompositeGFS& cgfs, const Child& child, TreePath treePath, ChildIndex childIndex)
+      //! returns true if size per entity of given dim and codim is a constant
+      bool dataHandleFixedSize (int dim, int codim) const
       {
-        std::size_t offset = offsets.back();
-        offsets.pop_back();
-        for (std::size_t i = offset; i < pos; ++i)
-          g[i] = cgfs.template subMap<ChildIndex::value>(g[i]);
+        return TypeTree::reduceOverLeafs(gfs(),DataHandleFixedSize(dim,codim),std::logical_and<bool>(),true);
       }
 
-      DataHandleGlobalIndicesVisitor(const Entity& entity, Container& global)
-        : e(entity)
-        , g(global)
-        , pos(0)
+      /*! how many objects of type DataType have to be sent for a given entity
+
+        Note: Only the sender side needs to know this size.
+      */
+      template<typename EntityType>
+      size_t dataHandleSize (const EntityType& e) const
       {
-        // a reasonable upper bound for the tree depth - this way, we avoid reallocations
-        offsets.reserve(16);
+        return TypeTree::reduceOverLeafs(gfs(),DataHandleSize<EntityType>(e),std::plus<size_t>(),size_t(0));
       }
 
-      const Entity& e;
-      Container& g;
-      std::size_t pos;
-      std::vector<std::size_t> offsets;
+      //! return vector of global indices associated with the given entity
+      template<typename EntityType, typename SizeType>
+      void dataHandleGlobalIndices (const EntityType& e,
+                                    std::vector<SizeType>& global) const
+      {
+        global.resize(dataHandleSize(e));
+        DataHandleGlobalIndicesVisitor<EntityType,std::vector<SizeType> > visitor(e,global);
+        TypeTree::applyToTree(gfs(),visitor);
+      }
 
     };
+
 
     template<typename BaseType, typename T>
     T& checkGridViewType(T& t)
@@ -96,6 +207,10 @@ namespace Dune {
     class CompositeGridFunctionSpace<GridFunctionSpaceLexicographicMapper,
                                      DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>
       : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
+      , public PowerCompositeDataHandleProvider<CompositeGridFunctionSpace<
+                                                  GridFunctionSpaceLexicographicMapper,
+                                                  DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>
+                                                >
     {
       typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE BaseT;
 
@@ -134,63 +249,6 @@ namespace Dune {
       {
         node.calculateSizes();
       }
-
-    };
-
-
-    struct DataHandleFixedSize
-    {
-
-      template<typename Node, typename TreePath>
-      bool operator()(const Node& node, TreePath treePath) const
-      {
-        return node.dataHandleFixedSize(dim,codim);
-      }
-
-      DataHandleFixedSize(int dimension, int codimension)
-        : dim(dimension)
-        , codim(codimension)
-      {}
-
-      const int dim;
-      const int codim;
-
-    };
-
-    struct DataHandleContains
-    {
-
-      template<typename Node, typename TreePath>
-      bool operator()(const Node& node, TreePath treePath) const
-      {
-        return node.dataHandleContains(dim,codim);
-      }
-
-      DataHandleContains(int dimension, int codimension)
-        : dim(dimension)
-        , codim(codimension)
-      {}
-
-      const int dim;
-      const int codim;
-
-    };
-
-    template<typename Entity>
-    struct DataHandleSize
-    {
-
-      template<typename Node, typename TreePath>
-      bool operator()(const Node& node, TreePath treePath) const
-      {
-        return node.dataHandleSize(e);
-      }
-
-      DataHandleSize(const Entity& entity)
-        : e(entity)
-      {}
-
-      const Entity& e;
 
     };
 
@@ -270,42 +328,6 @@ namespace Dune {
         return offset[i]+j;
       }
 
-
-      //------------------------------
-      // generic data handle interface
-      //------------------------------
-
-      //! returns true if data for this codim should be communicated
-      bool dataHandleContains (int dim, int codim) const
-      {
-        return TypeTree::reduceOverLeafs(*this,DataHandleContains(dim,codim),std::logical_or<bool>(),false);
-      }
-
-      //! returns true if size per entity of given dim and codim is a constant
-      bool dataHandleFixedSize (int dim, int codim) const
-      {
-        return TypeTree::reduceOverLeafs(*this,DataHandleFixedSize(dim,codim),std::logical_and<bool>(),true);
-      }
-
-      /*! how many objects of type DataType have to be sent for a given entity
-
-        Note: Only the sender side needs to know this size.
-      */
-      template<class EntityType>
-      size_t dataHandleSize (const EntityType& e) const
-      {
-        return TypeTree::reduceOverLeafs(*this,DataHandleSize<EntityType>(e),std::plus<size_t>(),size_t(0));
-      }
-
-      //! return vector of global indices associated with the given entity
-      template<class EntityType>
-      void dataHandleGlobalIndices (const EntityType& e,
-                                    std::vector<typename Traits::SizeType>& global) const
-      {
-        global.resize(dataHandleSize(e));
-        DataHandleGlobalIndicesVisitor<EntityType,std::vector<typename Traits::SizeType> > visitor(e,global);
-        TypeTree::applyToTree(*this,visitor);
-      }
 
       //------------------------------
 
