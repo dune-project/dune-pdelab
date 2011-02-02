@@ -42,7 +42,7 @@ namespace Dune {
     struct ConstraintsCallSkeleton
     {
       template<typename I, typename LFS, typename T>
-      static void skeleton (const C& c,  const IntersectionGeometry<I>& ig, 
+      static void skeleton (const C& c,  const IntersectionGeometry<I>& ig,
                             const LFS& lfs_e, const LFS& lfs_f,
                             T& trafo_e, T& trafo_f)
       {
@@ -80,8 +80,8 @@ namespace Dune {
     struct ConstraintsCallSkeleton<C,true>
     {
       template<typename I, typename LFS, typename T>
-      static void skeleton (const C& c, const IntersectionGeometry<I>& ig, 
-                            const LFS& lfs_e, const LFS& lfs_f, 
+      static void skeleton (const C& c, const IntersectionGeometry<I>& ig,
+                            const LFS& lfs_e, const LFS& lfs_f,
                             T& trafo_e, T& trafo_f)
       {
         c.skeleton(ig, lfs_e, lfs_f, trafo_e, trafo_f);
@@ -99,10 +99,10 @@ namespace Dune {
 
     // meta program to evaluate boundary constraints
 
-	template<typename F, bool FisLeaf, typename LFS, bool LFSisLeaf> 
+	template<typename F, bool FisLeaf, typename LFS, bool LFSisLeaf>
 	struct ConstraintsVisitNodeMetaProgram;
 
-	template<typename F, typename LFS, int n, int i> 
+	template<typename F, typename LFS, int n, int i>
 	struct ConstraintsVisitChildMetaProgram // visit i'th child of inner node
 	{
 	  template<typename CG, typename I>
@@ -120,7 +120,7 @@ namespace Dune {
 	  }
 	};
 
-	template<typename F, typename LFS, int n> 
+	template<typename F, typename LFS, int n>
 	struct ConstraintsVisitChildMetaProgram<F,LFS,n,n> // end of child recursion
 	{
       // end of child recursion
@@ -131,7 +131,7 @@ namespace Dune {
 	  }
 	};
 
-	template<typename F, bool FisLeaf, typename LFS, bool LFSisLeaf> 
+	template<typename F, bool FisLeaf, typename LFS, bool LFSisLeaf>
 	struct ConstraintsVisitNodeMetaProgram // visit inner node
 	{
 	  template<typename CG, typename I>
@@ -139,28 +139,28 @@ namespace Dune {
 	  {
         // both are inner nodes, visit all children
         // check that both have same number of children
-		dune_static_assert((static_cast<int>(F::CHILDREN)==static_cast<int>(LFS::CHILDREN)),  
+		dune_static_assert((static_cast<int>(F::CHILDREN)==static_cast<int>(LFS::CHILDREN)),
 						   "both nodes must have same number of children");
- 
+
         // start child recursion
 		ConstraintsVisitChildMetaProgram<F,LFS,F::CHILDREN,0>::boundary(f,lfs,cg,ig);
 	  }
 	};
 
-	template<typename F, typename LFS> 
+	template<typename F, typename LFS>
 	struct ConstraintsVisitNodeMetaProgram<F,true,LFS,false> // try to interpolate components from vector valued function
 	{
 	  template<typename CG, typename I>
 	  static void boundary (const F& f, const LFS& lfs, CG& cg, const IntersectionGeometry<I>& ig)
 	  {
-		dune_static_assert((static_cast<int>(LFS::isPower)==1),  
+		dune_static_assert((static_cast<int>(LFS::isPower)==1),
 						   "specialization only for power");
-		dune_static_assert((static_cast<int>(LFS::template Child<0>::Type::isLeaf)==1),  
+		dune_static_assert((static_cast<int>(LFS::template Child<0>::Type::isLeaf)==1),
 						   "children must be leaves");
-		dune_static_assert((static_cast<int>(F::Traits::dimRange)==static_cast<int>(LFS::CHILDREN)),  
+		dune_static_assert((static_cast<int>(F::Traits::dimRange)==static_cast<int>(LFS::CHILDREN)),
 						   "number of components must coincide with number of children");
 
-        // extract constraints type 
+        // extract constraints type
         typedef typename LFS::template Child<0>::Type::Traits::ConstraintsType C;
 
         for (int k=0; k<LFS::CHILDREN; k++)
@@ -175,14 +175,14 @@ namespace Dune {
             ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.getChild(k).constraints(),
                                                                fcomp,ig,lfs.getChild(k),cl);
 
-            // write coefficients into local vector 
+            // write coefficients into local vector
             lfs.getChild(k).mwrite(cl,cg);
           }
 	  }
 	};
 
-	template<typename F, typename LFS> 
-	struct ConstraintsVisitNodeMetaProgram<F,true,LFS,true> // leaf node in both trees 
+	template<typename F, typename LFS>
+	struct ConstraintsVisitNodeMetaProgram<F,true,LFS,true> // leaf node in both trees
 	{
 	  template<typename CG, typename I>
 	  static void boundary (const F& f, const LFS& lfs, CG& cg, const IntersectionGeometry<I>& ig)
@@ -193,13 +193,13 @@ namespace Dune {
 		// allocate local constraints map
 		CG cl;
 
-        // extract constraints type 
+        // extract constraints type
         typedef typename LFS::Traits::ConstraintsType C;
 
 		// iterate over boundary, need intersection iterator
         ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.constraints(),f,ig,lfs,cl);
 
-		// write coefficients into local vector 
+		// write coefficients into local vector
 		lfs.mwrite(cl,cg);
 	  }
 	};
@@ -207,10 +207,10 @@ namespace Dune {
 
     // second metaprogram that iterates over local function space only
 
-	template<typename LFS, bool LFSisLeaf> 
+	template<typename LFS, bool LFSisLeaf>
 	struct ConstraintsVisitNodeMetaProgram2;
 
-	template<typename LFS, int n, int i> 
+	template<typename LFS, int n, int i>
 	struct ConstraintsVisitChildMetaProgram2 // visit i'th child of inner node
 	{
 	  template<typename CG, typename I>
@@ -223,7 +223,7 @@ namespace Dune {
 		ConstraintsVisitChildMetaProgram2<LFS,n,i+1>::processor(lfs,cg,ig);
 	  }
 	  template<typename CG, typename I>
-	  static void skeleton (const LFS& lfs_e, const LFS& lfs_f, CG& cg, 
+	  static void skeleton (const LFS& lfs_e, const LFS& lfs_f, CG& cg,
                             const IntersectionGeometry<I>& ig)
 	  {
 		typedef typename LFS::template Child<i>::Type LFSC;
@@ -244,7 +244,7 @@ namespace Dune {
 	  }
 	};
 
-	template<typename LFS, int n> 
+	template<typename LFS, int n>
 	struct ConstraintsVisitChildMetaProgram2<LFS,n,n> // end of child recursion
 	{
  	  template<typename CG, typename I>
@@ -266,7 +266,7 @@ namespace Dune {
 	};
 
 
-	template<typename LFS, bool LFSisLeaf> 
+	template<typename LFS, bool LFSisLeaf>
 	struct ConstraintsVisitNodeMetaProgram2 // visit inner node
 	{
 	  template<typename CG, typename I>
@@ -291,7 +291,7 @@ namespace Dune {
 	};
 
 
-	template<typename LFS> 
+	template<typename LFS>
 	struct ConstraintsVisitNodeMetaProgram2<LFS,true> // leaf node
 	{
 	  template<typename CG, typename I>
@@ -303,13 +303,13 @@ namespace Dune {
 		// allocate local constraints map
 		CG cl;
 
-        // extract constraints type 
+        // extract constraints type
         typedef typename LFS::Traits::ConstraintsType C;
 
 		// iterate over boundary, need intersection iterator
         ConstraintsCallProcessor<C,C::doProcessor>::processor(lfs.constraints(),ig,lfs,cl);
 
-		// write coefficients into local vector 
+		// write coefficients into local vector
 		lfs.mwrite(cl,cg);
 	  }
 	  template<typename CG, typename I>
@@ -324,7 +324,7 @@ namespace Dune {
 		CG cl_e;
 		CG cl_f;
 
-        // extract constraints type 
+        // extract constraints type
         typedef typename LFS::Traits::ConstraintsType C;
 
         // as LFS::constraints() just returns the constraints of the
@@ -335,7 +335,7 @@ namespace Dune {
 		// iterate over boundary, need intersection iterator
         ConstraintsCallSkeleton<C,C::doSkeleton>::skeleton(c,ig,lfs_e,lfs_f,cl_e,cl_f);
 
-		// write coefficients into local vector 
+		// write coefficients into local vector
 		lfs_e.mwrite(cl_e,cg);
 		lfs_f.mwrite(cl_f,cg);
 	  }
@@ -348,18 +348,18 @@ namespace Dune {
 		// allocate local constraints map
 		CG cl;
 
-        // extract constraints type 
+        // extract constraints type
         typedef typename LFS::Traits::ConstraintsType C;
         const C & c = lfs.constraints();
 
 		// iterate over boundary, need intersection iterator
         ConstraintsCallVolume<C,C::doVolume>::volume(c,eg,lfs,cl);
 
-		// write coefficients into local vector 
+		// write coefficients into local vector
 		lfs.mwrite(cl,cg);
 	  }
 	};
-    
+
 #endif // DOXYGEN
 
     //! construct constraints from given boundary condition function
@@ -367,7 +367,7 @@ namespace Dune {
      * \code
 #include <dune/pdelab/gridfunctionspace/constraints.hh>
      * \endcode
-     * \tparam F   Type implementing a boundary condition function 
+     * \tparam F   Type implementing a boundary condition function
      * \tparam GFS Type implementing the model GridFunctionSpace
      * \tparam CG  Type implementing the model
      *             GridFunctionSpace::ConstraintsContainer::Type
@@ -397,7 +397,7 @@ namespace Dune {
       LFS lfs_f(gfs);
 
       // get index set
-      const typename GV::IndexSet& is=gfs.gridview().indexSet();      
+      const typename GV::IndexSet& is=gfs.gridview().indexSet();
 
       // helper to compute offset dependent on geometry type
       const int chunk=1<<28;
@@ -422,7 +422,7 @@ namespace Dune {
 
           ConstraintsVisitNodeMetaProgram2<LFS,LFS::isLeaf>
             ::volume(lfs_e,cg,ElementGeometry<Element>(*it));
-          
+
 		  // iterate over intersections and call metaprogram
           unsigned int intersection_index = 0;
 		  IntersectionIterator endit = gfs.gridview().iend(*it);
@@ -444,7 +444,7 @@ namespace Dune {
 
                 Dune::GeometryType gtn = iit->outside()->type();
                 const typename GV::IndexSet::IndexType idn = is.index(*(iit->outside()))+gtoffset[gtn];
-                
+
                 if(id>idn){
                   // bind local function space to element in neighbor
                   lfs_f.bind( *(iit->outside()) );
@@ -462,7 +462,7 @@ namespace Dune {
         typedef typename CG::iterator global_col_iterator;
         typedef typename CG::value_type::second_type global_row_type;
         typedef typename global_row_type::iterator global_row_iterator;
-	  
+
         std::cout << cg.size() << " constrained degrees of freedom" << std::endl;
 
         for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
@@ -590,7 +590,7 @@ namespace Dune {
     void copy_constrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
     {
       typedef typename XG::Backend B;
-	  typedef typename CG::const_iterator global_col_iterator;	  
+	  typedef typename CG::const_iterator global_col_iterator;
 	  for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
         B::access(xgout,cit->first) = B::access(xgin,cit->first);
 	}
