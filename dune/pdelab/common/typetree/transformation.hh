@@ -191,7 +191,9 @@ namespace Dune {
       {
 
         // transformed type, using the same nested struct trick as the PowerNode
-        typedef typename LookupNodeTransformation<S,T,typename S::ImplementationTag>::type::template result<
+        typedef typename LookupNodeTransformation<S,T,typename S::ImplementationTag>::type NodeTransformation;
+
+        typedef typename NodeTransformation::template result<
           typename TransformTree<C0,T,typename C0::NodeTag>::transformed_type,
           typename TransformTree<C1,T,typename C1::NodeTag>::transformed_type,
           typename TransformTree<C2,T,typename C2::NodeTag>::transformed_type,
@@ -202,10 +204,10 @@ namespace Dune {
           typename TransformTree<C7,T,typename C7::NodeTag>::transformed_type,
           typename TransformTree<C8,T,typename C8::NodeTag>::transformed_type,
           typename TransformTree<C9,T,typename C9::NodeTag>::transformed_type
-          > NodeTransformation;
+          > resulttypes;
 
-        typedef typename NodeTransformation::type transformed_type;
-        typedef typename NodeTransformation::storage_type transformed_storage_type;
+        typedef typename resulttypes::type transformed_type;
+        typedef typename resulttypes::storage_type transformed_storage_type;
         typedef typename S::ImplementationTag Tag;
 
         static transformed_type transform(const S& s, T& t)
@@ -279,27 +281,27 @@ namespace Dune {
       template<typename S, typename T>
       struct TransformTree<S,T,CompositeNodeTag>
       {
-        typedef typename transform_composite_node<S,typename S::Children,T>::transformed_type transformed_type;
-        typedef typename transform_composite_node<S,typename S::Children,T>::transformed_storage_type transformed_storage_type;
+        typedef typename transform_composite_node<S,typename S::ChildTypes,T>::transformed_type transformed_type;
+        typedef typename transform_composite_node<S,typename S::ChildTypes,T>::transformed_storage_type transformed_storage_type;
 
         static transformed_type transform(const S& s, T& t)
         {
-          return transform_composite_node<S,typename S::Children,T>::transform(s,t);
+          return transform_composite_node<S,typename S::ChildTypes,T>::transform(s,t);
         }
 
         static transformed_type transform(const S& s, const T& t)
         {
-          return transform_composite_node<S,typename S::Children,T>::transform(s,t);
+          return transform_composite_node<S,typename S::ChildTypes,T>::transform(s,t);
         }
 
         static transformed_storage_type transform_storage(shared_ptr<const S> sp, T& t)
         {
-          return transform_composite_node<S,typename S::Children,T>::transform_storage(sp,t);
+          return transform_composite_node<S,typename S::ChildTypes,T>::transform_storage(sp,t);
         }
 
         static transformed_storage_type transform_storage(shared_ptr<const S> sp, const T& t)
         {
-          return transform_composite_node<S,typename S::Children,T>::transform_storage(sp,t);
+          return transform_composite_node<S,typename S::ChildTypes,T>::transform_storage(sp,t);
         }
 
       };
