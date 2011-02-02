@@ -232,7 +232,7 @@ namespace Dune {
         // make the block sizes available in an array
         static const int blockSize[] = { s0, s1, s2, s3, s4, s5, s6, s7, s8, s9 };
         // check for compatible sizes
-        for (int i=1; i<BaseT::CHILDREN; i++)
+        for (std::size_t i=1; i<BaseT::CHILDREN; i++)
           {
             if (childLocalSize[i]%blockSize[i]!=0)
               DUNE_THROW(Exception,
@@ -245,7 +245,7 @@ namespace Dune {
         Dune::dinfo << "( ";
         offset[0] = 0;
         maxlocalsize = 0;
-        for (int i=0; i<BaseT::CHILDREN; i++)
+        for (std::size_t i=0; i<BaseT::CHILDREN; i++)
           {
             Dune::dinfo << childGlobalSize[i] << " ";
             offset[i+1] = offset[i]+childGlobalSize[i];
@@ -372,7 +372,7 @@ namespace Dune {
 
         std::vector<std::vector<typename Traits::SizeType> > childOffsets;
         childOffsets.resize(BaseT::CHILDREN);
-        for(int i=0; i<BaseT::CHILDREN; ++i)
+        for(std::size_t i=0; i<BaseT::CHILDREN; ++i)
           childOffsets[i].resize(gv.size(0)+1);
 
 
@@ -388,7 +388,7 @@ namespace Dune {
           DynamicBlockwiseMapperImp::GetChildOffsetsMetaProgram<CompositeGridFunctionSpace,BaseT::CHILDREN,0>::
             getChildOffsets(*this,*it,childOffsets);
 
-          for(int i=0; i<BaseT::CHILDREN; ++i){
+          for(std::size_t i=0; i<BaseT::CHILDREN; ++i){
             if(childOffsets[i][e_index+1] != childOffsets[i][e_index]){
               // Add new block index range element to list
               blockIndices[i].push_back(SizeTypePair(childOffsets[i][e_index],running_index));
@@ -400,19 +400,19 @@ namespace Dune {
         }
 
         // Insert a "stop entry" at end of every list
-        for(int i=0; i<BaseT::CHILDREN; ++i)
+        for(std::size_t i=0; i<BaseT::CHILDREN; ++i)
           blockIndices[i].push_back(SizeTypePair(childOffsets[i][gv.size(0)],running_index));
 
 
         blockIndexIterators.clear();
-        for(int i=0; i<BaseT::CHILDREN; ++i)
+        for(std::size_t i=0; i<BaseT::CHILDREN; ++i)
           blockIndexIterators.push_back(blockIndices[i].begin());
 
         // Gather the global information
         Dune::dinfo << "( ";
         offset[0] = 0;
         maxlocalsize = 0;
-        for (int i=0; i<BaseT::CHILDREN; i++)
+        for (std::size_t i=0; i<BaseT::CHILDREN; i++)
           {
             Dune::dinfo << childGlobalSize[i] << " ";
             offset[i+1] = offset[i]+childGlobalSize[i];
