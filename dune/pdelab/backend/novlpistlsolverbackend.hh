@@ -1191,7 +1191,7 @@ namespace Dune {
       smootherArgs.iterations = 1;
       smootherArgs.relaxationFactor = 1;
       //use noAccu or atOnceAccu
-      Criterion criterion(15,2000,1.2,1.6,Dune::Amg::AccumulationMode::atOnceAccu);
+      Criterion criterion(15,2000,1.2,1.6,Dune::Amg::atOnceAccu);
       Dune::NonoverlappingSchwarzScalarProduct<VectorType,Comm> sp(oocc);
       Operator oop(mat, oocc);
       AMG amg=AMG(oop, criterion, smootherArgs, 1, steps, steps, false, oocc);
