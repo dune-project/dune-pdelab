@@ -149,7 +149,7 @@ namespace Dune {
                                      DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>
       : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
       , public PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace<
-                                                     GridFunctionSpaceLexicographicMapper,
+                                                     GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9>,
                                                      DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>,
                                                    typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::Type::Traits::GridViewType,
                                                    typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::Type::Traits::BackendType,
@@ -286,7 +286,7 @@ namespace Dune {
     class CompositeGridFunctionSpace<GridFunctionSpaceDynamicBlockwiseMapper,DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>
       : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
       , public PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace<
-                                                     GridFunctionSpaceLexicographicMapper,
+                                                     GridFunctionSpaceDynamicBlockwiseMapper,
                                                      DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>,
                                                    typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::Type::Traits::GridViewType,
                                                    typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::Type::Traits::BackendType,
