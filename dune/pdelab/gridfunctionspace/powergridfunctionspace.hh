@@ -59,7 +59,7 @@ namespace Dune {
       typedef typename ImplementationBase::Traits Traits;
 
       // define local function space parametrized by self
-      typedef Dune::PDELab::PowerLocalFunctionSpaceNode<PowerGridFunctionSpace> LocalFunctionSpace;
+      typedef typename Dune::PDELab::TypeTree::TransformTree<PowerGridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
 
       template<std::size_t K = 2>
       PowerGridFunctionSpace (typename enable_if<K == BaseT::CHILDREN,T>::type& c0,
@@ -186,7 +186,7 @@ namespace Dune {
       typedef typename ImplementationBase::Traits Traits;
 
       // define local function space parametrized by self
-      typedef Dune::PDELab::PowerLocalFunctionSpaceNode<PowerGridFunctionSpace> LocalFunctionSpace;
+      typedef typename Dune::PDELab::TypeTree::TransformTree<PowerGridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
 
 
 
