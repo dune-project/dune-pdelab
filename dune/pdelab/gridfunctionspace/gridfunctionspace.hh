@@ -1217,45 +1217,48 @@ namespace Dune {
     // Subspace construction
     //=======================================
 
-    template<typename GFS, int k, typename CGFS> // primary template, only specializations are used !
+    template<typename GFS, std::size_t, typename Tag> // primary template, only specializations are used !
     class GridFunctionSubSpaceBase
     {
     };
 
+    template<typename GFS>
+    class CompositeGridFunctionSubSpaceNode;
+
+
+    template<typename Mapper, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN_FOR_SPECIALIZATION>
+    class CompositeGridFunctionSubSpaceNode<CompositeGridFunctionSpace<Mapper,DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES> >
+      : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
+    {
+
+      typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE NodeType;
+
+    public:
+
+      CompositeGridFunctionSubSpaceNode(const typename NodeType::ChildStorage& childStorage)
+        : NodeType(childStorage)
+      {}
+
+    };
+
 
     // CGFS is a composite
-	template<typename GFS, int k, typename P, typename T0, typename T1, typename T2, typename T3,
-			 typename T4, typename T5, typename T6, typename T7, typename T8>
-    class GridFunctionSubSpaceBase<GFS,k, CompositeGridFunctionSpace<P,T0,T1,T2,T3,T4,T5,T6,T7,T8> >
-      : public Countable // behave like child k of gfs which is a composite grid function space
+	template<typename GFS, std::size_t k>
+    class GridFunctionSubSpaceBase<GFS,k,CompositeGridFunctionSpaceTag>
+      : public CompositeGridFunctionSubSpaceNode<typename GFS::template Child<k>::Type>
     {
-      typedef CompositeGridFunctionSpace<P,T0,T1,T2,T3,T4,T5,T6,T7,T8> CGFS;
+      typedef typename GFS::template Child<k>::Type CGFS;
 
     public:
       //! export traits class
 	  typedef typename CGFS::Traits Traits;
 
       GridFunctionSubSpaceBase (const GFS& gfs)
-        : pgfs(&gfs), pcgfs(&gfs.template getChild<k>())
+        : CompositeGridFunctionSubSpaceNode<CGFS>(gfs.template child<k>().childStorage())
+        , pgfs(stackobject_to_shared_ptr(gfs))
+        , pcgfs(gfs.template childStorage<k>())
       {
       }
-
-	  enum { isLeaf = CGFS::isLeaf };
-	  enum { isPower = CGFS::isPower /**< */ };
-	  enum { isComposite = CGFS::isComposite /**< */ };
-	  enum { CHILDREN = CGFS::CHILDREN };
-
-	  template<int i>
-	  struct Child
-	  {
-		typedef typename CGFS::template Child<i>::Type Type;
-	  };
-
-	  template<int i>
-	  const typename CGFS::template Child<i>::Type& getChild () const
-	  {
-		return pcgfs->template getChild<i>();
-	  }
 
 	  // extract type of container storing Es
 	  template<typename E>
@@ -1278,7 +1281,7 @@ namespace Dune {
 	  };
 
       // define local function space parametrized by self
-      typedef Dune::PDELab::CompositeLocalFunctionSpaceNode<GridFunctionSubSpaceBase> LocalFunctionSpace;
+      // typedef Dune::PDELab::CompositeLocalFunctionSpaceNode<GridFunctionSubSpaceBase> LocalFunctionSpace;
 
 	  // get grid view
 	  const typename Traits::GridViewType& gridview () const
@@ -1307,59 +1310,45 @@ namespace Dune {
       //! map index from our index set [0,size()-1] to root index set
 	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
 	  {
-		return pgfs->upMap(pgfs->template subMap<k>(i));
+		return pgfs->upMap(pgfs->subMap(k,i));
 	  }
 
       //! map index from child i's index set into our index set
       template<int i>
 	  typename Traits::SizeType subMap (typename Traits::SizeType j) const
 	  {
-		return pcgfs->template subMap<i>(j);
+		return this->subMap(i,j);
 	  }
 
+      typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j) const
+      {
+		return pcgfs->subMap(i,j);
+      }
+
     private:
-      CountingPointer<GFS const> pgfs;
-      CountingPointer<CGFS const> pcgfs;
+      shared_ptr<GFS const> pgfs;
+      shared_ptr<CGFS const> pcgfs;
     };
 
 
     // CGFS is a power
-	template<typename GFS, int k, typename T, int l, typename P>
-    class GridFunctionSubSpaceBase<GFS,k, PowerGridFunctionSpace<T,l,P> >
-      : public Countable // behave like child k of gfs which is a composite grid function space
+	template<typename GFS, std::size_t k>
+    class GridFunctionSubSpaceBase<GFS,k,PowerGridFunctionSpaceTag>
+      : public TypeTree::PowerNode<typename GFS::template Child<k>::Type::ChildType,GFS::template Child<k>::Type::CHILDREN>
     {
-      typedef PowerGridFunctionSpace<T,l,P> CGFS;
+      typedef typename GFS::template Child<k>::Type CGFS;
+      typedef TypeTree::PowerNode<typename GFS::template Child<k>::Type::ChildType,GFS::template Child<k>::Type::CHILDREN> NodeType;
 
     public:
       //! export traits class
 	  typedef typename CGFS::Traits Traits;
 
       GridFunctionSubSpaceBase (const GFS& gfs)
-        : pgfs(&gfs), pcgfs(&gfs.template getChild<k>())
+        : NodeType(gfs.template child<k>().childStorage())
+        , pgfs(stackobject_to_shared_ptr(gfs))
+        , pcgfs(gfs.template childStorage<k>())
       {
       }
-
-	  enum { isLeaf = CGFS::isLeaf };
-	  enum { isPower = CGFS::isPower /**< */ };
-	  enum { isComposite = CGFS::isComposite /**< */ };
-	  enum { CHILDREN = CGFS::CHILDREN };
-
-	  template<int i>
-	  struct Child
-	  {
-		typedef typename CGFS::template Child<i>::Type Type;
-	  };
-
-	  template<int i>
-	  const typename CGFS::template Child<i>::Type& getChild () const
-	  {
-		return pcgfs->template getChild<i>();
-	  }
-
-	  const T& getChild (int i) const
-	  {
-		return pcgfs->getChild(i);
-	  }
 
 	  // extract type of container storing Es
 	  template<typename E>
@@ -1411,44 +1400,46 @@ namespace Dune {
       //! map index from our index set [0,size()-1] to root index set
 	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
 	  {
-		return pgfs->upMap(pgfs->template subMap<k>(i));
+		return pgfs->upMap(pgfs->subMap(k,i));
 	  }
 
       //! map index from child i's index set into our index set
       template<int i>
 	  typename Traits::SizeType subMap (typename Traits::SizeType j) const
 	  {
-		return pcgfs->template subMap<i>(j);
+		return this->subMap(i,j);
+	  }
+
+	  typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j) const
+	  {
+		return pcgfs->subMap(i,j);
 	  }
 
     private:
-      CountingPointer<GFS const> pgfs;
-      CountingPointer<CGFS const> pcgfs;
+      shared_ptr<GFS const> pgfs;
+      shared_ptr<CGFS const> pcgfs;
     };
 
 
     // CGFS is a leaf
-    template<typename GFS, int k, typename GV, typename FEM, typename CE,
-             typename B, typename P>
-    class GridFunctionSubSpaceBase<GFS,k, GridFunctionSpace<GV,FEM,CE,B,P> >
-      : public Countable // behave like child k of GFS which is a grid function space
+    template<typename GFS, std::size_t k>
+    class GridFunctionSubSpaceBase<GFS,k,LeafGridFunctionSpaceTag>
+      : public TypeTree::LeafNode
     {
-      typedef GridFunctionSpace<GV,FEM,CE,B,P> CGFS;
+      typedef typename GFS::template Child<k>::Type CGFS;
 
     public:
       //! export traits class
 	  typedef typename CGFS::Traits Traits;
+      typedef typename Traits::GridViewType GV;
+      typedef typename Traits::FiniteElementMapType FEM;
 	  typedef typename GV::Traits::template Codim<0>::Entity Element;
 
       GridFunctionSubSpaceBase (const GFS& gfs)
-        : pgfs(&gfs), pcgfs(&gfs.template getChild<k>())
+        : pgfs(stackobject_to_shared_ptr(gfs))
+        , pcgfs(gfs.template childStorage<k>())
       {
       }
-
-	  enum { isLeaf = CGFS::isLeaf };
-	  enum { isPower = CGFS::isPower /**< */ };
-	  enum { isComposite = CGFS::isComposite /**< */ };
-	  enum { CHILDREN = CGFS::CHILDREN };
 
       //! extract type of container storing Es
 	  template<typename E>
@@ -1512,7 +1503,7 @@ namespace Dune {
       //! map from our index set [0..size()-1] into root index set
 	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
 	  {
-		return pgfs->upMap(pgfs->template subMap<k>(i));
+		return pgfs->upMap(pgfs->subMap(k,i));
 	  }
 
 	  // compute global indices for one element
@@ -1531,10 +1522,10 @@ namespace Dune {
       }
 
     private:
-      CountingPointer<GFS const> pgfs;
-      CountingPointer<CGFS const> pcgfs;
+      shared_ptr<GFS const> pgfs;
+      shared_ptr<CGFS const> pcgfs;
     };
-
+    /*
     // ensure that GFS is not a leaf
     template<typename GFS, int k, int isleaf>
     class GridFunctionSubSpaceIntermediateBase
@@ -1558,16 +1549,14 @@ namespace Dune {
  		dune_static_assert((static_cast<int>(GFS::isLeaf)==0),"subspace cannot be taken from a leaf");
       }
     };
+    */
 
-
-
-
-    template<typename GFS, int k>
-    class GridFunctionSubSpace : public GridFunctionSubSpaceIntermediateBase<GFS,k,GFS::isLeaf>
+    template<typename GFS, std::size_t k>
+    class GridFunctionSubSpace : public GridFunctionSubSpaceBase<GFS,k,typename GFS::ImplementationTag>
     {
     public:
       GridFunctionSubSpace (const GFS& gfs)
-        : GridFunctionSubSpaceIntermediateBase<GFS,k,GFS::isLeaf>(gfs)
+        : GridFunctionSubSpaceBase<GFS,k,typename GFS::ImplementationTag>(gfs)
       {
         Dune::dinfo << "GridFunctionSubSpace:" << std::endl;
         Dune::dinfo << "root space size = " << gfs.globalSize()
