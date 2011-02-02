@@ -471,9 +471,9 @@ namespace Dune {
             const bool visit = std::remove_reference<V>::type::template VisitChild<N,C,typename TreePath::ViewType>::value;
             v.beforeChild(std::forward<N>(n),n.template child<count-inverse_k>(),tp.view(),count-inverse_k);
             tp.push_back(count-inverse_k);
-            ApplyToTree<V::treePathType,typename C::NodeTag,visit>::apply(n.template child<count-inverse_k>(),
-                                                                          std::forward<V>(v),
-                                                                          tp);
+            ApplyToTree<std::remove_reference<V>::type::treePathType,typename C::NodeTag,visit>::apply(n.template child<count-inverse_k>(),
+                                                                                                       std::forward<V>(v),
+                                                                                                       tp);
             tp.pop_back();
             v.afterChild(std::forward<N>(n),n.template child<count-inverse_k>(),tp.view(),count-inverse_k);
             v.in(std::forward<N>(n),tp.view());
@@ -555,9 +555,9 @@ namespace Dune {
             const bool visit = std::remove_reference<V>::type::template VisitChild<N,C,typename TreePath::ViewType>::value;
             v.beforeChild(std::forward<N>(n),n.template child<count-1>(),tp.view(),count-1);
             tp.push_back(count-1);
-            ApplyToTree<V::treePathType,typename C::NodeTag,visit>::apply(n.template child<count-1>(),
-                                                                          std::forward<V>(v),
-                                                                          tp);
+            ApplyToTree<std::remove_reference<V>::type::treePathType,typename C::NodeTag,visit>::apply(n.template child<count-1>(),
+                                                                                                       std::forward<V>(v),
+                                                                                                       tp);
             tp.pop_back();
             v.afterChild(std::forward<N>(n),n.template child<count-1>(),tp.view(),count-1);
           }
@@ -718,12 +718,12 @@ namespace Dune {
           v.pre(std::forward<N>(n),tp.view());
           typedef typename remove_reference<N>::type Node;
           typedef typename Node::template Child<0>::Type C;
-          const bool visit = V::template VisitChild<N,C,typename TreePath::ViewType>::value;
+          const bool visit = std::remove_reference<V>::type::template VisitChild<Node,C,typename TreePath::ViewType>::value;
           for (std::size_t k = 0; k < Node::CHILDREN; ++k)
             {
               v.beforeChild(std::forward<N>(n),n.child(k),tp.view(),k);
               tp.push_back(k);
-              ApplyToTree<V::treePathType,typename C::NodeTag,visit>::apply(n.child(k),std::forward<V>(v),tp);
+              ApplyToTree<std::remove_reference<V>::type::treePathType,typename C::NodeTag,visit>::apply(n.child(k),std::forward<V>(v),tp);
               tp.pop_back();
               v.afterChild(std::forward<N>(n),n.child(k),tp.view(),k);
               if (k < Node::CHILDREN-1)
@@ -780,8 +780,8 @@ namespace Dune {
       template<typename Tree, typename Visitor>
       void applyToTree(Tree&& tree, Visitor&& visitor)
       {
-        ApplyToTree<Visitor::treePathType>::apply(std::forward<Tree>(tree),
-                                                  std::forward<Visitor>(visitor));
+        ApplyToTree<std::remove_reference<Visitor>::type::treePathType>::apply(std::forward<Tree>(tree),
+                                                                               std::forward<Visitor>(visitor));
       }
 
 #else
