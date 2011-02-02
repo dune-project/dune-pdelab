@@ -259,6 +259,11 @@ namespace Dune {
           _children[i] = st;
         }
 
+        const NodeStorage& nodeStorage() const
+        {
+          return _children;
+        }
+
         //! @}
 
         //! @name Constructors

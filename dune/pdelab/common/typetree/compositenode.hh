@@ -255,6 +255,11 @@ namespace Dune {
           get<k>(_children) = child;
         }
 
+        const NodeStorage& nodeStorage() const
+        {
+          return _children;
+        }
+
         //! @}
 
       private:
