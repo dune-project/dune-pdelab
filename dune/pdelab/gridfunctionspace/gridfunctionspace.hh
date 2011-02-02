@@ -1252,6 +1252,7 @@ namespace Dune {
     public:
       //! export traits class
 	  typedef typename CGFS::Traits Traits;
+      typedef CompositeGridFunctionSpaceTag ImplementationTag;
 
       GridFunctionSubSpaceBase (const GFS& gfs)
         : CompositeGridFunctionSubSpaceNode<CGFS>(gfs.template child<k>().nodeStorage())
@@ -1279,9 +1280,6 @@ namespace Dune {
       private:
         ConstraintsContainer () {}
 	  };
-
-      // define local function space parametrized by self
-      // typedef Dune::PDELab::CompositeLocalFunctionSpaceNode<GridFunctionSubSpaceBase> LocalFunctionSpace;
 
 	  // get grid view
 	  const typename Traits::GridViewType& gridview () const
@@ -1342,6 +1340,7 @@ namespace Dune {
     public:
       //! export traits class
 	  typedef typename CGFS::Traits Traits;
+      typedef PowerGridFunctionSpaceTag ImplementationTag;
 
       GridFunctionSubSpaceBase (const GFS& gfs)
         : NodeType(gfs.template child<k>().nodeStorage())
@@ -1434,6 +1433,8 @@ namespace Dune {
       typedef typename Traits::GridViewType GV;
       typedef typename Traits::FiniteElementMapType FEM;
 	  typedef typename GV::Traits::template Codim<0>::Entity Element;
+
+      typedef LeafGridFunctionSpaceTag ImplementationTag;
 
       GridFunctionSubSpaceBase (const GFS& gfs)
         : pgfs(stackobject_to_shared_ptr(gfs))
@@ -1558,6 +1559,9 @@ namespace Dune {
       typedef GridFunctionSubSpaceBase<GFS,k,typename GFS::template Child<k>::Type::ImplementationTag> BaseT;
 
     public:
+
+      typedef typename Dune::PDELab::TypeTree::TransformTree<GridFunctionSubSpace,gfs_to_lfs>::Type LocalFunctionSpace;
+
       GridFunctionSubSpace (const GFS& gfs)
         : BaseT(gfs)
       {
