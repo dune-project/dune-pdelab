@@ -31,7 +31,7 @@ namespace Dune {
        * \note This class can also be used as a convenient base class if the implemented visitor
        * only needs to act on some of the possible callback sites, avoiding a lot of boilerplate code.
        */
-      struct TypeTreeVisitor
+      struct DefaultVisitor
       {
 
 #if HAVE_RVALUE_REFERENCES || DOXYGEN
@@ -80,6 +80,12 @@ namespace Dune {
         template<typename T, typename TreePath>
         void leaf(T&& t, TreePath treePath) const {}
 
+        template<typename T, typename Child, typename TreePath, typename ChildIndex>
+        void beforeChild(T&& t, Child&& child, TreePath treePath, ChildIndex childIndex) const {}
+
+        template<typename T, typename Child, typename TreePath, typename ChildIndex>
+        void afterChild(T&& t, Child&& child, TreePath treePath, ChildIndex childIndex) const {}
+
 #else // HAVE_RVALUE_REFERENCES
 
         // These are just a repeat of the above if the compiler does not support
@@ -118,14 +124,54 @@ namespace Dune {
         template<typename T, typename TreePath>
         void leaf(const T& t, TreePath treePath) const {}
 
+        template<typename T, typename Child, typename TreePath, typename ChildIndex>
+        void beforeChild(const T& t, const Child& child, TreePath treePath, ChildIndex childIndex) const {}
+
+        template<typename T, typename Child, typename TreePath, typename ChildIndex>
+        void beforeChild(T& t, Child& child, TreePath treePath, ChildIndex childIndex) const {}
+
+        template<typename T, typename Child, typename TreePath, typename ChildIndex>
+        void afterChild(const T& t, const Child& child, TreePath treePath, ChildIndex childIndex) const {}
+
+        template<typename T, typename Child, typename TreePath, typename ChildIndex>
+        void afterChild(T& t, Child& child, TreePath treePath, ChildIndex childIndex) const {}
+
 #endif // HAVE_RVALUE_REFERENCES || DOXYGEN
 
       };
 
+      struct VisitDirectChildren
+      {
+        template<typename Node, typename Child, typename TreePath>
+        struct VisitChild
+        {
+          static const bool value = false;
+        };
+      };
+
+      struct VisitTree
+      {
+        template<typename Node, typename Child, typename TreePath>
+        struct VisitChild
+        {
+          static const bool value = true;
+        };
+      };
+
+      struct TreeVisitor
+        : public DefaultVisitor
+        , public VisitTree
+      {};
+
+      struct DirectChildrenVisitor
+        : public DefaultVisitor
+        , public VisitDirectChildren
+      {};
+
 
 #ifndef DOXYGEN // these are all internals and not public API. Only access is using applyToTree().
 
-      template<typename tag = StartTag>
+      template<typename tag = StartTag, bool doApply = true>
       struct ApplyToTree
       {
 
@@ -170,9 +216,19 @@ namespace Dune {
       };
 
 
+      // Do not visit nodes the visitor is not interested in
+      template<typename tag>
+      struct ApplyToTree<tag,false>
+      {
+        template<typename Node, typename Visitor, typename TreePath>
+        static void apply(const Node& node, const Visitor& visitor, TreePath treePath)
+        {}
+      };
+
+
       // LeafNode - again, this is easy: just do all three visits
       template<>
-      struct ApplyToTree<LeafNodeTag>
+      struct ApplyToTree<LeafNodeTag,true>
       {
 
 #if HAVE_RVALUE_REFERENCES
@@ -229,9 +285,13 @@ namespace Dune {
           static void apply(N&& n, V&& v, TreePath tp)
           {
             typedef typename remove_reference<N>::type::template Child<count-inverse_k>::Type C;
-            ApplyToTree<typename C::NodeTag>::apply(n.template child<count-inverse_k>(),
-                                                    std::forward<V>(v),
-                                                    typename TreePathPushBack<TreePath,count-inverse_k>::type());
+            typedef typename TreePathPushBack<TreePath,count-inverse_k>::type ChildTreePath;
+            const bool visit = std::remove_reference<V>::type::template VisitChild<N,C,ChildTreePath>::value;
+            v.beforeChild(std::forward<N>(n),n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
+            ApplyToTree<typename C::NodeTag,visit>::apply(n.template child<count-inverse_k>(),
+                                                          std::forward<V>(v),
+                                                          ChildTreePath());
+            v.afterChild(std::forward<N>(n),n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
             v.in(std::forward<N>(n),tp);
             apply_to_children<inverse_k-1,count>::apply(std::forward<N>(n),
                                                         std::forward<V>(v),
@@ -244,7 +304,11 @@ namespace Dune {
           static void apply(N& n, V& v, TreePath tp)
           {
             typedef typename N::template Child<count-inverse_k>::Type C;
-            ApplyToTree<typename C::NodeTag>::apply(n.template child<count-inverse_k>(),v,typename TreePathPushBack<TreePath,count-inverse_k>::type());
+            typedef typename TreePathPushBack<TreePath,count-inverse_k>::type ChildTreePath;
+            const bool visit = V::template VisitChild<N,C,ChildTreePath>::value;
+            v.beforeChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
+            ApplyToTree<typename C::NodeTag,visit>::apply(n.template child<count-inverse_k>(),v,ChildTreePath());
+            v.afterChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
             v.in(n,tp);
             apply_to_children<inverse_k-1,count>::apply(n,v,tp);
           }
@@ -253,7 +317,11 @@ namespace Dune {
           static void apply(const N& n, V& v, TreePath tp)
           {
             typedef typename N::template Child<count-inverse_k>::Type C;
-            ApplyToTree<typename C::NodeTag>::apply(n.template child<count-inverse_k>(),v,typename TreePathPushBack<TreePath,count-inverse_k>::type());
+            typedef typename TreePathPushBack<TreePath,count-inverse_k>::type ChildTreePath;
+            const bool visit = V::template VisitChild<N,C,ChildTreePath>::value;
+            v.beforeChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
+            ApplyToTree<typename C::NodeTag,visit>::apply(n.template child<count-inverse_k>(),v,ChildTreePath());
+            v.afterChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
             v.in(n,tp);
             apply_to_children<inverse_k-1,count>::apply(n,v,tp);
           }
@@ -262,7 +330,11 @@ namespace Dune {
           static void apply(N& n, const V& v, TreePath tp)
           {
             typedef typename N::template Child<count-inverse_k>::Type C;
-            ApplyToTree<typename C::NodeTag>::apply(n.template child<count-inverse_k>(),v,typename TreePathPushBack<TreePath,count-inverse_k>::type());
+            typedef typename TreePathPushBack<TreePath,count-inverse_k>::type ChildTreePath;
+            const bool visit = V::template VisitChild<N,C,ChildTreePath>::value;
+            v.beforeChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
+            ApplyToTree<typename C::NodeTag,visit>::apply(n.template child<count-inverse_k>(),v,ChildTreePath());
+            v.afterChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
             v.in(n,tp);
             apply_to_children<inverse_k-1,count>::apply(n,v,tp);
           }
@@ -271,7 +343,11 @@ namespace Dune {
           static void apply(const N& n, const V& v, TreePath tp)
           {
             typedef typename N::template Child<count-inverse_k>::Type C;
-            ApplyToTree<typename C::NodeTag>::apply(n.template child<count-inverse_k>(),v,typename TreePathPushBack<TreePath,count-inverse_k>::type());
+            typedef typename TreePathPushBack<TreePath,count-inverse_k>::type ChildTreePath;
+            const bool visit = V::template VisitChild<N,C,ChildTreePath>::value;
+            v.beforeChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
+            ApplyToTree<typename C::NodeTag,visit>::apply(n.template child<count-inverse_k>(),v,ChildTreePath());
+            v.afterChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
             v.in(n,tp);
             apply_to_children<inverse_k-1,count>::apply(n,v,tp);
           }
@@ -292,9 +368,13 @@ namespace Dune {
           static void apply(N&& n, V&& v, TreePath tp)
           {
             typedef typename remove_reference<N>::type::template Child<count-1>::Type C;
-            ApplyToTree<typename C::NodeTag>::apply(n.template child<count-1>(),
-                                                      std::forward<V>(v),
-                                                      typename TreePathPushBack<TreePath,count-1>::type());
+            typedef typename TreePathPushBack<TreePath,count-1>::type ChildTreePath;
+            const bool visit = std::remove_reference<V>::type::template VisitChild<N,C,ChildTreePath>::value;
+            v.beforeChild(std::forward<N>(n),n.template child<count-1>(),tp,std::integral_constant<std::size_t,count-1>());
+            ApplyToTree<typename C::NodeTag,visit>::apply(n.template child<count-1>(),
+                                                          std::forward<V>(v),
+                                                          ChildTreePath());
+            v.afterChild(std::forward<N>(n),n.template child<count-1>(),tp,std::integral_constant<std::size_t,count-1>());
           }
 
 #else
@@ -303,28 +383,44 @@ namespace Dune {
           static void apply(N& n, V& v, TreePath tp)
           {
             typedef typename N::template Child<count-1>::Type C;
-            ApplyToTree<typename C::NodeTag>::apply(n.template child<count-1>(),v,typename TreePathPushBack<TreePath,count-1>::type());
+            typedef typename TreePathPushBack<TreePath,count-1>::type ChildTreePath;
+            const bool visit = V::template VisitChild<N,C,ChildTreePath>::value;
+            v.beforeChild(n,n.template child<count-1>(),tp,std::integral_constant<std::size_t,count-1>());
+            ApplyToTree<typename C::NodeTag,visit>::apply(n.template child<count-1>(),v,ChildTreePath());
+            v.afterChild(n,n.template child<count-1>(),tp,std::integral_constant<std::size_t,count-1>());
           }
 
           template<typename N, typename V, typename TreePath>
           static void apply(const N& n, V& v, TreePath tp)
           {
             typedef typename N::template Child<count-1>::Type C;
-            ApplyToTree<typename C::NodeTag>::apply(n.template child<count-1>(),v,typename TreePathPushBack<TreePath,count-1>::type());
+            typedef typename TreePathPushBack<TreePath,count-1>::type ChildTreePath;
+            const bool visit = V::template VisitChild<N,C,ChildTreePath>::value;
+            v.beforeChild(n,n.template child<count-1>(),tp,std::integral_constant<std::size_t,count-1>());
+            ApplyToTree<typename C::NodeTag,visit>::apply(n.template child<count-1>(),v,ChildTreePath());
+            v.afterChild(n,n.template child<count-1>(),tp,std::integral_constant<std::size_t,count-1>());
           }
 
           template<typename N, typename V, typename TreePath>
           static void apply(N& n, const V& v, TreePath tp)
           {
             typedef typename N::template Child<count-1>::Type C;
-            ApplyToTree<typename C::NodeTag>::apply(n.template child<count-1>(),v,typename TreePathPushBack<TreePath,count-1>::type());
+            typedef typename TreePathPushBack<TreePath,count-1>::type ChildTreePath;
+            const bool visit = V::template VisitChild<N,C,ChildTreePath>::value;
+            v.beforeChild(n,n.template child<count-1>(),tp,std::integral_constant<std::size_t,count-1>());
+            ApplyToTree<typename C::NodeTag,visit>::apply(n.template child<count-1>(),v,ChildTreePath());
+            v.afterChild(n,n.template child<count-1>(),tp,std::integral_constant<std::size_t,count-1>());
           }
 
           template<typename N, typename V, typename TreePath>
           static void apply(const N& n, const V& v, TreePath tp)
           {
             typedef typename N::template Child<count-1>::Type C;
-            ApplyToTree<typename C::NodeTag>::apply(n.template child<count-1>(),v,typename TreePathPushBack<TreePath,count-1>::type());
+            typedef typename TreePathPushBack<TreePath,count-1>::type ChildTreePath;
+            const bool visit = V::template VisitChild<N,C,ChildTreePath>::value;
+            v.beforeChild(n,n.template child<count-1>(),tp,std::integral_constant<std::size_t,count-1>());
+            ApplyToTree<typename C::NodeTag,visit>::apply(n.template child<count-1>(),v,ChildTreePath());
+            v.afterChild(n,n.template child<count-1>(),tp,std::integral_constant<std::size_t,count-1>());
           }
 
 #endif // HAVE_RVALUE_REFERENCES
@@ -417,7 +513,7 @@ namespace Dune {
 
       // Traverse PowerNode
       template<>
-      struct ApplyToTree<PowerNodeTag>
+      struct ApplyToTree<PowerNodeTag,true>
         : public ApplyToGenericCompositeNode
       {
 
@@ -428,7 +524,7 @@ namespace Dune {
 
       // Traverse CompositeNode
       template<>
-      struct ApplyToTree<CompositeNodeTag>
+      struct ApplyToTree<CompositeNodeTag,true>
         : public ApplyToGenericCompositeNode
       {
 
@@ -439,7 +535,7 @@ namespace Dune {
 
       // Traverse VariadicCompositeNode
       template<>
-      struct ApplyToTree<VariadicCompositeNodeTag>
+      struct ApplyToTree<VariadicCompositeNodeTag,true>
         : public ApplyToGenericCompositeNode
       {
 
