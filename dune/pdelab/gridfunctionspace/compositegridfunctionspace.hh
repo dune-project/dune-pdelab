@@ -56,15 +56,26 @@ namespace Dune {
       , public PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace<
                                                      GridFunctionSpaceLexicographicMapper,
                                                      DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>,
-                                                   DUNE_TYPETREE_COMPOSITENODE_BASETYPE,
-                                                   GridFunctionSpaceLexicographicMapper
+                                                   typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::Type::Traits::GridViewType,
+                                                   typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::Type::Traits::BackendType,
+                                                   GridFunctionSpaceLexicographicMapper,
+                                                   DUNE_TYPETREE_COMPOSITENODE_BASETYPE::CHILDREN
                                                    >
     {
       typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE BaseT;
 
-      typedef PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,BaseT,GridFunctionSpaceLexicographicMapper> ImplementationBase;
+      typedef PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,
+                                                  typename BaseT::template Child<0>::Type::Traits::GridViewType,
+                                                  typename BaseT::template Child<0>::Type::Traits::BackendType,
+                                                  GridFunctionSpaceLexicographicMapper,
+                                                  BaseT::CHILDREN> ImplementationBase;
 
-      friend class PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,BaseT,GridFunctionSpaceLexicographicMapper>;
+
+      friend class PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,
+                                                       typename BaseT::template Child<0>::Type::Traits::GridViewType,
+                                                       typename BaseT::template Child<0>::Type::Traits::BackendType,
+                                                       GridFunctionSpaceLexicographicMapper,
+                                                       BaseT::CHILDREN>;
 
     public:
 
@@ -138,18 +149,30 @@ namespace Dune {
                                      DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>
       : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
       , public PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace<
-                                                     GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9>,
+                                                     GridFunctionSpaceLexicographicMapper,
                                                      DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>,
-                                                   DUNE_TYPETREE_COMPOSITENODE_BASETYPE,
-                                                   GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9>
+                                                   typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::Type::Traits::GridViewType,
+                                                   typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::Type::Traits::BackendType,
+                                                   GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9>,
+                                                   DUNE_TYPETREE_COMPOSITENODE_BASETYPE::CHILDREN
                                                    >
     {
-      typedef GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9> BlockwiseMapper;
       typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE BaseT;
 
-      typedef PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,BaseT,BlockwiseMapper> ImplementationBase;
+      typedef GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9> BlockwiseMapper;
 
-      friend class PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,BaseT,BlockwiseMapper>;
+      typedef PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,
+                                                  typename BaseT::template Child<0>::Type::Traits::GridViewType,
+                                                  typename BaseT::template Child<0>::Type::Traits::BackendType,
+                                                  BlockwiseMapper,
+                                                  BaseT::CHILDREN> ImplementationBase;
+
+
+      friend class PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,
+                                                       typename BaseT::template Child<0>::Type::Traits::GridViewType,
+                                                       typename BaseT::template Child<0>::Type::Traits::BackendType,
+                                                       BlockwiseMapper,
+                                                       BaseT::CHILDREN>;
 
     public:
 
@@ -263,18 +286,30 @@ namespace Dune {
     class CompositeGridFunctionSpace<GridFunctionSpaceDynamicBlockwiseMapper,DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>
       : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
       , public PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace<
-                                                     GridFunctionSpaceDynamicBlockwiseMapper,
+                                                     GridFunctionSpaceLexicographicMapper,
                                                      DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>,
-                                                   DUNE_TYPETREE_COMPOSITENODE_BASETYPE,
-                                                   GridFunctionSpaceDynamicBlockwiseMapper
+                                                   typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::Type::Traits::GridViewType,
+                                                   typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::Type::Traits::BackendType,
+                                                   GridFunctionSpaceDynamicBlockwiseMapper,
+                                                   DUNE_TYPETREE_COMPOSITENODE_BASETYPE::CHILDREN
                                                    >
     {
-      typedef GridFunctionSpaceDynamicBlockwiseMapper BlockwiseMapper;
       typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE BaseT;
 
-      typedef PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,BaseT,BlockwiseMapper> ImplementationBase;
+      typedef GridFunctionSpaceDynamicBlockwiseMapper BlockwiseMapper;
 
-      friend class PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,BaseT,BlockwiseMapper>;
+      typedef PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,
+                                                  typename BaseT::template Child<0>::Type::Traits::GridViewType,
+                                                  typename BaseT::template Child<0>::Type::Traits::BackendType,
+                                                  BlockwiseMapper,
+                                                  BaseT::CHILDREN> ImplementationBase;
+
+
+      friend class PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,
+                                                       typename BaseT::template Child<0>::Type::Traits::GridViewType,
+                                                       typename BaseT::template Child<0>::Type::Traits::BackendType,
+                                                       BlockwiseMapper,
+                                                       BaseT::CHILDREN>;
 
     public:
 

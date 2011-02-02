@@ -41,15 +41,26 @@ namespace Dune {
                                                      T,
                                                      k,
                                                      GridFunctionSpaceLexicographicMapper>,
-                                                   TypeTree::PowerNode<T,k>,
-                                                   GridFunctionSpaceLexicographicMapper
+                                                   typename T::Traits::GridViewType,
+                                                   typename T::Traits::BackendType,
+                                                   GridFunctionSpaceLexicographicMapper,
+                                                   k
                                                    >
     {
 
       typedef TypeTree::PowerNode<T,k> BaseT;
-      typedef PowerCompositeGridFunctionSpaceBase<PowerGridFunctionSpace,BaseT,GridFunctionSpaceLexicographicMapper> ImplementationBase;
 
-      friend class PowerCompositeGridFunctionSpaceBase<PowerGridFunctionSpace,BaseT,GridFunctionSpaceLexicographicMapper>;
+      typedef PowerCompositeGridFunctionSpaceBase<PowerGridFunctionSpace,
+                                                  typename T::Traits::GridViewType,
+                                                  typename T::Traits::BackendType,
+                                                  GridFunctionSpaceLexicographicMapper,
+                                                  k> ImplementationBase;
+
+      friend class PowerCompositeGridFunctionSpaceBase<PowerGridFunctionSpace,
+                                                       typename T::Traits::GridViewType,
+                                                       typename T::Traits::BackendType,
+                                                       GridFunctionSpaceLexicographicMapper,
+                                                       k>;
 
     public:
 
@@ -167,16 +178,28 @@ namespace Dune {
                                                      T,
                                                      k,
                                                      GridFunctionSpaceComponentBlockwiseMapper<s> >,
-                                                   TypeTree::PowerNode<T,k>,
-                                                   GridFunctionSpaceComponentBlockwiseMapper<s>
+                                                   typename T::Traits::GridViewType,
+                                                   typename T::Traits::BackendType,
+                                                   GridFunctionSpaceComponentBlockwiseMapper<s>,
+                                                   k
                                                    >
     {
 
-      typedef GridFunctionSpaceComponentBlockwiseMapper<s> BlockwiseMapper;
       typedef TypeTree::PowerNode<T,k> BaseT;
-      typedef PowerCompositeGridFunctionSpaceBase<PowerGridFunctionSpace,BaseT,BlockwiseMapper> ImplementationBase;
 
-      friend class PowerCompositeGridFunctionSpaceBase<PowerGridFunctionSpace,BaseT,BlockwiseMapper>;
+      typedef GridFunctionSpaceComponentBlockwiseMapper<s> BlockwiseMapper;
+
+      typedef PowerCompositeGridFunctionSpaceBase<PowerGridFunctionSpace,
+                                                  typename T::Traits::GridViewType,
+                                                  typename T::Traits::BackendType,
+                                                  BlockwiseMapper,
+                                                  k> ImplementationBase;
+
+      friend class PowerCompositeGridFunctionSpaceBase<PowerGridFunctionSpace,
+                                                       typename T::Traits::GridViewType,
+                                                       typename T::Traits::BackendType,
+                                                       BlockwiseMapper,
+                                                       k>;
 
     public:
 

@@ -160,7 +160,7 @@ namespace Dune {
 
 
     //! Mixin class providing common functionality of PowerGridFunctionSpace and CompositeGridFunctionSpace
-    template<typename GridFunctionSpace, typename TreeNode, typename Mapper>
+    template<typename GridFunctionSpace, typename GV, typename B, typename Mapper, std::size_t k>
     class PowerCompositeGridFunctionSpaceBase
     {
 
@@ -183,10 +183,7 @@ namespace Dune {
     public:
 
       //! export traits class
-      typedef PowerCompositeGridFunctionSpaceTraits<typename TreeNode::template Child<0>::Type::Traits::GridViewType,
-                                                    typename TreeNode::template Child<0>::Type::Traits::BackendType,
-                                                    Mapper,
-                                                    TreeNode::CHILDREN> Traits;
+      typedef PowerCompositeGridFunctionSpaceTraits<GV,B,Mapper,k> Traits;
 
       //! extract type of container storing Es
       template<typename E>
@@ -218,13 +215,13 @@ namespace Dune {
       //! get dimension of root finite element space
       typename Traits::SizeType globalSize () const
       {
-        return offset[TreeNode::CHILDREN];
+        return offset[Traits::CHILDREN];
       }
 
       //! get dimension of this finite element space
       typename Traits::SizeType size () const
       {
-        return offset[TreeNode::CHILDREN];
+        return offset[Traits::CHILDREN];
       }
 
       //! get max dimension of shape function space
@@ -278,9 +275,9 @@ namespace Dune {
 
     protected:
 
-      typename Traits::SizeType childGlobalSize[TreeNode::CHILDREN];
-      typename Traits::SizeType childLocalSize[TreeNode::CHILDREN];
-      typename Traits::SizeType offset[TreeNode::CHILDREN+1];
+      typename Traits::SizeType childGlobalSize[Traits::CHILDREN];
+      typename Traits::SizeType childLocalSize[Traits::CHILDREN];
+      typename Traits::SizeType offset[Traits::CHILDREN+1];
       typename Traits::SizeType maxlocalsize;
 
        void setup ()
