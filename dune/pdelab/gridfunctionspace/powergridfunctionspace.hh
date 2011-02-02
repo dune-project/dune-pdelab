@@ -20,10 +20,10 @@ namespace Dune {
         base class that holds implementation of the methods
 
         PGFS(T,k) = {T}^k
-        
+
         \tparam T the underlying are all grid function spaces
         \tparam k power factor
-        \tparam Mapper is the ordering parameter. Use e.g. 
+        \tparam Mapper is the ordering parameter. Use e.g.
         \link GridFunctionSpaceLexicographicMapper GridFunctionSpaceLexicographicMapper \endlink
         or \link  GridFunctionSpaceComponentBlockwiseMapper  GridFunctionSpaceComponentBlockwiseMapper \endlink
         or \link  GridFunctionSpaceBlockwiseMapper  GridFunctionSpaceBlockwiseMapper \endlink
@@ -235,7 +235,6 @@ namespace Dune {
       struct VectorContainer
       {
         //! \brief define Type as the Type of a container of E's
-        typedef typename Traits::BackendType::template VectorContainer<PowerGridFunctionSpaceBase,E> Type;	
       private:
         VectorContainer () {}
       };
@@ -245,14 +244,14 @@ namespace Dune {
       struct ConstraintsContainer
       {
         //! \brief define Type as the Type of a container of E's
-        typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+        typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
       private:
         ConstraintsContainer () {}
       };
 
-      // define local function space parametrized by self 
+      // define local function space parametrized by self
       typedef Dune::PDELab::PowerLocalFunctionSpaceNode<PowerGridFunctionSpaceBase> LocalFunctionSpace;
-      
+
       // it is part of the trick to have a constructor without arguments
       // setting of the children is then done by the constructors
       // of the specialized derived classes
@@ -314,7 +313,7 @@ namespace Dune {
             return true;
         return false;
       }
-      
+
       //! returns true if size per entity of given dim and codim is a constant
       bool dataHandleFixedSize (int dim, int codim) const
       {
@@ -323,10 +322,10 @@ namespace Dune {
             return false;
         return true;
       }
-      
+
       /*! how many objects of type DataType have to be sent for a given entity
-        
-        Note: Only the sender side needs to know this size. 
+
+        Note: Only the sender side needs to know this size.
       */
       template<class EntityType>
       size_t dataHandleSize (const EntityType& e) const
@@ -339,7 +338,7 @@ namespace Dune {
 
       //! return vector of global indices associated with the given entity
       template<class EntityType>
-      void dataHandleGlobalIndices (const EntityType& e, 
+      void dataHandleGlobalIndices (const EntityType& e,
                                     std::vector<typename Traits::SizeType>& global) const
       {
         size_t n=0;
@@ -353,7 +352,7 @@ namespace Dune {
             for (size_t j=0; j<childglobal.size(); j++)
               global[n+j] = childglobal[j]*k+i;
             n += childglobal.size();
-          }          
+          }
       }
 
       //------------------------------
@@ -411,7 +410,7 @@ namespace Dune {
     };
 
 
-    /** 
+    /**
         \brief Tupel of grid function spaces base class that holds
         implementation of the methods specialization for dynamic
         blockwise ordering
@@ -423,7 +422,7 @@ namespace Dune {
     {
     public:
       //! export traits class
-      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType,
                                                     typename T::Traits::BackendType,
                                                     GridFunctionSpaceDynamicBlockwiseMapper, k>
       Traits;
@@ -435,7 +434,7 @@ namespace Dune {
       struct VectorContainer
       {
         //! \brief define Type as the Type of a container of E's
-        typedef typename Traits::BackendType::template VectorContainer<PowerGridFunctionSpaceBase,E> Type;	
+        typedef typename Traits::BackendType::template VectorContainer<PowerGridFunctionSpaceBase,E> Type;
       private:
         VectorContainer () {}
       };
@@ -445,14 +444,14 @@ namespace Dune {
       struct ConstraintsContainer
       {
         //! \brief define Type as the Type of a container of E's
-        typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+        typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
       private:
         ConstraintsContainer () {}
       };
 
-      // define local function space parametrized by self 
+      // define local function space parametrized by self
       typedef Dune::PDELab::PowerLocalFunctionSpaceNode<PowerGridFunctionSpaceBase> LocalFunctionSpace;
-      
+
       // it is part of the trick to have a constructor without arguments
       // setting of the children is then done by the constructors
       // of the specialized derived classes
@@ -518,7 +517,7 @@ namespace Dune {
             return true;
         return false;
       }
-      
+
       //! returns true if size per entity of given dim and codim is a constant
       bool dataHandleFixedSize (int dim, int codim) const
       {
@@ -527,10 +526,10 @@ namespace Dune {
             return false;
         return true;
       }
-      
+
       /*! how many objects of type DataType have to be sent for a given entity
-        
-        Note: Only the sender side needs to know this size. 
+
+        Note: Only the sender side needs to know this size.
       */
       template<class EntityType>
       size_t dataHandleSize (const EntityType& e) const
@@ -543,7 +542,7 @@ namespace Dune {
 
       //! return vector of global indices associated with the given entity
       template<class EntityType>
-      void dataHandleGlobalIndices (const EntityType& e, 
+      void dataHandleGlobalIndices (const EntityType& e,
                                     std::vector<typename Traits::SizeType>& global) const
       {
         size_t n=0;
@@ -557,7 +556,7 @@ namespace Dune {
             for (size_t j=0; j<childglobal.size(); j++)
               global[n+j] = childglobal[j]*k+i;
             n += childglobal.size();
-          }          
+          }
       }
 
       //------------------------------
@@ -573,7 +572,7 @@ namespace Dune {
     protected:
       void setup ()
       {
-        
+
         typedef typename Traits::GridViewType GridView;
         const GridView & gv = gridview();
 
@@ -598,7 +597,7 @@ namespace Dune {
           // Loop over children (realized by meta-program)
           DynamicBlockwiseMapperImp::GetChildOffsetsMetaProgram<PowerGridFunctionSpaceBase,BaseT::CHILDREN,0>::
             getChildOffsets(*this,*it,childOffsets);
-          
+
           for(int i=0; i<BaseT::CHILDREN; ++i){
             if(childOffsets[i][e_index+1] != childOffsets[i][e_index]){
               // Add new block index range element to list
@@ -609,7 +608,7 @@ namespace Dune {
             }
           }
         }
-        
+
         // Insert a "stop entry" at end of every list
         for(int i=0; i<BaseT::CHILDREN; ++i)
           blockIndices[i].push_back(SizeTypePair(childOffsets[i][gv.size(0)],running_index));
@@ -662,17 +661,17 @@ namespace Dune {
     /// \tparam T The type of the underlying grid function space
     /// \tparam k how many identical function space to use in the composition
     /// \tparam P The type of the mapper used. The mapper maps each degree of freedom
-    /// of each function space to a unique index. Use e.g. 
+    /// of each function space to a unique index. Use e.g.
     /// \link GridFunctionSpaceLexicographicMapper GridFunctionSpaceLexicographicMapper \endlink
     /// or \link  GridFunctionSpaceComponentBlockwiseMapper  GridFunctionSpaceComponentBlockwiseMapper \endlink
     /// or \link  GridFunctionSpaceBlockwiseMapper  GridFunctionSpaceBlockwiseMapper \endlink
     template<typename T, int k, typename P=GridFunctionSpaceLexicographicMapper>
-    class PowerGridFunctionSpace 
+    class PowerGridFunctionSpace
       : public PowerGridFunctionSpaceBase<T,k,P>
     {
     public:
       //! export traits class
-      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType,
                                                     typename T::Traits::BackendType,
                                                     P, k>
       Traits;
@@ -688,7 +687,7 @@ namespace Dune {
 
       //! \brief Construct a PowerGridFunction with k clones of the function t
       //! \param t grid function space to clone.
-      PowerGridFunctionSpace (T** t)  
+      PowerGridFunctionSpace (T** t)
       {
         for (int i=0; i<k; i++)
           setChild(i,*(t[i]));
@@ -700,12 +699,12 @@ namespace Dune {
 
 #ifndef DOXYGEN
     template<typename T, typename P>
-    class PowerGridFunctionSpace<T,2,P> 
+    class PowerGridFunctionSpace<T,2,P>
       : public PowerGridFunctionSpaceBase<T,2,P>
     {
     public:
       //! export traits class
-      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType,
                                                     typename T::Traits::BackendType,
                                                     P, 2>
       Traits;
@@ -728,12 +727,12 @@ namespace Dune {
     };
 
     template<typename T, typename P>
-    class PowerGridFunctionSpace<T,3,P> 
+    class PowerGridFunctionSpace<T,3,P>
       : public PowerGridFunctionSpaceBase<T,3,P>
     {
     public:
       //! export traits class
-      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType,
                                                     typename T::Traits::BackendType,
                                                     P, 3>
       Traits;
@@ -758,12 +757,12 @@ namespace Dune {
     };
 
     template<typename T, typename P>
-    class PowerGridFunctionSpace<T,4,P> 
+    class PowerGridFunctionSpace<T,4,P>
       : public PowerGridFunctionSpaceBase<T,4,P>
     {
     public:
       //! export traits class
-      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType,
                                                     typename T::Traits::BackendType,
                                                     P, 4>
       Traits;
@@ -790,12 +789,12 @@ namespace Dune {
     };
 
     template<typename T, typename P>
-    class PowerGridFunctionSpace<T,5,P> 
+    class PowerGridFunctionSpace<T,5,P>
       : public PowerGridFunctionSpaceBase<T,5,P>
     {
     public:
       //! export traits class
-      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType,
                                                     typename T::Traits::BackendType,
                                                     P, 5>
       Traits;
@@ -824,12 +823,12 @@ namespace Dune {
     };
 
     template<typename T, typename P>
-    class PowerGridFunctionSpace<T,6,P> 
+    class PowerGridFunctionSpace<T,6,P>
       : public PowerGridFunctionSpaceBase<T,6,P>
     {
     public:
       //! export traits class
-      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType,
                                                     typename T::Traits::BackendType,
                                                     P, 6>
       Traits;
@@ -860,7 +859,7 @@ namespace Dune {
     };
 
     template<typename T, typename P>
-    class PowerGridFunctionSpace<T,7,P> 
+    class PowerGridFunctionSpace<T,7,P>
       : public PowerGridFunctionSpaceBase<T,7,P>
     {
     public:
@@ -898,12 +897,12 @@ namespace Dune {
     };
 
     template<typename T, typename P>
-    class PowerGridFunctionSpace<T,8,P> 
+    class PowerGridFunctionSpace<T,8,P>
       : public PowerGridFunctionSpaceBase<T,8,P>
     {
     public:
       //! export traits class
-      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType,
                                                     typename T::Traits::BackendType,
                                                     P, 8>
       Traits;
@@ -938,12 +937,12 @@ namespace Dune {
     };
 
     template<typename T, typename P>
-    class PowerGridFunctionSpace<T,9,P> 
+    class PowerGridFunctionSpace<T,9,P>
       : public PowerGridFunctionSpaceBase<T,9,P>
     {
     public:
       //! export traits class
-      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType,
                                                     typename T::Traits::BackendType,
                                                     P, 9>
       Traits;
@@ -980,12 +979,12 @@ namespace Dune {
     };
 
     template<typename T, typename P>
-    class PowerGridFunctionSpace<T,10,P> 
+    class PowerGridFunctionSpace<T,10,P>
       : public PowerGridFunctionSpaceBase<T,10,P>
     {
     public:
       //! export traits class
-      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType, 
+      typedef PowerCompositeGridFunctionSpaceTraits<typename T::Traits::GridViewType,
                                                     typename T::Traits::BackendType,
                                                     P, 10>
       Traits;
@@ -1025,5 +1024,5 @@ namespace Dune {
 #endif // DOXYGEN
 
   }
-}    
+}
 #endif
