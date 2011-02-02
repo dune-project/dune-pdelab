@@ -182,7 +182,7 @@ namespace Dune {
         {
           ApplyToTree<tpType,typename remove_reference<Node>::type::NodeTag>::apply(std::forward<Node>(node),
                                                                                     std::forward<Visitor>(visitor),
-                                                                                    TreePath<>());
+                                                                                    TreePathFactory<tpType>::create().mutablePath());
         }
 
 #else
@@ -190,25 +190,25 @@ namespace Dune {
         template<typename Node, typename Visitor>
         static void apply(Node& node, Visitor& visitor)
         {
-          ApplyToTree<typename Node::NodeTag,tpType>::apply(node,visitor,TreePath<>());
+          ApplyToTree<typename Node::NodeTag,tpType>::apply(node,visitor,TreePathFactory<tpType>::create().mutablePath());
         }
 
         template<typename Node, typename Visitor>
         static void apply(const Node& node, Visitor& visitor)
         {
-          ApplyToTree<typename Node::NodeTag,tpType>::apply(node,visitor,TreePath<>());
+          ApplyToTree<typename Node::NodeTag,tpType>::apply(node,visitor,TreePathFactory<tpType>::create().mutablePath());
         }
 
         template<typename Node, typename Visitor>
         static void apply(Node& node, const Visitor& visitor)
         {
-          ApplyToTree<typename Node::NodeTag,tpType>::apply(node,visitor,TreePath<>());
+          ApplyToTree<typename Node::NodeTag,tpType>::apply(node,visitor,TreePathFactory<tpType>::create().mutablePath());
         }
 
         template<typename Node, typename Visitor>
         static void apply(const Node& node, const Visitor& visitor)
         {
-          ApplyToTree<typename Node::NodeTag,tpType>::apply(node,visitor,TreePath<>());
+          ApplyToTree<typename Node::NodeTag,tpType>::apply(node,visitor,TreePathFactory<tpType>::create().mutablePath());
         }
 
 #endif // HAVE_RVALUE_REFERENCES
@@ -236,7 +236,7 @@ namespace Dune {
         template<typename N, typename V, typename TreePath>
         static void apply(N&& n, V&& v, TreePath tp)
         {
-          v.leaf(std::forward<N>(n),tp);
+          v.leaf(std::forward<N>(n),tp.view());
         }
 
 #else
@@ -244,25 +244,25 @@ namespace Dune {
         template<typename N, typename V, typename TreePath>
         static void apply(N& n, V& v, TreePath tp)
         {
-          v.leaf(n,tp);
+          v.leaf(n,tp.view());
         }
 
         template<typename N, typename V, typename TreePath>
         static void apply(const N& n, V& v, TreePath tp)
         {
-          v.leaf(n,tp);
+          v.leaf(n,tp.view());
         }
 
         template<typename N, typename V, typename TreePath>
         static void apply(N& n, const V& v, TreePath tp)
         {
-          v.leaf(n,tp);
+          v.leaf(n,tp.view());
         }
 
         template<typename N, typename V, typename TreePath>
         static void apply(const N& n, const V& v, TreePath tp)
         {
-          v.leaf(n,tp);
+          v.leaf(n,tp.view());
         }
 
 #endif // HAVE_RVALUE_REFERENCES
@@ -276,7 +276,7 @@ namespace Dune {
         // This allows us to specialize the TMP for the last child, where we
         // do not want to invoke the infix visitor on the CompositeNode.
         template<std::size_t inverse_k, std::size_t count>
-        struct apply_to_children
+        struct apply_to_children_fully_static
         {
 
 #if HAVE_RVALUE_REFERENCES
@@ -293,9 +293,9 @@ namespace Dune {
                                                                           ChildTreePath());
             v.afterChild(std::forward<N>(n),n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
             v.in(std::forward<N>(n),tp);
-            apply_to_children<inverse_k-1,count>::apply(std::forward<N>(n),
-                                                        std::forward<V>(v),
-                                                        tp);
+            apply_to_children_fully_static<inverse_k-1,count>::apply(std::forward<N>(n),
+                                                                     std::forward<V>(v),
+                                                                     tp);
           }
 
 #else
@@ -310,7 +310,7 @@ namespace Dune {
             ApplyToTree<V::treePathType,typename C::NodeTag,visit>::apply(n.template child<count-inverse_k>(),v,ChildTreePath());
             v.afterChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
             v.in(n,tp);
-            apply_to_children<inverse_k-1,count>::apply(n,v,tp);
+            apply_to_children_fully_static<inverse_k-1,count>::apply(n,v,tp);
           }
 
           template<typename N, typename V, typename TreePath>
@@ -323,7 +323,7 @@ namespace Dune {
             ApplyToTree<V::treePathType,typename C::NodeTag,visit>::apply(n.template child<count-inverse_k>(),v,ChildTreePath());
             v.afterChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
             v.in(n,tp);
-            apply_to_children<inverse_k-1,count>::apply(n,v,tp);
+            apply_to_children_fully_static<inverse_k-1,count>::apply(n,v,tp);
           }
 
           template<typename N, typename V, typename TreePath>
@@ -336,7 +336,7 @@ namespace Dune {
             ApplyToTree<V::treePathType,typename C::NodeTag,visit>::apply(n.template child<count-inverse_k>(),v,ChildTreePath());
             v.afterChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
             v.in(n,tp);
-            apply_to_children<inverse_k-1,count>::apply(n,v,tp);
+            apply_to_children_fully_static<inverse_k-1,count>::apply(n,v,tp);
           }
 
           template<typename N, typename V, typename TreePath>
@@ -349,7 +349,7 @@ namespace Dune {
             ApplyToTree<V::treePathType,typename C::NodeTag,visit>::apply(n.template child<count-inverse_k>(),v,ChildTreePath());
             v.afterChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
             v.in(n,tp);
-            apply_to_children<inverse_k-1,count>::apply(n,v,tp);
+            apply_to_children_fully_static<inverse_k-1,count>::apply(n,v,tp);
           }
 
 #endif // HAVE_RVALUE_REFERENCES
@@ -359,7 +359,7 @@ namespace Dune {
         // Specialization for last child. This specialization stops the recursion and
         // does not call the infix visitor on the CompositeNode.
         template<std::size_t count>
-        struct apply_to_children<1,count>
+        struct apply_to_children_fully_static<1,count>
         {
 
 #if HAVE_RVALUE_REFERENCES
@@ -428,7 +428,7 @@ namespace Dune {
 
         // Specialization for CompositeNode without any children.
         template<std::size_t count>
-        struct apply_to_children<0,count>
+        struct apply_to_children_fully_static<0,count>
         {
 
 #if HAVE_RVALUE_REFERENCES
@@ -454,6 +454,192 @@ namespace Dune {
 
         };
 
+        // For the CompositeNode, we do again need a TMP for iterating over the
+        // children. Note that we use an index that counts down instead of up.
+        // This allows us to specialize the TMP for the last child, where we
+        // do not want to invoke the infix visitor on the CompositeNode.
+        template<std::size_t inverse_k, std::size_t count>
+        struct apply_to_children_dynamic
+        {
+
+#if HAVE_RVALUE_REFERENCES
+
+          template<typename N, typename V, typename TreePath>
+          static void apply(N&& n, V&& v, TreePath tp)
+          {
+            typedef typename remove_reference<N>::type::template Child<count-inverse_k>::Type C;
+            const bool visit = std::remove_reference<V>::type::template VisitChild<N,C,typename TreePath::ViewType>::value;
+            v.beforeChild(std::forward<N>(n),n.template child<count-inverse_k>(),tp.view(),count-inverse_k);
+            tp.push_back(count-inverse_k);
+            ApplyToTree<V::treePathType,typename C::NodeTag,visit>::apply(n.template child<count-inverse_k>(),
+                                                                          std::forward<V>(v),
+                                                                          tp);
+            tp.pop_back();
+            v.afterChild(std::forward<N>(n),n.template child<count-inverse_k>(),tp.view(),count-inverse_k);
+            v.in(std::forward<N>(n),tp.view());
+            apply_to_children_dynamic<inverse_k-1,count>::apply(std::forward<N>(n),
+                                                                std::forward<V>(v),
+                                                                tp);
+          }
+
+#else
+
+          template<typename N, typename V, typename TreePath>
+          static void apply(N& n, V& v, TreePath tp)
+          {
+            typedef typename N::template Child<count-inverse_k>::Type C;
+            typedef typename TreePathPushBack<TreePath,count-inverse_k>::type ChildTreePath;
+            const bool visit = V::template VisitChild<N,C,ChildTreePath>::value;
+            v.beforeChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
+            ApplyToTree<V::treePathType,typename C::NodeTag,visit>::apply(n.template child<count-inverse_k>(),v,ChildTreePath());
+            v.afterChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
+            v.in(n,tp);
+            apply_to_children_fully_static<inverse_k-1,count>::apply(n,v,tp);
+          }
+
+          template<typename N, typename V, typename TreePath>
+          static void apply(const N& n, V& v, TreePath tp)
+          {
+            typedef typename N::template Child<count-inverse_k>::Type C;
+            typedef typename TreePathPushBack<TreePath,count-inverse_k>::type ChildTreePath;
+            const bool visit = V::template VisitChild<N,C,ChildTreePath>::value;
+            v.beforeChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
+            ApplyToTree<V::treePathType,typename C::NodeTag,visit>::apply(n.template child<count-inverse_k>(),v,ChildTreePath());
+            v.afterChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
+            v.in(n,tp);
+            apply_to_children_fully_static<inverse_k-1,count>::apply(n,v,tp);
+          }
+
+          template<typename N, typename V, typename TreePath>
+          static void apply(N& n, const V& v, TreePath tp)
+          {
+            typedef typename N::template Child<count-inverse_k>::Type C;
+            typedef typename TreePathPushBack<TreePath,count-inverse_k>::type ChildTreePath;
+            const bool visit = V::template VisitChild<N,C,ChildTreePath>::value;
+            v.beforeChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
+            ApplyToTree<V::treePathType,typename C::NodeTag,visit>::apply(n.template child<count-inverse_k>(),v,ChildTreePath());
+            v.afterChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
+            v.in(n,tp);
+            apply_to_children_fully_static<inverse_k-1,count>::apply(n,v,tp);
+          }
+
+          template<typename N, typename V, typename TreePath>
+          static void apply(const N& n, const V& v, TreePath tp)
+          {
+            typedef typename N::template Child<count-inverse_k>::Type C;
+            typedef typename TreePathPushBack<TreePath,count-inverse_k>::type ChildTreePath;
+            const bool visit = V::template VisitChild<N,C,ChildTreePath>::value;
+            v.beforeChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
+            ApplyToTree<V::treePathType,typename C::NodeTag,visit>::apply(n.template child<count-inverse_k>(),v,ChildTreePath());
+            v.afterChild(n,n.template child<count-inverse_k>(),tp,std::integral_constant<std::size_t,count-inverse_k>());
+            v.in(n,tp);
+            apply_to_children_fully_static<inverse_k-1,count>::apply(n,v,tp);
+          }
+
+#endif // HAVE_RVALUE_REFERENCES
+
+        };
+
+        // Specialization for last child. This specialization stops the recursion and
+        // does not call the infix visitor on the CompositeNode.
+        template<std::size_t count>
+        struct apply_to_children_dynamic<1,count>
+        {
+
+#if HAVE_RVALUE_REFERENCES
+
+          template<typename N, typename V, typename TreePath>
+          static void apply(N&& n, V&& v, TreePath tp)
+          {
+            typedef typename remove_reference<N>::type::template Child<count-1>::Type C;
+            const bool visit = std::remove_reference<V>::type::template VisitChild<N,C,typename TreePath::ViewType>::value;
+            v.beforeChild(std::forward<N>(n),n.template child<count-1>(),tp.view(),count-1);
+            tp.push_back(count-1);
+            ApplyToTree<V::treePathType,typename C::NodeTag,visit>::apply(n.template child<count-1>(),
+                                                                          std::forward<V>(v),
+                                                                          tp);
+            tp.pop_back();
+            v.afterChild(std::forward<N>(n),n.template child<count-1>(),tp.view(),count-1);
+          }
+
+#else
+
+          template<typename N, typename V, typename TreePath>
+          static void apply(N& n, V& v, TreePath tp)
+          {
+            typedef typename N::template Child<count-1>::Type C;
+            typedef typename TreePathPushBack<TreePath,count-1>::type ChildTreePath;
+            const bool visit = V::template VisitChild<N,C,ChildTreePath>::value;
+            v.beforeChild(n,n.template child<count-1>(),tp,std::integral_constant<std::size_t,count-1>());
+            ApplyToTree<V::treePathType,typename C::NodeTag,visit>::apply(n.template child<count-1>(),v,ChildTreePath());
+            v.afterChild(n,n.template child<count-1>(),tp,std::integral_constant<std::size_t,count-1>());
+          }
+
+          template<typename N, typename V, typename TreePath>
+          static void apply(const N& n, V& v, TreePath tp)
+          {
+            typedef typename N::template Child<count-1>::Type C;
+            typedef typename TreePathPushBack<TreePath,count-1>::type ChildTreePath;
+            const bool visit = V::template VisitChild<N,C,ChildTreePath>::value;
+            v.beforeChild(n,n.template child<count-1>(),tp,std::integral_constant<std::size_t,count-1>());
+            ApplyToTree<V::treePathType,typename C::NodeTag,visit>::apply(n.template child<count-1>(),v,ChildTreePath());
+            v.afterChild(n,n.template child<count-1>(),tp,std::integral_constant<std::size_t,count-1>());
+          }
+
+          template<typename N, typename V, typename TreePath>
+          static void apply(N& n, const V& v, TreePath tp)
+          {
+            typedef typename N::template Child<count-1>::Type C;
+            typedef typename TreePathPushBack<TreePath,count-1>::type ChildTreePath;
+            const bool visit = V::template VisitChild<N,C,ChildTreePath>::value;
+            v.beforeChild(n,n.template child<count-1>(),tp,std::integral_constant<std::size_t,count-1>());
+            ApplyToTree<V::treePathType,typename C::NodeTag,visit>::apply(n.template child<count-1>(),v,ChildTreePath());
+            v.afterChild(n,n.template child<count-1>(),tp,std::integral_constant<std::size_t,count-1>());
+          }
+
+          template<typename N, typename V, typename TreePath>
+          static void apply(const N& n, const V& v, TreePath tp)
+          {
+            typedef typename N::template Child<count-1>::Type C;
+            typedef typename TreePathPushBack<TreePath,count-1>::type ChildTreePath;
+            const bool visit = V::template VisitChild<N,C,ChildTreePath>::value;
+            v.beforeChild(n,n.template child<count-1>(),tp,std::integral_constant<std::size_t,count-1>());
+            ApplyToTree<V::treePathType,typename C::NodeTag,visit>::apply(n.template child<count-1>(),v,ChildTreePath());
+            v.afterChild(n,n.template child<count-1>(),tp,std::integral_constant<std::size_t,count-1>());
+          }
+
+#endif // HAVE_RVALUE_REFERENCES
+        };
+
+        // Specialization for CompositeNode without any children.
+        template<std::size_t count>
+        struct apply_to_children_dynamic<0,count>
+        {
+
+#if HAVE_RVALUE_REFERENCES
+
+          template<typename N, typename V, typename TreePath>
+          static void apply(N&& n, V&& v, TreePath tp) {}
+
+#else
+
+          template<typename N, typename V, typename TreePath>
+          static void apply(N& n, V& v, TreePath tp) {}
+
+          template<typename N, typename V, typename TreePath>
+          static void apply(const N& n, V& v, TreePath tp) {}
+
+          template<typename N, typename V, typename TreePath>
+          static void apply(N& n, const V& v, TreePath tp) {}
+
+          template<typename N, typename V, typename TreePath>
+          static void apply(const N& n, const V& v, TreePath tp) {}
+
+#endif // HAVE_RVALUE_REFERENCES
+
+        };
+
+
       } // anonymous namespace
 
         // Base class for composite node traversal
@@ -467,9 +653,9 @@ namespace Dune {
         {
           v.pre(std::forward<N>(n),tp);
           typedef typename remove_reference<N>::type Node;
-          apply_to_children<Node::CHILDREN,Node::CHILDREN>::apply(std::forward<N>(n),
-                                                                  std::forward<V>(v),
-                                                                  tp);
+          apply_to_children_fully_static<Node::CHILDREN,Node::CHILDREN>::apply(std::forward<N>(n),
+                                                                               std::forward<V>(v),
+                                                                               tp);
           v.post(std::forward<N>(n),tp);
         }
 
@@ -479,7 +665,7 @@ namespace Dune {
         static void apply(N& n, V& v, TreePath tp)
         {
           v.pre(n,tp);
-          apply_to_children<N::CHILDREN,N::CHILDREN>::apply(n,v,tp);
+          apply_to_children_fully_static<N::CHILDREN,N::CHILDREN>::apply(n,v,tp);
           v.post(n,tp);
         }
 
@@ -487,7 +673,7 @@ namespace Dune {
         static void apply(const N& n, V& v, TreePath tp)
         {
           v.pre(n,tp);
-          apply_to_children<N::CHILDREN,N::CHILDREN>::apply(n,v,tp);
+          apply_to_children_fully_static<N::CHILDREN,N::CHILDREN>::apply(n,v,tp);
           v.post(n,tp);
         }
 
@@ -495,7 +681,7 @@ namespace Dune {
         static void apply(N& n, const V& v, TreePath tp)
         {
           v.pre(n,tp);
-          apply_to_children<N::CHILDREN,N::CHILDREN>::apply(n,v,tp);
+          apply_to_children_fully_static<N::CHILDREN,N::CHILDREN>::apply(n,v,tp);
           v.post(n,tp);
         }
 
@@ -503,7 +689,7 @@ namespace Dune {
         static void apply(const N& n, const V& v, TreePath tp)
         {
           v.pre(n,tp);
-          apply_to_children<N::CHILDREN,N::CHILDREN>::apply(n,v,tp);
+          apply_to_children_fully_static<N::CHILDREN,N::CHILDREN>::apply(n,v,tp);
           v.post(n,tp);
         }
 
@@ -518,6 +704,33 @@ namespace Dune {
       {
 
         using ApplyToGenericCompositeNode::apply;
+
+      };
+
+
+      template<>
+      struct ApplyToTree<TreePathType::dynamic,PowerNodeTag,true>
+      {
+
+        template<typename N, typename V, typename TreePath>
+        static void apply(N&& n, V&& v, TreePath tp)
+        {
+          v.pre(std::forward<N>(n),tp.view());
+          typedef typename remove_reference<N>::type Node;
+          typedef typename Node::template Child<0>::Type C;
+          const bool visit = V::template VisitChild<N,C,typename TreePath::ViewType>::value;
+          for (std::size_t k = 0; k < Node::CHILDREN; ++k)
+            {
+              v.beforeChild(std::forward<N>(n),n.child(k),tp.view(),k);
+              tp.push_back(k);
+              ApplyToTree<V::treePathType,typename C::NodeTag,visit>::apply(n.child(k),std::forward<V>(v),tp);
+              tp.pop_back();
+              v.afterChild(std::forward<N>(n),n.child(k),tp.view(),k);
+              if (k < Node::CHILDREN-1)
+                v.in(std::forward<N>(n),tp.view());
+            }
+          v.post(std::forward<N>(n),tp.view());
+        }
 
       };
 
@@ -540,6 +753,23 @@ namespace Dune {
       {
 
         using ApplyToGenericCompositeNode::apply;
+
+      };
+
+      template<>
+      struct ApplyToTree<TreePathType::dynamic,VariadicCompositeNodeTag,true>
+      {
+
+        template<typename N, typename V, typename TreePath>
+        static void apply(N&& n, V&& v, TreePath tp)
+        {
+          v.pre(std::forward<N>(n),tp.view());
+          typedef typename remove_reference<N>::type Node;
+          apply_to_children_dynamic<Node::CHILDREN,Node::CHILDREN>::apply(std::forward<N>(n),
+                                                                          std::forward<V>(v),
+                                                                          tp);
+          v.post(std::forward<N>(n),tp.view());
+        }
 
       };
 
