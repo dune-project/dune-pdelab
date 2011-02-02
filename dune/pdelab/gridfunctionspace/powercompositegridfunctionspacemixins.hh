@@ -8,20 +8,57 @@
 namespace Dune {
   namespace PDELab {
 
-    //=======================================
-    // composite grid function space
-    //=======================================
-
     //! \addtogroup GridFunctionSpace grid function space
     //! \ingroup PDELab
     //! \{
 
-    //! Mixin class providing DataHandle support for composite and power GridFunctionSpaces.
-    template<typename GridFunctionSpace>
-    class PowerCompositeDataHandleProvider
+
+    //! Mixin class providing common functionality of PowerGridFunctionSpace and CompositeGridFunctionSpace
+    template<typename GridFunctionSpace, typename TreeNode, typename Mapper>
+    class PowerCompositeGridFunctionSpaceBase
     {
 
 #ifndef DOXYGEN
+
+      //! We put the actual method in a base class because we want to use it with different tree iteration patterns
+      struct SetupVisitorBase
+        : public TypeTree::DefaultVisitor
+      {
+
+        template<typename CompositeGFS, typename Child, typename TreePath, typename ChildIndex>
+        void afterChild(CompositeGFS& cgfs, const Child& child, TreePath treePath, ChildIndex childIndex)
+        {
+          cgfs.childGlobalSize[ChildIndex::value] = child.globalSize();
+          cgfs.childLocalSize[ChildIndex::value] = child.maxLocalSize();
+        }
+
+      };
+
+      //! Visitor for setting up the GFS from pre-initialized children
+      struct SetupVisitor
+        : public SetupVisitorBase
+        , public TypeTree::VisitDirectChildren
+      {};
+
+      //! Visitor for updating the complete GFS tree
+      struct UpdateVisitor
+        : public SetupVisitorBase
+        , public TypeTree::VisitTree
+      {
+
+        template<typename LeafNode, typename TreePath>
+        void leaf(const LeafNode& node, TreePath treePath)
+        {
+          node.update();
+        }
+
+        template<typename LeafNode, typename TreePath>
+        void post(const LeafNode& node, TreePath treePath)
+        {
+          node.calculateSizes();
+        }
+
+      };
 
       //! Functor for dataHandleFixedSize()
       struct DataHandleFixedSize
@@ -130,9 +167,72 @@ namespace Dune {
         return static_cast<const GridFunctionSpace&>(*this);
       }
 
+      GridFunctionSpace& gfs()
+      {
+        return static_cast<GridFunctionSpace&>(*this);
+      }
+
 #endif // DOXYGEN
 
     public:
+
+      //! export traits class
+      typedef PowerCompositeGridFunctionSpaceTraits<typename TreeNode::template Child<0>::Type::Traits::GridViewType,
+                                                    typename TreeNode::template Child<0>::Type::Traits::BackendType,
+                                                    Mapper,
+                                                    TreeNode::CHILDREN> Traits;
+
+      //! extract type of container storing Es
+      template<typename E>
+      struct VectorContainer
+      {
+        //! \brief define Type as the Type of a container of E's
+        typedef typename Traits::BackendType::template VectorContainer<GridFunctionSpace,E> Type;
+      private:
+        VectorContainer ();
+      };
+
+      //! extract type for storing constraints
+      template<typename E>
+      struct ConstraintsContainer
+      {
+        //! \brief define Type as the Type of a container of E's
+        typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
+      private:
+        ConstraintsContainer ();
+      };
+
+
+      //! recalculate sizes
+      void update ()
+      {
+        TypeTree::applyToTree(gfs(),UpdateVisitor());
+      }
+
+      //! get dimension of root finite element space
+      typename Traits::SizeType globalSize () const
+      {
+        return offset[TreeNode::CHILDREN];
+      }
+
+      //! get dimension of this finite element space
+      typename Traits::SizeType size () const
+      {
+        return offset[TreeNode::CHILDREN];
+      }
+
+      //! get max dimension of shape function space
+      typename Traits::SizeType maxLocalSize () const
+      {
+        // this is bullshit !
+        return maxlocalsize;
+      }
+
+      //! get grid view
+      const typename Traits::GridViewType& gridview () const
+      {
+        return gfs().template child<0>().gridview();
+      }
 
       //------------------------------
       // generic data handle interface
@@ -170,136 +270,11 @@ namespace Dune {
         TypeTree::applyToTree(gfs(),visitor);
       }
 
-    };
-
-
-
-
-
-
-    template<typename GridFunctionSpace, typename Node, typename Mapper>
-    class PowerCompositeUpdateAndSetupProvider
-    {
-
-#ifndef DOXYGEN
-
-      //! We put the actual method in a base class because we want to use it with different tree iteration patterns
-      struct SetupVisitorBase
-        : public TypeTree::DefaultVisitor
-      {
-
-        template<typename CompositeGFS, typename Child, typename TreePath, typename ChildIndex>
-        void afterChild(CompositeGFS& cgfs, const Child& child, TreePath treePath, ChildIndex childIndex)
-        {
-          cgfs.childGlobalSize[ChildIndex::value] = child.globalSize();
-          cgfs.childLocalSize[ChildIndex::value] = child.maxLocalSize();
-        }
-
-      };
-
-      //! Visitor for setting up the GFS from pre-initialized children
-      struct SetupVisitor
-        : public SetupVisitorBase
-        , public TypeTree::VisitDirectChildren
-      {};
-
-      //! Visitor for updating the complete GFS tree
-      struct UpdateVisitor
-        : public SetupVisitorBase
-        , public TypeTree::VisitTree
-      {
-
-        template<typename LeafNode, typename TreePath>
-        void leaf(const LeafNode& node, TreePath treePath)
-        {
-          node.update();
-        }
-
-        template<typename LeafNode, typename TreePath>
-        void post(const LeafNode& node, TreePath treePath)
-        {
-          node.calculateSizes();
-        }
-
-      };
-
-      const GridFunctionSpace& gfs() const
-      {
-        return static_cast<const GridFunctionSpace&>(*this);
-      }
-
-      GridFunctionSpace& gfs()
-      {
-        return static_cast<GridFunctionSpace&>(*this);
-      }
-
-#endif // DOXYGEN
-
-    public:
-
-      //! export traits class
-      typedef PowerCompositeGridFunctionSpaceTraits<typename Node::template Child<0>::Type::Traits::GridViewType,
-                                                    typename Node::template Child<0>::Type::Traits::BackendType,
-                                                    Mapper,
-                                                    Node::CHILDREN> Traits;
-
-      //! extract type of container storing Es
-      template<typename E>
-      struct VectorContainer
-      {
-        //! \brief define Type as the Type of a container of E's
-        typedef typename Traits::BackendType::template VectorContainer<GridFunctionSpace,E> Type;
-      private:
-        VectorContainer ();
-      };
-
-      //! extract type for storing constraints
-      template<typename E>
-      struct ConstraintsContainer
-      {
-        //! \brief define Type as the Type of a container of E's
-        typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
-      private:
-        ConstraintsContainer ();
-      };
-
-
-      //! recalculate sizes
-      void update ()
-      {
-        TypeTree::applyToTree(gfs(),UpdateVisitor());
-      }
-
-      //! get dimension of root finite element space
-      typename Traits::SizeType globalSize () const
-      {
-        return offset[Node::CHILDREN];
-      }
-
-      //! get dimension of this finite element space
-      typename Traits::SizeType size () const
-      {
-        return offset[Node::CHILDREN];
-      }
-
-      //! get max dimension of shape function space
-      typename Traits::SizeType maxLocalSize () const
-      {
-        // this is bullshit !
-        return maxlocalsize;
-      }
-
-      //! get grid view
-      const typename Traits::GridViewType& gridview () const
-      {
-        return gfs().template child<0>().gridview();
-      }
-
     protected:
 
-      typename Traits::SizeType childGlobalSize[Node::CHILDREN];
-      typename Traits::SizeType childLocalSize[Node::CHILDREN];
-      typename Traits::SizeType offset[Node::CHILDREN+1];
+      typename Traits::SizeType childGlobalSize[TreeNode::CHILDREN];
+      typename Traits::SizeType childLocalSize[TreeNode::CHILDREN];
+      typename Traits::SizeType offset[TreeNode::CHILDREN+1];
       typename Traits::SizeType maxlocalsize;
 
        void setup ()

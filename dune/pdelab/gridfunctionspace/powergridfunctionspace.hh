@@ -37,24 +37,19 @@ namespace Dune {
     template<typename T, std::size_t k>
     class PowerGridFunctionSpace<T,k,GridFunctionSpaceLexicographicMapper>
       : public TypeTree::PowerNode<T,k>
-      , public PowerCompositeDataHandleProvider<PowerGridFunctionSpace<
-                                                  T,
-                                                  k,
-                                                  GridFunctionSpaceLexicographicMapper>
-                                                >
-      , public PowerCompositeUpdateAndSetupProvider<PowerGridFunctionSpace<
-                                                      T,
-                                                      k,
-                                                      GridFunctionSpaceLexicographicMapper>,
-                                                    TypeTree::PowerNode<T,k>,
-                                                    GridFunctionSpaceLexicographicMapper
-                                                    >
+      , public PowerCompositeGridFunctionSpaceBase<PowerGridFunctionSpace<
+                                                     T,
+                                                     k,
+                                                     GridFunctionSpaceLexicographicMapper>,
+                                                   TypeTree::PowerNode<T,k>,
+                                                   GridFunctionSpaceLexicographicMapper
+                                                   >
     {
 
       typedef TypeTree::PowerNode<T,k> BaseT;
-      typedef PowerCompositeUpdateAndSetupProvider<PowerGridFunctionSpace,BaseT,GridFunctionSpaceLexicographicMapper> ImplementationBase;
+      typedef PowerCompositeGridFunctionSpaceBase<PowerGridFunctionSpace,BaseT,GridFunctionSpaceLexicographicMapper> ImplementationBase;
 
-      friend class PowerCompositeUpdateAndSetupProvider<PowerGridFunctionSpace,BaseT,GridFunctionSpaceLexicographicMapper>;
+      friend class PowerCompositeGridFunctionSpaceBase<PowerGridFunctionSpace,BaseT,GridFunctionSpaceLexicographicMapper>;
 
     public:
       //! export traits class
@@ -160,25 +155,20 @@ namespace Dune {
     template<typename T, std::size_t k, int s>
     class PowerGridFunctionSpace<T,k,GridFunctionSpaceComponentBlockwiseMapper<s> >
       : public TypeTree::PowerNode<T,k>
-      , public PowerCompositeDataHandleProvider<PowerGridFunctionSpace<
-                                                  T,
-                                                  k,
-                                                  GridFunctionSpaceComponentBlockwiseMapper<s> >
-                                                >
-      , public PowerCompositeUpdateAndSetupProvider<PowerGridFunctionSpace<
-                                                      T,
-                                                      k,
-                                                      GridFunctionSpaceComponentBlockwiseMapper<s> >,
-                                                    TypeTree::PowerNode<T,k>,
-                                                    GridFunctionSpaceComponentBlockwiseMapper<s>
-                                                    >
+      , public PowerCompositeGridFunctionSpaceBase<PowerGridFunctionSpace<
+                                                     T,
+                                                     k,
+                                                     GridFunctionSpaceComponentBlockwiseMapper<s> >,
+                                                   TypeTree::PowerNode<T,k>,
+                                                   GridFunctionSpaceComponentBlockwiseMapper<s>
+                                                   >
     {
 
       typedef GridFunctionSpaceComponentBlockwiseMapper<s> BlockwiseMapper;
       typedef TypeTree::PowerNode<T,k> BaseT;
-      typedef PowerCompositeUpdateAndSetupProvider<PowerGridFunctionSpace,BaseT,BlockwiseMapper> ImplementationBase;
+      typedef PowerCompositeGridFunctionSpaceBase<PowerGridFunctionSpace,BaseT,BlockwiseMapper> ImplementationBase;
 
-      friend class PowerCompositeUpdateAndSetupProvider<PowerGridFunctionSpace,BaseT,BlockwiseMapper>;
+      friend class PowerCompositeGridFunctionSpaceBase<PowerGridFunctionSpace,BaseT,BlockwiseMapper>;
 
     public:
       //! export traits class
