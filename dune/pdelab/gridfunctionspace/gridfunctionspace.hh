@@ -1235,8 +1235,8 @@ namespace Dune {
 
     public:
 
-      CompositeGridFunctionSubSpaceNode(const typename NodeType::ChildStorage& childStorage)
-        : NodeType(childStorage)
+      CompositeGridFunctionSubSpaceNode(const typename NodeType::NodeStorage& nodeStorage)
+        : NodeType(nodeStorage)
       {}
 
     };
@@ -1254,7 +1254,7 @@ namespace Dune {
 	  typedef typename CGFS::Traits Traits;
 
       GridFunctionSubSpaceBase (const GFS& gfs)
-        : CompositeGridFunctionSubSpaceNode<CGFS>(gfs.template child<k>().childStorage())
+        : CompositeGridFunctionSubSpaceNode<CGFS>(gfs.template child<k>().nodeStorage())
         , pgfs(stackobject_to_shared_ptr(gfs))
         , pcgfs(gfs.template childStorage<k>())
       {
@@ -1344,7 +1344,7 @@ namespace Dune {
 	  typedef typename CGFS::Traits Traits;
 
       GridFunctionSubSpaceBase (const GFS& gfs)
-        : NodeType(gfs.template child<k>().childStorage())
+        : NodeType(gfs.template child<k>().nodeStorage())
         , pgfs(stackobject_to_shared_ptr(gfs))
         , pcgfs(gfs.template childStorage<k>())
       {
