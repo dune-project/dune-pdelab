@@ -20,9 +20,7 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
 
-#include "../common/countingptr.hh"
 #include "../common/typetree.hh"
-#include "../common/cpstoragepolicy.hh"
 #include "../common/geometrywrapper.hh"
 
 #include"localfunctionspace.hh"
