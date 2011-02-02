@@ -1552,11 +1552,14 @@ namespace Dune {
     */
 
     template<typename GFS, std::size_t k>
-    class GridFunctionSubSpace : public GridFunctionSubSpaceBase<GFS,k,typename GFS::ImplementationTag>
+    class GridFunctionSubSpace : public GridFunctionSubSpaceBase<GFS,k,typename GFS::template Child<k>::Type::ImplementationTag>
     {
+
+      typedef GridFunctionSubSpaceBase<GFS,k,typename GFS::template Child<k>::Type::ImplementationTag> BaseT;
+
     public:
       GridFunctionSubSpace (const GFS& gfs)
-        : GridFunctionSubSpaceBase<GFS,k,typename GFS::ImplementationTag>(gfs)
+        : BaseT(gfs)
       {
         Dune::dinfo << "GridFunctionSubSpace:" << std::endl;
         Dune::dinfo << "root space size = " << gfs.globalSize()
