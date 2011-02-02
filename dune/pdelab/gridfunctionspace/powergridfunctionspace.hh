@@ -158,7 +158,7 @@ namespace Dune {
         Dune::dinfo << "( ";
         offset[0] = 0;
         maxlocalsize = 0;
-        for (int i=0; i<k; i++)
+        for (std::size_t i=0; i<k; i++)
           {
             Dune::dinfo << childGlobalSize[i] << " ";
             offset[i+1] = offset[i]+childGlobalSize[i];
@@ -303,7 +303,7 @@ namespace Dune {
         Dune::dinfo << "( ";
         offset[0] = 0;
         maxlocalsize = 0;
-        for (int i=0; i<k; i++)
+        for (std::size_t i=0; i<k; i++)
           {
             offset[i+1] = offset[i]+childGlobalSize[i];
             Dune::dinfo << childGlobalSize[i] << "[" << offset[i] << "] ";
@@ -317,7 +317,7 @@ namespace Dune {
           DUNE_THROW(Exception,
                      "number of DOFs (" << childLocalSize[0] << ") per component "
                      "must be a multiple of the BlockSize (" << s << ")");
-        for (int i=1; i<k; i++)
+        for (std::size_t i=1; i<k; i++)
           if (childLocalSize[i]!=childLocalSize[0])
             DUNE_THROW(Exception, "components must be of equal size");
       }
