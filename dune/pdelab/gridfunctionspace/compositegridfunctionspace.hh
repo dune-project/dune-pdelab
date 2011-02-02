@@ -22,6 +22,8 @@ namespace Dune {
     class PowerCompositeDataHandleProvider
     {
 
+#ifndef DOXYGEN
+
       //! Functor for dataHandleFixedSize()
       struct DataHandleFixedSize
       {
@@ -128,6 +130,8 @@ namespace Dune {
       {
         return static_cast<const GridFunctionSpace&>(*this);
       }
+
+#endif // DOXYGEN
 
     public:
 
