@@ -3,7 +3,7 @@
 #ifndef DUNE_PDELAB_POWERGRIDFUNCTIONSPACE_HH
 #define DUNE_PDELAB_POWERGRIDFUNCTIONSPACE_HH
 
-#include "powercompositegridfunctionspacemixins.hh"
+#include "powercompositegridfunctionspacebase.hh"
 
 namespace Dune {
   namespace PDELab {
