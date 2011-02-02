@@ -451,6 +451,7 @@ namespace Dune {
     public:
 
       typedef PowerGridFunctionSpace<T,k,GridFunctionSpaceComponentBlockwiseMapper<1> > BaseT;
+      typedef typename Dune::PDELab::TypeTree::TransformTree<PowerGridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
 
       PowerGridFunctionSpace(T& c)
         : BaseT(c)

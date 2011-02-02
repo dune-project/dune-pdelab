@@ -270,6 +270,8 @@ namespace Dune {
 
     public:
 
+      typedef typename Dune::PDELab::TypeTree::TransformTree<CompositeGridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
+
       CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
         : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
       {}
