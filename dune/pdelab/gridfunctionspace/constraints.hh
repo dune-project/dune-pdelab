@@ -392,7 +392,7 @@ namespace Dune {
 	  typedef typename IntersectionIterator::Intersection Intersection;
 
       // make local function space
-      typedef typename GFS::LocalFunctionSpace LFS;
+      typedef LocalFunctionSpace<GFS> LFS;
       LFS lfs_e(gfs);
       LFS lfs_f(gfs);
 

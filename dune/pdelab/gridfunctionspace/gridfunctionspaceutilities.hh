@@ -784,7 +784,7 @@ namespace Dune {
 	private:
 	  CountingPointer<GFS const> pgfs;
 	  const X& xg;
-	  mutable typename GFS::LocalFunctionSpace lfs;
+	  mutable LocalFunctionSpace<GFS> lfs;
 	  mutable std::vector<RF> xl;
 	  mutable std::vector<RT> yb;
 	};

@@ -160,7 +160,7 @@ namespace Dune {
       typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
 
       // make local function space
-      typedef typename GFS::LocalFunctionSpace LFS;
+      typedef LocalFunctionSpace<GFS> LFS;
       LFS lfs(gfs);
 
       // loop once over the grid
