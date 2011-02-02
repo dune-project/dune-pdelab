@@ -435,7 +435,10 @@ namespace Dune {
 
       MakeableDynamicTreePath()
         : MutableDynamicTreePath(static_cast<std::vector<std::size_t>&>(*this))
-      {}
+      {
+        reserve(16); // try to avoid reallocations during tree traversal
+      }
+
     };
 
     template<TreePathType::Type tpType>
