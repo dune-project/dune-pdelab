@@ -773,6 +773,23 @@ namespace Dune {
 
       };
 
+      template<>
+      struct ApplyToTree<TreePathType::dynamic,CompositeNodeTag,true>
+      {
+
+        template<typename N, typename V, typename TreePath>
+        static void apply(N&& n, V&& v, TreePath tp)
+        {
+          v.pre(std::forward<N>(n),tp.view());
+          typedef typename remove_reference<N>::type Node;
+          apply_to_children_dynamic<Node::CHILDREN,Node::CHILDREN>::apply(std::forward<N>(n),
+                                                                          std::forward<V>(v),
+                                                                          tp);
+          v.post(std::forward<N>(n),tp.view());
+        }
+
+      };
+
 #endif // DOXYGEN
 
 #if HAVE_RVALUE_REFERENCES
