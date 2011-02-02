@@ -257,6 +257,8 @@ namespace Dune {
         ConstraintsContainer () {}
 	  };
 
+      typedef LeafGridFunctionSpaceTag ImplementationTag;
+
       //! define local function space parametrized by self
       typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSpace> LocalFunctionSpace;
 
@@ -579,6 +581,8 @@ namespace Dune {
 
       // define local function space parametrized by self
       typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSpace> LocalFunctionSpace;
+      typedef LeafGridFunctionSpaceTag ImplementationTag;
+
 
 	  // constructor
       GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_)
@@ -935,6 +939,8 @@ namespace Dune {
 
       // define local function space parametrized by self
       typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSpace> LocalFunctionSpace;
+      typedef LeafGridFunctionSpaceTag ImplementationTag;
+
 
 	  // constructors
       GridFunctionSpace (const GV& gridview, const FEM& fem, const IIS& iis_,

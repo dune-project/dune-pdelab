@@ -410,6 +410,7 @@ namespace Dune {
                             typename GFS::template Child<0>::Type::LocalFunctionSpace::Traits::NodeType,
                             typename GFS::template Child<1>::Type::LocalFunctionSpace::Traits::NodeType> Type;
     };
+    struct PowerGridFunctionSpaceTag {};
 
     template<typename GFS>
     struct CompositeLocalFunctionSpaceNodeBaseTypeTraits<GFS,3>
@@ -542,6 +543,8 @@ namespace Dune {
 
     };
 
+    struct CompositeGridFunctionSpaceTag {};
+
     //=======================================
     // local function space base: single component implementation
     //=======================================
@@ -644,6 +647,8 @@ namespace Dune {
     private:
       typename FESwitch::Store pfe;
     };
+
+    struct LeafGridFunctionSpaceTag {};
 
     //=======================================
     // local function facade

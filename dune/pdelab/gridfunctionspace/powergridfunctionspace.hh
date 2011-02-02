@@ -52,6 +52,9 @@ namespace Dune {
       friend class PowerCompositeGridFunctionSpaceBase<PowerGridFunctionSpace,BaseT,GridFunctionSpaceLexicographicMapper>;
 
     public:
+
+      typedef PowerGridFunctionSpaceTag ImplementationTag;
+
       //! export traits class
       typedef typename ImplementationBase::Traits Traits;
 
@@ -176,6 +179,9 @@ namespace Dune {
       friend class PowerCompositeGridFunctionSpaceBase<PowerGridFunctionSpace,BaseT,BlockwiseMapper>;
 
     public:
+
+      typedef PowerGridFunctionSpaceTag ImplementationTag;
+
       //! export traits class
       typedef typename ImplementationBase::Traits Traits;
 

@@ -68,6 +68,8 @@ namespace Dune {
 
     public:
 
+      typedef CompositeGridFunctionSpaceTag ImplementationTag;
+
       typedef typename ImplementationBase::Traits Traits;
 
       // define local function space parametrized by self
@@ -150,6 +152,9 @@ namespace Dune {
       friend class PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,BaseT,BlockwiseMapper>;
 
     public:
+
+      typedef CompositeGridFunctionSpaceTag ImplementationTag;
+
       //! export traits class
       typedef typename ImplementationBase::Traits Traits;
 
@@ -272,6 +277,9 @@ namespace Dune {
       friend class PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,BaseT,BlockwiseMapper>;
 
     public:
+
+      typedef CompositeGridFunctionSpaceTag ImplementationTag;
+
       //! export traits class
       typedef typename ImplementationBase::Traits Traits;
 
