@@ -72,6 +72,10 @@ namespace Dune {
       // define local function space parametrized by self
       typedef typename Dune::PDELab::TypeTree::TransformTree<PowerGridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
 
+      PowerGridFunctionSpace(T& c)
+        : BaseT(c)
+      {}
+
       template<std::size_t K = 2>
       PowerGridFunctionSpace (typename enable_if<K == BaseT::CHILDREN,T>::type& c0,
                               T& c1)
@@ -211,7 +215,9 @@ namespace Dune {
       // define local function space parametrized by self
       typedef typename Dune::PDELab::TypeTree::TransformTree<PowerGridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
 
-
+      PowerGridFunctionSpace(T& c)
+        : BaseT(c)
+      {}
 
       template<std::size_t K = 2>
       PowerGridFunctionSpace (typename enable_if<K == BaseT::CHILDREN,T>::type& c0,
