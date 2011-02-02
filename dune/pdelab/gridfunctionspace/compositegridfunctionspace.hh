@@ -89,6 +89,11 @@ namespace Dune {
       template<int i>
       typename Traits::SizeType subMap (typename Traits::SizeType j) const
       {
+        return subMap(i,j);
+      }
+
+      typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j)
+      {
         return this->offset[i]+j;
       }
 
@@ -166,6 +171,11 @@ namespace Dune {
       //! map index from child i's index set into our index set
       template<int i>
       typename Traits::SizeType subMap (typename Traits::SizeType j) const
+      {
+        return subMap(i,j);
+      }
+
+      typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j)
       {
         // make the block sizes and offsets available in an array
         static const int blockSize[] = { s0, s1, s2, s3, s4, s5, s6, s7, s8, s9 };
@@ -283,6 +293,11 @@ namespace Dune {
       //! map index from child i's index set into our index set
       template<int i>
       typename Traits::SizeType subMap (typename Traits::SizeType j) const
+      {
+        return subMap(i,j);
+      }
+
+      typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j)
       {
         BlockIndexRangeIterator & it = blockIndexIterators[i];
         while(it->first < j)++it;

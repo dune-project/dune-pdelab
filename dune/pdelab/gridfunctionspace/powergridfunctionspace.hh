@@ -118,6 +118,11 @@ namespace Dune {
       template<int i>
       typename Traits::SizeType subMap (typename Traits::SizeType j) const
       {
+        return subMap(i,j);
+      }
+
+      typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j)
+      {
         return this->offset[i]+j;
       }
 
@@ -239,6 +244,11 @@ namespace Dune {
       //! map index from child i's index set into our index set
       template<int i>
       typename Traits::SizeType subMap (typename Traits::SizeType j) const
+      {
+        return subMap(i,j);
+      }
+
+      typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j)
       {
         return (j%s)+(j/s)*k*s+i*s;
       }
