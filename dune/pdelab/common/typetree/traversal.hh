@@ -465,12 +465,12 @@ namespace Dune {
         template<typename N, typename V, typename TreePath>
         static void apply(N&& n, V&& v, TreePath tp)
         {
-          v.pre(n,tp);
+          v.pre(std::forward<N>(n),tp);
           typedef typename remove_reference<N>::type Node;
           apply_to_children<Node::CHILDREN,Node::CHILDREN>::apply(std::forward<N>(n),
                                                                   std::forward<V>(v),
                                                                   tp);
-          v.post(n,tp);
+          v.post(std::forward<N>(n),tp);
         }
 
 #else
