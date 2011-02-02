@@ -12,14 +12,6 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-
-    //! Mixin class providing common functionality of PowerGridFunctionSpace and CompositeGridFunctionSpace
-    template<typename GridFunctionSpace, typename TreeNode, typename Mapper>
-    class PowerCompositeGridFunctionSpaceBase
-    {
-
-#ifndef DOXYGEN
-
       //! We put the actual method in a base class because we want to use it with different tree iteration patterns
       struct SetupVisitorBase
         : public TypeTree::DefaultVisitor
@@ -165,6 +157,16 @@ namespace Dune {
         std::vector<std::size_t> offsets;
 
       };
+
+
+    //! Mixin class providing common functionality of PowerGridFunctionSpace and CompositeGridFunctionSpace
+    template<typename GridFunctionSpace, typename TreeNode, typename Mapper>
+    class PowerCompositeGridFunctionSpaceBase
+    {
+
+#ifndef DOXYGEN
+
+      friend struct SetupVisitorBase;
 
       const GridFunctionSpace& gfs() const
       {
