@@ -24,6 +24,8 @@ namespace Dune {
     // local function space base: metaprograms
     //=======================================
 
+    struct gfs_to_lfs {};
+
     namespace {
 
       template<typename = int>
@@ -342,6 +344,9 @@ namespace Dune {
 
     struct PowerGridFunctionSpaceTag {};
 
+    template<typename PowerGridFunctionSpace>
+    Dune::PDELab::TypeTree::WrappingPowerNodeTransformation<PowerGridFunctionSpace,gfs_to_lfs,PowerLocalFunctionSpaceNode>
+    lookupNodeTransformation(PowerGridFunctionSpace* pgfs, gfs_to_lfs t, PowerGridFunctionSpaceTag tag);
 
 
     //=======================================
@@ -391,6 +396,10 @@ namespace Dune {
     };
 
     struct CompositeGridFunctionSpaceTag {};
+
+    template<typename CompositeGridFunctionSpace>
+    Dune::PDELab::TypeTree::WrappingVariadicCompositeNodeTransformation<CompositeGridFunctionSpace,gfs_to_lfs,CompositeLocalFunctionSpaceNode>
+    lookupNodeTransformation(CompositeGridFunctionSpace* cgfs, gfs_to_lfs t, CompositeGridFunctionSpaceTag tag);
 
     //=======================================
     // local function space base: single component implementation
@@ -501,6 +510,10 @@ namespace Dune {
     };
 
     struct LeafGridFunctionSpaceTag {};
+
+    template<typename GridFunctionSpace>
+    Dune::PDELab::TypeTree::WrappingLeafNodeTransformation<GridFunctionSpace,gfs_to_lfs,LeafLocalFunctionSpaceNode<GridFunctionSpace> >
+    lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_lfs t, LeafGridFunctionSpaceTag tag);
 
     //=======================================
     // local function facade
