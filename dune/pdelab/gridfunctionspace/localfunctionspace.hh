@@ -397,9 +397,15 @@ namespace Dune {
 
     struct CompositeGridFunctionSpaceTag {};
 
+#if HAVE_VARIADIC_TEMPLATES
     template<typename CompositeGridFunctionSpace>
     Dune::PDELab::TypeTree::WrappingVariadicCompositeNodeTransformation<CompositeGridFunctionSpace,gfs_to_lfs,CompositeLocalFunctionSpaceNode>
     lookupNodeTransformation(CompositeGridFunctionSpace* cgfs, gfs_to_lfs t, CompositeGridFunctionSpaceTag tag);
+#else
+    template<typename CompositeGridFunctionSpace>
+    Dune::PDELab::TypeTree::WrappingCompositeNodeTransformation<CompositeGridFunctionSpace,gfs_to_lfs,CompositeLocalFunctionSpaceNode>
+    lookupNodeTransformation(CompositeGridFunctionSpace* cgfs, gfs_to_lfs t, CompositeGridFunctionSpaceTag tag);
+#endif
 
     //=======================================
     // local function space base: single component implementation
