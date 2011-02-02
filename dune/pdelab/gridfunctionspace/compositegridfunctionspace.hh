@@ -98,22 +98,27 @@ namespace Dune {
 
     private:
 
+      using ImplementationBase::childLocalSize;
+      using ImplementationBase::childGlobalSize;
+      using ImplementationBase::maxlocalsize;
+      using ImplementationBase::offset;
+
       void calculateSizes ()
       {
         Dune::dinfo << "CompositeGridFunctionSpace(lexicographic version):"
                     << std::endl;
 
         Dune::dinfo << "( ";
-        this->offset[0] = 0;
-        this->maxlocalsize = 0;
+        offset[0] = 0;
+        maxlocalsize = 0;
         for (std::size_t i=0; i<BaseT::CHILDREN; i++)
           {
-            Dune::dinfo << this->childGlobalSize[i] << " ";
-            this->offset[i+1] = this->offset[i]+this->childGlobalSize[i];
-            this->maxlocalsize += this->childLocalSize[i];
+            Dune::dinfo << childGlobalSize[i] << " ";
+            offset[i+1] = offset[i]+childGlobalSize[i];
+            maxlocalsize += childLocalSize[i];
           }
-        Dune::dinfo << ") total size = " << this->offset[BaseT::CHILDREN]
-                    << " max local size = " << this->maxlocalsize
+        Dune::dinfo << ") total size = " << offset[BaseT::CHILDREN]
+                    << " max local size = " << maxlocalsize
                     << std::endl;
       }
 
