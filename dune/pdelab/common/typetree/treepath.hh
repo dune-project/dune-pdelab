@@ -27,7 +27,11 @@ namespace Dune {
 #if HAVE_VARIADIC_TEMPLATES
 
     template<std::size_t... i>
-    struct TreePath {};
+    struct TreePath {
+      typedef TreePath ViewType;
+      TreePath view() { return *this; }
+      TreePath mutablePath() { return *this; }
+    };
 
     template<typename>
     struct TreePathSize;
@@ -139,6 +143,11 @@ namespace Dune {
                          "Only trailing indices my be noChildIndex");
       dune_static_assert(i8 == noChildIndex ? i9 == noChildIndex : true,
                          "Only trailing indices my be noChildIndex");
+
+      typedef TreePath ViewType;
+      TreePath view() { return *this; }
+      TreePath mutablePath() { return *this; }
+
     };
 
     //
@@ -340,6 +349,115 @@ namespace Dune {
 #endif // DOXYGEN
 
 #endif // HAVE_VARIADIC_TEMPLATES
+
+    class DynamicTreePath
+    {
+
+    public:
+
+      typedef DynamicTreePath ViewType;
+
+      std::size_t size() const
+      {
+        return _vec.size();
+      }
+
+      std::size_t element(std::size_t pos) const
+      {
+        return _vec[pos];
+      }
+
+      std::size_t back() const
+      {
+        return _vec.back();
+      }
+
+      std::size_t front() const
+      {
+        return _vec.front();
+      }
+
+    protected:
+
+      typedef std::vector<std::size_t> Vector;
+      Vector& _vec;
+
+      DynamicTreePath(Vector& vec)
+        : _vec(vec)
+      {}
+    };
+
+    class MutableDynamicTreePath
+      : public DynamicTreePath
+    {
+
+    public:
+
+      void push_back(std::size_t v)
+      {
+        _vec.push_back(v);
+      }
+
+      void pop_back()
+      {
+        _vec.pop_back();
+      }
+
+      void set_back(std::size_t v)
+      {
+        _vec.back() = v;
+      }
+
+      DynamicTreePath view()
+      {
+        return *this;
+      }
+
+    protected:
+
+      MutableDynamicTreePath(Vector& vec)
+        : DynamicTreePath(vec)
+      {}
+
+    };
+
+    class MakeableDynamicTreePath
+      : public std::vector<std::size_t>
+       , public MutableDynamicTreePath
+    {
+
+    public:
+
+      MutableDynamicTreePath mutablePath()
+      {
+        return static_cast<MutableDynamicTreePath&>(*this);
+      }
+
+      MakeableDynamicTreePath()
+        : MutableDynamicTreePath(static_cast<std::vector<std::size_t>&>(*this))
+      {}
+    };
+
+    template<TreePathType::Type tpType>
+    struct TreePathFactory;
+
+    template<>
+    struct TreePathFactory<TreePathType::fullyStatic>
+    {
+      static TreePath<> create()
+      {
+        return TreePath<>();
+      }
+    };
+
+    template<>
+    struct TreePathFactory<TreePathType::dynamic>
+    {
+      static MakeableDynamicTreePath create()
+      {
+        return MakeableDynamicTreePath();
+      }
+    };
 
     //! \} group TypeTree
 
