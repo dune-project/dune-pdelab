@@ -582,6 +582,7 @@ namespace Dune {
 
 #endif // HAVE_RVALUE_REFERENCES
 
+      //! \} group TypeTree
 
     } // namespace TypeTree
   } // namespace PDELab
