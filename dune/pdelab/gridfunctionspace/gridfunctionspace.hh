@@ -79,7 +79,7 @@ namespace Dune {
              typename enable_if<AlwaysTrue<typename
                    L::Traits::LocalFiniteElementType>::value>::type>
 	{
-      enum{ 
+      enum{
         //! \brief True if this grid function space is composed of others.
         isComposite = 0
       };
@@ -133,7 +133,7 @@ namespace Dune {
           for (size_t i=0; i<n; i++)
             x[i] = (*this)[i];
         }
-        
+
         template<typename X>
         void std_copy_from (const std::vector<X>& x)
         {
@@ -145,7 +145,7 @@ namespace Dune {
 
 	  };
 
-	  //! extract type of container element 
+	  //! extract type of container element
 	  template<class C>
 	  struct Value
 	  {
@@ -166,7 +166,7 @@ namespace Dune {
 		return c.operator[](i);
 	  }
 
-	  /** \brief get non const_reference to container element 
+	  /** \brief get non const_reference to container element
        *
        *  note: this method does not depend on T!
        */
@@ -223,7 +223,7 @@ namespace Dune {
      *  \tparam FEM  Type implementing FiniteElementMapInterface
      *  \tparam CE   Type for constraints assembler
      *  \tparam B    Backend type
-     *  \tparam P    Parameter type. Possible types are 
+     *  \tparam P    Parameter type. Possible types are
      * \link GridFunctionGeneralMapper \endlink (arbitrary number of unknowns per
      * entity) or \link GridFunctionRestrictedMapper \endlink (fixed number of unknowns per
      * entity) or \link GridFunctionStaticSize \endlink (number of unknowns per
@@ -244,7 +244,7 @@ namespace Dune {
 	  struct VectorContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;	
+		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;
       private:
         VectorContainer () {}
 	  };
@@ -254,23 +254,23 @@ namespace Dune {
 	  struct ConstraintsContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
       private:
         ConstraintsContainer () {}
 	  };
 
-      //! define local function space parametrized by self 
+      //! define local function space parametrized by self
       typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSpace> LocalFunctionSpace;
 
 	  //! constructor
-	  GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_) 
+	  GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_)
 		: defaultce(ce_), gv(gridview), pfem(&fem), ce(ce_)
 	  {
 		update();
 	  }
 
 	  //! constructor
-	  GridFunctionSpace (const GV& gridview, const FEM& fem) 
+	  GridFunctionSpace (const GV& gridview, const FEM& fem)
         : gv(gridview), pfem(&fem), ce(defaultce)
 	  {
 		update();
@@ -327,7 +327,7 @@ namespace Dune {
 
 	  //! compute global indices for one element
       void globalIndices (const typename Traits::FiniteElementType& fe,
-                          const Element& e, 
+                          const Element& e,
 						  std::vector<typename Traits::SizeType>& global) const
 	  {
         typedef FiniteElementInterfaceSwitch<
@@ -340,7 +340,7 @@ namespace Dune {
 
         for (std::size_t i=0; i<std::size_t(coeffs.size()); ++i)
 		  {
-			// get geometry type of subentity 
+			// get geometry type of subentity
 			Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
               ::general(fe.type()).type(coeffs.localKey(i).subEntity(),
                                         coeffs.localKey(i).codim());
@@ -349,8 +349,8 @@ namespace Dune {
             int index = gv.indexSet().subIndex(e,
                                                coeffs.localKey(i).subEntity(),
                                                coeffs.localKey(i).codim());
-		
-			// now compute 
+
+			// now compute
             global[i] = offset[(gtoffset.find(gt)->second)+index]+
               coeffs.localKey(i).index();
 		  }
@@ -372,16 +372,16 @@ namespace Dune {
       {
         return (codimUsed.find(codim)!=codimUsed.end());
       }
-      
+
       //! returns true if size per entity of given dim and codim is a constant
       bool dataHandleFixedSize (int dim, int codim) const
       {
         return false;
       }
-      
+
       /*! how many objects of type DataType have to be sent for a given entity
-        
-        Note: Only the sender side needs to know this size. 
+
+        Note: Only the sender side needs to know this size.
       */
       template<class EntityType>
       size_t dataHandleSize (const EntityType& e) const
@@ -490,7 +490,7 @@ namespace Dune {
                 unsigned int index = gtoffset[gt] +
                   is.subIndex(*it, coeffs.localKey(i).subEntity(),
                               coeffs.localKey(i).codim());
-				offset[index] = std::max(offset[index], 
+				offset[index] = std::max(offset[index],
                                          typename Traits::SizeType
                                             (coeffs.localKey(i).index()+1));
 			  }
@@ -498,7 +498,7 @@ namespace Dune {
 
 		// now count global number of dofs and compute offset
 		nglobal = 0;
-		for (typename std::vector<typename Traits::SizeType>::iterator i=offset.begin(); 
+		for (typename std::vector<typename Traits::SizeType>::iterator i=offset.begin();
 			 i!=offset.end(); ++i)
 		  {
 			typename Traits::SizeType size = *i;
@@ -549,7 +549,7 @@ namespace Dune {
 	  struct VectorContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;	
+		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;
       private:
         VectorContainer () {}
 	  };
@@ -559,12 +559,12 @@ namespace Dune {
 	  struct ConstraintsContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
       private:
         ConstraintsContainer () {}
 	  };
 
-      // define local function space parametrized by self 
+      // define local function space parametrized by self
       typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSpace> LocalFunctionSpace;
 
 	  // constructor
@@ -644,7 +644,7 @@ namespace Dune {
 
         for (unsigned int i=0; i<coeffs.size(); ++i)
 		  {
-			// get geometry type of subentity 
+			// get geometry type of subentity
 			Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
               ::general(fe.type()).type(coeffs.localKey(i).subEntity(),
                                         coeffs.localKey(i).codim());
@@ -653,8 +653,8 @@ namespace Dune {
             int index = gv.indexSet().subIndex(e,
                                                coeffs.localKey(i).subEntity(),
                                                coeffs.localKey(i).codim());
-		
-			// now compute 
+
+			// now compute
             global[i] =
               offset.find(gt)->second+index*dofcountmap.find(gt)->second
               + coeffs.localKey(i).index();
@@ -678,16 +678,16 @@ namespace Dune {
       {
         return (codimUsed.find(codim)!=codimUsed.end());
       }
-      
+
       //! returns true if size per entity of given dim and codim is a constant
       bool dataHandleFixedSize (int dim, int codim) const
       {
         return true;
       }
-      
+
       /*! how many objects of type DataType have to be sent for a given entity
-        
-        Note: Only the sender side needs to know this size. 
+
+        Note: Only the sender side needs to know this size.
       */
       template<class EntityType>
       size_t dataHandleSize (const EntityType& e) const
@@ -790,7 +790,7 @@ namespace Dune {
 		for (typename DofCountMapType::iterator i=dofcountmap.begin(); i!=dofcountmap.end(); ++i)
 		  {
 			offset[i->first] = nglobal;
-			nglobal += is.size(i->first)*(i->second); 
+			nglobal += is.size(i->first)*(i->second);
             Dune::dinfo << i->first << " offset now " << nglobal << std::endl;
 		  }
         Dune::dinfo << "total number of dofs = " << nglobal << std::endl;
@@ -833,8 +833,8 @@ namespace Dune {
     {
     public:
       typedef int IndexType;
- 
-      // number of intersections in index set 
+
+      // number of intersections in index set
       // (intersections do not have a geometry type)
       IndexType size () const
       {
@@ -855,7 +855,7 @@ namespace Dune {
         DUNE_THROW(Dune::Exception,"need IntersectionIndexSet for DOFs in intersections");
       }
 
-      // get index of i'th intersection of element 
+      // get index of i'th intersection of element
       // (in order they are visited by intersection iterator)
       template<typename Element>
       IndexType subIndex (const Element& element, int i) const
@@ -866,7 +866,7 @@ namespace Dune {
 
     //! \brief type that can be used for static sized GFS without DOFS in intersections
     typedef GridFunctionStaticSize<DummyIntersectionIndexSet> SimpleGridFunctionStaticSize;
-    
+
     //! \}
 
 	// specialization with restricted mapper
@@ -889,7 +889,7 @@ namespace Dune {
 	  struct VectorContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;	
+		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;
       private:
         VectorContainer () {}
 	  };
@@ -899,12 +899,12 @@ namespace Dune {
 	  struct ConstraintsContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
       private:
         ConstraintsContainer () {}
 	  };
 
-      // define local function space parametrized by self 
+      // define local function space parametrized by self
       typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSpace> LocalFunctionSpace;
 
 	  // constructors
@@ -1006,7 +1006,7 @@ namespace Dune {
             else
               index = gv.indexSet().subIndex(e,se,cd);
 
-			// now compute 
+			// now compute
             global[i] =
               offset.find(cd)->second + index * dofpercodim.find(cd)->second
               + coeffs.localKey(i).index();
@@ -1030,16 +1030,16 @@ namespace Dune {
       {
         return (dofpercodim.find(codim)!=dofpercodim.end());
       }
-      
+
       //! returns true if size per entity of given dim and codim is a constant
       bool dataHandleFixedSize (int dim, int codim) const
       {
         return true;
       }
-      
+
       /*! how many objects of type DataType have to be sent for a given entity
-        
-        Note: Only the sender side needs to know this size. 
+
+        Note: Only the sender side needs to know this size.
       */
       template<class EntityType>
       size_t dataHandleSize (const EntityType& e) const
@@ -1106,7 +1106,7 @@ namespace Dune {
             else
               (countmap[subentity])++;
           }
-       
+
         // compute number of degrees of freedom per codim
         dofpercodim.clear();
         for (typename CountMapType::iterator i=countmap.begin(); i!=countmap.end(); ++i)
@@ -1212,7 +1212,7 @@ namespace Dune {
 	  struct VectorContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;	
+		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;
       private:
         VectorContainer () {}
 	  };
@@ -1222,12 +1222,12 @@ namespace Dune {
 	  struct ConstraintsContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
       private:
         ConstraintsContainer () {}
 	  };
 
-      // define local function space parametrized by self 
+      // define local function space parametrized by self
       typedef Dune::PDELab::CompositeLocalFunctionSpaceNode<GridFunctionSubSpaceBase> LocalFunctionSpace;
 
 	  // get grid view
@@ -1316,7 +1316,7 @@ namespace Dune {
 	  struct VectorContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;	
+		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;
       private:
         VectorContainer () {}
 	  };
@@ -1326,12 +1326,12 @@ namespace Dune {
 	  struct ConstraintsContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
       private:
         ConstraintsContainer () {}
 	  };
 
-      // define local function space parametrized by self 
+      // define local function space parametrized by self
       typedef PowerLocalFunctionSpaceNode<GridFunctionSubSpaceBase> LocalFunctionSpace;
 
 	  // get grid view
@@ -1405,7 +1405,7 @@ namespace Dune {
 	  struct VectorContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;	
+		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;
       private:
         VectorContainer () {}
 	  };
@@ -1415,12 +1415,12 @@ namespace Dune {
 	  struct ConstraintsContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
       private:
         ConstraintsContainer () {}
 	  };
 
-      // define local function space parametrized by self 
+      // define local function space parametrized by self
       typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSubSpaceBase> LocalFunctionSpace;
 
 	  // get grid view
@@ -1467,7 +1467,7 @@ namespace Dune {
 
 	  // compute global indices for one element
       void globalIndices (const typename Traits::FiniteElementType& fe,
-                          const Element& e, 
+                          const Element& e,
 						  std::vector<typename Traits::SizeType>& global) const
 	  {
         pcgfs->globalIndices(fe,e,global);
@@ -1487,7 +1487,7 @@ namespace Dune {
 
     // ensure that GFS is not a leaf
     template<typename GFS, int k, int isleaf>
-    class GridFunctionSubSpaceIntermediateBase 
+    class GridFunctionSubSpaceIntermediateBase
       : public GridFunctionSubSpaceBase<GFS,k,typename GFS::template Child<k>::Type>
     {
       typedef GridFunctionSubSpaceBase<GFS,k,typename GFS::template Child<k>::Type> BaseT;
@@ -1516,7 +1516,7 @@ namespace Dune {
     class GridFunctionSubSpace : public GridFunctionSubSpaceIntermediateBase<GFS,k,GFS::isLeaf>
     {
     public:
-      GridFunctionSubSpace (const GFS& gfs) 
+      GridFunctionSubSpace (const GFS& gfs)
         : GridFunctionSubSpaceIntermediateBase<GFS,k,GFS::isLeaf>(gfs)
       {
         Dune::dinfo << "GridFunctionSubSpace:" << std::endl;
