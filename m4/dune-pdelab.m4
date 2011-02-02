@@ -1,5 +1,9 @@
 # Additional checks needed to build the module
-AC_DEFUN([DUNE_PDELAB_CHECKS])
+AC_DEFUN([DUNE_PDELAB_CHECKS],
+[
+  AC_REQUIRE([RVALUE_REFERENCES_CHECK])
+  AC_REQUIRE([VARIADIC_TEMPLATES_CHECK])
+])
 
 # Additional checks needed to find the module
 AC_DEFUN([DUNE_PDELAB_CHECK_MODULE],[
