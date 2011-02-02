@@ -9,7 +9,6 @@ common_HEADERS =				\
 	geometrywrapper.hh			\
 	jacobiantocurl.hh			\
 	multitypetree.hh			\
-	treepath.hh				\
 	vtkexport.hh
 
 include $(top_srcdir)/am/global-rules
