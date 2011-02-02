@@ -25,13 +25,13 @@ namespace Dune {
         : public TypeTree::DefaultVisitor
       {
 
-        static const TypeTree::TreePathType::Type treePathType = TypeTree::TreePathType::fullyStatic;
+        static const TypeTree::TreePathType::Type treePathType = TypeTree::TreePathType::dynamic;
 
         template<typename CompositeGFS, typename Child, typename TreePath, typename ChildIndex>
         void afterChild(CompositeGFS& cgfs, const Child& child, TreePath treePath, ChildIndex childIndex)
         {
-          cgfs.childGlobalSize[ChildIndex::value] = child.globalSize();
-          cgfs.childLocalSize[ChildIndex::value] = child.maxLocalSize();
+          cgfs.childGlobalSize[childIndex] = child.globalSize();
+          cgfs.childLocalSize[childIndex] = child.maxLocalSize();
         }
 
       };
@@ -127,7 +127,7 @@ namespace Dune {
         : public TypeTree::TreeVisitor
       {
 
-        static const TypeTree::TreePathType::Type treePathType = TypeTree::TreePathType::fullyStatic;
+        static const TypeTree::TreePathType::Type treePathType = TypeTree::TreePathType::dynamic;
 
         template<typename Node, typename TreePath>
         void leaf(const Node& node, TreePath treePath)
@@ -147,7 +147,7 @@ namespace Dune {
           std::size_t offset = offsets.back();
           offsets.pop_back();
           for (std::size_t i = offset; i < pos; ++i)
-            g[i] = cgfs.template subMap<ChildIndex::value>(g[i]);
+            g[i] = cgfs.subMap(childIndex,g[i]);
         }
 
         DataHandleGlobalIndicesVisitor(const Entity& entity, Container& global)

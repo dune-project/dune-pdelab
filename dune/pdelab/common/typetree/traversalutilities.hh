@@ -28,7 +28,7 @@ namespace Dune {
           : public TypeTree::TreeVisitor
         {
 
-          static const TreePathType::Type treePathType = TreePathType::fullyStatic;
+          static const TreePathType::Type treePathType = TreePathType::dynamic;
 
           template<typename Node, typename TreePath>
           void leaf(const Node& node, TreePath treePath)
