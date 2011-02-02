@@ -74,7 +74,9 @@ namespace Dune {
 
       PowerGridFunctionSpace(T& c)
         : BaseT(c)
-      {}
+      {
+        this->setup();
+      }
 
       template<std::size_t K = 2>
       PowerGridFunctionSpace (typename enable_if<K == BaseT::CHILDREN,T>::type& c0,
@@ -217,7 +219,9 @@ namespace Dune {
 
       PowerGridFunctionSpace(T& c)
         : BaseT(c)
-      {}
+      {
+        this->setup();
+      }
 
       template<std::size_t K = 2>
       PowerGridFunctionSpace (typename enable_if<K == BaseT::CHILDREN,T>::type& c0,
