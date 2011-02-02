@@ -131,7 +131,7 @@ namespace Dune {
 
 
     //! Trait class for the multi component grid function spaces
-	template<typename G, typename B, typename M, int k>
+	template<typename G, typename B, typename M, std::size_t k>
 	struct PowerCompositeGridFunctionSpaceTraits
 	{
       enum{ 
@@ -141,6 +141,9 @@ namespace Dune {
         noChilds = k
       };
       
+
+      const static std::size_t CHILDREN = k;
+
 	  //! \brief the grid view where grid function is defined upon
 	  typedef G GridViewType;
 
