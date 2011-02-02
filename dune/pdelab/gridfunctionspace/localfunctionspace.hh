@@ -9,8 +9,7 @@
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
-#include "../common/multitypetree.hh"
-#include "../common/cpstoragepolicy.hh"
+#include "../common/typetree.hh"
 
 #include "localindex.hh"
 
@@ -26,100 +25,90 @@ namespace Dune {
     //=======================================
 
     namespace {
-      
-      template<typename T, bool isleaf, typename E, typename GC, typename Int = typename GC::size_type>
-      struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
 
-      template<typename T, typename E, typename GC, typename Int, int n, int i>
-      struct LocalFunctionSpaceBaseVisitChildMetaProgram // visit i'th child of inner node
+      template<typename = int>
+      struct PropagateGlobalStorageVisitor
+        : public TypeTree::TreeVisitor
       {
-        typedef typename T::template Child<i>::Type C;
-        LocalFunctionSpaceBaseVisitNodeMetaProgram<C,C::isLeaf,E,GC,Int> childTMP;
-        LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,GC,Int,n,i+1> siblingTMP;
-        void fill_indices (T& t, const E& e, Int& offset, GC * const global)
+        static const TypeTree::TreePathType::Type treePathType = TypeTree::TreePathType::dynamic;
+
+        template<typename LFS, typename Child, typename TreePath, typename ChildIndex>
+        void beforeChild(const LFS& lfs, Child& child, TreePath treePath, ChildIndex childIndex) const
         {
-          // vist children of node t in order
-          Int initial_offset = offset; // remember initial offset to compute size later
-          childTMP.fill_indices(t.template getChild<i>(),e,offset,global);
-          for (Int j=initial_offset; j<offset; j++)
-            (*global)[j] = t.pgfs->template subMap<i>((*global)[j]);
-          // visit siblings
-          siblingTMP.fill_indices(t,e,offset,global);
-        }
-        void compute_size (T& t, const E& e, Int& size)
-        {
-          if (i == 0) // braucht man dieses if?
-            t.offset = size;
-          // now we are at a multi component local function space
-          // vist children of node t in order
-          Int initial_size = size; // remember initial offset to compute size later
-          childTMP.compute_size(t.template getChild<i>(),e,size);
-          t.n = size-initial_size;
-          // visit siblings
-          siblingTMP.compute_size(t,e,size);
+          child.global = lfs.global;
         }
       };
 
-      template<typename T, typename E, typename GC, typename Int, int n>
-      struct LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,GC,Int,n,n> // end of child recursion
+      template<typename Entity>
+      struct ComputeSizeVisitor
+        : public TypeTree::TreeVisitor
       {
-        void fill_indices (T& t, const E& e, Int& offset, GC * const global)
+
+        static const TypeTree::TreePathType::Type treePathType = TypeTree::TreePathType::dynamic;
+
+        template<typename Node, typename TreePath>
+        void pre(Node& node, TreePath treePath)
         {
-          return;
+          node.offset = offset;
         }
-        void compute_size (T& t, const E& e, Int& offset)
+
+        template<typename Node, typename TreePath>
+        void post(Node& node, TreePath treePath)
         {
-          return;
+          node.n = offset - node.offset;
         }
+
+        template<typename Node, typename TreePath>
+        void leaf(Node& node, TreePath treePath)
+        {
+          node.offset = offset;
+          Node::FESwitch::setStore(node.pfe, node.pgfs->finiteElementMap().find(e));
+          node.n = Node::FESwitch::basis(*node.pfe).size();
+          offset += node.n;
+        }
+
+        ComputeSizeVisitor(const Entity& entity)
+          : e(entity)
+          , offset(0)
+        {}
+
+        const Entity& e;
+        std::size_t offset;
+
       };
 
-      template<typename T, bool isleaf, typename E, typename GC, typename Int> 
-      struct LocalFunctionSpaceBaseVisitNodeMetaProgram // visit inner node
-      {
-        LocalFunctionSpaceBaseVisitChildMetaProgram<T,E,GC,Int,T::CHILDREN,0> childTMP;
-        void fill_indices (T& t, const E& e, Int& offset, GC * const global)
-        {
-          // std::cout << "OFFSET: " << t.offset << " SIZE: " << t.n << std::endl;
-          // now we are at a multi component local function space
-          t.global = global;
-          assert(t.offset == offset);
-          childTMP.fill_indices(t,e,offset,global);
-        }
-        void compute_size (T& t, const E& e, Int& size)
-        {
-          t.offset = size;
-          // now we are at a multi component local function space
-          Int initial_size = size; // remember initial offset to compute size later
-          childTMP.compute_size(t,e,size);
-          t.n = size-initial_size;
-        }
-      };
 
-      template<typename T, typename E, typename GC, typename Int> 
-      struct LocalFunctionSpaceBaseVisitNodeMetaProgram<T,true,E,GC,Int> // visit leaf node 
+      template<typename Entity, typename SizeType>
+      struct FillIndicesVisitor
+        : public TypeTree::TreeVisitor
       {
-        std::vector<typename T::Traits::GridFunctionSpaceType::Traits::SizeType> _global;
-        void fill_indices (T& t, const E& e, Int& offset, GC * const global)
+
+        static const TypeTree::TreePathType::Type treePathType = TypeTree::TreePathType::dynamic;
+
+        template<typename Node, typename TreePath>
+        void leaf(Node& node, TreePath treePath)
         {
-          // now we are at a single component local function space
-          // which is part of a multi component local function space
-          t.global = global;
-          assert(t.offset == offset);
-          _global.resize(t.n);
-          t.pgfs->globalIndices(*(t.pfe),e,_global); // get global indices for this finite element
-          for (Int i=0; i<t.n; i++) (*global)[offset+i]=_global[i]; 
-          offset += t.n; // append this chunk
+          _global.resize(node.n);
+          node.pgfs->globalIndices(*(node.pfe),e,_global); // get global indices for this finite element
+          for (std::size_t i=0; i<node.n; i++) (*node.global)[node.offset+i]=_global[i];
         }
-        void compute_size (T& t, const E& e, Int& size)
+
+        template<typename Node, typename Child, typename TreePath, typename ChildIndex>
+        void afterChild(const Node& node, const Child& child, TreePath treePath, ChildIndex childIndex)
         {
-          t.offset = size;
-          // now we are at a single component local function space
-          // which is part of a multi component local function space
-          T::FESwitch::setStore(t.pfe, t.pgfs->finiteElementMap().find(e));
-          // determine size of this chunk
-          t.n = T::FESwitch::basis(*t.pfe).size();
-          size += t.n; // append this chunk
+          for (std::size_t i = 0; i<child.n; ++i)
+            (*node.global)[child.offset+i] = node.pgfs->subMap(childIndex,(*node.global)[child.offset+i]);
         }
+
+        FillIndicesVisitor(const Entity& entity, std::size_t maxLocalSize)
+          : e(entity)
+        {
+          _global.reserve(maxLocalSize);
+        }
+
+        const Entity& e;
+        std::vector<SizeType> _global;
+
       };
 
     } // end empty namespace
@@ -153,22 +142,23 @@ namespace Dune {
     class LocalFunctionSpaceBaseNode
     {
       typedef typename GFS::Traits::BackendType B;
+
+      template<typename>
+      friend struct PropagateGlobalStorageVisitor;
+
+      template<typename>
+      friend struct ComputeSizeVisitor;
+
+      template<typename,typename>
+      friend struct FillIndicesVisitor;
+
     public:
       typedef LocalFunctionSpaceBaseTraits<GFS> Traits;
 
-      //! \brief empty constructor (needed for CopyStoragePolicy)
-      LocalFunctionSpaceBaseNode () {}
-      
       //! \brief construct from global function space
-      LocalFunctionSpaceBaseNode (const GFS& gfs) : 
-        pgfs(&gfs), global_storage(gfs.maxLocalSize()), global(0), n(0)
+      LocalFunctionSpaceBaseNode (shared_ptr<const GFS> gfs) :
+        pgfs(gfs), global_storage(gfs->maxLocalSize()), global(&global_storage), n(0)
       {}
-      
-      //! \brief initialize with grid function space
-      void setup (const GFS& gfs)
-      {
-        pgfs = &gfs;
-      }
 
       //! \brief get current size 
       typename Traits::IndexContainer::size_type size () const
@@ -260,42 +250,40 @@ namespace Dune {
       template<typename NodeType>
       void bind (NodeType& node, const typename Traits::Element& e);
 
-      CountingPointer<GFS const> pgfs;
+      template<typename NodeType>
+      void setup(NodeType& node)
+      {
+        TypeTree::applyToTree(node,PropagateGlobalStorageVisitor<>());
+      }
+
+      shared_ptr<GFS const> pgfs;
       typename Traits::IndexContainer global_storage;
       typename Traits::IndexContainer* global;
       typename Traits::IndexContainer::size_type n;
       typename Traits::IndexContainer::size_type offset;
     };
 
+
     template <typename GFS>
     template <typename NodeType>
     void LocalFunctionSpaceBaseNode<GFS>::bind (NodeType& node,
       const typename LocalFunctionSpaceBaseNode<GFS>::Traits::Element& e)
     {
-      static
-        LocalFunctionSpaceBaseVisitNodeMetaProgram<NodeType,NodeType::isLeaf,
-                                                    typename Traits::Element,
-                                                    typename Traits::IndexContainer>
-        TMP;
-      // we should only call bind on out selfs
+      typedef typename LocalFunctionSpaceBaseNode<GFS>::Traits::Element Element;
       assert(&node == this);
-      
-      // make offset
-      typename Traits::IndexContainer::size_type size=0;
-      
+
       // compute sizes
-      TMP.compute_size(node,e,size);
-      assert(size == n);
-      
+      ComputeSizeVisitor<Element> csv(e);
+      TypeTree::applyToTree(node,csv);
+
+      global_storage.resize(node.n);
+
       // initialize iterators and fill indices
-      size = 0;
-      TMP.fill_indices(node,e,size,&global_storage);
-      assert(global == &global_storage);
-      assert(size <= global_storage.size());
-      assert(offset == 0);
-      
+      FillIndicesVisitor<Element,typename Traits::IndexContainer::size_type> fiv(e,node.maxSize());
+      TypeTree::applyToTree(node,fiv);
+
       // apply upMap
-      for (typename Traits::IndexContainer::size_type i=0; i<size; i++)
+      for (typename Traits::IndexContainer::size_type i=0; i<n; ++i)
         global_storage[i] = pgfs->upMap(global_storage[i]);
     }
     
@@ -311,49 +299,37 @@ namespace Dune {
       typedef N NodeType;
     };
 
-    template<typename GFS>
-    class PowerLocalFunctionSpaceNode;
-
     // local function space for a power grid function space
-    template<typename GFS>
+    template<typename GFS, typename ChildLFS, std::size_t k>
     class PowerLocalFunctionSpaceNode :
       public LocalFunctionSpaceBaseNode<GFS>,
-      public PowerNode<typename GFS::template Child<0>::Type::LocalFunctionSpace::Traits::NodeType,
-                       GFS::CHILDREN,CopyStoragePolicy>
+      public TypeTree::PowerNode<ChildLFS,k>
     {
       typedef LocalFunctionSpaceBaseNode<GFS> BaseT;
+      typedef TypeTree::PowerNode<ChildLFS,k> TreeNode;
 
-      // friend decl for bind meta program
-      template<typename T, bool b, typename E, typename GC, typename Int> 
-      friend struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
-      template<typename T, typename E, typename GC, typename Int, int n, int i>
-      friend struct LocalFunctionSpaceBaseVisitChildMetaProgram;
+      template<typename>
+      friend struct PropagateGlobalStorageVisitor;
+
+      template<typename>
+      friend struct ComputeSizeVisitor;
+
+      template<typename,typename>
+      friend struct FillIndicesVisitor;
 
     public:
       typedef PowerCompositeLocalFunctionSpaceTraits<GFS,PowerLocalFunctionSpaceNode> Traits;
 
-      //! \brief empty constructor (needed for CopyStoragePolicy)
-      PowerLocalFunctionSpaceNode ()
-      {
-      }
-
       //! \brief initialize with grid function space
-      PowerLocalFunctionSpaceNode (const GFS& gfs)  : 
-        BaseT(gfs)
-      {
-        setup(gfs);
-      }
+      PowerLocalFunctionSpaceNode (shared_ptr<const GFS> gfs, const array<shared_ptr<ChildLFS>,k>& children)
+        : BaseT(gfs)
+        , TreeNode(children)
+      {}
 
-      //! \brief initialize with grid function space
-      void setup (const GFS& gfs)
-      {
-        BaseT::setup(gfs);
-        for (int i=0; i<GFS::CHILDREN; i++)
-          {
-            dinfo << "setting up child " << i << " of " << GFS::CHILDREN << std::endl;
-            this->getChild(i).setup(this->pgfs->getChild(i));
-          }
-      }
+      PowerLocalFunctionSpaceNode (const GFS& gfs, const array<shared_ptr<ChildLFS>,k>& children)
+        : BaseT(stackobject_to_shared_ptr(gfs))
+        , TreeNode(children)
+      {}
 
       //! \brief bind local function space to entity
       void bind (const typename Traits::Element& e)
@@ -364,175 +340,46 @@ namespace Dune {
 
     };
 
+    struct PowerGridFunctionSpaceTag {};
+
+
+
     //=======================================
     // local function space base: composite implementation
     //=======================================
 
-#ifndef DOXYGEN
-    namespace {
-      template<typename T, int n, int i>
-      struct CompositeLocalFunctionSpaceNodeVisitChildMetaProgram // visit child of inner node
-      {
-        template<typename GFS>
-        static void setup (T& t, const GFS& gfs)
-        {
-          dinfo << "setting up child " << i << " of " << n << std::endl;
-          t.template getChild<i>().setup(gfs.template getChild<i>());
-          CompositeLocalFunctionSpaceNodeVisitChildMetaProgram<T,n,i+1>::
-            setup(t,gfs);
-        }
-      };
-      
-      template<typename T, int n>
-      struct CompositeLocalFunctionSpaceNodeVisitChildMetaProgram<T,n,n> // end of child recursion
-      {
-        template<typename GFS>
-        static void setup (T& t, const GFS& gfs)
-        {
-        }
-      };
-    }
-#endif
-
-    template<typename GFS, int k>
-    struct CompositeLocalFunctionSpaceNodeBaseTypeTraits
-    {
-#ifdef DOXYGEN
-      typedef NodeType Type;
-#endif
-    };
-
-#ifndef DOXYGEN
-    template<typename GFS>
-    struct CompositeLocalFunctionSpaceNodeBaseTypeTraits<GFS,2>
-    {
-      typedef CompositeNode<CopyStoragePolicy, 
-                            typename GFS::template Child<0>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<1>::Type::LocalFunctionSpace::Traits::NodeType> Type;
-    };
-    struct PowerGridFunctionSpaceTag {};
-
-    template<typename GFS>
-    struct CompositeLocalFunctionSpaceNodeBaseTypeTraits<GFS,3>
-    {
-      typedef CompositeNode<CopyStoragePolicy, 
-                            typename GFS::template Child<0>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<1>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<2>::Type::LocalFunctionSpace::Traits::NodeType> Type;
-    };
-
-    template<typename GFS>
-    struct CompositeLocalFunctionSpaceNodeBaseTypeTraits<GFS,4>
-    {
-      typedef CompositeNode<CopyStoragePolicy, 
-                            typename GFS::template Child<0>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<1>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<2>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<3>::Type::LocalFunctionSpace::Traits::NodeType> Type;
-    };
-
-    template<typename GFS>
-    struct CompositeLocalFunctionSpaceNodeBaseTypeTraits<GFS,5>
-    {
-      typedef CompositeNode<CopyStoragePolicy, 
-                            typename GFS::template Child<0>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<1>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<2>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<3>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<4>::Type::LocalFunctionSpace::Traits::NodeType> Type;
-    };
-
-    template<typename GFS>
-    struct CompositeLocalFunctionSpaceNodeBaseTypeTraits<GFS,6>
-    {
-      typedef CompositeNode<CopyStoragePolicy, 
-                            typename GFS::template Child<0>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<1>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<2>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<3>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<4>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<5>::Type::LocalFunctionSpace::Traits::NodeType> Type;
-    };
-
-    template<typename GFS>
-    struct CompositeLocalFunctionSpaceNodeBaseTypeTraits<GFS,7>
-    {
-      typedef CompositeNode<CopyStoragePolicy, 
-                            typename GFS::template Child<0>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<1>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<2>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<3>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<4>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<5>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<6>::Type::LocalFunctionSpace::Traits::NodeType> Type;
-    };
-
-    template<typename GFS>
-    struct CompositeLocalFunctionSpaceNodeBaseTypeTraits<GFS,8>
-    {
-      typedef CompositeNode<CopyStoragePolicy, 
-                            typename GFS::template Child<0>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<1>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<2>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<3>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<4>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<5>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<6>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<7>::Type::LocalFunctionSpace::Traits::NodeType> Type;
-    };
-
-    template<typename GFS>
-    struct CompositeLocalFunctionSpaceNodeBaseTypeTraits<GFS,9>
-    {
-      typedef CompositeNode<CopyStoragePolicy, 
-                            typename GFS::template Child<0>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<1>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<2>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<3>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<4>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<5>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<6>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<7>::Type::LocalFunctionSpace::Traits::NodeType,
-                            typename GFS::template Child<8>::Type::LocalFunctionSpace::Traits::NodeType> Type;
-     
-    };
-#endif
-
     // local function space for a power grid function space
-    template<typename GFS> 
-    class CompositeLocalFunctionSpaceNode :
-      public LocalFunctionSpaceBaseNode<GFS>,
-      public CompositeLocalFunctionSpaceNodeBaseTypeTraits<GFS,GFS::CHILDREN>::Type
+    template<typename GFS,DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
+    class CompositeLocalFunctionSpaceNode
+      : public LocalFunctionSpaceBaseNode<GFS>
+      , public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
     {
       typedef LocalFunctionSpaceBaseNode<GFS> BaseT;
+      typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE NodeType;
 
-      // friend decl for bind meta program
-      template<typename T, bool b, typename E, typename GC, typename Int> 
-      friend struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
-      template<typename T, typename E, typename GC, typename Int, int n, int i>
-      friend struct LocalFunctionSpaceBaseVisitChildMetaProgram;
+      template<typename>
+      friend struct PropagateGlobalStorageVisitor;
+
+      template<typename>
+      friend struct ComputeSizeVisitor;
+
+      template<typename,typename>
+      friend struct FillIndicesVisitor;
 
     public:
       typedef PowerCompositeLocalFunctionSpaceTraits<GFS,CompositeLocalFunctionSpaceNode> Traits;
 
-      //! \brief empty constructor (needed for CopyStoragePolicy)
-      CompositeLocalFunctionSpaceNode ()
-      {
-      }
+      CompositeLocalFunctionSpaceNode (shared_ptr<const GFS> gfs,
+                                       DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
+        : BaseT(gfs)
+        , NodeType(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
+      {}
 
-      //! \brief initialize with grid function space
-      CompositeLocalFunctionSpaceNode (const GFS& gfs)  : BaseT(gfs)
-      {
-        setup(gfs);
-      }
-
-      //! \brief initialize with grid function space
-      void setup (const GFS& gfs)
-      {
-        BaseT::setup(gfs);
-        CompositeLocalFunctionSpaceNodeVisitChildMetaProgram<CompositeLocalFunctionSpaceNode,GFS::CHILDREN,0>::
-          setup(*this,gfs);
-      }
+      CompositeLocalFunctionSpaceNode (const GFS& gfs,
+                                       DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
+        : BaseT(stackobject_to_shared_ptr(gfs))
+        , NodeType(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
+      {}
 
       //! \brief bind local function space to entity
       void bind (const typename Traits::Element& e)
@@ -561,18 +408,21 @@ namespace Dune {
     };
 
     //! single component local function space
-    template<typename GFS> 
-    class LeafLocalFunctionSpaceNode :
-      public LocalFunctionSpaceBaseNode<GFS>,
-      public LeafNode
+    template<typename GFS>
+    class LeafLocalFunctionSpaceNode
+      : public LocalFunctionSpaceBaseNode<GFS>
+      , public TypeTree::LeafNode
     {
       typedef LocalFunctionSpaceBaseNode<GFS> BaseT;
 
-      // friend decl for bind meta program
-      template<typename T, bool b, typename E, typename GC, typename Int> 
-      friend struct LocalFunctionSpaceBaseVisitNodeMetaProgram;
-      template<typename T, typename E, typename GC, typename Int, int n, int i>
-      friend struct LocalFunctionSpaceBaseVisitChildMetaProgram;
+      template<typename>
+      friend struct PropagateGlobalStorageVisitor;
+
+      template<typename>
+      friend struct ComputeSizeVisitor;
+
+      template<typename,typename>
+      friend struct FillIndicesVisitor;
 
     public:
       typedef LeafLocalFunctionSpaceTraits<GFS,LeafLocalFunctionSpaceNode> Traits;
@@ -583,13 +433,15 @@ namespace Dune {
       > FESwitch;
 
     public:
-      //! \brief empty constructor (needed for CopyStoragePolicy)
-      LeafLocalFunctionSpaceNode ()
+
+      //! \brief initialize with grid function space
+      LeafLocalFunctionSpaceNode (shared_ptr<const GFS> gfs)
+        : BaseT(gfs)
       {
       }
 
-      //! \brief initialize with grid function space
-      LeafLocalFunctionSpaceNode (const GFS& gfs) : BaseT(gfs)
+      LeafLocalFunctionSpaceNode (const GFS& gfs)
+        : BaseT(stackobject_to_shared_ptr(gfs))
       {
       }
 
@@ -676,10 +528,20 @@ namespace Dune {
       typedef typename GFS::LocalFunctionSpace BaseT;
       typedef typename BaseT::Traits::IndexContainer::size_type I;
       typedef typename LocalIndexTraits<I,TAG>::LocalIndex LocalIndex;
+
+      template<typename>
+      friend struct PropagateGlobalStorageVisitor;
+
+      template<typename>
+      friend struct ComputeSizeVisitor;
+
+      template<typename,typename>
+      friend struct FillIndicesVisitor;
+
     public:
       typedef typename BaseT::Traits Traits;
 
-      LocalFunctionSpace(const GFS & gfs) : BaseT(gfs) {}
+      LocalFunctionSpace(const GFS & gfs) : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs>::transform(gfs)) { this->setup(*this); }
 
       LocalIndex localIndex (typename Traits::IndexContainer::size_type index) const
       {
@@ -698,8 +560,18 @@ namespace Dune {
       public GFS::LocalFunctionSpace
     {
       typedef typename GFS::LocalFunctionSpace BaseT;
+
+      template<typename>
+      friend struct PropagateGlobalStorageVisitor;
+
+      template<typename>
+      friend struct ComputeSizeVisitor;
+
+      template<typename,typename>
+      friend struct FillIndicesVisitor;
+
     public:
-      LocalFunctionSpace(const GFS & gfs) : BaseT(gfs) {}
+      LocalFunctionSpace(const GFS & gfs) : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs>::transform(gfs)) { this->setup(*this); }
     };
 
     //! \} group GridFunctionSpace
