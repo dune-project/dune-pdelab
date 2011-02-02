@@ -114,13 +114,13 @@ namespace Dune {
       };
 
     } // end empty namespace
-    
+
     //=======================================
     // local function space base: base class
     //=======================================
 
     //! traits mapping global function space information to local function space
-    template<typename GFS>  
+    template<typename GFS>
     struct LocalFunctionSpaceBaseTraits
     {
       //! \brief the grid view where grid function is defined upon
@@ -162,7 +162,7 @@ namespace Dune {
         pgfs(gfs), global_storage(gfs->maxLocalSize()), global(&global_storage), n(0)
       {}
 
-      //! \brief get current size 
+      //! \brief get current size
       typename Traits::IndexContainer::size_type size () const
       {
         return n;
@@ -288,13 +288,13 @@ namespace Dune {
       for (typename Traits::IndexContainer::size_type i=0; i<n; ++i)
         global_storage[i] = pgfs->upMap(global_storage[i]);
     }
-    
+
     //=======================================
     // local function space base: power implementation
     //=======================================
 
     //! traits for multi component local function space
-    template<typename GFS, typename N>  
+    template<typename GFS, typename N>
     struct PowerCompositeLocalFunctionSpaceTraits : public LocalFunctionSpaceBaseTraits<GFS>
     {
       //! type of local function space node
@@ -406,7 +406,7 @@ namespace Dune {
     //=======================================
 
     //! traits for single component local function space
-    template<typename GFS, typename N>  
+    template<typename GFS, typename N>
     struct LeafLocalFunctionSpaceTraits : public PowerCompositeLocalFunctionSpaceTraits<GFS,N>
     {
       //! Type of local finite element
@@ -473,7 +473,7 @@ namespace Dune {
         return this->pgfs->constraints();
       }
 
-      /** \brief write back coefficients for one element to container */  
+      /** \brief write back coefficients for one element to container */
       template<typename GC, typename LC>
       void mwrite (const LC& lc, GC& gc) const
       {
@@ -491,7 +491,7 @@ namespace Dune {
             global_col_iterator gcit = gc.find(i);
             if (gcit==gc.end())
               gc[i] = global_row_type();
-              
+
             // copy row to global container with transformed indices
             for (local_row_iterator rit=(cit->second).begin(); rit!=(cit->second).end(); ++rit)
               gc[i][i] = rit->second;
@@ -569,7 +569,7 @@ namespace Dune {
 
     // specialization for AnySpaceTag
     template <typename GFS>
-    class LocalFunctionSpace<GFS, AnySpaceTag> : 
+    class LocalFunctionSpace<GFS, AnySpaceTag> :
       public GFS::LocalFunctionSpace
     {
       typedef typename GFS::LocalFunctionSpace BaseT;
