@@ -9,9 +9,7 @@
 #include <dune/pdelab/common/typetree/leafnode.hh>
 #include <dune/pdelab/common/typetree/powernode.hh>
 #include <dune/pdelab/common/typetree/compositenode.hh>
-#if HAVE_VARIADIC_TEMPLATES
-#include <dune/pdelab/common/typetree/variadiccompositenode.hh>
-#endif
+#include <dune/pdelab/common/typetree/compositenodemacros.hh>
 #include <dune/pdelab/common/typetree/traversal.hh>
 #include <dune/pdelab/common/typetree/transformation.hh>
 
