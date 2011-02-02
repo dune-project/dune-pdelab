@@ -25,6 +25,8 @@ namespace Dune {
         : public TypeTree::DefaultVisitor
       {
 
+        static const TypeTree::TreePathType::Type treePathType = TypeTree::TreePathType::fullyStatic;
+
         template<typename CompositeGFS, typename Child, typename TreePath, typename ChildIndex>
         void afterChild(CompositeGFS& cgfs, const Child& child, TreePath treePath, ChildIndex childIndex)
         {
@@ -124,6 +126,8 @@ namespace Dune {
       struct DataHandleGlobalIndicesVisitor
         : public TypeTree::TreeVisitor
       {
+
+        static const TypeTree::TreePathType::Type treePathType = TypeTree::TreePathType::fullyStatic;
 
         template<typename Node, typename TreePath>
         void leaf(const Node& node, TreePath treePath)

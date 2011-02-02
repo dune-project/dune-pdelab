@@ -20,6 +20,10 @@ namespace Dune {
     //! \ingroup TypeTree
     //! \{
 
+    namespace TreePathType {
+      enum Type { fullyStatic, mostlyStatic, dynamic };
+    }
+
 #if HAVE_VARIADIC_TEMPLATES
 
     template<std::size_t... i>
