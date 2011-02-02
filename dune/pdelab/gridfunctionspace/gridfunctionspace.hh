@@ -21,7 +21,7 @@
 #include <dune/localfunctions/common/localkey.hh>
 
 #include "../common/countingptr.hh"
-#include "../common/multitypetree.hh"
+#include "../common/typetree.hh"
 #include "../common/cpstoragepolicy.hh"
 #include "../common/geometrywrapper.hh"
 
@@ -231,7 +231,7 @@ namespace Dune {
      */
     template<typename GV, typename FEM, typename CE=NoConstraints,
              typename B=StdVectorBackend, typename P=GridFunctionGeneralMapper>
-	class GridFunctionSpace : public Countable, public LeafNode
+	class GridFunctionSpace : public TypeTree::LeafNode
 	{
 	public:
       //! export Traits class
@@ -536,7 +536,7 @@ namespace Dune {
 	// B : Backend type
     template<typename GV, typename FEM, typename CE, typename B>
     class GridFunctionSpace<GV,FEM,CE,B,GridFunctionRestrictedMapper> :
-	  public Countable, public LeafNode
+	  public TypeTree::LeafNode
 	{
 	public:
       //! export Traits class
@@ -875,7 +875,7 @@ namespace Dune {
 	// B : Backend type
     template<typename GV, typename FEM, typename CE, typename B, typename IIS>
     class GridFunctionSpace<GV,FEM,CE,B,GridFunctionStaticSize<IIS> > :
-	  public Countable, public LeafNode
+	  public TypeTree::LeafNode
 	{
       typedef std::map<unsigned int,unsigned int> DofPerCodimMapType;
 	public:
