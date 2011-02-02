@@ -519,91 +519,62 @@ namespace Dune {
 
     };
 
-#if 0
-
-    template<typename T0, typename T1, typename T2, typename T3,
-             typename T4, typename T5, typename T6, typename T7, typename T8>
-    class CompositeGridFunctionSpaceBase<GridFunctionSpaceBlockwiseMapper,
-                                       T0,T1,T2,T3,T4,T5,T6,T7,T8>
-      : public CompositeGridFunctionSpaceBase<GridFunctionSpaceComponentBlockwiseMapper<1>,
-                                            T0,T1,T2,T3,T4,T5,T6,T7,T8>
+    template<DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN_FOR_SPECIALIZATION>
+    class CompositeGridFunctionSpace<GridFunctionSpaceBlockwiseMapper,
+                                     DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>
+      : public CompositeGridFunctionSpace<GridFunctionSpaceComponentBlockwiseMapper<1>,
+                                          DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>
     {
-    protected:
-      using CompositeGridFunctionSpaceBase<GridFunctionSpaceComponentBlockwiseMapper<1>,
-                                           T0,T1,T2,T3,T4,T5,T6,T7,T8>::setup;
+
+      typedef CompositeGridFunctionSpace<GridFunctionSpaceComponentBlockwiseMapper<1>,
+                                         DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES> BaseT;
+
+    public:
+
+      CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
+        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
+      {}
+
     };
+
 
     /**
         \brief Tupel of grid function spaces base class that holds
         implementation of the methods specialization for dynamic
         blockwise ordering
     */
-    template<DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
-    class CompositeGridFunctionSpaceBase<GridFunctionSpaceDynamicBlockwiseMapper,DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>
+    template<DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN_FOR_SPECIALIZATION>
+    class CompositeGridFunctionSpace<GridFunctionSpaceDynamicBlockwiseMapper,DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>
       : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
+      , public PowerCompositeDataHandleProvider<CompositeGridFunctionSpace<
+                                                  GridFunctionSpaceDynamicBlockwiseMapper,
+                                                  DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>
+                                                >
+      , public PowerCompositeUpdateAndSetupProvider<CompositeGridFunctionSpace<
+                                                      GridFunctionSpaceDynamicBlockwiseMapper,
+                                                      DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>,
+                                                    DUNE_TYPETREE_COMPOSITENODE_BASETYPE,
+                                                    GridFunctionSpaceDynamicBlockwiseMapper
+                                                    >
     {
       typedef GridFunctionSpaceDynamicBlockwiseMapper BlockwiseMapper;
       typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE BaseT;
+
+      typedef PowerCompositeUpdateAndSetupProvider<CompositeGridFunctionSpace,BaseT,BlockwiseMapper> ImplementationBase;
+
+      friend class PowerCompositeUpdateAndSetupProvider<CompositeGridFunctionSpace,BaseT,BlockwiseMapper>;
+
     public:
       //! export traits class
-      typedef PowerCompositeGridFunctionSpaceTraits<typename Child<0>::Type::Traits::GridViewType,
-                                                    typename Child<0>::Type::Traits::BackendType,
-                                                    BlockwiseMapper,
-                                                    BaseT::CHILDREN>
-      Traits;
-
-      //! extract type of container storing Es
-      template<typename E>
-      struct VectorContainer
-      {
-        //! \brief define Type as the Type of a container of E's
-        typedef typename Traits::BackendType::template VectorContainer<CompositeGridFunctionSpaceBase,E> Type;
-      private:
-        VectorContainer () {}
-      };
-
-      //! extract type for storing constraints
-      template<typename E>
-      struct ConstraintsContainer
-      {
-        //! \brief define Type as the Type of a container of E's
-        typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
-      private:
-        ConstraintsContainer () {}
-      };
+      typedef typename ImplementationBase::Traits Traits;
 
       // define local function space parametrized by self
-      typedef Dune::PDELab::CompositeLocalFunctionSpaceNode<CompositeGridFunctionSpaceBase> LocalFunctionSpace;
+      typedef Dune::PDELab::CompositeLocalFunctionSpaceNode<CompositeGridFunctionSpace> LocalFunctionSpace;
 
       CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(checkGridViewType<typename Child<0>::Type>))
+        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(checkGridViewType<typename BaseT::template Child<0>::Type>))
       {
-        setup();
-      }
-
-      // get grid view
-      const typename Traits::GridViewType& gridview () const
-      {
-        return this->template getChild<0>().gridview();
-      }
-
-      //! get dimension of root finite element space
-      typename Traits::SizeType globalSize () const
-      {
-        return offset[BaseT::CHILDREN];
-      }
-
-      //! get dimension of this finite element space
-      typename Traits::SizeType size () const
-      {
-        return offset[BaseT::CHILDREN];
-      }
-
-      // get max dimension of shape function space
-      typename Traits::SizeType maxLocalSize () const
-      {
-        // this is bullshit !
-        return maxlocalsize;
+        this->setup();
       }
 
       //! map index from our index set [0,size()-1] to root index set
@@ -623,71 +594,21 @@ namespace Dune {
         return global_index;
       }
 
-      //------------------------------
-      // generic data handle interface
-      //------------------------------
 
-      //! returns true if data for this codim should be communicated
-      bool dataHandleContains (int dim, int codim) const
-      {
-        return CompositeGridFunctionSpaceBaseVisitChildMetaProgram
-          <CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
-          dataHandleContains(*this,dim,codim);
-      }
+    private:
 
-      //! returns true if size per entity of given dim and codim is a constant
-      bool dataHandleFixedSize (int dim, int codim) const
-      {
-        return CompositeGridFunctionSpaceBaseVisitChildMetaProgram
-          <CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
-          dataHandleFixedSize(*this,dim,codim);
-      }
+      using ImplementationBase::childLocalSize;
+      using ImplementationBase::childGlobalSize;
+      using ImplementationBase::maxlocalsize;
+      using ImplementationBase::offset;
 
-      /*! how many objects of type DataType have to be sent for a given entity
-
-        Note: Only the sender side needs to know this size.
-      */
-      template<class EntityType>
-      size_t dataHandleSize (const EntityType& e) const
-      {
-        return CompositeGridFunctionSpaceBaseVisitChildMetaProgram
-          <CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
-          dataHandleSize(*this,e);
-      }
-
-      //! return vector of global indices associated with the given entity
-      template<class EntityType>
-      void dataHandleGlobalIndices (const EntityType& e,
-                                    std::vector<typename Traits::SizeType>& global) const
-      {
-        size_t n=dataHandleSize(e);
-        global.resize(n);
-        CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
-          dataHandleGlobalIndices(*this,e,global,0,childglobal);
-      }
-
-      //------------------------------
-
-      // recalculate sizes
-      void update ()
-      {
-        CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
-          update(*this);
-        setup();
-      }
-
-    protected:
-      void setup ()
+      void calculateSizes ()
       {
         Dune::dinfo << "CompositeGridFunctionSpace(blockwise version):"
                     << std::endl;
 
-        CompositeGridFunctionSpaceBaseVisitChildMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
-          setup(*this,childGlobalSize,childLocalSize);
-
-
         typedef typename Traits::GridViewType GridView;
-        const GridView & gv = gridview();
+        const GridView & gv = this->gridview();
 
         // Initialize offset array for each child
 
@@ -709,7 +630,7 @@ namespace Dune {
           typename Traits::SizeType e_index = gv.indexSet().index(*it);
 
           // Loop over children (realized by meta-program)
-          DynamicBlockwiseMapperImp::GetChildOffsetsMetaProgram<CompositeGridFunctionSpaceBase,BaseT::CHILDREN,0>::
+          DynamicBlockwiseMapperImp::GetChildOffsetsMetaProgram<CompositeGridFunctionSpace,BaseT::CHILDREN,0>::
             getChildOffsets(*this,*it,childOffsets);
 
           for(int i=0; i<BaseT::CHILDREN; ++i){
@@ -745,23 +666,15 @@ namespace Dune {
         Dune::dinfo << ") total size = " << offset[BaseT::CHILDREN]
                     << " max local size = " << maxlocalsize
                     << std::endl;
-        childglobal.resize(maxlocalsize);
       }
 
     private:
-      typename Traits::SizeType childGlobalSize[BaseT::CHILDREN];
-      typename Traits::SizeType childLocalSize[BaseT::CHILDREN];
-      typename Traits::SizeType offset[BaseT::CHILDREN+1];
-      typename Traits::SizeType maxlocalsize;
-      mutable std::vector<typename Traits::SizeType> childglobal;
       typedef std::pair<typename Traits::SizeType,typename Traits::SizeType> SizeTypePair;
       typedef std::list<SizeTypePair> BlockIndexRangeList;
       std::vector<BlockIndexRangeList> blockIndices;
       typedef typename BlockIndexRangeList::const_iterator BlockIndexRangeIterator;
       mutable std::vector<BlockIndexRangeIterator> blockIndexIterators;
     };
-
-#endif
 
     //! \addtogroup GridFunctionSpace
     //! \{
