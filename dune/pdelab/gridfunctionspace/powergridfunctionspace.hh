@@ -121,7 +121,7 @@ namespace Dune {
         return subMap(i,j);
       }
 
-      typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j)
+      typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j) const
       {
         return this->offset[i]+j;
       }
@@ -248,7 +248,7 @@ namespace Dune {
         return subMap(i,j);
       }
 
-      typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j)
+      typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j) const
       {
         return (j%s)+(j/s)*k*s+i*s;
       }
