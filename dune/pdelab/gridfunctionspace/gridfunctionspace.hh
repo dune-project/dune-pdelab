@@ -393,16 +393,31 @@ namespace Dune {
 
       //! return vector of global indices associated with the given entity
       template<class EntityType>
-      void dataHandleGlobalIndices (const EntityType& e, 
-                                    std::vector<typename Traits::SizeType>& global) const
+      std::size_t dataHandleGlobalIndices (const EntityType& e,
+                                           std::vector<typename Traits::SizeType>& global) const
+      {
+        return dataHandleGlobalIndices(e,global,0,true);
+      }
+
+#ifndef DOXYGEN
+
+      template<class EntityType>
+      std::size_t dataHandleGlobalIndices (const EntityType& e,
+                                           std::vector<typename Traits::SizeType>& global,
+                                           std::size_t pos,
+                                           bool resize) const
       {
         Dune::GeometryType gt=e.type();
         typename GV::IndexSet::IndexType index = gtoffset.find(gt)->second + gv.indexSet().index(e);
         unsigned int n = offset[index+1]-offset[index];
-		global.resize(n);
+        if (resize)
+          global.resize(n);
         for (unsigned i=0; i<n; i++)
-          global[i] = offset[index]+i;
+          global[pos+i] = offset[index]+i;
+        return n;
       }
+
+#endif // DOXYGEN
 
       //------------------------------
 
@@ -698,16 +713,32 @@ namespace Dune {
 
       //! return vector of global indices associated with the given entity
       template<class EntityType>
-      void dataHandleGlobalIndices (const EntityType& e, 
-                                    std::vector<typename Traits::SizeType>& global) const
+      std::size_t dataHandleGlobalIndices (const EntityType& e,
+                                           std::vector<typename Traits::SizeType>& global) const
+      {
+        return dataHandleGlobalIndices(e,global,0,true);
+      }
+
+#ifndef DOXYGEN
+
+      template<class EntityType>
+      std::size_t dataHandleGlobalIndices (const EntityType& e,
+                                           std::vector<typename Traits::SizeType>& global,
+                                           std::size_t pos,
+                                           bool resize) const
       {
         Dune::GeometryType gt=e.type();
         typename GV::IndexSet::IndexType index = gv.indexSet().index(e);
         unsigned int n = dofcountmap.find(gt)->second;
-		global.resize(n);
+        if (resize)
+          global.resize(n);
         for(unsigned i=0; i<n; i++)
-          global[i] = offset.find(gt)->second + index*n + i;
+          global[pos+i] = offset.find(gt)->second + index*n + i;
+        return n;
       }
+
+#endif // DOXYGEN
+
 
       //------------------------------
 
@@ -1050,23 +1081,38 @@ namespace Dune {
 
       //! return vector of global indices associated with the given entity
       template<class EntityType>
-      void dataHandleGlobalIndices (const EntityType& e, 
-                                    std::vector<typename Traits::SizeType>& global) const
+      std::size_t dataHandleGlobalIndices (const EntityType& e,
+                                           std::vector<typename Traits::SizeType>& global) const
+      {
+        return dataHandleGlobalIndices(e,global,0,true);
+      }
+
+#ifndef DOXYGEN
+
+      template<class EntityType>
+      std::size_t dataHandleGlobalIndices (const EntityType& e,
+                                           std::vector<typename Traits::SizeType>& global,
+                                           std::size_t pos,
+                                           bool resize) const
       {
         const int cd = EntityType::codimension;
         typename GV::IndexSet::IndexType o = offset.find(cd)->second;
         typename GV::IndexSet::IndexType index = gv.indexSet().index(e);
         unsigned int n = dofpercodim.find(cd)->second;
-		global.resize(n);
-        for (unsigned int i=0; i<n; i++) 
-          global[i] = o + index*n + i;
+        if (resize)
+          global.resize(n);
+        for (unsigned int i=0; i<n; i++)
+          global[pos+i] = o + index*n + i;
 //         Dune::dinfo << "[" << gv.grid().comm().rank() << "]: "
 //                     << " global indices "
 //                     << " offset=" << o
 //                     << " index=" << index
 //                     << " n=" << n
 //                     << std::endl;
+        return n;
       }
+
+#endif // DOXYGEN
 
       //------------------------------
 
