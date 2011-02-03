@@ -619,7 +619,7 @@ namespace Dune {
                                       C1,
                                       typename remove_reference<N2>::type,
                                       C2,
-                                      TreePath>::value;
+                                      typename TreePath::ViewType>::value;
               v.beforeChild(std::forward<N1>(n1),n1.template child<count-inverse_k>(),
                             std::forward<N2>(n2),n2.template child<count-inverse_k>(),
                             tp.view(),count-inverse_k);
@@ -649,7 +649,7 @@ namespace Dune {
             {
               typedef typename N1::template Child<count-inverse_k>::Type C1;
               typedef typename N2::template Child<count-inverse_k>::Type C2;
-              const bool visit = V::template VisitChild<N1,C1,N2,C2,TreePath>::value;
+              const bool visit = V::template VisitChild<N1,C1,N2,C2,typename TreePath::ViewType>::value;
               v.beforeChild(n1,n1.template child<count-inverse_k>(),
                             n2,n2.template child<count-inverse_k>(),
                             tp.view(),count-inverse_k);
@@ -674,7 +674,7 @@ namespace Dune {
             {
               typedef typename N1::template Child<count-inverse_k>::Type C1;
               typedef typename N2::template Child<count-inverse_k>::Type C2;
-              const bool visit = V::template VisitChild<N1,C1,N2,C2,TreePath>::value;
+              const bool visit = V::template VisitChild<N1,C1,N2,C2,typename TreePath::ViewType>::value;
               v.beforeChild(n1,n1.template child<count-inverse_k>(),
                             n2,n2.template child<count-inverse_k>(),
                             tp.view(),count-inverse_k);
@@ -699,7 +699,7 @@ namespace Dune {
             {
               typedef typename N1::template Child<count-inverse_k>::Type C1;
               typedef typename N2::template Child<count-inverse_k>::Type C2;
-              const bool visit = V::template VisitChild<N1,C1,N2,C2,TreePath>::value;
+              const bool visit = V::template VisitChild<N1,C1,N2,C2,typename TreePath::ViewType>::value;
               v.beforeChild(n1,n1.template child<count-inverse_k>(),
                             n2,n2.template child<count-inverse_k>(),
                             tp.view(),count-inverse_k);
@@ -724,7 +724,7 @@ namespace Dune {
             {
               typedef typename N1::template Child<count-inverse_k>::Type C1;
               typedef typename N2::template Child<count-inverse_k>::Type C2;
-              const bool visit = V::template VisitChild<N1,C1,N2,C2,TreePath>::value;
+              const bool visit = V::template VisitChild<N1,C1,N2,C2,typename TreePath::ViewType>::value;
               v.beforeChild(n1,n1.template child<count-inverse_k>(),
                             n2,n2.template child<count-inverse_k>(),
                             tp.view(),count-inverse_k);
@@ -766,7 +766,7 @@ namespace Dune {
                                       C1,
                                       typename remove_reference<N2>::type,
                                       C2,
-                                      TreePath>::value;
+                                      typename TreePath::ViewType>::value;
               v.beforeChild(std::forward<N1>(n1),n1.template child<count-1>(),
                             std::forward<N2>(n2),n2.template child<count-1>(),
                             tp.view(),count-1);
@@ -791,7 +791,7 @@ namespace Dune {
             {
               typedef typename N1::template Child<count-1>::Type C1;
               typedef typename N2::template Child<count-1>::Type C2;
-              const bool visit = V::template VisitChild<N1,C1,N2,C2,TreePath>::value;
+              const bool visit = V::template VisitChild<N1,C1,N2,C2,typename TreePath::ViewType>::value;
               v.beforeChild(n1,n1.template child<count-1>(),
                             n2,n2.template child<count-1>(),
                             tp.view(),count-1);
@@ -814,7 +814,7 @@ namespace Dune {
             {
               typedef typename N1::template Child<count-1>::Type C1;
               typedef typename N2::template Child<count-1>::Type C2;
-              const bool visit = V::template VisitChild<N1,C1,N2,C2,TreePath>::value;
+              const bool visit = V::template VisitChild<N1,C1,N2,C2,typename TreePath::ViewType>::value;
               v.beforeChild(n1,n1.template child<count-1>(),
                             n2,n2.template child<count-1>(),
                             tp.view(),count-1);
@@ -837,7 +837,7 @@ namespace Dune {
             {
               typedef typename N1::template Child<count-1>::Type C1;
               typedef typename N2::template Child<count-1>::Type C2;
-              const bool visit = V::template VisitChild<N1,C1,N2,C2,TreePath>::value;
+              const bool visit = V::template VisitChild<N1,C1,N2,C2,typename TreePath::ViewType>::value;
               v.beforeChild(n1,n1.template child<count-1>(),
                             n2,n2.template child<count-1>(),
                             tp.view(),count-1);
@@ -860,7 +860,7 @@ namespace Dune {
             {
               typedef typename N1::template Child<count-1>::Type C1;
               typedef typename N2::template Child<count-1>::Type C2;
-              const bool visit = V::template VisitChild<N1,C1,N2,C2,TreePath>::value;
+              const bool visit = V::template VisitChild<N1,C1,N2,C2,typename TreePath::ViewType>::value;
               v.beforeChild(n1,n1.template child<count-1>(),
                             n2,n2.template child<count-1>(),
                             tp.view(),count-1);
@@ -1067,7 +1067,7 @@ namespace Dune {
                                "non-leaf nodes with different numbers of children " \
                                "are not allowed during simultaneous grid traversal");
             const bool visit = std::remove_reference<V>::type
-              ::template VisitChild<Node1,C1,Node2,C2,TreePath>::value;
+              ::template VisitChild<Node1,C1,Node2,C2,typename TreePath::ViewType>::value;
             for (std::size_t k = 0; k < Node1::CHILDREN; ++k)
               {
                 v.beforeChild(std::forward<N1>(n1),n1.child(k),std::forward<N2>(n2),n2.child(k),tp.view(),k);
@@ -1098,7 +1098,7 @@ namespace Dune {
             dune_static_assert(N1::CHILDREN == N2::CHILDREN,
                                "non-leaf nodes with different numbers of children " \
                                "are not allowed during simultaneous grid traversal");
-            const bool visit = V::template VisitChild<N1,C1,N2,C2,TreePath>::value;
+            const bool visit = V::template VisitChild<N1,C1,N2,C2,typename TreePath::ViewType>::value;
             for (std::size_t k = 0; k < N1::CHILDREN; ++k)
               {
                 v.beforeChild(n1,n1.child(k),n2,n2.child(k),tp.view(),k);
@@ -1127,7 +1127,7 @@ namespace Dune {
             dune_static_assert(N1::CHILDREN == N2::CHILDREN,
                                "non-leaf nodes with different numbers of children " \
                                "are not allowed during simultaneous grid traversal");
-            const bool visit = V::template VisitChild<N1,C1,N2,C2,TreePath>::value;
+            const bool visit = V::template VisitChild<N1,C1,N2,C2,typename TreePath::ViewType>::value;
             for (std::size_t k = 0; k < N1::CHILDREN; ++k)
               {
                 v.beforeChild(n1,n1.child(k),n2,n2.child(k),tp.view(),k);
@@ -1156,7 +1156,7 @@ namespace Dune {
             dune_static_assert(N1::CHILDREN == N2::CHILDREN,
                                "non-leaf nodes with different numbers of children " \
                                "are not allowed during simultaneous grid traversal");
-            const bool visit = V::template VisitChild<N1,C1,N2,C2,TreePath>::value;
+            const bool visit = V::template VisitChild<N1,C1,N2,C2,typename TreePath::ViewType>::value;
             for (std::size_t k = 0; k < N1::CHILDREN; ++k)
               {
                 v.beforeChild(n1,n1.child(k),n2,n2.child(k),tp.view(),k);
@@ -1185,7 +1185,7 @@ namespace Dune {
             dune_static_assert(N1::CHILDREN == N2::CHILDREN,
                                "non-leaf nodes with different numbers of children " \
                                "are not allowed during simultaneous grid traversal");
-            const bool visit = V::template VisitChild<N1,C1,N2,C2,TreePath>::value;
+            const bool visit = V::template VisitChild<N1,C1,N2,C2,typename TreePath::ViewType>::value;
             for (std::size_t k = 0; k < N1::CHILDREN; ++k)
               {
                 v.beforeChild(n1,n1.child(k),n2,n2.child(k),tp.view(),k);
