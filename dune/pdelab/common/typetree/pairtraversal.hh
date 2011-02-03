@@ -17,8 +17,8 @@ namespace Dune {
     namespace TypeTree {
       namespace PairTraversal {
 
-        /** \addtogroup TypeTree
-         *  \ingroup PDELab
+        /** \addtogroup Tree Traversal
+         *  \ingroup TypeTree
          *  \{
          */
 
@@ -1137,7 +1137,7 @@ namespace Dune {
 
 #endif // HAVE_RVALUE_REFERENCES
 
-        //! \} group TypeTree
+        //! \} group Tree Traversal
 
       } // namespace PairTraversal
     } // namespace TypeTree

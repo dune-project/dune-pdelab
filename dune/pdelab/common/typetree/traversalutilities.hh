@@ -10,8 +10,8 @@ namespace Dune {
   namespace PDELab {
     namespace TypeTree {
 
-      /** \addtogroup TypeTree
-       *  \ingroup PDELab
+      /** \addtogroup Tree Traversal
+       *  \ingroup TypeTree
        *  \{
        */
 
@@ -86,7 +86,7 @@ namespace Dune {
         return visitor.result();
       }
 
-      //! \} group TypeTree
+      //! \} group Tree Traversal
 
     } // namespace TypeTree
   } // namespace PDELab
