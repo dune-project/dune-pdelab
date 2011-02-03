@@ -12,149 +12,153 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-      //! We put the actual method in a base class because we want to use it with different tree iteration patterns
-      struct SetupVisitorBase
-        : public TypeTree::DefaultVisitor // do not fix the traversal depth yet
-        , public TypeTree::DynamicTraversal
+#ifndef DOXYGEN // don't use an anomyous namespace - it breaks friend declarations
+
+    //! We put the actual method in a base class because we want to use it with different tree iteration patterns
+    struct SetupVisitorBase
+      : public TypeTree::DefaultVisitor // do not fix the traversal depth yet
+      , public TypeTree::DynamicTraversal
+    {
+
+      template<typename CompositeGFS, typename Child, typename TreePath, typename ChildIndex>
+      void afterChild(CompositeGFS& cgfs, const Child& child, TreePath treePath, ChildIndex childIndex) const
       {
+        cgfs.childGlobalSize[childIndex] = child.globalSize();
+        cgfs.childLocalSize[childIndex] = child.maxLocalSize();
+      }
 
-        template<typename CompositeGFS, typename Child, typename TreePath, typename ChildIndex>
-        void afterChild(CompositeGFS& cgfs, const Child& child, TreePath treePath, ChildIndex childIndex) const
-        {
-          cgfs.childGlobalSize[childIndex] = child.globalSize();
-          cgfs.childLocalSize[childIndex] = child.maxLocalSize();
-        }
+    };
 
-      };
+    //! Visitor for setting up the GFS from pre-initialized children
+    struct SetupVisitor
+      : public SetupVisitorBase
+      , public TypeTree::VisitDirectChildren
+    {};
 
-      //! Visitor for setting up the GFS from pre-initialized children
-      struct SetupVisitor
-        : public SetupVisitorBase
-        , public TypeTree::VisitDirectChildren
-      {};
+    //! Visitor for updating the complete GFS tree
+    struct UpdateVisitor
+      : public SetupVisitorBase
+      , public TypeTree::VisitTree
+    {
 
-      //! Visitor for updating the complete GFS tree
-      struct UpdateVisitor
-        : public SetupVisitorBase
-        , public TypeTree::VisitTree
+      template<typename LeafNode, typename TreePath>
+      void leaf(const LeafNode& node, TreePath treePath) const
       {
+        node.update();
+      }
 
-        template<typename LeafNode, typename TreePath>
-        void leaf(const LeafNode& node, TreePath treePath) const
-        {
-          node.update();
-        }
-
-        template<typename LeafNode, typename TreePath>
-        void post(const LeafNode& node, TreePath treePath) const
-        {
-          node.calculateSizes();
-        }
-
-      };
-
-      //! Functor for dataHandleFixedSize()
-      struct DataHandleFixedSize
+      template<typename LeafNode, typename TreePath>
+      void post(const LeafNode& node, TreePath treePath) const
       {
+        node.calculateSizes();
+      }
 
-        template<typename Node, typename TreePath>
-        bool operator()(const Node& node, TreePath treePath) const
-        {
-          return node.dataHandleFixedSize(dim,codim);
-        }
+    };
 
-        DataHandleFixedSize(int dimension, int codimension)
-          : dim(dimension)
-          , codim(codimension)
-        {}
+    //! Functor for dataHandleFixedSize()
+    struct DataHandleFixedSize
+    {
 
-        const int dim;
-        const int codim;
-
-      };
-
-      //! Functor for dataHandleContains()
-      struct DataHandleContains
+      template<typename Node, typename TreePath>
+      bool operator()(const Node& node, TreePath treePath) const
       {
+        return node.dataHandleFixedSize(dim,codim);
+      }
 
-        template<typename Node, typename TreePath>
-        bool operator()(const Node& node, TreePath treePath) const
-        {
-          return node.dataHandleContains(dim,codim);
-        }
+      DataHandleFixedSize(int dimension, int codimension)
+        : dim(dimension)
+        , codim(codimension)
+      {}
 
-        DataHandleContains(int dimension, int codimension)
-          : dim(dimension)
-          , codim(codimension)
-        {}
+      const int dim;
+      const int codim;
 
-        const int dim;
-        const int codim;
+    };
 
-      };
+    //! Functor for dataHandleContains()
+    struct DataHandleContains
+    {
 
-      //! Functor for dataHandleSize()
-      template<typename Entity>
-      struct DataHandleSize
+      template<typename Node, typename TreePath>
+      bool operator()(const Node& node, TreePath treePath) const
       {
+        return node.dataHandleContains(dim,codim);
+      }
 
-        template<typename Node, typename TreePath>
-        bool operator()(const Node& node, TreePath treePath) const
-        {
-          return node.dataHandleSize(e);
-        }
+      DataHandleContains(int dimension, int codimension)
+        : dim(dimension)
+        , codim(codimension)
+      {}
 
-        DataHandleSize(const Entity& entity)
-          : e(entity)
-        {}
+      const int dim;
+      const int codim;
 
-        const Entity& e;
+    };
 
-      };
+    //! Functor for dataHandleSize()
+    template<typename Entity>
+    struct DataHandleSize
+    {
 
-      //! Visitor for retrieving the global DOF indices of a given entity.
-      template<typename Entity, typename Container>
-      struct DataHandleGlobalIndicesVisitor
-        : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
+      template<typename Node, typename TreePath>
+      bool operator()(const Node& node, TreePath treePath) const
       {
+        return node.dataHandleSize(e);
+      }
 
-        template<typename Node, typename TreePath>
-        void leaf(const Node& node, TreePath treePath)
-        {
-          pos += node.dataHandleGlobalIndices(e,g,pos,false);
-        }
+      DataHandleSize(const Entity& entity)
+        : e(entity)
+      {}
 
-        template<typename CompositeGFS, typename Child, typename TreePath, typename ChildIndex>
-        void beforeChild(CompositeGFS& cgfs, const Child& child, TreePath treePath, ChildIndex childIndex)
-        {
-          offsets.push_back(pos);
-        }
+      const Entity& e;
 
-        template<typename CompositeGFS, typename Child, typename TreePath, typename ChildIndex>
-        void afterChild(CompositeGFS& cgfs, const Child& child, TreePath treePath, ChildIndex childIndex)
-        {
-          std::size_t offset = offsets.back();
-          offsets.pop_back();
-          for (std::size_t i = offset; i < pos; ++i)
-            g[i] = cgfs.subMap(childIndex,g[i]);
-        }
+    };
 
-        DataHandleGlobalIndicesVisitor(const Entity& entity, Container& global)
-          : e(entity)
-          , g(global)
-          , pos(0)
-        {
-          // a reasonable upper bound for the tree depth - this way, we avoid reallocations
-          offsets.reserve(16);
-        }
+    //! Visitor for retrieving the global DOF indices of a given entity.
+    template<typename Entity, typename Container>
+    struct DataHandleGlobalIndicesVisitor
+      : public TypeTree::TreeVisitor
+      , public TypeTree::DynamicTraversal
+    {
 
-        const Entity& e;
-        Container& g;
-        std::size_t pos;
-        std::vector<std::size_t> offsets;
+      template<typename Node, typename TreePath>
+      void leaf(const Node& node, TreePath treePath)
+      {
+        pos += node.dataHandleGlobalIndices(e,g,pos,false);
+      }
 
-      };
+      template<typename CompositeGFS, typename Child, typename TreePath, typename ChildIndex>
+      void beforeChild(CompositeGFS& cgfs, const Child& child, TreePath treePath, ChildIndex childIndex)
+      {
+        offsets.push_back(pos);
+      }
+
+      template<typename CompositeGFS, typename Child, typename TreePath, typename ChildIndex>
+      void afterChild(CompositeGFS& cgfs, const Child& child, TreePath treePath, ChildIndex childIndex)
+      {
+        std::size_t offset = offsets.back();
+        offsets.pop_back();
+        for (std::size_t i = offset; i < pos; ++i)
+          g[i] = cgfs.subMap(childIndex,g[i]);
+      }
+
+      DataHandleGlobalIndicesVisitor(const Entity& entity, Container& global)
+        : e(entity)
+        , g(global)
+        , pos(0)
+      {
+        // a reasonable upper bound for the tree depth - this way, we avoid reallocations
+        offsets.reserve(16);
+      }
+
+      const Entity& e;
+      Container& g;
+      std::size_t pos;
+      std::vector<std::size_t> offsets;
+
+    };
+
+#endif // DOXYGEN
 
 
     //! Mixin class providing common functionality of PowerGridFunctionSpace and CompositeGridFunctionSpace
