@@ -208,8 +208,15 @@ namespace Dune {
 
 #else
 
+          // The next two methods do some nasty trickery to make sure that both trees
+          // are either const or non-const and that no mixed case can occur. For this
+          // purpose, the enable_if on the first method makes sure that it will only
+          // ever match if both trees are non-const, and the second method casts both
+          // trees to const before passing them on.
           template<typename Node1, typename Node2, typename Visitor>
-          static void apply(Node1& node1, Node2& node2, Visitor& visitor)
+          static
+          typename enable_if<!(IsConst<Node1>::Value || IsConst<Node2>::Value)>::type
+          apply(Node1& node1, Node2& node2, Visitor& visitor)
           {
             ApplyToTree<tpType,
                         typename Node1::NodeTag,
@@ -226,14 +233,22 @@ namespace Dune {
             ApplyToTree<tpType,
                         typename Node1::NodeTag,
                         typename Node2::NodeTag
-                        >::apply(node1,
-                                 node2,
+                        >::apply(const_cast<const Node1&>(node1), // see previous method
+                                 const_cast<const Node2&>(node2), // for explanation
                                  visitor,
                                  TreePathFactory<tpType>::create().mutablePath());
           }
 
+
+          // The next two methods do some nasty trickery to make sure that both trees
+          // are either const or non-const and that no mixed case can occur. For this
+          // purpose, the enable_if on the first method makes sure that it will only
+          // ever match if both trees are non-const, and the second method casts both
+          // trees to const before passing them on.
           template<typename Node1, typename Node2, typename Visitor>
-          static void apply(Node1& node1, Node2& node2, const Visitor& visitor)
+          static
+          typename enable_if<!(IsConst<Node1>::Value || IsConst<Node2>::Value)>::type
+          apply(Node1& node1, Node2& node2, const Visitor& visitor)
           {
             ApplyToTree<tpType,
                         typename Node1::NodeTag,
@@ -250,8 +265,8 @@ namespace Dune {
             ApplyToTree<tpType,
                         typename Node1::NodeTag,
                         typename Node2::NodeTag
-                        >::apply(node1,
-                                 node2,
+                        >::apply(const_cast<const Node1&>(node1), // see previous method
+                                 const_cast<const Node2&>(node2), // for explanation
                                  visitor,
                                  TreePathFactory<tpType>::create().mutablePath());
           }
