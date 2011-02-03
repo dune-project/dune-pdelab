@@ -12,6 +12,8 @@ int main()
 #else
 
 #include <dune/pdelab/common/typetree.hh>
+#include <dune/pdelab/common/typetree/pairtraversal.hh>
+
 #include <iostream>
 
 struct Counter
@@ -185,8 +187,10 @@ struct SimpleComposite
 };
 
 struct TreePrinter
-  : public Dune::PDELab::TypeTree::TypeTreeVisitor
+  : public Dune::PDELab::TypeTree::TreeVisitor
 {
+
+  static const Dune::PDELab::TypeTree::TreePathType::Type treePathType = Dune::PDELab::TypeTree::TreePathType::dynamic;
 
   template<typename T, typename TreePath>
   void leaf(const T& t, TreePath treePath) const
@@ -197,11 +201,36 @@ struct TreePrinter
   template<typename T, typename TreePath>
   void pre(const T& t, TreePath treePath) const
   {
-    for (std::size_t i = 0; i < Dune::PDELab::TypeTree::TreePathSize<TreePath>::value; ++i)
+    for (std::size_t i = 0; i < treePath.size(); ++i)
       std::cout << "  ";
     std::cout << t.name() << " " << t.id() << std::endl;
   }
 };
+
+
+
+
+struct PairPrinter
+  : public Dune::PDELab::TypeTree::PairTraversal::TreeVisitor
+{
+
+  static const Dune::PDELab::TypeTree::TreePathType::Type treePathType = Dune::PDELab::TypeTree::TreePathType::fullyStatic;
+
+  template<typename T1, typename T2, typename TreePath>
+  void leaf(const T1& t1, const T2& t2, TreePath treePath) const
+  {
+    pre(t1,t2,treePath);
+  }
+
+  template<typename T1, typename T2, typename TreePath>
+  void pre(const T1& t1, const T2& t2, TreePath treePath) const
+  {
+    for (std::size_t i = 0; i < Dune::PDELab::TypeTree::TreePathSize<TreePath>::value; ++i)
+      std::cout << "  ";
+    std::cout << t1.name() << " " << t1.id() << "      " << t2.name() << " " << t2.id() << std::endl;
+  }
+};
+
 
 int main(int argc, char** argv)
 {
@@ -233,6 +262,9 @@ int main(int argc, char** argv)
 
 #if HAVE_RVALUE_REFERENCES
 
+  typedef SimpleComposite<SimpleLeaf,SimpleLeaf,SimpleLeaf> SC2;
+  SC2 sc2(sl1,sl1,sl1);
+
   typedef SimpleVariadicComposite<SimpleLeaf,SP1,SimpleLeaf,SC1> SVC1;
   SVC1 svc1_1(sl1,sp1_1,sl2,sc1_1);
   Dune::PDELab::TypeTree::applyToTree(svc1_1,treePrinter);
@@ -244,6 +276,11 @@ int main(int argc, char** argv)
 
   SVC1 svc1_2(SimpleLeaf(),SP1(sp1_2),sl2,const_cast<const SC1&>(sc1_1));
   Dune::PDELab::TypeTree::applyToTree(svc1_2,TreePrinter());
+
+  typedef SimpleComposite<SimpleLeaf,SC2,SimpleLeaf,SC1> SVC2;
+  SVC2 svc2_1(sl1,sc2,sl2,sc1_1);
+
+  Dune::PDELab::TypeTree::PairTraversal::applyToTree(svc1_2,svc2_1,PairPrinter());
 
 #endif
 
