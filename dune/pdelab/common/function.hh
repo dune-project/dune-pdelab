@@ -35,10 +35,10 @@ namespace Dune {
 	  typedef DF DomainFieldType;
 
 	  //! \brief Enum for domain dimension
-	  enum { 
+	  enum {
 		//! \brief dimension of the domain
-		dimDomain = n 
-	  }; 
+		dimDomain = n
+	  };
 
 	  //! \brief domain type
 	  typedef D DomainType;
@@ -47,10 +47,10 @@ namespace Dune {
 	  typedef RF RangeFieldType;
 
 	  //! \brief Enum for range dimension
-	  enum { 
+	  enum {
 		//! \brief dimension of the range
-		dimRange = m 
-	  }; 
+		dimRange = m
+	  };
 
 	  //! \brief range type
 	  typedef R RangeType;
@@ -63,16 +63,16 @@ namespace Dune {
 	{
 	public:
 	  //! \brief Export type traits
-	  typedef T Traits;  
+	  typedef T Traits;
 
 	  /** \brief Evaluate all basis function at given position
 
-		  Evaluates all shape functions at the given position and returns 
+		  Evaluates all shape functions at the given position and returns
 		  these values in a vector.
 	  */
 	  inline void evaluate (const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
 		asImp().evaluate(x,y);
 	  }
 
@@ -122,7 +122,7 @@ namespace Dune {
 	{
 	public:
 	  //! \brief Export type traits
-	  typedef T Traits;  
+	  typedef T Traits;
 
 	  /** \brief Evaluate the GridFunction at given position
 
@@ -133,10 +133,10 @@ namespace Dune {
           \param[in]  x The position in entity-local coordinates
           \param[out] y The result of the evaluation
 	  */
-	  inline void evaluate (const typename Traits::ElementType& e, 
+	  inline void evaluate (const typename Traits::ElementType& e,
 							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
 		asImp().evaluate(e,x,y);
 	  }
 
@@ -179,7 +179,7 @@ namespace Dune {
 	{
 	public:
 	  //! \brief Export type traits
-	  typedef T Traits;  
+	  typedef T Traits;
 
 	  /** \brief Evaluate the GridFunction at given position
 
@@ -191,10 +191,10 @@ namespace Dune {
           \param[out] y The result of the evaluation
 	  */
       template<typename I>
-	  inline void evaluate (const IntersectionGeometry<I>& ig, 
+	  inline void evaluate (const IntersectionGeometry<I>& ig,
 							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
 		asImp().evaluate(ig,x,y);
 	  }
 
@@ -211,14 +211,14 @@ namespace Dune {
 
     //! \addtogroup PDELab_FunctionAdapters Function Adapters
     //! \{
-      
+
 	/** \brief make a GridFunction from a Function
      *
      *  \tparam G The GridView type
      *  \tparam T The function type
      */
 	template<typename G, typename T>
-	class FunctionToGridFunctionAdapter : 
+	class FunctionToGridFunctionAdapter :
 	  public GridFunctionInterface<GridFunctionTraits<
 									 G,
 									 typename T::Traits::RangeFieldType,
@@ -242,7 +242,7 @@ namespace Dune {
        (is_same<typename T::Traits::DomainType,
                 typename Traits::DomainType>::value),
        "GridView's and wrapped Functions DomainType don't match");
-	  
+
       /** \brief Create a FunctionToGridFunctionAdapter
        *
        *  \param g_ The GridView
@@ -253,7 +253,7 @@ namespace Dune {
 	  inline void evaluate (const typename Traits::ElementType& e,
 							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
 		t.evaluate(e.geometry().global(x),y);
 	  }
 
@@ -287,7 +287,7 @@ namespace Dune {
 
 	  /** \brief Evaluate all basis function at given position
 
-		  Evaluates all shape functions at the given position and returns 
+		  Evaluates all shape functions at the given position and returns
 		  these values in a vector.
 	  */
 	  inline void evaluate (const typename Traits::DomainType& x,
@@ -311,7 +311,7 @@ namespace Dune {
      *  \tparam E Type of the grid's element
      */
 	template<typename T, typename E>
-	class GlobalFunctionToLocalFunctionAdapter : 
+	class GlobalFunctionToLocalFunctionAdapter :
 	  public FunctionInterface<typename T::Traits,
 							   GlobalFunctionToLocalFunctionAdapter<T,E> >
 	{
@@ -324,7 +324,7 @@ namespace Dune {
        *  \param e_ Grid's element where the local function is defined
        */
 	  GlobalFunctionToLocalFunctionAdapter (const T& t_, const E& e_) : t(t_), e(e_) {}
-	  
+
 	  /** \brief Evaluate the local function at the given position
 
           \param[in]  x The position in local coordinates
@@ -332,7 +332,7 @@ namespace Dune {
 	  */
 	  inline void evaluate (const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
 		t.evaluate(e.geometry().global(x),y);
 	  }
 
@@ -347,7 +347,7 @@ namespace Dune {
      *  \tparam T type of the GridFunction
      */
 	template<typename T> // T: GridFunction, E: Entity
-	class GridFunctionToLocalFunctionAdapter : 
+	class GridFunctionToLocalFunctionAdapter :
 	  public FunctionInterface<typename T::Traits,
 							   GridFunctionToLocalFunctionAdapter<T> >
 	{
@@ -359,8 +359,8 @@ namespace Dune {
        *  \param t_ GridFunction
        *  \param e_ Grid's element where the local function is defined
        */
-	  GridFunctionToLocalFunctionAdapter (const T& t_, 
-										  const typename Traits::ElementType& e_) 
+	  GridFunctionToLocalFunctionAdapter (const T& t_,
+										  const typename Traits::ElementType& e_)
 		: t(t_), e(e_) {}
 
 	  /** \brief Evaluate the local function at the given position
@@ -370,7 +370,7 @@ namespace Dune {
 	  */
 	  inline void evaluate (const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
 		t.evaluate(e,x,y);
 	  }
 
@@ -387,18 +387,18 @@ namespace Dune {
       typedef FunctionInterface<FunctionTraits<typename T::Traits::DomainFieldType,T::Traits::dimDomain,typename T::Traits::DomainType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> > , SelectComponentAdapter<T> > BaseT;
 	public:
 	  //! \brief Export type traits
-	  typedef typename BaseT::Traits Traits;  
+	  typedef typename BaseT::Traits Traits;
 
       SelectComponentAdapter (const T& t_, int k_) : t(t_), k(k_) {}
 
 	  /** \brief Evaluate all basis function at given position
 
-		  Evaluates all shape functions at the given position and returns 
+		  Evaluates all shape functions at the given position and returns
 		  these values in a vector.
 	  */
 	  inline void evaluate (const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
         typename T::Traits::RangeType Y;
         t.evaluate(x,Y);
         y = Y[k];
@@ -417,32 +417,32 @@ namespace Dune {
 
 	//! Takes a BoundaryGridFunction and acts as a single component
 	template<class T>
-	class BoundaryGridFunctionSelectComponentAdapter 
-      : public BoundaryGridFunctionInterface<BoundaryGridFunctionTraits<typename T::Traits::GridViewType, 
+	class BoundaryGridFunctionSelectComponentAdapter
+      : public BoundaryGridFunctionInterface<BoundaryGridFunctionTraits<typename T::Traits::GridViewType,
                                                                         typename T::Traits::RangeFieldType,1,
-                                                                        Dune::FieldVector<typename T::Traits::RangeFieldType,1> > , 
+                                                                        Dune::FieldVector<typename T::Traits::RangeFieldType,1> > ,
                                              BoundaryGridFunctionSelectComponentAdapter<T> >
 	{
-      typedef BoundaryGridFunctionInterface<BoundaryGridFunctionTraits<typename T::Traits::GridViewType, 
+      typedef BoundaryGridFunctionInterface<BoundaryGridFunctionTraits<typename T::Traits::GridViewType,
                                                                        typename T::Traits::RangeFieldType,1,
-                                                                       Dune::FieldVector<typename T::Traits::RangeFieldType,1> > , 
+                                                                       Dune::FieldVector<typename T::Traits::RangeFieldType,1> > ,
                                             BoundaryGridFunctionSelectComponentAdapter<T> > BaseT;
     public:
 	  //! \brief Export type traits
-	  typedef typename BaseT::Traits Traits;  
+	  typedef typename BaseT::Traits Traits;
 
       BoundaryGridFunctionSelectComponentAdapter (const T& t_, int k_) : t(t_), k(k_) {}
 
 	  /** \brief Evaluate all basis function at given position
 
-		  Evaluates all shape functions at the given position and returns 
+		  Evaluates all shape functions at the given position and returns
 		  these values in a vector.
 	  */
       template<typename I>
-	  inline void evaluate (const IntersectionGeometry<I>& ig, 
+	  inline void evaluate (const IntersectionGeometry<I>& ig,
 							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
         typename T::Traits::RangeType Y;
         t.evaluate(ig,x,Y);
         y = Y[k];
@@ -1011,7 +1011,7 @@ namespace Dune {
 
 	//! function signature for analytic functions on a grid
 	template<typename GV, typename RF, int m>
-	struct AnalyticGridFunctionTraits 
+	struct AnalyticGridFunctionTraits
 	  : public GridFunctionTraits<GV, RF, m, Dune::FieldVector<RF,m> >
 	{
 	};
@@ -1029,7 +1029,7 @@ namespace Dune {
      *              (Barton-Nackman-Trick).
      */
 	template<typename T, typename Imp>
-	class AnalyticGridFunctionBase 
+	class AnalyticGridFunctionBase
 	  : public GridFunctionBase<T,AnalyticGridFunctionBase<T,Imp> >
 	{
 	public:
@@ -1039,10 +1039,10 @@ namespace Dune {
 	  AnalyticGridFunctionBase (const typename Traits::GridViewType& g_) : g(g_) {}
 
       //! \copydoc GridFunctionBase::evaluate()
-	  inline void evaluate (const typename Traits::ElementType& e, 
-							const typename Traits::DomainType& x, 
+	  inline void evaluate (const typename Traits::ElementType& e,
+							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
 		asImp().evaluateGlobal(e.geometry().global(x),y);
 	  }
 
@@ -1050,7 +1050,7 @@ namespace Dune {
 	  {
 		return g;
 	  }
-  
+
 	private:
 	  const typename Traits::GridViewType& g;
 	  Imp& asImp () {return static_cast<Imp &> (*this);}
@@ -1059,7 +1059,7 @@ namespace Dune {
 
 
     // Adapter takes a vector-valued grid function and provides evaluation
-    // of normal flux on the interior of faces. 
+    // of normal flux on the interior of faces.
     template<typename T>
     class NormalFluxGridFunctionAdapter
       : public Dune::PDELab::GridFunctionInterface<Dune::PDELab::GridFunctionTraits<typename T::Traits::GridViewType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> >,
@@ -1073,12 +1073,12 @@ namespace Dune {
       NormalFluxGridFunctionAdapter (const T& t_) : t(&t_) {}
 
 
-      inline void evaluate (const typename Traits::ElementType& e, 
+      inline void evaluate (const typename Traits::ElementType& e,
                             const typename Traits::DomainType& x,
                             typename Traits::RangeType& y) const
-      {  
+      {
         // ensure correct size
-        dune_static_assert((static_cast<int>(T::Traits::GridViewType::dimension)==static_cast<int>(T::Traits::dimRange)),"number of components must equal dimension"); 
+        dune_static_assert((static_cast<int>(T::Traits::GridViewType::dimension)==static_cast<int>(T::Traits::dimRange)),"number of components must equal dimension");
 
         // evaluate velocity
         typename T::Traits::RangeType v;
@@ -1086,7 +1086,7 @@ namespace Dune {
 
         // implementation only handles triangles so far
         if (!e.geometry().type().isTriangle())
-          DUNE_THROW(Dune::NotImplemented, "only implemented for triangles"); 
+          DUNE_THROW(Dune::NotImplemented, "only implemented for triangles");
 
         // start and end corner in local numbering
         int n0, n1;
@@ -1094,7 +1094,7 @@ namespace Dune {
         typename Traits::DomainType nu;
 
         // determine outer unit normal
-        if (std::abs(x[0])<1E-10) 
+        if (std::abs(x[0])<1E-10)
           {
             // edge 1
             n0 = 2;
@@ -1103,7 +1103,7 @@ namespace Dune {
             nu = e.geometry().corner(n1);
             nu -= e.geometry().corner(n0);
             typename Traits::DomainFieldType temp = nu[0];
-            nu[0] = nu[1]; 
+            nu[0] = nu[1];
             nu[1] = -temp;
             nu /= nu.two_norm();
             y = v[0]*nu[0]+v[1]*nu[1];
@@ -1111,7 +1111,7 @@ namespace Dune {
           }
 
         if (std::abs(x[1])<1E-10)
-          { 
+          {
             // edge 2
             n0 = 0;
             n1 = 1;
@@ -1119,7 +1119,7 @@ namespace Dune {
             nu = e.geometry().corner(n1);
             nu -= e.geometry().corner(n0);
             typename Traits::DomainFieldType temp = nu[0];
-            nu[0] = nu[1]; 
+            nu[0] = nu[1];
             nu[1] = -temp;
             nu /= nu.two_norm();
             y = v[0]*nu[0]+v[1]*nu[1];
@@ -1127,7 +1127,7 @@ namespace Dune {
           }
 
         if (std::abs(x[0]+x[1]-1.0)<1E-10)
-          { 
+          {
             // edge 0
             n0 = 1;
             n1 = 2;
@@ -1135,14 +1135,14 @@ namespace Dune {
             nu = e.geometry().corner(n1);
             nu -= e.geometry().corner(n0);
             typename Traits::DomainFieldType temp = nu[0];
-            nu[0] = nu[1]; 
+            nu[0] = nu[1];
             nu[1] = -temp;
             nu /= nu.two_norm();
             y = v[0]*nu[0]+v[1]*nu[1];
             return;
           }
-          
-        DUNE_THROW(Dune::Exception, "x needs to be on an edge"); 
+
+        DUNE_THROW(Dune::Exception, "x needs to be on an edge");
       }
 
       //! get a reference to the GridView
@@ -1170,10 +1170,10 @@ namespace Dune {
       PiolaBackwardAdapter (const T& t_) : t(&t_) {}
 
 
-      inline void evaluate (const typename Traits::ElementType& e, 
+      inline void evaluate (const typename Traits::ElementType& e,
                             const typename Traits::DomainType& x,
                             typename Traits::RangeType& y) const
-      {  
+      {
         // evaluate velocity
         typename T::Traits::RangeType v;
         t->evaluate(e,x,v);
@@ -1222,7 +1222,7 @@ namespace Dune {
      *  \tparam GV The GridView for the VTKWriter
      *  \tparam T  The \ref GridFunctionTree
      */
-	template<typename GV, typename T> 
+	template<typename GV, typename T>
 	void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t, std::string s = "data")
 	{
       GridFunctionVertexDataFunctor<GV> f(w,s);
