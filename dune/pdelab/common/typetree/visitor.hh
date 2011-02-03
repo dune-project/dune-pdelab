@@ -280,12 +280,19 @@ namespace Dune {
 
       };
 
+      //! Mixin base class for visitors that only want to visit the direct children of a node.
+      /**
+       * This mixin class will reject all children presented to it, causing the algorithm to
+       * only visit the root node and call DefaultVisitor::beforeChild() and DefaultVisitor::afterChild()
+       * for its direct children.
+       */
       struct VisitDirectChildren
       {
 
         // the little trick with the default template arguments
         // makes the class usable for both single-tree visitors
         // and visitors for pairs of trees
+        //! Template struct for determining whether or not to visit a given child.
         template<typename Node1,
                  typename Child1,
                  typename Node2,
@@ -293,17 +300,25 @@ namespace Dune {
                  typename TreePath = void>
         struct VisitChild
         {
+          //! Do not visit any child.
           static const bool value = false;
         };
 
       };
 
+
+      //! Mixin base class for visitors that want to visit the complete tree.
+      /**
+       * This mixin class will accept all children presented to it and thus make the iterator
+       * traverse the entire tree.
+       */
       struct VisitTree
       {
 
         // the little trick with the default template arguments
         // makes the class usable for both single-tree visitors
         // and visitors for pairs of trees
+        //! Template struct for determining whether or not to visit a given child.
         template<typename Node1,
                  typename Child1,
                  typename Node2,
@@ -311,36 +326,59 @@ namespace Dune {
                  typename TreePath = void>
         struct VisitChild
         {
+          //! Visit any child.
           static const bool value = true;
         };
 
       };
 
+      //! Mixin base class for visitors that require a static TreePath during traversal.
+      /**
+       * \warning Static traversal should only be used if absolutely necessary, as it tends
+       *          to increase compilation times and object sizes (especially if compiling
+       *          with debug information)!
+       *
+       * \sa DynamicTraversal
+       */
       struct StaticTraversal
       {
+        //! Use the static tree traversal algorithm.
         static const TreePathType::Type treePathType = TreePathType::fullyStatic;
       };
 
+      //! Mixin base class for visitors that only need a dynamic TreePath during traversal.
+      /**
+       * \note Dynamic traversal is preferable to static traversal, as it causes fewer
+       *       template instantiations, which improves compile time and reduces object
+       *       size (especially if compiling with debug information).
+       *
+       * \sa StaticTraversal
+       */
       struct DynamicTraversal
       {
+        //! Use the dynamic tree traversal algorithm.
         static const TreePathType::Type treePathType = TreePathType::dynamic;
       };
 
+      //! Convenience base class for visiting the entire tree.
       struct TreeVisitor
         : public DefaultVisitor
         , public VisitTree
       {};
 
+      //! Convenience base class for visiting the direct children of a node.
       struct DirectChildrenVisitor
         : public DefaultVisitor
         , public VisitDirectChildren
       {};
 
+      //! Convenience base class for visiting an entire tree pair.
       struct TreePairVisitor
         : public DefaultPairVisitor
         , public VisitTree
       {};
 
+      //! Convenience base class for visiting the direct children of a node pair.
       struct DirectChildrenPairVisitor
         : public DefaultPairVisitor
         , public VisitDirectChildren
