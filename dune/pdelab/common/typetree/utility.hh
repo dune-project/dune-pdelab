@@ -5,6 +5,7 @@
 #define DUNE_PDELAB_COMMON_TYPETREE_UTILITY_HH
 
 #include <dune/common/shared_ptr.hh>
+#include <dune/pdelab/common/typetree/nodetags.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -27,6 +28,22 @@ namespace Dune {
       shared_ptr<T> convert_arg(T& t)
       {
         return stackobject_to_shared_ptr(t);
+      }
+
+      template<typename BaseType, typename T>
+      T& checkGridViewType(T& t)
+      {
+        dune_static_assert((is_same<typename BaseType::Traits::GridViewType,
+                            typename T::Traits::GridViewType>::value),
+                           "GridViewType must be equal in all components of composite type");
+        return t;
+      }
+
+      // this partial specialization is required for the non-variadic case
+      template<typename BaseType>
+      TypeTree::EmptyNode checkGridViewType(TypeTree::EmptyNode e)
+      {
+        return e;
       }
 
 #if HAVE_RVALUE_REFERENCES

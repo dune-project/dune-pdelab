@@ -16,22 +16,6 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-    template<typename BaseType, typename T>
-    T& checkGridViewType(T& t)
-    {
-      dune_static_assert((is_same<typename BaseType::Traits::GridViewType,
-                          typename T::Traits::GridViewType>::value),
-                         "GridViewType must be equal in all components of composite grid function space");
-      return t;
-    }
-
-    // this partial specialization is required for the non-variadic case
-    template<typename BaseType>
-    TypeTree::EmptyNode checkGridViewType(TypeTree::EmptyNode e)
-    {
-      return e;
-    }
-
     /** \brief base class for tuples of grid function spaces
         base class that holds implementation of the methods
         this is the default version with lexicographic ordering
@@ -87,7 +71,7 @@ namespace Dune {
       typedef typename Dune::PDELab::TypeTree::TransformTree<CompositeGridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
 
       CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(checkGridViewType<typename BaseT::template Child<0>::Type>))
+        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::checkGridViewType<typename BaseT::template Child<0>::Type>))
       {
         this->setup();
       }
@@ -185,7 +169,7 @@ namespace Dune {
       typedef typename Dune::PDELab::TypeTree::TransformTree<CompositeGridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
 
       CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(checkGridViewType<typename BaseT::template Child<0>::Type>))
+        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::checkGridViewType<typename BaseT::template Child<0>::Type>))
       {
         this->setup();
       }
@@ -324,7 +308,7 @@ namespace Dune {
       typedef typename Dune::PDELab::TypeTree::TransformTree<CompositeGridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
 
       CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(checkGridViewType<typename BaseT::template Child<0>::Type>))
+        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::checkGridViewType<typename BaseT::template Child<0>::Type>))
       {
         this->setup();
       }
