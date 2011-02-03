@@ -938,8 +938,7 @@ namespace Dune {
             }
             nnz += sparsity[i.index()].size();
           }
-          int rank;
-          MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+          int rank = gridView_.comm().rank();
           
           A.setSize(tmp.N(), tmp.N(), nnz);
           A.setBuildMode(Matrix::row_wise);
