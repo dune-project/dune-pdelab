@@ -19,348 +19,295 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-#ifndef DOXYGEN // hide internals
-    // do method invocation only if class has the method
+    namespace { // hide internals
+      // do method invocation only if class has the method
 
-    template<typename C, bool doIt>
-    struct ConstraintsCallBoundary
-    {
-      template<typename F, typename I, typename LFS, typename T>
-      static void boundary (const C& c, const F& f, const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo)
+      template<typename C, bool doIt>
+      struct ConstraintsCallBoundary
       {
-      }
-    };
-    template<typename C, bool doIt>
-    struct ConstraintsCallProcessor
-    {
-      template<typename I, typename LFS, typename T>
-      static void processor (const C& c, const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo)
+        template<typename F, typename I, typename LFS, typename T>
+        static void boundary (const C& c, const F& f, const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo)
+        {
+        }
+      };
+      template<typename C, bool doIt>
+      struct ConstraintsCallProcessor
       {
-      }
-    };
-    template<typename C, bool doIt>
-    struct ConstraintsCallSkeleton
-    {
-      template<typename I, typename LFS, typename T>
-      static void skeleton (const C& c,  const IntersectionGeometry<I>& ig,
-                            const LFS& lfs_e, const LFS& lfs_f,
-                            T& trafo_e, T& trafo_f)
+        template<typename I, typename LFS, typename T>
+        static void processor (const C& c, const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo)
+        {
+        }
+      };
+      template<typename C, bool doIt>
+      struct ConstraintsCallSkeleton
       {
-      }
-    };
-    template<typename C, bool doIt>
-    struct ConstraintsCallVolume
-    {
-      template<typename E, typename LFS, typename T>
-      static void volume (const C& c, const ElementGeometry<E>& eg, const LFS& lfs, T& trafo)
+        template<typename I, typename LFS, typename T>
+        static void skeleton (const C& c,  const IntersectionGeometry<I>& ig,
+                              const LFS& lfs_e, const LFS& lfs_f,
+                              T& trafo_e, T& trafo_f)
+        {
+        }
+      };
+      template<typename C, bool doIt>
+      struct ConstraintsCallVolume
       {
-      }
-    };
+        template<typename E, typename LFS, typename T>
+        static void volume (const C& c, const ElementGeometry<E>& eg, const LFS& lfs, T& trafo)
+        {
+        }
+      };
 
 
-    template<typename C>
-    struct ConstraintsCallBoundary<C,true>
-    {
-      template<typename F, typename I, typename LFS, typename T>
-      static void boundary (const C& c, const F& f, const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo)
+      template<typename C>
+      struct ConstraintsCallBoundary<C,true>
       {
-        c.boundary(f,ig,lfs,trafo);
-      }
-    };
-    template<typename C>
-    struct ConstraintsCallProcessor<C,true>
-    {
-      template<typename I, typename LFS, typename T>
-      static void processor (const C& c, const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo)
+        template<typename F, typename I, typename LFS, typename T>
+        static void boundary (const C& c, const F& f, const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo)
+        {
+          c.boundary(f,ig,lfs,trafo);
+        }
+      };
+      template<typename C>
+      struct ConstraintsCallProcessor<C,true>
       {
-        c.processor(ig,lfs,trafo);
-      }
-    };
-    template<typename C>
-    struct ConstraintsCallSkeleton<C,true>
-    {
-      template<typename I, typename LFS, typename T>
-      static void skeleton (const C& c, const IntersectionGeometry<I>& ig,
-                            const LFS& lfs_e, const LFS& lfs_f,
-                            T& trafo_e, T& trafo_f)
+        template<typename I, typename LFS, typename T>
+        static void processor (const C& c, const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo)
+        {
+          c.processor(ig,lfs,trafo);
+        }
+      };
+      template<typename C>
+      struct ConstraintsCallSkeleton<C,true>
       {
-        c.skeleton(ig, lfs_e, lfs_f, trafo_e, trafo_f);
-      }
-    };
-    template<typename C>
-    struct ConstraintsCallVolume<C,true>
-    {
-      template<typename E, typename LFS, typename T>
-      static void volume (const C& c, const ElementGeometry<E>& eg, const LFS& lfs, T& trafo)
+        template<typename I, typename LFS, typename T>
+        static void skeleton (const C& c, const IntersectionGeometry<I>& ig,
+                              const LFS& lfs_e, const LFS& lfs_f,
+                              T& trafo_e, T& trafo_f)
+        {
+          c.skeleton(ig, lfs_e, lfs_f, trafo_e, trafo_f);
+        }
+      };
+      template<typename C>
+      struct ConstraintsCallVolume<C,true>
       {
-        c.volume(eg,lfs,trafo);
-      }
-    };
-
-    // meta program to evaluate boundary constraints
-
-	template<typename F, bool FisLeaf, typename LFS, bool LFSisLeaf>
-	struct ConstraintsVisitNodeMetaProgram;
-
-	template<typename F, typename LFS, int n, int i>
-	struct ConstraintsVisitChildMetaProgram // visit i'th child of inner node
-	{
-	  template<typename CG, typename I>
-	  static void boundary (const F& f, const LFS& lfs, CG& cg, const IntersectionGeometry<I>& ig)
-	  {
-        // vist children of both nodes in pairs
-		typedef typename F::template Child<i>::Type FC;
-		typedef typename LFS::template Child<i>::Type LFSC;
-
-        const FC& fc=f.template getChild<i>();
-        const LFSC& lfsc=lfs.template getChild<i>();
-
-        ConstraintsVisitNodeMetaProgram<FC,FC::isLeaf,LFSC,LFSC::isLeaf>::boundary(fc,lfsc,cg,ig);
-		ConstraintsVisitChildMetaProgram<F,LFS,n,i+1>::boundary(f,lfs,cg,ig);
-	  }
-	};
-
-	template<typename F, typename LFS, int n>
-	struct ConstraintsVisitChildMetaProgram<F,LFS,n,n> // end of child recursion
-	{
-      // end of child recursion
-	  template<typename CG, typename I>
-	  static void boundary (const F& f, const LFS& lfs, CG& cg, const IntersectionGeometry<I>& ig)
-	  {
-        return;
-	  }
-	};
-
-	template<typename F, bool FisLeaf, typename LFS, bool LFSisLeaf>
-	struct ConstraintsVisitNodeMetaProgram // visit inner node
-	{
-	  template<typename CG, typename I>
-	  static void boundary (const F& f, const LFS& lfs, CG& cg, const IntersectionGeometry<I>& ig)
-	  {
-        // both are inner nodes, visit all children
-        // check that both have same number of children
-		dune_static_assert((static_cast<int>(F::CHILDREN)==static_cast<int>(LFS::CHILDREN)),
-						   "both nodes must have same number of children");
-
-        // start child recursion
-		ConstraintsVisitChildMetaProgram<F,LFS,F::CHILDREN,0>::boundary(f,lfs,cg,ig);
-	  }
-	};
-
-	template<typename F, typename LFS>
-	struct ConstraintsVisitNodeMetaProgram<F,true,LFS,false> // try to interpolate components from vector valued function
-	{
-	  template<typename CG, typename I>
-	  static void boundary (const F& f, const LFS& lfs, CG& cg, const IntersectionGeometry<I>& ig)
-	  {
-		dune_static_assert((static_cast<int>(LFS::isPower)==1),
-						   "specialization only for power");
-		dune_static_assert((static_cast<int>(LFS::template Child<0>::Type::isLeaf)==1),
-						   "children must be leaves");
-		dune_static_assert((static_cast<int>(F::Traits::dimRange)==static_cast<int>(LFS::CHILDREN)),
-						   "number of components must coincide with number of children");
-
-        // extract constraints type
-        typedef typename LFS::template Child<0>::Type::Traits::ConstraintsType C;
-
-        for (int k=0; k<LFS::CHILDREN; k++)
-          {
-            // allocate empty local constraints map
-            CG cl;
-
-            // call boundary condition evaluation of child k with component k
-            typedef BoundaryGridFunctionSelectComponentAdapter<F> FCOMP;
-            FCOMP fcomp(f,k);
-
-            ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.getChild(k).constraints(),
-                                                               fcomp,ig,lfs.getChild(k),cl);
-
-            // write coefficients into local vector
-            lfs.getChild(k).mwrite(cl,cg);
-          }
-	  }
-	};
-
-	template<typename F, typename LFS>
-	struct ConstraintsVisitNodeMetaProgram<F,true,LFS,true> // leaf node in both trees
-	{
-	  template<typename CG, typename I>
-	  static void boundary (const F& f, const LFS& lfs, CG& cg, const IntersectionGeometry<I>& ig)
-	  {
-        // now we are at a single component local function space
-        // which is part of a multi component local function space
-
-		// allocate local constraints map
-		CG cl;
-
-        // extract constraints type
-        typedef typename LFS::Traits::ConstraintsType C;
-
-		// iterate over boundary, need intersection iterator
-        ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.constraints(),f,ig,lfs,cl);
-
-		// write coefficients into local vector
-		lfs.mwrite(cl,cg);
-	  }
-	};
+        template<typename E, typename LFS, typename T>
+        static void volume (const C& c, const ElementGeometry<E>& eg, const LFS& lfs, T& trafo)
+        {
+          c.volume(eg,lfs,trafo);
+        }
+      };
 
 
-    // second metaprogram that iterates over local function space only
+      struct BoundaryConstraintsBase
+        : public TypeTree::TreePairVisitor
+      {
+        // This acts as a catch-all for unsupported leaf- / non-leaf combinations in the two
+        // trees. It is necessary because otherwise, the visitor would fall back to the default
+        // implementation in TreeVisitor, which simply does nothing. The resulting bugs would
+        // probably be hell to find...
+        template<typename F, typename LFS, typename TreePath>
+        void leaf(const F& f, const LFS& lfs, TreePath treePath) const
+        {
+          dune_static_assert((AlwaysFalse<F>::Value),
+                             "unsupported combination of function and LocalFunctionSpace");
+        }
+      };
 
-	template<typename LFS, bool LFSisLeaf>
-	struct ConstraintsVisitNodeMetaProgram2;
+      template<typename I, typename CG>
+      struct BoundaryConstraints
+        : public BoundaryConstraintsBase
+        , public TypeTree::DynamicTraversal
+      {
 
-	template<typename LFS, int n, int i>
-	struct ConstraintsVisitChildMetaProgram2 // visit i'th child of inner node
-	{
-	  template<typename CG, typename I>
-	  static void processor (const LFS& lfs, CG& cg, const IntersectionGeometry<I>& ig)
-	  {
-		typedef typename LFS::template Child<i>::Type LFSC;
-        const LFSC& lfsc=lfs.template getChild<i>();
+        // standard case - leaf in both trees
+        template<typename F, typename LFS, typename TreePath>
+        typename enable_if<F::isLeaf && LFS::isLeaf>::type
+        leaf(const F& f, const LFS& lfs, TreePath treePath) const
+        {
+          // allocate local constraints map
+          CG cl;
 
-        ConstraintsVisitNodeMetaProgram2<LFSC,LFSC::isLeaf>::processor(lfsc,cg,ig);
-		ConstraintsVisitChildMetaProgram2<LFS,n,i+1>::processor(lfs,cg,ig);
-	  }
-	  template<typename CG, typename I>
-	  static void skeleton (const LFS& lfs_e, const LFS& lfs_f, CG& cg,
-                            const IntersectionGeometry<I>& ig)
-	  {
-		typedef typename LFS::template Child<i>::Type LFSC;
-        const LFSC& lfsc_e=lfs_e.template getChild<i>();
-        const LFSC& lfsc_f=lfs_f.template getChild<i>();
+          // extract constraints type
+          typedef typename LFS::Traits::ConstraintsType C;
 
-        ConstraintsVisitNodeMetaProgram2<LFSC,LFSC::isLeaf>::skeleton(lfsc_e,lfsc_f,cg,ig);
-		ConstraintsVisitChildMetaProgram2<LFS,n,i+1>::skeleton(lfs_e,lfs_f,cg,ig);
-	  }
-	  template<typename CG, typename E>
-	  static void volume (const LFS& lfs, CG& cg, const ElementGeometry<E>& eg)
-	  {
-		typedef typename LFS::template Child<i>::Type LFSC;
-        const LFSC& lfsc=lfs.template getChild<i>();
+          // iterate over boundary, need intersection iterator
+          ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.constraints(),f,ig,lfs,cl);
 
-        ConstraintsVisitNodeMetaProgram2<LFSC,LFSC::isLeaf>::volume(lfsc,cg,eg);
-		ConstraintsVisitChildMetaProgram2<LFS,n,i+1>::volume(lfs,cg,eg);
-	  }
-	};
+          // write coefficients into local vector
+          lfs.mwrite(cl,cg);
+        }
 
-	template<typename LFS, int n>
-	struct ConstraintsVisitChildMetaProgram2<LFS,n,n> // end of child recursion
-	{
- 	  template<typename CG, typename I>
-	  static void processor (const LFS& lfs, CG& cg, const IntersectionGeometry<I>& ig)
-	  {
-        return;
-	  }
- 	  template<typename CG, typename I>
-	  static void skeleton (const LFS& lfs_e, const LFS& lfs_f, CG& cg,
-                            const IntersectionGeometry<I>& ig)
-	  {
-        return;
-	  }
-	  template<typename CG, typename E>
-	  static void volume (const LFS& lfs, CG& cg, const ElementGeometry<E>& eg)
-	  {
-        return;
-	  }
-	};
+        // interpolate PowerGridFunctionSpace from vector-valued function
+        template<typename F, typename LFS, typename TreePath>
+        typename enable_if<(!F::isLeaf) && LFS::isLeaf>::type
+        leaf(const F& f, const LFS& lfs, TreePath treePath) const
+        {
+          dune_static_assert(LFS::isPower,
+                             "Automatic interpolation of vector-valued function " \
+                             "only works for PowerGridFunctionSpace");
+          dune_static_assert((LFS::template Child<0>::Type::isLeaf),
+                             "Automatic interpolation of vector-valued function " \
+                             "is restricted to trees of depth 1");
+          dune_static_assert(LFS::CHILDREN == F::Traits::dimRange,
+                             "Number of children and dimension of range type " \
+                             "must match for automatic interpolation of " \
+                             "vector-valued function");
 
+          // extract constraints type
+          typedef typename LFS::template Child<0>::Type::Traits::ConstraintsType C;
 
-	template<typename LFS, bool LFSisLeaf>
-	struct ConstraintsVisitNodeMetaProgram2 // visit inner node
-	{
-	  template<typename CG, typename I>
-	  static void processor (const LFS& lfs, CG& cg, const IntersectionGeometry<I>& ig)
-	  {
-        // start child recursion
-		ConstraintsVisitChildMetaProgram2<LFS,LFS::CHILDREN,0>::processor(lfs,cg,ig);
-	  }
-	  template<typename CG, typename I>
-	  static void skeleton (const LFS& lfs_e, const LFS& lfs_f, CG& cg,
-                            const IntersectionGeometry<I>& ig)
-	  {
-        // start child recursion
-		ConstraintsVisitChildMetaProgram2<LFS,LFS::CHILDREN,0>::skeleton(lfs_e,lfs_f,cg,ig);
-	  }
-	  template<typename CG, typename E>
-	  static void volume (const LFS& lfs, CG& cg, const ElementGeometry<E>& eg)
-	  {
-        // start child recursion
-		ConstraintsVisitChildMetaProgram2<LFS,LFS::CHILDREN,0>::volume(lfs,cg,eg);
-	  }
-	};
+          for (std::size_t k=0; k<LFS::CHILDREN; ++k)
+            {
+              // allocate empty local constraints map
+              CG cl;
+
+              // call boundary condition evaluation of child k with component k
+              typedef BoundaryGridFunctionSelectComponentAdapter<F> FCOMP;
+              FCOMP fcomp(f,k);
+
+              ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.child(k).constraints(),
+                                                                 fcomp,ig,lfs.child(k),cl);
+
+              // write coefficients into local vector
+              lfs.child(k).mwrite(cl,cg);
+            }
+        }
+
+        BoundaryConstraints(const IntersectionGeometry<I>& ig_, CG& cg_)
+          : ig(ig_)
+          , cg(cg_)
+        {}
+
+      private:
+        const IntersectionGeometry<I>& ig;
+        // make CG mutable so we do not have to create an actual variable for the visitor
+        // This (and the const qualifier on the leaf() method) should be removed as soon as
+        // C++0x support becomes mandatory
+        mutable CG& cg;
+
+      };
 
 
-	template<typename LFS>
-	struct ConstraintsVisitNodeMetaProgram2<LFS,true> // leaf node
-	{
-	  template<typename CG, typename I>
-	  static void processor (const LFS& lfs, CG& cg, const IntersectionGeometry<I>& ig)
-	  {
-        // now we are at a single component local function space
-        // which is part of a multi component local function space
+      template<typename I, typename CG>
+      struct ProcessorConstraints
+        : public TypeTree::TreeVisitor
+        , public TypeTree::DynamicTraversal
+      {
 
-		// allocate local constraints map
-		CG cl;
+        template<typename LFS, typename TreePath>
+        void leaf(const LFS& lfs, TreePath treePath) const
+        {
+          CG cl;
 
-        // extract constraints type
-        typedef typename LFS::Traits::ConstraintsType C;
+          // extract constraints type
+          typedef typename LFS::Traits::ConstraintsType C;
 
-		// iterate over boundary, need intersection iterator
-        ConstraintsCallProcessor<C,C::doProcessor>::processor(lfs.constraints(),ig,lfs,cl);
+          // iterate over boundary, need intersection iterator
+          ConstraintsCallProcessor<C,C::doProcessor>::processor(lfs.constraints(),ig,lfs,cl);
 
-		// write coefficients into local vector
-		lfs.mwrite(cl,cg);
-	  }
-	  template<typename CG, typename I>
-	  static void skeleton (const LFS& lfs_e, const LFS& lfs_f, CG& cg,
-                            const IntersectionGeometry<I>& ig)
-	  {
-        // now we are at a single component local function space
-        // which is part of a multi component local function space
+          // write coefficients into local vector
+          lfs.mwrite(cl,cg);
+        }
 
-		// allocate local constraints map for both elements adjacent
-		// to this intersection
-		CG cl_e;
-		CG cl_f;
+        ProcessorConstraints(const IntersectionGeometry<I>& ig_, CG& cg_)
+          : ig(ig_)
+          , cg(cg_)
+        {}
 
-        // extract constraints type
-        typedef typename LFS::Traits::ConstraintsType C;
+      private:
+        const IntersectionGeometry<I>& ig;
+        // make CG mutable so we do not have to create an actual variable for the visitor
+        // This (and the const qualifier on the leaf() method) should be removed as soon as
+        // C++0x support becomes mandatory
+        mutable CG& cg;
 
-        // as LFS::constraints() just returns the constraints of the
-        // GridFunctionSpace, lfs_e.constraints() is equivalent to
-        // lfs_f.constraints()
-        const C & c = lfs_e.constraints();
+      };
 
-		// iterate over boundary, need intersection iterator
-        ConstraintsCallSkeleton<C,C::doSkeleton>::skeleton(c,ig,lfs_e,lfs_f,cl_e,cl_f);
 
-		// write coefficients into local vector
-		lfs_e.mwrite(cl_e,cg);
-		lfs_f.mwrite(cl_f,cg);
-	  }
-	  template<typename CG, typename E>
-	  static void volume (const LFS& lfs, CG& cg, const ElementGeometry<E>& eg)
-	  {
-        // now we are at a single component local function space
-        // which is part of a multi component local function space
+      template<typename I, typename CG>
+      struct SkeletonConstraints
+        : public TypeTree::TreePairVisitor
+        , public TypeTree::DynamicTraversal
+      {
 
-		// allocate local constraints map
-		CG cl;
+        template<typename LFS, typename TreePath>
+        void leaf(const LFS& lfs_e, const LFS& lfs_f, TreePath treePath) const
+        {
+          // allocate local constraints map for both elements adjacent
+          // to this intersection
+          CG cl_e;
+          CG cl_f;
 
-        // extract constraints type
-        typedef typename LFS::Traits::ConstraintsType C;
-        const C & c = lfs.constraints();
+          // extract constraints type
+          typedef typename LFS::Traits::ConstraintsType C;
 
-		// iterate over boundary, need intersection iterator
-        ConstraintsCallVolume<C,C::doVolume>::volume(c,eg,lfs,cl);
+          // as LFS::constraints() just returns the constraints of the
+          // GridFunctionSpace, lfs_e.constraints() is equivalent to
+          // lfs_f.constraints()
+          const C & c = lfs_e.constraints();
 
-		// write coefficients into local vector
-		lfs.mwrite(cl,cg);
-	  }
-	};
+          // iterate over boundary, need intersection iterator
+          ConstraintsCallSkeleton<C,C::doSkeleton>::skeleton(c,ig,lfs_e,lfs_f,cl_e,cl_f);
 
-#endif // DOXYGEN
+          // write coefficients into local vector
+          lfs_e.mwrite(cl_e,cg);
+          lfs_f.mwrite(cl_f,cg);
+        }
+
+        SkeletonConstraints(const IntersectionGeometry<I>& ig_, CG& cg_)
+          : ig(ig_)
+          , cg(cg_)
+        {}
+
+      private:
+        const IntersectionGeometry<I>& ig;
+        // make CG mutable so we do not have to create an actual variable for the visitor
+        // This (and the const qualifier on the leaf() method) should be removed as soon as
+        // C++0x support becomes mandatory
+        mutable CG& cg;
+
+      };
+
+
+      template<typename E, typename CG>
+      struct VolumeConstraints
+        : public TypeTree::TreeVisitor
+        , public TypeTree::DynamicTraversal
+      {
+
+        template<typename LFS, typename TreePath>
+        void leaf(const LFS& lfs, TreePath treePath) const
+        {
+          // allocate local constraints map
+          CG cl;
+
+          // extract constraints type
+          typedef typename LFS::Traits::ConstraintsType C;
+          const C & c = lfs.constraints();
+
+          // iterate over boundary, need intersection iterator
+          ConstraintsCallVolume<C,C::doVolume>::volume(c,eg,lfs,cl);
+
+          // write coefficients into local vector
+          lfs.mwrite(cl,cg);
+        }
+
+        VolumeConstraints(const ElementGeometry<E>& eg_, CG& cg_)
+          : eg(eg_)
+          , cg(cg_)
+        {}
+
+      private:
+        const ElementGeometry<E>& eg;
+        // make CG mutable so we do not have to create an actual variable for the visitor
+        // This (and the const qualifier on the leaf() method) should be removed as soon as
+        // C++0x support becomes mandatory
+        mutable CG& cg;
+
+      };
+
+
+    } // anonymous namespace
 
     //! construct constraints from given boundary condition function
     /**
@@ -420,8 +367,7 @@ namespace Dune {
           // bind local function space to element
           lfs_e.bind(*it);
 
-          ConstraintsVisitNodeMetaProgram2<LFS,LFS::isLeaf>
-            ::volume(lfs_e,cg,ElementGeometry<Element>(*it));
+          TypeTree::applyToTree(lfs_e,VolumeConstraints<Element,CG>(ElementGeometry<Element>(*it),cg));
 
 		  // iterate over intersections and call metaprogram
           unsigned int intersection_index = 0;
@@ -430,14 +376,12 @@ namespace Dune {
 			{
 			  if (iit->boundary())
                 {
-                  ConstraintsVisitNodeMetaProgram<F,F::isLeaf,LFS,LFS::isLeaf>
-                      ::boundary(f,lfs_e,cg,IntersectionGeometry<Intersection>(*iit,intersection_index));
+                  TypeTree::applyToTreePair(f,lfs_e,BoundaryConstraints<Intersection,CG>(IntersectionGeometry<Intersection>(*iit,intersection_index),cg));
                 }
 
               // ParallelStuff: BEGIN support for processor boundaries.
 			  if ((!iit->boundary()) && (!iit->neighbor()))
-				ConstraintsVisitNodeMetaProgram2<LFS,LFS::isLeaf>
-				  ::processor(lfs_e,cg,IntersectionGeometry<Intersection>(*iit,intersection_index));
+                TypeTree::applyToTree(lfs_e,ProcessorConstraints<Intersection,CG>(IntersectionGeometry<Intersection>(*iit,intersection_index),cg));
               // END support for processor boundaries.
 
 			  if (iit->neighbor()){
@@ -449,8 +393,8 @@ namespace Dune {
                   // bind local function space to element in neighbor
                   lfs_f.bind( *(iit->outside()) );
 
-                  ConstraintsVisitNodeMetaProgram2<LFS,LFS::isLeaf>
-                    ::skeleton(lfs_e,lfs_f,cg,IntersectionGeometry<Intersection>(*iit,intersection_index));
+                  TypeTree::applyToTreePair(lfs_e,lfs_f,SkeletonConstraints<Intersection,CG>(IntersectionGeometry<Intersection>(*iit,intersection_index),cg));
+
                 }
               }
 			}
