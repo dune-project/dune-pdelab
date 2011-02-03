@@ -28,11 +28,13 @@ namespace Dune {
 
     namespace {
 
+      // the bogus template parameter is necessary to make GCC honor the friend declaration
+      // in the LocalFunctionSpace (probably a GCC bug)
       template<typename = int>
       struct PropagateGlobalStorageVisitor
         : public TypeTree::TreeVisitor
+        , public TypeTree::DynamicTraversal
       {
-        static const TypeTree::TreePathType::Type treePathType = TypeTree::TreePathType::dynamic;
 
         template<typename LFS, typename Child, typename TreePath, typename ChildIndex>
         void beforeChild(const LFS& lfs, Child& child, TreePath treePath, ChildIndex childIndex) const
@@ -44,9 +46,8 @@ namespace Dune {
       template<typename Entity>
       struct ComputeSizeVisitor
         : public TypeTree::TreeVisitor
+        , public TypeTree::DynamicTraversal
       {
-
-        static const TypeTree::TreePathType::Type treePathType = TypeTree::TreePathType::dynamic;
 
         template<typename Node, typename TreePath>
         void pre(Node& node, TreePath treePath)
@@ -83,9 +84,8 @@ namespace Dune {
       template<typename Entity, typename SizeType>
       struct FillIndicesVisitor
         : public TypeTree::TreeVisitor
+        , public TypeTree::DynamicTraversal
       {
-
-        static const TypeTree::TreePathType::Type treePathType = TypeTree::TreePathType::dynamic;
 
         template<typename Node, typename TreePath>
         void leaf(Node& node, TreePath treePath)

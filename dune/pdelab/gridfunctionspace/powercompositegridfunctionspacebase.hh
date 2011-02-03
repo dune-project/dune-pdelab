@@ -14,13 +14,12 @@ namespace Dune {
 
       //! We put the actual method in a base class because we want to use it with different tree iteration patterns
       struct SetupVisitorBase
-        : public TypeTree::DefaultVisitor
+        : public TypeTree::DefaultVisitor // do not fix the traversal depth yet
+        , public TypeTree::DynamicTraversal
       {
 
-        static const TypeTree::TreePathType::Type treePathType = TypeTree::TreePathType::dynamic;
-
         template<typename CompositeGFS, typename Child, typename TreePath, typename ChildIndex>
-        void afterChild(CompositeGFS& cgfs, const Child& child, TreePath treePath, ChildIndex childIndex)
+        void afterChild(CompositeGFS& cgfs, const Child& child, TreePath treePath, ChildIndex childIndex) const
         {
           cgfs.childGlobalSize[childIndex] = child.globalSize();
           cgfs.childLocalSize[childIndex] = child.maxLocalSize();
@@ -41,13 +40,13 @@ namespace Dune {
       {
 
         template<typename LeafNode, typename TreePath>
-        void leaf(const LeafNode& node, TreePath treePath)
+        void leaf(const LeafNode& node, TreePath treePath) const
         {
           node.update();
         }
 
         template<typename LeafNode, typename TreePath>
-        void post(const LeafNode& node, TreePath treePath)
+        void post(const LeafNode& node, TreePath treePath) const
         {
           node.calculateSizes();
         }
@@ -117,9 +116,8 @@ namespace Dune {
       template<typename Entity, typename Container>
       struct DataHandleGlobalIndicesVisitor
         : public TypeTree::TreeVisitor
+        , public TypeTree::DynamicTraversal
       {
-
-        static const TypeTree::TreePathType::Type treePathType = TypeTree::TreePathType::dynamic;
 
         template<typename Node, typename TreePath>
         void leaf(const Node& node, TreePath treePath)
