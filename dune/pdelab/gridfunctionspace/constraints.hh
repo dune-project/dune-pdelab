@@ -365,7 +365,7 @@ namespace Dune {
     //! construct constraints from given boundary condition function
     /**
      * \code
-#include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * #include <dune/pdelab/gridfunctionspace/constraints.hh>
      * \endcode
      * \tparam F   Type implementing a boundary condition function
      * \tparam GFS Type implementing the model GridFunctionSpace
@@ -479,7 +479,7 @@ namespace Dune {
     //! construct constraints from given boundary condition function
     /**
      * \code
-#include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * #include <dune/pdelab/gridfunctionspace/constraints.hh>
      * \endcode
      * \tparam CG Type of ConstraintsContainer
      * \tparam XG Type of coefficients container
@@ -503,7 +503,7 @@ namespace Dune {
      * as if they were set by set_constrained_dofs()
      *
      * \code
-#include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * #include <dune/pdelab/gridfunctionspace/constraints.hh>
      * \endcode
      *
      * \tparam CG  Type of ConstraintsContainer
@@ -533,7 +533,7 @@ namespace Dune {
     //! check that constrained dofs match a certain value
     /**
      * \code
-#include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * #include <dune/pdelab/gridfunctionspace/constraints.hh>
      * \endcode
      *
      * This just calls check_constrained_dofs(cg, x, xg, cmp) with a default
@@ -560,7 +560,7 @@ namespace Dune {
     //! transform residual into transformed basis: r -> r~
     /**
      * \code
-#include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * #include <dune/pdelab/gridfunctionspace/constraints.hh>
      * \endcode
      */
     template<typename CG, typename XG>
@@ -583,7 +583,7 @@ namespace Dune {
     //! construct constraints from given boundary condition function
     /**
      * \code
-#include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * #include <dune/pdelab/gridfunctionspace/constraints.hh>
      * \endcode
      */
     template<typename CG, typename XG>
@@ -598,7 +598,7 @@ namespace Dune {
     // construct constraints from given boundary condition function
     /**
      * \code
-#include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * #include <dune/pdelab/gridfunctionspace/constraints.hh>
      * \endcode
      */
     template<typename CG, typename XG>
@@ -613,7 +613,7 @@ namespace Dune {
     // construct constraints from given boundary condition function
     /**
      * \code
-#include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * #include <dune/pdelab/gridfunctionspace/constraints.hh>
      * \endcode
      */
     template<typename CG, typename XG>
@@ -628,7 +628,7 @@ namespace Dune {
     // construct constraints from given boundary condition function
     /**
      * \code
-#include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * #include <dune/pdelab/gridfunctionspace/constraints.hh>
      * \endcode
      */
     template<typename CG, typename XG>
