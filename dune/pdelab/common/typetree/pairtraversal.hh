@@ -286,28 +286,28 @@ namespace Dune {
 
 #else
 
-          template<typename N, typename V, typename TreePath>
-          static void apply(N& n, V& v, TreePath tp)
+          template<typename N1, typename N2, typename V, typename TreePath>
+          static void apply(N1& n1, N2& n2, V& v, TreePath tp)
           {
-            v.leaf(n,tp.view());
+            v.leaf(n1,n2,tp.view());
           }
 
-          template<typename N, typename V, typename TreePath>
-          static void apply(const N& n, V& v, TreePath tp)
+          template<typename N1, typename N2, typename V, typename TreePath>
+          static void apply(const N1& n1, const N2& n2, V& v, TreePath tp)
           {
-            v.leaf(n,tp.view());
+            v.leaf(n1,n2,tp.view());
           }
 
-          template<typename N, typename V, typename TreePath>
-          static void apply(N& n, const V& v, TreePath tp)
+          template<typename N1, typename N2, typename V, typename TreePath>
+          static void apply(N1& n1, N2& n2, const V& v, TreePath tp)
           {
-            v.leaf(n,tp.view());
+            v.leaf(n1,n2,tp.view());
           }
 
-          template<typename N, typename V, typename TreePath>
-          static void apply(const N& n, const V& v, TreePath tp)
+          template<typename N1, typename N2, typename V, typename TreePath>
+          static void apply(const N1& n1, const N2& n2, const V& v, TreePath tp)
           {
-            v.leaf(n,tp.view());
+            v.leaf(n1,n2,tp.view());
           }
 
 #endif // HAVE_RVALUE_REFERENCES
