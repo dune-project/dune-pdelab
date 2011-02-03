@@ -190,25 +190,25 @@ namespace Dune {
         template<typename Node, typename Visitor>
         static void apply(Node& node, Visitor& visitor)
         {
-          ApplyToTree<typename Node::NodeTag,tpType>::apply(node,visitor,TreePathFactory<tpType>::create().mutablePath());
+          ApplyToTree<tpType,typename Node::NodeTag>::apply(node,visitor,TreePathFactory<tpType>::create().mutablePath());
         }
 
         template<typename Node, typename Visitor>
         static void apply(const Node& node, Visitor& visitor)
         {
-          ApplyToTree<typename Node::NodeTag,tpType>::apply(node,visitor,TreePathFactory<tpType>::create().mutablePath());
+          ApplyToTree<tpType,typename Node::NodeTag>::apply(node,visitor,TreePathFactory<tpType>::create().mutablePath());
         }
 
         template<typename Node, typename Visitor>
         static void apply(Node& node, const Visitor& visitor)
         {
-          ApplyToTree<typename Node::NodeTag,tpType>::apply(node,visitor,TreePathFactory<tpType>::create().mutablePath());
+          ApplyToTree<tpType,typename Node::NodeTag>::apply(node,visitor,TreePathFactory<tpType>::create().mutablePath());
         }
 
         template<typename Node, typename Visitor>
         static void apply(const Node& node, const Visitor& visitor)
         {
-          ApplyToTree<typename Node::NodeTag,tpType>::apply(node,visitor,TreePathFactory<tpType>::create().mutablePath());
+          ApplyToTree<tpType,typename Node::NodeTag>::apply(node,visitor,TreePathFactory<tpType>::create().mutablePath());
         }
 
 #endif // HAVE_RVALUE_REFERENCES
