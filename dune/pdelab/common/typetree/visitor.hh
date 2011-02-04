@@ -24,7 +24,7 @@ namespace Dune {
        * node within the TypeTree, encoded as child indices starting at the root node.
        *
        * \note This class can also be used as a convenient base class if the implemented visitor
-       * only needs to act on some of the possible callback sites, avoiding a lot of boilerplate code.
+       *       only needs to act on some of the possible callback sites, avoiding a lot of boilerplate code.
        */
       struct DefaultVisitor
       {
@@ -67,7 +67,7 @@ namespace Dune {
 
         //! Method for leaf traversal.
         /**
-         * This method gets called when encountering a leaf-node within the TypeTree.
+         * This method gets called when encountering a leaf node within the TypeTree.
          *
          * \param t        The node to visit.
          * \param treePath The position of the node within the TypeTree.
@@ -82,14 +82,14 @@ namespace Dune {
          * \note This method gets called even if the visitor decides not to visit the child in question.
          *
          * \param t          The parent node.
-         * \param Child      The child node that will (potentially) be visited next.
+         * \param child      The child node that will (potentially) be visited next.
          * \param treePath   The position of the parent node within the TypeTree.
          * \param childIndex The index of the child node in relation to the parent node.
          */
         template<typename T, typename Child, typename TreePath, typename ChildIndex>
         void beforeChild(T&& t, Child&& child, TreePath treePath, ChildIndex childIndex) const {}
 
-        //! Method for parent-child traversal.
+        //! Method for child-parent traversal.
         /**
          * This method gets called after visiting a child node.
          *
@@ -97,7 +97,7 @@ namespace Dune {
          *       chose not to do so.
          *
          * \param t          The parent node.
-         * \param Child      The child node that was visited last (if the visitor did not reject it).
+         * \param child      The child node that was visited last (if the visitor did not reject it).
          * \param treePath   The position of the parent node within the TypeTree.
          * \param childIndex The index of the child node in relation to the parent node.
          */
@@ -141,14 +141,18 @@ namespace Dune {
 
       //! Visitor interface and base class for visitors of pairs of TypeTrees.
       /**
-       * DefaultPairVisitor defines the interface for visitors that can be applied to a TypeTree
-       * using applyToTree(). Each method of the visitor is passed a node of the tree (either as
-       * a mutable or a const reference, depending on the constness of the tree applyToTree() was
-       * called with). The second argument is of type TreePath and denotes the exact position of the
-       * node within the TypeTree, encoded as child indices starting at the root node.
+       * DefaultPairVisitor defines the interface for visitors that can be applied to a pair of TypeTrees
+       * using applyToTreePair(). Each method of the visitor is passed a node of both trees (either as
+       * a mutable or a const reference, depending on the constness of the tree applyToTreePair() was
+       * called with). The last argument is of type TreePath and denotes the exact position of the
+       * nodes within the TypeTrees, encoded as child indices starting at the root node.
+       *
+       * \note If your compiler does not support rvalue references, both trees must be either const or
+       *       non-const. If you call applyToTreePair() with two trees of different constness, they will
+       *       both be made const.
        *
        * \note This class can also be used as a convenient base class if the implemented visitor
-       * only needs to act on some of the possible callback sites, avoiding a lot of boilerplate code.
+       *       only needs to act on some of the possible callback sites, avoiding a lot of boilerplate code.
        */
       struct DefaultPairVisitor
       {
@@ -160,7 +164,8 @@ namespace Dune {
          * This method gets called when first encountering a non-leaf node and
          * before visiting any of its children.
          *
-         * \param t        The node to visit.
+         * \param t1       The node of the first tree to visit.
+         * \param t2       The node of the second tree to visit.
          * \param treePath The position of the node within the TypeTree.
          */
         template<typename T1, typename T2, typename TreePath>
@@ -172,7 +177,8 @@ namespace Dune {
          * That definition implies that this method will only be called for nodes
          * with at least two children.
          *
-         * \param t        The node to visit.
+         * \param t1       The node of the first tree to visit.
+         * \param t2       The node of the second tree to visit.
          * \param treePath The position of the node within the TypeTree.
          */
         template<typename T1, typename T2, typename TreePath>
@@ -183,7 +189,8 @@ namespace Dune {
          * This method gets called after all children of a non-leaf node have
          * been visited.
          *
-         * \param t        The node to visit.
+         * \param t1       The node of the first tree to visit.
+         * \param t2       The node of the second tree to visit.
          * \param treePath The position of the node within the TypeTree.
          */
         template<typename T1, typename T2, typename TreePath>
@@ -191,9 +198,14 @@ namespace Dune {
 
         //! Method for leaf traversal.
         /**
-         * This method gets called when encountering a leaf-node within the TypeTree.
+         * This method gets called when encountering a leaf node within the pair of TypeTrees.
          *
-         * \param t        The node to visit.
+         * \attention Since the two TypeTrees are not required to be exactly identical,
+         *            it is only guaranteed that at least one of the nodes is a leaf node,
+         *            not both.
+         *
+         * \param t1       The node of the first tree to visit.
+         * \param t2       The node of the second tree to visit.
          * \param treePath The position of the node within the TypeTree.
          */
         template<typename T1, typename T2, typename TreePath>
@@ -205,12 +217,29 @@ namespace Dune {
          *
          * \note This method gets called even if the visitor decides not to visit the child in question.
          *
-         * \param t        The node to visit.
-         * \param treePath The position of the node within the TypeTree.
+         * \param t1         The node of the first tree to visit.
+         * \param child1     The child of t1 to visit.
+         * \param t2         The node of the second tree to visit.
+         * \param child1     The child of t2 to visit.
+         * \param treePath   The position of the parent nodes within the TypeTree.
+         * \param childIndex The index of the child nodes in relation to the parent nodes.
          */
         template<typename T1, typename Child1, typename T2, typename Child2, typename TreePath, typename ChildIndex>
         void beforeChild(T1&& t1, Child1&& child1, T2&& t2, Child2&& child2, TreePath treePath, ChildIndex childIndex) const {}
 
+        //! Method for child-parent traversal.
+        /**
+         * This method gets called after visiting a child node.
+         *
+         * \note This method gets called even if the visitor decides not to visit the child in question.
+         *
+         * \param t1         The node of the first tree to visit.
+         * \param child1     The child of t1 to visit.
+         * \param t2         The node of the second tree to visit.
+         * \param child1     The child of t2 to visit.
+         * \param treePath   The position of the parent nodes within the TypeTree.
+         * \param childIndex The index of the child nodes in relation to the parent nodes.
+         */
         template<typename T1, typename Child1, typename T2, typename Child2, typename TreePath, typename ChildIndex>
         void afterChild(T1&& t1, Child1&& child1, T2&& t2, Child2&& child2, TreePath treePath, ChildIndex childIndex) const {}
 

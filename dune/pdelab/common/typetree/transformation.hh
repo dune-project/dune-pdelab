@@ -11,40 +11,65 @@ namespace Dune {
   namespace PDELab {
     namespace TypeTree {
 
-      /** \addtogroup TypeTree
-       *  \ingroup PDELab
+      /** \addtogroup Transformation
+       *  \ingroup TypeTree
        *  \{
        */
 
 
-      // this struct represents the transformation of a single tree node
-      // and has to be specialized for all combinations of source type
-      // and transformation
+      //! Look up transformation descriptor to transform SourceNode with Transformation.
+      /**
+       * The tree transformation engine expects this function to return a struct describing
+       * how to perform the Transformation for the type SourceNode, which has ImplementationTag Tag.
+       * This function has to be specialized for every combination of Transformation and Tag that
+       * the transformation engine should support.
+       *
+       * \note The specialization does not have to placed in the namespace Dune::PDELab::TypeTree,
+       *       it can simply reside in the same namespace as either the SourceNode or the Tag.
+       *
+       * \note This function will never be really called, the engine only extracts the return type.
+       *       It is thus not necessary to actually implement the function, it is sufficient to
+       *       declare it.
+       *
+       * \tparam SourceNode     The type of the node in the source tree that should be transformed.
+       * \tparam Transformation The type of the transformation to apply to the source node.
+       * \tparam Tag            The implementation tag of the source node.
+       */
       template<typename SourceNode, typename Transformation, typename Tag>
       void lookupNodeTransformation(SourceNode* s, const Transformation& t, Tag tag);
 
 
-      // external interface to the algorithm
-      // To use it, you simply instantiate the template with the source type and
-      // the desired transformation.
-      //
-      // The algorithm is implemented in specializations of this struct. For this
-      // purpose, all nodes have to provide a tag type as NodeType::tag.
-      template<typename SourceTree, typename Transformation, typename tag = StartTag>
+      //! Transform a TypeTree.
+      /**
+       * This struct can be used to apply a transformation to a given TypeTree. It exports the type of
+       * the resulting (transformed) tree and contains methods to actually transform tree instances.
+       *
+       * \tparam SourceTree     = The TypeTree that should be transformed.
+       * \tparam Transformation = The Transformation to apply to the TypeTree.
+       * \tparam Tag            = This parameter is an implementation detail and must always be set to its default value.
+       */
+      template<typename SourceTree, typename Transformation, typename Tag = StartTag>
       struct TransformTree
       {
 
+#ifndef DOXYGEN
+
         // the type of the new tree that will result from this transformation
         typedef typename TransformTree<SourceTree,Transformation,typename SourceTree::NodeTag>::transformed_type transformed_type;
+
+#endif // DOXYGEN
+
+        //! The type of the transformed tree.
         typedef transformed_type Type;
 
-        // apply transformation to an existing tree s
+
+        //! Apply transformation to an existing tree s.
         static transformed_type transform(const SourceTree& s, const Transformation& t = Transformation())
         {
           return TransformTree<SourceTree,Transformation,typename SourceTree::NodeTag>::transform(s,t);
         }
 
-        // apply transformation to an existing tree s
+        //! Apply transformation to an existing tree s.
         static transformed_type transform(const SourceTree& s, Transformation& t)
         {
           return TransformTree<SourceTree,Transformation,typename SourceTree::NodeTag>::transform(s,t);
@@ -57,7 +82,8 @@ namespace Dune {
       template<typename S, typename T, typename Tag>
       struct LookupNodeTransformation
       {
-        typedef decltype(lookupNodeTransformation(static_cast<S*>(0),*static_cast<T*>(0),Tag())) type;
+        // TODO: add configure test and replace __typeof__ with a macro
+        typedef __typeof__(lookupNodeTransformation(static_cast<S*>(0),*static_cast<T*>(0),Tag())) type;
       };
 
       // handle a leaf node - this is easy
@@ -399,7 +425,7 @@ namespace Dune {
 
 
       // the specialization of transformation<> for the CompositeNode. This just extracts the
-      // CompositeNode::ChildType member and forwards to the helper struct
+      // CompositeNode::ChildTypes member and forwards to the helper struct
       template<typename S, typename T>
       struct TransformTree<S,T,VariadicCompositeNodeTag>
       {
@@ -452,7 +478,7 @@ namespace Dune {
 
 #endif // DOXYGEN
 
-      //! \} group TypeTree
+      //! \} group Traversal
 
     } // namespace TypeTree
   } // namespace PDELab

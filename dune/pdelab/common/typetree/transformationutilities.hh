@@ -11,8 +11,8 @@ namespace Dune {
   namespace PDELab {
     namespace TypeTree {
 
-      /** \addtogroup TypeTree
-       *  \ingroup PDELab
+      /** \addtogroup Transformation
+       *  \ingroup TypeTree
        *  \{
        */
 
@@ -261,7 +261,7 @@ namespace Dune {
       {};
 
 
-      //! \} group TypeTree
+      //! \} group Transformation
 
     } // namespace TypeTree
   } // namespace PDELab
