@@ -23,6 +23,23 @@ namespace Dune {
        * called with). The second argument is of type TreePath and denotes the exact position of the
        * node within the TypeTree, encoded as child indices starting at the root node.
        *
+       * In order to create a functioning visitor, an implementation will - in addition to providing the methods
+       * of this class - also have to contain the following template struct, which is used to determine
+       * whether to visit a given node:
+       *
+       * \code
+       * template<typename Node, typename Child, typename TreePath>
+       * struct VisitChild
+       * {
+       *   static const bool value = ...; // decide whether to visit Child
+       * };
+       * \endcode
+       *
+       * For the two most common scenarios - visiting only direct children and visiting the whole tree - there
+       * are mixin classes VisitDirectChildren and VisitTree and combined base classes TreeVisitor and
+       * DirectChildrenVisitor. The latter two inherit from both DefaultVisitor and one of the two mixin classes
+       * and can thus be used as convenient base classes.
+       *
        * \note This class can also be used as a convenient base class if the implemented visitor
        *       only needs to act on some of the possible callback sites, avoiding a lot of boilerplate code.
        */
@@ -146,6 +163,27 @@ namespace Dune {
        * a mutable or a const reference, depending on the constness of the tree applyToTreePair() was
        * called with). The last argument is of type TreePath and denotes the exact position of the
        * nodes within the TypeTrees, encoded as child indices starting at the root node.
+       *
+       * In order to create a functioning visitor, an implementation will - in addition to providing the methods
+       * of this class - also have to contain the following template struct, which is used to determine
+       * whether to visit a given node:
+       *
+       * \code
+       * template<typename Node1,
+       *          typename Child1,
+       *          typename Node2,
+       *          typename Child2,
+       *          typename TreePath>
+       * struct VisitChild
+       * {
+       *   static const bool value = ...; // decide whether to visit Child
+       * };
+       * \endcode
+       *
+       * For the two most common scenarios - visiting only direct children and visiting the whole tree - there
+       * are mixin classes VisitDirectChildren and VisitTree and combined base classes TreePairVisitor and
+       * DirectChildrenPairVisitor. The latter two inherit from both DefaultVisitor and one of the two mixin classes
+       * and can thus be used as convenient base classes.
        *
        * \note If your compiler does not support rvalue references, both trees must be either const or
        *       non-const. If you call applyToTreePair() with two trees of different constness, they will
