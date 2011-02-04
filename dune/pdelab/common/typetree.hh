@@ -11,6 +11,7 @@
 #include <dune/pdelab/common/typetree/compositenode.hh>
 #include <dune/pdelab/common/typetree/compositenodemacros.hh>
 #include <dune/pdelab/common/typetree/traversal.hh>
+#include <dune/pdelab/common/typetree/pairtraversal.hh>
 #include <dune/pdelab/common/typetree/traversalutilities.hh>
 #include <dune/pdelab/common/typetree/transformation.hh>
 #include <dune/pdelab/common/typetree/transformationutilities.hh>
