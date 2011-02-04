@@ -938,8 +938,6 @@ namespace Dune {
             }
             nnz += sparsity[i.index()].size();
           }
-          int rank = gridView_.comm().rank();
-          
           A.setSize(tmp.N(), tmp.N(), nnz);
           A.setBuildMode(Matrix::row_wise);
           typename Matrix::CreateIterator citer = A.createbegin();
@@ -1045,7 +1043,12 @@ namespace Dune {
         Solver<VectorType> solver(pop,psp,parPreCond,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
         //make r consistent
-        oocc.addOwnerCopyToOwnerCopy(r,r);
+        if (gfs.gridview().comm().size()>1){
+          Dune::PDELab::AddDataHandle<GFS,V> adddh(gfs,r);
+          gfs.gridview().communicate(adddh,
+                                     Dune::InteriorBorder_InteriorBorder_Interface,
+                                     Dune::ForwardCommunication);
+        }
         
         solver.apply(z,r,stat);
         res.converged  = stat.converged;
@@ -1197,7 +1200,13 @@ namespace Dune {
       Dune::InverseOperatorResult stat;
       int verb=0;
       if (gfs.gridview().comm().rank()==0) verb=verbose;
-      oocc.addOwnerCopyToOwnerCopy(r,r);
+      //make r consistent
+      if (gfs.gridview().comm().size()>1) {
+        Dune::PDELab::AddDataHandle<GFS,V> adddh(gfs,r);
+        gfs.gridview().communicate(adddh,
+                                   Dune::InteriorBorder_InteriorBorder_Interface,
+                                   Dune::ForwardCommunication);
+      }
       SOI<VectorType> solver(oop,sp,amg,reduction,maxiter,verb);
       solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
       res.converged  = stat.converged;
