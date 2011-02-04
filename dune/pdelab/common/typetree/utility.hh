@@ -31,7 +31,7 @@ namespace Dune {
       }
 
       template<typename BaseType, typename T>
-      T& checkGridViewType(T& t)
+      T& assertGridViewType(T& t)
       {
         dune_static_assert((is_same<typename BaseType::Traits::GridViewType,
                             typename T::Traits::GridViewType>::value),
@@ -41,7 +41,7 @@ namespace Dune {
 
       // this partial specialization is required for the non-variadic case
       template<typename BaseType>
-      TypeTree::EmptyNode checkGridViewType(TypeTree::EmptyNode e)
+      TypeTree::EmptyNode assertGridViewType(TypeTree::EmptyNode e)
       {
         return e;
       }
