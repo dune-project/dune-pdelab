@@ -1526,31 +1526,6 @@ namespace Dune {
       shared_ptr<GFS const> pgfs;
       shared_ptr<CGFS const> pcgfs;
     };
-    /*
-    // ensure that GFS is not a leaf
-    template<typename GFS, int k, int isleaf>
-    class GridFunctionSubSpaceIntermediateBase
-      : public GridFunctionSubSpaceBase<GFS,k,typename GFS::template Child<k>::Type>
-    {
-      typedef GridFunctionSubSpaceBase<GFS,k,typename GFS::template Child<k>::Type> BaseT;
-    public:
-      GridFunctionSubSpaceIntermediateBase (const GFS& gfs) : BaseT(gfs)
-      {
-      }
-    };
-
-
-    // compilation error if subspace from a leaf is taken
-    template<typename GFS, int k>
-    class GridFunctionSubSpaceIntermediateBase<GFS,k,true> : public Countable
-    {
-    public:
-      GridFunctionSubSpaceIntermediateBase (const GFS& gfs)
-      {
- 		dune_static_assert((static_cast<int>(GFS::isLeaf)==0),"subspace cannot be taken from a leaf");
-      }
-    };
-    */
 
     template<typename GFS, std::size_t k>
     class GridFunctionSubSpace : public GridFunctionSubSpaceBase<GFS,k,typename GFS::template Child<k>::Type::ImplementationTag>
