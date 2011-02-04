@@ -828,9 +828,13 @@ namespace Dune {
     // of normal flux on the interior of faces.
     template<typename T>
     class NormalFluxGridFunctionAdapter
-      : public Dune::PDELab::GridFunctionInterface<Dune::PDELab::GridFunctionTraits<typename T::Traits::GridViewType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> >,
-                                                   NormalFluxGridFunctionAdapter<T> >,
-                                                                                     public Dune::PDELab::LeafNode
+      : public Dune::PDELab::GridFunctionInterface<Dune::PDELab::GridFunctionTraits<typename T::Traits::GridViewType,
+                                                                                    typename T::Traits::RangeFieldType,
+                                                                                    1,
+                                                                                    Dune::FieldVector<typename T::Traits::RangeFieldType,1>
+                                                                                    >,
+                                                   NormalFluxGridFunctionAdapter<T> >
+      , public TypeTree::LeafNode
     {
     public:
       typedef Dune::PDELab::GridFunctionTraits<typename T::Traits::GridViewType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> > Traits;
@@ -925,8 +929,8 @@ namespace Dune {
     // backward Piola transformation on each element
     template<typename T>
     class PiolaBackwardAdapter
-      : public Dune::PDELab::GridFunctionInterface<typename T::Traits,PiolaBackwardAdapter<T> >,
-        public Dune::PDELab::LeafNode
+      : public Dune::PDELab::GridFunctionInterface<typename T::Traits,PiolaBackwardAdapter<T> >
+      , public TypeTree::LeafNode
     {
     public:
       typedef typename T::Traits::GridViewType GridViewType;
