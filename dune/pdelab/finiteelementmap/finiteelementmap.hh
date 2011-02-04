@@ -8,8 +8,6 @@
 
 #include <dune/grid/common/genericreferenceelements.hh>
 
-#include"../common/countingptr.hh"
-
 namespace Dune {
   namespace PDELab {
 
@@ -56,10 +54,9 @@ namespace Dune {
 
 	//! simple implementation where all entities have the same finite element
 	template<class Imp>
-	class SimpleLocalFiniteElementMap : 
-	  public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits<Imp>, 
-											SimpleLocalFiniteElementMap<Imp> >,
-	  public Countable
+	class SimpleLocalFiniteElementMap :
+	  public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits<Imp>,
+											SimpleLocalFiniteElementMap<Imp> >
 	{
 	public:
 	  //! \brief export type of the signature
@@ -110,7 +107,6 @@ namespace Dune {
           LocalFiniteElementMapTraits<FE>,
           Imp
         >
-      , public Countable
     {
       typedef typename GV::IndexSet IndexSet;
       static const int dim = GV::dimension;

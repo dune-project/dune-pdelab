@@ -38,8 +38,7 @@ namespace Dune {
 	//! FiniteElementMap which provides MonomLocalFiniteElement instances, depending on the local polynomial degree
     //! \ingroup FiniteElementMap
 	template<class M, class D, class R, int d, int maxP>
-	class VariableMonomLocalFiniteElementMap :
-      public Countable
+	class VariableMonomLocalFiniteElementMap
 	{
       typedef typename FixedOrderLocalBasisTraits<
         typename MonomLocalFiniteElement<D,R,d,0>::Traits::LocalBasisType::Traits,0>::Traits T;

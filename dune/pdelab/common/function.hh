@@ -829,7 +829,7 @@ namespace Dune {
     class NormalFluxGridFunctionAdapter
       : public Dune::PDELab::GridFunctionInterface<Dune::PDELab::GridFunctionTraits<typename T::Traits::GridViewType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> >,
                                                    NormalFluxGridFunctionAdapter<T> >,
-                                                                                     public Dune::PDELab::LeafNode, public Dune::PDELab::Countable
+                                                                                     public Dune::PDELab::LeafNode
     {
     public:
       typedef Dune::PDELab::GridFunctionTraits<typename T::Traits::GridViewType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> > Traits;
@@ -925,7 +925,7 @@ namespace Dune {
     template<typename T>
     class PiolaBackwardAdapter
       : public Dune::PDELab::GridFunctionInterface<typename T::Traits,PiolaBackwardAdapter<T> >,
-        public Dune::PDELab::LeafNode, public Dune::PDELab::Countable
+        public Dune::PDELab::LeafNode
     {
     public:
       typedef typename T::Traits::GridViewType GridViewType;

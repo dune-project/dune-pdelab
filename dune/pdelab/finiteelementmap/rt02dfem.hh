@@ -13,10 +13,9 @@ namespace Dune {
     //! \ingroup FiniteElementMap
 
     template<typename GV, typename D, typename R>
-    class RT02DLocalFiniteElementMap : 
-	  public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits< Dune::RT02DLocalFiniteElement<D,R> >, 
-											RT02DLocalFiniteElementMap<GV,D,R> >,
-      public Countable
+    class RT02DLocalFiniteElementMap :
+	  public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits< Dune::RT02DLocalFiniteElement<D,R> >,
+											RT02DLocalFiniteElementMap<GV,D,R> >
     {
       typedef Dune::RT02DLocalFiniteElement<D,R> FE;
       typedef typename GV::IndexSet IndexSet;

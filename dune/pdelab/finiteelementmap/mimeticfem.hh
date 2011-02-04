@@ -12,10 +12,9 @@ namespace Dune {
   namespace PDELab {
 
     template<typename IIS, typename D, typename R, int dim>
-    class MimeticLocalFiniteElementMap : 
-      public Dune::PDELab::LocalFiniteElementMapInterface<Dune::PDELab::LocalFiniteElementMapTraits< MimeticLocalFiniteElement<D,R,dim> >, 
-                                                          MimeticLocalFiniteElementMap<IIS,D,R,dim> >,
-                                                                                                     public Dune::PDELab::Countable
+    class MimeticLocalFiniteElementMap :
+      public Dune::PDELab::LocalFiniteElementMapInterface<Dune::PDELab::LocalFiniteElementMapTraits< MimeticLocalFiniteElement<D,R,dim> >,
+                                                          MimeticLocalFiniteElementMap<IIS,D,R,dim> >
     {
       typedef MimeticLocalFiniteElement<D,R,dim> FE;
      
