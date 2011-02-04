@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include <dune/common/deprecated.hh>
+
 /** @file
  *  @addtogroup StoragePolicy
  *  @brief This file implements a counting pointer with configurable memory
@@ -26,7 +28,7 @@ namespace Dune {
      *  objects won't delete the pointed to object if the reference count
      *  reaches zero.
      */
-    class NondeletingMemoryManagementPolicy
+    class DUNE_DEPRECATED NondeletingMemoryManagementPolicy
 	{
 	public:
 	  template<typename T>
@@ -40,7 +42,7 @@ namespace Dune {
      *  objects will delete the pointed to object if the reference count
      *  reaches zero.
      */
-	class DeletingMemoryManagementPolicy
+	class DUNE_DEPRECATED DeletingMemoryManagementPolicy
 	{
 	public:
 	  template<typename T>
@@ -74,7 +76,7 @@ namespace Dune {
      *  != to find out whether they point to the same object.
      */
 	template<typename T, typename P=NondeletingMemoryManagementPolicy>
-	class CountingPointer
+	class DUNE_DEPRECATED CountingPointer
 	{
 	  T* p;
 
@@ -141,7 +143,7 @@ namespace Dune {
 			if (p!=0)
 			  p->reference_counter_increment();
 		  }
-		return *this;		
+		return *this;
 	  }
 
       //! target element access
@@ -186,14 +188,14 @@ namespace Dune {
      *  This provides the necessary functionality in the target object for the
      *  CountingPointer template class to work.
      */
-	class Countable 
+	class DUNE_DEPRECATED Countable
 	{
 	  mutable int counter;
 
 	public:
 
       //! Default constructor
-	  Countable () : counter(0) 
+	  Countable () : counter(0)
 	  {
 	  }
 
@@ -201,13 +203,13 @@ namespace Dune {
 	  Countable (const Countable& x)
 	  {
 		counter = 0;
-	  } 
+	  }
 
 	  //! number of pointers does not change
 	  Countable& operator= (const Countable& x)
 	  {
         return *this;
-	  } 
+	  }
 
       //! increment reference counter
 	  void reference_counter_increment () const
@@ -250,7 +252,7 @@ namespace Dune {
 	};
 
     /** @} end documentation */
-    
+
   } // namespace PDELab
 } // namespace Dune
 
