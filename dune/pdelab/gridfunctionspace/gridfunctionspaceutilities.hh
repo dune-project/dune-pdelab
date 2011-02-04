@@ -12,9 +12,6 @@
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
-#include"../common/countingptr.hh"
-#include"../common/multitypetree.hh"
-#include"../common/cpstoragepolicy.hh"
 #include"../common/function.hh"
 #include <dune/pdelab/common/jacobiantocurl.hh>
 
@@ -661,7 +658,7 @@ namespace Dune {
        * \copydetails DiscreteGridFunction::DiscreteGridFunction(const GFS&,const X&)
        */
 	  DiscreteGridFunctionPiola (const GFS& gfs, const X& x_)
-		: pgfs(&gfs), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
+		: pgfs(stackobject_to_shared_ptr(gfs)), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
 	  {
 	  }
 
@@ -695,7 +692,7 @@ namespace Dune {
 	  }
 
 	private:
-	  CountingPointer<GFS const> pgfs;
+	  shared_ptr<GFS const> pgfs;
 	  const X& xg;
 	  mutable typename GFS::LocalFunctionSpace lfs;
 	  mutable std::vector<typename Traits::RangeFieldType> xl;
