@@ -366,14 +366,17 @@ namespace Dune {
       //! Apply visitor to a pair of TypeTrees.
       /**
        * This function applies the given visitor to the given tree. Both visitor and tree may be const
-       * or non-const (if the compiler supports rvalue references, they may even be a non-const temporary).
+       * or non-const. If the compiler supports rvalue references, they may even be a non-const temporary;
+       * otherwise both trees must be either const or non-const. If they have different constness, both will
+       * be promoted to const.
        *
-       * \note The visitor must implement the interface laid out by DefaultVisitor (most easily achieved by
+       * \note The visitor must implement the interface laid out by DefaultPairVisitor (most easily achieved by
        *       inheriting from it) and specify the required type of tree traversal (static or dynamic) by
        *       inheriting from either StaticTraversal or DynamicTraversal.
        *
-       * \param tree    The tree the visitor will be applied to.
-       * \param visitor The visitor to apply to the tree.
+       * \param tree1   The first tree the visitor will be applied to.
+       * \param tree2   The second tree the visitor will be applied to.
+       * \param visitor The visitor to apply to the trees.
        */
       template<typename Tree1, typename Tree2, typename Visitor>
       void applyToTreePair(Tree1&& tree1, Tree2&& tree2, Visitor&& visitor)

@@ -4,7 +4,7 @@
 #ifndef DUNE_PDELAB_COMMON_TYPETREE_VARIADICCOMPOSITENODE_HH
 #define DUNE_PDELAB_COMMON_TYPETREE_VARIADICCOMPOSITENODE_HH
 
-#if !HAVE_VARIADIC_TEMPLATES
+#if !(HAVE_VARIADIC_TEMPLATES || DOXYGEN)
 #error The class VariadicCompositeNode requires compiler support for variadic templates, which your compiler lacks.
 #endif
 
