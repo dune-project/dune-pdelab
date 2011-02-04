@@ -554,7 +554,7 @@ namespace Dune {
        *           used to initialize the first child, the second pointer for
        *           the second child and so on.
        */
-	  // PowerGridFunction (T** t) : PowerNode<T,k,CountingPointerStoragePolicy>(t) {}
+	  // TODO: PowerGridFunction (T** t) : ...
 
 #ifdef DOXYGEN
       /** \brief Initialize all children with different function objects
@@ -835,7 +835,7 @@ namespace Dune {
       typedef Dune::PDELab::GridFunctionTraits<typename T::Traits::GridViewType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> > Traits;
       typedef Dune::PDELab::GridFunctionInterface<Traits,NormalFluxGridFunctionAdapter<T> > BaseT;
 
-      NormalFluxGridFunctionAdapter (const T& t_) : t(&t_) {}
+      NormalFluxGridFunctionAdapter (const T& t_) : t(stackobject_to_shared_ptr(t_)) {}
 
 
       inline void evaluate (const typename Traits::ElementType& e,
@@ -917,7 +917,7 @@ namespace Dune {
       }
 
     private:
-      CountingPointer<T const> t;
+      shared_ptr<T const> t;
     };
 
     // Adapter takes a vector-valued grid function and applies
@@ -932,7 +932,7 @@ namespace Dune {
       typedef typename T::Traits Traits;
       typedef Dune::PDELab::GridFunctionInterface<Traits,PiolaBackwardAdapter<T> > BaseT;
 
-      PiolaBackwardAdapter (const T& t_) : t(&t_) {}
+      PiolaBackwardAdapter (const T& t_) : t(stackobject_to_shared_ptr(t_)) {}
 
 
       inline void evaluate (const typename Traits::ElementType& e,
@@ -958,7 +958,7 @@ namespace Dune {
       }
 
     private:
-      CountingPointer<T const> t;
+      shared_ptr<T const> t;
     };
 
 

@@ -476,7 +476,7 @@ namespace Dune {
        * \param x_  The coefficients vector
        */
 	  DiscreteGridFunctionGlobalCurl (const GFS& gfs, const X& x_)
-		: pgfs(&gfs), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), J(gfs.maxLocalSize())
+		: pgfs(stackobject_to_shared_ptr(gfs)), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), J(gfs.maxLocalSize())
 	  {
 	  }
 
@@ -520,7 +520,7 @@ namespace Dune {
 	  }
 
 	private:
-	  CountingPointer<GFS const> pgfs;
+	  shared_ptr<GFS const> pgfs;
 	  const X& xg;
 	  mutable typename GFS::LocalFunctionSpace lfs;
 	  mutable std::vector<typename Traits::RangeFieldType> xl;
@@ -578,7 +578,7 @@ namespace Dune {
        * \param x_  The coefficients vector
        */
       DiscreteGridFunctionGradient (const GFS& gfs, const X& x_)
-        : pgfs(&gfs), xg(x_)
+        : pgfs(stackobject_to_shared_ptr(gfs)), xg(x_)
       { }
 
       // Evaluate
@@ -621,7 +621,7 @@ namespace Dune {
       }
 
     private:
-      CountingPointer<GFS const> pgfs;
+      shared_ptr<GFS const> pgfs;
       const X& xg;
     };
 
