@@ -1,4 +1,7 @@
 commondir = $(includedir)/dune/pdelab/common
+SUBDIRS =                                       \
+	typetree
+
 common_HEADERS =				\
 	countingptr.hh				\
 	cpstoragepolicy.hh			\
@@ -9,6 +12,7 @@ common_HEADERS =				\
 	geometrywrapper.hh			\
 	jacobiantocurl.hh			\
 	multitypetree.hh			\
+	typetree.hh                             \
 	vtkexport.hh
 
 include $(top_srcdir)/am/global-rules
