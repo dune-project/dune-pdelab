@@ -19,16 +19,16 @@ namespace Dune {
     {
       typedef Dune::RT02DLocalFiniteElement<D,R> FE;
       typedef typename GV::IndexSet IndexSet;
-     
+
     public:
 	  //! \brief export type of the signature
-	  typedef LocalFiniteElementMapTraits<FE> Traits;  
+	  typedef LocalFiniteElementMapTraits<FE> Traits;
 
 	  //! \brief Use when Imp has a standard constructor
-	  RT02DLocalFiniteElementMap (const GV& gv_) 
+	  RT02DLocalFiniteElementMap (const GV& gv_)
         : gv(gv_), is(gv_.indexSet()), orient(gv_.size(0))
 	  {
-        // create all variants 
+        // create all variants
         for (int i=0; i<8; i++)
           variant[i] = FE(i);
 

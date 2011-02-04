@@ -23,7 +23,7 @@ namespace Dune {
           typedef Dune::MonomLocalFiniteElement<D,R,d,p> LFE;
           typedef typename C::value_type ptr;
           c[p] = ptr(new LocalFiniteElementVirtualImp<LFE>(LFE(Dune::GeometryType::cube)));
-          
+
           InitVariableMonomLocalFiniteElementMap<D,R,d,p-1>::init(c);
         }
       };
@@ -46,13 +46,13 @@ namespace Dune {
       typedef LocalFiniteElementVirtualInterface<T> FiniteElementType;
     public:
       typedef FiniteElementMapTraits<FiniteElementType> Traits;
-      
+
       VariableMonomLocalFiniteElementMap (const M & m, unsigned int defaultP) :
         mapper_(m), polOrder_(mapper_.size(), defaultP)
       {
         InitVariableMonomLocalFiniteElementMap<D,R,d,maxP>::init(finiteElements_);
       }
-      
+
 	  //! \brief get local basis functions for entity
 	  template<class EntityType>
 	  const typename Traits::FiniteElementType& find (const EntityType& e) const
@@ -83,7 +83,7 @@ namespace Dune {
       Dune::array< Dune::shared_ptr<FiniteElementType>, maxP+1 > finiteElements_;
     };
 
-    
+
 
   }
 }
