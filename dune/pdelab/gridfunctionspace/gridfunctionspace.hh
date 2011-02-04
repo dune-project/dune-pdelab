@@ -264,14 +264,14 @@ namespace Dune {
 
 	  //! constructor
 	  GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_)
-		: defaultce(ce_), gv(gridview), pfem(&fem), ce(ce_)
+		: defaultce(ce_), gv(gridview), pfem(stackobject_to_shared_ptr(fem)), ce(ce_)
 	  {
 		update();
 	  }
 
 	  //! constructor
 	  GridFunctionSpace (const GV& gridview, const FEM& fem)
-        : gv(gridview), pfem(&fem), ce(defaultce)
+        : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), ce(defaultce)
 	  {
 		update();
 	  }
@@ -526,7 +526,7 @@ namespace Dune {
 	private:
       CE defaultce;
 	  const GV& gv;
-	  CountingPointer<FEM const> pfem;
+	  shared_ptr<FEM const> pfem;
 	  typename Traits::SizeType nlocal;
 	  typename Traits::SizeType nglobal;
       const CE& ce;
@@ -586,14 +586,14 @@ namespace Dune {
 
 	  // constructor
       GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_)
-        : gv(gridview), pfem(&fem), defaultce(ce_), ce(ce_)
+        : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), defaultce(ce_), ce(ce_)
 	  {
 		update();
 	  }
 
 	  // constructor
       GridFunctionSpace (const GV& gridview, const FEM& fem)
-        : gv(gridview), pfem(&fem), ce(defaultce)
+        : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), ce(defaultce)
 	  {
 		update();
 	  }
@@ -831,7 +831,7 @@ namespace Dune {
 
 	private:
 	  const GV& gv;
-      CountingPointer<FEM const> pfem;
+      shared_ptr<FEM const> pfem;
 
 	  typename Traits::SizeType nlocal;
 	  typename Traits::SizeType nglobal;
@@ -945,25 +945,25 @@ namespace Dune {
 	  // constructors
       GridFunctionSpace (const GV& gridview, const FEM& fem, const IIS& iis_,
                          const CE& ce_)
-        : gv(gridview), pfem(&fem), iis(iis_), defaultce(ce_), ce(ce_)
+        : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), iis(iis_), defaultce(ce_), ce(ce_)
 	  {
 		update();
 	  }
 
       GridFunctionSpace (const GV& gridview, const FEM& fem, const IIS& iis_)
-        : gv(gridview), pfem(&fem), iis(iis_), ce(defaultce)
+        : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), iis(iis_), ce(defaultce)
 	  {
 		update();
 	  }
 
       GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_)
-        : gv(gridview), pfem(&fem), iis(dummyiis), defaultce(ce_), ce(ce_)
+        : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), iis(dummyiis), defaultce(ce_), ce(ce_)
 	  {
 		update();
 	  }
 
       GridFunctionSpace (const GV& gridview, const FEM& fem)
-        : gv(gridview), pfem(&fem), iis(dummyiis), ce(defaultce)
+        : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), iis(dummyiis), ce(defaultce)
 	  {
 		update();
 	  }
@@ -1200,7 +1200,7 @@ namespace Dune {
 	private:
       DummyIntersectionIndexSet dummyiis; // for version without intersection DOFs
 	  const GV& gv;
-      CountingPointer<FEM const> pfem;
+      shared_ptr<FEM const> pfem;
       const IIS& iis;
 
 	  typename Traits::SizeType nlocal;
