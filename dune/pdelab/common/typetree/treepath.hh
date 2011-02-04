@@ -24,7 +24,7 @@ namespace Dune {
       enum Type { fullyStatic, mostlyStatic, dynamic };
     }
 
-#if HAVE_VARIADIC_TEMPLATES
+#if HAVE_VARIADIC_TEMPLATES || !DOXYGEN
 
     template<std::size_t... i>
     struct TreePath {
@@ -350,28 +350,31 @@ namespace Dune {
 
 #endif // HAVE_VARIADIC_TEMPLATES
 
+    //! A TreePath that stores the path of a node as runtime information.
     class DynamicTreePath
     {
 
     public:
 
-      typedef DynamicTreePath ViewType;
-
+      //! Get the size (length) of this path.
       std::size_t size() const
       {
         return _vec.size();
       }
 
+      //! Get the index value at position pos.
       std::size_t element(std::size_t pos) const
       {
         return _vec[pos];
       }
 
+      //! Get the last index value.
       std::size_t back() const
       {
         return _vec.back();
       }
 
+      //! Get the first index value.
       std::size_t front() const
       {
         return _vec.front();
@@ -379,19 +382,36 @@ namespace Dune {
 
     protected:
 
+#ifndef DOXYGEN
+
       typedef std::vector<std::size_t> Vector;
       Vector& _vec;
 
       DynamicTreePath(Vector& vec)
         : _vec(vec)
       {}
+
+#endif // DOXYGEN
+
     };
 
+#ifndef DOXYGEN // DynamicTreePath subclasses are implementation details and never exposed to the user
+
+    // This is the object that gets passed around by the traversal algorithm. It
+    // extends the DynamicTreePath with stack-like modifier methods. Note that
+    // it does not yet allocate any storage for the index values. It just uses
+    // the reference to a storage vector of the base class. This implies that all
+    // objects that are copy-constructed from each other share a single index storage!
+    // The reason for this is to avoid differentiating the visitor signature for static
+    // and dynamic traversal: Having very cheap copy-construction for these objects
+    // allows us to pass them by value.
     class MutableDynamicTreePath
       : public DynamicTreePath
     {
 
     public:
+
+      typedef DynamicTreePath ViewType;
 
       void push_back(std::size_t v)
       {
@@ -421,6 +441,11 @@ namespace Dune {
 
     };
 
+    // DynamicTreePath storage provider.
+    // This objects provides the storage for the DynamicTreePath
+    // during the tree traversal. After construction, it should
+    // not be used directly - the traversal framework uses the
+    // base class returned by calling mutablePath().
     class MakeableDynamicTreePath
       : public std::vector<std::size_t>
        , public MutableDynamicTreePath
@@ -441,9 +466,12 @@ namespace Dune {
 
     };
 
+    // Factory for creating the right type of TreePath based on the requested
+    // traversal pattern (static or dynamic).
     template<TreePathType::Type tpType>
     struct TreePathFactory;
 
+    // Factory for static traversal.
     template<>
     struct TreePathFactory<TreePathType::fullyStatic>
     {
@@ -453,6 +481,7 @@ namespace Dune {
       }
     };
 
+    // Factory for dynamic traversal.
     template<>
     struct TreePathFactory<TreePathType::dynamic>
     {
@@ -461,6 +490,8 @@ namespace Dune {
         return MakeableDynamicTreePath();
       }
     };
+
+#endif // DOXYGEN
 
     //! \} group TypeTree
 
