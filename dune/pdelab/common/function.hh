@@ -971,21 +971,32 @@ namespace Dune {
 	// template metaprograms
 	//==========================
 
-    //! implement VisitingFunctor for vtkwriter_tree_addvertexdata
-    template<typename GV>
-    struct GridFunctionVertexDataFunctor : public MultiTypeTree::ReadPathFunctor<false> {
-      Dune::VTKWriter<GV>& w;
-      const std::string s;
-      GridFunctionVertexDataFunctor(Dune::VTKWriter<GV>& w_, const std::string & s_) :
-        w(w_), s(s_) {}
-      template<typename T> void visit_leaf(const T& t) {
-		std::stringstream name;
-        name << s;
-        for (std::vector<int>::size_type i=0; i<path.size(); i++)
-          name << "_" << path[i];
-		w.addVertexData(new VTKGridFunctionAdapter<T>(t,name.str()));
-      }
-    };
+    namespace {
+
+      //! implement VisitingFunctor for vtkwriter_tree_addvertexdata
+      template<typename VTKWriter>
+      struct AddGridFunctionsToVTKWriter
+        : public TypeTree::TreeVisitor
+        , public TypeTree::DynamicTraversal
+      {
+
+        VTKWriter& w;
+        const std::string s;
+
+        AddGridFunctionsToVTKWriter(VTKWriter& w_, const std::string & s_) :
+          w(w_), s(s_) {}
+
+        template<typename T, typename TreePath>
+        void leaf(const T& t, TreePath treePath) {
+          std::stringstream name;
+          name << s;
+          for (std::size_t i=0; i < treePath.size(); ++i)
+            name << "_" << treePath.element(i);
+          w.addVertexData(new VTKGridFunctionAdapter<T>(t,name.str()));
+        }
+      };
+
+    } // anonymous namespace
 
     /** \brief add vertex data from a \ref GridFunctionTree to a VTKWriter
      *
@@ -995,8 +1006,8 @@ namespace Dune {
 	template<typename GV, typename T>
 	void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t, std::string s = "data")
 	{
-      GridFunctionVertexDataFunctor<GV> f(w,s);
-      MultiTypeTree::ForEachNode(f,t);
+      AddGridFunctionsToVTKWriter<Dune::VTKWriter<GV> > visitor(w,s);
+      TypeTree::applyToTree(t,visitor);
 	}
 
     //! \} GridFunctionTree
