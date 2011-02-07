@@ -17,7 +17,6 @@
 #include "typetree.hh"
 #include "vtkexport.hh"
 #include "geometrywrapper.hh"
-#include "multitypetree.hh"
 
 namespace Dune {
   namespace PDELab {
