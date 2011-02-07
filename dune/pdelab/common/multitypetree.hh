@@ -9,6 +9,7 @@
 #include <dune/common/static_assert.hh>
 #include <dune/common/tuples.hh>
 #include <dune/common/typetraits.hh>
+#include <dune/common/deprecated.hh>
 
 #include "multitypetreeutility.hh"
 
@@ -66,7 +67,7 @@ namespace Dune {
      *
      *  A LeafNode models a \ref MultiTypeTree
      */
-	class LeafNode
+	class DUNE_DEPRECATED LeafNode
 	{
 	public:
       //! Mark this class as a leaf in the \ref MultiTypeTree
@@ -77,6 +78,8 @@ namespace Dune {
 	  enum { isComposite = false /**< */ };
       //! Leafs have no children in the \ref MultiTypeTree
 	  enum { CHILDREN = 0 /**< */ };
+
+      LeafNode() DUNE_DEPRECATED {}
 	};
 
 	//==========================
@@ -84,8 +87,8 @@ namespace Dune {
 	//==========================
 
     //! mark an missing type/node, need in the TMP (for internal use)
-	struct EmptyChild {};
-    
+	struct DUNE_DEPRECATED EmptyChild {};
+
 	//==========================
 	// StoragePolicy
 	//==========================
@@ -109,7 +112,7 @@ namespace Dune {
      *  stored as copies.  For an alternative look at
      *  CountingPointerStoragePolicy, it will all make much more sense then.
      */
-	class CopyStoragePolicy
+	class DUNE_DEPRECATED CopyStoragePolicy
 	{
 	public:
       /** \brief Determine the storage type S for an object of type T
@@ -129,7 +132,7 @@ namespace Dune {
 	  {
 		return t;
 	  }
-	  
+
       /** \brief set a store from an object
        *
        *  \param[out] s The store to assign to
@@ -140,7 +143,7 @@ namespace Dune {
 	  {
 		s = t;
 	  }
-	  
+
       //! get the object from a store
 	  template<typename T>
 	  static T& get (T& s)
@@ -162,8 +165,8 @@ namespace Dune {
 	// PowerNode
 	//==========================
 
-	template<typename T, int k, typename P=CopyStoragePolicy> 
-	class PowerNode;
+	template<typename T, int k, typename P=CopyStoragePolicy>
+	class DUNE_DEPRECATED PowerNode;
 
     namespace {
       //! base class for PowerNode (for internal use)
@@ -172,12 +175,12 @@ namespace Dune {
       {
       public:
         friend class PowerNode<T,k,P>;
-        
+
         enum { isLeaf = false };
         enum { isPower = true /**< */ };
         enum { isComposite = false /**< */ };
         enum { CHILDREN = k };
-        
+
         template<int i>
         struct Child
         {
@@ -209,34 +212,34 @@ namespace Dune {
         {
           P::set(c[i],t);
         }
-        
+
         T& getChild (int i)
         {
           return P::get(c[i]);
         }
-        
+
         const T& getChild (int i) const
         {
           return P::get(c[i]);
         }
-        
+
         void setChild (int i, T& t)
         {
           P::set(c[i],t);
         }
-        
+
         template<typename U>
         typename enable_if<!IsConst<U>::value>::type
         setChild (int i, const U& t)
         {
           P::set(c[i],t);
         }
-        
+
       private:
         typename P::template Storage<T>::Type c[k];
       };
     } // end empty namespace
-    
+
     /** \brief Collect k instances of type T within a \ref MultiTypeTree
      *
      *  A PowerNode models a \ref MultiTypeTree
@@ -735,7 +738,7 @@ namespace Dune {
         void setChild (typename Dune::tuple_element<i,OT>::type& t)
         {
           P::set(Dune::get<i>(c),t);
-        }	
+        }
 
       private:
         ST& c;
@@ -764,7 +767,7 @@ namespace Dune {
 			 typename T0, typename T1, typename T2=EmptyChild, typename T3=EmptyChild,
 			 typename T4=EmptyChild, typename T5=EmptyChild, typename T6=EmptyChild,
 			 typename T7=EmptyChild, typename T8=EmptyChild>
-	class CompositeNode 
+	class DUNE_DEPRECATED CompositeNode
 #ifndef DOXYGEN
 	  : public CompositeNodeBase<P,
 								 Dune::tuple<T0,T1,T2,T3,T4,T5,T6,T7,T8>,
@@ -810,14 +813,14 @@ namespace Dune {
        */
 	  CompositeNode (T0& t0, T1& t1, ...) {}
 #else
-	  CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, 
+	  CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4,
 					 T5& t5, T6& t6, T7& t7, T8& t8)
-		: BaseT(c), 
+		: BaseT(c),
 		  c(P::convert(t0),P::convert(t1),P::convert(t2),P::convert(t3),P::convert(t4),
 			P::convert(t5),P::convert(t6),P::convert(t7),P::convert(t8))
 	  {}
 #endif //DOXYGEN
-      
+
 	};
 
 #ifndef DOXYGEN
@@ -835,16 +838,16 @@ namespace Dune {
 	  typedef Dune::tuple<typename P::template Storage<T0>::Type,
 						  typename P::template Storage<T1>::Type> ST;
       typedef CompositeNodeBase<P,OT,ST> BaseT;
-	
+
 	  ST c;
 
     public:
 	  CompositeNode () : BaseT(c) {}
 
 	  CompositeNode (T0& t0, T1& t1)
-		: BaseT(c), 
+		: BaseT(c),
 		  c(P::convert(t0),P::convert(t1))
-	  {} 
+	  {}
 	};
 
 	// 3 children
@@ -863,16 +866,16 @@ namespace Dune {
 						  typename P::template Storage<T1>::Type,
 						  typename P::template Storage<T2>::Type> ST;
       typedef CompositeNodeBase<P,OT,ST> BaseT;
-	
+
 	  ST c;
 
     public:
 	  CompositeNode () : BaseT(c) {}
-      
+
       CompositeNode (T0& t0, T1& t1, T2& t2)
-		: BaseT(c), 
+		: BaseT(c),
 		  c(P::convert(t0),P::convert(t1),P::convert(t2))
-	  {} 
+	  {}
 	};
 
 	// 4 children
@@ -893,16 +896,16 @@ namespace Dune {
 						  typename P::template Storage<T2>::Type,
 						  typename P::template Storage<T3>::Type> ST;
       typedef CompositeNodeBase<P,OT,ST> BaseT;
-	
+
 	  ST c;
 
     public:
 	  CompositeNode () : BaseT(c) {}
-      
+
       CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3)
-		: BaseT(c), 
+		: BaseT(c),
 		  c(P::convert(t0),P::convert(t1),P::convert(t2),P::convert(t3))
-	  {} 
+	  {}
 	};
 
 	// 5 children
@@ -925,16 +928,16 @@ namespace Dune {
 						  typename P::template Storage<T3>::Type,
 						  typename P::template Storage<T4>::Type> ST;
       typedef CompositeNodeBase<P,OT,ST> BaseT;
-	
+
 	  ST c;
 
     public:
 	  CompositeNode () : BaseT(c) {}
-      
+
       CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4)
-		: BaseT(c), 
+		: BaseT(c),
 		  c(P::convert(t0),P::convert(t1),P::convert(t2),P::convert(t3),P::convert(t4))
-	  {} 
+	  {}
 	};
 
 	// 6 children
@@ -960,17 +963,17 @@ namespace Dune {
 						  typename P::template Storage<T4>::Type,
 						  typename P::template Storage<T5>::Type> ST;
       typedef CompositeNodeBase<P,OT,ST> BaseT;
-	
+
 	  ST c;
 
     public:
 	  CompositeNode () : BaseT(c) {}
-      
+
       CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5)
-		: BaseT(c), 
+		: BaseT(c),
 		  c(P::convert(t0),P::convert(t1),P::convert(t2),P::convert(t3),P::convert(t4),
 			P::convert(t5))
-	  {} 
+	  {}
 	};
 
 	// 7 children
@@ -998,18 +1001,18 @@ namespace Dune {
 						  typename P::template Storage<T5>::Type,
 						  typename P::template Storage<T6>::Type> ST;
       typedef CompositeNodeBase<P,OT,ST> BaseT;
-	
+
 	  ST c;
 
     public:
 	  CompositeNode () : BaseT(c) {}
-      
-      CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, 
+
+      CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4,
 				   T5& t5, T6& t6)
-		: BaseT(c), 
+		: BaseT(c),
 		  c(P::convert(t0),P::convert(t1),P::convert(t2),P::convert(t3),P::convert(t4),
 			P::convert(t5),P::convert(t6))
-	  {} 
+	  {}
 	};
 
 	// 8 children
@@ -1039,18 +1042,18 @@ namespace Dune {
 						  typename P::template Storage<T6>::Type,
 						  typename P::template Storage<T7>::Type> ST;
       typedef CompositeNodeBase<P,OT,ST> BaseT;
-	
+
 	  ST c;
 
     public:
 	  CompositeNode () : BaseT(c) {}
-      
-      CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, 
+
+      CompositeNode (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4,
                      T5& t5, T6& t6, T7& t7)
-		: BaseT(c), 
+		: BaseT(c),
 		  c(P::convert(t0),P::convert(t1),P::convert(t2),P::convert(t3),P::convert(t4),
 			P::convert(t5),P::convert(t6),P::convert(t7))
-	  {} 
+	  {}
 	};
 #endif //DOXYGEN
 
