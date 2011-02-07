@@ -346,7 +346,7 @@ namespace Dune {
 
     template<typename PowerGridFunctionSpace>
     Dune::PDELab::TypeTree::WrappingPowerNodeTransformation<PowerGridFunctionSpace,gfs_to_lfs,PowerLocalFunctionSpaceNode>
-    lookupNodeTransformation(PowerGridFunctionSpace* pgfs, gfs_to_lfs t, PowerGridFunctionSpaceTag tag);
+    lookupNodeTransformation(PowerGridFunctionSpace* pgfs, gfs_to_lfs* t, PowerGridFunctionSpaceTag tag);
 
 
     //=======================================
@@ -400,11 +400,11 @@ namespace Dune {
 #if HAVE_VARIADIC_TEMPLATES
     template<typename CompositeGridFunctionSpace>
     Dune::PDELab::TypeTree::WrappingVariadicCompositeNodeTransformation<CompositeGridFunctionSpace,gfs_to_lfs,CompositeLocalFunctionSpaceNode>
-    lookupNodeTransformation(CompositeGridFunctionSpace* cgfs, gfs_to_lfs t, CompositeGridFunctionSpaceTag tag);
+    lookupNodeTransformation(CompositeGridFunctionSpace* cgfs, gfs_to_lfs* t, CompositeGridFunctionSpaceTag tag);
 #else
     template<typename CompositeGridFunctionSpace>
     Dune::PDELab::TypeTree::WrappingCompositeNodeTransformation<CompositeGridFunctionSpace,gfs_to_lfs,CompositeLocalFunctionSpaceNode>
-    lookupNodeTransformation(CompositeGridFunctionSpace* cgfs, gfs_to_lfs t, CompositeGridFunctionSpaceTag tag);
+    lookupNodeTransformation(CompositeGridFunctionSpace* cgfs, gfs_to_lfs* t, CompositeGridFunctionSpaceTag tag);
 #endif
 
     //=======================================
@@ -519,7 +519,7 @@ namespace Dune {
 
     template<typename GridFunctionSpace>
     Dune::PDELab::TypeTree::WrappingLeafNodeTransformation<GridFunctionSpace,gfs_to_lfs,LeafLocalFunctionSpaceNode<GridFunctionSpace> >
-    lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_lfs t, LeafGridFunctionSpaceTag tag);
+    lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_lfs* t, LeafGridFunctionSpaceTag tag);
 
     //=======================================
     // local function facade

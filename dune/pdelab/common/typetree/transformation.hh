@@ -36,7 +36,7 @@ namespace Dune {
        * \tparam Tag            The implementation tag of the source node.
        */
       template<typename SourceNode, typename Transformation, typename Tag>
-      void lookupNodeTransformation(SourceNode* s, const Transformation& t, Tag tag);
+      void lookupNodeTransformation(SourceNode* s, Transformation* t, Tag tag);
 
 
       //! Transform a TypeTree.
@@ -83,7 +83,7 @@ namespace Dune {
       struct LookupNodeTransformation
       {
         // TODO: add configure test and replace __typeof__ with a macro
-        typedef __typeof__(lookupNodeTransformation(static_cast<S*>(0),*static_cast<T*>(0),Tag())) type;
+        typedef __typeof__(lookupNodeTransformation(static_cast<S*>(0),static_cast<T*>(0),Tag())) type;
       };
 
       // handle a leaf node - this is easy
