@@ -53,10 +53,15 @@ namespace Dune {
 		  return *this;
 		}
 
+        size_t flatsize() const
+        {
+          return BaseT::size();
+        }
+
 		template<typename X>
 		void std_copy_to (std::vector<X>& x) const
 		{
-		  size_t n = this->size()*BLOCKSIZE;
+		  size_t n = flatsize();
 		  x.resize(n);
 		  for (size_t i=0; i<n; i++)
 			x[i] = (*this)[i/BLOCKSIZE][i%BLOCKSIZE];
@@ -65,7 +70,7 @@ namespace Dune {
 		template<typename X>
 		void std_copy_from (const std::vector<X>& x)
 		{
-		  size_t n = this->size()*BLOCKSIZE;
+		  size_t n = flatsize();
 		  x.resize(n);
 		  for (size_t i=0; i<n; i++)
 			(*this)[i/BLOCKSIZE][i%BLOCKSIZE] = x[i];

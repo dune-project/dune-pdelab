@@ -605,7 +605,7 @@ namespace Dune {
     void set_nonconstrained_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
     {
       typedef typename XG::Backend B;
-      for (typename XG::size_type i=0; i<xg.size(); ++i)
+      for (typename XG::size_type i=0; i<xg.flatsize(); ++i)
         if (cg.find(i)==cg.end())
           B::access(xg,i) = x;
 	}
@@ -620,7 +620,7 @@ namespace Dune {
     void copy_nonconstrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
     {
       typedef typename XG::Backend B;
-      for (typename XG::size_type i=0; i<xgin.size(); ++i)
+      for (typename XG::size_type i=0; i<xgin.flatsize(); ++i)
         if (cg.find(i)==cg.end())
           B::access(xgout,i) = B::access(xgin,i);
 	}
@@ -636,7 +636,7 @@ namespace Dune {
     {
       typedef typename XG::Backend B;
 	  typedef typename CG::const_iterator global_col_iterator;
-      for (typename XG::size_type i=0; i<xg.size(); ++i){
+      for (typename XG::size_type i=0; i<xg.flatsize(); ++i){
         global_col_iterator it = cg.find(i);
         if (it == cg.end() || it->second.size() > 0)
           B::access(xg,i) = x;
