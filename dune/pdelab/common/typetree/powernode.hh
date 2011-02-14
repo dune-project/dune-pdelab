@@ -51,6 +51,15 @@ namespace Dune {
 
 #endif
 
+      template<typename PowerNode, typename T, std::size_t k>
+      struct PowerNodeChildCountCheck
+        : public enable_if<is_same<
+                             typename PowerNode::ChildType,
+                             T>::value &&
+                           PowerNode::CHILDREN == k,
+                           T>
+      {};
+
       /** \brief Collect k instances of type T within a \ref TypeTree.
        *
        *  \tparam T The base type
@@ -331,29 +340,29 @@ namespace Dune {
 
 #else
 
-        template<std::size_t K = 2>
-        PowerNode (typename enable_if<K == CHILDREN,T>::type& c0,
-                   T& c1)
+        template<typename U>
+        PowerNode (typename PowerNodeChildCountCheck<PowerNode,U,2>::type& c0,
+                   U& c1)
         {
           _children[0] = stackobject_to_shared_ptr(c0);
           _children[1] = stackobject_to_shared_ptr(c1);
         }
 
-        template<std::size_t K = 3>
-        PowerNode (typename enable_if<K == CHILDREN,T>::type& c0,
-                   T& c1,
-                   T& c2)
+        template<typename U>
+        PowerNode (typename PowerNodeChildCountCheck<PowerNode,U,3>::type& c0,
+                   U& c1,
+                   U& c2)
         {
           _children[0] = stackobject_to_shared_ptr(c0);
           _children[1] = stackobject_to_shared_ptr(c1);
           _children[2] = stackobject_to_shared_ptr(c2);
         }
 
-        template<std::size_t K = 4>
-        PowerNode (typename enable_if<K == CHILDREN,T>::type& c0,
-                   T& c1,
-                   T& c2,
-                   T& c3)
+        template<typename U>
+        PowerNode (typename PowerNodeChildCountCheck<PowerNode,U,4>::type& c0,
+                   U& c1,
+                   U& c2,
+                   U& c3)
         {
           _children[0] = stackobject_to_shared_ptr(c0);
           _children[1] = stackobject_to_shared_ptr(c1);
@@ -361,12 +370,12 @@ namespace Dune {
           _children[3] = stackobject_to_shared_ptr(c3);
         }
 
-        template<std::size_t K = 5>
-        PowerNode (typename enable_if<K == CHILDREN,T>::type& c0,
-                   T& c1,
-                   T& c2,
-                   T& c3,
-                   T& c4)
+        template<typename U>
+        PowerNode (typename PowerNodeChildCountCheck<PowerNode,U,5>::type& c0,
+                   U& c1,
+                   U& c2,
+                   U& c3,
+                   U& c4)
         {
           _children[0] = stackobject_to_shared_ptr(c0);
           _children[1] = stackobject_to_shared_ptr(c1);
@@ -375,13 +384,13 @@ namespace Dune {
           _children[4] = stackobject_to_shared_ptr(c4);
         }
 
-        template<std::size_t K = 6>
-        PowerNode (typename enable_if<K == CHILDREN,T>::type& c0,
-                   T& c1,
-                   T& c2,
-                   T& c3,
-                   T& c4,
-                   T& c5)
+        template<typename U>
+        PowerNode (typename PowerNodeChildCountCheck<PowerNode,U,6>::type& c0,
+                   U& c1,
+                   U& c2,
+                   U& c3,
+                   U& c4,
+                   U& c5)
         {
           _children[0] = stackobject_to_shared_ptr(c0);
           _children[1] = stackobject_to_shared_ptr(c1);
@@ -391,14 +400,14 @@ namespace Dune {
           _children[5] = stackobject_to_shared_ptr(c5);
         }
 
-        template<std::size_t K = 7>
-        PowerNode (typename enable_if<K == CHILDREN,T>::type& c0,
-                   T& c1,
-                   T& c2,
-                   T& c3,
-                   T& c4,
-                   T& c5,
-                   T& c6)
+        template<typename U>
+        PowerNode (typename PowerNodeChildCountCheck<PowerNode,U,7>::type& c0,
+                   U& c1,
+                   U& c2,
+                   U& c3,
+                   U& c4,
+                   U& c5,
+                   U& c6)
         {
           _children[0] = stackobject_to_shared_ptr(c0);
           _children[1] = stackobject_to_shared_ptr(c1);
@@ -409,15 +418,15 @@ namespace Dune {
           _children[6] = stackobject_to_shared_ptr(c6);
         }
 
-        template<std::size_t K = 8>
-        PowerNode (typename enable_if<K == CHILDREN,T>::type& c0,
-                   T& c1,
-                   T& c2,
-                   T& c3,
-                   T& c4,
-                   T& c5,
-                   T& c6,
-                   T& c7)
+        template<typename U>
+        PowerNode (typename PowerNodeChildCountCheck<PowerNode,U,8>::type& c0,
+                   U& c1,
+                   U& c2,
+                   U& c3,
+                   U& c4,
+                   U& c5,
+                   U& c6,
+                   U& c7)
         {
           _children[0] = stackobject_to_shared_ptr(c0);
           _children[1] = stackobject_to_shared_ptr(c1);
@@ -429,16 +438,16 @@ namespace Dune {
           _children[7] = stackobject_to_shared_ptr(c7);
         }
 
-        template<std::size_t K = 9>
-        PowerNode (typename enable_if<K == CHILDREN,T>::type& c0,
-                   T& c1,
-                   T& c2,
-                   T& c3,
-                   T& c4,
-                   T& c5,
-                   T& c6,
-                   T& c7,
-                   T& c8)
+        template<typename U>
+        PowerNode (typename PowerNodeChildCountCheck<PowerNode,U,9>::type& c0,
+                   U& c1,
+                   U& c2,
+                   U& c3,
+                   U& c4,
+                   U& c5,
+                   U& c6,
+                   U& c7,
+                   U& c8)
         {
           _children[0] = stackobject_to_shared_ptr(c0);
           _children[1] = stackobject_to_shared_ptr(c1);
@@ -451,17 +460,17 @@ namespace Dune {
           _children[8] = stackobject_to_shared_ptr(c8);
         }
 
-        template<std::size_t K = 10>
-        PowerNode (typename enable_if<K == CHILDREN,T>::type& c0,
-                   T& c1,
-                   T& c2,
-                   T& c3,
-                   T& c4,
-                   T& c5,
-                   T& c6,
-                   T& c7,
-                   T& c8,
-                   T& c9)
+        template<typename U>
+        PowerNode (typename PowerNodeChildCountCheck<PowerNode,U,10>::type& c0,
+                   U& c1,
+                   U& c2,
+                   U& c3,
+                   U& c4,
+                   U& c5,
+                   U& c6,
+                   U& c7,
+                   U& c8,
+                   U& c9)
         {
           _children[0] = stackobject_to_shared_ptr(c0);
           _children[1] = stackobject_to_shared_ptr(c1);
