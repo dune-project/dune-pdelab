@@ -573,23 +573,20 @@ namespace Dune {
 
 #else
 
-      template<std::size_t K = 2>
-      PowerGridFunction (typename enable_if<K == BaseT::CHILDREN,T>::type& c0,
+      PowerGridFunction (T& c0,
                          T& c1)
         : BaseT(c0,c1)
       {
       }
 
-      template<std::size_t K = 3>
-      PowerGridFunction (typename enable_if<K == BaseT::CHILDREN,T>::type& c0,
+      PowerGridFunction (T& c0,
                          T& c1,
                          T& c2)
         : BaseT(c0,c1,c2)
       {
       }
 
-      template<std::size_t K = 4>
-      PowerGridFunction (typename enable_if<K == BaseT::CHILDREN,T>::type& c0,
+      PowerGridFunction (T& c0,
                          T& c1,
                          T& c2,
                          T& c3)
@@ -597,8 +594,7 @@ namespace Dune {
       {
       }
 
-      template<std::size_t K = 5>
-      PowerGridFunction (typename enable_if<K == BaseT::CHILDREN,T>::type& c0,
+      PowerGridFunction (T& c0,
                          T& c1,
                          T& c2,
                          T& c3,
@@ -607,8 +603,7 @@ namespace Dune {
       {
       }
 
-      template<std::size_t K = 6>
-      PowerGridFunction (typename enable_if<K == BaseT::CHILDREN,T>::type& c0,
+      PowerGridFunction (T& c0,
                          T& c1,
                          T& c2,
                          T& c3,
@@ -618,8 +613,7 @@ namespace Dune {
       {
       }
 
-      template<std::size_t K = 7>
-      PowerGridFunction (typename enable_if<K == BaseT::CHILDREN,T>::type& c0,
+      PowerGridFunction (T& c0,
                          T& c1,
                          T& c2,
                          T& c3,
@@ -630,8 +624,7 @@ namespace Dune {
       {
       }
 
-      template<std::size_t K = 8>
-      PowerGridFunction (typename enable_if<K == BaseT::CHILDREN,T>::type& c0,
+      PowerGridFunction (T& c0,
                          T& c1,
                          T& c2,
                          T& c3,
@@ -643,8 +636,7 @@ namespace Dune {
       {
       }
 
-      template<std::size_t K = 9>
-      PowerGridFunction (typename enable_if<K == BaseT::CHILDREN,T>::type& c0,
+      PowerGridFunction (T& c0,
                          T& c1,
                          T& c2,
                          T& c3,
@@ -657,8 +649,7 @@ namespace Dune {
       {
       }
 
-      template<std::size_t K = 10>
-      PowerGridFunction (typename enable_if<K == BaseT::CHILDREN,T>::type& c0,
+      PowerGridFunction (T& c0,
                          T& c1,
                          T& c2,
                          T& c3,
