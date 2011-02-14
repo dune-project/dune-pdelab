@@ -24,7 +24,7 @@ namespace Dune {
       enum Type { fullyStatic, mostlyStatic, dynamic };
     }
 
-#if HAVE_VARIADIC_TEMPLATES || !DOXYGEN
+#if HAVE_VARIADIC_TEMPLATES || DOXYGEN
 
     template<std::size_t... i>
     struct TreePath {
