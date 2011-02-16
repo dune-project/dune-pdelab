@@ -63,6 +63,10 @@ int main(int argc, char** argv)
 
   Dune::PDELab::TypeTree::applyToTreePair(svc1_2,svc2_1,PairPrinter());
 
+  typedef Dune::PDELab::TypeTree::TreeInfo<SVC2> TI;
+
+  std::cout << "depth: " << TI::depth << std::endl << "nodes: " << TI::nodeCount << std::endl << "leafs: " << TI::leafCount << std::endl;
+
 #endif
 
 #endif
