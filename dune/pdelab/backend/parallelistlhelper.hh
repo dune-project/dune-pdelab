@@ -25,6 +25,9 @@
 namespace Dune {
   namespace PDELab {
 
+    //! \addtogroup Backend
+    //! \ingroup PDELab
+    //! \{
 
     //========================================================
     // A parallel helper class providing a nonoverlapping
@@ -494,6 +497,8 @@ namespace Dune {
       typedef OwnerOverlapCopyCommunication<bigunsignedint<s>,int> type;
     };
 #endif
+
+    //! \} group Backend
 
   } // namespace PDELab
 } // namespace Dune

@@ -26,6 +26,10 @@
 namespace Dune {
   namespace PDELab {
 
+    //! \addtogroup Backend
+    //! \ingroup PDELab
+    //! \{
+
     template<typename X, typename Y, typename GOS>
     class OnTheFlyOperator : public Dune::LinearOperator<X,Y>
     {
@@ -97,8 +101,8 @@ namespace Dune {
     public:
       /*! \brief make a linear solver object
 
-        \param[in] maxiter maximum number of iterations to do
-        \param[in] verbose print messages if true
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
       */
       explicit ISTLBackend_SEQ_Base(unsigned maxiter_=5000, bool verbose_=true)
         : maxiter(maxiter_), verbose(verbose_)
@@ -131,12 +135,17 @@ namespace Dune {
       unsigned maxiter;
       bool verbose;
     };
-    
+
     template<template<typename> class Solver>
     class ISTLBackend_SEQ_ILU0 
       :  public SequentialNorm, public LinearResultStorage
     {
     public:
+      /*! \brief make a linear solver object
+
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
+      */
       explicit ISTLBackend_SEQ_ILU0 (unsigned maxiter_=5000, int verbose_=1)
         : maxiter(maxiter_), verbose(verbose_)
        {}
@@ -163,65 +172,70 @@ namespace Dune {
       int verbose;
     };
     
+    //! \addtogroup PDELab_seqsolvers Sequential Solvers
+    //! \{
 
+    //! Sequential BiCGStab solver with SSOR preconditioner
     class ISTLBackend_SEQ_BCGS_SSOR
       : public ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::BiCGSTABSolver>
     {
     public:
       /*! \brief make a linear solver object
 
-        \param[in] maxiter maximum number of iterations to do
-        \param[in] verbose print messages if true
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
       */
       explicit ISTLBackend_SEQ_BCGS_SSOR (unsigned maxiter_=5000, bool verbose_=true)
         : ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::BiCGSTABSolver>(maxiter_, verbose_)
       {}
     };
 
+    //! Sequential BiCGStab solver with ILU0 preconditioner
     class ISTLBackend_SEQ_BCGS_ILU0
       : public ISTLBackend_SEQ_ILU0<Dune::BiCGSTABSolver>
     {
     public:
       /*! \brief make a linear solver object
 
-        \param[in] maxiter maximum number of iterations to do
-        \param[in] verbose print messages if true
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
       */
       explicit ISTLBackend_SEQ_BCGS_ILU0 (unsigned maxiter_=5000, int verbose_=1)
         : ISTLBackend_SEQ_ILU0<Dune::BiCGSTABSolver>(maxiter_, verbose_)
       {}
     };
     
-
+    //! Sequential CG solver with ILU0 preconditioner
     class ISTLBackend_SEQ_CG_ILU0
       : public ISTLBackend_SEQ_ILU0<Dune::CGSolver>
     {
     public:
       /*! \brief make a linear solver object
 
-        \param[in] maxiter maximum number of iterations to do
-        \param[in] verbose print messages if true
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
       */
       explicit ISTLBackend_SEQ_CG_ILU0 (unsigned maxiter_=5000, int verbose_=1)
         : ISTLBackend_SEQ_ILU0<Dune::CGSolver>(maxiter_, verbose_)
       {}
     };
 
+    //! Sequential CG solver with SSOR preconditioner
     class ISTLBackend_SEQ_CG_SSOR
       : public ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::CGSolver>
     {
     public:
       /*! \brief make a linear solver object
 
-        \param[in] maxiter maximum number of iterations to do
-        \param[in] verbose print messages if true
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
       */
       explicit ISTLBackend_SEQ_CG_SSOR (unsigned maxiter_=5000, bool verbose_=true)
         : ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::CGSolver>(maxiter_, verbose_)
       {}
     };
     
-
+    //! Sequential SuperLU solver
 #if HAVE_SUPERLU
     class ISTLBackend_SEQ_SuperLU
       : public SequentialNorm, public LinearResultStorage
@@ -229,8 +243,7 @@ namespace Dune {
     public:
       /*! \brief make a linear solver object
 
-        \param[in] maxiter maximum number of iterations to do
-        \param[in] verbose print messages if true
+        \param[in] verbose_ print messages if true
       */
       explicit ISTLBackend_SEQ_SuperLU (bool verbose_=true)
         : verbose(verbose_)
@@ -267,9 +280,6 @@ namespace Dune {
     {
     public:
       /*! \brief make a linear solver object
-
-        \param[in] maxiter maximum number of iterations to do
-        \param[in] verbose print messages if true
       */
       explicit ISTLBackend_SEQ_ExplicitDiagonal ()
       {}
@@ -294,6 +304,8 @@ namespace Dune {
         res.reduction  = reduction;
       }
     };
+
+    //! \} Sequential Solvers
 
     template<class GFS, template<class,class,class,int> class SMI, template<class> class SOI>
     class ISTLBackend_SEQ_AMG
@@ -370,6 +382,9 @@ namespace Dune {
       int verbose;
     };
 
+    //! \addtogroup PDELab_seqsolvers Sequential Solvers
+    //! \{
+
     /**
      * @brief Sequential conjugate gradient solver preconditioned with AMG smoothed by SSOR
      * @tparam GFS The type of the grid functions space.
@@ -382,13 +397,13 @@ namespace Dune {
     public:
       /**
        * @brief Constructor
-       * @param smoothsteps The number of steps to use for both pre and post smoothing.
+       * @param smoothsteps_ The number of steps to use for both pre and post smoothing.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
        */
-      ISTLBackend_SEQ_CG_AMG_SSOR(int smoothsteps=2,
+      ISTLBackend_SEQ_CG_AMG_SSOR(int smoothsteps_=2,
                                   unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSSOR, Dune::CGSolver>(smoothsteps, maxiter_,verbose_)
+        : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSSOR, Dune::CGSolver>(smoothsteps_, maxiter_,verbose_)
       {}
     };
 
@@ -404,16 +419,19 @@ namespace Dune {
     public:
       /**
        * @brief Constructor
-       * @param smoothsteps The number of steps to use for both pre and post smoothing.
+       * @param smoothsteps_ The number of steps to use for both pre and post smoothing.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
        */
-      ISTLBackend_SEQ_BCGS_AMG_SSOR(int smoothsteps=2,
+      ISTLBackend_SEQ_BCGS_AMG_SSOR(int smoothsteps_=2,
                                     unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSSOR, Dune::BiCGSTABSolver>(smoothsteps, maxiter_, verbose_)
+        : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSSOR, Dune::BiCGSTABSolver>(smoothsteps_, maxiter_, verbose_)
       {}
     };
     
+    /**
+     * @brief Sequential BiCGSTAB solver preconditioned with AMG smoothed by SOR     * @tparam GFS The type of the grid functions space.
+     */
     template<class GFS>
     class ISTLBackend_SEQ_BCGS_AMG_SOR
       : public ISTLBackend_SEQ_AMG<GFS, Dune::SeqSOR, Dune::BiCGSTABSolver>
@@ -422,16 +440,20 @@ namespace Dune {
     public:
       /**
        * @brief Constructor
-       * @param smoothsteps The number of steps to use for both pre and post smoothing.
+       * @param smoothsteps_ The number of steps to use for both pre and post smoothing.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
        */
-      ISTLBackend_SEQ_BCGS_AMG_SOR(int smoothsteps=2,
+      ISTLBackend_SEQ_BCGS_AMG_SOR(int smoothsteps_=2,
                                     unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSOR, Dune::BiCGSTABSolver>(smoothsteps, maxiter_, verbose_)
+        : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSOR, Dune::BiCGSTABSolver>(smoothsteps_, maxiter_, verbose_)
       {}
     };
 
+    /**
+     * @brief Sequential Loop solver preconditioned with AMG smoothed by SSOR
+     * @tparam GFS The type of the grid functions space.
+     */
     template<class GFS>
     class ISTLBackend_SEQ_LS_AMG_SSOR
       : public ISTLBackend_SEQ_AMG<GFS, Dune::SeqSSOR, Dune::LoopSolver>
@@ -440,16 +462,20 @@ namespace Dune {
     public:
       /**
        * @brief Constructor
-       * @param smoothsteps The number of steps to use for both pre and post smoothing.
+       * @param smoothsteps_ The number of steps to use for both pre and post smoothing.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
        */
-      ISTLBackend_SEQ_LS_AMG_SSOR(int smoothsteps=2,
+      ISTLBackend_SEQ_LS_AMG_SSOR(int smoothsteps_=2,
                                     unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSSOR, Dune::LoopSolver>(smoothsteps, maxiter_, verbose_)
+        : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSSOR, Dune::LoopSolver>(smoothsteps_, maxiter_, verbose_)
       {}
     };
 
+    /**
+     * @brief Sequential Loop solver preconditioned with AMG smoothed by SOR
+     * @tparam GFS The type of the grid functions space.
+     */
     template<class GFS>
     class ISTLBackend_SEQ_LS_AMG_SOR
       : public ISTLBackend_SEQ_AMG<GFS, Dune::SeqSOR, Dune::LoopSolver>
@@ -458,15 +484,18 @@ namespace Dune {
     public:
       /**
        * @brief Constructor
-       * @param smoothsteps The number of steps to use for both pre and post smoothing.
+       * @param smoothsteps_ The number of steps to use for both pre and post smoothing.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
        */
-      ISTLBackend_SEQ_LS_AMG_SOR(int smoothsteps=2,
+      ISTLBackend_SEQ_LS_AMG_SOR(int smoothsteps_=2,
                                     unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSOR, Dune::LoopSolver>(smoothsteps, maxiter_, verbose_)
+        : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSOR, Dune::LoopSolver>(smoothsteps_, maxiter_, verbose_)
       {}
     };
+
+    //! \} group Sequential Solvers
+    //! \} group Backend
 
   } // namespace PDELab
 } // namespace Dune

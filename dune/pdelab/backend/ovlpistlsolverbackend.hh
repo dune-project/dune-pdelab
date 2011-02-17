@@ -26,6 +26,10 @@
 namespace Dune {
   namespace PDELab {
 
+    //! \addtogroup Backend
+    //! \ingroup PDELab
+    //! \{
+
     //========================================================
     // Generic support for overlapping grids
     // (need to be used with appropriate constraints)
@@ -148,8 +152,6 @@ namespace Dune {
 
       /*!
         \brief Prepare the preconditioner.
-
-        \copydoc Preconditioner::pre(domain_type&,range_type&)
       */
       virtual void pre (domain_type& x, range_type& b)
       {
@@ -158,8 +160,6 @@ namespace Dune {
 
       /*!
         \brief Apply the precondioner.
-
-        \copydoc Preconditioner::apply(domain_type&,const range_type&)
       */
       virtual void apply (domain_type& v, const range_type& d)
       {
@@ -173,8 +173,6 @@ namespace Dune {
 
       /*!
         \brief Clean up.
-
-        \copydoc Preconditioner::post(domain_type&)
       */
       virtual void post (domain_type& x)
       {
@@ -214,9 +212,8 @@ namespace Dune {
       /*! \brief Constructor.
 
         Constructor gets all parameters to operate the prec.
-        \param A The matrix to operate on.
-        \param n The number of iterations to perform.
-        \param w The relaxation factor.
+        \param gfs_ The grid function space.
+        \param A_ The matrix to operate on.
       */
       SuperLUSubdomainSolver (const GFS& gfs_, const M& A_)
         : gfs(gfs_), A(A_), solver(A_,false) // this does the decomposition
@@ -224,15 +221,11 @@ namespace Dune {
 
       /*!
         \brief Prepare the preconditioner.
-
-        \copydoc Preconditioner::pre(X&,Y&)
       */
       virtual void pre (X& x, Y& b) {}
 
       /*!
         \brief Apply the precondioner.
-
-        \copydoc Preconditioner::apply(X&,const Y&)
       */
       virtual void apply (X& v, const Y& d)
       {
@@ -246,8 +239,6 @@ namespace Dune {
 
       /*!
         \brief Clean up.
-
-        \copydoc Preconditioner::post(X&)
       */
       virtual void post (X& x) {}
 
@@ -281,9 +272,9 @@ namespace Dune {
       /*! \brief Constructor.
 
         Constructor gets all parameters to operate the prec.
-        \param A The matrix to operate on.
-        \param n The number of iterations to perform.
-        \param w The relaxation factor.
+        \param gfs_ The grid function space.
+        \param A_ The matrix to operate on.
+        \param helper_ The parallel istl helper.
       */
       RestrictedSuperLUSubdomainSolver (const GFS& gfs_, const M& A_,
                                         const ParallelISTLHelper<GFS>& helper_)
@@ -292,15 +283,11 @@ namespace Dune {
 
       /*!
         \brief Prepare the preconditioner.
-
-        \copydoc Preconditioner::pre(X&,Y&)
       */
       virtual void pre (X& x, Y& b) {}
 
       /*!
         \brief Apply the precondioner.
-
-        \copydoc Preconditioner::apply(X&,const Y&)
       */
       virtual void apply (X& v, const Y& d)
       {
@@ -315,8 +302,6 @@ namespace Dune {
 
       /*!
         \brief Clean up.
-
-        \copydoc Preconditioner::post(X&)
       */
       virtual void post (X& x) {}
 
@@ -405,11 +390,11 @@ namespace Dune {
     public:
       /*! \brief make a linear solver object
 
-        \param[in] gfs a grid function space
-        \param[in] c a constraints object
-        \param[in] maxiter maximum number of iterations to do
-        \param[in] steps number of SSOR steps to apply as inner iteration
-        \param[in] verbose print messages if true
+        \param[in] gfs_ a grid function space
+        \param[in] c_ a constraints object
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] steps_ number of SSOR steps to apply as inner iteration
+        \param[in] verbose_ print messages if true
       */
       explicit ISTLBackend_OVLP_Base (const GFS& gfs_, const C& c_, unsigned maxiter_=5000,
                                             int steps_=5, int verbose_=1)
@@ -452,7 +437,10 @@ namespace Dune {
       int verbose;
     };
     
+    //! \addtogroup PDELab_ovlpsolvers Overlapping Solvers
+    //! \{
 
+    //! \brief Overlapping parallel BiCGStab solver with SSOR preconditioner
     template<class GFS, class C>
     class ISTLBackend_OVLP_BCGS_SSORk
       : public ISTLBackend_OVLP_Base<GFS,C,Dune::SeqSSOR, Dune::BiCGSTABSolver>
@@ -474,6 +462,7 @@ namespace Dune {
       {}
     };
 
+    //! \brief Overlapping parallel CGS solver with SSOR preconditioner
     template<class GFS, class C>
     class ISTLBackend_OVLP_CG_SSORk
       : public ISTLBackend_OVLP_Base<GFS,C,Dune::SeqSSOR, Dune::CGSolver>
@@ -495,6 +484,8 @@ namespace Dune {
       {}
     };
 
+    //! \} Solver    
+
     template<class GFS, class C, template<typename> class Solver>
     class ISTLBackend_OVLP_SuperLU_Base
       : public OVLPScalarProductImplementation<GFS>, public LinearResultStorage
@@ -504,11 +495,10 @@ namespace Dune {
     public:
       /*! \brief make a linear solver object
 
-        \param[in] gfs a grid function space
-        \param[in] c a constraints object
-        \param[in] maxiter maximum number of iterations to do
-        \param[in] kssor number of SSOR steps to apply as inner iteration
-        \param[in] verbose print messages if true
+        \param[in] gfs_ a grid function space
+        \param[in] c_ a constraints object
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
       */
       explicit ISTLBackend_OVLP_SuperLU_Base (const GFS& gfs_, const C& c_, unsigned maxiter_=5000,
                                               int verbose_=1)
@@ -553,6 +543,10 @@ namespace Dune {
       int verbose;
     };
 
+    //! \addtogroup PDELab_ovlpsolvers Overlapping Solvers
+    //! \{
+
+    //! \brief Overlapping parallel BiCGStab solver with SuperLU preconditioner
     template<class GFS, class C>
     class ISTLBackend_OVLP_BCGS_SuperLU
       : public ISTLBackend_OVLP_SuperLU_Base<GFS,C,Dune::BiCGSTABSolver>
@@ -561,11 +555,10 @@ namespace Dune {
       
       /*! \brief make a linear solver object
 
-        \param[in] gfs a grid function space
-        \param[in] c a constraints object
-        \param[in] maxiter maximum number of iterations to do
-        \param[in] kssor number of SSOR steps to apply as inner iteration
-        \param[in] verbose print messages if true
+        \param[in] gfs_ a grid function space
+        \param[in] c_ a constraints object
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
       */
       explicit ISTLBackend_OVLP_BCGS_SuperLU (const GFS& gfs_, const C& c_, unsigned maxiter_=5000,
                                               int verbose_=1)
@@ -573,6 +566,7 @@ namespace Dune {
       {}
     };
     
+    //! Overlapping parallel CG solver with SuperLU preconditioner
     template<class GFS, class C>
     class ISTLBackend_OVLP_CG_SuperLU
       : public ISTLBackend_OVLP_SuperLU_Base<GFS,C,Dune::CGSolver>
@@ -581,11 +575,10 @@ namespace Dune {
       
       /*! \brief make a linear solver object
 
-        \param[in] gfs a grid function space
-        \param[in] c a constraints object
-        \param[in] maxiter maximum number of iterations to do
-        \param[in] kssor number of SSOR steps to apply as inner iteration
-        \param[in] verbose print messages if true
+        \param[in] gfs_ a grid function space
+        \param[in] c_ a constraints object
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
       */
       explicit ISTLBackend_OVLP_CG_SuperLU (const GFS& gfs_, const C& c_, 
                                               unsigned maxiter_=5000,
@@ -603,8 +596,7 @@ namespace Dune {
     public:
       /*! \brief make a linear solver object
 
-        \param[in] maxiter maximum number of iterations to do
-        \param[in] verbose print messages if true
+        \param[in] gfs_ a grid function space
       */
       explicit ISTLBackend_OVLP_ExplicitDiagonal (const GFS& gfs_)
         : gfs(gfs_)
@@ -653,6 +645,7 @@ namespace Dune {
     private:
       const GFS& gfs;
     };
+    //! \} Overlapping Solvers
 
     template<class GFS, int s, template<class,class,class,int> class SMI, template<class> class SOI>
     class ISTLBackend_AMG
@@ -744,8 +737,11 @@ namespace Dune {
       int verbose;
     };
 
+    //! \addtogroup PDELab_ovlpsolvers Overlapping Solvers
+    //! \{
+
     /**
-     * @brief Parallel cojugate gradient solver preconditioned with AMG smoothed by SSOR
+     * @brief Overlapping parallel conjugate gradient solver preconditioned with AMG smoothed by SSOR
      * @tparam GFS The type of the grid functions space.
      * @tparam s The bits to use for the globale index.
      */
@@ -758,18 +754,18 @@ namespace Dune {
       /**
        * @brief Constructor
        * @param gfs_ The grid function space used.
-       * @param smoothsteps The number of steps to use for both pre and post smoothing.
+       * @param smoothsteps_ The number of steps to use for both pre and post smoothing.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
        */
-      ISTLBackend_CG_AMG_SSOR(const GFS& gfs_,int smoothsteps=2,
+      ISTLBackend_CG_AMG_SSOR(const GFS& gfs_,int smoothsteps_=2,
                               unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_AMG<GFS, s, Dune::SeqSSOR, Dune::CGSolver>(gfs_,smoothsteps, maxiter_,verbose_)
+        : ISTLBackend_AMG<GFS, s, Dune::SeqSSOR, Dune::CGSolver>(gfs_,smoothsteps_, maxiter_,verbose_)
       {}
     };
 
     /**
-     * @brief Parallel BiCGStab solver preconditioned with AMG smoothed by SSOR
+     * @brief Overlapping parallel BiCGStab solver preconditioned with AMG smoothed by SSOR
      * @tparam GFS The type of the grid functions space.
      * @tparam s The bits to use for the globale index.
      */
@@ -782,15 +778,19 @@ namespace Dune {
       /**
        * @brief Constructor
        * @param gfs_ The grid function space used.
-       * @param smoothsteps The number of steps to use for both pre and post smoothing.
+       * @param smoothsteps_ The number of steps to use for both pre and post smoothing.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
        */
-      ISTLBackend_BCGS_AMG_SSOR(const GFS& gfs_, int smoothsteps=2,
+      ISTLBackend_BCGS_AMG_SSOR(const GFS& gfs_, int smoothsteps_=2,
                                 unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_AMG<GFS, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>(gfs_,smoothsteps, maxiter_,verbose_)
+        : ISTLBackend_AMG<GFS, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>(gfs_,smoothsteps_, maxiter_,verbose_)
       {}
     };
+
+    //! \} Overlapping Solvers
+    
+    //! \} group Backend
 
   } // namespace PDELab
 } // namespace Dune
