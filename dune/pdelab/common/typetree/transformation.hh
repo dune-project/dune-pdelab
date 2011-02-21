@@ -472,7 +472,8 @@ namespace Dune {
 
         static transformed_storage_type transform_storage(shared_ptr<const EmptyNode> en, const T& t)
         {
-          return const_pointer_cast<transformed_type>(en);
+          //return const_pointer_cast<transformed_type>(en); // Dune built-in shared_ptr does not support this!
+          return emptyNodePtr;
         }
       };
 
