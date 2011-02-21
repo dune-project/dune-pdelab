@@ -307,6 +307,9 @@ check_PROGRAMS += testtypetreetransformation
 testtypetreetransformation_SOURCES = testtypetreetransformation.cc
 testtypetreetransformation_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE
 
+check_PROGRAMS += testinterpolate
+testinterpolate_SOURCES = testinterpolate.cc
+
 include $(top_srcdir)/am/global-rules
 
 DISTCHECK_CONFIGURE_FLAGS = --with-dune=$(DUNEROOT) CXX="$(CXX)" CC="$(CC)"
