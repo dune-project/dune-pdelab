@@ -80,7 +80,7 @@ namespace Dune {
               std::vector<typename XG::ElementType> xl(lfs.child(k).size());
 
               // call interpolate for the basis
-              ib.interpolate(lfs.child(k).finiteElement(), lf, xl);
+              ib.interpolate(lfs.child(k).finiteElement(), localf, xl);
 
               // write coefficients into local vector
               lfs.child(k).vwrite(xl,xg);
