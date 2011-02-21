@@ -53,10 +53,14 @@ struct Counter
 
 int Counter::_ids = 0;
 
+struct SimpleLeafTag {};
+
 struct SimpleLeaf
   : public Dune::PDELab::TypeTree::LeafNode
   , public Counter
 {
+
+  typedef SimpleLeafTag ImplementationTag;
 
   static const char* name()
   {
@@ -73,11 +77,27 @@ struct SimpleLeaf
   }
 };
 
+struct SimpleLeafDerived
+  : public SimpleLeaf
+{
+
+  static const char* name()
+  {
+    return "SimpleLeafDerived";
+  }
+
+};
+
+struct SimplePowerTag {};
+
 template<typename T, std::size_t k>
 struct SimplePower
   : public Dune::PDELab::TypeTree::PowerNode<T,k>
   , public Counter
 {
+
+  typedef SimplePowerTag ImplementationTag;
+
   static const char* name()
   {
     return "SimplePower";
@@ -114,11 +134,15 @@ struct SimplePower
 
 #if HAVE_VARIADIC_TEMPLATES && HAVE_RVALUE_REFERENCES
 
+struct SimpleVariadicCompositeTag {};
+
 template<typename... Children>
 struct SimpleVariadicComposite
   : public Dune::PDELab::TypeTree::VariadicCompositeNode<Children...>
   , public Counter
 {
+
+  typedef SimpleVariadicCompositeTag ImplementationTag;
 
   static const char* name()
   {
