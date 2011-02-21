@@ -17,8 +17,7 @@ namespace Dune
         template<typename GV, typename D, typename R, unsigned int k>
         class Pk3DLocalFiniteElementMap :
             public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits< Dune::Pk3DLocalFiniteElement<D,R,k> >,
-                                                  Pk3DLocalFiniteElementMap<GV,D,R,k> >,
-            public Countable
+                                                  Pk3DLocalFiniteElementMap<GV,D,R,k> >
         {
             typedef Dune::Pk3DLocalFiniteElement<D,R,k> FE;
             typedef typename GV::IndexSet IndexSet;

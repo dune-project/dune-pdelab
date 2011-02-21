@@ -13,13 +13,93 @@
 namespace Dune {
   namespace PDELab {
 
+  namespace TypeTree {
+
+
     //! \addtogroup TreePath
+    //! \ingroup TypeTree
     //! \{
+
+    namespace TreePathType {
+      enum Type { fullyStatic, mostlyStatic, dynamic };
+    }
+
+#if HAVE_VARIADIC_TEMPLATES || DOXYGEN
+
+    template<std::size_t... i>
+    struct TreePath {
+      typedef TreePath ViewType;
+      TreePath view() { return *this; }
+      TreePath mutablePath() { return *this; }
+    };
+
+    template<typename>
+    struct TreePathSize;
+
+    template<std::size_t... i>
+    struct TreePathSize<TreePath<i...> >
+      : public std::integral_constant<std::size_t,
+                                      sizeof...(i)>
+    {};
+
+    template<typename,std::size_t>
+    struct TreePathPushBack;
+
+    template<std::size_t k, std::size_t... i>
+    struct TreePathPushBack<TreePath<i...>,k>
+    {
+      typedef TreePath<i...,k> type;
+    };
+
+    template<typename,std::size_t>
+    struct TreePathPushFront;
+
+    template<std::size_t k, std::size_t... i>
+    struct TreePathPushFront<TreePath<i...>,k>
+    {
+      typedef TreePath<k,i...> type;
+    };
+
+    template<typename>
+    struct TreePathBack;
+
+    template<std::size_t k, std::size_t... i>
+    struct TreePathBack<TreePath<i...,k> >
+      : public std::integral_constant<std::size_t,k>
+    {};
+
+    template<typename>
+    struct TreePathFront;
+
+    template<std::size_t k, std::size_t... i>
+    struct TreePathFront<TreePath<k,i...> >
+      : public std::integral_constant<std::size_t,k>
+    {};
+
+    template<typename>
+    struct TreePathPopBack;
+
+    template<std::size_t k, std::size_t... i>
+    struct TreePathPopBack<TreePath<i...,k> >
+    {
+      typedef TreePath<i...> type;
+    };
+
+    template<typename>
+    struct TreePathPopFront;
+
+    template<std::size_t k, std::size_t... i>
+    struct TreePathPopFront<TreePath<k,i...> >
+    {
+      typedef TreePath<i...> type;
+    };
+
+#else
 
     //! number used a dummy child number, similar to Nil
     /**
-     * \note This should be used directly, it is an implementation detail of
-     *       class TreePath.
+     * \note This should not be used directly, it is an implementation detail
+     *       of class TreePath.
      */
     static const std::size_t noChildIndex = ~std::size_t(0);
 
@@ -63,6 +143,11 @@ namespace Dune {
                          "Only trailing indices my be noChildIndex");
       dune_static_assert(i8 == noChildIndex ? i9 == noChildIndex : true,
                          "Only trailing indices my be noChildIndex");
+
+      typedef TreePath ViewType;
+      TreePath view() { return *this; }
+      TreePath mutablePath() { return *this; }
+
     };
 
     //
@@ -263,10 +348,156 @@ namespace Dune {
     { };
 #endif // DOXYGEN
 
-    //! \} group TreePath
+#endif // HAVE_VARIADIC_TEMPLATES
+
+    //! A TreePath that stores the path of a node as runtime information.
+    class DynamicTreePath
+    {
+
+    public:
+
+      //! Get the size (length) of this path.
+      std::size_t size() const
+      {
+        return _vec.size();
+      }
+
+      //! Get the index value at position pos.
+      std::size_t element(std::size_t pos) const
+      {
+        return _vec[pos];
+      }
+
+      //! Get the last index value.
+      std::size_t back() const
+      {
+        return _vec.back();
+      }
+
+      //! Get the first index value.
+      std::size_t front() const
+      {
+        return _vec.front();
+      }
+
+    protected:
+
+#ifndef DOXYGEN
+
+      typedef std::vector<std::size_t> Vector;
+      Vector& _vec;
+
+      DynamicTreePath(Vector& vec)
+        : _vec(vec)
+      {}
+
+#endif // DOXYGEN
+
+    };
+
+#ifndef DOXYGEN // DynamicTreePath subclasses are implementation details and never exposed to the user
+
+    // This is the object that gets passed around by the traversal algorithm. It
+    // extends the DynamicTreePath with stack-like modifier methods. Note that
+    // it does not yet allocate any storage for the index values. It just uses
+    // the reference to a storage vector of the base class. This implies that all
+    // objects that are copy-constructed from each other share a single index storage!
+    // The reason for this is to avoid differentiating the visitor signature for static
+    // and dynamic traversal: Having very cheap copy-construction for these objects
+    // allows us to pass them by value.
+    class MutableDynamicTreePath
+      : public DynamicTreePath
+    {
+
+    public:
+
+      typedef DynamicTreePath ViewType;
+
+      void push_back(std::size_t v)
+      {
+        _vec.push_back(v);
+      }
+
+      void pop_back()
+      {
+        _vec.pop_back();
+      }
+
+      void set_back(std::size_t v)
+      {
+        _vec.back() = v;
+      }
+
+      DynamicTreePath view()
+      {
+        return *this;
+      }
+
+    protected:
+
+      MutableDynamicTreePath(Vector& vec)
+        : DynamicTreePath(vec)
+      {}
+
+    };
+
+    // DynamicTreePath storage provider.
+    // This objects provides the storage for the DynamicTreePath
+    // during the tree traversal. After construction, it should
+    // not be used directly - the traversal framework uses the
+    // base class returned by calling mutablePath().
+    class MakeableDynamicTreePath
+      : public std::vector<std::size_t>
+       , public MutableDynamicTreePath
+    {
+
+    public:
+
+      MutableDynamicTreePath mutablePath()
+      {
+        return static_cast<MutableDynamicTreePath&>(*this);
+      }
+
+      MakeableDynamicTreePath()
+        : MutableDynamicTreePath(static_cast<std::vector<std::size_t>&>(*this))
+      {
+        reserve(16); // try to avoid reallocations during tree traversal
+      }
+
+    };
+
+    // Factory for creating the right type of TreePath based on the requested
+    // traversal pattern (static or dynamic).
+    template<TreePathType::Type tpType>
+    struct TreePathFactory;
+
+    // Factory for static traversal.
+    template<>
+    struct TreePathFactory<TreePathType::fullyStatic>
+    {
+      static TreePath<> create()
+      {
+        return TreePath<>();
+      }
+    };
+
+    // Factory for dynamic traversal.
+    template<>
+    struct TreePathFactory<TreePathType::dynamic>
+    {
+      static MakeableDynamicTreePath create()
+      {
+        return MakeableDynamicTreePath();
+      }
+    };
+
+#endif // DOXYGEN
+
+    //! \} group TypeTree
+
+  } // namespace TypeTree
 
   } // namespace PDELab
 } //namespace Dune
 
 #endif // DUNE_PDELAB_COMMON_TREEPATH_HH
-

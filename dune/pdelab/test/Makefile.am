@@ -291,6 +291,22 @@ MOSTLYCLEANFILES +=				\
 	s*:vectorwavecached_*.pvtu		\
 	vectorwavecached_*.pvd
 
+check_PROGRAMS += testtypetree testtypetree-no-sfinae testtypetree-no-variadic testtypetree-no-rvalue-refs testtypetree-legacy
+testtypetree_SOURCES = testtypetree.cc
+testtypetree_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE
+testtypetree_no_sfinae_SOURCES = testtypetree.cc
+testtypetree_no_sfinae_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE_NO_SFINAE
+testtypetree_no_variadic_SOURCES = testtypetree.cc
+testtypetree_no_variadic_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE_NO_VARIADIC
+testtypetree_no_rvalue_refs_SOURCES = testtypetree.cc
+testtypetree_no_rvalue_refs_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE_NO_RVALUE_REFERENCES
+testtypetree_legacy_SOURCES = testtypetree.cc
+testtypetree_legacy_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE_LEGACY
+
+check_PROGRAMS += testtypetreetransformation
+testtypetreetransformation_SOURCES = testtypetreetransformation.cc
+testtypetreetransformation_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE
+
 include $(top_srcdir)/am/global-rules
 
 DISTCHECK_CONFIGURE_FLAGS = --with-dune=$(DUNEROOT) CXX="$(CXX)" CC="$(CC)"

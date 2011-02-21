@@ -14,11 +14,9 @@
 
 #include <dune/grid/utility/hierarchicsearch.hh>
 
-#include"countingptr.hh"
-#include"multitypetree.hh"
-#include"cpstoragepolicy.hh"
-#include"vtkexport.hh"
-#include"geometrywrapper.hh"
+#include "typetree.hh"
+#include "vtkexport.hh"
+#include "geometrywrapper.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -35,10 +33,10 @@ namespace Dune {
 	  typedef DF DomainFieldType;
 
 	  //! \brief Enum for domain dimension
-	  enum { 
+	  enum {
 		//! \brief dimension of the domain
-		dimDomain = n 
-	  }; 
+		dimDomain = n
+	  };
 
 	  //! \brief domain type
 	  typedef D DomainType;
@@ -47,10 +45,10 @@ namespace Dune {
 	  typedef RF RangeFieldType;
 
 	  //! \brief Enum for range dimension
-	  enum { 
+	  enum {
 		//! \brief dimension of the range
-		dimRange = m 
-	  }; 
+		dimRange = m
+	  };
 
 	  //! \brief range type
 	  typedef R RangeType;
@@ -63,16 +61,16 @@ namespace Dune {
 	{
 	public:
 	  //! \brief Export type traits
-	  typedef T Traits;  
+	  typedef T Traits;
 
 	  /** \brief Evaluate all basis function at given position
 
-		  Evaluates all shape functions at the given position and returns 
+		  Evaluates all shape functions at the given position and returns
 		  these values in a vector.
 	  */
 	  inline void evaluate (const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
 		asImp().evaluate(x,y);
 	  }
 
@@ -101,6 +99,16 @@ namespace Dune {
       { }
     };
 
+    template<typename GV>
+    struct PowerCompositeGridFunctionTraits
+    {
+      typedef GV GridViewType;
+
+	  //! \brief codim 0 entity
+	  typedef typename GV::Traits::template Codim<0>::Entity ElementType;
+
+    };
+
 	//! traits class holding function signature, same as in local function
 	template<class GV, class RF, int m, class R>
 	struct GridFunctionTraits
@@ -108,12 +116,8 @@ namespace Dune {
 				    		  Dune::FieldVector<typename GV::Grid::ctype,
                                                 GV::dimension>,
 							  RF, m, R>
+      , public PowerCompositeGridFunctionTraits<GV>
 	{
-	  //! \brief Export grid view type in addition
-	  typedef GV GridViewType;
-	  
-	  //! \brief codim 0 entity
-	  typedef typename GV::Traits::template Codim<0>::Entity ElementType;
 	};
 
 	//! a GridFunction maps x in DomainType to y in RangeType
@@ -122,7 +126,7 @@ namespace Dune {
 	{
 	public:
 	  //! \brief Export type traits
-	  typedef T Traits;  
+	  typedef T Traits;
 
 	  /** \brief Evaluate the GridFunction at given position
 
@@ -133,10 +137,10 @@ namespace Dune {
           \param[in]  x The position in entity-local coordinates
           \param[out] y The result of the evaluation
 	  */
-	  inline void evaluate (const typename Traits::ElementType& e, 
+	  inline void evaluate (const typename Traits::ElementType& e,
 							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
 		asImp().evaluate(e,x,y);
 	  }
 
@@ -179,7 +183,7 @@ namespace Dune {
 	{
 	public:
 	  //! \brief Export type traits
-	  typedef T Traits;  
+	  typedef T Traits;
 
 	  /** \brief Evaluate the GridFunction at given position
 
@@ -191,10 +195,10 @@ namespace Dune {
           \param[out] y The result of the evaluation
 	  */
       template<typename I>
-	  inline void evaluate (const IntersectionGeometry<I>& ig, 
+	  inline void evaluate (const IntersectionGeometry<I>& ig,
 							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
 		asImp().evaluate(ig,x,y);
 	  }
 
@@ -211,14 +215,14 @@ namespace Dune {
 
     //! \addtogroup PDELab_FunctionAdapters Function Adapters
     //! \{
-      
+
 	/** \brief make a GridFunction from a Function
      *
      *  \tparam G The GridView type
      *  \tparam T The function type
      */
 	template<typename G, typename T>
-	class FunctionToGridFunctionAdapter : 
+	class FunctionToGridFunctionAdapter :
 	  public GridFunctionInterface<GridFunctionTraits<
 									 G,
 									 typename T::Traits::RangeFieldType,
@@ -242,7 +246,7 @@ namespace Dune {
        (is_same<typename T::Traits::DomainType,
                 typename Traits::DomainType>::value),
        "GridView's and wrapped Functions DomainType don't match");
-	  
+
       /** \brief Create a FunctionToGridFunctionAdapter
        *
        *  \param g_ The GridView
@@ -253,7 +257,7 @@ namespace Dune {
 	  inline void evaluate (const typename Traits::ElementType& e,
 							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
 		t.evaluate(e.geometry().global(x),y);
 	  }
 
@@ -287,7 +291,7 @@ namespace Dune {
 
 	  /** \brief Evaluate all basis function at given position
 
-		  Evaluates all shape functions at the given position and returns 
+		  Evaluates all shape functions at the given position and returns
 		  these values in a vector.
 	  */
 	  inline void evaluate (const typename Traits::DomainType& x,
@@ -311,7 +315,7 @@ namespace Dune {
      *  \tparam E Type of the grid's element
      */
 	template<typename T, typename E>
-	class GlobalFunctionToLocalFunctionAdapter : 
+	class GlobalFunctionToLocalFunctionAdapter :
 	  public FunctionInterface<typename T::Traits,
 							   GlobalFunctionToLocalFunctionAdapter<T,E> >
 	{
@@ -324,7 +328,7 @@ namespace Dune {
        *  \param e_ Grid's element where the local function is defined
        */
 	  GlobalFunctionToLocalFunctionAdapter (const T& t_, const E& e_) : t(t_), e(e_) {}
-	  
+
 	  /** \brief Evaluate the local function at the given position
 
           \param[in]  x The position in local coordinates
@@ -332,7 +336,7 @@ namespace Dune {
 	  */
 	  inline void evaluate (const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
 		t.evaluate(e.geometry().global(x),y);
 	  }
 
@@ -347,7 +351,7 @@ namespace Dune {
      *  \tparam T type of the GridFunction
      */
 	template<typename T> // T: GridFunction, E: Entity
-	class GridFunctionToLocalFunctionAdapter : 
+	class GridFunctionToLocalFunctionAdapter :
 	  public FunctionInterface<typename T::Traits,
 							   GridFunctionToLocalFunctionAdapter<T> >
 	{
@@ -359,8 +363,8 @@ namespace Dune {
        *  \param t_ GridFunction
        *  \param e_ Grid's element where the local function is defined
        */
-	  GridFunctionToLocalFunctionAdapter (const T& t_, 
-										  const typename Traits::ElementType& e_) 
+	  GridFunctionToLocalFunctionAdapter (const T& t_,
+										  const typename Traits::ElementType& e_)
 		: t(t_), e(e_) {}
 
 	  /** \brief Evaluate the local function at the given position
@@ -370,7 +374,7 @@ namespace Dune {
 	  */
 	  inline void evaluate (const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
 		t.evaluate(e,x,y);
 	  }
 
@@ -387,18 +391,18 @@ namespace Dune {
       typedef FunctionInterface<FunctionTraits<typename T::Traits::DomainFieldType,T::Traits::dimDomain,typename T::Traits::DomainType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> > , SelectComponentAdapter<T> > BaseT;
 	public:
 	  //! \brief Export type traits
-	  typedef typename BaseT::Traits Traits;  
+	  typedef typename BaseT::Traits Traits;
 
       SelectComponentAdapter (const T& t_, int k_) : t(t_), k(k_) {}
 
 	  /** \brief Evaluate all basis function at given position
 
-		  Evaluates all shape functions at the given position and returns 
+		  Evaluates all shape functions at the given position and returns
 		  these values in a vector.
 	  */
 	  inline void evaluate (const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
         typename T::Traits::RangeType Y;
         t.evaluate(x,Y);
         y = Y[k];
@@ -417,32 +421,32 @@ namespace Dune {
 
 	//! Takes a BoundaryGridFunction and acts as a single component
 	template<class T>
-	class BoundaryGridFunctionSelectComponentAdapter 
-      : public BoundaryGridFunctionInterface<BoundaryGridFunctionTraits<typename T::Traits::GridViewType, 
+	class BoundaryGridFunctionSelectComponentAdapter
+      : public BoundaryGridFunctionInterface<BoundaryGridFunctionTraits<typename T::Traits::GridViewType,
                                                                         typename T::Traits::RangeFieldType,1,
-                                                                        Dune::FieldVector<typename T::Traits::RangeFieldType,1> > , 
+                                                                        Dune::FieldVector<typename T::Traits::RangeFieldType,1> > ,
                                              BoundaryGridFunctionSelectComponentAdapter<T> >
 	{
-      typedef BoundaryGridFunctionInterface<BoundaryGridFunctionTraits<typename T::Traits::GridViewType, 
+      typedef BoundaryGridFunctionInterface<BoundaryGridFunctionTraits<typename T::Traits::GridViewType,
                                                                        typename T::Traits::RangeFieldType,1,
-                                                                       Dune::FieldVector<typename T::Traits::RangeFieldType,1> > , 
+                                                                       Dune::FieldVector<typename T::Traits::RangeFieldType,1> > ,
                                             BoundaryGridFunctionSelectComponentAdapter<T> > BaseT;
     public:
 	  //! \brief Export type traits
-	  typedef typename BaseT::Traits Traits;  
+	  typedef typename BaseT::Traits Traits;
 
       BoundaryGridFunctionSelectComponentAdapter (const T& t_, int k_) : t(t_), k(k_) {}
 
 	  /** \brief Evaluate all basis function at given position
 
-		  Evaluates all shape functions at the given position and returns 
+		  Evaluates all shape functions at the given position and returns
 		  these values in a vector.
 	  */
       template<typename I>
-	  inline void evaluate (const IntersectionGeometry<I>& ig, 
+	  inline void evaluate (const IntersectionGeometry<I>& ig,
 							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
         typename T::Traits::RangeType Y;
         t.evaluate(ig,x,Y);
         y = Y[k];
@@ -484,9 +488,9 @@ namespace Dune {
      *              GridFunctionBase in some way (Barton-Nackman-Trick).
      */
 	template<class T, class Imp>
-	class GridFunctionBase : public GridFunctionInterface<T,Imp>, 
-							 public Countable, 
-							 public LeafNode
+	class GridFunctionBase
+      : public GridFunctionInterface<T,Imp>
+      , public TypeTree::LeafNode
 	{
 	public:
       //! Type of the GridView
@@ -503,15 +507,16 @@ namespace Dune {
      *              GridFunctionBase in some way (Barton-Nackman-Trick).
      */
 	template<class T, class Imp>
-	class BoundaryGridFunctionBase : public BoundaryGridFunctionInterface<T,Imp>, 
-							 public Countable, 
-							 public LeafNode
+	class BoundaryGridFunctionBase
+      : public BoundaryGridFunctionInterface<T,Imp>
+      , public TypeTree::LeafNode
 	{
 	public:
       //! Type of the GridView
 	  typedef typename T::GridViewType GridViewType;
 	};
 
+    struct PowerGridFunctionTag {};
 
 	/** \brief product of identical functions
      *
@@ -520,16 +525,25 @@ namespace Dune {
      *  \tparam T The type of the children of this node in the tree.
      *  \tparam k The number of children this node has.
      */
-	template<class T, int k>
-	class PowerGridFunction : public PowerNode<T,k,CountingPointerStoragePolicy>,
-							  public Countable
+	template<class T, std::size_t k>
+	class PowerGridFunction
+      : public TypeTree::PowerNode<T,k>
 	{
+
+      typedef TypeTree::PowerNode<T,k> BaseT;
+
 	public:
+
+      typedef PowerCompositeGridFunctionTraits<typename T::GridViewType> Traits;
+
+      typedef PowerGridFunctionTag ImplementationTag;
+
       //! record the GridView
 	  typedef typename T::GridViewType GridViewType;
 
       //! Construct a PowerGridFunction with k clones of the function t
-	  PowerGridFunction (T& t) : PowerNode<T,k,CountingPointerStoragePolicy>(t) {}
+	  PowerGridFunction (T& t)
+        : BaseT(t) {}
 
       /** \brief Initialize all children with different function objects
        *
@@ -540,7 +554,7 @@ namespace Dune {
        *           used to initialize the first child, the second pointer for
        *           the second child and so on.
        */
-	  PowerGridFunction (T** t) : PowerNode<T,k,CountingPointerStoragePolicy>(t) {}
+	  // TODO: PowerGridFunction (T** t) : ...
 
 #ifdef DOXYGEN
       /** \brief Initialize all children with different function objects
@@ -556,146 +570,103 @@ namespace Dune {
       PowerGridFunction (T& t0, T& t1, ...)
       {
       }
+
+#else
+
+      PowerGridFunction (T& c0,
+                         T& c1)
+        : BaseT(c0,c1)
+      {
+      }
+
+      PowerGridFunction (T& c0,
+                         T& c1,
+                         T& c2)
+        : BaseT(c0,c1,c2)
+      {
+      }
+
+      PowerGridFunction (T& c0,
+                         T& c1,
+                         T& c2,
+                         T& c3)
+        : BaseT(c0,c1,c2,c3)
+      {
+      }
+
+      PowerGridFunction (T& c0,
+                         T& c1,
+                         T& c2,
+                         T& c3,
+                         T& c4)
+        : BaseT(c0,c1,c2,c3,c4)
+      {
+      }
+
+      PowerGridFunction (T& c0,
+                         T& c1,
+                         T& c2,
+                         T& c3,
+                         T& c4,
+                         T& c5)
+        : BaseT(c0,c1,c2,c3,c4,c5)
+      {
+      }
+
+      PowerGridFunction (T& c0,
+                         T& c1,
+                         T& c2,
+                         T& c3,
+                         T& c4,
+                         T& c5,
+                         T& c6)
+        : BaseT(c0,c1,c2,c3,c4,c5,c6)
+      {
+      }
+
+      PowerGridFunction (T& c0,
+                         T& c1,
+                         T& c2,
+                         T& c3,
+                         T& c4,
+                         T& c5,
+                         T& c6,
+                         T& c7)
+        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7)
+      {
+      }
+
+      PowerGridFunction (T& c0,
+                         T& c1,
+                         T& c2,
+                         T& c3,
+                         T& c4,
+                         T& c5,
+                         T& c6,
+                         T& c7,
+                         T& c8)
+        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8)
+      {
+      }
+
+      PowerGridFunction (T& c0,
+                         T& c1,
+                         T& c2,
+                         T& c3,
+                         T& c4,
+                         T& c5,
+                         T& c6,
+                         T& c7,
+                         T& c8,
+                         T& c9)
+        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8,c9)
+      {
+      }
+
 #endif // DOXYGEN
 	};
 
-#ifndef DOXYGEN
-    // for k=2
-	template<class T>
-	class PowerGridFunction<T,2> : public PowerNode<T,2,CountingPointerStoragePolicy>,
-								   public Countable
-	{
-	public:
-	  typedef typename T::GridViewType GridViewType;
-
-	  PowerGridFunction (T& t) 
-		: PowerNode<T,2,CountingPointerStoragePolicy>(t) 
-	  {}
-
-	  PowerGridFunction (T& t0, T& t1) 
-		: PowerNode<T,2,CountingPointerStoragePolicy>(t0,t1) 
-	  {}
-	};
-
-    // for k=3
-	template<class T>
-	class PowerGridFunction<T,3> : public PowerNode<T,3,CountingPointerStoragePolicy>,
-								   public Countable
-	{
-	public:
-	  typedef typename T::GridViewType GridViewType;
-
-	  PowerGridFunction (T& t) 
-		: PowerNode<T,3,CountingPointerStoragePolicy>(t) 
-	  {}
-
-	  PowerGridFunction (T& t0, T& t1, T& t2) 
-		: PowerNode<T,3,CountingPointerStoragePolicy>(t0,t1,t2) 
-	  {}
-	};
-
-    // for k=4
-	template<class T>
-	class PowerGridFunction<T,4> : public PowerNode<T,4,CountingPointerStoragePolicy>,
-								   public Countable
-	{
-	public:
-	  typedef typename T::GridViewType GridViewType;
-
-	  PowerGridFunction (T& t) 
-		: PowerNode<T,4,CountingPointerStoragePolicy>(t) 
-	  {}
-
-	  PowerGridFunction (T& t0, T& t1, T& t2, T& t3) 
-		: PowerNode<T,4,CountingPointerStoragePolicy>(t0,t1,t2,t3) 
-	  {}
-	};
-
-    // for k=5
-	template<class T>
-	class PowerGridFunction<T,5> : public PowerNode<T,5,CountingPointerStoragePolicy>,
-								   public Countable
-	{
-	public:
-	  typedef typename T::GridViewType GridViewType;
-
-	  PowerGridFunction (T& t) 
-		: PowerNode<T,5,CountingPointerStoragePolicy>(t) 
-	  {}
-
-	  PowerGridFunction (T& t0, T& t1, T& t2, T& t3, T& t4) 
-		: PowerNode<T,5,CountingPointerStoragePolicy>(t0,t1,t2,t3,t4) 
-	  {}
-	};
-
-    // for k=6
-	template<class T>
-	class PowerGridFunction<T,6> : public PowerNode<T,6,CountingPointerStoragePolicy>,
-								   public Countable
-	{
-	public:
-	  typedef typename T::GridViewType GridViewType;
-
-	  PowerGridFunction (T& t) 
-		: PowerNode<T,6,CountingPointerStoragePolicy>(t) 
-	  {}
-
-	  PowerGridFunction (T& t0, T& t1, T& t2, T& t3, T& t4, T& t5) 
-		: PowerNode<T,6,CountingPointerStoragePolicy>(t0,t1,t2,t3,t4,t5) 
-	  {}
-	};
-
-    // for k=7
-	template<class T>
-	class PowerGridFunction<T,7> : public PowerNode<T,7,CountingPointerStoragePolicy>,
-								   public Countable
-	{
-	public:
-	  typedef typename T::GridViewType GridViewType;
-
-	  PowerGridFunction (T& t) 
-		: PowerNode<T,7,CountingPointerStoragePolicy>(t) 
-	  {}
-
-	  PowerGridFunction (T& t0, T& t1, T& t2, T& t3, T& t4, T& t5, T& t6) 
-		: PowerNode<T,7,CountingPointerStoragePolicy>(t0,t1,t2,t3,t4,t5,t6) 
-	  {}
-	};
-
-    // for k=8
-	template<class T>
-	class PowerGridFunction<T,8> : public PowerNode<T,8,CountingPointerStoragePolicy>,
-								   public Countable
-	{
-	public:
-	  typedef typename T::GridViewType GridViewType;
-
-	  PowerGridFunction (T& t) 
-		: PowerNode<T,8,CountingPointerStoragePolicy>(t) 
-	  {}
-
-	  PowerGridFunction (T& t0, T& t1, T& t2, T& t3, T& t4, T& t5, T& t6, T& t7) 
-		: PowerNode<T,8,CountingPointerStoragePolicy>(t0,t1,t2,t3,t4,t5,t6,t7) 
-	  {}
-	};
-
-    // for k=9
-	template<class T>
-	class PowerGridFunction<T,9> : public PowerNode<T,9,CountingPointerStoragePolicy>,
-								   public Countable
-	{
-	  typedef typename T::GridViewType GridViewType;
-
-	public:
-	  PowerGridFunction (T& t) 
-		: PowerNode<T,9,CountingPointerStoragePolicy>(t) 
-	  {}
-
-	  PowerGridFunction (T& t0, T& t1, T& t2, T& t3, T& t4, T& t5, T& t6, T& t7, T& t8) 
-		: PowerNode<T,9,CountingPointerStoragePolicy>(t0,t1,t2,t3,t4,t5,t6,t7,t8) 
-	  {}
-	};
-#endif
+    struct CompositeGridFunctionTag {};
 
     /** \brief composite functions
      *
@@ -706,39 +677,26 @@ namespace Dune {
      *             unused.  Currently, up to 9 slots are supported, making 8
      *             the maximum n.
      */
-	template<typename T0, typename T1, typename T2=EmptyChild, typename T3=EmptyChild,
-			 typename T4=EmptyChild, typename T5=EmptyChild, typename T6=EmptyChild,
-			 typename T7=EmptyChild, typename T8=EmptyChild>
+	template<DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
 	class CompositeGridFunction
-	  : public CompositeNode<CountingPointerStoragePolicy,T0,T1,T2,T3,T4,T5,T6,T7,T8>,
-		public Countable
+	  : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
 	{
-	public:
-      //! record the GridView
-	  typedef typename T0::GridViewType GridViewType;
 
-	  CompositeGridFunction (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, 
-							 T5& t5, T6& t6, T7& t7, T8& t8)
-		: CompositeNode<CountingPointerStoragePolicy,
-						T0,T1,T2,T3,T4,T5,T6,T7,T8>(t0,t1,t2,t3,t4,t5,t6,t7,t8)
+      typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE BaseT;
+
+	public:
+
+      typedef CompositeGridFunctionTag ImplementationTag;
+
+      typedef PowerCompositeGridFunctionTraits<typename BaseT::template Child<0>::Type::GridViewType> Traits;
+
+      //! record the GridView
+	  typedef typename BaseT::template Child<0>::Type::GridViewType GridViewType;
+
+	  CompositeGridFunction (DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
+		: BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename BaseT::template Child<0>::Type>))
 	  {
-		dune_static_assert((is_same<typename T0::GridViewType,typename T1::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T2::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T3::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T4::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T5::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T6::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T7::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T8::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-	  } 
+	  }
 
 #ifdef DOXYGEN
       /** \brief Initialize all children
@@ -754,208 +712,6 @@ namespace Dune {
 #endif //DOXYGEN
 	};
 
-
-#ifndef DOXYGEN
-	template<typename T0, typename T1> // 2 children
-	class CompositeGridFunction<T0,T1,EmptyChild,EmptyChild,EmptyChild,
-								EmptyChild,EmptyChild,EmptyChild,EmptyChild>
-	  : public CompositeNode<CountingPointerStoragePolicy,
-							 T0,T1,EmptyChild,EmptyChild,EmptyChild,
-							 EmptyChild,EmptyChild,EmptyChild,EmptyChild>,
-		public Countable
-
-	{
-	public:
-	  typedef typename T0::GridViewType GridViewType;
-
-	  CompositeGridFunction (T0& t0, T1& t1)
-		: CompositeNode<CountingPointerStoragePolicy,
-						T0,T1,EmptyChild,EmptyChild,EmptyChild,
-						EmptyChild,EmptyChild,EmptyChild,EmptyChild>(t0,t1)
-	  {
-		dune_static_assert((is_same<typename T0::GridViewType,typename T1::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-	  } 
-	};
-	
-	template<typename T0, typename T1, typename T2> // 3 children
-	class CompositeGridFunction<T0,T1,T2,EmptyChild,EmptyChild,
-								EmptyChild,EmptyChild,EmptyChild,EmptyChild>
-	  : public CompositeNode<CountingPointerStoragePolicy,
-							 T0,T1,T2,EmptyChild,EmptyChild,
-							 EmptyChild,EmptyChild,EmptyChild,EmptyChild>,
-		public Countable
-
-	{
-	public:
-	  typedef typename T0::GridViewType GridViewType;
-
-	  CompositeGridFunction (T0& t0, T1& t1, T2& t2)
-		: CompositeNode<CountingPointerStoragePolicy,
-						T0,T1,T2,EmptyChild,EmptyChild,
-						EmptyChild,EmptyChild,EmptyChild,EmptyChild>(t0,t1,t2)
-	  {
-		dune_static_assert((is_same<typename T0::GridViewType,typename T1::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T2::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-	  } 
-	};
-	
-	template<typename T0, typename T1, typename T2, typename T3> // 4 children
-	class CompositeGridFunction<T0,T1,T2,T3,EmptyChild,
-								EmptyChild,EmptyChild,EmptyChild,EmptyChild>
-	  : public CompositeNode<CountingPointerStoragePolicy,
-							 T0,T1,T2,T3,EmptyChild,
-							 EmptyChild,EmptyChild,EmptyChild,EmptyChild>,
-		public Countable
-
-	{
-	public:
-	  typedef typename T0::GridViewType GridViewType;
-
-	  CompositeGridFunction (T0& t0, T1& t1, T2& t2, T3& t3)
-		: CompositeNode<CountingPointerStoragePolicy,
-						T0,T1,T2,T3,EmptyChild,
-						EmptyChild,EmptyChild,EmptyChild,EmptyChild>(t0,t1,t2,t3)
-	  {
-		dune_static_assert((is_same<typename T0::GridViewType,typename T1::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T2::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T3::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-	  } 
-	};
-	
-	template<typename T0, typename T1, typename T2, typename T3, typename T4> // 5 children
-	class CompositeGridFunction<T0,T1,T2,T3,T4,
-								EmptyChild,EmptyChild,EmptyChild,EmptyChild>
-	  : public CompositeNode<CountingPointerStoragePolicy,
-							 T0,T1,T2,T3,T4,
-							 EmptyChild,EmptyChild,EmptyChild,EmptyChild>,
-		public Countable
-
-	{
-	public:
-	  typedef typename T0::GridViewType GridViewType;
-
-	  CompositeGridFunction (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4)
-		: CompositeNode<CountingPointerStoragePolicy,
-						T0,T1,T2,T3,T4,
-						EmptyChild,EmptyChild,EmptyChild,EmptyChild>(t0,t1,t2,t3,t4)
-	  {
-		dune_static_assert((is_same<typename T0::GridViewType,typename T1::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T2::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T3::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T4::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-	  } 
-	};
-	
-	template<typename T0, typename T1, typename T2, typename T3, typename T4,
-			 typename T5> // 6 children
-	class CompositeGridFunction<T0,T1,T2,T3,T4,
-								T5,EmptyChild,EmptyChild,EmptyChild>
-	  : public CompositeNode<CountingPointerStoragePolicy,
-							 T0,T1,T2,T3,T4,
-							 T5,EmptyChild,EmptyChild,EmptyChild>,
-		public Countable
-
-	{
-	public:
-	  typedef typename T0::GridViewType GridViewType;
-
-	  CompositeGridFunction (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5)
-		: CompositeNode<CountingPointerStoragePolicy,
-						T0,T1,T2,T3,T4,
-						T5,EmptyChild,EmptyChild,EmptyChild>(t0,t1,t2,t3,t4,t5)
-	  {
-		dune_static_assert((is_same<typename T0::GridViewType,typename T1::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T2::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T3::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T4::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T5::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-	  } 
-	};
-	
-	template<typename T0, typename T1, typename T2, typename T3, typename T4,
-			 typename T5, typename T6> // 7 children
-	class CompositeGridFunction<T0,T1,T2,T3,T4,
-								T5,T6,EmptyChild,EmptyChild>
-	  : public CompositeNode<CountingPointerStoragePolicy,
-							 T0,T1,T2,T3,T4,
-							 T5,T6,EmptyChild,EmptyChild>,
-		public Countable
-
-	{
-	public:
-	  typedef typename T0::GridViewType GridViewType;
-
-	  CompositeGridFunction (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6)
-		: CompositeNode<CountingPointerStoragePolicy,
-						T0,T1,T2,T3,T4,
-						T5,T6,EmptyChild,EmptyChild>(t0,t1,t2,t3,t4,t5,t6)
-	  {
-		dune_static_assert((is_same<typename T0::GridViewType,typename T1::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T2::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T3::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T4::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T5::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T6::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-	  } 
-	};
-	
-	template<typename T0, typename T1, typename T2, typename T3, typename T4,
-			 typename T5, typename T6, typename T7> // 8 children
-	class CompositeGridFunction<T0,T1,T2,T3,T4,
-								T5,T6,T7,EmptyChild>
-	  : public CompositeNode<CountingPointerStoragePolicy,
-							 T0,T1,T2,T3,T4,
-							 T5,T6,T7,EmptyChild>,
-		public Countable
-
-	{
-	public:
-	  typedef typename T0::GridViewType GridViewType;
-
-	  CompositeGridFunction (T0& t0, T1& t1, T2& t2, T3& t3, T4& t4, T5& t5, T6& t6, T7& t7)
-		: CompositeNode<CountingPointerStoragePolicy,
-						T0,T1,T2,T3,T4,
-						T5,T6,T7,EmptyChild>(t0,t1,t2,t3,t4,t5,t6,t7)
-	  {
-		dune_static_assert((is_same<typename T0::GridViewType,typename T1::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T2::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T3::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T4::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T5::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T6::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-		dune_static_assert((is_same<typename T0::GridViewType,typename T7::GridViewType>::value),  
-						   "GridViewType must be equal in all components of composite grid function");
-	  } 
-	};
-#endif
-	
     //========================================================
     // helper template to turn an ordinary GridFunction into a
     // GridFunctionTree leaf
@@ -1011,7 +767,7 @@ namespace Dune {
 
 	//! function signature for analytic functions on a grid
 	template<typename GV, typename RF, int m>
-	struct AnalyticGridFunctionTraits 
+	struct AnalyticGridFunctionTraits
 	  : public GridFunctionTraits<GV, RF, m, Dune::FieldVector<RF,m> >
 	{
 	};
@@ -1029,7 +785,7 @@ namespace Dune {
      *              (Barton-Nackman-Trick).
      */
 	template<typename T, typename Imp>
-	class AnalyticGridFunctionBase 
+	class AnalyticGridFunctionBase
 	  : public GridFunctionBase<T,AnalyticGridFunctionBase<T,Imp> >
 	{
 	public:
@@ -1039,10 +795,10 @@ namespace Dune {
 	  AnalyticGridFunctionBase (const typename Traits::GridViewType& g_) : g(g_) {}
 
       //! \copydoc GridFunctionBase::evaluate()
-	  inline void evaluate (const typename Traits::ElementType& e, 
-							const typename Traits::DomainType& x, 
+	  inline void evaluate (const typename Traits::ElementType& e,
+							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
 		asImp().evaluateGlobal(e.geometry().global(x),y);
 	  }
 
@@ -1050,7 +806,7 @@ namespace Dune {
 	  {
 		return g;
 	  }
-  
+
 	private:
 	  const typename Traits::GridViewType& g;
 	  Imp& asImp () {return static_cast<Imp &> (*this);}
@@ -1059,26 +815,30 @@ namespace Dune {
 
 
     // Adapter takes a vector-valued grid function and provides evaluation
-    // of normal flux on the interior of faces. 
+    // of normal flux on the interior of faces.
     template<typename T>
     class NormalFluxGridFunctionAdapter
-      : public Dune::PDELab::GridFunctionInterface<Dune::PDELab::GridFunctionTraits<typename T::Traits::GridViewType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> >,
-                                                   NormalFluxGridFunctionAdapter<T> >,
-                                                                                     public Dune::PDELab::LeafNode, public Dune::PDELab::Countable
+      : public Dune::PDELab::GridFunctionInterface<Dune::PDELab::GridFunctionTraits<typename T::Traits::GridViewType,
+                                                                                    typename T::Traits::RangeFieldType,
+                                                                                    1,
+                                                                                    Dune::FieldVector<typename T::Traits::RangeFieldType,1>
+                                                                                    >,
+                                                   NormalFluxGridFunctionAdapter<T> >
+      , public TypeTree::LeafNode
     {
     public:
       typedef Dune::PDELab::GridFunctionTraits<typename T::Traits::GridViewType,typename T::Traits::RangeFieldType,1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> > Traits;
       typedef Dune::PDELab::GridFunctionInterface<Traits,NormalFluxGridFunctionAdapter<T> > BaseT;
 
-      NormalFluxGridFunctionAdapter (const T& t_) : t(&t_) {}
+      NormalFluxGridFunctionAdapter (const T& t_) : t(stackobject_to_shared_ptr(t_)) {}
 
 
-      inline void evaluate (const typename Traits::ElementType& e, 
+      inline void evaluate (const typename Traits::ElementType& e,
                             const typename Traits::DomainType& x,
                             typename Traits::RangeType& y) const
-      {  
+      {
         // ensure correct size
-        dune_static_assert((static_cast<int>(T::Traits::GridViewType::dimension)==static_cast<int>(T::Traits::dimRange)),"number of components must equal dimension"); 
+        dune_static_assert((static_cast<int>(T::Traits::GridViewType::dimension)==static_cast<int>(T::Traits::dimRange)),"number of components must equal dimension");
 
         // evaluate velocity
         typename T::Traits::RangeType v;
@@ -1086,7 +846,7 @@ namespace Dune {
 
         // implementation only handles triangles so far
         if (!e.geometry().type().isTriangle())
-          DUNE_THROW(Dune::NotImplemented, "only implemented for triangles"); 
+          DUNE_THROW(Dune::NotImplemented, "only implemented for triangles");
 
         // start and end corner in local numbering
         int n0, n1;
@@ -1094,7 +854,7 @@ namespace Dune {
         typename Traits::DomainType nu;
 
         // determine outer unit normal
-        if (std::abs(x[0])<1E-10) 
+        if (std::abs(x[0])<1E-10)
           {
             // edge 1
             n0 = 2;
@@ -1103,7 +863,7 @@ namespace Dune {
             nu = e.geometry().corner(n1);
             nu -= e.geometry().corner(n0);
             typename Traits::DomainFieldType temp = nu[0];
-            nu[0] = nu[1]; 
+            nu[0] = nu[1];
             nu[1] = -temp;
             nu /= nu.two_norm();
             y = v[0]*nu[0]+v[1]*nu[1];
@@ -1111,7 +871,7 @@ namespace Dune {
           }
 
         if (std::abs(x[1])<1E-10)
-          { 
+          {
             // edge 2
             n0 = 0;
             n1 = 1;
@@ -1119,7 +879,7 @@ namespace Dune {
             nu = e.geometry().corner(n1);
             nu -= e.geometry().corner(n0);
             typename Traits::DomainFieldType temp = nu[0];
-            nu[0] = nu[1]; 
+            nu[0] = nu[1];
             nu[1] = -temp;
             nu /= nu.two_norm();
             y = v[0]*nu[0]+v[1]*nu[1];
@@ -1127,7 +887,7 @@ namespace Dune {
           }
 
         if (std::abs(x[0]+x[1]-1.0)<1E-10)
-          { 
+          {
             // edge 0
             n0 = 1;
             n1 = 2;
@@ -1135,14 +895,14 @@ namespace Dune {
             nu = e.geometry().corner(n1);
             nu -= e.geometry().corner(n0);
             typename Traits::DomainFieldType temp = nu[0];
-            nu[0] = nu[1]; 
+            nu[0] = nu[1];
             nu[1] = -temp;
             nu /= nu.two_norm();
             y = v[0]*nu[0]+v[1]*nu[1];
             return;
           }
-          
-        DUNE_THROW(Dune::Exception, "x needs to be on an edge"); 
+
+        DUNE_THROW(Dune::Exception, "x needs to be on an edge");
       }
 
       //! get a reference to the GridView
@@ -1152,28 +912,28 @@ namespace Dune {
       }
 
     private:
-      CountingPointer<T const> t;
+      shared_ptr<T const> t;
     };
 
     // Adapter takes a vector-valued grid function and applies
     // backward Piola transformation on each element
     template<typename T>
     class PiolaBackwardAdapter
-      : public Dune::PDELab::GridFunctionInterface<typename T::Traits,PiolaBackwardAdapter<T> >,
-        public Dune::PDELab::LeafNode, public Dune::PDELab::Countable
+      : public Dune::PDELab::GridFunctionInterface<typename T::Traits,PiolaBackwardAdapter<T> >
+      , public TypeTree::LeafNode
     {
     public:
       typedef typename T::Traits::GridViewType GridViewType;
       typedef typename T::Traits Traits;
       typedef Dune::PDELab::GridFunctionInterface<Traits,PiolaBackwardAdapter<T> > BaseT;
 
-      PiolaBackwardAdapter (const T& t_) : t(&t_) {}
+      PiolaBackwardAdapter (const T& t_) : t(stackobject_to_shared_ptr(t_)) {}
 
 
-      inline void evaluate (const typename Traits::ElementType& e, 
+      inline void evaluate (const typename Traits::ElementType& e,
                             const typename Traits::DomainType& x,
                             typename Traits::RangeType& y) const
-      {  
+      {
         // evaluate velocity
         typename T::Traits::RangeType v;
         t->evaluate(e,x,v);
@@ -1193,7 +953,7 @@ namespace Dune {
       }
 
     private:
-      CountingPointer<T const> t;
+      shared_ptr<T const> t;
     };
 
 
@@ -1201,32 +961,43 @@ namespace Dune {
 	// template metaprograms
 	//==========================
 
-    //! implement VisitingFunctor for vtkwriter_tree_addvertexdata
-    template<typename GV>
-    struct GridFunctionVertexDataFunctor : public MultiTypeTree::ReadPathFunctor<false> {
-      Dune::VTKWriter<GV>& w;
-      const std::string s;
-      GridFunctionVertexDataFunctor(Dune::VTKWriter<GV>& w_, const std::string & s_) :
-        w(w_), s(s_) {}
-      template<typename T> void visit_leaf(const T& t) {
-		std::stringstream name;
-        name << s;
-        for (std::vector<int>::size_type i=0; i<path.size(); i++)
-          name << "_" << path[i];
-		w.addVertexData(new VTKGridFunctionAdapter<T>(t,name.str()));
-      }
-    };
+    namespace {
+
+      //! implement VisitingFunctor for vtkwriter_tree_addvertexdata
+      template<typename VTKWriter>
+      struct AddGridFunctionsToVTKWriter
+        : public TypeTree::TreeVisitor
+        , public TypeTree::DynamicTraversal
+      {
+
+        VTKWriter& w;
+        const std::string s;
+
+        AddGridFunctionsToVTKWriter(VTKWriter& w_, const std::string & s_) :
+          w(w_), s(s_) {}
+
+        template<typename T, typename TreePath>
+        void leaf(const T& t, TreePath treePath) {
+          std::stringstream name;
+          name << s;
+          for (std::size_t i=0; i < treePath.size(); ++i)
+            name << "_" << treePath.element(i);
+          w.addVertexData(new VTKGridFunctionAdapter<T>(t,name.str()));
+        }
+      };
+
+    } // anonymous namespace
 
     /** \brief add vertex data from a \ref GridFunctionTree to a VTKWriter
      *
      *  \tparam GV The GridView for the VTKWriter
      *  \tparam T  The \ref GridFunctionTree
      */
-	template<typename GV, typename T> 
+	template<typename GV, typename T>
 	void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t, std::string s = "data")
 	{
-      GridFunctionVertexDataFunctor<GV> f(w,s);
-      MultiTypeTree::ForEachNode(f,t);
+      AddGridFunctionsToVTKWriter<Dune::VTKWriter<GV> > visitor(w,s);
+      TypeTree::applyToTree(t,visitor);
 	}
 
     //! \} GridFunctionTree

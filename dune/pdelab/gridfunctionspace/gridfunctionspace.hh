@@ -20,9 +20,7 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
 
-#include "../common/countingptr.hh"
-#include "../common/multitypetree.hh"
-#include "../common/cpstoragepolicy.hh"
+#include "../common/typetree.hh"
 #include "../common/geometrywrapper.hh"
 
 #include"localfunctionspace.hh"
@@ -79,7 +77,7 @@ namespace Dune {
              typename enable_if<AlwaysTrue<typename
                    L::Traits::LocalFiniteElementType>::value>::type>
 	{
-      enum{ 
+      enum{
         //! \brief True if this grid function space is composed of others.
         isComposite = 0
       };
@@ -138,7 +136,7 @@ namespace Dune {
           for (size_t i=0; i<n; i++)
             x[i] = (*this)[i];
         }
-        
+
         template<typename X>
         void std_copy_from (const std::vector<X>& x)
         {
@@ -150,7 +148,7 @@ namespace Dune {
 
 	  };
 
-	  //! extract type of container element 
+	  //! extract type of container element
 	  template<class C>
 	  struct Value
 	  {
@@ -171,7 +169,7 @@ namespace Dune {
 		return c.operator[](i);
 	  }
 
-	  /** \brief get non const_reference to container element 
+	  /** \brief get non const_reference to container element
        *
        *  note: this method does not depend on T!
        */
@@ -228,7 +226,7 @@ namespace Dune {
      *  \tparam FEM  Type implementing FiniteElementMapInterface
      *  \tparam CE   Type for constraints assembler
      *  \tparam B    Backend type
-     *  \tparam P    Parameter type. Possible types are 
+     *  \tparam P    Parameter type. Possible types are
      * \link GridFunctionGeneralMapper \endlink (arbitrary number of unknowns per
      * entity) or \link GridFunctionRestrictedMapper \endlink (fixed number of unknowns per
      * entity) or \link GridFunctionStaticSize \endlink (number of unknowns per
@@ -236,7 +234,7 @@ namespace Dune {
      */
     template<typename GV, typename FEM, typename CE=NoConstraints,
              typename B=StdVectorBackend, typename P=GridFunctionGeneralMapper>
-	class GridFunctionSpace : public Countable, public LeafNode
+	class GridFunctionSpace : public TypeTree::LeafNode
 	{
 	public:
       //! export Traits class
@@ -249,7 +247,7 @@ namespace Dune {
 	  struct VectorContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;	
+		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;
       private:
         VectorContainer () {}
 	  };
@@ -259,24 +257,26 @@ namespace Dune {
 	  struct ConstraintsContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
       private:
         ConstraintsContainer () {}
 	  };
 
-      //! define local function space parametrized by self 
-      typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSpace> LocalFunctionSpace;
+      typedef LeafGridFunctionSpaceTag ImplementationTag;
+
+      //! define local function space parametrized by self
+      typedef typename Dune::PDELab::TypeTree::TransformTree<GridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
 
 	  //! constructor
-	  GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_) 
-		: defaultce(ce_), gv(gridview), pfem(&fem), ce(ce_)
+	  GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_)
+		: defaultce(ce_), gv(gridview), pfem(stackobject_to_shared_ptr(fem)), ce(ce_)
 	  {
 		update();
 	  }
 
 	  //! constructor
-	  GridFunctionSpace (const GV& gridview, const FEM& fem) 
-        : gv(gridview), pfem(&fem), ce(defaultce)
+	  GridFunctionSpace (const GV& gridview, const FEM& fem)
+        : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), ce(defaultce)
 	  {
 		update();
 	  }
@@ -332,7 +332,7 @@ namespace Dune {
 
 	  //! compute global indices for one element
       void globalIndices (const typename Traits::FiniteElementType& fe,
-                          const Element& e, 
+                          const Element& e,
 						  std::vector<typename Traits::SizeType>& global) const
 	  {
         typedef FiniteElementInterfaceSwitch<
@@ -345,7 +345,7 @@ namespace Dune {
 
         for (std::size_t i=0; i<std::size_t(coeffs.size()); ++i)
 		  {
-			// get geometry type of subentity 
+			// get geometry type of subentity
 			Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
               ::general(fe.type()).type(coeffs.localKey(i).subEntity(),
                                         coeffs.localKey(i).codim());
@@ -354,8 +354,8 @@ namespace Dune {
             int index = gv.indexSet().subIndex(e,
                                                coeffs.localKey(i).subEntity(),
                                                coeffs.localKey(i).codim());
-		
-			// now compute 
+
+			// now compute
             global[i] = offset[(gtoffset.find(gt)->second)+index]+
               coeffs.localKey(i).index();
 		  }
@@ -377,16 +377,16 @@ namespace Dune {
       {
         return (codimUsed.find(codim)!=codimUsed.end());
       }
-      
+
       //! returns true if size per entity of given dim and codim is a constant
       bool dataHandleFixedSize (int dim, int codim) const
       {
         return false;
       }
-      
+
       /*! how many objects of type DataType have to be sent for a given entity
-        
-        Note: Only the sender side needs to know this size. 
+
+        Note: Only the sender side needs to know this size.
       */
       template<class EntityType>
       size_t dataHandleSize (const EntityType& e) const
@@ -398,16 +398,31 @@ namespace Dune {
 
       //! return vector of global indices associated with the given entity
       template<class EntityType>
-      void dataHandleGlobalIndices (const EntityType& e, 
-                                    std::vector<typename Traits::SizeType>& global) const
+      std::size_t dataHandleGlobalIndices (const EntityType& e,
+                                           std::vector<typename Traits::SizeType>& global) const
+      {
+        return dataHandleGlobalIndices(e,global,0,true);
+      }
+
+#ifndef DOXYGEN
+
+      template<class EntityType>
+      std::size_t dataHandleGlobalIndices (const EntityType& e,
+                                           std::vector<typename Traits::SizeType>& global,
+                                           std::size_t pos,
+                                           bool resize) const
       {
         Dune::GeometryType gt=e.type();
         typename GV::IndexSet::IndexType index = gtoffset.find(gt)->second + gv.indexSet().index(e);
         unsigned int n = offset[index+1]-offset[index];
-		global.resize(n);
+        if (resize)
+          global.resize(n);
         for (unsigned i=0; i<n; i++)
-          global[i] = offset[index]+i;
+          global[pos+i] = offset[index]+i;
+        return n;
       }
+
+#endif // DOXYGEN
 
       //------------------------------
 
@@ -495,7 +510,7 @@ namespace Dune {
                 unsigned int index = gtoffset[gt] +
                   is.subIndex(*it, coeffs.localKey(i).subEntity(),
                               coeffs.localKey(i).codim());
-				offset[index] = std::max(offset[index], 
+				offset[index] = std::max(offset[index],
                                          typename Traits::SizeType
                                             (coeffs.localKey(i).index()+1));
 			  }
@@ -503,7 +518,7 @@ namespace Dune {
 
 		// now count global number of dofs and compute offset
 		nglobal = 0;
-		for (typename std::vector<typename Traits::SizeType>::iterator i=offset.begin(); 
+		for (typename std::vector<typename Traits::SizeType>::iterator i=offset.begin();
 			 i!=offset.end(); ++i)
 		  {
 			typename Traits::SizeType size = *i;
@@ -516,7 +531,7 @@ namespace Dune {
 	private:
       CE defaultce;
 	  const GV& gv;
-	  CountingPointer<FEM const> pfem;
+	  shared_ptr<FEM const> pfem;
 	  typename Traits::SizeType nlocal;
 	  typename Traits::SizeType nglobal;
       const CE& ce;
@@ -541,7 +556,7 @@ namespace Dune {
 	// B : Backend type
     template<typename GV, typename FEM, typename CE, typename B>
     class GridFunctionSpace<GV,FEM,CE,B,GridFunctionRestrictedMapper> :
-	  public Countable, public LeafNode
+	  public TypeTree::LeafNode
 	{
 	public:
       //! export Traits class
@@ -554,7 +569,7 @@ namespace Dune {
 	  struct VectorContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;	
+		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;
       private:
         VectorContainer () {}
 	  };
@@ -564,24 +579,26 @@ namespace Dune {
 	  struct ConstraintsContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
       private:
         ConstraintsContainer () {}
 	  };
 
-      // define local function space parametrized by self 
-      typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSpace> LocalFunctionSpace;
+      typedef LeafGridFunctionSpaceTag ImplementationTag;
+
+      //! define local function space parametrized by self
+      typedef typename Dune::PDELab::TypeTree::TransformTree<GridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
 
 	  // constructor
       GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_)
-        : gv(gridview), pfem(&fem), defaultce(ce_), ce(ce_)
+        : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), defaultce(ce_), ce(ce_)
 	  {
 		update();
 	  }
 
 	  // constructor
       GridFunctionSpace (const GV& gridview, const FEM& fem)
-        : gv(gridview), pfem(&fem), ce(defaultce)
+        : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), ce(defaultce)
 	  {
 		update();
 	  }
@@ -649,7 +666,7 @@ namespace Dune {
 
         for (unsigned int i=0; i<coeffs.size(); ++i)
 		  {
-			// get geometry type of subentity 
+			// get geometry type of subentity
 			Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
               ::general(fe.type()).type(coeffs.localKey(i).subEntity(),
                                         coeffs.localKey(i).codim());
@@ -658,8 +675,8 @@ namespace Dune {
             int index = gv.indexSet().subIndex(e,
                                                coeffs.localKey(i).subEntity(),
                                                coeffs.localKey(i).codim());
-		
-			// now compute 
+
+			// now compute
             global[i] =
               offset.find(gt)->second+index*dofcountmap.find(gt)->second
               + coeffs.localKey(i).index();
@@ -683,16 +700,16 @@ namespace Dune {
       {
         return (codimUsed.find(codim)!=codimUsed.end());
       }
-      
+
       //! returns true if size per entity of given dim and codim is a constant
       bool dataHandleFixedSize (int dim, int codim) const
       {
         return true;
       }
-      
+
       /*! how many objects of type DataType have to be sent for a given entity
-        
-        Note: Only the sender side needs to know this size. 
+
+        Note: Only the sender side needs to know this size.
       */
       template<class EntityType>
       size_t dataHandleSize (const EntityType& e) const
@@ -703,16 +720,32 @@ namespace Dune {
 
       //! return vector of global indices associated with the given entity
       template<class EntityType>
-      void dataHandleGlobalIndices (const EntityType& e, 
-                                    std::vector<typename Traits::SizeType>& global) const
+      std::size_t dataHandleGlobalIndices (const EntityType& e,
+                                           std::vector<typename Traits::SizeType>& global) const
+      {
+        return dataHandleGlobalIndices(e,global,0,true);
+      }
+
+#ifndef DOXYGEN
+
+      template<class EntityType>
+      std::size_t dataHandleGlobalIndices (const EntityType& e,
+                                           std::vector<typename Traits::SizeType>& global,
+                                           std::size_t pos,
+                                           bool resize) const
       {
         Dune::GeometryType gt=e.type();
         typename GV::IndexSet::IndexType index = gv.indexSet().index(e);
         unsigned int n = dofcountmap.find(gt)->second;
-		global.resize(n);
+        if (resize)
+          global.resize(n);
         for(unsigned i=0; i<n; i++)
-          global[i] = offset.find(gt)->second + index*n + i;
+          global[pos+i] = offset.find(gt)->second + index*n + i;
+        return n;
       }
+
+#endif // DOXYGEN
+
 
       //------------------------------
 
@@ -795,7 +828,7 @@ namespace Dune {
 		for (typename DofCountMapType::iterator i=dofcountmap.begin(); i!=dofcountmap.end(); ++i)
 		  {
 			offset[i->first] = nglobal;
-			nglobal += is.size(i->first)*(i->second); 
+			nglobal += is.size(i->first)*(i->second);
             Dune::dinfo << i->first << " offset now " << nglobal << std::endl;
 		  }
         Dune::dinfo << "total number of dofs = " << nglobal << std::endl;
@@ -803,7 +836,7 @@ namespace Dune {
 
 	private:
 	  const GV& gv;
-      CountingPointer<FEM const> pfem;
+      shared_ptr<FEM const> pfem;
 
 	  typename Traits::SizeType nlocal;
 	  typename Traits::SizeType nglobal;
@@ -838,8 +871,8 @@ namespace Dune {
     {
     public:
       typedef int IndexType;
- 
-      // number of intersections in index set 
+
+      // number of intersections in index set
       // (intersections do not have a geometry type)
       IndexType size () const
       {
@@ -860,7 +893,7 @@ namespace Dune {
         DUNE_THROW(Dune::Exception,"need IntersectionIndexSet for DOFs in intersections");
       }
 
-      // get index of i'th intersection of element 
+      // get index of i'th intersection of element
       // (in order they are visited by intersection iterator)
       template<typename Element>
       IndexType subIndex (const Element& element, int i) const
@@ -871,7 +904,7 @@ namespace Dune {
 
     //! \brief type that can be used for static sized GFS without DOFS in intersections
     typedef GridFunctionStaticSize<DummyIntersectionIndexSet> SimpleGridFunctionStaticSize;
-    
+
     //! \}
 
 	// specialization with restricted mapper
@@ -880,7 +913,7 @@ namespace Dune {
 	// B : Backend type
     template<typename GV, typename FEM, typename CE, typename B, typename IIS>
     class GridFunctionSpace<GV,FEM,CE,B,GridFunctionStaticSize<IIS> > :
-	  public Countable, public LeafNode
+	  public TypeTree::LeafNode
 	{
       typedef std::map<unsigned int,unsigned int> DofPerCodimMapType;
 	public:
@@ -894,7 +927,7 @@ namespace Dune {
 	  struct VectorContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;	
+		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;
       private:
         VectorContainer () {}
 	  };
@@ -904,36 +937,38 @@ namespace Dune {
 	  struct ConstraintsContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
       private:
         ConstraintsContainer () {}
 	  };
 
-      // define local function space parametrized by self 
-      typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSpace> LocalFunctionSpace;
+      typedef LeafGridFunctionSpaceTag ImplementationTag;
+
+      //! define local function space parametrized by self
+      typedef typename Dune::PDELab::TypeTree::TransformTree<GridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
 
 	  // constructors
       GridFunctionSpace (const GV& gridview, const FEM& fem, const IIS& iis_,
                          const CE& ce_)
-        : gv(gridview), pfem(&fem), iis(iis_), defaultce(ce_), ce(ce_)
+        : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), iis(iis_), defaultce(ce_), ce(ce_)
 	  {
 		update();
 	  }
 
       GridFunctionSpace (const GV& gridview, const FEM& fem, const IIS& iis_)
-        : gv(gridview), pfem(&fem), iis(iis_), ce(defaultce)
+        : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), iis(iis_), ce(defaultce)
 	  {
 		update();
 	  }
 
       GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_)
-        : gv(gridview), pfem(&fem), iis(dummyiis), defaultce(ce_), ce(ce_)
+        : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), iis(dummyiis), defaultce(ce_), ce(ce_)
 	  {
 		update();
 	  }
 
       GridFunctionSpace (const GV& gridview, const FEM& fem)
-        : gv(gridview), pfem(&fem), iis(dummyiis), ce(defaultce)
+        : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), iis(dummyiis), ce(defaultce)
 	  {
 		update();
 	  }
@@ -1011,7 +1046,7 @@ namespace Dune {
             else
               index = gv.indexSet().subIndex(e,se,cd);
 
-			// now compute 
+			// now compute
             global[i] =
               offset.find(cd)->second + index * dofpercodim.find(cd)->second
               + coeffs.localKey(i).index();
@@ -1035,16 +1070,16 @@ namespace Dune {
       {
         return (dofpercodim.find(codim)!=dofpercodim.end());
       }
-      
+
       //! returns true if size per entity of given dim and codim is a constant
       bool dataHandleFixedSize (int dim, int codim) const
       {
         return true;
       }
-      
+
       /*! how many objects of type DataType have to be sent for a given entity
-        
-        Note: Only the sender side needs to know this size. 
+
+        Note: Only the sender side needs to know this size.
       */
       template<class EntityType>
       size_t dataHandleSize (const EntityType& e) const
@@ -1055,23 +1090,38 @@ namespace Dune {
 
       //! return vector of global indices associated with the given entity
       template<class EntityType>
-      void dataHandleGlobalIndices (const EntityType& e, 
-                                    std::vector<typename Traits::SizeType>& global) const
+      std::size_t dataHandleGlobalIndices (const EntityType& e,
+                                           std::vector<typename Traits::SizeType>& global) const
+      {
+        return dataHandleGlobalIndices(e,global,0,true);
+      }
+
+#ifndef DOXYGEN
+
+      template<class EntityType>
+      std::size_t dataHandleGlobalIndices (const EntityType& e,
+                                           std::vector<typename Traits::SizeType>& global,
+                                           std::size_t pos,
+                                           bool resize) const
       {
         const int cd = EntityType::codimension;
         typename GV::IndexSet::IndexType o = offset.find(cd)->second;
         typename GV::IndexSet::IndexType index = gv.indexSet().index(e);
         unsigned int n = dofpercodim.find(cd)->second;
-		global.resize(n);
-        for (unsigned int i=0; i<n; i++) 
-          global[i] = o + index*n + i;
+        if (resize)
+          global.resize(n);
+        for (unsigned int i=0; i<n; i++)
+          global[pos+i] = o + index*n + i;
 //         Dune::dinfo << "[" << gv.grid().comm().rank() << "]: "
 //                     << " global indices "
 //                     << " offset=" << o
 //                     << " index=" << index
 //                     << " n=" << n
 //                     << std::endl;
+        return n;
       }
+
+#endif // DOXYGEN
 
       //------------------------------
 
@@ -1111,7 +1161,7 @@ namespace Dune {
             else
               (countmap[subentity])++;
           }
-       
+
         // compute number of degrees of freedom per codim
         dofpercodim.clear();
         for (typename CountMapType::iterator i=countmap.begin(); i!=countmap.end(); ++i)
@@ -1155,7 +1205,7 @@ namespace Dune {
 	private:
       DummyIntersectionIndexSet dummyiis; // for version without intersection DOFs
 	  const GV& gv;
-      CountingPointer<FEM const> pfem;
+      shared_ptr<FEM const> pfem;
       const IIS& iis;
 
 	  typename Traits::SizeType nlocal;
@@ -1172,52 +1222,56 @@ namespace Dune {
     // Subspace construction
     //=======================================
 
-    template<typename GFS, int k, typename CGFS> // primary template, only specializations are used !
+    template<typename GFS, std::size_t, typename Tag> // primary template, only specializations are used !
     class GridFunctionSubSpaceBase
     {
     };
 
+    template<typename GFS>
+    class CompositeGridFunctionSubSpaceNode;
+
+
+    template<typename Mapper, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN_FOR_SPECIALIZATION>
+    class CompositeGridFunctionSubSpaceNode<CompositeGridFunctionSpace<Mapper,DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES> >
+      : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
+    {
+
+      typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE NodeType;
+
+    public:
+
+      CompositeGridFunctionSubSpaceNode(const typename NodeType::NodeStorage& nodeStorage)
+        : NodeType(nodeStorage)
+      {}
+
+    };
+
 
     // CGFS is a composite
-	template<typename GFS, int k, typename P, typename T0, typename T1, typename T2, typename T3,
-			 typename T4, typename T5, typename T6, typename T7, typename T8>
-    class GridFunctionSubSpaceBase<GFS,k, CompositeGridFunctionSpace<P,T0,T1,T2,T3,T4,T5,T6,T7,T8> >
-      : public Countable // behave like child k of gfs which is a composite grid function space
+	template<typename GFS, std::size_t k>
+    class GridFunctionSubSpaceBase<GFS,k,CompositeGridFunctionSpaceTag>
+      : public CompositeGridFunctionSubSpaceNode<typename GFS::template Child<k>::Type>
     {
-      typedef CompositeGridFunctionSpace<P,T0,T1,T2,T3,T4,T5,T6,T7,T8> CGFS;
+      typedef typename GFS::template Child<k>::Type CGFS;
 
     public:
       //! export traits class
 	  typedef typename CGFS::Traits Traits;
+      typedef CompositeGridFunctionSpaceTag ImplementationTag;
 
       GridFunctionSubSpaceBase (const GFS& gfs)
-        : pgfs(&gfs), pcgfs(&gfs.template getChild<k>())
+        : CompositeGridFunctionSubSpaceNode<CGFS>(gfs.template child<k>().nodeStorage())
+        , pgfs(stackobject_to_shared_ptr(gfs))
+        , pcgfs(gfs.template childStorage<k>())
       {
       }
-
-	  enum { isLeaf = CGFS::isLeaf };
-	  enum { isPower = CGFS::isPower /**< */ };
-	  enum { isComposite = CGFS::isComposite /**< */ };
-	  enum { CHILDREN = CGFS::CHILDREN };
-
-	  template<int i>
-	  struct Child
-	  {
-		typedef typename CGFS::template Child<i>::Type Type;
-	  };
-
-	  template<int i>
-	  const typename CGFS::template Child<i>::Type& getChild () const
-	  {
-		return pcgfs->template getChild<i>();
-	  }
 
 	  // extract type of container storing Es
 	  template<typename E>
 	  struct VectorContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;	
+		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;
       private:
         VectorContainer () {}
 	  };
@@ -1227,13 +1281,10 @@ namespace Dune {
 	  struct ConstraintsContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
       private:
         ConstraintsContainer () {}
 	  };
-
-      // define local function space parametrized by self 
-      typedef Dune::PDELab::CompositeLocalFunctionSpaceNode<GridFunctionSubSpaceBase> LocalFunctionSpace;
 
 	  // get grid view
 	  const typename Traits::GridViewType& gridview () const
@@ -1262,66 +1313,53 @@ namespace Dune {
       //! map index from our index set [0,size()-1] to root index set
 	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
 	  {
-		return pgfs->upMap(pgfs->template subMap<k>(i));
+		return pgfs->upMap(pgfs->subMap(k,i));
 	  }
 
       //! map index from child i's index set into our index set
       template<int i>
 	  typename Traits::SizeType subMap (typename Traits::SizeType j) const
 	  {
-		return pcgfs->template subMap<i>(j);
+		return this->subMap(i,j);
 	  }
 
+      typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j) const
+      {
+		return pcgfs->subMap(i,j);
+      }
+
     private:
-      CountingPointer<GFS const> pgfs;
-      CountingPointer<CGFS const> pcgfs;
+      shared_ptr<GFS const> pgfs;
+      shared_ptr<CGFS const> pcgfs;
     };
 
 
     // CGFS is a power
-	template<typename GFS, int k, typename T, int l, typename P>
-    class GridFunctionSubSpaceBase<GFS,k, PowerGridFunctionSpace<T,l,P> >
-      : public Countable // behave like child k of gfs which is a composite grid function space
+	template<typename GFS, std::size_t k>
+    class GridFunctionSubSpaceBase<GFS,k,PowerGridFunctionSpaceTag>
+      : public TypeTree::PowerNode<typename GFS::template Child<k>::Type::ChildType,GFS::template Child<k>::Type::CHILDREN>
     {
-      typedef PowerGridFunctionSpace<T,l,P> CGFS;
+      typedef typename GFS::template Child<k>::Type CGFS;
+      typedef TypeTree::PowerNode<typename GFS::template Child<k>::Type::ChildType,GFS::template Child<k>::Type::CHILDREN> NodeType;
 
     public:
       //! export traits class
 	  typedef typename CGFS::Traits Traits;
+      typedef PowerGridFunctionSpaceTag ImplementationTag;
 
       GridFunctionSubSpaceBase (const GFS& gfs)
-        : pgfs(&gfs), pcgfs(&gfs.template getChild<k>())
+        : NodeType(gfs.template child<k>().nodeStorage())
+        , pgfs(stackobject_to_shared_ptr(gfs))
+        , pcgfs(gfs.template childStorage<k>())
       {
       }
-
-	  enum { isLeaf = CGFS::isLeaf };
-	  enum { isPower = CGFS::isPower /**< */ };
-	  enum { isComposite = CGFS::isComposite /**< */ };
-	  enum { CHILDREN = CGFS::CHILDREN };
-
-	  template<int i>
-	  struct Child
-	  {
-		typedef typename CGFS::template Child<i>::Type Type;
-	  };
-
-	  template<int i>
-	  const typename CGFS::template Child<i>::Type& getChild () const
-	  {
-		return pcgfs->template getChild<i>();
-	  }
-
-	  const T& getChild (int i) const
-	  {
-		return pcgfs->getChild(i);
-	  }
 
 	  // extract type of container storing Es
 	  template<typename E>
 	  struct VectorContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;	
+		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;
       private:
         VectorContainer () {}
 	  };
@@ -1331,13 +1369,13 @@ namespace Dune {
 	  struct ConstraintsContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
       private:
         ConstraintsContainer () {}
 	  };
 
-      // define local function space parametrized by self 
-      typedef PowerLocalFunctionSpaceNode<GridFunctionSubSpaceBase> LocalFunctionSpace;
+      // define local function space parametrized by self
+      //typedef PowerLocalFunctionSpaceNode<GridFunctionSubSpaceBase> LocalFunctionSpace;
 
 	  // get grid view
 	  const typename Traits::GridViewType& gridview () const
@@ -1366,51 +1404,55 @@ namespace Dune {
       //! map index from our index set [0,size()-1] to root index set
 	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
 	  {
-		return pgfs->upMap(pgfs->template subMap<k>(i));
+		return pgfs->upMap(pgfs->subMap(k,i));
 	  }
 
       //! map index from child i's index set into our index set
       template<int i>
 	  typename Traits::SizeType subMap (typename Traits::SizeType j) const
 	  {
-		return pcgfs->template subMap<i>(j);
+		return this->subMap(i,j);
+	  }
+
+	  typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j) const
+	  {
+		return pcgfs->subMap(i,j);
 	  }
 
     private:
-      CountingPointer<GFS const> pgfs;
-      CountingPointer<CGFS const> pcgfs;
+      shared_ptr<GFS const> pgfs;
+      shared_ptr<CGFS const> pcgfs;
     };
 
 
     // CGFS is a leaf
-    template<typename GFS, int k, typename GV, typename FEM, typename CE,
-             typename B, typename P>
-    class GridFunctionSubSpaceBase<GFS,k, GridFunctionSpace<GV,FEM,CE,B,P> >
-      : public Countable // behave like child k of GFS which is a grid function space
+    template<typename GFS, std::size_t k>
+    class GridFunctionSubSpaceBase<GFS,k,LeafGridFunctionSpaceTag>
+      : public TypeTree::LeafNode
     {
-      typedef GridFunctionSpace<GV,FEM,CE,B,P> CGFS;
+      typedef typename GFS::template Child<k>::Type CGFS;
 
     public:
       //! export traits class
 	  typedef typename CGFS::Traits Traits;
+      typedef typename Traits::GridViewType GV;
+      typedef typename Traits::FiniteElementMapType FEM;
 	  typedef typename GV::Traits::template Codim<0>::Entity Element;
 
+      typedef LeafGridFunctionSpaceTag ImplementationTag;
+
       GridFunctionSubSpaceBase (const GFS& gfs)
-        : pgfs(&gfs), pcgfs(&gfs.template getChild<k>())
+        : pgfs(stackobject_to_shared_ptr(gfs))
+        , pcgfs(gfs.template childStorage<k>())
       {
       }
-
-	  enum { isLeaf = CGFS::isLeaf };
-	  enum { isPower = CGFS::isPower /**< */ };
-	  enum { isComposite = CGFS::isComposite /**< */ };
-	  enum { CHILDREN = CGFS::CHILDREN };
 
       //! extract type of container storing Es
 	  template<typename E>
 	  struct VectorContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;	
+		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;
       private:
         VectorContainer () {}
 	  };
@@ -1420,13 +1462,13 @@ namespace Dune {
 	  struct ConstraintsContainer
 	  {
 		//! \brief define Type as the Type of a container of E's
-		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;	
+		typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
       private:
         ConstraintsContainer () {}
 	  };
 
-      // define local function space parametrized by self 
-      typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSubSpaceBase> LocalFunctionSpace;
+      // define local function space parametrized by self
+      // typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSubSpaceBase> LocalFunctionSpace;
 
 	  // get grid view
 	  const typename Traits::GridViewType& gridview () const
@@ -1467,12 +1509,12 @@ namespace Dune {
       //! map from our index set [0..size()-1] into root index set
 	  typename Traits::SizeType upMap (typename Traits::SizeType i) const
 	  {
-		return pgfs->upMap(pgfs->template subMap<k>(i));
+		return pgfs->upMap(pgfs->subMap(k,i));
 	  }
 
 	  // compute global indices for one element
       void globalIndices (const typename Traits::FiniteElementType& fe,
-                          const Element& e, 
+                          const Element& e,
 						  std::vector<typename Traits::SizeType>& global) const
 	  {
         pcgfs->globalIndices(fe,e,global);
@@ -1486,43 +1528,22 @@ namespace Dune {
       }
 
     private:
-      CountingPointer<GFS const> pgfs;
-      CountingPointer<CGFS const> pcgfs;
+      shared_ptr<GFS const> pgfs;
+      shared_ptr<CGFS const> pcgfs;
     };
 
-    // ensure that GFS is not a leaf
-    template<typename GFS, int k, int isleaf>
-    class GridFunctionSubSpaceIntermediateBase 
-      : public GridFunctionSubSpaceBase<GFS,k,typename GFS::template Child<k>::Type>
+    template<typename GFS, std::size_t k>
+    class GridFunctionSubSpace : public GridFunctionSubSpaceBase<GFS,k,typename GFS::template Child<k>::Type::ImplementationTag>
     {
-      typedef GridFunctionSubSpaceBase<GFS,k,typename GFS::template Child<k>::Type> BaseT;
+
+      typedef GridFunctionSubSpaceBase<GFS,k,typename GFS::template Child<k>::Type::ImplementationTag> BaseT;
+
     public:
-      GridFunctionSubSpaceIntermediateBase (const GFS& gfs) : BaseT(gfs)
-      {
-      }
-    };
 
+      typedef typename Dune::PDELab::TypeTree::TransformTree<GridFunctionSubSpace,gfs_to_lfs>::Type LocalFunctionSpace;
 
-    // compilation error if subspace from a leaf is taken
-    template<typename GFS, int k>
-    class GridFunctionSubSpaceIntermediateBase<GFS,k,true> : public Countable
-    {
-    public:
-      GridFunctionSubSpaceIntermediateBase (const GFS& gfs)
-      {
- 		dune_static_assert((static_cast<int>(GFS::isLeaf)==0),"subspace cannot be taken from a leaf");
-      }
-    };
-
-
-
-
-    template<typename GFS, int k>
-    class GridFunctionSubSpace : public GridFunctionSubSpaceIntermediateBase<GFS,k,GFS::isLeaf>
-    {
-    public:
-      GridFunctionSubSpace (const GFS& gfs) 
-        : GridFunctionSubSpaceIntermediateBase<GFS,k,GFS::isLeaf>(gfs)
+      GridFunctionSubSpace (const GFS& gfs)
+        : BaseT(gfs)
       {
         Dune::dinfo << "GridFunctionSubSpace:" << std::endl;
         Dune::dinfo << "root space size = " << gfs.globalSize()

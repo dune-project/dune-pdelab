@@ -4,7 +4,6 @@
 #ifndef DUNE_PDELAB_FINITEELEMENTMAP_GLOBAL_HH
 #define DUNE_PDELAB_FINITEELEMENTMAP_GLOBAL_HH
 
-#include <dune/pdelab/common/countingptr.hh>
 #include <dune/pdelab/finiteelementmap/finiteelementmap.hh>
 
 namespace Dune {
@@ -17,8 +16,7 @@ namespace Dune {
      *                 Geometry&).
      */
     template<class Factory>
-    class GeometryFiniteElementMap :
-      public Countable
+    class GeometryFiniteElementMap
     {
       Factory& factory;
 
@@ -60,8 +58,7 @@ namespace Dune {
      *                   grid element.
      */
     template<class FEFactory, class VOFactory>
-    class GeometryVertexOrderFiniteElementMap :
-      public Countable
+    class GeometryVertexOrderFiniteElementMap
     {
       FEFactory& feFactory;
       const VOFactory& voFactory;

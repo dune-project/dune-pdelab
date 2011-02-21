@@ -12,9 +12,6 @@
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
-#include"../common/countingptr.hh"
-#include"../common/multitypetree.hh"
-#include"../common/cpstoragepolicy.hh"
 #include"../common/function.hh"
 #include <dune/pdelab/common/jacobiantocurl.hh>
 
@@ -35,7 +32,7 @@ namespace Dune {
     //! grid function spaces.
     //!
     //! this class may be used to pass compile-time
-    //! parameters to the implementation of 
+    //! parameters to the implementation of
     //! \link PowerGridFunctionSpace PowerGridFunctionSpace \endlink or
     //! \link CompositeGridFunctionSpace CompositeGridFunctionSpace \endlink
     struct GridFunctionSpaceLexicographicMapper {};
@@ -46,7 +43,7 @@ namespace Dune {
     //! The exact blocking structure can be passed as template parameters
     //!
     //! this class may be used to pass compile-time
-    //! parameters to the implementation of 
+    //! parameters to the implementation of
     //! \link PowerGridFunctionSpace PowerGridFunctionSpace \endlink or
     //! \link CompositeGridFunctionSpace CompositeGridFunctionSpace \endlink
     template<int s0 = 1, int s1 = 1, int s2 = 1, int s3 = 1, int s4 = 1, int s5 = 1, int s6 = 1, int s7 = 1, int s8 = 1, int s9 = 1>
@@ -63,12 +60,12 @@ namespace Dune {
     offset[] = { 0, s0, s0+s1, s0+s1+s2, s0+s1+s2+s3, s0+s1+s2+s3+s4,
                  s0+s1+s2+s3+s4+s5, s0+s1+s2+s3+s4+s5+s6, s0+s1+s2+s3+s4+s5+s6+s7,
                  s0+s1+s2+s3+s4+s5+s6+s7+s8, s0+s1+s2+s3+s4+s5+s6+s7+s8+s9 };
-    
+
     //! \brief Indicates using block-wise ordering of the unknowns for composite
     //! grid function spaces.
     //!
     //! this class may be used to pass compile-time
-    //! parameters to the implementation of 
+    //! parameters to the implementation of
     //! \link PowerGridFunctionSpace PowerGridFunctionSpace \endlink or
     //! \link CompositeGridFunctionSpace CompositeGridFunctionSpace \endlink
     struct GridFunctionSpaceBlockwiseMapper : GridFunctionSpaceComponentBlockwiseMapper<> {};
@@ -118,9 +115,9 @@ namespace Dune {
        function space tree and each grid cell. Notice, that this
        behavior can only be achieved by storing individual offset values
        for each grid cell and each node treated with this mapping.
-    
+
        This class may be used to pass compile-time parameters to the
-       implementation of 
+       implementation of
 
        \link PowerGridFunctionSpace PowerGridFunctionSpace \endlink or \link
        CompositeGridFunctionSpace CompositeGridFunctionSpace \endlink
@@ -131,16 +128,18 @@ namespace Dune {
 
 
     //! Trait class for the multi component grid function spaces
-	template<typename G, typename B, typename M, int k>
+	template<typename G, typename B, typename M, std::size_t k>
 	struct PowerCompositeGridFunctionSpaceTraits
 	{
-      enum{ 
+      enum{
         //! \brief True if this grid function space is composed of others.
         isComposite = 1,
         //! \brief number of child spaces
         noChilds = k
       };
-      
+
+      const static std::size_t CHILDREN = k;
+
 	  //! \brief the grid view where grid function is defined upon
 	  typedef G GridViewType;
 
@@ -149,14 +148,14 @@ namespace Dune {
 
       //! \brief mapper
       typedef M MapperType;
-      
+
 	  //! \brief short cut for size type exported by Backend
 	  typedef typename B::size_type SizeType;
 	};
 
     //! \brief a class holding transformation for constrained spaces
     template<typename S, typename T>
-    class ConstraintsTransformation 
+    class ConstraintsTransformation
       : public std::map<S,std::map<S,T> >
     {
     public:
@@ -194,7 +193,8 @@ namespace Dune {
      */
 	template<typename T, typename X>
 	class DiscreteGridFunction
-	  : public LeafNode, GridFunctionInterface<
+	  : public TypeTree::LeafNode
+      , GridFunctionInterface<
           GridFunctionTraits<
             typename T::Traits::GridViewType,
             typename BasisInterfaceSwitch<
@@ -214,7 +214,7 @@ namespace Dune {
               >::Range
             >,
           DiscreteGridFunction<T,X>
-          >
+        >
 	{
 	  typedef T GFS;
 
@@ -232,25 +232,25 @@ namespace Dune {
           >,
         DiscreteGridFunction<T,X>
         > BaseT;
-	
+
 	public:
 	  typedef typename BaseT::Traits Traits;
-	  
+
       /** \brief Construct a DiscreteGridFunction
        *
        * \param gfs The GridFunctionsSpace
        * \param x_  The coefficients vector
        */
 	  DiscreteGridFunction (const GFS& gfs, const X& x_)
-		: pgfs(&gfs), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
+		: pgfs(stackobject_to_shared_ptr(gfs)), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
 	  {
 	  }
 
       // Evaluate
-	  inline void evaluate (const typename Traits::ElementType& e, 
+	  inline void evaluate (const typename Traits::ElementType& e,
 							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
         typedef FiniteElementInterfaceSwitch<
           typename GFS::LocalFunctionSpace::Traits::FiniteElementType
           > FESwitch;
@@ -269,7 +269,7 @@ namespace Dune {
 	  }
 
 	private:
-	  CountingPointer<GFS const> pgfs;
+	  shared_ptr<GFS const> pgfs;
 	  const X& xg;
 	  mutable typename GFS::LocalFunctionSpace lfs;
 	  mutable std::vector<typename Traits::RangeFieldType> xl;
@@ -474,12 +474,12 @@ namespace Dune {
        * \param x_  The coefficients vector
        */
 	  DiscreteGridFunctionGlobalCurl (const GFS& gfs, const X& x_)
-		: pgfs(&gfs), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), J(gfs.maxLocalSize())
+		: pgfs(stackobject_to_shared_ptr(gfs)), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), J(gfs.maxLocalSize())
 	  {
 	  }
 
       // Evaluate
-	  inline void evaluate (const typename Traits::ElementType& e, 
+	  inline void evaluate (const typename Traits::ElementType& e,
 							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
 	  {
@@ -518,7 +518,7 @@ namespace Dune {
 	  }
 
 	private:
-	  CountingPointer<GFS const> pgfs;
+	  shared_ptr<GFS const> pgfs;
 	  const X& xg;
 	  mutable typename GFS::LocalFunctionSpace lfs;
 	  mutable std::vector<typename Traits::RangeFieldType> xl;
@@ -576,7 +576,7 @@ namespace Dune {
        * \param x_  The coefficients vector
        */
       DiscreteGridFunctionGradient (const GFS& gfs, const X& x_)
-        : pgfs(&gfs), xg(x_)
+        : pgfs(stackobject_to_shared_ptr(gfs)), xg(x_)
       { }
 
       // Evaluate
@@ -619,11 +619,11 @@ namespace Dune {
       }
 
     private:
-      CountingPointer<GFS const> pgfs;
+      shared_ptr<GFS const> pgfs;
       const X& xg;
     };
 
-    /** \brief DiscreteGridFunction with Piola transformation 
+    /** \brief DiscreteGridFunction with Piola transformation
      *
      * \copydetails DiscreteGridFunction
      */
@@ -650,23 +650,23 @@ namespace Dune {
           >,
         DiscreteGridFunctionPiola<T,X>
         > BaseT;
-	
+
 	public:
 	  typedef typename BaseT::Traits Traits;
-	  
+
       /** \brief Construct a DiscreteGridFunctionPiola
        *
        * \copydetails DiscreteGridFunction::DiscreteGridFunction(const GFS&,const X&)
        */
 	  DiscreteGridFunctionPiola (const GFS& gfs, const X& x_)
-		: pgfs(&gfs), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
+		: pgfs(stackobject_to_shared_ptr(gfs)), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
 	  {
 	  }
 
-	  inline void evaluate (const typename Traits::ElementType& e, 
+	  inline void evaluate (const typename Traits::ElementType& e,
 							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  { 
+	  {
         // evaluate shape function on the reference element as before
 		lfs.bind(e);
 		lfs.vread(xg,xl);
@@ -693,7 +693,7 @@ namespace Dune {
 	  }
 
 	private:
-	  CountingPointer<GFS const> pgfs;
+	  shared_ptr<GFS const> pgfs;
 	  const X& xg;
 	  mutable typename GFS::LocalFunctionSpace lfs;
 	  mutable std::vector<typename Traits::RangeFieldType> xl;
@@ -750,16 +750,16 @@ namespace Dune {
                        ::Traits::LocalBasisType::Traits::RangeFieldType RF;
       typedef typename ChildType::Traits::FiniteElementType
                        ::Traits::LocalBasisType::Traits::RangeType RT;
-	  
+
 	  VectorDiscreteGridFunction (const GFS& gfs, const X& x_)
-		: pgfs(&gfs), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
+		: pgfs(stackobject_to_shared_ptr(gfs)), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
 	  {
 	  }
 
-	  inline void evaluate (const typename Traits::ElementType& e, 
+	  inline void evaluate (const typename Traits::ElementType& e,
 							const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
-	  {  
+	  {
 		lfs.bind(e);
 		lfs.vread(xg,xl);
         for (int k=0; k<T::CHILDREN; k++)
@@ -779,9 +779,9 @@ namespace Dune {
 	  }
 
 	private:
-	  CountingPointer<GFS const> pgfs;
+	  shared_ptr<GFS const> pgfs;
 	  const X& xg;
-	  mutable typename GFS::LocalFunctionSpace lfs;
+	  mutable LocalFunctionSpace<GFS> lfs;
 	  mutable std::vector<RF> xl;
 	  mutable std::vector<RT> yb;
 	};

@@ -8,8 +8,6 @@
 
 #include <dune/grid/common/genericreferenceelements.hh>
 
-#include"../common/countingptr.hh"
-
 namespace Dune {
   namespace PDELab {
 
@@ -35,14 +33,14 @@ namespace Dune {
 	{
 	public:
 	  //! \brief Export traits
-	  typedef T Traits;  
+	  typedef T Traits;
 
 	  /** \brief Return local basis for the given entity.
 
-		  The return value is a reference to Traits::LocalBasisType. If 
+		  The return value is a reference to Traits::LocalBasisType. If
 		  there is a different local basis for two elements then this
 		  type must be polymorphic.
-	  */ 
+	  */
 	  template<class EntityType>
       const typename Traits::FiniteElementType& find (const EntityType& e) const
 	  {
@@ -56,14 +54,13 @@ namespace Dune {
 
 	//! simple implementation where all entities have the same finite element
 	template<class Imp>
-	class SimpleLocalFiniteElementMap : 
-	  public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits<Imp>, 
-											SimpleLocalFiniteElementMap<Imp> >,
-	  public Countable
+	class SimpleLocalFiniteElementMap :
+	  public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits<Imp>,
+											SimpleLocalFiniteElementMap<Imp> >
 	{
 	public:
 	  //! \brief export type of the signature
-	  typedef LocalFiniteElementMapTraits<Imp> Traits;  
+	  typedef LocalFiniteElementMapTraits<Imp> Traits;
 
 	  //! \brief Use when Imp has a standard constructor
 	  SimpleLocalFiniteElementMap ()
@@ -110,17 +107,16 @@ namespace Dune {
           LocalFiniteElementMapTraits<FE>,
           Imp
         >
-      , public Countable
     {
       typedef typename GV::IndexSet IndexSet;
       static const int dim = GV::dimension;
-     
+
     public:
 	  //! \brief export type of the signature
-	  typedef LocalFiniteElementMapTraits<FE> Traits;  
+	  typedef LocalFiniteElementMapTraits<FE> Traits;
 
 	  //! \brief construct EdgeSLocalFiniteElementMap
-	  EdgeS0LocalFiniteElementMap (const GV& gv_) 
+	  EdgeS0LocalFiniteElementMap (const GV& gv_)
         : gv(gv_), is(gv_.indexSet()), orient(gv_.size(0))
 	  {
         typedef typename GV::Grid::ctype ct;

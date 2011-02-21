@@ -10,12 +10,11 @@
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
-#include"../common/countingptr.hh"
-#include"../common/multitypetree.hh"
-#include"../common/cpstoragepolicy.hh"
-#include"../common/function.hh"
+#include "../common/typetree.hh"
+#include "../common/typetree/pairtraversal.hh"
+#include "../common/function.hh"
 
-#include"gridfunctionspace.hh"
+#include "gridfunctionspace.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -36,222 +35,104 @@ namespace Dune {
       }
     };
 
-    // Forward declaration of the metaprogram for visiting *nodes*
-	template<typename IB, typename F, bool FisLeaf, typename LFS, bool LFSisLeaf> 
-	struct InterpolateVisitNodeMetaProgram;
+    namespace {
 
-    // metaprogram for visiting *children*
-	template<typename IB, typename F, typename LFS, int n, int i> 
-	struct InterpolateVisitChildMetaProgram // visit i'th child of inner node
-	{
-	  template<typename XG, typename E>
-	  static void interpolate (const IB &ib, const F& f, const LFS& lfs, XG& xg, const E& e)
-	  {
-        // vist children of both nodes in pairs
-		typedef typename F::template Child<i>::Type FC;
-		typedef typename LFS::template Child<i>::Type LFSC;
-
-        const FC& fc=f.template getChild<i>();
-        const LFSC& lfsc=lfs.template getChild<i>();
-
-        InterpolateVisitNodeMetaProgram<IB, FC,FC::isLeaf,LFSC,LFSC::isLeaf>::interpolate(ib, fc,lfsc,xg,e);
-		InterpolateVisitChildMetaProgram<IB, F,LFS,n,i+1>::interpolate(ib, f,lfs,xg,e);
-	  }
-	};
-
-	template<typename IB, typename F, typename LFS, int n> 
-	struct InterpolateVisitChildMetaProgram<IB, F,LFS,n,n> // end of child recursion
-	{
-      // end of child recursion
-	  template<typename XG, typename E>
-	  static void interpolate (const IB &ib, const F& f, const LFS& lfs, XG& xg, const E& e)
-	  {
-        return;
-	  }
-	};
-
-	template<typename IB, typename F, bool FisLeaf, typename LFS, bool LFSisLeaf> 
-	struct InterpolateVisitNodeMetaProgram // visit inner node
-	{
-	  template<typename XG, typename E>
-	  static void interpolate (const IB &ib, const F& f, const LFS& lfs, XG& xg, const E& e)
-	  {
-        // both are inner nodes, visit all children
-        // check that both have same number of children
-		dune_static_assert((static_cast<int>(F::CHILDREN)==static_cast<int>(LFS::CHILDREN)),  
-						   "both nodes must have same number of children");
- 
-        // start child recursion
-		InterpolateVisitChildMetaProgram<IB,F,LFS,F::CHILDREN,0>::interpolate(ib,f,lfs,xg,e);
-	  }
-	};
-
-    /**\name VectorFunctionSwitch 
-       
-       This switch determines a reasonable interpolation depending on
-       the dimensions of the function space relative to the dimension
-       of the interpolation function. It supports:
-
-       <ul> 
-       
-       <li> Interpolation of a power function space from a vector
-       valued interpolation function.  
-
-       <li> Interpolation of a power function space from a scalar
-       interpolation function (alls components will have the same
-       value.
-
-       <li> Interpolation of a composite function space from a scalar
-       interpolation function (both components will have the same
-       value.
-
-       </ul>
-
-     @{
-    */
-
-    template<typename IB, typename F, typename LFS, int dimRange, bool isPower> 
-    struct InterpolateVectorFunctionSwitch
-    {
-      template<typename XG,typename E>
-      static void interpolate (const IB &ib, const F& f, const LFS& lfs, XG& xg, const E& e)
-      {DUNE_THROW(Dune::Exception, "Vector valued interpolation for composite spaces not implemented");}
-    };
-
-    // Interpolate components from vector valued function
-    template<typename IB, typename F, typename LFS, int dimRange> 
-    struct InterpolateVectorFunctionSwitch<IB,F,LFS,dimRange,true>
-    {
-      template<typename XG,typename E>
-      static void interpolate (const IB &ib, const F& f, const LFS& lfs, XG& xg, const E& e)
+      template<typename IB, typename E, typename XG>
+      struct InterpolateVisitor
+        : public TypeTree::TreePairVisitor
+        , public TypeTree::DynamicTraversal
       {
-        dune_static_assert((static_cast<int>(LFS::isPower)==1),  
-                           "specialization only for power");
-        dune_static_assert((static_cast<int>(F::Traits::dimRange)==static_cast<int>(LFS::CHILDREN)),  
-                           "number of components must coincide with number of children");
-        for (int k=0; k<LFS::CHILDREN; k++)
-          {
-            // allocate vector where to store coefficients from basis
-            std::vector<typename XG::ElementType> xl(lfs.getChild(k).size());
 
-            // call interpolate for the basis
-            typedef GridFunctionToLocalFunctionAdapter<F> LF;
-            LF localf(f,e);
-            typedef SelectComponentAdapter<LF> LFCOMP;
-            LFCOMP localfcomp(localf,k);
-            ib.interpolate(lfs.getChild(k).finiteElement(), localfcomp, xl);
-
-            // write coefficients into local vector 
-            lfs.getChild(k).vwrite(xl,xg);
-          }
-      }
-    };
-
-    // Interpolate components from scalar function
-    template<typename IB, typename F, typename LFS> 
-    struct InterpolateVectorFunctionSwitch<IB,F,LFS,1,true>
-    {
-      template<typename XG,typename E>
-      static void interpolate (const IB &ib, const F& f, const LFS& lfs, XG& xg, const E& e)
-      {
-        for (int k=0; k<LFS::CHILDREN; k++)
-          {
-            // allocate vector where to store coefficients from basis
-            std::vector<typename XG::ElementType> xl(lfs.getChild(k).size());
-
-            // call interpolate for the basis
-            typedef GridFunctionToLocalFunctionAdapter<F> LF;
-            LF localf(f,e);
-            ib.interpolate(lfs.getChild(k).finiteElement(), localf, xl);
-
-            // write coefficients into local vector 
-            lfs.getChild(k).vwrite(xl,xg);
-          }
-      }
-    };
-
-    // Interpolate components from scalar function
-    template<typename IB, typename F, typename LFS> 
-    struct InterpolateVectorFunctionSwitch<IB,F,LFS,1,false>
-    {
-      template<typename XG,typename E>
-      static void interpolate (const IB &ib, const F& f, const LFS& lfs, XG& xg, const E& e)
-      {
+        template<typename F, typename LFS, typename TreePath>
+        typename enable_if<F::isLeaf && LFS::isLeaf>::type
+        leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
-          typedef typename LFS::template Child<0>::Type Child;
-          const Child & child = lfs.template getChild<0>();
-
-          // allocate vector where to store coefficients from basis
-          std::vector<typename XG::ElementType> xl(child.size());
+          std::vector<typename XG::ElementType> xl(lfs.size());
 
           // call interpolate for the basis
-          typedef GridFunctionToLocalFunctionAdapter<F> LF;
-          LF localf(f,e);
-          ib.interpolate(child.finiteElement(), localf, xl);
+          ib.interpolate(lfs.finiteElement(),
+                         GridFunctionToLocalFunctionAdapter<F>(f,e), xl);
 
-          // write coefficients into local vector 
-          child.vwrite(xl,xg);
+          // write coefficients into local vector
+          lfs.vwrite(xl,xg);
         }
 
+        // interpolate PowerLFS from vector-valued function
+        template<typename F, typename LFS, typename TreePath>
+        typename enable_if<F::isLeaf && F::Traits::dimRange == 1
+                           && (!LFS::isLeaf)>::type
+        leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
-          typedef typename LFS::template Child<1>::Type Child;
-          const Child & child = lfs.template getChild<1>();
+#warning TODO: Implement interpolate from scalar function onto composite GFS
+          dune_static_assert(LFS::isPower,
+                             "Automatic interpolation of vector-valued function " \
+                             "only works for PowerGridFunctionSpace");
+          dune_static_assert((LFS::template Child<0>::Type::isLeaf),
+                             "Automatic interpolation of vector-valued function " \
+                             "is restricted to trees of depth 1");
 
-          // allocate vector where to store coefficients from basis
-          std::vector<typename XG::ElementType> xl(child.size());
-
-          // call interpolate for the basis
           typedef GridFunctionToLocalFunctionAdapter<F> LF;
           LF localf(f,e);
-          ib.interpolate(child.finiteElement(), localf, xl);
 
-          // write coefficients into local vector 
-          child.vwrite(xl,xg);
+          for (std::size_t k=0; k<LFS::CHILDREN; ++k)
+            {
+              // allocate vector where to store coefficients from basis
+              std::vector<typename XG::ElementType> xl(lfs.child(k).size());
+
+              // call interpolate for the basis
+              ib.interpolate(lfs.child(k).finiteElement(), lf, xl);
+
+              // write coefficients into local vector
+              lfs.child(k).vwrite(xl,xg);
+            }
         }
-      }
-    };
 
-    /** @} */
+        // interpolate PowerLFS from vector-valued function
+        template<typename F, typename LFS, typename TreePath>
+        typename enable_if<F::isLeaf && (F::Traits::dimRange > 1) &&
+                           (!LFS::isLeaf)>::type
+        leaf(const F& f, const LFS& lfs, TreePath treePath) const
+        {
+          dune_static_assert(LFS::isPower,
+                             "Automatic interpolation of vector-valued function " \
+                             "only works for PowerGridFunctionSpace");
+          dune_static_assert((LFS::template Child<0>::Type::isLeaf),
+                             "Automatic interpolation of vector-valued function " \
+                             "is restricted to trees of depth 1");
+          dune_static_assert(LFS::CHILDREN == F::Traits::dimRange,
+                             "Number of children and dimension of range type " \
+                             "must match for automatic interpolation of " \
+                             "vector-valued function");
+          for (std::size_t k=0; k<LFS::CHILDREN; ++k)
+            {
+              // allocate vector where to store coefficients from basis
+              std::vector<typename XG::ElementType> xl(lfs.child(k).size());
 
-	template<typename IB, typename F, typename LFS> 
-	struct InterpolateVisitNodeMetaProgram<IB,F,true,LFS,false> 
-	{
-	  template<typename XG, typename E>
-	  static void interpolate (const IB &ib, const F& f, const LFS& lfs, XG& xg, const E& e)
-	  {
-		dune_static_assert((static_cast<int>(LFS::template Child<0>::Type::isLeaf)==1),  
-						   "children must be leaves");
+              // call interpolate for the basis
+              typedef GridFunctionToLocalFunctionAdapter<F> LF;
+              LF localf(f,e);
+              typedef SelectComponentAdapter<LF> LFCOMP;
+              LFCOMP localfcomp(localf,k);
+              ib.interpolate(lfs.child(k).finiteElement(), localfcomp, xl);
 
-        // Choose a "reasonable" interpolation mode depending on
-        // dimensions of LFS and F
-        InterpolateVectorFunctionSwitch<IB,F,LFS,F::Traits::dimRange,LFS::isPower>::
-          interpolate(ib,f,lfs,xg,e);
-	  }
+              // write coefficients into local vector
+              lfs.child(k).vwrite(xl,xg);
+            }
+        }
 
+        InterpolateVisitor(IB ib_, const E& e_, XG& xg_)
+          : ib(ib_)
+          , e(e_)
+          , xg(xg_)
+        {}
 
-	};
+      private:
+        IB ib;
+        const E& e;
+        XG& xg;
+      };
 
-	template<typename IB, typename F, typename LFS> 
-	struct InterpolateVisitNodeMetaProgram<IB,F,true,LFS,true> // leaf node node in both trees 
-	{
-	  template<typename XG, typename E>
-	  static void interpolate (const IB &ib, const F& f, const LFS& lfs, XG& xg, const E& e)
-	  {
-        // now we are at a single component local function space
-        // which is part of a multi component local function space
-
-		// allocate vector where to store coefficients from basis
-		std::vector<typename XG::ElementType> xl(lfs.size());
-
-		// call interpolate for the basis
-        ib.interpolate(lfs.finiteElement(),
-                       GridFunctionToLocalFunctionAdapter<F>(f,e), xl);
-
-		// write coefficients into local vector 
-		lfs.vwrite(xl,xg);
-	  }
-	};
-
+    } // anonymous namespace
 
     //! interpolation from a given grid function
     /**
@@ -273,9 +154,10 @@ namespace Dune {
       // get some types
       typedef typename GFS::Traits::GridViewType GV;
       typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
+      typedef typename GV::Traits::template Codim<0>::Entity Element;
 
       // make local function space
-      typedef typename GFS::LocalFunctionSpace LFS;
+      typedef LocalFunctionSpace<GFS> LFS;
       LFS lfs(gfs);
 
       // loop once over the grid
@@ -286,8 +168,7 @@ namespace Dune {
           lfs.bind(*it);
 
           // call interpolate
-		  InterpolateVisitNodeMetaProgram<InterpolateBackendStandard,F,F::isLeaf,LFS,LFS::isLeaf>
-            ::interpolate(InterpolateBackendStandard(),f,lfs,xg,*it);
+          TypeTree::applyToTreePair(f,lfs,InterpolateVisitor<InterpolateBackendStandard,Element,XG>(InterpolateBackendStandard(),*it,xg));
         }
     }
 

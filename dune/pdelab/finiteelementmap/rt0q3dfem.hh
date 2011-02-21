@@ -13,23 +13,22 @@ namespace Dune {
     //! \ingroup FiniteElementMap
 
     template<typename GV, typename D, typename R>
-    class RT0Q3DLocalFiniteElementMap : 
-	  public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits< Dune::RT0Q3DLocalFiniteElement<D,R> >, 
-											RT0Q3DLocalFiniteElementMap<GV,D,R> >,
-      public Countable
+    class RT0Q3DLocalFiniteElementMap :
+	  public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits< Dune::RT0Q3DLocalFiniteElement<D,R> >,
+											RT0Q3DLocalFiniteElementMap<GV,D,R> >
     {
       typedef Dune::RT0Q3DLocalFiniteElement<D,R> FE;
       typedef typename GV::IndexSet IndexSet;
-     
+
     public:
 	  //! \brief export type of the signature
-	  typedef LocalFiniteElementMapTraits<FE> Traits;  
+	  typedef LocalFiniteElementMapTraits<FE> Traits;
 
 	  //! \brief Use when Imp has a standard constructor
-	  RT0Q3DLocalFiniteElementMap (const GV& gv_) 
+	  RT0Q3DLocalFiniteElementMap (const GV& gv_)
         : gv(gv_), is(gv_.indexSet()), orient(gv_.size(0))
 	  {
-        // create all variants 
+        // create all variants
         for (int i=0; i<64; i++)
           variant[i] = FE(i);
 

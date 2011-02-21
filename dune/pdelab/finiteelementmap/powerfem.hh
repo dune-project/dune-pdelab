@@ -8,7 +8,6 @@
 
 #include <dune/localfunctions/meta/power.hh>
 
-#include <dune/pdelab/common/countingptr.hh>
 #include <dune/pdelab/finiteelementmap/finiteelementmap.hh>
 
 namespace Dune {
@@ -21,8 +20,7 @@ namespace Dune {
      * \tparam dimR       Power to raise the backend FiniteElements to.
      */
     template<class BackendFEM, std::size_t dimR>
-    class PowerFiniteElementMap :
-      public Countable
+    class PowerFiniteElementMap
     {
       typedef typename BackendFEM::Traits::FiniteElementType BackendFE;
       typedef PowerFiniteElementFactory<BackendFE, dimR> Factory;

@@ -12,19 +12,18 @@ namespace Dune {
   namespace PDELab {
 
     template<typename IIS, typename D, typename R, int dim>
-    class MimeticLocalFiniteElementMap : 
-      public Dune::PDELab::LocalFiniteElementMapInterface<Dune::PDELab::LocalFiniteElementMapTraits< MimeticLocalFiniteElement<D,R,dim> >, 
-                                                          MimeticLocalFiniteElementMap<IIS,D,R,dim> >,
-                                                                                                     public Dune::PDELab::Countable
+    class MimeticLocalFiniteElementMap :
+      public Dune::PDELab::LocalFiniteElementMapInterface<Dune::PDELab::LocalFiniteElementMapTraits< MimeticLocalFiniteElement<D,R,dim> >,
+                                                          MimeticLocalFiniteElementMap<IIS,D,R,dim> >
     {
       typedef MimeticLocalFiniteElement<D,R,dim> FE;
-     
+
     public:
       //! \brief export type of the signature
-      typedef Dune::PDELab::LocalFiniteElementMapTraits<FE> Traits;  
+      typedef Dune::PDELab::LocalFiniteElementMapTraits<FE> Traits;
 
       //! \brief Use when Imp has a standard constructor
-      MimeticLocalFiniteElementMap (const IIS& iis_, Dune::GeometryType::BasicType basicType) 
+      MimeticLocalFiniteElementMap (const IIS& iis_, Dune::GeometryType::BasicType basicType)
         : iis(iis_), bt(basicType)
 
       {
@@ -45,7 +44,7 @@ namespace Dune {
             size_t old_n = variant.size();
             variant.resize(n+1);
             for (size_t i=old_n; i<n+1; i++) variant[i] = FE(bt,i);
-            return variant[n];      
+            return variant[n];
           }
       }
 

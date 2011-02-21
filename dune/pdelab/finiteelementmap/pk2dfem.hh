@@ -16,22 +16,21 @@ namespace Dune {
     //! \ingroup FiniteElementMap
 
     template<typename GV, typename D, typename R, unsigned int k>
-    class Pk2DLocalFiniteElementMap : 
-	  public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits< Dune::Pk2DLocalFiniteElement<D,R,k> >, 
-											Pk2DLocalFiniteElementMap<GV,D,R,k> >,
-      public Countable
+    class Pk2DLocalFiniteElementMap :
+	  public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits< Dune::Pk2DLocalFiniteElement<D,R,k> >,
+											Pk2DLocalFiniteElementMap<GV,D,R,k> >
     {
       typedef Dune::Pk2DLocalFiniteElement<D,R,k> FE;
       typedef typename GV::IndexSet IndexSet;
-     
+
     public:
 	  //! \brief export type of the signature
-	  typedef LocalFiniteElementMapTraits<FE> Traits;  
+	  typedef LocalFiniteElementMapTraits<FE> Traits;
 
 	  //! \brief Use when Imp has a standard constructor
 	  Pk2DLocalFiniteElementMap (const GV& gv_) : is(gv_.indexSet())
 	  {
-        // create all variants 
+        // create all variants
         for (int i=0; i<8; i++)
           variant[i] = FE(i);
       }
