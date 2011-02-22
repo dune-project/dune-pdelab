@@ -392,7 +392,12 @@ namespace Dune {
       size_t dataHandleSize (const EntityType& e) const
       {
         Dune::GeometryType gt=e.type();
-        typename GV::IndexSet::IndexType index = gtoffset.find(gt)->second + gv.indexSet().index(e);
+
+        typename GTOffsetMap::const_iterator git = gtoffset.find(gt);
+        if (git == gtoffset.end())
+          return 0;
+
+        typename GV::IndexSet::IndexType index = git->second + gv.indexSet().index(e);
         return offset[index+1]-offset[index];
       }
 
@@ -413,7 +418,12 @@ namespace Dune {
                                            bool resize) const
       {
         Dune::GeometryType gt=e.type();
-        typename GV::IndexSet::IndexType index = gtoffset.find(gt)->second + gv.indexSet().index(e);
+
+        typename GTOffsetMap::const_iterator git = gtoffset.find(gt);
+        if (git == gtoffset.end())
+          return 0;
+
+        typename GV::IndexSet::IndexType index = git->second + gv.indexSet().index(e);
         unsigned int n = offset[index+1]-offset[index];
         if (resize)
           global.resize(n);
@@ -536,7 +546,8 @@ namespace Dune {
 	  typename Traits::SizeType nglobal;
       const CE& ce;
 
-	  std::map<Dune::GeometryType,typename Traits::SizeType> gtoffset; // offset in vector for given geometry type
+      typedef std::map<Dune::GeometryType,typename Traits::SizeType> GTOffsetMap;
+	  GTOffsetMap gtoffset; // offset in vector for given geometry type
 	  std::vector<typename Traits::SizeType> offset; // offset into big vector for each entity;
       std::set<unsigned int> codimUsed;
 	};
@@ -715,7 +726,8 @@ namespace Dune {
       size_t dataHandleSize (const EntityType& e) const
       {
         Dune::GeometryType gt=e.type();
-        return dofcountmap.find(gt)->second;
+        typename DofCountMapType::const_iterator git = dofcountmap.find(gt);
+        return git != dofcountmap.end() ? dofcountmap.find(gt)->second : 0;
       }
 
       //! return vector of global indices associated with the given entity
@@ -736,7 +748,10 @@ namespace Dune {
       {
         Dune::GeometryType gt=e.type();
         typename GV::IndexSet::IndexType index = gv.indexSet().index(e);
-        unsigned int n = dofcountmap.find(gt)->second;
+        typename DofCountMapType::const_iterator git = dofcountmap.find(gt);
+        if (git == dofcountmap.end())
+          return 0;
+        unsigned int n = git->second;
         if (resize)
           global.resize(n);
         for(unsigned i=0; i<n; i++)
@@ -1085,7 +1100,8 @@ namespace Dune {
       size_t dataHandleSize (const EntityType& e) const
       {
         const int cd = EntityType::codimension;
-        return dofpercodim.find(cd)->second;
+        typename DofPerCodimMapType::const_iterator git = dofpercodim.find(cd);
+        return git != dofpercodim.end() ? dofpercodim.find(cd)->second : 0;
       }
 
       //! return vector of global indices associated with the given entity
@@ -1105,9 +1121,12 @@ namespace Dune {
                                            bool resize) const
       {
         const int cd = EntityType::codimension;
+        typename DofPerCodimMapType::const_iterator git = dofpercodim.find(cd);
+        if (git == dofpercodim.end())
+          return 0;
         typename GV::IndexSet::IndexType o = offset.find(cd)->second;
         typename GV::IndexSet::IndexType index = gv.indexSet().index(e);
-        unsigned int n = dofpercodim.find(cd)->second;
+        unsigned int n = git->second;
         if (resize)
           global.resize(n);
         for (unsigned int i=0; i<n; i++)
