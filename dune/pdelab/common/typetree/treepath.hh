@@ -10,6 +10,8 @@
 #include <dune/common/static_assert.hh>
 #include <dune/common/typetraits.hh>
 
+#include <dune/pdelab/common/typetree/fixedcapacitystack.hh>
+
 namespace Dune {
   namespace PDELab {
 
@@ -350,6 +352,7 @@ namespace Dune {
 
 #endif // HAVE_VARIADIC_TEMPLATES
 
+
     //! A TreePath that stores the path of a node as runtime information.
     class DynamicTreePath
     {
@@ -359,36 +362,37 @@ namespace Dune {
       //! Get the size (length) of this path.
       std::size_t size() const
       {
-        return _vec.size();
+        return _stack.size();
       }
 
       //! Get the index value at position pos.
       std::size_t element(std::size_t pos) const
       {
-        return _vec[pos];
+        return _stack[pos];
       }
 
       //! Get the last index value.
       std::size_t back() const
       {
-        return _vec.back();
+        return _stack.back();
       }
 
       //! Get the first index value.
       std::size_t front() const
       {
-        return _vec.front();
+        return _stack.front();
       }
 
     protected:
 
 #ifndef DOXYGEN
 
-      typedef std::vector<std::size_t> Vector;
-      Vector& _vec;
+      typedef FixedCapacityStackView<std::size_t> Stack;
 
-      DynamicTreePath(Vector& vec)
-        : _vec(vec)
+      Stack& _stack;
+
+      DynamicTreePath(Stack& stack)
+        : _stack(stack)
       {}
 
 #endif // DOXYGEN
@@ -415,17 +419,17 @@ namespace Dune {
 
       void push_back(std::size_t v)
       {
-        _vec.push_back(v);
+        _stack.push_back(v);
       }
 
       void pop_back()
       {
-        _vec.pop_back();
+        _stack.pop_back();
       }
 
       void set_back(std::size_t v)
       {
-        _vec.back() = v;
+        _stack.back() = v;
       }
 
       DynamicTreePath view()
@@ -435,8 +439,8 @@ namespace Dune {
 
     protected:
 
-      MutableDynamicTreePath(Vector& vec)
-        : DynamicTreePath(vec)
+      MutableDynamicTreePath(Stack& stack)
+        : DynamicTreePath(stack)
       {}
 
     };
@@ -446,9 +450,10 @@ namespace Dune {
     // during the tree traversal. After construction, it should
     // not be used directly - the traversal framework uses the
     // base class returned by calling mutablePath().
+    template<std::size_t treeDepth>
     class MakeableDynamicTreePath
-      : public std::vector<std::size_t>
-       , public MutableDynamicTreePath
+      : private FixedCapacityStack<std::size_t,treeDepth>
+      , public MutableDynamicTreePath
     {
 
     public:
@@ -459,9 +464,8 @@ namespace Dune {
       }
 
       MakeableDynamicTreePath()
-        : MutableDynamicTreePath(static_cast<std::vector<std::size_t>&>(*this))
+        : MutableDynamicTreePath(static_cast<FixedCapacityStackView<std::size_t>&>(*this))
       {
-        reserve(16); // try to avoid reallocations during tree traversal
       }
 
     };
@@ -475,7 +479,8 @@ namespace Dune {
     template<>
     struct TreePathFactory<TreePathType::fullyStatic>
     {
-      static TreePath<> create()
+      template<typename Tree>
+      static TreePath<> create(const Tree& tree)
       {
         return TreePath<>();
       }
@@ -485,9 +490,10 @@ namespace Dune {
     template<>
     struct TreePathFactory<TreePathType::dynamic>
     {
-      static MakeableDynamicTreePath create()
+      template<typename Tree>
+      static MakeableDynamicTreePath<TreeInfo<Tree>::depth> create(const Tree& tree)
       {
-        return MakeableDynamicTreePath();
+        return MakeableDynamicTreePath<TreeInfo<Tree>::depth>();
       }
     };
 

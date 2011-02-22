@@ -56,7 +56,7 @@ namespace Dune {
                           >::apply(std::forward<Node1>(node1),
                                    std::forward<Node2>(node2),
                                    std::forward<Visitor>(visitor),
-                                   TreePathFactory<tpType>::create().mutablePath());
+                                   TreePathFactory<tpType>::create(node1).mutablePath());
         }
 
 #else
@@ -77,7 +77,7 @@ namespace Dune {
                           >::apply(node1,
                                    node2,
                                    visitor,
-                                   TreePathFactory<tpType>::create().mutablePath());
+                                   TreePathFactory<tpType>::create(node1).mutablePath());
         }
 
         template<typename Node1, typename Node2, typename Visitor>
@@ -89,7 +89,7 @@ namespace Dune {
                           >::apply(const_cast<const Node1&>(node1), // see previous method
                                    const_cast<const Node2&>(node2), // for explanation
                                    visitor,
-                                   TreePathFactory<tpType>::create().mutablePath());
+                                   TreePathFactory<tpType>::create(node1).mutablePath());
         }
 
 
@@ -109,7 +109,7 @@ namespace Dune {
                           >::apply(node1,
                                    node2,
                                    visitor,
-                                   TreePathFactory<tpType>::create().mutablePath());
+                                   TreePathFactory<tpType>::create(node1).mutablePath());
         }
 
         template<typename Node1, typename Node2, typename Visitor>
@@ -121,7 +121,7 @@ namespace Dune {
                           >::apply(const_cast<const Node1&>(node1), // see previous method
                                    const_cast<const Node2&>(node2), // for explanation
                                    visitor,
-                                   TreePathFactory<tpType>::create().mutablePath());
+                                   TreePathFactory<tpType>::create(node1).mutablePath());
         }
 
 #endif // HAVE_RVALUE_REFERENCES

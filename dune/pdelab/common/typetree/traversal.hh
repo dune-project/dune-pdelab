@@ -60,7 +60,7 @@ namespace Dune {
         {
           ApplyToTree<tpType,typename remove_reference<Node>::type::NodeTag>::apply(std::forward<Node>(node),
                                                                                     std::forward<Visitor>(visitor),
-                                                                                    TreePathFactory<tpType>::create().mutablePath());
+                                                                                    TreePathFactory<tpType>::create(node).mutablePath());
         }
 
 #else
@@ -68,25 +68,25 @@ namespace Dune {
         template<typename Node, typename Visitor>
         static void apply(Node& node, Visitor& visitor)
         {
-          ApplyToTree<tpType,typename Node::NodeTag>::apply(node,visitor,TreePathFactory<tpType>::create().mutablePath());
+          ApplyToTree<tpType,typename Node::NodeTag>::apply(node,visitor,TreePathFactory<tpType>::create(node).mutablePath());
         }
 
         template<typename Node, typename Visitor>
         static void apply(const Node& node, Visitor& visitor)
         {
-          ApplyToTree<tpType,typename Node::NodeTag>::apply(node,visitor,TreePathFactory<tpType>::create().mutablePath());
+          ApplyToTree<tpType,typename Node::NodeTag>::apply(node,visitor,TreePathFactory<tpType>::create(node).mutablePath());
         }
 
         template<typename Node, typename Visitor>
         static void apply(Node& node, const Visitor& visitor)
         {
-          ApplyToTree<tpType,typename Node::NodeTag>::apply(node,visitor,TreePathFactory<tpType>::create().mutablePath());
+          ApplyToTree<tpType,typename Node::NodeTag>::apply(node,visitor,TreePathFactory<tpType>::create(node).mutablePath());
         }
 
         template<typename Node, typename Visitor>
         static void apply(const Node& node, const Visitor& visitor)
         {
-          ApplyToTree<tpType,typename Node::NodeTag>::apply(node,visitor,TreePathFactory<tpType>::create().mutablePath());
+          ApplyToTree<tpType,typename Node::NodeTag>::apply(node,visitor,TreePathFactory<tpType>::create(node).mutablePath());
         }
 
 #endif // HAVE_RVALUE_REFERENCES
