@@ -4,6 +4,7 @@
 #define DUNE_PDELAB_POWERCOMPOSITEGRIDFUNCTIONSPACEBASE_HH
 
 #include "../common/typetree.hh"
+#include "../common/typetree/fixedcapacitystack.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -115,7 +116,7 @@ namespace Dune {
     };
 
     //! Visitor for retrieving the global DOF indices of a given entity.
-    template<typename Entity, typename Container>
+    template<typename Entity, typename Container, std::size_t gfs_depth>
     struct DataHandleGlobalIndicesVisitor
       : public TypeTree::TreeVisitor
       , public TypeTree::DynamicTraversal
@@ -147,14 +148,12 @@ namespace Dune {
         , g(global)
         , pos(0)
       {
-        // a reasonable upper bound for the tree depth - this way, we avoid reallocations
-        offsets.reserve(16);
       }
 
       const Entity& e;
       Container& g;
       std::size_t pos;
-      std::vector<std::size_t> offsets;
+      TypeTree::FixedCapacityStack<std::size_t,gfs_depth> offsets;
 
     };
 
@@ -271,7 +270,7 @@ namespace Dune {
                                     std::vector<SizeType>& global) const
       {
         global.resize(dataHandleSize(e));
-        DataHandleGlobalIndicesVisitor<EntityType,std::vector<SizeType> > visitor(e,global);
+        DataHandleGlobalIndicesVisitor<EntityType,std::vector<SizeType>,TypeTree::TreeInfo<GridFunctionSpace>::depth> visitor(e,global);
         TypeTree::applyToTree(gfs(),visitor);
       }
 
