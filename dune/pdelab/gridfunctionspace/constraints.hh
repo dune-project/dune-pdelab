@@ -9,6 +9,7 @@
 
 #include"../common/function.hh"
 #include"../common/geometrywrapper.hh"
+#include"../common/typetraits.hh"
 
 #include"gridfunctionspace.hh"
 
@@ -309,116 +310,344 @@ namespace Dune {
 
     } // anonymous namespace
 
-    //! construct constraints from given boundary condition function
+    template<DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN_FOR_SPECIALIZATION>
+    struct CompositeConstraintsOperator
+      : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
+    {
+      typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE BaseT;
+
+      CompositeConstraintsOperator(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
+        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
+      {}
+          
+      CompositeConstraintsOperator(DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
+        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
+      {}
+
+      // aggregate flags
+      
+      // forward methods to childs
+      
+    };
+    
+    template<DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN_FOR_SPECIALIZATION>
+    struct CompositeConstraintsParameters
+      : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
+    {
+      typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE BaseT;
+
+      CompositeConstraintsParameters(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
+        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
+      {}
+
+      CompositeConstraintsParameters(DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
+        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
+      {}
+    };
+    
+    template<typename T, std::size_t k>
+    struct PowerConstraintsParameters
+      : public TypeTree::PowerNode<T,k>
+    {
+      typedef TypeTree::PowerNode<T,k> BaseT;
+      
+      PowerConstraintsParameters(T& c)
+        : BaseT(c)
+      {}
+
+      PowerConstraintsParameters (T& c0,
+                              T& c1)
+        : BaseT(c0,c1)
+      {}
+
+      PowerConstraintsParameters (T& c0,
+                              T& c1,
+                              T& c2)
+        : BaseT(c0,c1,c2)
+      {}
+
+      PowerConstraintsParameters (T& c0,
+                              T& c1,
+                              T& c2,
+                              T& c3)
+        : BaseT(c0,c1,c2,c3)
+      {}
+
+      PowerConstraintsParameters (T& c0,
+                              T& c1,
+                              T& c2,
+                              T& c3,
+                              T& c4)
+        : BaseT(c0,c1,c2,c3,c4)
+      {}
+
+      PowerConstraintsParameters (T& c0,
+                              T& c1,
+                              T& c2,
+                              T& c3,
+                              T& c4,
+                              T& c5)
+        : BaseT(c0,c1,c2,c3,c4,c5)
+      {}
+
+      PowerConstraintsParameters (T& c0,
+                              T& c1,
+                              T& c2,
+                              T& c3,
+                              T& c4,
+                              T& c5,
+                              T& c6)
+        : BaseT(c0,c1,c2,c3,c4,c5,c6)
+      {}
+
+      PowerConstraintsParameters (T& c0,
+                              T& c1,
+                              T& c2,
+                              T& c3,
+                              T& c4,
+                              T& c5,
+                              T& c6,
+                              T& c7)
+        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7)
+      {}
+
+      PowerConstraintsParameters (T& c0,
+                              T& c1,
+                              T& c2,
+                              T& c3,
+                              T& c4,
+                              T& c5,
+                              T& c6,
+                              T& c7,
+                              T& c8)
+        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8)
+      {}
+
+      PowerConstraintsParameters (T& c0,
+                              T& c1,
+                              T& c2,
+                              T& c3,
+                              T& c4,
+                              T& c5,
+                              T& c6,
+                              T& c7,
+                              T& c8,
+                              T& c9)
+        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8,c9)
+      {}
+
+      PowerConstraintsParameters (const array<shared_ptr<T>,k>& children)
+        : BaseT(children)
+      {}
+    };
+    
+#ifndef DOXYGEN
+
+    template<typename F>
+    class DirichletConstraintsWrapper
+      : public TypeTree::LeafNode
+    {
+      shared_ptr<const F> _f;
+    public:
+      DirichletConstraintsWrapper(shared_ptr<const F> f) : _f(f) {}
+      DirichletConstraintsWrapper(const F & f) : _f(stackobject_to_shared_ptr(f)) {}
+      
+      template<typename I>
+      bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      {
+        typename F::Traits::RangeType bctype;
+        _f->evaluate(intersection,coord,bctype);
+        return bctype > 0;
+      }
+    };
+
+    // Tag to name trafo GridFunction -> DirichletConstraintsWrapper
+    struct gf_to_constraints {};
+    
+    // register trafos GridFunction -> DirichletConstraintsWrapper
+    template<typename GridFunction>
+    Dune::PDELab::TypeTree::WrappingLeafNodeTransformation<GridFunction,gf_to_constraints,DirichletConstraintsWrapper<GridFunction> >
+    lookupNodeTransformation(GridFunction*, gf_to_constraints*, GridFunctionTag);
+
+    template<typename PowerGridFunction>
+    Dune::PDELab::TypeTree::SimplePowerNodeTransformation<PowerGridFunction,gf_to_constraints,PowerConstraintsParameters>
+    lookupNodeTransformation(PowerGridFunction*, gf_to_constraints*, PowerGridFunctionTag);
+
+#if HAVE_VARIADIC_TEMPLATES
+    template<typename CompositeGridFunction>
+    Dune::PDELab::TypeTree::SimpleVariadicCompositeNodeTransformation<CompositeGridFunction,gf_to_constraints,CompositeConstraintsParameters>
+    lookupNodeTransformation(CompositeGridFunction*, gf_to_constraints*, CompositeGridFunctionTag);
+#else
+    template<typename CompositeGridFunction>
+    Dune::PDELab::TypeTree::SimpleCompositeNodeTransformation<CompositeGridFunction,gf_to_constraints,CompositeConstraintsParameters>
+    lookupNodeTransformation(CompositeGridFunction*, gf_to_constraints*, CompositeGridFunctionTag);
+#endif
+    
+    //! construct constraints
     /**
      * \code
      * #include <dune/pdelab/gridfunctionspace/constraints.hh>
      * \endcode
-     * \tparam F   Type implementing a boundary condition function
+     * \tparam P   Type implementing a constraints parameter tree
      * \tparam GFS Type implementing the model GridFunctionSpace
      * \tparam CG  Type implementing the model
      *             GridFunctionSpace::ConstraintsContainer::Type
-     *
-     * \param f       The boundary condition function
-     * \param gfs     The gridfunctionspace
-     * \param cg      The constraints container
-     * \param verbose Print information about the constaints at the end
+     * \tparam isFunction bool to identify old-style parameters, which were implemented the Dune::PDELab::FunctionInterface
      */
-    template<typename F, typename GFS, typename CG>
-    void constraints(const F& f, const GFS& gfs, CG& cg,
-                     const bool verbose = false)
+    template<typename P, typename GFS, typename CG, bool isFunction>
+    struct ConstraintsAssemblerHelper
     {
-      // clear global constraints
-	  cg.clear();
+      //! construct constraints from given boundary condition function
+      /**
+       * \code
+       * #include <dune/pdelab/gridfunctionspace/constraints.hh>
+       * \endcode
+       * \tparam P   Type implementing a constraints parameter tree
+       * \tparam GFS Type implementing the model GridFunctionSpace
+       * \tparam CG  Type implementing the model
+       *             GridFunctionSpace::ConstraintsContainer::Type
+       *
+       * \param p       The parameter object
+       * \param gfs     The gridfunctionspace
+       * \param cg      The constraints container
+       * \param verbose Print information about the constaints at the end
+       */
+      static void
+      assemble(const P& p, const GFS& gfs, CG& cg, const bool verbose)
+      {
+        // clear global constraints
+        cg.clear();
 
-      // get some types
-      typedef typename GFS::Traits::GridViewType GV;
-      typedef typename GV::Traits::template Codim<0>::Entity Element;
-      typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
-	  typedef typename GV::IntersectionIterator IntersectionIterator;
-	  typedef typename IntersectionIterator::Intersection Intersection;
+        // get some types
+        typedef typename GFS::Traits::GridViewType GV;
+        typedef typename GV::Traits::template Codim<0>::Entity Element;
+        typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
+        typedef typename GV::IntersectionIterator IntersectionIterator;
+        typedef typename IntersectionIterator::Intersection Intersection;
 
-      // make local function space
-      typedef LocalFunctionSpace<GFS> LFS;
-      LFS lfs_e(gfs);
-      LFS lfs_f(gfs);
+        // make local function space
+        typedef LocalFunctionSpace<GFS> LFS;
+        LFS lfs_e(gfs);
+        LFS lfs_f(gfs);
 
-      // get index set
-      const typename GV::IndexSet& is=gfs.gridview().indexSet();
+        // get index set
+        const typename GV::IndexSet& is=gfs.gridview().indexSet();
 
-      // helper to compute offset dependent on geometry type
-      const int chunk=1<<28;
-      int offset = 0;
-      std::map<Dune::GeometryType,int> gtoffset;
+        // helper to compute offset dependent on geometry type
+        const int chunk=1<<28;
+        int offset = 0;
+        std::map<Dune::GeometryType,int> gtoffset;
 
-      // loop once over the grid
-      for (ElementIterator it = gfs.gridview().template begin<0>();
-           it!=gfs.gridview().template end<0>(); ++it)
+        // loop once over the grid
+        for (ElementIterator it = gfs.gridview().template begin<0>();
+             it!=gfs.gridview().template end<0>(); ++it)
         {
           // assign offset for geometry type;
           if (gtoffset.find(it->type())==gtoffset.end())
-            {
-              gtoffset[it->type()] = offset;
-              offset += chunk;
-            }
+          {
+            gtoffset[it->type()] = offset;
+            offset += chunk;
+          }
 
           const typename GV::IndexSet::IndexType id = is.index(*it)+gtoffset[it->type()];
 
           // bind local function space to element
           lfs_e.bind(*it);
 
+          // TypeTree::applyToTreePair(p,lfs_e,VolumeConstraints<Element,CG>(ElementGeometry<Element>(*it),cg));
           TypeTree::applyToTree(lfs_e,VolumeConstraints<Element,CG>(ElementGeometry<Element>(*it),cg));
 
 		  // iterate over intersections and call metaprogram
           unsigned int intersection_index = 0;
 		  IntersectionIterator endit = gfs.gridview().iend(*it);
 		  for (IntersectionIterator iit = gfs.gridview().ibegin(*it); iit!=endit; ++iit, ++intersection_index)
-			{
-			  if (iit->boundary())
-                {
-                  TypeTree::applyToTreePair(f,lfs_e,BoundaryConstraints<Intersection,CG>(IntersectionGeometry<Intersection>(*iit,intersection_index),cg));
-                }
+          {
+            if (iit->boundary())
+            {
+              TypeTree::applyToTreePair(p,lfs_e,BoundaryConstraints<Intersection,CG>(IntersectionGeometry<Intersection>(*iit,intersection_index),cg));
+            }
 
-              // ParallelStuff: BEGIN support for processor boundaries.
-			  if ((!iit->boundary()) && (!iit->neighbor()))
-                TypeTree::applyToTree(lfs_e,ProcessorConstraints<Intersection,CG>(IntersectionGeometry<Intersection>(*iit,intersection_index),cg));
-              // END support for processor boundaries.
+            // ParallelStuff: BEGIN support for processor boundaries.
+            if ((!iit->boundary()) && (!iit->neighbor()))
+              TypeTree::applyToTree(lfs_e,ProcessorConstraints<Intersection,CG>(IntersectionGeometry<Intersection>(*iit,intersection_index),cg));
+            // END support for processor boundaries.
 
-			  if (iit->neighbor()){
+            if (iit->neighbor()){
 
-                Dune::GeometryType gtn = iit->outside()->type();
-                const typename GV::IndexSet::IndexType idn = is.index(*(iit->outside()))+gtoffset[gtn];
+              Dune::GeometryType gtn = iit->outside()->type();
+              const typename GV::IndexSet::IndexType idn = is.index(*(iit->outside()))+gtoffset[gtn];
 
-                if(id>idn){
-                  // bind local function space to element in neighbor
-                  lfs_f.bind( *(iit->outside()) );
+              if(id>idn){
+                // bind local function space to element in neighbor
+                lfs_f.bind( *(iit->outside()) );
 
-                  TypeTree::applyToTreePair(lfs_e,lfs_f,SkeletonConstraints<Intersection,CG>(IntersectionGeometry<Intersection>(*iit,intersection_index),cg));
-
-                }
+                TypeTree::applyToTreePair(lfs_e,lfs_f,SkeletonConstraints<Intersection,CG>(IntersectionGeometry<Intersection>(*iit,intersection_index),cg));
               }
-			}
+            }
+          }
 		}
 
-	  // print result
-      if(verbose){
-        std::cout << "constraints:" << std::endl;
-        typedef typename CG::iterator global_col_iterator;
-        typedef typename CG::value_type::second_type global_row_type;
-        typedef typename global_row_type::iterator global_row_iterator;
+        // print result
+        if(verbose){
+          std::cout << "constraints:" << std::endl;
+          typedef typename CG::iterator global_col_iterator;
+          typedef typename CG::value_type::second_type global_row_type;
+          typedef typename global_row_type::iterator global_row_iterator;
 
-        std::cout << cg.size() << " constrained degrees of freedom" << std::endl;
+          std::cout << cg.size() << " constrained degrees of freedom" << std::endl;
 
-        for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
+          for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
           {
             std::cout << cit->first << ": ";
             for (global_row_iterator rit=(cit->second).begin(); rit!=(cit->second).end(); ++rit)
               std::cout << "(" << rit->first << "," << rit->second << ") ";
             std::cout << std::endl;
           }
+        }
       }
+    }; // end ConstraintsAssemblerHelper
 
-	} // constraints
+    template<typename F, typename GFS, typename CG>
+    struct ConstraintsAssemblerHelper<F, GFS, CG, true>
+    {
+      static void
+      assemble(const F& f, const GFS& gfs, CG& cg, const bool verbose)
+      {
+        // type of transformed tree
+        typedef typename Dune::PDELab::TypeTree::TransformTree<F,gf_to_constraints> Transformation;
+        typedef typename Transformation::Type P;
+        // transform tree
+        P p = Transformation::transform(f);
+        // call parameter based implementation
+        ConstraintsAssemblerHelper<P, GFS, CG, IsGridFunction<P>::value>::assemble(p,gfs,cg, verbose);
+      }
+    };
+#endif
+    
+    //! construct constraints from given boundary condition function
+    /**
+     * \code
+     * #include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * \endcode
+     * \tparam P   Type implementing a constraits parameter tree
+     * \tparam GFS Type implementing the model GridFunctionSpace
+     * \tparam CG  Type implementing the model
+     *             GridFunctionSpace::ConstraintsContainer::Type
+     *
+     * \param p       The boundary condition function
+     * \param gfs     The gridfunctionspace
+     * \param cg      The constraints container
+     * \param verbose Print information about the constaints at the end
+     *
+     * \note For backwards compatibility you can implement the parameter tree as an Implemention Dune::PDELab::FunctionInterface
+     *
+     */
+    template<typename P, typename GFS, typename CG>
+    void constraints(const P& p, const GFS& gfs, CG& cg,
+                     const bool verbose = false)
+    {
+      ConstraintsAssemblerHelper<P, GFS, CG, IsGridFunction<P>::value>::assemble(p,gfs,cg, verbose);
+	}
 
     //! construct constraints from given boundary condition function
     /**

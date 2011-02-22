@@ -22,6 +22,15 @@
 namespace Dune {
   namespace PDELab {
 
+    struct DirichletConstraintsParameters
+    {
+      template<typename I>
+      bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord)
+      {
+        return true;
+      }
+    };
+    
     //! Constraints construction
     // works in any dimension and on all element types
     class ConformingDirichletConstraints
@@ -34,24 +43,21 @@ namespace Dune {
 
       //! boundary constraints
       /**
-       * \tparam F   Boundary grid function returning boundary condition type.
-       *             If the value of the boundary grid function evaluated at
-       *             the local face center is >0, a dirichlet boundary is
-       *             assumed.
+       * \tparam P   Parameter class, wich fulfills the DirichletConstraintsParameters interface
        * \tparam IG  intersection geometry
        * \tparam LFS local function space
        * \tparam T   TransformationType
        */
-      template<typename F, typename I, typename LFS, typename T>
-      void boundary (const F& f, const IntersectionGeometry<I>& ig, 
+      template<typename P, typename I, typename LFS, typename T>
+      void boundary (const P& param, const IntersectionGeometry<I>& ig, 
                      const LFS& lfs, T& trafo) const
       {
+        typedef IntersectionGeometry<I> IS;
         typedef FiniteElementInterfaceSwitch<
           typename LFS::Traits::FiniteElementType
           > FESwitch;
-
-        typename F::Traits::RangeType bctype;
-
+        typedef FieldVector<typename IS::ctype, IS::dimension-1> FaceCoord;
+   
         const int face = ig.indexInInside();
 
         // find all local indices of this face
@@ -66,8 +72,8 @@ namespace Dune {
         // empty map means Dirichlet constraint
         typename T::RowType empty;
 
-        const typename F::Traits::DomainType testpoint = face_refelem.position(0,0);
-        f.evaluate(ig,testpoint,bctype);
+        const FaceCoord testpoint = face_refelem.position(0,0);
+        bool isDirichlet = param.isDirichlet(ig,testpoint);
 
         for (std::size_t i=0;
              i<std::size_t(FESwitch::coefficients(lfs.finiteElement()).size());
@@ -82,11 +88,10 @@ namespace Dune {
             for (int j=0; j<refelem.size(face,1,codim); j++){
               
               // test point to check whether we have dirichlet or neumann
-              const typename F::Traits::DomainType testpoint 
+              const FaceCoord testpoint 
                 = face_refelem.position(j,codim-1);
-              //      f.evaluate(ig,testpoint,bctype);
 
-              if (bctype > 0 &&
+              if (isDirichlet &&
                   static_cast<int>(FESwitch::coefficients(lfs.finiteElement()).
                                    localKey(i).subEntity())
                   == refelem.subEntity(face,1,j,codim))
@@ -121,7 +126,6 @@ namespace Dune {
         Dune::GeometryType gt = ig.inside()->type();
         typedef typename Dune::PDELab::IntersectionGeometry<I>::ctype DT;
         const int dim = Dune::PDELab::IntersectionGeometry<I>::Entity::Geometry::dimension;
-
 
         const Dune::GenericReferenceElement<DT,dim>& refelem = Dune::GenericReferenceElements<DT,dim>::general(gt);
 
