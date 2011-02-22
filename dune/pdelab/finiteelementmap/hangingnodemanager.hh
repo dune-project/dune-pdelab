@@ -166,7 +166,6 @@ namespace Dune {
 	      continue;
 	    }
 
-	    const int fLocalIndex =  fit->indexInOutside();
 	    const int f_level = fit->outside()->level();
 	  
 	    // a conforming face has no hanging nodes
