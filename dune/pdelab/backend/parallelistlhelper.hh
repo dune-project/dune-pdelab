@@ -253,7 +253,7 @@ namespace Dune {
 
     namespace
     {
-      template<typename GFS, int k>
+      template<typename GFS, bool Comp>
       struct BlockwiseIndicesHelper
       {
         enum{ value = false };
@@ -265,17 +265,24 @@ namespace Dune {
         enum{ value = false };
       };
 
+      template<typename M, int k>
+      struct BlockSizeIsEqual<M,ISTLVectorBackend<k>,k>
+      {
+        enum{ value = false };
+        static_assert(AlwaysFalse<M>::value, "Unsupported GridFunctionSpace mapper");
+      };
+
       template<int k>
-      struct BlockSizeIsEqual<GridFunctionSpaceBlockwiseMapper,ISTLVectorBackend<k>,k>
+      struct BlockSizeIsEqual<GridFunctionSpaceComponentBlockwiseMapper<1>,ISTLVectorBackend<k>,k>
       {
         enum{ value = true };
       };
 
       template<typename GFS>
-      struct BlockwiseIndicesHelper<GFS,1>
+      struct BlockwiseIndicesHelper<GFS,true>
       {
         enum{ value =  BlockSizeIsEqual<typename GFS::Traits::MapperType,
-              typename GFS::Traits::BackendType, GFS::Traits::noChilds>::value};
+              typename GFS::Traits::BackendType, GFS::CHILDREN>::value};
       };
 
       template<typename GFS>
@@ -284,6 +291,7 @@ namespace Dune {
         enum{
           value = BlockwiseIndicesHelper<GFS,GFS::Traits::isComposite>::value
         };
+        static_assert(GFS::Traits::isComposite, "Not Composite");
       };
 
       template<typename GFS, bool b, int k>
@@ -370,7 +378,8 @@ namespace Dune {
       struct BlockProcessor
         : public BlockProcessorHelper<GFS, BlockwiseIndices<GFS>::value,
                                       GFS::Traits::BackendType::BlockSize>
-      {};
+      {
+      };
 
     } // end anonymous namspace
 
