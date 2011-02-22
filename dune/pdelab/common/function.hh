@@ -479,6 +479,8 @@ namespace Dune {
     //! \addtogroup GridFunctionTree
     //! \{
 
+    struct GridFunctionTag {};
+
 	/** \brief leaf of a function tree
      *
      *  Classes derived from this class implement a \ref GridFunctionTree.
@@ -493,6 +495,7 @@ namespace Dune {
       , public TypeTree::LeafNode
 	{
 	public:
+      typedef GridFunctionTag ImplementationTag;
       //! Type of the GridView
 	  typedef typename T::GridViewType GridViewType;
 	};
@@ -512,6 +515,7 @@ namespace Dune {
       , public TypeTree::LeafNode
 	{
 	public:
+      typedef GridFunctionTag ImplementationTag;
       //! Type of the GridView
 	  typedef typename T::GridViewType GridViewType;
 	};
