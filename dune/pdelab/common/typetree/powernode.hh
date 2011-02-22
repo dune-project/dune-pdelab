@@ -51,14 +51,19 @@ namespace Dune {
 
 #endif
 
+#ifndef DOXYGEN
+
+      //! Helper struct to make constructor enabling mechanism in PowerNode more readable.
       template<typename PowerNode, typename T, std::size_t k>
-      struct PowerNodeChildCountCheck
+      struct AssertPowerNodeChildCount
         : public enable_if<is_same<
                              typename PowerNode::ChildType,
                              T>::value &&
                            PowerNode::CHILDREN == k,
                            T>
       {};
+
+#endif
 
       /** \brief Collect k instances of type T within a \ref TypeTree.
        *
@@ -140,7 +145,7 @@ namespace Dune {
         /**
          * \returns a reference to the i-th child.
          */
-        template<int i>
+        template<std::size_t i>
         T& DUNE_DEPRECATED getChild ()
         {
           return *_children[i];
@@ -150,7 +155,7 @@ namespace Dune {
         /**
          * \returns a const reference to the i-th child.
          */
-        template<int i>
+        template<std::size_t i>
         const T& DUNE_DEPRECATED getChild () const
         {
           return *_children[i];
@@ -160,7 +165,7 @@ namespace Dune {
         /**
          * \returns a copy of the object storing the i-th child.
          */
-        template<int i>
+        template<std::size_t i>
         ChildStorageType childStorage()
         {
           return _children[i];
@@ -173,21 +178,21 @@ namespace Dune {
          * become const.
          * \returns a copy of the object storing the i-th child.
          */
-        template<int i>
+        template<std::size_t i>
         ChildConstStorageType childStorage() const
         {
           return _children[i];
         }
 
         //! Sets the i-th child to the passed-in value.
-        template<int i>
+        template<std::size_t i>
         void setChild (T& t)
         {
           _children[i] = stackobject_to_shared_ptr(t);
         }
 
         //! Sets the stored value representing the i-th child to the passed-in value.
-        template<int i>
+        template<std::size_t i>
         void setChild (ChildStorageType st)
         {
           _children[i] = st;
@@ -203,7 +208,7 @@ namespace Dune {
         /**
          * \returns a reference to the i-th child.
          */
-        T& child (int i)
+        T& child (std::size_t i)
         {
           return *_children[i];
         }
@@ -212,7 +217,7 @@ namespace Dune {
         /**
          * \returns a const reference to the i-th child.
          */
-        const T& child (int i) const
+        const T& child (std::size_t i) const
         {
           return *_children[i];
         }
@@ -221,7 +226,7 @@ namespace Dune {
         /**
          * \returns a reference to the i-th child.
          */
-        T& getChild (int i) DUNE_DEPRECATED
+        T& getChild (std::size_t i) DUNE_DEPRECATED
         {
           return *_children[i];
         }
@@ -230,7 +235,7 @@ namespace Dune {
         /**
          * \returns a const reference to the i-th child.
          */
-        const T& getChild (int i) const DUNE_DEPRECATED
+        const T& getChild (std::size_t i) const DUNE_DEPRECATED
         {
           return *_children[i];
         }
@@ -239,7 +244,7 @@ namespace Dune {
         /**
          * \returns a copy of the object storing the i-th child.
          */
-        ChildStorageType childStorage(int i)
+        ChildStorageType childStorage(std::size_t i)
         {
           return _children[i];
         }
@@ -251,19 +256,19 @@ namespace Dune {
          * become const.
          * \returns a copy of the object storing the i-th child.
          */
-        ChildConstStorageType childStorage (int i) const
+        ChildConstStorageType childStorage (std::size_t i) const
         {
           return (_children[i]);
         }
 
         //! Sets the i-th child to the passed-in value.
-        void setChild (int i, T& t)
+        void setChild (std::size_t i, T& t)
         {
           _children[i] = stackobject_to_shared_ptr(t);
         }
 
         //! Sets the stored value representing the i-th child to the passed-in value.
-        void setChild (int i, ChildStorageType st)
+        void setChild (std::size_t i, ChildStorageType st)
         {
           _children[i] = st;
         }
@@ -341,7 +346,7 @@ namespace Dune {
 #else
 
         template<typename U>
-        PowerNode (typename PowerNodeChildCountCheck<PowerNode,U,2>::type& c0,
+        PowerNode (typename AssertPowerNodeChildCount<PowerNode,U,2>::type& c0,
                    U& c1)
         {
           _children[0] = stackobject_to_shared_ptr(c0);
@@ -349,7 +354,7 @@ namespace Dune {
         }
 
         template<typename U>
-        PowerNode (typename PowerNodeChildCountCheck<PowerNode,U,3>::type& c0,
+        PowerNode (typename AssertPowerNodeChildCount<PowerNode,U,3>::type& c0,
                    U& c1,
                    U& c2)
         {
@@ -359,7 +364,7 @@ namespace Dune {
         }
 
         template<typename U>
-        PowerNode (typename PowerNodeChildCountCheck<PowerNode,U,4>::type& c0,
+        PowerNode (typename AssertPowerNodeChildCount<PowerNode,U,4>::type& c0,
                    U& c1,
                    U& c2,
                    U& c3)
@@ -371,7 +376,7 @@ namespace Dune {
         }
 
         template<typename U>
-        PowerNode (typename PowerNodeChildCountCheck<PowerNode,U,5>::type& c0,
+        PowerNode (typename AssertPowerNodeChildCount<PowerNode,U,5>::type& c0,
                    U& c1,
                    U& c2,
                    U& c3,
@@ -385,7 +390,7 @@ namespace Dune {
         }
 
         template<typename U>
-        PowerNode (typename PowerNodeChildCountCheck<PowerNode,U,6>::type& c0,
+        PowerNode (typename AssertPowerNodeChildCount<PowerNode,U,6>::type& c0,
                    U& c1,
                    U& c2,
                    U& c3,
@@ -401,7 +406,7 @@ namespace Dune {
         }
 
         template<typename U>
-        PowerNode (typename PowerNodeChildCountCheck<PowerNode,U,7>::type& c0,
+        PowerNode (typename AssertPowerNodeChildCount<PowerNode,U,7>::type& c0,
                    U& c1,
                    U& c2,
                    U& c3,
@@ -419,7 +424,7 @@ namespace Dune {
         }
 
         template<typename U>
-        PowerNode (typename PowerNodeChildCountCheck<PowerNode,U,8>::type& c0,
+        PowerNode (typename AssertPowerNodeChildCount<PowerNode,U,8>::type& c0,
                    U& c1,
                    U& c2,
                    U& c3,
@@ -439,7 +444,7 @@ namespace Dune {
         }
 
         template<typename U>
-        PowerNode (typename PowerNodeChildCountCheck<PowerNode,U,9>::type& c0,
+        PowerNode (typename AssertPowerNodeChildCount<PowerNode,U,9>::type& c0,
                    U& c1,
                    U& c2,
                    U& c3,
@@ -461,7 +466,7 @@ namespace Dune {
         }
 
         template<typename U>
-        PowerNode (typename PowerNodeChildCountCheck<PowerNode,U,10>::type& c0,
+        PowerNode (typename AssertPowerNodeChildCount<PowerNode,U,10>::type& c0,
                    U& c1,
                    U& c2,
                    U& c3,
