@@ -193,7 +193,7 @@ namespace Dune {
          * \returns a const reference to the i-th child.
          */
         template<std::size_t k>
-        const typename Child<k>::Type& getChild() const
+        const typename Child<k>::Type& DUNE_DEPRECATED getChild() const
         {
           return child<k>();
         }
@@ -213,7 +213,7 @@ namespace Dune {
          * \returns a reference to the i-th child.
          */
         template<std::size_t k>
-        typename Child<k>::Type& getChild()
+        typename Child<k>::Type& DUNE_DEPRECATED getChild()
         {
           return child<k>();
         }
