@@ -426,7 +426,7 @@ namespace Dune {
         typename GV::IndexSet::IndexType index = git->second + gv.indexSet().index(e);
         unsigned int n = offset[index+1]-offset[index];
         if (resize)
-          global.resize(n);
+          global.resize(n+pos);
         for (unsigned i=0; i<n; i++)
           global[pos+i] = offset[index]+i;
         return n;
