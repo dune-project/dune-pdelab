@@ -199,7 +199,7 @@ void testpowerp1 (const GV& gv)
   P1FEM p1fem;
   
   // make constrained space
-  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,Dune::PDELab::P12DConstraints> P1GFS; 
+  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,Dune::PDELab::ConformingDirichletConstraints> P1GFS; 
   P1GFS p1gfs(gv,p1fem);
 
   // make m components of type P1
