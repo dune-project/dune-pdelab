@@ -102,7 +102,7 @@ namespace Dune {
     {
 
       template<typename Node, typename TreePath>
-      bool operator()(const Node& node, TreePath treePath) const
+      std::size_t operator()(const Node& node, TreePath treePath) const
       {
         return node.dataHandleSize(e);
       }
