@@ -221,14 +221,14 @@ namespace Dune {
                   ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
 
                 typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
-                const LFSV_PFS_V& lfsv_pfs_v = lfsv.template getChild<VBLOCK>();
+                const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
 
                 dune_static_assert
                   ((LFSV_PFS_V::CHILDREN == dim),"You seem to use the wrong function space for StokesDG");
 
                 // we assume all velocity components are the same type
                 typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
-                const LFSV_V& lfsv_v = lfsv_pfs_v.template getChild<0>();
+                const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
                 const unsigned int vsize = lfsv_v.size();
 
                 // domain and range field type
@@ -266,7 +266,7 @@ namespace Dune {
                     const RF factor = mu * weight;
                     for (unsigned int d=0; d<dim; d++)
                     {
-                        const LFSV_V& lfsv_v = lfsv_pfs_v.getChild(d);
+                        const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
 
                         // and store for each velocity component
                         for (size_type i=0; i<vsize; i++)
@@ -292,17 +292,17 @@ namespace Dune {
                     ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
 
                 typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
-                const LFSV_PFS_V& lfsv_pfs_v = lfsv.template getChild<VBLOCK>();
+                const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
 
                 dune_static_assert
                     ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
 
                 // ... we assume all velocity components are the same
                 typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
-                const LFSV_V& lfsv_v = lfsv_pfs_v.template getChild<0>();
+                const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
                 const unsigned int vsize = lfsv_v.size();
                 typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
-                const LFSV_P& lfsv_p = lfsv.template getChild<PBLOCK>();
+                const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
                 const unsigned int psize = lfsv_p.size();
 
                 // domain and range field type
@@ -363,7 +363,7 @@ namespace Dune {
                             const RF val = (grad_phi_v[i][0]*normal) * factor;
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                const LFSV_V& lfsv_v = lfsv_pfs_v.getChild(d);
+                                const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
                                 r[lfsv_v.localIndex(i)] -= epsilon * val * u0[d];
                             }
                         }
@@ -376,7 +376,7 @@ namespace Dune {
                             const RF val = phi_v[i] * factor;
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                const LFSV_V& lfsv_v = lfsv_pfs_v.getChild(d);
+                                const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
                                 r[lfsv_v.localIndex(i)] -= val * u0[d];
                             }
                         }
@@ -402,7 +402,7 @@ namespace Dune {
                         {
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                const LFSV_V& lfsv_v = lfsv_pfs_v.getChild(d);
+                                const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
                                 RF val = p0*normal[d]*phi_v[i] * weight;
                                 r[lfsv_v.localIndex(i)] += val;
                             }
@@ -423,16 +423,16 @@ namespace Dune {
                 dune_static_assert
                     ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
                 typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
-                const LFSV_PFS_V& lfsv_pfs_v = lfsv.template getChild<VBLOCK>();
+                const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
                 dune_static_assert
                     ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
 
                 // ... we assume all velocity components are the same
                 typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
-                const LFSV_V& lfsv_v = lfsv_pfs_v.template getChild<0>();
+                const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
                 const unsigned int vsize = lfsv_v.size();
                 typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
-                const LFSV_P& lfsv_p = lfsv.template getChild<PBLOCK>();
+                const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
                 const unsigned int psize = lfsv_p.size();
 
                 // domain and range field type
@@ -480,7 +480,7 @@ namespace Dune {
                             // and store for each velocity component
                             for (unsigned int d=0; d<dim; d++)
                             {
-                                const LFSV_V& lfsv_v = lfsv_pfs_v.getChild(d);
+                                const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
                                 mat(lfsv_v.localIndex(i),lfsv_v.localIndex(j)) += val;
                             }
                         }
@@ -497,7 +497,7 @@ namespace Dune {
                         {
                             for (unsigned int d=0; d<dim; d++)
                             {
-                                const LFSV_V& lfsv_v = lfsv_pfs_v.getChild(d);
+                                const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
                                 mat(lfsv_p.localIndex(j),lfsv_v.localIndex(i)) += val*grad_phi_v[i][0][d];
                                 mat(lfsv_v.localIndex(i),lfsv_p.localIndex(j)) += val*grad_phi_v[i][0][d];
                             }
@@ -523,20 +523,20 @@ namespace Dune {
                     ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
 
                 typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
-                const LFSV_PFS_V& lfsv_s_pfs_v = lfsv_s.template getChild<VBLOCK>();
-                const LFSV_PFS_V& lfsv_n_pfs_v = lfsv_n.template getChild<VBLOCK>();
+                const LFSV_PFS_V& lfsv_s_pfs_v = lfsv_s.template child<VBLOCK>();
+                const LFSV_PFS_V& lfsv_n_pfs_v = lfsv_n.template child<VBLOCK>();
                 dune_static_assert
                     ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
 
                 // ... we assume all velocity components are the same
                 typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
-                const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.template getChild<0>();
-                const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.template getChild<0>();
+                const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.template child<0>();
+                const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.template child<0>();
                 const unsigned int vsize_s = lfsv_s_v.size();
                 const unsigned int vsize_n = lfsv_n_v.size();
                 typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
-                const LFSV_P& lfsv_s_p = lfsv_s.template getChild<PBLOCK>();
-                const LFSV_P& lfsv_n_p = lfsv_n.template getChild<PBLOCK>();
+                const LFSV_P& lfsv_s_p = lfsv_s.template child<PBLOCK>();
+                const LFSV_P& lfsv_n_p = lfsv_n.template child<PBLOCK>();
                 const unsigned int psize_s = lfsv_s_p.size();
                 const unsigned int psize_n = lfsv_n_p.size();
 
@@ -600,7 +600,7 @@ namespace Dune {
                             RF val = (0.5*(grad_phi_v_s[i][0]*normal)*phi_v_s[j]) * factor;
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.getChild(d);
+                                const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
                                 mat_ss(lfsv_s_v.localIndex(j),lfsv_s_v.localIndex(i)) -= val;
                                 mat_ss(lfsv_s_v.localIndex(i),lfsv_s_v.localIndex(j)) += epsilon*val;
                             }
@@ -611,8 +611,8 @@ namespace Dune {
                             RF val = (-0.5*(grad_phi_v_s[i][0]*normal)*phi_v_n[j]) * factor;
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.getChild(d);
-                                const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.getChild(d);
+                                const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
+                                const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
                                 mat_ns(lfsv_n_v.localIndex(j),lfsv_s_v.localIndex(i)) -= val;
                                 mat_sn(lfsv_s_v.localIndex(i),lfsv_n_v.localIndex(j)) += epsilon*val;
                             }
@@ -625,8 +625,8 @@ namespace Dune {
                             RF val = (0.5*(grad_phi_v_n[i][0]*normal)*phi_v_s[j]) * factor;
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.getChild(d);
-                                const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.getChild(d);
+                                const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
+                                const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
                                 mat_sn(lfsv_s_v.localIndex(j),lfsv_n_v.localIndex(i)) -= val;
                                 mat_ns(lfsv_n_v.localIndex(i),lfsv_s_v.localIndex(j)) += epsilon*val;
                             }
@@ -637,7 +637,7 @@ namespace Dune {
                             RF val = (-0.5*(grad_phi_v_n[i][0]*normal)*phi_v_n[j]) * factor;
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.getChild(d);
+                                const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
                                 mat_nn(lfsv_n_v.localIndex(j),lfsv_n_v.localIndex(i)) -= val;
                                 mat_nn(lfsv_n_v.localIndex(i),lfsv_n_v.localIndex(j)) += epsilon*val;
                             }
@@ -654,7 +654,7 @@ namespace Dune {
                             RF val = phi_v_s[i]*phi_v_s[j] * factor;
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.getChild(d);
+                                const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
                                 mat_ss(lfsv_s_v.localIndex(j),lfsv_s_v.localIndex(i)) += val;
                             }
                         }
@@ -663,8 +663,8 @@ namespace Dune {
                             RF val = phi_v_s[i]*phi_v_n[j] * factor;
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.getChild(d);
-                                const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.getChild(d);
+                                const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
+                                const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
                                 mat_ns(lfsv_n_v.localIndex(j),lfsv_s_v.localIndex(i)) -= val;
                             }
                         }
@@ -676,8 +676,8 @@ namespace Dune {
                             RF val = phi_v_n[i]*phi_v_s[j] * factor;
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.getChild(d);
-                                const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.getChild(d);
+                                const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
+                                const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
                                 mat_sn(lfsv_s_v.localIndex(j),lfsv_n_v.localIndex(i)) -= val;
                             }
                         }
@@ -686,7 +686,7 @@ namespace Dune {
                             RF val = phi_v_n[i]*phi_v_n[j] * factor;
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.getChild(d);
+                                const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
                                 mat_nn(lfsv_n_v.localIndex(j),lfsv_n_v.localIndex(i)) += val;
                             }
                         }
@@ -701,7 +701,7 @@ namespace Dune {
                         {
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.getChild(d);
+                                const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
                                 RF val = 0.5*(phi_p_s[j]*normal[d]*phi_v_s[i]) * weight;
                                 mat_ss(lfsv_s_v.localIndex(i),lfsv_s_p.localIndex(j)) += val;
                                 mat_ss(lfsv_s_p.localIndex(j),lfsv_s_v.localIndex(i)) += val;
@@ -711,7 +711,7 @@ namespace Dune {
                         {
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.getChild(d);
+                                const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
                                 RF val = 0.5*(phi_p_n[j]*normal[d]*phi_v_s[i]) * weight;
                                 mat_sn(lfsv_s_v.localIndex(i),lfsv_n_p.localIndex(j)) += val;
                                 mat_ns(lfsv_n_p.localIndex(j),lfsv_s_v.localIndex(i)) += val;
@@ -724,7 +724,7 @@ namespace Dune {
                         {
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.getChild(d);
+                                const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
 
                                 // the normal vector flipped, thus the sign flips
                                 RF val = -0.5*(phi_p_s[j]*normal[d]*phi_v_n[i]) * weight;
@@ -736,7 +736,7 @@ namespace Dune {
                         {
                             for (unsigned int d=0;d<dim;++d)
                             {
-                                const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.getChild(d);
+                                const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
 
                                 // the normal vector flipped, thus the sign flips
                                 RF val = -0.5*(phi_p_n[j]*normal[d]*phi_v_n[i]) * weight;
@@ -763,16 +763,16 @@ namespace Dune {
                     ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
 
                 typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
-                const LFSV_PFS_V& lfsv_pfs_v = lfsv.template getChild<VBLOCK>();
+                const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
                 dune_static_assert
                     ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
 
                 // ... we assume all velocity components are the same
                 typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
-                const LFSV_V& lfsv_v = lfsv_pfs_v.template getChild<0>();
+                const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
                 const unsigned int vsize = lfsv_v.size();
                 typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
-                const LFSV_P& lfsv_p = lfsv.template getChild<PBLOCK>();
+                const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
                 const unsigned int psize = lfsv_p.size();
 
                 // domain and range field type
@@ -831,7 +831,7 @@ namespace Dune {
                                 RF val = ((grad_phi_v[j][0]*normal)*phi_v[i]) * factor;
                                 for (unsigned int d=0;d<dim;++d)
                                 {
-                                    const LFSV_V& lfsv_v = lfsv_pfs_v.getChild(d);
+                                    const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
                                     mat(lfsv_v.localIndex(i),lfsv_v.localIndex(j)) += - val;
                                     mat(lfsv_v.localIndex(j),lfsv_v.localIndex(i)) += epsilon*val;
                                 }
@@ -847,7 +847,7 @@ namespace Dune {
                             {
                                 for (unsigned int d=0;d<dim;++d)
                                 {
-                                    const LFSV_V& lfsv_v = lfsv_pfs_v.getChild(d);
+                                    const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
                                     RF val = (phi_p[j]*normal[d]*phi_v[i]) * weight;
                                     mat(lfsv_p.localIndex(j),lfsv_v.localIndex(i)) += val; // q u n
                                     mat(lfsv_v.localIndex(i),lfsv_p.localIndex(j)) += val; // p v n
@@ -865,7 +865,7 @@ namespace Dune {
                                 RF val = phi_v[i]*phi_v[j] * p_factor;
                                 for (unsigned int d=0;d<dim;++d)
                                 {
-                                    const LFSV_V& lfsv_v = lfsv_pfs_v.getChild(d);
+                                    const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
                                     mat(lfsv_v.localIndex(j),lfsv_v.localIndex(i)) += val;
                                 }
                             }
@@ -938,16 +938,16 @@ namespace Dune {
                 dune_static_assert
                     ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
                 typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
-                const LFSV_PFS_V& lfsv_pfs_v = lfsv.template getChild<VBLOCK>();
+                const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
                 dune_static_assert
                     ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
 
                 // ... we assume all velocity components are the same
                 typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
-                const LFSV_V& lfsv_v = lfsv_pfs_v.template getChild<0>();
+                const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
                 const unsigned int vsize = lfsv_v.size();
                 typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
-                const LFSV_P& lfsv_p = lfsv.template getChild<PBLOCK>();
+                const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
                 const unsigned int psize = lfsv_p.size();
 
                 // domain and range field type
@@ -986,13 +986,13 @@ namespace Dune {
                         // compute u (if Navier term enabled)
                         Dune::FieldVector<RF,dim> vu(0.0);
                         for(unsigned int d=0; d<dim; ++d){
-                            const LFSV_V & lfsu_v = lfsv_pfs_v.getChild(d);
+                            const LFSV_V & lfsu_v = lfsv_pfs_v.child(d);
                             for (size_t i=0; i<lfsu_v.size(); i++)
                                 vu[d] += x[lfsu_v.localIndex(i)] * phi_v[i];
                         }
                         
                         for(unsigned int dv=0; dv<dim; ++dv){
-                            const LFSV_V & lfsv_v = lfsv_pfs_v.getChild(dv);
+                            const LFSV_V & lfsv_v = lfsv_pfs_v.child(dv);
 
                             // compute gradient of u
                             Dune::FieldVector<RF,dim> gradu(0.0);
@@ -1001,7 +1001,7 @@ namespace Dune {
                             
                             
                             for(unsigned int du=0; du < dim; ++du){
-                                const LFSV_V & lfsu_v = lfsv_pfs_v.getChild(du);
+                                const LFSV_V & lfsu_v = lfsv_pfs_v.child(du);
 
                                 for (size_t i=0; i<vsize; i++)
                                     for(size_t j=0; j<vsize; j++)
@@ -1009,7 +1009,7 @@ namespace Dune {
                                             += rho * phi_v[j] * gradu[du] * phi_v[i] * weight;
                             } // du
 
-                            const LFSV_V & lfsu_v = lfsv_pfs_v.getChild(dv);
+                            const LFSV_V & lfsu_v = lfsv_pfs_v.child(dv);
                             for(size_t j=0; j<vsize; j++){
                                 const Dune::FieldVector<RF,dim> du(grad_phi_v[j][0]);
                                 for (size_t i=0; i<vsize; i++){
@@ -1037,16 +1037,16 @@ namespace Dune {
                 dune_static_assert
                     ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
                 typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
-                const LFSV_PFS_V& lfsv_pfs_v = lfsv.template getChild<VBLOCK>();
+                const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
                 dune_static_assert
                     ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
 
                 // ... we assume all velocity components are the same
                 typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
-                const LFSV_V& lfsv_v = lfsv_pfs_v.template getChild<0>();
+                const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
                 const unsigned int vsize = lfsv_v.size();
                 typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
-                const LFSV_P& lfsv_p = lfsv.template getChild<PBLOCK>();
+                const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
                 const unsigned int psize = lfsv_p.size();
 
                 // domain and range field type
@@ -1085,13 +1085,13 @@ namespace Dune {
                         // compute u (if Navier term enabled)
                         Dune::FieldVector<RF,dim> vu(0.0);
                         for(unsigned int d=0; d<dim; ++d){
-                            const LFSV_V & lfsu_v = lfsv_pfs_v.getChild(d);
+                            const LFSV_V & lfsu_v = lfsv_pfs_v.child(d);
                             for (size_t i=0; i<lfsu_v.size(); i++)
                                 vu[d] += x[lfsu_v.localIndex(i)] * phi_v[i];
                         }
                         
                         for(unsigned int d=0; d<dim; ++d){
-                            const LFSV_V & lfsu_v = lfsv_pfs_v.getChild(d);
+                            const LFSV_V & lfsu_v = lfsv_pfs_v.child(d);
 
                             // compute gradient of u
                             Dune::FieldVector<RF,dim> gradu(0.0);

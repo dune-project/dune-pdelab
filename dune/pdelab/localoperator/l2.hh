@@ -168,7 +168,7 @@ namespace Dune {
 	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
 	  {
         for(int i=0; i<LFSU::CHILDREN; ++i)
-          scalar_operator.alpha_volume(eg,lfsu.getChild(i),x,lfsv.getChild(i),r);
+          scalar_operator.alpha_volume(eg,lfsu.child(i),x,lfsv.child(i),r);
 	  }
 
       // jacobian of volume term
@@ -177,7 +177,7 @@ namespace Dune {
                             LocalMatrix<R>& mat) const
       {
         for(int i=0; i<LFSU::CHILDREN; ++i)
-          scalar_operator.jacobian_volume(eg,lfsu.getChild(i),x,lfsv.getChild(i),mat);
+          scalar_operator.jacobian_volume(eg,lfsu.child(i),x,lfsv.child(i),mat);
       }
 
     private:

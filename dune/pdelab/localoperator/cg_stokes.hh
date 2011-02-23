@@ -94,10 +94,10 @@ namespace Dune {
 
         // extract local function spaces
         typedef typename LFSU::template Child<0>::Type LFSU_V_PFS;
-        const LFSU_V_PFS& lfsu_v_pfs = lfsu.template getChild<0>();
+        const LFSU_V_PFS& lfsu_v_pfs = lfsu.template child<0>();
 
         typedef typename LFSU_V_PFS::template Child<0>::Type LFSU_V;
-        const unsigned int vsize = lfsu_v_pfs.getChild(0).size();
+        const unsigned int vsize = lfsu_v_pfs.child(0).size();
 
 		// domain and range field type
         typedef typename LFSU_V::Traits::FiniteElementType::
@@ -110,7 +110,7 @@ namespace Dune {
 
 
         typedef typename LFSU::template Child<1>::Type LFSU_P;
-        const LFSU_P& lfsu_p = lfsu.template getChild<1>();
+        const LFSU_P& lfsu_p = lfsu.template child<1>();
         const unsigned int psize = lfsu_p.size();
 
         typedef typename LFSU_P::Traits::FiniteElementType::
@@ -127,7 +127,7 @@ namespace Dune {
           {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType_V> js(vsize);
-            lfsu_v_pfs.getChild(0).finiteElement().localBasis().evaluateJacobian(it->position(),js);
+            lfsu_v_pfs.child(0).finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradient to real element
             const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
@@ -146,10 +146,10 @@ namespace Dune {
             Dune::FieldVector<RF,dim> vu(0.0);
             std::vector<RT_V> phi(psize);
             if(navier){
-              lfsu_v_pfs.getChild(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
+              lfsu_v_pfs.child(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
 
               for(int d=0; d<dim; ++d){
-                const LFSU_V & lfsu_v = lfsu_v_pfs.getChild(d);
+                const LFSU_V & lfsu_v = lfsu_v_pfs.child(d);
                 for (size_t i=0; i<lfsu_v.size(); i++)
                   vu[d] += x[lfsu_v.localIndex(i)] * phi[i];
               }
@@ -157,7 +157,7 @@ namespace Dune {
 
             for(int d=0; d<dim; ++d){
 
-              const LFSU_V & lfsu_v = lfsu_v_pfs.getChild(d);
+              const LFSU_V & lfsu_v = lfsu_v_pfs.child(d);
 
               // compute gradient of u
               Dune::FieldVector<RF,dim> gradu(0.0);
@@ -194,7 +194,7 @@ namespace Dune {
             RF divu(0.0);
             for (size_t i=0; i<vsize; i++)
               for(int d=0; d<dim; ++d)
-                divu += x[lfsu_v_pfs.getChild(d).localIndex(i)] * gradphi[i][d];
+                divu += x[lfsu_v_pfs.child(d).localIndex(i)] * gradphi[i][d];
 
             // integrate div u * psi_i
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
@@ -215,10 +215,10 @@ namespace Dune {
 
         // extract local velocity function spaces
         typedef typename LFSV::template Child<0>::Type LFSV_V_PFS;
-        const LFSV_V_PFS& lfsv_v_pfs = lfsv.template getChild<0>();
+        const LFSV_V_PFS& lfsv_v_pfs = lfsv.template child<0>();
 
         typedef typename LFSV_V_PFS::template Child<0>::Type LFSV_V;
-        const unsigned int vsize = lfsv_v_pfs.getChild(0).size();
+        const unsigned int vsize = lfsv_v_pfs.child(0).size();
 
         typedef typename LFSV_V::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::JacobianType JacobianType_V;
@@ -239,9 +239,9 @@ namespace Dune {
         // extract velocity boundary function (equal for all
         // dimensions)
         typedef typename B::template Child<0>::Type B_V_PFS;
-        const B_V_PFS & b_v_pfs = b.template getChild<0>();
+        const B_V_PFS & b_v_pfs = b.template child<0>();
         typedef typename B_V_PFS::template Child<0>::Type B_V;
-        const B_V & boundary_function = b_v_pfs.template getChild<0>();
+        const B_V & boundary_function = b_v_pfs.template child<0>();
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
@@ -262,7 +262,7 @@ namespace Dune {
 
             // evaluate basis functions
             std::vector<RT_V> phi(vsize);
-            lfsv_v_pfs.getChild(0).finiteElement().localBasis().evaluateFunction(local,phi);
+            lfsv_v_pfs.child(0).finiteElement().localBasis().evaluateFunction(local,phi);
 
             // evaluate flux boundary condition. the scalar flux is
             // assumed to be in normal direction
@@ -274,7 +274,7 @@ namespace Dune {
 
             for(unsigned int d=0; d<dim; ++d){
 
-              const LFSV_V & lfsv_v = lfsv_v_pfs.getChild(d);
+              const LFSV_V & lfsv_v = lfsv_v_pfs.child(d);
 
               for (size_t i=0; i<vsize; i++){
                 r[lfsv_v.localIndex(i)] += p.mu() * neumann_flux * normal[d] * phi[i] * factor;
@@ -336,8 +336,8 @@ namespace Dune {
 
         // extract local function spaces
         typedef typename LFSU::template Child<0>::Type LFSU_V_PFS;
-        const LFSU_V_PFS& lfsu_v_pfs = lfsu.template getChild<0>();
-        const unsigned int vsize = lfsu_v_pfs.getChild(0).size();
+        const LFSU_V_PFS& lfsu_v_pfs = lfsu.template child<0>();
+        const unsigned int vsize = lfsu_v_pfs.child(0).size();
         
         typedef typename LFSU_V_PFS::template Child<0>::Type LFSU_V;
 
@@ -354,7 +354,7 @@ namespace Dune {
 
 
         typedef typename LFSU::template Child<1>::Type LFSU_P;
-        const LFSU_P& lfsu_p = lfsu.template getChild<1>();
+        const LFSU_P& lfsu_p = lfsu.template child<1>();
         const unsigned int psize = lfsu_p.size();
 
         typedef typename LFSU_P::Traits::FiniteElementType::
@@ -372,7 +372,7 @@ namespace Dune {
           {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType_V> js(vsize);
-            lfsu_v_pfs.getChild(0).finiteElement().localBasis().evaluateJacobian(it->position(),js);
+            lfsu_v_pfs.child(0).finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradient to real element
             const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
@@ -391,10 +391,10 @@ namespace Dune {
             std::vector<RT_V> phi(psize);
             Dune::FieldVector<RF,dim> vu(0.0);
             if(navier){
-              lfsu_v_pfs.getChild(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
+              lfsu_v_pfs.child(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
 
               for(int d = 0; d < dim; ++d){
-                const LFSU_V & lfsv_v = lfsu_v_pfs.getChild(d);
+                const LFSU_V & lfsv_v = lfsu_v_pfs.child(d);
                 for(size_t l = 0; l < vsize; ++l)
                   vu[d] += x[lfsv_v.localIndex(l)] * phi[l];
               }
@@ -402,7 +402,7 @@ namespace Dune {
 
             for(int d=0; d<dim; ++d){
 
-              const LFSU_V & lfsv_v = lfsu_v_pfs.getChild(d);
+              const LFSU_V & lfsv_v = lfsu_v_pfs.child(d);
               const LFSU_V & lfsu_v = lfsv_v;
 
               // Derivatives of d-th velocity component
@@ -425,7 +425,7 @@ namespace Dune {
 
                 if(navier){
                   for(int k =0; k < dim; ++k){
-                    const LFSU_V & lfsu_v = lfsu_v_pfs.getChild(k);
+                    const LFSU_V & lfsu_v = lfsu_v_pfs.child(k);
 
                     const RF pre_factor = factor * p.rho() * gradu_d[k] * phi[i];
 
@@ -518,7 +518,7 @@ namespace Dune {
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
 	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
 	  {
-        scalar_operator.alpha_volume(eg,lfsu.template getChild<0>(),x,lfsu.template getChild<0>(),r);
+        scalar_operator.alpha_volume(eg,lfsu.template child<0>(),x,lfsu.template child<0>(),r);
 	  }
 
       // jacobian of volume term
@@ -526,7 +526,7 @@ namespace Dune {
 	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
                             LocalMatrix<R>& mat) const
       {
-        scalar_operator.jacobian_volume(eg,lfsu.template getChild<0>(),x,lfsu.template getChild<0>(),mat);
+        scalar_operator.jacobian_volume(eg,lfsu.template child<0>(),x,lfsu.template child<0>(),mat);
       }
 
     private:
