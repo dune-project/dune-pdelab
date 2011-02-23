@@ -29,32 +29,6 @@ namespace Dune {
     // Utilities for the power and composite gfs
     // ===============================================================
 
-    //! Trait class for the multi component grid function spaces
-	template<typename G, typename B, typename M, std::size_t k>
-	struct PowerCompositeGridFunctionSpaceTraits
-	{
-      enum{
-        //! \brief True if this grid function space is composed of others.
-        isComposite = 1,
-        //! \brief number of child spaces
-        noChilds = k
-      };
-
-      const static std::size_t CHILDREN = k;
-
-	  //! \brief the grid view where grid function is defined upon
-	  typedef G GridViewType;
-
-	  //! \brief vector backend
-	  typedef B BackendType;
-
-      //! \brief mapper
-      typedef M MapperType;
-
-	  //! \brief short cut for size type exported by Backend
-	  typedef typename B::size_type SizeType;
-	};
-
     //! \brief a class holding transformation for constrained spaces
     template<typename S, typename T>
     class ConstraintsTransformation

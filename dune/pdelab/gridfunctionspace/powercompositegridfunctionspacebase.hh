@@ -3,6 +3,8 @@
 #ifndef DUNE_PDELAB_POWERCOMPOSITEGRIDFUNCTIONSPACEBASE_HH
 #define DUNE_PDELAB_POWERCOMPOSITEGRIDFUNCTIONSPACEBASE_HH
 
+#include <cstddef>
+
 #include "../common/typetree.hh"
 #include "../common/typetree/fixedcapacitystack.hh"
 
@@ -159,6 +161,31 @@ namespace Dune {
 
 #endif // DOXYGEN
 
+    //! Trait class for the multi component grid function spaces
+    template<typename G, typename B, typename M, std::size_t k>
+    struct PowerCompositeGridFunctionSpaceTraits
+    {
+      enum{
+        //! \brief True if this grid function space is composed of others.
+        isComposite = 1,
+        //! \brief number of child spaces
+        noChilds = k
+      };
+
+      const static std::size_t CHILDREN = k;
+
+      //! \brief the grid view where grid function is defined upon
+      typedef G GridViewType;
+
+      //! \brief vector backend
+      typedef B BackendType;
+
+      //! \brief mapper
+      typedef M MapperType;
+
+      //! \brief short cut for size type exported by Backend
+      typedef typename B::size_type SizeType;
+    };
 
     //! Mixin class providing common functionality of PowerGridFunctionSpace and CompositeGridFunctionSpace
     template<typename GridFunctionSpace, typename GV, typename B, typename Mapper, std::size_t k>
