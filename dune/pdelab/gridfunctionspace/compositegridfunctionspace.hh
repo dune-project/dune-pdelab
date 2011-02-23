@@ -348,6 +348,20 @@ namespace Dune {
         Dune::dinfo << "CompositeGridFunctionSpace(blockwise version):"
                     << std::endl;
 
+        // Gather the global information
+        Dune::dinfo << "( ";
+        offset[0] = 0;
+        maxlocalsize = 0;
+        for (std::size_t i=0; i<BaseT::CHILDREN; i++)
+          {
+            Dune::dinfo << childGlobalSize[i] << " ";
+            offset[i+1] = offset[i]+childGlobalSize[i];
+            maxlocalsize += childLocalSize[i];
+          }
+        Dune::dinfo << ") total size = " << offset[BaseT::CHILDREN]
+                    << " max local size = " << maxlocalsize
+                    << std::endl;
+
         typedef typename Traits::GridViewType GridView;
         const GridView & gv = this->gridview();
 
@@ -394,19 +408,6 @@ namespace Dune {
         for(std::size_t i=0; i<BaseT::CHILDREN; ++i)
           blockIndexIterators.push_back(blockIndices[i].begin());
 
-        // Gather the global information
-        Dune::dinfo << "( ";
-        offset[0] = 0;
-        maxlocalsize = 0;
-        for (std::size_t i=0; i<BaseT::CHILDREN; i++)
-          {
-            Dune::dinfo << childGlobalSize[i] << " ";
-            offset[i+1] = offset[i]+childGlobalSize[i];
-            maxlocalsize += childLocalSize[i];
-          }
-        Dune::dinfo << ") total size = " << offset[BaseT::CHILDREN]
-                    << " max local size = " << maxlocalsize
-                    << std::endl;
       }
 
     private:
