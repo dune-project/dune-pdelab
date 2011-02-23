@@ -72,7 +72,7 @@ int main(int argc, char** argv)
             <Dune::PDELab::GridFunctionSpaceLexicographicMapper,CellGFS,FaceGFS> GFS;
         GFS gfs(cell_gfs, face_gfs);
 
-        typedef GFS::LocalFunctionSpace LFS;
+        typedef Dune::PDELab::LocalFunctionSpace<GFS> LFS;
         LFS lfs(gfs);
         typedef GV::Codim<0>::Iterator ElementIterator;
         for(ElementIterator it = gridview.begin<0>(), itend = gridview.end<0>(); it != itend; ++it)
