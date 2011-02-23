@@ -4,9 +4,14 @@
 #define DUNE_PDELAB_POWERCOMPOSITEGRIDFUNCTIONSPACEBASE_HH
 
 #include <cstddef>
+#include <functional>
+#include <vector>
 
-#include "../common/typetree.hh"
-#include "../common/typetree/fixedcapacitystack.hh"
+#include <dune/pdelab/common/typetree/traversal.hh>
+#include <dune/pdelab/common/typetree/traversalutilities.hh>
+#include <dune/pdelab/common/typetree/utility.hh>
+#include <dune/pdelab/common/typetree/visitor.hh>
+#include <dune/pdelab/gridfunctionspace/constraintstransformation.hh>
 
 namespace Dune {
   namespace PDELab {
