@@ -61,7 +61,6 @@ namespace Dune {
 
       };
 
-
       template<typename SourceNode, template<typename,typename,std::size_t> class TransformedNode>
       struct WrappingPowerNodeTransformationTemplate
       {
@@ -79,6 +78,7 @@ namespace Dune {
                                                             WrappingPowerNodeTransformationTemplate<SourceNode,TransformedNode>::template result
                                                             >
       {};
+
 
 #if HAVE_VARIADIC_TEMPLATES
 
@@ -126,6 +126,7 @@ namespace Dune {
       {};
 
 #endif // HAVE_VARIADIC_TEMPLATES
+
 
       template<typename SourceNode, typename Transformation, template<typename C0,
                                                                       typename C1,
@@ -261,6 +262,26 @@ namespace Dune {
       {};
 
 
+      template<typename SourceNode, typename Transformation, typename TransformedNode>
+      struct SimpleLeafNodeTransformation
+      {
+
+        typedef TransformedNode transformed_type;
+        typedef shared_ptr<transformed_type> transformed_storage_type;
+
+        static transformed_type transform(const SourceNode& s, const Transformation& t)
+        {
+          return transformed_type();
+        }
+
+        static transformed_storage_type transform_storage(shared_ptr<const SourceNode> s, const Transformation& t)
+        {
+          return make_shared<transformed_type>();
+        }
+
+      };
+
+
       template<typename SourceNode, typename Transformation, template<typename Child, std::size_t> class TransformedNode>
       struct SimplePowerNodeTransformation
       {
@@ -286,7 +307,9 @@ namespace Dune {
 
       };
 
+
 #if HAVE_VARIADIC_TEMPLATES
+
       template<typename SourceNode, typename Transformation, template<typename...> class TransformedNode>
       struct SimpleVariadicCompositeNodeTransformation
       {
@@ -311,7 +334,9 @@ namespace Dune {
         }
 
       };
-#endif
+
+#endif // HAVE_VARIADIC_TEMPLATES
+
 
       template<typename SourceNode, typename Transformation, template<typename C0,
                                                                       typename C1,
