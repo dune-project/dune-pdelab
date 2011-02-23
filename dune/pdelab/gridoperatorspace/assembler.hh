@@ -18,7 +18,9 @@ public:
   bool requireLambdaBoundary() const;
   bool requireAlphaEnrichedCoupling() const;
   bool requireLambdaEnrichedCoupling() const;
-  bool requirePostSkeletonAlphaVolume() const;
+  bool requireAlphaVolumePostSkeleton() const;
+  bool requireLambdaVolumePostSkeleton() const;
+
 
   template<class TT>
   void setTime(TT time);
