@@ -15,6 +15,7 @@ gridfunctionspace_HEADERS =			\
 	ordering.hh				\
 	powercompositegridfunctionspacebase.hh	\
 	powergridfunctionspace.hh		\
-	printvector.hh
+	printvector.hh				\
+	tags.hh
 
 include $(top_srcdir)/am/global-rules

@@ -10,8 +10,8 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
 #include "../common/typetree.hh"
-
 #include "localindex.hh"
+#include <dune/pdelab/gridfunctionspace/tags.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -342,8 +342,6 @@ namespace Dune {
 
     };
 
-    struct PowerGridFunctionSpaceTag {};
-
     template<typename PowerGridFunctionSpace>
     Dune::PDELab::TypeTree::WrappingPowerNodeTransformation<PowerGridFunctionSpace,gfs_to_lfs,PowerLocalFunctionSpaceNode>
     lookupNodeTransformation(PowerGridFunctionSpace* pgfs, gfs_to_lfs* t, PowerGridFunctionSpaceTag tag);
@@ -394,8 +392,6 @@ namespace Dune {
       }
 
     };
-
-    struct CompositeGridFunctionSpaceTag {};
 
 #if HAVE_VARIADIC_TEMPLATES
     template<typename CompositeGridFunctionSpace>
@@ -514,8 +510,6 @@ namespace Dune {
     private:
       typename FESwitch::Store pfe;
     };
-
-    struct LeafGridFunctionSpaceTag {};
 
     template<typename GridFunctionSpace>
     Dune::PDELab::TypeTree::WrappingLeafNodeTransformation<GridFunctionSpace,gfs_to_lfs,LeafLocalFunctionSpaceNode<GridFunctionSpace> >
