@@ -799,24 +799,6 @@ namespace Dune {
       mutable std::vector<BlockIndexRangeIterator> blockIndexIterators;
     };
 
-
-    //! \addtogroup GridFunctionSpace
-    //! \{
-
-    /// \brief product of identical grid function spaces
-    ///
-    /// the specializations of this class just set the members
-    /// all the methods are generic in the implementation
-    /// \tparam T The type of the underlying grid function space
-    /// \tparam k how many identical function space to use in the composition
-    /// \tparam P The type of the mapper used. The mapper maps each degree of freedom
-    /// of each function space to a unique index. Use e.g.
-    /// \link GridFunctionSpaceLexicographicMapper GridFunctionSpaceLexicographicMapper \endlink
-    /// or \link  GridFunctionSpaceComponentBlockwiseMapper  GridFunctionSpaceComponentBlockwiseMapper \endlink
-    /// or \link  GridFunctionSpaceBlockwiseMapper  GridFunctionSpaceBlockwiseMapper \endlink
-
-
-
   }
 }
 #endif
