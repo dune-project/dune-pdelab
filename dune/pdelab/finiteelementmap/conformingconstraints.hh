@@ -22,7 +22,8 @@
 namespace Dune {
   namespace PDELab {
 
-    struct DirichletConstraintsParameters
+    struct DirichletConstraintsParameters :
+      public TypeTree::LeafNode
     {
       template<typename I>
       bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord)
