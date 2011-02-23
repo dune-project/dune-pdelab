@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include <dune/common/deprecated.hh>
+#warning Don't use the dune/pdelab/common/countingptr.hh, this file is deprecated
 
 /** @file
  *  @addtogroup StoragePolicy
