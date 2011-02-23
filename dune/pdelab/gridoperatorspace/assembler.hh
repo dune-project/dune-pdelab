@@ -5,19 +5,21 @@ public:
 };
 
 
-class LocalAssemblerInterface : public LocalAssemblerBase 
+class LocalAssemblerInterface : public LocalAssemblerBase
 {
 public:
-  bool requireIntersections();
-  bool requireIntersectionsTwoSided();
-  bool requireAlphaVolume();
-  bool requireLambdaVolume();
-  bool requireAlphaSkeleton();
-  bool requireLambdaSkeleton();
-  bool requireAlphaBoundary();
-  bool requireLambdaBoundary();
-  bool requirePostSkeletonAlphaVolume();
-  
+  bool requireIntersections() const;
+  bool requireIntersectionsTwoSided() const;
+  bool requireAlphaVolume() const;
+  bool requireLambdaVolume() const;
+  bool requireAlphaSkeleton() const;
+  bool requireLambdaSkeleton() const;
+  bool requireAlphaBoundary() const;
+  bool requireLambdaBoundary() const;
+  bool requireAlphaEnrichedCoupling() const;
+  bool requireLambdaEnrichedCoupling() const;
+  bool requirePostSkeletonAlphaVolume() const;
+
   template<class TT>
   void setTime(TT time);
 
@@ -27,12 +29,12 @@ public:
   LocalResidualAssembler & localResidualAssembler(R & r);
   LocalJacobianAssembler & localJacobianAssembler(A & a);
   LocalResidualJacobianAssembler & localResidualJacobianAssembler(R & r, A & a);
-  
+
   class LocalAssemblerEngine{
   public:
-    typedef LocalAssemblerInterface LocalAssembler; 
+    typedef LocalAssemblerInterface LocalAssembler;
     const LocalAssembler & localAssembler();
-    
+
     template<>
     void assembleAlphaVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv);
     template<>
@@ -47,7 +49,19 @@ public:
     template<>
     void assembleLambdaBoundary(const IG & ig, const LFSV_S & lfsv_s);
     template<>
-    void assemblePostSkeletonVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv);
+    void assembleAlphaEnrichedCoupling(const IG & ig,
+                                       const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                                       const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
+                                       const LFSU_Coupling & lfsu_coupling, const LFSV_Coupling & lfsv_coupling);
+    template<>
+    void assembleLambdaEnrichedCoupling(const IG & ig,
+                                        const LFSV_S & lfsv_s,
+                                        const LFSV_N & lfsv_n,
+                                        const LFSV_Coupling & lfsv_coupling);
+    template<>
+    void assembleAlphaVolumePostSkeleton(const EG & eg, const LFSU & lfsu, const LFSV & lfsv);
+    template<>
+    void assembleLambdaVolumePostSkeleton(const EG & eg, const LFSV & lfsv);
 
     void preAssembly();
     void postAssembly();
@@ -69,10 +83,10 @@ public:
   template<typename P>
   void fill_pattern (P& globalpattern) const;
 
-  template<typename X, typename R> 
+  template<typename X, typename R>
   void residual (const X& x, R& r) const;
 
-  template<typename X, typename A> 
+  template<typename X, typename A>
   void jacobian (const X& x, A& a) const;
 
 };
