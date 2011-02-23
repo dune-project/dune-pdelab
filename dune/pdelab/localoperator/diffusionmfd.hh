@@ -86,9 +86,9 @@ namespace Dune
             {
                 // extract subspaces
                 typedef typename LFSU::template Child<0>::Type CellUnknowns;
-                const CellUnknowns& cell_space = lfsu.template getChild<0>();
+                const CellUnknowns& cell_space = lfsu.template child<0>();
                 typedef typename LFSU::template Child<1>::Type FaceUnknowns;
-                const FaceUnknowns& face_space = lfsu.template getChild<1>();
+                const FaceUnknowns& face_space = lfsu.template child<1>();
 
                 // get permeability for current cell
                 GeometryType gt = eg.geometry().type();
@@ -145,9 +145,9 @@ namespace Dune
             {
                 // extract subspaces
                 typedef typename LFSU::template Child<0>::Type CellUnknowns;
-                const CellUnknowns& cell_space = lfsu.template getChild<0>();
+                const CellUnknowns& cell_space = lfsu.template child<0>();
                 typedef typename LFSU::template Child<1>::Type FaceUnknowns;
-                const FaceUnknowns& face_space = lfsu.template getChild<1>();
+                const FaceUnknowns& face_space = lfsu.template child<1>();
 
                 // get permeability for current cell
                 GeometryType gt = eg.geometry().type();
@@ -203,9 +203,9 @@ namespace Dune
             {
                 // extract subspaces
                 typedef typename LFSU::template Child<0>::Type CellUnknowns;
-                const CellUnknowns& cell_space = lfsu.template getChild<0>();
+                const CellUnknowns& cell_space = lfsu.template child<0>();
                 typedef typename LFSU::template Child<1>::Type FaceUnknowns;
-                const FaceUnknowns& face_space = lfsu.template getChild<1>();
+                const FaceUnknowns& face_space = lfsu.template child<1>();
 
                 // get permeability for current cell
                 GeometryType gt = eg.geometry().type();
@@ -237,7 +237,7 @@ namespace Dune
             {
                 // extract subspaces
                 typedef typename LFSV::template Child<0>::Type CellUnknowns;
-                const CellUnknowns& cell_space = lfsv.template getChild<0>();
+                const CellUnknowns& cell_space = lfsv.template child<0>();
 
                 GeometryType gt = eg.geometry().type();
                 FieldVector<ctype,dim> localcenter = GenericReferenceElements<ctype,dim>::general(gt).position(0,0);
@@ -257,7 +257,7 @@ namespace Dune
                 if (data.bcType(ig, center) == Data::bcNeumann)
                 {
                     typedef typename LFSV::template Child<1>::Type FaceUnknowns;
-                    const FaceUnknowns& face_space = lfsv.template getChild<1>();
+                    const FaceUnknowns& face_space = lfsv.template child<1>();
 
                     r[face_space.localIndex(e)] += cell.face_areas[e]
                         * data.j(*(ig.inside()), local_face_center);

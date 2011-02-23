@@ -58,9 +58,9 @@ namespace Dune {
 	  {
         // select the two components
         typedef typename LFSU::template Child<0>::Type VelocitySpace;
-        const VelocitySpace& velocityspace = lfsu.template getChild<0>();
+        const VelocitySpace& velocityspace = lfsu.template child<0>();
         typedef typename LFSU::template Child<1>::Type PressureSpace;
-        const PressureSpace& pressurespace = lfsu.template getChild<1>();
+        const PressureSpace& pressurespace = lfsu.template child<1>();
 
 		// domain and range field type
         typedef typename VelocitySpace::Traits::FiniteElementType::
@@ -173,7 +173,7 @@ namespace Dune {
       {
         // select the two components
         typedef typename LFSV::template Child<1>::Type PressureSpace;
-        const PressureSpace& pressurespace = lfsv.template getChild<1>();
+        const PressureSpace& pressurespace = lfsv.template child<1>();
 
 		// domain and range field type
         typedef typename PressureSpace::Traits::FiniteElementType::
@@ -214,7 +214,7 @@ namespace Dune {
       {
         // select the two components
         typedef typename LFSV::template Child<0>::Type VelocitySpace;
-        const VelocitySpace& velocityspace = lfsv.template getChild<0>();
+        const VelocitySpace& velocityspace = lfsv.template child<0>();
 
 		// domain and range field type
         typedef typename VelocitySpace::Traits::FiniteElementType::

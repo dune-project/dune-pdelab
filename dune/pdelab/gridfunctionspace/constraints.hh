@@ -448,16 +448,17 @@ namespace Dune {
       : public TypeTree::LeafNode
     {
       shared_ptr<const F> _f;
+      unsigned int _i;
     public:
-      DirichletConstraintsWrapper(shared_ptr<const F> f) : _f(f) {}
-      DirichletConstraintsWrapper(const F & f) : _f(stackobject_to_shared_ptr(f)) {}
+      DirichletConstraintsWrapper(shared_ptr<const F> f, unsigned int i=0) : _f(f), _i(i) {}
+      DirichletConstraintsWrapper(const F & f, unsigned int i=0) : _f(stackobject_to_shared_ptr(f)), _i(i) {}
       
       template<typename I>
       bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
       {
         typename F::Traits::RangeType bctype;
         _f->evaluate(intersection,coord,bctype);
-        return bctype > 0;
+        return bctype[_i] > 0;
       }
     };
 
@@ -465,14 +466,50 @@ namespace Dune {
     struct gf_to_constraints {};
     
     // register trafos GridFunction -> DirichletConstraintsWrapper
+    template<typename F, typename Transformation>
+    struct MultiComponentDirichletConstraintsWrapperDescription
+    {
+
+      enum { dim = F::Traits::dimRange };
+      typedef DirichletConstraintsWrapper<F> node_type;
+      typedef PowerConstraintsParameters<node_type, dim> transformed_type;
+      typedef shared_ptr<transformed_type> transformed_storage_type;
+      
+      static transformed_type transform(const F& s, const Transformation& t)
+      {
+        shared_ptr<const F> sp = stackobject_to_shared_ptr(s);
+        array<shared_ptr<node_type>, dim> childs;
+        for (int i=0; i<dim; i++)
+          childs[i] = make_shared<node_type>(sp,i);
+        return transformed_type(childs);
+      }
+      
+      static transformed_storage_type transform_storage(shared_ptr<const F> s, const Transformation& t)
+      {
+        array<shared_ptr<node_type>, dim> childs;
+        for (int i=0; i<dim; i++)
+          childs[i] = make_shared<node_type>(s,i);
+        return make_shared<transformed_type>(childs);
+      }
+
+    };
+    // trafos for leaf nodes
     template<typename GridFunction>
-    Dune::PDELab::TypeTree::WrappingLeafNodeTransformation<GridFunction,gf_to_constraints,DirichletConstraintsWrapper<GridFunction> >
+    typename SelectType<
+      (GridFunction::Traits::dimRange == 1),
+      // trafo for scalar leaf nodes
+      Dune::PDELab::TypeTree::WrappingLeafNodeTransformation<GridFunction,gf_to_constraints,DirichletConstraintsWrapper<GridFunction> >,
+      // trafo for multi component leaf nodes
+      MultiComponentDirichletConstraintsWrapperDescription<GridFunction,gf_to_constraints>
+      >::Type
     lookupNodeTransformation(GridFunction*, gf_to_constraints*, GridFunctionTag);
 
+    // trafo for power nodes
     template<typename PowerGridFunction>
     Dune::PDELab::TypeTree::SimplePowerNodeTransformation<PowerGridFunction,gf_to_constraints,PowerConstraintsParameters>
     lookupNodeTransformation(PowerGridFunction*, gf_to_constraints*, PowerGridFunctionTag);
 
+    // trafos for composite nodes
 #if HAVE_VARIADIC_TEMPLATES
     template<typename CompositeGridFunction>
     Dune::PDELab::TypeTree::SimpleVariadicCompositeNodeTransformation<CompositeGridFunction,gf_to_constraints,CompositeConstraintsParameters>
