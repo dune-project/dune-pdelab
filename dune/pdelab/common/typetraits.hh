@@ -6,6 +6,8 @@
 
 #include <dune/common/typetraits.hh>
 
+#include "function.hh"
+
 namespace Dune {
   namespace PDELab {
     
@@ -15,8 +17,8 @@ namespace Dune {
       typedef void type;
     };
 
-    // forward decl of Tag defined in function.hh
-    struct GridFunctionTag;
+    // // forward decl of Tag defined in function.hh
+    // struct GridFunctionTag;
     
     template<typename T, typename = void>
     struct IsGridFunction
@@ -28,7 +30,9 @@ namespace Dune {
     struct IsGridFunction<T, typename AlwaysVoid<typename T::ImplementationTag>::type >
     {
       typedef typename T::ImplementationTag A;
-      static const bool value = is_same<A, GridFunctionTag>::value;
+      static const bool value = is_same<A, GridFunctionTag>::value || 
+        is_same<A, PowerGridFunctionTag>::value ||
+        is_same<A, CompositeGridFunctionTag>::value;
     };
     
   } // end namespace PDELab
