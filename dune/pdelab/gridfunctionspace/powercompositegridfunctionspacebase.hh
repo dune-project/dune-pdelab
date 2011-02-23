@@ -7,6 +7,7 @@
 #include <functional>
 #include <vector>
 
+#include <dune/pdelab/common/typetree/fixedcapacitystack.hh>
 #include <dune/pdelab/common/typetree/traversal.hh>
 #include <dune/pdelab/common/typetree/traversalutilities.hh>
 #include <dune/pdelab/common/typetree/utility.hh>
