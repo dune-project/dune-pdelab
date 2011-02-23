@@ -152,16 +152,6 @@ testlocalfunctionspace_LDADD =			\
 	$(ALBERTA_LIBS)				\
 	$(LDADD)
 
-NORMALTESTS += testmultitypetree
-testmultitypetree_SOURCES = testmultitypetree.cc
-testmultitypetree_CPPFLAGS = $(AM_CPPFLAGS)	\
-	$(ALBERTA_CPPFLAGS)
-testmultitypetree_LDFLAGS = $(AM_LDFLAGS)	\
-	$(ALBERTA_LDFLAGS)
-testmultitypetree_LDADD = 			\
-	$(ALBERTA_LIBS)				\
-	$(LDADD)
-
 NORMALTESTS += testmultistep
 testmultistep_SOURCES = testmultistep.cc
 testmultistep_CPPFLAGS = $(AM_CPPFLAGS)		\
