@@ -66,10 +66,19 @@ public:
     void preAssembly();
     void postAssembly();
 
-    void onBindInside(const LFSU & lfsu_s, const LFSV & lfsv_s);
-    void onBindOutside(const LFSU & lfsu_n, const LFSV & lfsv_n);
-    void onUnbindInside(const LFSU & lfsu_s, const LFSV & lfsv_s);
-    void onUnbindOutside(const LFSU & lfsu_n, const LFSV & lfsv_n);
+    void onBindLFSUInside(const LFSU_S & lfsu_s);
+    void onBindLFSVInside(const LFSV_S & lfsv_s);
+    void onBindLFSUOutside(const LFSU_N & lfsu_n);
+    void onBindLFSVOutside(const LFSV_N & lfsv_n);
+    void onBindLFSUCoupling(const LFSU_Coupling & lfsu_coupling);
+    void onBindLFSVCoupling(const LFSV_Coupling & lfsv_coupling);
+
+    void onUnbindLFSUInside(const LFSU_S & lfsu_s);
+    void onUnbindLFSVInside(const LFSV_S & lfsv_s);
+    void onUnbindLFSUOutside(const LFSU_N & lfsu_n);
+    void onUnbindLFSVOutside(const LFSV_N & lfsv_n);
+    void onUnbindLFSUCoupling(const LFSU_Coupling & lfsu_coupling);
+    void onUnbindLFSVCoupling(const LFSV_Coupling & lfsv_coupling);
   };
 
   class LocalResidualAssembler : public LocalAssemblerEngine {};
