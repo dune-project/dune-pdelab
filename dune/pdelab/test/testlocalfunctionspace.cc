@@ -49,11 +49,11 @@ void test (const GV& gv)
 
   // make local function space object
   typedef Dune::PDELab::AnySpaceTag Tag;
-  typename Q2GFS::LocalFunctionSpace q2lfs(q2gfs);
+  typename Dune::PDELab::LocalFunctionSpace<Q2GFS> q2lfs(q2gfs);
   Dune::PDELab::LocalVector<double, Tag> xl(q2lfs.maxSize());
-  typename PowerGFS::LocalFunctionSpace powerlfs(powergfs);
+  typename Dune::PDELab::LocalFunctionSpace<PowerGFS> powerlfs(powergfs);
   Dune::PDELab::LocalVector<double, Tag> xlp(powerlfs.maxSize());
-  typename CompositeGFS::LocalFunctionSpace compositelfs(compositegfs);
+  typename Dune::PDELab::LocalFunctionSpace<CompositeGFS> compositelfs(compositegfs);
   //  std::vector<double> xlc(compositelfs.maxSize());
 
   // loop over elements
@@ -73,22 +73,22 @@ void test (const GV& gv)
       assert(powerlfs.size() == 
           powerlfs.localVectorSize());
       assert(powerlfs.localVectorSize() == 
-          powerlfs.template getChild<0>().localVectorSize());
+          powerlfs.template child<0>().localVectorSize());
       assert(powerlfs.localVectorSize() == 
-          powerlfs.template getChild<1>().localVectorSize());
+          powerlfs.template child<1>().localVectorSize());
 
       compositelfs.bind(*it);
       compositelfs.debug();
       assert(compositelfs.size() == 
           compositelfs.localVectorSize());
       assert(compositelfs.localVectorSize() == 
-          compositelfs.template getChild<0>().localVectorSize());
+          compositelfs.template child<0>().localVectorSize());
       assert(compositelfs.localVectorSize() == 
-          compositelfs.template getChild<0>().template getChild<0>().localVectorSize());
+          compositelfs.template child<0>().template child<0>().localVectorSize());
       assert(compositelfs.localVectorSize() == 
-          compositelfs.template getChild<0>().template getChild<1>().localVectorSize());
+          compositelfs.template child<0>().template child<1>().localVectorSize());
       assert(compositelfs.localVectorSize() == 
-          compositelfs.template getChild<1>().localVectorSize());
+          compositelfs.template child<1>().localVectorSize());
 	}
 }
 
