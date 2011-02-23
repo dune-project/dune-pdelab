@@ -84,6 +84,7 @@ namespace Dune {
       {
         // TODO: add configure test and replace __typeof__ with a macro
         typedef __typeof__(lookupNodeTransformation(static_cast<S*>(0),static_cast<T*>(0),Tag())) type;
+        static_assert((!is_same<type,void>::value), "Unable to find valid transformation descriptor");
       };
 
       // handle a leaf node - this is easy
