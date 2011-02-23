@@ -83,7 +83,7 @@ namespace Dune {
         {
           // Fill vector with global coefficients
           std::vector<typename T::Traits::SizeType> global;
-          t.template getChild<i>().dataHandleGlobalIndices(e,global);
+          t.template child<i>().dataHandleGlobalIndices(e,global);
 
           // Update new offset for child
           typename T::Traits::SizeType entity_index = t.gridview().indexSet().index(e);
@@ -764,11 +764,11 @@ namespace Dune {
 		lfs.vread(xg,xl);
         for (int k=0; k<T::CHILDREN; k++)
           {
-            lfs.getChild(k).finiteElement().localBasis().
+            lfs.child(k).finiteElement().localBasis().
               evaluateFunction(x,yb);
             y[k] = 0.0;
             for (unsigned int i=0; i<yb.size(); i++)
-              y[k] += xl[lfs.getChild(k).localIndex(i)]*yb[i];
+              y[k] += xl[lfs.child(k).localIndex(i)]*yb[i];
           }
 	  }
 
