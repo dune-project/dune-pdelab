@@ -83,7 +83,7 @@ namespace Dune {
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
-        typename K::Traits::RangeType tensor;
+        typename K::Traits::RangeType tensor(0.0);
         Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
         k.evaluate(eg.entity(),localcenter,tensor);
 
@@ -157,7 +157,7 @@ namespace Dune {
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
-        typename K::Traits::RangeType tensor;
+        typename K::Traits::RangeType tensor(0.0);
         Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
         k.evaluate(eg.entity(),localcenter,tensor);
 
