@@ -246,7 +246,7 @@ namespace Dune {
 #endif
     private:
       const GFS& gfs;
-      V v;
+      V v; // vector to identify unique decomposition
       V g; //vector to identify ghost dofs
     };
 
@@ -402,7 +402,7 @@ namespace Dune {
       Dune::PDELab::GenericDataHandle<GFS,BoolVector,SharedGatherScatter> gdh(gfs,sharedDOF,SharedGatherScatter());
 
       if (gfs.gridview().comm().size()>1)
-        gfs.gridview().communicate(gdh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+        gfs.gridview().communicate(gdh,Dune::All_All_Interface,Dune::ForwardCommunication);
 
       // Count shared dofs that we own
       typedef typename C::ParallelIndexSet::GlobalIndex GlobalIndex;
