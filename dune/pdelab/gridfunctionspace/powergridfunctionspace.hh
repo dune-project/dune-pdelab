@@ -3,7 +3,22 @@
 #ifndef DUNE_PDELAB_POWERGRIDFUNCTIONSPACE_HH
 #define DUNE_PDELAB_POWERGRIDFUNCTIONSPACE_HH
 
-#include "powercompositegridfunctionspacebase.hh"
+#include <cstddef>
+#include <list>
+#include <ostream>
+#include <utility>
+#include <vector>
+
+#include <dune/common/exceptions.hh>
+#include <dune/common/stdstreams.hh>
+#include <dune/common/static_assert.hh>
+
+#include <dune/pdelab/common/typetree/powernode.hh>
+#include <dune/pdelab/common/typetree/transformation.hh>
+#include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/ordering.hh>
+#include <dune/pdelab/gridfunctionspace/powercompositegridfunctionspacebase.hh>
+#include <dune/pdelab/gridfunctionspace/tags.hh>
 
 namespace Dune {
   namespace PDELab {
