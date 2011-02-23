@@ -11,23 +11,6 @@
 #include <dune/pdelab/common/typetree/nodetags.hh>
 #include <dune/pdelab/common/typetree/treepath.hh>
 #include <dune/pdelab/common/typetree/visitor.hh>
-
-#ifndef DOXYGEN
-
-namespace Dune {
-  namespace PDELab {
-    namespace TypeTree {
-
-      // forward declaration of TMP struct for child visits - required for included implementation parts
-      template<TreePathType::Type tpType, typename tag = StartTag, bool doApply = true>
-      struct ApplyToTree;
-
-    }
-  }
-}
-
-#endif // DOXYGEN
-
 #include <dune/pdelab/common/typetree/applytochildrensingletree.hh>
 
 namespace Dune {

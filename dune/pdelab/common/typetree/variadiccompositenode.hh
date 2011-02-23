@@ -4,12 +4,13 @@
 #ifndef DUNE_PDELAB_COMMON_TYPETREE_VARIADICCOMPOSITENODE_HH
 #define DUNE_PDELAB_COMMON_TYPETREE_VARIADICCOMPOSITENODE_HH
 
-#if !(HAVE_VARIADIC_TEMPLATES || DOXYGEN)
+#if !(HAVE_VARIADIC_TEMPLATES || DOXYGEN || HEADERCHECK)
 #error The class VariadicCompositeNode requires compiler support for variadic templates, which your compiler lacks.
 #endif
 
 #include <dune/pdelab/common/typetree/nodetags.hh>
 #include <dune/common/tuples.hh>
+#include <dune/common/shared_ptr.hh>
 #include <dune/common/deprecated.hh>
 
 namespace Dune {

@@ -21,6 +21,10 @@ namespace Dune {
 
 #ifndef DOXYGEN // these are all internals and not public API.
 
+      // forward declaration of main engine struct
+      template<TreePathType::Type tpType, typename tag = StartTag, bool doApply = true>
+      struct ApplyToTree;
+
       namespace {
 
         // For the CompositeNode, we do need a TMP for iterating over the

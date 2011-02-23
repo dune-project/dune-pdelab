@@ -6,6 +6,10 @@
 
 #include <dune/pdelab/common/typetree/nodetags.hh>
 #include <dune/common/exceptions.hh>
+#include <dune/common/shared_ptr.hh>
+#include <dune/common/array.hh>
+#include <dune/common/tuples.hh>
+
 
 namespace Dune {
   namespace PDELab {

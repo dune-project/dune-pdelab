@@ -5,6 +5,7 @@
 #define DUNE_PDELAB_COMMON_TYPETREE_FIXEDCAPACITYSTACK_HH
 
 #include <dune/common/array.hh>
+#include <cassert>
 
 namespace Dune {
   namespace PDELab {

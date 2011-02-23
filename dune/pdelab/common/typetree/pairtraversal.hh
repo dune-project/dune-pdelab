@@ -7,27 +7,6 @@
 #include <dune/pdelab/common/typetree/nodetags.hh>
 #include <dune/pdelab/common/typetree/treepath.hh>
 #include <dune/pdelab/common/typetree/visitor.hh>
-
-#if HAVE_RVALUE_REFERENCES
-#include <utility>
-#endif
-
-#ifndef DOXYGEN
-
-namespace Dune {
-  namespace PDELab {
-    namespace TypeTree {
-
-      // forward declaration for included implementation parts
-      template<TreePathType::Type tpType, typename tag1 = StartTag, typename tag2 = StartTag, bool doApply = true>
-      struct ApplyToTreePair;
-
-    }
-  }
-}
-
-#endif // DOXYGEN
-
 #include <dune/pdelab/common/typetree/applytochildrentreepair.hh>
 
 namespace Dune {

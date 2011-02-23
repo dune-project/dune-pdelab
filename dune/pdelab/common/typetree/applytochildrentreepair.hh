@@ -10,6 +10,10 @@
 #include <dune/pdelab/common/typetree/treepath.hh>
 #include <dune/pdelab/common/typetree/visitor.hh>
 
+#if HAVE_RVALUE_REFERENCES
+#include <utility>
+#endif
+
 namespace Dune {
   namespace PDELab {
     namespace TypeTree {
@@ -20,6 +24,10 @@ namespace Dune {
        */
 
 #ifndef DOXYGEN // these are all internals and not public API. Only access is using applyToTree().
+
+      // forward declaration of main engine struct
+      template<TreePathType::Type tpType, typename tag1 = StartTag, typename tag2 = StartTag, bool doApply = true>
+      struct ApplyToTreePair;
 
       namespace {
 

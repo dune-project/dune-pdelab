@@ -49,12 +49,6 @@ namespace Dune {
 
         };
 
-        //! Pointer to an empty node that is used for all empty slots
-        /**
-         * TODO: move into a library!
-         */
-        shared_ptr<EmptyNode> emptyNodePtr(make_shared<EmptyNode>());
-
       } // anonymous namespace
 
 

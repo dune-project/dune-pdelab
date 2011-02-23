@@ -11,6 +11,8 @@
 #include <dune/common/typetraits.hh>
 
 #include <dune/pdelab/common/typetree/fixedcapacitystack.hh>
+#include <dune/pdelab/common/typetree/utility.hh>
+
 
 namespace Dune {
   namespace PDELab {
