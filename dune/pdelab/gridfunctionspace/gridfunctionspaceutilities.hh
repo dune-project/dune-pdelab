@@ -14,6 +14,7 @@
 
 #include"../common/function.hh"
 #include <dune/pdelab/common/jacobiantocurl.hh>
+#include <dune/pdelab/gridfunctionspace/constraintstransformation.hh> // backward compatibility
 #include"gridfunctionspace.hh"
 #include <dune/pdelab/gridfunctionspace/ordering.hh> // backward compatibility
 
@@ -24,23 +25,6 @@ namespace Dune {
     //! \addtogroup GridFunctionSpace
     //! \ingroup PDELab
     //! \{
-
-    //===============================================================
-    // Utilities for the power and composite gfs
-    // ===============================================================
-
-    //! \brief a class holding transformation for constrained spaces
-    template<typename S, typename T>
-    class ConstraintsTransformation
-      : public std::map<S,std::map<S,T> >
-    {
-    public:
-      //! export ElementType
-      typedef T ElementType;
-      //! export RowType
-      typedef std::map<S,T> RowType;
-    };
-
 
     //===============================================================
     // output: convert grid function space to discrete grid function
