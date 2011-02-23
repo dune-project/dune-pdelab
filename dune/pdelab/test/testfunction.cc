@@ -1,5 +1,5 @@
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include <iostream>
 
@@ -20,9 +20,9 @@ class F : public Dune::PDELab::FunctionInterface<
   F<T> >
 {
 public:
-  inline void evaluate (const Dune::FieldVector<T,2>& x, 
+  inline void evaluate (const Dune::FieldVector<T,2>& x,
 						Dune::FieldVector<T,1>& y) const
-  {  
+  {
 	y = sin(3*3.1415*x[0])*cos(7*3.1415*x[1]);
   }
 };
@@ -35,9 +35,9 @@ class G : public Dune::PDELab::FunctionInterface<
   G<T> >
 {
 public:
-  inline void evaluate (const Dune::FieldVector<T,2>& x, 
+  inline void evaluate (const Dune::FieldVector<T,2>& x,
 						Dune::FieldVector<T,2>& y) const
-  {  
+  {
 	y[0] =  x.two_norm()*x[1];
 	y[1] = -x.two_norm()*x[0];
   }
@@ -45,7 +45,7 @@ public:
 
 
 // iterate over grid view and use analytic function as grid function through adapter
-template<class GV, class T> 
+template<class GV, class T>
 void testgridfunction (const GV& gv, const T& t)
 {
   // make a grid function from the analytic function
@@ -73,7 +73,7 @@ void testgridfunction (const GV& gv, const T& t)
 }
 
 // iterate over grid view and use analytic function as grid function through adapter
-template<class GV, class T> 
+template<class GV, class T>
 void testvtkexport (const GV& gv, const T& t)
 {
   // make a grid function from the analytic function
@@ -98,16 +98,16 @@ class L : public Dune::PDELab::GridFunctionBase<
 public:
   L (const G& g_) : g(g_) {}
 
-  inline void evaluate (const Dune::FieldVector<T,2>& x, 
+  inline void evaluate (const Dune::FieldVector<T,2>& x,
 						Dune::FieldVector<T,1>& y) const
-  {  
+  {
 	y = sin(3*3.1415*x[0])*cos(7*3.1415*x[1]);
   }
 
-  inline void evaluate (const ElementType& e, 
-						const Dune::FieldVector<T,2>& x, 
+  inline void evaluate (const ElementType& e,
+						const Dune::FieldVector<T,2>& x,
 						Dune::FieldVector<T,1>& y) const
-  {  
+  {
 	evaluate(e.geometry().global(x),y);
   }
 
@@ -115,14 +115,14 @@ public:
   {
 	return g;
   }
-  
+
 private:
   const G& g;
 };
 
 
 // test function trees
-template<class GV> 
+template<class GV>
 void testfunctiontree (const GV& gv)
 {
   // a leaf function
@@ -170,9 +170,9 @@ void testfunctiontree (const GV& gv)
   typedef Dune::PDELab::CompositeGridFunction<C2,C9> T;
   T t(c2,c9);
 
-  std::cout << "number of nodes in T is " << Dune::PDELab::count_nodes(t) << std::endl;
-  std::cout << "number of leaves in T is " << Dune::PDELab::count_leaves(t) << std::endl;
-  Dune::PDELab::print_paths(t);
+  std::cout << "depth of T is " << Dune::PDELab::TypeTree::TreeInfo<T>::depth << std::endl;
+  std::cout << "number of nodes in T is " << Dune::PDELab::TypeTree::TreeInfo<T>::nodeCount << std::endl;
+  std::cout << "number of leaves in T is " << Dune::PDELab::TypeTree::TreeInfo<T>::leafCount << std::endl;
 
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
   Dune::PDELab::vtkwriter_tree_addvertexdata(vtkwriter,t);
@@ -204,7 +204,7 @@ int main(int argc, char** argv)
 	Dune::FieldVector<int,2> N(1);
 	Dune::FieldVector<bool,2> B(false);
 	Dune::YaspGrid<2> grid(L,N,B,0);
-    grid.globalRefine(6);
+        grid.globalRefine(6);
 
 	// run algorithm on a grid
 	std::cout << "instantiate grid functions on a grid" << std::endl;
@@ -227,4 +227,4 @@ int main(int argc, char** argv)
     std::cerr << "Unknown exception thrown!" << std::endl;
 	return 1;
   }
-} 
+}
