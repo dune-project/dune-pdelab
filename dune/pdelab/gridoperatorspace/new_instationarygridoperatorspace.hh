@@ -605,8 +605,11 @@ namespace Dune {
                   lfsu.vread(*x[i],xl);
 
                   // Rebind finite elements to the sub entity
-                  ST::BindSubEntity::rebind(lfsu,*sit);
-                  ST::BindSubEntity::rebind(lfsv,*sit);
+                  typename ST::BindEntityPartVisitor rebind_visitor(*sit);
+                  TypeTree::applyToTree(lfsu,rebind_visitor);
+                  TypeTree::applyToTree(lfsv,rebind_visitor);
+                  // ST::BindSubEntity::rebind(lfsu,*sit);
+                  // ST::BindSubEntity::rebind(lfsv,*sit);
 
                   // volume evaluation
                   if (doA)
@@ -648,6 +651,10 @@ namespace Dune {
                     SubIntersectionIterator eiit = sub_triangulation.iend();
                     for (; iit!=eiit; ++iit)
                       {
+
+                        typename ST::BindInsideIntersectionPartVisitor in_rebind_visitor(*iit);
+                        typename ST::BindOutsideIntersectionPartVisitor out_rebind_visitor(*iit);
+                        typename ST::BindIntersectionPartVisitor rebind_intersection_visitor(*iit);
 
                         if(has_subtriangulation){
                           // Rebind local function spaces and read coefficents
@@ -693,11 +700,16 @@ namespace Dune {
                                 lfsun.vread(*x[i],xn);
 
                                 // Prepare the local functions for global evaluation 
-                                ST::BindInsideSubIntersection::rebind(lfsu,*iit);
-                                ST::BindOutsideSubIntersection::rebind(lfsun,*iit);
+                                TypeTree::applyToTree(lfsu,in_rebind_visitor);
+                                TypeTree::applyToTree(lfsun,out_rebind_visitor);
+                                TypeTree::applyToTree(lfsv,in_rebind_visitor);
+                                TypeTree::applyToTree(lfsvn,out_rebind_visitor);
 
-                                ST::BindInsideSubIntersection::rebind(lfsv,*iit);
-                                ST::BindOutsideSubIntersection::rebind(lfsvn,*iit);
+                                // ST::BindInsideSubIntersection::rebind(lfsu,*iit);
+                                // ST::BindOutsideSubIntersection::rebind(lfsun,*iit);
+
+                                // ST::BindInsideSubIntersection::rebind(lfsv,*iit);
+                                // ST::BindOutsideSubIntersection::rebind(lfsvn,*iit);
                             
                                 // skeleton evaluation
                                 LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
@@ -714,8 +726,11 @@ namespace Dune {
                         if (iit->boundary())
                           {
                             // Prepare the local functions for global evaluation 
-                            ST::BindSubIntersection::rebind(lfsu,*iit);
-                            ST::BindSubIntersection::rebind(lfsv,*iit);
+                            TypeTree::applyToTree(lfsu,rebind_intersection_visitor);
+                            TypeTree::applyToTree(lfsv,rebind_intersection_visitor);
+
+                            // ST::BindSubIntersection::rebind(lfsu,*iit);
+                            // ST::BindSubIntersection::rebind(lfsv,*iit);
 
                             LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
                               alpha_boundary(la,*iit,lfsu,xl,lfsv,rl_a);
@@ -1072,8 +1087,12 @@ namespace Dune {
               lfsu.vread(x,xl);
 
               // Rebind finite elements to the sub entity
-              ST::BindSubEntity::rebind(lfsu,*sit);
-              ST::BindSubEntity::rebind(lfsv,*sit);
+              typename ST::BindEntityPartVisitor rebind_visitor(*sit);
+              TypeTree::applyToTree(lfsu,rebind_visitor);
+              TypeTree::applyToTree(lfsv,rebind_visitor);
+
+              // ST::BindSubEntity::rebind(lfsu,*sit);
+              // ST::BindSubEntity::rebind(lfsv,*sit);
 
               // volume evaluation
               if (implicit)
@@ -1111,6 +1130,10 @@ namespace Dune {
                 SubIntersectionIterator eiit = sub_triangulation.iend();
                 for (; iit!=eiit; ++iit)
                   {
+
+                    typename ST::BindInsideIntersectionPartVisitor in_rebind_visitor(*iit);
+                    typename ST::BindOutsideIntersectionPartVisitor out_rebind_visitor(*iit);
+                    typename ST::BindIntersectionPartVisitor rebind_intersection_visitor(*iit);
 
                     if(has_subtriangulation){
                       // Rebind local function spaces and read coefficents
@@ -1156,11 +1179,16 @@ namespace Dune {
                             lfsun.vread(x,xn);
 
                             // Prepare the local functions for global evaluation 
-                            ST::BindInsideSubIntersection::rebind(lfsu,*iit);
-                            ST::BindOutsideSubIntersection::rebind(lfsun,*iit);
+                            TypeTree::applyToTree(lfsu,in_rebind_visitor);
+                            TypeTree::applyToTree(lfsun,out_rebind_visitor);
+                            TypeTree::applyToTree(lfsv,in_rebind_visitor);
+                            TypeTree::applyToTree(lfsvn,out_rebind_visitor);
 
-                            ST::BindInsideSubIntersection::rebind(lfsv,*iit);
-                            ST::BindOutsideSubIntersection::rebind(lfsvn,*iit);
+                            // ST::BindInsideSubIntersection::rebind(lfsu,*iit);
+                            // ST::BindOutsideSubIntersection::rebind(lfsun,*iit);
+
+                            // ST::BindInsideSubIntersection::rebind(lfsv,*iit);
+                            // ST::BindOutsideSubIntersection::rebind(lfsvn,*iit);
                             
                             // skeleton evaluation
                             LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
@@ -1178,8 +1206,11 @@ namespace Dune {
                     if (iit->boundary())
                       {
                         // Prepare the local functions for global evaluation 
-                        ST::BindSubIntersection::rebind(lfsu,*iit);
-                        ST::BindSubIntersection::rebind(lfsv,*iit);
+                        TypeTree::applyToTree(lfsu,rebind_intersection_visitor);
+                        TypeTree::applyToTree(lfsv,rebind_intersection_visitor);
+
+                        // ST::BindSubIntersection::rebind(lfsu,*iit);
+                        // ST::BindSubIntersection::rebind(lfsv,*iit);
 
                         LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
                           alpha_boundary(la,*iit,lfsu,xl,lfsv,rl_a);
@@ -1434,8 +1465,12 @@ namespace Dune {
               lfsu.vread(x,xl);
 
               // Rebind finite elements to the sub entity
-              ST::BindSubEntity::rebind(lfsu,*sit);
-              ST::BindSubEntity::rebind(lfsv,*sit);
+              typename ST::BindEntityPartVisitor rebind_visitor(*sit);
+              TypeTree::applyToTree(lfsu,rebind_visitor);
+              TypeTree::applyToTree(lfsv,rebind_visitor);
+
+              // ST::BindSubEntity::rebind(lfsu,*sit);
+              // ST::BindSubEntity::rebind(lfsv,*sit);
 
               // volume evaluation
               if (implicit)
@@ -1463,6 +1498,11 @@ namespace Dune {
                 SubIntersectionIterator eiit = sub_triangulation.iend();
                 for (;iit!=eiit; ++iit)
                   {
+
+                    typename ST::BindInsideIntersectionPartVisitor in_rebind_visitor(*iit);
+                    typename ST::BindOutsideIntersectionPartVisitor out_rebind_visitor(*iit);
+                    typename ST::BindIntersectionPartVisitor rebind_intersection_visitor(*iit);
+
                     if(has_subtriangulation){
                       // Rebind local function spaces and read coefficents
                       lfsu.bind(*( iit->insideHostEntity() ));
@@ -1509,11 +1549,16 @@ namespace Dune {
                             lfsun.vread(x,xn);
 
                             // Prepare the local functions for global evaluation 
-                            ST::BindInsideSubIntersection::rebind(lfsu,*iit);
-                            ST::BindOutsideSubIntersection::rebind(lfsun,*iit);
+                            TypeTree::applyToTree(lfsu,in_rebind_visitor);
+                            TypeTree::applyToTree(lfsun,out_rebind_visitor);
+                            TypeTree::applyToTree(lfsv,in_rebind_visitor);
+                            TypeTree::applyToTree(lfsvn,out_rebind_visitor);
 
-                            ST::BindInsideSubIntersection::rebind(lfsv,*iit);
-                            ST::BindOutsideSubIntersection::rebind(lfsvn,*iit);
+                            // ST::BindInsideSubIntersection::rebind(lfsu,*iit);
+                            // ST::BindOutsideSubIntersection::rebind(lfsun,*iit);
+
+                            // ST::BindInsideSubIntersection::rebind(lfsv,*iit);
+                            // ST::BindOutsideSubIntersection::rebind(lfsvn,*iit);
                             
                             // skeleton evaluation
                             LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
@@ -1531,8 +1576,11 @@ namespace Dune {
                     if (iit->boundary())
                       {
                         // Prepare the local functions for global evaluation 
-                        ST::BindSubIntersection::rebind(lfsu,*iit);
-                        ST::BindSubIntersection::rebind(lfsv,*iit);
+                        // ST::BindSubIntersection::rebind(lfsu,*iit);
+                        // ST::BindSubIntersection::rebind(lfsv,*iit);
+                        TypeTree::applyToTree(lfsu,rebind_intersection_visitor);
+                        TypeTree::applyToTree(lfsv,rebind_intersection_visitor);
+
 
                         LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
                           jacobian_boundary(la,*iit,lfsu,xl,lfsv,al);

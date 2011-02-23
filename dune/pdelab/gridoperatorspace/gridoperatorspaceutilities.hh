@@ -72,25 +72,21 @@ namespace Dune {
       typedef IntersectionGeometry<Intersection>  SubIntersection;
       typedef std::list<SubIntersection> SubIntersectionList;
 
-      struct BindSubEntity{
-        template<typename LFS, typename SE>
-        inline static void rebind(const LFS &, const SE &){}
+      template<typename UnfittedGeometry>
+      struct RebindVisitor : public TypeTree::TreeVisitor, public TypeTree::DynamicTraversal
+      {
+        RebindVisitor(UnfittedGeometry & ug_){}
+
+        template<typename LeafNode, typename TreePath>
+        void leaf(const LeafNode& node, TreePath treePath) const
+        {
+        }
       };
 
-      struct BindInsideSubIntersection{
-        template<typename LFS, typename SE>
-        inline static void rebind(const LFS &, const SE &){}
-      };
-
-      struct BindOutsideSubIntersection{
-        template<typename LFS, typename SE>
-        inline static void rebind(const LFS &, const SE &){}
-      };
-
-      struct BindSubIntersection{
-        template<typename LFS, typename SE>
-        inline static void rebind(const LFS &, const SE &){}
-      };
+      typedef RebindVisitor<SubEntity> BindEntityPartVisitor;
+      typedef RebindVisitor<SubIntersection> BindInsideIntersectionPartVisitor;
+      typedef RebindVisitor<SubIntersection> BindOutsideIntersectionPartVisitor;
+      typedef RebindVisitor<SubIntersection> BindIntersectionPartVisitor;
 
       // The iterator has to wrap the true intersection
       // iterator. Otherwise a list of entity pointers would have to
