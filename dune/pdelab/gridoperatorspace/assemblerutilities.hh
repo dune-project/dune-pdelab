@@ -13,16 +13,12 @@
    \tparam CV   Constraints maps for the individual dofs (test space)
 
 */
-template<typename GFSU, typename GFSV, typename CU, typename CV>
-struct AssemblerSpaceTraits
+template<typename GFSU, typename GFSV>
+struct AssemblerTraits
 {
   typedef GFSU TrialGridFunctionSpace;
 
-  typedef CU TrialConstraintsType;
-
   typedef GFSV TestGridFunctionSpace;
-
-  typedef CV TestConstraintsType;
 
   //! \brief the grid view where grid function is defined upon
   typedef typename GFSU::Traits::GridViewType GridViewType;
@@ -33,19 +29,38 @@ struct AssemblerSpaceTraits
   static const bool isGalerkinMethod = Dune::is_same<GFSU,GFSV>::value;
 };
 
+/**
+   \brief Traits class for local assembler
+
+   This class collects types and auxilliary information about the
+   local assembler.
+       
+   \tparam GFSU GridFunctionSpace for ansatz functions
+   \tparam GFSV GridFunctionSpace for test functions
+   \tparam CU   Constraints maps for the individual dofs (trial space)
+   \tparam CV   Constraints maps for the individual dofs (test space)
+
+*/
+template<typename GFSU, typename GFSV, typename CU, typename CV>
+struct LocalAssemblerTraits : public AssemblerTraits<GFSU,GFSV>
+{
+  typedef CU TrialConstraintsType;
+
+  typedef CV TestConstraintsType;
+};
+
 
 class EmptyTransformation : public ConstraintsTransformation<int,float>
 {
 };
 
-
 /**
-   \brief Base class for grid operators.
+   \brief Base class for local assembler
 
-   This class provides some generic behavior required for most
-   grid operators. This includes the access of the global vectors
-   and matrices via local indices and local function spaces with
-   regard to the constraint mappings.
+   This class provides some generic behavior required for local
+   assembler implementations. This includes the access of the global
+   vectors and matrices via local indices and local function spaces
+   with regard to the constraint mappings.
        
    \tparam GFSU GridFunctionSpace for ansatz functions
    \tparam GFSV GridFunctionSpace for test functions
@@ -55,20 +70,20 @@ class EmptyTransformation : public ConstraintsTransformation<int,float>
 template<typename GFSU, typename GFSV,
          typename CU=EmptyTransformation,
          typename CV=EmptyTransformation>
-class AssemblerBase{
+class LocalAssemblerBase{
 public:
 
   typedef AssemblerSpaceTraits<GFSU,GFSV,CU,CV> Traits;
       
   //! construct AssemblerSpace
-  AssemblerBase (const GFSU& gfsu_, const GFSV& gfsv_) 
+  LocalAssemblerBase (const GFSU& gfsu_, const GFSV& gfsv_) 
     : gfsu(gfsu_), gfsv(gfsv_),
       pconstraintsu(&emptyconstraintsu), pconstraintsv(&emptyconstraintsv),
       lfsu(gfsu), lfsv(gfsv), lfsun(gfsu), lfsvn(gfsv)
   {}
 
   //! construct AssemblerSpace, with constraints
-  AssemblerBase (const GFSU& gfsu_, const CU& cu,
+  LocalAssemblerBase (const GFSU& gfsu_, const CU& cu,
                  const GFSV& gfsv_, const CV& cv) 
     : gfsu(gfsu_), gfsv(gfsv_),
       pconstraintsu(&cu), pconstraintsv(&cv),
@@ -406,8 +421,8 @@ protected:
 };
 
 template<typename GFSU, typename GFSV, typename CU, typename CV>
-CU AssemblerBase<GFSU,GFSV,CU,CV>::emptyconstraintsu;
+CU LocalAssemblerBase<GFSU,GFSV,CU,CV>::emptyconstraintsu;
 template<typename GFSU, typename GFSV, typename CU, typename CV>
-CV AssemblerBase<GFSU,GFSV,CU,CV>::emptyconstraintsv;
+CV LocalAssemblerBase<GFSU,GFSV,CU,CV>::emptyconstraintsv;
     
 #endif
