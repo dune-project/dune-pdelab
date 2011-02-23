@@ -14,6 +14,7 @@
 #include"../finiteelementmap/p0fem.hh"
 #include"../finiteelementmap/p12dfem.hh"
 #include"../finiteelementmap/pk2dfem.hh"
+#include"../finiteelementmap/conformingconstraints.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include"../gridfunctionspace/interpolate.hh"
@@ -86,7 +87,7 @@ void testp1 (const GV& gv)
   P1FEM p1fem;
   
   // make constrained space
-  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,Dune::PDELab::P12DConstraints> P1GFS; 
+  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,Dune::PDELab::ConformingDirichletConstraints> P1GFS; 
   P1GFS p1gfs(gv,p1fem);
 
   // make coefficent Vectors
