@@ -21,6 +21,7 @@
 #include"../finiteelementmap/p0fem.hh"
 #include"../finiteelementmap/p12dfem.hh"
 #include"../finiteelementmap/pk2dfem.hh"
+#include"../finiteelementmap/conformingconstraints.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include"../gridfunctionspace/interpolate.hh"
@@ -99,7 +100,7 @@ void testp1 (const GV& gv)
   
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
-    Dune::PDELab::P12DConstraints,Dune::PDELab::ISTLVectorBackend<1> > GFS; 
+    Dune::PDELab::ConformingDirichletConstraints,Dune::PDELab::ISTLVectorBackend<1> > GFS; 
   GFS gfs(gv,fem);
 
   // make constraints map and initialize it from a function
