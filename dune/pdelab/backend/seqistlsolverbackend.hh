@@ -175,7 +175,25 @@ namespace Dune {
     //! \addtogroup PDELab_seqsolvers Sequential Solvers
     //! \{
 
-    //! Sequential BiCGStab solver with SSOR preconditioner
+    /**
+     * @brief Backend for sequential BiCGSTAB solver with Jacobi preconditioner.
+     */
+    class ISTLBackend_SEQ_BCGS_Jac
+      : public ISTLBackend_SEQ_Base<Dune::SeqJac, Dune::BiCGSTABSolver>
+    {
+    public:
+      /*! \brief make a linear solver object
+        \param[in] maxiter maximum number of iterations to do
+        \param[in] verbose print messages if true
+      */
+      explicit ISTLBackend_SEQ_BCGS_Jac (unsigned maxiter_=5000, bool verbose_=true)
+        : ISTLBackend_SEQ_Base<Dune::SeqJac, Dune::BiCGSTABSolver>(maxiter_, verbose_)
+      {}
+    };
+
+    /**
+     * @brief Backend for sequential BiCGSTAB solver with SSOR preconditioner.
+     */
     class ISTLBackend_SEQ_BCGS_SSOR
       : public ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::BiCGSTABSolver>
     {
@@ -190,7 +208,9 @@ namespace Dune {
       {}
     };
 
-    //! Sequential BiCGStab solver with ILU0 preconditioner
+     /**
+     * @brief Backend for sequential BiCGSTAB solver with ILU0 preconditioner.
+     */
     class ISTLBackend_SEQ_BCGS_ILU0
       : public ISTLBackend_SEQ_ILU0<Dune::BiCGSTABSolver>
     {
@@ -205,7 +225,9 @@ namespace Dune {
       {}
     };
     
-    //! Sequential CG solver with ILU0 preconditioner
+    /**
+     * @brief Backend for sequential conjugate gradient solver with ILU0 preconditioner.
+     */
     class ISTLBackend_SEQ_CG_ILU0
       : public ISTLBackend_SEQ_ILU0<Dune::CGSolver>
     {
@@ -220,7 +242,9 @@ namespace Dune {
       {}
     };
 
-    //! Sequential CG solver with SSOR preconditioner
+    /**
+     * @brief Backend for sequential conjugate gradient solver with SSOR preconditioner.
+     */
     class ISTLBackend_SEQ_CG_SSOR
       : public ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::CGSolver>
     {
@@ -235,7 +259,22 @@ namespace Dune {
       {}
     };
     
-    //! Sequential SuperLU solver
+    /**
+     * @brief Backend for conjugate gradient solver with Jacobi preconditioner.
+     */
+    class ISTLBackend_SEQ_CG_Jac
+      : public ISTLBackend_SEQ_Base<Dune::SeqJac, Dune::CGSolver>
+    {
+    public:
+      /*! \brief make a linear solver object
+        \param[in] maxiter maximum number of iterations to do
+        \param[in] verbose print messages if true
+      */
+      explicit ISTLBackend_SEQ_CG_Jac (unsigned maxiter_=5000, bool verbose_=true)
+        : ISTLBackend_SEQ_Base<Dune::SeqJac, Dune::CGSolver>(maxiter_, verbose_)
+      {}
+    };
+
 #if HAVE_SUPERLU
     class ISTLBackend_SEQ_SuperLU
       : public SequentialNorm, public LinearResultStorage
