@@ -3,7 +3,23 @@
 #ifndef DUNE_PDELAB_COMPOSITEGRIDFUNCTIONSPACE_HH
 #define DUNE_PDELAB_COMPOSITEGRIDFUNCTIONSPACE_HH
 
-#include "powercompositegridfunctionspacebase.hh"
+#include <cstddef>
+#include <list>
+#include <ostream>
+#include <utility>
+#include <vector>
+
+#include <dune/common/exceptions.hh>
+#include <dune/common/stdstreams.hh>
+#include <dune/common/static_assert.hh>
+
+#include <dune/pdelab/common/typetree/compositenodemacros.hh>
+#include <dune/pdelab/common/typetree/transformation.hh>
+#include <dune/pdelab/common/typetree/utility.hh>
+#include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/ordering.hh>
+#include <dune/pdelab/gridfunctionspace/powercompositegridfunctionspacebase.hh>
+#include <dune/pdelab/gridfunctionspace/tags.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -418,22 +434,8 @@ namespace Dune {
       mutable std::vector<BlockIndexRangeIterator> blockIndexIterators;
     };
 
-    //! \addtogroup GridFunctionSpace
-    //! \{
-
-    /** \brief grid function space composed of other grid function spaces
-
-        Composes a tuple of arbitray grid function spaces into a grid function space.
-        The ordering of the resulting unknowns can be done lexicographically or block-wise.
-        \tparam Mapper is the ordering parameter. Use e.g.
-        \link GridFunctionSpaceLexicographicMapper GridFunctionSpaceLexicographicMapper \endlink
-        or \link  GridFunctionSpaceComponentBlockwiseMapper  GridFunctionSpaceComponentBlockwiseMapper \endlink
-        or \link  GridFunctionSpaceBlockwiseMapper  GridFunctionSpaceBlockwiseMapper \endlink
-        or \link  GridFunctionSpaceDynamicBlockwiseMapper  GridFunctionSpaceDynamicBlockwiseMapper \endlink
-    */
-
+    //! \}
   }
 
 }
-//! \}
 #endif
