@@ -621,8 +621,10 @@ namespace Dune {
 
             // ParallelStuff: BEGIN support for processor boundaries.
             if ((!iit->boundary()) && (!iit->neighbor()))
-              typedef IntersectionGeometry<Intersection> IntersectionWrapper;
-              TypeTree::applyToTree(lfs_e,ProcessorConstraints<IntersectionWrapper,CG>(IntersectionWrapper(*iit,intersection_index),cg));
+              {
+                typedef IntersectionGeometry<Intersection> IntersectionWrapper;
+                TypeTree::applyToTree(lfs_e,ProcessorConstraints<IntersectionWrapper,CG>(IntersectionWrapper(*iit,intersection_index),cg));
+              }
             // END support for processor boundaries.
 
             if (iit->neighbor()){
