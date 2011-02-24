@@ -110,7 +110,7 @@ namespace Dune
       typedef LocalBasisTraits<D,d,Dune::FieldVector<D,d>,R,1,Dune::FieldVector<R,1>,Dune::FieldMatrix<R,1,d> > Traits;
 
       //! \brief number of shape functions
-      int size () const
+      unsigned int size () const
       {
         return QkSize<k,d>::value;
       }
