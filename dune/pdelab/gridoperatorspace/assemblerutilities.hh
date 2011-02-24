@@ -58,6 +58,39 @@ namespace Dune{
     };
 
     /**
+       \brief Base class for assembler
+
+       \tparam GFSU GridFunctionSpace for ansatz functions
+       \tparam GFSV GridFunctionSpace for test functions
+    */
+    template<typename GFSU, typename GFSV>
+    class AssemblerBase{
+    public:
+
+      typedef AssemblerTraits<GFSU,GFSV> Traits;
+      
+      //! construct AssemblerSpace
+      AssemblerBase (const GFSU& gfsu_, const GFSV& gfsv_) 
+        : gfsu(gfsu_), gfsv(gfsv_),
+          lfsu(gfsu), lfsv(gfsv), lfsun(gfsu), lfsvn(gfsv)
+      {}
+
+      /* global function spaces */
+      const GFSU& gfsu;
+      const GFSV& gfsv;
+
+      /* local function spaces */
+      typedef LocalFunctionSpace<GFSU, TrialSpaceTag> LFSU;
+      typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
+      // local function spaces in local cell
+      mutable LFSU lfsu;
+      mutable LFSV lfsv;
+      // local function spaces in neighbor
+      mutable LFSU lfsun;
+      mutable LFSV lfsvn;
+    };
+
+    /**
        \brief Base class for local assembler
 
        This class provides some generic behavior required for local
@@ -76,7 +109,7 @@ namespace Dune{
     class LocalAssemblerBase{
     public:
 
-      typedef AssemblerSpaceTraits<GFSU,GFSV,CU,CV> Traits;
+      typedef LocalAssemblerTraits<GFSU,GFSV,CU,CV> Traits;
       
       //! construct AssemblerSpace
       LocalAssemblerBase (const GFSU& gfsu_, const GFSV& gfsv_) 
@@ -412,15 +445,6 @@ namespace Dune{
       const CV* pconstraintsv;
       static CU emptyconstraintsu;
       static CV emptyconstraintsv;
-      /* local function spaces */
-      typedef LocalFunctionSpace<GFSU, TrialSpaceTag> LFSU;
-      typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
-      // local function spaces in local cell
-      mutable LFSU lfsu;
-      mutable LFSV lfsv;
-      // local function spaces in neighbor
-      mutable LFSU lfsun;
-      mutable LFSV lfsvn;
     };
 
     template<typename GFSU, typename GFSV, typename CU, typename CV>
