@@ -452,6 +452,7 @@ namespace Dune {
 
 #ifndef DOXYGEN
 
+    //! wraps a BoundaryGridFunction in a DirichletConstraintsParameter class
     template<typename F>
     class DirichletConstraintsWrapper
       : public TypeTree::LeafNode
@@ -471,6 +472,9 @@ namespace Dune {
       }
     };
 
+    //! empty ConstraintsParameters class, needed for the TMP without any parameters
+    class NoConstraintsParameters : public TypeTree::LeafNode {};
+    
     // Tag to name trafo GridFunction -> DirichletConstraintsWrapper
     struct gf_to_constraints {};
 
@@ -673,7 +677,28 @@ namespace Dune {
     };
 #endif
 
-    //! construct constraints from given boundary condition function
+    //! construct constraints
+    /**
+     * \code
+     * #include <dune/pdelab/gridfunctionspace/constraints.hh>
+     * \endcode
+     * \tparam GFS Type implementing the model GridFunctionSpace
+     * \tparam CG  Type implementing the model
+     *             GridFunctionSpace::ConstraintsContainer::Type
+     *
+     * \param gfs     The gridfunctionspace
+     * \param cg      The constraints container
+     * \param verbose Print information about the constaints at the end
+     */
+    template<typename GFS, typename CG>
+    void constraints(const GFS& gfs, CG& cg,
+                     const bool verbose = false)
+    {
+      NoConstraintsParameters p;
+      ConstraintsAssemblerHelper<NoConstraintsParameters, GFS, CG, false>::assemble(p,gfs,cg, verbose);
+	}
+
+    //! construct constraints from given constraits parameter tree
     /**
      * \code
      * #include <dune/pdelab/gridfunctionspace/constraints.hh>
@@ -683,7 +708,7 @@ namespace Dune {
      * \tparam CG  Type implementing the model
      *             GridFunctionSpace::ConstraintsContainer::Type
      *
-     * \param p       The boundary condition function
+     * \param p       The condition parameters
      * \param gfs     The gridfunctionspace
      * \param cg      The constraints container
      * \param verbose Print information about the constaints at the end
