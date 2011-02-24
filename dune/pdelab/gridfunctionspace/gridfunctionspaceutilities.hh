@@ -462,7 +462,7 @@ namespace Dune {
 
         typename Traits::RangeType gradphi;
         y = 0;
-        for(unsigned i = 0; i < lfs.size(); ++i) {
+        for(unsigned int i = 0; i < lfs.size(); ++i) {
           // compute global gradient of shape function i
           gradphi = 0;
           JgeoIT.umv(J[i][0], gradphi);
@@ -622,7 +622,7 @@ namespace Dune {
 	  {
 		lfs.bind(e);
 		lfs.vread(xg,xl);
-        for (int k=0; k<T::CHILDREN; k++)
+        for (unsigned int k=0; k<T::CHILDREN; k++)
           {
             lfs.child(k).finiteElement().localBasis().
               evaluateFunction(x,yb);
