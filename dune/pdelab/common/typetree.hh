@@ -15,5 +15,6 @@
 #include <dune/pdelab/common/typetree/traversalutilities.hh>
 #include <dune/pdelab/common/typetree/transformation.hh>
 #include <dune/pdelab/common/typetree/transformationutilities.hh>
+#include <dune/pdelab/common/typetree/accumulate_static.hh>
 
 #endif // DUNE_PDELAB_TYPETREE_HH

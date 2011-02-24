@@ -1,6 +1,7 @@
 commondir = $(includedir)/dune/pdelab/common
 
 common_HEADERS =				\
+	accumulate_static.hh			\
 	applytochildrensingletree.hh		\
 	applytochildrentreepair.hh		\
 	compositenode.hh			\
