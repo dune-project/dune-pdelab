@@ -246,7 +246,8 @@ namespace Dune {
         void apply(const U& u, V& estimate)
         {
           //! @todo allgemein
-          P0FEM p0fem(Dune::GeometryType::simplex);
+          static Dune::GeometryType simplex(Dune::GeometryType::simplex,GV::dimension);
+          P0FEM p0fem(simplex);
           GFSV gfsv(gfsu.gridview(),p0fem);
 
           // make local function spaces
@@ -394,7 +395,8 @@ namespace Dune {
       void prepare (const U& u)
       {
         //! @todo allgemein
-        P0FEM p0fem(Dune::GeometryType::simplex);
+        static Dune::GeometryType simplex(Dune::GeometryType::simplex,GV::dimension);
+        P0FEM p0fem(simplex);
         GFSV gfsv(gfsu.gridview(),p0fem);
         V estimate(gfsv,0.);
         estimation.apply(u,estimate);
