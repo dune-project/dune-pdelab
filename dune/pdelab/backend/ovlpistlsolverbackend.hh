@@ -688,14 +688,24 @@ namespace Dune {
 
         Comm oocc(gfs.gridview().comm());
         MatrixType& mat=A.base();
-        phelper.createIndexSetAndProjectForAMG(mat, oocc);
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
           Dune::Amg::FirstDiagonal> >
           Criterion;
+#if HAVE_MPI
+        phelper.createIndexSetAndProjectForAMG(mat, oocc);
         typedef SMI<MatrixType,VectorType,VectorType,1> Smoother;
         typedef Dune::BlockPreconditioner<VectorType,VectorType,Comm,Smoother> ParSmoother;
-        typedef typename Dune::Amg::SmootherTraits<ParSmoother>::Arguments SmootherArgs;
         typedef Dune::OverlappingSchwarzOperator<MatrixType,VectorType,VectorType,Comm> Operator;
+        Operator oop(mat, oocc);
+        Dune::OverlappingSchwarzScalarProduct<VectorType,Comm> sp(oocc);
+#else
+        typedef SMI<MatrixType,VectorType,VectorType,1> ParSmoother;
+        typedef Dune::MatrixAdapter<MatrixType,VectorType,VectorType> Operator;
+        Operator oop(mat);
+        Dune::SeqScalarProduct<VectorType> sp;
+#endif
+        typedef typename Dune::Amg::SmootherTraits<ParSmoother>::Arguments
+          SmootherArgs;
         typedef Dune::Amg::AMG<Operator,VectorType,ParSmoother,Comm> AMG;
         SmootherArgs smootherArgs;
         smootherArgs.iterations = 1;
@@ -704,8 +714,6 @@ namespace Dune {
         Criterion criterion(15,2000);
         criterion.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
         criterion.setDebugLevel(verbose);
-        Dune::OverlappingSchwarzScalarProduct<VectorType,Comm> sp(oocc);
-        Operator oop(mat, oocc);
         //oocc.copyOwnerToAll(BlockProcessor<GFS>::getVector(r), BlockProcessor<GFS>::getVector(r));
         AMG amg=AMG(oop, criterion, smootherArgs, 1, steps, steps, false, oocc);
 
