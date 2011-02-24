@@ -291,7 +291,6 @@ namespace Dune {
         enum{
           value = BlockwiseIndicesHelper<GFS,GFS::Traits::isComposite>::value
         };
-        static_assert(GFS::Traits::isComposite, "Not Composite");
       };
 
       template<typename GFS, bool b, int k>
