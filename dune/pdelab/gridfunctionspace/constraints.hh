@@ -26,24 +26,24 @@ namespace Dune {
       template<typename C, bool doIt>
       struct ConstraintsCallBoundary
       {
-        template<typename F, typename I, typename LFS, typename T>
-        static void boundary (const C& c, const F& f, const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo)
+        template<typename F, typename IG, typename LFS, typename T>
+        static void boundary (const C& c, const F& f, const IG& ig, const LFS& lfs, T& trafo)
         {
         }
       };
       template<typename C, bool doIt>
       struct ConstraintsCallProcessor
       {
-        template<typename I, typename LFS, typename T>
-        static void processor (const C& c, const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo)
+        template<typename IG, typename LFS, typename T>
+        static void processor (const C& c, const IG& ig, const LFS& lfs, T& trafo)
         {
         }
       };
       template<typename C, bool doIt>
       struct ConstraintsCallSkeleton
       {
-        template<typename I, typename LFS, typename T>
-        static void skeleton (const C& c,  const IntersectionGeometry<I>& ig,
+        template<typename IG, typename LFS, typename T>
+        static void skeleton (const C& c,  const IG& ig,
                               const LFS& lfs_e, const LFS& lfs_f,
                               T& trafo_e, T& trafo_f)
         {
@@ -52,8 +52,8 @@ namespace Dune {
       template<typename C, bool doIt>
       struct ConstraintsCallVolume
       {
-        template<typename E, typename LFS, typename T>
-        static void volume (const C& c, const ElementGeometry<E>& eg, const LFS& lfs, T& trafo)
+        template<typename EG, typename LFS, typename T>
+        static void volume (const C& c, const EG& eg, const LFS& lfs, T& trafo)
         {
         }
       };
@@ -62,8 +62,8 @@ namespace Dune {
       template<typename C>
       struct ConstraintsCallBoundary<C,true>
       {
-        template<typename F, typename I, typename LFS, typename T>
-        static void boundary (const C& c, const F& f, const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo)
+        template<typename F, typename IG, typename LFS, typename T>
+        static void boundary (const C& c, const F& f, const IG& ig, const LFS& lfs, T& trafo)
         {
           c.boundary(f,ig,lfs,trafo);
         }
@@ -71,8 +71,8 @@ namespace Dune {
       template<typename C>
       struct ConstraintsCallProcessor<C,true>
       {
-        template<typename I, typename LFS, typename T>
-        static void processor (const C& c, const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo)
+        template<typename IG, typename LFS, typename T>
+        static void processor (const C& c, const IG& ig, const LFS& lfs, T& trafo)
         {
           c.processor(ig,lfs,trafo);
         }
@@ -80,8 +80,8 @@ namespace Dune {
       template<typename C>
       struct ConstraintsCallSkeleton<C,true>
       {
-        template<typename I, typename LFS, typename T>
-        static void skeleton (const C& c, const IntersectionGeometry<I>& ig,
+        template<typename IG, typename LFS, typename T>
+        static void skeleton (const C& c, const IG& ig,
                               const LFS& lfs_e, const LFS& lfs_f,
                               T& trafo_e, T& trafo_f)
         {
@@ -91,8 +91,8 @@ namespace Dune {
       template<typename C>
       struct ConstraintsCallVolume<C,true>
       {
-        template<typename E, typename LFS, typename T>
-        static void volume (const C& c, const ElementGeometry<E>& eg, const LFS& lfs, T& trafo)
+        template<typename EG, typename LFS, typename T>
+        static void volume (const C& c, const EG& eg, const LFS& lfs, T& trafo)
         {
           c.volume(eg,lfs,trafo);
         }
@@ -150,7 +150,7 @@ namespace Dune {
       };
 
 
-      template<typename I, typename CG>
+      template<typename IG, typename CG>
       struct BoundaryConstraints
         : public BoundaryConstraintsBase
         , public TypeTree::DynamicTraversal
@@ -183,13 +183,13 @@ namespace Dune {
           TypeTree::applyToTree(lfs,BoundaryConstraintsForParametersLeaf<F,IntersectionGeometry<I>,CG>(f,ig,cg));
         }
 
-        BoundaryConstraints(const IntersectionGeometry<I>& ig_, CG& cg_)
+        BoundaryConstraints(const IG& ig_, CG& cg_)
           : ig(ig_)
           , cg(cg_)
         {}
 
       private:
-        const IntersectionGeometry<I>& ig;
+        const IG& ig;
         // make CG mutable so we do not have to create an actual variable for the visitor
         // This (and the const qualifier on the leaf() method) should be removed as soon as
         // C++0x support becomes mandatory
@@ -198,7 +198,7 @@ namespace Dune {
       };
 
 
-      template<typename I, typename CG>
+      template<typename IG, typename CG>
       struct ProcessorConstraints
         : public TypeTree::TreeVisitor
         , public TypeTree::DynamicTraversal
@@ -219,13 +219,13 @@ namespace Dune {
           lfs.mwrite(cl,cg);
         }
 
-        ProcessorConstraints(const IntersectionGeometry<I>& ig_, CG& cg_)
+        ProcessorConstraints(const IG& ig_, CG& cg_)
           : ig(ig_)
           , cg(cg_)
         {}
 
       private:
-        const IntersectionGeometry<I>& ig;
+        const IG& ig;
         // make CG mutable so we do not have to create an actual variable for the visitor
         // This (and the const qualifier on the leaf() method) should be removed as soon as
         // C++0x support becomes mandatory
@@ -234,7 +234,7 @@ namespace Dune {
       };
 
 
-      template<typename I, typename CG>
+      template<typename IG, typename CG>
       struct SkeletonConstraints
         : public TypeTree::TreePairVisitor
         , public TypeTree::DynamicTraversal
@@ -264,13 +264,13 @@ namespace Dune {
           lfs_f.mwrite(cl_f,cg);
         }
 
-        SkeletonConstraints(const IntersectionGeometry<I>& ig_, CG& cg_)
+        SkeletonConstraints(const IG& ig_, CG& cg_)
           : ig(ig_)
           , cg(cg_)
         {}
 
       private:
-        const IntersectionGeometry<I>& ig;
+        const IG& ig;
         // make CG mutable so we do not have to create an actual variable for the visitor
         // This (and the const qualifier on the leaf() method) should be removed as soon as
         // C++0x support becomes mandatory
@@ -279,7 +279,7 @@ namespace Dune {
       };
 
 
-      template<typename E, typename CG>
+      template<typename EG, typename CG>
       struct VolumeConstraints
         : public TypeTree::TreeVisitor
         , public TypeTree::DynamicTraversal
@@ -302,13 +302,13 @@ namespace Dune {
           lfs.mwrite(cl,cg);
         }
 
-        VolumeConstraints(const ElementGeometry<E>& eg_, CG& cg_)
+        VolumeConstraints(const EG& eg_, CG& cg_)
           : eg(eg_)
           , cg(cg_)
         {}
 
       private:
-        const ElementGeometry<E>& eg;
+        const EG& eg;
         // make CG mutable so we do not have to create an actual variable for the visitor
         // This (and the const qualifier on the leaf() method) should be removed as soon as
         // C++0x support becomes mandatory
