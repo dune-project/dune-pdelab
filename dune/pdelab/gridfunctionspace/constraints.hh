@@ -601,7 +601,8 @@ namespace Dune {
           lfs_e.bind(*it);
 
           // TypeTree::applyToTreePair(p,lfs_e,VolumeConstraints<Element,CG>(ElementGeometry<Element>(*it),cg));
-          TypeTree::applyToTree(lfs_e,VolumeConstraints<Element,CG>(ElementGeometry<Element>(*it),cg));
+          typedef ElementGeometry<Element> ElementWrapper;
+          TypeTree::applyToTree(lfs_e,VolumeConstraints<ElementWrapper,CG>(ElementWrapper(*it),cg));
 
 		  // iterate over intersections and call metaprogram
           unsigned int intersection_index = 0;
@@ -610,12 +611,14 @@ namespace Dune {
           {
             if (iit->boundary())
             {
-              TypeTree::applyToTreePair(p,lfs_e,BoundaryConstraints<Intersection,CG>(IntersectionGeometry<Intersection>(*iit,intersection_index),cg));
+              typedef IntersectionGeometry<Intersection> IntersectionWrapper;
+              TypeTree::applyToTreePair(p,lfs_e,BoundaryConstraints<IntersectionWrapper,CG>(IntersectionWrapper(*iit,intersection_index),cg));
             }
 
             // ParallelStuff: BEGIN support for processor boundaries.
             if ((!iit->boundary()) && (!iit->neighbor()))
-              TypeTree::applyToTree(lfs_e,ProcessorConstraints<Intersection,CG>(IntersectionGeometry<Intersection>(*iit,intersection_index),cg));
+              typedef IntersectionGeometry<Intersection> IntersectionWrapper;
+              TypeTree::applyToTree(lfs_e,ProcessorConstraints<IntersectionWrapper,CG>(IntersectionWrapper(*iit,intersection_index),cg));
             // END support for processor boundaries.
 
             if (iit->neighbor()){
@@ -626,8 +629,8 @@ namespace Dune {
               if(id>idn){
                 // bind local function space to element in neighbor
                 lfs_f.bind( *(iit->outside()) );
-
-                TypeTree::applyToTreePair(lfs_e,lfs_f,SkeletonConstraints<Intersection,CG>(IntersectionGeometry<Intersection>(*iit,intersection_index),cg));
+                typedef IntersectionGeometry<Intersection> IntersectionWrapper;
+                TypeTree::applyToTreePair(lfs_e,lfs_f,SkeletonConstraints<IntersectionWrapper,CG>(IntersectionWrapper(*iit,intersection_index),cg));
               }
             }
           }
