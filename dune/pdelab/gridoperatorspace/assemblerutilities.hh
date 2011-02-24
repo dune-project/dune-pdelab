@@ -114,16 +114,14 @@ namespace Dune{
       //! construct AssemblerSpace
       LocalAssemblerBase (const GFSU& gfsu_, const GFSV& gfsv_) 
         : gfsu(gfsu_), gfsv(gfsv_),
-          pconstraintsu(&emptyconstraintsu), pconstraintsv(&emptyconstraintsv),
-          lfsu(gfsu), lfsv(gfsv), lfsun(gfsu), lfsvn(gfsv)
+          pconstraintsu(&emptyconstraintsu), pconstraintsv(&emptyconstraintsv)
       {}
 
       //! construct AssemblerSpace, with constraints
       LocalAssemblerBase (const GFSU& gfsu_, const CU& cu,
                           const GFSV& gfsv_, const CV& cv) 
         : gfsu(gfsu_), gfsv(gfsv_),
-          pconstraintsu(&cu), pconstraintsv(&cv),
-          lfsu(gfsu), lfsv(gfsv), lfsun(gfsu), lfsvn(gfsv)
+          pconstraintsu(&cu), pconstraintsv(&cv)
       {}
 
       //! get dimension of space u
