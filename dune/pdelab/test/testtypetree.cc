@@ -13,6 +13,67 @@ int main()
 
 #include "typetreetestutility.hh"
 
+
+struct NodeCountingFunctor
+{
+
+  typedef std::size_t result_type;
+
+  template<typename Node, typename TreePath>
+  struct doVisit
+  {
+    static const bool value = true;
+  };
+
+  template<typename Node, typename TreePath>
+  struct visit
+  {
+    static const result_type result = 1;
+  };
+
+};
+
+struct LeafCountingFunctor
+{
+
+  typedef std::size_t result_type;
+
+  template<typename Node, typename TreePath>
+  struct doVisit
+  {
+    static const bool value = Node::isLeaf;
+  };
+
+  template<typename Node, typename TreePath>
+  struct visit
+  {
+    static const result_type result = 1;
+  };
+
+};
+
+
+struct DepthFunctor
+{
+
+  typedef std::size_t result_type;
+
+  template<typename Node, typename TreePath>
+  struct doVisit
+  {
+    static const bool value = Node::isLeaf;
+  };
+
+  template<typename Node, typename TreePath>
+  struct visit
+  {
+    // the TreePath is always one entry shorter than the actual depth of the tree
+    static const result_type result = Dune::PDELab::TypeTree::TreePathSize<TreePath>::value + 1;
+  };
+
+};
+
+
 int main(int argc, char** argv)
 {
 
@@ -65,7 +126,31 @@ int main(int argc, char** argv)
 
   typedef Dune::PDELab::TypeTree::TreeInfo<SVC2> TI;
 
-  std::cout << "depth: " << TI::depth << std::endl << "nodes: " << TI::nodeCount << std::endl << "leafs: " << TI::leafCount << std::endl;
+  // test TreeInfo
+  dune_static_assert(TI::depth == 4 && TI::nodeCount == 14 && TI::leafCount == 10,
+                     "TreeInfo yields wrong information");
+
+  std::cout << "depth: " << TI::depth << std::endl
+            << "nodes: " << TI::nodeCount << std::endl
+            << "leafs: " << TI::leafCount << std::endl;
+
+  dune_static_assert((Dune::PDELab::TypeTree::AccumulateValue<SVC2,
+                                                              NodeCountingFunctor,
+                                                              Dune::PDELab::TypeTree::plus<std::size_t>,
+                                                              0>::result == TI::nodeCount),
+                     "Error in AccumulateValue");
+
+  dune_static_assert((Dune::PDELab::TypeTree::AccumulateValue<SVC2,
+                                                              LeafCountingFunctor,
+                                                              Dune::PDELab::TypeTree::plus<std::size_t>,
+                                                              0>::result == TI::leafCount),
+                     "Error in AccumulateValue");
+
+  dune_static_assert((Dune::PDELab::TypeTree::AccumulateValue<SVC2,
+                                                              DepthFunctor,
+                                                              Dune::PDELab::TypeTree::max<std::size_t>,
+                                                              0>::result == TI::depth),
+                     "Error in AccumulateValue");
 
 #endif
 
