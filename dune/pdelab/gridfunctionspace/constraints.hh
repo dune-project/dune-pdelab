@@ -328,17 +328,17 @@ namespace Dune {
       CompositeConstraintsOperator(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
         : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
       {}
-          
+
       CompositeConstraintsOperator(DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
         : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
       {}
 
       // aggregate flags
-      
+
       // forward methods to childs
-      
+
     };
-    
+
     template<DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN_FOR_SPECIALIZATION>
     struct CompositeConstraintsParameters
       : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
@@ -353,13 +353,13 @@ namespace Dune {
         : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
       {}
     };
-    
+
     template<typename T, std::size_t k>
     struct PowerConstraintsParameters
       : public TypeTree::PowerNode<T,k>
     {
       typedef TypeTree::PowerNode<T,k> BaseT;
-      
+
       PowerConstraintsParameters(T& c)
         : BaseT(c)
       {}
@@ -449,7 +449,7 @@ namespace Dune {
         : BaseT(children)
       {}
     };
-    
+
 #ifndef DOXYGEN
 
     template<typename F>
@@ -461,7 +461,7 @@ namespace Dune {
     public:
       DirichletConstraintsWrapper(shared_ptr<const F> f, unsigned int i=0) : _f(f), _i(i) {}
       DirichletConstraintsWrapper(const F & f, unsigned int i=0) : _f(stackobject_to_shared_ptr(f)), _i(i) {}
-      
+
       template<typename I>
       bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
       {
@@ -473,7 +473,7 @@ namespace Dune {
 
     // Tag to name trafo GridFunction -> DirichletConstraintsWrapper
     struct gf_to_constraints {};
-    
+
     // register trafos GridFunction -> DirichletConstraintsWrapper
     template<typename F, typename Transformation>
     struct MultiComponentDirichletConstraintsWrapperDescription
@@ -483,7 +483,7 @@ namespace Dune {
       typedef DirichletConstraintsWrapper<F> node_type;
       typedef PowerConstraintsParameters<node_type, dim> transformed_type;
       typedef shared_ptr<transformed_type> transformed_storage_type;
-      
+
       static transformed_type transform(const F& s, const Transformation& t)
       {
         shared_ptr<const F> sp = stackobject_to_shared_ptr(s);
@@ -492,7 +492,7 @@ namespace Dune {
           childs[i] = make_shared<node_type>(sp,i);
         return transformed_type(childs);
       }
-      
+
       static transformed_storage_type transform_storage(shared_ptr<const F> s, const Transformation& t)
       {
         array<shared_ptr<node_type>, dim> childs;
@@ -528,7 +528,7 @@ namespace Dune {
     Dune::PDELab::TypeTree::SimpleCompositeNodeTransformation<CompositeGridFunction,gf_to_constraints,CompositeConstraintsParameters>
     lookupNodeTransformation(CompositeGridFunction*, gf_to_constraints*, CompositeGridFunctionTag);
 #endif
-    
+
     //! construct constraints
     /**
      * \code
@@ -669,7 +669,7 @@ namespace Dune {
       }
     };
 #endif
-    
+
     //! construct constraints from given boundary condition function
     /**
      * \code
