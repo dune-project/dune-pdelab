@@ -3,34 +3,6 @@
 
 namespace Dune{
   namespace PDELab{
-    /**
-       \brief Traits class for assembler
-
-       This class collects types and auxilliary information about the
-       assembler.
-       
-       \tparam GFSU GridFunctionSpace for ansatz functions
-       \tparam GFSV GridFunctionSpace for test functions
-       \tparam CU   Constraints maps for the individual dofs (trial space)
-       \tparam CV   Constraints maps for the individual dofs (test space)
-
-    */
-    template<typename GFSU, typename GFSV>
-    struct AssemblerTraits
-    {
-      typedef GFSU TrialGridFunctionSpace;
-
-      typedef GFSV TestGridFunctionSpace;
-
-      //! \brief the grid view where grid function is defined upon
-      typedef typename GFSU::Traits::GridViewType GridViewType;
-
-      //! \brief short cut for size type exported by the GFSU
-      typedef typename GFSU::Traits::SizeType SizeType;
-
-      static const bool isGalerkinMethod = Dune::is_same<GFSU,GFSV>::value;
-    };
-
 
     /**
        \brief Traits class for local assembler
@@ -38,14 +10,12 @@ namespace Dune{
        This class collects types and auxilliary information about the
        local assembler.
        
-       \tparam GFSU GridFunctionSpace for ansatz functions
-       \tparam GFSV GridFunctionSpace for test functions
        \tparam CU   Constraints maps for the individual dofs (trial space)
        \tparam CV   Constraints maps for the individual dofs (test space)
 
     */
-    template<typename GFSU, typename GFSV, typename CU, typename CV>
-    struct LocalAssemblerTraits : public AssemblerTraits<GFSU,GFSV>
+    template<typename CU, typename CV>
+    struct LocalAssemblerTraits 
     {
       typedef CU TrialConstraintsType;
 
@@ -58,39 +28,6 @@ namespace Dune{
     };
 
     /**
-       \brief Base class for assembler
-
-       \tparam GFSU GridFunctionSpace for ansatz functions
-       \tparam GFSV GridFunctionSpace for test functions
-    */
-    template<typename GFSU, typename GFSV>
-    class AssemblerBase{
-    public:
-
-      typedef AssemblerTraits<GFSU,GFSV> Traits;
-      
-      //! construct AssemblerSpace
-      AssemblerBase (const GFSU& gfsu_, const GFSV& gfsv_) 
-        : gfsu(gfsu_), gfsv(gfsv_),
-          lfsu(gfsu), lfsv(gfsv), lfsun(gfsu), lfsvn(gfsv)
-      {}
-
-      /* global function spaces */
-      const GFSU& gfsu;
-      const GFSV& gfsv;
-
-      /* local function spaces */
-      typedef LocalFunctionSpace<GFSU, TrialSpaceTag> LFSU;
-      typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
-      // local function spaces in local cell
-      mutable LFSU lfsu;
-      mutable LFSV lfsv;
-      // local function spaces in neighbor
-      mutable LFSU lfsun;
-      mutable LFSV lfsvn;
-    };
-
-    /**
        \brief Base class for local assembler
 
        This class provides some generic behavior required for local
@@ -98,55 +35,25 @@ namespace Dune{
        vectors and matrices via local indices and local function spaces
        with regard to the constraint mappings.
        
-       \tparam GFSU GridFunctionSpace for ansatz functions
-       \tparam GFSV GridFunctionSpace for test functions
        \tparam CU   Constraints maps for the individual dofs (trial space)
        \tparam CV   Constraints maps for the individual dofs (test space)
     */
-    template<typename GFSU, typename GFSV,
-             typename CU=EmptyTransformation,
+    template<typename CU=EmptyTransformation,
              typename CV=EmptyTransformation>
     class LocalAssemblerBase{
     public:
 
-      typedef LocalAssemblerTraits<GFSU,GFSV,CU,CV> Traits;
+      typedef LocalAssemblerTraits<CU,CV> Traits;
       
       //! construct AssemblerSpace
-      LocalAssemblerBase (const GFSU& gfsu_, const GFSV& gfsv_) 
-        : gfsu(gfsu_), gfsv(gfsv_),
-          pconstraintsu(&emptyconstraintsu), pconstraintsv(&emptyconstraintsv)
+      LocalAssemblerBase () 
+        : pconstraintsu(&emptyconstraintsu), pconstraintsv(&emptyconstraintsv)
       {}
 
       //! construct AssemblerSpace, with constraints
-      LocalAssemblerBase (const GFSU& gfsu_, const CU& cu,
-                          const GFSV& gfsv_, const CV& cv) 
-        : gfsu(gfsu_), gfsv(gfsv_),
-          pconstraintsu(&cu), pconstraintsv(&cv)
+      LocalAssemblerBase (const CU& cu, const CV& cv) 
+        :pconstraintsu(&cu), pconstraintsv(&cv)
       {}
-
-      //! get dimension of space u
-      typename GFSU::Traits::SizeType globalSizeU () const
-      {
-        return gfsu.globalSize();
-      }
-
-      //! get dimension of space v
-      typename GFSV::Traits::SizeType globalSizeV () const
-      {
-        return gfsv.globalSize();
-      }
-
-      //! get the trial grid function space
-      const GFSU& trialGridFunctionSpace() const
-      {
-        return gfsu;
-      }
-
-      //! get the test grid function space
-      const GFSV& testGridFunctionSpace() const
-      {
-        return gfsv;
-      }
 
       //! get the constraints on the trial grid function space
       const CU& trialConstraints() const
@@ -435,9 +342,6 @@ namespace Dune{
         B::access(globalcontainer,i,i) = 1;
       }
 
-      /* global function spaces */
-      const GFSU& gfsu;
-      const GFSV& gfsv;
       /* constraints */
       const CU* pconstraintsu;
       const CV* pconstraintsv;
@@ -445,10 +349,10 @@ namespace Dune{
       static CV emptyconstraintsv;
     };
 
-    template<typename GFSU, typename GFSV, typename CU, typename CV>
-    CU LocalAssemblerBase<GFSU,GFSV,CU,CV>::emptyconstraintsu;
-    template<typename GFSU, typename GFSV, typename CU, typename CV>
-    CV LocalAssemblerBase<GFSU,GFSV,CU,CV>::emptyconstraintsv;
+    template<typename CU, typename CV>
+    CU LocalAssemblerBase<CU,CV>::emptyconstraintsu;
+    template<typename CU, typename CV>
+    CV LocalAssemblerBase<CU,CV>::emptyconstraintsv;
 
   };    
 };
