@@ -15,6 +15,7 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
 #include <dune/pdelab/common/geometrywrapper.hh>
+#include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspacetags.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
@@ -22,6 +23,7 @@
 namespace Dune {
   namespace PDELab {
 
+    //! Interface for the constraints parameters describing dirichlet constraints
     struct DirichletConstraintsParameters :
       public TypeTree::LeafNode
     {
@@ -32,7 +34,7 @@ namespace Dune {
       }
     };
     
-    //! Constraints construction
+    //! Dirichlet Constraints construction
     // works in any dimension and on all element types
     class ConformingDirichletConstraints
     {
@@ -49,22 +51,20 @@ namespace Dune {
        * \tparam LFS local function space
        * \tparam T   TransformationType
        */
-      template<typename P, typename I, typename LFS, typename T>
-      void boundary (const P& param, const IntersectionGeometry<I>& ig, 
-                     const LFS& lfs, T& trafo) const
+      template<typename P, typename IG, typename LFS, typename T>
+      void boundary (const P& param, const IG& ig, const LFS& lfs, T& trafo) const
       {
-        typedef IntersectionGeometry<I> IS;
         typedef FiniteElementInterfaceSwitch<
           typename LFS::Traits::FiniteElementType
           > FESwitch;
-        typedef FieldVector<typename IS::ctype, IS::dimension-1> FaceCoord;
+        typedef FieldVector<typename IG::ctype, IG::dimension-1> FaceCoord;
    
         const int face = ig.indexInInside();
 
         // find all local indices of this face
         Dune::GeometryType gt = ig.inside()->type();
-        typedef typename IntersectionGeometry<I>::ctype DT;
-        const int dim = IntersectionGeometry<I>::Entity::Geometry::dimension;
+        typedef typename IG::ctype DT;
+        const int dim = IG::Entity::Geometry::dimension;
         const Dune::GenericReferenceElement<DT,dim>& refelem = Dune::GenericReferenceElements<DT,dim>::general(gt);
 
 	    const Dune::GenericReferenceElement<DT,dim-1> & 
@@ -112,9 +112,8 @@ namespace Dune {
       // IG : intersection geometry
       // LFS : local function space
       // T : TransformationType
-      template<typename I, typename LFS, typename T>
-      void processor (const Dune::PDELab::IntersectionGeometry<I>& ig, 
-                      const LFS& lfs, T& trafo) const
+      template<typename IG, typename LFS, typename T>
+      void processor (const IG& ig, const LFS& lfs, T& trafo) const
       {
         typedef FiniteElementInterfaceSwitch<
           typename LFS::Traits::FiniteElementType
@@ -125,8 +124,8 @@ namespace Dune {
 
         // find all local indices of this face
         Dune::GeometryType gt = ig.inside()->type();
-        typedef typename Dune::PDELab::IntersectionGeometry<I>::ctype DT;
-        const int dim = Dune::PDELab::IntersectionGeometry<I>::Entity::Geometry::dimension;
+        typedef typename IG::ctype DT;
+        const int dim = IG::Entity::Geometry::dimension;
 
         const Dune::GenericReferenceElement<DT,dim>& refelem = Dune::GenericReferenceElements<DT,dim>::general(gt);
 
@@ -157,8 +156,8 @@ namespace Dune {
     public:
       enum { doVolume = true };
 
-      template<typename E, typename LFS, typename T>
-      void volume (const Dune::PDELab::ElementGeometry<E>& eg, const LFS& lfs, T& trafo) const
+      template<typename EG, typename LFS, typename T>
+      void volume (const EG& eg, const LFS& lfs, T& trafo) const
       {
         typedef FiniteElementInterfaceSwitch<
           typename LFS::Traits::FiniteElementType

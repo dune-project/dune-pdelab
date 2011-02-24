@@ -452,16 +452,16 @@ namespace Dune {
 
 #ifndef DOXYGEN
 
-    //! wraps a BoundaryGridFunction in a DirichletConstraintsParameter class
+    //! wraps a BoundaryGridFunction in a OldStyleConstraintsParameter class
     template<typename F>
-    class DirichletConstraintsWrapper
+    class OldStyleConstraintsWrapper
       : public TypeTree::LeafNode
     {
       shared_ptr<const F> _f;
       unsigned int _i;
     public:
-      DirichletConstraintsWrapper(shared_ptr<const F> f, unsigned int i=0) : _f(f), _i(i) {}
-      DirichletConstraintsWrapper(const F & f, unsigned int i=0) : _f(stackobject_to_shared_ptr(f)), _i(i) {}
+      OldStyleConstraintsWrapper(shared_ptr<const F> f, unsigned int i=0) : _f(f), _i(i) {}
+      OldStyleConstraintsWrapper(const F & f, unsigned int i=0) : _f(stackobject_to_shared_ptr(f)), _i(i) {}
 
       template<typename I>
       bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
@@ -470,21 +470,29 @@ namespace Dune {
         _f->evaluate(intersection,coord,bctype);
         return bctype[_i] > 0;
       }
+
+      template<typename I>
+      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      {
+        typename F::Traits::RangeType bctype;
+        _f->evaluate(intersection,coord,bctype);
+        return bctype[_i] == 0;
+      }
     };
 
     //! empty ConstraintsParameters class, needed for the TMP without any parameters
     class NoConstraintsParameters : public TypeTree::LeafNode {};
     
-    // Tag to name trafo GridFunction -> DirichletConstraintsWrapper
+    // Tag to name trafo GridFunction -> OldStyleConstraintsWrapper
     struct gf_to_constraints {};
 
-    // register trafos GridFunction -> DirichletConstraintsWrapper
+    // register trafos GridFunction -> OldStyleConstraintsWrapper
     template<typename F, typename Transformation>
-    struct MultiComponentDirichletConstraintsWrapperDescription
+    struct MultiComponentOldStyleConstraintsWrapperDescription
     {
 
       enum { dim = F::Traits::dimRange };
-      typedef DirichletConstraintsWrapper<F> node_type;
+      typedef OldStyleConstraintsWrapper<F> node_type;
       typedef PowerConstraintsParameters<node_type, dim> transformed_type;
       typedef shared_ptr<transformed_type> transformed_storage_type;
 
@@ -511,9 +519,9 @@ namespace Dune {
     typename SelectType<
       (GridFunction::Traits::dimRange == 1),
       // trafo for scalar leaf nodes
-      Dune::PDELab::TypeTree::WrappingLeafNodeTransformation<GridFunction,gf_to_constraints,DirichletConstraintsWrapper<GridFunction> >,
+      Dune::PDELab::TypeTree::WrappingLeafNodeTransformation<GridFunction,gf_to_constraints,OldStyleConstraintsWrapper<GridFunction> >,
       // trafo for multi component leaf nodes
-      MultiComponentDirichletConstraintsWrapperDescription<GridFunction,gf_to_constraints>
+      MultiComponentOldStyleConstraintsWrapperDescription<GridFunction,gf_to_constraints>
       >::Type
     lookupNodeTransformation(GridFunction*, gf_to_constraints*, GridFunctionTag);
 
@@ -621,10 +629,10 @@ namespace Dune {
 
             // ParallelStuff: BEGIN support for processor boundaries.
             if ((!iit->boundary()) && (!iit->neighbor()))
-              {
-                typedef IntersectionGeometry<Intersection> IntersectionWrapper;
-                TypeTree::applyToTree(lfs_e,ProcessorConstraints<IntersectionWrapper,CG>(IntersectionWrapper(*iit,intersection_index),cg));
-              }
+            {
+              typedef IntersectionGeometry<Intersection> IntersectionWrapper;
+              TypeTree::applyToTree(lfs_e,ProcessorConstraints<IntersectionWrapper,CG>(IntersectionWrapper(*iit,intersection_index),cg));
+            }
             // END support for processor boundaries.
 
             if (iit->neighbor()){
