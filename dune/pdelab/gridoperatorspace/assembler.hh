@@ -68,10 +68,12 @@ public:
     void preAssembly();
     void postAssembly();
 
-    void onBindLFSUInside(const LFSU_S & lfsu_s);
-    void onBindLFSVInside(const LFSV_S & lfsv_s);
-    void onBindLFSUOutside(const LFSU_N & lfsu_n);
-    void onBindLFSVOutside(const LFSV_N & lfsv_n);
+    void onBindLFSU(const EG & eg, const LFSU_S & lfsu_s);
+    void onBindLFSV(const EG & eg, const LFSV_S & lfsv_s);
+    void onBindLFSUInside(const IG & ig, const LFSU_S & lfsu_s);
+    void onBindLFSVInside(const IG & ig, const LFSV_S & lfsv_s);
+    void onBindLFSUOutside(const IG & ig, const LFSU_N & lfsu_n);
+    void onBindLFSVOutside(const IG & ig, const LFSV_N & lfsv_n);
     void onBindLFSUCoupling(const LFSU_Coupling & lfsu_coupling);
     void onBindLFSVCoupling(const LFSV_Coupling & lfsv_coupling);
 
