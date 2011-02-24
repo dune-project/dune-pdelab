@@ -114,6 +114,42 @@ namespace Dune {
         }
       };
 
+
+      template<typename F, typename IG, typename CG>
+      struct BoundaryConstraintsForParametersLeaf
+        : public TypeTree::TreeVisitor
+        , public TypeTree::DynamicTraversal
+      {
+
+        template<typename LFS, typename TreePath>
+        void leaf(const LFS& lfs, TreePath treePath) const
+        {
+          // allocate local constraints map
+          CG cl;
+
+          // extract constraints type
+          typedef typename LFS::Traits::ConstraintsType C;
+
+          // iterate over boundary, need intersection iterator
+          ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.constraints(),f,ig,lfs,cl);
+
+          // write coefficients into local vector
+          lfs.mwrite(cl,cg);
+        }
+
+        BoundaryConstraintsForParametersLeaf(const F& f_, const IG& ig_, CG& cg_)
+          : f(f_)
+          , ig(ig_)
+          , cg(cg_)
+        {}
+
+        const F& f;
+        const IG& ig;
+        mutable CG& cg;
+
+      };
+
+
       template<typename I, typename CG>
       struct BoundaryConstraints
         : public BoundaryConstraintsBase
@@ -138,40 +174,13 @@ namespace Dune {
           lfs.mwrite(cl,cg);
         }
 
-        // interpolate PowerGridFunctionSpace from vector-valued function
+        // reuse constraints parameter information from f for all LFS children
         template<typename F, typename LFS, typename TreePath>
-        typename enable_if<(!F::isLeaf) && LFS::isLeaf>::type
+        typename enable_if<F::isLeaf && (!LFS::isLeaf)>::type
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
-          dune_static_assert(LFS::isPower,
-                             "Automatic interpolation of vector-valued function " \
-                             "only works for PowerGridFunctionSpace");
-          dune_static_assert((LFS::template Child<0>::Type::isLeaf),
-                             "Automatic interpolation of vector-valued function " \
-                             "is restricted to trees of depth 1");
-          dune_static_assert(LFS::CHILDREN == F::Traits::dimRange,
-                             "Number of children and dimension of range type " \
-                             "must match for automatic interpolation of " \
-                             "vector-valued function");
-
-          // extract constraints type
-          typedef typename LFS::template Child<0>::Type::Traits::ConstraintsType C;
-
-          for (std::size_t k=0; k<LFS::CHILDREN; ++k)
-            {
-              // allocate empty local constraints map
-              CG cl;
-
-              // call boundary condition evaluation of child k with component k
-              typedef BoundaryGridFunctionSelectComponentAdapter<F> FCOMP;
-              FCOMP fcomp(f,k);
-
-              ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.child(k).constraints(),
-                                                                 fcomp,ig,lfs.child(k),cl);
-
-              // write coefficients into local vector
-              lfs.child(k).mwrite(cl,cg);
-            }
+          // traverse LFS tree and reuse parameter information
+          TypeTree::applyToTree(lfs,BoundaryConstraintsForParametersLeaf<F,IntersectionGeometry<I>,CG>(f,ig,cg));
         }
 
         BoundaryConstraints(const IntersectionGeometry<I>& ig_, CG& cg_)
