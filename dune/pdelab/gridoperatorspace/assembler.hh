@@ -74,15 +74,17 @@ public:
     void onBindLFSVInside(const IG & ig, const LFSV_S & lfsv_s);
     void onBindLFSUOutside(const IG & ig, const LFSU_N & lfsu_n);
     void onBindLFSVOutside(const IG & ig, const LFSV_N & lfsv_n);
-    void onBindLFSUCoupling(const LFSU_Coupling & lfsu_coupling);
-    void onBindLFSVCoupling(const LFSV_Coupling & lfsv_coupling);
+    void onBindLFSUCoupling(const IG & ig, const LFSU_Coupling & lfsu_coupling);
+    void onBindLFSVCoupling(const IG & ig, const LFSV_Coupling & lfsv_coupling);
 
-    void onUnbindLFSUInside(const LFSU_S & lfsu_s);
-    void onUnbindLFSVInside(const LFSV_S & lfsv_s);
-    void onUnbindLFSUOutside(const LFSU_N & lfsu_n);
-    void onUnbindLFSVOutside(const LFSV_N & lfsv_n);
-    void onUnbindLFSUCoupling(const LFSU_Coupling & lfsu_coupling);
-    void onUnbindLFSVCoupling(const LFSV_Coupling & lfsv_coupling);
+    void onUnbindLFSU(const EG & eg, const LFSU_S & lfsu_s);
+    void onUnbindLFSV(const EG & eg, const LFSV_S & lfsv_s);
+    void onUnbindLFSUInside(const IG & ig, const LFSU_S & lfsu_s);
+    void onUnbindLFSVInside(const IG & ig, const LFSV_S & lfsv_s);
+    void onUnbindLFSUOutside(const IG & ig, const LFSU_N & lfsu_n);
+    void onUnbindLFSVOutside(const IG & ig, const LFSV_N & lfsv_n);
+    void onUnbindLFSUCoupling(const IG & ig, const LFSU_Coupling & lfsu_coupling);
+    void onUnbindLFSVCoupling(const IG & ig, const LFSV_Coupling & lfsv_coupling);
   };
 
   class LocalResidualAssemblerEngine : public LocalAssemblerEngine {};
