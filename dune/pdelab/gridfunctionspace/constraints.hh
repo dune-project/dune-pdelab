@@ -180,7 +180,7 @@ namespace Dune {
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
           // traverse LFS tree and reuse parameter information
-          TypeTree::applyToTree(lfs,BoundaryConstraintsForParametersLeaf<F,IntersectionGeometry<I>,CG>(f,ig,cg));
+          TypeTree::applyToTree(lfs,BoundaryConstraintsForParametersLeaf<F,IG,CG>(f,ig,cg));
         }
 
         BoundaryConstraints(const IG& ig_, CG& cg_)
