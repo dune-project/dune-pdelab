@@ -286,8 +286,6 @@ namespace Dune {
               typename ST::BindEntityPartVisitor rebind_visitor(*sit);
               TypeTree::applyToTree(lfsu,rebind_visitor);
               TypeTree::applyToTree(lfsv,rebind_visitor);
-              // ST::BindSubEntity::rebind(lfsu,*sit);
-              // ST::BindSubEntity::rebind(lfsv,*sit);
 
               // volume evaluation
               LocalAssemblerCallSwitch<LA,LA::doAlphaVolume>::
