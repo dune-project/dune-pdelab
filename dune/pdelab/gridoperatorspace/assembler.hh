@@ -24,8 +24,8 @@ public:
     typedef LocalAssemblerInterface LocalAssembler;
     const LocalAssembler & localAssembler();
 
-    bool requireIntersections() const;
-    bool requireIntersectionsTwoSided() const;
+    bool requireSkeleton() const;
+    bool requireSkeletonTwoSided() const;
     bool requireUVVolume() const;
     bool requireVVolume() const;
     bool requireUVSkeleton() const;
