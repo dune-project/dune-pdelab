@@ -1,10 +1,11 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
-#ifndef DUNE_PDELAB_COMMON_TYPETREE_WRAPPINGTRANSFORMATIONDESCRIPTORS_HH
-#define DUNE_PDELAB_COMMON_TYPETREE_WRAPPINGTRANSFORMATIONDESCRIPTORS_HH
+#ifndef DUNE_PDELAB_COMMON_TYPETREE_GENERICTRANSFORMATIONDESCRIPTORS_HH
+#define DUNE_PDELAB_COMMON_TYPETREE_GENERICTRANSFORMATIONDESCRIPTORS_HH
 
 #include <dune/pdelab/common/typetree/nodetags.hh>
+#include <dune/pdelab/common/typetree/powercompositenodetransformationtemplates.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/array.hh>
@@ -21,7 +22,7 @@ namespace Dune {
        */
 
       template<typename SourceNode, typename Transformation, typename TransformedNode>
-      struct WrappingLeafNodeTransformation
+      struct GenericLeafNodeTransformation
       {
 
         typedef TransformedNode transformed_type;
@@ -29,19 +30,19 @@ namespace Dune {
 
         static transformed_type transform(const SourceNode& s, const Transformation& t)
         {
-          return transformed_type(s);
+          return transformed_type(s,t);
         }
 
         static transformed_storage_type transform_storage(shared_ptr<const SourceNode> s, const Transformation& t)
         {
-          return make_shared<transformed_type>(s);
+          return make_shared<transformed_type>(s,t);
         }
 
       };
 
 
       template<typename SourceNode, typename Transformation, template<typename Child> class TransformedNodeTemplate>
-      struct TemplatizedWrappingPowerNodeTransformation
+      struct TemplatizedGenericPowerNodeTransformation
       {
 
         template<typename TC>
@@ -54,40 +55,33 @@ namespace Dune {
         template<typename TC>
         static typename result<TC>::type transform(const SourceNode& s, const Transformation& t, const array<shared_ptr<TC>,result<TC>::type::CHILDREN>& children)
         {
-          return typename result<TC>::type(s,children);
+          return typename result<TC>::type(s,t,children);
         }
 
         template<typename TC>
         static typename result<TC>::storage_type transform_storage(shared_ptr<const SourceNode> s, const Transformation& t, const array<shared_ptr<TC>,result<TC>::type::CHILDREN>& children)
         {
-          return make_shared<typename result<TC>::type>(s,children);
+          return make_shared<typename result<TC>::type>(s,t,children);
         }
 
       };
 
-      template<typename SourceNode, template<typename,typename,std::size_t> class TransformedNode>
-      struct WrappingPowerNodeTransformationTemplate
-      {
-        template<typename TC>
-        struct result
-        {
-          typedef TransformedNode<SourceNode,TC,SourceNode::CHILDREN> type;
-        };
-      };
 
       template<typename SourceNode, typename Transformation, template<typename,typename,std::size_t> class TransformedNode>
-      struct WrappingPowerNodeTransformation
-        : public TemplatizedWrappingPowerNodeTransformation<SourceNode,
-                                                            Transformation,
-                                                            WrappingPowerNodeTransformationTemplate<SourceNode,TransformedNode>::template result
-                                                            >
+      struct GenericPowerNodeTransformation
+        : public TemplatizedGenericPowerNodeTransformation<SourceNode,
+                                                           Transformation,
+                                                           GenericPowerNodeTransformationTemplate<SourceNode,
+                                                                                                  Transformation,
+                                                                                                  TransformedNode>::template result
+                                                           >
       {};
 
 
 #if HAVE_VARIADIC_TEMPLATES
 
       template<typename SourceNode, typename Transformation, template<typename...> class TransformedNodeTemplate>
-      struct TemplatizedWrappingVariadicCompositeNodeTransformation
+      struct TemplatizedGenericVariadicCompositeNodeTransformation
       {
 
         template<typename... TC>
@@ -100,33 +94,26 @@ namespace Dune {
         template<typename... TC>
         static typename result<TC...>::type transform(const SourceNode& s, const Transformation& t, shared_ptr<TC>... children)
         {
-          return typename result<TC...>::type(s,children...);
+          return typename result<TC...>::type(s,t,children...);
         }
 
         template<typename... TC>
         static typename result<TC...>::storage_type transform_storage(shared_ptr<const SourceNode> s, const Transformation& t, shared_ptr<TC>... children)
         {
-          return make_shared<typename result<TC...>::type>(s,children...);
+          return make_shared<typename result<TC...>::type>(s,t,children...);
         }
 
       };
 
-      template<typename SourceNode, template<typename...> class TransformedNode>
-      struct WrappingVariadicCompositeNodeTransformationTemplate
-      {
-        template<typename... TC>
-        struct result
-        {
-          typedef TransformedNode<SourceNode,TC...> type;
-        };
-      };
 
       template<typename SourceNode, typename Transformation, template<typename...> class TransformedNode>
-      struct WrappingVariadicCompositeNodeTransformation
-        : public TemplatizedWrappingVariadicCompositeNodeTransformation<SourceNode,
-                                                                        Transformation,
-                                                                        WrappingVariadicCompositeNodeTransformationTemplate<SourceNode,TransformedNode>::template result
-                                                                        >
+      struct GenericVariadicCompositeNodeTransformation
+        : public TemplatizedGenericVariadicCompositeNodeTransformation<SourceNode,
+                                                                       Transformation,
+                                                                       GenericVariadicCompositeNodeTransformationTemplate<SourceNode,
+                                                                                                                          Transformation,
+                                                                                                                          TransformedNode>::template result
+                                                                       >
       {};
 
 #endif // HAVE_VARIADIC_TEMPLATES
@@ -143,7 +130,7 @@ namespace Dune {
                                                                       typename C8,
                                                                       typename C9
                                                                       > class TransformedNodeTemplate>
-      struct TemplatizedWrappingCompositeNodeTransformation
+      struct TemplatizedGenericCompositeNodeTransformation
       {
 
         template<typename TC0,
@@ -186,7 +173,7 @@ namespace Dune {
                   shared_ptr<TC8> c8,
                   shared_ptr<TC9> c9)
         {
-          return typename result<TC0,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9>::type(s,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9);
+          return typename result<TC0,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9>::type(s,t,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9);
         }
 
         template<typename TC0,
@@ -213,39 +200,11 @@ namespace Dune {
                           shared_ptr<TC8> c8,
                           shared_ptr<TC9> c9)
         {
-          return make_shared<typename result<TC0,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9>::type>(s,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9);
+          return make_shared<typename result<TC0,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9>::type>(s,t,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9);
         }
 
       };
 
-      template<typename SourceNode, template<typename SourceNode,
-                                             typename C0,
-                                             typename C1,
-                                             typename C2,
-                                             typename C3,
-                                             typename C4,
-                                             typename C5,
-                                             typename C6,
-                                             typename C7,
-                                             typename C8,
-                                             typename C9> class TransformedNode>
-      struct WrappingCompositeNodeTransformationTemplate
-      {
-        template<typename TC0,
-                 typename TC1,
-                 typename TC2,
-                 typename TC3,
-                 typename TC4,
-                 typename TC5,
-                 typename TC6,
-                 typename TC7,
-                 typename TC8,
-                 typename TC9>
-        struct result
-        {
-          typedef TransformedNode<SourceNode,TC0,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9> type;
-        };
-      };
 
       template<typename SourceNode, typename Transformation, template<typename Source,
                                                                       typename C0,
@@ -258,11 +217,13 @@ namespace Dune {
                                                                       typename C7,
                                                                       typename C8,
                                                                       typename C9> class TransformedNode>
-      struct WrappingCompositeNodeTransformation
-        : public TemplatizedWrappingCompositeNodeTransformation<SourceNode,
-                                                                Transformation,
-                                                                WrappingCompositeNodeTransformationTemplate<SourceNode,TransformedNode>::template result
-                                                                >
+      struct GenericCompositeNodeTransformation
+        : public TemplatizedGenericCompositeNodeTransformation<SourceNode,
+                                                               Transformation,
+                                                               GenericCompositeNodeTransformationTemplate<SourceNode,
+                                                                                                          Transformation,
+                                                                                                          TransformedNode>::template result
+                                                               >
       {};
 
 
@@ -272,4 +233,4 @@ namespace Dune {
   } // namespace PDELab
 } //namespace Dune
 
-#endif // DUNE_PDELAB_COMMON_TYPETREE_WRAPPINGTRANSFORMATIONDESCRIPTORS_HH
+#endif // DUNE_PDELAB_COMMON_TYPETREE_GENERICTRANSFORMATIONDESCRIPTORS_HH

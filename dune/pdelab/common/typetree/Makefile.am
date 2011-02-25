@@ -6,6 +6,7 @@ common_HEADERS =				\
 	applytochildrentreepair.hh		\
 	compositenode.hh			\
 	compositenodemacros.hh			\
+	generictransformationdescriptors.hh	\
 	leafnode.hh				\
 	nodetags.hh				\
 	pairtraversal.hh			\
@@ -18,7 +19,6 @@ common_HEADERS =				\
 	treepath.hh				\
 	utility.hh				\
 	variadiccompositenode.hh		\
-	visitor.hh				\
-	wrappingtransformationdescriptors.hh
+	visitor.hh
 
 include $(top_srcdir)/am/global-rules

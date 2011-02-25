@@ -5,6 +5,6 @@
 #define DUNE_PDELAB_COMMON_TYPETREE_TRANSFORMATIONUTILITIES_HH
 
 #include <dune/pdelab/common/typetree/simpletransformationdescriptors.hh>
-#include <dune/pdelab/common/typetree/wrappingtransformationdescriptors.hh>
+#include <dune/pdelab/common/typetree/generictransformationdescriptors.hh>
 
 #endif // DUNE_PDELAB_COMMON_TYPETREE_TRANSFORMATIONUTILITIES_HH
