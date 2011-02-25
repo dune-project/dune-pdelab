@@ -460,8 +460,18 @@ namespace Dune {
       shared_ptr<const F> _f;
       unsigned int _i;
     public:
-      OldStyleConstraintsWrapper(shared_ptr<const F> f, unsigned int i=0) : _f(f), _i(i) {}
-      OldStyleConstraintsWrapper(const F & f, unsigned int i=0) : _f(stackobject_to_shared_ptr(f)), _i(i) {}
+
+      template<typename Transformation>
+      OldStyleConstraintsWrapper(shared_ptr<const F> f, const Transformation& t, unsigned int i=0)
+        : _f(f)
+        , _i(i)
+      {}
+
+      template<typename Transformation>
+      OldStyleConstraintsWrapper(const F & f, const Transformation& t, unsigned int i=0)
+        : _f(stackobject_to_shared_ptr(f))
+        , _i(i)
+      {}
 
       template<typename I>
       bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
@@ -482,7 +492,7 @@ namespace Dune {
 
     //! empty ConstraintsParameters class, needed for the TMP without any parameters
     class NoConstraintsParameters : public TypeTree::LeafNode {};
-    
+
     // Tag to name trafo GridFunction -> OldStyleConstraintsWrapper
     struct gf_to_constraints {};
 
@@ -501,7 +511,7 @@ namespace Dune {
         shared_ptr<const F> sp = stackobject_to_shared_ptr(s);
         array<shared_ptr<node_type>, dim> childs;
         for (int i=0; i<dim; i++)
-          childs[i] = make_shared<node_type>(sp,i);
+          childs[i] = make_shared<node_type>(sp,t,i);
         return transformed_type(childs);
       }
 
@@ -509,7 +519,7 @@ namespace Dune {
       {
         array<shared_ptr<node_type>, dim> childs;
         for (int i=0; i<dim; i++)
-          childs[i] = make_shared<node_type>(s,i);
+          childs[i] = make_shared<node_type>(s,t,i);
         return make_shared<transformed_type>(childs);
       }
 
@@ -519,7 +529,7 @@ namespace Dune {
     typename SelectType<
       (GridFunction::Traits::dimRange == 1),
       // trafo for scalar leaf nodes
-      Dune::PDELab::TypeTree::WrappingLeafNodeTransformation<GridFunction,gf_to_constraints,OldStyleConstraintsWrapper<GridFunction> >,
+      Dune::PDELab::TypeTree::GenericLeafNodeTransformation<GridFunction,gf_to_constraints,OldStyleConstraintsWrapper<GridFunction> >,
       // trafo for multi component leaf nodes
       MultiComponentOldStyleConstraintsWrapperDescription<GridFunction,gf_to_constraints>
       >::Type

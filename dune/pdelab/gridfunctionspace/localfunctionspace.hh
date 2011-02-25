@@ -323,12 +323,18 @@ namespace Dune {
       typedef PowerCompositeLocalFunctionSpaceTraits<GFS,PowerLocalFunctionSpaceNode> Traits;
 
       //! \brief initialize with grid function space
-      PowerLocalFunctionSpaceNode (shared_ptr<const GFS> gfs, const array<shared_ptr<ChildLFS>,k>& children)
+      template<typename Transformation>
+      PowerLocalFunctionSpaceNode (shared_ptr<const GFS> gfs,
+                                   const Transformation& t,
+                                   const array<shared_ptr<ChildLFS>,k>& children)
         : BaseT(gfs)
         , TreeNode(children)
       {}
 
-      PowerLocalFunctionSpaceNode (const GFS& gfs, const array<shared_ptr<ChildLFS>,k>& children)
+      template<typename Transformation>
+      PowerLocalFunctionSpaceNode (const GFS& gfs,
+                                   const Transformation& t,
+                                   const array<shared_ptr<ChildLFS>,k>& children)
         : BaseT(stackobject_to_shared_ptr(gfs))
         , TreeNode(children)
       {}
@@ -343,7 +349,7 @@ namespace Dune {
     };
 
     template<typename PowerGridFunctionSpace>
-    Dune::PDELab::TypeTree::WrappingPowerNodeTransformation<PowerGridFunctionSpace,gfs_to_lfs,PowerLocalFunctionSpaceNode>
+    Dune::PDELab::TypeTree::GenericPowerNodeTransformation<PowerGridFunctionSpace,gfs_to_lfs,PowerLocalFunctionSpaceNode>
     lookupNodeTransformation(PowerGridFunctionSpace* pgfs, gfs_to_lfs* t, PowerGridFunctionSpaceTag tag);
 
 
@@ -372,13 +378,17 @@ namespace Dune {
     public:
       typedef PowerCompositeLocalFunctionSpaceTraits<GFS,CompositeLocalFunctionSpaceNode> Traits;
 
+      template<typename Transformation>
       CompositeLocalFunctionSpaceNode (shared_ptr<const GFS> gfs,
+                                       const Transformation& t,
                                        DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
         : BaseT(gfs)
         , NodeType(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
       {}
 
+      template<typename Transformation>
       CompositeLocalFunctionSpaceNode (const GFS& gfs,
+                                       const Transformation& t,
                                        DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
         : BaseT(stackobject_to_shared_ptr(gfs))
         , NodeType(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
@@ -395,11 +405,11 @@ namespace Dune {
 
 #if HAVE_VARIADIC_TEMPLATES
     template<typename CompositeGridFunctionSpace>
-    Dune::PDELab::TypeTree::WrappingVariadicCompositeNodeTransformation<CompositeGridFunctionSpace,gfs_to_lfs,CompositeLocalFunctionSpaceNode>
+    Dune::PDELab::TypeTree::GenericVariadicCompositeNodeTransformation<CompositeGridFunctionSpace,gfs_to_lfs,CompositeLocalFunctionSpaceNode>
     lookupNodeTransformation(CompositeGridFunctionSpace* cgfs, gfs_to_lfs* t, CompositeGridFunctionSpaceTag tag);
 #else
     template<typename CompositeGridFunctionSpace>
-    Dune::PDELab::TypeTree::WrappingCompositeNodeTransformation<CompositeGridFunctionSpace,gfs_to_lfs,CompositeLocalFunctionSpaceNode>
+    Dune::PDELab::TypeTree::GenericCompositeNodeTransformation<CompositeGridFunctionSpace,gfs_to_lfs,CompositeLocalFunctionSpaceNode>
     lookupNodeTransformation(CompositeGridFunctionSpace* cgfs, gfs_to_lfs* t, CompositeGridFunctionSpaceTag tag);
 #endif
 
@@ -446,12 +456,14 @@ namespace Dune {
     public:
 
       //! \brief initialize with grid function space
-      LeafLocalFunctionSpaceNode (shared_ptr<const GFS> gfs)
+      template<typename Transformation>
+      LeafLocalFunctionSpaceNode (shared_ptr<const GFS> gfs, const Transformation& t)
         : BaseT(gfs)
       {
       }
 
-      LeafLocalFunctionSpaceNode (const GFS& gfs)
+      template<typename Transformation>
+      LeafLocalFunctionSpaceNode (const GFS& gfs, const Transformation& t)
         : BaseT(stackobject_to_shared_ptr(gfs))
       {
       }
@@ -512,7 +524,7 @@ namespace Dune {
     };
 
     template<typename GridFunctionSpace>
-    Dune::PDELab::TypeTree::WrappingLeafNodeTransformation<GridFunctionSpace,gfs_to_lfs,LeafLocalFunctionSpaceNode<GridFunctionSpace> >
+    Dune::PDELab::TypeTree::GenericLeafNodeTransformation<GridFunctionSpace,gfs_to_lfs,LeafLocalFunctionSpaceNode<GridFunctionSpace> >
     lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_lfs* t, LeafGridFunctionSpaceTag tag);
 
     //=======================================
