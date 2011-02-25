@@ -47,7 +47,7 @@ namespace Dune {
       isOverlap = false;
       isGhost = false;
 
-      typename GFS::LocalFunctionSpace lfs(gfs);
+      LocalFunctionSpace<GFS> lfs(gfs);
       LocalVector<bool,AnySpaceTag> lv(gfs.maxLocalSize(), true);
 
       const GV &gv = gfs.gridview();
@@ -91,10 +91,10 @@ namespace Dune {
         Refelems;
       typedef GenericReferenceElement<typename GV::ctype, GV::dimension>
         Refelem;
-      typedef FiniteElementInterfaceSwitch<typename GFS::LocalFunctionSpace::
+      typedef FiniteElementInterfaceSwitch<typename LocalFunctionSpace<GFS>::
                                            Traits::FiniteElementType> FESwitch;
 
-      typename GFS::LocalFunctionSpace lfs(gfs);
+      LocalFunctionSpace<GFS> lfs(gfs);
       LocalVector<Domain, AnySpaceTag> lv(gfs.maxLocalSize());
 
       const GV &gv = gfs.gridview();

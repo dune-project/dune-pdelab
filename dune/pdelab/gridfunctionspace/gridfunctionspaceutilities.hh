@@ -195,7 +195,7 @@ namespace Dune {
       {
         static const J2C& j2C = J2C();
 
-        typename GFS::LocalFunctionSpace lfs(gfs);
+        LocalFunctionSpace<GFS> lfs(gfs);
         lfs.bind(e);
         std::vector<typename Traits::RangeFieldType> xl(lfs.size());
         lfs.vread(xg,xl);

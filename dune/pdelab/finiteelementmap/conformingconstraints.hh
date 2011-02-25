@@ -193,7 +193,7 @@ namespace Dune {
 
         gh.assign(gfs.globalSize(), 1);
         V ighost(gfs, 1);
-        typename GFS::LocalFunctionSpace lfs(gfs);
+        LocalFunctionSpace<GFS> lfs(gfs);
         LocalVector<int,AnySpaceTag> lv(gfs.maxLocalSize(), 0);
 
         const GV &gv = gfs.gridview();
