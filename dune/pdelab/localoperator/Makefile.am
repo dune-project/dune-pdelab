@@ -2,6 +2,9 @@ commondir = $(includedir)/dune/pdelab/localoperator
 common_HEADERS =				\
 	cg_stokes.hh				\
 	convectiondiffusion.hh			\
+	convectiondiffusiondg.hh		\
+	convectiondiffusionfem.hh		\
+	convectiondiffusionparameter.hh		\
 	defaultimp.hh				\
 	diffusion.hh				\
 	diffusionccfv.hh			\
