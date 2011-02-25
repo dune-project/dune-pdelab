@@ -548,9 +548,9 @@ namespace Dune {
     // tagged version
     template <typename GFS, typename TAG>
     class LocalFunctionSpace :
-      public GFS::LocalFunctionSpace
+      public Dune::PDELab::TypeTree::TransformTree<GFS,gfs_to_lfs>::Type
     {
-      typedef typename GFS::LocalFunctionSpace BaseT;
+      typedef typename Dune::PDELab::TypeTree::TransformTree<GFS,gfs_to_lfs>::Type BaseT;
       typedef typename BaseT::Traits::IndexContainer::size_type I;
       typedef typename LocalIndexTraits<I,TAG>::LocalIndex LocalIndex;
 
@@ -584,9 +584,9 @@ namespace Dune {
     // specialization for AnySpaceTag
     template <typename GFS>
     class LocalFunctionSpace<GFS, AnySpaceTag> :
-      public GFS::LocalFunctionSpace
+      public Dune::PDELab::TypeTree::TransformTree<GFS,gfs_to_lfs>::Type
     {
-      typedef typename GFS::LocalFunctionSpace BaseT;
+      typedef typename Dune::PDELab::TypeTree::TransformTree<GFS,gfs_to_lfs>::Type BaseT;
 
       template<typename>
       friend struct PropagateGlobalStorageVisitor;

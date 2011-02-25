@@ -264,9 +264,6 @@ namespace Dune {
 
       typedef LeafGridFunctionSpaceTag ImplementationTag;
 
-      //! define local function space parametrized by self
-      typedef typename Dune::PDELab::TypeTree::TransformTree<GridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
-
 	  //! constructor
 	  GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_)
 		: defaultce(ce_), gv(gridview), pfem(stackobject_to_shared_ptr(fem)), ce(ce_)
@@ -596,9 +593,6 @@ namespace Dune {
 	  };
 
       typedef LeafGridFunctionSpaceTag ImplementationTag;
-
-      //! define local function space parametrized by self
-      typedef typename Dune::PDELab::TypeTree::TransformTree<GridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
 
 	  // constructor
       GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_)
@@ -958,9 +952,6 @@ namespace Dune {
 	  };
 
       typedef LeafGridFunctionSpaceTag ImplementationTag;
-
-      //! define local function space parametrized by self
-      typedef typename Dune::PDELab::TypeTree::TransformTree<GridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
 
 	  // constructors
       GridFunctionSpace (const GV& gridview, const FEM& fem, const IIS& iis_,
@@ -1393,9 +1384,6 @@ namespace Dune {
         ConstraintsContainer () {}
 	  };
 
-      // define local function space parametrized by self
-      //typedef PowerLocalFunctionSpaceNode<GridFunctionSubSpaceBase> LocalFunctionSpace;
-
 	  // get grid view
 	  const typename Traits::GridViewType& gridview () const
 	  {
@@ -1485,9 +1473,6 @@ namespace Dune {
       private:
         ConstraintsContainer () {}
 	  };
-
-      // define local function space parametrized by self
-      // typedef Dune::PDELab::LeafLocalFunctionSpaceNode<GridFunctionSubSpaceBase> LocalFunctionSpace;
 
 	  // get grid view
 	  const typename Traits::GridViewType& gridview () const

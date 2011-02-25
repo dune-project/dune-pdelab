@@ -84,9 +84,6 @@ namespace Dune {
       //! export traits class
       typedef typename ImplementationBase::Traits Traits;
 
-      // define local function space parametrized by self
-      typedef typename Dune::PDELab::TypeTree::TransformTree<PowerGridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
-
       PowerGridFunctionSpace(T& c)
         : BaseT(c)
       {
@@ -278,9 +275,6 @@ namespace Dune {
       //! export traits class
       typedef typename ImplementationBase::Traits Traits;
 
-      // define local function space parametrized by self
-      typedef typename Dune::PDELab::TypeTree::TransformTree<PowerGridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
-
       PowerGridFunctionSpace(T& c)
         : BaseT(c)
       {
@@ -449,8 +443,6 @@ namespace Dune {
 
     public:
 
-      typedef typename Dune::PDELab::TypeTree::TransformTree<PowerGridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
-
       PowerGridFunctionSpace(T& c)
         : BaseT(c)
       {
@@ -587,9 +579,6 @@ namespace Dune {
 
       //! export traits class
       typedef typename ImplementationBase::Traits Traits;
-
-      // define local function space parametrized by self
-      typedef typename Dune::PDELab::TypeTree::TransformTree<PowerGridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
 
       PowerGridFunctionSpace(T& c)
         : BaseT(c)

@@ -83,9 +83,6 @@ namespace Dune {
 
       typedef typename ImplementationBase::Traits Traits;
 
-      // define local function space parametrized by self
-      typedef typename Dune::PDELab::TypeTree::TransformTree<CompositeGridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
-
       CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
         : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename BaseT::template Child<0>::Type>))
       {
@@ -181,9 +178,6 @@ namespace Dune {
       //! export traits class
       typedef typename ImplementationBase::Traits Traits;
 
-      // define local function space parametrized by self
-      typedef typename Dune::PDELab::TypeTree::TransformTree<CompositeGridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
-
       CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
         : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename BaseT::template Child<0>::Type>))
       {
@@ -270,8 +264,6 @@ namespace Dune {
 
     public:
 
-      typedef typename Dune::PDELab::TypeTree::TransformTree<CompositeGridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
-
       CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
         : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
       {}
@@ -319,9 +311,6 @@ namespace Dune {
 
       //! export traits class
       typedef typename ImplementationBase::Traits Traits;
-
-      // define local function space parametrized by self
-      typedef typename Dune::PDELab::TypeTree::TransformTree<CompositeGridFunctionSpace,gfs_to_lfs>::Type LocalFunctionSpace;
 
       CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
         : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename BaseT::template Child<0>::Type>))
