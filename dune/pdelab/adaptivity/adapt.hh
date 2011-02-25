@@ -60,7 +60,7 @@ namespace Dune {
          *  @param[in] to_ The Elem on which the LocalFunction is evaluated (should be e.g. a child
          *             of from_ to make the values of the shape functions meaningful)
          */
-        CoeffsToLocalFunctionAdapter (const std::vector<CoeffType>& coeff_, const FEM& fem_, const E& from_, const E& to_) 
+        CoeffsToLocalFunctionAdapter (const std::vector<CoeffType>& coeff_, const FEM& fem_, const E& from_, const E& to_)
           : coeff(coeff_), fem(fem_), from(from_), to(to_), fe(fem.find(from)) {}
 
         /** @brief Special version of the constructor with to = from.
@@ -69,7 +69,7 @@ namespace Dune {
          *  @param[in] fem_ A FiniteElementMap used for interpretation of the coefficients
          *  @param[in] elem_ The Elem on which the LocalFunction lives
          */
-        CoeffsToLocalFunctionAdapter (const std::vector<CoeffType>& coeff_, const FEM& fem_, const E& elem_) 
+        CoeffsToLocalFunctionAdapter (const std::vector<CoeffType>& coeff_, const FEM& fem_, const E& elem_)
           : coeff(coeff_), fem(fem_), from(elem_), to(elem_), fe(fem.find(from)) {}
 
         /** @brief Evaluate the LocalFunction at the given position
@@ -78,7 +78,7 @@ namespace Dune {
          *  @param[out] y The result of the evaluation
          */
         inline void evaluate (const typename Traits::DomainType& x, typename Traits::RangeType& y) const
-        {  
+        {
           std::vector<typename Traits::RangeType> yVector;
           fe.localBasis().evaluateFunction(from.geometry().local(to.geometry().global(x)),yVector);
           if (yVector.size() != coeff.size()) DUNE_THROW(Dune::Exception,"Coefficient vector has wrong length in CoeffsToLocalFunctionAdapter");
@@ -491,7 +491,7 @@ namespace Dune {
      * @tparam U          Container class for the solution
      * @tparam Projection Projection used for testing
      */
-    template<class Grid, class GFSU, class U, class Projection> 
+    template<class Grid, class GFSU, class U, class Projection>
       class TestingAdaptation : public AdaptationInterface<Grid,U>
     {
       typedef typename Grid::template Codim<0>::Entity Element;
@@ -628,7 +628,7 @@ namespace Dune {
     };
 
     /*! @class CoarsenIfPossible
-     * 
+     *
      * @brief @todo
      *
      * @tparam Grid       Type of the grid we want to adapt
@@ -636,7 +636,7 @@ namespace Dune {
      * @tparam U          Container class for the solution
      * @tparam Projection Projection used for testing
      */
-    template<class Grid, class GFSU, class U, class Projection> 
+    template<class Grid, class GFSU, class U, class Projection>
       class CoarsenIfPossible : public AdaptationInterface<Grid,U>
     {
       typedef typename Grid::template Codim<0>::Entity Element;
@@ -727,7 +727,7 @@ namespace Dune {
     /*! @class FunctionAdaptation
      *
      * @brief An adaptation scheme based on the value of a given function.
-     * 
+     *
      *        An adaptation scheme based on the value of a given function.
      *        Elems are marked in an effort to minimize the difference between
      *        their level and the average of the function on them.
@@ -736,7 +736,7 @@ namespace Dune {
      * @tparam U    Container class for the solution
      * @tparam F    Type of Function used
      */
-    template<class Grid, class U, class F> 
+    template<class Grid, class U, class F>
       class FunctionAdaptation : public AdaptationInterface<Grid,U>
     {
       typedef typename Grid::template Codim<0>::Entity Element;
@@ -824,7 +824,7 @@ namespace Dune {
      * @tparam Grid Type of the grid we want to adapt
      * @tparam U    Container class for the solution
      */
-    template<class Grid, class U> 
+    template<class Grid, class U>
       class GlobalCoarsen : public AdaptationInterface<Grid,U>
     {
       typedef typename Grid::template Codim<0>::Entity Element;
@@ -861,7 +861,7 @@ namespace Dune {
      * @tparam Grid Type of the grid we want to adapt
      * @tparam U    Container class for the solution
      */
-    template<class Grid, class U> 
+    template<class Grid, class U>
       class RandomAdaptation : public AdaptationInterface<Grid,U>
     {
       typedef typename Grid::template Codim<0>::Entity Element;
@@ -955,7 +955,7 @@ namespace Dune {
                 / father.geometry().integrationElement(father.geometry().local(e.geometry().global(it->position())));
 
               u += x * y * factor;
-            } 
+            }
           }
 
         /*! @brief Calculate the L2 norm of X - Y on e, but in the geometry of its ancestor
@@ -1156,14 +1156,14 @@ namespace Dune {
           {
             // mark elems that are to be refined / coarsened
             markGrid(u);
-            
+
             // prepare the grid for refinement
             grid.preAdapt();
 
             // save u
             MapType transferMap;
             backupData(u,transferMap);
-       
+
             // adapt the grid
             grid.adapt();
 
