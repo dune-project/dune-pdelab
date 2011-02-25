@@ -131,7 +131,7 @@ namespace Dune {
 	private:
 	  shared_ptr<GFS const> pgfs;
 	  const X& xg;
-	  mutable typename Dune::PDELab::LocalFunctionSpace<GFS> lfs;
+	  mutable LocalFunctionSpace<GFS> lfs;
 	  mutable std::vector<typename Traits::RangeFieldType> xl;
 	  mutable std::vector<typename Traits::RangeType> yb;
 	};
@@ -380,7 +380,7 @@ namespace Dune {
 	private:
 	  shared_ptr<GFS const> pgfs;
 	  const X& xg;
-	  mutable typename LocalFunctionSpace<GFS> lfs;
+	  mutable LocalFunctionSpace<GFS> lfs;
 	  mutable std::vector<typename Traits::RangeFieldType> xl;
       mutable std::vector<typename T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::JacobianType> J;
 	};
@@ -445,7 +445,7 @@ namespace Dune {
                             typename Traits::RangeType& y) const
       {
         // get and bind local functions space
-        typename LocalFunctionSpace<GFS> lfs(*pgfs);
+        LocalFunctionSpace<GFS> lfs(*pgfs);
         lfs.bind(e);
 
         // get local coefficients
@@ -555,7 +555,7 @@ namespace Dune {
 	private:
 	  shared_ptr<GFS const> pgfs;
 	  const X& xg;
-	  mutable typename LocalFunctionSpace<GFS> lfs;
+	  mutable LocalFunctionSpace<GFS> lfs;
 	  mutable std::vector<typename Traits::RangeFieldType> xl;
 	  mutable std::vector<typename Traits::RangeType> yb;
 	};
