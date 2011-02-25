@@ -10,6 +10,7 @@ common_HEADERS =				\
 	nodetags.hh				\
 	pairtraversal.hh			\
 	powernode.hh				\
+	simpletransformationdescriptors.hh	\
 	transformation.hh			\
 	transformationutilities.hh		\
 	traversal.hh				\
@@ -17,6 +18,7 @@ common_HEADERS =				\
 	treepath.hh				\
 	utility.hh				\
 	variadiccompositenode.hh		\
-	visitor.hh
+	visitor.hh				\
+	wrappingtransformationdescriptors.hh
 
 include $(top_srcdir)/am/global-rules
