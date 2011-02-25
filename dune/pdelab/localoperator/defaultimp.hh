@@ -31,7 +31,7 @@ namespace Dune {
     {
     public:
       NumericalJacobianVolume ()
-        : epsilon(1e-11)
+        : epsilon(1e-7)
       {}
 
       NumericalJacobianVolume (double epsilon_)
@@ -86,7 +86,7 @@ namespace Dune {
     {
     public:
       NumericalJacobianVolumePostSkeleton ()
-        : epsilon(1e-11)
+        : epsilon(1e-7)
       {}
 
       NumericalJacobianVolumePostSkeleton (double epsilon_)
@@ -139,7 +139,7 @@ namespace Dune {
     {
     public:
       NumericalJacobianSkeleton ()
-        : epsilon(1e-11)
+        : epsilon(1e-7)
       {}
 
       NumericalJacobianSkeleton (double epsilon_)
@@ -225,7 +225,7 @@ namespace Dune {
     {
     public:
       NumericalJacobianBoundary ()
-        : epsilon(1e-11)
+        : epsilon(1e-7)
       {}
 
       NumericalJacobianBoundary (double epsilon_)
@@ -286,7 +286,7 @@ namespace Dune {
     {
     public:
       NumericalJacobianApplyVolume ()
-        : epsilon(1e-11)
+        : epsilon(1e-7)
       {}
 
       NumericalJacobianApplyVolume (double epsilon_)
@@ -342,7 +342,7 @@ namespace Dune {
     {
     public:
       NumericalJacobianApplyVolumePostSkeleton ()
-        : epsilon(1e-11)
+        : epsilon(1e-7)
       {}
 
       NumericalJacobianApplyVolumePostSkeleton (double epsilon_)
@@ -396,7 +396,7 @@ namespace Dune {
     {
     public:
       NumericalJacobianApplySkeleton ()
-        : epsilon(1e-11)
+        : epsilon(1e-7)
       {}
 
       NumericalJacobianApplySkeleton (double epsilon_)
@@ -480,7 +480,7 @@ namespace Dune {
     {
     public:
       NumericalJacobianApplyBoundary ()
-        : epsilon(1e-11)
+        : epsilon(1e-7)
       {}
 
       NumericalJacobianApplyBoundary (double epsilon_)
