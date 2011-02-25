@@ -8,19 +8,6 @@ public:
 class LocalAssemblerInterface : public LocalAssemblerBase
 {
 public:
-  bool requireIntersections() const;
-  bool requireIntersectionsTwoSided() const;
-  bool requireAlphaVolume() const;
-  bool requireLambdaVolume() const;
-  bool requireAlphaSkeleton() const;
-  bool requireLambdaSkeleton() const;
-  bool requireAlphaBoundary() const;
-  bool requireLambdaBoundary() const;
-  bool requireAlphaEnrichedCoupling() const;
-  bool requireLambdaEnrichedCoupling() const;
-  bool requireAlphaVolumePostSkeleton() const;
-  bool requireLambdaVolumePostSkeleton() const;
-
 
   template<class TT>
   void setTime(TT time);
@@ -37,33 +24,46 @@ public:
     typedef LocalAssemblerInterface LocalAssembler;
     const LocalAssembler & localAssembler();
 
+    bool requireIntersections() const;
+    bool requireIntersectionsTwoSided() const;
+    bool requireUVVolume() const;
+    bool requireVVolume() const;
+    bool requireUVSkeleton() const;
+    bool requireVSkeleton() const;
+    bool requireUVBoundary() const;
+    bool requireVBoundary() const;
+    bool requireUVEnrichedCoupling() const;
+    bool requireVEnrichedCoupling() const;
+    bool requireUVVolumePostSkeleton() const;
+    bool requireVVolumePostSkeleton() const;
+
     template<>
-    void assembleAlphaVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv);
+    void assembleUVVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv);
     template<>
-    void assembleLambdaVolume(const EG & eg, const LFSV & lfsv);
+    void assembleVVolume(const EG & eg, const LFSV & lfsv);
     template<>
-    void assembleAlphaSkeleton(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+    void assembleUVSkeleton(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
                                const LFSU_N & lfsu_n, const LFSV_N & lfsv_n);
     template<>
-    void assembleLambdaSkeleton(const IG & ig, const LFSV_S & lfsv_s, const LFSV_N & lfsv_n);
+    void assembleVSkeleton(const IG & ig, const LFSV_S & lfsv_s, const LFSV_N & lfsv_n);
     template<>
-    void assembleAlphaBoundary(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
+    void assembleUVBoundary(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
     template<>
-    void assembleLambdaBoundary(const IG & ig, const LFSV_S & lfsv_s);
+    void assembleVBoundary(const IG & ig, const LFSV_S & lfsv_s);
     template<>
-    void assembleAlphaEnrichedCoupling(const IG & ig,
+    void assembleUVEnrichedCoupling(const IG & ig,
                                        const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
                                        const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
                                        const LFSU_Coupling & lfsu_coupling, const LFSV_Coupling & lfsv_coupling);
     template<>
-    void assembleLambdaEnrichedCoupling(const IG & ig,
+    void assembleVEnrichedCoupling(const IG & ig,
                                         const LFSV_S & lfsv_s,
                                         const LFSV_N & lfsv_n,
                                         const LFSV_Coupling & lfsv_coupling);
     template<>
-    void assembleAlphaVolumePostSkeleton(const EG & eg, const LFSU & lfsu, const LFSV & lfsv);
+    void assembleUVVolumePostSkeleton(const EG & eg, const LFSU & lfsu, const LFSV & lfsv);
     template<>
-    void assembleLambdaVolumePostSkeleton(const EG & eg, const LFSV & lfsv);
+    void assembleVVolumePostSkeleton(const EG & eg, const LFSV & lfsv);
 
     void preAssembly();
     void postAssembly();
