@@ -143,7 +143,7 @@ namespace Dune {
                                                                       typename C8,
                                                                       typename C9
                                                                       > class TransformedNodeTemplate>
-      struct TemplatizedCompositeNodeTransformation
+      struct TemplatizedWrappingCompositeNodeTransformation
       {
 
         template<typename TC0,
@@ -259,10 +259,10 @@ namespace Dune {
                                                                       typename C8,
                                                                       typename C9> class TransformedNode>
       struct WrappingCompositeNodeTransformation
-        : public TemplatizedCompositeNodeTransformation<SourceNode,
-                                                        Transformation,
-                                                        WrappingCompositeNodeTransformationTemplate<SourceNode,TransformedNode>::template result
-                                                        >
+        : public TemplatizedWrappingCompositeNodeTransformation<SourceNode,
+                                                                Transformation,
+                                                                WrappingCompositeNodeTransformationTemplate<SourceNode,TransformedNode>::template result
+                                                                >
       {};
 
 
