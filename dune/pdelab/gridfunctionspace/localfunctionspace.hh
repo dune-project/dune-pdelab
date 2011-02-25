@@ -90,9 +90,10 @@ namespace Dune {
         template<typename Node, typename TreePath>
         void leaf(Node& node, TreePath treePath)
         {
-          _global.resize(node.n);
-          node.pgfs->globalIndices(*(node.pfe),e,_global); // get global indices for this finite element
-          for (std::size_t i=0; i<node.n; i++) (*node.global)[node.offset+i]=_global[i];
+          // get global indices for this finite element
+          node.pgfs->globalIndices(*(node.pfe),e,
+            node.global->begin()+node.offset,
+            node.global->begin()+node.offset+node.n);
         }
 
         template<typename Node, typename Child, typename TreePath, typename ChildIndex>
@@ -104,13 +105,9 @@ namespace Dune {
 
         FillIndicesVisitor(const Entity& entity, std::size_t maxLocalSize)
           : e(entity)
-        {
-          _global.reserve(maxLocalSize);
-        }
+        {}
 
         const Entity& e;
-        std::vector<SizeType> _global;
-
       };
 
     } // end empty namespace

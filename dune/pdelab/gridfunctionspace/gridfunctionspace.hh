@@ -328,19 +328,18 @@ namespace Dune {
       }
 
 	  //! compute global indices for one element
+      template<typename StorageIterator>
       void globalIndices (const typename Traits::FiniteElementType& fe,
-                          const Element& e,
-						  std::vector<typename Traits::SizeType>& global) const
-	  {
+                          const Element& e, StorageIterator it, StorageIterator endit) const
+      {
         typedef FiniteElementInterfaceSwitch<
           typename Traits::FiniteElementType
           > FESwitch;
 		// get layout of entity
         const typename FESwitch::Coefficients &coeffs =
           FESwitch::coefficients(fe);
-        global.resize(coeffs.size());
 
-        for (std::size_t i=0; i<std::size_t(coeffs.size()); ++i)
+        for (std::size_t i=0; i<std::size_t(coeffs.size()); ++i, ++it)
 		  {
 			// get geometry type of subentity
 			Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
@@ -353,17 +352,13 @@ namespace Dune {
                                                coeffs.localKey(i).codim());
 
 			// now compute
-            global[i] = offset[(gtoffset.find(gt)->second)+index]+
+            (*it) = offset[(gtoffset.find(gt)->second)+index]+
               coeffs.localKey(i).index();
+
+            // make sure we don't write past the end of the iterator range
+            assert(it != endit);
 		  }
 	  }
-
-      // global Indices from element, needs additional finite element lookup
-	  void globalIndices (const Element& e,
-						  std::vector<typename Traits::SizeType>& global) const
-      {
-        globalIndices(pfem->find(e),e,global);
-      }
 
       //------------------------------
       // generic data handle interface
@@ -657,9 +652,9 @@ namespace Dune {
       }
 
 	  // compute global indices for one element
+      template<typename StorageIterator>
       void globalIndices (const typename Traits::FiniteElementType& fe,
-                          const Element& e,
-						  std::vector<typename Traits::SizeType>& global) const
+                          const Element& e, StorageIterator it, StorageIterator endit) const
 	  {
 		// get local coefficients for this entity
         typedef FiniteElementInterfaceSwitch<
@@ -667,9 +662,8 @@ namespace Dune {
           > FESwitch;
         const typename FESwitch::Coefficients &coeffs =
           FESwitch::coefficients(fe);
-        global.resize(coeffs.size());
 
-        for (unsigned int i=0; i<coeffs.size(); ++i)
+        for (unsigned int i=0; i<coeffs.size(); ++i, ++it)
 		  {
 			// get geometry type of subentity
 			Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
@@ -682,19 +676,13 @@ namespace Dune {
                                                coeffs.localKey(i).codim());
 
 			// now compute
-            global[i] =
-              offset.find(gt)->second+index*dofcountmap.find(gt)->second
+            (*it) = offset.find(gt)->second+index*dofcountmap.find(gt)->second
               + coeffs.localKey(i).index();
+
+            // make sure we don't write past the end of the iterator range
+            assert(it != endit);
 		  }
 	  }
-
-      // global Indices from element, needs additional finite element lookup
-	  void globalIndices (const Element& e,
-						  std::vector<typename Traits::SizeType>& global) const
-      {
-        globalIndices(pfem->find(e),e,global);
-      }
-
 
       //------------------------------
       // generic data handle interface
@@ -1028,9 +1016,9 @@ namespace Dune {
       }
 
 	  // compute global indices for one element
+      template<typename StorageIterator>
       void globalIndices (const typename Traits::FiniteElementType& fe,
-                          const Element& e,
-						  std::vector<typename Traits::SizeType>& global) const
+                          const Element& e, StorageIterator it, StorageIterator endit) const
 	  {
         typedef FiniteElementInterfaceSwitch<
           typename Traits::FiniteElementType
@@ -1038,9 +1026,8 @@ namespace Dune {
 		// get local coefficients for this entity
         const typename FESwitch::Coefficients &coeffs =
           FESwitch::coefficients(fe);
-        global.resize(coeffs.size());
 
-        for (unsigned int i=0; i<coeffs.size(); ++i)
+        for (unsigned int i=0; i<coeffs.size(); ++i, ++it)
 		  {
             typename GV::IndexSet::IndexType index;
             unsigned int cd = coeffs.localKey(i).codim();
@@ -1053,19 +1040,13 @@ namespace Dune {
               index = gv.indexSet().subIndex(e,se,cd);
 
 			// now compute
-            global[i] =
-              offset.find(cd)->second + index * dofpercodim.find(cd)->second
+            (*it) = offset.find(cd)->second + index * dofpercodim.find(cd)->second
               + coeffs.localKey(i).index();
+
+            // make sure we don't write past the end of the iterator range
+            assert(it != endit);
 		  }
 	  }
-
-      // global Indices from element, needs additional finite element lookup
-	  void globalIndices (const Element& e,
-						  std::vector<typename Traits::SizeType>& global) const
-      {
-        globalIndices(pfem->find(e),e,global);
-      }
-
 
       //------------------------------
       // generic data handle interface
@@ -1517,19 +1498,12 @@ namespace Dune {
 	  }
 
 	  // compute global indices for one element
+      template<typename StorageIterator>
       void globalIndices (const typename Traits::FiniteElementType& fe,
-                          const Element& e,
-						  std::vector<typename Traits::SizeType>& global) const
+                          const Element& e, StorageIterator it, StorageIterator endit) const
 	  {
-        pcgfs->globalIndices(fe,e,global);
+        pcgfs->globalIndices(fe,e,it,endit);
 	  }
-
-      // global Indices from element, needs additional finite element lookup
-	  void globalIndices (const Element& e,
-						  std::vector<typename Traits::SizeType>& global) const
-      {
-        pcgfs->globalIndices(e,global);
-      }
 
     private:
       shared_ptr<GFS const> pgfs;
