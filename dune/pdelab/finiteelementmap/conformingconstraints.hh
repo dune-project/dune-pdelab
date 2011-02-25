@@ -33,7 +33,7 @@ namespace Dune {
         return true;
       }
     };
-    
+
     //! Dirichlet Constraints construction
     // works in any dimension and on all element types
     class ConformingDirichletConstraints
@@ -58,7 +58,7 @@ namespace Dune {
           typename LFS::Traits::FiniteElementType
           > FESwitch;
         typedef FieldVector<typename IG::ctype, IG::dimension-1> FaceCoord;
-   
+
         const int face = ig.indexInInside();
 
         // find all local indices of this face
@@ -67,8 +67,8 @@ namespace Dune {
         const int dim = IG::Entity::Geometry::dimension;
         const Dune::GenericReferenceElement<DT,dim>& refelem = Dune::GenericReferenceElements<DT,dim>::general(gt);
 
-	    const Dune::GenericReferenceElement<DT,dim-1> & 
-	      face_refelem = Dune::GenericReferenceElements<DT,dim-1>::general(ig.geometry().type()); 
+	    const Dune::GenericReferenceElement<DT,dim-1> &
+	      face_refelem = Dune::GenericReferenceElements<DT,dim-1>::general(ig.geometry().type());
 
         // empty map means Dirichlet constraint
         typename T::RowType empty;
@@ -87,9 +87,9 @@ namespace Dune {
             if (codim==0) continue;
 
             for (int j=0; j<refelem.size(face,1,codim); j++){
-              
+
               // test point to check whether we have dirichlet or neumann
-              const FaceCoord testpoint 
+              const FaceCoord testpoint
                 = face_refelem.position(j,codim-1);
 
               if (isDirichlet &&
@@ -102,12 +102,12 @@ namespace Dune {
       }
     };
 
-    // extend constraints class by processor boundary 
+    // extend constraints class by processor boundary
     class OverlappingConformingDirichletConstraints : public ConformingDirichletConstraints
     {
     public:
       enum { doProcessor = true };
-      
+
       // boundary constraints
       // IG : intersection geometry
       // LFS : local function space
@@ -211,13 +211,13 @@ namespace Dune {
 
       void print ()
       {
-        std::cout << "/" << rank << "/ " << "ghost size=" 
-                  << gh.size() << std::endl; 
+        std::cout << "/" << rank << "/ " << "ghost size="
+                  << gh.size() << std::endl;
         for (std::size_t i=0; i<gh.size(); i++)
-          std::cout << "/" << rank << "/ " << "ghost[" << i << "]=" 
+          std::cout << "/" << rank << "/ " << "ghost[" << i << "]="
                     << gh[i] << std::endl;
-      } 
-      
+      }
+
     private:
       int rank;
       std::vector<int> gh;
