@@ -12,17 +12,6 @@
 namespace Dune {
   namespace PDELab {
 
-    //! Interface for the constraints parameters describing flux constraints, e.g. needed for RT0
-    struct FluxConstraintsParameters :
-      public TypeTree::LeafNode
-    {
-      template<typename I>
-      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord)
-      {
-        return true;
-      }
-    };
-    
     //! Neumann Constraints construction, as needed for RT0
     class RT0Constraints {
     public:

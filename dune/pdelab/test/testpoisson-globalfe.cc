@@ -29,11 +29,11 @@
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/geometrywrapper.hh>
 #include <dune/pdelab/common/vtkexport.hh>
+#include <dune/pdelab/constraints/constraints.hh>
 #include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include <dune/pdelab/finiteelementmap/q1fem.hh>
 #include <dune/pdelab/finiteelementmap/q22dfem.hh>
 #include <dune/pdelab/finiteelementmap/pk2dfem.hh>
-#include <dune/pdelab/gridfunctionspace/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>

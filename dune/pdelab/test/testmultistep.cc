@@ -35,7 +35,7 @@
 #include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include <dune/pdelab/finiteelementmap/p1fem.hh>
 #include <dune/pdelab/function/const.hh>
-#include <dune/pdelab/gridfunctionspace/constraints.hh>
+#include <dune/pdelab/constraints/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>

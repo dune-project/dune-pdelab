@@ -16,23 +16,13 @@
 
 #include <dune/pdelab/common/geometrywrapper.hh>
 #include <dune/pdelab/common/typetree.hh>
+#include <dune/pdelab/constraints/constraintsparameters.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspacetags.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 
 namespace Dune {
   namespace PDELab {
-
-    //! Interface for the constraints parameters describing dirichlet constraints
-    struct DirichletConstraintsParameters :
-      public TypeTree::LeafNode
-    {
-      template<typename I>
-      bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord)
-      {
-        return true;
-      }
-    };
 
     //! Dirichlet Constraints construction
     // works in any dimension and on all element types

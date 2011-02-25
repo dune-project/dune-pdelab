@@ -42,7 +42,7 @@
 #include <dune/pdelab/finiteelementmap/edges0.5fem.hh>
 #include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include <dune/pdelab/function/memberadaptor.hh>
-#include <dune/pdelab/gridfunctionspace/constraints.hh>
+#include <dune/pdelab/constraints/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/dofinfo.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>

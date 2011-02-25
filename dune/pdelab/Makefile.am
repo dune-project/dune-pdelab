@@ -3,13 +3,14 @@ SUBDIRS =					\
 	adaptivity				\
 	backend					\
 	common					\
-	finiteelement				\
-	finiteelementmap			\
+	constraints				\
+	finiteelement			\
+	finiteelementmap		\
 	function				\
-	gridfunctionspace			\
-	gridoperatorspace			\
-	linearsolver				\
-	localoperator				\
+	gridfunctionspace		\
+	gridoperatorspace		\
+	linearsolver			\
+	localoperator			\
 	multistep				\
 	newton					\
 	test

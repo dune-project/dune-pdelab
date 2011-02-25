@@ -9,8 +9,8 @@
 #include<dune/common/geometrytype.hh>
 
 #include "../common/geometrywrapper.hh"
+#include "../constraints/constraints.hh"
 #include "../gridfunctionspace/gridfunctionspace.hh"
-#include "../gridfunctionspace/constraints.hh"
 
 #include "../gridfunctionspace/localvector.hh"
 #include "localmatrix.hh"

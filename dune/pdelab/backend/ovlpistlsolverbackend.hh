@@ -17,7 +17,7 @@
 #include <dune/istl/io.hh>
 #include <dune/istl/superlu.hh>
 
-#include "../gridfunctionspace/constraints.hh"
+#include "../constraints/constraints.hh"
 #include "../gridfunctionspace/genericdatahandle.hh"
 #include "../newton/newton.hh"
 #include "istlvectorbackend.hh"

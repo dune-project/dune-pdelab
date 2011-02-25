@@ -12,7 +12,7 @@
 #include <dune/common/tupleutility.hh>
 #include <dune/common/typetraits.hh>
 
-#include <dune/pdelab/gridfunctionspace/constraints.hh>
+#include <dune/pdelab/constraints/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>

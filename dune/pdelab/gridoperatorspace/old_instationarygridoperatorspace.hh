@@ -13,8 +13,8 @@
 #include<dune/istl/io.hh>
 
 #include"../common/geometrywrapper.hh"
+#include"../constraints/constraints.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
-#include"../gridfunctionspace/constraints.hh"
 #include"../gridfunctionspace/interpolate.hh"
 #include"localmatrix.hh"
 #include"gridoperatorspaceutilities.hh"
