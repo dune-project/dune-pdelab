@@ -112,7 +112,7 @@ namespace Dune {
 							typename Traits::RangeType& y) const
 	  {
         typedef FiniteElementInterfaceSwitch<
-          typename GFS::LocalFunctionSpace::Traits::FiniteElementType
+          typename Dune::PDELab::LocalFunctionSpace<GFS>::Traits::FiniteElementType
           > FESwitch;
 		lfs.bind(e);
 		lfs.vread(xg,xl);
@@ -131,7 +131,7 @@ namespace Dune {
 	private:
 	  shared_ptr<GFS const> pgfs;
 	  const X& xg;
-	  mutable typename GFS::LocalFunctionSpace lfs;
+	  mutable typename Dune::PDELab::LocalFunctionSpace<GFS> lfs;
 	  mutable std::vector<typename Traits::RangeFieldType> xl;
 	  mutable std::vector<typename Traits::RangeType> yb;
 	};
