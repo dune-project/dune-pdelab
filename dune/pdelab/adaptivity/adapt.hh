@@ -251,10 +251,10 @@ namespace Dune {
           GFSV gfsv(gfsu.gridview(),p0fem);
 
           // make local function spaces
-          typedef typename GFSU::LocalFunctionSpace LFSU;
+          typedef LocalFunctionSpace<GFSU> LFSU;
           LFSU lfsu(gfsu);
           LFSU lfsu_n(gfsu);
-          typedef typename GFSV::LocalFunctionSpace LFSV;
+          typedef LocalFunctionSpace<GFSV> LFSV;
           LFSV lfsv(gfsv);
           LFSV lfsv_n(gfsv);
 
@@ -377,7 +377,7 @@ namespace Dune {
       typedef typename GV::ctype Coord;
       typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,double,GV::dimension> P0FEM;
       typedef GridFunctionSpace<GV,P0FEM> GFSV;
-      typedef typename GFSV::LocalFunctionSpace LFSV;
+      typedef typename LocalFunctionSpace<GFSV> LFSV;
       typedef typename GFSV::template VectorContainer<double>::Type V;
       typedef std::multimap<typename V::ElementType, const IndexType> MapType;
 
@@ -918,7 +918,7 @@ namespace Dune {
       {
         typedef typename GFSU::Traits::GridViewType::Grid Grid;
         typedef typename Grid::template Codim<0>::Entity Element;
-        typedef typename GFSU::LocalFunctionSpace LFSU;
+        typedef LocalFunctionSpace<GFSU> LFSU;
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
 
@@ -1113,7 +1113,7 @@ namespace Dune {
           typedef typename IdSet::IdType IdType;
           typedef typename Grid::LeafIndexSet IndexSet;
           typedef typename IndexSet::IndexType IndexType;
-          typedef typename GFSU::LocalFunctionSpace LFSU;
+          typedef typename LocalFunctionSpace<GFSU> LFSU;
           typedef DiscreteGridFunction<GFSU, U> DGF;
           typedef typename GFSU::Traits::FiniteElementMapType FEM;
           typedef InterpolateBackendStandard IB;
