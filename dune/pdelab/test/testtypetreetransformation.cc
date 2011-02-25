@@ -17,11 +17,13 @@ struct TargetLeaf
   : public Dune::PDELab::TypeTree::LeafNode
 {
 
-  TargetLeaf(const SimpleLeaf& sl)
+  template<typename Transformation>
+  TargetLeaf(const SimpleLeaf& sl, const Transformation& t)
     : s(Dune::stackobject_to_shared_ptr(sl))
   {}
 
-  TargetLeaf(Dune::shared_ptr<const SimpleLeaf> sl)
+  template<typename Transformation>
+  TargetLeaf(Dune::shared_ptr<const SimpleLeaf> sl, const Transformation& t)
     : s(sl)
   {}
 
@@ -44,12 +46,14 @@ struct TargetPower
   : public Dune::PDELab::TypeTree::PowerNode<T,k>
 {
 
-  TargetPower(const S& sc, const Dune::array<Dune::shared_ptr<T>,k>& children)
+  template<typename Transformation>
+  TargetPower(const S& sc, const Transformation& t, const Dune::array<Dune::shared_ptr<T>,k>& children)
     : Dune::PDELab::TypeTree::PowerNode<T,k>(children)
     , s(Dune::stackobject_to_shared_ptr(sc))
   {}
 
-  TargetPower(Dune::shared_ptr<const S> sc, const Dune::array<Dune::shared_ptr<T>,k>& children)
+  template<typename Transformation>
+  TargetPower(Dune::shared_ptr<const S> sc, const Transformation& t, const Dune::array<Dune::shared_ptr<T>,k>& children)
     : Dune::PDELab::TypeTree::PowerNode<T,k>(children)
     , s(sc)
   {}
@@ -74,12 +78,14 @@ struct TargetVariadicComposite
   : public Dune::PDELab::TypeTree::VariadicCompositeNode<Children...>
 {
 
-  TargetVariadicComposite(const S& sc, Dune::shared_ptr<Children>... children)
+  template<typename Transformation>
+  TargetVariadicComposite(const S& sc, const Transformation& t, Dune::shared_ptr<Children>... children)
     : Dune::PDELab::TypeTree::VariadicCompositeNode<Children...>(children...)
     , s(Dune::stackobject_to_shared_ptr(sc))
   {}
 
-  TargetVariadicComposite(Dune::shared_ptr<const S> sc, Dune::shared_ptr<Children>... children)
+  template<typename Transformation>
+  TargetVariadicComposite(Dune::shared_ptr<const S> sc, const Transformation& t, Dune::shared_ptr<Children>... children)
     : Dune::PDELab::TypeTree::VariadicCompositeNode<Children...>(children...)
     , s(sc)
   {}
@@ -103,15 +109,15 @@ struct TestTransformation {};
 
 // register leaf node
 template<typename SL>
-Dune::PDELab::TypeTree::WrappingLeafNodeTransformation<SimpleLeaf,TestTransformation,TargetLeaf>
+Dune::PDELab::TypeTree::GenericLeafNodeTransformation<SimpleLeaf,TestTransformation,TargetLeaf>
 lookupNodeTransformation(SL* sl, TestTransformation* t, SimpleLeafTag tag);
 
 template<typename SP>
-Dune::PDELab::TypeTree::WrappingPowerNodeTransformation<SP,TestTransformation,TargetPower>
+Dune::PDELab::TypeTree::GenericPowerNodeTransformation<SP,TestTransformation,TargetPower>
 lookupNodeTransformation(SP* sp, TestTransformation* t, SimplePowerTag tag);
 
 template<typename SVC>
-Dune::PDELab::TypeTree::WrappingVariadicCompositeNodeTransformation<SVC,TestTransformation,TargetVariadicComposite>
+Dune::PDELab::TypeTree::GenericVariadicCompositeNodeTransformation<SVC,TestTransformation,TargetVariadicComposite>
 lookupNodeTransformation(SVC* svc, TestTransformation* t, SimpleVariadicCompositeTag tag);
 
 
