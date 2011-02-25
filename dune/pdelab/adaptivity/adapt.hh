@@ -11,6 +11,7 @@
 #include<map>
 #include<dune/grid/common/quadraturerules.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
+#include<dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 
 // for CTLFA
 #include<dune/pdelab/common/function.hh>
@@ -377,7 +378,7 @@ namespace Dune {
       typedef typename GV::ctype Coord;
       typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,double,GV::dimension> P0FEM;
       typedef GridFunctionSpace<GV,P0FEM> GFSV;
-      typedef typename LocalFunctionSpace<GFSV> LFSV;
+      typedef LocalFunctionSpace<GFSV> LFSV;
       typedef typename GFSV::template VectorContainer<double>::Type V;
       typedef std::multimap<typename V::ElementType, const IndexType> MapType;
 
@@ -1113,7 +1114,7 @@ namespace Dune {
           typedef typename IdSet::IdType IdType;
           typedef typename Grid::LeafIndexSet IndexSet;
           typedef typename IndexSet::IndexType IndexType;
-          typedef typename LocalFunctionSpace<GFSU> LFSU;
+          typedef LocalFunctionSpace<GFSU> LFSU;
           typedef DiscreteGridFunction<GFSU, U> DGF;
           typedef typename GFSU::Traits::FiniteElementMapType FEM;
           typedef InterpolateBackendStandard IB;
@@ -1307,8 +1308,6 @@ namespace Dune {
             std::vector<typename U::ElementType> ul;
             std::vector<typename U::ElementType> ulc;
             U uc(gfsu,0.0);
-            std::map<IndexType, std::vector<typename GFSU::Traits::SizeType> > globalIndices;
-            std::vector<typename GFSU::Traits::SizeType> indices;
             const IndexSet& indexset = grid.leafIndexSet();
             std::vector<typename U::ElementType> ug(indexset.size(IndexSet::dimension),0.);
             std::vector<typename U::ElementType> ugc(indexset.size(IndexSet::dimension),0.);
@@ -1323,7 +1322,6 @@ namespace Dune {
               lfsu.bind(e);
               const IdType& id = idset.id(e);
               const int level = e.level();
-              gfsu.globalIndices(e, indices);
 
               if (e.isNew()) // id is not in map, we have to interpolate
               {
@@ -1374,7 +1372,6 @@ namespace Dune {
             {
               const Element& e = *it;
               lfsu.bind(e);
-              gfsu.globalIndices(e, indices);
 
               ul = std::vector<typename U::ElementType>(lfsu.size(),0.0);
               ulc = std::vector<typename U::ElementType>(lfsu.size(),0.0);
