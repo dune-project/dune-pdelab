@@ -170,11 +170,15 @@ struct SimpleVariadicComposite
 
 #endif
 
+struct SimpleCompositeTag {};
+
 template<typename C1, typename C2 = Dune::PDELab::TypeTree::EmptyNode, typename C3 = Dune::PDELab::TypeTree::EmptyNode, typename C4 = Dune::PDELab::TypeTree::EmptyNode>
 struct SimpleComposite
   : public Dune::PDELab::TypeTree::CompositeNode<C1,C2,C3,C4>
   , public Counter
 {
+
+  typedef SimpleCompositeTag ImplementationTag;
 
   static const char* name()
   {
