@@ -81,7 +81,7 @@ namespace Dune {
       };
 
 
-      template<typename Entity, typename SizeType>
+      template<typename Entity>
       struct FillIndicesVisitor
         : public TypeTree::TreeVisitor
         , public TypeTree::DynamicTraversal
@@ -103,7 +103,7 @@ namespace Dune {
             (*node.global)[child.offset+i] = node.pgfs->subMap(childIndex,(*node.global)[child.offset+i]);
         }
 
-        FillIndicesVisitor(const Entity& entity, std::size_t maxLocalSize)
+        FillIndicesVisitor(const Entity& entity)
           : e(entity)
         {}
 
@@ -278,8 +278,8 @@ namespace Dune {
       global_storage.resize(node.n);
 
       // initialize iterators and fill indices
-      FillIndicesVisitor<Element,typename Traits::IndexContainer::size_type> fiv(e,node.maxSize());
-      TypeTree::applyToTree(node,fiv);
+      FillIndicesVisitor<Element> fiv(e);
+      TypeTree::applyToTree(node,FillIndicesVisitor<Element,fiv);
 
       // apply upMap
       for (typename Traits::IndexContainer::size_type i=0; i<n; ++i)
