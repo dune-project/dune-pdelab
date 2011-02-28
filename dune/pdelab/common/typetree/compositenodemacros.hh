@@ -22,7 +22,7 @@
 
 #define DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE Children&... children
 
-#define DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE shared_ptr<Children>... children
+#define DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE Dune::shared_ptr<Children>... children
 
 #else
 
@@ -73,16 +73,16 @@
   typename Dune::PDELab::TypeTree::OptionalChild<C9>::type c9 = Dune::PDELab::TypeTree::OptionalChild<C9>::default_value()
 
 #define DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE \
-  shared_ptr<C0> c0, \
-  shared_ptr<C1> c1, \
-  shared_ptr<C2> c2, \
-  shared_ptr<C3> c3, \
-  shared_ptr<C4> c4, \
-  shared_ptr<C5> c5, \
-  shared_ptr<C6> c6, \
-  shared_ptr<C7> c7, \
-  shared_ptr<C8> c8, \
-  shared_ptr<C9> c9
+  Dune::shared_ptr<C0> c0,                                        \
+  Dune::shared_ptr<C1> c1, \
+  Dune::shared_ptr<C2> c2, \
+  Dune::shared_ptr<C3> c3, \
+  Dune::shared_ptr<C4> c4, \
+  Dune::shared_ptr<C5> c5, \
+  Dune::shared_ptr<C6> c6, \
+  Dune::shared_ptr<C7> c7, \
+  Dune::shared_ptr<C8> c8, \
+  Dune::shared_ptr<C9> c9
 
 #endif
 
