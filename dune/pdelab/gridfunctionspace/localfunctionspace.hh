@@ -148,7 +148,7 @@ namespace Dune {
       template<typename>
       friend struct ComputeSizeVisitor;
 
-      template<typename,typename>
+      template<typename>
       friend struct FillIndicesVisitor;
 
     public:
@@ -313,7 +313,7 @@ namespace Dune {
       template<typename>
       friend struct ComputeSizeVisitor;
 
-      template<typename,typename>
+      template<typename>
       friend struct FillIndicesVisitor;
 
     public:
@@ -369,7 +369,7 @@ namespace Dune {
       template<typename>
       friend struct ComputeSizeVisitor;
 
-      template<typename,typename>
+      template<typename>
       friend struct FillIndicesVisitor;
 
     public:
@@ -439,7 +439,7 @@ namespace Dune {
       template<typename>
       friend struct ComputeSizeVisitor;
 
-      template<typename,typename>
+      template<typename>
       friend struct FillIndicesVisitor;
 
     public:
@@ -557,7 +557,7 @@ namespace Dune {
       template<typename>
       friend struct ComputeSizeVisitor;
 
-      template<typename,typename>
+      template<typename>
       friend struct FillIndicesVisitor;
 
     public:
@@ -591,7 +591,7 @@ namespace Dune {
       template<typename>
       friend struct ComputeSizeVisitor;
 
-      template<typename,typename>
+      template<typename>
       friend struct FillIndicesVisitor;
 
     public:
