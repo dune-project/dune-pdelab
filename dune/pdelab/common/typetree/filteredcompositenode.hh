@@ -84,7 +84,44 @@ namespace Dune {
           static const std::size_t size = result::size;
         };
 
+        template<std::size_t n, std::size_t... indices>
+        struct valid_index_range
+        {
+          static const bool value = true;
+        };
+
+        template<std::size_t n, std::size_t k, std::size_t... indices>
+        struct valid_index_range<n,k,indices...>
+        {
+          static const bool value = (k < n) && valid_index_range<n,indices...>::value;
+        };
+
+        template<std::size_t k, std::size_t... values>
+        struct arg_pack_contains
+        {
+          static const bool value = false;
+        };
+
+        template<std::size_t k, std::size_t v, std::size_t... values>
+        struct arg_pack_contains<k,v,values...>
+        {
+          static const bool value = (k == v) || arg_pack_contains<k,values...>::value;
+        };
+
       }
+
+      template<typename Node, std::size_t... indices>
+      struct Indices
+      {
+        dune_static_assert((valid_index_range<Node::CHILDREN,indices...>::value),
+                           "Child index out of range");
+
+        template<typename Child, std::size_t new_index, std::size_t old_index>
+        struct apply
+        {
+          static const bool value = arg_pack_contains<old_index,indices...>::value;
+        };
+      };
 
       //! Base class for composite nodes representing a filtered view on an underlying composite node.
       template<typename Node, typename Filter>

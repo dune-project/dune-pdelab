@@ -27,29 +27,6 @@ struct LeafFilter
   };
 };
 
-template<std::size_t k, std::size_t... values>
-struct contains
-{
-  static const bool value = false;
-};
-
-template<std::size_t k, std::size_t v, std::size_t... values>
-struct contains<k,v,values...>
-{
-  static const bool value = (k == v) || contains<k,values...>::value;
-};
-
-
-template<std::size_t... indices>
-struct IndexBasedFilter
-{
-  template<typename T, std::size_t new_k, std::size_t old_k>
-  struct apply
-  {
-    static const bool value = contains<old_k,indices...>::value;
-  };
-};
-
 
 template<typename Node, typename Filter>
 class SimpleFilteredNode
@@ -117,12 +94,12 @@ int main(int argc, char** argv)
 
   FCN1 fcn1_1(svc2_1);
 
-  typedef SimpleFilteredNode<SVC2,IndexBasedFilter<1,2,3> > FCN2;
+  typedef SimpleFilteredNode<SVC2,Dune::PDELab::TypeTree::Indices<SVC2,1,2,3> > FCN2;
   typedef Dune::PDELab::TypeTree::TreeInfo<FCN2> FCN2_TI;
 
   FCN2 fcn2_1(svc2_1);
 
-  typedef SimpleFilteredNode<SVC2,IndexBasedFilter<3,1,0,4> > FCN3;
+  typedef SimpleFilteredNode<SVC2,Dune::PDELab::TypeTree::Indices<SVC2,3,1,0,4> > FCN3;
   typedef Dune::PDELab::TypeTree::TreeInfo<FCN3> FCN3_TI;
 
   FCN3 fcn3_1(svc2_1);
