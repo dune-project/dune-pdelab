@@ -60,6 +60,23 @@ namespace Dune {
                                         typename filter_helper<Filter,new_k,old_k+1,tail...>::template apply<head...>
                                         >::Type result;
 
+            typedef typename result::types types;
+            typedef typename result::storage_types storage_types;
+            typedef typename result::filter_entry_types filter_entry_types;
+
+            static const std::size_t size = result::size;
+          };
+
+        };
+
+        template<typename Filter, typename ChildContainer>
+        struct filter;
+
+        template<typename Filter, typename... Children>
+        struct filter<Filter,tuple<Children...> >
+        {
+          typedef typename filter_helper<Filter,0,0,Children...>::template apply<> result;
+
           typedef typename result::types types;
           typedef typename result::storage_types storage_types;
           typedef typename result::filter_entry_types filter_entry_types;
@@ -67,24 +84,7 @@ namespace Dune {
           static const std::size_t size = result::size;
         };
 
-      };
-
-      template<typename Filter, typename ChildContainer>
-      struct filter;
-
-      template<typename Filter, typename... Children>
-      struct filter<Filter,tuple<Children...> >
-      {
-        typedef typename filter_helper<Filter,0,0,Children...>::template apply<> result;
-
-        typedef typename result::types types;
-        typedef typename result::storage_types storage_types;
-        typedef typename result::filter_entry_types filter_entry_types;
-
-        static const std::size_t size = result::size;
-      };
-
-    }
+      }
 
       //! Base class for composite nodes representing a filtered view on an underlying composite node.
       template<typename Node, typename Filter>
