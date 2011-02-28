@@ -15,9 +15,10 @@ public:
   template<class RF>
   void setWeight(RF weight);
 
-  LocalResidualAssemblerEngine & localResidualAssembler(R & r, const X & x);
-  LocalJacobianAssemblerEngine & localJacobianAssembler(A & a, const X & x);
-  LocalResidualJacobianAssemblerEngine & localResidualJacobianAssembler(R & r, A & a, const X & x);
+  LocalPatternAssemblerEngine & localPatternAssemblerEngine(R & r, const X & x);
+  LocalResidualAssemblerEngine & localResidualAssemblerEngine(R & r, const X & x);
+  LocalJacobianAssemblerEngine & localJacobianAssemblerEngine(A & a, const X & x);
+  LocalResidualJacobianAssemblerEngine & localResidualJacobianAssemblerEngine(R & r, A & a, const X & x);
 
   class LocalAssemblerEngine{
   public:
@@ -87,6 +88,7 @@ public:
     void onUnbindLFSVCoupling(const IG & ig, const LFSV_Coupling & lfsv_coupling);
   };
 
+  class LocalPatternAssemblerEngine : public LocalAssemblerEngine {};
   class LocalResidualAssemblerEngine : public LocalAssemblerEngine {};
   class LocalJacobianAssemblerEngine : public LocalAssemblerEngine {};
   class LocalResidualJacobianAssemblerEngine : public LocalAssemblerEngine {};
