@@ -445,8 +445,6 @@ namespace Dune {
     class ISTLBackend_OVLP_BCGS_SSORk
       : public ISTLBackend_OVLP_Base<GFS,C,Dune::SeqSSOR, Dune::BiCGSTABSolver>
     {
-      typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
-
     public:
       /*! \brief make a linear solver object
 
@@ -467,8 +465,6 @@ namespace Dune {
     class ISTLBackend_OVLP_CG_SSORk
       : public ISTLBackend_OVLP_Base<GFS,C,Dune::SeqSSOR, Dune::CGSolver>
     {
-      typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
-
     public:
       /*! \brief make a linear solver object
 
@@ -490,8 +486,6 @@ namespace Dune {
     class ISTLBackend_OVLP_SuperLU_Base
       : public OVLPScalarProductImplementation<GFS>, public LinearResultStorage
     {
-      typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
-
     public:
       /*! \brief make a linear solver object
 
@@ -655,7 +649,7 @@ namespace Dune {
     public:
       ISTLBackend_AMG(const GFS& gfs_, int smoothsteps=2,
                       unsigned maxiter_=5000, int verbose_=1)
-        : gfs(gfs_), phelper(gfs), maxiter(maxiter_), steps(smoothsteps), verbose(verbose_)
+        : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), steps(smoothsteps), verbose(verbose_)
       {}
 
 

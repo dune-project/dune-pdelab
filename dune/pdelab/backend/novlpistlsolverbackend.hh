@@ -359,7 +359,7 @@ namespace Dune {
       explicit ISTLBackend_NOVLP_CG_NOPREC (const GFS& gfs_,
                                             unsigned maxiter_=5000,
                                             int verbose_=1)
-        : gfs(gfs_), phelper(gfs), maxiter(maxiter_), verbose(verbose_)
+        : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), verbose(verbose_)
       {}
 
       /*! \brief compute global norm of a vector
@@ -439,7 +439,7 @@ namespace Dune {
       explicit ISTLBackend_NOVLP_CG_Jacobi(const GFS& gfs_,
                                            unsigned maxiter_ = 5000,
                                            int verbose_ = 1) :
-        gfs(gfs_), phelper(gfs), maxiter(maxiter_), verbose(verbose_)
+        gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), verbose(verbose_)
       {}
 
       //! compute global norm of a vector
@@ -514,7 +514,7 @@ namespace Dune {
         \param[in] verbose_ print messages if true
       */
       explicit ISTLBackend_NOVLP_BCGS_NOPREC (const GFS& gfs_, unsigned maxiter_=5000, int verbose_=1)
-        : gfs(gfs_), phelper(gfs), maxiter(maxiter_), verbose(verbose_)
+        : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), verbose(verbose_)
       {}
 
       /*! \brief compute global norm of a vector
@@ -972,7 +972,7 @@ namespace Dune {
         \param[in] verbose_ print messages if true
       */
       explicit ISTLBackend_NOVLP_BASE_PREC (const GFS& gfs_, unsigned maxiter_ = 5000, unsigned steps_ = 5, int verbose_ = 1)
-        : gfs(gfs_), phelper(gfs_),
+        : gfs(gfs_), phelper(gfs_,verbose_),
           maxiter(maxiter_), steps(steps_), verbose(verbose_)
       {}
 
@@ -1125,7 +1125,7 @@ namespace Dune {
   public:
     ISTLBackend_AMG_NOVLP(const GFS& gfs_, int smoothsteps=2,
                           unsigned maxiter_=5000, int verbose_=1)
-      : gfs(gfs_), phelper(gfs), maxiter(maxiter_), steps(smoothsteps), verbose(verbose_)
+      : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), steps(smoothsteps), verbose(verbose_)
     {}
  
     template<class V>

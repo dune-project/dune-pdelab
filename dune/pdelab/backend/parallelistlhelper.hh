@@ -182,8 +182,8 @@ namespace Dune {
 
     public:
 
-      ParallelISTLHelper (const GFS& gfs_)
-        : gfs(gfs_), v(gfs,(double)gfs.gridview().comm().rank()), g(gfs,0.0)
+      ParallelISTLHelper (const GFS& gfs_, int verbose_=1)
+        : gfs(gfs_), v(gfs,(double)gfs.gridview().comm().rank()), g(gfs,0.0), verbose(verbose_)
       {
         // find out about ghosts
         Dune::PDELab::GenericDataHandle2<GFS,V,GhostGatherScatter> gdh(gfs,v,GhostGatherScatter());
@@ -248,6 +248,7 @@ namespace Dune {
       const GFS& gfs;
       V v; // vector to identify unique decomposition
       V g; //vector to identify ghost dofs
+      int verbose; //verbosity
     };
 
 
@@ -413,11 +414,13 @@ namespace Dune {
           if(v[i][j]==1.0 && sharedDOF[i][j])
             ++count;
 
-      std::cout<<gv.comm().rank()<<": shared count is"<< count.touint()<<std::endl;
+      if (verbose > 1)
+        std::cout<<gv.comm().rank()<<": shared count is "<< count.touint()<<std::endl;
 
       // Maybe divide by block size?
       BlockProcessor<GFS>::postProcessCount(count);
-      std::cout<<gv.comm().rank()<<": shared block count is"<< count.touint()<<std::endl;
+      if (verbose > 1)
+      std::cout<<gv.comm().rank()<<": shared block count is "<< count.touint()<<std::endl;
 
       std::vector<GlobalIndex> counts(gfs.gridview().comm().size());
       MPI_Allgather(&count, 1, MPITraits<GlobalIndex>::getType(), &(counts[0]),
