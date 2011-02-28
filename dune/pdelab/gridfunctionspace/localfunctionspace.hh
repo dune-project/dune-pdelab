@@ -279,7 +279,7 @@ namespace Dune {
 
       // initialize iterators and fill indices
       FillIndicesVisitor<Element> fiv(e);
-      TypeTree::applyToTree(node,FillIndicesVisitor<Element,fiv);
+      TypeTree::applyToTree(node,fiv);
 
       // apply upMap
       for (typename Traits::IndexContainer::size_type i=0; i<n; ++i)
