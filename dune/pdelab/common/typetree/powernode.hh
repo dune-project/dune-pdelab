@@ -10,6 +10,7 @@
 
 #include <dune/pdelab/common/typetree/nodetags.hh>
 #include <dune/pdelab/common/typetree/utility.hh>
+#include <dune/common/static_assert.hh>
 
 namespace Dune {
   namespace PDELab {
