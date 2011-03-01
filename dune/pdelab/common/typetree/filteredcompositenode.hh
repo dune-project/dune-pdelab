@@ -9,6 +9,7 @@
 #endif
 
 #include <dune/pdelab/common/typetree/nodetags.hh>
+#include <dune/pdelab/common/typetree/filters.hh>
 #include <dune/common/tuples.hh>
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/typetraits.hh>
@@ -24,168 +25,60 @@ namespace Dune {
 
       namespace {
 
-        template<typename T, std::size_t new_k, std::size_t old_k>
-        struct filter_entry
-        {
-          typedef T type;
-          typedef shared_ptr<T> storage_type;
-          typedef shared_ptr<const T> const_storage_type;
-          static const std::size_t filtered_index = new_k;
-          static const std::size_t original_index = old_k;
-        };
+        // ********************************************************************************
+        // Utility structs for filter construction and application
+        // ********************************************************************************
 
-        template<typename Filter, std::size_t new_k, std::size_t old_k, typename... tail>
-        struct filter_helper
+        // Gets the filter and wraps it in case of a SimpleFilter.
+        template<typename Filter, typename Tag>
+        struct get_filter;
+
+        // Helper struct to extract the child template parameter pack from the ChildTypes tuple.
+        template<typename Filter, typename Node, typename ChildTypes>
+        struct apply_filter_wrapper;
+
+        template<typename Filter, typename Node, typename... Children>
+        struct apply_filter_wrapper<Filter,Node,tuple<Children...> >
+          : public Filter::template apply<Node,Children...>
+        {};
+
+        // specialization for SimpleFilter
+        template<typename Filter>
+        struct get_filter<Filter,SimpleFilterTag>
         {
-          template<typename... head>
-          struct apply
+          struct type
           {
-            typedef tuple<typename head::type...> types;
-            typedef tuple<typename head::storage_type... > storage_types;
-            typedef tuple<head...> filter_entry_types;
-
-            static const std::size_t size = sizeof...(head);
+            template<typename Node, typename ChildTypes>
+            struct apply
+              : public apply_filter_wrapper<filter<Filter>,Node,ChildTypes>
+            {};
           };
         };
 
-        template<typename Filter, std::size_t new_k, std::size_t old_k, typename child, typename... tail>
-        struct filter_helper<Filter,new_k,old_k,child,tail...>
+        // specialization for AdvancedFilter
+        template<typename Filter>
+        struct get_filter<Filter,AdvancedFilterTag>
         {
-
-          template<typename... head>
-          struct apply
+          struct type
           {
-            typedef typename SelectType<Filter::template apply<child,new_k,old_k>::value,
-                                        typename filter_helper<Filter,new_k+1,old_k+1,tail...>::template apply<head...,filter_entry<child,new_k,old_k> >,
-                                        typename filter_helper<Filter,new_k,old_k+1,tail...>::template apply<head...>
-                                        >::Type result;
-
-            typedef typename result::types types;
-            typedef typename result::storage_types storage_types;
-            typedef typename result::filter_entry_types filter_entry_types;
-
-            static const std::size_t size = result::size;
+            template<typename Node, typename ChildTypes>
+            struct apply
+              : public apply_filter_wrapper<Filter,Node,ChildTypes>
+            {};
           };
-
         };
 
-        template<typename Filter, typename ChildContainer>
-        struct filter;
+      } // anonymous namespace
 
-        template<typename Filter, typename... Children>
-        struct filter<Filter,tuple<Children...> >
-        {
-          typedef typename filter_helper<Filter,0,0,Children...>::template apply<> result;
-
-          typedef typename result::types types;
-          typedef typename result::storage_types storage_types;
-          typedef typename result::filter_entry_types filter_entry_types;
-
-          static const std::size_t size = result::size;
-        };
-
-
-        template<std::size_t k, std::size_t... values>
-        struct arg_pack_contains
-        {
-          static const bool value = false;
-        };
-
-        template<std::size_t k, std::size_t v, std::size_t... values>
-        struct arg_pack_contains<k,v,values...>
-        {
-          static const bool value = (k == v) || arg_pack_contains<k,values...>::value;
-        };
-
-        template<std::size_t n, std::size_t... indices>
-        struct valid_index_range
-        {
-          static const bool value = true;
-        };
-
-        template<std::size_t n, std::size_t k, std::size_t... indices>
-        struct valid_index_range<n,k,indices...>
-        {
-          static const bool value = (k < n) && // check index range
-            !arg_pack_contains<k,indices...>::value && // avoid duplicate indices
-            valid_index_range<n,indices...>::value; // check remaining indices
-        };
-
-      }
-
-      //! Default filter that accepts any node and leaves its child structure unchanged.
-      /**
-       * This default filter causes the filtered node to be exactly identical to the original node.
-       * It is useful as a base class for documentation purposes and if you do not need to validate
-       * the filter, as it saves having to implement the validate template struct.
-       */
-      struct DefaultFilter
-      {
-        //! Validates the combination of filter and node.
-        template<typename Node>
-        struct validate
-        {
-          //! True if the combination of filter and node is valid.
-          static const bool value = true;
-        };
-
-        //! Applies the filter to the given child node.
-        /**
-         * This struct applies the filter to the given child to decide whether or not it will be
-         * included in the filtered node.
-         *
-         * \tparam Child     The type of the child node.
-         * \tparam new_index The index this child would receive in the filtered node.
-         * \tparam old_index The index of this child in the unfiltered node.
-         */
-        template<typename Child, std::size_t new_index, std::size_t old_index>
-        struct apply
-        {
-          //! True if the child will be included in the filtered node.
-          static const bool value = true;
-        };
-
-      };
-
-      //! Filter class for FilteredCompositeNode that selects the children with the given indices.
-      template<std::size_t... indices>
-      struct IndexFilter
-      {
-
-#ifndef DOXYGEN
-
-        template<typename Node>
-        struct validate
-        {
-          dune_static_assert((valid_index_range<Node::CHILDREN,indices...>::value),
-                             "Child index out of range or duplicate child index");
-
-          dune_static_assert(sizeof...(indices) <= Node::CHILDREN,
-                             "Too many indices: Each child can only appear once in a filtered node");
-
-          static const bool value = valid_index_range<Node::CHILDREN,indices...>::value &&
-            sizeof...(indices) <= Node::CHILDREN;
-        };
-
-        template<typename Child, std::size_t new_index, std::size_t old_index>
-        struct apply
-        {
-          static const bool value = arg_pack_contains<old_index,indices...>::value;
-        };
-
-#endif // DOXYGEN
-
-      };
 
       //! Base class for composite nodes representing a filtered view on an underlying composite node.
       template<typename Node, typename Filter>
       class FilteredCompositeNode
       {
 
-        dune_static_assert((Filter::template validate<Node>::value),"Invalid filter");
-
-        typedef filter<Filter,typename Node::ChildTypes> filter_result;
-        typedef typename filter_result::filter_entry_types index_map;
+        typedef typename get_filter<Filter,typename Filter::FilterTag>::type filter;
+        typedef typename filter::template apply<Node,typename Node::ChildTypes>::type filter_result;
+        typedef typename filter_result::template apply<Node> mapped_children;
 
       public:
 
@@ -193,10 +86,10 @@ namespace Dune {
         typedef VariadicCompositeNodeTag NodeTag;
 
         //! The type used for storing the children.
-        typedef typename filter_result::storage_types NodeStorage;
+        typedef typename mapped_children::NodeStorage NodeStorage;
 
         //! A tuple storing the types of all children.
-        typedef typename filter_result::types ChildTypes;
+        typedef typename mapped_children::ChildTypes ChildTypes;
 
         //! Mark this class as non leaf in the \ref TypeTree.
         static const bool isLeaf = false;
@@ -216,20 +109,20 @@ namespace Dune {
 
 #ifndef DOXYGEN
 
-          typedef typename tuple_element<k,index_map>::type map_entry;
+          typedef typename tuple_element<k,typename mapped_children::Children>::type OriginalChild;
 
-          static const std::size_t mapped_index = map_entry::original_index;
+          static const std::size_t mapped_index = tuple_element<k,typename filter_result::IndexMap>::type::original_index;
 
 #endif // DOXYGEN
 
           //! The type of the child.
-          typedef typename map_entry::type Type;
+          typedef typename OriginalChild::Type Type;
 
           //! The storage type of the child.
-          typedef typename map_entry::storage_type Storage;
+          typedef typename OriginalChild::Storage Storage;
 
           //! The const storage type of the child.
-          typedef typename map_entry::const_storage_type ConstStorage;
+          typedef typename OriginalChild::ConstStorage ConstStorage;
         };
 
         //! @name Child Access

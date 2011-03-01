@@ -6,6 +6,8 @@ common_HEADERS =				\
 	applytochildrentreepair.hh		\
 	compositenode.hh			\
 	compositenodemacros.hh			\
+	filteredcompositenode.hh		\
+	filters.hh				\
 	generictransformationdescriptors.hh	\
 	leafnode.hh				\
 	nodetags.hh				\

@@ -19,7 +19,7 @@ int main()
 #include <type_traits>
 
 struct LeafFilter
-  : public Dune::PDELab::TypeTree::DefaultFilter
+  : public Dune::PDELab::TypeTree::SimpleFilter
 {
   template<typename T, std::size_t new_k, std::size_t old_k>
   struct apply
@@ -100,7 +100,7 @@ int main(int argc, char** argv)
 
   FCN2 fcn2_1(svc2_1);
 
-  typedef SimpleFilteredNode<SVC2,Dune::PDELab::TypeTree::IndexFilter<3,1,0,4,1,3,3,3,3> > FCN3;
+  typedef SimpleFilteredNode<SVC2,Dune::PDELab::TypeTree::IndexFilter<3,1,0,4,1,2,1,0,2,1> > FCN3;
   typedef Dune::PDELab::TypeTree::TreeInfo<FCN3> FCN3_TI;
 
   FCN3 fcn3_1(svc2_1);
