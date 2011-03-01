@@ -238,6 +238,49 @@ namespace Dune {
 
         //! @}
 
+        //! @name Access to unfiltered node
+        //! @{
+
+      protected:
+
+        //! Returns the unfiltered node.
+        /**
+         * \returns A reference to the original, unfiltered node.
+         */
+        Node& unfiltered()
+        {
+          return *_node;
+        }
+
+        //! Returns the unfiltered node (const version).
+        /**
+         * \returns A const reference to the original, unfiltered node.
+         */
+        const Node& unfiltered() const
+        {
+          return *_node;
+        }
+
+        //! Returns the storage object of the unfiltered node.
+        /**
+         * \returns A shared_ptr to the original, unfiltered node.
+         */
+        shared_ptr<Node> unfilteredStorage()
+        {
+          return _node;
+        }
+
+        //! Returns the storage object of the unfiltered node (const version).
+        /**
+         * \returns A shared_ptr to the original, unfiltered node.
+         */
+        shared_ptr<const Node> unfilteredStorage() const
+        {
+          return _node;
+        }
+
+        //! @}
+
       public:
 
         //! @name Constructors
