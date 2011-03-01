@@ -158,6 +158,7 @@ namespace Dune {
         //! Access to the type and storage type of the i-th child.
         template<std::size_t k>
         struct Child {
+
           //! The type of the child.
           typedef typename tuple_element<k,ChildTypes>::type Type;
 
@@ -179,6 +180,7 @@ namespace Dune {
         template<std::size_t k>
         const typename Child<k>::Type& child() const
         {
+          dune_static_assert(k < CHILDREN, "child index out of range");
           return *get<k>(_children);
         }
 
@@ -189,6 +191,7 @@ namespace Dune {
         template<std::size_t k>
         const typename Child<k>::Type& DUNE_DEPRECATED getChild() const
         {
+          dune_static_assert(k < CHILDREN, "child index out of range");
           return child<k>();
         }
 
@@ -199,6 +202,7 @@ namespace Dune {
         template<std::size_t k>
         typename Child<k>::Type& child()
         {
+          dune_static_assert(k < CHILDREN, "child index out of range");
           return *get<k>(_children);
         }
 
@@ -209,6 +213,7 @@ namespace Dune {
         template<std::size_t k>
         typename Child<k>::Type& DUNE_DEPRECATED getChild()
         {
+          dune_static_assert(k < CHILDREN, "child index out of range");
           return child<k>();
         }
 
@@ -222,6 +227,7 @@ namespace Dune {
         template<std::size_t k>
         typename Child<k>::ConstStorage childStorage() const
         {
+          dune_static_assert(k < 10, "child index out of range");
           return get<k>(_children);
         }
 
@@ -232,6 +238,7 @@ namespace Dune {
         template<std::size_t k>
         typename Child<k>::Storage childStorage()
         {
+          dune_static_assert(k < 10, "child index out of range");
           return get<k>(_children);
         }
 
@@ -239,6 +246,7 @@ namespace Dune {
         template<std::size_t k>
         void setChild(typename Child<k>::type& child)
         {
+          dune_static_assert(k < CHILDREN, "child index out of range");
           get<k>(_children) = stackobject_to_shared_ptr(child);
         }
 
@@ -246,6 +254,7 @@ namespace Dune {
         template<std::size_t k>
         void setChild(typename Child<k>::storage_type child)
         {
+          dune_static_assert(k < CHILDREN, "child index out of range");
           get<k>(_children) = child;
         }
 

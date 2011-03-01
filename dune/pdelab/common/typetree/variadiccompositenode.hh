@@ -54,6 +54,8 @@ namespace Dune {
         template<std::size_t k>
         struct Child {
 
+          dune_static_assert(k < CHILDREN, "child index out of range");
+
           //! The type of the child.
           typedef typename tuple_element<k,ChildTypes>::type Type;
 
