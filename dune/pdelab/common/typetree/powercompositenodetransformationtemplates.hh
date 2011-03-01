@@ -28,7 +28,7 @@ namespace Dune {
 
 #if HAVE_VARIADIC_TEMPLATES
 
-      template<typename SourceNode, typename Transformation, template<typename...> class TransformedNode>
+      template<typename SourceNode, typename Transformation, template<typename,typename...> class TransformedNode>
       struct GenericVariadicCompositeNodeTransformationTemplate
       {
         template<typename... TC>

@@ -106,7 +106,7 @@ namespace Dune {
       };
 
 
-      template<typename SourceNode, typename Transformation, template<typename...> class TransformedNode>
+      template<typename SourceNode, typename Transformation, template<typename,typename...> class TransformedNode>
       struct GenericVariadicCompositeNodeTransformation
         : public TemplatizedGenericVariadicCompositeNodeTransformation<SourceNode,
                                                                        Transformation,
