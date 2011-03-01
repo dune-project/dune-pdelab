@@ -110,11 +110,9 @@ namespace Dune {
 
       }
 
-      template<typename Node, std::size_t... indices>
-      struct Indices
+      template<std::size_t... indices>
+      struct IndexFilter
       {
-        dune_static_assert((valid_index_range<Node::CHILDREN,indices...>::value),
-                           "Child index out of range");
 
         template<typename Child, std::size_t new_index, std::size_t old_index>
         struct apply

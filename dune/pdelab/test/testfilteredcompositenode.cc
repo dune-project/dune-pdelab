@@ -94,12 +94,12 @@ int main(int argc, char** argv)
 
   FCN1 fcn1_1(svc2_1);
 
-  typedef SimpleFilteredNode<SVC2,Dune::PDELab::TypeTree::Indices<SVC2,1,2,3> > FCN2;
+  typedef SimpleFilteredNode<SVC2,Dune::PDELab::TypeTree::IndexFilter<1,2,3> > FCN2;
   typedef Dune::PDELab::TypeTree::TreeInfo<FCN2> FCN2_TI;
 
   FCN2 fcn2_1(svc2_1);
 
-  typedef SimpleFilteredNode<SVC2,Dune::PDELab::TypeTree::Indices<SVC2,3,1,0,4> > FCN3;
+  typedef SimpleFilteredNode<SVC2,Dune::PDELab::TypeTree::IndexFilter<3,1,0,4,1,3,3,3,3> > FCN3;
   typedef Dune::PDELab::TypeTree::TreeInfo<FCN3> FCN3_TI;
 
   FCN3 fcn3_1(svc2_1);
