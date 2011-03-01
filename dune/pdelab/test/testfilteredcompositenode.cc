@@ -19,6 +19,7 @@ int main()
 #include <type_traits>
 
 struct LeafFilter
+  : public Dune::PDELab::TypeTree::DefaultFilter
 {
   template<typename T, std::size_t new_k, std::size_t old_k>
   struct apply

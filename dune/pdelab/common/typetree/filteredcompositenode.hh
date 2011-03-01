@@ -84,17 +84,6 @@ namespace Dune {
           static const std::size_t size = result::size;
         };
 
-        template<std::size_t n, std::size_t... indices>
-        struct valid_index_range
-        {
-          static const bool value = true;
-        };
-
-        template<std::size_t n, std::size_t k, std::size_t... indices>
-        struct valid_index_range<n,k,indices...>
-        {
-          static const bool value = (k < n) && valid_index_range<n,indices...>::value;
-        };
 
         template<std::size_t k, std::size_t... values>
         struct arg_pack_contains
@@ -108,23 +97,92 @@ namespace Dune {
           static const bool value = (k == v) || arg_pack_contains<k,values...>::value;
         };
 
+        template<std::size_t n, std::size_t... indices>
+        struct valid_index_range
+        {
+          static const bool value = true;
+        };
+
+        template<std::size_t n, std::size_t k, std::size_t... indices>
+        struct valid_index_range<n,k,indices...>
+        {
+          static const bool value = (k < n) && // check index range
+            !arg_pack_contains<k,indices...>::value && // avoid duplicate indices
+            valid_index_range<n,indices...>::value; // check remaining indices
+        };
+
       }
 
+      //! Default filter that accepts any node and leaves its child structure unchanged.
+      /**
+       * This default filter causes the filtered node to be exactly identical to the original node.
+       * It is useful as a base class for documentation purposes and if you do not need to validate
+       * the filter, as it saves having to implement the validate template struct.
+       */
+      struct DefaultFilter
+      {
+        //! Validates the combination of filter and node.
+        template<typename Node>
+        struct validate
+        {
+          //! True if the combination of filter and node is valid.
+          static const bool value = true;
+        };
+
+        //! Applies the filter to the given child node.
+        /**
+         * This struct applies the filter to the given child to decide whether or not it will be
+         * included in the filtered node.
+         *
+         * \tparam Child     The type of the child node.
+         * \tparam new_index The index this child would receive in the filtered node.
+         * \tparam old_index The index of this child in the unfiltered node.
+         */
+        template<typename Child, std::size_t new_index, std::size_t old_index>
+        struct apply
+        {
+          //! True if the child will be included in the filtered node.
+          static const bool value = true;
+        };
+
+      };
+
+      //! Filter class for FilteredCompositeNode that selects the children with the given indices.
       template<std::size_t... indices>
       struct IndexFilter
       {
+
+#ifndef DOXYGEN
+
+        template<typename Node>
+        struct validate
+        {
+          dune_static_assert((valid_index_range<Node::CHILDREN,indices...>::value),
+                             "Child index out of range or duplicate child index");
+
+          dune_static_assert(sizeof...(indices) <= Node::CHILDREN,
+                             "Too many indices: Each child can only appear once in a filtered node");
+
+          static const bool value = valid_index_range<Node::CHILDREN,indices...>::value &&
+            sizeof...(indices) <= Node::CHILDREN;
+        };
 
         template<typename Child, std::size_t new_index, std::size_t old_index>
         struct apply
         {
           static const bool value = arg_pack_contains<old_index,indices...>::value;
         };
+
+#endif // DOXYGEN
+
       };
 
       //! Base class for composite nodes representing a filtered view on an underlying composite node.
       template<typename Node, typename Filter>
       class FilteredCompositeNode
       {
+
+        dune_static_assert((Filter::template validate<Node>::value),"Invalid filter");
 
         typedef filter<Filter,typename Node::ChildTypes> filter_result;
         typedef typename filter_result::filter_entry_types index_map;
