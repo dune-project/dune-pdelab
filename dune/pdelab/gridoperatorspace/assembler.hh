@@ -21,7 +21,7 @@ public:
   void postStep ();
 
   template<typename TT>
-  void preStage (TT time, std::size_t r);
+  void preStage (TT time, std::size_t stage);
 
   void postStage ();
 
