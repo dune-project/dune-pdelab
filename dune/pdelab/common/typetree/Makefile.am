@@ -13,6 +13,7 @@ common_HEADERS =				\
 	nodetags.hh				\
 	pairtraversal.hh			\
 	powernode.hh				\
+	proxynode.hh				\
 	simpletransformationdescriptors.hh	\
 	transformation.hh			\
 	transformationutilities.hh		\
