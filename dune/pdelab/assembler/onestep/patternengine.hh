@@ -34,7 +34,8 @@ namespace Dune{
         : local_assembler(local_assembler_), 
           invalid_lae0(static_cast<PatternEngineDT0*>(0)), lae0(invalid_lae0),
           invalid_lae1(static_cast<PatternEngineDT1*>(0)), lae1(invalid_lae1), 
-          invalid_pattern(static_cast<Pattern*>(0)), pattern(invalid_pattern)
+          invalid_pattern(static_cast<Pattern*>(0)), pattern(invalid_pattern),
+          implicit(local_assembler.method.implicit())
       {}
 
       //! Public access to the wrapping local assembler
@@ -55,7 +56,7 @@ namespace Dune{
       //! Query methods for the global grid assembler
       //! @{
       bool requireSkeleton() const 
-      { return lae0->requireSkeleton() || lae1->requireSkeleton(); }
+      { return implicit && (lae0->requireSkeleton() || lae1->requireSkeleton()); }
       bool requireSkeletonTwoSided() const
       { return lae0->requireSkeletonTwoSided() || lae1->requireSkeletonTwoSided(); }
       bool requireUVVolume() const
@@ -173,14 +174,16 @@ namespace Dune{
       template<typename EG, typename LFSU, typename LFSV>
       void assembleUVVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
       {
-        lae0->assembleUVVolume(eg,lfsu,lfsv);
+        if(implicit)
+          lae0->assembleUVVolume(eg,lfsu,lfsv);
         lae1->assembleUVVolume(eg,lfsu,lfsv);
       }
 
       template<typename EG, typename LFSV>
       void assembleVVolume(const EG & eg, const LFSV & lfsv)
       {
-        lae0->assembleVVolume(eg,lfsv);
+        if(implicit)
+          lae0->assembleVVolume(eg,lfsv);
         lae1->assembleVVolume(eg,lfsv);
       }
 
@@ -188,29 +191,29 @@ namespace Dune{
       void assembleUVSkeleton(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
                               const LFSU_N & lfsu_n, const LFSV_N & lfsv_n)
       {
-        lae0->assembleUVSkeleton(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
-        lae1->assembleUVSkeleton(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
+        if(implicit)
+          lae0->assembleUVSkeleton(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
       }
 
       template<typename IG, typename LFSV_S, typename LFSV_N>
       void assembleVSkeleton(const IG & ig, const LFSV_S & lfsv_s, const LFSV_N & lfsv_n)
       {
-        lae0->assembleVSkeleton(ig,lfsv_s,lfsv_n);
-        lae1->assembleVSkeleton(ig,lfsv_s,lfsv_n);
+        if(implicit)
+          lae0->assembleVSkeleton(ig,lfsv_s,lfsv_n);
       }
 
       template<typename IG, typename LFSU_S, typename LFSV_S>
       void assembleUVBoundary(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s)
       {
-        lae0->assembleUVBoundary(ig,lfsu_s,lfsv_s);
-        lae1->assembleUVBoundary(ig,lfsu_s,lfsv_s);
+        if(implicit)
+          lae0->assembleUVBoundary(ig,lfsu_s,lfsv_s);
       }
 
       template<typename IG, typename LFSV_S>
       void assembleVBoundary(const IG & ig, const LFSV_S & lfsv_s)
       {
-        lae0->assembleVBoundary(ig,lfsv_s);
-        lae1->assembleVBoundary(ig,lfsv_s);
+        if(implicit)
+          lae0->assembleVBoundary(ig,lfsv_s);
       }
 
       template<typename IG, typename LFSU_S, typename LFSV_S,, typename LFSU_N,, typename LFSV_N,
@@ -220,8 +223,8 @@ namespace Dune{
                                              const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
                                              const LFSU_C & lfsu_coupling, const LFSV_C & lfsv_coupling)
       {
-        lae0->assembleUVEnrichedCoupling(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n,lfsu_coupling,lfsv_coupling);
-        lae1->assembleUVEnrichedCoupling(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n,lfsu_coupling,lfsv_coupling);
+        if(implicit)
+          lae0->assembleUVEnrichedCoupling(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n,lfsu_coupling,lfsv_coupling);
       }
 
       template<typename IG, typename LFSV_S, typename LFSV_N, typename LFSV_C>
@@ -230,22 +233,22 @@ namespace Dune{
                                             const LFSV_N & lfsv_n,
                                             const LFSV_C & lfsv_coupling) 
       {
-        lae0->assembleVEnrichedCoupling(ig,lfsv_s,lfsv_n,lfsv_coupling);
-        lae1->assembleVEnrichedCoupling(ig,lfsv_s,lfsv_n,lfsv_coupling);
+        if(implicit)
+          lae0->assembleVEnrichedCoupling(ig,lfsv_s,lfsv_n,lfsv_coupling);
       }
 
       template<typename EG, typename LFSU, typename LFSV>
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
       {
-        lae0->assembleUVVolumePostSkeleton(eg,lfsu,lfsv);
-        lae1->assembleUVVolumePostSkeleton(eg,lfsu,lsfv);
+        if(implicit)
+          lae0->assembleUVVolumePostSkeleton(eg,lfsu,lfsv);
       }
 
       template<typename EG, typename LFSV>
       void assembleVVolumePostSkeleton(const EG & eg, const LFSV & lfsv)
       {
-        lae0->assembleVVolumePostSkeleton(eg,lfsv);
-        lae1->assembleVVolumePostSkeleton(eg,lsfv);
+        if(implicit)
+          lae0->assembleVVolumePostSkeleton(eg,lfsv);
       }
 
       //! @}
@@ -269,6 +272,9 @@ namespace Dune{
 
       //! Pointer to the current matrix pattern container
       Pattern * pattern;
+
+      //! Flag which indicates, whether method is implicit;
+      const bool implicit;
 
     }; // End of class OneStepLocalPatternAssemblerEngine
 

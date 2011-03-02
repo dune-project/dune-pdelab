@@ -47,7 +47,7 @@ namespace Dune{
       OneStepLocalPrestageAssemblerEngine(const LocalAssembler & local_assembler_)
         : la(local_assembler_), lae0(invalid_lae0), lae1(invalid_lae1), 
           invalid_residual(static_cast<Residual*>(0)), 
-          invalid_solutions(static_cast<Solution*>(0)),
+          invalid_solutions(static_cast<Solutions*>(0)),
           const_residual(invalid_residual), solutions(invalid_solutions), stage(0)
       {}
 
@@ -253,18 +253,19 @@ namespace Dune{
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
+          if(do0[s]){
+            lae0->localAssembler().setWeight(b[s]*la.dt);
+            lae0->setSolution(solutions[s]);
+            lae0->loadCoefficientsLFSUInside(lfsu);
+            lae0->assembleUVVolume(eg,lfsu,lfsv);
+          }
 
-          // Compute residual for current solution
-          lae0->setSolution(solutions[s]);
-          lae0->loadCoefficientsLFSUInside(lfsu);
-          lae0->assembleUVVolume(eg,lfsu,lfsv);
-
-          lae1->setSolution(solutions[s]);
-          lae1->loadCoefficientsLFSUInside(lfsu);
-          lae1->assembleUVVolume(eg,lfsu,lfsv);
+          if(do1[s]){
+            lae1->localAssembler().setWeight(a[s]);
+            lae1->setSolution(solutions[s]);
+            lae1->loadCoefficientsLFSUInside(lfsu);
+            lae1->assembleUVVolume(eg,lfsu,lfsv);
+          }
         }
       }
       
@@ -275,13 +276,16 @@ namespace Dune{
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
+          if(do0[s]){
+            lae0->localAssembler().setWeight(b[s]*la.dt);
+            lae0->assembleVVolume(eg,lfsv);
+          }
 
-          // Compute residual for current solution
-          lae0->assembleVVolume(eg,lfsv);
-          lae1->assembleVVolume(eg,lfsv);
+          if(do1[s]){
+            lae1->localAssembler().setWeight(a[s]);
+            lae1->assembleVVolume(eg,lfsv);
+          }
+
         }
       }
 
@@ -293,20 +297,21 @@ namespace Dune{
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
+          if(do0[s]){
+            lae0->localAssembler().setWeight(b[s]*la.dt);
+            lae0->setSolution(solutions[s]);
+            lae0->loadCoefficientsLFSUInside(lfsu_s);
+            lae0->loadCoefficientsLFSUOutside(lfsu_n);
+            lae0->assembleUVSkeleton(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
+          }
 
-          // Compute residual for current solution
-          lae0->setSolution(solutions[s]);
-          lae0->loadCoefficientsLFSUInside(lfsu_s);
-          lae0->loadCoefficientsLFSUOutside(lfsu_n);
-          lae0->assembleUVSkeleton(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
-
-          lae1->setSolution(solutions[s]);
-          lae1->loadCoefficientsLFSUInside(lfsu_s);
-          lae1->loadCoefficientsLFSUOutside(lfsu_n);
-          lae1->assembleUVSkelton(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
+          if(do1[s]){
+            lae1->localAssembler().setWeight(a[s]);
+            lae1->setSolution(solutions[s]);
+            lae1->loadCoefficientsLFSUInside(lfsu_s);
+            lae1->loadCoefficientsLFSUOutside(lfsu_n);
+            lae1->assembleUVSkeleton(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
+          }
         }
       }
 
@@ -317,13 +322,15 @@ namespace Dune{
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
+          if(do0[s]){
+            lae0->localAssembler().setWeight(b[s]*la.dt);
+            lae0->assembleVSkeleton(ig,lfsv_s,lfsv_n);
+          }
 
-          // Compute residual for current solution
-          lae0->assembleVSkeleton(ig,lfsv_s,lfsv_n);
-          lae1->assembleVSkelton(ig,lfsv_s,lfsv_n);
+          if(do1[s]){
+            lae1->localAssembler().setWeight(a[s]);
+            lae1->assembleVSkeleton(ig,lfsv_s,lfsv_n);
+          }
         }
       }
 
@@ -334,18 +341,19 @@ namespace Dune{
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
+          if(do0[s]){
+            lae0->localAssembler().setWeight(b[s]*la.dt);
+            lae0->setSolution(solutions[s]);
+            lae0->loadCoefficientsLFSUInside(lfsu_s);
+            lae0->assembleUVBoundary(ig,lfsu_s,lfsv_s);
+          }
 
-          // Compute residual for current solution
-          lae0->setSolution(solutions[s]);
-          lae0->loadCoefficientsLFSUInside(lfsu_s);
-          lae0->assembleUVBoundary(ig,lfsu_s,lfsv_s);
-
-          lae1->setSolution(solutions[s]);
-          lae1->loadCoefficientsLFSUInside(lfsu_s);
-          lae1->assembleUVSkelton(ig,lfsu_s,lfsv_s);
+          if(do1[s]){
+            lae1->localAssembler().setWeight(a[s]);
+            lae1->setSolution(solutions[s]);
+            lae1->loadCoefficientsLFSUInside(lfsu_s);
+            lae1->assembleUVSkeleton(ig,lfsu_s,lfsv_s);
+          }
         }
       }
 
@@ -356,13 +364,15 @@ namespace Dune{
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
+          if(do0[s]){
+            lae0->localAssembler().setWeight(b[s]*la.dt);
+            lae0->assembleVBoundary(ig,lfsv_s);
+          }
 
-          // Compute residual for current solution
-          lae0->assembleVBoundary(ig,lfsv_s);
-          lae1->assembleVBoundary(ig,lfsv_s);
+          if(do1[s]){
+            lae1->localAssembler().setWeight(a[s]);
+            lae1->assembleVBoundary(ig,lfsv_s);
+          }
         }
       }
 
@@ -377,22 +387,23 @@ namespace Dune{
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
+          if(do0[s]){
+            lae0->localAssembler().setWeight(b[s]*la.dt);
+            lae0->setSolution(solutions[s]);
+            lae0->loadCoefficientsLFSUInside(lfsu_s);
+            lae0->loadCoefficientsLFSUOutside(lfsu_n);
+            lae0->loadCoefficientsLFSUCoupling(lfsu_c);
+            lae0->assembleUVEnrichedCoupling(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n,lfsu_c,lfsv_c);
+          }
 
-          // Compute residual for current solution
-          lae0->setSolution(solutions[s]);
-          lae0->loadCoefficientsLFSUInside(lfsu_s);
-          lae0->loadCoefficientsLFSUOutside(lfsu_n);
-          lae0->loadCoefficientsLFSUCoupling(lfsu_c);
-          lae0->assembleUVEnrichedCoupling(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n,lfsu_c,lfsv_c);
-
-          lae1->setSolution(solutions[s]);
-          lae1->loadCoefficientsLFSUInside(lfsu_s);
-          lae1->loadCoefficientsLFSUOutside(lfsu_n);
-          lae1->loadCoefficientsLFSUCoupling(lfsu_c);
-          lae1->assembleUVEnrichedCoupling(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n,lfsu_c,lfsv_c);
+          if(do1[s]){
+            lae1->localAssembler().setWeight(a[s]);
+            lae1->setSolution(solutions[s]);
+            lae1->loadCoefficientsLFSUInside(lfsu_s);
+            lae1->loadCoefficientsLFSUOutside(lfsu_n);
+            lae1->loadCoefficientsLFSUCoupling(lfsu_c);
+            lae1->assembleUVEnrichedCoupling(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n,lfsu_c,lfsv_c);
+          }
         }
       }
 
@@ -406,13 +417,16 @@ namespace Dune{
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
+          if(do0[s]){
+            lae0->localAssembler().setWeight(b[s]*la.dt);
+            lae0->assembleVEnrichedCoupling(ig,lfsv_s,lfsv_n,lfsv_c);
+          }
 
-          // Compute residual for current solution
-          lae0->assembleVEnrichedCoupling(ig,lfsv_s,lfsv_n,lfsv_c);
-          lae1->assembleVEnrichedCoupling(ig,lfsv_s,lfsv_n,lfsv_c);
+          if(do1[s]){
+            lae1->localAssembler().setWeight(a[s]);
+            lae1->assembleVEnrichedCoupling(ig,lfsv_s,lfsv_n,lfsv_c);
+          }
+
         }
       }
 
@@ -423,18 +437,20 @@ namespace Dune{
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
+          if(do0[s]){
+            lae0->localAssembler().setWeight(b[s]*la.dt);
+            lae0->setSolution(solutions[s]);
+            lae0->loadCoefficientsLFSUInside(lfsu);
+            lae0->assembleUVVolumePostSkeleton(eg,lfsu,lfsv);
+          }
 
-          // Compute residual for current solution
-          lae0->setSolution(solutions[s]);
-          lae0->loadCoefficientsLFSUInside(lfsu);
-          lae0->assembleUVVolumePostSkeleton(eg,lfsu,lfsv);
+          if(do1[s]){
+            lae1->localAssembler().setWeight(a[s]);
+            lae1->setSolution(solutions[s]);
+            lae1->loadCoefficientsLFSUInside(lfsu);
+            lae1->assembleUVVolumePostSkeleton(eg,lfsu,lfsv);
+          }
 
-          lae1->setSolution(solutions[s]);
-          lae1->loadCoefficientsLFSUInside(lfsu);
-          lae1->assembleUVVolumePostSkeleton(eg,lfsu,lfsv);
         }
       }
 
@@ -445,13 +461,15 @@ namespace Dune{
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
+          if(do0[s]){
+            lae0->localAssembler().setWeight(b[s]*la.dt);
+            lae0->assembleVVolumePostSkeleton(eg,lfsv);
+          }
 
-          // Compute residual for current solution
-          lae0->assembleVVolumePostSkeleton(eg,lfsv);
-          lae1->assembleVVolumePostSkeleton(eg,lfsv);
+          if(do1[s]){
+            lae1->localAssembler().setWeight(a[s]);
+            lae1->assembleVVolumePostSkeleton(eg,lfsv);
+          }
         }
       }
       //! @}

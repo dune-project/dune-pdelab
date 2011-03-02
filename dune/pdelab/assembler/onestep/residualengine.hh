@@ -44,14 +44,14 @@ namespace Dune{
       OneStepLocalResidualAssemblerEngine(const LocalAssembler & local_assembler_)
         : la(local_assembler_), lae0(invalid_lae0), lae1(invalid_lae1), 
           invalid_residual(static_cast<Residual*>(0)), 
-          invalid_solutions(static_cast<Solution*>(0)),
-          const_residual(invalid_residual), solutions(invalid_solutions), stage(0)
+          invalid_solution(static_cast<Solution*>(0)),
+          residual(invalid_residual), solution(invalid_solution), stage(0)
       {}
 
       //! Query methods for the global grid assembler
       //! @{
       bool requireSkeleton() const 
-      { return lae0->requireSkeleton() || lae1->requireSkeleton(); }
+      { return implicit && (lae0->requireSkeleton() || lae1->requireSkeleton()); }
       bool requireSkeletonTwoSided() const
       { return lae0->requireSkeletonTwoSided() || lae1->requireSkeletonTwoSided(); }
       bool requireUVVolume() const
@@ -80,23 +80,24 @@ namespace Dune{
       //! Public access to the wrapping local assembler
       const LocalAssembler & localAssembler(){ return la; }
 
+      //! Set current solution vector. Must be called before
+      //! setResidual(). Should be called prior to assembling.
+      void setSolution(const Solution & solution_){
+        solution = &solution_;
+      }
+
       //! Set current const residual vector. Should be called prior to
       //! assembling.
-      void setConstResidual(Residual & const_residual_){
-        const_residual = &const_residual_;
+      void setResidual(Residual & residual_){
+        residual = &residual_;
+
+        assert(solution != invalid_solution);
+
+        // Initialize the engines of the two wrapped local assemblers
+        lae0 = & local_assembler.la0.localResidualAssemblerEngine(*residual,*solution);
+        lae1 = & local_assembler.la1.localResidualAssemblerEngine(*residual,*solution);
       }
 
-      //! Set current solution vector. Should be called prior to
-      //! assembling.
-      void setSolutions(const Solutions & solutions_){
-        solutions = &solutions_;
-      }
-
-      //! Set current stage number
-      void setStage(const int stage_){
-        stage = stage_;
-      }
-    
       //! Called immediately after binding of local function space in
       //! global assembler.
       //! @{
@@ -193,11 +194,20 @@ namespace Dune{
       //! coefficients is done in each assemble call.
       //!@{
       template<typename LFSU>
-      void loadCoefficientsLFSUInside(const LFSU & lfsu_s){}
+      void loadCoefficientsLFSUInside(const LFSU & lfsu_s){
+        lae0->loadCoefficientsLFSUInside(lfsu_s);
+        lae1->loadCoefficientsLFSUInside(lfsu_s);
+      }
       template<typename LFSU>
-      void loadCoefficientsLFSUOutside(const LFSU & lfsu_n){}
+      void loadCoefficientsLFSUOutside(const LFSU & lfsu_n){
+        lae0->loadCoefficientsLFSUInside(lfsu_n);
+        lae1->loadCoefficientsLFSUInside(lfsu_n);
+      }
       template<typename LFSU>
-      void loadCoefficientsLFSUCoupling(const LFSU & lfsu_c){}
+      void loadCoefficientsLFSUCoupling(const LFSU & lfsu_c){
+        lae0->loadCoefficientsLFSUInside(lfsu_c);
+        lae1->loadCoefficientsLFSUInside(lfsu_c);
+      }
       //! @}
 
 
@@ -206,33 +216,27 @@ namespace Dune{
       void preAssembly()
       {
         // Initialize constant part of residual
-        *const_residual = 0.;
+        *residual = 0.;
 
         // Set residual vector of subordinate local assemblers
-        lae0->setResidual(*const_residual);
-        lae1->setResidual(*const_residual);
+        lae0->setResidual(*residual);
+        lae1->setResidual(*residual);
 
         // Extract the coefficients of the time step scheme
-        a.resize(stage);
-        b.resize(stage);
-        d.resize(stage);
-        for (size_t i=0; i<stage; ++i){ 
-          a[i] = la.method.a(stage,i);
-          b[i] = la.method.b(stage,i);
-          d[i] = la.method.d(i);
-          do0[i] = ( std::abs(a[i]) < 1E-6 );
-          do1[i] = ( std::abs(b[i]) < 1E-6 );
-        }
+        b_rr = la.method.b(la.stage,la.stage);
+        d_r = la.method.d(la.stage);
+        implicit = std::abs(b_rr) > 1e-6;
 
         // prepare local operators for stage
-        lae0->preStage(la.time+la.method.d(stage)*la.dt,stage);
-        lae1->preStage(la.time+la.method.d(stage)*la.dt,stage);
-
-      }
-      void postAssembly()
-      { 
+        lae0->setTime(la.time + d_r * la.dt);
+        lae1->setTime(la.time + d_r * la.dt);
         
+        // Set weights
+        lae0.localAssembler().setWeight(b_rr * la.dt);
+        lae1.localAssembler().setWeight(1.0);
       }
+
+      void postAssembly(){}
       //! @}
 
       //! Assembling methods
@@ -240,121 +244,46 @@ namespace Dune{
       template<typename EG, typename LFSU, typename LFSV>
       void assembleUVVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
       {
-        for (unsigned s=0; s<stage; ++s){
-          // Reset the time in the local assembler
-          la->setTime(la.time+d[s]*la.dt);
-
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
-
-          // Compute residual for current solution
-          lae0->setSolution(solutions[s]);
-          lae0->loadCoefficientsLFSUInside(lfsu);
+        if(implicit)
           lae0->assembleUVVolume(eg,lfsu,lfsv);
-
-          lae1->setSolution(solutions[s]);
-          lae1->loadCoefficientsLFSUInside(lfsu);
-          lae1->assembleUVVolume(eg,lfsu,lfsv);
-        }
+        lae1->assembleUVVolume(eg,lfsu,lfsv);
       }
       
       template<typename EG, typename LFSV>
       void assembleVVolume(const EG & eg, const LFSV & lfsv)
       {
-        for (unsigned s=0; s<stage; ++s){
-          // Reset the time in the local assembler
-          la->setTime(la.time+d[s]*la.dt);
-
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
-
-          // Compute residual for current solution
+        if(implicit)
           lae0->assembleVVolume(eg,lfsv);
-          lae1->assembleVVolume(eg,lfsv);
-        }
+        lae1->assembleVVolume(eg,lfsv);
       }
 
       template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N>
       void assembleUVSkeleton(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
                               const LFSU_N & lfsu_n, const LFSV_N & lfsv_n)
       {
-        for (unsigned s=0; s<stage; ++s){
-          // Reset the time in the local assembler
-          la->setTime(la.time+d[s]*la.dt);
-
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
-
-          // Compute residual for current solution
-          lae0->setSolution(solutions[s]);
-          lae0->loadCoefficientsLFSUInside(lfsu_s);
-          lae0->loadCoefficientsLFSUOutside(lfsu_n);
+        if(implicit)
           lae0->assembleUVSkeleton(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
-
-          lae1->setSolution(solutions[s]);
-          lae1->loadCoefficientsLFSUInside(lfsu_s);
-          lae1->loadCoefficientsLFSUOutside(lfsu_n);
-          lae1->assembleUVSkelton(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
-        }
       }
 
       template<typename IG, typename LFSV_S, typename LFSV_N>
       void assembleVSkeleton(const IG & ig, const LFSV_S & lfsv_s, const LFSV_N & lfsv_n)
       {
-        for (unsigned s=0; s<stage; ++s){
-          // Reset the time in the local assembler
-          la->setTime(la.time+d[s]*la.dt);
-
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
-
-          // Compute residual for current solution
+        if(implicit)
           lae0->assembleVSkeleton(ig,lfsv_s,lfsv_n);
-          lae1->assembleVSkelton(ig,lfsv_s,lfsv_n);
-        }
       }
 
       template<typename IG, typename LFSU_S, typename LFSV_S>
       void assembleUVBoundary(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s)
       {
-        for (unsigned s=0; s<stage; ++s){
-          // Reset the time in the local assembler
-          la->setTime(la.time+d[s]*la.dt);
-
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
-
-          // Compute residual for current solution
-          lae0->setSolution(solutions[s]);
-          lae0->loadCoefficientsLFSUInside(lfsu_s);
+        if(implicit)
           lae0->assembleUVBoundary(ig,lfsu_s,lfsv_s);
-
-          lae1->setSolution(solutions[s]);
-          lae1->loadCoefficientsLFSUInside(lfsu_s);
-          lae1->assembleUVSkelton(ig,lfsu_s,lfsv_s);
-        }
       }
 
       template<typename IG, typename LFSV_S>
       void assembleVBoundary(const IG & ig, const LFSV_S & lfsv_s)
       {
-        for (unsigned s=0; s<stage; ++s){
-          // Reset the time in the local assembler
-          la->setTime(la.time+d[s]*la.dt);
-
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
-
-          // Compute residual for current solution
+        if(implicit)
           lae0->assembleVBoundary(ig,lfsv_s);
-          lae1->assembleVBoundary(ig,lfsv_s);
-        }
       }
 
       template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N, 
@@ -364,27 +293,8 @@ namespace Dune{
                                              const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
                                              const LFSU_C & lfsu_c, const LFSV_C & lfsv_c)
       {
-        for (unsigned s=0; s<stage; ++s){
-          // Reset the time in the local assembler
-          la->setTime(la.time+d[s]*la.dt);
-
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
-
-          // Compute residual for current solution
-          lae0->setSolution(solutions[s]);
-          lae0->loadCoefficientsLFSUInside(lfsu_s);
-          lae0->loadCoefficientsLFSUOutside(lfsu_n);
-          lae0->loadCoefficientsLFSUCoupling(lfsu_c);
+        if(implicit)
           lae0->assembleUVEnrichedCoupling(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n,lfsu_c,lfsv_c);
-
-          lae1->setSolution(solutions[s]);
-          lae1->loadCoefficientsLFSUInside(lfsu_s);
-          lae1->loadCoefficientsLFSUOutside(lfsu_n);
-          lae1->loadCoefficientsLFSUCoupling(lfsu_c);
-          lae1->assembleUVEnrichedCoupling(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n,lfsu_c,lfsv_c);
-        }
       }
 
       template<typename IG, typename LFSV_S, typename LFSV_N, typename LFSV_C>
@@ -393,61 +303,27 @@ namespace Dune{
                                             const LFSV_N & lfsv_n,
                                             const LFSV_C & lfsv_c) 
       {
-        for (unsigned s=0; s<stage; ++s){
-          // Reset the time in the local assembler
-          la->setTime(la.time+d[s]*la.dt);
-
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
-
-          // Compute residual for current solution
+        if(implicit)
           lae0->assembleVEnrichedCoupling(ig,lfsv_s,lfsv_n,lfsv_c);
-          lae1->assembleVEnrichedCoupling(ig,lfsv_s,lfsv_n,lfsv_c);
-        }
       }
 
       template<typename EG, typename LFSU, typename LFSV>
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
       {
-        for (unsigned s=0; s<stage; ++s){
-          // Reset the time in the local assembler
-          la->setTime(la.time+d[s]*la.dt);
-
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
-
-          // Compute residual for current solution
-          lae0->setSolution(solutions[s]);
-          lae0->loadCoefficientsLFSUInside(lfsu);
+        if(implicit)
           lae0->assembleUVVolumePostSkeleton(eg,lfsu,lfsv);
-
-          lae1->setSolution(solutions[s]);
-          lae1->loadCoefficientsLFSUInside(lfsu);
-          lae1->assembleUVVolumePostSkeleton(eg,lfsu,lfsv);
-        }
       }
 
       template<typename EG, typename LFSV>
       void assembleVVolumePostSkeleton(const EG & eg, const LFSV & lfsv)
       {
-        for (unsigned s=0; s<stage; ++s){
-          // Reset the time in the local assembler
-          la->setTime(la.time+d[s]*la.dt);
-
-          // Set assembling weights
-          lae0->localAssembler().setWeight(b[s]*la.dt);
-          lae1->localAssembler().setWeight(a[s]);
-
-          // Compute residual for current solution
+        if(implicit)
           lae0->assembleVVolumePostSkeleton(eg,lfsv);
-          lae1->assembleVVolumePostSkeleton(eg,lfsv);
-        }
       }
       //! @}
 
     private:
+
       //! Reference to the wrapping local assembler object which
       //! constructed this engine
       const LocalAssembler & la;
@@ -457,32 +333,25 @@ namespace Dune{
 
       PatternEngineDT0 * const invalid_lae0;
       PatternEngineDT0 * lae0;
-      PatternEngineDT1 * const invalid_lae1;;
+      PatternEngineDT1 * const invalid_lae1;
       PatternEngineDT1 * lae1;
 
       //! Default value indicating an invalid residual pointer
       Residual * const invalid_residual;
 
       //! Default value indicating an invalid solution pointer
-      Solutions * const invalid_solutions;
+      Solution * const invalid_solution;
 
       //! Pointer to the current constant part residual vector in
       //! which to assemble
-      Residual * const_residual;
+      Residual * residual;
 
       //! Pointer to the current residual vector in which to assemble
-      const Solutions * solutions;
-
-      //! The current stage number
-      int stage;
+      const Solution * solution;
 
       //! Coefficients of time stepping scheme
-      std::vector<Real> a;
-      std::vector<Real> b;
-      std::vector<Real> d;
-      std::vector<bool> do0;
-      std::vector<bool> do1;
-
+      Real b_rr, d_r;
+      bool implicit;
 
       //! The local vectors and matrices as required for assembling
       //! @{
