@@ -55,8 +55,8 @@ namespace Dune {
       enum { doLambdaVolume = true };
       enum { doLambdaBoundary = true };
 
-      Poisson (const F& f_, const B& b_, const J& j_)
-        : f(f_), b(b_), j(j_)
+      Poisson (const F& f_, const B& bctype_, const J& j_)
+        : f(f_), bctype(bctype_), j(j_)
       {}
 
 	  // volume integral depending on test and ansatz functions
@@ -182,11 +182,9 @@ namespace Dune {
                rule.begin(); it!=rule.end(); ++it)
           {
             // evaluate boundary condition type
-            typename B::Traits::RangeType bctype;
-            b.evaluate(ig,it->position(),bctype);
- 
             // skip rest if we are on Dirichlet boundary
-            if (bctype>0) continue;
+            if( bctype.isDirichlet( ig,it->position() ) ) 
+              continue;
 
             // position of quadrature point in local coordinates of element 
             const DomainLocal& local =
@@ -209,7 +207,7 @@ namespace Dune {
 
     protected:
       const F& f;
-      const B& b;
+      const B& bctype;
       const J& j;
 	};
 
@@ -240,19 +238,22 @@ namespace Dune {
     protected:
       // need non-const references for setTime()
       F& f;
-      B& b;
+      B& bctype;
       J& j;
 
     public:
       //! construct InstationaryPoisson
-      InstationaryPoisson(F& f_, B& b_, J& j_)
-        : Base(f_, b_, j_), f(f_), b(b_), j(j_)
+      InstationaryPoisson(F& f_, B& bctype_, J& j_)
+        : Base(f_, bctype_, j_)
+        , f(f_)
+        , bctype(bctype_)
+        , j(j_)
       {}
 
       //! set the time for subsequent evaluation on the parameter functions
       void setTime (Time t) {
         f.setTime(t);
-        b.setTime(t);
+        bctype.setTime(t);
         j.setTime(t);
         IDefault::setTime(t);
       }
