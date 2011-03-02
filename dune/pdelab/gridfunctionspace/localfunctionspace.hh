@@ -70,7 +70,7 @@ namespace Dune {
           offset += node.n;
         }
 
-        ComputeSizeVisitor(const Entity& entity)
+        ComputeSizeVisitor(const Entity& entity, std::size_t offset = 0)
           : e(entity)
           , offset(0)
         {}
