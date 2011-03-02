@@ -150,14 +150,21 @@ namespace Dune {
 		const IndexType v_globalindex = vertex_mapper.map( *vertex );
 
 		const FacePoint facelocal_position = reference_face_element.position(i,dim-1);
-		typename BoundaryFunction::Traits::RangeType boundary_value;
 
+                /*
+		typename BoundaryFunction::Traits::RangeType boundary_value;
 		boundaryFunction.evaluate(IntersectionGeometry<Intersection>(*fit,intersection_index),
                                           facelocal_position,boundary_value);
-
 		if(boundary_value)
 		  node_info[v_globalindex].is_boundary=true;
 		else
+		  node_info[v_globalindex].is_boundary=false;
+                */
+
+                if( boundaryFunction.isDirichlet( IntersectionGeometry<Intersection>(*fit,intersection_index),
+                                                  facelocal_position) )
+		  node_info[v_globalindex].is_boundary=true;
+                else
 		  node_info[v_globalindex].is_boundary=false;
 
 		unsigned short & min = node_info[v_globalindex].minimum_touching_level;
