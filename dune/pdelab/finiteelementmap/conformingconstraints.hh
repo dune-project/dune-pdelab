@@ -179,7 +179,7 @@ namespace Dune {
         typedef typename GFS::Traits::GridViewType GV;
         typedef typename GV::template Codim<0>::
           template Partition<Interior_Partition>::Iterator Iterator;
-        typedef typename GFS::template VectorContainer<int>::Type V;
+        typedef typename Dune::PDELab::BackendVectorSelector<GFS,int>::Type V;
 
         gh.assign(gfs.globalSize(), 1);
         V ighost(gfs, 1);

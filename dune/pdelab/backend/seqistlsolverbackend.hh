@@ -75,7 +75,7 @@ namespace Dune {
       template<class V>
       typename V::ElementType norm(const V& v) const
       {
-        return v.two_norm();
+        return v.base().two_norm();
       }
     };
 
@@ -120,9 +120,13 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::ElementType reduction)
       {
-        Dune::MatrixAdapter<M,V,W> opa(A);
-        Preconditioner<M,V,W,1> ssor(A, 3, 1.0);
-        Solver<V> solver(opa, ssor, reduction, maxiter, verbose);
+        Dune::MatrixAdapter<typename M::BaseT, 
+                            typename V::BaseT, 
+                            typename W::BaseT> opa(A);
+        Preconditioner<typename M::BaseT, 
+                            typename V::BaseT, 
+                       typename W::BaseT,1> ssor(A, 3, 1.0);
+        Solver<typename V::BaseT> solver(opa, ssor, reduction, maxiter, verbose);
         Dune::InverseOperatorResult stat;
         solver.apply(z, r, stat);
         res.converged  = stat.converged;
@@ -159,9 +163,13 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::ElementType reduction)
       {
-        Dune::MatrixAdapter<M,V,W> opa(A);
-        Dune::SeqILU0<M,V,W> ilu0(A, 1.0);
-        Solver<V> solver(opa, ilu0, reduction, maxiter, verbose);
+        Dune::MatrixAdapter<typename M::BaseT, 
+                            typename V::BaseT, 
+                            typename W::BaseT> opa(A);
+        Dune::SeqILU0<typename M::BaseT, 
+                      typename V::BaseT, 
+                      typename W::BaseT> ilu0(A, 1.0);
+        Solver<typename V::BaseT> solver(opa, ilu0, reduction, maxiter, verbose);
         Dune::InverseOperatorResult stat;
         solver.apply(z, r, stat);
         res.converged  = stat.converged;
@@ -333,7 +341,9 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::ElementType reduction)
       {
-        Dune::SeqJac<M,V,W> jac(A,1,1.0);
+        Dune::SeqJac<typename M::BaseT, 
+                     typename V::BaseT, 
+                     typename W::BaseT> jac(A,1,1.0);
         jac.pre(z,r);
         jac.apply(z,r);
         jac.post(z);
@@ -364,7 +374,7 @@ namespace Dune {
       template<class V>
       typename V::ElementType norm (const V& v) const
       {
-        return v.two_norm();
+        return v.base().two_norm();
       }
 
       /*! \brief solve the given linear system

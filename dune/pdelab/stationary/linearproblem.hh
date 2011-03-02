@@ -2,6 +2,7 @@
 #define DUNE_PDELAB_STATIONARYLINEARPROBLEM_HH
 
 #include<dune/common/timer.hh>
+#include<dune/pdelab/backend/backendselector.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -18,8 +19,9 @@ namespace Dune {
     {
       typedef typename V::ElementType Real;
       typedef typename GOS::template MatrixContainer<Real>::Type M;
-      typedef typename GOS::Traits::TrialGridFunctionSpace::template VectorContainer<Real>::Type W;
-
+      typedef typename GOS::Traits::TrialGridFunctionSpace TrialGridFunctionSpace;
+      typedef typename Dune::PDELab::BackendVectorSelector<TrialGridFunctionSpace,Real>::Type W;
+      
     public:
 
       StationaryLinearProblemSolver (const GOS& gos_, V& x_, LS& ls_, typename V::ElementType reduction_, typename V::ElementType mindefect_ = 1e-99)

@@ -171,7 +171,7 @@ namespace Dune {
       {
         // do local scalar product on unique partition
         field_type sum = 0;
-        for (typename X::size_type i=0; i<x.N(); ++i)
+        for (typename X::size_type i=0; i<x.base().N(); ++i)
           for (typename X::size_type j=0; j<x[i].N(); ++j)
             sum += (x[i][j]*y[i][j])*helper.mask(i,j);
 

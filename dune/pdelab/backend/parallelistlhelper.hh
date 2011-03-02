@@ -178,7 +178,8 @@ namespace Dune {
         V1 mask;
       };
 
-      typedef typename GFS::template VectorContainer<double>::Type V;
+      
+      typedef typename Dune::PDELab::BackendVectorSelector<GFS,double>::Type V;
 
     public:
 
@@ -198,12 +199,12 @@ namespace Dune {
           gfs.gridview().communicate(dh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
 
         // convert vector into mask vector
-        for (typename V::size_type i=0; i<v.N(); ++i)
-          for (typename V::size_type j=0; j<v[i].N(); ++j)
-            if (v[i][j]==gfs.gridview().comm().rank())
-              v[i][j] = 1.0;
+        for (typename V::size_type i=0; i<v.base().N(); ++i)
+          for (typename V::size_type j=0; j<v.base()[i].N(); ++j)
+            if (v.base()[i][j]==gfs.gridview().comm().rank())
+              v.base()[i][j] = 1.0;
             else
-              v[i][j] = 0.0;
+              v.base()[i][j] = 0.0;
 
       }
 
@@ -213,19 +214,19 @@ namespace Dune {
       {
         for (typename V::size_type i=0; i<v.N(); ++i)
           for (typename V::size_type j=0; j<v[i].N(); ++j)
-            w[i][j] *= v[i][j];
+            w.base()[i][j] *= v.base()[i][j];
       }
 
       // access to mask vector
       double mask (typename V::size_type i, typename V::size_type j) const
       {
-        return v[i][j];
+        return v.base()[i][j];
       }
 
       // access to ghost vector
       double ghost (typename V::size_type i, typename V::size_type j) const
       {
-        return g[i][j];
+        return g.base()[i][j];
       }
 
 #if HAVE_MPI
@@ -397,7 +398,7 @@ namespace Dune {
       //                   <<"Only grids with at least one layer of overlap cells are supported");
 
       // First find out which dofs we share with other processors
-      typedef typename GFS::template VectorContainer<bool>::Type BoolVector;
+      typedef typename Dune::PDELab::BackendVectorSelector<GFS,bool>::Type BoolVector;
       BoolVector sharedDOF(gfs, false);
       Dune::PDELab::GenericDataHandle<GFS,BoolVector,SharedGatherScatter> gdh(gfs,sharedDOF,SharedGatherScatter());
 
@@ -433,7 +434,8 @@ namespace Dune {
         start=start+counts[i];
       //std::cout<<gv.comm().rank()<<": start index = "<<start.touint()<<std::endl;
 
-      typedef typename GFS::template VectorContainer<GlobalIndex>::Type GIVector;
+      
+      typedef typename Dune::PDELab::BackendVectorSelector<GFS,GlobalIndex>::Type GIVector;
       GIVector scalarIndices(gfs, std::numeric_limits<GlobalIndex>::max());
 
 

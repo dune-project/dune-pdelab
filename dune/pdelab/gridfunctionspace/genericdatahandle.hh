@@ -16,9 +16,9 @@ namespace Dune {
 	/// \tparam GFS a grid function space
 	/// \tparam V   a vector container associated with the GFS
 	/// \tparam T   gather/scatter methods with argumemts buffer, and data
-	template<class GFS, class V, class T>
+	template<class GFS, class V, class T, class E=typename V::ElementType>
 	class GenericDataHandle
-	  : public Dune::CommDataHandleIF<GenericDataHandle<GFS,V,T>,typename V::ElementType>
+	  : public Dune::CommDataHandleIF<GenericDataHandle<GFS,V,T>,E>
 	{
 	  typedef typename GFS::Traits::BackendType B;
 
@@ -255,11 +255,11 @@ namespace Dune {
 	  }
 	};
 	
-	template<class GFS, class V>
+	template<class GFS, class V, class E=typename V::ElementType>
 	class AddDataHandle
-	  : public GenericDataHandle<GFS,V,AddGatherScatter>
+	  : public GenericDataHandle<GFS,V,AddGatherScatter,E>
 	{
-	  typedef GenericDataHandle<GFS,V,AddGatherScatter> BaseT;
+	  typedef GenericDataHandle<GFS,V,AddGatherScatter,E> BaseT;
 
 	public:
 

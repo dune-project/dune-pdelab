@@ -106,9 +106,9 @@ namespace Dune {
       {
         // do local scalar product on unique partition
         field_type sum = 0;
-        for (typename X::size_type i=0; i<x.N(); ++i)
-          for (typename X::size_type j=0; j<x[i].N(); ++j)
-            sum += (x[i][j]*y[i][j])*helper.mask(i,j);
+        for (typename X::size_type i=0; i<x.base().N(); ++i)
+          for (typename X::size_type j=0; j<x.base()[i].N(); ++j)
+            sum += (x.base()[i][j]*y.base()[i][j])*helper.mask(i,j);
 
         // do global communication
         return gfs.gridview().comm().sum(sum);
@@ -130,13 +130,16 @@ namespace Dune {
     // wrapped sequential preconditioner
     template<class CC, class GFS, class P>
     class OverlappingWrappedPreconditioner
-      : public Dune::Preconditioner<typename P::domain_type,typename P::range_type>
+      : public Dune::Preconditioner<typename Dune::PDELab::BackendVectorSelector<GFS,typename P::domain_type::field_type>::Type, 
+                                    typename Dune::PDELab::BackendVectorSelector<GFS,typename P::range_type::field_type>::Type>
     {
     public:
       //! \brief The domain type of the preconditioner.
-      typedef typename P::domain_type domain_type;
+      typedef typename Dune::PDELab::BackendVectorSelector<GFS,typename P::domain_type::field_type>::Type 
+      domain_type;
       //! \brief The range type of the preconditioner.
-      typedef typename P::range_type range_type;
+      typedef typename Dune::PDELab::BackendVectorSelector<GFS,typename P::range_type::field_type>::Type 
+      range_type;
 
       // define the category
       enum {
@@ -166,7 +169,7 @@ namespace Dune {
         range_type dd(d);
         set_constrained_dofs(cc,0.0,dd);
         prec.apply(v,dd);
-        Dune::PDELab::AddDataHandle<GFS,domain_type> adddh(gfs,v);
+        Dune::PDELab::AddDataHandle<GFS,domain_type,typename domain_type::field_type> adddh(gfs,v);
         if (gfs.gridview().comm().size()>1)
           gfs.gridview().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
       }
@@ -330,7 +333,7 @@ namespace Dune {
       {
         // do local scalar product on unique partition
         typename X::ElementType sum = 0;
-        for (typename X::size_type i=0; i<x.N(); ++i)
+        for (typename X::size_type i=0; i<x.base().N(); ++i)
           for (typename X::size_type j=0; j<x[i].N(); ++j)
             sum += (x[i][j]*y[i][j])*helper.mask(i,j);
 

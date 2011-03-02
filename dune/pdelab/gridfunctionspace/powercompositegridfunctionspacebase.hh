@@ -219,16 +219,6 @@ namespace Dune {
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<GV,B,Mapper,k> Traits;
 
-      //! extract type of container storing Es
-      template<typename E>
-      struct VectorContainer
-      {
-        //! \brief define Type as the Type of a container of E's
-        typedef typename Traits::BackendType::template VectorContainer<GridFunctionSpace,E> Type;
-      private:
-        VectorContainer ();
-      };
-
       //! extract type for storing constraints
       template<typename E>
       struct ConstraintsContainer

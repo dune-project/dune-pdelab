@@ -23,6 +23,8 @@
 #include "../common/typetree.hh"
 #include "../common/geometrywrapper.hh"
 
+#include "../backend/backendselector.hh"
+
 #include"localfunctionspace.hh"
 #include"gridfunctionspaceutilities.hh"
 #include"powergridfunctionspace.hh"
@@ -101,52 +103,105 @@ namespace Dune {
 	  typedef C ConstraintsType;
 	};
 
+    class StdVectorBackend;
+
+    //! container construction
+    template<typename T, typename E>
+    class StdVectorContainer
+    {
+    public:
+      typedef std::vector<E> ContainerType;
+      typedef typename ContainerType::iterator iterator;
+      typedef typename ContainerType::const_iterator const_iterator;
+      typedef E ElementType;
+      typedef StdVectorBackend Backend;
+      typedef typename std::vector<E>::size_type size_type;
+      
+      StdVectorContainer (const T& t) : container(t.globalSize()) {}
+      StdVectorContainer (const T& t, const E& e) : container(t.globalSize(),e) {}
+      StdVectorContainer& operator= (const E& e) // set all elements to same value
+      {
+        for (typename ContainerType::size_type i=0; i<container.size(); i++)
+          container[i] = e;
+        return *this;
+      }
+
+      ContainerType& base ()
+      {
+        return container;
+      }
+      
+      const ContainerType& base () const
+      {
+        return container;
+      }
+
+      
+      iterator begin()
+      {
+        return container.begin();
+      }
+      
+
+      const_iterator begin() const
+      {
+        return container.begin();
+      }
+
+      iterator end()
+      {
+        return container.end();
+      }
+      
+
+      const_iterator end() const
+      {
+        return container.end();
+      }
+
+
+      size_t flatsize() const
+      {
+        return container.size();
+      }
+
+      E& operator[](size_type i)
+      {
+        return container[i];
+      }
+      
+      const E& operator[](size_type i) const
+      {
+        return container[i];
+      }
+
+      template<typename X>
+      void std_copy_to (std::vector<X>& x) const
+      {
+        typename std::vector<X>::size_type n = flatsize();
+        x.resize(n);
+        for (size_t i=0; i<n; i++)
+          x[i] = container[i];
+      }
+
+      template<typename X>
+      void std_copy_from (const std::vector<X>& x)
+      {
+        typename std::vector<X>::size_t n = flatsize();
+        x.resize(n);
+        for (size_t i=0; i<n; i++)
+          container[i] = x[i];
+      }
+
+    private:
+      ContainerType container;
+    };
+
+
 	//! \brief Simple Backend for std::vector
 	class StdVectorBackend
-	{
+	{      
 	public:
-	  //! container construction
-	  template<typename T, typename E>
-	  class VectorContainer : public std::vector<E>
-	  {
-		typedef std::vector<E> BaseT;
-	  public:
-		typedef E ElementType;
-        typedef StdVectorBackend Backend;
-
-		VectorContainer (const T& t) : BaseT(t.globalSize()) {}
-		VectorContainer (const T& t, const E& e) : BaseT(t.globalSize(),e) {}
-		VectorContainer& operator= (const E& e) // set all elements to same value
-		{
-		  for (typename BaseT::size_type i=0; i<BaseT::size(); i++)
-			(*this)[i] = e;
-		  return *this;
-		}
-
-        size_t flatsize() const
-        {
-          return BaseT::size();
-        }
-
-        template<typename X>
-        void std_copy_to (std::vector<X>& x) const
-        {
-          size_type n = flatsize();
-          x.resize(n);
-          for (size_t i=0; i<n; i++)
-            x[i] = (*this)[i];
-        }
-
-        template<typename X>
-        void std_copy_from (const std::vector<X>& x)
-        {
-          size_t n = flatsize();
-          x.resize(n);
-          for (size_t i=0; i<n; i++)
-            (*this)[i] = x[i];
-        }
-
-	  };
 
 	  //! extract type of container element
 	  template<class C>
@@ -163,22 +218,31 @@ namespace Dune {
        *
        *  we can assume C to be std::vector<T>
        */
-	  template<typename C>
-	  static const typename C::value_type& access (const C& c, size_type i)
+	  template<typename C, typename E>
+	  static const typename StdVectorContainer<C,E>::ContainerType::value_type& 
+      access (const StdVectorContainer<C,E>& c, size_type i)
 	  {
-		return c.operator[](i);
+		return c[i];
 	  }
-
+      
 	  /** \brief get non const_reference to container element
        *
        *  note: this method does not depend on T!
        */
-	  template<typename C>
-	  static typename C::value_type& access (C& c, size_type i)
+	  template<typename C, typename E>
+	  static typename StdVectorContainer<C,E>::ContainerType::value_type& 
+      access (StdVectorContainer<C,E>& c, size_type i)
 	  {
-		return c.operator[](i);
+		return c[i];
 	  }
 	};
+
+    template<typename T, typename E>
+    struct BackendVectorSelectorHelper<StdVectorBackend,T,E>
+    {
+      typedef StdVectorContainer<T,E> Type;
+    };
+    
 
 	/** \brief Tag indicating an arbitrary number of unkowns per entity.
      *
@@ -241,16 +305,6 @@ namespace Dune {
 	  typedef GridFunctionSpaceTraits<GV,FEM,CE,B> Traits;
 	  typedef typename GV::Traits::template Codim<0>::Entity Element;
 	  typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
-
-	  //! extract type of container storing Ts
-	  template<typename T>
-	  struct VectorContainer
-	  {
-		//! \brief define Type as the Type of a container of E's
-		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;
-      private:
-        VectorContainer () {}
-	  };
 
  	  //! extract type for storing constraints
 	  template<typename E>
@@ -566,16 +620,6 @@ namespace Dune {
 	  typedef GridFunctionSpaceTraits<GV,FEM,CE,B> Traits;
 	  typedef typename GV::Traits::template Codim<0>::Entity Element;
 	  typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
-
-      //! extract type of container storing Es
-	  template<typename T>
-	  struct VectorContainer
-	  {
-		//! \brief define Type as the Type of a container of E's
-		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;
-      private:
-        VectorContainer () {}
-	  };
 
  	  //! extract type for storing constraints
 	  template<typename E>
@@ -919,16 +963,6 @@ namespace Dune {
 	  typedef typename GV::Traits::template Codim<0>::Entity Element;
 	  typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
 
-      //! extract type of container storing Es
-	  template<typename T>
-	  struct VectorContainer
-	  {
-		//! \brief define Type as the Type of a container of E's
-		typedef typename B::template VectorContainer<GridFunctionSpace,T> Type;
-      private:
-        VectorContainer () {}
-	  };
-
  	  //! extract type for storing constraints
 	  template<typename E>
 	  struct ConstraintsContainer
@@ -1257,16 +1291,6 @@ namespace Dune {
       {
       }
 
-	  // extract type of container storing Es
-	  template<typename E>
-	  struct VectorContainer
-	  {
-		//! \brief define Type as the Type of a container of E's
-		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;
-      private:
-        VectorContainer () {}
-	  };
-
   	  //! extract type for storing constraints
 	  template<typename E>
 	  struct ConstraintsContainer
@@ -1344,16 +1368,6 @@ namespace Dune {
         , pcgfs(gfs.template childStorage<k>())
       {
       }
-
-	  // extract type of container storing Es
-	  template<typename E>
-	  struct VectorContainer
-	  {
-		//! \brief define Type as the Type of a container of E's
-		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;
-      private:
-        VectorContainer () {}
-	  };
 
  	  //! extract type for storing constraints
 	  template<typename E>
@@ -1434,16 +1448,6 @@ namespace Dune {
         , pcgfs(gfs.template childStorage<k>())
       {
       }
-
-      //! extract type of container storing Es
-	  template<typename E>
-	  struct VectorContainer
-	  {
-		//! \brief define Type as the Type of a container of E's
-		typedef typename Traits::BackendType::template VectorContainer<GridFunctionSubSpaceBase,E> Type;
-      private:
-        VectorContainer () {}
-	  };
 
   	  //! extract type for storing constraints
 	  template<typename E>
