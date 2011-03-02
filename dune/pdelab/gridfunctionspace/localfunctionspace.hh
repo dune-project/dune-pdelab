@@ -232,6 +232,12 @@ namespace Dune {
         std::cout << ")" << std::endl;
       }
 
+      //! Returns the GridFunctionSpace underlying this LocalFunctionSpace.
+      const GFS& gridFunctionSpace() const
+      {
+        return *pgfs;
+      }
+
     protected:
       //! \brief bind local function space to entity
       /**
