@@ -91,6 +91,10 @@ public:
     void onBindLFSUVCoupling(const IG & ig, const LFSU_Coupling & lfsu_coupling, const LFSV_Coupling & lfsv_coupling);
     void onBindLFSVCoupling(const IG & ig, const LFSV_Coupling & lfsv_coupling);
 
+    void loadCoefficientsLFSUInside(const LFSU_S & lfsu_s);
+    void loadCoefficientsLFSUOutside(const LFSU_N & lfsu_n);
+    void loadCoefficientsLFSUCoupling(const LFSU_Coupling & lfsu_coupling);
+
     void onUnbindLFSUV(const EG & eg, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
     void onUnbindLFSV(const EG & eg, const LFSV_S & lfsv_s);
     void onUnbindLFSUVInside(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
@@ -99,6 +103,10 @@ public:
     void onUnbindLFSVOutside(const IG & ig, const LFSV_N & lfsv_n);
     void onUnbindLFSUVCoupling(const IG & ig, const LFSU_Coupling & lfsu_coupling, const LFSV_Coupling & lfsv_coupling);
     void onUnbindLFSVCoupling(const IG & ig, const LFSV_Coupling & lfsv_coupling);
+
+    // these methods are optional - not necessary for things like the PatternEngine
+    void setSolution(const X& x);
+    void setResidual(const X& x);
   };
 
   class LocalPatternAssemblerEngine : public LocalAssemblerEngine {};
