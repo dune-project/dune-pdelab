@@ -510,19 +510,6 @@ namespace Dune{
       std::vector<bool> do0;
       std::vector<bool> do1;
 
-
-      //! The local vectors and matrices as required for assembling
-      //! @{
-      typedef Dune::PDELab::TrialSpaceTag LocalTrialSpaceTag;
-      typedef Dune::PDELab::TestSpaceTag LocalTestSpaceTag;
-      Dune::PDELab::LocalVector<SolutionElement, LocalTrialSpaceTag> xl;
-      Dune::PDELab::LocalVector<ResidualElement, LocalTestSpaceTag> rl0;
-      Dune::PDELab::LocalVector<ResidualElement, LocalTestSpaceTag> rl1;
-      Dune::PDELab::LocalVector<SolutionElement, LocalTrialSpaceTag> xn;
-      Dune::PDELab::LocalVector<ResidualElement, LocalTestSpaceTag> rn;
-      //! @}
-
-    
     }; // End of class OneStepLocalPrestageAssemblerEngine
 
   };
