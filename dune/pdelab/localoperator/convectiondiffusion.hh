@@ -19,6 +19,9 @@
 #include"flags.hh"
 #include"idefault.hh"
 
+#include<dune/pdelab/constraints/constraintsparameters.hh>
+
+
 namespace Dune {
   namespace PDELab {
     //! \addtogroup LocalOperator
@@ -116,15 +119,14 @@ namespace Dune {
 		return asImp().q(e,x,u);
 	  }
 
-	  //! boundary condition type function
-      // 0 means Neumann
-      // 1 means Dirichlet
-      // 2 means Outflow (zero diffusive flux)
-	  int
-	  bc (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
-	  {
-		return asImp().bc(is,x);
-	  }
+      template<typename I>
+      bool isDirichlet(
+                       const I & intersection,               /*@\label{bcp:name}@*/
+                       const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                       ) const
+      {
+        return asImp.isDirichlet( intersection, coord );
+      }
 
 	  //! Dirichlet boundary condition value
 	  typename Traits::RangeFieldType 
@@ -154,34 +156,25 @@ namespace Dune {
       \tparam T  model of ConvectionDiffusionParameterInterface
      */
     template<typename T>
-    class BoundaryConditionType_CD
-      : public Dune::PDELab::BoundaryGridFunctionBase<Dune::PDELab::
-                                                      BoundaryGridFunctionTraits<typename T::Traits::GridViewType,int,1,
-                                                                                 Dune::FieldVector<int,1> >,
-                                                      BoundaryConditionType_CD<T> >
+    class BCTypeParam_CD
+      : public Dune::PDELab::DirichletConstraintsParameters   /*@\label{bcp:base}@*/
     {
       const typename T::Traits::GridViewType& gv;
       const T& t;
 
     public:
-      typedef Dune::PDELab::BoundaryGridFunctionTraits<typename T::Traits::GridViewType,int,1,
-                                                       Dune::FieldVector<int,1> > Traits;
-      typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,BoundaryConditionType_CD<T> > BaseT;
-
-      BoundaryConditionType_CD (const typename T::Traits::GridViewType& gv_, const T& t_) : gv(gv_), t(t_) {}
-
-      template<typename I>
-      inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
-                            const typename Traits::DomainType& x,
-                            typename Traits::RangeType& y) const
-      {  
-        y = t.bc(ig.intersection(),x);
-      }
-
-      //! get a reference to the GridView
-      inline const typename T::Traits::GridViewType& getGridView ()
+      BCTypeParam_CD( const typename T::Traits::GridViewType& gv_, const T& t_ )
+        : gv( gv_ ), t( t_ )
       {
-        return gv;
+      }
+  
+      template<typename I>
+      bool isDirichlet(
+                       const I & intersection,               /*@\label{bcp:name}@*/
+                       const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                       ) const
+      {
+        return t.isDirichlet( intersection, coord );
       }
     };
 
@@ -364,12 +357,10 @@ namespace Dune {
         // loop over quadrature points and integrate normal flux
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
-            // evaluate boundary condition type
-            int bctype;
-            bctype = param.bc(ig.intersection(),it->position());
- 
+            // evaluate boundary condition type 
             // skip rest if we are on Dirichlet boundary
-            if (bctype!=0) continue;
+            if( param.isDirichlet( ig.intersection(), it->position() ) )
+              continue;
 
             // position of quadrature point in local coordinates of element 
             Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
