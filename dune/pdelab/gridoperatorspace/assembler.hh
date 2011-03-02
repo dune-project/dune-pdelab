@@ -106,7 +106,7 @@ public:
 
     // these methods are optional - not necessary for things like the PatternEngine
     void setSolution(const X& x);
-    void setResidual(const X& x);
+    void setResidual(const R& r);
   };
 
   class LocalPatternAssemblerEngine : public LocalAssemblerEngine {};
@@ -116,7 +116,7 @@ public:
 };
 
 
-class StandardGridAssembler{
+class GridOperator{
 public:
   template<typename P>
   void fill_pattern (P& globalpattern) const;
