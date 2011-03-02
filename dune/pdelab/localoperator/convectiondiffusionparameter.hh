@@ -162,33 +162,28 @@ namespace Dune {
     */
     template<typename T>
     class ConvectionDiffusionBoundaryConditionAdapter
-      : public Dune::PDELab::BoundaryGridFunctionBase<Dune::PDELab::
-                                                      BoundaryGridFunctionTraits<typename T::Traits::GridViewType,int,1,
-                                                                                 Dune::FieldVector<int,1> >,
-                                                      ConvectionDiffusionBoundaryConditionAdapter<T> >
+      : public Dune::PDELab::DirichletConstraintsParameters   /*@\label{bcp:base}@*/
     {
       const typename T::Traits::GridViewType& gv;
       const T& t;
 
     public:
-      typedef Dune::PDELab::BoundaryGridFunctionTraits<typename T::Traits::GridViewType,int,1,
-                                                       Dune::FieldVector<int,1> > Traits;
-      typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,ConvectionDiffusionBoundaryConditionAdapter<T> > BaseT;
 
-      ConvectionDiffusionBoundaryConditionAdapter (const typename T::Traits::GridViewType& gv_, const T& t_) : gv(gv_), t(t_) {}
-
-      template<typename I>
-      inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
-                            const typename Traits::DomainType& x,
-                            typename Traits::RangeType& y) const
-      {  
-        y = t.bctype(ig.intersection(),x);
-      }
-
-      //! get a reference to the GridView
-      inline const typename T::Traits::GridViewType& getGridView ()
+      ConvectionDiffusionBoundaryConditionAdapter( 
+                                                  const typename T::Traits::GridViewType& gv_, 
+                                                  const T& t_ )
+        : gv( gv_ ), t( t_ )
       {
-        return gv;
+      }
+  
+      template<typename I>
+      bool isDirichlet(
+                       const I & ig               /*@\label{bcp:name}@*/
+                       , const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                       ) const
+      {
+        if( t.bctype( ig.intersection(), coord ) == ConvectionDiffusionBoundaryConditions::Dirichlet )
+          return true;
       }
     };
 
