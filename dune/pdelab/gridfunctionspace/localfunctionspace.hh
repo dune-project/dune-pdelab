@@ -298,6 +298,9 @@ namespace Dune {
       typedef N NodeType;
     };
 
+    //! Tag denoting a PowerLocalFunctionSpace
+    struct PowerLocalFunctionSpaceTag {};
+
     // local function space for a power grid function space
     template<typename GFS, typename ChildLFS, std::size_t k>
     class PowerLocalFunctionSpaceNode :
@@ -318,6 +321,8 @@ namespace Dune {
 
     public:
       typedef PowerCompositeLocalFunctionSpaceTraits<GFS,PowerLocalFunctionSpaceNode> Traits;
+
+      typedef PowerLocalFunctionSpaceTag ImplementationTag;
 
       //! \brief initialize with grid function space
       template<typename Transformation>
@@ -354,6 +359,9 @@ namespace Dune {
     // local function space base: composite implementation
     //=======================================
 
+    //! Tag denoting a CompositeLocalFunctionSpace
+    struct CompositeLocalFunctionSpaceTag {};
+
     // local function space for a power grid function space
     template<typename GFS,DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
     class CompositeLocalFunctionSpaceNode
@@ -374,6 +382,8 @@ namespace Dune {
 
     public:
       typedef PowerCompositeLocalFunctionSpaceTraits<GFS,CompositeLocalFunctionSpaceNode> Traits;
+
+      typedef CompositeLocalFunctionSpaceTag ImplementationTag;
 
       template<typename Transformation>
       CompositeLocalFunctionSpaceNode (shared_ptr<const GFS> gfs,
@@ -414,6 +424,9 @@ namespace Dune {
     // local function space base: single component implementation
     //=======================================
 
+    //! Tag denoting a LeafLocalFunctionSpace
+    struct LeafLocalFunctionSpaceTag {};
+
     //! traits for single component local function space
     template<typename GFS, typename N>
     struct LeafLocalFunctionSpaceTraits : public PowerCompositeLocalFunctionSpaceTraits<GFS,N>
@@ -444,6 +457,8 @@ namespace Dune {
 
     public:
       typedef LeafLocalFunctionSpaceTraits<GFS,LeafLocalFunctionSpaceNode> Traits;
+
+      typedef LeafLocalFunctionSpaceTag ImplementationTag;
 
     private:
       typedef FiniteElementInterfaceSwitch<
