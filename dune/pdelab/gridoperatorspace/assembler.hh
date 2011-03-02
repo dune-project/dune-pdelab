@@ -15,6 +15,19 @@ public:
   template<class RF>
   void setWeight(RF weight);
 
+  template<typename TT>
+  void preStep (TT time, TT dt, std::size_t stages);
+
+  void postStep ();
+
+  template<typename TT>
+  void preStage (TT time, std::size_t r);
+
+  void postStage ();
+
+  template<typename TT>
+  TT suggestTimestep (TT dt) const;
+
   LocalPatternAssemblerEngine & localPatternAssemblerEngine(R & r, const X & x);
   LocalResidualAssemblerEngine & localResidualAssemblerEngine(R & r, const X & x);
   LocalJacobianAssemblerEngine & localJacobianAssemblerEngine(A & a, const X & x);
