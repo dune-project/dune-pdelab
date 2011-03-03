@@ -113,16 +113,20 @@ int main(int argc, char** argv)
   SVC2 svc2_1(sl1,svc1_2,sl2,sp1_3,sc1_1);
 
   testFilteredCompositeNode(svc2_1,LeafFilter());
+  testFilteredCompositeNode<const SVC2>(svc2_1,LeafFilter());
 
   testFilteredCompositeNode(svc2_1,Dune::PDELab::TypeTree::IndexFilter<1,3,2>());
+  testFilteredCompositeNode<const SVC2>(svc2_1,Dune::PDELab::TypeTree::IndexFilter<1,3,2>());
 
   typedef Dune::PDELab::TypeTree::IndexFilter<3,1,0,4,1,2,1,0,2,1> IndexFilter1;
   testFilteredCompositeNode(svc2_1,IndexFilter1());
+  testFilteredCompositeNode<const SVC2>(svc2_1,IndexFilter1());
 
   typedef SimpleFilteredNode<SVC2,IndexFilter1> SFN;
   SFN sfn(svc2_1);
 
   testFilteredCompositeNode(sfn,IndexFilter1());
+  testFilteredCompositeNode<const SFN>(sfn,IndexFilter1());
 
   return 0;
 }

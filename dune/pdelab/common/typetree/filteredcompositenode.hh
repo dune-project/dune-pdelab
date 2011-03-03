@@ -80,6 +80,14 @@ namespace Dune {
         typedef typename filter::template apply<Node,typename Node::ChildTypes>::type filter_result;
         typedef typename filter_result::template apply<Node> mapped_children;
 
+        static const bool nodeIsConst = IsConst<typename remove_reference<Node>::type>::value;
+
+        template<std::size_t k>
+        struct lazy_enable
+        {
+          static const bool value = !nodeIsConst;
+        };
+
       public:
 
         //! The type tag that describes a VariadicCompositeNode.
@@ -133,7 +141,8 @@ namespace Dune {
          * \returns a reference to the i-th child.
          */
         template<std::size_t k>
-        typename Child<k>::Type& child()
+        typename enable_if<lazy_enable<k>::value,typename Child<k>::Type&>::type
+        child()
         {
           return _node->template child<Child<k>::mapped_index>();
         }
@@ -153,7 +162,8 @@ namespace Dune {
          * \returns a copy of the object storing the i-th child.
          */
         template<std::size_t k>
-        typename Child<k>::Storage childStorage()
+        typename enable_if<lazy_enable<k>::value,typename Child<k>::Storage>::type
+        childStorage()
         {
           return _node->template childStorage<Child<k>::mapped_index>();
         }
@@ -173,14 +183,14 @@ namespace Dune {
 
         //! Sets the i-th child to the passed-in value.
         template<std::size_t k>
-        void setChild(typename Child<k>::type& child)
+        void setChild(typename Child<k>::type& child, typename enable_if<lazy_enable<k>::value,void*>::type = 0)
         {
           _node->template childStorage<Child<k>::mapped_index>() = stackobject_to_shared_ptr(child);
         }
 
         //! Sets the storage of the i-th child to the passed-in value.
         template<std::size_t k>
-        void setChild(typename Child<k>::storage_type child)
+        void setChild(typename Child<k>::storage_type child, typename enable_if<lazy_enable<k>::value,void*>::type = 0)
         {
           _node->template childStorage<Child<k>::mapped_index>() = child;
         }
@@ -196,7 +206,9 @@ namespace Dune {
         /**
          * \returns A reference to the original, unfiltered node.
          */
-        Node& unfiltered()
+        template<bool enabled = !nodeIsConst>
+        typename enable_if<enabled,Node&>::type
+        unfiltered()
         {
           return *_node;
         }
@@ -214,7 +226,9 @@ namespace Dune {
         /**
          * \returns A shared_ptr to the original, unfiltered node.
          */
-        shared_ptr<Node> unfilteredStorage()
+        template<bool enabled = !nodeIsConst>
+        typename enable_if<enabled,shared_ptr<Node> >::type
+        unfilteredStorage()
         {
           return _node;
         }
