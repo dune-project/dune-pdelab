@@ -116,8 +116,24 @@ public:
 };
 
 
+template<typename GFSU, typename GFSV, 
+         typename MB, typename DF, typename RF, typename JF>
 class GridOperator{
 public:
+
+  //! The matrix backend to be used for the jacobian matrix
+  typedef MB MatrixBackend;
+
+  //! The domain and range types of the operator
+  //! @{
+  typedef DF DomainField;
+  typedef RF RangeField;
+  typedef JF JacobianField;
+  typedef typename MatrixBackend::template Matrix<UDGGridOperator,JacobianField> Jacobian;
+  typedef typename GFSV::template VectorContainer<RangeField>::Type Range;
+  typedef typename GFSU::template VectorContainer<DomainField>::Type Domain;
+  //! @}
+
   template<typename P>
   void fill_pattern (P& globalpattern) const;
 
@@ -126,5 +142,26 @@ public:
 
   template<typename X, typename A>
   void jacobian (const X& x, A& a) const;
+
+  template<typename TT>
+  void preStep (TT time, TT dt, std::size_t stages);
+
+  void postStep ();
+
+  template<typename TT>
+  void preStage (TT time, std::size_t stage);
+
+  void postStage ();
+
+  template<typename TT>
+  TT suggestTimestep (TT dt) const;
+
+  const GFSU& trialGridFunctionSpace() const;
+
+  const GFSV& testGridFunctionSpace() const;
+
+  typename GFSU::Traits::SizeType globalSizeU () const;
+
+  typename GFSV::Traits::SizeType globalSizeV () const;
 
 };
