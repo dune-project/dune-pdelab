@@ -76,7 +76,7 @@ namespace Dune {
 	 pass contructors to the base class
       */
       LocalVector() {}
-      LocalVector(size_type i) : BaseT(i) {}
+      explicit LocalVector(size_type i) : BaseT(i) {}
       LocalVector(size_type i, const value_type & v) : BaseT(i,v) {}
       /** \} */
     };
