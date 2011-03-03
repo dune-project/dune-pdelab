@@ -158,18 +158,18 @@ namespace Dune {
     };
 
     // the number of polynomials of at most degree k in space dimension d (as run-time function)
-    unsigned int pk_size (unsigned int k, unsigned int d)
+    int pk_size (int k, int d)
     {
       if (k==0) return 1;
       if (d==1) return k+1;
-      unsigned int n=0;
-      for (unsigned int j=0; j<=k; j++) 
+      int n=0;
+      for (int j=0; j<=k; j++) 
         n += pk_size(k-j,d-1);
       return n;
     }
 
     // the number of polynomials of exactly degree k in space dimension d (as run-time function)
-    unsigned int pk_size_exact (unsigned int k, unsigned int d)
+    int pk_size_exact (int k, int d)
     {
       if (k==0)
         return 1;
@@ -190,7 +190,7 @@ namespace Dune {
       if (count==i) return; // found the index
 
       // search recursively
-      for (unsigned int m=k-1; m>=0; m--)
+      for (int m=k-1; m>=0; m--)
         {
           alpha[dim]=m;
           //std::cout << "dada alpha=" << alpha << " count=" << count << " norm=" << norm+m << " dim=" << dim << " k=" << k << " i=" << i << std::endl;
@@ -470,7 +470,7 @@ namespace Dune {
       }
 
       // return dimension of P_l
-      unsigned int size (int l)
+      int size (int l)
       {
         return pk_size(l,d);
       }
