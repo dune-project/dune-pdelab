@@ -209,8 +209,8 @@ namespace Dune{
       //! @{
       void preAssembly()
       {
-        // Initialize constant part of residual
-        *const_residual = 0.;
+        lae0->preAssembly();
+        lae1->preAssembly();
 
         // Extract the coefficients of the time step scheme
         a.resize(la.stage);
@@ -225,11 +225,13 @@ namespace Dune{
         }
 
         // prepare local operators for stage
-        la.preStage(la.time+la.method.d(la.stage)*la.dt,la.stage);
+        lae0->localAssembler().preStage(la.time+la.method.d(la.stage)*la.dt,la.stage);
+        lae1->localAssembler().preStage(la.time+la.method.d(la.stage)*la.dt,la.stage);
       }
       void postAssembly()
       { 
-        
+        lae0->postAssembly();
+        lae1->postAssembly();
       }
       //! @}
 

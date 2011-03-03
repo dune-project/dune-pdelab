@@ -210,8 +210,8 @@ namespace Dune{
       //! @{
       void preAssembly()
       {
-        // Initialize constant part of residual
-        *jacobian = 0.;
+        lae0->preAssembly();
+        lae1->preAssembly();
 
         // Extract the coefficients of the time step scheme
         b_rr = la.method.b(la.stage,la.stage);
@@ -225,8 +225,8 @@ namespace Dune{
         lae1->setTime(la.time + d_r * la.dt);
         
         // Set weights
-        lae0.localAssembler().setWeight(b_rr * la.dt);
-        lae1.localAssembler().setWeight(1.0);
+        lae0->localAssembler().setWeight(b_rr * la.dt);
+        lae1->localAssembler().setWeight(1.0);
       }
 
       void postAssembly(){}

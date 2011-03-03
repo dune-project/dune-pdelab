@@ -8,7 +8,7 @@
 #include <dune/pdelab/common/typetree.hh>
 
 namespace Dune{
-  namespace UDG{
+  namespace PDELab{
 
     /**
        \brief The local assembler for one step methods
@@ -41,10 +41,12 @@ namespace Dune{
       //! The local assembler engines
       //! @{
       typedef OneStepLocalPatternAssemblerEngine<OneStepLocalAssembler> LocalPatternAssemblerEngine;
+      typedef OneStepLocalPreStageAssemblerEngine<OneStepLocalAssembler> LocalPrestageAssemblerEngine;
       typedef OneStepLocalResidualAssemblerEngine<OneStepLocalAssembler> LocalResidualAssemblerEngine;
       typedef OneStepLocalJacobianAssemblerEngine<OneStepLocalAssembler> LocalJacobianAssemblerEngine;
 
       friend class OneStepLocalPatternAssemblerEngine<OneStepLocalAssembler>;
+      friend class OneStepLocalPreStageAssemblerEngine<OneStepLocalAssembler>;
       friend class OneStepLocalResidualAssemblerEngine<OneStepLocalAssembler>;
       friend class OneStepLocalJacobianAssemblerEngine<OneStepLocalAssembler>;
       //! @}
@@ -84,20 +86,10 @@ namespace Dune{
 
 
       //! Constructor with empty constraints
-      OneStepLocalAssembler (LA0 & la0_, LA1 & la1_, OneStepParameters & method_, 
-                             Residual & const_residual_) 
-        : la0(la0_), la1(la1_), method(method_), const_residual(const_residual_), 
+      OneStepLocalAssembler (LA0 & la0_, LA1 & la1_, Residual & const_residual_) 
+        : la0(la0_), la1(la1_), const_residual(const_residual_), 
           time(0.0), weight(1.0), stage(0)
-          pattern_engine(*this), residual_engine(*this), jacobian_engine(*this)
-      { static_checks(); }
-
-      //! Constructor for non trivial constraints
-      OneStepLocalAssembler (LA0 & la0_, LA1 & la1_, OneStepParameters & method_, 
-                             Residual & const_residual_, const CU& cu_, const CV& cv_) 
-        : Base(cu_, cv_), 
-          la0(la0_), la1(la1_), method(method_), const_residual(const_residual_), 
-          time(0.0), weight(1.0),
-          pattern_engine(*this), residual_engine(*this), jacobian_engine(*this)
+          pattern_engine(*this), prestage_engine(*this), residual_engine(*this), jacobian_engine(*this)
       { static_checks(); }
 
       //! Notifies the local assembler about the current time of
@@ -111,6 +103,11 @@ namespace Dune{
       //! Notifies the assembler about the current weight of assembling.
       void setWeight(RangeField weight_){
         weight = weight_;
+      }
+
+      //! Set the one step method parameters
+      void setMethod(const OneStepParameters & method_){
+        method = & method_;
       }
 
       //! Set the current stage of the one step scheme
@@ -132,11 +129,20 @@ namespace Dune{
 
       //! Returns a reference to the requested engine. This engine is
       //! completely configured and ready to use.
+      LocalPreStageAssemblerEngine & localPreStageAssemblerEngine
+      (const std::vector<Solution*> & x)
+      {
+        prestage_engine.setSolutions(x);
+        prestage_engine.setConstResidual(const_residual);
+        return prestage_engine;
+      }
+
+      //! Returns a reference to the requested engine. This engine is
+      //! completely configured and ready to use.
       LocalResidualAssemblerEngine & localResidualAssemblerEngine
       (Residual & r, const Solution & x)
       {
         residual_engine.setResidual(r);
-        residual_engine.setConstResidual(const_residual);
         residual_engine.setSolution(x);
         return residual_engine;
       }
@@ -164,7 +170,7 @@ namespace Dune{
 
       //! The one step parameter object containing the generalized
       //! butcher tableau parameters
-      const OneStepParameters & method;
+      OneStepParameters * method;
 
       //! The constant part of the residual
       Residual & const_residual;
@@ -181,6 +187,7 @@ namespace Dune{
       //! The engine member objects
       //! @{
       LocalPatternAssemblerEngine  pattern_engine;
+      LocalPreStageAssemblerEngine prestage_engine;
       LocalResidualAssemblerEngine residual_engine;
       LocalJacobianAssemblerEngine jacobian_engine;
       //! @}

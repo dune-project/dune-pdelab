@@ -165,8 +165,14 @@ namespace Dune{
 
       //! Notifier functions, called immediately before and after assembling
       //! @{
-      void preAssembly(){}
-      void postAssembly(){}
+      void preAssembly(){
+        lae0->preAssembly();
+        lae1->preAssembly();
+      }
+      void postAssembly(){
+        lae0->postAssembly();
+        lae1->postAssembly();
+      }
       //! @}
 
       //! Assembling methods
