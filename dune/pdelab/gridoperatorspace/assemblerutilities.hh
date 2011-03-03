@@ -14,18 +14,22 @@ namespace Dune{
        \tparam CV   Constraints maps for the individual dofs (test space)
 
     */
-    template<typename CU, typename CV>
+    template<typename B, typename CU, typename CV>
     struct LocalAssemblerTraits 
     {
+      typedef B MatrixBackend;
+
+      typedef typename B::size_type SizeType;
+
       typedef CU TrialConstraintsType;
 
       typedef CV TestConstraintsType;
     };
 
 
-    class EmptyTransformation : public ConstraintsTransformation<int,float>
-    {
-    };
+    // class EmptyTransformation : public ConstraintsTransformation<int,float>
+    // {
+    // };
 
     /**
        \brief Base class for local assembler
@@ -35,15 +39,17 @@ namespace Dune{
        vectors and matrices via local indices and local function spaces
        with regard to the constraint mappings.
        
+       \tparam B    The matrix backend
        \tparam CU   Constraints maps for the individual dofs (trial space)
        \tparam CV   Constraints maps for the individual dofs (test space)
     */
-    template<typename CU=EmptyTransformation,
+    template<typename B, 
+             typename CU=EmptyTransformation,
              typename CV=EmptyTransformation>
     class LocalAssemblerBase{
     public:
 
-      typedef LocalAssemblerTraits<CU,CV> Traits;
+      typedef LocalAssemblerTraits<B,CU,CV> Traits;
       
       //! construct AssemblerSpace
       LocalAssemblerBase () 
@@ -349,10 +355,10 @@ namespace Dune{
       static CV emptyconstraintsv;
     };
 
-    template<typename CU, typename CV>
-    CU LocalAssemblerBase<CU,CV>::emptyconstraintsu;
-    template<typename CU, typename CV>
-    CV LocalAssemblerBase<CU,CV>::emptyconstraintsv;
+    template<typename B, typename CU, typename CV>
+    CU LocalAssemblerBase<B,CU,CV>::emptyconstraintsu;
+    template<typename B, typename CU, typename CV>
+    CV LocalAssemblerBase<B,CU,CV>::emptyconstraintsv;
 
   };    
 };
