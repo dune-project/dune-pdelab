@@ -41,14 +41,14 @@ namespace Dune{
       /**
          \brief Constructor 
 
-         \param [in] local_assembler_ The local assembler object which
+         \param [in] la_ The local assembler object which
          creates this engine
       */
-      OneStepLocalPrestageAssemblerEngine(const LocalAssembler & local_assembler_)
-        : la(local_assembler_), lae0(invalid_lae0), lae1(invalid_lae1), 
+      OneStepLocalPrestageAssemblerEngine(const LocalAssembler & la_)
+        : la(la_), lae0(invalid_lae0), lae1(invalid_lae1), 
           invalid_residual(static_cast<Residual*>(0)), 
           invalid_solutions(static_cast<Solutions*>(0)),
-          const_residual(invalid_residual), solutions(invalid_solutions), stage(0)
+          const_residual(invalid_residual), solutions(invalid_solutions)
       {}
 
       //! Query methods for the global grid assembler
@@ -97,15 +97,10 @@ namespace Dune{
         assert(solutions != invalid_solutions);
 
         // Initialize the engines of the two wrapped local assemblers
-        lae0 = & local_assembler.la0.localResidualAssemblerEngine(*const_residual,(*solutions)[0]);
-        lae1 = & local_assembler.la1.localResidualAssemblerEngine(*const_residual,(*solutions)[0]);
+        lae0 = & la.la0.localResidualAssemblerEngine(*const_residual,(*solutions)[0]);
+        lae1 = & la.la1.localResidualAssemblerEngine(*const_residual,(*solutions)[0]);
       }
 
-      //! Set current stage number
-      void setStage(const int stage_){
-        stage = stage_;
-      }
-    
       //! Called immediately after binding of local function space in
       //! global assembler.
       //! @{
@@ -217,25 +212,21 @@ namespace Dune{
         // Initialize constant part of residual
         *const_residual = 0.;
 
-        // Set residual vector of subordinate local assemblers
-        lae0->setResidual(*const_residual);
-        lae1->setResidual(*const_residual);
-
         // Extract the coefficients of the time step scheme
-        a.resize(stage);
-        b.resize(stage);
-        d.resize(stage);
-        for (size_t i=0; i<stage; ++i){ 
-          a[i] = la.method.a(stage,i);
-          b[i] = la.method.b(stage,i);
+        a.resize(la.stage);
+        b.resize(la.stage);
+        d.resize(la.stage);
+        for (size_t i=0; i<la.stage; ++i){ 
+          a[i] = la.method.a(la.stage,i);
+          b[i] = la.method.b(la.stage,i);
           d[i] = la.method.d(i);
           do0[i] = ( std::abs(a[i]) < 1E-6 );
           do1[i] = ( std::abs(b[i]) < 1E-6 );
         }
 
         // prepare local operators for stage
-        lae0->preStage(la.time+la.method.d(stage)*la.dt,stage);
-        lae1->preStage(la.time+la.method.d(stage)*la.dt,stage);
+        lae0->preStage(la.time+la.method.d(la.stage)*la.dt,la.stage);
+        lae1->preStage(la.time+la.method.d(la.stage)*la.dt,la.stage);
 
       }
       void postAssembly()
@@ -249,7 +240,7 @@ namespace Dune{
       template<typename EG, typename LFSU, typename LFSV>
       void assembleUVVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
       {
-        for (unsigned s=0; s<stage; ++s){
+        for (unsigned s=0; s<la.stage; ++s){
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
@@ -272,7 +263,7 @@ namespace Dune{
       template<typename EG, typename LFSV>
       void assembleVVolume(const EG & eg, const LFSV & lfsv)
       {
-        for (unsigned s=0; s<stage; ++s){
+        for (unsigned s=0; s<la.stage; ++s){
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
@@ -293,7 +284,7 @@ namespace Dune{
       void assembleUVSkeleton(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
                               const LFSU_N & lfsu_n, const LFSV_N & lfsv_n)
       {
-        for (unsigned s=0; s<stage; ++s){
+        for (unsigned s=0; s<la.stage; ++s){
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
@@ -318,7 +309,7 @@ namespace Dune{
       template<typename IG, typename LFSV_S, typename LFSV_N>
       void assembleVSkeleton(const IG & ig, const LFSV_S & lfsv_s, const LFSV_N & lfsv_n)
       {
-        for (unsigned s=0; s<stage; ++s){
+        for (unsigned s=0; s<la.stage; ++s){
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
@@ -337,7 +328,7 @@ namespace Dune{
       template<typename IG, typename LFSU_S, typename LFSV_S>
       void assembleUVBoundary(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s)
       {
-        for (unsigned s=0; s<stage; ++s){
+        for (unsigned s=0; s<la.stage; ++s){
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
@@ -360,7 +351,7 @@ namespace Dune{
       template<typename IG, typename LFSV_S>
       void assembleVBoundary(const IG & ig, const LFSV_S & lfsv_s)
       {
-        for (unsigned s=0; s<stage; ++s){
+        for (unsigned s=0; s<la.stage; ++s){
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
@@ -383,7 +374,7 @@ namespace Dune{
                                              const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
                                              const LFSU_C & lfsu_c, const LFSV_C & lfsv_c)
       {
-        for (unsigned s=0; s<stage; ++s){
+        for (unsigned s=0; s<la.stage; ++s){
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
@@ -413,7 +404,7 @@ namespace Dune{
                                             const LFSV_N & lfsv_n,
                                             const LFSV_C & lfsv_c) 
       {
-        for (unsigned s=0; s<stage; ++s){
+        for (unsigned s=0; s<la.stage; ++s){
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
@@ -433,7 +424,7 @@ namespace Dune{
       template<typename EG, typename LFSU, typename LFSV>
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
       {
-        for (unsigned s=0; s<stage; ++s){
+        for (unsigned s=0; s<la.stage; ++s){
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
@@ -457,7 +448,7 @@ namespace Dune{
       template<typename EG, typename LFSV>
       void assembleVVolumePostSkeleton(const EG & eg, const LFSV & lfsv)
       {
-        for (unsigned s=0; s<stage; ++s){
+        for (unsigned s=0; s<la.stage; ++s){
           // Reset the time in the local assembler
           la->setTime(la.time+d[s]*la.dt);
 
@@ -499,9 +490,6 @@ namespace Dune{
 
       //! Pointer to the current residual vector in which to assemble
       const Solutions * solutions;
-
-      //! The current stage number
-      int stage;
 
       //! Coefficients of time stepping scheme
       std::vector<Real> a;

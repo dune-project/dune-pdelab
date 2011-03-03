@@ -1,7 +1,7 @@
-#ifndef DUNE_UDG_PATTERNENGINE_HH
-#define DUNE_UDG_PATTERNENGINE_HH
+#ifndef DUNE_ONE_STEP_PATTERNENGINE_HH
+#define DUNE_ONE_STEP_PATTERNENGINE_HH
 namespace Dune{
-  namespace UDG{
+  namespace PDELab{
 
     /**
        \brief The local assembler engine for OneStep sub triangulations which
@@ -30,16 +30,16 @@ namespace Dune{
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
-      OneStepLocalPatternAssemblerEngine(const LocalAssembler & local_assembler_)
-        : local_assembler(local_assembler_), 
+      OneStepLocalPatternAssemblerEngine(const LocalAssembler & la_)
+        : la(la_), 
           invalid_lae0(static_cast<PatternEngineDT0*>(0)), lae0(invalid_lae0),
           invalid_lae1(static_cast<PatternEngineDT1*>(0)), lae1(invalid_lae1), 
           invalid_pattern(static_cast<Pattern*>(0)), pattern(invalid_pattern),
-          implicit(local_assembler.method.implicit())
+          implicit(la.method.implicit())
       {}
 
       //! Public access to the wrapping local assembler
-      const LocalAssembler & localAssembler(){ return local_assembler; }
+      const LocalAssembler & localAssembler(){ return la; }
 
       //! Set current residual vector. Should be called prior to
       //! assembling.
@@ -49,8 +49,8 @@ namespace Dune{
         pattern = &pattern_;
 
         // Initialize the engines of the two wrapped local assemblers
-        lae0 = & local_assembler.la0.localPatternAssemblerEngine(pattern_);
-        lae1 = & local_assembler.la1.localPatternAssemblerEngine(pattern_);
+        lae0 = & la.la0.localPatternAssemblerEngine(pattern_);
+        lae1 = & la.la1.localPatternAssemblerEngine(pattern_);
       }
 
       //! Query methods for the global grid assembler
@@ -257,7 +257,7 @@ namespace Dune{
     private:
 
       //! Reference to the wrapping local assembler object
-      const LocalAssembler & local_assembler;
+      const LocalAssembler & la;
 
       typedef typename LocalAssemblerDT0::LocalPatternAssemblerEngine PatternEngineDT0;
       typedef typename LocalAssemblerDT1::LocalPatternAssemblerEngine PatternEngineDT1;

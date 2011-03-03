@@ -1,5 +1,5 @@
-#ifndef DUNE_ONE_STEP_RESIDUALENGINE_HH
-#define DUNE_ONE_STEP_RESIDUALENGINE_HH
+#ifndef DUNE_ONE_STEP_JACOBIANENGINE_HH
+#define DUNE_ONE_STEP_JACOBIANENGINE_HH
 
 namespace Dune{
   namespace PDELab{
@@ -12,7 +12,7 @@ namespace Dune{
 
     */
     template<typename OSLA>
-    class OneStepLocalResidualAssemblerEngine
+    class OneStepLocalJacobianAssemblerEngine
     {
     public:
       //! The type of the wrapping local assembler
@@ -22,7 +22,7 @@ namespace Dune{
       typedef OSLA::LocalAssemblerDT1 LocalAssemblerDT1;
 
       //! The type of the residual vector
-      typedef typename OSLA::Residual Residual;
+      typedef typename OSLA::Jacobian Jacobian;
 
       //! The type of the solution vector
       typedef typename OSLA::Solution Solution;
@@ -36,9 +36,9 @@ namespace Dune{
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
-      OneStepLocalResidualAssemblerEngine(const LocalAssembler & local_assembler_)
+      OneStepLocalJacobianAssemblerEngine(const LocalAssembler & local_assembler_)
         : la(local_assembler_), lae0(invalid_lae0), lae1(invalid_lae1), 
-          invalid_residual(static_cast<Residual*>(0)), 
+          invalid_jacobian(static_cast<Jacobian*>(0)), 
           invalid_solution(static_cast<Solution*>(0)),
           residual(invalid_residual), solution(invalid_solution)
       {}
@@ -81,16 +81,16 @@ namespace Dune{
         solution = &solution_;
       }
 
-      //! Set current const residual vector. Should be called prior to
+      //! Set current residual vector. Should be called prior to
       //! assembling.
-      void setResidual(Residual & residual_){
-        residual = &residual_;
+      void setJacobian(Jacobian & jacobian_){
+        jacobian = &jacobian_;
 
         assert(solution != invalid_solution);
 
         // Initialize the engines of the two wrapped local assemblers
-        lae0 = & local_assembler.la0.localResidualAssemblerEngine(*residual,*solution);
-        lae1 = & local_assembler.la1.localResidualAssemblerEngine(*residual,*solution);
+        lae0 = & local_assembler.la0.localJacobianAssemblerEngine(*jacobian,*solution);
+        lae1 = & local_assembler.la1.localJacobianAssemblerEngine(*jacobian,*solution);
       }
 
       //! Called immediately after binding of local function space in
@@ -211,11 +211,13 @@ namespace Dune{
       void preAssembly()
       {
         // Initialize constant part of residual
-        *residual = 0.;
+        *jacobian = 0.;
 
         // Extract the coefficients of the time step scheme
         b_rr = la.method.b(la.stage,la.stage);
         d_r = la.method.d(la.stage);
+
+        // Here we only want to know whether this stage is implicit
         implicit = std::abs(b_rr) > 1e-6;
 
         // prepare local operators for stage
@@ -319,23 +321,23 @@ namespace Dune{
       //! constructed this engine
       const LocalAssembler & la;
 
-      typedef typename LocalAssemblerDT0::LocalResidualAssemblerEngine ResidualEngineDT0;
-      typedef typename LocalAssemblerDT1::LocalResidualAssemblerEngine ResidualEngineDT1;
+      typedef typename LocalAssemblerDT0::LocalJacobianAssemblerEngine JacobianEngineDT0;
+      typedef typename LocalAssemblerDT1::LocalJacobianAssemblerEngine JacobianEngineDT1;
 
-      ResidualEngineDT0 * const invalid_lae0;
-      ResidualEngineDT0 * lae0;
-      ResidualEngineDT1 * const invalid_lae1;
-      ResidualEngineDT1 * lae1;
+      JacobianEngineDT0 * const invalid_lae0;
+      JacobianEngineDT0 * lae0;
+      JacobianEngineDT1 * const invalid_lae1;
+      JacobianEngineDT1 * lae1;
 
       //! Default value indicating an invalid residual pointer
-      Residual * const invalid_residual;
+      Jacobian * const invalid_jacobian;
 
       //! Default value indicating an invalid solution pointer
       Solution * const invalid_solution;
 
       //! Pointer to the current constant part residual vector in
       //! which to assemble
-      Residual * residual;
+      Jacobian * jacobian;
 
       //! Pointer to the current residual vector in which to assemble
       const Solution * solution;
@@ -344,7 +346,7 @@ namespace Dune{
       Real b_rr, d_r;
       bool implicit;
 
-    }; // End of class OneStepLocalResidualAssemblerEngine
+    }; // End of class OneStepLocalJacobianAssemblerEngine
 
   };
 };
