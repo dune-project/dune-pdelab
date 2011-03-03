@@ -73,6 +73,10 @@ int main(int argc, char** argv)
   testProxyNode(sp1_1);
   testProxyNode(sc1_1);
 
+  testProxyNode<const SimpleLeaf>(sl1);
+  testProxyNode<const SP1>(sp1_1);
+  testProxyNode<const SC1>(sc1_1);
+
 #if HAVE_VARIADIC_TEMPLATES && HAVE_VARIADIC_CONSTRUCTOR_SFINAE
 
   typedef SimpleVariadicComposite<SimpleLeaf,SP1,SimpleLeaf,SC1> SVC1;
@@ -86,6 +90,7 @@ int main(int argc, char** argv)
   SVC2 svc2_1(sl1,svc1_2,sl2,sp1_3,sc1_1);
 
   testProxyNode(svc2_1);
+  testProxyNode<const SVC2>(svc2_1);
 
 #endif // HAVE_VARIADIC_TEMPLATES
 
