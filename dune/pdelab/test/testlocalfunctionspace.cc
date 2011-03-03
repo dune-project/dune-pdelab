@@ -40,10 +40,10 @@ void test (const GV& gv)
   CompositeGFS compositegfs(powergfs,q1gfs);
 
   // make coefficent Vectors
-  typedef typename Q2GFS::template VectorContainer<double>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<Q2GFS,double>::Type V;
   V x(q2gfs);
   x = 0.0;
-  typedef typename PowerGFS::template VectorContainer<double>::Type VP;
+  typedef typename Dune::PDELab::BackendVectorSelector<PowerGFS,double>::Type VP;
   VP xp(powergfs);
   xp = 0.0;
 

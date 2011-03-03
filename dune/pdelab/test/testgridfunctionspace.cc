@@ -71,10 +71,10 @@ struct test<2> {
     PGFS17B pgfs17b(gfs2);
 
     // make coefficent Vectors
-    typedef typename GFS1::template VectorContainer<double>::Type V1;
+    typedef typename Dune::PDELab::BackendVectorSelector<GFS1,double>::Type V1;
     V1 x1(gfs1);
     x1 = 0.0;
-    typedef typename GFS2::template VectorContainer<double>::Type V2;
+    typedef typename Dune::PDELab::BackendVectorSelector<GFS2,double>::Type V2;
     V2 x2(gfs2);
     x2 = 0.0;
 
