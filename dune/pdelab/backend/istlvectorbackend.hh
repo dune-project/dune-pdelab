@@ -112,12 +112,12 @@ namespace Dune {
       
       operator ContainerType&()
       {
-        return *this;
+        return container;
       }
       
       operator const ContainerType&() const
       {
-        return *this;
+        return container;
       }
 
       iterator begin()
