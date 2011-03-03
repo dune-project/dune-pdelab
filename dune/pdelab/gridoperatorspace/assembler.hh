@@ -1,4 +1,4 @@
-class Assembler{
+class AssemblerInterface{
 public:
   template<class LocalAssembler>
   void assemble(LocalAssembler & local_assembler);
@@ -133,6 +133,9 @@ public:
   typedef typename GFSV::template VectorContainer<RangeField>::Type Range;
   typedef typename GFSU::template VectorContainer<DomainField>::Type Domain;
   //! @}
+
+  typedef LocalAssemblerInterface LocalAssembler;
+  typedef AssemblerInterface Assembler;
 
   template<typename P>
   void fill_pattern (P& globalpattern) const;
