@@ -225,9 +225,7 @@ namespace Dune{
         }
 
         // prepare local operators for stage
-        lae0->preStage(la.time+la.method.d(la.stage)*la.dt,la.stage);
-        lae1->preStage(la.time+la.method.d(la.stage)*la.dt,la.stage);
-
+        la.preStage(la.time+la.method.d(la.stage)*la.dt,la.stage);
       }
       void postAssembly()
       { 

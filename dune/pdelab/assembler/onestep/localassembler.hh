@@ -87,7 +87,7 @@ namespace Dune{
       OneStepLocalAssembler (LA0 & la0_, LA1 & la1_, OneStepParameters & method_, 
                              Residual & const_residual_) 
         : la0(la0_), la1(la1_), method(method_), const_residual(const_residual_), 
-          time(0.0), weight(1.0), 
+          time(0.0), weight(1.0), stage(0)
           pattern_engine(*this), residual_engine(*this), jacobian_engine(*this)
       { static_checks(); }
 
@@ -111,6 +111,11 @@ namespace Dune{
       //! Notifies the assembler about the current weight of assembling.
       void setWeight(RangeField weight_){
         weight = weight_;
+      }
+
+      //! Set the current stage of the one step scheme
+      void setStage(int stage_){
+        stage = stage_;
       }
 
       //! Access methods which provid "ready to use" engines
@@ -169,6 +174,9 @@ namespace Dune{
 
       //! The current weight of assembling
       RangeField weight;
+
+      //! The current stage of the one step scheme
+      int stage;
 
       //! The engine member objects
       //! @{
