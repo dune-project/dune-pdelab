@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<iostream>
 #include<vector>
@@ -14,7 +14,7 @@
 #include"../gridfunctionspace/localvector.hh"
 
 // test function trees
-template<class GV> 
+template<class GV>
 void test (const GV& gv)
 {
   // instantiate finite element maps
@@ -22,7 +22,7 @@ void test (const GV& gv)
   Q22DFEM q22dfem;
   typedef Dune::PDELab::Q12DLocalFiniteElementMap<float,double> Q12DFEM;
   Q12DFEM q12dfem;
-  
+
   // make a grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> Q2GFS;
   Q2GFS q2gfs(gv,q22dfem);
@@ -64,30 +64,30 @@ void test (const GV& gv)
       q2lfs.bind(*it);
       q2lfs.debug();
       q2lfs.vread(x,xl);
-      assert(q2lfs.size() == 
+      assert(q2lfs.size() ==
           q2lfs.localVectorSize());
 
       powerlfs.bind(*it);
       powerlfs.debug();
       powerlfs.vread(xp,xlp);
-      assert(powerlfs.size() == 
+      assert(powerlfs.size() ==
           powerlfs.localVectorSize());
-      assert(powerlfs.localVectorSize() == 
+      assert(powerlfs.localVectorSize() ==
           powerlfs.template child<0>().localVectorSize());
-      assert(powerlfs.localVectorSize() == 
+      assert(powerlfs.localVectorSize() ==
           powerlfs.template child<1>().localVectorSize());
 
       compositelfs.bind(*it);
       compositelfs.debug();
-      assert(compositelfs.size() == 
+      assert(compositelfs.size() ==
           compositelfs.localVectorSize());
-      assert(compositelfs.localVectorSize() == 
+      assert(compositelfs.localVectorSize() ==
           compositelfs.template child<0>().localVectorSize());
-      assert(compositelfs.localVectorSize() == 
+      assert(compositelfs.localVectorSize() ==
           compositelfs.template child<0>().template child<0>().localVectorSize());
-      assert(compositelfs.localVectorSize() == 
+      assert(compositelfs.localVectorSize() ==
           compositelfs.template child<0>().template child<1>().localVectorSize());
-      assert(compositelfs.localVectorSize() == 
+      assert(compositelfs.localVectorSize() ==
           compositelfs.template child<1>().localVectorSize());
 	}
 }
@@ -104,7 +104,7 @@ int main(int argc, char** argv)
 	Dune::FieldVector<bool,2> B(false);
 	Dune::YaspGrid<2> grid(L,N,B,0);
     grid.globalRefine(1);
-    
+
 	test(grid.leafView());
 
 	// test passed
@@ -119,4 +119,4 @@ int main(int argc, char** argv)
     std::cerr << "Unknown exception thrown!" << std::endl;
 	return 1;
   }
-} 
+}

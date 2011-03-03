@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<iostream>
 #include<dune/common/mpihelper.hh>
@@ -21,7 +21,7 @@ struct test;
 
 template<>
 struct test<2> {
-  template<class GV> 
+  template<class GV>
   static void testleafgridfunction(const GV& gv)
   {
     // instantiate finite element maps
@@ -33,11 +33,11 @@ struct test<2> {
     Q12DFEM q12dfem;
     typedef Dune::PDELab::Q22DLocalFiniteElementMap<float,double> Q22DFEM;
     Q22DFEM q22dfem;
-  
+
     // make a grid function space
-    typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS; 
+    typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS;
     P0GFS p0gfs(gv,p0fem);
-    typedef Dune::PDELab::GridFunctionSpace<GV,Q12DFEM> GFS1; 
+    typedef Dune::PDELab::GridFunctionSpace<GV,Q12DFEM> GFS1;
     GFS1 gfs1(gv,q12dfem);
     typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> GFS2;
     GFS2 gfs2(gv,q22dfem);
@@ -102,13 +102,13 @@ struct test<2> {
     CGFS8 cgfs8(gfs1,pgfs2,cgfs2,cgfs3,cgfs4,cgfs5,cgfs6,cgfs7);
     typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::GridFunctionSpaceLexicographicMapper,
       GFS1,PGFS2,CGFS2,CGFS3,CGFS4,CGFS5,CGFS6,CGFS7,CGFS8> CGFS9;
-    CGFS9 cgfs9(gfs1,pgfs2,cgfs2,cgfs3,cgfs4,cgfs5,cgfs6,cgfs7,cgfs8); 
+    CGFS9 cgfs9(gfs1,pgfs2,cgfs2,cgfs3,cgfs4,cgfs5,cgfs6,cgfs7,cgfs8);
   }
 };
 
 template<>
 struct test<3> {
-  template<class GV> 
+  template<class GV>
   static void testleafgridfunction(const GV& gv)
   {
     // instantiate finite element maps
@@ -120,19 +120,19 @@ struct test<3> {
     P1FEM p1fem;
     typedef Dune::PDELab::Q1LocalFiniteElementMap<float,double,3> Q1FEM;
     Q1FEM q1fem;
-  
+
     // make a grid function space
-    typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS; 
+    typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS;
     P0GFS p0gfs(gv,p0fem);
 // Doesn't work, we need a grid with triangular elemets for that
-//  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM> P1GFS; 
+//  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM> P1GFS;
 //  P1GFS p1gfs(gv,p1fem);
-    typedef Dune::PDELab::GridFunctionSpace<GV,Q1FEM> Q1GFS; 
+    typedef Dune::PDELab::GridFunctionSpace<GV,Q1FEM> Q1GFS;
     Q1GFS q1gfs(gv,q1fem);
   }
 };
 
-template<class GV> 
+template<class GV>
 void testleafgridfunction(const GV& gv)
 {
   test<GV::dimension>::testleafgridfunction(gv);
@@ -154,7 +154,7 @@ int main(int argc, char** argv)
       Dune::FieldVector<bool,2> B(false);
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(1);
-      
+
       testleafgridfunction(grid.leafView());
     }
 
@@ -167,7 +167,7 @@ int main(int argc, char** argv)
       Dune::FieldVector<bool,3> B(false);
       Dune::YaspGrid<3> grid(L,N,B,0);
       grid.globalRefine(1);
-      
+
       testleafgridfunction(grid.leafView());
     }
 
@@ -183,4 +183,4 @@ int main(int argc, char** argv)
     std::cerr << "Unknown exception thrown!" << std::endl;
 	return 1;
   }
-} 
+}
