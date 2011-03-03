@@ -48,8 +48,8 @@ namespace Dune {
       enum { doLambdaVolume = true };
       enum { doLambdaBoundary = true };
 
-      DiffusionMixed (const K& k_, const A0& a0_, const F& f_, const B& b_, const G& g_, int qorder_v_=2, int qorder_p_=1)
-        : k(k_), a0(a0_), f(f_), b(b_), g(g_), qorder_v(qorder_v_), qorder_p(qorder_p_)
+      DiffusionMixed (const K& k_, const A0& a0_, const F& f_, const B& bctype_, const G& g_, int qorder_v_=2, int qorder_p_=1)
+        : k(k_), a0(a0_), f(f_), bctype(bctype_), g(g_), qorder_v(qorder_v_), qorder_p(qorder_p_)
       {}
 
 	  // volume integral depending on test and ansatz functions
@@ -242,11 +242,9 @@ namespace Dune {
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
             // evaluate boundary condition type
-            typename B::Traits::RangeType bctype;
-            b.evaluate(ig,it->position(),bctype);
- 
             // skip rest if we are on Neumann boundary
-            if (DiffusionBoundaryCondition::isNeumann(bctype)) continue;
+            if( bctype.isNeumann( ig,it->position() ) )
+              continue;
 
             // position of quadrature point in local coordinates of element 
             Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
@@ -278,7 +276,7 @@ namespace Dune {
       const K& k;
       const A0& a0;
       const F& f;
-      const B& b;
+      const B& bctype;
       const G& g;
       int qorder_v; 
       int qorder_p;
