@@ -182,8 +182,8 @@ namespace Dune {
                        , const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
                        ) const
       {
-        if( t.bctype( ig.intersection(), coord ) == ConvectionDiffusionBoundaryConditions::Dirichlet )
-          return true;
+        return( t.bctype( ig.intersection(), coord ) 
+                == ConvectionDiffusionBoundaryConditions::Dirichlet );
       }
     };
 
