@@ -143,18 +143,9 @@ public:
   template<typename X, typename A>
   void jacobian (const X& x, A& a) const;
 
-  template<typename TT>
-  void preStep (TT time, TT dt, std::size_t stages);
+  Assembler & assembler();
 
-  void postStep ();
-
-  template<typename TT>
-  void preStage (TT time, std::size_t stage);
-
-  void postStage ();
-
-  template<typename TT>
-  TT suggestTimestep (TT dt) const;
+  LocalAssemblerInterface & localAssembler();
 
   const GFSU& trialGridFunctionSpace() const;
 
