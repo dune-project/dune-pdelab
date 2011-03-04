@@ -9,6 +9,7 @@ gridfunctionspace_HEADERS =			\
 	interpolate.hh				\
 	intersectionindexset.hh			\
 	leafordering.hh				\
+	lexicographicordering.hh		\
 	localfunctionspace.hh			\
 	localfunctionspacetags.hh		\
 	localindex.hh				\
