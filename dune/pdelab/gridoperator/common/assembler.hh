@@ -154,4 +154,15 @@ public:
 
   typename GFSV::Traits::SizeType globalSizeV () const;
 
+  //! Interpolate xnew from f, taking unconstrained values from xold.
+  /**
+   * \note the exact type of F will depend on the GridOperator and
+   *       may be a more complicated object than a simple GridFunction
+   *       for scenarios like MultiDomain or grid-glue.
+   */
+  template<typename F>
+  void interpolate(const typename Traits::Domain& xold,
+                   const F& f,
+                   typename Traits::Domain& xnew);
+
 };
