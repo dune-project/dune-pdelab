@@ -10,6 +10,7 @@
 #include <dune/common/shared_ptr.hh>
 #include<dune/common/static_assert.hh>
 #include<dune/grid/yaspgrid.hh>
+#include <dune/pdelab/backend/backendselector.hh>
 #include"../finiteelementmap/p0fem.hh"
 #include"../finiteelementmap/rt02dfem.hh"
 #include"../finiteelementmap/rt0q2dfem.hh"
@@ -92,10 +93,12 @@ void testrt0 (const GV& gv)
   RT0GFS rt0gfs(gv,rt0fem);
 
   // make coefficent Vectors
-  typedef typename P0GFS::template VectorContainer<double>::Type P0V;
+  typedef typename Dune::PDELab::BackendVectorSelector<P0GFS, double>::Type
+    P0V;
   P0V p0xg(p0gfs);
   p0xg = 0.0;
-  typedef typename RT0GFS::template VectorContainer<double>::Type RT0V;
+  typedef typename Dune::PDELab::BackendVectorSelector<RT0GFS, double>::Type
+    RT0V;
   RT0V rt0xg(rt0gfs);
   rt0xg = 0.0;
 

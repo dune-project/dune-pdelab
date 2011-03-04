@@ -34,6 +34,7 @@
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/grid/utility/vertexorder.hh>
 
+#include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/backend/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/istlsolverbackend.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
@@ -204,7 +205,8 @@ void vectorWave(const Config &config, const GV& gv, const FEM& fem)
   ce.compute_ghosts(gfs); // con stores indices of ghost dofs
 
   if(config.debug.dof_positions) {
-    typedef typename GFS::template VectorContainer<std::size_t>::Type IntV;
+    typedef typename Dune::PDELab::BackendVectorSelector
+      <GFS, std::size_t>::Type IntV;
     IntV dummy(gfs);
     for(std::size_t i = 0; i < gfs.size(); ++i)
       IntV::Backend::access(dummy, i) = i;
@@ -238,7 +240,7 @@ void vectorWave(const Config &config, const GV& gv, const FEM& fem)
   typedef Dune::tuple<R0, R1, R2> LOPs;
   typedef Dune::tuple<R0&, R1&, R2&> LOPRefs;
 
-  typedef typename GFS::template VectorContainer<RF>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS, RF>::Type V;
 
   typedef Dune::PDELab::CachedMultiStepGridOperatorSpace<int,DF,RF,GFS,GFS,
     LOPs,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1>, true> MGOS;

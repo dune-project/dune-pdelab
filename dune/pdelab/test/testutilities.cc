@@ -8,6 +8,7 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/grid/yaspgrid.hh>
+#include <dune/pdelab/backend/backendselector.hh>
 #include"../finiteelementmap/q22dfem.hh"
 #include"../finiteelementmap/q12dfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
@@ -29,7 +30,7 @@ void testq1 (const GV& gv)
   Q1GFS q1gfs(gv,q12dfem);
 
   // make coefficent Vectors
-  typedef typename Q1GFS::template VectorContainer<double>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<Q1GFS, double>::Type V;
   V x(q1gfs);
   x = 0.0;
   x[3] = 1.0;
@@ -104,13 +105,13 @@ void testinterpolate (const GV& gv)
   PGFS pgfs(q2gfs,q2gfs);
 
   // make coefficent Vectors
-  typedef typename Q1GFS::template VectorContainer<double>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<Q1GFS, double>::Type V;
   V xg(q1gfs);
   xg = 0.0;
-  typedef typename CGFS::template VectorContainer<double>::Type CV;
+  typedef typename Dune::PDELab::BackendVectorSelector<CGFS, double>::Type CV;
   CV cxg(cgfs);
   cxg = 0.0;
-  typedef typename PGFS::template VectorContainer<double>::Type PV;
+  typedef typename Dune::PDELab::BackendVectorSelector<PGFS, double>::Type PV;
   PV pxg(pgfs);
   pxg = 0.0;
 
@@ -247,7 +248,7 @@ void testtaylorhood (const GV& gv)
   THGFS thgfs(vgfs,q1gfs);
 
   // make coefficent Vector
-  typedef typename THGFS::template VectorContainer<double>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<THGFS, double>::Type V;
   V xg(thgfs);
   xg = 0.0;
 
@@ -272,8 +273,8 @@ void testtaylorhood (const GV& gv)
   Dune::PDELab::interpolate(alternativeth,thgfs,xg);
 
   // check entries of global vector
-  for (typename V::size_type i=0; i<xg.size(); i++)
-    std::cout << "[" << i << ":" << xg[i] << "] ";
+  for (typename V::size_type i=0; i<xg.flatsize(); i++)
+    std::cout << "[" << i << ":" << V::Backend::access(xg, i) << "] ";
   std::cout << std::endl;
 
   // check entries

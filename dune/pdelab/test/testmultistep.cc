@@ -26,6 +26,7 @@
 #include <dune/grid/io/file/vtk/vtksequencewriter.hh>
 #include <dune/grid/yaspgrid.hh>
 
+#include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/backend/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/istlsolverbackend.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
@@ -230,7 +231,7 @@ void wave (const GV& gv, const FEM& fem, typename GV::ctype dt,
   Dune::PDELab::constraints(b,gfs,cg);
 
   // make coefficent Vector and initialize it from a function
-  typedef typename GFS::template VectorContainer<RF>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS, RF>::Type V;
   std::deque<Dune::shared_ptr<V> > oldvalues;
   typedef G<GV,RF,DF> GType;
   GType g(gv);

@@ -12,6 +12,7 @@
 #include <dune/common/tupleutility.hh>
 #include <dune/common/typetraits.hh>
 
+#include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/constraints/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
@@ -332,8 +333,7 @@ namespace Dune {
       struct MatrixContainer
       {
         //! \brief define Type as the Type of a Matrix of E's
-        typedef typename B::template Matrix<CachedMultiStepGridOperatorSpace,
-                                            E> Type;
+        typedef typename B::template Matrix<E> Type;
       private:
         MatrixContainer () {}
       };
@@ -342,9 +342,9 @@ namespace Dune {
       // extract useful types
       typedef GridOperatorBase<GFSU,GFSV,CU,CV,B> Base;
 
-      typedef typename GFSU::template VectorContainer<Coeffs>::Type
+      typedef typename Dune::PDELab::BackendVectorSelector<GFSU, Coeffs>::Type
         UnknownVector;
-      typedef typename GFSV::template VectorContainer<Coeffs>::Type
+      typedef typename Dune::PDELab::BackendVectorSelector<GFSV, Coeffs>::Type
         ResidualVector;
       typedef typename MatrixContainer<Coeffs>::Type Matrix;
 

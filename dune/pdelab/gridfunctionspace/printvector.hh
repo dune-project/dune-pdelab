@@ -14,6 +14,7 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/ios_state.hh>
 
+#include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/gridfunctionspace/dofinfo.hh>
 
 namespace Dune {
@@ -71,7 +72,8 @@ position TAB vector entry NEWLINE
       const GV &gv = gfs.gridview();
       typedef FieldVector<typename GV::ctype, GV::dimensionworld> DomainW;
 
-      typedef typename GFS::template VectorContainer<DomainW>::Type PosV;
+      typedef typename Dune::PDELab::BackendVectorSelector<GFS, DomainW>::Type
+        PosV;
       PosV posV(gfs);
       getDofEntityPositions(gfs, posV);
 

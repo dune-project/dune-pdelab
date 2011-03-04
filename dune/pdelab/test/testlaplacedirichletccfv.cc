@@ -28,6 +28,7 @@
 #include"../common/vtkexport.hh"
 #include"../gridoperatorspace/gridoperatorspace.hh"
 #include"../localoperator/laplacedirichletccfv.hh"
+#include"../backend/backendselector.hh"
 #include"../backend/istlvectorbackend.hh"
 #include"../backend/istlmatrixbackend.hh"
 #include"../backend/istlsolverbackend.hh"
@@ -106,7 +107,7 @@ void test (const GV& gv)
   GFS gfs(gv,fem);
 
   // make coefficent Vector and initialize it from a function
-  typedef typename GFS::template VectorContainer<RF>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS, RF>::Type V;
   V x0(gfs);
   x0 = 0.0;
   typedef G<GV,RF> GType;

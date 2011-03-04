@@ -23,6 +23,7 @@
 #include <dune/istl/preconditioners.hh>
 #include <dune/istl/solvers.hh>
 
+#include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/backend/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/istlsolverbackend.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
@@ -201,7 +202,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   Dune::PDELab::constraints(b,gfs,cg);
 
   // make coefficent Vector and initialize it from a function
-  typedef typename GFS::template VectorContainer<R>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS, R>::Type V;
   V x0(gfs);
   x0 = 0.0;
   typedef G<GV,R> GType;

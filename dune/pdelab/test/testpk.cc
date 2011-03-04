@@ -10,6 +10,7 @@
 #include <dune/common/shared_ptr.hh>
 #include<dune/common/static_assert.hh>
 #include<dune/grid/yaspgrid.hh>
+#include <dune/pdelab/backend/backendselector.hh>
 #include"../finiteelementmap/p0fem.hh"
 #include"../finiteelementmap/p12dfem.hh"
 #include"../finiteelementmap/pk2dfem.hh"
@@ -69,13 +70,16 @@ void testpk (const GV& gv)
   PkGFS pkgfs(gv,pkfem);
 
   // make coefficent Vectors
-  typedef typename P0GFS::template VectorContainer<double>::Type P0V;
+  typedef typename Dune::PDELab::BackendVectorSelector<P0GFS, double>::Type
+    P0V;
   P0V p0xg(p0gfs);
   p0xg = 0.0;
-  typedef typename P1GFS::template VectorContainer<double>::Type P1V;
+  typedef typename Dune::PDELab::BackendVectorSelector<P1GFS, double>::Type
+    P1V;
   P1V p1xg(p1gfs);
   p1xg = 0.0;
-  typedef typename PkGFS::template VectorContainer<double>::Type PkV;
+  typedef typename Dune::PDELab::BackendVectorSelector<PkGFS, double>::Type
+    PkV;
   PkV pkxg(pkgfs);
   pkxg = 0.0;
 

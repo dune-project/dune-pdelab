@@ -10,6 +10,8 @@
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/timer.hh>
 
+#include <dune/pdelab/backend/backendselector.hh>
+
 namespace Dune {
   namespace PDELab {
 
@@ -28,10 +30,10 @@ namespace Dune {
     class StationaryMatrixLinearSolver
     {
       typedef typename GOS::template MatrixContainer<Coeff>::Type Matrix;
-      typedef typename GOS::Traits::TrialGridFunctionSpace::
-        template VectorContainer<Coeff>::Type VectorU;
-      typedef typename GOS::Traits::TestGridFunctionSpace::
-        template VectorContainer<Coeff>::Type VectorV;
+      typedef typename Dune::PDELab::BackendVectorSelector
+        <typename GOS::Traits::TrialGridFunctionSpace, Coeff>::Type VectorU;
+      typedef typename Dune::PDELab::BackendVectorSelector
+        <typename GOS::Traits::TestGridFunctionSpace, Coeff>::Type VectorV;
 
       const GOS& gos;
       SB& sb;

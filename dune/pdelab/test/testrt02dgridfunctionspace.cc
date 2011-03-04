@@ -22,6 +22,7 @@
 #include <dune/grid/uggrid/uggridfactory.hh>
 #endif
 
+#include <dune/pdelab/backend/backendselector.hh>
 #include "../common/vtkexport.hh"
 #include "../gridfunctionspace/gridfunctionspace.hh"
 #include "../gridfunctionspace/gridfunctionspaceutilities.hh"
@@ -45,7 +46,7 @@ void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
     > GFS;
   GFS gfs(gv,fem);                    // make grid function space
 
-  typedef typename GFS::template VectorContainer<R>::Type X;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS, R>::Type X;
   X x(gfs,0.0);                       // make coefficient vector
   x[2] = 1.0;                         // set a component
 

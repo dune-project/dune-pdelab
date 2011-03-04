@@ -15,6 +15,7 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
 
+#include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspacetags.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 
@@ -35,13 +36,14 @@ namespace Dune {
     template<class GFS>
     void classifyDofs
     ( const GFS& gfs,
-      typename GFS::template VectorContainer<bool>::Type &isInterior,
-      typename GFS::template VectorContainer<bool>::Type &isOverlap,
-      typename GFS::template VectorContainer<bool>::Type &isGhost)
+      typename Dune::PDELab::BackendVectorSelector<GFS,
+                                                   bool>::Type &isInterior,
+      typename Dune::PDELab::BackendVectorSelector<GFS, bool>::Type &isOverlap,
+      typename Dune::PDELab::BackendVectorSelector<GFS, bool>::Type &isGhost)
     {
       typedef typename GFS::Traits::GridViewType GV;
       typedef typename GV::template Codim<0>::Iterator Iterator;
-      typedef typename GFS::template VectorContainer<bool>::Type V;
+      typedef typename Dune::PDELab::BackendVectorSelector<GFS, bool>::Type V;
 
       isInterior = false;
       isOverlap = false;
@@ -78,7 +80,8 @@ namespace Dune {
     template<class GFS>
     void getDofEntityPositions
     ( const GFS& gfs,
-      typename GFS::template VectorContainer<
+      typename Dune::PDELab::BackendVectorSelector<
+        GFS,
         FieldVector<typename GFS::Traits::GridViewType::ctype,
                     GFS::Traits::GridViewType::dimensionworld>
         >::Type &dofPositions)

@@ -7,6 +7,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
 #include <dune/grid/yaspgrid.hh>
+#include <dune/pdelab/backend/backendselector.hh>
 #include "../finiteelementmap/p0fem.hh"
 #include "../finiteelementmap/q22dfem.hh"
 #include "../finiteelementmap/q1fem.hh"
@@ -83,7 +84,7 @@ static void test_interpolate(const GV& gv)
   GFS gfs(gfs1,pgfs,cgfs,pgfs,cgfs);
 
   // make coefficent Vector
-  typedef typename GFS::template VectorContainer<double>::Type V;
+  typedef typename Dune::PDELab::BackendVectorSelector<GFS, double>::Type V;
   V x(gfs,0.0);
 
   // build interpolation function tree
