@@ -225,7 +225,7 @@ namespace Dune {
         typedef typename GV::ctype Coord;
         typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,double,GV::dimension> P0FEM;
         typedef GridFunctionSpace<GV,P0FEM> GFSV;
-        typedef typename GFSV::template VectorContainer<double>::Type V;
+        typedef typename Dune::PDELab::BackendVectorSelector<GFSV,double>::Type V;
         typedef typename Dune::PDELab::GridOperatorSpace<GFSU,GFSV,LOP> GOS;
 
         public:
@@ -379,7 +379,7 @@ namespace Dune {
       typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,double,GV::dimension> P0FEM;
       typedef GridFunctionSpace<GV,P0FEM> GFSV;
       typedef LocalFunctionSpace<GFSV> LFSV;
-      typedef typename GFSV::template VectorContainer<double>::Type V;
+      typedef typename Dune::PDELab::BackendVectorSelector<GFSV,double>::Type V;
       typedef std::multimap<typename V::ElementType, const IndexType> MapType;
 
       public:
