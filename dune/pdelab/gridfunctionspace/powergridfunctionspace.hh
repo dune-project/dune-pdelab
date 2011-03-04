@@ -395,7 +395,15 @@ namespace Dune {
 
       typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j) const
       {
-        return (j%s)+(j/s)*k*s+i*s;
+        // j: index within child
+        // i: child number
+        // s: block size
+        // k: number of children
+        // consider codim 0 only
+        // layout: { [s dofs of child 0] ... [s dofs of child k-1] } repeat
+        return j%s     // index of dof within []-block
+          + i*s        // start-index of []-block within {}-block
+          + (j/s)*k*s; // start-index of {}-block
       }
 
 

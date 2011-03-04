@@ -199,9 +199,20 @@ namespace Dune {
 
       typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j) const
       {
-        return (j%BlockwiseMapper::size[i])
-          +(j/BlockwiseMapper::size[i])*BlockwiseMapper::offset[BaseT::CHILDREN]
-          +BlockwiseMapper::offset[i];
+        // j: index within child
+        // i: child number
+        // BlockwiseMapper::size[i]: []-block size for child i
+        // BlockwiseMapper::offset[i]: offset within {}-block for child i
+        // k: number of children
+        // consider codim 0 only
+        // layout: { [s0 dofs of child 0] ... [s(k-1) dofs of child (k-1)] } repeat
+        return
+          // index of dof within []-block
+          (j%BlockwiseMapper::size[i])
+          // start-index of []-block within {}-block
+          +BlockwiseMapper::offset[i]
+          // start-index of {}-block
+          +(j/BlockwiseMapper::size[i])*BlockwiseMapper::offset[BaseT::CHILDREN];
       }
 
 
@@ -410,6 +421,7 @@ namespace Dune {
       }
 
     private:
+      // first: childIndex, second: parentIndex
       typedef std::pair<typename Traits::SizeType,typename Traits::SizeType> SizeTypePair;
       typedef std::list<SizeTypePair> BlockIndexRangeList;
       std::vector<BlockIndexRangeList> blockIndices;
