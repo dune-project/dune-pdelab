@@ -20,6 +20,8 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
 
+#include <dune/pdelab/gridfunctionspace/leafordering.hh>
+
 #include "../common/typetree.hh"
 #include "../common/geometrywrapper.hh"
 
@@ -318,10 +320,13 @@ namespace Dune {
 
       typedef LeafGridFunctionSpaceTag ImplementationTag;
 
+      typedef LeafOrdering<GridFunctionSpace> Ordering;
+
 	  //! constructor
 	  GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_)
 		: defaultce(ce_), gv(gridview), pfem(stackobject_to_shared_ptr(fem)), ce(ce_)
 	  {
+        orderingp = make_shared<Ordering>(*this);
 		update();
 	  }
 
@@ -329,6 +334,7 @@ namespace Dune {
 	  GridFunctionSpace (const GV& gridview, const FEM& fem)
         : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), ce(defaultce)
 	  {
+        orderingp = make_shared<Ordering>(*this);
 		update();
 	  }
 
@@ -349,6 +355,12 @@ namespace Dune {
 	  {
         return *pfem;
 	  }
+
+      //! get ordering
+      const Ordering &ordering() const { return *orderingp; }
+
+      //! get ordering
+      const shared_ptr<Ordering> &orderingPtr() { return orderingp; }
 
       //! get dimension of root finite element space
 	  typename Traits::SizeType globalSize () const
@@ -582,6 +594,9 @@ namespace Dune {
 			nglobal += size;
 		  }
         Dune::dinfo << "total number of dofs is " << nglobal << std::endl;
+
+        // update ordering
+        orderingp->update();
 	  }
 
 	private:
@@ -596,6 +611,8 @@ namespace Dune {
 	  GTOffsetMap gtoffset; // offset in vector for given geometry type
 	  std::vector<typename Traits::SizeType> offset; // offset into big vector for each entity;
       std::set<unsigned int> codimUsed;
+
+      std::shared_ptr<Ordering> orderingp;
 	};
 
 	/** \brief Tag indicating a fixed number of unkowns per entity (known at compile time).
@@ -633,10 +650,13 @@ namespace Dune {
 
       typedef LeafGridFunctionSpaceTag ImplementationTag;
 
+      typedef LeafOrdering<GridFunctionSpace> Ordering;
+
 	  // constructor
       GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_)
         : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), defaultce(ce_), ce(ce_)
 	  {
+        orderingp = make_shared<Ordering>(*this);
 		update();
 	  }
 
@@ -644,6 +664,7 @@ namespace Dune {
       GridFunctionSpace (const GV& gridview, const FEM& fem)
         : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), ce(defaultce)
 	  {
+        orderingp = make_shared<Ordering>(*this);
 		update();
 	  }
 
@@ -664,6 +685,12 @@ namespace Dune {
 	  {
         return *pfem;
 	  }
+
+      //! get ordering
+      const Ordering &ordering() const { return *orderingp; }
+
+      //! get ordering
+      const shared_ptr<Ordering> &orderingPtr() { return orderingp; }
 
       //! get dimension of root finite element space
 	  typename Traits::SizeType globalSize () const
@@ -873,6 +900,9 @@ namespace Dune {
             Dune::dinfo << i->first << " offset now " << nglobal << std::endl;
 		  }
         Dune::dinfo << "total number of dofs = " << nglobal << std::endl;
+
+        // update ordering
+        orderingp->update();
 	  }
 
 	private:
@@ -888,6 +918,8 @@ namespace Dune {
 	  DofCountMapType dofcountmap; // number of degrees of freedom per geometry type
 	  std::map<Dune::GeometryType,typename Traits::SizeType> offset; // offset in vector for given geometry type
       std::set<unsigned int> codimUsed;
+
+      std::shared_ptr<Ordering> orderingp;
 	};
 
     //! \addtogroup GridFunctionSpace
@@ -975,29 +1007,35 @@ namespace Dune {
 
       typedef LeafGridFunctionSpaceTag ImplementationTag;
 
+      typedef LeafOrdering<GridFunctionSpace> Ordering;
+
 	  // constructors
       GridFunctionSpace (const GV& gridview, const FEM& fem, const IIS& iis_,
                          const CE& ce_)
         : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), iis(iis_), defaultce(ce_), ce(ce_)
 	  {
+        orderingp = make_shared<Ordering>(*this);
 		update();
 	  }
 
       GridFunctionSpace (const GV& gridview, const FEM& fem, const IIS& iis_)
         : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), iis(iis_), ce(defaultce)
 	  {
+        orderingp = make_shared<Ordering>(*this);
 		update();
 	  }
 
       GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_)
         : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), iis(dummyiis), defaultce(ce_), ce(ce_)
 	  {
+        orderingp = make_shared<Ordering>(*this);
 		update();
 	  }
 
       GridFunctionSpace (const GV& gridview, const FEM& fem)
         : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), iis(dummyiis), ce(defaultce)
 	  {
+        orderingp = make_shared<Ordering>(*this);
 		update();
 	  }
 
@@ -1018,6 +1056,12 @@ namespace Dune {
 	  {
         return *pfem;
 	  }
+
+      //! get ordering
+      const Ordering &ordering() const { return *orderingp; }
+
+      //! get ordering
+      const shared_ptr<Ordering> &orderingPtr() { return orderingp; }
 
       //! get dimension of root finite element space
 	  typename Traits::SizeType globalSize () const
@@ -1225,6 +1269,9 @@ namespace Dune {
 //                           << "in static size grid function space"
 //                           << std::endl;;
           }
+
+        // update ordering
+        orderingp->update();
 	  }
 
 	private:
@@ -1240,6 +1287,8 @@ namespace Dune {
 
       DofPerCodimMapType dofpercodim;
       std::map<unsigned int,typename Traits::SizeType> offset;
+
+      std::shared_ptr<Ordering> orderingp;
 	};
 
 
