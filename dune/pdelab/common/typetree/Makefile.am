@@ -10,6 +10,7 @@ common_HEADERS =				\
 	filters.hh				\
 	generictransformationdescriptors.hh	\
 	leafnode.hh				\
+	nodeinterface.hh			\
 	nodetags.hh				\
 	pairtraversal.hh			\
 	powernode.hh				\
