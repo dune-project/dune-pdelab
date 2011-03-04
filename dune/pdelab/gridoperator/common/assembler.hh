@@ -1,3 +1,7 @@
+#include <gridoperatorutilities.hh>
+#include <assemblerutilties.hh>
+
+
 class AssemblerInterface{
 public:
   template<class LocalAssembler>
@@ -115,27 +119,20 @@ public:
   class LocalResidualJacobianAssemblerEngine : public LocalAssemblerEngine {};
 };
 
-
-template<typename GFSU, typename GFSV, 
+template<typename GFSU, typename GFSV,
          typename MB, typename DF, typename RF, typename JF>
 class GridOperator{
 public:
 
-  //! The matrix backend to be used for the jacobian matrix
-  typedef MB MatrixBackend;
-
-  //! The domain and range types of the operator
-  //! @{
-  typedef DF DomainField;
-  typedef RF RangeField;
-  typedef JF JacobianField;
-  typedef typename MatrixBackend::template Matrix<UDGGridOperator,JacobianField> Jacobian;
-  typedef typename GFSV::template VectorContainer<RangeField>::Type Range;
-  typedef typename GFSU::template VectorContainer<DomainField>::Type Domain;
-  //! @}
-
-  typedef LocalAssemblerInterface LocalAssembler;
-  typedef AssemblerInterface Assembler;
+  typedef GridOperatorTraits<GridOperator,
+                             GFSU,
+                             GFSV,
+                             MB,
+                             DF,
+                             RF,
+                             JF,
+                             Assembler,
+                             LocalAssembler> Traits;
 
   template<typename P>
   void fill_pattern (P& globalpattern) const;
