@@ -5,6 +5,8 @@
 #define DUNE_PDELAB_ASSEMBLERUTILITIES_HH
 
 #include <dune/pdelab/constraints/constraintstransformation.hh>
+#include <dune/pdelab/gridoperatorspace/localmatrix.hh>
+
 namespace Dune{
   namespace PDELab{
 
