@@ -41,6 +41,9 @@ AC_CONFIG_FILES([
   dune/pdelab/finiteelementmap/Makefile
   dune/pdelab/function/Makefile
   dune/pdelab/gridfunctionspace/Makefile
+  dune/pdelab/gridoperator/Makefile
+  dune/pdelab/gridoperator/common/Makefile
+  dune/pdelab/gridoperator/onestep/Makefile
   dune/pdelab/gridoperatorspace/Makefile
   dune/pdelab/instationary/Makefile
   dune/pdelab/linearsolver/Makefile

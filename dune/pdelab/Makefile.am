@@ -8,6 +8,7 @@ SUBDIRS =					\
 	finiteelementmap		\
 	function				\
 	gridfunctionspace		\
+	gridoperator			\
 	gridoperatorspace		\
 	linearsolver			\
 	localoperator			\
