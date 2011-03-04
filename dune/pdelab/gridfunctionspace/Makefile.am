@@ -18,6 +18,7 @@ gridfunctionspace_HEADERS =			\
 	localvector.hh				\
 	nonleaforderingbase.hh			\
 	ordering.hh				\
+	orderingbase.hh				\
 	orderinginterface.hh			\
 	powercompositegridfunctionspacebase.hh	\
 	powergridfunctionspace.hh		\
