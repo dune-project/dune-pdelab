@@ -4,6 +4,7 @@ gridfunctionspace_HEADERS =			\
 	compositegridfunctionspace.hh		\
 	constraints.hh				\
 	dofinfo.hh				\
+	dynamicblockwiseordering.hh		\
 	genericdatahandle.hh			\
 	gridfunctionspace.hh			\
 	gridfunctionspaceutilities.hh		\
