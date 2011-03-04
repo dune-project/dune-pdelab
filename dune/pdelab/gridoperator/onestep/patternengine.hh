@@ -15,10 +15,10 @@ namespace Dune{
     {
     public:
       //! The type of the wrapping local assembler
-      typedef OSLA OneStepLocalAssembler;
+      typedef OSLA LocalAssembler;
 
-      typedef OSLA::LocalAssemblerDT0 LocalAssemblerDT0;
-      typedef OSLA::LocalAssemblerDT1 LocalAssemblerDT1;
+      typedef typename OSLA::LocalAssemblerDT0 LocalAssemblerDT0;
+      typedef typename OSLA::LocalAssemblerDT1 LocalAssemblerDT1;
 
       //! The type of the matrix pattern container
       typedef typename LocalAssemblerDT0::Pattern Pattern;
@@ -34,8 +34,7 @@ namespace Dune{
         : la(la_), 
           invalid_lae0(static_cast<PatternEngineDT0*>(0)), lae0(invalid_lae0),
           invalid_lae1(static_cast<PatternEngineDT1*>(0)), lae1(invalid_lae1), 
-          invalid_pattern(static_cast<Pattern*>(0)), pattern(invalid_pattern),
-          implicit(la.method.implicit())
+          invalid_pattern(static_cast<Pattern*>(0)), pattern(invalid_pattern)
       {}
 
       //! Public access to the wrapping local assembler
@@ -60,7 +59,7 @@ namespace Dune{
       bool requireSkeletonTwoSided() const
       { return lae0->requireSkeletonTwoSided() || lae1->requireSkeletonTwoSided(); }
       bool requireUVVolume() const
-      { return lae0->doPatternVolume() || lae1->doPatternVolume(); }
+      { return lae0->requireUVVolume() || lae1->requireUVVolume(); }
       bool requireVVolume() const
       { return lae0->requireVVolume() || lae1->requireVVolume(); }
       bool requireUVSkeleton() const
@@ -140,8 +139,8 @@ namespace Dune{
 
       template<typename IG, typename LFSU>
       void onUnbindLFSUInside(const IG & ig, const LFSU & lfsu){
-        lae0->onUnbindLFSUInside(eg,lfsu);
-        lae1->onUnbindLFSUInside(eg,lfsu);
+        lae0->onUnbindLFSUInside(ig,lfsu);
+        lae1->onUnbindLFSUInside(ig,lfsu);
       }
 
       template<typename IG, typename LFSU>
@@ -163,9 +162,24 @@ namespace Dune{
       }
       //! @}
 
+      //! Methods for loading of the local function's
+      //! coefficients. These methods are blocked. The loading of the
+      //! coefficients is done in each assemble call.
+      //!@{
+      template<typename LFSU>
+      void loadCoefficientsLFSUInside(const LFSU & lfsu_s){ }
+      template<typename LFSU>
+      void loadCoefficientsLFSUOutside(const LFSU & lfsu_n){ }
+      template<typename LFSU>
+      void loadCoefficientsLFSUCoupling(const LFSU & lfsu_c){ }
+      //! @}
+
+
       //! Notifier functions, called immediately before and after assembling
       //! @{
       void preAssembly(){
+        implicit = la.osp_method->implicit();
+
         lae0->preAssembly();
         lae1->preAssembly();
       }
@@ -222,9 +236,9 @@ namespace Dune{
           lae0->assembleVBoundary(ig,lfsv_s);
       }
 
-      template<typename IG, typename LFSU_S, typename LFSV_S,, typename LFSU_N,, typename LFSV_N,
+      template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N,
                typename LFSU_C, typename LFSV_C>
-      static void assembleUVEnrichedCoupling(const IG & ig,
+      void assembleUVEnrichedCoupling(const IG & ig,
                                              const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
                                              const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
                                              const LFSU_C & lfsu_coupling, const LFSV_C & lfsv_coupling)
@@ -234,7 +248,7 @@ namespace Dune{
       }
 
       template<typename IG, typename LFSV_S, typename LFSV_N, typename LFSV_C>
-      static void assembleVEnrichedCoupling(const IG & ig,
+      void assembleVEnrichedCoupling(const IG & ig,
                                             const LFSV_S & lfsv_s,
                                             const LFSV_N & lfsv_n,
                                             const LFSV_C & lfsv_coupling) 
@@ -280,7 +294,7 @@ namespace Dune{
       Pattern * pattern;
 
       //! Flag which indicates, whether method is implicit;
-      const bool implicit;
+      bool implicit;
 
     }; // End of class OneStepLocalPatternAssemblerEngine
 

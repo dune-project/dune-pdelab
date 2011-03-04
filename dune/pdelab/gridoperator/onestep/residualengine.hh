@@ -18,8 +18,14 @@ namespace Dune{
       //! The type of the wrapping local assembler
       typedef OSLA OneStepLocalAssembler;
 
-      typedef OSLA::LocalAssemblerDT0 LocalAssemblerDT0;
-      typedef OSLA::LocalAssemblerDT1 LocalAssemblerDT1;
+      //! Types of the subordinate assemblers and engines
+      //! @{
+      typedef typename OSLA::LocalAssemblerDT0 LocalAssemblerDT0;
+      typedef typename OSLA::LocalAssemblerDT1 LocalAssemblerDT1;
+
+      typedef typename LocalAssemblerDT0::LocalResidualAssemblerEngine ResidualEngineDT0;
+      typedef typename LocalAssemblerDT1::LocalResidualAssemblerEngine ResidualEngineDT1;
+      //! @}
 
       //! The type of the residual vector
       typedef typename OSLA::Residual Residual;
@@ -30,6 +36,8 @@ namespace Dune{
       //! The type for real numbers
       typedef typename OSLA::Real Real;
 
+      typedef OSLA LocalAssembler;
+
       /**
          \brief Constructor 
 
@@ -37,7 +45,9 @@ namespace Dune{
          creates this engine
       */
       OneStepLocalResidualAssemblerEngine(const LocalAssembler & local_assembler_)
-        : la(local_assembler_), lae0(invalid_lae0), lae1(invalid_lae1), 
+        : la(local_assembler_), 
+          invalid_lae0(static_cast<ResidualEngineDT0*>(0)), lae0(invalid_lae0), 
+          invalid_lae1(static_cast<ResidualEngineDT1*>(0)), lae1(invalid_lae1), 
           invalid_residual(static_cast<Residual*>(0)), 
           invalid_solution(static_cast<Solution*>(0)),
           residual(invalid_residual), solution(invalid_solution)
@@ -50,7 +60,7 @@ namespace Dune{
       bool requireSkeletonTwoSided() const
       { return lae0->requireSkeletonTwoSided() || lae1->requireSkeletonTwoSided(); }
       bool requireUVVolume() const
-      { return lae0->doPatternVolume() || lae1->doPatternVolume(); }
+      { return lae0->requireUVVolume() || lae1->requireUVVolume(); }
       bool requireVVolume() const
       { return lae0->requireVVolume() || lae1->requireVVolume(); }
       bool requireUVSkeleton() const
@@ -89,8 +99,8 @@ namespace Dune{
         assert(solution != invalid_solution);
 
         // Initialize the engines of the two wrapped local assemblers
-        lae0 = & local_assembler.la0.localResidualAssemblerEngine(*residual,*solution);
-        lae1 = & local_assembler.la1.localResidualAssemblerEngine(*residual,*solution);
+        lae0 = & la.la0.localResidualAssemblerEngine(*residual,*solution);
+        lae1 = & la.la1.localResidualAssemblerEngine(*residual,*solution);
       }
 
       //! Called immediately after binding of local function space in
@@ -110,26 +120,26 @@ namespace Dune{
 
       template<typename IG, typename LFSU>
       void onBindLFSUInside(const IG & ig, const LFSU & lfsu){
-        lae0->onBindLFSUInside(eg,lfsu);
-        lae1->onBindLFSUInside(eg,lfsu);
+        lae0->onBindLFSUInside(ig,lfsu);
+        lae1->onBindLFSUInside(ig,lfsu);
       }
 
       template<typename IG, typename LFSU>
       void onBindLFSUOutside(const IG & ig, const LFSU & lfsun){
-        lae0->onBindLFSUOutside(eg,lfsun);
-        lae1->onBindLFSUOutside(eg,lfsun);
+        lae0->onBindLFSUOutside(ig,lfsun);
+        lae1->onBindLFSUOutside(ig,lfsun);
       }
 
       template<typename IG, typename LFSV>
       void onBindLFSVInside(const IG & ig, const LFSV & lfsv){
-        lae0->onBindLFSVInside(eg,lfsv);
-        lae1->onBindLFSVInside(eg,lfsv);
+        lae0->onBindLFSVInside(ig,lfsv);
+        lae1->onBindLFSVInside(ig,lfsv);
       }
 
       template<typename IG, typename LFSV>
       void onBindLFSVOutside(const IG & ig, const LFSV & lfsvn){
-        lae0->onBindLFSVOutside(eg,lfsvn);
-        lae1->onBindLFSVOutside(eg,lfsvn);
+        lae0->onBindLFSVOutside(ig,lfsvn);
+        lae1->onBindLFSVOutside(ig,lfsvn);
       }
 
       template<typename LFSU>
@@ -195,13 +205,13 @@ namespace Dune{
       }
       template<typename LFSU>
       void loadCoefficientsLFSUOutside(const LFSU & lfsu_n){
-        lae0->loadCoefficientsLFSUInside(lfsu_n);
-        lae1->loadCoefficientsLFSUInside(lfsu_n);
+        lae0->loadCoefficientsLFSUOutside(lfsu_n);
+        lae1->loadCoefficientsLFSUOutside(lfsu_n);
       }
       template<typename LFSU>
       void loadCoefficientsLFSUCoupling(const LFSU & lfsu_c){
-        lae0->loadCoefficientsLFSUInside(lfsu_c);
-        lae1->loadCoefficientsLFSUInside(lfsu_c);
+        lae0->loadCoefficientsLFSUCoupling(lfsu_c);
+        lae1->loadCoefficientsLFSUCoupling(lfsu_c);
       }
       //! @}
 
@@ -214,17 +224,17 @@ namespace Dune{
         lae1->preAssembly();
 
         // Extract the coefficients of the time step scheme
-        b_rr = la.method.b(la.stage,la.stage);
-        d_r = la.method.d(la.stage);
+        b_rr = la.osp_method->b(la.stage,la.stage);
+        d_r = la.osp_method->d(la.stage);
         implicit = std::abs(b_rr) > 1e-6;
 
         // prepare local operators for stage
-        lae0->setTime(la.time + d_r * la.dt);
-        lae1->setTime(la.time + d_r * la.dt);
+        la.la0.setTime(la.time + d_r * la.dt);
+        la.la1.setTime(la.time + d_r * la.dt);
         
         // Set weights
-        lae0->localAssembler().setWeight(b_rr * la.dt);
-        lae1->localAssembler().setWeight(1.0);
+        la.la0.setWeight(b_rr * la.dt);
+        la.la1.setWeight(1.0);
 
         // Initialize residual vector with constant part
         *residual = la.const_residual;
@@ -233,6 +243,7 @@ namespace Dune{
       void postAssembly(){
         lae0->postAssembly();
         lae1->postAssembly();
+        Dune::PDELab::constrain_residual(*(la.pconstraintsv),*residual);
       }
       //! @}
 
@@ -285,7 +296,7 @@ namespace Dune{
 
       template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N, 
                typename LFSU_C, typename LFSV_C>
-      static void assembleUVEnrichedCoupling(const IG & ig,
+      void assembleUVEnrichedCoupling(const IG & ig,
                                              const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
                                              const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
                                              const LFSU_C & lfsu_c, const LFSV_C & lfsv_c)
@@ -295,7 +306,7 @@ namespace Dune{
       }
 
       template<typename IG, typename LFSV_S, typename LFSV_N, typename LFSV_C>
-      static void assembleVEnrichedCoupling(const IG & ig,
+      void assembleVEnrichedCoupling(const IG & ig,
                                             const LFSV_S & lfsv_s,
                                             const LFSV_N & lfsv_n,
                                             const LFSV_C & lfsv_c) 
@@ -324,9 +335,6 @@ namespace Dune{
       //! Reference to the wrapping local assembler object which
       //! constructed this engine
       const LocalAssembler & la;
-
-      typedef typename LocalAssemblerDT0::LocalResidualAssemblerEngine ResidualEngineDT0;
-      typedef typename LocalAssemblerDT1::LocalResidualAssemblerEngine ResidualEngineDT1;
 
       ResidualEngineDT0 * const invalid_lae0;
       ResidualEngineDT0 * lae0;
