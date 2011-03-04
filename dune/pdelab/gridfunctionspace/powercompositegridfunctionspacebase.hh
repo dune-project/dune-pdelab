@@ -23,43 +23,22 @@ namespace Dune {
 
 #ifndef DOXYGEN // don't use an anomyous namespace - it breaks friend declarations
 
-    //! We put the actual method in a base class because we want to use it with different tree iteration patterns
-    struct SetupVisitorBase
-      : public TypeTree::DefaultVisitor // do not fix the traversal depth yet
+    //! Visitor for updating the complete GFS tree
+    struct UpdateVisitor
+      : public TypeTree::TreeVisitor
       , public TypeTree::DynamicTraversal
     {
 
-      template<typename CompositeGFS, typename Child, typename TreePath, typename ChildIndex>
-      void afterChild(CompositeGFS& cgfs, const Child& child, TreePath treePath, ChildIndex childIndex) const
+      template<typename LeafNode, typename TreePath>
+      void leaf(LeafNode& node, TreePath treePath) const
       {
-        cgfs.childGlobalSize[childIndex] = child.globalSize();
-        cgfs.childLocalSize[childIndex] = child.maxLocalSize();
+        node.shallowUpdate();
       }
 
-    };
-
-    //! Visitor for setting up the GFS from pre-initialized children
-    struct SetupVisitor
-      : public SetupVisitorBase
-      , public TypeTree::VisitDirectChildren
-    {};
-
-    //! Visitor for updating the complete GFS tree
-    struct UpdateVisitor
-      : public SetupVisitorBase
-      , public TypeTree::VisitTree
-    {
-
-      template<typename LeafNode, typename TreePath>
-      void leaf(const LeafNode& node, TreePath treePath) const
+      template<typename Node, typename TreePath>
+      void post(Node& node, TreePath treePath) const
       {
-        node.update();
-      }
-
-      template<typename LeafNode, typename TreePath>
-      void post(const LeafNode& node, TreePath treePath) const
-      {
-        node.calculateSizes();
+        node.shallowUpdate();
       }
 
     };
@@ -200,8 +179,6 @@ namespace Dune {
 
 #ifndef DOXYGEN
 
-      friend struct SetupVisitorBase;
-
       const GridFunctionSpace& gfs() const
       {
         return static_cast<const GridFunctionSpace&>(*this);
@@ -229,6 +206,8 @@ namespace Dune {
         ConstraintsContainer ();
       };
 
+      //! assumes all children are up to date.
+      void shallowUpdate() { gfs().ordering().update(); }
 
       //! recalculate sizes
       void update ()
@@ -236,23 +215,25 @@ namespace Dune {
         TypeTree::applyToTree(gfs(),UpdateVisitor());
       }
 
+      
+
       //! get dimension of root finite element space
       typename Traits::SizeType globalSize () const
       {
-        return offset[Traits::CHILDREN];
+        return gfs().ordering().size();
       }
 
       //! get dimension of this finite element space
       typename Traits::SizeType size () const
       {
-        return offset[Traits::CHILDREN];
+        return gfs().ordering().size();
       }
 
       //! get max dimension of shape function space
       typename Traits::SizeType maxLocalSize () const
       {
         // this is bullshit !
-        return maxlocalsize;
+        return gfs().ordering().maxLocalSize();
       }
 
       //! get grid view
@@ -260,6 +241,19 @@ namespace Dune {
       {
         return gfs().template child<0>().gridview();
       }
+
+      //! map index from our index set [0,size()-1] to root index set
+      typename Traits::SizeType upMap (typename Traits::SizeType i) const
+      { return i; }
+
+      //! map index from child i's index set into our index set
+      template<int i>
+      typename Traits::SizeType subMap(typename Traits::SizeType j) const
+      { return subMap(i,j); }
+
+      typename Traits::SizeType subMap(typename Traits::SizeType i,
+                                       typename Traits::SizeType j) const
+      { return gfs().ordering().subMap(i, j); }
 
       //------------------------------
       // generic data handle interface
@@ -295,19 +289,6 @@ namespace Dune {
         global.resize(dataHandleSize(e));
         DataHandleGlobalIndicesVisitor<EntityType,std::vector<SizeType>,TypeTree::TreeInfo<GridFunctionSpace>::depth> visitor(e,global);
         TypeTree::applyToTree(gfs(),visitor);
-      }
-
-    protected:
-
-      typename Traits::SizeType childGlobalSize[Traits::CHILDREN];
-      typename Traits::SizeType childLocalSize[Traits::CHILDREN];
-      typename Traits::SizeType offset[Traits::CHILDREN+1];
-      typename Traits::SizeType maxlocalsize;
-
-       void setup ()
-      {
-        TypeTree::applyToTree(gfs(),SetupVisitor());
-        gfs().calculateSizes();
       }
 
     };

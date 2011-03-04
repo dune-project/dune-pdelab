@@ -1,23 +1,14 @@
-// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
-// vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_COMPOSITEGRIDFUNCTIONSPACE_HH
-#define DUNE_PDELAB_COMPOSITEGRIDFUNCTIONSPACE_HH
+// -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// vi: set et ts=8 sw=2 sts=2:
 
-#include <cstddef>
-#include <list>
-#include <ostream>
-#include <utility>
-#include <vector>
+#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_COMPOSITEGRIDFUNCTIONSPACE_HH
+#define DUNE_PDELAB_GRIDFUNCTIONSPACE_COMPOSITEGRIDFUNCTIONSPACE_HH
 
-#include <dune/common/exceptions.hh>
-#include <dune/common/stdstreams.hh>
-#include <dune/common/static_assert.hh>
+#include <dune/common/shared_ptr.hh>
 
 #include <dune/pdelab/common/typetree/compositenodemacros.hh>
-#include <dune/pdelab/common/typetree/transformation.hh>
 #include <dune/pdelab/common/typetree/utility.hh>
-#include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/ordering.hh>
+#include <dune/pdelab/gridfunctionspace/lexicographicordering.hh>
 #include <dune/pdelab/gridfunctionspace/powercompositegridfunctionspacebase.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 
@@ -42,395 +33,68 @@ namespace Dune {
         or \link  GridFunctionSpaceDynamicBlockwiseMapper  GridFunctionSpaceDynamicBlockwiseMapper \endlink
         \tparam Ti are all grid function spaces
     */
-    template<typename Mapper, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
+    template<typename OrderingTag,
+             DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
     class CompositeGridFunctionSpace
-    {
-    private:
-      dune_static_assert(AlwaysFalse<Mapper>::value, "You seem to be using an unsupported Mapper");
-    };
-
-    template<DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN_FOR_SPECIALIZATION>
-    class CompositeGridFunctionSpace<GridFunctionSpaceLexicographicMapper,
-                                     DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>
       : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
-      , public PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace<
-                                                     GridFunctionSpaceLexicographicMapper,
-                                                     DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>,
-                                                   typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::Type::Traits::GridViewType,
-                                                   typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::Type::Traits::BackendType,
-                                                   GridFunctionSpaceLexicographicMapper,
-                                                   DUNE_TYPETREE_COMPOSITENODE_BASETYPE::CHILDREN
-                                                   >
+      , public PowerCompositeGridFunctionSpaceBase<
+          CompositeGridFunctionSpace<
+            OrderingTag,
+            DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>,
+          typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::
+            Type::Traits::GridViewType,
+          typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::
+            Type::Traits::BackendType,
+          OrderingTag,
+          DUNE_TYPETREE_COMPOSITENODE_BASETYPE::CHILDREN
+        >
     {
       typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE BaseT;
 
-      typedef PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,
-                                                  typename BaseT::template Child<0>::Type::Traits::GridViewType,
-                                                  typename BaseT::template Child<0>::Type::Traits::BackendType,
-                                                  GridFunctionSpaceLexicographicMapper,
-                                                  BaseT::CHILDREN> ImplementationBase;
+      typedef PowerCompositeGridFunctionSpaceBase<
+        CompositeGridFunctionSpace,
+        typename BaseT::template Child<0>::Type::Traits::GridViewType,
+        typename BaseT::template Child<0>::Type::Traits::BackendType,
+        OrderingTag,
+        BaseT::CHILDREN> ImplementationBase;
 
-
-      friend class PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,
-                                                       typename BaseT::template Child<0>::Type::Traits::GridViewType,
-                                                       typename BaseT::template Child<0>::Type::Traits::BackendType,
-                                                       GridFunctionSpaceLexicographicMapper,
-                                                       BaseT::CHILDREN>;
+      friend class PowerCompositeGridFunctionSpaceBase<
+        CompositeGridFunctionSpace,
+        typename BaseT::template Child<0>::Type::Traits::GridViewType,
+        typename BaseT::template Child<0>::Type::Traits::BackendType,
+        OrderingTag,
+        BaseT::CHILDREN>;
 
     public:
-
       typedef CompositeGridFunctionSpaceTag ImplementationTag;
+
+      typedef typename TransformCompositeGFSToOrdering<OrderingTag>::
+        template result<
+          typename ImplementationBase::Traits,
+          DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES_NESTED_TYPE(Ordering)
+        >::type Ordering;
 
       typedef typename ImplementationBase::Traits Traits;
 
       CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
         : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename BaseT::template Child<0>::Type>))
-      {
-        this->setup();
-      }
+        , orderingp
+          (make_shared<Ordering>
+           (*this,
+            DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_MEMBER(orderingPtr())))
+      { }
 
-      //! map index from our index set [0,size()-1] to root index set
-      typename Traits::SizeType upMap (typename Traits::SizeType i) const
-      {
-        return i;
-      }
-
-      //! map index from child i's index set into our index set
-      template<int i>
-      typename Traits::SizeType subMap (typename Traits::SizeType j) const
-      {
-        return subMap(i,j);
-      }
-
-      typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j) const
-      {
-        return this->offset[i]+j;
-      }
+      const Ordering &ordering() const { return *orderingp; }
+      const shared_ptr<Ordering> &orderingPtr() { return orderingp; }
 
     private:
+      shared_ptr<Ordering> orderingp;
 
-      using ImplementationBase::childLocalSize;
-      using ImplementationBase::childGlobalSize;
-      using ImplementationBase::maxlocalsize;
-      using ImplementationBase::offset;
-
-      void calculateSizes ()
-      {
-        Dune::dinfo << "CompositeGridFunctionSpace(lexicographic version):"
-                    << std::endl;
-
-        Dune::dinfo << "( ";
-        offset[0] = 0;
-        maxlocalsize = 0;
-        for (std::size_t i=0; i<BaseT::CHILDREN; i++)
-          {
-            Dune::dinfo << childGlobalSize[i] << " ";
-            offset[i+1] = offset[i]+childGlobalSize[i];
-            maxlocalsize += childLocalSize[i];
-          }
-        Dune::dinfo << ") total size = " << offset[BaseT::CHILDREN]
-                    << " max local size = " << maxlocalsize
-                    << std::endl;
-      }
-
-    };
-
-    // tupel of grid function spaces
-    // base class that holds implementation of the methods
-    // specialization for blockwise ordering
-    // P is the ordering parameter
-    // Ti are all grid function spaces
-    template<DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN_FOR_SPECIALIZATION,
-             int s0, int s1, int s2, int s3, int s4, int s5, int s6, int s7, int s8, int s9>
-    class CompositeGridFunctionSpace<GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9>,
-                                     DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>
-      : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
-      , public PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace<
-                                                     GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9>,
-                                                     DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>,
-                                                   typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::Type::Traits::GridViewType,
-                                                   typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::Type::Traits::BackendType,
-                                                   GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9>,
-                                                   DUNE_TYPETREE_COMPOSITENODE_BASETYPE::CHILDREN
-                                                   >
-    {
-      typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE BaseT;
-
-      typedef GridFunctionSpaceComponentBlockwiseMapper<s0,s1,s2,s3,s4,s5,s6,s7,s8,s9> BlockwiseMapper;
-
-      typedef PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,
-                                                  typename BaseT::template Child<0>::Type::Traits::GridViewType,
-                                                  typename BaseT::template Child<0>::Type::Traits::BackendType,
-                                                  BlockwiseMapper,
-                                                  BaseT::CHILDREN> ImplementationBase;
-
-
-      friend class PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,
-                                                       typename BaseT::template Child<0>::Type::Traits::GridViewType,
-                                                       typename BaseT::template Child<0>::Type::Traits::BackendType,
-                                                       BlockwiseMapper,
-                                                       BaseT::CHILDREN>;
-
-    public:
-
-      typedef CompositeGridFunctionSpaceTag ImplementationTag;
-
-      //! export traits class
-      typedef typename ImplementationBase::Traits Traits;
-
-      CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename BaseT::template Child<0>::Type>))
-      {
-        this->setup();
-      }
-
-      //! map index from our index set [0,size()-1] to root index set
-      typename Traits::SizeType upMap (typename Traits::SizeType i) const
-      {
-        return i;
-      }
-
-      //! map index from child i's index set into our index set
-      template<int i>
-      typename Traits::SizeType subMap (typename Traits::SizeType j) const
-      {
-        return subMap(i,j);
-      }
-
-      typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j) const
-      {
-        // j: index within child
-        // i: child number
-        // BlockwiseMapper::size[i]: []-block size for child i
-        // BlockwiseMapper::offset[i]: offset within {}-block for child i
-        // k: number of children
-        // consider codim 0 only
-        // layout: { [s0 dofs of child 0] ... [s(k-1) dofs of child (k-1)] } repeat
-        return
-          // index of dof within []-block
-          (j%BlockwiseMapper::size[i])
-          // start-index of []-block within {}-block
-          +BlockwiseMapper::offset[i]
-          // start-index of {}-block
-          +(j/BlockwiseMapper::size[i])*BlockwiseMapper::offset[BaseT::CHILDREN];
-      }
-
-
-    private:
-
-      using ImplementationBase::childLocalSize;
-      using ImplementationBase::childGlobalSize;
-      using ImplementationBase::maxlocalsize;
-      using ImplementationBase::offset;
-
-      void calculateSizes ()
-      {
-        Dune::dinfo << "CompositeGridFunctionSpace(blockwise version):"
-                    << std::endl;
-
-        // make the block sizes available in an array
-        static const int blockSize[] = { s0, s1, s2, s3, s4, s5, s6, s7, s8, s9 };
-        // check for compatible sizes
-        for (std::size_t i=1; i<BaseT::CHILDREN; i++)
-          {
-            if (childLocalSize[i]%blockSize[i]!=0)
-              DUNE_THROW(Exception,
-                         "number of DOFs (" << childLocalSize[i] << ") per component "
-                         "must be a multiple of the BlockSize (" << blockSize[i] << ")");
-            if (childGlobalSize[i]/blockSize[i]!=childGlobalSize[0]/blockSize[0])
-              DUNE_THROW(Exception, "components must be of equal size");
-          }
-
-        Dune::dinfo << "( ";
-        offset[0] = 0;
-        maxlocalsize = 0;
-        for (std::size_t i=0; i<BaseT::CHILDREN; i++)
-          {
-            Dune::dinfo << childGlobalSize[i] << " ";
-            offset[i+1] = offset[i]+childGlobalSize[i];
-            maxlocalsize += childLocalSize[i];
-          }
-        Dune::dinfo << ") total size = " << offset[BaseT::CHILDREN]
-                    << " max local size = " << maxlocalsize
-                    << std::endl;
-      }
-
-    };
-
-    template<DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN_FOR_SPECIALIZATION>
-    class CompositeGridFunctionSpace<GridFunctionSpaceBlockwiseMapper,
-                                     DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>
-      : public CompositeGridFunctionSpace<GridFunctionSpaceComponentBlockwiseMapper<1>,
-                                          DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>
-    {
-
-      typedef CompositeGridFunctionSpace<GridFunctionSpaceComponentBlockwiseMapper<1>,
-                                         DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES> BaseT;
-
-    public:
-
-      CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
-      {}
-
-    };
-
-
-    /**
-        \brief Tupel of grid function spaces base class that holds
-        implementation of the methods specialization for dynamic
-        blockwise ordering
-    */
-    template<DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN_FOR_SPECIALIZATION>
-    class CompositeGridFunctionSpace<GridFunctionSpaceDynamicBlockwiseMapper,DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>
-      : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
-      , public PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace<
-                                                     GridFunctionSpaceDynamicBlockwiseMapper,
-                                                     DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>,
-                                                   typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::Type::Traits::GridViewType,
-                                                   typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::Type::Traits::BackendType,
-                                                   GridFunctionSpaceDynamicBlockwiseMapper,
-                                                   DUNE_TYPETREE_COMPOSITENODE_BASETYPE::CHILDREN
-                                                   >
-    {
-      typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE BaseT;
-
-      typedef GridFunctionSpaceDynamicBlockwiseMapper BlockwiseMapper;
-
-      typedef PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,
-                                                  typename BaseT::template Child<0>::Type::Traits::GridViewType,
-                                                  typename BaseT::template Child<0>::Type::Traits::BackendType,
-                                                  BlockwiseMapper,
-                                                  BaseT::CHILDREN> ImplementationBase;
-
-
-      friend class PowerCompositeGridFunctionSpaceBase<CompositeGridFunctionSpace,
-                                                       typename BaseT::template Child<0>::Type::Traits::GridViewType,
-                                                       typename BaseT::template Child<0>::Type::Traits::BackendType,
-                                                       BlockwiseMapper,
-                                                       BaseT::CHILDREN>;
-
-    public:
-
-      typedef CompositeGridFunctionSpaceTag ImplementationTag;
-
-      //! export traits class
-      typedef typename ImplementationBase::Traits Traits;
-
-      CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename BaseT::template Child<0>::Type>))
-      {
-        this->setup();
-      }
-
-      //! map index from our index set [0,size()-1] to root index set
-      typename Traits::SizeType upMap (typename Traits::SizeType i) const
-      {
-        return i;
-      }
-
-      //! map index from child i's index set into our index set
-      template<int i>
-      typename Traits::SizeType subMap (typename Traits::SizeType j) const
-      {
-        return subMap(i,j);
-      }
-
-      typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j) const
-      {
-        BlockIndexRangeIterator & it = blockIndexIterators[i];
-        while(it->first < j)++it;
-        while(it->first > j)--it;
-        const typename Traits::SizeType global_index = it->second + j - it->first;
-        return global_index;
-      }
-
-
-    private:
-
-      using ImplementationBase::childLocalSize;
-      using ImplementationBase::childGlobalSize;
-      using ImplementationBase::maxlocalsize;
-      using ImplementationBase::offset;
-
-      void calculateSizes ()
-      {
-        Dune::dinfo << "CompositeGridFunctionSpace(blockwise version):"
-                    << std::endl;
-
-        // Gather the global information
-        Dune::dinfo << "( ";
-        offset[0] = 0;
-        maxlocalsize = 0;
-        for (std::size_t i=0; i<BaseT::CHILDREN; i++)
-          {
-            Dune::dinfo << childGlobalSize[i] << " ";
-            offset[i+1] = offset[i]+childGlobalSize[i];
-            maxlocalsize += childLocalSize[i];
-          }
-        Dune::dinfo << ") total size = " << offset[BaseT::CHILDREN]
-                    << " max local size = " << maxlocalsize
-                    << std::endl;
-
-        typedef typename Traits::GridViewType GridView;
-        const GridView & gv = this->gridview();
-
-        // Initialize offset array for each child
-
-        blockIndices.clear();
-        blockIndices.resize(BaseT::CHILDREN);
-
-        std::vector<std::vector<typename Traits::SizeType> > childOffsets;
-        childOffsets.resize(BaseT::CHILDREN);
-        for(std::size_t i=0; i<BaseT::CHILDREN; ++i)
-          childOffsets[i].resize(gv.size(0)+1);
-
-
-        // Iterate grid and determine the offsets for each child
-        typedef typename GridView::template Codim<0>::Iterator Iterator;
-        Iterator it = gv.template begin<0>();
-        const Iterator eit = gv.template end<0>();
-        typename Traits::SizeType running_index(0);
-        for(; it!=eit; ++it){
-          typename Traits::SizeType e_index = gv.indexSet().index(*it);
-
-          // Loop over children (realized by meta-program)
-          DynamicBlockwiseMapperImp::GetChildOffsetsMetaProgram<CompositeGridFunctionSpace,BaseT::CHILDREN,0>::
-            getChildOffsets(*this,*it,childOffsets);
-
-          for(std::size_t i=0; i<BaseT::CHILDREN; ++i){
-            if(childOffsets[i][e_index+1] != childOffsets[i][e_index]){
-              // Add new block index range element to list
-              blockIndices[i].push_back(SizeTypePair(childOffsets[i][e_index],running_index));
-
-              // Update running index
-              running_index += childOffsets[i][e_index+1] - childOffsets[i][e_index];
-            }
-          }
-        }
-
-        // Insert a "stop entry" at end of every list
-        for(std::size_t i=0; i<BaseT::CHILDREN; ++i)
-          blockIndices[i].push_back(SizeTypePair(childOffsets[i][gv.size(0)],running_index));
-
-
-        blockIndexIterators.clear();
-        for(std::size_t i=0; i<BaseT::CHILDREN; ++i)
-          blockIndexIterators.push_back(blockIndices[i].begin());
-
-      }
-
-    private:
-      // first: childIndex, second: parentIndex
-      typedef std::pair<typename Traits::SizeType,typename Traits::SizeType> SizeTypePair;
-      typedef std::list<SizeTypePair> BlockIndexRangeList;
-      std::vector<BlockIndexRangeList> blockIndices;
-      typedef typename BlockIndexRangeList::const_iterator BlockIndexRangeIterator;
-      mutable std::vector<BlockIndexRangeIterator> blockIndexIterators;
     };
 
     //! \}
-  }
 
-}
-#endif
+  } // namespace PDELab
+} // namespace Dune
+
+#endif // DUNE_PDELAB_GRIDFUNCTIONSPACE_COMPOSITEGRIDFUNCTIONSPACE_HH

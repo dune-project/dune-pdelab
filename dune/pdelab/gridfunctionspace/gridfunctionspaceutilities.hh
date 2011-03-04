@@ -16,8 +16,6 @@
 #include <dune/pdelab/common/jacobiantocurl.hh>
 #include <dune/pdelab/constraints/constraintstransformation.hh> // backward compatibility
 #include"gridfunctionspace.hh"
-#include <dune/pdelab/gridfunctionspace/ordering.hh> // backward compatibility
-
 
 namespace Dune {
   namespace PDELab {
