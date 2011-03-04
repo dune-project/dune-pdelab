@@ -4,6 +4,7 @@
 #ifndef DUNE_PDELAB_ASSEMBLERUTILITIES_HH
 #define DUNE_PDELAB_ASSEMBLERUTILITIES_HH
 
+#include <dune/pdelab/constraints/constraintstransformation.hh>
 namespace Dune{
   namespace PDELab{
 
@@ -28,11 +29,6 @@ namespace Dune{
 
       typedef CV TestConstraintsType;
     };
-
-
-    // class EmptyTransformation : public ConstraintsTransformation<int,float>
-    // {
-    // };
 
     /**
        \brief Base class for local assembler

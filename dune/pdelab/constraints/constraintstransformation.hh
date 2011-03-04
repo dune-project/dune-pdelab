@@ -24,6 +24,10 @@ namespace Dune {
       typedef std::map<S,T> RowType;
     };
 
+    class EmptyTransformation : public ConstraintsTransformation<int,float>
+    {
+    };
+
    //! \} group GridFunctionSpace
   } // namespace PDELab
 } // namespace Dune

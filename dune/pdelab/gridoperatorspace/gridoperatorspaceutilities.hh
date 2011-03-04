@@ -37,11 +37,6 @@ namespace Dune {
 	};
 
 
-    class EmptyTransformation : public ConstraintsTransformation<int,float>
-    {
-    };
-
-
     class NoSubTriangulationImp
     {
     public:
