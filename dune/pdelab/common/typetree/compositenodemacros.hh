@@ -24,6 +24,15 @@
 
 #define DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE Dune::shared_ptr<Children>... children
 
+#define DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_MEMBER(member) children.member...
+
+#define DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES_NESTED_TYPE(nested_type) typename Children::nested_type...
+
+#define DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES_NESTED_STATIC_MEMBER(member) Children::member...
+
+#define DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES_THROUGH_META_FUNCTION(meta_function) typename meta_function::template apply<Children>::type...
+
+
 #else
 
 #include <dune/pdelab/common/typetree/compositenode.hh>
@@ -83,6 +92,54 @@
   Dune::shared_ptr<C7> c7, \
   Dune::shared_ptr<C8> c8, \
   Dune::shared_ptr<C9> c9
+
+#define DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_MEMBER(member) \
+  c0.member, \
+  c1.member, \
+  c2.member, \
+  c3.member, \
+  c4.member, \
+  c5.member, \
+  c6.member, \
+  c7.member, \
+  c8.member, \
+  c9.member
+
+#define DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES_NESTED_TYPE(nested_type) \
+  typename C0::nested_type, \
+  typename C1::nested_type, \
+  typename C2::nested_type, \
+  typename C3::nested_type, \
+  typename C4::nested_type, \
+  typename C5::nested_type, \
+  typename C6::nested_type, \
+  typename C7::nested_type, \
+  typename C8::nested_type, \
+  typename C9::nested_type
+
+#define DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES_NESTED_STATIC_MEMBER(member) \
+  C0::member, \
+  C1::member, \
+  C2::member, \
+  C3::member, \
+  C4::member, \
+  C5::member, \
+  C6::member, \
+  C7::member, \
+  C8::member, \
+  C9::member
+
+#define DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES_THROUGH_META_FUNCTION(meta_function) \
+  typename meta_function::template apply<C0>::type, \
+  typename meta_function::template apply<C1>::type, \
+  typename meta_function::template apply<C2>::type, \
+  typename meta_function::template apply<C3>::type, \
+  typename meta_function::template apply<C4>::type, \
+  typename meta_function::template apply<C5>::type, \
+  typename meta_function::template apply<C6>::type, \
+  typename meta_function::template apply<C7>::type, \
+  typename meta_function::template apply<C8>::type, \
+  typename meta_function::template apply<C9>::type
 
 #endif
 
