@@ -4,6 +4,8 @@
 #ifndef DUNE_PDELAB_GRIDOPERATORUTILITIES_HH
 #define DUNE_PDELAB_GRIDOPERATORUTILITIES_HH
 
+#include <dune/pdelab/backend/backendselector.hh>
+
 namespace Dune{
   namespace PDELab{
 
@@ -48,14 +50,14 @@ namespace Dune{
       typedef DF DomainField;
 
       //! The type of the domain (solution).
-      typedef Dune::PDELab::BackendVectorSelector<GFSU,DF>::Type Domain;
+      typedef typename Dune::PDELab::BackendVectorSelector<GFSU,DF>::Type Domain;
 
 
       //! The field type of the range (residual).
       typedef RF RangeField;
 
       //! The type of the range (residual).
-      typedef Dune::PDELab::BackendVectorSelector<GFSV,RF>::Type Range;
+      typedef typename Dune::PDELab::BackendVectorSelector<GFSV,RF>::Type Range;
 
 
       //! The field type of the jacobian.
