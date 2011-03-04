@@ -2,7 +2,7 @@
 // vi: set et ts=4 sw=2 sts=2:
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<iostream>
 #include<vector>
@@ -46,7 +46,7 @@
 //===============================================================
 //===============================================================
 // Solve the Poisson equation
-//           - \Delta u = f in \Omega, 
+//           - \Delta u = f in \Omega,
 //                    u = g on \partial\Omega_D
 //  -\nabla u \cdot \nu = j on \partial\Omega_N
 //===============================================================
@@ -67,7 +67,7 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,F<GV,RF> > BaseT;
 
   F (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
   {
     if (x[0]>0.25 && x[0]<0.375 && x[1]>0.25 && x[1]<0.375)
@@ -116,7 +116,7 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,G<GV,RF> > BaseT;
 
   G (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
   {
     typename Traits::DomainType center;
@@ -137,7 +137,7 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,J<GV,RF> > BaseT;
 
   J (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
   {
     if (x[1]<1E-6 || x[1]>1.0-1E-6)
@@ -154,11 +154,11 @@ public:
 };
 
 //===============================================================
-// Problem setup and solution 
+// Problem setup and solution
 //===============================================================
 
 // generate a P1 function and output it
-template<typename GV, typename FEM, typename CON, int q> 
+template<typename GV, typename FEM, typename CON, int q>
 void poisson (const GV& gv, const FEM& fem, std::string filename)
 {
   // constants and types
@@ -168,7 +168,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
 
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,
-    Dune::PDELab::ISTLVectorBackend<1> > GFS; 
+    Dune::PDELab::ISTLVectorBackend<1> > GFS;
   GFS gfs(gv,fem);
 
   // make constraints map and initialize it from a function
@@ -243,7 +243,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
   DGF dgf(gfs,x);
-  
+
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
@@ -271,13 +271,13 @@ int main(int argc, char** argv)
 
       // get view
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
+      const GV& gv=grid.leafView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef Dune::PDELab::Q12DLocalFiniteElementMap<DF,double> FEM;
       FEM fem;
-  
+
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q1_2d");
     }
@@ -293,13 +293,13 @@ int main(int argc, char** argv)
 
       // get view
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
+      const GV& gv=grid.leafView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef Dune::PDELab::Q22DLocalFiniteElementMap<DF,double> FEM;
       FEM fem;
-  
+
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q2_2d");
     }
@@ -315,13 +315,13 @@ int main(int argc, char** argv)
 
       // get view
       typedef Dune::YaspGrid<3>::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
+      const GV& gv=grid.leafView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,double,3> FEM;
       FEM fem;
-  
+
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q1_3d");
     }
@@ -329,14 +329,14 @@ int main(int argc, char** argv)
     // UG Pk 2D test
 #if HAVE_UG
     {
-      // make grid 
+      // make grid
       Dune::shared_ptr<Dune::UGGrid<2> > grid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
       grid->globalRefine(4);
 
       // get view
       typedef Dune::UGGrid<2>::LeafGridView GV;
-      const GV& gv=grid->leafView(); 
- 
+      const GV& gv=grid->leafView();
+
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
@@ -344,7 +344,7 @@ int main(int argc, char** argv)
       const int q=2*k;
       typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
       FEM fem(gv);
-  
+
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,"poisson_UG_Pk_2d");
     }
@@ -352,14 +352,14 @@ int main(int argc, char** argv)
 
 #if HAVE_ALBERTA
     {
-      // make grid 
+      // make grid
       AlbertaUnitSquare grid;
       grid.globalRefine(8);
-      
+
       // get view
       typedef AlbertaUnitSquare::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
-      
+      const GV& gv=grid.leafView();
+
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
@@ -367,7 +367,7 @@ int main(int argc, char** argv)
       const int q=2*k;
       typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
       FEM fem(gv);
-      
+
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,"poisson_Alberta_Pk_2d");
     }
@@ -375,14 +375,14 @@ int main(int argc, char** argv)
 
 #if HAVE_ALUGRID
     {
-      // make grid 
+      // make grid
       ALUUnitSquare grid;
       grid.globalRefine(4);
 
       // get view
       typedef ALUUnitSquare::LeafGridView GV;
-      const GV& gv=grid.leafView(); 
-      
+      const GV& gv=grid.leafView();
+
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef double R;
@@ -390,7 +390,7 @@ int main(int argc, char** argv)
       const int q=2*k;
       typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
       FEM fem(gv);
-      
+
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,"poisson_ALU_Pk_2d");
     }
@@ -407,4 +407,4 @@ int main(int argc, char** argv)
     std::cerr << "Unknown exception thrown!" << std::endl;
 	return 1;
   }
-} 
+}
