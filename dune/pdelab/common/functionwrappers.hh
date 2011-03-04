@@ -6,6 +6,8 @@
 
 #include <vector>
 
+#include <dune/pdelab/common/typetree/nodetags.hh>
+
 #include "function.hh"
 
 namespace Dune {
@@ -27,9 +29,15 @@ namespace Dune {
      *                supported.
      */
     template<typename Engine, typename F0,
-             typename F1 = EmptyChild, typename F2 = EmptyChild, typename F3 = EmptyChild,
-             typename F4 = EmptyChild, typename F5 = EmptyChild, typename F6 = EmptyChild,
-             typename F7 = EmptyChild, typename F8 = EmptyChild, typename F9 = EmptyChild>
+             typename F1 = TypeTree::EmptyNode,
+             typename F2 = TypeTree::EmptyNode,
+             typename F3 = TypeTree::EmptyNode,
+             typename F4 = TypeTree::EmptyNode,
+             typename F5 = TypeTree::EmptyNode,
+             typename F6 = TypeTree::EmptyNode,
+             typename F7 = TypeTree::EmptyNode,
+             typename F8 = TypeTree::EmptyNode,
+             typename F9 = TypeTree::EmptyNode>
     class PointwiseGridFunctionAdapter :
       public GridFunctionInterface<
       typename F0::Traits,
@@ -52,10 +60,10 @@ namespace Dune {
       const F7& f7;
       const F8& f8;
       const F9& f9;
-      //! hold the number of non-EmptyChild functions
+      //! hold the number of non-EmptyNode functions
       unsigned size;
 
-      //! increment a sum (but only if type(*f) != EmptyChild via overloading)
+      //! increment a sum (but only if type(*f) != EmptyNode via overloading)
       /**
        * \tparam F The type of *f
        *
@@ -66,15 +74,15 @@ namespace Dune {
       template<typename F>
       static void inc(unsigned &sum, const F* f)
       { ++sum; }
-      //! increment a sum (well, don't, since type(*f) == EmptyChild)
+      //! increment a sum (well, don't, since type(*f) == EmptyNode)
       /**
        * \param sum The variable to increment (well, not to imcrement)
        * \param f   Dummy parameter, only its type is of importance to select
        *            the correct method from the overloaded set
        */
-      static void inc(unsigned &sum, const EmptyChild* f)
+      static void inc(unsigned &sum, const TypeTree::EmptyNode* f)
       { }
-      //! count the number of non-EmptyChild functions
+      //! count the number of non-EmptyNode functions
       /**
        * uses the inc()-methods
        */
@@ -93,7 +101,8 @@ namespace Dune {
         return sum;
       }
 
-      //! evaluate a function (but only if type(f) != EmptyChild via overloading)
+      //! \brief evaluate a function (but only if type(f) != EmptyNode via
+      //!        overloading)
       /**
        * \tparam F The type of f
        *
@@ -112,10 +121,10 @@ namespace Dune {
         f.evaluate(e, x, y[index]);
         ++index;
       }
-      //! evaluate a function (well, don't, since type(f) == EmptyChild)
+      //! evaluate a function (well, don't, since type(f) == EmptyNode)
       /**
-       * \param f     Dummy argument, only its type EmptyChild is of importance to
-       *              select the correct method from the overload set.
+       * \param f     Dummy argument, only its type EmptyNode is of importance
+       *              to select the correct method from the overload set.
        * \param index The index to write to in the std::vector y.  Since this
        *              dummy methid doesn't actually write anythin to y, the
        *              index is not incremented afterwards.
@@ -124,7 +133,7 @@ namespace Dune {
        * \param y     Where to write the result of the evaluation.  Well, its
        *              not actually used in this dummy method
        */
-      static void evaluate(const EmptyChild &f, unsigned &index,
+      static void evaluate(const TypeTree::EmptyNode &f, unsigned &index,
                            const typename Traits::ElementType& e,
                            const typename Traits::DomainType& x,
                            std::vector<typename Traits::RangeType>& y)
@@ -151,9 +160,15 @@ namespace Dune {
       {}
 #else
       PointwiseGridFunctionAdapter(const Engine& engine_, const F0& f0_,
-                                   const F1& f1_ = EmptyChild(), const F2& f2_ = EmptyChild(), const F3& f3_ = EmptyChild(),
-                                   const F4& f4_ = EmptyChild(), const F5& f5_ = EmptyChild(), const F6& f6_ = EmptyChild(),
-                                   const F7& f7_ = EmptyChild(), const F8& f8_ = EmptyChild(), const F9& f9_ = EmptyChild())
+                                   const F1& f1_ = TypeTree::EmptyNode(),
+                                   const F2& f2_ = TypeTree::EmptyNode(),
+                                   const F3& f3_ = TypeTree::EmptyNode(),
+                                   const F4& f4_ = TypeTree::EmptyNode(),
+                                   const F5& f5_ = TypeTree::EmptyNode(),
+                                   const F6& f6_ = TypeTree::EmptyNode(),
+                                   const F7& f7_ = TypeTree::EmptyNode(),
+                                   const F8& f8_ = TypeTree::EmptyNode(),
+                                   const F9& f9_ = TypeTree::EmptyNode())
         : engine(engine_), f0(f0_)
         , f1(f1_), f2(f2_), f3(f3_)
         , f4(f4_), f5(f5_), f6(f6_)
