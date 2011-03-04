@@ -4,18 +4,22 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include<iostream>
-#include<dune/common/mpihelper.hh>
-#include<dune/common/exceptions.hh>
-#include<dune/common/fvector.hh>
-#include<dune/grid/yaspgrid.hh>
-#include"../finiteelementmap/p0fem.hh"
-#include"../finiteelementmap/p1fem.hh"
-#include"../finiteelementmap/q12dfem.hh"
-#include"../finiteelementmap/q22dfem.hh"
-#include"../finiteelementmap/q1fem.hh"
-#include"../gridfunctionspace/gridfunctionspace.hh"
-#include"../backend/istlvectorbackend.hh"
+
+#include <iostream>
+
+#include <dune/common/exceptions.hh>
+#include <dune/common/fvector.hh>
+#include <dune/common/mpihelper.hh>
+
+#include <dune/grid/yaspgrid.hh>
+
+#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/finiteelementmap/p0fem.hh>
+#include <dune/pdelab/finiteelementmap/p1fem.hh>
+#include <dune/pdelab/finiteelementmap/q12dfem.hh>
+#include <dune/pdelab/finiteelementmap/q1fem.hh>
+#include <dune/pdelab/finiteelementmap/q22dfem.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 
 // test function trees
 template<int dim>
