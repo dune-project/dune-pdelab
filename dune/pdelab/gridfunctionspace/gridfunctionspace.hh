@@ -23,9 +23,12 @@
 #include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/common/geometrywrapper.hh>
 #include <dune/pdelab/common/typetree.hh>
+#include <dune/pdelab/gridfunctionspace/blockwiseordering.hh>
 #include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/dynamicblockwiseordering.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/leafordering.hh>
+#include <dune/pdelab/gridfunctionspace/lexicographicordering.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
 
