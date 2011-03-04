@@ -58,8 +58,8 @@ namespace Dune {
       enum { doLambdaSkeleton = false };
       enum { doLambdaBoundary = true };
 
-      DiffusionDG (const K& k_, const F& f_, const B& b_, const G& g_, const J& j_, int dg_method) :
-        k(k_), f(f_), b(b_), g(g_), j(j_)
+      DiffusionDG (const K& k_, const F& f_, const B& bctype_, const G& g_, const J& j_, int dg_method) :
+        k(k_), f(f_), bctype(bctype_), g(g_), j(j_)
       {
         
         // OBB
@@ -324,11 +324,8 @@ namespace Dune {
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // evaluate boundary condition type
-        typename B::Traits::RangeType bctype;
-        b.evaluate(ig,rule.begin()->position(),bctype);
-
         // Dirichlet boundary condition
-        if (DiffusionBoundaryCondition::isDirichlet(bctype))
+        if( bctype.isDirichlet( ig, rule.begin()->position() ) )
           {
             // center in face's reference element
             const Dune::FieldVector<DF,IG::dimension-1>& face_center =
@@ -471,11 +468,8 @@ namespace Dune {
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // evaluate boundary condition type
-        typename B::Traits::RangeType bctype;
-        b.evaluate(ig,rule.begin()->position(),bctype);
-
         // Neumann boundary condition
-        if (DiffusionBoundaryCondition::isNeumann(bctype))
+        if( bctype.isNeumann( ig, rule.begin()->position() ) )
           {
             // loop over quadrature points and integrate normal flux
             for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -501,8 +495,7 @@ namespace Dune {
               }
           }
         // Dirichlet boundary condition
-        else
-        if (DiffusionBoundaryCondition::isDirichlet(bctype))
+        else if( bctype.isDirichlet( ig, rule.begin()->position() ) )
           {
             /*
               !!!!!!!! TODO: Warum normale am face center? !!!!!!
@@ -563,7 +556,7 @@ namespace Dune {
           }
         else
           {
-            DUNE_THROW(Dune::Exception, "Unrecognized or unsupported boundary condition. (" << bctype << ")");
+            DUNE_THROW( Dune::Exception, "Unrecognized or unsupported boundary condition type!" );
           }
       }
 
@@ -823,11 +816,8 @@ namespace Dune {
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // evaluate boundary condition type
-        typename B::Traits::RangeType bctype;
-        b.evaluate(ig,rule.begin()->position(),bctype);
-
         // Dirichlet boundary condition
-        if (DiffusionBoundaryCondition::isDirichlet(bctype))
+        if( bctype.isDirichlet( ig, rule.begin()->position() ) )
           {
             // center in face's reference element
             const Dune::FieldVector<DF,IG::dimension-1>& face_center =
@@ -902,7 +892,7 @@ namespace Dune {
     private:
       const K& k;
       const F& f;
-      const B& b;
+      const B& bctype;
       const G& g;
       const J& j;
       // values for NIPG / NIPG
