@@ -31,8 +31,8 @@
 #include <dune/pdelab/backend/istlsolverbackend.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/common/function.hh>
-#include <dune/pdelab/common/geometrywrapper.hh>
 #include <dune/pdelab/common/vtkexport.hh>
+#include <dune/pdelab/constraints/constraintsparameters.hh>
 #include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include <dune/pdelab/finiteelementmap/p1fem.hh>
 #include <dune/pdelab/function/const.hh>
@@ -66,40 +66,25 @@
 
 ////////////////////////////////////////////////////////////////////////
 //
-// boundary grid function selecting boundary conditions
+// constraints parameters selecting boundary conditions
 //
 
-template<typename GV>
-class B
-  : public Dune::PDELab::BoundaryGridFunctionBase
-          < Dune::PDELab::
-            BoundaryGridFunctionTraits<GV,int,1,
-                                       Dune::FieldVector<int,1> >,
-            B<GV> >,
-    public Dune::PDELab::InstationaryFunctionDefaults
+class ConstraintsParameters
+  : public Dune::PDELab::DirichletConstraintsParameters
 {
-  const GV& gv;
 
 public:
-  typedef Dune::PDELab::BoundaryGridFunctionTraits
-    <GV,int,1,Dune::FieldVector<int,1> > Traits;
-  typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,B<GV> > BaseT;
-
-  B (const GV& gv_) : gv(gv_) {}
 
   template<typename I>
-  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig,
-                        const typename Traits::DomainType& x,
-                        typename Traits::RangeType& y) const
+  bool isDirichlet
+  ( const I & ig,
+    const Dune::FieldVector<typename I::ctype, I::dimension-1> & x) const
   {
-    y = 1; // Dirichlet
+    return true;
   }
 
-  //! get a reference to the GridView
-  inline const GV& getGridView () const
-  {
-    return gv;
-  }
+  template<class Time>
+  void setTime(const Time &t) { }
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -226,9 +211,8 @@ void wave (const GV& gv, const FEM& fem, typename GV::ctype dt,
   typedef typename GFS::template ConstraintsContainer<RF>::Type C;
   C cg;
   cg.clear();
-  typedef B<GV> BType;
-  BType b(gv);
-  Dune::PDELab::constraints(b,gfs,cg);
+  ConstraintsParameters constraintsparameters;
+  Dune::PDELab::constraints(constraintsparameters,gfs,cg);
 
   // make coefficent Vector and initialize it from a function
   typedef typename Dune::PDELab::BackendVectorSelector<GFS, RF>::Type V;
@@ -249,9 +233,10 @@ void wave (const GV& gv, const FEM& fem, typename GV::ctype dt,
   typedef Dune::PDELab::ConstGridFunction<GV, RF, 1> ZeroFunc;
   ZeroFunc zeroFunc(gv, 0);
 
-  typedef Dune::PDELab::InstationaryPoisson<DF, ZeroFunc, BType, ZeroFunc,
-    qorder> Poisson;
-  Poisson poisson(zeroFunc, b, zeroFunc);
+  typedef Dune::PDELab::InstationaryPoisson<
+    DF, ZeroFunc, ConstraintsParameters, ZeroFunc, qorder
+    > Poisson;
+  Poisson poisson(zeroFunc, constraintsparameters, zeroFunc);
 
   typedef Dune::PDELab::ScaledLocalOperator<Poisson, RF, DF> R0;
   R0 r0(poisson, c*c);

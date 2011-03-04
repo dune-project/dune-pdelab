@@ -28,9 +28,9 @@
 #include <dune/pdelab/backend/istlsolverbackend.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/common/function.hh>
-#include <dune/pdelab/common/geometrywrapper.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/constraints/constraints.hh>
+#include <dune/pdelab/constraints/constraintsparameters.hh>
 #include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
 #include <dune/pdelab/finiteelementmap/q1fem.hh>
 #include <dune/pdelab/finiteelementmap/q22dfem.hh>
@@ -79,49 +79,29 @@ public:
 };
 
 // boundary grid function selecting boundary conditions
-template<typename GV>
-class B :
-  public Dune::PDELab::BoundaryGridFunctionBase<
-    Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,
-                                             Dune::FieldVector<int,1> >,
-    B<GV> >
+class ConstraintsParameters
+  : public Dune::PDELab::DirichletConstraintsParameters
 {
-  const GV& gv;
 
 public:
-  typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,
-                                                   Dune::FieldVector<int,1> >
-    Traits;
-  typedef Dune::PDELab::BoundaryGridFunctionBase<Traits,B<GV> > BaseT;
-
-  B (const GV& gv_) : gv(gv_) {}
 
   template<typename I>
-  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig,
-                        const typename Traits::DomainType& x,
-                        typename Traits::RangeType& y) const
+  bool isDirichlet(const I & ig, const Dune::FieldVector<typename I::ctype, I::dimension-1> & x) const
   {
-    Dune::FieldVector<typename GV::Grid::ctype,GV::dimension>
+    Dune::FieldVector<typename I::ctype,I::dimension>
       xg = ig.geometry().global(x);
 
     if (xg[1]<1E-6 || xg[1]>1.0-1E-6)
       {
-        y = 0; // Neumann
-        return;
+        return false;
       }
     if (xg[0]>1.0-1E-6 && xg[1]>0.5+1E-6)
       {
-        y = 0; // Neumann
-        return;
+        return false;
       }
-    y = 1; // Dirichlet
+    return true;
   }
 
-  //! get a reference to the GridView
-  inline const GV& getGridView () const
-  {
-    return gv;
-  }
 };
 
 // function for Dirichlet boundary conditions and initialization
@@ -197,9 +177,8 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   typedef typename GFS::template ConstraintsContainer<R>::Type C;
   C cg;
   cg.clear();
-  typedef B<GV> BType;
-  BType b(gv);
-  Dune::PDELab::constraints(b,gfs,cg);
+  ConstraintsParameters constraintsparameters;
+  Dune::PDELab::constraints(constraintsparameters,gfs,cg);
 
   // make coefficent Vector and initialize it from a function
   typedef typename Dune::PDELab::BackendVectorSelector<GFS, R>::Type V;
@@ -215,8 +194,8 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   FType f(gv);
   typedef J<GV,R> JType;
   JType j(gv);
-  typedef Dune::PDELab::Poisson<FType,BType,JType,q> LOP;
-  LOP lop(f,b,j);
+  typedef Dune::PDELab::Poisson<FType,ConstraintsParameters,JType,q> LOP;
+  LOP lop(f,constraintsparameters,j);
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
     LOP,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
   GOS gos(gfs,cg,gfs,cg,lop);
