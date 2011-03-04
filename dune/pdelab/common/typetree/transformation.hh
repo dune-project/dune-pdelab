@@ -161,11 +161,7 @@ namespace Dune {
                                                                                     typename S::ChildType::NodeTag>::transformed_type
                                                              >::storage_type transformed_storage_type;
 
-        // Transform an instance of S. For simplicity, this is done by first creating an instance of the
-        // new type by calling the factory function node_transform<S,T>::transform<TransformedChild>(s)
-        // and transforming the children after that. It should also be possible to do a bottom-up construction,
-        // but this would require different constructors (and constructor-argument forwarding), which I did
-        // not include in the nodes.
+        // Transform an instance of S.
         static transformed_type transform(const S& s, T& t)
         {
           // transform children
