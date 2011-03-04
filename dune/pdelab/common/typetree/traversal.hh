@@ -326,6 +326,9 @@ namespace Dune {
 
       //! Apply visitor to TypeTree.
       /**
+       * \code
+#include <dune/pdelab/common/typetree/traversal.hh>
+       * \endcode
        * This function applies the given visitor to the given tree. Both visitor and tree may be const
        * or non-const (if the compiler supports rvalue references, they may even be a non-const temporary).
        *
