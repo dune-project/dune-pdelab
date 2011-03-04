@@ -88,7 +88,7 @@ namespace Dune {
       struct MatrixContainer
       {
         //! \brief define Type as the Type of a Matrix of E's
-        typedef typename B::template Matrix<GridOperatorSpace ,E> Type;
+        typedef typename B::template Matrix<E> Type;
       private:
         MatrixContainer () {}
       };
