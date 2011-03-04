@@ -199,15 +199,9 @@ namespace Dune {
 
       typename Traits::SizeType subMap (typename Traits::SizeType i, typename Traits::SizeType j) const
       {
-        // make the block sizes and offsets available in an array
-        static const int blockSize[] = { s0, s1, s2, s3, s4, s5, s6, s7, s8, s9 };
-        static const int blockOffset[] = { 0, s0, s0+s1, s0+s1+s2, s0+s1+s2+s3, s0+s1+s2+s3+s4,
-                                           s0+s1+s2+s3+s4+s5, s0+s1+s2+s3+s4+s5+s6, s0+s1+s2+s3+s4+s5+s6+s7,
-                                           s0+s1+s2+s3+s4+s5+s6+s7+s8, s0+s1+s2+s3+s4+s5+s6+s7+s8+s9 };
         return (j%BlockwiseMapper::size[i])
           +(j/BlockwiseMapper::size[i])*BlockwiseMapper::offset[BaseT::CHILDREN]
           +BlockwiseMapper::offset[i];
-        return (j%blockSize[i])+(j/blockSize[i])*blockOffset[BaseT::CHILDREN]+blockOffset[i];
       }
 
 
