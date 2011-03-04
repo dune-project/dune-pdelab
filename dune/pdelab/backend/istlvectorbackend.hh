@@ -9,6 +9,7 @@
 #include<dune/istl/bvector.hh>
 
 #include "backendselector.hh"
+#include "istlmatrixbackend.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -179,7 +180,10 @@ namespace Dune {
         //! \brief export the block size
         BlockSize = BLOCKSIZE
       };
-      
+
+      //export Matrix Backend Type
+      typedef ISTLBCRSMatrixBackend<BLOCKSIZE,BLOCKSIZE> MatrixBackend;
+     
 	  //! container construction
 
 	  // extract type of container element 
