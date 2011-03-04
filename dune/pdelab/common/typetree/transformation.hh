@@ -85,6 +85,16 @@ namespace Dune {
 
 #ifndef DOXYGEN // internal per-node implementations of the transformation algorithm
 
+      /**
+       * \tparam S   C++ type of source node.
+       * \tparam T   Tag identifying the transformation.
+       * \tparam Tag Tag identifying the source type.
+       *
+       * Tag may be identical for different implementation of the same concept
+       * (i.e. all leaf GridFunctionSpace), but this is not required.  This
+       * allows you to handle different leaf GridFunctionSpace implementation
+       * differently.  Tag should be extracted from S::ImplementationTag.
+       */
       template<typename S, typename T, typename Tag>
       struct LookupNodeTransformation
       {
