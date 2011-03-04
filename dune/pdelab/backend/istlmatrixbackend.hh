@@ -24,7 +24,7 @@ namespace Dune {
 	  typedef typename Dune::BCRSMatrix< Dune::FieldMatrix<float,1,1> >::size_type size_type;
 
 	  //! container construction
-	  template<typename T, typename E>
+	  template<typename E>
 	  class Matrix : public Dune::BCRSMatrix< Dune::FieldMatrix<E,ROWBLOCKSIZE,COLBLOCKSIZE> >
 	  {
 		typedef Dune::FieldMatrix<E,ROWBLOCKSIZE,COLBLOCKSIZE> FM;
@@ -36,6 +36,7 @@ namespace Dune {
         typedef ISTLBCRSMatrixBackend<ROWBLOCKSIZE,COLBLOCKSIZE> Backend;
 
         //! construct container
+        template<typename T>
 		Matrix (const T& t) 
 		  : BaseT(t.globalSizeV()/ROWBLOCKSIZE,t.globalSizeU()/COLBLOCKSIZE,
 				  Dune::BCRSMatrix<FM>::random) 
