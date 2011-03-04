@@ -124,8 +124,7 @@ template<typename GFSU, typename GFSV,
 class GridOperator{
 public:
 
-  typedef GridOperatorTraits<GridOperator,
-                             GFSU,
+  typedef GridOperatorTraits<GFSU,
                              GFSV,
                              MB,
                              DF,

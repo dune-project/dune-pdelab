@@ -14,7 +14,6 @@ namespace Dune{
      * This class collects types and auxilliary information about the
      * grid operator.
      *
-     * \tparam GO   The grid operator.
      * \tparam GFSU The trial function space.
      * \tparam GFSV The test function space.
      * \tparam MB   The matrix backend.
@@ -24,16 +23,12 @@ namespace Dune{
      * \tparam A    The global assembler.
      * \tparam LA   The local assembler.
      */
-    template<typename GO,
-             typename GFSU, typename GFSV,
+    template<typename GFSU, typename GFSV,
              typename MB,
              typename DF, typename RF, typename JF,
              typename A, typename LA>
     struct GridOperatorTraits
     {
-
-      //! The type of the grid operator.
-      typedef GO GridOperator;
 
       //! The trial grid function space.
       typedef GFSU TrialGridFunctionSpace;
@@ -64,7 +59,7 @@ namespace Dune{
       typedef JF JacobianField;
 
       //! The type of the jacobian.
-      typedef typename MatrixBackend::template Matrix<GridOperator,JacobianField> Jacobian;
+      typedef typename MatrixBackend::template Matrix<JacobianField> Jacobian;
 
 
       //! The global assembler of the grid operator.
