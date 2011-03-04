@@ -20,17 +20,14 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
 
+#include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/common/geometrywrapper.hh>
+#include <dune/pdelab/common/typetree.hh>
+#include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/leafordering.hh>
-
-#include "../common/typetree.hh"
-#include "../common/geometrywrapper.hh"
-
-#include "../backend/backendselector.hh"
-
-#include"localfunctionspace.hh"
-#include"gridfunctionspaceutilities.hh"
-#include"powergridfunctionspace.hh"
-#include"compositegridfunctionspace.hh"
+#include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
 
 namespace Dune {
   namespace PDELab {
