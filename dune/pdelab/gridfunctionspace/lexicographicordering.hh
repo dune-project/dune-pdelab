@@ -49,9 +49,9 @@ namespace Dune {
       public:
         CollectSizesVisitor(SizeType *sizes_) : sizes(sizes_) { }
 
-        template<class T, class TreePath>
-        void pre(const T &t, const TreePath &tp) const
-        { sizes[tp.back()] = t.size(); }
+        template<class T, class Child, class TreePath, class ChildIndex>
+        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex childIndex) const
+        { sizes[childIndex] = child.size(); }
       };
 
       //! Interface for merging index spaces

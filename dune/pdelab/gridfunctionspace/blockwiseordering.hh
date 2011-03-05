@@ -116,19 +116,19 @@ namespace Dune {
         std::size_t sizeRatio;
 
       public:
-        template<class T, class TreePath>
-        void pre(const T &t, const TreePath &tp) {
+        template<class T, class Child, class TreePath, class ChildIndex>
+        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex childIndex) {
           static const std::size_t *blockSize = Size<Tag>::value;
 
-          if(t.maxLocalSize()%blockSize[tp.back()]!=0)
+          if(child.maxLocalSize()%blockSize[childIndex]!=0)
             DUNE_THROW(InvalidStateException, className<OrderingImp>() << ": "
-                       "Number of DOFs (" << t.maxLocalSize() << ") per "
+                       "Number of DOFs (" << child.maxLocalSize() << ") per "
                        "component must be a multiple of the BlockSize "
-                       "(" << blockSize[tp.back()] << ")");
-          if(tp.back() == 0)
-            sizeRatio = t.maxLocalSize()/blockSize[0];
+                       "(" << blockSize[childIndex] << ")");
+          if(childIndex == 0)
+            sizeRatio = child.maxLocalSize()/blockSize[0];
           else
-            if(t.maxLocalSize()/blockSize[tp.back()] != sizeRatio)
+            if(child.maxLocalSize()/blockSize[childIndex] != sizeRatio)
               DUNE_THROW(InvalidStateException,
                          className<OrderingImp>() << ": Components must be of "
                          "equal size");

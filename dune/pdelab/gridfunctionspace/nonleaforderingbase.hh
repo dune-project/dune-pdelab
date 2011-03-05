@@ -32,9 +32,9 @@ namespace Dune {
       public:
         PrintSizesVisitor(Stream &stream_) : stream(stream_) {}
 
-        template<class T, class TreePath>
-        void pre(const T &t, const TreePath &) const
-        { stream << t.maxLocalSize() << " "; }
+        template<class T, class Child, class TreePath, class ChildIndex>
+        void beforeChild(const T &t, const Child& child, TreePath tp, ChildIndex childIndex) const
+        { stream << child.maxLocalSize() << " "; }
       };
 
       class BlockedVisitor :
@@ -46,9 +46,9 @@ namespace Dune {
       public:
         BlockedVisitor(bool &blocked_) : blocked(blocked_) { }
 
-        template<class T, class TreePath>
-        void pre(const T &t, const TreePath &) const
-        { blocked = blocked && t.blocked(); }
+        template<class T, class Child, class TreePath, class ChildIndex>
+        void beforeChild(const T &t, const Child& child, TreePath tp, ChildIndex childIndex) const
+        { blocked = blocked && child.blocked(); }
       };
 
       class FixedSizeVisitor :
@@ -60,9 +60,9 @@ namespace Dune {
       public:
         FixedSizeVisitor(bool &fixedSize_) : fixedSize(fixedSize_) { }
 
-        template<class T, class TreePath>
-        void pre(const T &t, const TreePath &) const
-        { fixedSize = fixedSize && t.fixedSize(); }
+        template<class T, typename Child, class TreePath, class ChildIndex>
+        void beforeChild(const T &t, const Child& child, TreePath treePath, ChildIndex childIndex) const
+        { fixedSize = fixedSize && child.fixedSize(); }
       };
 
       template<class SizeType>
@@ -75,9 +75,9 @@ namespace Dune {
       public:
         SizeVisitor(SizeType &size_) : size(size_) { }
 
-        template<class T, class TreePath>
-        void pre(const T &t, const TreePath &) const
-        { size += t.size(); }
+        template<class T, class Child, class TreePath, class ChildIndex>
+        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex) const
+        { size += child.size(); }
       };
 
       template<class SizeType>
@@ -90,9 +90,9 @@ namespace Dune {
       public:
         MaxLocalSizeVisitor(SizeType &size_) : size(size_) { }
 
-        template<class T, class TreePath>
-        void pre(const T &t, const TreePath &) const
-        { size += t.maxLocalSize(); }
+        template<class T, class Child, class TreePath, class ChildIndex>
+        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex) const
+        { size += child.maxLocalSize(); }
       };
 
       template<class SizeType, class Entity>
@@ -108,9 +108,9 @@ namespace Dune {
           size(size_), e(e_)
         { }
 
-        template<class T, class TreePath>
-        void pre(const T &t, const TreePath &) const
-        { size += t.entitySize(e); }
+        template<class T, class Child, class TreePath, class ChildIndex>
+        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex) const
+        { size += child.entitySize(e); }
       };
 
       template<class SizeType, class Element>
@@ -129,9 +129,9 @@ namespace Dune {
           size(size_), e(e_), codim(codim_), subentity(subentity_)
         { }
 
-        template<class T, class TreePath>
-        void pre(const T &t, const TreePath &) const
-        { size += t.entitySize(e, codim, subentity); }
+        template<class T, class Child, class TreePath, class ChildIndex>
+        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex) const
+        { size += child.entitySize(e, codim, subentity); }
       };
 
       template<class SizeType, class Intersection>
@@ -147,9 +147,9 @@ namespace Dune {
           size(size_), i(i_)
         { }
 
-        template<class T, class TreePath>
-        void pre(const T &t, const TreePath &) const
-        { size += t.intersectionSize(i); }
+        template<class T, class Child, class TreePath, class ChildIndex>
+        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex) const
+        { size += child.intersectionSize(i); }
       };
     }
 
