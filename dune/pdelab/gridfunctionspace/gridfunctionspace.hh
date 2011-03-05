@@ -118,7 +118,7 @@ namespace Dune {
       typedef E ElementType;
       typedef StdVectorBackend Backend;
       typedef typename std::vector<E>::size_type size_type;
-      
+
       StdVectorContainer (const T& t) : container(t.globalSize()) {}
       StdVectorContainer (const T& t, const E& e) : container(t.globalSize(),e) {}
       StdVectorContainer& operator= (const E& e) // set all elements to same value
@@ -132,18 +132,18 @@ namespace Dune {
       {
         return container;
       }
-      
+
       const ContainerType& base () const
       {
         return container;
       }
 
-      
+
       iterator begin()
       {
         return container.begin();
       }
-      
+
 
       const_iterator begin() const
       {
@@ -154,7 +154,7 @@ namespace Dune {
       {
         return container.end();
       }
-      
+
 
       const_iterator end() const
       {
@@ -171,7 +171,7 @@ namespace Dune {
       {
         return container[i];
       }
-      
+
       const E& operator[](size_type i) const
       {
         return container[i];
@@ -202,7 +202,7 @@ namespace Dune {
 
 	//! \brief Simple Backend for std::vector
 	class StdVectorBackend
-	{      
+	{
 	public:
 
 	  //! extract type of container element
@@ -221,18 +221,18 @@ namespace Dune {
        *  we can assume C to be std::vector<T>
        */
 	  template<typename C, typename E>
-	  static const typename StdVectorContainer<C,E>::ContainerType::value_type& 
+	  static const typename StdVectorContainer<C,E>::ContainerType::value_type&
       access (const StdVectorContainer<C,E>& c, size_type i)
 	  {
 		return c[i];
 	  }
-      
+
 	  /** \brief get non const_reference to container element
        *
        *  note: this method does not depend on T!
        */
 	  template<typename C, typename E>
-	  static typename StdVectorContainer<C,E>::ContainerType::value_type& 
+	  static typename StdVectorContainer<C,E>::ContainerType::value_type&
       access (StdVectorContainer<C,E>& c, size_type i)
 	  {
 		return c[i];
@@ -244,7 +244,7 @@ namespace Dune {
     {
       typedef StdVectorContainer<T,E> Type;
     };
-    
+
 
 	/** \brief Tag indicating an arbitrary number of unkowns per entity.
      *
@@ -532,6 +532,7 @@ namespace Dune {
 		  }
 
 		// now we can allocate one number per entity that holds degrees of freedom
+
 		typename Traits::SizeType nentities = 0;
 		gtoffset.clear();
 		const typename GV::IndexSet& is=gv.indexSet();
