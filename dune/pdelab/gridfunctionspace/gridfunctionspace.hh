@@ -552,6 +552,15 @@ namespace Dune {
 
 		// now compute the number of entries for each entity
 		// requires second grid traversal
+
+        typedef std::map<Dune::GeometryType,std::size_t> GeometryTypeSizeMap;
+        GeometryTypeSizeMap gtsizes;
+        for (GtUsedSetType::iterator it = gtused.begin(); it != gtused.end(); ++it)
+          {
+            gtsizes[*it] = 0;
+          }
+        fixed_size = true;
+
 		nlocal = 0;
 		for (ElementIterator it = gv.template begin<0>();
 			 it!=gv.template end<0>(); ++it)
@@ -569,6 +578,8 @@ namespace Dune {
             nlocal = std::max(nlocal, static_cast<typename Traits::SizeType>
                                         (coeffs.size()));
 
+            GeometryTypeSizeMap localgtsizes;
+
 			// compute maximum size for each subentity
             for (std::size_t i=0; i<std::size_t(coeffs.size()); ++i)
 			  {
@@ -581,7 +592,27 @@ namespace Dune {
 				offset[index] = std::max(offset[index],
                                          typename Traits::SizeType
                                             (coeffs.localKey(i).index()+1));
+                if (fixed_size)
+                  {
+                    localgtsizes[gt] = offset[index];
+                  }
 			  }
+
+            if (fixed_size)
+              {
+                for (GeometryTypeSizeMap::iterator it = gtsizes.begin(); it != gtsizes.end(); ++it)
+                  {
+                    std::size_t localsize = localgtsizes[it->first];
+                    if (it->second == 0)
+                      it->second = localsize;
+                    else
+                      if (it->second != localsize)
+                        {
+                          fixed_size = false;
+                          break;
+                        }
+                  }
+              }
 		  }
 
 		// now count global number of dofs and compute offset
@@ -599,6 +630,11 @@ namespace Dune {
         orderingp->update();
 	  }
 
+      bool fixedSize() const
+      {
+        return fixed_size;
+      }
+
 	private:
       CE defaultce;
 	  const GV& gv;
@@ -606,6 +642,7 @@ namespace Dune {
 	  typename Traits::SizeType nlocal;
 	  typename Traits::SizeType nglobal;
       const CE& ce;
+      bool fixed_size;
 
       typedef std::map<Dune::GeometryType,typename Traits::SizeType> GTOffsetMap;
 	  GTOffsetMap gtoffset; // offset in vector for given geometry type
