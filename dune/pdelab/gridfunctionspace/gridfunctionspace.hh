@@ -905,6 +905,11 @@ namespace Dune {
         orderingp->update();
 	  }
 
+      bool fixedSize() const
+      {
+        return true; // true by definition
+      }
+
 	private:
 	  const GV& gv;
       shared_ptr<FEM const> pfem;
@@ -1274,6 +1279,11 @@ namespace Dune {
         orderingp->update();
 	  }
 
+      bool fixedSize() const
+      {
+        return true; // true by definition
+      }
+
 	private:
       DummyIntersectionIndexSet dummyiis; // for version without intersection DOFs
 	  const GV& gv;
@@ -1470,6 +1480,11 @@ namespace Dune {
 		return pcgfs->subMap(i,j);
 	  }
 
+      bool fixedSize() const
+      {
+        return pcgfs->fixedSize();
+      }
+
     private:
       shared_ptr<GFS const> pgfs;
       shared_ptr<CGFS const> pcgfs;
@@ -1557,6 +1572,11 @@ namespace Dune {
 	  {
         pcgfs->globalIndices(fe,e,it,endit);
 	  }
+
+      bool fixedSize() const
+      {
+        return pcgfs->fixedSize();
+      }
 
     private:
       shared_ptr<GFS const> pgfs;
