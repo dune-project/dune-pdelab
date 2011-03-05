@@ -130,6 +130,8 @@ public:
                              DF,
                              RF,
                              JF,
+                             CU,
+                             CV,
                              Assembler,
                              LocalAssembler> Traits;
 

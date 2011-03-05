@@ -20,12 +20,15 @@ namespace Dune{
      * \tparam DF   The domain (solution) field type.
      * \tparam RF   The range (residual) field type.
      * \tparam JF   The jacobian field type.
+     * \tparam CU   The type of the trial grid function space constraints.
+     * \tparam CV   The type of the test grid function space constraints.
      * \tparam A    The global assembler.
      * \tparam LA   The local assembler.
      */
     template<typename GFSU, typename GFSV,
              typename MB,
              typename DF, typename RF, typename JF,
+             typename CU, typename CV,
              typename A, typename LA>
     struct GridOperatorTraits
     {
@@ -35,6 +38,13 @@ namespace Dune{
 
       //! The test grid function space.
       typedef GFSV TestGridFunctionSpace;
+
+
+      //! The type of the trial grid function space constraints.
+      typedef CU TrialGridFunctionSpaceConstraints;
+
+      //! The type of the test grid function space constraints.
+      typedef CV TestGridFunctionSpaceConstraints;
 
 
       //! The matrix backend of the grid operator.
