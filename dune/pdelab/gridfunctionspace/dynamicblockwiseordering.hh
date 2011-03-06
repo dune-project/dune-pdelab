@@ -43,7 +43,7 @@ namespace Dune {
      */
     struct DynamicBlockwiseOrderingTag { };
     typedef DynamicBlockwiseOrderingTag
-      GridFunctionDynamicSpaceBlockwiseMapper;
+      GridFunctionSpaceDynamicBlockwiseMapper;
 
     namespace DynamicBlockwiseOrderingImp {
 
@@ -61,9 +61,13 @@ namespace Dune {
           indexRanges(indexRanges_)
         { }
 
-        template<class T, class TreePath>
-        void pre(const T &t, const TreePath &tp) const
-        { indexRanges[tp.back()].back().first = t.size(); }
+        // template<class T, class TreePath>
+        // void pre(const T &t, const TreePath &tp) const
+        // { indexRanges[tp.back()].back().first = t.size(); }
+
+        template<class T, class Child, class TreePath, class ChildIndex>
+        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex childIndex) 
+        { indexRanges[childIndex].back().first = child.size(); }
       };
 
       template<class SizeType, class Element>
@@ -83,18 +87,26 @@ namespace Dune {
           indexRanges(indexRanges_), eindex(eindex_), e(e_)
         { }
 
-        template<class T, class TreePath>
-        void pre(const T &t, const TreePath &tp) const
-        { indexRanges[tp.back()][eindex].first = t.entityOffset(e); }
+        // template<class T, class TreePath>
+        // void pre(const T &t, const TreePath &tp) const
+        // { indexRanges[tp.back()][eindex].first = t.entityOffset(e); }
+
+        template<class T, class Child, class TreePath, class ChildIndex>
+        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex childIndex) 
+        { indexRanges[childIndex][eindex].first = t.entityOffset(e); }
       };
 
       struct PrintMaxLocalSizesVisitor :
         public TypeTree::DirectChildrenVisitor,
         public TypeTree::DynamicTraversal
       {
-        template<class T, class TreePath>
-        void pre(const T &t, const TreePath &) const
-        { dinfo << t.maxLocalSize() << " "; }
+        // template<class T, class TreePath>
+        // void pre(const T &t, const TreePath &) const
+        // { dinfo << t.maxLocalSize() << " "; }
+
+        template<class T, class Child, class TreePath, class ChildIndex>
+        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex childIndex) 
+        { dinfo << child.maxLocalSize() << " "; }
       };
 
       //! Interface for merging index spaces
@@ -312,7 +324,7 @@ namespace Dune {
       PowerDynamicBlockwiseOrdering
       ( const GFS &gfs,
         const typename Node::NodeStorage &children) :
-        Node(children), Base(gfs.gridView())
+        Node(children), Base(gfs.gridview())
       { }
 
       std::string name() const { return "PowerDynamicBlockwiseOrdering"; }
@@ -324,7 +336,7 @@ namespace Dune {
       template<class GFSTraits, class TransformedChild, std::size_t k>
       struct result {
         typedef PowerDynamicBlockwiseOrdering<typename GFSTraits::SizeType,
-                                              typename GFSTraits::GridView,
+                                              typename GFSTraits::GridViewType,
                                               TransformedChild,
                                               k> type;
       };
@@ -361,7 +373,7 @@ namespace Dune {
       CompositeDynamicBlockwiseOrdering
       ( const GFS &gfs,
         DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE) :
-        Node(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES), Base(gfs.gridView())
+        Node(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES), Base(gfs.gridview())
       { }
 
       std::string name() const { return "CompositeDynamicBlockwiseOrdering"; }
@@ -374,7 +386,7 @@ namespace Dune {
       struct result {
         typedef CompositeDynamicBlockwiseOrdering<
           typename GFSTraits::SizeType,
-          typename GFSTraits::GridView,
+          typename GFSTraits::GridViewType,
           DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES> type;
       };
     };
