@@ -106,10 +106,10 @@ namespace Dune{
       //! Called immediately after binding of local function space in
       //! global assembler.
       //! @{
-      template<typename EG, typename LFSU>
-      void onBindLFSU(const EG & eg, const LFSU & lfsu){
-        lae0->onBindLFSU(eg,lfsu);
-        lae1->onBindLFSU(eg,lfsu);
+      template<typename EG, typename LFSU, typename LFSV>
+      void onBindLFSUV(const EG & eg, const LFSU & lfsu, const LFSV & lfsv){
+        lae0->onBindLFSUV(eg,lfsu,lfsv);
+        lae1->onBindLFSUV(eg,lfsu,lfsv);
       }
 
       template<typename EG, typename LFSV>
@@ -118,16 +118,16 @@ namespace Dune{
         lae1->onBindLFSV(eg,lfsv);
       }
 
-      template<typename IG, typename LFSU>
-      void onBindLFSUInside(const IG & ig, const LFSU & lfsu){
-        lae0->onBindLFSUInside(ig,lfsu);
-        lae1->onBindLFSUInside(ig,lfsu);
+      template<typename IG, typename LFSU, typename LFSV>
+      void onBindLFSUVInside(const IG & ig, const LFSU & lfsu, const LFSV & lfsv){
+        lae0->onBindLFSUVInside(ig,lfsu,lfsv);
+        lae1->onBindLFSUVInside(ig,lfsu,lfsv);
       }
 
-      template<typename IG, typename LFSU>
-      void onBindLFSUOutside(const IG & ig, const LFSU & lfsun){
-        lae0->onBindLFSUOutside(ig,lfsun);
-        lae1->onBindLFSUOutside(ig,lfsun);
+      template<typename IG, typename LFSU, typename LFSV>
+      void onBindLFSUVOutside(const IG & ig, const LFSU & lfsun, const LFSV & lfsvn){
+        lae0->onBindLFSUVOutside(ig,lfsun,lfsvn);
+        lae1->onBindLFSUVOutside(ig,lfsun,lfsvn);
       }
 
       template<typename IG, typename LFSV>
@@ -142,10 +142,10 @@ namespace Dune{
         lae1->onBindLFSVOutside(ig,lfsvn);
       }
 
-      template<typename LFSU>
-      void onBindLFSUCoupling(const LFSU & lfsu){}
-      template<typename LFSU>
-      void onUnbindLFSUCoupling(const LFSU & lfsu){}
+      template<typename LFSU, typename LFSV>
+      void onBindLFSUVCoupling(const LFSU & lfsu, const LFSV & lfsv){}
+      template<typename LFSU, typename LFSV>
+      void onUnbindLFSUVCoupling(const LFSU & lfsu, const LFSV & lfsv){}
       template<typename LFSV>
       void onBindLFSVCoupling(const LFSV & lfsv){}
       template<typename LFSV>
@@ -156,10 +156,10 @@ namespace Dune{
       //! Called when the local function space is about to be rebound or
       //! discarded 
       //! @{
-      template<typename EG, typename LFSU>
-      void onUnbindLFSU(const EG & eg, const LFSU & lfsu){
-        lae0->onUnbindLFSU(eg,lfsu);
-        lae1->onUnbindLFSU(eg,lfsu);
+      template<typename EG, typename LFSU, typename LFSV>
+      void onUnbindLFSUV(const EG & eg, const LFSU & lfsu, const LFSV & lfsv){
+        lae0->onUnbindLFSUV(eg,lfsu, lfsv);
+        lae1->onUnbindLFSUV(eg,lfsu, lfsv);
       }
 
       template<typename EG, typename LFSV>
@@ -168,16 +168,16 @@ namespace Dune{
         lae1->onUnbindLFSV(eg,lfsv);
       }
 
-      template<typename IG, typename LFSU>
-      void onUnbindLFSUInside(const IG & ig, const LFSU & lfsu){
-        lae0->onUnbindLFSUInside(ig,lfsu);
-        lae1->onUnbindLFSUInside(ig,lfsu);
+      template<typename IG, typename LFSU, typename LFSV>
+      void onUnbindLFSUVInside(const IG & ig, const LFSU & lfsu, const LFSV & lfsv){
+        lae0->onUnbindLFSUVInside(ig,lfsu, lfsv);
+        lae1->onUnbindLFSUVInside(ig,lfsu, lfsv);
       }
 
-      template<typename IG, typename LFSU>
-      void onUnbindLFSUOutside(const IG & ig, const LFSU & lfsun){
-        lae0->onUnbindLFSUOutside(ig,lfsun);
-        lae1->onUnbindLFSUOutside(ig,lfsun);
+      template<typename IG, typename LFSU, typename LFSV>
+      void onUnbindLFSUVOutside(const IG & ig, const LFSU & lfsun, const LFSV & lfsvn){
+        lae0->onUnbindLFSUVOutside(ig,lfsun,lfsvn);
+        lae1->onUnbindLFSUVOutside(ig,lfsun,lfsvn);
       }
 
       template<typename IG, typename LFSV>

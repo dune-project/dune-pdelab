@@ -2,6 +2,7 @@
 #define DUNE_PDELAB_ONESTEP_OPERATOR_HH
 
 #include <dune/pdelab/gridoperator/onestep/localassembler.hh>
+#include <dune/pdelab/gridoperator/common/gridoperatorutilities.hh>
 
 namespace Dune{
   namespace PDELab{
@@ -29,29 +30,8 @@ namespace Dune{
     {
     public:
 
-      //! The matrix backend to be used for the jacobian matrix
-      typedef typename GO0::MatrixBackend MatrixBackend;
-
       //! The sparsity pattern container for the jacobian matrix
       typedef typename GO0::Pattern Pattern;
-
-      //! The domain and range types of the operator
-      //! @{
-      typedef typename GO0::DomainField DomainField;
-      typedef typename GO0::RangeField RangeField;
-      typedef typename GO0::Jacobian Jacobian;
-      typedef typename GO0::Range Range;
-      typedef typename GO0::Domain Domain;
-      //! @}
-
-      //! The grid function spaces
-      typedef typename GO0::TrialGridFunctionSpace TrialGridFunctionSpace;
-      typedef typename GO0::TestGridFunctionSpace TestGridFunctionSpace;
-      
-      template <typename MFT>
-      struct MatrixContainer{
-        typedef Jacobian Type;
-      };
 
       //! The global UDG assembler type
       typedef typename GO0::Assembler Assembler;
@@ -64,6 +44,31 @@ namespace Dune{
 
       //! The local UDG assembler type
       typedef OneStepLocalAssembler<LocalAssemblerDT0,LocalAssemblerDT1,CU,CV> LocalAssembler;
+
+      //! The grid operator traits 
+      typedef Dune::PDELab::GridOperatorTraits
+      <typename GO0::Traits::TrialGridFunctionSpace,
+       typename GO0::Traits::TestGridFunctionSpace,
+       typename GO0::Traits::MatrixBackend, 
+       typename GO0::Traits::DomainField,
+       typename GO0::Traits::RangeField, 
+       typename GO0::Traits::JacobianField,
+       typename GO0::Traits::TrialGridFunctionSpaceConstraints,
+       typename GO0::Traits::TestGridFunctionSpaceConstraints,
+       Assembler, 
+       LocalAssembler> Traits;
+
+      //! The io types of the operator
+      //! @{
+      typedef typename Traits::Domain Domain;
+      typedef typename Traits::Range Range;
+      typedef typename Traits::Jacobian Jacobian;
+      //! @}
+
+      template <typename MFT>
+      struct MatrixContainer{
+        typedef Jacobian Type;
+      };
 
       //! The type for real number e.g. time
       typedef typename LocalAssembler::Real Real;
@@ -90,25 +95,25 @@ namespace Dune{
       {}
 
       //! Get the trial grid function space
-      const TrialGridFunctionSpace& trialGridFunctionSpace() const
+      const typename Traits::TrialGridFunctionSpace& trialGridFunctionSpace() const
       {
         return global_assembler.trialGridFunctionSpace();
       }
 
       //! Get the test grid function space
-      const TestGridFunctionSpace& testGridFunctionSpace() const
+      const typename Traits::TestGridFunctionSpace& testGridFunctionSpace() const
       {
         return global_assembler.testGridFunctionSpace();
       }
 
       //! Get dimension of space u
-      typename TrialGridFunctionSpace::Traits::SizeType globalSizeU () const
+      typename Traits::TrialGridFunctionSpace::Traits::SizeType globalSizeU () const
       {
         return trialGridFunctionSpace().globalSize();
       }
 
       //! Get dimension of space v
-      typename TestGridFunctionSpace::Traits::SizeType globalSizeV () const
+      typename Traits::TestGridFunctionSpace::Traits::SizeType globalSizeV () const
       {
         return testGridFunctionSpace().globalSize();
       }

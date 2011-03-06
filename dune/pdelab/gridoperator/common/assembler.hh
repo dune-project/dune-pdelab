@@ -32,7 +32,7 @@ public:
   template<typename TT>
   TT suggestTimestep (TT dt) const;
 
-  LocalPatternAssemblerEngine & localPatternAssemblerEngine(R & r, const X & x);
+  LocalPatternAssemblerEngine & localPatternAssemblerEngine(P & p);
   LocalResidualAssemblerEngine & localResidualAssemblerEngine(R & r, const X & x);
   LocalJacobianAssemblerEngine & localJacobianAssemblerEngine(A & a, const X & x);
   LocalResidualJacobianAssemblerEngine & localResidualJacobianAssemblerEngine(R & r, A & a, const X & x);

@@ -21,7 +21,7 @@ namespace Dune{
              typename CU=Dune::PDELab::EmptyTransformation, 
              typename CV=Dune::PDELab::EmptyTransformation>
     class OneStepLocalAssembler 
-      : public Dune::PDELab::LocalAssemblerBase< typename LA0::Traits::MatrixBackendType, CU, CV>
+      : public Dune::PDELab::LocalAssemblerBase< typename LA0::Traits::MatrixBackend, CU, CV>
     {
     public:
 
@@ -29,7 +29,7 @@ namespace Dune{
       typedef typename LA0::Traits Traits;
 
       //! The base class
-      typedef Dune::PDELab::LocalAssemblerBase< typename LA0::Traits::MatrixBackendType, CU, CV> Base;
+      typedef Dune::PDELab::LocalAssemblerBase< typename LA0::Traits::MatrixBackend, CU, CV> Base;
 
       //! The types of the local assemblers of order one and zero
       typedef LA0 LocalAssemblerDT0;
