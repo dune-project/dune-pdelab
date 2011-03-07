@@ -14,36 +14,38 @@ namespace Dune {
 	class LocalMatrix
 	{
 	public:
+      typedef T value_type;
+      typedef int size_type;
 	  LocalMatrix () {}
 
-	  LocalMatrix (int r, int c)
+	  LocalMatrix (size_type r, size_type c)
 		: m(r*c), rows(r), cols(c)
 	  {}
 
-	  LocalMatrix (int r, int c, const T& t)
+	  LocalMatrix (size_type r, size_type c, const T& t)
 		: m(r*c,t), rows(r), cols(c)
 	  {}
 
-	  void resize (int r, int c)
+	  void resize (size_type r, size_type c)
 	  {
 		m.resize(r*c);
 		rows = r; 
 		cols = c;
 	  }
 
-	  void assign (int r, int c, const T& t)
+	  void assign (size_type r, size_type c, const T& t)
 	  {
 		m.assign(r*c,t);
 		rows = r; 
 		cols = c;
 	  }
 
-	  const T& operator() (int i, int j) const
+	  const T& operator() (size_type i, size_type j) const
 	  {
 		return m[j*rows+i];
 	  }
 
-	  T& operator() (int i, int j)
+	  T& operator() (size_type i, size_type j)
 	  {
 		return m[j*rows+i];
 	  }
@@ -54,12 +56,12 @@ namespace Dune {
         return *this;
       }
 
-	  int nrows () const
+	  size_type nrows () const
 	  {
 		return rows;
 	  }
 
-	  int ncols () const
+	  size_type ncols () const
 	  {
 		return cols;
 	  }
@@ -68,16 +70,16 @@ namespace Dune {
       template<class X, class R>
       void umv (const X& x, R& y) const
       {
-        for (int i=0; i<rows; ++i)
+        for (size_type i=0; i<rows; ++i)
         {
-          for (int j=0; j<cols; j++)
+          for (size_type j=0; j<cols; j++)
             y[i] += (*this)(i,j) * x[j];
         }
       }
       
 	private:
 	  std::vector<T> m;
-	  int rows, cols;
+	  size_type rows, cols;
 	};
 
     template<class Stream, class T>
