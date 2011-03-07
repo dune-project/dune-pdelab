@@ -44,8 +44,8 @@ namespace Dune {
              std::size_t s6 = s5, std::size_t s7 = s6, std::size_t s8 = s7,
              std::size_t s9 = s8>
     struct ComponentBlockwiseOrderingTag { };
-    template<int s0 = 1, int s1 = s0, int s2 = s1, int s3 = s2, int s4 = s3,
-             int s5 = s4, int s6 = s5, int s7 = s6, int s8 = s7, int s9 = s8>
+    template<std::size_t s0 = 1, std::size_t s1 = s0, std::size_t s2 = s1, std::size_t s3 = s2, std::size_t s4 = s3,
+             std::size_t s5 = s4, std::size_t s6 = s5, std::size_t s7 = s6, std::size_t s8 = s7, std::size_t s9 = s8>
     struct GridFunctionSpaceComponentBlockwiseMapper :
       public ComponentBlockwiseOrderingTag<s0, s1, s2, s3, s4, s5, s6, s7, s8,
                                            s9>
@@ -288,6 +288,17 @@ namespace Dune {
       };
     };
 
+    template<std::size_t s0, std::size_t s1, std::size_t s2, std::size_t s3,
+             std::size_t s4, std::size_t s5, std::size_t s6, std::size_t s7,
+             std::size_t s8, std::size_t s9>
+    struct TransformPowerGFSToOrdering<
+      GridFunctionSpaceComponentBlockwiseMapper<s0, s1, s2, s3, s4, s5, s6, s7, s8, s9>
+      > : public TransformPowerGFSToOrdering<
+      ComponentBlockwiseOrderingTag<s0, s1, s2, s3, s4, s5, s6, s7, s8, s9>
+      >
+    {};
+
+
     //! Interface for merging index spaces
     template<class SizeType, class Tag,
              DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
@@ -339,6 +350,17 @@ namespace Dune {
           > type;
       };
     };
+
+    template<std::size_t s0, std::size_t s1, std::size_t s2, std::size_t s3,
+             std::size_t s4, std::size_t s5, std::size_t s6, std::size_t s7,
+             std::size_t s8, std::size_t s9>
+    struct TransformCompositeGFSToOrdering<
+      GridFunctionSpaceComponentBlockwiseMapper<s0, s1, s2, s3, s4, s5, s6, s7, s8, s9>
+      > : public TransformCompositeGFSToOrdering<
+        ComponentBlockwiseOrderingTag<s0, s1, s2, s3, s4, s5, s6, s7, s8, s9>
+        >
+    {};
+
 
    //! \} group GridFunctionSpace
   } // namespace PDELab
