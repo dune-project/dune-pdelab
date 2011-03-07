@@ -105,6 +105,16 @@ namespace Dune {
         return false;
       }
 
+      //! Resets the modification state of the view to not modified.
+      /**
+       * \warning Never call this method from within a local operator, or
+       *          your local residual / matrix contributions will be lost!
+       */
+      void resetModified()
+      {
+        _modified = false;
+      }
+
       // Constructor
       WeightedMatrixAccumulationView(Container& container, weight_type weight)
         : _container(container)

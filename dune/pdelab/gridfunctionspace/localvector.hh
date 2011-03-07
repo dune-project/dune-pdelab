@@ -160,6 +160,16 @@ namespace Dune {
         return _modified;
       }
 
+      //! Resets the modification state of the view to not modified.
+      /**
+       * \warning Never call this method from within a local operator, or
+       *          your local residual / matrix contributions will be lost!
+       */
+      void resetModified()
+      {
+        _modified = false;
+      }
+
     private:
       C& _container;
       weight_type _weight;
