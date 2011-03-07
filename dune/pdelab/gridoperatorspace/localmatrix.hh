@@ -42,6 +42,16 @@ namespace Dune {
         return _weight;
       }
 
+      //! Resets the weighting coefficient of the view.
+      /**
+       * \warning Only call this method when you know what you are doing! It is especially not meant
+       *          to be called from inside local operators.
+       */
+      void setWeight(weight_type weight)
+      {
+        _weight = weight;
+      }
+
       //! Applies the current weight to v and adds the result to the (i,j)-th entry of the container.
       void accumulate(size_type i, size_type j, value_type v)
       {
@@ -104,7 +114,7 @@ namespace Dune {
 
     private:
       Container& _container;
-      const weight_type _weight;
+      weight_type _weight;
       bool _modified;
     };
 
