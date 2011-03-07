@@ -42,17 +42,6 @@ namespace Dune{
       //! The local operator 
       typedef LOP LocalOperator;
 
-      //! Types related to the finte element spaces
-      //! @{
-      typedef FiniteElementInterfaceSwitch<typename GFSU::Traits::FiniteElementType> UFiniteElement;
-      typedef Dune::BasisInterfaceSwitch<typename UFiniteElement::Basis> UBasis;
-      typedef FiniteElementInterfaceSwitch<typename GFSV::Traits::FiniteElementType> VFiniteElement;
-      typedef Dune::BasisInterfaceSwitch<typename VFiniteElement::Basis> VBasis;
-      typedef typename UBasis::Range URange;
-      typedef typename VBasis::Range VRange;
-      typedef typename UBasis::RangeField RangeField;
-      //! @}
-
       //! The local function spaces
       //! @{
       // Types of local function spaces
@@ -61,6 +50,7 @@ namespace Dune{
       //! @}
 
       //! The local operators type for real numbers e.g. time
+      typedef typename R::ElementType RangeField;
       typedef RangeField Real;
 
       //! The residual representation type
@@ -88,14 +78,14 @@ namespace Dune{
 
       //! Constructor with empty constraints
       DefaultLocalAssembler (LOP & lop_) 
-        : lop(lop_),  weight(1.0), 
+        : lop(lop_),  weight(1.0), doConstraintsPostProcessing(true),
           pattern_engine(*this), residual_engine(*this), jacobian_engine(*this)
       {}
 
       //! Constructor for non trivial constraints
       DefaultLocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_) 
         : Base(cu_, cv_), 
-          lop(lop_),  weight(1.0),
+          lop(lop_),  weight(1.0), doConstraintsPostProcessing(true),
           pattern_engine(*this), residual_engine(*this), jacobian_engine(*this)
       {}
 
@@ -174,6 +164,14 @@ namespace Dune{
       static bool doPatternVolumePostSkeleton()  { return LOP::doPatternVolumePostSkeleton; }
       //! @}
 
+      //! This method allows to set the behavior with regard to the
+      //! post processing of the constraints. It is called by the
+      //! setupGridOperators() method of the GridOperator and should
+      //! not be called directly.
+      void constraintsPostProcessing(bool v){
+        doConstraintsPostProcessing = v;
+      }
+
     private:
 
       //! The local operator
@@ -182,12 +180,17 @@ namespace Dune{
       //! The current weight of assembling
       RangeField weight;
 
+      //! Indicates whether this local operator has to perform post
+      //! processing with regard to the constraints
+      bool doConstraintsPostProcessing;
+
       //! The engine member objects
       //! @{
       LocalPatternAssemblerEngine  pattern_engine;
       LocalResidualAssemblerEngine residual_engine;
       LocalJacobianAssemblerEngine jacobian_engine;
       //! @}
+
     };
 
   };

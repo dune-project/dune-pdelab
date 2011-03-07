@@ -23,9 +23,7 @@ namespace Dune{
        \tparam CV   Constraints maps for the individual dofs (test space)
 
     */
-    template<typename GO0, typename GO1,
-             typename CU=Dune::PDELab::EmptyTransformation,
-             typename CV=Dune::PDELab::EmptyTransformation>
+    template<typename GO0, typename GO1>
     class OneStepGridOperator
     {
     public:
@@ -43,7 +41,7 @@ namespace Dune{
       //! @}
 
       //! The local UDG assembler type
-      typedef OneStepLocalAssembler<LocalAssemblerDT0,LocalAssemblerDT1,CU,CV> LocalAssembler;
+      typedef OneStepLocalAssembler<LocalAssemblerDT0,LocalAssemblerDT1> LocalAssembler;
 
       //! The grid operator traits 
       typedef Dune::PDELab::GridOperatorTraits
@@ -77,22 +75,15 @@ namespace Dune{
       typedef typename LocalAssembler::OneStepParameters OneStepParameters;
 
       //! Constructor for non trivial constraints
-      OneStepGridOperator(const GO0 & go0_, const GO1 & go1_)
+      OneStepGridOperator(GO0 & go0_, GO1 & go1_)
         : global_assembler(go0_.assembler()), 
           go0(go0_), go1(go1_),
           la0(go0_.localAssembler()), la1(go1_.localAssembler()),
           const_residual(go0_.testGridFunctionSpace()),
           local_assembler(la0,la1, const_residual)
-      {}
-
-      //! Constructor for non trivial constraints
-      OneStepGridOperator(const GO0 & go0_, const GO1 & go1_, const CU & cu_, const CV & cv_)
-        : global_assembler(go0_.assembler()), 
-          go0(go0_), go1(go1_),
-          la0(go0_.localAssembler()), la1(go1_.localAssembler()),
-          const_residual(go0_.testGridFunctionSpace()),
-          local_assembler(la0,la1, const_residual, cu_, cv_)
-      {}
+      {
+        GO0::setupGridOperators(Dune::tie(go0_,go1_));
+      }
 
       //! Get the trial grid function space
       const typename Traits::TrialGridFunctionSpace& trialGridFunctionSpace() const

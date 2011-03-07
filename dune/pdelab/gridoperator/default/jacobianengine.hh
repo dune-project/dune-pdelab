@@ -175,11 +175,13 @@ namespace Dune{
       //! @{
       void preAssembly(){}
       void postAssembly(){ 
-        typedef typename LocalAssembler::Base::Traits::TestConstraintsType::const_iterator 
-          global_row_iterator;       
-        for (global_row_iterator cit=(local_assembler.pconstraintsv)->begin(); 
-             cit!=(local_assembler.pconstraintsv)->end(); ++cit)
-          local_assembler.set_trivial_row(cit->first,cit->second,*jacobian);
+        if(local_assembler.doConstraintsPostProcessing){
+          typedef typename LocalAssembler::Base::Traits::TestConstraintsType::const_iterator 
+            global_row_iterator;       
+          for (global_row_iterator cit=(local_assembler.pconstraintsv)->begin(); 
+               cit!=(local_assembler.pconstraintsv)->end(); ++cit)
+            local_assembler.set_trivial_row(cit->first,cit->second,*jacobian);
+        }
       }
       //! @}
 

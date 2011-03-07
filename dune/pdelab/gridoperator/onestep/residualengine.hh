@@ -243,7 +243,6 @@ namespace Dune{
       void postAssembly(){
         lae0->postAssembly();
         lae1->postAssembly();
-        Dune::PDELab::constrain_residual(*(la.pconstraintsv),*residual);
       }
       //! @}
 

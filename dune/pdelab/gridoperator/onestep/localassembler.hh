@@ -17,23 +17,27 @@ namespace Dune{
        \tparam LA0 The local assembler for the temporal derivative term of order zero
        \tparam LA1 The local assembler for the temporal derivative term of order one
     */
-    template<typename LA0, typename LA1, 
-             typename CU=Dune::PDELab::EmptyTransformation, 
-             typename CV=Dune::PDELab::EmptyTransformation>
+    template<typename LA0, typename LA1>
     class OneStepLocalAssembler 
-      : public Dune::PDELab::LocalAssemblerBase< typename LA0::Traits::MatrixBackend, CU, CV>
+      : public Dune::PDELab::LocalAssemblerBase< 
+      typename LA0::Traits::MatrixBackend, 
+      typename LA0::Traits::TrialConstraintsType, 
+      typename LA0::Traits::TestConstraintsType>
     {
     public:
 
       //! The traits class from the 
       typedef typename LA0::Traits Traits;
 
-      //! The base class
-      typedef Dune::PDELab::LocalAssemblerBase< typename LA0::Traits::MatrixBackend, CU, CV> Base;
-
       //! The types of the local assemblers of order one and zero
       typedef LA0 LocalAssemblerDT0;
       typedef LA1 LocalAssemblerDT1;
+
+      //! The base class
+      typedef Dune::PDELab::LocalAssemblerBase
+      < typename LA0::Traits::MatrixBackend, 
+        typename LA0::Traits::TrialConstraintsType, 
+        typename LA0::Traits::TestConstraintsType> Base;
 
       //! The local assembler engines
       //! @{
@@ -87,13 +91,6 @@ namespace Dune{
       //! Constructor with empty constraints
       OneStepLocalAssembler (LA0 & la0_, LA1 & la1_, Residual & const_residual_) 
         : la0(la0_), la1(la1_), const_residual(const_residual_), 
-          time(0.0), stage(0),
-          pattern_engine(*this), prestage_engine(*this), residual_engine(*this), jacobian_engine(*this)
-      { static_checks(); }
-
-      //! Constructor with non trivial constraints
-      OneStepLocalAssembler (LA0 & la0_, LA1 & la1_, Residual & const_residual_, const CU & cu_, const CV & cv_) 
-        : Base(cu_,cv_), la0(la0_), la1(la1_), const_residual(const_residual_), 
           time(0.0), stage(0),
           pattern_engine(*this), prestage_engine(*this), residual_engine(*this), jacobian_engine(*this)
       { static_checks(); }

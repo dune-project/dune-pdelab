@@ -74,8 +74,6 @@ namespace Dune{
         Dune::PDELab::MultiGeomUniqueIDMapper<GV> cell_mapper(gfsu.gridview());
 
         // Extract integration requirements from the local assembler
-        const bool require_uv_volume = assembler_engine.requireUVVolume();
-        const bool require_v_volume = assembler_engine.requireVVolume();
         const bool require_uv_skeleton = assembler_engine.requireUVSkeleton();
         const bool require_v_skeleton = assembler_engine.requireVSkeleton();
         const bool require_uv_boundary = assembler_engine.requireUVBoundary();

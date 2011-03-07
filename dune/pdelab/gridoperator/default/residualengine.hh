@@ -180,7 +180,11 @@ namespace Dune{
       //! Notifier functions, called immediately before and after assembling
       //! @{
       void preAssembly(){ }
-      void postAssembly(){ Dune::PDELab::constrain_residual(*(local_assembler.pconstraintsv),*residual); }
+      void postAssembly(){ 
+        if(local_assembler.doConstraintsPostProcessing){
+          Dune::PDELab::constrain_residual(*(local_assembler.pconstraintsv),*residual); 
+        }
+      }
       //! @}
 
       //! Assembling methods

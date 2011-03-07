@@ -235,11 +235,8 @@ namespace Dune{
       }
 
       void postAssembly(){
-        typedef typename LocalAssembler::Base::Traits::TestConstraintsType::const_iterator 
-          global_row_iterator;       
-        for (global_row_iterator cit=(la.pconstraintsv)->begin(); 
-             cit!=(la.pconstraintsv)->end(); ++cit)
-          la.set_trivial_row(cit->first,cit->second,*jacobian);
+        lae0->postAssembly();
+        lae1->postAssembly();
       }
       //! @}
 

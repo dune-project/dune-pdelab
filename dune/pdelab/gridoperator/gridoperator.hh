@@ -4,7 +4,7 @@
 #include <dune/pdelab/gridoperator/common/gridoperatorutilities.hh>
 #include <dune/pdelab/gridoperator/default/localassembler.hh>
 #include <dune/pdelab/gridoperator/default/assembler.hh>
-
+#include <dune/common/tupleutility.hh>
 
 namespace Dune{
   namespace PDELab{
@@ -94,6 +94,35 @@ namespace Dune{
       const Assembler & assembler() const { return global_assembler; }
 
       LocalAssembler & localAssembler() const { return local_assembler; }
+
+
+      //! Visitor which is called in the method setupGridOperators for
+      //! each tuple element.
+      template <typename GridOperatorTuple>
+      struct SetupGridOperator {
+        SetupGridOperator() 
+          : index(0), size(Dune::tuple_size<GridOperatorTuple>::value) {}
+   
+        template <class T>
+        void visit(T& elem) { 
+          elem.localAssembler().constraintsPostProcessing(index == size-1);
+          ++index; 
+        }
+
+        int index;
+        const int size;
+      };
+
+      //! Method to set up a number of grid operators which are used
+      //! in a joint assembling. It is assumed that all operators are
+      //! specializations of the same template type
+      template<typename GridOperatorTuple>
+      static void setupGridOperators(GridOperatorTuple tuple)
+      {
+        Dune::ForEachValue<GridOperatorTuple> forEach(tuple);
+        SetupGridOperator<GridOperatorTuple> setup_visitor;
+        forEach.apply(setup_visitor);
+      }
 
       //! Interpolate the constrained dofs from given function
       template<typename F, typename X> 
