@@ -12,7 +12,7 @@ namespace Dune{
 
     */
     template<typename LA>
-    class LocalJacobianAssemblerEngine
+    class DefaultLocalJacobianAssemblerEngine
     {
     public:
       //! The type of the wrapping local assembler
@@ -24,9 +24,6 @@ namespace Dune{
       //! The local function spaces
       typedef typename LA::LFSU LFSU;
       typedef typename LA::LFSV LFSV;
-
-      //! The sub triangulation type
-      typedef typename LA::SubTriangulation SubTriangulation;
 
       //! The type of the jacobian matrix
       typedef typename LA::Jacobian Jacobian;
@@ -42,7 +39,7 @@ namespace Dune{
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
-      LocalJacobianAssemblerEngine(const LocalAssembler & local_assembler_)
+      DefaultLocalJacobianAssemblerEngine(const LocalAssembler & local_assembler_)
         : local_assembler(local_assembler_), lop(local_assembler_.lop), 
           invalid_jacobian(static_cast<Jacobian*>(0)),
           invalid_solution(static_cast<Solution*>(0)),
@@ -323,7 +320,7 @@ namespace Dune{
       }
 
     
-    }; // End of class LocalJacobianAssemblerEngine
+    }; // End of class DefaultLocalJacobianAssemblerEngine
 
   };
 };

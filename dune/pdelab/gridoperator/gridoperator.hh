@@ -18,7 +18,6 @@ namespace Dune{
        \tparam MB The matrix backend to be used for representation of the jacobian
        \tparam DF The domain field type of the operator
        \tparam RF The range field type of the operator
-       \tparam ST The type of the sub triangulation
        \tparam nonoverlapping_mode Switch for nonoverlapping grids
        \tparam CU   Constraints maps for the individual dofs (trial space)
        \tparam CV   Constraints maps for the individual dofs (test space)
@@ -26,15 +25,15 @@ namespace Dune{
     */
     template<typename GFSU, typename GFSV, typename LOP,
              typename MB, typename DF, typename RF, typename JF,
-             bool nonoverlapping_mode = false,
              typename CU=Dune::PDELab::EmptyTransformation,
-             typename CV=Dune::PDELab::EmptyTransformation>
+             typename CV=Dune::PDELab::EmptyTransformation,
+             bool nonoverlapping_mode = false>
     class GridOperator
     {
     public:
 
       //! The global UDG assembler type
-      typedef Assembler<GFSU,GFSV,nonoverlapping_mode> Assembler;
+      typedef DefaultAssembler<GFSU,GFSV,nonoverlapping_mode> Assembler;
 
       //! The type of the domain (solution).
       typedef typename Dune::PDELab::BackendVectorSelector<GFSU,DF>::Type Domain;
@@ -47,7 +46,7 @@ namespace Dune{
       typedef typename MB::Pattern Pattern;
 
       //! The local UDG assembler type
-      typedef LocalAssembler<GFSU,GFSV,LOP,Domain,Range,Jacobian,MB,Pattern,CU,CV> LocalAssembler;
+      typedef DefaultLocalAssembler<GFSU,GFSV,LOP,Domain,Range,Jacobian,MB,Pattern,CU,CV> LocalAssembler;
 
       //! The grid operator traits 
       typedef Dune::PDELab::GridOperatorTraits
@@ -59,8 +58,7 @@ namespace Dune{
       };
 
       //! Constructor for non trivial constraints
-      GridOperator(const GFSU & gfsu_, const GFSV & gfsv_, LOP & lop_, 
-                      const CU & cu_, const CV & cv_)
+      GridOperator(const GFSU & gfsu_, const CU & cu_, const GFSV & gfsv_, const CV & cv_, LOP & lop_ )
         : global_assembler(gfsu_,gfsv_), local_assembler(lop_, cu_, cv_) 
       {}
 

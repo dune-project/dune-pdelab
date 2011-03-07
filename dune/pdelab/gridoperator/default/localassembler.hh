@@ -28,7 +28,7 @@ namespace Dune{
              typename X, typename R, typename A, typename B, typename P,
              typename CU=Dune::PDELab::EmptyTransformation,
              typename CV=Dune::PDELab::EmptyTransformation>
-    class LocalAssembler : public Dune::PDELab::LocalAssemblerBase<B,CU,CV>{
+    class DefaultLocalAssembler : public Dune::PDELab::LocalAssemblerBase<B,CU,CV>{
     public:
 
       //! The base class of this local assembler
@@ -61,7 +61,7 @@ namespace Dune{
       //! @}
 
       //! The local operators type for real numbers e.g. time
-      typedef typename LOP::RealType Real;
+      typedef RangeField Real;
 
       //! The residual representation type
       typedef R Residual;
@@ -77,23 +77,23 @@ namespace Dune{
 
       //! The local assembler engines
       //! @{
-      typedef LocalPatternAssemblerEngine<LocalAssembler> LocalPatternAssemblerEngine;
-      typedef LocalResidualAssemblerEngine<LocalAssembler> LocalResidualAssemblerEngine;
-      typedef LocalJacobianAssemblerEngine<LocalAssembler> LocalJacobianAssemblerEngine;
+      typedef DefaultLocalPatternAssemblerEngine<DefaultLocalAssembler> LocalPatternAssemblerEngine;
+      typedef DefaultLocalResidualAssemblerEngine<DefaultLocalAssembler> LocalResidualAssemblerEngine;
+      typedef DefaultLocalJacobianAssemblerEngine<DefaultLocalAssembler> LocalJacobianAssemblerEngine;
 
-      friend class LocalPatternAssemblerEngine<LocalAssembler>;
-      friend class LocalResidualAssemblerEngine<LocalAssembler>;
-      friend class LocalJacobianAssemblerEngine<LocalAssembler>;
+      friend class DefaultLocalPatternAssemblerEngine<DefaultLocalAssembler>;
+      friend class DefaultLocalResidualAssemblerEngine<DefaultLocalAssembler>;
+      friend class DefaultLocalJacobianAssemblerEngine<DefaultLocalAssembler>;
       //! @}
 
       //! Constructor with empty constraints
-      LocalAssembler (LOP & lop_) 
+      DefaultLocalAssembler (LOP & lop_) 
         : lop(lop_),  weight(1.0), 
           pattern_engine(*this), residual_engine(*this), jacobian_engine(*this)
       {}
 
       //! Constructor for non trivial constraints
-      LocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_) 
+      DefaultLocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_) 
         : Base(cu_, cv_), 
           lop(lop_),  weight(1.0),
           pattern_engine(*this), residual_engine(*this), jacobian_engine(*this)

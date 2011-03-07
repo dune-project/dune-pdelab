@@ -11,7 +11,7 @@ namespace Dune{
 
     */
     template<typename LA>
-    class LocalPatternAssemblerEngine
+    class DefaultLocalPatternAssemblerEngine
     {
     public:
       //! The type of the wrapping local assembler
@@ -35,7 +35,7 @@ namespace Dune{
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
-      LocalPatternAssemblerEngine(const LocalAssembler & local_assembler_)
+      DefaultLocalPatternAssemblerEngine(const LocalAssembler & local_assembler_)
         : local_assembler(local_assembler_), lop(local_assembler_.lop), 
           invalid_pattern(static_cast<Pattern*>(0)), pattern(invalid_pattern)
       {}
@@ -112,17 +112,17 @@ namespace Dune{
       //! discarded 
       //! @{
       template<typename EG>
-      void onUnbindLFSUV(const EG & eg, const LFSU & lfsu, const LFSV & lfsv){}
-
-      template<typename EG>
-      void onUnbindLFSV(const EG & eg, const LFSV & lfsv){
-
+      void onUnbindLFSUV(const EG & eg, const LFSU & lfsu, const LFSV & lfsv){
+      
         for (size_t k=0; k<localpattern.size(); ++k)
           local_assembler.add_entry(*pattern,
                                     lfsv.globalIndex(localpattern[k].i()),
                                     lfsu.globalIndex(localpattern[k].j())
                                     );
       }
+
+      template<typename EG>
+      void onUnbindLFSV(const EG & eg, const LFSV & lfsv){ }
 
       template<typename IG>
       void onUnbindLFSUVInside(const IG & ig, const LFSU & lfsu, const LFSV & lfsv){}
@@ -138,17 +138,6 @@ namespace Dune{
       template<typename IG>
       void onUnbindLFSVOutside(const IG & ig, const LFSV & lfsvn){
 
-        for (size_t k=0; k<localpattern_sn.size(); ++k)
-          local_assembler.add_entry(*pattern,
-                                    lfsv_s.globalIndex(localpattern_sn[k].i()),
-                                    lfsu_n.globalIndex(localpattern_sn[k].j())
-                                    );
-
-        for (size_t k=0; k<localpattern_ns.size(); ++k)
-          local_assembler.add_entry(*pattern,
-                                    lfsv_n.globalIndex(localpattern_ns[k].i()),
-                                    lfsu_s.globalIndex(localpattern_ns[k].j())
-                                    );
       }
       //! @}
 
@@ -184,6 +173,18 @@ namespace Dune{
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternSkeleton>::
           pattern_skeleton(lop,lfsu_s,lfsv_s,lfsu_n,lfsv_n,
                            localpattern_sn, localpattern_ns);
+
+        for (size_t k=0; k<localpattern_sn.size(); ++k)
+          local_assembler.add_entry(*pattern,
+                                    lfsv_s.globalIndex(localpattern_sn[k].i()),
+                                    lfsu_n.globalIndex(localpattern_sn[k].j())
+                                    );
+
+        for (size_t k=0; k<localpattern_ns.size(); ++k)
+          local_assembler.add_entry(*pattern,
+                                    lfsv_n.globalIndex(localpattern_ns[k].i()),
+                                    lfsu_s.globalIndex(localpattern_ns[k].j())
+                                    );
       }
 
       template<typename IG>
@@ -243,7 +244,7 @@ namespace Dune{
       //! Local pattern object used in assembling
       LocalPattern localpattern;
       LocalPattern localpattern_sn, localpattern_ns;
-    }; // End of class LocalPatternAssemblerEngine
+    }; // End of class DefaultLocalPatternAssemblerEngine
 
   };
 };

@@ -15,7 +15,7 @@ namespace Dune{
        */
 
     template<typename GFSU, typename GFSV, bool nonoverlapping_mode=false>
-    class Assembler {
+    class DefaultAssembler {
     public:
 
       //! Types related to current grid view
@@ -39,7 +39,7 @@ namespace Dune{
       //! Static check on whether this is a Galerkin method
       static const bool isGalerkinMethod = Dune::is_same<GFSU,GFSV>::value;
 
-      Assembler (const GFSU& gfsu_, const GFSV& gfsv_) 
+      DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_) 
         : gfsu(gfsu_), gfsv(gfsv_), lfsu(gfsu_), lfsv(gfsv_), 
           lfsun(gfsu_), lfsvn(gfsv_)
       { }
@@ -65,7 +65,8 @@ namespace Dune{
       template<class LocalAssemblerEngine>
       void assemble(LocalAssemblerEngine & assembler_engine) const
       {
-    
+        typedef typename GV::Traits::template Codim<0>::Entity Element;
+
         // Notify assembler engine about oncoming assembly
         assembler_engine.preAssembly();
 
@@ -94,14 +95,16 @@ namespace Dune{
             if (nonoverlapping_mode && it->partitionType()!=Dune::InteriorEntity)
               continue; 
 
+            ElementGeometry<Element> eg(*it);
+
             // Bind local test function space to element
             lfsv.bind( *it );
 
             // Notify assembler engine about bind
-            assembler_engine.onBindLFSV(*it,lfsv);
+            assembler_engine.onBindLFSV(eg,lfsv);
 
             // Volume integration
-            assembler_engine.assembleVVolume(*it,lfsv);
+            assembler_engine.assembleVVolume(eg,lfsv);
 
             // Bind local trial function space to element
             lfsu.bind( *it );
@@ -110,19 +113,22 @@ namespace Dune{
             assembler_engine.loadCoefficientsLFSUInside(lfsu);
 
             // Notify assembler engine about bind
-            assembler_engine.onBindLFSUV(*it,lfsu,lfsv);
+            assembler_engine.onBindLFSUV(eg,lfsu,lfsv);
 
             // Volume integration
-            assembler_engine.assembleUVVolume(*it,lfsu,lfsv);
+            assembler_engine.assembleUVVolume(eg,lfsu,lfsv);
 
             // Skip if no intersection iterator is needed
             if (require_uv_skeleton || require_v_skeleton || require_uv_boundary || require_v_boundary)
               {
                 // Traverse intersections
+                unsigned int intersection_index = 0;
                 IntersectionIterator endit = gfsu.gridview().iend(*it);
                 IntersectionIterator iit = gfsu.gridview().ibegin(*it);
-                for(; iit!=endit; ++iit)
+                for(; iit!=endit; ++iit, ++intersection_index)
                   {
+
+                    IntersectionGeometry<Intersection> ig(*iit,intersection_index);
 
                     // skeleton term
                     if (iit->neighbor() && (require_uv_skeleton || require_v_skeleton) )
@@ -136,8 +142,6 @@ namespace Dune{
                         // or interior is a ghost
                         visit_face |= (nonoverlapping_mode && 
                                        (iit->inside())->partitionType()!=Dune::InteriorEntity);
-                        // or this is a domain interface
-                        visit_face |= iit->insideDomainIndex() != iit->outsideDomainIndex();
                           
                         // unique vist of intersection
                         if (visit_face)
@@ -146,10 +150,10 @@ namespace Dune{
                             lfsvn.bind(*(iit->outside()));
 
                             // Notify assembler engine about binds
-                            assembler_engine.onBindLFSVOutside(*iit,lfsvn);
+                            assembler_engine.onBindLFSVOutside(ig,lfsvn);
                             
                             // Skeleton integration
-                            assembler_engine.assembleVSkeleton(*iit,lfsv,lfsvn);
+                            assembler_engine.assembleVSkeleton(ig,lfsv,lfsvn);
 
                             if(require_uv_skeleton){
 
@@ -157,20 +161,20 @@ namespace Dune{
                               lfsun.bind(*(iit->outside()));
 
                               // Notify assembler engine about binds
-                              assembler_engine.onBindLFSUVOutside(*iit,lfsun,lfsvn);
+                              assembler_engine.onBindLFSUVOutside(ig,lfsun,lfsvn);
 
                               // Load coefficients of local functions
                               assembler_engine.loadCoefficientsLFSUOutside(lfsun);
 
                               // Skeleton integration
-                              assembler_engine.assembleUVSkeleton(*iit,lfsu,lfsv,lfsun,lfsvn);
+                              assembler_engine.assembleUVSkeleton(ig,lfsu,lfsv,lfsun,lfsvn);
 
                               // Notify assembler engine about unbinds
-                              assembler_engine.onUnbindLFSUVOutside(*iit,lfsun,lfsvn);
+                              assembler_engine.onUnbindLFSUVOutside(ig,lfsun,lfsvn);
                             }
 
                             // Notify assembler engine about unbinds
-                            assembler_engine.onUnbindLFSVOutside(*iit,lfsvn);
+                            assembler_engine.onUnbindLFSVOutside(ig,lfsvn);
                           }
                       }
 
@@ -179,11 +183,11 @@ namespace Dune{
                     if( (require_uv_boundary || require_v_boundary ) && iit->boundary() ){
 
                       // Boundary integration
-                      assembler_engine.assembleVBoundary(*iit,lfsv);
+                      assembler_engine.assembleVBoundary(ig,lfsv);
 
                       if(require_uv_boundary){
                         // Boundary integration
-                        assembler_engine.assembleUVBoundary(*iit,lfsu,lfsv);
+                        assembler_engine.assembleUVBoundary(ig,lfsu,lfsv);
                       }
                     }
 
@@ -191,20 +195,20 @@ namespace Dune{
               } // do skeleton
             
             if(require_uv_post_skeleton || require_v_post_skeleton){
-                // Volume integration
-                assembler_engine.assembleVVolumePostSkeleton(*sit,lfsv);
+              // Volume integration
+              assembler_engine.assembleVVolumePostSkeleton(eg,lfsv);
 
-                if(require_uv_post_skeleton){
-                  // Volume integration
-                  assembler_engine.assembleUVVolumePostSkeleton(*sit,lfsu,lfsv);
-                }
+              if(require_uv_post_skeleton){
+                // Volume integration
+                assembler_engine.assembleUVVolumePostSkeleton(eg,lfsu,lfsv);
+              }
             }
 
             // Notify assembler engine about unbinds
-            assembler_engine.onUnbindLFSUV(*it,lfsu,lfsv);
+            assembler_engine.onUnbindLFSUV(eg,lfsu,lfsv);
 
             // Notify assembler engine about unbinds
-            assembler_engine.onUnbindLFSV(*it,lfsv);
+            assembler_engine.onUnbindLFSV(eg,lfsv);
 
           } // it
 

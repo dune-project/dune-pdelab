@@ -12,7 +12,7 @@ namespace Dune{
 
     */
     template<typename LA>
-    class LocalResidualAssemblerEngine
+    class DefaultLocalResidualAssemblerEngine
     {
     public:
       //! The type of the wrapping local assembler
@@ -33,16 +33,13 @@ namespace Dune{
       typedef typename LA::LFSU LFSU;
       typedef typename LA::LFSV LFSV;
 
-      //! The sub triangulation type
-      typedef typename LA::SubTriangulation SubTriangulation;
-  
       /**
          \brief Constructor 
 
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
-      LocalResidualAssemblerEngine(const LocalAssembler & local_assembler_)
+      DefaultLocalResidualAssemblerEngine(const LocalAssembler & local_assembler_)
         : local_assembler(local_assembler_), lop(local_assembler_.lop), 
           invalid_residual(static_cast<Residual*>(0)), invalid_solution(static_cast<Solution*>(0)),
           residual(invalid_residual), 
@@ -338,7 +335,7 @@ namespace Dune{
           y[i] = a;
       }
 
-    }; // End of class LocalResidualAssemblerEngine
+    }; // End of class DefaultLocalResidualAssemblerEngine
 
   };
 };
