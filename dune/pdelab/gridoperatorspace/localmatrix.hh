@@ -65,8 +65,13 @@ namespace Dune {
        *          only allows application of operator+=() and operator-=(). In
        *          both cases, the argument will automatically be multiplied by
        *          the weight associated with this view.
+       *
+       * \deprecated Direct access to the individual container entries is deprecated
+       *             and will be removed in a future release. Please use accumulate()
+       *             or a combination of weight() and rawAccumulate() to update the
+       *             entries of this container.
        */
-      reference operator()(size_type i, size_type j)
+      reference operator()(size_type i, size_type j) DUNE_DEPRECATED
       {
         _modified = true;
         return reference(_container(i,j),_weight);
