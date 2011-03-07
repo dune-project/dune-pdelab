@@ -167,4 +167,11 @@ public:
                    const F& f,
                    typename Traits::Domain& xnew);
 
+  //! Set up the passed-in tuple of GridOperators to cooperate, e.g.
+  //! for a time-stepping method. The caller guarantees that the
+  //! GridOperators will always be invoked in the order that they
+  //! appear in the tuple.
+  template<typename GridOperatorTuple>
+  static void setupGridOperators(GridOperatorTuple& tuple);
+
 };
