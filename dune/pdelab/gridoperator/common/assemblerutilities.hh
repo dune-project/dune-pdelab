@@ -350,7 +350,7 @@ namespace Dune{
       }
 
       template<typename GC>
-      void handle_dirichlet_contraints(GC& globalcontainer) const
+      void handle_dirichlet_constraints(GC& globalcontainer) const
       {
         typedef typename CV::const_iterator global_row_iterator;
         for (global_row_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit)
