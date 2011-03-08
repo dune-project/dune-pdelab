@@ -26,6 +26,7 @@ namespace Dune{
     */
     template<typename GFSU, typename GFSV, typename LOP, 
              typename X, typename R, typename A, typename B, typename P,
+             bool nonoverlapping_mode = false,
              typename CU=Dune::PDELab::EmptyTransformation,
              typename CV=Dune::PDELab::EmptyTransformation>
     class DefaultLocalAssembler : public Dune::PDELab::LocalAssemblerBase<B,CU,CV>{
@@ -41,6 +42,8 @@ namespace Dune{
 
       //! The local operator 
       typedef LOP LocalOperator;
+
+      static const bool isNonOverlapping = nonoverlapping_mode;
 
       //! The local function spaces
       //! @{

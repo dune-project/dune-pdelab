@@ -89,11 +89,10 @@ namespace Dune{
             // Compute unique id
             const typename GV::IndexSet::IndexType ids = cell_mapper.map(*it);
 
-            // Skip ghost and overlap
-            if (nonoverlapping_mode && it->partitionType()!=Dune::InteriorEntity)
-              continue; 
-
             ElementGeometry<Element> eg(*it);
+
+            if(assembler_engine.assembleCell(eg))
+              continue;
 
             // Bind local test function space to element
             lfsv.bind( *it );
