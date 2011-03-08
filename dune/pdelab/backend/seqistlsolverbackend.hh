@@ -179,7 +179,47 @@ namespace Dune {
       unsigned maxiter;
       int verbose;
     };
-    
+
+    template<template<typename> class Solver>
+    class ISTLBackend_SEQ_ILUn
+      :  public SequentialNorm, public LinearResultStorage
+    {
+    public:
+      /*! \brief make a linear solver object
+        \param[in] n The number of levels to be used.
+        \param[in] w The relaxation factor.
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
+      */
+      explicit ISTLBackend_SEQ_ILUn (int n, double w, unsigned maxiter_=5000, int verbose_=1)
+        : n_(n), w_(w), maxiter(maxiter_), verbose(verbose_)
+       {}
+      /*! \brief solve the given linear system
+
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename W::ElementType reduction)
+      {
+        Dune::MatrixAdapter<M,V,W> opa(A);
+        Dune::SeqILUn<typename M::BaseT,V,W> ilu0(A.base(), n_, w_);
+        Solver<V> solver(opa, ilu0, reduction, maxiter, verbose);
+        Dune::InverseOperatorResult stat;
+        solver.apply(z, r, stat);
+        res.converged  = stat.converged;
+        res.reduction  = stat.reduction;
+       }
+    private:
+      int n_;
+      double w_;
+      
+      unsigned maxiter;
+      int verbose;
+    };
+
     //! \addtogroup PDELab_seqsolvers Sequential Solvers
     //! \{
 
@@ -247,6 +287,42 @@ namespace Dune {
       */
       explicit ISTLBackend_SEQ_CG_ILU0 (unsigned maxiter_=5000, int verbose_=1)
         : ISTLBackend_SEQ_ILU0<Dune::CGSolver>(maxiter_, verbose_)
+      {}
+    };
+
+    //! Sequential BiCGStab solver with ILU0 preconditioner
+    class ISTLBackend_SEQ_BCGS_ILUn
+      : public ISTLBackend_SEQ_ILUn<Dune::BiCGSTABSolver>
+    {
+    public:
+      /*! \brief make a linear solver object
+
+        
+        \param[in] n The number of levels to be used.
+        \param[in] w The relaxation factor.
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
+      */
+      explicit ISTLBackend_SEQ_BCGS_ILUn (int n, double w=1.0, unsigned maxiter_=5000, int verbose_=1)
+        : ISTLBackend_SEQ_ILUn<Dune::BiCGSTABSolver>(n, w, maxiter_, verbose_)
+      {}
+    }; 
+
+    //! Sequential congute gradient solver with ILU0 preconditioner
+    class ISTLBackend_SEQ_CG_ILUn
+      : public ISTLBackend_SEQ_ILUn<Dune::CGSolver>
+    {
+    public:
+      /*! \brief make a linear solver object
+
+        
+        \param[in] n The number of levels to be used.
+        \param[in] w The relaxation factor.
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
+      */
+      explicit ISTLBackend_SEQ_CG_ILUn (int n, double w=1.0, unsigned maxiter_=5000, int verbose_=1)
+        : ISTLBackend_SEQ_ILUn<Dune::CGSolver>(n, w, maxiter_, verbose_)
       {}
     };
 
