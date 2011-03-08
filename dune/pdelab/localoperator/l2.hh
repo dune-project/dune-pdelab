@@ -167,7 +167,7 @@ namespace Dune {
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
 	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
 	  {
-        for(int i=0; i<LFSU::CHILDREN; ++i)
+        for(unsigned int i=0; i<LFSU::CHILDREN; ++i)
           scalar_operator.alpha_volume(eg,lfsu.child(i),x,lfsv.child(i),r);
 	  }
 
@@ -176,7 +176,7 @@ namespace Dune {
 	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
                             LocalMatrix<R>& mat) const
       {
-        for(int i=0; i<LFSU::CHILDREN; ++i)
+        for(unsigned int i=0; i<LFSU::CHILDREN; ++i)
           scalar_operator.jacobian_volume(eg,lfsu.child(i),x,lfsv.child(i),mat);
       }
 

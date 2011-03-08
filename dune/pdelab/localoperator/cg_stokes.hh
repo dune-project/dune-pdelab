@@ -264,7 +264,7 @@ namespace Dune {
 
             // evaluate flux boundary condition. the scalar flux is
             // assumed to be in normal direction
-            typename J::Traits::RangeType neumann_flux;
+            typename J::Traits::RangeType neumann_flux(0);
             j.evaluate(*(ig.inside()), local, neumann_flux);
             
             const RF factor = it->weight() * ig.geometry().integrationElement(it->position());
