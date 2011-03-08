@@ -210,6 +210,27 @@ namespace Dune {
       LocalVector(v_size_type i, const value_type & v) : BaseT(i,v) {}
       /** \} */
 
+
+      // ********************************************************************************
+      // compatilibity methods to make sure LocalVector works with local operators that
+      // have already been converted to the new style of accessing the residual
+      // ********************************************************************************
+
+      weight_type weight() DUNE_DEPRECATED
+      {
+        return 1.0;
+      }
+
+      void accumulate(size_type n, value_type v) DUNE_DEPRECATED
+      {
+        this->operator[](n) += v;
+      }
+
+      void rawAccumulate(size_type n, value_type v) DUNE_DEPRECATED
+      {
+        this->operator[](n) += v;
+      }
+
       /**
 	 \{
 	 Access Operators operator[](LocalIndex), automatically hides
@@ -246,6 +267,27 @@ namespace Dune {
       WeightedAccumulationView weightedAccumulationView(weight_type weight)
       {
         return WeightedAccumulationView(*this,weight);
+      }
+
+
+      // ********************************************************************************
+      // compatilibity methods to make sure LocalVector works with local operators that
+      // have already been converted to the new style of accessing the residual
+      // ********************************************************************************
+
+      weight_type weight() DUNE_DEPRECATED
+      {
+        return 1.0;
+      }
+
+      void accumulate(size_type n, value_type v) DUNE_DEPRECATED
+      {
+        this->operator[](n) += v;
+      }
+
+      void rawAccumulate(size_type n, value_type v) DUNE_DEPRECATED
+      {
+        this->operator[](n) += v;
       }
 
       /**

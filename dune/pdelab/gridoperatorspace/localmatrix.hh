@@ -202,6 +202,27 @@ namespace Dune {
         }
       }
 
+      // ********************************************************************************
+      // compatilibity methods to make sure LocalMatrix works with local operators that
+      // have already been converted to the new style of accessing the jacobian
+      // ********************************************************************************
+
+      weight_type weight() DUNE_DEPRECATED
+      {
+        return 1.0;
+      }
+
+      void accumulate(size_type i, size_type j, value_type v) DUNE_DEPRECATED
+      {
+        this->operator()(i,j) += v;
+      }
+
+      void rawAccumulate(size_type i, size_type j, value_type v) DUNE_DEPRECATED
+      {
+        this->operator()(i,j) += v;
+      }
+
+
       //! Returns a weighted accumulate-only view of this matrix with the given weight.
       WeightedAccumulationView weightedAccumulationView(weight_type weight)
       {
