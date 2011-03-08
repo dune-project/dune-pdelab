@@ -455,9 +455,9 @@ namespace Dune {
           asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,up_s,
                                  up_n);
           for (int i=0; i<m_s; i++)
-            y_s[i] += ((up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta)*x_n[lfsu_n.localIndex(j)];
+            y_s[lfsv_n.localIndex(i)] += ((up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta)*x_n[lfsu_n.localIndex(j)];
           for (int i=0; i<m_n; i++)
-            y_n[i] += ((up_n[lfsv_n.localIndex(i)]-down_n[lfsv_n.localIndex(i)])/delta)*x_n[lfsu_n.localIndex(j)];
+            y_n[lfsv_n.localIndex(i)] += ((up_n[lfsv_n.localIndex(i)]-down_n[lfsv_n.localIndex(i)])/delta)*x_n[lfsu_n.localIndex(j)];
           u_n[lfsu_n.localIndex(j)] = x_n[lfsu_n.localIndex(j)];
         }
       }
