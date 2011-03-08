@@ -144,24 +144,23 @@ namespace Dune {
             const int dim = IG::dimension;
             const int dimw = IG::dimensionworld;
 
-            const Dune::QuadratureRule<DF,dim>&
-              rule = Dune::QuadratureRules<DF,dim>::rule(ig.geometry().type(),intorder);
+            const Dune::QuadratureRule<DF,dim-1>&
+              rule = Dune::QuadratureRules<DF,dim-1>::rule(ig.geometry().type(),intorder);
 
-            Dune::FieldVector<RF,dim> integrand(0.);
+            RF integrand(0.);
 
-            for (typename Dune::QuadratureRule<DF,dim>::const_iterator
+            for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator
                 it=rule.begin(); it!=rule.end(); ++it)
             {
               // position in inside elem
-              const Dune::FieldVector<DF,dimw> inside_pos
-                = ig.inside()->geometry().local(it->position());
+              Dune::FieldVector<DF,dim> inside_pos = ig.geometryInInside().global(it->position());
 
               // gradients of basis on reference elem
               std::vector<JacobianType> js_s(lfsu_s.size());
               lfsu_s.finiteElement().localBasis().evaluateJacobian(inside_pos,js_s);
 
               // gradients of basis on inside elem
-              const Dune::FieldMatrix<DF,dimw,dim>
+              const Dune::FieldMatrix<DF,dim,dim>
                 jac_s = ig.inside()->geometry().jacobianInverseTransposed(inside_pos);
               std::vector<Dune::FieldVector<RF,dim> > gradphi_s(lfsu_s.size());
               for (size_type i=0; i<lfsu_s.size(); i++)
@@ -173,17 +172,16 @@ namespace Dune {
                 gradu_s.axpy(x_s[i],gradphi_s[i]);
 
               // position in outside elem
-              const Dune::FieldVector<DF,dimw> outside_pos
-                = ig.inside()->geometry().local(it->position());
+              Dune::FieldVector<DF,dim> outside_pos = ig.geometryInOutside().global(it->position());
 
               // gradient on reference elem
               std::vector<JacobianType> js_n(lfsu_n.size());
               lfsu_n.finiteElement().localBasis().evaluateJacobian(outside_pos,js_n);
 
               // gradient on outside elem
-              const Dune::FieldMatrix<DF,dimw,dim>
+              const Dune::FieldMatrix<DF,dim,dim>
                 jac_n = ig.outside()->geometry().jacobianInverseTransposed(outside_pos);
-              std::vector<Dune::FieldVector<RF,dim> > gradphi_n(lfsu_n.size());
+              std::vector<Dune::FieldVector<RF,dimw> > gradphi_n(lfsu_n.size());
               for (size_type i=0; i<lfsu_n.size(); i++)
                 jac_n.mv(js_n[i][0],gradphi_n[i]);
 
@@ -192,14 +190,34 @@ namespace Dune {
               for (size_type i=0; i<lfsu_n.size(); i++)
                 gradu_n.axpy(x_n[i],gradphi_n[i]);
 
+              // jump of gradient
+              const Dune::FieldVector<DF,dim> outer_normal = ig.unitOuterNormal(it->position());
+              RF grad_normal(0.0);
+              for (size_type i=0; i<dim; i++) grad_normal += (gradu_s[i]-gradu_n[i])*outer_normal[i];
+
               // integrate
               RF factor = it->weight()*ig.inside()->geometry().integrationElement(inside_pos);
-              for (int i = 0; i < dimw; ++i)
-                integrand[i] += (gradu_s[i] - gradu_n[i]) * (gradu_s[i] - gradu_n[i]) * factor;
+              integrand += grad_normal * grad_normal * factor;
             }
 
-            r_s[0] += integrand.two_norm();
-            r_n[0] += integrand.two_norm();
+            // compute estimate for diameter of intersection
+            DF hmax = -1.0E00;
+            if (dim==1)
+              {
+                hmax = 1.0;
+              }
+            else
+              {
+                for (int i=1; i<ig.geometry().corners(); i++)
+                  {
+                    Dune::FieldVector<DF,dim> x = ig.geometry().corner(0);
+                    Dune::FieldVector<DF,dim> y = ig.geometry().corner(i);
+                    x -= y;
+                    hmax = std::max(hmax,x.two_norm());
+                  }
+              }
+            r_s[0] += sqrt(hmax*integrand);
+            r_n[0] += sqrt(hmax*integrand);
           }
     };
 
