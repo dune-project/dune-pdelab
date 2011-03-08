@@ -103,9 +103,9 @@ namespace Dune {
               gradu.axpy(x[lfsu.localIndex(i)],gradphiu[i][0]);
 
             // integrate grad u * grad phi_i
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+            RF factor = r.weight() * it->weight() * eg.geometry().integrationElement(it->position());
             for (size_t i=0; i<lfsv.size(); i++)
-              r[lfsv.localIndex(i)] += (gradu*gradphiv[i][0])*factor;
+              r.rawAccumulate(lfsv.localIndex(i),(gradu*gradphiv[i][0])*factor);
           }
 	  }
 
@@ -147,9 +147,9 @@ namespace Dune {
             f.evaluate(eg.entity(),it->position(),y);
 
             // integrate f
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+            RF factor = - r.weight() * it->weight() * eg.geometry().integrationElement(it->position());
             for (size_t i=0; i<lfsv.size(); i++)
-              r[lfsv.localIndex(i)] -= y*phi[i]*factor;
+              r.rawAccumulate(lfsv.localIndex(i),y*phi[i]*factor);
           }
       }
 
@@ -199,9 +199,9 @@ namespace Dune {
             j.evaluate(*(ig.inside()),local,y);
             
             // integrate J
-            RF factor = it->weight()*ig.geometry().integrationElement(it->position());
+            RF factor = r.weight() * it->weight()*ig.geometry().integrationElement(it->position());
             for (size_t i=0; i<lfsv.size(); i++)
-              r[lfsv.localIndex(i)] += y*phi[i]*factor;
+              r.rawAccumulate(lfsv.localIndex(i),y*phi[i]*factor);
           }
       }
 
