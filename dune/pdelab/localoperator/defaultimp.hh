@@ -519,7 +519,7 @@ namespace Dune {
           asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,upview_s,
                                  upview_n);
           for (int i=0; i<m_s; i++)
-            y_s.accumulate(lfsv_n.localIndex(i),
+            y_s.accumulate(lfsv_s.localIndex(i),
                            ((up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta)*x_n[lfsu_n.localIndex(j)]);
           for (int i=0; i<m_n; i++)
             y_n.accumulate(lfsv_n.localIndex(i),
