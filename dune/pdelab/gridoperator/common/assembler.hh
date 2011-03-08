@@ -1,177 +1,219 @@
 #include <gridoperatorutilities.hh>
 #include <assemblerutilties.hh>
 
+namespace Dune {
+  namespace PDELab {
 
-class AssemblerInterface{
-public:
-  template<class LocalAssembler>
-  void assemble(LocalAssembler & local_assembler);
-};
+    //! \defgroup GridOperator Grid Operator
+    //! \ingroup PDELab
+    //! \{
+
+    /** \brief The global assembler which performs the traversing of
+        the integration parts.
+
+        The global assembler does only provide the local function
+        spaces and the integration parts. It does not perform the
+        actual integration or modify any of the assembling objects
+        like the pattern, residual, and jacobian matrix.
+
+     */
+    class AssemblerInterface{
+    public:
+      template<class LocalAssemblerEngine>
+      void assemble(LocalAssemblerEngine & local_assembler_engine);
+    };
 
 
-class LocalAssemblerInterface : public LocalAssemblerBase
-{
-public:
+    template<typename B, typename CU, typename CV>
+    class LocalAssemblerInterface : public LocalAssemblerBase<B,CU,CV>
+    {
+    public:
 
-  template<class TT>
-  void setTime(TT time);
+      template<class TT>
+      void setTime(TT time);
 
-  template<class RF>
-  void setWeight(RF weight);
+      template<class RF>
+      void setWeight(RF weight);
 
-  template<typename TT>
-  void preStep (TT time, TT dt, std::size_t stages);
+      template<typename TT>
+      void preStep (TT time, TT dt, std::size_t stages);
 
-  void postStep ();
+      void postStep ();
 
-  template<typename TT>
-  void preStage (TT time, std::size_t stage);
+      template<typename TT>
+      void preStage (TT time, std::size_t stage);
 
-  void postStage ();
+      void postStage ();
 
-  template<typename TT>
-  TT suggestTimestep (TT dt) const;
+      template<typename TT>
+      TT suggestTimestep (TT dt) const;
 
-  LocalPatternAssemblerEngine & localPatternAssemblerEngine(P & p);
-  LocalResidualAssemblerEngine & localResidualAssemblerEngine(R & r, const X & x);
-  LocalJacobianAssemblerEngine & localJacobianAssemblerEngine(A & a, const X & x);
-  LocalResidualJacobianAssemblerEngine & localResidualJacobianAssemblerEngine(R & r, A & a, const X & x);
+      LocalPatternAssemblerEngine & localPatternAssemblerEngine(P & p);
+      LocalResidualAssemblerEngine & localResidualAssemblerEngine(R & r, const X & x);
+      LocalJacobianAssemblerEngine & localJacobianAssemblerEngine(A & a, const X & x);
+      LocalResidualJacobianAssemblerEngine & localResidualJacobianAssemblerEngine(R & r, A & a, const X & x);
 
-  class LocalAssemblerEngine{
-  public:
-    typedef LocalAssemblerInterface LocalAssembler;
-    const LocalAssembler & localAssembler();
+      class LocalAssemblerEngine{
+      public:
+        typedef LocalAssemblerInterface LocalAssembler;
+        const LocalAssembler & localAssembler();
 
-    bool requireSkeleton() const;
-    bool requireSkeletonTwoSided() const;
-    bool requireUVVolume() const;
-    bool requireVVolume() const;
-    bool requireUVSkeleton() const;
-    bool requireVSkeleton() const;
-    bool requireUVBoundary() const;
-    bool requireVBoundary() const;
-    bool requireUVEnrichedCoupling() const;
-    bool requireVEnrichedCoupling() const;
-    bool requireUVVolumePostSkeleton() const;
-    bool requireVVolumePostSkeleton() const;
+        bool requireSkeleton() const;
+        bool requireSkeletonTwoSided() const;
+        bool requireUVVolume() const;
+        bool requireVVolume() const;
+        bool requireUVSkeleton() const;
+        bool requireVSkeleton() const;
+        bool requireUVBoundary() const;
+        bool requireVBoundary() const;
+        bool requireUVEnrichedCoupling() const;
+        bool requireVEnrichedCoupling() const;
+        bool requireUVVolumePostSkeleton() const;
+        bool requireVVolumePostSkeleton() const;
 
-    template<>
-    void assembleUVVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv);
-    template<>
-    void assembleVVolume(const EG & eg, const LFSV & lfsv);
-    template<>
-    void assembleUVSkeleton(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
-                               const LFSU_N & lfsu_n, const LFSV_N & lfsv_n);
-    template<>
-    void assembleVSkeleton(const IG & ig, const LFSV_S & lfsv_s, const LFSV_N & lfsv_n);
-    template<>
-    void assembleUVBoundary(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
-    template<>
-    void assembleVBoundary(const IG & ig, const LFSV_S & lfsv_s);
-    template<>
-    void assembleUVEnrichedCoupling(const IG & ig,
-                                       const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
-                                       const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
-                                       const LFSU_Coupling & lfsu_coupling, const LFSV_Coupling & lfsv_coupling);
-    template<>
-    void assembleVEnrichedCoupling(const IG & ig,
-                                        const LFSV_S & lfsv_s,
-                                        const LFSV_N & lfsv_n,
-                                        const LFSV_Coupling & lfsv_coupling);
-    template<>
-    void assembleUVVolumePostSkeleton(const EG & eg, const LFSU & lfsu, const LFSV & lfsv);
-    template<>
-    void assembleVVolumePostSkeleton(const EG & eg, const LFSV & lfsv);
 
-    void preAssembly();
-    void postAssembly();
+        template<typename EG>
+        bool assembleCell(const EG & eg);
+        template<>
+        void assembleUVVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv);
+        template<>
+        void assembleVVolume(const EG & eg, const LFSV & lfsv);
+        template<>
+        void assembleUVSkeleton(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                                const LFSU_N & lfsu_n, const LFSV_N & lfsv_n);
+        template<>
+        void assembleVSkeleton(const IG & ig, const LFSV_S & lfsv_s, const LFSV_N & lfsv_n);
+        template<>
+        void assembleUVBoundary(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
+        template<>
+        void assembleVBoundary(const IG & ig, const LFSV_S & lfsv_s);
+        template<>
+        void assembleUVEnrichedCoupling(const IG & ig,
+                                        const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                                        const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
+                                        const LFSU_Coupling & lfsu_coupling, const LFSV_Coupling & lfsv_coupling);
+        template<>
+        void assembleVEnrichedCoupling(const IG & ig,
+                                       const LFSV_S & lfsv_s,
+                                       const LFSV_N & lfsv_n,
+                                       const LFSV_Coupling & lfsv_coupling);
+        template<>
+        void assembleUVVolumePostSkeleton(const EG & eg, const LFSU & lfsu, const LFSV & lfsv);
+        template<>
+        void assembleVVolumePostSkeleton(const EG & eg, const LFSV & lfsv);
 
-    void onBindLFSUV(const EG & eg, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
-    void onBindLFSV(const EG & eg, const LFSV_S & lfsv_s);
-    void onBindLFSUVInside(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
-    void onBindLFSVInside(const IG & ig, const LFSV_S & lfsv_s);
-    void onBindLFSUVOutside(const IG & ig, const LFSU_N & lfsu_n, const LFSV_N & lfsv_n);
-    void onBindLFSVOutside(const IG & ig, const LFSV_N & lfsv_n);
-    void onBindLFSUVCoupling(const IG & ig, const LFSU_Coupling & lfsu_coupling, const LFSV_Coupling & lfsv_coupling);
-    void onBindLFSVCoupling(const IG & ig, const LFSV_Coupling & lfsv_coupling);
+        void preAssembly();
+        void postAssembly();
 
-    void loadCoefficientsLFSUInside(const LFSU_S & lfsu_s);
-    void loadCoefficientsLFSUOutside(const LFSU_N & lfsu_n);
-    void loadCoefficientsLFSUCoupling(const LFSU_Coupling & lfsu_coupling);
+        void onBindLFSUV(const EG & eg, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
+        void onBindLFSV(const EG & eg, const LFSV_S & lfsv_s);
+        void onBindLFSUVInside(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
+        void onBindLFSVInside(const IG & ig, const LFSV_S & lfsv_s);
+        void onBindLFSUVOutside(const IG & ig, const LFSU_N & lfsu_n, const LFSV_N & lfsv_n);
+        void onBindLFSVOutside(const IG & ig, const LFSV_N & lfsv_n);
+        void onBindLFSUVCoupling(const IG & ig, 
+                                 const LFSU_Coupling & lfsu_coupling, const LFSV_Coupling & lfsv_coupling);
+        void onBindLFSVCoupling(const IG & ig, const LFSV_Coupling & lfsv_coupling);
 
-    void onUnbindLFSUV(const EG & eg, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
-    void onUnbindLFSV(const EG & eg, const LFSV_S & lfsv_s);
-    void onUnbindLFSUVInside(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
-    void onUnbindLFSVInside(const IG & ig, const LFSV_S & lfsv_s);
-    void onUnbindLFSUVOutside(const IG & ig, const LFSU_N & lfsu_n, const LFSV_N & lfsv_n);
-    void onUnbindLFSVOutside(const IG & ig, const LFSV_N & lfsv_n);
-    void onUnbindLFSUVCoupling(const IG & ig, const LFSU_Coupling & lfsu_coupling, const LFSV_Coupling & lfsv_coupling);
-    void onUnbindLFSVCoupling(const IG & ig, const LFSV_Coupling & lfsv_coupling);
+        void loadCoefficientsLFSUInside(const LFSU_S & lfsu_s);
+        void loadCoefficientsLFSUOutside(const LFSU_N & lfsu_n);
+        void loadCoefficientsLFSUCoupling(const LFSU_Coupling & lfsu_coupling);
 
-    // these methods are optional - not necessary for things like the PatternEngine
-    void setSolution(const X& x);
-    void setResidual(const R& r);
+        void onUnbindLFSUV(const EG & eg, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
+        void onUnbindLFSV(const EG & eg, const LFSV_S & lfsv_s);
+        void onUnbindLFSUVInside(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
+        void onUnbindLFSVInside(const IG & ig, const LFSV_S & lfsv_s);
+        void onUnbindLFSUVOutside(const IG & ig, const LFSU_N & lfsu_n, const LFSV_N & lfsv_n);
+        void onUnbindLFSVOutside(const IG & ig, const LFSV_N & lfsv_n);
+        void onUnbindLFSUVCoupling(const IG & ig, 
+                                   const LFSU_Coupling & lfsu_coupling, const LFSV_Coupling & lfsv_coupling);
+        void onUnbindLFSVCoupling(const IG & ig, const LFSV_Coupling & lfsv_coupling);
+
+        // these methods are optional - not necessary for things like the PatternEngine
+        void setSolution(const X& x);
+        void setResidual(const R& r);
+      };
+
+      class LocalPatternAssemblerEngine : public LocalAssemblerEngine {};
+      class LocalResidualAssemblerEngine : public LocalAssemblerEngine {};
+      class LocalJacobianAssemblerEngine : public LocalAssemblerEngine {};
+      class LocalResidualJacobianAssemblerEngine : public LocalAssemblerEngine {};
+    };
+
+    template<typename GFSU, typename GFSV,
+             typename MB, typename DF, typename RF, typename JF>
+    class GridOperatorInterface{
+    public:
+
+      typedef GridOperatorTraits
+      <GFSU,GFSV,MB,DF,RF,JF,CU,CV,AssemblerInterface,LocalAssemblerInterface> Traits;
+
+      template<typename P>
+      void fill_pattern (P& globalpattern) const;
+
+      template<typename X, typename R>
+      void residual (const X& x, R& r) const;
+
+      template<typename X, typename A>
+      void jacobian (const X& x, A& a) const;
+
+      Assembler & assembler();
+
+      LocalAssemblerInterface & localAssembler();
+
+      const GFSU& trialGridFunctionSpace() const;
+
+      const GFSV& testGridFunctionSpace() const;
+
+      typename GFSU::Traits::SizeType globalSizeU () const;
+
+      typename GFSV::Traits::SizeType globalSizeV () const;
+
+      //! Interpolate xnew from f, taking unconstrained values from xold.
+      /**
+       * \note the exact type of F will depend on the GridOperator and
+       *       may be a more complicated object than a simple GridFunction
+       *       for scenarios like MultiDomain or grid-glue.
+       */
+      template<typename F>
+      void interpolate(const typename Traits::Domain& xold,
+                       const F& f,
+                       typename Traits::Domain& xnew);
+
+      //! Set up the passed-in tuple of GridOperators to cooperate, e.g.
+      //! for a time-stepping method. The caller guarantees that the
+      //! GridOperators will always be invoked in the order that they
+      //! appear in the tuple.
+      template<typename GridOperatorTuple>
+      static void setupGridOperators(GridOperatorTuple& tuple);
+
+    };
+    //! \}
   };
-
-  class LocalPatternAssemblerEngine : public LocalAssemblerEngine {};
-  class LocalResidualAssemblerEngine : public LocalAssemblerEngine {};
-  class LocalJacobianAssemblerEngine : public LocalAssemblerEngine {};
-  class LocalResidualJacobianAssemblerEngine : public LocalAssemblerEngine {};
 };
 
-template<typename GFSU, typename GFSV,
-         typename MB, typename DF, typename RF, typename JF>
-class GridOperator{
-public:
+/**
+\page GridOperatorDocPage Grid Operator
+@ingroup GridOperator
 
-  typedef GridOperatorTraits<GFSU,
-                             GFSV,
-                             MB,
-                             DF,
-                             RF,
-                             JF,
-                             CU,
-                             CV,
-                             Assembler,
-                             LocalAssembler> Traits;
+\section GridOperatorDocIntroduction Introduction
 
-  template<typename P>
-  void fill_pattern (P& globalpattern) const;
+In the PDELab concept, the continuous PDE problem is reduced to an
+algebraic problem: 
 
-  template<typename X, typename R>
-  void residual (const X& x, R& r) const;
+Find \f$ \mathbf{u}\in\mathbf{U} \f$ such that \f$
+\mathcal{R}(\mathbf{u}) = \mathbf{0} \f$. 
 
-  template<typename X, typename A>
-  void jacobian (const X& x, A& a) const;
+For instationary problems a corresponding algebraic problem is setup
+for each time step or stage of a time step.
 
-  Assembler & assembler();
+The grid operator object represents the operator mapping \f$
+\mathcal{R} : \mathbf{U} \to \mathbf{V} \f$ . It is evaluated via the
+Dune::PDELab::GridOperatorInterface::residual() member method and its
+derivatives are aquired with the
+Dune::PDELab::GridOperatorInterface::jacobian() method. 
 
-  LocalAssemblerInterface & localAssembler();
+Evaluating the grid operator and its jacobian matrix entails
+integrations over the computational domain during which these
 
-  const GFSU& trialGridFunctionSpace() const;
-
-  const GFSV& testGridFunctionSpace() const;
-
-  typename GFSU::Traits::SizeType globalSizeU () const;
-
-  typename GFSV::Traits::SizeType globalSizeV () const;
-
-  //! Interpolate xnew from f, taking unconstrained values from xold.
-  /**
-   * \note the exact type of F will depend on the GridOperator and
-   *       may be a more complicated object than a simple GridFunction
-   *       for scenarios like MultiDomain or grid-glue.
-   */
-  template<typename F>
-  void interpolate(const typename Traits::Domain& xold,
-                   const F& f,
-                   typename Traits::Domain& xnew);
-
-  //! Set up the passed-in tuple of GridOperators to cooperate, e.g.
-  //! for a time-stepping method. The caller guarantees that the
-  //! GridOperators will always be invoked in the order that they
-  //! appear in the tuple.
-  template<typename GridOperatorTuple>
-  static void setupGridOperators(GridOperatorTuple& tuple);
-
-};
+*/
