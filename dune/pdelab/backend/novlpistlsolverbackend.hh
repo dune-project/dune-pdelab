@@ -650,8 +650,8 @@ namespace Dune {
     {
       typedef MatrixType Matrix;
       typedef typename GridOperatorSpace::Traits GridOperatorSpaceTraits;
-      typedef typename GridOperatorSpaceTraits::GridViewType GridView;
       typedef typename GridOperatorSpaceTraits::TrialGridFunctionSpace GFS;
+      typedef typename GFS::Traits::GridViewType GridView;
       enum {dim = GridView::dimension};
       typedef typename GridView::Traits::Grid Grid;
       typedef typename Matrix::block_type BlockType;
@@ -1120,7 +1120,7 @@ namespace Dune {
   {
     typedef typename GOS::Traits::TrialGridFunctionSpace GFS;
     typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
-    typedef typename GFS::template VectorContainer<Scalar>::Type U;
+    typedef typename Dune::PDELab::BackendVectorSelector<GFS,Scalar>::Type U;
  
   public:
     ISTLBackend_AMG_NOVLP(const GFS& gfs_, int smoothsteps=2,
