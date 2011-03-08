@@ -412,9 +412,10 @@ namespace Dune {
             }
 
             // jacobian of volume term
-            template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+            template<typename EG, typename LFSU, typename X, typename LFSV,
+                     typename LocalMatrix>
             void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                LocalMatrix<R>& mat) const
+                                  LocalMatrix& mat) const
             {
                 // dimensions
                 static const unsigned int dim = EG::Geometry::dimension;
@@ -507,12 +508,13 @@ namespace Dune {
             }
 
             // jacobian of skeleton term
-            template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+            template<typename IG, typename LFSU, typename X, typename LFSV,
+                     typename LocalMatrix>
             void jacobian_skeleton (const IG& ig,
                 const LFSU& lfsu_s, const X&, const LFSV& lfsv_s,
                 const LFSU& lfsu_n, const X&, const LFSV& lfsv_n,
-                LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn,
-                LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn) const
+                LocalMatrix& mat_ss, LocalMatrix& mat_sn,
+                LocalMatrix& mat_ns, LocalMatrix& mat_nn) const
             {
                 // dimensions
                 static const unsigned int dim = IG::Geometry::dimension;
@@ -749,10 +751,11 @@ namespace Dune {
             }
 
             // jacobian of boundary term
-            template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+            template<typename IG, typename LFSU, typename X, typename LFSV,
+                     typename LocalMatrix>
             void jacobian_boundary (const IG& ig,
                 const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                LocalMatrix<R>& mat) const
+                LocalMatrix& mat) const
             {
                 // dimensions
                 static const unsigned int dim = IG::Geometry::dimension;
@@ -923,9 +926,10 @@ namespace Dune {
                 : StokesLocalOperator(configuration,ip_factor_,mu_,_f,_b,_v,_p,_qorder), rho(rho_), qorder(_qorder)
             {}
 
-            template<typename EG, typename LFSU, typename X, typename LFSV,typename R>
+            template<typename EG, typename LFSU, typename X, typename LFSV,
+                     typename LocalMatrix>
             void jacobian_volume( const EG& eg,const LFSU& lfsu, const X& x, 
-                                  const LFSV& lfsv, LocalMatrix<R>& mat) const
+                                  const LFSV& lfsv, LocalMatrix& mat) const
             {
                 // Assemble the Stokes part of the jacobian
                 StokesLocalOperator::jacobian_volume(eg,lfsu,x,lfsv,mat);
