@@ -40,28 +40,37 @@ namespace Dune {
 
       //! compute local jacobian of the volume term
       template<typename EG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename Jacobian>
       void jacobian_volume
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        LocalMatrix<R>& mat) const
+        Jacobian& mat) const
       {
+        typedef typename X::value_type D;
+        typedef typename Jacobian::value_type R;
+        typedef LocalVector<R,TestSpaceTag,typename Jacobian::weight_type> ResidualVector;
+        typedef typename ResidualVector::WeightedAccumulationView ResidualView;
+
         const int m=lfsv.size();
         const int n=lfsu.size();
 
         X u(x);
-        std::vector<R> down(mat.nrows(),0.0),up(mat.nrows());
 
-        asImp().alpha_volume(eg,lfsu,u,lfsv,down);
+        ResidualVector down(m),up(m);
+        ResidualView downview = down.weightedAccumulationView(mat.weight());
+        ResidualView upview = up.weightedAccumulationView(mat.weight());
+
+
+        asImp().alpha_volume(eg,lfsu,u,lfsv,downview);
         for (int j=0; j<n; j++) // loop over columns
         {
           for (int k=0; k<mat.nrows(); k++) up[k]=0.0;
-          R delta = epsilon*(1.0+std::abs(u[lfsu.localIndex(j)]));
+          D delta = epsilon*(1.0+std::abs(u[lfsu.localIndex(j)]));
           u[lfsu.localIndex(j)] += delta;
-          asImp().alpha_volume(eg,lfsu,u,lfsv,up);
+          asImp().alpha_volume(eg,lfsu,u,lfsv,upview);
           for (int i=0; i<m; i++)
-            mat(lfsv.localIndex(i),lfsu.localIndex(j)) 
-              += (up[lfsv.localIndex(i)]-down[lfsv.localIndex(i)])/delta;
+            mat.rawAccumulate(lfsv.localIndex(i),lfsu.localIndex(j),
+                              (up[lfsv.localIndex(i)]-down[lfsv.localIndex(i)])/delta);
           u[lfsu.localIndex(j)] = x[lfsu.localIndex(j)];
         }
       }
@@ -95,28 +104,36 @@ namespace Dune {
 
       //! compute local post-skeleton jacobian of the volume term
       template<typename EG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename Jacobian>
       void jacobian_volume_post_skeleton
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        LocalMatrix<R>& mat) const
+        Jacobian& mat) const
       {
+        typedef typename X::value_type D;
+        typedef typename Jacobian::value_type R;
+        typedef LocalVector<R,TestSpaceTag,typename Jacobian::weight_type> ResidualVector;
+        typedef typename ResidualVector::WeightedAccumulationView ResidualView;
+
         const int m=lfsv.size();
         const int n=lfsu.size();
 
         X u(x);
-        std::vector<R> down(mat.nrows(),0.0),up(mat.nrows());
 
-        asImp().alpha_volume_post_skeleton(eg,lfsu,u,lfsv,down);
+        ResidualVector down(m),up(m);
+        ResidualView downview = down.weightedAccumulationView(mat.weight());
+        ResidualView upview = up.weightedAccumulationView(mat.weight());
+
+        asImp().alpha_volume_post_skeleton(eg,lfsu,u,lfsv,downview);
         for (int j=0; j<n; j++) // loop over columns
         {
           for (int k=0; k<mat.nrows(); k++) up[k]=0.0;
-          R delta = epsilon*(1.0+std::abs(u[lfsu.localIndex(j)]));
+          D delta = epsilon*(1.0+std::abs(u[lfsu.localIndex(j)]));
           u[lfsu.localIndex(j)] += delta;
-          asImp().alpha_volume_post_skeleton(eg,lfsu,u,lfsv,up);
+          asImp().alpha_volume_post_skeleton(eg,lfsu,u,lfsv,upview);
           for (int i=0; i<m; i++)
-            mat(lfsv.localIndex(i),lfsu.localIndex(j)) 
-              += (up[lfsv.localIndex(i)]-down[lfsv.localIndex(i)])/delta;
+            mat.rawAccumulate(lfsv.localIndex(i),lfsu.localIndex(j),
+                              (up[lfsv.localIndex(i)]-down[lfsv.localIndex(i)])/delta);
           u[lfsu.localIndex(j)] = x[lfsu.localIndex(j)];
         }
       }
@@ -148,14 +165,19 @@ namespace Dune {
 
       //! compute local jacobian of the skeleton term
       template<typename IG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename Jacobian>
       void jacobian_skeleton
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-        LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn,
-        LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn) const
+        Jacobian& mat_ss, Jacobian& mat_sn,
+        Jacobian& mat_ns, Jacobian& mat_nn) const
       {
+        typedef typename X::value_type D;
+        typedef typename Jacobian::value_type R;
+        typedef LocalVector<R,TestSpaceTag,typename Jacobian::weight_type> ResidualVector;
+        typedef typename ResidualVector::WeightedAccumulationView ResidualView;
+
         const int m_s=lfsv_s.size();
         const int m_n=lfsv_n.size();
         const int n_s=lfsu_s.size();
@@ -163,28 +185,34 @@ namespace Dune {
 
         X u_s(x_s);
         X u_n(x_n);
-        std::vector<R> down_s(mat_ss.nrows(),0.0),up_s(mat_ss.nrows());
-        std::vector<R> down_n(mat_nn.nrows(),0.0),up_n(mat_nn.nrows());
+
+        ResidualVector down_s(m_s),up_s(m_s);
+        ResidualView downview_s = down_s.weightedAccumulationView(1.0);
+        ResidualView upview_s = up_s.weightedAccumulationView(1.0);
+
+        ResidualVector down_n(m_n),up_n(m_n);
+        ResidualView downview_n = down_n.weightedAccumulationView(1.0);
+        ResidualView upview_n = up_n.weightedAccumulationView(1.0);
 
         // base line
-        asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,down_s,
-                               down_n);
+        asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,downview_s,
+                               downview_n);
 
         // jiggle in self
         for (int j=0; j<n_s; j++)
         {
           for (int k=0; k<mat_ss.nrows(); k++) up_s[k]=0.0;
           for (int k=0; k<mat_nn.nrows(); k++) up_n[k]=0.0;
-          R delta = epsilon*(1.0+std::abs(u_s[lfsu_s.localIndex(j)]));
+          D delta = epsilon*(1.0+std::abs(u_s[lfsu_s.localIndex(j)]));
           u_s[lfsu_s.localIndex(j)] += delta;
-          asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,up_s,
-                                 up_n);
+          asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,upview_s,
+                                 upview_n);
           for (int i=0; i<m_s; i++)
-            mat_ss(lfsv_s.localIndex(i),lfsu_s.localIndex(j)) 
-              += (up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta;
+            mat_ss.accumulate(lfsv_s.localIndex(i),lfsu_s.localIndex(j),
+                              (up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta);
           for (int i=0; i<m_n; i++)
-            mat_ns(lfsv_n.localIndex(i),lfsu_s.localIndex(j)) 
-              += (up_n[lfsv_n.localIndex(i)]-down_n[lfsv_n.localIndex(i)])/delta;
+            mat_ns.accumulate(lfsv_n.localIndex(i),lfsu_s.localIndex(j),
+                              (up_n[lfsv_n.localIndex(i)]-down_n[lfsv_n.localIndex(i)])/delta);
           u_s[lfsu_s.localIndex(j)] = x_s[lfsu_s.localIndex(j)];
         }
 
@@ -193,16 +221,16 @@ namespace Dune {
         {
           for (int k=0; k<mat_ss.nrows(); k++) up_s[k]=0.0;
           for (int k=0; k<mat_nn.nrows(); k++) up_n[k]=0.0;
-          R delta = epsilon*(1.0+std::abs(u_n[lfsu_n.localIndex(j)]));
+          D delta = epsilon*(1.0+std::abs(u_n[lfsu_n.localIndex(j)]));
           u_n[lfsu_n.localIndex(j)] += delta;
-          asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,up_s,
-                                 up_n);
+          asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,upview_s,
+                                 upview_n);
           for (int i=0; i<m_s; i++)
-            mat_sn(lfsv_s.localIndex(i),lfsu_n.localIndex(j)) 
-              += (up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta;
+            mat_sn.accumulate(lfsv_s.localIndex(i),lfsu_n.localIndex(j),
+                              (up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta);
           for (int i=0; i<m_n; i++)
-            mat_nn(lfsv_n.localIndex(i),lfsu_n.localIndex(j)) 
-              += (up_n[lfsv_n.localIndex(i)]-down_n[lfsv_n.localIndex(i)])/delta;
+            mat_nn.accumulate(lfsv_n.localIndex(i),lfsu_n.localIndex(j),
+                              (up_n[lfsv_n.localIndex(i)]-down_n[lfsv_n.localIndex(i)])/delta);
           u_n[lfsu_n.localIndex(j)] = x_n[lfsu_n.localIndex(j)];
         }
       }
@@ -234,31 +262,40 @@ namespace Dune {
 
       //! compute local jacobian of the boundary term
       template<typename IG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename Jacobian>
       void jacobian_boundary
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        LocalMatrix<R>& mat_ss) const
+        Jacobian& mat_ss) const
       {
+        typedef typename X::value_type D;
+        typedef typename Jacobian::value_type R;
+        typedef LocalVector<R,TestSpaceTag,typename Jacobian::weight_type> ResidualVector;
+        typedef typename ResidualVector::WeightedAccumulationView ResidualView;
+
         const int m_s=lfsv_s.size();
         const int n_s=lfsu_s.size();
 
         X u_s(x_s);
-        std::vector<R> down_s(mat_ss.nrows(),0.0),up_s(mat_ss.nrows());
+
+        ResidualVector down_s(m_s),up_s(m_s);
+        ResidualView downview_s = down_s.weightedAccumulationView(mat_ss.weight());
+        ResidualView upview_s = up_s.weightedAccumulationView(mat_ss.weight());;
+
 
         // base line
-        asImp().alpha_boundary(ig,lfsu_s,u_s,lfsv_s,down_s);
+        asImp().alpha_boundary(ig,lfsu_s,u_s,lfsv_s,downview_s);
 
         // jiggle in self
         for (int j=0; j<n_s; j++)
         {
           for (int k=0; k<mat_ss.nrows(); k++) up_s[k]=0.0;
-          R delta = epsilon*(1.0+std::abs(u_s[lfsu_s.localIndex(j)]));
+          D delta = epsilon*(1.0+std::abs(u_s[lfsu_s.localIndex(j)]));
           u_s[lfsu_s.localIndex(j)] += delta;
-          asImp().alpha_boundary(ig,lfsu_s,u_s,lfsv_s,up_s);
+          asImp().alpha_boundary(ig,lfsu_s,u_s,lfsv_s,upview_s);
           for (int i=0; i<m_s; i++)
-            mat_ss(lfsv_s.localIndex(i),lfsu_s.localIndex(j)) 
-              += (up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta;
+            mat_ss.rawAccumulate(lfsv_s.localIndex(i),lfsu_s.localIndex(j),
+                                 (up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta);
           u_s[lfsu_s.localIndex(j)] = x_s[lfsu_s.localIndex(j)];
         }
       }
@@ -301,23 +338,31 @@ namespace Dune {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         Y& y) const
       {
-        typedef typename X::value_type R;
+        typedef typename X::value_type D;
+        typedef typename X::size_type size_type;
+        typedef typename Y::value_type R;
+        typedef LocalVector<R,TestSpaceTag,typename Y::weight_type> ResidualVector;
+        typedef typename ResidualVector::WeightedAccumulationView ResidualView;
+
         const int m=lfsv.size();
         const int n=lfsu.size();
 
         X u(x);
-        std::vector<R> down(y.size(),0.0),up(y.size());
 
-        asImp().alpha_volume(eg,lfsu,u,lfsv,down);
+        ResidualVector down(m),up(m);
+        ResidualView downview = down.weightedAccumulationView(y.weight());
+        ResidualView upview = up.weightedAccumulationView(y.weight());
+
+        asImp().alpha_volume(eg,lfsu,u,lfsv,downview);
         for (int j=0; j<n; j++) // loop over columns
         {
-          for (unsigned k=0; k<y.size(); k++) up[k]=0.0;
-          R delta = epsilon*(1.0+std::abs(u[lfsu.localIndex(j)]));
+          for (size_type k=0; k<y.size(); k++) up[k]=0.0;
+          D delta = epsilon*(1.0+std::abs(u[lfsu.localIndex(j)]));
           u[lfsu.localIndex(j)] += delta;
-          asImp().alpha_volume(eg,lfsu,u,lfsv,up);
+          asImp().alpha_volume(eg,lfsu,u,lfsv,upview);
           for (int i=0; i<m; i++)
-            y[lfsv.localIndex(i)] 
-              += ((up[lfsv.localIndex(i)]-down[lfsv.localIndex(i)])/delta)*x[lfsu.localIndex(j)];
+            y.rawAccumulate(lfsv.localIndex(i),
+                            ((up[lfsv.localIndex(i)]-down[lfsv.localIndex(i)])/delta)*x[lfsu.localIndex(j)]);
           u[lfsu.localIndex(j)] = x[lfsu.localIndex(j)];
         }
       }
@@ -357,23 +402,31 @@ namespace Dune {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         Y& y) const
       {
-        typedef typename X::value_type R;
+        typedef typename X::value_type D;
+        typedef typename X::size_type size_type;
+        typedef typename Y::value_type R;
+        typedef LocalVector<R,TestSpaceTag,typename Y::weight_type> ResidualVector;
+        typedef typename ResidualVector::WeightedAccumulationView ResidualView;
+
         const int m=lfsv.size();
         const int n=lfsu.size();
 
         X u(x);
-        std::vector<R> down(y.size(),0.0),up(y.size());
 
-        asImp().alpha_volume_post_skeleton(eg,lfsu,u,lfsv,down);
+        ResidualVector down(m),up(m);
+        ResidualView downview = down.weightedAccumulationView(y.weight());
+        ResidualView upview = up.weightedAccumulationView(y.weight());
+
+        asImp().alpha_volume_post_skeleton(eg,lfsu,u,lfsv,downview);
         for (int j=0; j<n; j++) // loop over columns
         {
-          for (int k=0; k<y.size(); k++) up[k]=0.0;
-          R delta = epsilon*(1.0+std::abs(u[lfsu.localIndex(j)]));
+          for (size_type k=0; k<y.size(); k++) up[k]=0.0;
+          D delta = epsilon*(1.0+std::abs(u[lfsu.localIndex(j)]));
           u[lfsu.localIndex(j)] += delta;
-          asImp().alpha_volume_post_skeleton(eg,lfsu,u,lfsv,up);
+          asImp().alpha_volume_post_skeleton(eg,lfsu,u,lfsv,upview);
           for (int i=0; i<m; i++)
-            y[lfsv.localIndex(i)] 
-              += ((up[lfsv.localIndex(i)]-down[lfsv.localIndex(i)])/delta)*x[lfsu.localIndex(j)];
+            y.rawAccumulate(lfsv.localIndex(i),
+                            ((up[lfsv.localIndex(i)]-down[lfsv.localIndex(i)])/delta)*x[lfsu.localIndex(j)]);
           u[lfsu.localIndex(j)] = x[lfsu.localIndex(j)];
         }
       }
@@ -412,7 +465,12 @@ namespace Dune {
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
         Y& y_s, Y& y_n) const
       {
-        typedef typename X::value_type R;
+        typedef typename X::value_type D;
+        typedef typename Y::value_type R;
+        typedef typename X::size_type size_type;
+        typedef LocalVector<R,TestSpaceTag,typename Y::weight_type> ResidualVector;
+        typedef typename ResidualVector::WeightedAccumulationView ResidualView;
+
         const int m_s=lfsv_s.size();
         const int m_n=lfsv_n.size();
         const int n_s=lfsu_s.size();
@@ -420,44 +478,52 @@ namespace Dune {
 
         X u_s(x_s);
         X u_n(x_n);
-        std::vector<R> down_s(y_s.size(),0.0),up_s(y_s.size());
-        std::vector<R> down_n(y_n.size(),0.0),up_n(y_n.size());
+
+        ResidualVector down_s(m_s),up_s(m_s);
+        ResidualView downview_s = down_s.weightedAccumulationView(1.0);
+        ResidualView upview_s = up_s.weightedAccumulationView(1.0);
+
+        ResidualVector down_n(m_n),up_n(m_n);
+        ResidualView downview_n = down_n.weightedAccumulationView(1.0);
+        ResidualView upview_n = up_n.weightedAccumulationView(1.0);
 
         // base line
-        asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,down_s,
-                               down_n);
+        asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,downview_s,
+                               downview_n);
 
         // jiggle in self
         for (int j=0; j<n_s; j++)
         {
-          for (unsigned k=0; k<y_s.size(); k++) up_s[k]=0.0;
-          for (unsigned k=0; k<y_n.size(); k++) up_n[k]=0.0;
-          R delta = epsilon*(1.0+std::abs(u_s[lfsu_s.localIndex(j)]));
+          for (size_type k=0; k<y_s.size(); k++) up_s[k]=0.0;
+          for (size_type k=0; k<y_n.size(); k++) up_n[k]=0.0;
+          D delta = epsilon*(1.0+std::abs(u_s[lfsu_s.localIndex(j)]));
           u_s[lfsu_s.localIndex(j)] += delta;
-          asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,up_s,
-                                 up_n);
+          asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,upview_s,
+                                 upview_n);
           for (int i=0; i<m_s; i++)
-            y_s[lfsv_s.localIndex(i)] += 
-              ((up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta)*x_s[lfsu_s.localIndex(j)];
+            y_s.accumulate(lfsv_s.localIndex(i),
+                           ((up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta)*x_s[lfsu_s.localIndex(j)]);
           for (int i=0; i<m_n; i++)
-            y_n[lfsv_n.localIndex(i)] += 
-              ((up_n[lfsv_n.localIndex(i)]-down_n[lfsv_n.localIndex(i)])/delta)*x_s[lfsu_s.localIndex(j)];
+            y_n.accumulate(lfsv_n.localIndex(i),
+                           ((up_n[lfsv_n.localIndex(i)]-down_n[lfsv_n.localIndex(i)])/delta)*x_s[lfsu_s.localIndex(j)]);
           u_s[lfsu_s.localIndex(j)] = x_s[lfsu_s.localIndex(j)];
         }
 
         // jiggle in neighbor
         for (int j=0; j<n_n; j++)
         {
-          for (unsigned k=0; k<y_s.size(); k++) up_s[k]=0.0;
-          for (unsigned k=0; k<y_n.size(); k++) up_n[k]=0.0;
-          R delta = epsilon*(1.0+std::abs(u_n[lfsu_n.localIndex(j)]));
+          for (size_type k=0; k<y_s.size(); k++) up_s[k]=0.0;
+          for (size_type k=0; k<y_n.size(); k++) up_n[k]=0.0;
+          D delta = epsilon*(1.0+std::abs(u_n[lfsu_n.localIndex(j)]));
           u_n[lfsu_n.localIndex(j)] += delta;
-          asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,up_s,
-                                 up_n);
+          asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,upview_s,
+                                 upview_n);
           for (int i=0; i<m_s; i++)
-            y_s[lfsv_n.localIndex(i)] += ((up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta)*x_n[lfsu_n.localIndex(j)];
+            y_s.accumulate(lfsv_n.localIndex(i),
+                           ((up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta)*x_n[lfsu_n.localIndex(j)]);
           for (int i=0; i<m_n; i++)
-            y_n[lfsv_n.localIndex(i)] += ((up_n[lfsv_n.localIndex(i)]-down_n[lfsv_n.localIndex(i)])/delta)*x_n[lfsu_n.localIndex(j)];
+            y_n.accumulate(lfsv_n.localIndex(i),
+                           ((up_n[lfsv_n.localIndex(i)]-down_n[lfsv_n.localIndex(i)])/delta)*x_n[lfsu_n.localIndex(j)]);
           u_n[lfsu_n.localIndex(j)] = x_n[lfsu_n.localIndex(j)];
         }
       }
@@ -495,26 +561,34 @@ namespace Dune {
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         Y& y_s) const
       {
-        typedef typename X::value_type R;
+        typedef typename X::value_type D;
+        typedef typename Y::value_type R;
+        typedef typename X::size_type size_type;
+        typedef LocalVector<R,TestSpaceTag,typename Y::weight_type> ResidualVector;
+        typedef typename ResidualVector::WeightedAccumulationView ResidualView;
+
         const int m_s=lfsv_s.size();
         const int n_s=lfsu_s.size();
 
         X u_s(x_s);
-        std::vector<R> down_s(y_s.size(),0.0),up_s(y_s.size());
+
+        ResidualVector down_s(m_s),up_s(m_s);
+        ResidualView downview_s = down_s.weightedAccumulationView(1.0);
+        ResidualView upview_s = up_s.weightedAccumulationView(1.0);
 
         // base line
-        asImp().alpha_boundary(ig,lfsu_s,u_s,lfsv_s,down_s);
+        asImp().alpha_boundary(ig,lfsu_s,u_s,lfsv_s,downview_s);
 
         // jiggle in self
         for (int j=0; j<n_s; j++)
         {
-          for (unsigned k=0; k<y_s.size(); k++) up_s[k]=0.0;
-          R delta = epsilon*(1.0+std::abs(u_s[lfsu_s.localIndex(j)]));
+          for (size_type k=0; k<y_s.size(); k++) up_s[k]=0.0;
+          D delta = epsilon*(1.0+std::abs(u_s[lfsu_s.localIndex(j)]));
           u_s[lfsu_s.localIndex(j)] += delta;
-          asImp().alpha_boundary(ig,lfsu_s,u_s,lfsv_s,up_s);
+          asImp().alpha_boundary(ig,lfsu_s,u_s,lfsv_s,upview_s);
           for (int i=0; i<m_s; i++)
-            y_s[lfsv_s.localIndex(i)] 
-              += ((up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta)*x_s[lfsu_s.localIndex(j)];
+            y_s.rawAccumulate(lfsv_s.localIndex(i),
+                              ((up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta)*x_s[lfsu_s.localIndex(j)]);
           u_s[lfsu_s.localIndex(j)] = x_s[lfsu_s.localIndex(j)];
         }
       }
@@ -554,7 +628,11 @@ namespace Dune {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         R& r) const
       {
-        LocalMatrix<typename R::value_type> mat(r.size(),x.size(), 0);
+        typedef LocalMatrix<typename R::value_type> Jacobian;
+        typedef typename Jacobian::WeightedAccumulationView JacobianView;
+
+        Jacobian mat(r.size(),x.size(), 0);
+        JacobianView matview = mat.weightedAccumulationView(1.0);
         asImp().jacobian_volume(eg, lfsu, x, lfsv, mat);
         mat.umv(x,r);
       }
@@ -589,18 +667,23 @@ namespace Dune {
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
         R& r_s, R& r_n) const
       {
-        LocalMatrix<typename R::value_type> mat_ss(r_s.size(),
-                                                   x_s.size(), 0);
-        LocalMatrix<typename R::value_type> mat_sn(r_s.size(),
-                                                   x_n.size(), 0);
-        LocalMatrix<typename R::value_type> mat_ns(r_n.size(),
-                                                   x_s.size(), 0);
-        LocalMatrix<typename R::value_type> mat_nn(r_n.size(),
-                                                   x_n.size(), 0);
+        typedef LocalMatrix<typename R::value_type> Jacobian;
+        typedef typename Jacobian::WeightedAccumulationView JacobianView;
+
+        Jacobian mat_ss(r_s.size(),x_s.size(),0);
+        Jacobian mat_sn(r_s.size(),x_n.size(),0);
+        Jacobian mat_ns(r_n.size(),x_s.size(),0);
+        Jacobian mat_nn(r_n.size(),x_n.size(),0);
+
+        JacobianView view_ss = mat_ss.weightedAccumulationView(1.0);
+        JacobianView view_sn = mat_sn.weightedAccumulationView(1.0);
+        JacobianView view_ns = mat_ns.weightedAccumulationView(1.0);
+        JacobianView view_nn = mat_nn.weightedAccumulationView(1.0);
+
         asImp().jacobian_skeleton(ig,
           lfsu_s, x_s, lfsv_s,
           lfsu_n, x_n, lfsv_n,
-          mat_ss, mat_sn, mat_ns, mat_nn);
+          view_ss, view_sn, view_ns, view_nn);
         // TODO: Reihenfolge der Multiplikationen!
         mat_ss.umv(x_s,r_s);
         mat_ns.umv(x_s,r_n);
@@ -637,8 +720,12 @@ namespace Dune {
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
         R& r) const
       {
-        LocalMatrix<typename R::value_type> mat(x.size(),r.size(), 0);
-        asImp().jacobian_boundary(ig, lfsu, x, lfsv, mat);
+        typedef LocalMatrix<typename R::value_type> Jacobian;
+        typedef typename Jacobian::WeightedAccumulationView JacobianView;
+
+        Jacobian mat(x.size(),r.size(), 0);
+        JacobianView view = mat.weightedAccumulationView(1.0);
+        asImp().jacobian_boundary(ig, lfsu, x, lfsv, view);
         mat.umv(x,r);
       }
 
