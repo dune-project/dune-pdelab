@@ -69,8 +69,11 @@ namespace Dune {
     {
     public:
 
-      //! The type of the underlying container.
+      //! The type of the underlying LocalVector.
       typedef C Container;
+
+      //! The type of the storage container underlying the LocalVector.
+      typedef typename Container::BaseContainer BaseContainer;
 
       //! The value type of the entries.
       typedef typename Container::value_type value_type;
@@ -123,21 +126,23 @@ namespace Dune {
         _weight = weight;
       }
 
-      //! Applies the current weight to v and adds the result to the n-th entry of the container.
-      void accumulate(size_type n, value_type v)
+      //! Applies the current weight to v and adds the result to the n-th degree of freedom of the lfs.
+      template<typename LFS>
+      void accumulate(const LFS& lfs, size_type n, value_type v)
       {
         _modified = true;
-        _container[n] += _weight * v;
+        _container(lfs,n) += _weight * v;
       }
 
-      //! Adds v to the n-th entry of the underlying container without applying the current weight.
+      //! Adds v to the n-th degree of freedom of the lfs without applying the current weight.
       /**
        * \warning When using this method, you must take care of applying the weight yourself, otherwise
        *          your program may exhibit strange behavior or even calculate wrong results!
        */
-      void rawAccumulate(size_type n, value_type v)
+      template<typename LFS>
+      void rawAccumulate(const LFS& lfs, size_type n, value_type v)
       {
-        _container[n] += v;
+        _container(lfs,n) += v;
       }
 
       //! Constructor
@@ -169,105 +174,153 @@ namespace Dune {
         _modified = false;
       }
 
+      //! Returns the container (of type LocalVector) that this view is based on.
+      Container& container()
+      {
+        _modified = true;
+        return _container;
+      }
+
+      //! Returns the container (of type LocalVector) that this view is based on (const version).
+      const Container& container() const
+      {
+        return _container;
+      }
+
+      //! Returns the storage container of the underlying LocalVector.
+      BaseContainer& base()
+      {
+        _modified = true;
+        return _container.base();
+      }
+
+      //! Returns the storage container of the underlying LocalVector (const version).
+      const BaseContainer& base() const
+      {
+        return _container.base();
+      }
+
     private:
       C& _container;
       weight_type _weight;
       bool _modified;
     };
 
+
+    //! A container for storing data associated with the degrees of freedom of a LocalFunctionSpace.
     /**
-       \brief a simple container to store local vector entry
-
-       This makes it possible to use strict type checking, even for integers.
-
-       \tparam T   The type of values to store in the vector.
-       \tparam TAG Tag type for differentiating between trial and test space vectors.
-       \tparam W   The type of weight applied in a WeightedAccumulationView.
+     * This container acts as a wrapper around a std::vector-like container and supports accessing
+     * its entries indexed by pairs of (LocalFunctionSpace,DOF of LocalFunctionSpace). If requested
+     * by specifying a non-default LFSFlavorTag, the container will also assert that a LocalFunctionSpace
+     * of the matching kind (trial or test space) is used to access its content.
+     *
+     * \tparam T            The type of values to store in the vector.
+     * \tparam LFSFlavorTag Tag type for differentiating between trial and test space vectors.
+     * \tparam W            The type of weight applied in a WeightedAccumulationView.
      */
-    template<typename T, typename TAG, typename W = T>
-    class LocalVector : public std::vector<T>
+    template<typename T, typename LFSFlavorTag = AnySpaceTag, typename W = T>
+    class LocalVector
     {
-    private:
-      typedef std::vector<T> BaseT;
     public:
-      typedef typename BaseT::value_type  value_type;
-      typedef typename BaseT::size_type  v_size_type;
-      typedef typename BaseT::reference    reference;
-      typedef typename BaseT::const_reference const_reference;
-      typedef LocalIndex<v_size_type, TAG> size_type;
-      typedef W weight_type;
 
-      //! An accumulate-only view of the vector that automatically takes into account an accumulation weight.
-      typedef WeightedVectorAccumulationView<LocalVector> WeightedAccumulationView;
+      //! The type of the underlying storage container.
+      typedef std::vector<T> BaseContainer;
 
+      //! The value type of this container.
+      typedef typename BaseContainer::value_type  value_type;
+
+      //! The size type of this container.
+      typedef typename BaseContainer::size_type    size_type;
+
+      //! The reference type of this container.
+      typedef typename BaseContainer::reference    reference;
+
+      //! The const reference type of this container.
+      typedef typename BaseContainer::const_reference const_reference;
+
+      //! The weight type of this container.
       /**
-	 \{
-	 pass contructors to the base class
-      */
-      LocalVector() {}
-      LocalVector(v_size_type i) : BaseT(i) {}
-      LocalVector(v_size_type i, const value_type & v) : BaseT(i,v) {}
-      /** \} */
-
-
-      // ********************************************************************************
-      // compatilibity methods to make sure LocalVector works with local operators that
-      // have already been converted to the new style of accessing the residual
-      // ********************************************************************************
-
-      weight_type weight() DUNE_DEPRECATED
-      {
-        return 1.0;
-      }
-
-      void accumulate(size_type n, value_type v) DUNE_DEPRECATED
-      {
-        this->operator[](n) += v;
-      }
-
-      void rawAccumulate(size_type n, value_type v) DUNE_DEPRECATED
-      {
-        this->operator[](n) += v;
-      }
-
-      /**
-	 \{
-	 Access Operators operator[](LocalIndex), automatically hides
-	 operator[](unsigned int)
+       * A value of this type will be used to assign a weight to contributions in
+       * a WeightedAccumulationView.
        */
-      reference operator[] (size_type n) { return BaseT::operator[](n.i); }
-      const_reference operator[] (size_type n) const { return BaseT::operator[](n.i); }
-      /** \} */
-
-      //! Returns a weighted accumulate-only view of this vector with the given weight.
-      WeightedAccumulationView weightedAccumulationView(weight_type weight)
-      {
-        return WeightedAccumulationView(*this,weight);
-      }
-
-    private:
-    };
-
-#ifndef DOXYGEN
-    // specialization for AnySpaceTag
-    template<typename T, typename W>
-    class LocalVector<T, AnySpaceTag, W> : public std::vector<T>
-    {
-    private:
-      typedef std::vector<T> BaseT;
-    public:
-      typedef typename BaseT::value_type  value_type;
-      typedef typename BaseT::size_type    size_type;
-      typedef typename BaseT::reference    reference;
-      typedef typename BaseT::const_reference const_reference;
       typedef W weight_type;
+
+      //! An accumulate-only view of this container that automatically applies a weight to all contributions.
       typedef WeightedVectorAccumulationView<LocalVector> WeightedAccumulationView;
 
+      //! Returns a WeighedAccumulationView of this container with the given weight.
       WeightedAccumulationView weightedAccumulationView(weight_type weight)
       {
         return WeightedAccumulationView(*this,weight);
       }
 
+      //! Access the value in this container associated with the i-th degree of freedom of the LocalFunctionSpace lfs.
+      /**
+       * \param lfs The LocalFunctionSpace for which to retrieve a value. This must be the LFS that has been used to
+       *            load the values into this vector or one of its children (right now, this is not checked).
+       * \param i   The index of the degree of freedom of the LocalFunctionSpace that will be returned.
+       */
+      template<typename LFS>
+      reference operator()(const LFS& lfs, size_type i)
+      {
+        return _container[lfs.localIndex(i)];
+      }
+
+      //! Access the value in this container associated with the i-th degree of freedom of the LocalFunctionSpace lfs (const version).
+      /**
+       * \param lfs The LocalFunctionSpace for which to retrieve a value. This must be the LFS that has been used to
+       *            load the values into this vector or one of its children (right now, this is not checked).
+       * \param i   The index of the degree of freedom of the LocalFunctionSpace that will be returned.
+       */
+      template<typename LFS>
+      const_reference operator()(const LFS& lfs, size_type i) const
+      {
+        return _container[lfs.localIndex(i)];
+      }
+
+      //! Assigns v to all entries.
+      LocalVector& operator=(const value_type& v)
+      {
+        std::fill(_container.begin(),_container.end(),v);
+        return *this;
+      }
+
+      //! Multiplies all entries by v.
+      LocalVector& operator*=(const value_type& v)
+      {
+        std::transform(_container.begin(),_container.end(),_container.begin(),std::bind1st(std::multiplies<value_type>(),v));
+        return *this;
+      }
+
+      //! Direct access to the i-th entry.
+      reference operator[](size_type i) DUNE_DEPRECATED
+      {
+        return _container[i];
+      }
+
+      //! Direct acces to the i-th entry (const version).
+      const_reference DUNE_DEPRECATED operator[](size_type i) const
+      {
+        return _container[i];
+      }
+
+      //! The size of the container.
+      size_type size() const
+      {
+        return _container.size();
+      }
+
+      //! Resize the container.
+      void resize(size_type size)
+      {
+        _container.resize(size);
+      }
+
+      //! Resize the container to size and assign the passed value to all entries.
+      void assign(size_type size, const T& value)
+      {
+        _container.assign(size,value);
+      }
 
       // ********************************************************************************
       // compatilibity methods to make sure LocalVector works with local operators that
@@ -279,26 +332,49 @@ namespace Dune {
         return 1.0;
       }
 
-      void accumulate(size_type n, value_type v) DUNE_DEPRECATED
+      template<typename LFS>
+      void DUNE_DEPRECATED accumulate(const LFS& lfs, size_type n, value_type v)
       {
-        this->operator[](n) += v;
+        (*this)(lfs,n) += v;
       }
 
-      void rawAccumulate(size_type n, value_type v) DUNE_DEPRECATED
+      template<typename LFS>
+      void DUNE_DEPRECATED rawAccumulate(const LFS& lfs, size_type n, value_type v)
       {
-        this->operator[](n) += v;
+        (*this)(lfs,v) += v;
       }
 
-      /**
-	 \{
-	 pass contructors to the base class
-      */
-      LocalVector() {}
-      explicit LocalVector(size_type i) : BaseT(i) {}
-      LocalVector(size_type i, const value_type & v) : BaseT(i,v) {}
-      /** \} */
+      //! Returns the underlying, std::vector-like storage container.
+      BaseContainer& base()
+      {
+        return _container;
+      }
+
+      //! Returns the underlying, std::vector-like storage container (const version).
+      const BaseContainer& base() const
+      {
+        return _container;
+      }
+
+      //! Default constructor.
+      LocalVector()
+      {}
+
+      //! Construct a LocalVector with size n.
+      explicit LocalVector(size_type n)
+        : _container(n)
+      {}
+
+      //! Construct a LocalVector with size n and initialize all entries with v.
+      LocalVector(size_type n, const value_type & v)
+        : _container(n,v)
+      {}
+
+    private:
+
+      BaseContainer _container;
+
     };
-#endif
 
     /**
      * \} group PDELab
