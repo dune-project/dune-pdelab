@@ -59,10 +59,9 @@ namespace Dune {
 #endif // DOXYGEN
 
     /**
-       \addtogroup PDELAB_StrictTrialAndTest Strict Trial and Test space handling
-       \ingroup GridFunctionSpace
-       \{
-    */
+     * \addtogroup PDELab
+     * \{
+     */
 
     //! An accumulate-only view on a local vector that automatically takes into account an accumulation weight.
     template<typename C>
@@ -302,7 +301,7 @@ namespace Dune {
 #endif
 
     /**
-       \}
+     * \} group PDELab
      */
 
   } // end namespace PDELab

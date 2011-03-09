@@ -9,6 +9,11 @@
 namespace Dune {
   namespace PDELab {
 
+    /**
+     * \addtogroup PDELab
+     * \{
+     */
+
     //! An accumulate-only view on a local matrix that automatically takes into account an accumulation weight.
     template<typename C>
     class WeightedMatrixAccumulationView
@@ -245,6 +250,10 @@ namespace Dune {
       }
       return stream;
     }
+
+    /**
+     * \} group PDELab
+     */
 
   } // namespace PDELab
 } // namespace Dune
