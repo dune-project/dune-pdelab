@@ -175,7 +175,7 @@ namespace Dune{
       //! @}
 
 
-      //! Notifier functions, called immediately before and after assembling
+      //! @name Notification functions
       //! @{
       void preAssembly(){
         implicit = la.osp_method->implicit();
@@ -189,8 +189,18 @@ namespace Dune{
       }
       //! @}
 
-      //! Assembling methods
+      //! @name Assembling methods
       //! @{
+
+      template<typename EG>
+      bool assembleCell(const EG & eg)
+      {
+        bool rv = true;
+        rv &= lae0->assembleCell(eg);
+        rv &= lae1->assembleCell(eg);
+        return rv;
+      }
+
       template<typename EG, typename LFSU, typename LFSV>
       void assembleUVVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
       {

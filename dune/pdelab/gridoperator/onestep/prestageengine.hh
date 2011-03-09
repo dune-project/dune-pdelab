@@ -244,8 +244,18 @@ namespace Dune{
       }
       //! @}
 
-      //! Assembling methods
+      //! @ Assembling methods
       //! @{
+
+      template<typename EG>
+      bool assembleCell(const EG & eg)
+      {
+        bool rv = true;
+        rv &= lae0->assembleCell(eg);
+        rv &= lae1->assembleCell(eg);
+        return rv;
+      }
+
       template<typename EG, typename LFSU, typename LFSV>
       void assembleUVVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
       {
