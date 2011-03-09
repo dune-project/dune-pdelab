@@ -256,6 +256,84 @@ namespace Dune {
     };
 
     /**
+     * \brief Parameters to turn the ExplicitOneStepMethod into a
+     * third order strong stability preserving (SSP) scheme.
+     *
+     * \tparam R C++ type of the floating point parameters
+     */
+    template<class R> 
+    class Shu3Parameter : public TimeSteppingParameterInterface<R>
+    {
+    public:
+      
+      Shu3Parameter ()
+      {
+	D[0] = 0.0;     D[1] = 1.0;     D[2] = 0.5; D[3] = 1.0;
+
+	A[0][0] = -1.0; A[0][1] = 1.0; A[0][2] = 0.0; A[0][3] = 0.0;
+	A[1][0] = -0.75; A[1][1] = -0.25; A[1][2] = 1.0; A[1][3] = 0.0;
+	A[2][0] = -1.0/3.0; A[2][1] = 0.0; A[2][2] = -2.0/3.0; A[2][3] = 1.0;
+
+	B[0][0] =  1.0; B[0][1] = 0.0;  B[0][2] = 0.0;     B[0][3] = 0.0;
+	B[1][0] =  0.0; B[1][1] = 0.5;  B[1][2] = 0.0;     B[1][3] = 0.0;
+	B[2][0] =  0.0; B[2][1] = 0.0;  B[2][2] = 2.0/3.0; B[2][3] = 0.0; 
+
+      }
+
+      /*! \brief Return true if method is implicit
+      */
+      virtual bool implicit () const
+      {
+	return false;
+      }
+      
+      /*! \brief Return number of stages s of the method
+      */
+      virtual unsigned s () const
+      {
+	return 3;
+      }
+      
+      /*! \brief Return entries of the A matrix
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
+      */
+      virtual R a (int r, int i) const
+      {
+	return A[r-1][i];
+      }
+      
+      /*! \brief Return entries of the B matrix
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
+      */
+      virtual R b (int r, int i) const
+      {
+	return B[r-1][i];
+      }
+      
+      /*! \brief Return entries of the d Vector
+        \note that i ∈ 0,...,s
+      */
+      virtual R d (int i) const
+      {
+	return D[i];
+      }
+      
+      /*! \brief Return name of the scheme
+      */
+      virtual std::string name () const
+      {
+        return std::string("Shu's third order method");
+      }
+
+    private:
+      Dune::FieldVector<R,4> D;
+      Dune::FieldMatrix<R,3,4> A;
+      Dune::FieldMatrix<R,3,4> B;
+    };
+
+
+
+    /**
      * \brief Parameters to turn the OneStepMethod into an
      * Alexander scheme.
      *
