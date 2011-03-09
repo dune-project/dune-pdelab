@@ -218,7 +218,7 @@ namespace Dune {
       typedef W weight_type;
 
       //! An accumulate-only view of this container that automatically applies a weight to all contributions.
-      typedef WeightedVectorAccumulationView<LocalMatrix> WeightedAccumulationView;
+      typedef WeightedMatrixAccumulationView<LocalMatrix> WeightedAccumulationView;
 
       //! Default constructor
 	  LocalMatrix () {}
