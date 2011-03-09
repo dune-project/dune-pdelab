@@ -376,6 +376,31 @@ namespace Dune {
 
     };
 
+
+    template<typename C>
+    C& accessBaseContainer(C& c)
+    {
+      return c;
+    }
+
+    template<typename T, typename Tag, typename W>
+    typename LocalVector<T,Tag,W>::BaseContainer& accessBaseContainer(LocalVector<T,Tag,W>& c)
+    {
+      return c.base();
+    }
+
+    template<typename C>
+    const C& accessBaseContainer(const C& c)
+    {
+      return c;
+    }
+
+    template<typename T, typename Tag, typename W>
+    const typename LocalVector<T,Tag,W>::BaseContainer& accessBaseContainer(const LocalVector<T,Tag,W>& c)
+    {
+      return c.base();
+    }
+
     /**
      * \} group PDELab
      */
