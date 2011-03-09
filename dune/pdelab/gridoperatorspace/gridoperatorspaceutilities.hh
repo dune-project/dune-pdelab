@@ -14,7 +14,7 @@ namespace Dune {
   namespace PDELab {
 
 	//! collect types exported by a grid operator space
-	template<typename GFSU, typename GFSV, typename B, 
+	template<typename GFSU, typename GFSV, typename B,
 			 typename CU, typename CV>
 	struct GridOperatorSpaceTraits
 	{
@@ -50,7 +50,7 @@ namespace Dune {
       void create_boundaries(const E &, const EG &)
       {DUNE_THROW(Dune::NotImplemented,"This should never be called.");}
     };
-    
+
     template<typename GV>
     class NoSubTriangulation
     {
@@ -63,7 +63,7 @@ namespace Dune {
 	  typedef ElementGeometry<Entity> SubEntity;
       typedef std::list<SubEntity> SubEntityList;
       typedef typename SubEntityList::iterator SubEntityIterator;
-	  
+
       typedef IntersectionGeometry<Intersection>  SubIntersection;
       typedef std::list<SubIntersection> SubIntersectionList;
 
@@ -100,11 +100,11 @@ namespace Dune {
         {}
 
         SubIntersectionIterator & operator++()
-        { 
-          ++it;  ++intersection_index; 
+        {
+          ++it;  ++intersection_index;
           if(it != eit)
             sub_intersection.reset(new SubIntersection(*it,intersection_index));
-          return *this; 
+          return *this;
         }
 
         SubIntersection & operator*()
@@ -116,7 +116,7 @@ namespace Dune {
         {
           return sub_intersection.get();
         }
-        
+
         bool operator==(const SubIntersectionIterator & at) const
         {
           return it == at.it;
@@ -127,18 +127,18 @@ namespace Dune {
           return it != at.it;
         }
 
-      private: 
+      private:
         int intersection_index;
         IntersectionIterator it;
         IntersectionIterator eit;
         mutable std::auto_ptr<SubIntersection> sub_intersection;
       };
-      
-      NoSubTriangulation(const GV & gv_, const NoSubTriangulationImp &) 
+
+      NoSubTriangulation(const GV & gv_, const NoSubTriangulationImp &)
         : gv(gv_)
       {}
 
-      NoSubTriangulation(const NoSubTriangulation & c_) 
+      NoSubTriangulation(const NoSubTriangulation & c_)
         : gv(c_.gv), sub_entities(c_.sub_entities)
       {}
 
@@ -180,9 +180,9 @@ namespace Dune {
 
 	   The sparsity pattern of a linear operator is described by by connecting
 	   degrees of freedom in one element with degrees of freedom in the
-	   same element (intra) or an intersecting element (inter). 
+	   same element (intra) or an intersecting element (inter).
 
-	   This numbering is with respect to the depth-first canonical order of the 
+	   This numbering is with respect to the depth-first canonical order of the
 	   degrees of freedom of an entity.
 
 	   \nosubgrouping
@@ -203,26 +203,26 @@ namespace Dune {
 	  inline int i () const
 	  {
 		return Dune::get<0>(*this);
-	  } 
+	  }
 
 	  //! \brief Return second component
 	  inline int j () const
 	  {
 		return Dune::get<1>(*this);
-	  } 
+	  }
 
 	  //! \brief Set both components
 	  void set (int i, int j)
 	  {
 		Dune::get<0>(*this) = i;
 		Dune::get<1>(*this) = j;
-	  } 
+	  }
 	};
 
 	/**@ingroup FlatOperatorSpaceGroup
 	   \brief Layout description for a sparse linear operator
        \see SparsityLink
-       
+
 	   \nosubgrouping
 	*/
 	class LocalSparsityPattern : public std::vector<SparsityLink>
@@ -247,9 +247,9 @@ namespace Dune {
 		typedef E ElementType;
         typedef StdVectorFlatMatrixBackend Backend;
 
-		Matrix (const T& t) 
-		  : n(t.globalSizeU()), 
-			BaseT(t.globalSizeU()*t.globalSizeV()) 
+		Matrix (const T& t)
+		  : n(t.globalSizeU()),
+			BaseT(t.globalSizeU()*t.globalSizeV())
 		{}
 
 	  private:
@@ -287,7 +287,7 @@ namespace Dune {
 		}
 	  };
 
-	  // get non const_reference to container element 
+	  // get non const_reference to container element
 	  // note: this method does not depend on T!
 	  template<typename C>
 	  static typename C::value_type& access (C& c, size_type i, size_type j)
@@ -297,8 +297,8 @@ namespace Dune {
 
 // 	  // read a submatrix given by global indices
 // 	  template<typename C, typename RI, typename CI, typename T>
-// 	  static void read (const C& c, 
-// 						const RI& row_index, const CI& col_index, 
+// 	  static void read (const C& c,
+// 						const RI& row_index, const CI& col_index,
 // 						LocalMatrix<T>& submatrix)
 // 	  {
 // 		submatrix.resize(row_index.size(),col_index.size());
@@ -309,7 +309,7 @@ namespace Dune {
 
 // 	  // write a submatrix given by global indices
 // 	  template<typename C, typename RI, typename CI, typename T>
-// 	  static void write (const RI& row_index, const CI& col_index, 
+// 	  static void write (const RI& row_index, const CI& col_index,
 // 						 const LocalMatrix<T>& submatrix, C& c)
 // 	  {
 // 		for (int j=0; j<col_index.size(); j++)
@@ -319,7 +319,7 @@ namespace Dune {
 
 // 	  // write a submatrix given by global indices
 // 	  template<typename C, typename RI, typename CI, typename T>
-// 	  static void add (const RI& row_index, const CI& col_index, 
+// 	  static void add (const RI& row_index, const CI& col_index,
 // 					   const LocalMatrix<T>& submatrix, C& c)
 // 	  {
 // 		for (int j=0; j<col_index.size(); j++)
@@ -346,9 +346,9 @@ namespace Dune {
       std::map<Dune::GeometryType,int> gtoffset;
       typedef typename GV::template Codim<0>::Entity Entity;
       typedef typename GV::IndexSet::IndexType SizeType;
-      
+
     public:
-      MultiGeomUniqueIDMapper(const GV & gv) 
+      MultiGeomUniqueIDMapper(const GV & gv)
         : offset(0), is(gv.indexSet())
       {}
 
@@ -385,8 +385,8 @@ namespace Dune {
       {
       }
       template<typename LFSU, typename LFSV>
-      static void pattern_skeleton (const LA& la, const LFSU& lfsu_s, const LFSV& lfsv_s, 
-                                  const LFSU& lfsu_n, const LFSV& lfsv_n, 
+      static void pattern_skeleton (const LA& la, const LFSU& lfsu_s, const LFSV& lfsv_s,
+                                  const LFSU& lfsu_n, const LFSV& lfsv_n,
                                    LocalSparsityPattern& pattern_sn,
                                    LocalSparsityPattern& pattern_ns)
       {
@@ -406,14 +406,14 @@ namespace Dune {
 	  {
 	  }
 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void alpha_skeleton (const LA& la, const IG& ig, 
+	  static void alpha_skeleton (const LA& la, const IG& ig,
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                            R& r_s, R& r_n)
       {
       }
 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void alpha_boundary (const LA& la, const IG& ig, 
+	  static void alpha_boundary (const LA& la, const IG& ig,
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                            R& r_s)
       {
@@ -447,14 +447,14 @@ namespace Dune {
 	  {
 	  }
 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
-	  static void jacobian_apply_skeleton (const LA& la, const IG& ig, 
+	  static void jacobian_apply_skeleton (const LA& la, const IG& ig,
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                            Y& y_s, Y& y_n)
       {
       }
 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
-	  static void jacobian_apply_boundary (const LA& la, const IG& ig, 
+	  static void jacobian_apply_boundary (const LA& la, const IG& ig,
                                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                                            Y& y_s)
       {
@@ -468,15 +468,15 @@ namespace Dune {
       {
       }
 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void jacobian_skeleton (const LA& la, const IG& ig, 
+	  static void jacobian_skeleton (const LA& la, const IG& ig,
                               const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                              const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
-                              LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn, 
+                              const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
+                              LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn,
                               LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn)
       {
       }
 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void jacobian_boundary (const LA& la, const IG& ig, 
+	  static void jacobian_boundary (const LA& la, const IG& ig,
                                      const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                                      LocalMatrix<R>& mat_ss)
       {
@@ -499,8 +499,8 @@ namespace Dune {
         la.pattern_volume_post_skeleton(lfsu,lfsv,pattern);
       }
       template<typename LFSU, typename LFSV>
-      static void pattern_skeleton (const LA& la, const LFSU& lfsu_s, const LFSV& lfsv_s, 
-                                  const LFSU& lfsu_n, const LFSV& lfsv_n, 
+      static void pattern_skeleton (const LA& la, const LFSU& lfsu_s, const LFSV& lfsv_s,
+                                  const LFSU& lfsu_n, const LFSV& lfsv_n,
                                    LocalSparsityPattern& pattern_sn,
                                    LocalSparsityPattern& pattern_ns)
       {
@@ -526,15 +526,15 @@ namespace Dune {
 		la.alpha_volume_post_skeleton(eg,lfsu,x,lfsv,r);
 	  }
 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void alpha_skeleton (const LA& la, const IG& ig, 
+	  static void alpha_skeleton (const LA& la, const IG& ig,
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                            R& r_s, R& r_n)
       {
         la.alpha_skeleton(ig,lfsu_s,x_s,lfsv_s,lfsu_n,x_n,lfsv_n,r_s,r_n);
       }
 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void alpha_boundary (const LA& la, const IG& ig, 
+	  static void alpha_boundary (const LA& la, const IG& ig,
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                            R& r_s)
       {
@@ -575,15 +575,15 @@ namespace Dune {
 		la.jacobian_apply_volume_post_skeleton(eg,lfsu,x,lfsv,y);
 	  }
 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
-	  static void jacobian_apply_skeleton (const LA& la, const IG& ig, 
+	  static void jacobian_apply_skeleton (const LA& la, const IG& ig,
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                            Y& y_s, Y& y_n)
       {
         la.jacobian_apply_skeleton(ig,lfsu_s,x_s,lfsv_s,lfsu_n,x_n,lfsv_n,y_s,y_n);
       }
 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
-	  static void jacobian_apply_boundary (const LA& la, const IG& ig, 
+	  static void jacobian_apply_boundary (const LA& la, const IG& ig,
                                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                                            Y& y_s)
       {
@@ -601,17 +601,17 @@ namespace Dune {
         la.jacobian_volume_post_skeleton(eg,lfsu,x,lfsv,mat);
       }
  	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void jacobian_skeleton (const LA& la, const IG& ig, 
+	  static void jacobian_skeleton (const LA& la, const IG& ig,
                               const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                              const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
-                              LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn, 
+                              const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
+                              LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn,
                               LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn)
       {
         la.jacobian_skeleton(ig,lfsu_s,x_s,lfsv_s,lfsu_n,x_n,lfsv_n,
                              mat_ss, mat_sn, mat_ns, mat_nn);
       }
 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void jacobian_boundary (const LA& la, const IG& ig, 
+	  static void jacobian_boundary (const LA& la, const IG& ig,
                                      const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                                      LocalMatrix<R>& mat_ss)
       {
@@ -626,13 +626,13 @@ namespace Dune {
        grid operators. This includes the access of the global vectors
        and matrices via local indices and local function spaces with
        regard to the constraint mappings.
-       
+
        \tparam GFSU GridFunctionSpace for ansatz functions
        \tparam GFSV GridFunctionSpace for test functions
        \tparam CU   Constraints maps for the individual dofs (trial space)
        \tparam CV   Constraints maps for the individual dofs (test space)
        \tparam B The vector backend used for the coefficient vector
-       
+
      */
 	template<typename GFSU, typename GFSV,
 			 typename CU=EmptyTransformation,
@@ -642,9 +642,9 @@ namespace Dune {
     public:
 
 	  typedef GridOperatorSpaceTraits<GFSU,GFSV,B,CU,CV> Traits;
-      
+
       //! construct GridOperatorSpace
-	  GridOperatorBase (const GFSU& gfsu_, const GFSV& gfsv_) 
+	  GridOperatorBase (const GFSU& gfsu_, const GFSV& gfsv_)
 		: gfsu(gfsu_), gfsv(gfsv_),
           pconstraintsu(&emptyconstraintsu), pconstraintsv(&emptyconstraintsv),
           lfsu(gfsu), lfsv(gfsv), lfsun(gfsu), lfsvn(gfsv)
@@ -652,7 +652,7 @@ namespace Dune {
 
       //! construct GridOperatorSpace, with constraints
 	  GridOperatorBase (const GFSU& gfsu_, const CU& cu,
-						 const GFSV& gfsv_, const CV& cv) 
+						 const GFSV& gfsv_, const CV& cv)
 		: gfsu(gfsu_), gfsv(gfsv_),
           pconstraintsu(&cu), pconstraintsv(&cv),
           lfsu(gfsu), lfsv(gfsv), lfsun(gfsu), lfsvn(gfsv)
@@ -703,7 +703,7 @@ namespace Dune {
       template<typename X>
       void forwardtransform(X & x, const bool postrestrict = false)
       {
-        typedef typename CV::const_iterator global_col_iterator;	  
+        typedef typename CV::const_iterator global_col_iterator;
         for (global_col_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit){
           typedef typename global_col_iterator::value_type::first_type GlobalIndex;
           const GlobalIndex & contributor = cit->first;
@@ -713,7 +713,7 @@ namespace Dune {
           const ContributedMap & contributed = cit->second;
           global_row_iterator it  = contributed.begin();
           global_row_iterator eit = contributed.end();
-          
+
           for(;it!=eit;++it)
             x[it->first] += it->second * x[contributor];
         }
@@ -730,7 +730,7 @@ namespace Dune {
       template<typename X>
       void backtransform(X & x, const bool prerestrict = false)
       {
-        typedef typename CV::const_iterator global_col_iterator;  
+        typedef typename CV::const_iterator global_col_iterator;
         for (global_col_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit){
           typedef typename global_col_iterator::value_type::first_type GlobalIndex;
           const GlobalIndex & contributor = cit->first;
@@ -740,7 +740,7 @@ namespace Dune {
           const ContributedMap & contributed = cit->second;
           global_row_iterator it  = contributed.begin();
           global_row_iterator eit = contributed.end();
-          
+
           if(prerestrict)
             x[contributor] = 0.;
 
@@ -751,9 +751,9 @@ namespace Dune {
 
     protected:
 
-      /** \brief read local stiffness matrix for entity */  
+      /** \brief read local stiffness matrix for entity */
       template<typename LFSV, typename LFSU, typename GC, typename T>
-      void eread (const LFSV& lfsv, const LFSU& lfsu, const GC& globalcontainer, 
+      void eread (const LFSV& lfsv, const LFSU& lfsu, const GC& globalcontainer,
                   LocalMatrix<T>& localcontainer) const
       {
         for (int i=0; i<lfsv.size(); i++)
@@ -761,7 +761,7 @@ namespace Dune {
             localcontainer(i,j) = B::access(globalcontainer,lfsv.globalIndex(i),lfsu.globalIndex(j));
       }
 
-      /** \brief write local stiffness matrix for entity */  
+      /** \brief write local stiffness matrix for entity */
       template<typename LFSV, typename LFSU, typename T, typename GC>
       void ewrite (const LFSV& lfsv, const LFSU& lfsu, const LocalMatrix<T>& localcontainer, GC& globalcontainer) const
       {
@@ -770,7 +770,7 @@ namespace Dune {
             B::access(globalcontainer,lfsv.globalIndex(i),lfsu.globalIndex(j)) = localcontainer(i,j);
       }
 
-      /** \brief write local stiffness matrix for entity */  
+      /** \brief write local stiffness matrix for entity */
       template<typename LFSV, typename LFSU, typename T, typename GC>
       void eadd (const LFSV& lfsv, const LFSU& lfsu, const LocalMatrix<T>& localcontainer, GC& globalcontainer) const
       {
@@ -783,7 +783,7 @@ namespace Dune {
           and apply constraints transformation. Hence we perform: \f$
           \boldsymbol{J} := \boldsymbol{J} + \boldsymbol{S}_{
           \boldsymbol{\tilde V}} m \boldsymbol{S}^T_{
-          \boldsymbol{\tilde U}} \f$*/  
+          \boldsymbol{\tilde U}} \f$*/
       template<typename LFSV, typename LFSU, typename T, typename GC>
       void etadd (const LFSV& lfsv, const LFSU& lfsu, const LocalMatrix<T>& localcontainer, GC& globalcontainer) const
       {
@@ -792,7 +792,7 @@ namespace Dune {
           for (size_t j=0; j<lfsu.size(); j++){
             typename Traits::SizeType gi = lfsv.globalIndex(i);
             typename Traits::SizeType gj = lfsu.globalIndex(j);
-            
+
             // Get global constraints containers for test and ansatz space
             const CV & cv = *pconstraintsv;
             const CU & cu = *pconstraintsu;
@@ -813,7 +813,7 @@ namespace Dune {
             bool constrained_v(false);
             global_vrow_iterator gvrit;
             if(gvcit!=cv.end()){
-              gvrit = gvcit->second.begin();              
+              gvrit = gvcit->second.begin();
               constrained_v = true;
             }
 
@@ -838,7 +838,7 @@ namespace Dune {
                 gurit = gucit->second.begin();
                 constrained_u = true;
                 if(gurit == gucit->second.end()){
-                  T t = localcontainer(i,j) * vf;
+                  T t = localcontainer(lfsv,i,lfsu,j) * vf;
                   if(t != 0.0)                 // entry might not be present in the matrix
                     B::access(globalcontainer,gi,gj) += t;
                 }
@@ -859,13 +859,13 @@ namespace Dune {
                 }
 
                 // add weighted local entry to global matrix
-                T t = localcontainer(i,j) * uf * vf;
+                T t = localcontainer(lfsv,i,lfsu,j) * uf * vf;
                 if (t != 0.0)                 // entry might not be present in the matrix
                   B::access(globalcontainer,gi,gj) += t;
 
                 if(constrained_u && gurit != gucit->second.end())
                   ++gurit;
-                else 
+                else
                   break;
 
               }while(true);
@@ -897,7 +897,7 @@ namespace Dune {
         typedef typename CU::const_iterator global_ucol_iterator;
         typedef typename global_ucol_iterator::value_type::second_type global_urow_type;
         typedef typename global_urow_type::const_iterator global_urow_iterator;
-            
+
         global_vcol_iterator gvcit = cv.find(gi);
         global_ucol_iterator gucit = cu.find(gj);
 
@@ -907,7 +907,7 @@ namespace Dune {
         bool constrained_v(false);
         global_vrow_iterator gvrit;
         if(gvcit!=cv.end()){
-          gvrit = gvcit->second.begin();              
+          gvrit = gvcit->second.begin();
           constrained_v = true;
           if(gvrit == gvcit->second.end())
             globalpattern.add_link(gi,gj);
@@ -936,12 +936,12 @@ namespace Dune {
 
               gj = gurit->first;
             }
-                
+
             globalpattern.add_link(gi,gj);
 
             if(constrained_u && gurit != gucit->second.end())
               ++gurit;
-            else 
+            else
               break;
 
           }while(true);
@@ -957,7 +957,7 @@ namespace Dune {
 
       /** \brief insert dirichlet constraints for row and assemble
           T^T_U in constrained rows
-      */  
+      */
       template<typename GI, typename GC, typename CG>
       void set_trivial_row (GI i, const CG & cv_i, GC& globalcontainer) const
       {
@@ -992,7 +992,7 @@ namespace Dune {
     CU GridOperatorBase<GFSU,GFSV,CU,CV,B>::emptyconstraintsu;
     template<typename GFSU, typename GFSV, typename CU, typename CV, typename B>
     CV GridOperatorBase<GFSU,GFSV,CU,CV,B>::emptyconstraintsv;
-    
+
 
   } // namespace PDELab
 } // namespace Dune
