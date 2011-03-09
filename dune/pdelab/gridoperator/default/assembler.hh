@@ -106,11 +106,11 @@ namespace Dune{
             // Bind local trial function space to element
             lfsu.bind( *it );
 
-            // Load coefficients of local functions
-            assembler_engine.loadCoefficientsLFSUInside(lfsu);
-
             // Notify assembler engine about bind
             assembler_engine.onBindLFSUV(eg,lfsu,lfsv);
+
+            // Load coefficients of local functions
+            assembler_engine.loadCoefficientsLFSUInside(lfsu);
 
             // Volume integration
             assembler_engine.assembleUVVolume(eg,lfsu,lfsv);
