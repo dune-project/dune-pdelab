@@ -85,6 +85,13 @@ namespace Dune{
         GO0::setupGridOperators(Dune::tie(go0_,go1_));
       }
 
+      //! Determines whether the time step size is multiplied to the
+      //! mass term (first order time derivative) or the elliptic term
+      //! (zero-th order time derivative).
+      void divideMassTermByDeltaT(bool v){
+        local_assembler.divideMassTermByDeltaT(v);
+      }
+
       //! Get the trial grid function space
       const typename Traits::TrialGridFunctionSpace& trialGridFunctionSpace() const
       {

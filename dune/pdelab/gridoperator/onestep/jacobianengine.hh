@@ -230,8 +230,8 @@ namespace Dune{
         la.la1.setTime(la.time + d_r * la.dt);
         
         // Set weights
-        la.la0.setWeight(b_rr * la.dt);
-        la.la1.setWeight(1.0);
+        la.la0.setWeight(b_rr * la.dt_factor0);
+        la.la1.setWeight(la.dt_factor1);
       }
 
       void postAssembly(){

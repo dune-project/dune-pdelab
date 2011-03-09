@@ -91,7 +91,7 @@ namespace Dune{
       //! Constructor with empty constraints
       OneStepLocalAssembler (LA0 & la0_, LA1 & la1_, Residual & const_residual_) 
         : la0(la0_), la1(la1_), const_residual(const_residual_), 
-          time(0.0), stage(0),
+          time(0.0), use_mass_dt(false), stage(0),
           pattern_engine(*this), prestage_engine(*this), residual_engine(*this), jacobian_engine(*this)
       { static_checks(); }
 
@@ -101,6 +101,15 @@ namespace Dune{
       void preStep(Real time_, Real dt_, int stages_){
         time = time_;
         dt = dt_;
+        if(use_mass_dt){
+          dt_factor0 = 1.0;
+          dt_factor1 = 1.0 / dt;
+        }
+        else{
+          dt_factor0 = dt;
+          dt_factor1 = 1.0;
+        }
+          
         la0.preStep(time_,dt_, stages_);
         la1.preStep(time_,dt_, stages_);
       }
@@ -113,6 +122,13 @@ namespace Dune{
       //! Set the current stage of the one step scheme
       void setStage(int stage_){
         stage = stage_;
+      }
+
+      //! Determines whether the time step size is multiplied to the
+      //! mass term (first order time derivative) or the elliptic term
+      //! (zero-th order time derivative).
+      void divideMassTermByDeltaT(bool v){
+        use_mass_dt = v;
       }
 
       //! Access time at given stage
@@ -181,7 +197,25 @@ namespace Dune{
       Residual & const_residual;
       
       //! The current time of assembling
-      Real time, dt;
+      Real time;
+
+      //! The time step size 
+      Real dt;
+      
+      /** The time step factors for assembling. Depending on the value
+       of \a use_mass_dt, it will hold:
+
+       dt_factor0 = dt and dt_factor1 = 1.0
+
+       or
+
+       dt_factor0 = 1.0 and dt_factor1 = 1.0 / dt
+      */
+      Real dt_factor0, dt_factor1;
+
+      //! Determines, whether the time step size will be multiplied
+      //! with the time derivative term of first of zero-th order.
+      bool use_mass_dt;
 
       //! The current stage of the one step scheme
       int stage;
