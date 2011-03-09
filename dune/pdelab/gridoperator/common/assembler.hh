@@ -230,72 +230,114 @@ namespace Dune {
     {
     public:
 
+      /** @name Notification functions for time step controller
+          @{
+      */
+
+      //! Set current time of assembling
       template<class TT>
       void setTime(TT time);
 
-      template<class RF>
-      void setWeight(RF weight);
-
+      //! Notify local assembler about upcoming time step
       template<typename TT>
       void preStep (TT time, TT dt, std::size_t stages);
 
+      //! Notify local assembler about completion of time step
       void postStep ();
 
+      //! Notify local assembler about upcoming time step stage
       template<typename TT>
       void preStage (TT time, std::size_t stage);
 
+      //! Notify local assembler about completion of time step stage
       void postStage ();
 
+      //! Suggest a valid time step size
       template<typename TT>
       TT suggestTimestep (TT dt) const;
 
+      /** @} */
+
+      //! Set current weight of assembling
+      template<class RF>
+      void setWeight(RF weight);
+
+      /** @name Access to the assembler engines 
+          @{ 
+      */
       LocalPatternAssemblerEngine & localPatternAssemblerEngine(P & p);
       LocalResidualAssemblerEngine & localResidualAssemblerEngine(R & r, const X & x);
       LocalJacobianAssemblerEngine & localJacobianAssemblerEngine(A & a, const X & x);
       LocalResidualJacobianAssemblerEngine & localResidualJacobianAssemblerEngine(R & r, A & a, const X & x);
+      /** @} */
 
-      
-
+      /**  @name Assembler engines 
+           @{
+      */
       class LocalPatternAssemblerEngine : public LocalAssemblerEngine {};
       class LocalResidualAssemblerEngine : public LocalAssemblerEngine {};
       class LocalJacobianAssemblerEngine : public LocalAssemblerEngine {};
       class LocalResidualJacobianAssemblerEngine : public LocalAssemblerEngine {};
+      /** @} */
+
     };
 
+    /** \brief The grid operator represents an operator mapping which
+        corresponds to the (possibly nonlinear) algebraic problem
+        resulting from the discretization of a PDE.
+        
+        A grid operator provides methods which allow its evaluation as
+        well as the computation of its jacobian matrix. It therefore
+        provides all functionality required for a direct application
+        of the Newton method.
+
+        For numerical reasons, the field type of the jacobian matrix
+        is allowed to differ from the operator's range field type. 
+
+    */
     template<typename GFSU, typename GFSV,
              typename MB, typename DF, typename RF, typename JF>
     class GridOperatorInterface{
     public:
 
+      //! The traits class
       typedef GridOperatorTraits
       <GFSU,GFSV,MB,DF,RF,JF,CU,CV,AssemblerInterface,LocalAssemblerInterface> Traits;
 
+      //! Determines the sparsity pattern of the jacobian matrix
       template<typename P>
       void fill_pattern (P& globalpattern) const;
 
+      //! Evaluates the grid operator for a given point \a x in its
+      //! domain
       template<typename X, typename R>
       void residual (const X& x, R& r) const;
 
+      //! Evaluates the jacobian matrix of the grid operator for a
+      //! given point \a x in its domain
       template<typename X, typename A>
       void jacobian (const X& x, A& a) const;
 
+      //! @name Access to the assembler objects
+      //! @{
       Assembler & assembler();
-
       LocalAssemblerInterface & localAssembler();
+      //! @}
 
+      //! @name Access to the grid function spaces
+      //! @{
       const GFSU& trialGridFunctionSpace() const;
-
       const GFSV& testGridFunctionSpace() const;
-
       typename GFSU::Traits::SizeType globalSizeU () const;
-
       typename GFSV::Traits::SizeType globalSizeV () const;
+      //! @}
 
       //! Interpolate xnew from f, taking unconstrained values from xold.
       /**
-       * \note the exact type of F will depend on the GridOperator and
-       *       may be a more complicated object than a simple GridFunction
-       *       for scenarios like MultiDomain or grid-glue.
+       * \note The exact type of F will depend on the GridOperator and
+       *       may be a more complicated object than a simple
+       *       GridFunction for scenarios like MultiDomain or
+       *       grid-glue.
        */
       template<typename F>
       void interpolate(const typename Traits::Domain& xold,
@@ -306,6 +348,15 @@ namespace Dune {
       //! for a time-stepping method. The caller guarantees that the
       //! GridOperators will always be invoked in the order that they
       //! appear in the tuple.
+      /**
+         \note This function is typically called by a superior grid
+         operator which wraps the grid operators given in the
+         tuple. It is assumed that all types in \a tuple are
+         specializations of the same template class which calls the
+         Dune::PDELab::GridOperatorInterface::setupGridOperator
+         function itself.
+
+       */
       template<typename GridOperatorTuple>
       static void setupGridOperators(GridOperatorTuple& tuple);
 
@@ -324,7 +375,7 @@ In the PDELab concept, the continuous PDE problem is reduced to an
 algebraic problem: 
 
 Find \f$ \mathbf{u}\in\mathbf{U} \f$ such that \f$
-\mathcal{R}(\mathbf{u}) = \mathbf{0} \f$. 
+\mathcal{R}(\mathbf{u}) = \mathbf{0} \f$ . 
 
 For instationary problems a corresponding algebraic problem is setup
 for each time step or stage of a time step.
@@ -338,14 +389,14 @@ Dune::PDELab::GridOperatorInterface::jacobian() method.
 Evaluating the grid operator and its jacobian matrix entails
 integrations over the computational domain during which the
 corresponding algebraic objects are assembled incrementally. The
-assembling is provided by two objects corresponding to the
+assembling is performed by two objects corresponding to the
 Dune::PDELab::AssemblerInterface and the
 Dune::PDELab::LocalAssemblerInterface . The former, the global
 assembler, provides the geometric objects, representing parts of the
 computational domain to be integrated. The latter, the local
 assembler, calls the local operator in an appropriate way to compute
-the local integrals and afterwards writes the results into the algebra
-objects. 
+the local integrals and afterwards accumulates the results into the
+algebra objects.
 
 The separation of these two tasks into different objects has
 significant advantages to a monolithic approach. It allows different
@@ -359,4 +410,60 @@ Furthermore, the separation provides a junction for caching
 objects. Such objects would provide the interface of the local
 assembler, while actually wrapping the true local assembler object.
 
-*/
+\section GridOperatorDocEngines Engines
+
+In a simple stationary PDE problem, the assembling functionality
+provided by Dune::PDELab::AssemblerInterface and the
+Dune::PDELab::LocalAssemblerInterface will be used for at least three
+different purposes:
+
+- Evaluating the grid operator (usually corresponds to computing the
+  problem's residual vector)
+
+- Setup of the jacobian matrix sparsity pattern
+
+- Computing the jacobian matrix
+
+As these three tasks require rather different local operations
+(e.g. setting up of the jacobian matrix sparsity pattern does not
+require any evaluations of the local function spaces), the local
+assembler does not directly interact with the global
+assembler. Instead, it provides engines which drive the global
+assembler for each of the different tasks. Therefore, every local
+assembler is required to provide the engines:
+
+- LocalPatternAssemblerEngine
+- LocalResidualAssemblerEngine
+- LocalJacobianAssemblerEngine
+- LocalResidualJacobianAssemblerEngine
+
+The last of the engines above allows a combined assembling of the
+residual and the jacobian matrix. 
+
+\section GridOperatorDocComposite Instationary problems and composite grid operators
+
+When given a instationary PDE problem which (after spatial
+discretization) results in an algebraic problem 
+
+\f[ \partial_t \mathcal{R}_1(\mathbf{u}) + \mathcal{R}_0(\mathbf{u}) = \mathbf{0}, \f]
+
+then the PDELab approach is to define a grid operator for each \f$
+\mathcal{R}_1 \f$ and \f$ \mathcal{R}_0 \f$ and then combine these
+grid operators in a composite grid operator which provides the
+additional functionality needed by the chosen time stepping method
+(e.g. for a Runge-Kutta scheme, the grid operator must be able to be
+evaluated for each of the Runge-Kutta stages). The class
+Dune::PDELab::OneStepGridOperator is a fairly general implementation
+which allows the appli cation of many different one step methods
+including all methods of Runge-Kutta type.
+
+In general, such composite grid operators will apply multiple
+assembler engines in a combined assembling during a single grid
+traversion. This will usually result in both engines performing
+operations, which they could efficiently share or distribute. To allow
+such optimizations, the composite grid operator may inform his
+subordinate grid operators of their co-operators and the order in
+which they will be called during assembling. This is done via the 
+Dune::PDELab::GridOperatorInterface::setupGridOperators method.
+
+ */
