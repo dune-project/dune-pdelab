@@ -4,6 +4,10 @@
 #ifndef DUNE_PDELAB_COMMON_FUNCTIONUTILITIES_HH
 #define DUNE_PDELAB_COMMON_FUNCTIONUTILITIES_HH
 
+#include <limits>
+#include <ostream>
+
+#include <dune/common/debugstream.hh>
 #include <dune/common/geometrytype.hh>
 #include <dune/common/shared_ptr.hh>
 
@@ -125,6 +129,9 @@ gf.getGridView().comm().sum(sum);
           xl = (*e)->geometry().local(xg);
         else
           e.reset();
+        if(myRank == 0 && evalRank == gfp->getGridView().comm().size())
+          dwarn << "Warning: GridFunctionProbe at (" << xg << ") is outside "
+                << "the grid" << std::endl;
       }
 
       //! Set a new GridFunction
@@ -167,11 +174,19 @@ gf.getGridView().comm().sum(sum);
       //! evaluate the GridFunction and broadcast result to all ranks
       /**
        * \param val Store the result here.
+       *
+       * \note If the GridFunctionProbe is outside the grid NaN will be stored
+       *       in val.
        */
       void eval_all(Range& val) const {
-        if(gfp->getGridView().comm().rank() == evalRank)
-          gfp->evaluate(**e, xl, val);
-        gfp->getGridView().comm().broadcast(&val,1,evalRank);
+        typedef typename GF::Traits::RangeFieldType RF;
+        if(evalRank == gfp->getGridView().comm().size())
+          val = std::numeric_limits<RF>::quiet_NaN();
+        else {
+          if(gfp->getGridView().comm().rank() == evalRank)
+            gfp->evaluate(**e, xl, val);
+          gfp->getGridView().comm().broadcast(&val,1,evalRank);
+        }
       }
 
       //! evaluate the GridFunction and communicate result to the given rank
@@ -184,6 +199,8 @@ gf.getGridView().comm().sum(sum);
        * \note CollectiveCommunication does not provide any direct
        *       process-to-process communication, so currently this function is
        *       identical with eval_all(), with the \c rank parameter ignored.
+       * \note If the GridFunctionProbe is outside the grid NaN will be stored
+       *       in val.
        */
       void eval(Range& val, int rank = 0) const {
         eval_all(val);
