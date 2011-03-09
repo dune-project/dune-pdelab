@@ -268,7 +268,7 @@ namespace Dune {
        * \note update() must have been called before this method may be used.
        */
       SizeType subMap(SizeType child, SizeType indexInChild) const {
-        static const SizeType &size = Size<Tag>::value[0];
+        static const SizeType &size = BlockwiseOrderingImp::Size<Tag>::value[0];
 
         return indexInChild % size
           + size*child
