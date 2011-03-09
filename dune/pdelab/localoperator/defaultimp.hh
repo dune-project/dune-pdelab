@@ -56,7 +56,8 @@ namespace Dune {
 
         X u(x);
 
-        ResidualVector down(m),up(m);
+        // Notice that in general lfsv.size() != mat.nrows() 
+        ResidualVector down(mat.nrows(),0.),up(mat.nrows());
         ResidualView downview = down.weightedAccumulationView(mat.weight());
         ResidualView upview = up.weightedAccumulationView(mat.weight());
 
@@ -120,7 +121,8 @@ namespace Dune {
 
         X u(x);
 
-        ResidualVector down(m),up(m);
+        // Notice that in general lfsv.size() != mat.nrows() 
+        ResidualVector down(mat.nrows(),0.),up(mat.nrows());
         ResidualView downview = down.weightedAccumulationView(mat.weight());
         ResidualView upview = up.weightedAccumulationView(mat.weight());
 
@@ -186,11 +188,12 @@ namespace Dune {
         X u_s(x_s);
         X u_n(x_n);
 
-        ResidualVector down_s(m_s),up_s(m_s);
+        // Notice that in general lfsv.size() != mat.nrows() 
+        ResidualVector down_s(mat_ss.nrows()),up_s(mat_ss.nrows());
         ResidualView downview_s = down_s.weightedAccumulationView(1.0);
         ResidualView upview_s = up_s.weightedAccumulationView(1.0);
 
-        ResidualVector down_n(m_n),up_n(m_n);
+        ResidualVector down_n(mat_nn.nrows()),up_n(mat_nn.nrows());
         ResidualView downview_n = down_n.weightedAccumulationView(1.0);
         ResidualView upview_n = up_n.weightedAccumulationView(1.0);
 
@@ -278,7 +281,8 @@ namespace Dune {
 
         X u_s(x_s);
 
-        ResidualVector down_s(m_s),up_s(m_s);
+        // Notice that in general lfsv.size() != mat.nrows() 
+        ResidualVector down_s(mat_ss.nrows()),up_s(mat_ss.nrows());
         ResidualView downview_s = down_s.weightedAccumulationView(mat_ss.weight());
         ResidualView upview_s = up_s.weightedAccumulationView(mat_ss.weight());;
 
@@ -349,7 +353,8 @@ namespace Dune {
 
         X u(x);
 
-        ResidualVector down(m),up(m);
+        // Notice that in general lfsv.size() != y.size()
+        ResidualVector down(y.size()),up(y.size());
         ResidualView downview = down.weightedAccumulationView(y.weight());
         ResidualView upview = up.weightedAccumulationView(y.weight());
 
@@ -413,7 +418,8 @@ namespace Dune {
 
         X u(x);
 
-        ResidualVector down(m),up(m);
+        // Notice that in general lfsv.size() != y.size()
+        ResidualVector down(y.size()),up(y.size());
         ResidualView downview = down.weightedAccumulationView(y.weight());
         ResidualView upview = up.weightedAccumulationView(y.weight());
 
@@ -479,11 +485,12 @@ namespace Dune {
         X u_s(x_s);
         X u_n(x_n);
 
-        ResidualVector down_s(m_s),up_s(m_s);
+        // Notice that in general lfsv_s.size() != y_s.size()
+        ResidualVector down_s(y_s.size()),up_s(y_s.size());
         ResidualView downview_s = down_s.weightedAccumulationView(1.0);
         ResidualView upview_s = up_s.weightedAccumulationView(1.0);
 
-        ResidualVector down_n(m_n),up_n(m_n);
+        ResidualVector down_n(y_n.size()),up_n(y_n.size());
         ResidualView downview_n = down_n.weightedAccumulationView(1.0);
         ResidualView upview_n = up_n.weightedAccumulationView(1.0);
 
@@ -572,7 +579,8 @@ namespace Dune {
 
         X u_s(x_s);
 
-        ResidualVector down_s(m_s),up_s(m_s);
+        // Notice that in general lfsv_s.size() != y_s.size()
+        ResidualVector down_s(y_s.size()),up_s(y_s.size());
         ResidualView downview_s = down_s.weightedAccumulationView(1.0);
         ResidualView upview_s = up_s.weightedAccumulationView(1.0);
 
