@@ -610,7 +610,7 @@ namespace Dune {
     {
       typedef typename Dune::PDELab::TypeTree::TransformTree<GFS,gfs_to_lfs>::Type BaseT;
       typedef typename BaseT::Traits::IndexContainer::size_type I;
-      typedef typename LocalIndexTraits<I,TAG>::LocalIndex LocalIndex;
+      typedef typename BaseT::Traits::IndexContainer::size_type LocalIndex;
 
       template<typename>
       friend struct PropagateGlobalStorageVisitor;
