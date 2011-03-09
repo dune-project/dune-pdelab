@@ -11,6 +11,7 @@
 #include <dune/common/classname.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/stdstreams.hh>
+#include <dune/common/typetraits.hh>
 
 #include <dune/pdelab/common/typetree/compositenodemacros.hh>
 #include <dune/pdelab/common/typetree/powernode.hh>
@@ -39,13 +40,26 @@ namespace Dune {
      * \note It is assumed that all grid elements have the same number of
      *       dofs, otherwise use DynamicBlockwiseOrdering.
      */
-    template<std::size_t s0 = 1, std::size_t s1 = s0, std::size_t s2 = s1,
-             std::size_t s3 = s2, std::size_t s4 = s3, std::size_t s5 = s4,
-             std::size_t s6 = s5, std::size_t s7 = s6, std::size_t s8 = s7,
-             std::size_t s9 = s8>
-    struct ComponentBlockwiseOrderingTag { };
-    template<std::size_t s0 = 1, std::size_t s1 = s0, std::size_t s2 = s1, std::size_t s3 = s2, std::size_t s4 = s3,
-             std::size_t s5 = s4, std::size_t s6 = s5, std::size_t s7 = s6, std::size_t s8 = s7, std::size_t s9 = s8>
+    template<std::size_t s0_ = 1, std::size_t s1_ = 1, std::size_t s2_ = 1,
+             std::size_t s3_ = 1, std::size_t s4_ = 1, std::size_t s5_ = 1,
+             std::size_t s6_ = 1, std::size_t s7_ = 1, std::size_t s8_ = 1,
+             std::size_t s9_ = 1>
+    struct ComponentBlockwiseOrderingTag {
+      static const std::size_t s0 = s0_;
+      static const std::size_t s1 = s1_;
+      static const std::size_t s2 = s2_;
+      static const std::size_t s3 = s3_;
+      static const std::size_t s4 = s4_;
+      static const std::size_t s5 = s5_;
+      static const std::size_t s6 = s6_;
+      static const std::size_t s7 = s7_;
+      static const std::size_t s8 = s8_;
+      static const std::size_t s9 = s9_;
+    };
+    template<std::size_t s0 = 1, std::size_t s1 = 1, std::size_t s2 = 1,
+             std::size_t s3 = 1, std::size_t s4 = 1, std::size_t s5 = 1,
+             std::size_t s6 = 1, std::size_t s7 = 1, std::size_t s8 = 1,
+             std::size_t s9 = 1>
     struct GridFunctionSpaceComponentBlockwiseMapper :
       public ComponentBlockwiseOrderingTag<s0, s1, s2, s3, s4, s5, s6, s7, s8,
                                            s9>
@@ -108,35 +122,6 @@ namespace Dune {
 
       //////////////////////////////////////////////////////////////////////
 
-      template<class OrderingImp, class Tag>
-      class SizeCheckVisitor :
-        public TypeTree::DirectChildrenVisitor,
-        public TypeTree::DynamicTraversal
-      {
-        std::size_t sizeRatio;
-
-      public:
-        template<class T, class Child, class TreePath, class ChildIndex>
-        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex childIndex) {
-          static const std::size_t *blockSize = Size<Tag>::value;
-
-          if(child.maxLocalSize()%blockSize[childIndex]!=0)
-            DUNE_THROW(InvalidStateException, className<OrderingImp>() << ": "
-                       "Number of DOFs (" << child.maxLocalSize() << ") per "
-                       "component must be a multiple of the BlockSize "
-                       "(" << blockSize[childIndex] << ")");
-          if(childIndex == 0)
-            sizeRatio = child.maxLocalSize()/blockSize[0];
-          else
-            if(child.maxLocalSize()/blockSize[childIndex] != sizeRatio)
-              DUNE_THROW(InvalidStateException,
-                         className<OrderingImp>() << ": Components must be of "
-                         "equal size");
-        }
-      };
-
-      //////////////////////////////////////////////////////////////////////
-
       //! Interface for merging index spaces
       template<class SizeType, class Tag, class Imp>
       class Base :
@@ -168,31 +153,9 @@ namespace Dune {
                        "only with children that have a uniform size for all "
                        "entities of a given geometry type/all intersections");
 
-          // check for compatible sizes
-          {
-            SizeCheckVisitor<Imp, Tag> visitor;
-            TypeTree::applyToTree(asImp(), visitor);
-          }
+          asImp().sizeCheck();
 
           printInfo(dinfo);
-        }
-
-        //! map a global dof index from a child
-        /**
-         * Given the index of a dof in the global dof-vector of one of the
-         * children, compute the index of the same dof in the global
-         * dof-vector of this ordering.
-         *
-         * \note update() must have been called before this method may be
-         *       used.
-         */
-        SizeType subMap(SizeType child, SizeType indexInChild) const {
-          static const SizeType *size = Size<Tag>::value;
-          static const SizeType *offset = Offset<Tag>::value;
-
-          return indexInChild % size[child]
-            + offset[child]
-            + (indexInChild/size[child]) * offset[Imp::CHILDREN];
         }
 
         //! \brief offset of the block of dofs attached to a given entity (of
@@ -251,6 +214,35 @@ namespace Dune {
     {
       typedef TypeTree::PowerNode<Child, k> Node;
 
+      friend class BlockwiseOrderingImp::Base<
+        SizeType, Tag, PowerBlockwiseOrdering
+        >;
+
+      // make sure the ordering tag wasn't given more than one argument
+      dune_static_assert
+      ((IsBaseOf<ComponentBlockwiseOrderingTag<Tag::s0>, Tag>::value),
+       "At most one blocksize may be given to a ComponentBlockwiseOrderingTag "
+       "to be used in a PowerNode.");
+
+      // check for compatible sizes
+      void sizeCheck() {
+        static const std::size_t &blockSize =
+          BlockwiseOrderingImp::Size<Tag>::value[0];
+
+        SizeType maxLocalSize = this->child(0).maxLocalSize();
+        if(maxLocalSize%blockSize!=0)
+          DUNE_THROW(InvalidStateException,
+                     className<PowerBlockwiseOrdering>() << ": Number of DOFs "
+                     "(" << maxLocalSize << ") per component must be a "
+                     "multiple of the BlockSize (" << blockSize << ")");
+        for(std::size_t childIndex = 1; childIndex < Node::CHILDREN;
+            ++childIndex)
+          if(this->child(childIndex).maxLocalSize() != maxLocalSize)
+            DUNE_THROW(InvalidStateException,
+                       className<PowerBlockwiseOrdering>() << ": Components "
+                       "must be of equal size");
+      }
+
     public:
       //! Construct ordering object
       /**
@@ -266,6 +258,22 @@ namespace Dune {
                              const typename Node::NodeStorage &children) :
         Node(children)
       { }
+
+      //! map a global dof index from a child
+      /**
+       * Given the index of a dof in the global dof-vector of one of the
+       * children, compute the index of the same dof in the global dof-vector
+       * of this ordering.
+       *
+       * \note update() must have been called before this method may be used.
+       */
+      SizeType subMap(SizeType child, SizeType indexInChild) const {
+        static const SizeType &size = Size<Tag>::value[0];
+
+        return indexInChild % size
+          + size*child
+          + (indexInChild/size) * size*Node::CHILDREN;
+      }
 
       std::string name() const { return "PowerBlockwiseOrdering"; }
     };
@@ -313,6 +321,47 @@ namespace Dune {
     {
       typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE Node;
 
+      friend class BlockwiseOrderingImp::Base<
+        SizeType, Tag, CompositeBlockwiseOrdering
+        >;
+
+      //////////////////////////////////////////////////////////////////////
+      class SizeCheckVisitor :
+        public TypeTree::DirectChildrenVisitor,
+        public TypeTree::DynamicTraversal
+      {
+        std::size_t sizeRatio;
+
+      public:
+        template<class T, class Child, class TreePath, class ChildIndex>
+        void beforeChild(const T &t, const Child& child, TreePath,
+                         ChildIndex childIndex)
+        {
+          static const std::size_t *blockSize = Size<Tag>::value;
+
+          if(child.maxLocalSize()%blockSize[childIndex]!=0)
+            DUNE_THROW(InvalidStateException,
+                       className<CompositeBlockwiseOrdering>() << ": Number "
+                       "of DOFs (" << child.maxLocalSize() << ") per "
+                       "component must be a multiple of the BlockSize "
+                       "(" << blockSize[childIndex] << ")");
+          if(childIndex == 0)
+            sizeRatio = child.maxLocalSize()/blockSize[0];
+          else
+            if(child.maxLocalSize()/blockSize[childIndex] != sizeRatio)
+              DUNE_THROW(InvalidStateException,
+                         className<CompositeBlockwiseOrdering>() << ": "
+                         "Components must be of equal size");
+        }
+      };
+      //////////////////////////////////////////////////////////////////////
+
+      // check for compatible sizes
+      void sizeCheck() {
+        SizeCheckVisitor visitor;
+        TypeTree::applyToTree(*this, visitor);
+      }
+
     public:
       //! Construct ordering object
       /**
@@ -329,6 +378,24 @@ namespace Dune {
         DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE) :
         Node(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
       { }
+
+      //! map a global dof index from a child
+      /**
+       * Given the index of a dof in the global dof-vector of one of the
+       * children, compute the index of the same dof in the global dof-vector
+       * of this ordering.
+       *
+       * \note update() must have been called before this method may be used.
+       */
+      SizeType subMap(SizeType child, SizeType indexInChild) const {
+        static const SizeType *size = BlockwiseOrderingImp::Size<Tag>::value;
+        static const SizeType *offset =
+          BlockwiseOrderingImp::Offset<Tag>::value;
+
+        return indexInChild % size[child]
+          + offset[child]
+          + (indexInChild/size[child]) * offset[Node::CHILDREN];
+      }
 
       std::string name() const { return "CompositeBlockwiseOrdering"; }
     };
