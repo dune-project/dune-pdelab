@@ -65,14 +65,13 @@ namespace Dune {
         asImp().alpha_volume(eg,lfsu,u,lfsv,downview);
         for (int j=0; j<n; j++) // loop over columns
         {
-          for (int k=0; k<mat.nrows(); k++) up[k]=0.0;
-          D delta = epsilon*(1.0+std::abs(u[lfsu.localIndex(j)]));
-          u[lfsu.localIndex(j)] += delta;
+          up = 0.0;
+          D delta = epsilon*(1.0+std::abs(u(lfsu,j)));
+          u(lfsu,j) += delta;
           asImp().alpha_volume(eg,lfsu,u,lfsv,upview);
           for (int i=0; i<m; i++)
-            mat.rawAccumulate(lfsv.localIndex(i),lfsu.localIndex(j),
-                              (up[lfsv.localIndex(i)]-down[lfsv.localIndex(i)])/delta);
-          u[lfsu.localIndex(j)] = x[lfsu.localIndex(j)];
+            mat.rawAccumulate(lfsv,i,lfsu,j,(up(lfsv,i)-down(lfsv,i))/delta);
+          u(lfsu,j) = x(lfsu,j);
         }
       }
 
@@ -129,14 +128,13 @@ namespace Dune {
         asImp().alpha_volume_post_skeleton(eg,lfsu,u,lfsv,downview);
         for (int j=0; j<n; j++) // loop over columns
         {
-          for (int k=0; k<mat.nrows(); k++) up[k]=0.0;
-          D delta = epsilon*(1.0+std::abs(u[lfsu.localIndex(j)]));
-          u[lfsu.localIndex(j)] += delta;
+          up = 0.0;
+          D delta = epsilon*(1.0+std::abs(u(lfsu,j)));
+          u(lfsu,j) += delta;
           asImp().alpha_volume_post_skeleton(eg,lfsu,u,lfsv,upview);
           for (int i=0; i<m; i++)
-            mat.rawAccumulate(lfsv.localIndex(i),lfsu.localIndex(j),
-                              (up[lfsv.localIndex(i)]-down[lfsv.localIndex(i)])/delta);
-          u[lfsu.localIndex(j)] = x[lfsu.localIndex(j)];
+            mat.rawAccumulate(lfsv,i,lfsu,j,(up(lfsv,i)-down(lfsv,i))/delta);
+          u(lfsu,j) = x(lfsu,j);
         }
       }
 
@@ -204,37 +202,33 @@ namespace Dune {
         // jiggle in self
         for (int j=0; j<n_s; j++)
         {
-          for (int k=0; k<mat_ss.nrows(); k++) up_s[k]=0.0;
-          for (int k=0; k<mat_nn.nrows(); k++) up_n[k]=0.0;
-          D delta = epsilon*(1.0+std::abs(u_s[lfsu_s.localIndex(j)]));
-          u_s[lfsu_s.localIndex(j)] += delta;
+          up_s = 0.0;
+          up_n = 0.0;
+          D delta = epsilon*(1.0+std::abs(u_s(lfsu_s,j)));
+          u_s(lfsu_s,j) += delta;
           asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,upview_s,
                                  upview_n);
           for (int i=0; i<m_s; i++)
-            mat_ss.accumulate(lfsv_s.localIndex(i),lfsu_s.localIndex(j),
-                              (up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta);
+            mat_ss.accumulate(lfsv_s,i,lfsu_s,j,(up_s(lfsv_s,i)-down_s(lfsv_s,i))/delta);
           for (int i=0; i<m_n; i++)
-            mat_ns.accumulate(lfsv_n.localIndex(i),lfsu_s.localIndex(j),
-                              (up_n[lfsv_n.localIndex(i)]-down_n[lfsv_n.localIndex(i)])/delta);
-          u_s[lfsu_s.localIndex(j)] = x_s[lfsu_s.localIndex(j)];
+            mat_ns.accumulate(lfsv_n,i,lfsu_s,j,(up_n(lfsv_n,i)-down_n(lfsv_n,i))/delta);
+          u_s(lfsu_s,j) = x_s(lfsu_s,j);
         }
 
         // jiggle in neighbor
         for (int j=0; j<n_n; j++)
         {
-          for (int k=0; k<mat_ss.nrows(); k++) up_s[k]=0.0;
-          for (int k=0; k<mat_nn.nrows(); k++) up_n[k]=0.0;
-          D delta = epsilon*(1.0+std::abs(u_n[lfsu_n.localIndex(j)]));
-          u_n[lfsu_n.localIndex(j)] += delta;
+          up_s = 0.0;
+          up_n = 0.0;
+          D delta = epsilon*(1.0+std::abs(u_n(lfsu_n,j)));
+          u_n(lfsu_n,j) += delta;
           asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,upview_s,
                                  upview_n);
           for (int i=0; i<m_s; i++)
-            mat_sn.accumulate(lfsv_s.localIndex(i),lfsu_n.localIndex(j),
-                              (up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta);
+            mat_sn.accumulate(lfsv_s,i,lfsu_n,j,(up_s(lfsv_s,i)-down_s(lfsv_s,i))/delta);
           for (int i=0; i<m_n; i++)
-            mat_nn.accumulate(lfsv_n.localIndex(i),lfsu_n.localIndex(j),
-                              (up_n[lfsv_n.localIndex(i)]-down_n[lfsv_n.localIndex(i)])/delta);
-          u_n[lfsu_n.localIndex(j)] = x_n[lfsu_n.localIndex(j)];
+            mat_nn.accumulate(lfsv_n,i,lfsu_n,j,(up_n(lfsv_n,i)-down_n(lfsv_n,i))/delta);
+          u_n(lfsu_n,j) = x_n(lfsu_n,j);
         }
       }
 
@@ -293,14 +287,13 @@ namespace Dune {
         // jiggle in self
         for (int j=0; j<n_s; j++)
         {
-          for (int k=0; k<mat_ss.nrows(); k++) up_s[k]=0.0;
-          D delta = epsilon*(1.0+std::abs(u_s[lfsu_s.localIndex(j)]));
-          u_s[lfsu_s.localIndex(j)] += delta;
+          up_s = 0.0;
+          D delta = epsilon*(1.0+std::abs(u_s(lfsu_s,j)));
+          u_s(lfsu_s,j) += delta;
           asImp().alpha_boundary(ig,lfsu_s,u_s,lfsv_s,upview_s);
           for (int i=0; i<m_s; i++)
-            mat_ss.rawAccumulate(lfsv_s.localIndex(i),lfsu_s.localIndex(j),
-                                 (up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta);
-          u_s[lfsu_s.localIndex(j)] = x_s[lfsu_s.localIndex(j)];
+            mat_ss.rawAccumulate(lfsv_s,i,lfsu_s,j,(up_s(lfsv_s,i)-down_s(lfsv_s,i))/delta);
+          u_s(lfsu_s,j) = x_s(lfsu_s,j);
         }
       }
 
@@ -361,14 +354,13 @@ namespace Dune {
         asImp().alpha_volume(eg,lfsu,u,lfsv,downview);
         for (int j=0; j<n; j++) // loop over columns
         {
-          for (size_type k=0; k<y.size(); k++) up[k]=0.0;
-          D delta = epsilon*(1.0+std::abs(u[lfsu.localIndex(j)]));
-          u[lfsu.localIndex(j)] += delta;
+          up = 0.0;
+          D delta = epsilon*(1.0+std::abs(u(lfsu,j)));
+          u(lfsu,j) += delta;
           asImp().alpha_volume(eg,lfsu,u,lfsv,upview);
           for (int i=0; i<m; i++)
-            y.rawAccumulate(lfsv.localIndex(i),
-                            ((up[lfsv.localIndex(i)]-down[lfsv.localIndex(i)])/delta)*x[lfsu.localIndex(j)]);
-          u[lfsu.localIndex(j)] = x[lfsu.localIndex(j)];
+            y.rawAccumulate(lfsv,i,((up(lfsv,i)-down(lfsv,i))/delta)*x(lfsu,j));
+          u(lfsu,j) = x(lfsu,j);
         }
       }
 
@@ -426,14 +418,13 @@ namespace Dune {
         asImp().alpha_volume_post_skeleton(eg,lfsu,u,lfsv,downview);
         for (int j=0; j<n; j++) // loop over columns
         {
-          for (size_type k=0; k<y.size(); k++) up[k]=0.0;
-          D delta = epsilon*(1.0+std::abs(u[lfsu.localIndex(j)]));
-          u[lfsu.localIndex(j)] += delta;
+          up = 0.0;
+          D delta = epsilon*(1.0+std::abs(u(lfsu,j)));
+          u(lfsu,j) += delta;
           asImp().alpha_volume_post_skeleton(eg,lfsu,u,lfsv,upview);
           for (int i=0; i<m; i++)
-            y.rawAccumulate(lfsv.localIndex(i),
-                            ((up[lfsv.localIndex(i)]-down[lfsv.localIndex(i)])/delta)*x[lfsu.localIndex(j)]);
-          u[lfsu.localIndex(j)] = x[lfsu.localIndex(j)];
+            y.rawAccumulate(lfsv,i,((up(lfsv,i)-down(lfsv,i))/delta)*x(lfsu,j));
+          u(lfsu,j) = x(lfsu,j);
         }
       }
 
@@ -501,37 +492,33 @@ namespace Dune {
         // jiggle in self
         for (int j=0; j<n_s; j++)
         {
-          for (size_type k=0; k<y_s.size(); k++) up_s[k]=0.0;
-          for (size_type k=0; k<y_n.size(); k++) up_n[k]=0.0;
-          D delta = epsilon*(1.0+std::abs(u_s[lfsu_s.localIndex(j)]));
-          u_s[lfsu_s.localIndex(j)] += delta;
+          up_s = 0.0;
+          up_n = 0.0;
+          D delta = epsilon*(1.0+std::abs(u_s(lfsu_s,j)));
+          u_s(lfsu_s,j) += delta;
           asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,upview_s,
                                  upview_n);
           for (int i=0; i<m_s; i++)
-            y_s.accumulate(lfsv_s.localIndex(i),
-                           ((up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta)*x_s[lfsu_s.localIndex(j)]);
+            y_s.accumulate(lfsv_s,i,((up_s(lfsv_s,i)-down_s(lfsv_s,i))/delta)*x_s(lfsu_s,j));
           for (int i=0; i<m_n; i++)
-            y_n.accumulate(lfsv_n.localIndex(i),
-                           ((up_n[lfsv_n.localIndex(i)]-down_n[lfsv_n.localIndex(i)])/delta)*x_s[lfsu_s.localIndex(j)]);
-          u_s[lfsu_s.localIndex(j)] = x_s[lfsu_s.localIndex(j)];
+            y_n.accumulate(lfsv_n,i,((up_n(lfsv_n,i)-down_n(lfsv_n.i))/delta)*x_s(lfsu_s,j));
+          u_s(lfsu_s,j) = x_s(lfsu_s,j);
         }
 
         // jiggle in neighbor
         for (int j=0; j<n_n; j++)
         {
-          for (size_type k=0; k<y_s.size(); k++) up_s[k]=0.0;
-          for (size_type k=0; k<y_n.size(); k++) up_n[k]=0.0;
-          D delta = epsilon*(1.0+std::abs(u_n[lfsu_n.localIndex(j)]));
-          u_n[lfsu_n.localIndex(j)] += delta;
+          up_s = 0.0;
+          up_n = 0.0;
+          D delta = epsilon*(1.0+std::abs(u_n(lfsu_n,j)));
+          u_n(lfsu_n,j) += delta;
           asImp().alpha_skeleton(ig,lfsu_s,u_s,lfsv_s,lfsu_n,u_n,lfsv_n,upview_s,
                                  upview_n);
           for (int i=0; i<m_s; i++)
-            y_s.accumulate(lfsv_s.localIndex(i),
-                           ((up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta)*x_n[lfsu_n.localIndex(j)]);
+            y_s.accumulate(lfsv_s,i,((up_s(lfsv_s,i)-down_s(lfsv_s,i))/delta)*x_n(lfsu_n,j));
           for (int i=0; i<m_n; i++)
-            y_n.accumulate(lfsv_n.localIndex(i),
-                           ((up_n[lfsv_n.localIndex(i)]-down_n[lfsv_n.localIndex(i)])/delta)*x_n[lfsu_n.localIndex(j)]);
-          u_n[lfsu_n.localIndex(j)] = x_n[lfsu_n.localIndex(j)];
+            y_n.accumulate(lfsv_n,i,((up_n(lfsv_n,i)-down_n(lfsv_n,i))/delta)*x_n(lfsu_n,j));
+          u_n(lfsu_n,j) = x_n(lfsu_n,j);
         }
       }
 
@@ -590,14 +577,13 @@ namespace Dune {
         // jiggle in self
         for (int j=0; j<n_s; j++)
         {
-          for (size_type k=0; k<y_s.size(); k++) up_s[k]=0.0;
-          D delta = epsilon*(1.0+std::abs(u_s[lfsu_s.localIndex(j)]));
-          u_s[lfsu_s.localIndex(j)] += delta;
+          up_s = 0.0;
+          D delta = epsilon*(1.0+std::abs(u_s(lfsu_s,j)));
+          u_s(lfsu_s,j) += delta;
           asImp().alpha_boundary(ig,lfsu_s,u_s,lfsv_s,upview_s);
           for (int i=0; i<m_s; i++)
-            y_s.rawAccumulate(lfsv_s.localIndex(i),
-                              ((up_s[lfsv_s.localIndex(i)]-down_s[lfsv_s.localIndex(i)])/delta)*x_s[lfsu_s.localIndex(j)]);
-          u_s[lfsu_s.localIndex(j)] = x_s[lfsu_s.localIndex(j)];
+            y_s.rawAccumulate(lfsv_s,i,((up_s(lfsv_s,i)-down_s(lfsv_s,i))/delta)*x_s(lfsu_s,j));
+          u_s(lfsu_s,j) = x_s(lfsu_s,j);
         }
       }
 
@@ -642,7 +628,8 @@ namespace Dune {
         Jacobian mat(r.size(),x.size(), 0);
         JacobianView matview = mat.weightedAccumulationView(1.0);
         asImp().jacobian_volume(eg, lfsu, x, lfsv, mat);
-        mat.umv(x,r);
+        // we need to include the weight here, as umv() and usmv() operate on the bare container for effiency
+        mat.usmv(r.weight(),x,r);
       }
 
     private:
@@ -693,10 +680,10 @@ namespace Dune {
           lfsu_n, x_n, lfsv_n,
           view_ss, view_sn, view_ns, view_nn);
         // TODO: Reihenfolge der Multiplikationen!
-        mat_ss.umv(x_s,r_s);
-        mat_ns.umv(x_s,r_n);
-        mat_sn.umv(x_n,r_s);
-        mat_nn.umv(x_n,r_n);
+        mat_ss.usmv(r_s.weight(),x_s,r_s);
+        mat_ns.usmv(r_n.weight(),x_s,r_n);
+        mat_sn.usmv(r_s.weight(),x_n,r_s);
+        mat_nn.usmv(r_n.weight(),x_n,r_n);
       }
 
     private:
@@ -734,7 +721,8 @@ namespace Dune {
         Jacobian mat(x.size(),r.size(), 0);
         JacobianView view = mat.weightedAccumulationView(1.0);
         asImp().jacobian_boundary(ig, lfsu, x, lfsv, view);
-        mat.umv(x,r);
+        // we need to include the weight here, as umv() and usmv() operate on the bare container for effiency
+        mat.usmv(r.weight(),x,r);
       }
 
     private:
