@@ -12,6 +12,7 @@
 #include "../common/typetree.hh"
 #include "localindex.hh"
 #include <dune/pdelab/gridfunctionspace/tags.hh>
+#include <dune/pdelab/gridfunctionspace/localvector.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -233,7 +234,7 @@ namespace Dune {
         // assert(&global_storage == global); // make sure we call this method only on the root node!
         localcontainer.resize(n);
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          localcontainer[typename LC::size_type(k)] = B::access(globalcontainer,(*global)[offset + k]);
+          accessBaseContainer(localcontainer)[k] = B::access(globalcontainer,(*global)[offset + k]);
       }
 
       //! \brief write back coefficients for one element to container
@@ -242,7 +243,7 @@ namespace Dune {
       {
         // assert(&global_storage == global); // make sure we call this method only on the root node!
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          B::access(globalcontainer,(*global)[offset + k]) = localcontainer[typename LC::size_type(k)];
+          B::access(globalcontainer,(*global)[offset + k]) = accessBaseContainer(localcontainer)[k];
       }
 
       //! \brief add coefficients for one element to container
@@ -251,7 +252,7 @@ namespace Dune {
       {
         // assert(&global_storage == global); // make sure we call this method only on the root node!
         for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          B::access(globalcontainer,(*global)[offset + k]) += localcontainer[typename LC::size_type(k)];
+          B::access(globalcontainer,(*global)[offset + k]) += accessBaseContainer(localcontainer)[k];
       }
 
       //! \brief print debug information about this local function space
