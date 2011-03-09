@@ -119,7 +119,7 @@ namespace Dune {
       //! Returns whether this view has been written to.
       bool modified() const
       {
-        return false;
+        return _modified;
       }
 
       //! Resets the modification state of the view to not modified.
