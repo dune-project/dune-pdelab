@@ -337,7 +337,8 @@ namespace Dune {
         void beforeChild(const T &t, const Child& child, TreePath,
                          ChildIndex childIndex)
         {
-          static const std::size_t *blockSize = Size<Tag>::value;
+          static const std::size_t *blockSize =
+            BlockwiseOrderingImp::Size<Tag>::value;
 
           if(child.maxLocalSize()%blockSize[childIndex]!=0)
             DUNE_THROW(InvalidStateException,
