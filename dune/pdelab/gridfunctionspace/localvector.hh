@@ -6,8 +6,6 @@
 #include <vector>
 #include <dune/common/deprecated.hh>
 
-#include "localindex.hh"
-
 /** \file
     \author Christian Engwer
     A local Vector class, which can be tagged by a tag from localfunctionspacetags.hh

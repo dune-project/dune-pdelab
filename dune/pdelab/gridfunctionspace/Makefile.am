@@ -14,7 +14,6 @@ gridfunctionspace_HEADERS =			\
 	lexicographicordering.hh		\
 	localfunctionspace.hh			\
 	localfunctionspacetags.hh		\
-	localindex.hh				\
 	localvector.hh				\
 	nonleaforderingbase.hh			\
 	orderingbase.hh				\

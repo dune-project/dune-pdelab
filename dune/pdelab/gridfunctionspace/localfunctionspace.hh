@@ -9,8 +9,7 @@
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
-#include "../common/typetree.hh"
-#include "localindex.hh"
+#include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 
