@@ -137,7 +137,7 @@ namespace Dune {
         for (typename Dune::QuadratureRule<DF,dimLocal>::const_iterator it =
                rule.begin(); it!=rule.end(); ++it)
           {
-            // evaluate shape functions 
+            // evaluate shape functions
             std::vector<Range> phi(lfsv.size());
             FESwitch::basis(lfsv.finiteElement()).
               evaluateFunction(it->position(),phi);
@@ -183,21 +183,21 @@ namespace Dune {
           {
             // evaluate boundary condition type
             // skip rest if we are on Dirichlet boundary
-            if( bctype.isDirichlet( ig,it->position() ) ) 
+            if( bctype.isDirichlet( ig,it->position() ) )
               continue;
 
-            // position of quadrature point in local coordinates of element 
+            // position of quadrature point in local coordinates of element
             const DomainLocal& local =
               ig.geometryInInside().global(it->position());
 
-            // evaluate test shape functions 
+            // evaluate test shape functions
             std::vector<Range> phi(lfsv.size());
             FESwitch::basis(lfsv.finiteElement()).evaluateFunction(local,phi);
-            
+
             // evaluate flux boundary condition
             typename J::Traits::RangeType y;
             j.evaluate(*(ig.inside()),local,y);
-            
+
             // integrate J
             RF factor = r.weight() * it->weight()*ig.geometry().integrationElement(it->position());
             for (size_t i=0; i<lfsv.size(); i++)
