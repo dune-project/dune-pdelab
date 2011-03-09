@@ -143,13 +143,24 @@ namespace Dune {
       template<typename EG, typename LFSV>
       void assembleVVolumePostSkeleton(const EG & eg, const LFSV & lfsv);
 
+      //! Called directly before assembling
+      void preAssembly();
+
+      //! Called last thing after assembling
+      void postAssembly();
+
       /**
          @}
        */
 
-      void preAssembly();
-      void postAssembly();
+      /**
+         @name Notifications
 
+         Notification methods called by the global assembler when
+         binding and unbinding the local function spaces.
+
+         @{
+       */
       void onBindLFSUV(const EG & eg, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
       void onBindLFSV(const EG & eg, const LFSV_S & lfsv_s);
       void onBindLFSUVInside(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
@@ -170,16 +181,37 @@ namespace Dune {
                                  const LFSU_Coupling & lfsu_coupling, const LFSV_Coupling & lfsv_coupling);
       void onUnbindLFSVCoupling(const IG & ig, const LFSV_Coupling & lfsv_coupling);
 
+      /** @} */
+
+      /**
+         @name Loading trial space coefficients
+
+         Tells the engine to load the local coefficients for the given
+         local function space.
+
+         @{
+       */
       void loadCoefficientsLFSUInside(const LFSU_S & lfsu_s);
       void loadCoefficientsLFSUOutside(const LFSU_N & lfsu_n);
       void loadCoefficientsLFSUCoupling(const LFSU_Coupling & lfsu_coupling);
+      /** @} */
 
 
-      
+      /**
+         @name Assign the assembler target objects
+
+         These methods assign the objects into which the assembler
+         should assemble i.e. the solution vector from which the local
+         coefficients are to be extracted.
+
+         @{
+       */
       void setSolution(const X& x);
       void setPattern(const P& p);
       void setJacobian(const J & j);
       void setResidual(const R& r);
+      /** @} */
+
     };
 
     /** \brief The local assembler which provides the engines that
