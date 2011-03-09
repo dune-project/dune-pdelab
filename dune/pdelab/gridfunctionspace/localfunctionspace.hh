@@ -43,6 +43,37 @@ namespace Dune {
         }
       };
 
+      // This visitor is not used in standard PDELab code, but is necessary for MultiDomain
+      // It is defined here due to the necessary friend declarations in the local function spaces.
+      // for template parameter see above
+      template<typename = int>
+      struct ClearSizeVisitor
+        : public TypeTree::TreeVisitor
+        , public TypeTree::DynamicTraversal
+      {
+
+        template<typename Node, typename TreePath>
+        void pre(Node& node, TreePath treePath)
+        {
+          leaf(node,treePath);
+        }
+
+        template<typename Node, typename TreePath>
+        void leaf(Node& node, TreePath treePath)
+        {
+          node.offset = offset;
+          node.n = 0;
+        }
+
+        ClearSizeVisitor(std::size_t offset_)
+          : offset(offset_)
+        {}
+
+        const std::size_t offset;
+
+      };
+
+
       template<typename Entity>
       struct ComputeSizeVisitor
         : public TypeTree::TreeVisitor
@@ -320,6 +351,9 @@ namespace Dune {
       friend struct PropagateGlobalStorageVisitor;
 
       template<typename>
+      friend struct ClearSizeVisitor;
+
+      template<typename>
       friend struct ComputeSizeVisitor;
 
       template<typename>
@@ -379,6 +413,9 @@ namespace Dune {
 
       template<typename>
       friend struct PropagateGlobalStorageVisitor;
+
+      template<typename>
+      friend struct ClearSizeVisitor;
 
       template<typename>
       friend struct ComputeSizeVisitor;
@@ -454,6 +491,9 @@ namespace Dune {
 
       template<typename>
       friend struct PropagateGlobalStorageVisitor;
+
+      template<typename>
+      friend struct ClearSizeVisitor;
 
       template<typename>
       friend struct ComputeSizeVisitor;
@@ -576,6 +616,9 @@ namespace Dune {
       friend struct PropagateGlobalStorageVisitor;
 
       template<typename>
+      friend struct ClearSizeVisitor;
+
+      template<typename>
       friend struct ComputeSizeVisitor;
 
       template<typename>
@@ -608,6 +651,9 @@ namespace Dune {
 
       template<typename>
       friend struct PropagateGlobalStorageVisitor;
+
+      template<typename>
+      friend struct ClearSizeVisitor;
 
       template<typename>
       friend struct ComputeSizeVisitor;
