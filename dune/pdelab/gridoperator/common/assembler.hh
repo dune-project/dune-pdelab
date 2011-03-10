@@ -51,6 +51,8 @@ namespace Dune {
       bool requireVSkeleton() const;
       bool requireUVBoundary() const;
       bool requireVBoundary() const;
+      bool requireUVProcessor() const;
+      bool requireVProcessor() const;
       bool requireUVEnrichedCoupling() const;
       bool requireVEnrichedCoupling() const;
       bool requireUVVolumePostSkeleton() const;
@@ -116,7 +118,23 @@ namespace Dune {
       template<typename IG, typename LFSV_S>
       void assembleVBoundary(const IG & ig, const LFSV_S & lfsv_s);
 
-      template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N, 
+      /** Assembling for a processor boundary codim 1 entity part for trial and
+      test local function spaces. Specifically, this method will be called for intersections
+      for which it holds that both ig.boundary() and ig.neighbor() return false, i.e. intersections
+      for which it is not possible to obtain the outside entity.
+      */
+      template<typename IG, typename LFSU_S, typename LFSV_S>
+      void assembleUVProcessor(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
+
+      /** Assembling for a processor boundary codim 1 entity part for test local
+      function spaces. Specifically, this method will be called for intersections
+      for which it holds that both ig.boundary() and ig.neighbor() return false, i.e. intersections
+      for which it is not possible to obtain the outside entity.
+      */
+      template<typename IG, typename LFSV_S>
+      void assembleVProcessor(const IG & ig, const LFSV_S & lfsv_s);
+
+      template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N,
                typename LFSU_C, typename LFSV_C>
       void assembleUVEnrichedCoupling(const IG & ig,
                                       const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
