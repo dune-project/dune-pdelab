@@ -74,6 +74,10 @@ namespace Dune{
       { return lae0->requireUVBoundary() || lae1->requireUVBoundary(); }
       bool requireVBoundary() const
       { return lae0->requireVBoundary() || lae1->requireVBoundary(); }
+      bool requireUVProcessor() const
+      { return lae0->requireUVProcessor() || lae1->requireUVProcessor(); }
+      bool requireVProcessor() const
+      { return lae0->requireVProcessor() || lae1->requireVProcessor(); }
       bool requireUVEnrichedCoupling() const
       { return lae0->requireUVEnrichedCoupling() || lae1->requireUVEnrichedCoupling(); }
       bool requireVEnrichedCoupling() const
@@ -392,7 +396,51 @@ namespace Dune{
         }
       }
 
-      template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N, 
+      template<typename IG, typename LFSU_S, typename LFSV_S>
+      void assembleUVProcessor(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s)
+      {
+        for (int s=0; s<la.stage; ++s){
+          // Reset the time in the local assembler
+          la.la0.setTime(la.time+d[s]*la.dt);
+          la.la1.setTime(la.time+d[s]*la.dt);
+
+          if(do0[s]){
+            la.la0.setWeight(b[s]*la.dt_factor0);
+            lae0->setSolution(*((*solutions)[s]));
+            lae0->loadCoefficientsLFSUInside(lfsu_s);
+            lae0->assembleUVProcessor(ig,lfsu_s,lfsv_s);
+          }
+
+          if(do1[s]){
+            la.la1.setWeight(a[s]*la.dt_factor1);
+            lae1->setSolution(*((*solutions)[s]));
+            lae1->loadCoefficientsLFSUInside(lfsu_s);
+            lae1->assembleUVProcessor(ig,lfsu_s,lfsv_s);
+          }
+        }
+      }
+
+      template<typename IG, typename LFSV_S>
+      void assembleVProcessor(const IG & ig, const LFSV_S & lfsv_s)
+      {
+        for (int s=0; s<la.stage; ++s){
+          // Reset the time in the local assembler
+          la.la0.setTime(la.time+d[s]*la.dt);
+          la.la1.setTime(la.time+d[s]*la.dt);
+
+          if(do0[s]){
+            la.la0.setWeight(b[s]*la.dt_factor0);
+            lae0->assembleVProcessor(ig,lfsv_s);
+          }
+
+          if(do1[s]){
+            la.la1.setWeight(a[s]*la.dt_factor1);
+            lae1->assembleVProcessor(ig,lfsv_s);
+          }
+        }
+      }
+
+      template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N,
                typename LFSU_C, typename LFSV_C>
       void assembleUVEnrichedCoupling(const IG & ig,
                                              const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
