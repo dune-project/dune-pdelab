@@ -34,7 +34,7 @@
 #include"../constraints/constraints.hh"
 #include"../common/function.hh"
 #include"../common/vtkexport.hh"
-#include"../gridoperatorspace/gridoperatorspace.hh"
+#include"../gridoperator/gridoperator.hh"
 #include"../backend/istlvectorbackend.hh"
 #include"../backend/istlmatrixbackend.hh"
 #include"../backend/istlsolverbackend.hh"
@@ -178,45 +178,52 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   ConstraintsParameters constraintsparameters;
   Dune::PDELab::constraints(constraintsparameters,gfs,cg);
 
-  // make coefficent Vector and initialize it from a function
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,R>::Type V;
-  V x0(gfs);
-  x0 = 0.0;
+  // make local operator
   typedef G<GV,R> GType;
   GType g(gv);
-  Dune::PDELab::interpolate(g,gfs,x0);
-  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
-
-  // make grid function operator
   typedef F<GV,R> FType;
   FType f(gv);
   typedef J<GV,R> JType;
   JType j(gv);
   typedef Dune::PDELab::Poisson<FType,ConstraintsParameters,JType,q> LOP;
   LOP lop(f,constraintsparameters,j);
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
-    LOP,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
-  GOS gos(gfs,cg,gfs,cg,lop);
+
+  // make grid operator
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,
+                                     Dune::PDELab::ISTLBCRSMatrixBackend<1,1>,
+                                     double,double,double,
+                                     C,C> GridOperator;
+  GridOperator gridoperator(gfs,cg,gfs,cg,lop);
+
+  // make coefficent Vector and initialize it from a function
+  typedef typename GridOperator::Traits::Domain DV;
+  DV x0(gfs);
+  x0 = 0.0;
+
+  Dune::PDELab::interpolate(g,gfs,x0);
+  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
+
 
   // represent operator as a matrix
-  typedef typename GOS::template MatrixContainer<R>::Type M;
-  M m(gos);
+  typedef typename GridOperator::Traits::Jacobian M;
+  M m(gridoperator);
   m = 0.0;
-  gos.jacobian(x0,m);
+  gridoperator.jacobian(x0,m);
   //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
   // evaluate residual w.r.t initial guess
-  V r(gfs);
+  typedef typename GridOperator::Traits::Range RV;
+  RV r(gfs);
   r = 0.0;
-  gos.residual(x0,r);
+  gridoperator.residual(x0,r);
 
   // make ISTL solver
-  Dune::MatrixAdapter<M,V,V> opa(m);
-  typedef Dune::PDELab::OnTheFlyOperator<V,V,GOS> ISTLOnTheFlyOperator;
-  ISTLOnTheFlyOperator opb(gos);
-  Dune::SeqSSOR<M,V,V> ssor(m,1,1.0);
-  Dune::SeqILU0<M,V,V> ilu0(m,1.0);
-  Dune::Richardson<V,V> richardson(1.0);
+  Dune::MatrixAdapter<M,DV,RV> opa(m);
+  typedef Dune::PDELab::OnTheFlyOperator<DV,RV,GridOperator> ISTLOnTheFlyOperator;
+  //ISTLOnTheFlyOperator opb(gridoperator);
+  Dune::SeqSSOR<M,DV,RV> ssor(m,1,1.0);
+  Dune::SeqILU0<M,DV,RV> ilu0(m,1.0);
+  Dune::Richardson<DV,RV> richardson(1.0);
 
 //   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<M,
 //     Dune::Amg::FirstDiagonal> > Criterion;
@@ -230,18 +237,19 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
 //   typedef Dune::Amg::AMG<Dune::MatrixAdapter<M,V,V>,V,Smoother> AMG;
 //   AMG amg(opa,criterion,smootherArgs,1,1);
 
-  Dune::CGSolver<V> solvera(opa,ilu0,1E-10,5000,2);
-  Dune::CGSolver<V> solverb(opb,richardson,1E-10,5000,2);
+  Dune::CGSolver<DV> solvera(opa,ilu0,1E-10,5000,2);
+  // FIXME: Use ISTLOnTheFlyOperator in the second solver again
+  Dune::CGSolver<DV> solverb(opa,richardson,1E-10,5000,2);
   Dune::InverseOperatorResult stat;
 
   // solve the jacobian system
   r *= -1.0; // need -residual
-  V x(gfs,0.0);
+  DV x(gfs,0.0);
   solvera.apply(x,r,stat);
   x += x0;
 
   // make discrete function object
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+  typedef Dune::PDELab::DiscreteGridFunction<GFS,DV> DGF;
   DGF dgf(gfs,x);
 
   // output grid function with VTKWriter
