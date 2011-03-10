@@ -4,6 +4,7 @@ headercheck_IGNORE = assembler.hh
 
 common_HEADERS =				\
 	assemblerutilities.hh			\
-	gridoperatorutilities.hh
+	gridoperatorutilities.hh		\
+	localassemblerenginebase.hh
 
 include $(top_srcdir)/am/global-rules
