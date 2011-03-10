@@ -1,6 +1,9 @@
 #ifndef DUNE_PDELAB_DEFAULT_RESIDUALENGINE_HH
 #define DUNE_PDELAB_DEFAULT_RESIDUALENGINE_HH
 
+#include <dune/pdelab/gridoperator/common/localassemblerenginebase.hh>
+#include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
+
 namespace Dune{
   namespace PDELab{
 
@@ -13,6 +16,7 @@ namespace Dune{
     */
     template<typename LA>
     class DefaultLocalResidualAssemblerEngine
+      : public LocalAssemblerEngineBase
     {
     public:
       //! The type of the wrapping local assembler
@@ -64,10 +68,6 @@ namespace Dune{
       { return local_assembler.doAlphaBoundary(); }
       bool requireVBoundary() const
       { return local_assembler.doLambdaBoundary(); }
-      bool requireUVEnrichedCoupling() const
-      { return false; }
-      bool requireVEnrichedCoupling() const
-      { return false; }
       bool requireUVVolumePostSkeleton() const
       { return local_assembler.doAlphaVolumePostSkeleton(); }
       bool requireVVolumePostSkeleton() const
@@ -131,18 +131,9 @@ namespace Dune{
       //! discarded 
       //! @{
       template<typename EG>
-      void onUnbindLFSUV(const EG & eg, const LFSU & lfsu, const LFSV & lfsv){}
-
-      template<typename EG>
       void onUnbindLFSV(const EG & eg, const LFSV & lfsv){
         lfsv.vadd(rl,*residual);
       }
-
-      template<typename IG>
-      void onUnbindLFSUVInside(const IG & ig, const LFSU & lfsu, const LFSV & lfsv){}
-
-      template<typename IG>
-      void onUnbindLFSUVOutside(const IG & ig, const LFSU & lfsun, const LFSV & lfsvn){}
 
       template<typename IG>
       void onUnbindLFSVInside(const IG & ig, const LFSV & lfsv){
@@ -166,16 +157,6 @@ namespace Dune{
       void loadCoefficientsLFSUCoupling(const LFSU & lfsu_c)
       {DUNE_THROW(Dune::NotImplemented,"No coupling lfsu available for ");}
       //! @}
-
-
-#ifndef DOXYGEN
-      // Dummy implementation for bind notifiers on coupling function
-      // spaces
-      void onBindLFSUCoupling(const LFSU & lfsu){}
-      void onUnbindLFSUCoupling(const LFSU & lfsu){}
-      void onBindLFSVCoupling(const LFSV & lfsv){}
-      void onUnbindLFSVCoupling(const LFSV & lfsv){}
-#endif
 
       //! Notifier functions, called immediately before and after assembling
       //! @{
