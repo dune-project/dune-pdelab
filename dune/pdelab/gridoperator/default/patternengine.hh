@@ -1,5 +1,9 @@
 #ifndef DUNE_PDELAB_DEFAULT_PATTERNENGINE_HH
 #define DUNE_PDELAB_DEFAULT_PATTERNENGINE_HH
+
+#include <dune/pdelab/gridoperator/common/localassemblerenginebase.hh>
+#include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
+
 namespace Dune{
   namespace PDELab{
 
@@ -12,6 +16,7 @@ namespace Dune{
     */
     template<typename LA>
     class DefaultLocalPatternAssemblerEngine
+      : public LocalAssemblerEngineBase
     {
     public:
       //! The type of the wrapping local assembler
@@ -53,28 +58,14 @@ namespace Dune{
       //! @{
       bool requireSkeleton() const 
       { return local_assembler.doPatternSkeleton(); }
-      bool requireSkeletonTwoSided() const
-      { return false; }
       bool requireUVVolume() const
       { return local_assembler.doPatternVolume(); }
-      bool requireVVolume() const
-      { return false; }
       bool requireUVSkeleton() const
       { return local_assembler.doPatternSkeleton(); }
-      bool requireVSkeleton() const
-      { return false; }
       bool requireUVBoundary() const
       { return local_assembler.doPatternBoundary(); }
-      bool requireVBoundary() const
-      { return false; }
-      bool requireUVEnrichedCoupling() const
-      { return false; }
-      bool requireVEnrichedCoupling() const
-      { return false; }
       bool requireUVVolumePostSkeleton() const
       { return local_assembler.doPatternVolumePostSkeleton(); }
-      bool requireVVolumePostSkeleton() const
-      { return false; }
       //! @}
 
 
@@ -87,12 +78,6 @@ namespace Dune{
         localpattern = LocalPattern();
       }
 
-      template<typename EG>
-      void onBindLFSV(const EG & eg, const LFSV & lfsv){}
-
-      template<typename IG>
-      void onBindLFSUVInside(const IG & ig, const LFSU & lfsu, const LFSV & lfsv){}
-
       template<typename IG>
       void onBindLFSUVOutside(const IG & ig, const LFSU & lfsun, const LFSV & lfsvn){
         // Reset link container
@@ -100,11 +85,6 @@ namespace Dune{
         localpattern_ns = LocalPattern();
       }
 
-      template<typename IG>
-      void onBindLFSVInside(const IG & ig, const LFSV & lfsv){}
-
-      template<typename IG>
-      void onBindLFSVOutside(const IG & ig, const LFSV & lfsvn){}
       //! @}
 
 
@@ -121,47 +101,10 @@ namespace Dune{
                                     );
       }
 
-      template<typename EG>
-      void onUnbindLFSV(const EG & eg, const LFSV & lfsv){ }
-
-      template<typename IG>
-      void onUnbindLFSUVInside(const IG & ig, const LFSU & lfsu, const LFSV & lfsv){}
-
-      template<typename IG>
-      void onUnbindLFSUVOutside(const IG & ig, const LFSU & lfsun, const LFSV & lfsvn){}
-
-      template<typename IG>
-      void onUnbindLFSVInside(const IG & ig, const LFSV & lfsv){
-
-      }
-
-      template<typename IG>
-      void onUnbindLFSVOutside(const IG & ig, const LFSV & lfsvn){
-
-      }
-      //! @}
-
-      //! Methods for loading of the local function's coefficients
-      //! @{
-      void loadCoefficientsLFSUInside(const LFSU & lfsu_s){}
-      void loadCoefficientsLFSUOutside(const LFSU & lfsu_n){}
-      void loadCoefficientsLFSUCoupling(const LFSU & lfsu_c){}
-      //! @}
-
-      //! Notifier functions, called immediately before and after assembling
-      //! @{
-      void preAssembly(){}
-      void postAssembly(){}
       //! @}
 
       //! Assembling methods
       //! @{
-
-      template<typename EG>
-      bool assembleCell(const EG & eg)
-      {
-        return false;
-      }
 
       template<typename EG>
       void assembleUVVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
@@ -169,9 +112,6 @@ namespace Dune{
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternVolume>::
           pattern_volume(lop,lfsu,lfsv,localpattern);
       }
-
-      template<typename EG>
-      void assembleVVolume(const EG & eg, const LFSV & lfsv){}
 
       template<typename IG>
       void assembleUVSkeleton(const IG & ig, const LFSU & lfsu_s, const LFSV & lfsv_s,
@@ -195,17 +135,11 @@ namespace Dune{
       }
 
       template<typename IG>
-      void assembleVSkeleton(const IG & ig, const LFSV & lfsv_s, const LFSV & lfsv_n){}
-
-      template<typename IG>
       void assembleUVBoundary(const IG & ig, const LFSU & lfsu_s, const LFSV & lfsv_s)
       {
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternBoundary>::
           pattern_boundary(lop,lfsu_s,lfsv_s,localpattern);
       }
-
-      template<typename IG>
-      void assembleVBoundary(const IG & ig, const LFSV & lfsv_s){}
 
       template<typename IG>
       static void assembleUVEnrichedCoupling(const IG & ig,
@@ -227,9 +161,6 @@ namespace Dune{
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternVolumePostSkeleton>::
           pattern_volume_post_skeleton(lop,lfsu,lfsv,localpattern);
       }
-
-      template<typename EG>
-      void assembleVVolumePostSkeleton(const EG & eg, const LFSV & lfsv){}
 
       //! @}
 
