@@ -200,8 +200,8 @@ namespace Dune{
       }
       template<typename LFSU>
       void loadCoefficientsLFSUOutside(const LFSU & lfsu_n){
-        lae0->loadCoefficientsLFSUInside(lfsu_n);
-        lae1->loadCoefficientsLFSUInside(lfsu_n);
+        lae0->loadCoefficientsLFSUOutside(lfsu_n);
+        lae1->loadCoefficientsLFSUOutside(lfsu_n);
       }
       template<typename LFSU>
       void loadCoefficientsLFSUCoupling(const LFSU & lfsu_c){

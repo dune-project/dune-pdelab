@@ -136,6 +136,11 @@ namespace Dune{
         return time+osp_method->d(stage_)*dt;
       }
 
+      //! Access time at given stage
+      Real timeAtStage(){
+        return time+osp_method->d(stage)*dt;
+      }
+
       //! Access methods which provid "ready to use" engines
       //! @{
 

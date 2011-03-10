@@ -129,6 +129,9 @@ namespace Dune{
       template<typename F, typename X> 
       void interpolate (const X& xold, F& f, X& x) const
       {
+        // set time in boundary value function
+        f.setTime(local_assembler.timeAtStage());
+
         // Interpolate f into grid function space and set corresponding coefficients
         Dune::PDELab::interpolate(f,global_assembler.trialGridFunctionSpace(),x);
 
