@@ -459,26 +459,26 @@ namespace Dune {
                                            Y& y_s)
       {
       }
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, LocalMatrix<R>& mat)
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
+	  static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
       {
       }
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void jacobian_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, LocalMatrix<R>& mat)
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
+	  static void jacobian_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M& mat)
       {
       }
-	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+	  template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
 	  static void jacobian_skeleton (const LA& la, const IG& ig,
                               const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                               const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-                              LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn,
-                              LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn)
+                              M & mat_ss, M & mat_sn,
+                              M & mat_ns, M & mat_nn)
       {
       }
-	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+	  template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
 	  static void jacobian_boundary (const LA& la, const IG& ig,
                                      const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                                     LocalMatrix<R>& mat_ss)
+                                     M & mat_ss)
       {
       }
     };
@@ -590,30 +590,30 @@ namespace Dune {
         la.jacobian_apply_boundary(ig,lfsu_s,x_s,lfsv_s,y_s);
       }
 
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, LocalMatrix<R>& mat)
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
+	  static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
       {
         la.jacobian_volume(eg,lfsu,x,lfsv,mat);
       }
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void jacobian_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, LocalMatrix<R>& mat)
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
+	  static void jacobian_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
       {
         la.jacobian_volume_post_skeleton(eg,lfsu,x,lfsv,mat);
       }
- 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+ 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
 	  static void jacobian_skeleton (const LA& la, const IG& ig,
                               const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                               const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-                              LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn,
-                              LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn)
+                              M & mat_ss, M & mat_sn,
+                              M & mat_ns, M & mat_nn)
       {
         la.jacobian_skeleton(ig,lfsu_s,x_s,lfsv_s,lfsu_n,x_n,lfsv_n,
                              mat_ss, mat_sn, mat_ns, mat_nn);
       }
-	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+	  template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
 	  static void jacobian_boundary (const LA& la, const IG& ig,
                                      const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                                     LocalMatrix<R>& mat_ss)
+                                     M & mat_ss)
       {
         la.jacobian_boundary(ig,lfsu_s,x_s,lfsv_s,mat_ss);
       }
