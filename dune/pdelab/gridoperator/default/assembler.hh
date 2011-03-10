@@ -78,6 +78,8 @@ namespace Dune{
         const bool require_v_skeleton = assembler_engine.requireVSkeleton();
         const bool require_uv_boundary = assembler_engine.requireUVBoundary();
         const bool require_v_boundary = assembler_engine.requireVBoundary();
+        const bool require_uv_processor = assembler_engine.requireUVBoundary();
+        const bool require_v_processor = assembler_engine.requireVBoundary();
         const bool require_uv_post_skeleton = assembler_engine.requireUVVolumePostSkeleton();
         const bool require_v_post_skeleton = assembler_engine.requireVVolumePostSkeleton();
         const bool require_skeleton_two_sided = assembler_engine.requireSkeletonTwoSided();
@@ -116,7 +118,9 @@ namespace Dune{
             assembler_engine.assembleUVVolume(eg,lfsu,lfsv);
 
             // Skip if no intersection iterator is needed
-            if (require_uv_skeleton || require_v_skeleton || require_uv_boundary || require_v_boundary)
+            if (require_uv_skeleton || require_v_skeleton ||
+                require_uv_boundary || require_v_boundary ||
+                require_uv_processor || require_v_processor)
               {
                 // Traverse intersections
                 unsigned int intersection_index = 0;
@@ -127,66 +131,88 @@ namespace Dune{
 
                     IntersectionGeometry<Intersection> ig(*iit,intersection_index);
 
-                    // skeleton term
-                    if (iit->neighbor() && (require_uv_skeleton || require_v_skeleton) )
+                    switch (IntersectionType::get(*iit))
                       {
-                        // compute unique id for neighbor
-
-                        const typename GV::IndexSet::IndexType idn = cell_mapper.map(*(iit->outside()));
-
-                        // Visit face if id is bigger
-                        bool visit_face = ids > idn || require_skeleton_two_sided;
-                        // or interior is a ghost
-                        visit_face |= (nonoverlapping_mode && 
-                                       (iit->inside())->partitionType()!=Dune::InteriorEntity);
-                          
-                        // unique vist of intersection
-                        if (visit_face)
+                      case IntersectionType::skeleton:
+                        // the specific ordering of the if-statements in the old code caused periodic
+                        // boundary intersection to be handled the same as skeleton intersections
+                      case IntersectionType::periodic:
+                        if (require_uv_skeleton || require_v_skeleton)
                           {
-                            // Bind local test space to neighbor element
-                            lfsvn.bind(*(iit->outside()));
+                            // compute unique id for neighbor
 
-                            // Notify assembler engine about binds
-                            assembler_engine.onBindLFSVOutside(ig,lfsvn);
-                            
-                            // Skeleton integration
-                            assembler_engine.assembleVSkeleton(ig,lfsv,lfsvn);
+                            const typename GV::IndexSet::IndexType idn = cell_mapper.map(*(iit->outside()));
 
-                            if(require_uv_skeleton){
+                            // Visit face if id is bigger
+                            bool visit_face = ids > idn || require_skeleton_two_sided;
+                            // or interior is a ghost
+                            visit_face |= (nonoverlapping_mode &&
+                                           (iit->inside())->partitionType()!=Dune::InteriorEntity);
 
-                              // Bind local trial space to neighbor element
-                              lfsun.bind(*(iit->outside()));
+                            // unique vist of intersection
+                            if (visit_face)
+                              {
+                                // Bind local test space to neighbor element
+                                lfsvn.bind(*(iit->outside()));
 
-                              // Notify assembler engine about binds
-                              assembler_engine.onBindLFSUVOutside(ig,lfsun,lfsvn);
+                                // Notify assembler engine about binds
+                                assembler_engine.onBindLFSVOutside(ig,lfsvn);
 
-                              // Load coefficients of local functions
-                              assembler_engine.loadCoefficientsLFSUOutside(lfsun);
+                                // Skeleton integration
+                                assembler_engine.assembleVSkeleton(ig,lfsv,lfsvn);
 
-                              // Skeleton integration
-                              assembler_engine.assembleUVSkeleton(ig,lfsu,lfsv,lfsun,lfsvn);
+                                if(require_uv_skeleton){
 
-                              // Notify assembler engine about unbinds
-                              assembler_engine.onUnbindLFSUVOutside(ig,lfsun,lfsvn);
-                            }
+                                  // Bind local trial space to neighbor element
+                                  lfsun.bind(*(iit->outside()));
 
-                            // Notify assembler engine about unbinds
-                            assembler_engine.onUnbindLFSVOutside(ig,lfsvn);
+                                  // Notify assembler engine about binds
+                                  assembler_engine.onBindLFSUVOutside(ig,lfsun,lfsvn);
+
+                                  // Load coefficients of local functions
+                                  assembler_engine.loadCoefficientsLFSUOutside(lfsun);
+
+                                  // Skeleton integration
+                                  assembler_engine.assembleUVSkeleton(ig,lfsu,lfsv,lfsun,lfsvn);
+
+                                  // Notify assembler engine about unbinds
+                                  assembler_engine.onUnbindLFSUVOutside(ig,lfsun,lfsvn);
+                                }
+
+                                // Notify assembler engine about unbinds
+                                assembler_engine.onUnbindLFSVOutside(ig,lfsvn);
+                              }
                           }
-                      }
+                        break;
 
-                    // If intersection part is on domain boundary and
-                    // boundary integration is required
-                    if( (require_uv_boundary || require_v_boundary ) && iit->boundary() ){
+                      case IntersectionType::boundary:
+                        if(require_uv_boundary || require_v_boundary )
+                          {
 
-                      // Boundary integration
-                      assembler_engine.assembleVBoundary(ig,lfsv);
+                            // Boundary integration
+                            assembler_engine.assembleVBoundary(ig,lfsv);
 
-                      if(require_uv_boundary){
-                        // Boundary integration
-                        assembler_engine.assembleUVBoundary(ig,lfsu,lfsv);
-                      }
-                    }
+                            if(require_uv_boundary){
+                              // Boundary integration
+                              assembler_engine.assembleUVBoundary(ig,lfsu,lfsv);
+                            }
+                          }
+                        break;
+
+                      case IntersectionType::processor:
+                        if(require_uv_processor || require_v_processor )
+                          {
+
+                            // Processor integration
+                            assembler_engine.assembleVProcessor(ig,lfsv);
+
+                            if(require_uv_processor){
+                              // Processor integration
+                              assembler_engine.assembleUVProcessor(ig,lfsu,lfsv);
+                            }
+                          }
+                        break;
+                      } // switch
 
                   } // iit
               } // do skeleton
