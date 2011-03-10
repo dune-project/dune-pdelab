@@ -145,9 +145,6 @@ namespace Dune{
 
                             // Visit face if id is bigger
                             bool visit_face = ids > idn || require_skeleton_two_sided;
-                            // or interior is a ghost
-                            visit_face |= (nonoverlapping_mode &&
-                                           (iit->inside())->partitionType()!=Dune::InteriorEntity);
 
                             // unique vist of intersection
                             if (visit_face)
