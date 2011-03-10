@@ -1,6 +1,9 @@
 #ifndef DUNE_PDELAB_DEFAULT_JACOBIANENGINE_HH
 #define DUNE_PDELAB_DEFAULT_JACOBIANENGINE_HH
 
+#include <dune/pdelab/gridoperator/common/localassemblerenginebase.hh>
+#include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
+
 namespace Dune{
   namespace PDELab{
 
@@ -13,6 +16,7 @@ namespace Dune{
     */
     template<typename LA>
     class DefaultLocalJacobianAssemblerEngine
+      : public LocalAssemblerEngineBase
     {
     public:
       //! The type of the wrapping local assembler
@@ -55,24 +59,12 @@ namespace Dune{
       { return local_assembler.doSkeletonTwoSided(); }
       bool requireUVVolume() const
       { return local_assembler.doAlphaVolume(); }
-      bool requireVVolume() const
-      { return false; }
       bool requireUVSkeleton() const
       { return local_assembler.doAlphaSkeleton(); }
-      bool requireVSkeleton() const
-      { return false; }
       bool requireUVBoundary() const
       { return local_assembler.doAlphaBoundary(); }
-      bool requireVBoundary() const
-      { return false; }
-      bool requireUVEnrichedCoupling() const
-      { return false; }
-      bool requireVEnrichedCoupling() const
-      { return false; }
       bool requireUVVolumePostSkeleton() const
       { return local_assembler.doAlphaVolumePostSkeleton(); }
-      bool requireVVolumePostSkeleton() const
-      { return false; }
       //! @}
 
       //! Public access to the wrapping local assembler
@@ -100,30 +92,6 @@ namespace Dune{
         alc.assign(lfsv.size() ,lfsu.size(),0.0);
       }
 
-      template<typename EG>
-      void onBindLFSV(const EG & eg, const LFSV & lfsv){
-
-      }
-
-      template<typename IG>
-      void onBindLFSUVInside(const IG & ig, const LFSU & lfsu, const LFSV & lfsv){
-      }
-
-      template<typename IG>
-      void onBindLFSUVOutside(const IG & ig, const LFSU & lfsun, const LFSV & lfsvn){
-        xn.resize(lfsun.size());
-      }
-
-      template<typename IG>
-      void onBindLFSVInside(const IG & ig, const LFSV & lfsv){
-
-      }
-
-      template<typename IG>
-      void onBindLFSVOutside(const IG & ig, const LFSV & lfsvn){
-
-      }
-
       //! @}
 
       //! Called when the local function space is about to be rebound or
@@ -134,20 +102,6 @@ namespace Dune{
         local_assembler.etadd(lfsv,lfsu,al,*jacobian);
       }
 
-      template<typename EG>
-      void onUnbindLFSV(const EG & eg, const LFSV & lfsv){}
-
-      template<typename IG>
-      void onUnbindLFSUVInside(const IG & ig, const LFSU & lfsu, const LFSV & lfsv){}
-
-      template<typename IG>
-      void onUnbindLFSUVOutside(const IG & ig, const LFSU & lfsun, const LFSV & lfsvn){}
-
-      template<typename IG>
-      void onUnbindLFSVInside(const IG & ig, const LFSV & lfsv){}
-
-      template<typename IG>
-      void onUnbindLFSVOutside(const IG & ig, const LFSV & lfsvn){}
       //! @}
 
       //! Methods for loading of the local function's coefficients
@@ -162,18 +116,8 @@ namespace Dune{
       {DUNE_THROW(Dune::NotImplemented,"No coupling lfsu available for ");}
       //! @}
 
-#ifndef DOXYGEN
-      // Dummy implementation for bind notifiers on coupling function
-      // spaces
-      void onBindLFSUVCoupling(const LFSU & lfsu, const LFSV & lfsv){}
-      void onUnbindLFSUVCoupling(const LFSU & lfsu, const LFSV & lfsv){}
-      void onBindLFSVCoupling(const LFSV & lfsv){}
-      void onUnbindLFSVCoupling(const LFSV & lfsv){}
-#endif
-
       //! Notifier functions, called immediately before and after assembling
       //! @{
-      void preAssembly(){}
       void postAssembly(){ 
         if(local_assembler.doConstraintsPostProcessing){
           typedef typename LocalAssembler::Base::Traits::TestConstraintsType::const_iterator 
@@ -203,10 +147,6 @@ namespace Dune{
         update(al,local_assembler.weight,alc);
       }
 
-      template<typename EG>
-      void assembleVVolume(const EG & eg, const LFSV & lfsv)
-      {}
-
       template<typename IG>
       void assembleUVSkeleton(const IG & ig, const LFSU & lfsu_s, const LFSV & lfsv_s,
                               const LFSU & lfsu_n, const LFSV & lfsv_n)
@@ -232,9 +172,6 @@ namespace Dune{
       }
 
       template<typename IG>
-      void assembleVSkeleton(const IG & ig, const LFSV & lfsv_s, const LFSV & lfsv_n){}
-
-      template<typename IG>
       void assembleUVBoundary(const IG & ig, const LFSU & lfsu_s, const LFSV & lfsv_s)
       {
         assign(alc,0.0);
@@ -242,9 +179,6 @@ namespace Dune{
           jacobian_boundary(lop,ig,lfsu_s,xl,lfsv_s,alc);                              
         update(al,local_assembler.weight,alc);
       }
-
-      template<typename IG>
-      void assembleVBoundary(const IG & ig, const LFSV & lfsv_s){}
 
       template<typename IG>
       static void assembleUVEnrichedCoupling(const IG & ig,
@@ -268,9 +202,6 @@ namespace Dune{
           jacobian_volume_post_skeleton(lop,eg,lfsu,xl,lfsv,alc);
         update(al,local_assembler.weight,alc);
       }
-
-      template<typename EG>
-      void assembleVVolumePostSkeleton(const EG & eg, const LFSV & lfsv){}
 
       //! @}
 
