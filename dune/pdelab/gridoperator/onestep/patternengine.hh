@@ -70,6 +70,10 @@ namespace Dune{
       { return lae0->requireUVBoundary() || lae1->requireUVBoundary(); }
       bool requireVBoundary() const
       { return lae0->requireVBoundary() || lae1->requireVBoundary(); }
+      bool requireUVProcessor() const
+      { return lae0->requireUVProcessor() || lae1->requireUVProcessor(); }
+      bool requireVProcessor() const
+      { return lae0->requireVProcessor() || lae1->requireVProcessor(); }
       bool requireUVEnrichedCoupling() const
       { return lae0->requireUVEnrichedCoupling() || lae1->requireUVEnrichedCoupling(); }
       bool requireVEnrichedCoupling() const
@@ -244,6 +248,20 @@ namespace Dune{
       {
         if(implicit)
           lae0->assembleVBoundary(ig,lfsv_s);
+      }
+
+      template<typename IG, typename LFSU_S, typename LFSV_S>
+      void assembleUVProcessor(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s)
+      {
+        if(implicit)
+          lae0->assembleUVProcessor(ig,lfsu_s,lfsv_s);
+      }
+
+      template<typename IG, typename LFSV_S>
+      void assembleVProcessor(const IG & ig, const LFSV_S & lfsv_s)
+      {
+        if(implicit)
+          lae0->assembleVProcessor(ig,lfsv_s);
       }
 
       template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N,
