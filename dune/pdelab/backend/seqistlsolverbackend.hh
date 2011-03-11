@@ -173,6 +173,8 @@ namespace Dune {
         Dune::InverseOperatorResult stat;
         solver.apply(z, r, stat);
         res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
         res.reduction  = stat.reduction;
        }
     private:
