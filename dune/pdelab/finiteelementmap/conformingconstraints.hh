@@ -64,7 +64,10 @@ namespace Dune {
         typename T::RowType empty;
 
         const FaceCoord testpoint = face_refelem.position(0,0);
-        bool isDirichlet = param.isDirichlet(ig,testpoint);
+
+        // Abort if this isn't a Dirichlet boundary
+        if (!param.isDirichlet(ig,testpoint))
+          return;
 
         for (std::size_t i=0;
              i<std::size_t(FESwitch::coefficients(lfs.finiteElement()).size());
@@ -82,8 +85,7 @@ namespace Dune {
               const FaceCoord testpoint
                 = face_refelem.position(j,codim-1);
 
-              if (isDirichlet &&
-                  static_cast<int>(FESwitch::coefficients(lfs.finiteElement()).
+              if (static_cast<int>(FESwitch::coefficients(lfs.finiteElement()).
                                    localKey(i).subEntity())
                   == refelem.subEntity(face,1,j,codim))
                 trafo[i] = empty;
