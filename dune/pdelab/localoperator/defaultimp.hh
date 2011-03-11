@@ -627,7 +627,7 @@ namespace Dune {
 
         Jacobian mat(r.size(),x.size(), 0);
         JacobianView matview = mat.weightedAccumulationView(1.0);
-        asImp().jacobian_volume(eg, lfsu, x, lfsv, mat);
+        asImp().jacobian_volume(eg, lfsu, x, lfsv, matview);
         // we need to include the weight here, as umv() and usmv() operate on the bare container for effiency
         mat.usmv(r.weight(),x,r);
       }
