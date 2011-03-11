@@ -38,23 +38,23 @@ namespace Dune{
       typedef typename LA::LFSV LFSV;
 
       /**
-         \brief Constructor 
+         \brief Constructor
 
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
       DefaultLocalResidualAssemblerEngine(const LocalAssembler & local_assembler_)
-        : local_assembler(local_assembler_), lop(local_assembler_.lop), 
+        : local_assembler(local_assembler_), lop(local_assembler_.lop),
           invalid_residual(static_cast<Residual*>(0)), invalid_solution(static_cast<Solution*>(0)),
-          residual(invalid_residual), 
+          residual(invalid_residual),
           solution(invalid_solution),
           rl_view(rl,1.0),
           rn_view(rn,1.0)
       {}
-  
+
       //! Query methods for the global grid assembler
       //! @{
-      bool requireSkeleton() const 
+      bool requireSkeleton() const
       { return ( local_assembler.doAlphaSkeleton() || local_assembler.doLambdaSkeleton() ); }
       bool requireSkeletonTwoSided() const
       { return local_assembler.doSkeletonTwoSided(); }
@@ -90,7 +90,7 @@ namespace Dune{
       void setSolution(const Solution & solution_){
         solution = &solution_;
       }
-    
+
       //! Called immediately after binding of local function space in
       //! global assembler.
       //! @{
@@ -127,7 +127,7 @@ namespace Dune{
       //! @}
 
       //! Called when the local function space is about to be rebound or
-      //! discarded 
+      //! discarded
       //! @{
       template<typename EG>
       void onUnbindLFSV(const EG & eg, const LFSV & lfsv){
@@ -159,11 +159,13 @@ namespace Dune{
 
       //! Notifier functions, called immediately before and after assembling
       //! @{
-      void postAssembly(){ 
+
+      void postAssembly(){
         if(local_assembler.doConstraintsPostProcessing){
-          Dune::PDELab::constrain_residual(*(local_assembler.pconstraintsv),*residual); 
+          Dune::PDELab::constrain_residual(*(local_assembler.pconstraintsv),*residual);
         }
       }
+
       //! @}
 
       //! Assembling methods
@@ -240,7 +242,7 @@ namespace Dune{
       static void assembleVEnrichedCoupling(const IG & ig,
                                             const LFSV & lfsv_s,
                                             const LFSV & lfsv_n,
-                                            const LFSV & lfsv_coupling) 
+                                            const LFSV & lfsv_coupling)
       {DUNE_THROW(Dune::NotImplemented,"Assembling of coupling spaces is not implemented for ");}
 
       template<typename EG>

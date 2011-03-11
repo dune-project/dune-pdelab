@@ -38,26 +38,26 @@ namespace Dune{
       typedef typename Solution::ElementType SolutionElement;
 
       /**
-         \brief Constructor 
+         \brief Constructor
 
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
       DefaultLocalJacobianAssemblerEngine(const LocalAssembler & local_assembler_)
-        : local_assembler(local_assembler_), lop(local_assembler_.lop), 
+        : local_assembler(local_assembler_), lop(local_assembler_.lop),
           invalid_jacobian(static_cast<Jacobian*>(0)),
           invalid_solution(static_cast<Solution*>(0)),
-          jacobian(invalid_jacobian), 
+          jacobian(invalid_jacobian),
           solution(invalid_solution),
           al_view(al,1.0),
           al_sn_view(al_sn,1.0),
           al_ns_view(al_ns,1.0),
           al_nn_view(al_nn,1.0)
       {}
-  
+
       //! Query methods for the global grid assembler
       //! @{
-      bool requireSkeleton() const 
+      bool requireSkeleton() const
       { return local_assembler.doAlphaSkeleton(); }
       bool requireSkeletonTwoSided() const
       { return local_assembler.doSkeletonTwoSided(); }
@@ -85,7 +85,7 @@ namespace Dune{
       void setSolution(const Solution & solution_){
         solution = &solution_;
       }
-    
+
       //! Called immediately after binding of local function space in
       //! global assembler.
       //! @{
@@ -98,7 +98,7 @@ namespace Dune{
       //! @}
 
       //! Called when the local function space is about to be rebound or
-      //! discarded 
+      //! discarded
       //! @{
       template<typename EG>
       void onUnbindLFSUV(const EG & eg, const LFSU & lfsu, const LFSV & lfsv){
@@ -121,11 +121,11 @@ namespace Dune{
 
       //! Notifier functions, called immediately before and after assembling
       //! @{
-      void postAssembly(){ 
+      void postAssembly(){
         if(local_assembler.doConstraintsPostProcessing){
-          typedef typename LocalAssembler::Base::Traits::TestConstraintsType::const_iterator 
-            global_row_iterator;       
-          for (global_row_iterator cit=(local_assembler.pconstraintsv)->begin(); 
+          typedef typename LocalAssembler::Base::Traits::TestConstraintsType::const_iterator
+            global_row_iterator;
+          for (global_row_iterator cit=(local_assembler.pconstraintsv)->begin();
                cit!=(local_assembler.pconstraintsv)->end(); ++cit)
             local_assembler.set_trivial_row(cit->first,cit->second,*jacobian);
         }
@@ -189,7 +189,7 @@ namespace Dune{
       static void assembleVEnrichedCoupling(const IG & ig,
                                             const LFSV & lfsv_s,
                                             const LFSV & lfsv_n,
-                                            const LFSV & lfsv_coupling) 
+                                            const LFSV & lfsv_coupling)
       {DUNE_THROW(Dune::NotImplemented,"Assembling of coupling spaces is not implemented for ");}
 
       template<typename EG>
@@ -245,7 +245,6 @@ namespace Dune{
 
       //! @}
 
-    
     }; // End of class DefaultLocalJacobianAssemblerEngine
 
   };
