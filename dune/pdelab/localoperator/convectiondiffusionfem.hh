@@ -139,9 +139,9 @@ namespace Dune {
       }
 
       // jacobian of volume term
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
-                            Dune::PDELab::LocalMatrix<R>& mat) const
+                            M& mat) const
       {
         // domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
@@ -280,10 +280,10 @@ namespace Dune {
       }
 
       // jacobian contribution from boundary
-      template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
       void jacobian_boundary (const IG& ig,
                               const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                              Dune::PDELab::LocalMatrix<R>& mat_s) const
+                              M& mat_s) const
       {
         // domain and range field type
         typedef typename LFSV::Traits::FiniteElementType::
