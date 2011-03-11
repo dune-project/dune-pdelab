@@ -299,10 +299,8 @@ namespace Dune {
         RF cell_volume = eg.geometry().volume();
 
 		// contribution from source term
-		//r[liquid] -= scale_l * tp.q_l(eg.entity(),cell_center_local,time) * cell_volume;
-		//r[gas]    -= scale_g * tp.q_g(eg.entity(),cell_center_local,time) * cell_volume;
-		r.accumulate(lfsv,liquid,-scale_l * tp.q_l(eg.entity(),cell_center_local,time) * cell_volume);
-		r.accumulate(lfsv,gas,-scale_g * tp.q_g(eg.entity(),cell_center_local,time) * cell_volume);
+		r.accumulate(lfsv, liquid, -scale_l * tp.q_l(eg.entity(),cell_center_local,time) * cell_volume);
+		r.accumulate(lfsv, gas, -scale_g * tp.q_g(eg.entity(),cell_center_local,time) * cell_volume);
 	  }
 
 	  // skeleton integral depending on test and ansatz functions
