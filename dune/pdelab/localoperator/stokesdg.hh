@@ -10,6 +10,7 @@
 #include <dune/grid/common/quadraturerules.hh>
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
+#include <dune/pdelab/localoperator/idefault.hh>
 
 #include "../common/geometrywrapper.hh"
 #include "../gridoperatorspace/gridoperatorspace.hh"
@@ -140,6 +141,7 @@ namespace Dune {
             ,public JacobianBasedAlphaVolume< StokesDG<F,B,V,P,IP> >
             ,public JacobianBasedAlphaSkeleton< StokesDG<F,B,V,P,IP> >
             ,public JacobianBasedAlphaBoundary< StokesDG<F,B,V,P,IP> >
+            ,public InstationaryLocalOperatorDefaultMethods<double>
         {
             typedef StokesBoundaryCondition BC;
             typedef typename V::Traits::RangeFieldType RF;
@@ -272,7 +274,7 @@ namespace Dune {
                         for (size_type i=0; i<vsize; i++)
                         {
                             RF val = phi_v[i]*factor;
-                            r[lfsv_v.localIndex(i)] += fval[d] * val;
+                            r.accumulate(lfsv_v,i, fval[d] * val);
                         }
                     }
                 }
@@ -364,7 +366,7 @@ namespace Dune {
                             for (unsigned int d=0;d<dim;++d)
                             {
                                 const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
-                                r[lfsv_v.localIndex(i)] -= epsilon * val * u0[d];
+                                r.accumulate(lfsv_v,i, - epsilon * val * u0[d]);
                             }
                         }
                         //================================================//
@@ -377,7 +379,7 @@ namespace Dune {
                             for (unsigned int d=0;d<dim;++d)
                             {
                                 const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
-                                r[lfsv_v.localIndex(i)] -= val * u0[d];
+                                r.accumulate(lfsv_v,i, -val * u0[d] );
                             }
                         }
                         //================================================//
@@ -386,7 +388,7 @@ namespace Dune {
                         for (unsigned int i=0;i<psize;++i) // test
                         {
                             RF val = phi_p[i]*(u0 * normal) * weight;
-                            r[lfsv_p.localIndex(i)] -= val;
+                            r.accumulate(lfsv_p,i, - val);
                         }
                     }
                     if (bctype == BC::PressureDirichlet)
@@ -404,7 +406,7 @@ namespace Dune {
                             {
                                 const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
                                 RF val = p0*normal[d]*phi_v[i] * weight;
-                                r[lfsv_v.localIndex(i)] += val;
+                                r.accumulate(lfsv_v,i, val);
                             }
                         }
                     }
@@ -482,7 +484,7 @@ namespace Dune {
                             for (unsigned int d=0; d<dim; d++)
                             {
                                 const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
-                                mat(lfsv_v.localIndex(i),lfsv_v.localIndex(j)) += val;
+                                mat.accumulate(lfsv_v,i,lfsv_v,j, val);
                             }
                         }
                     }
@@ -499,8 +501,8 @@ namespace Dune {
                             for (unsigned int d=0; d<dim; d++)
                             {
                                 const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
-                                mat(lfsv_p.localIndex(j),lfsv_v.localIndex(i)) += val*grad_phi_v[i][0][d];
-                                mat(lfsv_v.localIndex(i),lfsv_p.localIndex(j)) += val*grad_phi_v[i][0][d];
+                                mat.accumulate(lfsv_p,j,lfsv_v,i, val*grad_phi_v[i][0][d]);
+                                mat.accumulate(lfsv_v,i,lfsv_p,j, val*grad_phi_v[i][0][d]);
                             }
                         }
                     }
@@ -603,8 +605,8 @@ namespace Dune {
                             for (unsigned int d=0;d<dim;++d)
                             {
                                 const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
-                                mat_ss(lfsv_s_v.localIndex(j),lfsv_s_v.localIndex(i)) -= val;
-                                mat_ss(lfsv_s_v.localIndex(i),lfsv_s_v.localIndex(j)) += epsilon*val;
+                                mat_ss.accumulate(lfsv_s_v,j,lfsv_s_v,i, - val);
+                                mat_ss.accumulate(lfsv_s_v,i,lfsv_s_v,j, epsilon*val );
                             }
                         }
                         for (unsigned int j=0;j<vsize_n;++j) 
@@ -615,8 +617,8 @@ namespace Dune {
                             {
                                 const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
                                 const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
-                                mat_ns(lfsv_n_v.localIndex(j),lfsv_s_v.localIndex(i)) -= val;
-                                mat_sn(lfsv_s_v.localIndex(i),lfsv_n_v.localIndex(j)) += epsilon*val;
+                                mat_ns.accumulate(lfsv_n_v,j,lfsv_s_v,i,- val);
+                                mat_sn.accumulate(lfsv_s_v,i,lfsv_n_v,j, epsilon*val);
                             }
                         }
                     }
@@ -629,8 +631,8 @@ namespace Dune {
                             {
                                 const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
                                 const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
-                                mat_sn(lfsv_s_v.localIndex(j),lfsv_n_v.localIndex(i)) -= val;
-                                mat_ns(lfsv_n_v.localIndex(i),lfsv_s_v.localIndex(j)) += epsilon*val;
+                                mat_sn.accumulate(lfsv_s_v,j,lfsv_n_v,i, - val);
+                                mat_ns.accumulate(lfsv_n_v,i,lfsv_s_v,j, epsilon*val );
                             }
                         }
                         for (unsigned int j=0;j<vsize_n;++j) 
@@ -640,8 +642,8 @@ namespace Dune {
                             for (unsigned int d=0;d<dim;++d)
                             {
                                 const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
-                                mat_nn(lfsv_n_v.localIndex(j),lfsv_n_v.localIndex(i)) -= val;
-                                mat_nn(lfsv_n_v.localIndex(i),lfsv_n_v.localIndex(j)) += epsilon*val;
+                                mat_nn.accumulate(lfsv_n_v,j,lfsv_n_v,i,- val);
+                                mat_nn.accumulate(lfsv_n_v,i,lfsv_n_v,j, epsilon*val);
                             }
                         }
                     }
@@ -657,7 +659,7 @@ namespace Dune {
                             for (unsigned int d=0;d<dim;++d)
                             {
                                 const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
-                                mat_ss(lfsv_s_v.localIndex(j),lfsv_s_v.localIndex(i)) += val;
+                                mat_ss.accumulate(lfsv_s_v,j,lfsv_s_v,i, val);
                             }
                         }
                         for (unsigned int j=0;j<vsize_n;++j) 
@@ -667,7 +669,7 @@ namespace Dune {
                             {
                                 const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
                                 const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
-                                mat_ns(lfsv_n_v.localIndex(j),lfsv_s_v.localIndex(i)) -= val;
+                                mat_ns.accumulate(lfsv_n_v,j,lfsv_s_v,i, - val);
                             }
                         }
                     }
@@ -680,7 +682,7 @@ namespace Dune {
                             {
                                 const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
                                 const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
-                                mat_sn(lfsv_s_v.localIndex(j),lfsv_n_v.localIndex(i)) -= val;
+                                mat_sn.accumulate(lfsv_s_v,j,lfsv_n_v,i, - val);
                             }
                         }
                         for (unsigned int j=0;j<vsize_n;++j) 
@@ -689,7 +691,7 @@ namespace Dune {
                             for (unsigned int d=0;d<dim;++d)
                             {
                                 const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
-                                mat_nn(lfsv_n_v.localIndex(j),lfsv_n_v.localIndex(i)) += val;
+                                mat_nn.accumulate(lfsv_n_v,j,lfsv_n_v,i, val);
                             }
                         }
                     }
@@ -705,8 +707,8 @@ namespace Dune {
                             {
                                 const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
                                 RF val = 0.5*(phi_p_s[j]*normal[d]*phi_v_s[i]) * weight;
-                                mat_ss(lfsv_s_v.localIndex(i),lfsv_s_p.localIndex(j)) += val;
-                                mat_ss(lfsv_s_p.localIndex(j),lfsv_s_v.localIndex(i)) += val;
+                                mat_ss.accumulate(lfsv_s_v,i,lfsv_s_p,j, val);
+                                mat_ss.accumulate(lfsv_s_p,j,lfsv_s_v,i, val);
                             }
                         }
                         for (unsigned int j=0;j<psize_n;++j) 
@@ -715,8 +717,8 @@ namespace Dune {
                             {
                                 const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
                                 RF val = 0.5*(phi_p_n[j]*normal[d]*phi_v_s[i]) * weight;
-                                mat_sn(lfsv_s_v.localIndex(i),lfsv_n_p.localIndex(j)) += val;
-                                mat_ns(lfsv_n_p.localIndex(j),lfsv_s_v.localIndex(i)) += val;
+                                mat_sn.accumulate(lfsv_s_v,i,lfsv_n_p,j, val);
+                                mat_ns.accumulate(lfsv_n_p,j,lfsv_s_v,i, val);
                             }
                         }
                     }
@@ -730,8 +732,8 @@ namespace Dune {
 
                                 // the normal vector flipped, thus the sign flips
                                 RF val = -0.5*(phi_p_s[j]*normal[d]*phi_v_n[i]) * weight;
-                                mat_ns(lfsv_n_v.localIndex(i),lfsv_s_p.localIndex(j)) += val;
-                                mat_sn(lfsv_s_p.localIndex(j),lfsv_n_v.localIndex(i)) += val;
+                                mat_ns.accumulate(lfsv_n_v,i,lfsv_s_p,j, val);
+                                mat_sn.accumulate(lfsv_s_p,j,lfsv_n_v,i, val);
                             }
                         }
                         for (unsigned int j=0;j<psize_n;++j) 
@@ -742,8 +744,8 @@ namespace Dune {
 
                                 // the normal vector flipped, thus the sign flips
                                 RF val = -0.5*(phi_p_n[j]*normal[d]*phi_v_n[i]) * weight;
-                                mat_nn(lfsv_n_v.localIndex(i),lfsv_n_p.localIndex(j)) += val;
-                                mat_nn(lfsv_n_p.localIndex(j),lfsv_n_v.localIndex(i)) += val;
+                                mat_nn.accumulate(lfsv_n_v,i,lfsv_n_p,j, val);
+                                mat_nn.accumulate(lfsv_n_p,j,lfsv_n_v,i, val);
                             }
                         }
                     }
@@ -835,8 +837,8 @@ namespace Dune {
                                 for (unsigned int d=0;d<dim;++d)
                                 {
                                     const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
-                                    mat(lfsv_v.localIndex(i),lfsv_v.localIndex(j)) += - val;
-                                    mat(lfsv_v.localIndex(j),lfsv_v.localIndex(i)) += epsilon*val;
+                                    mat.accumulate(lfsv_v,i,lfsv_v,j, - val);
+                                    mat.accumulate(lfsv_v,j,lfsv_v,i, epsilon*val);
                                 }
                             }
                         }
@@ -852,8 +854,8 @@ namespace Dune {
                                 {
                                     const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
                                     RF val = (phi_p[j]*normal[d]*phi_v[i]) * weight;
-                                    mat(lfsv_p.localIndex(j),lfsv_v.localIndex(i)) += val; // q u n
-                                    mat(lfsv_v.localIndex(i),lfsv_p.localIndex(j)) += val; // p v n
+                                    mat.accumulate(lfsv_p,j,lfsv_v,i, val); // q u n
+                                    mat.accumulate(lfsv_v,i,lfsv_p,j, val); // p v n
                                 }
                             }
                         }
@@ -869,7 +871,7 @@ namespace Dune {
                                 for (unsigned int d=0;d<dim;++d)
                                 {
                                     const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
-                                    mat(lfsv_v.localIndex(j),lfsv_v.localIndex(i)) += val;
+                                    mat.accumulate(lfsv_v,j,lfsv_v,i, val);
                                 }
                             }
                         }
@@ -992,7 +994,7 @@ namespace Dune {
                         for(unsigned int d=0; d<dim; ++d){
                             const LFSV_V & lfsu_v = lfsv_pfs_v.child(d);
                             for (size_t i=0; i<lfsu_v.size(); i++)
-                                vu[d] += x[lfsu_v.localIndex(i)] * phi_v[i];
+                              vu[d] += x(lfsu_v,i) * phi_v[i];
                         }
                         
                         for(unsigned int dv=0; dv<dim; ++dv){
@@ -1001,7 +1003,7 @@ namespace Dune {
                             // compute gradient of u
                             Dune::FieldVector<RF,dim> gradu(0.0);
                             for (size_t i=0; i<lfsv_v.size(); i++)
-                                gradu.axpy(x[lfsv_v.localIndex(i)],grad_phi_v[i][0]);
+                              gradu.axpy(x(lfsv_v,i),grad_phi_v[i][0]);
                             
                             
                             for(unsigned int du=0; du < dim; ++du){
@@ -1009,16 +1011,15 @@ namespace Dune {
 
                                 for (size_t i=0; i<vsize; i++)
                                     for(size_t j=0; j<vsize; j++)
-                                        mat(lfsv_v.localIndex(i),lfsu_v.localIndex(j))
-                                            += rho * phi_v[j] * gradu[du] * phi_v[i] * weight;
+                                      mat.accumulate(lfsv_v,i,lfsu_v,j,
+                                                     rho * phi_v[j] * gradu[du] * phi_v[i] * weight);
                             } // du
 
                             const LFSV_V & lfsu_v = lfsv_pfs_v.child(dv);
                             for(size_t j=0; j<vsize; j++){
                                 const Dune::FieldVector<RF,dim> du(grad_phi_v[j][0]);
                                 for (size_t i=0; i<vsize; i++){
-                                    mat(lfsv_v.localIndex(i),lfsu_v.localIndex(j))
-                                        += rho * (vu * du) * phi_v[i] * weight;
+                                  mat.accumulate(lfsv_v,i,lfsu_v,j, rho * (vu * du) * phi_v[i] * weight);
                                 } // j
                             }// i
                         } // dv
@@ -1091,7 +1092,7 @@ namespace Dune {
                         for(unsigned int d=0; d<dim; ++d){
                             const LFSV_V & lfsu_v = lfsv_pfs_v.child(d);
                             for (size_t i=0; i<lfsu_v.size(); i++)
-                                vu[d] += x[lfsu_v.localIndex(i)] * phi_v[i];
+                              vu[d] += x(lfsu_v,i) * phi_v[i];
                         }
                         
                         for(unsigned int d=0; d<dim; ++d){
@@ -1100,13 +1101,13 @@ namespace Dune {
                             // compute gradient of u
                             Dune::FieldVector<RF,dim> gradu(0.0);
                             for (size_t i=0; i<lfsu_v.size(); i++)
-                                gradu.axpy(x[lfsu_v.localIndex(i)],grad_phi_v[i][0]);
+                              gradu.axpy(x(lfsu_v,i),grad_phi_v[i][0]);
                             
                             //compute u * grad u_d
                             const RF u_nabla_u = vu * gradu;
 
                             for (size_t i=0; i<vsize; i++)
-                                r[lfsu_v.localIndex(i)] += rho * u_nabla_u * phi_v[i] * weight;
+                              r.accumulate(lfsu_v,i, rho * u_nabla_u * phi_v[i] * weight);
                         }
                     
                     }
