@@ -89,6 +89,16 @@ namespace Dune {
         return container.two_norm();
       }
 
+      E one_norm() const
+      {
+        return container.one_norm();
+      }
+
+      E infinity_norm() const
+      {
+        return container.infinity_norm();
+      }
+
       E operator*(const ISTLBlockVectorContainer& y) const
       {
         return container*y.base();
