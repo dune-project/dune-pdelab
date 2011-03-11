@@ -280,6 +280,12 @@ namespace Dune {
         enum{ value = true };
       };
 
+      template<int k>
+      struct BlockSizeIsEqual<ComponentBlockwiseOrderingTag<1>,ISTLVectorBackend<k>,k>
+      {
+        enum{ value = true };
+      };
+
       template<typename GFS>
       struct BlockwiseIndicesHelper<GFS,true>
       {
