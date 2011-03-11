@@ -47,7 +47,9 @@ namespace Dune{
         : local_assembler(local_assembler_), lop(local_assembler_.lop), 
           invalid_residual(static_cast<Residual*>(0)), invalid_solution(static_cast<Solution*>(0)),
           residual(invalid_residual), 
-          solution(invalid_solution)
+          solution(invalid_solution),
+          rl_view(rl,1.0),
+          rn_view(rn,1.0)
       {}
   
       //! Query methods for the global grid assembler
@@ -100,7 +102,6 @@ namespace Dune{
       template<typename EG>
       void onBindLFSV(const EG & eg, const LFSV & lfsv){
         rl.assign(lfsv.size(),0.0);
-        rlc.assign(lfsv.size(),0.0);
       }
 
       template<typename IG>
@@ -116,13 +117,11 @@ namespace Dune{
       template<typename IG>
       void onBindLFSVInside(const IG & ig, const LFSV & lfsv){
         rl.assign(lfsv.size(),0.0);
-        rlc.assign(lfsv.size(),0.0);
       }
 
       template<typename IG>
       void onBindLFSVOutside(const IG & ig, const LFSV & lfsvn){
         rn.assign(lfsvn.size(),0.0);
-        rnc.assign(lfsvn.size(),0.0);
       }
 
       //! @}
@@ -160,7 +159,6 @@ namespace Dune{
 
       //! Notifier functions, called immediately before and after assembling
       //! @{
-      void preAssembly(){ }
       void postAssembly(){ 
         if(local_assembler.doConstraintsPostProcessing){
           Dune::PDELab::constrain_residual(*(local_assembler.pconstraintsv),*residual); 
@@ -180,66 +178,55 @@ namespace Dune{
       template<typename EG>
       void assembleUVVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
       {
-        assign(rlc,0);
+        rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
-          alpha_volume(lop,eg,lfsu,xl,lfsv,rlc);
-        axpy(rl,local_assembler.weight,rlc);
+          alpha_volume(lop,eg,lfsu,xl,lfsv,rl_view);
       }
 
       template<typename EG>
       void assembleVVolume(const EG & eg, const LFSV & lfsv)
       {
-        assign(rlc,0);
+        rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaVolume>::
-          lambda_volume(lop,eg,lfsv,rlc);
-        axpy(rl,local_assembler.weight,rlc);
+          lambda_volume(lop,eg,lfsv,rl_view);
       }
 
       template<typename IG>
       void assembleUVSkeleton(const IG & ig, const LFSU & lfsu_s, const LFSV & lfsv_s,
                               const LFSU & lfsu_n, const LFSV & lfsv_n)
       {
-        assign(rlc,0);
-        assign(rnc,0);
+        rl_view.setWeight(local_assembler.weight);
+        rn_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
           alpha_skeleton(lop,ig,
                          lfsu_s,xl,lfsv_s,
                          lfsu_n,xn,lfsv_n,
-                         rlc,rnc);
-
-        axpy(rl,local_assembler.weight,rlc);
-        axpy(rn,local_assembler.weight,rnc);
+                         rl_view,rn_view);
       }
 
       template<typename IG>
       void assembleVSkeleton(const IG & ig, const LFSV & lfsv_s, const LFSV & lfsv_n)
       {
-        assign(rlc,0);
-        assign(rnc,0);
-
+        rl_view.setWeight(local_assembler.weight);
+        rn_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaSkeleton>::
-          lambda_skeleton(lop, ig, lfsv_s, lfsv_n, rlc, rnc);
-
-        axpy(rl,local_assembler.weight,rlc);
-        axpy(rn,local_assembler.weight,rnc);
+          lambda_skeleton(lop, ig, lfsv_s, lfsv_n, rl_view, rn_view);
       }
 
       template<typename IG>
       void assembleUVBoundary(const IG & ig, const LFSU & lfsu_s, const LFSV & lfsv_s)
       {
-        assign(rlc,0);
+        rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
-          alpha_boundary(lop,ig,lfsu_s,xl,lfsv_s,rlc);
-        axpy(rl,local_assembler.weight,rlc);
+          alpha_boundary(lop,ig,lfsu_s,xl,lfsv_s,rl_view);
       }
 
       template<typename IG>
       void assembleVBoundary(const IG & ig, const LFSV & lfsv_s)
       {
-        assign(rlc,0);
+        rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaBoundary>::
-          lambda_boundary(lop,ig,lfsv_s,rlc);
-        axpy(rl,local_assembler.weight,rlc);
+          lambda_boundary(lop,ig,lfsv_s,rl_view);
       }
 
       template<typename IG>
@@ -259,19 +246,17 @@ namespace Dune{
       template<typename EG>
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
       {
-        assign(rlc,0);
+        rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::
-          alpha_volume_post_skeleton(lop,eg,lfsu,xl,lfsv,rlc);
-        axpy(rl,local_assembler.weight,rlc);
+          alpha_volume_post_skeleton(lop,eg,lfsu,xl,lfsv,rl_view);
       }
 
       template<typename EG>
       void assembleVVolumePostSkeleton(const EG & eg, const LFSV & lfsv)
       {
-        assign(rlc,0);
+        rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaVolumePostSkeleton>::
-          lambda_volume_post_skeleton(lop,eg,lfsv,rlc);
-        axpy(rl,local_assembler.weight,rlc);
+          lambda_volume_post_skeleton(lop,eg,lfsv,rl_view);
       }
 
       //! @}
@@ -300,32 +285,23 @@ namespace Dune{
       //! @{
       typedef Dune::PDELab::TrialSpaceTag LocalTrialSpaceTag;
       typedef Dune::PDELab::TestSpaceTag LocalTestSpaceTag;
+
+      typedef Dune::PDELab::LocalVector<SolutionElement, LocalTrialSpaceTag> SolutionVector;
+      typedef Dune::PDELab::LocalVector<ResidualElement, LocalTestSpaceTag> ResidualVector;
+
       //! Inside local coefficients
-      Dune::PDELab::LocalVector<SolutionElement, LocalTrialSpaceTag> xl;
+      SolutionVector xl;
       //! Outside local coefficients
-      Dune::PDELab::LocalVector<SolutionElement, LocalTrialSpaceTag> xn;
+      SolutionVector xn;
       //! Inside local residual
-      Dune::PDELab::LocalVector<ResidualElement, LocalTestSpaceTag> rl;
+      ResidualVector rl;
       //! Outside local residual
-      Dune::PDELab::LocalVector<ResidualElement, LocalTestSpaceTag> rn;
-      //! Inside local residual copy
-      Dune::PDELab::LocalVector<ResidualElement, LocalTestSpaceTag> rlc;
-      //! Outside local residual copy
-      Dune::PDELab::LocalVector<ResidualElement, LocalTestSpaceTag> rnc;
+      ResidualVector rn;
+      //! Inside local residual weighted view
+      typename ResidualVector::WeightedAccumulationView rl_view;
+      //! Outside local residual weighted view
+      typename ResidualVector::WeightedAccumulationView rn_view;
       //! @}
-
-      template<typename VC, typename VF>
-      void axpy(VC & y, const VF & a, const VC & x){
-        assert(y.size() == x.size());
-        for(unsigned int i=0; i<y.size(); ++i)
-          y[i] += a * x[i];
-      }
-
-      template<typename VC, typename VF>
-      void assign(VC & y, const VF & a){
-        for(unsigned int i=0; i<y.size(); ++i)
-          y[i] = a;
-      }
 
     }; // End of class DefaultLocalResidualAssemblerEngine
 

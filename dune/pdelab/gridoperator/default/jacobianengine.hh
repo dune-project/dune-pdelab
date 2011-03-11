@@ -48,7 +48,11 @@ namespace Dune{
           invalid_jacobian(static_cast<Jacobian*>(0)),
           invalid_solution(static_cast<Solution*>(0)),
           jacobian(invalid_jacobian), 
-          solution(invalid_solution)
+          solution(invalid_solution),
+          al_view(al,1.0),
+          al_sn_view(al_sn,1.0),
+          al_ns_view(al_ns,1.0),
+          al_nn_view(al_nn,1.0)
       {}
   
       //! Query methods for the global grid assembler
@@ -89,7 +93,6 @@ namespace Dune{
       void onBindLFSUV(const EG & eg, const LFSU & lfsu, const LFSV & lfsv){
         xl.resize(lfsu.size());
         al.assign(lfsv.size() ,lfsu.size(),0.0);
-        alc.assign(lfsv.size() ,lfsu.size(),0.0);
       }
 
       //! @}
@@ -141,30 +144,26 @@ namespace Dune{
       template<typename EG>
       void assembleUVVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
       {
-        assign(alc,0.0);
+        al_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
-          jacobian_volume(lop,eg,lfsu,xl,lfsv,alc);
-        update(al,local_assembler.weight,alc);
+          jacobian_volume(lop,eg,lfsu,xl,lfsv,al_view);
       }
 
       template<typename IG>
       void assembleUVSkeleton(const IG & ig, const LFSU & lfsu_s, const LFSV & lfsv_s,
                               const LFSU & lfsu_n, const LFSV & lfsv_n)
       {
-        assign(alc,0.0);
-
         al_sn.assign(lfsv_s.size() ,lfsu_n.size(),0.0);
         al_ns.assign(lfsv_n.size(),lfsu_s.size() ,0.0);
         al_nn.assign(lfsv_n.size(),lfsu_n.size(),0.0);
 
+        al_view.setWeight(local_assembler.weight);
+        al_sn_view.setWeight(local_assembler.weight);
+        al_ns_view.setWeight(local_assembler.weight);
+        al_nn_view.setWeight(local_assembler.weight);
+
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
-          jacobian_skeleton(lop,ig,lfsu_s,xl,lfsv_s,lfsu_n,xn,lfsv_n,alc,al_sn,al_ns,al_nn);
-
-        update(al,local_assembler.weight,alc);
-
-        al_sn *= local_assembler.weight;
-        al_ns *= local_assembler.weight;
-        al_nn *= local_assembler.weight;
+          jacobian_skeleton(lop,ig,lfsu_s,xl,lfsv_s,lfsu_n,xn,lfsv_n,al_view,al_sn_view,al_ns_view,al_nn_view);
 
         local_assembler.etadd(lfsv_s,lfsu_n,al_sn,*jacobian);
         local_assembler.etadd(lfsv_n,lfsu_s,al_ns,*jacobian);
@@ -174,10 +173,9 @@ namespace Dune{
       template<typename IG>
       void assembleUVBoundary(const IG & ig, const LFSU & lfsu_s, const LFSV & lfsv_s)
       {
-        assign(alc,0.0);
+        al_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
-          jacobian_boundary(lop,ig,lfsu_s,xl,lfsv_s,alc);                              
-        update(al,local_assembler.weight,alc);
+          jacobian_boundary(lop,ig,lfsu_s,xl,lfsv_s,al_view);
       }
 
       template<typename IG>
@@ -197,10 +195,9 @@ namespace Dune{
       template<typename EG>
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
       {
-        assign(alc,0.0);
+        al_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::
-          jacobian_volume_post_skeleton(lop,eg,lfsu,xl,lfsv,alc);
-        update(al,local_assembler.weight,alc);
+          jacobian_volume_post_skeleton(lop,eg,lfsu,xl,lfsv,al_view);
       }
 
       //! @}
@@ -229,35 +226,24 @@ namespace Dune{
       //! @{
       typedef Dune::PDELab::TrialSpaceTag LocalTrialSpaceTag;
       typedef Dune::PDELab::TestSpaceTag LocalTestSpaceTag;
-      Dune::PDELab::LocalVector<SolutionElement, LocalTrialSpaceTag> xl;
-      Dune::PDELab::LocalVector<SolutionElement, LocalTrialSpaceTag> xn;
-      Dune::PDELab::LocalMatrix<JacobianElement> al;
-      Dune::PDELab::LocalMatrix<JacobianElement> al_sn;
-      Dune::PDELab::LocalMatrix<JacobianElement> al_ns;
-      Dune::PDELab::LocalMatrix<JacobianElement> al_nn;
 
-      Dune::PDELab::LocalMatrix<JacobianElement> alc;
+      typedef Dune::PDELab::LocalVector<SolutionElement, LocalTrialSpaceTag> SolutionVector;
+      typedef Dune::PDELab::LocalMatrix<JacobianElement> JacobianMatrix;
+
+      SolutionVector xl;
+      SolutionVector xn;
+
+      JacobianMatrix al;
+      JacobianMatrix al_sn;
+      JacobianMatrix al_ns;
+      JacobianMatrix al_nn;
+
+      typename JacobianMatrix::WeightedAccumulationView al_view;
+      typename JacobianMatrix::WeightedAccumulationView al_sn_view;
+      typename JacobianMatrix::WeightedAccumulationView al_ns_view;
+      typename JacobianMatrix::WeightedAccumulationView al_nn_view;
+
       //! @}
-
-      template<typename VC, typename VF>
-      void update(VC & A, const VF & a, const VC & B){
-        assert(A.nrows() == B.nrows());
-        assert(A.ncols() == B.ncols());
-        const unsigned int R = A.nrows();
-        const unsigned int C = A.ncols();
-        for(unsigned int r=0; r<R; ++r)
-          for(unsigned int c=0; c<C; ++c)
-            A(r,c) += a * B(r,c);
-      }
-
-      template<typename VC, typename VF>
-      void assign(VC & A, const VF & a){
-        const unsigned int R = A.nrows();
-        const unsigned int C = A.ncols();
-        for(unsigned int r=0; r<R; ++r)
-          for(unsigned int c=0; c<C; ++c)
-            A(r,c) = a;
-      }
 
     
     }; // End of class DefaultLocalJacobianAssemblerEngine
