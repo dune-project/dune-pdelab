@@ -629,6 +629,16 @@ namespace Dune {
 
       LocalFunctionSpace(const GFS & gfs) : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs>::transform(gfs)) { this->setup(*this); }
 
+      LocalFunctionSpace(const LocalFunctionSpace & lfs)
+        : BaseT(lfs)
+      {
+        // We need to reset the global pointers in the new LFS tree,
+        // as they are still pointing to the global_storage of the
+        // old tree.
+        this->global = &(this->global_storage);
+        this->setup(*this);
+      }
+
       LocalIndex localIndex (typename Traits::IndexContainer::size_type index) const
       {
         return LocalIndex(BaseT::localIndex(index));
@@ -663,6 +673,17 @@ namespace Dune {
 
     public:
       LocalFunctionSpace(const GFS & gfs) : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs>::transform(gfs)) { this->setup(*this); }
+
+      LocalFunctionSpace(const LocalFunctionSpace & lfs)
+        : BaseT(lfs)
+      {
+        // We need to reset the global pointers in the new LFS tree,
+        // as they are still pointing to the global_storage of the
+        // old tree.
+        this->global = &(this->global_storage);
+        this->setup(*this);
+      }
+
     };
 
     //! \} group GridFunctionSpace
