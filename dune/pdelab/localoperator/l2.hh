@@ -86,19 +86,19 @@ namespace Dune {
             // evaluate u
             RF u=0.0;
             for (size_type i=0; i<lfsu.size(); i++)
-              u += x[lfsu.localIndex(i)]*phi[i];
+              u += x(lfsu,i)*phi[i];
 
             // u*phi_i
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_type i=0; i<lfsu.size(); i++)
-              r[lfsv.localIndex(i)] += u*phi[i]*factor;
+              r.accumulate(lfsv,i, u*phi[i]*factor);
           }
 	  }
 
       // jacobian of volume term
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
 	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
-                            LocalMatrix<R>& mat) const
+                            M & mat) const
       {
         // Switches between local and global interface
         typedef FiniteElementInterfaceSwitch<
@@ -132,7 +132,7 @@ namespace Dune {
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_type j=0; j<lfsu.size(); j++)
               for (size_type i=0; i<lfsu.size(); i++)
-                mat(lfsv.localIndex(i),lfsu.localIndex(j)) += phi[j]*phi[i]*factor;
+                mat.accumulate(lfsv,i,lfsu,j, phi[j]*phi[i]*factor);
           }
       }
 
