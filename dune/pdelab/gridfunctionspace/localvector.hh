@@ -389,6 +389,13 @@ namespace Dune {
     }
 
     template<typename C>
+    typename WeightedVectorAccumulationView<C>::BaseContainer& accessBaseContainer
+    (WeightedVectorAccumulationView<C>& c)
+    {
+      return c.base();
+    }
+
+    template<typename C>
     const C& accessBaseContainer(const C& c)
     {
       return c;
@@ -396,6 +403,13 @@ namespace Dune {
 
     template<typename T, typename Tag, typename W>
     const typename LocalVector<T,Tag,W>::BaseContainer& accessBaseContainer(const LocalVector<T,Tag,W>& c)
+    {
+      return c.base();
+    }
+
+    template<typename C>
+    const typename WeightedVectorAccumulationView<C>::BaseContainer& accessBaseContainer
+    (const WeightedVectorAccumulationView<C>& c)
     {
       return c.base();
     }
