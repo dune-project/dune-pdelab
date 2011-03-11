@@ -340,7 +340,7 @@ namespace Dune {
       template<typename LFS>
       void DUNE_DEPRECATED rawAccumulate(const LFS& lfs, size_type n, value_type v)
       {
-        (*this)(lfs,v) += v;
+        (*this)(lfs,n) += v;
       }
 
       //! Returns the underlying, std::vector-like storage container.
