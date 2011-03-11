@@ -225,7 +225,8 @@ namespace Dune {
 	Dune::FieldMatrix<DF,dimw,dim> jac;
 
 	// evaluate speed of sound (assumed constant per element)
-	RF c2 = param.c(eg.entity(),eg.entity().geometry().center());
+    Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
+	RF c2 = param.c(eg.entity(),localcenter);
 	c2 = c2*c2; // square it
 
 	// std::cout << "alpha_volume center=" << eg.geometry().center() << std::endl;
@@ -295,8 +296,12 @@ namespace Dune {
 	const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
 
 	// evaluate speed of sound (assumed constant per element)
-	RF c_s = param.c(*(ig.inside()),ig.inside()->geometry().center());
-	RF c_n = param.c(*(ig.outside()),ig.outside()->geometry().center());
+    const Dune::FieldVector<DF,dim>& 
+      inside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+    const Dune::FieldVector<DF,dim>& 
+      outside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
+	RF c_s = param.c(*(ig.inside()),inside_local);
+	RF c_n = param.c(*(ig.outside()),outside_local);
 
 	// compute A+ (outgoing waves)
 	Dune::FieldMatrix<DF,dim+1,dim+1> RT;
@@ -402,7 +407,9 @@ namespace Dune {
 	const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
 
 	// evaluate speed of sound (assumed constant per element)
-	RF c_s = param.c(*(ig.inside()),ig.inside()->geometry().center());
+    const Dune::FieldVector<DF,dim>& 
+      inside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+	RF c_s = param.c(*(ig.inside()),inside_local);
 
 	// compute A+ (outgoing waves)
 	Dune::FieldMatrix<DF,dim+1,dim+1> RT;
