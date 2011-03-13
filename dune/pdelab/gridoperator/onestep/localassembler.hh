@@ -53,37 +53,37 @@ namespace Dune{
       //! @}
 
       void static_checks(){
-        dune_static_assert((is_same<typename LA0::Pattern,typename LA1::Pattern>::value),
+        dune_static_assert((is_same<typename LA0::GridOperator::Traits::MatrixBackend::Pattern,typename LA1::GridOperator::Traits::MatrixBackend::Pattern>::value),
                            "Received two local assemblers which are non-compatible "
                            "due to different matrix pattern types");
-        dune_static_assert((is_same<typename LA0::Jacobian,typename LA1::Jacobian>::value),
+        dune_static_assert((is_same<typename LA0::GridOperator::Traits::Jacobian,typename LA1::GridOperator::Traits::Jacobian>::value),
                            "Received two local assemblers which are non-compatible "
                            "due to different jacobian types");
-        dune_static_assert((is_same<typename LA0::Solution,typename LA1::Solution>::value),
+        dune_static_assert((is_same<typename LA0::GridOperator::Traits::Domain,typename LA1::GridOperator::Traits::Domain>::value),
                            "Received two local assemblers which are non-compatible "
                            "due to different solution vector types");
-        dune_static_assert((is_same<typename LA0::Residual,typename LA1::Residual>::value),
+        dune_static_assert((is_same<typename LA0::GridOperator::Traits::Range,typename LA1::GridOperator::Traits::Range>::value),
                            "Received two local assemblers which are non-compatible "
                            "due to different residual vector types");
-        dune_static_assert((is_same<typename LA0::Real,typename LA1::Real>::value),
-                           "Received two local assemblers which are non-compatible "
-                           "due to different real number types");
+        //dune_static_assert((is_same<typename LA0::Real,typename LA1::Real>::value),
+        //                   "Received two local assemblers which are non-compatible "
+        //                   "due to different real number types");
       }
 
       //! The local operators type for real numbers e.g. time
-      typedef typename LA0::Real Real;
+      typedef typename LA0::GridOperator::Traits::RangeField Real;
 
       //! The residual representation type
-      typedef typename LA0::Residual Residual;
+      typedef typename LA0::GridOperator::Traits::Range Residual;
 
       //! The solution representation type
-      typedef typename LA0::Solution Solution;
+      typedef typename LA0::GridOperator::Traits::Domain Solution;
 
       //! The jacobian representation type
-      typedef typename LA0::Jacobian Jacobian;
+      typedef typename LA0::GridOperator::Traits::Jacobian Jacobian;
 
       //! The matrix pattern representation type
-      typedef typename LA0::Pattern Pattern;
+      typedef typename LA0::GridOperator::Traits::MatrixBackend::Pattern Pattern;
 
       //! The type of the one step parameter object
       typedef Dune::PDELab::TimeSteppingParameterInterface<Real> OneStepParameters;

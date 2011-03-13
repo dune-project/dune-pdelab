@@ -30,15 +30,15 @@ namespace Dune{
     public:
 
       //! The sparsity pattern container for the jacobian matrix
-      typedef typename GO0::Pattern Pattern;
+      typedef typename GO0::Traits::MatrixBackend::Pattern Pattern;
 
       //! The global UDG assembler type
-      typedef typename GO0::Assembler Assembler;
+      typedef typename GO0::Traits::Assembler Assembler;
 
       //! The local assembler types of the subordinate grid operators
       //! @{
-      typedef typename GO0::LocalAssembler LocalAssemblerDT0;
-      typedef typename GO1::LocalAssembler LocalAssemblerDT1;
+      typedef typename GO0::Traits::LocalAssembler LocalAssemblerDT0;
+      typedef typename GO1::Traits::LocalAssembler LocalAssemblerDT1;
       //! @}
 
       //! The local UDG assembler type
