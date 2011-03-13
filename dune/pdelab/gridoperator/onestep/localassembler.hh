@@ -18,15 +18,15 @@ namespace Dune{
        \tparam LA1 The local assembler for the temporal derivative term of order one
     */
     template<typename LA0, typename LA1>
-    class OneStepLocalAssembler 
-      : public Dune::PDELab::LocalAssemblerBase< 
-      typename LA0::Traits::MatrixBackend, 
-      typename LA0::Traits::TrialConstraintsType, 
+    class OneStepLocalAssembler
+      : public Dune::PDELab::LocalAssemblerBase<
+      typename LA0::Traits::MatrixBackend,
+      typename LA0::Traits::TrialConstraintsType,
       typename LA0::Traits::TestConstraintsType>
     {
     public:
 
-      //! The traits class from the 
+      //! The traits class from the
       typedef typename LA0::Traits Traits;
 
       //! The types of the local assemblers of order one and zero
@@ -35,8 +35,8 @@ namespace Dune{
 
       //! The base class
       typedef Dune::PDELab::LocalAssemblerBase
-      < typename LA0::Traits::MatrixBackend, 
-        typename LA0::Traits::TrialConstraintsType, 
+      < typename LA0::Traits::MatrixBackend,
+        typename LA0::Traits::TrialConstraintsType,
         typename LA0::Traits::TestConstraintsType> Base;
 
       //! The local assembler engines
@@ -89,8 +89,8 @@ namespace Dune{
       typedef Dune::PDELab::TimeSteppingParameterInterface<Real> OneStepParameters;
 
       //! Constructor with empty constraints
-      OneStepLocalAssembler (LA0 & la0_, LA1 & la1_, Residual & const_residual_) 
-        : la0(la0_), la1(la1_), const_residual(const_residual_), 
+      OneStepLocalAssembler (LA0 & la0_, LA1 & la1_, Residual & const_residual_)
+        : la0(la0_), la1(la1_), const_residual(const_residual_),
           time(0.0), use_mass_dt(false), stage(0),
           pattern_engine(*this), prestage_engine(*this), residual_engine(*this), jacobian_engine(*this)
       { static_checks(); }
@@ -109,7 +109,7 @@ namespace Dune{
           dt_factor0 = dt;
           dt_factor1 = 1.0;
         }
-          
+
         la0.preStep(time_,dt_, stages_);
         la1.preStep(time_,dt_, stages_);
       }
@@ -200,13 +200,13 @@ namespace Dune{
 
       //! The constant part of the residual
       Residual & const_residual;
-      
+
       //! The current time of assembling
       Real time;
 
-      //! The time step size 
+      //! The time step size
       Real dt;
-      
+
       /** The time step factors for assembling. Depending on the value
        of \a use_mass_dt, it will hold:
 

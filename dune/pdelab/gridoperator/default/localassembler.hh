@@ -54,7 +54,7 @@ namespace Dune{
       //! The current grid view type
       typedef typename GFSU::Traits::GridViewType GridView;
 
-      //! The local operator 
+      //! The local operator
       typedef LOP LocalOperator;
 
       static const bool isNonOverlapping = nonoverlapping_mode;
@@ -94,14 +94,14 @@ namespace Dune{
       //! @}
 
       //! Constructor with empty constraints
-      DefaultLocalAssembler (LOP & lop_) 
+      DefaultLocalAssembler (LOP & lop_)
         : lop(lop_),  weight(1.0), doConstraintsPostProcessing(true),
           pattern_engine(*this), residual_engine(*this), jacobian_engine(*this)
       {}
 
       //! Constructor for non trivial constraints
-      DefaultLocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_) 
-        : Base(cu_, cv_), 
+      DefaultLocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_)
+        : Base(cu_, cv_),
           lop(lop_),  weight(1.0), doConstraintsPostProcessing(true),
           pattern_engine(*this), residual_engine(*this), jacobian_engine(*this)
       {}

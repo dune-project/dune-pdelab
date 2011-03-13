@@ -58,7 +58,7 @@ namespace Dune{
       typedef OSLA LocalAssembler;
 
       /**
-         \brief Constructor 
+         \brief Constructor
 
          \param [in] local_assembler_ The local assembler object which
          creates this engine
@@ -103,7 +103,7 @@ namespace Dune{
         // prepare local operators for stage
         la.la0.setTime(la.time + d_r * la.dt);
         la.la1.setTime(la.time + d_r * la.dt);
-        
+
         // Set weights
         la.la0.setWeight(b_rr * la.dt_factor0);
         la.la1.setWeight(la.dt_factor1);
@@ -139,6 +139,7 @@ namespace Dune{
 
     }; // End of class OneStepLocalResidualAssemblerEngine
 
-  };
-};
+  }
+}
+
 #endif

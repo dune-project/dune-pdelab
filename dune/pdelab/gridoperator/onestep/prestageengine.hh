@@ -59,9 +59,9 @@ namespace Dune{
 
       //! The type of the solution container
       typedef std::vector<Solution*> Solutions;
-      
+
       /**
-         \brief Constructor 
+         \brief Constructor
 
          \param [in] la_ The local assembler object which
          creates this engine
@@ -75,7 +75,7 @@ namespace Dune{
 
       //! Query methods for the global grid assembler
       //! @{
-      bool requireSkeleton() const 
+      bool requireSkeleton() const
       { return lae0->requireSkeleton() || lae1->requireSkeleton(); }
       //! @}
 
@@ -125,7 +125,7 @@ namespace Dune{
         d.resize(la.stage);
         do0.resize(la.stage);
         do1.resize(la.stage);
-        for (int i=0; i<la.stage; ++i){ 
+        for (int i=0; i<la.stage; ++i){
           a[i] = la.osp_method->a(la.stage,i);
           b[i] = la.osp_method->b(la.stage,i);
           d[i] = la.osp_method->d(i);
@@ -138,7 +138,7 @@ namespace Dune{
         la.la1.preStage(la.time+la.osp_method->d(la.stage)*la.dt,la.stage);
       }
       void postAssembly()
-      { 
+      {
         lae0->postAssembly();
         lae1->postAssembly();
       }
@@ -170,7 +170,7 @@ namespace Dune{
           }
         }
       }
-      
+
       template<typename EG, typename LFSV>
       void assembleVVolume(const EG & eg, const LFSV & lfsv)
       {
@@ -363,7 +363,7 @@ namespace Dune{
       void assembleVEnrichedCoupling(const IG & ig,
                                             const LFSV_S & lfsv_s,
                                             const LFSV_N & lfsv_n,
-                                            const LFSV_C & lfsv_c) 
+                                            const LFSV_C & lfsv_c)
       {
         for (int s=0; s<la.stage; ++s){
           // Reset the time in the local assembler

@@ -12,7 +12,7 @@ namespace Dune{
        \brief A standard grid operator implementation suitable for the
        combination with a one step time stepping method.
 
-       
+
        \tparam GFSU GridFunctionSpace for ansatz functions
        \tparam GFSV GridFunctionSpace for test functions
        \tparam MB The matrix backend to be used for representation of the jacobian
@@ -44,17 +44,17 @@ namespace Dune{
       //! The local UDG assembler type
       typedef OneStepLocalAssembler<LocalAssemblerDT0,LocalAssemblerDT1> LocalAssembler;
 
-      //! The grid operator traits 
+      //! The grid operator traits
       typedef Dune::PDELab::GridOperatorTraits
       <typename GO0::Traits::TrialGridFunctionSpace,
        typename GO0::Traits::TestGridFunctionSpace,
-       typename GO0::Traits::MatrixBackend, 
+       typename GO0::Traits::MatrixBackend,
        typename GO0::Traits::DomainField,
-       typename GO0::Traits::RangeField, 
+       typename GO0::Traits::RangeField,
        typename GO0::Traits::JacobianField,
        typename GO0::Traits::TrialGridFunctionSpaceConstraints,
        typename GO0::Traits::TestGridFunctionSpaceConstraints,
-       Assembler, 
+       Assembler,
        LocalAssembler> Traits;
 
       //! The io types of the operator
@@ -77,7 +77,7 @@ namespace Dune{
 
       //! Constructor for non trivial constraints
       OneStepGridOperator(GO0 & go0_, GO1 & go1_)
-        : global_assembler(go0_.assembler()), 
+        : global_assembler(go0_.assembler()),
           go0(go0_), go1(go1_),
           la0(go0_.localAssembler()), la1(go1_.localAssembler()),
           const_residual(go0_.testGridFunctionSpace()),
@@ -154,7 +154,7 @@ namespace Dune{
       }
 
       //! Interpolate constrained values from given function f
-      template<typename F, typename X> 
+      template<typename F, typename X>
       void interpolate (unsigned stage, const X& xold, F& f, X& x) const
       {
         // Set time in boundary value function
@@ -168,7 +168,7 @@ namespace Dune{
         // Copy non-constrained dofs from old time step
         Dune::PDELab::copy_nonconstrained_dofs(local_assembler.trialConstraints(),xold,x);
       }
-      
+
       //! parametrize assembler with a time-stepping method
       void preStep (const TimeSteppingParameterInterface<Real>& method_, Real time_, Real dt_)
       {

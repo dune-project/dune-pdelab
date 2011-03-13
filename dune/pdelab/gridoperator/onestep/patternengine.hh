@@ -8,7 +8,7 @@ namespace Dune{
 
     /**
        \brief The local assembler engine for OneStep sub triangulations which
-       creates the matrix pattern 
+       creates the matrix pattern
 
        \tparam LA The local udg assembler
 
@@ -45,7 +45,7 @@ namespace Dune{
       typedef Dune::PDELab::LocalSparsityPattern LocalPattern;
 
       /**
-         \brief Constructor 
+         \brief Constructor
 
          \param [in] local_assembler_ The local assembler object which
          creates this engine
@@ -92,6 +92,7 @@ namespace Dune{
 
     }; // End of class OneStepLocalPatternAssemblerEngine
 
-  };
-};
+  }
+}
+
 #endif

@@ -49,7 +49,7 @@ namespace Dune{
       typedef DefaultLocalAssembler<GridOperator,LOP,nonoverlapping_mode>
       LocalAssembler;
 
-      //! The grid operator traits 
+      //! The grid operator traits
       typedef Dune::PDELab::GridOperatorTraits
       <GFSU,GFSV,MB,DF,RF,JF,CU,CV,Assembler,LocalAssembler> Traits;
 
@@ -60,7 +60,7 @@ namespace Dune{
 
       //! Constructor for non trivial constraints
       GridOperator(const GFSU & gfsu_, const CU & cu_, const GFSV & gfsv_, const CV & cv_, LOP & lop_ )
-        : global_assembler(gfsu_,gfsv_), local_assembler(lop_, cu_, cv_) 
+        : global_assembler(gfsu_,gfsv_), local_assembler(lop_, cu_, cv_)
       {}
 
       //! Constructor for empty constraints
@@ -101,13 +101,13 @@ namespace Dune{
       //! each tuple element.
       template <typename GridOperatorTuple>
       struct SetupGridOperator {
-        SetupGridOperator() 
+        SetupGridOperator()
           : index(0), size(Dune::tuple_size<GridOperatorTuple>::value) {}
-   
+
         template <class T>
-        void visit(T& elem) { 
+        void visit(T& elem) {
           elem.localAssembler().constraintsPostProcessing(index == size-1);
-          ++index; 
+          ++index;
         }
 
         int index;
@@ -126,7 +126,7 @@ namespace Dune{
       }
 
       //! Interpolate the constrained dofs from given function
-      template<typename F, typename X> 
+      template<typename F, typename X>
       void interpolate (const X& xold, F& f, X& x) const
       {
         // Interpolate f into grid function space and set corresponding coefficients
@@ -156,7 +156,7 @@ namespace Dune{
         JacobianEngine & jacobian_engine = local_assembler.localJacobianAssemblerEngine(a,x);
         global_assembler.assemble(jacobian_engine);
       }
-      
+
     private:
       Assembler global_assembler;
       mutable LocalAssembler local_assembler;
