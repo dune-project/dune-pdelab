@@ -90,7 +90,8 @@ namespace Dune{
 
       //! Constructor with empty constraints
       OneStepLocalAssembler (LA0 & la0_, LA1 & la1_, Residual & const_residual_)
-        : la0(la0_), la1(la1_), const_residual(const_residual_),
+        : Base(la0_.trialConstraints(),la0_.testConstraints()),
+          la0(la0_), la1(la1_), const_residual(const_residual_),
           time(0.0), use_mass_dt(false), stage(0),
           pattern_engine(*this), prestage_engine(*this), residual_engine(*this), jacobian_engine(*this)
       { static_checks(); }
