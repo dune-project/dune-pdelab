@@ -160,7 +160,9 @@ namespace Dune{
         // Set time in boundary value function
         f.setTime(local_assembler.timeAtStage(stage));
 
-        // Interpolate 
+        go0.localAssembler().setTime(local_assembler.timeAtStage(stage));
+
+        // Interpolate
         go0.interpolate(xold,f,x);
 
         // Copy non-constrained dofs from old time step
