@@ -24,13 +24,27 @@ namespace Dune{
        \tparam CV   Constraints maps for the individual dofs (test space)
 
     */
-    template<typename GFSU, typename GFSV, typename LOP, 
-             typename X, typename R, typename A, typename B, typename P,
-             bool nonoverlapping_mode = false,
-             typename CU=Dune::PDELab::EmptyTransformation,
-             typename CV=Dune::PDELab::EmptyTransformation>
-    class DefaultLocalAssembler : public Dune::PDELab::LocalAssemblerBase<B,CU,CV>{
+    template<typename GO, typename LOP, bool nonoverlapping_mode = false>
+    class DefaultLocalAssembler : public Dune::PDELab::LocalAssemblerBase<typename GO::Traits::MatrixBackend,
+                                                                          typename GO::Traits::TrialGridFunctionSpaceConstraints,
+                                                                          typename GO::Traits::TestGridFunctionSpaceConstraints>{
     public:
+
+      typedef GO GridOperator;
+
+      typedef typename GridOperator::Traits::TrialGridFunctionSpace GFSU;
+      typedef typename GridOperator::Traits::TestGridFunctionSpace GFSV;
+
+      typedef typename GridOperator::Traits::Domain X;
+      typedef typename GridOperator::Traits::Range R;
+      typedef typename GridOperator::Traits::Jacobian A;
+
+      typedef typename GridOperator::Traits::MatrixBackend B;
+      typedef typename B::Pattern P;
+
+      typedef typename GridOperator::Traits::TrialGridFunctionSpaceConstraints CU;
+      typedef typename GridOperator::Traits::TestGridFunctionSpaceConstraints CV;
+
 
       //! The base class of this local assembler
       typedef Dune::PDELab::LocalAssemblerBase<B,CU,CV> Base;

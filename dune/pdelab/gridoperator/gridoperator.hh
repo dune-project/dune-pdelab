@@ -46,7 +46,7 @@ namespace Dune{
       typedef typename MB::Pattern Pattern;
 
       //! The local UDG assembler type
-      typedef DefaultLocalAssembler<GFSU,GFSV,LOP,Domain,Range,Jacobian,MB,Pattern,nonoverlapping_mode,CU,CV> 
+      typedef DefaultLocalAssembler<GridOperator,LOP,nonoverlapping_mode>
       LocalAssembler;
 
       //! The grid operator traits 
