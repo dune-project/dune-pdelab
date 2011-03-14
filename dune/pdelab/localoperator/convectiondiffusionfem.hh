@@ -520,7 +520,8 @@ namespace Dune {
           }
 
         // accumulate indicator
-        DF h_T = std::max(diameter(ig.inside()->geometry()),diameter(ig.outside()->geometry()));
+        DF h_T = diameter(ig.geometry());
+        //        DF h_T = std::max(diameter(ig.inside()->geometry()),diameter(ig.outside()->geometry()));
         r_s[lfsv_s.localIndex(0)] += 0.5*h_T*sum;
         r_n[lfsv_n.localIndex(0)] += 0.5*h_T*sum;
       }
@@ -601,7 +602,8 @@ namespace Dune {
           }
 
         // accumulate indicator
-        DF h_T = diameter(ig.inside()->geometry());
+        DF h_T = diameter(ig.geometry());
+        //DF h_T = diameter(ig.inside()->geometry());
         r_s[lfsv_s.localIndex(0)] += h_T*sum;
       }
 
