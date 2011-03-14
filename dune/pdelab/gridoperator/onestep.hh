@@ -200,9 +200,9 @@ namespace Dune{
       }
 
     private:
-      Assembler global_assembler;
-      const GO0 & go0;
-      const GO1 & go1;
+      Assembler & global_assembler;
+      GO0 & go0;
+      GO1 & go1;
       LocalAssemblerDT0 & la0;
       LocalAssemblerDT1 & la1;
       Range const_residual;
