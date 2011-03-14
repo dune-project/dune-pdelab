@@ -332,6 +332,86 @@ namespace Dune {
     };
 
 
+    /**
+     * \brief Parameters to turn the ExplicitOneStepMethod into a
+     * classical fourth order Runge-Kutta method
+     *
+     * \tparam R C++ type of the floating point parameters
+     */
+    template<class R> 
+    class RK4Parameter : public TimeSteppingParameterInterface<R>
+    {
+    public:
+      
+      RK4Parameter ()
+      {
+	D[0] = 0.0;     D[1] = 0.5;     D[2] = 0.5; D[3] = 1.0; D[4] = 1.0;
+
+	A[0][0] = -1.0; A[0][1] = 1.0; A[0][2] = 0.0; A[0][3] = 0.0;  A[0][4] = 0.0;
+	A[1][0] = -1.0; A[1][1] = 0.0; A[1][2] = 1.0; A[1][3] = 0.0;  A[1][4] = 0.0;
+	A[2][0] = -1.0; A[2][1] = 0.0; A[2][2] = 0.0; A[2][3] = 1.0;  A[2][4] = 0.0;
+	A[3][0] = -1.0; A[3][1] = 0.0; A[3][2] = 0.0; A[3][3] = 0.0;  A[3][4] = 1.0;
+
+	B[0][0] =  0.5;     B[0][1] = 0.0;     B[0][2] = 0.0;     B[0][3] = 0.0;      B[0][4] = 0.0;
+	B[1][0] =  0.0;     B[1][1] = 0.5;     B[1][2] = 0.0;     B[1][3] = 0.0;      B[1][4] = 0.0;
+	B[2][0] =  0.0;     B[2][1] = 0.0;     B[2][2] = 1.0;     B[2][3] = 0.0;      B[2][4] = 0.0;
+	B[3][0] =  1.0/6.0; B[3][1] = 1.0/3.0; B[3][2] = 1.0/3.0; B[3][3] = 1.0/6.0;  B[3][4] = 0.0;
+
+      }
+
+      /*! \brief Return true if method is implicit
+      */
+      virtual bool implicit () const
+      {
+	return false;
+      }
+      
+      /*! \brief Return number of stages s of the method
+      */
+      virtual unsigned s () const
+      {
+	return 4;
+      }
+      
+      /*! \brief Return entries of the A matrix
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
+      */
+      virtual R a (int r, int i) const
+      {
+	return A[r-1][i];
+      }
+      
+      /*! \brief Return entries of the B matrix
+        \note that r ∈ 1,...,s and i ∈ 0,...,r
+      */
+      virtual R b (int r, int i) const
+      {
+	return B[r-1][i];
+      }
+      
+      /*! \brief Return entries of the d Vector
+        \note that i ∈ 0,...,s
+      */
+      virtual R d (int i) const
+      {
+	return D[i];
+      }
+      
+      /*! \brief Return name of the scheme
+      */
+      virtual std::string name () const
+      {
+        return std::string("RK4");
+      }
+
+    private:
+      Dune::FieldVector<R,5> D;
+      Dune::FieldMatrix<R,4,5> A;
+      Dune::FieldMatrix<R,4,5> B;
+    };
+
+
+
 
     /**
      * \brief Parameters to turn the OneStepMethod into an
