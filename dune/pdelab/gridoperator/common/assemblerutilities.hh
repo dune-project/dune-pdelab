@@ -10,28 +10,58 @@
 namespace Dune{
   namespace PDELab{
 
-    /**
-       \brief Traits class for local assembler
+    /** Traits of the local assembler
 
-       This class collects types and auxilliary information about the
-       local assembler.
-
-       \tparam CU   Constraints maps for the individual dofs (trial space)
-       \tparam CV   Constraints maps for the individual dofs (test space)
+        \tparam GO The grid operator 
 
     */
-    template<typename B, typename CU, typename CV>
+    template<typename GO>
     struct LocalAssemblerTraits
     {
-      typedef B MatrixBackend;
 
-      typedef typename B::size_type SizeType;
+      //! The trial grid function space.
+      typedef typename GO::Traits::TrialGridFunctionSpace TrialGridFunctionSpace;
 
-      typedef CU TrialConstraintsType;
+      //! The test grid function space.
+      typedef typename GO::Traits::TestGridFunctionSpace TestGridFunctionSpace;
 
-      typedef CV TestConstraintsType;
+
+      //! The type of the trial grid function space constraints.
+      typedef typename GO::Traits::TrialGridFunctionSpaceConstraints TrialGridFunctionSpaceConstraints;
+
+      //! The type of the test grid function space constraints.
+      typedef typename GO::Traits::TestGridFunctionSpaceConstraints TestGridFunctionSpaceConstraints;
+
+
+      //! The matrix backend of the grid operator.
+      typedef typename GO::Traits::MatrixBackend MatrixBackend;
+
+
+      //! The field type of the domain (solution).
+      typedef typename GO::Traits::DomainField DomainField;
+
+      //! The type of the domain (solution).
+      typedef typename GO::Traits::Domain Solution;
+
+
+      //! The field type of the range (residual).
+      typedef typename GO::Traits::RangeField RangeField;
+
+      //! The type of the range (residual).
+      typedef typename GO::Traits::Range Residual;
+
+
+      //! The field type of the jacobian.
+      typedef typename GO::Traits::JacobianField JacobianField;
+
+      //! The type of the jacobian.
+      typedef typename GO::Traits::Jacobian Jacobian;
+
+      //! The matrix pattern
+      typedef typename MatrixBackend::Pattern MatrixPattern;
+
+
     };
-
 
     //! Translation helper from intersection method return values to intersection type.
     /**
@@ -77,7 +107,7 @@ namespace Dune{
     class LocalAssemblerBase{
     public:
 
-      typedef LocalAssemblerTraits<B,CU,CV> Traits;
+      typedef typename B::size_type SizeType;
 
       //! construct AssemblerSpace
       LocalAssemblerBase ()
@@ -197,8 +227,8 @@ namespace Dune{
 
         for (size_t i=0; i<lfsv.size(); i++)
           for (size_t j=0; j<lfsu.size(); j++){
-            typename Traits::SizeType gi = lfsv.globalIndex(i);
-            typename Traits::SizeType gj = lfsu.globalIndex(j);
+            SizeType gi = lfsv.globalIndex(i);
+            SizeType gj = lfsu.globalIndex(j);
 
             // Get global constraints containers for test and ansatz space
             const CV & cv = *pconstraintsv;
