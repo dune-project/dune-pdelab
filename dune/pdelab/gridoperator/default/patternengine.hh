@@ -31,17 +31,17 @@ namespace Dune{
 
       //! The type of the solution vector
       typedef typename LA::Pattern Pattern;
-  
+
       typedef Dune::PDELab::LocalSparsityPattern LocalPattern;
 
       /**
-         \brief Constructor 
+         \brief Constructor
 
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
       DefaultLocalPatternAssemblerEngine(const LocalAssembler & local_assembler_)
-        : local_assembler(local_assembler_), lop(local_assembler_.lop), 
+        : local_assembler(local_assembler_), lop(local_assembler_.lop),
           invalid_pattern(static_cast<Pattern*>(0)), pattern(invalid_pattern)
       {}
 
@@ -56,7 +56,7 @@ namespace Dune{
 
       //! Query methods for the global grid assembler
       //! @{
-      bool requireSkeleton() const 
+      bool requireSkeleton() const
       { return local_assembler.doPatternSkeleton(); }
       bool requireUVVolume() const
       { return local_assembler.doPatternVolume(); }
@@ -141,7 +141,7 @@ namespace Dune{
       static void assembleVEnrichedCoupling(const IG & ig,
                                             const LFSV & lfsv_s,
                                             const LFSV & lfsv_n,
-                                            const LFSV & lfsv_coupling) 
+                                            const LFSV & lfsv_coupling)
       {DUNE_THROW(Dune::NotImplemented,"Assembling of coupling spaces is not implemented for ");}
 
       template<typename EG>

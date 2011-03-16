@@ -39,8 +39,8 @@ namespace Dune{
       //! Static check on whether this is a Galerkin method
       static const bool isGalerkinMethod = Dune::is_same<GFSU,GFSV>::value;
 
-      DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_) 
-        : gfsu(gfsu_), gfsv(gfsv_), lfsu(gfsu_), lfsv(gfsv_), 
+      DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_)
+        : gfsu(gfsu_), gfsv(gfsv_), lfsu(gfsu_), lfsv(gfsv_),
           lfsun(gfsu_), lfsvn(gfsv_)
       { }
 
@@ -56,9 +56,9 @@ namespace Dune{
         return gfsv;
       }
 
-      // Assembler (const GFSU& gfsu_, const GFSV& gfsv_) 
-      //   : gfsu(gfsu_), gfsv(gfsv_), lfsu(gfsu_), lfsv(gfsv_), 
-      //     lfsun(gfsu_), lfsvn(gfsv_), 
+      // Assembler (const GFSU& gfsu_, const GFSV& gfsv_)
+      //   : gfsu(gfsu_), gfsv(gfsv_), lfsu(gfsu_), lfsv(gfsv_),
+      //     lfsun(gfsu_), lfsvn(gfsv_),
       //     sub_triangulation(ST(gfsu_.gridview(),Dune::PDELab::NoSubTriangulationImp()))
       // { }
 
@@ -217,7 +217,7 @@ namespace Dune{
 
                   } // iit
               } // do skeleton
-            
+
             if(require_uv_post_skeleton || require_v_post_skeleton){
               // Volume integration
               assembler_engine.assembleVVolumePostSkeleton(eg,lfsv);

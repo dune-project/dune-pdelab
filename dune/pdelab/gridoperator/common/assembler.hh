@@ -32,15 +32,15 @@ namespace Dune {
     public:
       //! The type of the local assembler
       typedef LocalAssemblerInterface LocalAssembler;
-      
+
       //! Access to the superior local assembler object
       const LocalAssembler & localAssembler();
 
-      /** @name Query methods 
+      /** @name Query methods
 
           Query methods indicating which assembling methods need to be
           called by the global assembler.
-      
+
       @{
       */
       bool requireSkeleton() const;
@@ -73,47 +73,47 @@ namespace Dune {
       is called before the local function spaces are bound to the cell
       and the coefficients for the local trial function space are
       extracted.
-      
+
       \return Indicate whether assembling of this cell may be aborted
       after the call of this method. This may avoid unneccessary costs
-      due to binding of the local function spaces etc. 
+      due to binding of the local function spaces etc.
       */
       template<typename EG>
       bool assembleCell(const EG & eg);
 
       /** Assembling for a codim 0 entity part for trial and test
-      local function spaces. 
+      local function spaces.
       */
       template<typename EG, typename LFSU, typename LFSV>
       void assembleUVVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv);
 
       /** Assembling for a codim 0 entity part for test local function
-      spaces. 
+      spaces.
       */
       template<typename EG, typename LFSV>
       void assembleVVolume(const EG & eg, const LFSV & lfsv);
 
       /** Assembling for an interior codim 1 entity part for trial and
-      test local function spaces. 
+      test local function spaces.
       */
       template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N>
       void assembleUVSkeleton(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
                               const LFSU_N & lfsu_n, const LFSV_N & lfsv_n);
 
       /** Assembling for an interior codim 1 entity part for test
-      local function spaces. 
+      local function spaces.
       */
       template<typename IG, typename LFSV_S, typename LFSV_N>
       void assembleVSkeleton(const IG & ig, const LFSV_S & lfsv_s, const LFSV_N & lfsv_n);
 
       /** Assembling for a boundary codim 1 entity part for trial and
-      test local function spaces. 
+      test local function spaces.
       */
       template<typename IG, typename LFSU_S, typename LFSV_S>
       void assembleUVBoundary(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
 
       /** Assembling for a boundary codim 1 entity part for test local
-      function spaces. 
+      function spaces.
       */
       template<typename IG, typename LFSV_S>
       void assembleVBoundary(const IG & ig, const LFSV_S & lfsv_s);
@@ -263,7 +263,7 @@ namespace Dune {
 
         The local assembler provides engines for the standard
         operations of the grid operator. This includes setting up the
-        pattern, computing the residual and the jacobian matrix. 
+        pattern, computing the residual and the jacobian matrix.
 
         It also provides a standard interface which may be used by
         implementations of time stepping methods.
@@ -306,8 +306,8 @@ namespace Dune {
       template<class RF>
       void setWeight(RF weight);
 
-      /** @name Access to the assembler engines 
-          @{ 
+      /** @name Access to the assembler engines
+          @{
       */
       LocalPatternAssemblerEngine & localPatternAssemblerEngine(P & p);
       LocalResidualAssemblerEngine & localResidualAssemblerEngine(R & r, const X & x);
@@ -315,7 +315,7 @@ namespace Dune {
       LocalResidualJacobianAssemblerEngine & localResidualJacobianAssemblerEngine(R & r, A & a, const X & x);
       /** @} */
 
-      /**  @name Assembler engines 
+      /**  @name Assembler engines
            @{
       */
       class LocalPatternAssemblerEngine : public LocalAssemblerEngine {};
@@ -329,14 +329,14 @@ namespace Dune {
     /** \brief The grid operator represents an operator mapping which
         corresponds to the (possibly nonlinear) algebraic problem
         resulting from the discretization of a PDE.
-        
+
         A grid operator provides methods which allow its evaluation as
         well as the computation of its jacobian matrix. It therefore
         provides all functionality required for a direct application
         of the Newton method.
 
         For numerical reasons, the field type of the jacobian matrix
-        is allowed to differ from the operator's range field type. 
+        is allowed to differ from the operator's range field type.
 
     */
     template<typename GFSU, typename GFSV,
@@ -422,10 +422,10 @@ namespace Dune {
 \section GridOperatorDocIntroduction Introduction
 
 In the PDELab concept, the continuous PDE problem is reduced to an
-algebraic problem: 
+algebraic problem:
 
 Find \f$ \mathbf{u}\in\mathbf{U} \f$ such that \f$
-\mathcal{R}(\mathbf{u}) = \mathbf{0} \f$ . 
+\mathcal{R}(\mathbf{u}) = \mathbf{0} \f$ .
 
 For instationary problems a corresponding algebraic problem is setup
 for each time step or stage of a time step.
@@ -434,7 +434,7 @@ The grid operator object represents the operator mapping \f$
 \mathcal{R} : \mathbf{U} \to \mathbf{V} \f$ . It is evaluated via the
 Dune::PDELab::GridOperatorInterface::residual() member method and its
 derivatives are aquired with the
-Dune::PDELab::GridOperatorInterface::jacobian() method. 
+Dune::PDELab::GridOperatorInterface::jacobian() method.
 
 Evaluating the grid operator and its jacobian matrix entails
 integrations over the computational domain during which the
@@ -454,7 +454,7 @@ implementations of the assembler interface to be used interchangeably
 in common implementations of time stepping schemes. The latter may
 link in between the global and the local assembler and thus apply the
 necessary modifications to the local integrations (like multiplying
-with the time step with or Runge-Kutta coefficients). 
+with the time step with or Runge-Kutta coefficients).
 
 Furthermore, the separation provides a junction for caching
 objects. Such objects would provide the interface of the local
@@ -488,12 +488,12 @@ assembler is required to provide the engines:
 - LocalResidualJacobianAssemblerEngine
 
 The last of the engines above allows a combined assembling of the
-residual and the jacobian matrix. 
+residual and the jacobian matrix.
 
 \section GridOperatorDocComposite Instationary problems and composite grid operators
 
 When given a instationary PDE problem which (after spatial
-discretization) results in an algebraic problem 
+discretization) results in an algebraic problem
 
 \f[ \partial_t \mathcal{R}_1(\mathbf{u}) + \mathcal{R}_0(\mathbf{u}) = \mathbf{0}, \f]
 
@@ -513,7 +513,7 @@ traversion. This will usually result in both engines performing
 operations, which they could efficiently share or distribute. To allow
 such optimizations, the composite grid operator may inform his
 subordinate grid operators of their co-operators and the order in
-which they will be called during assembling. This is done via the 
+which they will be called during assembling. This is done via the
 Dune::PDELab::GridOperatorInterface::setupGridOperators method.
 
  */
