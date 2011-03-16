@@ -133,10 +133,14 @@ namespace Dune{
         lae1->onBindLFSUVInside(ig,lfsu,lfsv);
       }
 
-      template<typename IG, typename LFSU, typename LFSV>
-      void onBindLFSUVOutside(const IG & ig, const LFSU & lfsun, const LFSV & lfsvn){
-        lae0->onBindLFSUVOutside(ig,lfsun,lfsvn);
-        lae1->onBindLFSUVOutside(ig,lfsun,lfsvn);
+      template<typename IG,
+               typename LFSU_S, typename LFSV_S,
+               typename LFSU_N, typename LFSV_N>
+      void onBindLFSUVOutside(const IG & ig,
+                              const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                              const LFSU_N & lfsu_n, const LFSV_N & lfsv_n){
+        lae0->onBindLFSUVOutside(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
+        lae1->onBindLFSUVOutside(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
       }
 
       template<typename IG, typename LFSV>
@@ -145,22 +149,44 @@ namespace Dune{
         lae1->onBindLFSVInside(ig,lfsv);
       }
 
-      template<typename IG, typename LFSV>
-      void onBindLFSVOutside(const IG & ig, const LFSV & lfsvn){
-        lae0->onBindLFSVOutside(ig,lfsvn);
-        lae1->onBindLFSVOutside(ig,lfsvn);
+      template<typename IG,
+               typename LFSV_S,
+               typename LFSV_N>
+      void onBindLFSVOutside(const IG & ig,
+                             const LFSV_S & lfsv_s,
+                             const LFSV_N & lfsv_n){
+        lae0->onBindLFSVOutside(ig,lfsv_s,lfsv_n);
+        lae1->onBindLFSVOutside(ig,lfsv_s,lfsv_n);
       }
 
-      template<typename IG, typename LFSUC, typename LFSVC>
-      void onBindLFSUVCoupling(const IG & ig, const LFSUC & lfsuc, const LFSVC & lfsvc){
-        lae0->onBindLFSUVCoupling(ig,lfsuc,lfsvc);
-        lae1->onBindLFSUVCoupling(ig,lfsuc,lfsvc);
+      template<typename IG,
+               typename LFSU_S, typename LFSV_S,
+               typename LFSU_N, typename LFSV_N,
+               typename LFSU_C, typename LFSV_C>
+      void onBindLFSUVCoupling(const IG & ig,
+                               const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                               const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
+                               const LFSU_C & lfsu_c, const LFSV_C & lfsv_c){
+        lae0->onBindLFSUVCoupling(ig,
+                                  lfsu_s,lfsv_s,
+                                  lfsu_n,lfsv_n,
+                                  lfsu_c,lfsv_c);
+        lae1->onBindLFSUVCoupling(ig,
+                                  lfsu_s,lfsv_s,
+                                  lfsu_n,lfsv_n,
+                                  lfsu_c,lfsv_c);
       }
 
-      template<typename IG, typename LFSVC>
-      void onBindLFSVCoupling(const IG & ig, const LFSVC & lfsvc){
-        lae0->onBindLFSVCoupling(ig,lfsvc);
-        lae1->onBindLFSVCoupling(ig,lfsvc);
+      template<typename IG,
+               typename LFSV_S,
+               typename LFSV_N,
+               typename LFSV_C>
+      void onBindLFSVCoupling(const IG & ig,
+                              const LFSV_S & lfsv_s,
+                              const LFSV_N & lfsv_n,
+                              const LFSV_C & lfsv_c){
+        lae0->onBindLFSVCoupling(ig,lfsv_s,lfsv_n,lfsv_c);
+        lae1->onBindLFSVCoupling(ig,lfsv_s,lfsv_n,lfsv_c);
       }
 
       //! @}
@@ -186,10 +212,14 @@ namespace Dune{
         lae1->onUnbindLFSUVInside(ig,lfsu, lfsv);
       }
 
-      template<typename IG, typename LFSU, typename LFSV>
-      void onUnbindLFSUVOutside(const IG & ig, const LFSU & lfsun, const LFSV & lfsvn){
-        lae0->onUnbindLFSUVOutside(ig,lfsun,lfsvn);
-        lae1->onUnbindLFSUVOutside(ig,lfsun,lfsvn);
+      template<typename IG,
+               typename LFSU_S, typename LFSV_S,
+               typename LFSU_N, typename LFSV_N>
+      void onUnbindLFSUVOutside(const IG & ig,
+                                const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                                const LFSU_N & lfsu_n, const LFSV_N & lfsv_n){
+        lae0->onUnbindLFSUVOutside(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
+        lae1->onUnbindLFSUVOutside(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
       }
 
       template<typename IG, typename LFSV>
@@ -198,29 +228,50 @@ namespace Dune{
         lae1->onUnbindLFSVInside(ig,lfsv);
       }
 
-      template<typename IG, typename LFSV>
-      void onUnbindLFSVOutside(const IG & ig, const LFSV & lfsvn){
-        lae0->onUnbindLFSVOutside(ig,lfsvn);
-        lae1->onUnbindLFSVOutside(ig,lfsvn);
+      template<typename IG,
+               typename LFSV_S,
+               typename LFSV_N>
+      void onUnbindLFSVOutside(const IG & ig,
+                               const LFSV_S & lfsv_s,
+                               const LFSV_N & lfsv_n){
+        lae0->onUnbindLFSVOutside(ig,lfsv_s,lfsv_n);
+        lae1->onUnbindLFSVOutside(ig,lfsv_s,lfsv_n);
       }
 
-      template<typename IG, typename LFSUC, typename LFSVC>
-      void onUnbindLFSUVCoupling(const IG& ig, const LFSUC & lfsuc, const LFSVC & lfsvc){
-        lae0->onUnbindLFSUVCoupling(ig,lfsuc,lfsvc);
-        lae1->onUnbindLFSUVCoupling(ig,lfsuc,lfsvc);
+      template<typename IG,
+               typename LFSU_S, typename LFSV_S,
+               typename LFSU_N, typename LFSV_N,
+               typename LFSU_C, typename LFSV_C>
+      void onUnbindLFSUVCoupling(const IG & ig,
+                                 const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                                 const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
+                                 const LFSU_C & lfsu_c, const LFSV_C & lfsv_c){
+        lae0->onUnbindLFSUVCoupling(ig,
+                                    lfsu_s,lfsv_s,
+                                    lfsu_n,lfsv_n,
+                                    lfsu_c,lfsv_c);
+        lae1->onUnbindLFSUVCoupling(ig,
+                                    lfsu_s,lfsv_s,
+                                    lfsu_n,lfsv_n,
+                                    lfsu_c,lfsv_c);
       }
 
-      template<typename IG, typename LFSVC>
-      void onUnbindLFSVCoupling(const IG& ig, const LFSVC & lfsvc){
-        lae0->onUnbindLFSVCoupling(ig,lfsvc);
-        lae1->onUnbindLFSVCoupling(ig,lfsvc);
+      template<typename IG,
+               typename LFSV_S,
+               typename LFSV_N,
+               typename LFSV_C>
+      void onUnbindLFSVCoupling(const IG & ig,
+                                const LFSV_S & lfsv_s,
+                                const LFSV_N & lfsv_n,
+                                const LFSV_C & lfsv_c){
+        lae0->onUnbindLFSVCoupling(ig,lfsv_s,lfsv_n,lfsv_c);
+        lae1->onUnbindLFSVCoupling(ig,lfsv_s,lfsv_n,lfsv_c);
       }
 
       //! @}
 
       //! Methods for loading of the local function's
-      //! coefficients. These methods are blocked. The loading of the
-      //! coefficients is done in each assemble call.
+      //! coefficients.
       //!@{
       template<typename LFSU>
       void loadCoefficientsLFSUInside(const LFSU & lfsu_s){
