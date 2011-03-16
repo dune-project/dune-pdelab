@@ -110,7 +110,10 @@ namespace Dune{
       }
 
       template<typename IG>
-      void onBindLFSUVOutside(const IG & ig, const LFSU & lfsun, const LFSV & lfsvn){
+      void onBindLFSUVOutside(const IG & ig,
+                              const LFSU & lfsus, const LFSV & lfsvs,
+                              const LFSU & lfsun, const LFSV & lfsvn)
+      {
         xn.resize(lfsun.size());
       }
 
@@ -120,7 +123,10 @@ namespace Dune{
       }
 
       template<typename IG>
-      void onBindLFSVOutside(const IG & ig, const LFSV & lfsvn){
+      void onBindLFSVOutside(const IG & ig,
+                             const LFSU & lfsus,
+                             const LFSV & lfsvn)
+      {
         rn.assign(lfsvn.size(),0.0);
       }
 
@@ -140,7 +146,10 @@ namespace Dune{
       }
 
       template<typename IG>
-      void onUnbindLFSVOutside(const IG & ig, const LFSV & lfsvn){
+      void onUnbindLFSVOutside(const IG & ig,
+                               const LFSV & lfsvs,
+                               const LFSV & lfsvn)
+      {
         lfsvn.vadd(rn,*residual);
       }
       //! @}

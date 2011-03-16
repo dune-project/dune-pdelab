@@ -95,6 +95,18 @@ namespace Dune{
         al.assign(lfsv.size() ,lfsu.size(),0.0);
       }
 
+      template<typename IG>
+      void onBindLFSUVOutside(const IG & ig,
+                              const LFSU & lfsu_s, const LFSV & lfsv_s,
+                              const LFSU & lfsu_n, const LFSV & lfsv_n)
+      {
+        xn.resize(lfsu_n.size());
+        al.assign(lfsv_s.size() ,lfsu_s.size(),0.0);
+        al_sn.assign(lfsv_s.size(),lfsu_n.size(),0.0);
+        al_ns.assign(lfsv_n.size(),lfsu_s.size(),0.0);
+        al_nn.assign(lfsv_n.size(),lfsu_n.size(),0.0);
+      }
+
       //! @}
 
       //! Called when the local function space is about to be rebound or
@@ -103,6 +115,16 @@ namespace Dune{
       template<typename EG>
       void onUnbindLFSUV(const EG & eg, const LFSU & lfsu, const LFSV & lfsv){
         local_assembler.etadd(lfsv,lfsu,al,*jacobian);
+      }
+
+      template<typename IG>
+      void onUnbindLFSUVOutside(const IG & ig,
+                                const LFSU & lfsu_s, const LFSV & lfsv_s,
+                                const LFSU & lfsu_n, const LFSV & lfsv_n)
+      {
+        local_assembler.etadd(lfsv_s,lfsu_n,al_sn,*jacobian);
+        local_assembler.etadd(lfsv_n,lfsu_s,al_ns,*jacobian);
+        local_assembler.etadd(lfsv_n,lfsu_n,al_nn,*jacobian);
       }
 
       //! @}
@@ -153,10 +175,6 @@ namespace Dune{
       void assembleUVSkeleton(const IG & ig, const LFSU & lfsu_s, const LFSV & lfsv_s,
                               const LFSU & lfsu_n, const LFSV & lfsv_n)
       {
-        al_sn.assign(lfsv_s.size() ,lfsu_n.size(),0.0);
-        al_ns.assign(lfsv_n.size(),lfsu_s.size() ,0.0);
-        al_nn.assign(lfsv_n.size(),lfsu_n.size(),0.0);
-
         al_view.setWeight(local_assembler.weight);
         al_sn_view.setWeight(local_assembler.weight);
         al_ns_view.setWeight(local_assembler.weight);
@@ -164,10 +182,6 @@ namespace Dune{
 
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
           jacobian_skeleton(lop,ig,lfsu_s,xl,lfsv_s,lfsu_n,xn,lfsv_n,al_view,al_sn_view,al_ns_view,al_nn_view);
-
-        local_assembler.etadd(lfsv_s,lfsu_n,al_sn,*jacobian);
-        local_assembler.etadd(lfsv_n,lfsu_s,al_ns,*jacobian);
-        local_assembler.etadd(lfsv_n,lfsu_n,al_nn,*jacobian);
       }
 
       template<typename IG>

@@ -153,7 +153,7 @@ namespace Dune{
                                 lfsvn.bind(*(iit->outside()));
 
                                 // Notify assembler engine about binds
-                                assembler_engine.onBindLFSVOutside(ig,lfsvn);
+                                assembler_engine.onBindLFSVOutside(ig,lfsv,lfsvn);
 
                                 // Skeleton integration
                                 assembler_engine.assembleVSkeleton(ig,lfsv,lfsvn);
@@ -164,7 +164,9 @@ namespace Dune{
                                   lfsun.bind(*(iit->outside()));
 
                                   // Notify assembler engine about binds
-                                  assembler_engine.onBindLFSUVOutside(ig,lfsun,lfsvn);
+                                  assembler_engine.onBindLFSUVOutside(ig,
+                                                                      lfsu,lfsv,
+                                                                      lfsun,lfsvn);
 
                                   // Load coefficients of local functions
                                   assembler_engine.loadCoefficientsLFSUOutside(lfsun);
@@ -173,11 +175,13 @@ namespace Dune{
                                   assembler_engine.assembleUVSkeleton(ig,lfsu,lfsv,lfsun,lfsvn);
 
                                   // Notify assembler engine about unbinds
-                                  assembler_engine.onUnbindLFSUVOutside(ig,lfsun,lfsvn);
+                                  assembler_engine.onUnbindLFSUVOutside(ig,
+                                                                        lfsu,lfsv,
+                                                                        lfsun,lfsvn);
                                 }
 
                                 // Notify assembler engine about unbinds
-                                assembler_engine.onUnbindLFSVOutside(ig,lfsvn);
+                                assembler_engine.onUnbindLFSVOutside(ig,lfsv,lfsvn);
                               }
                           }
                         break;
