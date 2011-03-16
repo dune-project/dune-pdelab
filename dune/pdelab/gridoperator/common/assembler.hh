@@ -179,25 +179,51 @@ namespace Dune {
 
          @{
        */
-      void onBindLFSUV(const EG & eg, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
-      void onBindLFSV(const EG & eg, const LFSV_S & lfsv_s);
-      void onBindLFSUVInside(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
-      void onBindLFSVInside(const IG & ig, const LFSV_S & lfsv_s);
-      void onBindLFSUVOutside(const IG & ig, const LFSU_N & lfsu_n, const LFSV_N & lfsv_n);
-      void onBindLFSVOutside(const IG & ig, const LFSV_N & lfsv_n);
-      void onBindLFSUVCoupling(const IG & ig, 
+      void onBindLFSUV(const EG & eg,
+                       const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
+      void onBindLFSV(const EG & eg,
+                      const LFSV_S & lfsv_s);
+      void onBindLFSUVInside(const IG & ig,
+                             const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
+      void onBindLFSVInside(const IG & ig,
+                            const LFSV_S & lfsv_s);
+      void onBindLFSUVOutside(const IG & ig,
+                              const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                              const LFSU_N & lfsu_n, const LFSV_N & lfsv_n);
+      void onBindLFSVOutside(const IG & ig,
+                             const LFSV_S & lfsv_s,
+                             const LFSV_N & lfsv_n);
+      void onBindLFSUVCoupling(const IG & ig,
+                               const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                               const LFSU_N & lfsu_n, const LFSV_N & lfsv_n
                                const LFSU_Coupling & lfsu_coupling, const LFSV_Coupling & lfsv_coupling);
-      void onBindLFSVCoupling(const IG & ig, const LFSV_Coupling & lfsv_coupling);
+      void onBindLFSVCoupling(const IG & ig,
+                              const LFSV_S & lfsv_s,
+                              const LFSV_N & lfsv_n,
+                              const LFSV_Coupling & lfsv_coupling);
 
-      void onUnbindLFSUV(const EG & eg, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
-      void onUnbindLFSV(const EG & eg, const LFSV_S & lfsv_s);
-      void onUnbindLFSUVInside(const IG & ig, const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
-      void onUnbindLFSVInside(const IG & ig, const LFSV_S & lfsv_s);
-      void onUnbindLFSUVOutside(const IG & ig, const LFSU_N & lfsu_n, const LFSV_N & lfsv_n);
-      void onUnbindLFSVOutside(const IG & ig, const LFSV_N & lfsv_n);
-      void onUnbindLFSUVCoupling(const IG & ig, 
+      void onUnbindLFSUV(const EG & eg,
+                         const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
+      void onUnbindLFSV(const EG & eg,
+                        const LFSV_S & lfsv_s);
+      void onUnbindLFSUVInside(const IG & ig,
+                               const LFSU_S & lfsu_s, const LFSV_S & lfsv_s);
+      void onUnbindLFSVInside(const IG & ig,
+                              const LFSV_S & lfsv_s);
+      void onUnbindLFSUVOutside(const IG & ig,
+                                const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                                const LFSU_N & lfsu_n, const LFSV_N & lfsv_n);
+      void onUnbindLFSVOutside(const IG & ig,
+                               const LFSV_S & lfsv_s,
+                               const LFSV_N & lfsv_n);
+      void onUnbindLFSUVCoupling(const IG & ig,
+                                 const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
+                                 const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
                                  const LFSU_Coupling & lfsu_coupling, const LFSV_Coupling & lfsv_coupling);
-      void onUnbindLFSVCoupling(const IG & ig, const LFSV_Coupling & lfsv_coupling);
+      void onUnbindLFSVCoupling(const IG & ig,
+                                const LFSV_S & lfsv_s,
+                                const LFSV_N & lfsv_n,
+                                const LFSV_Coupling & lfsv_coupling);
 
       /** @} */
 
