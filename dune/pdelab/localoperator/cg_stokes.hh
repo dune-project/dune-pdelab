@@ -151,7 +151,7 @@ namespace Dune {
               for(int d=0; d<dim; ++d){
                 const LFSU_V & lfsu_v = lfsu_v_pfs.child(d);
                 for (size_t i=0; i<lfsu_v.size(); i++)
-                  vu[d] += x[lfsu_v.localIndex(i)] * phi[i];
+                  vu[d] += x(lfsu_v,i) * phi[i];
               }
             }
 
@@ -162,12 +162,12 @@ namespace Dune {
               // compute gradient of u
               Dune::FieldVector<RF,dim> gradu(0.0);
               for (size_t i=0; i<lfsu_v.size(); i++)
-                gradu.axpy(x[lfsu_v.localIndex(i)],gradphi[i]);
+                gradu.axpy(x(lfsu_v,i),gradphi[i]);
 
               // compute pressure
               RT_P func_p(0.0);
               for (size_t i=0; i<lfsu_p.size(); i++)
-                func_p += x[lfsu_p.localIndex(i)] * psi[i];
+                func_p += x(lfsu_p,i) * psi[i];
 
               //compute u * grad u_d
               const RF u_nabla_u = vu * gradu;
@@ -178,14 +178,14 @@ namespace Dune {
               for (size_t i=0; i<vsize; i++){
 
                 // integrate grad u * grad phi_i
-                r[lfsu_v.localIndex(i)] += p.mu() * (gradu * gradphi[i]) * factor;
+                r.accumulate(lfsu_v,i, p.mu() * (gradu * gradphi[i]) * factor);
 
                 // integrate div phi_i * p
-                r[lfsu_v.localIndex(i)] -= (func_p * gradphi[i][d]) * factor;
+                r.accumulate(lfsu_v,i,- (func_p * gradphi[i][d]) * factor);
 
                 // integrate u * grad u * phi_i
                 if(navier)
-                  r[lfsu_v.localIndex(i)] += p.rho() * u_nabla_u * phi[i] * factor;
+                  r.accumulate(lfsu_v,i, p.rho() * u_nabla_u * phi[i] * factor);
               }
 
             }
@@ -194,12 +194,12 @@ namespace Dune {
             RF divu(0.0);
             for (size_t i=0; i<vsize; i++)
               for(int d=0; d<dim; ++d)
-                divu += x[lfsu_v_pfs.child(d).localIndex(i)] * gradphi[i][d];
+                divu += x(lfsu_v_pfs.child(d),i) * gradphi[i][d];
 
             // integrate div u * psi_i
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_t i=0; i<lfsu_p.size(); i++){
-              r[lfsu_p.localIndex(i)] -= (divu * psi[i]) * factor;
+              r.accumulate(lfsu_p,i, - (divu * psi[i]) * factor);
             }
 
           }
@@ -275,7 +275,7 @@ namespace Dune {
               const LFSV_V & lfsv_v = lfsv_v_pfs.child(d);
 
               for (size_t i=0; i<vsize; i++){
-                r[lfsv_v.localIndex(i)] += p.mu() * neumann_flux * normal[d] * phi[i] * factor;
+                r.accumulate(lfsv_v,i, p.mu() * neumann_flux * normal[d] * phi[i] * factor);
               }
 
             }
@@ -394,7 +394,7 @@ namespace Dune {
               for(int d = 0; d < dim; ++d){
                 const LFSU_V & lfsv_v = lfsu_v_pfs.child(d);
                 for(size_t l = 0; l < vsize; ++l)
-                  vu[d] += x[lfsv_v.localIndex(l)] * phi[l];
+                  vu[d] += x(lfsv_v,l) * phi[l];
               }
             }
 
@@ -407,19 +407,19 @@ namespace Dune {
               Dune::FieldVector<RF,dim> gradu_d(0.0);
               if(navier)
                 for(size_t l =0; l < vsize; ++l)
-                  gradu_d.axpy(x[lfsv_v.localIndex(l)], gradphi[l]);
+                  gradu_d.axpy(x(lfsv_v,l), gradphi[l]);
 
               RF factor = it->weight() * eg.geometry().integrationElement(it->position());
               for (size_t i=0; i<lfsv_v.size(); i++){
 
                 // integrate grad phi_u_i * grad phi_v_i (viscous force)
                 for (size_t j=0; j<lfsv_v.size(); j++){
-                  mat(lfsv_v.localIndex(i),lfsu_v.localIndex(j)) += p.mu() * (gradphi[i] * gradphi[j]) * factor;
+                  mat.accumulate(lfsv_v,i,lfsu_v,j, p.mu() * (gradphi[i] * gradphi[j]) * factor);
                 }
 
                 // integrate grad_d phi_v_d * p_u (pressure force)
                 for (size_t j=0; j<lfsu_p.size(); j++)
-                  mat(lfsv_v.localIndex(i),lfsu_p.localIndex(j)) -= (gradphi[i][d] * psi[j]) * factor;
+                  mat.accumulate(lfsv_v,i,lfsu_p,j, - (gradphi[i][d] * psi[j]) * factor);
 
                 if(navier){
                   for(int k =0; k < dim; ++k){
@@ -428,21 +428,21 @@ namespace Dune {
                     const RF pre_factor = factor * p.rho() * gradu_d[k] * phi[i];
 
                     for(size_t j=0; j< lfsu_v.size(); ++j)
-                      mat(lfsv_v.localIndex(i),lfsu_v.localIndex(j)) += pre_factor * phi[j];
+                      mat.accumulate(lfsv_v,i,lfsu_v,j, pre_factor * phi[j]);
                   } // k
                 }
 
                 if(navier){
                   const RF pre_factor = factor * p.rho() *  phi[i];
                   for(size_t j=0; j< lfsu_v.size(); ++j)
-                    mat(lfsv_v.localIndex(i),lfsu_v.localIndex(j)) +=  pre_factor * (vu * gradphi[j]);
+                    mat.accumulate(lfsv_v,i,lfsu_v,j,  pre_factor * (vu * gradphi[j]));
                 }
 
               }
 
               for (size_t i=0; i<lfsu_p.size(); i++){
                 for (size_t j=0; j<lfsu_v.size(); j++)
-                  mat(lfsu_p.localIndex(i),lfsu_v.localIndex(j)) -= (gradphi[j][d] * psi[i]) * factor;
+                  mat.accumulate(lfsu_p,i,lfsu_v,j, - (gradphi[j][d] * psi[i]) * factor);
               }
 
             } // d
