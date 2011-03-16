@@ -162,7 +162,7 @@ namespace Dune {
 
           // now assign indices in the parent to the child-blocks
           SizeType parentIndex = 0;
-          for(std::size_t block = 0; block < mapper.size(); ++block)
+          for(std::size_t block = 0; block < std::size_t(mapper.size()); ++block)
             for(std::size_t child = 0; child < Imp::CHILDREN; ++child) {
               indexRanges[child][block].second = parentIndex;
               parentIndex += indexRanges[child][block+1].first -
