@@ -92,6 +92,8 @@ namespace Dune{
         return testGridFunctionSpace().globalSize();
       }
 
+      Assembler & assembler() { return global_assembler; }
+
       const Assembler & assembler() const { return global_assembler; }
 
       LocalAssembler & localAssembler() const { return local_assembler; }
