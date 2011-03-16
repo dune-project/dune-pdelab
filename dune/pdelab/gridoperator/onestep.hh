@@ -42,7 +42,7 @@ namespace Dune{
       //! @}
 
       //! The local UDG assembler type
-      typedef OneStepLocalAssembler<LocalAssemblerDT0,LocalAssemblerDT1> LocalAssembler;
+      typedef OneStepLocalAssembler<OneStepGridOperator,LocalAssemblerDT0,LocalAssemblerDT1> LocalAssembler;
 
       //! The grid operator traits
       typedef Dune::PDELab::GridOperatorTraits

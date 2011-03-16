@@ -30,11 +30,11 @@ namespace Dune{
       typedef typename LA::LFSV LFSV;
 
       //! The type of the jacobian matrix
-      typedef typename LA::Jacobian Jacobian;
+      typedef typename LA::Traits::Jacobian Jacobian;
       typedef typename Jacobian::ElementType JacobianElement;
 
       //! The type of the solution vector
-      typedef typename LA::Solution Solution;
+      typedef typename LA::Traits::Solution Solution;
       typedef typename Solution::ElementType SolutionElement;
 
       /**
@@ -145,7 +145,7 @@ namespace Dune{
       //! @{
       void postAssembly(){
         if(local_assembler.doConstraintsPostProcessing){
-          typedef typename LocalAssembler::Base::Traits::TestConstraintsType::const_iterator
+          typedef typename LocalAssembler::Traits::TestGridFunctionSpaceConstraints::const_iterator
             global_row_iterator;
           for (global_row_iterator cit=(local_assembler.pconstraintsv)->begin();
                cit!=(local_assembler.pconstraintsv)->end(); ++cit)

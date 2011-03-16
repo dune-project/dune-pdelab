@@ -17,27 +17,26 @@ namespace Dune{
        \tparam LA0 The local assembler for the temporal derivative term of order zero
        \tparam LA1 The local assembler for the temporal derivative term of order one
     */
-    template<typename LA0, typename LA1>
+    template<typename GO, typename LA0, typename LA1>
     class OneStepLocalAssembler
       : public Dune::PDELab::LocalAssemblerBase<
-      typename LA0::Traits::MatrixBackend,
-      typename LA0::Traits::TrialConstraintsType,
-      typename LA0::Traits::TestConstraintsType>
+      typename GO::Traits::MatrixBackend,
+      typename GO::Traits::TrialGridFunctionSpaceConstraints,
+      typename GO::Traits::TestGridFunctionSpaceConstraints>
     {
     public:
-
-      //! The traits class from the
-      typedef typename LA0::Traits Traits;
 
       //! The types of the local assemblers of order one and zero
       typedef LA0 LocalAssemblerDT0;
       typedef LA1 LocalAssemblerDT1;
 
+      typedef Dune::PDELab::LocalAssemblerTraits<GO> Traits;
+
       //! The base class
       typedef Dune::PDELab::LocalAssemblerBase
-      < typename LA0::Traits::MatrixBackend,
-        typename LA0::Traits::TrialConstraintsType,
-        typename LA0::Traits::TestConstraintsType> Base;
+      <typename GO::Traits::MatrixBackend,
+       typename GO::Traits::TrialGridFunctionSpaceConstraints,
+       typename GO::Traits::TestGridFunctionSpaceConstraints> Base;
 
       //! The local assembler engines
       //! @{
@@ -53,43 +52,44 @@ namespace Dune{
       //! @}
 
       void static_checks(){
-        dune_static_assert((is_same<typename LA0::GridOperator::Traits::MatrixBackend::Pattern,typename LA1::GridOperator::Traits::MatrixBackend::Pattern>::value),
+        dune_static_assert((is_same<typename LA0::Traits::MatrixBackend::Pattern,
+                            typename LA1::Traits::MatrixBackend::Pattern>::value),
                            "Received two local assemblers which are non-compatible "
                            "due to different matrix pattern types");
-        dune_static_assert((is_same<typename LA0::GridOperator::Traits::Jacobian,typename LA1::GridOperator::Traits::Jacobian>::value),
+        dune_static_assert((is_same<typename LA0::Traits::Jacobian,
+                            typename LA1::Traits::Jacobian>::value),
                            "Received two local assemblers which are non-compatible "
                            "due to different jacobian types");
-        dune_static_assert((is_same<typename LA0::GridOperator::Traits::Domain,typename LA1::GridOperator::Traits::Domain>::value),
+        dune_static_assert((is_same<typename LA0::Traits::Solution,
+                            typename LA1::Traits::Solution>::value),
                            "Received two local assemblers which are non-compatible "
                            "due to different solution vector types");
-        dune_static_assert((is_same<typename LA0::GridOperator::Traits::Range,typename LA1::GridOperator::Traits::Range>::value),
+        dune_static_assert((is_same<typename LA0::Traits::Residual,
+                            typename LA1::Traits::Residual>::value),
                            "Received two local assemblers which are non-compatible "
                            "due to different residual vector types");
-        //dune_static_assert((is_same<typename LA0::Real,typename LA1::Real>::value),
-        //                   "Received two local assemblers which are non-compatible "
-        //                   "due to different real number types");
       }
 
       //! The local operators type for real numbers e.g. time
-      typedef typename LA0::GridOperator::Traits::RangeField Real;
+      typedef typename Traits::RangeField Real;
 
-      //! The residual representation type
-      typedef typename LA0::GridOperator::Traits::Range Residual;
+      // //! The residual representation type
+      // typedef typename LA0::GridOperator::Traits::Range Residual;
 
-      //! The solution representation type
-      typedef typename LA0::GridOperator::Traits::Domain Solution;
+      // //! The solution representation type
+      // typedef typename LA0::GridOperator::Traits::Domain Solution;
 
-      //! The jacobian representation type
-      typedef typename LA0::GridOperator::Traits::Jacobian Jacobian;
+      // //! The jacobian representation type
+      // typedef typename LA0::GridOperator::Traits::Jacobian Jacobian;
 
-      //! The matrix pattern representation type
-      typedef typename LA0::GridOperator::Traits::MatrixBackend::Pattern Pattern;
+      // //! The matrix pattern representation type
+      // typedef typename LA0::GridOperator::Traits::MatrixBackend::Pattern Pattern;
 
       //! The type of the one step parameter object
       typedef Dune::PDELab::TimeSteppingParameterInterface<Real> OneStepParameters;
 
       //! Constructor with empty constraints
-      OneStepLocalAssembler (LA0 & la0_, LA1 & la1_, Residual & const_residual_)
+      OneStepLocalAssembler (LA0 & la0_, LA1 & la1_, typename Traits::Residual & const_residual_)
         : Base(la0_.trialConstraints(),la0_.testConstraints()),
           la0(la0_), la1(la1_), const_residual(const_residual_),
           time(0.0), use_mass_dt(false), stage(0),
@@ -148,7 +148,7 @@ namespace Dune{
       //! Returns a reference to the requested engine. This engine is
       //! completely configured and ready to use.
       LocalPatternAssemblerEngine & localPatternAssemblerEngine
-      (Pattern & p)
+      (typename Traits::MatrixPattern & p)
       {
         pattern_engine.setPattern(p);
         return pattern_engine;
@@ -157,7 +157,7 @@ namespace Dune{
       //! Returns a reference to the requested engine. This engine is
       //! completely configured and ready to use.
       LocalPreStageAssemblerEngine & localPreStageAssemblerEngine
-      (const std::vector<Solution*> & x)
+      (const std::vector<typename Traits::Solution*> & x)
       {
         prestage_engine.setSolutions(x);
         prestage_engine.setConstResidual(const_residual);
@@ -167,7 +167,7 @@ namespace Dune{
       //! Returns a reference to the requested engine. This engine is
       //! completely configured and ready to use.
       LocalResidualAssemblerEngine & localResidualAssemblerEngine
-      (Residual & r, const Solution & x)
+      (typename Traits::Residual & r, const typename Traits::Solution & x)
       {
         residual_engine.setSolution(x);
         residual_engine.setResidual(r);
@@ -177,7 +177,7 @@ namespace Dune{
       //! Returns a reference to the requested engine. This engine is
       //! completely configured and ready to use.
       LocalJacobianAssemblerEngine & localJacobianAssemblerEngine
-      (Jacobian & a, const Solution & x)
+      (typename Traits::Jacobian & a, const typename Traits::Solution & x)
       {
         jacobian_engine.setSolution(x);
         jacobian_engine.setJacobian(a);
@@ -200,7 +200,7 @@ namespace Dune{
       const OneStepParameters * osp_method;
 
       //! The constant part of the residual
-      Residual & const_residual;
+      typename Traits::Residual & const_residual;
 
       //! The current time of assembling
       Real time;

@@ -25,31 +25,29 @@ namespace Dune{
 
     */
     template<typename GO, typename LOP, bool nonoverlapping_mode = false>
-    class DefaultLocalAssembler : public Dune::PDELab::LocalAssemblerBase<typename GO::Traits::MatrixBackend,
-                                                                          typename GO::Traits::TrialGridFunctionSpaceConstraints,
-                                                                          typename GO::Traits::TestGridFunctionSpaceConstraints>{
+    class DefaultLocalAssembler : 
+      public Dune::PDELab::LocalAssemblerBase<typename GO::Traits::MatrixBackend,
+                                              typename GO::Traits::TrialGridFunctionSpaceConstraints,
+                                              typename GO::Traits::TestGridFunctionSpaceConstraints>
+    {
+
     public:
 
-      typedef GO GridOperator;
+      //! The traits class
+      typedef Dune::PDELab::LocalAssemblerTraits<GO> Traits;
 
-      typedef typename GridOperator::Traits::TrialGridFunctionSpace GFSU;
-      typedef typename GridOperator::Traits::TestGridFunctionSpace GFSV;
+      //! The local operators type for real numbers e.g. time
+      typedef typename Traits::Residual::ElementType RangeField;
+      typedef RangeField Real;
 
-      typedef typename GridOperator::Traits::Domain X;
-      typedef typename GridOperator::Traits::Range R;
-      typedef typename GridOperator::Traits::Jacobian A;
+      typedef typename Traits::TrialGridFunctionSpace GFSU;
+      typedef typename Traits::TestGridFunctionSpace GFSV;
 
-      typedef typename GridOperator::Traits::MatrixBackend B;
-      typedef typename B::Pattern P;
-
-      typedef typename GridOperator::Traits::TrialGridFunctionSpaceConstraints CU;
-      typedef typename GridOperator::Traits::TestGridFunctionSpaceConstraints CV;
-
+      typedef typename Traits::TrialGridFunctionSpaceConstraints CU;
+      typedef typename Traits::TestGridFunctionSpaceConstraints CV;
 
       //! The base class of this local assembler
-      typedef Dune::PDELab::LocalAssemblerBase<B,CU,CV> Base;
-
-      typedef typename Base::Traits Traits;
+      typedef Dune::PDELab::LocalAssemblerBase<typename Traits::MatrixBackend,CU,CV> Base;
 
       //! The current grid view type
       typedef typename GFSU::Traits::GridViewType GridView;
@@ -65,22 +63,6 @@ namespace Dune{
       typedef Dune::PDELab::LocalFunctionSpace<GFSU, Dune::PDELab::TrialSpaceTag> LFSU;
       typedef Dune::PDELab::LocalFunctionSpace<GFSV, Dune::PDELab::TestSpaceTag> LFSV;
       //! @}
-
-      //! The local operators type for real numbers e.g. time
-      typedef typename R::ElementType RangeField;
-      typedef RangeField Real;
-
-      //! The residual representation type
-      typedef R Residual;
-
-      //! The solution representation type
-      typedef X Solution;
-
-      //! The jacobian representation type
-      typedef A Jacobian;
-
-      //! The matrix pattern representation type
-      typedef P Pattern;
 
       //! The local assembler engines
       //! @{
@@ -134,7 +116,7 @@ namespace Dune{
       //! Returns a reference to the requested engine. This engine is
       //! completely configured and ready to use.
       LocalPatternAssemblerEngine & localPatternAssemblerEngine
-      (Pattern & p)
+      (typename Traits::MatrixPattern & p)
       {
         pattern_engine.setPattern(p);
         return pattern_engine;
@@ -143,7 +125,7 @@ namespace Dune{
       //! Returns a reference to the requested engine. This engine is
       //! completely configured and ready to use.
       LocalResidualAssemblerEngine & localResidualAssemblerEngine
-      (Residual & r, const Solution & x)
+      (typename Traits::Residual & r, const typename Traits::Solution & x)
       {
         residual_engine.setResidual(r);
         residual_engine.setSolution(x);
@@ -153,7 +135,7 @@ namespace Dune{
       //! Returns a reference to the requested engine. This engine is
       //! completely configured and ready to use.
       LocalJacobianAssemblerEngine & localJacobianAssemblerEngine
-      (Jacobian & a, const Solution & x)
+      (typename Traits::Jacobian & a, const typename Traits::Solution & x)
       {
         jacobian_engine.setJacobian(a);
         jacobian_engine.setSolution(x);

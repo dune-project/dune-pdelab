@@ -47,11 +47,11 @@ namespace Dune{
       //! @}
 
       //! The type of the residual vector
-      typedef typename OSLA::Residual Residual;
+      typedef typename OSLA::Traits::Residual Residual;
       typedef typename Residual::ElementType ResidualElement;
 
       //! The type of the solution vector
-      typedef typename OSLA::Solution Solution;
+      typedef typename OSLA::Traits::Solution Solution;
       typedef typename Solution::ElementType SolutionElement;
 
       //! The type for real numbers

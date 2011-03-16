@@ -47,10 +47,10 @@ namespace Dune{
       //! @}
 
       //! The type of the residual vector
-      typedef typename OSLA::Residual Residual;
+      typedef typename OSLA::Traits::Residual Residual;
 
       //! The type of the solution vector
-      typedef typename OSLA::Solution Solution;
+      typedef typename OSLA::Traits::Solution Solution;
 
       //! The type for real numbers
       typedef typename OSLA::Real Real;

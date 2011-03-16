@@ -30,7 +30,7 @@ namespace Dune{
       typedef typename LA::LFSV LFSV;
 
       //! The type of the solution vector
-      typedef typename LA::Pattern Pattern;
+      typedef typename LA::Traits::MatrixPattern Pattern;
 
       typedef Dune::PDELab::LocalSparsityPattern LocalPattern;
 

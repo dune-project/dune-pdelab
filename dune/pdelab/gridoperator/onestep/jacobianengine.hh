@@ -43,10 +43,10 @@ namespace Dune{
       typedef typename LocalAssemblerDT1::LocalJacobianAssemblerEngine JacobianEngineDT1;
 
       //! The type of the residual vector
-      typedef typename OSLA::Jacobian Jacobian;
+      typedef typename OSLA::Traits::Jacobian Jacobian;
 
       //! The type of the solution vector
-      typedef typename OSLA::Solution Solution;
+      typedef typename OSLA::Traits::Solution Solution;
 
       //! The type for real numbers
       typedef typename OSLA::Real Real;

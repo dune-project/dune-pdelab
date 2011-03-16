@@ -41,7 +41,7 @@ namespace Dune{
       typedef typename OSLA::LocalAssemblerDT1 LocalAssemblerDT1;
 
       //! The type of the matrix pattern container
-      typedef typename LocalAssemblerDT0::Pattern Pattern;
+      typedef typename LocalAssembler::Traits::MatrixPattern Pattern;
       typedef Dune::PDELab::LocalSparsityPattern LocalPattern;
 
       /**

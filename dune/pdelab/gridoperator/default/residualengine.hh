@@ -26,11 +26,11 @@ namespace Dune{
       typedef typename LA::LocalOperator LOP;
 
       //! The type of the residual vector
-      typedef typename LA::Residual Residual;
+      typedef typename LA::Traits::Residual Residual;
       typedef typename Residual::ElementType ResidualElement;
 
       //! The type of the solution vector
-      typedef typename LA::Solution Solution;
+      typedef typename LA::Traits::Solution Solution;
       typedef typename Solution::ElementType SolutionElement;
 
       //! The local function spaces
