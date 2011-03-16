@@ -155,17 +155,19 @@ namespace Dune{
           la.la0.setTime(la.time+d[s]*la.dt);
           la.la1.setTime(la.time+d[s]*la.dt);
 
+          lae0->setSolution(*((*solutions)[s]));
+          lae1->setSolution(*((*solutions)[s]));
+
+          lae0->loadCoefficientsLFSUInside(lfsu);
+          lae1->loadCoefficientsLFSUInside(lfsu);
+
           if(do0[s]){
             la.la0.setWeight(b[s]*la.dt_factor0);
-            lae0->setSolution(*((*solutions)[s]));
-            lae0->loadCoefficientsLFSUInside(lfsu);
             lae0->assembleUVVolume(eg,lfsu,lfsv);
           }
 
           if(do1[s]){
             la.la1.setWeight(a[s]*la.dt_factor1);
-            lae1->setSolution(*((*solutions)[s]));
-            lae1->loadCoefficientsLFSUInside(lfsu);
             lae1->assembleUVVolume(eg,lfsu,lfsv);
           }
         }
@@ -201,19 +203,23 @@ namespace Dune{
           la.la0.setTime(la.time+d[s]*la.dt);
           la.la1.setTime(la.time+d[s]*la.dt);
 
+          lae0->setSolution(*((*solutions)[s]));
+          lae1->setSolution(*((*solutions)[s]));
+
+          lae0->loadCoefficientsLFSUInside(lfsu_s);
+          lae1->loadCoefficientsLFSUInside(lfsu_s);
+          lae0->loadCoefficientsLFSUOutside(lfsu_n);
+          lae1->loadCoefficientsLFSUOutside(lfsu_n);
+
           if(do0[s]){
             la.la0.setWeight(b[s]*la.dt_factor0);
             lae0->setSolution(*((*solutions)[s]));
-            lae0->loadCoefficientsLFSUInside(lfsu_s);
-            lae0->loadCoefficientsLFSUOutside(lfsu_n);
             lae0->assembleUVSkeleton(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
           }
 
           if(do1[s]){
             la.la1.setWeight(a[s]*la.dt_factor1);
             lae1->setSolution(*((*solutions)[s]));
-            lae1->loadCoefficientsLFSUInside(lfsu_s);
-            lae1->loadCoefficientsLFSUOutside(lfsu_n);
             lae1->assembleUVSkeleton(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
           }
         }
@@ -247,17 +253,19 @@ namespace Dune{
           la.la0.setTime(la.time+d[s]*la.dt);
           la.la1.setTime(la.time+d[s]*la.dt);
 
+          lae0->setSolution(*((*solutions)[s]));
+          lae1->setSolution(*((*solutions)[s]));
+
+          lae0->loadCoefficientsLFSUInside(lfsu_s);
+          lae1->loadCoefficientsLFSUInside(lfsu_s);
+
           if(do0[s]){
             la.la0.setWeight(b[s]*la.dt_factor0);
-            lae0->setSolution(*((*solutions)[s]));
-            lae0->loadCoefficientsLFSUInside(lfsu_s);
             lae0->assembleUVBoundary(ig,lfsu_s,lfsv_s);
           }
 
           if(do1[s]){
             la.la1.setWeight(a[s]*la.dt_factor1);
-            lae1->setSolution(*((*solutions)[s]));
-            lae1->loadCoefficientsLFSUInside(lfsu_s);
             lae1->assembleUVBoundary(ig,lfsu_s,lfsv_s);
           }
         }
@@ -291,17 +299,19 @@ namespace Dune{
           la.la0.setTime(la.time+d[s]*la.dt);
           la.la1.setTime(la.time+d[s]*la.dt);
 
+          lae0->setSolution(*((*solutions)[s]));
+          lae1->setSolution(*((*solutions)[s]));
+
+          lae0->loadCoefficientsLFSUInside(lfsu_s);
+          lae1->loadCoefficientsLFSUInside(lfsu_s);
+
           if(do0[s]){
             la.la0.setWeight(b[s]*la.dt_factor0);
-            lae0->setSolution(*((*solutions)[s]));
-            lae0->loadCoefficientsLFSUInside(lfsu_s);
             lae0->assembleUVProcessor(ig,lfsu_s,lfsv_s);
           }
 
           if(do1[s]){
             la.la1.setWeight(a[s]*la.dt_factor1);
-            lae1->setSolution(*((*solutions)[s]));
-            lae1->loadCoefficientsLFSUInside(lfsu_s);
             lae1->assembleUVProcessor(ig,lfsu_s,lfsv_s);
           }
         }
@@ -339,21 +349,25 @@ namespace Dune{
           la.la0.setTime(la.time+d[s]*la.dt);
           la.la1.setTime(la.time+d[s]*la.dt);
 
+          lae0->setSolution(*((*solutions)[s]));
+          lae1->setSolution(*((*solutions)[s]));
+
+          lae0->loadCoefficientsLFSUInside(lfsu_s);
+          lae1->loadCoefficientsLFSUInside(lfsu_s);
+
+          lae0->loadCoefficientsLFSUOutside(lfsu_n);
+          lae1->loadCoefficientsLFSUOutside(lfsu_n);
+
+          lae0->loadCoefficientsLFSUCoupling(lfsu_c);
+          lae1->loadCoefficientsLFSUCoupling(lfsu_c);
+
           if(do0[s]){
             la.la0.setWeight(b[s]*la.dt_factor0);
-            lae0->setSolution(*((*solutions)[s]));
-            lae0->loadCoefficientsLFSUInside(lfsu_s);
-            lae0->loadCoefficientsLFSUOutside(lfsu_n);
-            lae0->loadCoefficientsLFSUCoupling(lfsu_c);
             lae0->assembleUVEnrichedCoupling(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n,lfsu_c,lfsv_c);
           }
 
           if(do1[s]){
             la.la1.setWeight(a[s]*la.dt_factor1);
-            lae1->setSolution(*((*solutions)[s]));
-            lae1->loadCoefficientsLFSUInside(lfsu_s);
-            lae1->loadCoefficientsLFSUOutside(lfsu_n);
-            lae1->loadCoefficientsLFSUCoupling(lfsu_c);
             lae1->assembleUVEnrichedCoupling(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n,lfsu_c,lfsv_c);
           }
         }
@@ -391,17 +405,19 @@ namespace Dune{
           la.la0.setTime(la.time+d[s]*la.dt);
           la.la1.setTime(la.time+d[s]*la.dt);
 
+          lae0->setSolution(*((*solutions)[s]));
+          lae1->setSolution(*((*solutions)[s]));
+
+          lae0->loadCoefficientsLFSUInside(lfsu);
+          lae1->loadCoefficientsLFSUInside(lfsu);
+
           if(do0[s]){
             la.la0.setWeight(b[s]*la.dt_factor0);
-            lae0->setSolution(*((*solutions)[s]));
-            lae0->loadCoefficientsLFSUInside(lfsu);
             lae0->assembleUVVolumePostSkeleton(eg,lfsu,lfsv);
           }
 
           if(do1[s]){
             la.la1.setWeight(a[s]*la.dt_factor1);
-            lae1->setSolution(*((*solutions)[s]));
-            lae1->loadCoefficientsLFSUInside(lfsu);
             lae1->assembleUVVolumePostSkeleton(eg,lfsu,lfsv);
           }
 
