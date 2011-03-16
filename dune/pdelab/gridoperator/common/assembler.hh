@@ -400,6 +400,12 @@ namespace Dune {
          Dune::PDELab::GridOperatorInterface::setupGridOperator
          function itself.
 
+         \warning After calling this function, all data-handling methods
+         (onBind...(), onUnbind...(), loadCoefficients() ) MUST always
+         be called for all children and in the same order as the one
+         passed to this function. Failure to do so will result in wrong
+         assembly results!
+
        */
       template<typename GridOperatorTuple>
       static void setupGridOperators(GridOperatorTuple& tuple);
