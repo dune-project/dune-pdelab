@@ -323,9 +323,9 @@ namespace Dune {
       {}
 
 
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                            LocalMatrix<R>& mat) const
+                            M& mat) const
       {
         // dimensions
         const int dim = EG::Geometry::dimension;
@@ -520,9 +520,9 @@ namespace Dune {
 	  }
 
       // jacobian of volume term
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
 	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
-                            LocalMatrix<R>& mat) const
+                            M& mat) const
       {
         scalar_operator.jacobian_volume(eg,lfsu.template child<0>(),x,lfsu.template child<0>(),mat);
       }
