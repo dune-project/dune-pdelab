@@ -101,7 +101,6 @@ namespace Dune{
                               const LFSU & lfsu_n, const LFSV & lfsv_n)
       {
         xn.resize(lfsu_n.size());
-        al.assign(lfsv_s.size() ,lfsu_s.size(),0.0);
         al_sn.assign(lfsv_s.size(),lfsu_n.size(),0.0);
         al_ns.assign(lfsv_n.size(),lfsu_s.size(),0.0);
         al_nn.assign(lfsv_n.size(),lfsu_n.size(),0.0);
