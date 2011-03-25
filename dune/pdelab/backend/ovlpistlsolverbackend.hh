@@ -443,43 +443,50 @@ namespace Dune {
     //! \addtogroup PDELab_ovlpsolvers Overlapping Solvers
     //! \{
 
-    //! \brief Overlapping parallel BiCGStab solver with SSOR preconditioner
-    template<class GFS, class C>
+    /**
+     * @brief Overlapping parallel BiCGStab solver with SSOR preconditioner
+     * @tparam GFS The Type of the GridFunctionSpace.
+     * @tparam CC The Type of the Constraints Container.
+     */
+    template<class GFS, class CC>
     class ISTLBackend_OVLP_BCGS_SSORk
-      : public ISTLBackend_OVLP_Base<GFS,C,Dune::SeqSSOR, Dune::BiCGSTABSolver>
+      : public ISTLBackend_OVLP_Base<GFS,CC,Dune::SeqSSOR, Dune::BiCGSTABSolver>
     {
     public:
       /*! \brief make a linear solver object
 
         \param[in] gfs a grid function space
-        \param[in] c a constraints object
+        \param[in] cc a constraints container object
         \param[in] maxiter maximum number of iterations to do
         \param[in] steps number of SSOR steps to apply as inner iteration
         \param[in] verbose print messages if true
       */
-      explicit ISTLBackend_OVLP_BCGS_SSORk (const GFS& gfs, const C& c, unsigned maxiter=5000,
+      explicit ISTLBackend_OVLP_BCGS_SSORk (const GFS& gfs, const CC& cc, unsigned maxiter=5000,
                                             int steps=5, int verbose=1)
-        : ISTLBackend_OVLP_Base<GFS,C,Dune::SeqSSOR, Dune::BiCGSTABSolver>(gfs, c, maxiter, steps, verbose)
+        : ISTLBackend_OVLP_Base<GFS,CC,Dune::SeqSSOR, Dune::BiCGSTABSolver>(gfs, cc, maxiter, steps, verbose)
       {}
     };
-
-    //! \brief Overlapping parallel CGS solver with SSOR preconditioner
-    template<class GFS, class C>
+    /**
+     * @brief Overlapping parallel CGS solver with SSOR preconditioner
+     * @tparam GFS The Type of the GridFunctionSpace.
+     * @tparam CC The Type of the Constraints Container.
+     */
+    template<class GFS, class CC>
     class ISTLBackend_OVLP_CG_SSORk
-      : public ISTLBackend_OVLP_Base<GFS,C,Dune::SeqSSOR, Dune::CGSolver>
+      : public ISTLBackend_OVLP_Base<GFS,CC,Dune::SeqSSOR, Dune::CGSolver>
     {
     public:
       /*! \brief make a linear solver object
 
         \param[in] gfs a grid function space
-        \param[in] c a constraints object
+        \param[in] cc a constraints container object
         \param[in] maxiter maximum number of iterations to do
         \param[in] steps number of SSOR steps to apply as inner iteration
         \param[in] verbose print messages if true
       */
-      explicit ISTLBackend_OVLP_CG_SSORk (const GFS& gfs, const C& c, unsigned maxiter=5000,
+      explicit ISTLBackend_OVLP_CG_SSORk (const GFS& gfs, const CC& cc, unsigned maxiter=5000,
                                             int steps=5, int verbose=1)
-        : ISTLBackend_OVLP_Base<GFS,C,Dune::SeqSSOR, Dune::CGSolver>(gfs, c, maxiter, steps, verbose)
+        : ISTLBackend_OVLP_Base<GFS,CC,Dune::SeqSSOR, Dune::CGSolver>(gfs, cc, maxiter, steps, verbose)
       {}
     };
 
@@ -542,50 +549,58 @@ namespace Dune {
 
     //! \addtogroup PDELab_ovlpsolvers Overlapping Solvers
     //! \{
-
-    //! \brief Overlapping parallel BiCGStab solver with SuperLU preconditioner
-    template<class GFS, class C>
+    /**
+     * @brief Overlapping parallel BiCGStab solver with SuperLU preconditioner
+     * @tparam GFS The Type of the GridFunctionSpace.
+     * @tparam CC The Type of the Constraints Container.
+     */
+    template<class GFS, class CC>
     class ISTLBackend_OVLP_BCGS_SuperLU
-      : public ISTLBackend_OVLP_SuperLU_Base<GFS,C,Dune::BiCGSTABSolver>
+      : public ISTLBackend_OVLP_SuperLU_Base<GFS,CC,Dune::BiCGSTABSolver>
     {
     public:
       
       /*! \brief make a linear solver object
 
         \param[in] gfs_ a grid function space
-        \param[in] c_ a constraints object
+        \param[in] cc_ a constraints container object
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_OVLP_BCGS_SuperLU (const GFS& gfs_, const C& c_, unsigned maxiter_=5000,
+      explicit ISTLBackend_OVLP_BCGS_SuperLU (const GFS& gfs_, const CC& cc_, unsigned maxiter_=5000,
                                               int verbose_=1)
-        : ISTLBackend_OVLP_SuperLU_Base<GFS,C,Dune::BiCGSTABSolver>(gfs_,c_,maxiter_,verbose_)
+        : ISTLBackend_OVLP_SuperLU_Base<GFS,CC,Dune::BiCGSTABSolver>(gfs_,cc_,maxiter_,verbose_)
       {}
     };
-    
-    //! Overlapping parallel CG solver with SuperLU preconditioner
-    template<class GFS, class C>
+
+    /**    
+     * @Overlapping parallel CG solver with SuperLU preconditioner
+     * @tparam GFS The Type of the GridFunctionSpace.
+     * @tparam CC The Type of the Constraints Container.
+     */
+    template<class GFS, class CC>
     class ISTLBackend_OVLP_CG_SuperLU
-      : public ISTLBackend_OVLP_SuperLU_Base<GFS,C,Dune::CGSolver>
+      : public ISTLBackend_OVLP_SuperLU_Base<GFS,CC,Dune::CGSolver>
     {
     public:
       
       /*! \brief make a linear solver object
 
         \param[in] gfs_ a grid function space
-        \param[in] c_ a constraints object
+        \param[in] cc_ a constraints object
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_OVLP_CG_SuperLU (const GFS& gfs_, const C& c_, 
+      explicit ISTLBackend_OVLP_CG_SuperLU (const GFS& gfs_, const CC& cc_, 
                                               unsigned maxiter_=5000,
                                               int verbose_=1)
-        : ISTLBackend_OVLP_SuperLU_Base<GFS,C,Dune::CGSolver>(gfs_,c_,maxiter_,verbose_)
+        : ISTLBackend_OVLP_SuperLU_Base<GFS,CC,Dune::CGSolver>(gfs_,cc_,maxiter_,verbose_)
       {}
     };
 
 
-    //! Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
+    // @Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
+    // @tparam GFS The Type of the GridFunctionSpace.
     template<class GFS>
     class ISTLBackend_OVLP_ExplicitDiagonal
       : public LinearResultStorage
@@ -748,7 +763,7 @@ namespace Dune {
     /**
      * @brief Overlapping parallel conjugate gradient solver preconditioned with AMG smoothed by SSOR
      * @tparam GFS The type of the grid functions space.
-     * @tparam s The bits to use for the globale index.
+     * @tparam s The bits to use for the global index.
      */
     template<class GFS, int s=96>
     class ISTLBackend_CG_AMG_SSOR
@@ -772,7 +787,7 @@ namespace Dune {
     /**
      * @brief Overlapping parallel BiCGStab solver preconditioned with AMG smoothed by SSOR
      * @tparam GFS The type of the grid functions space.
-     * @tparam s The bits to use for the globale index.
+     * @tparam s The bits to use for the global index.
      */
     template<class GFS, int s=96>
     class ISTLBackend_BCGS_AMG_SSOR

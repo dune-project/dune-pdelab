@@ -235,8 +235,8 @@ namespace Dune {
     {
     public:
       /*! \brief make a linear solver object
-        \param[in] maxiter maximum number of iterations to do
-        \param[in] verbose print messages if true
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
       */
       explicit ISTLBackend_SEQ_BCGS_Jac (unsigned maxiter_=5000, bool verbose_=true)
         : ISTLBackend_SEQ_Base<Dune::SeqJac, Dune::BiCGSTABSolver>(maxiter_, verbose_)
@@ -302,13 +302,13 @@ namespace Dune {
       /*! \brief make a linear solver object
 
         
-        \param[in] n The number of levels to be used.
-        \param[in] w The relaxation factor.
+        \param[in] n_ The number of levels to be used.
+        \param[in] w_ The relaxation factor.
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_SEQ_BCGS_ILUn (int n, double w=1.0, unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_ILUn<Dune::BiCGSTABSolver>(n, w, maxiter_, verbose_)
+      explicit ISTLBackend_SEQ_BCGS_ILUn (int n_, double w_=1.0, unsigned maxiter_=5000, int verbose_=1)
+        : ISTLBackend_SEQ_ILUn<Dune::BiCGSTABSolver>(n_, w_, maxiter_, verbose_)
       {}
     }; 
 
@@ -320,13 +320,13 @@ namespace Dune {
       /*! \brief make a linear solver object
 
         
-        \param[in] n The number of levels to be used.
-        \param[in] w The relaxation factor.
+        \param[in] n_ The number of levels to be used.
+        \param[in] w_ The relaxation factor.
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_SEQ_CG_ILUn (int n, double w=1.0, unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_ILUn<Dune::CGSolver>(n, w, maxiter_, verbose_)
+      explicit ISTLBackend_SEQ_CG_ILUn (int n_, double w_=1.0, unsigned maxiter_=5000, int verbose_=1)
+        : ISTLBackend_SEQ_ILUn<Dune::CGSolver>(n_, w_, maxiter_, verbose_)
       {}
     };
 
@@ -355,8 +355,8 @@ namespace Dune {
     {
     public:
       /*! \brief make a linear solver object
-        \param[in] maxiter maximum number of iterations to do
-        \param[in] verbose print messages if true
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
       */
       explicit ISTLBackend_SEQ_CG_Jac (unsigned maxiter_=5000, bool verbose_=true)
         : ISTLBackend_SEQ_Base<Dune::SeqJac, Dune::CGSolver>(maxiter_, verbose_)
