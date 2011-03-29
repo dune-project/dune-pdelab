@@ -124,7 +124,7 @@ namespace Dune{
 
       template<typename IG>
       void onBindLFSVOutside(const IG & ig,
-                             const LFSU & lfsus,
+                             const LFSV & lfsvs,
                              const LFSV & lfsvn)
       {
         rn.assign(lfsvn.size(),0.0);
