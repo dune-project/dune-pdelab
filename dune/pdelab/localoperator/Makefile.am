@@ -21,6 +21,8 @@ common_HEADERS =				\
 	laplacedirichletp12d.hh			\
 	linearacousticsdg.hh			\
 	linearacousticsparameter.hh		\
+	maxwelldg.hh				\
+	maxwellparameter.hh			\
 	mfdcommon.hh				\
 	pattern.hh				\
 	poisson.hh				\
