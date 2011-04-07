@@ -63,7 +63,7 @@ namespace Dune {
 
         const IB& ib;
         const LF& lf;
-        mutable XG& xg;
+        XG& xg;
 
       };
 
@@ -98,7 +98,7 @@ namespace Dune {
 
         const IB& ib;
         const LF& lf;
-        mutable XG& xg;
+        XG& xg;
 
       };
 

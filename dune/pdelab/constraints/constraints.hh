@@ -145,7 +145,7 @@ namespace Dune {
 
         const F& f;
         const IG& ig;
-        mutable CG& cg;
+        CG& cg;
 
       };
 
@@ -190,10 +190,7 @@ namespace Dune {
 
       private:
         const IG& ig;
-        // make CG mutable so we do not have to create an actual variable for the visitor
-        // This (and the const qualifier on the leaf() method) should be removed as soon as
-        // C++0x support becomes mandatory
-        mutable CG& cg;
+        CG& cg;
 
       };
 
@@ -226,10 +223,7 @@ namespace Dune {
 
       private:
         const IG& ig;
-        // make CG mutable so we do not have to create an actual variable for the visitor
-        // This (and the const qualifier on the leaf() method) should be removed as soon as
-        // C++0x support becomes mandatory
-        mutable CG& cg;
+        CG& cg;
 
       };
 
@@ -271,10 +265,7 @@ namespace Dune {
 
       private:
         const IG& ig;
-        // make CG mutable so we do not have to create an actual variable for the visitor
-        // This (and the const qualifier on the leaf() method) should be removed as soon as
-        // C++0x support becomes mandatory
-        mutable CG& cg;
+        CG& cg;
 
       };
 
@@ -309,10 +300,7 @@ namespace Dune {
 
       private:
         const EG& eg;
-        // make CG mutable so we do not have to create an actual variable for the visitor
-        // This (and the const qualifier on the leaf() method) should be removed as soon as
-        // C++0x support becomes mandatory
-        mutable CG& cg;
+        CG& cg;
 
       };
 
