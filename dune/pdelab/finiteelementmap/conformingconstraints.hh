@@ -81,10 +81,6 @@ namespace Dune {
 
             for (int j=0; j<refelem.size(face,1,codim); j++){
 
-              // test point to check whether we have dirichlet or neumann
-              const FaceCoord testpoint
-                = face_refelem.position(j,codim-1);
-
               if (static_cast<int>(FESwitch::coefficients(lfs.finiteElement()).
                                    localKey(i).subEntity())
                   == refelem.subEntity(face,1,j,codim))
