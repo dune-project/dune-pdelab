@@ -193,7 +193,7 @@ namespace Dune {
               // jump of gradient
               const Dune::FieldVector<DF,dim> outer_normal = ig.unitOuterNormal(it->position());
               RF grad_normal(0.0);
-              for (size_type i=0; i<dim; i++) grad_normal += (gradu_s[i]-gradu_n[i])*outer_normal[i];
+              for (int i=0; i<dim; i++) grad_normal += (gradu_s[i]-gradu_n[i])*outer_normal[i];
 
               // integrate
               RF factor = it->weight()*ig.inside()->geometry().integrationElement(inside_pos);
