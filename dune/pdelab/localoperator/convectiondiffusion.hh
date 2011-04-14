@@ -275,7 +275,8 @@ namespace Dune {
 
         // evaluate nonlinearity w(x_i); we assume here it is a Lagrange basis!
         std::vector<typename T::Traits::RangeFieldType> w(lfsu.size());
-        for (size_type i=0; i<lfsu.size(); i++) w[i] = param.w(eg.entity(),localcenter,x[i]);
+        for (size_type i=0; i<lfsu.size(); i++)
+          w[i] = param.w(eg.entity(),localcenter,x(lfsu,i));
 
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -321,7 +322,7 @@ namespace Dune {
             // integrate (K grad u)*grad phi_i + a_0*u*phi_i
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_type i=0; i<lfsu.size(); i++)
-              r[i] += ( Dvgradu*gradphi[i] - q*gradphi[i] - f*phi[i] )*factor;
+              r.accumulate(lfsu,i,( Dvgradu*gradphi[i] - q*gradphi[i] - f*phi[i] )*factor);
           }
 	  }
 
@@ -352,7 +353,8 @@ namespace Dune {
         Dune::FieldVector<DF,dim-1> facecenterlocal = Dune::GenericReferenceElements<DF,dim-1>::general(gtface).position(0,0);
         Dune::FieldVector<DF,dim> facecenterinelement = ig.geometryInInside().global( facecenterlocal );
         std::vector<typename T::Traits::RangeFieldType> w(lfsu_s.size());
-        for (size_type i=0; i<lfsu_s.size(); i++) w[i] = param.w(*(ig.inside()),facecenterinelement,x_s[i]);
+        for (size_type i=0; i<lfsu_s.size(); i++)
+          w[i] = param.w(*(ig.inside()),facecenterinelement,x_s(lfsu_s,i));
 
         // loop over quadrature points and integrate normal flux
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -381,7 +383,7 @@ namespace Dune {
             // integrate j
             RF factor = it->weight()*ig.geometry().integrationElement(it->position());
             for (size_type i=0; i<lfsv_s.size(); i++)
-              r_s[i] += j*phi[i]*factor;
+              r_s.accumulate(lfsu_s,i,j*phi[i]*factor);
           }
       }
 
