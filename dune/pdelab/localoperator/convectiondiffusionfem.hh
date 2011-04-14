@@ -104,7 +104,7 @@ namespace Dune {
             // evaluate u
             RF u=0.0;
             for (size_type i=0; i<lfsu.size(); i++)
-              u += x[lfsu.localIndex(i)]*phi[i];
+              u += x(lfsu,i)*phi[i];
 
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             // std::vector<JacobianType> js(lfsu.size());
@@ -120,7 +120,7 @@ namespace Dune {
             // compute gradient of u
             Dune::FieldVector<RF,dim> gradu(0.0);
             for (size_type i=0; i<lfsu.size(); i++)
-              gradu.axpy(x[lfsu.localIndex(i)],gradphi[i]);
+              gradu.axpy(x(lfsu,i),gradphi[i]);
 
             // compute A * gradient of u
             Dune::FieldVector<RF,dim> Agradu(0.0);
@@ -134,7 +134,7 @@ namespace Dune {
             // integrate (A grad u)*grad phi_i - u b*grad phi_i + c*u*phi_i
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_type i=0; i<lfsu.size(); i++)
-              r[lfsu.localIndex(i)] += ( Agradu*gradphi[i] - u*(b*gradphi[i]) + (c*u-f)*phi[i] )*factor;
+              r.accumulate(lfsu,i,( Agradu*gradphi[i] - u*(b*gradphi[i]) + (c*u-f)*phi[i] )*factor);
           }
       }
 
@@ -199,7 +199,7 @@ namespace Dune {
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_type j=0; j<lfsu.size(); j++)
               for (size_type i=0; i<lfsu.size(); i++)
-                mat(lfsu.localIndex(i),lfsu.localIndex(j)) += ( Agradphi[j]*gradphi[i]-phi[j]*(b*gradphi[i])+c*phi[j]*phi[i] )*factor;
+                mat.accumulate(lfsu,i,lfsu,j,( Agradphi[j]*gradphi[i]-phi[j]*(b*gradphi[i])+c*phi[j]*phi[i] )*factor);
           }
       }
 
@@ -254,7 +254,7 @@ namespace Dune {
                 // integrate j
                 RF factor = it->weight()*ig.geometry().integrationElement(it->position());
                 for (size_type i=0; i<lfsu_s.size(); i++)
-                  r_s[lfsu_s.localIndex(i)] += j*phi[i]*factor;
+                  r_s.accumulate(lfsu_s,i,j*phi[i]*factor);
               }
 
             if (bctype==ConvectionDiffusionBoundaryConditions::Outflow)
@@ -262,7 +262,7 @@ namespace Dune {
                 // evaluate u
                 RF u=0.0;
                 for (size_type i=0; i<lfsu_s.size(); i++)
-                  u += x_s[lfsu_s.localIndex(i)]*phi[i];
+                  u += x_s(lfsu_s,i)*phi[i];
 
                 // evaluate velocity field and outer unit normal
                 typename T::Traits::RangeType b = param.b(*(ig.inside()),local);
@@ -274,7 +274,7 @@ namespace Dune {
                 // integrate o
                 RF factor = it->weight()*ig.geometry().integrationElement(it->position());
                 for (size_type i=0; i<lfsu_s.size(); i++)
-                  r_s[lfsu_s.localIndex(i)] += ( (b*n)*u + o)*phi[i]*factor;
+                  r_s.accumulate(lfsu_s,i,( (b*n)*u + o)*phi[i]*factor);
               }
           }
       }
@@ -331,7 +331,7 @@ namespace Dune {
             RF factor = it->weight()*ig.geometry().integrationElement(it->position());
             for (size_type j=0; j<lfsu_s.size(); j++)
               for (size_type i=0; i<lfsu_s.size(); i++)
-                mat_s(lfsu_s.localIndex(i),lfsu_s.localIndex(j)) += (b*n)*phi[j]*phi[i]*factor;
+                mat_s.accumulate(lfsu_s,i,lfsu_s,j,(b*n)*phi[j]*phi[i]*factor);
           }
       }
 
@@ -420,7 +420,8 @@ namespace Dune {
 
             // evaluate u
             RF u=0.0;
-            for (size_type i=0; i<lfsu.size(); i++) u += x[lfsu.localIndex(i)]*phi[i];
+            for (size_type i=0; i<lfsu.size(); i++)
+              u += x(lfsu,i)*phi[i];
 
             // evaluate reaction term
             typename T::Traits::RangeFieldType c = param.c(eg.entity(),it->position());
@@ -435,7 +436,7 @@ namespace Dune {
 
         // accumulate cell indicator 
         DF h_T = diameter(eg.geometry());
-        r[lfsv.localIndex(0)] += h_T*h_T*sum;
+        r.accumulate(lfsv,0,h_T*h_T*sum);
       }
 
 
@@ -509,9 +510,11 @@ namespace Dune {
 
             // compute gradient of u
             Dune::FieldVector<RF,dim> gradu_s(0.0);
-            for (size_type i=0; i<lfsu_s.size(); i++) gradu_s.axpy(x_s[lfsu_s.localIndex(i)],tgradphi_s[i]);
+            for (size_type i=0; i<lfsu_s.size(); i++)
+              gradu_s.axpy(x_s(lfsu_s,i),tgradphi_s[i]);
             Dune::FieldVector<RF,dim> gradu_n(0.0);
-            for (size_type i=0; i<lfsu_n.size(); i++) gradu_n.axpy(x_n[lfsu_n.localIndex(i)],tgradphi_n[i]);
+            for (size_type i=0; i<lfsu_n.size(); i++)
+              gradu_n.axpy(x_n(lfsu_n,i),tgradphi_n[i]);
 
             // integrate
             RF factor = it->weight() * ig.geometry().integrationElement(it->position());
@@ -522,8 +525,8 @@ namespace Dune {
         // accumulate indicator
         DF h_T = diameter(ig.geometry());
         //        DF h_T = std::max(diameter(ig.inside()->geometry()),diameter(ig.outside()->geometry()));
-        r_s[lfsv_s.localIndex(0)] += 0.5*h_T*sum;
-        r_n[lfsv_n.localIndex(0)] += 0.5*h_T*sum;
+        r_s.accumulate(lfsv_s,0,0.5*h_T*sum);
+        r_n.accumulate(lfsv_n,0,0.5*h_T*sum);
       }
 
 
@@ -590,7 +593,8 @@ namespace Dune {
 
             // compute gradient of u
             Dune::FieldVector<RF,dim> gradu_s(0.0);
-            for (size_type i=0; i<lfsu_s.size(); i++) gradu_s.axpy(x_s[lfsu_s.localIndex(i)],tgradphi_s[i]);
+            for (size_type i=0; i<lfsu_s.size(); i++)
+              gradu_s.axpy(x_s(lfsu_s,i),tgradphi_s[i]);
 
             // evaluate flux boundary condition
             RF j = param.j(ig.intersection(),it->position());
@@ -604,7 +608,7 @@ namespace Dune {
         // accumulate indicator
         DF h_T = diameter(ig.geometry());
         //DF h_T = diameter(ig.inside()->geometry());
-        r_s[lfsv_s.localIndex(0)] += h_T*sum;
+        r_s.accumulate(lfsv_s,0,h_T*sum);
       }
 
     private:
