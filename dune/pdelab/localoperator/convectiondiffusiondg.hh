@@ -78,11 +78,12 @@ namespace Dune {
                              ConvectionDiffusionDGMethod::Type method_=ConvectionDiffusionDGMethod::NIPG, 
                              ConvectionDiffusionDGWeights::Type weights_=ConvectionDiffusionDGWeights::weightsOff,
                              Real alpha_=0.0, int intorderadd_=0) 
-        : param(param_), method(method_), weights(weights_),
-          alpha(alpha_), intorderadd(intorderadd_), quadrature_factor(2),
-          Dune::PDELab::NumericalJacobianApplyVolume<ConvectionDiffusionDG<T,FiniteElementMap> >(1.0e-7),
+        : Dune::PDELab::NumericalJacobianApplyVolume<ConvectionDiffusionDG<T,FiniteElementMap> >(1.0e-7),
           Dune::PDELab::NumericalJacobianApplySkeleton<ConvectionDiffusionDG<T,FiniteElementMap> >(1.0e-7),
-          Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionDG<T,FiniteElementMap> >(1.0e-7)
+          Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionDG<T,FiniteElementMap> >(1.0e-7),
+          param(param_), method(method_), weights(weights_),
+          alpha(alpha_), intorderadd(intorderadd_), quadrature_factor(2)
+          
       {
         theta = 1.0;
         if (method==ConvectionDiffusionDGMethod::SIPG) theta = -1.0;
@@ -133,7 +134,8 @@ namespace Dune {
 
             // evaluate u
             RF u=0.0;
-            for (size_type i=0; i<lfsu.size(); i++) u += x[lfsu.localIndex(i)]*phi[i];
+            for (size_type i=0; i<lfsu.size(); i++)
+              u += x(lfsu,i)*phi[i];
 
             // evaluate gradient of basis functions (we assume Galerkin method lfsu=lfsv)
 #if USECACHE==0
@@ -152,7 +154,7 @@ namespace Dune {
             // compute gradient of u
             Dune::FieldVector<RF,dim> gradu(0.0);
             for (size_type i=0; i<lfsu.size(); i++)
-              gradu.axpy(x[lfsu.localIndex(i)],gradphi[i]);
+              gradu.axpy(x(lfsu,i),gradphi[i]);
 
             // compute K * gradient of u
             Dune::FieldVector<RF,dim> Agradu(0.0);
@@ -167,7 +169,7 @@ namespace Dune {
             // integrate (K grad u - bu)*grad phi_i + a*u*phi_i
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_type i=0; i<lfsv.size(); i++)
-              r[lfsv.localIndex(i)] += ( Agradu*gradphi[i] - u*(b*gradphi[i]) + c*u*phi[i] )*factor;
+              r.accumulate(lfsv,i,( Agradu*gradphi[i] - u*(b*gradphi[i]) + c*u*phi[i] )*factor);
           }
       }
 
@@ -243,7 +245,7 @@ namespace Dune {
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_type j=0; j<lfsu.size(); j++)
               for (size_type i=0; i<lfsu.size(); i++)
-                mat(lfsu.localIndex(i),lfsu.localIndex(j)) +=  ( Agradphi[j]*gradphi[i] - phi[j]*(b*gradphi[i]) + c*phi[j]*phi[i] )*factor;
+                mat.accumulate(lfsu,i,lfsu,j,( Agradphi[j]*gradphi[i] - phi[j]*(b*gradphi[i]) + c*phi[j]*phi[i] )*factor);
           }
       }
 
@@ -282,7 +284,8 @@ namespace Dune {
 
         // face diameter; this should be revised for anisotropic meshes?
         DF h_s, h_n;
-        DF hmax_s, hmax_n;
+        DF hmax_s = 0.;
+        DF hmax_n = 0.;
         element_size(ig.inside()->geometry(),h_s,hmax_s);
         element_size(ig.outside()->geometry(),h_n,hmax_n);
         RF h_F = std::min(h_s,h_n);
@@ -349,8 +352,12 @@ namespace Dune {
 #endif
 
             // evaluate u
-            RF u_s=0.0; for (size_type i=0; i<lfsu_s.size(); i++) u_s += x_s[lfsu_s.localIndex(i)]*phi_s[i];
-            RF u_n=0.0; for (size_type i=0; i<lfsu_n.size(); i++) u_n += x_n[lfsu_n.localIndex(i)]*phi_n[i];
+            RF u_s=0.0;
+            for (size_type i=0; i<lfsu_s.size(); i++)
+              u_s += x_s(lfsu_s,i)*phi_s[i];
+            RF u_n=0.0;
+            for (size_type i=0; i<lfsu_n.size(); i++)
+              u_n += x_n(lfsu_n,i)*phi_n[i];
 
             // evaluate gradient of basis functions (we assume Galerkin method lfsu=lfsv)
 #if USECACHE==0
@@ -373,9 +380,11 @@ namespace Dune {
 
             // compute gradient of u
             Dune::FieldVector<RF,dim> gradu_s(0.0);
-            for (size_type i=0; i<lfsu_s.size(); i++) gradu_s.axpy(x_s[lfsu_s.localIndex(i)],tgradphi_s[i]);
+            for (size_type i=0; i<lfsu_s.size(); i++)
+              gradu_s.axpy(x_s(lfsu_s,i),tgradphi_s[i]);
             Dune::FieldVector<RF,dim> gradu_n(0.0);
-            for (size_type i=0; i<lfsu_n.size(); i++) gradu_n.axpy(x_n[lfsu_n.localIndex(i)],tgradphi_n[i]);
+            for (size_type i=0; i<lfsu_n.size(); i++)
+              gradu_n.axpy(x_n(lfsu_n,i),tgradphi_n[i]);
 
             // evaluate velocity field and upwinding, assume H(div) velocity field => may choose any side
             typename T::Traits::RangeType b = param.b(*(ig.inside()),iplocal_s);
@@ -397,25 +406,31 @@ namespace Dune {
 
             // convection term
             RF term1 = (omegaup_s*u_s + omegaup_n*u_n) * normalflux *factor;
-            for (size_type i=0; i<lfsu_s.size(); i++) r_s[lfsu_s.localIndex(i)] += term1 * phi_s[i];
-            for (size_type i=0; i<lfsu_n.size(); i++) r_n[lfsu_n.localIndex(i)] -= term1 * phi_n[i];
+            for (size_type i=0; i<lfsu_s.size(); i++)
+              r_s.accumulate(lfsu_s,i,term1 * phi_s[i]);
+            for (size_type i=0; i<lfsu_n.size(); i++)
+              r_n.accumulate(lfsu_n,i,-term1 * phi_n[i]);
 
             // diffusion term
             RF term2 =  -(omega_s*(An_F_s*gradu_s) + omega_n*(An_F_n*gradu_n)) * factor;
-            for (size_type i=0; i<lfsu_s.size(); i++) r_s[lfsu_s.localIndex(i)] += term2 * phi_s[i];
-            for (size_type i=0; i<lfsu_n.size(); i++) r_n[lfsu_n.localIndex(i)] -= term2 * phi_n[i];
+            for (size_type i=0; i<lfsu_s.size(); i++)
+              r_s.accumulate(lfsu_s,i,term2 * phi_s[i]);
+            for (size_type i=0; i<lfsu_n.size(); i++)
+              r_n.accumulate(lfsu_n,i,-term2 * phi_n[i]);
 
             // (non-)symmetric IP term
             RF term3 = (u_s-u_n) * factor;
             for (size_type i=0; i<lfsu_s.size(); i++) 
-              r_s[lfsu_s.localIndex(i)] += term3 * theta * omega_s * (An_F_s*tgradphi_s[i]);
+              r_s.accumulate(lfsu_s,i,term3 * theta * omega_s * (An_F_s*tgradphi_s[i]));
             for (size_type i=0; i<lfsu_n.size(); i++) 
-              r_n[lfsu_n.localIndex(i)] += term3 * theta * omega_n * (An_F_n*tgradphi_n[i]);
+              r_n.accumulate(lfsu_n,i,term3 * theta * omega_n * (An_F_n*tgradphi_n[i]));
 
             // standard IP term integral
             RF term4 = penalty_factor * (u_s-u_n) * factor;
-            for (size_type i=0; i<lfsu_s.size(); i++) r_s[lfsu_s.localIndex(i)] += term4 * phi_s[i];
-            for (size_type i=0; i<lfsu_n.size(); i++) r_n[lfsu_n.localIndex(i)] -= term4 * phi_n[i];
+            for (size_type i=0; i<lfsu_s.size(); i++)
+              r_s.accumulate(lfsu_s,i,term4 * phi_s[i]);
+            for (size_type i=0; i<lfsu_n.size(); i++)
+              r_n.accumulate(lfsu_n,i,-term4 * phi_n[i]);
           }
       }
 
@@ -453,7 +468,7 @@ namespace Dune {
 
         // face diameter; this should be revised for anisotropic meshes?
         DF h_s, h_n;
-        DF hmax_s, hmax_n;
+        DF hmax_s = 0., hmax_n = 0.;
         element_size(ig.inside()->geometry(),h_s,hmax_s);
         element_size(ig.outside()->geometry(),h_n,hmax_n);
         RF h_F = std::min(h_s,h_n);
@@ -561,37 +576,37 @@ namespace Dune {
             for (size_type j=0; j<lfsu_s.size(); j++) {
               RF temp1 = -(An_F_s*tgradphi_s[j])*omega_s*factor;
               for (size_type i=0; i<lfsu_s.size(); i++) {
-                mat_ss(lfsu_s.localIndex(i),lfsu_s.localIndex(j)) += omegaup_s * phi_s[j] * normalflux *factor * phi_s[i];
-                mat_ss(lfsu_s.localIndex(i),lfsu_s.localIndex(j)) += temp1 * phi_s[i];
-                mat_ss(lfsu_s.localIndex(i),lfsu_s.localIndex(j)) += phi_s[j] * factor * theta * omega_s * (An_F_s*tgradphi_s[i]);
-                mat_ss(lfsu_s.localIndex(i),lfsu_s.localIndex(j)) += phi_s[j] * ipfactor * phi_s[i];
+                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,omegaup_s * phi_s[j] * normalflux *factor * phi_s[i]);
+                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,temp1 * phi_s[i]);
+                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,phi_s[j] * factor * theta * omega_s * (An_F_s*tgradphi_s[i]));
+                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,phi_s[j] * ipfactor * phi_s[i]);
               }
             }
             for (size_type j=0; j<lfsu_n.size(); j++) {
               RF temp1 = -(An_F_n*tgradphi_n[j])*omega_n*factor;
               for (size_type i=0; i<lfsu_s.size(); i++) {
-                mat_sn(lfsu_s.localIndex(i),lfsu_n.localIndex(j)) += omegaup_n * phi_n[j] * normalflux *factor * phi_s[i];
-                mat_sn(lfsu_s.localIndex(i),lfsu_n.localIndex(j)) += temp1 * phi_s[i];
-                mat_sn(lfsu_s.localIndex(i),lfsu_n.localIndex(j)) += -phi_n[j] * factor * theta * omega_s * (An_F_s*tgradphi_s[i]);
-                mat_sn(lfsu_s.localIndex(i),lfsu_n.localIndex(j)) += -phi_n[j] * ipfactor * phi_s[i];
+                mat_sn.accumulate(lfsu_s,i,lfsu_n,j,omegaup_n * phi_n[j] * normalflux *factor * phi_s[i]);
+                mat_sn.accumulate(lfsu_s,i,lfsu_n,j,temp1 * phi_s[i]);
+                mat_sn.accumulate(lfsu_s,i,lfsu_n,j,-phi_n[j] * factor * theta * omega_s * (An_F_s*tgradphi_s[i]));
+                mat_sn.accumulate(lfsu_s,i,lfsu_n,j,-phi_n[j] * ipfactor * phi_s[i]);
               }
             }
             for (size_type j=0; j<lfsu_s.size(); j++) {
               RF temp1 = -(An_F_s*tgradphi_s[j])*omega_s*factor;
               for (size_type i=0; i<lfsu_n.size(); i++) {
-                mat_ns(lfsu_n.localIndex(i),lfsu_s.localIndex(j)) -= omegaup_s * phi_s[j] * normalflux *factor * phi_n[i];
-                mat_ns(lfsu_n.localIndex(i),lfsu_s.localIndex(j)) -= temp1 * phi_n[i];
-                mat_ns(lfsu_n.localIndex(i),lfsu_s.localIndex(j)) += phi_s[j] * factor * theta * omega_n * (An_F_n*tgradphi_n[i]);
-                mat_ns(lfsu_n.localIndex(i),lfsu_s.localIndex(j)) -= phi_s[j] * ipfactor * phi_n[i];
+                mat_ns.accumulate(lfsu_n,i,lfsu_s,j,-omegaup_s * phi_s[j] * normalflux *factor * phi_n[i]);
+                mat_ns.accumulate(lfsu_n,i,lfsu_s,j,-temp1 * phi_n[i]);
+                mat_ns.accumulate(lfsu_n,i,lfsu_s,j,phi_s[j] * factor * theta * omega_n * (An_F_n*tgradphi_n[i]));
+                mat_ns.accumulate(lfsu_n,i,lfsu_s,j,-phi_s[j] * ipfactor * phi_n[i]);
               }
             }
             for (size_type j=0; j<lfsu_n.size(); j++) {
               RF temp1 = -(An_F_n*tgradphi_n[j])*omega_n*factor;
               for (size_type i=0; i<lfsu_n.size(); i++) {
-                mat_nn(lfsu_n.localIndex(i),lfsu_n.localIndex(j)) -= omegaup_n * phi_n[j] * normalflux *factor * phi_n[i];
-                mat_nn(lfsu_n.localIndex(i),lfsu_n.localIndex(j)) -= temp1 * phi_n[i];
-                mat_nn(lfsu_n.localIndex(i),lfsu_n.localIndex(j)) += -phi_n[j] * factor * theta * omega_n * (An_F_n*tgradphi_n[i]);
-                mat_nn(lfsu_n.localIndex(i),lfsu_n.localIndex(j)) -= -phi_n[j] * ipfactor * phi_n[i];
+                mat_nn.accumulate(lfsu_n,i,lfsu_n,j,-omegaup_n * phi_n[j] * normalflux *factor * phi_n[i]);
+                mat_nn.accumulate(lfsu_n,i,lfsu_n,j,-temp1 * phi_n[i]);
+                mat_nn.accumulate(lfsu_n,i,lfsu_n,j,-phi_n[j] * factor * theta * omega_n * (An_F_n*tgradphi_n[i]));
+                mat_nn.accumulate(lfsu_n,i,lfsu_n,j,phi_n[j] * ipfactor * phi_n[i]);
               }
             }
           }
@@ -631,7 +646,7 @@ namespace Dune {
 
         // face diameter
         DF h_s;
-        DF hmax_s;
+        DF hmax_s = 0.;
         element_size(ig.inside()->geometry(),h_s,hmax_s);
         RF h_F = h_s;
         h_F = ig.inside()->geometry().volume()/ig.geometry().volume(); // Houston!
@@ -686,13 +701,16 @@ namespace Dune {
                 RF j = param.j(ig.intersection(),it->position());
                 
                 // integrate
-                for (size_type i=0; i<lfsv_s.size(); i++) r_s[lfsu_s.localIndex(i)] += j * phi_s[i] * factor;
+                for (size_type i=0; i<lfsv_s.size(); i++) 
+                  r_s.accumulate(lfsu_s,i,j * phi_s[i] * factor);
 
                 continue;
               }
 
             // evaluate u
-            RF u_s=0.0; for (size_type i=0; i<lfsu_s.size(); i++) u_s += x_s[lfsu_s.localIndex(i)]*phi_s[i];
+            RF u_s=0.0; 
+            for (size_type i=0; i<lfsu_s.size(); i++) 
+              u_s += x_s(lfsu_s,i)*phi_s[i];
 
             // evaluate velocity field and upwinding, assume H(div) velocity field => choose any side
             typename T::Traits::RangeType b = param.b(*(ig.inside()),iplocal_s);
@@ -705,13 +723,15 @@ namespace Dune {
 
                 // convection term
                 RF term1 = u_s * normalflux *factor;
-                for (size_type i=0; i<lfsu_s.size(); i++) r_s[lfsu_s.localIndex(i)] += term1 * phi_s[i];
+                for (size_type i=0; i<lfsu_s.size(); i++)
+                  r_s.accumulate(lfsu_s,i,term1 * phi_s[i]);
 
                 // evaluate flux boundary condition
                 RF o = param.o(ig.intersection(),it->position());
 
                 // integrate
-                for (size_type i=0; i<lfsv_s.size(); i++) r_s[lfsu_s.localIndex(i)] += o * phi_s[i] * factor;
+                for (size_type i=0; i<lfsv_s.size(); i++)
+                  r_s.accumulate(lfsu_s,i,o * phi_s[i] * factor);
 
                 continue;
               }
@@ -731,7 +751,8 @@ namespace Dune {
 
             // compute gradient of u
             Dune::FieldVector<RF,dim> gradu_s(0.0);
-            for (size_type i=0; i<lfsu_s.size(); i++) gradu_s.axpy(x_s[lfsu_s.localIndex(i)],tgradphi_s[i]);
+            for (size_type i=0; i<lfsu_s.size(); i++)
+              gradu_s.axpy(x_s(lfsu_s,i),tgradphi_s[i]);
 
             // evaluate Dirichlet boundary condition
             RF g = param.g(*(ig.inside()),iplocal_s);
@@ -751,19 +772,23 @@ namespace Dune {
 
             // convection term
             RF term1 = (omegaup_s*u_s + omegaup_n*g) * normalflux *factor;
-            for (size_type i=0; i<lfsu_s.size(); i++) r_s[lfsu_s.localIndex(i)] += term1 * phi_s[i];
+            for (size_type i=0; i<lfsu_s.size(); i++)
+              r_s.accumulate(lfsu_s,i,term1 * phi_s[i]);
 
             // diffusion term
             RF term2 =  (An_F_s*gradu_s) * factor;
-            for (size_type i=0; i<lfsu_s.size(); i++) r_s[lfsu_s.localIndex(i)] -= term2 * phi_s[i];
+            for (size_type i=0; i<lfsu_s.size(); i++)
+              r_s.accumulate(lfsu_s,i,-term2 * phi_s[i]);
 
             // (non-)symmetric IP term
             RF term3 = (u_s-g) * factor;
-            for (size_type i=0; i<lfsu_s.size(); i++) r_s[lfsu_s.localIndex(i)] += term3 * theta * (An_F_s*tgradphi_s[i]);
+            for (size_type i=0; i<lfsu_s.size(); i++)
+              r_s.accumulate(lfsu_s,i,term3 * theta * (An_F_s*tgradphi_s[i]));
 
             // standard IP term
             RF term4 = penalty_factor * (u_s-g) * factor;
-            for (size_type i=0; i<lfsu_s.size(); i++) r_s[lfsu_s.localIndex(i)] += term4 * phi_s[i];
+            for (size_type i=0; i<lfsu_s.size(); i++)
+              r_s.accumulate(lfsu_s,i,term4 * phi_s[i]);
           }
       }
 
@@ -799,7 +824,7 @@ namespace Dune {
 
         // face diameter
         DF h_s;
-        DF hmax_s;
+        DF hmax_s = 0.;
         element_size(ig.inside()->geometry(),h_s,hmax_s);
         RF h_F = h_s;
         h_F = ig.inside()->geometry().volume()/ig.geometry().volume(); // Houston!
@@ -863,7 +888,7 @@ namespace Dune {
                 // convection term
                 for (size_type j=0; j<lfsu_s.size(); j++) 
                   for (size_type i=0; i<lfsu_s.size(); i++) 
-                    mat_ss(lfsu_s.localIndex(i),lfsu_s.localIndex(j)) += phi_s[j] * normalflux * factor * phi_s[i];
+                    mat_ss.accumulate(lfsu_s,i,lfsu_s,j,phi_s[j] * normalflux * factor * phi_s[i]);
 
                 continue;
               }
@@ -897,22 +922,22 @@ namespace Dune {
             // convection term
             for (size_type j=0; j<lfsu_s.size(); j++) 
               for (size_type i=0; i<lfsu_s.size(); i++) 
-                mat_ss(lfsu_s.localIndex(i),lfsu_s.localIndex(j)) += omegaup_s * phi_s[j] * normalflux * factor * phi_s[i];
+                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,omegaup_s * phi_s[j] * normalflux * factor * phi_s[i]);
 
             // diffusion term
             for (size_type j=0; j<lfsu_s.size(); j++) 
               for (size_type i=0; i<lfsu_s.size(); i++) 
-                mat_ss(lfsu_s.localIndex(i),lfsu_s.localIndex(j)) -= (An_F_s*tgradphi_s[j]) * factor * phi_s[i];
+                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,-(An_F_s*tgradphi_s[j]) * factor * phi_s[i]);
 
             // (non-)symmetric IP term
             for (size_type j=0; j<lfsu_s.size(); j++) 
               for (size_type i=0; i<lfsu_s.size(); i++) 
-                mat_ss(lfsu_s.localIndex(i),lfsu_s.localIndex(j)) += phi_s[j] * factor * theta * (An_F_s*tgradphi_s[i]);
+                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,phi_s[j] * factor * theta * (An_F_s*tgradphi_s[i]));
 
             // standard IP term
             for (size_type j=0; j<lfsu_s.size(); j++) 
               for (size_type i=0; i<lfsu_s.size(); i++) 
-                mat_ss(lfsu_s.localIndex(i),lfsu_s.localIndex(j)) +=  penalty_factor * phi_s[j] * phi_s[i] * factor;
+                mat_ss.accumulate(lfsu_s,i,lfsu_s,j,penalty_factor * phi_s[j] * phi_s[i] * factor);
           }
       }
 
@@ -955,7 +980,7 @@ namespace Dune {
             // integrate f
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_type i=0; i<lfsv.size(); i++)
-              r[lfsv.localIndex(i)] -= f*phi[i]*factor;
+              r.accumulate(lfsv,i,-f*phi[i]*factor);
           }
       }
 
@@ -964,8 +989,8 @@ namespace Dune {
       ConvectionDiffusionDGMethod::Type method;
       ConvectionDiffusionDGWeights::Type weights;
       Real alpha, beta;
-      int quadrature_factor;
       int intorderadd;
+      int quadrature_factor;
       Real theta;
       typedef typename FiniteElementMap::Traits::FiniteElementType::Traits::LocalBasisType LocalBasisType;
       Dune::PDELab::LocalBasisCache<LocalBasisType> cache;
