@@ -501,7 +501,7 @@ namespace Dune {
           for (int i=0; i<m_s; i++)
             y_s.accumulate(lfsv_s,i,((up_s(lfsv_s,i)-down_s(lfsv_s,i))/delta)*x_s(lfsu_s,j));
           for (int i=0; i<m_n; i++)
-            y_n.accumulate(lfsv_n,i,((up_n(lfsv_n,i)-down_n(lfsv_n.i))/delta)*x_s(lfsu_s,j));
+            y_n.accumulate(lfsv_n,i,((up_n(lfsv_n,i)-down_n(lfsv_n,i))/delta)*x_s(lfsu_s,j));
           u_s(lfsu_s,j) = x_s(lfsu_s,j);
         }
 
