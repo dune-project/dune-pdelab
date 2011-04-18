@@ -110,7 +110,7 @@ namespace Dune {
             // compute sigma
             VelocityRangeType sigma; sigma = 0.0;
             for (std::size_t i=0; i<velocityspace.size(); i++)
-              sigma.axpy(x[velocityspace.localIndex(i)],vtransformedbasis[i]);
+              sigma.axpy(x(velocityspace,i),vtransformedbasis[i]);
 
             // K^{-1} * sigma
             VelocityRangeType Kinvsigma;
@@ -119,7 +119,7 @@ namespace Dune {
             // integrate  (K^{-1}*sigma) * phi_i
             RF factor = it->weight() / det;
             for (std::size_t i=0; i<velocityspace.size(); i++)
-              r[velocityspace.localIndex(i)] += (Kinvsigma*vtransformedbasis[i])*factor;
+              r.accumulate(velocityspace,i,(Kinvsigma*vtransformedbasis[i])*factor);
           }
 
         // u div v term, div sigma q term, a0*u term
@@ -135,7 +135,7 @@ namespace Dune {
             // compute u
             PressureRangeType u; u = 0.0;
             for (std::size_t i=0; i<pressurespace.size(); i++)
-              u.axpy(x[pressurespace.localIndex(i)],pbasis[i]);
+              u.axpy(x(pressurespace,i),pbasis[i]);
 
             // evaluate Helmholtz term
             typename A0::Traits::RangeType a0value;
@@ -144,7 +144,7 @@ namespace Dune {
             // integrate a0 * u * q
             RF factor = it->weight();
             for (std::size_t i=0; i<pressurespace.size(); i++)
-              r[pressurespace.localIndex(i)] -= a0value*u*pbasis[i]*factor;
+              r.accumulate(pressurespace,i,-a0value*u*pbasis[i]*factor);
 
             // compute divergence of velocity basis functions on reference element
             std::vector<RF> divergence(velocityspace.size(),0.0);
@@ -154,16 +154,16 @@ namespace Dune {
 
             // integrate sigma * phi_i
             for (std::size_t i=0; i<velocityspace.size(); i++)
-              r[velocityspace.localIndex(i)] -= u*divergence[i]*factor;
+              r.accumulate(velocityspace,i,-u*divergence[i]*factor);
 
             // compute divergence of sigma
             RF divergencesigma = 0.0;
             for (std::size_t i=0; i<velocityspace.size(); i++)
-              divergencesigma += x[velocityspace.localIndex(i)]*divergence[i];
+              divergencesigma += x(velocityspace,i)*divergence[i];
 
             // integrate div sigma * q
             for (std::size_t i=0; i<pressurespace.size(); i++)
-              r[pressurespace.localIndex(i)] -= divergencesigma*pbasis[i]*factor;
+              r.accumulate(pressurespace,i,-divergencesigma*pbasis[i]*factor);
           }
 	  }
 
@@ -204,7 +204,7 @@ namespace Dune {
             // integrate f
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (std::size_t i=0; i<pressurespace.size(); i++)
-              r[pressurespace.localIndex(i)] += y*pbasis[i]*factor;
+              r.accumulate(pressurespace,i,y*pbasis[i]*factor);
           }
       }
 
@@ -268,7 +268,7 @@ namespace Dune {
             // integrate g v*normal
             RF factor = it->weight()*ig.geometry().integrationElement(it->position())/det;
             for (std::size_t i=0; i<velocityspace.size(); i++)
-              r[velocityspace.localIndex(i)] += y*(vtransformedbasis[i]*ig.unitOuterNormal(it->position()))*factor;
+              r.accumulate(velocityspace,i,y*(vtransformedbasis[i]*ig.unitOuterNormal(it->position()))*factor);
           }
       }
 
