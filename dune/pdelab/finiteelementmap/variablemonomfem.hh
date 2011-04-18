@@ -22,7 +22,8 @@ namespace Dune {
         {
           typedef Dune::MonomLocalFiniteElement<D,R,d,p> LFE;
           typedef typename C::value_type ptr;
-          static GeometryType cube(d);
+          GeometryType cube;
+          cube.makeCube(d);
           c[p] = ptr(new LocalFiniteElementVirtualImp<LFE>(LFE(cube)));
 
           InitVariableMonomLocalFiniteElementMap<D,R,d,p-1>::init(c);
