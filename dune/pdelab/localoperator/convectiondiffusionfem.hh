@@ -244,7 +244,7 @@ namespace Dune {
             // evaluate shape functions (assume Galerkin method) 
             // std::vector<RangeType> phi(lfsu_s.size());
             // lfsu_s.finiteElement().localBasis().evaluateFunction(local,phi);
-            const std::vector<RangeType>& phi = cache.evaluateFunction(it->position(),lfsu_s.finiteElement().localBasis());
+            const std::vector<RangeType>& phi = cache.evaluateFunction(local,lfsu_s.finiteElement().localBasis());
 
             if (bctype==ConvectionDiffusionBoundaryConditions::Neumann)
               {
@@ -321,7 +321,7 @@ namespace Dune {
             // evaluate shape functions (assume Galerkin method) 
             // std::vector<RangeType> phi(lfsu_s.size());
             // lfsu_s.finiteElement().localBasis().evaluateFunction(local,phi);
-            const std::vector<RangeType>& phi = cache.evaluateFunction(it->position(),lfsu_s.finiteElement().localBasis());
+            const std::vector<RangeType>& phi = cache.evaluateFunction(local,lfsu_s.finiteElement().localBasis());
 
             // evaluate velocity field and outer unit normal
             typename T::Traits::RangeType b = param.b(*(ig.inside()),local);
