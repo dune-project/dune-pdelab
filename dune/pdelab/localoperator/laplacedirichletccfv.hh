@@ -80,8 +80,8 @@ namespace Dune {
         RF distance = inside_global.two_norm();
         
         // contribution to residual on inside element, other residual is computed by symmetric call
-        r_s[0] += (x_s[0]-x_n[0])*face_volume/distance;
-        r_n[0] -= (x_s[0]-x_n[0])*face_volume/distance;
+        r_s.accumulate(lfsu_s,0,(x_s(lfsu_s,0)-x_n(lfsu_n,0))*face_volume/distance);
+        r_n.accumulate(lfsu_n,0,-(x_s(lfsu_s,0)-x_n(lfsu_n,0))*face_volume/distance);
 	  }
 
 	  // skeleton integral depending on test and ansatz functions
@@ -123,7 +123,7 @@ namespace Dune {
         g.evaluate(*(ig.inside()),x,y);
 
         // contribution to residual on inside element
-        r_s[0] += (x_s[0]-y[0])*face_volume/distance;
+        r_s.accumulate(lfsu_s,0,(x_s(lfsu_s,0)-y[0])*face_volume/distance);
 	  }
 
     private:
