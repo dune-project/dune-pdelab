@@ -48,7 +48,7 @@ namespace Dune {
       public Dune::PDELab::NumericalJacobianBoundary<ConvectionDiffusionFEM<T,FiniteElementMap> >,
       public Dune::PDELab::FullVolumePattern,
       public Dune::PDELab::LocalOperatorDefaultFlags,
-      public Dune::PDELab::InstationaryLocalOperatorDefaultMethods<double>
+      public Dune::PDELab::InstationaryLocalOperatorDefaultMethods<typename T::Traits::RangeFieldType>
     {
     public:
       // pattern assembly flags
