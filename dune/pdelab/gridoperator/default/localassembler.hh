@@ -107,7 +107,6 @@ namespace Dune{
       void postStep (){ lop.postStep(); }
       void postStage (){ lop.postStage(); }
       Real suggestTimestep (Real dt) const{return lop.suggestTimestep(dt); }
-
       //! @}
 
       //! Access methods which provid "ready to use" engines
@@ -156,7 +155,7 @@ namespace Dune{
       static bool doLambdaBoundary() { return LOP::doLambdaBoundary; }
       static bool doAlphaVolumePostSkeleton()  { return LOP::doAlphaVolumePostSkeleton; }
       static bool doLambdaVolumePostSkeleton() { return LOP::doLambdaVolumePostSkeleton; }
-      static bool doSkeletonTwoSided()  { assert(!LOP::doSkeletonTwoSided); return false; }
+      static bool doSkeletonTwoSided()  { return LOP::doSkeletonTwoSided; }
       static bool doPatternVolume()  { return LOP::doPatternVolume; }
       static bool doPatternSkeleton()  { return LOP::doPatternSkeleton; }
       static bool doPatternBoundary()  { return LOP::doPatternBoundary; }
