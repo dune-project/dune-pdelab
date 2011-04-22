@@ -241,9 +241,9 @@ namespace Dune {
 	  }
 
       // jacobian of volume term
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
 	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
-                            LocalMatrix<R>& mat) const
+                            M& mat) const
       {
         // do nothing; alpha_volume only needed for dt computations
       }
@@ -281,8 +281,8 @@ namespace Dune {
 
         // convective flux
         RF u_upwind=0;
-        if (vn>=0) u_upwind = x_s[0]; else u_upwind = x_n[0];
-        r_s[0] += (u_upwind*vn)*face_volume;
+        if (vn>=0) u_upwind = x_s(lfsu_s,0); else u_upwind = x_n(lfsu_n,0);
+        r_s.accumulate(lfsu_s,0,(u_upwind*vn)*face_volume);
         if (vn>=0)
           cellinflux += vn*face_volume; // dt computation
 
@@ -305,7 +305,7 @@ namespace Dune {
  
         // diffusive flux
         // note: we do only one-sided evaluation here
-        r_s[0] -= (D_avg*(x_n[0]-x_s[0])/distance)*face_volume;
+        r_s.accumulate(lfsu_s,0,-(D_avg*(x_n(lfsu_n,0)-x_s(lfsu_s,0))/distance)*face_volume);
       }
 
       // post skeleton: compute time step allowable for cell; to be done later
@@ -361,7 +361,7 @@ namespace Dune {
         if (bc==0) // Neumann boundary
           {
             typename TP::Traits::RangeFieldType j = tp.j(*(ig.inside()),face_center_in_element);
-            r_s[0] += j*face_volume;
+            r_s.accumulate(lfsu_s,0,j*face_volume);
             return;
          }
 
@@ -375,14 +375,14 @@ namespace Dune {
 
         if (bc==2) // Outflow boundary
           {
-            r_s[0] += vn*x_s[0]*face_volume;
+            r_s.accumulate(lfsu_s,0,vn*x_s(lfsu_s,0)*face_volume);
             return;
           }
 
         if (bc==1) // Dirichlet boundary
           {
             typename TP::Traits::RangeFieldType g;
-            if (vn>=0) g=x_s[0]; else g=tp.g(*(ig.inside()),face_center_in_element);
+            if (vn>=0) g=x_s(lfsu_s,0); else g=tp.g(*(ig.inside()),face_center_in_element);
             const Dune::FieldVector<DF,IG::dimension>&
               inside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
             typename TP::Traits::RangeFieldType D_inside = tp.D(*(ig.inside()),inside_local);
@@ -392,7 +392,7 @@ namespace Dune {
               outside_global = ig.geometry().center();
             inside_global -= outside_global;
             RF distance = inside_global.two_norm();
-            r_s[0] += (g*vn - D_inside*(g-x_s[0])/distance)*face_volume;
+            r_s.accumulate(lfsu_s,0,(g*vn - D_inside*(g-x_s(lfsu_s,0))/distance)*face_volume);
             return;
           }
       }
@@ -415,7 +415,7 @@ namespace Dune {
         // evaluate source term
         typename TP::Traits::RangeFieldType q = tp.q(eg.entity(),inside_local);
 
-        r[0] -= q*eg.geometry().volume();
+        r.accumulate(lfsv,0,-q*eg.geometry().volume());
       }
 
       //! set time in parameter class
@@ -525,13 +525,13 @@ namespace Dune {
         typename TP::Traits::RangeFieldType c = tp.c(eg.entity(),inside_local);
         
         // residual contribution
-        r[0] += c*x[0]*eg.geometry().volume();
+        r.accumulate(lfsu,0,c*x(lfsu,0)*eg.geometry().volume());
 	  }
 
       // jacobian of volume term
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
 	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
-                            LocalMatrix<R>& mat) const
+                            M& mat) const
       {
 		// domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
