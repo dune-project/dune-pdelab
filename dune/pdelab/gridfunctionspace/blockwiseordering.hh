@@ -144,10 +144,6 @@ namespace Dune {
         void update() {
           Dune::dinfo << asImp().name() << ":" << std::endl;
 
-          if(!NonLeafOrderingBase<SizeType, Imp>::blocked())
-            DUNE_THROW(InvalidStateException, className<Imp>() << " works "
-                       "only with blocking children");
-
           if(!NonLeafOrderingBase<SizeType, Imp>::fixedSize())
             DUNE_THROW(InvalidStateException, className<Imp>() << " works "
                        "only with children that have a uniform size for all "
