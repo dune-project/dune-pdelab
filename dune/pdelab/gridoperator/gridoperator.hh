@@ -10,8 +10,7 @@ namespace Dune{
   namespace PDELab{
 
     /**
-       \brief A standard grid operator implementation for grids with a
-       UDG subtriangulation
+       \brief Standard grid operator implementation
 
        \tparam GFSU GridFunctionSpace for ansatz functions
        \tparam GFSV GridFunctionSpace for test functions
@@ -32,7 +31,7 @@ namespace Dune{
     {
     public:
 
-      //! The global UDG assembler type
+      //! The global assembler type
       typedef DefaultAssembler<GFSU,GFSV,nonoverlapping_mode> Assembler;
 
       //! The type of the domain (solution).
@@ -45,7 +44,7 @@ namespace Dune{
       //! The sparsity pattern container for the jacobian matrix
       typedef typename MB::Pattern Pattern;
 
-      //! The local UDG assembler type
+      //! The local assembler type
       typedef DefaultLocalAssembler<GridOperator,LOP,nonoverlapping_mode>
       LocalAssembler;
 
