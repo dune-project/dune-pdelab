@@ -24,6 +24,10 @@ namespace Dune {
 
     //! Integrate a GridFunction
     /**
+     * \code
+#include <dune/pdelab/common/functionutilities.hh>
+     * \endcode
+     *
      * Integrate a GridFunction over the domain given by the GridFunction's
      * GridView.  In the parallel case, this function integrates over the
      * Interior_Partition only.  If the accumulated result over all processors
