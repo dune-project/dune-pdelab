@@ -13,7 +13,7 @@
 #include"../gridoperatorspace/gridoperatorspace.hh"
 #include"pattern.hh"
 #include"flags.hh"
-#include "diffusionparam.hh"
+#include"diffusionparam.hh"
 
 
 namespace Dune {
@@ -85,13 +85,13 @@ namespace Dune {
         typename A0::Traits::RangeType a0value;
         a0.evaluate(eg.entity(),inside_local,a0value);
 
-        r[0] += a0value*x[0]*eg.geometry().volume();
+        r.accumulate(lfsu,0,a0value*x(lfsu,0)*eg.geometry().volume());
 
         // evaluate source term
         typename F::Traits::RangeType fvalue;
         f.evaluate(eg.entity(),inside_local,fvalue);
 
-        r[0] -= fvalue*eg.geometry().volume();
+        r.accumulate(lfsu,0,-fvalue*eg.geometry().volume());
       }
 
 	  // skeleton integral depending on test and ansatz functions
@@ -139,8 +139,8 @@ namespace Dune {
         RF distance = inside_global.two_norm();
         
         // contribution to residual on inside element, other residual is computed by symmetric call
-        r_s[0] += k_avg*(x_s[0]-x_n[0])*face_volume/distance;
-        r_n[0] -= k_avg*(x_s[0]-x_n[0])*face_volume/distance;
+        r_s.accumulate(lfsu_s,0,k_avg*(x_s(lfsu_s,0)-x_n(lfsu_n,0))*face_volume/distance);
+        r_n.accumulate(lfsu_n,0,-k_avg*(x_s(lfsu_s,0)-x_n(lfsu_n,0))*face_volume/distance);
 	  }
 
 	  // skeleton integral depending on test and ansatz functions
@@ -193,7 +193,7 @@ namespace Dune {
             g.evaluate(*(ig.inside()),x,y);
             
             // contribution to residual on inside element
-            r_s[0] += k_inside*(x_s[0]-y[0])*face_volume/distance;
+            r_s.accumulate(lfsu_s,0,k_inside*(x_s(lfsu_s,0)-y[0])*face_volume/distance);
           }
         else // if (DiffusionBoundaryCondition::isNeumann(bctype))
           {
@@ -203,7 +203,7 @@ namespace Dune {
             j.evaluate(*(ig.inside()),inside_local,jvalue);
 
             // contribution to residual on inside element
-            r_s[0] += jvalue*face_volume;
+            r_s.accumulate(lfsu_s,0,jvalue*face_volume);
           }
 	  }
 
