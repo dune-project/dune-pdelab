@@ -102,46 +102,46 @@ namespace Dune
                 for(unsigned int e = 0, m = 0; e < cell.num_faces; ++e)
                     for(unsigned int f = 0; f < cell.num_faces; ++f, ++m)
                     {
-                        r[cell_space.localIndex(0)] += W[m]
-                            * (x[cell_space.localIndex(0)] - x[face_space.localIndex(f)]);
-                        r[face_space.localIndex(e)] -= W[m]
-                            * (x[cell_space.localIndex(0)] - x[face_space.localIndex(f)]);
+		      r.accumulate(cell_space,0,W[m]
+				   * (x(cell_space,0) - x(face_space,f)));
+		      r.accumulate(face_space,e,-W[m]
+				   * (x(cell_space,0) - x(face_space,f)));
                     }
 
                 // Helmholtz term
-                r[cell_space.localIndex(0)] += data.a_0(eg.entity(), localcenter)
-                    * x[cell_space.localIndex(0)];
+                r.accumulate(cell_space,0,data.a_0(eg.entity(), localcenter)
+			     * x(cell_space,0));
             }
 
             // jacobian ********************************************
 
-            template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+            template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
             void jacobian_volume(const EG& eg, const LFSU& lfsu, const X& x,
-                                 const LFSV& lfsv, LocalMatrix<R>& mat) const
+                                 const LFSV& lfsv, M& mat) const
             {
                 cell.init(eg.entity());
             }
 
-            template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+            template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
             void jacobian_skeleton(const IG& ig,
                                    const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                                    const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-                                   LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn,
-                                   LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn) const
+                                   M& mat_ss, M& mat_sn,
+                                   M& mat_ns, M& mat_nn) const
             {
                 cell.add_face(ig.intersection());
             }
 
-            template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+            template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
             void jacobian_boundary(const IG& ig, const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                                   LocalMatrix<R>& mat_ss) const
+                                   M& mat_ss) const
             {
                 cell.add_face(ig.intersection());
             }
 
-            template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+            template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
             void jacobian_volume_post_skeleton(const EG& eg, const LFSU& lfsu, const X& x,
-                                               const LFSV& lfsv, LocalMatrix<R>& mat) const
+                                               const LFSV& lfsv, M& mat) const
             {
                 // extract subspaces
                 typedef typename LFSU::template Child<0>::Type CellUnknowns;
@@ -161,15 +161,15 @@ namespace Dune
                 for(unsigned int e = 0, m = 0; e < cell.num_faces; ++e)
                     for(unsigned int f = 0; f < cell.num_faces; ++f, ++m)
                     {
-                        mat(cell_space.localIndex(0), cell_space.localIndex(0)) += W[m];
-                        mat(cell_space.localIndex(0), face_space.localIndex(f)) -= W[m];
-                        mat(face_space.localIndex(f), cell_space.localIndex(0)) -= W[m];
-                        mat(face_space.localIndex(f), face_space.localIndex(f)) += W[m];
+		      mat.accumulate(cell_space,0,cell_space,0,W[m]);
+		      mat.accumulate(cell_space,0,face_space,f,-W[m]);
+		      mat.accumulate(face_space,f,cell_space,0,-W[m]);
+		      mat.accumulate(face_space,f,face_space,f,W[m]);
                     }
 
                 // Helmholtz term
-                mat(cell_space.localIndex(0), cell_space.localIndex(0))
-                    += data.a_0(eg.entity(), localcenter);
+                mat.accumulate(cell_space,0,cell_space,0,
+			       data.a_0(eg.entity(), localcenter));
             }
 
             // jacobian_apply **************************************
@@ -241,7 +241,7 @@ namespace Dune
 
                 GeometryType gt = eg.geometry().type();
                 FieldVector<ctype,dim> localcenter = GenericReferenceElements<ctype,dim>::general(gt).position(0,0);
-                r[cell_space.localIndex(0)] -= cell.volume * data.f(eg.entity(), localcenter);
+                r.accumulate(cell_space,0,-cell.volume * data.f(eg.entity(), localcenter));
             }
 
             template<typename IG, typename LFSV, typename R>
@@ -259,8 +259,8 @@ namespace Dune
                     typedef typename LFSV::template Child<1>::Type FaceUnknowns;
                     const FaceUnknowns& face_space = lfsv.template child<1>();
 
-                    r[face_space.localIndex(e)] += cell.face_areas[e]
-                        * data.j(*(ig.inside()), local_face_center);
+		    r.accumulate(face_space,e,cell.face_areas[e]
+				 * data.j(*(ig.inside()), local_face_center));
                 }
             }
 
