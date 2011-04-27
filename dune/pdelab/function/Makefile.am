@@ -7,6 +7,7 @@ myinc_HEADERS =					\
 	memberadaptor.hh			\
 	minus.hh				\
 	scalarscaled.hh				\
+	sqr.hh					\
 	sqrt.hh
 
 include $(top_srcdir)/am/global-rules
