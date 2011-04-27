@@ -659,15 +659,53 @@ namespace Dune {
     };
     //! \} Overlapping Solvers
 
-    template<class GFS, int s, template<class,class,class,int> class SMI, template<class> class SOI>
+    /**
+     * @brief traits class for using AMG with the old grid operator space 
+     * instead of the new grid operator
+     * @tparam MatrixFT The field type of the matrix.
+     * @tparam V The type of the BackendVectorSelector
+     * @tparam GOS The type of the old grid operator space.
+     */
+    template<class MatrixFT, class V, class GOS>
+    class fakeGOTraits
+    {
+    public:
+      struct Traits{
+        typedef V Domain;
+        typedef MatrixFT JacobianField;
+        typedef typename V::ElementType DomainField;
+        typedef typename GOS::Traits GOSTraits;
+        typedef typename GOSTraits::TrialGridFunctionSpace TrialGridFunctionSpace;
+        typedef typename GOS::template MatrixContainer<MatrixFT>::Type Jacobian;
+      };
+    };
+
+    template<class GO, int s, template<class,class,class,int> class SMI, template<class> class SOI>
     class ISTLBackend_AMG
     {
-      typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
+      typedef typename GO::Traits::TrialGridFunctionSpace GFS;
+      typedef typename Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
+      typedef typename GO::Traits::Jacobian M;
+      typedef typename M::BaseT MatrixType;
+      typedef typename GO::Traits::Domain V;
+      typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type VectorType;
+      typedef typename CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
+#if HAVE_MPI
+      typedef SMI<MatrixType,VectorType,VectorType,1> Smoother;
+      typedef Dune::BlockPreconditioner<VectorType,VectorType,Comm,Smoother> ParSmoother;
+      typedef Dune::OverlappingSchwarzOperator<MatrixType,VectorType,VectorType,Comm> Operator;
+#else
+      typedef SMI<MatrixType,VectorType,VectorType,1> ParSmoother;
+      typedef Dune::MatrixAdapter<MatrixType,VectorType,VectorType> Operator;
+#endif
+      typedef typename Dune::Amg::SmootherTraits<ParSmoother>::Arguments SmootherArgs;
+      typedef Dune::Amg::AMG<Operator,VectorType,ParSmoother,Comm> AMG;
 
     public:
       ISTLBackend_AMG(const GFS& gfs_, int smoothsteps=2,
-                      unsigned maxiter_=5000, int verbose_=1)
-        : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), steps(smoothsteps), verbose(verbose_)
+                      unsigned maxiter_=5000, int verbose_=1, bool reuse_=false)
+        : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), steps(smoothsteps), verbose(verbose_),
+          reuse(reuse_), firstapply(true)
       {}
 
 
@@ -675,7 +713,6 @@ namespace Dune {
 
         \param[in] v the given vector
       */
-      template<class V>
       typename V::ElementType norm (const V& v) const
       {
         typedef Dune::PDELab::OverlappingScalarProduct<GFS,V> PSP;
@@ -690,56 +727,42 @@ namespace Dune {
         \param[in] r right hand side
         \param[in] reduction to be achieved
       */
-      template<class M, class V>
       void apply(M& A, V& z, V& r, typename V::ElementType reduction)
       {
-        typedef typename M::BaseT MatrixType;
-        typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type
-          VectorType;
-        typedef typename CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
-
         Comm oocc(gfs.gridview().comm());
         MatrixType& mat=A.base();
-        typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
-          Dune::Amg::FirstDiagonal> >
+        typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,Dune::Amg::FirstDiagonal> >
           Criterion;
 #if HAVE_MPI
         phelper.createIndexSetAndProjectForAMG(mat, oocc);
-        typedef SMI<MatrixType,VectorType,VectorType,1> Smoother;
-        typedef Dune::BlockPreconditioner<VectorType,VectorType,Comm,Smoother> ParSmoother;
-        typedef Dune::OverlappingSchwarzOperator<MatrixType,VectorType,VectorType,Comm> Operator;
         Operator oop(mat, oocc);
         Dune::OverlappingSchwarzScalarProduct<VectorType,Comm> sp(oocc);
 #else
-        typedef SMI<MatrixType,VectorType,VectorType,1> ParSmoother;
-        typedef Dune::MatrixAdapter<MatrixType,VectorType,VectorType> Operator;
         Operator oop(mat);
         Dune::SeqScalarProduct<VectorType> sp;
 #endif
-        typedef typename Dune::Amg::SmootherTraits<ParSmoother>::Arguments
-          SmootherArgs;
-        typedef Dune::Amg::AMG<Operator,VectorType,ParSmoother,Comm> AMG;
         SmootherArgs smootherArgs;
         smootherArgs.iterations = 1;
         smootherArgs.relaxationFactor = 1;
-
         Criterion criterion(15,2000);
         criterion.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
         criterion.setDebugLevel(verbose);
-        //oocc.copyOwnerToAll(BlockProcessor<GFS>::getVector(r), BlockProcessor<GFS>::getVector(r));
-        AMG amg=AMG(oop, criterion, smootherArgs, 1, steps, steps, false, oocc);
-
-        Dune::InverseOperatorResult stat;
+        
         int verb=0;
         if (gfs.gridview().comm().rank()==0) verb=verbose;
+        //only construct a new AMG if the matrix changes
+        if (reuse==false || firstapply==true){
+          amg.reset(new AMG(oop, criterion, smootherArgs, 1, steps, steps, false, oocc));
+          firstapply = false;
+        }
+        SOI<VectorType> solver(oop,sp,*amg,reduction,maxiter,verb);
+        Dune::InverseOperatorResult stat;
 
-        SOI<VectorType> solver(oop,sp,amg,reduction,maxiter,verb);
         solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
         res.reduction  = stat.reduction;
-        //oocc.copyOwnerToAll(BlockProcessor<GFS>::getVector(z), BlockProcessor<GFS>::getVector(z));
       }
 
       /*! \brief Return access to result data */
@@ -755,6 +778,9 @@ namespace Dune {
       unsigned maxiter;
       int steps;
       int verbose;
+      bool reuse;
+      bool firstapply;
+      Dune::shared_ptr<AMG> amg;
     };
 
     //! \addtogroup PDELab_ovlpsolvers Overlapping Solvers
@@ -762,14 +788,15 @@ namespace Dune {
 
     /**
      * @brief Overlapping parallel conjugate gradient solver preconditioned with AMG smoothed by SSOR
-     * @tparam GFS The type of the grid functions space.
+     * @tparam GO The type of the grid operator 
+     * (or the fakeGOTraits class for the old grid operator space).
      * @tparam s The bits to use for the global index.
      */
-    template<class GFS, int s=96>
+    template<class GO, int s=96>
     class ISTLBackend_CG_AMG_SSOR
-      : public ISTLBackend_AMG<GFS, s, Dune::SeqSSOR, Dune::CGSolver>
+      : public ISTLBackend_AMG<GO, s, Dune::SeqSSOR, Dune::CGSolver>
     {
-
+      typedef typename GO::Traits::TrialGridFunctionSpace GFS;
     public:
       /**
        * @brief Constructor
@@ -777,23 +804,26 @@ namespace Dune {
        * @param smoothsteps_ The number of steps to use for both pre and post smoothing.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
+       * @param reuse_ Set true, if the Matrix to be used is always identical 
+       * (AMG aggregation is then only performed once).
        */
       ISTLBackend_CG_AMG_SSOR(const GFS& gfs_,int smoothsteps_=2,
-                              unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_AMG<GFS, s, Dune::SeqSSOR, Dune::CGSolver>(gfs_,smoothsteps_, maxiter_,verbose_)
+                                    unsigned maxiter_=5000, int verbose_=1, bool reuse_=false)
+        : ISTLBackend_AMG<GO, s, Dune::SeqSSOR, Dune::CGSolver>(gfs_,smoothsteps_, maxiter_,verbose_,reuse_)
       {}
     };
 
     /**
-     * @brief Overlapping parallel BiCGStab solver preconditioned with AMG smoothed by SSOR
-     * @tparam GFS The type of the grid functions space.
-     * @tparam s The bits to use for the global index.
+     * @brief Overlapping parallel BiCGStab solver preconditioned with AMG smoothed by SSOR.
+     * @tparam GO The type of the grid operator 
+     * (or the fakeGOTraits class for the old grid operator space).
+     * @tparam s The bits to use for the globale index.
      */
-    template<class GFS, int s=96>
+    template<class GO, int s=96>
     class ISTLBackend_BCGS_AMG_SSOR
-      : public ISTLBackend_AMG<GFS, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>
+      : public ISTLBackend_AMG<GO, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>
     {
-
+      typedef typename GO::Traits::TrialGridFunctionSpace GFS;
     public:
       /**
        * @brief Constructor
@@ -801,10 +831,12 @@ namespace Dune {
        * @param smoothsteps_ The number of steps to use for both pre and post smoothing.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
+       * @param reuse_ Set true, if the Matrix to be used is always identical 
+       * (AMG aggregation is then only performed once).
        */
       ISTLBackend_BCGS_AMG_SSOR(const GFS& gfs_, int smoothsteps_=2,
-                                unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_AMG<GFS, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>(gfs_,smoothsteps_, maxiter_,verbose_)
+                                unsigned maxiter_=5000, int verbose_=1, bool reuse_=false)
+        : ISTLBackend_AMG<GO, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>(gfs_,smoothsteps_, maxiter_,verbose_,reuse_)
       {}
     };
 
