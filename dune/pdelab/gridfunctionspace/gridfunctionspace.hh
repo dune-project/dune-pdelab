@@ -11,6 +11,7 @@
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/geometrytype.hh>
+#include <dune/common/shared_ptr.hh>
 #include <dune/common/static_assert.hh>
 #include <dune/common/stdstreams.hh>
 #include <dune/common/typetraits.hh>
@@ -650,7 +651,7 @@ namespace Dune {
 	  std::vector<typename Traits::SizeType> offset; // offset into big vector for each entity;
       std::set<unsigned int> codimUsed;
 
-      std::shared_ptr<Ordering> orderingp;
+      Dune::shared_ptr<Ordering> orderingp;
 	};
 
 	/** \brief Tag indicating a fixed number of unkowns per entity (known at compile time).
@@ -962,7 +963,7 @@ namespace Dune {
 	  std::map<Dune::GeometryType,typename Traits::SizeType> offset; // offset in vector for given geometry type
       std::set<unsigned int> codimUsed;
 
-      std::shared_ptr<Ordering> orderingp;
+      Dune::shared_ptr<Ordering> orderingp;
 	};
 
     //! \addtogroup GridFunctionSpace
@@ -1336,7 +1337,7 @@ namespace Dune {
       DofPerCodimMapType dofpercodim;
       std::map<unsigned int,typename Traits::SizeType> offset;
 
-      std::shared_ptr<Ordering> orderingp;
+      Dune::shared_ptr<Ordering> orderingp;
 	};
 
 

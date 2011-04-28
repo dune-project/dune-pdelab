@@ -5,6 +5,7 @@
 
 #include <dune/common/deprecated.hh>
 #include <dune/common/mpihelper.hh>
+#include <dune/common/static_assert.hh>
 
 #include <dune/istl/owneroverlapcopy.hh>
 #include <dune/istl/solvercategory.hh>
@@ -271,7 +272,8 @@ namespace Dune {
       struct BlockSizeIsEqual<M,ISTLVectorBackend<k>,k>
       {
         enum{ value = false };
-        static_assert(AlwaysFalse<M>::value, "Unsupported GridFunctionSpace mapper");
+        dune_static_assert(AlwaysFalse<M>::value,
+                           "Unsupported GridFunctionSpace mapper");
       };
 
       template<int k>
