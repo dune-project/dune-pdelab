@@ -133,7 +133,7 @@ namespace Dune {
             // compute gradient of u
             Dune::FieldVector<RF,dim> gradu(0.0);
             for (size_t i=0; i<lfsu.size(); i++)
-              gradu.axpy(x[i],gradphi[i]);
+              gradu.axpy(x(lfsu,i),gradphi[i]);
 
             // compute K * gradient of u
             Dune::FieldVector<RF,dim> Kgradu(0.0);
@@ -235,12 +235,12 @@ namespace Dune {
             Dune::FieldVector<RF,dim> gradu_s(0.0);
             for (size_t i=0; i<lfsu_s.size(); i++)
               {
-                gradu_s.axpy(x_s[i],gradphi_s[i]);
+                gradu_s.axpy(x_s(lfsu_s,i),gradphi_s[i]);
               }
             Dune::FieldVector<RF,dim> gradu_n(0.0);
             for (size_t i=0; i<lfsu_n.size(); i++)
               {
-                gradu_n.axpy(x_n[i],gradphi_n[i]);
+                gradu_n.axpy(x_n(lfsu_n,i),gradphi_n[i]);
               }
 
             // compute K * gradient of u
@@ -253,12 +253,12 @@ namespace Dune {
             RF u_s = 0.0;
             for (size_t i=0; i<lfsu_s.size(); i++)
               {
-                u_s += x_s[i]*phi_s[i];
+                u_s += x_s(lfsu_s,i)*phi_s[i];
               }
             RF u_n = 0.0;
             for (size_t i=0; i<lfsu_n.size(); i++)
               {
-                u_n += x_n[i]*phi_n[i];
+                u_n += x_n(lfsu_n,i)*phi_n[i];
               }
 
             // jump and average for u
@@ -370,7 +370,7 @@ namespace Dune {
                 Dune::FieldVector<RF,dim> gradu(0.0);
                 for (size_t i=0; i<lfsu.size(); i++)
                   {
-                    gradu.axpy(x[i],gradphi[i]);
+                    gradu.axpy(x(lfsu,i),gradphi[i]);
                   }
 
                 // compute K * gradient of u
@@ -381,7 +381,7 @@ namespace Dune {
                 RF u=0.0;
                 for (size_t i=0; i<lfsu.size(); i++)
                   {
-                    u += x[i]*phi[i];
+                    u += x(lfsu,i)*phi[i];
                   }
 
                 // integrate u
@@ -713,12 +713,12 @@ namespace Dune {
             Dune::FieldVector<RF,dim> gradu_s(0.0);
             for (size_t i=0; i<lfsu_s.size(); i++)
               {
-                gradu_s.axpy(x_s[i],gradphi_s[i]);
+                gradu_s.axpy(x_s(lfsu_s,i),gradphi_s[i]);
               }
             Dune::FieldVector<RF,dim> gradu_n(0.0);
             for (size_t i=0; i<lfsu_n.size(); i++)
               {
-                gradu_n.axpy(x_n[i],gradphi_n[i]);
+                gradu_n.axpy(x_n(lfsu_n,i),gradphi_n[i]);
               }
 
             // compute K * gradient of u
@@ -731,12 +731,12 @@ namespace Dune {
             RF u_s = 0.0;
             for (size_t i=0; i<lfsu_s.size(); i++)
               {
-                u_s += x_s[i]*phi_s[i];
+                u_s += x_s(lfsu_n,i)*phi_s[i];
               }
             RF u_n = 0.0;
             for (size_t i=0; i<lfsu_n.size(); i++)
               {
-                u_n += x_n[i]*phi_n[i];
+                u_n += x_n(lfsu_n,i)*phi_n[i];
               }
 
             // average on intersection of K * grad v * normal
@@ -862,7 +862,7 @@ namespace Dune {
                 Dune::FieldVector<RF,dim> gradu(0.0);
                 for (size_t i=0; i<lfsu.size(); i++)
                   {
-                    gradu.axpy(x[i],gradphi[i]);
+                    gradu.axpy(x(lfsu,i),gradphi[i]);
                   }
 
                 // compute K * gradient of v
