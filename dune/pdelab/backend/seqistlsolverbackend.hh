@@ -436,22 +436,40 @@ namespace Dune {
 
     //! \} Sequential Solvers
 
-    template<class GFS, template<class,class,class,int> class SMI, template<class> class SOI>
+    template<class GO, template<class,class,class,int> class Preconditioner, template<class> class Solver>
     class ISTLBackend_SEQ_AMG
     {
+      typedef typename GO::Traits::TrialGridFunctionSpace GFS;
+      typedef typename GO::Traits::Jacobian M;
+      typedef typename M::BaseT MatrixType;
+      typedef typename GO::Traits::Domain V;
+      typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type VectorType;
+      typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
+      typedef Dune::MatrixAdapter<MatrixType,VectorType,VectorType> Operator;
+      typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments SmootherArgs;
+      typedef Dune::Amg::AMG<Operator,VectorType,Smoother> AMG;
+      typedef Dune::Amg::Parameters Parameters;
 
     public:
-      ISTLBackend_SEQ_AMG(int smoothsteps=2,
-                          unsigned maxiter_=5000, int verbose_=1)
-        : maxiter(maxiter_), steps(smoothsteps), verbose(verbose_)
-      {}
+      ISTLBackend_SEQ_AMG(unsigned maxiter_=5000, int verbose_=1)
+        : maxiter(maxiter_), params(15,2000), verbose(verbose_)
+      {
+        params.setDebugLevel(verbose_);
+      }
 
+       /*! \brief set AMG parameters
+
+        \param[in] params_ a parameter object of Type Dune::Amg::Parameters
+      */     
+      void setparams(Parameters params_)
+      {
+        params = params_;
+      }
 
       /*! \brief compute global norm of a vector
 
         \param[in] v the given vector
       */
-      template<class V>
       typename V::ElementType norm (const V& v) const
       {
         return v.base().two_norm();
@@ -464,33 +482,25 @@ namespace Dune {
         \param[in] r right hand side
         \param[in] reduction to be achieved
       */
-      template<class M, class V>
       void apply(M& A, V& z, V& r, typename V::ElementType reduction)
       {
-        typedef typename M::BaseT MatrixType;
-        typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type
-          VectorType;
         MatrixType& mat=A.base();
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
-          Dune::Amg::FirstDiagonal> >
-          Criterion;
-        typedef SMI<MatrixType,VectorType,VectorType,1> Smoother;
-        typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments
-          SmootherArgs;
-        typedef Dune::MatrixAdapter<MatrixType,VectorType,VectorType> Operator;
-        typedef Dune::Amg::AMG<Operator,VectorType,Smoother> AMG;
+          Dune::Amg::FirstDiagonal> > Criterion;
         SmootherArgs smootherArgs;
         smootherArgs.iterations = 1;
         smootherArgs.relaxationFactor = 1;
 
-        Criterion criterion(15,2000);
-        criterion.setDebugLevel(verbose?3:0);
+        Criterion criterion(params);
         Operator oop(mat);
-        AMG amg=AMG(oop, criterion, smootherArgs, 1, steps, steps);
-
+        //only construct a new AMG if the matrix changes
+        if (reuse==false || firstapply==true){
+          amg.reset(new AMG(oop, criterion, smootherArgs));
+          firstapply = false;
+        }
         Dune::InverseOperatorResult stat;
 
-        SOI<VectorType> solver(oop,amg,reduction,maxiter,verbose);
+        Solver<VectorType> solver(oop,*amg,reduction,maxiter,verbose);
         solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
@@ -507,8 +517,11 @@ namespace Dune {
     private:
       Dune::PDELab::LinearSolverResult<double> res;
       unsigned maxiter;
-      int steps;
+      Parameters params;
       int verbose;
+      bool reuse;
+      bool firstapply;
+      Dune::shared_ptr<AMG> amg;
     };
 
     //! \addtogroup PDELab_seqsolvers Sequential Solvers
@@ -516,110 +529,106 @@ namespace Dune {
 
     /**
      * @brief Sequential conjugate gradient solver preconditioned with AMG smoothed by SSOR
-     * @tparam GFS The type of the grid functions space.
+     * @tparam GO The type of the grid operator 
+     * (or the fakeGOTraits class for the old grid operator space).
      */
-    template<class GFS>
+    template<class GO>
     class ISTLBackend_SEQ_CG_AMG_SSOR
-      : public ISTLBackend_SEQ_AMG<GFS, Dune::SeqSSOR, Dune::CGSolver>
+      : public ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::CGSolver>
     {
 
     public:
       /**
        * @brief Constructor
-       * @param smoothsteps_ The number of steps to use for both pre and post smoothing.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
        */
-      ISTLBackend_SEQ_CG_AMG_SSOR(int smoothsteps_=2,
-                                  unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSSOR, Dune::CGSolver>(smoothsteps_, maxiter_,verbose_)
+      ISTLBackend_SEQ_CG_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::CGSolver>(maxiter_,verbose_)
       {}
     };
 
     /**
      * @brief Sequential BiCGStab solver preconditioned with AMG smoothed by SSOR
-     * @tparam GFS The type of the grid functions space.
+     * @tparam GO The type of the grid operator 
+     * (or the fakeGOTraits class for the old grid operator space).
      */
-    template<class GFS>
+    template<class GO>
     class ISTLBackend_SEQ_BCGS_AMG_SSOR
-      : public ISTLBackend_SEQ_AMG<GFS, Dune::SeqSSOR, Dune::BiCGSTABSolver>
+      : public ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::BiCGSTABSolver>
     {
 
     public:
       /**
        * @brief Constructor
-       * @param smoothsteps_ The number of steps to use for both pre and post smoothing.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
        */
-      ISTLBackend_SEQ_BCGS_AMG_SSOR(int smoothsteps_=2,
-                                    unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSSOR, Dune::BiCGSTABSolver>(smoothsteps_, maxiter_, verbose_)
+      ISTLBackend_SEQ_BCGS_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::BiCGSTABSolver>(maxiter_, verbose_)
       {}
     };
     
     /**
-     * @brief Sequential BiCGSTAB solver preconditioned with AMG smoothed by SOR     * @tparam GFS The type of the grid functions space.
+     * @brief Sequential BiCGSTAB solver preconditioned with AMG smoothed by SOR
+     * @tparam GO The type of the grid operator 
+     * (or the fakeGOTraits class for the old grid operator space).
      */
-    template<class GFS>
+    template<class GO>
     class ISTLBackend_SEQ_BCGS_AMG_SOR
-      : public ISTLBackend_SEQ_AMG<GFS, Dune::SeqSOR, Dune::BiCGSTABSolver>
+      : public ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::BiCGSTABSolver>
     {
 
     public:
       /**
        * @brief Constructor
-       * @param smoothsteps_ The number of steps to use for both pre and post smoothing.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
        */
-      ISTLBackend_SEQ_BCGS_AMG_SOR(int smoothsteps_=2,
-                                    unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSOR, Dune::BiCGSTABSolver>(smoothsteps_, maxiter_, verbose_)
+      ISTLBackend_SEQ_BCGS_AMG_SOR(unsigned maxiter_=5000, int verbose_=1)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::BiCGSTABSolver>(maxiter_, verbose_)
       {}
     };
 
     /**
      * @brief Sequential Loop solver preconditioned with AMG smoothed by SSOR
-     * @tparam GFS The type of the grid functions space.
+     * @tparam GO The type of the grid operator 
+     * (or the fakeGOTraits class for the old grid operator space).
      */
-    template<class GFS>
+    template<class GO>
     class ISTLBackend_SEQ_LS_AMG_SSOR
-      : public ISTLBackend_SEQ_AMG<GFS, Dune::SeqSSOR, Dune::LoopSolver>
+      : public ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::LoopSolver>
     {
 
     public:
       /**
        * @brief Constructor
-       * @param smoothsteps_ The number of steps to use for both pre and post smoothing.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
        */
-      ISTLBackend_SEQ_LS_AMG_SSOR(int smoothsteps_=2,
-                                    unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSSOR, Dune::LoopSolver>(smoothsteps_, maxiter_, verbose_)
+      ISTLBackend_SEQ_LS_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::LoopSolver>(maxiter_, verbose_)
       {}
     };
 
     /**
      * @brief Sequential Loop solver preconditioned with AMG smoothed by SOR
-     * @tparam GFS The type of the grid functions space.
+     * @tparam GO The type of the grid operator 
+     * (or the fakeGOTraits class for the old grid operator space).
      */
-    template<class GFS>
+    template<class GO>
     class ISTLBackend_SEQ_LS_AMG_SOR
-      : public ISTLBackend_SEQ_AMG<GFS, Dune::SeqSOR, Dune::LoopSolver>
+      : public ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::LoopSolver>
     {
 
     public:
       /**
        * @brief Constructor
-       * @param smoothsteps_ The number of steps to use for both pre and post smoothing.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
        */
-      ISTLBackend_SEQ_LS_AMG_SOR(int smoothsteps_=2,
-                                    unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_AMG<GFS, Dune::SeqSOR, Dune::LoopSolver>(smoothsteps_, maxiter_, verbose_)
+      ISTLBackend_SEQ_LS_AMG_SOR(unsigned maxiter_=5000, int verbose_=1)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::LoopSolver>(maxiter_, verbose_)
       {}
     };
 
