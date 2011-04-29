@@ -562,9 +562,9 @@ namespace Dune {
 
 #ifndef NumericalJacobianX
       // jacobian of volume term
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                            LocalMatrix<R>& mat) const
+                            M& mat) const
       {
         // domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
@@ -627,12 +627,12 @@ namespace Dune {
       }
 
       // jacobian of skeleton term
-      template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
       void jacobian_skeleton (const IG& ig,
                               const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                               const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-                              LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn,
-                              LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn) const
+                              M& mat_ss, M& mat_sn,
+                              M& mat_ns, M& mat_nn) const
       {
         // domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
@@ -791,10 +791,10 @@ namespace Dune {
       }
 
       // jacobian of volume term
-      template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
       void jacobian_boundary (const IG& ig,
                               const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                              LocalMatrix<R>& mat) const
+                              M& mat) const
       {
         // domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
