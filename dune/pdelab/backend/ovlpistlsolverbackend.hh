@@ -680,7 +680,8 @@ namespace Dune {
       };
     };
 
-    template<class GO, int s, template<class,class,class,int> class SMI, template<class> class SOI>
+    template<class GO, int s, template<class,class,class,int> class Preconditioner,
+             template<class> class Solver>
     class ISTLBackend_AMG
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
@@ -691,23 +692,34 @@ namespace Dune {
       typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type VectorType;
       typedef typename CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
 #if HAVE_MPI
-      typedef SMI<MatrixType,VectorType,VectorType,1> Smoother;
+      typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
       typedef Dune::BlockPreconditioner<VectorType,VectorType,Comm,Smoother> ParSmoother;
       typedef Dune::OverlappingSchwarzOperator<MatrixType,VectorType,VectorType,Comm> Operator;
 #else
-      typedef SMI<MatrixType,VectorType,VectorType,1> ParSmoother;
+      typedef Preconditioner<MatrixType,VectorType,VectorType,1> ParSmoother;
       typedef Dune::MatrixAdapter<MatrixType,VectorType,VectorType> Operator;
 #endif
       typedef typename Dune::Amg::SmootherTraits<ParSmoother>::Arguments SmootherArgs;
       typedef Dune::Amg::AMG<Operator,VectorType,ParSmoother,Comm> AMG;
+      typedef Dune::Amg::Parameters Parameters;
 
     public:
-      ISTLBackend_AMG(const GFS& gfs_, int smoothsteps=2,
-                      unsigned maxiter_=5000, int verbose_=1, bool reuse_=false)
-        : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), steps(smoothsteps), verbose(verbose_),
-          reuse(reuse_), firstapply(true)
-      {}
+      ISTLBackend_AMG(const GFS& gfs_, unsigned maxiter_=5000, 
+                      int verbose_=1, bool reuse_=false)
+        : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), params(15,2000), verbose(verbose_), reuse(reuse_), firstapply(true)
+      {
+        params.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
+        params.setDebugLevel(verbose_);
+      }
 
+       /*! \brief set AMG parameters
+
+        \param[in] params_ a parameter object of Type Dune::Amg::Parameters
+      */     
+      void setparams(Parameters params_)
+      {
+        params = params_;
+      }
 
       /*! \brief compute global norm of a vector
 
@@ -731,8 +743,8 @@ namespace Dune {
       {
         Comm oocc(gfs.gridview().comm());
         MatrixType& mat=A.base();
-        typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,Dune::Amg::FirstDiagonal> >
-          Criterion;
+        typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
+          Dune::Amg::FirstDiagonal> > Criterion;
 #if HAVE_MPI
         phelper.createIndexSetAndProjectForAMG(mat, oocc);
         Operator oop(mat, oocc);
@@ -744,18 +756,16 @@ namespace Dune {
         SmootherArgs smootherArgs;
         smootherArgs.iterations = 1;
         smootherArgs.relaxationFactor = 1;
-        Criterion criterion(15,2000);
-        criterion.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
-        criterion.setDebugLevel(verbose);
+        Criterion criterion(params);
         
         int verb=0;
         if (gfs.gridview().comm().rank()==0) verb=verbose;
         //only construct a new AMG if the matrix changes
         if (reuse==false || firstapply==true){
-          amg.reset(new AMG(oop, criterion, smootherArgs, 1, steps, steps, false, oocc));
+          amg.reset(new AMG(oop, criterion, smootherArgs, oocc));
           firstapply = false;
         }
-        SOI<VectorType> solver(oop,sp,*amg,reduction,maxiter,verb);
+        Solver<VectorType> solver(oop,sp,*amg,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
 
         solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
@@ -776,7 +786,7 @@ namespace Dune {
       PHELPER phelper;
       Dune::PDELab::LinearSolverResult<double> res;
       unsigned maxiter;
-      int steps;
+      Parameters params;
       int verbose;
       bool reuse;
       bool firstapply;
@@ -801,15 +811,14 @@ namespace Dune {
       /**
        * @brief Constructor
        * @param gfs_ The grid function space used.
-       * @param smoothsteps_ The number of steps to use for both pre and post smoothing.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
        * @param reuse_ Set true, if the Matrix to be used is always identical 
        * (AMG aggregation is then only performed once).
        */
-      ISTLBackend_CG_AMG_SSOR(const GFS& gfs_,int smoothsteps_=2,
-                                    unsigned maxiter_=5000, int verbose_=1, bool reuse_=false)
-        : ISTLBackend_AMG<GO, s, Dune::SeqSSOR, Dune::CGSolver>(gfs_,smoothsteps_, maxiter_,verbose_,reuse_)
+      ISTLBackend_CG_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000, 
+                              int verbose_=1, bool reuse_=false)
+        : ISTLBackend_AMG<GO, s, Dune::SeqSSOR, Dune::CGSolver>(gfs_, maxiter_,verbose_,reuse_)
       {}
     };
 
@@ -834,9 +843,9 @@ namespace Dune {
        * @param reuse_ Set true, if the Matrix to be used is always identical 
        * (AMG aggregation is then only performed once).
        */
-      ISTLBackend_BCGS_AMG_SSOR(const GFS& gfs_, int smoothsteps_=2,
-                                unsigned maxiter_=5000, int verbose_=1, bool reuse_=false)
-        : ISTLBackend_AMG<GO, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>(gfs_,smoothsteps_, maxiter_,verbose_,reuse_)
+      ISTLBackend_BCGS_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000,
+                                int verbose_=1, bool reuse_=false)
+        : ISTLBackend_AMG<GO, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>(gfs_, maxiter_,verbose_,reuse_)
       {}
     };
 

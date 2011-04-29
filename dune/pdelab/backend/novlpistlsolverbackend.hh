@@ -1011,25 +1011,26 @@ namespace Dune {
         exchanger.getextendedmatrix(mat,phelper);
         exchanger.sumEntries(mat);
         phelper.createIndexSetAndProjectForAMG(mat, oocc);
-        typedef Preconditioner<MatrixType,VectorType,VectorType,1> SeqPreCond;
-        SeqPreCond seqPreCond(mat, steps, 1.0);
+        typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
+        Smoother smoother(mat, steps, 1.0);
         typedef Dune::NonoverlappingSchwarzScalarProduct<VectorType,Comm> PSP;
         PSP psp(oocc);      
-        typedef Dune::NonoverlappingSchwarzOperator<MatrixType,VectorType,VectorType,Comm> POP;
-        POP pop(mat,oocc);
-        typedef Dune::NonoverlappingBlockPreconditioner<Comm, SeqPreCond> ParPreCond;
-        ParPreCond parPreCond(seqPreCond, oocc);
+        typedef Dune::NonoverlappingSchwarzOperator<MatrixType,VectorType,VectorType,Comm> Operator;
+        Operator oop(mat,oocc);
+        typedef Dune::NonoverlappingBlockPreconditioner<Comm, Smoother> ParSmoother;
+        ParSmoother parsmoother(smoother, oocc);
 #else
         Comm oocc(gfs.gridview().comm());
-        typedef Preconditioner<MatrixType,VectorType,VectorType,1> ParPreCond;
-        ParPreCond parPreCond(mat, steps, 1.0);
-        typedef Dune::MatrixAdapter<MatrixType,VectorType,VectorType> POP;
-        Dune::SeqScalarProduct<VectorType> psp;
-        POP pop(mat);
+        typedef Preconditioner<MatrixType,VectorType,VectorType,1> ParSmoother;
+        ParSmoother parsmoother(mat, steps, 1.0);
+        Dune::SeqScalarProduct<VectorType> PSP;
+        PSP psp;
+        typedef Dune::MatrixAdapter<MatrixType,VectorType,VectorType> Operator;
+        Operator oop(mat);
 #endif
         int verb=0;
         if (gfs.gridview().comm().rank()==0) verb=verbose;
-        Solver<VectorType> solver(pop,psp,parPreCond,reduction,maxiter,verb);
+        Solver<VectorType> solver(oop,psp,parsmoother,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
         //make r consistent
         if (gfs.gridview().comm().size()>1){
@@ -1067,8 +1068,7 @@ namespace Dune {
   /**
    * @brief Nonoverlapping parallel BiCGSTAB solver preconditioned by block SSOR.
    * @tparam GO The type of the grid operator 
-     * (or the fakeGOTraits class for the old grid operator space).
-   * @tparam C The communication object.
+   * (or the fakeGOTraits class for the old grid operator space).
    *
    * The solver uses a NonoverlappingBlockPreconditioner with underlying
    * sequential SSOR preconditioner. The crucial step is to add up the matrix entries
@@ -1121,146 +1121,159 @@ namespace Dune {
     //! \} Nonoverlapping Solvers
     //! \} group Backend
     
-  template<class GO,int s, template<class,class,class,int> class SMI, template<class> class SOI>
-  class ISTLBackend_AMG_NOVLP
-  {
-    typedef typename GO::Traits::TrialGridFunctionSpace GFS;
-    typedef typename Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
-    typedef typename GO::Traits::Jacobian M;
-    typedef typename M::BaseT MatrixType;
-    typedef typename GO::Traits::Domain V;
-    typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type VectorType;
-    typedef typename CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
+    template<class GO,int s, template<class,class,class,int> class Preconditioner,
+             template<class> class Solver>
+    class ISTLBackend_AMG_NOVLP
+    {
+      typedef typename GO::Traits::TrialGridFunctionSpace GFS;
+      typedef typename Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
+      typedef typename GO::Traits::Jacobian M;
+      typedef typename M::BaseT MatrixType;
+      typedef typename GO::Traits::Domain V;
+      typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type VectorType;
+      typedef typename CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
 #if HAVE_MPI
-    typedef SMI<MatrixType,VectorType,VectorType,1> Smoother;
-    typedef Dune::NonoverlappingBlockPreconditioner<Comm,Smoother> ParSmoother;
-    typedef Dune::NonoverlappingSchwarzOperator<MatrixType,VectorType,VectorType,Comm> Operator;
+      typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
+      typedef Dune::NonoverlappingBlockPreconditioner<Comm,Smoother> ParSmoother;
+      typedef Dune::NonoverlappingSchwarzOperator<MatrixType,VectorType,VectorType,Comm> Operator;
 #else
-    typedef SMI<MatrixType,VectorType,VectorType,1> ParSmoother;
-    typedef Dune::MatrixAdapter<MatrixType,VectorType,VectorType> Operator;
+      typedef Preconditioner<MatrixType,VectorType,VectorType,1> ParSmoother;
+      typedef Dune::MatrixAdapter<MatrixType,VectorType,VectorType> Operator;
 #endif
-    typedef typename Dune::Amg::SmootherTraits<ParSmoother>::Arguments SmootherArgs;
-    typedef Dune::Amg::AMG<Operator,VectorType,ParSmoother,Comm> AMG;
- 
-  public:
-    ISTLBackend_AMG_NOVLP(const GFS& gfs_, int smoothsteps=2,
-                          unsigned maxiter_=5000, int verbose_=1, bool reuse_=false)
-      : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), steps(smoothsteps), verbose(verbose_),
-        reuse(reuse_), firstapply(true)
-    {}
- 
-    typename V::ElementType norm (const V& v) const
-    {
-      V x(v); // make a copy because it has to be made consistent
-      typedef Dune::PDELab::NonoverlappingScalarProduct<GFS,V> PSP;
-      PSP psp(gfs,phelper);
-      psp.make_consistent(x);
-      return psp.norm(x);
-    }
+      typedef typename Dune::Amg::SmootherTraits<ParSmoother>::Arguments SmootherArgs;
+      typedef Dune::Amg::AMG<Operator,VectorType,ParSmoother,Comm> AMG;
+      typedef Dune::Amg::Parameters Parameters;
 
-    void apply(M& A, V& z, V& r, typename V::ElementType reduction)
-    {
-      MatrixType& mat=A.base();
-      typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
-        Dune::Amg::FirstDiagonal> > Criterion;
+    public:
+      ISTLBackend_AMG_NOVLP(const GFS& gfs_, unsigned maxiter_=5000, 
+                            int verbose_=1, bool reuse_=false)
+        : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), params(15,2000,1.2,1.6,Dune::Amg::atOnceAccu),
+          verbose(verbose_), reuse(reuse_), firstapply(true)
+      {
+        params.setDebugLevel(verbose_);
+      }
+      
+      void setparams(Parameters params_)
+      {
+        params = params_;
+      }
+
+      typename V::ElementType norm (const V& v) const
+      {
+        V x(v); // make a copy because it has to be made consistent
+        typedef Dune::PDELab::NonoverlappingScalarProduct<GFS,V> PSP;
+        PSP psp(gfs,phelper);
+        psp.make_consistent(x);
+        return psp.norm(x);
+      }
+      
+      void apply(M& A, V& z, V& r, typename V::ElementType reduction)
+      {
+        MatrixType& mat=A.base();
+        typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
+          Dune::Amg::FirstDiagonal> > Criterion;
 #if HAVE_MPI
-      Comm oocc(gfs.gridview().comm(),Dune::SolverCategory::nonoverlapping);
-      typedef VertexExchanger<GO,MatrixType> Exchanger;
-      Exchanger exchanger(gfs.gridview());
-      exchanger.getextendedmatrix(mat,phelper);
-      exchanger.sumEntries(mat);        
-      phelper.createIndexSetAndProjectForAMG(mat, oocc);
-      Dune::NonoverlappingSchwarzScalarProduct<VectorType,Comm> sp(oocc);
-      Operator oop(mat, oocc);
+        Comm oocc(gfs.gridview().comm(),Dune::SolverCategory::nonoverlapping);
+        typedef VertexExchanger<GO,MatrixType> Exchanger;
+        Exchanger exchanger(gfs.gridview());
+        exchanger.getextendedmatrix(mat,phelper);
+        exchanger.sumEntries(mat);        
+        phelper.createIndexSetAndProjectForAMG(mat, oocc);
+        Dune::NonoverlappingSchwarzScalarProduct<VectorType,Comm> sp(oocc);
+        Operator oop(mat, oocc);
 #else
-      Comm oocc(gfs.gridview().comm());
-      Operator oop(mat);
-      Dune::SeqScalarProduct<VectorType> sp;
+        Comm oocc(gfs.gridview().comm());
+        Operator oop(mat);
+        Dune::SeqScalarProduct<VectorType> sp;
 #endif
-      SmootherArgs smootherArgs;
-      smootherArgs.iterations = 1;
-      smootherArgs.relaxationFactor = 1;
-      //use noAccu or atOnceAccu
-      Criterion criterion(15,2000,1.2,1.6,Dune::Amg::atOnceAccu);
-
-      int verb=0;
-      if (gfs.gridview().comm().rank()==0) verb=verbose;
-      //only construct a new AMG if the matrix changes
-      if (reuse==false || firstapply==true){
-        amg.reset(new AMG(oop, criterion, smootherArgs, 1, steps, steps, false, oocc));
-        firstapply = false;
+        SmootherArgs smootherArgs;
+        smootherArgs.iterations = 1;
+        smootherArgs.relaxationFactor = 1;
+        //use noAccu or atOnceAccu
+        params;
+        Criterion criterion(params);
+        //Criterion criterion(15,2000,1.2,1.6,Dune::Amg::atOnceAccu);
+        //criterion.setDebugLevel(verbose);
+        
+        int verb=0;
+        if (gfs.gridview().comm().rank()==0) verb=verbose;
+        //only construct a new AMG if the matrix changes
+        if (reuse==false || firstapply==true){
+          // amg.reset(new AMG(oop, criterion, smootherArgs, 1, params.getNoPreSmoothSteps(), params.getNoPostSmoothSteps(), false, oocc));
+          amg.reset(new AMG(oop, criterion, smootherArgs, oocc));
+          firstapply = false;
+        }
+        Dune::InverseOperatorResult stat;
+        // make r consistent
+        if (gfs.gridview().comm().size()>1) {
+          Dune::PDELab::AddDataHandle<GFS,V> adddh(gfs,r);
+          gfs.gridview().communicate(adddh,
+                                     Dune::InteriorBorder_InteriorBorder_Interface,
+                                     Dune::ForwardCommunication);
+        }
+        Solver<VectorType> solver(oop,sp,*amg,reduction,maxiter,verb);
+        solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
       }
-      Dune::InverseOperatorResult stat;
-      // make r consistent
-      if (gfs.gridview().comm().size()>1) {
-        Dune::PDELab::AddDataHandle<GFS,V> adddh(gfs,r);
-        gfs.gridview().communicate(adddh,
-                                   Dune::InteriorBorder_InteriorBorder_Interface,
-                                   Dune::ForwardCommunication);
+      
+      const Dune::PDELab::LinearSolverResult<double>& result() const
+      {
+        return res;
       }
-      SOI<VectorType> solver(oop,sp,*amg,reduction,maxiter,verb);
-      solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
-      res.converged  = stat.converged;
-      res.iterations = stat.iterations;
-      res.elapsed    = stat.elapsed;
-      res.reduction  = stat.reduction;
-    }
- 
-    const Dune::PDELab::LinearSolverResult<double>& result() const
+      
+    private:
+      const GFS& gfs;
+      PHELPER phelper;
+      Dune::PDELab::LinearSolverResult<double> res;
+      unsigned maxiter;
+      Parameters params;
+      int verbose;
+      bool reuse;
+      bool firstapply;
+      Dune::shared_ptr<AMG> amg;
+    };
+    
+    template<class GO, int s=96>
+    class ISTLBackend_NOVLP_CG_AMG_SSOR
+      : public ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::CGSolver>
     {
-      return res;
-    }
- 
-  private:
-    const GFS& gfs;
-    PHELPER phelper;
-    Dune::PDELab::LinearSolverResult<double> res;
-    unsigned maxiter;
-    int steps;
-    int verbose;
-    bool reuse;
-    bool firstapply;
-    Dune::shared_ptr<AMG> amg;
-  };
- 
-  template<class GO, int s=96>
-  class ISTLBackend_NOVLP_CG_AMG_SSOR
-    : public ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::CGSolver>
-  {
-    typedef typename GO::Traits::TrialGridFunctionSpace GFS;
+      typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       
-  public:
-    ISTLBackend_NOVLP_CG_AMG_SSOR(const GFS& gfs_,int smoothsteps=2,
-                                  unsigned maxiter_=5000, int verbose_=1, bool reuse_=false)
-      : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::CGSolver>(gfs_,smoothsteps, maxiter_,verbose_,reuse_)
-    {}
-  };
+    public:
+      ISTLBackend_NOVLP_CG_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000, 
+                                    int verbose_=1, bool reuse_=false)
+        : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::CGSolver>(gfs_, maxiter_,verbose_,reuse_)
+      {}
+    };
 
-  template<class GO, int s=96>
-  class ISTLBackend_NOVLP_BCGS_AMG_SSOR
-    : public ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>
-  {
-    typedef typename GO::Traits::TrialGridFunctionSpace GFS;
+    template<class GO, int s=96>
+    class ISTLBackend_NOVLP_BCGS_AMG_SSOR
+      : public ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>
+    {
+      typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       
-  public:
-    ISTLBackend_NOVLP_BCGS_AMG_SSOR(const GFS& gfs_,int smoothsteps=2,
-                                    unsigned maxiter_=5000, int verbose_=1, bool reuse_=false)
-      : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>(gfs_,smoothsteps, maxiter_,verbose_,reuse_)
-    {}
-  };
+    public:
+      ISTLBackend_NOVLP_BCGS_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000,
+                                      int verbose_=1, bool reuse_=false)
+        : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>(gfs_, maxiter_,verbose_,reuse_)
+      {}
+    };
 
-  template<class GO, int s=96>
-  class ISTLBackend_NOVLP_LS_AMG_SSOR
-    : public ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::LoopSolver>
-  {
-    typedef typename GO::Traits::TrialGridFunctionSpace GFS;
+    template<class GO, int s=96>
+    class ISTLBackend_NOVLP_LS_AMG_SSOR
+      : public ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::LoopSolver>
+    {
+      typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       
-  public:
-    ISTLBackend_NOVLP_LS_AMG_SSOR(const GFS& gfs_,int smoothsteps_=2,
-                                  unsigned maxiter_=5000, int verbose_=1, bool reuse_=false)
-      : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::LoopSolver>(gfs_,smoothsteps_, maxiter_,verbose_,reuse_)
-    {}
-  };
+    public:
+      ISTLBackend_NOVLP_LS_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000, 
+                                    int verbose_=1, bool reuse_=false)
+        : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::LoopSolver>(gfs_, maxiter_,verbose_,reuse_)
+      {}
+    };
 
   } // namespace PDELab
 } // namespace Dune
