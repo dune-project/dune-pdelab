@@ -143,7 +143,7 @@ namespace Dune {
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_t i=0; i<lfsu.size(); i++)
               {
-                r[i] += Kgradu*gradphi[i] * factor;
+                r.accumulate( lfsv, i, Kgradu*gradphi[i] * factor ) ;
               }
           }
       }
@@ -284,18 +284,18 @@ namespace Dune {
             for (unsigned int i=0; i<lfsv_s.size(); i++)
               {
                 // NIPG / SIPG penalty term: sigma/|gamma|^beta * [u]*[v]
-                r_s[i] += penalty_weight * u_jump*phi_s[i]*factor;
+                r_s.accumulate( lfsv_s, i, penalty_weight * u_jump*phi_s[i]*factor );
                 // epsilon * <Kgradv*my>[u] - <Kgradu*my>[v]
-                r_s[i] += epsilon*(kgradphi_s[i]*normal)*0.5*u_jump*factor;
-                r_s[i] -= phi_s[i]*kgradunormal_average*factor;
+                r_s.accumulate( lfsv_s, i, epsilon*(kgradphi_s[i]*normal)*0.5*u_jump*factor );
+                r_s.accumulate( lfsv_s, i, - phi_s[i]*kgradunormal_average*factor );
               }
             for (unsigned int i=0; i<lfsv_n.size(); i++)
               {
                 // NIPG / SIPG penalty term: sigma/|gamma|^beta * [u]*[v]
-                r_n[i] += penalty_weight * u_jump*(-phi_n[i])*factor;
+                r_n.accumulate( lfsv_s, i, penalty_weight * u_jump*(-phi_n[i])*factor );
                 // epsilon * <Kgradv*my>[u] - [v]<Kgradu*my>
-                r_n[i] += epsilon*(kgradphi_n[i]*normal)*0.5*u_jump*factor;
-                r_n[i] -= (-phi_n[i])*kgradunormal_average*factor;
+                r_n.accumulate( lfsv_s, i, epsilon*(kgradphi_n[i]*normal)*0.5*u_jump*factor );
+                r_n.accumulate( lfsv_s, i,  phi_n[i] * kgradunormal_average * factor );
               }
           }
       }
@@ -389,12 +389,12 @@ namespace Dune {
                 for (size_t i=0; i<lfsv.size(); i++)
                   {
                     // Left hand side of NIPG / SIPG penalty term: sigma/|gamma|^beta*u*v
-                    r[i] += penalty_weight*u*phi[i]*factor;
+                    r.accumulate( lfsv, i, penalty_weight*u*phi[i]*factor );
                     // epsilon*K*gradient of v*my*u - v*K*gradient of u*my
                     Dune::FieldVector<RF,dim> Kgradv(0.0);
                     tensor.umv(gradphi[i],Kgradv);
-                    r[i] += epsilon * (Kgradv*normal)*u*factor;
-                    r[i] -= phi[i]*(Kgradu*normal)*factor;
+                    r.accumulate( lfsv, i, epsilon * (Kgradv*normal)*u*factor );
+                    r.accumulate( lfsv, i, - phi[i]*(Kgradu*normal)*factor );
                   }
               }
           }
@@ -438,7 +438,7 @@ namespace Dune {
             for (size_t i=0; i<lfsv.size(); i++)
               {
                 // f*v
-                r[i] -= y*phi[i]*factor;
+                r.accumulate( lfsv, i, - y*phi[i]*factor );
               }
           }
       }
@@ -490,7 +490,7 @@ namespace Dune {
                 for (size_t i=0; i<lfsv.size(); i++)
                   {
                     // Neumann boundary condition: j*v
-                    r[i] += y*phi[i]*factor;
+                    r.accumulate( lfsv, i, y*phi[i]*factor );
                   }
               }
           }
@@ -546,11 +546,11 @@ namespace Dune {
                 for (size_t i=0; i<lfsv.size(); i++)
                   {
                     // Right hand side of NIPG / SIPG penalty term: -sigma / |gamma|^beta * g
-                    r[i] -= penalty_weight*y*phi[i]*factor;
+                    r.accumulate( lfsv, i, -penalty_weight * y * phi[i] * factor );
                     // Dirichlet boundary: -epsilon*K*gradient of v*my*g
                     Dune::FieldVector<RF,dim> Kgradv(0.0);
                     tensor.umv(gradphi[i],Kgradv);
-                    r[i] -= epsilon * (Kgradv*normal)*y*factor;
+                    r.accumulate( lfsv, i, -epsilon * (Kgradv*normal)*y*factor );
                   }
               }
           }
@@ -620,7 +620,7 @@ namespace Dune {
                 for (typename LFSU::Traits::SizeType i=0; i<lfsu.size(); i++)
                   {
                     // K*gradient of phi_j*K*gradient of phi_i
-                    mat(i,j) += ( Kgradphi[j]*gradphi[i])*factor;
+                    mat.accumulate( lfsu, i, lfsu, j, ( Kgradphi[j]*gradphi[i])*factor );
                   }
               }
           }
@@ -758,16 +758,16 @@ namespace Dune {
                 for (typename LFSU::Traits::SizeType i=0; i<lfsu_s.size(); i++)
                   {
                     // epsilon*(K*gradient of phi_s_j + K*gradient of phi_n_j)/2*(phi_s_i - phi_n_i) - (phi_s_j - phi_n_j)*(K*gradient of phi_s_i + K*gradient of phi_n_i)/2
-                    mat_ss(i,j) += (epsilon*0.5*(kgradphi_s[i]*normal)*(phi_s[j]) - (phi_s[i])*0.5*(kgradphi_s[j]*normal) )*factor;
+                    mat_ss.accumulate( lfsu_s, i, lfsu_s, j, (epsilon*0.5*(kgradphi_s[i]*normal)*(phi_s[j]) - (phi_s[i])*0.5*(kgradphi_s[j]*normal) ) * factor );
                     // NIPG / SIPG term: (phi_n_j - phi_s_j)*(phi_n_i - phi_s_i)
-                    mat_ss(i,j) += penalty_weight*(phi_s[j])*(phi_s[i]) *factor;
+                    mat_ss.accumulate( lfsu_s, i, lfsu_s, j, penalty_weight*(phi_s[j])*(phi_s[i]) * factor );
                   }
                 for (typename LFSU::Traits::SizeType i=0; i<lfsu_n.size(); i++)
                   {
                     // epsilon*(K*gradient of phi_s_j + K*gradient of phi_n_j)/2*(phi_s_i - phi_n_i) - (phi_s_j - phi_n_j)*(K*gradient of phi_s_i + K*gradient of phi_n_i)/2
-                    mat_ns(i,j) += (epsilon*0.5*(kgradphi_n[i]*normal)*(phi_s[j]) - (-phi_n[i])*0.5*(kgradphi_s[j]*normal) )*factor;
+                    mat_ns.accumulate( lfsu_n, i, lfsu_s, j, (epsilon*0.5*(kgradphi_n[i]*normal)*(phi_s[j]) - (-phi_n[i])*0.5*(kgradphi_s[j]*normal) )*factor );
                     // NIPG / SIPG term: (phi_n_j - phi_s_j)*(phi_n_i - phi_s_i)
-                    mat_ns(i,j) += penalty_weight*(phi_s[j])*(-phi_n[i]) *factor;
+                    mat_ns.accumulate( lfsu_n, i, lfsu_s, j, penalty_weight*(phi_s[j])*(-phi_n[i]) *factor );
                   }
               }
             for (typename LFSU::Traits::SizeType j=0; j<lfsu_n.size(); j++)
@@ -775,16 +775,16 @@ namespace Dune {
                 for (typename LFSU::Traits::SizeType i=0; i<lfsu_s.size(); i++)
                   {
                     // epsilon*(K*gradient of phi_s_j + K*gradient of phi_n_j)/2*(phi_s_i - phi_n_i) - (phi_s_j - phi_n_j)*(K*gradient of phi_s_i + K*gradient of phi_n_i)/2
-                    mat_sn(i,j) += (epsilon*0.5*(kgradphi_s[i]*normal)*(-phi_n[j]) - (phi_s[i])*0.5*(kgradphi_n[j]*normal) )*factor;
+                    mat_sn.accumulate( lfsu_s, i, lfsu_n, j, (epsilon*0.5*(kgradphi_s[i]*normal)*(-phi_n[j]) - (phi_s[i])*0.5*(kgradphi_n[j]*normal) )*factor );
                     // NIPG / SIPG term: (phi_n_j - phi_s_j)*(phi_n_i - phi_s_i)
-                    mat_sn(i,j) += penalty_weight*(-phi_n[j])*(phi_s[i]) *factor;
+                    mat_sn.accumulate( lfsu_s, i, lfsu_n, j, penalty_weight*(-phi_n[j])*(phi_s[i]) *factor );
                   }
                 for (typename LFSU::Traits::SizeType i=0; i<lfsu_n.size(); i++)
                   {
                     // epsilon*(K*gradient of phi_s_j + K*gradient of phi_n_j)/2*(phi_s_i - phi_n_i) - (phi_s_j - phi_n_j)*(K*gradient of phi_s_i + K*gradient of phi_n_i)/2
-                    mat_nn(i,j) += (epsilon*0.5*(kgradphi_n[i]*normal)*(-phi_n[j]) - (-phi_n[i])*0.5*(kgradphi_n[j]*normal) )*factor;
+                    mat_nn.accumulate( lfsu_s, i, lfsu_n, j, (epsilon*0.5*(kgradphi_n[i]*normal)*(-phi_n[j]) - (-phi_n[i])*0.5*(kgradphi_n[j]*normal) )*factor );
                     // NIPG / SIPG term: (phi_n_j - phi_s_j)*(phi_n_i - phi_s_i)
-                    mat_nn(i,j) += penalty_weight*(-phi_n[j])*(-phi_n[i]) *factor;
+                    mat_nn.accumulate( lfsu_s, i, lfsu_n, j, penalty_weight*(-phi_n[j])*(-phi_n[i]) *factor );
                   }
               }
           }
@@ -879,9 +879,9 @@ namespace Dune {
                     for (typename LFSU::Traits::SizeType i=0; i<lfsu.size(); i++)
                       {
                         // epsilon*K*gradient of phi_i*my*phi_j - phi_i*K*gradient of phi_j*my
-                        mat(i,j) += (epsilon*(kgradphi[i]*normal)*phi[j] - phi[i]*(kgradphi[j]*normal))*factor;
+                        mat.accumulate( lfsu, i, lfsu, j, (epsilon*(kgradphi[i]*normal)*phi[j] - phi[i]*(kgradphi[j]*normal))*factor );
                         // NIPG / SIPG penalty term: sigma / |gamma|^beta *phi_j*phi_i
-                        mat(i,j) += (penalty_weight*phi[j]*phi[i])*factor;
+                        mat.accumulate( lfsu, i, lfsu, j, (penalty_weight*phi[j]*phi[i])*factor );
                       }
                   }
               }
