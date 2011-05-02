@@ -277,10 +277,10 @@ namespace Dune {
           LFSV lfsv(gfsv);
           LFSV lfsv_n(gfsv);
 
-          std::vector<typename U::ElementType> ul;
-          std::vector<typename U::ElementType> ul_n;
-          std::vector<typename V::ElementType> vl;
-          std::vector<typename V::ElementType> vl_n;
+          LocalVector<typename U::ElementType, TrialSpaceTag> ul;
+          LocalVector<typename U::ElementType, TrialSpaceTag> ul_n;
+          LocalVector<typename V::ElementType, TestSpaceTag> vl;
+          LocalVector<typename V::ElementType, TestSpaceTag> vl_n;
 
           // traverse grid view
           for (LeafIterator it = gfsu.gridview().template begin<0,Dune::Interior_Partition>();
@@ -291,8 +291,8 @@ namespace Dune {
             lfsu.bind(e);
             lfsv.bind(e);
 
-            ul = std::vector<typename U::ElementType>(lfsu.size());
-            vl = std::vector<typename V::ElementType>(lfsv.size(),0.);
+            ul.resize(lfsu.size());
+            vl.assign(lfsv.size(),0.0);
 
             // read coefficents
             lfsu.vread(u,ul);
@@ -315,9 +315,9 @@ namespace Dune {
                 lfsu_n.bind(*(iit->outside()));
                 lfsv_n.bind(*(iit->outside()));
 
-                ul_n = std::vector<typename U::ElementType>(lfsu_n.size());
-                vl   = std::vector<typename V::ElementType>(lfsv.size()  ,0.);
-                vl_n = std::vector<typename V::ElementType>(lfsv_n.size(),0.);
+                ul_n.resize(lfsu_n.size());
+                vl.assign(lfsv.size(),0.0);
+                vl_n.assign(lfsv_n.size(),0.0);
 
                 // only assemble  where we have a solution
                 if (!nonoverlapping_mode || iit->outside()->partitionType()==Dune::InteriorEntity)
