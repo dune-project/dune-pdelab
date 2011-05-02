@@ -1023,7 +1023,7 @@ namespace Dune {
         Comm oocc(gfs.gridview().comm());
         typedef Preconditioner<MatrixType,VectorType,VectorType,1> ParSmoother;
         ParSmoother parsmoother(mat, steps, 1.0);
-        Dune::SeqScalarProduct<VectorType> PSP;
+        typedef Dune::SeqScalarProduct<VectorType> PSP;
         PSP psp;
         typedef Dune::MatrixAdapter<MatrixType,VectorType,VectorType> Operator;
         Operator oop(mat);
@@ -1190,16 +1190,12 @@ namespace Dune {
         smootherArgs.iterations = 1;
         smootherArgs.relaxationFactor = 1;
         //use noAccu or atOnceAccu
-        params;
         Criterion criterion(params);
-        //Criterion criterion(15,2000,1.2,1.6,Dune::Amg::atOnceAccu);
-        //criterion.setDebugLevel(verbose);
         
         int verb=0;
         if (gfs.gridview().comm().rank()==0) verb=verbose;
         //only construct a new AMG if the matrix changes
         if (reuse==false || firstapply==true){
-          // amg.reset(new AMG(oop, criterion, smootherArgs, 1, params.getNoPreSmoothSteps(), params.getNoPostSmoothSteps(), false, oocc));
           amg.reset(new AMG(oop, criterion, smootherArgs, oocc));
           firstapply = false;
         }
