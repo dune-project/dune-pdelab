@@ -4,6 +4,7 @@
 #include <dune/pdelab/gridoperator/common/gridoperatorutilities.hh>
 #include <dune/pdelab/gridoperator/default/localassembler.hh>
 #include <dune/pdelab/gridoperator/default/assembler.hh>
+#include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/common/tupleutility.hh>
 
 namespace Dune{
