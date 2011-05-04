@@ -3,6 +3,7 @@
 
 #include <dune/pdelab/gridoperator/common/localassemblerenginebase.hh>
 #include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
+#include <dune/pdelab/constraints/constraints.hh>
 
 namespace Dune{
   namespace PDELab{
