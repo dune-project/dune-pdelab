@@ -72,7 +72,7 @@ namespace Dune{
       //! @}
 
       //! Public access to the wrapping local assembler
-      const LocalAssembler & localAssembler(){ return local_assembler; }
+      const LocalAssembler & localAssembler() const { return local_assembler; }
 
       //! Set current residual vector. Should be called prior to
       //! assembling.
@@ -156,6 +156,12 @@ namespace Dune{
       //! Assembling methods
       //! @{
 
+      /** Assemble on a given cell without function spaces.
+
+          \return If true, the assembling for this cell is assumed to
+          be complete and the assembler continues with the next grid
+          cell.
+       */
       template<typename EG>
       bool assembleCell(const EG & eg)
       {
