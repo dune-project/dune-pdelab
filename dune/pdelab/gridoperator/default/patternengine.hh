@@ -46,7 +46,7 @@ namespace Dune{
       {}
 
       //! Public access to the wrapping local assembler
-      const LocalAssembler & localAssembler(){ return local_assembler; }
+      const LocalAssembler & localAssembler() const { return local_assembler; }
 
       //! Set current residual vector. Should be called prior to
       //! assembling.
