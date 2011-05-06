@@ -32,23 +32,24 @@ namespace Dune
             unsigned int iterations;   // number of iterations
             double elapsed;            // total user time in seconds
             RFType reduction;          // defect reduction
+            RFType conv_rate;          // convergence rate (average reduction per step)
 
             LinearSolverResult() :
-                converged(false), iterations(0), elapsed(0.0), reduction(0.0) {}
+                converged(false), iterations(0), elapsed(0.0), reduction(0.0), conv_rate(0.0) {}
         };
 
         // Status information of Newton's method
         template<class RFType>
         struct NewtonResult : LinearSolverResult<RFType>
         {
-            RFType conv_rate;          // average reduction per Newton iteration
+//            RFType conv_rate;          // average reduction per Newton iteration
             RFType first_defect;       // the first defect
             RFType defect;             // the final defect
             double assembler_time;     // Cumulative time for matrix assembly
             double linear_solver_time; // Cumulative time for linear sovler
 
             NewtonResult() :
-                conv_rate(0.0), first_defect(0.0), defect(0.0), assembler_time(0.0), linear_solver_time(0.0) {}
+                first_defect(0.0), defect(0.0), assembler_time(0.0), linear_solver_time(0.0) {} // conv_rate(0.0),
         };
 
         template<class GOS, class TrlV, class TstV>
