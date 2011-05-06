@@ -241,7 +241,7 @@ namespace Dune {
 	    Dune::FieldVector<RF,dim+1> u(0.0);
 	    for (size_type k=0; k<=dim; k++) // for all components
 	      for (size_type j=0; j<dgspace.size(); j++) // for all basis functions 
-		u[k] += x[lfsv.child(k).localIndex(j)]*phi[j];
+            u[k] += x(lfsv.child(k),j)*phi[j];
 	    // std::cout << "  u at " << it->position() << " : " << u << std::endl;
 
 	    // evaluate gradient of basis functions (we assume Galerkin method lfsu=lfsv)
@@ -259,10 +259,10 @@ namespace Dune {
 	      {
 		// component i=0
 		for (size_type j=0; j<dim; j++)
-		  r[lfsv.child(0).localIndex(k)] -= u[j+1]*gradphi[k][j]*factor;
+		  r.accumulate(lfsv.child(0),k, - u[j+1]*gradphi[k][j]*factor);
 		// components i=1...d
 		for (size_type i=1; i<=dim; i++)
-		  r[lfsv.child(i).localIndex(k)] -= c2*u[0]*gradphi[k][i-1]*factor;
+		  r.accumulate(lfsv.child(i),k, - c2*u[0]*gradphi[k][i-1]*factor);
 	      }
 	    // std::cout << "  residual: ";
 	    // for (size_type i=0; i<r.size(); i++) std::cout << r[i] << " ";
@@ -352,11 +352,11 @@ namespace Dune {
 	    Dune::FieldVector<RF,dim+1> u_s(0.0);
 	    for (size_type i=0; i<=dim; i++) // for all components
 	      for (size_type k=0; k<dgspace_s.size(); k++) // for all basis functions 
-		u_s[i] += x_s[lfsv_s.child(i).localIndex(k)]*phi_s[k];
+            u_s[i] += x_s(lfsv_s.child(i),k)*phi_s[k];
 	    Dune::FieldVector<RF,dim+1> u_n(0.0);
 	    for (size_type i=0; i<=dim; i++) // for all components
 	      for (size_type k=0; k<dgspace_n.size(); k++) // for all basis functions 
-		u_n[i] += x_n[lfsv_n.child(i).localIndex(k)]*phi_n[k];
+            u_n[i] += x_n(lfsv_n.child(i),k)*phi_n[k];
 
 	    // compute numerical flux at integration point
 	    Dune::FieldVector<RF,dim+1> f(0.0);
@@ -369,10 +369,10 @@ namespace Dune {
 	    RF factor = it->weight() * ig.geometry().integrationElement(it->position());
 	    for (size_type k=0; k<dgspace_s.size(); k++) // loop over all vector-valued (!) basis functions (with identical components)
 	      for (size_type i=0; i<=dim; i++) // loop over all components
-		r_s[lfsv_s.child(i).localIndex(k)] += f[i]*phi_s[k]*factor;
+            r_s.accumulate(lfsv_s.child(i),k, f[i]*phi_s[k]*factor);
 	    for (size_type k=0; k<dgspace_n.size(); k++) // loop over all vector-valued (!) basis functions (with identical components)
 	      for (size_type i=0; i<=dim; i++) // loop over all components
-		r_n[lfsv_n.child(i).localIndex(k)] -= f[i]*phi_n[k]*factor;
+            r_n.accumulate(lfsv_n.child(i),k, - f[i]*phi_n[k]*factor);
 	  }
 
 	// std::cout << "  residual_s: ";
@@ -457,7 +457,7 @@ namespace Dune {
 	    Dune::FieldVector<RF,dim+1> u_s(0.0);
 	    for (size_type i=0; i<=dim; i++) // for all components
 	      for (size_type k=0; k<dgspace_s.size(); k++) // for all basis functions 
-		u_s[i] += x_s[lfsv_s.child(i).localIndex(k)]*phi_s[k];
+            u_s[i] += x_s(lfsv_s.child(i),k)*phi_s[k];
 	    // std::cout << "  u_s " << u_s << std::endl;
 
 	    // evaluate boundary condition
@@ -475,7 +475,7 @@ namespace Dune {
 	    RF factor = it->weight() * ig.geometry().integrationElement(it->position());
 	    for (size_type k=0; k<dgspace_s.size(); k++) // loop over all vector-valued (!) basis functions (with identical components)
 	      for (size_type i=0; i<=dim; i++) // loop over all components
-		r_s[lfsv_s.child(i).localIndex(k)] += f[i]*phi_s[k]*factor;
+            r_s.accumulate(lfsv_s.child(i),k, f[i]*phi_s[k]*factor);
 	  }
 
 	// std::cout << "  residual_s: ";
@@ -519,7 +519,7 @@ namespace Dune {
 	    RF factor = it->weight() * eg.geometry().integrationElement(it->position());
 	    for (size_type k=0; k<=dim; k++) // for all components
 	      for (size_type i=0; i<dgspace.size(); i++) // for all test functions of this component
-		r[lfsv.child(k).localIndex(i)] -= q[k]*phi[i]*factor;
+            r.accumulate(lfsv.child(k),i, - q[k]*phi[i]*factor);
 	  }
       }
 
@@ -637,20 +637,20 @@ namespace Dune {
 	    Dune::FieldVector<RF,dim+1> u(0.0);
 	    for (size_type k=0; k<=dim; k++) // for all components
 	      for (size_type j=0; j<dgspace.size(); j++) // for all basis functions 
-		u[k] += x[lfsv.child(k).localIndex(j)]*phi[j];
+            u[k] += x(lfsv.child(k),j)*phi[j];
 
 	    // integrate
 	    RF factor = it->weight() * eg.geometry().integrationElement(it->position());
 	    for (size_type k=0; k<=dim; k++) // for all components
 	      for (size_type i=0; i<dgspace.size(); i++) // for all test functions of this component
-		r[lfsv.child(k).localIndex(i)] += u[k]*phi[i]*factor;
+            r.accumulate(lfsv.child(k),i, u[k]*phi[i]*factor);
 	  }
       }
 
       // jacobian of volume term
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
-			    LocalMatrix<R>& mat) const
+			    M & mat) const
       {
 	// get types
 	typedef typename LFSV::template Child<0>::Type DGSpace;
@@ -682,7 +682,7 @@ namespace Dune {
 	    for (size_type k=0; k<=dim; k++) // for all components
 	      for (size_type i=0; i<dgspace.size(); i++) // for all test functions of this component
 		for (size_type j=0; j<dgspace.size(); j++) // for all ansatz functions of this component
-		  mat(lfsv.child(k).localIndex(i),lfsu.child(k).localIndex(j)) += phi[j]*phi[i]*factor;
+		  mat.accumulate(lfsv.child(k),i,lfsu.child(k),j, phi[j]*phi[i]*factor);
 	  }
       }
 
