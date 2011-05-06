@@ -835,7 +835,10 @@ namespace Dune {
         B::access(xg,cit->first) = 0;
 	}
 
-    //! construct constraints from given boundary condition function
+    //! Modify coefficient vector based on constrained dofs as given
+    //! in the constraints container
+    //! @{
+
     /**
      * \code
      * #include <dune/pdelab/gridfunctionspace/constraints.hh>
@@ -850,7 +853,6 @@ namespace Dune {
         B::access(xgout,cit->first) = B::access(xgin,cit->first);
 	}
 
-    // construct constraints from given boundary condition function
     /**
      * \code
      * #include <dune/pdelab/gridfunctionspace/constraints.hh>
@@ -865,7 +867,7 @@ namespace Dune {
           B::access(xg,i) = x;
 	}
 
-    // construct constraints from given boundary condition function
+
     /**
      * \code
      * #include <dune/pdelab/gridfunctionspace/constraints.hh>
@@ -880,7 +882,6 @@ namespace Dune {
           B::access(xgout,i) = B::access(xgin,i);
 	}
 
-    // construct constraints from given boundary condition function
     /**
      * \code
      * #include <dune/pdelab/gridfunctionspace/constraints.hh>
@@ -898,6 +899,7 @@ namespace Dune {
       }
 	}
 
+    //! @}
 
     //! \} group GridFunctionSpace
   } // namespace PDELab
