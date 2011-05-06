@@ -555,7 +555,7 @@ namespace Dune {
         typename TP::Traits::RangeFieldType c = tp.c(eg.entity(),inside_local);
         
         // residual contribution
-        mat(0,0) += c*eg.geometry().volume();
+        mat.accumulate(lfsu,0,lfsu,0,c*eg.geometry().volume());
       }
 
 	private:
