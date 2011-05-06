@@ -181,6 +181,12 @@ namespace Dune{
       //! Assembling methods
       //! @{
 
+      /** Assemble on a given cell without function spaces.
+
+          \return If true, the assembling for this cell is assumed to
+          be complete and the assembler continues with the next grid
+          cell.
+       */
       template<typename EG>
       bool assembleCell(const EG & eg)
       {

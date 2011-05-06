@@ -70,7 +70,9 @@ namespace Dune{
         : BaseT(la_),
           invalid_residual(static_cast<Residual*>(0)),
           invalid_solutions(static_cast<Solutions*>(0)),
-          const_residual(invalid_residual), solutions(invalid_solutions)
+          const_residual_0(invalid_residual), 
+          const_residual_1(invalid_residual), 
+          solutions(invalid_solutions)
       {}
 
       //! Query methods for the global grid assembler
@@ -87,14 +89,26 @@ namespace Dune{
 
       //! Set current const residual vector. Should be called prior to
       //! assembling.
-      void setConstResidual(Residual & const_residual_){
-        const_residual = &const_residual_;
-
-        assert(solutions != invalid_solutions);
+      void setConstResiduals(Residual & const_residual_0_, Residual & const_residual_1_){
+        const_residual_0 = &const_residual_0_;
+        const_residual_1 = &const_residual_1_;
 
         // Initialize the engines of the two wrapped local assemblers
-        setLocalAssemblerEngineDT0(la.la0.localResidualAssemblerEngine(*const_residual,*((*solutions)[0])));
-        setLocalAssemblerEngineDT1(la.la1.localResidualAssemblerEngine(*const_residual,*((*solutions)[0])));
+        assert(solutions != invalid_solutions);
+        setLocalAssemblerEngineDT0(la.la0.localResidualAssemblerEngine(*const_residual_0,*((*solutions)[0])));
+        setLocalAssemblerEngineDT1(la.la1.localResidualAssemblerEngine(*const_residual_1,*((*solutions)[0])));
+      }
+
+      //! Set current const residual vector. Should be called prior to
+      //! assembling.
+      void setConstResidual(Residual & const_residual_){
+        const_residual_0 = &const_residual_;
+        const_residual_1 = &const_residual_;
+
+        // Initialize the engines of the two wrapped local assemblers
+        assert(solutions != invalid_solutions);
+        setLocalAssemblerEngineDT0(la.la0.localResidualAssemblerEngine(*const_residual_0,*((*solutions)[0])));
+        setLocalAssemblerEngineDT1(la.la1.localResidualAssemblerEngine(*const_residual_1,*((*solutions)[0])));
       }
 
       //! Methods for loading of the local function's
@@ -117,7 +131,8 @@ namespace Dune{
         lae0->preAssembly();
         lae1->preAssembly();
 
-        *const_residual = 0.0;
+        *const_residual_0 = 0.0;
+        *const_residual_1 = 0.0;
 
         // Extract the coefficients of the time step scheme
         a.resize(la.stage);
@@ -454,8 +469,12 @@ namespace Dune{
       Solutions * const invalid_solutions;
 
       //! Pointer to the current constant part residual vector in
-      //! which to assemble
-      Residual * const_residual;
+      //! which to assemble the residual corresponding to the operator
+      //! representing the time derivative of order zero and one.
+      //! @{
+      Residual * const_residual_0;
+      Residual * const_residual_1;
+      //! @}
 
       //! Pointer to the current residual vector in which to assemble
       const Solutions * solutions;

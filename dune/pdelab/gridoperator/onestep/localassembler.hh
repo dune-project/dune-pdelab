@@ -5,6 +5,8 @@
 #include <dune/pdelab/gridoperator/onestep/patternengine.hh>
 #include <dune/pdelab/gridoperator/onestep/jacobianengine.hh>
 #include <dune/pdelab/gridoperator/onestep/prestageengine.hh>
+#include <dune/pdelab/gridoperator/onestep/jacobianresidualengine.hh>
+
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/common/typetree.hh>
 
@@ -45,10 +47,15 @@ namespace Dune{
       typedef OneStepLocalResidualAssemblerEngine<OneStepLocalAssembler> LocalResidualAssemblerEngine;
       typedef OneStepLocalJacobianAssemblerEngine<OneStepLocalAssembler> LocalJacobianAssemblerEngine;
 
+      typedef typename LA1::LocalPatternAssemblerEngine LocalExplicitPatternAssemblerEngine;
+      typedef OneStepExplicitLocalJacobianResidualAssemblerEngine<OneStepLocalAssembler> 
+      LocalExplicitJacobianResidualAssemblerEngine;
+
       friend class OneStepLocalPatternAssemblerEngine<OneStepLocalAssembler>;
       friend class OneStepLocalPreStageAssemblerEngine<OneStepLocalAssembler>;
       friend class OneStepLocalResidualAssemblerEngine<OneStepLocalAssembler>;
       friend class OneStepLocalJacobianAssemblerEngine<OneStepLocalAssembler>;
+      friend class OneStepExplicitLocalJacobianResidualAssemblerEngine<OneStepLocalAssembler>;
       //! @}
 
       void static_checks(){
@@ -73,27 +80,17 @@ namespace Dune{
       //! The local operators type for real numbers e.g. time
       typedef typename Traits::RangeField Real;
 
-      // //! The residual representation type
-      // typedef typename LA0::GridOperator::Traits::Range Residual;
-
-      // //! The solution representation type
-      // typedef typename LA0::GridOperator::Traits::Domain Solution;
-
-      // //! The jacobian representation type
-      // typedef typename LA0::GridOperator::Traits::Jacobian Jacobian;
-
-      // //! The matrix pattern representation type
-      // typedef typename LA0::GridOperator::Traits::MatrixBackend::Pattern Pattern;
-
       //! The type of the one step parameter object
       typedef Dune::PDELab::TimeSteppingParameterInterface<Real> OneStepParameters;
 
       //! Constructor with empty constraints
       OneStepLocalAssembler (LA0 & la0_, LA1 & la1_, typename Traits::Residual & const_residual_)
         : Base(la0_.trialConstraints(),la0_.testConstraints()),
-          la0(la0_), la1(la1_), const_residual(const_residual_),
-          time(0.0), use_mass_dt(false), stage(0),
-          pattern_engine(*this), prestage_engine(*this), residual_engine(*this), jacobian_engine(*this)
+          la0(la0_), la1(la1_), 
+          const_residual(const_residual_), 
+          time(0.0), dt_mode(MultiplyOperator0ByDT), stage(0),
+          pattern_engine(*this), prestage_engine(*this), residual_engine(*this), jacobian_engine(*this),
+          explicit_jacobian_residual_engine(*this)
       { static_checks(); }
 
       //! Notifies the local assembler about the current time of
@@ -102,13 +99,22 @@ namespace Dune{
       void preStep(Real time_, Real dt_, int stages_){
         time = time_;
         dt = dt_;
-        if(use_mass_dt){
+
+        // This switch decides which term will be multiplied with dt
+        if(dt_mode == DivideOperator1ByDT){
           dt_factor0 = 1.0;
           dt_factor1 = 1.0 / dt;
         }
-        else{
+        else if(dt_mode == MultiplyOperator0ByDT){
           dt_factor0 = dt;
           dt_factor1 = 1.0;
+        }
+        else if(dt_mode == DoNotAssembleDT){
+          dt_factor0 = 1.0;
+          dt_factor1 = 1.0;
+        }
+        else{
+          DUNE_THROW(Dune::Exception,"Unknown mode for assembling of time step size!");
         }
 
         la0.preStep(time_,dt_, stages_);
@@ -125,11 +131,13 @@ namespace Dune{
         stage = stage_;
       }
 
+      enum DTAssemblingMode { DivideOperator1ByDT, MultiplyOperator0ByDT, DoNotAssembleDT };
+
       //! Determines whether the time step size is multiplied to the
       //! mass term (first order time derivative) or the elliptic term
       //! (zero-th order time derivative).
-      void divideMassTermByDeltaT(bool v){
-        use_mass_dt = v;
+      void setDTAssemblingMode(DTAssemblingMode dt_mode_){
+        dt_mode = dt_mode_;
       }
 
       //! Access time at given stage
@@ -140,6 +148,11 @@ namespace Dune{
       //! Access time at given stage
       Real timeAtStage(){
         return time+osp_method->d(stage)*dt;
+      }
+
+      void setWeight(const Real weight){
+        la0.setWeight(weight);
+        la1.setWeight(weight);
       }
 
       //! Access methods which provid "ready to use" engines
@@ -170,6 +183,7 @@ namespace Dune{
       (typename Traits::Residual & r, const typename Traits::Solution & x)
       {
         residual_engine.setSolution(x);
+        residual_engine.setConstResidual(const_residual);
         residual_engine.setResidual(r);
         return residual_engine;
       }
@@ -182,6 +196,33 @@ namespace Dune{
         jacobian_engine.setSolution(x);
         jacobian_engine.setJacobian(a);
         return jacobian_engine;
+      }
+
+      //! Returns a reference to the requested engine. This engine is
+      //! completely configured and ready to use.
+      LocalExplicitPatternAssemblerEngine & localExplicitPatternAssemblerEngine
+      (typename Traits::MatrixPattern & p)
+      {
+        return la1.localPatternAssemblerEngine(p);
+      }
+
+      //! Returns a reference to the requested engine. This engine is
+      //! completely configured and ready to use.
+      LocalExplicitJacobianResidualAssemblerEngine & localExplicitJacobianResidualAssemblerEngine
+      (typename Traits::Jacobian & a, 
+       typename Traits::Residual & r0, typename Traits::Residual & r1, 
+       const std::vector<typename Traits::Solution*> & x)
+      {
+        // Init pre stage engine
+        prestage_engine.setSolutions( x );
+        prestage_engine.setConstResiduals(r0,r1);
+        explicit_jacobian_residual_engine.setLocalPreStageEngine(prestage_engine);
+
+        // Init jacobian engine
+        explicit_jacobian_residual_engine.setLocalJacobianEngine
+          (la1.localJacobianAssemblerEngine(a,*(x[stage])));
+
+        return explicit_jacobian_residual_engine;
       }
 
       //! @}
@@ -209,19 +250,24 @@ namespace Dune{
       Real dt;
 
       /** The time step factors for assembling. Depending on the value
-       of \a use_mass_dt, it will hold:
+       of \a dt_mode, it will hold:
 
        dt_factor0 = dt and dt_factor1 = 1.0
 
        or
 
        dt_factor0 = 1.0 and dt_factor1 = 1.0 / dt
+       
+       or
+
+       dt_factor0 = 1.0 and dt_factor1 = 1.0 .
+
       */
       Real dt_factor0, dt_factor1;
 
       //! Determines, whether the time step size will be multiplied
       //! with the time derivative term of first of zero-th order.
-      bool use_mass_dt;
+      DTAssemblingMode dt_mode;
 
       //! The current stage of the one step scheme
       int stage;
@@ -232,6 +278,7 @@ namespace Dune{
       LocalPreStageAssemblerEngine prestage_engine;
       LocalResidualAssemblerEngine residual_engine;
       LocalJacobianAssemblerEngine jacobian_engine;
+      LocalExplicitJacobianResidualAssemblerEngine explicit_jacobian_residual_engine;
       //! @}
     };
 

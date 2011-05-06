@@ -8,23 +8,7 @@
 namespace Dune{
   namespace PDELab{
 
-    /**
-       \brief A standard grid operator implementation suitable for the
-       combination with a one step time stepping method.
-
-
-       \tparam GFSU GridFunctionSpace for ansatz functions
-       \tparam GFSV GridFunctionSpace for test functions
-       \tparam MB The matrix backend to be used for representation of the jacobian
-       \tparam DF The domain field type of the operator
-       \tparam RF The range field type of the operator
-       \tparam ST The type of the sub triangulation
-       \tparam nonoverlapping_mode Switch for nonoverlapping grids
-       \tparam CU   Constraints maps for the individual dofs (trial space)
-       \tparam CV   Constraints maps for the individual dofs (test space)
-
-    */
-    template<typename GO0, typename GO1>
+    template<typename GO0, typename GO1, bool implicit = true>
     class OneStepGridOperator
     {
     public:
@@ -80,17 +64,28 @@ namespace Dune{
         : global_assembler(go0_.assembler()),
           go0(go0_), go1(go1_),
           la0(go0_.localAssembler()), la1(go1_.localAssembler()),
-          const_residual(go0_.testGridFunctionSpace()),
+          const_residual( go0_.testGridFunctionSpace() ),
           local_assembler(la0,la1, const_residual)
       {
         GO0::setupGridOperators(Dune::tie(go0_,go1_));
+        if(!implicit)
+          local_assembler.setDTAssemblingMode(LocalAssembler::DoNotAssembleDT);
       }
 
       //! Determines whether the time step size is multiplied to the
       //! mass term (first order time derivative) or the elliptic term
       //! (zero-th order time derivative).
-      void divideMassTermByDeltaT(bool v){
-        local_assembler.divideMassTermByDeltaT(v);
+      void divideMassTermByDeltaT()
+      {
+        if(!implicit)
+          DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");
+        local_assembler.setDTAssemblingMode(LocalAssembler::DivideOperator1ByDT);
+      }
+      void multiplySpatialTermByDeltaT()
+      {
+        if(!implicit)
+          DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");
+        local_assembler.setDTAssemblingMode(LocalAssembler::MultiplyOperator0ByDT);
       }
 
       //! Get the trial grid function space
@@ -123,13 +118,21 @@ namespace Dune{
 
       //! Fill pattern of jacobian matrix
       void fill_pattern(Pattern & p) const {
-        typedef typename LocalAssembler::LocalPatternAssemblerEngine PatternEngine;
-        PatternEngine & pattern_engine = local_assembler.localPatternAssemblerEngine(p);
-        global_assembler.assemble(pattern_engine);
+        if(implicit){
+          typedef typename LocalAssembler::LocalPatternAssemblerEngine PatternEngine;
+          PatternEngine & pattern_engine = local_assembler.localPatternAssemblerEngine(p);
+          global_assembler.assemble(pattern_engine);
+        } else {
+          typedef typename LocalAssembler::LocalExplicitPatternAssemblerEngine PatternEngine;
+          PatternEngine & pattern_engine = local_assembler.localExplicitPatternAssemblerEngine(p);
+          global_assembler.assemble(pattern_engine);
+        }
       }
 
       //! Assemble constant part of residual
       void preStage(unsigned int stage, const std::vector<Domain*> & x){
+        if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
+
         typedef typename LocalAssembler::LocalPreStageAssemblerEngine PreStageEngine;
         local_assembler.setStage(stage);
         PreStageEngine & prestage_engine = local_assembler.localPreStageAssemblerEngine(x);
@@ -139,6 +142,8 @@ namespace Dune{
 
       //! Assemble residual
       void residual(const Domain & x, Range & r) const {
+        if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
+
         typedef typename LocalAssembler::LocalResidualAssemblerEngine ResidualEngine;
         ResidualEngine & residual_engine = local_assembler.localResidualAssemblerEngine(r,x);
         global_assembler.assemble(residual_engine);
@@ -147,10 +152,29 @@ namespace Dune{
 
       //! Assemble jacobian
       void jacobian(const Domain & x, Jacobian & a) const {
+        if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
+
         typedef typename LocalAssembler::LocalJacobianAssemblerEngine JacobianEngine;
         JacobianEngine & jacobian_engine = local_assembler.localJacobianAssemblerEngine(a,x);
         global_assembler.assemble(jacobian_engine);
         //printmatrix(std::cout,a.base(),"global stiffness matrix","row",9,1);
+      }
+
+      //! Assemble jacobian and residual simultaneously for explicit treatment
+      void explicit_jacobian_residual(unsigned int stage, const std::vector<Domain*> & x,
+                                      Jacobian & a, Range & r1, Range & r0)
+      {
+        if(implicit){DUNE_THROW(Dune::Exception,"This function should not be called in implicit mode");}
+
+        local_assembler.setStage(stage);
+
+        typedef typename LocalAssembler::LocalExplicitJacobianResidualAssemblerEngine 
+          ExplicitJacobianResidualEngine;
+        
+        ExplicitJacobianResidualEngine & jacobian_residual_engine 
+          = local_assembler.localExplicitJacobianResidualAssemblerEngine(a,r0,r1,x);
+
+        global_assembler.assemble(jacobian_residual_engine);
       }
 
       //! Interpolate constrained values from given function f
@@ -167,6 +191,12 @@ namespace Dune{
 
         // Copy non-constrained dofs from old time step
         Dune::PDELab::copy_nonconstrained_dofs(local_assembler.trialConstraints(),xold,x);
+      }
+
+      //! set time stepping method
+      void setMethod (const TimeSteppingParameterInterface<Real>& method_)
+      {
+        local_assembler.setMethod(method_);
       }
 
       //! parametrize assembler with a time-stepping method

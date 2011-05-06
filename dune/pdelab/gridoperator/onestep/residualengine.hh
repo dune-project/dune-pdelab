@@ -67,7 +67,11 @@ namespace Dune{
         : BaseT(local_assembler_),
           invalid_residual(static_cast<Residual*>(0)),
           invalid_solution(static_cast<Solution*>(0)),
-          residual(invalid_residual), solution(invalid_solution)
+          residual_0(invalid_residual), 
+          residual_1(invalid_residual), 
+          const_residual_0(invalid_residual),
+          const_residual_1(invalid_residual),
+          solution(invalid_solution)
       {}
 
       //! Set current solution vector. Must be called before
@@ -76,16 +80,46 @@ namespace Dune{
         solution = &solution_;
       }
 
+      //! Set current const residual vector. Must be called before
+      //! setResidual(). Should be called prior to assembling.
+      void setConstResidual(const Residual &const_residual_){
+        const_residual_0 = &const_residual_;
+        const_residual_1 = &const_residual_;
+      }
+
       //! Set current const residual vector. Should be called prior to
       //! assembling.
       void setResidual(Residual & residual_){
-        residual = &residual_;
-
-        assert(solution != invalid_solution);
+        residual_0 = &residual_;
+        residual_1 = &residual_;
 
         // Initialize the engines of the two wrapped local assemblers
-        setLocalAssemblerEngineDT0(la.la0.localResidualAssemblerEngine(*residual,*solution));
-        setLocalAssemblerEngineDT1(la.la1.localResidualAssemblerEngine(*residual,*solution));
+        assert(solution != invalid_solution);
+        setLocalAssemblerEngineDT0(la.la0.localResidualAssemblerEngine(*residual_0,*solution));
+        setLocalAssemblerEngineDT1(la.la1.localResidualAssemblerEngine(*residual_1,*solution));
+      }
+
+      //! Set current const residual vectors. Must be called before
+      //! setResidual(). Should be called prior to assembling. Here,
+      //! separate vectors are used for the operators corresponding to
+      //! the time dervatives of order one and zero.
+      void setConstResiduals(const Residual &const_residual_0_, const Residual &const_residual_1_){
+        const_residual_0 = &const_residual_0_;
+        const_residual_1 = &const_residual_1_;
+      }
+
+      //! Set current const residual vectors. Should be called prior
+      //! to assembling. Here, separate vectors are used for the
+      //! operators corresponding to the time dervatives of order one
+      //! and zero.
+      void setResiduals(Residual & residual_0_, Residual & residual_1_){
+        residual_0 = &residual_0_;
+        residual_1 = &residual_1_;
+
+        // Initialize the engines of the two wrapped local assemblers
+        assert(solution != invalid_solution);
+        setLocalAssemblerEngineDT0(la.la0.localResidualAssemblerEngine(*residual_0,*solution));
+        setLocalAssemblerEngineDT1(la.la1.localResidualAssemblerEngine(*residual_1,*solution));
       }
 
       //! Notifier functions, called immediately before and after assembling
@@ -108,11 +142,19 @@ namespace Dune{
         la.la0.setWeight(b_rr * la.dt_factor0);
         la.la1.setWeight(la.dt_factor1);
 
-        // Initialize residual vector with constant part
-        *residual = la.const_residual;
       }
 
       void postAssembly(){
+
+        // Update residual vectors with constant part
+        assert(const_residual_0 != invalid_residual);
+        assert(const_residual_1 != invalid_residual);
+        *residual_0 += *const_residual_0;
+        if(residual_0 != residual_1){
+          assert(const_residual_0 != const_residual_1);
+          *residual_1 += *const_residual_1;
+        }
+
         lae0->postAssembly();
         lae1->postAssembly();
       }
@@ -128,8 +170,20 @@ namespace Dune{
       Solution * const invalid_solution;
 
       //! Pointer to the current constant part residual vector in
-      //! which to assemble
-      Residual * residual;
+      //! which to assemble the residual corresponding to the operator
+      //! representing the time derivative of order zero and one.
+      //! @{
+      Residual * residual_0;
+      Residual * residual_1;
+      //! @}
+
+      //! Pointer to the current constant part residual vectors in
+      //! which to assemble the residual corresponding to the operator
+      //! representing the time derivative of order zero and one.
+      //! @{
+      const Residual * const_residual_0;
+      const Residual * const_residual_1;
+      //! @}
 
       //! Pointer to the current residual vector in which to assemble
       const Solution * solution;
