@@ -4,6 +4,9 @@
 #ifndef DUNE_PDELAB_VTKEXPORT_HH
 #define DUNE_PDELAB_VTKEXPORT_HH
 
+#include<cstddef>
+#include<vector>
+
 #include<dune/grid/io/file/vtk/vtkwriter.hh>
 
 namespace Dune {
@@ -20,12 +23,32 @@ namespace Dune {
 
 	public:
 	  VTKGridFunctionAdapter (const T& t_, std::string s_)
-		: t(t_), s(s_)
+        : t(t_), s(s_), remap(T::Traits::dimRange)
+      {
+        for(std::size_t c = 0; c < T::Traits::dimRange; ++c)
+          remap[c] = c;
+      }
+
+      //! construct a VTKGridFunctionAdapter
+      /**
+       * \param t_     GridFunction object to wrap.
+       * \param s_     Name of the field as returned by name().
+       * \param remap_ How components are remapped between PDELab and VTK.
+       *
+       * The resulting VTKFunction will have \c remap_.size() components.
+       * None of the elements of \c remap_ should be greater or equal to \c
+       * T::Traits::dimRange.  When component \c c is requested by the
+       * VTKWriter, it will be mapped to the component \c remap_[c] of the
+       * GridFunction.
+       */
+      VTKGridFunctionAdapter (const T& t_, std::string s_,
+                              const std::vector<std::size_t> &remap_)
+        : t(t_), s(s_), remap(remap_)
 	  {}
 
 	  virtual int ncomps () const
 	  {
-		return T::Traits::dimRange;
+        return remap.size();;
 	  }
 
 	  virtual double evaluate (int comp, const Entity& e, const Dune::FieldVector<DF,n>& xi) const
@@ -36,7 +59,7 @@ namespace Dune {
 		for (int i=0; i<n; i++) 
 		  x[i] = xi[i];
 		t.evaluate(e,x,y);
-		return y[comp];
+        return y[remap[comp]];
 	  }
 	  
 	  virtual std::string name () const
@@ -47,6 +70,7 @@ namespace Dune {
 	private:
 	  const T& t;
 	  std::string s;
+      std::vector<std::size_t> remap;
 	};
 
     /** vizualize order of a hp-FiniteElementMap so it can be used with the VTKWriter from dune-grid.
