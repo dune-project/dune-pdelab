@@ -122,6 +122,14 @@ namespace Dune{
         setLocalAssemblerEngineDT1(la.la1.localResidualAssemblerEngine(*residual_1,*solution));
       }
 
+      //! When multiple engines are combined in one assembling
+      //! procedure, this method allows to reset the weights which may
+      //! have been changed by the other engines.
+      void setWeights(){
+        la.la0.setWeight(b_rr * la.dt_factor0);
+        la.la1.setWeight(la.dt_factor1);
+      }
+
       //! Notifier functions, called immediately before and after assembling
       //! @{
       void preAssembly()
@@ -138,10 +146,7 @@ namespace Dune{
         la.la0.setTime(la.time + d_r * la.dt);
         la.la1.setTime(la.time + d_r * la.dt);
 
-        // Set weights
-        la.la0.setWeight(b_rr * la.dt_factor0);
-        la.la1.setWeight(la.dt_factor1);
-
+        setWeights();
       }
 
       void postAssembly(){
