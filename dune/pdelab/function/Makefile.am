@@ -7,6 +7,7 @@ myinc_HEADERS =					\
 	memberadaptor.hh			\
 	minus.hh				\
 	scalarscaled.hh				\
+	selectcomponent.hh			\
 	sqr.hh					\
 	sqrt.hh
 
