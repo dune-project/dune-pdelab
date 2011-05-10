@@ -456,8 +456,10 @@ namespace Dune {
       typedef Dune::Amg::Parameters Parameters;
 
     public:
-      ISTLBackend_SEQ_AMG(unsigned maxiter_=5000, int verbose_=1)
-        : maxiter(maxiter_), params(15,2000), verbose(verbose_)
+      ISTLBackend_SEQ_AMG(unsigned maxiter_=5000, int verbose_=1,
+                          bool reuse_=false)
+        : maxiter(maxiter_), params(15,2000), verbose(verbose_),
+          reuse(reuse_), firstapply(true)
       {
         params.setDebugLevel(verbose_);
       }
@@ -548,9 +550,12 @@ namespace Dune {
        * @brief Constructor
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
+       * @param reuse_ Set true, if the Matrix to be used is always identical 
+       * (AMG aggregation is then only performed once).
        */
-      ISTLBackend_SEQ_CG_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::CGSolver>(maxiter_,verbose_)
+      ISTLBackend_SEQ_CG_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1,
+                                  bool reuse_=false)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::CGSolver>(maxiter_,verbose_,reuse_)
       {}
     };
 
@@ -569,9 +574,12 @@ namespace Dune {
        * @brief Constructor
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
+       * @param reuse_ Set true, if the Matrix to be used is always identical 
+       * (AMG aggregation is then only performed once).
        */
-      ISTLBackend_SEQ_BCGS_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::BiCGSTABSolver>(maxiter_, verbose_)
+      ISTLBackend_SEQ_BCGS_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1,
+                                    bool reuse_=false)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::BiCGSTABSolver>(maxiter_, verbose_, reuse_)
       {}
     };
     
@@ -590,9 +598,12 @@ namespace Dune {
        * @brief Constructor
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
+       * @param reuse_ Set true, if the Matrix to be used is always identical 
+       * (AMG aggregation is then only performed once).
        */
-      ISTLBackend_SEQ_BCGS_AMG_SOR(unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::BiCGSTABSolver>(maxiter_, verbose_)
+      ISTLBackend_SEQ_BCGS_AMG_SOR(unsigned maxiter_=5000, int verbose_=1,
+                                   bool reuse_=false)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::BiCGSTABSolver>(maxiter_, verbose_,reuse_)
       {}
     };
 
@@ -611,9 +622,12 @@ namespace Dune {
        * @brief Constructor
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
+       * @param reuse_ Set true, if the Matrix to be used is always identical 
+       * (AMG aggregation is then only performed once).
        */
-      ISTLBackend_SEQ_LS_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::LoopSolver>(maxiter_, verbose_)
+      ISTLBackend_SEQ_LS_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1,
+                                  bool reuse_=false)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::LoopSolver>(maxiter_, verbose_,reuse_)
       {}
     };
 
@@ -632,9 +646,12 @@ namespace Dune {
        * @brief Constructor
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
+       * @param reuse_ Set true, if the Matrix to be used is always identical 
+       * (AMG aggregation is then only performed once).
        */
-      ISTLBackend_SEQ_LS_AMG_SOR(unsigned maxiter_=5000, int verbose_=1)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::LoopSolver>(maxiter_, verbose_)
+      ISTLBackend_SEQ_LS_AMG_SOR(unsigned maxiter_=5000, int verbose_=1,
+                                 bool reuse_=false)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::LoopSolver>(maxiter_, verbose_,reuse_)
       {}
     };
 
