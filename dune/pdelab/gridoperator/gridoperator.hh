@@ -18,6 +18,7 @@ namespace Dune{
        \tparam MB The matrix backend to be used for representation of the jacobian
        \tparam DF The domain field type of the operator
        \tparam RF The range field type of the operator
+       \tparam JF The jacobian field type
        \tparam nonoverlapping_mode Switch for nonoverlapping grids
        \tparam CU   Constraints maps for the individual dofs (trial space)
        \tparam CV   Constraints maps for the individual dofs (test space)
