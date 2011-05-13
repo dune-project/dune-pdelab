@@ -566,7 +566,7 @@ namespace Dune {
 
             // copy row to global container with transformed indices
             for (local_row_iterator rit=(cit->second).begin(); rit!=(cit->second).end(); ++rit)
-              gc[i][i] = rit->second;
+              gc[i][globalIndex(rit->first)] = rit->second;
           }
       }
 
