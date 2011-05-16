@@ -103,7 +103,7 @@ namespace Dune {
 
         ComputeSizeVisitor(const Entity& entity, std::size_t offset = 0)
           : e(entity)
-          , offset(0)
+          , offset(offset)
         {}
 
         const Entity& e;
