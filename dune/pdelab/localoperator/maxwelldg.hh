@@ -459,8 +459,8 @@ namespace Dune {
         RF mu_n = param.mu(*(ig.outside()),outside_local);
         RF eps_s = param.eps(*(ig.inside()),inside_local);
         RF eps_n = param.eps(*(ig.outside()),outside_local);
-        RF sigma_s = param.sigma(*(ig.inside()),inside_local);
-        RF sigma_n = param.sigma(*(ig.outside()),outside_local);
+        //RF sigma_s = param.sigma(*(ig.inside()),inside_local);
+        //RF sigma_n = param.sigma(*(ig.outside()),outside_local);
 
         // compute A+ (outgoing waves)
         Dune::FieldMatrix<DF,dim*2,dim*2> R_s;
@@ -568,7 +568,7 @@ namespace Dune {
           inside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
         RF mu_s = param.mu(*(ig.inside()),inside_local);
         RF eps_s = param.eps(*(ig.inside()),inside_local);
-        RF sigma_s = param.sigma(*(ig.inside()),inside_local);
+        //RF sigma_s = param.sigma(*(ig.inside()),inside_local);
 
         // compute A+ (outgoing waves)
         Dune::FieldMatrix<DF,dim*2,dim*2> R_s;
@@ -793,13 +793,13 @@ namespace Dune {
             Dune::FieldVector<RF,dim*2> u(0.0);
             for (size_type k=0; k<dim*2; k++) // for all components
               for (size_type j=0; j<dgspace.size(); j++) // for all basis functions 
-                u[k] += x[lfsv.child(k).localIndex(j)]*phi[j];
+                u[k] += x(lfsv.child(k),j)*phi[j];
 
             // integrate
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_type k=0; k<dim*2; k++) // for all components
               for (size_type i=0; i<dgspace.size(); i++) // for all test functions of this component
-                r[lfsv.child(k).localIndex(i)] += u[k]*phi[i]*factor;
+                r.accumulate(lfsv.child(k),i,u[k]*phi[i]*factor);
           }
       }
 
