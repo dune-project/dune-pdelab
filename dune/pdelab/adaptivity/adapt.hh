@@ -18,7 +18,7 @@
 // for InterpolateBackendStandard
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 // for ErrorEstimator
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
 // for intersectionoperator
 #include<dune/pdelab/localoperator/defaultimp.hh>
@@ -169,7 +169,7 @@ namespace Dune {
               // compute gradient of u on inside elem
               Dune::FieldVector<RF,dim> gradu_s(0.0);
               for (size_type i=0; i<lfsu_s.size(); i++)
-                gradu_s.axpy(x_s[i],gradphi_s[i]);
+                gradu_s.axpy(x_s(lfsu_s,i),gradphi_s[i]);
 
               // position in outside elem
               Dune::FieldVector<DF,dim> outside_pos = ig.geometryInOutside().global(it->position());
@@ -188,7 +188,7 @@ namespace Dune {
               // compute gradient of u on outside elem
               Dune::FieldVector<RF,dim> gradu_n(0.0);
               for (size_type i=0; i<lfsu_n.size(); i++)
-                gradu_n.axpy(x_n[i],gradphi_n[i]);
+                gradu_n.axpy(x_n(lfsu_n,i),gradphi_n[i]);
 
               // jump of gradient
               const Dune::FieldVector<DF,dim> outer_normal = ig.unitOuterNormal(it->position());
@@ -216,8 +216,8 @@ namespace Dune {
                     hmax = std::max(hmax,x.two_norm());
                   }
               }
-            r_s[0] += sqrt(hmax*integrand);
-            r_n[0] += sqrt(hmax*integrand);
+            r_s.accumulate(lfsu_s,0,sqrt(hmax*integrand));
+            r_n.accumulate(lfsu_n,0,sqrt(hmax*integrand));
           }
     };
 
@@ -244,7 +244,6 @@ namespace Dune {
         typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,double,GV::dimension> P0FEM;
         typedef GridFunctionSpace<GV,P0FEM> GFSV;
         typedef typename Dune::PDELab::BackendVectorSelector<GFSV,double>::Type V;
-        typedef typename Dune::PDELab::GridOperatorSpace<GFSU,GFSV,LOP> GOS;
 
         public:
 
