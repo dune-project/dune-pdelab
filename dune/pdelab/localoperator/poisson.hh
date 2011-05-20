@@ -143,7 +143,7 @@ namespace Dune {
               evaluateFunction(it->position(),phi);
 
             // evaluate right hand side parameter function
-            typename F::Traits::RangeType y;
+            typename F::Traits::RangeType y(0.0);
             f.evaluate(eg.entity(),it->position(),y);
 
             // integrate f
@@ -195,7 +195,7 @@ namespace Dune {
             FESwitch::basis(lfsv.finiteElement()).evaluateFunction(local,phi);
 
             // evaluate flux boundary condition
-            typename J::Traits::RangeType y;
+            typename J::Traits::RangeType y(0.0);
             j.evaluate(*(ig.inside()),local,y);
 
             // integrate J
