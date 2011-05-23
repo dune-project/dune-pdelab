@@ -277,11 +277,30 @@ namespace Dune {
      */
 	template<typename GF>
 	class GridFunctionToFunctionAdapter
-      : public FunctionInterface<typename GF::Traits, GridFunctionToFunctionAdapter<GF> >
+      : public FunctionInterface<FunctionTraits<typename GF::Traits::GridViewType::ctype,
+                                                GF::Traits::GridViewType::dimensionworld,
+                                                Dune::FieldVector<typename GF::Traits::GridViewType::ctype,
+                                                                  GF::Traits::GridViewType::dimensionworld
+                                                                  >,
+                                                typename GF::Traits::RangeFieldType,
+                                                GF::Traits::dimRange,
+                                                Dune::FieldVector<typename GF::Traits::RangeFieldType,
+                                                                  GF::Traits::dimRange>
+                                                >,
+                                 GridFunctionToFunctionAdapter<GF> >
 	{
 	public:
 	  //! \brief Export type traits
-	  typedef typename GF::Traits Traits;
+	  typedef FunctionTraits<typename GF::Traits::GridViewType::ctype,
+                             GF::Traits::GridViewType::dimemsionworld,
+                             Dune::FieldVector<typename GF::Traits::GridViewType::ctype,
+                                               GF::Traits::GridViewType::dimensionworld
+                                               >,
+                             typename GF::Traits::RangeFieldType,
+                             GF::Traits::dimRange,
+                             Dune::FieldVector<typename GF::Traits::RangeFieldType,
+                                               GF::Traits::dimRange>
+                             > Traits;
 
       //! make a GridFunctionToFunctionAdapter
       GridFunctionToFunctionAdapter(const GF &gf_)
@@ -297,15 +316,15 @@ namespace Dune {
 	  inline void evaluate (const typename Traits::DomainType& x,
 							typename Traits::RangeType& y) const
 	  {
-        typename Traits::GridViewType::Grid::Traits::template Codim<0>::EntityPointer
+        typename GF::Traits::GridViewType::Grid::Traits::template Codim<0>::EntityPointer
           ep = hsearch.findEntity(x);
         gf.evaluate(*ep, ep->geometry().local(x), y);
 	  }
 
 	private:
       const GF &gf;
-      const Dune::HierarchicSearch<typename Traits::GridViewType::Grid,
-                                   typename Traits::GridViewType::IndexSet> hsearch;
+      const Dune::HierarchicSearch<typename GF::Traits::GridViewType::Grid,
+                                   typename GF::Traits::GridViewType::IndexSet> hsearch;
 	};
 
 
