@@ -292,7 +292,7 @@ namespace Dune {
 	public:
 	  //! \brief Export type traits
 	  typedef FunctionTraits<typename GF::Traits::GridViewType::ctype,
-                             GF::Traits::GridViewType::dimemsionworld,
+                             GF::Traits::GridViewType::dimensionworld,
                              Dune::FieldVector<typename GF::Traits::GridViewType::ctype,
                                                GF::Traits::GridViewType::dimensionworld
                                                >,
