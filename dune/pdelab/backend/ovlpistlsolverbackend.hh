@@ -601,8 +601,9 @@ namespace Dune {
     };
 
 
-    // @Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
-    // @tparam GFS The Type of the GridFunctionSpace.
+    /** @Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
+     * @tparam GFS The Type of the GridFunctionSpace.
+     */
     template<class GFS>
     class ISTLBackend_OVLP_ExplicitDiagonal
       : public LinearResultStorage
