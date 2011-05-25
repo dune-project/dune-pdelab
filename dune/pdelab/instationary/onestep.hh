@@ -893,14 +893,14 @@ namespace Dune {
         return dt;
       }
 
-      //! do one step;
-      /* This is a version which interpolates constraints at the start of each stage
+      /*! \brief do one step;
+       * This is a version which interpolates constraints at the start of each stage
        *
        * \param[in]  time start of time step
        * \param[in]  dt suggested time step size
        * \param[in]  xold value at begin of time step
        * \param[in]  f function to interpolate boundary conditions from
-       * \param[out] xnew value at end of time step; contains initial guess for first substep on entry
+       * \param[in,out] xnew value at end of time step; contains initial guess for first substep on entry
        * \return selected time step size
        */
       template<typename F>
@@ -1076,10 +1076,11 @@ namespace Dune {
           DUNE_THROW(Exception,"explicit one step method called with implicit scheme");
       }
 
-      //! do one step;
-      /*
+      /*! \brief do one step;
+       * \param[in]  time start of time step
+       * \param[in]  dt suggested time step size
        * \param[in]  xold value at begin of time step
-       * \param[out] xnew value at end of time step; contains initial guess for first substep on entry
+       * \param[in,out] xnew value at end of time step; contains initial guess for first substep on entry
        * \return time step size 
        */
       T apply (T time, T dt, TrlV& xold, TrlV& xnew)
