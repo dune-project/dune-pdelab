@@ -807,12 +807,11 @@ namespace Dune {
         method = &method_;
       }
 
-      //! do one step;
-      /*
+      /*! \brief do one step;
        * \param[in]  time start of time step
        * \param[in]  dt suggested time step size
        * \param[in]  xold value at begin of time step
-       * \param[out] xnew value at end of time step; contains initial guess for first substep on entry
+       * \param[in,out] xnew value at end of time step; contains initial guess for first substep on entry
        * \return selected time step size
        */
       T apply (T time, T dt, TrlV& xold, TrlV& xnew)
