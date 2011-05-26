@@ -5,7 +5,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/static_assert.hh>
-#include <dune/common/configparser.hh>
+#include <dune/common/parametertree.hh>
 
 #include <dune/grid/common/quadraturerules.hh>
 
