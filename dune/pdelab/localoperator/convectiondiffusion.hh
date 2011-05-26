@@ -125,7 +125,7 @@ namespace Dune {
                        const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
                        ) const
       {
-        return asImp.isDirichlet( intersection, coord );
+        return asImp().isDirichlet( intersection, coord );
       }
 
 	  //! Dirichlet boundary condition value
