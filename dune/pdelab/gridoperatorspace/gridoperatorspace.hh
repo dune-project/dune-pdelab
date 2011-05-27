@@ -5,6 +5,7 @@
 
 #include<map>
 
+#include<dune/common/deprecated.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/geometrytype.hh>
 
@@ -35,6 +36,9 @@ namespace Dune {
      * \tparam B The vector backend used for the coefficient vector
      * \tparam nonoverlapping_mode Indicates whether assembling is done for overlap cells
      */
+    /**
+       \deprecated This class is deprecated, please use Dune::PDELab::GridOperator
+    */
 	template<typename GFSU, typename GFSV, typename LA,
 			 typename CU=EmptyTransformation,
 			 typename CV=EmptyTransformation,
@@ -58,28 +62,40 @@ namespace Dune {
 	  typedef typename Base::Traits Traits;
 
       //! construct GridOperatorSpace
+      /**
+         \deprecated This class is deprecated, please use Dune::PDELab::GridOperator
+       */
 	  GridOperatorSpace (const GFSU& gfsu_, const GFSV& gfsv_, 
-                         const LA & la_, const ST & st_) 
+                         const LA & la_, const ST & st_) DUNE_DEPRECATED
 		: Base(gfsu_,gfsv_), la(la_), sub_triangulation(st_)
 	  { }
 
       //! construct GridOperatorSpace
+      /**
+         \deprecated This class is deprecated, please use Dune::PDELab::GridOperator
+       */
 	  GridOperatorSpace (const GFSU& gfsu_, const GFSV& gfsv_, 
-                         const LA & la_) 
+                         const LA & la_) DUNE_DEPRECATED
 		: Base(gfsu_,gfsv_), la(la_), sub_triangulation(ST(gfsu_.gridview(),NoSubTriangulationImp()))
 	  { }
 
       //! construct GridOperatorSpace, with constraints
+      /**
+         \deprecated This class is deprecated, please use Dune::PDELab::GridOperator
+       */
 	  GridOperatorSpace (const GFSU& gfsu_, const CU& cu,
 						 const GFSV& gfsv_, const CV& cv, 
-                         const LA & la_, const ST & st_) 
+                         const LA & la_, const ST & st_) DUNE_DEPRECATED
 		: Base(gfsu_,cu,gfsv_,cv), la(la_), sub_triangulation(st_)
 	  { }
 
       //! construct GridOperatorSpace, with constraints
+      /**
+         \deprecated This class is deprecated, please use Dune::PDELab::GridOperator
+       */
 	  GridOperatorSpace (const GFSU& gfsu_, const CU& cu,
 						 const GFSV& gfsv_, const CV& cv, 
-                         const LA & la_) 
+                         const LA & la_) DUNE_DEPRECATED
 		: Base(gfsu_,cu,gfsv_,cv), la(la_), sub_triangulation(ST(gfsu_.gridview(),NoSubTriangulationImp()))
 	  { }
 
