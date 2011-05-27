@@ -17,9 +17,9 @@
 namespace Dune {
   namespace PDELab {
 
-    /** \brief Traits class for convection diffusion parameters
+    /** \brief Traits class for linear acoustics parameters
      *
-     * A class supplying parameters to a convection-diffusion local
+     * A class supplying parameters to a linear-acoustics local
      * operator has to define a public traits class exporting the needed
      * types and constants.
      */
