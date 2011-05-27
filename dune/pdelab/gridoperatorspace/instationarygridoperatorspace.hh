@@ -622,7 +622,7 @@ namespace Dune {
                       // Accumulate local residuals for each sub entity if we
                       // have a sub triangulation.
                       if(has_subtriangulation){
-                        for (size_t k=0; k<rl_a.size(); ++k) rl_a[k] *= b[i]*dt; 
+                        rl_a *= b[i]*dt;
                         lfsv.vadd(rl_a,r0);
                       }
                     }
@@ -634,7 +634,7 @@ namespace Dune {
                       // Accumulate local residuals for each sub entity if we
                       // have a sub triangulation.
                       if(has_subtriangulation){
-                        for (size_t k=0; k<rl_m.size(); ++k) rl_m[k] *= a[i]; 
+                        rl_m *= a[i];
                         lfsv.vadd(rl_m,r0);
                       }
                     }
@@ -741,7 +741,7 @@ namespace Dune {
                         // Accumulate local residuals for each sub entity if we
                         // have a sub triangulation.
                         if(has_subtriangulation){
-                          for (size_t k=0; k<rl_a.size(); ++k) rl_a[k] *= b[i]*dt; 
+                          rl_a *= b[i]*dt;
                           lfsv.vadd(rl_a,r0);
                         }
                       }
@@ -756,12 +756,12 @@ namespace Dune {
                         lambda_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsv,rl_a);
                     
                       // accumulate result (note: r needs to be cleared outside)
-                      for (size_t k=0; k<rl_a.size(); ++k) rl_a[k] *= b[i]*dt; 
+                      rl_a *= b[i]*dt;
                       lfsv.vadd(rl_a,r0);
                     }
                   if (doM)
                     {
-                      for (size_t k=0; k<rl_m.size(); ++k) rl_m[k] *= a[i]; 
+                      rl_m *= a[i];
                       lfsv.vadd(rl_m,r0);
                     }
                 }
@@ -971,12 +971,12 @@ namespace Dune {
                       lambda_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsv,rl_a);
                     
                     // accumulate result (note: beta needs to be cleared outside)
-                    for (size_t k=0; k<rl_a.size(); ++k) rl_a[k] *= -b[i]; 
+                    rl_a *= -b[i];
                     lfsv.vadd(rl_a,beta);
                   }
                 if (doM)
                   {
-                    for (size_t k=0; k<rl_m.size(); ++k) rl_m[k] *= -a[i]; 
+                    rl_m *= -a[i];
                     lfsv.vadd(rl_m,alpha);
                   }
               }
@@ -1102,9 +1102,9 @@ namespace Dune {
                   LocalAssemblerCallSwitch<LA,LA::doLambdaVolume>::
                     lambda_volume(la,*sit,lfsv,rl_a);
 
-                  // accumulate result (note: r needs to be cleared outside)                  
+                  // accumulate result (note: r needs to be cleared outside)
                   if(has_subtriangulation){
-                    for (size_t i=0; i<rl_a.size(); ++i) rl_a[i] *= b_rr*dt; 
+                    rl_a *= b_rr*dt;
                     lfsv.vadd(rl_a,r);
                   }
                 }
@@ -1222,7 +1222,7 @@ namespace Dune {
                     // have a sub triangulation.
 
                     if(has_subtriangulation){
-                      for (size_t i=0; i<rl_a.size(); ++i) rl_a[i] *= b_rr*dt; 
+                      rl_a *= b_rr*dt;
                       lfsv.vadd(rl_a,r);
                     }
 
@@ -1238,7 +1238,7 @@ namespace Dune {
                     lambda_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsv,rl_a);
 
                   // accumulate result (note: r needs to be cleared outside)
-                  for (size_t i=0; i<rl_a.size(); ++i) rl_a[i] *= b_rr*dt; 
+                  rl_a *= b_rr*dt;
                   lfsv.vadd(rl_a,r);
                 }
  
