@@ -147,11 +147,11 @@ namespace Dune {
     //=====================================================
 
     template<int d>
-    class MultiIndex : public Dune::FieldVector<int,d>
+    class MultiIndex : public Dune::array<int,d>
     {
     public:
 
-      MultiIndex () : FieldVector<int,d>()
+      MultiIndex () : Dune::array<int,d>()
       {
       }
 
