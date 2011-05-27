@@ -554,9 +554,15 @@ namespace Dune {
         // allocate local data container
         LocalVector<typename X::ElementType, TrialSpaceTag> xl;
         LocalVector<typename R::ElementType, TestSpaceTag> rl_a;
+        WeightedVectorAccumulationView<
+          LocalVector<typename R::ElementType, TestSpaceTag> > rl_a_v(rl_a,1.0);
         LocalVector<typename R::ElementType, TestSpaceTag> rl_m;
+        WeightedVectorAccumulationView<
+          LocalVector<typename R::ElementType, TestSpaceTag> > rl_m_v(rl_m,1.0);
         LocalVector<typename X::ElementType, TrialSpaceTag> xn;
         LocalVector<typename R::ElementType, TestSpaceTag> rn;
+        WeightedVectorAccumulationView<
+          LocalVector<typename R::ElementType, TestSpaceTag> > rn_v(rn,1.0);
 
         // traverse grid view
         for (ElementIterator it = gfsu.gridview().template begin<0>();
@@ -615,9 +621,9 @@ namespace Dune {
                   if (doA)
                     {
                       LocalAssemblerCallSwitch<LA,LA::doAlphaVolume>::
-                        alpha_volume(la,*sit,lfsu,xl,lfsv,rl_a);
+                        alpha_volume(la,*sit,lfsu,xl,lfsv,rl_a_v);
                       LocalAssemblerCallSwitch<LA,LA::doLambdaVolume>::
-                        lambda_volume(la,*sit,lfsv,rl_a);
+                        lambda_volume(la,*sit,lfsv,rl_a_v);
 
                       // Accumulate local residuals for each sub entity if we
                       // have a sub triangulation.
@@ -629,7 +635,7 @@ namespace Dune {
                   if (doM)
                     {
                       LocalAssemblerCallSwitch<LM,LM::doAlphaVolume>::
-                        alpha_volume(lm,*sit,lfsu,xl,lfsv,rl_m);
+                        alpha_volume(lm,*sit,lfsu,xl,lfsv,rl_m_v);
 
                       // Accumulate local residuals for each sub entity if we
                       // have a sub triangulation.
@@ -713,12 +719,12 @@ namespace Dune {
                             
                                 // skeleton evaluation
                                 LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
-                                  alpha_skeleton(la,*iit,lfsu,xl,lfsv,lfsun,xn,lfsvn,rl_a,rn);
+                                  alpha_skeleton(la,*iit,lfsu,xl,lfsv,lfsun,xn,lfsvn,rl_a_v,rn_v);
                                 LocalAssemblerCallSwitch<LA,LA::doLambdaSkeleton>::
-                                  lambda_skeleton(la,*iit,lfsv,lfsvn,rl_a,rn);
+                                  lambda_skeleton(la,*iit,lfsv,lfsvn,rl_a_v,rn_v);
                             
                                 // accumulate result (note: r needs to be cleared outside)
-                                for (size_t k=0; k<rn.size(); ++k) rn[k] *= b[i]*dt;
+                                rn *= b[i]*dt;
                                 lfsvn.vadd(rn,r0);
                               }
                           }
@@ -733,9 +739,9 @@ namespace Dune {
                             // ST::BindSubIntersection::rebind(lfsv,*iit);
 
                             LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
-                              alpha_boundary(la,*iit,lfsu,xl,lfsv,rl_a);
+                              alpha_boundary(la,*iit,lfsu,xl,lfsv,rl_a_v);
                             LocalAssemblerCallSwitch<LA,LA::doLambdaBoundary>::
-                              lambda_boundary(la,*iit,lfsv,rl_a);
+                              lambda_boundary(la,*iit,lfsv,rl_a_v);
                           }
 
                         // Accumulate local residuals for each sub entity if we
@@ -751,9 +757,9 @@ namespace Dune {
                   if (doA)
                     {
                       LocalAssemblerCallSwitch<LA,LA::doAlphaVolumePostSkeleton>::
-                        alpha_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_a);
+                        alpha_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_a_v);
                       LocalAssemblerCallSwitch<LA,LA::doLambdaVolumePostSkeleton>::
-                        lambda_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsv,rl_a);
+                        lambda_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsv,rl_a_v);
                     
                       // accumulate result (note: r needs to be cleared outside)
                       rl_a *= b[i]*dt;
@@ -836,9 +842,15 @@ namespace Dune {
         // allocate local data container
         LocalVector<typename X::ElementType, TrialSpaceTag> xl;
         LocalVector<typename R::ElementType, TestSpaceTag> rl_a;
+        WeightedVectorAccumulationView<
+          LocalVector<typename R::ElementType, TestSpaceTag> > rl_a_v(rl_a,1.0);
         LocalVector<typename R::ElementType, TestSpaceTag> rl_m;
+        WeightedVectorAccumulationView<
+          LocalVector<typename R::ElementType, TestSpaceTag> > rl_m_v(rl_m,1.0);
         LocalVector<typename X::ElementType, TrialSpaceTag> xn;
         LocalVector<typename R::ElementType, TestSpaceTag> rn;
+        WeightedVectorAccumulationView<
+          LocalVector<typename R::ElementType, TestSpaceTag> > rn_v(rn,1.0);
         LocalMatrix<typename A::ElementType> ml;
         
         // traverse grid view
@@ -888,14 +900,14 @@ namespace Dune {
                 if (doA)
                   {
                     LocalAssemblerCallSwitch<LA,LA::doAlphaVolume>::
-                      alpha_volume(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_a);
+                      alpha_volume(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_a_v);
                     LocalAssemblerCallSwitch<LA,LA::doLambdaVolume>::
-                      lambda_volume(la,ElementGeometry<Element>(*it),lfsv,rl_a);
+                      lambda_volume(la,ElementGeometry<Element>(*it),lfsv,rl_a_v);
                   }
                 if (doM)
                   {
                     LocalAssemblerCallSwitch<LM,LM::doAlphaVolume>::
-                      alpha_volume(lm,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_m);
+                      alpha_volume(lm,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_m_v);
                   }
 
                 // skip if no intersection iterator is needed
@@ -939,15 +951,15 @@ namespace Dune {
                             
                                 // skeleton evaluation
                                 LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
-                                  alpha_skeleton(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,lfsun,xn,lfsvn,rl_a,rn);
+                                  alpha_skeleton(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,lfsun,xn,lfsvn,rl_a_v,rn_v);
                                 LocalAssemblerCallSwitch<LA,LA::doLambdaSkeleton>::
                                   lambda_skeleton
                                   (la,IntersectionGeometry<Intersection>
                                            (*iit,intersection_index),
-                                   lfsv,lfsvn,rl_a,rn);
+                                   lfsv,lfsvn,rl_a_v,rn_v);
                             
                                 // accumulate result (note: r needs to be cleared outside)
-                                for (size_t k=0; k<rn.size(); ++k) rn[k] *= -b[i];
+                                rn *= -b[i];
                                 lfsvn.vadd(rn,beta);
                               }
                           }
@@ -956,9 +968,9 @@ namespace Dune {
                         if (iit->boundary())
                           {
                             LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
-                              alpha_boundary(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,rl_a);
+                              alpha_boundary(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,rl_a_v);
                             LocalAssemblerCallSwitch<LA,LA::doLambdaBoundary>::
-                              lambda_boundary(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsv,rl_a);
+                              lambda_boundary(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsv,rl_a_v);
                           }
                       }
                   }
@@ -966,9 +978,9 @@ namespace Dune {
                 if (doA)
                   {
                     LocalAssemblerCallSwitch<LA,LA::doAlphaVolumePostSkeleton>::
-                      alpha_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_a);
+                      alpha_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_a_v);
                     LocalAssemblerCallSwitch<LA,LA::doLambdaVolumePostSkeleton>::
-                      lambda_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsv,rl_a);
+                      lambda_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsv,rl_a_v);
                     
                     // accumulate result (note: beta needs to be cleared outside)
                     rl_a *= -b[i];
@@ -1054,9 +1066,15 @@ namespace Dune {
         // allocate local data container
         LocalVector<typename X::ElementType, TrialSpaceTag> xl;
         LocalVector<typename R::ElementType, TestSpaceTag> rl_a;
+        WeightedVectorAccumulationView<
+          LocalVector<typename R::ElementType, TestSpaceTag> > rl_a_v(rl_a,1.0);
         LocalVector<typename R::ElementType, TestSpaceTag> rl_m;
+        WeightedVectorAccumulationView<
+          LocalVector<typename R::ElementType, TestSpaceTag> > rl_m_v(rl_m,1.0);
         LocalVector<typename X::ElementType, TrialSpaceTag> xn;
         LocalVector<typename R::ElementType, TestSpaceTag> rn;
+        WeightedVectorAccumulationView<
+          LocalVector<typename R::ElementType, TestSpaceTag> > rn_v(rn,1.0);
                             
         // traverse grid view
         for (ElementIterator it = gfsu.gridview().template begin<0>();
@@ -1098,9 +1116,9 @@ namespace Dune {
               if (implicit)
                 {
                   LocalAssemblerCallSwitch<LA,LA::doAlphaVolume>::
-                    alpha_volume(la,*sit,lfsu,xl,lfsv,rl_a);
+                    alpha_volume(la,*sit,lfsu,xl,lfsv,rl_a_v);
                   LocalAssemblerCallSwitch<LA,LA::doLambdaVolume>::
-                    lambda_volume(la,*sit,lfsv,rl_a);
+                    lambda_volume(la,*sit,lfsv,rl_a_v);
 
                   // accumulate result (note: r needs to be cleared outside)
                   if(has_subtriangulation){
@@ -1110,7 +1128,7 @@ namespace Dune {
                 }
 
               LocalAssemblerCallSwitch<LM,LM::doAlphaVolume>::
-                alpha_volume(lm,*sit,lfsu,xl,lfsv,rl_m);
+                alpha_volume(lm,*sit,lfsu,xl,lfsv,rl_m_v);
               
               if(has_subtriangulation){
                 lfsv.vadd(rl_m,r); // scheme is normalized !
@@ -1192,12 +1210,12 @@ namespace Dune {
                             
                             // skeleton evaluation
                             LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
-                              alpha_skeleton(la,*iit,lfsu,xl,lfsv,lfsun,xn,lfsvn,rl_a,rn);
+                              alpha_skeleton(la,*iit,lfsu,xl,lfsv,lfsun,xn,lfsvn,rl_a_v,rn_v);
                             LocalAssemblerCallSwitch<LA,LA::doLambdaSkeleton>::
-                              lambda_skeleton(la,*iit,lfsv,lfsvn,rl_a,rn);
+                              lambda_skeleton(la,*iit,lfsv,lfsvn,rl_a_v,rn_v);
                             
                             // accumulate result (note: r needs to be cleared outside)
-                            for (size_t i=0; i<rn.size(); ++i) rn[i] *= b_rr*dt;
+                            rn *= b_rr*dt;
                             lfsvn.vadd(rn,r);
                           }
                       }
@@ -1213,9 +1231,9 @@ namespace Dune {
                         // ST::BindSubIntersection::rebind(lfsv,*iit);
 
                         LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
-                          alpha_boundary(la,*iit,lfsu,xl,lfsv,rl_a);
+                          alpha_boundary(la,*iit,lfsu,xl,lfsv,rl_a_v);
                         LocalAssemblerCallSwitch<LA,LA::doLambdaBoundary>::
-                          lambda_boundary(la,*iit,lfsv,rl_a);
+                          lambda_boundary(la,*iit,lfsv,rl_a_v);
                       }
 
                     // Accumulate local residuals for each sub entity if we
@@ -1233,9 +1251,9 @@ namespace Dune {
               if (implicit)
                 {
                   LocalAssemblerCallSwitch<LA,LA::doAlphaVolumePostSkeleton>::
-                    alpha_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_a);
+                    alpha_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_a_v);
                   LocalAssemblerCallSwitch<LA,LA::doLambdaVolumePostSkeleton>::
-                    lambda_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsv,rl_a);
+                    lambda_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsv,rl_a_v);
 
                   // accumulate result (note: r needs to be cleared outside)
                   rl_a *= b_rr*dt;
@@ -1286,9 +1304,15 @@ namespace Dune {
         // allocate local data container
         LocalVector<typename X::ElementType, TrialSpaceTag> xl;
         LocalVector<typename Y::ElementType, TestSpaceTag> yl_a;
+        WeightedVectorAccumulationView<
+          LocalVector<typename R::ElementType, TestSpaceTag> > yl_a_v(yl_a,1.0);
         LocalVector<typename Y::ElementType, TestSpaceTag> yl_m;
+        WeightedVectorAccumulationView<
+          LocalVector<typename R::ElementType, TestSpaceTag> > yl_m_v(yl_m,1.0);
         LocalVector<typename X::ElementType, TrialSpaceTag> xn;
         LocalVector<typename Y::ElementType, TestSpaceTag> yn;
+        WeightedVectorAccumulationView<
+          LocalVector<typename R::ElementType, TestSpaceTag> > yn_v(yn,1.0);
 
         // traverse grid view
         for (ElementIterator it = gfsu.gridview().template begin<0>();
@@ -1324,10 +1348,10 @@ namespace Dune {
             if (implicit)
               {
                 LocalAssemblerCallSwitch<LA,LA::doAlphaVolume>::
-                  jacobian_apply_volume(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,yl_a);
+                  jacobian_apply_volume(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,yl_a_v);
               }
             LocalAssemblerCallSwitch<LM,LM::doAlphaVolume>::
-              jacobian_apply_volume(lm,ElementGeometry<Element>(*it),lfsu,xl,lfsv,yl_m);
+              jacobian_apply_volume(lm,ElementGeometry<Element>(*it),lfsu,xl,lfsv,yl_m_v);
 
             // skeleton and boundary evaluation
             if (implicit&&(LA::doAlphaSkeleton||LA::doAlphaBoundary))
@@ -1368,10 +1392,10 @@ namespace Dune {
                             
                             // skeleton evaluation
                             LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
-                              jacobian_apply_skeleton(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,lfsun,xn,lfsvn,yl_a,yn);
+                              jacobian_apply_skeleton(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,lfsun,xn,lfsvn,yl_a_v,yn_v);
 
                             // accumulate result (note: r needs to be cleared outside)
-                            for (size_t i=0; i<yn.size(); ++i) yn[i] *= b_rr*dt; 
+                            yn *= b_rr*dt; 
                             lfsvn.vadd(yn,y);
                           }
                       }
@@ -1380,7 +1404,7 @@ namespace Dune {
                     if (iit->boundary())
                       {
                         LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
-                          jacobian_apply_boundary(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,yl_a);
+                          jacobian_apply_boundary(la,IntersectionGeometry<Intersection>(*iit,intersection_index),lfsu,xl,lfsv,yl_a_v);
                       }
                   }
               }
@@ -1388,8 +1412,8 @@ namespace Dune {
             if (implicit)
               {
                 LocalAssemblerCallSwitch<LA,LA::doAlphaVolumePostSkeleton>::
-                  jacobian_apply_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,yl_a);
-                for (size_t i=0; i<yl_a.size(); ++i) yl_a[i] *= b_rr*dt; 
+                  jacobian_apply_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,yl_a_v);
+                yl_a *= b_rr*dt; 
                 lfsv.vadd(yl_a,y);
               }
 

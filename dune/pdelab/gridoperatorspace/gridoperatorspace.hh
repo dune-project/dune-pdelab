@@ -267,8 +267,12 @@ namespace Dune {
         // allocate local data container
         LocalVector<typename X::ElementType, TrialSpaceTag> xl;
         LocalVector<typename R::ElementType, TestSpaceTag> rl;
+        WeightedVectorAccumulationView<
+          LocalVector<typename R::ElementType, TestSpaceTag> > rl_v(rl,1.0);
         LocalVector<typename X::ElementType, TrialSpaceTag> xn;
         LocalVector<typename R::ElementType, TestSpaceTag> rn;
+        WeightedVectorAccumulationView<
+          LocalVector<typename R::ElementType, TestSpaceTag> > rn_v(rn,1.0);
 
 		// traverse grid view
 		for (ElementIterator it = gfsu.gridview().template begin<0>();
@@ -304,9 +308,9 @@ namespace Dune {
 
               // volume evaluation
               LocalAssemblerCallSwitch<LA,LA::doAlphaVolume>::
-                alpha_volume(la,*sit,lfsu,xl,lfsv,rl);
+                alpha_volume(la,*sit,lfsu,xl,lfsv,rl_v);
               LocalAssemblerCallSwitch<LA,LA::doLambdaVolume>::
-                lambda_volume(la,*sit,lfsv,rl);
+                lambda_volume(la,*sit,lfsv,rl_v);
 
               // Accumulate local residuals for each sub entity if we
               // have a sub triangulation.
@@ -384,9 +388,9 @@ namespace Dune {
 
                             // skeleton evaluation
                             LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
-                              alpha_skeleton(la,*iit,lfsu,xl,lfsv,lfsun,xn,lfsvn,rl,rn);
+                              alpha_skeleton(la,*iit,lfsu,xl,lfsv,lfsun,xn,lfsvn,rl_v,rn_v);
                             LocalAssemblerCallSwitch<LA,LA::doLambdaSkeleton>::
-                              lambda_skeleton(la,*iit,lfsv,lfsvn,rl,rn);
+                              lambda_skeleton(la,*iit,lfsv,lfsvn,rl_v,rn_v);
 
                             // accumulate result (note: r needs to be cleared outside)
                             lfsvn.vadd(rn,r);
@@ -403,9 +407,9 @@ namespace Dune {
                       TypeTree::applyToTree(lfsv,rebind_intersection_visitor);
                               
                       LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
-                        alpha_boundary(la,*iit,lfsu,xl,lfsv,rl);
+                        alpha_boundary(la,*iit,lfsu,xl,lfsv,rl_v);
                       LocalAssemblerCallSwitch<LA,LA::doLambdaBoundary>::
-                        lambda_boundary(la,*iit,lfsv,rl);
+                        lambda_boundary(la,*iit,lfsv,rl_v);
                     }
 
                     // Accumulate local residuals for each sub entity if we
@@ -419,9 +423,9 @@ namespace Dune {
             
             if(!has_subtriangulation){
               LocalAssemblerCallSwitch<LA,LA::doAlphaVolumePostSkeleton>::
-                alpha_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl);
+                alpha_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,rl_v);
               LocalAssemblerCallSwitch<LA,LA::doLambdaVolumePostSkeleton>::
-                lambda_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsv,rl);
+                lambda_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsv,rl_v);
 
               // accumulate result (note: r needs to be cleared outside)
               lfsv.vadd(rl,r);
@@ -460,7 +464,11 @@ namespace Dune {
 
         // allocate local data container
         LocalVector<typename R::ElementType, TestSpaceTag> rl;
+        WeightedVectorAccumulationView<
+          LocalVector<typename R::ElementType, TestSpaceTag> > rl_v(rl,1.0);
         LocalVector<typename R::ElementType, TestSpaceTag> rn;
+        WeightedVectorAccumulationView<
+          LocalVector<typename R::ElementType, TestSpaceTag> > rn_v(rn,1.0);
 
 		// traverse grid view
 		for (ElementIterator it = gfsu.gridview().template begin<0>();
@@ -492,7 +500,7 @@ namespace Dune {
 
               // volume evaluation
               LocalAssemblerCallSwitch<LA,LA::doLambdaVolume>::
-                lambda_volume(la,*sit,lfsv,rl);
+                lambda_volume(la,*sit,lfsv,rl_v);
 
               // Accumulate local residuals for each sub entity if we
               // have a sub triangulation.
@@ -554,7 +562,7 @@ namespace Dune {
 
                             // skeleton evaluation
                             LocalAssemblerCallSwitch<LA,LA::doLambdaSkeleton>::
-                              lambda_skeleton(la,*iit,lfsv,lfsvn,rl,rn);
+                              lambda_skeleton(la,*iit,lfsv,lfsvn,rl_v,rn_v);
 
                             // accumulate result (note: r needs to be cleared outside)
                             lfsvn.vadd(rn,r);
@@ -569,7 +577,7 @@ namespace Dune {
                       TypeTree::applyToTree(lfsv,rebind_intersection_visitor);
                               
                       LocalAssemblerCallSwitch<LA,LA::doLambdaBoundary>::
-                        lambda_boundary(la,*iit,lfsv,rl);
+                        lambda_boundary(la,*iit,lfsv,rl_v);
                     }
 
                     // Accumulate local residuals for each sub entity if we
@@ -583,7 +591,7 @@ namespace Dune {
             
             if(!has_subtriangulation){
               LocalAssemblerCallSwitch<LA,LA::doLambdaVolumePostSkeleton>::
-                lambda_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsv,rl);
+                lambda_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsv,rl_v);
 
               // accumulate result (note: r needs to be cleared outside)
               lfsv.vadd(rl,r);
