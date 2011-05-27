@@ -426,47 +426,21 @@ namespace Dune {
             //std::cout << "i=" << i << " alpha_i=" << alpha[i] << std::endl;
           }
 
-        // run Gram-Schmidt orthogonalization procedure in high precission
-        gram_schmidt();
+        orthonormalize();
+      }
 
-        // std::cout << "orthogonal basis monomial representation" << std::endl;
-        // for (int i=0; i<n; i++)
-        //   {
-        //     std::cout << "phi_" << i << ":" ; 
-        //     for (int j=0; j<=i; j++)
-        //       std::cout << " (" << alpha[j] << "," << coeffs[i][j] << ")";
-        //     std::cout << std::endl;
-        //   }
-
-        // compute coefficients of gradient              
-        for (int s=0; s<d; s++)
-          for (int i=0; i<n; i++)
-            for (int j=0; j<=i; j++)
-              gradcoeffs[s][i][j] = 0;
+      // construct orthonormal basis from an other basis
+      template<class LFE>
+      OrthonormalPolynomialBasis (const LFE & lfe)
+      {
+        // compute index to multiindex map
         for (int i=0; i<n; i++)
-          for (int j=0; j<=i; j++)
-            for (int s=0; s<d; s++)
-              if (alpha[j][s]>0)
-                {
-                  MultiIndex<d> beta = alpha[j]; // get exponents
-                  FieldType factor = beta[s]; 
-                  beta[s] -= 1;
-                  int l = invert_index(beta);
-                  gradcoeffs[s][i][l] += coeffs[i][j]*factor;
-                }
+          {
+            pk_multiindex(i,alpha[i]);
+            //std::cout << "i=" << i << " alpha_i=" << alpha[i] << std::endl;
+          }
 
-        // for (int s=0; s<d; s++)
-        //   {
-        //     std::cout << "derivative in direction " << s << std::endl;
-        //     for (int i=0; i<n; i++)
-        //       {
-        //         std::cout << "phi_" << i << ":" ; 
-        //         for (int j=0; j<=i; j++)
-        //           std::cout << " (" << alpha[j] << "," << gradcoeffs[s][i][j] << ")";
-        //         std::cout << std::endl;
-        //       }
-        //   }
-
+        orthonormalize();
       }
 
       // return dimension of P_l
@@ -548,6 +522,51 @@ namespace Dune {
       MultiIndex<d> alpha[n]; // store index to multiindex map
       LowprecMat coeffs; // coefficients with respect to monomials
       LowprecMat gradcoeffs[d]; // coefficients of gradient
+
+      // compute orthonormalized shapefunctions from a given set of coefficients
+      void orthonormalize()
+      {
+        // run Gram-Schmidt orthogonalization procedure in high precission
+        gram_schmidt();
+
+        // std::cout << "orthogonal basis monomial representation" << std::endl;
+        // for (int i=0; i<n; i++)
+        //   {
+        //     std::cout << "phi_" << i << ":" ; 
+        //     for (int j=0; j<=i; j++)
+        //       std::cout << " (" << alpha[j] << "," << coeffs[i][j] << ")";
+        //     std::cout << std::endl;
+        //   }
+
+        // compute coefficients of gradient              
+        for (int s=0; s<d; s++)
+          for (int i=0; i<n; i++)
+            for (int j=0; j<=i; j++)
+              gradcoeffs[s][i][j] = 0;
+        for (int i=0; i<n; i++)
+          for (int j=0; j<=i; j++)
+            for (int s=0; s<d; s++)
+              if (alpha[j][s]>0)
+                {
+                  MultiIndex<d> beta = alpha[j]; // get exponents
+                  FieldType factor = beta[s]; 
+                  beta[s] -= 1;
+                  int l = invert_index(beta);
+                  gradcoeffs[s][i][l] += coeffs[i][j]*factor;
+                }
+
+        // for (int s=0; s<d; s++)
+        //   {
+        //     std::cout << "derivative in direction " << s << std::endl;
+        //     for (int i=0; i<n; i++)
+        //       {
+        //         std::cout << "phi_" << i << ":" ; 
+        //         for (int j=0; j<=i; j++)
+        //           std::cout << " (" << alpha[j] << "," << gradcoeffs[s][i][j] << ")";
+        //         std::cout << std::endl;
+        //       }
+        //   }
+      }
 
       // get index from a given multiindex
       int invert_index (MultiIndex<d>& a)
@@ -746,6 +765,9 @@ namespace Dune {
 
     OPBLocalBasis (int order_) : opb(), gt(bt,d) {}
 
+    template<class LFE>
+    OPBLocalBasis (int order_, const LFE & lfe) : opb(lfe), gt(bt,d) {}
+
     unsigned int size () const { return n; }
     
     //! \brief Evaluate all shape functions
@@ -850,6 +872,11 @@ namespace Dune {
 
     OPBLocalFiniteElement () 
       : gt(bt,d), basis(k), coefficients(k), interpolation(basis,k)
+    {}
+
+    template<class LFE>
+    OPBLocalFiniteElement (const LFE & lfe) 
+      : gt(bt,d), basis(k, lfe), coefficients(k), interpolation(basis,k)
     {}
 
     const typename Traits::LocalBasisType& localBasis () const 
