@@ -170,9 +170,9 @@ namespace Dune {
       template<typename X>
       void std_copy_from (const std::vector<X>& x)
       {
-        size_t n = flatsize();
-        x.resize(n);
-        for (size_t i=0; i<n; i++)
+        //test if x has the same size as the container
+        assert (x.size() == flatsize());
+        for (size_t i=0; i<flatsize(); i++)
           container[i/BLOCKSIZE][i%BLOCKSIZE] = x[i];
       }
         
