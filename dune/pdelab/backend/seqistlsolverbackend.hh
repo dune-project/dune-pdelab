@@ -241,7 +241,7 @@ namespace Dune {
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_SEQ_BCGS_Jac (unsigned maxiter_=5000, bool verbose_=true)
+      explicit ISTLBackend_SEQ_BCGS_Jac (unsigned maxiter_=5000, int verbose_=1)
         : ISTLBackend_SEQ_Base<Dune::SeqJac, Dune::BiCGSTABSolver>(maxiter_, verbose_)
       {}
     };
@@ -361,7 +361,7 @@ namespace Dune {
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_SEQ_CG_Jac (unsigned maxiter_=5000, bool verbose_=true)
+      explicit ISTLBackend_SEQ_CG_Jac (unsigned maxiter_=5000, int verbose_=1)
         : ISTLBackend_SEQ_Base<Dune::SeqJac, Dune::CGSolver>(maxiter_, verbose_)
       {}
     };
