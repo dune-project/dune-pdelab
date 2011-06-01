@@ -5,6 +5,7 @@
 
 #include<map>
 
+#include<dune/common/deprecated.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/geometrytype.hh>
 #include<dune/common/fvector.hh>
@@ -147,6 +148,9 @@ namespace Dune {
      * \tparam B    linear algebra backend
      * \tparam nonoverlapping_mode switch to assemble for nonoverlapping grids
      */
+    /**
+       \deprecated This class is deprecated, please use Dune::PDELab::OnestepGridOperator or similar
+    */
     template<typename TReal,
              typename R,
              typename GFSU, 
@@ -184,49 +188,67 @@ namespace Dune {
       };
 
       //! construct 
-      InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_, 
-                                     const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) 
+      /**
+         \deprecated This class is deprecated, please use Dune::PDELab::OnestepGridOperator or similar
+      */
+      InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_,
+                                     const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) DUNE_DEPRECATED
         : Base(gfsu_,gfsv_), la(la_), lm(lm_), method(&method_), r0(gfsv,0.0), 
           sub_triangulation(ST(gfsu_.gridview(),NoSubTriangulationImp()))
       {}
 
       //! construct using default time stepper
-      InstationaryGridOperatorSpace (const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) 
+      /**
+         \deprecated This class is deprecated, please use Dune::PDELab::OnestepGridOperator or similar
+      */
+      InstationaryGridOperatorSpace (const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_) DUNE_DEPRECATED
         : Base(gfsu_,gfsv_), la(la_), lm(lm_), method(&defaultmethod), r0(gfsv,0.0), 
           sub_triangulation(ST(gfsu_.gridview(),NoSubTriangulationImp()))
       {}
 
       //! construct, with constraints
-      InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_, 
+      /**
+         \deprecated This class is deprecated, please use Dune::PDELab::OnestepGridOperator or similar
+      */
+      InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_,
                                      const GFSU& gfsu_, const CU& cu,
                                      const GFSV& gfsv_, const CV& cv,
-                                     LA& la_, LM& lm_) 
+                                     LA& la_, LM& lm_) DUNE_DEPRECATED
         : Base(gfsu_,cu,gfsv_,cv), la(la_), lm(lm_), method(&method_), r0(gfsv,0.0), 
           sub_triangulation(ST(gfsu_.gridview(),NoSubTriangulationImp()))
       {}
 
       //! construct, with constraints and default time stepper
+      /**
+         \deprecated This class is deprecated, please use Dune::PDELab::OnestepGridOperator or similar
+      */
       InstationaryGridOperatorSpace (const GFSU& gfsu_, const CU& cu,
                                      const GFSV& gfsv_, const CV& cv,
-                                     LA& la_, LM& lm_) 
+                                     LA& la_, LM& lm_) DUNE_DEPRECATED
         : Base(gfsu_,cu,gfsv_,cv), la(la_), lm(lm_), method(&defaultmethod), r0(gfsv,0.0),
           sub_triangulation(ST(gfsu_.gridview(),NoSubTriangulationImp()))
       {}
 
       //! construct, with given sub triangulation
-      InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_, 
+      /**
+         \deprecated This class is deprecated, please use Dune::PDELab::OnestepGridOperator or similar
+      */
+      InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_,
                                      const GFSU& gfsu_, const GFSV& gfsv_, LA& la_, LM& lm_,
-                                     ST & st_) 
-        : Base(gfsu_,gfsv_), la(la_), lm(lm_), method(&method_), r0(gfsv,0.0), 
+                                     ST & st_) DUNE_DEPRECATED
+        : Base(gfsu_,gfsv_), la(la_), lm(lm_), method(&method_), r0(gfsv,0.0),
           sub_triangulation(st_)
       {}
 
       //! construct, with constraints and given sub triangulation
-      InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_, 
+      /**
+         \deprecated This class is deprecated, please use Dune::PDELab::OnestepGridOperator or similar
+      */
+      InstationaryGridOperatorSpace (const TimeSteppingParameterInterface<TReal>& method_,
                                      const GFSU& gfsu_, const CU& cu,
                                      const GFSV& gfsv_, const CV& cv,
-                                     LA& la_, LM& lm_, ST & st_) 
-        : Base(gfsu_,cu,gfsv_,cv), la(la_), lm(lm_), method(&method_), r0(gfsv,0.0), 
+                                     LA& la_, LM& lm_, ST & st_) DUNE_DEPRECATED
+        : Base(gfsu_,cu,gfsv_,cv), la(la_), lm(lm_), method(&method_), r0(gfsv,0.0),
           sub_triangulation(st_)
       {}
 
@@ -852,6 +874,8 @@ namespace Dune {
         WeightedVectorAccumulationView<
           LocalVector<typename R::ElementType, TestSpaceTag> > rn_v(rn,1.0);
         LocalMatrix<typename A::ElementType> ml;
+        WeightedMatrixAccumulationView<
+          LocalMatrix<typename A::ElementType> > ml_v (ml, 1.0);
         
         // traverse grid view
         for (ElementIterator it = gfsu.gridview().template begin<0>();
@@ -1011,7 +1035,8 @@ namespace Dune {
 
             // compute local jacobian
             LocalAssemblerCallSwitch<LM,LM::doAlphaVolume>::
-              jacobian_volume(lm,ElementGeometry<Element>(*it),lfsu,xl,lfsv,ml);
+              jacobian_volume(lm,ElementGeometry<Element>(*it),lfsu,xl,lfsv,
+                ml_v);
 
             // accumulate to global matrix
             etadd(lfsv,lfsu,ml,mat); // scheme is normalized 
@@ -1459,6 +1484,17 @@ namespace Dune {
         LocalMatrix<typename A::ElementType> al_sn;
         LocalMatrix<typename A::ElementType> al_ns;
         LocalMatrix<typename A::ElementType> al_nn;
+
+        WeightedMatrixAccumulationView<
+          LocalMatrix<typename A::ElementType> > al_v (al, 1.0);
+        WeightedMatrixAccumulationView<
+          LocalMatrix<typename A::ElementType> > ml_v (ml, 1.0);
+        WeightedMatrixAccumulationView<
+          LocalMatrix<typename A::ElementType> > al_sn_v (al_sn, 1.0);
+        WeightedMatrixAccumulationView<
+          LocalMatrix<typename A::ElementType> > al_ns_v (al_ns, 1.0);
+        WeightedMatrixAccumulationView<
+          LocalMatrix<typename A::ElementType> > al_nn_v (al_nn, 1.0);
         
         // traverse grid view
         for (ElementIterator it = gfsu.gridview().template begin<0>();
@@ -1500,7 +1536,8 @@ namespace Dune {
               if (implicit)
                 {
                   LocalAssemblerCallSwitch<LA,LA::doAlphaVolume>::
-                    jacobian_volume(la,*sit,lfsu,xl,lfsv,al);
+                    jacobian_volume(la,*sit,lfsu,xl,lfsv,
+                      al_v);
 
                   if(has_subtriangulation){
                     al *= b_rr*dt;
@@ -1508,7 +1545,8 @@ namespace Dune {
                   }
                 }
               LocalAssemblerCallSwitch<LM,LM::doAlphaVolume>::
-                jacobian_volume(lm,*sit,lfsu,xl,lfsv,ml);
+                jacobian_volume(lm,*sit,lfsu,xl,lfsv,
+                  ml_v);
 
               if(has_subtriangulation)
                 etadd(lfsv,lfsu,ml,a);
@@ -1587,7 +1625,11 @@ namespace Dune {
                             // skeleton evaluation
                             LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
                               jacobian_skeleton(la,*iit,
-                                                lfsu,xl,lfsv,lfsun,xn,lfsvn,al,al_sn,al_ns,al_nn);
+                                                lfsu,xl,lfsv,lfsun,xn,lfsvn,
+                                al_v,
+                                al_sn_v,
+                                al_ns_v,
+                                al_nn_v);
 
                             // accumulate result
                             al_sn *= b_rr*dt; etadd(lfsv,lfsun,al_sn,a);
@@ -1607,7 +1649,8 @@ namespace Dune {
 
 
                         LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
-                          jacobian_boundary(la,*iit,lfsu,xl,lfsv,al);
+                          jacobian_boundary(la,*iit,lfsu,xl,lfsv,
+                            al_v);
                       }
 
                     if(has_subtriangulation){
@@ -1621,7 +1664,8 @@ namespace Dune {
               if (implicit)
                 {
                   LocalAssemblerCallSwitch<LA,LA::doAlphaVolumePostSkeleton>::
-                    jacobian_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,al);
+                    jacobian_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,
+                      al_v);
                   al *= b_rr*dt;
                   etadd(lfsv,lfsu,al,a);
                 }

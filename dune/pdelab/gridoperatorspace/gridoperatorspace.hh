@@ -792,6 +792,15 @@ namespace Dune {
         LocalMatrix<typename A::ElementType> al_sn;
         LocalMatrix<typename A::ElementType> al_ns;
         LocalMatrix<typename A::ElementType> al_nn;
+
+        WeightedMatrixAccumulationView<
+          LocalMatrix<typename A::ElementType> > al_v (al, 1.0);
+        WeightedMatrixAccumulationView<
+          LocalMatrix<typename A::ElementType> > al_sn_v (al_sn, 1.0);
+        WeightedMatrixAccumulationView<
+          LocalMatrix<typename A::ElementType> > al_ns_v (al_ns, 1.0);
+        WeightedMatrixAccumulationView<
+          LocalMatrix<typename A::ElementType> > al_nn_v (al_nn, 1.0);
         
 		// traverse grid view
 		for (ElementIterator it = gfsu.gridview().template begin<0>();
@@ -830,7 +839,8 @@ namespace Dune {
 
               // volume evaluation
               LocalAssemblerCallSwitch<LA,LA::doAlphaVolume>::
-                jacobian_volume(la,*sit,lfsu,xl,lfsv,al);
+                jacobian_volume(la,*sit,lfsu,xl,lfsv,
+                  al_v);
 
               // Accumulate local residuals for each sub entity if we
               // have a sub triangulation.
@@ -910,7 +920,11 @@ namespace Dune {
 
                             // skeleton evaluation
                             LocalAssemblerCallSwitch<LA,LA::doAlphaSkeleton>::
-                              jacobian_skeleton(la,*iit,lfsu,xl,lfsv,lfsun,xn,lfsvn,al,al_sn,al_ns,al_nn);
+                              jacobian_skeleton(la,*iit,lfsu,xl,lfsv,lfsun,xn,lfsvn,
+                                al_v,
+                                al_sn_v,
+                                al_ns_v,
+                                al_nn_v);
 
                             // accumulate result
                             etadd(lfsv,lfsun,al_sn,a);
@@ -930,7 +944,8 @@ namespace Dune {
                       // ST::BindSubIntersection::rebind(lfsv,*iit);
 
                       LocalAssemblerCallSwitch<LA,LA::doAlphaBoundary>::
-                        jacobian_boundary(la,*iit,lfsu,xl,lfsv,al);                              
+                        jacobian_boundary(la,*iit,lfsu,xl,lfsv,
+                          al_v);                              
                     }
 
                     // Accumulate local residuals for each sub entity if we
@@ -943,7 +958,8 @@ namespace Dune {
 
             if(!has_subtriangulation){
               LocalAssemblerCallSwitch<LA,LA::doAlphaVolumePostSkeleton>::
-                jacobian_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,al);
+                jacobian_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,
+                  al_v);
 
               // accumulate result (note: a needs to be cleared outside)
               etadd(lfsv,lfsu,al,a);
