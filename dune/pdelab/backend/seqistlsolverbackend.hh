@@ -231,6 +231,22 @@ namespace Dune {
     //! \{
 
     /**
+     * @brief Backend for sequential loop solver with Jacobi preconditioner.
+     */
+    class ISTLBackend_SEQ_LOOP_Jac
+      : public ISTLBackend_SEQ_Base<Dune::SeqJac, Dune::LoopSolver>
+    {
+    public:
+      /*! \brief make a linear solver object
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
+      */
+      explicit ISTLBackend_SEQ_LOOP_Jac (unsigned maxiter_=5000, int verbose_=1)
+        : ISTLBackend_SEQ_Base<Dune::SeqJac, Dune::LoopSolver>(maxiter_, verbose_)
+      {}
+    };
+
+    /**
      * @brief Backend for sequential BiCGSTAB solver with Jacobi preconditioner.
      */
     class ISTLBackend_SEQ_BCGS_Jac
