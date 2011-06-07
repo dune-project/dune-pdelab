@@ -256,7 +256,7 @@ namespace Dune {
       //! integrate one monomial
       ComputationFieldType integrate (const MultiIndex<d>& a) const
       {
-        DUNE_THROW(Dune::NotImplemented,"non-specialized version of MonimalIntegrator called. Please implement.");
+        DUNE_THROW(Dune::NotImplemented,"non-specialized version of MonomalIntegrator called. Please implement.");
       }
     };
 
