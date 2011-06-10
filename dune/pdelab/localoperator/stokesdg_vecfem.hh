@@ -26,6 +26,62 @@
 namespace Dune {
   namespace PDELab {
 
+  template<class Basis, class Dummy = void>
+  struct VectorBasisInterfaceSwitch {
+    //! export vector type of the local coordinates
+    typedef typename Basis::Traits::DomainLocal DomainLocal;
+    //! export field type of the values
+    typedef typename Basis::Traits::RangeField RangeField;
+    //! export dimension of the values
+    static const std::size_t dimRange = Basis::Traits::dimRange;
+
+    //! Compute global jacobian matrix for vector valued bases
+    template<typename Geometry>
+    static void jacobian(const Basis& basis, const Geometry& geometry,
+                         const DomainLocal& xl,
+                         std::vector<FieldMatrix<RangeField, dimRange,
+                                          Geometry::coorddimension> >& jac)
+    {
+      jac.resize(basis.size());
+      basis.evaluateJacobian(xl, jac);
+    }
+  };
+
+  //! Switch for uniform treatment of local and global basis classes
+  template<class Basis>
+  struct VectorBasisInterfaceSwitch<
+    Basis, typename enable_if<Basis::Traits::dimDomain>::type
+    > 
+  {
+    //! export vector type of the local coordinates
+    typedef typename Basis::Traits::DomainType DomainLocal;
+    //! export field type of the values
+    typedef typename Basis::Traits::RangeFieldType RangeField;
+    //! export dimension of the values
+    static const std::size_t dimRange = Basis::Traits::dimRange;
+
+    //! Compute global jacobian matrix for vector valued bases
+    template<typename Geometry>
+    static void jacobian(const Basis& basis, const Geometry& geometry,
+                         const DomainLocal& xl,
+                         std::vector<FieldMatrix<RangeField, dimRange,
+                                          Geometry::coorddimension> >& jac)
+    {
+      jac.resize(basis.size());
+
+      std::vector<FieldMatrix<
+      RangeField, dimRange, Geometry::coorddimension> > ljac(basis.size());
+      basis.evaluateJacobian(xl, ljac);
+
+      const typename Geometry::Jacobian& geojac =
+        geometry.jacobianInverseTransposed(xl);
+
+      for(std::size_t i = 0; i < basis.size(); ++i)
+        for(std::size_t row=0; row < dimRange; ++row)
+          geojac.mv(ljac[i][row], jac[i][row]);
+    }
+  };
+
     /** \brief A local operator for solving the stokes equation using
             a DG discretization and a vector valued finite element map
             for the velocity grid function space.
@@ -94,6 +150,7 @@ namespace Dune {
         // domain and range field type
         typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
         typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+        typedef VectorBasisInterfaceSwitch<typename FESwitch_V::Basis > VectorBasisSwitch_V;
         typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
         typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
         typedef typename BasisSwitch_V::DomainField DF;
@@ -124,7 +181,7 @@ namespace Dune {
 
             // evaluate jacobian of basis functions on reference element
             std::vector<Dune::FieldMatrix<RF,dim,dim> > jac_phi_v(lfsu_v.size());
-            BasisSwitch_V::jacobian
+            VectorBasisSwitch_V::jacobian
               (FESwitch_V::basis(lfsv_v.finiteElement()), eg.geometry(), it->position(), jac_phi_v);
 
             // compute divergence of test functions
@@ -208,6 +265,7 @@ namespace Dune {
         // domain and range field type
         typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
         typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+        typedef VectorBasisInterfaceSwitch<typename FESwitch_V::Basis > VectorBasisSwitch_V;
         typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
         typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
         typedef typename BasisSwitch_V::DomainField DF;
@@ -248,9 +306,9 @@ namespace Dune {
           // evaluate jacobian of basis functions on reference element
           std::vector<Dune::FieldMatrix<RF,dim,dim> > jac_phi_v_s(lfsu_v_s.size());
           std::vector<Dune::FieldMatrix<RF,dim,dim> > jac_phi_v_n(lfsu_v_n.size());
-          BasisSwitch_V::jacobian
+          VectorBasisSwitch_V::jacobian
             (FESwitch_V::basis(lfsv_v_s.finiteElement()), ig.inside()->geometry(), local_s, jac_phi_v_s);
-          BasisSwitch_V::jacobian
+          VectorBasisSwitch_V::jacobian
             (FESwitch_V::basis(lfsv_v_n.finiteElement()), ig.outside()->geometry(), local_n, jac_phi_v_n);
 
           // compute divergence of test functions
@@ -376,6 +434,7 @@ namespace Dune {
         // domain and range field type
         typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
         typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+        typedef VectorBasisInterfaceSwitch<typename FESwitch_V::Basis > VectorBasisSwitch_V;
         typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
         typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
         typedef typename BasisSwitch_V::DomainField DF;
@@ -413,7 +472,7 @@ namespace Dune {
 
           // evaluate jacobian of basis functions on reference element
           std::vector<Dune::FieldMatrix<RF,dim,dim> > jac_phi_v_s(lfsu_v_s.size());
-          BasisSwitch_V::jacobian
+          VectorBasisSwitch_V::jacobian
             (FESwitch_V::basis(lfsv_v_s.finiteElement()), ig.inside()->geometry(), local_s, jac_phi_v_s);
 
           // compute divergence of test functions
