@@ -3,6 +3,7 @@ gridfunctionspace_HEADERS =			\
 	blockwiseordering.hh			\
 	compositegridfunctionspace.hh		\
 	constraints.hh				\
+	debug.hh				\
 	dofinfo.hh				\
 	dynamicblockwiseordering.hh		\
 	genericdatahandle.hh			\
