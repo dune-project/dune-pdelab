@@ -32,6 +32,7 @@ namespace Dune {
       struct EmptyNode
       {
         typedef EmptyNodeTag NodeTag;
+        typedef EmptyNodeTag ImplementationTag;
       };
 
 #ifndef DOXYGEN
