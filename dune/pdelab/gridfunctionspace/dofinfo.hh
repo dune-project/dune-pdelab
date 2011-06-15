@@ -16,7 +16,7 @@
 #include <dune/localfunctions/common/localkey.hh>
 
 #include <dune/pdelab/backend/backendselector.hh>
-#include <dune/pdelab/gridfunctionspace/localfunctionspacetags.hh>
+#include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 
 namespace Dune {

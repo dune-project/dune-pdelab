@@ -4,6 +4,7 @@
 #define DUNE_PDELAB_LOCALVECTOR_HH
 
 #include <vector>
+#include <algorithm>
 #include <dune/common/deprecated.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspacetags.hh>
 
