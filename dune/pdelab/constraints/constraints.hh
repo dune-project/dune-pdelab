@@ -489,6 +489,8 @@ namespace Dune {
     struct MultiComponentOldStyleConstraintsWrapperDescription
     {
 
+      static const bool recursive = false;
+
       enum { dim = F::Traits::dimRange };
       typedef OldStyleConstraintsWrapper<F> node_type;
       typedef PowerConstraintsParameters<node_type, dim> transformed_type;

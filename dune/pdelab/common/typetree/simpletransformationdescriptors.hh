@@ -24,6 +24,8 @@ namespace Dune {
       struct SimpleLeafNodeTransformation
       {
 
+        static const bool recursive = false;
+
         typedef TransformedNode transformed_type;
         typedef shared_ptr<transformed_type> transformed_storage_type;
 
@@ -43,6 +45,8 @@ namespace Dune {
       template<typename SourceNode, typename Transformation, template<typename Child, std::size_t> class TransformedNode>
       struct SimplePowerNodeTransformation
       {
+
+        static const bool recursive = true;
 
         template<typename TC>
         struct result
@@ -71,6 +75,8 @@ namespace Dune {
       template<typename SourceNode, typename Transformation, template<typename...> class TransformedNode>
       struct SimpleVariadicCompositeNodeTransformation
       {
+
+        static const bool recursive = true;
 
         template<typename... TC>
         struct result
@@ -109,6 +115,8 @@ namespace Dune {
                                                                       > class TransformedNode>
       struct SimpleCompositeNodeTransformation
       {
+
+        static const bool recursive = true;
 
         template<typename TC0,
                  typename TC1,

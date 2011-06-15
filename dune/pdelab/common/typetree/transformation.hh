@@ -487,6 +487,17 @@ namespace Dune {
 
 #endif // HAVE_VARIADIC_TEMPLATES
 
+      // generic transformation descriptor for empty nodes
+      struct EmptyNodeTransformation
+      {
+        // there is nothing to recurse into here
+        static const bool recursive = false;
+      };
+
+      template<typename Transformation>
+      EmptyNodeTransformation lookupNodeTransformation(EmptyNode* s, Transformation* t, EmptyNodeTag tag);
+
+
       // handle empty nodes
       template<typename T>
       struct TransformTree<EmptyNode,T,EmptyNodeTag>
