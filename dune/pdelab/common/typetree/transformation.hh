@@ -144,6 +144,41 @@ namespace Dune {
       };
 
 
+      // common implementation for non-recursive transformation of non-leaf nodes
+      template<typename S, typename T>
+      struct TransformTreeNonRecursive
+      {
+        // get transformed type from specification
+        typedef typename LookupNodeTransformation<S,T,typename S::ImplementationTag>::type NodeTransformation;
+
+        typedef typename NodeTransformation::transformed_type transformed_type;
+        typedef typename NodeTransformation::transformed_storage_type transformed_storage_type;
+
+        // delegate instance transformation to per-node specification
+        static transformed_type transform(const S& s, T& t)
+        {
+          return NodeTransformation::transform(s,t);
+        }
+
+        // delegate instance transformation to per-node specification
+        static transformed_type transform(const S& s, const T& t)
+        {
+          return NodeTransformation::transform(s,t);
+        }
+
+        static transformed_storage_type transform_storage(shared_ptr<const S> sp, T& t)
+        {
+          return NodeTransformation::transform_storage(sp,t);
+        }
+
+        static transformed_storage_type transform_storage(shared_ptr<const S> sp, const T& t)
+        {
+          return NodeTransformation::transform_storage(sp,t);
+        }
+
+      };
+
+
       // handle power tag - a little more tricky
       template<typename S, typename T>
       struct TransformTree<S,T,PowerNodeTag,true>
@@ -222,6 +257,13 @@ namespace Dune {
         }
 
       };
+
+      // non-recursive version of the PowerNode transformation.
+      template<typename S, typename T>
+      struct TransformTree<S,T,PowerNodeTag,false>
+        : public TransformTreeNonRecursive<S,T>
+      {};
+
 
 
       // non-variadic version
@@ -357,6 +399,12 @@ namespace Dune {
         }
 
       };
+
+      // non-recursive version of the CompositeNode transformation.
+      template<typename S, typename T>
+      struct TransformTree<S,T,CompositeNodeTag,false>
+        : public TransformTreeNonRecursive<S,T>
+      {};
 
 #if HAVE_VARIADIC_TEMPLATES
 
@@ -499,6 +547,13 @@ namespace Dune {
         }
 
       };
+
+      // non-recursive version of the VariadicCompositeNode transformation.
+      template<typename S, typename T>
+      struct TransformTree<S,T,VariadicCompositeNodeTag,false>
+        : public TransformTreeNonRecursive<S,T>
+      {};
+
 
 #endif // HAVE_VARIADIC_TEMPLATES
 
