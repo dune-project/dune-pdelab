@@ -63,6 +63,18 @@ namespace Dune {
         typedef __typeof__(lookupNodeTransformation(static_cast<S*>(0),static_cast<T*>(0),Tag())) type;
         dune_static_assert((!is_same<type,void>::value), "Unable to find valid transformation descriptor");
       };
+
+      struct EmptyNodeTransformation;
+
+      // Specialization for EmptyNode. This is mainly here to save the user from possible
+      // ambiguities when looking up lookupNodeTransformation().
+      template<typename S, typename T>
+      struct LookupNodeTransformation<S,T,EmptyNodeTag>
+      {
+        typedef EmptyNodeTransformation type;
+      };
+
+
 #endif // DOXYGEN
 
 
@@ -563,10 +575,6 @@ namespace Dune {
         // there is nothing to recurse into here
         static const bool recursive = false;
       };
-
-      template<typename Transformation>
-      EmptyNodeTransformation lookupNodeTransformation(EmptyNode* s, Transformation* t, EmptyNodeTag tag);
-
 
       // handle empty nodes
       template<typename T, bool recursive>
