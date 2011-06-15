@@ -45,46 +45,7 @@ namespace Dune {
       void lookupNodeTransformation(SourceNode* s, Transformation* t, Tag tag);
 
 
-      //! Transform a TypeTree.
-      /**
-       * This struct can be used to apply a transformation to a given TypeTree. It exports the type of
-       * the resulting (transformed) tree and contains methods to actually transform tree instances.
-       *
-       * \tparam SourceTree     = The TypeTree that should be transformed.
-       * \tparam Transformation = The Transformation to apply to the TypeTree.
-       * \tparam Tag            = This parameter is an implementation detail and must always be set to its default value.
-       */
-      template<typename SourceTree, typename Transformation, typename Tag = StartTag>
-      struct TransformTree
-      {
-
 #ifndef DOXYGEN
-
-        // the type of the new tree that will result from this transformation
-        typedef typename TransformTree<SourceTree,Transformation,typename SourceTree::NodeTag>::transformed_type transformed_type;
-
-#endif // DOXYGEN
-
-        //! The type of the transformed tree.
-        typedef transformed_type Type;
-
-
-        //! Apply transformation to an existing tree s.
-        static transformed_type transform(const SourceTree& s, const Transformation& t = Transformation())
-        {
-          return TransformTree<SourceTree,Transformation,typename SourceTree::NodeTag>::transform(s,t);
-        }
-
-        //! Apply transformation to an existing tree s.
-        static transformed_type transform(const SourceTree& s, Transformation& t)
-        {
-          return TransformTree<SourceTree,Transformation,typename SourceTree::NodeTag>::transform(s,t);
-        }
-
-      };
-
-#ifndef DOXYGEN // internal per-node implementations of the transformation algorithm
-
       /**
        * \tparam S   C++ type of source node.
        * \tparam T   Tag identifying the transformation.
@@ -102,10 +63,55 @@ namespace Dune {
         typedef __typeof__(lookupNodeTransformation(static_cast<S*>(0),static_cast<T*>(0),Tag())) type;
         dune_static_assert((!is_same<type,void>::value), "Unable to find valid transformation descriptor");
       };
+#endif // DOXYGEN
+
+
+      //! Transform a TypeTree.
+      /**
+       * This struct can be used to apply a transformation to a given TypeTree. It exports the type of
+       * the resulting (transformed) tree and contains methods to actually transform tree instances.
+       *
+       * \tparam SourceTree     = The TypeTree that should be transformed.
+       * \tparam Transformation = The Transformation to apply to the TypeTree.
+       * \tparam Tag            = This parameter is an implementation detail and must always be set to its default value.
+       * \tparam recursive      = This parameter is an implementation detail and must always be set to its default value.
+       */
+      template<typename SourceTree, typename Transformation, typename Tag = StartTag, bool recursive = true>
+      struct TransformTree
+      {
+
+#ifndef DOXYGEN
+
+        typedef typename LookupNodeTransformation<SourceTree,Transformation,typename SourceTree::ImplementationTag>::type NodeTransformation;
+
+        // the type of the new tree that will result from this transformation
+        typedef typename TransformTree<SourceTree,Transformation,typename SourceTree::NodeTag,NodeTransformation::recursive>::transformed_type transformed_type;
+
+#endif // DOXYGEN
+
+        //! The type of the transformed tree.
+        typedef transformed_type Type;
+
+
+        //! Apply transformation to an existing tree s.
+        static transformed_type transform(const SourceTree& s, const Transformation& t = Transformation())
+        {
+          return TransformTree<SourceTree,Transformation,typename SourceTree::NodeTag,NodeTransformation::recursive>::transform(s,t);
+        }
+
+        //! Apply transformation to an existing tree s.
+        static transformed_type transform(const SourceTree& s, Transformation& t)
+        {
+          return TransformTree<SourceTree,Transformation,typename SourceTree::NodeTag,NodeTransformation::recursive>::transform(s,t);
+        }
+
+      };
+
+#ifndef DOXYGEN // internal per-node implementations of the transformation algorithm
 
       // handle a leaf node - this is easy
-      template<typename S, typename T>
-      struct TransformTree<S,T,LeafNodeTag>
+      template<typename S, typename T, bool recursive>
+      struct TransformTree<S,T,LeafNodeTag,recursive>
       {
         // get transformed type from specification
         typedef typename LookupNodeTransformation<S,T,typename S::ImplementationTag>::type NodeTransformation;
@@ -140,7 +146,7 @@ namespace Dune {
 
       // handle power tag - a little more tricky
       template<typename S, typename T>
-      struct TransformTree<S,T,PowerNodeTag>
+      struct TransformTree<S,T,PowerNodeTag,true>
       {
         // get transformed type from specification
         // Handling this transformation in a way that makes the per-node specification easy to write
@@ -150,25 +156,29 @@ namespace Dune {
         // template of the node transformation struct called result (see example of such a specification
         // further down).
         typedef typename LookupNodeTransformation<S,T,typename S::ImplementationTag>::type NodeTransformation;
+        typedef typename LookupNodeTransformation<typename S::ChildType,T,typename S::ChildType::ImplementationTag>::type ChildNodeTransformation;
 
         typedef typename NodeTransformation::template result<typename TransformTree<typename S::ChildType,
                                                                                     T,
-                                                                                    typename S::ChildType::NodeTag>::transformed_type
+                                                                                    typename S::ChildType::NodeTag,
+                                                                                    ChildNodeTransformation::recursive>::transformed_type
                                                              >::type transformed_type;
 
         typedef typename NodeTransformation::template result<typename TransformTree<typename S::ChildType,
                                                                                     T,
-                                                                                    typename S::ChildType::NodeTag>::transformed_type
+                                                                                    typename S::ChildType::NodeTag,
+                                                                                    ChildNodeTransformation::recursive>::transformed_type
                                                              >::storage_type transformed_storage_type;
 
         // Transform an instance of S.
         static transformed_type transform(const S& s, T& t)
         {
           // transform children
-          typedef typename TransformTree<typename S::ChildType,T,typename S::ChildType::NodeTag>::transformed_type transformed_child;
+          typedef TransformTree<typename S::ChildType,T,typename S::ChildType::NodeTag,ChildNodeTransformation::recursive> ChildTreeTransformation;
+          typedef typename ChildTreeTransformation::transformed_type transformed_child;
           array<shared_ptr<transformed_child>,transformed_type::CHILDREN> children;
           for (std::size_t k = 0; k < transformed_type::CHILDREN; ++k) {
-            children[k] = TransformTree<typename S::ChildType,T,typename S::ChildType::NodeTag>::transform_storage(s.childStorage(k),t);
+            children[k] = ChildTreeTransformation::transform_storage(s.childStorage(k),t);
           }
           // transform node
           return NodeTransformation::transform(s,t,children);
@@ -177,10 +187,11 @@ namespace Dune {
         static transformed_type transform(const S& s, const T& t)
         {
           // transform children
-          typedef typename TransformTree<typename S::ChildType,T,typename S::ChildType::NodeTag>::transformed_type transformed_child;
+          typedef TransformTree<typename S::ChildType,T,typename S::ChildType::NodeTag,ChildNodeTransformation::recursive> ChildTreeTransformation;
+          typedef typename ChildTreeTransformation::transformed_type transformed_child;
           array<shared_ptr<transformed_child>,transformed_type::CHILDREN> children;
           for (std::size_t k = 0; k < transformed_type::CHILDREN; ++k) {
-            children[k] = TransformTree<typename S::ChildType,T,typename S::ChildType::NodeTag>::transform_storage(s.childStorage(k),t);
+            children[k] = ChildTreeTransformation::transform_storage(s.childStorage(k),t);
           }
           // transform node
           return NodeTransformation::transform(s,t,children);
@@ -189,10 +200,11 @@ namespace Dune {
         static transformed_storage_type transform_storage(shared_ptr<const S> sp, T& t)
         {
           // transform children
-          typedef typename TransformTree<typename S::ChildType,T,typename S::ChildType::NodeTag>::transformed_type transformed_child;
-          array<shared_ptr<transformed_child>,transformed_type::CHILDREN> children;
+          typedef TransformTree<typename S::ChildType,T,typename S::ChildType::NodeTag,ChildNodeTransformation::recursive> ChildTreeTransformation;
+          typedef typename ChildTreeTransformation::transformed_storage_type transformed_child_storage;
+          array<transformed_child_storage,transformed_type::CHILDREN> children;
           for (std::size_t k = 0; k < transformed_type::CHILDREN; ++k) {
-            children[k] = TransformTree<typename S::ChildType,T,typename S::ChildType::NodeTag>::transform_storage(sp->childStorage(k),t);
+            children[k] = ChildTreeTransformation::transform_storage(sp->childStorage(k),t);
           }
           return NodeTransformation::transform_storage(sp,t,children);
         }
@@ -200,10 +212,11 @@ namespace Dune {
         static transformed_storage_type transform_storage(shared_ptr<const S> sp, const T& t)
         {
           // transform children
-          typedef typename TransformTree<typename S::ChildType,T,typename S::ChildType::NodeTag>::transformed_type transformed_child;
-          array<shared_ptr<transformed_child>,transformed_type::CHILDREN> children;
+          typedef TransformTree<typename S::ChildType,T,typename S::ChildType::NodeTag,ChildNodeTransformation::recursive> ChildTreeTransformation;
+          typedef typename ChildTreeTransformation::transformed_storage_type transformed_child_storage;
+          array<transformed_child_storage,transformed_type::CHILDREN> children;
           for (std::size_t k = 0; k < transformed_type::CHILDREN; ++k) {
-            children[k] = TransformTree<typename S::ChildType,T,typename S::ChildType::NodeTag>::transform_storage(sp->childStorage(k),t);
+            children[k] = ChildTreeTransformation::transform_storage(sp->childStorage(k),t);
           }
           return NodeTransformation::transform_storage(sp,t,children);
         }
@@ -233,16 +246,16 @@ namespace Dune {
         typedef typename LookupNodeTransformation<S,T,typename S::ImplementationTag>::type NodeTransformation;
 
         typedef typename NodeTransformation::template result<
-          typename TransformTree<C0,T,typename C0::NodeTag>::transformed_type,
-          typename TransformTree<C1,T,typename C1::NodeTag>::transformed_type,
-          typename TransformTree<C2,T,typename C2::NodeTag>::transformed_type,
-          typename TransformTree<C3,T,typename C3::NodeTag>::transformed_type,
-          typename TransformTree<C4,T,typename C4::NodeTag>::transformed_type,
-          typename TransformTree<C5,T,typename C5::NodeTag>::transformed_type,
-          typename TransformTree<C6,T,typename C6::NodeTag>::transformed_type,
-          typename TransformTree<C7,T,typename C7::NodeTag>::transformed_type,
-          typename TransformTree<C8,T,typename C8::NodeTag>::transformed_type,
-          typename TransformTree<C9,T,typename C9::NodeTag>::transformed_type
+          typename TransformTree<C0,T,typename C0::NodeTag,LookupNodeTransformation<C0,T,typename C0::ImplementationTag>::type::recursive>::transformed_type,
+          typename TransformTree<C1,T,typename C1::NodeTag,LookupNodeTransformation<C1,T,typename C1::ImplementationTag>::type::recursive>::transformed_type,
+          typename TransformTree<C2,T,typename C2::NodeTag,LookupNodeTransformation<C2,T,typename C2::ImplementationTag>::type::recursive>::transformed_type,
+          typename TransformTree<C3,T,typename C3::NodeTag,LookupNodeTransformation<C3,T,typename C3::ImplementationTag>::type::recursive>::transformed_type,
+          typename TransformTree<C4,T,typename C4::NodeTag,LookupNodeTransformation<C4,T,typename C4::ImplementationTag>::type::recursive>::transformed_type,
+          typename TransformTree<C5,T,typename C5::NodeTag,LookupNodeTransformation<C5,T,typename C5::ImplementationTag>::type::recursive>::transformed_type,
+          typename TransformTree<C6,T,typename C6::NodeTag,LookupNodeTransformation<C6,T,typename C6::ImplementationTag>::type::recursive>::transformed_type,
+          typename TransformTree<C7,T,typename C7::NodeTag,LookupNodeTransformation<C7,T,typename C7::ImplementationTag>::type::recursive>::transformed_type,
+          typename TransformTree<C8,T,typename C8::NodeTag,LookupNodeTransformation<C8,T,typename C8::ImplementationTag>::type::recursive>::transformed_type,
+          typename TransformTree<C9,T,typename C9::NodeTag,LookupNodeTransformation<C9,T,typename C9::ImplementationTag>::type::recursive>::transformed_type
           > resulttypes;
 
         typedef typename resulttypes::type transformed_type;
@@ -253,64 +266,64 @@ namespace Dune {
         {
           return NodeTransformation::transform(s,
                                                t,
-                                               TransformTree<C0,T,typename C0::NodeTag>::transform_storage(s.template childStorage<0>(),t),
-                                               TransformTree<C1,T,typename C1::NodeTag>::transform_storage(s.template childStorage<1>(),t),
-                                               TransformTree<C2,T,typename C2::NodeTag>::transform_storage(s.template childStorage<2>(),t),
-                                               TransformTree<C3,T,typename C3::NodeTag>::transform_storage(s.template childStorage<3>(),t),
-                                               TransformTree<C4,T,typename C4::NodeTag>::transform_storage(s.template childStorage<4>(),t),
-                                               TransformTree<C5,T,typename C5::NodeTag>::transform_storage(s.template childStorage<5>(),t),
-                                               TransformTree<C6,T,typename C6::NodeTag>::transform_storage(s.template childStorage<6>(),t),
-                                               TransformTree<C7,T,typename C7::NodeTag>::transform_storage(s.template childStorage<7>(),t),
-                                               TransformTree<C8,T,typename C8::NodeTag>::transform_storage(s.template childStorage<8>(),t),
-                                               TransformTree<C9,T,typename C9::NodeTag>::transform_storage(s.template childStorage<9>(),t));
+                                               TransformTree<C0,T,typename C0::NodeTag,LookupNodeTransformation<C0,T,typename C0::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<0>(),t),
+                                               TransformTree<C1,T,typename C1::NodeTag,LookupNodeTransformation<C1,T,typename C1::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<1>(),t),
+                                               TransformTree<C2,T,typename C2::NodeTag,LookupNodeTransformation<C2,T,typename C2::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<2>(),t),
+                                               TransformTree<C3,T,typename C3::NodeTag,LookupNodeTransformation<C3,T,typename C3::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<3>(),t),
+                                               TransformTree<C4,T,typename C4::NodeTag,LookupNodeTransformation<C4,T,typename C4::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<4>(),t),
+                                               TransformTree<C5,T,typename C5::NodeTag,LookupNodeTransformation<C5,T,typename C5::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<5>(),t),
+                                               TransformTree<C6,T,typename C6::NodeTag,LookupNodeTransformation<C6,T,typename C6::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<6>(),t),
+                                               TransformTree<C7,T,typename C7::NodeTag,LookupNodeTransformation<C7,T,typename C7::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<7>(),t),
+                                               TransformTree<C8,T,typename C8::NodeTag,LookupNodeTransformation<C8,T,typename C8::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<8>(),t),
+                                               TransformTree<C9,T,typename C9::NodeTag,LookupNodeTransformation<C9,T,typename C9::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<9>(),t));
         }
 
         static transformed_type transform(const S& s, const T& t)
         {
           return NodeTransformation::transform(s,
                                                t,
-                                               TransformTree<C0,T,typename C0::NodeTag>::transform_storage(s.template childStorage<0>(),t),
-                                               TransformTree<C1,T,typename C1::NodeTag>::transform_storage(s.template childStorage<1>(),t),
-                                               TransformTree<C2,T,typename C2::NodeTag>::transform_storage(s.template childStorage<2>(),t),
-                                               TransformTree<C3,T,typename C3::NodeTag>::transform_storage(s.template childStorage<3>(),t),
-                                               TransformTree<C4,T,typename C4::NodeTag>::transform_storage(s.template childStorage<4>(),t),
-                                               TransformTree<C5,T,typename C5::NodeTag>::transform_storage(s.template childStorage<5>(),t),
-                                               TransformTree<C6,T,typename C6::NodeTag>::transform_storage(s.template childStorage<6>(),t),
-                                               TransformTree<C7,T,typename C7::NodeTag>::transform_storage(s.template childStorage<7>(),t),
-                                               TransformTree<C8,T,typename C8::NodeTag>::transform_storage(s.template childStorage<8>(),t),
-                                               TransformTree<C9,T,typename C9::NodeTag>::transform_storage(s.template childStorage<9>(),t));
+                                               TransformTree<C0,T,typename C0::NodeTag,LookupNodeTransformation<C0,T,typename C0::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<0>(),t),
+                                               TransformTree<C1,T,typename C1::NodeTag,LookupNodeTransformation<C1,T,typename C1::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<1>(),t),
+                                               TransformTree<C2,T,typename C2::NodeTag,LookupNodeTransformation<C2,T,typename C2::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<2>(),t),
+                                               TransformTree<C3,T,typename C3::NodeTag,LookupNodeTransformation<C3,T,typename C3::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<3>(),t),
+                                               TransformTree<C4,T,typename C4::NodeTag,LookupNodeTransformation<C4,T,typename C4::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<4>(),t),
+                                               TransformTree<C5,T,typename C5::NodeTag,LookupNodeTransformation<C5,T,typename C5::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<5>(),t),
+                                               TransformTree<C6,T,typename C6::NodeTag,LookupNodeTransformation<C6,T,typename C6::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<6>(),t),
+                                               TransformTree<C7,T,typename C7::NodeTag,LookupNodeTransformation<C7,T,typename C7::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<7>(),t),
+                                               TransformTree<C8,T,typename C8::NodeTag,LookupNodeTransformation<C8,T,typename C8::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<8>(),t),
+                                               TransformTree<C9,T,typename C9::NodeTag,LookupNodeTransformation<C9,T,typename C9::ImplementationTag>::type::recursive>::transform_storage(s.template childStorage<9>(),t));
         }
 
         static transformed_storage_type transform_storage(shared_ptr<const S> sp, T& t)
         {
           return NodeTransformation::transform_storage(sp,
                                                        t,
-                                                       TransformTree<C0,T,typename C0::NodeTag>::transform_storage(sp->template childStorage<0>(),t),
-                                                       TransformTree<C1,T,typename C1::NodeTag>::transform_storage(sp->template childStorage<1>(),t),
-                                                       TransformTree<C2,T,typename C2::NodeTag>::transform_storage(sp->template childStorage<2>(),t),
-                                                       TransformTree<C3,T,typename C3::NodeTag>::transform_storage(sp->template childStorage<3>(),t),
-                                                       TransformTree<C4,T,typename C4::NodeTag>::transform_storage(sp->template childStorage<4>(),t),
-                                                       TransformTree<C5,T,typename C5::NodeTag>::transform_storage(sp->template childStorage<5>(),t),
-                                                       TransformTree<C6,T,typename C6::NodeTag>::transform_storage(sp->template childStorage<6>(),t),
-                                                       TransformTree<C7,T,typename C7::NodeTag>::transform_storage(sp->template childStorage<7>(),t),
-                                                       TransformTree<C8,T,typename C8::NodeTag>::transform_storage(sp->template childStorage<8>(),t),
-                                                       TransformTree<C9,T,typename C9::NodeTag>::transform_storage(sp->template childStorage<9>(),t));
+                                                       TransformTree<C0,T,typename C0::NodeTag,LookupNodeTransformation<C0,T,typename C0::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<0>(),t),
+                                                       TransformTree<C1,T,typename C1::NodeTag,LookupNodeTransformation<C1,T,typename C1::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<1>(),t),
+                                                       TransformTree<C2,T,typename C2::NodeTag,LookupNodeTransformation<C2,T,typename C2::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<2>(),t),
+                                                       TransformTree<C3,T,typename C3::NodeTag,LookupNodeTransformation<C3,T,typename C3::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<3>(),t),
+                                                       TransformTree<C4,T,typename C4::NodeTag,LookupNodeTransformation<C4,T,typename C4::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<4>(),t),
+                                                       TransformTree<C5,T,typename C5::NodeTag,LookupNodeTransformation<C5,T,typename C5::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<5>(),t),
+                                                       TransformTree<C6,T,typename C6::NodeTag,LookupNodeTransformation<C6,T,typename C6::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<6>(),t),
+                                                       TransformTree<C7,T,typename C7::NodeTag,LookupNodeTransformation<C7,T,typename C7::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<7>(),t),
+                                                       TransformTree<C8,T,typename C8::NodeTag,LookupNodeTransformation<C8,T,typename C8::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<8>(),t),
+                                                       TransformTree<C9,T,typename C9::NodeTag,LookupNodeTransformation<C9,T,typename C9::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<9>(),t));
         }
 
         static transformed_storage_type transform_storage(shared_ptr<const S> sp, const T& t)
         {
           return NodeTransformation::transform_storage(sp,
                                                        t,
-                                                       TransformTree<C0,T,typename C0::NodeTag>::transform_storage(sp->template childStorage<0>(),t),
-                                                       TransformTree<C1,T,typename C1::NodeTag>::transform_storage(sp->template childStorage<1>(),t),
-                                                       TransformTree<C2,T,typename C2::NodeTag>::transform_storage(sp->template childStorage<2>(),t),
-                                                       TransformTree<C3,T,typename C3::NodeTag>::transform_storage(sp->template childStorage<3>(),t),
-                                                       TransformTree<C4,T,typename C4::NodeTag>::transform_storage(sp->template childStorage<4>(),t),
-                                                       TransformTree<C5,T,typename C5::NodeTag>::transform_storage(sp->template childStorage<5>(),t),
-                                                       TransformTree<C6,T,typename C6::NodeTag>::transform_storage(sp->template childStorage<6>(),t),
-                                                       TransformTree<C7,T,typename C7::NodeTag>::transform_storage(sp->template childStorage<7>(),t),
-                                                       TransformTree<C8,T,typename C8::NodeTag>::transform_storage(sp->template childStorage<8>(),t),
-                                                       TransformTree<C9,T,typename C9::NodeTag>::transform_storage(sp->template childStorage<9>(),t));
+                                                       TransformTree<C0,T,typename C0::NodeTag,LookupNodeTransformation<C0,T,typename C0::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<0>(),t),
+                                                       TransformTree<C1,T,typename C1::NodeTag,LookupNodeTransformation<C1,T,typename C1::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<1>(),t),
+                                                       TransformTree<C2,T,typename C2::NodeTag,LookupNodeTransformation<C2,T,typename C2::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<2>(),t),
+                                                       TransformTree<C3,T,typename C3::NodeTag,LookupNodeTransformation<C3,T,typename C3::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<3>(),t),
+                                                       TransformTree<C4,T,typename C4::NodeTag,LookupNodeTransformation<C4,T,typename C4::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<4>(),t),
+                                                       TransformTree<C5,T,typename C5::NodeTag,LookupNodeTransformation<C5,T,typename C5::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<5>(),t),
+                                                       TransformTree<C6,T,typename C6::NodeTag,LookupNodeTransformation<C6,T,typename C6::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<6>(),t),
+                                                       TransformTree<C7,T,typename C7::NodeTag,LookupNodeTransformation<C7,T,typename C7::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<7>(),t),
+                                                       TransformTree<C8,T,typename C8::NodeTag,LookupNodeTransformation<C8,T,typename C8::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<8>(),t),
+                                                       TransformTree<C9,T,typename C9::NodeTag,LookupNodeTransformation<C9,T,typename C9::ImplementationTag>::type::recursive>::transform_storage(sp->template childStorage<9>(),t));
         }
       };
 
@@ -318,7 +331,7 @@ namespace Dune {
       // the specialization of transformation<> for the CompositeNode. This just extracts the
       // CompositeNode::ChildType member and forwards to the helper struct
       template<typename S, typename T>
-      struct TransformTree<S,T,CompositeNodeTag>
+      struct TransformTree<S,T,CompositeNodeTag,true>
       {
         typedef typename transform_composite_node<S,typename S::ChildTypes,T>::transformed_type transformed_type;
         typedef typename transform_composite_node<S,typename S::ChildTypes,T>::transformed_storage_type transformed_storage_type;
@@ -386,13 +399,15 @@ namespace Dune {
         typedef typename LookupNodeTransformation<S,T,Tag>::type NodeTransformation;
         typedef typename NodeTransformation::template result<typename TransformTree<C,
                                                                                     T,
-                                                                                    typename C::NodeTag
+                                                                                    typename C::NodeTag,
+                                                                                    LookupNodeTransformation<C,T,typename C::ImplementationTag>::type::recursive
                                                                                     >::transformed_type...
                                                              >::type transformed_type;
 
         typedef typename NodeTransformation::template result<typename TransformTree<C,
                                                                                     T,
-                                                                                    typename C::NodeTag
+                                                                                    typename C::NodeTag,
+                                                                                    LookupNodeTransformation<C,T,typename C::ImplementationTag>::type::recursive
                                                                                     >::transformed_type...
                                                              >::storage_type transformed_storage_type;
 
@@ -400,7 +415,7 @@ namespace Dune {
         static typename enable_if<(unpacked<C2...>::value), transformed_type>::type
         transform(const S& s, T& t, C2... children)
         {
-          return NodeTransformation::transform(s,t,TransformTree<C,T,typename C::NodeTag>::transform_storage(children,t)...);
+          return NodeTransformation::transform(s,t,TransformTree<C,T,typename C::NodeTag,LookupNodeTransformation<C,T,typename C::ImplementationTag>::type::recursive>::transform_storage(children,t)...);
         }
 
         template<typename... C2>
@@ -414,7 +429,7 @@ namespace Dune {
         static typename enable_if<(unpacked<C2...>::value), transformed_type>::type
         transform(const S& s, const T& t, C2... children)
         {
-          return NodeTransformation::transform(s,t,TransformTree<C,T,typename C::NodeTag>::transform_storage(children,t)...);
+          return NodeTransformation::transform(s,t,TransformTree<C,T,typename C::NodeTag,LookupNodeTransformation<C,T,typename C::ImplementationTag>::type::recursive>::transform_storage(children,t)...);
         }
 
         template<typename... C2>
@@ -428,7 +443,7 @@ namespace Dune {
         static typename enable_if<(unpacked<C2...>::value), transformed_storage_type>::type
         transform_storage(shared_ptr<const S> sp, T& t, C2... children)
         {
-          return NodeTransformation::transform_storage(sp,t,TransformTree<C,T,typename C::NodeTag>::transform_storage(children,t)...);
+          return NodeTransformation::transform_storage(sp,t,TransformTree<C,T,typename C::NodeTag,LookupNodeTransformation<C,T,typename C::ImplementationTag>::type::recursive>::transform_storage(children,t)...);
         }
 
         template<typename... C2>
@@ -442,7 +457,7 @@ namespace Dune {
         static typename enable_if<(unpacked<C2...>::value), transformed_storage_type>::type
         transform_storage(shared_ptr<const S> sp, const T& t, C2... children)
         {
-          return NodeTransformation::transform_storage(sp,t,TransformTree<C,T,typename C::NodeTag>::transform_storage(children,t)...);
+          return NodeTransformation::transform_storage(sp,t,TransformTree<C,T,typename C::NodeTag,LookupNodeTransformation<C,T,typename C::ImplementationTag>::type::recursive>::transform_storage(children,t)...);
         }
 
         template<typename... C2>
@@ -458,7 +473,7 @@ namespace Dune {
       // the specialization of transformation<> for the CompositeNode. This just extracts the
       // CompositeNode::ChildTypes member and forwards to the helper struct
       template<typename S, typename T>
-      struct TransformTree<S,T,VariadicCompositeNodeTag>
+      struct TransformTree<S,T,VariadicCompositeNodeTag,true>
       {
         typedef typename transform_variadic_composite_node<S,typename S::ChildTypes,T>::transformed_type transformed_type;
         typedef typename transform_variadic_composite_node<S,typename S::ChildTypes,T>::transformed_storage_type transformed_storage_type;
@@ -499,8 +514,8 @@ namespace Dune {
 
 
       // handle empty nodes
-      template<typename T>
-      struct TransformTree<EmptyNode,T,EmptyNodeTag>
+      template<typename T, bool recursive>
+      struct TransformTree<EmptyNode,T,EmptyNodeTag,recursive>
       {
         // get transformed type from specification
         typedef EmptyNode transformed_type;
