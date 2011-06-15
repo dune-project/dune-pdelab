@@ -11,6 +11,7 @@
 #include <dune/pdelab/gridfunctionspace/lexicographicordering.hh>
 #include <dune/pdelab/gridfunctionspace/powercompositegridfunctionspacebase.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
+#include <dune/pdelab/gridfunctionspace/compositeorderingutilities.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -36,7 +37,7 @@ namespace Dune {
     template<typename OrderingTag,
              DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
     class CompositeGridFunctionSpace
-      : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
+      : public CompositeGridFunctionSpaceBase<DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>
       , public PowerCompositeGridFunctionSpaceBase<
           CompositeGridFunctionSpace<
             OrderingTag,
@@ -49,39 +50,36 @@ namespace Dune {
           DUNE_TYPETREE_COMPOSITENODE_BASETYPE::CHILDREN
         >
     {
-      typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE BaseT;
+      typedef CompositeGridFunctionSpaceBase<DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES> NodeT;
 
       typedef PowerCompositeGridFunctionSpaceBase<
         CompositeGridFunctionSpace,
-        typename BaseT::template Child<0>::Type::Traits::GridViewType,
-        typename BaseT::template Child<0>::Type::Traits::BackendType,
+        typename NodeT::template Child<0>::Type::Traits::GridViewType,
+        typename NodeT::template Child<0>::Type::Traits::BackendType,
         OrderingTag,
-        BaseT::CHILDREN> ImplementationBase;
+        NodeT::CHILDREN> ImplementationBase;
 
       friend class PowerCompositeGridFunctionSpaceBase<
         CompositeGridFunctionSpace,
-        typename BaseT::template Child<0>::Type::Traits::GridViewType,
-        typename BaseT::template Child<0>::Type::Traits::BackendType,
+        typename NodeT::template Child<0>::Type::Traits::GridViewType,
+        typename NodeT::template Child<0>::Type::Traits::BackendType,
         OrderingTag,
-        BaseT::CHILDREN>;
+        NodeT::CHILDREN>;
+
+      friend struct gfs_to_ordering<CompositeGridFunctionSpace,OrderingTag>;
+
+      typedef TypeTree::TransformTree<NodeT,gfs_to_ordering<CompositeGridFunctionSpace,OrderingTag> > OrderingTransformation;
 
     public:
       typedef CompositeGridFunctionSpaceTag ImplementationTag;
 
-      typedef typename TransformCompositeGFSToOrdering<OrderingTag>::
-        template result<
-          typename ImplementationBase::Traits,
-          DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES_NESTED_TYPE(Ordering)
-        >::type Ordering;
+      typedef typename OrderingTransformation::Type Ordering;
 
       typedef typename ImplementationBase::Traits Traits;
 
       CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename BaseT::template Child<0>::Type>))
-        , orderingp
-          (make_shared<Ordering>
-           (*this,
-            DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_MEMBER(orderingPtr())))
+        : NodeT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>))
+        , orderingp(make_shared<Ordering>(OrderingTransformation::transform(static_cast<NodeT&>(*this))))
       { }
 
       const Ordering &ordering() const { return *orderingp; }

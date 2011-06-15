@@ -18,6 +18,7 @@
 #include <dune/pdelab/common/typetree/visitor.hh>
 #include <dune/pdelab/gridfunctionspace/nonleaforderingbase.hh>
 #include <dune/pdelab/gridfunctionspace/orderingbase.hh>
+#include <dune/pdelab/gridfunctionspace/compositeorderingutilities.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -234,15 +235,131 @@ namespace Dune {
       std::string name() const { return "CompositeLexicographicOrdering"; }
     };
 
-    template<>
-    struct TransformCompositeGFSToOrdering<LexicographicOrderingTag> {
-      template<class GFSTraits, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
-      struct result {
-        typedef CompositeLexicographicOrdering<
-          typename GFSTraits::SizeType, DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES
-          > type;
+
+#if HAVE_VARIADIC_TEMPLATES
+
+    //! Node transformation descriptor for CompositeGridFunctionSpace -> LexicographicOrdering (with variadic templates).
+    template<typename GFSNode, typename Transformation>
+    struct VariadicCompositeGFSToLexicographicOrderingTransformation
+    {
+
+      static const bool recursive = true;
+
+      template<typename... TC>
+      struct result
+      {
+        typedef CompositeLexicographicOrdering<typename Transformation::GridFunctionSpace::Traits::SizeType,
+                                               TC...> type;
+        typedef shared_ptr<type> storage_type;
       };
+
+      template<typename... TC>
+      static typename result<TC...>::type transform(const GFSNode& s, const Transformation& t, shared_ptr<TC>... children)
+      {
+        return typename result<TC...>::type(t.asGridFunctionSpace(s),children...);
+      }
+
+      template<typename... TC>
+      static typename result<TC...>::storage_type transform_storage(shared_ptr<const GFSNode> s, const Transformation& t, shared_ptr<TC>... children)
+      {
+        return make_shared<typename result<TC...>::type>(t.asGridFunctionSpace(*s),children...);
+      }
+
     };
+
+    // Register transformation.
+    template<typename GFSNode, typename GFS>
+    VariadicCompositeGFSToLexicographicOrderingTransformation<GFSNode,gfs_to_ordering<GFS,LexicographicOrderingTag> >
+    lookupNodeTransformation(GFSNode*, gfs_to_ordering<GFS,LexicographicOrderingTag>*, CompositeGridFunctionSpaceBaseTag);
+
+#else // HAVE_VARIADIC_TEMPLATES
+
+    //! Node transformation descriptor for CompositeGridFunctionSpace -> LexicographicOrdering (without variadic templates).
+    template<typename GFSNode, typename Transformation>
+    struct CompositeGFSToLexicographicOrderingTransformation
+    {
+
+      static const bool recursive = true;
+
+      template<typename TC0,
+               typename TC1,
+               typename TC2,
+               typename TC3,
+               typename TC4,
+               typename TC5,
+               typename TC6,
+               typename TC7,
+               typename TC8,
+               typename TC9>
+      struct result
+      {
+        typedef CompositeLexicographicOrdering<typename Transformation::GridFunctionSpace::Traits::SizeType,
+                                               TC0,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9> type;
+        typedef shared_ptr<type> storage_type;
+      };
+
+      template<typename TC0,
+               typename TC1,
+               typename TC2,
+               typename TC3,
+               typename TC4,
+               typename TC5,
+               typename TC6,
+               typename TC7,
+               typename TC8,
+               typename TC9>
+      static typename result<TC0,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9>::type
+      transform(const GFSNode& s,
+                const Transformation& t,
+                shared_ptr<TC0> c0,
+                shared_ptr<TC1> c1,
+                shared_ptr<TC2> c2,
+                shared_ptr<TC3> c3,
+                shared_ptr<TC4> c4,
+                shared_ptr<TC5> c5,
+                shared_ptr<TC6> c6,
+                shared_ptr<TC7> c7,
+                shared_ptr<TC8> c8,
+                shared_ptr<TC9> c9)
+      {
+        return typename result<TC0,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9>::type(t.asGridFunctionSpace(s),c0,c1,c2,c3,c4,c5,c6,c7,c8,c9);
+      }
+
+      template<typename TC0,
+               typename TC1,
+               typename TC2,
+               typename TC3,
+               typename TC4,
+               typename TC5,
+               typename TC6,
+               typename TC7,
+               typename TC8,
+               typename TC9>
+      static typename result<TC0,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9>::storage_type
+      transform_storage(shared_ptr<const GFSNode> s,
+                        const Transformation& t,
+                        shared_ptr<TC0> c0,
+                        shared_ptr<TC1> c1,
+                        shared_ptr<TC2> c2,
+                        shared_ptr<TC3> c3,
+                        shared_ptr<TC4> c4,
+                        shared_ptr<TC5> c5,
+                        shared_ptr<TC6> c6,
+                        shared_ptr<TC7> c7,
+                        shared_ptr<TC8> c8,
+                        shared_ptr<TC9> c9)
+      {
+        return make_shared<typename result<TC0,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9>::type>(t.asGridFunctionSpace(s),c0,c1,c2,c3,c4,c5,c6,c7,c8,c9);
+      }
+
+    };
+
+    // Register transformation
+    template<typename GFSNode, typename GFS>
+    CompositeGFSToLexicographicOrderingTransformation<GFSNode,gfs_to_ordering<GFS,LexicographicOrderingTag> >
+    lookupNodeTransformation(GFSNode*, gfs_to_ordering<GFS,LexicographicOrderingTag>*, CompositeGridFunctionSpaceBaseTag);
+
+#endif // HAVE_VARIADIC_TEMPLATES
 
    //! \} group GridFunctionSpace
   } // namespace PDELab
