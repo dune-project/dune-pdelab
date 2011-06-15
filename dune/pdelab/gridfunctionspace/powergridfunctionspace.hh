@@ -183,7 +183,7 @@ namespace Dune {
       }
 
       const Ordering &ordering() const { return *orderingp; }
-      const shared_ptr<Ordering> &orderingPtr() { return orderingp; }
+      const shared_ptr<Ordering> &orderingPtr() const { return orderingp; }
 
     private:
       void initOrdering() {

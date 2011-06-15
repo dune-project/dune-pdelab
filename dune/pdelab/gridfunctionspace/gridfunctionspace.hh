@@ -361,7 +361,7 @@ namespace Dune {
       const Ordering &ordering() const { return *orderingp; }
 
       //! get ordering
-      const shared_ptr<Ordering> &orderingPtr() { return orderingp; }
+      const shared_ptr<Ordering> &orderingPtr() const { return orderingp; }
 
       //! get dimension of root finite element space
 	  typename Traits::SizeType globalSize () const
@@ -729,7 +729,7 @@ namespace Dune {
       const Ordering &ordering() const { return *orderingp; }
 
       //! get ordering
-      const shared_ptr<Ordering> &orderingPtr() { return orderingp; }
+      const shared_ptr<Ordering> &orderingPtr() const { return orderingp; }
 
       //! get dimension of root finite element space
 	  typename Traits::SizeType globalSize () const
@@ -1105,7 +1105,7 @@ namespace Dune {
       const Ordering &ordering() const { return *orderingp; }
 
       //! get ordering
-      const shared_ptr<Ordering> &orderingPtr() { return orderingp; }
+      const shared_ptr<Ordering> &orderingPtr() const { return orderingp; }
 
       //! get dimension of root finite element space
 	  typename Traits::SizeType globalSize () const
