@@ -91,7 +91,7 @@ void testp1 (const GV& gv)
   P1GFS p1gfs(gv,p1fem);
 
   // make coefficent Vectors
-  typedef typename P1GFS::template VectorContainer<double>::Type P1V;
+  typedef typename Dune::PDELab::BackendVectorSelector<P1GFS,double>::Type P1V;
   P1V p1xg(p1gfs);
   p1xg = 0.0;
 
@@ -207,7 +207,7 @@ void testpowerp1 (const GV& gv)
   P1mGFS p1mgfs(p1gfs);
 
   // make coefficent Vector
-  typedef typename P1mGFS::template VectorContainer<double>::Type P1mV;
+  typedef typename Dune::PDELab::BackendVectorSelector<P1mGFS,double>::Type P1mV;
   P1mV p1mxg(p1mgfs);
   p1mxg = 0.0;
 
