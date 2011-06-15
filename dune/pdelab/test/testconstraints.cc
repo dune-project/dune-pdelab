@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<iostream>
 #include<vector>
@@ -35,7 +35,7 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,F<GV,RF> > BaseT;
 
   F (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
   {
     typename Traits::DomainType center;
@@ -61,10 +61,10 @@ public:
   B (const GV& gv_) : gv(gv_) {}
 
   template<typename I>
-  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
+  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig,
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
-  {  
+  {
     y = 1; // all is Dirichlet boundary
   }
 
@@ -77,7 +77,7 @@ public:
 
 
 // generate a P1 function and output it
-template<class GV> 
+template<class GV>
 void testp1 (const GV& gv)
 {
   typedef typename GV::Grid::ctype DF;
@@ -85,9 +85,9 @@ void testp1 (const GV& gv)
   // instantiate finite element maps
   typedef Dune::PDELab::P12DLocalFiniteElementMap<DF,double> P1FEM;
   P1FEM p1fem;
-  
+
   // make constrained space
-  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,Dune::PDELab::ConformingDirichletConstraints> P1GFS; 
+  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,Dune::PDELab::ConformingDirichletConstraints> P1GFS;
   P1GFS p1gfs(gv,p1fem);
 
   // make coefficent Vectors
@@ -136,7 +136,7 @@ public:
 
   Fm (const GV& gv) : BaseT(gv) {}
 
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
   {
     for (int i=0; i<m; i++)
@@ -160,14 +160,14 @@ public:
   Bm (const GV& gv_) : gv(gv_) {}
 
   template<typename I>
-  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
+  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig,
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
-  {  
+  {
     typedef Dune::PDELab::IntersectionGeometry<I> IG;
 
     // map from local coordinates in intersection to global coordinates
-    Dune::FieldVector<typename IG::ctype,IG::Geometry::coorddimension> 
+    Dune::FieldVector<typename IG::ctype,IG::Geometry::coorddimension>
       xg = ig.geometry().global(x);
 
     // set boundary condition according to coordinates
@@ -188,7 +188,7 @@ public:
 
 
 // generate a P1 function and output it
-template<class GV> 
+template<class GV>
 void testpowerp1 (const GV& gv)
 {
   typedef typename GV::Grid::ctype DF;
@@ -197,9 +197,9 @@ void testpowerp1 (const GV& gv)
   // instantiate finite element map
   typedef Dune::PDELab::P12DLocalFiniteElementMap<DF,double> P1FEM;
   P1FEM p1fem;
-  
+
   // make constrained space
-  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,Dune::PDELab::ConformingDirichletConstraints> P1GFS; 
+  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,Dune::PDELab::ConformingDirichletConstraints> P1GFS;
   P1GFS p1gfs(gv,p1fem);
 
   // make m components of type P1
@@ -289,4 +289,4 @@ int main(int argc, char** argv)
     std::cerr << "Unknown exception thrown!" << std::endl;
 	return 1;
   }
-} 
+}
