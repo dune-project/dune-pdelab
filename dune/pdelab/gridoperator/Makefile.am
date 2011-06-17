@@ -1,9 +1,11 @@
-commondir = $(includedir)/dune/pdelab/gridoperator
+gridoperatordir = $(includedir)/dune/pdelab/gridoperator
 SUBDIRS =                                       \
 	common					\
+	default					\
 	onestep
 
-common_HEADERS =				\
+gridoperator_HEADERS =				\
+	gridoperator.hh				\
 	onestep.hh
 
 include $(top_srcdir)/am/global-rules

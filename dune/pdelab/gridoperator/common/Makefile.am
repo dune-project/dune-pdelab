@@ -1,10 +1,10 @@
-commondir = $(includedir)/dune/pdelab/gridoperator/common
+gridoperatorcommondir = $(gridoperatordir)/common
 
 headercheck_IGNORE = assembler.hh
 
-common_HEADERS =				\
-	assemblerutilities.hh			\
-	gridoperatorutilities.hh		\
+gridoperatorcommon_HEADERS =				\
+	assemblerutilities.hh				\
+	gridoperatorutilities.hh			\
 	localassemblerenginebase.hh
 
 include $(top_srcdir)/am/global-rules

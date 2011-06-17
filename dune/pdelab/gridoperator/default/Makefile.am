@@ -1,0 +1,10 @@
+gridoperatordefaultdir = $(gridoperator)/default
+
+gridoperatordefault_HEADERS =				\
+	assembler.hh					\
+	jacobianengine.hh				\
+	localassembler.hh				\
+	patternengine.hh				\
+	residualengine.hh
+
+include $(top_srcdir)/am/global-rules

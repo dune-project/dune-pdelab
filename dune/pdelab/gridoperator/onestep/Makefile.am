@@ -1,6 +1,6 @@
-commondir = $(includedir)/dune/pdelab/gridoperator/onestep
+gridoperatoronestepdir = $(gridoperatordir)/onestep
 
-common_HEADERS =				\
+gridoperatoronestep_HEADERS =			\
 	jacobianengine.hh			\
 	localassembler.hh			\
 	patternengine.hh			\
