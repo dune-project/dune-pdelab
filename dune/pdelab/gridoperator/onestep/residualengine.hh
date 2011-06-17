@@ -3,6 +3,8 @@
 
 #include <dune/pdelab/gridoperator/onestep/enginebase.hh>
 
+#include <cmath>
+
 namespace Dune{
   namespace PDELab{
 

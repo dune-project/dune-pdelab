@@ -2,6 +2,7 @@
 #define DUNE_PDELAB_ONESTEP_PRESTAGEENGINE_HH
 
 #include <dune/pdelab/gridoperator/onestep/enginebase.hh>
+#include <vector>
 
 namespace Dune{
   namespace PDELab{
