@@ -8,6 +8,7 @@
 #error The class FilteredCompositeNode requires compiler support for variadic templates, which your compiler lacks.
 #endif
 
+#if (HAVE_VARIADIC_TEMPLATES || DOXYGEN)
 #include <dune/common/tuples.hh>
 #include <dune/common/typetraits.hh>
 
@@ -232,5 +233,7 @@ namespace Dune {
 
   } // namespace PDELab
 } //namespace Dune
+
+#endif // (HAVE_VARIADIC_TEMPLATES || DOXYGEN)
 
 #endif // DUNE_PDELAB_COMMON_TYPETREE_FILTERS_HH
