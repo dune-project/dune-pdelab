@@ -70,7 +70,7 @@ namespace Dune {
       typedef typename TransformPowerGFSToOrdering<OrderingTag>::
         template result<
           typename ImplementationBase::Traits,
-          typename T::Ordering,
+          const typename T::Ordering,
           k
         >::type Ordering;
 

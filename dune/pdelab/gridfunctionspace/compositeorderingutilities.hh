@@ -65,7 +65,7 @@ namespace Dune {
       // so there is no need for more recursion.
       static const bool recursive = false;
 
-      typedef typename ChildGFS::Ordering transformed_type;
+      typedef const typename ChildGFS::Ordering transformed_type;
       typedef shared_ptr<transformed_type> transformed_storage_type;
 
       template<typename Transformation>
