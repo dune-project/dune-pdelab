@@ -1,7 +1,10 @@
 #ifndef DUNE_PDELAB_DEFAULT_ASSEMBLER_HH
 #define DUNE_PDELAB_DEFAULT_ASSEMBLER_HH
 
-#include<dune/pdelab/gridoperator/common/assemblerutilities.hh>
+#include <dune/common/typetraits.hh>
+#include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
+#include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
+#include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 
 namespace Dune{
   namespace PDELab{
