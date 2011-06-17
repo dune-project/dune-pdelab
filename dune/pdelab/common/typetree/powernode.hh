@@ -4,6 +4,8 @@
 #ifndef DUNE_PDELAB_COMMON_TYPETREE_POWERNODE_HH
 #define DUNE_PDELAB_COMMON_TYPETREE_POWERNODE_HH
 
+#include <cassert>
+
 #include <dune/common/deprecated.hh>
 #include <dune/common/array.hh>
 #include <dune/common/typetraits.hh>
