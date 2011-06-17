@@ -17,6 +17,7 @@
 #include "defaultimp.hh"
 #include "pattern.hh"
 #include "flags.hh"
+#include "stokesdg.hh"
 
 #ifndef VBLOCK
 #define VBLOCK 0
