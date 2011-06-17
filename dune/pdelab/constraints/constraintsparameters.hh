@@ -4,6 +4,9 @@
 #ifndef DUNE_PDELAB_CONSTRAINTSPARAMETERS_HH
 #define DUNE_PDELAB_CONSTRAINTSPARAMETERS_HH
 
+#include <dune/pdelab/common/typetree.hh>
+#include <dune/common/fvector.hh>
+
 namespace Dune {
   namespace PDELab {
 
