@@ -22,6 +22,7 @@
 #include "../newton/newton.hh"
 #include "istlvectorbackend.hh"
 #include "parallelistlhelper.hh"
+#include "seqistlsolverbackend.hh"
 
 namespace Dune {
   namespace PDELab {
