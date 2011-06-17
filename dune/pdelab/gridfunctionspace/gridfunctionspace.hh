@@ -358,15 +358,9 @@ namespace Dune {
 	  }
 
       //! Direct access to the DOF ordering.
-      Ordering &ordering() { return *orderingp; }
-
-      //! Direct access to the DOF ordering (const version).
       const Ordering &ordering() const { return *orderingp; }
 
       //! Direct access to the storage of the DOF ordering.
-      shared_ptr<Ordering> orderingPtr() { return orderingp; }
-
-      //! Direct access to the storage of the DOF ordering (const version).
       shared_ptr<const Ordering> orderingPtr() const { return orderingp; }
 
       //! get dimension of root finite element space
@@ -732,15 +726,9 @@ namespace Dune {
 	  }
 
       //! Direct access to the DOF ordering.
-      Ordering &ordering() { return *orderingp; }
-
-      //! Direct access to the DOF ordering (const version).
       const Ordering &ordering() const { return *orderingp; }
 
       //! Direct access to the storage of the DOF ordering.
-      shared_ptr<Ordering> orderingPtr() { return orderingp; }
-
-      //! Direct access to the storage of the DOF ordering (const version).
       shared_ptr<const Ordering> orderingPtr() const { return orderingp; }
 
       //! get dimension of root finite element space
@@ -1114,15 +1102,9 @@ namespace Dune {
 	  }
 
       //! Direct access to the DOF ordering.
-      Ordering &ordering() { return *orderingp; }
-
-      //! Direct access to the DOF ordering (const version).
       const Ordering &ordering() const { return *orderingp; }
 
       //! Direct access to the storage of the DOF ordering.
-      shared_ptr<Ordering> orderingPtr() { return orderingp; }
-
-      //! Direct access to the storage of the DOF ordering (const version).
       shared_ptr<const Ordering> orderingPtr() const { return orderingp; }
 
       //! get dimension of root finite element space
