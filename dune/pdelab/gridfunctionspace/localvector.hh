@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <functional>
 #include <dune/common/deprecated.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspacetags.hh>
 
