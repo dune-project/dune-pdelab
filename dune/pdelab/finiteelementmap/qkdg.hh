@@ -10,6 +10,12 @@
 #include <dune/localfunctions/common/localfiniteelementtraits.hh>
 #include <dune/localfunctions/common/localtoglobaladaptors.hh>
 
+#include <dune/localfunctions/common/localbasis.hh>
+#include <dune/localfunctions/common/localkey.hh>
+#include <dune/localfunctions/common/localfiniteelementtraits.hh>
+
+#include "finiteelementmap.hh"
+
 namespace Dune 
 {
 
