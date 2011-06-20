@@ -1,4 +1,4 @@
-gridoperatordefaultdir = $(gridoperator)/default
+gridoperatordefaultdir = $(includedir)/dune/pdelab/gridoperator/default
 
 gridoperatordefault_HEADERS =				\
 	assembler.hh					\

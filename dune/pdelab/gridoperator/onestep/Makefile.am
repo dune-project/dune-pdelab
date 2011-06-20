@@ -1,4 +1,4 @@
-gridoperatoronestepdir = $(gridoperatordir)/onestep
+gridoperatoronestepdir = $(includedir)/dune/pdelab/gridoperator/onestep
 
 gridoperatoronestep_HEADERS =			\
 	jacobianengine.hh			\
