@@ -14,9 +14,7 @@ finiteelementmap_HEADERS =			\
 	opbfem.hh				\
 	p0constraints.hh			\
 	p0fem.hh				\
-	p0fem.hh				\
 	p12dfem.hh				\
-	p1fem.hh				\
 	p1fem.hh				\
 	pk1dbasis.hh				\
 	pk2dfem.hh				\
