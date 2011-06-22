@@ -12,6 +12,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/stdstreams.hh>
 #include <dune/common/typetraits.hh>
+#include <dune/common/deprecated.hh>
 
 #include <dune/pdelab/common/typetree/compositenodemacros.hh>
 #include <dune/pdelab/common/typetree/powernode.hh>
@@ -56,6 +57,13 @@ namespace Dune {
       static const std::size_t s7 = s7_;
       static const std::size_t s8 = s8_;
       static const std::size_t s9 = s9_;
+
+      // nested tag for backwards compatibility with GridFunctionSpaceComponentBlockwiseMapper:
+      // as the implementation uses template specialization in some places, the
+      // GridFunctionSpaceComponentBlockwiseMapper will not match there, causing the compilation
+      // to fail. The Tag is typedef'd to the baseclass in both old and new version and can thus
+      // be used when looking up specializations.
+      typedef ComponentBlockwiseOrderingTag NormalizedTag;
     };
     template<std::size_t s0 = 1, std::size_t s1 = 1, std::size_t s2 = 1,
              std::size_t s3 = 1, std::size_t s4 = 1, std::size_t s5 = 1,
@@ -64,7 +72,10 @@ namespace Dune {
     struct GridFunctionSpaceComponentBlockwiseMapper :
       public ComponentBlockwiseOrderingTag<s0, s1, s2, s3, s4, s5, s6, s7, s8,
                                            s9>
-    { };
+    {
+      typedef ComponentBlockwiseOrderingTag<s0, s1, s2, s3, s4, s5, s6, s7, s8,
+                                            s9> NormalizedTag;
+    };
 
     typedef ComponentBlockwiseOrderingTag<> BlockwiseOrderingTag;
     typedef BlockwiseOrderingTag GridFunctionSpaceBlockwiseMapper;
@@ -224,7 +235,7 @@ namespace Dune {
       // check for compatible sizes
       void sizeCheck() {
         static const std::size_t &blockSize =
-          BlockwiseOrderingImp::Size<Tag>::value[0];
+          BlockwiseOrderingImp::Size<typename Tag::NormalizedTag>::value[0];
 
         SizeType maxLocalSize = this->child(0).maxLocalSize();
         if(maxLocalSize%blockSize!=0)
@@ -265,7 +276,7 @@ namespace Dune {
        * \note update() must have been called before this method may be used.
        */
       SizeType subMap(SizeType child, SizeType indexInChild) const {
-        static const SizeType &size = BlockwiseOrderingImp::Size<Tag>::value[0];
+        static const SizeType &size = BlockwiseOrderingImp::Size<typename Tag::NormalizedTag>::value[0];
 
         return indexInChild % size
           + size*child
@@ -335,7 +346,7 @@ namespace Dune {
                          ChildIndex childIndex)
         {
           static const std::size_t *blockSize =
-            BlockwiseOrderingImp::Size<Tag>::value;
+            BlockwiseOrderingImp::Size<typename Tag::NormalizedTag>::value;
 
           if(child.maxLocalSize()%blockSize[childIndex]!=0)
             DUNE_THROW(InvalidStateException,
@@ -386,9 +397,9 @@ namespace Dune {
        * \note update() must have been called before this method may be used.
        */
       SizeType subMap(SizeType child, SizeType indexInChild) const {
-        static const SizeType *size = BlockwiseOrderingImp::Size<Tag>::value;
+        static const SizeType *size = BlockwiseOrderingImp::Size<typename Tag::NormalizedTag>::value;
         static const SizeType *offset =
-          BlockwiseOrderingImp::Offset<Tag>::value;
+          BlockwiseOrderingImp::Offset<typename Tag::NormalizedTag>::value;
 
         return indexInChild % size[child]
           + offset[child]
@@ -438,6 +449,14 @@ namespace Dune {
              std::size_t s8, std::size_t s9>
     VariadicCompositeGFSToBlockwiseOrderingTransformation<GFSNode,gfs_to_ordering<GFS,ComponentBlockwiseOrderingTag<s0, s1, s2, s3, s4, s5, s6, s7,s8, s9> > >
     lookupNodeTransformation(GFSNode*, gfs_to_ordering<GFS,ComponentBlockwiseOrderingTag<s0, s1, s2, s3, s4, s5, s6, s7,s8, s9> >*, CompositeGridFunctionSpaceBaseTag);
+
+    // register old GridFunctionSpaceComponentBlockwiseMapper separately - unfortunately, this is necessary to make the specialization match correctly
+    template<typename GFSNode, typename GFS,
+             std::size_t s0, std::size_t s1, std::size_t s2, std::size_t s3,
+             std::size_t s4, std::size_t s5, std::size_t s6, std::size_t s7,
+             std::size_t s8, std::size_t s9>
+    VariadicCompositeGFSToBlockwiseOrderingTransformation<GFSNode,gfs_to_ordering<GFS,GridFunctionSpaceComponentBlockwiseMapper<s0, s1, s2, s3, s4, s5, s6, s7,s8, s9> > >
+    lookupNodeTransformation(GFSNode*, gfs_to_ordering<GFS,GridFunctionSpaceComponentBlockwiseMapper<s0, s1, s2, s3, s4, s5, s6, s7,s8, s9> >*, CompositeGridFunctionSpaceBaseTag);
 
 #else // HAVE_VARIADIC_TEMPLATES
 
@@ -528,7 +547,15 @@ namespace Dune {
              std::size_t s0, std::size_t s1, std::size_t s2, std::size_t s3,
              std::size_t s4, std::size_t s5, std::size_t s6, std::size_t s7,
              std::size_t s8, std::size_t s9>
-    CompositeGFSToBlockwiseOrderingTransformation<GFSNode,gfs_to_ordering<GFS,ComponentBlockwiseOrderingTag<s0, s1, s2, s3, s4, s5, s6, s7,s8, s9> > >
+    CompositeGFSToBlockwiseOrderingTransformation<GFSNode,gfs_to_ordering<GFS,GridFunctionSpaceComponentBlockwiseMapper<s0, s1, s2, s3, s4, s5, s6, s7,s8, s9> > >
+    lookupNodeTransformation(GFSNode*, gfs_to_ordering<GFS,ComponentBlockwiseOrderingTag<s0, s1, s2, s3, s4, s5, s6, s7,s8, s9> >*, CompositeGridFunctionSpaceBaseTag);
+
+    // register old GridFunctionSpaceComponentBlockwiseMapper separately - unfortunately, this is necessary to make the specialization match correctly
+    template<typename GFSNode, typename GFS,
+             std::size_t s0, std::size_t s1, std::size_t s2, std::size_t s3,
+             std::size_t s4, std::size_t s5, std::size_t s6, std::size_t s7,
+             std::size_t s8, std::size_t s9>
+    CompositeGFSToBlockwiseOrderingTransformation<GFSNode,gfs_to_ordering<GFS,GridFunctionSpaceComponentBlockwiseMapper<s0, s1, s2, s3, s4, s5, s6, s7,s8, s9> > >
     lookupNodeTransformation(GFSNode*, gfs_to_ordering<GFS,ComponentBlockwiseOrderingTag<s0, s1, s2, s3, s4, s5, s6, s7,s8, s9> >*, CompositeGridFunctionSpaceBaseTag);
 
 #endif // HAVE_VARIADIC_TEMPLATES
