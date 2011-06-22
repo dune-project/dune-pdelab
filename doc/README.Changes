@@ -323,3 +323,18 @@ create new TypeTrees by transforming an existing type.  This feature is used
 for e.g. the construction of a LocalFunctionSpace from a GridFunctionSpace.
 This feature will be used easily construct trees of FunctionAdapters and will
 thus allow the user to quickly implements its own adapter classes.
+
+Name change for Mappers in Power-/CompositeGridFunctionSpace
+------------------------------------------------------------
+
+The names of the Mappers describing the nested embedding of sub function spaces
+have been changed to clearly differentiate them from the Mapper types used on the
+leaf function spaces, which serve a different purpose. The replacements are:
+
+GridFunctionSpaceLexicographicMapper -> LexicographicOrderingTag
+GridFunctionSpaceBlockwiseMapper -> BlockwiseOrderingTag
+GridFunctionSpaceComponentBlockwiseMapper -> ComponentBlockwiseOrderingTag
+GridFunctionSpaceDynamicBlockwiseMapper -> DynamicBlockwiseOrderingTag
+
+Apart from those renames, the new Tags provide exactly the same interface and
+functionality as the old mappers.
