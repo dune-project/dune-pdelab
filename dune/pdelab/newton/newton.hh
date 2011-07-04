@@ -103,7 +103,7 @@ namespace Dune
             virtual ~NewtonBase() { }
 
             virtual bool terminate() = 0;
-            virtual void prepare_step(Matrix& A) = 0;
+            virtual void prepare_step(Matrix& A, TestVector& r) = 0;
             virtual void line_search(TrialVector& z, TestVector& r) = 0;
             virtual void defect(TestVector& r) = 0;
         };
@@ -232,7 +232,7 @@ namespace Dune
                     Timer assembler_timer;
                     try
                     {
-                        this->prepare_step(A);
+                        this->prepare_step(A,r);
                     }
                     catch (...)
                     {
@@ -419,7 +419,7 @@ namespace Dune
                 reassemble_threshold = reassemble_threshold_;
             }
 
-            virtual void prepare_step(Matrix& A)
+            virtual void prepare_step(Matrix& A, TstV& )
             {
                 this->reassembled = false;
                 if (this->res.defect/this->prev_defect > reassemble_threshold)
