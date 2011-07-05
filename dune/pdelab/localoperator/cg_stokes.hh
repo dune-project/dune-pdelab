@@ -144,7 +144,8 @@ namespace Dune {
             
             // compute u (if Navier term enabled)
             Dune::FieldVector<RF,dim> vu(0.0);
-            std::vector<RT_V> phi(psize);
+
+            std::vector<RT_V> phi(vsize);
             if(navier){
               lfsu_v_pfs.child(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
 
@@ -386,7 +387,7 @@ namespace Dune {
             lfsu_p.finiteElement().localBasis().evaluateFunction(it->position(),psi);
 
             // compute u (if Navier term enabled)
-            std::vector<RT_V> phi(psize);
+            std::vector<RT_V> phi(vsize);
             Dune::FieldVector<RF,dim> vu(0.0);
             if(navier){
               lfsu_v_pfs.child(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
