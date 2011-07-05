@@ -539,6 +539,27 @@ namespace Dune {
 	  typedef typename T::GridViewType GridViewType;
 	};
 
+
+    /** \brief Visitor for Power- and CompositeGridFunctions calling
+        the setTime() method on the leafs of the corresponding
+        function trees.
+
+        \tparam Scalar type representing time.
+    */
+    template<typename TT>
+    struct PowerCompositeSetTimeVisitor 
+      : public TypeTree::TreeVisitor, public TypeTree::DynamicTraversal
+    {
+      TT time;
+      PowerCompositeSetTimeVisitor(const TT time_) : time(time_) {}
+
+      template<typename LeafNode, typename TreePath>
+      void leaf(LeafNode& node, TreePath treePath) const
+      {
+        node.setTime(time);
+      }
+    };
+
     struct PowerGridFunctionTag {};
 
 	/** \brief product of identical functions
@@ -563,6 +584,13 @@ namespace Dune {
 
       //! record the GridView
 	  typedef typename T::GridViewType GridViewType;
+
+      //! Set the time in all leaf nodes of this function tree
+      template <typename TT>
+      void setTime(TT time){
+        PowerCompositeSetTimeVisitor<TT> visitor(time);
+        Dune::PDELab::TypeTree::applyToTree(*this,visitor);
+      }
 
       //! Construct a PowerGridFunction with k clones of the function t
 	  PowerGridFunction (T& t)
@@ -720,6 +748,13 @@ namespace Dune {
 		: BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename BaseT::template Child<0>::Type>))
 	  {
 	  }
+
+      //! Set the time in all leaf nodes of this function tree
+      template <typename TT>
+      void setTime(TT time){
+        PowerCompositeSetTimeVisitor<TT> visitor(time);
+        Dune::PDELab::TypeTree::applyToTree(*this,visitor);
+      }
 
 #ifdef DOXYGEN
       /** \brief Initialize all children
