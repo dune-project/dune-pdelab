@@ -427,6 +427,20 @@ namespace Dune {
 		  }
 	  }
 
+      //! Return the offset in the global indices for the given entity
+      template< class Entity >
+      typename Traits::SizeType entityOffset(const Entity &e) const
+      {
+        // get geometry type of subentity
+        Dune::GeometryType gt=e.geometry().type();
+
+        // evaluate consecutive index of subentity
+        int index = gv.indexSet().index(e);
+
+        // now compute
+        return offset[(gtoffset.find(gt)->second)+index];
+      }
+
       //------------------------------
       // generic data handle interface
       //------------------------------

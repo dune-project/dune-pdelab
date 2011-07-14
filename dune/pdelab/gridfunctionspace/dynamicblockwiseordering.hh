@@ -94,7 +94,7 @@ namespace Dune {
 
         template<class T, class Child, class TreePath, class ChildIndex>
         void beforeChild(const T &t, const Child& child, TreePath, ChildIndex childIndex)
-        { indexRanges[childIndex][eindex].first = t.entityOffset(e); }
+        { indexRanges[childIndex][eindex].first = child.entityOffset(e); }
       };
 
       struct PrintMaxLocalSizesVisitor :
@@ -131,6 +131,14 @@ namespace Dune {
         mutable std::vector<IndexRangeIterator> indexRangeIterators;
 
       public:
+
+        Base(const Base &b) : gv(b.gv), mapper(b.mapper), indexRanges(b.indexRanges)
+        {
+          indexRangeIterators.clear();
+          for(std::size_t child=0; child<Imp::CHILDREN; ++child)
+            indexRangeIterators.push_back(indexRanges[child].begin());
+        }
+
         Base(const GV &gv_) : gv(gv_), mapper(gv) { asImp().update(); }
 
         //! update internal data structures
@@ -191,8 +199,15 @@ namespace Dune {
          */
         SizeType subMap(SizeType child, SizeType indexInChild) const {
           IndexRangeIterator &it = indexRangeIterators[child];
-          while(it->first < indexInChild) ++it;
-          while(it->first > indexInChild) --it;
+
+          while(it->first <= indexInChild){
+            ++it;
+            assert(it != indexRanges[child].end());
+          }
+          while(it->first > indexInChild){ 
+            assert(it != indexRanges[child].begin());
+            --it;
+          }
           return it->second + (indexInChild - it->first);
         }
 
