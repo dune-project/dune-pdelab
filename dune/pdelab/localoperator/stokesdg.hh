@@ -17,6 +17,7 @@
 #include "defaultimp.hh"
 #include "pattern.hh"
 #include "flags.hh"
+#include "stokesdgparameter.hh"
 
 #ifndef VBLOCK
 #define VBLOCK 0
@@ -26,160 +27,24 @@
 namespace Dune {
     namespace PDELab {
 
-        /**
-           These are the boundary condition types as to be returned by
-           the employed boundary type function. 
-
-           Possible types:
-
-           <ul>
-
-           <li>\a DoNothing : Do not evaluate boundary integrals.
-
-           <li>\a VelocityDirichlet : Dirichlet conditions for velocity.
-
-           <li>\a PressureDirichlet : Natural Neumann conditions for the
-           impulse flux. These are equivalent to a fixed pressure
-           condition \b if \f$ \forall i : n \cdot \nabla v_i = 0 \f$.
-
-           </ul>
-         */
-        struct StokesBoundaryCondition {
-            enum Type {
-                DoNothing = 0,
-                VelocityDirichlet = 1,
-                PressureDirichlet = 2
-            };
-        };
-
-        /** 
-            \brief This is the default implementation for the interior
-            penalty factor.
-
-            It computes the factor according to \f$
-            \frac{\sigma}{|e|^\beta} \f$ for each face \f$ e \f$. It
-            assumes that the intersection geometries passed to the
-            local assembler allow to compute \f$|e|\f$ via \a
-            ig.geometry().volume().
-        */
-        template <typename RF>
-        class DefaultInteriorPenalty
-        {
-        private:
-            RF beta;
-            RF sigma;
-            RF mu;
-        public:
-
-            DefaultInteriorPenalty(const std::string method, const RF mu_)
-                : mu(mu_)
-            {
-                std::string s = method;
-                std::transform(s.begin(), s.end(), s.begin(), tolower);
-
-                // nipg (epsilon=1) 2d p1 -> Klaus sagt sollte auch sigma 1 klappen
-                if (s.find("nipg") != std::string::npos)
-                {
-                    beta = 1;
-                    if (sscanf(s.c_str(), "nipg %lg", &sigma) != 1)
-                        sigma = 3.9;
-                    return;
-                }
-                // sipg (epsilon=-1) 2d p1 -> Klaus sagt sigma=3.9irgendwas
-                if (s.find("sipg") != std::string::npos)
-                {
-                    beta = 1;
-                    if (sscanf(s.c_str(), "sipg %lg", &sigma) != 1)
-                        sigma = 3.9;
-                    return;
-                }
-                // obb sigma = 0, epsilon = 
-                if (s == "obb")
-                {
-                    beta = 1;
-                    sigma = 0;
-                    return;
-                }
-                // extract parameters
-                {
-                    int epsilon;
-                    if (3 == sscanf(s.c_str(), "%d %lg %lg", &epsilon, &sigma, &beta))
-                        return;
-                }
-                DUNE_THROW(Dune::Exception, "Unknown DG type " << method);
-            }
-
-            DefaultInteriorPenalty(const Dune::ParameterTree & config, const RF mu_)
-                : mu(mu_)
-            {
-                beta = config.get<double>("beta");
-                sigma = config.get<double>("ip_sigma");
-            }
-
-            template<typename I>
-            RF getFaceIP(const I & ig) const
-            {
-                return mu * sigma / std::pow(ig.geometry().volume(),beta);
-            }
-        };
-
-        
-        /** \brief a local operator for solving the stokes equation using a DG discretization
+        /** \brief A local operator for solving the stokes equation using a DG discretization
             
-            \tparam F velocity source term function
-            \tparam B boundary condition function
-            \tparam V dirichlet velocity boundary condition function
-            \tparam P dirichlet pressure boundary condition function
-            \tparam IP a class providing the interior penalty factor for each face
+            \tparam PRM Parameter class for this local operator
          */
-        template<typename F, typename B, typename V, typename P, 
-                 typename IP = DefaultInteriorPenalty<typename V::Traits::RangeFieldType> >
+        template<typename PRM>
         class StokesDG :
             public LocalOperatorDefaultFlags,
             public FullSkeletonPattern, public FullVolumePattern
             //
-            ,public JacobianBasedAlphaVolume< StokesDG<F,B,V,P,IP> >
-            ,public JacobianBasedAlphaSkeleton< StokesDG<F,B,V,P,IP> >
-            ,public JacobianBasedAlphaBoundary< StokesDG<F,B,V,P,IP> >
+            ,public JacobianBasedAlphaVolume< StokesDG<PRM> >
+            ,public JacobianBasedAlphaSkeleton< StokesDG<PRM> >
+            ,public JacobianBasedAlphaBoundary< StokesDG<PRM> >
             ,public InstationaryLocalOperatorDefaultMethods<double>
         {
             typedef StokesBoundaryCondition BC;
-            typedef typename V::Traits::RangeFieldType RF;
-
-            void initFromString(const std::string & method)
-            {
-                std::string s = method;
-                std::transform(s.begin(), s.end(), s.begin(), tolower);
-
-                // nipg (epsilon=1) 2d p1 -> Klaus sagt sollte auch sigma 1 klappen
-                if (s.find("nipg") != std::string::npos)
-                    {
-                        epsilon = 1;
-                        return;
-                    }
-                // sipg (epsilon=-1) 2d p1 -> Klaus sagt sigma=3.9irgendwas
-                if (s.find("sipg") != std::string::npos)
-                    {
-                        epsilon = -1;
-                        return;
-                    }
-                // obb sigma = 0, epsilon = 
-                if (s == "obb")
-                    {
-                        epsilon = 1;
-                        return;
-                    }
-                // extract parameters
-                {
-                    double sigma, beta;
-                    if (3 == sscanf(s.c_str(), "%d %lg %lg", &epsilon, &sigma, &beta))
-                        return;
-                }
-                DUNE_THROW(Dune::Exception, "Unknown DG type " << method);
-            }
+            typedef typename PRM::Traits::RangeFieldType RF;
 
         public:
-            typedef IP InteriorPenaltyFactor;
 
             // pattern assembly flags
             enum { doPatternVolume = true };
@@ -195,19 +60,21 @@ namespace Dune {
             enum { doLambdaVolume   = true };
             enum { doLambdaBoundary = true };
 
-            StokesDG (const std::string & method, const IP & ip_factor_, const RF mu_,
-                      const F & _f, const B & _b, const V & _v, const P & _p, int _qorder=4) :
-                f(_f), b(_b), v(_v), p(_p), qorder(_qorder), mu(mu_), ip_factor(ip_factor_)
-            {
-                initFromString(method);
-            }
+            /** \brief Constructor
 
-            StokesDG (const Dune::ParameterTree & configuration,const IP & ip_factor_, const RF mu_,
-                      const F & _f, const B & _b, const V & _v, const P & _p, int _qorder=4) :
-                f(_f), b(_b), v(_v), p(_p), qorder(_qorder), mu(mu_), ip_factor(ip_factor_)
-            {
-                epsilon = configuration.get<int>("epsilon");
-            }
+                \param [in] _prm                        Parameter class for this local operator
+                \param [in] _superintegration_order     This number will be added to the order of 
+                                                        quadrature in every integration. It is 
+                                                        only needed, when one of the parameters (e.g
+                                                        rho, mu) is not constant or the mappings from
+                                                        the reference elements to the cells are 
+                                                        nonlinear. Boundary conditions are assumed to 
+                                                        have the same order as the corresponding
+                                                        finite element.
+             */
+            StokesDG (PRM & _prm, int _superintegration_order=0) :
+                prm(_prm), superintegration_order(_superintegration_order)
+            {}
 
             // volume integral depending only on test functions,
             // contains f on the right hand side
@@ -243,6 +110,8 @@ namespace Dune {
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
+                const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
+                const int qorder = v_order + superintegration_order;
                 Dune::GeometryType gt = eg.geometry().type();
                 const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
                 
@@ -252,6 +121,8 @@ namespace Dune {
                     const Dune::FieldVector<DF,dim> local = it->position();
                     const Dune::FieldVector<DF,dimw> global = eg.geometry().global(local);
                     
+                    const RF mu = prm.mu(eg,local);
+
                     // values of velocity shape functions
                     std::vector<RT> phi_v(vsize);
                     FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
@@ -259,8 +130,7 @@ namespace Dune {
                     const RF weight = it->weight() * eg.geometry().integrationElement(it->position());
 
                     // evaluate source term
-                    typename F::Traits::RangeType fval;
-                    f.evaluateGlobal(global,fval);
+                    typename PRM::Traits::RangeType fval(prm.f(eg,local));
                     
                     //================================================//
                     // \int (f*v)
@@ -320,11 +190,13 @@ namespace Dune {
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
+                const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
+                const int qorder = 2*v_order - 1 + superintegration_order;
                 Dune::GeometryType gtface = ig.geometryInInside().type();
                 const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
-                const RF penalty_factor = ip_factor.getFaceIP(ig);
-
+                const RF penalty_factor = prm.getFaceIP(ig);
+                const int epsilon = prm.epsilonIPSymmetryFactor();
                 // loop over quadrature points and integrate normal flux
                 for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
                 {
@@ -346,15 +218,14 @@ namespace Dune {
 
                     const Dune::FieldVector<DF,dim> normal = ig.unitOuterNormal(it->position());
                     const RF weight = it->weight()*ig.geometry().integrationElement(it->position());
+                    const RF mu = prm.mu(ig,flocal);
 
                     // evaluate boundary condition type
-                    typename B::Traits::RangeType bctype;
-                    b.evaluate(ig,flocal,bctype);
-                    
+                    typename PRM::Traits::BoundaryConditionType bctype(prm.bctype(ig,flocal));
+
                     if (bctype == BC::VelocityDirichlet)
                     {
-                        typename V::Traits::RangeType u0;
-                        v.evaluateGlobal(global,u0);
+                        typename PRM::Traits::RangeType u0(prm.g(ig,flocal));
                         
                         //================================================//
                         // \mu \int \nabla u_0 \cdot v \cdot n
@@ -393,8 +264,7 @@ namespace Dune {
                     }
                     if (bctype == BC::PressureDirichlet)
                     {
-                        typename P::Traits::RangeType p0;
-                        p.evaluateGlobal(global,p0);
+                        typename PRM::Traits::RangeFieldType p0(prm.j(ig,flocal));
                     
                         //std::cout << "Pdirichlet\n";
                         //================================================//
@@ -451,6 +321,9 @@ namespace Dune {
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
+                const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
+                const int qorder = 2*v_order - 2 + superintegration_order;
+
                 Dune::GeometryType gt = eg.geometry().type();
                 const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
                 
@@ -458,6 +331,7 @@ namespace Dune {
                 for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
                 {
                     const Dune::FieldVector<DF,dim> local = it->position();
+                    const RF mu = prm.mu(eg,local);
                     
                     // and value of pressure shape functions
                     std::vector<RT> phi_p(psize);
@@ -557,10 +431,13 @@ namespace Dune {
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
+                const int v_order = FESwitch_V::basis(lfsv_s_v.finiteElement()).order();
+                const int qorder = 2*v_order - 1 + superintegration_order;
                 Dune::GeometryType gtface = ig.geometryInInside().type();
                 const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
-                const RF penalty_factor = ip_factor.getFaceIP(ig);
+                const RF penalty_factor = prm.getFaceIP(ig);
+                const int epsilon = prm.epsilonIPSymmetryFactor();
 
                 // loop over quadrature points and integrate normal flux
                 for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -591,7 +468,8 @@ namespace Dune {
 
                     const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(it->position());
                     const RF weight = it->weight()*ig.geometry().integrationElement(it->position());
-                    
+                    const RF mu = prm.mu(ig,it->position());
+   
                     //================================================//
                     // - (\mu \int < \nabla u > . normal . [v])  
                     //================================================//
@@ -793,14 +671,16 @@ namespace Dune {
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
+                const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
+                const int qorder = 2*v_order - 1 + superintegration_order;
                 Dune::GeometryType gtface = ig.geometryInInside().type();
                 const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
                 // evaluate boundary condition type
-                typename B::Traits::RangeType bctype;
-                b.evaluate(ig,rule.begin()->position(),bctype);
+                typename PRM::Traits::BoundaryConditionType bctype(prm.bctype(ig,rule.begin()->position()));
 
-                const RF penalty_factor = ip_factor.getFaceIP(ig);
+                const RF penalty_factor = prm.getFaceIP(ig);
+                const int epsilon = prm.epsilonIPSymmetryFactor();
 
                 // loop over quadrature points and integrate normal flux
                 for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -821,6 +701,7 @@ namespace Dune {
 
                     const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(it->position());
                     const RF weight = it->weight()*ig.geometry().integrationElement(it->position());
+                    const RF mu = prm.mu(ig,it->position());
                     
                     // velocity boundary condition
                     if (bctype == BC::VelocityDirichlet)
@@ -880,52 +761,35 @@ namespace Dune {
                 }
             }
 
-        private:
-            const F& f;
-            const B& b;
-            const V& v;
-            const P& p;
-            // values for NIPG / NIPG
-            int    epsilon;
-            int    qorder;
-            // physical parameters
-            double mu;
-            const IP & ip_factor;
+        protected:
+          PRM & prm;                  // Parameter class for this local operator
+          int superintegration_order; // Quadrature order
         };
 
-        /** \brief a local operator for solving the navier stokes
+
+        /** \brief A local operator for solving the navier stokes
             equation using a DG discretization
             
-            \tparam F velocity source term function
-            \tparam B boundary condition function
-            \tparam V dirichlet velocity boundary condition function
-            \tparam P dirichlet pressure boundary condition function
-            \tparam IP a class providing the interior penalty factor for each face
+            \tparam PRM Parameter Class corresponding to the NavierStokesDGParameters interface
          */
-        template<typename F, typename B, typename V, typename P, 
-                 typename IP = DefaultInteriorPenalty<typename V::Traits::RangeFieldType> >
-        class NavierStokesDG : public StokesDG<F,B,V,P,IP>
+        template<typename PRM >
+        class NavierStokesDG : public StokesDG<PRM>
         {
         public:
+            //! Boundary condition indicator type
             typedef StokesBoundaryCondition BC;
-            typedef typename V::Traits::RangeFieldType RF;
-            typedef IP InteriorPenaltyFactor;
-            typedef StokesDG<F,B,V,P,IP> StokesLocalOperator;
+            //! Common range field type
+            typedef typename PRM::Traits::RangeFieldType RF;
+            
+            typedef StokesDG<PRM> StokesLocalOperator;
 
-        private:
-            const RF rho;
-            const unsigned int qorder;
 
         public:
-
-            NavierStokesDG (const std::string & method, const IP & ip_factor_, const RF rho_, const RF mu_,
-                            const F & _f, const B & _b, const V & _v, const P & _p, int _qorder=4) 
-                : StokesLocalOperator(method,ip_factor_,mu_,_f,_b,_v,_p,_qorder), rho(rho_), qorder(_qorder)
-            {}
-
-            NavierStokesDG (const Dune::ParameterTree & configuration,const IP & ip_factor_, const RF rho_, 
-                            const RF mu_, const F & _f, const B & _b, const V & _v, const P & _p, int _qorder=4)
-                : StokesLocalOperator(configuration,ip_factor_,mu_,_f,_b,_v,_p,_qorder), rho(rho_), qorder(_qorder)
+            using StokesLocalOperator::prm;
+            using StokesLocalOperator::superintegration_order;
+            
+            NavierStokesDG (PRM & prm_, int superintegration_order_=0) 
+                : StokesLocalOperator(prm_ ,superintegration_order_)
             {}
 
             template<typename EG, typename LFSU, typename X, typename LFSV,
@@ -935,7 +799,6 @@ namespace Dune {
             {
                 // Assemble the Stokes part of the jacobian
                 StokesLocalOperator::jacobian_volume(eg,lfsu,x,lfsv,mat);
-                if(rho == 0) return;
                 
                 // dimensions
                 static const unsigned int dim = EG::Geometry::dimension;
@@ -969,14 +832,19 @@ namespace Dune {
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
+                const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
+                const int qorder = 3*v_order - 1 + superintegration_order;
                 Dune::GeometryType gt = eg.geometry().type();
-                const unsigned int quad_order = qorder + FESwitch_V::basis(lfsv_v.finiteElement()).order()-1;
-                const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,quad_order);
+                const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
                 
                 // loop over quadrature points
                 for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
                     {
                         const Dune::FieldVector<DF,dim> local = it->position();
+
+                        // Get density at point
+                        const RF rho = prm.rho(eg,local);
+                        if(rho == 0) continue;
                     
                         // and value of pressure shape functions
                         std::vector<RT> phi_v(psize);
@@ -1033,7 +901,6 @@ namespace Dune {
             {
                 // Assemble the Stokes part of the residual
                 StokesLocalOperator::alpha_volume(eg,lfsu,x,lfsv,r);
-                if(rho == 0) return;
 
                 // dimensions
                 static const unsigned int dim = EG::Geometry::dimension;
@@ -1067,14 +934,19 @@ namespace Dune {
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
+                const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
+                const int qorder = 3*v_order - 1 + superintegration_order;
                 Dune::GeometryType gt = eg.geometry().type();
-                const unsigned int quad_order = qorder + FESwitch_V::basis(lfsv_v.finiteElement()).order()-1;
-                const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,quad_order);
+                const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
                 
                 // loop over quadrature points
                 for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
                     {
                         const Dune::FieldVector<DF,dim> local = it->position();
+
+                        // Get density at point
+                        const RF rho = prm.rho(eg,local);
+                        if(rho == 0) continue;
                     
                         // and value of pressure shape functions
                         std::vector<RT> phi_v(psize);
