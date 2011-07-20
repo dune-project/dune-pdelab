@@ -348,6 +348,10 @@ namespace Dune {
     {
       typedef TypeTree::PowerNode<T,k> BaseT;
 
+      PowerConstraintsParameters()
+        : BaseT()
+      {}
+
       PowerConstraintsParameters(T& c)
         : BaseT(c)
       {}
