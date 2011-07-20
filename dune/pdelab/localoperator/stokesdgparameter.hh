@@ -128,6 +128,9 @@ namespace Dune {
             //! \brief Export type for range field
             typedef RF RangeFieldType;
 
+            //! \brief Export dimension of range
+            enum { dimRange = GV::dimensionworld }; 
+
             //! \brief range type
             typedef Dune::FieldVector<RF,GV::dimensionworld> RangeType;
 
