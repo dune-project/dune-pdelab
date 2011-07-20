@@ -95,8 +95,6 @@ namespace Dune {
         template<class T, class Child, class TreePath, class ChildIndex>
         void beforeChild(const T &t, const Child& child, TreePath, ChildIndex childIndex) const
         { indexRanges[childIndex][eindex].first = child.entityOffset(e); }
-        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex childIndex)
-        { indexRanges[childIndex][eindex].first = t.entityOffset(e); }
       };
 
       struct PrintMaxLocalSizesVisitor :
