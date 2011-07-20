@@ -987,6 +987,118 @@ namespace Dune {
 
         };
 
+        /** \brief A local operator for solving the stokes equation using a DG discretization
+            
+            \tparam PRM Parameter class for this local operator
+         */
+        template<typename PRM>
+        class StokesMassDG :
+            public LocalOperatorDefaultFlags,
+            public FullVolumePattern,
+            public JacobianBasedAlphaVolume< StokesMassDG<PRM> >,
+            public InstationaryLocalOperatorDefaultMethods<double>
+        {
+            typedef StokesBoundaryCondition BC;
+            typedef typename PRM::Traits::RangeFieldType RF;
+
+        public:
+
+            // pattern assembly flags
+            enum { doPatternVolume = true };
+
+            // residual assembly flags
+            enum { doAlphaVolume    = true };
+
+            /** \brief Constructor
+
+                \param [in] _prm                        Parameter class for this local operator
+                \param [in] _superintegration_order     This number will be added to the order of 
+                                                        quadrature in every integration. It is 
+                                                        only needed, when one of the parameters (e.g
+                                                        rho, mu) is not constant or the mappings from
+                                                        the reference elements to the cells are 
+                                                        nonlinear. Boundary conditions are assumed to 
+                                                        have the same order as the corresponding
+                                                        finite element.
+             */
+            StokesMassDG (PRM & _prm, int _superintegration_order=0) :
+                prm(_prm), superintegration_order(_superintegration_order)
+            {}
+
+            // jacobian of volume term
+            template<typename EG, typename LFSU, typename X, typename LFSV,
+                     typename LocalMatrix>
+            void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
+                                  LocalMatrix& mat) const
+            {
+                // dimensions
+                static const unsigned int dim = EG::Geometry::dimension;
+
+                // subspaces
+                dune_static_assert
+                    ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesMassDG");
+                typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
+                const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
+                dune_static_assert
+                    ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesMassDG");
+
+                // ... we assume all velocity components are the same
+                typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
+                const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
+                const unsigned int vsize = lfsv_v.size();
+
+                // domain and range field type
+                typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
+                typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+                typedef typename BasisSwitch_V::DomainField DF;
+                typedef typename BasisSwitch_V::Range RT;
+                typedef typename BasisSwitch_V::RangeField RF;
+                typedef typename LFSV::Traits::SizeType size_type;
+
+                // select quadrature rule
+                const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
+                const int qorder = 2*v_order + superintegration_order;
+
+                Dune::GeometryType gt = eg.geometry().type();
+                const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
+                
+                // loop over quadrature points
+                for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+                {
+                    const Dune::FieldVector<DF,dim> local = it->position();
+                    
+                    // and value of pressure shape functions
+                    std::vector<RT> psi_v(vsize);
+                    FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,psi_v);
+
+                    const RF rho = prm.rho(eg,local);
+                    const RF weight = it->weight() * eg.geometry().integrationElement(it->position());
+
+                    //================================================//
+                    // \int (rho*u*v)
+                    //================================================//
+                    const RF factor = rho * weight;
+                    for (size_type j=0; j<vsize; j++)
+                    {
+                        for (size_type i=0; i<vsize; i++)
+                        {
+                            const RF val = (psi_v[j]*psi_v[i])*factor;
+                            // and store for each velocity component
+                            for (unsigned int d=0; d<dim; d++)
+                            {
+                                const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
+                                mat.accumulate(lfsv_v,i,lfsv_v,j, val);
+                            }
+                        }
+                    }
+                }
+            }
+
+        protected:
+          PRM & prm;                  // Parameter class for this local operator
+          int superintegration_order; // Quadrature order
+        };
+
         //! \} group GridFunctionSpace
     } // namespace PDELab
 } // namespace Dune
