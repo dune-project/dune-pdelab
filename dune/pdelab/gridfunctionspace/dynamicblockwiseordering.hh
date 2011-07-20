@@ -67,7 +67,7 @@ namespace Dune {
         // { indexRanges[tp.back()].back().first = t.size(); }
 
         template<class T, class Child, class TreePath, class ChildIndex>
-        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex childIndex)
+        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex childIndex) const
         { indexRanges[childIndex].back().first = child.size(); }
       };
 
@@ -93,8 +93,10 @@ namespace Dune {
         // { indexRanges[tp.back()][eindex].first = t.entityOffset(e); }
 
         template<class T, class Child, class TreePath, class ChildIndex>
-        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex childIndex)
+        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex childIndex) const
         { indexRanges[childIndex][eindex].first = child.entityOffset(e); }
+        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex childIndex)
+        { indexRanges[childIndex][eindex].first = t.entityOffset(e); }
       };
 
       struct PrintMaxLocalSizesVisitor :
@@ -106,7 +108,7 @@ namespace Dune {
         // { dinfo << t.maxLocalSize() << " "; }
 
         template<class T, class Child, class TreePath, class ChildIndex>
-        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex childIndex)
+        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex childIndex) const
         { dinfo << child.maxLocalSize() << " "; }
       };
 
