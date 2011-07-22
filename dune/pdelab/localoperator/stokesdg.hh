@@ -110,9 +110,12 @@ namespace Dune {
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
-                const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
-                const int qorder = v_order + superintegration_order;
                 Dune::GeometryType gt = eg.geometry().type();
+                const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
+                const int det_jac_order = gt.isSimplex() ?  0 : (dim-1);
+                // quad order is velocity order + det_jac order + superintegration
+                const int qorder = v_order + det_jac_order + superintegration_order;
+
                 const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
                 
                 // loop over quadrature points
@@ -190,9 +193,11 @@ namespace Dune {
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
+                Dune::GeometryType gtface = ig.geometry().type();
                 const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
-                const int qorder = 2*v_order - 1 + superintegration_order;
-                Dune::GeometryType gtface = ig.geometryInInside().type();
+                const int det_jac_order = gtface.isSimplex() ? 0 : (dim-2);
+                const int jac_order = gtface.isSimplex() ? 0 : 1;
+                const int qorder = 2*v_order + det_jac_order + jac_order + superintegration_order;
                 const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
                 const RF penalty_factor = prm.getFaceIP(ig);
@@ -241,7 +246,7 @@ namespace Dune {
                             }
                         }
                         //================================================//
-                        // \mu \int \sigma / |\gamma|^\beta v u_0
+                        // \int \sigma / |\gamma|^\beta v u_0
                         //================================================//
                         factor = penalty_factor * weight;
                         for (unsigned int i=0;i<vsize;++i) 
@@ -321,10 +326,11 @@ namespace Dune {
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
-                const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
-                const int qorder = 2*v_order - 2 + superintegration_order;
-
                 Dune::GeometryType gt = eg.geometry().type();
+                const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
+                const int det_jac_order = gt.isSimplex() ? 0 : (dim-1);
+                const int jac_order = gt.isSimplex() ? 0 : 1;
+                const int qorder = 2*v_order - 2 + 2*jac_order + det_jac_order + superintegration_order;
                 const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
                 
                 // loop over quadrature points
@@ -342,7 +348,8 @@ namespace Dune {
                     BasisSwitch_V::gradient(FESwitch_V::basis(lfsv_v.finiteElement()),
                                             eg.geometry(), local, grad_phi_v);
 
-                    const RF weight = it->weight() * eg.geometry().integrationElement(it->position());
+                    const RF detj = eg.geometry().integrationElement(it->position());
+                    const RF weight = it->weight() * detj;
                     
                     //================================================//
                     // \int (mu*grad_u*grad_v)
@@ -431,9 +438,10 @@ namespace Dune {
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
+                Dune::GeometryType gtface = ig.geometry().type();
                 const int v_order = FESwitch_V::basis(lfsv_s_v.finiteElement()).order();
-                const int qorder = 2*v_order - 1 + superintegration_order;
-                Dune::GeometryType gtface = ig.geometryInInside().type();
+                const int det_jac_order = gtface.isSimplex() ? 0 : (dim-2);
+                const int qorder = 2*v_order + det_jac_order + superintegration_order;
                 const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
                 const RF penalty_factor = prm.getFaceIP(ig);
@@ -672,8 +680,9 @@ namespace Dune {
 
                 // select quadrature rule
                 const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
-                const int qorder = 2*v_order - 1 + superintegration_order;
-                Dune::GeometryType gtface = ig.geometryInInside().type();
+                Dune::GeometryType gtface = ig.geometry().type();
+                const int det_jac_order = gtface.isSimplex() ? 0 : (dim-1);
+                const int qorder = 2*v_order + det_jac_order + superintegration_order;
                 const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
                 // evaluate boundary condition type
@@ -832,9 +841,11 @@ namespace Dune {
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
-                const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
-                const int qorder = 3*v_order - 1 + superintegration_order;
                 Dune::GeometryType gt = eg.geometry().type();
+                const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
+                const int det_jac_order = gt.isSimplex() ? 0 : (dim-1);
+                const int jac_order = gt.isSimplex() ? 0 : 1;
+                const int qorder = 3*v_order - 1 + jac_order + det_jac_order + superintegration_order;
                 const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
                 
                 // loop over quadrature points
@@ -935,8 +946,10 @@ namespace Dune {
 
                 // select quadrature rule
                 const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
-                const int qorder = 3*v_order - 1 + superintegration_order;
                 Dune::GeometryType gt = eg.geometry().type();
+                const int det_jac_order = gt.isSimplex() ? 0 : (dim-1);
+                const int jac_order = gt.isSimplex() ? 0 : 1;
+                const int qorder = 3*v_order - 1 + jac_order + det_jac_order + superintegration_order;
                 const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
                 
                 // loop over quadrature points
@@ -1056,10 +1069,10 @@ namespace Dune {
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
-                const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
-                const int qorder = 2*v_order + superintegration_order;
-
                 Dune::GeometryType gt = eg.geometry().type();
+                const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
+                const int det_jac_order = gt.isSimplex() ? 0 : (dim-1);
+                const int qorder = 2*v_order + det_jac_order + superintegration_order;
                 const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
                 
                 // loop over quadrature points
