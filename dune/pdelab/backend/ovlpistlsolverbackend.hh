@@ -400,7 +400,7 @@ namespace Dune {
         \param[in] steps_ number of SSOR steps to apply as inner iteration
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_OVLP_Base (const GFS& gfs_, const C& c_, unsigned maxiter_=5000,
+      ISTLBackend_OVLP_Base (const GFS& gfs_, const C& c_, unsigned maxiter_=5000,
                                             int steps_=5, int verbose_=1)
         : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), c(c_), maxiter(maxiter_), steps(steps_), verbose(verbose_)
       {}
@@ -463,7 +463,7 @@ namespace Dune {
         \param[in] steps number of SSOR steps to apply as inner iteration
         \param[in] verbose print messages if true
       */
-      explicit ISTLBackend_OVLP_BCGS_SSORk (const GFS& gfs, const CC& cc, unsigned maxiter=5000,
+      ISTLBackend_OVLP_BCGS_SSORk (const GFS& gfs, const CC& cc, unsigned maxiter=5000,
                                             int steps=5, int verbose=1)
         : ISTLBackend_OVLP_Base<GFS,CC,Dune::SeqSSOR, Dune::BiCGSTABSolver>(gfs, cc, maxiter, steps, verbose)
       {}
@@ -486,7 +486,7 @@ namespace Dune {
         \param[in] steps number of SSOR steps to apply as inner iteration
         \param[in] verbose print messages if true
       */
-      explicit ISTLBackend_OVLP_CG_SSORk (const GFS& gfs, const CC& cc, unsigned maxiter=5000,
+      ISTLBackend_OVLP_CG_SSORk (const GFS& gfs, const CC& cc, unsigned maxiter=5000,
                                             int steps=5, int verbose=1)
         : ISTLBackend_OVLP_Base<GFS,CC,Dune::SeqSSOR, Dune::CGSolver>(gfs, cc, maxiter, steps, verbose)
       {}
@@ -506,7 +506,7 @@ namespace Dune {
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_OVLP_SuperLU_Base (const GFS& gfs_, const C& c_, unsigned maxiter_=5000,
+      ISTLBackend_OVLP_SuperLU_Base (const GFS& gfs_, const C& c_, unsigned maxiter_=5000,
                                               int verbose_=1)
         : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), c(c_), maxiter(maxiter_), verbose(verbose_)
       {}
@@ -570,7 +570,7 @@ namespace Dune {
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_OVLP_BCGS_SuperLU (const GFS& gfs_, const CC& cc_, unsigned maxiter_=5000,
+      ISTLBackend_OVLP_BCGS_SuperLU (const GFS& gfs_, const CC& cc_, unsigned maxiter_=5000,
                                               int verbose_=1)
         : ISTLBackend_OVLP_SuperLU_Base<GFS,CC,Dune::BiCGSTABSolver>(gfs_,cc_,maxiter_,verbose_)
       {}
@@ -594,7 +594,7 @@ namespace Dune {
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_OVLP_CG_SuperLU (const GFS& gfs_, const CC& cc_, 
+      ISTLBackend_OVLP_CG_SuperLU (const GFS& gfs_, const CC& cc_, 
                                               unsigned maxiter_=5000,
                                               int verbose_=1)
         : ISTLBackend_OVLP_SuperLU_Base<GFS,CC,Dune::CGSolver>(gfs_,cc_,maxiter_,verbose_)

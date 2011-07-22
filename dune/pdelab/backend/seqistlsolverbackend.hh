@@ -195,7 +195,7 @@ namespace Dune {
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_SEQ_ILUn (int n, double w, unsigned maxiter_=5000, int verbose_=1)
+      ISTLBackend_SEQ_ILUn (int n, double w, unsigned maxiter_=5000, int verbose_=1)
         : n_(n), w_(w), maxiter(maxiter_), verbose(verbose_)
        {}
       /*! \brief solve the given linear system
@@ -428,7 +428,7 @@ namespace Dune {
     public:
       /*! \brief make a linear solver object
       */
-      explicit ISTLBackend_SEQ_ExplicitDiagonal ()
+      ISTLBackend_SEQ_ExplicitDiagonal ()
       {}
 
       /*! \brief solve the given linear system
