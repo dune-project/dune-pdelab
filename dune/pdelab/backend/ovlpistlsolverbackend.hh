@@ -618,6 +618,10 @@ namespace Dune {
         : gfs(gfs_)
       {}
 
+      explicit ISTLBackend_OVLP_ExplicitDiagonal (const ISTLBackend_OVLP_ExplicitDiagonal& other_)
+        : gfs(other_.gfs)
+      {}
+      
       /*! \brief compute global norm of a vector
 
         \param[in] v the given vector
