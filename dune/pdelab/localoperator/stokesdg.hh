@@ -766,6 +766,71 @@ namespace Dune {
                             }
                         }
 
+                    } // Velocity Dirichlet
+                    if (bctype == BC::SlipVelocity)
+                    {
+                        //================================================//
+                        // - (\mu \int \nabla u. normal . v)  
+                        //================================================//
+                        const RF factor = mu * weight;
+                        for (unsigned int i=0;i<vsize;++i) // ansatz
+                        {
+                            for (unsigned int j=0;j<vsize;++j) // test
+                            {
+                                RF val = ((grad_phi_v[j][0]*normal)*phi_v[i]) * factor;
+                                for (unsigned int d=0;d<dim;++d)
+                                {
+                                    const LFSV_V& lfsv_v_d = lfsv_pfs_v.child(d);
+                                    
+                                    for (unsigned int dd=0;dd<dim;++dd)
+                                      {
+                                        const LFSV_V& lfsv_v_dd = lfsv_pfs_v.child(dd);
+
+                                        mat.accumulate(lfsv_v_dd,i,lfsv_v_d,j, - val*normal[d]*normal[dd]);
+                                        mat.accumulate(lfsv_v_d,j,lfsv_v_dd,i, epsilon*val*normal[d]*normal[dd]);
+                                      }
+                                }
+                            }
+                        }
+
+                        //================================================//
+                        // \mu \int \sigma / |\gamma|^\beta v u
+                        //================================================//
+                        const RF p_factor = penalty_factor * weight;
+                        for (unsigned int i=0;i<vsize;++i)
+                        {
+                            for (unsigned int j=0;j<vsize;++j) 
+                            {
+                                RF val = phi_v[i]*phi_v[j] * p_factor;
+                                for (unsigned int d=0;d<dim;++d)
+                                {
+                                    const LFSV_V& lfsv_v_d = lfsv_pfs_v.child(d);
+                                    for (unsigned int dd=0;dd<dim;++dd)
+                                      {
+                                        const LFSV_V& lfsv_v_dd = lfsv_pfs_v.child(dd);
+                                        mat.accumulate(lfsv_v_d,j,lfsv_v_dd,i, val*normal[d]*normal[dd]);
+                                      }
+                                }
+                            }
+                        }
+
+                        //================================================//
+                        // \int q u n
+                        // \int p v n
+                        //================================================//
+                        for (unsigned int i=0;i<vsize;++i) // ansatz
+                        {
+                            for (unsigned int j=0;j<psize;++j) // test
+                            {
+                                for (unsigned int d=0;d<dim;++d)
+                                {
+                                    const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
+                                    RF val = (phi_p[j]*normal[d]*phi_v[i]) * weight;
+                                    mat.accumulate(lfsv_p,j,lfsv_v,i, val); // q u n
+                                    mat.accumulate(lfsv_v,i,lfsv_p,j, val); // p v n
+                                }
+                            }
+                        }
                     }
                 }
             }

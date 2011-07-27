@@ -26,7 +26,8 @@ namespace Dune {
             enum Type {
                 DoNothing = 0,
                 VelocityDirichlet = 1,
-                PressureDirichlet = 2
+                PressureDirichlet = 2,
+                SlipVelocity = 3
             };
         };
 
