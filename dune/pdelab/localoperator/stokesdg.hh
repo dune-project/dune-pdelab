@@ -38,9 +38,9 @@ namespace Dune {
             public LocalOperatorDefaultFlags,
             public FullSkeletonPattern, public FullVolumePattern
             //
-            ,public JacobianBasedAlphaVolume< StokesDG<PRM> >
-            ,public JacobianBasedAlphaSkeleton< StokesDG<PRM> >
-            ,public JacobianBasedAlphaBoundary< StokesDG<PRM> >
+            ,public JacobianBasedAlphaVolume< StokesDG<PRM,full_tensor> >
+            ,public JacobianBasedAlphaSkeleton< StokesDG<PRM,full_tensor> >
+            ,public JacobianBasedAlphaBoundary< StokesDG<PRM,full_tensor> >
             ,public InstationaryLocalOperatorDefaultMethods<double>
         {
             typedef StokesBoundaryCondition BC;
