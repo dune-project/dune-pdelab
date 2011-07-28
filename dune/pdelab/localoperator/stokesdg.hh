@@ -29,9 +29,11 @@ namespace Dune {
 
         /** \brief A local operator for solving the stokes equation using a DG discretization
             
-            \tparam PRM Parameter class for this local operator
+            \tparam PRM                 Parameter class for this local operator
+            \tparam full_tensor         Flag enabling the assembling of the
+                                        full tensor for the viscous stress
          */
-        template<typename PRM>
+        template<typename PRM, bool full_tensor = true>
         class StokesDG :
             public LocalOperatorDefaultFlags,
             public FullSkeletonPattern, public FullVolumePattern
@@ -233,7 +235,7 @@ namespace Dune {
                         typename PRM::Traits::RangeType u0(prm.g(ig,flocal));
                         
                         //================================================//
-                        // \mu \int \nabla u_0 \cdot v \cdot n
+                        // \mu \int \nabla v \cdot u_0 \cdot n
                         //================================================//
                         RF factor = mu * weight;
                         for (unsigned int i=0;i<vsize;++i) 
@@ -361,11 +363,21 @@ namespace Dune {
                         {
                             // grad_phi_j*grad_phi_i
                             RF val = (grad_phi_v[j][0]*grad_phi_v[i][0])*factor;
-                            // and store for each velocity component
+
                             for (unsigned int d=0; d<dim; d++)
                             {
-                                const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
-                                mat.accumulate(lfsv_v,i,lfsv_v,j, val);
+                                const LFSV_V& lfsv_v_d = lfsv_pfs_v.child(d);
+                                mat.accumulate(lfsv_v_d,i,lfsv_v_d,j, val);
+
+                                // Assemble symmetric part for (grad u)^T
+                                if(full_tensor){ 
+                                  for (unsigned int dd=0; dd<dim; dd++){
+                                    RF Tval = (grad_phi_v[j][0][d]*grad_phi_v[i][0][dd])*factor;
+                                    const LFSV_V& lfsv_v_dd = lfsv_pfs_v.child(dd);
+                                    mat.accumulate(lfsv_v_d,i,lfsv_v_dd,j, Tval);
+                                  }
+                                }
+
                             }
                         }
                     }
@@ -493,6 +505,18 @@ namespace Dune {
                                 const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
                                 mat_ss.accumulate(lfsv_s_v,j,lfsv_s_v,i, - val);
                                 mat_ss.accumulate(lfsv_s_v,i,lfsv_s_v,j, epsilon*val );
+
+                                // Assemble symmetric part for (grad u)^T
+                                if(full_tensor){ 
+
+                                  for (unsigned int dd=0;dd<dim;++dd)
+                                    {
+                                      RF Tval = (0.5*(grad_phi_v_s[i][0][d]*normal[dd])*phi_v_s[j]) * factor;
+                                      const LFSV_V& lfsv_s_v_dd = lfsv_s_pfs_v.child(dd);
+                                      mat_ss.accumulate(lfsv_s_v,j,lfsv_s_v_dd,i, - Tval);
+                                      mat_ss.accumulate(lfsv_s_v_dd,i,lfsv_s_v,j, epsilon*Tval );
+                                    }
+                                }
                             }
                         }
                         for (unsigned int j=0;j<vsize_n;++j) 
@@ -505,6 +529,18 @@ namespace Dune {
                                 const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
                                 mat_ns.accumulate(lfsv_n_v,j,lfsv_s_v,i,- val);
                                 mat_sn.accumulate(lfsv_s_v,i,lfsv_n_v,j, epsilon*val);
+
+                                // Assemble symmetric part for (grad u)^T
+                                if(full_tensor){ 
+
+                                  for (unsigned int dd=0;dd<dim;++dd)
+                                    {
+                                      RF Tval = (-0.5*(grad_phi_v_s[i][0][d]*normal[dd])*phi_v_n[j]) * factor;
+                                      const LFSV_V& lfsv_s_v_dd = lfsv_s_pfs_v.child(dd);
+                                      mat_ns.accumulate(lfsv_n_v,j,lfsv_s_v_dd,i,- Tval);
+                                      mat_sn.accumulate(lfsv_s_v_dd,i,lfsv_n_v,j, epsilon*Tval);
+                                    }
+                                }
                             }
                         }
                     }
@@ -519,6 +555,18 @@ namespace Dune {
                                 const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
                                 mat_sn.accumulate(lfsv_s_v,j,lfsv_n_v,i, - val);
                                 mat_ns.accumulate(lfsv_n_v,i,lfsv_s_v,j, epsilon*val );
+
+                                // Assemble symmetric part for (grad u)^T
+                                if(full_tensor){ 
+
+                                  for (unsigned int dd=0;dd<dim;++dd)
+                                    {
+                                      RF Tval = (0.5*(grad_phi_v_n[i][0][d]*normal[dd])*phi_v_s[j]) * factor;
+                                      const LFSV_V& lfsv_n_v_dd = lfsv_n_pfs_v.child(dd);
+                                      mat_sn.accumulate(lfsv_s_v,j,lfsv_n_v_dd,i, - Tval);
+                                      mat_ns.accumulate(lfsv_n_v_dd,i,lfsv_s_v,j, epsilon*Tval );
+                                    }
+                                }
                             }
                         }
                         for (unsigned int j=0;j<vsize_n;++j) 
@@ -530,6 +578,18 @@ namespace Dune {
                                 const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
                                 mat_nn.accumulate(lfsv_n_v,j,lfsv_n_v,i,- val);
                                 mat_nn.accumulate(lfsv_n_v,i,lfsv_n_v,j, epsilon*val);
+
+                                // Assemble symmetric part for (grad u)^T
+                                if(full_tensor){ 
+
+                                  for (unsigned int dd=0;dd<dim;++dd)
+                                    {
+                                      RF Tval = (-0.5*(grad_phi_v_n[i][0][d]*normal[dd])*phi_v_n[j]) * factor;
+                                      const LFSV_V& lfsv_n_v_dd = lfsv_n_pfs_v.child(dd);
+                                      mat_nn.accumulate(lfsv_n_v,j,lfsv_n_v_dd,i,- Tval);
+                                      mat_nn.accumulate(lfsv_n_v_dd,i,lfsv_n_v,j, epsilon*Tval);
+                                    }
+                                }
                             }
                         }
                     }
@@ -729,6 +789,18 @@ namespace Dune {
                                     const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
                                     mat.accumulate(lfsv_v,i,lfsv_v,j, - val);
                                     mat.accumulate(lfsv_v,j,lfsv_v,i, epsilon*val);
+
+                                    // Assemble symmetric part for (grad u)^T
+                                    if(full_tensor){ 
+
+                                      for (unsigned int dd=0;dd<dim;++dd)
+                                        {
+                                          RF Tval = ((grad_phi_v[j][0][d]*normal[dd])*phi_v[i]) * factor;
+                                          const LFSV_V& lfsv_v_dd = lfsv_pfs_v.child(dd);
+                                          mat.accumulate(lfsv_v,i,lfsv_v_dd,j, - Tval);
+                                          mat.accumulate(lfsv_v_dd,j,lfsv_v,i, epsilon*Tval);
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -777,7 +849,13 @@ namespace Dune {
                         {
                             for (unsigned int j=0;j<vsize;++j) // test
                             {
-                                RF val = ((grad_phi_v[j][0]*normal)*phi_v[i]) * factor;
+                                RF ten_sum = 1.0;
+
+                                // Assemble symmetric part for (grad u)^T
+                                if(full_tensor)
+                                  ten_sum = 2.0;
+
+                                RF val = ten_sum * ((grad_phi_v[j][0]*normal)*phi_v[i]) * factor;
                                 for (unsigned int d=0;d<dim;++d)
                                 {
                                     const LFSV_V& lfsv_v_d = lfsv_pfs_v.child(d);
@@ -786,7 +864,7 @@ namespace Dune {
                                       {
                                         const LFSV_V& lfsv_v_dd = lfsv_pfs_v.child(dd);
 
-                                        mat.accumulate(lfsv_v_dd,i,lfsv_v_d,j, - val*normal[d]*normal[dd]);
+                                        mat.accumulate(lfsv_v_dd,i,lfsv_v_d,j, -val*normal[d]*normal[dd]);
                                         mat.accumulate(lfsv_v_d,j,lfsv_v_dd,i, epsilon*val*normal[d]*normal[dd]);
                                       }
                                 }
