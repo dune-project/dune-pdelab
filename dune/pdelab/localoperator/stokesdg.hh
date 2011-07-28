@@ -922,10 +922,13 @@ namespace Dune {
         /** \brief A local operator for solving the navier stokes
             equation using a DG discretization
             
-            \tparam PRM Parameter Class corresponding to the NavierStokesDGParameters interface
+            \tparam PRM                 Parameter Class corresponding to the 
+                                        NavierStokesDGParameters interface
+            \tparam full_tensor         Flag enabling the assembling of the
+                                        full tensor for the viscous stress
          */
-        template<typename PRM >
-        class NavierStokesDG : public StokesDG<PRM>
+        template<typename PRM, bool full_tensor = true>
+        class NavierStokesDG : public StokesDG<PRM,full_tensor>
         {
         public:
             //! Boundary condition indicator type
@@ -933,7 +936,7 @@ namespace Dune {
             //! Common range field type
             typedef typename PRM::Traits::RangeFieldType RF;
             
-            typedef StokesDG<PRM> StokesLocalOperator;
+          typedef StokesDG<PRM,full_tensor> StokesLocalOperator;
 
 
         public:
