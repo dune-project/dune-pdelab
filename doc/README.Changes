@@ -116,8 +116,8 @@ Access to matrix entries:
 
 Accumulate residual:
 
-| x[lfsu.localIndex(i)] += value                      // old way
-| x.accumulate(lfsu,i,value)                          // new way
+| r[lfsv.localIndex(j)] += value                      // old way
+| r.accumulate(lfsv,j,value)                          // new way
 
 Accumulate jacobian:
 
