@@ -12,6 +12,7 @@
 #include <dune/common/tupleutility.hh>
 #include <dune/common/typetraits.hh>
 
+#include <dune/pdelab/gridfunctionspace/localvector.hh>
 #include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include <dune/pdelab/gridoperatorspace/localmatrix.hh>
 
@@ -378,89 +379,126 @@ namespace Dune {
 
       template<int i>
       struct AlphaVolumeOperation {
+        typedef typename tuple_element<i,Args>::type Arg;
         template<typename EG, typename LFSU, typename X, typename LFSV,
-                 typename R>
+                 typename C>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const EG& eg,
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                          R& r)
+                          WeightedVectorAccumulationView<C>& r)
         {
-          if(weights[i] != 0) {
-            R my_r(lfsv.size(), 0);
-            LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doAlphaVolume>::
-              alpha_volume(*get<i>(lops), eg, lfsu, x, lfsv, my_r);
-            for(unsigned k = 0; k < lfsv.size(); ++k)
-              r[k] += weights[i] * my_r[k];
+          apply(lops, weights[i]*r.weight(), eg, lfsu, x, lfsv, r.container());
+        }
+        template<typename EG, typename LFSU, typename X, typename LFSV,
+                 typename C>
+        static void apply(const ArgPtrs& lops, typename C::weight_type weight,
+                          const EG& eg,
+                          const LFSU& lfsu, const X& x, const LFSV& lfsv,
+                          C& r)
+        {
+          if(weight != 0) {
+            WeightedVectorAccumulationView<C> view(r, weight);
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolume>::
+              alpha_volume(*get<i>(lops), eg, lfsu, x, lfsv, view);
           }
         }
       };
 
       template<int i>
       struct AlphaVolumePostSkeletonOperation {
+        typedef typename tuple_element<i,Args>::type Arg;
         template<typename EG, typename LFSU, typename X, typename LFSV,
-                 typename R>
+                 typename C>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const EG& eg,
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                          R& r)
+                          WeightedVectorAccumulationView<C>& r)
         {
-          if(weights[i] != 0) {
-            R my_r(lfsv.size(), 0);
-            LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
+          apply(lops, weights[i]*r.weight(), eg, lfsu, x, lfsv, r.container());
+        }
+        template<typename EG, typename LFSU, typename X, typename LFSV,
+                 typename C>
+        static void apply(const ArgPtrs& lops, typename C::weight_type weight,
+                          const EG& eg,
+                          const LFSU& lfsu, const X& x, const LFSV& lfsv,
+                          C& r)
+        {
+          if(weight != 0) {
+            WeightedVectorAccumulationView<C> view(r, weight);
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolumePostSkeleton>::
               alpha_volume_post_skeleton(*get<i>(lops), eg,
                                          lfsu, x, lfsv,
-                                         my_r);
-            for(unsigned k = 0; k < lfsv.size(); ++k)
-              r[k] += weights[i] * my_r[k];
+                                         view);
           }
         }
       };
 
       template<int i>
       struct AlphaSkeletonOperation {
+        typedef typename tuple_element<i,Args>::type Arg;
         template<typename IG, typename LFSU, typename X, typename LFSV,
-                 typename R>
+                 typename C>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const IG& ig,
                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-                          R& r_s, R& r_n)
+                          WeightedVectorAccumulationView<C>& r_s,
+                          WeightedVectorAccumulationView<C>& r_n)
         {
-          if(weights[i] != 0) {
-            R my_r_s(lfsv_s.size(), 0);
-            R my_r_n(lfsv_n.size(), 0);
-            LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doAlphaSkeleton>::
+          apply(lops, weights[i]*r_s.weight(), weights[i]*r_n.weight(),
+                ig,
+                lfsu_s, x_s, lfsv_s,
+                lfsu_n, x_n, lfsv_n,
+                r_s.container(), r_n.container());
+        }
+        template<typename IG, typename LFSU, typename X, typename LFSV,
+                 typename C>
+        static void apply(const ArgPtrs& lops,
+                          typename C::weight_type weight_s,
+                          typename C::weight_type weight_n,
+                          const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                          const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
+                          C& r_s, C& r_n)
+        {
+          if(weight_s != 0 || weight_n != 0) {
+            WeightedVectorAccumulationView<C> view_s(r_s, weight_s);
+            WeightedVectorAccumulationView<C> view_n(r_n, weight_n);
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaSkeleton>::
               alpha_skeleton(*get<i>(lops), ig,
                              lfsu_s, x_s, lfsv_s,
                              lfsu_n, x_n, lfsv_n,
-                             my_r_s, my_r_n);
-            for(unsigned k = 0; k < lfsv_s.size(); ++k)
-              r_s[k] += weights[i] * my_r_s[k];
-            for(unsigned k = 0; k < lfsv_n.size(); ++k)
-              r_n[k] += weights[i] * my_r_n[k];
+                             view_s, view_n);
           }
         }
       };
 
       template<int i>
       struct AlphaBoundaryOperation {
+        typedef typename tuple_element<i,Args>::type Arg;
         template<typename IG, typename LFSU, typename X, typename LFSV,
-                 typename R>
+                 typename C>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const IG& ig,
                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                          R& r_s)
+                          WeightedVectorAccumulationView<C>& r_s)
         {
-          if(weights[i] != 0) {
-            R my_r_s(lfsv_s.size(), 0);
-            LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doAlphaBoundary>::
-              alpha_boundary(*get<i>(lops), ig, lfsu_s, x_s, lfsv_s, my_r_s);
-            for(unsigned k = 0; k < lfsv_s.size(); ++k)
-              r_s[k] += weights[i] * my_r_s[k];
+          apply(lops, weights[i]*r_s.weight(), ig,
+                lfsu_s, x_s, lfsv_s,
+                r_s.container());
+        }
+        template<typename IG, typename LFSU, typename X, typename LFSV,
+                 typename C>
+        static void apply(const ArgPtrs& lops,
+                          typename C::weight_type weight_s,
+                          const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                          C& r_s)
+        {
+          if(weight_s != 0) {
+            WeightedVectorAccumulationView<C> view_s(r_s, weight_s);
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaBoundary>::
+              alpha_boundary(*get<i>(lops), ig, lfsu_s, x_s, lfsv_s, view_s);
           }
         }
       };
@@ -472,11 +510,11 @@ namespace Dune {
        *       the calls to the evaluation methods are eliminated at run-time.
        */
       template<typename EG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename C>
       void alpha_volume
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        R& r) const
+        C& r) const
       {
         ForLoop<AlphaVolumeOperation, 0, size-1>::
           apply(lops, weights, eg, lfsu, x, lfsv, r);
@@ -489,11 +527,11 @@ namespace Dune {
        *       the calls to the evaluation methods are eliminated at run-time.
        */
       template<typename EG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename C>
       void alpha_volume_post_skeleton
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        R& r) const
+        C& r) const
       {
         ForLoop<AlphaVolumePostSkeletonOperation, 0, size-1>::
           apply(lops, weights, eg, lfsu, x, lfsv, r);
@@ -505,12 +543,12 @@ namespace Dune {
        *       the calls to the evaluation methods are eliminated at run-time.
        */
       template<typename IG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename C>
       void alpha_skeleton
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-        R& r_s, R& r_n) const
+        C& r_s, C& r_n) const
       {
         ForLoop<AlphaSkeletonOperation, 0, size-1>::
           apply(lops, weights, ig,
@@ -525,11 +563,11 @@ namespace Dune {
        *       the calls to the evaluation methods are eliminated at run-time.
        */
       template<typename IG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename C>
       void alpha_boundary
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        R& r_s) const
+        C& r_s) const
       {
         ForLoop<AlphaBoundaryOperation, 0, size-1>::
           apply(lops, weights, ig, lfsu_s, x_s, lfsv_s, r_s);
@@ -548,82 +586,110 @@ namespace Dune {
 
       template<int i>
       struct LambdaVolumeOperation {
-        template<typename EG, typename LFSV, typename R>
+        typedef typename tuple_element<i,Args>::type Arg;
+        template<typename EG, typename LFSV, typename C>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const EG& eg,
                           const LFSV& lfsv,
-                          R& r)
+                          WeightedVectorAccumulationView<C>& r)
         {
-          if(weights[i] != 0) {
-            R my_r(lfsv.size(), 0);
-            LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doLambdaVolume>::
-              lambda_volume(*get<i>(lops), eg, lfsv, my_r);
-            for(unsigned k = 0; k < lfsv.size(); ++k)
-              r[k] += weights[i] * my_r[k];
+          apply(lops, weights[i]*r.weight(), eg, lfsv, r.container());
+        }
+        template<typename EG, typename LFSV, typename C>
+        static void apply(const ArgPtrs& lops, typename C::weight_type weight,
+                          const EG& eg,
+                          const LFSV& lfsv,
+                          C& r)
+        {
+          if(weight != 0) {
+            WeightedVectorAccumulationView<C> view(r, weight);
+            LocalAssemblerCallSwitch<Arg, Arg::doLambdaVolume>::
+              lambda_volume(*get<i>(lops), eg, lfsv, view);
           }
         }
       };
 
       template<int i>
       struct LambdaVolumePostSkeletonOperation {
-        template<typename EG, typename LFSV, typename R>
+        typedef typename tuple_element<i,Args>::type Arg;
+        template<typename EG, typename LFSV, typename C>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const EG& eg,
                           const LFSV& lfsv,
-                          R& r)
+                          WeightedVectorAccumulationView<C>& r)
         {
-          if(weights[i] != 0) {
-            R my_r(lfsv.size(), 0);
-            LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doLambdaVolumePostSkeleton>::
-              lambda_volume_post_skeleton(*get<i>(lops), eg, lfsv, my_r);
-            for(unsigned k = 0; k < lfsv.size(); ++k)
-              r[k] += weights[i] * my_r[k];
+          apply(lops, weights[i]*r.weight(), eg, lfsv, r.container());
+        }
+        template<typename EG, typename LFSV, typename C>
+        static void apply(const ArgPtrs& lops, typename C::weight_type weight,
+                          const EG& eg,
+                          const LFSV& lfsv,
+                          C& r)
+        {
+          if(weight != 0) {
+            WeightedVectorAccumulationView<C> view(r, weight);
+            LocalAssemblerCallSwitch<Arg, Arg::doLambdaVolumePostSkeleton>::
+              lambda_volume_post_skeleton(*get<i>(lops), eg, lfsv, view);
           }
         }
       };
 
       template<int i>
       struct LambdaSkeletonOperation {
-        template<typename IG, typename LFSV, typename R>
+        typedef typename tuple_element<i,Args>::type Arg;
+        template<typename IG, typename LFSV, typename C>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const IG& ig,
-                          const LFSV& lfsv_s,
-                          const LFSV& lfsv_n,
-                          R& r_s, R& r_n)
+                          const LFSV& lfsv_s, const LFSV& lfsv_n,
+                          WeightedVectorAccumulationView<C>& r_s,
+                          WeightedVectorAccumulationView<C>& r_n)
         {
-          if(weights[i] != 0) {
-            R my_r_s(lfsv_s.size(), 0);
-            R my_r_n(lfsv_n.size(), 0);
-            LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doLambdaSkeleton>::
+          apply(lops, weights[i]*r_s.weight(), weights[i]*r_n.weight(),
+                ig,
+                lfsv_s, lfsv_n,
+                r_s.container(), r_n.container());
+        }
+        template<typename IG, typename LFSV, typename C>
+        static void apply(const ArgPtrs& lops,
+                          typename C::weight_type weight_s,
+                          typename C::weight_type weight_n,
+                          const IG& ig,
+                          const LFSV& lfsv_s, const LFSV& lfsv_n,
+                          C& r_s, C& r_n)
+        {
+          if(weight_s != 0 || weight_n != 0) {
+            WeightedVectorAccumulationView<C> view_s(r_s, weight_s);
+            WeightedVectorAccumulationView<C> view_n(r_n, weight_n);
+            LocalAssemblerCallSwitch<Arg, Arg::doLambdaSkeleton>::
               lambda_skeleton(*get<i>(lops), ig,
                               lfsv_s, lfsv_n,
-                              my_r_s, my_r_n);
-            for(unsigned k = 0; k < lfsv_s.size(); ++k)
-              r_s[k] += weights[i] * my_r_s[k];
-            for(unsigned k = 0; k < lfsv_n.size(); ++k)
-              r_n[k] += weights[i] * my_r_n[k];
+                              view_s, view_n);
           }
         }
       };
 
       template<int i>
       struct LambdaBoundaryOperation {
-        template<typename IG, typename LFSV, typename R>
+        typedef typename tuple_element<i,Args>::type Arg;
+        template<typename IG, typename LFSV, typename C>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const IG& ig,
                           const LFSV& lfsv_s,
-                          R& r_s)
+                          WeightedVectorAccumulationView<C>& r_s)
         {
-          if(weights[i] != 0) {
-            R my_r_s(lfsv_s.size(), 0);
-            LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doLambdaBoundary>::
-              lambda_boundary(*get<i>(lops), ig, lfsv_s, my_r_s);
-            for(unsigned k = 0; k < lfsv_s.size(); ++k)
-              r_s[k] += weights[i] * my_r_s[k];
+          apply(lops, weights[i]*r_s.weight(), ig, lfsv_s, r_s.container());
+        }
+        template<typename IG, typename LFSV, typename C>
+        static void apply(const ArgPtrs& lops,
+                          typename C::weight_type weight_s,
+                          const IG& ig,
+                          const LFSV& lfsv_s,
+                          C& r_s)
+        {
+          if(weight_s != 0) {
+            WeightedVectorAccumulationView<C> view_s(r_s, weight_s);
+            LocalAssemblerCallSwitch<Arg, Arg::doLambdaBoundary>::
+              lambda_boundary(*get<i>(lops), ig, lfsv_s, view_s);
           }
         }
       };
@@ -634,8 +700,8 @@ namespace Dune {
        * \note Summands with zero weight don't contribute to the residual, and
        *       the calls to the evaluation methods are eliminated at run-time.
        */
-      template<typename EG, typename LFSV, typename R>
-      void lambda_volume(const EG& eg, const LFSV& lfsv, R& r) const
+      template<typename EG, typename LFSV, typename C>
+      void lambda_volume(const EG& eg, const LFSV& lfsv, C& r) const
       {
         ForLoop<LambdaVolumeOperation, 0, size-1>::
           apply(lops, weights, eg, lfsv, r);
@@ -647,10 +713,10 @@ namespace Dune {
        * \note Summands with zero weight don't contribute to the residual, and
        *       the calls to the evaluation methods are eliminated at run-time.
        */
-      template<typename EG, typename LFSV, typename R>
+      template<typename EG, typename LFSV, typename C>
       void lambda_volume_post_skeleton(const EG& eg,
                                        const LFSV& lfsv,
-                                       R& r) const
+                                       C& r) const
       {
         ForLoop<LambdaVolumePostSkeletonOperation, 0, size-1>::
           apply(lops, weights, eg, lfsv, r);
@@ -661,10 +727,10 @@ namespace Dune {
        * \note Summands with zero weight don't contribute to the residual, and
        *       the calls to the evaluation methods are eliminated at run-time.
        */
-      template<typename IG, typename LFSV, typename R>
+      template<typename IG, typename LFSV, typename C>
       void lambda_skeleton(const IG& ig,
                            const LFSV& lfsv_s, const LFSV& lfsv_n,
-                           R& r_s, R& r_n) const
+                           C& r_s, C& r_n) const
       {
         ForLoop<LambdaSkeletonOperation, 0, size-1>::
           apply(lops, weights, ig, lfsv_s, lfsv_n, r_s, r_n);
@@ -675,8 +741,8 @@ namespace Dune {
        * \note Summands with zero weight don't contribute to the residual, and
        *       the calls to the evaluation methods are eliminated at run-time.
        */
-      template<typename IG, typename LFSV, typename R>
-      void lambda_boundary(const IG& ig, const LFSV& lfsv_s, R& r_s) const
+      template<typename IG, typename LFSV, typename C>
+      void lambda_boundary(const IG& ig, const LFSV& lfsv_s, C& r_s) const
       {
         ForLoop<LambdaBoundaryOperation, 0, size-1>::
           apply(lops, weights, ig, lfsv_s, r_s);
@@ -695,91 +761,128 @@ namespace Dune {
 
       template<int i>
       struct JacobianApplyVolumeOperation {
+        typedef typename tuple_element<i,Args>::type Arg;
         template<typename EG, typename LFSU, typename X, typename LFSV,
-                 typename Y>
+                 typename C>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const EG& eg,
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                          Y& y)
+                          WeightedVectorAccumulationView<C>& r)
         {
-          if(weights[i] != 0) {
-            Y my_y(lfsv.size(), 0);
-            LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doAlphaVolume>::
-              jacobian_apply_volume(*get<i>(lops), eg, lfsu, x, lfsv, my_y);
-            for(unsigned k = 0; k < lfsv.size(); ++k)
-              y[k] += weights[i] * my_y[k];
+          apply(lops, weights[i]*r.weight(), eg, lfsu, x, lfsv, r.container());
+        }
+        template<typename EG, typename LFSU, typename X, typename LFSV,
+                 typename C>
+        static void apply(const ArgPtrs& lops, typename C::weight_type weight,
+                          const EG& eg,
+                          const LFSU& lfsu, const X& x, const LFSV& lfsv,
+                          C& r)
+        {
+          if(weight != 0) {
+            WeightedVectorAccumulationView<C> view(r, weight);
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolume>::
+              jacobian_apply_volume(*get<i>(lops), eg, lfsu, x, lfsv, view);
           }
         }
       };
 
       template<int i>
       struct JacobianApplyVolumePostSkeletonOperation {
+        typedef typename tuple_element<i,Args>::type Arg;
         template<typename EG, typename LFSU, typename X, typename LFSV,
-                 typename Y>
+                 typename C>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const EG& eg,
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                          Y& y)
+                          WeightedVectorAccumulationView<C>& r)
         {
-          if(weights[i] != 0) {
-            Y my_y(lfsv.size(), 0);
-            LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
+          apply(lops, weights[i]*r.weight(), eg, lfsu, x, lfsv, r.container());
+        }
+        template<typename EG, typename LFSU, typename X, typename LFSV,
+                 typename C>
+        static void apply(const ArgPtrs& lops, typename C::weight_type weight,
+                          const EG& eg,
+                          const LFSU& lfsu, const X& x, const LFSV& lfsv,
+                          C& r)
+        {
+          if(weight != 0) {
+            WeightedVectorAccumulationView<C> view(r, weight);
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolumePostSkeleton>::
               jacobian_apply_volume_post_skeleton(*get<i>(lops), eg,
                                                   lfsu, x, lfsv,
-                                                  my_y);
-            for(unsigned k = 0; k < lfsv.size(); ++k)
-              y[k] += weights[i] * my_y[k];
+                                                  view);
           }
         }
       };
 
       template<int i>
       struct JacobianApplySkeletonOperation {
+        typedef typename tuple_element<i,Args>::type Arg;
         template<typename IG, typename LFSU, typename X, typename LFSV,
-                 typename Y>
+                 typename C>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const IG& ig,
                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-                          Y& y_s, Y& y_n)
+                          WeightedVectorAccumulationView<C>& r_s,
+                          WeightedVectorAccumulationView<C>& r_n)
         {
-          if(weights[i] != 0) {
-            Y my_y_s(lfsv_s.size(), 0);
-            Y my_y_n(lfsv_n.size(), 0);
-            LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doAlphaSkeleton>::
+          apply(lops, weights[i]*r_s.weight(), weights[i]*r_n.weight(),
+                ig,
+                lfsu_s, x_s, lfsv_s,
+                lfsu_n, x_n, lfsv_n,
+                r_s.container(), r_n.container());
+        }
+        template<typename IG, typename LFSU, typename X, typename LFSV,
+                 typename C>
+        static void apply(const ArgPtrs& lops,
+                          typename C::weight_type weight_s,
+                          typename C::weight_type weight_n,
+                          const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                          const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
+                          C& r_s, C& r_n)
+        {
+          if(weight_s != 0 || weight_n != 0) {
+            WeightedVectorAccumulationView<C> view_s(r_s, weight_s);
+            WeightedVectorAccumulationView<C> view_n(r_n, weight_n);
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaSkeleton>::
               jacobian_apply_skeleton(*get<i>(lops), ig,
                                       lfsu_s, x_s, lfsv_s,
                                       lfsu_n, x_n, lfsv_n,
-                                      my_y_s, my_y_n);
-            for(unsigned k = 0; k < lfsv_s.size(); ++k)
-              y_s[k] += weights[i] * my_y_s[k];
-            for(unsigned k = 0; k < lfsv_n.size(); ++k)
-              y_n[k] += weights[i] * my_y_n[k];
+                                      view_s, view_n);
           }
         }
       };
 
       template<int i>
       struct JacobianApplyBoundaryOperation {
+        typedef typename tuple_element<i,Args>::type Arg;
         template<typename IG, typename LFSU, typename X, typename LFSV,
-                 typename Y>
+                 typename C>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const IG& ig,
                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                          Y& y_s)
+                          WeightedVectorAccumulationView<C>& r_s)
         {
-          if(weights[i] != 0) {
-            Y my_y_s(lfsv_s.size(), 0);
-            LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doAlphaBoundary>::
+          apply(lops, weights[i]*r_s.weight(), ig,
+                lfsu_s, x_s, lfsv_s,
+                r_s.container());
+        }
+        template<typename IG, typename LFSU, typename X, typename LFSV,
+                 typename C>
+        static void apply(const ArgPtrs& lops,
+                          typename C::weight_type weight_s,
+                          const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                          C& r_s)
+        {
+          if(weight_s != 0) {
+            WeightedVectorAccumulationView<C> view_s(r_s, weight_s);
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaBoundary>::
               jacobian_apply_boundary(*get<i>(lops), ig,
                                       lfsu_s, x_s, lfsv_s,
-                                      my_y_s);
-            for(unsigned k = 0; k < lfsv_s.size(); ++k)
-              y_s[k] += weights[i] * my_y_s[k];
+                                      view_s);
           }
         }
       };
@@ -791,14 +894,14 @@ namespace Dune {
        *       the calls to the evaluation methods are eliminated at run-time.
        */
       template<typename EG, typename LFSU, typename X, typename LFSV,
-               typename Y>
+               typename C>
       void jacobian_apply_volume
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        Y& y) const
+        C& r) const
       {
         ForLoop<JacobianApplyVolumeOperation, 0, size-1>::
-          apply(lops, weights, eg, lfsu, x, lfsv, y);
+          apply(lops, weights, eg, lfsu, x, lfsv, r);
       }
 
       //! \brief apply an element's jacobian after the intersections have been
@@ -808,14 +911,14 @@ namespace Dune {
        *       the calls to the evaluation methods are eliminated at run-time.
        */
       template<typename EG, typename LFSU, typename X, typename LFSV,
-               typename Y>
+               typename C>
       void jacobian_apply_volume_post_skeleton
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        Y& y) const
+        C& r) const
       {
         ForLoop<JacobianApplyVolumePostSkeletonOperation, 0, size-1>::
-          apply(lops, weights, eg, lfsu, x, lfsv, y);
+          apply(lops, weights, eg, lfsu, x, lfsv, r);
       }
 
       //! apply an internal intersections's jacobians
@@ -824,18 +927,18 @@ namespace Dune {
        *       the calls to the evaluation methods are eliminated at run-time.
        */
       template<typename IG, typename LFSU, typename X, typename LFSV,
-               typename Y>
+               typename C>
       void jacobian_apply_skeleton
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-        Y& y_s, Y& y_n) const
+        C& r_s, C& r_n) const
       {
         ForLoop<JacobianApplySkeletonOperation, 0, size-1>::
           apply(lops, weights, ig,
                 lfsu_s, x_s, lfsv_s,
                 lfsu_n, x_n, lfsv_n,
-                y_s, y_n);
+                r_s, r_n);
       }
 
       //! apply a boundary intersections's jacobian
@@ -844,14 +947,14 @@ namespace Dune {
        *       the calls to the evaluation methods are eliminated at run-time.
        */
       template<typename IG, typename LFSU, typename X, typename LFSV,
-               typename Y>
+               typename C>
       void jacobian_apply_boundary
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        Y& y_s) const
+        C& r_s) const
       {
         ForLoop<JacobianApplyBoundaryOperation, 0, size-1>::
-          apply(lops, weights, ig, lfsu_s, x_s, lfsv_s, y_s);
+          apply(lops, weights, ig, lfsu_s, x_s, lfsv_s, r_s);
       }
 
       //! \} Methods for the application of the jacobian
@@ -867,104 +970,139 @@ namespace Dune {
 
       template<int i>
       struct JacobianVolumeOperation {
+        typedef typename tuple_element<i,Args>::type Arg;
         template<typename EG, typename LFSU, typename X, typename LFSV,
-                 typename R>
+                 typename C>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const EG& eg,
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                          LocalMatrix<R>& mat)
+                          WeightedMatrixAccumulationView<C>& m)
         {
-          if(weights[i] != 0) {
-            LocalMatrix<R> my_mat(lfsu.size(), lfsv.size(), 0);
-            LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doAlphaVolume>::
-              jacobian_volume(*get<i>(lops), eg, lfsu, x, lfsv, my_mat);
-            for(unsigned k = 0; k < lfsu.size(); ++k)
-              for(unsigned l = 0; l < lfsv.size(); ++l)
-                mat(k,l) += weights[i] * my_mat(k,l);
+          apply(lops, weights[i]*m.weight(), eg, lfsu, x, lfsv, m.container());
+        }
+        template<typename EG, typename LFSU, typename X, typename LFSV,
+                 typename C>
+        static void apply(const ArgPtrs& lops, typename C::weight_type weight,
+                          const EG& eg,
+                          const LFSU& lfsu, const X& x, const LFSV& lfsv,
+                          C& m)
+        {
+          if(weight != 0) {
+            WeightedMatrixAccumulationView<C> view(m, weight);
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolume>::
+              jacobian_volume(*get<i>(lops), eg, lfsu, x, lfsv, view);
           }
         }
       };
 
       template<int i>
       struct JacobianVolumePostSkeletonOperation {
+        typedef typename tuple_element<i,Args>::type Arg;
         template<typename EG, typename LFSU, typename X, typename LFSV,
-                 typename R>
+                 typename C>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const EG& eg,
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                          LocalMatrix<R>& mat)
+                          WeightedMatrixAccumulationView<C>& m)
         {
-          if(weights[i] != 0) {
-            LocalMatrix<R> my_mat(lfsu.size(), lfsv.size(), 0);
-            LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
+          apply(lops, weights[i]*m.weight(), eg, lfsu, x, lfsv, m.container());
+        }
+        template<typename EG, typename LFSU, typename X, typename LFSV,
+                 typename C>
+        static void apply(const ArgPtrs& lops, typename C::weight_type weight,
+                          const EG& eg,
+                          const LFSU& lfsu, const X& x, const LFSV& lfsv,
+                          C& m)
+        {
+          if(weight != 0) {
+            WeightedMatrixAccumulationView<C> view(m, weight);
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolumePostSkeleton>::
               jacobian_volume_post_skeleton(*get<i>(lops), eg,
                                             lfsu, x, lfsv,
-                                            my_mat);
-            for(unsigned k = 0; k < lfsu.size(); ++k)
-              for(unsigned l = 0; l < lfsv.size(); ++l)
-                mat(k,l) += weights[i] * my_mat(k,l);
+                                            view);
           }
         }
       };
 
       template<int i>
       struct JacobianSkeletonOperation {
+        typedef typename tuple_element<i,Args>::type Arg;
         template<typename IG, typename LFSU, typename X, typename LFSV,
-                 typename R>
+                 typename C>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const IG& ig,
                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-                          LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn,
-                          LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn)
+                          WeightedMatrixAccumulationView<C>& m_ss,
+                          WeightedMatrixAccumulationView<C>& m_sn,
+                          WeightedMatrixAccumulationView<C>& m_ns,
+                          WeightedMatrixAccumulationView<C>& m_nn)
         {
-          if(weights[i] != 0) {
-            LocalMatrix<R> my_mat_ss(lfsu_s.size(), lfsv_s.size(), 0);
-            LocalMatrix<R> my_mat_sn(lfsu_s.size(), lfsv_n.size(), 0);
-            LocalMatrix<R> my_mat_ns(lfsu_n.size(), lfsv_s.size(), 0);
-            LocalMatrix<R> my_mat_nn(lfsu_n.size(), lfsv_n.size(), 0);
-            LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doAlphaSkeleton>::
+          apply(lops,
+                weights[i]*m_ss.weight(), weights[i]*m_sn.weight(),
+                weights[i]*m_ns.weight(), weights[i]*m_nn.weight(),
+                ig,
+                lfsu_s, x_s, lfsv_s,
+                lfsu_n, x_n, lfsv_n,
+                m_ss.container(), m_sn.container(),
+                m_ns.container(), m_nn.container());
+        }
+        template<typename IG, typename LFSU, typename X, typename LFSV,
+                 typename C>
+        static void apply(const ArgPtrs& lops,
+                          typename C::weight_type weight_ss,
+                          typename C::weight_type weight_sn,
+                          typename C::weight_type weight_ns,
+                          typename C::weight_type weight_nn,
+                          const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                          const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
+                          C& m_ss, C& m_sn, C& m_ns, C& m_nn)
+        {
+          if(weight_ss != 0 || weight_sn != 0 ||
+             weight_ns != 0 || weight_nn != 0)
+          {
+            WeightedMatrixAccumulationView<C> view_ss(m_ss, weight_ss);
+            WeightedMatrixAccumulationView<C> view_sn(m_sn, weight_sn);
+            WeightedMatrixAccumulationView<C> view_ns(m_ns, weight_ns);
+            WeightedMatrixAccumulationView<C> view_nn(m_nn, weight_nn);
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaSkeleton>::
               jacobian_skeleton(*get<i>(lops), ig,
                                 lfsu_s, x_s, lfsv_s,
                                 lfsu_n, x_n, lfsv_n,
-                                my_mat_ss, my_mat_sn, my_mat_ns, my_mat_nn);
-            for(unsigned k = 0; k < lfsu_s.size(); ++k)
-              for(unsigned l = 0; l < lfsv_s.size(); ++l)
-                mat_ss(k,l) += weights[i] * my_mat_ss(k,l);
-            for(unsigned k = 0; k < lfsu_s.size(); ++k)
-              for(unsigned l = 0; l < lfsv_n.size(); ++l)
-                mat_sn(k,l) += weights[i] * my_mat_sn(k,l);
-            for(unsigned k = 0; k < lfsu_n.size(); ++k)
-              for(unsigned l = 0; l < lfsv_s.size(); ++l)
-                mat_ns(k,l) += weights[i] * my_mat_ns(k,l);
-            for(unsigned k = 0; k < lfsu_n.size(); ++k)
-              for(unsigned l = 0; l < lfsv_n.size(); ++l)
-                mat_nn(k,l) += weights[i] * my_mat_nn(k,l);
+                                view_ss, view_sn, view_ns, view_nn);
           }
         }
       };
 
       template<int i>
       struct JacobianBoundaryOperation {
+        typedef typename tuple_element<i,Args>::type Arg;
         template<typename IG, typename LFSU, typename X, typename LFSV,
-                 typename R>
+                 typename C>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const IG& ig,
                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                          LocalMatrix<R>& mat_ss)
+                          WeightedMatrixAccumulationView<C>& m_ss)
         {
-          if(weights[i] != 0) {
-            LocalMatrix<R> my_mat_ss(lfsu_s.size(), lfsv_s.size(), 0);
-            LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
-              tuple_element<i,Args>::type::doAlphaBoundary>::
+          apply(lops, weights[i]*m_ss.weight(), ig,
+                lfsu_s, x_s, lfsv_s,
+                m_ss.container());
+        }
+        template<typename IG, typename LFSU, typename X, typename LFSV,
+                 typename C>
+        static void apply(const ArgPtrs& lops,
+                          typename C::weight_type weight_ss,
+                          const IG& ig,
+                          const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                          C& m_ss)
+        {
+          if(weight_ss != 0)
+          {
+            WeightedMatrixAccumulationView<C> view_ss(m_ss, weight_ss);
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaSkeleton>::
               jacobian_boundary(*get<i>(lops), ig,
-                                lfsu_s, x_s, lfsv_s, my_mat_ss);
-            for(unsigned k = 0; k < lfsu_s.size(); ++k)
-              for(unsigned l = 0; l < lfsv_s.size(); ++l)
-                mat_ss(k,l) += weights[i] * my_mat_ss(k,l);
+                                lfsu_s, x_s, lfsv_s, view_ss);
           }
         }
       };
@@ -976,14 +1114,14 @@ namespace Dune {
        *       the calls to the evaluation methods are eliminated at run-time.
        */
       template<typename EG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename C>
       void jacobian_volume
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        LocalMatrix<R>& mat) const
+        C& m) const
       {
         ForLoop<JacobianVolumeOperation, 0, size-1>::
-          apply(lops, weights, eg, lfsu, x, lfsv, mat);
+          apply(lops, weights, eg, lfsu, x, lfsv, m);
       }
 
       //! get an element's jacobian after the intersections have been handled
@@ -992,14 +1130,14 @@ namespace Dune {
        *       the calls to the evaluation methods are eliminated at run-time.
        */
       template<typename EG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename C>
       void jacobian_volume_post_skeleton
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        LocalMatrix<R>& mat) const
+        C& m) const
       {
         ForLoop<JacobianVolumePostSkeletonOperation, 0, size-1>::
-          apply(lops, weights, eg, lfsu, x, lfsv, mat);
+          apply(lops, weights, eg, lfsu, x, lfsv, m);
       }
 
       //! apply an internal intersections's jacobians
@@ -1008,19 +1146,18 @@ namespace Dune {
        *       the calls to the evaluation methods are eliminated at run-time.
        */
       template<typename IG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename C>
       void jacobian_skeleton
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-        LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn,
-        LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn) const
+        C& m_ss, C& m_sn, C& m_ns, C& m_nn) const
       {
         ForLoop<JacobianSkeletonOperation, 0, size-1>::
           apply(lops, weights, ig,
                 lfsu_s, x_s, lfsv_s,
                 lfsu_n, x_n, lfsv_n,
-                mat_ss, mat_sn, mat_ns, mat_nn);
+                m_ss, m_sn, m_ns, m_nn);
       }
 
       //! get a boundary intersections's jacobian
@@ -1029,14 +1166,14 @@ namespace Dune {
        *       the calls to the evaluation methods are eliminated at run-time.
        */
       template<typename IG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename C>
       void jacobian_boundary
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        LocalMatrix<R>& mat_ss) const
+        C& m_ss) const
       {
         ForLoop<JacobianBoundaryOperation, 0, size-1>::
-          apply(lops, weights, ig, lfsu_s, x_s, lfsv_s, mat_ss);
+          apply(lops, weights, ig, lfsu_s, x_s, lfsv_s, m_ss);
       }
 
       //! \} Methods to extract the jacobian
