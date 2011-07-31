@@ -1100,7 +1100,7 @@ namespace Dune {
           if(weight_ss != 0)
           {
             WeightedMatrixAccumulationView<C> view_ss(m_ss, weight_ss);
-            LocalAssemblerCallSwitch<Arg, Arg::doAlphaSkeleton>::
+            LocalAssemblerCallSwitch<Arg, Arg::doAlphaBoundary>::
               jacobian_boundary(*get<i>(lops), ig,
                                 lfsu_s, x_s, lfsv_s, view_ss);
           }
