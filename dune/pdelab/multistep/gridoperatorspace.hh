@@ -232,7 +232,7 @@ namespace Dune {
 
         for(unsigned step = 1; step <= parameters->steps(); ++step) {
           setWeights(step);
-          sumLOP.setTime(tn-(step-1)*dt);
+          sumLOP.setTime(tn-step*dt);
           // residual is additive
           SGOS::residual(*oldvalues[step-1], *r0);
         }
