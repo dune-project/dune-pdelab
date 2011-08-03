@@ -144,6 +144,13 @@ MOSTLYCLEANFILES += testlaplacedirichletp12d.vtu
 
 NORMALTESTS += testelasticity
 testelasticity_SOURCES = testelasticity.cc
+testelasticity_CPPFLAGS = $(AM_CPPFLAGS)	\
+	$(SUPERLU_CPPFLAGS)
+testelasticity_LDFLAGS = $(AM_LDFLAGS)	\
+	$(SUPERLU_LDFLAGS)
+testelasticity_LDADD =		\
+	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
+	$(LDADD)
 MOSTLYCLEANFILES += testelasticity.vtu
 
 NORMALTESTS += testlocalfunctionspace
