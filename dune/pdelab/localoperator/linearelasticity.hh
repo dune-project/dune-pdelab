@@ -43,8 +43,8 @@ namespace Dune {
       enum { doLambdaVolume = true };
       enum { doLambdaBoundary = false };
 
-      LinearElasticity (double m, double l, int intorder_=4)
-        : intorder(intorder_), mu(m), lambda(l), g(0.0)
+      LinearElasticity (double m, double l, double _g, int intorder_=4)
+        : intorder(intorder_), mu(m), lambda(l), g(_g)
       {}
 
       template<typename EG, typename LFSU_HAT, typename X, typename LFSV, typename M>
@@ -247,7 +247,7 @@ namespace Dune {
           //typename F::Traits::RangeType y;
           //f.evaluate(eg.entity(),it->position(),y);
           FieldVector<RF,dim> y(0.0);
-          y[dim-1] = -g;
+          y[dim-1] = g;
 
           // weight
           RF factor = it->weight() * eg.geometry().integrationElement(it->position());

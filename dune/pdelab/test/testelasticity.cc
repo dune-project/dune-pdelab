@@ -66,13 +66,13 @@ public:
   {
     Dune::FieldVector<typename I::ctype, I::dimension>
       xg = intersection.geometry().global( coord );
-    return (xg[0] == 0.0 || xg[0] == szX);  // Dirichlet b.c. on left & right boundary
+    return (xg[0] == 0.0); // || xg[0] == szX);  // Dirichlet b.c. on left & right boundary
   }
 };
 
 // generate a P1 function and output it
 template<class GV> 
-void testp1 (const GV& gv, double mu, double lambda)
+void testp1 (const GV& gv, double mu, double lambda, double constG)
 {
   typedef typename GV::Grid::ctype DF;
 
@@ -116,7 +116,7 @@ void testp1 (const GV& gv, double mu, double lambda)
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
 
   // make grid function operator
-  Dune::PDELab::LinearElasticity la(mu, lambda);
+  Dune::PDELab::LinearElasticity la(mu, lambda, constG);
   typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
     Dune::PDELab::LinearElasticity,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
   GOS gos(gfs,cg,gfs,cg,la);
@@ -170,6 +170,7 @@ int main(int argc, char** argv)
 
     double mu = 1.0;
     double lambda = 1.0;
+    double g = 1.0;
     int level=5;
 
     if (argc > 1)
@@ -177,11 +178,13 @@ int main(int argc, char** argv)
     if (argc > 2)
         lambda = atof(argv[2]);
     if (argc > 3)
-        level = atoi(argv[3]);
-
+        g = atof(argv[3]);
+    if (argc > 4)
+        level = atoi(argv[4]);
 
     std::cout << "mu     = " << mu << "\n"
-              << "lambda = " << lambda << std::endl;
+              << "lambda = " << lambda << "\n"
+              << "g = " << g << std::endl;
     
     Dune::FieldVector<double,2> L(1); L[0] = szX;
     Dune::FieldVector<int,2> N(1); N[0] = szX;
@@ -189,7 +192,7 @@ int main(int argc, char** argv)
     Dune::YaspGrid<2> grid(L,N,B,0);
     grid.globalRefine(level);
     
-    testp1(grid.leafView(), mu, lambda);
+    testp1(grid.leafView(), mu, lambda, g);
 
     // test passed
     return 0;
