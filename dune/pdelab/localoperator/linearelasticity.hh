@@ -58,23 +58,23 @@ namespace Dune {
         : intorder(intorder_), mu(m), lambda(l), g(_g)
       {}
 
-      template<typename EG, typename LFSU_HAT, typename X, typename LFSV, typename M>
-      void jacobian_volume (const EG& eg, const LFSU_HAT& lfsu_hat, const X& x, const LFSV& lfsv, M & mat) const
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
+      void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat) const
       {
         // extract local function spaces
-        typedef typename LFSU_HAT::template Child<0>::Type LFSU;
+        typedef typename LFSU::template Child<0>::Type LFSU_SUB;
 
         // domain and range field type
-        typedef typename LFSU::Traits::FiniteElementType::
+        typedef typename LFSU_SUB::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename LFSU::Traits::FiniteElementType::
+        typedef typename LFSU_SUB::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
+        typedef typename LFSU_SUB::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType JacobianType;
-        typedef typename LFSU::Traits::FiniteElementType::
+        typedef typename LFSU_SUB::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RangeType;
 
-        typedef typename LFSU::Traits::SizeType size_type;
+        typedef typename LFSU_SUB::Traits::SizeType size_type;
         
         // dimensions
         const int dim = EG::Geometry::dimension;
@@ -89,46 +89,44 @@ namespace Dune {
         for (typename QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
         {
           // evaluate basis functions
-          std::vector<RangeType> phi(lfsu_hat.child(0).size());
-          lfsu_hat.child(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
+          std::vector<RangeType> phi(lfsu.child(0).size());
+          lfsu.child(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
             
           // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
-          std::vector<JacobianType> js(lfsu_hat.child(0).size());
-          lfsu_hat.child(0).finiteElement().localBasis().evaluateJacobian(it->position(),js);
+          std::vector<JacobianType> js(lfsu.child(0).size());
+          lfsu.child(0).finiteElement().localBasis().evaluateJacobian(it->position(),js);
             
           // transform gradient to real element
           const FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
-          std::vector<FieldVector<RF,dim> > gradphi(lfsu_hat.child(0).size());
-          for (size_type i=0; i<lfsu_hat.child(0).size(); i++)
+          std::vector<FieldVector<RF,dim> > gradphi(lfsu.child(0).size());
+          for (size_type i=0; i<lfsu.child(0).size(); i++)
           {
             gradphi[i] = 0.0;
             jac.umv(js[i][0],gradphi[i]);
           }
-            
+
           for(int d=0; d<dim; ++d)
           {
-            const LFSU & lfsu = lfsu_hat.child(d);
-            
             // geometric weight 
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
 
-            for (size_type i=0; i<lfsu.size(); i++)
+            for (size_type i=0; i<lfsu.child(0).size(); i++)
             {
               for (int k=0; k<dim; k++)
               {
                 for (size_type j=0; j<lfsv.child(k).size(); j++)
                 {
                   // integrate \mu (grad u + (grad u)^T) * (grad phi_i + (grad phi_i)^T)
-                  mat.accumulate(lfsv.child(d),j,lfsu,i,
-                    // mu (d u_d / d x_k) (d phi_i_d / d x_k)
-                    mu * gradphi[i][k] * gradphi[j][k]
+                  mat.accumulate(lfsv.child(k),j,lfsu.child(k),i,
+                    // mu (d u_k / d x_d) (d v_k / d x_d)
+                    mu * gradphi[i][d] * gradphi[j][d]
                     *factor);
-                  mat.accumulate(lfsv.child(k),j,lfsu,i,
-                    // mu (d u_d / d x_k) (d phi_i_k / d x_d)
+                  mat.accumulate(lfsv.child(k),j,lfsu.child(d),i,
+                    // mu (d u_d / d x_k) (d v_k / d x_d)
                     mu * gradphi[i][k] * gradphi[j][d]
                     *factor);
-                  // integrate \lambda sum_(k=0..dim) (d u / d x_d) * (d phi_i / d x_k)
-                  mat.accumulate(lfsv.child(k),j,lfsu,i,
+                  // integrate \lambda sum_(k=0..dim) (d u_d / d x_d) * (d v_k / d x_k)
+                  mat.accumulate(lfsv.child(k),j,lfsu.child(d),i,
                     lambda * gradphi[i][d]*gradphi[j][k]
                     *factor);
                 }
@@ -200,7 +198,7 @@ namespace Dune {
             // geometric weight 
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
 
-            for (size_type i=0; i<lfsu.size(); i++)
+            for (size_type i=0; i<lfsv.child(d).size(); i++)
             {
               for (int k=0; k<dim; k++)
               {
@@ -334,7 +332,7 @@ namespace Dune {
         }
       }
       
-    private:
+    protected:
       int intorder;
       double mu;
       double lambda;
