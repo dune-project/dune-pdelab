@@ -136,12 +136,9 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
 
   // make ISTL solver
   Dune::MatrixAdapter<M,V,V> opa(m);
-  // typedef Dune::PDELab::OnTheFlyOperator<V,V,GOS> ISTLOnTheFlyOperator;
-  // ISTLOnTheFlyOperator opb(gos);
   Dune::SeqILU0<M,V,V> ilu0(m,1e-2);
 
   Dune::CGSolver<V> solver(opa,ilu0,1E-20,5000,2);
-  Dune::SuperLU<typename M::BaseT> super(m,2);
   Dune::InverseOperatorResult stat;
 
   // solve the jacobian system
@@ -149,7 +146,6 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
   V x(gfs,0.0);
   Dune::PDELab::set_nonconstrained_dofs(cg,1.0,x);
   solver.apply(x,r,stat);
-  // super.apply(x,r,stat);
   x += x0;
 
   // make discrete function object
