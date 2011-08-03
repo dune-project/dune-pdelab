@@ -142,6 +142,10 @@ testlaplacedirichletp12d_LDADD =		\
 	$(LDADD)
 MOSTLYCLEANFILES += testlaplacedirichletp12d.vtu
 
+NORMALTESTS += testelasticity
+testelasticity_SOURCES = testelasticity.cc
+MOSTLYCLEANFILES += testelasticity.vtu
+
 NORMALTESTS += testlocalfunctionspace
 testlocalfunctionspace_SOURCES = testlocalfunctionspace.cc
 testlocalfunctionspace_CPPFLAGS = $(AM_CPPFLAGS)	\
