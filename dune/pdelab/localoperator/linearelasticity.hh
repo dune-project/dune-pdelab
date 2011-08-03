@@ -25,6 +25,17 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
+    template<typename F, typename B, typename U, typename G>
+    class LinearElasticityParameters
+    {
+      double lambda;
+      double mu;
+      const F & f;
+      const B & b;
+      const U & u;
+      const G & g;
+    };
+    
     class LinearElasticity : public FullVolumePattern,
                              public LocalOperatorDefaultFlags,
                              public InstationaryLocalOperatorDefaultMethods<double>,
