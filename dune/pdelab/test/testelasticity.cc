@@ -31,7 +31,7 @@
 #include"../backend/istlmatrixbackend.hh"
 #include"../backend/istlsolverbackend.hh"
 
-static const double szX = 1.0;
+static const double szX = 10.0;
 
 // define some grid functions to interpolate from
 template<typename GV, typename RF>

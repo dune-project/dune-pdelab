@@ -41,7 +41,7 @@ namespace Dune {
       // residual assembly flags
       enum { doAlphaVolume = true };
       enum { doLambdaVolume = true };
-      enum { doLambdaBoundary = false };
+      enum { doLambdaBoundary = true };
 
       LinearElasticity (double m, double l, double _g, int intorder_=4)
         : intorder(intorder_), mu(m), lambda(l), g(_g)
@@ -247,10 +247,70 @@ namespace Dune {
           //typename F::Traits::RangeType y;
           //f.evaluate(eg.entity(),it->position(),y);
           FieldVector<RF,dim> y(0.0);
-          y[dim-1] = g;
+          y[dim-1] = -g;
 
           // weight
           RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+          
+          for(int d=0; d<dim; ++d)
+          {
+            const LFSV & lfsv = lfsv_hat.child(d);
+            
+            // integrate f
+            for (size_type i=0; i<lfsv.size(); i++)
+              r.accumulate(lfsv,i, -y[d]*phi[i] * factor);
+          }
+        }
+      }
+
+      // jacobian of boundary term
+      template<typename IG, typename LFSV_HAT, typename R>
+      void lambda_boundary (const IG& ig, const LFSV_HAT& lfsv_hat, R& r) const
+      {
+        // extract local function spaces
+        typedef typename LFSV_HAT::template Child<0>::Type LFSV;
+
+        // domain and range field type
+        typedef typename LFSV::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
+        typedef typename LFSV::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        typedef typename LFSV::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType RangeType;
+
+        typedef typename LFSV::Traits::SizeType size_type;
+        
+        // dimensions
+        const int dim = IG::Geometry::dimension;
+        
+        // select quadrature rule
+        GeometryType gt = ig.geometry().type();
+        const QuadratureRule<DF,dim-1>& rule = QuadratureRules<DF,dim-1>::rule(gt,intorder);
+
+        // loop over quadrature points
+        for (typename QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        {
+          // position of quadrature point in local coordinates of element 
+          Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
+
+          Dune::FieldVector<DF,dim> global = ig.geometry().global(it->position());
+
+          if (global[0] != 10.0)
+            return;
+          std::cout << "BC" << std::endl;
+          
+          // evaluate shape functions 
+          std::vector<RangeType> phi(lfsv_hat.child(0).size());
+          lfsv_hat.child(0).finiteElement().localBasis().evaluateFunction(local,phi);
+            
+          // evaluate right hand side parameter function
+          //typename F::Traits::RangeType y;
+          //f.evaluate(eg.entity(),it->position(),y);
+          FieldVector<RF,dim> y(0.0);
+          y[dim-1] = 0.001;
+
+          // weight
+          RF factor = it->weight() * ig.geometry().integrationElement(it->position());
           
           for(int d=0; d<dim; ++d)
           {
@@ -262,7 +322,7 @@ namespace Dune {
           }
         }
       }
-
+      
     private:
       int intorder;
       double mu;
