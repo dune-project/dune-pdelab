@@ -31,6 +31,8 @@
 #include"../backend/istlmatrixbackend.hh"
 #include"../backend/istlsolverbackend.hh"
 
+static const double szX = 1.0;
+
 // define some grid functions to interpolate from
 template<typename GV, typename RF>
 class G
@@ -46,8 +48,8 @@ public:
                               typename Traits::RangeType& y) const
   {
     y = 0;
-    if (x[0] == 10.0)
-        y[0] = 0.1;
+    if (x[0] == szX)
+        y[1] = 0.1;
   }
 };
 
@@ -62,7 +64,7 @@ public:
   {
     Dune::FieldVector<typename I::ctype, I::dimension>
       xg = intersection.geometry().global( coord );
-    return (xg[0] == 0.0 || xg[0] == 10.0);  // Dirichlet b.c. on left & right boundary
+    return (xg[0] == 0.0 || xg[0] == szX);  // Dirichlet b.c. on left & right boundary
   }
 };
 
@@ -73,7 +75,6 @@ void testp1 (const GV& gv)
   typedef typename GV::Grid::ctype DF;
 
   const int dim = GV::dimension;
-  const int dimw = GV::dimensionworld;
   
   // instantiate finite element maps
   typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,double, dim> FEM;
@@ -96,8 +97,9 @@ void testp1 (const GV& gv)
   typedef typename GFS::template ConstraintsContainer<double>::Type C;
   C cg;
   cg.clear();
+  // Dune::PDELab::PowerConstraintsParameters<BCType,dim> b;
   BCType b;
-  Dune::PDELab::constraints(b,gfs,cg);
+  Dune::PDELab::constraints(b,gfs,cg, true);
 
   // make coefficent Vector and initialize it from a function
   typedef typename Dune::PDELab::BackendVectorSelector<GFS,double>::Type V;
@@ -119,7 +121,7 @@ void testp1 (const GV& gv)
   M m(gos);
   m = 0.0;
   gos.jacobian(x0,m);
-  //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
+  // Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
   // evaluate residual w.r.t initial guess
   V r(gfs);
@@ -140,7 +142,8 @@ void testp1 (const GV& gv)
 
   // solve the jacobian system
   r *= -1.0; // need -residual
-  V x(gfs,1.0);
+  V x(gfs,0.0);
+  Dune::PDELab::set_nonconstrained_dofs(cg,1.0,x);
   solvera.apply(x,r,stat);
   x += x0;
 
@@ -160,8 +163,8 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
-    Dune::FieldVector<double,2> L(1); L[0] = 10;
-    Dune::FieldVector<int,2> N(1); N[0] = 10;
+    Dune::FieldVector<double,2> L(1); L[0] = szX;
+    Dune::FieldVector<int,2> N(1); N[0] = szX;
     Dune::FieldVector<bool,2> B(false);
     Dune::YaspGrid<2> grid(L,N,B,0);
     grid.globalRefine(3);
