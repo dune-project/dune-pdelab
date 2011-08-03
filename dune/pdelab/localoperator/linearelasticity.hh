@@ -32,6 +32,9 @@ namespace Dune {
                              public NumericalJacobianVolume<LinearElasticity>
     {
     public:
+#warning TODO: check LFSU size
+#warning TODO: check LFSU == LFSV
+
       // pattern assembly flags
       enum { doPatternVolume = true };
 
@@ -125,10 +128,8 @@ namespace Dune {
       }
 
       // volume integral depending on test and ansatz functions
-#warning TODO: check LFSU size
-#warning TODO: check LFSU == LFSV
       template<typename EG, typename LFSU_HAT, typename X, typename LFSV, typename R>
-      void alpha_volume (const EG& eg, const LFSU_HAT& lfsu_hat, const X& x, const LFSV& , R& r) const
+      void alpha_volume (const EG& eg, const LFSU_HAT& lfsu_hat, const X& x, const LFSV& lfsv, R& r) const
       {
         // extract local function spaces
         typedef typename LFSU_HAT::template Child<0>::Type LFSU;
@@ -190,19 +191,22 @@ namespace Dune {
 
             for (size_type i=0; i<lfsu.size(); i++)
             {
-              RF a = 0.0;
-              RF b = 0.0;
-              
-              // integrate \mu (grad u + (grad u)^T) * (grad phi_i + (grad phi_i)^T)
               for (int k=0; k<dim; k++)
               {
-                a += mu * gradu[k] * (gradphi[i][k] + gradphi[i][d]);
+                // integrate \mu (grad u + (grad u)^T) * (grad phi_i + (grad phi_i)^T)
+                r.accumulate(lfsv.child(d),i,
+                  // mu (d u_d / d x_k) (d phi_i_d / d x_k)
+                  mu * gradu[k] * gradphi[i][k]
+                  *factor);
+                r.accumulate(lfsv.child(k),i,
+                  // mu (d u_d / d x_k) (d phi_i_k / d x_d)
+                  mu * gradu[k] * gradphi[i][d]
+                  *factor);
+                // integrate \lambda sum_(k=0..dim) (d u / d x_d) * (d phi_i / d x_k)
+                r.accumulate(lfsv.child(k),i,
+                  lambda * gradu[d]*gradphi[i][k]
+                  *factor);
               }
-              // integrate \lambda sum_(k=0..dim) (d u / d x_d) * (d phi_i / d x_k)
-              for (int k=0; k<dim; k++)
-                b += lambda * gradu[d]*gradphi[i][k];
-
-              r.accumulate(lfsu,i, (a+b) * factor);
             }
           }
         }
