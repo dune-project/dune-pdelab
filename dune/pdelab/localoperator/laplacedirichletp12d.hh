@@ -71,7 +71,7 @@ namespace Dune {
 		// integrate grad u * grad phi_i (0.5 is the area of the reference element)
 		RF area = 0.5*eg.geometry().integrationElement(integrationpoint);
 		for (int i=0; i<3; i++)
-		  r[i] += (gradu*gradphi[i])*area;
+          r.accumulate(lfsv, i, (gradu*gradphi[i])*area);
 	  }
 	};
 
