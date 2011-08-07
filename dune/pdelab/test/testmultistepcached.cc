@@ -39,7 +39,6 @@
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
-#include <dune/pdelab/gridoperatorspace/localmatrix.hh>
 #include <dune/pdelab/localoperator/defaultimp.hh>
 #include <dune/pdelab/localoperator/flags.hh>
 #include <dune/pdelab/localoperator/idefault.hh>
@@ -145,10 +144,10 @@ public:
   R2(int qorder_ = 2) : qorder(qorder_) { }
 
   template<typename EG, typename LFSU, typename X, typename LFSV,
-           typename R>
+           typename M>
   void jacobian_volume(const EG& eg,
                        const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                       Dune::PDELab::LocalMatrix<R>& mat) const
+                       M& mat) const
   {
     // domain and range field type
     typedef typename LFSU::Traits::FiniteElementType LFEU;
@@ -178,7 +177,7 @@ public:
       std::vector<RangeV> phiv(lfsv.size());
       lfsv.finiteElement().localBasis().evaluateFunction(it->position(),phiv);
 
-      R factor = it->weight()
+      DF factor = it->weight()
         * eg.geometry().integrationElement(it->position());
 
       for(unsigned i = 0; i < lfsu.size(); ++i)
