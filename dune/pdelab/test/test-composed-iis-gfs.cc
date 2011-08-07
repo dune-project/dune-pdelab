@@ -56,7 +56,9 @@ int main(int argc, char** argv)
 
         // make finite element maps
         typedef Dune::PDELab::P0LocalFiniteElementMap<double,double,3> CellFEM;
-        CellFEM cell_fem(Dune::GeometryType::cube);
+        Dune::GeometryType gt;
+        gt.makeHexahedron();
+        CellFEM cell_fem(gt);
         typedef Dune::PDELab::MimeticLocalFiniteElementMap<IIS,double,double,3> FaceFEM;
         FaceFEM face_fem(iis, Dune::GeometryType::cube);
 
