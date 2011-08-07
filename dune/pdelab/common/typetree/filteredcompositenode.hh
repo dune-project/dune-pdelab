@@ -24,6 +24,7 @@ namespace Dune {
        *  \{
        */
 
+#ifndef DOXYGEN
       namespace {
 
         // ********************************************************************************
@@ -70,6 +71,7 @@ namespace Dune {
         };
 
       } // anonymous namespace
+#endif // DOXYGEN
 
 
       //! Base class for composite nodes representing a filtered view on an underlying composite node.

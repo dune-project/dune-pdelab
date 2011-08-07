@@ -16,9 +16,9 @@ namespace Dune {
 
     //! Calculate cross product
     /**
-     * \[
+     * \f[
      *   A=B\times C
-     * \]
+     * \f]
      *
      * \tparam dimB_ Dimension of B.
      * \tparam dimC_ Dimension of C.

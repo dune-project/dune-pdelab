@@ -23,13 +23,13 @@ namespace Dune {
     //! Print a vector with associciated dof positions
     /**
      * This prints a vector in the following form:
-     * \pre
+\verbatim
 title " [rank=" rank ", size=" size "]" NEWLINE
 position TAB vector entry NEWLINE
 .
 .
 .
-     * \endpre
+\endverbatim
      * The coordinate components in "position" are printed in fix-width,
      * seperated by a single space, with the precision as determined by the \c
      * coordPrecision parameter.  The "vector entry" is printed in whatever

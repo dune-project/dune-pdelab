@@ -185,7 +185,7 @@ namespace Dune
         };
 
         template<class GOS, class S, class TrlV, class TstV>
-        void NewtonSolver<GOS,S,TrlV,TstV>::apply(TrlV& u_)
+        void NewtonSolver<GOS,S,TrlV,TstV>::apply(TrialVector& u_)
         {
             this->u = &u_;
             apply();

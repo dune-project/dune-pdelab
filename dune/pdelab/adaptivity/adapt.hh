@@ -529,7 +529,7 @@ namespace Dune {
 
       /*! @brief The constructor.
        *
-       * @param @todo
+       * @todo Doc params
        */
       TestingAdaptation (Grid& grid_, const GFSU& gfsu_, Projection& projection_,
           double refine_, double coarsen_ = 0., int min_ = 0, int max_ = std::numeric_limits<int>::max())
@@ -668,7 +668,7 @@ namespace Dune {
 
       /*! @brief The constructor.
        *
-       * @param @todo
+       * @todo Doc params!
        */
       CoarsenIfPossible (Grid& grid_, const GFSU& gfsu_, Projection& projection_,
           double threshold_ = 0.1, int min_ = 0)
@@ -677,7 +677,7 @@ namespace Dune {
 
       /*! @brief Estimate the error and mark elems for refinement
        *
-       * @param @todo
+       * @todo Doc params!
        */
       void mark (const Element& e, const U& u)
       {
@@ -814,7 +814,7 @@ namespace Dune {
 
       /*! @brief The constructor.
        *
-       * @param @todo
+       * @todo Doc params
        */
       GlobalRefine (Grid& grid_, int max_ = std::numeric_limits<int>::max()) : grid(grid_), max(max_) {}
 
@@ -851,7 +851,7 @@ namespace Dune {
 
       /*! @brief The constructor.
        *
-       * @param @todo
+       * @todo Doc params!
        */
       GlobalCoarsen (Grid& grid_, int min_ = 0) : grid(grid_), min(min_) {}
 
@@ -888,7 +888,7 @@ namespace Dune {
 
       /*! @brief The constructor.
        *
-       * @param @todo
+       * @todo Doc params
        */
       RandomAdaptation (Grid& grid_, double refine_, double coarsen_ = 1., int min_ = 0, int max_ = std::numeric_limits<int>::max())
         : grid(grid_), refine(refine_), coarsen(coarsen_), min(min_), max(max_)
@@ -944,14 +944,14 @@ namespace Dune {
 
         /*! @brief The constructor.
          *
-         * @param @todo
+         * @todo Doc params!
          */
         explicit L2Projection(int intorder_=2) : intorder(intorder_), haveMatrix(), matrix() {}
 
         /*! @brief Calculate the L2 scalar product of functions X and Y on e, but in the geometry of its ancestor
          *
-         * @tparam @todo
-         * @param @todo
+         * @todo Doc template params
+         * @todo params
          */
         template<typename F1, typename F2>
           void apply (const Element& father, const Element& e, F1& X, F2& Y, typename U::ElementType& u) const
@@ -978,8 +978,8 @@ namespace Dune {
 
         /*! @brief Calculate the L2 norm of X - Y on e, but in the geometry of its ancestor
          *
-         * @tparam @todo
-         * @param @todo
+         * @todo Doc template params
+         * @todo Doc params
          */
         template<typename F1, typename F2>
           void error (const Element& father, const Element& e, F1& X, F2& Y, typename U::ElementType& u) const
@@ -1010,8 +1010,8 @@ namespace Dune {
 
         /*! @brief Calculate the inverse local mass matrix, used in the local L2 projection
          *
-         * @tparam @todo
-         * @param @todo
+         * @todo Doc template params
+         * @todo Doc params
          */
         template <class CTLFA, class FEM>
           const std::vector<double>& inverseMassMatrix(const Element& e, const FEM& fem, int k)

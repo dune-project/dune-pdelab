@@ -577,7 +577,7 @@ namespace Dune {
     };
 
     /**    
-     * @Overlapping parallel CG solver with SuperLU preconditioner
+     * @brief Overlapping parallel CG solver with SuperLU preconditioner
      * @tparam GFS The Type of the GridFunctionSpace.
      * @tparam CC The Type of the Constraints Container.
      */
@@ -602,7 +602,7 @@ namespace Dune {
     };
 
 
-    /** @Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
+    /** @brief Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
      * @tparam GFS The Type of the GridFunctionSpace.
      */
     template<class GFS>
@@ -847,7 +847,6 @@ namespace Dune {
       /**
        * @brief Constructor
        * @param gfs_ The grid function space used.
-       * @param smoothsteps_ The number of steps to use for both pre and post smoothing.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
        * @param reuse_ Set true, if the Matrix to be used is always identical 

@@ -22,13 +22,13 @@ namespace Dune {
     //! Print a matrix in sparse format with associciated dof positions
     /**
      * This prints a matrix in the following form:
-     * \pre
+\verbatim
 title " (rank=" rank ")" NEWLINE
 row position TAB column position TAB matrix entry NEWLINE
 .
 .
 .
-     * \endpre
+\endverbatim
      * The coordinate components in "row position" and "column position" are
      * printed in fix-width, seperated by a single space, with the precision
      * as determined by the \c coordPrecision parameter.  The "matrix entry"
