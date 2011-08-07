@@ -1,5 +1,5 @@
-// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
-// vi: set et ts=4 sw=2 sts=2:
+// -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// vi: set et ts=8 sw=2 sts=2:
 
 #ifndef DUNE_PDELAB_COUNTINGPTR_HH
 #define DUNE_PDELAB_COUNTINGPTR_HH
@@ -25,36 +25,36 @@ namespace Dune {
      *  @{
      */
 
-	/** @brief Don't delete target if reference count reaches zero
+    /** @brief Don't delete target if reference count reaches zero
      *
      *  If this class is given to CountingPointer as the memory management policy, the CountingPointer
      *  objects won't delete the pointed to object if the reference count
      *  reaches zero.
      */
     class DUNE_DEPRECATED NondeletingMemoryManagementPolicy
-	{
-	public:
-	  template<typename T>
-	  static void delete_action (T* p)
-	  {}
-	};
+    {
+    public:
+      template<typename T>
+      static void delete_action (T* p)
+      {}
+    };
 
-	/** @brief Delete target if reference count reaches zero
+    /** @brief Delete target if reference count reaches zero
      *
      *  If this class is given to CountingPointer as the memory management policy, the CountingPointer
      *  objects will delete the pointed to object if the reference count
      *  reaches zero.
      */
-	class DUNE_DEPRECATED DeletingMemoryManagementPolicy
-	{
-	public:
-	  template<typename T>
-	  static void delete_action (T* p)
-	  {
-		if (p->reference_counter_zero())
-		  delete p;
-	  }
-	};
+    class DUNE_DEPRECATED DeletingMemoryManagementPolicy
+    {
+    public:
+      template<typename T>
+      static void delete_action (T* p)
+      {
+        if (p->reference_counter_zero())
+          delete p;
+      }
+    };
 
     /** @brief Pointer with a reference count in the pointed-to object
      *
@@ -78,33 +78,33 @@ namespace Dune {
      *  pointed to object.  Finally, CountingPointer objects may be compared using == and
      *  != to find out whether they point to the same object.
      */
-	template<typename T, typename P=NondeletingMemoryManagementPolicy>
-	class DUNE_DEPRECATED CountingPointer
-	{
-	  T* p;
+    template<typename T, typename P=NondeletingMemoryManagementPolicy>
+    class DUNE_DEPRECATED CountingPointer
+    {
+      T* p;
 
-	public:
+    public:
       //! Construct a CountingPointer object which points to 0
-	  CountingPointer ()
-	  {
-		p = 0;
-	  }
+      CountingPointer ()
+      {
+        p = 0;
+      }
 
       //! Construct a CountingPointer object which points to p_ (which may be 0)
-	  explicit CountingPointer (T* p_)
-	  {
-		p = p_;
-		if (p!=0)
-		  p->reference_counter_increment();
-	  }
+      explicit CountingPointer (T* p_)
+      {
+        p = p_;
+        if (p!=0)
+          p->reference_counter_increment();
+      }
 
       //! Copy constructor
-	  CountingPointer (const CountingPointer<T>& cp)
-	  {
-		p = cp.p;
-		if (p!=0)
-		  p->reference_counter_increment();
-	  }
+      CountingPointer (const CountingPointer<T>& cp)
+      {
+        p = cp.p;
+        if (p!=0)
+          p->reference_counter_increment();
+      }
 
       //! Conversion to CountingPointer<const T>
       operator CountingPointer<const T>() const {
@@ -112,147 +112,147 @@ namespace Dune {
       }
 
       //! Destructor
-	  ~CountingPointer ()
-	  {
-		if (p!=0)
-		  {
-			p->reference_counter_decrement();
-			P::delete_action(p);
-		  }
-	  }
+      ~CountingPointer ()
+      {
+        if (p!=0)
+          {
+            p->reference_counter_decrement();
+            P::delete_action(p);
+          }
+      }
 
       //! assignment from a C pointer
-	  CountingPointer<T>& operator= (T* p_)
-	  {
-		if (p!=p_)
-		  {
-			if (p!=0)
-			  p->reference_counter_decrement();
-			p = p_;
-			if (p!=0)
-			  p->reference_counter_increment();
-		  }
-		return *this;
-	  }
+      CountingPointer<T>& operator= (T* p_)
+      {
+        if (p!=p_)
+          {
+            if (p!=0)
+              p->reference_counter_decrement();
+            p = p_;
+            if (p!=0)
+              p->reference_counter_increment();
+          }
+        return *this;
+      }
 
       //! copy operator
-	  CountingPointer<T>& operator= (const CountingPointer<T>& cp)
-	  {
-		if (p!=cp.p)
-		  {
-			if (p!=0)
-			  p->reference_counter_decrement();
-			p = cp.p;
-			if (p!=0)
-			  p->reference_counter_increment();
-		  }
-		return *this;
-	  }
+      CountingPointer<T>& operator= (const CountingPointer<T>& cp)
+      {
+        if (p!=cp.p)
+          {
+            if (p!=0)
+              p->reference_counter_decrement();
+            p = cp.p;
+            if (p!=0)
+              p->reference_counter_increment();
+          }
+        return *this;
+      }
 
       //! target element access
-	  T* operator-> () const
-	  {
-		return p;
-	  }
+      T* operator-> () const
+      {
+        return p;
+      }
 
       //! dereference operator
-	  T& operator* () const
-	  {
-		return *p;
-	  }
+      T& operator* () const
+      {
+        return *p;
+      }
 
       //! check whether both point to same target
-	  bool operator== (const CountingPointer<T>& cp) const
-	  {
-		return p==cp.p;
-	  }
+      bool operator== (const CountingPointer<T>& cp) const
+      {
+        return p==cp.p;
+      }
 
       //! check whether target have different adress
-	  bool operator!= (const CountingPointer<T>& cp) const
-	  {
-		return p!=cp.p;
-	  }
+      bool operator!= (const CountingPointer<T>& cp) const
+      {
+        return p!=cp.p;
+      }
 
-	};
+    };
 
-	class CountableException
-	{
-	  int counter;
-	public:
-	  CountableException (int i) : counter(i) {}
-	  int get_counter () const
-	  {
-		return counter;
-	  }
-	};
+    class CountableException
+    {
+      int counter;
+    public:
+      CountableException (int i) : counter(i) {}
+      int get_counter () const
+      {
+        return counter;
+      }
+    };
 
     /** @brief Base class for object pointed to by CountingPointer
      *
      *  This provides the necessary functionality in the target object for the
      *  CountingPointer template class to work.
      */
-	class DUNE_DEPRECATED Countable
-	{
-	  mutable int counter;
+    class DUNE_DEPRECATED Countable
+    {
+      mutable int counter;
 
-	public:
+    public:
 
       //! Default constructor
-	  Countable () : counter(0)
-	  {
-	  }
+      Countable () : counter(0)
+      {
+      }
 
-	  //! copy constructor: new object, no pointer exists
-	  Countable (const Countable& x)
-	  {
-		counter = 0;
-	  }
+      //! copy constructor: new object, no pointer exists
+      Countable (const Countable& x)
+      {
+        counter = 0;
+      }
 
-	  //! number of pointers does not change
-	  Countable& operator= (const Countable& x)
-	  {
+      //! number of pointers does not change
+      Countable& operator= (const Countable& x)
+      {
         return *this;
-	  }
+      }
 
       //! increment reference counter
-	  void reference_counter_increment () const
-	  {
-		counter++;
-	  }
+      void reference_counter_increment () const
+      {
+        counter++;
+      }
 
       //! decrement reference counter
-	  void reference_counter_decrement () const
-	  {
-		counter--;
-	  }
+      void reference_counter_decrement () const
+      {
+        counter--;
+      }
 
       //! check wether the reference counter is zero
-	  bool reference_counter_zero () const
-	  {
-		return counter==0;
-	  }
+      bool reference_counter_zero () const
+      {
+        return counter==0;
+      }
 
       //! get value of reference counter
-	  int get_reference_counter () const
-	  {
-		return counter;
-	  }
+      int get_reference_counter () const
+      {
+        return counter;
+      }
 
       /** @brief Destructor
        *
        *  Warn if any CountingPointer is still pointing to us.
        */
-	  ~Countable ()
-	  {
-		if (counter!=0)
-		  {
-			std::cout << counter << " counting pointer(s) point to object at "
-					  << this << " while it is deleted" << std::endl;
-			//			throw CountableException(counter);
+      ~Countable ()
+      {
+        if (counter!=0)
+          {
+            std::cout << counter << " counting pointer(s) point to object at "
+                      << this << " while it is deleted" << std::endl;
+            //          throw CountableException(counter);
 
-		  }
-	  }
-	};
+          }
+      }
+    };
 
     /** @} end documentation */
 
