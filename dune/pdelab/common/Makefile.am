@@ -11,6 +11,7 @@ common_HEADERS =				\
 	functionwrappers.hh			\
 	geometrywrapper.hh			\
 	jacobiantocurl.hh			\
+	range.hh				\
 	typetree.hh                             \
 	vtkexport.hh
 
