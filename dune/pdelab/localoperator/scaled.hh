@@ -297,10 +297,9 @@ namespace Dune {
         R& r) const
       {
         if(factor != 0) {
-          R my_r(lfsv.size(), 0);
+          typename R::WeightedAccumulationView
+            my_r(r.weightedAccumulationView(factor));
           bp->alpha_volume(eg, lfsu, x, lfsv, my_r);
-          for(unsigned i = 0; i < lfsv.size(); ++i)
-            r[i] += factor * my_r[i];
         }
       }
 
@@ -336,10 +335,9 @@ namespace Dune {
         R& r) const
       {
         if(factor != 0) {
-          R my_r(lfsv.size(), 0);
+          typename R::WeightedAccumulationView
+            my_r(r.weightedAccumulationView(factor));
           bp->alpha_volume_post_skeleton(eg, lfsu, x, lfsv, my_r);
-          for(unsigned i = 0; i < lfsv.size(); ++i)
-            r[i] += factor * my_r[i];
         }
       }
 
@@ -385,16 +383,14 @@ namespace Dune {
         R& r_s, R& r_n) const
       {
         if(factor != 0) {
-          R my_r_s(lfsv_s.size(), 0);
-          R my_r_n(lfsv_n.size(), 0);
+          typename R::WeightedAccumulationView
+            my_r_s(r_s.weightedAccumulationView(factor));
+          typename R::WeightedAccumulationView
+            my_r_n(r_n.weightedAccumulationView(factor));
           bp->alpha_skeleton(ig,
                              lfsu_s, x_s, lfsv_s,
                              lfsu_n, x_n, lfsv_n,
                              my_r_s, my_r_n);
-          for(unsigned i = 0; i < lfsv_s.size(); ++i)
-            r_s[i] += factor * my_r_s[i];
-          for(unsigned i = 0; i < lfsv_n.size(); ++i)
-            r_n[i] += factor * my_r_n[i];
         }
       }
 
@@ -432,10 +428,9 @@ namespace Dune {
         R& r_s) const
       {
         if(factor != 0) {
-          R my_r_s(lfsv_s.size(), 0);
+          typename R::WeightedAccumulationView
+            my_r_s(r_s.weightedAccumulationView(factor));
           bp->alpha_boundary(ig, lfsu_s, x_s, lfsv_s, my_r_s);
-          for(unsigned i = 0; i < lfsv_s.size(); ++i)
-            r_s[i] += factor * my_r_s[i];
         }
       }
 
@@ -466,10 +461,9 @@ namespace Dune {
       void lambda_volume(const EG& eg, const LFSV& lfsv, R& r) const
       {
         if(factor != 0) {
-          R my_r(lfsv.size(), 0);
+          typename R::WeightedAccumulationView
+            my_r(r.weightedAccumulationView(factor));
           bp->lambda_volume(eg, lfsv, my_r);
-          for(unsigned i = 0; i < lfsv.size(); ++i)
-            r[i] += factor * my_r[i];
         }
       }
 
@@ -497,10 +491,9 @@ namespace Dune {
                                        R& r) const
       {
         if(factor != 0) {
-          R my_r(lfsv.size(), 0);
+          typename R::WeightedAccumulationView
+            my_r(r.weightedAccumulationView(factor));
           bp->lambda_volume_post_skeleton(eg, lfsv, my_r);
-          for(unsigned i = 0; i < lfsv.size(); ++i)
-            r[i] += factor * my_r[i];
         }
       }
 
@@ -531,13 +524,11 @@ namespace Dune {
                            R& r_s, R& r_n) const
       {
         if(factor != 0) {
-          R my_r_s(lfsv_s.size(), 0);
-          R my_r_n(lfsv_n.size(), 0);
+          typename R::WeightedAccumulationView
+            my_r_s(r_s.weightedAccumulationView(factor));
+          typename R::WeightedAccumulationView
+            my_r_n(r_n.weightedAccumulationView(factor));
           bp->lambda_skeleton(ig, lfsv_s, lfsv_n, my_r_s, my_r_n);
-          for(unsigned i = 0; i < lfsv_s.size(); ++i)
-            r_s[i] += factor * my_r_s[i];
-          for(unsigned i = 0; i < lfsv_n.size(); ++i)
-            r_n[i] += factor * my_r_n[i];
         }
       }
 
@@ -563,10 +554,9 @@ namespace Dune {
       void lambda_boundary(const IG& ig, const LFSV& lfsv_s, R& r_s) const
       {
         if(factor != 0) {
-          R my_r_s(lfsv_s.size(), 0);
+          typename R::WeightedAccumulationView
+            my_r_s(r_s.weightedAccumulationView(factor));
           bp->lambda_boundary(ig, lfsv_s, my_r_s);
-          for(unsigned i = 0; i < lfsv_s.size(); ++i)
-            r_s[i] += factor * my_r_s[i];
         }
       }
 
@@ -612,10 +602,9 @@ namespace Dune {
         Y& y) const
       {
         if(factor != 0) {
-          Y my_y(lfsv.size(), 0);
+          typename Y::WeightedAccumulationView
+            my_y(y.weightedAccumulationView(factor));
           bp->jacobian_apply_volume(eg, lfsu, x, lfsv, my_y);
-          for(unsigned i = 0; i < lfsv.size(); ++i)
-            y[i] += factor * my_y[i];
         }
       }
 
@@ -655,10 +644,9 @@ namespace Dune {
         Y& y) const
       {
         if(factor != 0) {
-          Y my_y(lfsv.size(), 0);
+          typename Y::WeightedAccumulationView
+            my_y(y.weightedAccumulationView(factor));
           bp->jacobian_apply_volume_post_skeleton(eg, lfsu, x, lfsv, my_y);
-          for(unsigned i = 0; i < lfsv.size(); ++i)
-            y[i] += factor * my_y[i];
         }
       }
 
@@ -709,16 +697,14 @@ namespace Dune {
         Y& y_s, Y& y_n) const
       {
         if(factor != 0) {
-          Y my_y_s(lfsv_s.size(), 0);
-          Y my_y_n(lfsv_n.size(), 0);
+          typename Y::WeightedAccumulationView
+            my_y_s(y_s.weightedAccumulationView(factor));
+          typename Y::WeightedAccumulationView
+            my_y_n(y_n.weightedAccumulationView(factor));
           bp->jacobian_apply_skeleton(ig,
                                       lfsu_s, x_s, lfsv_s,
                                       lfsu_n, x_n, lfsv_n,
                                       my_y_s, my_y_n);
-          for(unsigned i = 0; i < lfsv_s.size(); ++i)
-            y_s[i] += factor * my_y_s[i];
-          for(unsigned i = 0; i < lfsv_n.size(); ++i)
-            y_n[i] += factor * my_y_n[i];
         }
       }
 
@@ -760,10 +746,9 @@ namespace Dune {
         Y& y_s) const
       {
         if(factor != 0) {
-          Y my_y_s(lfsv_s.size(), 0);
+          typename Y::WeightedAccumulationView
+            my_y_s(y_s.weightedAccumulationView(factor));
           bp->jacobian_apply_boundary(ig, lfsu_s, x_s, lfsv_s, my_y_s);
-          for(unsigned i = 0; i < lfsv_s.size(); ++i)
-            y_s[i] += factor * my_y_s[i];
         }
       }
 
@@ -793,18 +778,16 @@ namespace Dune {
        * jacobian_boundary() methods are called (if they are called at all).
        */
       template<typename EG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename M>
       void jacobian_volume
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        LocalMatrix<R>& mat) const
+        M& mat) const
       {
         if(factor != 0) {
-          LocalMatrix<R> my_mat(lfsu.size(), lfsv.size(), 0);
+          typename M::WeightedAccumulationView
+            my_mat(mat.weightedAccumulationView(factor));
           bp->jacobian_volume(eg, lfsu, x, lfsv, my_mat);
-          for(unsigned i = 0; i < lfsu.size(); ++i)
-            for(unsigned j = 0; j < lfsv.size(); ++j)
-              mat(i,j) += factor * my_mat(i,j);
         }
       }
 
@@ -827,18 +810,16 @@ namespace Dune {
        * all).
        */
       template<typename EG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename M>
       void jacobian_volume_post_skeleton
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        LocalMatrix<R>& mat) const
+        M& mat) const
       {
         if(factor != 0) {
-          LocalMatrix<R> my_mat(lfsu.size(), lfsv.size(), 0);
+          typename M::WeightedAccumulationView
+            my_mat(mat.weightedAccumulationView(factor));
           bp->jacobian_volume_post_skeleton(eg, lfsu, x, lfsv, my_mat);
-          for(unsigned i = 0; i < lfsu.size(); ++i)
-            for(unsigned j = 0; j < lfsv.size(); ++j)
-              mat(i,j) += factor * my_mat(i,j);
         }
       }
 
@@ -878,35 +859,26 @@ namespace Dune {
        * before the call to jacobian_volume_post_skeleton().
        */
       template<typename IG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename M>
       void jacobian_skeleton
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-        LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn,
-        LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn) const
+        M& mat_ss, M& mat_sn, M& mat_ns, M& mat_nn) const
       {
         if(factor != 0) {
-          LocalMatrix<R> my_mat_ss(lfsu_s.size(), lfsv_s.size(), 0);
-          LocalMatrix<R> my_mat_sn(lfsu_s.size(), lfsv_n.size(), 0);
-          LocalMatrix<R> my_mat_ns(lfsu_n.size(), lfsv_s.size(), 0);
-          LocalMatrix<R> my_mat_nn(lfsu_n.size(), lfsv_n.size(), 0);
+          typename M::WeightedAccumulationView
+            my_mat_ss(mat_ss.weightedAccumulationView(factor));
+          typename M::WeightedAccumulationView
+            my_mat_sn(mat_sn.weightedAccumulationView(factor));
+          typename M::WeightedAccumulationView
+            my_mat_ns(mat_ns.weightedAccumulationView(factor));
+          typename M::WeightedAccumulationView
+            my_mat_nn(mat_nn.weightedAccumulationView(factor));
           bp->jacobian_skeleton(ig,
                                 lfsu_s, x_s, lfsv_s,
                                 lfsu_n, x_n, lfsv_n,
                                 my_mat_ss, my_mat_sn, my_mat_ns, my_mat_nn);
-          for(unsigned i = 0; i < lfsu_s.size(); ++i)
-            for(unsigned j = 0; j < lfsv_s.size(); ++j)
-              mat_ss(i,j) += factor * my_mat_ss(i,j);
-          for(unsigned i = 0; i < lfsu_s.size(); ++i)
-            for(unsigned j = 0; j < lfsv_n.size(); ++j)
-              mat_sn(i,j) += factor * my_mat_sn(i,j);
-          for(unsigned i = 0; i < lfsu_n.size(); ++i)
-            for(unsigned j = 0; j < lfsv_s.size(); ++j)
-              mat_ns(i,j) += factor * my_mat_ns(i,j);
-          for(unsigned i = 0; i < lfsu_n.size(); ++i)
-            for(unsigned j = 0; j < lfsv_n.size(); ++j)
-              mat_nn(i,j) += factor * my_mat_nn(i,j);
         }
       }
 
@@ -933,18 +905,16 @@ namespace Dune {
        * before the call to jacobian_volume_post_skeleton().
        */
       template<typename IG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename M>
       void jacobian_boundary
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        LocalMatrix<R>& mat_ss) const
+        M& mat_ss) const
       {
         if(factor != 0) {
-          LocalMatrix<R> my_mat_ss(lfsu_s.size(), lfsv_s.size(), 0);
+          typename M::WeightedAccumulationView
+            my_mat_ss(mat_ss.weightedAccumulationView(factor));
           bp->jacobian_boundary(ig, lfsu_s, x_s, lfsv_s, my_mat_ss);
-          for(unsigned i = 0; i < lfsu_s.size(); ++i)
-            for(unsigned j = 0; j < lfsv_s.size(); ++j)
-              mat_ss(i,j) += factor * my_mat_ss(i,j);
         }
       }
 
