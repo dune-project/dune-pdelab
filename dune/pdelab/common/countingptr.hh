@@ -8,8 +8,13 @@
 
 #include <dune/common/deprecated.hh>
 
-#warning Don\'t use <dune/pdelab/common/countingptr.hh>, this file is
-#warning deprecated
+#ifdef DUNE_PDELAB_COUNTINGPTR_HH_SILENCE_DEPRECATION_WARNING
+#define DUNE_PDELAB_COUNTINGPTR_DEPRECATED
+#else // ! DUNE_PDELAB_COUNTINGPTR_HH_SILENCE_DEPRECATION_WARNING
+#define DUNE_PDELAB_COUNTINGPTR_DEPRECATED DUNE_DEPRECATED
+#warning "Don't use <dune/pdelab/common/countingptr.hh>, this file is "\
+         "deprecated"
+#endif // !DUNE_PDELAB_COUNTINGPTR_HH_SILENCE_DEPRECATION_WARNING
 
 /** @file
  *  @addtogroup StoragePolicy
@@ -31,7 +36,7 @@ namespace Dune {
      *  objects won't delete the pointed to object if the reference count
      *  reaches zero.
      */
-    class DUNE_DEPRECATED NondeletingMemoryManagementPolicy
+    class DUNE_PDELAB_COUNTINGPTR_DEPRECATED NondeletingMemoryManagementPolicy
     {
     public:
       template<typename T>
@@ -79,7 +84,7 @@ namespace Dune {
      *  != to find out whether they point to the same object.
      */
     template<typename T, typename P=NondeletingMemoryManagementPolicy>
-    class DUNE_DEPRECATED CountingPointer
+    class DUNE_PDELAB_COUNTINGPTR_DEPRECATED CountingPointer
     {
       T* p;
 
@@ -191,7 +196,7 @@ namespace Dune {
      *  This provides the necessary functionality in the target object for the
      *  CountingPointer template class to work.
      */
-    class DUNE_DEPRECATED Countable
+    class DUNE_PDELAB_COUNTINGPTR_DEPRECATED Countable
     {
       mutable int counter;
 

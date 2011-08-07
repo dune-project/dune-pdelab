@@ -9,7 +9,9 @@
 #include <dune/common/mpihelper.hh>
 #include <dune/common/exceptions.hh>
 
+#define DUNE_PDELAB_COUNTINGPTR_HH_SILENCE_DEPRECATION_WARNING
 #include"../common/countingptr.hh"
+#undef DUNE_PDELAB_COUNTINGPTR_HH_SILENCE_DEPRECATION_WARNING
 
 class A : public Dune::PDELab::Countable
 {
