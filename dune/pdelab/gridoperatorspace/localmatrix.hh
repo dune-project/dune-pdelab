@@ -36,6 +36,17 @@ namespace Dune {
       //! The type of the weight applied when accumulating contributions.
       typedef typename C::weight_type weight_type;
 
+      //! \brief Export this type for uniform handling of the containers
+      //!        themselves and their views.
+      typedef WeightedMatrixAccumulationView WeightedAccumulationView;
+
+      //! \brief Returns a WeighedAccumulationView with some weight in
+      //!        addition to this view's weight
+      WeightedAccumulationView weightedAccumulationView(weight_type weight)
+      {
+        return WeightedAccumulationView(container(),weight*this->weight());
+      }
+
       //! The size_type of the underlying container.
       typedef typename C::size_type size_type;
 

@@ -82,6 +82,17 @@ namespace Dune {
       //! The type of the weight applied when accumulating contributions.
       typedef typename Container::weight_type weight_type;
 
+      //! \brief Export this type for uniform handling of the containers
+      //!        themselves and their views.
+      typedef WeightedVectorAccumulationView WeightedAccumulationView;
+
+      //! \brief Returns a WeighedAccumulationView with some weight in
+      //!        addition to this view's weight
+      WeightedAccumulationView weightedAccumulationView(weight_type weight)
+      {
+        return WeightedAccumulationView(container(),weight*this->weight());
+      }
+
       //! A special wrapper type to enable backwards compatibility with current containers when directly accessing entries.
       typedef WeightedContainerEntryProxy<value_type,weight_type> reference;
 
