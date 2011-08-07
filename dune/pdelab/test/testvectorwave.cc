@@ -16,12 +16,12 @@
 #include <utility>
 
 #include <dune/common/array.hh>
-#include <dune/common/configparser.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/misc.hh>
 #include <dune/common/mpihelper.hh>
 #include <dune/common/parametertree.hh>
+#include <dune/common/parametertreeparser.hh>
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/timer.hh>
 #include <dune/common/tuples.hh>
@@ -369,9 +369,9 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
-    Dune::ConfigParser paramtree;
+    Dune::ParameterTree paramtree;
     if(argc > 1)
-      paramtree.parseFile(argv[1]);
+      Dune::ParameterTreeParser::readINITree(argv[1], paramtree);
 
 #if HAVE_ALUGRID
     {
@@ -383,7 +383,7 @@ int main(int argc, char** argv)
       typedef Dune::FieldVector<DF, dim> Domain;
 
       const Dune::ParameterTree &myParams = paramtree.hasSub("alu.3d")
-        ? paramtree.Dune::ParameterTree::sub("alu.3d")
+        ? paramtree.sub("alu.3d")
         : Dune::ParameterTree();
 
       // make grid
