@@ -19,7 +19,6 @@
 #include <dune/pdelab/localoperator/flags.hh>
 #include <dune/pdelab/localoperator/idefault.hh>
 #include <dune/pdelab/localoperator/pattern.hh>
-#include <dune/pdelab/gridoperatorspace/localmatrix.hh>
 #include <dune/pdelab/multistep/cache.hh>
 
 namespace Dune {
@@ -195,9 +194,9 @@ RangeField mu(const Domain& xg) const;
         {}
 
         template<typename EG, typename LFSU, typename X, typename LFSV,
-                 typename R>
+                 typename M>
         void jacobian_volume(const EG& eg, const LFSU& lfsu, const X& x,
-                             const LFSV& lfsv, LocalMatrix<R>& mat) const
+                             const LFSV& lfsv, M& mat) const
         {
           // domain and range field type
           typedef typename LFSU::Traits::FiniteElementType FEU;
@@ -364,9 +363,9 @@ RangeField mu(const Domain& xg) const;
         {}
 
         template<typename EG, typename LFSU, typename X, typename LFSV,
-                 typename R>
+                 typename M>
         void jacobian_volume(const EG& eg, const LFSU& lfsu, const X& x,
-                             const LFSV& lfsv, LocalMatrix<R>& mat) const
+                             const LFSV& lfsv, M& mat) const
         {
           // domain and range field type
           typedef typename LFSU::Traits::FiniteElementType FEU;
