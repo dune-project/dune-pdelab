@@ -816,7 +816,7 @@ namespace Dune {
        *
        * @param @todo
        */
-      GlobalRefine (Grid& grid_, int max_ = std::numeric_limits<int>::max) : grid(grid_), max(max_) {}
+      GlobalRefine (Grid& grid_, int max_ = std::numeric_limits<int>::max()) : grid(grid_), max(max_) {}
 
       /*! @brief Mark every Elem for refinement
        *
