@@ -359,8 +359,9 @@ namespace Dune {
             {}
 
             //! Dynamic viscosity value from local cell coordinate
+            template<typename ElementGeometry>
             typename Traits::RangeFieldType 
-            rho (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+            rho (const ElementGeometry& eg, const typename Traits::DomainType& x) const
             {
                 return density;
             }
