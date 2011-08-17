@@ -24,7 +24,7 @@ namespace Dune {
       {
         bool operator() (const DomainType& v1, const DomainType& v2) const
         {
-          for (typename DomainType::size_type i=0; i<DomainType::size; i++)
+          for (typename DomainType::size_type i=0; i<DomainType::dimension; i++)
             {
               if ( v1[i] < v2[i]-1e-5 ) return true;   // is less than
               if ( v1[i] > v2[i]+1e-5 ) return false;  // is greater than
