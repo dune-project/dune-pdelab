@@ -432,9 +432,7 @@ namespace Dune {
       std::cout<<gv.comm().rank()<<": shared block count is "<< count.touint()<<std::endl;
 
       std::vector<GlobalIndex> counts(gfs.gridview().comm().size());
-      MPI_Allgather(&count, 1, MPITraits<GlobalIndex>::getType(), &(counts[0]),
-                    1, MPITraits<GlobalIndex>::getType(),
-                    gfs.gridview().comm());
+      gfs.gridview().comm().allgather(&count, 1, &(counts[0]));
 
       // Compute start index start_p = \sum_{i=0}^{i<p} counts_i
       GlobalIndex start=0;
