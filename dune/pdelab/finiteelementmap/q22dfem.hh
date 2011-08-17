@@ -4,7 +4,7 @@
 #ifndef DUNE_PDELAB_Q22DFEM_HH
 #define DUNE_PDELAB_Q22DFEM_HH
 
-#include<dune/localfunctions/lagrange/q22d.hh>
+#include<dune/localfunctions/lagrange/q2.hh>
 
 #include"finiteelementmap.hh"
 #include <dune/pdelab/finiteelementmap/global.hh>
@@ -15,7 +15,7 @@ namespace Dune {
     //! \ingroup FiniteElementMap
 	template<class D, class R>
 	class Q22DLocalFiniteElementMap
-	  : public SimpleLocalFiniteElementMap< Dune::Q22DLocalFiniteElement<D,R> >
+      : public SimpleLocalFiniteElementMap< Dune::Q2LocalFiniteElement<D,R,2> >
 	{};
 
     //! Global-valued finite element map for Q22D elements
@@ -28,10 +28,10 @@ namespace Dune {
     template<class Geometry, class RF>
     class Q22DFiniteElementMap
       : public GeometryFiniteElementMap<
-          Q22DFiniteElementFactory<Geometry, RF>
+          Q2FiniteElementFactory<Geometry, RF>
           >
     {
-      typedef Q22DFiniteElementFactory<Geometry, RF> FEFactory;
+      typedef Q2FiniteElementFactory<Geometry, RF> FEFactory;
       typedef GeometryFiniteElementMap<FEFactory> Base;
 
       static FEFactory feFactory;
