@@ -317,6 +317,12 @@ namespace Dune {
         if(adaptToIsolatedHangingNotes)
           manager.adaptToIsolatedHangingNodes();
       }
+      
+      void update( Grid & grid ){
+        manager.analyzeView();
+        manager.adaptToIsolatedHangingNodes();
+      }
+
 
 
       // boundary constraints

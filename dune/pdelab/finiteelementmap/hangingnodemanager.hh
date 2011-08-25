@@ -17,7 +17,11 @@ namespace Dune {
     class HangingNodeManager
     {
     private:
-      enum{ verbosity = 1 };
+#ifdef DEBUG
+      enum{ verbosity = 2 };
+#else
+      enum{ verbosity = 0 };
+#endif
       typedef typename Grid::LeafIndexSet::IndexType IndexType;
 
     private:
@@ -123,6 +127,17 @@ namespace Dune {
 	    unsigned short & max = node_info[v_globalindex].maximum_level;
 	    if (level < min) min = level;
 	    if (level > max) max = level;
+            
+            if(verbosity>1){
+              std::cout << "   cell-id=" << cell_mapper.map(*it);
+              std::cout << "   level=" << level;
+              std::cout << "   v_size=" << v_size;
+              std::cout << "   v_globalindex = " << v_globalindex;
+              std::cout << "   maximum_level = " << max;
+              std::cout << "   minimum_level = " << min;
+              std::cout << std::endl;
+            }
+
 	  }
 
 	  // Now we still have to update minimum_touching_level for this
@@ -315,12 +330,13 @@ namespace Dune {
                 reiterate = true;    // Once an element has to be refined, the procedure needs to be repeated!
                 refinements++;       // Count the number of refinements.
 
-                if(verbosity){
+                if(verbosity>1){
                   std::cout << "   cell-id=" << cell_mapper.map(*it);
                   std::cout << "   level=" << level;
                   std::cout << "   v_size=" << v_size;
+                  std::cout << "   v_globalindex = " << v_globalindex;
                   std::cout << std::endl;
-                  std::cout << "   Refining element nr " << cell_mapper.map(*it) 
+                  std::cout << "Refining element nr " << cell_mapper.map(*it) 
                             << " to isolate hanging nodes. Level diff = " 
                             << v_info.maximum_level << " - " << level<< std::endl;
                 }
