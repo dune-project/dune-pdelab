@@ -789,7 +789,14 @@ namespace Dune {
           verbosityLevel = level;
       }
 
-      const PDESOLVER & getPDESolver()
+      //! Access to the (non) linear solver
+      const PDESOLVER & getPDESolver() const
+      {
+        return pdesolver;
+      }
+
+      //! Access to the (non) linear solver
+      PDESOLVER & getPDESolver() 
       {
         return pdesolver;
       }
