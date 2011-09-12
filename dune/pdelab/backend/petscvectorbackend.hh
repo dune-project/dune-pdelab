@@ -33,6 +33,7 @@ namespace Dune {
       template<typename T>
       PetscVectorContainer (const T& t_)
         : _data(NULL)
+        , _managed(true)
       {
         PETSC_CALL(VecCreate(PETSC_COMM_SELF,&_v));
         PETSC_CALL(VecSetSizes(_v,t_.globalSize(),PETSC_DECIDE));
@@ -42,6 +43,7 @@ namespace Dune {
       template<typename T>
       PetscVectorContainer (const T& t_, const E& e)
         : _data(NULL)
+        , _managed(true)
       {
         PETSC_CALL(VecCreate(PETSC_COMM_SELF,&_v));
         PETSC_CALL(VecSetSizes(_v,t_.globalSize(),PETSC_DECIDE));
@@ -51,9 +53,17 @@ namespace Dune {
 
       PetscVectorContainer (const PetscVectorContainer& rhs)
         : _data(NULL)
+        , _managed(true)
       {
         PETSC_CALL(VecDuplicate(rhs._v,&_v));
         PETSC_CALL(VecCopy(rhs._v,_v));
+      }
+
+      PetscVectorContainer(Vec vec, bool managed = true)
+        : _v(vec)
+        , _data(NULL)
+        , _managed(managed)
+      {
       }
 
       PetscVectorContainer& operator= (const PetscVectorContainer& rhs)
@@ -66,7 +76,10 @@ namespace Dune {
       ~PetscVectorContainer()
       {
         checkin();
-        PETSC_CALL(VecDestroy(&_v));
+        if (_managed)
+          {
+            PETSC_CALL(VecDestroy(&_v));
+          }
       }
 
       size_type N() const
@@ -237,6 +250,7 @@ namespace Dune {
     private:
       Vec _v;
       mutable E* _data;
+      const bool _managed;
 
       void checkin() const
       {
