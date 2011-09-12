@@ -13,28 +13,28 @@
 namespace Dune {
   namespace PDELab {
 
-	//! collect types exported by a grid operator space
-	template<typename GFSU, typename GFSV, typename B,
-			 typename CU, typename CV>
-	struct GridOperatorSpaceTraits
-	{
-	  typedef GFSU TrialGridFunctionSpace;
+    //! collect types exported by a grid operator space
+    template<typename GFSU, typename GFSV, typename B,
+             typename CU, typename CV>
+    struct GridOperatorSpaceTraits
+    {
+      typedef GFSU TrialGridFunctionSpace;
 
-	  typedef CU TrialConstraintsType;
+      typedef CU TrialConstraintsType;
 
-	  typedef GFSV TestGridFunctionSpace;
+      typedef GFSV TestGridFunctionSpace;
 
-	  typedef CV TestConstraintsType;
+      typedef CV TestConstraintsType;
 
-	  //! \brief the grid view where grid function is defined upon
-	  typedef typename GFSU::Traits::GridViewType GridViewType;
+      //! \brief the grid view where grid function is defined upon
+      typedef typename GFSU::Traits::GridViewType GridViewType;
 
-	  //! \brief vector backend
-	  typedef B BackendType;
+      //! \brief vector backend
+      typedef B BackendType;
 
-	  //! \brief short cut for size type exported by Backend
-	  typedef typename B::size_type SizeType;
-	};
+      //! \brief short cut for size type exported by Backend
+      typedef typename B::size_type SizeType;
+    };
 
 
     class NoSubTriangulationImp
@@ -56,11 +56,11 @@ namespace Dune {
     {
     public:
       static const bool hasSubTriangulation = false;
-	  typedef typename GV::Traits::template Codim<0>::Entity Entity;
-	  typedef typename GV::IntersectionIterator IntersectionIterator;
-	  typedef typename IntersectionIterator::Intersection Intersection;
+      typedef typename GV::Traits::template Codim<0>::Entity Entity;
+      typedef typename GV::IntersectionIterator IntersectionIterator;
+      typedef typename IntersectionIterator::Intersection Intersection;
 
-	  typedef ElementGeometry<Entity> SubEntity;
+      typedef ElementGeometry<Entity> SubEntity;
       typedef std::list<SubEntity> SubEntityList;
       typedef typename SubEntityList::iterator SubEntityIterator;
 
@@ -175,166 +175,166 @@ namespace Dune {
       mutable SubEntityList sub_entities;
     };
 
-	/**@ingroup FlatOperatorSpaceGroup
-	   \brief Entry in sparsity pattern
+    /**@ingroup FlatOperatorSpaceGroup
+       \brief Entry in sparsity pattern
 
-	   The sparsity pattern of a linear operator is described by by connecting
-	   degrees of freedom in one element with degrees of freedom in the
-	   same element (intra) or an intersecting element (inter).
+       The sparsity pattern of a linear operator is described by by connecting
+       degrees of freedom in one element with degrees of freedom in the
+       same element (intra) or an intersecting element (inter).
 
-	   This numbering is with respect to the depth-first canonical order of the
-	   degrees of freedom of an entity.
+       This numbering is with respect to the depth-first canonical order of the
+       degrees of freedom of an entity.
 
-	   \nosubgrouping
-	*/
-	class SparsityLink : public Dune::tuple<int,int>
-	{
-	public:
-	  //! \brief Standard constructor for uninitialized local index
-	  SparsityLink ()
-	  {}
+       \nosubgrouping
+    */
+    class SparsityLink : public Dune::tuple<int,int>
+    {
+    public:
+      //! \brief Standard constructor for uninitialized local index
+      SparsityLink ()
+      {}
 
-	  //! \brief Initialize all components
-	  SparsityLink (int i, int j)
-		: Dune::tuple<int,int>(i,j)
-	  {}
+      //! \brief Initialize all components
+      SparsityLink (int i, int j)
+        : Dune::tuple<int,int>(i,j)
+      {}
 
-	  //! \brief Return first component
-	  inline int i () const
-	  {
-		return Dune::get<0>(*this);
-	  }
+      //! \brief Return first component
+      inline int i () const
+      {
+        return Dune::get<0>(*this);
+      }
 
-	  //! \brief Return second component
-	  inline int j () const
-	  {
-		return Dune::get<1>(*this);
-	  }
+      //! \brief Return second component
+      inline int j () const
+      {
+        return Dune::get<1>(*this);
+      }
 
-	  //! \brief Set both components
-	  void set (int i, int j)
-	  {
-		Dune::get<0>(*this) = i;
-		Dune::get<1>(*this) = j;
-	  }
-	};
+      //! \brief Set both components
+      void set (int i, int j)
+      {
+        Dune::get<0>(*this) = i;
+        Dune::get<1>(*this) = j;
+      }
+    };
 
-	/**@ingroup FlatOperatorSpaceGroup
-	   \brief Layout description for a sparse linear operator
+    /**@ingroup FlatOperatorSpaceGroup
+       \brief Layout description for a sparse linear operator
        \see SparsityLink
 
-	   \nosubgrouping
-	*/
-	class LocalSparsityPattern : public std::vector<SparsityLink>
-	{};
+       \nosubgrouping
+    */
+    class LocalSparsityPattern : public std::vector<SparsityLink>
+    {};
 
-	//================================================
-	// Default matrix backend
-	//================================================
+    //================================================
+    // Default matrix backend
+    //================================================
 
-	// Simple Backend for std::vector
-	class StdVectorFlatMatrixBackend
-	{
-	public:
-	  // Matrix construction
-	  template<typename T, typename E>
-	  class Matrix : public std::vector<E>
-	  {
-		typedef std::vector<E> BaseT;
-	  public:
-		friend class StdVectorFlatMatrixBackend; // for access to line length
+    // Simple Backend for std::vector
+    class StdVectorFlatMatrixBackend
+    {
+    public:
+      // Matrix construction
+      template<typename T, typename E>
+      class Matrix : public std::vector<E>
+      {
+        typedef std::vector<E> BaseT;
+      public:
+        friend class StdVectorFlatMatrixBackend; // for access to line length
 
-		typedef E ElementType;
+        typedef E ElementType;
         typedef StdVectorFlatMatrixBackend Backend;
 
-		Matrix (const T& t)
-		  : n(t.globalSizeU()),
-			BaseT(t.globalSizeU()*t.globalSizeV())
-		{}
+        Matrix (const T& t)
+          : n(t.globalSizeU()),
+            BaseT(t.globalSizeU()*t.globalSizeV())
+        {}
 
-	  private:
-		std::vector<int>::size_type line () const
-		{
-		  return n;
-		}
+      private:
+        std::vector<int>::size_type line () const
+        {
+          return n;
+        }
 
-		std::vector<int>::size_type n;
-	  };
+        std::vector<int>::size_type n;
+      };
 
-	  // extract type of matrix element from a Matrix
-	  template<class C>
-	  struct Value
-	  {
-		typedef typename C::value_type Type;
-	  };
+      // extract type of matrix element from a Matrix
+      template<class C>
+      struct Value
+      {
+        typedef typename C::value_type Type;
+      };
 
-	  //! The size type
-	  typedef std::vector<int>::size_type size_type;
+      //! The size type
+      typedef std::vector<int>::size_type size_type;
 
-	  // get const_reference to container element
-	  template<typename C>
-	  static const typename C::value_type& access (const C& c, size_type i, size_type j)
-	  {
-		return c.operator[](i*c.line()+j);
-	  }
+      // get const_reference to container element
+      template<typename C>
+      static const typename C::value_type& access (const C& c, size_type i, size_type j)
+      {
+        return c.operator[](i*c.line()+j);
+      }
 
-	  // type to store sparsity pattern
-	  class Pattern
-	  {
-	  public:
-		void add_link (size_type i, size_type j)
-		{
-		}
-	  };
+      // type to store sparsity pattern
+      class Pattern
+      {
+      public:
+        void add_link (size_type i, size_type j)
+        {
+        }
+      };
 
-	  // get non const_reference to container element
-	  // note: this method does not depend on T!
-	  template<typename C>
-	  static typename C::value_type& access (C& c, size_type i, size_type j)
-	  {
-		return c.operator[](i*c.line()+j);
-	  }
+      // get non const_reference to container element
+      // note: this method does not depend on T!
+      template<typename C>
+      static typename C::value_type& access (C& c, size_type i, size_type j)
+      {
+        return c.operator[](i*c.line()+j);
+      }
 
-// 	  // read a submatrix given by global indices
-// 	  template<typename C, typename RI, typename CI, typename T>
-// 	  static void read (const C& c,
-// 						const RI& row_index, const CI& col_index,
-// 						LocalMatrix<T>& submatrix)
-// 	  {
-// 		submatrix.resize(row_index.size(),col_index.size());
-// 		for (int j=0; j<col_index.size(); j++)
-// 		  for (int i=0; i<row_index.size(); i++)
-// 			submatrix(i,j) = c.operator[](row_index[i]*c.line()+col_index[j]);
-// 	  }
+//    // read a submatrix given by global indices
+//    template<typename C, typename RI, typename CI, typename T>
+//    static void read (const C& c,
+//                      const RI& row_index, const CI& col_index,
+//                      LocalMatrix<T>& submatrix)
+//    {
+//      submatrix.resize(row_index.size(),col_index.size());
+//      for (int j=0; j<col_index.size(); j++)
+//        for (int i=0; i<row_index.size(); i++)
+//          submatrix(i,j) = c.operator[](row_index[i]*c.line()+col_index[j]);
+//    }
 
-// 	  // write a submatrix given by global indices
-// 	  template<typename C, typename RI, typename CI, typename T>
-// 	  static void write (const RI& row_index, const CI& col_index,
-// 						 const LocalMatrix<T>& submatrix, C& c)
-// 	  {
-// 		for (int j=0; j<col_index.size(); j++)
-// 		  for (int i=0; i<row_index.size(); i++)
-// 			c.operator[](row_index[i]*c.line()+col_index[j]) = submatrix(i,j);
-// 	  }
+//    // write a submatrix given by global indices
+//    template<typename C, typename RI, typename CI, typename T>
+//    static void write (const RI& row_index, const CI& col_index,
+//                       const LocalMatrix<T>& submatrix, C& c)
+//    {
+//      for (int j=0; j<col_index.size(); j++)
+//        for (int i=0; i<row_index.size(); i++)
+//          c.operator[](row_index[i]*c.line()+col_index[j]) = submatrix(i,j);
+//    }
 
-// 	  // write a submatrix given by global indices
-// 	  template<typename C, typename RI, typename CI, typename T>
-// 	  static void add (const RI& row_index, const CI& col_index,
-// 					   const LocalMatrix<T>& submatrix, C& c)
-// 	  {
-// 		for (int j=0; j<col_index.size(); j++)
-// 		  for (int i=0; i<row_index.size(); i++)
-// 			c.operator[](row_index[i]*c.line()+col_index[j]) += submatrix(i,j);
-// 	  }
+//    // write a submatrix given by global indices
+//    template<typename C, typename RI, typename CI, typename T>
+//    static void add (const RI& row_index, const CI& col_index,
+//                     const LocalMatrix<T>& submatrix, C& c)
+//    {
+//      for (int j=0; j<col_index.size(); j++)
+//        for (int i=0; i<row_index.size(); i++)
+//          c.operator[](row_index[i]*c.line()+col_index[j]) += submatrix(i,j);
+//    }
 
-	  // clear one row of the matrix
-	  template<typename C, typename RI>
-	  static void clear_row (RI row, C& c)
-	  {
-		for (int j=0; j<c.line(); j++)
-		  c.operator[](row*c.line()+j) = 0;
-	  }
-	};
+      // clear one row of the matrix
+      template<typename C, typename RI>
+      static void clear_row (RI row, C& c)
+      {
+        for (int j=0; j<c.line(); j++)
+          c.operator[](row*c.line()+j) = 0;
+      }
+    };
 
     template<typename GV>
     class MultiGeomUniqueIDMapper
@@ -358,10 +358,10 @@ namespace Dune {
 
         // assign offset for geometry type;
         if (gtoffset.find(gtype)==gtoffset.end())
-          {
-            gtoffset[gtype] = offset;
-            offset += chunk;
-          }
+        {
+          gtoffset[gtype] = offset;
+          offset += chunk;
+        }
 
         // compute unique id
         const SizeType id = is.index(e) + gtoffset[gtype];
@@ -369,7 +369,7 @@ namespace Dune {
       }
     };
 
-	// compile time switching of function call
+    // compile time switching of function call
     template<typename LA, bool doIt>
     struct LocalAssemblerCallSwitch
     {
@@ -386,99 +386,99 @@ namespace Dune {
       }
       template<typename LFSU, typename LFSV>
       static void pattern_skeleton (const LA& la, const LFSU& lfsu_s, const LFSV& lfsv_s,
-                                  const LFSU& lfsu_n, const LFSV& lfsv_n,
-                                   LocalSparsityPattern& pattern_sn,
-                                   LocalSparsityPattern& pattern_ns)
+        const LFSU& lfsu_n, const LFSV& lfsv_n,
+        LocalSparsityPattern& pattern_sn,
+        LocalSparsityPattern& pattern_ns)
       {
       }
       template<typename LFSU, typename LFSV>
       static void pattern_boundary(const LA& la,
-                                   const LFSU& lfsu_s, const LFSV& lfsv_s,
-                                   LocalSparsityPattern& pattern_ss)
+        const LFSU& lfsu_s, const LFSV& lfsv_s,
+        LocalSparsityPattern& pattern_ss)
       {
       }
-	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void alpha_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r)
-	  {
-	  }
-	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void alpha_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r)
-	  {
-	  }
-	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void alpha_skeleton (const LA& la, const IG& ig,
-                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-                           R& r_s, R& r_n)
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      static void alpha_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r)
       {
       }
-	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void alpha_boundary (const LA& la, const IG& ig,
-                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                           R& r_s)
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      static void alpha_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r)
+      {
+      }
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+      static void alpha_skeleton (const LA& la, const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
+        R& r_s, R& r_n)
+      {
+      }
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+      static void alpha_boundary (const LA& la, const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+        R& r_s)
       {
       }
 
-	  template<typename EG, typename LFSV, typename R>
+      template<typename EG, typename LFSV, typename R>
       static void lambda_volume (const LA& la, const EG& eg, const LFSV& lfsv, R& r)
       {
       }
-	  template<typename EG, typename LFSV, typename R>
+      template<typename EG, typename LFSV, typename R>
       static void lambda_volume_post_skeleton (const LA& la, const EG& eg, const LFSV& lfsv, R& r)
       {
       }
       template<typename IG, typename LFSV, typename R>
       static void lambda_skeleton(const LA& la, const IG& ig,
-                                  const LFSV& lfsv_s, const LFSV& lfsv_n,
-                                  R& r_s, R& r_n)
+        const LFSV& lfsv_s, const LFSV& lfsv_n,
+        R& r_s, R& r_n)
       {
       }
- 	  template<typename IG, typename LFSV, typename R>
+      template<typename IG, typename LFSV, typename R>
       static void lambda_boundary (const LA& la, const IG& ig, const LFSV& lfsv, R& r)
       {
       }
 
-	  template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
-	  static void jacobian_apply_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
-	  {
-	  }
-	  template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
-	  static void jacobian_apply_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
-	  {
-	  }
-	  template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
-	  static void jacobian_apply_skeleton (const LA& la, const IG& ig,
-                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-                           Y& y_s, Y& y_n)
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+      static void jacobian_apply_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
       {
       }
-	  template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
-	  static void jacobian_apply_boundary (const LA& la, const IG& ig,
-                                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                                           Y& y_s)
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+      static void jacobian_apply_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
       {
       }
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
-	  static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      static void jacobian_apply_skeleton (const LA& la, const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
+        Y& y_s, Y& y_n)
+      {
+      }
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      static void jacobian_apply_boundary (const LA& la, const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+        Y& y_s)
       {
       }
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
-	  static void jacobian_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M& mat)
+      static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
       {
       }
-	  template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
-	  static void jacobian_skeleton (const LA& la, const IG& ig,
-                              const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                              const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-                              M & mat_ss, M & mat_sn,
-                              M & mat_ns, M & mat_nn)
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
+      static void jacobian_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M& mat)
       {
       }
-	  template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
-	  static void jacobian_boundary (const LA& la, const IG& ig,
-                                     const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                                     M & mat_ss)
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
+      static void jacobian_skeleton (const LA& la, const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
+        M & mat_ss, M & mat_sn,
+        M & mat_ns, M & mat_nn)
+      {
+      }
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
+      static void jacobian_boundary (const LA& la, const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+        M & mat_ss)
       {
       }
     };
@@ -500,124 +500,124 @@ namespace Dune {
       }
       template<typename LFSU, typename LFSV>
       static void pattern_skeleton (const LA& la, const LFSU& lfsu_s, const LFSV& lfsv_s,
-                                  const LFSU& lfsu_n, const LFSV& lfsv_n,
-                                   LocalSparsityPattern& pattern_sn,
-                                   LocalSparsityPattern& pattern_ns)
+        const LFSU& lfsu_n, const LFSV& lfsv_n,
+        LocalSparsityPattern& pattern_sn,
+        LocalSparsityPattern& pattern_ns)
       {
         la.pattern_skeleton(lfsu_s,lfsv_s,lfsu_n,lfsv_n,
-                            pattern_sn, pattern_ns);
+          pattern_sn, pattern_ns);
       }
       template<typename LFSU, typename LFSV>
       static void pattern_boundary(const LA& la,
-                                   const LFSU& lfsu_s, const LFSV& lfsv_s,
-                                   LocalSparsityPattern& pattern_ss)
+        const LFSU& lfsu_s, const LFSV& lfsv_s,
+        LocalSparsityPattern& pattern_ss)
       {
         la.pattern_boundary(lfsu_s,lfsv_s,pattern_ss);
       }
 
-	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void alpha_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r)
-	  {
-		la.alpha_volume(eg,lfsu,x,lfsv,r);
-	  }
-	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void alpha_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r)
-	  {
-		la.alpha_volume_post_skeleton(eg,lfsu,x,lfsv,r);
-	  }
-	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void alpha_skeleton (const LA& la, const IG& ig,
-                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-                           R& r_s, R& r_n)
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      static void alpha_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r)
+      {
+        la.alpha_volume(eg,lfsu,x,lfsv,r);
+      }
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      static void alpha_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r)
+      {
+        la.alpha_volume_post_skeleton(eg,lfsu,x,lfsv,r);
+      }
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+      static void alpha_skeleton (const LA& la, const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
+        R& r_s, R& r_n)
       {
         la.alpha_skeleton(ig,lfsu_s,x_s,lfsv_s,lfsu_n,x_n,lfsv_n,r_s,r_n);
       }
-	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-	  static void alpha_boundary (const LA& la, const IG& ig,
-                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                           R& r_s)
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+      static void alpha_boundary (const LA& la, const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+        R& r_s)
       {
         la.alpha_boundary(ig,lfsu_s,x_s,lfsv_s,r_s);
       }
 
-	  template<typename EG, typename LFSV, typename R>
+      template<typename EG, typename LFSV, typename R>
       static void lambda_volume (const LA& la, const EG& eg, const LFSV& lfsv, R& r)
       {
         la.lambda_volume(eg,lfsv,r);
       }
-	  template<typename EG, typename LFSV, typename R>
+      template<typename EG, typename LFSV, typename R>
       static void lambda_volume_post_skeleton (const LA& la, const EG& eg, const LFSV& lfsv, R& r)
       {
         la.lambda_volume_post_skeleton(eg,lfsv,r);
       }
       template<typename IG, typename LFSV, typename R>
       static void lambda_skeleton(const LA& la, const IG& ig,
-                                  const LFSV& lfsv_s, const LFSV& lfsv_n,
-                                  R& r_s, R& r_n)
+        const LFSV& lfsv_s, const LFSV& lfsv_n,
+        R& r_s, R& r_n)
       {
         la.lambda_skeleton(ig, lfsv_s, lfsv_n, r_s, r_n);
       }
- 	  template<typename IG, typename LFSV, typename R>
+      template<typename IG, typename LFSV, typename R>
       static void lambda_boundary (const LA& la, const IG& ig, const LFSV& lfsv, R& r)
       {
         la.lambda_boundary(ig,lfsv,r);
       }
 
-	  template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
-	  static void jacobian_apply_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
-	  {
-		la.jacobian_apply_volume(eg,lfsu,x,lfsv,y);
-	  }
-	  template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
-	  static void jacobian_apply_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
-	  {
-		la.jacobian_apply_volume_post_skeleton(eg,lfsu,x,lfsv,y);
-	  }
-	  template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
-	  static void jacobian_apply_skeleton (const LA& la, const IG& ig,
-                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-                           Y& y_s, Y& y_n)
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+      static void jacobian_apply_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
+      {
+        la.jacobian_apply_volume(eg,lfsu,x,lfsv,y);
+      }
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename Y>
+      static void jacobian_apply_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, Y& y)
+      {
+        la.jacobian_apply_volume_post_skeleton(eg,lfsu,x,lfsv,y);
+      }
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      static void jacobian_apply_skeleton (const LA& la, const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
+        Y& y_s, Y& y_n)
       {
         la.jacobian_apply_skeleton(ig,lfsu_s,x_s,lfsv_s,lfsu_n,x_n,lfsv_n,y_s,y_n);
       }
-	  template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
-	  static void jacobian_apply_boundary (const LA& la, const IG& ig,
-                                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                                           Y& y_s)
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename Y>
+      static void jacobian_apply_boundary (const LA& la, const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+        Y& y_s)
       {
         la.jacobian_apply_boundary(ig,lfsu_s,x_s,lfsv_s,y_s);
       }
 
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
-	  static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
+      static void jacobian_volume (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
       {
         la.jacobian_volume(eg,lfsu,x,lfsv,mat);
       }
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
-	  static void jacobian_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
+      static void jacobian_volume_post_skeleton (const LA& la, const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & mat)
       {
         la.jacobian_volume_post_skeleton(eg,lfsu,x,lfsv,mat);
       }
- 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
-	  static void jacobian_skeleton (const LA& la, const IG& ig,
-                              const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                              const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-                              M & mat_ss, M & mat_sn,
-                              M & mat_ns, M & mat_nn)
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
+      static void jacobian_skeleton (const LA& la, const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+        const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
+        M & mat_ss, M & mat_sn,
+        M & mat_ns, M & mat_nn)
       {
         la.jacobian_skeleton(ig,lfsu_s,x_s,lfsv_s,lfsu_n,x_n,lfsv_n,
-                             mat_ss, mat_sn, mat_ns, mat_nn);
+          mat_ss, mat_sn, mat_ns, mat_nn);
       }
-	  template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
-	  static void jacobian_boundary (const LA& la, const IG& ig,
-                                     const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                                     M & mat_ss)
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
+      static void jacobian_boundary (const LA& la, const IG& ig,
+        const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+        M & mat_ss)
       {
         la.jacobian_boundary(ig,lfsu_s,x_s,lfsv_s,mat_ss);
       }
-   };
+    };
 
     /**
        \brief Base class for grid operators.
@@ -633,42 +633,42 @@ namespace Dune {
        \tparam CV   Constraints maps for the individual dofs (test space)
        \tparam B The vector backend used for the coefficient vector
 
-     */
-	template<typename GFSU, typename GFSV,
-			 typename CU=EmptyTransformation,
-			 typename CV=EmptyTransformation,
-			 typename B=StdVectorFlatMatrixBackend>
+    */
+    template<typename GFSU, typename GFSV,
+             typename CU=EmptyTransformation,
+             typename CV=EmptyTransformation,
+             typename B=StdVectorFlatMatrixBackend>
     class GridOperatorBase{
     public:
 
-	  typedef GridOperatorSpaceTraits<GFSU,GFSV,B,CU,CV> Traits;
+      typedef GridOperatorSpaceTraits<GFSU,GFSV,B,CU,CV> Traits;
 
       //! construct GridOperatorSpace
-	  GridOperatorBase (const GFSU& gfsu_, const GFSV& gfsv_)
-		: gfsu(gfsu_), gfsv(gfsv_),
+      GridOperatorBase (const GFSU& gfsu_, const GFSV& gfsv_)
+        : gfsu(gfsu_), gfsv(gfsv_),
           pconstraintsu(&emptyconstraintsu), pconstraintsv(&emptyconstraintsv),
           lfsu(gfsu), lfsv(gfsv), lfsun(gfsu), lfsvn(gfsv)
-	  {}
+      {}
 
       //! construct GridOperatorSpace, with constraints
-	  GridOperatorBase (const GFSU& gfsu_, const CU& cu,
-						 const GFSV& gfsv_, const CV& cv)
-		: gfsu(gfsu_), gfsv(gfsv_),
+      GridOperatorBase (const GFSU& gfsu_, const CU& cu,
+        const GFSV& gfsv_, const CV& cv)
+        : gfsu(gfsu_), gfsv(gfsv_),
           pconstraintsu(&cu), pconstraintsv(&cv),
           lfsu(gfsu), lfsv(gfsv), lfsun(gfsu), lfsvn(gfsv)
-	  {}
+      {}
 
       //! get dimension of space u
-	  typename GFSU::Traits::SizeType globalSizeU () const
-	  {
-		return gfsu.globalSize();
-	  }
+      typename GFSU::Traits::SizeType globalSizeU () const
+      {
+        return gfsu.globalSize();
+      }
 
       //! get dimension of space v
-	  typename GFSV::Traits::SizeType globalSizeV () const
-	  {
-		return gfsv.globalSize();
-	  }
+      typename GFSV::Traits::SizeType globalSizeV () const
+      {
+        return gfsv.globalSize();
+      }
 
       //! get the trial grid function space
       const GFSU& trialGridFunctionSpace() const
@@ -699,7 +699,7 @@ namespace Dune {
           V\f$ to \f$ V'\f$. If postrestrict == true then
           \f$\boldsymbol{R}^T_{\boldsymbol{\tilde U}', \boldsymbol{U}'}
           \boldsymbol{S}_{\boldsymbol{\tilde V}}\f$ is applied
-           instead of the full transformation.  */
+          instead of the full transformation.  */
       template<typename X>
       void forwardtransform(X & x, const bool postrestrict = false)
       {
@@ -726,7 +726,7 @@ namespace Dune {
       /** \brief Transforms a vector \f$ \boldsymbol{x} \f$ from \f$
           V'\f$ to \f$ V\f$. If prerestrict == true then
           \f$\boldsymbol{S}^T_{\boldsymbol{\tilde U}}\f$ is applied
-           instead of the full transformation.  */
+          instead of the full transformation.  */
       template<typename X>
       void backtransform(X & x, const bool prerestrict = false)
       {
@@ -754,7 +754,7 @@ namespace Dune {
       /** \brief read local stiffness matrix for entity */
       template<typename LFSV, typename LFSU, typename GC, typename T>
       void eread (const LFSV& lfsv, const LFSU& lfsu, const GC& globalcontainer,
-                  LocalMatrix<T>& localcontainer) const
+        LocalMatrix<T>& localcontainer) const
       {
         for (int i=0; i<lfsv.size(); i++)
           for (int j=0; j<lfsu.size(); j++)
@@ -831,7 +831,7 @@ namespace Dune {
                 vf = gvrit->second;
               }
 
-            // Set constrained_u true if gj is constrained dof
+              // Set constrained_u true if gj is constrained dof
               bool constrained_u(false);
               global_urow_iterator gurit;
               if(gucit!=cu.end()){
@@ -881,9 +881,9 @@ namespace Dune {
       }
 
       /** \brief Adding matrix entry to pattern with respect to the
-       constraints contributions. This assembles the entries addressed
-       by etadd(..). See the documentation there for more information
-       about the matrix pattern. */
+          constraints contributions. This assembles the entries addressed
+          by etadd(..). See the documentation there for more information
+          about the matrix pattern. */
       template<typename GI, typename P>
       void add_entry(P & globalpattern, GI gi, GI gj) const
       {
@@ -988,7 +988,7 @@ namespace Dune {
       mutable LFSV lfsvn;
     };
 
-	template<typename GFSU, typename GFSV, typename CU, typename CV, typename B>
+    template<typename GFSU, typename GFSV, typename CU, typename CV, typename B>
     CU GridOperatorBase<GFSU,GFSV,CU,CV,B>::emptyconstraintsu;
     template<typename GFSU, typename GFSV, typename CU, typename CV, typename B>
     CV GridOperatorBase<GFSU,GFSV,CU,CV,B>::emptyconstraintsv;
