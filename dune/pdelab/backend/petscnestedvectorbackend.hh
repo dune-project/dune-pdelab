@@ -54,35 +54,41 @@ namespace Dune {
 
       template<typename GFS>
       PetscNestedVectorContainer (const GFS& gfs)
-        : _data(NULL)
+        : _data(gfs.globalSize())
+        , _sub_data(GFS::CHILDREN)
+        , _checkedIn(true)
       {
         const size_t _blockCount = GFS::CHILDREN;
         ChildContainer children(_blockCount);
         create_child_vectors ccv(children);
         TypeTree::applyToTree(gfs,ccv);
         Vec child_array[_blockCount];
-        for (int i = 0; i < _blockCount; ++i)
+        for (size_t i = 0; i < _blockCount; ++i)
           child_array[i] = children[i]->_v;
         PETSC_CALL(VecCreateNest(PETSC_COMM_SELF,_blockCount,PETSC_NULL,child_array,&_v));
       }
 
       template<typename GFS>
       PetscNestedVectorContainer (const GFS& gfs, const E& e)
-        : _data(NULL)
+        : _data(gfs.globalSize())
+        , _sub_data(GFS::CHILDREN)
+        , _checkedIn(true)
       {
         const size_t _blockCount = GFS::CHILDREN;
         ChildContainer children(_blockCount);
         create_child_vectors ccv(children);
         TypeTree::applyToTree(gfs,ccv);
         Vec child_array[_blockCount];
-        for (int i = 0; i < _blockCount; ++i)
+        for (size_t i = 0; i < _blockCount; ++i)
           child_array[i] = *(children[i]);
         PETSC_CALL(VecCreateNest(PETSC_COMM_SELF,_blockCount,PETSC_NULL,child_array,&_v));
         this->operator=(e);
       }
 
       PetscNestedVectorContainer (const PetscNestedVectorContainer& rhs)
-        : _data(NULL)
+        : _data(rhs._data.size())
+        , _sub_data(rhs._sub_data.size())
+        , _checkedIn(true)
       {
         PETSC_CALL(VecDuplicate(rhs._v,&_v));
         PETSC_CALL(VecCopy(rhs._v,_v));
@@ -92,7 +98,7 @@ namespace Dune {
       {
         checkin();
         PETSC_CALL(VecCopy(rhs._v,_v));
-        _data = NULL;
+        _checkedIn = true;
       }
 
       ~PetscNestedVectorContainer()
@@ -249,43 +255,62 @@ namespace Dune {
       template<typename X>
       void std_copy_to (std::vector<X>& x) const
       {
-        size_t n = flatsize();
-        x.resize(n);
         checkout();
-        for (size_t i=0; i<n; i++)
-          x[i] = _data[i];
+        std::copy(_data.begin(),_data.end(),x.begin());
       }
 
       template<typename X>
       void std_copy_from (const std::vector<X>& x)
       {
-        //test if x has the same size as the container
-        assert (x.size() == flatsize());
         checkout();
-        for (size_t i=0; i<flatsize(); i++)
-          _data[i] = x[i];
+        std::copy(x.begin(),x.end(),_data.begin());
       }
 
     private:
       Vec _v;
-      mutable E* _data;
+      mutable std::vector<double> _data;
+      mutable std::vector<double*> _sub_data;
+      mutable bool _checkedIn;
 
       void checkin() const
       {
-        if (_data)
+        if (!_checkedIn)
           {
-            std::cout << "restoring " << _data << std::endl;
-            PETSC_CALL(VecRestoreArray(_v,&_data));
-            _data = NULL;
+            int N;
+            Vec* sv;
+            PETSC_CALL(VecNestGetSubVecs(_v,&N,&sv));
+            auto it = _data.begin();
+            for (int n = 0; n < N; ++n)
+              {
+                int CN;
+                PETSC_CALL(VecGetLocalSize(sv[n],&CN));
+                auto endit = it + CN;
+                for(auto childit = _sub_data[n]; it != endit; ++it, ++childit)
+                  *childit = *it;
+                PETSC_CALL(VecRestoreArray(sv[n],&(_sub_data[n])));
+              }
+            _checkedIn = true;
           }
       }
 
       void checkout() const
       {
-        if (!_data)
+        if (_checkedIn)
           {
-            PETSC_CALL(VecGetArray(_v,&_data));
-            std::cout << "got " << _data << std::endl;
+            int N;
+            Vec* sv;
+            PETSC_CALL(VecNestGetSubVecs(_v,&N,&sv));
+            auto it = _data.begin();
+            for (int n = 0; n < N; ++n)
+              {
+                int CN;
+                PETSC_CALL(VecGetArray(sv[n],&(_sub_data[n])));
+                PETSC_CALL(VecGetLocalSize(sv[n],&CN));
+                auto endit = it + CN;
+                for(auto childit = _sub_data[n]; it != endit; ++it, ++childit)
+                  *it = *childit;
+              }
+            _checkedIn = false;
           }
       }
 

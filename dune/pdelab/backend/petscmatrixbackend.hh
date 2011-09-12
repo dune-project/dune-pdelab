@@ -20,8 +20,13 @@ namespace Dune {
     class PetscNestedMatrixBackend;
     class PetscNestedMatrixContainer;
 
+    class PetscMatrixAccessorBase;
+
     template<typename LFSV, typename LFSU>
     class PetscMatrixAccessor;
+
+    template<typename LFSV, typename LFSU>
+    class PetscNestedMatrixAccessor;
 
     template<typename T>
     class Pattern : public std::vector< std::set<T> >
@@ -87,12 +92,11 @@ namespace Dune {
     struct petsc_matrix_builder<GFSV,PetscNestedVectorBackend,GFSU,PetscNestedVectorBackend>
       : public petsc_types
     {
-
-      static const size_type M = GFSV::CHILDREN;
-      static const size_type N = GFSU::CHILDREN;
-
       static MatrixPtr build(const GFSV& gfsv, const GFSU& gfsu, const Pattern& pattern)
       {
+        const size_type M = GFSV::CHILDREN;
+        const size_type N = GFSU::CHILDREN;
+
         MatrixArray matrices(N*M);
         recursive_matrix_builder<GFSV,GFSU>::build_children(gfsv,gfsu,pattern,matrices);
         return make_shared<PetscNestedMatrixContainer>(M,N,matrices);
@@ -143,7 +147,7 @@ namespace Dune {
       }
 
       template<std::size_t r = row>
-      static typename enable_if<(r < M) && (col < N)>::type
+      static typename enable_if<(r < M) && (col < N-1)>::type
       build_children(const GFSV& gfsv, const GFSU& gfsu, const Pattern& pattern, MatrixArray& matrices)
       {
         matrices[row*N + col] = build_child(gfsv,gfsu,pattern);
@@ -151,7 +155,7 @@ namespace Dune {
       }
 
       template<std::size_t r = row>
-      static typename enable_if<(r < M) && (col == N)>::type
+      static typename enable_if<(r < M) && (col == N-1)>::type
       build_children(const GFSV& gfsv, const GFSU& gfsu, const Pattern& pattern, MatrixArray& matrices)
       {
         matrices[row*N + col] = build_child(gfsv,gfsu,pattern);
@@ -173,8 +177,12 @@ namespace Dune {
 
       friend class PetscMatrixBackend;
 
+      friend class PetscMatrixAccessorBase;
+
       template<typename LFSV, typename LFSU>
       friend class PetscMatrixAccessor;
+
+      friend class PetscNestedMatrixContainer;
 
       enum AccessorState {
         clean,
@@ -231,6 +239,13 @@ namespace Dune {
         PETSC_CALL(MatSetOption(_m,MAT_IGNORE_ZERO_ENTRIES,PETSC_TRUE));
         PETSC_CALL(MatSetOption(_m,MAT_NO_OFF_PROC_ZERO_ROWS,PETSC_TRUE)); // we only ever zero our own rows
       }
+
+      PetscMatrixContainer (Mat m, bool managed = true)
+        : _m(m)
+        , _accessorState(clean)
+        , _rowsToClear()
+        , _managed(managed)
+      {}
 
     protected:
 
@@ -312,7 +327,7 @@ namespace Dune {
           }
       }
 
-      void flush(MatAssemblyType assemblyType)
+      virtual void flush(MatAssemblyType assemblyType)
       {
         if (_accessorState == addValues || _accessorState == setValues || assemblyType == MAT_FINAL_ASSEMBLY)
           {
@@ -358,25 +373,18 @@ namespace Dune {
 
 
 
-    template<typename LFSV,typename LFSU>
-    class PetscMatrixAccessor
+    class PetscMatrixAccessorBase
+      : petsc_types
     {
 
-      friend class PetscMatrixBackend;
+      template<typename,typename>
+      friend class PetscNestedMatrixAccessor;
 
       void setup(PetscMatrixContainer::AccessorState state)
       {
         if (_state == PetscMatrixContainer::clean)
           {
             _m.access(state);
-            int m_offset = 0;
-            int n_offset = 0;
-            PETSC_CALL(MatGetOwnershipRange(_m.base(),&m_offset,PETSC_NULL));
-            PETSC_CALL(MatGetOwnershipRangeColumn(_m.base(),&n_offset,PETSC_NULL));
-            for (size_type i = 0; i < _M; ++i)
-              _rows[i] = m_offset + _lfsv.globalIndex(i);
-            for (size_type i = 0; i < _N; ++i)
-              _cols[i] = n_offset + _lfsu.globalIndex(i);
             if (state == PetscMatrixContainer::readValues)
               {
                 PETSC_CALL(MatGetValues(_m.base(),_M,&(_rows[0]),_N,&(_cols[0]),&(_vals[0])));
@@ -388,23 +396,21 @@ namespace Dune {
           }
       }
 
-      PetscMatrixAccessor(PetscMatrixContainer& m, const LFSV& lfsv, const LFSU& lfsu)
+    public:
+
+      PetscMatrixAccessorBase(PetscMatrixContainer& m, size_type M, size_type N, size_type row_offset = 0, size_type col_offset = 0)
         : _m(m)
-        , _lfsv(lfsv)
-        , _lfsu(lfsu)
-        , _M(lfsv.localVectorSize())
-        , _N(lfsu.localVectorSize())
+        , _M(M)
+        , _N(N)
         , _rows(_M)
         , _cols(_N)
         , _vals(_M * _N)
         , _state(PetscMatrixContainer::clean)
+        , _row_offset(row_offset)
+        , _col_offset(col_offset)
       {}
 
-    public:
-
-      typedef PetscMatrixContainer::size_type size_type;
-
-      ~PetscMatrixAccessor()
+      ~PetscMatrixAccessorBase()
       {
         switch (_state)
           {
@@ -438,14 +444,46 @@ namespace Dune {
     private:
 
       PetscMatrixContainer& _m;
-      const LFSV& _lfsv;
-      const LFSU& _lfsu;
+
+    protected:
       const size_type _M;
       const size_type _N;
       std::vector<int> _rows;
       std::vector<int> _cols;
+
+    private:
       std::vector<double> _vals;
       PetscMatrixContainer::AccessorState _state;
+      const size_type _row_offset;
+      const size_type _col_offset;
+
+    };
+
+
+
+    template<typename LFSV,typename LFSU>
+    class PetscMatrixAccessor
+      : public PetscMatrixAccessorBase
+    {
+
+      friend class PetscMatrixBackend;
+
+    protected:
+
+      PetscMatrixAccessor(PetscMatrixContainer& m, const LFSV& lfsv, const LFSU& lfsu, size_type row_offset = 0, size_type col_offset = 0)
+        : PetscMatrixAccessorBase(m,lfsv.localVectorSize(),lfsu.localVectorSize(),row_offset,col_offset)
+      {
+        int m_offset = 0;
+        int n_offset = 0;
+        PETSC_CALL(MatGetOwnershipRange(m.base(),&m_offset,PETSC_NULL));
+        PETSC_CALL(MatGetOwnershipRangeColumn(m.base(),&n_offset,PETSC_NULL));
+        m_offset -= row_offset;
+        n_offset -= col_offset;
+        for (size_type i = 0; i < _M; ++i)
+          _rows[i] = m_offset + lfsv.globalIndex(i);
+        for (size_type i = 0; i < _N; ++i)
+          _cols[i] = n_offset + lfsu.globalIndex(i);
+      }
 
     };
 
@@ -492,6 +530,70 @@ namespace Dune {
 
       virtual ~PetscNestedMatrixContainer()
       {
+      }
+
+      virtual void flush(MatAssemblyType assemblyType)
+      {
+        if (_accessorState == addValues || _accessorState == setValues || assemblyType == MAT_FINAL_ASSEMBLY)
+          {
+            PETSC_CALL(MatAssemblyBegin(_m,assemblyType));
+            PETSC_CALL(MatAssemblyEnd(_m,assemblyType));
+          }
+        _accessorState = clean;
+        if (_rowsToClear.size() > 0) // TODO: communicate in MPI case
+          {
+            int M;
+            int N;
+            Mat** sm;
+            PETSC_CALL(MatNestGetSubMats(_m,&M,&N,&sm));
+            int row_offsets[M+1];
+            int col_offsets[N+1];
+            row_offsets[0] = col_offsets[0] = 0;
+
+            for (int i = 0; i < M; ++i)
+              {
+                int MM;
+                PETSC_CALL(MatGetLocalSize(sm[i][0],&MM,PETSC_NULL));
+                row_offsets[i+1] = row_offsets[i] + MM;
+              }
+
+            for (int j = 0; j < N; ++j)
+              {
+                int NN;
+                PETSC_CALL(MatGetLocalSize(sm[0][j],PETSC_NULL,&NN));
+                col_offsets[j+1] = col_offsets[j] + NN;
+              }
+
+            for (auto it = _rowsToClear.begin(); it != _rowsToClear.end(); ++it)
+              {
+                auto rows = it->second;
+                std::sort(rows.begin(),rows.end());
+                auto rowit = rows.begin();
+                auto rowend = rowit;
+                int row_block = 0;
+                do {
+                  rowend = std::find_if(rowit,rows.end(),std::bind1st(std::less_equal<int>(),row_offsets[row_block+1]));
+                  for (; rowit != rowend; ++rowit)
+                    {
+                      int local_row = (*rowit) - row_offsets[row_block];
+                      for (int j = 0; j < N; ++j)
+                        {
+                          PETSC_CALL(MatZeroRows(sm[row_block][j],1,&local_row,0.0,PETSC_NULL,PETSC_NULL));
+                          if (col_offsets[j] <= *rowit && *rowit < col_offsets[j+1])
+                            {
+                              PETSC_CALL(MatSetValue(sm[row_block][j],local_row,*rowit-col_offsets[j],it->first,INSERT_VALUES));
+                              PETSC_CALL(MatAssemblyBegin(sm[row_block][j],MAT_FINAL_ASSEMBLY));
+                              PETSC_CALL(MatAssemblyEnd(sm[row_block][j],MAT_FINAL_ASSEMBLY));
+                            }
+                        }
+                    }
+                  ++row_block;
+                } while (rowit != rows.end());
+              }
+            PETSC_CALL(MatAssemblyBegin(_m,MAT_FINAL_ASSEMBLY));
+            PETSC_CALL(MatAssemblyEnd(_m,MAT_FINAL_ASSEMBLY));
+            _rowsToClear.clear();
+          }
       }
 
     };
@@ -559,6 +661,125 @@ namespace Dune {
     };
 
 
+
+    template<typename LFSV,typename LFSU>
+    class PetscNestedMatrixAccessor
+      : public petsc_types
+    {
+
+      struct get_child_offsets
+        : public TypeTree::DirectChildrenVisitor
+        , public TypeTree::DynamicTraversal
+      {
+        get_child_offsets(std::vector<std::size_t>& local_offsets, std::vector<std::size_t>& global_offsets, std::vector<std::vector<int> >& indices)
+          : _local_offsets(local_offsets)
+          , _global_offsets(global_offsets)
+          , _indices(indices)
+        {}
+
+        template<typename T, typename Child, typename TreePath, typename ChildIndex>
+        void beforeChild(const T& t, const Child& child, TreePath treePath, ChildIndex childIndex)
+        {
+          _local_offsets[childIndex+1] = _local_offsets[childIndex] + child.size();
+          _global_offsets[childIndex+1] = _global_offsets[childIndex] + child.gridFunctionSpace().size();
+          _indices[childIndex].resize(child.size());
+          for (std::size_t i = 0; i < child.size(); ++i)
+            _indices[childIndex][i] = child.globalIndex(i) - _global_offsets[childIndex];
+        }
+
+        std::vector<std::size_t>& _local_offsets;
+        std::vector<std::size_t>& _global_offsets;
+        std::vector<std::vector<int> >& _indices;
+      };
+
+      friend class PetscNestedMatrixBackend;
+
+      static const std::size_t M = LFSV::CHILDREN;
+      static const std::size_t N = LFSU::CHILDREN;
+
+      PetscNestedMatrixAccessor(PetscNestedMatrixContainer& m, const LFSV& lfsv, const LFSU& lfsu)
+        : _m(m)
+        , _lfsv(lfsv)
+        , _lfsu(lfsu)
+        , _accessors(N*M)
+        , _matrices(N*M)
+        , _local_row_offsets(M+1)
+        , _local_col_offsets(N+1)
+        , _global_row_offsets(M+1)
+        , _global_col_offsets(N+1)
+        , _row_indices(M)
+        , _col_indices(N)
+      {
+        get_child_offsets rows(_local_row_offsets,_global_row_offsets,_row_indices);
+        TypeTree::applyToTree(lfsv,rows);
+        get_child_offsets cols(_local_col_offsets,_global_col_offsets,_col_indices);
+        TypeTree::applyToTree(lfsu,cols);
+      }
+
+      PetscMatrixAccessorBase& accessor(size_type& i, size_type& j)
+      {
+        auto row = std::find_if(_local_row_offsets.begin(),_local_row_offsets.end(),std::bind1st(std::less<size_type>(),i));
+        --row;
+        auto col = std::find_if(_local_col_offsets.begin(),_local_col_offsets.end(),std::bind1st(std::less<size_type>(),j));
+        --col;
+        const size_type mi = row - _local_row_offsets.begin();
+        const size_type mj = col - _local_col_offsets.begin();
+
+        shared_ptr<PetscMatrixAccessorBase> a;
+        if (!(a = _accessors[mi*N + mj]))
+          {
+            Mat submat;
+            PETSC_CALL(MatNestGetSubMat(_m.base(),mi,mj,&submat));
+            shared_ptr<PetscMatrixContainer> c(make_shared<PetscMatrixContainer>(submat,false));
+            a = make_shared<PetscMatrixAccessorBase>(*c,(*(row+1))-(*row),(*(col+1))-(*col),_global_row_offsets[mi],_global_row_offsets[mj]);
+            swap(a->_rows,_row_indices[mi]);
+            swap(a->_cols,_col_indices[mj]);
+            _accessors[mi*N + mj] = a;
+            _matrices[mi*N + mj] = c;
+          }
+        i -= *row;
+        j -= *col;
+        return *a;
+      }
+
+    public:
+
+      typedef PetscNestedMatrixContainer::size_type size_type;
+
+      double get(size_type i, size_type j)
+      {
+        return accessor(i,j).get(i,j);
+      }
+
+      void set(size_type i, size_type j, double v)
+      {
+        accessor(i,j).set(i,j,v);
+      }
+
+      void add(size_type i, size_type j, double v)
+      {
+        accessor(i,j).add(i,j,v);
+      }
+
+    private:
+
+      PetscNestedMatrixContainer& _m;
+      const LFSV& _lfsv;
+      const LFSU& _lfsu;
+      std::vector<shared_ptr<PetscMatrixAccessorBase> > _accessors;
+      std::vector<shared_ptr<PetscMatrixContainer> > _matrices;
+      std::vector<std::size_t> _local_row_offsets;
+      std::vector<std::size_t> _local_col_offsets;
+      std::vector<std::size_t> _global_row_offsets;
+      std::vector<std::size_t> _global_col_offsets;
+      std::vector<std::vector<int> > _row_indices;
+      std::vector<std::vector<int> > _col_indices;
+
+    };
+
+
+
+
     class PetscNestedMatrixBackend
       : public PetscMatrixBackend
     {
@@ -578,6 +799,21 @@ namespace Dune {
         : PetscNestedMatrixContainer(go)
         {}
       };
+
+
+      template<typename LFSV, typename LFSU>
+      class Accessor
+        : public PetscNestedMatrixAccessor<LFSV,LFSU>
+      {
+
+      public:
+
+        Accessor(PetscNestedMatrixContainer& m, const LFSV& lfsv, const LFSU& lfsu)
+          : PetscNestedMatrixAccessor<LFSV,LFSU>(m,lfsv,lfsu)
+        {}
+
+      };
+
 
     };
 
