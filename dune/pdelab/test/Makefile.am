@@ -319,6 +319,14 @@ check_PROGRAMS += testproxynode
 testproxynode_SOURCES = testproxynode.cc
 testproxynode_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE
 
+check_PROGRAMS += testpoisson-petsc
+testpoisson_petsc_SOURCES = testpoisson-petsc.cc
+testpoisson_petsc_CPPFLAGS = @AM_CPPFLAGS@ $(PETSC_CPPFLAGS)
+testpoisson_petsc_LDFLAGS = $(AM_LDFLAGS) $(PETSC_LDFLAGS)
+testpoisson_petsc_LDADD = $(LDADD) $(PETSC_LIBS)
+
+MOSTLYCLEANFILES += poisson_petsc_*.vtu
+
 include $(top_srcdir)/am/global-rules
 
 DISTCHECK_CONFIGURE_FLAGS = --with-dune=$(DUNEROOT) CXX="$(CXX)" CC="$(CC)"
