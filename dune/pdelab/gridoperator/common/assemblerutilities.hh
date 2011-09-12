@@ -193,27 +193,30 @@ namespace Dune{
       void eread (const LFSV& lfsv, const LFSU& lfsu, const GC& globalcontainer,
                   LocalMatrix<T>& localcontainer) const
       {
+        typename B::template Accessor<LFSV,LFSU> accessor(globalcontainer,lfsv,lfsu);
         for (int i=0; i<lfsv.size(); i++)
           for (int j=0; j<lfsu.size(); j++)
-            localcontainer(i,j) = B::access(globalcontainer,lfsv.globalIndex(i),lfsu.globalIndex(j));
+            localcontainer(i,j) = accessor.get(i,j);
       }
 
       /** \brief write local stiffness matrix for entity */
       template<typename LFSV, typename LFSU, typename T, typename GC>
       void ewrite (const LFSV& lfsv, const LFSU& lfsu, const LocalMatrix<T>& localcontainer, GC& globalcontainer) const
       {
+        typename B::template Accessor<LFSV,LFSU> accessor(globalcontainer,lfsv,lfsu);
         for (int i=0; i<lfsv.size(); i++)
           for (int j=0; j<lfsu.size(); j++)
-            B::access(globalcontainer,lfsv.globalIndex(i),lfsu.globalIndex(j)) = localcontainer(i,j);
+            accessor.set(i,j,localcontainer(i,j));
       }
 
       /** \brief write local stiffness matrix for entity */
       template<typename LFSV, typename LFSU, typename T, typename GC>
       void eadd (const LFSV& lfsv, const LFSU& lfsu, const LocalMatrix<T>& localcontainer, GC& globalcontainer) const
       {
+        typename B::template Accessor<LFSV,LFSU> accessor(globalcontainer,lfsv,lfsu);
         for (size_t i=0; i<lfsv.size(); i++)
           for (size_t j=0; j<lfsu.size(); j++)
-            B::access(globalcontainer,lfsv.globalIndex(i),lfsu.globalIndex(j)) += localcontainer(i,j);
+            accessor.add(i,j,localcontainer(i,j));
       }
 
       /** \brief Add local matrix \f$m\f$ to global Jacobian \f$J\f$
@@ -224,6 +227,8 @@ namespace Dune{
       template<typename LFSV, typename LFSU, typename T, typename GC>
       void etadd (const LFSV& lfsv, const LFSU& lfsu, const LocalMatrix<T>& localcontainer, GC& globalcontainer) const
       {
+
+        typename B::template Accessor<LFSV,LFSU> accessor(globalcontainer,lfsv,lfsu);
 
         for (size_t i=0; i<lfsv.size(); i++)
           for (size_t j=0; j<lfsu.size(); j++){
@@ -277,7 +282,7 @@ namespace Dune{
                 if(gurit == gucit->second.end()){
                   T t = localcontainer(lfsv,i,lfsu,j) * vf;
                   if(t != 0.0)                 // entry might not be present in the matrix
-                    B::access(globalcontainer,gi,gj) += t;
+                    accessor.add(i,j,t);
                 }
               }
 
@@ -298,7 +303,7 @@ namespace Dune{
                 // add weighted local entry to global matrix
                 T t = localcontainer(lfsv,i,lfsu,j) * uf * vf;
                 if (t != 0.0)                 // entry might not be present in the matrix
-                  B::access(globalcontainer,gi,gj) += t;
+                  accessor.add(i,j,t);
 
                 if(constrained_u && gurit != gucit->second.end())
                   ++gurit;
@@ -400,18 +405,20 @@ namespace Dune{
       {
         //std::cout << "clearing row " << i << std::endl;
         // set all entries in row i to zero
-        B::clear_row(i,globalcontainer);
+        B::clear_row(i,globalcontainer,1);
 
         // set diagonal element to 1
-        B::access(globalcontainer,i,i) = 1;
+        // B::access(globalcontainer,i,i) = 1;
       }
 
       template<typename GC>
       void handle_dirichlet_constraints(GC& globalcontainer) const
       {
+        B::flush(globalcontainer);
         typedef typename CV::const_iterator global_row_iterator;
         for (global_row_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit)
           set_trivial_row(cit->first,cit->second,globalcontainer);
+        B::finalize(globalcontainer);
       }
 
       /* constraints */
