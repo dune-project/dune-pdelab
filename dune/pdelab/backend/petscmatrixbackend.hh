@@ -662,7 +662,7 @@ namespace Dune {
       //! The size type
       typedef typename std::size_t size_type;
 
-      static void clear_row (size_type i, PetscMatrixContainer& c, double diagonal_value = 0.0)
+      static void clear_row (size_type i, PetscMatrixContainer& c, double diagonal_value)
       {
         c.enqueue_row_clear(i,diagonal_value);
       }

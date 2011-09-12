@@ -329,10 +329,11 @@ namespace Dune {
 
       // clear one row of the matrix
       template<typename C, typename RI>
-      static void clear_row (RI row, C& c)
+      static void clear_row (RI row, C& c, const typename C::field_type& diag_val)
       {
         for (int j=0; j<c.line(); j++)
           c.operator[](row*c.line()+j) = 0;
+        c.operator[](row*c.line()+row) = diag_val;
       }
     };
 
@@ -963,10 +964,7 @@ namespace Dune {
       {
         //std::cout << "clearing row " << i << std::endl;
         // set all entries in row i to zero
-        B::clear_row(i,globalcontainer);
-
-        // set diagonal element to 1
-        B::access(globalcontainer,i,i) = 1;
+        B::clear_row(i,globalcontainer, 1);
       }
 
       /* global function spaces */
