@@ -3,6 +3,8 @@
 #ifndef DUNE_PETSCVECTORBACKEND_HH
 #define DUNE_PETSCVECTORBACKEND_HH
 
+#if HAVE_PETSC
+
 #include<vector>
 
 #include<dune/common/fvector.hh>
@@ -319,4 +321,6 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // HAVE_PETSC
+
+#endif // DUNE_PETSCVECTORBACKEND_HH

@@ -3,6 +3,8 @@
 #ifndef DUNE_PETSCMATRIXBACKEND_HH
 #define DUNE_PETSCMATRIXBACKEND_HH
 
+#if HAVE_PETSC
+
 #include<vector>
 
 #include <dune/pdelab/backend/petscutility.hh>
@@ -837,4 +839,6 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // HAVE_PETSC
+
+#endif // DUNE_PETSCMATRIXBACKEND_HH

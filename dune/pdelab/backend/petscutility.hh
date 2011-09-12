@@ -3,6 +3,7 @@
 #ifndef DUNE_PETSCUTILITY_HH
 #define DUNE_PETSCUTILITY_HH
 
+#if HAVE_PETSC
 
 #include <petscsys.h>
 #include <dune/common/exceptions.hh>
@@ -29,4 +30,6 @@ PETSC_GUARD_START \
 PetscErrorCode __petsc_err = (x); \
 PETSC_GUARD_END(__petsc_err)
 
-#endif
+#endif // HAVE_PETSC
+
+#endif // DUNE_PETSCUTILITY_HH
