@@ -259,7 +259,6 @@ namespace Dune {
       {
         if (_data)
           {
-            std::cout << "restoring " << _data << std::endl;
             PETSC_CALL(VecRestoreArray(_v,&_data));
             _data = NULL;
           }
@@ -270,7 +269,6 @@ namespace Dune {
         if (!_data)
           {
             PETSC_CALL(VecGetArray(_v,&_data));
-            std::cout << "got " << _data << std::endl;
           }
       }
 
