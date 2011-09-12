@@ -15,7 +15,7 @@ namespace Dune {
   namespace PDELab {
 
     template<int> class ISTLVectorBackend;
-    
+
     template<typename T, typename E, int BLOCKSIZE>
     class ISTLBlockVectorContainer
     {
@@ -23,7 +23,7 @@ namespace Dune {
       typedef E ElementType;
       typedef Dune::BlockVector< Dune::FieldVector<E,BLOCKSIZE> > ContainerType;
       typedef ContainerType BaseT;
-      typedef typename ContainerType::field_type field_type;      
+      typedef typename ContainerType::field_type field_type;
       typedef typename ContainerType::iterator iterator;
       typedef typename ContainerType::const_iterator const_iterator;
       typedef typename ContainerType::block_type block_type;
@@ -41,7 +41,7 @@ namespace Dune {
       {
         return container.N();
       }
-      
+
 
       ISTLBlockVectorContainer& operator= (const E& e)
       {
@@ -55,7 +55,7 @@ namespace Dune {
         return *this;
       }
 
-      
+
       ISTLBlockVectorContainer& operator+= (const E& e)
       {
         container+=e;
@@ -73,12 +73,12 @@ namespace Dune {
         container-=e;
         return *this;
       }
-      
+
       block_type& operator[](std::size_t i)
       {
         return container[i];
       }
-      
+
       const block_type& operator[](std::size_t i) const
       {
         return container[i];
@@ -103,13 +103,13 @@ namespace Dune {
       {
         return container*y.base();
       }
-      
+
       ISTLBlockVectorContainer& axpy(const E& a, const ISTLBlockVectorContainer& y)
       {
         container.axpy(a, y);
         return *this;
       }
-      
+
       // for debugging and AMG access
       ContainerType& base ()
       {
@@ -120,12 +120,12 @@ namespace Dune {
       {
         return container;
       }
-      
+
       operator ContainerType&()
       {
         return container;
       }
-      
+
       operator const ContainerType&() const
       {
         return container;
@@ -135,7 +135,7 @@ namespace Dune {
       {
         return container.begin();
       }
-      
+
 
       const_iterator begin() const
       {
@@ -146,7 +146,7 @@ namespace Dune {
       {
         return container.end();
       }
-      
+
 
       const_iterator end() const
       {
@@ -175,17 +175,17 @@ namespace Dune {
         for (size_t i=0; i<flatsize(); i++)
           container[i/BLOCKSIZE][i%BLOCKSIZE] = x[i];
       }
-        
+
     private:
       Dune::BlockVector< Dune::FieldVector<E,BLOCKSIZE> > container;
     };
 
 
-	//! ISTL backend for FunctionSpace
-	template<int BLOCKSIZE=1>
-	class ISTLVectorBackend
-	{
-	public:
+    //! ISTL backend for FunctionSpace
+    template<int BLOCKSIZE=1>
+    class ISTLVectorBackend
+    {
+    public:
       enum{
         //! \brief export the block size
         BlockSize = BLOCKSIZE
@@ -193,44 +193,44 @@ namespace Dune {
 
       //export Matrix Backend Type
       typedef ISTLBCRSMatrixBackend<BLOCKSIZE,BLOCKSIZE> MatrixBackend;
-     
-	  //! container construction
 
-	  // extract type of container element 
-	  template<class C>
-	  struct Value
-	  {
-		typedef typename C::field_type Type;
-	  };
+      //! container construction
 
-	  //! The size type
-	  typedef typename Dune::BlockVector< Dune::FieldVector<float,BLOCKSIZE> >::size_type size_type;
+      // extract type of container element
+      template<class C>
+      struct Value
+      {
+        typedef typename C::field_type Type;
+      };
 
-	  // get const_reference to container element
-	  // note: this method does not depend on T!
-	  template<typename C>
-	  static const typename C::field_type& access (const C& c, size_type i)
-	  {
-		return c.base()[i/BLOCKSIZE][i%BLOCKSIZE];
-	  }
+      //! The size type
+      typedef typename Dune::BlockVector< Dune::FieldVector<float,BLOCKSIZE> >::size_type size_type;
 
-	  // get non const_reference to container element 
-	  // note: this method does not depend on T!
-	  template<typename C>
-	  static typename C::field_type& access (C& c, size_type i)
-	  {
-		return c.base()[i/BLOCKSIZE][i%BLOCKSIZE];
-	  }
-	};
+      // get const_reference to container element
+      // note: this method does not depend on T!
+      template<typename C>
+      static const typename C::field_type& access (const C& c, size_type i)
+      {
+        return c.base()[i/BLOCKSIZE][i%BLOCKSIZE];
+      }
+
+      // get non const_reference to container element
+      // note: this method does not depend on T!
+      template<typename C>
+      static typename C::field_type& access (C& c, size_type i)
+      {
+        return c.base()[i/BLOCKSIZE][i%BLOCKSIZE];
+      }
+    };
 
     template<int BLOCKSIZE,typename T, typename E>
     struct BackendVectorSelectorHelper<ISTLVectorBackend<BLOCKSIZE>, T, E>
     {
       typedef ISTLBlockVectorContainer<T,E,BLOCKSIZE> Type;
     };
-    
-      
-      
+
+
+
   } // namespace PDELab
 } // namespace Dune
 
