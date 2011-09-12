@@ -22,7 +22,7 @@ namespace Dune {
 #define PETSC_GUARD_START {
 
 #define PETSC_GUARD_END(err_var) \
-  if (err_var != 0) DUNE_THROW(Dune::PDELab::PetscException,"Petsc problem"); \
+  if (err_var != 0) DUNE_THROW(Dune::PDELab::PetscException,"PETSc problem"); \
 }
 
 #define PETSC_CALL(x) \
