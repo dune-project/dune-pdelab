@@ -282,6 +282,16 @@ namespace Dune {
         return _m;
       }
 
+      operator Mat&()
+      {
+        return _m;
+      }
+
+      operator const Mat&() const
+      {
+        return _m;
+      }
+
       size_type M() const
       {
         int size = 0;
