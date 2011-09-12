@@ -90,6 +90,7 @@ namespace Dune {
         , _sub_data(rhs._sub_data.size())
         , _checkedIn(true)
       {
+        rhs.checkin();
         PETSC_CALL(VecDuplicate(rhs._v,&_v));
         PETSC_CALL(VecCopy(rhs._v,_v));
       }
@@ -97,6 +98,7 @@ namespace Dune {
       PetscNestedVectorContainer& operator= (const PetscNestedVectorContainer& rhs)
       {
         checkin();
+        rhs.checkin();
         PETSC_CALL(VecCopy(rhs._v,_v));
         _checkedIn = true;
       }
@@ -194,6 +196,7 @@ namespace Dune {
       PetscNestedVectorContainer& axpy(const E& a, const PetscNestedVectorContainer& y)
       {
         checkin();
+        y.checkin();
         PETSC_CALL(VecAXPY(_v,a,y._v));
         return *this;
       }
