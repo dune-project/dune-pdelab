@@ -269,6 +269,14 @@ namespace Dune {
         std::copy(x.begin(),x.end(),_data.begin());
       }
 
+      PetscVectorContainer subVector(size_type i)
+      {
+        checkin();
+        Vec sub_vec;
+        PETSC_CALL(VecNestGetSubVec(_v,i,&sub_vec));
+        return PetscVectorContainer(sub_vec,false);
+      }
+
     private:
       Vec _v;
       mutable std::vector<double> _data;

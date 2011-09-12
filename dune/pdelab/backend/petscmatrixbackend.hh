@@ -532,6 +532,13 @@ namespace Dune {
       {
       }
 
+      PetscMatrixContainer subMatrix(size_type i, size_type j)
+      {
+        Mat sub_mat;
+        PETSC_CALL(MatNestGetSubMat(_m,i,j,&sub_mat));
+        return PetscMatrixContainer(sub_mat,false);
+      }
+
       virtual void flush(MatAssemblyType assemblyType)
       {
         if (_accessorState == addValues || _accessorState == setValues || assemblyType == MAT_FINAL_ASSEMBLY)
