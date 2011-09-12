@@ -196,15 +196,61 @@ namespace Dune {
 
       //! clear one row of the matrix
       template<typename C, typename RI>
-      static void clear_row (RI i, C& c)
+      static void clear_row (RI i, C& c, const typename C::field_type& diag_val)
       {
         typedef typename C::ColIterator coliterator;
         coliterator end=c[i/ROWBLOCKSIZE].end();
         for (coliterator j=c[i/ROWBLOCKSIZE].begin(); j!=end; ++j)
           for (int jj=0; jj<COLBLOCKSIZE; jj++)
             (*j)[i%ROWBLOCKSIZE][jj] = 0;
+        access(c,i,i) = diag_val;
       }
+
+      template<typename LFSV, typename LFSU>
+      struct Accessor
+      {
+
+        typedef ISTLBCRSMatrixBackend<ROWBLOCKSIZE,COLBLOCKSIZE> Backend;
+        typedef typename Backend::size_type size_type;
+        typedef typename Backend::template Matrix<double> Matrix;
+
+        Accessor(Matrix& matrix, const LFSV& lfsv, const LFSU& lfsu)
+          : _matrix(matrix)
+          , _lfsv(lfsv)
+          , _lfsu(lfsu)
+        {}
+
+        void set(size_type i, size_type j, const typename Matrix::field_type& v)
+        {
+          Backend::access(_matrix,_lfsv.globalIndex(i),_lfsu.globalIndex(j)) = v;
+        }
+
+        void add(size_type i, size_type j, const typename Matrix::field_type& v)
+        {
+          Backend::access(_matrix,_lfsv.globalIndex(i),_lfsu.globalIndex(j)) += v;
+        }
+
+        typename Matrix::field_type get(size_type i, size_type j) const
+        {
+          return Backend::access(_matrix,_lfsv.globalIndex(i),_lfsu.globalIndex(j));
+        }
+
+        Matrix& _matrix;
+        const LFSV& _lfsv;
+        const LFSU& _lfsu;
+
+      };
+
+      template<typename C>
+      static void flush(C& matrix)
+      {}
+
+      template<typename C>
+      static void finalize(C& matrix)
+      {}
+
     };
+
 
   } // namespace PDELab
 } // namespace Dune
