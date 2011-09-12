@@ -12,7 +12,7 @@ namespace Dune{
 
     /** Traits of the local assembler
 
-        \tparam GO The grid operator 
+        \tparam GO The grid operator
 
     */
     template<typename GO>
