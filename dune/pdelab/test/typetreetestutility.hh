@@ -15,14 +15,16 @@ struct Counter
   Counter(const Counter& rhs)
     : _id(_ids++)
   {
+    rhs.assert_valid();
     std::cout << "Copy-Constructed id = " << id() << " from id = " << rhs.id() << std::endl;
   }
 
   Counter(Counter&& rhs)
     : _id(rhs._id)
   {
+    rhs.assert_valid();
     rhs._id = -1;
-    std::cout << "Move-Constructed id = " << id() << " from id = " << rhs.id() << std::endl;
+    std::cout << "Move-Constructed id = " << id() << std::endl;
   }
 
   ~Counter()
@@ -32,19 +34,30 @@ struct Counter
 
   Counter& operator=(const Counter& rhs)
   {
+    rhs.assert_valid();
+    assert_valid();
     std::cout << "Assigned id = " << id() << " from id = " << rhs.id() << std::endl;
     return *this;
   }
 
   Counter& operator=(Counter&& rhs)
   {
+    assert_valid();
+    rhs.assert_valid();
     std::cout << "Move-Assigned id = " << id() << " from id = " << rhs.id() << std::endl;
+    rhs._id = -1;
     return *this;
   }
 
   int id() const
   {
+    assert_valid();
     return _id;
+  }
+
+  void assert_valid() const
+  {
+    assert(_id != -1);
   }
 
   int _id;
