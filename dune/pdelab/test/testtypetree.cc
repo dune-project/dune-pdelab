@@ -91,10 +91,17 @@ int main(int argc, char** argv)
   sp1_1.setChild(1,sl1);
   sp1_1.setChild(2,sl1);
 
+  Dune::PDELab::TypeTree::applyToTree(sp1_1,TreePrinter());
+
   SimpleLeaf sl2;
   SP1 sp1_2(sl2,false);
 
-  Dune::PDELab::TypeTree::applyToTree(sp1_1,TreePrinter());
+  Dune::PDELab::TypeTree::applyToTree(sp1_2,TreePrinter());
+
+  SP1 sp1_2a(sl2,true);
+
+  Dune::PDELab::TypeTree::applyToTree(sp1_2a,TreePrinter());
+
 
   typedef SimpleComposite<SimpleLeaf,SP1,SimpleLeaf> SC1;
   SC1 sc1_1(sl1,sp1_2,sl2);
