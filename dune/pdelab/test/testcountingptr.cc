@@ -16,6 +16,9 @@
 class A : public Dune::PDELab::Countable
 {
 public:
+
+  A() {}
+
   void hello () const
   {
     std::cout << "object of const class A" << std::endl;
