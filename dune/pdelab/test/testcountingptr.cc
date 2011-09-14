@@ -18,11 +18,11 @@ class A : public Dune::PDELab::Countable
 public:
   void hello () const
   {
-    std::cout << "object of class A" << std::endl;
+    std::cout << "object of const class A" << std::endl;
   }
   void hello ()
   {
-    std::cout << "object of const class A" << std::endl;
+    std::cout << "object of class A" << std::endl;
   }
 };
 
