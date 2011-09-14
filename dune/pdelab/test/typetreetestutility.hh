@@ -88,6 +88,14 @@ struct SimpleLeaf
   {
     std::cout << "move ctor" << std::endl;
   }
+
+  SimpleLeaf(const SimpleLeaf& rhs)
+    : Dune::PDELab::TypeTree::LeafNode(rhs)
+    , Counter(rhs)
+  {
+    std::cout << "copy ctor" << std::endl;
+  }
+
 };
 
 struct SimpleLeafDerived
