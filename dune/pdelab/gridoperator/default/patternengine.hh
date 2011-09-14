@@ -58,6 +58,7 @@ namespace Dune{
       //! @{
       bool requireSkeleton() const
       { return local_assembler.doPatternSkeleton(); }
+
       bool requireUVVolume() const
       { return local_assembler.doPatternVolume(); }
       bool requireUVSkeleton() const
@@ -73,10 +74,10 @@ namespace Dune{
 
       void add_pattern(const LFSV& lfsv, const LFSU& lfsu, const LocalPattern& p)
       {
-        for (size_t k=0; k<localpattern.size(); ++k)
+        for (size_t k=0; k<p.size(); ++k)
           local_assembler.add_entry(*pattern,
-                                    lfsv.globalIndex(localpattern[k].i()),
-                                    lfsu.globalIndex(localpattern[k].j())
+                                    lfsv.globalIndex(p[k].i()),
+                                    lfsu.globalIndex(p[k].j())
                                     );
       }
 
