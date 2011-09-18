@@ -75,7 +75,7 @@ AC_DEFUN([DUNE_PATH_PETSC],[
           
       # defaultpath
       PETSC_LIB_PATH="$with_petsc$lib_path"
-      PETSC_INCLUDE_PATH="$with_petsc$include_path"
+      PETSC_INCLUDE_PATH="$with_petsc/$include_path"
                   
       PETSC_LIBS="-lpetsc $LAPACK_LIBS $BLAS_LIBS -lX11 $DUNEMPILIBS"
       PETSC_LDFLAGS="-L$PETSC_LIB_PATH $DUNEMPILDFLAGS"
