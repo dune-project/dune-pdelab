@@ -206,11 +206,10 @@ namespace Dune {
         access(c,i,i) = diag_val;
       }
 
-      template<typename LFSV, typename LFSU>
+      template<typename LFSV, typename LFSU, typename E>
       struct Accessor
       {
-        typedef typename LFSU::Traits::FiniteElementType::
-                Traits::LocalBasisType::Traits::RangeFieldType ElementType;
+        typedef E ElementType;
         typedef ISTLBCRSMatrixBackend<ROWBLOCKSIZE,COLBLOCKSIZE> Backend;
         typedef typename Backend::size_type size_type;
         typedef typename Backend::template Matrix<ElementType> Matrix;

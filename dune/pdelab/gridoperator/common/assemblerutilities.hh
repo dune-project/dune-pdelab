@@ -193,7 +193,7 @@ namespace Dune{
       void eread (const LFSV& lfsv, const LFSU& lfsu, const GC& globalcontainer,
                   LocalMatrix<T>& localcontainer) const
       {
-        typename B::template Accessor<LFSV,LFSU> accessor(globalcontainer,lfsv,lfsu);
+        typename B::template Accessor<LFSV,LFSU,T> accessor(globalcontainer,lfsv,lfsu);
         for (int i=0; i<lfsv.size(); i++)
           for (int j=0; j<lfsu.size(); j++)
             localcontainer(i,j) = accessor.get(i,j);
@@ -203,7 +203,7 @@ namespace Dune{
       template<typename LFSV, typename LFSU, typename T, typename GC>
       void ewrite (const LFSV& lfsv, const LFSU& lfsu, const LocalMatrix<T>& localcontainer, GC& globalcontainer) const
       {
-        typename B::template Accessor<LFSV,LFSU> accessor(globalcontainer,lfsv,lfsu);
+        typename B::template Accessor<LFSV,LFSU,T> accessor(globalcontainer,lfsv,lfsu);
         for (int i=0; i<lfsv.size(); i++)
           for (int j=0; j<lfsu.size(); j++)
             accessor.set(i,j,localcontainer(i,j));
@@ -213,7 +213,7 @@ namespace Dune{
       template<typename LFSV, typename LFSU, typename T, typename GC>
       void eadd (const LFSV& lfsv, const LFSU& lfsu, const LocalMatrix<T>& localcontainer, GC& globalcontainer) const
       {
-        typename B::template Accessor<LFSV,LFSU> accessor(globalcontainer,lfsv,lfsu);
+        typename B::template Accessor<LFSV,LFSU,T> accessor(globalcontainer,lfsv,lfsu);
         for (size_t i=0; i<lfsv.size(); i++)
           for (size_t j=0; j<lfsu.size(); j++)
             accessor.add(i,j,localcontainer(i,j));
@@ -228,7 +228,7 @@ namespace Dune{
       void etadd (const LFSV& lfsv, const LFSU& lfsu, const LocalMatrix<T>& localcontainer, GC& globalcontainer) const
       {
 
-        typename B::template Accessor<LFSV,LFSU> accessor(globalcontainer,lfsv,lfsu);
+        typename B::template Accessor<LFSV,LFSU,T> accessor(globalcontainer,lfsv,lfsu);
 
         for (size_t i=0; i<lfsv.size(); i++)
           for (size_t j=0; j<lfsu.size(); j++){

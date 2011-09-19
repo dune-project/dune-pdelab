@@ -623,10 +623,12 @@ namespace Dune {
     {
     public:
 
-      template<typename LFSV, typename LFSU>
+      template<typename LFSV, typename LFSU, typename E>
       class Accessor
         : public PetscMatrixAccessor<LFSV,LFSU>
       {
+
+        dune_static_assert((is_same<E,double>::value),"Petsc currently only supports double as field type");
 
       public:
 
@@ -820,10 +822,12 @@ namespace Dune {
       };
 
 
-      template<typename LFSV, typename LFSU>
+      template<typename LFSV, typename LFSU, typename E>
       class Accessor
         : public PetscNestedMatrixAccessor<LFSV,LFSU>
       {
+
+        dune_static_assert((is_same<E,double>::value),"Petsc currently only supports double as field type");
 
       public:
 
