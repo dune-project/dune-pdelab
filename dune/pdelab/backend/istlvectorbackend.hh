@@ -84,17 +84,17 @@ namespace Dune {
         return container[i];
       }
 
-      E two_norm() const
+      typename Dune::template FieldTraits<E>::real_type two_norm() const
       {
         return container.two_norm();
       }
 
-      E one_norm() const
+      typename Dune::template FieldTraits<E>::real_type one_norm() const
       {
         return container.one_norm();
       }
 
-      E infinity_norm() const
+      typename Dune::template FieldTraits<E>::real_type infinity_norm() const
       {
         return container.infinity_norm();
       }

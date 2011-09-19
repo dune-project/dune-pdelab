@@ -209,10 +209,11 @@ namespace Dune {
       template<typename LFSV, typename LFSU>
       struct Accessor
       {
-
+        typedef typename LFSU::Traits::FiniteElementType::
+                Traits::LocalBasisType::Traits::RangeFieldType ElementType;
         typedef ISTLBCRSMatrixBackend<ROWBLOCKSIZE,COLBLOCKSIZE> Backend;
         typedef typename Backend::size_type size_type;
-        typedef typename Backend::template Matrix<double> Matrix;
+        typedef typename Backend::template Matrix<ElementType> Matrix;
 
         Accessor(Matrix& matrix, const LFSV& lfsv, const LFSU& lfsu)
           : _matrix(matrix)

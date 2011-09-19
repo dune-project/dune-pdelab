@@ -73,7 +73,7 @@ namespace Dune {
         \param[in] v the given vector
       */
       template<class V>
-      typename V::ElementType norm(const V& v) const
+      typename Dune::template FieldTraits<typename V::ElementType >::real_type norm(const V& v) const
       {
         return v.base().two_norm();
       }
@@ -162,7 +162,7 @@ namespace Dune {
         \param[in] reduction to be achieved
       */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename W::ElementType reduction)
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType >::real_type reduction)
       {
         Dune::MatrixAdapter<typename M::BaseT, 
                             typename V::BaseT, 
