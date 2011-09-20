@@ -6,6 +6,7 @@
 #if HAVE_PETSC
 
 #include <petscsys.h>
+#include <petscversion.h>
 #include <dune/common/exceptions.hh>
 
 namespace Dune {
@@ -29,6 +30,13 @@ namespace Dune {
 PETSC_GUARD_START \
 PetscErrorCode __petsc_err = (x); \
 PETSC_GUARD_END(__petsc_err)
+
+
+#define DUNE_PETSC_NEWER(MAJOR,MINOR,SUBMINOR)                          \
+  PETSC_VERSION_MAJOR > MAJOR ||                                        \
+  (PETSC_VERSION_MAJOR >= MAJOR &&                                      \
+   PETSC_VERSION_MINOR >= MINOR &&                                      \
+   PETSC_VERSION_SUBMINOR >= SUBMINOR)
 
 #endif // HAVE_PETSC
 
