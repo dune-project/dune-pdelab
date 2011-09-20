@@ -648,7 +648,7 @@ namespace Dune {
       public:
 
         template<typename GridOperator>
-        Matrix(const GridOperator& go)
+        explicit Matrix(const GridOperator& go)
         : PetscMatrixContainer(go)
         {}
       };
