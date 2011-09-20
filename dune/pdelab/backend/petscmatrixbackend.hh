@@ -769,17 +769,20 @@ namespace Dune {
 
       double get(size_type i, size_type j)
       {
-        return accessor(i,j).get(i,j);
+        PetscMatrixAccessorBase& a = accessor(i,j);
+        return a.get(i,j);
       }
 
       void set(size_type i, size_type j, double v)
       {
-        accessor(i,j).set(i,j,v);
+        PetscMatrixAccessorBase& a = accessor(i,j);
+        a.set(i,j,v);
       }
 
       void add(size_type i, size_type j, double v)
       {
-        accessor(i,j).add(i,j,v);
+        PetscMatrixAccessorBase& a = accessor(i,j);
+        a.add(i,j,v);
       }
 
     private:
