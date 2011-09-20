@@ -752,9 +752,9 @@ namespace Dune {
             Mat submat;
             PETSC_CALL(MatNestGetSubMat(_m.base(),mi,mj,&submat));
             shared_ptr<PetscMatrixContainer> c(make_shared<PetscMatrixContainer>(submat,false));
-            swap(a->_rows,_row_indices[mi]);
-            swap(a->_cols,_col_indices[mj]);
             a = make_shared<PetscMatrixAccessorBase>(*c,(*(row+1))-(*row),(*(col+1))-(*col),_global_row_offsets[mi],_global_col_offsets[mj]);
+            a->_rows = _row_indices[mi];
+            a->_cols = _col_indices[mj];
             _accessors[mi*N + mj] = a;
             _matrices[mi*N + mj] = c;
           }
