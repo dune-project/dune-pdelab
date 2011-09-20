@@ -82,7 +82,11 @@ namespace Dune {
         checkin();
         if (_managed)
           {
+#if DUNE_PETSC_NEWER(3,2,0)
+            PETSC_CALL(VecDestroy(&_v));
+#else
             PETSC_CALL(VecDestroy(_v));
+#endif
           }
       }
 
