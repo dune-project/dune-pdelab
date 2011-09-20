@@ -82,7 +82,7 @@ namespace Dune {
         checkin();
         if (_managed)
           {
-            PETSC_CALL(VecDestroy(&_v));
+            PETSC_CALL(VecDestroy(_v));
           }
       }
 
