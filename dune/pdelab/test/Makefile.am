@@ -42,7 +42,11 @@ noinst_HEADERS =				\
 	gnuplotgraph.hh				\
 	gridexamples.hh				\
 	l2difference.hh				\
-	l2norm.hh
+	l2norm.hh                               \
+        typetreetargetnodes.hh                  \
+        typetreetestswitch.hh                   \
+        typetreetestutility.hh
+
 
 noinst_SCRIPTS =				\
 	make_pvd.sh

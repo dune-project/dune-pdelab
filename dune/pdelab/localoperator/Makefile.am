@@ -19,6 +19,7 @@ common_HEADERS =				\
 	l2.hh					\
 	laplacedirichletccfv.hh			\
 	laplacedirichletp12d.hh			\
+        linearelasticity.hh                     \
 	linearacousticsdg.hh			\
 	linearacousticsparameter.hh		\
 	maxwelldg.hh				\
@@ -29,6 +30,8 @@ common_HEADERS =				\
 	scaled.hh				\
 	stokesdg.hh				\
 	sum.hh					\
+        stokesdgparameter.hh                    \
+        stokesdg_vecfem.hh                      \
 	transportccfv.hh			\
 	twophaseccfv.hh				\
 	vectorwave.hh				\

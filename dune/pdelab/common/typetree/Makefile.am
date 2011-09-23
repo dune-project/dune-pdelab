@@ -8,11 +8,13 @@ common_HEADERS =				\
 	compositenodemacros.hh			\
 	filteredcompositenode.hh		\
 	filters.hh				\
+        fixedcapacitystack.hh                   \
 	generictransformationdescriptors.hh	\
 	leafnode.hh				\
 	nodeinterface.hh			\
 	nodetags.hh				\
 	pairtraversal.hh			\
+        powercompositenodetransformationtemplates.hh \
 	powernode.hh				\
 	proxynode.hh				\
 	simpletransformationdescriptors.hh	\

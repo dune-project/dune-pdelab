@@ -1,4 +1,15 @@
 commondir = $(includedir)/dune/pdelab/backend
-common_HEADERS = istlmatrixbackend.hh istlvectorbackend.hh parallelistlhelper.hh seqistlsolverbackend.hh ovlpistlsolverbackend.hh novlpistlsolverbackend.hh istlsolverbackend.hh
+common_HEADERS = backendselector.hh             \
+                 istlmatrixbackend.hh           \
+                 istlsolverbackend.hh           \
+                 istlvectorbackend.hh           \
+                 novlpistlsolverbackend.hh      \
+                 ovlpistlsolverbackend.hh       \
+                 parallelistlhelper.hh          \
+                 petscmatrixbackend.hh          \
+                 petscnestedvectorbackend.hh    \
+                 petscutility.hh                \
+                 petscvectorbackend.hh          \
+                 seqistlsolverbackend.hh        
 
 include $(top_srcdir)/am/global-rules

@@ -1,7 +1,9 @@
 gridoperatoronestepdir = $(includedir)/dune/pdelab/gridoperator/onestep
 
 gridoperatoronestep_HEADERS =			\
+        enginebase.hh                           \
 	jacobianengine.hh			\
+        jacobianresidualengine.hh               \
 	localassembler.hh			\
 	patternengine.hh			\
 	prestageengine.hh			\

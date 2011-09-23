@@ -13,6 +13,7 @@ common_HEADERS =				\
 	jacobiantocurl.hh			\
 	range.hh				\
 	typetree.hh                             \
+        typetraits.hh                           \
 	vtkexport.hh
 
 include $(top_srcdir)/am/global-rules
