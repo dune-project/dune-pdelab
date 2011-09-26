@@ -18,6 +18,7 @@
 #include"idefault.hh"
 #include"flags.hh"
 #include"l2.hh"
+#include"stokesparameter.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -64,6 +65,9 @@ namespace Dune {
       public InstationaryLocalOperatorDefaultMethods<double>
 	{
 	public:
+      //! Boundary condition indicator type
+      typedef StokesBoundaryCondition BC;
+        
       // pattern assembly flags
       enum { doPatternVolume = true };
 
@@ -237,13 +241,6 @@ namespace Dune {
         typedef typename LFSV_V::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::DomainFieldType DF;
 
-        // extract velocity boundary function (equal for all
-        // dimensions)
-        typedef typename B::template Child<0>::Type B_V_PFS;
-        const B_V_PFS & b_v_pfs = b.template child<0>();
-        typedef typename B_V_PFS::template Child<0>::Type B_V;
-        const B_V & boundary_function = b_v_pfs.template child<0>();
-
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
@@ -252,11 +249,11 @@ namespace Dune {
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
             // evaluate boundary condition type
-            typename B_V::Traits::RangeType bctype;
-            boundary_function.evaluate(ig,it->position(),bctype);
+            typename BC::Type bctype;
+            b.evaluate(ig,it->position(),bctype);
  
             // skip rest if we are on Dirichlet boundary
-            if (bctype>0) continue;
+            if (bctype == BC::VelocityDirichlet) continue;
 
             // position of quadrature point in local coordinates of element 
             Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());

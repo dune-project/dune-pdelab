@@ -33,6 +33,65 @@ namespace Dune {
             };
         };
         
+        template<typename BF>
+        class StokesVelocityDirichletConstraints
+            : public Dune::PDELab::DirichletConstraintsParameters
+        {
+        private:
+            const BF & boundary_function_;
+  
+        public:
+
+            StokesVelocityDirichletConstraints (const BF bf)
+                : boundary_function_(bf)
+            {
+            }
+
+            template<typename I>
+            bool isDirichlet(
+                const I & intersection,
+                const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                ) const
+            {
+                StokesBoundaryCondition::Type bctype;
+                boundary_function_.evaluate(intersection,coord,bctype);
+
+                return (bctype ==
+                    StokesBoundaryCondition::VelocityDirichlet);
+            }
+            
+        };
+        
+        template<typename BF>
+        class StokesPressureDirichletConstraints
+            : public Dune::PDELab::DirichletConstraintsParameters
+        {
+        private:
+            const BF & boundary_function_;
+  
+        public:
+
+            StokesPressureDirichletConstraints (const BF bf)
+                : boundary_function_(bf)
+            {
+            }
+
+            template<typename I>
+            bool isDirichlet(
+                const I & intersection,
+                const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                ) const
+            {
+                StokesBoundaryCondition::Type bctype;
+                boundary_function_.evaluate(intersection,coord,bctype);
+
+                return (bctype ==
+                    StokesBoundaryCondition::PressureDirichlet);
+            }
+            
+        };
+        
+        
     }
 }
 
