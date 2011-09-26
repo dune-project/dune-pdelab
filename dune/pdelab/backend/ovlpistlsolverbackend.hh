@@ -442,6 +442,62 @@ namespace Dune {
       int verbose;
     };
     
+    // Base class for ILU0 as preconditioner
+    template<class GFS, class C,
+             template<class> class Solver>
+    class ISTLBackend_OVLP_ILU0_Base
+      : public OVLPScalarProductImplementation<GFS>, public LinearResultStorage
+    {
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] gfs_ a grid function space
+        \param[in] c_ a constraints object
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] steps_ number of SSOR steps to apply as inner iteration
+        \param[in] verbose_ print messages if true
+      */
+      ISTLBackend_OVLP_ILU0_Base (const GFS& gfs_, const C& c_, unsigned maxiter_=5000, int verbose_=1)
+        : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), c(c_), maxiter(maxiter_), verbose(verbose_)
+      {}
+      
+      /*! \brief solve the given linear system
+
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      {
+        typedef Dune::PDELab::OverlappingOperator<C,M,V,W> POP;
+        POP pop(c,A);
+        typedef OVLPScalarProduct<GFS,V> PSP;
+        PSP psp(*this);
+        typedef SeqILU0<M,V,W,1> SeqPrec;
+        SeqPrec seqprec(A,1.0);
+        typedef Dune::PDELab::OverlappingWrappedPreconditioner<C,GFS,SeqPrec> WPREC;
+        WPREC wprec(gfs,seqprec,c,this->parallelHelper());
+        int verb=0;
+        if (gfs.gridview().comm().rank()==0) verb=verbose;
+        Solver<V> solver(pop,psp,wprec,reduction,maxiter,verb);
+        Dune::InverseOperatorResult stat;
+        solver.apply(z,r,stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+        res.conv_rate  = stat.conv_rate;
+      }
+    private:
+      const GFS& gfs;
+      const C& c;
+      unsigned maxiter;
+      int steps;
+      int verbose;
+    };
+
     //! \addtogroup PDELab_ovlpsolvers Overlapping Solvers
     //! \{
 
@@ -466,6 +522,27 @@ namespace Dune {
       ISTLBackend_OVLP_BCGS_SSORk (const GFS& gfs, const CC& cc, unsigned maxiter=5000,
                                             int steps=5, int verbose=1)
         : ISTLBackend_OVLP_Base<GFS,CC,Dune::SeqSSOR, Dune::BiCGSTABSolver>(gfs, cc, maxiter, steps, verbose)
+      {}
+    };
+    /**
+     * @brief Overlapping parallel BiCGStab solver with ILU0 preconditioner
+     * @tparam GFS The Type of the GridFunctionSpace.
+     * @tparam CC The Type of the Constraints Container.
+     */
+    template<class GFS, class CC>
+    class ISTLBackend_OVLP_BCGS_ILU0
+      : public ISTLBackend_OVLP_ILU0_Base<GFS,CC,Dune::BiCGSTABSolver>
+    {
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] gfs a grid function space
+        \param[in] cc a constraints container object
+        \param[in] maxiter maximum number of iterations to do
+        \param[in] verbose print messages if true
+      */
+      ISTLBackend_OVLP_BCGS_ILU0 (const GFS& gfs, const CC& cc, unsigned maxiter=5000, int verbose=1)
+        : ISTLBackend_OVLP_ILU0_Base<GFS,CC,Dune::BiCGSTABSolver>(gfs, cc, maxiter, verbose)
       {}
     };
     /**
