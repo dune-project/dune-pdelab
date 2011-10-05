@@ -126,8 +126,6 @@ namespace Dune {
                     const Dune::FieldVector<DF,dim> local = it->position();
                     const Dune::FieldVector<DF,dimw> global = eg.geometry().global(local);
                     
-                    const RF mu = prm.mu(eg,local);
-
                     // values of velocity shape functions
                     std::vector<RT> phi_v(vsize);
                     FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
@@ -140,7 +138,7 @@ namespace Dune {
                     //================================================//
                     // \int (f*v)
                     //================================================//
-                    const RF factor = mu * weight;
+                    const RF factor = weight;
                     for (unsigned int d=0; d<dim; d++)
                     {
                         const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
