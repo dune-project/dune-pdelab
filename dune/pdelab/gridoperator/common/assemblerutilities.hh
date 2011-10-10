@@ -228,7 +228,7 @@ namespace Dune{
       {
         const CU & cu = *pconstraintsu;
 
-        typedef typename CV::const_iterator global_vcol_iterator;
+        typedef typename CU::const_iterator global_ucol_iterator;
 
         for (size_t j = 0; j < lfsu.size(); ++j)
           {
