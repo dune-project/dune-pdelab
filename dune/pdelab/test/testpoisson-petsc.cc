@@ -31,7 +31,7 @@
 #include"../constraints/constraints.hh"
 #include"../common/function.hh"
 #include"../common/vtkexport.hh"
-#include"../gridoperator/gridoperator.Hh"
+#include"../gridoperator/gridoperator.hh"
 #include"../backend/petscvectorbackend.hh"
 #include"../backend/petscmatrixbackend.hh"
 #include"../localoperator/laplacedirichletp12d.hh"
