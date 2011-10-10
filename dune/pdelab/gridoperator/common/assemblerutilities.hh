@@ -219,6 +219,40 @@ namespace Dune{
             accessor.add(i,j,localcontainer(i,j));
       }
 
+
+      /** \brief Add local matrix to global matrix,
+          and apply Dirichlet constraints in a symmetric
+          fashion. Apart from that, identical to etadd(). */
+      template<typename LFSV, typename LFSU, typename T, typename GC>
+      void etadd_symmetric (const LFSV& lfsv, const LFSU& lfsu, LocalMatrix<T>& localcontainer, GC& globalcontainer) const
+      {
+        const CU & cu = *pconstraintsu;
+
+        typedef typename CV::const_iterator global_vcol_iterator;
+
+        for (size_t j = 0; j < lfsu.size(); ++j)
+          {
+            global_ucol_iterator cuit = cu.find(lfsu.globalIndex(j));
+
+            // If this column is not constrained or the constraint is not of
+            // Dirichlet type, abort
+            if (cuit == cu.end() || cuit->second.size() > 0)
+              continue;
+
+            // clear out the current column
+            for (size_t i = 0; i < lfsv.size(); ++i)
+              {
+                // we do not need to update the residual, since the solution
+                // (i.e. the correction) for the Dirichlet DOF is 0 by definition
+                localcontainer(lfsv,i,lfsu,j) = 0.0;
+              }
+          }
+
+        // hand off to standard etadd() method
+        etadd(lfsv,lfsu,localcontainer,globalcontainer);
+      }
+
+
       /** \brief Add local matrix \f$m\f$ to global Jacobian \f$J\f$
           and apply constraints transformation. Hence we perform: \f$
           \boldsymbol{J} := \boldsymbol{J} + \boldsymbol{S}_{
