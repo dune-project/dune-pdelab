@@ -123,6 +123,30 @@ namespace Dune {
 
     //! construct a VTKGridFunctionAdapter
     /**
+     * \param gf    GridFunction object to wrap.  A reference to the grid
+     *              function object is stored internally and the constructed
+     *              object becomes invalid as soon as that reference becomes
+     *              invalid.
+     * \param name  Name of the field as returned by name().
+     * \param remap How components are remapped between PDELab and VTK.  The
+     *              default value yields the identity map with entries
+     *              (0,1,...,T::Traits::dimRange-1).
+     *
+     * The resulting VTKFunction will have \c remap_.size() components.  None
+     * of the elements of \c remap should be greater or equal to \c
+     * T::Traits::dimRange.  When component \c c is requested by the
+     * VTKWriter, it will be mapped to the component \c remap[c] of the
+     * GridFunction.
+     */
+    template<class GF>
+    shared_ptr<VTKGridFunctionAdapter<GF> > makeVTKGridFunctionAdapter
+    ( const GF &gf, const std::string &name,
+      const std::vector<std::size_t> &remap =
+        rangeVector(std::size_t(GF::Traits::dimRange)))
+    { return make_shared<VTKGridFunctionAdapter<GF> >(stackobject_to_shared_ptr(gf), name, remap); }
+
+    //! construct a VTKGridFunctionAdapter
+    /**
      * \param gf    Shared pointer to a GridFunction object to wrap.
      * \param name  Name of the field as returned by name().
 
