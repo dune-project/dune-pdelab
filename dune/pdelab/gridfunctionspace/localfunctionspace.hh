@@ -151,11 +151,17 @@ namespace Dune {
     template<typename GFS>
     struct LocalFunctionSpaceBaseTraits
     {
-      //! \brief the grid view where grid function is defined upon
+      //! \brief Type of the underlying grid function space
       typedef GFS GridFunctionSpaceType;
 
-      //! \brief Type to store indices from Backend
+      //! \brief Type of the underlying grid function space
+      typedef GFS GridFunctionSpace;
+
+      //! \brief Type of the grid view that the underlying grid function space is defined on.
       typedef typename GFS::Traits::GridViewType GridViewType;
+
+      //! \brief Type of the grid view that the underlying grid function space is defined on.
+      typedef typename GFS::Traits::GridViewType GridView;
 
       //! \brief Type of codim 0 entity in the grid
       typedef typename GridViewType::Traits::template Codim<0>::Entity Element;
