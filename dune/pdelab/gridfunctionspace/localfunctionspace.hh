@@ -747,6 +747,9 @@ namespace Dune {
     // local function facade
     //=======================================
 
+    template <typename GFS, typename TAG=AnySpaceTag>
+    class LocalFunctionSpace;
+
     /**
        \brief Create a local function space from a global function space
 
@@ -757,11 +760,9 @@ namespace Dune {
        If no TAG is specified the AnySpaceTag is used, which basicly
        states, that it is not clear, whether this is a trial of a test
        space.
-     */
-    template <typename GFS, typename TAG=AnySpaceTag>
-    class LocalFunctionSpace;
 
-    // tagged version
+       \extends LocalFunctionSpaceBaseNode
+     */
     template <typename GFS, typename TAG>
     class LocalFunctionSpace :
       public Dune::PDELab::TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::Type
