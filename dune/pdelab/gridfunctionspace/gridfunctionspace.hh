@@ -1644,8 +1644,6 @@ namespace Dune {
 
     public:
 
-      typedef typename Dune::PDELab::TypeTree::TransformTree<GridFunctionSubSpace,gfs_to_lfs>::Type LocalFunctionSpace;
-
       GridFunctionSubSpace (const GFS& gfs)
         : BaseT(gfs)
       {
