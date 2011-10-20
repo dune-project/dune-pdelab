@@ -668,7 +668,7 @@ namespace Dune {
 
       //! Calculates the multiindices associated with the given entity.
       template<typename Entity, typename MultiIndexIterator>
-      void multiIndices(const Entity& e, MultiIndexIterator it, MultiIndexIterator end)
+      void multiIndices(const Entity& e, MultiIndexIterator it, MultiIndexIterator endit)
       {
         // get layout of entity
         const typename FESwitch::Coefficients &coeffs =
