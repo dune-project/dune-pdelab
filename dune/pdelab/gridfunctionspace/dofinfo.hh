@@ -25,7 +25,7 @@ namespace Dune {
     //! classify the dofs according to the partition type of their entities
     /**
      * \code
-#include <dune/pdelab/gridfunctionspace/dofclassification.hh>
+#include <dune/pdelab/gridfunctionspace/dofinfo.hh>
      * \endcode
      * This determines for every dof whether that dof is in or on the border
      * of an interior, overlap, or ghost grid element.  The arrays \c
@@ -70,7 +70,7 @@ namespace Dune {
     //! get the "positions" of dofs
     /**
      * \code
-#include <dune/pdelab/gridfunctionspace/dofclassification.hh>
+#include <dune/pdelab/gridfunctionspace/dofinfo.hh>
      * \endcode
      * More precisely, determine the position of the center of their
      * associated entity.
