@@ -15,7 +15,7 @@ namespace Dune {
 
     //! Do-nothing local operator
     /**
-     * Thi local operator does nothing nothing.  It can be used as a
+     * This local operator does nothing.  It can be used as a
      * placeholder where an (instationary) local operator is semantically
      * required but not actually used.
      *
