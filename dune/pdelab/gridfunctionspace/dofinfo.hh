@@ -119,6 +119,65 @@ namespace Dune {
       }
     }
 
+    //! get the "values" of dofs
+    /**
+     * \code
+#include <dune/pdelab/gridfunctionspace/dofinfo.hh>
+     * \endcode
+     *
+     * Evaluate the base function associated with a dof at the center of that
+     * dofs associated entity.  This is mostly interesting for vector-values
+     * finite elements; scalar-valued finite elements will have mostly 1 in as
+     * the value everywhere.
+     *
+     * \note Does not work for systems currently.
+     */
+    template<class GFS>
+    void getDofEntityValues
+    ( const GFS& gfs,
+      typename Dune::PDELab::BackendVectorSelector<
+        GFS,
+        typename Dune::BasisInterfaceSwitch
+        <typename Dune::FiniteElementInterfaceSwitch
+         <typename GFS::Traits::FiniteElementType>::Basis>::Range>::Type
+        &values)
+    {
+      typedef typename GFS::Traits::GridViewType GV;
+      typedef typename GV::template Codim<0>::Iterator Iterator;
+      typedef GenericReferenceElements<typename GV::ctype, GV::dimension>
+        Refelems;
+      typedef GenericReferenceElement<typename GV::ctype, GV::dimension>
+        Refelem;
+      typedef FiniteElementInterfaceSwitch<typename LocalFunctionSpace<GFS>::
+                                           Traits::FiniteElementType> FESwitch;
+      typedef BasisInterfaceSwitch<typename FESwitch::Basis> BasisSwitch;
+      typedef typename BasisSwitch::Range Range;
+
+      LocalFunctionSpace<GFS> lfs(gfs);
+      LocalVector<Range, AnySpaceTag> lv(gfs.maxLocalSize());
+      std::vector<Range> lvv(gfs.maxLocalSize());
+
+      const GV &gv = gfs.gridview();
+      const Iterator &end = gv.template end<0>();
+      for(Iterator it = gv.template begin<0>(); it != end; ++it) {
+        const Refelem &refelem = Refelems::general(it->type());
+
+        lfs.bind(*it);
+        const typename FESwitch::Coefficients &coefficients =
+          FESwitch::coefficients(lfs.finiteElement());
+        const typename FESwitch::Basis &basis =
+          FESwitch::basis(lfs.finiteElement());
+
+        for(std::size_t i = 0; i < lfs.size(); ++i) {
+          const LocalKey &key = coefficients.localKey(i);
+          basis.evaluateFunction(refelem.position(key.subEntity(), key.codim()), lvv);
+          lv[i] = lvv[i];
+        }
+
+        lfs.vwrite(lv, values);
+      }
+    }
+
   } // end namespace PDELab
 } // end namespace Dune
 
