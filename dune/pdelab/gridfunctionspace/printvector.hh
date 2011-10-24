@@ -22,6 +22,9 @@ namespace Dune {
 
     //! Print a vector with associciated dof positions
     /**
+\code
+#include <dune/pdelab/gridfunctionspace/printvector.hh>
+\endcode
      * This prints a vector in the following form:
 \verbatim
 title " [rank=" rank ", size=" size "]" NEWLINE
