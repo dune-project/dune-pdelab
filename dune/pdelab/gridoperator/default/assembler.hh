@@ -261,6 +261,6 @@ namespace Dune{
       mutable LFSV lfsvn;
     };
 
-  };
-};
+  }
+}
 #endif

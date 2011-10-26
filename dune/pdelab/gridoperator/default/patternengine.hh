@@ -174,6 +174,6 @@ namespace Dune{
       LocalPattern localpattern_sn, localpattern_ns;
     }; // End of class DefaultLocalPatternAssemblerEngine
 
-  };
-};
+  }
+}
 #endif

@@ -489,6 +489,6 @@ namespace Dune{
 
     }; // End of class OneStepLocalPreStageAssemblerEngine
 
-  };
-};
+  }
+}
 #endif

@@ -724,6 +724,6 @@ namespace Dune{
 
     }; // End of class OneStepJacobianResidualAssemblerEngine
 
-  };
-};
+  }
+}
 #endif

@@ -284,6 +284,6 @@ namespace Dune{
       //! @}
     };
 
-  };
-};
+  }
+}
 #endif

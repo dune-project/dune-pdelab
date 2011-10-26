@@ -239,6 +239,6 @@ namespace Dune{
       mutable LocalAssembler local_assembler;
     };
 
-  };
-};
+  }
+}
 #endif

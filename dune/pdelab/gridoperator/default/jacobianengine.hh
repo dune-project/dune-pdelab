@@ -262,6 +262,6 @@ namespace Dune{
 
     }; // End of class DefaultLocalJacobianAssemblerEngine
 
-  };
-};
+  }
+}
 #endif

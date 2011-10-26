@@ -323,6 +323,6 @@ namespace Dune{
 
     }; // End of class DefaultLocalResidualAssemblerEngine
 
-  };
-};
+  }
+}
 #endif
