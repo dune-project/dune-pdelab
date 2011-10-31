@@ -1,6 +1,10 @@
 #ifndef DUNE_PDELAB_LOCALOPERATOR_STOKESDGPARAMETER_HH
 #define DUNE_PDELAB_LOCALOPERATOR_STOKESDGPARAMETER_HH
 
+#include <dune/common/parametertreeparser.hh>
+
+#include <dune/pdelab/common/geometrywrapper.hh>
+
 #include "stokesparameter.hh"
 
 namespace Dune {

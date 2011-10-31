@@ -7,6 +7,8 @@
 
 #include <dune/common/stdstreams.hh>
 
+#include <dune/grid/common/genericreferenceelements.hh>
+
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
 #include <dune/pdelab/common/typetree.hh>
