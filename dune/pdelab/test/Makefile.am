@@ -323,11 +323,13 @@ check_PROGRAMS += testproxynode
 testproxynode_SOURCES = testproxynode.cc
 testproxynode_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE
 
+if PETSC
 check_PROGRAMS += testpoisson-petsc
 testpoisson_petsc_SOURCES = testpoisson-petsc.cc
 testpoisson_petsc_CPPFLAGS = @AM_CPPFLAGS@ $(PETSC_CPPFLAGS)
 testpoisson_petsc_LDFLAGS = $(AM_LDFLAGS) $(PETSC_LDFLAGS)
 testpoisson_petsc_LDADD = $(LDADD) $(PETSC_LIBS)
+endif
 
 MOSTLYCLEANFILES += poisson_petsc_*.vtu
 
