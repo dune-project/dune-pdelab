@@ -51,6 +51,11 @@ noinst_HEADERS =				\
 noinst_SCRIPTS =				\
 	make_pvd.sh
 
+headercheck_IGNORE =				\
+        typetreetargetnodes.hh			\
+        typetreetestswitch.hh			\
+        typetreetestutility.hh
+
 GRIDDIM = 2
 
 # scripts are not distributed automatically
