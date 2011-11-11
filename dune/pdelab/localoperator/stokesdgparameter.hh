@@ -266,6 +266,14 @@ namespace Dune {
                 return y;
             }
 
+            //! Rescaling factor for the incompressibility equation
+            typename Traits::RangeFieldType 
+            incompressibilityScaling ( typename Traits::RangeFieldType  dt ) const
+            {
+              typename P::Traits::RangeType y(1.0 / dt);
+              return y;
+            }
+
             /** \brief Interior penalty parameter.
 
                 \return The coefficient of the interior penalty term.

@@ -46,6 +46,9 @@ namespace Dune {
             typedef StokesBoundaryCondition BC;
             typedef typename PRM::Traits::RangeFieldType RF;
 
+            typedef InstationaryLocalOperatorDefaultMethods<double> InstatBase;
+            typedef typename InstatBase::RealType Real;
+
         public:
 
             // pattern assembly flags
@@ -75,8 +78,15 @@ namespace Dune {
                                                         finite element.
              */
             StokesDG (PRM & _prm, int _superintegration_order=0) :
-                prm(_prm), superintegration_order(_superintegration_order)
+              prm(_prm), superintegration_order(_superintegration_order),
+              current_dt(1.0)
             {}
+
+            // Store current dt
+            void preStep (RealType , RealType dt, int )
+            {
+              current_dt = dt;
+            }
 
             // volume integral depending only on test functions,
             // contains f on the right hand side
@@ -202,6 +212,8 @@ namespace Dune {
 
                 const RF penalty_factor = prm.getFaceIP(ig);
                 const int epsilon = prm.epsilonIPSymmetryFactor();
+                const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
+                
                 // loop over quadrature points and integrate normal flux
                 for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
                 {
@@ -264,7 +276,7 @@ namespace Dune {
                         for (unsigned int i=0;i<psize;++i) // test
                         {
                             RF val = phi_p[i]*(u0 * normal) * weight;
-                            r.accumulate(lfsv_p,i, - val);
+                            r.accumulate(lfsv_p,i, - val * incomp_scaling);
                         }
                     }
                     if (bctype == BC::PressureDirichlet)
@@ -332,6 +344,8 @@ namespace Dune {
                 const int jac_order = gt.isSimplex() ? 0 : 1;
                 const int qorder = 2*v_order - 2 + 2*jac_order + det_jac_order + superintegration_order;
                 const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
+
+                const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
                 
                 // loop over quadrature points
                 for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -392,7 +406,7 @@ namespace Dune {
                             for (unsigned int d=0; d<dim; d++)
                             {
                                 const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
-                                mat.accumulate(lfsv_p,j,lfsv_v,i, val*grad_phi_v[i][0][d]);
+                                mat.accumulate(lfsv_p,j,lfsv_v,i, val*grad_phi_v[i][0][d] * incomp_scaling);
                                 mat.accumulate(lfsv_v,i,lfsv_p,j, val*grad_phi_v[i][0][d]);
                             }
                         }
@@ -456,6 +470,7 @@ namespace Dune {
 
                 const RF penalty_factor = prm.getFaceIP(ig);
                 const int epsilon = prm.epsilonIPSymmetryFactor();
+                const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
 
                 // loop over quadrature points and integrate normal flux
                 for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -652,7 +667,7 @@ namespace Dune {
                                 const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
                                 RF val = 0.5*(phi_p_s[j]*normal[d]*phi_v_s[i]) * weight;
                                 mat_ss.accumulate(lfsv_s_v,i,lfsv_s_p,j, val);
-                                mat_ss.accumulate(lfsv_s_p,j,lfsv_s_v,i, val);
+                                mat_ss.accumulate(lfsv_s_p,j,lfsv_s_v,i, val * incomp_scaling);
                             }
                         }
                         for (unsigned int j=0;j<psize_n;++j) 
@@ -662,7 +677,7 @@ namespace Dune {
                                 const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
                                 RF val = 0.5*(phi_p_n[j]*normal[d]*phi_v_s[i]) * weight;
                                 mat_sn.accumulate(lfsv_s_v,i,lfsv_n_p,j, val);
-                                mat_ns.accumulate(lfsv_n_p,j,lfsv_s_v,i, val);
+                                mat_ns.accumulate(lfsv_n_p,j,lfsv_s_v,i, val * incomp_scaling);
                             }
                         }
                     }
@@ -677,7 +692,7 @@ namespace Dune {
                                 // the normal vector flipped, thus the sign flips
                                 RF val = -0.5*(phi_p_s[j]*normal[d]*phi_v_n[i]) * weight;
                                 mat_ns.accumulate(lfsv_n_v,i,lfsv_s_p,j, val);
-                                mat_sn.accumulate(lfsv_s_p,j,lfsv_n_v,i, val);
+                                mat_sn.accumulate(lfsv_s_p,j,lfsv_n_v,i, val * incomp_scaling);
                             }
                         }
                         for (unsigned int j=0;j<psize_n;++j) 
@@ -689,7 +704,7 @@ namespace Dune {
                                 // the normal vector flipped, thus the sign flips
                                 RF val = -0.5*(phi_p_n[j]*normal[d]*phi_v_n[i]) * weight;
                                 mat_nn.accumulate(lfsv_n_v,i,lfsv_n_p,j, val);
-                                mat_nn.accumulate(lfsv_n_p,j,lfsv_n_v,i, val);
+                                mat_nn.accumulate(lfsv_n_p,j,lfsv_n_v,i, val * incomp_scaling);
                             }
                         }
                     }
@@ -748,6 +763,7 @@ namespace Dune {
 
                 const RF penalty_factor = prm.getFaceIP(ig);
                 const int epsilon = prm.epsilonIPSymmetryFactor();
+                const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
 
                 // loop over quadrature points and integrate normal flux
                 for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -814,7 +830,7 @@ namespace Dune {
                                 {
                                     const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
                                     RF val = (phi_p[j]*normal[d]*phi_v[i]) * weight;
-                                    mat.accumulate(lfsv_p,j,lfsv_v,i, val); // q u n
+                                    mat.accumulate(lfsv_p,j,lfsv_v,i, val * incomp_scaling); // q u n
                                     mat.accumulate(lfsv_v,i,lfsv_p,j, val); // p v n
                                 }
                             }
@@ -902,7 +918,7 @@ namespace Dune {
                                 {
                                     const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
                                     RF val = (phi_p[j]*normal[d]*phi_v[i]) * weight;
-                                    mat.accumulate(lfsv_p,j,lfsv_v,i, val); // q u n
+                                    mat.accumulate(lfsv_p,j,lfsv_v,i, val * incomp_scaling); // q u n
                                     mat.accumulate(lfsv_v,i,lfsv_p,j, val); // p v n
                                 }
                             }
@@ -914,6 +930,7 @@ namespace Dune {
         protected:
           PRM & prm;                  // Parameter class for this local operator
           int superintegration_order; // Quadrature order
+          Real current_dt;
         };
 
 
