@@ -23,6 +23,15 @@ namespace Dune {
       return true;
     }
 
+    //! make sure all vector entries are below a certain limit
+    template<class Communication, class Vector>
+    bool checkVectorLimit(const Communication &comm, const Vector &v,
+                          typename Vector::ElementType limit)
+    {
+      bool good = checkVectorLimit(v, limit);
+      return comm.min(good);
+    }
+
   } // namespace PDELab
 } // namespace Dune
 
