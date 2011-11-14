@@ -7,7 +7,8 @@
 
 #include<dune/common/deprecated.hh>
 #include<dune/common/exceptions.hh>
-#include<dune/common/geometrytype.hh>
+
+#include <dune/geometry/type.hh>
 
 #include "../common/geometrywrapper.hh"
 #include "../constraints/constraints.hh"

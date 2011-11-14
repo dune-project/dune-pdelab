@@ -6,7 +6,7 @@
 
 #include <dune/common/deprecated.hh>
 
-#include <dune/grid/common/genericreferenceelements.hh>
+#include <dune/geometry/genericreferenceelements.hh>
 
 namespace Dune {
   namespace PDELab {

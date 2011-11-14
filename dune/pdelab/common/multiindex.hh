@@ -4,7 +4,8 @@
 #define DUNE_PDELAB_COMMON_MULTIINDEX_HH
 
 #include <dune/common/reservedvector.hh>
-#include <dune/common/geometrytype.hh>
+
+#include <dune/geometry/type.hh>
 
 #include <algorithm>
 #include <iomanip>

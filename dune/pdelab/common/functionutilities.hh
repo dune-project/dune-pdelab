@@ -8,11 +8,12 @@
 #include <ostream>
 
 #include <dune/common/debugstream.hh>
-#include <dune/common/geometrytype.hh>
 #include <dune/common/shared_ptr.hh>
 
+#include <dune/geometry/quadraturerules.hh>
+#include <dune/geometry/type.hh>
+
 #include <dune/grid/common/gridenums.hh>
-#include <dune/grid/common/quadraturerules.hh>
 #include <dune/grid/utility/hierarchicsearch.hh>
 
 namespace Dune {

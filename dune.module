@@ -6,4 +6,4 @@ Module: dune-pdelab
 Version: 0.1
 Maintainer: dune@dune-project.org
 #depending on 
-Depends: dune-common dune-grid dune-localfunctions dune-istl
+Depends: dune-common dune-geometry dune-grid dune-localfunctions dune-istl

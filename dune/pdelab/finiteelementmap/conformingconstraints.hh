@@ -7,9 +7,10 @@
 #include <cstddef>
 
 #include <dune/common/exceptions.hh>
-#include <dune/common/geometrytype.hh>
 
-#include <dune/grid/common/genericreferenceelements.hh>
+#include <dune/geometry/genericreferenceelements.hh>
+#include <dune/geometry/type.hh>
+
 #include <dune/grid/common/grid.hh>
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
