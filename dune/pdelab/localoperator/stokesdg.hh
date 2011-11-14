@@ -985,9 +985,6 @@ namespace Dune {
                 typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
                 const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
                 const unsigned int vsize = lfsv_v.size();
-                typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
-                const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
-                const unsigned int psize = lfsv_p.size();
 
                 // domain and range field type
                 typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
@@ -996,9 +993,6 @@ namespace Dune {
                 typedef typename BasisSwitch_V::Range RT;
                 typedef typename BasisSwitch_V::RangeField RF;
                 typedef typename BasisSwitch_V::Range Range_V;
-                typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-                typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
-                typedef typename BasisSwitch_P::Range Range_P;
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
@@ -1019,7 +1013,7 @@ namespace Dune {
                         if(rho == 0) continue;
                     
                         // and value of pressure shape functions
-                        std::vector<RT> phi_v(psize);
+                        std::vector<RT> phi_v(vsize);
                         FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
 
                         // compute gradients
@@ -1089,9 +1083,6 @@ namespace Dune {
                 typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
                 const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
                 const unsigned int vsize = lfsv_v.size();
-                typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
-                const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
-                const unsigned int psize = lfsv_p.size();
 
                 // domain and range field type
                 typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
@@ -1100,9 +1091,6 @@ namespace Dune {
                 typedef typename BasisSwitch_V::Range RT;
                 typedef typename BasisSwitch_V::RangeField RF;
                 typedef typename BasisSwitch_V::Range Range_V;
-                typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-                typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
-                typedef typename BasisSwitch_P::Range Range_P;
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
@@ -1123,7 +1111,7 @@ namespace Dune {
                         if(rho == 0) continue;
                     
                         // and value of pressure shape functions
-                        std::vector<RT> phi_v(psize);
+                        std::vector<RT> phi_v(vsize);
                         FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
 
                         // compute gradients
