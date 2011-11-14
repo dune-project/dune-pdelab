@@ -866,7 +866,7 @@ namespace Dune {
 	  }
 
 	private:
-	  const typename Traits::GridViewType& g;
+      typename Traits::GridViewType g;
 	  Imp& asImp () {return static_cast<Imp &> (*this);}
 	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
 	};
