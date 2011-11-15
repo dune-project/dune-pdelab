@@ -210,7 +210,6 @@ namespace Dune {
                 const int qorder = 2*v_order + det_jac_order + jac_order + superintegration_order;
                 const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
-                const RF penalty_factor = prm.getFaceIP(ig);
                 const int epsilon = prm.epsilonIPSymmetryFactor();
                 const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
                 
@@ -221,7 +220,9 @@ namespace Dune {
                     Dune::FieldVector<DF,dim-1> flocal = it->position();
                     Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(flocal);
                     Dune::FieldVector<DF,dimw> global = ig.geometry().global(flocal);
-                    
+                 
+                    const RF penalty_factor = prm.getFaceIP(ig,flocal);
+                   
                     // value of velocity shape functions
                     std::vector<RT> phi_v(vsize);
                     FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
@@ -468,17 +469,19 @@ namespace Dune {
                 const int qorder = 2*v_order + det_jac_order + superintegration_order;
                 const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
-                const RF penalty_factor = prm.getFaceIP(ig);
                 const int epsilon = prm.epsilonIPSymmetryFactor();
                 const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
 
                 // loop over quadrature points and integrate normal flux
                 for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
-                {
+                {                  
+
                     // position of quadrature point in local coordinates of element
                     Dune::FieldVector<DF,dim> local_s = ig.geometryInInside().global(it->position());
                     Dune::FieldVector<DF,dim> local_n = ig.geometryInOutside().global(it->position());
 
+                    const RF penalty_factor = prm.getFaceIP(ig,it->position());
+                
                     // value of velocity shape functions
                     std::vector<RT> phi_v_s(vsize_s);
                     std::vector<RT> phi_v_n(vsize_n);
@@ -761,7 +764,6 @@ namespace Dune {
                 // evaluate boundary condition type
                 typename PRM::Traits::BoundaryConditionType bctype(prm.bctype(ig,rule.begin()->position()));
 
-                const RF penalty_factor = prm.getFaceIP(ig);
                 const int epsilon = prm.epsilonIPSymmetryFactor();
                 const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
 
@@ -770,6 +772,8 @@ namespace Dune {
                 {
                     // position of quadrature point in local coordinates of element
                     Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
+
+                    const RF penalty_factor = prm.getFaceIP(ig,it->position() );
                     
                     // value of velocity shape functions
                     std::vector<RT> phi_v(vsize);

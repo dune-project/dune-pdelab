@@ -285,6 +285,17 @@ namespace Dune {
                 return ip.getFaceIP(ig);
             }
 
+            /** \brief Interior penalty parameter.
+
+                \return The coefficient of the interior penalty term.
+            */
+            template<typename I>
+            typename Traits::RangeFieldType       
+            getFaceIP(const I & ig, const typename Traits::IntersectionDomainType& ) const
+            {
+                return ip.getFaceIP(ig);
+            }
+
             //! Return the symmetry factor epsilon for this IP
             //! discretization
             int
