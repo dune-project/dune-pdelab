@@ -3,6 +3,7 @@
 #ifndef DUNE_PDELAB_COMMON_VECTORUTILITIES_HH
 #define DUNE_PDELAB_COMMON_VECTORUTILITIES_HH
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstdlib>
@@ -30,6 +31,25 @@ namespace Dune {
     {
       bool good = checkVectorLimit(v, limit);
       return comm.min(good);
+    }
+
+    //! Calculate infinity norm of all vector entries.
+    template<class Vector>
+    typename Vector::ElementType vectorInfNorm(const Vector &v) {
+      typedef typename Vector::Backend BE;
+      typename Vector::ElementType norm = 0;
+      for(std::size_t i = 0; i < v.flatsize(); ++i)
+        norm = std::max(norm, std::abs(BE::access(v, i)));
+      return norm;
+    }
+
+    //! Calculate infinity norm of all vector entries.
+    template<class Communication, class Vector>
+    typename Vector::ElementType vectorInfNorm(const Communication &comm,
+                                               const Vector &v)
+    {
+      typename Vector::ElementType norm = vectorInfNorm(v);
+      return comm.max(norm);
     }
 
   } // namespace PDELab
