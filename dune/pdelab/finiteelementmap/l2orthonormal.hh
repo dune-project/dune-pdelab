@@ -8,7 +8,7 @@
 #include<dune/common/fvector.hh>
 #include<dune/common/gmpfield.hh>
 
-#include<dune/geometry/genericreferenceelements.hh>
+#include<dune/geometry/referenceelements.hh>
 #include<dune/geometry/quadraturerules.hh>
 #include<dune/geometry/type.hh>
 

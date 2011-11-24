@@ -7,7 +7,7 @@
 
 #include <dune/common/stdstreams.hh>
 
-#include <dune/geometry/genericreferenceelements.hh>
+#include <dune/geometry/referenceelements.hh>
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 

@@ -15,7 +15,7 @@
 #include <dune/common/stdstreams.hh>
 #include <dune/common/typetraits.hh>
 
-#include <dune/geometry/genericreferenceelements.hh>
+#include <dune/geometry/referenceelements.hh>
 #include <dune/geometry/type.hh>
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
