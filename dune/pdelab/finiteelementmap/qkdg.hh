@@ -4,9 +4,9 @@
 #ifndef DUNE_QkDG_LOCALFINITEELEMENT_HH
 #define DUNE_QkDG_LOCALFINITEELEMENT_HH
 
-#include <dune/common/geometrytype.hh>
 #include <dune/common/fvector.hh>
 
+#include <dune/geometry/type.hh>
 
 #include <dune/localfunctions/common/localbasis.hh>
 #include <dune/localfunctions/common/localfiniteelementtraits.hh>
