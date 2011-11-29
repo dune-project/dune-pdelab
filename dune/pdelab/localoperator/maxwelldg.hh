@@ -7,16 +7,18 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
+
 #include<dune/grid/common/genericreferenceelements.hh>
-#include<dune/pdelab/common/geometrywrapper.hh>
+
 #include<dune/pdelab/common/function.hh>
+#include<dune/pdelab/common/geometrywrapper.hh>
+#include<dune/pdelab/finiteelement/localbasiscache.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
-#include<dune/pdelab/localoperator/pattern.hh>
+#include<dune/pdelab/localoperator/defaultimp.hh>
 #include<dune/pdelab/localoperator/flags.hh>
 #include<dune/pdelab/localoperator/idefault.hh>
-#include<dune/pdelab/localoperator/defaultimp.hh>
-#include<dune/pdelab/finiteelement/localbasiscache.hh>
+#include<dune/pdelab/localoperator/pattern.hh>
 
 #include"maxwellparameter.hh"
 
