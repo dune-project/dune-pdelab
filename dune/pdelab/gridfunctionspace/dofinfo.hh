@@ -9,7 +9,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
 
-#include <dune/geometry/genericreferenceelements.hh>
+#include <dune/geometry/referenceelements.hh>
 
 #include <dune/grid/common/gridenums.hh>
 
