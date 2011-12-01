@@ -567,19 +567,21 @@ namespace Dune {
      *
      * \tparam T Type of PowerGridFunctionSpace
      * \tparam X Type of coefficients vector
+     * \tparam dimR Force a different number of components for the resulting
+     *              GridFunction than the PowerGridFunctionSpace.
      */
-	template<typename T, typename X>
+    template<typename T, typename X, std::size_t dimR = T::CHILDREN>
 	class VectorDiscreteGridFunction
 	  : public GridFunctionInterface<
           GridFunctionTraits<
             typename T::Traits::GridViewType,
             typename T::template Child<0>::Type::Traits::FiniteElementType
                      ::Traits::LocalBasisType::Traits::RangeFieldType,
-            T::CHILDREN,
+            dimR,
             Dune::FieldVector<
               typename T::template Child<0>::Type::Traits::FiniteElementType
                        ::Traits::LocalBasisType::Traits::RangeFieldType,
-              T::CHILDREN
+              dimR
               >
             >,
           VectorDiscreteGridFunction<T,X>
@@ -592,14 +594,14 @@ namespace Dune {
           typename T::Traits::GridViewType,
           typename T::template Child<0>::Type::Traits::FiniteElementType
                    ::Traits::LocalBasisType::Traits::RangeFieldType,
-          T::CHILDREN,
+          dimR,
           Dune::FieldVector<
             typename T::template Child<0>::Type::Traits::FiniteElementType
                      ::Traits::LocalBasisType::Traits::RangeFieldType,
-            T::CHILDREN
+            dimR
             >
           >,
-        VectorDiscreteGridFunction<T,X>
+        VectorDiscreteGridFunction<T,X,dimR>
         > BaseT;
 
 	public:
@@ -610,10 +612,41 @@ namespace Dune {
       typedef typename ChildType::Traits::FiniteElementType
                        ::Traits::LocalBasisType::Traits::RangeType RT;
 
-	  VectorDiscreteGridFunction (const GFS& gfs, const X& x_)
+      //! construct
+      /**
+       * \param gfs   GridFunctionSpace.
+       * \param x_    Coefficient vector.
+       * \param start Number of first child of gfs to use.
+       */
+      VectorDiscreteGridFunction(const GFS& gfs, const X& x_,
+                                 std::size_t start = 0)
 		: pgfs(stackobject_to_shared_ptr(gfs)), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
 	  {
+        for(std::size_t i = 0; i < dimR; ++i)
+          remap[i] = i + start;
 	  }
+
+      //! construct
+      /**
+       * \param gfs    GridFunctionSpace.
+       * \param x_     Coefficient vector.
+       * \param remap_ Subscriptable entity (i.e. a container, array, or
+       *               pointer) with at least dimR entries.  The relevant
+       *               entries are copied.
+       *
+       * \note If \c i denotes a component of the resulting grid function,
+       *       then remap_[i] denotes the corresponding child of the
+       *       gridfunctionspace.
+       */
+      template<class Remap>
+      VectorDiscreteGridFunction(const GFS& gfs, const X& x_,
+                                 const Remap &remap_) :
+        pgfs(stackobject_to_shared_ptr(gfs)), xg(x_), lfs(gfs),
+        xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
+      {
+        for(std::size_t i = 0; i < dimR; ++i)
+          remap[i] = remap_[i];
+      }
 
 	  inline void evaluate (const typename Traits::ElementType& e,
 							const typename Traits::DomainType& x,
@@ -623,11 +656,11 @@ namespace Dune {
 		lfs.vread(xg,xl);
         for (unsigned int k=0; k<T::CHILDREN; k++)
           {
-            lfs.child(k).finiteElement().localBasis().
+            lfs.child(remap[k]).finiteElement().localBasis().
               evaluateFunction(x,yb);
             y[k] = 0.0;
             for (unsigned int i=0; i<yb.size(); i++)
-              y[k] += xl[lfs.child(k).localIndex(i)]*yb[i];
+              y[k] += xl[lfs.child(remap[k]).localIndex(i)]*yb[i];
           }
 	  }
 
@@ -640,6 +673,7 @@ namespace Dune {
 	private:
 	  shared_ptr<GFS const> pgfs;
 	  const X& xg;
+      std::size_t remap[dimR];
 	  mutable LocalFunctionSpace<GFS> lfs;
 	  mutable std::vector<RF> xl;
 	  mutable std::vector<RT> yb;
