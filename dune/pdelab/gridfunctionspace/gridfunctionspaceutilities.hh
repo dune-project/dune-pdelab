@@ -654,7 +654,7 @@ namespace Dune {
 	  {
 		lfs.bind(e);
 		lfs.vread(xg,xl);
-        for (unsigned int k=0; k<T::CHILDREN; k++)
+        for (unsigned int k=0; k < dimR; k++)
           {
             lfs.child(remap[k]).finiteElement().localBasis().
               evaluateFunction(x,yb);
