@@ -92,7 +92,7 @@ namespace Dune {
       }
 
     private:
-      std::shared_ptr<const T> t;
+      shared_ptr<const T> t;
       std::string s;
       std::vector<std::size_t> remap;
     };
