@@ -2,7 +2,7 @@
 #ifndef DUNE_PDELAB_P0FEM_HH
 #define DUNE_PDELAB_P0FEM_HH
 
-#include <dune/common/geometrytype.hh>
+#include <dune/geometry/type.hh>
 
 #include<dune/localfunctions/lagrange/p0.hh>
 #include"finiteelementmap.hh"
