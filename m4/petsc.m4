@@ -25,7 +25,13 @@ AC_DEFUN([DUNE_PATH_PETSC],[
           if test -d "$withval" ; then
 	    # get absolute path
 	    with_petsc=`eval cd $withval 2>&1 && pwd`
-	    AC_MSG_RESULT(yes)
+            include_path=include
+            lib_path=lib
+            if test ! -f "$with_petsc/$include_path/petsc.h" ; then
+                AC_MSG_RESULT(yes)
+            else
+                AC_MSG_RESULT(no)
+            fi
           else
             with_petsc="no"
 	    AC_MSG_RESULT(no)
@@ -40,7 +46,13 @@ AC_DEFUN([DUNE_PATH_PETSC],[
 	    # get absolute path
 	    with_petsc=`eval cd $PETSC 2>&1 && pwd`
             PETSC=""
-            AC_MSG_RESULT(yes)
+            include_path=include
+            lib_path=lib
+            if test ! -f "$with_petsc/$include_path/petsc.h" ; then
+                AC_MSG_RESULT(yes)
+            else
+                AC_MSG_RESULT(no)
+            fi
           else
             PETSC=""
             with_petsc=no
