@@ -27,7 +27,8 @@ AC_DEFUN([DUNE_PATH_PETSC],[
 	    with_petsc=`eval cd $withval 2>&1 && pwd`
             include_path=include
             lib_path=lib
-            if test ! -f "$with_petsc/$include_path/petsc.h" ; then
+            echo "$with_petsc/$include_path/petsc.h"
+            if test -f "$with_petsc/$include_path/petsc.h" ; then
                 AC_MSG_RESULT(yes)
             else
                 AC_MSG_RESULT(no)
