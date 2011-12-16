@@ -2,7 +2,7 @@
 #ifndef DUNE_PDELAB_VARIABLEMONOMFEM_HH
 #define DUNE_PDELAB_VARIABLEMONOMFEM_HH
 
-#include <dune/common/geometrytype.hh>
+#include <dune/geometry/type.hh>
 
 #include <dune/localfunctions/common/virtualwrappers.hh>
 #include <dune/localfunctions/monom.hh>

@@ -6,7 +6,7 @@
 
 #include <cstddef>
 
-#include <dune/common/geometrytype.hh>
+#include <dune/geometry/type.hh>
 
 #include<dune/localfunctions/monom.hh>
 

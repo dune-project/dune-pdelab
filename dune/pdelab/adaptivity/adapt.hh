@@ -9,7 +9,7 @@
 #include<limits>
 #include<vector>
 #include<map>
-#include<dune/grid/common/quadraturerules.hh>
+#include<dune/geometry/quadraturerules.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 

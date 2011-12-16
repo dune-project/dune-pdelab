@@ -13,10 +13,12 @@
 #include <dune/common/mpihelper.hh>
 #include <dune/common/shared_ptr.hh>
 
+#include <dune/geometry/generalvertexorder.hh>
+
 #include <dune/grid/io/file/vtk/common.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include <dune/grid/uggrid.hh>
-#include <dune/grid/utility/vertexorder.hh>
+#include <dune/grid/utility/vertexorderfactory.hh>
 #include <dune/grid/yaspgrid.hh>
 
 #include <dune/istl/operators.hh>

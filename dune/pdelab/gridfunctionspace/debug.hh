@@ -13,7 +13,8 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/static_assert.hh>
 
-#include <dune/grid/common/genericreferenceelements.hh>
+#include <dune/geometry/referenceelements.hh>
+
 #include <dune/grid/common/gridenums.hh>
 
 #include <dune/localfunctions/common/interfaceswitch.hh>

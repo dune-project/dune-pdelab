@@ -3,9 +3,8 @@
 
 #include <cmath>
 
-#include <dune/common/geometrytype.hh>
-
-#include <dune/grid/common/quadraturerules.hh>
+#include <dune/geometry/type.hh>
+#include <dune/geometry/quadraturerules.hh>
 
 #include "../common/functionwrappers.hh"
 

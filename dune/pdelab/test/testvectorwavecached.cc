@@ -26,13 +26,15 @@
 #include <dune/common/timer.hh>
 #include <dune/common/tuples.hh>
 
+#include <dune/geometry/referenceelements.hh>
+#include <dune/geometry/generalvertexorder.hh>
+
 #include <dune/grid/alugrid.hh>
-#include <dune/grid/common/genericreferenceelements.hh>
 #include <dune/grid/common/gridenums.hh>
 #include <dune/grid/io/file/vtk/common.hh>
 #include <dune/grid/io/file/vtk/vtksequencewriter.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
-#include <dune/grid/utility/vertexorder.hh>
+#include <dune/grid/utility/vertexorderfactory.hh>
 
 #include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/backend/istlmatrixbackend.hh>

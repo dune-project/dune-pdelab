@@ -3,8 +3,7 @@
 #define DUNE_PDELAB_MIMETICFEM_HH
 
 #include<vector>
-#include<dune/common/geometrytype.hh>
-
+#include<dune/geometry/type.hh>
 #include<dune/localfunctions/mimetic.hh>
 #include"finiteelementmap.hh"
 

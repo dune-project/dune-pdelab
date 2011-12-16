@@ -7,17 +7,16 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
-#include<dune/common/geometrytype.hh>
 
-#include<dune/grid/common/genericreferenceelements.hh>
-#include<dune/grid/common/quadraturerules.hh>
+#include<dune/geometry/type.hh>
+#include<dune/geometry/referenceelements.hh>
+#include<dune/geometry/quadraturerules.hh>
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
-#include <dune/pdelab/localoperator/defaultimp.hh>
-
 #include"../common/geometrywrapper.hh"
 #include"../gridoperatorspace/gridoperatorspace.hh"
+#include"defaultimp.hh"
 #include"pattern.hh"
 #include"flags.hh"
 #include"idefault.hh"

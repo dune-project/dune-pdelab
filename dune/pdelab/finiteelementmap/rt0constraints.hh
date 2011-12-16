@@ -3,9 +3,8 @@
 #define DUNE_PDELAB_RT0CONSTRAINTS_HH
 
 #include<dune/common/exceptions.hh>
-#include<dune/grid/common/genericreferenceelements.hh>
-#include<dune/grid/common/grid.hh>
-#include<dune/common/geometrytype.hh>
+#include<dune/geometry/referenceelements.hh>
+#include<dune/geometry/type.hh>
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/common/typetree.hh>
 

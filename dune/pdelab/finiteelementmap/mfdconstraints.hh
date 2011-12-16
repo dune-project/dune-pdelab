@@ -1,8 +1,8 @@
 #ifndef DUNE_PDELAB_MFDCONSTRAINTS_HH
 #define DUNE_PDELAB_MFDCONSTRAINTS_HH
 
-#include<dune/grid/common/genericreferenceelements.hh>
-#include<dune/common/geometrytype.hh>
+#include<dune/geometry/referenceelements.hh>
+#include<dune/geometry/type.hh>
 
 namespace Dune
 {

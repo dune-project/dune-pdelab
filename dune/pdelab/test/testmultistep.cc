@@ -15,13 +15,14 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/fmatrix.hh>
 #include <dune/common/fvector.hh>
-#include <dune/common/geometrytype.hh>
 #include <dune/common/misc.hh>
 #include <dune/common/mpihelper.hh>
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/tuples.hh>
 
-#include <dune/grid/common/quadraturerules.hh>
+#include <dune/geometry/type.hh>
+#include <dune/geometry/quadraturerules.hh>
+
 #include <dune/grid/io/file/vtk/common.hh>
 #include <dune/grid/io/file/vtk/vtksequencewriter.hh>
 #include <dune/grid/yaspgrid.hh>

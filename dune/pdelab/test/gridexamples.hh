@@ -5,9 +5,10 @@
 #include <vector>
 
 #include <dune/common/fvector.hh>
-#include <dune/common/geometrytype.hh>
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/static_assert.hh>
+
+#include <dune/geometry/type.hh>
 
 #include<dune/grid/yaspgrid.hh>
 #include<dune/grid/common/gridfactory.hh>

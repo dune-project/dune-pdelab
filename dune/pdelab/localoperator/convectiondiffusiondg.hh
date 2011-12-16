@@ -5,7 +5,7 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
-#include<dune/grid/common/genericreferenceelements.hh>
+#include<dune/geometry/referenceelements.hh>
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>

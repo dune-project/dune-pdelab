@@ -7,7 +7,7 @@
 #include <dune/common/static_assert.hh>
 #include <dune/common/parametertreeparser.hh>
 
-#include <dune/grid/common/quadraturerules.hh>
+#include <dune/geometry/quadraturerules.hh>
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/pdelab/localoperator/idefault.hh>

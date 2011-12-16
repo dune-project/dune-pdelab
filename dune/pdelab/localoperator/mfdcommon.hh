@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <dune/common/fvector.hh>
-#include <dune/grid/common/genericreferenceelements.hh>
+#include <dune/geometry/referenceelements.hh>
 
 namespace Dune
 {
