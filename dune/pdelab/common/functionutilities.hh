@@ -35,7 +35,7 @@ namespace Dune {
      * result is required, use something like
      * \code
 integrateGridFunction(gf, sum);
-gf.getGridView().comm().sum(sum);
+sum = gf.getGridView().comm().sum(sum);
      * \endcode
      *
      * \tparam GF Type of the GridFunction.
