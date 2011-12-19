@@ -1,6 +1,6 @@
-commondir = $(includedir)/dune/pdelab/common
+typetreedir = $(includedir)/dune/pdelab/common/typetree
 
-common_HEADERS =				\
+typetree_HEADERS =				\
 	accumulate_static.hh			\
 	applytochildrensingletree.hh		\
 	applytochildrentreepair.hh		\
