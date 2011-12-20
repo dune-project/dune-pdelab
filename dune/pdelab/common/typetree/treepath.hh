@@ -42,8 +42,7 @@ namespace Dune {
 
     template<std::size_t... i>
     struct TreePathSize<TreePath<i...> >
-      : public std::integral_constant<std::size_t,
-                                      sizeof...(i)>
+      : public integral_constant<std::size_t, sizeof...(i)>
     {};
 
     template<typename,std::size_t>
@@ -69,7 +68,7 @@ namespace Dune {
 
     template<std::size_t k, std::size_t... i>
     struct TreePathBack<TreePath<i...,k> >
-      : public std::integral_constant<std::size_t,k>
+      : public integral_constant<std::size_t,k>
     {};
 
     template<typename>
@@ -77,7 +76,7 @@ namespace Dune {
 
     template<std::size_t k, std::size_t... i>
     struct TreePathFront<TreePath<k,i...> >
-      : public std::integral_constant<std::size_t,k>
+      : public integral_constant<std::size_t,k>
     {};
 
     template<typename>
