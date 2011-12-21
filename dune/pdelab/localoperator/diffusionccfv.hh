@@ -198,8 +198,11 @@ namespace Dune {
           {
             // Neumann boundary
             // evaluate flux boundary condition
+
+            //evaluate boundary function
+            typename J::Traits::DomainType x = ig.geometryInInside().global(face_local);
             typename J::Traits::RangeType jvalue;
-            j.evaluate(*(ig.inside()),inside_local,jvalue);
+            j.evaluate(*(ig.inside()),x,jvalue);
 
             // contribution to residual on inside element
             r_s.accumulate(lfsu_s,0,jvalue*face_volume);
