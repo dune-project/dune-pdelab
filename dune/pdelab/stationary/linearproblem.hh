@@ -85,11 +85,13 @@ namespace Dune {
         watch.reset();
         V z(gos.trialGridFunctionSpace(),0.0);
         typename V::ElementType red = std::min(reduction,defect/mindefect);
-        std::cout << "=== solving (reduction: " << red << ") ";
+        if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
+          std::cout << "=== solving (reduction: " << red << ") ";
         ls.apply(m,z,r,red); // solver makes right hand side consistent
         timing = watch.elapsed();
         // timing = gos.trialGridFunctionSpace().gridview().comm().max(timing);
-        std::cout << timing << " s" << std::endl;
+        if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
+          std::cout << timing << " s" << std::endl;
 
         // and update
         *x -= z;
