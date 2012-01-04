@@ -278,8 +278,11 @@ namespace Dune {
 
           LocalVector<typename U::ElementType, TrialSpaceTag> ul;
           LocalVector<typename U::ElementType, TrialSpaceTag> ul_n;
-          LocalVector<typename V::ElementType, TestSpaceTag> vl;
-          LocalVector<typename V::ElementType, TestSpaceTag> vl_n;
+
+          typedef LocalVector<typename V::ElementType, TestSpaceTag> LV;
+          typedef typename LV::WeightedAccumulationView LVView;
+          LV vl;
+          LV vl_n;
 
           // traverse grid view
           for (LeafIterator it = gfsu.gridview().template begin<0,Dune::Interior_Partition>();
@@ -296,11 +299,12 @@ namespace Dune {
             // read coefficents
             lfsu.vread(u,ul);
 
+            LVView vlview = vl.weightedAccumulationView(1.0);
             // volume evaluation
             LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
-              alpha_volume(lop,ElementGeometry<Element>(e),lfsu,ul,lfsv,vl);
+              alpha_volume(lop,ElementGeometry<Element>(e),lfsu,ul,lfsv,vlview);
             LocalAssemblerCallSwitch<LOP,LOP::doLambdaVolume>::
-              lambda_volume(lop,ElementGeometry<Element>(e),lfsv,vl);
+              lambda_volume(lop,ElementGeometry<Element>(e),lfsv,vlview);
 
             lfsv.vadd(vl,estimate);
 
@@ -324,9 +328,10 @@ namespace Dune {
                   // read coefficients
                   lfsu_n.vread(u,ul_n);
 
+                  LVView vlview_n = vl_n.weightedAccumulationView(1.0);
                   LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
                     alpha_skeleton(lop,IntersectionGeometry<Intersection>(*iit,0),
-                        lfsu,ul,lfsv,lfsu_n,ul_n,lfsv_n,vl,vl_n);
+                                   lfsu,ul,lfsv,lfsu_n,ul_n,lfsv_n,vlview,vlview_n);
                 }
 
                 lfsv.vadd(vl,estimate);
