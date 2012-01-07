@@ -57,21 +57,21 @@ namespace Dune {
      */
 
     template<typename B, typename J, typename P, bool navier = true, int qorder=3>
-	class TaylorHoodNavierStokes :
+    class TaylorHoodNavierStokes :
       public NumericalJacobianApplyVolume<TaylorHoodNavierStokes<B,J,P,navier,qorder> >,
       public NumericalJacobianVolume<TaylorHoodNavierStokes<B,J,P,navier,qorder> >,
       public FullVolumePattern,
       public LocalOperatorDefaultFlags,
       public InstationaryLocalOperatorDefaultMethods<double>
-	{
-	public:
+    {
+    public:
       //! Boundary condition indicator type
       typedef StokesBoundaryCondition BC;
         
       // pattern assembly flags
       enum { doPatternVolume = true };
 
-	  // residual assembly flags
+      // residual assembly flags
       enum { doAlphaVolume = true };
       enum { doLambdaBoundary = true };
 
@@ -88,10 +88,10 @@ namespace Dune {
           b(b_), j(j_), p(p_)
       {}
       
-	  // volume integral depending on test and ansatz functions
-	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
-	  {
+      // volume integral depending on test and ansatz functions
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+      {
         // dimensions
         const int dim = EG::Geometry::dimension;
         const int dimw = EG::Geometry::dimensionworld;
@@ -103,13 +103,13 @@ namespace Dune {
         typedef typename LFSU_V_PFS::template Child<0>::Type LFSU_V;
         const unsigned int vsize = lfsu_v_pfs.child(0).size();
 
-		// domain and range field type
+        // domain and range field type
         typedef typename LFSU_V::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeFieldType RF;
+          Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSU_V::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeType RT_V;
+          Traits::LocalBasisType::Traits::RangeType RT_V;
         typedef typename LFSU_V::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::JacobianType JacobianType_V;
+          Traits::LocalBasisType::Traits::JacobianType JacobianType_V;
         typedef typename LFSU_V::Traits::SizeType size_type;
 
 
@@ -118,9 +118,9 @@ namespace Dune {
         const unsigned int psize = lfsu_p.size();
 
         typedef typename LFSU_P::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::DomainFieldType DF;
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename LFSU_P::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeType RT_P;
+          Traits::LocalBasisType::Traits::RangeType RT_P;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -208,7 +208,7 @@ namespace Dune {
             }
 
           }
-	  }
+      }
 
       // jacobian of boundary term
       template<typename IG, typename LFSV, typename R>
@@ -226,20 +226,20 @@ namespace Dune {
         const unsigned int vsize = lfsv_v_pfs.child(0).size();
 
         typedef typename LFSV_V::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::JacobianType JacobianType_V;
+          Traits::LocalBasisType::Traits::JacobianType JacobianType_V;
         typedef typename LFSV_V::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeType RT_V;
+          Traits::LocalBasisType::Traits::RangeType RT_V;
 
-		// the range field type (equal for velocity and pressure)
+        // the range field type (equal for velocity and pressure)
         typedef typename LFSV_V::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeFieldType RF;
+          Traits::LocalBasisType::Traits::RangeFieldType RF;
 
         // the size type (equal for velocity and pressure)
         typedef typename LFSV_V::Traits::SizeType size_type;
 
-		// the domain field type (equal for velocity and pressure)
+        // the domain field type (equal for velocity and pressure)
         typedef typename LFSV_V::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::DomainFieldType DF;
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
@@ -297,15 +297,15 @@ namespace Dune {
      */
 
     template<typename B, typename J, typename P, bool navier, int qorder=2>
-	class TaylorHoodNavierStokesJacobian :
+    class TaylorHoodNavierStokesJacobian :
       public JacobianBasedAlphaVolume< TaylorHoodNavierStokesJacobian<B,J,P,navier,qorder> >,
       public TaylorHoodNavierStokes<B,J,P,navier,qorder>
-	{
-	public:
+    {
+    public:
       // pattern assembly flags
       enum { doPatternVolume = true };
 
-	  // residual assembly flags
+      // residual assembly flags
       enum { doAlphaVolume = true };
       enum { doLambdaBoundary = true };
 
@@ -339,15 +339,15 @@ namespace Dune {
         
         typedef typename LFSU_V_PFS::template Child<0>::Type LFSU_V;
 
-	    // domain and range field type
+        // domain and range field type
         typedef typename LFSU_V::Traits::FiniteElementType::
-	      Traits::LocalBasisType::Traits::DomainFieldType DF_V;
+          Traits::LocalBasisType::Traits::DomainFieldType DF_V;
         typedef typename LFSU_V::Traits::FiniteElementType::
-	      Traits::LocalBasisType::Traits::RangeFieldType RF;
+          Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSU_V::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeType RT_V;
+          Traits::LocalBasisType::Traits::RangeType RT_V;
         typedef typename LFSU_V::Traits::FiniteElementType::
-	      Traits::LocalBasisType::Traits::JacobianType JacobianType_V;
+          Traits::LocalBasisType::Traits::JacobianType JacobianType_V;
         typedef typename LFSU_V::Traits::SizeType size_type;
 
 
@@ -356,10 +356,10 @@ namespace Dune {
         const unsigned int psize = lfsu_p.size();
 
         typedef typename LFSU_P::Traits::FiniteElementType::
-	      Traits::LocalBasisType::Traits::DomainFieldType DF;
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
 
         typedef typename LFSU_P::Traits::FiniteElementType::
-	      Traits::LocalBasisType::Traits::RangeType RT_P;
+          Traits::LocalBasisType::Traits::RangeType RT_P;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -448,11 +448,11 @@ namespace Dune {
             } // d
 
           } // it
-	  }
+      }
 
-	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
-	  {
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+      {
         Base::alpha_volume(eg,lfsu,x,lfsv,r);
       }
 
@@ -495,42 +495,50 @@ namespace Dune {
      \int_\Omega uv dx
      * \f}
      */
-	class NavierStokesMass : public NumericalJacobianApplyVolume<NavierStokesMass>,
+    template< typename P >
+    class NavierStokesMass : public NumericalJacobianApplyVolume<NavierStokesMass<P> >,
                              public FullVolumePattern,
                              public LocalOperatorDefaultFlags,
                              public InstationaryLocalOperatorDefaultMethods<double>
-	{
-	public:
+    {
+    public:
       // pattern assembly flags
       enum { doPatternVolume = true };
 
-	  // residual assembly flags
+      // residual assembly flags
       enum { doAlphaVolume = true };
 
-      NavierStokesMass (int intorder_=4)
-        : intorder(intorder_),
+      NavierStokesMass (const P & p_, int intorder_=4)
+        : p(p_), intorder(intorder_),
           scalar_operator(intorder_)
       {}
 
-	  // volume integral depending on test and ansatz functions
-	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
-	  {
+      // volume integral depending on test and ansatz functions
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+      {
+        const typename R::weight_type weight = r.weight();
+        r.setWeight(weight * p.rho());
         scalar_operator.alpha_volume(eg,lfsu.template child<0>(),x,lfsu.template child<0>(),r);
-	  }
+        r.setWeight(weight);
+      }
 
       // jacobian of volume term
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
-	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
+      void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
                             M& mat) const
       {
+        const typename M::weight_type weight = mat.weight();
+        mat.setWeight(weight * p.rho());
         scalar_operator.jacobian_volume(eg,lfsu.template child<0>(),x,lfsu.template child<0>(),mat);
+        mat.setWeight(weight);
       }
 
     private:
+      const P & p;
       int intorder;
       PowerL2 scalar_operator;
-	};
+    };
 
     //! \} group LocalOperator
   } // namespace PDELab
