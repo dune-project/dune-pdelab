@@ -124,7 +124,14 @@ namespace Dune {
       , public FixedCapacityStackView<T>
     {
 
+      typedef FixedCapacityStackView<T> view_base;
+
     public:
+
+      using view_base::back;
+      using view_base::front;
+      using view_base::size;
+      using view_base::operator[];
 
       FixedCapacityStack()
         : FixedCapacityStackView<T>::Impl(&(static_cast<array<T,capacity>&>(*this)[0]),capacity)
