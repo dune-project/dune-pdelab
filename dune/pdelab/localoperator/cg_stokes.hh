@@ -56,7 +56,7 @@ namespace Dune {
       \tparam q Quadrature order.
      */
 
-    template<typename B, typename J, typename P, bool navier = true, int qorder=3>
+    template<typename B, typename J, typename P, bool navier = true, int qorder=3, bool full_tensor=true>
     class TaylorHoodNavierStokes :
       public NumericalJacobianApplyVolume<TaylorHoodNavierStokes<B,J,P,navier,qorder> >,
       public NumericalJacobianVolume<TaylorHoodNavierStokes<B,J,P,navier,qorder> >,
@@ -160,14 +160,17 @@ namespace Dune {
               }
             }
 
+            // Compute velocity jacobian
+            Dune::FieldMatrix<RF,dim,dim> jacu(0.0);
+            for(int d=0; d<dim; ++d){
+              const LFSU_V & lfsu_v = lfsu_v_pfs.child(d);
+              for (size_t i=0; i<lfsu_v.size(); i++)
+                jacu[d].axpy(x(lfsu_v,i),gradphi[i]);
+            }
+
             for(int d=0; d<dim; ++d){
 
               const LFSU_V & lfsu_v = lfsu_v_pfs.child(d);
-
-              // compute gradient of u
-              Dune::FieldVector<RF,dim> gradu(0.0);
-              for (size_t i=0; i<lfsu_v.size(); i++)
-                gradu.axpy(x(lfsu_v,i),gradphi[i]);
 
               // compute pressure
               RT_P func_p(0.0);
@@ -175,7 +178,7 @@ namespace Dune {
                 func_p += x(lfsu_p,i) * psi[i];
 
               //compute u * grad u_d
-              const RF u_nabla_u = vu * gradu;
+              const RF u_nabla_u = vu * jacu[d];
 
               // geometric weight 
               RF factor = it->weight() * eg.geometry().integrationElement(it->position());
@@ -183,7 +186,11 @@ namespace Dune {
               for (size_t i=0; i<vsize; i++){
 
                 // integrate grad u * grad phi_i
-                r.accumulate(lfsu_v,i, p.mu() * (gradu * gradphi[i]) * factor);
+                r.accumulate(lfsu_v,i, p.mu() * (jacu[d] * gradphi[i]) * factor);
+
+                if(full_tensor)
+                  for(int dd=0; dd<dim; ++dd)
+                    r.accumulate(lfsu_v,i, p.mu() * (jacu[dd][d] * gradphi[i][dd]) * factor);
 
                 // integrate div phi_i * p
                 r.accumulate(lfsu_v,i,- (func_p * gradphi[i][d]) * factor);
@@ -296,7 +303,7 @@ namespace Dune {
        the same interface and functionality.
      */
 
-    template<typename B, typename J, typename P, bool navier, int qorder=2>
+    template<typename B, typename J, typename P, bool navier, int qorder=2, bool full_tensor=true>
     class TaylorHoodNavierStokesJacobian :
       public JacobianBasedAlphaVolume< TaylorHoodNavierStokesJacobian<B,J,P,navier,qorder> >,
       public TaylorHoodNavierStokes<B,J,P,navier,qorder>
@@ -415,6 +422,14 @@ namespace Dune {
                 // integrate grad phi_u_i * grad phi_v_i (viscous force)
                 for (size_t j=0; j<lfsv_v.size(); j++){
                   mat.accumulate(lfsv_v,i,lfsu_v,j, p.mu() * (gradphi[i] * gradphi[j]) * factor);
+
+                  // integrate (grad phi_u_i)^T * grad phi_v_i (viscous force)
+                  if(full_tensor)
+                    for(int dd=0; dd<dim; ++dd){
+                      const LFSU_V & lfsu_v = lfsu_v_pfs.child(dd);
+                      mat.accumulate(lfsv_v,i,lfsu_v,j, p.mu() * (gradphi[j][d] * gradphi[i][dd]) * factor);
+                    }
+
                 }
 
                 // integrate grad_d phi_v_d * p_u (pressure force)
