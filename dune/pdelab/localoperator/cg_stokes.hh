@@ -34,7 +34,7 @@ namespace Dune {
         TaylorHood basis.
      
         \f{align*}{
-        u \cdot \nabla u \cdot v - \Delta u + \nabla p &=& 0 \mbox{ in } \Omega, \\
+        u \cdot \nabla u \cdot v - \nabla \cdot ( \nabla u + (\nabla u)^T + p I) &=& 0 \mbox{ in } \Omega, \\
         \nabla \cdot u &=& 0 \mbox{ in } \Omega \\
         u &=& g \mbox{ on } \partial\Omega_D \\
         -\nu (\nabla u + p I ) \nu &=& j \mbox{ on } \partial\Omega_N \\
@@ -43,12 +43,8 @@ namespace Dune {
         As indicated in the equation above, this implementation
         utilizes only scalar Neumann conditions.
 
-      \tparam B Grid function type selecting boundary condition
-
-      \tparam J Scalar grid function type giving j 
-
       \tparam P A suitable parameter class with the interface of
-      TaylorHoodNavierStokesParameters
+      TaylorHoodNavierStokesDefaultParameters
 
       \tparam navier May be set to false, to avoid assembling of
       navier term in case rho=0.
@@ -465,26 +461,6 @@ namespace Dune {
         Base::lambda_boundary(ig,lfsv,r);
       }
 
-    };
-
-    //! Interface for the parameter class required by the classes
-    //! TaylorHoodNavierStokes and TaylorHoodNavierStokesJacobian.
-    template <class CT>
-    class TaylorHoodNavierStokesParameters{
-    public:
-      CT rho() const{ return CT(1.0); }
-      CT mu()  const{ return CT(1.0); }
-    };
-
-    //! Interface for the parameter class required by the classes
-    //! TaylorHoodNavierStokes and TaylorHoodNavierStokesJacobian.
-    template <class CT>
-    class InstationaryTaylorHoodNavierStokesParameters{
-    public:
-      CT rho() const{ return CT(1.0); }
-      CT mu()  const{ return CT(1.0); }
-      CT tau()  const{ return CT(0.1); }
-      CT time()  const{ return CT(1.0); }
     };
 
     /** a local operator for the mass term corresponding to the
