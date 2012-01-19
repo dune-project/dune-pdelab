@@ -2,6 +2,7 @@
 #define DUNE_PDELAB_LOCALOPERATOR_STOKESPARAMETER_HH
 
 #include <dune/pdelab/constraints/constraintsparameters.hh>
+#include <dune/common/parametertree.hh>
 
 namespace Dune {
     namespace PDELab {
@@ -32,20 +33,65 @@ namespace Dune {
                 SlipVelocity = 3
             };
         };
+
+      //! Interface for the parameter class required by the classes
+      //! TaylorHoodNavierStokes and TaylorHoodNavierStokesJacobian.
+      template <class BF, class NF, class RF>
+      class TaylorHoodNavierStokesDefaultParameters
+      {
+      public:
+
+        typedef StokesBoundaryCondition BCType;
+        typedef BF BCTypeFunction;
+        typedef NF NeumannStressFunction;
+
+        TaylorHoodNavierStokesDefaultParameters(Dune::ParameterTree config, const BF & _bf, const NF & _nf):
+          rho_(config.get<double>("rho")), 
+          mu_(config.get<double>("mu")), 
+          bf_(_bf), nf_(_nf)
+        {}
+
+        RF rho() const{ return rho_; }
+        RF mu()  const{ return mu_; }
+
+        template<typename IG, typename LC>
+        typename BCType::Type
+        bcType(const IG & ig, const LC & x) const
+        {
+          typename BCType::Type y;
+          bf_.evaluate(ig,x,y);
+          return y;
+        }
         
-        template<typename BF>
+        template<typename IG, typename LC, typename V>
+        V
+        stress(const IG & ig, const LC & x, V normal) const
+        {
+          typename NF::Traits::RangeType y(0);
+          nf_.evaluate(*(ig.inside()),ig.geometryInInside().global(x),y);
+          normal *= y;
+          return normal;
+        }
+
+      private:
+        const RF rho_;
+        const RF mu_;
+        const BF & bf_;
+        const NF & nf_;
+      };
+
+
+        template<typename PRM>
         class StokesVelocityDirichletConstraints
             : public Dune::PDELab::DirichletConstraintsParameters
         {
         private:
-            const BF & boundary_function_;
-  
+            const PRM & prm_;
+
         public:
 
-            StokesVelocityDirichletConstraints (const BF bf)
-                : boundary_function_(bf)
-            {
-            }
+            StokesVelocityDirichletConstraints (const PRM & _prm)
+              : prm_(_prm) { }
 
             template<typename I>
             bool isDirichlet(
@@ -53,28 +99,22 @@ namespace Dune {
                 const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
                 ) const
             {
-                StokesBoundaryCondition::Type bctype;
-                boundary_function_.evaluate(intersection,coord,bctype);
-
-                return (bctype ==
-                    StokesBoundaryCondition::VelocityDirichlet);
+                StokesBoundaryCondition::Type bctype =prm_.bcType(intersection,coord);
+                return (bctype == StokesBoundaryCondition::VelocityDirichlet);
             }
-            
         };
-        
-        template<typename BF>
+
+        template<typename PRM>
         class StokesPressureDirichletConstraints
             : public Dune::PDELab::DirichletConstraintsParameters
         {
         private:
-            const BF & boundary_function_;
-  
+            const PRM & prm_;
+
         public:
 
-            StokesPressureDirichletConstraints (const BF bf)
-                : boundary_function_(bf)
-            {
-            }
+            StokesPressureDirichletConstraints (const PRM & _prm)
+              : prm_(_prm) { }
 
             template<typename I>
             bool isDirichlet(
@@ -82,15 +122,10 @@ namespace Dune {
                 const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
                 ) const
             {
-                StokesBoundaryCondition::Type bctype;
-                boundary_function_.evaluate(intersection,coord,bctype);
-
-                return (bctype ==
-                    StokesBoundaryCondition::PressureDirichlet);
+                StokesBoundaryCondition::Type bctype =prm_.bcType(intersection,coord);
+                return (bctype == StokesBoundaryCondition::PressureDirichlet);
             }
-            
         };
-        
         
     }
 }

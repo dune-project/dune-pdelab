@@ -56,10 +56,10 @@ namespace Dune {
       \tparam q Quadrature order.
      */
 
-    template<typename B, typename J, typename P, bool navier = true, int qorder=3, bool full_tensor=true>
+    template<typename P, bool navier = true, int qorder=3, bool full_tensor=true>
     class TaylorHoodNavierStokes :
-      public NumericalJacobianApplyVolume<TaylorHoodNavierStokes<B,J,P,navier,qorder> >,
-      public NumericalJacobianVolume<TaylorHoodNavierStokes<B,J,P,navier,qorder> >,
+      public NumericalJacobianApplyVolume<TaylorHoodNavierStokes<P,navier,qorder,full_tensor> >,
+      public NumericalJacobianVolume<TaylorHoodNavierStokes<P,navier,qorder,full_tensor> >,
       public FullVolumePattern,
       public LocalOperatorDefaultFlags,
       public InstationaryLocalOperatorDefaultMethods<double>
@@ -75,17 +75,12 @@ namespace Dune {
       enum { doAlphaVolume = true };
       enum { doLambdaBoundary = true };
 
-      typedef B BoundaryFunction;
-      typedef J FluxFunction;
       typedef P PhysicalParameters;
 
-      TaylorHoodNavierStokes (const BoundaryFunction& b_, 
-                              const FluxFunction& j_,
-                              const PhysicalParameters & p_
-                              )
+      TaylorHoodNavierStokes (const PhysicalParameters & p_)
 
-        : NumericalJacobianVolume< TaylorHoodNavierStokes<B,J,P,navier,qorder> >(1e-7), 
-          b(b_), j(j_), p(p_)
+        : NumericalJacobianVolume< TaylorHoodNavierStokes<P,navier,qorder,full_tensor> >(1e-7), 
+          p(p_)
       {}
       
       // volume integral depending on test and ansatz functions
@@ -256,8 +251,7 @@ namespace Dune {
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
             // evaluate boundary condition type
-            typename BC::Type bctype;
-            b.evaluate(ig,it->position(),bctype);
+            typename BC::Type bctype = p.bcType(ig,it->position());
  
             // skip rest if we are on Dirichlet boundary
             if (bctype == BC::VelocityDirichlet) continue;
@@ -269,20 +263,19 @@ namespace Dune {
             std::vector<RT_V> phi(vsize);
             lfsv_v_pfs.child(0).finiteElement().localBasis().evaluateFunction(local,phi);
 
-            // evaluate flux boundary condition. the scalar flux is
-            // assumed to be in normal direction
-            typename J::Traits::RangeType neumann_flux(0);
-            j.evaluate(*(ig.inside()), local, neumann_flux);
-            
             const RF factor = it->weight() * ig.geometry().integrationElement(it->position());
             const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(it->position());
 
+            // evaluate flux boundary condition. the scalar flux is
+            // assumed to be in normal direction
+            const Dune::FieldVector<DF,dimw> neumann_stress = p.stress(ig,it->position(),normal);
+            
             for(unsigned int d=0; d<dim; ++d){
 
               const LFSV_V & lfsv_v = lfsv_v_pfs.child(d);
 
               for (size_t i=0; i<vsize; i++){
-                r.accumulate(lfsv_v,i, p.mu() * neumann_flux * normal[d] * phi[i] * factor);
+                r.accumulate(lfsv_v,i, p.mu() * neumann_stress[d] * phi[i] * factor);
               }
 
             }
@@ -290,8 +283,6 @@ namespace Dune {
       }
 
     protected:
-      const B& b;
-      const J& j;
       const P& p;
     };
 
@@ -303,10 +294,10 @@ namespace Dune {
        the same interface and functionality.
      */
 
-    template<typename B, typename J, typename P, bool navier, int qorder=2, bool full_tensor=true>
+    template<typename P, bool navier, int qorder=2, bool full_tensor=true>
     class TaylorHoodNavierStokesJacobian :
-      public JacobianBasedAlphaVolume< TaylorHoodNavierStokesJacobian<B,J,P,navier,qorder> >,
-      public TaylorHoodNavierStokes<B,J,P,navier,qorder>
+      public JacobianBasedAlphaVolume< TaylorHoodNavierStokesJacobian<P,navier,qorder,full_tensor> >,
+      public TaylorHoodNavierStokes<P,navier,qorder,full_tensor>
     {
     public:
       // pattern assembly flags
@@ -316,17 +307,14 @@ namespace Dune {
       enum { doAlphaVolume = true };
       enum { doLambdaBoundary = true };
 
-      typedef B BoundaryFunction;
-      typedef J FluxFunction;
       typedef P PhysicalParameters;
 
-      typedef TaylorHoodNavierStokes<B,J,P,navier,qorder> Base;
+      typedef TaylorHoodNavierStokes<P,navier,qorder,full_tensor> Base;
+      using Base::p;
 
-      TaylorHoodNavierStokesJacobian (const BoundaryFunction& b_, 
-                                      const FluxFunction& j_, 
-                                      const PhysicalParameters & p_)
+      TaylorHoodNavierStokesJacobian (const PhysicalParameters & p_)
 
-        : Base(b_,j_,p_), b(b_), j(j_), p(p_)
+        : Base(p_)
       {}
 
 
@@ -477,10 +465,6 @@ namespace Dune {
         Base::lambda_boundary(ig,lfsv,r);
       }
 
-    protected:
-      const B& b;
-      const J& j;
-      const P& p;
     };
 
     //! Interface for the parameter class required by the classes
