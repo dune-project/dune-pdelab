@@ -186,6 +186,7 @@ namespace Dune {
         return( t.bctype( ig.intersection(), coord ) 
                 == ConvectionDiffusionBoundaryConditions::Dirichlet );
       }
+
     };
 
 
@@ -206,7 +207,9 @@ namespace Dune {
                                              1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> > Traits;
 
     //! constructor 
-    ConvectionDiffusionDirichletExtensionAdapter (const typename Traits::GridViewType& g_, const T& t_) : g(g_), t(t_) {}
+    ConvectionDiffusionDirichletExtensionAdapter (const typename Traits::GridViewType& g_, T& t_)
+    : g(g_), t(t_)
+    {}
 
     //! \copydoc GridFunctionBase::evaluate()
     inline void evaluate (const typename Traits::ElementType& e, 
@@ -220,10 +223,15 @@ namespace Dune {
     {
       return g;
     }
+
+    inline void setTime(double time_)
+    {
+      t.setTime(time_);
+    }
   
   private:
     const typename Traits::GridViewType& g;
-    const T& t;
+    T& t;
   };
 
 
