@@ -592,6 +592,9 @@ namespace Dune {
         Dune::PDELab::TypeTree::applyToTree(*this,visitor);
       }
 
+    PowerGridFunction()
+        : BaseT()  {}
+
       //! Construct a PowerGridFunction with k clones of the function t
 	  PowerGridFunction (T& t)
         : BaseT(t) {}
