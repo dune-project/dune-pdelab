@@ -236,6 +236,23 @@ namespace Dune
       }
     };
 
+    /** \todo Please doc me! */
+    template<int d, class LB>
+    class QkLocalInterpolation<0,d,LB>
+    {
+    public:
+      //! \brief Local interpolation of a function
+      template<typename F, typename C>
+      void interpolate (const F& f, std::vector<C>& out) const
+      {
+        typename LB::Traits::DomainType x(0);
+        typename LB::Traits::RangeType y;
+        f.evaluate(x,y); 
+        out.resize(1);
+        out[0] = y;
+      }
+    };
+
   }
 
   /** \todo Please doc me !
