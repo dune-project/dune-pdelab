@@ -76,16 +76,17 @@ namespace Dune {
         : i(i_), index(index_)
 	  {}
 
-      int insideDomainIndex() const 
+      //! \todo Please doc me!
+      int insideDomainIndex() const
       {
         return 0;
       }
 
-      int outsideDomainIndex() const 
-      { 
+      //! \todo Please doc me!
+      int outsideDomainIndex() const
+      {
         const bool is_boundary = i.boundary();
         return 0 - int(is_boundary);
-
       }
 
 	  //! return true if intersection is with interior or exterior boundary (see the cases above)
