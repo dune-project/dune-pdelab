@@ -19,11 +19,16 @@ namespace Dune {
   namespace PDELab {
 
     // a local operator for solving the diffusion equation
-    //     - div (K grad u) = 0 in \Omega,
+    //     - div (K grad u) = f in \Omega,
     //                    u = g on \Gamma_D
     //    (- K grad u) * nu = j on \Gamma_N
-    // discontinuous Galerkin method
-    // G : grid function for Dirichlet boundary conditions
+    // discontinuous Galerkin method (SIPG, NIPG, OBB)
+    //
+    // @tparam K grid function for permeability tensor
+    // @tparam F grid function for rhs
+    // @tparam B boundary type function
+    // @tparam G grid function for Dirichlet boundary conditions
+    // @tparam J grid function for Neumann boundary conditions
     template<typename K, typename F, typename B, typename G, typename J>
     class DiffusionDG :
       public LocalOperatorDefaultFlags,
