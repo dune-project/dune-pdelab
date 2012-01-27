@@ -744,6 +744,7 @@ namespace Dune {
               }
 
             // evaluate gradient of basis functions (we assume Galerkin method lfsu=lfsv)
+            assert (bctype == ConvectionDiffusionBoundaryConditions::Dirichlet);
 #if USECACHE==0
             std::vector<JacobianType> gradphi_s(lfsu_s.size());
             lfsu_s.finiteElement().localBasis().evaluateJacobian(iplocal_s,gradphi_s);
