@@ -542,7 +542,7 @@ namespace Dune {
                 lfsv.finiteElement().localBasis().evaluateFunction(local,phi);
 
                 // evaluate Dirichlet boundary condition
-                typename G::Traits::RangeType y;
+                typename G::Traits::RangeType y = 0;
                 g.evaluate(*(ig.inside()),local,y);
 
                 // integrate G
