@@ -375,6 +375,59 @@ namespace Dune {
         private:
             RF density;         // Fluid density
         };
+
+
+      namespace NavierStokesDGImp{
+        /** \brief Compile-time switch for the boundary slip factor
+
+            If the parameter class declares
+            static const bool enable_variable_slip = true;
+            it may also define a function 
+            
+            template<typename IntersectionGeometry>
+            typename Traits::RangeFieldType 
+            boundarySlip (const IntersectionGeometry& ig, 
+            const typename Traits::IntersectionDomainType& x) const
+
+            which returns a value in [0,1] and may be used to define a
+            smooth transition from a slip to a no-slip boundary.
+
+            @{
+        */
+        template< typename PRM, typename Dummy = void>
+        struct VariableBoundarySlipSwitch{
+          
+          template<typename IntersectionGeometry>
+          static typename PRM::Traits::RangeFieldType 
+          boundarySlip
+          (const PRM & , 
+           const IntersectionGeometry& , 
+           const typename PRM::Traits::IntersectionDomainType& )
+          {
+            return 1.0;
+          }
+          
+        };
+
+        template< typename PRM>
+        struct VariableBoundarySlipSwitch
+        <PRM,typename Dune::enable_if<PRM::enable_variable_slip>::type>
+        {
+          template<typename IntersectionGeometry>
+          static typename PRM::Traits::RangeFieldType 
+          boundarySlip
+          (const PRM & prm, 
+           const IntersectionGeometry& ig, 
+           const typename PRM::Traits::IntersectionDomainType& x)
+          {
+            return prm.boundarySlip(ig,x);
+          }
+
+        };
+        /** @} */
+      };
+
+
     }
 }
 

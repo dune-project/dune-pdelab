@@ -789,19 +789,30 @@ namespace Dune {
                     const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(it->position());
                     const RF weight = it->weight()*ig.geometry().integrationElement(it->position());
                     const RF mu = prm.mu(ig,it->position());
-                    
+
+                    // Slip factor smoothly switching between slip and no slip conditions.
+                    RF slip_factor = 0.0;
+                    typedef NavierStokesDGImp::VariableBoundarySlipSwitch<PRM> BoundarySlipSwitch;
+                    if (bctype == BC::SlipVelocity)
+                      // Calls boundarySlip(..) function of parameter
+                      // class if available, i.e. if
+                      // enable_variable_slip is defined. Otherwise
+                      // returns 1.0;
+                      slip_factor = BoundarySlipSwitch::boundarySlip(prm,ig,it->position());
+
                     // velocity boundary condition
-                    if (bctype == BC::VelocityDirichlet)
+                    if (bctype == BC::VelocityDirichlet || bctype == BC::SlipVelocity)
                     {
+                      const RF factor = weight * (1.0 - slip_factor);
+
                         //================================================//
                         // - (\mu \int \nabla u. normal . v)  
                         //================================================//
-                        const RF factor = mu * weight;
                         for (unsigned int i=0;i<vsize;++i) // ansatz
                         {
                             for (unsigned int j=0;j<vsize;++j) // test
                             {
-                                RF val = ((grad_phi_v[j][0]*normal)*phi_v[i]) * factor;
+                                RF val = ((grad_phi_v[j][0]*normal)*phi_v[i]) * factor * mu;
                                 for (unsigned int d=0;d<dim;++d)
                                 {
                                     const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
@@ -813,7 +824,7 @@ namespace Dune {
 
                                       for (unsigned int dd=0;dd<dim;++dd)
                                         {
-                                          RF Tval = ((grad_phi_v[j][0][d]*normal[dd])*phi_v[i]) * factor;
+                                          RF Tval = ((grad_phi_v[j][0][d]*normal[dd])*phi_v[i]) * factor * mu;
                                           const LFSV_V& lfsv_v_dd = lfsv_pfs_v.child(dd);
                                           mat.accumulate(lfsv_v,i,lfsv_v_dd,j, - Tval);
                                           mat.accumulate(lfsv_v_dd,j,lfsv_v,i, epsilon*Tval);
@@ -842,7 +853,7 @@ namespace Dune {
                         //================================================//
                         // \mu \int \sigma / |\gamma|^\beta v u
                         //================================================//
-                        const RF p_factor = penalty_factor * weight;
+                        const RF p_factor = penalty_factor * factor;
                         for (unsigned int i=0;i<vsize;++i)
                         {
                             for (unsigned int j=0;j<vsize;++j) 
@@ -859,10 +870,12 @@ namespace Dune {
                     } // Velocity Dirichlet
                     if (bctype == BC::SlipVelocity)
                     {
+                        const RF factor = weight * (slip_factor);
+  
                         //================================================//
                         // - (\mu \int \nabla u. normal . v)  
                         //================================================//
-                        const RF factor = mu * weight;
+
                         for (unsigned int i=0;i<vsize;++i) // ansatz
                         {
                             for (unsigned int j=0;j<vsize;++j) // test
@@ -873,7 +886,7 @@ namespace Dune {
                                 if(full_tensor)
                                   ten_sum = 2.0;
 
-                                RF val = ten_sum * ((grad_phi_v[j][0]*normal)*phi_v[i]) * factor;
+                                RF val = ten_sum * ((grad_phi_v[j][0]*normal)*phi_v[i]) * factor * mu;
                                 for (unsigned int d=0;d<dim;++d)
                                 {
                                     const LFSV_V& lfsv_v_d = lfsv_pfs_v.child(d);
@@ -892,7 +905,7 @@ namespace Dune {
                         //================================================//
                         // \mu \int \sigma / |\gamma|^\beta v u
                         //================================================//
-                        const RF p_factor = penalty_factor * weight;
+                        const RF p_factor = penalty_factor * factor;
                         for (unsigned int i=0;i<vsize;++i)
                         {
                             for (unsigned int j=0;j<vsize;++j) 
@@ -910,24 +923,7 @@ namespace Dune {
                             }
                         }
 
-                        //================================================//
-                        // \int q u n
-                        // \int p v n
-                        //================================================//
-                        for (unsigned int i=0;i<vsize;++i) // ansatz
-                        {
-                            for (unsigned int j=0;j<psize;++j) // test
-                            {
-                                for (unsigned int d=0;d<dim;++d)
-                                {
-                                    const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
-                                    RF val = (phi_p[j]*normal[d]*phi_v[i]) * weight;
-                                    mat.accumulate(lfsv_p,j,lfsv_v,i, val * incomp_scaling); // q u n
-                                    mat.accumulate(lfsv_v,i,lfsv_p,j, val); // p v n
-                                }
-                            }
-                        }
-                    }
+                    } // Slip Velocity
                 }
             }
 
