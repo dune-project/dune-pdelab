@@ -679,6 +679,62 @@ namespace Dune {
 	  mutable std::vector<RT> yb;
 	};
 
+
+  /** \brief Copy DOF from child coefficient vector to parent coefficient vector
+   *
+   * \tparam U_CHILD Type of the child coefficient vector
+   * \tparam U Type of the parent coefficient vector
+   * \tparam GFS Type of the parent (power/composite-) grid function space
+   *
+   * \param uChild child coefficient vector
+   * \param uParent parent coefficient vector
+   * \param gfs parent (power/composite) grid function space
+   * \param index of child in parent GFS
+   */
+  template<typename U_CHILD, typename U, typename GFS>
+  void copy_dofs_child_to_parent(U_CHILD& uChild, U& uParent, const GFS& gfs, int child)
+  {
+    if(child >= GFS::CHILDREN)
+      DUNE_THROW(Dune::Exception, "Child index must be smaller than the number of GFS children!");
+
+    typedef typename U_CHILD::Backend CHILD_BE;
+    typedef typename U::Backend BE;
+
+    int n = uChild.flatsize();
+    for(int i=0; i<n; ++i)
+    {
+      BE::access(uParent, gfs.subMap(child, i)) = CHILD_BE::access(uChild, i);
+    }
+  }
+
+  /** \brief Copy DOF from parent coefficient vector to child coefficient vector
+   *
+   * \tparam U Type of the parent coefficient vector
+   * \tparam U_CHILD Type of the child coefficient vector
+   * \tparam GFS Type of the parent (power/composite-) grid function space
+   *
+   * \param uParent parent coefficient vector
+   * \param uChild child coefficient vector
+   * \param gfs parent (power/composite) grid function space
+   * \param index of child in parent GFS
+   */
+  template<typename U, typename U_CHILD, typename GFS>
+  void copy_dofs_parent_to_child(U& uParent, U_CHILD& uChild, const GFS& gfs, int child)
+  {
+    if(child >= GFS::CHILDREN)
+      DUNE_THROW(Dune::Exception, "Child index must be smaller than the number of GFS children!");
+
+    typedef typename U_CHILD::Backend CHILD_BE;
+    typedef typename U::Backend BE;
+
+    int n = uChild.flatsize();
+    for(int i=0; i<n; ++i)
+    {
+      CHILD_BE::access(uChild, i) = BE::access(uParent, gfs.subMap(child, i));
+    }
+  }
+
+
    //! \} group GridFunctionSpace
   } // namespace PDELab
 } // namespace Dune
