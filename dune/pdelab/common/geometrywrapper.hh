@@ -26,7 +26,7 @@ namespace Dune {
 	  {}
 
       //! \todo Please doc me!
-	  const Geometry& geometry () const
+      Geometry geometry () const
 	  {
 		return e.geometry();
 	  }
@@ -128,7 +128,7 @@ namespace Dune {
 		local coordinates of the intersection to local coordinates of the
 		inside() entity.
 	  */
-	  const LocalGeometry& geometryInInside () const
+      LocalGeometry geometryInInside () const
 	  {
 		return i.geometryInInside();
 	  }
@@ -140,7 +140,7 @@ namespace Dune {
 		local coordinates of the intersection to local coordinates of the
 		outside() entity.
 	  */
-	  const LocalGeometry& geometryInOutside () const
+      LocalGeometry geometryInOutside () const
 	  {
 		return i.geometryInOutside();
 	  }
@@ -150,7 +150,7 @@ namespace Dune {
 		This method returns a Geometry object that provides a mapping from
 		local coordinates of the intersection to global (world) coordinates.
 	  */
-	  const Geometry& geometry () const
+      Geometry geometry () const
 	  {
 		return i.geometry();
 	  }
