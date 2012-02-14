@@ -905,6 +905,7 @@ namespace Dune {
 
       /** @brief communicates values for the sparsity pattern of the new matrix.
           @param A Matrix to operate on.
+          @param helper ParallelelISTLHelper.
       */
       void getextendedmatrix (Matrix& A,const ParallelISTLHelper<GFS>& helper)
       {
