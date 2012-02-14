@@ -7,7 +7,11 @@
 namespace Dune {
   namespace PDELab {
 
-    // extend constraints class by processor boundary 
+    //! \addtogroup Constraints
+    //! \ingroup FiniteElementMap
+    //! \{
+
+    //! Parallel P0 constraints for overlapping grids
     class P0ParallelConstraints
     {
     public:
@@ -16,12 +20,14 @@ namespace Dune {
       enum{doSkeleton=false};
       enum{doVolume=false};
 
-      // boundary constraints
-      // IG : intersection geometry
-      // LFS : local function space
-      // T : TransformationType
+      //! processor constraints
+      /**
+       * \tparam IG  intersection geometry
+       * \tparam LFS local function space
+       * \tparam T   TransformationType
+       */
       template<typename I, typename LFS, typename T>
-      void processor (const Dune::PDELab::IntersectionGeometry<I>& ig, 
+      void processor (const Dune::PDELab::IntersectionGeometry<I>& ig,
                       const LFS& lfs, T& trafo) const
       {
         typename T::RowType empty;
@@ -31,6 +37,8 @@ namespace Dune {
         }
       }
     };
+    //! \}
+
   }
 }
 

@@ -25,6 +25,10 @@
 namespace Dune {
   namespace PDELab {
 
+    //! \addtogroup Constraints
+    //! \ingroup FiniteElementMap
+    //! \{
+
     //! Dirichlet Constraints construction
     // works in any dimension and on all element types
     class ConformingDirichletConstraints
@@ -91,16 +95,18 @@ namespace Dune {
       }
     };
 
-    // extend constraints class by processor boundary
+    //! extend conforming constraints class by processor boundary
     class OverlappingConformingDirichletConstraints : public ConformingDirichletConstraints
     {
     public:
       enum { doProcessor = true };
 
-      // boundary constraints
-      // IG : intersection geometry
-      // LFS : local function space
-      // T : TransformationType
+      //! processor constraints
+      /**
+       * \tparam IG  intersection geometry
+       * \tparam LFS local function space
+       * \tparam T   TransformationType
+       */
       template<typename IG, typename LFS, typename T>
       void processor (const IG& ig, const LFS& lfs, T& trafo) const
       {
@@ -139,12 +145,18 @@ namespace Dune {
       }
     };
 
-    // extend constraints class by processor boundary
+    //! extend conforming constraints class by processor boundary
     class NonoverlappingConformingDirichletConstraints : public ConformingDirichletConstraints
     {
     public:
       enum { doVolume = true };
 
+      //! volume constraints
+      /**
+       * \tparam EG  element geometry
+       * \tparam LFS local function space
+       * \tparam T   TransformationType
+       */
       template<typename EG, typename LFS, typename T>
       void volume (const EG& eg, const LFS& lfs, T& trafo) const
       {
@@ -211,6 +223,7 @@ namespace Dune {
       int rank;
       std::vector<int> gh;
     };
+    //! \}
 
   }
 }

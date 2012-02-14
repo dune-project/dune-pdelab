@@ -14,6 +14,10 @@
 namespace Dune {
   namespace PDELab {
 
+    //! \addtogroup Constraints
+    //! \ingroup FiniteElementMap
+    //! \{
+
     class HangingNodesConstraintsAssemblers
     {
     public:
@@ -290,11 +294,7 @@ namespace Dune {
     }; // end of class HangingNodesConstraintsAssemblers
 
 
-
-
-
-
-    //! Constraints construction
+    //! Hanging Node constraints construction
     // works in any dimension and on all element types
     template <class Grid, class HangingNodesConstraintsAssemblerType, class BoundaryFunction>
     class HangingNodesDirichletConstraints : public ConformingDirichletConstraints
@@ -323,13 +323,13 @@ namespace Dune {
         manager.adaptToIsolatedHangingNodes();
       }
 
-
-
-      // boundary constraints
-      // F : grid function returning boundary condition type
-      // IG : intersection geometry
-      // LFS : local function space
-      // T : TransformationType
+      //! boundary constraints
+      /**
+       * \tparam F  grid function returning boundary condition type
+       * \tparam IG  intersection geometry
+       * \tparam LFS local function space
+       * \tparam T   TransformationType
+       */
       template<typename F, typename I, typename LFS, typename T>
       void boundary (const F& f, const IntersectionGeometry<I>& ig, 
                      const LFS& lfs, T& trafo) const
@@ -386,10 +386,12 @@ namespace Dune {
         
       }
 
-      // boundary constraints
-      // I : intersection 
-      // LFS : local function space
-      // T : TransformationType
+      //! skeleton constraints
+      /**
+       * \tparam I  intersection geometry
+       * \tparam LFS local function space
+       * \tparam T   TransformationType
+       */
       template<typename I, typename LFS, typename T>
       void skeleton (const IntersectionGeometry<I>& ig, 
                      const LFS& lfs_e, const LFS& lfs_f, 
@@ -458,7 +460,7 @@ namespace Dune {
       } // skeleton
 
     }; // end of class HangingNodesDirichletConstraints
-
+    //! \}
 
   }
 }
