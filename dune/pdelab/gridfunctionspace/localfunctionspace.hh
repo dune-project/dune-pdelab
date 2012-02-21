@@ -27,6 +27,25 @@ namespace Dune {
     // local function space base: metaprograms
     //=======================================
 
+    template<typename GFS, typename Tag>
+    struct _build_dof_index_type
+    {
+      typedef Dune::PDELab::DOFIndex<std::size_t,TypeTree::TreeInfo<GFS>::depth,2> type;
+    };
+
+    template<typename GFS>
+    struct _build_dof_index_type<GFS,SingleCodimMapper>
+    {
+      typedef SimpleDOFIndex<typename GFS::Traits::SizeType> type;
+    };
+
+
+    template<typename GFS>
+    struct build_dof_index_type
+    {
+      typedef typename _build_dof_index_type<GFS,typename GFS::OrderingTag>::type type;
+    };
+
     //! GridFunctionSpace to LocalFunctionSpace transformation.
     /**
      * gfs_to_lfs describes the transformation of a GridFunctionSpace tree to its corresponding
@@ -48,7 +67,7 @@ namespace Dune {
 
       //! The MultiIndex type that will be used in the resulting LocalFunctionSpace tree.
       //typedef Dune::PDELab::MultiIndex<std::size_t,TypeTree::TreeInfo<GFS>::depth> MultiIndex;
-      typedef Dune::PDELab::DOFIndex<std::size_t,TypeTree::TreeInfo<GFS>::depth,2> DOFIndex;
+      typedef typename build_dof_index_type<GFS>::type DOFIndex;
 
     };
 
