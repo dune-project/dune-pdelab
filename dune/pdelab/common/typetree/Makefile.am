@@ -4,6 +4,7 @@ typetree_HEADERS =				\
 	accumulate_static.hh			\
 	applytochildrensingletree.hh		\
 	applytochildrentreepair.hh		\
+	childextraction.hh			\
 	compositenode.hh			\
 	compositenodemacros.hh			\
 	filteredcompositenode.hh		\
