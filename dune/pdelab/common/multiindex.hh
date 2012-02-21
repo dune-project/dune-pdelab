@@ -156,6 +156,8 @@ namespace Dune {
       class View
       {
 
+        friend class MultiIndex;
+
         typedef ReservedVector<T,n> base_type;
 
       public:
@@ -321,6 +323,8 @@ namespace Dune {
 
       class View
       {
+
+        friend class DOFIndex;
 
       public:
 
