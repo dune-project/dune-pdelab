@@ -393,6 +393,11 @@ namespace Dune {
           return s;
         }
 
+        std::size_t size() const
+        {
+          return _tree_index_view.size();
+        };
+
       private:
 
         explicit View(const DOFIndex& dof_index)
@@ -495,6 +500,11 @@ namespace Dune {
         return std::lexicographical_compare(_c.begin(),_c.end(),r._c.begin(),r._c.end());
       }
 #endif
+
+      std::size_t size() const
+      {
+        return _tree_index.size();
+      }
 
     private:
 
