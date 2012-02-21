@@ -19,7 +19,7 @@ namespace Dune {
       public TypeTree::LeafNode
     {
       template<typename I>
-      bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord)
+      bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
       {
         return true;
       }
@@ -30,7 +30,7 @@ namespace Dune {
       public TypeTree::LeafNode
     {
       template<typename I>
-      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord)
+      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
       {
         return true;
       }
