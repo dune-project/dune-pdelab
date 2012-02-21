@@ -295,6 +295,11 @@ namespace Dune {
         return View(*this,this->size());
       }
 
+      View view(std::size_t size) const
+      {
+        return View(*this,size);
+      }
+
       //! Tests whether two MultiIndices are equal.
       /**
        * \note Only MultiIndices of identical max_depth are comparable
@@ -395,6 +400,11 @@ namespace Dune {
           , _tree_index_view(dof_index._tree_index.view())
         {}
 
+        View(const DOFIndex& dof_index, std::size_t size)
+          : _entity_index_view(dof_index._entity_index)
+          , _tree_index_view(dof_index._tree_index.view(size))
+        {}
+
         View(const EntityIndex& entity_index, const TreeIndex& tree_index)
           : _entity_index_view(entity_index)
           , _tree_index_view(tree_index)
@@ -412,6 +422,11 @@ namespace Dune {
       View view() const
       {
         return View(*this);
+      }
+
+      View view(std::size_t size) const
+      {
+        return View(*this,size);
       }
 
       void clear()
