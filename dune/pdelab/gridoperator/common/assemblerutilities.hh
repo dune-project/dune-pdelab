@@ -389,25 +389,23 @@ namespace Dune{
       /** \brief insert dirichlet constraints for row and assemble
           T^T_U in constrained rows
       */
-      template<typename GI, typename GC, typename CG>
-      void set_trivial_row (GI i, const CG & cv_i, GC& globalcontainer) const
+      template<typename GI, typename GC>
+      void set_trivial_row (GI i, GC& globalcontainer) const
       {
         //std::cout << "clearing row " << i << std::endl;
         // set all entries in row i to zero
-        B::clear_row(i,globalcontainer,1);
-
-        // set diagonal element to 1
-        // B::access(globalcontainer,i,i) = 1;
+        globalcontainer.clear_row(i,1);
       }
 
-      template<typename GC>
-      void handle_dirichlet_constraints(GC& globalcontainer) const
+      template<typename GFSV, typename GC>
+      void handle_dirichlet_constraints(const GFSV& gfsv, GC& globalcontainer) const
       {
-        B::flush(globalcontainer);
+        globalcontainer.flush();
         typedef typename CV::const_iterator global_row_iterator;
         for (global_row_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit)
-          set_trivial_row(cit->first,cit->second,globalcontainer);
-        B::finalize(globalcontainer);
+          if (cit->second.size() == 0)
+            set_trivial_row(gfsv.ordering()->map_index(cit->first),globalcontainer);
+        globalcontainer.finalize();
       }
 
       /* constraints */
