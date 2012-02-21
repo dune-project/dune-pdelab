@@ -31,6 +31,8 @@ namespace Dune {
 
       static const bool has_dynamic_ordering_children = false;
 
+      static const bool consume_tree_index = false;
+
     private:
 
       typedef typename Traits::GridView GV;
@@ -82,6 +84,45 @@ namespace Dune {
             ci.back() += localOrdering()._entity_dof_offsets[localOrdering()._gt_entity_offsets[geometry_type_index] + entity_index];
           }
       }
+
+
+      template<typename ItIn, typename ItOut>
+      void map_indices(const ItIn begin, const ItIn end, ItOut out) const
+      {
+        typedef typename Traits::SizeType size_type;
+        if (_container_blocked)
+          {
+            for (ItIn in = begin; in != end; ++in, ++out)
+              {
+                assert(in->treeIndex().size() == 1);
+                out->push_back(in->treeIndex().back());
+                out->push_back(localOrdering()._gt_entity_offsets[in->entityIndex()[0]] + in->entityIndex()[1]);
+              }
+          }
+        else if (localOrdering()._fixed_size)
+          {
+            for (ItIn in = begin; in != end; ++in, ++out)
+              {
+                assert(in->treeIndex().size() == 1);
+                out->push_back(in->treeIndex().back());
+                const size_type geometry_type_index = in->entityIndex()[0];
+                const size_type entity_index = in->entityIndex()[1];
+                out->back() += _gt_dof_offsets[geometry_type_index] + entity_index * localOrdering()._gt_dof_offsets[geometry_type_index];
+              }
+          }
+        else
+          {
+            for (ItIn in = begin; in != end; ++in, ++out)
+              {
+                assert(in->treeIndex().size() == 1);
+                out->push_back(in->treeIndex().back());
+                const size_type geometry_type_index = in->entityIndex()[0];
+                const size_type entity_index = in->entityIndex()[1];
+                out->back() += localOrdering()._entity_dof_offsets[localOrdering()._gt_entity_offsets[geometry_type_index] + entity_index];
+              }
+          }
+      }
+
 
       void update()
       {
@@ -672,6 +713,8 @@ namespace Dune {
 
       static const bool has_dynamic_ordering_children = false;
 
+      static const bool consume_tree_index = false;
+
     private:
 
       typedef TypeTree::VariadicCompositeNode<LocalOrdering> NodeT;
@@ -724,6 +767,45 @@ namespace Dune {
         else
           {
             ci.back() += _entity_dof_offsets[_gt_entity_offsets[geometry_type_index] + entity_index];
+          }
+      }
+
+      template<typename ItIn, typename ItOut>
+      void map_indices(const ItIn begin, const ItIn end, ItOut out) const
+      {
+        typedef typename Traits::SizeType size_type;
+        if (_container_blocked)
+          {
+            if (_fixed_size)
+              for (ItIn in = begin; in != end; ++in, ++out)
+                {
+                  const size_type geometry_type_index = in->entityIndex()[0];
+                  const size_type entity_index = in->entityIndex()[1];
+                  out->push_back(_gt_dof_offsets[geometry_type_index] + entity_index);
+                }
+            else
+              for (ItIn in = begin; in != end; ++in, ++out)
+                {
+                  out->push_back(_gt_entity_offsets[in->entityIndex()[0]] + in->entityIndex()[1]);
+                }
+          }
+        else if (_fixed_size)
+          {
+            for (ItIn in = begin; in != end; ++in, ++out)
+              {
+                const size_type geometry_type_index = in->entityIndex()[0];
+                const size_type entity_index = in->entityIndex()[1];
+                out->back() += _gt_dof_offsets[geometry_type_index] + entity_index * localOrdering().size(geometry_type_index,entity_index);
+              }
+          }
+        else
+          {
+            for (ItIn in = begin; in != end; ++in, ++out)
+              {
+                const size_type geometry_type_index = in->entityIndex()[0];
+                const size_type entity_index = in->entityIndex()[1];
+                out->back() += _entity_dof_offsets[_gt_entity_offsets[geometry_type_index] + entity_index];
+              }
           }
       }
 

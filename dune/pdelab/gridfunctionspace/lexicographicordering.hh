@@ -53,6 +53,8 @@ namespace Dune {
 
         typedef LexicographicOrderingTag OrderingTag;
 
+        static const bool consume_tree_index = true;
+
         //! Construct ordering object
         /**
          * In general, an ordering object is not properly setup after
@@ -63,6 +65,22 @@ namespace Dune {
         : OrderingBase<DI,CI>(node,container_blocked,nullptr)
         {
         }
+
+        template<typename ItIn, typename ItOut>
+        void map_indices(const ItIn begin, const ItIn end, ItOut out) const
+        {
+          if (this->_container_blocked)
+            {
+              for (ItIn in = begin; in != end; ++in, ++out)
+                out->push_back(in->treeIndex().back());
+            }
+          else
+            {
+              for (ItIn in = begin; in != end; ++in, ++out)
+                out->back() += (this->offset(in->treeIndex().back()));
+            }
+        }
+
 
         /*        Base(shared_ptr<Backend> backend)
           : OrderingBase<MI,CI>(static_cast<Node&>(*this),backend->blocked())

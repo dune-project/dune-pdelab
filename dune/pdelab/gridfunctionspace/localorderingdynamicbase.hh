@@ -76,6 +76,51 @@ namespace Dune {
           }
       }
 
+
+      template<typename ItIn, typename ItOut>
+      void map_indices(const ItIn begin, const ItIn end, ItOut out) const
+      {
+        if (_child_count == 0)
+          {
+            for (ItIn in = begin; in != end; ++in, ++out)
+              {
+                assert(in->size() == 1 && "MultiIndex length must match GridFunctionSpace tree depth");
+                out->push_back(in->treeIndex().back());
+              }
+          }
+        else if (_container_blocked)
+          {
+            for (ItIn in = begin; in != end; ++in, ++out)
+              out->push_back(in->treeIndex().back());
+          }
+        else if (_fixed_size)
+          {
+            for (ItIn in = begin; in != end; ++in, ++out)
+              {
+                const typename Traits::SizeType child_index = in->treeIndex().back();
+                if (child_index > 0)
+                  {
+                    const typename Traits::SizeType index = in->entityIndex()[0] * _child_count + child_index - 1;
+                    out->back() += _gt_dof_offsets[index];
+                  }
+              }
+          }
+        else
+          {
+            for (ItIn in = begin; in != end; ++in, ++out)
+              {
+                const typename Traits::SizeType child_index = in->treeIndex().back();
+                if (child_index > 0)
+                  {
+                    assert(_gt_used[in->entityIndex()[0]]);
+                    const typename Traits::SizeType index = (_gt_entity_offsets[in->entityIndex()[0]] + in->entityIndex()[1]) * _child_count + child_index - 1;
+                    out->back() += _entity_dof_offsets[index];
+                  }
+              }
+          }
+      }
+
+
       typename Traits::SizeType size(const typename Traits::SizeType geometry_type_index, const typename Traits::SizeType entity_index) const
       {
         if (_fixed_size)

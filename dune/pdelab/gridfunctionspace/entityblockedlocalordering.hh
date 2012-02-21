@@ -45,6 +45,8 @@ namespace Dune {
 
     public:
 
+      static const bool consume_tree_index = true;
+
       typedef typename BaseT::Traits Traits;
 
       PowerEntityBlockedLocalOrdering(const typename NodeT::NodeStorage& child_storage, bool container_blocked)
@@ -235,6 +237,8 @@ namespace Dune {
     public:
 
       typedef typename Base::Traits Traits;
+
+      static const bool consume_tree_index = true;
 
       CompositeEntityBlockedLocalOrdering(bool container_blocked, DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
         : Node(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)

@@ -32,6 +32,12 @@ namespace Dune {
         DUNE_THROW(NotImplemented,"not implemented");
       }
 
+      template<typename ItIn, typename ItOut>
+      void map_indices(const ItIn begin, const ItIn end, ItOut out) const
+      {
+        // don't do anything - this is handled by the specialized GridViewOrdering
+      }
+
       typename Traits::SizeType size(const typename Traits::SizeType geometry_type_index, const typename Traits::SizeType entity_index) const
       {
         typedef typename Traits::SizeType size_type;
