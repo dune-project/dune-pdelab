@@ -6,14 +6,45 @@
 
 #include <vector>
 
+#include <dune/pdelab/common/multiindex.hh>
+#include <dune/pdelab/common/typetree/traversal.hh>
+#include <dune/pdelab/common/typetree/accumulate_static.hh>
+
 namespace Dune {
   namespace PDELab {
+
+    struct extract_max_container_depth
+    {
+
+      typedef std::size_t result_type;
+
+      template<typename Node, typename TreePath>
+      struct doVisit
+      {
+        static const bool value = true;
+      };
+
+      template<typename Node, typename TreePath>
+      struct visit
+      {
+        static const std::size_t result = Node::Traits::Backend::Traits::max_blocking_depth;
+      };
+
+    };
 
     template<typename RootGFS>
     struct gfs_to_ordering
     {
+      static const std::size_t ci_depth =
+        TypeTree::AccumulateValue<RootGFS,
+                                  extract_max_container_depth,
+                                  TypeTree::max<std::size_t>,
+                                  0,
+                                  TypeTree::plus<std::size_t>
+                                  >::result + 1;
+
       typedef typename gfs_to_lfs<RootGFS>::DOFIndex DOFIndex;
-      typedef ReservedVector<std::size_t,2> ContainerIndex;
+      typedef MultiIndex<std::size_t,ci_depth> ContainerIndex;
     };
 
     template<typename GlobalTransformation>
