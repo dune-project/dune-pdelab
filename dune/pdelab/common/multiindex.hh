@@ -15,6 +15,57 @@ namespace Dune {
 
   namespace PDELab {
 
+
+    template<typename F>
+    struct SimpleDOFIndex
+      : public FieldVector<F,1>
+    {
+
+      SimpleDOFIndex()
+      {}
+
+      SimpleDOFIndex(const F& v)
+        : FieldVector<F,1>(v)
+      {}
+
+      F& back()
+      {
+        return (*this)[0];
+      }
+
+      const F& back() const
+      {
+        return (*this)[0];
+      }
+
+    };
+
+
+    template<typename F>
+    struct SimpleContainerIndex
+      : public FieldVector<F,1>
+    {
+
+      SimpleContainerIndex()
+      {}
+
+      SimpleContainerIndex(const F& v)
+        : FieldVector<F,1>(v)
+      {}
+
+      F& back()
+      {
+        return (*this)[0];
+      }
+
+      const F& back() const
+      {
+        return (*this)[0];
+      }
+
+    };
+
+
     //! A multi-index representing a degree of freedom in a GridFunctionSpace.
     /**
      * A MultiIndex provides a way for identifying degrees of freedom in a (possibly
