@@ -191,7 +191,7 @@ namespace Dune {
     }
 
     template<typename DI, typename CI, typename Container>
-    typename enable_if<!is_same<typename Container::block_type,double>::value>::type
+    typename enable_if<!is_same<typename Container::block_type,typename Container::field_type>::value>::type
     allocate_istl_vector(const OrderingBase<DI,CI>& ordering, Container& c)
     {
       for (std::size_t i = 0; i < ordering.dynamic_child_count(); ++i)
@@ -207,7 +207,7 @@ namespace Dune {
     }
 
     template<typename DI, typename CI, typename Container>
-    typename enable_if<is_same<typename Container::block_type,double>::value>::type
+    typename enable_if<is_same<typename Container::block_type,typename Container::field_type>::value>::type
     allocate_istl_vector(const OrderingBase<DI,CI>& ordering, Container& c)
     {
     }
