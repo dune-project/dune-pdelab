@@ -325,6 +325,9 @@ namespace Dune {
              typename B=StdVectorBackend, typename P=GridFunctionGeneralMapper>
     class GridFunctionSpace : public TypeTree::LeafNode
     {
+
+      typedef TypeTree::TransformTree<GridFunctionSpace,gfs_to_ordering<GridFunctionSpace> > ordering_transformation;
+
     public:
       //! export Traits class
       typedef GridFunctionSpaceTraits<GV,FEM,CE,B> Traits;
@@ -333,21 +336,19 @@ namespace Dune {
 
       typedef P SizeTag;
 
+      typedef LeafGridFunctionSpaceTag ImplementationTag;
+
+      typedef typename ordering_transformation::Type Ordering;
+
        //! extract type for storing constraints
       template<typename E>
       struct ConstraintsContainer
       {
         //! \brief define Type as the Type of a container of E's
-        typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
+        typedef ConstraintsTransformation<typename Ordering::Traits::DOFIndex,E> Type;
       private:
         ConstraintsContainer () {}
       };
-
-      typedef LeafGridFunctionSpaceTag ImplementationTag;
-
-      typedef TypeTree::TransformTree<GridFunctionSpace,gfs_to_ordering<GridFunctionSpace> > ordering_transformation;
-
-      typedef typename ordering_transformation::Type Ordering;
 
       //! constructor
       GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_, const B& backend = B())

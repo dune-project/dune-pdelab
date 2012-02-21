@@ -210,7 +210,7 @@ namespace Dune {
       struct ConstraintsContainer
       {
         //! \brief define Type as the Type of a container of E's
-        typedef ConstraintsTransformation<typename Traits::SizeType,E> Type;
+        typedef ConstraintsTransformation<typename GridFunctionSpace::Ordering::Traits::DOFIndex,E> Type;
       private:
         ConstraintsContainer ();
       };
