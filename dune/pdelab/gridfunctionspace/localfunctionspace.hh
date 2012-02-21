@@ -434,7 +434,9 @@ namespace Dune {
                                    const array<shared_ptr<ChildLFS>,k>& children)
         : BaseT(gfs)
         , TreeNode(children)
-      {}
+      {
+        this->setup(*this);
+      }
 
       template<typename Transformation>
       PowerLocalFunctionSpaceNode (const GFS& gfs,
@@ -442,7 +444,9 @@ namespace Dune {
                                    const array<shared_ptr<ChildLFS>,k>& children)
         : BaseT(stackobject_to_shared_ptr(gfs))
         , TreeNode(children)
-      {}
+      {
+        this->setup(*this);
+      }
 
       //! \brief bind local function space to entity
       void bind (const typename Traits::Element& e)
@@ -514,7 +518,9 @@ namespace Dune {
                                        DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
         : BaseT(gfs)
         , NodeType(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
-      {}
+      {
+        this->setup(*this);
+      }
 
       template<typename Transformation>
       CompositeLocalFunctionSpaceNode (const GFS& gfs,
@@ -522,7 +528,9 @@ namespace Dune {
                                        DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
         : BaseT(stackobject_to_shared_ptr(gfs))
         , NodeType(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
-      {}
+      {
+        this->setup(*this);
+      }
 
       //! \brief bind local function space to entity
       void bind (const typename Traits::Element& e)
