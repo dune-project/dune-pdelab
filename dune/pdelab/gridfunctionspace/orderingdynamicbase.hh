@@ -23,7 +23,7 @@ namespace Dune {
       void map_index(const typename Traits::MultiIndex& mi, typename Traits::ContainerIndex& ci) const
       {
         if (_delegate)
-          _delegate->map_index(mi,ci);
+          _delegate->map_index_dynamic(mi,ci);
         else
           {
             typename Traits::SizeType child_index = mi.back();

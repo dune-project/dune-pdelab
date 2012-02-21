@@ -25,7 +25,7 @@ namespace Dune {
 
       typedef OrderingTraits<MI,CI> Traits;
 
-      virtual void map_index(const typename Traits::MultiIndex& mi, typename Traits::ContainerIndex& ci) const = 0;
+      virtual void map_index_dynamic(const typename Traits::MultiIndex& mi, typename Traits::ContainerIndex& ci) const = 0;
     };
 
 
