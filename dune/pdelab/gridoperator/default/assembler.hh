@@ -74,7 +74,7 @@ namespace Dune{
         assembler_engine.preAssembly();
 
         // Map each cell to unique id
-        Dune::PDELab::MultiGeomUniqueIDMapper<GV> cell_mapper(gfsu.gridview());
+        Dune::PDELab::MultiGeomUniqueIDMapper<GV> cell_mapper(gfsu.gridView());
 
         // Extract integration requirements from the local assembler
         const bool require_uv_skeleton = assembler_engine.requireUVSkeleton();
@@ -88,8 +88,8 @@ namespace Dune{
         const bool require_skeleton_two_sided = assembler_engine.requireSkeletonTwoSided();
 
         // Traverse grid view
-        for (ElementIterator it = gfsu.gridview().template begin<0>();
-             it!=gfsu.gridview().template end<0>(); ++it)
+        for (ElementIterator it = gfsu.gridView().template begin<0>();
+             it!=gfsu.gridView().template end<0>(); ++it)
           {
             // Compute unique id
             const typename GV::IndexSet::IndexType ids = cell_mapper.map(*it);
@@ -127,8 +127,8 @@ namespace Dune{
               {
                 // Traverse intersections
                 unsigned int intersection_index = 0;
-                IntersectionIterator endit = gfsu.gridview().iend(*it);
-                IntersectionIterator iit = gfsu.gridview().ibegin(*it);
+                IntersectionIterator endit = gfsu.gridView().iend(*it);
+                IntersectionIterator iit = gfsu.gridView().ibegin(*it);
                 for(; iit!=endit; ++iit, ++intersection_index)
                   {
 

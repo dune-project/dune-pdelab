@@ -201,8 +201,8 @@ namespace Dune {
       LFS lfs(gfs);
 
       // loop once over the grid
-      for (ElementIterator it = gfs.gridview().template begin<0>();
-           it!=gfs.gridview().template end<0>(); ++it)
+      for (ElementIterator it = gfs.gridView().template begin<0>();
+           it!=gfs.gridView().template end<0>(); ++it)
         {
           // bind local function space to element
           lfs.bind(*it);

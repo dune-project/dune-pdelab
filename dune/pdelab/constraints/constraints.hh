@@ -593,7 +593,7 @@ namespace Dune {
         LFS lfs_f(gfs);
 
         // get index set
-        const typename GV::IndexSet& is=gfs.gridview().indexSet();
+        const typename GV::IndexSet& is=gfs.gridView().indexSet();
 
         // helper to compute offset dependent on geometry type
         const int chunk=1<<28;
@@ -601,8 +601,8 @@ namespace Dune {
         std::map<Dune::GeometryType,int> gtoffset;
 
         // loop once over the grid
-        for (ElementIterator it = gfs.gridview().template begin<0>();
-             it!=gfs.gridview().template end<0>(); ++it)
+        for (ElementIterator it = gfs.gridView().template begin<0>();
+             it!=gfs.gridView().template end<0>(); ++it)
         {
           // assign offset for geometry type;
           if (gtoffset.find(it->type())==gtoffset.end())
@@ -620,10 +620,10 @@ namespace Dune {
           typedef ElementGeometry<Element> ElementWrapper;
           TypeTree::applyToTree(lfs_e,VolumeConstraints<ElementWrapper,CG>(ElementWrapper(*it),cg));
 
-		  // iterate over intersections and call metaprogram
+          // iterate over intersections and call metaprogram
           unsigned int intersection_index = 0;
-		  IntersectionIterator endit = gfs.gridview().iend(*it);
-		  for (IntersectionIterator iit = gfs.gridview().ibegin(*it); iit!=endit; ++iit, ++intersection_index)
+          IntersectionIterator endit = gfs.gridView().iend(*it);
+          for (IntersectionIterator iit = gfs.gridView().ibegin(*it); iit!=endit; ++iit, ++intersection_index)
           {
             if (iit->boundary())
             {
@@ -652,7 +652,7 @@ namespace Dune {
               }
             }
           }
-		}
+        }
 
         // print result
         if(verbose){
@@ -710,7 +710,7 @@ namespace Dune {
     {
       NoConstraintsParameters p;
       ConstraintsAssemblerHelper<NoConstraintsParameters, GFS, CG, false>::assemble(p,gfs,cg, verbose);
-	}
+    }
 
     //! construct constraints from given constraits parameter tree
     /**
@@ -735,7 +735,7 @@ namespace Dune {
                      const bool verbose = false)
     {
       ConstraintsAssemblerHelper<P, GFS, CG, IsGridFunction<P>::value>::assemble(p,gfs,cg, verbose);
-	}
+    }
 
     //! construct constraints from given boundary condition function
     /**
@@ -754,10 +754,10 @@ namespace Dune {
                               XG& xg)
     {
       typedef typename XG::Backend B;
-	  typedef typename CG::const_iterator global_col_iterator;
-	  for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
+      typedef typename CG::const_iterator global_col_iterator;
+      for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
         B::access(xg,cit->first) = x;
-	}
+    }
 
     //! check that constrained dofs match a certain value
     /**
@@ -827,19 +827,19 @@ namespace Dune {
     template<typename CG, typename XG>
     void constrain_residual (const CG& cg, XG& xg)
     {
-	  typedef typename CG::const_iterator global_col_iterator;
+      typedef typename CG::const_iterator global_col_iterator;
       typedef typename CG::value_type::second_type::const_iterator global_row_iterator;
       typedef typename XG::Backend B;
 
-	  for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
+      for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
         for(global_row_iterator rit = cit->second.begin(); rit!=cit->second.end(); ++rit)
           B::access(xg,rit->first) += rit->second * B::access(xg,cit->first);
 
       // extra loop because constrained dofs might have contributions
       // to constrained dofs
-	  for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
+      for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
         B::access(xg,cit->first) = 0;
-	}
+    }
 
     //! Modify coefficient vector based on constrained dofs as given
     //! in the constraints container
@@ -854,10 +854,10 @@ namespace Dune {
     void copy_constrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
     {
       typedef typename XG::Backend B;
-	  typedef typename CG::const_iterator global_col_iterator;
-	  for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
+      typedef typename CG::const_iterator global_col_iterator;
+      for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
         B::access(xgout,cit->first) = B::access(xgin,cit->first);
-	}
+    }
 
     /**
      * \code
@@ -871,7 +871,7 @@ namespace Dune {
       for (typename XG::size_type i=0; i<xg.flatsize(); ++i)
         if (cg.find(i)==cg.end())
           B::access(xg,i) = x;
-	}
+    }
 
 
     /**
@@ -886,7 +886,7 @@ namespace Dune {
       for (typename XG::size_type i=0; i<xgin.flatsize(); ++i)
         if (cg.find(i)==cg.end())
           B::access(xgout,i) = B::access(xgin,i);
-	}
+    }
 
     /**
      * \code
@@ -897,13 +897,13 @@ namespace Dune {
     void set_shifted_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
     {
       typedef typename XG::Backend B;
-	  typedef typename CG::const_iterator global_col_iterator;
+      typedef typename CG::const_iterator global_col_iterator;
       for (typename XG::size_type i=0; i<xg.flatsize(); ++i){
         global_col_iterator it = cg.find(i);
         if (it == cg.end() || it->second.size() > 0)
           B::access(xg,i) = x;
       }
-	}
+    }
 
     //! @}
 

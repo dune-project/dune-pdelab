@@ -677,7 +677,7 @@ namespace Dune {
           FESwitch::coefficients(*pfe);
 
         typedef typename GFS::Traits::GridViewType GV;
-        GV gv = this->gridFunctionSpace().gridview();
+        GV gv = this->gridFunctionSpace().gridView();
 
         const Dune::GenericReferenceElement<double,GV::Grid::dimension>& refEl =
           Dune::GenericReferenceElements<double,GV::Grid::dimension>::general(this->pfe->type());

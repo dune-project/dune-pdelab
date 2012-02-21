@@ -67,7 +67,7 @@ namespace Dune
         public:
             void setVerbosityLevel(unsigned int verbosity_level_)
             {
-                if (gridoperator.trialGridFunctionSpace().gridview().comm().rank()>0)
+                if (gridoperator.trialGridFunctionSpace().gridView().comm().rank()>0)
                     verbosity_level = 0;
                 else
                     verbosity_level = verbosity_level_;
@@ -87,7 +87,7 @@ namespace Dune
                 , u(&u_)
                 , verbosity_level(1)
             {
-                if (gridoperator.trialGridFunctionSpace().gridview().comm().rank()>0)
+                if (gridoperator.trialGridFunctionSpace().gridView().comm().rank()>0)
                     verbosity_level = 0;
             }
 
@@ -96,7 +96,7 @@ namespace Dune
                 , u(0)
                 , verbosity_level(1)
             {
-                if (gridoperator.trialGridFunctionSpace().gridview().comm().rank()>0)
+                if (gridoperator.trialGridFunctionSpace().gridView().comm().rank()>0)
                     verbosity_level = 0;
             }
 

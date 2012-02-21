@@ -776,14 +776,14 @@ namespace Dune {
                     IGOS& igos_, const PDESOLVER& pdesolver_)
 	: method(&method_), igos(igos_), pdesolver(pdesolver_), verbosityLevel(1), step(1)
       {
-        if (igos.trialGridFunctionSpace().gridview().comm().rank()>0)
+        if (igos.trialGridFunctionSpace().gridView().comm().rank()>0)
           verbosityLevel = 0;
       }
 
       //! change verbosity level; 0 means completely quiet
       void setVerbosityLevel (int level)
       {
-        if (igos.trialGridFunctionSpace().gridview().comm().rank()>0)
+        if (igos.trialGridFunctionSpace().gridView().comm().rank()>0)
           verbosityLevel = 0;
         else
           verbosityLevel = level;

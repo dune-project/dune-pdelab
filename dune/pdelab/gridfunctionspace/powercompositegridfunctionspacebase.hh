@@ -237,9 +237,15 @@ namespace Dune {
       }
 
       //! get grid view
-      const typename Traits::GridViewType& gridview () const
+      const typename Traits::GridViewType& gridview () const DUNE_DEPRECATED
       {
-        return gfs().template child<0>().gridview();
+        return gfs().template child<0>().gridView();
+      }
+
+      //! get grid view
+      const typename Traits::GridViewType& gridView () const
+      {
+        return gfs().template child<0>().gridView();
       }
 
       //! map index from our index set [0,size()-1] to root index set
