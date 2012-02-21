@@ -843,6 +843,13 @@ namespace Dune {
         xg[gfs.ordering()->map_index(cit->first)] = 0;
     }
 
+
+    template<typename XG>
+    void constrain_residual (const typename XG::GridFunctionSpace& gfs, const EmptyTransformation& cg, XG& xg)
+    {
+    }
+
+
     //! Modify coefficient vector based on constrained dofs as given
     //! in the constraints container
     //! @{

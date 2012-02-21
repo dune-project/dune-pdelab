@@ -389,22 +389,25 @@ namespace Dune{
       /** \brief insert dirichlet constraints for row and assemble
           T^T_U in constrained rows
       */
-      template<typename GI, typename GC>
-      void set_trivial_row (GI i, GC& globalcontainer) const
+      template<typename GFSV, typename GC, typename C>
+      void set_trivial_rows(const GFSV& gfsv, GC& globalcontainer, const C& c) const
       {
-        //std::cout << "clearing row " << i << std::endl;
-        // set all entries in row i to zero
-        globalcontainer.clear_row(i,1);
+        typedef typename C::const_iterator global_row_iterator;
+        for (global_row_iterator cit = c.begin(); cit != c.end(); ++cit)
+          if (cit->second.size() == 0)
+            globalcontainer.clear_row(gfsv.ordering()->map_index(cit->first),1);
+      }
+
+      template<typename GFSV, typename GC>
+      void set_trivial_rows(const GFSV& gfsv, GC& globalcontainer, const EmptyTransformation& c) const
+      {
       }
 
       template<typename GFSV, typename GC>
       void handle_dirichlet_constraints(const GFSV& gfsv, GC& globalcontainer) const
       {
         globalcontainer.flush();
-        typedef typename CV::const_iterator global_row_iterator;
-        for (global_row_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit)
-          if (cit->second.size() == 0)
-            set_trivial_row(gfsv.ordering()->map_index(cit->first),globalcontainer);
+        set_trivial_rows(gfsv,globalcontainer,*pconstraintsv);
         globalcontainer.finalize();
       }
 
