@@ -10,10 +10,10 @@
 namespace Dune {
   namespace PDELab {
 
-    template<typename GFS, typename DI, typename CI>
+    template<typename FEM, typename GV, typename DI, typename CI>
     class LeafLocalOrdering
       : public TypeTree::LeafNode
-      , public LocalOrderingBase<typename GFS::Traits::GridView,DI,CI>
+      , public LocalOrderingBase<GV,DI,CI>
     {
 
       template<typename>
@@ -22,36 +22,37 @@ namespace Dune {
       template<typename>
       friend struct extract_per_entity_sizes_from_cell;
 
-      typedef LocalOrderingBase<typename GFS::Traits::GridView,DI,CI> BaseT;
+      typedef LocalOrderingBase<GV,DI,CI> BaseT;
 
     public:
 
       typedef typename BaseT::Traits Traits;
 
-      LeafLocalOrdering(const GFS& gfs, bool backend_blocked)
+      LeafLocalOrdering(const shared_ptr<const FEM>& fem, const GV& gv, bool backend_blocked)
         : BaseT(*this,backend_blocked)
-        , _gfs(gfs)
+        , _fem(fem)
+        , _gv(gv)
       {}
-
-      const GFS& gridFunctionSpace() const
-      {
-        return _gfs;
-      }
 
       const typename Traits::GridView& gridView() const
       {
-        return _gfs.gridview();
+        return _gv;
+      }
+
+      const FEM& finiteElementMap() const
+      {
+        return *_fem;
       }
 
     private:
 
       typedef FiniteElementInterfaceSwitch<
-      typename GFS::Traits::FiniteElementType
+      typename FEM::Traits::FiniteElement
       > FESwitch;
 
       void collect_used_geometry_types_from_cell(const typename Traits::GridView::template Codim<0>::Entity& cell)
       {
-        FESwitch::setStore(_pfe,_gfs.finiteElementMap().find(cell));
+        FESwitch::setStore(_pfe,_fem->find(cell));
 
         const typename FESwitch::Coefficients& coeffs =
           FESwitch::coefficients(*_pfe);
@@ -77,7 +78,7 @@ namespace Dune {
         if (this->_fixed_size_possible)
           std::fill(gt_sizes.begin(),gt_sizes.end(),0);
 
-        FESwitch::setStore(_pfe,_gfs.finiteElementMap().find(cell));
+        FESwitch::setStore(_pfe,_fem->find(cell));
 
         const typename FESwitch::Coefficients& coeffs =
           FESwitch::coefficients(*_pfe);
@@ -93,7 +94,7 @@ namespace Dune {
             GeometryType gt = ref_el.type(key.subEntity(),key.codim());
             const size_type geometry_type_index = GlobalGeometryTypeIndex::index(gt);
 
-            const size_type entity_index = _gfs.gridview().indexSet().subIndex(cell,key.subEntity(),key.codim());
+            const size_type entity_index = _gv.indexSet().subIndex(cell,key.subEntity(),key.codim());
             const size_type index = this->_gt_entity_offsets[geometry_type_index] + entity_index;
             gt_sizes[geometry_type_index] = this->_entity_dof_offsets[index] = std::max(static_cast<size_type>(this->_entity_dof_offsets[index]),static_cast<size_type>(key.index() + 1));
           }
@@ -114,7 +115,8 @@ namespace Dune {
           }
       }
 
-      const GFS& _gfs;
+      shared_ptr<const FEM> _fem;
+      GV _gv;
       typename FESwitch::Store _pfe;
 
     };
@@ -127,7 +129,8 @@ namespace Dune {
       static const bool recursive = false;
 
       typedef LeafLocalOrdering<
-        GFS,
+        typename GFS::Traits::FiniteElementMap,
+        typename GFS::Traits::GridView,
         typename Transformation::DOFIndex,
         typename Transformation::ContainerIndex
         > transformed_type;
@@ -136,12 +139,12 @@ namespace Dune {
 
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
-        return transformed_type(gfs,false);
+        return transformed_type(gfs.finiteElementMapStorage(),gfs.gridView(),false);
       }
 
       static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
       {
-        return make_shared<transformed_type>(*gfs,false);
+        return make_shared<transformed_type>(gfs->finiteElementMapStorage(),gfs->gridView(),false);
       }
 
     };

@@ -292,7 +292,8 @@ namespace Dune {
 
       static const bool recursive = false;
 
-      typedef DirectLeafLocalOrdering<GFS,
+      typedef DirectLeafLocalOrdering<typename GFS::Traits::FiniteElementMap,
+                                      typename GFS::Traits::GridView,
                                       typename Transformation::DOFIndex,
                                       typename Transformation::ContainerIndex
                                       > LocalOrdering;
@@ -304,12 +305,12 @@ namespace Dune {
 
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
-        return transformed_type(make_tuple(make_shared<LocalOrdering>(gfs)),gfs.backend().blocked());
+        return transformed_type(make_tuple(make_shared<LocalOrdering>(gfs.finiteElementMapStorage(),gfs.gridView())),gfs.backend().blocked());
       }
 
       static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
       {
-        return make_shared<transformed_type>(make_tuple(make_shared<LocalOrdering>(*gfs)),gfs->backend().blocked());
+        return make_shared<transformed_type>(make_tuple(make_shared<LocalOrdering>(gfs->finiteElementMapStorage(),gfs->gridView())),gfs->backend().blocked());
       }
 
     };
@@ -333,7 +334,7 @@ namespace Dune {
       template<typename Node, typename TreePath>
       void leaf(Node& node, TreePath tp)
       {
-        node._fixed_size = node.gridFunctionSpace().fixedSize();
+        node._fixed_size = node.finiteElementMap().fixedSize();
         any = any || node._fixed_size;
       }
 
@@ -378,12 +379,12 @@ namespace Dune {
             node._gt_dof_offsets.assign(GlobalGeometryTypeIndex::size(dim),0);
             for (GTVector::const_iterator it = geom_types.begin(); it != geom_types.end(); ++it)
               {
-                size_type size = node.gridFunctionSpace().size(*it);
+                size_type size = node.finiteElementMap().size(*it);
                 node._gt_dof_offsets[GlobalGeometryTypeIndex::index(*it)] = size;
                 node._gt_used[GlobalGeometryTypeIndex::index(*it)] = size > 0;
                 node._codim_used[dim - it->dim()] = node._codim_used[dim - it->dim()] || (size > 0);
               }
-            node._max_local_size = node.gridFunctionSpace().fixedMaxLocalSize();
+            node._max_local_size = node.finiteElementMap().maxLocalSize();
           }
       }
 

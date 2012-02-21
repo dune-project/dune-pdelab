@@ -12,7 +12,7 @@
 namespace Dune {
   namespace PDELab {
 
-    template<typename GFS, typename DI, typename CI>
+    template<typename FEM, typename GV, typename DI, typename CI>
     class DirectLeafLocalOrdering
       : public TypeTree::LeafNode
     {
@@ -22,7 +22,7 @@ namespace Dune {
 
     public:
 
-      typedef LocalOrderingTraits<typename GFS::Traits::GridViewType,DI,CI> Traits;
+      typedef LocalOrderingTraits<GV,DI,CI> Traits;
 
       void map_local_index(const typename Traits::SizeType geometry_type_index,
                            const typename Traits::SizeType entity_index,
@@ -63,22 +63,28 @@ namespace Dune {
         return 0;
       }
 
-      explicit DirectLeafLocalOrdering(const GFS& gfs)
-        : _gfs(gfs)
+      explicit DirectLeafLocalOrdering(const shared_ptr<const FEM>& fem, const GV& gv)
+        : _fem(fem)
+        , _gv(gv)
         , _fixed_size(false)
         , _container_blocked(false)
       {}
 
       const typename Traits::GridView& gridView() const
       {
-        return _gfs.gridview();
+        return _gv;
+      }
+
+      const FEM& finiteElementMap() const
+      {
+        return *_fem;
       }
 
     private:
 
       void update_a_priori_fixed_size()
       {
-        _fixed_size = _gfs.fixedSize();
+        _fixed_size = _fem->fixedSize();
       }
 
       typedef std::vector<GeometryType> GTVector;
@@ -94,7 +100,7 @@ namespace Dune {
         _gt_dof_offsets.assign(GlobalGeometryTypeIndex::size(dim),0);
         for (GTVector::const_iterator it = geom_types.begin(); it != geom_types.end(); ++it)
           {
-            size_type size = _gfs.size(*it);
+            size_type size = _fem->size(*it);
             _gt_dof_offsets[GlobalGeometryTypeIndex::index(*it)] = size;
             _gt_used[GlobalGeometryTypeIndex::index(*it)] = size > 0;
             _codim_used[dim - it->dim()] = _codim_used[dim - it->dim()] || (size > 0);
@@ -103,12 +109,13 @@ namespace Dune {
 
       typename Traits::SizeType maxLocalSize() const
       {
-        return _gfs.fixedMaxLocalSize();
+        return _fem->maxLocalSize();
       }
 
     protected:
 
-      const GFS& _gfs;
+      shared_ptr<const FEM> _fem;
+      GV _gv;
       bool _fixed_size;
       const bool _container_blocked;
 
