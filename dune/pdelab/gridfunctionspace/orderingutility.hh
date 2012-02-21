@@ -67,6 +67,18 @@ namespace Dune {
         dof_index.treeIndex().push_back(tree_index);
       }
 
+      template<typename DOFIndex>
+      static std::size_t geometryType(const DOFIndex& dof_index)
+      {
+        return dof_index.treeIndex()[0];
+      }
+
+      template<typename DOFIndex>
+      static std::size_t entityIndex(const DOFIndex& dof_index)
+      {
+        return dof_index.treeIndex()[1];
+      }
+
     };
 
     struct SimpleDOFIndexAccessor
