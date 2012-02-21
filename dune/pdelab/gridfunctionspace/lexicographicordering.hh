@@ -20,6 +20,7 @@
 //#include <dune/pdelab/gridfunctionspace/orderingbase.hh>
 //#include <dune/pdelab/gridfunctionspace/compositeorderingutilities.hh>
 
+#include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/orderingutility.hh>
 #include <dune/pdelab/gridfunctionspace/orderingdynamicbase.hh>
 
@@ -255,22 +256,48 @@ namespace Dune {
     lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_ordering<Params>* t, PowerGridFunctionSpaceTag tag);
 
 
+    struct update_direct_children
+      : public TypeTree::DirectChildrenVisitor
+      , public TypeTree::DynamicTraversal
+    {
 
+      template<typename GFS, typename Child, typename TreePath, typename ChildIndex>
+      void afterChild(const GFS& gfs, Child& child, TreePath tp, ChildIndex childIndex) const
+      {
+        child.update();
+      }
 
-#if 0
+    };
+
 
     //! Interface for merging index spaces
-    template<class SizeType, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
+    template<typename DI, typename CI, typename Backend, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
     class CompositeLexicographicOrdering :
       public DUNE_TYPETREE_COMPOSITENODE_BASETYPE,
-      public LexicographicOrderingImp::Base<
-        SizeType, DUNE_TYPETREE_COMPOSITENODE_BASETYPE,
-        CompositeLexicographicOrdering<
-          SizeType, DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES
-          >
-      >
+      public lexicographic_ordering::Base<DI,
+                                          CI,
+                                          Backend,
+                                          CompositeLexicographicOrdering<
+                                            DI,
+                                            CI,
+                                            Backend,
+                                            DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES
+                                            >
+                                          >
     {
       typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE Node;
+
+      typedef lexicographic_ordering::Base<
+        DI,
+        CI,
+        Backend,
+        CompositeLexicographicOrdering<
+          DI,
+          CI,
+          Backend,
+          DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES
+          >
+        > Base;
 
     public:
       //! Construct ordering object
@@ -282,21 +309,38 @@ namespace Dune {
        * \note This constructor must be present for ordering objects not at
        *       the leaf of the tree.
        */
-      template<class GFS>
-      CompositeLexicographicOrdering
-      ( const GFS &gfs,
-        DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE) :
-        Node(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
+      CompositeLexicographicOrdering(DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
+        : Node(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
+        , Base(*this)
       { }
 
       std::string name() const { return "CompositeLexicographicOrdering"; }
+
+      void update()
+      {
+        std::cout << "********************" << std::endl;
+        TypeTree::applyToTree(*this,update_direct_children());
+        for (std::size_t i = 0; i < Node::CHILDREN; ++i)
+          {
+            for (auto it = this->dynamic_child(i)._child_offsets.begin(); it != this->dynamic_child(i)._child_offsets.end(); ++it)
+              std::cout << *it << " ";
+            std::cout << std::endl;
+          }
+        Base::update();
+        for (auto it = this->_child_offsets.begin(); it != this->_child_offsets.end(); ++it)
+          std::cout << *it << " ";
+        std::cout << std::endl;
+        std::cout << "********************" << std::endl;
+      }
     };
 
 #if HAVE_VARIADIC_TEMPLATES
 
-    //! Node transformation descriptor for CompositeGridFunctionSpace -> LexicographicOrdering (with variadic templates).
-    template<typename GFSNode, typename Transformation>
-    struct VariadicCompositeGFSToLexicographicOrderingTransformation
+    template<typename GFS, typename Transformation, typename OrderingTag>
+    struct composite_gfs_to_ordering_descriptor;
+
+    template<typename GFS, typename Transformation>
+    struct composite_gfs_to_ordering_descriptor<GFS,Transformation,LexicographicOrderingTag>
     {
 
       static const bool recursive = true;
@@ -304,29 +348,41 @@ namespace Dune {
       template<typename... TC>
       struct result
       {
-        typedef CompositeLexicographicOrdering<typename Transformation::GridFunctionSpace::Traits::SizeType,
-                                               TC...> type;
+
+        typedef CompositeLexicographicOrdering<
+          typename Transformation::DOFIndex,
+          typename Transformation::ContainerIndex,
+          typename GFS::Traits::Backend,
+          TC...
+          > type;
+
         typedef shared_ptr<type> storage_type;
+
       };
 
       template<typename... TC>
-      static typename result<TC...>::type transform(const GFSNode& s, const Transformation& t, shared_ptr<TC>... children)
+      static typename result<TC...>::type transform(const GFS& gfs, const Transformation& t, shared_ptr<TC>... children)
       {
-        return typename result<TC...>::type(t.asGridFunctionSpace(s),children...);
+        return typename result<TC...>::type(children...);
       }
 
       template<typename... TC>
-      static typename result<TC...>::storage_type transform_storage(shared_ptr<const GFSNode> s, const Transformation& t, shared_ptr<TC>... children)
+      static typename result<TC...>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, shared_ptr<TC>... children)
       {
-        return make_shared<typename result<TC...>::type>(t.asGridFunctionSpace(*s),children...);
+        return make_shared<typename result<TC...>::type>(children...);
       }
 
     };
 
-    // Register transformation.
-    template<typename GFSNode, typename GFS>
-    VariadicCompositeGFSToLexicographicOrderingTransformation<GFSNode,gfs_to_ordering<GFS,LexicographicOrderingTag> >
-    lookupNodeTransformation(GFSNode*, gfs_to_ordering<GFS,LexicographicOrderingTag>*, CompositeGridFunctionSpaceBaseTag);
+
+    template<typename GridFunctionSpace, typename Params>
+    composite_gfs_to_ordering_descriptor<
+      GridFunctionSpace,
+      gfs_to_ordering<Params>,
+      typename GridFunctionSpace::OrderingTag
+      >
+    lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_ordering<Params>* t, CompositeGridFunctionSpaceTag tag);
+
 
 #else // HAVE_VARIADIC_TEMPLATES
 
@@ -414,8 +470,6 @@ namespace Dune {
     template<typename GFSNode, typename GFS>
     CompositeGFSToLexicographicOrderingTransformation<GFSNode,gfs_to_ordering<GFS,LexicographicOrderingTag> >
     lookupNodeTransformation(GFSNode*, gfs_to_ordering<GFS,LexicographicOrderingTag>*, CompositeGridFunctionSpaceBaseTag);
-
-#endif // 0
 
 #endif // HAVE_VARIADIC_TEMPLATES
 
