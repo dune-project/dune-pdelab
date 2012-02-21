@@ -17,7 +17,7 @@ namespace Dune {
 
     public:
 
-      typedef OrderingTraits<DI,CI> Traits;
+      typedef LocalOrderingTraits<typename GFS::Traits::GridViewType,DI,CI> Traits;
 
       void map_local_index(const typename Traits::SizeType geometry_type_index,
                            const typename Traits::SizeType entity_index,

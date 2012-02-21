@@ -29,17 +29,36 @@ namespace Dune {
     {
       typedef DI DOFIndex;
 
-      typedef typename DI::EntityIndex EntityIndex;
       typedef typename DI::TreeIndex TreeIndex;
 
       typedef typename DI::View DOFIndexView;
-      typedef typename DI::View::EntityIndex EntityIndexView;
       typedef typename DI::View::TreeIndex TreeIndexView;
 
       typedef CI ContainerIndex;
 
       typedef typename DI::size_type SizeType;
     };
+
+
+    template<typename GV, typename DI, typename CI>
+    struct LocalOrderingTraits
+      : public OrderingTraits<DI,CI>
+    {
+
+      typedef GV GridView;
+
+    };
+
+    template<typename GV, typename DI, typename CI>
+    struct GridViewOrderingTraits
+      : public LocalOrderingTraits<GV,DI,CI>
+    {
+
+      typedef typename DI::EntityIndex EntityIndex;
+      typedef typename DI::View::EntityIndex EntityIndexView;
+
+    };
+
 
     template<typename DI, typename CI>
     class VirtualOrderingBase
