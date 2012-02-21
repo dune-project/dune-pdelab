@@ -386,6 +386,7 @@ namespace Dune {
       {
         node._fixed_size = node.finiteElementMap().fixedSize();
         any = any || node._fixed_size;
+        all = all && node._fixed_size;
       }
 
       template<typename Node, typename TreePath>
@@ -402,9 +403,11 @@ namespace Dune {
 
       collect_a_priori_fixed_size()
         : any(false)
+        , all(true)
       {}
 
       bool any;
+      bool all;
 
     };
 
@@ -588,7 +591,7 @@ namespace Dune {
 
             std::partial_sum(node._gt_entity_offsets.begin(),node._gt_entity_offsets.end(),node._gt_entity_offsets.begin());
             node._entity_dof_offsets.assign(node._gt_entity_offsets.back() * std::max(node._child_count,static_cast<size_type>(1)),0);
-            node._fixed_size_possible = false;
+            node._fixed_size_possible = true;
           }
       }
 
@@ -734,13 +737,12 @@ namespace Dune {
 
                 typedef typename std::vector<typename Node::Traits::SizeType>::iterator iterator;
 
-                iterator next_gt_it = node._gt_dof_offsets.begin() + Node::CHILDREN;
                 const iterator end_it = node._gt_dof_offsets.end();
 
                 for (iterator it = node._gt_dof_offsets.begin();
                      it != end_it;
-                     it += Node::CHILDREN, next_gt_it += Node::CHILDREN)
-                  std::partial_sum(it,next_gt_it,it);
+                     it += Node::CHILDREN)
+                  std::partial_sum(it,it + Node::CHILDREN,it);
 
                 node._fixed_size = true;
               }
@@ -761,6 +763,10 @@ namespace Dune {
                           node._entity_dof_offsets[index++] = (carry += node.dynamic_child(child_index).size(geometry_type_index,entity_index));
                       }
                   }
+
+                for (auto v : node._entity_dof_offsets)
+                  std::cout << v << " ";
+                std::cout << std::endl;
               }
           }
       }
@@ -920,25 +926,9 @@ namespace Dune {
           {
             // collect used GeometryTypes
             TypeTree::applyToTree(localOrdering(),update_fixed_size<GV>(_gv,geom_types));
-
-            _gt_dof_offsets.resize(gt_index_count + 1);
-            _block_count = 0;
-
-            const GTVector::const_iterator end_it = geom_types.end();
-            for (GTVector::const_iterator it = geom_types.begin(); it != end_it; ++it)
-              {
-                const size_type gt_index = GlobalGeometryTypeIndex::index(*it);
-                const size_type gt_size = localOrdering().size(gt_index,0);
-                const size_type gt_entity_count = _gv.indexSet().size(*it);
-                _gt_dof_offsets[gt_index + 1] = gt_size * gt_entity_count;
-                _block_count += (gt_size > 0) * gt_entity_count;
-              }
-            std::partial_sum(_gt_dof_offsets.begin(),_gt_dof_offsets.end(),_gt_dof_offsets.begin());
-            _size = _gt_dof_offsets.back();
-            if (!_container_blocked)
-              _block_count = _size;
           }
-        else
+
+        if (!fixed_size_collector.all)
           {
             TypeTree::applyToTree(localOrdering(),pre_collect_used_geometry_types(GV::dimension));
 
@@ -961,66 +951,71 @@ namespace Dune {
                 TypeTree::applyToTree(localOrdering(),visitor);
               }
             TypeTree::applyToTree(localOrdering(),post_extract_per_entity_sizes<GV>(_gv,geom_types));
-
-            if (localOrdering().fixedSize())
-              {
-                _fixed_size = true;
-                _gt_dof_offsets.resize(gt_index_count + 1);
-
-                _block_count = 0;
-
-                for (GTVector::const_iterator it = geom_types.begin(); it != geom_types.end(); ++it)
-                  {
-                    const size_type gt_index = GlobalGeometryTypeIndex::index(*it);
-                    const size_type gt_size = localOrdering().size(gt_index,0);
-                    const size_type gt_entity_count = _gv.indexSet().size(*it);
-                    _gt_dof_offsets[gt_index + 1] = gt_size * gt_entity_count;
-                    _block_count += (gt_size > 0) * gt_entity_count;
-                  }
-
-                std::partial_sum(_gt_dof_offsets.begin(),_gt_dof_offsets.end(),_gt_dof_offsets.begin());
-                _size = _gt_dof_offsets.back();
-
-                if (!_container_blocked)
-                  _block_count = _size;
-
-              }
-            else
-              {
-                _gt_entity_offsets.assign(gt_index_count + 1,0);
-
-                for (GTVector::const_iterator it = geom_types.begin(); it != geom_types.end(); ++it)
-                  {
-                    if (!localOrdering().contains(*it))
-                      continue;
-                    const size_type gt_index = GlobalGeometryTypeIndex::index(*it);
-                    _gt_entity_offsets[gt_index + 1] = _gv.indexSet().size(*it);
-                  }
-
-                std::partial_sum(_gt_entity_offsets.begin(),_gt_entity_offsets.end(),_gt_entity_offsets.begin());
-                _entity_dof_offsets.assign(_gt_entity_offsets.back()+1,0);
-                _block_count = 0;
-
-                size_type carry = 0;
-                size_type index = 0;
-                for (size_type gt_index = 0; gt_index < GlobalGeometryTypeIndex::size(dim); ++gt_index)
-                  {
-                    if (!localOrdering().contains_geometry_type(gt_index))
-                      continue;
-                    const size_type entity_count = _gt_entity_offsets[gt_index + 1] - _gt_entity_offsets[gt_index];
-                    for (size_type entity_index = 0; entity_index < entity_count; ++entity_index)
-                      {
-                        const size_type size = localOrdering().size(gt_index,entity_index);
-                        _entity_dof_offsets[++index] = (carry += size);
-                        _block_count += (size > 0);
-                      }
-                  }
-                _size = _entity_dof_offsets.back();
-
-                if (!_container_blocked)
-                  _block_count = _size;
-              }
           }
+
+        if (localOrdering().fixedSize())
+          {
+            _fixed_size = true;
+            _gt_dof_offsets.resize(gt_index_count + 1);
+
+            _block_count = 0;
+
+            for (GTVector::const_iterator it = geom_types.begin(); it != geom_types.end(); ++it)
+              {
+                const size_type gt_index = GlobalGeometryTypeIndex::index(*it);
+                const size_type gt_size = localOrdering().size(gt_index,0);
+                const size_type gt_entity_count = _gv.indexSet().size(*it);
+                _gt_dof_offsets[gt_index + 1] = gt_size * gt_entity_count;
+                _block_count += (gt_size > 0) * gt_entity_count;
+              }
+
+            std::partial_sum(_gt_dof_offsets.begin(),_gt_dof_offsets.end(),_gt_dof_offsets.begin());
+            _size = _gt_dof_offsets.back();
+
+            if (!_container_blocked)
+              _block_count = _size;
+
+          }
+        else
+          {
+            _gt_entity_offsets.assign(gt_index_count + 1,0);
+
+            for (GTVector::const_iterator it = geom_types.begin(); it != geom_types.end(); ++it)
+              {
+                if (!localOrdering().contains(*it))
+                  continue;
+                const size_type gt_index = GlobalGeometryTypeIndex::index(*it);
+                _gt_entity_offsets[gt_index + 1] = _gv.indexSet().size(*it);
+              }
+
+            std::partial_sum(_gt_entity_offsets.begin(),_gt_entity_offsets.end(),_gt_entity_offsets.begin());
+            _entity_dof_offsets.assign(_gt_entity_offsets.back()+1,0);
+            _block_count = 0;
+
+            size_type carry = 0;
+            size_type index = 0;
+            for (size_type gt_index = 0; gt_index < GlobalGeometryTypeIndex::size(dim); ++gt_index)
+              {
+                if (!localOrdering().contains_geometry_type(gt_index))
+                  continue;
+                const size_type entity_count = _gt_entity_offsets[gt_index + 1] - _gt_entity_offsets[gt_index];
+                for (size_type entity_index = 0; entity_index < entity_count; ++entity_index)
+                  {
+                    const size_type size = localOrdering().size(gt_index,entity_index);
+                    _entity_dof_offsets[++index] = (carry += size);
+                    _block_count += (size > 0);
+                  }
+              }
+            _size = _entity_dof_offsets.back();
+
+            for (auto v : _entity_dof_offsets)
+              std::cout << v << " ";
+            std::cout << std::endl;
+
+            if (!_container_blocked)
+              _block_count = _size;
+          }
+
         _max_local_size = localOrdering().maxLocalSize();
       }
 
