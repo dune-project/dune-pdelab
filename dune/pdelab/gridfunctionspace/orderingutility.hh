@@ -59,7 +59,7 @@ namespace Dune {
     {
 
       template<typename Node, typename Child, typename TreePath, typename ChildIndex>
-      void afterChild(const Node& node, Child& child, TreePath tp, ChildIndex child_index);
+      void afterChild(const Node& node, Child& child, TreePath tp, ChildIndex child_index)
       {
         _children[child_index] = &child;
       }
