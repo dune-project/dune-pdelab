@@ -156,6 +156,7 @@ namespace Dune {
 
       enum DOFFlags
         {
+          DOF_NONCONSTRAINED = 0,
           DOF_CONSTRAINED = 1<<0,
           DOF_DIRICHLET = 1<<1
         };
@@ -235,7 +236,7 @@ namespace Dune {
             const typename C::const_iterator cit = _gfs_constraints.find(dof_index);
             if (cit == _gfs_constraints.end())
               {
-                _dof_flags[i] = 0;
+                _dof_flags[i] = DOF_NONCONSTRAINED;
                 continue;
               }
 
