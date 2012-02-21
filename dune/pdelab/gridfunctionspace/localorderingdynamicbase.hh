@@ -101,9 +101,10 @@ namespace Dune {
             for (ItIn in = begin; in != end; ++in, ++out)
               {
                 const typename Traits::SizeType child_index = in->treeIndex().back();
+                const typename Traits::SizeType gt_index = Traits::DOFIndexAccessor::geometryType(*in);
                 if (child_index > 0)
                   {
-                    const typename Traits::SizeType index = in->entityIndex()[0] * _child_count + child_index - 1;
+                    const typename Traits::SizeType index = gt_index * _child_count + child_index - 1;
                     out->back() += _gt_dof_offsets[index];
                   }
               }
@@ -115,8 +116,12 @@ namespace Dune {
                 const typename Traits::SizeType child_index = in->treeIndex().back();
                 if (child_index > 0)
                   {
-                    assert(_gt_used[in->entityIndex()[0]]);
-                    const typename Traits::SizeType index = (_gt_entity_offsets[in->entityIndex()[0]] + in->entityIndex()[1]) * _child_count + child_index - 1;
+                    const typename Traits::SizeType gt_index = Traits::DOFIndexAccessor::geometryType(*in);
+                    const typename Traits::SizeType entity_index = Traits::DOFIndexAccessor::entityIndex(*in);
+
+                    assert(_gt_used[gt_index]);
+
+                    const typename Traits::SizeType index = (_gt_entity_offsets[gt_index] + entity_index) * _child_count + child_index - 1;
                     out->back() += _entity_dof_offsets[index];
                   }
               }
