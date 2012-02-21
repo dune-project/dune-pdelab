@@ -88,7 +88,7 @@ namespace Dune {
       {}
 
     private:
-      std::vector<child_type*> _children;
+      std::vector<child_type*>& _children;
 
     };
 
