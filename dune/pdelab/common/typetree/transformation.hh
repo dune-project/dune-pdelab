@@ -99,6 +99,9 @@ namespace Dune {
         // the type of the new tree that will result from this transformation
         typedef typename TransformTree<SourceTree,Transformation,typename SourceTree::NodeTag,NodeTransformation::recursive>::transformed_type transformed_type;
 
+        // the storage type of the new tree that will result from this transformation
+        typedef typename TransformTree<SourceTree,Transformation,typename SourceTree::NodeTag,NodeTransformation::recursive>::transformed_storage_type transformed_storage_type;
+
 #endif // DOXYGEN
 
         //! The type of the transformed tree.
@@ -116,6 +119,21 @@ namespace Dune {
         {
           return TransformTree<SourceTree,Transformation,typename SourceTree::NodeTag,NodeTransformation::recursive>::transform(s,t);
         }
+
+        //! Apply transformation to storage type of an existing tree, returning a heap-allocated storage type
+        //! instance of the transformed tree.
+        static transformed_storage_type transform_storage(shared_ptr<const SourceTree> sp, Transformation& t)
+        {
+          return TransformTree<SourceTree,Transformation,typename SourceTree::NodeTag,NodeTransformation::recursive>::transform_storage(sp,t);
+        }
+
+        //! Apply transformation to storage type of an existing tree, returning a heap-allocated storage type
+        //! instance of the transformed tree.
+        static transformed_storage_type transform_storage(shared_ptr<const SourceTree> sp, const Transformation& t)
+        {
+          return TransformTree<SourceTree,Transformation,typename SourceTree::NodeTag,NodeTransformation::recursive>::transform_storage(sp,t);
+        }
+
 
       };
 
