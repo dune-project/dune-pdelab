@@ -154,10 +154,12 @@ namespace Dune{
         la.la0.preStage(la.time+la.osp_method->d(la.stage)*la.dt,la.stage);
         la.la1.preStage(la.time+la.osp_method->d(la.stage)*la.dt,la.stage);
       }
-      void postAssembly()
+
+      template<typename GFSU, typename GFSV>
+      void postAssembly(const GFSU& gfsu, const GFSV& gfsv)
       {
-        lae0->postAssembly();
-        lae1->postAssembly();
+        lae0->postAssembly(gfsu,gfsv);
+        lae1->postAssembly(gfsu,gfsv);
       }
       //! @}
 

@@ -14,7 +14,7 @@ namespace Dune{
     public:
 
       //! The sparsity pattern container for the jacobian matrix
-      typedef typename GO0::Traits::MatrixBackend::Pattern Pattern;
+      typedef typename GO0::Traits::Jacobian::Pattern Pattern;
 
       //! The global UDG assembler type
       typedef typename GO0::Traits::Assembler Assembler;

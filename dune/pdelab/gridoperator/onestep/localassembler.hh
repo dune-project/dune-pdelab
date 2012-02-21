@@ -12,6 +12,8 @@
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/common/typetree.hh>
 
+#include <dune/pdelab/gridfunctionspace/lfscontainerindexcache.hh>
+
 namespace Dune{
   namespace PDELab{
 
@@ -61,8 +63,8 @@ namespace Dune{
       //! @}
 
       void static_checks(){
-        dune_static_assert((is_same<typename LA0::Traits::MatrixBackend::Pattern,
-                            typename LA1::Traits::MatrixBackend::Pattern>::value),
+        dune_static_assert((is_same<typename LA0::Traits::Jacobian::Pattern,
+                            typename LA1::Traits::Jacobian::Pattern>::value),
                            "Received two local assemblers which are non-compatible "
                            "due to different matrix pattern types");
         dune_static_assert((is_same<typename LA0::Traits::Jacobian,

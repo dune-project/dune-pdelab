@@ -151,7 +151,8 @@ namespace Dune{
         setWeights();
       }
 
-      void postAssembly(){
+      template<typename GFSU, typename GFSV>
+      void postAssembly(const GFSU& gfsu, const GFSV& gfsv){
 
         // Update residual vectors with constant part
         assert(const_residual_0 != invalid_residual);
@@ -162,8 +163,8 @@ namespace Dune{
           *residual_1 += *const_residual_1;
         }
 
-        lae0->postAssembly();
-        lae1->postAssembly();
+        lae0->postAssembly(gfsu,gfsv);
+        lae1->postAssembly(gfsu,gfsv);
       }
       //! @}
 
