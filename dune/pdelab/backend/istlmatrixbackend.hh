@@ -631,6 +631,11 @@ namespace Dune {
         return _container;
       }
 
+      ContainerType& base()
+      {
+        return _container;
+      }
+
       void flush()
       {}
 
