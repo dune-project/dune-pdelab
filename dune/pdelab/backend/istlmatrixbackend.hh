@@ -399,6 +399,10 @@ namespace Dune {
           _col_cache = &col_cache;
         }
 
+        void unbind()
+        {
+        }
+
         size_type N() const
         {
           return _row_cache.size();

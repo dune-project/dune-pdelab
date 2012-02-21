@@ -265,6 +265,10 @@ namespace Dune {
           _lfs_cache = &lfs_cache;
         }
 
+        void unbind()
+        {
+        }
+
         size_type size() const
         {
           return _lfs_cache->size();
@@ -375,6 +379,10 @@ namespace Dune {
         void bind(const LFSCache& lfs_cache)
         {
           _lfs_cache = &lfs_cache;
+        }
+
+        void unbind()
+        {
         }
 
         size_type size() const
