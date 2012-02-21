@@ -7,6 +7,7 @@
 #include <cstddef>
 
 #include <dune/pdelab/common/typetree/leafnode.hh>
+#include <dune/pdelab/gridfunctionspace/orderingdynamicbase.hh>
 #include <dune/pdelab/gridfunctionspace/gridviewordering.hh>
 #include <dune/pdelab/gridfunctionspace/leaflocalordering.hh>
 
@@ -30,7 +31,7 @@ namespace Dune {
 
     public:
 
-      typedef ... Traits;
+      typedef typename GVOrdering::Traits Traits;
 
       //! Construct ordering object
       /**
@@ -38,7 +39,7 @@ namespace Dune {
        * construction.  This must be done by a seperate call to update().
        * This particular ordering however can be used right away.
        */
-      LeafOrdering(const NodeT::NodeStorage& gv_ordering_storage)
+      LeafOrdering(const typename NodeT::NodeStorage& gv_ordering_storage)
         : NodeT(gv_ordering_storage)
         , BaseT(*this,this->template childStorage<0>.get())
       { }
@@ -71,7 +72,7 @@ namespace Dune {
       bool fixedSize() const { return gridViewOrdering().fixedSize(); }
 
       //! number of indices in this ordering
-      SizeType size() const { return gridViewOrdering().size(); }
+      typename Traits::SizeType size() const { return gridViewOrdering().size(); }
 
       //! \brief maximum number of dofs attached to any given element and all
       //!        of its subentities and intersections
@@ -80,8 +81,9 @@ namespace Dune {
        * actual maximum.  There is however one special case: it is guaranteed
        * to be the exact maximum for fixedSize()==true.
        */
-      SizeType maxLocalSize() const { return gridViewOrdering().maxLocalSize(); }
+      typename Traits::SizeType maxLocalSize() const { return gridViewOrdering().maxLocalSize(); }
 
+#if 0
       //! \brief number of indices attached to a given entity (of arbitrary
       //!        codimension)
       /**
@@ -138,6 +140,9 @@ namespace Dune {
       template<class Intersection>
       SizeType intersectionOffset(const Intersection &i) const
       { return gfs.intersectionOffset(i); }
+
+#endif // 0
+
     };
 
 
