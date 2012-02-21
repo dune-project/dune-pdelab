@@ -21,6 +21,9 @@ namespace Dune {
 	{
       //! Type of finite element from local functions
       typedef T FiniteElementType;
+
+      //! Type of finite element from local functions
+      typedef T FiniteElement;
 	};
 
     //! collect types exported by a finite element map

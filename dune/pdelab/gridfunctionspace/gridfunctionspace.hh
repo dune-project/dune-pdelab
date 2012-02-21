@@ -66,6 +66,9 @@ namespace Dune {
       //! finite element map
       typedef L FiniteElementMapType;
 
+      //! finite element map
+      typedef L FiniteElementMap;
+
       //! finite element
       typedef typename L::Traits::FiniteElementType FiniteElementType;
 
