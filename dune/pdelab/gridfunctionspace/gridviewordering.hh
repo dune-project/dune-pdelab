@@ -78,24 +78,35 @@ namespace Dune {
         const typename Traits::SizeType entity_index = di.entityIndex()[1];
         assert (di.treeIndex().size() == 1);
         ci.push_back(di.treeIndex().back());
-        if (_container_blocked)
+
+        if (localOrdering()._fixed_size)
           {
-            // This check is needed to avoid a horrid stream of compiler warnings about
-            // exceeding array bounds in ReservedVector!
-            if (ci.size() < ci.capacity())
-              ci.push_back(localOrdering()._gt_entity_offsets[geometry_type_index] + entity_index);
+            if (_container_blocked)
+              {
+                DUNE_THROW(Dune::Exception,"Not implemented");
+              }
             else
               {
-                DUNE_THROW(Dune::Exception,"Container blocking incompatible with backend structure");
+                ci.back() += _gt_dof_offsets[geometry_type_index] + entity_index * localOrdering()._gt_dof_sizes[geometry_type_index];
               }
-          }
-        else if (localOrdering()._fixed_size)
-          {
-            ci.back() += _gt_dof_offsets[geometry_type_index] + entity_index * localOrdering()._gt_dof_offsets[geometry_type_index];
           }
         else
           {
-            ci.back() += localOrdering()._entity_dof_offsets[localOrdering()._gt_entity_offsets[geometry_type_index] + entity_index];
+            if (_container_blocked)
+              {
+                // This check is needed to avoid a horrid stream of compiler warnings about
+                // exceeding array bounds in ReservedVector!
+                if (ci.size() < ci.capacity())
+                  ci.push_back(localOrdering()._gt_entity_offsets[geometry_type_index] + entity_index);
+                else
+                  {
+                    DUNE_THROW(Dune::Exception,"Container blocking incompatible with backend structure");
+                  }
+              }
+            else
+              {
+                ci.back() += localOrdering()._entity_dof_offsets[localOrdering()._gt_entity_offsets[geometry_type_index] + entity_index];
+              }
           }
       }
 
@@ -104,35 +115,46 @@ namespace Dune {
       void map_indices(const ItIn begin, const ItIn end, ItOut out) const
       {
         typedef typename Traits::SizeType size_type;
-        if (_container_blocked)
+
+        if (localOrdering()._fixed_size)
           {
-            for (ItIn in = begin; in != end; ++in, ++out)
+            if (_container_blocked)
               {
-                assert(in->treeIndex().size() == 1);
-                out->push_back(in->treeIndex().back());
-                out->push_back(localOrdering()._gt_entity_offsets[in->entityIndex()[0]] + in->entityIndex()[1]);
+                DUNE_THROW(Dune::Exception,"not implemented");
               }
-          }
-        else if (localOrdering()._fixed_size)
-          {
-            for (ItIn in = begin; in != end; ++in, ++out)
+            else
               {
-                assert(in->treeIndex().size() == 1);
-                out->push_back(in->treeIndex().back());
-                const size_type geometry_type_index = in->entityIndex()[0];
-                const size_type entity_index = in->entityIndex()[1];
-                out->back() += _gt_dof_offsets[geometry_type_index] + entity_index * localOrdering()._gt_dof_offsets[geometry_type_index];
+                for (ItIn in = begin; in != end; ++in, ++out)
+                  {
+                    assert(in->treeIndex().size() == 1);
+                    out->push_back(in->treeIndex().back());
+                    const size_type geometry_type_index = in->entityIndex()[0];
+                    const size_type entity_index = in->entityIndex()[1];
+                    out->back() += _gt_dof_offsets[geometry_type_index] + entity_index * localOrdering()._gt_dof_sizes[geometry_type_index];
+                  }
               }
           }
         else
           {
-            for (ItIn in = begin; in != end; ++in, ++out)
+            if (_container_blocked)
               {
-                assert(in->treeIndex().size() == 1);
-                out->push_back(in->treeIndex().back());
-                const size_type geometry_type_index = in->entityIndex()[0];
-                const size_type entity_index = in->entityIndex()[1];
-                out->back() += localOrdering()._entity_dof_offsets[localOrdering()._gt_entity_offsets[geometry_type_index] + entity_index];
+                for (ItIn in = begin; in != end; ++in, ++out)
+                  {
+                    assert(in->treeIndex().size() == 1);
+                    out->push_back(in->treeIndex().back());
+                    out->push_back(localOrdering()._gt_entity_offsets[in->entityIndex()[0]] + in->entityIndex()[1]);
+                  }
+              }
+            else
+              {
+                for (ItIn in = begin; in != end; ++in, ++out)
+                  {
+                    assert(in->treeIndex().size() == 1);
+                    out->push_back(in->treeIndex().back());
+                    const size_type geometry_type_index = in->entityIndex()[0];
+                    const size_type entity_index = in->entityIndex()[1];
+                    out->back() += localOrdering()._entity_dof_offsets[localOrdering()._gt_entity_offsets[geometry_type_index] + entity_index];
+                  }
               }
           }
       }
@@ -148,7 +170,6 @@ namespace Dune {
       {
         LocalOrdering& lo = localOrdering();
         lo.update_a_priori_fixed_size();
-        _fixed_size = lo._fixed_size;
 
         const std::size_t dim = GV::dimension;
 
@@ -164,8 +185,35 @@ namespace Dune {
 
         if (lo._fixed_size)
           {
-            lo.update_fixed_size(geom_types);
+            lo.update_fixed_size(geom_types.begin(),geom_types.end());
+          }
+        else
+          {
+            lo.pre_collect_used_geometry_types_from_cell();
 
+            typedef typename GV::template Codim<0>::Iterator CellIterator;
+            typedef typename GV::template Codim<0>::Entity Cell;
+
+            const CellIterator end_it = _gv.template end<0>();
+            for (CellIterator it = _gv.template begin<0>(); it != end_it; ++it)
+              {
+                lo.collect_used_geometry_types_from_cell(*it);
+              }
+
+            lo.allocate_entity_offset_vector(geom_types.begin(),geom_types.end());
+
+            for (CellIterator it = _gv.template begin<0>(); it != end_it; ++it)
+              {
+                lo.extract_per_entity_sizes_from_cell(*it);
+              }
+
+            lo.finalize_non_fixed_size_update();
+          }
+
+        // we need to re-test here, as the local ordering could have detected a fixed size ordering
+        // and switched its implementation
+        if (lo._fixed_size)
+          {
             _gt_dof_offsets.assign(GlobalGeometryTypeIndex::size(dim) + 1,0);
 
             const GTVector::const_iterator end_it = geom_types.end();
@@ -176,13 +224,15 @@ namespace Dune {
               }
             std::partial_sum(_gt_dof_offsets.begin(),_gt_dof_offsets.end(),_gt_dof_offsets.begin());
             _block_count = _size = _gt_dof_offsets.back();
-            _max_local_size = lo.maxLocalSize();
           }
         else
           {
-            assert(!"Not implemented yet!");
-            // FIXME
+            _block_count = _size = lo._entity_dof_offsets.back();
           }
+
+        _fixed_size = lo._fixed_size;
+        _max_local_size = lo.maxLocalSize();
+
       }
 
       //! dofs are blocked per entity/intersection on the leafs

@@ -42,7 +42,7 @@ namespace Dune {
       {
         typedef typename Traits::SizeType size_type;
         if (_fixed_size)
-          return _gt_dof_offsets[geometry_type_index];
+          return _gt_dof_sizes[geometry_type_index];
         else if (_gt_used[geometry_type_index])
           {
             const size_type index = _gt_entity_offsets[geometry_type_index] + entity_index;
@@ -82,50 +82,172 @@ namespace Dune {
 
     private:
 
+      typedef FiniteElementInterfaceSwitch<
+      typename FEM::Traits::FiniteElement
+      > FESwitch;
+
+
       void update_a_priori_fixed_size()
       {
         _fixed_size = _fem->fixedSize();
       }
 
-      typedef std::vector<GeometryType> GTVector;
 
-      void update_fixed_size(const GTVector& geom_types)
+      template<typename It>
+      void update_fixed_size(It it, const It end)
       {
         assert(_fixed_size);
+
+        _max_local_size = _fem->maxLocalSize();
 
         typedef typename Traits::SizeType size_type;
         const size_type dim = Traits::GridView::dimension;
         _codim_used.assign(dim + 1,false);
         _gt_used.assign(GlobalGeometryTypeIndex::size(dim),false);
-        _gt_dof_offsets.assign(GlobalGeometryTypeIndex::size(dim),0);
-        for (GTVector::const_iterator it = geom_types.begin(); it != geom_types.end(); ++it)
+        _gt_dof_sizes.assign(GlobalGeometryTypeIndex::size(dim),0);
+        for (; it != end; ++it)
           {
             size_type size = _fem->size(*it);
-            _gt_dof_offsets[GlobalGeometryTypeIndex::index(*it)] = size;
+            _gt_dof_sizes[GlobalGeometryTypeIndex::index(*it)] = size;
             _gt_used[GlobalGeometryTypeIndex::index(*it)] = size > 0;
             _codim_used[dim - it->dim()] = _codim_used[dim - it->dim()] || (size > 0);
           }
       }
 
+
+      void pre_collect_used_geometry_types_from_cell()
+      {
+        typedef typename Traits::SizeType size_type;
+        const size_type dim = Traits::GridView::dimension;
+
+        _codim_used.assign(dim + 1,0);
+        _gt_used.assign(GlobalGeometryTypeIndex::size(dim),false);
+        _gt_dof_sizes.assign(GlobalGeometryTypeIndex::size(dim),0);
+        _local_gt_dof_sizes.resize(GlobalGeometryTypeIndex::size(dim));
+        _max_local_size = 0;
+        _fixed_size_possible = true;
+      }
+
+
+      void collect_used_geometry_types_from_cell(const typename Traits::GridView::template Codim<0>::Entity& cell)
+      {
+        FESwitch::setStore(_fe_store,_fem->find(cell));
+
+        const typename FESwitch::Coefficients& coeffs =
+          FESwitch::coefficients(*_fe_store);
+
+        _max_local_size = std::max(_max_local_size,coeffs.size());
+
+        const GenericReferenceElement<typename Traits::GridView::ctype, Traits::GridView::dimension>& ref_el = GenericReferenceElements<typename Traits::GridView::ctype,Traits::GridView::dimension>::general(cell.type());
+
+        for (std::size_t i = 0; i < coeffs.size(); ++i)
+          {
+            const LocalKey& key = coeffs.localKey(i);
+            GeometryType gt = ref_el.type(key.subEntity(),key.codim());
+            _gt_used[GlobalGeometryTypeIndex::index(gt)] = true;
+            _codim_used[key.codim()] = true;
+          }
+      }
+
+
+      template<typename It>
+      void allocate_entity_offset_vector(It it, const It end)
+      {
+        _gt_entity_offsets.assign(GlobalGeometryTypeIndex::size(GV::dimension) + 1,0);
+        for (; it != end; ++it)
+          {
+            if (_gt_used[GlobalGeometryTypeIndex::index(*it)])
+              _gt_entity_offsets[GlobalGeometryTypeIndex::index(*it) + 1] = _gv.indexSet().size(*it);
+          }
+        std::partial_sum(_gt_entity_offsets.begin(),_gt_entity_offsets.end(),_gt_entity_offsets.begin());
+        _entity_dof_offsets.assign(_gt_entity_offsets.back() + 1,0);
+      }
+
+
+      void extract_per_entity_sizes_from_cell(const typename Traits::GridView::template Codim<0>::Entity& cell)
+      {
+        if (this->_fixed_size_possible)
+          std::fill(_local_gt_dof_sizes.begin(),_local_gt_dof_sizes.end(),0);
+
+        FESwitch::setStore(_fe_store,_fem->find(cell));
+
+        const typename FESwitch::Coefficients& coeffs =
+          FESwitch::coefficients(*_fe_store);
+
+        typedef typename Traits::SizeType size_type;
+
+        const GenericReferenceElement<typename Traits::GridView::ctype,Traits::GridView::dimension>& ref_el =
+          GenericReferenceElements<typename Traits::GridView::ctype,Traits::GridView::dimension>::general(cell.type());
+
+        for (std::size_t i = 0; i < coeffs.size(); ++i)
+          {
+            const LocalKey& key = coeffs.localKey(i);
+            GeometryType gt = ref_el.type(key.subEntity(),key.codim());
+            const size_type geometry_type_index = GlobalGeometryTypeIndex::index(gt);
+
+            const size_type entity_index = _gv.indexSet().subIndex(cell,key.subEntity(),key.codim());
+            const size_type index = _gt_entity_offsets[geometry_type_index] + entity_index;
+            _local_gt_dof_sizes[geometry_type_index] = _entity_dof_offsets[index+1] = std::max(_entity_dof_offsets[index+1],static_cast<size_type>(key.index() + 1));
+          }
+
+        if (_fixed_size_possible)
+          {
+            for (size_type i = 0; i < _local_gt_dof_sizes.size(); ++i)
+              if (_local_gt_dof_sizes[i] > 0)
+                {
+                  if (_gt_dof_sizes[i] == 0)
+                    _gt_dof_sizes[i] = _local_gt_dof_sizes[i];
+                  else if (_gt_dof_sizes[i] != _local_gt_dof_sizes[i])
+                    {
+                      _fixed_size_possible = false;
+                      break;
+                    }
+                }
+          }
+
+      }
+
+
+      void finalize_non_fixed_size_update()
+      {
+        if (_fixed_size_possible)
+          {
+            // free per-entity offsets
+            _entity_dof_offsets = std::vector<typename Traits::SizeType>();
+            _fixed_size = true;
+          }
+        else
+          {
+            // convert per-entity sizes to offsets
+            std::partial_sum(_entity_dof_offsets.begin(),_entity_dof_offsets.end(),_entity_dof_offsets.begin());
+          }
+      }
+
+
       typename Traits::SizeType maxLocalSize() const
       {
-        return _fem->maxLocalSize();
+        return _max_local_size;
       }
+
 
     protected:
 
       shared_ptr<const FEM> _fem;
+      typename FESwitch::Store _fe_store;
+
       GV _gv;
       bool _fixed_size;
+      bool _fixed_size_possible;
+      typename Traits::SizeType _max_local_size;
       const bool _container_blocked;
 
       std::vector<bool> _codim_used;
       std::vector<bool> _gt_used;
 
       std::vector<typename Traits::SizeType> _gt_entity_offsets;
-      std::vector<typename Traits::SizeType> _gt_dof_offsets;
+      std::vector<typename Traits::SizeType> _gt_dof_sizes;
       std::vector<typename Traits::SizeType> _entity_dof_offsets;
-
+      std::vector<typename Traits::SizeType> _local_gt_dof_sizes;
     };
 
 
