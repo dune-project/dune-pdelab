@@ -218,7 +218,7 @@ namespace Dune {
     access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, std::size_t i)
     {
       assert(i == 0);
-      return b[ri[i]][ci[i]];
+      return b[ri[0]][ci[i]];
     }
 
     template<typename RI, typename CI, typename Block>
@@ -229,7 +229,7 @@ namespace Dune {
     access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, std::size_t i)
     {
       assert(i == 0);
-      return b[0][ci[i]];
+      return b[0][ci[0]];
     }
 
     template<typename RI, typename CI, typename Block>
