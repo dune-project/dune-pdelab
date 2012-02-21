@@ -135,14 +135,14 @@ namespace Dune {
 
         //! Sets the i-th child to the passed-in value.
         template<std::size_t k>
-        void setChild(typename Child<k>::type& child)
+        void setChild(typename Child<k>::Type& child)
         {
           get<k>(_children) = stackobject_to_shared_ptr(child);
         }
 
         //! Sets the storage of the i-th child to the passed-in value.
         template<std::size_t k>
-        void setChild(typename Child<k>::storage_type child)
+        void setChild(typename Child<k>::Storage child)
         {
           get<k>(_children) = child;
         }
