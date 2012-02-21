@@ -69,8 +69,8 @@ namespace Dune{
         : BaseT(local_assembler_),
           invalid_residual(static_cast<Residual*>(0)),
           invalid_solution(static_cast<Solution*>(0)),
-          residual_0(invalid_residual), 
-          residual_1(invalid_residual), 
+          residual_0(invalid_residual),
+          residual_1(invalid_residual),
           const_residual_0(invalid_residual),
           const_residual_1(invalid_residual),
           solution(invalid_solution)

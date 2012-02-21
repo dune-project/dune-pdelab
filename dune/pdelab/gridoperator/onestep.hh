@@ -168,10 +168,10 @@ namespace Dune{
 
         local_assembler.setStage(stage);
 
-        typedef typename LocalAssembler::LocalExplicitJacobianResidualAssemblerEngine 
+        typedef typename LocalAssembler::LocalExplicitJacobianResidualAssemblerEngine
           ExplicitJacobianResidualEngine;
-        
-        ExplicitJacobianResidualEngine & jacobian_residual_engine 
+
+        ExplicitJacobianResidualEngine & jacobian_residual_engine
           = local_assembler.localExplicitJacobianResidualAssemblerEngine(a,r0,r1,x);
 
         global_assembler.assemble(jacobian_residual_engine);

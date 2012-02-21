@@ -72,8 +72,8 @@ namespace Dune{
         : BaseT(la_),
           invalid_residual(static_cast<Residual*>(0)),
           invalid_solutions(static_cast<Solutions*>(0)),
-          const_residual_0(invalid_residual), 
-          const_residual_1(invalid_residual), 
+          const_residual_0(invalid_residual),
+          const_residual_1(invalid_residual),
           solutions(invalid_solutions)
       {}
 
