@@ -11,8 +11,11 @@
 #include <dune/pdelab/common/typetree/traversal.hh>
 #include <dune/pdelab/common/typetree/traversalutilities.hh>
 #include <dune/pdelab/common/typetree/utility.hh>
+#include <dune/pdelab/common/typetree/transformation.hh>
 #include <dune/pdelab/common/typetree/visitor.hh>
 #include <dune/pdelab/constraints/constraintstransformation.hh>
+
+#include <dune/pdelab/gridfunctionspace/lexicographicordering.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -167,6 +170,8 @@ namespace Dune {
       //! \brief vector backend
       typedef B BackendType;
 
+      typedef B Backend;
+
       //! \brief mapper
       typedef M MapperType;
 
@@ -198,6 +203,8 @@ namespace Dune {
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<GV,B,Mapper,k> Traits;
 
+      typedef Mapper OrderingTag;
+
       //! extract type for storing constraints
       template<typename E>
       struct ConstraintsContainer
@@ -217,25 +224,25 @@ namespace Dune {
         TypeTree::applyToTree(gfs(),UpdateVisitor());
       }
 
-      
+
 
       //! get dimension of root finite element space
       typename Traits::SizeType globalSize () const
       {
-        return gfs().ordering().size();
+        return gfs().ordering()->size();
       }
 
       //! get dimension of this finite element space
       typename Traits::SizeType size () const
       {
-        return gfs().ordering().size();
+        return gfs().ordering()->size();
       }
 
       //! get max dimension of shape function space
       typename Traits::SizeType maxLocalSize () const
       {
         // this is bullshit !
-        return gfs().ordering().maxLocalSize();
+        return gfs().ordering()->maxLocalSize();
       }
 
       //! get grid view
