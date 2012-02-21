@@ -130,12 +130,6 @@ namespace Dune {
       }
 
       //! update internal data structures
-      /**
-       * In general this method must be called after initialization and every
-       * time the structure of the dof-vector of one of gfs's children
-       * changes.  For this particular ordering however this method does
-       * nothing.
-       */
       void _recursive_update()
       {
         LocalOrdering& lo = localOrdering();
@@ -171,7 +165,7 @@ namespace Dune {
           }
         else
           {
-
+            // FIXME
           }
       }
 
