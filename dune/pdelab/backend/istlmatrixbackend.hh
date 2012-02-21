@@ -56,7 +56,7 @@ namespace Dune {
 
     };
 
-    template<typename SubPattern_ = void>
+    template<typename Ordering, typename SubPattern_ = void>
     class Pattern
       : public std::vector<std::unordered_map<std::size_t,SubPattern_> >
     {
@@ -74,14 +74,25 @@ namespace Dune {
       template<typename RI, typename CI>
       void recursive_add_entry(const RI& ri, const CI& ci)
       {
-        SubPattern& sub_pattern = (*this)[ri.back()][ci.back()];
-        sub_pattern.resize(std::max(sub_pattern.size(),ri[ri.size()-2]+1));
-        sub_pattern.recursive_add_entry(ri.back_popped(),ci.back_popped());
+        this->resize(_row_ordering.blockCount());
+        auto r = (*this)[ri.back()].insert(make_pair(ci.back(),SubPattern(_row_ordering.dynamic_child(ri.back()),_col_ordering.dynamic_child(ci.back()))));
+        r.first->second.recursive_add_entry(ri.back_popped(),ci.back_popped());
       }
+
+      Pattern(const Ordering& row_ordering, const Ordering& col_ordering)
+        : _row_ordering(row_ordering)
+        , _col_ordering(col_ordering)
+      {}
+
+    private:
+
+      const Ordering& _row_ordering;
+      const Ordering& _col_ordering;
+
     };
 
-    template<>
-    class Pattern<void>
+    template<typename Ordering>
+    class Pattern<Ordering,void>
       : public std::vector<std::unordered_set<std::size_t> >
     {
 
@@ -98,9 +109,20 @@ namespace Dune {
       template<typename RI, typename CI>
       void recursive_add_entry(const RI& ri, const CI& ci)
       {
-        this->resize(std::max(this->size(),ri.back()+1));
+        this->resize(_row_ordering.blockCount());
         (*this)[ri.back()].insert(ci.back());
       }
+
+      Pattern(const Ordering& row_ordering, const Ordering& col_ordering)
+        : _row_ordering(row_ordering)
+        , _col_ordering(col_ordering)
+      {}
+
+    private:
+
+      const Ordering& _row_ordering;
+      const Ordering& _col_ordering;
+
     };
 
     template<typename M, int blocklevel = M::blocklevel>
@@ -121,22 +143,22 @@ namespace Dune {
       static const bool value = true;
     };
 
-    template<typename M, bool pattern>
+    template<typename M, typename Ordering, bool pattern>
     struct _build_pattern_type
     {
       typedef void type;
     };
 
-    template<typename M>
-    struct _build_pattern_type<M,true>
+    template<typename M, typename Ordering>
+    struct _build_pattern_type<M,Ordering,true>
     {
-      typedef Pattern<typename _build_pattern_type<typename M::block_type,requires_pattern<typename M::block_type>::value>::type> type;
+      typedef Pattern<Ordering,typename _build_pattern_type<typename M::block_type,Ordering,requires_pattern<typename M::block_type>::value>::type> type;
     };
 
-    template<typename M>
+    template<typename M, typename Ordering>
     struct build_pattern_type
     {
-      typedef typename _build_pattern_type<M,requires_pattern<M>::value>::type type;
+      typedef typename _build_pattern_type<M,Ordering,requires_pattern<M>::value>::type type;
     };
 
 
@@ -275,17 +297,17 @@ namespace Dune {
     }
 
 
-    template<typename OrderingU, typename OrderingV, typename Pattern, typename Container>
+    template<typename OrderingV, typename OrderingU, typename Pattern, typename Container>
     typename enable_if<
       !is_same<typename Pattern::SubPattern,void>::value &&
       requires_pattern<Container>::value
       >::type
-    allocate_istl_matrix(const OrderingU& ordering_u,
-                         const OrderingV& ordering_v,
+    allocate_istl_matrix(const OrderingV& ordering_v,
+                         const OrderingU& ordering_u,
                          const Pattern& p,
                          Container& c)
     {
-      c.setSize(ordering_u.blockCount(),ordering_v.blockCount(),false);
+      c.setSize(ordering_v.blockCount(),ordering_u.blockCount(),false);
       c.setBuildMode(Container::random);
 
       for (std::size_t i = 0; i < c.N(); ++i)
@@ -300,43 +322,43 @@ namespace Dune {
       for (std::size_t i = 0; i < c.N(); ++i)
         for (auto cit = p[i].begin(); cit != p[i].end(); ++cit)
           {
-            allocate_istl_matrix(ordering_u.dynamic_child(i),
-                                 ordering_v.dynamic_child(cit->first),
+            allocate_istl_matrix(ordering_v.dynamic_child(i),
+                                 ordering_u.dynamic_child(cit->first),
                                  cit->second,
                                  c[i][cit->first]);
           }
     }
 
-    template<typename OrderingU, typename OrderingV, typename Pattern, typename Container>
+    template<typename OrderingV, typename OrderingU, typename Pattern, typename Container>
     typename enable_if<
       !is_same<typename Pattern::SubPattern,void>::value &&
       !requires_pattern<Container>::value
       >::type
-    allocate_istl_matrix(const OrderingU& ordering_u,
-                         const OrderingV& ordering_v,
+    allocate_istl_matrix(const OrderingV& ordering_v,
+                         const OrderingU& ordering_u,
                          const Pattern& p,
                          Container& c)
     {
       for (std::size_t i = 0; i < c.N(); ++i)
         for (auto cit = p[i].begin(); cit != p[i].end(); ++cit)
           {
-            allocate_istl_matrix(ordering_u.dynamic_child(i),
-                                 ordering_v.dynamic_child(cit->first),
+            allocate_istl_matrix(ordering_v.dynamic_child(i),
+                                 ordering_u.dynamic_child(cit->first),
                                  cit->second,
                                  c[i][cit->first]);
           }
     }
 
-    template<typename OrderingU, typename OrderingV, typename Pattern, typename Container>
+    template<typename OrderingV, typename OrderingU, typename Pattern, typename Container>
     typename enable_if<
       is_same<typename Pattern::SubPattern,void>::value
       >::type
-    allocate_istl_matrix(const OrderingU& ordering_u,
-                         const OrderingV& ordering_v,
+    allocate_istl_matrix(const OrderingV& ordering_v,
+                         const OrderingU& ordering_u,
                          const Pattern& p,
                          Container& c)
     {
-      c.setSize(ordering_u.blockCount(),ordering_v.blockCount(),false);
+      c.setSize(ordering_v.blockCount(),ordering_u.blockCount(),false);
       c.setBuildMode(Container::random);
 
       for (std::size_t i = 0; i < c.N(); ++i)
@@ -354,6 +376,11 @@ namespace Dune {
     class ISTLMatrixContainer
     {
 
+      typedef OrderingBase<
+        typename GFSV::Ordering::Traits::DOFIndex,
+        typename GFSV::Ordering::Traits::ContainerIndex
+        > CustomOrdering;
+
     public:
 
       typedef typename C::field_type ElementType;
@@ -367,7 +394,7 @@ namespace Dune {
       typedef typename GFSV::Ordering::Traits::ContainerIndex RowIndex;
       typedef typename GFSU::Ordering::Traits::ContainerIndex ColIndex;
 
-      typedef typename build_pattern_type<C>::type Pattern;
+      typedef typename build_pattern_type<C,CustomOrdering>::type Pattern;
 
       template<typename RowCache, typename ColCache>
       class LocalView
@@ -573,10 +600,10 @@ namespace Dune {
       template<typename GO>
       ISTLMatrixContainer (const GO& go)
       {
-        typename build_pattern_type<C>::type pattern;
+        Pattern pattern(*go.testGridFunctionSpace().ordering(),*go.trialGridFunctionSpace().ordering());
         go.fill_pattern(pattern);
-        allocate_istl_matrix(*go.trialGridFunctionSpace().ordering(),
-                             *go.testGridFunctionSpace().ordering(),
+        allocate_istl_matrix(*go.testGridFunctionSpace().ordering(),
+                             *go.trialGridFunctionSpace().ordering(),
                              pattern,
                              _container);
       }
@@ -584,10 +611,10 @@ namespace Dune {
       template<typename GO>
       ISTLMatrixContainer (const GO& go, const E& e)
       {
-        typename build_pattern_type<C>::type pattern;
+        Pattern pattern(*go.testGridFunctionSpace().ordering(),*go.trialGridFunctionSpace().ordering());
         go.fill_pattern(pattern);
-        allocate_istl_matrix(*go.trialGridFunctionSpace().ordering(),
-                             *go.testGridFunctionSpace().ordering(),
+        allocate_istl_matrix(*go.testGridFunctionSpace().ordering(),
+                             *go.trialGridFunctionSpace().ordering(),
                              pattern,
                              _container);
         _container = e;
