@@ -283,9 +283,10 @@ namespace Dune {
     {
 
       template<typename Node, typename TreePath>
-      void leaf(Node& node, TreePath tp) const
+      void leaf(Node& node, TreePath tp)
       {
         node._fixed_size = node.gridFunctionSpace().fixedSize();
+        any = any || node._fixed_size;
       }
 
       template<typename Node, typename TreePath>
@@ -299,6 +300,12 @@ namespace Dune {
       {
         node._fixed_size = node._fixed_size && child._fixed_size;
       }
+
+      collect_a_priori_fixed_size()
+        : any(false)
+      {}
+
+      bool any;
 
     };
 
@@ -734,13 +741,14 @@ namespace Dune {
           }
 
         // Do we already know that we have fixed per-GeometryType sizes?
-        TypeTree::applyToTree(localOrdering(),collect_a_priori_fixed_size());
+        collect_a_priori_fixed_size fixed_size_collector;
+        TypeTree::applyToTree(localOrdering(),fixed_size_collector);
         _fixed_size = localOrdering().fixedSize();
 
         typedef std::vector<GeometryType> GTVector;
         const size_type gt_index_count = GlobalGeometryTypeIndex::size(GV::dimension);
 
-        if (_fixed_size)
+        if (fixed_size_collector.any)
           {
             // collect used GeometryTypes
             TypeTree::applyToTree(localOrdering(),update_fixed_size<GV>(_gv,geom_types));
