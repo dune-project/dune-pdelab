@@ -4,6 +4,7 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_DIRECTLEAFLOCALORDERING_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_DIRECTLEAFLOCALORDERING_HH
 
+#include <dune/pdelab/common/typetree/leafnode.hh>
 #include <dune/pdelab/gridfunctionspace/orderingutility.hh>
 
 #include <vector>
@@ -13,6 +14,7 @@ namespace Dune {
 
     template<typename GFS, typename DI, typename CI>
     class DirectLeafLocalOrdering
+      : public TypeTree::LeafNode
     {
 
       template<typename>
@@ -55,7 +57,7 @@ namespace Dune {
         return 0;
       }
 
-      DirectLeafLocalOrdering(const GFS& gfs)
+      explicit DirectLeafLocalOrdering(const GFS& gfs)
         : _gfs(gfs)
         , _fixed_size(false)
         , _container_blocked(false)
