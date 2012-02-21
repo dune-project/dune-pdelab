@@ -336,6 +336,9 @@ testpoisson_petsc_LDFLAGS = $(AM_LDFLAGS) $(PETSC_LDFLAGS)
 testpoisson_petsc_LDADD = $(LDADD) $(PETSC_LIBS)
 endif
 
+check_PROGRAMS += testordering
+testordering_SOURCES = testordering.cc
+
 MOSTLYCLEANFILES += poisson_petsc_*.vtu
 
 include $(top_srcdir)/am/global-rules
