@@ -127,7 +127,9 @@ namespace Dune {
       typename Traits::SizeType size(const typename Traits::SizeType geometry_type_index, const typename Traits::SizeType entity_index) const
       {
         if (_fixed_size)
-          return _gt_dof_offsets[geometry_type_index * _child_count + _child_count - 1];
+          return _child_count > 0
+            ? _gt_dof_offsets[geometry_type_index * _child_count + _child_count - 1]
+            : _gt_dof_offsets[geometry_type_index];
 
         if (!_gt_used[geometry_type_index])
           return 0;
