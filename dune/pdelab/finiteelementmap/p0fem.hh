@@ -23,12 +23,32 @@ namespace Dune {
        */
       P0LocalFiniteElementMap (Dune::GeometryType::BasicType basicType) DUNE_DEPRECATED
         : SimpleLocalFiniteElementMap< Dune::P0LocalFiniteElement<D,R,d> >(Dune::P0LocalFiniteElement<D,R,d>(basicType))
+        , _gt(basicType,d)
       {
       }
       P0LocalFiniteElementMap (const Dune::GeometryType& type)
         : SimpleLocalFiniteElementMap< Dune::P0LocalFiniteElement<D,R,d> >(Dune::P0LocalFiniteElement<D,R,d>(type))
+        , _gt(type)
       {
       }
+
+      bool fixedSize() const
+      {
+        return true;
+      }
+
+      std::size_t size(GeometryType gt) const
+      {
+        return gt == _gt ? 1 : 0;
+      }
+
+      std::size_t maxLocalSize() const
+      {
+        return 1;
+      }
+
+    private:
+      const GeometryType _gt;
 
     };
 
