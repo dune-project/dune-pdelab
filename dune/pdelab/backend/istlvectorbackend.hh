@@ -646,12 +646,12 @@ namespace Dune {
         return *this;
       }
 
-      block_type& operator[](std::size_t i)
+      block_type& block(std::size_t i)
       {
         return container[i];
       }
 
-      const block_type& operator[](std::size_t i) const
+      const block_type& block(std::size_t i) const
       {
         return container[i];
       }
