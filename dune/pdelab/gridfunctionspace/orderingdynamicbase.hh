@@ -22,6 +22,13 @@ namespace Dune {
 
       static const bool has_dynamic_ordering_children = true;
 
+      typename Traits::ContainerIndex map_index(const typename Traits::DOFIndex& di) const
+      {
+        typename Traits::ContainerIndex ci;
+        map_index(di.view(),ci);
+        return ci;
+      }
+
       void map_index(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
       {
         if (_delegate)

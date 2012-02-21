@@ -65,6 +65,13 @@ namespace Dune {
         map_index(di,ci);
       }
 
+      typename Traits::ContainerIndex map_index(const typename Traits::DOFIndex& di) const
+      {
+        typename Traits::ContainerIndex ci;
+        map_index(di.view(),ci);
+        return ci;
+      }
+
       void map_index(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
       {
         const typename Traits::SizeType geometry_type_index = di.entityIndex()[0];
@@ -742,6 +749,13 @@ namespace Dune {
       virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
       {
         map_index(di,ci);
+      }
+
+      typename Traits::ContainerIndex map_index(const typename Traits::DOFIndex& di) const
+      {
+        typename Traits::ContainerIndex ci;
+        map_index(di.view(),ci);
+        return ci;
       }
 
       void map_index(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
