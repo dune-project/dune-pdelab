@@ -363,9 +363,28 @@ namespace Dune {
       }
 
       //! constructor
+      GridFunctionSpace (const GV& gridview, const shared_ptr<const FEM>& fem, const CE& ce_, const B& backend = B())
+        : defaultce(ce_)
+        , gv(gridview)
+        , pfem(fem)
+        , ce(ce_)
+        , _backend(backend)
+      {
+      }
+
+      //! constructor
       GridFunctionSpace (const GV& gridview, const FEM& fem, const B& backend = B())
         : gv(gridview)
         , pfem(stackobject_to_shared_ptr(fem))
+        , ce(defaultce)
+        , _backend(backend)
+      {
+      }
+
+      //! constructor
+      GridFunctionSpace (const GV& gridview, const shared_ptr<const FEM>& fem, const B& backend = B())
+        : gv(gridview)
+        , pfem(fem)
         , ce(defaultce)
         , _backend(backend)
       {
