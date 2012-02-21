@@ -150,8 +150,8 @@ namespace Dune {
 
     };
 
-    template<typename LFS, typename C = EmptyTransformation>
-    class LFSContainerIndexCache
+    template<typename LFS, typename C, typename CacheTag>
+    class LFSContainerIndexCacheBase
     {
 
       enum DOFFlags
@@ -196,7 +196,7 @@ namespace Dune {
       typedef std::vector<ConstraintsEntry> ConstraintsVector;
       typedef typename ConstraintsVector::const_iterator ConstraintsIterator;
 
-      LFSContainerIndexCache(const LFS& lfs, const C& constraints)
+      LFSContainerIndexCacheBase(const LFS& lfs, const C& constraints)
         : _lfs(lfs)
         , _container_indices(lfs.maxSize())
         , _dof_flags(lfs.maxSize())
@@ -341,8 +341,8 @@ namespace Dune {
     };
 
 
-    template<typename LFS>
-    class LFSContainerIndexCache<LFS,EmptyTransformation>
+    template<typename LFS, typename CacheTag>
+    class LFSContainerIndexCacheBase<LFS,EmptyTransformation,CacheTag>
     {
 
     public:
@@ -377,13 +377,13 @@ namespace Dune {
       typedef std::vector<ConstraintsEntry> ConstraintsVector;
       typedef typename ConstraintsVector::const_iterator ConstraintsIterator;
 
-      explicit LFSContainerIndexCache(const LFS& lfs)
+      explicit LFSContainerIndexCacheBase(const LFS& lfs)
         : _lfs(lfs)
         , _container_indices(lfs.maxSize())
       {
       }
 
-      LFSContainerIndexCache(const LFS& lfs, const EmptyTransformation& c)
+      LFSContainerIndexCacheBase(const LFS& lfs, const EmptyTransformation& c)
         : _lfs(lfs)
         , _container_indices(lfs.maxSize())
       {
@@ -467,6 +467,288 @@ namespace Dune {
       CIVector _container_indices;
       mutable CIMap _container_index_map;
       const ConstraintsVector _constraints;
+
+    };
+
+
+
+    template<typename LFS, typename C>
+    class LFSContainerIndexCacheBase<LFS,C,SimpleLFSCacheTag>
+    {
+
+      enum DOFFlags
+        {
+          DOF_NONCONSTRAINED = 0,
+          DOF_CONSTRAINED = 1<<0,
+          DOF_DIRICHLET = 1<<1
+        };
+
+    public:
+
+      typedef LFS LocalFunctionSpace;
+
+      typedef typename LFS::Traits::GridFunctionSpace GFS;
+      typedef typename GFS::Ordering Ordering;
+      typedef typename Ordering::Traits::ContainerIndex CI;
+      typedef typename Ordering::Traits::DOFIndex DI;
+      typedef std::size_t size_type;
+
+      typedef std::vector<CI> CIVector;
+      typedef std::unordered_map<DI,CI,boost::hash<DI> > CIMap;
+
+      struct ConstraintsEntry
+        : public std::pair<CI,typename C::mapped_type::mapped_type>
+      {
+        typedef CI ContainerIndex;
+        typedef typename C::mapped_type::mapped_type Weight;
+
+        const ContainerIndex& containerIndex() const
+        {
+          return this->first;
+        }
+
+        const Weight& weight() const
+        {
+          return this->second;
+        }
+      };
+
+      typedef std::vector<ConstraintsEntry> ConstraintsVector;
+      typedef typename ConstraintsVector::const_iterator ConstraintsIterator;
+
+      LFSContainerIndexCacheBase(const LFS& lfs, const C& constraints)
+        : _lfs(lfs)
+        , _dof_flags(lfs.maxSize())
+        , _constraints_iterators(lfs.maxSize())
+        , _gfs_constraints(constraints)
+      {
+      }
+
+      void update()
+      {
+        _constraints.resize(0);
+        std::vector<std::pair<size_type,typename C::const_iterator> > non_dirichlet_constrained_dofs;
+        size_type constraint_entry_count = 0;
+        for (size_type i = 0; i < _lfs.size(); ++i)
+          {
+            const DI& dof_index = _lfs.dofIndex(i);
+            const typename C::const_iterator cit = _gfs_constraints.find(dof_index);
+            if (cit == _gfs_constraints.end())
+              {
+                _dof_flags[i] = DOF_NONCONSTRAINED;
+                continue;
+              }
+
+            if (cit->second.size() == 0)
+              {
+                _dof_flags[i] = DOF_CONSTRAINED | DOF_DIRICHLET;
+                _constraints_iterators[i] = make_pair(_constraints.end(),_constraints.end());
+              }
+            else
+              {
+                _dof_flags[i] = DOF_CONSTRAINED;
+                constraint_entry_count += cit->second.size();
+                non_dirichlet_constrained_dofs.push_back(make_pair(i,cit));
+              }
+          }
+
+        if (constraint_entry_count > 0)
+          {
+            _constraints.resize(constraint_entry_count);
+            typename ConstraintsVector::iterator eit = _constraints.begin();
+            for (typename std::vector<std::pair<size_type,typename C::const_iterator> >::const_iterator it = non_dirichlet_constrained_dofs.begin();
+                 it != non_dirichlet_constrained_dofs.end();
+                 ++it)
+              {
+                _constraints_iterators[it->first].first = eit;
+                for (auto cit = it->second->second.begin(); cit != it->second->second.end(); ++cit, ++eit)
+                  {
+                    eit->first = cit->first;
+                    eit->second = cit->second;
+                  }
+                _constraints_iterators[it->first].second = eit;
+              }
+          }
+      }
+
+      const DI& dof_index(size_type i) const
+      {
+        return _lfs.dofIndex(i);
+      }
+
+      CI container_index(size_type i) const
+      {
+        return CI(_lfs.dofIndex(i)[0]);
+      }
+
+      const CI& container_index(const DI& i) const
+      {
+        return CI(i[0]);
+      }
+
+      bool constrained(size_type i) const
+      {
+        return _dof_flags[i] & DOF_CONSTRAINED;
+      }
+
+      bool dirichlet_constraint(size_type i) const
+      {
+        return _dof_flags[i] & DOF_DIRICHLET;
+      }
+
+      ConstraintsIterator constraints_begin(size_type i) const
+      {
+        assert(constrained(i));
+        return _constraints_iterators[i].first;
+      }
+
+      ConstraintsIterator constraints_end(size_type i) const
+      {
+        assert(constrained(i));
+        return _constraints_iterators[i].second;
+      }
+
+      const LocalFunctionSpace& localFunctionSpace() const
+      {
+        return _lfs;
+      }
+
+      size_type size() const
+      {
+        return _lfs.size();
+      }
+
+    private:
+
+      const LFS& _lfs;
+      CIVector _container_indices;
+      std::vector<unsigned char> _dof_flags;
+      std::vector<std::pair<ConstraintsIterator,ConstraintsIterator> > _constraints_iterators;
+      mutable CIMap _container_index_map;
+      ConstraintsVector _constraints;
+
+      const C& _gfs_constraints;
+
+    };
+
+
+    template<typename LFS>
+    class LFSContainerIndexCacheBase<LFS,EmptyTransformation,SimpleLFSCacheTag>
+    {
+
+    public:
+
+      typedef LFS LocalFunctionSpace;
+      typedef typename LFS::Traits::GridFunctionSpace GFS;
+      typedef typename GFS::Ordering Ordering;
+      typedef typename Ordering::Traits::ContainerIndex CI;
+      typedef typename Ordering::Traits::DOFIndex DI;
+      typedef std::size_t size_type;
+
+      typedef std::vector<CI> CIVector;
+      typedef std::unordered_map<DI,CI,boost::hash<DI> > CIMap;
+
+      struct ConstraintsEntry
+        : public std::pair<const CI*,double>
+      {
+        typedef CI ContainerIndex;
+        typedef double Weight;
+
+        const ContainerIndex& containerIndex() const
+        {
+          return *(this->first);
+        }
+
+        const Weight& weight() const
+        {
+          return this->second;
+        }
+      };
+
+      typedef std::vector<ConstraintsEntry> ConstraintsVector;
+      typedef typename ConstraintsVector::const_iterator ConstraintsIterator;
+
+      explicit LFSContainerIndexCacheBase(const LFS& lfs)
+        : _lfs(lfs)
+      {
+      }
+
+      LFSContainerIndexCacheBase(const LFS& lfs, const EmptyTransformation& c)
+        : _lfs(lfs)
+      {
+      }
+
+
+      void update()
+      {
+        // there's nothing to do here...
+      }
+
+      CI container_index(size_type i) const
+      {
+        return CI(_lfs.dofIndex(i)[0]);
+      }
+
+      CI container_index(const DI& i) const
+      {
+        return CI(i[0]);
+      }
+
+      bool constrained(size_type i) const
+      {
+        return false;
+      }
+
+      bool dirichlet_constraint(size_type i) const
+      {
+        return false;
+      }
+
+      ConstraintsIterator constraints_begin(size_type i) const
+      {
+        return _constraints.begin();
+      }
+
+      ConstraintsIterator constraints_end(size_type i) const
+      {
+        return _constraints.end();
+      }
+
+      const LocalFunctionSpace& localFunctionSpace() const
+      {
+        return _lfs;
+      }
+
+      size_type size() const
+      {
+        return _lfs.size();
+      }
+
+    private:
+
+      const LFS& _lfs;
+      mutable CIMap _container_index_map;
+      const ConstraintsVector _constraints;
+
+    };
+
+
+    template<typename LFS, typename C = EmptyTransformation>
+    class LFSContainerIndexCache
+      : public LFSContainerIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag>
+    {
+
+    public:
+
+      LFSContainerIndexCache(const LFS& lfs, const C& c)
+        : LFSContainerIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag>(lfs,c)
+      {
+      }
+
+      LFSContainerIndexCache(const LFS& lfs)
+        : LFSContainerIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag>(lfs)
+      {
+      }
 
     };
 

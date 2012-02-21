@@ -221,8 +221,8 @@ namespace Dune {
       template<typename>
       friend struct FillIndicesVisitor;
 
-      template<typename LFS, typename C>
-      friend class LFSContainerIndexCache;
+      template<typename LFS, typename C, typename Tag>
+      friend class LFSContainerIndexCacheBase;
 
     public:
       typedef LocalFunctionSpaceBaseTraits<GFS,DOFIndex> Traits;
