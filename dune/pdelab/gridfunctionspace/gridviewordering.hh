@@ -328,7 +328,6 @@ namespace Dune {
     template<typename GFS, typename Transformation, typename SizeTag>
     struct leaf_gfs_to_ordering_descriptor;
 
-    struct GridFunctionGeneralMapper;
 
     template<typename GFS, typename Transformation>
     struct leaf_gfs_to_ordering_descriptor<GFS,Transformation,GridFunctionGeneralMapper>

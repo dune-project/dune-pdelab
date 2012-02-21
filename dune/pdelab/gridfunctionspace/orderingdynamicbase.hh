@@ -20,6 +20,10 @@ namespace Dune {
 
       typedef OrderingTraits<DI,CI> Traits;
 
+      typedef HierarchicContainerAllocationTag ContainerAllocationTag;
+
+      typedef DefaultLFSCacheTag CacheTag;
+
       static const bool has_dynamic_ordering_children = true;
 
       typename Traits::ContainerIndex map_index(const typename Traits::DOFIndex& di) const

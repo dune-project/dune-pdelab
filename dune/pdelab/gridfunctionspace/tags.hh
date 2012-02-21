@@ -34,6 +34,15 @@ namespace Dune {
      */
     struct LexicographicOrderingTag { };
 
+    /** \brief Tag indicating an arbitrary number of unkowns per entity.
+     *
+     * class used to pass compile-time parameter to the GridFunctionSpace.
+     */
+    struct GridFunctionGeneralMapper {};
+
+    //! Tag indicating a function space with a single unknown attached to every
+    //! entity of a exactly one single codimension.
+    struct SingleCodimMapper {};
 
     //! Tag denoting a PowerLocalFunctionSpace
     struct PowerLocalFunctionSpaceTag {};
@@ -44,6 +53,21 @@ namespace Dune {
     //! Tag denoting a LeafLocalFunctionSpace
     struct LeafLocalFunctionSpaceTag {};
 
+    //! Tag for denoting possibly nested containers, requiring a recursive
+    //! allocation algorithm.
+    struct HierarchicContainerAllocationTag {};
+
+    //! Tag for denoting that a backend / ordering will always spawn flat
+    //! containers.
+    struct FlatContainerAllocationTag {};
+
+    //! Tag denoting that an ordering will work with the default implementation
+    //! of the LFSIndexCache.
+    struct DefaultLFSCacheTag {};
+
+    //! Tag denoting that an ordering will work with the simplified version of
+    //! the LFSIndexCache.
+    struct SimpleLFSCacheTag {};
 
     //! \} group GridFunctionSpace
   } // namespace PDELab

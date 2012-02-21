@@ -270,13 +270,6 @@ namespace Dune {
     };
 
 
-    /** \brief Tag indicating an arbitrary number of unkowns per entity.
-     *
-     * class used to pass compile-time parameter to the GridFunctionSpace.
-     */
-    struct GridFunctionGeneralMapper {};
-
-
     // Empty constraints assembler class
     class NoConstraints
     {
