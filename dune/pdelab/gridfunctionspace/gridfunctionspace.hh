@@ -83,6 +83,7 @@ namespace Dune {
       typedef C ConstraintsType;
     };
 
+#if 0
     //! \brief collect types exported by a leaf grid function space
     /**
      * This is based on LocalFiniteElementMap
@@ -115,6 +116,7 @@ namespace Dune {
       //! \brief type representing constraints
       typedef C ConstraintsType;
     };
+#endif // 0
 
     class StdVectorBackend;
 
