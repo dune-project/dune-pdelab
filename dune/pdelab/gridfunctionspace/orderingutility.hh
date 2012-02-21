@@ -80,7 +80,20 @@ namespace Dune {
       template<typename Node, typename Child, typename TreePath, typename ChildIndex>
       void afterChild(const Node& node, Child& child, TreePath tp, ChildIndex child_index)
       {
+        extract_child(node,child,child_index);
+      }
+
+      template<typename Node, typename Child, typename ChildIndex>
+      typename enable_if<Node::has_dynamic_ordering_children>::type
+      extract_child(const Node& node, Child& child, ChildIndex child_index)
+      {
         _children[child_index] = &child;
+      }
+
+      template<typename Node, typename Child, typename ChildIndex>
+      typename enable_if<!Node::has_dynamic_ordering_children>::type
+      extract_child(const Node& node, Child& child, ChildIndex child_index)
+      {
       }
 
       extract_child_bases(std::vector<child_type*>& children)

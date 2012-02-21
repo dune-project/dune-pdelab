@@ -28,6 +28,8 @@ namespace Dune {
     public:
       typedef typename LocalOrdering::Traits Traits;
 
+      static const bool has_dynamic_ordering_children = false;
+
     private:
 
       typedef typename Traits::GridView GV;
@@ -679,6 +681,8 @@ namespace Dune {
     {
     public:
       typedef typename LocalOrdering::Traits Traits;
+
+      static const bool has_dynamic_ordering_children = false;
 
     private:
 

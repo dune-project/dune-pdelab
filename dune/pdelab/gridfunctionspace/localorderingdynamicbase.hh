@@ -18,6 +18,8 @@ namespace Dune {
     public:
 
       typedef OrderingTraits<DI,CI> Traits;
+      static const bool has_dynamic_ordering_children = true;
+
 
       void map_local_index(const typename Traits::SizeType geometry_type_index,
                            const typename Traits::SizeType entity_index,

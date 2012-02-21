@@ -20,6 +20,8 @@ namespace Dune {
 
       typedef OrderingTraits<DI,CI> Traits;
 
+      static const bool has_dynamic_ordering_children = true;
+
       void map_index(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
       {
         if (_delegate)
