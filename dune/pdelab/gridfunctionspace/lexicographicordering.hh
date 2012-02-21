@@ -44,7 +44,7 @@ namespace Dune {
     namespace lexicographic_ordering {
 
       //! Interface for merging index spaces
-      template<typename DI, typename CI, typename Backend, typename Node>
+      template<typename DI, typename CI, typename Node>
       class Base
         : public OrderingBase<DI,CI>
       {
@@ -59,8 +59,8 @@ namespace Dune {
          * construction.  This must be done by a seperate call to update()
          * after all the children have been properly set up.
          */
-        Base(Node& node)
-        : OrderingBase<DI,CI>(node,false,nullptr)
+        Base(Node& node, bool container_blocked)
+        : OrderingBase<DI,CI>(node,container_blocked,nullptr)
         {
         }
 
@@ -153,21 +153,19 @@ namespace Dune {
     }
 
     //! Interface for merging index spaces
-    template<typename DI, typename CI, typename Backend, typename Child, std::size_t k>
+    template<typename DI, typename CI, typename Child, std::size_t k>
     class PowerLexicographicOrdering
       : public TypeTree::PowerNode<Child, k>
       , public lexicographic_ordering::Base<DI,
                                             CI,
-                                            Backend,
-                                            PowerLexicographicOrdering<DI,CI,Backend,Child,k>
+                                            PowerLexicographicOrdering<DI,CI,Child,k>
                                             >
     {
       typedef TypeTree::PowerNode<Child, k> Node;
 
       typedef lexicographic_ordering::Base<DI,
                                            CI,
-                                           Backend,
-                                           PowerLexicographicOrdering<DI,CI,Backend,Child,k>
+                                           PowerLexicographicOrdering<DI,CI,Child,k>
                                            > Base;
 
     public:
@@ -181,9 +179,9 @@ namespace Dune {
        * \note This constructor must be present for ordering objects not at
        *       the leaf of the tree.
        */
-      PowerLexicographicOrdering(const typename Node::NodeStorage& children)
+      PowerLexicographicOrdering(bool container_blocked, const typename Node::NodeStorage& children)
         : Node(children)
-        , Base(*this)
+        , Base(*this,container_blocked)
       { }
 
       void update()
@@ -223,7 +221,6 @@ namespace Dune {
         typedef PowerLexicographicOrdering<
           typename Transformation::DOFIndex,
           typename Transformation::ContainerIndex,
-          typename GFS::Traits::Backend,
           TC,
           GFS::CHILDREN
           > type;
@@ -235,13 +232,13 @@ namespace Dune {
       template<typename TC>
       static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
       {
-        return typename result<TC>::type(children);
+        return typename result<TC>::type(false,children);
       }
 
       template<typename TC>
       static typename result<TC>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
       {
-        return make_shared<typename result<TC>::type>(children);
+        return make_shared<typename result<TC>::type>(false,children);
       }
 
     };
@@ -271,16 +268,14 @@ namespace Dune {
 
 
     //! Interface for merging index spaces
-    template<typename DI, typename CI, typename Backend, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
+    template<typename DI, typename CI, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
     class CompositeLexicographicOrdering :
       public DUNE_TYPETREE_COMPOSITENODE_BASETYPE,
       public lexicographic_ordering::Base<DI,
                                           CI,
-                                          Backend,
                                           CompositeLexicographicOrdering<
                                             DI,
                                             CI,
-                                            Backend,
                                             DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES
                                             >
                                           >
@@ -290,11 +285,9 @@ namespace Dune {
       typedef lexicographic_ordering::Base<
         DI,
         CI,
-        Backend,
         CompositeLexicographicOrdering<
           DI,
           CI,
-          Backend,
           DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES
           >
         > Base;
@@ -309,9 +302,9 @@ namespace Dune {
        * \note This constructor must be present for ordering objects not at
        *       the leaf of the tree.
        */
-      CompositeLexicographicOrdering(DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
+      CompositeLexicographicOrdering(bool backend_blocked, DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
         : Node(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
-        , Base(*this)
+        , Base(*this,backend_blocked)
       { }
 
       std::string name() const { return "CompositeLexicographicOrdering"; }
@@ -352,7 +345,6 @@ namespace Dune {
         typedef CompositeLexicographicOrdering<
           typename Transformation::DOFIndex,
           typename Transformation::ContainerIndex,
-          typename GFS::Traits::Backend,
           TC...
           > type;
 
@@ -363,13 +355,13 @@ namespace Dune {
       template<typename... TC>
       static typename result<TC...>::type transform(const GFS& gfs, const Transformation& t, shared_ptr<TC>... children)
       {
-        return typename result<TC...>::type(children...);
+        return typename result<TC...>::type(true,children...);
       }
 
       template<typename... TC>
       static typename result<TC...>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, shared_ptr<TC>... children)
       {
-        return make_shared<typename result<TC...>::type>(children...);
+        return make_shared<typename result<TC...>::type>(true,children...);
       }
 
     };
