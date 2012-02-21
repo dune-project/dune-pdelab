@@ -359,6 +359,7 @@ namespace Dune {
       typedef typename C::field_type ElementType;
       typedef ElementType E;
       typedef C ContainerType;
+      typedef C BaseT;
       typedef typename C::field_type field_type;
       typedef typename C::block_type block_type;
       typedef typename C::size_type size_type;
