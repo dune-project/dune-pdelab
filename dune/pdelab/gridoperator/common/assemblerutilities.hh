@@ -219,137 +219,116 @@ namespace Dune{
       /** \brief Add local matrix to global matrix,
           and apply Dirichlet constraints in a symmetric
           fashion. Apart from that, identical to etadd(). */
-      template<typename LFSV, typename LFSU, typename T, typename GC>
-      void etadd_symmetric (const LFSV& lfsv, const LFSU& lfsu, LocalMatrix<T>& localcontainer, GC& globalcontainer) const
+      template<typename T, typename GCView>
+      void etadd_symmetric (const LocalMatrix<T>& localcontainer, GCView& globalcontainer_view) const
       {
-        const CU & cu = *pconstraintsu;
 
-        typedef typename CU::const_iterator global_ucol_iterator;
+        typedef typename GCView::RowIndexCache LFSVIndexCache;
+        typedef typename GCView::ColIndexCache LFSUIndexCache;
 
-        for (size_t j = 0; j < lfsu.size(); ++j)
+        const LFSVIndexCache& lfsv_indices = globalcontainer_view.rowIndexCache();
+        const LFSUIndexCache& lfsu_indices = globalcontainer_view.colIndexCache();
+
+        typedef typename LFSVIndexCache::LocalFunctionSpace LFSV;
+        const LFSV& lfsv = lfsv_indices.localFunctionSpace();
+
+        typedef typename LFSUIndexCache::LocalFunctionSpace LFSU;
+        const LFSU& lfsu = lfsu_indices.localFunctionSpace();
+
+        for (size_t j = 0; j < lfsu_indices.size(); ++j)
           {
-            global_ucol_iterator cuit = cu.find(lfsu.globalIndex(j));
-
-            // If this column is not constrained or the constraint is not of
-            // Dirichlet type, abort
-            if (cuit == cu.end() || cuit->second.size() > 0)
-              continue;
-
-            // clear out the current column
-            for (size_t i = 0; i < lfsv.size(); ++i)
+            if (lfsu_indices.constrained(j) && lfsu_indices.dirichlet_constraint(j))
               {
-                // we do not need to update the residual, since the solution
-                // (i.e. the correction) for the Dirichlet DOF is 0 by definition
-                localcontainer(lfsv,i,lfsu,j) = 0.0;
+                // clear out the current column
+                for (size_t i = 0; i < lfsv_indices.size(); ++i)
+                  {
+                    // we do not need to update the residual, since the solution
+                    // (i.e. the correction) for the Dirichlet DOF is 0 by definition
+                    localcontainer(lfsv,i,lfsu,j) = 0.0;
+                  }
               }
           }
 
         // hand off to standard etadd() method
-        etadd(lfsv,lfsu,localcontainer,globalcontainer);
+        etadd(localcontainer,globalcontainer_view);
       }
 
 
-      /** \brief Add local matrix \f$m\f$ to global Jacobian \f$J\f$
-          and apply constraints transformation. Hence we perform: \f$
-          \boldsymbol{J} := \boldsymbol{J} + \boldsymbol{S}_{
-          \boldsymbol{\tilde V}} m \boldsymbol{S}^T_{
-          \boldsymbol{\tilde U}} \f$*/
-      template<typename LFSV, typename LFSU, typename T, typename GC>
-      void etadd (const LFSV& lfsv, const LFSU& lfsu, const LocalMatrix<T>& localcontainer, GC& globalcontainer) const
+      template<typename T, typename GCView>
+      void etadd (const LocalMatrix<T>& localcontainer, GCView& globalcontainer_view) const
       {
 
-        typename B::template Accessor<LFSV,LFSU,T> accessor(globalcontainer,lfsv,lfsu);
+        typedef typename GCView::RowIndexCache LFSVIndexCache;
+        typedef typename GCView::ColIndexCache LFSUIndexCache;
 
-        for (size_t i=0; i<lfsv.size(); i++)
-          for (size_t j=0; j<lfsu.size(); j++){
-            SizeType gi = lfsv.globalIndex(i);
-            SizeType gj = lfsu.globalIndex(j);
+        const LFSVIndexCache& lfsv_indices = globalcontainer_view.rowIndexCache();
+        const LFSUIndexCache& lfsu_indices = globalcontainer_view.colIndexCache();
 
-            // Get global constraints containers for test and ansatz space
-            const CV & cv = *pconstraintsv;
-            const CU & cu = *pconstraintsu;
+        typedef typename LFSVIndexCache::LocalFunctionSpace LFSV;
+        const LFSV& lfsv = lfsv_indices.localFunctionSpace();
 
-            typedef typename CV::const_iterator global_vcol_iterator;
-            typedef typename global_vcol_iterator::value_type::second_type global_vrow_type;
-            typedef typename global_vrow_type::const_iterator global_vrow_iterator;
+        typedef typename LFSUIndexCache::LocalFunctionSpace LFSU;
+        const LFSU& lfsu = lfsu_indices.localFunctionSpace();
 
-            typedef typename CU::const_iterator global_ucol_iterator;
-            typedef typename global_ucol_iterator::value_type::second_type global_urow_type;
-            typedef typename global_urow_type::const_iterator global_urow_iterator;
+        for (size_t i = 0; i<lfsv_indices.size(); ++i)
+          for (size_t j = 0; j<lfsu_indices.size(); ++j)
+            {
 
-            // Check whether the global indices are constrained indices
-            global_vcol_iterator gvcit = cv.find(gi);
-            global_ucol_iterator gucit = cu.find(gj);
+              const bool constrained_v = lfsv_indices.constrained(i);
+              const bool constrained_u = lfsu_indices.constrained(j);
 
-            // Set constrained_v true if gi is constrained dof
-            bool constrained_v(false);
-            global_vrow_iterator gvrit;
-            if(gvcit!=cv.end()){
-              gvrit = gvcit->second.begin();
-              constrained_v = true;
-            }
+              typedef typename LFSVIndexCache::ConstraintsIterator VConstraintsIterator;
+              typedef typename LFSUIndexCache::ConstraintsIterator UConstraintsIterator;
 
-            T vf = 1;
-            do{
-              // if gi is index of constrained dof
-              if(constrained_v){
+              if (constrained_v)
+                {
+                  if (lfsv_indices.dirichlet_constraint(i))
+                    continue;
 
-                if(gvrit == gvcit->second.end())
-                  break;
-
-                // otherwise set gi to an index to a contributed dof
-                // and set vf to the contribution weight
-                gi = gvrit->first;
-                vf = gvrit->second;
-              }
-
-              // Set constrained_u true if gj is constrained dof
-              bool constrained_u(false);
-              global_urow_iterator gurit;
-              if(gucit!=cu.end()){
-                gurit = gucit->second.begin();
-                constrained_u = true;
-                if(gurit == gucit->second.end()){
-                  T t = localcontainer(lfsv,i,lfsu,j) * vf;
-                  if(t != 0.0)                 // entry might not be present in the matrix
-                    accessor.add(i,j,t);
+                  for (VConstraintsIterator vcit = lfsv_indices.constraints_begin(i); vcit != lfsv_indices.constraints_end(i); ++vcit)
+                    if (constrained_u)
+                      {
+                        if (lfsu_indices.dirichlet_constraint(j))
+                          {
+                            T value = localcontainer(lfsv,i,lfsu,j) * vcit->weight();
+                            if (value != 0.0)
+                              globalcontainer_view.add(vcit->containerIndex(),j,value);
+                          }
+                        else
+                          {
+                            for (UConstraintsIterator ucit = lfsu_indices.constraints_begin(j); ucit != lfsu_indices.constraints_end(j); ++ucit)
+                              {
+                                T value = localcontainer(lfsv,i,lfsu,j) * vcit->weight() * ucit->weight();
+                                if (value != 0.0)
+                                  globalcontainer_view.add(vcit->containerIndex(),ucit->containerIndex(),value);
+                              }
+                          }
+                      }
                 }
-              }
-
-              T uf = 1;
-              do{
-                // if gj is index of constrained dof
-                if(constrained_u){
-
-                  if(gurit == gucit->second.end())
-                    break;
-
-                  // otherwise set gj to an index to a contributed dof
-                  // and set uf to the contribution weight
-                  gj = gurit->first;
-                  uf = gurit->second;
-                }
-
-                // add weighted local entry to global matrix
-                T t = localcontainer(lfsv,i,lfsu,j) * uf * vf;
-                if (t != 0.0)                 // entry might not be present in the matrix
-                  accessor.add(i,j,t);
-
-                if(constrained_u && gurit != gucit->second.end())
-                  ++gurit;
-                else
-                  break;
-
-              }while(true);
-
-              if(constrained_v && gvrit != gvcit->second.end())
-                ++gvrit;
               else
-                break;
-
-            }while(true);
-
-          }
+                {
+                  if (constrained_u)
+                    {
+                      if (lfsu_indices.dirichlet_constraint(j))
+                        {
+                          T value = localcontainer(lfsv,i,lfsu,j);
+                          if (value != 0.0)
+                            globalcontainer_view.add(i,j,value);
+                        }
+                      else
+                        {
+                          for (UConstraintsIterator ucit = lfsu_indices.constraints_begin(j); ucit != lfsu_indices.constraints_end(j); ++ucit)
+                            {
+                              T value = localcontainer(lfsv,i,lfsu,j) * ucit->weight();
+                              if (value != 0.0)
+                                globalcontainer_view.add(i,ucit->containerIndex(),value);
+                            }
+                        }
+                    }
+                  else
+                    globalcontainer_view.add(i,j,localcontainer(lfsv,i,lfsu,j));
+                }
+            }
       }
 
 
