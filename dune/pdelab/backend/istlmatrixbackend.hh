@@ -518,6 +518,15 @@ namespace Dune {
           (*_container)(_row_cache->container_index(i),j) += v;
         }
 
+        ISTLMatrixContainer& global_container()
+        {
+          return *_container;
+        }
+
+        const ISTLMatrixContainer& global_container() const
+        {
+          return *_container;
+        }
 
       private:
 
