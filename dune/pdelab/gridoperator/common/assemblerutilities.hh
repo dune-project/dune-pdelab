@@ -356,79 +356,59 @@ namespace Dune{
           }
       }
 
+
       /** \brief Adding matrix entry to pattern with respect to the
           constraints contributions. This assembles the entries addressed
           by etadd(..). See the documentation there for more information
           about the matrix pattern. */
-      template<typename GI, typename P>
-      void add_entry(P & globalpattern, GI gi, GI gj) const
+      template<typename P, typename LFSVIndices, typename LFSUIndices, typename Index>
+      void add_entry(P & globalpattern,
+                     const LFSVIndices& lfsv_indices, Index i,
+                     const LFSUIndices& lfsu_indices, Index j) const
       {
-        const CV & cv = *pconstraintsv;
-        const CU & cu = *pconstraintsu;
+        typedef typename LFSVIndices::ConstraintsIterator VConstraintsIterator;
+        typedef typename LFSUIndices::ConstraintsIterator UConstraintsIterator;
 
-        typedef typename CV::const_iterator global_vcol_iterator;
-        typedef typename global_vcol_iterator::value_type::second_type global_vrow_type;
-        typedef typename global_vrow_type::const_iterator global_vrow_iterator;
+        const bool constrained_v = lfsv_indices.constrained(i);
+        const bool constrained_u = lfsu_indices.constrained(j);
 
-        typedef typename CU::const_iterator global_ucol_iterator;
-        typedef typename global_ucol_iterator::value_type::second_type global_urow_type;
-        typedef typename global_urow_type::const_iterator global_urow_iterator;
+        if(lfsv_indices.container_index(i) == lfsu_indices.container_index(j))
+          globalpattern.add_link(lfsv_indices.container_index(i),lfsu_indices.container_index(j));
 
-        global_vcol_iterator gvcit = cv.find(gi);
-        global_ucol_iterator gucit = cu.find(gj);
-
-        if(gi==gj)
-          globalpattern.add_link(gi,gj);
-
-        bool constrained_v(false);
-        global_vrow_iterator gvrit;
-        if(gvcit!=cv.end()){
-          gvrit = gvcit->second.begin();
-          constrained_v = true;
-          if(gvrit == gvcit->second.end())
-            globalpattern.add_link(gi,gj);
-        }
-
-        do{
-          if(constrained_v){
-            if(gvrit == gvcit->second.end())
-              break;
-            gi = gvrit->first;
-          }
-
-          bool constrained_u(false);
-          global_urow_iterator gurit;
-          if(gucit!=cu.end()){
-            gurit = gucit->second.begin();
-            constrained_u = true;
-            if(gurit == gucit->second.end())
-              globalpattern.add_link(gi,gj);
-          }
-
-          do{
-            if(constrained_u){
-              if(gurit == gucit->second.end())
-                break;
-
-              gj = gurit->first;
-            }
-
-            globalpattern.add_link(gi,gj);
-
-            if(constrained_u && gurit != gucit->second.end())
-              ++gurit;
+        if(!constrained_v)
+          {
+            if (!constrained_u || lfsu_indices.dirichlet_constraint(j))
+              {
+                globalpattern.add_link(lfsv_indices.container_index(i),lfsu_indices.container_index(j));
+              }
             else
-              break;
-
-          }while(true);
-
-          if(constrained_v && gvrit != gvcit->second.end())
-            ++gvrit;
-          else
-            break;
-
-        }while(true);
-
+              {
+                for (UConstraintsIterator gurit = lfsu_indices.constraints_begin(j); gurit != lfsu_indices.constraints_end(j); ++gurit)
+                  globalpattern.add_link(lfsv_indices.container_index(i),gurit->containerIndex());
+              }
+          }
+        else
+          {
+            if (lfsv_indices.dirichlet_constraint(i))
+              {
+                globalpattern.add_link(lfsv_indices.container_index(i),lfsu_indices.container_index(j));
+              }
+            else
+              {
+                for(VConstraintsIterator gvrit = lfsv_indices.constraints_begin(i); gvrit != lfsv_indices.constraints_end(i); ++gvrit)
+                  {
+                    if (!constrained_u || lfsu_indices.dirichlet_constraint(j))
+                      {
+                        globalpattern.add_link(gvrit->containerIndex(),lfsu_indices.container_index(j));
+                      }
+                    else
+                      {
+                        for (UConstraintsIterator gurit = lfsu_indices.constraints_begin(j); gurit != lfsu_indices.constraints_end(j); ++gurit)
+                          globalpattern.add_link(gvrit->containerIndex(),gurit->containerIndex());
+                      }
+                  }
+              }
+          }
       }
 
       /** \brief insert dirichlet constraints for row and assemble
