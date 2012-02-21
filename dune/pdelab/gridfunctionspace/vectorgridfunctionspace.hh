@@ -35,37 +35,63 @@ namespace Dune {
         or \link  GridFunctionSpaceBlockwiseMapper  GridFunctionSpaceBlockwiseMapper \endlink
         or \link  GridFunctionSpaceDynamicBlockwiseMapper  GridFunctionSpaceDynamicBlockwiseMapper \endlink
     */
-    template<typename T, std::size_t k,
+    template<typename GV,
+             typename FEM,
+             std::size_t k,
              typename Backend,
-             typename OrderingTag = LexicographicOrderingTag>
+             typename LeafBackend,
+             typename Constraints = NoConstraints,
+             typename OrderingTag = LexicographicOrderingTag,
+             typename LeafOrderingTag = GridFunctionGeneralMapper>
     class VectorGridFunctionSpace :
-      public TypeTree::PowerNode<T,k>,
-      public PowerCompositeGridFunctionSpaceBase<
-        VectorGridFunctionSpace<T, k, Backend, OrderingTag>,
-        typename T::Traits::GridViewType,
-        Backend,
-        OrderingTag,
-        k
-      >
+      public TypeTree::PowerNode<GridFunctionSpace<
+                                   GV,
+                                   FEM,
+                                   Constraints,
+                                   LeafBackend,
+                                   LeafOrderingTag
+                                   >,
+                                 k>,
+      public PowerCompositeGridFunctionSpaceBase<VectorGridFunctionSpace<
+                                                   GV,
+                                                   FEM,
+                                                   k,
+                                                   Backend,
+                                                   LeafBackend,
+                                                   Constraints,
+                                                   OrderingTag,
+                                                   LeafOrderingTag
+                                                   >,
+                                                 GV,
+                                                 Backend,
+                                                 OrderingTag,
+                                                 k>
     {
+
+      typedef GridFunctionSpace<
+        GV,
+        FEM,
+        Constraints,
+        LeafBackend,
+        LeafOrderingTag
+        > LeafGFS;
 
     public:
 
       typedef VectorGridFunctionSpaceTag ImplementationTag;
 
-      typedef TypeTree::PowerNode<T,k> BaseT;
+      typedef TypeTree::PowerNode<LeafGFS,k> BaseT;
 
       typedef PowerCompositeGridFunctionSpaceBase<
         VectorGridFunctionSpace,
-        typename T::Traits::GridViewType,
+        GV,
         Backend,
         OrderingTag,
-        k
-        > ImplementationBase;
+        k> ImplementationBase;
 
       friend class PowerCompositeGridFunctionSpaceBase<
         VectorGridFunctionSpace,
-        typename T::Traits::GridViewType,
+        GV,
         Backend,
         OrderingTag,
         k>;
@@ -81,118 +107,28 @@ namespace Dune {
       //! export traits class
       typedef typename ImplementationBase::Traits Traits;
 
-      VectorGridFunctionSpace(T& c, const Backend& backend = Backend())
-        : BaseT(c)
-        , ImplementationBase(backend)
+      VectorGridFunctionSpace(const GV& gv, const FEM& fem, const Backend& backend = Backend(), const LeafBackend& leafBackend = LeafBackend())
+        : ImplementationBase(backend)
       {
+        shared_ptr<const FEM> fem_ptr = stackobject_to_shared_ptr(fem);
+        for (std::size_t i = 0; i < k; ++i)
+          this->setChild(i,make_shared<LeafGFS>(gv,fem_ptr,leafBackend));
       }
 
-      VectorGridFunctionSpace (T& c0,
-                               T& c1,
-                               const Backend& backend = Backend())
-        : BaseT(c0,c1)
-        , ImplementationBase(backend)
+      void name(std::string name)
       {
+        ImplementationBase::name(name);
+        for (std::size_t i = 0; i < k; ++i)
+          {
+            std::stringstream ns;
+            ns << name << "_" << i;
+            this->child(i).name(ns.str());
+          }
       }
 
-      VectorGridFunctionSpace (T& c0,
-                               T& c1,
-                               T& c2,
-                               const Backend& backend = Backend())
-        : BaseT(c0,c1,c2)
-        , ImplementationBase(backend)
+      std::string name() const
       {
-      }
-
-      VectorGridFunctionSpace (T& c0,
-                               T& c1,
-                               T& c2,
-                               T& c3,
-                               const Backend& backend = Backend())
-        : BaseT(c0,c1,c2,c3)
-        , ImplementationBase(backend)
-      {
-      }
-
-      VectorGridFunctionSpace (T& c0,
-                               T& c1,
-                               T& c2,
-                               T& c3,
-                               T& c4,
-                               const Backend& backend = Backend())
-        : BaseT(c0,c1,c2,c3,c4)
-        , ImplementationBase(backend)
-      {
-      }
-
-      VectorGridFunctionSpace (T& c0,
-                               T& c1,
-                               T& c2,
-                               T& c3,
-                               T& c4,
-                               T& c5,
-                               const Backend& backend = Backend())
-        : BaseT(c0,c1,c2,c3,c4,c5)
-        , ImplementationBase(backend)
-      {
-      }
-
-      VectorGridFunctionSpace (T& c0,
-                               T& c1,
-                               T& c2,
-                               T& c3,
-                               T& c4,
-                               T& c5,
-                               T& c6,
-                               const Backend& backend = Backend())
-        : BaseT(c0,c1,c2,c3,c4,c5,c6)
-        , ImplementationBase(backend)
-      {
-      }
-
-      VectorGridFunctionSpace (T& c0,
-                               T& c1,
-                               T& c2,
-                               T& c3,
-                               T& c4,
-                               T& c5,
-                               T& c6,
-                               T& c7,
-                               const Backend& backend = Backend())
-        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7)
-        , ImplementationBase(backend)
-      {
-      }
-
-      VectorGridFunctionSpace (T& c0,
-                               T& c1,
-                               T& c2,
-                               T& c3,
-                               T& c4,
-                               T& c5,
-                               T& c6,
-                               T& c7,
-                               T& c8,
-                               const Backend& backend = Backend())
-        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8)
-        , ImplementationBase(backend)
-      {
-      }
-
-      VectorGridFunctionSpace (T& c0,
-                               T& c1,
-                               T& c2,
-                               T& c3,
-                               T& c4,
-                               T& c5,
-                               T& c6,
-                               T& c7,
-                               T& c8,
-                               T& c9,
-                               const Backend& backend = Backend())
-        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8,c9)
-        , ImplementationBase(backend)
-      {
+        return ImplementationBase::name();
       }
 
       //! Direct access to the DOF ordering.
