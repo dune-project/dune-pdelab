@@ -598,6 +598,12 @@ namespace Dune {
         return _container;
       }
 
+      void flush()
+      {}
+
+      void finalize()
+      {}
+
     private:
 
       ContainerType _container;
