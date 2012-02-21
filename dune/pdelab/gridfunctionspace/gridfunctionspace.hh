@@ -72,6 +72,8 @@ namespace Dune {
       //! finite element
       typedef typename L::Traits::FiniteElementType FiniteElementType;
 
+      typedef typename L::Traits::FiniteElementType FiniteElement;
+
       //! type representing constraints
       typedef C ConstraintsType;
     };

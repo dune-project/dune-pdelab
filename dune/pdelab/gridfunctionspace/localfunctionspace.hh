@@ -600,8 +600,13 @@ namespace Dune {
       //! Type of local finite element
       typedef typename GFS::Traits::FiniteElementType FiniteElementType;
 
+      typedef typename GFS::Traits::FiniteElementType FiniteElement;
+
       //! \brief Type of constraints engine
       typedef typename GFS::Traits::ConstraintsType ConstraintsType;
+
+      typedef typename GFS::Traits::ConstraintsType Constraints;
+
     };
 
     //! single component local function space

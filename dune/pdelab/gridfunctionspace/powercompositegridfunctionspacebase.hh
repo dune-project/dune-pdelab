@@ -162,6 +162,8 @@ namespace Dune {
       //! \brief the grid view where grid function is defined upon
       typedef G GridViewType;
 
+      typedef G GridView;
+
       //! \brief vector backend
       typedef B BackendType;
 
