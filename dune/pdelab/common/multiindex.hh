@@ -5,8 +5,6 @@
 
 #include <dune/common/reservedvector.hh>
 
-#include <dune/geometry/type.hh>
-
 #include <algorithm>
 #include <iomanip>
 
@@ -183,9 +181,8 @@ namespace Dune {
        * \param entity_index  the index of the grid entity associated with the DOF.
        * \param index         the first index of the DOF within the MultiIndex.
        */
-      MultiIndex(GeometryType gt, value_type entity_index, value_type index)
-        : _gt(gt)
-        , _entity_index(entity_index)
+      MultiIndex(value_type entity_index, value_type index)
+        : _entity_index(entity_index)
       {
         push_back(index);
       }
@@ -199,18 +196,11 @@ namespace Dune {
        * \param entity_index  the index of the grid entity associated with the DOF.
        * \param index         the first index of the DOF within the MultiIndex.
        */
-      void set(GeometryType gt, value_type entity_index, value_type index)
+      void set(value_type entity_index, value_type index)
       {
-        _gt = gt;
         _entity_index = entity_index;
         _c.clear();
         push_back(index);
-      }
-
-      //! Returns the GeometryType of the grid entity associated with the DOF.
-      Dune::GeometryType geometryType() const
-      {
-        return _gt;
       }
 
       //! Returns the index of the grid entity associated with the DOF.
@@ -230,7 +220,7 @@ namespace Dune {
       {
         s << "("
           // entity information
-          << std::setw(12) << mi._gt << " " << std::setw(4) << mi._entity_index
+          << std::setw(4) << mi._entity_index
           << " |";
         // index tuple
         for (const_iterator it = mi._c.begin(); it != mi._c.end(); ++it)
@@ -249,7 +239,6 @@ namespace Dune {
       bool operator== (const MultiIndex& r) const
       {
         return
-          _gt == r._gt &&
           _entity_index = r._entity_index &&
           std::equal(_c.begin(),_c.end(),r._c.begin());
       }
@@ -313,7 +302,6 @@ namespace Dune {
 
     private:
 
-      GeometryType _gt;
       value_type _entity_index;
       container_type _c;
 
