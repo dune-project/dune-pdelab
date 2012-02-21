@@ -27,32 +27,34 @@ namespace Dune {
     struct istl_field_vector_backend_tag {};
     struct istl_vector_backend_tag {};
 
-    template<std::size_t block_size = 1>
+    template<std::size_t block_size_ = 1>
     struct ISTLFieldVectorBackend
     {
 
       typedef istl_field_vector_backend_tag tag;
 
 
-      dune_static_assert((block_size > 0),"block size for FieldVector has to be positive");
+      dune_static_assert((block_size_ > 0),"block size for FieldVector has to be positive");
 
 
       typedef std::size_t size_type;
 
-      static const size_type blockSize = block_size;
+      static const size_type blockSize = block_size_;
 
       struct Traits
       {
+        static const bool block_size = block_size_;
         static const size_type max_blocking_depth = block_size > 1 ? 1 : 0;
+        static const bool blocked = block_size > 1;
       };
 
       bool blocked() const
       {
-        return block_size > 1;
+        return Traits::block_size > 1;
       }
     };
 
-    template<bool block = false>
+    template<bool blocked_ = false>
     struct ISTLVectorBackend
     {
 
@@ -60,17 +62,16 @@ namespace Dune {
 
       typedef std::size_t size_type;
 
-      static const bool is_blocked = block;
-
       struct Traits
       {
-        static const size_type max_blocking_depth = block ? 1 : 0;
+        static const size_type max_blocking_depth = blocked_ ? 1 : 0;
+        static const bool blocked = blocked_;
       };
 
 
       bool blocked() const
       {
-        return block;
+        return blocked_;
       }
 
     };
@@ -138,7 +139,7 @@ namespace Dune {
     {
 
       typedef typename SelectType<
-        ParentNode::Traits::Backend::blocked,
+        ParentNode::Traits::Backend::Traits::blocked,
         BlockVector<ChildContainer>,
         ChildContainer
         >::Type type;
