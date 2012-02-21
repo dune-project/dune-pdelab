@@ -63,8 +63,8 @@ namespace Dune{
       // Types of local function spaces
       typedef Dune::PDELab::LocalFunctionSpace<GFSU, Dune::PDELab::TrialSpaceTag> LFSU;
       typedef Dune::PDELab::LocalFunctionSpace<GFSV, Dune::PDELab::TestSpaceTag> LFSV;
-      typedef LFSContainerIndexCache<LFSU> LFSUCache;
-      typedef LFSContainerIndexCache<LFSV> LFSVCache;
+      typedef LFSContainerIndexCache<LFSU,CU> LFSUCache;
+      typedef LFSContainerIndexCache<LFSV,CV> LFSVCache;
 
       //! @}
 

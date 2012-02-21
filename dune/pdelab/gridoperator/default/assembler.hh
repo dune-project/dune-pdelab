@@ -17,7 +17,7 @@ namespace Dune{
        * \tparam nonoverlapping_mode Indicates whether assembling is done for overlap cells
        */
 
-    template<typename GFSU, typename GFSV, bool nonoverlapping_mode=false>
+    template<typename GFSU, typename GFSV, typename CU, typename CV, bool nonoverlapping_mode=false>
     class DefaultAssembler {
     public:
 
@@ -42,13 +42,22 @@ namespace Dune{
       //! Static check on whether this is a Galerkin method
       static const bool isGalerkinMethod = Dune::is_same<GFSU,GFSV>::value;
 
+      DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_, const CU& cu, const CV& cv)
+        : gfsu(gfsu_)
+        , gfsv(gfsv_)
+        , lfsu(gfsu_), lfsu_cache(lfsu,cu)
+        , lfsv(gfsv_), lfsv_cache(lfsv,cv)
+        , lfsun(gfsu_), lfsun_cache(lfsun,cu)
+        , lfsvn(gfsv_), lfsvn_cache(lfsvn,cv)
+      { }
+
       DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_)
         : gfsu(gfsu_)
         , gfsv(gfsv_)
-        , lfsu(gfsu_), lfsu_cache(lfsu)
-        , lfsv(gfsv_), lfsv_cache(lfsv)
-        , lfsun(gfsu_), lfsun_cache(lfsun)
-        , lfsvn(gfsv_), lfsvn_cache(lfsvn)
+        , lfsu(gfsu_), lfsu_cache(lfsu,CU())
+        , lfsv(gfsv_), lfsv_cache(lfsv,CV())
+        , lfsun(gfsu_), lfsun_cache(lfsun,CU())
+        , lfsvn(gfsv_), lfsvn_cache(lfsvn,CV())
       { }
 
       //! Get the trial grid function space
@@ -260,9 +269,9 @@ namespace Dune{
 
       /* local function spaces */
       typedef LocalFunctionSpace<GFSU, TrialSpaceTag> LFSU;
-      typedef LFSContainerIndexCache<LFSU> LFSUCache;
+      typedef LFSContainerIndexCache<LFSU,CU> LFSUCache;
       typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
-      typedef LFSContainerIndexCache<LFSV> LFSVCache;
+      typedef LFSContainerIndexCache<LFSV,CV> LFSVCache;
       // local function spaces in local cell
       mutable LFSU lfsu;
       mutable LFSUCache lfsu_cache;

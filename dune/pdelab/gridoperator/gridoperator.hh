@@ -34,7 +34,7 @@ namespace Dune{
     public:
 
       //! The global assembler type
-      typedef DefaultAssembler<GFSU,GFSV,nonoverlapping_mode> Assembler;
+      typedef DefaultAssembler<GFSU,GFSV,CU,CV,nonoverlapping_mode> Assembler;
 
       //! The type of the domain (solution).
       typedef typename Dune::PDELab::BackendVectorSelector<GFSU,DF>::Type Domain;
@@ -61,7 +61,7 @@ namespace Dune{
 
       //! Constructor for non trivial constraints
       GridOperator(const GFSU & gfsu_, const CU & cu_, const GFSV & gfsv_, const CV & cv_, LOP & lop_ )
-        : global_assembler(gfsu_,gfsv_), local_assembler(lop_, cu_, cv_)
+        : global_assembler(gfsu_,gfsv_,cu_,cv_), local_assembler(lop_, cu_, cv_)
       {}
 
       //! Constructor for empty constraints
