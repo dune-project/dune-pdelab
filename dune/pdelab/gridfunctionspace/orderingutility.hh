@@ -9,23 +9,46 @@
 namespace Dune {
   namespace PDELab {
 
-    template<typename MI, typename CI>
-    struct OrderingTraits
+    template<typename RootGFS>
+    struct gfs_to_ordering
     {
-      typedef MI MultiIndex;
-      typedef CI ContainerIndex;
-
-      typedef typename MI::Traits::SizeType SizeType;
+      typedef typename gfs_to_lfs<RootGFS>::DOFIndex DOFIndex;
+      typedef ReservedVector<std::size_t,2> ContainerIndex;
     };
 
-    template<typename MI, typename CI>
+    template<typename GlobalTransformation>
+    struct gfs_to_local_ordering
+    {
+      typedef typename GlobalTransformation::DOFIndex DOFIndex;
+      typedef typename GlobalTransformation::ContainerIndex ContainerIndex;
+    };
+
+
+    template<typename DI, typename CI>
+    struct OrderingTraits
+    {
+      typedef DI DOFIndex;
+
+      typedef typename DI::EntityIndex EntityIndex;
+      typedef typename DI::TreeIndex TreeIndex;
+
+      typedef typename DI::View DOFIndexView;
+      typedef typename DI::View::EntityIndex EntityIndexView;
+      typedef typename DI::View::TreeIndex TreeIndexView;
+
+      typedef CI ContainerIndex;
+
+      typedef typename DI::size_type SizeType;
+    };
+
+    template<typename DI, typename CI>
     class VirtualOrderingBase
     {
     public:
 
-      typedef OrderingTraits<MI,CI> Traits;
+      typedef OrderingTraits<DI,CI> Traits;
 
-      virtual void map_index_dynamic(const typename Traits::MultiIndex& mi, typename Traits::ContainerIndex& ci) const = 0;
+      virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const = 0;
     };
 
 
