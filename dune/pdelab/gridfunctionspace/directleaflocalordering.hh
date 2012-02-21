@@ -95,7 +95,7 @@ namespace Dune {
 
         typedef typename Traits::SizeType size_type;
         const size_type dim = Traits::GridView::dimension;
-        _codim_used.assign(dim,false);
+        _codim_used.assign(dim + 1,false);
         _gt_used.assign(GlobalGeometryTypeIndex::size(dim),false);
         _gt_dof_offsets.assign(GlobalGeometryTypeIndex::size(dim),0);
         for (GTVector::const_iterator it = geom_types.begin(); it != geom_types.end(); ++it)

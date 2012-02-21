@@ -374,7 +374,7 @@ namespace Dune {
           {
             typedef typename Node::Traits::SizeType size_type;
             const size_type dim = GV::dimension;
-            node._codim_used.assign(dim,false);
+            node._codim_used.assign(dim + 1,false);
             node._gt_used.assign(GlobalGeometryTypeIndex::size(dim),false);
             node._gt_dof_offsets.assign(GlobalGeometryTypeIndex::size(dim),0);
             for (GTVector::const_iterator it = geom_types.begin(); it != geom_types.end(); ++it)
@@ -395,7 +395,7 @@ namespace Dune {
           {
             typedef typename Node::Traits::SizeType size_type;
             const size_type dim = GV::dimension;
-            node._codim_used.assign(dim,false);
+            node._codim_used.assign(dim + 1,false);
             node._gt_used.assign(Dune::GlobalGeometryTypeIndex::size(dim),false);
             node._gt_dof_offsets.assign(Dune::GlobalGeometryTypeIndex::size(dim) * Node::CHILDREN,0);
             node._max_local_size = 0;
@@ -468,7 +468,7 @@ namespace Dune {
       {
         if (!node._fixed_size)
           {
-            node._codim_used.assign(dim,false);
+            node._codim_used.assign(dim + 1,false);
             node._gt_used.assign(Dune::GlobalGeometryTypeIndex::size(dim),false);
             node._gt_dof_offsets.assign(Dune::GlobalGeometryTypeIndex::size(dim) * node._child_count,0);
             node._gt_entity_offsets.assign(Dune::GlobalGeometryTypeIndex::size(dim) + 1,0);
