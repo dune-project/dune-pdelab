@@ -592,8 +592,8 @@ namespace Dune {
         Dune::PDELab::TypeTree::applyToTree(*this,visitor);
       }
 
-    PowerGridFunction()
-        : BaseT()  {}
+      PowerGridFunction()
+      {}
 
       //! Construct a PowerGridFunction with k clones of the function t
 	  PowerGridFunction (T& t)
@@ -746,6 +746,9 @@ namespace Dune {
 
       //! record the GridView
 	  typedef typename BaseT::template Child<0>::Type::GridViewType GridViewType;
+
+      CompositeGridFunction()
+      {}
 
 	  CompositeGridFunction (DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
 		: BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename BaseT::template Child<0>::Type>))
