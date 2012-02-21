@@ -6,6 +6,8 @@
 #include <dune/common/reservedvector.hh>
 #include <dune/geometry/typeindex.hh>
 
+#include <boost/functional/hash.hpp>
+
 #include <algorithm>
 #include <iomanip>
 
@@ -309,6 +311,14 @@ namespace Dune {
 
     };
 
+
+    template<typename T, std::size_t n>
+    std::size_t hash_value(const MultiIndex<T,n>& mi)
+    {
+      return boost::hash_range(mi.begin(),mi.end());
+    }
+
+
     template<typename T, std::size_t tree_n, std::size_t entity_n = 1>
     class DOFIndex
     {
@@ -449,6 +459,15 @@ namespace Dune {
       TreeIndex _tree_index;
 
     };
+
+    template<typename T, std::size_t n1, std::size_t n2>
+    std::size_t hash_value(const DOFIndex<T,n1,n2>& di)
+    {
+      std::size_t seed = 0;
+      boost::hash_combine(seed,boost::hash_range(di.entityIndex().begin(),di.entityIndex().end()));
+      boost::hash_combine(seed,boost::hash_range(di.treeIndex().begin(),di.treeIndex().end()));
+      return seed;
+    }
 
 
   } // namespace PDELab
