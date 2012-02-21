@@ -752,7 +752,7 @@ namespace Dune {
     Dune::PDELab::TypeTree::GenericLeafNodeTransformation<
       GridFunctionSpace,
       gfs_to_lfs<Params>,
-      LeafLocalFunctionSpaceNode<GridFunctionSpace,typename gfs_to_lfs<Params>::MultiIndex>
+      LeafLocalFunctionSpaceNode<GridFunctionSpace,typename gfs_to_lfs<Params>::DOFIndex>
       >
     lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_lfs<Params>* t, LeafGridFunctionSpaceTag tag);
 
