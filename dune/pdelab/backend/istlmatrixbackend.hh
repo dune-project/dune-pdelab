@@ -244,6 +244,36 @@ namespace Dune {
     }
 
 
+    template<typename RI, typename Block>
+    typename enable_if<Block::blocklevel != 1>::type
+    clear_istl_matrix_row(Block& b, const RI& ri, std::size_t i)
+    {
+      for (std::size_t j = 0; j < b.M(); ++j)
+        if (b.exists(ri[i],j))
+          clear_istl_matrix_row(b[ri[i]][j],ri,i-1);
+    }
+
+    template<typename RI, typename Block>
+    typename enable_if<Block::blocklevel == 1 &&
+                       Block::rows == 1
+                       >::type
+    clear_istl_matrix_row(Block& b, const RI& ri, std::size_t i)
+    {
+      assert(i == 0);
+      b[0] = 0;
+    }
+
+    template<typename RI, typename Block>
+    typename enable_if<Block::blocklevel == 1 &&
+                       Block::rows != 1
+                       >::type
+    clear_istl_matrix_row(Block& b, const RI& ri, std::size_t i)
+    {
+      assert(i == 0);
+      b[ri[0]] = 0;
+    }
+
+
     template<typename OrderingU, typename OrderingV, typename Pattern, typename Container>
     typename enable_if<
       !is_same<typename Pattern::SubPattern,void>::value &&
@@ -603,6 +633,12 @@ namespace Dune {
 
       void finalize()
       {}
+
+      void clear_row(const RowIndex& ri, const E& diagonal_entry)
+      {
+        clear_istl_matrix_row(_container,ri,ri.size()-1);
+        (*this)(ri,ri) = diagonal_entry;
+      }
 
     private:
 
