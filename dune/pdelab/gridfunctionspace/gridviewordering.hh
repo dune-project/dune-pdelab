@@ -328,7 +328,7 @@ namespace Dune {
                 node._gt_used[GlobalGeometryTypeIndex::index(*it)] = size > 0;
                 node._codim_used[dim - it->dim()] = node._codim_used[dim - it->dim()] || (size > 0);
               }
-            node._max_local_size = node.gridFunctionSpace().maxLocalSize();
+            node._max_local_size = node.gridFunctionSpace().fixedMaxLocalSize();
           }
       }
 
