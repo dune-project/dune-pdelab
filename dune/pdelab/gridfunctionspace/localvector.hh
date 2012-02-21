@@ -154,6 +154,7 @@ namespace Dune {
       template<typename LFS>
       void rawAccumulate(const LFS& lfs, size_type n, value_type v)
       {
+        _modified = true;
         _container(lfs,n) += v;
       }
 

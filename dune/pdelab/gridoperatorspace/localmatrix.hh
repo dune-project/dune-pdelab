@@ -94,6 +94,7 @@ namespace Dune {
                          const LFSU& lfsu, size_type j,
                          value_type v)
       {
+        _modified = true;
         _container(lfsv,i,lfsu,j) += v;
       }
 
