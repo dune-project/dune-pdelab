@@ -290,34 +290,6 @@ namespace Dune {
         return (*global)[offset + index];
       }
 
-      //! \brief extract coefficients for one element from container
-      template<typename GC, typename LC>
-      void vread (const GC& globalcontainer, LC& localcontainer) const
-      {
-        // assert(&global_storage == global); // make sure we call this method only on the root node!
-        localcontainer.resize(n);
-        for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          accessBaseContainer(localcontainer)[k] = B::access(globalcontainer,(*global)[offset + k]);
-      }
-
-      //! \brief write back coefficients for one element to container
-      template<typename GC, typename LC>
-      void vwrite (const LC& localcontainer, GC& globalcontainer) const
-      {
-        // assert(&global_storage == global); // make sure we call this method only on the root node!
-        for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          B::access(globalcontainer,(*global)[offset + k]) = accessBaseContainer(localcontainer)[k];
-      }
-
-      //! \brief add coefficients for one element to container
-      template<typename GC, typename LC>
-      void vadd (const LC& localcontainer, GC& globalcontainer) const
-      {
-        // assert(&global_storage == global); // make sure we call this method only on the root node!
-        for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          B::access(globalcontainer,(*global)[offset + k]) += accessBaseContainer(localcontainer)[k];
-      }
-
       //! \brief print debug information about this local function space
       void debug () const
       {
