@@ -650,10 +650,7 @@ namespace Dune {
                                                                             coeffs.localKey(i).codim());
 
             // store data
-            it->clear();
-            it->entityIndex()[0] = GlobalGeometryTypeIndex::index(gt);
-            it->entityIndex()[1] = index;
-            it->treeIndex().push_back(coeffs.localKey(i).index());
+            GFS::Ordering::Traits::DOFIndexAccessor::store(*it,gt,index,coeffs.localKey(i).index());
 
             // make sure we don't write past the end of the iterator range
             assert(it != endit);
