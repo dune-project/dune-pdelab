@@ -141,6 +141,7 @@ namespace Dune {
       {
         LocalOrdering& lo = localOrdering();
         lo.update_a_priori_fixed_size();
+        _fixed_size = lo._fixed_size;
 
         const std::size_t dim = GV::dimension;
 
@@ -172,6 +173,7 @@ namespace Dune {
           }
         else
           {
+            assert(!"Not implemented yet!");
             // FIXME
           }
       }
@@ -189,12 +191,7 @@ namespace Dune {
        *       between entities od different geometry type or between entities
        *       and intersections.
        */
-      bool fixedSize() const { return localOrdering()._fixed_size; }
-
-      virtual typename Traits::SizeType size_dynamic() const
-      {
-        return 0;
-      }
+      bool fixedSize() const { return _fixed_size; }
 
       //! \brief maximum number of dofs attached to any given element and all
       //!        of its subentities and intersections
@@ -270,6 +267,7 @@ namespace Dune {
       using BaseT::_size;
       using BaseT::_block_count;
       using BaseT::_container_blocked;
+      using BaseT::_fixed_size;
 
       typename Traits::GridView _gv;
       std::vector<typename Traits::SizeType> _gt_dof_offsets;
