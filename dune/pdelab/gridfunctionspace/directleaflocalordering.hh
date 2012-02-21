@@ -15,6 +15,9 @@ namespace Dune {
     class DirectLeafLocalOrdering
     {
 
+      template<typename>
+      friend class LeafGridViewOrdering;
+
     public:
 
       typedef LocalOrderingTraits<typename GFS::Traits::GridViewType,DI,CI> Traits;
