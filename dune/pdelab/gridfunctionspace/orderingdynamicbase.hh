@@ -28,7 +28,7 @@ namespace Dune {
           _delegate->map_index_dynamic(di,ci);
         else
           {
-            typename Traits::SizeType child_index = di.back();
+            typename Traits::SizeType child_index = di.treeIndex().back();
             _children[child_index]->map_index(di.back_popped(),ci);
             if (_container_blocked)
               ci.push_back(child_index);
@@ -39,7 +39,7 @@ namespace Dune {
 
       typename Traits::SizeType size() const
       {
-        return _child_offsets.back();
+        return _size;
       }
 
       typename Traits::SizeType size(const typename Traits::SizeType child_index) const
@@ -52,25 +52,40 @@ namespace Dune {
         return _child_offsets[child_index];
       }
 
+      typename Traits::SizeType maxLocalSize() const
+      {
+        return _max_local_size;
+      }
+
       void update()
       {
         typename Traits::SizeType carry = 0;
+        _max_local_size = 0;
         for (typename Traits::SizeType i = 0; i < _child_count; ++i)
           _child_offsets[i+1] = (carry += _children[i].size());
+        _size = _child_offsets.back();
       }
 
       template<typename Node>
-      OrderingBase(Node& node, VirtualOrderingBase<DI,CI>* delegate = nullptr)
-        : _container_blocked(node.container_blocked())
+      OrderingBase(Node& node, bool container_blocked, VirtualOrderingBase<DI,CI>* delegate = nullptr)
+        : _container_blocked(container_blocked)
         , _child_count(Node::CHILDREN)
         , _children(Node::CHILDREN,nullptr)
         , _child_offsets(Node::CHILDREN + 1,0)
+        , _max_local_size(0)
+        , _size(0)
         , _delegate(delegate)
       {
         TypeTree::applyToTree(node,extract_child_bases<OrderingBase>(_children));
       }
 
+      bool container_blocked() const
+      {
+        return _container_blocked;
+      }
+
     protected:
+    public:
 
       bool _fixed_size;
       const bool _container_blocked;
@@ -79,6 +94,9 @@ namespace Dune {
       std::vector<OrderingBase*> _children;
 
       std::vector<typename Traits::SizeType> _child_offsets;
+
+      std::size_t _max_local_size;
+      std::size_t _size;
 
       const VirtualOrderingBase<DI,CI>* _delegate;
 
