@@ -919,7 +919,7 @@ namespace Dune {
 
       typedef typename CG::const_iterator global_col_iterator;
       for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
-        if (cit->second().size() == 0)
+        if (cit->second.size() == 0)
           {
             const typename XG::ContainerIndex& i = gfs.ordering()->map_index(cit->first);
             tmp[i] = xg[i];
