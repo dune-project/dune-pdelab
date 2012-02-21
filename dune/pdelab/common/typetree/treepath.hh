@@ -384,6 +384,15 @@ namespace Dune {
         return _stack.front();
       }
 
+      friend std::ostream& operator<<(std::ostream& os, const DynamicTreePath& tp)
+      {
+        os << "TreePath( ";
+        for (std::size_t i = 0; i < tp.size(); ++i)
+          os << tp.element(i) << " ";
+        os << ")";
+        return os;
+      }
+
     protected:
 
 #ifndef DOXYGEN
