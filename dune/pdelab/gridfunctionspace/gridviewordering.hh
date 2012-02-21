@@ -7,6 +7,8 @@
 #include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/gridfunctionspace/orderingutility.hh>
 #include <dune/pdelab/gridfunctionspace/localorderingdynamicbase.hh>
+#include <dune/pdelab/gridfunctionspace/directleaflocalordering.hh>
+
 
 namespace Dune {
   namespace PDELab {
@@ -217,12 +219,46 @@ namespace Dune {
 
     };
 
+    template<typename GFS, typename Transformation, typename SizeTag>
+    struct leaf_gfs_to_ordering_descriptor;
+
+    struct GridFunctionGeneralMapper;
+
+    template<typename GFS, typename Transformation>
+    struct leaf_gfs_to_ordering_descriptor<GFS,Transformation,GridFunctionGeneralMapper>
+    {
+
+      static const bool recursive = false;
+
+      typedef DirectLeafLocalOrdering<GFS,
+                                      typename Transformation::DOFIndex,
+                                      typename Transformation::ContainerIndex
+                                      > LocalOrdering;
+
+      typedef LeafGridViewOrdering<LocalOrdering> GridViewOrdering;
+
+      typedef GridViewOrdering transformed_type;
+      typedef shared_ptr<transformed_type> transformed_storage_type;
+
+      static transformed_type transform(const GFS& gfs, const Transformation& t)
+      {
+        return transformed_type(make_tuple(make_shared<LocalOrdering>(gfs)));
+      }
+
+      static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
+      {
+        return make_shared<transformed_type>(make_tuple(make_shared<LocalOrdering>(gfs)));
+      }
+
+    };
+
+
 
     template<typename GridFunctionSpace, typename Params>
-    Dune::PDELab::TypeTree::GenericLeafNodeTransformation<
+    leaf_gfs_to_ordering_descriptor<
       GridFunctionSpace,
       gfs_to_ordering<Params>,
-      LeafLocalFunctionSpaceNode<GridFunctionSpace,typename gfs_to_lfs<Params>::MultiIndex>
+      typename GridFunctionSpace::SizeTag
       >
     lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_ordering<Params>* t, LeafGridFunctionSpaceTag tag);
 
