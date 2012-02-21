@@ -76,6 +76,29 @@ namespace Dune
         return variant[perm_index[compressPerm(vertexmap)]];
       }
 
+      bool fixedSize() const
+      {
+        return true;
+      }
+
+      std::size_t size(GeometryType gt) const
+      {
+        if (gt.isVertex())
+          return k > 0 ? 1 : 0;
+        if (gt.isLine())
+          return k > 1 ? k - 1 : 0;
+        if (gt.isTriangle())
+          return k > 2 ? (k-2)*(k-1)/2 : 0;
+        if (gt.isTetrahedron())
+          return k == 0 ? 1 : (k-3)*(k-2)*(k-1)/6;
+        return 0;
+      }
+
+      std::size_t maxLocalSize() const
+      {
+        return (k+1)*(k+2)*(k+3)/6;
+      }
+
     private:
       FE variant[24];
       unsigned int perm_index[256];
