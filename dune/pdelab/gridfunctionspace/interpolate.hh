@@ -15,6 +15,7 @@
 #include "../common/function.hh"
 
 #include "gridfunctionspace.hh"
+#include <dune/pdelab/gridfunctionspace/lfscontainerindexcache.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -52,7 +53,7 @@ namespace Dune {
           ib.interpolate(lfs.finiteElement(), lf, xl);
 
           // write coefficients into local vector
-          lfs.vwrite(xl,xg);
+          xg.write_sub_container(lfs,xl);
         }
 
         InterpolateLeafFromScalarVisitor(const IB& ib_, const LF& lf_, XG& xg_)
@@ -87,7 +88,7 @@ namespace Dune {
           ib.interpolate(lfs.finiteElement(), localfcomp, xl);
 
           // write coefficients into local vector
-          lfs.vwrite(xl,xg);
+          xg.write_sub_container(lfs,xl);
         }
 
         InterpolateLeafFromVectorVisitor(const IB& ib_, const LF& lf_, XG& xg_)
@@ -120,7 +121,7 @@ namespace Dune {
                          GridFunctionToLocalFunctionAdapter<F>(f,e), xl);
 
           // write coefficients into local vector
-          lfs.vwrite(xl,xg);
+          xg.write_sub_container(lfs,xl);
         }
 
         // interpolate PowerLFS from vector-valued function
@@ -199,6 +200,11 @@ namespace Dune {
       // make local function space
       typedef LocalFunctionSpace<GFS> LFS;
       LFS lfs(gfs);
+      typedef LFSContainerIndexCache<LFS> LFSCache;
+      LFSCache lfs_cache(lfs);
+      typedef typename XG::template LocalView<LFSCache> XView;
+
+      XView x_view(xg);
 
       // loop once over the grid
       for (ElementIterator it = gfs.gridView().template begin<0>();
@@ -206,10 +212,16 @@ namespace Dune {
         {
           // bind local function space to element
           lfs.bind(*it);
+          lfs_cache.update();
+          x_view.bind(lfs_cache);
 
           // call interpolate
-          TypeTree::applyToTreePair(f,lfs,InterpolateVisitor<InterpolateBackendStandard,Element,XG>(InterpolateBackendStandard(),*it,xg));
+          TypeTree::applyToTreePair(f,lfs,InterpolateVisitor<InterpolateBackendStandard,Element,XView>(InterpolateBackendStandard(),*it,x_view));
+
+          x_view.unbind();
         }
+
+      x_view.detach();
     }
 
     //! \} group GridFunctionSpace
