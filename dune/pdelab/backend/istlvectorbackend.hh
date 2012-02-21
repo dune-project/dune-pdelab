@@ -578,15 +578,15 @@ namespace Dune {
 
 
       ISTLBlockVectorContainer (const GFS& gfs_)
-        : container(gfs_.ordering()->blockCount())
+        : container(gfs_.ordering().blockCount())
       {
-        allocate_istl_vector(*gfs_.ordering(),container);
+        allocate_istl_vector(gfs_.ordering(),container);
       }
 
       ISTLBlockVectorContainer (const GFS& gfs_, const E& e)
-        : container(gfs_.ordering()->blockCount())
+        : container(gfs_.ordering().blockCount())
       {
-        allocate_istl_vector(*gfs_.ordering(),container);
+        allocate_istl_vector(gfs_.ordering(),container);
         container=e;
       }
 

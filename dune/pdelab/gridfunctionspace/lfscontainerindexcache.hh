@@ -224,7 +224,7 @@ namespace Dune {
           typename LeafSizeVector::const_iterator,
           TypeTree::TreeInfo<Ordering>::depth
           > index_mapper(_lfs._dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin());
-        TypeTree::applyToTree(*_lfs.gridFunctionSpace().ordering(),index_mapper);
+        TypeTree::applyToTree(_lfs.gridFunctionSpace().ordering(),index_mapper);
 
         _constraints.resize(0);
         std::vector<std::pair<size_type,typename C::const_iterator> > non_dirichlet_constrained_dofs;
@@ -288,7 +288,7 @@ namespace Dune {
 
         // i did not exist in the cache, map it into the newly inserted container index
         if (r.second)
-            _lfs.gridFunctionSpace().ordering()->map_index(i.view(),r.first->second);
+            _lfs.gridFunctionSpace().ordering().map_index(i.view(),r.first->second);
 
         // return cached container index
         return r.first->second;
@@ -409,7 +409,7 @@ namespace Dune {
           typename LeafSizeVector::const_iterator,
           TypeTree::TreeInfo<Ordering>::depth
           > index_mapper(_lfs._dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin());
-        TypeTree::applyToTree(*_lfs.gridFunctionSpace().ordering(),index_mapper);
+        TypeTree::applyToTree(_lfs.gridFunctionSpace().ordering(),index_mapper);
       }
 
       const CI& container_index(size_type i) const

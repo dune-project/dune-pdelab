@@ -230,20 +230,20 @@ namespace Dune {
       //! get dimension of root finite element space
       typename Traits::SizeType globalSize () const
       {
-        return gfs().ordering()->size();
+        return gfs().ordering().size();
       }
 
       //! get dimension of this finite element space
       typename Traits::SizeType size () const
       {
-        return gfs().ordering()->size();
+        return gfs().ordering().size();
       }
 
       //! get max dimension of shape function space
       typename Traits::SizeType maxLocalSize () const
       {
         // this is bullshit !
-        return gfs().ordering()->maxLocalSize();
+        return gfs().ordering().maxLocalSize();
       }
 
       //! get grid view

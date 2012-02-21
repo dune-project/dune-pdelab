@@ -406,40 +406,56 @@ namespace Dune {
       }
 
       //! Direct access to the DOF ordering.
-      // const Ordering &ordering() const { return *orderingp; }
+      const Ordering &ordering() const
+      {
+        return *orderingStorage();
+      }
+
+      //! Direct access to the DOF ordering.
+      Ordering &ordering()
+      {
+        return *orderingStorage();
+      }
 
       //! Direct access to the storage of the DOF ordering.
-      shared_ptr<const Ordering> ordering() const
+      shared_ptr<const Ordering> orderingStorage() const
       {
         if (!_ordering)
-          _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+          {
+            _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+            _ordering->update();
+          }
         return _ordering;
       }
 
-      shared_ptr<Ordering> ordering()
+      //! Direct access to the storage of the DOF ordering.
+      shared_ptr<Ordering> orderingStorage()
       {
         if (!_ordering)
-          _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+          {
+            _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+            _ordering->update();
+          }
         return _ordering;
       }
 
       //! get dimension of root finite element space
       typename Traits::SizeType globalSize () const
       {
-        return ordering()->size();
+        return ordering().size();
       }
 
       //! get dimension of this finite element space
       typename Traits::SizeType size () const
       {
-        return ordering()->size();
+        return ordering().size();
       }
 
       //! get max dimension of shape function space
       //! \todo What are the exact semantics of maxLocalSize?
       typename Traits::SizeType maxLocalSize () const
       {
-        return ordering()->maxLocalSize();
+        return ordering().maxLocalSize();
       }
 
       //! map index from our index set [0,size()-1] to root index set

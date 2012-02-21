@@ -600,10 +600,10 @@ namespace Dune {
       template<typename GO>
       ISTLMatrixContainer (const GO& go)
       {
-        Pattern pattern(*go.testGridFunctionSpace().ordering(),*go.trialGridFunctionSpace().ordering());
+        Pattern pattern(go.testGridFunctionSpace().ordering(),go.trialGridFunctionSpace().ordering());
         go.fill_pattern(pattern);
-        allocate_istl_matrix(*go.testGridFunctionSpace().ordering(),
-                             *go.trialGridFunctionSpace().ordering(),
+        allocate_istl_matrix(go.testGridFunctionSpace().ordering(),
+                             go.trialGridFunctionSpace().ordering(),
                              pattern,
                              _container);
       }
@@ -611,10 +611,10 @@ namespace Dune {
       template<typename GO>
       ISTLMatrixContainer (const GO& go, const E& e)
       {
-        Pattern pattern(*go.testGridFunctionSpace().ordering(),*go.trialGridFunctionSpace().ordering());
+        Pattern pattern(go.testGridFunctionSpace().ordering(),go.trialGridFunctionSpace().ordering());
         go.fill_pattern(pattern);
-        allocate_istl_matrix(*go.testGridFunctionSpace().ordering(),
-                             *go.trialGridFunctionSpace().ordering(),
+        allocate_istl_matrix(go.testGridFunctionSpace().ordering(),
+                             go.trialGridFunctionSpace().ordering(),
                              pattern,
                              _container);
         _container = e;

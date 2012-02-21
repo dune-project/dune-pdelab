@@ -789,7 +789,7 @@ namespace Dune {
     {
       typedef typename CG::const_iterator global_col_iterator;
       for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
-        if(cmp.ne(xg[gfs.ordering()->map_index(cit->first)], x))
+        if(cmp.ne(xg[gfs.ordering().map_index(cit->first)], x))
           return false;
       return true;
     }
@@ -835,12 +835,12 @@ namespace Dune {
 
       for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
         for(global_row_iterator rit = cit->second.begin(); rit!=cit->second.end(); ++rit)
-          xg[gfs.ordering()->map_index(rit->first)] += rit->second * xg[gfs.ordering()->map_index(cit->first)];
+          xg[gfs.ordering().map_index(rit->first)] += rit->second * xg[gfs.ordering().map_index(cit->first)];
 
       // extra loop because constrained dofs might have contributions
       // to constrained dofs
       for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
-        xg[gfs.ordering()->map_index(cit->first)] = 0;
+        xg[gfs.ordering().map_index(cit->first)] = 0;
     }
 
 
@@ -865,7 +865,7 @@ namespace Dune {
       typedef typename CG::const_iterator global_col_iterator;
       for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
         {
-          const typename XG::ContainerIndex& i = gfs.ordering()->map_index(cit->first);
+          const typename XG::ContainerIndex& i = gfs.ordering().map_index(cit->first);
           xgout[i] = xgin[i];
         }
     }
@@ -928,7 +928,7 @@ namespace Dune {
       for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
         if (cit->second.size() == 0)
           {
-            const typename XG::ContainerIndex& i = gfs.ordering()->map_index(cit->first);
+            const typename XG::ContainerIndex& i = gfs.ordering().map_index(cit->first);
             tmp[i] = xg[i];
           }
 

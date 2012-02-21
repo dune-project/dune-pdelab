@@ -195,10 +195,37 @@ namespace Dune {
       {
       }
 
-      shared_ptr<Ordering> ordering() const
+      //! Direct access to the DOF ordering.
+      const Ordering &ordering() const
+      {
+        return *orderingStorage();
+      }
+
+      //! Direct access to the DOF ordering.
+      Ordering &ordering()
+      {
+        return *orderingStorage();
+      }
+
+      //! Direct access to the storage of the DOF ordering.
+      shared_ptr<const Ordering> orderingStorage() const
       {
         if (!_ordering)
-          _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+          {
+            _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+            _ordering->update();
+          }
+        return _ordering;
+      }
+
+      //! Direct access to the storage of the DOF ordering.
+      shared_ptr<Ordering> orderingStorage()
+      {
+        if (!_ordering)
+          {
+            _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+            _ordering->update();
+          }
         return _ordering;
       }
 
