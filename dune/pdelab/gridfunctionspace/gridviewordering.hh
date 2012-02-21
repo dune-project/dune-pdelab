@@ -125,7 +125,7 @@ namespace Dune {
                 _gt_dof_offsets[gt_index + 1] = lo.size(gt_index,0) * _gv.indexSet().size(*it);
               }
             std::partial_sum(_gt_dof_offsets.begin(),_gt_dof_offsets.end(),_gt_dof_offsets.begin());
-            _size = _gt_dof_offsets.back();
+            _block_count = _size = _gt_dof_offsets.back();
             _max_local_size = lo.maxLocalSize();
           }
         else
@@ -226,6 +226,7 @@ namespace Dune {
 
       using BaseT::_max_local_size;
       using BaseT::_size;
+      using BaseT::_block_count;
       using BaseT::_container_blocked;
 
       typename Traits::GridView _gv;
@@ -754,15 +755,21 @@ namespace Dune {
             TypeTree::applyToTree(localOrdering(),update_fixed_size<GV>(_gv,geom_types));
 
             _gt_dof_offsets.resize(gt_index_count + 1);
+            _block_count = 0;
 
             const GTVector::const_iterator end_it = geom_types.end();
             for (GTVector::const_iterator it = geom_types.begin(); it != end_it; ++it)
               {
                 const size_type gt_index = GlobalGeometryTypeIndex::index(*it);
-                _gt_dof_offsets[gt_index + 1] = localOrdering().size(gt_index,0) * _gv.indexSet().size(*it);
+                const size_type gt_size = localOrdering().size(gt_index,0);
+                const size_type gt_entity_count = _gv.indexSet().size(*it);
+                _gt_dof_offsets[gt_index + 1] = gt_size * gt_entity_count;
+                _block_count += (gt_size > 0) * gt_entity_count;
               }
             std::partial_sum(_gt_dof_offsets.begin(),_gt_dof_offsets.end(),_gt_dof_offsets.begin());
             _size = _gt_dof_offsets.back();
+            if (!_container_blocked)
+              _block_count = _size;
           }
         else
           {
@@ -793,14 +800,23 @@ namespace Dune {
                 _fixed_size = true;
                 _gt_dof_offsets.resize(gt_index_count + 1);
 
+                _block_count = 0;
+
                 for (GTVector::const_iterator it = geom_types.begin(); it != geom_types.end(); ++it)
                   {
                     const size_type gt_index = GlobalGeometryTypeIndex::index(*it);
-                    _gt_dof_offsets[gt_index + 1] = localOrdering().size(gt_index,0) * _gv.indexSet().size(*it);
+                    const size_type gt_size = localOrdering().size(gt_index,0);
+                    const size_type gt_entity_count = _gv.indexSet().size(*it);
+                    _gt_dof_offsets[gt_index + 1] = gt_size * gt_entity_count;
+                    _block_count += (gt_size > 0) * gt_entity_count;
                   }
 
                 std::partial_sum(_gt_dof_offsets.begin(),_gt_dof_offsets.end(),_gt_dof_offsets.begin());
                 _size = _gt_dof_offsets.back();
+
+                if (!_container_blocked)
+                  _block_count = _size;
+
               }
             else
               {
@@ -816,6 +832,8 @@ namespace Dune {
 
                 std::partial_sum(_gt_entity_offsets.begin(),_gt_entity_offsets.end(),_gt_entity_offsets.begin());
                 _entity_dof_offsets.assign(_gt_entity_offsets.back()+1,0);
+                _block_count = 0;
+
                 size_type carry = 0;
                 for (GTVector::const_iterator it = geom_types.begin(); it != geom_types.end(); ++it)
                   {
@@ -825,9 +843,16 @@ namespace Dune {
                     size_type entity_pos = _gt_entity_offsets[gt_index] + 1;
                     const size_type entity_count = _gt_entity_offsets[gt_index + 1] - entity_pos + 1;
                     for (size_type entity_index = 0; entity_index < entity_count; ++entity_index, ++entity_pos)
-                      _entity_dof_offsets[entity_pos] = (carry += localOrdering().size(gt_index,entity_index));
+                      {
+                        const size_type size = localOrdering().size(gt_index,entity_index);
+                        _entity_dof_offsets[entity_pos] = (carry += size);
+                        _block_count += (size > 0);
+                      }
                   }
                 _size = _entity_dof_offsets.back();
+
+                if (!_container_blocked)
+                  _block_count = _size;
               }
           }
         _max_local_size = localOrdering().maxLocalSize();
@@ -840,6 +865,7 @@ namespace Dune {
       using BaseT::_max_local_size;
       using BaseT::_child_offsets;
       using BaseT::_size;
+      using BaseT::_block_count;
 
       typename Traits::GridView _gv;
       std::vector<typename Traits::SizeType> _gt_dof_offsets;

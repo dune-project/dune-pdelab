@@ -42,6 +42,11 @@ namespace Dune {
         return _size;
       }
 
+      typename Traits::SizeType blockCount() const
+      {
+        return _block_count;
+      }
+
       typename Traits::SizeType size(const typename Traits::SizeType child_index) const
       {
         return _child_offsets[child_index + 1] - _child_offsets[child_index];
@@ -59,21 +64,30 @@ namespace Dune {
 
       void update()
       {
+        std::fill(_child_offsets.begin(),_child_offsets.end(),0);
         typename Traits::SizeType carry = 0;
         _max_local_size = 0;
+        _block_count = 0;
         for (typename Traits::SizeType i = 0; i < _child_count; ++i)
-          _child_offsets[i+1] = (carry += _children[i].size());
+          {
+            _child_offsets[i+1] = (carry += _children[i]->size());
+            _block_count += _children[i]->blockCount();
+            _max_local_size += _children[i]->maxLocalSize();
+          }
+        if (_container_blocked)
+          _block_count = _child_count;
         _size = _child_offsets.back();
       }
 
       template<typename Node>
       OrderingBase(Node& node, bool container_blocked, VirtualOrderingBase<DI,CI>* delegate = nullptr)
         : _container_blocked(container_blocked)
-        , _child_count(Node::CHILDREN)
-        , _children(Node::CHILDREN,nullptr)
+        , _child_count(Node::has_dynamic_ordering_children ? Node::CHILDREN : 0)
+        , _children(_child_count,nullptr)
         , _child_offsets(Node::CHILDREN + 1,0)
         , _max_local_size(0)
         , _size(0)
+        , _block_count(0)
         , _delegate(delegate)
       {
         TypeTree::applyToTree(node,extract_child_bases<OrderingBase>(_children));
@@ -84,7 +98,10 @@ namespace Dune {
         return _container_blocked;
       }
 
-    protected:
+      std::size_t dynamic_child_count() const
+      {
+        return _child_count;
+      }
 
       OrderingBase& dynamic_child(typename Traits::SizeType i)
       {
@@ -108,6 +125,7 @@ namespace Dune {
 
       std::size_t _max_local_size;
       std::size_t _size;
+      std::size_t _block_count;
 
       const VirtualOrderingBase<DI,CI>* _delegate;
 
