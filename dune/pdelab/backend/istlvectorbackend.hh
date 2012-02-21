@@ -24,9 +24,15 @@
 namespace Dune {
   namespace PDELab {
 
+    struct istl_field_vector_backend_tag {};
+    struct istl_vector_backend_tag {};
+
     template<std::size_t block_size = 1>
     struct ISTLFieldVectorBackend
     {
+
+      typedef istl_field_vector_backend_tag tag;
+
 
       dune_static_assert((block_size > 0),"block size for FieldVector has to be positive");
 
@@ -49,6 +55,8 @@ namespace Dune {
     template<bool block = false>
     struct ISTLVectorBackend
     {
+
+      typedef istl_field_vector_backend_tag tag;
 
       typedef std::size_t size_type;
 
@@ -115,67 +123,113 @@ namespace Dune {
 
     };
 
+    template<typename ChildContainer, typename ParentNode, typename ParentBackendTag>
+    struct istl_vector_parent_helper
+    {
+
+      dune_static_assert((Dune::AlwaysFalse<ChildContainer>::value),
+                         "unsupported combination of child container and parent backend.");
+
+    };
+
+
+    template<typename ChildContainer, typename ParentNode>
+    struct istl_vector_parent_helper<ChildContainer,ParentNode,istl_vector_backend_tag>
+    {
+
+      typedef typename SelectType<
+        ParentNode::Traits::Backend::blocked,
+        BlockVector<ChildContainer>,
+        ChildContainer
+        >::Type type;
+
+    };
+
+
+  template<typename ChildContainer, typename ParentNode>
+  struct istl_vector_parent_helper<ChildContainer,ParentNode,istl_field_vector_backend_tag>
+    {
+
+      dune_static_assert(ChildContainer::block_type::dimension == 1,"currently only nesting for scalar child blocks is supported");
+      dune_static_assert(ParentNode::Traits::Backend::blockSize == ParentNode::CHILDREN,"parent block size must match number of children");
+
+      typedef BlockVector<FieldVector<typename ChildContainer::field_type,ParentNode::CHILDREN> > type;
+
+    };
+
+
+
     struct combine_istl_vector_parent
     {
 
       template<typename ChildContainer, typename Node>
       struct reduce
       {
-        typedef typename SelectType<
-          Node::Traits::Backend::is_blocked,
-          BlockVector<ChildContainer>,
-          ChildContainer
-          >::Type type;
+
+        typedef typename istl_vector_parent_helper<
+          ChildContainer,
+          Node,
+          typename Node::Traits::Backend::tag
+          >::type type;
+
       };
 
     };
 
 
     template<typename CI, typename Block>
-    typename enable_if<Block::blocklevel != 1,typename Block::field_type&>::type
+    typename enable_if<Block::blocklevel >= 3,typename Block::field_type&>::type
     access_istl_vector_element(Block& b, const CI& ci, int i)
     {
       return access_istl_vector_element(b[ci[i]],ci,i-1);
     }
 
     template<typename CI, typename Block>
-    typename enable_if<Block::blocklevel == 1 && Block::dimension == 1,typename Block::field_type&>::type
-    access_istl_vector_element(Block& b, const CI& ci, int i)
-    {
-      assert(i == -1);
-      return b[0];
-    }
-
-    template<typename CI, typename Block>
-    typename enable_if<Block::blocklevel == 1 && Block::dimension != 1,typename Block::field_type&>::type
+    typename enable_if<Block::blocklevel == 2 &&
+                       Block::block_type::dimension == 1,
+                       typename Block::field_type&>::type
     access_istl_vector_element(Block& b, const CI& ci, int i)
     {
       assert(i == 0);
-      return b[ci[0]];
+      return b[ci[0]][0];
+    }
+
+    template<typename CI, typename Block>
+    typename enable_if<Block::blocklevel == 2 &&
+                       Block::block_type::dimension != 1,
+                       typename Block::field_type&>::type
+    access_istl_vector_element(Block& b, const CI& ci, int i)
+    {
+      assert(i == 1);
+      return b[ci[1]][ci[0]];
     }
 
 
     template<typename CI, typename Block>
-    typename enable_if<Block::blocklevel != 1,const typename Block::field_type&>::type
+    typename enable_if<Block::blocklevel >= 3,const typename Block::field_type&>::type
     access_istl_vector_element(const Block& b, const CI& ci, int i)
     {
       return access_istl_vector_element(b[ci[i]],ci,i-1);
     }
 
     template<typename CI, typename Block>
-    typename enable_if<Block::blocklevel == 1 && Block::dimension == 1,const typename Block::field_type&>::type
-    access_istl_vector_element(const Block& b, const CI& ci, int i)
-    {
-      assert(i == -1);
-      return b[0];
-    }
-
-    template<typename CI, typename Block>
-    typename enable_if<Block::blocklevel == 1 && Block::dimension != 1,const typename Block::field_type&>::type
+    typename enable_if<Block::blocklevel == 2 &&
+                       Block::block_type::dimension == 1,
+                       const typename Block::field_type&>::type
     access_istl_vector_element(const Block& b, const CI& ci, int i)
     {
       assert(i == 0);
-      return b[ci[0]];
+      return b[ci[0]][0];
+    }
+
+    template<typename CI, typename Block>
+    typename enable_if<Block::blocklevel == 2 &&
+                       Block::block_type::dimension != 1,
+                       const typename Block::field_type&>::type
+    access_istl_vector_element(const Block& b, const CI& ci, int i)
+    {
+      assert(i == 1);
+      return b[ci[1]][ci[0]];
     }
 
 
