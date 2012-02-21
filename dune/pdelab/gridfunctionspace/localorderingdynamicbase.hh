@@ -11,15 +11,15 @@
 namespace Dune {
   namespace PDELab {
 
-    template<typename DI, typename CI>
+    template<typename GV, typename DI, typename CI>
     class LocalOrderingBase
     {
 
     public:
 
-      typedef OrderingTraits<DI,CI> Traits;
       static const bool has_dynamic_ordering_children = true;
 
+      typedef LocalOrderingTraits<GV,DI,CI> Traits;
 
       void map_local_index(const typename Traits::SizeType geometry_type_index,
                            const typename Traits::SizeType entity_index,
@@ -110,7 +110,8 @@ namespace Dune {
 
     protected:
       bool _fixed_size;
-      const bool _container_blocked;
+      bool _container_blocked;
+      bool _max_local_size;
 
       const std::size_t _child_count;
       std::vector<LocalOrderingBase*> _children;
