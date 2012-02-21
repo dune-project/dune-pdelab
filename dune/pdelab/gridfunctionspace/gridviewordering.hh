@@ -162,12 +162,6 @@ namespace Dune {
 
       void update()
       {
-        _recursive_update();
-      }
-
-      //! update internal data structures
-      void _recursive_update()
-      {
         LocalOrdering& lo = localOrdering();
         lo.update_a_priori_fixed_size();
 
