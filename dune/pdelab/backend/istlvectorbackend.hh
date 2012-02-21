@@ -398,6 +398,15 @@ namespace Dune {
           return (*_container)[ci];
         }
 
+        ISTLBlockVectorContainer& global_container()
+        {
+          return *_container;
+        }
+
+        const ISTLBlockVectorContainer& global_container() const
+        {
+          return *_container;
+        }
 
       private:
 
@@ -497,6 +506,11 @@ namespace Dune {
         const ElementType& operator[](const ContainerIndex& ci) const
         {
           return _container[ci];
+        }
+
+        const ISTLBlockVectorContainer& global_container() const
+        {
+          return *_container;
         }
 
 
