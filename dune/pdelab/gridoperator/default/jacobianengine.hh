@@ -155,15 +155,17 @@ namespace Dune{
       //! Notifier functions, called immediately before and after assembling
       //! @{
       void postAssembly(const GFSU& gfsu, const GFSV& gfsv){
-        //        if(local_assembler.doConstraintsPostProcessing){
-        //  local_assembler.handle_dirichlet_constraints(*jacobian);
-        //}
+        Jacobian& jacobian = global_a_ss_view.global_container();
         global_s_s_view.detach();
         global_s_n_view.detach();
         global_a_ss_view.detach();
         global_a_sn_view.detach();
         global_a_ns_view.detach();
         global_a_nn_view.detach();
+
+        if(local_assembler.doConstraintsPostProcessing){
+          local_assembler.handle_dirichlet_constraints(gfsv,jacobian);
+        }
       }
       //! @}
 
