@@ -151,7 +151,7 @@ namespace Dune {
           {
             lo.update_fixed_size(geom_types);
 
-            _gt_dof_offsets.resize(GlobalGeometryTypeIndex::size(dim) + 1);
+            _gt_dof_offsets.assign(GlobalGeometryTypeIndex::size(dim) + 1,0);
 
             const GTVector::const_iterator end_it = geom_types.end();
             for (GTVector::const_iterator it = geom_types.begin(); it != end_it; ++it)
