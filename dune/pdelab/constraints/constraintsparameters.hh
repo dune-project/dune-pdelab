@@ -24,7 +24,7 @@ namespace Dune {
         return true;
       }
     };
-    
+
     //! Interface for the constraints parameters describing flux constraints, e.g. needed for RT0
     struct FluxConstraintsParameters :
       public TypeTree::LeafNode
@@ -35,11 +35,10 @@ namespace Dune {
         return true;
       }
     };
-        
+
     //! \}
 
   }
 }
 
 #endif // DUNE_PDELAB_CONSTRAINTSPARAMETERS_HH
-
