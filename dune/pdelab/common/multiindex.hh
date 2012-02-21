@@ -4,6 +4,7 @@
 #define DUNE_PDELAB_COMMON_MULTIINDEX_HH
 
 #include <dune/common/reservedvector.hh>
+#include <dune/geometry/typeindex.hh>
 
 #include <algorithm>
 #include <iomanip>
@@ -144,48 +145,101 @@ namespace Dune {
      */
     template<typename T, std::size_t n>
     class MultiIndex
+      : public ReservedVector<T,n>
     {
-
-      typedef ReservedVector<T,n> container_type;
 
     public:
 
       //! The maximum possible depth of the MultiIndex.
       static const std::size_t max_depth = n;
 
-      //! Unsigned integral type.
-      typedef typename container_type::size_type size_type;
-
-      //! The value type of the individual index entries.
-      typedef typename container_type::value_type value_type;
-
-      //! A reference to an index entry.
-      typedef typename container_type::reference reference;
-
-      //! A const reference to an index entry.
-      typedef typename container_type::const_reference const_reference;
-
-      //! Iterator over index entries.
-      typedef typename container_type::iterator iterator;
-
-      //! Const iterator over index entries.
-      typedef typename container_type::const_iterator const_iterator;
-
-      //! Default constructor.
-      MultiIndex()
-      {}
-
-      //! Constructor to be called from leaf GridFunctionSpaces.
-      /**
-       * \param gt            the GeometryType of the grid entity associated with the DOF.
-       * \param entity_index  the index of the grid entity associated with the DOF.
-       * \param index         the first index of the DOF within the MultiIndex.
-       */
-      MultiIndex(value_type entity_index, value_type index)
-        : _entity_index(entity_index)
+      class View
       {
-        push_back(index);
-      }
+
+        typedef ReservedVector<T,n> base_type;
+
+      public:
+
+        //! The maximum possible depth of the MultiIndex.
+        static const std::size_t max_depth = n;
+
+        typedef typename base_type::value_type value_type;
+        typedef typename base_type::pointer pointer;
+        typedef typename base_type::const_reference reference;
+        typedef typename base_type::const_reference const_reference;
+        typedef typename base_type::size_type size_type;
+        typedef typename base_type::difference_type difference_type;
+        typedef typename base_type::const_iterator iterator;
+        typedef typename base_type::const_iterator const_iterator;
+
+      private:
+
+        View(const MultiIndex& mi, size_type size)
+          : _mi(mi)
+          , _size(size)
+        {}
+
+      public:
+
+        void clear()
+        {
+          _size = 0;
+        }
+
+        reference front()
+        {
+          return _mi.front();
+        }
+
+        const_reference front() const
+        {
+          return _mi.front();
+        }
+
+        reference back()
+        {
+          return _mi[_size-1];
+        }
+
+        const_reference back() const
+        {
+          return _mi[_size-1];
+        }
+
+        reference operator[](size_type i)
+        {
+          assert(i < _size);
+          return _mi[i];
+        }
+
+        const_reference operator[](size_type i) const
+        {
+          assert(i < _size);
+          return _mi[i];
+        }
+
+        void resize(size_type s)
+        {
+          assert(s <= _mi.size());
+          _size = s;
+        }
+
+        View back_popped() const
+        {
+          assert(_size > 0);
+          return View(_mi,_size-1);
+        }
+
+        size_type size() const
+        {
+          return _size;
+        }
+
+      private:
+        const MultiIndex& _mi;
+        size_type _size;
+
+      };
 
       //! Sets the MultiIndex to a new DOF.
       /**
@@ -196,40 +250,28 @@ namespace Dune {
        * \param entity_index  the index of the grid entity associated with the DOF.
        * \param index         the first index of the DOF within the MultiIndex.
        */
-      void set(value_type entity_index, value_type index)
+      void set(typename ReservedVector<T,n>::value_type index)
       {
-        _entity_index = entity_index;
-        _c.clear();
-        push_back(index);
-      }
-
-      //! Returns the index of the grid entity associated with the DOF.
-      value_type entityIndex() const
-      {
-        return _entity_index;
-      }
-
-      //! Appends a new index entry to the MultiIndex.
-      void push_back(value_type i)
-      {
-        _c.push_back(i);
+        this->clear();
+        this->push_back(index);
       }
 
       //! Writes a pretty representation of the MultiIndex to the given std::ostream.
       friend std::ostream& operator<< (std::ostream& s, const MultiIndex& mi)
       {
-        s << "("
-          // entity information
-          << std::setw(4) << mi._entity_index
-          << " |";
-        // index tuple
-        for (const_iterator it = mi._c.begin(); it != mi._c.end(); ++it)
+        s << "(";
+        for (typename ReservedVector<T,n>::const_iterator it = mi.begin(); it != mi.end(); ++it)
           s << std::setw(3) << *it;
         // fill up to maximum depth for consistent formatting
-        for (std::size_t i = mi._c.size(); i < mi.max_depth; ++i)
+        for (std::size_t i = mi.size(); i < max_depth; ++i)
           s << "  -";
         s << ")";
         return s;
+      }
+
+      View view() const
+      {
+        return View(*this,this->size());
       }
 
       //! Tests whether two MultiIndices are equal.
@@ -239,8 +281,8 @@ namespace Dune {
       bool operator== (const MultiIndex& r) const
       {
         return
-          _entity_index = r._entity_index &&
-          std::equal(_c.begin(),_c.end(),r._c.begin());
+          this->size() == r.size() &&
+          std::equal(this->begin(),this->end(),r.begin());
       }
 
       //! Tests whether two MultiIndices are not equal.
@@ -258,54 +300,162 @@ namespace Dune {
       }
 #endif
 
-      //! The size (number of index entries) of the MultiIndex.
-      size_type size() const
+    };
+
+    template<typename T, std::size_t tree_n, std::size_t entity_n = 1>
+    class DOFIndex
+    {
+
+    public:
+
+      //! The maximum possible depth of the MultiIndex.
+      static const std::size_t max_depth = tree_n;
+      static const std::size_t max_tree_depth = tree_n;
+      static const std::size_t max_entity_depth = entity_n;
+
+      typedef MultiIndex<T,max_entity_depth> EntityIndex;
+      typedef MultiIndex<T,max_tree_depth> TreeIndex;
+
+      typedef typename TreeIndex::size_type size_type;
+      typedef T value_type;
+
+      class View
       {
-        return _c.size();
+
+      public:
+
+        typedef typename MultiIndex<T,entity_n>::View EntityIndex;
+        typedef typename MultiIndex<T,tree_n>::View TreeIndex;
+
+        const EntityIndex& entityIndex() const
+        {
+          return _entity_index_view;
+        }
+
+        const TreeIndex& treeIndex() const
+        {
+          return _tree_index_view;
+        }
+
+        View back_popped() const
+        {
+          return View(_entity_index_view,_tree_index_view.back_popped());
+        }
+
+      private:
+
+        explicit View(const DOFIndex& dof_index)
+          : _entity_index_view(dof_index._entity_index.view())
+          , _tree_index_view(dof_index._tree_index.view())
+        {}
+
+        View(const EntityIndex& entity_index, const TreeIndex& tree_index)
+          : _entity_index_view(entity_index)
+          , _tree_index_view(tree_index)
+        {}
+
+        EntityIndex _entity_index_view;
+        TreeIndex _tree_index_view;
+
+      };
+
+      //! Default constructor.
+      DOFIndex()
+      {}
+
+      View view() const
+      {
+        return View(*this);
       }
 
-      //! Returns a const_iterator pointing to the beginning of the MultiIndex.
-      const_iterator begin() const
+      //! Sets the MultiIndex to a new DOF.
+      /**
+       * This should only be called from a leaf GridFunctionSpace as it will delete all exisiting
+       * index entries.
+       *
+       * \param gt            the GeometryType of the grid entity associated with the DOF.
+       * \param entity_index  the index of the grid entity associated with the DOF.
+       * \param index         the first index of the DOF within the MultiIndex.
+       */
+      void set(value_type entity_index, value_type index)
       {
-        return _c.begin();
+        _entity_index.clear();
+        _entity_index.push_back(entity_index);
+        _tree_index.clear();
+        _tree_index.push_back(index);
       }
 
-      //! Returns a const_iterator pointing to the end of the MultiIndex.
-      const_iterator end() const
+      void clear()
       {
-        return _c.end();
+        _entity_index.clear();
+        _tree_index.clear();
       }
 
-      //! Returns an iterator pointing to the beginning of the MultiIndex.
-      iterator begin()
+      //! Returns the index of the grid entity associated with the DOF.
+      EntityIndex& entityIndex()
       {
-        return _c.begin();
+        return _entity_index;
       }
 
-      //! Returns an iterator pointing to the end of the MultiIndex.
-      iterator end()
+      const EntityIndex& entityIndex() const
       {
-        return _c.end();
+        return _entity_index;
       }
 
-      //! Returns a reference ot the i-th index entry.
-      reference operator[](size_type i)
+      TreeIndex& treeIndex()
       {
-        return _c[i];
+        return _tree_index;
       }
 
-      //! Returns a const reference ot the i-th index entry.
-      const_reference operator[](size_type i) const
+      const TreeIndex& treeIndex() const
       {
-        return _c[i];
+        return _tree_index;
       }
+
+      //! Writes a pretty representation of the MultiIndex to the given std::ostream.
+      friend std::ostream& operator<< (std::ostream& s, const DOFIndex& di)
+      {
+        s << "("
+          << di._entity_index
+          << " | "
+          << di._tree_index
+          << ")";
+        return s;
+      }
+
+      //! Tests whether two MultiIndices are equal.
+      /**
+       * \note Only MultiIndices of identical max_depth are comparable
+       */
+      bool operator== (const DOFIndex& r) const
+      {
+        return
+          _entity_index == r._entity_index &&
+          _tree_index == r._tree_index;
+      }
+
+      //! Tests whether two MultiIndices are not equal.
+      bool operator!= (const DOFIndex& r) const
+      {
+        return !(*this == r);
+      }
+
+#if 0
+      bool operator< (const DOFIndex& r) const
+      {
+        // FIXME: think about natural ordering
+        return _c.size() < _r.size();
+        return std::lexicographical_compare(_c.begin(),_c.end(),r._c.begin(),r._c.end());
+      }
+#endif
 
     private:
 
-      value_type _entity_index;
-      container_type _c;
+      EntityIndex _entity_index;
+      TreeIndex _tree_index;
 
     };
+
 
   } // namespace PDELab
 } // namespace Dune
