@@ -41,10 +41,10 @@ namespace Dune{
       //! The type of the range (residual).
       typedef typename Dune::PDELab::BackendVectorSelector<GFSV,RF>::Type Range;
       //! The type of the jacobian.
-      typedef typename MB::template Matrix<JF> Jacobian;
+      typedef typename Dune::PDELab::BackendMatrixSelector<MB,Domain,Range,JF>::Type Jacobian;
 
       //! The sparsity pattern container for the jacobian matrix
-      typedef typename MB::Pattern Pattern;
+      typedef typename Jacobian::Pattern Pattern;
 
       //! The local assembler type
       typedef DefaultLocalAssembler<GridOperator,LOP,nonoverlapping_mode>

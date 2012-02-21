@@ -58,7 +58,7 @@ namespace Dune{
       typedef typename GO::Traits::Jacobian Jacobian;
 
       //! The matrix pattern
-      typedef typename MatrixBackend::Pattern MatrixPattern;
+      typedef typename Jacobian::Pattern MatrixPattern;
 
 
     };
