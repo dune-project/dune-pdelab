@@ -37,8 +37,10 @@ namespace Dune{
       //! The local function spaces
       typedef typename LA::LFSU LFSU;
       typedef typename LA::LFSUCache LFSUCache;
+      typedef typename LFSU::Traits::GridFunctionSpace GFSU;
       typedef typename LA::LFSV LFSV;
       typedef typename LA::LFSVCache LFSVCache;
+      typedef typename LFSV::Traits::GridFunctionSpace GFSV;
 
       typedef typename Solution::template ConstLocalView<LFSUCache> SolutionView;
       typedef typename Residual::template LocalView<LFSVCache> ResidualView;
@@ -184,7 +186,7 @@ namespace Dune{
       //! Notifier functions, called immediately before and after assembling
       //! @{
 
-      void postAssembly(){
+      void postAssembly(const GFSU& gfsu, const GFSV& gfsv){
         /*
         if(local_assembler.doConstraintsPostProcessing){
           Dune::PDELab::constrain_residual(*(local_assembler.pconstraintsv),global_rl_view.global_container());

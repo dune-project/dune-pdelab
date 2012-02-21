@@ -28,8 +28,10 @@ namespace Dune{
       //! The local function spaces
       typedef typename LA::LFSU LFSU;
       typedef typename LA::LFSUCache LFSUCache;
+      typedef typename LFSU::Traits::GridFunctionSpace GFSU;
       typedef typename LA::LFSV LFSV;
       typedef typename LA::LFSVCache LFSVCache;
+      typedef typename LFSV::Traits::GridFunctionSpace GFSV;
 
       //! The type of the jacobian matrix
       typedef typename LA::Traits::Jacobian Jacobian;
@@ -152,7 +154,7 @@ namespace Dune{
 
       //! Notifier functions, called immediately before and after assembling
       //! @{
-      void postAssembly(){
+      void postAssembly(const GFSU& gfsu, const GFSV& gfsv){
         //        if(local_assembler.doConstraintsPostProcessing){
         //  local_assembler.handle_dirichlet_constraints(*jacobian);
         //}

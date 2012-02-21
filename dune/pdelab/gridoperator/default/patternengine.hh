@@ -28,8 +28,10 @@ namespace Dune{
       //! The local function spaces
       typedef typename LA::LFSU LFSU;
       typedef typename LA::LFSUCache LFSUCache;
+      typedef typename LFSU::Traits::GridFunctionSpace GFSU;
       typedef typename LA::LFSV LFSV;
       typedef typename LA::LFSVCache LFSVCache;
+      typedef typename LFSV::Traits::GridFunctionSpace GFSV;
 
 
       //! The type of the solution vector
