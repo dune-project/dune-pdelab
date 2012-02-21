@@ -55,8 +55,9 @@ namespace Dune {
         return 0;
       }
 
-      DirectLeafLocalOrdering(GFS& gfs)
+      DirectLeafLocalOrdering(const GFS& gfs)
         : _gfs(gfs)
+        , _fixed_size(false)
         , _container_blocked(false)
       {}
 
