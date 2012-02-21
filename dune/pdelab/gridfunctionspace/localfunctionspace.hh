@@ -694,28 +694,25 @@ namespace Dune {
           }
       }
 
-      /** \brief write back coefficients for one element to container */
+
       template<typename GC, typename LC>
-      void mwrite (const LC& lc, GC& gc) const
+      void insert_constraints (const LC& lc, GC& gc) const
       {
         // LC and GC are maps of maps
         typedef typename LC::const_iterator local_col_iterator;
-        typedef typename LC::value_type::second_type local_row_type;
-        typedef typename local_row_type::const_iterator local_row_iterator;
+        typedef typename LC::value_type::second_type::const_iterator local_row_iterator;
         typedef typename GC::iterator global_col_iterator;
         typedef typename GC::value_type::second_type global_row_type;
 
         for (local_col_iterator cit=lc.begin(); cit!=lc.end(); ++cit)
           {
-            typename Traits::SizeType i = globalIndex(cit->first);
-            // insert empty row in global container if necessary
-            global_col_iterator gcit = gc.find(i);
-            if (gcit==gc.end())
-              gc[i] = global_row_type();
+
+            // look up entry in global map, if not found, insert an empty one.
+            global_col_iterator gcit = gc.insert(std::make_pair(std::ref(this->dofIndex(cit->first)),global_row_type())).first;
 
             // copy row to global container with transformed indices
             for (local_row_iterator rit=(cit->second).begin(); rit!=(cit->second).end(); ++rit)
-              gc[i][globalIndex(rit->first)] = rit->second;
+              gcit->second[this->dofIndex(rit->first)] = rit->second;
           }
       }
 
