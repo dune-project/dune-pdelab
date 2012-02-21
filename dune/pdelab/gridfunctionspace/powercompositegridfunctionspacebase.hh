@@ -320,9 +320,20 @@ namespace Dune {
         : _backend(backend)
       {}
 
+      const std::string& name() const
+      {
+        return _name;
+      }
+
+      void name(const std::string& name)
+      {
+        _name = name;
+      }
+
     private:
 
       B _backend;
+      std::string _name;
 
     };
 

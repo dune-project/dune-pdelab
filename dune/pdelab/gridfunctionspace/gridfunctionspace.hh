@@ -723,6 +723,16 @@ namespace Dune {
         return _backend;
       }
 
+      const std::string& name() const
+      {
+        return _name;
+      }
+
+      void name(const std::string& name)
+      {
+        _name = name;
+      }
+
     private:
       CE defaultce;
       const GV& gv;
@@ -732,6 +742,7 @@ namespace Dune {
       const CE& ce;
       B _backend;
       bool fixed_size;
+      std::string _name;
 
       typedef std::map<Dune::GeometryType,typename Traits::SizeType> GTOffsetMap;
       GTOffsetMap gtoffset; // offset in vector for given geometry type
