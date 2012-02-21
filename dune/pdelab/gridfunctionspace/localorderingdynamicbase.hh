@@ -128,10 +128,13 @@ namespace Dune {
       {
         if (_fixed_size)
           return _gt_dof_offsets[geometry_type_index * _child_count + _child_count - 1];
-        else
-          return _gt_used[geometry_type_index]
-            ? _entity_dof_offsets[(_gt_entity_offsets[geometry_type_index] + entity_index) * _child_count + _child_count - 1]
-            : 0;
+
+        if (!_gt_used[geometry_type_index])
+          return 0;
+
+        return _child_count > 0
+          ? _entity_dof_offsets[(_gt_entity_offsets[geometry_type_index] + entity_index) * _child_count + _child_count - 1]
+          : _entity_dof_offsets[(_gt_entity_offsets[geometry_type_index] + entity_index)];
       }
 
       typename Traits::SizeType size(const typename Traits::SizeType geometry_type_index, const typename Traits::SizeType entity_index, const typename Traits::SizeType child_index) const
@@ -183,6 +186,11 @@ namespace Dune {
       bool contains(const GeometryType& gt) const
       {
         return _gt_used[GlobalGeometryTypeIndex::index(gt)];
+      }
+
+      bool contains_geometry_type(typename Traits::SizeType gt_index) const
+      {
+        return _gt_used[gt_index];
       }
 
       bool contains(typename Traits::SizeType codim) const

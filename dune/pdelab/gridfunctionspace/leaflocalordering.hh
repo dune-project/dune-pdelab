@@ -83,6 +83,8 @@ namespace Dune {
         const typename FESwitch::Coefficients& coeffs =
           FESwitch::coefficients(*_pfe);
 
+        this->_max_local_size = std::max(this->_max_local_size,coeffs.size());
+
         typedef typename Traits::SizeType size_type;
 
         const GenericReferenceElement<typename Traits::GridView::ctype,Traits::GridView::dimension>& ref_el =
@@ -96,7 +98,7 @@ namespace Dune {
 
             const size_type entity_index = _gv.indexSet().subIndex(cell,key.subEntity(),key.codim());
             const size_type index = this->_gt_entity_offsets[geometry_type_index] + entity_index;
-            gt_sizes[geometry_type_index] = this->_entity_dof_offsets[index] = std::max(static_cast<size_type>(this->_entity_dof_offsets[index]),static_cast<size_type>(key.index() + 1));
+            gt_sizes[geometry_type_index] = this->_entity_dof_offsets[index] = std::max(this->_entity_dof_offsets[index],static_cast<size_type>(key.index() + 1));
           }
 
         if (this->_fixed_size_possible)
@@ -104,9 +106,9 @@ namespace Dune {
             for (size_type i = 0; i < gt_sizes.size(); ++i)
               if (gt_sizes[i] > 0)
                 {
-                  if (this->_gt_dof_offsets[i + 1] == 0)
-                    this->_gt_dof_offsets[i + 1] = gt_sizes[i];
-                  else if (this->_gt_dof_offsets[i + 1] != gt_sizes[i])
+                  if (this->_gt_dof_offsets[i] == 0)
+                    this->_gt_dof_offsets[i] = gt_sizes[i];
+                  else if (this->_gt_dof_offsets[i] != gt_sizes[i])
                     {
                       this->_fixed_size_possible = false;
                       break;
