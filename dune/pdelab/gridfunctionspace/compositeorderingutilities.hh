@@ -16,10 +16,6 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-    //! Tag for the intermediate base class of the CompositeGridFunctionSpace.
-    struct CompositeGridFunctionSpaceBaseTag {};
-
-
     //! Intermediate base class for the CompositeGridFunctionSpace.
     /**
      * The only purpose of this base class is to serve as a source tree for

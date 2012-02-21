@@ -356,9 +356,6 @@ namespace Dune {
       typedef N NodeType;
     };
 
-    //! Tag denoting a PowerLocalFunctionSpace
-    struct PowerLocalFunctionSpaceTag {};
-
     // local function space for a power grid function space
     template<typename GFS, typename DOFIndex, typename ChildLFS, std::size_t k>
     class PowerLocalFunctionSpaceNode :
@@ -436,9 +433,6 @@ namespace Dune {
     //=======================================
     // local function space base: composite implementation
     //=======================================
-
-    //! Tag denoting a CompositeLocalFunctionSpace
-    struct CompositeLocalFunctionSpaceTag {};
 
     // local function space for a power grid function space
     template<typename GFS, typename DOFIndex, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
@@ -549,9 +543,6 @@ namespace Dune {
     //=======================================
     // local function space base: single component implementation
     //=======================================
-
-    //! Tag denoting a LeafLocalFunctionSpace
-    struct LeafLocalFunctionSpaceTag {};
 
     //! traits for single component local function space
     template<typename GFS, typename DOFIndex, typename N>

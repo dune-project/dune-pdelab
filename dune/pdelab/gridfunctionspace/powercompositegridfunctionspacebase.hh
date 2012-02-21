@@ -15,6 +15,7 @@
 #include <dune/pdelab/common/typetree/visitor.hh>
 #include <dune/pdelab/constraints/constraintstransformation.hh>
 
+#include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/lexicographicordering.hh>
 
 namespace Dune {

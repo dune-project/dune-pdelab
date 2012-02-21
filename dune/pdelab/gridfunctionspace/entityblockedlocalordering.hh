@@ -24,8 +24,6 @@
 namespace Dune {
   namespace PDELab {
 
-    struct EntityBlockedOrderingTag {};
-
     //! Interface for merging index spaces
     template<typename ChildOrdering, std::size_t k>
     class PowerEntityBlockedLocalOrdering

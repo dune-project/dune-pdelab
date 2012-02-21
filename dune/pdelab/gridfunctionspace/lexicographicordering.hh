@@ -31,16 +31,6 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-    //! \brief Indicate lexicographic ordering of the unknowns of non-leaf
-    //!        grid function spaces.
-    /**
-     * This class instructs the non-leaf GridFunctionSpaces to order the dofs
-     * of the child-GridFunctionSpaces in a lexicographic manner in the
-     * combined dof-vector, i.e. first all dofs of child 0, then all dofs of
-     * child 1 and so on.
-     */
-    struct LexicographicOrderingTag { };
-
     namespace lexicographic_ordering {
 
       //! Interface for merging index spaces
