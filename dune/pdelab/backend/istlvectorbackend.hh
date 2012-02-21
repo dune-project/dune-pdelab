@@ -303,6 +303,67 @@ namespace Dune {
             }
         }
 
+        template<typename ChildLFS, typename LC>
+        void read(const ChildLFS& child_lfs, LC& local_container) const
+        {
+          for (size_type i = 0; i < child_lfs.size(); ++i)
+            {
+              const size_type local_index = child_lfs.localIndex(i);
+              accessBaseContainer(local_container)[local_index] = (*_container)[_lfs_cache->container_index(local_index)];
+            }
+        }
+
+        template<typename ChildLFS, typename LC>
+        void write(const ChildLFS& child_lfs, const LC& local_container)
+        {
+          for (size_type i = 0; i < child_lfs.size(); ++i)
+            {
+              const size_type local_index = child_lfs.localIndex(i);
+              (*_container)[_lfs_cache->container_index(local_index)] = accessBaseContainer(local_container)[local_index];
+            }
+        }
+
+        template<typename ChildLFS, typename LC>
+        void add(const ChildLFS& child_lfs, const LC& local_container)
+        {
+          for (size_type i = 0; i < child_lfs.size(); ++i)
+            {
+              const size_type local_index = child_lfs.localIndex(i);
+              (*_container)[_lfs_cache->container_index(local_index)] += accessBaseContainer(local_container)[local_index];
+            }
+        }
+
+
+        template<typename ChildLFS, typename LC>
+        void read_sub_container(const ChildLFS& child_lfs, LC& local_container) const
+        {
+          for (size_type i = 0; i < child_lfs.size(); ++i)
+            {
+              const size_type local_index = child_lfs.localIndex(i);
+              accessBaseContainer(local_container)[i] = (*_container)[_lfs_cache->container_index(local_index)];
+            }
+        }
+
+        template<typename ChildLFS, typename LC>
+        void write_sub_container(const ChildLFS& child_lfs, const LC& local_container)
+        {
+          for (size_type i = 0; i < child_lfs.size(); ++i)
+            {
+              const size_type local_index = child_lfs.localIndex(i);
+              (*_container)[_lfs_cache->container_index(local_index)] = accessBaseContainer(local_container)[i];
+            }
+        }
+
+        template<typename ChildLFS, typename LC>
+        void add_sub_container(const ChildLFS& child_lfs, const LC& local_container)
+        {
+          for (size_type i = 0; i < child_lfs.size(); ++i)
+            {
+              const size_type local_index = child_lfs.localIndex(i);
+              (*_container)[_lfs_cache->container_index(local_index)] += accessBaseContainer(local_container)[i];
+            }
+        }
+
         void commit()
         {
         }
@@ -401,6 +462,27 @@ namespace Dune {
               accessBaseContainer(local_container)[i] = (*_container)[_lfs_cache->container_index(i)];
             }
         }
+
+        template<typename ChildLFS, typename LC>
+        void read(const ChildLFS& child_lfs, LC& local_container) const
+        {
+          for (size_type i = 0; i < child_lfs.size(); ++i)
+            {
+              const size_type local_index = child_lfs.localIndex(i);
+              accessBaseContainer(local_container)[local_index] = (*_container)[_lfs_cache->container_index(local_index)];
+            }
+        }
+
+        template<typename ChildLFS, typename LC>
+        void read_sub_container(const ChildLFS& child_lfs, LC& local_container) const
+        {
+          for (size_type i = 0; i < child_lfs.size(); ++i)
+            {
+              const size_type local_index = child_lfs.localIndex(i);
+              accessBaseContainer(local_container)[i] = (*_container)[_lfs_cache->container_index(local_index)];
+            }
+        }
+
 
         const ElementType& operator[](size_type i) const
         {
