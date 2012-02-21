@@ -7,6 +7,8 @@
 #include <cstddef>
 
 #include <dune/pdelab/common/typetree/leafnode.hh>
+#include <dune/pdelab/gridfunctionspace/gridviewordering.hh>
+#include <dune/pdelab/gridfunctionspace/leaflocalordering.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -16,24 +18,30 @@ namespace Dune {
     //! \{
 
     //! Dummy ordering for leaf gridfunctionspaces
-    template<class GFS>
-    class LeafOrdering :
-      public TypeTree::LeafNode
+    template<typename GVOrdering>
+    class LeafOrdering
+      : public TypeTree::VariadicCompositeNode<GVOrdering>
+      , public OrderingBase<typename GVOrdering::Traits::MI,typename GVOrdering::Traits::CI>
     {
-    public:
-      typedef typename GFS::Traits::SizeType SizeType;
 
-    private:
-      const GFS &gfs;
+      typedef TypeTree::VariadicCompositeNode<GVOrdering> NodeT;
+
+      typedef OrderingBase<typename GVOrdering::Traits::MI,typename GVOrdering::Traits::CI> BaseT;
 
     public:
+
+      typedef ... Traits;
+
       //! Construct ordering object
       /**
        * In general, an ordering object is not properly setup after
        * construction.  This must be done by a seperate call to update().
        * This particular ordering however can be used right away.
        */
-      LeafOrdering(const GFS &gfs_) : gfs(gfs_) { }
+      LeafOrdering(const NodeT::NodeStorage& gv_ordering_storage)
+        : NodeT(gv_ordering_storage)
+        , BaseT(*this,this->template childStorage<0>.get())
+      { }
 
       //! update internal data structures
       /**
@@ -42,7 +50,10 @@ namespace Dune {
        * changes.  For this particular ordering however this method does
        * nothing.
        */
-      void update() { }
+      void update()
+      {
+        gridViewOrdering().update();
+      }
 
       //! dofs are blocked per entity/intersection on the leafs
       bool blocked() const { return true; }
@@ -57,10 +68,10 @@ namespace Dune {
        *       between entities od different geometry type or between entities
        *       and intersections.
        */
-      bool fixedSize() const { return gfs.fixedSize(); }
+      bool fixedSize() const { return gridViewOrdering().fixedSize(); }
 
       //! number of indices in this ordering
-      SizeType size() const { return gfs.size(); }
+      SizeType size() const { return gridViewOrdering().size(); }
 
       //! \brief maximum number of dofs attached to any given element and all
       //!        of its subentities and intersections
@@ -69,7 +80,7 @@ namespace Dune {
        * actual maximum.  There is however one special case: it is guaranteed
        * to be the exact maximum for fixedSize()==true.
        */
-      SizeType maxLocalSize() const { return gfs.maxLocalSize(); }
+      SizeType maxLocalSize() const { return gridViewOrdering().maxLocalSize(); }
 
       //! \brief number of indices attached to a given entity (of arbitrary
       //!        codimension)
@@ -128,6 +139,39 @@ namespace Dune {
       SizeType intersectionOffset(const Intersection &i) const
       { return gfs.intersectionOffset(i); }
     };
+
+
+    template<typename LeafGFS, typename Transformation>
+    struct leaf_gfs_to_ordering_descriptor
+    {
+
+      static const bool recursive = false;
+
+      typedef LeafLocalOrdering<LeafGFS,
+                                typename Transformation::MultiIndex,
+                                typename Transformation::ContainerIndex
+                                > LocalOrdering;
+
+      typedef LeafGridViewOrdering<typename LeafGFS::Traits::GridView,LocalOrdering> GridViewOrdering;
+
+      typedef LeafOrdering<GridViewOrdering> transformed_type;
+      typedef shared_ptr<transformed_type> transformed_storage_type;
+
+      static transformed_type transform(const LeafGFS& s, const Transformation& t)
+      {
+        return transformed_type(make_tuple(make_shared<GridViewOrdering>(gfs.gridview(),make_tuple(make_shared<LocalOrdering>(gfs)))));
+      }
+
+      static transformed_storage_type transform_storage(shared_ptr<const LeafGFS> gfs, const Transformation& t)
+      {
+        return make_shared<transformed_type>(make_tuple(make_shared<GridViewOrdering>(gfs.gridview(),make_tuple(make_shared<LocalOrdering>(gfs)))));
+      }
+
+    };
+
+    template<typename LeafGFS, typename Params>
+    leaf_gfs_to_ordering_descriptor<LeafGFS,gfs_to_ordering<Params> >
+    lookupNodeTransformation(LeafGFS* gfs, gfs_to_ordering<Params>* t, LeafGridFunctionSpaceTag tag);
 
    //! \} group GridFunctionSpace
   } // namespace PDELab
