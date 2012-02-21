@@ -6,6 +6,8 @@
 
 #include <dune/pdelab/gridfunctionspace/orderingutility.hh>
 
+#include <vector>
+
 namespace Dune {
   namespace PDELab {
 

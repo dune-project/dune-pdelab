@@ -4,6 +4,8 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_ORDERINGUTILITY_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_ORDERINGUTILITY_HH
 
+#include <vector>
+
 namespace Dune {
   namespace PDELab {
 
