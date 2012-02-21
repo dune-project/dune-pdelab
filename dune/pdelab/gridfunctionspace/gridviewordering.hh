@@ -18,15 +18,17 @@ namespace Dune {
     //! \{
 
     //! Dummy ordering for leaf gridfunctionspaces
-    template<typename GV, typename LocalOrdering>
-    class GridViewLeafOrdering
+    template<typename LocalOrdering>
+    class LeafGridViewOrdering
       : public TypeTree::VariadicCompositeNode<LocalOrdering>
-      , public VirtualOrderingBase
+      , public VirtualOrderingBase<typename LocalOrdering::Traits::DOFIndex,typename LocalOrdering::Traits::ContainerIndex>
     {
     public:
       typedef typename LocalOrdering::Traits Traits;
 
     private:
+
+      typedef typename Traits::GridView GV;
 
       typedef TypeTree::VariadicCompositeNode<LocalOrdering> NodeT;
 
@@ -34,33 +36,44 @@ namespace Dune {
 
     public:
 
-      GridViewLeafOrdering(const GV& gv, const NodeT::NodeStorage& localOrdering)
-        : NodeT(localOrdering)
-        , _gv(gv)
-      {}
-
-      virtual void map_index_dynamic(const MultiIndex& mi, ContainerIndex& ci) const
+      LocalOrdering& localOrdering()
       {
-        map_index(mi,ci);
+        return this->template child<0>();
       }
 
-      void map_index(const MultiIndex& mi, ContainerIndex& ci) const
+      const LocalOrdering& localOrdering() const
       {
-        const SizeType geometry_type_index = ...;
-        const SizeType entity_index = ...;
-        assert(mi.size() == 1);
-        ci.push_back(mi.back());
+        return this->template child<0>();
+      }
+
+
+      LeafGridViewOrdering(const typename NodeT::NodeStorage& localOrdering)
+        : NodeT(localOrdering)
+        , _gv(this->template child<0>().gridView())
+      {}
+
+      virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
+      {
+        map_index(di,ci);
+      }
+
+      void map_index(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
+      {
+        const typename Traits::SizeType geometry_type_index = di.entityIndex()[0];
+        const typename Traits::SizeType entity_index = di.entityIndex()[1];
+        assert (di.treeIndex().size() == 1);
+        ci.push_back(di.treeIndex().back());
         if (_backend_blocked)
           {
-            ci.push_back(_gt_entity_offsets[geometry_type_index] + entity_index);
+            ci.push_back(localOrdering()._gt_entity_offsets[geometry_type_index] + entity_index);
           }
-        else if (_fixed_size)
+        else if (localOrdering()._fixed_size)
           {
-            ci.back() += _gt_dof_offsets[geometry_type_index] + entity_index * _gt_dof_size[geometry_type_index];
+            ci.back() += _gt_dof_offsets[geometry_type_index] + entity_index * localOrdering()._gt_dof_offsets[geometry_type_index];
           }
         else
           {
-            ci.back() += _entity_dof_offsets[_gt_entity_offsets[geometry_type_index] + entity_index];
+            ci.back() += localOrdering()._entity_dof_offsets[localOrdering()._gt_entity_offsets[geometry_type_index] + entity_index];
           }
       }
 
@@ -71,33 +84,41 @@ namespace Dune {
        * changes.  For this particular ordering however this method does
        * nothing.
        */
-      void update()
+      void _recursive_update()
       {
-        _fixed_size = localOrdering().fixedSize();
+        LocalOrdering& lo = localOrdering();
+        lo.update_a_priori_fixed_size();
 
-        if (_fixedSize)
+        const std::size_t dim = GV::dimension;
+
+        typedef typename Traits::SizeType size_type;
+        typedef std::vector<GeometryType> GTVector;
+        GTVector geom_types;
+
+        for (size_type cc = 0; cc <= dim; ++cc)
           {
-
-            TypeTree::applyToTree(,_localOrdering);
+            const GTVector& per_codim_geom_types = _gv.indexSet().geometryTypes(cc);
+            std::copy(per_codim_geom_types.begin(),per_codim_geom_types.end(),std::back_inserter(geom_types));
           }
 
-        typedef typename GV::template Codim<0>::Iterator CellIterator;
-
-
-        _fixedSize = _localOrdering.fixedSize();
-        if (_fixedSize)
+        if (lo._fixed_size)
           {
-            std::fill(_gt_used.begin(),_gt_used.end(),false);
-            const std::vector<Dune::GeometryType>& geometryTypes = _gv.indexSet().geometryTypes();
-            for(GTVector::const_iterator it = geometryTypes.begin(); it != geometryTypes.end(); ++it)
+            lo.update_fixed_size(geom_types);
+
+            _gt_dof_offsets.resize(GlobalGeometryTypeIndex::size(dim) + 1);
+
+            const GTVector::const_iterator end_it = geom_types.end();
+            for (GTVector::const_iterator it = geom_types.begin(); it != end_it; ++it)
               {
-                size_type index = Dune::GlobalGeometryTypeIndex::index(*it);
-                TypeTree::applyToTree(localOrdering(),UpdatePerGeometryTypeOffsets(*it));
-                _gt_used[] |= _offsets[index].size() > 0;
+                const size_type gt_index = GlobalGeometryTypeIndex::index(*it);
+                _gt_dof_offsets[gt_index + 1] = lo.size(gt_index,0) * _gv.indexSet().size(*it);
               }
+            std::partial_sum(_gt_dof_offsets.begin(),_gt_dof_offsets.end(),_gt_dof_offsets.begin());
+          }
+        else
+          {
 
           }
-
       }
 
       //! dofs are blocked per entity/intersection on the leafs
@@ -113,10 +134,10 @@ namespace Dune {
        *       between entities od different geometry type or between entities
        *       and intersections.
        */
-      bool fixedSize() const { return _fixedSize; }
+      bool fixedSize() const { return localOrdering()._fixed_size; }
 
       //! number of indices in this ordering
-      SizeType size() const { return _size; }
+      typename Traits::SizeType size() const { return _size; }
 
       //! \brief maximum number of dofs attached to any given element and all
       //!        of its subentities and intersections
@@ -125,8 +146,9 @@ namespace Dune {
        * actual maximum.  There is however one special case: it is guaranteed
        * to be the exact maximum for fixedSize()==true.
        */
-      SizeType maxLocalSize() const { return _maxLocalSize; }
+      typename Traits::SizeType maxLocalSize() const { return _max_local_size; }
 
+#if 0
       //! \brief number of indices attached to a given entity (of arbitrary
       //!        codimension)
       /**
@@ -135,7 +157,7 @@ namespace Dune {
        *       Element &e, std::size_t codim, std::size_t subentity).
        */
       template<class Entity>
-      SizeType entitySize(const Entity &e) const { return gfs.entitySize(e); }
+      typename Traits::SizeType entitySize(const Entity &e) const { return gfs.entitySize(e); }
       //! number of indices attached to a given subentity of an element
       /**
        * This method determines the number of indices attached to a subentity
@@ -144,12 +166,12 @@ namespace Dune {
        * calling entitySize((*e.subEntity<codim>(subentity)).
        */
       template<class Element>
-      SizeType entitySize(const Element &e, std::size_t codim,
+      typename Traits::SizeType entitySize(const Element &e, std::size_t codim,
                           std::size_t subentity) const
       { return gfs.entitySize(e, codim, subentity); }
       //! number of indices attached to a given intersection
       template<class Intersection>
-      SizeType intersectionSize(const Intersection &i) const
+      typename Traits::SizeType intersectionSize(const Intersection &i) const
       { return gfs.intersectionSize(i); }
 
       //! \brief offset of the block of dofs attached to a given entity (of
@@ -164,7 +186,7 @@ namespace Dune {
        * \throw InvalidStateException If blocked()==false.
        */
       template<class Entity>
-      SizeType entityOffset(const Entity &e) const
+      typename Traits::SizeType entityOffset(const Entity &e) const
       { return gfs.entityOffset(e); }
       //! \brief offset of the blocks of dofs attached to a given subentity of
       //!        an element
@@ -176,13 +198,23 @@ namespace Dune {
        * entityOffset(*e.subEntity<codim>(subentity)).
        */
       template<class Element>
-      SizeType entityOffset(const Element &e, std::size_t codim,
+      typename Traits::SizeType entityOffset(const Element &e, std::size_t codim,
                             std::size_t subentity) const
       { return gfs.entityOffset(e, codim, subentity); }
       //! offset of the block of dofs attached to a given intersection
       template<class Intersection>
-      SizeType intersectionOffset(const Intersection &i) const
+      typename Traits::SizeType intersectionOffset(const Intersection &i) const
       { return gfs.intersectionOffset(i); }
+
+#endif // 0
+
+    private:
+
+      const bool _backend_blocked;
+      std::size_t _size;
+      std::size_t _max_local_size;
+      std::vector<typename Traits::SizeType> _gt_dof_offsets;
+
     };
 
 
