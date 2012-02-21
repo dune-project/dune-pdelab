@@ -360,8 +360,6 @@ namespace Dune {
         , ce(ce_)
         , _backend(backend)
       {
-        //        orderingp = make_shared<Ordering>(*this);
-        //update();
       }
 
       //! constructor
@@ -371,8 +369,6 @@ namespace Dune {
         , ce(defaultce)
         , _backend(backend)
       {
-        //        orderingp = make_shared<Ordering>(*this);
-        //update();
       }
 
       //! get grid view
@@ -584,143 +580,6 @@ namespace Dune {
 #endif // DOXYGEN
 
       //------------------------------
-
-
-      // update information, e.g. when grid has changed
-      void update ()
-      {
-        Dune::dinfo << "GridFunctionSpace(general version):" << std::endl;
-
-       // determine which geometry types are used
-        // needs one traversal of the grid
-        typedef std::set<Dune::GeometryType> GtUsedSetType;
-        GtUsedSetType gtused;
-        codimUsed.clear();
-        for (ElementIterator it = gv.template begin<0>();
-             it!=gv.template end<0>(); ++it)
-          {
-            const typename Traits::FiniteElementType &fe = pfem->find(*it);
-            // check geometry type
-            if (fe.type()!=it->type())
-              DUNE_THROW(Exception, "geometry type mismatch in GridFunctionSpace");
-
-            // get local coefficients for this entity
-            typedef FiniteElementInterfaceSwitch<
-              typename Traits::FiniteElementType
-              > FESwitch;
-            const typename FESwitch::Coefficients& coeffs =
-              FESwitch::coefficients(fe);
-
-            // insert geometry type of all subentities into set
-            for (std::size_t i=0; i<std::size_t(coeffs.size()); ++i)
-              {
-                Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
-                  ::general(it->type()).type(coeffs.localKey(i).subEntity(),
-                                             coeffs.localKey(i).codim());
-                gtused.insert(gt);
-                codimUsed.insert(GV::Grid::dimension-gt.dim());
-              }
-          }
-
-        // now we can allocate one number per entity that holds degrees of freedom
-
-        typename Traits::SizeType nentities = 0;
-        gtoffset.clear();
-        const typename GV::IndexSet& is=gv.indexSet();
-        for (typename GtUsedSetType::iterator i=gtused.begin(); i!=gtused.end(); ++i)
-          {
-            gtoffset[*i] = nentities;
-            Dune::dinfo << *i << ": " << is.size(*i)
-                        << " entries in offset vector at " << nentities
-                        << std::endl;
-            nentities += is.size(*i);
-          }
-        nentities++; // add one additional dummy entry; this allows to compute size of last entity.
-        offset.resize(nentities);
-        for (typename std::vector<typename Traits::SizeType>::iterator i=offset.begin(); i!=offset.end(); ++i)
-          *i = 0;
-        Dune::dinfo << "allocated offset vector with size " << offset.size()
-                    << std::endl;
-
-        // now compute the number of entries for each entity
-        // requires second grid traversal
-
-        typedef std::map<Dune::GeometryType,std::size_t> GeometryTypeSizeMap;
-        GeometryTypeSizeMap gtsizes;
-        for (GtUsedSetType::iterator it = gtused.begin(); it != gtused.end(); ++it)
-          {
-            gtsizes[*it] = 0;
-          }
-        fixed_size = true;
-
-        nlocal = 0;
-        for (ElementIterator it = gv.template begin<0>();
-             it!=gv.template end<0>(); ++it)
-          {
-            const typename Traits::FiniteElementType &fe = pfem->find(*it);
-
-            // get local coefficients for this entity
-            typedef FiniteElementInterfaceSwitch<
-              typename Traits::FiniteElementType
-              > FESwitch;
-            const typename FESwitch::Coefficients& coeffs =
-              FESwitch::coefficients(fe);
-
-            // compute maximum number of degrees of freedom per element
-            nlocal = std::max(nlocal, static_cast<typename Traits::SizeType>
-                                        (coeffs.size()));
-
-            GeometryTypeSizeMap localgtsizes;
-
-            // compute maximum size for each subentity
-            for (std::size_t i=0; i<std::size_t(coeffs.size()); ++i)
-              {
-                Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
-                  ::general(it->type()).type(coeffs.localKey(i).subEntity(),
-                                             coeffs.localKey(i).codim());
-                unsigned int index = gtoffset[gt] +
-                  is.subIndex(*it, coeffs.localKey(i).subEntity(),
-                              coeffs.localKey(i).codim());
-                offset[index] = std::max(offset[index],
-                                         typename Traits::SizeType
-                                            (coeffs.localKey(i).index()+1));
-                if (fixed_size)
-                  {
-                    localgtsizes[gt] = offset[index];
-                  }
-              }
-
-            if (fixed_size)
-              {
-                for (GeometryTypeSizeMap::iterator it = gtsizes.begin(); it != gtsizes.end(); ++it)
-                  {
-                    std::size_t localsize = localgtsizes[it->first];
-                    if (it->second == 0)
-                      it->second = localsize;
-                    else
-                      if (it->second != localsize)
-                        {
-                          fixed_size = false;
-                          break;
-                        }
-                  }
-              }
-          }
-
-        // now count global number of dofs and compute offset
-        nglobal = 0;
-        for (typename std::vector<typename Traits::SizeType>::iterator i=offset.begin();
-             i!=offset.end(); ++i)
-          {
-            typename Traits::SizeType size = *i;
-            *i = nglobal;
-            nglobal += size;
-          }
-        Dune::dinfo << "total number of dofs is " << nglobal << std::endl;
-
-        // update ordering
-        //orderingp->update();
-      }
 
       bool fixedSize() const
       {
