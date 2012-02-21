@@ -15,6 +15,7 @@
 #include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/gridfunctionspace/lfscontainerindexcache.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
+#include <dune/pdelab/gridfunctionspace/tags.hh>
 
 
 #include "backendselector.hh"
@@ -245,6 +246,18 @@ namespace Dune {
     {
     }
 
+    template<typename Ordering, typename Container>
+    void dispatch_istl_vector_allocation(const Ordering& ordering, Container& c, HierarchicContainerAllocationTag tag)
+    {
+      allocate_istl_vector(ordering,c);
+    }
+
+    template<typename Ordering, typename Container>
+    void dispatch_istl_vector_allocation(const Ordering& ordering, Container& c, FlatContainerAllocationTag tag)
+    {
+      resize_istl_vector(c,ordering.blockCount(),false);
+    }
+
     template<typename DI, typename CI, typename Container>
     typename enable_if<!is_same<typename Container::block_type,typename Container::field_type>::value>::type
     allocate_istl_vector(const OrderingBase<DI,CI>& ordering, Container& c)
@@ -423,6 +436,7 @@ namespace Dune {
         {
         }
 
+
         ElementType& operator[](size_type i)
         {
           return (*_container)[_lfs_cache->container_index(i)];
@@ -580,13 +594,13 @@ namespace Dune {
       ISTLBlockVectorContainer (const GFS& gfs_)
         : container(gfs_.ordering().blockCount())
       {
-        allocate_istl_vector(gfs_.ordering(),container);
+        dispatch_istl_vector_allocation(gfs_.ordering(),container,typename GFS::Ordering::ContainerAllocationTag());
       }
 
       ISTLBlockVectorContainer (const GFS& gfs_, const E& e)
         : container(gfs_.ordering().blockCount())
       {
-        allocate_istl_vector(gfs_.ordering(),container);
+        dispatch_istl_vector_allocation(gfs_.ordering(),container,typename GFS::Ordering::ContainerAllocationTag());
         container=e;
       }
 

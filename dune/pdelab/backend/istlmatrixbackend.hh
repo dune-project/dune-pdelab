@@ -155,10 +155,22 @@ namespace Dune {
       typedef Pattern<Ordering,typename _build_pattern_type<typename M::block_type,Ordering,requires_pattern<typename M::block_type>::value>::type> type;
     };
 
-    template<typename M, typename Ordering>
+    template<typename M, typename GFSV, typename GFSU, typename Tag>
     struct build_pattern_type
     {
+
+      typedef OrderingBase<
+        typename GFSV::Ordering::Traits::DOFIndex,
+        typename GFSV::Ordering::Traits::ContainerIndex
+        > Ordering;
+
       typedef typename _build_pattern_type<M,Ordering,requires_pattern<M>::value>::type type;
+    };
+
+    template<typename M, typename GFSV, typename GFSU>
+    struct build_pattern_type<M,GFSV,GFSU,FlatContainerAllocationTag>
+    {
+      typedef Pattern<typename GFSV::Ordering> type;
     };
 
 
@@ -376,11 +388,6 @@ namespace Dune {
     class ISTLMatrixContainer
     {
 
-      typedef OrderingBase<
-        typename GFSV::Ordering::Traits::DOFIndex,
-        typename GFSV::Ordering::Traits::ContainerIndex
-        > CustomOrdering;
-
     public:
 
       typedef typename C::field_type ElementType;
@@ -394,7 +401,7 @@ namespace Dune {
       typedef typename GFSV::Ordering::Traits::ContainerIndex RowIndex;
       typedef typename GFSU::Ordering::Traits::ContainerIndex ColIndex;
 
-      typedef typename build_pattern_type<C,CustomOrdering>::type Pattern;
+      typedef typename build_pattern_type<C,GFSV,GFSU,typename GFSV::Ordering::ContainerAllocationTag>::type Pattern;
 
       template<typename RowCache, typename ColCache>
       class LocalView
