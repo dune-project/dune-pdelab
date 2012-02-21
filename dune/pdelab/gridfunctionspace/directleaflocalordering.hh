@@ -66,6 +66,38 @@ namespace Dune {
         return _gfs.gridview();
       }
 
+    private:
+
+      void update_a_priori_fixed_size()
+      {
+        _fixed_size = _gfs.fixedSize();
+      }
+
+      typedef std::vector<GeometryType> GTVector;
+
+      void update_fixed_size(const GTVector& geom_types)
+      {
+        assert(node._fixed_size);
+
+        typedef typename Traits::SizeType size_type;
+        const size_type dim = Traits::GridView::dimension;
+        _codim_used.assign(dim,false);
+        _gt_used.assign(GlobalGeometryTypeIndex::size(dim),false);
+        _gt_dof_offsets.assign(GlobalGeometryTypeIndex::size(dim),0);
+        for (GTVector::const_iterator it = geom_types.begin(); it != geom_types.end(); ++it)
+          {
+            size_type size = _gfs.size(*it);
+            _gt_dof_offsets[GlobalGeometryTypeIndex::index(*it)] = size;
+            _gt_used[GlobalGeometryTypeIndex::index(*it)] = size > 0;
+            _codim_used[dim - it->dim()] = _codim_used[dim - it->dim()] || (size > 0);
+          }
+      }
+
+      typename Traits::SizeType maxLocalSize() const
+      {
+        return _gfs.fixedMaxLocalSize();
+      }
+
     protected:
 
       const GFS& _gfs;
