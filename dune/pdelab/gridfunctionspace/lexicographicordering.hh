@@ -16,9 +16,12 @@
 #include <dune/pdelab/common/typetree/powernode.hh>
 #include <dune/pdelab/common/typetree/traversal.hh>
 #include <dune/pdelab/common/typetree/visitor.hh>
-#include <dune/pdelab/gridfunctionspace/nonleaforderingbase.hh>
-#include <dune/pdelab/gridfunctionspace/orderingbase.hh>
-#include <dune/pdelab/gridfunctionspace/compositeorderingutilities.hh>
+//#include <dune/pdelab/gridfunctionspace/nonleaforderingbase.hh>
+//#include <dune/pdelab/gridfunctionspace/orderingbase.hh>
+//#include <dune/pdelab/gridfunctionspace/compositeorderingutilities.hh>
+
+#include <dune/pdelab/gridfunctionspace/orderingutility.hh>
+#include <dune/pdelab/gridfunctionspace/orderingdynamicbase.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -36,47 +39,35 @@ namespace Dune {
      * child 1 and so on.
      */
     struct LexicographicOrderingTag { };
-    typedef LexicographicOrderingTag GridFunctionSpaceLexicographicMapper;
 
-    namespace LexicographicOrderingImp {
-
-      template<class SizeType>
-      class CollectSizesVisitor :
-        public TypeTree::DirectChildrenVisitor,
-        public TypeTree::DynamicTraversal
-      {
-        SizeType *sizes;
-
-      public:
-        CollectSizesVisitor(SizeType *sizes_) : sizes(sizes_) { }
-
-        template<class T, class Child, class TreePath, class ChildIndex>
-        void beforeChild(const T &t, const Child& child, TreePath, ChildIndex childIndex) const
-        { sizes[childIndex] = child.size(); }
-      };
+    namespace lexicographic_ordering {
 
       //! Interface for merging index spaces
-      template<class SizeType, class Node, class Imp>
-      class Base :
-        public NonLeafOrderingBase<SizeType, Imp>
+      template<typename DI, typename CI, typename Backend, typename Node>
+      class Base
+        : public OrderingBase<DI,CI>
       {
-      protected:
-        using NonLeafOrderingBase<SizeType, Imp>::asImp;
-        using NonLeafOrderingBase<SizeType, Imp>::printInfo;
-
-        SizeType childOffsets[Node::CHILDREN+1];
 
       public:
+
+        typedef LexicographicOrderingTag OrderingTag;
+
         //! Construct ordering object
         /**
          * In general, an ordering object is not properly setup after
          * construction.  This must be done by a seperate call to update()
          * after all the children have been properly set up.
          */
-        Base() {
-          childOffsets[0] = 0;
-          asImp().update();
+        Base(Node& node)
+        : OrderingBase<DI,CI>(node,false,nullptr)
+        {
         }
+
+        /*        Base(shared_ptr<Backend> backend)
+          : OrderingBase<MI,CI>(static_cast<Node&>(*this),backend->blocked())
+          , _backend(backend)
+        {
+        }*/
 
         //! update internal data structures
         /**
@@ -85,17 +76,15 @@ namespace Dune {
          * the children must have been set up properly before the call to
          * update().
          */
-        void update() {
+        void updatae() {
+          /*
           Dune::dinfo << asImp().name() << ":" << std::endl;
 
-          TypeTree::applyToTree(asImp(),
-                                CollectSizesVisitor<SizeType>(childOffsets+1));
-          // childOffset[i+1] now contains the *size* of child[i].
-          // Convert to offsets...
-          for(std::size_t child = 1; child < Node::CHILDREN; ++child)
-            childOffsets[child+1] += childOffsets[child];
+          TypeTree::applyToTree(asImp(),update_children());
+          static_cast<OrderingBase<DI,CI>*>(this)->update();
 
           printInfo(dinfo);
+          */
         }
 
         //! whether dofs are blocked per entity/intersection (they are not)
@@ -110,12 +99,9 @@ namespace Dune {
          * \note update() must have been called before this method may be
          *       used.
          */
-        SizeType subMap(SizeType child, SizeType indexInChild) const
-        { return childOffsets[child] + indexInChild; }
 
         //! number of indices in this ordering
-        SizeType size() const { return childOffsets[Node::CHILDREN]; }
-
+#if 0
         //! \brief offset of the block of dofs attached to a given entity (of
         //!        arbitrary codimension)
         /**
@@ -159,21 +145,32 @@ namespace Dune {
                      className<Imp>() << "::intersectionOffset() does not "
                      "make sense since the ordering is non-blocking");
         }
+
+#endif // 0
+
       };
     }
 
     //! Interface for merging index spaces
-    template<class SizeType, class Child, std::size_t k>
-    class PowerLexicographicOrdering :
-      public TypeTree::PowerNode<Child, k>,
-      public LexicographicOrderingImp::Base<
-        SizeType, TypeTree::PowerNode<Child, k>,
-        PowerLexicographicOrdering<SizeType, Child, k>
-      >
+    template<typename DI, typename CI, typename Backend, typename Child, std::size_t k>
+    class PowerLexicographicOrdering
+      : public TypeTree::PowerNode<Child, k>
+      , public lexicographic_ordering::Base<DI,
+                                            CI,
+                                            Backend,
+                                            PowerLexicographicOrdering<DI,CI,Backend,Child,k>
+                                            >
     {
       typedef TypeTree::PowerNode<Child, k> Node;
 
+      typedef lexicographic_ordering::Base<DI,
+                                           CI,
+                                           Backend,
+                                           PowerLexicographicOrdering<DI,CI,Backend,Child,k>
+                                           > Base;
+
     public:
+
       //! Construct ordering object
       /**
        * In general, an ordering object is not properly setup after
@@ -183,24 +180,84 @@ namespace Dune {
        * \note This constructor must be present for ordering objects not at
        *       the leaf of the tree.
        */
-      template<class GFS>
-      PowerLexicographicOrdering(const GFS &gfs,
-                                 const typename Node::NodeStorage &children) :
-        Node(children)
+      PowerLexicographicOrdering(const typename Node::NodeStorage& children)
+        : Node(children)
+        , Base(*this)
       { }
+
+      void update()
+      {
+        std::cout << "********************" << std::endl;
+        for (std::size_t i = 0; i < Node::CHILDREN; ++i)
+          {
+            this->child(i).update();
+            for (auto it = this->child(i)._child_offsets.begin(); it != this->child(i)._child_offsets.end(); ++it)
+              std::cout << *it << " ";
+            std::cout << std::endl;
+          }
+        Base::update();
+        for (auto it = this->_child_offsets.begin(); it != this->_child_offsets.end(); ++it)
+          std::cout << *it << " ";
+        std::cout << std::endl;
+        std::cout << "********************" << std::endl;
+      }
 
       std::string name() const { return "PowerLexicographicOrdering"; }
     };
 
-    template<>
-    struct TransformPowerGFSToOrdering<LexicographicOrderingTag> {
-      template<class GFSTraits, class TransformedChild, std::size_t k>
-      struct result {
-        typedef PowerLexicographicOrdering<typename GFSTraits::SizeType,
-                                           TransformedChild, k
-                                           > type;
+
+    template<typename GFS, typename Transformation, typename OrderingTag>
+    struct power_gfs_to_ordering_descriptor;
+
+    template<typename GFS, typename Transformation>
+    struct power_gfs_to_ordering_descriptor<GFS,Transformation,LexicographicOrderingTag>
+    {
+
+      static const bool recursive = true;
+
+      template<typename TC>
+      struct result
+      {
+
+        typedef PowerLexicographicOrdering<
+          typename Transformation::DOFIndex,
+          typename Transformation::ContainerIndex,
+          typename GFS::Traits::Backend,
+          TC,
+          GFS::CHILDREN
+          > type;
+
+        typedef shared_ptr<type> storage_type;
+
       };
+
+      template<typename TC>
+      static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
+      {
+        return typename result<TC>::type(children);
+      }
+
+      template<typename TC>
+      static typename result<TC>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
+      {
+        return make_shared<typename result<TC>::type>(children);
+      }
+
     };
+
+
+    template<typename GridFunctionSpace, typename Params>
+    power_gfs_to_ordering_descriptor<
+      GridFunctionSpace,
+      gfs_to_ordering<Params>,
+      typename GridFunctionSpace::OrderingTag
+      >
+    lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_ordering<Params>* t, PowerGridFunctionSpaceTag tag);
+
+
+
+
+#if 0
 
     //! Interface for merging index spaces
     template<class SizeType, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
@@ -234,7 +291,6 @@ namespace Dune {
 
       std::string name() const { return "CompositeLexicographicOrdering"; }
     };
-
 
 #if HAVE_VARIADIC_TEMPLATES
 
@@ -358,6 +414,8 @@ namespace Dune {
     template<typename GFSNode, typename GFS>
     CompositeGFSToLexicographicOrderingTransformation<GFSNode,gfs_to_ordering<GFS,LexicographicOrderingTag> >
     lookupNodeTransformation(GFSNode*, gfs_to_ordering<GFS,LexicographicOrderingTag>*, CompositeGridFunctionSpaceBaseTag);
+
+#endif // 0
 
 #endif // HAVE_VARIADIC_TEMPLATES
 
