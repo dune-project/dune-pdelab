@@ -63,6 +63,8 @@ namespace Dune {
       //! vector backend
       typedef B BackendType;
 
+      typedef B Backend;
+
       //! short cut for size type exported by Backend
       typedef typename B::size_type SizeType;
 
