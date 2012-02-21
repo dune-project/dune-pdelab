@@ -363,12 +363,12 @@ namespace Dune {
     };
 
 
-    template <typename GFS, typename MultiIndex>
+    template <typename GFS, typename DOFIndex>
     template <typename NodeType>
-    void LocalFunctionSpaceBaseNode<GFS,MultiIndex>::bind (NodeType& node,
-         const typename LocalFunctionSpaceBaseNode<GFS,MultiIndex>::Traits::Element& e)
+    void LocalFunctionSpaceBaseNode<GFS,DOFIndex>::bind (NodeType& node,
+         const typename LocalFunctionSpaceBaseNode<GFS,DOFIndex>::Traits::Element& e)
     {
-      typedef typename LocalFunctionSpaceBaseNode<GFS,MultiIndex>::Traits::Element Element;
+      typedef typename LocalFunctionSpaceBaseNode<GFS,DOFIndex>::Traits::Element Element;
       assert(&node == this);
 
       // compute sizes
@@ -454,7 +454,7 @@ namespace Dune {
     };
 
 
-    // transformation template, we need a custom template in order to inject the MultiIndex type into the LocalFunctionSpace
+    // transformation template, we need a custom template in order to inject the DOFIndex type into the LocalFunctionSpace
     template<typename SourceNode, typename Transformation>
     struct power_gfs_to_lfs_template
     {
