@@ -17,6 +17,7 @@
 #include <dune/pdelab/constraints/constraintstransformation.hh> // backward compatibility
 #include"gridfunctionspace.hh"
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/lfscontainerindexcache.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -101,7 +102,12 @@ namespace Dune {
        * \param x_  The coefficients vector
        */
 	  DiscreteGridFunction (const GFS& gfs, const X& x_)
-		: pgfs(stackobject_to_shared_ptr(gfs)), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
+        : pgfs(stackobject_to_shared_ptr(gfs))
+        , lfs(gfs)
+        , lfs_cache(lfs)
+        , x_view(x_)
+        , xl(gfs.maxLocalSize())
+        , yb(gfs.maxLocalSize())
 	  {
 	  }
 
@@ -114,7 +120,10 @@ namespace Dune {
           typename Dune::PDELab::LocalFunctionSpace<GFS>::Traits::FiniteElementType
           > FESwitch;
 		lfs.bind(e);
-		lfs.vread(xg,xl);
+        lfs_cache.update();
+        x_view.bind(lfs_cache);
+        x_view.read(xl);
+        x_view.unbind();
         FESwitch::basis(lfs.finiteElement()).evaluateFunction(x,yb);
 		y = 0;
 		for (unsigned int i=0; i<yb.size(); i++)
@@ -128,9 +137,15 @@ namespace Dune {
 	  }
 
 	private:
+
+      typedef LocalFunctionSpace<GFS> LFS;
+      typedef LFSContainerIndexCache<LFS> LFSCache;
+      typedef typename X::template ConstLocalView<LFSCache> XView;
+
 	  shared_ptr<GFS const> pgfs;
-	  const X& xg;
-	  mutable LocalFunctionSpace<GFS> lfs;
+      mutable LFS lfs;
+      mutable LFSCache lfs_cache;
+      mutable XView x_view;
 	  mutable std::vector<typename Traits::RangeFieldType> xl;
 	  mutable std::vector<typename Traits::RangeType> yb;
 	};
