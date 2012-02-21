@@ -216,9 +216,6 @@ namespace Dune {
         ConstraintsContainer ();
       };
 
-      //! assumes all children are up to date.
-      void shallowUpdate() { gfs().ordering().update(); }
-
       //! recalculate sizes
       void update ()
       {
@@ -257,19 +254,6 @@ namespace Dune {
       {
         return gfs().template child<0>().gridView();
       }
-
-      //! map index from our index set [0,size()-1] to root index set
-      typename Traits::SizeType upMap (typename Traits::SizeType i) const
-      { return i; }
-
-      //! map index from child i's index set into our index set
-      template<int i>
-      typename Traits::SizeType subMap(typename Traits::SizeType j) const
-      { return subMap(i,j); }
-
-      typename Traits::SizeType subMap(typename Traits::SizeType i,
-                                       typename Traits::SizeType j) const
-      { return gfs().ordering().subMap(i, j); }
 
       //------------------------------
       // generic data handle interface
