@@ -750,13 +750,15 @@ namespace Dune {
      * \param xg The container with the coefficients
      */
     template<typename CG, typename XG>
-    void set_constrained_dofs(const CG& cg, typename XG::ElementType x,
+    void set_constrained_dofs(const typename XG::GridFunctionSpace& gfs,
+                              const CG& cg,
+                              typename XG::ElementType x,
                               XG& xg)
     {
       typedef typename XG::Backend B;
       typedef typename CG::const_iterator global_col_iterator;
       for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
-        B::access(xg,cit->first) = x;
+        xg[gfs.ordering->map_index(cit->first)] = x;
     }
 
     //! check that constrained dofs match a certain value
@@ -781,13 +783,13 @@ namespace Dune {
      *          otherwise.
      */
     template<typename CG, typename XG, typename Cmp>
-    bool check_constrained_dofs(const CG& cg, typename XG::ElementType x,
+    bool check_constrained_dofs(const typename XG::GridFunctionSpace& gfs,
+                                const CG& cg, typename XG::ElementType x,
                                 XG& xg, const Cmp& cmp = Cmp())
     {
-      typedef typename XG::Backend B;
       typedef typename CG::const_iterator global_col_iterator;
       for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
-        if(cmp.ne(B::access(xg,cit->first), x))
+        if(cmp.ne(xg[gfs.ordering()->map_index(cit->first)], x))
           return false;
       return true;
     }
@@ -811,10 +813,11 @@ namespace Dune {
      *          otherwise.
      */
     template<typename CG, typename XG>
-    bool check_constrained_dofs(const CG& cg, typename XG::ElementType x,
+    bool check_constrained_dofs(const typename XG::GridFunctionSpace& gfs,
+                                const CG& cg, typename XG::ElementType x,
                                 XG& xg)
     {
-      return check_constrained_dofs(cg, x, xg,
+      return check_constrained_dofs(gfs, cg, x, xg,
                                     FloatCmpOps<typename XG::ElementType>());
     }
 
@@ -825,20 +828,19 @@ namespace Dune {
      * \endcode
      */
     template<typename CG, typename XG>
-    void constrain_residual (const CG& cg, XG& xg)
+    void constrain_residual (const typename XG::GridFunctionSpace& gfs, const CG& cg, XG& xg)
     {
       typedef typename CG::const_iterator global_col_iterator;
       typedef typename CG::value_type::second_type::const_iterator global_row_iterator;
-      typedef typename XG::Backend B;
 
       for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
         for(global_row_iterator rit = cit->second.begin(); rit!=cit->second.end(); ++rit)
-          B::access(xg,rit->first) += rit->second * B::access(xg,cit->first);
+          xg[gfs.ordering()->map_index(rit->first)] += rit->second * xg[gfs.ordering()->map_index(cit->first)];
 
       // extra loop because constrained dofs might have contributions
       // to constrained dofs
       for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
-        B::access(xg,cit->first) = 0;
+        xg[gfs.ordering()->map_index(cit->first)] = 0;
     }
 
     //! Modify coefficient vector based on constrained dofs as given
@@ -851,12 +853,14 @@ namespace Dune {
      * \endcode
      */
     template<typename CG, typename XG>
-    void copy_constrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
+    void copy_constrained_dofs (const typename XG::GridFunctionSpace& gfs, const CG& cg, const XG& xgin, XG& xgout)
     {
-      typedef typename XG::Backend B;
       typedef typename CG::const_iterator global_col_iterator;
       for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
-        B::access(xgout,cit->first) = B::access(xgin,cit->first);
+        {
+          const typename XG::ContainerIndex& i = gfs.ordering()->map_index(cit->first);
+          xgout[i] = xgin[i];
+        }
     }
 
     /**
@@ -865,12 +869,18 @@ namespace Dune {
      * \endcode
      */
     template<typename CG, typename XG>
-    void set_nonconstrained_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
+    void set_nonconstrained_dofs (const typename XG::GridFunctionSpace& gfs, const CG& cg, typename XG::ElementType x, XG& xg)
     {
+      // FIXME: This is horribly inefficient!
+      XG tmp(xg);
+      xg = x;
+      copy_constrained_dofs(gfs,cg,tmp,xg);
+      /*
       typedef typename XG::Backend B;
       for (typename XG::size_type i=0; i<xg.flatsize(); ++i)
         if (cg.find(i)==cg.end())
           B::access(xg,i) = x;
+      */
     }
 
 
@@ -880,12 +890,18 @@ namespace Dune {
      * \endcode
      */
     template<typename CG, typename XG>
-    void copy_nonconstrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
+    void copy_nonconstrained_dofs (const typename XG::GridFunctionSpace& gfs, const CG& cg, const XG& xgin, XG& xgout)
     {
+      // FIXME: This is horribly inefficient!
+      XG tmp(xgin);
+      copy_constrained_dofs(gfs,cg,xgout,tmp);
+      xgout = tmp;
+      /*
       typedef typename XG::Backend B;
       for (typename XG::size_type i=0; i<xgin.flatsize(); ++i)
         if (cg.find(i)==cg.end())
           B::access(xgout,i) = B::access(xgin,i);
+      */
     }
 
     /**
@@ -894,8 +910,24 @@ namespace Dune {
      * \endcode
      */
     template<typename CG, typename XG>
-    void set_shifted_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
+    void set_shifted_dofs (const typename XG::GridFunctionSpace& gfs, const CG& cg, typename XG::ElementType x, XG& xg)
     {
+      // FIXME: This is horribly inefficient!
+
+      XG tmp(xg);
+      tmp = x;
+
+      typedef typename CG::const_iterator global_col_iterator;
+      for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
+        if (cit->second().size() == 0)
+          {
+            const typename XG::ContainerIndex& i = gfs.ordering()->map_index(cit->first);
+            tmp[i] = xg[i];
+          }
+
+      xg = tmp;
+
+      /*
       typedef typename XG::Backend B;
       typedef typename CG::const_iterator global_col_iterator;
       for (typename XG::size_type i=0; i<xg.flatsize(); ++i){
@@ -903,6 +935,7 @@ namespace Dune {
         if (it == cg.end() || it->second.size() > 0)
           B::access(xg,i) = x;
       }
+      */
     }
 
     //! @}
