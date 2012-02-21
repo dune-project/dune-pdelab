@@ -122,12 +122,12 @@ namespace Dune {
         };
 
         //! Per node type algorithm struct. Prototype.
-        template<typename Tree, typename Functor, typename Reduction, typename Functor::result_type current_value, typename TreePath, typename Tag>
+        template<typename Tree, typename Functor, typename Reduction, typename ParentChildReduction, typename Functor::result_type current_value, typename TreePath, typename Tag>
         struct accumulate_value;
 
         //! Leaf node specialization.
-        template<typename LeafNode, typename Functor, typename Reduction, typename Functor::result_type current_value, typename TreePath>
-        struct accumulate_value<LeafNode,Functor,Reduction,current_value,TreePath,LeafNodeTag>
+        template<typename LeafNode, typename Functor, typename Reduction, typename ParentChildReduction, typename Functor::result_type current_value, typename TreePath>
+        struct accumulate_value<LeafNode,Functor,Reduction,ParentChildReduction,current_value,TreePath,LeafNodeTag>
         {
 
           typedef typename Functor::result_type result_type;
@@ -139,7 +139,7 @@ accumulate_node_helper<LeafNode,Functor,Reduction,current_value,TreePath,Functor
         };
 
         //! Iteration over children of a composite node.
-        template<typename Node, typename Functor, typename Reduction, typename Functor::result_type current_value, typename TreePath, std::size_t i, std::size_t n>
+        template<typename Node, typename Functor, typename Reduction, typename ParentChildReduction, typename Functor::result_type current_value, typename TreePath, std::size_t i, std::size_t n>
         struct accumulate_over_children
         {
 
@@ -149,15 +149,15 @@ accumulate_node_helper<LeafNode,Functor,Reduction,current_value,TreePath,Functor
 
           typedef typename Node::template Child<i>::Type child;
 
-          static const result_type child_result = accumulate_value<child,Functor,Reduction,current_value,child_tree_path,typename child::NodeTag>::result;
+          static const result_type child_result = accumulate_value<child,Functor,Reduction,ParentChildReduction,current_value,child_tree_path,typename child::NodeTag>::result;
 
-          static const result_type result = accumulate_over_children<Node,Functor,Reduction,child_result,TreePath,i+1,n>::result;
+          static const result_type result = accumulate_over_children<Node,Functor,Reduction,ParentChildReduction,child_result,TreePath,i+1,n>::result;
 
         };
 
         //! end of iteration.
-        template<typename Node, typename Functor, typename Reduction, typename Functor::result_type current_value, typename TreePath, std::size_t n>
-        struct accumulate_over_children<Node,Functor,Reduction,current_value,TreePath,n,n>
+        template<typename Node, typename Functor, typename Reduction, typename ParentChildReduction, typename Functor::result_type current_value, typename TreePath, std::size_t n>
+        struct accumulate_over_children<Node,Functor,Reduction,ParentChildReduction,current_value,TreePath,n,n>
         {
 
           typedef typename Functor::result_type result_type;
@@ -168,37 +168,38 @@ accumulate_node_helper<LeafNode,Functor,Reduction,current_value,TreePath,Functor
 
         //! Generic composite node specialization. We are doing the calculation at compile time and thus have to use static iteration for
         //! the PowerNode as well.
-        template<typename Node, typename Functor, typename Reduction, typename Functor::result_type current_value, typename TreePath>
+        template<typename Node, typename Functor, typename Reduction, typename ParentChildReduction, typename Functor::result_type current_value, typename TreePath>
         struct accumulate_value_generic_composite_node
         {
 
           typedef typename Functor::result_type result_type;
 
-          static const result_type node_result =
-            accumulate_node_helper<Node,Functor,Reduction,current_value,TreePath,Functor::template doVisit<Node,TreePath>::value>::result;
+          static const result_type child_result = accumulate_over_children<Node,Functor,Reduction,ParentChildReduction,current_value,TreePath,0,Node::CHILDREN>::result;
 
-          static const result_type result = accumulate_over_children<Node,Functor,Reduction,node_result,TreePath,0,Node::CHILDREN>::result;
+          static const result_type result =
+            accumulate_node_helper<Node,Functor,ParentChildReduction,child_result,TreePath,Functor::template doVisit<Node,TreePath>::value>::result;
+
 
         };
 
         //! PowerNode specialization.
-        template<typename PowerNode, typename Functor, typename Reduction, typename Functor::result_type current_value, typename TreePath>
-        struct accumulate_value<PowerNode,Functor,Reduction,current_value,TreePath,PowerNodeTag>
-          : public accumulate_value_generic_composite_node<PowerNode,Functor,Reduction,current_value,TreePath>
+        template<typename PowerNode, typename Functor, typename Reduction, typename ParentChildReduction, typename Functor::result_type current_value, typename TreePath>
+        struct accumulate_value<PowerNode,Functor,Reduction,ParentChildReduction,current_value,TreePath,PowerNodeTag>
+          : public accumulate_value_generic_composite_node<PowerNode,Functor,Reduction,ParentChildReduction,current_value,TreePath>
         {};
 
         //! CompositeNode specialization.
-        template<typename CompositeNode, typename Functor, typename Reduction, typename Functor::result_type current_value, typename TreePath>
-        struct accumulate_value<CompositeNode,Functor,Reduction,current_value,TreePath,CompositeNodeTag>
-          : public accumulate_value_generic_composite_node<CompositeNode,Functor,Reduction,current_value,TreePath>
+        template<typename CompositeNode, typename Functor, typename Reduction, typename ParentChildReduction, typename Functor::result_type current_value, typename TreePath>
+        struct accumulate_value<CompositeNode,Functor,Reduction,ParentChildReduction,current_value,TreePath,CompositeNodeTag>
+          : public accumulate_value_generic_composite_node<CompositeNode,Functor,Reduction,ParentChildReduction,current_value,TreePath>
         {};
 
 #if HAVE_VARIADIC_TEMPLATES
 
         //! VariadicCompositeNode specialization.
-        template<typename VariadicCompositeNode, typename Functor, typename Reduction, typename Functor::result_type current_value, typename TreePath>
-        struct accumulate_value<VariadicCompositeNode,Functor,Reduction,current_value,TreePath,VariadicCompositeNodeTag>
-          : public accumulate_value_generic_composite_node<VariadicCompositeNode,Functor,Reduction,current_value,TreePath>
+        template<typename VariadicCompositeNode, typename Functor, typename Reduction, typename ParentChildReduction, typename Functor::result_type current_value, typename TreePath>
+        struct accumulate_value<VariadicCompositeNode,Functor,Reduction,ParentChildReduction,current_value,TreePath,VariadicCompositeNodeTag>
+          : public accumulate_value_generic_composite_node<VariadicCompositeNode,Functor,Reduction,ParentChildReduction,current_value,TreePath>
         {};
 
 #endif // HAVE_VARIADIC_TEMPLATES
@@ -262,7 +263,7 @@ accumulate_node_helper<LeafNode,Functor,Reduction,current_value,TreePath,Functor
        *
        * \tparam startValue  The starting value fed into the initial accumulation step.
        */
-      template<typename Tree, typename Functor, typename Reduction, typename Functor::result_type startValue>
+      template<typename Tree, typename Functor, typename Reduction, typename Functor::result_type startValue, typename ParentChildReduction = Reduction>
       struct AccumulateValue
       {
 
@@ -270,7 +271,7 @@ accumulate_node_helper<LeafNode,Functor,Reduction,current_value,TreePath,Functor
         typedef typename Functor::result_type result_type;
 
         //! The accumulated result of the computation.
-        static const result_type result = accumulate_value<Tree,Functor,Reduction,startValue,TreePath<>,typename Tree::NodeTag>::result;
+        static const result_type result = accumulate_value<Tree,Functor,Reduction,ParentChildReduction,startValue,TreePath<>,typename Tree::NodeTag>::result;
 
       };
 
