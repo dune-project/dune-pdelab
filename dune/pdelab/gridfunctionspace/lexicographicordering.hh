@@ -232,13 +232,13 @@ namespace Dune {
       template<typename TC>
       static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
       {
-        return typename result<TC>::type(false,children);
+        return typename result<TC>::type(gfs.backend().blocked(),children);
       }
 
       template<typename TC>
       static typename result<TC>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
       {
-        return make_shared<typename result<TC>::type>(false,children);
+        return make_shared<typename result<TC>::type>(gfs->backend().blocked(),children);
       }
 
     };
@@ -355,13 +355,13 @@ namespace Dune {
       template<typename... TC>
       static typename result<TC...>::type transform(const GFS& gfs, const Transformation& t, shared_ptr<TC>... children)
       {
-        return typename result<TC...>::type(true,children...);
+        return typename result<TC...>::type(gfs.backend().blocked(),children...);
       }
 
       template<typename... TC>
       static typename result<TC...>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, shared_ptr<TC>... children)
       {
-        return make_shared<typename result<TC...>::type>(true,children...);
+        return make_shared<typename result<TC...>::type>(gfs->backend().blocked(),children...);
       }
 
     };

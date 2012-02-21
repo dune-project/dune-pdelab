@@ -256,12 +256,12 @@ namespace Dune {
 
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
-        return transformed_type(make_tuple(make_shared<LocalOrdering>(gfs)),false);
+        return transformed_type(make_tuple(make_shared<LocalOrdering>(gfs)),gfs.backend().blocked());
       }
 
       static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
       {
-        return make_shared<transformed_type>(make_tuple(make_shared<LocalOrdering>(*gfs)),false);
+        return make_shared<transformed_type>(make_tuple(make_shared<LocalOrdering>(*gfs)),gfs->backend().blocked());
       }
 
     };
