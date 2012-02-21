@@ -271,7 +271,7 @@ namespace Dune {
       template<typename Node, typename TreePath>
       void leaf(Node& node, TreePath tp) const
       {
-        node._fixed_size = node.gridFunctionSpace().alwaysFixedSize();
+        node._fixed_size = node.gridFunctionSpace().fixedSize();
       }
 
       template<typename Node, typename TreePath>
@@ -312,7 +312,7 @@ namespace Dune {
                 size_type size = node.gridFunctionSpace().size(*it);
                 node._gt_dof_offsets[Dune::GlobalGeometryTypeIndex::index(*it)] = size;
                 node._gt_used[Dune::GlobalGeometryTypeIndex::index(*it)] = size > 0;
-                node._codim_used[cc] |= size > 0;
+                node._codim_used[dim - it->dim()] |= size > 0;
               }
           }
       }
@@ -358,7 +358,7 @@ namespace Dune {
       {
         if (node._fixed_size)
           {
-            typedef std::vector<typename Node::Traits::SizeType>::iterator iterator;
+            typedef typename std::vector<typename Node::Traits::SizeType>::iterator iterator;
 
             iterator next_gt_it = node._gt_dof_offsets.begin() + Node::CHILDREN;
             const iterator end_it = node._gt_dof_offsets.end();
@@ -518,7 +518,17 @@ namespace Dune {
             if (node._fixed_size_possible)
               std::fill(gt_sizes.begin(),gt_sizes.end(),0);
 
-            ... coeffs = ...;
+            typedef FiniteElementInterfaceSwitch<
+              typename Node::Traits::GridFunctionSpace::Traits::FiniteElementType
+              > FESwitch;
+
+            const typename Node::Traits::GridFunctionSpace::Traits::FiniteElementType&
+              fe = node.gridFunctionSpace().fe();
+
+            const typename FESwitch::Coefficients& coeffs =
+              FESwitch::coefficients(fe);
+
+            typedef typename FESwitch::Coefficients::const_iterator CoeffIterator;
 
             for (CoeffIterator it = coeffs.begin(); it != coeffs.end(); ++it)
               {
@@ -530,7 +540,7 @@ namespace Dune {
                 gt_sizes[geometry_type_index] = node._entity_dof_offsets[index] = std::max(node._entity_dof_offsets[index],it->index() + 1);
               }
 
-            îf (node._fixed_size_possible)
+            if (node._fixed_size_possible)
               {
                 for (size_type i = 0; i < gt_sizes.size(); ++i)
                   if (gt_sizes[i] > 0)
@@ -551,13 +561,13 @@ namespace Dune {
       extract_per_entity_sizes_from_cell(const GV& gv_)
         : gv(gv_)
         , cell(nullptr)
-        , ref_el(Dune::GenericReferenceElements<typename Entity::ctype,dim>::general(cell.type()))
+        , ref_el(Dune::GenericReferenceElements<typename GV::ctype,dim>::general(cell.type()))
         , gt_sizes(Dune::GlobalGeometryTypeIndex::size(dim),0)
       {}
 
       GV gv;
       const Cell* cell;
-      const Dune::GenericReferenceElement<typename Entity::ctype,dim>& ref_el;
+      const Dune::GenericReferenceElement<typename GV::ctype,dim>& ref_el;
       std::vector<size_type> gt_sizes;
 
     };
@@ -568,6 +578,8 @@ namespace Dune {
       : public TypeTree::TreeVisitor
       , public TypeTree::DynamicTraversal
     {
+
+      typedef std::vector<GeometryType> GTVector;
 
 
       template<typename Node, typename TreePath>
@@ -604,13 +616,16 @@ namespace Dune {
       {
         if (!node._fixed_size)
           {
+            typedef typename Node::Traits::SizeType size_type;
+            const size_type dim = GV::dimension;
+
             if (node._fixed_size_possible)
               {
-                for (size_type gt = 0; gt < Dune::GlobalGeometryTypeIndex::size(GV::dimension); ++gt)
+                for (size_type gt = 0; gt < GlobalGeometryTypeIndex::size(GV::dimension); ++gt)
                   {
                     size_type carry = 0;
                     for (size_type child_index = 0; child_index < Node::CHILDREN; ++child_index)
-                      node._gt_dof_offsets[gt * Node::CHILDREN + childIndex] = (carry += child._gt_dof_offsets[gt * child._child_count + child._child_count - 1]);
+                      node._gt_dof_offsets[gt * Node::CHILDREN + child_index] = (carry += node._children[child_index]._gt_dof_offsets[gt * node._children[child_index]._child_count + node._children[child_index]._child_count - 1]);
                   }
                 node._fixed_size = true;
               }
@@ -620,14 +635,14 @@ namespace Dune {
 
                 for (GTVector::const_iterator it = geom_types.begin(); it != geom_types.end(); ++it)
                   {
-                    if (node._gt_used[Dune::GlobalGeometryTypeIndex::index(*it)])
-                      node._gt_entity_offsets[Dune::GlobalGeometryTypeIndex::index(*it) + 1] = gv.indexSet().size(*it);
+                    if (node._gt_used[GlobalGeometryTypeIndex::index(*it)])
+                      node._gt_entity_offsets[GlobalGeometryTypeIndex::index(*it) + 1] = gv.indexSet().size(*it);
                   }
 
                 std::partial_sum(node._gt_entity_offsets.begin(),node._gt_entity_offsets.end(),node._gt_entity_offsets.begin());
                 node._entity_dof_offsets.assign(node._gt_entity_offsets.back() * node._child_count,0);
 
-                for (size_type geometry_type_index = 0; geometry_type_index < Dune::GlobalGeometryTypeIndex::size(dim); ++geometry_type_index)
+                for (size_type geometry_type_index = 0; geometry_type_index < GlobalGeometryTypeIndex::size(dim); ++geometry_type_index)
                   {
                     if (!node._gt_used[geometry_type_index])
                       continue;
@@ -642,7 +657,7 @@ namespace Dune {
           }
       }
 
-      post_collect_used_geometry_types(const GV& gv_, const GTVector& geom_types_)
+      post_extract_per_entity_sizes(const GV& gv_, const GTVector& geom_types_)
         : gv(gv_)
         , geom_types(geom_types_)
       {}
@@ -654,12 +669,12 @@ namespace Dune {
 
 
     template<typename GV, typename LocalOrdering>
-    class NonLeafGridViewOrdering
+    class GridViewOrdering
       : public TypeTree::VariadicCompositeNode<LocalOrdering>
-      , public VirtualOrderingBase
+      , public VirtualOrderingBase<typename LocalOrdering::Traits::DOFIndex, typename LocalOrdering::Traits::ContainerIndex>
     {
     public:
-      typedef typename LocalOrdering::Traits::SizeType SizeType;
+      typedef typename LocalOrdering::Traits Traits;
 
     private:
 
@@ -674,29 +689,40 @@ namespace Dune {
        * construction.  This must be done by a seperate call to update().
        * This particular ordering however can be used right away.
        */
-      NonLeafGridViewOrdering(const GV& gv, const NodeT::NodeStorage& local_ordering)
+      GridViewOrdering(const GV& gv, const typename NodeT::NodeStorage& local_ordering)
         : NodeT(local_ordering)
         , _gv(gv)
       {}
 
-      virtual void map_index_dynamic(const MultiIndex& mi, ContainerIndex& ci) const
+      LocalOrdering& localOrdering()
       {
-        map_index(mi,ci);
+        return this->template child<0>();
       }
 
-      void map_index(const MultiIndex& mi, ContainerIndex& ci) const
+      const LocalOrdering& localOrdering() const
       {
-        const SizeType geometry_type_index = ...;
-        const SizeType entity_index = ...;
-        const SizeType child_index = mi.back();
-        localOrdering().map_local_index(geometry_type_index,entity_index,mi,ci);
+        return this->template child<0>();
+      }
+
+      virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
+      {
+        map_index(di,ci);
+      }
+
+      void map_index(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
+      {
+        typedef typename Traits::SizeType size_type;
+        const size_type geometry_type_index = di.geometryIndex()[0];
+        const size_type entity_index = di.geometryIndex()[1];
+        const size_type child_index = di.treeIndex().back();
+        localOrdering().map_local_index(geometry_type_index,entity_index,di.treeIndex(),ci);
         if (_backend_blocked)
           {
             ci.push_back(_gt_entity_offsets[geometry_type_index] + entity_index);
           }
         else if (_fixed_size)
           {
-            ci.back() += _gt_dof_offsets[geometry_type_index] + entity_index * _gt_dof_size[geometry_type_index];
+            ci.back() += _gt_dof_offsets[geometry_type_index] + entity_index * localOrdering().size(geometry_type_index,entity_index);
           }
         else
           {
@@ -707,6 +733,9 @@ namespace Dune {
       void update()
       {
 
+        typedef std::vector<GeometryType> GTVector;
+        typedef typename Traits::SizeType size_type;
+        const size_type dim = GV::dimension;
         GTVector geom_types;
 
         for (size_type cc = 0; cc <= dim; ++cc)
@@ -719,8 +748,8 @@ namespace Dune {
         TypeTree::applyToTree(localOrdering(),collect_a_priori_fixed_size());
         _fixed_size = localOrdering().fixedSize();
 
-        typedef std::vector<Dune::GeometryType> GTVector;
-        const Traits::SizeType gt_index_count = Dune::GlobalGeometryTypeIndex::size(GV::dimension);
+        typedef std::vector<GeometryType> GTVector;
+        const size_type gt_index_count = GlobalGeometryTypeIndex::size(GV::dimension);
 
         if (_fixed_size)
           {
@@ -732,7 +761,7 @@ namespace Dune {
             const GTVector::const_iterator end_it = geom_types.end();
             for (GTVector::const_iterator it = geom_types.begin(); it != end_it; ++it)
               {
-                const Traits::SizeType gt_index = Dune::GlobalGeometryTypeIndex::index(*it);
+                const size_type gt_index = GlobalGeometryTypeIndex::index(*it);
                 _gt_dof_offsets[gt_index + 1] = localOrdering().size(gt_index,0) * _gv.indexSet().size(*it);
               }
             std::partial_sum(_gt_dof_offsets.begin(),_gt_dof_offsets.end(),_gt_dof_offsets.begin());
@@ -740,6 +769,10 @@ namespace Dune {
         else
           {
             TypeTree::applyToTree(localOrdering(),pre_collect_used_geometry_types(GV::dimension));
+
+            typedef typename GV::template Codim<0>::Iterator CellIterator;
+            typedef typename GV::template Codim<0>::Entity Cell;
+
             const CellIterator end_it = _gv.template end<0>();
             for (CellIterator it = _gv.template begin<0>(); it != end_it; ++it)
               {
@@ -748,7 +781,7 @@ namespace Dune {
             TypeTree::applyToTree(localOrdering(),post_collect_used_geometry_types<GV>(_gv,geom_types));
             // allocate
 
-            TypeTree::applyToTree(localOrdering(),pre_extract_per_entity_sizes<GV>(_gv));
+            //TypeTree::applyToTree(localOrdering(),pre_extract_per_entity_sizes<GV>(_gv));
             for (CellIterator it = _gv.template begin<0>(); it != end_it; ++it)
               {
                 TypeTree::applyToTree(localOrdering(),extract_per_entity_sizes_from_cell<Cell>(*it));
@@ -762,7 +795,7 @@ namespace Dune {
 
                 for (GTVector::const_iterator it = geom_types.begin(); it != geom_types.end(); ++it)
                   {
-                    const Traits::SizeType gt_index = Dune::GlobalGeometryTypeIndex::index(*it);
+                    const size_type gt_index = GlobalGeometryTypeIndex::index(*it);
                     _gt_dof_offsets[gt_index + 1] = localOrdering().size(gt_index,0) * _gv.indexSet().size(*it);
                   }
 
@@ -776,27 +809,36 @@ namespace Dune {
                   {
                     if (!localOrdering().contains(*it))
                       continue;
-                    const Traits::SizeType gt_index = Dune::GlobalGeometryTypeIndex::index(*it);
+                    const size_type gt_index = GlobalGeometryTypeIndex::index(*it);
                     _gt_entity_offsets[gt_index + 1] = _gv.indexSet().size(*it);
                   }
 
                 std::partial_sum(_gt_entity_offsets.begin(),_gt_entity_offsets.end(),_gt_entity_offsets.begin());
                 _entity_dof_offsets.assign(_gt_entity_offsets.back()+1,0);
-                Traits::SizeType carry = 0;
+                size_type carry = 0;
                 for (GTVector::const_iterator it = geom_types.begin(); it != geom_types.end(); ++it)
                   {
                     if (!localOrdering().contains(*it))
                       continue;
-                    const Traits::SizeType gt_index = Dune::GlobalGeometryTypeIndex::index(*it);
-                    Traits::SizeType entity_pos = _gt_entity_offsets[gt_index] + 1;
-                    const Traits::SizeType entity_count = _gt_entity_offsets[gt_index + 1] - entity_pos + 1;
-                    for (Traits::SizeType entity_index = 0; entity_index < entity_count; ++entity_index, ++entity_pos)
+                    const size_type gt_index = Dune::GlobalGeometryTypeIndex::index(*it);
+                    size_type entity_pos = _gt_entity_offsets[gt_index] + 1;
+                    const size_type entity_count = _gt_entity_offsets[gt_index + 1] - entity_pos + 1;
+                    for (size_type entity_index = 0; entity_index < entity_count; ++entity_index, ++entity_pos)
                       _entity_dof_offsets[entity_pos] = (carry += localOrdering.size(gt_index,entity_index));
                   }
 
               }
           }
       }
+
+    private:
+
+      bool _backend_blocked;
+      bool _fixed_size;
+      std::vector<typename Traits::SizeType> _gt_dof_offsets;
+      std::vector<typename Traits::SizeType> _gt_entity_offsets;
+      std::vector<typename Traits::SizeType> _entity_dof_offsets;
+
     };
 
 
