@@ -65,7 +65,6 @@ namespace Dune {
         template<typename LFS, typename Child, typename TreePath, typename ChildIndex>
         void beforeChild(const LFS& lfs, Child& child, TreePath treePath, ChildIndex childIndex) const
         {
-          child.global = lfs.global;
           child._dof_indices = lfs._dof_indices;
         }
       };
@@ -148,10 +147,7 @@ namespace Dune {
         template<typename Node, typename TreePath>
         void leaf(Node& node, TreePath treePath)
         {
-          // get global indices for this finite element
-          node.pgfs->globalIndices(*(node.pfe),e,
-            node.global->begin()+node.offset,
-            node.global->begin()+node.offset+node.n);
+          // setup DOFIndices for this finite element
           node.dofIndices(e,node._dof_indices->begin()+node.offset,node._dof_indices->begin()+node.offset+node.n);
         }
 
@@ -160,7 +156,7 @@ namespace Dune {
         {
           for (std::size_t i = 0; i<child.n; ++i)
             {
-              (*node.global)[child.offset+i] = node.pgfs->subMap(childIndex,(*node.global)[child.offset+i]);
+              // update tree path for the DOFIndices of the child
               (*node._dof_indices)[child.offset+i].treeIndex().push_back(childIndex);
             }
         }
@@ -234,8 +230,6 @@ namespace Dune {
       //! \brief construct from global function space
       LocalFunctionSpaceBaseNode (shared_ptr<const GFS> gfs)
         : pgfs(gfs)
-        , global_storage(gfs->maxLocalSize())
-        , global(&global_storage)
         , _dof_index_storage(gfs->maxLocalSize())
         , _dof_indices(&_dof_index_storage)
         , n(0)
@@ -262,7 +256,7 @@ namespace Dune {
        */
       typename Traits::IndexContainer::size_type localVectorSize () const
       {
-        return global->size();
+        return _dof_indices->size();
       }
 
       //! \brief map index in this local function space to root local function space
@@ -284,18 +278,12 @@ namespace Dune {
         return (*_dof_indices)[offset + index];
       }
 
-      //! \brief map index in this local function space to global index space
-      typename Traits::SizeType globalIndex (typename Traits::IndexContainer::size_type index) const
-      {
-        return (*global)[offset + index];
-      }
-
       //! \brief print debug information about this local function space
       void debug () const
       {
         std::cout << n << " indices = (";
         for (typename Traits::IndexContainer::size_type k=0; k<n; k++)
-          std::cout << (*global)[offset + k] << " ";
+          std::cout << (*_dof_indices)[localIndex(k)] << " ";
         std::cout << ")" << std::endl;
       }
 
@@ -329,8 +317,6 @@ namespace Dune {
       }
 
       shared_ptr<GFS const> pgfs;
-      typename Traits::IndexContainer global_storage;
-      typename Traits::IndexContainer* global;
       typename Traits::DOFIndexContainer _dof_index_storage;
       typename Traits::DOFIndexContainer* _dof_indices;
       typename Traits::IndexContainer::size_type n;
@@ -350,15 +336,12 @@ namespace Dune {
       ComputeSizeVisitor<Element> csv(e);
       TypeTree::applyToTree(node,csv);
 
-      global_storage.resize(node.n);
+      _dof_index_storage.resize(node.n);
 
       // initialize iterators and fill indices
       FillIndicesVisitor<Element> fiv(e);
       TypeTree::applyToTree(node,fiv);
 
-      // apply upMap
-      for (typename Traits::IndexContainer::size_type i=0; i<n; ++i)
-        global_storage[i] = pgfs->upMap(global_storage[i]);
     }
 
     //=======================================
