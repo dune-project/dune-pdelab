@@ -34,6 +34,9 @@ namespace Dune {
       template<typename>
       friend struct extract_per_entity_sizes_from_cell;
 
+      template<typename>
+      friend class GridViewOrdering;
+
     public:
 
       static const bool has_dynamic_ordering_children = true;
@@ -202,6 +205,11 @@ namespace Dune {
       const LocalOrderingBase& dynamic_child(typename Traits::SizeType i) const
       {
         return *_children[i];
+      }
+
+      void disable_container_blocking()
+      {
+        _container_blocked = false;
       }
 
 

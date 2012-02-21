@@ -38,9 +38,6 @@ namespace Dune {
                                 typename ChildOrdering::Traits::DOFIndex,
                                 typename ChildOrdering::Traits::ContainerIndex> BaseT;
 
-      template<typename, typename, typename>
-      friend struct power_gfs_to_ordering_descriptor;
-
     public:
 
       static const bool consume_tree_index = true;
@@ -188,14 +185,14 @@ namespace Dune {
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
         transformed_type r(transformed_type(make_tuple(make_shared<LocalOrdering>(LocalOrderingTransformation::transform(gfs,gfs_to_local_ordering<Transformation>()))),gfs.backend().blocked()));
-        r.template child<0>()._container_blocked = false;
+        // r.template child<0>()._container_blocked = false;
         return std::move(r);
       }
 
       static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
       {
         transformed_storage_type r(make_shared<transformed_type>(make_tuple(LocalOrderingTransformation::transform_storage(gfs,gfs_to_local_ordering<Transformation>())),gfs->backend().blocked()));
-        r->template child<0>()._container_blocked = false;
+        // r->template child<0>()._container_blocked = false;
         return std::move(r);
       }
 
@@ -375,14 +372,14 @@ namespace Dune {
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
         transformed_type r(make_tuple(make_shared<LocalOrdering>(LocalOrderingTransformation::transform(gfs,gfs_to_local_ordering<Transformation>()))),gfs.backend().blocked());
-        r.template child<0>()._container_blocked = false;
+        // r.template child<0>()._container_blocked = false;
         return std::move(r);
       }
 
       static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
       {
         transformed_storage_type r(make_shared<transformed_type>(make_tuple(LocalOrderingTransformation::transform_storage(gfs,gfs_to_local_ordering<Transformation>())),gfs->backend().blocked()));
-        r->template child<0>()._container_blocked = false;
+        // r->template child<0>()._container_blocked = false;
         return std::move(r);
       }
 

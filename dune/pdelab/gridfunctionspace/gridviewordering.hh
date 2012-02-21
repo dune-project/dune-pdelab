@@ -740,7 +740,11 @@ namespace Dune {
         : NodeT(local_ordering)
         , BaseT(*this,container_blocked,this)
         , _gv(localOrdering().gridView())
-      {}
+      {
+        // make sure to switch off container blocking handling in the local ordering,
+        // we already handle it in the GridViewOrdering
+        localOrdering().disable_container_blocking();
+      }
 
       LocalOrdering& localOrdering()
       {
