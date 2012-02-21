@@ -48,7 +48,7 @@ namespace Dune {
 
       //! The MultiIndex type that will be used in the resulting LocalFunctionSpace tree.
       //typedef Dune::PDELab::MultiIndex<std::size_t,TypeTree::TreeInfo<GFS>::depth> MultiIndex;
-      typedef Dune::PDELab::DOFIndex<std::size_t,TypeTree::TreeInfo<GFS>::depth> DOFIndex;
+      typedef Dune::PDELab::DOFIndex<std::size_t,TypeTree::TreeInfo<GFS>::depth,2> DOFIndex;
 
     };
 
