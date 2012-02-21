@@ -547,7 +547,7 @@ namespace Dune {
         \tparam Scalar type representing time.
     */
     template<typename TT>
-    struct PowerCompositeSetTimeVisitor 
+    struct PowerCompositeSetTimeVisitor
       : public TypeTree::TreeVisitor, public TypeTree::DynamicTraversal
     {
       TT time;
