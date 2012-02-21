@@ -18,29 +18,35 @@
 #include <dune/pdelab/common/typetree/powernode.hh>
 #include <dune/pdelab/common/typetree/traversal.hh>
 #include <dune/pdelab/common/typetree/visitor.hh>
-#include <dune/pdelab/gridfunctionspace/nonleaforderingbase.hh>
-#include <dune/pdelab/gridfunctionspace/orderingbase.hh>
-#include <dune/pdelab/gridfunctionspace/compositeorderingutilities.hh>
+
+#include <dune/pdelab/gridfunctionspace/gridviewordering.hh>
 
 namespace Dune {
   namespace PDELab {
+
+    struct EntityBlockedOrderingTag {};
 
     //! Interface for merging index spaces
     template<typename ChildOrdering, std::size_t k>
     class PowerEntityBlockedLocalOrdering
       : public TypeTree::PowerNode<ChildOrdering,k>
-      , public LocalOrderingBase<typename ChildOrdering::Traits::MultiIndex,typename ChildOrdering::Traits::ContainerIndex>
+      , public LocalOrderingBase<typename ChildOrdering::Traits::GridView,
+                                 typename ChildOrdering::Traits::DOFIndex,
+                                 typename ChildOrdering::Traits::ContainerIndex>
     {
 
       typedef TypeTree::PowerNode<ChildOrdering,k> NodeT;
-      typedef LocalOrderingBase<typename ChildOrdering::Traits::MultiIndex,typename ChildOrdering::Traits::ContainerIndex> BaseT;
+      typedef LocalOrderingBase<typename ChildOrdering::Traits::GridView,
+                                typename ChildOrdering::Traits::DOFIndex,
+                                typename ChildOrdering::Traits::ContainerIndex> BaseT;
 
     public:
 
-      template<typename Backend>
-      PowerEntityBlockedLocalOrdering(typename const NodeT::NodeStorage& child_storage, const Backend& backend)
+      typedef typename BaseT::Traits Traits;
+
+      PowerEntityBlockedLocalOrdering(const typename NodeT::NodeStorage& child_storage, bool container_blocked)
         : NodeT(child_storage)
-        , BaseT(*this,backend.blocked())
+        , BaseT(*this,container_blocked)
       {}
 
       const typename Traits::GridView& gridView() const
@@ -56,6 +62,7 @@ namespace Dune {
        * update().
        */
       void update() {
+        /*
         Dune::dinfo << asImp().name() << ":" << std::endl;
 
         if(!NonLeafOrderingBase<SizeType, Imp>::fixedSize())
@@ -66,8 +73,10 @@ namespace Dune {
         asImp().sizeCheck();
 
         printInfo(dinfo);
+        */
       }
 
+#if 0
       //! \brief offset of the block of dofs attached to a given entity (of
       //!        arbitrary codimension)
       /**
@@ -111,90 +120,84 @@ namespace Dune {
         return asImp().subMap
           (0, asImp().template child<0>().intersectionOffset(i));
       }
+
+#endif // 0
+
     };
 
+    template<typename GFS, typename Transformation, typename OrderingTag>
+    struct power_gfs_to_local_ordering_descriptor;
 
-    template<typename PowerGFS, typename Transformation>
-    struct power_gfs_to_ordering_descriptor<EntityBlockedOrderingTag>
+
+    template<typename GFS, typename Transformation>
+    struct power_gfs_to_local_ordering_descriptor<GFS,Transformation,EntityBlockedOrderingTag>
+    {
+
+      static const bool recursive = true;
+
+      template<typename TC>
+      struct result
+      {
+        typedef PowerEntityBlockedLocalOrdering<TC,GFS::CHILDREN> type;
+        typedef shared_ptr<type> storage_type;
+      };
+
+      template<typename TC>
+      static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
+      {
+        return typename result<TC>::type(children,false);
+      }
+
+      template<typename TC>
+      static typename result<TC>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
+      {
+        return make_shared<typename result<TC>::type>(children,false);
+      }
+
+    };
+
+    template<typename GFS, typename Params>
+    power_gfs_to_local_ordering_descriptor<
+      GFS,
+      gfs_to_local_ordering<Params>,
+      typename GFS::OrderingTag
+      >
+    lookupNodeTransformation(GFS* gfs, gfs_to_local_ordering<Params>* t, PowerGridFunctionSpaceTag tag);
+
+
+    template<typename GFS, typename Transformation>
+    struct power_gfs_to_ordering_descriptor<GFS,Transformation,EntityBlockedOrderingTag>
     {
 
       static const bool recursive = false;
 
-      typedef TypeTree::TransformTree<PowerGFS,gfs_to_local_ordering<Transformation> > LocalOrderingTransformation;
+      typedef TypeTree::TransformTree<GFS,gfs_to_local_ordering<Transformation> > LocalOrderingTransformation;
       typedef typename LocalOrderingTransformation::Type LocalOrdering;
 
-      typedef NonLeafGridViewOrdering<LocalOrdering> GridViewOrdering;
+      typedef GridViewOrdering<LocalOrdering> transformed_type;
 
-      typedef PowerEntityBlockedOrdering<GridViewOrdering> transformed_type;
       typedef shared_ptr<transformed_type> transformed_storage_type;
 
-      static transformed_type transform(const PowerGFS& s, const Transformation& t)
+      static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
-        return transformed_type(make_tuple(make_shared<GridViewOrdering>(make_tuple(make_shared<LocalOrdering>(LocalOrderingTransformation::transform(gfs,gfs_to_local_ordering<Transformation>()))))));
+        return transformed_type(make_tuple(make_shared<LocalOrdering>(LocalOrderingTransformation::transform(gfs,gfs_to_local_ordering<Transformation>()))),false);
       }
 
-      static transformed_storage_type transform_storage(shared_ptr<const LeafGFS> gfs, const Transformation& t)
+      static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
       {
-        return make_shared<transformed_type>(make_tuple(make_shared<GridViewOrdering>(gfs.gridview(),make_tuple(LocalOrderingTransformation::transform_storage(gfs,gfs_to_local_ordering<Transformation>())))));
-      }
-
-    };
-
-
-    template<typename PowerGFS, typename Transformation>
-    struct power_gfs_to_ordering_descriptor<LexicographicOrderingTag>
-    {
-
-      static const bool recursive = true;
-
-      template<typename TC>
-      struct result
-      {
-        typedef PowerLexicographicOrdering<TC,PowerGFS::CHILDREN> type;
-        typedef shared_ptr<type> storage_type;
-      };
-
-      template<typename TC>
-      static typename result<TC>::type transform(const PowerGFS& gfs, const Transformation& t, const typename result<TC>::type::NodeStorage& children)
-      {
-        return typename result<TC>::type(gfs.backend(),children);
-      }
-
-      template<typename TC>
-      static typename result<TC>::storage_type transform_storage(shared_ptr<const PowerGFS> gfs, const typename result<TC>::type::NodeStorage& children)
-      {
-        return make_shared<typename result<TC>::storage_type>(gfs.backend(),children);
+        return make_shared<transformed_type>(make_tuple(make_shared<LocalOrdering>(LocalOrderingTransformation::transform_storage(gfs,gfs_to_local_ordering<Transformation>()))),false);
       }
 
     };
 
+    template<typename GFS, typename Params>
+    power_gfs_to_ordering_descriptor<
+      GFS,
+      gfs_to_ordering<Params>,
+      typename GFS::OrderingTag
+      >
+    lookupNodeTransformation(GFS* gfs, gfs_to_ordering<Params>* t, PowerGridFunctionSpaceTag tag);
 
-    template<typename PowerGFS, typename Transformation>
-    struct power_gfs_to_local_ordering_descriptor<EntityBlockedOrderingTag>
-    {
-
-      static const bool recursive = true;
-
-      template<typename TC>
-      struct result
-      {
-        typedef PowerEntityBlockedLocalOrdering<TC,PowerGFS::CHILDREN> type;
-        typedef shared_ptr<type> storage_type;
-      };
-
-      template<typename TC>
-      static typename result<TC>::type transform(const PowerGFS& gfs, const Transformation& t, const typename result<TC>::type::NodeStorage& children)
-      {
-        return typename result<TC>::type(gfs.backend(),children);
-      }
-
-      template<typename TC>
-      static typename result<TC>::storage_type transform_storage(shared_ptr<const PowerGFS> gfs, const typename result<TC>::type::NodeStorage& children)
-      {
-        return make_shared<typename result<TC>::storage_type>(gfs.backend(),children);
-      }
-
-    };
 
 
 #if 0
