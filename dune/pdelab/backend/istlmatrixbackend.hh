@@ -405,11 +405,13 @@ namespace Dune {
 
         const RowIndexCache& rowIndexCache() const
         {
+          assert(_row_cache);
           return *_row_cache;
         }
 
         const ColIndexCache& colIndexCache() const
         {
+          assert(_col_cache);
           return *_col_cache;
         }
 
