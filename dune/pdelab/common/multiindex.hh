@@ -317,11 +317,10 @@ namespace Dune {
 
       //! The maximum possible depth of the MultiIndex.
       static const std::size_t max_depth = tree_n;
-      static const std::size_t max_tree_depth = tree_n;
-      static const std::size_t max_entity_depth = entity_n;
+      static const std::size_t entity_capacity = entity_n;
 
-      typedef MultiIndex<T,max_entity_depth> EntityIndex;
-      typedef MultiIndex<T,max_tree_depth> TreeIndex;
+      typedef array<T,entity_capacity> EntityIndex;
+      typedef MultiIndex<T,max_depth> TreeIndex;
 
       typedef typename TreeIndex::size_type size_type;
       typedef T value_type;
@@ -333,7 +332,10 @@ namespace Dune {
 
       public:
 
-        typedef typename MultiIndex<T,entity_n>::View EntityIndex;
+        static const std::size_t max_depth = tree_n;
+        static const std::size_t entity_capacity = entity_n;
+
+        typedef const array<T,entity_n>& EntityIndex;
         typedef typename MultiIndex<T,tree_n>::View TreeIndex;
 
         const EntityIndex& entityIndex() const
@@ -354,7 +356,7 @@ namespace Dune {
       private:
 
         explicit View(const DOFIndex& dof_index)
-          : _entity_index_view(dof_index._entity_index.view())
+          : _entity_index_view(dof_index._entity_index)
           , _tree_index_view(dof_index._tree_index.view())
         {}
 
@@ -377,26 +379,9 @@ namespace Dune {
         return View(*this);
       }
 
-      //! Sets the MultiIndex to a new DOF.
-      /**
-       * This should only be called from a leaf GridFunctionSpace as it will delete all exisiting
-       * index entries.
-       *
-       * \param gt            the GeometryType of the grid entity associated with the DOF.
-       * \param entity_index  the index of the grid entity associated with the DOF.
-       * \param index         the first index of the DOF within the MultiIndex.
-       */
-      void set(value_type entity_index, value_type index)
-      {
-        _entity_index.clear();
-        _entity_index.push_back(entity_index);
-        _tree_index.clear();
-        _tree_index.push_back(index);
-      }
-
       void clear()
       {
-        _entity_index.clear();
+        std::fill(_entity_index.begin(),_entity_index.end(),0);
         _tree_index.clear();
       }
 
@@ -439,7 +424,7 @@ namespace Dune {
       bool operator== (const DOFIndex& r) const
       {
         return
-          _entity_index == r._entity_index &&
+          std::equal(_entity_index.begin(),_entity_index.end(),r._entity_index.begin()) &&
           _tree_index == r._tree_index;
       }
 

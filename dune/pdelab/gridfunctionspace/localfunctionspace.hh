@@ -710,8 +710,8 @@ namespace Dune {
 
             // store data
             it->clear();
-            it->entityIndex().push_back(GlobalGeometryTypeIndex::index(gt));
-            it->entityIndex().push_back(index);
+            it->entityIndex()[0] = GlobalGeometryTypeIndex::index(gt);
+            it->entityIndex()[1] = index;
             it->treeIndex().push_back(coeffs.localKey(i).index());
 
             // make sure we don't write past the end of the iterator range
