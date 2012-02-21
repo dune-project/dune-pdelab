@@ -25,7 +25,7 @@ namespace Dune{
 
     */
     template<typename GO, typename LOP, bool nonoverlapping_mode = false>
-    class DefaultLocalAssembler : 
+    class DefaultLocalAssembler :
       public Dune::PDELab::LocalAssemblerBase<typename GO::Traits::MatrixBackend,
                                               typename GO::Traits::TrialGridFunctionSpaceConstraints,
                                               typename GO::Traits::TestGridFunctionSpaceConstraints>
