@@ -189,34 +189,30 @@ namespace Dune{
     protected:
 
       /** \brief read local stiffness matrix for entity */
-      template<typename LFSV, typename LFSU, typename GC, typename T>
-      void eread (const LFSV& lfsv, const LFSU& lfsu, const GC& globalcontainer,
-                  LocalMatrix<T>& localcontainer) const
+      template<typename GCView, typename T>
+      void eread (const GCView& globalcontainer_view, LocalMatrix<T>& localcontainer) const
       {
-        typename B::template Accessor<LFSV,LFSU,T> accessor(globalcontainer,lfsv,lfsu);
-        for (int i=0; i<lfsv.size(); i++)
-          for (int j=0; j<lfsu.size(); j++)
-            localcontainer(i,j) = accessor.get(i,j);
+        for (int i = 0; i < localcontainer.N(); ++i)
+          for (int j = 0; j < localcontainer.M(); ++j)
+            localcontainer(i,j) = globalcontainer_view(i,j);
       }
 
       /** \brief write local stiffness matrix for entity */
-      template<typename LFSV, typename LFSU, typename T, typename GC>
-      void ewrite (const LFSV& lfsv, const LFSU& lfsu, const LocalMatrix<T>& localcontainer, GC& globalcontainer) const
+      template<typename T, typename GCView>
+      void ewrite (const LocalMatrix<T>& localcontainer, GCView& globalcontainer_view) const
       {
-        typename B::template Accessor<LFSV,LFSU,T> accessor(globalcontainer,lfsv,lfsu);
-        for (int i=0; i<lfsv.size(); i++)
-          for (int j=0; j<lfsu.size(); j++)
-            accessor.set(i,j,localcontainer(i,j));
+        for (int i = 0; i < localcontainer.N(); ++i)
+          for (int j = 0; j < localcontainer.M(); ++j)
+            globalcontainer_view(i,j) = localcontainer(i,j);
       }
 
       /** \brief write local stiffness matrix for entity */
-      template<typename LFSV, typename LFSU, typename T, typename GC>
-      void eadd (const LFSV& lfsv, const LFSU& lfsu, const LocalMatrix<T>& localcontainer, GC& globalcontainer) const
+      template<typename T, typename GCView>
+      void eadd (const LocalMatrix<T>& localcontainer, GCView& globalcontainer_view) const
       {
-        typename B::template Accessor<LFSV,LFSU,T> accessor(globalcontainer,lfsv,lfsu);
-        for (size_t i=0; i<lfsv.size(); i++)
-          for (size_t j=0; j<lfsu.size(); j++)
-            accessor.add(i,j,localcontainer(i,j));
+        for (int i = 0; i < localcontainer.N(); ++i)
+          for (int j = 0; j < localcontainer.M(); ++j)
+            globalcontainer_view.add(i,j,localcontainer(i,j));
       }
 
 
