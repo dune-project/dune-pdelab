@@ -125,7 +125,7 @@ namespace Dune {
         void leaf(const LFS& lfs, TreePath treePath) const
         {
           // allocate local constraints map
-          CG cl;
+          typename CG::LocalTransformation cl;
 
           // extract constraints type
           typedef typename LFS::Traits::ConstraintsType C;
@@ -134,7 +134,7 @@ namespace Dune {
           ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.constraints(),f,ig,lfs,cl);
 
           // write coefficients into local vector
-          lfs.mwrite(cl,cg);
+          lfs.insert_constraints(cl,cg);
         }
 
         BoundaryConstraintsForParametersLeaf(const F& f_, const IG& ig_, CG& cg_)
@@ -162,7 +162,7 @@ namespace Dune {
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
           // allocate local constraints map
-          CG cl;
+          typename CG::LocalTransformation cl;
 
           // extract constraints type
           typedef typename LFS::Traits::ConstraintsType C;
@@ -171,7 +171,7 @@ namespace Dune {
           ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.constraints(),f,ig,lfs,cl);
 
           // write coefficients into local vector
-          lfs.mwrite(cl,cg);
+          lfs.insert_constraints(cl,cg);
         }
 
         // reuse constraints parameter information from f for all LFS children
@@ -204,7 +204,7 @@ namespace Dune {
         template<typename LFS, typename TreePath>
         void leaf(const LFS& lfs, TreePath treePath) const
         {
-          CG cl;
+          typename CG::LocalTransformation cl;
 
           // extract constraints type
           typedef typename LFS::Traits::ConstraintsType C;
@@ -213,7 +213,7 @@ namespace Dune {
           ConstraintsCallProcessor<C,C::doProcessor>::processor(lfs.constraints(),ig,lfs,cl);
 
           // write coefficients into local vector
-          lfs.mwrite(cl,cg);
+          lfs.insert_constraints(cl,cg);
         }
 
         ProcessorConstraints(const IG& ig_, CG& cg_)
@@ -239,8 +239,8 @@ namespace Dune {
         {
           // allocate local constraints map for both elements adjacent
           // to this intersection
-          CG cl_e;
-          CG cl_f;
+          typename CG::LocalTransformation cl_e;
+          typename CG::LocalTransformation cl_f;
 
           // extract constraints type
           typedef typename LFS::Traits::ConstraintsType C;
@@ -254,8 +254,8 @@ namespace Dune {
           ConstraintsCallSkeleton<C,C::doSkeleton>::skeleton(c,ig,lfs_e,lfs_f,cl_e,cl_f);
 
           // write coefficients into local vector
-          lfs_e.mwrite(cl_e,cg);
-          lfs_f.mwrite(cl_f,cg);
+          lfs_e.insert_constraints(cl_e,cg);
+          lfs_f.insert_constraints(cl_f,cg);
         }
 
         SkeletonConstraints(const IG& ig_, CG& cg_)
@@ -280,7 +280,7 @@ namespace Dune {
         void leaf(const LFS& lfs, TreePath treePath) const
         {
           // allocate local constraints map
-          CG cl;
+          typename CG::LocalTransformation cl;
 
           // extract constraints type
           typedef typename LFS::Traits::ConstraintsType C;
@@ -290,7 +290,7 @@ namespace Dune {
           ConstraintsCallVolume<C,C::doVolume>::volume(c,eg,lfs,cl);
 
           // write coefficients into local vector
-          lfs.mwrite(cl,cg);
+          lfs.insert_constraints(cl,cg);
         }
 
         VolumeConstraints(const EG& eg_, CG& cg_)
