@@ -237,6 +237,11 @@ namespace Dune {
           return _size;
         }
 
+        bool empty() const
+        {
+          return _size == 0;
+        }
+
       private:
         const MultiIndex& _mi;
         size_type _size;
