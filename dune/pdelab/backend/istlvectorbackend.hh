@@ -133,49 +133,49 @@ namespace Dune {
 
     template<typename CI, typename Block>
     typename enable_if<Block::blocklevel != 1,typename Block::field_type&>::type
-    access_istl_vector_element(Block& b, const CI& ci, std::size_t i)
+    access_istl_vector_element(Block& b, const CI& ci, int i)
     {
       return access_istl_vector_element(b[ci[i]],ci,i-1);
     }
 
     template<typename CI, typename Block>
     typename enable_if<Block::blocklevel == 1 && Block::dimension == 1,typename Block::field_type&>::type
-    access_istl_vector_element(Block& b, const CI& ci, std::size_t i)
+    access_istl_vector_element(Block& b, const CI& ci, int i)
     {
-      assert(i == 0);
+      assert(i == -1);
       return b[0];
     }
 
     template<typename CI, typename Block>
     typename enable_if<Block::blocklevel == 1 && Block::dimension != 1,typename Block::field_type&>::type
-    access_istl_vector_element(Block& b, const CI& ci, std::size_t i)
+    access_istl_vector_element(Block& b, const CI& ci, int i)
     {
       assert(i == 0);
-      return b[ci[i]];
+      return b[ci[0]];
     }
 
 
     template<typename CI, typename Block>
     typename enable_if<Block::blocklevel != 1,const typename Block::field_type&>::type
-    access_istl_vector_element(const Block& b, const CI& ci, std::size_t i)
+    access_istl_vector_element(const Block& b, const CI& ci, int i)
     {
       return access_istl_vector_element(b[ci[i]],ci,i-1);
     }
 
     template<typename CI, typename Block>
     typename enable_if<Block::blocklevel == 1 && Block::dimension == 1,const typename Block::field_type&>::type
-    access_istl_vector_element(const Block& b, const CI& ci, std::size_t i)
+    access_istl_vector_element(const Block& b, const CI& ci, int i)
     {
-      assert(i == 0);
+      assert(i == -1);
       return b[0];
     }
 
     template<typename CI, typename Block>
     typename enable_if<Block::blocklevel == 1 && Block::dimension != 1,const typename Block::field_type&>::type
-    access_istl_vector_element(const Block& b, const CI& ci, std::size_t i)
+    access_istl_vector_element(const Block& b, const CI& ci, int i)
     {
       assert(i == 0);
-      return b[ci[i]];
+      return b[ci[0]];
     }
 
 

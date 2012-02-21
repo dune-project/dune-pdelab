@@ -142,7 +142,7 @@ namespace Dune {
 
     template<typename RI, typename CI, typename Block>
     typename enable_if<Block::blocklevel != 1,typename Block::field_type&>::type
-    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, std::size_t i)
+    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, int i)
     {
       return access_istl_matrix_element(b[ri[i]][ci[i]],ri,ci,i-1);
     }
@@ -152,9 +152,9 @@ namespace Dune {
                        Block::rows == 1 &&
                        Block::cols == 1,
                        typename Block::field_type&>::type
-    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, std::size_t i)
+    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, int i)
     {
-      assert(i == 0);
+      assert(i == -1);
       return b[0][0];
     }
 
@@ -163,10 +163,10 @@ namespace Dune {
                        Block::rows != 1 &&
                        Block::cols != 1,
                        typename Block::field_type&>::type
-    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, std::size_t i)
+    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, int i)
     {
       assert(i == 0);
-      return b[ri[i]][ci[i]];
+      return b[ri[0]][ci[0]];
     }
 
     template<typename RI, typename CI, typename Block>
@@ -174,10 +174,10 @@ namespace Dune {
                        Block::rows == 1 &&
                        Block::cols != 1,
                        typename Block::field_type&>::type
-    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, std::size_t i)
+    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, int i)
     {
       assert(i == 0);
-      return b[0][ci[i]];
+      return b[0][ci[0]];
     }
 
     template<typename RI, typename CI, typename Block>
@@ -185,16 +185,16 @@ namespace Dune {
                        Block::rows != 1 &&
                        Block::cols == 1,
                        typename Block::field_type&>::type
-    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, std::size_t i)
+    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, int i)
     {
       assert(i == 0);
-      return b[ri[i]][0];
+      return b[ri[0]][0];
     }
 
 
     template<typename RI, typename CI, typename Block>
     typename enable_if<Block::blocklevel != 1,const typename Block::field_type&>::type
-    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, std::size_t i)
+    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, int i)
     {
       return access_istl_matrix_element(b[ri[i]][ci[i]],ri,ci,i-1);
     }
@@ -204,9 +204,9 @@ namespace Dune {
                        Block::rows == 1 &&
                        Block::cols == 1,
                        const typename Block::field_type&>::type
-    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, std::size_t i)
+    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, int i)
     {
-      assert(i == 0);
+      assert(i == -1);
       return b[0][0];
     }
 
@@ -215,10 +215,10 @@ namespace Dune {
                        Block::rows != 1 &&
                        Block::cols != 1,
                        const typename Block::field_type&>::type
-    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, std::size_t i)
+    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, int i)
     {
       assert(i == 0);
-      return b[ri[0]][ci[i]];
+      return b[ri[0]][ci[0]];
     }
 
     template<typename RI, typename CI, typename Block>
@@ -226,7 +226,7 @@ namespace Dune {
                        Block::rows == 1 &&
                        Block::cols != 1,
                        const typename Block::field_type&>::type
-    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, std::size_t i)
+    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, int i)
     {
       assert(i == 0);
       return b[0][ci[0]];
@@ -237,16 +237,16 @@ namespace Dune {
                        Block::rows != 1 &&
                        Block::cols == 1,
                        const typename Block::field_type&>::type
-    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, std::size_t i)
+    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, int i)
     {
       assert(i == 0);
-      return b[ri[i]][0];
+      return b[ri[0]][0];
     }
 
 
     template<typename RI, typename Block>
     typename enable_if<Block::blocklevel != 1>::type
-    clear_istl_matrix_row(Block& b, const RI& ri, std::size_t i)
+    clear_istl_matrix_row(Block& b, const RI& ri, int i)
     {
       for (std::size_t j = 0; j < b.M(); ++j)
         if (b.exists(ri[i],j))
@@ -257,9 +257,9 @@ namespace Dune {
     typename enable_if<Block::blocklevel == 1 &&
                        Block::rows == 1
                        >::type
-    clear_istl_matrix_row(Block& b, const RI& ri, std::size_t i)
+    clear_istl_matrix_row(Block& b, const RI& ri, int i)
     {
-      assert(i == 0);
+      assert(i == -1);
       b[0] = 0;
     }
 
@@ -267,7 +267,7 @@ namespace Dune {
     typename enable_if<Block::blocklevel == 1 &&
                        Block::rows != 1
                        >::type
-    clear_istl_matrix_row(Block& b, const RI& ri, std::size_t i)
+    clear_istl_matrix_row(Block& b, const RI& ri, int i)
     {
       assert(i == 0);
       b[ri[0]] = 0;
@@ -614,13 +614,13 @@ namespace Dune {
       E& operator()(const RowIndex& ri, const ColIndex& ci)
       {
         assert(ri.size() == ci.size());
-        return access_istl_matrix_element(_container,ri,ci,ri.size()-1);
+        return access_istl_matrix_element(_container,ri,ci,std::max(ri.size()-1,ci.size()-1));
       }
 
       const E& operator()(const RowIndex& ri, const ColIndex& ci) const
       {
         assert(ri.size() == ci.size());
-        return access_istl_matrix_element(_container,ri,ci,ri.size()-1);
+        return access_istl_matrix_element(_container,ri,ci,std::max(ri.size()-1,ci.size()-1));
       }
 
       const ContainerType& base() const
