@@ -34,8 +34,6 @@ namespace Dune {
 
       typedef TypeTree::VariadicCompositeNode<LocalOrdering> NodeT;
 
-      GV _gv;
-
     public:
 
       LocalOrdering& localOrdering()
@@ -49,9 +47,12 @@ namespace Dune {
       }
 
 
-      LeafGridViewOrdering(const typename NodeT::NodeStorage& localOrdering)
+      LeafGridViewOrdering(const typename NodeT::NodeStorage& localOrdering, bool backend_blocked)
         : NodeT(localOrdering)
         , _gv(this->template child<0>().gridView())
+        , _backend_blocked(backend_blocked)
+        , _size(0)
+        , _max_local_size(0)
       {}
 
       virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
@@ -99,7 +100,7 @@ namespace Dune {
 
         for (size_type cc = 0; cc <= dim; ++cc)
           {
-            const GTVector& per_codim_geom_types = _gv.indexSet().geometryTypes(cc);
+            const GTVector& per_codim_geom_types = _gv.indexSet().geomTypes(cc);
             std::copy(per_codim_geom_types.begin(),per_codim_geom_types.end(),std::back_inserter(geom_types));
           }
 
@@ -116,6 +117,8 @@ namespace Dune {
                 _gt_dof_offsets[gt_index + 1] = lo.size(gt_index,0) * _gv.indexSet().size(*it);
               }
             std::partial_sum(_gt_dof_offsets.begin(),_gt_dof_offsets.end(),_gt_dof_offsets.begin());
+            _size = _gt_dof_offsets.back();
+            _max_local_size = lo.maxLocalSize();
           }
         else
           {
@@ -212,6 +215,7 @@ namespace Dune {
 
     private:
 
+      typename Traits::GridView _gv;
       const bool _backend_blocked;
       std::size_t _size;
       std::size_t _max_local_size;
@@ -242,12 +246,12 @@ namespace Dune {
 
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
-        return transformed_type(make_tuple(make_shared<LocalOrdering>(gfs)));
+        return transformed_type(make_tuple(make_shared<LocalOrdering>(gfs)),false);
       }
 
       static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
       {
-        return make_shared<transformed_type>(make_tuple(make_shared<LocalOrdering>(gfs)));
+        return make_shared<transformed_type>(make_tuple(make_shared<LocalOrdering>(gfs)),false);
       }
 
     };
