@@ -85,7 +85,7 @@ namespace Dune {
 
       void update_fixed_size(const GTVector& geom_types)
       {
-        assert(node._fixed_size);
+        assert(_fixed_size);
 
         typedef typename Traits::SizeType size_type;
         const size_type dim = Traits::GridView::dimension;
