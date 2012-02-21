@@ -24,14 +24,15 @@
 #include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/common/geometrywrapper.hh>
 #include <dune/pdelab/common/typetree.hh>
-#include <dune/pdelab/gridfunctionspace/blockwiseordering.hh>
-#include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/dynamicblockwiseordering.hh>
+//#include <dune/pdelab/gridfunctionspace/blockwiseordering.hh>
+//#include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
+//#include <dune/pdelab/gridfunctionspace/dynamicblockwiseordering.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include <dune/pdelab/gridfunctionspace/leafordering.hh>
-#include <dune/pdelab/gridfunctionspace/lexicographicordering.hh>
+#include <dune/pdelab/gridfunctionspace/gridviewordering.hh>
+//#include <dune/pdelab/gridfunctionspace/leafordering.hh>
+//#include <dune/pdelab/gridfunctionspace/lexicographicordering.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
+//#include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -314,6 +315,8 @@ namespace Dune {
       typedef typename GV::Traits::template Codim<0>::Entity Element;
       typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
 
+      typedef P SizeTag;
+
        //! extract type for storing constraints
       template<typename E>
       struct ConstraintsContainer
@@ -326,22 +329,29 @@ namespace Dune {
 
       typedef LeafGridFunctionSpaceTag ImplementationTag;
 
-      typedef LeafOrdering<GridFunctionSpace> Ordering;
+      typedef TypeTree::TransformTree<GridFunctionSpace,gfs_to_ordering<GridFunctionSpace> > ordering_transformation;
+
+      typedef typename ordering_transformation::Type Ordering;
 
       //! constructor
       GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_)
-        : defaultce(ce_), gv(gridview), pfem(stackobject_to_shared_ptr(fem)), ce(ce_)
+        : defaultce(ce_)
+        , gv(gridview)
+        , pfem(stackobject_to_shared_ptr(fem))
+        , ce(ce_)
       {
-        orderingp = make_shared<Ordering>(*this);
-        update();
+        //        orderingp = make_shared<Ordering>(*this);
+        //update();
       }
 
       //! constructor
       GridFunctionSpace (const GV& gridview, const FEM& fem)
-        : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), ce(defaultce)
+        : gv(gridview)
+        , pfem(stackobject_to_shared_ptr(fem))
+        , ce(defaultce)
       {
-        orderingp = make_shared<Ordering>(*this);
-        update();
+        //        orderingp = make_shared<Ordering>(*this);
+        //update();
       }
 
       //! get grid view
@@ -369,10 +379,15 @@ namespace Dune {
       }
 
       //! Direct access to the DOF ordering.
-      const Ordering &ordering() const { return *orderingp; }
+      // const Ordering &ordering() const { return *orderingp; }
 
       //! Direct access to the storage of the DOF ordering.
-      shared_ptr<const Ordering> orderingPtr() const { return orderingp; }
+      shared_ptr<const Ordering> ordering() const
+      {
+        if (!_ordering)
+          _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+        return _ordering;
+      }
 
       //! get dimension of root finite element space
       typename Traits::SizeType globalSize () const
@@ -654,7 +669,7 @@ namespace Dune {
         Dune::dinfo << "total number of dofs is " << nglobal << std::endl;
 
         // update ordering
-        orderingp->update();
+        //orderingp->update();
       }
 
       bool fixedSize() const
@@ -676,7 +691,7 @@ namespace Dune {
       std::vector<typename Traits::SizeType> offset; // offset into big vector for each entity;
       std::set<unsigned int> codimUsed;
 
-      Dune::shared_ptr<Ordering> orderingp;
+      shared_ptr<Ordering> _ordering;
     };
 
     /** \brief Tag indicating a fixed number of unkowns per entity (known at compile time).
@@ -688,6 +703,7 @@ namespace Dune {
 
     //! \}
 
+#if 0
     // specialization with restricted mapper
     // GV : Type implementing GridView
     // FEM  : Type implementing FiniteElementMapInterface
@@ -1365,7 +1381,6 @@ namespace Dune {
       Dune::shared_ptr<Ordering> orderingp;
     };
 
-
     //=======================================
     // Subspace construction
     //=======================================
@@ -1664,6 +1679,9 @@ namespace Dune {
                     << std::endl;
       }
     };
+
+#endif // 0
+
 
   } // namespace PDELab
 } // namespace Dune
