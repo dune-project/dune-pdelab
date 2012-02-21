@@ -22,7 +22,7 @@ namespace Dune {
     class DGFTreeVectorFunction;
 
     template<typename VTKWriter, typename GFS, typename X>
-    void add_solution_to_vtk_writer(VTKWriter& vtk_writer, const GFS& gfs, const X& x);
+    struct vtk_output_collector;
 
 
     //! Helper class for common data of a DGFTree.
@@ -36,8 +36,8 @@ namespace Dune {
       template<typename LFS, typename Data>
       friend class DGFTreeVectorFunction;
 
-      template<typename VTKWriter, typename GFS_, typename X_>
-      friend void add_solution_to_vtk_writer(VTKWriter& vtk_writer, const GFS_& gfs, const X_& x);
+      template<typename, typename, typename>
+      friend struct vtk_output_collector;
 
       typedef LocalFunctionSpace<GFS> LFS;
       typedef LFSContainerIndexCache<LFS> LFSCache;
@@ -58,7 +58,7 @@ namespace Dune {
         , _index_set(gfs.gridView().indexSet())
       {}
 
-    private:
+    public:
 
       void bind(const Cell& cell)
       {
@@ -277,14 +277,12 @@ namespace Dune {
 
 
 
-    template<typename VTKWriter, typename GFS, typename X>
+    template<typename VTKWriter, typename Data>
     struct add_solution_to_vtk_writer_visitor
       : public TypeTree::DefaultVisitor
       , public TypeTree::DynamicTraversal
     {
 
-      //! Common data container (hierarchic LFS, global solution data etc.)
-      typedef DGFTreeCommonData<GFS,X> Data;
 
       template<typename LFS, typename Child, typename TreePath>
       struct VisitChild
@@ -313,7 +311,7 @@ namespace Dune {
               name_stream << (i > 0 ? "_" : "") << tp.element(i);
             name = name_stream.str();
           }
-        vtk_writer.addVertexData(new VTKGridFunctionAdapter<DGF>(dgf,name.c_str()));
+        vtk_writer.addCellData(new VTKGridFunctionAdapter<DGF>(dgf,name.c_str()));
       }
 
       //! Tag dispatch-based switch that creates a vector-valued function for a VectorGridFunctionSpace.
@@ -351,9 +349,9 @@ namespace Dune {
       }
 
 
-      add_solution_to_vtk_writer_visitor(VTKWriter& vtk_writer_, const GFS& gfs_, const X& x_)
+      add_solution_to_vtk_writer_visitor(VTKWriter& vtk_writer_, shared_ptr<Data> data_)
         : vtk_writer(vtk_writer_)
-        , data(make_shared<Data>(gfs_,x_))
+        , data(data_)
       {}
 
       VTKWriter& vtk_writer;
@@ -361,12 +359,46 @@ namespace Dune {
 
     };
 
+    template<typename VTKWriter, typename GFS, typename X>
+    struct vtk_output_collector
+    {
+
+      //! Common data container (hierarchic LFS, global solution data etc.)
+      typedef DGFTreeCommonData<GFS,X> Data;
+
+      vtk_output_collector& add_solution()
+      {
+        add_solution_to_vtk_writer_visitor<VTKWriter,Data> visitor(_vtk_writer,_data);
+        TypeTree::applyToTree(_data->_lfs,visitor);
+        return *this;
+      }
+
+      template<typename Factory, typename TreePath>
+      vtk_output_collector& add_cell_function(Factory factory, TreePath tp, std::string name)
+      {
+        typedef typename TypeTree::extract_child_type<typename Data::LFS,TreePath>::type LFS;
+        typedef typename Factory::template create_type<LFS,Data>::type DGF;
+        _vtk_writer.addCellData(new VTKGridFunctionAdapter<DGF>(factory.create(TypeTree::extract_child(_data->_lfs,tp),_data),name));
+        return *this;
+      }
+
+      vtk_output_collector(VTKWriter& vtk_writer, const GFS& gfs, const X& x)
+        : _vtk_writer(vtk_writer)
+        , _data(make_shared<Data>(gfs,x))
+      {}
+
+      VTKWriter& _vtk_writer;
+      shared_ptr<Data> _data;
+
+    };
+
 
     template<typename VTKWriter, typename GFS, typename X>
-    void add_solution_to_vtk_writer(VTKWriter& vtk_writer, const GFS& gfs, const X& x)
+    vtk_output_collector<VTKWriter,GFS,X> add_solution_to_vtk_writer(VTKWriter& vtk_writer, const GFS& gfs, const X& x)
     {
-      add_solution_to_vtk_writer_visitor<VTKWriter,GFS,X> visitor(vtk_writer,gfs,x);
-      TypeTree::applyToTree(visitor.data->_lfs,visitor);
+      vtk_output_collector<VTKWriter,GFS,X> collector(vtk_writer,gfs,x);
+      collector.add_solution();
+      return std::move(collector);
     }
 
 
