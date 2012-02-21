@@ -58,7 +58,7 @@ namespace Dune {
     struct ISTLVectorBackend
     {
 
-      typedef istl_field_vector_backend_tag tag;
+      typedef istl_vector_backend_tag tag;
 
       typedef std::size_t size_type;
 
