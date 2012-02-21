@@ -330,6 +330,8 @@ namespace Dune {
 
       typedef P SizeTag;
 
+      typedef P OrderingTag;
+
       typedef LeafGridFunctionSpaceTag ImplementationTag;
 
       typedef typename ordering_transformation::Type Ordering;
