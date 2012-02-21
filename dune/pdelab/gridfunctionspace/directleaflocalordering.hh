@@ -60,6 +60,11 @@ namespace Dune {
         , _container_blocked(false)
       {}
 
+      const typename Traits::GridView& gridView() const
+      {
+        return _gfs.gridview();
+      }
+
     protected:
 
       const GFS& _gfs;
