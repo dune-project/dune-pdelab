@@ -567,13 +567,13 @@ namespace Dune {
 
       ISTLBlockVectorContainer& operator+= (const ISTLBlockVectorContainer& e)
       {
-        container+=e;
+        container+=e.container;
         return *this;
       }
 
       ISTLBlockVectorContainer& operator-= (const ISTLBlockVectorContainer& e)
       {
-        container-=e;
+        container-=e.container;
         return *this;
       }
 
