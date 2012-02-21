@@ -3,7 +3,8 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_CONSTRAINTSTRANSFORMATION_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_CONSTRAINTSTRANSFORMATION_HH
 
-#include <map>
+#include <unordered_map>
+#include <dune/common/tuples.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -13,18 +14,33 @@ namespace Dune {
     //! \{
 
     //! \brief a class holding transformation for constrained spaces
-    template<typename S, typename T>
+    template<typename DI, typename F>
     class ConstraintsTransformation
-      : public std::map<S,std::map<S,T> >
+      : public std::unordered_map<DI,std::unordered_map<DI,F> >
     {
     public:
       //! export ElementType
-      typedef T ElementType;
+      typedef F ElementType;
+      typedef F Field;
+
+      class LocalTransformation
+        : public std::unordered_map<typename DI::size_type,std::unordered_map<typename DI::size_type,F> >
+      {
+
+      public:
+
+        typedef F ElementType;
+        typedef F Field;
+
+        typedef std::unordered_map<typename DI::size_type,F> RowType;
+
+      };
+
       //! export RowType
-      typedef std::map<S,T> RowType;
+      typedef typename ConstraintsTransformation::mapped_type RowType;
     };
 
-    class EmptyTransformation : public ConstraintsTransformation<int,float>
+    class EmptyTransformation : public ConstraintsTransformation<char,char>
     {
     };
 
