@@ -60,7 +60,7 @@ namespace Dune {
       }
 
       template<typename Node>
-      OrderingBase(Node& node, shared_ptr<VirtualOrderingBase<MI,CI> > delegate)
+      OrderingBase(Node& node, VirtualOrderingBase<MI,CI>* delegate = nullptr)
         : _container_blocked(node.container_blocked())
         , _child_count(Node::CHILDREN)
         , _children(Node::CHILDREN,nullptr)
@@ -80,7 +80,7 @@ namespace Dune {
 
       std::vector<SizeType> _child_offsets;
 
-      shared_ptr<VirtualOrderingBase<MI,CI> > _delegate;
+      const VirtualOrderingBase<MI,CI>* _delegate;
 
     };
 
