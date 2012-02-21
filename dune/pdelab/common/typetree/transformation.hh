@@ -22,6 +22,7 @@ namespace Dune {
        *  \{
        */
 
+#ifdef DOXYGEN
 
       //! Look up transformation descriptor to transform SourceNode with Transformation.
       /**
@@ -44,8 +45,8 @@ namespace Dune {
       template<typename SourceNode, typename Transformation, typename Tag>
       void lookupNodeTransformation(SourceNode* s, Transformation* t, Tag tag);
 
+#else // DOXYGEN
 
-#ifndef DOXYGEN
       /**
        * \tparam S   C++ type of source node.
        * \tparam T   Tag identifying the transformation.
@@ -73,7 +74,6 @@ namespace Dune {
       {
         typedef EmptyNodeTransformation type;
       };
-
 
 #endif // DOXYGEN
 
