@@ -191,6 +191,16 @@ namespace Dune {
         BlockSize = BLOCKSIZE
       };
 
+      struct Traits
+      {
+        static const std::size_t max_block_depth = 1;
+      };
+
+      bool blocked() const
+      {
+        return true;
+      }
+
       //export Matrix Backend Type
       typedef ISTLBCRSMatrixBackend<BLOCKSIZE,BLOCKSIZE> MatrixBackend;
 

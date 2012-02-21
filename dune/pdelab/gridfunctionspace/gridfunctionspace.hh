@@ -214,6 +214,18 @@ namespace Dune {
     {
     public:
 
+      struct Traits
+      {
+
+        static const std::size_t max_blocking_depth = 1;
+
+      };
+
+      bool blocked() const
+      {
+        return false;
+      }
+
       //! extract type of container element
       template<class C>
       struct Value
