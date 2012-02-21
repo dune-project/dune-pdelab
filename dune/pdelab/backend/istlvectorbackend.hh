@@ -540,6 +540,11 @@ namespace Dune {
         return container.N();
       }
 
+      ISTLBlockVectorContainer& operator= (const ISTLBlockVectorContainer& r)
+      {
+        container = r.container;
+        return *this;
+      }
 
       ISTLBlockVectorContainer& operator= (const E& e)
       {
