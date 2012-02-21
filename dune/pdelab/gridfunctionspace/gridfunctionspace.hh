@@ -58,6 +58,8 @@ namespace Dune {
       //! the grid view where grid function is defined upon
       typedef G GridViewType;
 
+      typedef G GridView;
+
       //! vector backend
       typedef B BackendType;
 
@@ -389,23 +391,30 @@ namespace Dune {
         return _ordering;
       }
 
+      shared_ptr<Ordering> ordering()
+      {
+        if (!_ordering)
+          _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+        return _ordering;
+      }
+
       //! get dimension of root finite element space
       typename Traits::SizeType globalSize () const
       {
-        return nglobal;
+        return ordering()->size();
       }
 
       //! get dimension of this finite element space
       typename Traits::SizeType size () const
       {
-        return nglobal;
+        return ordering()->size();
       }
 
       //! get max dimension of shape function space
       //! \todo What are the exact semantics of maxLocalSize?
       typename Traits::SizeType maxLocalSize () const
       {
-        return nlocal;
+        return ordering()->maxLocalSize();
       }
 
       //! map index from our index set [0,size()-1] to root index set
@@ -674,7 +683,17 @@ namespace Dune {
 
       bool fixedSize() const
       {
-        return fixed_size;
+        return pfem->fixedSize();
+      }
+
+      typename Traits::SizeType size(GeometryType gt) const
+      {
+        return pfem->size(gt);
+      }
+
+      typename Traits::SizeType fixedMaxLocalSize() const
+      {
+        return pfem->maxLocalSize();
       }
 
     private:
@@ -691,7 +710,7 @@ namespace Dune {
       std::vector<typename Traits::SizeType> offset; // offset into big vector for each entity;
       std::set<unsigned int> codimUsed;
 
-      shared_ptr<Ordering> _ordering;
+      mutable shared_ptr<Ordering> _ordering;
     };
 
     /** \brief Tag indicating a fixed number of unkowns per entity (known at compile time).

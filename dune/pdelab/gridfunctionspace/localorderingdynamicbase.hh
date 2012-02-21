@@ -15,6 +15,25 @@ namespace Dune {
     class LocalOrderingBase
     {
 
+      friend struct collect_a_priori_fixed_size;
+
+      template<typename>
+      friend struct update_fixed_size;
+
+      template<typename>
+      friend struct post_collect_used_geometry_types;
+
+      template<typename>
+      friend struct post_extract_per_entity_sizes;
+
+      friend struct pre_collect_used_geometry_types;
+
+      template<typename>
+      friend struct collect_used_geometry_types_from_cell;
+
+      template<typename>
+      friend struct extract_per_entity_sizes_from_cell;
+
     public:
 
       static const bool has_dynamic_ordering_children = true;
@@ -108,10 +127,43 @@ namespace Dune {
         TypeTree::applyToTree(node,extract_child_bases<LocalOrderingBase>(_children));
       }
 
+      bool fixedSize() const
+      {
+        return _fixed_size;
+      }
+
+      bool contains(const GeometryType& gt) const
+      {
+        return _gt_used[GlobalGeometryTypeIndex::index(gt)];
+      }
+
+      bool contains(typename Traits::SizeType codim) const
+      {
+        return _codim_used[codim];
+      }
+
+      typename Traits::SizeType maxLocalSize() const
+      {
+        return _max_local_size;
+      }
+
     protected:
+
+      LocalOrderingBase& dynamic_child(typename Traits::SizeType i)
+      {
+        return *_children[i];
+      }
+
+      const LocalOrderingBase& dynamic_child(typename Traits::SizeType i) const
+      {
+        return *_children[i];
+      }
+
+
       bool _fixed_size;
+      bool _fixed_size_possible;
       bool _container_blocked;
-      bool _max_local_size;
+      std::size_t _max_local_size;
 
       const std::size_t _child_count;
       std::vector<LocalOrderingBase*> _children;

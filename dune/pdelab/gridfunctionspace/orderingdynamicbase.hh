@@ -85,6 +85,17 @@ namespace Dune {
       }
 
     protected:
+
+      OrderingBase& dynamic_child(typename Traits::SizeType i)
+      {
+        return *_children[i];
+      }
+
+      const OrderingBase& dynamic_child(typename Traits::SizeType i) const
+      {
+        return *_children[i];
+      }
+
     public:
 
       bool _fixed_size;
