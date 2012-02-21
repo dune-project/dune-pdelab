@@ -14,6 +14,7 @@
 
 #include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/gridfunctionspace/lfscontainerindexcache.hh>
+#include <dune/pdelab/gridfunctionspace/localvector.hh>
 
 
 #include "backendselector.hh"
@@ -279,7 +280,7 @@ namespace Dune {
         {
           for (size_type i = 0; i < size(); ++i)
             {
-              local_container.base()[i] = (*_container)[_lfs_cache->container_index(i)];
+              accessBaseContainer(local_container)[i] = (*_container)[_lfs_cache->container_index(i)];
             }
         }
 
@@ -288,7 +289,7 @@ namespace Dune {
         {
           for (size_type i = 0; i < size(); ++i)
             {
-              (*_container)[_lfs_cache->container_index(i)] = local_container.base()[i];
+              (*_container)[_lfs_cache->container_index(i)] = accessBaseContainer(local_container)[i];
             }
         }
 
@@ -297,7 +298,7 @@ namespace Dune {
         {
           for (size_type i = 0; i < size(); ++i)
             {
-              (*_container)[_lfs_cache->container_index(i)] += local_container.base()[i];
+              (*_container)[_lfs_cache->container_index(i)] += accessBaseContainer(local_container)[i];
             }
         }
 
@@ -395,7 +396,7 @@ namespace Dune {
         {
           for (size_type i = 0; i < size(); ++i)
             {
-              local_container.base()[i] = (*_container)[_lfs_cache->container_index(i)];
+              accessBaseContainer(local_container)[i] = (*_container)[_lfs_cache->container_index(i)];
             }
         }
 
