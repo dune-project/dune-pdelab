@@ -12,24 +12,22 @@
 namespace Dune {
   namespace PDELab {
 
-    template<typename MI, typename CI>
+    template<typename DI, typename CI>
     class OrderingBase
     {
 
     public:
 
-      typedef OrderingTraits<MI,CI> Traits;
+      typedef OrderingTraits<DI,CI> Traits;
 
-      void map_index(const typename Traits::MultiIndex& mi, typename Traits::ContainerIndex& ci) const
+      void map_index(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
       {
         if (_delegate)
-          _delegate->map_index_dynamic(mi,ci);
+          _delegate->map_index_dynamic(di,ci);
         else
           {
-            typename Traits::SizeType child_index = mi.back();
-            mi.pop_back();
-            _children[child_index]->map_index(mi,ci);
-            mi.push_back(child_index);
+            typename Traits::SizeType child_index = di.back();
+            _children[child_index]->map_index(di.back_popped(),ci);
             if (_container_blocked)
               ci.push_back(child_index);
             else
@@ -60,7 +58,7 @@ namespace Dune {
       }
 
       template<typename Node>
-      OrderingBase(Node& node, VirtualOrderingBase<MI,CI>* delegate = nullptr)
+      OrderingBase(Node& node, VirtualOrderingBase<DI,CI>* delegate = nullptr)
         : _container_blocked(node.container_blocked())
         , _child_count(Node::CHILDREN)
         , _children(Node::CHILDREN,nullptr)
@@ -78,9 +76,9 @@ namespace Dune {
       const std::size_t _child_count;
       std::vector<OrderingBase*> _children;
 
-      std::vector<SizeType> _child_offsets;
+      std::vector<typename Traits::SizeType> _child_offsets;
 
-      const VirtualOrderingBase<MI,CI>* _delegate;
+      const VirtualOrderingBase<DI,CI>* _delegate;
 
     };
 

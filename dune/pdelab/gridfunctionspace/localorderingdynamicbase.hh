@@ -11,17 +11,17 @@
 namespace Dune {
   namespace PDELab {
 
-    template<typename MI, typename CI>
+    template<typename DI, typename CI>
     class LocalOrderingBase
     {
 
     public:
 
-      typedef OrderingTraits<MI,CI> Traits;
+      typedef OrderingTraits<DI,CI> Traits;
 
       void map_local_index(const typename Traits::SizeType geometry_type_index,
                            const typename Traits::SizeType entity_index,
-                           const typename Traits::MultiIndex& mi,
+                           typename Traits::TreeIndexView mi,
                            typename Traits::ContainerIndex& ci) const
       {
         if (_child_count == 0)
@@ -32,26 +32,26 @@ namespace Dune {
         else
           {
             const typename Traits::SizeType child_index = mi.back();
-            mi.pop_back();
             if (!mi.empty())
-              _children[child_index]->map_local_index(geometry_type_index,entity_index,mi,ci);
-            mi.push_back(child_index);
+              _children[child_index]->map_local_index(geometry_type_index,entity_index,mi.back_popped(),ci);
             if (_container_blocked)
               {
                 ci.push_back(child_index);
               }
             else if (child_index > 0)
-              if (_fixed_size)
-                {
-                  const typename Traits::SizeType index = geometry_type_index * _child_count + child_index - 1;
-                  ci.back() += _gt_dof_offsets[index];
-                }
-              else
-                {
-                  assert(_gt_used[geometry_type_index]);
-                  const typename Traits::SizeType index = (_gt_entity_offsets[geometry_type_index] + entity_index) * _child_count + child_index - 1;
-                  ci.back() += _entity_dof_offsets[index];
-                }
+              {
+                if (_fixed_size)
+                  {
+                    const typename Traits::SizeType index = geometry_type_index * _child_count + child_index - 1;
+                    ci.back() += _gt_dof_offsets[index];
+                  }
+                else
+                  {
+                    assert(_gt_used[geometry_type_index]);
+                    const typename Traits::SizeType index = (_gt_entity_offsets[geometry_type_index] + entity_index) * _child_count + child_index - 1;
+                    ci.back() += _entity_dof_offsets[index];
+                  }
+              }
           }
       }
 
@@ -70,14 +70,14 @@ namespace Dune {
         assert(child_index < _child_count);
         if (_fixed_size)
           {
-            const Traits::SizeType index = geometry_type_index * _child_count + child_index;
+            const typename Traits::SizeType index = geometry_type_index * _child_count + child_index;
             return child_index > 0 ? _gt_dof_offsets[index] - _gt_dof_offsets[index-1] : _gt_dof_offsets[index];
           }
         else
           {
             if (_gt_used[geometry_type_index])
               {
-                const Traits::SizeType index = (_gt_entity_offsets[geometry_type_index] + entity_index) * _child_count + child_index;
+                const typename Traits::SizeType index = (_gt_entity_offsets[geometry_type_index] + entity_index) * _child_count + child_index;
                 return child_index > 0 ? _entity_dof_offsets[index] - _entity_dof_offsets[index-1] : _entity_dof_offsets[index];
               }
             else
@@ -116,9 +116,9 @@ namespace Dune {
       std::vector<bool> _codim_used;
       std::vector<bool> _gt_used;
 
-      std::vector<Traits::SizeType> _gt_entity_offsets;
-      std::vector<Traits::SizeType> _gt_dof_offsets;
-      std::vector<Traits::SizeType> _entity_dof_offsets;
+      std::vector<typename Traits::SizeType> _gt_entity_offsets;
+      std::vector<typename Traits::SizeType> _gt_dof_offsets;
+      std::vector<typename Traits::SizeType> _entity_dof_offsets;
 
     };
 
