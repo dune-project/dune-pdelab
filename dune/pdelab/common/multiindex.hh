@@ -244,6 +244,18 @@ namespace Dune {
           return _size == 0;
         }
 
+        friend std::ostream& operator<< (std::ostream& s, const View& mi)
+        {
+          s << "(";
+          // fill up to maximum depth for consistent formatting
+          for (std::size_t i = mi.size(); i < max_depth; ++i)
+            s << "  -";
+          for (typename ReservedVector<T,n>::const_iterator it = mi._mi.begin(); it != mi._mi.begin() + mi.size(); ++it)
+            s << std::setw(3) << *it;
+          s << ")";
+          return s;
+        }
+
       private:
         const MultiIndex& _mi;
         size_type _size;
@@ -269,11 +281,11 @@ namespace Dune {
       friend std::ostream& operator<< (std::ostream& s, const MultiIndex& mi)
       {
         s << "(";
-        for (typename ReservedVector<T,n>::const_iterator it = mi.begin(); it != mi.end(); ++it)
-          s << std::setw(3) << *it;
         // fill up to maximum depth for consistent formatting
         for (std::size_t i = mi.size(); i < max_depth; ++i)
           s << "  -";
+        for (typename ReservedVector<T,n>::const_iterator it = mi.begin(); it != mi.end(); ++it)
+          s << std::setw(3) << *it;
         s << ")";
         return s;
       }
@@ -363,6 +375,19 @@ namespace Dune {
           return View(_entity_index_view,_tree_index_view.back_popped());
         }
 
+        friend std::ostream& operator<< (std::ostream& s, const View& di)
+        {
+          s << "(";
+
+          for (typename std::remove_reference<EntityIndex>::type::const_iterator it = di._entity_index_view.begin(); it != di._entity_index_view.end(); ++it)
+            s << std::setw(4) << *it;
+
+          s << " | "
+            << di._tree_index_view
+            << ")";
+          return s;
+        }
+
       private:
 
         explicit View(const DOFIndex& dof_index)
@@ -419,9 +444,12 @@ namespace Dune {
       //! Writes a pretty representation of the MultiIndex to the given std::ostream.
       friend std::ostream& operator<< (std::ostream& s, const DOFIndex& di)
       {
-        s << "("
-          << di._entity_index
-          << " | "
+        s << "(";
+
+        for (typename EntityIndex::const_iterator it = di._entity_index.begin(); it != di._entity_index.end(); ++it)
+          s << std::setw(4) << *it;
+
+        s << " | "
           << di._tree_index
           << ")";
         return s;
