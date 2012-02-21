@@ -204,19 +204,11 @@ namespace Dune {
 
       void update()
       {
-        std::cout << "********************" << std::endl;
         for (std::size_t i = 0; i < Node::CHILDREN; ++i)
           {
             this->child(i).update();
-            for (auto it = this->child(i)._child_offsets.begin(); it != this->child(i)._child_offsets.end(); ++it)
-              std::cout << *it << " ";
-            std::cout << std::endl;
           }
         Base::update();
-        for (auto it = this->_child_offsets.begin(); it != this->_child_offsets.end(); ++it)
-          std::cout << *it << " ";
-        std::cout << std::endl;
-        std::cout << "********************" << std::endl;
       }
 
       std::string name() const { return "PowerLexicographicOrdering"; }
@@ -329,19 +321,8 @@ namespace Dune {
 
       void update()
       {
-        std::cout << "********************" << std::endl;
         TypeTree::applyToTree(*this,update_direct_children());
-        for (std::size_t i = 0; i < Node::CHILDREN; ++i)
-          {
-            for (auto it = this->dynamic_child(i)._child_offsets.begin(); it != this->dynamic_child(i)._child_offsets.end(); ++it)
-              std::cout << *it << " ";
-            std::cout << std::endl;
-          }
         Base::update();
-        for (auto it = this->_child_offsets.begin(); it != this->_child_offsets.end(); ++it)
-          std::cout << *it << " ";
-        std::cout << std::endl;
-        std::cout << "********************" << std::endl;
       }
     };
 
