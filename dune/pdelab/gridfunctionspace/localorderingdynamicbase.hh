@@ -26,94 +26,80 @@ namespace Dune {
       {
         if (_child_count == 0)
           {
-            assert(mi.size() == 1 && "MultiIndex length must match tree depth");
+            assert(mi.size() == 1 && "MultiIndex length must match GridFunctionSpace tree depth");
             ci.push_back(mi.back());
           }
         else
           {
             const typename Traits::SizeType child_index = mi.back();
             mi.pop_back();
-            _children[child_index]->map_local_index(geometry_type_index,entity_index,mi,ci);
+            if (!mi.empty())
+              _children[child_index]->map_local_index(geometry_type_index,entity_index,mi,ci);
             mi.push_back(child_index);
             if (_container_blocked)
               {
                 ci.push_back(child_index);
               }
-            else if (_fixed_size)
-              {
-                ci.back() += _gt_dof_offsets[geometry_type_index * (_child_count + 1) + child_index];
-              }
-            else
-              {
-                ci.back() += _entity_dof_offsets[(_gt_entity_offsets[geometry_type_index] + entity_index) * (_child_count + 1) + child_index];
-              }
+            else if (child_index > 0)
+              if (_fixed_size)
+                {
+                  const typename Traits::SizeType index = geometry_type_index * _child_count + child_index - 1;
+                  ci.back() += _gt_dof_offsets[index];
+                }
+              else
+                {
+                  assert(_gt_used[geometry_type_index]);
+                  const typename Traits::SizeType index = (_gt_entity_offsets[geometry_type_index] + entity_index) * _child_count + child_index - 1;
+                  ci.back() += _entity_dof_offsets[index];
+                }
           }
       }
 
       typename Traits::SizeType size(const typename Traits::SizeType geometry_type_index, const typename Traits::SizeType entity_index) const
       {
-        if (_child_count == 0)
-          return size(geometry_type_index,entity_index,0);
+        if (_fixed_size)
+          return _gt_dof_offsets[geometry_type_index * _child_count + _child_count - 1];
         else
-          return offset(geometry_type_index,entity_index,_child_count);
+          return _gt_used[geometry_type_index]
+            ? _entity_dof_offsets[(_gt_entity_offsets[geometry_type_index] + entity_index) * _child_count + _child_count - 1]
+            : 0;
       }
 
       typename Traits::SizeType size(const typename Traits::SizeType geometry_type_index, const typename Traits::SizeType entity_index, const typename Traits::SizeType child_index) const
       {
-        if (_child_count == 0)
+        assert(child_index < _child_count);
+        if (_fixed_size)
           {
-            assert (child_index == 0);
-            if (_fixed_size)
-              {
-                return _gt_dof_offsets[geometry_type_index];
-              }
-            else
-              {
-                return _entity_dof_offsets[_gt_entity_offsets[geometry_type_index + entity_index]];
-              }
+            const Traits::SizeType index = geometry_type_index * _child_count + child_index;
+            return child_index > 0 ? _gt_dof_offsets[index] - _gt_dof_offsets[index-1] : _gt_dof_offsets[index];
           }
         else
           {
-            if (_fixed_size)
+            if (_gt_used[geometry_type_index])
               {
-                const typename Traits::SizeType index = geometry_type_index * (_child_count + 1) + child_index;
-                return _gt_dof_offsets[index+1] - gt_dof_offsets[index];
+                const Traits::SizeType index = (_gt_entity_offsets[geometry_type_index] + entity_index) * _child_count + child_index;
+                return child_index > 0 ? _entity_dof_offsets[index] - _entity_dof_offsets[index-1] : _entity_dof_offsets[index];
               }
             else
               {
-                const typename Traits::SizeType index = (_gt_entity_offsets[geometry_type_index] + entity_index) * (_child_count + 1) + child_index;
-                return _entity_dof_offsets[index+1] - entity_dof_offsets[index];
+                return 0;
               }
           }
       }
 
       typename Traits::SizeType offset(const typename Traits::SizeType geometry_type_index, const typename Traits::SizeType entity_index, const typename Traits::SizeType child_index) const
       {
-        if (_child_count == 0)
-          {
-            assert(child_index < 2);
-            return child_index == 0 ? 0 : size(geometry_type_index,entity_index,0);
-          }
+        assert(child_index < _child_count);
+        assert(_gt_used[geometry_type_index]);
+        if (_fixed_size)
+          return child_index > 0 ? _gt_dof_offsets[geometry_type_index * _child_count + child_index - 1] : 0;
         else
-          {
-            if (_fixed_size)
-              {
-                return _gt_dof_offsets[geometry_type_index * (_child_count + 1) + child_index];
-              }
-            else
-              {
-                return _entity_dof_offsets[(_gt_entity_offsets[geometry_type_index] + entity_index) * (_child_count + 1) + child_index];
-              }
-          }
-      }
-
-      void update()
-      {
+          return child_index > 0 ? _entity_dof_offsets[(_gt_entity_offsets[geometry_type_index] + entity_index) * _child_count + child_index - 1] : 0;
       }
 
       template<typename Node>
-      LocalOrderingBase(Node& node)
-        : _container_blocked(node.container_blocked())
+      LocalOrderingBase(Node& node, bool container_blocked)
+        : _container_blocked(container_blocked)
         , _child_count(Node::CHILDREN)
         , _children(Node::CHILDREN,nullptr)
       {
@@ -127,9 +113,12 @@ namespace Dune {
       const std::size_t _child_count;
       std::vector<LocalOrderingBase*> _children;
 
-      std::vector<SizeType> _gt_entity_offsets;
-      std::vector<SizeType> _gt_dof_offsets;
-      std::vector<SizeType> _entity_dof_offsets;
+      std::vector<bool> _codim_used;
+      std::vector<bool> _gt_used;
+
+      std::vector<Traits::SizeType> _gt_entity_offsets;
+      std::vector<Traits::SizeType> _gt_dof_offsets;
+      std::vector<Traits::SizeType> _entity_dof_offsets;
 
     };
 
