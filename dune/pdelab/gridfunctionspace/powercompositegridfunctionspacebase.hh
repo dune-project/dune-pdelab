@@ -306,6 +306,24 @@ namespace Dune {
         TypeTree::applyToTree(gfs(),visitor);
       }
 
+      B& backend()
+      {
+        return _backend;
+      }
+
+      const B& backend() const
+      {
+        return _backend;
+      }
+
+      PowerCompositeGridFunctionSpaceBase(const B& backend)
+        : _backend(backend)
+      {}
+
+    private:
+
+      B _backend;
+
     };
 
   }

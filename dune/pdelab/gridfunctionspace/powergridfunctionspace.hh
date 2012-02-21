@@ -81,29 +81,26 @@ namespace Dune {
       //! export traits class
       typedef typename ImplementationBase::Traits Traits;
 
-      PowerGridFunctionSpace(T& c)
+      PowerGridFunctionSpace(T& c, const Backend& backend = Backend())
         : BaseT(c)
-      {
-      }
-
-      PowerGridFunctionSpace (T& c0,
-                              T& c1)
-        : BaseT(c0,c1)
+        , ImplementationBase(backend)
       {
       }
 
       PowerGridFunctionSpace (T& c0,
                               T& c1,
-                              T& c2)
-        : BaseT(c0,c1,c2)
+                              const Backend& backend = Backend())
+        : BaseT(c0,c1)
+        , ImplementationBase(backend)
       {
       }
 
       PowerGridFunctionSpace (T& c0,
                               T& c1,
                               T& c2,
-                              T& c3)
-        : BaseT(c0,c1,c2,c3)
+                              const Backend& backend = Backend())
+        : BaseT(c0,c1,c2)
+        , ImplementationBase(backend)
       {
       }
 
@@ -111,8 +108,9 @@ namespace Dune {
                               T& c1,
                               T& c2,
                               T& c3,
-                              T& c4)
-        : BaseT(c0,c1,c2,c3,c4)
+                              const Backend& backend = Backend())
+        : BaseT(c0,c1,c2,c3)
+        , ImplementationBase(backend)
       {
       }
 
@@ -121,8 +119,9 @@ namespace Dune {
                               T& c2,
                               T& c3,
                               T& c4,
-                              T& c5)
-        : BaseT(c0,c1,c2,c3,c4,c5)
+                              const Backend& backend = Backend())
+        : BaseT(c0,c1,c2,c3,c4)
+        , ImplementationBase(backend)
       {
       }
 
@@ -132,8 +131,9 @@ namespace Dune {
                               T& c3,
                               T& c4,
                               T& c5,
-                              T& c6)
-        : BaseT(c0,c1,c2,c3,c4,c5,c6)
+                              const Backend& backend = Backend())
+        : BaseT(c0,c1,c2,c3,c4,c5)
+        , ImplementationBase(backend)
       {
       }
 
@@ -144,8 +144,9 @@ namespace Dune {
                               T& c4,
                               T& c5,
                               T& c6,
-                              T& c7)
-        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7)
+                              const Backend& backend = Backend())
+        : BaseT(c0,c1,c2,c3,c4,c5,c6)
+        , ImplementationBase(backend)
       {
       }
 
@@ -157,8 +158,9 @@ namespace Dune {
                               T& c5,
                               T& c6,
                               T& c7,
-                              T& c8)
-        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8)
+                              const Backend& backend = Backend())
+        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7)
+        , ImplementationBase(backend)
       {
       }
 
@@ -171,8 +173,25 @@ namespace Dune {
                               T& c6,
                               T& c7,
                               T& c8,
-                              T& c9)
+                              const Backend& backend = Backend())
+        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8)
+        , ImplementationBase(backend)
+      {
+      }
+
+      PowerGridFunctionSpace (T& c0,
+                              T& c1,
+                              T& c2,
+                              T& c3,
+                              T& c4,
+                              T& c5,
+                              T& c6,
+                              T& c7,
+                              T& c8,
+                              T& c9,
+                              const Backend& backend = Backend())
         : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8,c9)
+        , ImplementationBase(backend)
       {
       }
 

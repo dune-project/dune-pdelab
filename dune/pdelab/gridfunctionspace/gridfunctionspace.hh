@@ -348,21 +348,23 @@ namespace Dune {
       typedef typename ordering_transformation::Type Ordering;
 
       //! constructor
-      GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_)
+      GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_, const B& backend = B())
         : defaultce(ce_)
         , gv(gridview)
         , pfem(stackobject_to_shared_ptr(fem))
         , ce(ce_)
+        , _backend(backend)
       {
         //        orderingp = make_shared<Ordering>(*this);
         //update();
       }
 
       //! constructor
-      GridFunctionSpace (const GV& gridview, const FEM& fem)
+      GridFunctionSpace (const GV& gridview, const FEM& fem, const B& backend = B())
         : gv(gridview)
         , pfem(stackobject_to_shared_ptr(fem))
         , ce(defaultce)
+        , _backend(backend)
       {
         //        orderingp = make_shared<Ordering>(*this);
         //update();
@@ -708,6 +710,16 @@ namespace Dune {
         return pfem->maxLocalSize();
       }
 
+      B& backend()
+      {
+        return _backend;
+      }
+
+      const B& backend() const
+      {
+        return _backend;
+      }
+
     private:
       CE defaultce;
       const GV& gv;
@@ -715,6 +727,7 @@ namespace Dune {
       typename Traits::SizeType nlocal;
       typename Traits::SizeType nglobal;
       const CE& ce;
+      B _backend;
       bool fixed_size;
 
       typedef std::map<Dune::GeometryType,typename Traits::SizeType> GTOffsetMap;
