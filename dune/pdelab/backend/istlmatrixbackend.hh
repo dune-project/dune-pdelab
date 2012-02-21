@@ -248,9 +248,10 @@ namespace Dune {
     typename enable_if<Block::blocklevel != 1>::type
     clear_istl_matrix_row(Block& b, const RI& ri, int i)
     {
-      for (std::size_t j = 0; j < b.M(); ++j)
-        if (b.exists(ri[i],j))
-          clear_istl_matrix_row(b[ri[i]][j],ri,i-1);
+      typedef typename Block::ColIterator col_iterator_type;
+      const col_iterator_type end = b[ri[i]].end();
+      for(col_iterator_type cit = b[ri[i]].begin(); cit != end; ++cit)
+          clear_istl_matrix_row(*cit,ri,i-1);
     }
 
     template<typename RI, typename Block>
