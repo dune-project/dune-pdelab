@@ -32,6 +32,15 @@
 
 #define DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES_THROUGH_META_FUNCTION(meta_function) typename meta_function::template apply<Children>::type...
 
+template<typename... T> struct extract_first_child;
+
+template<typename T0, typename... T>
+struct extract_first_child<T0,T...>
+{
+  typedef T0 type;
+};
+
+#define DUNE_TYPETREE_COMPOSITENODE_FIRST_CHILD extract_first_child<Children...>::type
 
 #else
 
@@ -140,6 +149,8 @@
   typename meta_function::template apply<C7>::type, \
   typename meta_function::template apply<C8>::type, \
   typename meta_function::template apply<C9>::type
+
+#define DUNE_TYPETREE_COMPOSITENODE_FIRST_CHILD C0
 
 #endif
 
