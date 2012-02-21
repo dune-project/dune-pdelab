@@ -55,19 +55,48 @@ namespace Dune {
     };
 
 
+    struct DefaultDOFIndexAccessor
+    {
+
+      template<typename DOFIndex, typename SizeType>
+      static void store(DOFIndex& dof_index, const GeometryType& gt, SizeType entity_index, SizeType tree_index)
+      {
+        dof_index.clear();
+        dof_index.entityIndex()[0] = GlobalGeometryTypeIndex::index(gt);
+        dof_index.entityIndex()[1] = entity_index;
+        dof_index.treeIndex().push_back(tree_index);
+      }
+
+    };
+
+    template<typename DI, typename CI>
+    struct SimpleOrderingTraits
+    {
+
+      typedef DI DOFIndex;
+
+      typedef CI ContainerIndex;
+
+      typedef std::size_t SizeType;
+
+      typedef DefaultDOFIndexAccessor DOFIndexAccessor;
+
+    };
+
+
+
     template<typename DI, typename CI>
     struct OrderingTraits
+      : public SimpleOrderingTraits<DI,CI>
     {
-      typedef DI DOFIndex;
 
       typedef typename DI::TreeIndex TreeIndex;
 
       typedef typename DI::View DOFIndexView;
       typedef typename DI::View::TreeIndex TreeIndexView;
 
-      typedef CI ContainerIndex;
-
       typedef typename DI::size_type SizeType;
+
     };
 
 
