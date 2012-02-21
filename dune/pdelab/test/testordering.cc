@@ -20,6 +20,9 @@
 #include <dune/pdelab/finiteelementmap/q1fem.hh>
 #include <dune/pdelab/finiteelementmap/q22dfem.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/entityblockedlocalordering.hh>
+#include <dune/pdelab/gridfunctionspace/leaflocalordering.hh>
+
 
 // test function trees
 template<int dim>
@@ -47,6 +50,16 @@ struct test<2> {
     GFS1 gfs1(gv,q12dfem);
     typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> GFS2;
     GFS2 gfs2(gv,q22dfem);
+
+    typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,Dune::PDELab::StdVectorBackend> P1GFS;
+
+    P1GFS p1gfs(gfs1,gfs1,gfs1);
+
+    typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,2,Dune::PDELab::StdVectorBackend> PGFS;
+
+    PGFS pgfs(p1gfs,p1gfs);
+
+
     /*
     typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM,Dune::PDELab::NoConstraints,
       Dune::PDELab::ISTLVectorBackend<1>,
@@ -78,14 +91,52 @@ struct test<2> {
     PGFS17B pgfs17b(gfs2);
     */
     // make coefficent Vectors
+
+    auto po = pgfs.ordering();
+    po->update();
+
+    auto o1 = gfs1.ordering();
+    o1->update();
+
+    Dune::PDELab::LocalFunctionSpace<GFS1> lfs1(gfs1);
+
+    typename GV::template Codim<0>::Iterator it = gv.template begin<0>();
+
+    lfs1.bind(*it);
+
+    for (unsigned i = 0; i < lfs1.size(); ++i)
+      {
+        auto di = lfs1.dofIndex(i);
+        typename GFS1::Ordering::Traits::ContainerIndex ci;
+        gfs1.ordering()->map_index(di.view(),ci);
+        std::cout << di << "    " << ci << std::endl;
+      }
     typedef typename Dune::PDELab::BackendVectorSelector<GFS1,double>::Type V1;
     V1 x1(gfs1);
     x1 = 0.0;
+
+    Dune::PDELab::LocalFunctionSpace<PGFS> plfs(pgfs);
+
+    plfs.bind(*it);
+
+    for (unsigned i = 0; i < plfs.size(); ++i)
+      {
+        auto di = plfs.dofIndex(i);
+        typename GFS1::Ordering::Traits::ContainerIndex ci;
+        po->map_index(di.view(),ci);
+        std::cout << di << "    " << ci << std::endl;
+      }
+
+    typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,Dune::PDELab::StdVectorBackend,Dune::PDELab::EntityBlockedOrderingTag> EBPGFS1;
+
+    EBPGFS1 ebpgfs1(gfs1);
+
+    auto ebo = ebpgfs1.ordering();
+
+    /*
     typedef typename Dune::PDELab::BackendVectorSelector<GFS2,double>::Type V2;
     V2 x2(gfs2);
     x2 = 0.0;
-
-    gfs1.ordering();
 
     /*
     // test composite
