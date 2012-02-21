@@ -393,7 +393,13 @@ namespace Dune {
         return *pfem;
       }
 
-      // get finite element map, I think we dont need it
+      //! get finite element map
+      shared_ptr<const FEM> finiteElementMapStorage () const
+      {
+        return pfem;
+      }
+
+      //! get finite element map
       const FEM& localFiniteElementMap () const DUNE_DEPRECATED
       {
         return *pfem;
