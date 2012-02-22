@@ -58,7 +58,7 @@ namespace Dune {
           m.reset(new Matrix(gos));
 
           timing = watch.elapsed();
-          if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
+          if (gos.trialGridFunctionSpace().gridView().comm().rank()==0)
             std::cout << "=== matrix setup " << timing << " s" << std::endl;
 
           // assemble matrix
@@ -68,11 +68,11 @@ namespace Dune {
           gos.jacobian(x,*m);
 
           timing = watch.elapsed();
-          if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
+          if (gos.trialGridFunctionSpace().gridView().comm().rank()==0)
             std::cout << "=== matrix assembly " << timing << " s" << std::endl;
         }
         else {
-          if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
+          if (gos.trialGridFunctionSpace().gridView().comm().rank()==0)
             std::cout << "=== matrix setup skipped" << std::endl
                       << "=== matrix assembly skipped" << std::endl;
         }
@@ -84,7 +84,7 @@ namespace Dune {
         gos.residual(x,r);  // residual is additive
 
         timing = watch.elapsed();
-        if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
+        if (gos.trialGridFunctionSpace().gridView().comm().rank()==0)
           std::cout << "=== residual assembly " << timing << " s" << std::endl;
 
         Coeff defect = sb.norm(r);
@@ -96,7 +96,7 @@ namespace Dune {
         sb.apply(*m,z,r,red); // solver makes right hand side consistent
         timing = watch.elapsed();
 
-        if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
+        if (gos.trialGridFunctionSpace().gridView().comm().rank()==0)
           std::cout << "=== solving (reduction: " << red << ") "
                     << timing << " s" << std::endl;
 

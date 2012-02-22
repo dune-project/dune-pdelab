@@ -224,8 +224,8 @@ namespace Dune{
       Real suggestTimestep (Real dt) const
       {
         Real suggested_dt = std::min(la0.suggestTimestep(dt),la1.suggestTimestep(dt));
-        if (trialGridFunctionSpace().gridview().comm().size()>1)
-          suggested_dt =  trialGridFunctionSpace().gridview().comm().min(suggested_dt);
+        if (trialGridFunctionSpace().gridView().comm().size()>1)
+          suggested_dt =  trialGridFunctionSpace().gridView().comm().min(suggested_dt);
         return suggested_dt;
       }
 

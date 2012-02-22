@@ -112,7 +112,7 @@ namespace Dune {
             sum += (x.base()[i][j]*y.base()[i][j])*helper.mask(i,j);
 
         // do global communication
-        return gfs.gridview().comm().sum(sum);
+        return gfs.gridView().comm().sum(sum);
       }
 
       /*! \brief Norm of a right-hand side vector.
@@ -171,8 +171,8 @@ namespace Dune {
         set_constrained_dofs(cc,0.0,dd);
         prec.apply(v,dd);
         Dune::PDELab::AddDataHandle<GFS,domain_type,typename domain_type::field_type> adddh(gfs,v);
-        if (gfs.gridview().comm().size()>1)
-          gfs.gridview().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
+        if (gfs.gridView().comm().size()>1)
+          gfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
       }
 
       /*!
@@ -300,8 +300,8 @@ namespace Dune {
         solver.apply(v,b,stat);
         helper.mask(v);
         Dune::PDELab::AddDataHandle<GFS,X> adddh(gfs,v);
-        if (gfs.gridview().comm().size()>1)
-          gfs.gridview().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+        if (gfs.gridView().comm().size()>1)
+          gfs.gridView().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
       }
 
       /*!
@@ -339,7 +339,7 @@ namespace Dune {
             sum += (x[i][j]*y[i][j])*helper.mask(i,j);
 
         // do global communication
-        return gfs.gridview().comm().sum(sum);
+        return gfs.gridView().comm().sum(sum);
       }
 
       /*! \brief Norm of a right-hand side vector.
@@ -424,7 +424,7 @@ namespace Dune {
         typedef Dune::PDELab::OverlappingWrappedPreconditioner<C,GFS,SeqPrec> WPREC;
         WPREC wprec(gfs,seqprec,c,this->parallelHelper());
         int verb=0;
-        if (gfs.gridview().comm().rank()==0) verb=verbose;
+        if (gfs.gridView().comm().rank()==0) verb=verbose;
         Solver<V> solver(pop,psp,wprec,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
         solver.apply(z,r,stat);
@@ -479,7 +479,7 @@ namespace Dune {
         typedef Dune::PDELab::OverlappingWrappedPreconditioner<C,GFS,SeqPrec> WPREC;
         WPREC wprec(gfs,seqprec,c,this->parallelHelper());
         int verb=0;
-        if (gfs.gridview().comm().rank()==0) verb=verbose;
+        if (gfs.gridView().comm().rank()==0) verb=verbose;
         Solver<V> solver(pop,psp,wprec,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
         solver.apply(z,r,stat);
@@ -605,7 +605,7 @@ namespace Dune {
         typedef Dune::PDELab::SuperLUSubdomainSolver<GFS,M,V,W> PREC;
         PREC prec(gfs,A);
         int verb=0;
-        if (gfs.gridview().comm().rank()==0) verb=verbose;
+        if (gfs.gridView().comm().rank()==0) verb=verbose;
         Solver<V> solver(pop,psp,prec,reduction,maxiter,verbose);
         Dune::InverseOperatorResult stat;
         solver.apply(z,r,stat);
@@ -727,10 +727,10 @@ namespace Dune {
         jac.pre(z,r);
         jac.apply(z,r);
         jac.post(z);
-        if (gfs.gridview().comm().size()>1)
+        if (gfs.gridView().comm().size()>1)
         {
           Dune::PDELab::CopyDataHandle<GFS,V> copydh(gfs,z);
-          gfs.gridview().communicate(copydh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+          gfs.gridView().communicate(copydh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
         }
         res.converged  = true;
         res.iterations = 1;
@@ -826,7 +826,7 @@ namespace Dune {
       */
       void apply(M& A, V& z, V& r, typename V::ElementType reduction)
       {
-        Comm oocc(gfs.gridview().comm());
+        Comm oocc(gfs.gridView().comm());
         MatrixType& mat=A.base();
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
           Dune::Amg::FirstDiagonal> > Criterion;
@@ -844,7 +844,7 @@ namespace Dune {
         Criterion criterion(params);
         
         int verb=0;
-        if (gfs.gridview().comm().rank()==0) verb=verbose;
+        if (gfs.gridView().comm().rank()==0) verb=verbose;
         //only construct a new AMG if the matrix changes
         if (reuse==false || firstapply==true){
           amg.reset(new AMG(oop, criterion, smootherArgs, oocc));

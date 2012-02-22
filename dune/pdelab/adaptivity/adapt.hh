@@ -266,7 +266,7 @@ namespace Dune {
           //! @todo allgemein
           static Dune::GeometryType simplex(Dune::GeometryType::simplex,GV::dimension);
           P0FEM p0fem(simplex);
-          GFSV gfsv(gfsu.gridview(),p0fem);
+          GFSV gfsv(gfsu.gridView(),p0fem);
 
           // make local function spaces
           typedef LocalFunctionSpace<GFSU> LFSU;
@@ -285,8 +285,8 @@ namespace Dune {
           LV vl_n;
 
           // traverse grid view
-          for (LeafIterator it = gfsu.gridview().template begin<0,Dune::Interior_Partition>();
-              it!=gfsu.gridview().template end<0,Dune::Interior_Partition>(); ++it)
+          for (LeafIterator it = gfsu.gridView().template begin<0,Dune::Interior_Partition>();
+              it!=gfsu.gridView().template end<0,Dune::Interior_Partition>(); ++it)
           {
             const Element& e = *it;
             // bind local function spaces to element
@@ -309,8 +309,8 @@ namespace Dune {
             lfsv.vadd(vl,estimate);
 
             // skeleton term
-            IntersectionIterator endit = gfsu.gridview().iend(*it);
-            for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); iit!=endit; ++iit)
+            IntersectionIterator endit = gfsu.gridView().iend(*it);
+            for (IntersectionIterator iit = gfsu.gridView().ibegin(*it); iit!=endit; ++iit)
             {
               if (iit->neighbor())
               {
@@ -420,7 +420,7 @@ namespace Dune {
         //! @todo allgemein
         static Dune::GeometryType simplex(Dune::GeometryType::simplex,GV::dimension);
         P0FEM p0fem(simplex);
-        GFSV gfsv(gfsu.gridview(),p0fem);
+        GFSV gfsv(gfsu.gridView(),p0fem);
         V estimate(gfsv,0.);
         estimation.apply(u,estimate);
         LFSV lfsv(gfsv);

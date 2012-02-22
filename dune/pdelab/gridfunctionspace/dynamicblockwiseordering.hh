@@ -340,7 +340,7 @@ namespace Dune {
       PowerDynamicBlockwiseOrdering
       ( const GFS &gfs,
         const typename Node::NodeStorage &children) :
-        Node(children), Base(gfs.gridview())
+        Node(children), Base(gfs.gridView())
       { }
 
       std::string name() const { return "PowerDynamicBlockwiseOrdering"; }
@@ -389,7 +389,7 @@ namespace Dune {
       CompositeDynamicBlockwiseOrdering
       ( const GFS &gfs,
         DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE) :
-        Node(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES), Base(gfs.gridview())
+        Node(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES), Base(gfs.gridView())
       { }
 
       std::string name() const { return "CompositeDynamicBlockwiseOrdering"; }

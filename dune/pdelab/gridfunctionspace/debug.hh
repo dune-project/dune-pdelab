@@ -261,7 +261,7 @@ namespace Dune {
     void debugDofVectorByPos(std::ostream &stream, const GFS &gfs, const V &v)
     {
       DebugDofVectorFilterUniqueInteriorBorder
-        <typename GFS::Traits::GridViewType> filter(gfs.gridview());
+        <typename GFS::Traits::GridViewType> filter(gfs.gridView());
       debugDofVector(stream, gfs, v, filter);
     }
 
@@ -270,7 +270,7 @@ namespace Dune {
                         Filter &filter)
     {
       typedef typename GFS::Traits::GridViewType GV;
-      const GV &gv = gfs.gridview();
+      const GV &gv = gfs.gridView();
 
       typedef LocalFunctionSpace<GFS> LFS;
       LFS lfs(gfs);

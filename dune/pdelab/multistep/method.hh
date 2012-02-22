@@ -55,14 +55,14 @@ namespace Dune {
         : parameters(&parameters_), mgos(mgos_), pdeSolver(pdeSolver_),
           verbosity(1), step(1)
       {
-        if(mgos.trialGridFunctionSpace().gridview().comm().rank() > 0)
+        if(mgos.trialGridFunctionSpace().gridView().comm().rank() > 0)
           verbosity = 0;
       }
 
       //! change verbosity level; 0 means completely quiet
       void setVerbosityLevel (int level)
       {
-        if(mgos.trialGridFunctionSpace().gridview().comm().rank() == 0)
+        if(mgos.trialGridFunctionSpace().gridView().comm().rank() == 0)
           verbosity = level;
       }
 

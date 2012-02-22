@@ -1030,7 +1030,7 @@ namespace Dune {
       {
         if (method->implicit())
           DUNE_THROW(Exception,"explicit one step method called with implicit scheme");
-        if (igos.trialGridFunctionSpace().gridview().comm().rank()>0)
+        if (igos.trialGridFunctionSpace().gridView().comm().rank()>0)
           verbosityLevel = 0;
       }
 
@@ -1062,7 +1062,7 @@ namespace Dune {
       //! change verbosity level; 0 means completely quiet
       void setVerbosityLevel (int level)
       {
-        if (igos.trialGridFunctionSpace().gridview().comm().rank()>0)
+        if (igos.trialGridFunctionSpace().gridView().comm().rank()>0)
           verbosityLevel = 0;
         else
           verbosityLevel = level;

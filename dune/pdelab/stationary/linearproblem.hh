@@ -55,8 +55,8 @@ namespace Dune {
         M m(gos); 
 
         timing = watch.elapsed();
-        // timing = gos.trialGridFunctionSpace().gridview().comm().max(timing);
-        if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
+        // timing = gos.trialGridFunctionSpace().gridView().comm().max(timing);
+        if (gos.trialGridFunctionSpace().gridView().comm().rank()==0)
           std::cout << "=== matrix setup (max) " << timing << " s" << std::endl;
         watch.reset();
 
@@ -64,8 +64,8 @@ namespace Dune {
         gos.jacobian(*x,m);
 
         timing = watch.elapsed();
-        // timing = gos.trialGridFunctionSpace().gridview().comm().max(timing);
-        if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
+        // timing = gos.trialGridFunctionSpace().gridView().comm().max(timing);
+        if (gos.trialGridFunctionSpace().gridView().comm().rank()==0)
           std::cout << "=== matrix assembly (max) " << timing << " s" << std::endl;
 
         // assemble residual
@@ -75,8 +75,8 @@ namespace Dune {
         gos.residual(*x,r);  // residual is additive
 
         timing = watch.elapsed();
-        // timing = gos.trialGridFunctionSpace().gridview().comm().max(timing);
-        if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
+        // timing = gos.trialGridFunctionSpace().gridView().comm().max(timing);
+        if (gos.trialGridFunctionSpace().gridView().comm().rank()==0)
           std::cout << "=== residual assembly (max) " << timing << " s" << std::endl;
 
         typename V::ElementType defect = ls.norm(r);
@@ -85,12 +85,12 @@ namespace Dune {
         watch.reset();
         V z(gos.trialGridFunctionSpace(),0.0);
         typename V::ElementType red = std::min(reduction,defect/mindefect);
-        if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
+        if (gos.trialGridFunctionSpace().gridView().comm().rank()==0)
           std::cout << "=== solving (reduction: " << red << ") ";
         ls.apply(m,z,r,red); // solver makes right hand side consistent
         timing = watch.elapsed();
-        // timing = gos.trialGridFunctionSpace().gridview().comm().max(timing);
-        if (gos.trialGridFunctionSpace().gridview().comm().rank()==0)
+        // timing = gos.trialGridFunctionSpace().gridView().comm().max(timing);
+        if (gos.trialGridFunctionSpace().gridView().comm().rank()==0)
           std::cout << timing << " s" << std::endl;
 
         // and update
