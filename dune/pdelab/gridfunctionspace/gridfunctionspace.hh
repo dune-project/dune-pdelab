@@ -345,7 +345,7 @@ namespace Dune {
       }
 
       //! get grid view
-      const GV& gridview () const DUNE_DEPRECATED
+      const GV& gridview () const DUNE_DEPRECATED_MSG("Use gridView() instead of gridview()")
       {
         return gv;
       }
@@ -733,7 +733,13 @@ namespace Dune {
       }
 
       // get grid view
-      const GV& gridview () const
+      const GV& gridview () const DUNE_DEPRECATED_MSG("Use gridView() instead of gridview()")
+      {
+        return gv;
+      }
+
+      // get grid view
+      const GV& gridView () const
       {
         return gv;
       }
@@ -1109,7 +1115,13 @@ namespace Dune {
       }
 
       // get grid view
-      const GV& gridview () const
+      const GV& gridview () const DUNE_DEPRECATED_MSG("Use gridView() instead of gridview()")
+      {
+        return gv;
+      }
+
+      // get grid view
+      const GV& gridView () const
       {
         return gv;
       }
@@ -1425,9 +1437,15 @@ namespace Dune {
       };
 
       // get grid view
-      const typename Traits::GridViewType& gridview () const
+      const typename Traits::GridViewType& gridview () const DUNE_DEPRECATED_MSG("Use gridView() instead of gridview()")
       {
-        return pgfs->gridview();
+        return pgfs->gridView();
+      }
+
+      // get grid view
+      const typename Traits::GridViewType& gridView () const
+      {
+        return pgfs->gridView();
       }
 
       //! get dimension of root finite element space
@@ -1503,9 +1521,15 @@ namespace Dune {
       };
 
       // get grid view
-      const typename Traits::GridViewType& gridview () const
+      const typename Traits::GridViewType& gridview () const DUNE_DEPRECATED_MSG("Use gridView() instead of gridview()")
       {
-        return pgfs->gridview();
+        return pgfs->gridView();
+      }
+
+      // get grid view
+      const typename Traits::GridViewType& gridView () const
+      {
+        return pgfs->gridView();
       }
 
       //! get dimension of root finite element space
@@ -1588,9 +1612,15 @@ namespace Dune {
       };
 
       // get grid view
-      const typename Traits::GridViewType& gridview () const
+      const typename Traits::GridViewType& gridview () const DUNE_DEPRECATED_MSG("Use gridView() instead of gridview()")
       {
-        return pcgfs->gridview();
+        return pcgfs->gridView();
+      }
+
+      // get grid view
+      const typename Traits::GridViewType& gridView () const
+      {
+        return pcgfs->gridView();
       }
 
       // get finite element map
