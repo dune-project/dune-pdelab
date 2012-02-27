@@ -381,7 +381,7 @@ namespace Dune {
 
 
     template<typename T, std::size_t n>
-    std::size_t hash_value(const MultiIndex<T,n>& mi)
+    inline std::size_t hash_value(const MultiIndex<T,n>& mi)
     {
       return boost::hash_range(mi.begin(),mi.end());
     }
@@ -565,7 +565,7 @@ namespace Dune {
     };
 
     template<typename T, std::size_t n1, std::size_t n2>
-    std::size_t hash_value(const DOFIndex<T,n1,n2>& di)
+    inline std::size_t hash_value(const DOFIndex<T,n1,n2>& di)
     {
       std::size_t seed = 0;
       boost::hash_combine(seed,boost::hash_range(di.entityIndex().begin(),di.entityIndex().end()));
@@ -576,6 +576,37 @@ namespace Dune {
 
   } // namespace PDELab
 } // namespace Dune
+
+
+// ********************************************************************************
+// Specialize std::hash for MultiIndex and DOFIndex
+//
+// We forward to a function called hash_value() using ADL, this way we get a common
+// implementation of the actual hash for both std::hash and boost::hash (which will
+// do this lookup by default).
+// ********************************************************************************
+
+namespace std {
+
+  template<typename T, std::size_t n>
+  struct hash<Dune::PDELab::MultiIndex<T,n> >
+  {
+    std::size_t operator()(const Dune::PDELab::MultiIndex<T,n>& multi_index) const
+    {
+      return hash_value(multi_index);
+    }
+  };
+
+  template<typename T, std::size_t n1, std::size_t n2>
+  struct hash<Dune::PDELab::DOFIndex<T,n1,n2> >
+  {
+    std::size_t operator()(const Dune::PDELab::DOFIndex<T,n1,n2>& dof_index) const
+    {
+      return hash_value(dof_index);
+    }
+  };
+
+}
 
 
 #endif // DUNE_PDELAB_COMMON_MULTIINDEX_HH
