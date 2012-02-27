@@ -34,12 +34,13 @@
 #include"../constraints/constraints.hh"
 #include"../common/function.hh"
 #include"../common/vtkexport.hh"
-#include"../gridoperator/gridoperator.hh"
 #include"../backend/istlvectorbackend.hh"
 #include"../backend/istlmatrixbackend.hh"
+#include"../gridoperator/gridoperator.hh"
 #include"../backend/istlsolverbackend.hh"
 #include"../localoperator/laplacedirichletp12d.hh"
 #include"../localoperator/poisson.hh"
+#include"../gridfunctionspace/vtk.hh"
 
 #include"gridexamples.hh"
 
@@ -168,8 +169,9 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
 
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,
-    Dune::PDELab::ISTLVectorBackend<1> > GFS;
+    Dune::PDELab::ISTLFieldVectorBackend<1> > GFS;
   GFS gfs(gv,fem);
+  gfs.name("solution");
 
   // make constraints map and initialize it from a function
   typedef typename GFS::template ConstraintsContainer<R>::Type C;
@@ -190,7 +192,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
 
   // make grid operator
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,
-                                     Dune::PDELab::ISTLBCRSMatrixBackend<1,1>,
+                                     Dune::PDELab::ISTLMatrixBackend,
                                      double,double,double,
                                      C,C> GridOperator;
   GridOperator gridoperator(gfs,cg,gfs,cg,lop);
@@ -201,7 +203,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   x0 = 0.0;
 
   Dune::PDELab::interpolate(g,gfs,x0);
-  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
+  Dune::PDELab::set_nonconstrained_dofs(gfs,cg,0.0,x0);
 
 
   // represent operator as a matrix
@@ -218,12 +220,12 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   gridoperator.residual(x0,r);
 
   // make ISTL solver
-  Dune::MatrixAdapter<M,DV,RV> opa(m);
-  typedef Dune::PDELab::OnTheFlyOperator<DV,RV,GridOperator> ISTLOnTheFlyOperator;
+  Dune::MatrixAdapter<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> opa(m.base());
+  typedef Dune::PDELab::OnTheFlyOperator<typename DV::BaseT,typename RV::BaseT,GridOperator> ISTLOnTheFlyOperator;
   //ISTLOnTheFlyOperator opb(gridoperator);
-  Dune::SeqSSOR<M,DV,RV> ssor(m,1,1.0);
-  Dune::SeqILU0<M,DV,RV> ilu0(m,1.0);
-  Dune::Richardson<DV,RV> richardson(1.0);
+  Dune::SeqSSOR<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ssor(m.base(),1,1.0);
+  Dune::SeqILU0<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ilu0(m.base(),1.0);
+  Dune::Richardson<typename DV::BaseT,typename RV::BaseT> richardson(1.0);
 
 //   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<M,
 //     Dune::Amg::FirstDiagonal> > Criterion;
@@ -237,24 +239,20 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
 //   typedef Dune::Amg::AMG<Dune::MatrixAdapter<M,V,V>,V,Smoother> AMG;
 //   AMG amg(opa,criterion,smootherArgs,1,1);
 
-  Dune::CGSolver<DV> solvera(opa,ilu0,1E-10,5000,2);
+  Dune::CGSolver<typename DV::BaseT> solvera(opa,ilu0,1E-10,5000,2);
   // FIXME: Use ISTLOnTheFlyOperator in the second solver again
-  Dune::CGSolver<DV> solverb(opa,richardson,1E-10,5000,2);
+  Dune::CGSolver<typename DV::BaseT> solverb(opa,richardson,1E-10,5000,2);
   Dune::InverseOperatorResult stat;
 
   // solve the jacobian system
   r *= -1.0; // need -residual
   DV x(gfs,0.0);
-  solvera.apply(x,r,stat);
+  solvera.apply(x.base(),r.base(),stat);
   x += x0;
-
-  // make discrete function object
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,DV> DGF;
-  DGF dgf(gfs,x);
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
+  Dune::PDELab::add_solution_to_vtk_writer(vtkwriter,gfs,x);
   vtkwriter.write(filename,Dune::VTKOptions::ascii);
 }
 
