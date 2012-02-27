@@ -137,6 +137,21 @@ testlaplacedirichletccfv_LDADD =		\
 	$(LDADD)
 MOSTLYCLEANFILES += testlaplacedirichletccfv.vtu
 
+NORMALTESTS += testlaplacedirichletccfv-simplified
+testlaplacedirichletccfv_simplified_SOURCES = testlaplacedirichletccfv.cc
+testlaplacedirichletccfv_simplified_CPPFLAGS = $(AM_CPPFLAGS)	\
+	$(ALBERTA_CPPFLAGS)				\
+	$(SUPERLU_CPPFLAGS)				\
+	-DTEST_SIMPLIFIED_INFRASTRUCTURE
+testlaplacedirichletccfv_simplified_LDFLAGS = $(AM_LDFLAGS)	\
+	$(ALBERTA_LDFLAGS)					\
+	$(SUPERLU_LDFLAGS)
+testlaplacedirichletccfv_simplified_LDADD =		\
+	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
+	$(ALBERTA_LIBS)				\
+	$(LDADD)
+MOSTLYCLEANFILES += testlaplacedirichletccfv-simplified.vtu
+
 NORMALTESTS += testlaplacedirichletp12d
 testlaplacedirichletp12d_SOURCES = testlaplacedirichletp12d.cc
 testlaplacedirichletp12d_CPPFLAGS = $(AM_CPPFLAGS)	\
