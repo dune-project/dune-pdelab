@@ -70,13 +70,13 @@ namespace Dune {
       template<typename DOFIndex>
       static std::size_t geometryType(const DOFIndex& dof_index)
       {
-        return dof_index.treeIndex()[0];
+        return dof_index.entityIndex()[0];
       }
 
       template<typename DOFIndex>
       static std::size_t entityIndex(const DOFIndex& dof_index)
       {
-        return dof_index.treeIndex()[1];
+        return dof_index.entityIndex()[1];
       }
 
     };
