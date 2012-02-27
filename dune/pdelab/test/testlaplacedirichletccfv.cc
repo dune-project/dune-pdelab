@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<iostream>
 #include<vector>
@@ -47,7 +47,7 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,G<GV,RF> > BaseT;
 
   G (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
   {
     typename Traits::DomainType center;
@@ -73,10 +73,10 @@ public:
   B (const GV& gv_) : gv(gv_) {}
 
   template<typename I>
-  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
+  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig,
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
-  {  
+  {
     y = 1; // all is Dirichlet boundary
   }
 
@@ -88,7 +88,7 @@ public:
 };
 
 
-template<class GV> 
+template<class GV>
 void test (const GV& gv)
 {
   typedef typename GV::Grid::ctype DF;
@@ -100,7 +100,7 @@ void test (const GV& gv)
   gt.makeCube(dim);
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,RF,dim> FEM;
   FEM fem(gt); // works only for cubes
-  
+
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
     Dune::PDELab::NoConstraints,Dune::PDELab::ISTLVectorBackend<1> > GFS; 
@@ -173,7 +173,7 @@ int main(int argc, char** argv)
       Dune::FieldVector<bool,2> B(false);
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(3);
-      
+
       test(grid.leafView());
     }
 
@@ -202,4 +202,4 @@ int main(int argc, char** argv)
     std::cerr << "Unknown exception thrown!" << std::endl;
 	return 1;
   }
-} 
+}
