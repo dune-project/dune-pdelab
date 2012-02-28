@@ -43,29 +43,29 @@ namespace Dune {
              typename Constraints = NoConstraints,
              typename OrderingTag = LexicographicOrderingTag,
              typename LeafOrderingTag = GridFunctionGeneralMapper>
-    class VectorGridFunctionSpace :
-      public TypeTree::PowerNode<GridFunctionSpace<
-                                   GV,
-                                   FEM,
-                                   Constraints,
-                                   LeafBackend,
-                                   LeafOrderingTag
-                                   >,
-                                 k>,
-      public PowerCompositeGridFunctionSpaceBase<VectorGridFunctionSpace<
+    class VectorGridFunctionSpace
+      : public TypeTree::PowerNode<GridFunctionSpace<
+                                     GV,
+                                     FEM,
+                                     Constraints,
+                                     LeafBackend,
+                                     LeafOrderingTag
+                                     >,
+                                   k>
+      , public PowerCompositeGridFunctionSpaceBase<VectorGridFunctionSpace<
+                                                     GV,
+                                                     FEM,
+                                                     k,
+                                                     Backend,
+                                                     LeafBackend,
+                                                     Constraints,
+                                                     OrderingTag,
+                                                     LeafOrderingTag
+                                                     >,
                                                    GV,
-                                                   FEM,
-                                                   k,
                                                    Backend,
-                                                   LeafBackend,
-                                                   Constraints,
                                                    OrderingTag,
-                                                   LeafOrderingTag
-                                                   >,
-                                                 GV,
-                                                 Backend,
-                                                 OrderingTag,
-                                                 k>
+                                                   k>
     {
 
       typedef GridFunctionSpace<
