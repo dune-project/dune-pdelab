@@ -317,7 +317,9 @@ namespace Dune {
      */
     template<typename GV, typename FEM, typename CE=NoConstraints,
              typename B=StdVectorBackend, typename P=GridFunctionGeneralMapper>
-    class GridFunctionSpace : public TypeTree::LeafNode
+    class GridFunctionSpace
+      : public TypeTree::LeafNode
+      , public GridFunctionOutputParameters
     {
 
       typedef TypeTree::TransformTree<GridFunctionSpace,gfs_to_ordering<GridFunctionSpace> > ordering_transformation;

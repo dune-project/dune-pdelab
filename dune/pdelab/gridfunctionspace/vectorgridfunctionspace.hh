@@ -66,6 +66,7 @@ namespace Dune {
                                                    Backend,
                                                    OrderingTag,
                                                    k>
+      , public GridFunctionOutputParameters
     {
 
       typedef GridFunctionSpace<
