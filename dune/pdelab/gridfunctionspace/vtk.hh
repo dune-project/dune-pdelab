@@ -130,7 +130,8 @@ namespace Dune {
       typedef typename BaseT::Traits Traits;
 
       DGFTreeLeafFunction (const LFS& lfs, const shared_ptr<Data>& data)
-        : _lfs(lfs)
+        : BaseT(lfs.gridFunctionSpace().dataSetType())
+        , _lfs(lfs)
         , _data(data)
         , _basis(lfs.maxSize())
       {}
@@ -228,7 +229,8 @@ namespace Dune {
       typedef typename ChildLFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType RT;
 
       DGFTreeVectorFunction (const LFS& lfs, const shared_ptr<Data>& data)
-        : _lfs(lfs)
+        : BaseT(lfs.gridFunctionSpace().dataSetType())
+        , _lfs(lfs)
         , _data(data)
         , _basis(lfs.maxSize())
       {}
@@ -311,7 +313,17 @@ namespace Dune {
               name_stream << (i > 0 ? "_" : "") << tp.element(i);
             name = name_stream.str();
           }
-        vtk_writer.addCellData(new VTKGridFunctionAdapter<DGF>(dgf,name.c_str()));
+        switch (dgf->dataSetType())
+          {
+          case DGF::Output::vertexData:
+            vtk_writer.addVertexData(new VTKGridFunctionAdapter<DGF>(dgf,name.c_str()));
+            break;
+          case DGF::Output::cellData:
+            vtk_writer.addCellData(new VTKGridFunctionAdapter<DGF>(dgf,name.c_str()));
+            break;
+          default:
+            DUNE_THROW(NotImplemented,"Unsupported data set type");
+          }
       }
 
       //! Tag dispatch-based switch that creates a vector-valued function for a VectorGridFunctionSpace.
