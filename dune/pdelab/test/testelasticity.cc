@@ -25,11 +25,14 @@
 #include"../constraints/constraints.hh"
 #include"../common/function.hh"
 #include"../common/vtkexport.hh"
-#include"../gridoperatorspace/gridoperatorspace.hh"
-#include"../localoperator/linearelasticity.hh"
 #include"../backend/istlvectorbackend.hh"
 #include"../backend/istlmatrixbackend.hh"
+#include"../gridoperator/gridoperator.hh"
+#include"../localoperator/linearelasticity.hh"
 #include"../backend/istlsolverbackend.hh"
+
+#include <dune/pdelab/gridfunctionspace/vectorgridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/vtk.hh>
 
 static const double szX = 10.0;
 
@@ -84,16 +87,23 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
 
   // make function space
   typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-  typedef Dune::PDELab::ISTLVectorBackend<1> VectorBackend;
-  typedef Dune::PDELab::SimpleGridFunctionStaticSize GFSSize;
+  typedef Dune::PDELab::ISTLFieldVectorBackend<1> VectorBackend;
 
-  typedef Dune::PDELab::GridFunctionSpace
-    <GV, FEM, Constraints, VectorBackend, GFSSize> Q1GFS;
-  Q1GFS q1gfs(gv,fem);
+  typedef Dune::PDELab::GridFunctionGeneralMapper Mapper;
 
-  typedef Dune::PDELab::GridFunctionSpaceLexicographicMapper GFMapper;
-  typedef Dune::PDELab::PowerGridFunctionSpace<Q1GFS,dim,GFMapper> GFS;
-  GFS gfs(q1gfs);
+  typedef Dune::PDELab::LexicographicOrderingTag OrderingTag;
+  typedef Dune::PDELab::VectorGridFunctionSpace<
+    GV,
+    FEM,
+    dim,
+    Dune::PDELab::ISTLVectorBackend<false>,
+    VectorBackend,
+    Constraints,
+    OrderingTag,
+    Mapper
+    > GFS;
+  GFS gfs(gv,fem);
+  gfs.name("displacement");
 
   // make constraints map and initialize it from a function
   typedef typename GFS::template ConstraintsContainer<double>::Type C;
@@ -106,23 +116,29 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
   std::cout << gfs.size() << " DOFs\n";
   std::cout << cg.size() << " constraint DOFs\n";
 
+  // make local operator
+  typedef Dune::PDELab::LinearElasticity LO;
+  LO lo(mu, lambda, constG);
+
+  // make grid operator
+  typedef Dune::PDELab::GridOperator<
+    GFS,GFS,LO,
+    Dune::PDELab::ISTLMatrixBackend,
+    double,double,double,
+    C,C> GOS;
+  GOS gos(gfs,cg,gfs,cg,lo);
+
   // make coefficent Vector and initialize it from a function
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,double>::Type V;
+  typedef typename GOS::Traits::Domain V;
   V x0(gfs);
   x0 = 0.0;
   typedef G<GV,double> GType;
   GType g(gv);
   Dune::PDELab::interpolate(g,gfs,x0);
-  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
-
-  // make grid function operator
-  Dune::PDELab::LinearElasticity la(mu, lambda, constG);
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
-    Dune::PDELab::LinearElasticity,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
-  GOS gos(gfs,cg,gfs,cg,la);
+  Dune::PDELab::set_nonconstrained_dofs(gfs,cg,0.0,x0);
 
   // represent operator as a matrix
-  typedef typename GOS::template MatrixContainer<double>::Type M;
+  typedef typename GOS::Traits::Jacobian M;
   M m(gos);
   m = 0.0;
   gos.jacobian(x0,m);
@@ -135,26 +151,24 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
   gos.residual(x0,r);
 
   // make ISTL solver
-  Dune::MatrixAdapter<M,V,V> opa(m);
-  Dune::SeqILU0<M,V,V> ilu0(m,1e-2);
+  typedef typename M::BaseT ISTL_M;
+  typedef typename V::BaseT ISTL_V;
+  Dune::MatrixAdapter<ISTL_M,ISTL_V,ISTL_V> opa(m.base());
+  Dune::SeqILU0<ISTL_M,ISTL_V,ISTL_V> ilu0(m.base(),1e-2);
 
-  Dune::CGSolver<V> solver(opa,ilu0,1E-20,5000,2);
+  Dune::CGSolver<ISTL_V> solver(opa,ilu0,1E-20,5000,2);
   Dune::InverseOperatorResult stat;
 
   // solve the jacobian system
   r *= -1.0; // need -residual
   V x(gfs,0.0);
-  Dune::PDELab::set_nonconstrained_dofs(cg,1.0,x);
-  solver.apply(x,r,stat);
+  Dune::PDELab::set_nonconstrained_dofs(gfs,cg,1.0,x);
+  solver.apply(x.base(),r.base(),stat);
   x += x0;
 
-  // make discrete function object
-  typedef Dune::PDELab::VectorDiscreteGridFunction<GFS,V> DGF;
-  DGF dgf(gfs,x);
-  
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"displacement"));
+  Dune::PDELab::add_solution_to_vtk_writer(vtkwriter,gfs,x);
   vtkwriter.write("testelasticity",Dune::VTKOptions::ascii);
 }
 
