@@ -49,6 +49,10 @@ NORMALTESTS += poisson
 poisson_SOURCES = poisson.cc
 MOSTLYCLEANFILES += poisson_*.vtu poisson_*timings.txt
 
+NORMALTESTS += laplacedirichletccfv
+laplacedirichletccfv_SOURCES = laplacedirichletccfv.cc
+MOSTLYCLEANFILES += laplacedirichlet_*.vtu laplacedirichlet_*timings.txt
+
 include $(top_srcdir)/am/global-rules
 
 DISTCHECK_CONFIGURE_FLAGS = --with-dune=$(DUNEROOT) CXX="$(CXX)" CC="$(CC)"
