@@ -331,14 +331,15 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const bool sol
 }
 
 template<typename Grid>
-std::string name(std::string grid_name, const Grid& grid, std::string method_name, int p, int q)
+std::string name(std::string grid_name, const Grid& grid, std::string method_name, int p, int q, bool solve)
 {
   std::stringstream n;
   n << "poisson_" << method_name << p
-    << "_"<< grid_name
+    << "_" << grid_name
     << "_" << Grid::dimension << "D"
     << "_l" << grid.maxLevel()
-    << "_q" << q;
+    << "_q" << q
+    << (solve ? "_solve" : "_nosolve");
   return n.str();
 }
 
@@ -370,9 +371,6 @@ int main(int argc, char** argv)
         return 64;
       }
 
-    // allow overwriting of parameters using the command line
-    Dune::ParameterTreeParser::readOptions(argc,argv,params);
-
     const std::size_t global_runs = params.get("global.runs",5);
     const bool global_solve = params.get("global.solve",false);
 
@@ -402,7 +400,7 @@ int main(int argc, char** argv)
         FEM fem;
 
         // solve problem
-        poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,name("Yasp",grid,"Q",1,2),solve,runs);
+        poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,name("Yasp",grid,"Q",1,2,solve),solve,runs);
       }
 
     // YaspGrid Q2 2D test
@@ -431,7 +429,7 @@ int main(int argc, char** argv)
         FEM fem;
 
         // solve problem
-        poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,4>(gv,fem,name("Yasp",grid,"Q",2,2),solve,runs);
+        poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,4>(gv,fem,name("Yasp",grid,"Q",2,2,solve),solve,runs);
       }
 
     // YaspGrid Q2 3D test
@@ -460,7 +458,7 @@ int main(int argc, char** argv)
         FEM fem;
 
         // solve problem
-        poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,4>(gv,fem,name("Yasp",grid,"Q",2,2),solve,runs);
+        poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,4>(gv,fem,name("Yasp",grid,"Q",2,2,solve),solve,runs);
       }
 
     // UG Pk 2D test
@@ -490,7 +488,7 @@ int main(int argc, char** argv)
         FEM fem(gv);
 
         // solve problem
-        poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,name("UG",*grid,"P",k,q),solve,runs);
+        poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,name("UG",*grid,"P",k,q,solve),solve,runs);
 
       }
 #endif
@@ -521,7 +519,7 @@ int main(int argc, char** argv)
         FEM fem(gv);
 
         // solve problem
-        poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,name("Alberta",grid,"P",k,q),solve,runs);
+        poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,name("Alberta",grid,"P",k,q,solve),solve,runs);
       }
 #endif
 
@@ -551,7 +549,7 @@ int main(int argc, char** argv)
         FEM fem(gv);
 
         // solve problem
-        poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,name("ALU",grid,"P",k,q),solve,runs);
+        poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,q>(gv,fem,name("ALU",grid,"P",k,q,solve),solve,runs);
       }
 #endif
 
