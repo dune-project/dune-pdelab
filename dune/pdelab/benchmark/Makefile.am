@@ -45,6 +45,10 @@ LDADD =						\
 # THIS IS A SEPARATION MARKER TO MINIMIZE SVN MERGE CONFLICTS
 # BRANCH TARGETS FOLLOW
 
+NORMALTESTS += poisson
+poisson_SOURCES = poisson.cc
+MOSTLYCLEANFILES += poisson_*.vtu poisson_*timings.txt
+
 include $(top_srcdir)/am/global-rules
 
 DISTCHECK_CONFIGURE_FLAGS = --with-dune=$(DUNEROOT) CXX="$(CXX)" CC="$(CC)"
