@@ -172,10 +172,15 @@ namespace Dune {
 	//! a GridFunction maps x in DomainType to y in RangeType
 	template<class T, class Imp>
 	class GridFunctionInterface
+      : public GridFunctionOutputParameters
 	{
 	public:
 	  //! \brief Export type traits
 	  typedef T Traits;
+
+      GridFunctionInterface(Output::DataSetType dataSetType = Output::vertexData)
+        : GridFunctionOutputParameters(dataSetType)
+      {}
 
 	  /** \brief Evaluate the GridFunction at given position
 
