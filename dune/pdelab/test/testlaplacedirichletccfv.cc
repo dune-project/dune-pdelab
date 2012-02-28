@@ -3,6 +3,7 @@
 #include "config.h"
 #endif
 #include<iostream>
+#include<sstream>
 #include<vector>
 #include<map>
 #include<dune/common/mpihelper.hh>
@@ -178,13 +179,17 @@ void test (const GV& gv)
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming);
   Dune::PDELab::add_solution_to_vtk_writer(vtkwriter,gfs,x);
 
+  std::stringstream vtu_name;
+
 #ifdef TEST_SIMPLIFIED_INFRASTRUCTURE
-  std::string vtu_name("testlaplacedirichletccfv-simplified");
+  vtu_name << "testlaplacedirichletccfv-simplified";
 #else
-  std::string vtu_name("testlaplacedirichletccfv");
+  vtu_name << "testlaplacedirichletccfv";
 #endif
 
-  vtkwriter.write(vtu_name,Dune::VTKOptions::ascii);
+  vtu_name << "-" << dim << "D";
+
+  vtkwriter.write(vtu_name.str(),Dune::VTKOptions::ascii);
 }
 
 int main(int argc, char** argv)
