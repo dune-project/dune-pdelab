@@ -120,6 +120,7 @@ void test (const GV& gv)
     Mapper> GFS;
   GFS gfs(gv,fem);
   gfs.name("u");
+  gfs.setDataSetType(GFS::Output::cellData);
 
   typedef G<GV,RF> GType;
   GType g(gv);
