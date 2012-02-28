@@ -109,6 +109,55 @@ namespace Dune {
 
     };
 
+
+    //! Mixin base class for specifying output hints to I/O routines like VTK.
+    class GridFunctionOutputParameters
+    {
+
+    public:
+
+      //! Namespace for output-related data types and enums.
+      struct Output
+      {
+        //! The type of the data set.
+        /**
+         * This information can be used by a VTKWriter to pick the correct
+         * VTK data set type.
+         */
+        enum DataSetType
+          {
+            vertexData, //!< A data set with vertex values.
+            cellData    //!< A data set with cell values.
+          };
+      };
+
+      //! Standard constructor.
+      /**
+       * \param dataSetType The type of the data set represented by this function.
+       */
+      GridFunctionOutputParameters(Output::DataSetType dataSetType = Output::vertexData)
+        : _dataSetType(dataSetType)
+      {}
+
+      //! Return the data set type of this function.
+      Output::DataSetType dataSetType() const
+      {
+        return _dataSetType;
+      }
+
+      //! Set the data set type of this function.
+      void setDataSetType(Output::DataSetType dataSetType)
+      {
+        _dataSetType = dataSetType;
+      }
+
+    private:
+
+      Output::DataSetType _dataSetType;
+
+    };
+
+
 	//! traits class holding function signature, same as in local function
 	template<class GV, class RF, int m, class R>
 	struct GridFunctionTraits
