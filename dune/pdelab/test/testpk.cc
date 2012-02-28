@@ -15,6 +15,7 @@
 #include"../finiteelementmap/p12dfem.hh"
 #include"../finiteelementmap/pk2dfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
+#include"../backend/istlvectorbackend.hh"
 #include"../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include"../gridfunctionspace/interpolate.hh"
 #include"../common/function.hh"
@@ -61,12 +62,15 @@ void testpk (const GV& gv)
   typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> PkFEM;
   PkFEM pkfem(gv);
 
+  typedef Dune::PDELab::ISTLFieldVectorBackend<1> VBE;
+  typedef Dune::PDELab::NoConstraints CON;
+
   // make a grid function space
-  typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS; 
+  typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,CON,VBE> P0GFS;
   P0GFS p0gfs(gv,p0fem);
-  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM> P1GFS; 
+  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,CON,VBE> P1GFS;
   P1GFS p1gfs(gv,p1fem);
-  typedef Dune::PDELab::GridFunctionSpace<GV,PkFEM> PkGFS; 
+  typedef Dune::PDELab::GridFunctionSpace<GV,PkFEM,CON,VBE> PkGFS;
   PkGFS pkgfs(gv,pkfem);
 
   // make coefficent Vectors
