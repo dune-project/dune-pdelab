@@ -120,15 +120,15 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::ElementType reduction)
       {
-        Dune::MatrixAdapter<typename M::BaseT, 
-                            typename V::BaseT, 
-                            typename W::BaseT> opa(A);
-        Preconditioner<typename M::BaseT, 
-                            typename V::BaseT, 
-                       typename W::BaseT,1> ssor(A, 3, 1.0);
-        Solver<typename V::BaseT> solver(opa, ssor, reduction, maxiter, verbose);
+        Dune::MatrixAdapter<typename M::BaseT,
+                            typename V::BaseT,
+                            typename W::BaseT> opa(A.base());
+        Preconditioner<typename M::BaseT,
+                       typename V::BaseT,
+                       typename W::BaseT,1> prec(A.base(), 3, 1.0);
+        Solver<typename V::BaseT> solver(opa, prec, reduction, maxiter, verbose);
         Dune::InverseOperatorResult stat;
-        solver.apply(z, r, stat);
+        solver.apply(z.base(), r.base(), stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -164,15 +164,15 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType >::real_type reduction)
       {
-        Dune::MatrixAdapter<typename M::BaseT, 
-                            typename V::BaseT, 
-                            typename W::BaseT> opa(A);
-        Dune::SeqILU0<typename M::BaseT, 
-                      typename V::BaseT, 
-                      typename W::BaseT> ilu0(A, 1.0);
+        Dune::MatrixAdapter<typename M::BaseT,
+                            typename V::BaseT,
+                            typename W::BaseT> opa(A.base());
+        Dune::SeqILU0<typename M::BaseT,
+                      typename V::BaseT,
+                      typename W::BaseT> ilu0(A.base(), 1.0);
         Solver<typename V::BaseT> solver(opa, ilu0, reduction, maxiter, verbose);
         Dune::InverseOperatorResult stat;
-        solver.apply(z, r, stat);
+        solver.apply(z.base(), r.base(), stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -208,11 +208,13 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::ElementType reduction)
       {
-        Dune::MatrixAdapter<M,V,W> opa(A);
+        Dune::MatrixAdapter<typename M::BaseT,
+                            typename V::BaseT,
+                            typename W::BaseT> opa(A.base());
         Dune::SeqILUn<typename M::BaseT,V,W> ilu0(A.base(), n_, w_);
         Solver<V> solver(opa, ilu0, reduction, maxiter, verbose);
         Dune::InverseOperatorResult stat;
-        solver.apply(z, r, stat);
+        solver.apply(z.base(), r.base(), stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -405,10 +407,10 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::ElementType reduction)
       {
-        typedef typename M::BaseT ISTLM;
-        Dune::SuperLU<ISTLM> solver(A, verbose);
+        typedef typename M::ContainerType ISTLM;
+        Dune::SuperLU<ISTLM> solver(A.base(), verbose);
         Dune::InverseOperatorResult stat;
-        solver.apply(z, r, stat);
+        solver.apply(z.base(), r.base(), stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -441,9 +443,9 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::ElementType reduction)
       {
-        Dune::SeqJac<typename M::BaseT, 
-                     typename V::BaseT, 
-                     typename W::BaseT> jac(A,1,1.0);
+        Dune::SeqJac<typename M::BaseT,
+                     typename V::BaseT,
+                     typename W::BaseT> jac(A.base(),1,1.0);
         jac.pre(z,r);
         jac.apply(z,r);
         jac.post(z);
