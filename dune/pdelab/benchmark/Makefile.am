@@ -46,6 +46,10 @@ NORMALTESTS += poisson-old
 poisson_old_SOURCES = poisson-old.cc
 MOSTLYCLEANFILES += poisson-old_*.vtu poisson-old_*timings.txt
 
+NORMALTESTS += laplacedirichletccfv-old
+laplacedirichletccfv_old_SOURCES = laplacedirichletccfv-old.cc
+MOSTLYCLEANFILES += laplacedirichletccfv-old_*.vtu laplacedirichletccfv-old_*timings.txt
+
 # THIS IS A SEPARATION MARKER TO MINIMIZE SVN MERGE CONFLICTS
 # BRANCH TARGETS FOLLOW
 
