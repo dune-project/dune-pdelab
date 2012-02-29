@@ -5,6 +5,7 @@
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
+#include <dune/pdelab/common/elementmapper.hh>
 
 namespace Dune{
   namespace PDELab{
@@ -87,7 +88,7 @@ namespace Dune{
         assembler_engine.preAssembly();
 
         // Map each cell to unique id
-        Dune::PDELab::MultiGeomUniqueIDMapper<GV> cell_mapper(gfsu.gridView());
+        ElementMapper<GV> cell_mapper(gfsu.gridView());
 
         // Extract integration requirements from the local assembler
         const bool require_uv_skeleton = assembler_engine.requireUVSkeleton();
