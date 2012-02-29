@@ -22,6 +22,7 @@
 #include "../gridfunctionspace/genericdatahandle.hh"
 #include "../newton/newton.hh"
 #include "istlvectorbackend.hh"
+#include <dune/pdelab/gridfunctionspace/tags.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -187,6 +188,7 @@ namespace Dune {
       ParallelISTLHelper (const GFS& gfs_, int verbose_=1)
         : gfs(gfs_), v(gfs,(double)gfs.gridview().comm().rank()), g(gfs,0.0), verbose(verbose_)
       {
+        /*
         // find out about ghosts
         Dune::PDELab::GenericDataHandle2<GFS,V,GhostGatherScatter> gdh(gfs,v,GhostGatherScatter());
         if (gfs.gridview().comm().size()>1)
@@ -206,6 +208,8 @@ namespace Dune {
               v.base()[i][j] = 1.0;
             else
               v.base()[i][j] = 0.0;
+        */
+        v = 1.0;
 
       }
 
@@ -256,6 +260,7 @@ namespace Dune {
 
     namespace
     {
+      /*
       template<typename GFS, bool Comp>
       struct BlockwiseIndicesHelper
       {
@@ -301,6 +306,26 @@ namespace Dune {
         enum{
           value = BlockwiseIndicesHelper<GFS,GFS::Traits::isComposite>::value
         };
+      };
+      */
+
+      template<typename GFS, bool composite>
+      struct BlockwiseIndicesHelper {
+        static const bool value = false;
+      };
+
+      template<typename GFS>
+      struct BlockwiseIndicesHelper<GFS,true>
+      {
+        static const bool value =
+          is_same<typename GFS::OrderingTag,EntityBlockedOrderingTag>::value &&
+          GFS::Traits::Backend::blockSize == GFS::CHILDREN;
+      };
+
+      template<typename GFS>
+      struct BlockwiseIndices
+      {
+        static const bool value = BlockwiseIndicesHelper<GFS,GFS::Traits::isComposite>::value;
       };
 
       template<typename GFS, bool b, int k>
@@ -386,7 +411,7 @@ namespace Dune {
       template<typename GFS>
       struct BlockProcessor
         : public BlockProcessorHelper<GFS, BlockwiseIndices<GFS>::value,
-                                      GFS::Traits::BackendType::BlockSize>
+                                      GFS::Traits::Backend::blockSize>
       {
       };
 
