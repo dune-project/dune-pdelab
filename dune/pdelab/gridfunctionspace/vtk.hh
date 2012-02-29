@@ -11,6 +11,7 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/pdelab/common/typetree/visitor.hh>
 #include <dune/pdelab/common/typetree/traversal.hh>
+#include <dune/pdelab/common/elementmapper.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -47,6 +48,8 @@ namespace Dune {
       typedef typename GFS::Traits::SizeType size_type;
       typedef typename GFS::Traits::GridView::IndexSet IndexSet;
 
+      static const size_type dim = GFS::Traits::GridView::dimension;
+
     public:
 
       DGFTreeCommonData(const GFS& gfs, const X& x)
@@ -54,15 +57,15 @@ namespace Dune {
         , _lfs_cache(_lfs)
         , _x_view(x)
         , _x_local(_lfs.maxSize())
+        , _element_mapper(gfs.gridView())
         , _current_cell_index(std::numeric_limits<size_type>::max())
-        , _index_set(gfs.gridView().indexSet())
       {}
 
     public:
 
       void bind(const Cell& cell)
       {
-        const size_type cell_index = _index_set.index(cell);
+        size_type cell_index = _element_mapper.map(cell);
         if (_current_cell_index == cell_index)
           return;
 
@@ -78,8 +81,8 @@ namespace Dune {
       LFSCache _lfs_cache;
       XView _x_view;
       XLocalVector _x_local;
+      ElementMapper<typename GFS::Traits::GridView> _element_mapper;
       size_type _current_cell_index;
-      const IndexSet& _index_set;
 
     };
 
