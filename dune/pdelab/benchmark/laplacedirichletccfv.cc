@@ -220,10 +220,6 @@ void test (const GV& gv, const Mapper& mapper, std::string filename, const bool 
       bh.end("solve",std::cout);
       bh.start("I/O",std::cout);
 
-      // make discrete function object
-      typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-      DGF dgf(gfs,x);
-
       // output grid function with VTKWriter
       Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming);
       Dune::PDELab::add_solution_to_vtk_writer(vtkwriter,gfs,x);
