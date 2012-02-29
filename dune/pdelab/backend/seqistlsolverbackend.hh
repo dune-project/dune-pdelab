@@ -91,7 +91,7 @@ namespace Dune {
     protected:
       Dune::PDELab::LinearSolverResult<double> res;
     };
-    
+
 
     template<template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
@@ -107,8 +107,8 @@ namespace Dune {
       explicit ISTLBackend_SEQ_Base(unsigned maxiter_=5000, int verbose_=1)
         : maxiter(maxiter_), verbose(verbose_)
       {}
-      
-      
+
+
 
       /*! \brief solve the given linear system
 
@@ -142,7 +142,7 @@ namespace Dune {
     };
 
     template<template<typename> class Solver>
-    class ISTLBackend_SEQ_ILU0 
+    class ISTLBackend_SEQ_ILU0
       :  public SequentialNorm, public LinearResultStorage
     {
     public:
@@ -222,7 +222,7 @@ namespace Dune {
     private:
       int n_;
       double w_;
-      
+
       unsigned maxiter;
       int verbose;
     };
@@ -295,7 +295,7 @@ namespace Dune {
         : ISTLBackend_SEQ_ILU0<Dune::BiCGSTABSolver>(maxiter_, verbose_)
       {}
     };
-    
+
     /**
      * @brief Backend for sequential conjugate gradient solver with ILU0 preconditioner.
      */
@@ -320,7 +320,7 @@ namespace Dune {
     public:
       /*! \brief make a linear solver object
 
-        
+
         \param[in] n_ The number of levels to be used.
         \param[in] w_ The relaxation factor.
         \param[in] maxiter_ maximum number of iterations to do
@@ -329,7 +329,7 @@ namespace Dune {
       explicit ISTLBackend_SEQ_BCGS_ILUn (int n_, double w_=1.0, unsigned maxiter_=5000, int verbose_=1)
         : ISTLBackend_SEQ_ILUn<Dune::BiCGSTABSolver>(n_, w_, maxiter_, verbose_)
       {}
-    }; 
+    };
 
     //! Sequential congute gradient solver with ILU0 preconditioner
     class ISTLBackend_SEQ_CG_ILUn
@@ -338,7 +338,7 @@ namespace Dune {
     public:
       /*! \brief make a linear solver object
 
-        
+
         \param[in] n_ The number of levels to be used.
         \param[in] w_ The relaxation factor.
         \param[in] maxiter_ maximum number of iterations to do
@@ -365,7 +365,7 @@ namespace Dune {
         : ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::CGSolver>(maxiter_, verbose_)
       {}
     };
-    
+
     /**
      * @brief Backend for conjugate gradient solver with Jacobi preconditioner.
      */
@@ -483,7 +483,7 @@ namespace Dune {
        /*! \brief set AMG parameters
 
         \param[in] params_ a parameter object of Type Dune::Amg::Parameters
-      */     
+      */
       void setparams(Parameters params_)
       {
         params = params_;
@@ -553,7 +553,7 @@ namespace Dune {
 
     /**
      * @brief Sequential conjugate gradient solver preconditioned with AMG smoothed by SSOR
-     * @tparam GO The type of the grid operator 
+     * @tparam GO The type of the grid operator
      * (or the fakeGOTraits class for the old grid operator space).
      */
     template<class GO>
@@ -566,7 +566,7 @@ namespace Dune {
        * @brief Constructor
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
-       * @param reuse_ Set true, if the Matrix to be used is always identical 
+       * @param reuse_ Set true, if the Matrix to be used is always identical
        * (AMG aggregation is then only performed once).
        */
       ISTLBackend_SEQ_CG_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1,
@@ -577,7 +577,7 @@ namespace Dune {
 
     /**
      * @brief Sequential BiCGStab solver preconditioned with AMG smoothed by SSOR
-     * @tparam GO The type of the grid operator 
+     * @tparam GO The type of the grid operator
      * (or the fakeGOTraits class for the old grid operator space).
      */
     template<class GO>
@@ -590,7 +590,7 @@ namespace Dune {
        * @brief Constructor
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
-       * @param reuse_ Set true, if the Matrix to be used is always identical 
+       * @param reuse_ Set true, if the Matrix to be used is always identical
        * (AMG aggregation is then only performed once).
        */
       ISTLBackend_SEQ_BCGS_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1,
@@ -598,10 +598,10 @@ namespace Dune {
         : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::BiCGSTABSolver>(maxiter_, verbose_, reuse_)
       {}
     };
-    
+
     /**
      * @brief Sequential BiCGSTAB solver preconditioned with AMG smoothed by SOR
-     * @tparam GO The type of the grid operator 
+     * @tparam GO The type of the grid operator
      * (or the fakeGOTraits class for the old grid operator space).
      */
     template<class GO>
@@ -614,7 +614,7 @@ namespace Dune {
        * @brief Constructor
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
-       * @param reuse_ Set true, if the Matrix to be used is always identical 
+       * @param reuse_ Set true, if the Matrix to be used is always identical
        * (AMG aggregation is then only performed once).
        */
       ISTLBackend_SEQ_BCGS_AMG_SOR(unsigned maxiter_=5000, int verbose_=1,
@@ -625,7 +625,7 @@ namespace Dune {
 
     /**
      * @brief Sequential Loop solver preconditioned with AMG smoothed by SSOR
-     * @tparam GO The type of the grid operator 
+     * @tparam GO The type of the grid operator
      * (or the fakeGOTraits class for the old grid operator space).
      */
     template<class GO>
@@ -638,7 +638,7 @@ namespace Dune {
        * @brief Constructor
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
-       * @param reuse_ Set true, if the Matrix to be used is always identical 
+       * @param reuse_ Set true, if the Matrix to be used is always identical
        * (AMG aggregation is then only performed once).
        */
       ISTLBackend_SEQ_LS_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1,
@@ -649,7 +649,7 @@ namespace Dune {
 
     /**
      * @brief Sequential Loop solver preconditioned with AMG smoothed by SOR
-     * @tparam GO The type of the grid operator 
+     * @tparam GO The type of the grid operator
      * (or the fakeGOTraits class for the old grid operator space).
      */
     template<class GO>
@@ -662,7 +662,7 @@ namespace Dune {
        * @brief Constructor
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
-       * @param reuse_ Set true, if the Matrix to be used is always identical 
+       * @param reuse_ Set true, if the Matrix to be used is always identical
        * (AMG aggregation is then only performed once).
        */
       ISTLBackend_SEQ_LS_AMG_SOR(unsigned maxiter_=5000, int verbose_=1,
