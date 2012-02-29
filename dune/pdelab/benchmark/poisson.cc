@@ -296,14 +296,14 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const bool sol
           //   typedef Dune::Amg::AMG<Dune::MatrixAdapter<M,V,V>,V,Smoother> AMG;
           //   AMG amg(opa,criterion,smootherArgs,1,1);
 
-          Dune::CGSolver<typename DV::ContainerType> solvera(opa,ilu0,1E-10,5000,2);
+          Dune::CGSolver<typename DV::ContainerType> solvera(opa,ilu0,1E-10,5000,1);
           // FIXME: Use ISTLOnTheFlyOperator in the second solver again
-          Dune::CGSolver<typename DV::ContainerType> solverb(opa,richardson,1E-10,5000,2);
+          Dune::CGSolver<typename DV::ContainerType> solverb(opa,richardson,1E-10,5000,1);
           Dune::InverseOperatorResult stat;
 
           // solve the jacobian system
           r *= -1.0; // need -residual
-          //solvera.apply(x.base(),r.base(),stat);
+          solvera.apply(x.base(),r.base(),stat);
           x += x0;
         }
 
