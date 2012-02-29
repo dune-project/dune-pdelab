@@ -179,7 +179,7 @@ namespace Dune {
         V1 mask;
       };
 
-      
+
       typedef typename Dune::PDELab::BackendVectorSelector<GFS,double>::Type V;
 
     public:
@@ -440,7 +440,7 @@ namespace Dune {
         start=start+counts[i];
       //std::cout<<gv.comm().rank()<<": start index = "<<start.touint()<<std::endl;
 
-      
+
       typedef typename Dune::PDELab::BackendVectorSelector<GFS,GlobalIndex>::Type GIVector;
       GIVector scalarIndices(gfs, std::numeric_limits<GlobalIndex>::max());
 
@@ -470,13 +470,13 @@ namespace Dune {
               // This dof is managed by us.
               attr = Dune::OwnerOverlapCopyAttributeSet::owner;
             }
-            else if ( g[i][j]==(1<<24) && ( c.getSolverCategory() == 
+            else if ( g[i][j]==(1<<24) && ( c.getSolverCategory() ==
                                             static_cast<int>(SolverCategory::nonoverlapping)) ){
               //use attribute overlap for ghosts in novlp grids
               attr = Dune::OwnerOverlapCopyAttributeSet::overlap;
             }
             else {
-              attr = Dune::OwnerOverlapCopyAttributeSet::copy;                
+              attr = Dune::OwnerOverlapCopyAttributeSet::copy;
             }
             BlockProcessor<GFS>::
               addIndex(scalarIndices[i][j], ii, attr, m, c.indexSet());
@@ -498,7 +498,7 @@ namespace Dune {
 
       c.remoteIndices().template rebuild<false>();
       //std::cout<<c.remoteIndices()<<std::endl;
-       
+
     }
 #endif
 
