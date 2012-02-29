@@ -6,6 +6,7 @@ common_HEADERS =				\
 	countingptr.hh				\
 	cpstoragepolicy.hh			\
 	crossproduct.hh				\
+	elementmapper.hh			\
 	function.hh				\
 	functionutilities.hh			\
 	functionwrappers.hh			\
