@@ -98,7 +98,7 @@ namespace Dune {
         std::pair<
           std::map<std::string,BenchmarkEntry>::iterator,
           bool
-          > res = _tasks.insert(make_pair(std::ref(task),BenchmarkEntry()));
+          > res = _tasks.insert(make_pair(task,BenchmarkEntry()));
         if (res.second)
           res.first->second.timings.resize(_max_runs);
         res.first->second.timings[_run].start = _time();
