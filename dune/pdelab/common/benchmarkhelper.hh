@@ -95,7 +95,10 @@ namespace Dune {
 
       void start(std::string task)
       {
-        auto res = _tasks.insert(make_pair(std::ref(task),BenchmarkEntry()));
+        std::pair<
+          std::map<std::string,BenchmarkEntry>::iterator,
+          bool
+          > res = _tasks.insert(make_pair(std::ref(task),BenchmarkEntry()));
         if (res.second)
           res.first->second.timings.resize(_max_runs);
         res.first->second.timings[_run].start = _time();
@@ -126,9 +129,11 @@ namespace Dune {
         entry.avg = 0;
         entry.std_dev = 0;
 
-        for (auto& t : entry.timings)
+        for (std::vector<Timing>::iterator it = entry.timings.begin(), end = entry.timings.end();
+             it != end;
+             ++it)
           {
-            const double elapsed = t.elapsed();
+            const double elapsed = it->elapsed();
             entry.min = std::min(entry.min,elapsed);
             entry.max = std::max(entry.max,elapsed);
             entry.avg += elapsed;
@@ -143,10 +148,12 @@ namespace Dune {
       void update_statistics()
       {
         _max_name_len = 5; // strlen("total")
-        for (auto& t : _tasks)
+        for (std::map<std::string,BenchmarkEntry>::iterator it = _tasks.begin(), end = _tasks.end();
+             it != end;
+             ++it)
           {
-            _max_name_len = std::max(_max_name_len,t.first.size());
-            update_entry(t.second);
+            _max_name_len = std::max(_max_name_len,it->first.size());
+            update_entry(it->second);
           }
 
         update_entry(_run_times);
@@ -158,9 +165,11 @@ namespace Dune {
       {
         s << std::setw(_max_name_len + 1) << std::left << name
           << std::right << std::scientific << std::setw(10) << std::setprecision(2);
-        for (auto& t : entry.timings)
+        for (std::vector<Timing>::const_iterator it = entry.timings.begin(), end = entry.timings.end();
+             it != end;
+             ++it)
           {
-            s << std::setw(10) << t.elapsed();
+            s << std::setw(10) << it->elapsed();
           }
         s << std::setw(10) << entry.min
           << std::setw(10) << entry.max
@@ -189,8 +198,10 @@ namespace Dune {
           << std::setw(10) << "avg"
           << std::setw(10) << "std_dev" << std::endl;
 
-        for (auto& t : _tasks)
-          print_entry(s,t.first,t.second);
+        for (std::map<std::string,BenchmarkEntry>::const_iterator it = _tasks.begin(), end = _tasks.end();
+             it != end;
+             ++it)
+          print_entry(s,it->first,it->second);
 
         print_entry(s,"total",_run_times);
       }
