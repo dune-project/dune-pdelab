@@ -4,6 +4,7 @@
 #include <vector>
 #include <sstream>
 
+#include <dune/common/exceptions.hh>
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/gridfunctionspace/lfscontainerindexcache.hh>
@@ -309,11 +310,21 @@ namespace Dune {
         std::string name(dgf->localFunctionSpace().gridFunctionSpace().name());
         if (name.empty())
           {
+
+            if (base_name.empty())
+              {
+                DUNE_THROW(IOError,
+                           "You need to either name all GridFunctionSpaces "
+                           "written to the VTK file or provide a base name.");
+              }
+
             std::stringstream name_stream;
+
+            name_stream << base_name;
 
             // Build a simple name based on the component's TreePath (e.g. 0_2_3)
             for (std::size_t i = 0; i < tp.size(); ++i)
-              name_stream << (i > 0 ? "_" : "") << tp.element(i);
+              name_stream << "_" << tp.element(i);
             name = name_stream.str();
           }
         switch (dgf->dataSetType())
@@ -364,13 +375,15 @@ namespace Dune {
       }
 
 
-      add_solution_to_vtk_writer_visitor(VTKWriter& vtk_writer_, shared_ptr<Data> data_)
+      add_solution_to_vtk_writer_visitor(VTKWriter& vtk_writer_, shared_ptr<Data> data_, std::string base_name_)
         : vtk_writer(vtk_writer_)
         , data(data_)
+        , base_name(base_name_)
       {}
 
       VTKWriter& vtk_writer;
       shared_ptr<Data> data;
+      std::string base_name;
 
     };
 
@@ -381,9 +394,9 @@ namespace Dune {
       //! Common data container (hierarchic LFS, global solution data etc.)
       typedef DGFTreeCommonData<GFS,X> Data;
 
-      vtk_output_collector& add_solution()
+      vtk_output_collector& add_solution(std::string base_name = "")
       {
-        add_solution_to_vtk_writer_visitor<VTKWriter,Data> visitor(_vtk_writer,_data);
+        add_solution_to_vtk_writer_visitor<VTKWriter,Data> visitor(_vtk_writer,_data,base_name);
         TypeTree::applyToTree(_data->_lfs,visitor);
         return *this;
       }
@@ -409,10 +422,10 @@ namespace Dune {
 
 
     template<typename VTKWriter, typename GFS, typename X>
-    vtk_output_collector<VTKWriter,GFS,X> add_solution_to_vtk_writer(VTKWriter& vtk_writer, const GFS& gfs, const X& x)
+    vtk_output_collector<VTKWriter,GFS,X> add_solution_to_vtk_writer(VTKWriter& vtk_writer, const GFS& gfs, const X& x, std::string base_name = "")
     {
       vtk_output_collector<VTKWriter,GFS,X> collector(vtk_writer,gfs,x);
-      collector.add_solution();
+      collector.add_solution(base_name);
       return std::move(collector);
     }
 
