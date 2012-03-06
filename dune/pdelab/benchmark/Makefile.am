@@ -51,7 +51,7 @@ MOSTLYCLEANFILES += poisson_*.vtu poisson_*timings.txt
 
 NORMALTESTS += laplacedirichletccfv
 laplacedirichletccfv_SOURCES = laplacedirichletccfv.cc
-MOSTLYCLEANFILES += laplacedirichlet_*.vtu laplacedirichlet_*timings.txt
+MOSTLYCLEANFILES += laplacedirichletccfv_*.vtu laplacedirichletccfv_*timings.txt
 
 include $(top_srcdir)/am/global-rules
 
