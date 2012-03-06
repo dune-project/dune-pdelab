@@ -760,9 +760,6 @@ namespace Dune {
                       }
                   }
 
-                for (auto v : node._entity_dof_offsets)
-                  std::cout << v << " ";
-                std::cout << std::endl;
               }
           }
       }
@@ -1005,10 +1002,6 @@ namespace Dune {
                   }
               }
             _size = _entity_dof_offsets.back();
-
-            for (auto v : _entity_dof_offsets)
-              std::cout << v << " ";
-            std::cout << std::endl;
 
             if (!_container_blocked)
               _block_count = _size;
