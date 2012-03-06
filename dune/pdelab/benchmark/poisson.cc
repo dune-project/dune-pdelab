@@ -183,6 +183,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const bool sol
       typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,
                                               Dune::PDELab::ISTLFieldVectorBackend<1> > GFS;
       GFS gfs(gv,fem);
+      gfs.name("solution");
 
       bh.end("GFS setup",std::cout);
       bh.start("ordering update",std::cout);
