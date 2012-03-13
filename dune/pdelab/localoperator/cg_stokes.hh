@@ -171,24 +171,28 @@ namespace Dune {
               //compute u * grad u_d
               const RF u_nabla_u = vu * jacu[d];
 
+              // Viscosity and density
+              const RF mu = p.mu(eg,it->position());
+              const RF rho = p.rho(eg,it->position());
+
               // geometric weight 
               RF factor = it->weight() * eg.geometry().integrationElement(it->position());
 
               for (size_t i=0; i<vsize; i++){
 
                 // integrate grad u * grad phi_i
-                r.accumulate(lfsu_v,i, p.mu() * (jacu[d] * gradphi[i]) * factor);
+                r.accumulate(lfsu_v,i, mu * (jacu[d] * gradphi[i]) * factor);
 
                 if(full_tensor)
                   for(int dd=0; dd<dim; ++dd)
-                    r.accumulate(lfsu_v,i, p.mu() * (jacu[dd][d] * gradphi[i][dd]) * factor);
+                    r.accumulate(lfsu_v,i, mu * (jacu[dd][d] * gradphi[i][dd]) * factor);
 
                 // integrate div phi_i * p
                 r.accumulate(lfsu_v,i,- (func_p * gradphi[i][d]) * factor);
 
                 // integrate u * grad u * phi_i
                 if(navier)
-                  r.accumulate(lfsu_v,i, p.rho() * u_nabla_u * phi[i] * factor);
+                  r.accumulate(lfsu_v,i, rho * u_nabla_u * phi[i] * factor);
               }
 
             }
@@ -271,7 +275,7 @@ namespace Dune {
               const LFSV_V & lfsv_v = lfsv_v_pfs.child(d);
 
               for (size_t i=0; i<vsize; i++){
-                r.accumulate(lfsv_v,i, p.mu() * neumann_stress[d] * phi[i] * factor);
+                r.accumulate(lfsv_v,i, neumann_stress[d] * phi[i] * factor);
               }
 
             }
@@ -389,6 +393,10 @@ namespace Dune {
               }
             }
 
+            // Viscosity and density
+            const RF mu = p.mu(eg,it->position());
+            const RF rho = p.rho(eg,it->position());
+
             for(int d=0; d<dim; ++d){
 
               const LFSU_V & lfsv_v = lfsu_v_pfs.child(d);
@@ -405,13 +413,13 @@ namespace Dune {
 
                 // integrate grad phi_u_i * grad phi_v_i (viscous force)
                 for (size_t j=0; j<lfsv_v.size(); j++){
-                  mat.accumulate(lfsv_v,i,lfsu_v,j, p.mu() * (gradphi[i] * gradphi[j]) * factor);
+                  mat.accumulate(lfsv_v,i,lfsu_v,j, mu * (gradphi[i] * gradphi[j]) * factor);
 
                   // integrate (grad phi_u_i)^T * grad phi_v_i (viscous force)
                   if(full_tensor)
                     for(int dd=0; dd<dim; ++dd){
                       const LFSU_V & lfsu_v = lfsu_v_pfs.child(dd);
-                      mat.accumulate(lfsv_v,i,lfsu_v,j, p.mu() * (gradphi[j][d] * gradphi[i][dd]) * factor);
+                      mat.accumulate(lfsv_v,i,lfsu_v,j, mu * (gradphi[j][d] * gradphi[i][dd]) * factor);
                     }
 
                 }
@@ -424,7 +432,7 @@ namespace Dune {
                   for(int k =0; k < dim; ++k){
                     const LFSU_V & lfsu_v = lfsu_v_pfs.child(k);
 
-                    const RF pre_factor = factor * p.rho() * gradu_d[k] * phi[i];
+                    const RF pre_factor = factor * rho * gradu_d[k] * phi[i];
 
                     for(size_t j=0; j< lfsu_v.size(); ++j)
                       mat.accumulate(lfsv_v,i,lfsu_v,j, pre_factor * phi[j]);
@@ -432,7 +440,7 @@ namespace Dune {
                 }
 
                 if(navier){
-                  const RF pre_factor = factor * p.rho() *  phi[i];
+                  const RF pre_factor = factor * rho *  phi[i];
                   for(size_t j=0; j< lfsu_v.size(); ++j)
                     mat.accumulate(lfsv_v,i,lfsu_v,j,  pre_factor * (vu * gradphi[j]));
                 }
