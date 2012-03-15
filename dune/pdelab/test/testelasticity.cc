@@ -87,7 +87,7 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
 
   // make function space
   typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-  typedef Dune::PDELab::ISTLFieldVectorBackend<1> VectorBackend;
+  typedef Dune::PDELab::ISTLVectorBackend<> ComponentVectorBackend;
 
   typedef Dune::PDELab::GridFunctionGeneralMapper Mapper;
 
@@ -96,8 +96,8 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
     GV,
     FEM,
     dim,
-    Dune::PDELab::ISTLVectorBackend<false>,
-    VectorBackend,
+    Dune::PDELab::ISTLVectorBackend<>,
+    ComponentVectorBackend,
     Constraints,
     OrderingTag,
     Mapper

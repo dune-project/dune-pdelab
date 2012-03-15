@@ -169,7 +169,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
 
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,
-    Dune::PDELab::ISTLFieldVectorBackend<1> > GFS;
+    Dune::PDELab::ISTLVectorBackend<> > GFS;
   GFS gfs(gv,fem);
   gfs.name("solution");
 

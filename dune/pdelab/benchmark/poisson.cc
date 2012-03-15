@@ -180,8 +180,10 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const bool sol
       bh.start("GFS setup",std::cout);
 
       // make function space
-      typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,
-                                              Dune::PDELab::ISTLFieldVectorBackend<1> > GFS;
+      typedef Dune::PDELab::GridFunctionSpace<
+        GV,FEM,CON,
+        Dune::PDELab::ISTLVectorBackend<>
+        > GFS;
       GFS gfs(gv,fem);
       gfs.name("solution");
 

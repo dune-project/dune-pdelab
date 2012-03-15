@@ -62,7 +62,7 @@ void testpk (const GV& gv)
   typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> PkFEM;
   PkFEM pkfem(gv);
 
-  typedef Dune::PDELab::ISTLFieldVectorBackend<1> VBE;
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
   typedef Dune::PDELab::NoConstraints CON;
 
   // make a grid function space

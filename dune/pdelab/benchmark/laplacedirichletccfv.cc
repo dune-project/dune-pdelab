@@ -127,7 +127,7 @@ void test (const GV& gv, const Mapper& mapper, std::string filename, const bool 
         GV,
         FEM,
         Dune::PDELab::NoConstraints,
-        Dune::PDELab::ISTLFieldVectorBackend<1>,
+        Dune::PDELab::ISTLVectorBackend<>,
         Mapper
         > GFS;
       GFS gfs(gv,fem);
