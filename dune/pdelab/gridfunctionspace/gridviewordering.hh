@@ -842,15 +842,25 @@ namespace Dune {
         localOrdering().map_local_index(geometry_type_index,entity_index,di.treeIndex(),ci);
         if (_container_blocked)
           {
-            ci.push_back(_gt_entity_offsets[geometry_type_index] + entity_index);
-          }
-        else if (_fixed_size)
-          {
-            ci.back() += _gt_dof_offsets[geometry_type_index] + entity_index * localOrdering().size(geometry_type_index,entity_index);
+            if (_fixed_size)
+              {
+                ci.push_back(_gt_dof_offsets[geometry_type_index] + entity_index);
+              }
+            else
+              {
+                ci.push_back(_gt_entity_offsets[geometry_type_index] + entity_index);
+              }
           }
         else
           {
-            ci.back() += _entity_dof_offsets[_gt_entity_offsets[geometry_type_index] + entity_index];
+            if (_fixed_size)
+              {
+                ci.back() += _gt_dof_offsets[geometry_type_index] + entity_index * localOrdering().size(geometry_type_index,entity_index);
+              }
+            else
+              {
+                ci.back() += _entity_dof_offsets[_gt_entity_offsets[geometry_type_index] + entity_index];
+              }
           }
       }
 
