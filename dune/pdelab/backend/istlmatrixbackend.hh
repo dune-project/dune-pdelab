@@ -18,6 +18,16 @@
 namespace Dune {
   namespace PDELab {
 
+    namespace ISTLParameters {
+
+      enum Blocking
+        {
+          no_blocking,
+          dynamic_blocking,
+          static_blocking
+        };
+    }
+
     template<typename RV, typename CV, typename block_type>
     struct matrix_for_vectors;
 
