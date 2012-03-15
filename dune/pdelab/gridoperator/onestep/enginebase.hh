@@ -18,6 +18,12 @@ namespace Dune{
       //! The type of the wrapping local assembler
       typedef OSLA OneStepLocalAssembler;
 
+      // Constraints caching policy
+      static const bool needs_constraints_caching =
+        LAE0::needs_constraints_caching ||
+        LAE1::needs_constraints_caching;
+
+
       //! Types of the subordinate assemblers and engines
       //! @{
       typedef typename OSLA::LocalAssemblerDT0 LocalAssemblerDT0;

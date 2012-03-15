@@ -66,6 +66,9 @@ namespace Dune{
       typedef LFSContainerIndexCache<LFSU,CU> LFSUCache;
       typedef LFSContainerIndexCache<LFSV,CV> LFSVCache;
 
+      typedef LFSContainerIndexCache<LFSU,EmptyTransformation> NoConstraintsLFSUCache;
+      typedef LFSContainerIndexCache<LFSV,EmptyTransformation> NoConstraintsLFSVCache;
+
       //! @}
 
       //! The local assembler engines

@@ -20,6 +20,9 @@ namespace Dune{
       : public LocalAssemblerEngineBase
     {
     public:
+
+      static const bool needs_constraints_caching = false;
+
       //! The type of the wrapping local assembler
       typedef LA LocalAssembler;
 
@@ -36,10 +39,10 @@ namespace Dune{
 
       //! The local function spaces
       typedef typename LA::LFSU LFSU;
-      typedef typename LA::LFSUCache LFSUCache;
+      typedef typename LA::NoConstraintsLFSUCache LFSUCache;
       typedef typename LFSU::Traits::GridFunctionSpace GFSU;
       typedef typename LA::LFSV LFSV;
-      typedef typename LA::LFSVCache LFSVCache;
+      typedef typename LA::NoConstraintsLFSVCache LFSVCache;
       typedef typename LFSV::Traits::GridFunctionSpace GFSV;
 
       typedef typename Solution::template ConstLocalView<LFSUCache> SolutionView;

@@ -383,7 +383,8 @@ namespace Dune {
       {
       }
 
-      LFSContainerIndexCacheBase(const LFS& lfs, const EmptyTransformation& c)
+      template<typename C>
+      LFSContainerIndexCacheBase(const LFS& lfs, const C& c)
         : _lfs(lfs)
         , _container_indices(lfs.maxSize())
       {
@@ -673,7 +674,8 @@ namespace Dune {
       {
       }
 
-      LFSContainerIndexCacheBase(const LFS& lfs, const EmptyTransformation& c)
+      template<typename C>
+      LFSContainerIndexCacheBase(const LFS& lfs, const C& c)
         : _lfs(lfs)
       {
       }
@@ -740,7 +742,8 @@ namespace Dune {
 
     public:
 
-      LFSContainerIndexCache(const LFS& lfs, const C& c)
+      template<typename CC>
+      LFSContainerIndexCache(const LFS& lfs, const CC& c)
         : LFSContainerIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag>(lfs,c)
       {
       }

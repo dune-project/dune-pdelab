@@ -43,22 +43,24 @@ namespace Dune{
       //! Static check on whether this is a Galerkin method
       static const bool isGalerkinMethod = Dune::is_same<GFSU,GFSV>::value;
 
-      DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_, const CU& cu, const CV& cv)
+      DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_, const CU& cu_, const CV& cv_)
         : gfsu(gfsu_)
         , gfsv(gfsv_)
-        , lfsu(gfsu_), lfsu_cache(lfsu,cu)
-        , lfsv(gfsv_), lfsv_cache(lfsv,cv)
-        , lfsun(gfsu_), lfsun_cache(lfsun,cu)
-        , lfsvn(gfsv_), lfsvn_cache(lfsvn,cv)
+        , cu(cu_)
+        , cv(cv_)
+        , lfsu(gfsu_)
+        , lfsv(gfsv_)
+        , lfsun(gfsu_)
+        , lfsvn(gfsv_)
       { }
 
       DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_)
         : gfsu(gfsu_)
         , gfsv(gfsv_)
-        , lfsu(gfsu_), lfsu_cache(lfsu,CU())
-        , lfsv(gfsv_), lfsv_cache(lfsv,CV())
-        , lfsun(gfsu_), lfsun_cache(lfsun,CU())
-        , lfsvn(gfsv_), lfsvn_cache(lfsvn,CV())
+        , lfsu(gfsu_)
+        , lfsv(gfsv_)
+        , lfsun(gfsu_)
+        , lfsvn(gfsv_)
       { }
 
       //! Get the trial grid function space
@@ -83,6 +85,23 @@ namespace Dune{
       void assemble(LocalAssemblerEngine & assembler_engine) const
       {
         typedef typename GV::Traits::template Codim<0>::Entity Element;
+
+        typedef typename std::conditional<
+          LocalAssemblerEngine::needs_constraints_caching,
+          LFSContainerIndexCache<LFSU,CU>,
+          LFSContainerIndexCache<LFSU,EmptyTransformation>
+          >::type LFSUCache;
+
+        typedef typename std::conditional<
+          LocalAssemblerEngine::needs_constraints_caching,
+          LFSContainerIndexCache<LFSV,CV>,
+          LFSContainerIndexCache<LFSV,EmptyTransformation>
+          >::type LFSVCache;
+
+        LFSUCache lfsu_cache(lfsu,cu);
+        LFSVCache lfsv_cache(lfsv,cv);
+        LFSUCache lfsun_cache(lfsun,cu);
+        LFSVCache lfsvn_cache(lfsvn,cv);
 
         // Notify assembler engine about oncoming assembly
         assembler_engine.preAssembly();
@@ -268,21 +287,19 @@ namespace Dune{
       const GFSU& gfsu;
       const GFSV& gfsv;
 
+      const CU& cu;
+      const CV& cv;
+
       /* local function spaces */
       typedef LocalFunctionSpace<GFSU, TrialSpaceTag> LFSU;
-      typedef LFSContainerIndexCache<LFSU,CU> LFSUCache;
       typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
-      typedef LFSContainerIndexCache<LFSV,CV> LFSVCache;
       // local function spaces in local cell
       mutable LFSU lfsu;
-      mutable LFSUCache lfsu_cache;
       mutable LFSV lfsv;
-      mutable LFSVCache lfsv_cache;
       // local function spaces in neighbor
       mutable LFSU lfsun;
-      mutable LFSUCache lfsun_cache;
       mutable LFSV lfsvn;
-      mutable LFSVCache lfsvn_cache;
+
     };
 
   }

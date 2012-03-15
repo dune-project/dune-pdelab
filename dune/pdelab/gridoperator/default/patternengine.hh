@@ -19,6 +19,9 @@ namespace Dune{
       : public LocalAssemblerEngineBase
     {
     public:
+
+      static const bool needs_constraints_caching = true;
+
       //! The type of the wrapping local assembler
       typedef LA LocalAssembler;
 
