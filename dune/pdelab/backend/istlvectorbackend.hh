@@ -25,18 +25,17 @@
 namespace Dune {
   namespace PDELab {
 
-    struct istl_field_vector_backend_tag {};
     struct istl_vector_backend_tag {};
 
-    template<std::size_t block_size_ = 1>
-    struct ISTLFieldVectorBackend
+    template<ISTLParameters::Blocking blocking = ISTLParameters::no_blocking, std::size_t block_size_ = 1>
+    struct ISTLVectorBackend
     {
 
-      typedef istl_field_vector_backend_tag tag;
-
+      typedef istl_vector_backend_tag tag;
 
       dune_static_assert((block_size_ > 0),"block size for FieldVector has to be positive");
-
+      dune_static_assert((blocking == ISTLParameters::static_blocking || block_size_ == 1),
+                         "Explicitly specified block size only supported for static blocking");
 
       typedef std::size_t size_type;
 
@@ -44,37 +43,16 @@ namespace Dune {
 
       struct Traits
       {
+        static const ISTLParameters::Blocking block_type = blocking;
         static const bool block_size = block_size_;
-        static const size_type max_blocking_depth = block_size > 1 ? 1 : 0;
-        static const bool blocked = block_size > 1;
+        static const bool blocked = blocking != ISTLParameters::no_blocking;
+        static const size_type max_blocking_depth = blocked ? 1 : 0;
       };
 
       bool blocked() const
       {
-        return Traits::block_size > 1;
+        return Traits::blocked;
       }
-    };
-
-    template<bool blocked_ = false>
-    struct ISTLVectorBackend
-    {
-
-      typedef istl_vector_backend_tag tag;
-
-      typedef std::size_t size_type;
-
-      struct Traits
-      {
-        static const size_type max_blocking_depth = blocked_ ? 1 : 0;
-        static const bool blocked = blocked_;
-      };
-
-
-      bool blocked() const
-      {
-        return blocked_;
-      }
-
     };
 
     template<typename E,typename Node, typename Tag>
@@ -125,7 +103,7 @@ namespace Dune {
 
     };
 
-    template<typename ChildContainer, typename ParentNode, typename ParentBackendTag>
+    template<typename ChildContainer, typename ParentNode, typename ParentBackendTag, ISTLParameters::Blocking blocking>
     struct istl_vector_parent_helper
     {
 
@@ -136,20 +114,24 @@ namespace Dune {
 
 
     template<typename ChildContainer, typename ParentNode>
-    struct istl_vector_parent_helper<ChildContainer,ParentNode,istl_vector_backend_tag>
+    struct istl_vector_parent_helper<ChildContainer,ParentNode,istl_vector_backend_tag,ISTLParameters::dynamic_blocking>
     {
 
-      typedef typename SelectType<
-        ParentNode::Traits::Backend::Traits::blocked,
-        BlockVector<ChildContainer>,
-        ChildContainer
-        >::Type type;
+      typedef BlockVector<ChildContainer> type;
+
+    };
+
+    template<typename ChildContainer, typename ParentNode>
+    struct istl_vector_parent_helper<ChildContainer,ParentNode,istl_vector_backend_tag,ISTLParameters::no_blocking>
+    {
+
+      typedef ChildContainer type;
 
     };
 
 
   template<typename ChildContainer, typename ParentNode>
-  struct istl_vector_parent_helper<ChildContainer,ParentNode,istl_field_vector_backend_tag>
+  struct istl_vector_parent_helper<ChildContainer,ParentNode,istl_vector_backend_tag,ISTLParameters::static_blocking>
     {
 
       dune_static_assert(ChildContainer::block_type::dimension == 1,"currently only nesting for scalar child blocks is supported");
@@ -171,7 +153,8 @@ namespace Dune {
         typedef typename istl_vector_parent_helper<
           ChildContainer,
           Node,
-          typename Node::Traits::Backend::tag
+          typename Node::Traits::Backend::tag,
+          Node::Traits::Backend::Traits::block_type
           >::type type;
 
       };
@@ -781,16 +764,10 @@ namespace Dune {
 
     };
 
-    template<std::size_t blockSize, typename GFS, typename E>
-    struct BackendVectorSelectorHelper<ISTLFieldVectorBackend<blockSize>, GFS, E>
+    template<ISTLParameters::Blocking blocking, std::size_t block_size, typename GFS, typename E>
+    struct BackendVectorSelectorHelper<ISTLVectorBackend<blocking,block_size>, GFS, E>
       : public ISTLVectorSelectorHelper<GFS,E>
     {};
-
-    template<bool blocked, typename GFS, typename E>
-    struct BackendVectorSelectorHelper<ISTLVectorBackend<blocked>, GFS, E>
-      : public ISTLVectorSelectorHelper<GFS,E>
-    {};
-
 
   } // namespace PDELab
 } // namespace Dune
