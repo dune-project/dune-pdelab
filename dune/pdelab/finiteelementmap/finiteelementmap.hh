@@ -5,6 +5,7 @@
 #define DUNE_PDELAB_FINITELEMENTMAP_HH
 
 #include <dune/common/deprecated.hh>
+#include <dune/common/exceptions.hh>
 
 #include <dune/geometry/referenceelements.hh>
 
@@ -14,6 +15,9 @@ namespace Dune {
     //! \addtogroup FiniteElementMap
     //! \ingroup PDELab
     //! \{
+
+    class FiniteElementMapError : public Exception;
+    class VariableElementSize : public FiniteElementMapError;
 
 	//! collect types exported by a finite element map
 	template<class T>
