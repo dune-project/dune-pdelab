@@ -16,8 +16,8 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-    class FiniteElementMapError : public Exception;
-    class VariableElementSize : public FiniteElementMapError;
+    class FiniteElementMapError : public Exception {};
+    class VariableElementSize : public FiniteElementMapError {};
 
 	//! collect types exported by a finite element map
 	template<class T>
