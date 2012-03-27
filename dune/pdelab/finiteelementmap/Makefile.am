@@ -13,6 +13,7 @@ finiteelementmap_HEADERS =			\
 	monomfem.hh				\
 	opbfem.hh				\
 	p0constraints.hh			\
+	p0ghostconstraints.hh			\
 	p0fem.hh				\
 	p12dfem.hh				\
 	p1fem.hh				\
