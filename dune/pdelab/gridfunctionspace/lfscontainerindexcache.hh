@@ -262,7 +262,7 @@ namespace Dune {
                  ++it)
               {
                 _constraints_iterators[it->first].first = eit;
-                for (auto cit = it->second->second.begin(); cit != it->second->second.end(); ++cit, ++eit)
+                for (typename C::mapped_type::const_iterator cit = it->second->second.begin(); cit != it->second->second.end(); ++cit, ++eit)
                   {
                     eit->first = &(container_index(cit->first));
                     eit->second = cit->second;
@@ -562,7 +562,7 @@ namespace Dune {
                  ++it)
               {
                 _constraints_iterators[it->first].first = eit;
-                for (auto cit = it->second->second.begin(); cit != it->second->second.end(); ++cit, ++eit)
+                for (typename C::mapped_type::const_iterator cit = it->second->second.begin(); cit != it->second->second.end(); ++cit, ++eit)
                   {
                     eit->first = cit->first;
                     eit->second = cit->second;
