@@ -12,9 +12,22 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/ios_state.hh>
 
+#include <ctime>
+
 namespace Dune {
   namespace PDELab {
 
+    struct CppClockWallTimeSource
+    {
+
+      double operator()() const
+      {
+        return static_cast<double>(std::clock()) / static_cast<double>(CLOCKS_PER_SEC);
+      }
+
+    };
+
+#if HAVE_MPI
 
     struct MPIWallTimeSource
     {
@@ -25,6 +38,14 @@ namespace Dune {
       }
 
     };
+
+    typedef MPIWallTimeSource DefaultTimeSource;
+
+#else
+
+    typedef CppClockWallTimeSource DefaultTimeSource;
+
+#endif
 
     struct Timing
     {
@@ -47,7 +68,7 @@ namespace Dune {
       double std_dev;
     };
 
-    template<typename TimeSource = MPIWallTimeSource>
+    template<typename TimeSource = DefaultTimeSource>
     struct BenchmarkHelper
     {
 
