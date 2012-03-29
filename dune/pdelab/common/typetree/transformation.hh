@@ -446,31 +446,12 @@ namespace Dune {
       template<typename S, typename Children, typename T>
       struct transform_variadic_composite_node;
 
-      // helper struct to obfuscate the enable_if tests in transform_variadic_composite_node
-      // obfuscation is necessary to avoid a compiler bug in GCC 4.3
-      template<typename... T1>
-      struct argument_unpacking_complete
-      {
-        template<typename... T2>
-        struct apply
-        {
-          static const bool value = sizeof...(T1) == sizeof...(T2);
-        };
-      };
-
       // specialized version of the helper struct which extracts the template argument list with the children from
       // its second template parameter, which has to be CompositeNode::ChildTypes. Apart from that, the struct is
       // similar to the one for a PowerNode, but it obviously delegates transformation of the children to the TMP.
       template<typename S, typename T, typename... C>
       struct transform_variadic_composite_node<S,tuple<C...>,T>
       {
-
-        // helper struct for testing if argument unpacking is complete
-        template<typename... C2>
-        struct unpacked
-        {
-          static const bool value = argument_unpacking_complete<C...>::template apply<C2...>::value;
-        };
 
         // transformed type, using the same nested struct trick as the PowerNode
         typedef typename S::ImplementationTag Tag;
@@ -489,60 +470,45 @@ namespace Dune {
                                                                                     >::transformed_type...
                                                              >::storage_type transformed_storage_type;
 
-        template<typename... C2>
-        static typename enable_if<(unpacked<C2...>::value), transformed_type>::type
-        transform(const S& s, T& t, C2... children)
+        // Retrieve the transformation descriptor for the child with index i.
+        // This little helper improves really improves the readability of the
+        // transformation functions.
+        template<std::size_t i>
+        struct ChildTransformation
+          : public TransformTree<typename S::template Child<i>::Type,
+                                 T,
+                                 typename S::template Child<i>::Type::NodeTag,
+                                 LookupNodeTransformation<
+                                   typename S::template Child<i>::Type,
+                                   T,
+                                   typename S::template Child<i>::Type::ImplementationTag
+                                   >::type::recursive
+                                 >
+        {};
+
+
+        template<std::size_t... i>
+        static transformed_type transform(const S& s, T& t, index_pack<i...> indices)
         {
-          return NodeTransformation::transform(s,t,TransformTree<C,T,typename C::NodeTag,LookupNodeTransformation<C,T,typename C::ImplementationTag>::type::recursive>::transform_storage(children,t)...);
+          return NodeTransformation::transform(s,t,ChildTransformation<i>::transform_storage(s.template childStorage<i>(),t)...);
         }
 
-        template<typename... C2>
-        static typename enable_if<(!unpacked<C2...>::value), transformed_type>::type
-        transform(const S& s, T& t, C2... children)
+        template<std::size_t... i>
+        static transformed_type transform(const S& s, const T& t, index_pack<i...> indices)
         {
-          return transform(s,t,children...,s.template childStorage<sizeof...(C2)>());
+          return NodeTransformation::transform(s,t,ChildTransformation<i>::transform_storage(s.template childStorage<i>(),t)...);
         }
 
-        template<typename... C2>
-        static typename enable_if<(unpacked<C2...>::value), transformed_type>::type
-        transform(const S& s, const T& t, C2... children)
+        template<std::size_t... i>
+        static transformed_storage_type transform_storage(shared_ptr<const S> sp, T& t, index_pack<i...> indices)
         {
-          return NodeTransformation::transform(s,t,TransformTree<C,T,typename C::NodeTag,LookupNodeTransformation<C,T,typename C::ImplementationTag>::type::recursive>::transform_storage(children,t)...);
+          return NodeTransformation::transform_storage(sp,t,ChildTransformation<i>::transform_storage(sp->template childStorage<i>(),t)...);
         }
 
-        template<typename... C2>
-        static typename enable_if<(!unpacked<C2...>::value), transformed_type>::type
-        transform(const S& s, const T& t, C2... children)
+        template<std::size_t... i>
+        static transformed_storage_type transform_storage(shared_ptr<const S> sp, const T& t, index_pack<i...> indices)
         {
-          return transform(s,t,children...,s.template childStorage<sizeof...(C2)>());
-        }
-
-        template<typename... C2>
-        static typename enable_if<(unpacked<C2...>::value), transformed_storage_type>::type
-        transform_storage(shared_ptr<const S> sp, T& t, C2... children)
-        {
-          return NodeTransformation::transform_storage(sp,t,TransformTree<C,T,typename C::NodeTag,LookupNodeTransformation<C,T,typename C::ImplementationTag>::type::recursive>::transform_storage(children,t)...);
-        }
-
-        template<typename... C2>
-        static typename enable_if<(!unpacked<C2...>::value), transformed_storage_type>::type
-        transform_storage(shared_ptr<const S> sp, T& t, const C2&... children)
-        {
-          return transform_storage(sp,t,children...,sp->template childStorage<sizeof...(C2)>());
-        }
-
-        template<typename... C2>
-        static typename enable_if<(unpacked<C2...>::value), transformed_storage_type>::type
-        transform_storage(shared_ptr<const S> sp, const T& t, C2... children)
-        {
-          return NodeTransformation::transform_storage(sp,t,TransformTree<C,T,typename C::NodeTag,LookupNodeTransformation<C,T,typename C::ImplementationTag>::type::recursive>::transform_storage(children,t)...);
-        }
-
-        template<typename... C2>
-        static typename enable_if<(!unpacked<C2...>::value), transformed_storage_type>::type
-        transform_storage(shared_ptr<const S> sp, const T& t, const C2&... children)
-        {
-          return transform_storage(sp,t,children...,sp->template childStorage<sizeof...(C2)>());
+          return NodeTransformation::transform_storage(sp,t,ChildTransformation<i>::transform_storage(sp->template childStorage<i>(),t)...);
         }
 
       };
@@ -558,22 +524,22 @@ namespace Dune {
 
         static transformed_type transform(const S& s, T& t)
         {
-          return transform_variadic_composite_node<S,typename S::ChildTypes,T>::transform(s,t);
+          return transform_variadic_composite_node<S,typename S::ChildTypes,T>::transform(s,t,tuple_indices(s.nodeStorage()));
         }
 
         static transformed_type transform(const S& s, const T& t)
         {
-          return transform_variadic_composite_node<S,typename S::ChildTypes,T>::transform(s,t);
+          return transform_variadic_composite_node<S,typename S::ChildTypes,T>::transform(s,t,tuple_indices(s.nodeStorage()));
         }
 
         static transformed_storage_type transform_storage(shared_ptr<const S> sp, T& t)
         {
-          return transform_variadic_composite_node<S,typename S::ChildTypes,T>::transform_storage(sp,t);
+          return transform_variadic_composite_node<S,typename S::ChildTypes,T>::transform_storage(sp,t,tuple_indices(sp->nodeStorage()));
         }
 
         static transformed_storage_type transform_storage(shared_ptr<const S> sp, const T& t)
         {
-          return transform_variadic_composite_node<S,typename S::ChildTypes,T>::transform_storage(sp,t);
+          return transform_variadic_composite_node<S,typename S::ChildTypes,T>::transform_storage(sp,t,tuple_indices(sp->nodeStorage()));
         }
 
       };

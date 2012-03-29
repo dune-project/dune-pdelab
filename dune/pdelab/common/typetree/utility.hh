@@ -5,6 +5,7 @@
 #define DUNE_PDELAB_COMMON_TYPETREE_UTILITY_HH
 
 #include <dune/common/shared_ptr.hh>
+#include <dune/common/tuples.hh>
 #include <dune/pdelab/common/typetree/nodetags.hh>
 
 namespace Dune {
@@ -206,6 +207,69 @@ namespace Dune {
       {};
 
 #endif // DOXYGEN
+
+
+#if HAVE_VARIADIC_TEMPLATES
+
+      //! Simple holder class for a template argument pack of indices.
+      /**
+       * The main use of index_pack is to unpack variadically templated
+       * data structures like this:
+       *
+       * \code
+       * template<typename T, typename F, std::size_t... i>
+       * void apply_to_tuple(const T& t, F f, index_pack<i...> indices)
+       * {
+       *   f(get<i>(t))...;
+       * }
+       *
+       * tuple<int,double,...,char> t;
+       * apply_to_tuple(t,foo,tuple_indices(t));
+       * \endcode
+       *
+       * \sa tuple_indices()
+       */
+      template<std::size_t... i>
+      struct index_pack {};
+
+      //! TMP to build an index_pack containing the sequence 0,...,n-1.
+      template<std::size_t n, std::size_t... i>
+      struct build_index_pack
+        : public build_index_pack<n-1,n-1,i...>
+      {
+
+#ifdef DOXYGEN
+        //! Result.
+        typedef index_pack<0,1,...,n-1> type;
+#endif // DOXYGEN
+
+      };
+
+#ifndef DOXYGEN
+
+      // end of recursion
+      template<std::size_t... i>
+      struct build_index_pack<0,i...>
+      {
+        typedef index_pack<0,i...> type;
+      };
+
+#endif // DOXYGEN
+
+      //! TMP to build an index_pack for all elements in the tuple.
+      template<typename tuple>
+      struct build_tuple_index_pack
+        : public build_index_pack<tuple_size<tuple>::value>
+      {};
+
+      //! Generate an index_pack for the tuple t.
+      template<typename tuple>
+      typename build_tuple_index_pack<tuple>::type tuple_indices(const tuple& t)
+      {
+        return typename build_tuple_index_pack<tuple>::type();
+      }
+
+#endif // HAVE_VARIADIC_TEMPLATES
 
       //! \} group TypeTree
 
