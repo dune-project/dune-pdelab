@@ -251,7 +251,7 @@ namespace Dune {
       template<std::size_t... i>
       struct build_index_pack<0,i...>
       {
-        typedef index_pack<0,i...> type;
+        typedef index_pack<i...> type;
       };
 
 #endif // DOXYGEN
