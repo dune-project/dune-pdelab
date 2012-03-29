@@ -13,7 +13,27 @@ namespace Dune {
     template<class D, class R, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=R>
     class OPBLocalFiniteElementMap
       : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::OPBLocalFiniteElement<D,R,k,d,bt,ComputationFieldType> >
-    {};
+    {
+
+      bool fixedSize() const
+      {
+        return true;
+      }
+
+      std::size_t size(GeometryType gt) const
+      {
+        if (gt == GeometryType(bt,d))
+          return Dune::PB::PkSize<k,d>::value;
+        else
+          return 0;
+      }
+
+      std::size_t maxLocalSize() const
+      {
+        return Dune::PB::PkSize<k,d>::value;
+      }
+
+    };
 
   }
 }
