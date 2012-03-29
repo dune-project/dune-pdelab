@@ -79,6 +79,21 @@ namespace Dune {
         return polOrder_[i];
 	  }
 
+      bool fixedSize() const
+      {
+        return false;
+      }
+
+      std::size_t size(GeometryType gt) const
+      {
+        DUNE_THROW(VariableElementSize,"VariableMonomLocalFiniteElementMap can contain elements of variable order.");
+      }
+
+      std::size_t maxLocalSize() const
+      {
+        DUNE_THROW(VariableElementSize,"VariableMonomLocalFiniteElementMap can contain elements of variable order.");
+      }
+
 	private:
       const M & mapper_;
       std::vector<unsigned char> polOrder_;
