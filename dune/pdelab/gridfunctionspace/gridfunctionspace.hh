@@ -596,21 +596,6 @@ namespace Dune {
 
       //------------------------------
 
-      bool fixedSize() const
-      {
-        return pfem->fixedSize();
-      }
-
-      typename Traits::SizeType size(GeometryType gt) const
-      {
-        return pfem->size(gt);
-      }
-
-      typename Traits::SizeType fixedMaxLocalSize() const
-      {
-        return pfem->maxLocalSize();
-      }
-
       B& backend()
       {
         return _backend;
