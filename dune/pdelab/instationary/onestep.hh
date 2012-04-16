@@ -789,6 +789,9 @@ namespace Dune {
           verbosityLevel = level;
       }
 
+      //! change number of current step
+      void setStepNumber(int newstep) { step = newstep; }
+
       //! Access to the (non) linear solver
       const PDESOLVER & getPDESolver() const
       {
@@ -1067,6 +1070,9 @@ namespace Dune {
         else
           verbosityLevel = level;
       }
+
+      //! change number of current step
+      void setStepNumber(int newstep) { step = newstep; }
 
       //! redefine the method to be used; can be done before every step
       /**
