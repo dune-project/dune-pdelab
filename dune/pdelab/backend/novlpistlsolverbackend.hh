@@ -26,6 +26,7 @@
 #include "../newton/newton.hh"
 #include "istlvectorbackend.hh"
 #include "parallelistlhelper.hh"
+#include "seqistlsolverbackend.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -1249,6 +1250,7 @@ namespace Dune {
           stats.levels = amg->maxlevels();
           stats.directCoarseLevelSolver=amg->usesDirectCoarseLevelSolver();
         }
+        
         Dune::InverseOperatorResult stat;
         // make r consistent
         if (gfs.gridView().comm().size()>1) {
@@ -1257,6 +1259,7 @@ namespace Dune {
                                      Dune::InteriorBorder_InteriorBorder_Interface,
                                      Dune::ForwardCommunication);
         }
+        watch.reset();
         Solver<VectorType> solver(oop,sp,*amg,reduction,maxiter,verb);
         solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
         stats.tsolve= watch.elapsed();

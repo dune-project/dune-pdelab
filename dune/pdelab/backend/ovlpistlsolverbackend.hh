@@ -765,28 +765,6 @@ namespace Dune {
       };
     };
 
-    /**
-     * @brief Class providing some statistics of the AMG solver.
-     *
-     */
-    struct ISTLAMGStatistics
-    {
-      /** 
-       * @brief The needed for computing the parallel information and
-       * for adapting the linear system.
-       */
-      double tprepare;
-      /** @brief the number of levels in the AMG hierarchy. */
-      int levels;
-      /** @brief The time spent in solving the system (without building the hierarchy. */
-      double tsolve;
-      /** @brief The time needed for building the AMG hierarchy (coarsening). */
-      double tsetup;
-      /** @brief True if a direct solver was used on the coarset level. */
-      bool directCoarseLevelSolver;
-    };
-      
-
     template<class GO, int s, template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
     class ISTLBackend_AMG

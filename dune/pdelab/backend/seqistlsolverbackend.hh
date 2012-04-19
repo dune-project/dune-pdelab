@@ -395,6 +395,16 @@ namespace Dune {
         : verbose(verbose_)
       {}
 
+      
+      /*! \brief make a linear solver object
+        
+        \param[in] maxiter Maximum number of allowed steps (ignored)
+        \param[in] verbose_ print messages if true
+      */
+      explicit ISTLBackend_SEQ_SuperLU (int maxiter, int verbose_=1)
+        : verbose(verbose_)
+      {}
+
       /*! \brief solve the given linear system
 
         \param[in] A the given matrix
@@ -457,6 +467,27 @@ namespace Dune {
 
     //! \} Sequential Solvers
 
+    /**
+     * @brief Class providing some statistics of the AMG solver.
+     *
+     */
+    struct ISTLAMGStatistics
+    {
+      /** 
+       * @brief The needed for computing the parallel information and
+       * for adapting the linear system.
+       */
+      double tprepare;
+      /** @brief the number of levels in the AMG hierarchy. */
+      int levels;
+      /** @brief The time spent in solving the system (without building the hierarchy. */
+      double tsolve;
+      /** @brief The time needed for building the AMG hierarchy (coarsening). */
+      double tsetup;
+      /** @brief True if a direct solver was used on the coarset level. */
+      bool directCoarseLevelSolver;
+    };
+      
     template<class GO, template<class,class,class,int> class Preconditioner, template<class> class Solver>
     class ISTLBackend_SEQ_AMG
     {
@@ -477,6 +508,7 @@ namespace Dune {
         : maxiter(maxiter_), params(15,2000), verbose(verbose_),
           reuse(reuse_), firstapply(true), usesuperlu(usesuperlu_)
       {
+        params.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
         params.setDebugLevel(verbose_);
 #if !HAVE_SUPERLU
         if (gfs.gridView().comm().rank() == 0 && usesuperlu == true)
@@ -516,6 +548,7 @@ namespace Dune {
       */
       void apply(M& A, V& z, V& r, typename V::ElementType reduction)
       {
+        Timer watch;
         MatrixType& mat=A.base();
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
           Dune::Amg::FirstDiagonal> > Criterion;
@@ -529,11 +562,16 @@ namespace Dune {
         if (reuse==false || firstapply==true){
           amg.reset(new AMG(oop, criterion, smootherArgs));
           firstapply = false;
+          stats.tsetup = watch.elapsed();
+          stats.levels = amg->maxlevels();
+          stats.directCoarseLevelSolver=amg->usesDirectCoarseLevelSolver();
         }
+        watch.reset();
         Dune::InverseOperatorResult stat;
 
         Solver<VectorType> solver(oop,*amg,reduction,maxiter,verbose);
         solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
+        stats.tsolve= watch.elapsed();
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -547,6 +585,15 @@ namespace Dune {
         return res;
       }
 
+      /** 
+       * @brief Get statistics of the AMG solver (no of levels, timings). 
+       * @return statistis of the AMG solver. 
+       */
+      const ISTLAMGStatistics& statistics() const
+      {
+        return stats;
+      }
+      
     private:
       Dune::PDELab::LinearSolverResult<double> res;
       unsigned maxiter;
@@ -556,6 +603,7 @@ namespace Dune {
       bool firstapply;
       bool usesuperlu;
       Dune::shared_ptr<AMG> amg;
+      ISTLAMGStatistics stats;
     };
 
     //! \addtogroup PDELab_seqsolvers Sequential Solvers
