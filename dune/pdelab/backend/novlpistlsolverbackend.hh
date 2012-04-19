@@ -1152,11 +1152,23 @@ namespace Dune {
 
     public:
       ISTLBackend_AMG_NOVLP(const GFS& gfs_, unsigned maxiter_=5000, 
-                            int verbose_=1, bool reuse_=false)
-        : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), params(15,2000,1.2,1.6,Dune::Amg::atOnceAccu),
-          verbose(verbose_), reuse(reuse_), firstapply(true)
+                            int verbose_=1, bool reuse_=false,
+                            bool usesuperlu_=true)
+        : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_),
+          params(15,2000,1.2,1.6,Dune::Amg::atOnceAccu),
+          verbose(verbose_), reuse(reuse_), firstapply(true),
+          usesuperlu(usesuperlu_)
       {
         params.setDebugLevel(verbose_);
+#if !HAVE_SUPERLU
+        if (gfs.gridView().comm().rank() == 0 && usesuperlu == true)
+          {
+            std::cout << "WARNING: You are using AMG without SuperLU!"
+                      << " Please consider installing SuperLU," 
+                      << " or set the usesuperlu flag to false"
+                      << " to suppress this warning." << std::endl;
+          }
+#endif
       }
       
       void setparams(Parameters params_)
@@ -1236,6 +1248,7 @@ namespace Dune {
       int verbose;
       bool reuse;
       bool firstapply;
+      bool usesuperlu;
       Dune::shared_ptr<AMG> amg;
     };
     
@@ -1247,8 +1260,10 @@ namespace Dune {
       
     public:
       ISTLBackend_NOVLP_CG_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000, 
-                                    int verbose_=1, bool reuse_=false)
-        : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::CGSolver>(gfs_, maxiter_,verbose_,reuse_)
+                                    int verbose_=1, bool reuse_=false,
+                                    bool usesuperlu_=true)
+        : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::CGSolver>
+          (gfs_, maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
 
@@ -1260,8 +1275,10 @@ namespace Dune {
       
     public:
       ISTLBackend_NOVLP_BCGS_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000,
-                                      int verbose_=1, bool reuse_=false)
-        : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>(gfs_, maxiter_,verbose_,reuse_)
+                                      int verbose_=1, bool reuse_=false,
+                                      bool usesuperlu_=true)
+        : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>
+          (gfs_, maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
 
@@ -1273,8 +1290,10 @@ namespace Dune {
       
     public:
       ISTLBackend_NOVLP_LS_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000, 
-                                    int verbose_=1, bool reuse_=false)
-        : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::LoopSolver>(gfs_, maxiter_,verbose_,reuse_)
+                                    int verbose_=1, bool reuse_=false,
+                                    bool usesuperlu_=true)
+        : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::LoopSolver>
+          (gfs_, maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
 

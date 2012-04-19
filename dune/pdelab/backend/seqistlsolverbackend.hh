@@ -473,11 +473,20 @@ namespace Dune {
 
     public:
       ISTLBackend_SEQ_AMG(unsigned maxiter_=5000, int verbose_=1,
-                          bool reuse_=false)
+                          bool reuse_=false, bool usesuperlu_=true)
         : maxiter(maxiter_), params(15,2000), verbose(verbose_),
-          reuse(reuse_), firstapply(true)
+          reuse(reuse_), firstapply(true), usesuperlu(usesuperlu_)
       {
         params.setDebugLevel(verbose_);
+#if !HAVE_SUPERLU
+        if (gfs.gridView().comm().rank() == 0 && usesuperlu == true)
+          {
+            std::cout << "WARNING: You are using AMG without SuperLU!"
+                      << " Please consider installing SuperLU," 
+                      << " or set the usesuperlu flag to false"
+                      << " to suppress this warning." << std::endl;
+          }
+#endif
       }
 
        /*! \brief set AMG parameters
@@ -545,6 +554,7 @@ namespace Dune {
       int verbose;
       bool reuse;
       bool firstapply;
+      bool usesuperlu;
       Dune::shared_ptr<AMG> amg;
     };
 
@@ -568,10 +578,12 @@ namespace Dune {
        * @param verbose_ The verbosity level to use.
        * @param reuse_ Set true, if the Matrix to be used is always identical 
        * (AMG aggregation is then only performed once).
+       * @param usesuperlu_ Set false, to suppress the no SuperLU warning
        */
       ISTLBackend_SEQ_CG_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1,
-                                  bool reuse_=false)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::CGSolver>(maxiter_,verbose_,reuse_)
+                                  bool reuse_=false, bool usesuperlu_=true)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::CGSolver>
+          (maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
 
@@ -592,10 +604,12 @@ namespace Dune {
        * @param verbose_ The verbosity level to use.
        * @param reuse_ Set true, if the Matrix to be used is always identical 
        * (AMG aggregation is then only performed once).
+       * @param usesuperlu_ Set false, to suppress the no SuperLU warning
        */
       ISTLBackend_SEQ_BCGS_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1,
-                                    bool reuse_=false)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::BiCGSTABSolver>(maxiter_, verbose_, reuse_)
+                                    bool reuse_=false, bool usesuperlu_=true)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::BiCGSTABSolver>
+          (maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
     
@@ -616,10 +630,12 @@ namespace Dune {
        * @param verbose_ The verbosity level to use.
        * @param reuse_ Set true, if the Matrix to be used is always identical 
        * (AMG aggregation is then only performed once).
+       * @param usesuperlu_ Set false, to suppress the no SuperLU warning
        */
       ISTLBackend_SEQ_BCGS_AMG_SOR(unsigned maxiter_=5000, int verbose_=1,
-                                   bool reuse_=false)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::BiCGSTABSolver>(maxiter_, verbose_,reuse_)
+                                   bool reuse_=false, bool usesuperlu_=true)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::BiCGSTABSolver>
+          (maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
 
@@ -640,10 +656,12 @@ namespace Dune {
        * @param verbose_ The verbosity level to use.
        * @param reuse_ Set true, if the Matrix to be used is always identical 
        * (AMG aggregation is then only performed once).
+       * @param usesuperlu_ Set false, to suppress the no SuperLU warning
        */
       ISTLBackend_SEQ_LS_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1,
-                                  bool reuse_=false)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::LoopSolver>(maxiter_, verbose_,reuse_)
+                                  bool reuse_=false, bool usesuperlu_=true)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::LoopSolver>
+          (maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
 
@@ -664,10 +682,12 @@ namespace Dune {
        * @param verbose_ The verbosity level to use.
        * @param reuse_ Set true, if the Matrix to be used is always identical 
        * (AMG aggregation is then only performed once).
+       * @param usesuperlu_ Set false, to suppress the no SuperLU warning
        */
       ISTLBackend_SEQ_LS_AMG_SOR(unsigned maxiter_=5000, int verbose_=1,
-                                 bool reuse_=false)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::LoopSolver>(maxiter_, verbose_,reuse_)
+                                 bool reuse_=false, bool usesuperlu_=true)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::LoopSolver>
+          (maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
 
