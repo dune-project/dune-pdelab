@@ -910,9 +910,9 @@ namespace Dune {
         watch.reset();
         Solver<VectorType> solver(oop,sp,*amg,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
-        stats.tsolve= watch.elapsed();
         
         solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
+        stats.tsolve= watch.elapsed();
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
