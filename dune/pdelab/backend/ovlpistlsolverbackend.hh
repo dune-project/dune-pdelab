@@ -765,6 +765,28 @@ namespace Dune {
       };
     };
 
+    /**
+     * @brief Class providing some statistics of the AMG solver.
+     *
+     */
+    struct ISTLAMGStatistics
+    {
+      /** 
+       * @brief The needed for computing the parallel information and
+       * for adapting the linear system.
+       */
+      double tprepare;
+      /** @brief the number of levels in the AMG hierarchy. */
+      int levels;
+      /** @brief The time spent in solving the system (without building the hierarchy. */
+      double tsolve;
+      /** @brief The time needed for building the AMG hierarchy (coarsening). */
+      double tsetup;
+      /** @brief True if a direct solver was used on the coarset level. */
+      bool directCoarseLevelSolver;
+    };
+      
+
     template<class GO, int s, template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
     class ISTLBackend_AMG
@@ -813,11 +835,28 @@ namespace Dune {
 
         \param[in] params_ a parameter object of Type Dune::Amg::Parameters
       */     
+      void setParameters(const Parameters& params_)
+      {
+        params = params_;
+      }
+        
       void setparams(Parameters params_)
       {
         params = params_;
       }
 
+      /** 
+       * @brief Get the parameters describing the behaviuour of AMG.
+       *
+       * The returned object can be adjusted to ones needs and then can be
+       * reset using setParameters.
+       * @return The object holding the parameters of AMG.
+       */
+      const Parameters& parameters() const
+      {
+        return params;
+      }
+      
       /*! \brief compute global norm of a vector
 
         \param[in] v the given vector
@@ -838,6 +877,7 @@ namespace Dune {
       */
       void apply(M& A, V& z, V& r, typename V::ElementType reduction)
       {
+        Timer watch;
         Comm oocc(gfs.gridView().comm());
         MatrixType& mat=A.base();
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
@@ -854,6 +894,8 @@ namespace Dune {
         smootherArgs.iterations = 1;
         smootherArgs.relaxationFactor = 1;
         Criterion criterion(params);
+        stats.tprepare=watch.elapsed();
+        watch.reset();
         
         int verb=0;
         if (gfs.gridView().comm().rank()==0) verb=verbose;
@@ -861,10 +903,15 @@ namespace Dune {
         if (reuse==false || firstapply==true){
           amg.reset(new AMG(oop, criterion, smootherArgs, oocc));
           firstapply = false;
+          stats.tsetup = watch.elapsed();
+          stats.levels = amg->maxlevels();
+          stats.directCoarseLevelSolver=amg->usesDirectCoarseLevelSolver();
         }
+        watch.reset();
         Solver<VectorType> solver(oop,sp,*amg,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
-
+        stats.tsolve= watch.elapsed();
+        
         solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
@@ -879,6 +926,15 @@ namespace Dune {
         return res;
       }
 
+      /** 
+       * @brief Get statistics of the AMG solver (no of levels, timings). 
+       * @return statistis of the AMG solver. 
+       */
+      const ISTLAMGStatistics& statistics() const
+      {
+        return stats;
+      }
+      
     private:
       const GFS& gfs;
       PHELPER phelper;
@@ -890,6 +946,7 @@ namespace Dune {
       bool firstapply;
       bool usesuperlu;
       Dune::shared_ptr<AMG> amg;
+      ISTLAMGStatistics stats;
     };
 
     //! \addtogroup PDELab_ovlpsolvers Overlapping Solvers
