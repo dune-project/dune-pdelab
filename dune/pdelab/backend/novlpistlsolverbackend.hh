@@ -1159,6 +1159,7 @@ namespace Dune {
           verbose(verbose_), reuse(reuse_), firstapply(true),
           usesuperlu(usesuperlu_)
       {
+        params.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
         params.setDebugLevel(verbose_);
 #if !HAVE_SUPERLU
         if (gfs.gridView().comm().rank() == 0 && usesuperlu == true)
@@ -1170,12 +1171,37 @@ namespace Dune {
           }
 #endif
       }
-      
+
+       /*! \brief set AMG parameters
+
+        \param[in] params_ a parameter object of Type Dune::Amg::Parameters
+      */     
+      void setParameters(const Parameters& params_)
+      {
+        params = params_;
+      }
+        
       void setparams(Parameters params_)
       {
         params = params_;
       }
 
+      /** 
+       * @brief Get the parameters describing the behaviuour of AMG.
+       *
+       * The returned object can be adjusted to ones needs and then can be
+       * reset using setParameters.
+       * @return The object holding the parameters of AMG.
+       */
+      const Parameters& parameters() const
+      {
+        return params;
+      }
+      
+      /*! \brief compute global norm of a vector
+
+        \param[in] v the given vector
+      */
       typename V::ElementType norm (const V& v) const
       {
         V x(v); // make a copy because it has to be made consistent
@@ -1187,6 +1213,7 @@ namespace Dune {
       
       void apply(M& A, V& z, V& r, typename V::ElementType reduction)
       {
+        Timer watch;
         MatrixType& mat=A.base();
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
           Dune::Amg::FirstDiagonal> > Criterion;
@@ -1209,6 +1236,8 @@ namespace Dune {
         smootherArgs.relaxationFactor = 1;
         //use noAccu or atOnceAccu
         Criterion criterion(params);
+        stats.tprepare=watch.elapsed();
+        watch.reset();
         
         int verb=0;
         if (gfs.gridView().comm().rank()==0) verb=verbose;
@@ -1216,6 +1245,9 @@ namespace Dune {
         if (reuse==false || firstapply==true){
           amg.reset(new AMG(oop, criterion, smootherArgs, oocc));
           firstapply = false;
+          stats.tsetup = watch.elapsed();
+          stats.levels = amg->maxlevels();
+          stats.directCoarseLevelSolver=amg->usesDirectCoarseLevelSolver();
         }
         Dune::InverseOperatorResult stat;
         // make r consistent
@@ -1227,6 +1259,7 @@ namespace Dune {
         }
         Solver<VectorType> solver(oop,sp,*amg,reduction,maxiter,verb);
         solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
+        stats.tsolve= watch.elapsed();
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -1237,6 +1270,15 @@ namespace Dune {
       const Dune::PDELab::LinearSolverResult<double>& result() const
       {
         return res;
+      }
+
+      /** 
+       * @brief Get statistics of the AMG solver (no of levels, timings). 
+       * @return statistis of the AMG solver. 
+       */
+      const ISTLAMGStatistics& statistics() const
+      {
+        return stats;
       }
       
     private:
@@ -1250,21 +1292,7 @@ namespace Dune {
       bool firstapply;
       bool usesuperlu;
       Dune::shared_ptr<AMG> amg;
-    };
-    
-    template<class GO, int s=96>
-    class ISTLBackend_NOVLP_CG_AMG_SSOR
-      : public ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::CGSolver>
-    {
-      typedef typename GO::Traits::TrialGridFunctionSpace GFS;
-      
-    public:
-      ISTLBackend_NOVLP_CG_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000, 
-                                    int verbose_=1, bool reuse_=false,
-                                    bool usesuperlu_=true)
-        : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::CGSolver>
-          (gfs_, maxiter_, verbose_, reuse_, usesuperlu_)
-      {}
+      ISTLAMGStatistics stats;
     };
 
     template<class GO, int s=96>
