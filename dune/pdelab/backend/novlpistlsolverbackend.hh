@@ -1299,6 +1299,22 @@ namespace Dune {
     };
 
     template<class GO, int s=96>
+    class ISTLBackend_NOVLP_CG_AMG_SSOR
+      : public ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::CGSolver>
+    {
+      typedef typename GO::Traits::TrialGridFunctionSpace GFS;
+      
+    public:
+      ISTLBackend_NOVLP_CG_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000, 
+                                    int verbose_=1, bool reuse_=false,
+                                    bool usesuperlu_=true)
+        : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::CGSolver>
+          (gfs_, maxiter_, verbose_, reuse_, usesuperlu_)
+      {}
+    };
+
+
+    template<class GO, int s=96>
     class ISTLBackend_NOVLP_BCGS_AMG_SSOR
       : public ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>
     {
