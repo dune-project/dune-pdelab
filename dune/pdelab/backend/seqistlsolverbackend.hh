@@ -313,7 +313,7 @@ namespace Dune {
       {}
     };
 
-    //! Sequential BiCGStab solver with ILU0 preconditioner
+    //! \brief Sequential BiCGStab solver with ILU0 preconditioner
     class ISTLBackend_SEQ_BCGS_ILUn
       : public ISTLBackend_SEQ_ILUn<Dune::BiCGSTABSolver>
     {
@@ -331,7 +331,7 @@ namespace Dune {
       {}
     }; 
 
-    //! Sequential congute gradient solver with ILU0 preconditioner
+    //! \brief Sequential congute gradient solver with ILU0 preconditioner
     class ISTLBackend_SEQ_CG_ILUn
       : public ISTLBackend_SEQ_ILUn<Dune::CGSolver>
     {
@@ -366,6 +366,9 @@ namespace Dune {
       {}
     };
     
+    /**
+     * @brief Backend using a MINRes solver preconditioned by SSOR.
+     */
     class ISTLBackend_SEQ_MINRES_SSOR
       : public ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::MINRESSolver>
     {
@@ -397,6 +400,9 @@ namespace Dune {
     };
 
 #if HAVE_SUPERLU
+    /**
+     * @brief Solver backend using SuperLU as a direct solver.
+     */
     class ISTLBackend_SEQ_SuperLU
       : public SequentialNorm, public LinearResultStorage
     {
