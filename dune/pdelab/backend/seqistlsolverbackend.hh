@@ -366,6 +366,20 @@ namespace Dune {
       {}
     };
     
+    class ISTLBackend_SEQ_MINRES_SSOR
+      : public ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::MINRESSolver>
+    {
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
+      */
+      explicit ISTLBackend_SEQ_MINRES_SSOR (unsigned maxiter_=5000, int verbose_=1)
+        : ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::MINRESSolver>(maxiter_, verbose_)
+      {}
+    };
+    
     /**
      * @brief Backend for conjugate gradient solver with Jacobi preconditioner.
      */
