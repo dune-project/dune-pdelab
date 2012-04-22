@@ -28,6 +28,7 @@ namespace Dune {
     };
 
 #if HAVE_MPI
+#include"mpi.h"
 
     struct MPIWallTimeSource
     {

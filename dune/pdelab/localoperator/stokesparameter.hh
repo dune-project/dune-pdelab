@@ -3,6 +3,7 @@
 
 #include <dune/pdelab/constraints/constraintsparameters.hh>
 #include <dune/common/parametertree.hh>
+#include <dune/pdelab/common/function.hh>
 
 namespace Dune {
     namespace PDELab {

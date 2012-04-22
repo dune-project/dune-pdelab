@@ -3,6 +3,7 @@
 
 #include<dune/common/timer.hh>
 #include<dune/pdelab/backend/backendselector.hh>
+#include<iostream>
 
 namespace Dune {
   namespace PDELab {
