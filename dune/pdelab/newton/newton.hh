@@ -13,7 +13,6 @@
 #include <dune/common/ios_state.hh>
 #include <dune/common/timer.hh>
 
-#include<dune/istl/matrixmarket.hh>
 namespace Dune
 {
     namespace PDELab
@@ -165,8 +164,6 @@ namespace Dune
                 if (this->verbosity_level >= 4)
                     std::cout << "      Solving linear system..." << std::endl;
                 z = 0.0;                                        // TODO: vector interface
-                storeMatrixMarket(A.base(), std::string("A"));
-                storeMatrixMarket(r.base(), std::string("z"));
                 this->solver.apply(A, z, r, this->linear_reduction);        // TODO: solver interface
 
                 ios_base_all_saver restorer(std::cout); // store old ios flags
