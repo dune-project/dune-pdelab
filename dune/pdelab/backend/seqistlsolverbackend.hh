@@ -401,7 +401,7 @@ namespace Dune {
         \param[in] maxiter Maximum number of allowed steps (ignored)
         \param[in] verbose_ print messages if true
       */
-      explicit ISTLBackend_SEQ_SuperLU (int maxiter, int verbose_)
+      ISTLBackend_SEQ_SuperLU (int maxiter, int verbose_)
         : verbose(verbose_)
       {}
 
