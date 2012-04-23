@@ -264,26 +264,42 @@ namespace Dune{
 
         typename B::template Accessor<LFSV,LFSU,T> accessor(globalcontainer,lfsv,lfsu);
 
-        for (size_t i=0; i<lfsv.size(); i++)
-          for (size_t j=0; j<lfsu.size(); j++){
+        typedef typename CV::const_iterator global_vcol_iterator;
+        typedef typename global_vcol_iterator::value_type::second_type global_vrow_type;
+        typedef typename global_vrow_type::const_iterator global_vrow_iterator;
+
+        typedef typename CU::const_iterator global_ucol_iterator;
+        typedef typename global_ucol_iterator::value_type::second_type global_urow_type;
+        typedef typename global_urow_type::const_iterator global_urow_iterator;
+
+        // for (size_t i=0; i<lfsv.size(); i++) 
+        //   for (size_t j=0; j<lfsu.size(); j++)
+        //     accessor.add(i,j,localcontainer(lfsv,i,lfsu,j));
+        // return;
+
+        // cache for row iterators
+        const CV & cv = *pconstraintsv;
+        std::vector<global_vcol_iterator> gvcit_cache(lfsv.size());
+        for (size_t i=0; i<lfsv.size(); i++) {
             SizeType gi = lfsv.globalIndex(i);
+            gvcit_cache[i] = cv.find(gi);
+          }
+
+        // cache for column iterators
+        const CU & cu = *pconstraintsu;
+        std::vector<global_ucol_iterator> gucit_cache(lfsu.size());
+        for (size_t j=0; j<lfsu.size(); j++){
+          SizeType gj = lfsu.globalIndex(j);
+          gucit_cache[j] = cu.find(gj);
+        }
+
+        for (size_t i=0; i<lfsv.size(); i++) {
+          SizeType gi = lfsv.globalIndex(i);
+          global_vcol_iterator gvcit = gvcit_cache[i];
+          
+          for (size_t j=0; j<lfsu.size(); j++){
             SizeType gj = lfsu.globalIndex(j);
-
-            // Get global constraints containers for test and ansatz space
-            const CV & cv = *pconstraintsv;
-            const CU & cu = *pconstraintsu;
-
-            typedef typename CV::const_iterator global_vcol_iterator;
-            typedef typename global_vcol_iterator::value_type::second_type global_vrow_type;
-            typedef typename global_vrow_type::const_iterator global_vrow_iterator;
-
-            typedef typename CU::const_iterator global_ucol_iterator;
-            typedef typename global_ucol_iterator::value_type::second_type global_urow_type;
-            typedef typename global_urow_type::const_iterator global_urow_iterator;
-
-            // Check whether the global indices are constrained indices
-            global_vcol_iterator gvcit = cv.find(gi);
-            global_ucol_iterator gucit = cu.find(gj);
+            global_ucol_iterator gucit = gucit_cache[j];
 
             // Set constrained_v true if gi is constrained dof
             bool constrained_v(false);
@@ -354,6 +370,7 @@ namespace Dune{
             }while(true);
 
           }
+        }
       }
 
       /** \brief Adding matrix entry to pattern with respect to the
