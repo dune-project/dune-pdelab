@@ -531,7 +531,7 @@ namespace Dune {
         params.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
         params.setDebugLevel(verbose_);
 #if !HAVE_SUPERLU
-        if (gfs.gridView().comm().rank() == 0 && usesuperlu == true)
+        if (usesuperlu == true)
           {
             std::cout << "WARNING: You are using AMG without SuperLU!"
                       << " Please consider installing SuperLU," 
