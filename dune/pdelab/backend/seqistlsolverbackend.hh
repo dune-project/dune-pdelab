@@ -504,12 +504,14 @@ namespace Dune {
       double tsolve;
       /** @brief The time needed for building the AMG hierarchy (coarsening). */
       double tsetup;
+      /** @brief The number of iterations performed until convergence was reached. */
+      int iterations;
       /** @brief True if a direct solver was used on the coarset level. */
       bool directCoarseLevelSolver;
     };
       
     template<class GO, template<class,class,class,int> class Preconditioner, template<class> class Solver>
-    class ISTLBackend_SEQ_AMG
+    class ISTLBackend_SEQ_AMG : public LinearResultStorage
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       typedef typename GO::Traits::Jacobian M;
@@ -599,11 +601,6 @@ namespace Dune {
         res.conv_rate  = stat.conv_rate;
       }
 
-      /*! \brief Return access to result data */
-      const Dune::PDELab::LinearSolverResult<double>& result() const
-      {
-        return res;
-      }
 
       /** 
        * @brief Get statistics of the AMG solver (no of levels, timings). 
@@ -615,7 +612,6 @@ namespace Dune {
       }
       
     private:
-      Dune::PDELab::LinearSolverResult<double> res;
       unsigned maxiter;
       Parameters params;
       int verbose;

@@ -767,7 +767,7 @@ namespace Dune {
 
     template<class GO, int s, template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
-    class ISTLBackend_AMG
+    class ISTLBackend_AMG : public LinearResultStorage
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       typedef typename Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
@@ -786,9 +786,14 @@ namespace Dune {
 #endif
       typedef typename Dune::Amg::SmootherTraits<ParSmoother>::Arguments SmootherArgs;
       typedef Dune::Amg::AMG<Operator,VectorType,ParSmoother,Comm> AMG;
-      typedef Dune::Amg::Parameters Parameters;
 
     public:
+      
+      /** 
+       * @brief Parameters object to customize matrix hierachy building.
+       */
+      typedef Dune::Amg::Parameters Parameters;
+
       ISTLBackend_AMG(const GFS& gfs_, unsigned maxiter_=5000, 
                       int verbose_=1, bool reuse_=false,
                       bool usesuperlu_=true)
@@ -898,12 +903,6 @@ namespace Dune {
         res.conv_rate  = stat.conv_rate;
       }
 
-      /*! \brief Return access to result data */
-      const Dune::PDELab::LinearSolverResult<double>& result() const
-      {
-        return res;
-      }
-
       /** 
        * @brief Get statistics of the AMG solver (no of levels, timings). 
        * @return statistis of the AMG solver. 
@@ -916,7 +915,6 @@ namespace Dune {
     private:
       const GFS& gfs;
       PHELPER phelper;
-      Dune::PDELab::LinearSolverResult<double> res;
       unsigned maxiter;
       Parameters params;
       int verbose;
