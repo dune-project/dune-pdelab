@@ -26,13 +26,19 @@ namespace Dune {
     //! \{
 
 	//! traits class holding function signature, same as in local function
+    //! \tparam DF The numeric type of the field representing the domain.
+    //! \tparam dimension of the domain.
+    //! \tparam D The type of the domain.
+    //! \tparam m The dimension of the range.
+    //! \tparam RF The numeric type of the field representing the range.
+    //! \tparam R The type of the range.
 	template<class DF, int n, class D, class RF, int m, class R>
 	struct FunctionTraits
 	{
 	  //! \brief Export type for domain field
 	  typedef DF DomainFieldType;
-
-	  //! \brief Enum for domain dimension
+      
+      // Enum for domain dimension
 	  enum {
 		//! \brief dimension of the domain
 		dimDomain = n
@@ -44,7 +50,7 @@ namespace Dune {
 	  //! \brief Export type for range field
 	  typedef RF RangeFieldType;
 
-	  //! \brief Enum for range dimension
+      // Enum for range dimension
 	  enum {
 		//! \brief dimension of the range
 		dimRange = m
@@ -54,8 +60,9 @@ namespace Dune {
 	  typedef R RangeType;
 	};
 
-
-	//! a Function maps x in DomainType to y in RangeType
+    //! \brief a Function that maps x in DomainType to y in RangeType
+    //! \tparam T The type of the function traits
+    //! \tparam Imp The type implementing the interface.
 	template<class T, class Imp>
 	class FunctionInterface
 	{
@@ -79,13 +86,13 @@ namespace Dune {
 	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
 	};
 
-    //! Default class for additional methods in instationary functions
+    //! \brief Default class for additional methods in instationary functions
     class InstationaryFunctionDefaults
     {
     public:
       //! set time for subsequent evaluation
       /**
-       * This method set the time for subsequent calls to any of the
+       * This method sets the time for subsequent calls to any of the
        * evaluation methods.
        *
        * \note This default method does nothing, it just ensures setTime() can
@@ -109,7 +116,11 @@ namespace Dune {
 
     };
 
-	//! traits class holding function signature, same as in local function
+    //! \brief traits class holding the function signature, same as in local function
+    //! \brief GV The type of the grid view the function lives on.
+    //! \brief RF The numeric type used in the range of the function.
+    //! \brief m The dimension of the range.
+    //! \tparam R The numeric type of the field representing the range.
 	template<class GV, class RF, int m, class R>
 	struct GridFunctionTraits
 	  : public FunctionTraits<typename GV::Grid::ctype, GV::dimension,
@@ -120,7 +131,7 @@ namespace Dune {
 	{
 	};
 
-	//! a GridFunction maps x in DomainType to y in RangeType
+    //! \brief a GridFunction maps x in DomainType to y in RangeType
 	template<class T, class Imp>
 	class GridFunctionInterface
 	{
@@ -144,7 +155,7 @@ namespace Dune {
 		asImp().evaluate(e,x,y);
 	  }
 
-      //! get a reference to the GridView
+      //! \brief get a reference to the GridView
       /* \note This is deprecated in favor of "getGridView() const" */
       DUNE_DEPRECATED
 	  inline const typename Traits::GridViewType& getGridView ()
@@ -152,7 +163,7 @@ namespace Dune {
 		return asImp().getGridView();
 	  }
 
-      //! get a reference to the GridView
+      //! \brief get a reference to the GridView
 	  inline const typename Traits::GridViewType& getGridView () const
 	  {
 		return asImp().getGridView();
@@ -163,7 +174,11 @@ namespace Dune {
 	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
 	};
 
-	//! traits class holding function signature, same as in local function
+    //! \brief traits class holding function signature, same as in local function
+    //! \tparam GV The type of the grid view the function lives on.
+    //! \tparam RF The numeric type of the field representing the range.
+    //! \tparam m The dimension of the range.
+    //! \tparam R The type of the range.
 	template<class GV, class RF, int m, class R>
 	struct BoundaryGridFunctionTraits
 	  : public FunctionTraits<typename GV::Grid::ctype, GV::dimension-1,
@@ -176,13 +191,14 @@ namespace Dune {
 	};
 
 
-	//! a BoundaryGridFunction allows evaluation on boundary intersections
-    // T are BoundaryGridFunctionTraits
+    //! \brief A BoundaryGridFunction allows evaluation on boundary intersections
+    // \tparam T The type of the BoundaryGridFunctionTraits.
+    // \tparam Imp The type of the implementing class.
 	template<class T, class Imp>
 	class BoundaryGridFunctionInterface
 	{
 	public:
-	  //! \brief Export type traits
+      //! \brief Export type traits of the boundary grid function.
 	  typedef T Traits;
 
 	  /** \brief Evaluate the GridFunction at given position
