@@ -27,8 +27,8 @@ namespace Dune {
       template<typename C, bool doIt>
       struct ConstraintsCallBoundary
       {
-        template<typename F, typename IG, typename LFS, typename T>
-        static void boundary (const C& c, const F& f, const IG& ig, const LFS& lfs, T& trafo)
+        template<typename P, typename IG, typename LFS, typename T>
+        static void boundary (const C& c, const P& p, const IG& ig, const LFS& lfs, T& trafo)
         {
         }
       };
@@ -63,11 +63,11 @@ namespace Dune {
       template<typename C>
       struct ConstraintsCallBoundary<C,true>
       {
-        template<typename F, typename IG, typename LFS, typename T>
-        static void boundary (const C& c, const F& f, const IG& ig, const LFS& lfs, T& trafo)
+        template<typename P, typename IG, typename LFS, typename T>
+        static void boundary (const C& c, const P& p, const IG& ig, const LFS& lfs, T& trafo)
         {
           if (lfs.size())
-            c.boundary(f,ig,lfs,trafo);
+            c.boundary(p,ig,lfs,trafo);
         }
       };
       template<typename C>
@@ -111,8 +111,8 @@ namespace Dune {
         // trees. It is necessary because otherwise, the visitor would fall back to the default
         // implementation in TreeVisitor, which simply does nothing. The resulting bugs would
         // probably be hell to find...
-        template<typename F, typename LFS, typename TreePath>
-        void leaf(const F& f, const LFS& lfs, TreePath treePath) const
+        template<typename P, typename LFS, typename TreePath>
+        void leaf(const P& p, const LFS& lfs, TreePath treePath) const
         {
           static_assert((AlwaysFalse<F>::Value),
                         "unsupported combination of function and LocalFunctionSpace");
@@ -120,7 +120,7 @@ namespace Dune {
       };
 
 
-      template<typename F, typename IG, typename CL>
+      template<typename P, typename IG, typename CL>
       struct BoundaryConstraintsForParametersLeaf
         : public TypeTree::TreeVisitor
         , public TypeTree::DynamicTraversal
@@ -134,16 +134,16 @@ namespace Dune {
           typedef typename LFS::Traits::ConstraintsType C;
 
           // iterate over boundary, need intersection iterator
-          ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.constraints(),f,ig,lfs,cl);
+          ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.constraints(),p,ig,lfs,cl);
         }
 
-        BoundaryConstraintsForParametersLeaf(const F& f_, const IG& ig_, CL& cl_)
-          : f(f_)
+        BoundaryConstraintsForParametersLeaf(const P& p_, const IG& ig_, CL& cl_)
+          : p(p_)
           , ig(ig_)
           , cl(cl_)
         {}
 
-        const F& f;
+        const P& p;
         const IG& ig;
         CL& cl;
 
@@ -157,24 +157,24 @@ namespace Dune {
       {
 
         // standard case - leaf in both trees
-        template<typename F, typename LFS, typename TreePath>
-        typename enable_if<F::isLeaf && LFS::isLeaf>::type
-        leaf(const F& f, const LFS& lfs, TreePath treePath) const
+        template<typename P, typename LFS, typename TreePath>
+        typename enable_if<P::isLeaf && LFS::isLeaf>::type
+        leaf(const P& p, const LFS& lfs, TreePath treePath) const
         {
           // extract constraints type
           typedef typename LFS::Traits::ConstraintsType C;
 
           // iterate over boundary, need intersection iterator
-          ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.constraints(),f,ig,lfs,cl);
+          ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.constraints(),p,ig,lfs,cl);
         }
 
-        // reuse constraints parameter information from f for all LFS children
-        template<typename F, typename LFS, typename TreePath>
-        typename enable_if<F::isLeaf && (!LFS::isLeaf)>::type
-        leaf(const F& f, const LFS& lfs, TreePath treePath) const
+        // reuse constraints parameter information from p for all LFS children
+        template<typename P, typename LFS, typename TreePath>
+        typename enable_if<P::isLeaf && (!LFS::isLeaf)>::type
+        leaf(const P& p, const LFS& lfs, TreePath treePath) const
         {
           // traverse LFS tree and reuse parameter information
-          TypeTree::applyToTree(lfs,BoundaryConstraintsForParametersLeaf<F,IG,CL>(f,ig,cl));
+          TypeTree::applyToTree(lfs,BoundaryConstraintsForParametersLeaf<P,IG,CL>(p,ig,cl));
         }
 
         BoundaryConstraints(const IG& ig_, CL& cl_)
