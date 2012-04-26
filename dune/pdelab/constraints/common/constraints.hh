@@ -104,7 +104,7 @@ namespace Dune {
       };
 
 
-      struct BoundaryConstraintsBase
+      struct ParameterizedConstraintsBase
         : public TypeTree::TreePairVisitor
       {
         // This acts as a catch-all for unsupported leaf- / non-leaf combinations in the two
@@ -152,7 +152,7 @@ namespace Dune {
 
       template<typename IG, typename CL>
       struct BoundaryConstraints
-        : public BoundaryConstraintsBase
+        : public ParameterizedConstraintsBase
         , public TypeTree::DynamicTraversal
       {
 
