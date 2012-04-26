@@ -6,6 +6,7 @@
 #include <dune/common/deprecated.hh>
 #include <dune/common/mpihelper.hh>
 #include <dune/common/static_assert.hh>
+#include <dune/common/stdstreams.hh>
 
 #include <dune/istl/owneroverlapcopy.hh>
 #include <dune/istl/solvercategory.hh>
@@ -423,13 +424,15 @@ namespace Dune {
           if(v[i][j]==1.0 && sharedDOF[i][j])
             ++count;
 
-      if (verbose > 1)
-        std::cout<<gv.comm().rank()<<": shared count is "<< count.touint()<<std::endl;
+      dverb<<gv.comm().rank()<<": shared count is "<< count.touint()
+           <<std::endl;
 
       // Maybe divide by block size?
       BlockProcessor<GFS>::postProcessCount(count);
-      if (verbose > 1)
-      std::cout<<gv.comm().rank()<<": shared block count is "<< count.touint()<<std::endl;
+
+      dverb<<gv.comm().rank()<<": shared block count is "<< count.touint()
+           <<std::endl;
+      
 
       std::vector<GlobalIndex> counts(gfs.gridView().comm().size());
       gfs.gridView().comm().allgather(&count, 1, &(counts[0]));
