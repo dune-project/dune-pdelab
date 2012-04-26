@@ -53,8 +53,8 @@ namespace Dune {
       template<typename C, bool doIt>
       struct ConstraintsCallVolume
       {
-        template<typename EG, typename LFS, typename T>
-        static void volume (const C& c, const EG& eg, const LFS& lfs, T& trafo)
+        template<typename P, typename EG, typename LFS, typename T>
+        static void volume (const C& c, const P&, const EG& eg, const LFS& lfs, T& trafo)
         {
         }
       };
@@ -95,11 +95,11 @@ namespace Dune {
       template<typename C>
       struct ConstraintsCallVolume<C,true>
       {
-        template<typename EG, typename LFS, typename T>
-        static void volume (const C& c, const EG& eg, const LFS& lfs, T& trafo)
+        template<typename P, typename EG, typename LFS, typename T>
+        static void volume (const C& c, const P& p, const EG& eg, const LFS& lfs, T& trafo)
         {
           if (lfs.size())
-            c.volume(eg,lfs,trafo);
+            c.volume(p,eg,lfs,trafo);
         }
       };
 
