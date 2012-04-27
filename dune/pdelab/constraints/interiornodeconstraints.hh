@@ -62,6 +62,11 @@ namespace Dune {
         }
       }
 
+      const std::vector<bool> & interiorNodes() const
+      {
+        return interior;
+      }
+
       template<typename GV>
       void updateInteriorNodes(const GV & gv)
       {
