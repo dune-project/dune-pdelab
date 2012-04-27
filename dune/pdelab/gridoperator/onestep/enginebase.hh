@@ -324,6 +324,7 @@ namespace Dune{
       {
         if(implicit)
           lae0->assembleUVSkeleton(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
+        lae1->assembleUVSkeleton(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n);
       }
 
       template<typename IG, typename LFSV_S, typename LFSV_N>
@@ -331,6 +332,7 @@ namespace Dune{
       {
         if(implicit)
           lae0->assembleVSkeleton(ig,lfsv_s,lfsv_n);
+        lae1->assembleVSkeleton(ig,lfsv_s,lfsv_n);
       }
 
       template<typename IG, typename LFSU_S, typename LFSV_S>
@@ -338,6 +340,7 @@ namespace Dune{
       {
         if(implicit)
           lae0->assembleUVBoundary(ig,lfsu_s,lfsv_s);
+        lae1->assembleUVBoundary(ig,lfsu_s,lfsv_s);
       }
 
       template<typename IG, typename LFSV_S>
@@ -345,6 +348,7 @@ namespace Dune{
       {
         if(implicit)
           lae0->assembleVBoundary(ig,lfsv_s);
+        lae1->assembleVBoundary(ig,lfsv_s);
       }
 
       template<typename IG, typename LFSU_S, typename LFSV_S>
@@ -352,6 +356,7 @@ namespace Dune{
       {
         if(implicit)
           lae0->assembleUVProcessor(ig,lfsu_s,lfsv_s);
+        lae1->assembleUVProcessor(ig,lfsu_s,lfsv_s);
       }
 
       template<typename IG, typename LFSV_S>
@@ -359,6 +364,7 @@ namespace Dune{
       {
         if(implicit)
           lae0->assembleVProcessor(ig,lfsv_s);
+        lae1->assembleVProcessor(ig,lfsv_s);
       }
 
       template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N,
@@ -370,6 +376,7 @@ namespace Dune{
       {
         if(implicit)
           lae0->assembleUVEnrichedCoupling(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n,lfsu_c,lfsv_c);
+        lae1->assembleUVEnrichedCoupling(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n,lfsu_c,lfsv_c);
       }
 
       template<typename IG, typename LFSV_S, typename LFSV_N, typename LFSV_C>
