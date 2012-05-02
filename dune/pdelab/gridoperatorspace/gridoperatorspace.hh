@@ -97,7 +97,7 @@ namespace Dune {
 	  GridOperatorSpace (const GFSU& gfsu_, const CU& cu,
 						 const GFSV& gfsv_, const CV& cv, 
                          const LA & la_) DUNE_DEPRECATED
-		: Base(gfsu_,cu,gfsv_,cv), la(la_), sub_triangulation(ST(gfsu_.gridview(),NoSubTriangulationImp()))
+        : Base(gfsu_,cu,gfsv_,cv), la(la_), sub_triangulation(ST(gfsu_.gridView(),NoSubTriangulationImp()))
 	  { }
 
 
@@ -119,12 +119,12 @@ namespace Dune {
       void fill_pattern (P& globalpattern) const
       {
         // map each cell to unique id
-        MultiGeomUniqueIDMapper<GV> cell_mapper(gfsu.gridview());
+        MultiGeomUniqueIDMapper<GV> cell_mapper(gfsu.gridView());
 
         const bool has_subtriangulation = ST::hasSubTriangulation;
         
-        for (ElementIterator it = gfsu.gridview().template begin<0>();
-             it!=gfsu.gridview().template end<0>(); ++it)
+        for (ElementIterator it = gfsu.gridView().template begin<0>();
+             it!=gfsu.gridView().template end<0>(); ++it)
           {
  			// bind local function spaces to element
 			lfsu.bind(*it);
@@ -263,7 +263,7 @@ namespace Dune {
         const bool has_subtriangulation = ST::hasSubTriangulation;
 
         // map each cell to unique id
-        MultiGeomUniqueIDMapper<GV> cell_mapper(gfsu.gridview());
+        MultiGeomUniqueIDMapper<GV> cell_mapper(gfsu.gridView());
 
         // allocate local data container
         LocalVector<typename X::ElementType, TrialSpaceTag> xl;
@@ -276,8 +276,8 @@ namespace Dune {
           LocalVector<typename R::ElementType, TestSpaceTag> > rn_v(rn,1.0);
 
 		// traverse grid view
-		for (ElementIterator it = gfsu.gridview().template begin<0>();
-			 it!=gfsu.gridview().template end<0>(); ++it)
+        for (ElementIterator it = gfsu.gridView().template begin<0>();
+             it!=gfsu.gridView().template end<0>(); ++it)
 		  {
             // compute unique id
             typename GV::IndexSet::IndexType id = cell_mapper.map(*it);
@@ -784,7 +784,7 @@ namespace Dune {
         const bool has_subtriangulation = ST::hasSubTriangulation;
 
         // map each cell to unique id
-        MultiGeomUniqueIDMapper<GV> cell_mapper(gfsu.gridview());
+        MultiGeomUniqueIDMapper<GV> cell_mapper(gfsu.gridView());
 
         // allocate local data container
         LocalVector<typename X::ElementType, TrialSpaceTag> xn;
@@ -804,8 +804,8 @@ namespace Dune {
           LocalMatrix<typename A::ElementType> > al_nn_v (al_nn, 1.0);
         
 		// traverse grid view
-		for (ElementIterator it = gfsu.gridview().template begin<0>();
-			 it!=gfsu.gridview().template end<0>(); ++it)
+        for (ElementIterator it = gfsu.gridView().template begin<0>();
+             it!=gfsu.gridView().template end<0>(); ++it)
 		  {
 
             // compute unique id
