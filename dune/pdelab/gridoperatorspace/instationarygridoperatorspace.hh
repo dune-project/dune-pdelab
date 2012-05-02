@@ -108,7 +108,7 @@ namespace Dune {
                                      const GFSV& gfsv_, const CV& cv,
                                      LA& la_, LM& lm_) DUNE_DEPRECATED
         : Base(gfsu_,cu,gfsv_,cv), la(la_), lm(lm_), method(&method_), r0(gfsv,0.0), 
-          sub_triangulation(ST(gfsu_.gridview(),NoSubTriangulationImp()))
+          sub_triangulation(ST(gfsu_.gridView(),NoSubTriangulationImp()))
       {}
 
       //! construct, with constraints and default time stepper
@@ -181,12 +181,12 @@ namespace Dune {
       void fill_pattern (P& globalpattern) const
       {
         // map each cell to unique id
-        MultiGeomUniqueIDMapper<GV> cell_mapper(gfsu.gridview());
+        MultiGeomUniqueIDMapper<GV> cell_mapper(gfsu.gridView());
 
         const bool has_subtriangulation = ST::hasSubTriangulation;
 
-        for (ElementIterator it = gfsu.gridview().template begin<0>();
-             it!=gfsu.gridview().template end<0>(); ++it)
+        for (ElementIterator it = gfsu.gridView().template begin<0>();
+             it!=gfsu.gridView().template end<0>(); ++it)
           {
             // bind local function spaces to element
             lfsu.bind(*it);
@@ -736,7 +736,7 @@ namespace Dune {
         // visit each face only once
         const int chunk=1<<28;
         int offset = 0;
-        const typename GV::IndexSet& is=gfsu.gridview().indexSet();
+        const typename GV::IndexSet& is=gfsu.gridView().indexSet();
         std::map<Dune::GeometryType,int> gtoffset;
 
         // extract coefficients of time stepping scheme
@@ -771,8 +771,8 @@ namespace Dune {
           LocalMatrix<typename A::ElementType> > ml_v (ml, 1.0);
         
         // traverse grid view
-        for (ElementIterator it = gfsu.gridview().template begin<0>();
-             it!=gfsu.gridview().template end<0>(); ++it)
+        for (ElementIterator it = gfsu.gridView().template begin<0>();
+             it!=gfsu.gridView().template end<0>(); ++it)
           {
             // assign offset for geometry type;
             if (gtoffset.find(it->type())==gtoffset.end())
@@ -833,8 +833,8 @@ namespace Dune {
                   {
                     // traverse intersections
                     unsigned int intersection_index = 0;
-                    IntersectionIterator endit = gfsu.gridview().iend(*it);
-                    for (IntersectionIterator iit = gfsu.gridview().ibegin(*it); 
+                    IntersectionIterator endit = gfsu.gridView().iend(*it);
+                    for (IntersectionIterator iit = gfsu.gridView().ibegin(*it); 
                          iit!=endit; ++iit, ++intersection_index)
                       {
                         // skeleton term
