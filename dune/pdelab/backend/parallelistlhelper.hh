@@ -186,25 +186,25 @@ namespace Dune {
     public:
 
       ParallelISTLHelper (const GFS& gfs_, int verbose_=1)
-        : gfs(gfs_), v(gfs,(double)gfs.gridview().comm().rank()), g(gfs,0.0), verbose(verbose_)
+        : gfs(gfs_), v(gfs,(double)gfs.gridView().comm().rank()), g(gfs,0.0), verbose(verbose_)
       {
         /*
         // find out about ghosts
         Dune::PDELab::GenericDataHandle2<GFS,V,GhostGatherScatter> gdh(gfs,v,GhostGatherScatter());
-        if (gfs.gridview().comm().size()>1)
-          gfs.gridview().communicate(gdh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+        if (gfs.gridView().comm().size()>1)
+          gfs.gridView().communicate(gdh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
 
         g = v;
 
         // partition interior/border
         Dune::PDELab::GenericDataHandle2<GFS,V,InteriorBorderGatherScatter> dh(gfs,v,InteriorBorderGatherScatter());
-        if (gfs.gridview().comm().size()>1)
-          gfs.gridview().communicate(dh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
+        if (gfs.gridView().comm().size()>1)
+          gfs.gridView().communicate(dh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
 
         // convert vector into mask vector
         for (typename V::size_type i=0; i<v.base().N(); ++i)
           for (typename V::size_type j=0; j<v.base()[i].N(); ++j)
-            if (v.base()[i][j]==gfs.gridview().comm().rank())
+            if (v.base()[i][j]==gfs.gridView().comm().rank())
               v.base()[i][j] = 1.0;
             else
               v.base()[i][j] = 0.0;
@@ -424,7 +424,7 @@ namespace Dune {
     void ParallelISTLHelper<GFS>::createIndexSetAndProjectForAMG(M& m, C& c)
     {
       typedef typename GFS::Traits::GridViewType GV;
-      const GV& gv = gfs.gridview();
+      const GV& gv = gfs.gridView();
       //      static const std::size_t dim = GV::Grid::dimension;
       //      if(gv.comm().size()>1 && gv.grid().overlapSize(dim)<1)
       //        DUNE_THROW(Dune::InvalidStateException, "ParallelISTLHelper::createIndexSetAndProjectForAMG: "
@@ -435,8 +435,8 @@ namespace Dune {
       BoolVector sharedDOF(gfs, false);
       Dune::PDELab::GenericDataHandle<GFS,BoolVector,SharedGatherScatter> gdh(gfs,sharedDOF,SharedGatherScatter());
 
-      if (gfs.gridview().comm().size()>1)
-        gfs.gridview().communicate(gdh,Dune::All_All_Interface,Dune::ForwardCommunication);
+      if (gfs.gridView().comm().size()>1)
+        gfs.gridView().communicate(gdh,Dune::All_All_Interface,Dune::ForwardCommunication);
 
       // Count shared dofs that we own
       typedef typename C::ParallelIndexSet::GlobalIndex GlobalIndex;
@@ -456,12 +456,12 @@ namespace Dune {
       if (verbose > 1)
       std::cout<<gv.comm().rank()<<": shared block count is "<< count.touint()<<std::endl;
 
-      std::vector<GlobalIndex> counts(gfs.gridview().comm().size());
-      gfs.gridview().comm().allgather(&count, 1, &(counts[0]));
+      std::vector<GlobalIndex> counts(gfs.gridView().comm().size());
+      gfs.gridView().comm().allgather(&count, 1, &(counts[0]));
 
       // Compute start index start_p = \sum_{i=0}^{i<p} counts_i
       GlobalIndex start=0;
-      for(int i=0; i<gfs.gridview().comm().rank(); ++i)
+      for(int i=0; i<gfs.gridView().comm().rank(); ++i)
         start=start+counts[i];
       //std::cout<<gv.comm().rank()<<": start index = "<<start.touint()<<std::endl;
 
@@ -480,8 +480,8 @@ namespace Dune {
       // publish global indices for the shared DOFS to other processors.
       typedef GlobalIndexGatherScatter<typename GFS::Traits::BackendType,V> GIGS;
       Dune::PDELab::GenericDataHandle3<GFS,GIVector,GIGS> gdhgi(gfs, scalarIndices, GIGS(v));
-       if (gfs.gridview().comm().size()>1)
-                gfs.gridview().communicate(gdhgi,Dune::All_All_Interface,Dune::ForwardCommunication);
+       if (gfs.gridView().comm().size()>1)
+                gfs.gridView().communicate(gdhgi,Dune::All_All_Interface,Dune::ForwardCommunication);
 
 
       // Setup the index set
@@ -514,10 +514,10 @@ namespace Dune {
       // Compute neighbours using communication
       typedef NeighbourGatherScatter<typename V::ElementType> NeighbourGS;
       std::set<int> neighbours;
-      Dune::PDELab::GenericDataHandle<GFS,V,NeighbourGS> gdhn(gfs, v, NeighbourGS(gfs.gridview().comm().rank(),
+      Dune::PDELab::GenericDataHandle<GFS,V,NeighbourGS> gdhn(gfs, v, NeighbourGS(gfs.gridView().comm().rank(),
                                                                                   neighbours));
-      if (gfs.gridview().comm().size()>1)
-        gfs.gridview().communicate(gdhn,Dune::All_All_Interface,Dune::ForwardCommunication);
+      if (gfs.gridView().comm().size()>1)
+        gfs.gridView().communicate(gdhn,Dune::All_All_Interface,Dune::ForwardCommunication);
       c.remoteIndices().setNeighbours(neighbours);
       //std::cout<<gv.comm().rank()<<": no neighbours="<<neighbours.size()<<std::endl;
 

@@ -77,7 +77,7 @@ row position TAB column position TAB matrix entry NEWLINE
       const TestGFS &testGFS = gos.testGridFunctionSpace();
 
       typedef typename TrialGFS::Traits::GridViewType GV;
-      const GV &gv = trialGFS.gridview();
+      const GV &gv = trialGFS.gridView();
       typedef FieldVector<typename GV::ctype, GV::dimensionworld> DomainW;
 
       typedef typename TrialGFS::template VectorContainer<DomainW>::Type

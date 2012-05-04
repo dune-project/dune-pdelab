@@ -72,7 +72,7 @@ position TAB vector entry NEWLINE
       ios_base_all_saver stateSaver(outStream);
 
       typedef typename GFS::Traits::GridViewType GV;
-      const GV &gv = gfs.gridview();
+      const GV &gv = gfs.gridView();
       typedef FieldVector<typename GV::ctype, GV::dimensionworld> DomainW;
 
       typedef typename Dune::PDELab::BackendVectorSelector<GFS, DomainW>::Type

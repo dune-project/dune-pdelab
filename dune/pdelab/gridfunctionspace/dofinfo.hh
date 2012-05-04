@@ -53,7 +53,7 @@ namespace Dune {
       LocalFunctionSpace<GFS> lfs(gfs);
       LocalVector<bool,AnySpaceTag> lv(gfs.maxLocalSize(), true);
 
-      const GV &gv = gfs.gridview();
+      const GV &gv = gfs.gridView();
       const Iterator &end = gv.template end<0>();
       for(Iterator it = gv.template begin<0>(); it != end; ++it) {
         lfs.bind(*it);
@@ -101,7 +101,7 @@ namespace Dune {
       LocalFunctionSpace<GFS> lfs(gfs);
       LocalVector<Domain, AnySpaceTag> lv(gfs.maxLocalSize());
 
-      const GV &gv = gfs.gridview();
+      const GV &gv = gfs.gridView();
       const Iterator &end = gv.template end<0>();
       for(Iterator it = gv.template begin<0>(); it != end; ++it) {
         const Refelem &refelem = Refelems::general(it->type());
@@ -158,7 +158,7 @@ namespace Dune {
       LocalVector<Range, AnySpaceTag> lv(gfs.maxLocalSize());
       std::vector<Range> lvv(gfs.maxLocalSize());
 
-      const GV &gv = gfs.gridview();
+      const GV &gv = gfs.gridView();
       const Iterator &end = gv.template end<0>();
       for(Iterator it = gv.template begin<0>(); it != end; ++it) {
         const Refelem &refelem = Refelems::general(it->type());

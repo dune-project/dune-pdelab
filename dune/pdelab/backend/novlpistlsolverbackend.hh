@@ -113,8 +113,8 @@ namespace Dune {
 
         // accumulate y on border
         Dune::PDELab::AddDataHandle<GFS,Y> adddh(gfs,y);
-        if (gfs.gridview().comm().size()>1)
-          gfs.gridview().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
+        if (gfs.gridView().comm().size()>1)
+          gfs.gridView().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
       }
 
       //! apply operator to x, scale and add:  \f$ y = y + \alpha A(x) \f$
@@ -130,8 +130,8 @@ namespace Dune {
 
         // accumulate y on border
         Dune::PDELab::AddDataHandle<GFS,Y> adddh(gfs,y);
-        if (gfs.gridview().comm().size()>1)
-          gfs.gridview().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
+        if (gfs.gridView().comm().size()>1)
+          gfs.gridView().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
       }
 
       //! extract the matrix
@@ -176,7 +176,7 @@ namespace Dune {
             sum += (x[i][j]*y[i][j])*helper.mask(i,j);
 
         // do global communication
-        return gfs.gridview().comm().sum(sum);
+        return gfs.gridView().comm().sum(sum);
       }
 
       /*! \brief Norm of a right-hand side vector.
@@ -192,8 +192,8 @@ namespace Dune {
       void make_consistent (X& x) const
       {
         Dune::PDELab::AddDataHandle<GFS,X> adddh(gfs,x);
-        if (gfs.gridview().comm().size()>1)
-          gfs.gridview().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
+        if (gfs.gridView().comm().size()>1)
+          gfs.gridView().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
       }
 
     private:
@@ -312,7 +312,7 @@ namespace Dune {
           DBackend::access(diagonal, i) = MBackend::access(m, i, i);
 
         AddDataHandle<GFS, Diagonal> addDH(gfs, diagonal);
-        gfs.gridview().communicate(addDH,
+        gfs.gridView().communicate(addDH,
                                    InteriorBorder_InteriorBorder_Interface,
                                    ForwardCommunication);
       }
@@ -393,7 +393,7 @@ namespace Dune {
         typedef Dune::PDELab::NonoverlappingRichardson<GFS,V,W> PRICH;
         PRICH prich(gfs,phelper);
         int verb=0;
-        if (gfs.gridview().comm().rank()==0) verb=verbose;
+        if (gfs.gridView().comm().rank()==0) verb=verbose;
         Dune::CGSolver<V> solver(pop,psp,prich,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
         solver.apply(z,r,stat);
@@ -486,7 +486,7 @@ namespace Dune {
         PPre ppre(gfs,A);
 
         int verb=0;
-        if (gfs.gridview().comm().rank()==0) verb=verbose;
+        if (gfs.gridView().comm().rank()==0) verb=verbose;
         CGSolver<V> solver(pop,psp,ppre,reduction,maxiter,verb);
         InverseOperatorResult stat;
         solver.apply(z,r,stat);
@@ -550,7 +550,7 @@ namespace Dune {
         typedef Dune::PDELab::NonoverlappingRichardson<GFS,V,W> PRICH;
         PRICH prich(gfs,phelper);
         int verb=0;
-        if (gfs.gridview().comm().rank()==0) verb=verbose;
+        if (gfs.gridView().comm().rank()==0) verb=verbose;
         Dune::BiCGSTABSolver<V> solver(pop,psp,prich,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
         solver.apply(z,r,stat);
@@ -623,10 +623,10 @@ namespace Dune {
         jac.pre(z,r);
         jac.apply(z,r);
         jac.post(z);
-        if (gfs.gridview().comm().size()>1)
+        if (gfs.gridView().comm().size()>1)
         {
           Dune::PDELab::AddDataHandle<GFS,V> adddh(gfs,z);
-          gfs.gridview().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
+          gfs.gridView().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
         }
         res.converged  = true;
         res.iterations = 1;
@@ -695,7 +695,7 @@ namespace Dune {
         }
       }
 
-      //! A DataHandle class to exchange matrix sparsity patterns 
+      //! A DataHandle class to exchange matrix sparsity patterns
       class MatPatternExchange
         : public CommDataHandleIF<MatPatternExchange,IdType> {
         typedef typename Matrix::RowIterator RowIterator;
@@ -1010,9 +1010,9 @@ namespace Dune {
         MatrixType& mat=A.base();
         typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type VectorType;
 #if HAVE_MPI
-        Comm oocc(gfs.gridview().comm(),Dune::SolverCategory::nonoverlapping);
+        Comm oocc(gfs.gridView().comm(),Dune::SolverCategory::nonoverlapping);
         typedef VertexExchanger<GO,MatrixType> Exchanger;
-        Exchanger exchanger(gfs.gridview());
+        Exchanger exchanger(gfs.gridView());
         exchanger.getextendedmatrix(mat,phelper);
         exchanger.sumEntries(mat);
         phelper.createIndexSetAndProjectForAMG(mat, oocc);
@@ -1025,7 +1025,7 @@ namespace Dune {
         typedef Dune::NonoverlappingBlockPreconditioner<Comm, Smoother> ParSmoother;
         ParSmoother parsmoother(smoother, oocc);
 #else
-        Comm oocc(gfs.gridview().comm());
+        Comm oocc(gfs.gridView().comm());
         typedef Preconditioner<MatrixType,VectorType,VectorType,1> ParSmoother;
         ParSmoother parsmoother(mat, steps, 1.0);
         typedef Dune::SeqScalarProduct<VectorType> PSP;
@@ -1034,13 +1034,13 @@ namespace Dune {
         Operator oop(mat);
 #endif
         int verb=0;
-        if (gfs.gridview().comm().rank()==0) verb=verbose;
+        if (gfs.gridView().comm().rank()==0) verb=verbose;
         Solver<VectorType> solver(oop,psp,parsmoother,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
         //make r consistent
-        if (gfs.gridview().comm().size()>1){
+        if (gfs.gridView().comm().size()>1){
           Dune::PDELab::AddDataHandle<GFS,V> adddh(gfs,r);
-          gfs.gridview().communicate(adddh,
+          gfs.gridView().communicate(adddh,
                                      Dune::InteriorBorder_InteriorBorder_Interface,
                                      Dune::ForwardCommunication);
         }
@@ -1179,16 +1179,16 @@ namespace Dune {
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
           Dune::Amg::FirstDiagonal> > Criterion;
 #if HAVE_MPI
-        Comm oocc(gfs.gridview().comm(),Dune::SolverCategory::nonoverlapping);
+        Comm oocc(gfs.gridView().comm(),Dune::SolverCategory::nonoverlapping);
         typedef VertexExchanger<GO,MatrixType> Exchanger;
-        Exchanger exchanger(gfs.gridview());
+        Exchanger exchanger(gfs.gridView());
         exchanger.getextendedmatrix(mat,phelper);
         exchanger.sumEntries(mat);        
         phelper.createIndexSetAndProjectForAMG(mat, oocc);
         Dune::NonoverlappingSchwarzScalarProduct<VectorType,Comm> sp(oocc);
         Operator oop(mat, oocc);
 #else
-        Comm oocc(gfs.gridview().comm());
+        Comm oocc(gfs.gridView().comm());
         Operator oop(mat);
         Dune::SeqScalarProduct<VectorType> sp;
 #endif
@@ -1199,7 +1199,7 @@ namespace Dune {
         Criterion criterion(params);
         
         int verb=0;
-        if (gfs.gridview().comm().rank()==0) verb=verbose;
+        if (gfs.gridView().comm().rank()==0) verb=verbose;
         //only construct a new AMG if the matrix changes
         if (reuse==false || firstapply==true){
           amg.reset(new AMG(oop, criterion, smootherArgs, oocc));
@@ -1207,9 +1207,9 @@ namespace Dune {
         }
         Dune::InverseOperatorResult stat;
         // make r consistent
-        if (gfs.gridview().comm().size()>1) {
+        if (gfs.gridView().comm().size()>1) {
           Dune::PDELab::AddDataHandle<GFS,V> adddh(gfs,r);
-          gfs.gridview().communicate(adddh,
+          gfs.gridView().communicate(adddh,
                                      Dune::InteriorBorder_InteriorBorder_Interface,
                                      Dune::ForwardCommunication);
         }

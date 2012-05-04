@@ -131,10 +131,10 @@ namespace Dune {
  	  }
 
       //! get a reference to the GridView
-	  inline const typename Traits::GridViewType& getGridView () const
-	  {
-		return pgfs->gridview();
-	  }
+      inline const typename Traits::GridViewType& getGridView () const
+      {
+        return pgfs->gridView();
+      }
 
 	private:
 
@@ -226,7 +226,7 @@ namespace Dune {
 
       //! get a reference to the GridView
       const typename Traits::GridViewType& getGridView() const
-      { return gfs.gridview(); }
+      { return gfs.gridView(); }
     };
 
     //! Helper class to calculate the Traits of DiscreteGridFunctionCurl
@@ -386,10 +386,10 @@ namespace Dune {
  	  }
 
       //! get a reference to the GridView
-	  inline const typename Traits::GridViewType& getGridView () const
-	  {
-		return pgfs->gridview();
-	  }
+      inline const typename Traits::GridViewType& getGridView () const
+      {
+        return pgfs->gridView();
+      }
 
 	private:
 	  shared_ptr<GFS const> pgfs;
@@ -489,7 +489,7 @@ namespace Dune {
       //! get a reference to the GridView
       inline const typename Traits::GridViewType& getGridView () const
       {
-        return pgfs->gridview();
+        return pgfs->gridView();
       }
 
     private:
@@ -561,10 +561,10 @@ namespace Dune {
 	  }
 
       //! get a reference to the GridView
-	  inline const typename Traits::GridViewType& getGridView () const
-	  {
-		return pgfs->gridview();
-	  }
+      inline const typename Traits::GridViewType& getGridView () const
+      {
+        return pgfs->gridView();
+      }
 
 	private:
 	  shared_ptr<GFS const> pgfs;
@@ -680,10 +680,10 @@ namespace Dune {
 	  }
 
       //! get a reference to the GridView
-	  inline const typename Traits::GridViewType& getGridView () const
-	  {
-		return pgfs->gridview();
-	  }
+      inline const typename Traits::GridViewType& getGridView () const
+      {
+        return pgfs->gridView();
+      }
 
 	private:
 	  shared_ptr<GFS const> pgfs;

@@ -429,7 +429,7 @@ namespace Dune {
 	  PartitionDataHandle (const GFS& gfs_, V& v_) 
 		: BaseT(gfs_,v_,PartitionGatherScatter())
 	  {
-        v_ = gfs_.gridview().comm().rank();
+        v_ = gfs_.gridView().comm().rank();
       }
 	};
 

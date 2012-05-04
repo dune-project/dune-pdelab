@@ -197,7 +197,7 @@ namespace Dune {
         LocalFunctionSpace<GFS> lfs(gfs);
         LocalVector<int,AnySpaceTag> lv(gfs.maxLocalSize(), 0);
 
-        const GV &gv = gfs.gridview();
+        const GV &gv = gfs.gridView();
         const Iterator &end = gv.template end<0, Interior_Partition>();
         for(Iterator it = gv.template begin<0, Interior_Partition>();
             it != end; ++it)
