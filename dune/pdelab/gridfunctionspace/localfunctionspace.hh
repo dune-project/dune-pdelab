@@ -332,7 +332,7 @@ namespace Dune {
       template<typename NodeType>
       void setup(NodeType& node)
       {
-        _dof_index_storage.resize(gridFunctionSpace().ordering().maxLocalSize())
+        _dof_index_storage.resize(gridFunctionSpace().ordering().maxLocalSize());
         TypeTree::applyToTree(node,PropagateGlobalStorageVisitor<>());
       }
 
