@@ -514,6 +514,15 @@ namespace Dune {
         return *this;
       }
 
+      template<typename Factory, typename TreePath>
+      vtk_output_collector& add_vertex_function(Factory factory, TreePath tp, std::string name)
+      {
+        typedef typename TypeTree::extract_child_type<typename Data::LFS,TreePath>::type LFS;
+        typedef typename Factory::template create_type<LFS,Data>::type DGF;
+        _vtk_writer.addVertexData(new VTKGridFunctionAdapter<DGF>(factory.create(TypeTree::extract_child(_data->_lfs,tp),_data),name));
+        return *this;
+      }
+
       vtk_output_collector(VTKWriter& vtk_writer, const shared_ptr<Data>& data, const Predicate& predicate = Predicate())
         : _vtk_writer(vtk_writer)
         , _data(data)
