@@ -10,7 +10,7 @@ namespace Dune {
     template<typename GridFunctionSpace, typename FieldType>
     struct BackendVectorSelector
     {
-      typedef typename GridFunctionSpace::Traits::BackendType Backend;
+      typedef typename GridFunctionSpace::Traits::Backend Backend;
       typedef typename BackendVectorSelectorHelper<Backend, GridFunctionSpace, FieldType>::Type Type;
     };
 
