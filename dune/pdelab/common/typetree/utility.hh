@@ -220,7 +220,7 @@ namespace Dune {
        * template<typename T, typename F, std::size_t... i>
        * void apply_to_tuple(const T& t, F f, index_pack<i...> indices)
        * {
-       *   f(get<i>(t))...;
+       *   discard((f(get<i>(t)),0)...);
        * }
        *
        * tuple<int,double,...,char> t;
@@ -228,6 +228,7 @@ namespace Dune {
        * \endcode
        *
        * \sa tuple_indices()
+       * \sa discard()
        */
       template<std::size_t... i>
       struct index_pack {};
@@ -268,6 +269,14 @@ namespace Dune {
       {
         return typename tuple_index_pack_builder<tuple>::type();
       }
+
+      //! No-op function to make calling a function on a variadic template argument pack legal C++.
+      /**
+       * \sa index_pack
+       */
+      template<typename... Args>
+      void discard(Args&&... args)
+      {}
 
 #endif // HAVE_VARIADIC_TEMPLATES
 
