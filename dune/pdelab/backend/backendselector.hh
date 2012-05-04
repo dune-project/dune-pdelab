@@ -2,7 +2,7 @@
 #define DUNE_PDELAB_BACKENDSELECTOR_HH
 namespace Dune {
   namespace PDELab {
-    
+
     template<typename Backend, typename GridFunctionSpace, typename FieldType>
     struct BackendVectorSelectorHelper
     {};
@@ -14,7 +14,7 @@ namespace Dune {
       typedef typename BackendVectorSelectorHelper<Backend, GridFunctionSpace, FieldType>::Type Type;
     };
 
-    
+
   }
 }
 
