@@ -60,13 +60,17 @@ namespace Dune{
       };
 
       //! Constructor for non trivial constraints
-      GridOperator(const GFSU & gfsu_, const CU & cu_, const GFSV & gfsv_, const CV & cv_, LOP & lop_ )
-        : global_assembler(gfsu_,gfsv_,cu_,cv_), local_assembler(lop_, cu_, cv_)
+      GridOperator(const GFSU & gfsu_, const CU & cu_, const GFSV & gfsv_, const CV & cv_, LOP & lop_, const MB& mb_ = MB())
+        : global_assembler(gfsu_,gfsv_,cu_,cv_)
+        , local_assembler(lop_, cu_, cv_)
+        , backend(mb_)
       {}
 
       //! Constructor for empty constraints
-      GridOperator(const GFSU & gfsu_, const GFSV & gfsv_, LOP & lop_)
-        : global_assembler(gfsu_,gfsv_), local_assembler(lop_)
+      GridOperator(const GFSU & gfsu_, const GFSV & gfsv_, LOP & lop_, const MB& mb_ = MB())
+        : global_assembler(gfsu_,gfsv_)
+        , local_assembler(lop_)
+        , backend(mb_)
       {}
 
       //! Get the trial grid function space
@@ -163,6 +167,8 @@ namespace Dune{
     private:
       Assembler global_assembler;
       mutable LocalAssembler local_assembler;
+      MB backend;
+
     };
 
   }
