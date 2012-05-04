@@ -762,15 +762,19 @@ namespace Dune {
     public:
       typedef typename BaseT::Traits Traits;
 
-      LocalFunctionSpace(const GFS & gfs) : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs)) { this->setup(*this); }
+      LocalFunctionSpace(const GFS & gfs)
+        : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs))
+      {
+        this->setup(*this);
+      }
 
       LocalFunctionSpace(const LocalFunctionSpace & lfs)
         : BaseT(lfs)
       {
-        // We need to reset the global pointers in the new LFS tree,
-        // as they are still pointing to the global_storage of the
+        // We need to reset the DOFIndex storage pointers in the new LFS tree,
+        // as they are still pointing to the _dof_index_storage of the
         // old tree.
-        this->global = &(this->global_storage);
+        this->_dof_indices = &(this->_dof_index_storage);
         this->setup(*this);
       }
 
@@ -807,15 +811,19 @@ namespace Dune {
       friend struct FillIndicesVisitor;
 
     public:
-      LocalFunctionSpace(const GFS & gfs) : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs)) { this->setup(*this); }
+      LocalFunctionSpace(const GFS & gfs)
+        : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs))
+      {
+        this->setup(*this);
+      }
 
       LocalFunctionSpace(const LocalFunctionSpace & lfs)
         : BaseT(lfs)
       {
-        // We need to reset the global pointers in the new LFS tree,
-        // as they are still pointing to the global_storage of the
+        // We need to reset the DOFIndex storage pointers in the new LFS tree,
+        // as they are still pointing to the _dof_index_storage of the
         // old tree.
-        this->global = &(this->global_storage);
+        this->_dof_indices = &(this->_dof_index_storage);
         this->setup(*this);
       }
 
