@@ -58,7 +58,7 @@ namespace Dune {
     template<typename LFS, typename Data>
     class DGFTreeVectorFunction;
 
-    template<typename VTKWriter, typename GFS, typename X, typename Predicate>
+    template<typename VTKWriter, typename Data>
     struct vtk_output_collector;
 
 
@@ -73,7 +73,7 @@ namespace Dune {
       template<typename LFS, typename Data>
       friend class DGFTreeVectorFunction;
 
-      template<typename, typename, typename, typename>
+      template<typename, typename>
       friend struct vtk_output_collector;
 
       typedef LocalFunctionSpace<GFS> LFS;
@@ -88,6 +88,8 @@ namespace Dune {
 
     public:
 
+      typedef GFS GridFunctionSpace;
+      typedef X Vector;
       typedef Pred Predicate;
 
       DGFTreeCommonData(const GFS& gfs, const X& x)
@@ -101,19 +103,18 @@ namespace Dune {
 
     public:
 
-      template<typename Cell2>
-      void bind(const Cell2& cell)
+      void bind(const Cell& cell)
       {
-        //size_type cell_index = _element_mapper.map(cell);
-        //if (_current_cell_index == cell_index)
-        //  return;
+        size_type cell_index = _element_mapper.map(cell);
+        if (_current_cell_index == cell_index)
+          return;
 
         _lfs.bind(cell);
         _lfs_cache.update();
         _x_view.bind(_lfs_cache);
         _x_view.read(_x_local);
         _x_view.unbind();
-        //_current_cell_index = cell_index;
+        _current_cell_index = cell_index;
       }
 
       LFS _lfs;
@@ -485,12 +486,16 @@ namespace Dune {
       }
     };
 
-    template<typename VTKWriter, typename GFS, typename X, typename Predicate = default_predicate>
+    template<typename VTKWriter, typename Data_>
     struct vtk_output_collector
     {
 
       //! Common data container (hierarchic LFS, global solution data etc.)
-      typedef DGFTreeCommonData<GFS,X,Predicate> Data;
+      typedef Data_ Data;
+
+      typedef typename Data::GridFunctionSpace GFS;
+      typedef typename Data::Vector Vector;
+      typedef typename Data::Predicate Predicate;
 
       vtk_output_collector& add_solution(std::string base_name = "")
       {
@@ -509,9 +514,9 @@ namespace Dune {
         return *this;
       }
 
-      vtk_output_collector(VTKWriter& vtk_writer, const GFS& gfs, const X& x, const Predicate& predicate = Predicate())
+      vtk_output_collector(VTKWriter& vtk_writer, const shared_ptr<Data>& data, const Predicate& predicate = Predicate())
         : _vtk_writer(vtk_writer)
-        , _data(make_shared<Data>(gfs,x))
+        , _data(data)
         , _predicate(predicate)
       {}
 
@@ -523,9 +528,14 @@ namespace Dune {
 
 
     template<typename VTKWriter, typename GFS, typename X, typename Predicate = default_predicate>
-    vtk_output_collector<VTKWriter,GFS,X,Predicate> add_solution_to_vtk_writer(VTKWriter& vtk_writer, const GFS& gfs, const X& x, std::string base_name = "", const Predicate& predicate = Predicate())
+    vtk_output_collector<
+      VTKWriter,
+      DGFTreeCommonData<GFS,X,Predicate>
+      >
+    add_solution_to_vtk_writer(VTKWriter& vtk_writer, const GFS& gfs, const X& x, std::string base_name = "", const Predicate& predicate = Predicate())
     {
-      vtk_output_collector<VTKWriter,GFS,X,Predicate> collector(vtk_writer,gfs,x,predicate);
+      typedef DGFTreeCommonData<GFS,X,Predicate> Data;
+      vtk_output_collector<VTKWriter,Data> collector(vtk_writer,make_shared<Data>(gfs,x),predicate);
       collector.add_solution(base_name);
       return std::move(collector);
     }
