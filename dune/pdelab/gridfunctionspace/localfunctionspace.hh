@@ -229,7 +229,7 @@ namespace Dune {
     template <typename GFS, typename DOFIndex>
     class LocalFunctionSpaceBaseNode
     {
-      typedef typename GFS::Traits::BackendType B;
+      typedef typename GFS::Traits::Backend B;
 
       template<typename>
       friend struct PropagateGlobalStorageVisitor;
