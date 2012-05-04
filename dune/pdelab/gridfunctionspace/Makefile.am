@@ -17,8 +17,6 @@ gridfunctionspace_HEADERS =			\
 	localfunctionspace.hh			\
 	localfunctionspacetags.hh		\
 	localvector.hh				\
-	nonleaforderingbase.hh			\
-	orderingbase.hh				\
 	orderinginterface.hh			\
 	powercompositegridfunctionspacebase.hh	\
 	powergridfunctionspace.hh		\

@@ -10,7 +10,6 @@
 
 #include <dune/pdelab/common/typetree/powernode.hh>
 #include <dune/pdelab/gridfunctionspace/lexicographicordering.hh>
-#include <dune/pdelab/gridfunctionspace/orderingbase.hh>
 #include <dune/pdelab/gridfunctionspace/powercompositegridfunctionspacebase.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 

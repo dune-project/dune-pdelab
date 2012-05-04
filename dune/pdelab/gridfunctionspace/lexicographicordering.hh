@@ -16,9 +16,6 @@
 #include <dune/pdelab/common/typetree/powernode.hh>
 #include <dune/pdelab/common/typetree/traversal.hh>
 #include <dune/pdelab/common/typetree/visitor.hh>
-//#include <dune/pdelab/gridfunctionspace/nonleaforderingbase.hh>
-//#include <dune/pdelab/gridfunctionspace/orderingbase.hh>
-//#include <dune/pdelab/gridfunctionspace/compositeorderingutilities.hh>
 
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/orderingutility.hh>
