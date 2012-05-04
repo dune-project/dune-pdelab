@@ -270,6 +270,17 @@ namespace Dune {
         return typename tuple_index_pack_builder<tuple>::type();
       }
 
+      //! Generate an index_pack with the values {0, 1, ..., n-1}.
+      /**
+       * \tparam n The length of the index pack.
+       * \return   index_pack<0,1,...,n-1>.
+       **/
+      template<std::size_t n>
+      typename index_pack_builder<n>::type index_range()
+      {
+        return typename index_pack_builder<n>::type();
+      }
+
       //! No-op function to make calling a function on a variadic template argument pack legal C++.
       /**
        * \sa index_pack
