@@ -99,7 +99,7 @@ namespace Dune {
      *
      * extract_child(node,Dune::PDELab::TypeTree::TreePath<2,3,0>())
      *
-     * returns the first child of the third child of the second child
+     * returns the first child of the fourth child of the third child
      * of node.
      *
      * \sa Use extract_child_type to determine the type of the return
@@ -127,7 +127,7 @@ namespace Dune {
      *
      * extract_child(node,Dune::PDELab::TypeTree::TreePath<2,3,0>())
      *
-     * returns the first child of the third child of the second child
+     * returns the first child of the fourth child of the third child
      * of node.
      *
      * \sa Use extract_child_type to determine the type of the return
@@ -235,7 +235,7 @@ namespace Dune {
      *
      * extract_child_storage(node,Dune::PDELab::TypeTree::TreePath<2,3,0>())
      *
-     * returns the first child of the third child of the second child
+     * returns the first child of the fourth child of the third child
      * of node.
      *
      * \sa Use extract_child_type to determine the type of the return
@@ -255,16 +255,16 @@ namespace Dune {
     {}
 
     //! Extract the storage for the child of a node located at tp
-    //! (non-const version).
+    //! (const version).
     /**
-     * Use this function to extract the storage (usually a shared_ptr)
+     * Use this function to extract the const storage (usually a shared_ptr)
      * of a (possibly indirect) child of a TypeTree node.
      *
      * Example:
      *
      * extract_child_storage(node,Dune::PDELab::TypeTree::TreePath<2,3,0>())
      *
-     * returns the first child of the third child of the second child
+     * returns the first child of the foruth child of the third child
      * of node.
      *
      * \sa Use extract_child_type to determine the type of the return
