@@ -425,6 +425,9 @@ namespace Dune {
 
       public:
 
+        typedef typename C::field_type E;
+        typedef E ElementType;
+
         typedef RowCache RowIndexCache;
         typedef ColCache ColIndexCache;
 
