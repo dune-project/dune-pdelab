@@ -234,8 +234,8 @@ namespace Dune {
 
       //! TMP to build an index_pack containing the sequence 0,...,n-1.
       template<std::size_t n, std::size_t... i>
-      struct build_index_pack
-        : public build_index_pack<n-1,n-1,i...>
+      struct index_pack_builder
+        : public index_pack_builder<n-1,n-1,i...>
       {
 
 #ifdef DOXYGEN
@@ -249,7 +249,7 @@ namespace Dune {
 
       // end of recursion
       template<std::size_t... i>
-      struct build_index_pack<0,i...>
+      struct index_pack_builder<0,i...>
       {
         typedef index_pack<i...> type;
       };
@@ -258,15 +258,15 @@ namespace Dune {
 
       //! TMP to build an index_pack for all elements in the tuple.
       template<typename tuple>
-      struct build_tuple_index_pack
-        : public build_index_pack<tuple_size<tuple>::value>
+      struct tuple_index_pack_builder
+        : public index_pack_builder<tuple_size<tuple>::value>
       {};
 
       //! Generate an index_pack for the tuple t.
       template<typename tuple>
-      typename build_tuple_index_pack<tuple>::type tuple_indices(const tuple& t)
+      typename tuple_index_pack_builder<tuple>::type tuple_indices(const tuple& t)
       {
-        return typename build_tuple_index_pack<tuple>::type();
+        return typename tuple_index_pack_builder<tuple>::type();
       }
 
 #endif // HAVE_VARIADIC_TEMPLATES
