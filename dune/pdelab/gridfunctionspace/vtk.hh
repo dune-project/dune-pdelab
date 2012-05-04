@@ -15,7 +15,42 @@
 #include <dune/pdelab/common/elementmapper.hh>
 
 namespace Dune {
+
+  template<typename GV>
+  class VTKWriter;
+
+  template<typename GV>
+  class SubsamplingVTKWriter;
+
+  template<typename GV>
+  class VTKSequenceWriter;
+
   namespace PDELab {
+
+    namespace {
+
+      template<typename VTKWriter>
+      struct vtk_writer_traits;
+
+      template<typename GV>
+      struct vtk_writer_traits<Dune::VTKWriter<GV> >
+      {
+        typedef GV GridView;
+      };
+
+      template<typename GV>
+      struct vtk_writer_traits<Dune::SubsamplingVTKWriter<GV> >
+      {
+        typedef GV GridView;
+      };
+
+      template<typename GV>
+      struct vtk_writer_traits<Dune::VTKSequenceWriter<GV> >
+      {
+        typedef GV GridView;
+      };
+
+    }
 
     template<typename LFS, typename Data>
     class DGFTreeLeafFunction;
@@ -23,12 +58,12 @@ namespace Dune {
     template<typename LFS, typename Data>
     class DGFTreeVectorFunction;
 
-    template<typename VTKWriter, typename GFS, typename X>
+    template<typename VTKWriter, typename GFS, typename X, typename Predicate>
     struct vtk_output_collector;
 
 
     //! Helper class for common data of a DGFTree.
-    template<typename GFS, typename X>
+    template<typename GFS, typename X, typename Pred>
     class DGFTreeCommonData
     {
 
@@ -38,7 +73,7 @@ namespace Dune {
       template<typename LFS, typename Data>
       friend class DGFTreeVectorFunction;
 
-      template<typename, typename, typename>
+      template<typename, typename, typename, typename>
       friend struct vtk_output_collector;
 
       typedef LocalFunctionSpace<GFS> LFS;
@@ -53,6 +88,8 @@ namespace Dune {
 
     public:
 
+      typedef Pred Predicate;
+
       DGFTreeCommonData(const GFS& gfs, const X& x)
         : _lfs(gfs)
         , _lfs_cache(_lfs)
@@ -64,18 +101,19 @@ namespace Dune {
 
     public:
 
-      void bind(const Cell& cell)
+      template<typename Cell2>
+      void bind(const Cell2& cell)
       {
-        size_type cell_index = _element_mapper.map(cell);
-        if (_current_cell_index == cell_index)
-          return;
+        //size_type cell_index = _element_mapper.map(cell);
+        //if (_current_cell_index == cell_index)
+        //  return;
 
         _lfs.bind(cell);
         _lfs_cache.update();
         _x_view.bind(_lfs_cache);
         _x_view.read(_x_local);
         _x_view.unbind();
-        _current_cell_index = cell_index;
+        //_current_cell_index = cell_index;
       }
 
       LFS _lfs;
@@ -294,10 +332,11 @@ namespace Dune {
       struct VisitChild
       {
 
-        //! Do not descend into children of VectorGridFunctionSpace
-        static const bool value = !is_same<
-          typename LFS::Traits::GridFunctionSpace::ImplementationTag,
-          VectorGridFunctionSpaceTag
+        static const bool value =
+          // Do not descend into children of VectorGridFunctionSpace
+          !is_same<
+            typename LFS::Traits::GridFunctionSpace::ImplementationTag,
+            VectorGridFunctionSpaceTag
           >::value;
 
       };
@@ -360,43 +399,103 @@ namespace Dune {
         // do nothing here - not a vector space
       }
 
+      // **********************************************************************
+      // Visitor functions for adding DiscreteGridFunctions to VTKWriter
+      //
+      // The visitor functions contain a switch that will make them ignore
+      // function spaces with a different underlying GridView type than
+      // the VTKWriter.
+      // This cannot happen in vanilla PDELab, but is required for MultiDomain
+      // support
+      // **********************************************************************
+
+      // don't do anything if GridView types differ
+      template<typename LFS, typename TreePath>
+      typename enable_if<
+        !is_same<
+          typename LFS::Traits::GridFunctionSpace::Traits::GridView,
+          typename vtk_writer_traits<VTKWriter>::GridView
+          >::value
+        >::type
+      post(const LFS& lfs, TreePath tp)
+      {
+      }
+
+      // don't do anything if GridView types differ
+      template<typename LFS, typename TreePath>
+      typename enable_if<
+        !is_same<
+          typename LFS::Traits::GridFunctionSpace::Traits::GridView,
+          typename vtk_writer_traits<VTKWriter>::GridView
+          >::value
+        >::type
+      leaf(const LFS& lfs, TreePath tp)
+      {
+      }
+
       //! Handle VectorGridFunctionSpace components in here.
       template<typename LFS, typename TreePath>
-      void post(const LFS& lfs, TreePath tp)
+      typename enable_if<
+        is_same<
+          typename LFS::Traits::GridFunctionSpace::Traits::GridView,
+          typename vtk_writer_traits<VTKWriter>::GridView
+          >::value
+        >::type
+      post(const LFS& lfs, TreePath tp)
       {
-        add_vector_solution(lfs,tp,typename LFS::Traits::GridFunctionSpace::ImplementationTag());
+        if (predicate(lfs))
+          add_vector_solution(lfs,tp,typename LFS::Traits::GridFunctionSpace::ImplementationTag());
       }
 
       //! Create a standard leaf function for leaf GridFunctionSpaces.
       template<typename LFS, typename TreePath>
-      void leaf(const LFS& lfs, TreePath tp)
+      typename enable_if<
+        is_same<
+          typename LFS::Traits::GridFunctionSpace::Traits::GridView,
+          typename vtk_writer_traits<VTKWriter>::GridView
+          >::value
+        >::type
+      leaf(const LFS& lfs, TreePath tp)
       {
-        add_to_vtk_writer(make_shared<DGFTreeLeafFunction<LFS,Data> >(lfs,data),tp);
+        if (predicate(lfs))
+          add_to_vtk_writer(make_shared<DGFTreeLeafFunction<LFS,Data> >(lfs,data),tp);
       }
 
 
-      add_solution_to_vtk_writer_visitor(VTKWriter& vtk_writer_, shared_ptr<Data> data_, std::string base_name_)
+      add_solution_to_vtk_writer_visitor(VTKWriter& vtk_writer_, shared_ptr<Data> data_, std::string base_name_, const typename Data::Predicate& predicate_)
         : vtk_writer(vtk_writer_)
         , data(data_)
         , base_name(base_name_)
+        , predicate(predicate_)
       {}
 
       VTKWriter& vtk_writer;
       shared_ptr<Data> data;
       std::string base_name;
+      typename Data::Predicate predicate;
 
     };
 
-    template<typename VTKWriter, typename GFS, typename X>
+    struct default_predicate
+    {
+      template<typename T>
+      bool operator()(const T& t) const
+      {
+        return true;
+      }
+    };
+
+    template<typename VTKWriter, typename GFS, typename X, typename Predicate = default_predicate>
     struct vtk_output_collector
     {
 
       //! Common data container (hierarchic LFS, global solution data etc.)
-      typedef DGFTreeCommonData<GFS,X> Data;
+      typedef DGFTreeCommonData<GFS,X,Predicate> Data;
 
       vtk_output_collector& add_solution(std::string base_name = "")
       {
-        add_solution_to_vtk_writer_visitor<VTKWriter,Data> visitor(_vtk_writer,_data,base_name);
+
+        add_solution_to_vtk_writer_visitor<VTKWriter,Data> visitor(_vtk_writer,_data,base_name,_predicate);
         TypeTree::applyToTree(_data->_lfs,visitor);
         return *this;
       }
@@ -410,21 +509,23 @@ namespace Dune {
         return *this;
       }
 
-      vtk_output_collector(VTKWriter& vtk_writer, const GFS& gfs, const X& x)
+      vtk_output_collector(VTKWriter& vtk_writer, const GFS& gfs, const X& x, const Predicate& predicate = Predicate())
         : _vtk_writer(vtk_writer)
         , _data(make_shared<Data>(gfs,x))
+        , _predicate(predicate)
       {}
 
       VTKWriter& _vtk_writer;
       shared_ptr<Data> _data;
+      Predicate _predicate;
 
     };
 
 
-    template<typename VTKWriter, typename GFS, typename X>
-    vtk_output_collector<VTKWriter,GFS,X> add_solution_to_vtk_writer(VTKWriter& vtk_writer, const GFS& gfs, const X& x, std::string base_name = "")
+    template<typename VTKWriter, typename GFS, typename X, typename Predicate = default_predicate>
+    vtk_output_collector<VTKWriter,GFS,X,Predicate> add_solution_to_vtk_writer(VTKWriter& vtk_writer, const GFS& gfs, const X& x, std::string base_name = "", const Predicate& predicate = Predicate())
     {
-      vtk_output_collector<VTKWriter,GFS,X> collector(vtk_writer,gfs,x);
+      vtk_output_collector<VTKWriter,GFS,X,Predicate> collector(vtk_writer,gfs,x,predicate);
       collector.add_solution(base_name);
       return std::move(collector);
     }
