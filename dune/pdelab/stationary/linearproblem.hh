@@ -18,7 +18,7 @@ namespace Dune {
     class StationaryLinearProblemSolver
     {
       typedef typename V::ElementType Real;
-      typedef typename GOS::template MatrixContainer<Real>::Type M;
+      typedef typename GOS::Traits::Jacobian M;
       typedef typename GOS::Traits::TrialGridFunctionSpace TrialGridFunctionSpace;
       typedef typename Dune::PDELab::BackendVectorSelector<TrialGridFunctionSpace,Real>::Type W;
       
