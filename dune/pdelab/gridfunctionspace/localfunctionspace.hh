@@ -249,7 +249,7 @@ namespace Dune {
       //! \brief construct from global function space
       LocalFunctionSpaceBaseNode (shared_ptr<const GFS> gfs)
         : pgfs(gfs)
-        , _dof_index_storage(gfs->maxLocalSize())
+        , _dof_index_storage()
         , _dof_indices(&_dof_index_storage)
         , n(0)
       {}
@@ -332,6 +332,7 @@ namespace Dune {
       template<typename NodeType>
       void setup(NodeType& node)
       {
+        _dof_index_storage.resize(gridFunctionSpace().ordering().maxLocalSize())
         TypeTree::applyToTree(node,PropagateGlobalStorageVisitor<>());
       }
 
