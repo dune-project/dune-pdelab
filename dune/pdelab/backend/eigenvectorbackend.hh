@@ -17,6 +17,10 @@ namespace Dune {
       static const int BlockSize = 1;
 
       //! container construction
+      /*
+        \todo 1. Documentation
+        \todo 2. remove template parameter T
+       */
       template<typename T, typename E>
         class VectorContainer : public Eigen::VectorXd
       {
