@@ -24,7 +24,7 @@ namespace Dune {
 
   template<class PreconditionerImp>
     class EigenBackend_BiCGSTAB_Base
-      : public SequentialNorm, public LinearResultStorage
+      : public LinearResultStorage
     {
     public:
       /*! \brief make a linear solver object
@@ -61,6 +61,13 @@ namespace Dune {
         res.elapsed    = elapsed;
         res.reduction  = solver.error();
         res.conv_rate  = 0;
+      }
+
+    public:
+      template<class V>
+      typename Dune::template FieldTraits<typename V::ElementType >::real_type norm(const V& v) const
+      {
+        return v.base().norm();
       }
 
     private:

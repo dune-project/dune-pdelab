@@ -5,22 +5,28 @@
 
 #if HAVE_EIGEN
 
+#include "eigenmatrixbackend.hh"
 #include <Eigen/Dense>
 
 namespace Dune {
   namespace PDELab {
 
-    //! ISTL backend for FunctionSpace
+    /** Eigen backend for FunctionSpace
+     *
+     * In order to use this backend, the development release of Eigen needs to be installed.
+     * Tested with Development Release 3.1.0-alpha2
+     * (available at http://bitbucket.org/eigen/eigen/get/3.1.0-alpha2.tar.bz2)
+     *
+     */
     class EigenVectorBackend
     {
     public:
+      //! There is no block size support in Eigen, so block size 1 is fixed.
       static const int BlockSize = 1;
 
-      //! container construction
-      /*
-        \todo 1. Documentation
-        \todo 2. remove template parameter T
-       */
+      //! the compatible matrix backend
+      typedef SparseEigenMatrixBackend MatrixBackend;
+
       template<typename T, typename E>
         class VectorContainer : public Eigen::VectorXd
       {
