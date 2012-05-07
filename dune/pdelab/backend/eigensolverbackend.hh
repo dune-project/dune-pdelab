@@ -8,6 +8,8 @@
 
 #include <dune/pdelab/constraints/constraints.hh>
 
+#include "solver.hh"
+
 #if HAVE_EIGEN
 
 #include <Eigen/Eigen>
