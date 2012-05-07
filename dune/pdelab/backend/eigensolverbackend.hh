@@ -66,15 +66,15 @@ namespace Dune {
       int verbose;
     };
 
-    class EigenBackend_BiCGSTAB_IILU
-      : public EigenBackend_BiCGSTAB_Base<Eigen::IncompleteLUT<double> >
-    {
-    public:
-        explicit EigenBackend_BiCGSTAB_IILU(unsigned maxiter_=5000)
-          : EigenBackend_BiCGSTAB_Base(maxiter_)
-        {
-        }
-    };
+    // class EigenBackend_BiCGSTAB_IILU
+    //   : public EigenBackend_BiCGSTAB_Base<Eigen::IncompleteLUT<double> >
+    // {
+    // public:
+    //     explicit EigenBackend_BiCGSTAB_IILU(unsigned maxiter_=5000)
+    //       : EigenBackend_BiCGSTAB_Base(maxiter_)
+    //     {
+    //     }
+    // };
 
     class EigenBackend_BiCGSTAB_Diagonal
       : public EigenBackend_BiCGSTAB_Base<Eigen::DiagonalPreconditioner<double> >
@@ -132,14 +132,14 @@ namespace Dune {
     };
 
 
-    class EigenBackend_CG_IILU_Up
-      : public EigenBackend_CG_Base<Eigen::IncompleteLUT<double>, Eigen::Upper >
-    {
-    public:
-        explicit EigenBackend_CG_IILU_Up(unsigned maxiter_=5000)
-          : EigenBackend_CG_Base(maxiter_)
-        {}
-    };
+    // class EigenBackend_CG_IILU_Up
+    //   : public EigenBackend_CG_Base<Eigen::IncompleteLUT<double>, Eigen::Upper >
+    // {
+    // public:
+    //     explicit EigenBackend_CG_IILU_Up(unsigned maxiter_=5000)
+    //       : EigenBackend_CG_Base(maxiter_)
+    //     {}
+    // };
 
     class EigenBackend_CG_Diagonal_Up
       : public EigenBackend_CG_Base<Eigen::DiagonalPreconditioner<double>, Eigen::Upper >
@@ -150,14 +150,14 @@ namespace Dune {
         {}
     };
 
-    class EigenBackend_CG_IILU_Lo
-      : public EigenBackend_CG_Base<Eigen::IncompleteLUT<double>, Eigen::Lower >
-    {
-    public:
-        explicit EigenBackend_CG_IILU_Lo(unsigned maxiter_=5000)
-          : EigenBackend_CG_Base(maxiter_)
-        {}
-    };
+    // class EigenBackend_CG_IILU_Lo
+    //   : public EigenBackend_CG_Base<Eigen::IncompleteLUT<double>, Eigen::Lower >
+    // {
+    // public:
+    //     explicit EigenBackend_CG_IILU_Lo(unsigned maxiter_=5000)
+    //       : EigenBackend_CG_Base(maxiter_)
+    //     {}
+    // };
 
     class EigenBackend_CG_Diagonal_Lo
       : public EigenBackend_CG_Base<Eigen::DiagonalPreconditioner<double>, Eigen::Lower >
