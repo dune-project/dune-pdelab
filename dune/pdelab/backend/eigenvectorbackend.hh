@@ -100,6 +100,12 @@ namespace Dune {
         }
     };
 
+    template<typename T, typename E>
+    struct BackendVectorSelectorHelper<EigenVectorBackend,T,E>
+    {
+        typedef EigenVectorBackend::VectorContainer<T,E> Type;
+    };
+
   } // namespace PDELab
 } // namespace Dune
 
