@@ -6,10 +6,7 @@
 #include <dune/common/deprecated.hh>
 #include <dune/common/mpihelper.hh>
 
-#include <dune/pdelab/gridfunctionspace/constraints.hh>
-#include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
-#include <dune/pdelab/newton/newton.hh>
-#include <dune/pdelab/backend/seqistlsolverbackend.hh>
+#include <dune/pdelab/constraints/constraints.hh>
 
 #if HAVE_EIGEN
 

@@ -5,10 +5,6 @@
 #include <vector>
 #include <set>
 
-#include<dune/common/fmatrix.hh>
-#include<dune/istl/bvector.hh>
-#include<dune/istl/bcrsmatrix.hh>
-
 #if HAVE_EIGEN
 
 #include <Eigen/Sparse>
