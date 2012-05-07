@@ -19,7 +19,7 @@
 
 #include "../constraints/constraints.hh"
 #include "../gridfunctionspace/genericdatahandle.hh"
-#include "../newton/newton.hh"
+#include "solver.hh"
 #include "istlvectorbackend.hh"
 #include "parallelistlhelper.hh"
 
