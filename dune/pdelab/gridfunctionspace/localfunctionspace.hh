@@ -718,7 +718,7 @@ namespace Dune {
 
         for (local_col_iterator cit=lc.begin(); cit!=lc.end(); ++cit)
           {
-            typename Traits::SizeType i = globalIndex(cit->first);
+            typename Traits::SizeType i = this->globalIndex(cit->first);
             // insert empty row in global container if necessary
             global_col_iterator gcit = gc.find(i);
             if (gcit==gc.end())
@@ -726,7 +726,7 @@ namespace Dune {
 
             // copy row to global container with transformed indices
             for (local_row_iterator rit=(cit->second).begin(); rit!=(cit->second).end(); ++rit)
-              gc[i][globalIndex(rit->first)] = rit->second;
+              gc[i][this->globalIndex(rit->first)] = rit->second;
           }
       }
 
