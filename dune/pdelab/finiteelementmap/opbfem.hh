@@ -15,6 +15,8 @@ namespace Dune {
       : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::OPBLocalFiniteElement<D,R,k,d,bt,ComputationFieldType> >
     {
 
+    public:
+
       bool fixedSize() const
       {
         return true;
