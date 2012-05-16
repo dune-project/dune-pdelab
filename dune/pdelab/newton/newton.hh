@@ -60,7 +60,7 @@ namespace Dune
             typedef TstV TestVector;
 
             typedef typename TestVector::ElementType RFType;
-            typedef typename GOS::template MatrixContainer<RFType>::Type Matrix;
+            typedef typename GOS::Traits::Jacobian Matrix;
 
             typedef NewtonResult<RFType> Result;
 
@@ -117,7 +117,7 @@ namespace Dune
             typedef TstV TestVector;
 
             typedef typename TestVector::ElementType RFType;
-            typedef typename GOS::template MatrixContainer<RFType>::Type Matrix;
+            typedef typename GOS::Traits::Jacobian Matrix;
 
         public:
             typedef NewtonResult<RFType> Result;
@@ -394,7 +394,7 @@ namespace Dune
             typedef TrlV TrialVector;
 
             typedef typename TstV::ElementType RFType;
-            typedef typename GOS::template MatrixContainer<RFType>::Type Matrix;
+            typedef typename GOS::Traits::Jacobian Matrix;
 
         public:
             NewtonPrepareStep(GridOperator& go, TrialVector& u_)
