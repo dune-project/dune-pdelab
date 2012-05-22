@@ -2,11 +2,13 @@
 #ifndef DUNE_PDELAB_DIFFUSIONDG_HH
 #define DUNE_PDELAB_DIFFUSIONDG_HH
 
-#include<dune/common/exceptions.hh>
-#include<dune/common/fvector.hh>
-#include<dune/common/static_assert.hh>
-#include<dune/geometry/quadraturerules.hh>
-#include<dune/geometry/referenceelements.hh>
+#include <dune/common/exceptions.hh>
+#include <dune/common/fvector.hh>
+#include <dune/common/static_assert.hh>
+#include <dune/geometry/quadraturerules.hh>
+#include <dune/geometry/referenceelements.hh>
+
+#include <dune/pdelab/localoperator/defaultimp.hh>
 
 #include "../common/geometrywrapper.hh"
 #include "../gridoperatorspace/gridoperatorspace.hh"
