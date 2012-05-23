@@ -55,6 +55,7 @@ AC_CONFIG_FILES([
   dune/pdelab/newton/Makefile
   dune/pdelab/stationary/Makefile
   dune/pdelab/test/Makefile
+  lib/Makefile
   m4/Makefile
   Makefile
 ])
