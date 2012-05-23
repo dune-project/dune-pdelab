@@ -13,6 +13,7 @@ common_HEADERS =				\
 	geometrywrapper.hh			\
 	hostname.hh				\
 	jacobiantocurl.hh			\
+	logtag.hh				\
 	multiindex.hh				\
 	range.hh				\
 	typetree.hh                             \
@@ -22,7 +23,8 @@ common_HEADERS =				\
 noinst_LTLIBRARIES = libpdelabcommon.la
 libpdelabcommon_la_SOURCES =			\
 	clock.cc				\
-	hostname.cc
+	hostname.cc				\
+	logtag.cc
 libpdelabcommon_la_LIBADD =			\
 	-lrt
 
