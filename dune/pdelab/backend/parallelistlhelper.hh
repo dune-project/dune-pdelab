@@ -21,7 +21,6 @@
 
 #include "../constraints/constraints.hh"
 #include "../gridfunctionspace/genericdatahandle.hh"
-#include "../newton/newton.hh"
 #include "istlvectorbackend.hh"
 
 namespace Dune {

@@ -21,9 +21,6 @@
 #include <dune/istl/solvers.hh>
 #include <dune/istl/superlu.hh>
 
-#include "../constraints/constraints.hh"
-#include "../gridfunctionspace/genericdatahandle.hh"
-#include "../newton/newton.hh"
 #include "istlvectorbackend.hh"
 #include "parallelistlhelper.hh"
 #include "seqistlsolverbackend.hh"
