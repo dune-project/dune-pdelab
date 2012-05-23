@@ -1,6 +1,8 @@
 #ifndef DUNE_PDELAB_BACKEND_SOLVER_HH
 #define DUNE_PDELAB_BACKEND_SOLVER_HH
 
+#include<dune/common/fvector.hh>
+
 namespace Dune {
   namespace PDELab {
 
