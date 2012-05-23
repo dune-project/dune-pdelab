@@ -11,6 +11,7 @@ common_HEADERS =				\
 	functionutilities.hh			\
 	functionwrappers.hh			\
 	geometrywrapper.hh			\
+	hostname.hh				\
 	jacobiantocurl.hh			\
 	multiindex.hh				\
 	range.hh				\
@@ -20,7 +21,8 @@ common_HEADERS =				\
 
 noinst_LTLIBRARIES = libpdelabcommon.la
 libpdelabcommon_la_SOURCES =			\
-	clock.cc
+	clock.cc				\
+	hostname.cc
 libpdelabcommon_la_LIBADD =			\
 	-lrt
 
