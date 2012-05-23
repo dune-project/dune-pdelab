@@ -5,6 +5,8 @@
 #define DUNE_PDELAB_COMMON_LOGTAG_HH
 
 #include <ostream>
+#include <sstream>
+#include <string>
 
 #include <dune/common/shared_ptr.hh>
 
@@ -148,6 +150,54 @@ int main() {
 
       ~WithLogtag();
     };
+
+    //! Insert standard boilerplate into log messages
+    /**
+     * This class can be used to create your own logtag locally, e.g. inside a
+     * function.  When inserted into a std::ostream, it will insert the
+     * standard logtag and some static boilerplate string.  The boilerplate
+     * string can be constructed by inserting into the localtag itself.
+     * Sample usage:
+     * \code
+void myfunc() {
+  LocalTag mytag;
+  mytag << "myfunc(): ";
+  std::cout << mytag << "Starting..." << std::endl;
+
+  for(unsigned stage = 0; stage < 42; ++stage) {
+    LocalTag stagetag(mytag);
+    stagetag << "stage " << stage << ": ";
+    std::cout << stagetag << "Starting... << std::endl;
+
+    do_somethin(stage);
+
+    std::cout << stagetag << "Finished." << std::endl;
+  }
+
+  std::cout << mytag << "Finished." << std::endl;
+}
+     * \endcode
+     */
+    class LocalTag {
+      std::string str_;
+
+    public:
+      //! extract the static boilerplate message
+      inline const std::string &str() const { return str_; }
+
+      //! append something to the static boilerplate message
+      template<class V>
+      LocalTag &operator<<(const V &v) {
+        std::stringstream s;
+        s << v;
+        str_ += s.str();
+        return *this;
+      }
+    };
+
+    //! insert a localtag into a std::ostream
+    inline std::ostream &operator<<(std::ostream &s, const LocalTag &tag)
+    { return s << logtag << tag.str(); }
 
   } // namespace PDELab
 } // namespace Dune
