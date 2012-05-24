@@ -320,9 +320,85 @@ namespace Dune {
     };
 
 
+    class DefaultVTKFunctionNameGenerator
+    {
+
+    public:
+
+      template<typename TreePath>
+      std::string operator()(std::string component_name, TreePath tp) const
+      {
+        if (component_name.empty())
+          {
+
+            if (_prefix.empty() && _suffix.empty())
+              {
+                DUNE_THROW(IOError,
+                           "You need to either name all GridFunctionSpaces "
+                           "written to the VTK file or provide a prefix / suffix.");
+              }
+
+            std::stringstream name_stream;
+
+            if (!_prefix.empty())
+              name_stream << _prefix << _separator;
+
+            // Build a simple name based on the component's TreePath (e.g. 0_2_3)
+            for (std::size_t i = 0; i < tp.size(); ++i)
+              name_stream << (i > 0 ? _separator : "") << tp.element(i);
+
+            if (!_suffix.empty())
+              name_stream << _separator << _suffix;
+            return name_stream.str();
+          }
+        else
+          {
+            // construct name from prefix, component name and suffix
+            return _prefix + component_name + _suffix;
+          }
+      }
+
+      DefaultVTKFunctionNameGenerator& prefix(std::string prefix)
+      {
+        _prefix = prefix;
+        return *this;
+      }
+
+      DefaultVTKFunctionNameGenerator& suffix(std::string suffix)
+      {
+        _suffix = suffix;
+        return *this;
+      }
+
+      DefaultVTKFunctionNameGenerator& separator(std::string separator)
+      {
+        _separator = separator;
+        return *this;
+      }
+
+      DefaultVTKFunctionNameGenerator(std::string prefix = "",
+                                      std::string suffix = "",
+                                      std::string separator = "_")
+        : _prefix(prefix)
+        , _suffix(suffix)
+        , _separator(separator)
+      {}
+
+    private:
+
+      std::string _prefix;
+      std::string _suffix;
+      std::string _separator;
+
+    };
+
+    inline DefaultVTKFunctionNameGenerator default_vtk_name_scheme()
+    {
+      return DefaultVTKFunctionNameGenerator();
+    }
 
 
-    template<typename VTKWriter, typename Data>
+    template<typename VTKWriter, typename Data, typename NameGenerator>
     struct add_solution_to_vtk_writer_visitor
       : public TypeTree::DefaultVisitor
       , public TypeTree::DynamicTraversal
@@ -347,26 +423,7 @@ namespace Dune {
       template<typename DGF, typename TreePath>
       void add_to_vtk_writer(const shared_ptr<DGF>& dgf, TreePath tp)
       {
-        std::string name(dgf->localFunctionSpace().gridFunctionSpace().name());
-        if (name.empty())
-          {
-
-            if (base_name.empty())
-              {
-                DUNE_THROW(IOError,
-                           "You need to either name all GridFunctionSpaces "
-                           "written to the VTK file or provide a base name.");
-              }
-
-            std::stringstream name_stream;
-
-            name_stream << base_name;
-
-            // Build a simple name based on the component's TreePath (e.g. 0_2_3)
-            for (std::size_t i = 0; i < tp.size(); ++i)
-              name_stream << "_" << tp.element(i);
-            name = name_stream.str();
-          }
+        std::string name = name_generator(dgf->localFunctionSpace().gridFunctionSpace().name(),tp);
         switch (dgf->dataSetType())
           {
           case DGF::Output::vertexData:
@@ -463,16 +520,16 @@ namespace Dune {
       }
 
 
-      add_solution_to_vtk_writer_visitor(VTKWriter& vtk_writer_, shared_ptr<Data> data_, std::string base_name_, const typename Data::Predicate& predicate_)
+      add_solution_to_vtk_writer_visitor(VTKWriter& vtk_writer_, shared_ptr<Data> data_, const NameGenerator& name_generator_, const typename Data::Predicate& predicate_)
         : vtk_writer(vtk_writer_)
         , data(data_)
-        , base_name(base_name_)
+        , name_generator(name_generator_)
         , predicate(predicate_)
       {}
 
       VTKWriter& vtk_writer;
       shared_ptr<Data> data;
-      std::string base_name;
+      const NameGenerator& name_generator;
       typename Data::Predicate predicate;
 
     };
@@ -497,10 +554,11 @@ namespace Dune {
       typedef typename Data::Vector Vector;
       typedef typename Data::Predicate Predicate;
 
-      vtk_output_collector& add_solution(std::string base_name = "")
+      template<typename NameGenerator>
+      vtk_output_collector& add_solution(const NameGenerator& name_generator)
       {
 
-        add_solution_to_vtk_writer_visitor<VTKWriter,Data> visitor(_vtk_writer,_data,base_name,_predicate);
+        add_solution_to_vtk_writer_visitor<VTKWriter,Data,NameGenerator> visitor(_vtk_writer,_data,name_generator,_predicate);
         TypeTree::applyToTree(_data->_lfs,visitor);
         return *this;
       }
@@ -536,16 +594,24 @@ namespace Dune {
     };
 
 
-    template<typename VTKWriter, typename GFS, typename X, typename Predicate = default_predicate>
+    template<typename VTKWriter,
+             typename GFS,
+             typename X,
+             typename NameGenerator = DefaultVTKFunctionNameGenerator,
+             typename Predicate = default_predicate>
     vtk_output_collector<
       VTKWriter,
       DGFTreeCommonData<GFS,X,Predicate>
       >
-    add_solution_to_vtk_writer(VTKWriter& vtk_writer, const GFS& gfs, const X& x, std::string base_name = "", const Predicate& predicate = Predicate())
+    add_solution_to_vtk_writer(VTKWriter& vtk_writer,
+                               const GFS& gfs,
+                               const X& x,
+                               const NameGenerator& name_generator = default_vtk_name_scheme(),
+                               const Predicate& predicate = Predicate())
     {
       typedef DGFTreeCommonData<GFS,X,Predicate> Data;
       vtk_output_collector<VTKWriter,Data> collector(vtk_writer,make_shared<Data>(gfs,x),predicate);
-      collector.add_solution(base_name);
+      collector.add_solution(name_generator);
       return std::move(collector);
     }
 
