@@ -462,7 +462,7 @@ namespace Dune {
                   if(full_tensor)
                     for(int dd=0; dd<dim; ++dd){
                       const LFSU_V & lfsu_v = lfsu_v_pfs.child(dd);
-                      mat.accumulate(lfsv_v,i,lfsu_v,j, mu * (gradphi[j][dd] * gradphi[i][d]) * factor);
+                      mat.accumulate(lfsv_v,i,lfsu_v,j, mu * (gradphi[j][d] * gradphi[i][dd]) * factor);
                     }
 
                 }
