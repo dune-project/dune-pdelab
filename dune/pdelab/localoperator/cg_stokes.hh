@@ -44,7 +44,7 @@ namespace Dune {
         utilizes only scalar Neumann conditions.
 
         \tparam P A suitable parameter class with the interface of
-        TaylorHoodNavierStokesDefaultParameters
+        NavierStokesDefaultParameters
 
         \tparam navier May be set to false, to avoid assembling of
         navier term in case rho=0.
