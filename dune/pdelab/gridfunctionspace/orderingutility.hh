@@ -10,6 +10,8 @@
 #include <dune/pdelab/common/typetree/traversal.hh>
 #include <dune/pdelab/common/typetree/accumulate_static.hh>
 
+#include "localfunctionspace.hh"
+
 namespace Dune {
   namespace PDELab {
 
