@@ -16,17 +16,20 @@ namespace Dune {
         \tparam F Momentum source term function
         \tparam B Boundary condition function
         \tparam V Dirichlet velocity boundary condition function
-        \tparam P Dirichlet pressure boundary condition function
+        \tparam J Neumann stress boundary function (vector- or scalar-valued).
+                  Scalar values will be interpreted as the magnitude of a vector
+                  oriented in outer normal direction.
+                  For prescribed pressure you can use $J=p \cdot n$.
         \tparam IP A class providing the interior penalty factor for each face
     */
-    template<typename GV, typename RF_, typename F, typename B, typename V, typename P,
+    template<typename GV, typename RF, typename F, typename B, typename V, typename J,
              typename IP = DefaultInteriorPenalty<typename V::Traits::RangeFieldType> >
-    class NavierStokesDGParameters
-      : public NavierStokesParameters<GV,RF,F,B,V,P>
+    class StokesDGParameters
+      : public NavierStokesDefaultParameters<GV,RF,F,B,V,J>
     {
     private:
 
-      typedef NavierStokesParameters<GV,RF,F,B,V,P> Base;
+      typedef NavierStokesDefaultParameters<GV,RF,F,B,V,J> Base;
 
       void initFromString(const std::string & method)
       {
@@ -36,52 +39,58 @@ namespace Dune {
         // nipg (epsilon=1) 2d p1 -> Klaus sagt sollte auch sigma 1 klappen
         if (s.find("nipg") != std::string::npos)
           {
-            epsilon = 1;
+            _epsilon = 1;
             return;
           }
         // sipg (epsilon=-1) 2d p1 -> Klaus sagt sigma=3.9irgendwas
         if (s.find("sipg") != std::string::npos)
           {
-            epsilon = -1;
+            _epsilon = -1;
             return;
           }
         // obb sigma = 0, epsilon =
         if (s == "obb")
           {
-            epsilon = 1;
+            _epsilon = 1;
             return;
           }
         // extract parameters
         {
           double sigma, beta;
-          if (3 == sscanf(s.c_str(), "%d %lg %lg", &epsilon, &sigma, &beta))
+          if (3 == sscanf(s.c_str(), "%d %lg %lg", &_epsilon, &sigma, &beta))
             return;
         }
         DUNE_THROW(Dune::Exception, "Unknown DG type " << method);
       }
 
+    protected:
+      StokesDGParameters(const std::string & method, const RF mu, const RF rho,
+                         F & f, B & b, V & v, J & j, IP & ip)
+        : Base(mu,rho,f,b,v,j),
+          _ip(ip)
+      {
+        initFromString(method);
+      }
 
+      
     public:
 
       //! Traits class
       typedef typename Base::Traits Traits;
 
-      //! Common range field type
-      typedef typename Traits::RangeFieldType RF;
-
-      StokesDGParameters(const std::string & method, const RF mu_,
-                         F & ff_, B & bf_, V & vf_, P & pf_, IP & ip_)
-        : Base(mu,rho,f,b,v,j)
-        , ip(ip_)
+      StokesDGParameters(const std::string & method, const RF mu,
+                         F & f, B & b, V & v, J & j, IP & ip)
+        : Base(mu,1.0,f,b,v,j),
+          _ip(ip)
       {
         initFromString(method);
       }
 
       StokesDGParameters(const Dune::ParameterTree & configuration,
-                         F & ff_, B & bf_, V & vf_, P & pf_, IP & ip_)
-        : Base(configuration,f,b,v,j)
-        , ip(ip_)
-        , epsilon(configuration.get<int>("epsilon"))
+                         F & f, B & b, V & v, J & j, IP & ip)
+        : Base(configuration,f,b,v,j),
+          _ip(ip),
+          _epsilon(configuration.get<int>("epsilon"))
       {}
 
 
@@ -89,7 +98,7 @@ namespace Dune {
       typename Traits::RangeFieldType
       incompressibilityScaling ( typename Traits::RangeFieldType  dt ) const
       {
-        typename P::Traits::RangeType y(1.0 / dt);
+        typename J::Traits::RangeType y(1.0 / dt);
         return y;
       }
 
@@ -101,7 +110,7 @@ namespace Dune {
       typename Traits::RangeFieldType
       getFaceIP(const I & ig) const
       {
-        return ip.getFaceIP(ig);
+        return _ip.getFaceIP(ig);
       }
 
       /** \brief Interior penalty parameter.
@@ -112,7 +121,7 @@ namespace Dune {
       typename Traits::RangeFieldType
       getFaceIP(const I & ig, const typename Traits::IntersectionDomainType& ) const
       {
-        return ip.getFaceIP(ig);
+        return _ip.getFaceIP(ig);
       }
 
       //! Return the symmetry factor epsilon for this IP
@@ -120,13 +129,13 @@ namespace Dune {
       int
       epsilonIPSymmetryFactor()
       {
-        return epsilon;
+        return _epsilon;
       }
 
     private:
 
-      IP & ip;              // Interior penalty
-      int epsilon;          // IP symmetry factor
+      IP & _ip;              // Interior penalty
+      int _epsilon;          // IP symmetry factor
     };
 
 
@@ -135,7 +144,10 @@ namespace Dune {
         \tparam F Momentum source term function
         \tparam B Boundary condition function
         \tparam V Dirichlet velocity boundary condition function
-        \tparam P Dirichlet pressure boundary condition function
+        \tparam J Neumann stress boundary function (vector- or scalar-valued).
+                  Scalar values will be interpreted as the magnitude of a vector
+                  oriented in outer normal direction.
+                  For prescribed pressure you can use $J=p \cdot n$.
         \tparam IP A class providing the interior penalty factor for each face
     */
     template<typename GV, typename RF, typename F, typename B, typename V, typename J,
@@ -145,17 +157,17 @@ namespace Dune {
     {
 
       //! Type of base class
-      typedef StokesDGParameters<GV,F,B,V,P,IP> Base;
+      typedef StokesDGParameters<GV,F,B,V,J,IP> Base;
 
     public:
 
-      NavierStokesDGParameters(const std::string & method, const RF mu_,
-                         F & ff_, B & bf_, V & vf_, P & pf_, IP & ip_)
+      NavierStokesDGParameters(const std::string & method, const RF mu, const RF rho,
+                               F & f, B & b, V & v, J & j, IP & ip)
         : Base(method,mu,rho,f,b,v,j,ip)
       {}
 
-      StokesDGParameters(const Dune::ParameterTree & configuration,
-                         F & ff_, B & bf_, V & vf_, P & pf_, IP & ip_)
+      NavierStokesDGParameters(const Dune::ParameterTree & configuration,
+                               F & f, B & b, V & v, J & j, IP & ip)
         : Base(configuration,f,b,v,j,ip)
       {}
 
