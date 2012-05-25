@@ -14,6 +14,7 @@
 #include<dune/istl/bcrsmatrix.hh>
 
 #include"../gridoperatorspace/localmatrix.hh"
+#include"backendselector.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -713,13 +714,6 @@ namespace Dune {
         typedef ISTLMatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,typename build_matrix_type<E,typename VV::ContainerType,typename VU::ContainerType>::type > type;
       };
     };
-
-    template<typename Backend, typename VU, typename VV, typename E>
-    struct BackendMatrixSelector
-    {
-      typedef typename Backend::template MatrixHelper<VV,VU,E>::type Type;
-    };
-
 
   } // namespace PDELab
 } // namespace Dune

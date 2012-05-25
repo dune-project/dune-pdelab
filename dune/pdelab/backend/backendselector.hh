@@ -14,6 +14,11 @@ namespace Dune {
       typedef typename BackendVectorSelectorHelper<Backend, GridFunctionSpace, FieldType>::Type Type;
     };
 
+    template<typename Backend, typename VU, typename VV, typename E>
+    struct BackendMatrixSelector
+    {
+      typedef typename Backend::template MatrixHelper<VV,VU,E>::type Type;
+    };
 
   }
 }
