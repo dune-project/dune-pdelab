@@ -1197,8 +1197,6 @@ namespace Dune {
                 static const unsigned int dim = EG::Geometry::dimension;
 
                 // subspaces
-                dune_static_assert
-                    ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesMassDG");
                 typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
                 const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
                 dune_static_assert
