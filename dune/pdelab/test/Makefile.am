@@ -346,6 +346,14 @@ testpoisson_petsc_LDFLAGS = $(AM_LDFLAGS) $(PETSC_LDFLAGS)
 testpoisson_petsc_LDADD = $(LDADD) $(PETSC_LIBS)
 endif
 
+if GMP
+check_PROGRAMS += testopbfem
+testopbfem_SOURCES = testopbfem.cc
+testopbfem_CPPFLAGS = @AM_CPPFLAGS@ $(GMP_CPPFLAGS)
+testopbfem_LDFLAGS = $(AM_LDFLAGS) $(GMP_LDFLAGS)
+testopbfem_LDADD = $(LDADD) $(GMP_LIBS)
+endif
+
 check_PROGRAMS += testordering
 testordering_SOURCES = testordering.cc
 
