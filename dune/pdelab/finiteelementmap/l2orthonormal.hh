@@ -2,6 +2,7 @@
 #define DUNE_PM_ORTHONORMAL_HH
 
 #include<iostream>
+#include<algorithm>
 #include<dune/common/fvector.hh>
 #include<dune/common/fmatrix.hh>
 #include<dune/common/exceptions.hh>
@@ -453,12 +454,12 @@ namespace Dune {
       template<typename Point, typename Result>
       void evaluateFunction (const Point& x, Result& r) const
       {
-        for (int i=0; i<n; i++)
+        std::fill(r.begin(),r.end(),0.0);
+        for (int j=0; j<n; ++j)
           {
-            FieldType sum(0.0);
-            for (int j=0; j<=i; j++)
-              sum = sum + coeffs[i][j]*MonomialEvaluate<FieldType,d-1>::compute(x,alpha[j]);
-            r[i] = sum;
+            const FieldType monomial_value = MonomialEvaluate<FieldType,d-1>::compute(x,alpha[j]);
+            for (int i=j; i<n; ++i)
+              r[i] += coeffs[i][j] * monomial_value;
           }
       }
 
@@ -466,20 +467,15 @@ namespace Dune {
       template<typename Point, typename Result>
       void evaluateJacobian (const Point& x, Result& r) const
       {
-        for (int i=0; i<n; i++)
+        std::fill(r.begin(),r.end(),0.0);
+
+        for (int j=0; j<n; ++j)
           {
-            FieldType sum[d];
-            for (int s=0; s<d; s++)
-              {
-                sum[s] = 0.0;
-                for (int j=0; j<=i; j++)
-                  sum[s] += gradcoeffs[s][i][j]*MonomialEvaluate<FieldType,d-1>::compute(x,alpha[j]);
-              }
-            for (int s=0; s<d; s++) r[i][0][s] = sum[s];
+            const FieldType monomial_value = MonomialEvaluate<FieldType,d-1>::compute(x,alpha[j]);
+            for (int i=j; i<n; ++i)
+              for (int s=0; s<d; ++s)
+                r[i][0][s] += gradcoeffs[s][i][j]*monomial_value;
           }
-        // std::cout << "evaluate jacobian at x=" << x << std::endl;
-        // for (int i=0; i<n; i++)
-        //   std::cout << " phi_" << i << " " << r[i] << std::endl;
       }
 
       // evaluate all basis polynomials at given point up to order l <= k
