@@ -875,7 +875,7 @@ namespace Dune {
     {}
 
     template<class LFE>
-    OPBLocalFiniteElement (const LFE & lfe)
+    explicit OPBLocalFiniteElement (const LFE & lfe)
       : gt(bt,d), basis(k, lfe), coefficients(k), interpolation(basis,k)
     {}
 
