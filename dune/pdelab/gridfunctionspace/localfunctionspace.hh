@@ -593,6 +593,28 @@ namespace Dune {
     //! Tag denoting a LeafLocalFunctionSpace
     struct LeafLocalFunctionSpaceTag {};
 
+
+    // SFINAE switch that decides whether the GFS has an intersection IndexSet based on
+    // the presence of the nested type IntersectionIndexSet.
+
+    template<typename GFS, typename = void>
+    struct gfs_has_iis
+      : public integral_constant<bool,false>
+    {};
+
+    template<typename GFS>
+    struct gfs_has_iis<
+      GFS,
+      typename enable_if<
+        Dune::AlwaysTrue<
+          typename GFS::IntersectionIndexSet
+          >::value
+        >::type
+      >
+      : public integral_constant<bool,true>
+    {};
+
+
     //! traits for single component local function space
     template<typename GFS, typename MultiIndex, typename N>
     struct LeafLocalFunctionSpaceTraits : public PowerCompositeLocalFunctionSpaceTraits<GFS,MultiIndex,N>
@@ -673,6 +695,26 @@ namespace Dune {
         return this->pgfs->constraints();
       }
 
+      template<typename GFS2, typename Entity>
+      typename enable_if<
+        gfs_has_iis<GFS2>::value,
+        typename GFS2::Traits::GridViewType::IndexSet::IndexType
+        >::type
+      intersectionIndex(const GFS2& gfs, const Entity& e, const Dune::LocalKey& key) const
+      {
+        return gfs.intersectionIndexSet().subIndex(e,key.subEntity());
+      }
+
+      template<typename GFS2, typename Entity>
+      typename enable_if<
+        !gfs_has_iis<GFS2>::value,
+        typename GFS2::Traits::GridViewType::IndexSet::IndexType
+        >::type
+      intersectionIndex(const GFS2& gfs, const Entity& e, const Dune::LocalKey& key) const
+      {
+        DUNE_THROW(Dune::Exception,"This GridFunctionSpace does not support DOFs on intersections.");
+      }
+
       //! Calculates the multiindices associated with the given entity.
       template<typename Entity, typename MultiIndexIterator>
       void multiIndices(const Entity& e, MultiIndexIterator it, MultiIndexIterator endit)
@@ -689,14 +731,28 @@ namespace Dune {
 
         for (std::size_t i = 0; i < std::size_t(coeffs.size()); ++i, ++it)
           {
-            // get geometry type of subentity
-            Dune::GeometryType gt = refEl.type(coeffs.localKey(i).subEntity(),
-                                              coeffs.localKey(i).codim());
+            int codim = coeffs.localKey(i).codim();
 
-            // evaluate consecutive index of subentity
-            typename GV::IndexSet::IndexType index = gv.indexSet().subIndex(e,
-                                                                            coeffs.localKey(i).subEntity(),
-                                                                            coeffs.localKey(i).codim());
+            typename GV::IndexSet::IndexType index;
+            GeometryType gt;
+
+            if (codim == Dune::LocalKey::intersectionCodim)
+              {
+                // intersections do not have a GeometryType
+                gt.makeNone(GV::dimension-1);
+                index = intersectionIndex(this->gridFunctionSpace(),e,coeffs.localKey(i));
+              }
+            else
+              {
+                // get geometry type of subentity
+                gt = refEl.type(coeffs.localKey(i).subEntity(),
+                                coeffs.localKey(i).codim());
+
+                // evaluate consecutive index of subentity
+                index = gv.indexSet().subIndex(e,
+                                               coeffs.localKey(i).subEntity(),
+                                               coeffs.localKey(i).codim());
+              }
 
             it->set(gt,index,coeffs.localKey(i).index());
 

@@ -1069,6 +1069,7 @@ namespace Dune {
       typedef GridFunctionSpaceTraits<GV,FEM,CE,B> Traits;
       typedef typename GV::Traits::template Codim<0>::Entity Element;
       typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
+      typedef IIS IntersectionIndexSet;
 
        //! extract type for storing constraints
       template<typename E>
@@ -1358,6 +1359,11 @@ namespace Dune {
       bool fixedSize() const
       {
         return true; // true by definition
+      }
+
+      const IIS& intersectionIndexSet() const
+      {
+        return iis;
       }
 
     private:
