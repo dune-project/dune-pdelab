@@ -66,9 +66,20 @@ namespace Dune {
     template<typename>
     struct TreePathBack;
 
-    template<std::size_t k, std::size_t... i>
-    struct TreePathBack<TreePath<i...,k> >
+    // There is only a single element, so return that...
+    template<std::size_t k>
+    struct TreePathBack<TreePath<k> >
       : public integral_constant<std::size_t,k>
+    {};
+
+    // We need to explicitly provide two elements here, as
+    // the template argument pack would match the empty list
+    // and create a conflict with the single-element specialization.
+    // Here, we just shave off the first element and recursively
+    // instantiate ourselves.
+    template<std::size_t j, std::size_t k, std::size_t... l>
+    struct TreePathBack<TreePath<j,k,l...> >
+      : public TreePathBack<TreePath<k,l...> >
     {};
 
     template<typename>
@@ -79,14 +90,22 @@ namespace Dune {
       : public integral_constant<std::size_t,k>
     {};
 
-    template<typename>
+    template<typename, std::size_t...>
     struct TreePathPopBack;
 
     template<std::size_t k, std::size_t... i>
-    struct TreePathPopBack<TreePath<i...,k> >
+    struct TreePathPopBack<TreePath<k>,i...>
     {
       typedef TreePath<i...> type;
     };
+
+    template<std::size_t j,
+             std::size_t k,
+             std::size_t... l,
+             std::size_t... i>
+    struct TreePathPopBack<TreePath<j,k,l...>,i...>
+      : public TreePathPopBack<TreePath<k,l...>,i...,j>
+    {};
 
     template<typename>
     struct TreePathPopFront;
