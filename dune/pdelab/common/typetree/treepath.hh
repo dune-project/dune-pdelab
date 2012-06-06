@@ -116,6 +116,26 @@ namespace Dune {
       typedef TreePath<i...> type;
     };
 
+    template<typename... i>
+    void print_tree_path(std::ostream& os)
+    {}
+
+    template<std::size_t k, std::size_t... i>
+    void print_tree_path(std::ostream& os)
+    {
+      os << k << " ";
+      print_tree_path<i...>(os);
+    }
+
+    template<std::size_t... i>
+    std::ostream& operator<<(std::ostream& os, const TreePath<i...>& tp)
+    {
+      os << "TreePath< ";
+      print_tree_path<i...>(os);
+      os << ">";
+      return os;
+    }
+
 #else
 
     //! number used a dummy child number, similar to Nil
