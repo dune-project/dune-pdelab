@@ -487,12 +487,12 @@ namespace Dune {
 
         size_type N() const
         {
-          return _row_cache.size();
+          return _row_cache->size();
         }
 
         size_type M() const
         {
-          return _col_cache.size();
+          return _col_cache->size();
         }
 
         template<typename LC>
