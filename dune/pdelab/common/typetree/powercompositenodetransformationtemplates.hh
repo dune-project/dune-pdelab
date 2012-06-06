@@ -43,7 +43,7 @@ namespace Dune {
 
       template<typename SourceNode,
                typename Transformation,
-               template<typename SourceNode,
+               template<typename SourceNode_,
                         typename C0,
                         typename C1,
                         typename C2,
