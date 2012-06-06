@@ -65,7 +65,7 @@ namespace Dune {
         typename enable_if<lazy_enabled<k>::value,typename Child<k>::Type&>::type
         child()
         {
-          return node().proxiedNode().child<k>();
+          return node().proxiedNode().template child<k>();
         }
 
         //! Returns the i-th child (const version).
@@ -75,7 +75,7 @@ namespace Dune {
         template<std::size_t k>
         const typename Child<k>::Type& child() const
         {
-          return node().proxiedNode().child<k>();
+          return node().proxiedNode().template child<k>();
         }
 
         //! Returns the storage of the i-th child.
@@ -86,7 +86,7 @@ namespace Dune {
         typename enable_if<lazy_enabled<k>::value,typename Child<k>::Storage>::type
         childStorage()
         {
-          return node().proxiedNode().childStorage<k>();
+          return node().proxiedNode().template childStorage<k>();
         }
 
         //! Returns the storage of the i-th child (const version).
@@ -99,21 +99,21 @@ namespace Dune {
         template<std::size_t k>
         typename Child<k>::ConstStorage childStorage() const
         {
-          return node().proxiedNode().childStorage<k>();
+          return node().proxiedNode().template childStorage<k>();
         }
 
         //! Sets the i-th child to the passed-in value.
         template<std::size_t k>
         void setChild(typename Child<k>::type& child, typename enable_if<lazy_enabled<k>::value,void*>::type = 0)
         {
-          node().proxiedNode().childStorage<k>() = stackobject_to_shared_ptr(child);
+          node().proxiedNode().template childStorage<k>() = stackobject_to_shared_ptr(child);
         }
 
         //! Sets the storage of the i-th child to the passed-in value.
         template<std::size_t k>
         void setChild(typename Child<k>::storage_type child, typename enable_if<lazy_enabled<k>::value,void*>::type = 0)
         {
-           node().proxiedNode().childStorage<k>() = child;
+           node().proxiedNode().template childStorage<k>() = child;
         }
 
         const typename ProxiedNode::NodeStorage& nodeStorage() const
