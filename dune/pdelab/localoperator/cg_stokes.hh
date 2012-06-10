@@ -211,12 +211,10 @@ namespace Dune {
               for(int d=0; d<dim; ++d)
                 divu += x(lfsu_v_pfs.child(d),i) * gradphi[i][d];
 
-            const RF g2 = _p.g2(eg,it->position());
-
             // integrate div u * psi_i
             for (size_t i=0; i<lfsu_p.size(); i++)
               {
-                r.accumulate(lfsu_p,i, ((g2 - divu) * psi[i]) * factor);
+                r.accumulate(lfsu_p,i, -1.0 * divu * psi[i] * factor);
               }
 
           }
@@ -244,8 +242,14 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType RT_V;
         typedef typename LFSV_V::Traits::SizeType size_type;
 
+        typedef typename LFSV::template Child<1>::Type LFSV_P;
+        const LFSV_P& lfsv_p = lfsv.template child<1>();
+        const unsigned int psize = lfsv_p.size();
+
         typedef typename LFSV_V::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
+        typedef typename LFSV_P::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType RT_P;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -260,6 +264,9 @@ namespace Dune {
             std::vector<RT_V> phi(vsize);
             lfsv_v_pfs.child(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
 
+            std::vector<RT_P> psi(psize);
+            lfsv_p.finiteElement().localBasis().evaluateFunction(it->position(),psi);
+            
             // forcing term
             const Dune::FieldVector<RF,dim> f1 = _p.f(eg,it->position());
 
@@ -277,6 +284,15 @@ namespace Dune {
                 }
 
             }
+
+            const RF g2 = _p.g2(eg,it->position());
+
+            // integrate div u * psi_i
+            for (size_t i=0; i<lfsv_p.size(); i++)
+              {
+                r.accumulate(lfsv_p,i, g2 * psi[i] * factor);
+              }
+
           }
       }
 
