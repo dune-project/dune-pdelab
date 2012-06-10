@@ -24,13 +24,32 @@ namespace Dune {
 	{
     public:
       MonomLocalFiniteElementMap (Dune::GeometryType::BasicType basicType) DUNE_DEPRECATED
-        : SimpleLocalFiniteElementMap< Dune::MonomLocalFiniteElement<D,R,d,p> >(Dune::MonomLocalFiniteElement<D,R,d,p>(basicType))
+        : SimpleLocalFiniteElementMap< Dune::MonomLocalFiniteElement<D,R,d,p> >(Dune::MonomLocalFiniteElement<D,R,d,p>(basicType)), _gt(basicType,d)
       {
       }
       MonomLocalFiniteElementMap (const Dune::GeometryType& type)
-        : SimpleLocalFiniteElementMap< Dune::MonomLocalFiniteElement<D,R,d,p> >(Dune::MonomLocalFiniteElement<D,R,d,p>(type))
+        : SimpleLocalFiniteElementMap< Dune::MonomLocalFiniteElement<D,R,d,p> >(Dune::MonomLocalFiniteElement<D,R,d,p>(type)), _gt(type)
       {
       }
+
+      bool fixedSize() const
+      {
+        return true;
+      }
+
+      std::size_t size(GeometryType gt) const
+      {
+        return gt == _gt ? 1 : 0;
+      }
+
+      std::size_t maxLocalSize() const
+      {
+        return MonomImp::Size<d,p>::val;
+      }
+
+    private:
+      const GeometryType _gt;
+
     };
 
     //! Global-valued finite element map for Monom elements
