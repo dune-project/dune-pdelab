@@ -95,10 +95,10 @@ namespace Dune {
 
 
       //! Rescaling factor for the incompressibility equation
-      typename Traits::RangeFieldType
-      incompressibilityScaling ( typename Traits::RangeFieldType  dt ) const
+      typename Traits::RangeField
+      incompressibilityScaling ( typename Traits::RangeField  dt ) const
       {
-        typename J::Traits::RangeType y(1.0 / dt);
+        typename J::Traits::Range y(1.0 / dt);
         return y;
       }
 
@@ -107,7 +107,7 @@ namespace Dune {
           \return The coefficient of the interior penalty term.
       */
       template<typename I>
-      typename Traits::RangeFieldType
+      typename Traits::RangeField
       getFaceIP(const I & ig) const
       {
         return _ip.getFaceIP(ig);
@@ -118,8 +118,8 @@ namespace Dune {
           \return The coefficient of the interior penalty term.
       */
       template<typename I>
-      typename Traits::RangeFieldType
-      getFaceIP(const I & ig, const typename Traits::IntersectionDomainType& ) const
+      typename Traits::RangeField
+      getFaceIP(const I & ig, const typename Traits::IntersectionDomain& ) const
       {
         return _ip.getFaceIP(ig);
       }
@@ -151,12 +151,12 @@ namespace Dune {
         \tparam IP A class providing the interior penalty factor for each face
     */
     template<typename GV, typename RF, typename F, typename B, typename V, typename J,
-             typename IP = DefaultInteriorPenalty<typename V::Traits::RangeFieldType> >
+             typename IP = DefaultInteriorPenalty<typename V::Traits::RangeField> >
     class NavierStokesDGParameters
       : public StokesDGParameters<GV,RF,F,B,V,J,IP>
     {
 
-      //! Type of base class
+      //!  of base class
       typedef StokesDGParameters<GV,F,B,V,J,IP> Base;
 
     public:
@@ -182,9 +182,9 @@ namespace Dune {
           it may also define a function
 
           template<typename IntersectionGeometry>
-          typename Traits::RangeFieldType
+          typename Traits::RangeField
           boundarySlip (const IntersectionGeometry& ig,
-          const typename Traits::IntersectionDomainType& x) const
+          const typename Traits::IntersectionDomain& x) const
 
           which returns a value in [0,1] and may be used to define a
           smooth transition from a slip to a no-slip boundary.
@@ -195,11 +195,11 @@ namespace Dune {
       struct VariableBoundarySlipSwitch{
 
         template<typename IntersectionGeometry>
-        static typename PRM::Traits::RangeFieldType
+        static typename PRM::Traits::RangeField
         boundarySlip
         (const PRM & ,
          const IntersectionGeometry& ,
-         const typename PRM::Traits::IntersectionDomainType& )
+         const typename PRM::Traits::IntersectionDomain& )
         {
           return 1.0;
         }
@@ -211,11 +211,11 @@ namespace Dune {
       <PRM,typename Dune::enable_if<PRM::enable_variable_slip>::type>
       {
         template<typename IntersectionGeometry>
-        static typename PRM::Traits::RangeFieldType
+        static typename PRM::Traits::RangeField
         boundarySlip
         (const PRM & prm,
          const IntersectionGeometry& ig,
-         const typename PRM::Traits::IntersectionDomainType& x)
+         const typename PRM::Traits::IntersectionDomain& x)
         {
           return prm.boundarySlip(ig,x);
         }

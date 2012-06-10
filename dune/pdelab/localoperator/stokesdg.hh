@@ -44,7 +44,7 @@ namespace Dune {
             ,public InstationaryLocalOperatorDefaultMethods<double>
         {
             typedef StokesBoundaryCondition BC;
-            typedef typename PRM::Traits::RangeFieldType RF;
+            typedef typename PRM::Traits::RangeField RF;
 
             typedef InstationaryLocalOperatorDefaultMethods<double> InstatBase;
             typedef typename InstatBase::RealType Real;
@@ -143,7 +143,7 @@ namespace Dune {
                     const RF weight = it->weight() * eg.geometry().integrationElement(it->position());
 
                     // evaluate source term
-                    typename PRM::Traits::RangeType fval(prm.f(eg,local));
+                    typename PRM::Traits::VelocityRange fval(prm.f(eg,local));
 
                     //================================================//
                     // \int (f*v)
@@ -239,11 +239,11 @@ namespace Dune {
                     const RF mu = prm.mu(ig,flocal);
 
                     // evaluate boundary condition type
-                    typename PRM::Traits::BoundaryConditionType bctype(prm.bctype(ig,flocal));
+                    typename PRM::Traits::BoundaryCondition::Type bctype(prm.bctype(ig,flocal));
 
                     if (bctype == BC::VelocityDirichlet)
                     {
-                        typename PRM::Traits::RangeType u0(prm.g(ig,flocal));
+                        typename PRM::Traits::VelocityRange u0(prm.g(ig,flocal));
 
                         //================================================//
                         // \mu \int \nabla v \cdot u_0 \cdot n
@@ -762,7 +762,7 @@ namespace Dune {
                 const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
                 // evaluate boundary condition type
-                typename PRM::Traits::BoundaryConditionType bctype(prm.bctype(ig,rule.begin()->position()));
+                typename PRM::Traits::BoundaryCondition::Type bctype(prm.bctype(ig,rule.begin()->position()));
 
                 const int epsilon = prm.epsilonIPSymmetryFactor();
                 const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
@@ -949,7 +949,7 @@ namespace Dune {
             //! Boundary condition indicator type
             typedef StokesBoundaryCondition BC;
             //! Common range field type
-            typedef typename PRM::Traits::RangeFieldType RF;
+            typedef typename PRM::Traits::RangeField RF;
 
           typedef StokesDG<PRM,full_tensor> StokesLocalOperator;
 
@@ -1161,7 +1161,7 @@ namespace Dune {
             public InstationaryLocalOperatorDefaultMethods<double>
         {
             typedef StokesBoundaryCondition BC;
-            typedef typename PRM::Traits::RangeFieldType RF;
+            typedef typename PRM::Traits::RangeField RF;
 
         public:
 
