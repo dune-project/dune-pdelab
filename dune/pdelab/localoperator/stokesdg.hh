@@ -111,6 +111,9 @@ namespace Dune {
                 typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
                 const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
                 const unsigned int vsize = lfsv_v.size();
+                typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
+                const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
+                const unsigned int psize = lfsv_p.size();
 
                 // domain and range field type
                 typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
@@ -119,6 +122,9 @@ namespace Dune {
                 typedef typename BasisSwitch_V::Range RT;
                 typedef typename BasisSwitch_V::RangeField RF;
                 typedef typename BasisSwitch_V::Range Range_V;
+                typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
+                typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
+                typedef typename BasisSwitch_P::Range Range_P;
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
@@ -140,6 +146,10 @@ namespace Dune {
                     std::vector<RT> phi_v(vsize);
                     FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
 
+                    // values of pressure shape functions
+                    std::vector<RT> phi_p(psize);
+                    FESwitch_P::basis(lfsv_p.finiteElement()).evaluateFunction(local,phi_p);
+
                     const RF weight = it->weight() * eg.geometry().integrationElement(it->position());
 
                     // evaluate source term
@@ -157,9 +167,18 @@ namespace Dune {
                         for (size_type i=0; i<vsize; i++)
                         {
                             RF val = phi_v[i]*factor;
-                            r.accumulate(lfsv_v,i, fval[d] * val);
+                            r.accumulate(lfsv_v,i, -fval[d] * val);
                         }
                     }
+
+                    const RF g2 = prm.g2(eg,it->position());
+                    
+                    // integrate div u * psi_i
+                    for (size_t i=0; i<lfsv_p.size(); i++)
+                    {
+                        r.accumulate(lfsv_p,i, g2 * phi_p[i] * factor);
+                    }
+                    
                 }
             }
 
