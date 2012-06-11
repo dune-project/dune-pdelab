@@ -57,10 +57,8 @@ namespace Dune{
       DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_)
         : gfsu(gfsu_)
         , gfsv(gfsv_)
-#if __GNUC__ == 4 && (__GNUC_MINOR__ == 4 || __GNUC_MINOR__ == 5) // fix the junk heap that is GCC 4.4
         , cu()
         , cv()
-#endif
         , lfsu(gfsu_)
         , lfsv(gfsv_)
         , lfsun(gfsu_)
