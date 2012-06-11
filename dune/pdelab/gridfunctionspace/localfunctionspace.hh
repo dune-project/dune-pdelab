@@ -356,7 +356,6 @@ namespace Dune {
       ComputeSizeVisitor<Element> csv(e);
       TypeTree::applyToTree(node,csv);
 
-      _dof_index_storage.resize(node.n);
 
       // initialize iterators and fill indices
       FillIndicesVisitor<Element> fiv(e);
