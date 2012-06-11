@@ -90,7 +90,7 @@ namespace Dune {
                                    const Entity& e,
                                    const Domain& x)
       {
-        dune_static_assert(GF::Traits::dimRange == Domain::dimension,"dimension of function range does not match grid dimension");
+        dune_static_assert(int(GF::Traits::dimRange) == int(Domain::dimension),"dimension of function range does not match grid dimension");
         typename GF::Traits::RangeType y;
         gf.evaluate(e,x,y);
         return y;
