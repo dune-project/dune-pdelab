@@ -39,7 +39,7 @@ namespace Dune {
 
       std::size_t size(GeometryType gt) const
       {
-        return gt == _gt ? 1 : 0;
+        return gt == _gt ? Dune::MonomImp::Size<d,p>::val : 0;
       }
 
       std::size_t maxLocalSize() const
