@@ -813,6 +813,7 @@ namespace Dune {
       LocalFunctionSpace(const GFS & gfs)
         : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs))
       {
+        this->_dof_indices = &(this->_dof_index_storage);
         this->setup(*this);
       }
 
