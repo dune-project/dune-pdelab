@@ -98,7 +98,7 @@ namespace Dune {
       typename Traits::RangeField
       incompressibilityScaling ( typename Traits::RangeField  dt ) const
       {
-        typename J::Traits::Range y(1.0 / dt);
+        typename Traits::RangeField y(1.0 / dt);
         return y;
       }
 

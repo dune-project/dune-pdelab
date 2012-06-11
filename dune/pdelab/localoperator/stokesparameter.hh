@@ -182,7 +182,7 @@ namespace Dune {
       typename Traits::VelocityRange
       f(const EG& e, const typename Traits::Domain& x) const
       {
-        typename Traits::VelocityRange fvalue;
+        typename F::Traits::RangeType fvalue;
         return evaluateVelocityGridFunction(_f,e.entity(),x);
       }
 
@@ -192,7 +192,7 @@ namespace Dune {
       bctype(const IG& is,
              const typename Traits::IntersectionDomain& x) const
       {
-        typename Traits::BoundaryCondition::Type y;
+        typename B::Traits::RangeType y;
         _b.evaluate(is,x,y);
         return y;
       }
@@ -234,7 +234,7 @@ namespace Dune {
       typename Traits::VelocityRange
       g(const EG& e, const typename Traits::Domain& x) const
       {
-        typename Traits::Range y;
+        typename V::Traits::RangeType y;
         _v.evaluate(e.entity(),x,y);
         return y;
       }
@@ -245,9 +245,17 @@ namespace Dune {
       g(const IG& ig, const typename Traits::IntersectionDomain& x) const
       {
         typename IG::EntityPointer ep = ig.inside();
-        typename Traits::Range y;
-        _v.evaluate(*ep,ig.geometryInInside.global(x),y);
+        typename V::Traits::RangeType y;
+        _v.evaluate(*ep,ig.geometryInInside().global(x),y);
         return y;
+      }
+
+      //! pressure source term
+      template<typename EG>
+      typename Traits::RangeField
+      g2(const EG& e, const typename Traits::Domain& x) const
+      {
+        return 0;
       }
 
 #ifdef DOXYGEN
