@@ -140,7 +140,7 @@ namespace Dune {
                 for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
                 {
                     const Dune::FieldVector<DF,dim> local = it->position();
-                    const Dune::FieldVector<DF,dimw> global = eg.geometry().global(local);
+                    //const Dune::FieldVector<DF,dimw> global = eg.geometry().global(local);
 
                     // values of velocity shape functions
                     std::vector<RT> phi_v(vsize);
@@ -238,7 +238,7 @@ namespace Dune {
                     // position of quadrature point in local coordinates of element
                     Dune::FieldVector<DF,dim-1> flocal = it->position();
                     Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(flocal);
-                    Dune::FieldVector<DF,dimw> global = ig.geometry().global(flocal);
+                    //Dune::FieldVector<DF,dimw> global = ig.geometry().global(flocal);
 
                     const RF penalty_factor = prm.getFaceIP(ig,flocal);
 
