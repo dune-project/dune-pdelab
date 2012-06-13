@@ -137,13 +137,13 @@ namespace Dune {
      *               Scalar values will be interpreted as the magnitude of a vector
      *               oriented in outer normal direction.
      */
-    template <typename GV, typename RF, typename F, typename B, typename V, typename J>
+    template <typename GV, typename RF, typename F, typename B, typename V, typename J, bool navier = false, bool tensor = false>
     class NavierStokesDefaultParameters
     {
     public:
 
-      static const bool assemble_navier = false;
-      static const bool assemble_full_tensor = false;
+      static const bool assemble_navier = navier;
+      static const bool assemble_full_tensor = tensor;
 
       //! Type traits
       typedef NavierStokesParameterTraits<GV,RF> Traits;
