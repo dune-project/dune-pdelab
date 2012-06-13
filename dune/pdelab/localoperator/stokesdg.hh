@@ -172,13 +172,13 @@ namespace Dune {
                     }
 
                     const RF g2 = prm.g2(eg,it->position());
-                    
+
                     // integrate div u * psi_i
                     for (size_t i=0; i<lfsv_p.size(); i++)
                     {
                         r.accumulate(lfsv_p,i, g2 * phi_p[i] * factor);
                     }
-                    
+
                 }
             }
 
