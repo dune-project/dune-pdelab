@@ -31,7 +31,7 @@ namespace Dune
                   Dune::VTK::OutputType outputtype_ = Dune::VTK::appendedraw,
                   std::string path_="vtk", unsigned int offset_=0) :
             VTK(gv_,datamode_), gv(gv_),
-            basename(basename_), fn(basename_),
+            basename(basename_), fn(basename_,offset_),
             path(path_), outputtype(outputtype_),
             offset(offset_){}
 
