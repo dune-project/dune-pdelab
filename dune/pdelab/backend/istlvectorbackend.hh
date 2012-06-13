@@ -44,7 +44,7 @@ namespace Dune {
       struct Traits
       {
         static const ISTLParameters::Blocking block_type = blocking;
-        static const bool block_size = block_size_;
+        static const size_type block_size = block_size_;
         static const bool blocked = blocking != ISTLParameters::no_blocking;
         static const size_type max_blocking_depth = blocked ? 1 : 0;
       };
