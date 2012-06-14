@@ -153,9 +153,9 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
   DGF dgf(gfs,x);
   
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"displacement"));
-  vtkwriter.write("testelasticity",Dune::VTKOptions::ascii);
+  vtkwriter.write("testelasticity",Dune::VTK::ascii);
 }
 
 int main(int argc, char** argv)

@@ -55,7 +55,7 @@ void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
 
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);  // plot result
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"rt02d"));
-  vtkwriter.write(filename.str(),Dune::VTKOptions::ascii);
+  vtkwriter.write(filename.str(),Dune::VTK::ascii);
 }
 
 

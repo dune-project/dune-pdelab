@@ -106,9 +106,11 @@ namespace Dune {
       { }
     };
 
+    //! \brief GV The type of the grid view the function lives on.
     template<typename GV>
     struct PowerCompositeGridFunctionTraits
     {
+      //! \brief The type of the grid view the function lives on.
       typedef GV GridViewType;
 
 	  //! \brief codim 0 entity

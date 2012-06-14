@@ -101,11 +101,11 @@ void testpk (const GV& gv)
   PkDGF pkdgf(pkgfs,pkxg);
 
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P0DGF>(p0dgf,"p0"));
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<P1DGF>(p1dgf,"p1"));
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PkDGF>(pkdgf,"pk"));
-  vtkwriter.write("testpk",Dune::VTKOptions::ascii);
+  vtkwriter.write("testpk",Dune::VTK::ascii);
 }
 
 int main(int argc, char** argv)

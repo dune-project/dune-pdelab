@@ -153,9 +153,9 @@ void test (const GV& gv)
   DGF dgf(gfs,x);
   
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::nonconforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"u"));
-  vtkwriter.write("testlaplacedirichletccfv",Dune::VTKOptions::ascii);
+  vtkwriter.write("testlaplacedirichletccfv",Dune::VTK::ascii);
 }
 
 int main(int argc, char** argv)

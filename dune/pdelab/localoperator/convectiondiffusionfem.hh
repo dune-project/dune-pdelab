@@ -125,7 +125,7 @@ namespace Dune {
             Dune::FieldVector<RF,dim> Agradu(0.0);
             tensor.umv(gradu,Agradu);
 
-            // evaluate velocity field, sink term and source te
+            // evaluate velocity field, sink term and source term
             typename T::Traits::RangeType b = param.b(eg.entity(),it->position());
             typename T::Traits::RangeFieldType c = param.c(eg.entity(),it->position());
             typename T::Traits::RangeFieldType f = param.f(eg.entity(),it->position());

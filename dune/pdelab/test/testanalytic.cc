@@ -56,9 +56,9 @@ void testuserfriendly (const GV& gv)
   V v(gv);
   typedef Dune::PDELab::CompositeGridFunction<V,P> TH;
   TH th(v,p);
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   Dune::PDELab::vtkwriter_tree_addvertexdata(vtkwriter,th);
-  vtkwriter.write("channel",Dune::VTKOptions::ascii);
+  vtkwriter.write("channel",Dune::VTK::ascii);
 }
 
 int main(int argc, char** argv)

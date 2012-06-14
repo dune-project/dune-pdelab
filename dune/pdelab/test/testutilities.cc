@@ -40,9 +40,9 @@ void testq1 (const GV& gv)
   DGF dgf(q1gfs,x);
 
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"test"));
-  vtkwriter.write("q1",Dune::VTKOptions::ascii);
+  vtkwriter.write("q1",Dune::VTK::ascii);
 }
 
 // define some grid functions to interpolate from

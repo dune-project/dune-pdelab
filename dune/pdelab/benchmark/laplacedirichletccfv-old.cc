@@ -221,10 +221,10 @@ void test (const GV& gv, const Mapper& mapper, std::string filename, const bool 
       DGF dgf(gfs,x);
 
       // output grid function with VTKWriter
-      Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming);
+      Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::nonconforming);
       vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"u"));
 
-      vtkwriter.write(filename,Dune::VTKOptions::ascii);
+      vtkwriter.write(filename,Dune::VTK::ascii);
 
       bh.end("I/O",std::cout);
 
