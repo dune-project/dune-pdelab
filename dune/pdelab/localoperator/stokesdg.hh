@@ -95,7 +95,6 @@ namespace Dune {
             {
                 // dimensions
                 static const unsigned int dim = EG::Geometry::dimension;
-                static const unsigned int dimw = EG::Geometry::dimensionworld;
 
                 // subspaces
                 dune_static_assert
@@ -170,7 +169,6 @@ namespace Dune {
             {
                 // dimensions
                 static const unsigned int dim = IG::Geometry::dimension;
-                static const unsigned int dimw = IG::Geometry::dimensionworld;
 
                 // subspaces
                 dune_static_assert
@@ -256,6 +254,17 @@ namespace Dune {
                             {
                                 const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
                                 r.accumulate(lfsv_v,i, - epsilon * val * u0[d]);
+
+                                // Assemble symmetric part for (grad u)^T
+                                if(full_tensor){
+                                
+                                    for (unsigned int dd=0;dd<dim;++dd)
+                                    {
+                                        RF Tval = (grad_phi_v[i][0][d]*normal[dd]) * factor;
+                                        const LFSV_V& lfsv_v_dd = lfsv_pfs_v.child(dd);
+                                        r.accumulate(lfsv_v_dd,i, - epsilon * Tval * u0[d]);
+                                    }
+                                }
                             }
                         }
                         //================================================//
