@@ -15,11 +15,6 @@ namespace Dune {
       : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::OPBLocalFiniteElement<D,R,k,d,bt,ComputationFieldType> >
     {
 
-      static const std::size_t _per_cell_size =
-        (bt == GeometryType::cube) ? Dune::PB::QkSize<k,d>::value
-        : (bt == GeometryType::simplex) ? Dune::PB::PkSize<k,d>::value
-        : 0;
-
     public:
 
       bool fixedSize() const
@@ -30,14 +25,14 @@ namespace Dune {
       std::size_t size(GeometryType gt) const
       {
         if (gt == GeometryType(bt,d))
-          return _per_cell_size;
+          return Dune::PB::PkSize<k,d>::value;
         else
           return 0;
       }
 
       std::size_t maxLocalSize() const
       {
-        return _per_cell_size;
+        return Dune::PB::PkSize<k,d>::value;
       }
 
     };
