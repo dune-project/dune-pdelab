@@ -95,7 +95,8 @@ namespace Dune {
             {
                 // dimensions
                 static const unsigned int dim = EG::Geometry::dimension;
-
+                static const unsigned int dimw = EG::Geometry::dimensionworld;
+                
                 // subspaces
                 dune_static_assert
                   ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
@@ -169,6 +170,7 @@ namespace Dune {
             {
                 // dimensions
                 static const unsigned int dim = IG::Geometry::dimension;
+                static const unsigned int dimw = IG::Geometry::dimensionworld;
 
                 // subspaces
                 dune_static_assert
