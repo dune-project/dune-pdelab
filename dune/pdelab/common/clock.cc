@@ -9,6 +9,11 @@
 #define _POSIX_C_SOURCE 199309L
 #endif
 
+//make sure gettimeofday is available
+#ifndef _BSD_SOURCE
+#define _BSD_SOURCE
+#endif
+
 #if HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -76,6 +81,19 @@ namespace Dune {
     }
 #endif // HAVE_POSIX_CLOCK
 
+    TimeSpec gettimeofdayWallTime() {
+      timeval result;
+      if(gettimeofday(&result, NULL) < 0)
+        DUNE_THROW(ClockError, "gettimeofday() failed: errno = " << errno);
+      TimeSpec tmp = { result.tv_sec, 1000*result.tv_usec };
+      return tmp;
+    }
+
+    const TimeSpec &gettimeofdayWallTimeResolution() {
+      static const TimeSpec res = { 0, 1000 };
+      return res;
+    }
+
     struct WallTimeClock {
       TimeSpec (*clock)();
       TimeSpec resolution;
@@ -94,8 +112,11 @@ namespace Dune {
           return;
         }
 #endif // HAVE_POSIX_CLOCK
-        DUNE_THROW(NotImplemented,
-                   "Impossible to get wall time on this system");
+        {
+          clock = gettimeofdayWallTime;
+          resolution = gettimeofdayWallTimeResolution();
+          return;
+        }
       }
     };
     TimeSpec getWallTime() { return WallTimeClock::instance().clock(); }
