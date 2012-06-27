@@ -97,6 +97,7 @@ namespace Dune {
     struct WallTimeClock {
       TimeSpec (*clock)();
       TimeSpec resolution;
+      std::string clockName;
 
       static const WallTimeClock &instance() {
         static const WallTimeClock clock;
@@ -109,12 +110,14 @@ namespace Dune {
         if(checkPOSIXGetWallTime()) {
           clock = posixGetWallTime;
           resolution = posixGetWallTimeResolution();
+          clockName = "clock_gettime(CLOCK_REALTIME, ...)";
           return;
         }
 #endif // HAVE_POSIX_CLOCK
         {
           clock = gettimeofdayWallTime;
           resolution = gettimeofdayWallTimeResolution();
+          clockName = "gettimeofday(...)";
           return;
         }
       }
@@ -122,6 +125,8 @@ namespace Dune {
     TimeSpec getWallTime() { return WallTimeClock::instance().clock(); }
     TimeSpec getWallTimeResolution()
     { return WallTimeClock::instance().resolution; }
+    const std::string &getWallTimeImp()
+    { return WallTimeClock::instance().clockName; }
 
     //////////////////////////////////////////////////////////////////////
     //
@@ -164,6 +169,7 @@ namespace Dune {
     struct ProcessTimeClock {
       TimeSpec (*clock)();
       TimeSpec resolution;
+      std::string clockName;
 
       static const ProcessTimeClock &instance() {
         static const ProcessTimeClock clock;
@@ -177,6 +183,7 @@ namespace Dune {
         {
           clock = posixGetProcessTime;
           resolution = posixGetProcessTimeResolution();
+          clockName = "clock_gettime(CLOCK_PROCESS_CPUTIME_ID, ...)";
           return;
         }
 #endif // HAVE_POSIX_CLOCK && _POSIX_CPUTIME
@@ -187,6 +194,8 @@ namespace Dune {
     TimeSpec getProcessTime() { return ProcessTimeClock::instance().clock(); }
     TimeSpec getProcessTimeResolution()
     { return ProcessTimeClock::instance().resolution; }
+    const std::string &getProcessTimeImp()
+    { return ProcessTimeClock::instance().clockName; }
 
   } // namespace PDELab
 } // namespace Dune

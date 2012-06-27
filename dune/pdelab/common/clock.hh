@@ -64,10 +64,16 @@ namespace Dune {
     TimeSpec getWallTime();
     //! get resolution of the wall time in seconds
     TimeSpec getWallTimeResolution();
+    //! \brief return a string describing which implementation is used to get
+    //!        the wall time
+    const std::string &getWallTimeImp();
     //! get the process time in seconds used by the current process
     TimeSpec getProcessTime();
     //! get resolution of the process time in seconds
     TimeSpec getProcessTimeResolution();
+    //! \brief return a string describing which implementation is used to get
+    //!        the process time
+    const std::string &getProcessTimeImp();
 
   } // namespace PDELab
 } //namespace Dune
