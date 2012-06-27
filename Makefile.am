@@ -15,7 +15,7 @@ SUBDIRS =					\
 # The library subdirectory itself
 SUBDIRS += lib
 # All subdirectories that must (or can) be handled after the library is built
-# none yet...
+SUBDIRS += src
 
 # pass most important options when "make distcheck" is used
 DISTCHECK_CONFIGURE_FLAGS = --with-dune=$(DUNEROOT) CXX="$(CXX)" CXXFLAGS="$(CXXFLAGS)" CC="$(CC)"
