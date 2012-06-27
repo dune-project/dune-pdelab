@@ -48,7 +48,7 @@ namespace Dune {
     //  Wall time
     //
 
-#if _POSIX_TIMERS >= 0
+#if HAVE_POSIX_CLOCK
     TimeSpec posixGetWallTime() {
       timespec result;
       if(clock_gettime(CLOCK_REALTIME, &result) < 0)
@@ -74,7 +74,7 @@ namespace Dune {
       return true;
 # endif // _POSIX_TIMERS > 0
     }
-#endif // _POSIX_TIMERS
+#endif // HAVE_POSIX_CLOCK
 
     struct WallTimeClock {
       TimeSpec (*clock)();
@@ -87,13 +87,13 @@ namespace Dune {
 
     private:
       WallTimeClock() {
-#if _POSIX_TIMERS >= 0
+#if HAVE_POSIX_CLOCK
         if(checkPOSIXGetWallTime()) {
           clock = posixGetWallTime;
           resolution = posixGetWallTimeResolution();
           return;
         }
-#endif // _POSIX_TIMERS
+#endif // HAVE_POSIX_CLOCK
         DUNE_THROW(NotImplemented,
                    "Impossible to get wall time on this system");
       }
@@ -107,7 +107,7 @@ namespace Dune {
     //  Process Time
     //
 
-#if _POSIX_CPUTIME >= 0
+#if HAVE_POSIX_CLOCK && _POSIX_CPUTIME >= 0
     TimeSpec posixGetProcessTime() {
       // Use clock_gettime(CLOCK_PROCESS_CPUTIME_ID, ...) even though that may
       // be problematic in the context of process migration between cores.  In
@@ -138,7 +138,7 @@ namespace Dune {
       return true;
 # endif // _POSIX_CPUTIME > 0
     }
-#endif // _POSIX_CPUTIME >= 0
+#endif // HAVE_POSIX_CLOCK && _POSIX_CPUTIME >= 0
 
     struct ProcessTimeClock {
       TimeSpec (*clock)();
@@ -151,14 +151,14 @@ namespace Dune {
 
     private:
       ProcessTimeClock() {
-#if _POSIX_CPUTIME >= 0
+#if HAVE_POSIX_CLOCK && _POSIX_CPUTIME >= 0
         if(checkPOSIXGetProcessTime())
         {
           clock = posixGetProcessTime;
           resolution = posixGetProcessTimeResolution();
           return;
         }
-#endif // _POSIX_CPUTIME
+#endif // HAVE_POSIX_CLOCK && _POSIX_CPUTIME
         DUNE_THROW(NotImplemented,
                    "Impossible to get process time on this system");
       }
