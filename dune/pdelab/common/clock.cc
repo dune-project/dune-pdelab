@@ -166,6 +166,22 @@ namespace Dune {
     }
 #endif // HAVE_POSIX_CLOCK && _POSIX_CPUTIME >= 0
 
+    TimeSpec getrusageProcessTime() {
+      rusage ru;
+      if(getrusage(RUSAGE_SELF, &ru) < 0)
+        DUNE_THROW(ClockError, "getrusage(RUSAGE_SELF, ...) failed: errno = "
+                   << errno);
+      TimeSpec time = { ru.ru_utime.tv_sec, 1000*ru.ru_utime.tv_usec };
+      TimeSpec tmp = { ru.ru_stime.tv_sec, 1000*ru.ru_stime.tv_usec };
+      time += tmp;
+      return time;
+    }
+
+    const TimeSpec &getrusageProcessTimeResolution() {
+      static const TimeSpec res = { 0, 1000 };
+      return res;
+    }
+
     struct ProcessTimeClock {
       TimeSpec (*clock)();
       TimeSpec resolution;
@@ -187,8 +203,11 @@ namespace Dune {
           return;
         }
 #endif // HAVE_POSIX_CLOCK && _POSIX_CPUTIME
-        DUNE_THROW(NotImplemented,
-                   "Impossible to get process time on this system");
+        {
+          clock = getrusageProcessTime;
+          resolution = getrusageProcessTimeResolution();
+          clockName = "getrusage(RUSAGE_SELF, ...)";
+        }
       }
     };
     TimeSpec getProcessTime() { return ProcessTimeClock::instance().clock(); }
