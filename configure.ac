@@ -58,7 +58,6 @@ AC_CONFIG_FILES([
   lib/Makefile
   m4/Makefile
   Makefile
-  src/Makefile
 ])
 AC_OUTPUT
 # finally print the summary information
