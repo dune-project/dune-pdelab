@@ -62,8 +62,12 @@ namespace Dune {
 
     //! get the wall time in seconds since the epoch
     TimeSpec getWallTime();
-    //! get the cpu time in seconds used by the current process
+    //! get resolution of the wall time in seconds
+    TimeSpec getWallTimeResolution();
+    //! get the process time in seconds used by the current process
     TimeSpec getProcessTime();
+    //! get resolution of the process time in seconds
+    TimeSpec getProcessTimeResolution();
 
   } // namespace PDELab
 } //namespace Dune

@@ -22,6 +22,7 @@
 #include <sys/resource.h>
 #include <sys/time.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <dune/common/exceptions.hh>
 
@@ -42,7 +43,13 @@ namespace Dune {
       return s;
     }
 
-    TimeSpec getWallTime() {
+    //////////////////////////////////////////////////////////////////////
+    //
+    //  Wall time
+    //
+
+#if _POSIX_TIMERS >= 0
+    TimeSpec posixGetWallTime() {
       timespec result;
       if(clock_gettime(CLOCK_REALTIME, &result) < 0)
         DUNE_THROW(ClockError, "clock_gettime(CLOCK_REALTIME, ...) failed: "
@@ -51,7 +58,57 @@ namespace Dune {
       return tmp;
     }
 
-    TimeSpec getProcessTime() {
+    TimeSpec posixGetWallTimeResolution() {
+      timespec result;
+      if(clock_getres(CLOCK_REALTIME, &result) < 0)
+        DUNE_THROW(ClockError, "clock_getres(CLOCK_REALTIME, ...) failed: "
+                   "errno = " << errno);
+      TimeSpec tmp = { result.tv_sec, result.tv_nsec };
+      return tmp;
+    }
+
+    bool checkPOSIXGetWallTime() {
+# if _POSIX_TIMERS == 0
+      return sysconf(_SC_TIMERS) > 0;
+# else // _POSIX_TIMERS > 0
+      return true;
+# endif // _POSIX_TIMERS > 0
+    }
+#endif // _POSIX_TIMERS
+
+    struct WallTimeClock {
+      TimeSpec (*clock)();
+      TimeSpec resolution;
+
+      static const WallTimeClock &instance() {
+        static const WallTimeClock clock;
+        return clock;
+      }
+
+    private:
+      WallTimeClock() {
+#if _POSIX_TIMERS >= 0
+        if(checkPOSIXGetWallTime()) {
+          clock = posixGetWallTime;
+          resolution = posixGetWallTimeResolution();
+          return;
+        }
+#endif // _POSIX_TIMERS
+        DUNE_THROW(NotImplemented,
+                   "Impossible to get wall time on this system");
+      }
+    };
+    TimeSpec getWallTime() { return WallTimeClock::instance().clock(); }
+    TimeSpec getWallTimeResolution()
+    { return WallTimeClock::instance().resolution; }
+
+    //////////////////////////////////////////////////////////////////////
+    //
+    //  Process Time
+    //
+
+#if _POSIX_CPUTIME >= 0
+    TimeSpec posixGetProcessTime() {
       // Use clock_gettime(CLOCK_PROCESS_CPUTIME_ID, ...) even though that may
       // be problematic in the context of process migration between cores.  In
       // practice, it appears to still be far better then the next best
@@ -64,6 +121,51 @@ namespace Dune {
       TimeSpec tmp = { result.tv_sec, result.tv_nsec };
       return tmp;
     }
+
+    TimeSpec posixGetProcessTimeResolution() {
+      timespec result;
+      if(clock_getres(CLOCK_PROCESS_CPUTIME_ID, &result) < 0)
+        DUNE_THROW(ClockError, "clock_getres(CLOCK_PROCESS_CPUTIME_ID, ...) "
+                   "failed: errno = " << errno);
+      TimeSpec tmp = { result.tv_sec, result.tv_nsec };
+      return tmp;
+    }
+
+    bool checkPOSIXGetProcessTime() {
+# if _POSIX_CPUTIME == 0
+      return sysconf(_SC_CPUTIME) > 0;
+# else // _POSIX_CPUTIME > 0
+      return true;
+# endif // _POSIX_CPUTIME > 0
+    }
+#endif // _POSIX_CPUTIME >= 0
+
+    struct ProcessTimeClock {
+      TimeSpec (*clock)();
+      TimeSpec resolution;
+
+      static const ProcessTimeClock &instance() {
+        static const ProcessTimeClock clock;
+        return clock;
+      }
+
+    private:
+      ProcessTimeClock() {
+#if _POSIX_CPUTIME >= 0
+        if(checkPOSIXGetProcessTime())
+        {
+          clock = posixGetProcessTime;
+          resolution = posixGetProcessTimeResolution();
+          return;
+        }
+#endif // _POSIX_CPUTIME
+        DUNE_THROW(NotImplemented,
+                   "Impossible to get process time on this system");
+      }
+    };
+    TimeSpec getProcessTime() { return ProcessTimeClock::instance().clock(); }
+    TimeSpec getProcessTimeResolution()
+    { return ProcessTimeClock::instance().resolution; }
 
   } // namespace PDELab
 } // namespace Dune
