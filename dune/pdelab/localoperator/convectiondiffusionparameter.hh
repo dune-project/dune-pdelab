@@ -65,7 +65,7 @@ namespace Dune {
      */
     struct ConvectionDiffusionBoundaryConditions
     {
-      enum Type { Dirichlet=1, Neumann=-1, Outflow=-2 }; // BC requiring constraints must be >0 if
+      enum Type { Dirichlet=1, Neumann=-1, Outflow=-2, None=-3 }; // BC requiring constraints must be >0 if
       // constraints assembler coming with PDELab is used
     };
 
@@ -183,7 +183,7 @@ namespace Dune {
                        , const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
                        ) const
       {
-        return( t.bctype( ig.intersection(), coord ) 
+        return( t.bctype( ig.intersection(), coord )
                 == ConvectionDiffusionBoundaryConditions::Dirichlet );
       }
 
