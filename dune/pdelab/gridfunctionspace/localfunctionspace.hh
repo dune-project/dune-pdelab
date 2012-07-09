@@ -10,6 +10,7 @@
 #include <dune/geometry/referenceelements.hh>
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
+#include <dune/localfunctions/common/localkey.hh>
 
 #include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/common/multiindex.hh>
