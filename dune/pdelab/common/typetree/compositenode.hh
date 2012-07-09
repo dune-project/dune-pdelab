@@ -285,7 +285,7 @@ namespace Dune {
          */
         static shared_ptr<EmptyNode> guarded_wrap_object(EmptyNode& en)
         {
-          return emptyNodePtr;
+          return emptyNodePtr();
         }
 
       protected:
