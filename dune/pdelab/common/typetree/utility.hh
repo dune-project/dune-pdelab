@@ -60,17 +60,8 @@ namespace Dune {
 
 #endif // DOXYGEN
 
-
-      namespace {
-
-        //! Pointer to an empty node that is used for all empty slots
-        /**
-         * TODO: move into a library!
-         */
-        shared_ptr<EmptyNode> emptyNodePtr(make_shared<EmptyNode>());
-
-      }
-
+      //! Reference to a pointer to an empty node that is used for all empty slots
+      const shared_ptr<EmptyNode>& emptyNodePtr();
 
       //! Struct for obtaining some basic structural information about a TypeTree.
       /**
