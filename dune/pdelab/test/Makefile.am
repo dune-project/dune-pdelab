@@ -73,6 +73,13 @@ testanalytic_LDADD =				\
 	$(LDADD)
 MOSTLYCLEANFILES += channel.vtu
 
+NORMALTESTS += testclock
+testclock_SOURCES = testclock.cc
+# don't include all the grid stuff
+testclock_CPPFLAGS = @AM_CPPFLAGS@
+testclock_LDFLAGS = @AM_LDFLAGS@
+testclock_LDADD = @LDADD@
+
 if ALUGRID
 NORMALTESTS += test-composed-iis-gfs
 test_composed_iis_gfs_SOURCES = test-composed-iis-gfs.cc

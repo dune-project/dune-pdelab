@@ -26,7 +26,11 @@ libpdelabcommon_la_SOURCES =			\
 	clock.cc				\
 	hostname.cc				\
 	logtag.cc
+libpdelabcommon_la_CPPFLAGS = $(AM_CPPFLAGS)	\
+	$(POSIX_CLOCK_CPPFLAGS)
+libpdelabcommon_la_LDFLAGS = $(AM_LDFLAGS)	\
+	$(POSIX_CLOCK_LDFLAGS)
 libpdelabcommon_la_LIBADD =			\
-	-lrt
+	$(POSIX_CLOCK_LIBS)
 
 include $(top_srcdir)/am/global-rules

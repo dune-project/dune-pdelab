@@ -62,8 +62,18 @@ namespace Dune {
 
     //! get the wall time in seconds since the epoch
     TimeSpec getWallTime();
-    //! get the cpu time in seconds used by the current process
+    //! get resolution of the wall time in seconds
+    TimeSpec getWallTimeResolution();
+    //! \brief return a string describing which implementation is used to get
+    //!        the wall time
+    const std::string &getWallTimeImp();
+    //! get the process time in seconds used by the current process
     TimeSpec getProcessTime();
+    //! get resolution of the process time in seconds
+    TimeSpec getProcessTimeResolution();
+    //! \brief return a string describing which implementation is used to get
+    //!        the process time
+    const std::string &getProcessTimeImp();
 
   } // namespace PDELab
 } //namespace Dune

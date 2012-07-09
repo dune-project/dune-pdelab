@@ -9,6 +9,11 @@
 #define _POSIX_C_SOURCE 199309L
 #endif
 
+//make sure gettimeofday is available
+#ifndef _BSD_SOURCE
+#define _BSD_SOURCE
+#endif
+
 #if HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -22,6 +27,7 @@
 #include <sys/resource.h>
 #include <sys/time.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <dune/common/exceptions.hh>
 
@@ -42,7 +48,13 @@ namespace Dune {
       return s;
     }
 
-    TimeSpec getWallTime() {
+    //////////////////////////////////////////////////////////////////////
+    //
+    //  Wall time
+    //
+
+#if HAVE_POSIX_CLOCK
+    TimeSpec posixGetWallTime() {
       timespec result;
       if(clock_gettime(CLOCK_REALTIME, &result) < 0)
         DUNE_THROW(ClockError, "clock_gettime(CLOCK_REALTIME, ...) failed: "
@@ -51,7 +63,78 @@ namespace Dune {
       return tmp;
     }
 
-    TimeSpec getProcessTime() {
+    TimeSpec posixGetWallTimeResolution() {
+      timespec result;
+      if(clock_getres(CLOCK_REALTIME, &result) < 0)
+        DUNE_THROW(ClockError, "clock_getres(CLOCK_REALTIME, ...) failed: "
+                   "errno = " << errno);
+      TimeSpec tmp = { result.tv_sec, result.tv_nsec };
+      return tmp;
+    }
+
+    bool checkPOSIXGetWallTime() {
+# if _POSIX_TIMERS == 0
+      return sysconf(_SC_TIMERS) > 0;
+# else // _POSIX_TIMERS > 0
+      return true;
+# endif // _POSIX_TIMERS > 0
+    }
+#endif // HAVE_POSIX_CLOCK
+
+    TimeSpec gettimeofdayWallTime() {
+      timeval result;
+      if(gettimeofday(&result, NULL) < 0)
+        DUNE_THROW(ClockError, "gettimeofday() failed: errno = " << errno);
+      TimeSpec tmp = { result.tv_sec, 1000*result.tv_usec };
+      return tmp;
+    }
+
+    const TimeSpec &gettimeofdayWallTimeResolution() {
+      static const TimeSpec res = { 0, 1000 };
+      return res;
+    }
+
+    struct WallTimeClock {
+      TimeSpec (*clock)();
+      TimeSpec resolution;
+      std::string clockName;
+
+      static const WallTimeClock &instance() {
+        static const WallTimeClock clock;
+        return clock;
+      }
+
+    private:
+      WallTimeClock() {
+#if HAVE_POSIX_CLOCK
+        if(checkPOSIXGetWallTime()) {
+          clock = posixGetWallTime;
+          resolution = posixGetWallTimeResolution();
+          clockName = "clock_gettime(CLOCK_REALTIME, ...)";
+          return;
+        }
+#endif // HAVE_POSIX_CLOCK
+        {
+          clock = gettimeofdayWallTime;
+          resolution = gettimeofdayWallTimeResolution();
+          clockName = "gettimeofday(...)";
+          return;
+        }
+      }
+    };
+    TimeSpec getWallTime() { return WallTimeClock::instance().clock(); }
+    TimeSpec getWallTimeResolution()
+    { return WallTimeClock::instance().resolution; }
+    const std::string &getWallTimeImp()
+    { return WallTimeClock::instance().clockName; }
+
+    //////////////////////////////////////////////////////////////////////
+    //
+    //  Process Time
+    //
+
+#if HAVE_POSIX_CLOCK && _POSIX_CPUTIME >= 0
+    TimeSpec posixGetProcessTime() {
       // Use clock_gettime(CLOCK_PROCESS_CPUTIME_ID, ...) even though that may
       // be problematic in the context of process migration between cores.  In
       // practice, it appears to still be far better then the next best
@@ -64,6 +147,74 @@ namespace Dune {
       TimeSpec tmp = { result.tv_sec, result.tv_nsec };
       return tmp;
     }
+
+    TimeSpec posixGetProcessTimeResolution() {
+      timespec result;
+      if(clock_getres(CLOCK_PROCESS_CPUTIME_ID, &result) < 0)
+        DUNE_THROW(ClockError, "clock_getres(CLOCK_PROCESS_CPUTIME_ID, ...) "
+                   "failed: errno = " << errno);
+      TimeSpec tmp = { result.tv_sec, result.tv_nsec };
+      return tmp;
+    }
+
+    bool checkPOSIXGetProcessTime() {
+# if _POSIX_CPUTIME == 0
+      return sysconf(_SC_CPUTIME) > 0;
+# else // _POSIX_CPUTIME > 0
+      return true;
+# endif // _POSIX_CPUTIME > 0
+    }
+#endif // HAVE_POSIX_CLOCK && _POSIX_CPUTIME >= 0
+
+    TimeSpec getrusageProcessTime() {
+      rusage ru;
+      if(getrusage(RUSAGE_SELF, &ru) < 0)
+        DUNE_THROW(ClockError, "getrusage(RUSAGE_SELF, ...) failed: errno = "
+                   << errno);
+      TimeSpec time = { ru.ru_utime.tv_sec, 1000*ru.ru_utime.tv_usec };
+      TimeSpec tmp = { ru.ru_stime.tv_sec, 1000*ru.ru_stime.tv_usec };
+      time += tmp;
+      return time;
+    }
+
+    const TimeSpec &getrusageProcessTimeResolution() {
+      static const TimeSpec res = { 0, 1000 };
+      return res;
+    }
+
+    struct ProcessTimeClock {
+      TimeSpec (*clock)();
+      TimeSpec resolution;
+      std::string clockName;
+
+      static const ProcessTimeClock &instance() {
+        static const ProcessTimeClock clock;
+        return clock;
+      }
+
+    private:
+      ProcessTimeClock() {
+#if HAVE_POSIX_CLOCK && _POSIX_CPUTIME >= 0
+        if(checkPOSIXGetProcessTime())
+        {
+          clock = posixGetProcessTime;
+          resolution = posixGetProcessTimeResolution();
+          clockName = "clock_gettime(CLOCK_PROCESS_CPUTIME_ID, ...)";
+          return;
+        }
+#endif // HAVE_POSIX_CLOCK && _POSIX_CPUTIME
+        {
+          clock = getrusageProcessTime;
+          resolution = getrusageProcessTimeResolution();
+          clockName = "getrusage(RUSAGE_SELF, ...)";
+        }
+      }
+    };
+    TimeSpec getProcessTime() { return ProcessTimeClock::instance().clock(); }
+    TimeSpec getProcessTimeResolution()
+    { return ProcessTimeClock::instance().resolution; }
+    const std::string &getProcessTimeImp()
+    { return ProcessTimeClock::instance().clockName; }
 
   } // namespace PDELab
 } // namespace Dune
