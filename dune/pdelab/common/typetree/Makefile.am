@@ -28,4 +28,9 @@ typetree_HEADERS =				\
 	variadiccompositenode.hh		\
 	visitor.hh
 
+noinst_LTLIBRARIES = libpdelabtypetree.la
+libpdelabtypetree_la_SOURCES =			\
+	utility.cc
+
+
 include $(top_srcdir)/am/global-rules

@@ -6,6 +6,7 @@
 #include <dune/grid/common/gridenums.hh>
 #include <dune/geometry/referenceelements.hh>
 #include <dune/localfunctions/common/interfaceswitch.hh>
+#include <dune/localfunctions/common/localkey.hh>
 
 namespace Dune {
   namespace PDELab {
