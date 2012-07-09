@@ -1,7 +1,6 @@
 M4FILES =					\
 	dune-pdelab.m4				\
 	dune-posix-clock.m4			\
-	eigen.m4				\
 	petsc.m4
 
 aclocaldir = $(datadir)/aclocal
