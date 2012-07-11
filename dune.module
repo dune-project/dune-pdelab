@@ -3,7 +3,7 @@
 
 #Name of the module
 Module: dune-pdelab
-Version: 0.1
+Version: 1.0-dev
 Maintainer: dune-pdelab@dune-project.org
 #depending on 
 Depends: dune-common dune-geometry dune-grid dune-localfunctions dune-istl
