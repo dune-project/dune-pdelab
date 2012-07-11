@@ -453,6 +453,21 @@ namespace Dune {
         _vals[i * _cols.size() + j] += v;
       }
 
+      void setGlobal(size_type gi, size_type gj, const typename Matrix::field_type& v)
+      {
+        DUNE_THROW(NotImplemented,"Non-Dirichlet constraint is not yet implemented for PETSc backend.");
+      }
+
+      void addGlobal(size_type gi, size_type gj, const typename Matrix::field_type& v)
+      {
+        DUNE_THROW(NotImplemented,"Non-Dirichlet constraint is not yet implemented for PETSc backend.");
+      }
+
+      typename Matrix::field_type getGlobal(size_type gi, size_type gj) const
+      {
+        DUNE_THROW(NotImplemented,"Non-Dirichlet constraint is not yet implemented for PETSc backend.");
+      }
+
     private:
 
       PetscMatrixContainer& _m;
