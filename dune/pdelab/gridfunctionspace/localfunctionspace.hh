@@ -850,7 +850,12 @@ namespace Dune {
     public:
       typedef typename BaseT::Traits Traits;
 
-      LocalFunctionSpace(const GFS & gfs) : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs)) { this->setup(*this); }
+      LocalFunctionSpace(const GFS & gfs)
+        : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs))
+      {
+        this->global = &(this->global_storage);
+        this->setup(*this);
+      }
 
       LocalFunctionSpace(const LocalFunctionSpace & lfs)
         : BaseT(lfs)
@@ -895,7 +900,12 @@ namespace Dune {
       friend struct FillIndicesVisitor;
 
     public:
-      LocalFunctionSpace(const GFS & gfs) : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs)) { this->setup(*this); }
+      LocalFunctionSpace(const GFS & gfs)
+        : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs))
+      {
+        this->global = &(this->global_storage);
+        this->setup(*this);
+      }
 
       LocalFunctionSpace(const LocalFunctionSpace & lfs)
         : BaseT(lfs)
