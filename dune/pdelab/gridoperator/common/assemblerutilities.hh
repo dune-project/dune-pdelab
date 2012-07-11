@@ -312,6 +312,9 @@ namespace Dune{
             T vf = 1;
             do{
               // if gi is index of constrained dof
+
+              bool foreign_dofs = false;
+
               if(constrained_v){
 
                 if(gvrit == gvcit->second.end())
@@ -321,6 +324,7 @@ namespace Dune{
                 // and set vf to the contribution weight
                 gi = gvrit->first;
                 vf = gvrit->second;
+                foreign_dofs = true;
               }
 
               // Set constrained_u true if gj is constrained dof
@@ -332,7 +336,13 @@ namespace Dune{
                 if(gurit == gucit->second.end()){
                   T t = localcontainer(lfsv,i,lfsu,j) * vf;
                   if(t != 0.0)                 // entry might not be present in the matrix
-                    accessor.add(i,j,t);
+                    {
+                      if (foreign_dofs)
+                        accessor.addGlobal(gi,gj,t);
+                      else
+                        accessor.add(i,j,t);
+                    }
+
                 }
               }
 
@@ -348,12 +358,18 @@ namespace Dune{
                   // and set uf to the contribution weight
                   gj = gurit->first;
                   uf = gurit->second;
+                  foreign_dofs = true;
                 }
 
                 // add weighted local entry to global matrix
                 T t = localcontainer(lfsv,i,lfsu,j) * uf * vf;
                 if (t != 0.0)                 // entry might not be present in the matrix
-                  accessor.add(i,j,t);
+                  {
+                    if (foreign_dofs)
+                      accessor.addGlobal(gi,gj,t);
+                    else
+                      accessor.add(i,j,t);
+                  }
 
                 if(constrained_u && gurit != gucit->second.end())
                   ++gurit;
