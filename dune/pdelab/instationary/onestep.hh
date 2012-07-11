@@ -774,7 +774,7 @@ namespace Dune {
        * there).
        */
       OneStepMethod(const TimeSteppingParameterInterface<T>& method_,
-                    IGOS& igos_, const PDESOLVER& pdesolver_)
+                    IGOS& igos_, PDESOLVER& pdesolver_)
 	: method(&method_), igos(igos_), pdesolver(pdesolver_), verbosityLevel(1), step(1)
       {
         if (igos.trialGridFunctionSpace().gridView().comm().rank()>0)
@@ -995,7 +995,7 @@ namespace Dune {
     private:
       const TimeSteppingParameterInterface<T> *method;
       IGOS& igos;
-      PDESOLVER pdesolver;
+      PDESOLVER& pdesolver;
       int verbosityLevel;
       int step;
     };
