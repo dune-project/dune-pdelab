@@ -403,7 +403,7 @@ namespace Dune {
         
         // dimensions
         const int dim = EG::Geometry::dimension;
-        const int intorder = 2;
+        const int intorder = 2*lfsu.finiteElement().localBasis().order();
         
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -471,7 +471,7 @@ namespace Dune {
         A_n = param.A(*(ig.outside()),outside_local);
 
         // select quadrature rule
-        const int intorder = 2;
+        const int intorder = 2*lfsu_s.finiteElement().localBasis().order();
         Dune::GeometryType gtface = ig.geometryInInside().type();
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
 
@@ -560,7 +560,7 @@ namespace Dune {
         A_s.mv(n_F,An_F_s);
 
         // select quadrature rule
-        const int intorder = 2;
+        const int intorder = 2*lfsu_s.finiteElement().localBasis().order();
         Dune::GeometryType gtface = ig.geometryInInside().type();
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
 
