@@ -256,7 +256,10 @@ namespace Dune {
          * @param[in] gsop_ A LocalOperator to evaluate on the Intersections, defaults to GradientSmoothnessOperator
          */
         ResidualErrorEstimation(const GFSU& gfsu_, const LOP& lop_ = GradientSmoothnessOperator())
-          : gfsu(gfsu_), lop(lop_) {}
+          : gfsu(gfsu_), lop(lop_), gt(Dune::GeometryType::simplex,GV::dimension) {}
+
+        ResidualErrorEstimation(Dune::GeometryType gt_, const GFSU& gfsu_, const LOP& lop_ = GradientSmoothnessOperator())
+          : gfsu(gfsu_), lop(lop_), gt(gt_) {}
 
         /*! @brief Calculate an estimate of the error.
          *
@@ -266,8 +269,8 @@ namespace Dune {
         void apply(const U& u, V& estimate)
         {
           //! @todo allgemein !!!
-          static Dune::GeometryType simplex(Dune::GeometryType::simplex,GV::dimension);
-          P0FEM p0fem(simplex);
+          //static Dune::GeometryType simplex(Dune::GeometryType::simplex,GV::dimension);
+          P0FEM p0fem(gt);
           GFSV gfsv(gfsu.gridView(),p0fem);
 
           // make local function spaces
@@ -365,6 +368,7 @@ namespace Dune {
 
         const GFSU& gfsu;
         const LOP& lop;
+        Dune::GeometryType gt;
       };
 
     /*! @class AdaptationInterface
@@ -429,7 +433,13 @@ namespace Dune {
       EstimationAdaptation(Grid& grid_, const GFSU& gfsu_, Estimation& estimation_,
           double refine_, double coarsen_ = 0., int min_ = 0, int max_ = std::numeric_limits<int>::max(), bool doCommunicate_ = true)
         : grid(grid_), gfsu(gfsu_), estimation(estimation_),refine(refine_), coarsen(coarsen_),
-        min(min_), max(max_), doCommunicate(doCommunicate_), refinementMap(), localEstimate(0.) {}
+          min(min_), max(max_), doCommunicate(doCommunicate_), refinementMap(), localEstimate(0.),
+          gt(Dune::GeometryType::simplex,GV::dimension) {}
+
+      EstimationAdaptation(Dune::GeometryType gt_, Grid& grid_, const GFSU& gfsu_, Estimation& estimation_,
+          double refine_, double coarsen_ = 0., int min_ = 0, int max_ = std::numeric_limits<int>::max(), bool doCommunicate_ = true)
+        : grid(grid_), gfsu(gfsu_), estimation(estimation_),refine(refine_), coarsen(coarsen_),
+          min(min_), max(max_), doCommunicate(doCommunicate_), refinementMap(), localEstimate(0.), gt(gt_) {}
 
       /*! @brief Prepare information before marking any of the Elements
        *
@@ -438,8 +448,8 @@ namespace Dune {
       void prepare (const U& u)
       {
         //! @todo allgemein !!!
-        static Dune::GeometryType simplex(Dune::GeometryType::simplex,GV::dimension);
-        P0FEM p0fem(simplex);
+        //        static Dune::GeometryType simplex(Dune::GeometryType::simplex,GV::dimension);
+        P0FEM p0fem(gt);
         GFSV gfsv(gfsu.gridView(),p0fem);
         V estimate(gfsv,0.);
         estimation.apply(u,estimate);
@@ -536,6 +546,7 @@ namespace Dune {
       double localEstimate;
       std::vector<double> eta;
       double globalEstimate;
+      Dune::GeometryType gt;
     };
 
     /*! @class TestingAdaptation
