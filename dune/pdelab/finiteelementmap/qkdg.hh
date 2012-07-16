@@ -15,19 +15,19 @@
 
 #include "finiteelementmap.hh"
 
-namespace Dune 
+namespace Dune
 {
 
   namespace QkStuff
   {
     // This is the main class
     // usage: QkSize<2,3>::value
-    // k is the polynomial degree, 
+    // k is the polynomial degree,
     // n is the space dimension
     template<int k, int n>
     struct QkSize
     {
-      enum{ 
+      enum{
         value=(k+1)*QkSize<k,n-1>::value
       };
     };
@@ -35,7 +35,7 @@ namespace Dune
     template<>
     struct QkSize<0,1>
     {
-      enum{ 
+      enum{
         value=1
       };
     };
@@ -43,7 +43,7 @@ namespace Dune
     template<int k>
     struct QkSize<k,1>
     {
-      enum{ 
+      enum{
         value=k+1
       };
     };
@@ -51,7 +51,7 @@ namespace Dune
     template<int n>
     struct QkSize<0,n>
     {
-      enum{ 
+      enum{
         value=1
       };
     };
@@ -65,13 +65,13 @@ namespace Dune
         if (j!=i) result *= (k*x-j)/(i-j);
       return result;
     }
-    
+
     // derivative of ith Lagrange polynomial of degree k in one dimension
     template<class D, class R, int k>
     R dp (int i, D x)
     {
       R result(0.0);
-      
+
       for (int j=0; j<=k; j++)
         if (j!=i)
           {
@@ -82,7 +82,7 @@ namespace Dune
           }
       return result;
     }
-    
+
     template<int k, int d>
     Dune::FieldVector<int,d> multiindex (int i)
     {
@@ -123,16 +123,16 @@ namespace Dune
       //! \brief Evaluate all shape functions
       inline void evaluateFunction (const typename Traits::DomainType& in,
                                     std::vector<typename Traits::RangeType>& out) const
-      { 
+      {
         out.resize(size());
-        for (size_t i=0; i<size(); i++) 
+        for (size_t i=0; i<size(); i++)
           {
             // convert index i to multiindex
             Dune::FieldVector<int,d> alpha(multiindex<k,d>(i));
-	    
+
             // initialize product
             out[i] = 1.0;
-	    
+
             // dimension by dimension
             for (int j=0; j<d; j++)
               out[i] *= p<D,R,k>(alpha[j],in[j]);
@@ -140,27 +140,27 @@ namespace Dune
       }
 
       //! \brief Evaluate Jacobian of all shape functions
-      inline void 
+      inline void
       evaluateJacobian (const typename Traits::DomainType& in,         // position
                         std::vector<typename Traits::JacobianType>& out) const      // return value
-      {  
+      {
         out.resize(size());
-	
+
         // Loop over all shape functions
-        for (size_t i=0; i<size(); i++) 
+        for (size_t i=0; i<size(); i++)
           {
             // convert index i to multiindex
             Dune::FieldVector<int,d> alpha(multiindex<k,d>(i));
-	    
+
             // Loop over all coordinate directions
-            for (int j=0; j<d; j++) 
+            for (int j=0; j<d; j++)
               {
                 // Initialize: the overall expression is a product
                 // if j-th bit of i is set to -1, else 1
                 out[i][0][j] = dp<D,R,k>(alpha[j],in[j]);
-		
+
                 // rest of the product
-                for (int l=0; l<d; l++) 
+                for (int l=0; l<d; l++)
                   if (l!=j)
                     out[i][0][j] *= p<D,R,k>(alpha[l],in[l]);
               }
@@ -181,7 +181,7 @@ namespace Dune
        \implements Dune::LocalCoefficientsVirtualImp
     */
     template<int k, int d>
-    class QkDGLocalCoefficients 
+    class QkDGLocalCoefficients
     {
     public:
       //! \brief Standard constructor
@@ -190,47 +190,47 @@ namespace Dune
         for (std::size_t i=0; i<QkSize<k,d>::value; i++)
           li[i] = LocalKey(0,0,i);
       }
-      
+
       //! number of coefficients
       std::size_t size () const
       {
         return QkSize<k,d>::value;
       }
-      
+
       //! get i'th index
       const LocalKey& localKey (std::size_t i) const
       {
         return li[i];
-      } 
-      
+      }
+
     private:
       std::vector<LocalKey> li;
     };
 
     /** \todo Please doc me! */
     template<int k, int d, class LB>
-    class QkLocalInterpolation 
+    class QkLocalInterpolation
     {
     public:
-      
+
       //! \brief Local interpolation of a function
       template<typename F, typename C>
       void interpolate (const F& f, std::vector<C>& out) const
       {
         typename LB::Traits::DomainType x;
         typename LB::Traits::RangeType y;
-	
+
         out.resize(QkSize<k,d>::value);
-	
-        for (int i=0; i<QkSize<k,d>::value; i++) 
+
+        for (int i=0; i<QkSize<k,d>::value; i++)
           {
             // convert index i to multiindex
             Dune::FieldVector<int,d> alpha(multiindex<k,d>(i));
-	  
+
             // Generate coordinate of the i-th Lagrange point
             for (int j=0; j<d; j++)
               x[j] = (1.0*alpha[j])/k;
-	  
+
             f.evaluate(x,y); out[i] = y;
           }
       }
@@ -247,7 +247,7 @@ namespace Dune
       {
         typename LB::Traits::DomainType x(0);
         typename LB::Traits::RangeType y;
-        f.evaluate(x,y); 
+        f.evaluate(x,y);
         out.resize(1);
         out[0] = y;
       }
@@ -285,21 +285,21 @@ namespace Dune
     {
       return basis;
     }
-	
+
     /** \todo Please doc me !
      */
     const typename Traits::LocalCoefficientsType& localCoefficients () const
     {
       return coefficients;
     }
-	
+
     /** \todo Please doc me !
      */
     const typename Traits::LocalInterpolationType& localInterpolation () const
     {
       return interpolation;
     }
-    
+
     /** \todo Please doc me !
      */
     GeometryType type () const
@@ -338,9 +338,9 @@ namespace Dune
       typename Geometry::ctype, RF, k, Geometry::mydimension
       > LFE;
     typedef ScalarLocalToGlobalFiniteElementAdaptorFactory<LFE, Geometry> Base;
-    
+
     static const LFE lfe;
-    
+
   public:
     //! default constructor
     QkDGFiniteElementFactory() : Base(lfe) {}
@@ -367,7 +367,7 @@ namespace Dune
     enum{ k = 1 };
     typedef QkStuff::QkLocalBasis<D,R,k,d> LocalBasis;
 
-    class QkCGLocalCoefficients 
+    class QkCGLocalCoefficients
     {
       enum{ k = 1 };
     public:
@@ -377,19 +377,19 @@ namespace Dune
         for (std::size_t i=0; i<QkStuff::QkSize<k,d>::value; i++)
           li[i] = LocalKey(i,d,0);
       }
-      
+
       //! number of coefficients
       std::size_t size () const
       {
         return QkStuff::QkSize<k,d>::value;
       }
-      
+
       //! get i'th index
       const LocalKey& localKey (std::size_t i) const
       {
         return li[i];
-      } 
-      
+      }
+
     private:
       std::vector<LocalKey> li;
     };
@@ -417,21 +417,21 @@ namespace Dune
     {
       return basis;
     }
-	
+
     /** \todo Please doc me !
      */
     const typename Traits::LocalCoefficientsType& localCoefficients () const
     {
       return coefficients;
     }
-	
+
     /** \todo Please doc me !
      */
     const typename Traits::LocalInterpolationType& localInterpolation () const
     {
       return interpolation;
     }
-    
+
     /** \todo Please doc me !
      */
     GeometryType type () const
@@ -461,7 +461,7 @@ namespace Dune
     enum{ d = 2 };
     typedef QkStuff::QkLocalBasis<D,R,k,d> LocalBasis;
 
-    class QkCGLocalCoefficients 
+    class QkCGLocalCoefficients
     {
       enum{ k = 2 };
       enum{ d = 2 };
@@ -479,19 +479,19 @@ namespace Dune
         li[7] = LocalKey(3,1,0);
         li[8] = LocalKey(3,2,0);
       }
-      
+
       //! number of coefficients
       std::size_t size () const
       {
         return QkStuff::QkSize<k,d>::value;
       }
-      
+
       //! get i'th index
       const LocalKey& localKey (std::size_t i) const
       {
         return li[i];
-      } 
-      
+      }
+
     private:
       std::vector<LocalKey> li;
     };
@@ -519,21 +519,21 @@ namespace Dune
     {
       return basis;
     }
-	
+
     /** \todo Please doc me !
      */
     const typename Traits::LocalCoefficientsType& localCoefficients () const
     {
       return coefficients;
     }
-	
+
     /** \todo Please doc me !
      */
     const typename Traits::LocalInterpolationType& localInterpolation () const
     {
       return interpolation;
     }
-    
+
     /** \todo Please doc me !
      */
     GeometryType type () const
@@ -564,7 +564,7 @@ namespace Dune
     enum{ d = 3 };
     typedef QkStuff::QkLocalBasis<D,R,k,d> LocalBasis;
 
-    class QkCGLocalCoefficients 
+    class QkCGLocalCoefficients
     {
       enum{ k = 2 };
       enum{ d = 3 };
@@ -584,19 +584,19 @@ namespace Dune
         li[ 3] = LocalKey(4,2,0); li[ 4] = LocalKey(4,1,0); li[ 5] = LocalKey(5,2,0);
         li[ 0] = LocalKey(0,3,0); li[ 1] = LocalKey(6,2,0); li[ 2] = LocalKey(1,3,0);
       }
-      
+
       //! number of coefficients
       std::size_t size () const
       {
         return QkStuff::QkSize<k,d>::value;
       }
-      
+
       //! get i'th index
       const LocalKey& localKey (std::size_t i) const
       {
         return li[i];
-      } 
-      
+      }
+
     private:
       std::vector<LocalKey> li;
     };
@@ -624,21 +624,21 @@ namespace Dune
     {
       return basis;
     }
-	
+
     /** \todo Please doc me !
      */
     const typename Traits::LocalCoefficientsType& localCoefficients () const
     {
       return coefficients;
     }
-	
+
     /** \todo Please doc me !
      */
     const typename Traits::LocalInterpolationType& localInterpolation () const
     {
       return interpolation;
     }
-    
+
     /** \todo Please doc me !
      */
     GeometryType type () const
