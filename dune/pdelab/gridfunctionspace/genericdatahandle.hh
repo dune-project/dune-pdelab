@@ -241,13 +241,13 @@ namespace Dune {
 	{
 	public:
 	  template<class MessageBuffer, class DataType>
-	  void gather (MessageBuffer& buff, DataType& data)
+      void gather (MessageBuffer& buff, DataType& data) const
 	  {
 		buff.write(data);
 	  }
 	  
 	  template<class MessageBuffer, class DataType>
-	  void scatter (MessageBuffer& buff, DataType& data)
+      void scatter (MessageBuffer& buff, DataType& data) const
 	  {
 		DataType x; 
 		buff.read(x);
@@ -272,14 +272,14 @@ namespace Dune {
 	{
 	public:
 	  template<class MessageBuffer, class DataType>
-	  void gather (MessageBuffer& buff, DataType& data)
+      void gather (MessageBuffer& buff, DataType& data) const
 	  {
 		buff.write(data);
         data = (DataType) 0;
 	  }
 	  
 	  template<class MessageBuffer, class DataType>
-	  void scatter (MessageBuffer& buff, DataType& data)
+      void scatter (MessageBuffer& buff, DataType& data) const
 	  {
 		DataType x; 
 		buff.read(x);
@@ -304,13 +304,13 @@ namespace Dune {
 	{
 	public:
 	  template<class MessageBuffer, class DataType>
-	  void gather (MessageBuffer& buff, DataType& data)
+      void gather (MessageBuffer& buff, DataType& data) const
 	  {
 		buff.write(data);
 	  }
 	  
 	  template<class MessageBuffer, class DataType>
-	  void scatter (MessageBuffer& buff, DataType& data)
+      void scatter (MessageBuffer& buff, DataType& data) const
 	  {
 		DataType x; 
 		buff.read(x);
@@ -335,13 +335,13 @@ namespace Dune {
 	{
 	public:
 	  template<class MessageBuffer, class DataType>
-	  void gather (MessageBuffer& buff, DataType& data)
+      void gather (MessageBuffer& buff, DataType& data) const
 	  {
 		buff.write(data);
 	  }
 	  
 	  template<class MessageBuffer, class DataType>
-	  void scatter (MessageBuffer& buff, DataType& data)
+      void scatter (MessageBuffer& buff, DataType& data) const
 	  {
 		DataType x; 
 		buff.read(x);
@@ -366,13 +366,13 @@ namespace Dune {
 	{
 	public:
 	  template<class MessageBuffer, class DataType>
-	  void gather (MessageBuffer& buff, DataType& data)
+      void gather (MessageBuffer& buff, DataType& data) const
 	  {
 		buff.write(data);
 	  }
 	  
 	  template<class MessageBuffer, class DataType>
-	  void scatter (MessageBuffer& buff, DataType& data)
+      void scatter (MessageBuffer& buff, DataType& data) const
 	  {
 		DataType x; 
 		buff.read(x);
@@ -399,7 +399,7 @@ namespace Dune {
     {
     public:
       template<class MessageBuffer, class EntityType, class DataType>
-      void gather (MessageBuffer& buff, const EntityType& e, DataType& data)
+      void gather (MessageBuffer& buff, const EntityType& e, DataType& data) const
       {
         if (e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity)
           data = (1<<24);
@@ -407,7 +407,7 @@ namespace Dune {
       }
   
       template<class MessageBuffer, class EntityType, class DataType>
-      void scatter (MessageBuffer& buff, const EntityType& e, DataType& data)
+      void scatter (MessageBuffer& buff, const EntityType& e, DataType& data) const
       {
 		DataType x; 
 		buff.read(x);
@@ -438,7 +438,7 @@ namespace Dune {
 	{
 	public:
       template<class MessageBuffer, class EntityType, class DataType>
-      void gather (MessageBuffer& buff, const EntityType& e, DataType& data)
+      void gather (MessageBuffer& buff, const EntityType& e, DataType& data) const
 	  {
         if (e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity)
           data = 1;
@@ -446,7 +446,7 @@ namespace Dune {
 	  }
 	  
       template<class MessageBuffer, class EntityType, class DataType>
-      void scatter (MessageBuffer& buff, const EntityType& e, DataType& data)
+      void scatter (MessageBuffer& buff, const EntityType& e, DataType& data) const
 	  {
 		DataType x; 
 		buff.read(x);
