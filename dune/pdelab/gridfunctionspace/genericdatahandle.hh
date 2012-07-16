@@ -200,161 +200,161 @@ namespace Dune {
     };
 
 
-	class AddGatherScatter
-	{
-	public:
-	  template<class MessageBuffer, class DataType>
+    class AddGatherScatter
+    {
+    public:
+      template<class MessageBuffer, class DataType>
       void gather (MessageBuffer& buff, DataType& data) const
-	  {
-		buff.write(data);
-	  }
-	  
-	  template<class MessageBuffer, class DataType>
+      {
+        buff.write(data);
+      }
+
+      template<class MessageBuffer, class DataType>
       void scatter (MessageBuffer& buff, DataType& data) const
-	  {
-		DataType x; 
-		buff.read(x);
-		data += x;
-	  }
-	};
+      {
+        DataType x;
+        buff.read(x);
+        data += x;
+      }
+    };
 
     template<class GFS, class V>
-	class AddDataHandle
+    class AddDataHandle
       : public GFSDataHandle<GFS,V,DataGatherScatter<AddGatherScatter> >
-	{
+    {
       typedef GFSDataHandle<GFS,V,DataGatherScatter<AddGatherScatter> > BaseT;
 
-	public:
+    public:
 
       AddDataHandle (const GFS& gfs_, V& v_)
         : BaseT(gfs_,v_,DataGatherScatter<AddGatherScatter>(AddGatherScatter()))
-	  {}
-	};
+      {}
+    };
 
-	class AddClearGatherScatter
-	{
-	public:
-	  template<class MessageBuffer, class DataType>
+    class AddClearGatherScatter
+    {
+    public:
+      template<class MessageBuffer, class DataType>
       void gather (MessageBuffer& buff, DataType& data) const
-	  {
-		buff.write(data);
+      {
+        buff.write(data);
         data = (DataType) 0;
-	  }
-	  
-	  template<class MessageBuffer, class DataType>
+      }
+
+      template<class MessageBuffer, class DataType>
       void scatter (MessageBuffer& buff, DataType& data) const
-	  {
-		DataType x; 
-		buff.read(x);
-		data += x;
-	  }
-	};
-	
-	template<class GFS, class V>
-	class AddClearDataHandle
+      {
+        DataType x;
+        buff.read(x);
+        data += x;
+      }
+    };
+
+    template<class GFS, class V>
+    class AddClearDataHandle
       : public GFSDataHandle<GFS,V,DataGatherScatter<AddClearGatherScatter> >
-	{
+    {
       typedef GFSDataHandle<GFS,V,DataGatherScatter<AddClearGatherScatter> > BaseT;
 
-	public:
+    public:
 
       AddClearDataHandle (const GFS& gfs_, V& v_)
         : BaseT(gfs_,v_,DataGatherScatter<AddClearGatherScatter>(AddClearGatherScatter()))
-	  {}
-	};
+      {}
+    };
 
-	class CopyGatherScatter
-	{
-	public:
-	  template<class MessageBuffer, class DataType>
+    class CopyGatherScatter
+    {
+    public:
+      template<class MessageBuffer, class DataType>
       void gather (MessageBuffer& buff, DataType& data) const
-	  {
-		buff.write(data);
-	  }
-	  
-	  template<class MessageBuffer, class DataType>
+      {
+        buff.write(data);
+      }
+
+      template<class MessageBuffer, class DataType>
       void scatter (MessageBuffer& buff, DataType& data) const
-	  {
-		DataType x; 
-		buff.read(x);
-		data = x;
-	  }
-	};
-	
-	template<class GFS, class V>
-	class CopyDataHandle
+      {
+        DataType x;
+        buff.read(x);
+        data = x;
+      }
+    };
+
+    template<class GFS, class V>
+    class CopyDataHandle
       : public GFSDataHandle<GFS,V,DataGatherScatter<CopyGatherScatter> >
-	{
+    {
       typedef GFSDataHandle<GFS,V,DataGatherScatter<CopyGatherScatter >> BaseT;
 
-	public:
+    public:
 
       CopyDataHandle (const GFS& gfs_, V& v_)
         : BaseT(gfs_,v_,DataGatherScatter<CopyGatherScatter>(CopyGatherScatter()))
-	  {}
-	};
+      {}
+    };
 
-	class MinGatherScatter
-	{
-	public:
-	  template<class MessageBuffer, class DataType>
+    class MinGatherScatter
+    {
+    public:
+      template<class MessageBuffer, class DataType>
       void gather (MessageBuffer& buff, DataType& data) const
-	  {
-		buff.write(data);
-	  }
-	  
-	  template<class MessageBuffer, class DataType>
+      {
+        buff.write(data);
+      }
+
+      template<class MessageBuffer, class DataType>
       void scatter (MessageBuffer& buff, DataType& data) const
-	  {
-		DataType x; 
-		buff.read(x);
-		data = std::min(data,x);
-	  }
-	};
-	
-	template<class GFS, class V>
-	class MinDataHandle
+      {
+        DataType x;
+        buff.read(x);
+        data = std::min(data,x);
+      }
+    };
+
+    template<class GFS, class V>
+    class MinDataHandle
       : public GFSDataHandle<GFS,V,DataGatherScatter<MinGatherScatter> >
-	{
+    {
       typedef GFSDataHandle<GFS,V,DataGatherScatter<MinGatherScatter> > BaseT;
 
-	public:
+    public:
 
       MinDataHandle (const GFS& gfs_, V& v_)
         : BaseT(gfs_,v_,DataGatherScatter<MinGatherScatter>(MinGatherScatter()))
-	  {}
-	};
+      {}
+    };
 
-	class MaxGatherScatter
-	{
-	public:
-	  template<class MessageBuffer, class DataType>
+    class MaxGatherScatter
+    {
+    public:
+      template<class MessageBuffer, class DataType>
       void gather (MessageBuffer& buff, DataType& data) const
-	  {
-		buff.write(data);
-	  }
-	  
-	  template<class MessageBuffer, class DataType>
+      {
+        buff.write(data);
+      }
+
+      template<class MessageBuffer, class DataType>
       void scatter (MessageBuffer& buff, DataType& data) const
-	  {
-		DataType x; 
-		buff.read(x);
-		data = std::max(data,x);
-	  }
-	};
-	
-	template<class GFS, class V>
-	class MaxDataHandle
+      {
+        DataType x;
+        buff.read(x);
+        data = std::max(data,x);
+      }
+    };
+
+    template<class GFS, class V>
+    class MaxDataHandle
       : public GFSDataHandle<GFS,V,DataGatherScatter<MaxGatherScatter> >
-	{
+    {
       typedef GFSDataHandle<GFS,V,DataGatherScatter<MaxGatherScatter> > BaseT;
 
-	public:
+    public:
 
       MaxDataHandle (const GFS& gfs_, V& v_)
         : BaseT(gfs_,v_,DataGatherScatter<MaxGatherScatter>(MaxGatherScatter()))
-	  {}
-	};
+      {}
+    };
 
     // assign degrees of freedoms to processors
     // owner is never a ghost
@@ -368,12 +368,12 @@ namespace Dune {
           data = (1<<24);
         buff.write(data);
       }
-  
+
       template<class MessageBuffer, class EntityType, class DataType>
       void scatter (MessageBuffer& buff, const EntityType& e, DataType& data) const
       {
-		DataType x; 
-		buff.read(x);
+        DataType x;
+        buff.read(x);
         if (e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity)
           data = x;
         else
@@ -381,59 +381,60 @@ namespace Dune {
       }
     };
 
-	template<class GFS, class V>
-	class PartitionDataHandle
+    template<class GFS, class V>
+    class PartitionDataHandle
       : public GFSDataHandle<GFS,V,DataEntityGatherScatter<PartitionGatherScatter> >
-	{
+    {
       typedef GFSDataHandle<GFS,V,DataEntityGatherScatter<PartitionGatherScatter> > BaseT;
 
-	public:
+    public:
 
       PartitionDataHandle (const GFS& gfs_, V& v_)
         : BaseT(gfs_,v_,DataEntityGatherScatter<PartitionGatherScatter>(PartitionGatherScatter()))
-	  {
+      {
         v_ = gfs_.gridView().comm().rank();
       }
-	};
+    };
 
     // compute dofs assigned to ghost entities
-	class GhostGatherScatter
-	{
-	public:
+    class GhostGatherScatter
+    {
+    public:
       template<class MessageBuffer, class EntityType, class DataType>
       void gather (MessageBuffer& buff, const EntityType& e, DataType& data) const
-	  {
+      {
         if (e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity)
           data = 1;
         buff.write(data);
-	  }
-	  
+      }
+
       template<class MessageBuffer, class EntityType, class DataType>
       void scatter (MessageBuffer& buff, const EntityType& e, DataType& data) const
-	  {
-		DataType x; 
-		buff.read(x);
+      {
+        DataType x;
+        buff.read(x);
         if (e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity)
           data = 1;
-	  }
-	};
-	
-	template<class GFS, class V>
-	class GhostDataHandle
+      }
+    };
+
+    template<class GFS, class V>
+    class GhostDataHandle
       : public Dune::PDELab::GFSDataHandle<GFS,V,DataEntityGatherScatter<GhostGatherScatter> >
-	{
+    {
       typedef Dune::PDELab::GFSDataHandle<GFS,V,DataEntityGatherScatter<GhostGatherScatter> > BaseT;
 
-	public:
+    public:
 
       GhostDataHandle (const GFS& gfs_, V& v_)
         : BaseT(gfs_,v_,DataEntityGatherScatter<GhostGatherScatter>(GhostGatherScatter()))
-	  {
+      {
         v_ = static_cast<typename V::ElementType>(0);
       }
-	};
+    };
 
 
-  }
-}
-#endif
+  } // namespace PDELab
+} // namespace Dune
+
+#endif // DUNE_PDELAB_GENERICDATAHANDLE_HH
