@@ -38,6 +38,14 @@ namespace Dune {
         // don't do anything - this is handled by the specialized GridViewOrdering
       }
 
+      typename Traits::SizeType size(const typename Traits::DOFIndex::EntityIndex& index) const
+      {
+        return size(
+          Traits::DOFIndexAccessor::GeometryIndex::geometryType(index),
+          Traits::DOFIndexAccessor::GeometryIndex::entityIndex(index)
+        );
+      }
+
       typename Traits::SizeType size(const typename Traits::SizeType geometry_type_index, const typename Traits::SizeType entity_index) const
       {
         typedef typename Traits::SizeType size_type;
