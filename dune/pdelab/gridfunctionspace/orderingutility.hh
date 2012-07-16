@@ -69,16 +69,40 @@ namespace Dune {
         dof_index.treeIndex().push_back(tree_index);
       }
 
+      struct GeometryIndex
+      {
+
+        template<typename Index>
+        static std::size_t geometryType(const Index& geometry_index)
+        {
+          return geometry_index[0];
+        }
+
+        template<typename Index>
+        static std::size_t entityIndex(const Index& geometry_index)
+        {
+          return geometry_index[1];
+        }
+
+        template<typename Index, typename SizeType>
+        static void store(Index& index, const GeometryType& gt, SizeType entity_index)
+        {
+          index[0] = GlobalGeometryTypeIndex::index(gt);
+          index[1] = entity_index;
+        }
+
+      };
+
       template<typename DOFIndex>
       static std::size_t geometryType(const DOFIndex& dof_index)
       {
-        return dof_index.entityIndex()[0];
+        return GeometryIndex::geometryType(dof_index.entityIndex());
       }
 
       template<typename DOFIndex>
       static std::size_t entityIndex(const DOFIndex& dof_index)
       {
-        return dof_index.entityIndex()[1];
+        return GeometryIndex::entityIndex(dof_index.entityIndex());
       }
 
     };
