@@ -167,8 +167,10 @@ namespace Dune {
 
       typedef typename LFS::Traits::GridFunctionSpace GFS;
       typedef typename GFS::Ordering Ordering;
-      typedef typename Ordering::Traits::ContainerIndex CI;
-      typedef typename Ordering::Traits::DOFIndex DI;
+      typedef typename Ordering::Traits::ContainerIndex ContainerIndex;
+      typedef ContainerIndex CI;
+      typedef typename Ordering::Traits::DOFIndex DOFIndex;
+      typedef DOFIndex DI;
       typedef std::size_t size_type;
 
       typedef std::vector<CI> CIVector;
@@ -350,8 +352,10 @@ namespace Dune {
       typedef LFS LocalFunctionSpace;
       typedef typename LFS::Traits::GridFunctionSpace GFS;
       typedef typename GFS::Ordering Ordering;
-      typedef typename Ordering::Traits::ContainerIndex CI;
-      typedef typename Ordering::Traits::DOFIndex DI;
+      typedef typename Ordering::Traits::ContainerIndex ContainerIndex;
+      typedef ContainerIndex CI;
+      typedef typename Ordering::Traits::DOFIndex DOFIndex;
+      typedef DOFIndex DI;
       typedef std::size_t size_type;
 
       typedef std::vector<CI> CIVector;
