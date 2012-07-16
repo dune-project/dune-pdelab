@@ -352,6 +352,11 @@ namespace Dune {
           return *_container;
         }
 
+        const LFSCache& cache() const
+        {
+          return *_lfs_cache;
+        }
+
       private:
 
         ISTLBlockVectorContainer* _container;
