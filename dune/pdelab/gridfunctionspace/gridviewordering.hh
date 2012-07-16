@@ -968,20 +968,24 @@ namespace Dune {
 
             _block_count = 0;
 
+            _size = 0;
+
             for (GTVector::const_iterator it = geom_types.begin(); it != geom_types.end(); ++it)
               {
                 const size_type gt_index = GlobalGeometryTypeIndex::index(*it);
-                const size_type gt_size = localOrdering().size(gt_index,0);
+                size_type gt_size = localOrdering().size(gt_index,0);
                 const size_type gt_entity_count = _gv.indexSet().size(*it);
+                _size += gt_size * gt_entity_count;
+                if (_container_blocked)
+                  gt_size = gt_size > 0;
                 _gt_dof_offsets[gt_index + 1] = gt_size * gt_entity_count;
-                _block_count += (gt_size > 0) * gt_entity_count;
+                _block_count += gt_size * gt_entity_count;
               }
 
             std::partial_sum(_gt_dof_offsets.begin(),_gt_dof_offsets.end(),_gt_dof_offsets.begin());
-            _size = _gt_dof_offsets.back();
+            _block_count = _gt_dof_offsets.back();
 
-            if (!_container_blocked)
-              _block_count = _size;
+            _codim_fixed_size.set();
 
           }
         else
