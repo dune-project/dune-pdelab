@@ -668,7 +668,29 @@ namespace Dune {
     template<class D, class R, int k, int d>
     class QkDGLocalFiniteElementMap
       : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::QkDGLocalFiniteElement<D,R,k,d> >
-    {};
+    {
+
+    public:
+
+      bool fixedSize() const
+      {
+        return true;
+      }
+
+      std::size_t size(GeometryType gt) const
+      {
+        if (gt == GeometryType(GeometryType::cube,d))
+          return Dune::QkStuff::QkSize<k,d>::value;
+        else
+          return 0;
+      }
+
+      std::size_t maxLocalSize() const
+      {
+        return Dune::QkStuff::QkSize<k,d>::value;
+      }
+
+    };
 
     //! wrap up element from local functions
     //! \ingroup FiniteElementMap
