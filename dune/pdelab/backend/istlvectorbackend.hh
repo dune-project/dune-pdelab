@@ -177,11 +177,11 @@ namespace Dune {
       struct LocalView
       {
 
-        dune_static_assert((is_same<typename LFSCache::LocalFunctionSpace::Traits::GridFunctionSpace,GFS>::value),
-                           "The LocalFunctionSpace passed to LocalView must belong to the underlying GridFunctionSpace.");
+        //dune_static_assert((is_same<typename LFSCache::LocalFunctionSpace::Traits::GridFunctionSpace,GFS>::value),
+        //                   "The LocalFunctionSpace passed to LocalView must belong to the underlying GridFunctionSpace.");
 
         typedef E ElementType;
-        typedef typename LFSCache::LocalFunctionSpace LFS;
+        //typedef typename LFSCache::LocalFunctionSpace LFS;
         typedef typename LFSCache::DOFIndex DOFIndex;
         typedef typename LFSCache::ContainerIndex ContainerIndex;
 
