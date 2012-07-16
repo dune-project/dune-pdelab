@@ -854,6 +854,7 @@ namespace Dune {
         : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs))
       {
         this->global = &(this->global_storage);
+        this->_multi_indices = &(this->_multi_index_storage);
         this->setup(*this);
       }
 
@@ -864,6 +865,7 @@ namespace Dune {
         // as they are still pointing to the global_storage of the
         // old tree.
         this->global = &(this->global_storage);
+        this->_multi_indices = &(this->_multi_index_storage);
         this->setup(*this);
       }
 
@@ -904,6 +906,7 @@ namespace Dune {
         : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs))
       {
         this->global = &(this->global_storage);
+        this->_multi_indices = &(this->_multi_index_storage);
         this->setup(*this);
       }
 
@@ -914,6 +917,7 @@ namespace Dune {
         // as they are still pointing to the global_storage of the
         // old tree.
         this->global = &(this->global_storage);
+        this->_multi_indices = &(this->_multi_index_storage);
         this->setup(*this);
       }
 
