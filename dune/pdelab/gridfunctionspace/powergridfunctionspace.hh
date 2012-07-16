@@ -11,6 +11,7 @@
 #include <dune/pdelab/common/typetree/powernode.hh>
 #include <dune/pdelab/gridfunctionspace/lexicographicordering.hh>
 #include <dune/pdelab/gridfunctionspace/powercompositegridfunctionspacebase.hh>
+#include <dune/pdelab/gridfunctionspace/datahandleprovider.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 
 namespace Dune {
@@ -37,15 +38,15 @@ namespace Dune {
     template<typename T, std::size_t k,
              typename Backend,
              typename OrderingTag = LexicographicOrderingTag>
-    class PowerGridFunctionSpace :
-      public TypeTree::PowerNode<T,k>,
-      public PowerCompositeGridFunctionSpaceBase<
-        PowerGridFunctionSpace<T, k, Backend, OrderingTag>,
-        typename T::Traits::GridViewType,
-        Backend,
-        OrderingTag,
-        k
-      >
+    class PowerGridFunctionSpace
+      : public TypeTree::PowerNode<T,k>
+      , public PowerCompositeGridFunctionSpaceBase<
+          PowerGridFunctionSpace<T, k, Backend, OrderingTag>,
+          typename T::Traits::GridViewType,
+          Backend,
+          OrderingTag,
+          k>
+      , public DataHandleProvider<PowerGridFunctionSpace<T,k,Backend,OrderingTag> >
     {
 
     public:

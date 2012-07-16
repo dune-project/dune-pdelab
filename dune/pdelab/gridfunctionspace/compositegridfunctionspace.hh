@@ -10,6 +10,7 @@
 #include <dune/pdelab/common/typetree/utility.hh>
 #include <dune/pdelab/gridfunctionspace/lexicographicordering.hh>
 #include <dune/pdelab/gridfunctionspace/powercompositegridfunctionspacebase.hh>
+#include <dune/pdelab/gridfunctionspace/datahandleprovider.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 //#include <dune/pdelab/gridfunctionspace/compositeorderingutilities.hh>
 
@@ -50,6 +51,7 @@ namespace Dune {
           OrderingTag,
           DUNE_TYPETREE_COMPOSITENODE_BASETYPE::CHILDREN
         >
+      , public DataHandleProvider<CompositeGridFunctionSpace<Backend,OrderingTag,DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES> >
     {
       typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE NodeT;
 

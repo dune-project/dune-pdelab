@@ -30,6 +30,7 @@
 #include <dune/pdelab/gridfunctionspace/gridviewordering.hh>
 #include <dune/pdelab/gridfunctionspace/lexicographicordering.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/datahandleprovider.hh>
 #include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
 
@@ -320,6 +321,7 @@ namespace Dune {
     class GridFunctionSpace
       : public TypeTree::LeafNode
       , public GridFunctionOutputParameters
+      , public DataHandleProvider<GridFunctionSpace<GV,FEM,CE,B,P> >
     {
 
       typedef TypeTree::TransformTree<GridFunctionSpace,gfs_to_ordering<GridFunctionSpace> > ordering_transformation;
@@ -527,72 +529,6 @@ namespace Dune {
         // now compute
         return offset[(gtoffset.find(gt)->second)+index];
       }
-
-      //------------------------------
-      // generic data handle interface
-      //------------------------------
-
-      //! returns true if data for this codim should be communicated
-      bool dataHandleContains (int dim, int codim) const
-      {
-        return (codimUsed.find(codim)!=codimUsed.end());
-      }
-
-      //! returns true if size per entity of given dim and codim is a constant
-      bool dataHandleFixedSize (int dim, int codim) const
-      {
-        return false;
-      }
-
-      /*! how many objects of type DataType have to be sent for a given entity
-
-        Note: Only the sender side needs to know this size.
-      */
-      template<class EntityType>
-      size_t dataHandleSize (const EntityType& e) const
-      {
-        Dune::GeometryType gt=e.type();
-
-        typename GTOffsetMap::const_iterator git = gtoffset.find(gt);
-        if (git == gtoffset.end())
-          return 0;
-
-        typename GV::IndexSet::IndexType index = git->second + gv.indexSet().index(e);
-        return offset[index+1]-offset[index];
-      }
-
-      //! return vector of global indices associated with the given entity
-      template<class EntityType>
-      std::size_t dataHandleGlobalIndices (const EntityType& e,
-                                           std::vector<typename Traits::SizeType>& global) const
-      {
-        return dataHandleGlobalIndices(e,global,0,true);
-      }
-
-#ifndef DOXYGEN
-
-      template<class EntityType>
-      std::size_t dataHandleGlobalIndices (const EntityType& e,
-                                           std::vector<typename Traits::SizeType>& global,
-                                           std::size_t pos,
-                                           bool resize) const
-      {
-        Dune::GeometryType gt=e.type();
-
-        typename GTOffsetMap::const_iterator git = gtoffset.find(gt);
-        if (git == gtoffset.end())
-          return 0;
-
-        typename GV::IndexSet::IndexType index = git->second + gv.indexSet().index(e);
-        unsigned int n = offset[index+1]-offset[index];
-        if (resize)
-          global.resize(n+pos);
-        for (unsigned i=0; i<n; i++)
-          global[pos+i] = offset[index]+i;
-        return n;
-      }
-
-#endif // DOXYGEN
 
       //------------------------------
 
