@@ -38,6 +38,8 @@ namespace Dune {
 
       public:
 
+        typedef typename OrderingBase<DI,CI>::Traits Traits;
+
         typedef LexicographicOrderingTag OrderingTag;
 
         static const bool consume_tree_index = true;

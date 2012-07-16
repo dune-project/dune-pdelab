@@ -67,7 +67,7 @@ namespace Dune {
             const LocalKey& key = coeffs.localKey(i);
             Dune::GeometryType gt = ref_el.type(key.subEntity(),key.codim());
             this->_gt_used[GlobalGeometryTypeIndex::index(gt)] = true;
-            this->_codim_used[key.codim()] = true;
+            this->_codim_used.set(key.codim());
           }
       }
 

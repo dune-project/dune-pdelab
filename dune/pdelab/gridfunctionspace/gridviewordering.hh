@@ -230,6 +230,9 @@ namespace Dune {
         _fixed_size = lo._fixed_size;
         _max_local_size = lo.maxLocalSize();
 
+        _codim_used = lo._codim_used;
+        _codim_fixed_size = lo._codim_fixed_size;
+
       }
 
       //! dofs are blocked per entity/intersection on the leafs
@@ -246,6 +249,8 @@ namespace Dune {
        *       and intersections.
        */
       bool fixedSize() const { return _fixed_size; }
+
+      using BaseT::fixedSize;
 
       //! \brief maximum number of dofs attached to any given element and all
       //!        of its subentities and intersections
@@ -322,6 +327,8 @@ namespace Dune {
       using BaseT::_block_count;
       using BaseT::_container_blocked;
       using BaseT::_fixed_size;
+      using BaseT::_codim_used;
+      using BaseT::_codim_fixed_size;
 
       typename Traits::GridView _gv;
       std::vector<typename Traits::SizeType> _gt_dof_offsets;
@@ -423,7 +430,7 @@ namespace Dune {
           {
             typedef typename Node::Traits::SizeType size_type;
             const size_type dim = GV::dimension;
-            node._codim_used.assign(dim + 1,false);
+            node._codim_used.reset();
             node._gt_used.assign(GlobalGeometryTypeIndex::size(dim),false);
             node._gt_dof_offsets.assign(GlobalGeometryTypeIndex::size(dim),0);
             for (GTVector::const_iterator it = geom_types.begin(); it != geom_types.end(); ++it)
@@ -444,7 +451,7 @@ namespace Dune {
           {
             typedef typename Node::Traits::SizeType size_type;
             const size_type dim = GV::dimension;
-            node._codim_used.assign(dim + 1,false);
+            node._codim_used.reset();
             node._gt_used.assign(Dune::GlobalGeometryTypeIndex::size(dim),false);
             node._gt_dof_offsets.assign(Dune::GlobalGeometryTypeIndex::size(dim) * Node::CHILDREN,0);
             node._max_local_size = 0;
@@ -456,11 +463,8 @@ namespace Dune {
       {
         if (node._fixed_size)
           {
-            std::transform(node._codim_used.begin(),
-                           node._codim_used.end(),
-                           child._codim_used.begin(),
-                           node._codim_used.begin(),
-                           std::logical_or<bool>());
+            node._codim_used |= child._codim_used;
+
             std::transform(node._gt_used.begin(),
                            node._gt_used.end(),
                            child._gt_used.begin(),
@@ -517,7 +521,7 @@ namespace Dune {
       {
         if (!node._fixed_size)
           {
-            node._codim_used.assign(dim + 1,false);
+            node._codim_used.reset();
             node._gt_used.assign(Dune::GlobalGeometryTypeIndex::size(dim),false);
             node._gt_dof_offsets.assign(Dune::GlobalGeometryTypeIndex::size(dim) * std::max(node._child_count,static_cast<std::size_t>(1)),0);
             node._gt_entity_offsets.assign(Dune::GlobalGeometryTypeIndex::size(dim) + 1,0);
@@ -596,11 +600,8 @@ namespace Dune {
       {
         if (!node._fixed_size)
           {
-            std::transform(node._codim_used.begin(),
-                           node._codim_used.end(),
-                           child._codim_used.begin(),
-                           node._codim_used.begin(),
-                           std::logical_or<bool>());
+            node._codim_used |= child._codim_used;
+
             std::transform(node._gt_used.begin(),
                            node._gt_used.end(),
                            child._gt_used.begin(),
@@ -958,6 +959,8 @@ namespace Dune {
             TypeTree::applyToTree(localOrdering(),post_extract_per_entity_sizes<GV>(_gv,geom_types));
           }
 
+        _codim_used = localOrdering()._codim_used;
+
         if (localOrdering().fixedSize())
           {
             _fixed_size = true;
@@ -1015,10 +1018,14 @@ namespace Dune {
 
             if (!_container_blocked)
               _block_count = _size;
+
+            _codim_fixed_size.reset();
           }
 
         _max_local_size = localOrdering().maxLocalSize();
       }
+
+      using BaseT::fixedSize;
 
     private:
 
@@ -1028,6 +1035,8 @@ namespace Dune {
       using BaseT::_child_offsets;
       using BaseT::_size;
       using BaseT::_block_count;
+      using BaseT::_codim_used;
+      using BaseT::_codim_fixed_size;
 
       typename Traits::GridView _gv;
       std::vector<typename Traits::SizeType> _gt_dof_offsets;

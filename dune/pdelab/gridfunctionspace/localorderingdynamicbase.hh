@@ -210,7 +210,7 @@ namespace Dune {
 
       bool contains(typename Traits::SizeType codim) const
       {
-        return _codim_used[codim];
+        return _codim_used.test(codim);
       }
 
       typename Traits::SizeType maxLocalSize() const
@@ -244,7 +244,7 @@ namespace Dune {
       const std::size_t _child_count;
       std::vector<LocalOrderingBase*> _children;
 
-      std::vector<bool> _codim_used;
+      typename Traits::CodimFlag _codim_used;
       std::vector<bool> _gt_used;
 
       std::vector<typename Traits::SizeType> _gt_entity_offsets;

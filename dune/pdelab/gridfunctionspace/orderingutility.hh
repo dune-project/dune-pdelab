@@ -5,6 +5,7 @@
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_ORDERINGUTILITY_HH
 
 #include <vector>
+#include <bitset>
 
 #include <dune/pdelab/common/multiindex.hh>
 #include <dune/pdelab/common/typetree/traversal.hh>
@@ -154,6 +155,12 @@ namespace Dune {
     struct OrderingTraits
       : public SimpleOrderingTraits<DI,CI>
     {
+
+      // The maximum dimension supported (length of bitsets)
+      // 32 dimensions should probably be fine for now... ;-)
+      static const std::size_t max_dim = 32;
+
+      typedef std::bitset<max_dim> CodimFlag;
 
       typedef typename DI::TreeIndex TreeIndex;
 

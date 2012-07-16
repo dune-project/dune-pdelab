@@ -76,12 +76,16 @@ namespace Dune {
       void update()
       {
         std::fill(_child_offsets.begin(),_child_offsets.end(),0);
+        _codim_used.reset();
+        _codim_fixed_size.set();
         typename Traits::SizeType carry = 0;
         _max_local_size = 0;
         _block_count = 0;
         for (typename Traits::SizeType i = 0; i < _child_count; ++i)
           {
             _child_offsets[i+1] = (carry += _children[i]->size());
+            _codim_used |= _children[i]->_codim_used;
+            _codim_fixed_size &= _children[i]->_codim_fixed_size;
             _block_count += _children[i]->blockCount();
             _max_local_size += _children[i]->maxLocalSize();
           }
@@ -124,6 +128,16 @@ namespace Dune {
         return *_children[i];
       }
 
+      bool contains(typename Traits::SizeType codim) const
+      {
+        return _codim_used.test(codim);
+      }
+
+      bool fixedSize(typename Traits::SizeType codim) const
+      {
+        return _codim_fixed_size.test(codim);
+      }
+
     public:
 
       bool _fixed_size;
@@ -133,6 +147,8 @@ namespace Dune {
       std::vector<OrderingBase*> _children;
 
       std::vector<typename Traits::SizeType> _child_offsets;
+      typename Traits::CodimFlag _codim_used;
+      typename Traits::CodimFlag _codim_fixed_size;
 
       std::size_t _max_local_size;
       std::size_t _size;

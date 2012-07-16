@@ -110,7 +110,7 @@ namespace Dune {
 
         typedef typename Traits::SizeType size_type;
         const size_type dim = Traits::GridView::dimension;
-        _codim_used.assign(dim + 1,false);
+        _codim_used.reset();
         _gt_used.assign(GlobalGeometryTypeIndex::size(dim),false);
         _gt_dof_sizes.assign(GlobalGeometryTypeIndex::size(dim),0);
         for (; it != end; ++it)
@@ -120,6 +120,8 @@ namespace Dune {
             _gt_used[GlobalGeometryTypeIndex::index(*it)] = size > 0;
             _codim_used[dim - it->dim()] = _codim_used[dim - it->dim()] || (size > 0);
           }
+
+        _codim_fixed_size.set();
       }
 
 
@@ -128,7 +130,7 @@ namespace Dune {
         typedef typename Traits::SizeType size_type;
         const size_type dim = Traits::GridView::dimension;
 
-        _codim_used.assign(dim + 1,0);
+        _codim_used.reset();
         _gt_used.assign(GlobalGeometryTypeIndex::size(dim),false);
         _gt_dof_sizes.assign(GlobalGeometryTypeIndex::size(dim),0);
         _local_gt_dof_sizes.resize(GlobalGeometryTypeIndex::size(dim));
@@ -153,7 +155,7 @@ namespace Dune {
             const LocalKey& key = coeffs.localKey(i);
             GeometryType gt = ref_el.type(key.subEntity(),key.codim());
             _gt_used[GlobalGeometryTypeIndex::index(gt)] = true;
-            _codim_used[key.codim()] = true;
+            _codim_used.set(key.codim());
           }
       }
 
@@ -169,6 +171,9 @@ namespace Dune {
           }
         std::partial_sum(_gt_entity_offsets.begin(),_gt_entity_offsets.end(),_gt_entity_offsets.begin());
         _entity_dof_offsets.assign(_gt_entity_offsets.back() + 1,0);
+
+        // Don't claim fixed size for any codim for now
+        _codim_fixed_size.reset();
       }
 
 
@@ -223,6 +228,7 @@ namespace Dune {
             // free per-entity offsets
             _entity_dof_offsets = std::vector<typename Traits::SizeType>();
             _fixed_size = true;
+            _codim_fixed_size.set();
           }
         else
           {
@@ -249,7 +255,8 @@ namespace Dune {
       typename Traits::SizeType _max_local_size;
       const bool _container_blocked;
 
-      std::vector<bool> _codim_used;
+      typename Traits::CodimFlag _codim_used;
+      typename Traits::CodimFlag _codim_fixed_size;
       std::vector<bool> _gt_used;
 
       std::vector<typename Traits::SizeType> _gt_entity_offsets;
