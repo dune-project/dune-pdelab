@@ -182,8 +182,8 @@ namespace Dune {
 
         typedef E ElementType;
         typedef typename LFSCache::LocalFunctionSpace LFS;
-        typedef typename LFS::Traits::DOFIndex DOFIndex;
-        typedef typename LFS::Traits::GridFunctionSpace::Ordering::Traits::ContainerIndex ContainerIndex;
+        typedef typename LFSCache::DOFIndex DOFIndex;
+        typedef typename LFSCache::ContainerIndex ContainerIndex;
 
         LocalView()
           : _container(nullptr)
