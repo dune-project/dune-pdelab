@@ -128,6 +128,57 @@ namespace Dune {
           }
       }
 
+      template<typename ItOut>
+      typename Traits::SizeType
+      containerIndices(const typename Traits::DOFIndex::EntityIndex& ei,
+                       typename Traits::SizeType child_index,
+                       ItOut out, const ItOut end) const
+      {
+        typedef typename Traits::SizeType size_type;
+
+        const size_type geometry_type_index = Traits::DOFIndexAccessor::GeometryIndex::geometryType(ei);
+        const size_type entity_index = Traits::DOFIndexAccessor::GeometryIndex::entityIndex(ei);
+
+        if (!_gt_used[geometry_type_index])
+          return 0;
+
+        if (_child_count == 0)
+          {
+            const size_type size = _fixed_size
+              ? _gt_dof_offsets[geometry_type_index]
+              : _entity_dof_offsets[(_gt_entity_offsets[geometry_type_index] + entity_index)];
+
+            for (size_type i = 0; i < size; ++i, ++out)
+              {
+                out->push_back(i);
+              }
+            return size;
+          }
+        else
+          {
+            if (_container_blocked)
+              {
+                for (; out != end; ++out)
+                  out->push_back(child_index);
+              }
+            else if (child_index > 0)
+              {
+                if (_fixed_size)
+                  for (; out != end; ++out)
+                    {
+                      const typename Traits::SizeType index = geometry_type_index * _child_count + child_index - 1;
+                      out->back() += _gt_dof_offsets[index];
+                    }
+                else
+                  for (; out != end; ++out)
+                    {
+                      const typename Traits::SizeType index = (_gt_entity_offsets[geometry_type_index] + entity_index) * _child_count + child_index - 1;
+                      out->back() += _entity_dof_offsets[index];
+                    }
+              }
+            return 0;
+          }
+      }
 
       typename Traits::SizeType size(const typename Traits::DOFIndex::EntityIndex& index) const
       {

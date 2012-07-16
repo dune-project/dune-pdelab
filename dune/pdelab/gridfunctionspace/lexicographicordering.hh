@@ -70,6 +70,25 @@ namespace Dune {
             }
         }
 
+        template<typename ItOut>
+        typename Traits::SizeType
+        containerIndices(const typename Traits::DOFIndex::EntityIndex& ei,
+                         typename Traits::SizeType child_index,
+                         ItOut out, const ItOut end) const
+        {
+          if (this->_container_blocked)
+            {
+              for (; out != end; ++out)
+                out->push_back(child_index);
+            }
+          else
+            {
+              for (; out != end; ++out)
+                out->back() += (this->offset(child_index));
+            }
+          return 0;
+        }
+
 
         /*        Base(shared_ptr<Backend> backend)
           : OrderingBase<MI,CI>(static_cast<Node&>(*this),backend->blocked())

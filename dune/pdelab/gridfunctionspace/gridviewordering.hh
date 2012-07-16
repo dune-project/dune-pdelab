@@ -162,6 +162,60 @@ namespace Dune {
           }
       }
 
+      template<typename ItOut>
+      typename Traits::SizeType
+      containerIndices(const typename Traits::DOFIndex::EntityIndex& ei,
+                       typename Traits::SizeType child_index,
+                       ItOut out, const ItOut end) const
+      {
+        typedef typename Traits::SizeType size_type;
+
+        const size_type geometry_type_index = Traits::DOFIndexAccessor::GeometryIndex::geometryType(ei);
+        const size_type entity_index = Traits::DOFIndexAccessor::GeometryIndex::entityIndex(ei);
+
+        if (!localOrdering()._gt_used[geometry_type_index])
+          return 0;
+
+        if (localOrdering()._fixed_size)
+          {
+            size_type size = localOrdering()._gt_dof_sizes[geometry_type_index];
+            if (_container_blocked)
+              {
+                DUNE_THROW(Dune::NotImplemented,"not implemented");
+              }
+            else
+              {
+                for (size_type i = 0; i < size; ++i, ++out)
+                  {
+                    out->push_back(i);
+                    out->back() += _gt_dof_offsets[geometry_type_index] + entity_index * localOrdering()._gt_dof_sizes[geometry_type_index];
+                  }
+              }
+            return 0;
+          }
+        else
+          {
+            size_type index = localOrdering()._gt_entity_offsets[geometry_type_index] + entity_index;
+            size_type size = localOrdering()._entity_dof_offsets[index+1] - localOrdering()._entity_dof_offsets[index];
+            if (_container_blocked)
+              {
+                for (size_type i = 0; i < size; ++i, ++out)
+                  {
+                    out->push_back(i);
+                    out->push_back(index);
+                  }
+              }
+            else
+              {
+                for (size_type i = 0; i < size; ++i, ++out)
+                  {
+                    out->push_back(i);
+                    out->back() += localOrdering()._entity_dof_offsets[index];
+                  }
+              }
+            return 0;
+          }
+      }
 
       void update()
       {
@@ -904,6 +958,47 @@ namespace Dune {
                 out->back() += _entity_dof_offsets[_gt_entity_offsets[geometry_type_index] + entity_index];
               }
           }
+      }
+
+      template<typename ItOut>
+      typename Traits::SizeType
+      containerIndices(const typename Traits::DOFIndex::EntityIndex& ei,
+                       typename Traits::SizeType child_index,
+                       ItOut out, const ItOut end) const
+      {
+        typedef typename Traits::SizeType size_type;
+
+        const size_type geometry_type_index = Traits::DOFIndexAccessor::GeometryIndex::geometryType(ei);
+        const size_type entity_index = Traits::DOFIndexAccessor::GeometryIndex::entityIndex(ei);
+
+        if (_container_blocked)
+          {
+            if (_fixed_size)
+              for (; out != end; ++out)
+                {
+                  out->push_back(_gt_dof_offsets[geometry_type_index] + entity_index);
+                }
+            else
+              for (; out != end; ++out)
+                {
+                  out->push_back(_gt_entity_offsets[geometry_type_index] + entity_index);
+                }
+          }
+        else if (_fixed_size)
+          {
+            for (; out != end; ++out)
+              {
+                out->back() += _gt_dof_offsets[geometry_type_index] + entity_index * localOrdering().size(geometry_type_index,entity_index);
+              }
+          }
+        else
+          {
+            for (; out != end; ++out)
+              {
+                out->back() += _entity_dof_offsets[_gt_entity_offsets[geometry_type_index] + entity_index];
+              }
+          }
+        return 0;
       }
 
       void update()

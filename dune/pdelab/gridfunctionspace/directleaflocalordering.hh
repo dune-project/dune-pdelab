@@ -38,6 +38,17 @@ namespace Dune {
         // don't do anything - this is handled by the specialized GridViewOrdering
       }
 
+      template<typename ItOut>
+      typename Traits::SizeType
+      containerIndices(const typename Traits::DOFIndex::EntityIndex& ei,
+                       typename Traits::SizeType child_index,
+                       ItOut out, const ItOut end) const
+      {
+        // only return the size, as the tree visitor expects that from all leaf nodes.
+        // The actual index processing is done by the specialized GridViewOrdering.
+        return size(ei);
+      }
+
       typename Traits::SizeType size(const typename Traits::DOFIndex::EntityIndex& index) const
       {
         return size(
