@@ -166,13 +166,22 @@ namespace Dune {
         return norm;
       }
 
-      E operator*(const PetscVectorContainer& y) const
+      E dot(const PetscVectorContainer& y) const
       {
         checkin();
-        double dotproduct = 0;
+        PetscScalar dotproduct = 0;
         PETSC_CALL(VecDot(_v,y._v,&dotproduct));
         return dotproduct;
       }
+
+      E operator*(const PetscVectorContainer& y) const
+      {
+        checkin();
+        PetscScalar dotproduct = 0;
+        PETSC_CALL(VecTDot(_v,y._v,&dotproduct));
+        return dotproduct;
+      }
+
 
       PetscVectorContainer& axpy(const E& a, const PetscVectorContainer& y)
       {
@@ -316,7 +325,6 @@ namespace Dune {
     template<typename T, typename E>
     struct BackendVectorSelectorHelper<PetscVectorBackend,T,E>
     {
-      dune_static_assert((is_same<E,double>::value),"Petsc only supports double for now");
       typedef PetscVectorContainer Type;
     };
 
