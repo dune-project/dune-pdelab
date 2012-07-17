@@ -430,7 +430,7 @@ namespace Dune {
 
         // i did not exist in the cache, map it into the newly inserted container index
         if (r.second)
-            _lfs.gridFunctionSpace().ordering()->map_index(i.view(),r.first->second);
+            _lfs.gridFunctionSpace().ordering().map_index(i.view(),r.first->second);
 
         // return cached container index
         return r.first->second;
