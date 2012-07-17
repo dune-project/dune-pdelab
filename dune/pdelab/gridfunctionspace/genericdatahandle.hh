@@ -64,7 +64,8 @@ namespace Dune {
       {
         _index_cache.update(e);
         _local_view.bind(_index_cache);
-        _gather_scatter.gather(buff,e,_local_view);
+        if (_gather_scatter.gather(buff,e,_local_view))
+          _local_view.commit();
         _local_view.unbind();
       }
 
@@ -77,8 +78,8 @@ namespace Dune {
       {
         _index_cache.update(e);
         _local_view.bind(_index_cache);
-        _gather_scatter.scatter(buff,n,e,_local_view);
-        _local_view.commit();
+        if (_gather_scatter.scatter(buff,n,e,_local_view))
+          _local_view.commit();
         _local_view.unbind();
       }
 
@@ -104,19 +105,21 @@ namespace Dune {
       typedef std::size_t size_type;
 
       template<typename MessageBuffer, typename Entity, typename LocalView>
-      void gather(MessageBuffer& buff, const Entity& e, const LocalView& local_view) const
+      bool gather(MessageBuffer& buff, const Entity& e, const LocalView& local_view) const
       {
         for (std::size_t i = 0; i < local_view.size(); ++i)
           _gather_scatter.gather(buff,local_view[i]);
+        return false;
       }
 
       template<typename MessageBuffer, typename Entity, typename LocalView>
-      void scatter(MessageBuffer& buff, size_type n, const Entity& e, LocalView& local_view) const
+      bool scatter(MessageBuffer& buff, size_type n, const Entity& e, LocalView& local_view) const
       {
         if (local_view.size() != n)
           DUNE_THROW(Exception,"size mismatch in generic data handle");
         for (std::size_t i = 0; i < local_view.size(); ++i)
           _gather_scatter.scatter(buff,local_view[i]);
+        return true;
       }
 
       DataGatherScatter(GatherScatter gather_scatter)
@@ -139,19 +142,21 @@ namespace Dune {
       typedef std::size_t size_type;
 
       template<typename MessageBuffer, typename Entity, typename LocalView>
-      void gather(MessageBuffer& buff, const Entity& e, const LocalView& local_view) const
+      bool gather(MessageBuffer& buff, const Entity& e, const LocalView& local_view) const
       {
         for (std::size_t i = 0; i < local_view.size(); ++i)
           _gather_scatter.gather(buff,e,local_view[i]);
+        return false;
       }
 
       template<typename MessageBuffer, typename Entity, typename LocalView>
-      void scatter(MessageBuffer& buff, size_type n, const Entity& e, LocalView& local_view) const
+      bool scatter(MessageBuffer& buff, size_type n, const Entity& e, LocalView& local_view) const
       {
         if (local_view.size() != n)
           DUNE_THROW(Exception,"size mismatch in generic data handle");
         for (std::size_t i = 0; i < local_view.size(); ++i)
           _gather_scatter.scatter(buff,e,local_view[i]);
+        return true;
       }
 
       DataEntityGatherScatter(GatherScatter gather_scatter)
@@ -174,19 +179,21 @@ namespace Dune {
       typedef std::size_t size_type;
 
       template<typename MessageBuffer, typename Entity, typename LocalView>
-      void gather(MessageBuffer& buff, const Entity& e, const LocalView& local_view) const
+      bool gather(MessageBuffer& buff, const Entity& e, const LocalView& local_view) const
       {
         for (std::size_t i = 0; i < local_view.size(); ++i)
           _gather_scatter.gather(buff,local_view.cache().container_index(i),local_view[i]);
+        return false;
       }
 
       template<typename MessageBuffer, typename Entity, typename LocalView>
-      void scatter(MessageBuffer& buff, size_type n, const Entity& e, LocalView& local_view) const
+      bool scatter(MessageBuffer& buff, size_type n, const Entity& e, LocalView& local_view) const
       {
         if (local_view.size() != n)
           DUNE_THROW(Exception,"size mismatch in generic data handle");
         for (std::size_t i = 0; i < local_view.size(); ++i)
           _gather_scatter.scatter(buff,local_view.cache().container_index(i),local_view[i]);
+        return true;
       }
 
       DataContainerIndexGatherScatter(GatherScatter gather_scatter)
