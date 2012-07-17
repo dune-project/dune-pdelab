@@ -192,7 +192,7 @@ namespace Dune{
       void postAssembly(const GFSU& gfsu, const GFSV& gfsv){
         if(local_assembler.doConstraintsPostProcessing)
           {
-            Dune::PDELab::constrain_residual(gfsv,*(local_assembler.pconstraintsv),global_rl_view.global_container());
+            Dune::PDELab::constrain_residual(*(local_assembler.pconstraintsv),global_rl_view.global_container());
           }
       }
 

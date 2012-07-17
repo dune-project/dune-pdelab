@@ -14,9 +14,9 @@ namespace Dune {
     //! \{
 
     //! \brief a class holding transformation for constrained spaces
-    template<typename DI, typename F>
+    template<typename DI, typename CI, typename F>
     class ConstraintsTransformation
-      : public std::unordered_map<DI,std::unordered_map<DI,F> >
+      : public std::unordered_map<CI,std::unordered_map<CI,F> >
     {
     public:
       //! export ElementType
@@ -24,7 +24,7 @@ namespace Dune {
       typedef F Field;
 
       class LocalTransformation
-        : public std::unordered_map<typename DI::size_type,std::unordered_map<typename DI::size_type,F> >
+        : public std::unordered_map<DI,std::unordered_map<DI,F> >
       {
 
       public:
@@ -32,15 +32,39 @@ namespace Dune {
         typedef F ElementType;
         typedef F Field;
 
-        typedef std::unordered_map<typename DI::size_type,F> RowType;
+        typedef std::unordered_map<DI,F> RowType;
 
       };
 
       //! export RowType
       typedef typename ConstraintsTransformation::mapped_type RowType;
+
+      template<typename IndexCache>
+      void import_local_transformation(const LocalTransformation& local_transformation, const IndexCache& index_cache)
+      {
+        typedef typename LocalTransformation::const_iterator LocalConstraintIterator;
+        typedef typename LocalTransformation::mapped_type::const_iterator LocalEntryIterator;
+        typedef std::unordered_map<CI,F> GlobalConstraint;
+
+        for (LocalConstraintIterator lc_it = local_transformation.begin(),
+               lc_end = local_transformation.end();
+             lc_it != lc_end;
+             ++lc_it)
+          {
+            GlobalConstraint& global_constraint = (*this)[index_cache.container_index(lc_it->first)];
+            for (LocalEntryIterator le_it = lc_it->second.begin(),
+                   le_end = lc_it->second.end();
+                 le_it != le_end;
+                 ++le_it)
+              {
+                global_constraint[index_cache.container_index(le_it->first)] = le_it->second;
+              }
+          }
+      }
+
     };
 
-    class EmptyTransformation : public ConstraintsTransformation<char,char>
+    class EmptyTransformation : public ConstraintsTransformation<char,char,char>
     {
     };
 

@@ -89,7 +89,7 @@ namespace Dune {
               if (static_cast<int>(FESwitch::coefficients(lfs.finiteElement()).
                                    localKey(i).subEntity())
                   == refelem.subEntity(face,1,j,codim))
-                trafo[i] = empty;
+                trafo[lfs.dofIndex(i)] = empty;
             }
           }
       }
@@ -140,7 +140,7 @@ namespace Dune {
             for (int j=0; j<refelem.size(face,1,codim); j++)
               if (FESwitch::coefficients(lfs.finiteElement()).localKey(i).
                   subEntity() == std::size_t(refelem.subEntity(face,1,j,codim)))
-                trafo[i] = empty;
+                trafo[lfs.dofIndex(i)] = empty;
           }
       }
     };
@@ -179,7 +179,7 @@ namespace Dune {
           {
             if (gh[lfs.globalIndex(i)]!=0)
               {
-                trafo[i] = empty;
+                trafo[lfs.dofIndex(i)] = empty;
               }
           }
       }

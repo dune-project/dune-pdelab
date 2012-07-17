@@ -345,7 +345,7 @@ namespace Dune {
       struct ConstraintsContainer
       {
         //! \brief define Type as the Type of a container of E's
-        typedef ConstraintsTransformation<typename Ordering::Traits::DOFIndex,E> Type;
+        typedef ConstraintsTransformation<typename Ordering::Traits::DOFIndex,typename Ordering::Traits::ContainerIndex,E> Type;
       private:
         ConstraintsContainer () {}
       };

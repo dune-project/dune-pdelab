@@ -234,8 +234,8 @@ namespace Dune {
         size_type constraint_entry_count = 0;
         for (size_type i = 0; i < _lfs.size(); ++i)
           {
-            const DI& dof_index = _lfs.dofIndex(i);
-            const typename C::const_iterator cit = _gfs_constraints.find(dof_index);
+            const CI& container_index = _container_indices[i];
+            const typename C::const_iterator cit = _gfs_constraints.find(container_index);
             if (cit == _gfs_constraints.end())
               {
                 _dof_flags[i] = DOF_NONCONSTRAINED;
@@ -266,7 +266,7 @@ namespace Dune {
                 _constraints_iterators[it->first].first = eit;
                 for (typename C::mapped_type::const_iterator cit = it->second->second.begin(); cit != it->second->second.end(); ++cit, ++eit)
                   {
-                    eit->first = &(container_index(cit->first));
+                    eit->first = &(cit->first);
                     eit->second = cit->second;
                   }
                 _constraints_iterators[it->first].second = eit;
