@@ -55,7 +55,7 @@ namespace Dune
             PDELab::FilenameHelper fnloop(basename,offset);
             for (unsigned int i=0; i<timesteps.size(); i++)
                 {
-                    std::string fname = getParallelHeaderName(fnloop.getName(), path, gv.comm().size());
+                    std::string fname = this->getParallelHeaderName(fnloop.getName(), path, gv.comm().size());
                     pvd << "  <DataSet timestep=\"" << timesteps[i]
                         << "\" file=\"" << fname << "\"/>\n";
                     fnloop.increment();
