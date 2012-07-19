@@ -11,24 +11,26 @@ Copyright holders:
 2010--2012    Steffen Müthing
 2010--2012    Rebecca Neumann
 2011          Adrian Ngo
-2012          Jurgis Pods 
+2012          Jurgis Pods
 2011          Hanna Remmel
+2012          Matthias Wohlmuth
 
 
 
-The DUNE library and headers are licensed under version 2 of the GNU
-General Public License (see below), with a special exception for
-linking and compiling against DUNE, the so-called "runtime exception."
-The license is intended to be similar to the GNU Lesser General
-Public License, which by itself isn't suitable for a template library.
+The PDELab library, headers and example programs are licensed under
+version 2 of the GNU General Public License (see below), with a
+special exception for linking and compiling against PDELab, the
+so-called "runtime exception."  The license is intended to be similar
+to the GNU Lesser General Public License, which by itself isn't
+suitable for a template library.
 
 The exact wording of the exception reads as follows:
 
-   As a special exception, you may use the DUNE source files as part
+   As a special exception, you may use the PDELab source files as part
    of a software library or application without restriction.
    Specifically, if other files instantiate templates or use macros or
-   inline functions from one or more of the DUNE source files, or you
-   compile one or more of the DUNE source files and link them with
+   inline functions from one or more of the PDELab source files, or you
+   compile one or more of the PDELab source files and link them with
    other files to produce an executable, this does not by itself cause
    the resulting executable to be covered by the GNU General Public
    License.  This exception does not however invalidate any other
