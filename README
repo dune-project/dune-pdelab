@@ -1,0 +1,77 @@
+PDELab
+======
+
+PDELab is a PDE solver toolbox built on top of DUNE, the Distributed and Unified
+Numerics Environment [0].
+
+The main intention is to provide a good set of high-level abstractions to allow
+for a reasonably quick development of simulation codes, while at the same time
+offering the flexibility to implement new numerical methods and optimize for
+specific simulation scenarios.
+
+This package contains the PDELab library code. For application examples see the
+companion package dune-pdelab-howto.
+
+Dependencies
+------------
+
+PDELab depends on the following software packages:
+
+* DUNE core libraries (dune-common, dune-geometry, dune-grid, dune-istl,
+  dune-localfunctions) version 2.2.x, and their respective dependencies.
+
+* PDELab's compiler requirements differ slightly from the underlying DUNE
+  libraries: We require at least GCC 4.0, although we only regurlarly test GCC
+  versions from GCC 4.2 onward. Compile times are greatly reduced if the
+  compiler supports the new C++11 standard (GCC 4.3 and newer). PDELab is not
+  regularly tested with ICC, but we also support the clang compiler (3.1+).
+
+The following software is optional
+
+* PETSc 3.3 [4] - there is an experimental backend for PETSc vectors and
+  matrices. See RELEASE_NOTES for details.
+
+* Eigen 3.1.0 [5] - there is an experimental backend for Eigen vectors and
+  matrices as well as some solvers. See RELEASE_NOTES for details.
+
+For a full explanation of the DUNE installation process please read
+the installation notes [1].
+
+License
+-------
+
+The PDELab library, headers and example programs are licensed under version 2 of
+the GNU General Public License, with the so-called "runtime exception", as
+follows:
+
+   As a special exception, you may use the DUNE source files as part
+   of a software library or application without restriction.
+   Specifically, if other files instantiate templates or use macros or
+   inline functions from one or more of the DUNE source files, or you
+   compile one or more of the DUNE source files and link them with
+   other files to produce an executable, this does not by itself cause
+   the resulting executable to be covered by the GNU General Public
+   License.  This exception does not however invalidate any other
+   reasons why the executable file might be covered by the GNU General
+   Public License.
+
+This licence clones the one of the libstc++ library. For further
+implications of this library please see their licence page [3]
+
+See the file COPYING for full copying permissions.
+
+Installation
+------------
+
+Short installation instructions can be found in file INSTALL. For the
+full instructions please see [1].
+
+Links
+-----
+
+0. http://www.dune-project.org
+1. http://www.dune-project.org/doc/installation-notes.html
+2. http://dune-project.org/doc/buildsystem/buildsystem.pdf
+3. http://gcc.gnu.org/onlinedocs/libstdc++/faq.html#faq.license
+4. http://www.mcs.anl.gov/petsc/
+5. http://eigen.tuxfamily.org
