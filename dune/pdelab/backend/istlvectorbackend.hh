@@ -104,6 +104,11 @@ namespace Dune {
         return container*y.base();
       }
 
+      E dot(const ISTLBlockVectorContainer& y) const
+      {
+        return container.dot(y.base());
+      }
+
       ISTLBlockVectorContainer& axpy(const E& a, const ISTLBlockVectorContainer& y)
       {
         container.axpy(a, y);
