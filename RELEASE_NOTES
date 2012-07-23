@@ -1,0 +1,94 @@
+PDELab 1.0 ==========
+
+This is the first public release of PDELab, a PDE discretization toolkit built
+on top of the DUNE framework [0]. License information can be found in the file
+COPYING.
+
+If you need help, please ask on our mailinglist [1]. Bugs can also be submitted
+to the PDELab bugtracker at [2] instead.
+
+This release of PDELab is designed to work with the 2.2 release of the
+DUNE libraries.
+
+
+Caveats =======
+
+The following list is a non-exhaustive overview of possible problems you might
+encounter with this release.
+
+Assembler --------
+
+* The GridOperatorSpace and accompanying InstationaryGridOperatorSpace are
+  deprecated and will be removed in the near future. Use GridOperator and
+  OneStepGridOperator instead.
+
+* The GridOperatorSpace for multi-step methods has not been ported to the new
+  GridOperator pattern yet. If you use multi-step methods, you will have to keep
+  using the MultiStepGridOperatorSpace for now.
+
+* Hanging nodes support is currently restricted to P1 and Q1 spaces.
+
+Solvers -------
+
+* Both the Newton solver and the linear solve currently allocate a new matrix on
+  each call to apply(), which can incur a significant overhead if they are
+  called frequently (e.g. for instationary problems). This will be fixed in a
+  later release.
+
+Linear Algebra Backends -----------------------
+
+* Due to changes in the ISTL backend, users who construct their own solvers
+  directly from ISTL primitives will have to make sure to use native ISTL types
+  and variables for this. These can be accessed by the nested typedef ::BaseT
+  and the method .base() for both vectors and matrices. For an example, see
+  src/convection-diffusion/poisson.cc in dune-pdelab-howto. In general, we
+  encourage usage of the predefined solver backends, though.
+
+* Matrix allocation currently requires a lot of memory (roughly twice as much as
+  the matrix after allocation) and can take disproportionately long, especially
+  for problems with simple spaces and operators. This will be fixed in a later
+  release.
+
+* The alternative backends for PETSc [3] and Eigen [4] are still in very
+  experimental stage and do not offer as much functionality as the default ISTL
+  backend:
+
+  - The PETSc backend does not work for parallel computations and only provides
+    facilities for assembling jacobian and residual. Users will have to
+    construct their own solvers using native PETSc functionality. The backend
+    should work with PETSc 3.3.
+
+  - The Eigen backend does not work for parallel computations either, but it
+    provides a number of ready-to-use solvers. The backend does not support
+    blocking of DOFs. The backend requires at least a prerelease version of
+    Eigen 3.1.0.
+
+* The PETSc backend does not work correctly when used in conjunction with
+  hanging nodes.
+
+General -------
+
+* Compile times can be really long for non-trivial problems. Some developers
+  have had good success with using the clang compiler instead of GCC during
+  development and bug-testing to reduce compile times.
+
+* If you are still using a *really* ancient version of PDELab, have a look at
+  doc/README.changes for an overview of the major API changes that might keep
+  your code from compiling.
+
+* Starting with the current release, PDELab is dual-licensed under both LGPL3+
+  and GPL 2 with a special runtime exception - the details can be found in the
+  file COPYING. Please note that for now, you cannot actually make use of the
+  LGPL3+ license yet, as the DUNE core modules are exclusively licensed under
+  GPL 2 with runtime exception, which is not compatible with LGPL3+. Instead,
+  this licensing change should be seen as preparation for a possible future move
+  of the core modules to a dual-licensing scheme.
+
+
+Links =====
+
+0. http://www.dune-project.org
+1. http://lists.dune-project.org/mailman/listinfo/dune-pdelab
+2. http://users.dune-project.org/projects/dune-pdelab/issues
+3. http://www.mcs.anl.gov/petsc/
+4. http://eigen.tuxfamily.org
