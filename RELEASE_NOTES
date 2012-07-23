@@ -10,6 +10,7 @@ to the PDELab bugtracker at [2] instead.
 This release of PDELab is designed to work with the 2.2 release of the
 DUNE libraries.
 
+
 Caveats =======
 
 The following list is a non-exhaustive overview of possible problems you might
@@ -74,6 +75,14 @@ General -------
 * If you are still using a *really* ancient version of PDELab, have a look at
   doc/README.changes for an overview of the major API changes that might keep
   your code from compiling.
+
+* Starting with the current release, PDELab is dual-licensed under both LGPL3+
+  and GPL 2 with a special runtime exception - the details can be found in the
+  file COPYING. Please note that for now, you cannot actually make use of the
+  LGPL3+ license yet, as the DUNE core modules are exclusively licensed under
+  GPL 2 with runtime exception, which is not compatible with LGPL3+. Instead,
+  this licensing change should be seen as preparation for a possible future move
+  of the core modules to a dual-licensing scheme.
 
 
 Links =====
