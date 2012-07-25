@@ -1,4 +1,5 @@
 noinst_DATA = README.txt
+EXTRA_DIST = README.txt
 
 SUBDIRS =					\
 	common
