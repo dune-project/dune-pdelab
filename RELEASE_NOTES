@@ -1,5 +1,5 @@
-PDELab 1.0
-==========
+PDELab 1.0.0
+============
 
 This is the first public release of PDELab, a PDE discretization toolkit built
 on top of the DUNE framework [0]. License information can be found in the file
