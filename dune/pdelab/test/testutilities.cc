@@ -149,12 +149,12 @@ void testinterpolate (const GV& gv)
   PDGF1 pdgf1(psubgfs1,pxg);
 
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF0>(dgf0,"comp 0"));
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF1>(dgf1,"comp 1"));
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF0>(pdgf0,"comp 3"));
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF1>(pdgf1,"comp 4"));
-  vtkwriter.write("interpolated",Dune::VTKOptions::ascii);
+  vtkwriter.write("interpolated",Dune::VTK::ascii);
 }
 
 template<typename GV, typename RF>
@@ -311,12 +311,12 @@ void testtaylorhood (const GV& gv)
   DGFP dgfp(subp,xg);
 
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGFV0>(dgfv0,"v0"));
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGFV1>(dgfv1,"v1"));
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGFV>(dgfv,"v"));
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGFP>(dgfp,"p"));
-  vtkwriter.write("taylorhood",Dune::VTKOptions::ascii);
+  vtkwriter.write("taylorhood",Dune::VTK::ascii);
 }
 
 int main(int argc, char** argv)

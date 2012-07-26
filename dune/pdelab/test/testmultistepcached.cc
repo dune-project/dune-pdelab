@@ -312,14 +312,14 @@ void wave (const GV& gv, const FEM& fem, typename GV::ctype dt,
     DGF dgf(gfs,*mgos.getCache()->getUnknowns(-1));
     vtkwriter.addVertexData
       (new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-    vtkwriter.write(-dt,Dune::VTK::binary);
+    vtkwriter.write(-dt,Dune::VTK::base64);
     vtkwriter.clear();
   }
   {
     DGF dgf(gfs,*mgos.getCache()->getUnknowns(0));
     vtkwriter.addVertexData
       (new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-    vtkwriter.write(0,Dune::VTK::binary);
+    vtkwriter.write(0,Dune::VTK::base64);
     vtkwriter.clear();
   }
 
@@ -333,7 +333,7 @@ void wave (const GV& gv, const FEM& fem, typename GV::ctype dt,
     DGF dgf(gfs,*xnew);
     vtkwriter.addVertexData
       (new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
-    vtkwriter.write(time,Dune::VTK::binary);
+    vtkwriter.write(time,Dune::VTK::base64);
     vtkwriter.clear();
   }
 }
