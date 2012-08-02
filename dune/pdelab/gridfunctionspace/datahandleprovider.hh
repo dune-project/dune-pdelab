@@ -135,8 +135,8 @@ namespace Dune {
 
         Note: Only the sender side needs to know this size.
       */
-      template<class EntityType>
-      size_type dataHandleSize (const EntityType& e) const
+      template<typename Entity>
+      size_type dataHandleSize (const Entity& e) const
       {
         typedef typename GFS::Ordering Ordering;
 
@@ -156,8 +156,8 @@ namespace Dune {
       }
 
       //! return vector of global indices associated with the given entity
-      template<class EntityType, typename ContainerIndex>
-      size_type dataHandleContainerIndices (const EntityType& e,
+      template<typename Entity, typename ContainerIndex>
+      size_type dataHandleContainerIndices (const Entity& e,
                                             std::vector<ContainerIndex>& indices) const
       {
         typedef typename GFS::Ordering Ordering;
