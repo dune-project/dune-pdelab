@@ -53,6 +53,8 @@ namespace Dune {
       {
 
         typedef std::size_t size_type;
+        typedef typename std::vector<ContainerIndex>::iterator Iterator;
+
 
         template<typename Ordering, typename Child, typename TreePath, typename ChildIndex>
         void beforeChild(const Ordering& ordering, const Child& child, TreePath tp, ChildIndex childIndex)
@@ -92,9 +94,24 @@ namespace Dune {
           , _end(indices.begin())
         {}
 
-      private:
+        // Required for multidomain support
+        indices_for_entity(const EntityIndex& entity_index,
+                           std::vector<ContainerIndex>& indices,
+                           Iterator begin)
+          : _entity_index(entity_index)
+          , _indices(indices)
+          , _it(begin)
+          , _end(begin)
+        {}
 
-        typedef typename std::vector<ContainerIndex>::iterator Iterator;
+
+        // Exposed for multidomain support
+        Iterator end() const
+        {
+          return _end;
+        }
+
+      private:
 
         const EntityIndex& _entity_index;
         std::vector<ContainerIndex>& _indices;
