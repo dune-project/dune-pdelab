@@ -45,8 +45,9 @@ namespace Dune {
 	  // residual assembly flags
       enum { doAlphaVolume = true };
 
-      L2 (int intorder_=2)
+      L2 (int intorder_=2,double scaling=10)
         : intorder(intorder_)
+        , _scaling(scaling)
       {}
 
 	  // volume integral depending on test and ansatz functions
@@ -88,7 +89,7 @@ namespace Dune {
               u += x(lfsu,i)*phi[i];
 
             // u*phi_i
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+            RF factor = _scaling * it->weight() * eg.geometry().integrationElement(it->position());
             for (size_type i=0; i<lfsu.size(); i++)
               r.accumulate(lfsv,i, u*phi[i]*factor);
           }
@@ -128,7 +129,7 @@ namespace Dune {
             FESwitch::basis(lfsu.finiteElement()).evaluateFunction(it->position(),phi);
 
             // integrate phi_j*phi_i
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+            RF factor = _scaling * it->weight() * eg.geometry().integrationElement(it->position());
             for (size_type j=0; j<lfsu.size(); j++)
               for (size_type i=0; i<lfsu.size(); i++)
                 mat.accumulate(lfsv,i,lfsu,j, phi[j]*phi[i]*factor);
@@ -137,6 +138,7 @@ namespace Dune {
 
     private:
       int intorder;
+      const double _scaling;
 	};
 
     /** a local operator for the mass operator of a vector valued lfs (L_2 integral)
