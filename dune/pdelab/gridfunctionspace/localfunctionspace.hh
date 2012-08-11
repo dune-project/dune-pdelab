@@ -264,7 +264,8 @@ namespace Dune {
       //! \brief get maximum possible size (which is maxLocalSize from grid function space)
       typename Traits::IndexContainer::size_type maxSize () const
       {
-        return pgfs->maxLocalSize();
+        // _dof_indices is always as large as the max local size of the root GFS
+        return _dof_indices->size();
       }
 
       //! \brief get size of an appropriate local vector object
