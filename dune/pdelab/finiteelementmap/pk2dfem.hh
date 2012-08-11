@@ -64,7 +64,7 @@ namespace Dune {
         if (gt.isLine())
           return k > 1 ? k - 1 : 0;
         if (gt.isTriangle())
-          return k > 2 ? (k-2)*(k-1)/2 : 0;
+          return k > 2 ? (k-2)*(k-1)/2 : (k == 0);
         return 0;
       }
 
@@ -121,7 +121,7 @@ namespace Dune {
         if (gt.isLine())
           return k > 1 ? k - 1 : 0;
         if (gt.isTriangle())
-          return k > 2 ? (k-2)*(k-1)/2 : 0;
+          return k > 2 ? (k-2)*(k-1)/2 : (k == 0);
         return 0;
       }
 
