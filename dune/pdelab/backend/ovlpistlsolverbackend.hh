@@ -232,10 +232,19 @@ namespace Dune {
       {
         Dune::InverseOperatorResult stat;
         Y b(d); // need copy, since solver overwrites right hand side
+        std::stringstream s1;
+        s1 << "b p" << gfs.gridView().comm().rank();
+        // printvector(std::cout,b.base(),s1.str(),s1.str(),8,10,2);
         solver.apply(v,b,stat);
+        std::stringstream s2;
+        s2 << "v p" << gfs.gridView().comm().rank();
+        // printvector(std::cout,v.base(),s2.str(),s2.str(),8,10,2);
         Dune::PDELab::AddDataHandle<GFS,X> adddh(gfs,v);
-        if (gfs.gridview().comm().size()>1)
-          gfs.gridview().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
+        if (gfs.gridView().comm().size()>1)
+          gfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
+        std::stringstream s3;
+        s3 << "cv p" << gfs.gridView().comm().rank();
+        // printvector(std::cout,v.base(),s3.str(),s3.str(),8,10,2);
       }
 
       /*!
@@ -332,8 +341,8 @@ namespace Dune {
         // do local scalar product on unique partition
         typename X::ElementType sum = 0;
         for (typename X::size_type i=0; i<x.base().N(); ++i)
-          for (typename X::size_type j=0; j<x[i].N(); ++j)
-            sum += (x[i][j]*y[i][j])*helper.mask(i,j);
+          for (typename X::size_type j=0; j<x.base()[i].N(); ++j)
+            sum += (x.base()[i][j]*y.base()[i][j])*helper.mask(i,j);
 
         // do global communication
         return gfs.gridView().comm().sum(sum);
@@ -348,7 +357,7 @@ namespace Dune {
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
 
-      const  ParallelISTLHelper<GFS>& parallelHelper()
+      const  ParallelISTLHelper<GFS>& parallelHelper() const
       {
         return helper;
       }
@@ -603,7 +612,7 @@ namespace Dune {
         PREC prec(gfs,A);
         int verb=0;
         if (gfs.gridView().comm().rank()==0) verb=verbose;
-        Solver<V> solver(pop,psp,prec,reduction,maxiter,verbose);
+        Solver<V> solver(pop,psp,prec,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
         solver.apply(z,r,stat);
         res.converged  = stat.converged;
