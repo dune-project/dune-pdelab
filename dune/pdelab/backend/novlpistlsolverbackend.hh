@@ -573,6 +573,84 @@ namespace Dune {
       int verbose;
     };
 
+
+    //! \brief Nonoverlapping parallel BiCGStab solver with Jacobi preconditioner
+    template<class GFS>
+    class ISTLBackend_NOVLP_BCGS_Jacobi
+    {
+      typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
+
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] gfs_ a grid function space
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
+      */
+      explicit ISTLBackend_NOVLP_BCGS_Jacobi (const GFS& gfs_, unsigned maxiter_=5000, int verbose_=1)
+        : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), verbose(verbose_)
+      {}
+
+      /*! \brief compute global norm of a vector
+
+        \param[in] v the given vector
+      */
+      template<class V>
+      typename V::ElementType norm (const V& v) const
+      {
+        V x(v); // make a copy because it has to be made consistent
+        typedef Dune::PDELab::NonoverlappingScalarProduct<GFS,V> PSP;
+        PSP psp(gfs,phelper);
+        psp.make_consistent(x);
+        return psp.norm(x);
+      }
+
+      /*! \brief solve the given linear system
+
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      {
+        typedef Dune::PDELab::NonoverlappingOperator<GFS,M,V,W> POP;
+        POP pop(gfs,A);
+        typedef Dune::PDELab::NonoverlappingScalarProduct<GFS,V> PSP;
+        PSP psp(gfs,phelper);
+
+        typedef typename M::ElementType MField;
+        typedef typename BackendVectorSelector<GFS,MField>::Type Diagonal;
+        typedef NonoverlappingJacobi<Diagonal,V,W> PPre;
+        PPre ppre(gfs,A);
+
+        int verb=0;
+        if (gfs.gridView().comm().rank()==0) verb=verbose;
+        Dune::BiCGSTABSolver<V> solver(pop,psp,ppre,reduction,maxiter,verb);
+        Dune::InverseOperatorResult stat;
+        solver.apply(z,r,stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+        res.conv_rate  = stat.conv_rate;
+      }
+
+      /*! \brief Return access to result data */
+      const Dune::PDELab::LinearSolverResult<double>& result() const
+      {
+        return res;
+      }
+
+    private:
+      const GFS& gfs;
+      PHELPER phelper;
+      Dune::PDELab::LinearSolverResult<double> res;
+      unsigned maxiter;
+      int verbose;
+    };
+
     //! Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
     template<typename GFS>
     class ISTLBackend_NOVLP_ExplicitDiagonal
