@@ -18,7 +18,9 @@
 
 #include"convectiondiffusionparameter.hh"
 
+#ifndef USECACHE
 #define USECACHE 1
+#endif
 
 namespace Dune {
   namespace PDELab {
