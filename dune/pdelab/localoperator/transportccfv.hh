@@ -267,7 +267,7 @@ namespace Dune {
 
         // face geometry
         const Dune::FieldVector<DF,IG::dimension-1>& 
-          face_local = Dune::GenericReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
+          face_local = Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
         RF face_volume = ig.geometry().volume();
 
         // face center in element coordinates
@@ -288,9 +288,9 @@ namespace Dune {
 
         // evaluate diffusion coefficients
         const Dune::FieldVector<DF,IG::dimension>&
-          inside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
         const Dune::FieldVector<DF,IG::dimension>& 
-          outside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
+          outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
         typename TP::Traits::RangeFieldType D_inside = tp.D(*(ig.inside()),inside_local);
         typename TP::Traits::RangeFieldType D_outside = tp.D(*(ig.outside()),outside_local);
         typename TP::Traits::RangeFieldType D_avg = 2.0/(1.0/(D_inside+1E-30) + 1.0/(D_outside+1E-30));
@@ -324,7 +324,7 @@ namespace Dune {
 
         // cell center
         const Dune::FieldVector<DF,dim>& 
-          inside_local = Dune::GenericReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
         
         // compute optimal dt for this cell
         typename TP::Traits::RangeFieldType cellcapacity = tp.c(eg.entity(),inside_local)*eg.geometry().volume();
@@ -350,7 +350,7 @@ namespace Dune {
     
         // face geometry
         const Dune::FieldVector<DF,IG::dimension-1>& 
-          face_local = Dune::GenericReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
+          face_local = Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
         RF face_volume = ig.geometry().volume();
         Dune::FieldVector<DF,dim> face_center_in_element = ig.geometryInInside().global(face_local);
 
@@ -384,7 +384,7 @@ namespace Dune {
             typename TP::Traits::RangeFieldType g;
             if (vn>=0) g=x_s(lfsu_s,0); else g=tp.g(*(ig.inside()),face_center_in_element);
             const Dune::FieldVector<DF,IG::dimension>&
-              inside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+              inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
             typename TP::Traits::RangeFieldType D_inside = tp.D(*(ig.inside()),inside_local);
             Dune::FieldVector<DF,IG::dimension> 
               inside_global = ig.inside()->geometry().center();
@@ -410,7 +410,7 @@ namespace Dune {
 
         // cell center
         const Dune::FieldVector<DF,dim>& 
-          inside_local = Dune::GenericReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
 
         // evaluate source term
         typename TP::Traits::RangeFieldType q = tp.q(eg.entity(),inside_local);
@@ -519,7 +519,7 @@ namespace Dune {
 
         // cell center
         const Dune::FieldVector<DF,dim>& 
-          inside_local = Dune::GenericReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
         
         // evaluate capacity
         typename TP::Traits::RangeFieldType c = tp.c(eg.entity(),inside_local);
@@ -549,7 +549,7 @@ namespace Dune {
 
         // cell center
         const Dune::FieldVector<DF,dim>& 
-          inside_local = Dune::GenericReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
         
         // evaluate capacity
         typename TP::Traits::RangeFieldType c = tp.c(eg.entity(),inside_local);
