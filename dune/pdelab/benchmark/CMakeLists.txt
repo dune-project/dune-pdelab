@@ -8,46 +8,18 @@ set(check_SCRIPTS  )
 # programs just to build when "make check" is used
 set(check_PROGRAMS  ${NORMALTESTS})
 
-# UG flags must be in front of ALUGrid flags, else when
-# dune/grid/uggrid/ugincludes.hh does #include "parallel.h",
-# ALUGrid-1.14-inst/include/serial/parallel.h will be included...
-set(AM_CPPFLAGS  ${AM_CPPFLAGS}                             
-        ${UG_CPPFLAGS}                                  
-        ${ALUGRID_CPPFLAGS}                             
-        ${AMIRAMESH_CPPFLAGS}                           
-        ${DUNE_CPPFLAGS}                                
-        ${DUNEMPICPPFLAGS}                              
-        ${PARMETIS_CPPFLAGS})
-set(AM_LDFLAGS  ${AM_LDFLAGS}                       
-        ${UG_LDFLAGS}                           
-        ${ALUGRID_LDFLAGS}                      
-        ${AMIRAMESH_LDFLAGS}                    
-        ${DUNE_LDFLAGS}                         
-        ${DUNEMPILDFLAGS}                       
-        ${PARMETIS_LDFLAGS})
-set(LDADD                                          
-        ${PARMETIS_LIBS}                        
-        ${ALUGRID_LIBS}                         
-        ${AMIRAMESH_LIBS}                       
-        ${DUNE_LIBS}                            
-        ${DUNEMPILIBS}                          
-        ${UG_LIBS}                              
-        ${LDADD})
-
-#noinst_HEADERS =
-
 # THIS IS A SEPARATION MARKER TO MINIMIZE SVN MERGE CONFLICTS
 # TRUNK TARGETS FOLLOW
 
 list(APPEND NORMALTESTS poisson-old)
-add_executable(poisson_old poisson-old.cc)
+add_executable(poisson-old poisson-old.cc)
 list(APPEND MOSTLYCLEANFILES poisson-old_*.vtu poisson-old_*timings.txt)
 
 list(APPEND NORMALTESTS laplacedirichletccfv-old)
-add_executable(laplacedirichletccfv_old laplacedirichletccfv-old.cc)
+add_executable(laplacedirichletccfv-old laplacedirichletccfv-old.cc)
 list(APPEND MOSTLYCLEANFILES laplacedirichletccfv-old_*.vtu laplacedirichletccfv-old_*timings.txt)
 
-foreach(_test ${NORMALTEST})
+foreach(_test ${NORMALTESTS})
   add_dune_ug_flags(${_test})
   add_dune_alugrid_flags(${_test})
   add_dune_amiramesh_flags(${_test})
