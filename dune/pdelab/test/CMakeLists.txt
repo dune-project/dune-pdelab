@@ -35,6 +35,7 @@ set(EXTRA_DIST  make_pvd.sh)
 
 list(APPEND NORMALTESTS testanalytic)
 add_executable(testanalytic testanalytic.cc)
+target_link_libraries(testanalytic dunepdelab ${DUNE_LIBS})
 
 # The following lines are comment out as the translation is not clear. TODO review
 #
@@ -49,6 +50,7 @@ list(APPEND MOSTLYCLEANFILES channel.vtu)
 
 list(APPEND NORMALTESTS testclock)
 add_executable(testclock testclock.cc)
+target_link_libraries(testclock dunepdelab ${DUNE_LIBS})
 
 #add compile and link flags
 # UG flags must be in front of ALUGrid flags, else when
