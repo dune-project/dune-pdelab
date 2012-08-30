@@ -38,9 +38,8 @@ set(DISTCHECK_CONFIGURE_FLAGS  --with-dune=${DUNEROOT} CXX="${CXX}" CC="${CC}")
 # list of tests to run
 set(TESTS  ${NORMALTESTS})
 
-foreach(i ${TESTS})
-  add_test(${i} ${i})
-endforeach(i ${TESTS})
+add_test(NAME poisson-old WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/poisson-old ${CMAKE_CURRENT_SOURCE_DIR}/poisson-old.ini)
+add_test(NAME laplacedirichletccfv-old WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/laplacedirichletccfv-old ${CMAKE_CURRENT_SOURCE_DIR}/laplacedirichletccfv-old.ini)
 
 
 # We do not want want to build the tests during make all
