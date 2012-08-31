@@ -258,6 +258,7 @@ namespace Dune {
                 lo.extract_per_entity_sizes_from_cell(*it);
               }
 
+            // FIXME: handling of blocked containers!
             lo.finalize_non_fixed_size_update();
           }
 
@@ -266,15 +267,21 @@ namespace Dune {
         if (lo._fixed_size)
           {
             _gt_dof_offsets.assign(GlobalGeometryTypeIndex::size(dim) + 1,0);
+            _size = 0;
 
             const GTVector::const_iterator end_it = geom_types.end();
             for (GTVector::const_iterator it = geom_types.begin(); it != end_it; ++it)
               {
                 const size_type gt_index = GlobalGeometryTypeIndex::index(*it);
-                _gt_dof_offsets[gt_index + 1] = lo.size(gt_index,0) * _gv.indexSet().size(*it);
+                size_type gt_size = lo.size(gt_index,0);
+                size_type entity_count = _gv.indexSet().size(*it);
+                _size += gt_size * entity_count;
+                if (_container_blocked)
+                  gt_size = gt_size > 0;
+                _gt_dof_offsets[gt_index + 1] = gt_size * entity_count;
               }
             std::partial_sum(_gt_dof_offsets.begin(),_gt_dof_offsets.end(),_gt_dof_offsets.begin());
-            _block_count = _size = _gt_dof_offsets.back();
+            _block_count = _gt_dof_offsets.back();
           }
         else
           {
