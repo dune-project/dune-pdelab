@@ -752,7 +752,7 @@ namespace Dune {
       {
       }
 
-      LFSContainerIndexCache(const LFS& lfs)
+      explicit LFSContainerIndexCache(const LFS& lfs)
         : LFSContainerIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag>(lfs)
       {
       }
