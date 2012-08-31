@@ -1074,7 +1074,6 @@ namespace Dune {
                 if (_container_blocked)
                   gt_size = gt_size > 0;
                 _gt_dof_offsets[gt_index + 1] = gt_size * gt_entity_count;
-                _block_count += gt_size * gt_entity_count;
               }
 
             std::partial_sum(_gt_dof_offsets.begin(),_gt_dof_offsets.end(),_gt_dof_offsets.begin());
