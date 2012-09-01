@@ -227,7 +227,7 @@ namespace Dune {
 
       //! get a reference to the GridView
       const typename Traits::GridViewType& getGridView() const
-      { return gfs.gridView(); }
+      { return pgfs->gridView(); }
     };
 
     //! Helper class to calculate the Traits of DiscreteGridFunctionCurl
@@ -351,7 +351,7 @@ namespace Dune {
       DiscreteGridFunctionGlobalCurl (const GFS& gfs, const X& x_)
         : pgfs(stackobject_to_shared_ptr(gfs)),
           pxg(stackobject_to_shared_ptr(x_)),
-          lfs(gfs), xl(gfs.maxLocalSize()), J(gfs.maxLocalSize())
+          lfs(gfs), xl(pgfs->maxLocalSize()), J(pgfs->maxLocalSize())
       {
       }
 
