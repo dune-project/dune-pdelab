@@ -768,6 +768,10 @@ namespace Dune {
       : gt(bt,d), basis(k, lfe), coefficients(k), interpolation(basis,k)
     {}
 
+    OPBLocalFiniteElement (const OPBLocalFiniteElement & other)
+      : gt(other.gt), basis(other.basis), coefficients(other.coefficients), interpolation(basis,k)
+    {}
+
     const typename Traits::LocalBasisType& localBasis () const
     {
       return basis;
