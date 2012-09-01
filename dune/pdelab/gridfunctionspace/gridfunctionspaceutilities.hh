@@ -101,7 +101,21 @@ namespace Dune {
        * \param x_  The coefficients vector
        */
       DiscreteGridFunction (const GFS& gfs, const X& x_)
-        : pgfs(stackobject_to_shared_ptr(gfs)), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
+        : pgfs(stackobject_to_shared_ptr(gfs)),
+          pxg(stackobject_to_shared_ptr(x_)),
+          lfs(pgfs), xl(pgfs->maxLocalSize()), yb(pgfs->maxLocalSize())
+      {
+      }
+
+      /** \brief Construct a DiscreteGridFunction
+       *
+       * \param gfs shared pointer to the GridFunctionsSpace
+       * \param x_  shared pointer to the coefficients vector
+       */
+      DiscreteGridFunction (shared_ptr<const GFS> gfs, shared_ptr<const X> x_)
+        : pgfs(gfs),
+          pxg(x_),
+          lfs(pgfs), xl(pgfs->maxLocalSize()), yb(pgfs->maxLocalSize())
       {
       }
 
@@ -114,7 +128,7 @@ namespace Dune {
           typename Dune::PDELab::LocalFunctionSpace<GFS>::Traits::FiniteElementType
           > FESwitch;
         lfs.bind(e);
-        lfs.vread(xg,xl);
+        lfs.vread(*pxg,xl);
         FESwitch::basis(lfs.finiteElement()).evaluateFunction(x,yb);
         y = 0;
         for (unsigned int i=0; i<yb.size(); i++)
@@ -128,8 +142,8 @@ namespace Dune {
       }
 
     private:
-      shared_ptr<GFS const> pgfs;
-      const X& xg;
+      shared_ptr<const GFS> pgfs;
+      shared_ptr<const X> pxg;
       mutable LocalFunctionSpace<GFS> lfs;
       mutable std::vector<typename Traits::RangeFieldType> xl;
       mutable std::vector<typename Traits::RangeType> yb;
@@ -174,8 +188,9 @@ namespace Dune {
       typedef GridFunctionInterface<Traits, DiscreteGridFunctionCurl<T,X> >
         BaseT;
 
-      const GFS &gfs;
-      const X &xg;
+      shared_ptr<const GFS> pgfs;
+      shared_ptr<const X> pxg;
+      mutable LocalFunctionSpace<GFS> lfs;
 
     public:
       /** \brief Construct a DiscreteGridFunctionCurl
@@ -184,7 +199,9 @@ namespace Dune {
        * \param x_   The coefficients vector
        */
       DiscreteGridFunctionCurl(const GFS& gfs_, const X& xg_) :
-        gfs(gfs_), xg(xg_)
+        pgfs(stackobject_to_shared_ptr(gfs_)),
+        pxg(stackobject_to_shared_ptr(xg_)),
+        lfs(pgfs)
       { }
 
       // Evaluate
@@ -194,10 +211,9 @@ namespace Dune {
       {
         static const J2C& j2C = J2C();
 
-        LocalFunctionSpace<GFS> lfs(gfs);
         lfs.bind(e);
         std::vector<typename Traits::RangeFieldType> xl(lfs.size());
-        lfs.vread(xg,xl);
+        lfs.vread(*pxg,xl);
         std::vector<Jacobian> jacobian(lfs.size());
         lfs.finiteElement().basis().evaluateJacobian(x,jacobian);
 
@@ -333,7 +349,9 @@ namespace Dune {
        * \param x_  The coefficients vector
        */
       DiscreteGridFunctionGlobalCurl (const GFS& gfs, const X& x_)
-        : pgfs(stackobject_to_shared_ptr(gfs)), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), J(gfs.maxLocalSize())
+        : pgfs(stackobject_to_shared_ptr(gfs)),
+          pxg(stackobject_to_shared_ptr(x_)),
+          lfs(gfs), xl(gfs.maxLocalSize()), J(gfs.maxLocalSize())
       {
       }
 
@@ -343,7 +361,7 @@ namespace Dune {
                             typename Traits::RangeType& y) const
       {
         lfs.bind(e);
-        lfs.vread(xg,xl);
+        lfs.vread(*pxg,xl);
         lfs.finiteElement().localBasis().
           evaluateJacobianGlobal(x,J,e.geometry());
         y = 0;
@@ -377,8 +395,8 @@ namespace Dune {
       }
 
     private:
-      shared_ptr<GFS const> pgfs;
-      const X& xg;
+      shared_ptr<const GFS> pgfs;
+      shared_ptr<const X> pxg;
       mutable LocalFunctionSpace<GFS> lfs;
       mutable std::vector<typename Traits::RangeFieldType> xl;
       mutable std::vector<typename T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::JacobianType> J;
@@ -435,7 +453,9 @@ namespace Dune {
        * \param x_  The coefficients vector
        */
       DiscreteGridFunctionGradient (const GFS& gfs, const X& x_)
-        : pgfs(stackobject_to_shared_ptr(gfs)), xg(x_)
+        : pgfs(stackobject_to_shared_ptr(gfs)),
+          pxg(stackobject_to_shared_ptr(x_)),
+          lfs(pgfs)
       { }
 
       // Evaluate
@@ -444,12 +464,11 @@ namespace Dune {
                             typename Traits::RangeType& y) const
       {
         // get and bind local functions space
-        LocalFunctionSpace<GFS> lfs(*pgfs);
         lfs.bind(e);
 
         // get local coefficients
         std::vector<typename Traits::RangeFieldType> xl(lfs.size());
-        lfs.vread(xg,xl);
+        lfs.vread(*pxg,xl);
 
         // get Jacobian of geometry
         const typename Traits::ElementType::Geometry::Jacobian&
@@ -478,8 +497,9 @@ namespace Dune {
       }
 
     private:
-      shared_ptr<GFS const> pgfs;
-      const X& xg;
+      shared_ptr<const GFS> pgfs;
+      shared_ptr<const X> pxg;
+      mutable LocalFunctionSpace<GFS> lfs;
     };
 
     /** \brief DiscreteGridFunction with Piola transformation
@@ -518,7 +538,9 @@ namespace Dune {
        * \copydetails DiscreteGridFunction::DiscreteGridFunction(const GFS&,const X&)
        */
       DiscreteGridFunctionPiola (const GFS& gfs, const X& x_)
-        : pgfs(stackobject_to_shared_ptr(gfs)), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
+        : pgfs(stackobject_to_shared_ptr(gfs)),
+          pxg(stackobject_to_shared_ptr(x_)),
+          lfs(pgfs), xl(pgfs->maxLocalSize()), yb(pgfs->maxLocalSize())
       {
       }
 
@@ -528,7 +550,7 @@ namespace Dune {
       {
         // evaluate shape function on the reference element as before
         lfs.bind(e);
-        lfs.vread(xg,xl);
+        lfs.vread(*pxg,xl);
         lfs.finiteElement().localBasis().evaluateFunction(x,yb);
         typename Traits::RangeType yhat;
         yhat = 0;
@@ -552,8 +574,8 @@ namespace Dune {
       }
 
     private:
-      shared_ptr<GFS const> pgfs;
-      const X& xg;
+      shared_ptr<const GFS> pgfs;
+      shared_ptr<const X> pxg;
       mutable LocalFunctionSpace<GFS> lfs;
       mutable std::vector<typename Traits::RangeFieldType> xl;
       mutable std::vector<typename Traits::RangeType> yb;
@@ -620,7 +642,9 @@ namespace Dune {
        */
       VectorDiscreteGridFunction(const GFS& gfs, const X& x_,
                                  std::size_t start = 0)
-        : pgfs(stackobject_to_shared_ptr(gfs)), xg(x_), lfs(gfs), xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
+        : pgfs(stackobject_to_shared_ptr(gfs)),
+          pxg(stackobject_to_shared_ptr(x_)),
+          lfs(pgfs), xl(pgfs->maxLocalSize()), yb(pgfs->maxLocalSize())
       {
         for(std::size_t i = 0; i < dimR; ++i)
           remap[i] = i + start;
@@ -640,9 +664,10 @@ namespace Dune {
        */
       template<class Remap>
       VectorDiscreteGridFunction(const GFS& gfs, const X& x_,
-                                 const Remap &remap_) :
-        pgfs(stackobject_to_shared_ptr(gfs)), xg(x_), lfs(gfs),
-        xl(gfs.maxLocalSize()), yb(gfs.maxLocalSize())
+                                 const Remap &remap_)
+        : pgfs(stackobject_to_shared_ptr(gfs)),
+          pxg(stackobject_to_shared_ptr(x_)),
+          lfs(pgfs), xl(pgfs->maxLocalSize()), yb(pgfs->maxLocalSize())
       {
         for(std::size_t i = 0; i < dimR; ++i)
           remap[i] = remap_[i];
@@ -653,7 +678,7 @@ namespace Dune {
                             typename Traits::RangeType& y) const
       {
         lfs.bind(e);
-        lfs.vread(xg,xl);
+        lfs.vread(*pxg,xl);
         for (unsigned int k=0; k < dimR; k++)
           {
             lfs.child(remap[k]).finiteElement().localBasis().
@@ -671,8 +696,8 @@ namespace Dune {
       }
 
     private:
-      shared_ptr<GFS const> pgfs;
-      const X& xg;
+      shared_ptr<const GFS> pgfs;
+      shared_ptr<const X> pxg;
       std::size_t remap[dimR];
       mutable LocalFunctionSpace<GFS> lfs;
       mutable std::vector<RF> xl;
