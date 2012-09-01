@@ -906,8 +906,7 @@ namespace Dune {
       
     public:
       LocalFunctionSpace(const GFS & gfs)
-        : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs)),
-          dummy_pgfs(stackobject_to_shared_ptr<const GFS>(gfs))
+        : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs))
       {
         this->global = &(this->global_storage);
         this->_multi_indices = &(this->_multi_index_storage);
@@ -924,7 +923,8 @@ namespace Dune {
       }
 
       LocalFunctionSpace(const LocalFunctionSpace & lfs)
-        : BaseT(lfs)
+        : BaseT(lfs),
+          dummy_pgfs(lfs.dummy_pgfs)
       {
         // We need to reset the global pointers in the new LFS tree,
         // as they are still pointing to the global_storage of the
