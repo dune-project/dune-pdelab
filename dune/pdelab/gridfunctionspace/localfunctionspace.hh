@@ -901,9 +901,22 @@ namespace Dune {
       template<typename>
       friend struct FillIndicesVisitor;
 
+      // store a copy of the share_ptr to avoid deallocation
+      shared_ptr<const GFS> dummy_pgfs;
+      
     public:
       LocalFunctionSpace(const GFS & gfs)
-        : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs))
+        : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs)),
+          dummy_pgfs(stackobject_to_shared_ptr<const GFS>(gfs))
+      {
+        this->global = &(this->global_storage);
+        this->_multi_indices = &(this->_multi_index_storage);
+        this->setup(*this);
+      }
+
+      LocalFunctionSpace(shared_ptr<const GFS> pgfs)
+        : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(*pgfs)),
+          dummy_pgfs(pgfs)
       {
         this->global = &(this->global_storage);
         this->_multi_indices = &(this->_multi_index_storage);
