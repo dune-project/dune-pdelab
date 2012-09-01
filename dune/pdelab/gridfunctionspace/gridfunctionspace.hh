@@ -680,7 +680,7 @@ namespace Dune {
 
     private:
       CE defaultce;
-      const GV& gv;
+      const GV gv;
       shared_ptr<FEM const> pfem;
       typename Traits::SizeType nlocal;
       typename Traits::SizeType nglobal;
