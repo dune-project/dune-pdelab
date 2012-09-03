@@ -82,7 +82,7 @@ namespace Dune {
         return 0;
       }
 
-      explicit DirectLeafLocalOrdering(const shared_ptr<const FEM>& fem, const GV& gv)
+      DirectLeafLocalOrdering(const shared_ptr<const FEM>& fem, const GV& gv)
         : _fem(fem)
         , _gv(gv)
         , _fixed_size(false)
