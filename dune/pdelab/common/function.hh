@@ -241,6 +241,7 @@ namespace Dune {
      */
 	template<typename G, typename T>
 	class FunctionToGridFunctionAdapter :
+      public TypeTree::LeafNode,
 	  public GridFunctionInterface<GridFunctionTraits<
 									 G,
 									 typename T::Traits::RangeFieldType,
