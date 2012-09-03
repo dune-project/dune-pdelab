@@ -52,6 +52,5 @@ foreach(i ${SUBDIRS})
   add_subdirectory(${i} ${opt})
 endforeach(i ${SUBDIRS})
 
-export(TARGETS dunepdelab FILE DunePdelabTargets.cmake)
 # finalize the dune project, e.g. generating config.h etc.
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)
