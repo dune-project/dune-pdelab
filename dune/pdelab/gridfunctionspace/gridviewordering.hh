@@ -121,7 +121,14 @@ namespace Dune {
           {
             if (_container_blocked)
               {
-                DUNE_THROW(Dune::Exception,"not implemented");
+                for (ItIn in = begin; in != end; ++in, ++out)
+                  {
+                    assert(in->treeIndex().size() == 1);
+                    out->push_back(in->treeIndex().back());
+                    const size_type geometry_type_index = Traits::DOFIndexAccessor::geometryType(*in);
+                    const size_type entity_index = Traits::DOFIndexAccessor::entityIndex(*in);
+                    out->push_back(_gt_dof_offsets[geometry_type_index] + entity_index);
+                  }
               }
             else
               {
