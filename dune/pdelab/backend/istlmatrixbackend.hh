@@ -67,7 +67,7 @@ namespace Dune {
 
     };
 
-    template<typename Ordering, typename SubPattern_ = void>
+    template<typename RowOrdering, typename ColOrdering, typename SubPattern_ = void>
     class Pattern
       : public std::vector<std::unordered_map<std::size_t,SubPattern_> >
     {
@@ -90,20 +90,20 @@ namespace Dune {
         r.first->second.recursive_add_entry(ri.back_popped(),ci.back_popped());
       }
 
-      Pattern(const Ordering& row_ordering, const Ordering& col_ordering)
+      Pattern(const RowOrdering& row_ordering, const ColOrdering& col_ordering)
         : _row_ordering(row_ordering)
         , _col_ordering(col_ordering)
       {}
 
     private:
 
-      const Ordering& _row_ordering;
-      const Ordering& _col_ordering;
+      const RowOrdering& _row_ordering;
+      const ColOrdering& _col_ordering;
 
     };
 
-    template<typename Ordering>
-    class Pattern<Ordering,void>
+    template<typename RowOrdering, typename ColOrdering>
+    class Pattern<RowOrdering,ColOrdering,void>
       : public std::vector<std::unordered_set<std::size_t> >
     {
 
@@ -124,15 +124,15 @@ namespace Dune {
         (*this)[ri.back()].insert(ci.back());
       }
 
-      Pattern(const Ordering& row_ordering, const Ordering& col_ordering)
+      Pattern(const RowOrdering& row_ordering, const ColOrdering& col_ordering)
         : _row_ordering(row_ordering)
         , _col_ordering(col_ordering)
       {}
 
     private:
 
-      const Ordering& _row_ordering;
-      const Ordering& _col_ordering;
+      const RowOrdering& _row_ordering;
+      const ColOrdering& _col_ordering;
 
     };
 
@@ -154,16 +154,16 @@ namespace Dune {
       static const bool value = true;
     };
 
-    template<typename M, typename Ordering, bool pattern>
+    template<typename M, typename RowOrdering, typename ColOrdering, bool pattern>
     struct _build_pattern_type
     {
       typedef void type;
     };
 
-    template<typename M, typename Ordering>
-    struct _build_pattern_type<M,Ordering,true>
+    template<typename M, typename RowOrdering, typename ColOrdering>
+    struct _build_pattern_type<M,RowOrdering,ColOrdering,true>
     {
-      typedef Pattern<Ordering,typename _build_pattern_type<typename M::block_type,Ordering,requires_pattern<typename M::block_type>::value>::type> type;
+      typedef Pattern<RowOrdering,ColOrdering,typename _build_pattern_type<typename M::block_type,RowOrdering,ColOrdering,requires_pattern<typename M::block_type>::value>::type> type;
     };
 
     template<typename M, typename GFSV, typename GFSU, typename Tag>
@@ -173,23 +173,28 @@ namespace Dune {
       typedef OrderingBase<
         typename GFSV::Ordering::Traits::DOFIndex,
         typename GFSV::Ordering::Traits::ContainerIndex
-        > Ordering;
+        > RowOrdering;
 
-      typedef typename _build_pattern_type<M,Ordering,requires_pattern<M>::value>::type type;
+      typedef OrderingBase<
+        typename GFSU::Ordering::Traits::DOFIndex,
+        typename GFSU::Ordering::Traits::ContainerIndex
+        > ColOrdering;
+
+      typedef typename _build_pattern_type<M,RowOrdering,ColOrdering,requires_pattern<M>::value>::type type;
     };
 
     template<typename M, typename GFSV, typename GFSU>
     struct build_pattern_type<M,GFSV,GFSU,FlatContainerAllocationTag>
     {
-      typedef Pattern<typename GFSV::Ordering> type;
+      typedef Pattern<typename GFSV::Ordering, typename GFSU::Ordering> type;
     };
 
 
     template<typename RI, typename CI, typename Block>
     typename enable_if<Block::blocklevel != 1,typename Block::field_type&>::type
-    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, int i)
+    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, int i, int j)
     {
-      return access_istl_matrix_element(b[ri[i]][ci[i]],ri,ci,i-1);
+      return access_istl_matrix_element(b[ri[i]][ci[j]],ri,ci,i-1,j-1);
     }
 
     template<typename RI, typename CI, typename Block>
@@ -197,9 +202,10 @@ namespace Dune {
                        Block::rows == 1 &&
                        Block::cols == 1,
                        typename Block::field_type&>::type
-    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, int i)
+    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, int i, int j)
     {
       assert(i == -1);
+      assert(j == -1);
       return b[0][0];
     }
 
@@ -208,9 +214,10 @@ namespace Dune {
                        Block::rows != 1 &&
                        Block::cols != 1,
                        typename Block::field_type&>::type
-    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, int i)
+    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, int i, int j)
     {
       assert(i == 0);
+      assert(j == 0);
       return b[ri[0]][ci[0]];
     }
 
@@ -219,9 +226,10 @@ namespace Dune {
                        Block::rows == 1 &&
                        Block::cols != 1,
                        typename Block::field_type&>::type
-    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, int i)
+    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, int i, int j)
     {
-      assert(i == 0);
+      assert(i == -1);
+      assert(j == 0);
       return b[0][ci[0]];
     }
 
@@ -230,18 +238,19 @@ namespace Dune {
                        Block::rows != 1 &&
                        Block::cols == 1,
                        typename Block::field_type&>::type
-    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, int i)
+    access_istl_matrix_element(Block& b, const RI& ri, const CI& ci, int i, int j)
     {
       assert(i == 0);
+      assert(j == -1);
       return b[ri[0]][0];
     }
 
 
     template<typename RI, typename CI, typename Block>
     typename enable_if<Block::blocklevel != 1,const typename Block::field_type&>::type
-    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, int i)
+    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, int i, int j)
     {
-      return access_istl_matrix_element(b[ri[i]][ci[i]],ri,ci,i-1);
+      return access_istl_matrix_element(b[ri[i]][ci[j]],ri,ci,i-1,j-1);
     }
 
     template<typename RI, typename CI, typename Block>
@@ -249,9 +258,10 @@ namespace Dune {
                        Block::rows == 1 &&
                        Block::cols == 1,
                        const typename Block::field_type&>::type
-    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, int i)
+    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, int i, int j)
     {
       assert(i == -1);
+      assert(j == -1);
       return b[0][0];
     }
 
@@ -260,9 +270,10 @@ namespace Dune {
                        Block::rows != 1 &&
                        Block::cols != 1,
                        const typename Block::field_type&>::type
-    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, int i)
+    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, int i, int j)
     {
       assert(i == 0);
+      assert(j == 0);
       return b[ri[0]][ci[0]];
     }
 
@@ -271,9 +282,10 @@ namespace Dune {
                        Block::rows == 1 &&
                        Block::cols != 1,
                        const typename Block::field_type&>::type
-    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, int i)
+    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, int i, int j)
     {
-      assert(i == 0);
+      assert(i == -1);
+      assert(j == 0);
       return b[0][ci[0]];
     }
 
@@ -282,9 +294,10 @@ namespace Dune {
                        Block::rows != 1 &&
                        Block::cols == 1,
                        const typename Block::field_type&>::type
-    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, int i)
+    access_istl_matrix_element(const Block& b, const RI& ri, const CI& ci, int i, int j)
     {
       assert(i == 0);
+      assert(j == -1);
       return b[ri[0]][0];
     }
 
@@ -665,14 +678,12 @@ namespace Dune {
 
       E& operator()(const RowIndex& ri, const ColIndex& ci)
       {
-        assert(ri.size() == ci.size());
-        return access_istl_matrix_element(_container,ri,ci,std::max(ri.size()-1,ci.size()-1));
+        return access_istl_matrix_element(_container,ri,ci,ri.size()-1,ci.size()-1);
       }
 
       const E& operator()(const RowIndex& ri, const ColIndex& ci) const
       {
-        assert(ri.size() == ci.size());
-        return access_istl_matrix_element(_container,ri,ci,std::max(ri.size()-1,ci.size()-1));
+        return access_istl_matrix_element(_container,ri,ci,ri.size()-1,ci.size()-1);
       }
 
       const ContainerType& base() const
