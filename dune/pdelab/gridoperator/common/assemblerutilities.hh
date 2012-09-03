@@ -332,6 +332,23 @@ namespace Dune{
       }
 
 
+      template<typename Pattern, typename RI, typename CI>
+      typename enable_if<
+        is_same<RI,CI>::value
+        >::type
+      add_diagonal_entry(Pattern& pattern, const RI& ri, const CI& ci) const
+      {
+        if (ri == ci)
+          pattern.add_link(ri,ci);
+      }
+
+      template<typename Pattern, typename RI, typename CI>
+      typename enable_if<
+        !is_same<RI,CI>::value
+        >::type
+      add_diagonal_entry(Pattern& pattern, const RI& ri, const CI& ci) const
+      {}
+
       /** \brief Adding matrix entry to pattern with respect to the
           constraints contributions. This assembles the entries addressed
           by etadd(..). See the documentation there for more information
@@ -347,8 +364,10 @@ namespace Dune{
         const bool constrained_v = lfsv_indices.constrained(i);
         const bool constrained_u = lfsu_indices.constrained(j);
 
-        if(lfsv_indices.container_index(i) == lfsu_indices.container_index(j))
-          globalpattern.add_link(lfsv_indices.container_index(i),lfsu_indices.container_index(j));
+        add_diagonal_entry(globalpattern,
+                           lfsv_indices.container_index(i),
+                           lfsu_indices.container_index(j)
+                           );
 
         if(!constrained_v)
           {
