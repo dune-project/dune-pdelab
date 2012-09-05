@@ -44,7 +44,7 @@ namespace Dune {
 		dimDomain = n
 	  };
 
-	  //! \brief domain type
+      //! \brief domain type in dim-size coordinates
 	  typedef D DomainType;
 
 	  //! \brief Export type for range field
@@ -859,7 +859,7 @@ namespace Dune {
      *
      *  This is a convenience class which eases the creation of analytic
      *  GridFunctions.  Classes derived from it need only implement a method
-     *  evaluateGlobal(const DomainType &x_global, RangeType &y) to have a
+     *  evaluateGlobal(const Dune::FieldVector<typename Traits::DomainFieldType,GV::dimensionworld> &x_global, RangeType &y) to have a
      *  full-fledged GridFunction.
      *
      *  \tparam T   The Traits class
