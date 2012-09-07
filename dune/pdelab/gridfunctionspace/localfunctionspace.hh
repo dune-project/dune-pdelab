@@ -901,6 +901,9 @@ namespace Dune {
       template<typename>
       friend struct FillIndicesVisitor;
 
+      // store a copy of the share_ptr to avoid deallocation
+      shared_ptr<const GFS> dummy_pgfs;
+      
     public:
       LocalFunctionSpace(const GFS & gfs)
         : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs))
@@ -910,8 +913,18 @@ namespace Dune {
         this->setup(*this);
       }
 
+      LocalFunctionSpace(shared_ptr<const GFS> pgfs)
+        : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(*pgfs)),
+          dummy_pgfs(pgfs)
+      {
+        this->global = &(this->global_storage);
+        this->_multi_indices = &(this->_multi_index_storage);
+        this->setup(*this);
+      }
+
       LocalFunctionSpace(const LocalFunctionSpace & lfs)
-        : BaseT(lfs)
+        : BaseT(lfs),
+          dummy_pgfs(lfs.dummy_pgfs)
       {
         // We need to reset the global pointers in the new LFS tree,
         // as they are still pointing to the global_storage of the

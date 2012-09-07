@@ -344,6 +344,22 @@ namespace Dune {
         update();
       }
 
+      //! constructor
+      GridFunctionSpace (const GV& gridview, shared_ptr<const FEM> fem, const CE& ce_)
+        : defaultce(ce_), gv(gridview), pfem(fem), ce(ce_)
+      {
+        orderingp = make_shared<Ordering>(*this);
+        update();
+      }
+
+      //! constructor
+      GridFunctionSpace (const GV& gridview, shared_ptr<const FEM> fem)
+        : gv(gridview), pfem(fem), ce(defaultce)
+      {
+        orderingp = make_shared<Ordering>(*this);
+        update();
+      }
+
       //! get grid view
       const GV& gridview () const DUNE_DEPRECATED_MSG("Use gridView() instead of gridview()")
       {
@@ -664,7 +680,7 @@ namespace Dune {
 
     private:
       CE defaultce;
-      const GV& gv;
+      const GV gv;
       shared_ptr<FEM const> pfem;
       typename Traits::SizeType nlocal;
       typename Traits::SizeType nglobal;

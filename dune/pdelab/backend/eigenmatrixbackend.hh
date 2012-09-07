@@ -154,7 +154,7 @@ namespace Dune
          }
 
 
-         void setGlobal(size_type gi, size_type gj, const typename Matrix::ElementTyoe& v)
+         void setGlobal(size_type gi, size_type gj, const typename Matrix::ElementType& v)
          {
            Backend::access(_matrix,gi,gj) = v;
          }
