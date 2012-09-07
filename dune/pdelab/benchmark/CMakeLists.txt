@@ -25,6 +25,7 @@ foreach(_test ${NORMALTESTS})
   add_dune_amiramesh_flags(${_test})
   add_dune_mpi_flags(${_test})
   add_dune_parmetis_flags(${_test})
+  target_link_libraries(${_test} ${DUNE_LIBS})
 endforeach(_test ${NORMALTEST})
 
 # THIS IS A SEPARATION MARKER TO MINIMIZE SVN MERGE CONFLICTS
