@@ -1461,13 +1461,13 @@ namespace Dune {
       // get grid view
       const typename Traits::GridViewType& gridview () const DUNE_DEPRECATED_MSG("Use gridView() instead of gridview()")
       {
-        return pgfs->gridView();
+        return pcgfs->gridView();
       }
 
       // get grid view
       const typename Traits::GridViewType& gridView () const
       {
-        return pgfs->gridView();
+        return pcgfs->gridView();
       }
 
       //! get dimension of root finite element space
@@ -1545,13 +1545,13 @@ namespace Dune {
       // get grid view
       const typename Traits::GridViewType& gridview () const DUNE_DEPRECATED_MSG("Use gridView() instead of gridview()")
       {
-        return pgfs->gridView();
+        return pcgfs->gridView();
       }
 
       // get grid view
       const typename Traits::GridViewType& gridView () const
       {
-        return pgfs->gridView();
+        return pcgfs->gridView();
       }
 
       //! get dimension of root finite element space
