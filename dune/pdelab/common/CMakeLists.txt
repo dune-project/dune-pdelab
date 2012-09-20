@@ -27,7 +27,7 @@ dune_add_library(dunepdelab
         clock.cc                                
         hostname.cc                             
         logtag.cc
-	$<TARGET_OBJECTS:pdelabtypetree>
+	_DUNE_TARGET_OBJECTS:pdelabtypetree_
 	ADD_LIBS ${DUNE_LIBS}
 	)
 

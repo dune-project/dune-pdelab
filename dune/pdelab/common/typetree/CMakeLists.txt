@@ -29,7 +29,7 @@ set(typetree_HEADERS
         visitor.hh)
 
 set(noinst_LTLIBRARIES  libpdelabtypetree.la)
-add_library(pdelabtypetree OBJECT
+dune_add_library(pdelabtypetree OBJECT
         utility.cc)
 
 
