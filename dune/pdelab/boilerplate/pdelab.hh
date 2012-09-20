@@ -407,7 +407,6 @@ namespace Dune {
 
             CGFEMBase (const GV& gridview)
             {
-                std::cout << "making Qk FEM" << std::endl;
                 femp = shared_ptr<FEM>(new FEM());
             }
 
@@ -1364,7 +1363,7 @@ namespace Dune {
             shared_ptr<LS> lsp;
         };
 
-        // in the nonoverlapping case : BCGS SSORk
+        // in the overlapping case : BCGS SSORk
         template<typename FS, typename ASS>
         class ISTLSolverBackend_IterativeDefault<FS,ASS,SolverCategory::overlapping>
         {
