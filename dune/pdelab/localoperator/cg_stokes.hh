@@ -501,7 +501,7 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         const typename R::weight_type weight = r.weight();
-        r.setWeight(weight * p.rho());
+        r.setWeight(weight * p.rho(eg,x));
         scalar_operator.alpha_volume(eg,lfsu.template child<0>(),x,lfsu.template child<0>(),r);
         r.setWeight(weight);
       }
@@ -512,7 +512,7 @@ namespace Dune {
                             M& mat) const
       {
         const typename M::weight_type weight = mat.weight();
-        mat.setWeight(weight * p.rho());
+        mat.setWeight(weight * p.rho(eg,x));
         scalar_operator.jacobian_volume(eg,lfsu.template child<0>(),x,lfsu.template child<0>(),mat);
         mat.setWeight(weight);
       }

@@ -114,6 +114,7 @@ namespace Dune {
           TaylorHoodNavierStokesJacobian and NavierStokesMass local
           operator classes.
 
+          \tparam GV    The type of the grid view used.
           \tparam BF    The boundary type function returning an element
                         of StokesBoundaryCondition.
           \tparam NF    The Neumann stress flux boundary function.
@@ -142,8 +143,8 @@ namespace Dune {
         { return rho_; }
 
         /** \brief Density evaluated on a codim 0 geometry. */
-        template<typename EG>
-        RF rho(const EG & eg, const typename Traits::Domain & x) const
+        template<typename EG, typename Domain>
+        RF rho(const EG & eg, const Domain & x) const
         { return rho_; }
 
         /** \brief Viscosity evaluated on a codim 1 geometry. */
