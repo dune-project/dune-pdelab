@@ -772,7 +772,7 @@ namespace Dune {
     };
 
     template<class GO, int s, template<class,class,class,int> class Preconditioner,
-             template<class> class Solver>
+             template<class> class Solver, bool skipBlocksizeCheck = false>
     class ISTLBackend_AMG : public LinearResultStorage
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
@@ -780,7 +780,7 @@ namespace Dune {
       typedef typename GO::Traits::Jacobian M;
       typedef typename M::BaseT MatrixType;
       typedef typename GO::Traits::Domain V;
-      typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type VectorType;
+      typedef typename BlockProcessor<GFS,skipBlocksizeCheck>::template AMGVectorTypeSelector<V>::Type VectorType;
       typedef typename CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
 #if HAVE_MPI
       typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
@@ -900,7 +900,8 @@ namespace Dune {
         Solver<VectorType> solver(oop,sp,*amg,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
         
-        solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
+        solver.apply(BlockProcessor<GFS,skipBlocksizeCheck>::getVector(z),
+            BlockProcessor<GFS,skipBlocksizeCheck>::getVector(r),stat);
         stats.tsolve= watch.elapsed();
         res.converged  = stat.converged;
         res.iterations = stat.iterations;

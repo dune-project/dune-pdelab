@@ -383,9 +383,24 @@ namespace Dune {
 
       };
 
-      template<typename GFS>
+
+      template<typename GFS, bool skipBlocksizeCheck>
       struct BlockProcessor
+      {
+      };
+
+      template<typename GFS>
+      struct BlockProcessor<GFS,false>
         : public BlockProcessorHelper<GFS, BlockwiseIndices<GFS>::value,
+                                      GFS::Traits::BackendType::BlockSize>
+      {
+      };
+
+      // This specialiation skips the BlockSizeEqual-checks; user is responsible for providing
+      // a consistent combination of GFS and Backend!
+      template<typename GFS>
+      struct BlockProcessor<GFS,true>
+        : public BlockProcessorHelper<GFS, true,
                                       GFS::Traits::BackendType::BlockSize>
       {
       };
