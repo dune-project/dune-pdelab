@@ -36,7 +36,7 @@ namespace Dune {
     //========================================================
 
     // operator that resets result to zero at constrained DOFS
-    template<typename GFS>
+    template<typename GFS, bool skipBlocksizeCheck = false>
     class ParallelISTLHelper
     {
       /**
@@ -442,7 +442,7 @@ namespace Dune {
            <<std::endl;
 
       // Maybe divide by block size?
-      BlockProcessor<GFS>::postProcessCount(count);
+      BlockProcessor<GFS,skipBlocksizeCheck>::postProcessCount(count);
 
       dverb<<gv.comm().rank()<<": shared block count is "<< count.touint()
            <<std::endl;
@@ -466,7 +466,7 @@ namespace Dune {
         for (typename V::size_type j=0; j<v[i].N(); ++j)
           if(v[i][j]==1.0 && sharedDOF[i][j]){
             scalarIndices[i][j]=start;
-            BlockProcessor<GFS>::increment(start, ii++);
+            BlockProcessor<GFS,skipBlocksizeCheck>::increment(start, ii++);
           }
 
       // publish global indices for the shared DOFS to other processors.
@@ -495,7 +495,7 @@ namespace Dune {
             else {
               attr = Dune::OwnerOverlapCopyAttributeSet::copy;                
             }
-            BlockProcessor<GFS>::
+            BlockProcessor<GFS,skipBlocksizeCheck>::
               addIndex(scalarIndices[i][j], ii, attr, m, c.indexSet());
           }
         }
