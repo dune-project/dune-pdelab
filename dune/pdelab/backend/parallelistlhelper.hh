@@ -409,9 +409,9 @@ namespace Dune {
 
 
 #if HAVE_MPI
-    template<typename GFS>
+    template<typename GFS, bool skipBlocksizeCheck>
     template<typename M, typename C>
-    void ParallelISTLHelper<GFS>::createIndexSetAndProjectForAMG(M& m, C& c)
+    void ParallelISTLHelper<GFS,skipBlocksizeCheck>::createIndexSetAndProjectForAMG(M& m, C& c)
     {
       typedef typename GFS::Traits::GridViewType GV;
       const GV& gv = gfs.gridView();
