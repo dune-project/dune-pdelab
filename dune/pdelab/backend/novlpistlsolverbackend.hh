@@ -771,7 +771,27 @@ namespace Dune {
         }
       }
 
-      //! A DataHandle class to exchange matrix sparsity patterns
+      /**
+       * @brief A DataHandle class to exchange matrix sparsity patterns.
+       * 
+       *  We look at a 2D example with a nonoverlapping grid,
+       *  two processes and no ghosts with Q1 discretization.
+       *  Process 0 has the left part of the domain
+       *  with three cells and eight vertices (1-8),
+       *  Process 1 the right part with three cells
+       *  and eight vertices (2,4,7-12).
+       *  <pre>
+       *  1 _ 2        2 _ 9 _ 10        
+       *  |   |        |   |   | 
+       *  3 _ 4 _ 7    4 _ 7 _ 11
+       *  |   |   |        |   |
+       *  5 _ 6 _ 8        8 _ 12
+       *  </pre>
+       *  If we look at vertex 7 and the corresponding entries in the matrix for P0,
+       *  there will be entries for (7,4) and (7,8), but not for (7,2).
+       *  The MatPatternExchange class will find these entries and returns a vector "sparsity",
+       *  that contains all missing connections.
+       */
       class MatPatternExchange
         : public CommDataHandleIF<MatPatternExchange,IdType> {
         typedef typename Matrix::RowIterator RowIterator;
