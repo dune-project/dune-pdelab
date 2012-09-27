@@ -1,2 +1,2 @@
 set(modules DunePdelabMacros.cmake FindPackageMultipass.cmake  FindPETSc.cmake  ResolveCompilerPaths.cmake)
-install(FILES ${modules} DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/cmake/modules)
+install(FILES ${modules} DESTINATION ${DUNE_INSTALL_MODULEDIR})
