@@ -3,6 +3,7 @@ SUBDIRS =                                       \
 
 commondir = $(includedir)/dune/pdelab/common
 common_HEADERS =				\
+        benchmarkhelper.hh                      \
 	clock.hh				\
 	countingptr.hh				\
 	cpstoragepolicy.hh			\
