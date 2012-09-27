@@ -771,7 +771,27 @@ namespace Dune {
         }
       }
 
-      //! A DataHandle class to exchange matrix sparsity patterns
+      /**
+       * @brief A DataHandle class to exchange matrix sparsity patterns.
+       * 
+       *  We look at a 2D example with a nonoverlapping grid,
+       *  two processes and no ghosts with Q1 discretization.
+       *  Process 0 has the left part of the domain
+       *  with three cells and eight vertices (1-8),
+       *  Process 1 the right part with three cells
+       *  and eight vertices (2,4,7-12).
+       *  <pre>
+       *  1 _ 2        2 _ 9 _ 10        
+       *  |   |        |   |   | 
+       *  3 _ 4 _ 7    4 _ 7 _ 11
+       *  |   |   |        |   |
+       *  5 _ 6 _ 8        8 _ 12
+       *  </pre>
+       *  If we look at vertex 7 and the corresponding entries in the matrix for P0,
+       *  there will be entries for (7,4) and (7,8), but not for (7,2).
+       *  The MatPatternExchange class will find these entries and returns a vector "sparsity",
+       *  that contains all missing connections.
+       */
       class MatPatternExchange
         : public CommDataHandleIF<MatPatternExchange,IdType> {
         typedef typename Matrix::RowIterator RowIterator;
@@ -1038,7 +1058,7 @@ namespace Dune {
       
     template<class GO, 
              template<class,class,class,int> class Preconditioner,
-             template<class> class Solver>
+             template<class> class Solver, bool skipBlocksizeCheck = false>
     class ISTLBackend_NOVLP_BASE_PREC
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
@@ -1084,7 +1104,7 @@ namespace Dune {
         typedef typename CommSelector<96,Dune::MPIHelper::isFake>::type Comm;
         typedef typename M::BaseT MatrixType;
         MatrixType& mat=A.base();
-        typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type VectorType;
+        typedef typename BlockProcessor<GFS,skipBlocksizeCheck>::template AMGVectorTypeSelector<V>::Type VectorType;
 #if HAVE_MPI
         Comm oocc(gfs.gridView().comm(),Dune::SolverCategory::nonoverlapping);
         typedef VertexExchanger<GO,MatrixType> Exchanger;
@@ -1204,7 +1224,7 @@ namespace Dune {
     //! \} group Backend
     
     template<class GO,int s, template<class,class,class,int> class Preconditioner,
-             template<class> class Solver>
+             template<class> class Solver, bool skipBlocksizeCheck = false>
     class ISTLBackend_AMG_NOVLP : public LinearResultStorage
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
@@ -1212,7 +1232,7 @@ namespace Dune {
       typedef typename GO::Traits::Jacobian M;
       typedef typename M::BaseT MatrixType;
       typedef typename GO::Traits::Domain V;
-      typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type VectorType;
+      typedef typename BlockProcessor<GFS,skipBlocksizeCheck>::template AMGVectorTypeSelector<V>::Type VectorType;
       typedef typename CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
 #if HAVE_MPI
       typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
@@ -1336,7 +1356,8 @@ namespace Dune {
         }
         watch.reset();
         Solver<VectorType> solver(oop,sp,*amg,reduction,maxiter,verb);
-        solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
+        solver.apply(BlockProcessor<GFS,skipBlocksizeCheck>::getVector(z),
+            BlockProcessor<GFS,skipBlocksizeCheck>::getVector(r),stat);
         stats.tsolve= watch.elapsed();
         res.converged  = stat.converged;
         res.iterations = stat.iterations;

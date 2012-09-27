@@ -143,8 +143,8 @@ namespace Dune {
         { return rho_; }
 
         /** \brief Density evaluated on a codim 0 geometry. */
-        template<typename EG, typename Domain>
-        RF rho(const EG & eg, const Domain & x) const
+        template<typename EG>
+        RF rho(const EG & eg, const typename Traits::Domain & x) const
         { return rho_; }
 
         /** \brief Viscosity evaluated on a codim 1 geometry. */

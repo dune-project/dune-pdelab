@@ -484,14 +484,15 @@ namespace Dune {
       bool directCoarseLevelSolver;
     };
       
-    template<class GO, template<class,class,class,int> class Preconditioner, template<class> class Solver>
+    template<class GO, template<class,class,class,int> class Preconditioner, template<class> class Solver,
+              bool skipBlocksizeCheck = false>
     class ISTLBackend_SEQ_AMG : public LinearResultStorage
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       typedef typename GO::Traits::Jacobian M;
       typedef typename M::BaseT MatrixType;
       typedef typename GO::Traits::Domain V;
-      typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type VectorType;
+      typedef typename BlockProcessor<GFS,skipBlocksizeCheck>::template AMGVectorTypeSelector<V>::Type VectorType;
       typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
       typedef Dune::MatrixAdapter<MatrixType,VectorType,VectorType> Operator;
       typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments SmootherArgs;
@@ -566,7 +567,8 @@ namespace Dune {
         Dune::InverseOperatorResult stat;
 
         Solver<VectorType> solver(oop,*amg,reduction,maxiter,verbose);
-        solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
+        solver.apply(BlockProcessor<GFS,skipBlocksizeCheck>::getVector(z),
+            BlockProcessor<GFS,skipBlocksizeCheck>::getVector(r),stat);
         stats.tsolve= watch.elapsed();
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
@@ -604,9 +606,9 @@ namespace Dune {
      * @tparam GO The type of the grid operator 
      * (or the fakeGOTraits class for the old grid operator space).
      */
-    template<class GO>
+    template<class GO, bool skipBlocksizeCheck = false>
     class ISTLBackend_SEQ_CG_AMG_SSOR
-      : public ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::CGSolver>
+      : public ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::CGSolver, skipBlocksizeCheck>
     {
 
     public:
@@ -620,7 +622,7 @@ namespace Dune {
        */
       ISTLBackend_SEQ_CG_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1,
                                   bool reuse_=false, bool usesuperlu_=true)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::CGSolver>
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::CGSolver,skipBlocksizeCheck>
           (maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
@@ -630,9 +632,9 @@ namespace Dune {
      * @tparam GO The type of the grid operator 
      * (or the fakeGOTraits class for the old grid operator space).
      */
-    template<class GO>
+    template<class GO, bool skipBlocksizeCheck = false>
     class ISTLBackend_SEQ_BCGS_AMG_SSOR
-      : public ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::BiCGSTABSolver>
+      : public ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::BiCGSTABSolver, skipBlocksizeCheck>
     {
 
     public:
@@ -646,7 +648,7 @@ namespace Dune {
        */
       ISTLBackend_SEQ_BCGS_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1,
                                     bool reuse_=false, bool usesuperlu_=true)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::BiCGSTABSolver>
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::BiCGSTABSolver,skipBlocksizeCheck>
           (maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
@@ -656,9 +658,9 @@ namespace Dune {
      * @tparam GO The type of the grid operator 
      * (or the fakeGOTraits class for the old grid operator space).
      */
-    template<class GO>
+    template<class GO, bool skipBlocksizeCheck = false>
     class ISTLBackend_SEQ_BCGS_AMG_SOR
-      : public ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::BiCGSTABSolver>
+      : public ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::BiCGSTABSolver, skipBlocksizeCheck>
     {
 
     public:
@@ -672,7 +674,7 @@ namespace Dune {
        */
       ISTLBackend_SEQ_BCGS_AMG_SOR(unsigned maxiter_=5000, int verbose_=1,
                                    bool reuse_=false, bool usesuperlu_=true)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::BiCGSTABSolver>
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::BiCGSTABSolver,skipBlocksizeCheck>
           (maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
@@ -682,9 +684,9 @@ namespace Dune {
      * @tparam GO The type of the grid operator 
      * (or the fakeGOTraits class for the old grid operator space).
      */
-    template<class GO>
+    template<class GO, bool skipBlocksizeCheck = false>
     class ISTLBackend_SEQ_LS_AMG_SSOR
-      : public ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::LoopSolver>
+      : public ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::LoopSolver, skipBlocksizeCheck>
     {
 
     public:
@@ -698,7 +700,7 @@ namespace Dune {
        */
       ISTLBackend_SEQ_LS_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1,
                                   bool reuse_=false, bool usesuperlu_=true)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::LoopSolver>
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::LoopSolver,skipBlocksizeCheck>
           (maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
@@ -708,9 +710,9 @@ namespace Dune {
      * @tparam GO The type of the grid operator 
      * (or the fakeGOTraits class for the old grid operator space).
      */
-    template<class GO>
+    template<class GO, bool skipBlocksizeCheck = false>
     class ISTLBackend_SEQ_LS_AMG_SOR
-      : public ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::LoopSolver>
+      : public ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::LoopSolver, skipBlocksizeCheck>
     {
 
     public:
@@ -724,7 +726,7 @@ namespace Dune {
        */
       ISTLBackend_SEQ_LS_AMG_SOR(unsigned maxiter_=5000, int verbose_=1,
                                  bool reuse_=false, bool usesuperlu_=true)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::LoopSolver>
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::LoopSolver,skipBlocksizeCheck>
           (maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };

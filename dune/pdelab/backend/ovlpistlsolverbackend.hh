@@ -772,7 +772,7 @@ namespace Dune {
     };
 
     template<class GO, int s, template<class,class,class,int> class Preconditioner,
-             template<class> class Solver>
+             template<class> class Solver, bool skipBlocksizeCheck = false>
     class ISTLBackend_AMG : public LinearResultStorage
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
@@ -780,7 +780,7 @@ namespace Dune {
       typedef typename GO::Traits::Jacobian M;
       typedef typename M::BaseT MatrixType;
       typedef typename GO::Traits::Domain V;
-      typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type VectorType;
+      typedef typename BlockProcessor<GFS,skipBlocksizeCheck>::template AMGVectorTypeSelector<V>::Type VectorType;
       typedef typename CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
 #if HAVE_MPI
       typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
@@ -900,7 +900,8 @@ namespace Dune {
         Solver<VectorType> solver(oop,sp,*amg,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
         
-        solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
+        solver.apply(BlockProcessor<GFS,skipBlocksizeCheck>::getVector(z),
+            BlockProcessor<GFS,skipBlocksizeCheck>::getVector(r),stat);
         stats.tsolve= watch.elapsed();
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
@@ -988,6 +989,35 @@ namespace Dune {
                                 int verbose_=1, bool reuse_=false,
                                 bool usesuperlu_=true)
         : ISTLBackend_AMG<GO, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>
+          (gfs_, maxiter_, verbose_, reuse_, usesuperlu_)
+      {}
+    };
+
+    /**
+     * @brief Overlapping parallel BiCGStab solver preconditioned with AMG smoothed by ILU0.
+     * @tparam GO The type of the grid operator 
+     * (or the fakeGOTraits class for the old grid operator space).
+     * @tparam s The bits to use for the globale index.
+     */
+    template<class GO, int s=96>
+    class ISTLBackend_BCGS_AMG_ILU0
+      : public ISTLBackend_AMG<GO, s, Dune::SeqILU0, Dune::BiCGSTABSolver>
+    {
+      typedef typename GO::Traits::TrialGridFunctionSpace GFS;
+    public:
+      /**
+       * @brief Constructor
+       * @param gfs_ The grid function space used.
+       * @param maxiter_ The maximum number of iterations allowed.
+       * @param verbose_ The verbosity level to use.
+       * @param reuse_ Set true, if the Matrix to be used is always identical 
+       * (AMG aggregation is then only performed once).
+       * @param usesuperlu_ Set false, to suppress the no SuperLU warning
+       */
+      ISTLBackend_BCGS_AMG_ILU0(const GFS& gfs_, unsigned maxiter_=5000,
+                                int verbose_=1, bool reuse_=false,
+                                bool usesuperlu_=true)
+        : ISTLBackend_AMG<GO, s, Dune::SeqILU0, Dune::BiCGSTABSolver>
           (gfs_, maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
