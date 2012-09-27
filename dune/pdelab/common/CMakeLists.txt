@@ -2,7 +2,8 @@ set(SUBDIRS
         typetree)
 
 set(commondir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/common)
-set(common_HEADERS                                 
+set(common_HEADERS
+        benchmarkhelper.hh
         clock.hh                                
         countingptr.hh                          
         cpstoragepolicy.hh                      
