@@ -792,6 +792,8 @@ namespace Dune {
       double T;
       int verbose;
       bool no_adapt;
+      double refine_fraction;
+      double coarsen_fraction;
 
       // results to be reported to the user after evaluating the error
       bool accept;
@@ -806,9 +808,20 @@ namespace Dune {
       TimeAdaptationStrategy (double tol_, double T_, int verbose_=0)
         : scaling(16.0), optimistic_factor(1.0), coarsen_limit(0.5), balance_limit(0.33333), 
           tol(tol_), T(T_), verbose(verbose_), no_adapt(false), 
+          refine_fraction(0.7), coarsen_fraction(0.2),
           accept(false), adapt_dt(false), adapt_grid(false), newdt(1.0),
           accumulated_estimated_error_squared(0.0)
       {
+      }
+
+      void setRefineFraction (double s)
+      {
+        refine_fraction=s;
+      }
+
+      void setCoarsenFraction (double s)
+      {
+        coarsen_fraction=s;
       }
 
       void setCoarsenLimit (double s)
@@ -929,7 +942,7 @@ namespace Dune {
                     // coarsen grid in space
                     double eta_refine, eta_coarsen;
                     if (verbose>1) std::cout << "+++ mark grid for coarsening" << std::endl;
-                    Dune::PDELab::error_fraction(eta_space,0.8,0.2,eta_refine,eta_coarsen);
+                    Dune::PDELab::error_fraction(eta_space,refine_fraction,coarsen_fraction,eta_refine,eta_coarsen);
                     Dune::PDELab::mark_grid(grid,eta_space,1E100,eta_coarsen,verbose);
                     adapt_grid = true;
                   }
@@ -958,7 +971,7 @@ namespace Dune {
                 // refine grid in space
                 double eta_refine, eta_coarsen;
                 if (verbose>1) std::cout << "+++ mark grid for refinement and coarsening" << std::endl;
-                Dune::PDELab::error_fraction(eta_space,0.7,0.2,eta_refine,eta_coarsen);
+                Dune::PDELab::error_fraction(eta_space,refine_fraction,coarsen_fraction,eta_refine,eta_coarsen);
                 Dune::PDELab::mark_grid(grid,eta_space,eta_refine,eta_coarsen,verbose);
                 adapt_grid = true;
               }
