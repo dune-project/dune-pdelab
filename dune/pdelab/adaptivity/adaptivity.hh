@@ -745,7 +745,8 @@ namespace Dune {
     }
 
     template<typename Grid, typename X>
-    void mark_grid (Grid &grid, const X& x, typename X::ElementType refine_threshold)
+    void mark_grid (Grid &grid, const X& x, typename X::ElementType refine_threshold, 
+                    typename X::ElementType coarsen_threshold, int verbose=0)
     {
       typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator 
         Iterator;
@@ -756,14 +757,215 @@ namespace Dune {
       const IndexSet& is(gv.indexSet());
       Iterator it = grid.template leafbegin<0,Dune::All_Partition>();
       Iterator eit = grid.template leafend<0,Dune::All_Partition>();
-    
+
+      unsigned int refine_cnt=0;
+      unsigned int coarsen_cnt=0;
+
       for(;it!=eit;++it)
         {
           typename IndexSet::IndexType myid = is.template index<0>(*it);
           if (x[myid]>=refine_threshold)
-            grid.mark(1,*(it));
+            {
+              grid.mark(1,*(it));
+              refine_cnt++;
+            }
+          if (x[myid]<=coarsen_threshold)
+            {
+              grid.mark(-1,*(it));
+              coarsen_cnt++;
+            }
         }
+      if (verbose>0)
+        std::cout << "+++ mark_grid: " << refine_cnt << " marked for refinement, " 
+                  << coarsen_cnt << " marked for coarsening" << std::endl;
     }
+
+
+    class TimeAdaptationStrategy
+    {
+      // strategy parameters
+      double scaling;
+      double optimistic_factor;
+      double coarsen_limit;
+      double balance_limit;
+      double tol;
+      double T;
+      int verbose;
+      bool no_adapt;
+
+      // results to be reported to the user after evaluating the error
+      bool accept;
+      bool adapt_dt;
+      bool adapt_grid;
+      double newdt;
+
+      // the only state variable: accumulated error
+      double accumulated_estimated_error_squared;
+
+    public:
+      TimeAdaptationStrategy (double tol_, double T_, int verbose_=0)
+        : scaling(16.0), optimistic_factor(1.0), coarsen_limit(0.5), balance_limit(0.33333), 
+          tol(tol_), T(T_), verbose(verbose_), no_adapt(false), 
+          accept(false), adapt_dt(false), adapt_grid(false), newdt(1.0),
+          accumulated_estimated_error_squared(0.0)
+      {
+      }
+
+      void setCoarsenLimit (double s)
+      {
+        coarsen_limit=s;
+      }
+
+      void setBalanceLimit (double s)
+      {
+        balance_limit=s;
+      }
+
+      void setTemporalScaling (double s)
+      {
+        scaling=s;
+      }
+
+      void setOptimisticFactor (double s)
+      {
+        optimistic_factor=s;
+      }
+
+      void setAdaptationOn ()
+      {
+        no_adapt = false;
+      }
+
+      void setAdaptationOff ()
+      {
+        no_adapt = true;
+      }
+
+      bool acceptTimeStep () const
+      {
+        return accept;
+      }
+
+      bool adaptDT () const
+      {
+        return adapt_dt;
+      }
+
+      bool adaptGrid () const
+      {
+        return adapt_grid;
+      }
+
+      double newDT () const
+      {
+        return newdt;
+      }
+
+      double accumulatedErrorSquared () const
+      {
+        return accumulated_estimated_error_squared;
+      }
+
+      template<typename GM, typename X>
+      void evaluate_estimators (GM& grid, double time, double dt, const X& eta_space,  const X& eta_time)
+      {
+        accept=false;
+        adapt_dt=false;
+        adapt_grid=false;
+        newdt=dt;
+        
+        double spatial_error = eta_space.one_norm();
+        double temporal_error = scaling*eta_time.one_norm();
+        double sum = spatial_error + temporal_error;
+        double allowed = optimistic_factor*(tol*tol-accumulated_estimated_error_squared)*dt/(T-time);
+        double q_s = spatial_error/sum;
+        double q_t = temporal_error/sum;
+
+        // for simplicity: a mode that does no adaptation at all
+        if (no_adapt)
+          {
+            accept = true;
+            accumulated_estimated_error_squared += sum;
+            if (verbose>1) std::cout << "+++ no adapt mode" << std::endl;
+            return;
+          }
+
+        if (verbose>0)
+          std::cout << "+++"
+                    << " q_s=" << q_s
+                    << " q_t=" << q_t
+                    << " sum=" << sum
+                    << " allowed=" << allowed
+                    << " estimated error=" << sqrt(accumulated_estimated_error_squared+sum)
+                    << std::endl;
+
+        if (sum<=allowed)
+          {
+            // we will accept this time step
+            accept = true;
+            if (verbose>1) std::cout << "+++ accepting time step" << std::endl;
+            accumulated_estimated_error_squared += sum;
+
+            // check if grid size or time step needs to be adapted
+            if (sum<coarsen_limit*allowed)
+              {
+                // the error is too small, i.e. the computation is inefficient
+                if (q_t<balance_limit)
+                  {
+                    // spatial error is dominating => increase time step
+                    newdt = 2*dt;
+                    adapt_dt = true;
+                    if (verbose>1) std::cout << "+++ spatial error dominates: increase time step" << std::endl;
+                  }
+                else
+                  {
+                    if (q_t<1-balance_limit)
+                      {
+                        // step sizes balanced: coarsen in time
+                        newdt = 2*dt;
+                        adapt_dt = true;
+                        if (verbose>1) std::cout << "+++ increasing time step" << std::endl;
+                      }
+                    // coarsen grid in space
+                    double eta_refine, eta_coarsen;
+                    if (verbose>1) std::cout << "+++ mark grid for coarsening" << std::endl;
+                    Dune::PDELab::error_fraction(eta_space,0.8,0.2,eta_refine,eta_coarsen);
+                    Dune::PDELab::mark_grid(grid,eta_space,1E100,eta_coarsen,verbose);
+                    adapt_grid = true;
+                  }
+              }
+          }
+        else
+          {
+            // error is too large, we need to do something
+            if (verbose>1) std::cout << "+++ will redo time step" << std::endl;
+            if (q_t>1-balance_limit)
+              {
+                // temporal error is dominating => deacrease time step only
+                newdt = 0.5*dt;
+                adapt_dt = true;
+                if (verbose>1) std::cout << "+++ deacreasing time step only" << std::endl;
+              }
+            else
+              {
+                if (q_t>balance_limit)
+                  {
+                    // step sizes balanced: refine in time as well
+                    newdt = 0.5*dt;
+                    adapt_dt = true;
+                    if (verbose>1) std::cout << "+++ decreasing time step" << std::endl;
+                  }
+                // refine grid in space
+                double eta_refine, eta_coarsen;
+                if (verbose>1) std::cout << "+++ mark grid for refinement and coarsening" << std::endl;
+                Dune::PDELab::error_fraction(eta_space,0.7,0.2,eta_refine,eta_coarsen);
+                Dune::PDELab::mark_grid(grid,eta_space,eta_refine,eta_coarsen,verbose);
+                adapt_grid = true;
+              }
+          }
+      }
+    };
+
 
 
   } // namespace PDELab

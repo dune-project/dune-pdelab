@@ -67,6 +67,7 @@
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/constraints/constraints.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
+#include <dune/pdelab/gridoperator/onestep.hh>
 #include <dune/pdelab/stationary/linearproblem.hh>
 #include <dune/pdelab/finiteelementmap/pkfem.hh>
 #include <dune/pdelab/finiteelementmap/p0fem.hh>
@@ -77,6 +78,8 @@
 #include <dune/pdelab/finiteelementmap/p0constraints.hh>
 #include <dune/pdelab/finiteelementmap/p0ghostconstraints.hh>
 #include <dune/pdelab/adaptivity/adaptivity.hh>
+#include <dune/pdelab/instationary/onestep.hh>
+#include <dune/pdelab/newton/newton.hh>
 
 namespace Dune {
     namespace PDELab {
@@ -143,6 +146,12 @@ namespace Dune {
                         DUNE_THROW(GridError, className<StructuredGrid>()
                                    << "::StructuredGrid(): grid type must be simplex or cube ");
                     }
+            }
+
+            // return shared pointer
+            Dune::shared_ptr<T> getSharedPtr ()
+            {
+                return gridp;
             }
 
             // return grid reference
@@ -282,6 +291,12 @@ namespace Dune {
 #endif
             }
 
+            // return shared pointer
+            Dune::shared_ptr<Grid> getSharedPtr ()
+            {
+                return gridp;
+            }
+
             // return grid reference
             Grid& getGrid ()
             {
@@ -335,6 +350,12 @@ namespace Dune {
                 Dune::GridFactory<T> factory;
                 Dune::GmshReader<T>::read(factory,filename);
                 gridp = shared_ptr<T>(factory.createGrid());
+            }
+
+            // return shared pointer
+            Dune::shared_ptr<T> getSharedPtr ()
+            {
+                return gridp;
             }
 
             // return grid reference
