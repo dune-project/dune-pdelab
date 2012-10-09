@@ -29,7 +29,7 @@ namespace Dune {
       typedef E DataType;
       typedef typename GFS::Traits::SizeType size_type;
 
-      GFSDataHandle(const GFS& gfs, V& v, GatherScatter gather_scatter)
+      GFSDataHandle(const GFS& gfs, V& v, GatherScatter gather_scatter = GatherScatter())
         : _gfs(gfs)
         , _index_cache(gfs)
         , _local_view(v)
@@ -122,7 +122,7 @@ namespace Dune {
         return true;
       }
 
-      DataGatherScatter(GatherScatter gather_scatter)
+      DataGatherScatter(GatherScatter gather_scatter = GatherScatter())
         : _gather_scatter(gather_scatter)
       {}
 
@@ -159,7 +159,7 @@ namespace Dune {
         return true;
       }
 
-      DataEntityGatherScatter(GatherScatter gather_scatter)
+      DataEntityGatherScatter(GatherScatter gather_scatter = GatherScatter())
         : _gather_scatter(gather_scatter)
       {}
 
@@ -196,7 +196,7 @@ namespace Dune {
         return true;
       }
 
-      DataContainerIndexGatherScatter(GatherScatter gather_scatter)
+      DataContainerIndexGatherScatter(GatherScatter gather_scatter = GatherScatter())
         : _gather_scatter(gather_scatter)
       {}
 
@@ -234,7 +234,7 @@ namespace Dune {
     public:
 
       AddDataHandle (const GFS& gfs_, V& v_)
-        : BaseT(gfs_,v_,DataGatherScatter<AddGatherScatter>(AddGatherScatter()))
+        : BaseT(gfs_,v_)
       {}
     };
 
@@ -266,7 +266,7 @@ namespace Dune {
     public:
 
       AddClearDataHandle (const GFS& gfs_, V& v_)
-        : BaseT(gfs_,v_,DataGatherScatter<AddClearGatherScatter>(AddClearGatherScatter()))
+        : BaseT(gfs_,v_)
       {}
     };
 
@@ -297,7 +297,7 @@ namespace Dune {
     public:
 
       CopyDataHandle (const GFS& gfs_, V& v_)
-        : BaseT(gfs_,v_,DataGatherScatter<CopyGatherScatter>(CopyGatherScatter()))
+        : BaseT(gfs_,v_)
       {}
     };
 
@@ -328,7 +328,7 @@ namespace Dune {
     public:
 
       MinDataHandle (const GFS& gfs_, V& v_)
-        : BaseT(gfs_,v_,DataGatherScatter<MinGatherScatter>(MinGatherScatter()))
+        : BaseT(gfs_,v_)
       {}
     };
 
@@ -359,7 +359,7 @@ namespace Dune {
     public:
 
       MaxDataHandle (const GFS& gfs_, V& v_)
-        : BaseT(gfs_,v_,DataGatherScatter<MaxGatherScatter>(MaxGatherScatter()))
+        : BaseT(gfs_,v_)
       {}
     };
 
@@ -397,7 +397,7 @@ namespace Dune {
     public:
 
       PartitionDataHandle (const GFS& gfs_, V& v_)
-        : BaseT(gfs_,v_,DataEntityGatherScatter<PartitionGatherScatter>(PartitionGatherScatter()))
+        : BaseT(gfs_,v_)
       {
         v_ = gfs_.gridView().comm().rank();
       }
@@ -434,7 +434,7 @@ namespace Dune {
     public:
 
       GhostDataHandle (const GFS& gfs_, V& v_)
-        : BaseT(gfs_,v_,DataEntityGatherScatter<GhostGatherScatter>(GhostGatherScatter()))
+        : BaseT(gfs_,v_)
       {
         v_ = static_cast<typename V::ElementType>(0);
       }
