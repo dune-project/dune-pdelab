@@ -33,16 +33,16 @@ namespace Dune {
      \int_\Omega uv dx
      * \f}
      */
-	class L2 : public NumericalJacobianApplyVolume<L2>,
+    class L2 : public NumericalJacobianApplyVolume<L2>,
                public FullVolumePattern,
                public LocalOperatorDefaultFlags,
                public InstationaryLocalOperatorDefaultMethods<double>
-	{
-	public:
+    {
+    public:
       // pattern assembly flags
       enum { doPatternVolume = true };
 
-	  // residual assembly flags
+      // residual assembly flags
       enum { doAlphaVolume = true };
 
       L2 (int intorder_=2,double scaling=10)
@@ -50,10 +50,10 @@ namespace Dune {
         , _scaling(scaling)
       {}
 
-	  // volume integral depending on test and ansatz functions
-	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
-	  {
+      // volume integral depending on test and ansatz functions
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+      {
         // Switches between local and global interface
         typedef FiniteElementInterfaceSwitch<
           typename LFSU::Traits::FiniteElementType
@@ -62,13 +62,13 @@ namespace Dune {
           typename FESwitch::Basis
           > BasisSwitch;
 
-		// domain and range field type
+        // domain and range field type
         typedef typename BasisSwitch::DomainField DF;
         typedef typename BasisSwitch::RangeField RF;
         typedef typename BasisSwitch::Range RangeType;
 
         typedef typename LFSU::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = EG::Geometry::dimension;
 
@@ -93,11 +93,11 @@ namespace Dune {
             for (size_type i=0; i<lfsu.size(); i++)
               r.accumulate(lfsv,i, u*phi[i]*factor);
           }
-	  }
+      }
 
       // jacobian of volume term
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
-	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
+      void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             M & mat) const
       {
         // Switches between local and global interface
@@ -108,7 +108,7 @@ namespace Dune {
           typename FESwitch::Basis
           > BasisSwitch;
 
-		// domain and range field type
+        // domain and range field type
         typedef typename BasisSwitch::DomainField DF;
         typedef typename BasisSwitch::RangeField RF;
         typedef typename BasisSwitch::Range RangeType;
@@ -123,7 +123,7 @@ namespace Dune {
 
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
-          {            
+          {
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
             FESwitch::basis(lfsu.finiteElement()).evaluateFunction(it->position(),phi);
@@ -139,7 +139,7 @@ namespace Dune {
     private:
       int intorder;
       const double _scaling;
-	};
+    };
 
     /** a local operator for the mass operator of a vector valued lfs (L_2 integral)
      *
@@ -147,16 +147,16 @@ namespace Dune {
      \int_\Omega uv dx
      * \f}
      */
-	class PowerL2 : public NumericalJacobianApplyVolume<PowerL2>,
+    class PowerL2 : public NumericalJacobianApplyVolume<PowerL2>,
                     public FullVolumePattern,
                     public LocalOperatorDefaultFlags,
                     public InstationaryLocalOperatorDefaultMethods<double>
-	{
-	public:
+    {
+    public:
       // pattern assembly flags
       enum { doPatternVolume = true };
 
-	  // residual assembly flags
+      // residual assembly flags
       enum { doAlphaVolume = true };
 
       PowerL2 (int intorder_=2)
@@ -164,17 +164,17 @@ namespace Dune {
           scalar_operator(intorder_)
       {}
 
-	  // volume integral depending on test and ansatz functions
-	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
-	  {
+      // volume integral depending on test and ansatz functions
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+      {
         for(unsigned int i=0; i<LFSU::CHILDREN; ++i)
           scalar_operator.alpha_volume(eg,lfsu.child(i),x,lfsv.child(i),r);
-	  }
+      }
 
       // jacobian of volume term
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
-	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
+      void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             M& mat) const
       {
         for(unsigned int i=0; i<LFSU::CHILDREN; ++i)
@@ -184,7 +184,7 @@ namespace Dune {
     private:
       int intorder;
       L2 scalar_operator;
-	};
+    };
 
     //! \} group LocalOperator
   } // namespace PDELab
