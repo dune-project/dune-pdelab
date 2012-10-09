@@ -13,6 +13,7 @@ common_HEADERS =				\
 	functionutilities.hh			\
 	functionwrappers.hh			\
 	geometrywrapper.hh			\
+	globaldofindex.hh			\
 	hostname.hh				\
 	jacobiantocurl.hh			\
 	logtag.hh				\
