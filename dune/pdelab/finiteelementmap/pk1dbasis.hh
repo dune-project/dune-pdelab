@@ -194,6 +194,7 @@ namespace Dune {
     public:
       Pk1dLocalFiniteElementMap (std::size_t k)
         : Dune::PDELab::SimpleLocalFiniteElementMap< Pk1dLocalFiniteElement<D,R> >(Pk1dLocalFiniteElement<D,R>(k))
+        , _k(k)
       {}
 
       bool fixedSize() const
@@ -204,16 +205,19 @@ namespace Dune {
       std::size_t size(GeometryType gt) const
       {
         if (gt.isVertex())
-          return k > 0 ? 1 : 0;
+          return _k > 0 ? 1 : 0;
         if (gt.isLine())
-          return k > 1 ? k - 1 : 0;
+          return _k > 0 ? _k - 1 : 1;
         return 0;
       }
 
       std::size_t maxLocalSize() const
       {
-        return k + 1;
+        return _k + 1;
       }
+
+    private:
+      const std::size_t _k;
     };
   }
 }
