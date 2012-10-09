@@ -16,56 +16,6 @@ namespace Dune {
   namespace PDELab {
 
 
-    template<typename F>
-    struct SimpleDOFIndex
-      : public FieldVector<F,1>
-    {
-
-      SimpleDOFIndex()
-      {}
-
-      SimpleDOFIndex(const F& v)
-        : FieldVector<F,1>(v)
-      {}
-
-      F& back()
-      {
-        return (*this)[0];
-      }
-
-      const F& back() const
-      {
-        return (*this)[0];
-      }
-
-    };
-
-
-    template<typename F>
-    struct SimpleContainerIndex
-      : public FieldVector<F,1>
-    {
-
-      SimpleContainerIndex()
-      {}
-
-      SimpleContainerIndex(const F& v)
-        : FieldVector<F,1>(v)
-      {}
-
-      F& back()
-      {
-        return (*this)[0];
-      }
-
-      const F& back() const
-      {
-        return (*this)[0];
-      }
-
-    };
-
-
     //! A multi-index representing a degree of freedom in a GridFunctionSpace.
     /**
      * A MultiIndex provides a way for identifying degrees of freedom in a (possibly
@@ -313,15 +263,6 @@ namespace Dune {
 
       };
 
-      //! Sets the MultiIndex to a new DOF.
-      /**
-       * This should only be called from a leaf GridFunctionSpace as it will delete all exisiting
-       * index entries.
-       *
-       * \param gt            the GeometryType of the grid entity associated with the DOF.
-       * \param entity_index  the index of the grid entity associated with the DOF.
-       * \param index         the first index of the DOF within the MultiIndex.
-       */
       void set(typename ReservedVector<T,n>::value_type index)
       {
         this->clear();
@@ -387,199 +328,12 @@ namespace Dune {
     }
 
 
-    template<typename T, std::size_t tree_n, std::size_t entity_n = 1>
-    class DOFIndex
-    {
-
-    public:
-
-      //! The maximum possible depth of the MultiIndex.
-      static const std::size_t max_depth = tree_n;
-      static const std::size_t entity_capacity = entity_n;
-
-      typedef array<T,entity_capacity> EntityIndex;
-      typedef MultiIndex<T,max_depth> TreeIndex;
-
-      typedef typename TreeIndex::size_type size_type;
-      typedef T value_type;
-
-      class View
-      {
-
-        friend class DOFIndex;
-
-      public:
-
-        static const std::size_t max_depth = tree_n;
-        static const std::size_t entity_capacity = entity_n;
-
-        typedef const array<T,entity_n>& EntityIndex;
-        typedef typename MultiIndex<T,tree_n>::View TreeIndex;
-
-        const EntityIndex& entityIndex() const
-        {
-          return _entity_index_view;
-        }
-
-        const TreeIndex& treeIndex() const
-        {
-          return _tree_index_view;
-        }
-
-        View back_popped() const
-        {
-          return View(_entity_index_view,_tree_index_view.back_popped());
-        }
-
-        friend std::ostream& operator<< (std::ostream& s, const View& di)
-        {
-          s << "(";
-
-          for (typename std::remove_reference<EntityIndex>::type::const_iterator it = di._entity_index_view.begin(); it != di._entity_index_view.end(); ++it)
-            s << std::setw(4) << *it;
-
-          s << " | "
-            << di._tree_index_view
-            << ")";
-          return s;
-        }
-
-        std::size_t size() const
-        {
-          return _tree_index_view.size();
-        };
-
-      private:
-
-        explicit View(const DOFIndex& dof_index)
-          : _entity_index_view(dof_index._entity_index)
-          , _tree_index_view(dof_index._tree_index.view())
-        {}
-
-        View(const DOFIndex& dof_index, std::size_t size)
-          : _entity_index_view(dof_index._entity_index)
-          , _tree_index_view(dof_index._tree_index.view(size))
-        {}
-
-        View(const EntityIndex& entity_index, const TreeIndex& tree_index)
-          : _entity_index_view(entity_index)
-          , _tree_index_view(tree_index)
-        {}
-
-        EntityIndex _entity_index_view;
-        TreeIndex _tree_index_view;
-
-      };
-
-      //! Default constructor.
-      DOFIndex()
-      {}
-
-      View view() const
-      {
-        return View(*this);
-      }
-
-      View view(std::size_t size) const
-      {
-        return View(*this,size);
-      }
-
-      void clear()
-      {
-        std::fill(_entity_index.begin(),_entity_index.end(),0);
-        _tree_index.clear();
-      }
-
-      //! Returns the index of the grid entity associated with the DOF.
-      EntityIndex& entityIndex()
-      {
-        return _entity_index;
-      }
-
-      const EntityIndex& entityIndex() const
-      {
-        return _entity_index;
-      }
-
-      TreeIndex& treeIndex()
-      {
-        return _tree_index;
-      }
-
-      const TreeIndex& treeIndex() const
-      {
-        return _tree_index;
-      }
-
-      //! Writes a pretty representation of the MultiIndex to the given std::ostream.
-      friend std::ostream& operator<< (std::ostream& s, const DOFIndex& di)
-      {
-        s << "(";
-
-        for (typename EntityIndex::const_iterator it = di._entity_index.begin(); it != di._entity_index.end(); ++it)
-          s << std::setw(4) << *it;
-
-        s << " | "
-          << di._tree_index
-          << ")";
-        return s;
-      }
-
-      //! Tests whether two MultiIndices are equal.
-      /**
-       * \note Only MultiIndices of identical max_depth are comparable
-       */
-      bool operator== (const DOFIndex& r) const
-      {
-        return
-          std::equal(_entity_index.begin(),_entity_index.end(),r._entity_index.begin()) &&
-          _tree_index == r._tree_index;
-      }
-
-      //! Tests whether two MultiIndices are not equal.
-      bool operator!= (const DOFIndex& r) const
-      {
-        return !(*this == r);
-      }
-
-#if 0
-      bool operator< (const DOFIndex& r) const
-      {
-        // FIXME: think about natural ordering
-        return _c.size() < _r.size();
-        return std::lexicographical_compare(_c.begin(),_c.end(),r._c.begin(),r._c.end());
-      }
-#endif
-
-      std::size_t size() const
-      {
-        return _tree_index.size();
-      }
-
-    private:
-
-      EntityIndex _entity_index;
-      TreeIndex _tree_index;
-
-    };
-
-    template<typename T, std::size_t n1, std::size_t n2>
-    inline std::size_t hash_value(const DOFIndex<T,n1,n2>& di)
-    {
-      std::size_t seed = 0;
-      boost::hash_combine(seed,boost::hash_range(di.entityIndex().begin(),di.entityIndex().end()));
-      boost::hash_combine(seed,boost::hash_range(di.treeIndex().begin(),di.treeIndex().end()));
-      return seed;
-    }
-
-
   } // namespace PDELab
 } // namespace Dune
 
 
 // ********************************************************************************
-// Specialize std::hash for MultiIndex and DOFIndex
+// Specialize std::hash for MultiIndex
 //
 // We forward to a function called hash_value() using ADL, this way we get a common
 // implementation of the actual hash for both std::hash and boost::hash (which will
@@ -594,15 +348,6 @@ namespace std {
     std::size_t operator()(const Dune::PDELab::MultiIndex<T,n>& multi_index) const
     {
       return hash_value(multi_index);
-    }
-  };
-
-  template<typename T, std::size_t n1, std::size_t n2>
-  struct hash<Dune::PDELab::DOFIndex<T,n1,n2> >
-  {
-    std::size_t operator()(const Dune::PDELab::DOFIndex<T,n1,n2>& dof_index) const
-    {
-      return hash_value(dof_index);
     }
   };
 

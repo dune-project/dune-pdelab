@@ -13,7 +13,8 @@
 #include <dune/localfunctions/common/localkey.hh>
 
 #include <dune/pdelab/common/typetree.hh>
-#include <dune/pdelab/common/multiindex.hh>
+#include <dune/pdelab/common/dofindex.hh>
+#include <dune/pdelab/common/simpledofindex.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 

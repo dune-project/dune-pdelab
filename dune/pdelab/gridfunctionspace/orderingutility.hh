@@ -7,7 +7,7 @@
 #include <vector>
 #include <bitset>
 
-#include <dune/pdelab/common/multiindex.hh>
+#include <dune/pdelab/common/dofindex.hh>
 #include <dune/pdelab/common/typetree/traversal.hh>
 #include <dune/pdelab/common/typetree/accumulate_static.hh>
 

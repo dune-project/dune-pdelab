@@ -7,6 +7,7 @@ common_HEADERS =				\
 	countingptr.hh				\
 	cpstoragepolicy.hh			\
 	crossproduct.hh				\
+	dofindex.hh				\
 	elementmapper.hh			\
 	function.hh				\
 	functionutilities.hh			\
@@ -17,8 +18,9 @@ common_HEADERS =				\
 	logtag.hh				\
 	multiindex.hh				\
 	range.hh				\
-	typetree.hh                             \
-        typetraits.hh                           \
+	simpledofindex.hh			\
+	typetree.hh				\
+	typetraits.hh				\
 	vtkexport.hh
 
 noinst_LTLIBRARIES = libpdelabcommon.la
