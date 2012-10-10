@@ -601,6 +601,8 @@ namespace Dune {
     void error_fraction(const T& x, typename T::ElementType alpha, typename T::ElementType beta,
                         typename T::ElementType& eta_alpha, typename T::ElementType& eta_beta, int verbose=0)
     {
+      if (verbose>0) 
+        std::cout << "+++ error fraction: alpha=" << alpha << " beta=" << beta << std::endl;
       const int steps=20; // max number of bisection steps
       typedef typename T::ElementType NumberType;
       NumberType total_error = x.one_norm();
@@ -622,11 +624,11 @@ namespace Dune {
               if (x[i]>=eta_alpha) { sum_alpha += x[i]; alpha_count++;}
               if (x[i]< eta_beta) { sum_beta += x[i]; beta_count++;}
             }
-          if (verbose>0)
+          if (verbose>1)
             {
-              std::cout << j << " eta_alpha=" << eta_alpha << " alpha_fraction=" << sum_alpha/total_error 
+              std::cout << "+++ " << j << " eta_alpha=" << eta_alpha << " alpha_fraction=" << sum_alpha/total_error 
                         << " elements: " << alpha_count << " of " << x.N() << std::endl;
-              std::cout << j << " eta_beta=" << eta_beta << " beta_fraction=" << sum_beta/total_error 
+              std::cout << "+++ " << j << " eta_beta=" << eta_beta << " beta_fraction=" << sum_beta/total_error 
                         << " elements: " << beta_count << " of " << x.N() << std::endl;
             }
           if (std::abs(alpha-sum_alpha/total_error) <= 0.01 && std::abs(beta-sum_beta/total_error) <= 0.01) break;
@@ -638,6 +640,11 @@ namespace Dune {
             eta_beta_right = eta_beta;
           else
             eta_beta_left = eta_beta;
+        }
+      if (verbose>0)
+        {
+          std::cout << "+++ refine_threshold=" << eta_alpha 
+                    << " coarsen_threshold=" << eta_beta << std::endl;
         }
     }
 
@@ -667,7 +674,7 @@ namespace Dune {
               if (x[i]>=eta_alpha) { sum_alpha += 1.0; alpha_count++;}
               if (x[i]< eta_beta) { sum_beta +=1.0; beta_count++;}
             }
-          if (verbose>0)
+          if (verbose>1)
             {
               std::cout << j << " eta_alpha=" << eta_alpha << " alpha_fraction=" << sum_alpha/total_error 
                         << " elements: " << alpha_count << " of " << x.N() << std::endl;
@@ -683,6 +690,11 @@ namespace Dune {
             eta_beta_right = eta_beta;
           else
             eta_beta_left = eta_beta;
+        }
+      if (verbose>0)
+        {
+          std::cout << "+++ refine_threshold=" << eta_alpha 
+                    << " coarsen_threshold=" << eta_beta << std::endl;
         }
     }
 
@@ -735,13 +747,13 @@ namespace Dune {
               sum[k] += x[i];
               count[k] += 1;
             }
-      std::cout << "// error distribution" << std::endl;
-      std::cout << " number of elements: " << x.N() << std::endl;
-      std::cout << " max element error:  " << max_error << std::endl;
-      std::cout << " total error:        " << total_error << std::endl;
-      std::cout << " bin #elements eta sum/total " << std::endl;
+      std::cout << "+++ error distribution" << std::endl;
+      std::cout << "+++ number of elements: " << x.N() << std::endl;
+      std::cout << "+++ max element error:  " << max_error << std::endl;
+      std::cout << "+++ total error:        " << total_error << std::endl;
+      std::cout << "+++ bin #elements eta sum/total " << std::endl;
       for (unsigned int k=0; k<bins; k++)
-        std::cout << k+1 << " " << count[k] << " " << eta[k] << " " << sum[k]/total_error << std::endl;
+        std::cout << "+++ " << k+1 << " " << count[k] << " " << eta[k] << " " << sum[k]/total_error << std::endl;
     }
 
     template<typename Grid, typename X>
@@ -777,6 +789,42 @@ namespace Dune {
         }
       if (verbose>0)
         std::cout << "+++ mark_grid: " << refine_cnt << " marked for refinement, " 
+                  << coarsen_cnt << " marked for coarsening" << std::endl;
+    }
+
+
+    template<typename Grid, typename X>
+    void mark_grid_for_coarsening (Grid &grid, const X& x, typename X::ElementType refine_threshold,
+                                   typename X::ElementType coarsen_threshold, int verbose=0)
+    {
+      typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator 
+        Iterator;
+      typedef typename Grid::LeafGridView GV;
+      typedef typename GV::IndexSet IndexSet;
+
+      const GV& gv=grid.leafView();
+      const IndexSet& is(gv.indexSet());
+      Iterator it = grid.template leafbegin<0,Dune::All_Partition>();
+      Iterator eit = grid.template leafend<0,Dune::All_Partition>();
+
+      unsigned int coarsen_cnt=0;
+
+      for(;it!=eit;++it)
+        {
+          typename IndexSet::IndexType myid = is.template index<0>(*it);
+          if (x[myid]>=refine_threshold)
+            {
+              grid.mark(-1,*(it));
+              coarsen_cnt++;
+            }
+          if (x[myid]<=coarsen_threshold)
+            {
+              grid.mark(-1,*(it));
+              coarsen_cnt++;
+            }
+        }
+      if (verbose>0)
+        std::cout << "+++ mark_grid_for_coarsening: " 
                   << coarsen_cnt << " marked for coarsening" << std::endl;
     }
 
@@ -894,15 +942,7 @@ namespace Dune {
         double q_s = spatial_error/sum;
         double q_t = temporal_error/sum;
 
-        // for simplicity: a mode that does no adaptation at all
-        if (no_adapt)
-          {
-            accept = true;
-            accumulated_estimated_error_squared += sum;
-            if (verbose>1) std::cout << "+++ no adapt mode" << std::endl;
-            return;
-          }
-
+        // print some statistics
         if (verbose>0)
           std::cout << "+++"
                     << " q_s=" << q_s
@@ -912,6 +952,16 @@ namespace Dune {
                     << " estimated error=" << sqrt(accumulated_estimated_error_squared+sum)
                     << std::endl;
 
+        // for simplicity: a mode that does no adaptation at all
+        if (no_adapt)
+          {
+            accept = true;
+            accumulated_estimated_error_squared += sum;
+            if (verbose>1) std::cout << "+++ no adapt mode" << std::endl;
+            return;
+          }
+
+        // the adaptation strategy
         if (sum<=allowed)
           {
             // we will accept this time step
@@ -932,7 +982,7 @@ namespace Dune {
                   }
                 else
                   {
-                    if (q_t<1-balance_limit)
+                    if (q_s>balance_limit)
                       {
                         // step sizes balanced: coarsen in time
                         newdt = 2*dt;
@@ -942,9 +992,21 @@ namespace Dune {
                     // coarsen grid in space
                     double eta_refine, eta_coarsen;
                     if (verbose>1) std::cout << "+++ mark grid for coarsening" << std::endl;
-                    Dune::PDELab::error_fraction(eta_space,refine_fraction,coarsen_fraction,eta_refine,eta_coarsen);
-                    Dune::PDELab::mark_grid(grid,eta_space,1E100,eta_coarsen,verbose);
+                    //error_distribution(eta_space,20);
+                    Dune::PDELab::error_fraction(eta_space,coarsen_fraction,coarsen_fraction,eta_refine,eta_coarsen);
+                    Dune::PDELab::mark_grid_for_coarsening(grid,eta_space,eta_refine,eta_coarsen,verbose);
                     adapt_grid = true;
+                  }
+              }
+            else
+              {
+                // modify at least the time step
+                if (q_t<balance_limit)
+                  {
+                    // spatial error is dominating => increase time step
+                    newdt = 1.25*dt;
+                    adapt_dt = true;
+                    if (verbose>1) std::cout << "+++ spatial error dominates: increase time step" << std::endl;
                   }
               }
           }
@@ -961,7 +1023,14 @@ namespace Dune {
               }
             else
               {
-                if (q_t>balance_limit)
+                if (q_t<balance_limit)
+                  {
+                    // time steps size not balanced (too small)
+                    newdt = 1.5*dt;
+                    adapt_dt = true;
+                    if (verbose>1) std::cout << "+++ increasing time step" << std::endl;
+                  }
+                else
                   {
                     // step sizes balanced: refine in time as well
                     newdt = 0.5*dt;
