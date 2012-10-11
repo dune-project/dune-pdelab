@@ -190,8 +190,8 @@ namespace Dune {
     inline std::size_t hash_value(const DOFIndex<T,n1,n2>& di)
     {
       std::size_t seed = 0;
-      boost::hash_combine(seed,boost::hash_range(di.entityIndex().begin(),di.entityIndex().end()));
-      boost::hash_combine(seed,boost::hash_range(di.treeIndex().begin(),di.treeIndex().end()));
+      hash_range(seed,di.entityIndex().begin(),di.entityIndex().end());
+      hash_range(seed,di.treeIndex().begin(),di.treeIndex().end());
       return seed;
     }
 
@@ -200,27 +200,6 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-
-// ********************************************************************************
-// Specialize std::hash for DOFIndex
-//
-// We forward to a function called hash_value() using ADL, this way we get a common
-// implementation of the actual hash for both std::hash and boost::hash (which will
-// do this lookup by default).
-// ********************************************************************************
-
-namespace std {
-
-  template<typename T, std::size_t n1, std::size_t n2>
-  struct hash<Dune::PDELab::DOFIndex<T,n1,n2> >
-  {
-    std::size_t operator()(const Dune::PDELab::DOFIndex<T,n1,n2>& dof_index) const
-    {
-      return hash_value(dof_index);
-    }
-  };
-
-}
-
+DUNE_DEFINE_HASH(DUNE_HASH_TEMPLATE_ARGS(typename T, std::size_t n1, std::size_t n2),DUNE_HASH_TYPE(Dune::PDELab::DOFIndex<T,n1,n2>))
 
 #endif // DUNE_PDELAB_COMMON_DOFINDEX_HH

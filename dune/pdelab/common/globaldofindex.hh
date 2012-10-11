@@ -184,8 +184,8 @@ namespace Dune {
     {
       std::size_t seed = 0;
       std::hash<ID> id_hasher;
-      boost::hash_combine(seed,id_hasher(di.entityID()));
-      boost::hash_range(seed,di.treeIndex().begin(),di.treeIndex().end());
+      hash_combine(seed,id_hasher(di.entityID()));
+      hash_range(seed,di.treeIndex().begin(),di.treeIndex().end());
       return seed;
     }
 
@@ -194,27 +194,6 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-
-// ********************************************************************************
-// Specialize std::hash for GlobalDOFIndex
-//
-// We forward to a function called hash_value() using ADL, this way we get a common
-// implementation of the actual hash for both std::hash and boost::hash (which will
-// do this lookup by default).
-// ********************************************************************************
-
-namespace std {
-
-  template<typename T, std::size_t n, typename ID>
-  struct hash<Dune::PDELab::GlobalDOFIndex<T,n,ID> >
-  {
-    std::size_t operator()(const Dune::PDELab::GlobalDOFIndex<T,n,ID>& global_dof_index) const
-    {
-      return hash_value(global_dof_index);
-    }
-  };
-
-}
-
+DUNE_DEFINE_HASH(DUNE_HASH_TEMPLATE_ARGS(typename T, std::size_t n, typename ID),DUNE_HASH_TYPE(Dune::PDELab::GlobalDOFIndex<T,n,ID>))
 
 #endif // DUNE_PDELAB_COMMON_GLOBALDOFINDEX_HH

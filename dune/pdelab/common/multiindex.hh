@@ -6,7 +6,7 @@
 #include <dune/common/reservedvector.hh>
 #include <dune/geometry/typeindex.hh>
 
-#include <boost/functional/hash.hpp>
+#include <dune/common/hash.hh>
 
 #include <algorithm>
 #include <iomanip>
@@ -324,34 +324,13 @@ namespace Dune {
     template<typename T, std::size_t n>
     inline std::size_t hash_value(const MultiIndex<T,n>& mi)
     {
-      return boost::hash_range(mi.begin(),mi.end());
+      return hash_range(mi.begin(),mi.end());
     }
 
 
   } // namespace PDELab
 } // namespace Dune
 
-
-// ********************************************************************************
-// Specialize std::hash for MultiIndex
-//
-// We forward to a function called hash_value() using ADL, this way we get a common
-// implementation of the actual hash for both std::hash and boost::hash (which will
-// do this lookup by default).
-// ********************************************************************************
-
-namespace std {
-
-  template<typename T, std::size_t n>
-  struct hash<Dune::PDELab::MultiIndex<T,n> >
-  {
-    std::size_t operator()(const Dune::PDELab::MultiIndex<T,n>& multi_index) const
-    {
-      return hash_value(multi_index);
-    }
-  };
-
-}
-
+DUNE_DEFINE_HASH(DUNE_HASH_TEMPLATE_ARGS(typename T, std::size_t n),DUNE_HASH_TYPE(Dune::PDELab::MultiIndex<T,n>))
 
 #endif // DUNE_PDELAB_COMMON_MULTIINDEX_HH
