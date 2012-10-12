@@ -314,9 +314,9 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const bool sol
       bh.start("IO",std::cout);
 
       // output grid function with VTKWriter
-      Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+      Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
       Dune::PDELab::add_solution_to_vtk_writer(vtkwriter,gfs,x);
-      vtkwriter.write(filename,Dune::VTKOptions::ascii);
+      vtkwriter.write(filename,Dune::VTK::ascii);
 
       bh.end("IO",std::cout);
 
