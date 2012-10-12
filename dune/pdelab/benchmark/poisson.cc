@@ -244,7 +244,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const bool sol
       bh.end("interpolation",std::cout);
       bh.start("set free DOFs",std::cout);
 
-      Dune::PDELab::set_nonconstrained_dofs(gfs,cg,0.0,x0);
+      Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
 
       bh.end("set free DOFs",std::cout);
       bh.start("matrix creation",std::cout);

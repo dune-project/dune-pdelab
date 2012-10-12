@@ -203,7 +203,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   x0 = 0.0;
 
   Dune::PDELab::interpolate(g,gfs,x0);
-  Dune::PDELab::set_nonconstrained_dofs(gfs,cg,0.0,x0);
+  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
 
 
   // represent operator as a matrix
