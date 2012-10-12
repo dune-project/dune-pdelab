@@ -722,7 +722,7 @@ namespace Dune {
       template<typename VV, typename VU, typename E>
       struct MatrixHelper
       {
-        typedef ISTLMatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,typename build_matrix_type<E,typename VV::ContainerType,typename VU::ContainerType>::type > type;
+        typedef ISTLMatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,typename build_matrix_type<E,typename VV::Container,typename VU::Container>::type > type;
       };
     };
 

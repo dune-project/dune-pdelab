@@ -5,7 +5,6 @@
 
 #include <vector>
 #include <stack>
-#include <unordered_map>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/reservedvector.hh>
@@ -13,6 +12,7 @@
 #include <dune/istl/bvector.hh>
 
 #include <dune/pdelab/common/typetree.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfscontainerindexcache.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
@@ -162,14 +162,14 @@ namespace Dune {
     public:
       typedef typename C::field_type ElementType;
       typedef ElementType E;
-      typedef C ContainerType;
+      typedef C Container;
       typedef GFS GridFunctionSpace;
-      typedef ContainerType BaseT;
-      typedef typename ContainerType::field_type field_type;
-      typedef typename ContainerType::iterator iterator;
-      typedef typename ContainerType::const_iterator const_iterator;
-      typedef typename ContainerType::block_type block_type;
-      typedef typename ContainerType::size_type size_type;
+      typedef Container BaseT;
+      typedef typename Container::field_type field_type;
+      typedef typename Container::iterator iterator;
+      typedef typename Container::const_iterator const_iterator;
+      typedef typename Container::block_type block_type;
+      typedef typename Container::size_type size_type;
 
       typedef typename GFS::Ordering::Traits::ContainerIndex ContainerIndex;
 
@@ -444,17 +444,17 @@ namespace Dune {
 
         const ElementType& operator[](size_type i) const
         {
-          return _container[_lfs_cache->container_index(i)];
+          return (*_container)[_lfs_cache->container_index(i)];
         }
 
         const ElementType& operator[](const DOFIndex& di) const
         {
-          return _container[_lfs_cache->container_index(di)];
+          return (*_container)[_lfs_cache->container_index(di)];
         }
 
         const ElementType& operator[](const ContainerIndex& ci) const
         {
-          return _container[ci];
+          return (*_container)[ci];
         }
 
         const ISTLBlockVectorContainer& global_container() const
@@ -471,153 +471,178 @@ namespace Dune {
       };
 
 
-      ISTLBlockVectorContainer (const GFS& gfs_)
-        : container(gfs_.ordering().blockCount())
+      ISTLBlockVectorContainer(const ISTLBlockVectorContainer& rhs)
+        : _gfs(rhs._gfs)
+        , _container(make_shared<Container>(_gfs.ordering().blockCount()))
       {
-        dispatch_istl_vector_allocation(gfs_.ordering(),container,typename GFS::Ordering::ContainerAllocationTag());
+        dispatch_istl_vector_allocation(_gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+        (*_container) = rhs.base();
       }
 
-      ISTLBlockVectorContainer (const GFS& gfs_, const E& e)
-        : container(gfs_.ordering().blockCount())
+      ISTLBlockVectorContainer (const GFS& gfs)
+        : _gfs(gfs)
+        , _container(make_shared<Container>(gfs.ordering().blockCount()))
       {
-        dispatch_istl_vector_allocation(gfs_.ordering(),container,typename GFS::Ordering::ContainerAllocationTag());
-        container=e;
+        dispatch_istl_vector_allocation(gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+      }
+
+      ISTLBlockVectorContainer (const GFS& gfs, const E& e)
+        : _gfs(gfs)
+        , _container(make_shared<Container>(gfs.ordering().blockCount()))
+      {
+        dispatch_istl_vector_allocation(gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+        (*_container)=e;
+      }
+
+      void detach()
+      {
+        _container.reset();
+      }
+
+      void attach(shared_ptr<Container> container)
+      {
+        _container = container;
+      }
+
+      shared_ptr<Container> containerStorage()
+      {
+        return _container;
       }
 
       size_type N() const
       {
-        return container.N();
+        return _container->N();
       }
 
       ISTLBlockVectorContainer& operator= (const ISTLBlockVectorContainer& r)
       {
-        container = r.container;
+        (*_container) = r.base();
         return *this;
       }
 
       ISTLBlockVectorContainer& operator= (const E& e)
       {
-        container=e;
+        (*_container)=e;
         return *this;
       }
 
       ISTLBlockVectorContainer& operator*= (const E& e)
       {
-        container*=e;
+        (*_container)*=e;
         return *this;
       }
 
 
       ISTLBlockVectorContainer& operator+= (const E& e)
       {
-        container+=e;
+        (*_container)+=e;
         return *this;
       }
 
       ISTLBlockVectorContainer& operator+= (const ISTLBlockVectorContainer& e)
       {
-        container+=e.container;
+        (*_container)+= e.base();
         return *this;
       }
 
       ISTLBlockVectorContainer& operator-= (const ISTLBlockVectorContainer& e)
       {
-        container-=e.container;
+        (*_container)-= e.base();
         return *this;
       }
 
       block_type& block(std::size_t i)
       {
-        return container[i];
+        return (*_container)[i];
       }
 
       const block_type& block(std::size_t i) const
       {
-        return container[i];
+        return (*_container)[i];
       }
 
       E& operator[](const ContainerIndex& ci)
       {
-        return access_istl_vector_element(container,ci,ci.size()-1);
+        return access_istl_vector_element(*_container,ci,ci.size()-1);
       }
 
       const E& operator[](const ContainerIndex& ci) const
       {
-        return access_istl_vector_element(container,ci,ci.size()-1);
+        return access_istl_vector_element(*_container,ci,ci.size()-1);
       }
 
       typename Dune::template FieldTraits<E>::real_type two_norm() const
       {
-        return container.two_norm();
+        return _container->two_norm();
       }
 
       typename Dune::template FieldTraits<E>::real_type one_norm() const
       {
-        return container.one_norm();
+        return _container->one_norm();
       }
 
       typename Dune::template FieldTraits<E>::real_type infinity_norm() const
       {
-        return container.infinity_norm();
+        return _container->infinity_norm();
       }
 
       E operator*(const ISTLBlockVectorContainer& y) const
       {
-        return container*y.base();
+        return (*_container)*y.base();
       }
 
       ISTLBlockVectorContainer& axpy(const E& a, const ISTLBlockVectorContainer& y)
       {
-        container.axpy(a, y.base());
+        _container->axpy(a, y.base());
         return *this;
       }
 
       // for debugging and AMG access
-      ContainerType& base ()
+      Container& base ()
       {
-        return container;
+        return *_container;
       }
 
-      const ContainerType& base () const
+      const Container& base () const
       {
-        return container;
+        return *_container;
       }
 
-      operator ContainerType&()
+      operator Container&()
       {
-        return container;
+        return *_container;
       }
 
-      operator const ContainerType&() const
+      operator const Container&() const
       {
-        return container;
+        return *_container;
       }
 
       iterator begin()
       {
-        return container.begin();
+        return _container->begin();
       }
 
 
       const_iterator begin() const
       {
-        return container.begin();
+        return _container->begin();
       }
 
       iterator end()
       {
-        return container.end();
+        return _container->end();
       }
 
 
       const_iterator end() const
       {
-        return container.end();
+        return _container->end();
       }
 
       size_t flatsize() const
       {
-        return container.dim();
+        return _container->dim();
       }
 
       template<typename X>
@@ -627,7 +652,7 @@ namespace Dune {
         size_t n = flatsize();
         x.resize(n);
         for (size_t i=0; i<n; i++)
-          x[i] = container[i][i];
+          x[i] = (*_container)[i][i];
       }
 
       template<typename X>
@@ -637,11 +662,12 @@ namespace Dune {
         //test if x has the same size as the container
         assert (x.size() == flatsize());
         for (size_t i=0; i<flatsize(); i++)
-          container[i][i] = x[i];
+          (*_container)[i][i] = x[i];
       }
 
     private:
-      ContainerType container;
+      const GFS& _gfs;
+      shared_ptr<Container> _container;
     };
 
 

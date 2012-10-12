@@ -280,12 +280,12 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const bool sol
         {
 
           // make ISTL solver
-          Dune::MatrixAdapter<typename M::ContainerType,typename DV::ContainerType,typename RV::ContainerType> opa(m.base());
-          typedef Dune::PDELab::OnTheFlyOperator<typename DV::ContainerType,typename RV::ContainerType,GridOperator> ISTLOnTheFlyOperator;
+          Dune::MatrixAdapter<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> opa(m.base());
+          typedef Dune::PDELab::OnTheFlyOperator<typename DV::BaseT,typename RV::BaseT,GridOperator> ISTLOnTheFlyOperator;
           //ISTLOnTheFlyOperator opb(gridoperator);
-          Dune::SeqSSOR<typename M::ContainerType,typename DV::ContainerType,typename RV::ContainerType> ssor(m.base(),1,1.0);
-          Dune::SeqILU0<typename M::ContainerType,typename DV::ContainerType,typename RV::ContainerType> ilu0(m.base(),1.0);
-          Dune::Richardson<typename DV::ContainerType,typename RV::ContainerType> richardson(1.0);
+          Dune::SeqSSOR<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ssor(m.base(),1,1.0);
+          Dune::SeqILU0<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ilu0(m.base(),1.0);
+          Dune::Richardson<typename DV::BaseT,typename RV::BaseT> richardson(1.0);
 
           //   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<M,
           //     Dune::Amg::FirstDiagonal> > Criterion;
@@ -299,9 +299,9 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const bool sol
           //   typedef Dune::Amg::AMG<Dune::MatrixAdapter<M,V,V>,V,Smoother> AMG;
           //   AMG amg(opa,criterion,smootherArgs,1,1);
 
-          Dune::CGSolver<typename DV::ContainerType> solvera(opa,ilu0,1E-10,5000,1);
+          Dune::CGSolver<typename DV::BaseT> solvera(opa,ilu0,1E-10,5000,1);
           // FIXME: Use ISTLOnTheFlyOperator in the second solver again
-          Dune::CGSolver<typename DV::ContainerType> solverb(opa,richardson,1E-10,5000,1);
+          Dune::CGSolver<typename DV::BaseT> solverb(opa,richardson,1E-10,5000,1);
           Dune::InverseOperatorResult stat;
 
           // solve the jacobian system
