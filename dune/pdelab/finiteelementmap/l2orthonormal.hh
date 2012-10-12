@@ -159,7 +159,7 @@ namespace Dune {
     };
 
     // the number of polynomials of at most degree k in space dimension d (as run-time function)
-    int pk_size (int k, int d)
+    inline int pk_size (int k, int d)
     {
       if (k==0) return 1;
       if (d==1) return k+1;
@@ -170,7 +170,7 @@ namespace Dune {
     }
 
     // the number of polynomials of exactly degree k in space dimension d (as run-time function)
-    int pk_size_exact (int k, int d)
+    inline int pk_size_exact (int k, int d)
     {
       if (k==0)
         return 1;
@@ -224,7 +224,7 @@ namespace Dune {
     //=====================================================
 
     //! compute binomial coefficient "n over k"
-    long binomial (long n, long k)
+    inline long binomial (long n, long k)
     {
       if (k>=n)
         {
