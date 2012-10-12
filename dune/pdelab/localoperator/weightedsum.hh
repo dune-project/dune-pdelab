@@ -248,7 +248,7 @@ namespace Dune {
                           const LFSU& lfsu, const LFSV& lfsv,
                           LocalSparsityPattern& pattern)
         {
-          if(weights[i] != 0)
+          if(weights[i] != K(0))
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
               tuple_element<i,Args>::type::doPatternVolume>::
               pattern_volume(*get<i>(lops), lfsu, lfsv, pattern);
@@ -262,7 +262,7 @@ namespace Dune {
                           const LFSU& lfsu, const LFSV& lfsv,
                           LocalSparsityPattern& pattern)
         {
-          if(weights[i] != 0)
+          if(weights[i] != K(0))
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
               tuple_element<i,Args>::type::doPatternVolumePostSkeleton>::
               pattern_volume_post_skeleton(*get<i>(lops), lfsu, lfsv, pattern);
@@ -278,7 +278,7 @@ namespace Dune {
                           LocalSparsityPattern& pattern_sn,
                           LocalSparsityPattern& pattern_ns)
         {
-          if(weights[i] != 0)
+          if(weights[i] != K(0))
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
               tuple_element<i,Args>::type::doPatternSkeleton>::
               pattern_skeleton(*get<i>(lops),
@@ -294,7 +294,7 @@ namespace Dune {
                           const LFSU& lfsu_s, const LFSV& lfsv_s,
                           LocalSparsityPattern& pattern_ss)
         {
-          if(weights[i] != 0)
+          if(weights[i] != K(0))
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
               tuple_element<i,Args>::type::doPatternBoundary>::
               pattern_boundary(*get<i>(lops), lfsu_s, lfsv_s, pattern_ss);
@@ -396,7 +396,7 @@ namespace Dune {
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
                           C& r)
         {
-          if(weight != 0) {
+          if(weight != K(0)) {
             WeightedVectorAccumulationView<C> view(r, weight);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolume>::
               alpha_volume(*get<i>(lops), eg, lfsu, x, lfsv, view);
@@ -423,7 +423,7 @@ namespace Dune {
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
                           C& r)
         {
-          if(weight != 0) {
+          if(weight != K(0)) {
             WeightedVectorAccumulationView<C> view(r, weight);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolumePostSkeleton>::
               alpha_volume_post_skeleton(*get<i>(lops), eg,
@@ -461,7 +461,7 @@ namespace Dune {
                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                           C& r_s, C& r_n)
         {
-          if(weight_s != 0 || weight_n != 0) {
+          if(weight_s != K(0) || weight_n != K(0)) {
             WeightedVectorAccumulationView<C> view_s(r_s, weight_s);
             WeightedVectorAccumulationView<C> view_n(r_n, weight_n);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaSkeleton>::
@@ -495,7 +495,7 @@ namespace Dune {
                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                           C& r_s)
         {
-          if(weight_s != 0) {
+          if(weight_s != K(0)) {
             WeightedVectorAccumulationView<C> view_s(r_s, weight_s);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaBoundary>::
               alpha_boundary(*get<i>(lops), ig, lfsu_s, x_s, lfsv_s, view_s);
@@ -601,7 +601,7 @@ namespace Dune {
                           const LFSV& lfsv,
                           C& r)
         {
-          if(weight != 0) {
+          if(weight != K(0)) {
             WeightedVectorAccumulationView<C> view(r, weight);
             LocalAssemblerCallSwitch<Arg, Arg::doLambdaVolume>::
               lambda_volume(*get<i>(lops), eg, lfsv, view);
@@ -626,7 +626,7 @@ namespace Dune {
                           const LFSV& lfsv,
                           C& r)
         {
-          if(weight != 0) {
+          if(weight != K(0)) {
             WeightedVectorAccumulationView<C> view(r, weight);
             LocalAssemblerCallSwitch<Arg, Arg::doLambdaVolumePostSkeleton>::
               lambda_volume_post_skeleton(*get<i>(lops), eg, lfsv, view);
@@ -657,7 +657,7 @@ namespace Dune {
                           const LFSV& lfsv_s, const LFSV& lfsv_n,
                           C& r_s, C& r_n)
         {
-          if(weight_s != 0 || weight_n != 0) {
+          if(weight_s != K(0) || weight_n != K(0)) {
             WeightedVectorAccumulationView<C> view_s(r_s, weight_s);
             WeightedVectorAccumulationView<C> view_n(r_n, weight_n);
             LocalAssemblerCallSwitch<Arg, Arg::doLambdaSkeleton>::
@@ -686,7 +686,7 @@ namespace Dune {
                           const LFSV& lfsv_s,
                           C& r_s)
         {
-          if(weight_s != 0) {
+          if(weight_s != K(0)) {
             WeightedVectorAccumulationView<C> view_s(r_s, weight_s);
             LocalAssemblerCallSwitch<Arg, Arg::doLambdaBoundary>::
               lambda_boundary(*get<i>(lops), ig, lfsv_s, view_s);
@@ -778,7 +778,7 @@ namespace Dune {
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
                           C& r)
         {
-          if(weight != 0) {
+          if(weight != K(0)) {
             WeightedVectorAccumulationView<C> view(r, weight);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolume>::
               jacobian_apply_volume(*get<i>(lops), eg, lfsu, x, lfsv, view);
@@ -805,7 +805,7 @@ namespace Dune {
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
                           C& r)
         {
-          if(weight != 0) {
+          if(weight != K(0)) {
             WeightedVectorAccumulationView<C> view(r, weight);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolumePostSkeleton>::
               jacobian_apply_volume_post_skeleton(*get<i>(lops), eg,
@@ -843,7 +843,7 @@ namespace Dune {
                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                           C& r_s, C& r_n)
         {
-          if(weight_s != 0 || weight_n != 0) {
+          if(weight_s != K(0) || weight_n != K(0)) {
             WeightedVectorAccumulationView<C> view_s(r_s, weight_s);
             WeightedVectorAccumulationView<C> view_n(r_n, weight_n);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaSkeleton>::
@@ -877,7 +877,7 @@ namespace Dune {
                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                           C& r_s)
         {
-          if(weight_s != 0) {
+          if(weight_s != K(0)) {
             WeightedVectorAccumulationView<C> view_s(r_s, weight_s);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaBoundary>::
               jacobian_apply_boundary(*get<i>(lops), ig,
@@ -987,7 +987,7 @@ namespace Dune {
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
                           C& m)
         {
-          if(weight != 0) {
+          if(weight != K(0)) {
             WeightedMatrixAccumulationView<C> view(m, weight);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolume>::
               jacobian_volume(*get<i>(lops), eg, lfsu, x, lfsv, view);
@@ -1014,7 +1014,7 @@ namespace Dune {
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
                           C& m)
         {
-          if(weight != 0) {
+          if(weight != K(0)) {
             WeightedMatrixAccumulationView<C> view(m, weight);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaVolumePostSkeleton>::
               jacobian_volume_post_skeleton(*get<i>(lops), eg,
@@ -1059,8 +1059,8 @@ namespace Dune {
                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                           C& m_ss, C& m_sn, C& m_ns, C& m_nn)
         {
-          if(weight_ss != 0 || weight_sn != 0 ||
-             weight_ns != 0 || weight_nn != 0)
+          if(weight_ss != K(0) || weight_sn != K(0) ||
+             weight_ns != K(0) || weight_nn != K(0))
           {
             WeightedMatrixAccumulationView<C> view_ss(m_ss, weight_ss);
             WeightedMatrixAccumulationView<C> view_sn(m_sn, weight_sn);
@@ -1097,7 +1097,7 @@ namespace Dune {
                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                           C& m_ss)
         {
-          if(weight_ss != 0)
+          if(weight_ss != K(0))
           {
             WeightedMatrixAccumulationView<C> view_ss(m_ss, weight_ss);
             LocalAssemblerCallSwitch<Arg, Arg::doAlphaBoundary>::
