@@ -1,9 +1,9 @@
 # $Id: Makefile.am 586 2006-04-28 13:41:31Z mblatt $
 
 #defined empty so we can add to it later
-NORMALTESTS = 
+NORMALTESTS =
 MOSTLYCLEANFILES =
-check_SCRIPTS = 
+check_SCRIPTS =
 
 # list of tests to run
 TESTS = $(NORMALTESTS)
