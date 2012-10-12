@@ -351,12 +351,12 @@ namespace Dune {
       c.endrowsizes();
 
       for (std::size_t i = 0; i < c.N(); ++i)
-        for (typename Pattern::value_type::iterator cit = p[i].begin(); cit != p[i].end(); ++cit)
+        for (typename Pattern::value_type::const_iterator cit = p[i].begin(); cit != p[i].end(); ++cit)
           c.addindex(i,cit->first);
       c.endindices();
 
       for (std::size_t i = 0; i < c.N(); ++i)
-        for (typename Pattern::value_type::iterator cit = p[i].begin(); cit != p[i].end(); ++cit)
+        for (typename Pattern::value_type::const_iterator cit = p[i].begin(); cit != p[i].end(); ++cit)
           {
             allocate_istl_matrix(ordering_v.dynamic_child(i),
                                  ordering_u.dynamic_child(cit->first),
