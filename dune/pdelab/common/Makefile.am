@@ -22,6 +22,8 @@ common_HEADERS =				\
 	simpledofindex.hh			\
 	typetree.hh				\
 	typetraits.hh				\
+	unordered_map.hh			\
+	unordered_set.hh			\
 	vtkexport.hh
 
 noinst_LTLIBRARIES = libpdelabcommon.la
