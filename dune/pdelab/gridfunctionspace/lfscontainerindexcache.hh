@@ -177,6 +177,8 @@ namespace Dune {
       typedef std::vector<CI> CIVector;
       typedef unordered_map<DI,CI> CIMap;
 
+      typedef unordered_map<const CI*,std::pair<size_type,bool> > InverseMap;
+
       struct ConstraintsEntry
         : public std::pair<const CI*,typename C::mapped_type::mapped_type>
       {
@@ -204,6 +206,7 @@ namespace Dune {
         , _container_indices(lfs.maxSize())
         , _dof_flags(lfs.maxSize())
         , _constraints_iterators(lfs.maxSize())
+        , _inverse_cache_built(false)
         , _gfs_constraints(constraints)
       {
       }
@@ -214,6 +217,9 @@ namespace Dune {
         _container_index_map.clear();
         for (typename CIVector::iterator it = _container_indices.begin(); it != _container_indices.end(); ++it)
           it->clear();
+
+        _inverse_map.clear();
+        _inverse_cache_built = false;
 
         // extract size for all leaf spaces (into a flat list)
         typedef ReservedVector<size_type,TypeTree::TreeInfo<LFS>::leafCount> LeafSizeVector;
@@ -330,7 +336,92 @@ namespace Dune {
         return _lfs.size();
       }
 
+      std::pair<size_type,bool> local_index(const ContainerIndex& ci) const
+      {
+        if (!_inverse_cache_built)
+          build_inverse_cache();
+        return _inverse_map[ci];
+      }
+
+      size_type offset(size_type i) const
+      {
+        if (!_inverse_cache_built)
+          build_inverse_cache();
+        return _offsets[i];
+      }
+
+      size_type extended_offset(size_type i) const
+      {
+        if (!_inverse_cache_built)
+          build_inverse_cache();
+        return _extended_offsets[i];
+      }
+
     private:
+
+      struct sort_container_indices
+      {
+        template<typename T>
+        bool operator()(const T* a, const T* b) const
+        {
+          return std::lexicographical_compare(reversed_iterator(a->end()),reversed_iterator(a->begin()),
+                                              reversed_iterator(b->end()),reversed_iterator(b->begin())
+                                              );
+        }
+      };
+
+
+      void build_inverse_cache()
+      {
+        size_type i = 0;
+        size_type child = 0;
+        _offsets[0] = 0;
+        for (typename CIVector::const_iterator it = _container_indices.begin(),
+               endit = _container_indices.end();
+             it != endit;
+             ++it, ++i
+             )
+          {
+            _inverse_map.insert(std::make_pair(&(*it),std::make_pair(i,false)));
+            if (it->back() != child)
+              {
+                _offsets[child+1] = i;
+                ++child;
+              }
+          }
+
+        std::vector<const ContainerIndex*> extended_cis;
+        extended_cis.reserve(_constraints.size());
+
+        for (typename ConstraintsVector::const_iterator it = _constraints.begin(),
+               endit = _constraints.end();
+             it != endit;
+             ++it
+             )
+          {
+            if (_inverse_map.count(it->first) == 0)
+              extended_cis.push_back(it->first);
+          }
+
+        std::sort(extended_cis.begin(),extended_cis.end(),sort_container_indices());
+
+        typename std::vector<const ContainerIndex*>::const_iterator endit = std::unique(extended_cis.begin(),extended_cis.end());
+
+        i = 0;
+        child = 0;
+        for (typename std::vector<const ContainerIndex*>::const_iterator it = extended_cis.begin(); it != endit; ++it, ++i)
+          {
+            _inverse_map.insert(std::make_pair(&(*it),std::make_pair(i,true)));
+            if (it->back() != child)
+              {
+                _extended_offsets[child+1] = i;
+                ++child;
+              }
+          }
+
+        _inverse_cache_built = true;
+
+      }
 
       const LFS& _lfs;
       CIVector _container_indices;
@@ -338,6 +429,10 @@ namespace Dune {
       std::vector<std::pair<ConstraintsIterator,ConstraintsIterator> > _constraints_iterators;
       mutable CIMap _container_index_map;
       ConstraintsVector _constraints;
+      mutable size_type _offsets[LFS::CHILDREN];
+      mutable size_type _extended_offsets[LFS::CHILDREN];
+      mutable bool _inverse_cache_built;
+      mutable InverseMap _inverse_map;
 
       const C& _gfs_constraints;
 
@@ -417,6 +512,11 @@ namespace Dune {
           TypeTree::TreeInfo<Ordering>::depth
           > index_mapper(_lfs._dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin());
         TypeTree::applyToTree(_lfs.gridFunctionSpace().ordering(),index_mapper);
+      }
+
+      const DI& dof_index(size_type i) const
+      {
+        return _lfs.dofIndex(i);
       }
 
       const CI& container_index(size_type i) const
