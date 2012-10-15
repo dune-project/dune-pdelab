@@ -169,11 +169,11 @@ namespace Dune {
           }
       }
 
-      template<typename ItOut>
+      template<typename CIOutIterator>
       typename Traits::SizeType
       containerIndices(const typename Traits::DOFIndex::EntityIndex& ei,
                        typename Traits::SizeType child_index,
-                       ItOut out, const ItOut end) const
+                       CIOutIterator ci_out, const CIOutIterator ci_end) const
       {
         typedef typename Traits::SizeType size_type;
 
@@ -192,10 +192,10 @@ namespace Dune {
               }
             else
               {
-                for (size_type i = 0; i < size; ++i, ++out)
+                for (size_type i = 0; i < size; ++i, ++ci_out)
                   {
-                    out->push_back(i);
-                    out->back() += _gt_dof_offsets[geometry_type_index] + entity_index * localOrdering()._gt_dof_sizes[geometry_type_index];
+                    ci_out->push_back(i);
+                    ci_out->back() += _gt_dof_offsets[geometry_type_index] + entity_index * localOrdering()._gt_dof_sizes[geometry_type_index];
                   }
               }
             return 0;
@@ -206,18 +206,18 @@ namespace Dune {
             size_type size = localOrdering()._entity_dof_offsets[index+1] - localOrdering()._entity_dof_offsets[index];
             if (_container_blocked)
               {
-                for (size_type i = 0; i < size; ++i, ++out)
+                for (size_type i = 0; i < size; ++i, ++ci_out)
                   {
-                    out->push_back(i);
-                    out->push_back(index);
+                    ci_out->push_back(i);
+                    ci_out->push_back(index);
                   }
               }
             else
               {
-                for (size_type i = 0; i < size; ++i, ++out)
+                for (size_type i = 0; i < size; ++i, ++ci_out)
                   {
-                    out->push_back(i);
-                    out->back() += localOrdering()._entity_dof_offsets[index];
+                    ci_out->push_back(i);
+                    ci_out->back() += localOrdering()._entity_dof_offsets[index];
                   }
               }
             return 0;
@@ -974,11 +974,11 @@ namespace Dune {
           }
       }
 
-      template<typename ItOut>
+      template<typename CIOutIterator>
       typename Traits::SizeType
       containerIndices(const typename Traits::DOFIndex::EntityIndex& ei,
                        typename Traits::SizeType child_index,
-                       ItOut out, const ItOut end) const
+                       CIOutIterator ci_out, const CIOutIterator ci_end) const
       {
         typedef typename Traits::SizeType size_type;
 
@@ -988,30 +988,32 @@ namespace Dune {
         if (_container_blocked)
           {
             if (_fixed_size)
-              for (; out != end; ++out)
+              for (; ci_out != ci_end; ++ci_out)
                 {
-                  out->push_back(_gt_dof_offsets[geometry_type_index] + entity_index);
+                  ci_out->push_back(_gt_dof_offsets[geometry_type_index] + entity_index);
                 }
             else
-              for (; out != end; ++out)
+              for (; ci_out != ci_end; ++ci_out)
                 {
-                  out->push_back(_gt_entity_offsets[geometry_type_index] + entity_index);
+                  ci_out->push_back(_gt_entity_offsets[geometry_type_index] + entity_index);
                 }
           }
         else if (_fixed_size)
           {
-            for (; out != end; ++out)
+            for (; ci_out != ci_end; ++ci_out)
               {
-                out->back() += _gt_dof_offsets[geometry_type_index] + entity_index * localOrdering().size(geometry_type_index,entity_index);
+                ci_out->back() += _gt_dof_offsets[geometry_type_index] + entity_index * localOrdering().size(geometry_type_index,entity_index);
               }
           }
         else
           {
-            for (; out != end; ++out)
+            for (; ci_out != ci_end; ++ci_out)
               {
-                out->back() += _entity_dof_offsets[_gt_entity_offsets[geometry_type_index] + entity_index];
+                ci_out->back() += _entity_dof_offsets[_gt_entity_offsets[geometry_type_index] + entity_index];
               }
           }
+
+        // The return value is not used for non-leaf orderings.
         return 0;
       }
 

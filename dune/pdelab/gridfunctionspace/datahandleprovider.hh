@@ -46,20 +46,26 @@ namespace Dune {
       };
 
 
-      template<typename EntityIndex, typename ContainerIndex, std::size_t tree_depth>
+      template<typename DOFIndex, typename ContainerIndex, std::size_t tree_depth, bool map_dof_indices = false>
       struct indices_for_entity
         : public TypeTree::TreeVisitor
         , public TypeTree::DynamicTraversal
       {
 
         typedef std::size_t size_type;
-        typedef typename std::vector<ContainerIndex>::iterator Iterator;
+        typedef typename DOFIndex::EntityIndex EntityIndex;
+        typedef typename std::vector<ContainerIndex>::iterator CIIterator;
+        typedef typename std::conditional<
+          map_dof_indices,
+          typename std::vector<DOFIndex>::iterator,
+          DummyDOFIndexIterator
+          >::type DIIterator;
 
 
         template<typename Ordering, typename Child, typename TreePath, typename ChildIndex>
         void beforeChild(const Ordering& ordering, const Child& child, TreePath tp, ChildIndex childIndex)
         {
-          _stack.push(_it);
+          _stack.push(std::make_pair(_ci_it,_di_it));
         }
 
         template<typename Ordering, typename TreePath>
@@ -67,11 +73,14 @@ namespace Dune {
         {
           size_type size = ordering.containerIndices(_entity_index,
                                                      tp.back(),
-                                                     _it,
-                                                     _end);
+                                                     _ci_it,
+                                                     _ci_end,
+                                                     _di_it);
 
-          _end += size;
-          _it = _end;
+          _ci_end += size;
+          _ci_it = _ci_end;
+          _di_end += size;
+          _di_it = _di_end;
         }
 
         template<typename Ordering, typename Child, typename TreePath, typename ChildIndex>
@@ -80,45 +89,57 @@ namespace Dune {
           // pop
           ordering.containerIndices(_entity_index,
                                     childIndex,
-                                    _stack.top(),
-                                    _end);
+                                    _stack.top().first,
+                                    _ci_end);
+
+          if (Ordering::consume_tree_index)
+            for (DIIterator it = _stack.top().second;
+                 it != _di_end;
+                 ++it)
+              it->treeIndex().push_back(childIndex);
+
           _stack.pop();
         }
 
 
         indices_for_entity(const EntityIndex& entity_index,
-                           std::vector<ContainerIndex>& indices)
+                           CIIterator ci_begin,
+                           DIIterator di_begin = DIIterator())
           : _entity_index(entity_index)
-          , _indices(indices)
-          , _it(indices.begin())
-          , _end(indices.begin())
-        {}
-
-        // Required for multidomain support
-        indices_for_entity(const EntityIndex& entity_index,
-                           std::vector<ContainerIndex>& indices,
-                           Iterator begin)
-          : _entity_index(entity_index)
-          , _indices(indices)
-          , _it(begin)
-          , _end(begin)
+          , _ci_it(ci_begin)
+          , _ci_end(ci_begin)
+          , _di_it(di_begin)
+          , _di_end(di_begin)
         {}
 
 
         // Exposed for multidomain support
-        Iterator end() const
+        CIIterator ci_end() const
         {
-          return _end;
+          return _ci_end;
         }
 
       private:
 
         const EntityIndex& _entity_index;
-        std::vector<ContainerIndex>& _indices;
-        Iterator _it;
-        Iterator _end;
+        CIIterator _ci_it;
+        CIIterator _ci_end;
+        DIIterator _di_it;
+        DIIterator _di_end;
 
-        std::stack<Iterator,ReservedVector<Iterator,tree_depth> > _stack;
+        std::stack<
+          std::pair<
+            CIIterator,
+            DIIterator
+            >,
+          ReservedVector<
+            std::pair<
+              CIIterator,
+              DIIterator
+              >,
+            tree_depth
+            >
+          > _stack;
       };
 
     } // anonymous namespace
@@ -172,22 +193,48 @@ namespace Dune {
         return get_size.size();
       }
 
+      template<typename V, typename EntityIndex>
+      void setup_dof_indices(V& v, size_type n, const EntityIndex& ei, std::integral_constant<bool,true>) const
+      {
+        v.resize(n);
+        for (typename V::iterator it = v.begin(),
+               endit = v.end();
+             it != endit;
+             ++it)
+          {
+            it->treeIndex().clear();
+            it->entityIndex() = ei;
+          }
+      }
+
+      template<typename V, typename EntityIndex>
+      void setup_dof_indices(V& v, size_type n, const EntityIndex& ei, std::integral_constant<bool,false>) const
+      {}
+
+      template<typename V>
+      typename V::iterator dof_indices_begin(V& v, std::integral_constant<bool,true>) const
+      {
+        return v.begin();
+      }
+
+      template<typename V>
+      DummyDOFIndexIterator dof_indices_begin(V& v, std::integral_constant<bool,false>) const
+      {
+        return DummyDOFIndexIterator();
+      }
+
       //! return vector of global indices associated with the given entity
-      template<typename Entity, typename ContainerIndex>
-      size_type dataHandleContainerIndices (const Entity& e,
-                                            std::vector<ContainerIndex>& indices) const
+      template<typename Entity, typename ContainerIndex, typename DOFIndex, bool map_dof_indices>
+      size_type dataHandleIndices (const Entity& e,
+                                   std::vector<ContainerIndex>& container_indices,
+                                   std::vector<DOFIndex>& dof_indices,
+                                   std::integral_constant<bool,map_dof_indices> map_dof_indices_value
+                                   ) const
       {
         typedef typename GFS::Ordering Ordering;
 
         dune_static_assert((is_same<ContainerIndex,typename Ordering::Traits::ContainerIndex>::value),
                            "dataHandleContainerIndices() called with invalid ContainerIndex type.");
-
-        // Clear index state
-        for (typename std::vector<ContainerIndex>::iterator it = indices.begin(),
-               endit = indices.end();
-             it != endit;
-             ++it)
-          it->clear();
 
         typedef typename Ordering::Traits::DOFIndex::EntityIndex EntityIndex;
         EntityIndex ei;
@@ -201,13 +248,22 @@ namespace Dune {
         get_size_for_entity<EntityIndex> get_size(ei);
         TypeTree::applyToTree(gfs().ordering(),get_size);
 
-        indices.resize(get_size.size());
+        container_indices.resize(get_size.size());
+        // Clear index state
+        for (typename std::vector<ContainerIndex>::iterator it = container_indices.begin(),
+               endit = container_indices.end();
+             it != endit;
+             ++it)
+          it->clear();
+
+        setup_dof_indices(dof_indices,get_size.size(),ei,map_dof_indices_value);
 
         indices_for_entity<
-          EntityIndex,
+          DOFIndex,
           ContainerIndex,
-          TypeTree::TreeInfo<Ordering>::depth
-          > extract_indices(ei,indices);
+          TypeTree::TreeInfo<Ordering>::depth,
+          map_dof_indices
+          > extract_indices(ei,container_indices.begin(),dof_indices_begin(dof_indices,map_dof_indices_value));
         TypeTree::applyToTree(gfs().ordering(),extract_indices);
 
         return get_size.size();

@@ -9,7 +9,7 @@ namespace Dune {
   namespace PDELab {
 
 
-    template<typename GFS>
+    template<typename GFS, bool map_dof_indices = false>
     class EntityContainerIndexCache
     {
 
@@ -24,10 +24,12 @@ namespace Dune {
       typedef std::size_t size_type;
 
       typedef std::vector<CI> CIVector;
+      typedef std::vector<DI> DIVector;
 
       EntityContainerIndexCache(const GFS& gfs)
         : _gfs(gfs)
         , _container_indices(gfs.maxLocalSize())
+        , _dof_indices(map_dof_indices ? gfs.maxLocalSize() : 0)
         , _size(0)
       {}
 
@@ -40,21 +42,28 @@ namespace Dune {
             return;
           }
 
-        // clear out existing state
-        for (typename CIVector::iterator it = _container_indices.begin(); it != _container_indices.end(); ++it)
-          it->clear();
-
-        _size = _gfs.dataHandleContainerIndices(e,_container_indices);
+        _size = _gfs.dataHandleIndices(e,_container_indices,_dof_indices,std::integral_constant<bool,map_dof_indices>());
       }
 
-      /*
+
       const DI& dof_index(size_type i) const
       {
-        return _lfs.dofIndex(i);
+        assert(map_dof_indices);
+        return _dof_indices[i];
       }
-      */
+
+      const DI& dofIndex(size_type i) const
+      {
+        assert(map_dof_indices);
+        return _dof_indices[i];
+      }
 
       const CI& container_index(size_type i) const
+      {
+        return _container_indices[i];
+      }
+
+      const CI& containerIndex(size_type i) const
       {
         return _container_indices[i];
       }
@@ -110,6 +119,7 @@ namespace Dune {
 
       const GFS& _gfs;
       CIVector _container_indices;
+      DIVector _dof_indices;
       size_type _size;
 
     };

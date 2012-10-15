@@ -70,22 +70,28 @@ namespace Dune {
             }
         }
 
-        template<typename ItOut>
+        template<typename CIOutIterator, typename DIOutIterator = DummyDOFIndexIterator>
         typename Traits::SizeType
         containerIndices(const typename Traits::DOFIndex::EntityIndex& ei,
                          typename Traits::SizeType child_index,
-                         ItOut out, const ItOut end) const
+                         CIOutIterator ci_out, const CIOutIterator ci_end) const
         {
           if (this->_container_blocked)
             {
-              for (; out != end; ++out)
-                out->push_back(child_index);
+              for (; ci_out != ci_end; ++ci_out)
+                {
+                  ci_out->push_back(child_index);
+                }
             }
           else
             {
-              for (; out != end; ++out)
-                out->back() += (this->offset(child_index));
+              for (; ci_out != ci_end; ++ci_out)
+                {
+                  ci_out->back() += (this->offset(child_index));
+                }
             }
+
+          // The return value is not used for non-leaf orderings.
           return 0;
         }
 

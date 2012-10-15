@@ -38,15 +38,22 @@ namespace Dune {
         // don't do anything - this is handled by the specialized GridViewOrdering
       }
 
-      template<typename ItOut>
+      template<typename CIOutIterator, typename DIOutIterator = DummyDOFIndexIterator>
       typename Traits::SizeType
       containerIndices(const typename Traits::DOFIndex::EntityIndex& ei,
                        typename Traits::SizeType child_index,
-                       ItOut out, const ItOut end) const
+                       CIOutIterator ci_out, const CIOutIterator ci_end,
+                       DIOutIterator di_out = DIOutIterator()) const
       {
+        const typename Traits::SizeType s = size(ei);
+
+        // Handle DOF indices
+        for (typename Traits::SizeType i = 0; i < s; ++i, ++di_out)
+          di_out->treeIndex().push_back(i);
+
         // only return the size, as the tree visitor expects that from all leaf nodes.
         // The actual index processing is done by the specialized GridViewOrdering.
-        return size(ei);
+        return s;
       }
 
       typename Traits::SizeType size(const typename Traits::DOFIndex::EntityIndex& index) const
