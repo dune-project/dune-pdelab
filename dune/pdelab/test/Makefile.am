@@ -364,6 +364,9 @@ endif
 check_PROGRAMS += testordering
 testordering_SOURCES = testordering.cc
 
+check_PROGRAMS += testdatahandle
+testdatahandle_SOURCES = testdatahandle.cc
+
 MOSTLYCLEANFILES += poisson_petsc_*.vtu
 
 include $(top_srcdir)/am/global-rules
