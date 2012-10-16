@@ -369,6 +369,10 @@ testdatahandle_SOURCES = testdatahandle.cc
 
 MOSTLYCLEANFILES += poisson_petsc_*.vtu
 
+check_PROGRAMS += testnonoverlapping
+testnonoverlapping_SOURCES = testnonoverlapping.cc
+testnonoverlapping_CPPFLAGS = $(AM_CPPFLAGS)
+
 include $(top_srcdir)/am/global-rules
 
 DISTCHECK_CONFIGURE_FLAGS = --with-dune=$(DUNEROOT) CXX="$(CXX)" CC="$(CC)"
