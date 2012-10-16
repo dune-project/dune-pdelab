@@ -62,14 +62,52 @@ namespace Dune {
     struct DefaultDOFIndexAccessor
     {
 
-      template<typename DOFIndex, typename SizeType>
-      static void store(DOFIndex& dof_index, const GeometryType& gt, SizeType entity_index, SizeType tree_index)
+      template<typename DOFIndex, typename SizeType, typename IndexType>
+      static typename enable_if<
+        std::is_integral<IndexType>::value
+        >::type
+      store(DOFIndex& dof_index, const GeometryType& gt, SizeType entity_index, IndexType tree_index)
       {
         dof_index.clear();
         dof_index.entityIndex()[0] = GlobalGeometryTypeIndex::index(gt);
         dof_index.entityIndex()[1] = entity_index;
         dof_index.treeIndex().push_back(tree_index);
       }
+
+      template<typename DOFIndex, typename SizeType, typename IndexType>
+      static typename enable_if<
+        !std::is_integral<IndexType>::value
+        >::type
+      store(DOFIndex& dof_index, const GeometryType& gt, SizeType entity_index, IndexType tree_index)
+      {
+        dof_index.entityIndex()[0] = GlobalGeometryTypeIndex::index(gt);
+        dof_index.entityIndex()[1] = entity_index;
+        dof_index.treeIndex() = tree_index;
+      }
+
+      template<typename DOFIndex, typename SizeType, typename IndexType>
+      static typename enable_if<
+        std::is_integral<IndexType>::value
+        >::type
+      store(DOFIndex& dof_index, SizeType gt_index, SizeType entity_index, IndexType tree_index)
+      {
+        dof_index.clear();
+        dof_index.entityIndex()[0] = gt_index;
+        dof_index.entityIndex()[1] = entity_index;
+        dof_index.treeIndex().push_back(tree_index);
+      }
+
+      template<typename DOFIndex, typename SizeType, typename IndexType>
+      static typename enable_if<
+        !std::is_integral<IndexType>::value
+        >::type
+      store(DOFIndex& dof_index, SizeType gt_index, SizeType entity_index, IndexType tree_index)
+      {
+        dof_index.entityIndex()[0] = gt_index;
+        dof_index.entityIndex()[1] = entity_index;
+        dof_index.treeIndex() = tree_index;
+      }
+
 
       struct GeometryIndex
       {
