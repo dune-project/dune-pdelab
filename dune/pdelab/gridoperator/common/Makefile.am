@@ -5,6 +5,7 @@ headercheck_IGNORE = assembler.hh
 gridoperatorcommon_HEADERS =	        \
         assembler.hh                    \
 	assemblerutilities.hh		\
+	borderdofexchanger.hh		\
 	gridoperatorutilities.hh	\
 	localassemblerenginebase.hh	\
 	timesteppingparameterinterface.hh
