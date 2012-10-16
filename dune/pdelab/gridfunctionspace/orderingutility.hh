@@ -237,6 +237,62 @@ namespace Dune {
 
     };
 
+
+    //! Dummy iterator type over DOF indices.
+    /**
+     * This dummy iterator is used to support omitting the calculation
+     * of DOFIndex values in the per-entity index lookup methods of
+     * orderings. By defining all operations performed on the DOFIndex
+     * iterator and its value by this methods as no-ops, we can reuse the
+     * combined implementation mapping both DOFIndex and ContainerIndex for
+     * the (much more common) case of only having to map the ContainerIndex
+     * values.
+     */
+    struct DummyDOFIndexIterator
+    {
+
+      typedef std::size_t size_type;
+
+      DummyDOFIndexIterator& operator++()
+      {
+        return *this;
+      }
+
+      DummyDOFIndexIterator& operator+=(size_type i)
+      {
+        return *this;
+      }
+
+      DummyDOFIndexIterator& operator*()
+      {
+        return *this;
+      }
+
+      DummyDOFIndexIterator* operator->()
+      {
+        return this;
+      }
+
+      DummyDOFIndexIterator& treeIndex()
+      {
+        return *this;
+      }
+
+      bool operator==(const DummyDOFIndexIterator& r) const
+      {
+        return true;
+      }
+
+      bool operator!=(const DummyDOFIndexIterator& r) const
+      {
+        return !operator==(r);
+      }
+
+      void push_back(size_type i)
+      {}
+
+    };
+
    //! \} group GridFunctionSpace
   } // namespace PDELab
 } // namespace Dune
