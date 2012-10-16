@@ -166,7 +166,7 @@ namespace Dune{
         global_a_ns_view.detach();
         global_a_nn_view.detach();
 
-        if(local_assembler.doConstraintsPostProcessing){
+        if(local_assembler.doPostProcessing){
           local_assembler.handle_dirichlet_constraints(gfsv,jacobian);
         }
       }

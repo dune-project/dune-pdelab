@@ -111,9 +111,10 @@ namespace Dune{
         SetupGridOperator()
           : index(0), size(Dune::tuple_size<GridOperatorTuple>::value) {}
 
-        template <class T>
+        template <typename T>
         void visit(T& elem) {
-          elem.localAssembler().constraintsPostProcessing(index == size-1);
+          elem.localAssembler().doPreProcessing = index == 0;
+          elem.localAssembler().doPostProcessing = index == size-1;
           ++index;
         }
 

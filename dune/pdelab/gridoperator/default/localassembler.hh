@@ -84,14 +84,14 @@ namespace Dune{
 
       //! Constructor with empty constraints
       DefaultLocalAssembler (LOP & lop_)
-        : lop(lop_),  weight(1.0), doConstraintsPostProcessing(true),
+        : lop(lop_),  weight(1.0), doPreProcessing(true), doPostProcessing(true),
           pattern_engine(*this), residual_engine(*this), jacobian_engine(*this)
       {}
 
       //! Constructor for non trivial constraints
       DefaultLocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_)
         : Base(cu_, cv_),
-          lop(lop_),  weight(1.0), doConstraintsPostProcessing(true),
+          lop(lop_),  weight(1.0), doPreProcessing(true), doPostProcessing(true),
           pattern_engine(*this), residual_engine(*this), jacobian_engine(*this)
       {}
 
@@ -169,12 +169,22 @@ namespace Dune{
       static bool doPatternVolumePostSkeleton()  { return LOP::doPatternVolumePostSkeleton; }
       //! @}
 
-      //! This method allows to set the behavior with regard to the
-      //! post processing of the constraints. It is called by the
+      //! This method allows to set the behavior with regard to any
+      //! preprocessing within the engines. It is called by the
       //! setupGridOperators() method of the GridOperator and should
       //! not be called directly.
-      void constraintsPostProcessing(bool v){
-        doConstraintsPostProcessing = v;
+      void preProcessing(bool v)
+      {
+        doPreProcessing = v;
+      }
+
+      //! This method allows to set the behavior with regard to any
+      //! postprocessing within the engines. It is called by the
+      //! setupGridOperators() method of the GridOperator and should
+      //! not be called directly.
+      void postProcessing(bool v)
+      {
+        doPostProcessing = v;
       }
 
     private:
@@ -185,9 +195,13 @@ namespace Dune{
       //! The current weight of assembling
       RangeField weight;
 
+      //! Indicates whether this local operator has to perform pre
+      //! processing
+      bool doPreProcessing;
+
       //! Indicates whether this local operator has to perform post
-      //! processing with regard to the constraints
-      bool doConstraintsPostProcessing;
+      //! processing
+      bool doPostProcessing;
 
       //! The engine member objects
       //! @{
