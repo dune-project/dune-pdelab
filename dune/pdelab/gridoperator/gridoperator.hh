@@ -2,6 +2,7 @@
 #define DUNE_PDELAB_GRIDOPERATOR_HH
 
 #include <dune/pdelab/gridoperator/common/gridoperatorutilities.hh>
+#include <dune/pdelab/gridoperator/common/borderdofexchanger.hh>
 #include <dune/pdelab/gridoperator/default/localassembler.hh>
 #include <dune/pdelab/gridoperator/default/assembler.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
@@ -50,6 +51,8 @@ namespace Dune{
       typedef DefaultLocalAssembler<GridOperator,LOP,nonoverlapping_mode>
       LocalAssembler;
 
+      typedef NonOverlappingBorderDOFExchanger<GridOperator> BorderDOFExchanger;
+
       //! The grid operator traits
       typedef Dune::PDELab::GridOperatorTraits
       <GFSU,GFSV,MB,DF,RF,JF,CU,CV,Assembler,LocalAssembler> Traits;
@@ -62,14 +65,16 @@ namespace Dune{
       //! Constructor for non trivial constraints
       GridOperator(const GFSU & gfsu_, const CU & cu_, const GFSV & gfsv_, const CV & cv_, LOP & lop_, const MB& mb_ = MB())
         : global_assembler(gfsu_,gfsv_,cu_,cv_)
-        , local_assembler(lop_, cu_, cv_)
+        , dof_exchanger(make_shared<BorderDOFExchanger>(*this))
+        , local_assembler(lop_, cu_, cv_,dof_exchanger)
         , backend(mb_)
       {}
 
       //! Constructor for empty constraints
       GridOperator(const GFSU & gfsu_, const GFSV & gfsv_, LOP & lop_, const MB& mb_ = MB())
         : global_assembler(gfsu_,gfsv_)
-        , local_assembler(lop_)
+        , dof_exchanger(make_shared<BorderDOFExchanger>(*this))
+        , local_assembler(lop_,dof_exchanger)
         , backend(mb_)
       {}
 
@@ -165,8 +170,14 @@ namespace Dune{
         global_assembler.assemble(jacobian_engine);
       }
 
+      void make_consistent(Jacobian& a) const {
+        dof_exchanger->accumulateBorderEntries(*this,a);
+      }
+
     private:
       Assembler global_assembler;
+      shared_ptr<BorderDOFExchanger> dof_exchanger;
+
       mutable LocalAssembler local_assembler;
       MB backend;
 

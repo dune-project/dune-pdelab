@@ -83,16 +83,19 @@ namespace Dune{
       //! @}
 
       //! Constructor with empty constraints
-      DefaultLocalAssembler (LOP & lop_)
+      DefaultLocalAssembler (LOP & lop_, shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : lop(lop_),  weight(1.0), doPreProcessing(true), doPostProcessing(true),
-          pattern_engine(*this), residual_engine(*this), jacobian_engine(*this)
+          pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this)
+        , _reconstruct_border_entries(isNonOverlapping)
       {}
 
       //! Constructor for non trivial constraints
-      DefaultLocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_)
+      DefaultLocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_,
+                             shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : Base(cu_, cv_),
           lop(lop_),  weight(1.0), doPreProcessing(true), doPostProcessing(true),
-          pattern_engine(*this), residual_engine(*this), jacobian_engine(*this)
+          pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this)
+        , _reconstruct_border_entries(isNonOverlapping)
       {}
 
       //! Notifies the local assembler about the current time of
@@ -115,6 +118,11 @@ namespace Dune{
       void postStage (){ lop.postStage(); }
       Real suggestTimestep (Real dt) const{return lop.suggestTimestep(dt); }
       //! @}
+
+      bool reconstructBorderEntries() const
+      {
+        return _reconstruct_border_entries;
+      }
 
       //! Access methods which provid "ready to use" engines
       //! @{
@@ -209,6 +217,8 @@ namespace Dune{
       LocalResidualAssemblerEngine residual_engine;
       LocalJacobianAssemblerEngine jacobian_engine;
       //! @}
+
+      bool _reconstruct_border_entries;
 
     };
 
