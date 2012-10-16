@@ -9,12 +9,12 @@
 #include <dune/pdelab/common/unordered_map.hh>
 #include <dune/pdelab/common/unordered_set.hh>
 
-#include<dune/common/fmatrix.hh>
-#include<dune/istl/bvector.hh>
-#include<dune/istl/bcrsmatrix.hh>
+#include <dune/common/fmatrix.hh>
+#include <dune/istl/bvector.hh>
+#include <dune/istl/bcrsmatrix.hh>
 
-#include"../gridoperatorspace/localmatrix.hh"
-#include"backendselector.hh"
+#include "../gridoperatorspace/localmatrix.hh"
+#include "backendselector.hh"
 
 namespace Dune {
   namespace PDELab {
