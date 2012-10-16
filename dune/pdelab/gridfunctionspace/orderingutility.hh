@@ -8,6 +8,7 @@
 #include <bitset>
 
 #include <dune/pdelab/common/dofindex.hh>
+#include <dune/pdelab/common/globaldofindex.hh>
 #include <dune/pdelab/common/typetree/traversal.hh>
 #include <dune/pdelab/common/typetree/accumulate_static.hh>
 
@@ -178,6 +179,11 @@ namespace Dune {
     {
 
       typedef GV GridView;
+      typedef Dune::PDELab::GlobalDOFIndex<
+        typename DI::value_type,
+        DI::max_depth,
+        typename GV::Grid::GlobalIdSet::IdType
+        > GlobalDOFIndex;
 
     };
 
