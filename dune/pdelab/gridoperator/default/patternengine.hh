@@ -105,17 +105,9 @@ namespace Dune{
 
       //! @}
 
-
-      void add_pattern(const LFSVCache& lfsv_cache, const LFSUCache& lfsu_cache, const LocalPattern& p)
+      void add_border_pattern(true_type, const LFSVCache& lfsv_cache, const LFSUCache& lfsu_cache, const LocalPattern& p)
       {
-        for (size_type k=0; k<p.size(); ++k)
-          local_assembler.add_entry(*pattern,
-                                    lfsv_cache,p[k].i(),
-                                    lfsu_cache,p[k].j()
-                                    );
-
-        if (LocalAssembler::isNonOverlapping &&
-            local_assembler.reconstructBorderEntries() &&
+        if (local_assembler.reconstructBorderEntries() &&
             !communicationCache().initialized())
           {
             for (auto& entry : p)
@@ -136,6 +128,23 @@ namespace Dune{
                 communicationCache().addEntry(di,col_geometry_index,col_entity_index,dj.treeIndex());
               }
           }
+      }
+
+      void add_border_pattern(false_type, const LFSVCache& lfsv_cache, const LFSUCache& lfsu_cache, const LocalPattern& p)
+      {}
+
+      void add_pattern(const LFSVCache& lfsv_cache, const LFSUCache& lfsu_cache, const LocalPattern& p)
+      {
+        for (size_type k=0; k<p.size(); ++k)
+          local_assembler.add_entry(*pattern,
+                                    lfsv_cache,p[k].i(),
+                                    lfsu_cache,p[k].j()
+                                    );
+
+        add_border_pattern(integral_constant<bool,LocalAssembler::isNonOverlapping>(),
+                           lfsv_cache,
+                           lfsu_cache,
+                           p);
       }
 
 
@@ -217,8 +226,14 @@ namespace Dune{
 
 
       void postAssembly(const GFSU& gfsu, const GFSV& gfsv){
-        if(LocalAssembler::isNonOverlapping &&
-           local_assembler.doPostProcessing &&
+        post_border_pattern_assembly(integral_constant<bool,LocalAssembler::isNonOverlapping>(),
+                                     gfsu,
+                                     gfsv);
+      }
+
+      void post_border_pattern_assembly(true_type, const GFSU& gfsu, const GFSV& gfsv)
+      {
+        if(local_assembler.doPostProcessing &&
            local_assembler.reconstructBorderEntries())
           {
             communicationCache().finishInitialization();
@@ -231,6 +246,8 @@ namespace Dune{
           }
       }
 
+      void post_border_pattern_assembly(false_type, const GFSU& gfsu, const GFSV& gfsv)
+      {}
 
       //! @}
 

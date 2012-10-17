@@ -440,6 +440,33 @@ namespace Dune {
     };
 
 
+    template<typename GridOperator>
+    class OverlappingBorderDOFExchanger
+    {
+
+    public:
+
+      typedef OverlappingBorderDOFExchanger CommunicationCache;
+
+      OverlappingBorderDOFExchanger(const GridOperator& grid_operator)
+      {}
+
+      void accumulateBorderEntries(const GridOperator& grid_operator, typename GridOperator::Traits::Jacobian& matrix)
+      {}
+
+      CommunicationCache& communicationCache()
+      {
+        return *this;
+      }
+
+      const CommunicationCache& communicationCache() const
+      {
+        return *this;
+      }
+
+    };
+
+
   } // namespace PDELab
 } // namespace Dune
 
