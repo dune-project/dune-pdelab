@@ -1,4 +1,7 @@
 commondir = $(includedir)/dune/pdelab/backend
+
+SUBDIRS = istl
+
 common_HEADERS = backendselector.hh             \
                  istlmatrixbackend.hh           \
                  istlsolverbackend.hh           \
