@@ -11,6 +11,8 @@
 
 #include <dune/istl/bvector.hh>
 
+#include <dune/pdelab/backend/istl/tags.hh>
+
 #include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfscontainerindexcache.hh>
@@ -53,105 +55,94 @@ namespace Dune {
       }
     };
 
-
     template<typename CI, typename Block>
-    typename enable_if<Block::blocklevel >= 3,typename Block::field_type&>::type
-    access_istl_vector_element(Block& b, const CI& ci, int i)
+    typename Block::field_type&
+    access_istl_vector_element(istl::tags::block_vector, Block& b, const CI& ci, int i)
     {
-      return access_istl_vector_element(b[ci[i]],ci,i-1);
+      return access_istl_vector_element(istl::container_tag(b[ci[i]]),b[ci[i]],ci,i-1);
     }
 
     template<typename CI, typename Block>
-    typename enable_if<Block::blocklevel == 2 &&
-                       Block::block_type::dimension == 1,
-                       typename Block::field_type&>::type
-    access_istl_vector_element(Block& b, const CI& ci, int i)
+    typename Block::field_type&
+    access_istl_vector_element(istl::tags::field_vector_1, Block& b, const CI& ci, int i)
+    {
+      assert(i == -1);
+      return b[0];
+    }
+
+    template<typename CI, typename Block>
+    typename Block::field_type&
+    access_istl_vector_element(istl::tags::field_vector_n, Block& b, const CI& ci, int i)
     {
       assert(i == 0);
-      return b[ci[0]][0];
+      return b[ci[0]];
     }
 
+
     template<typename CI, typename Block>
-    typename enable_if<Block::blocklevel == 2 &&
-                       Block::block_type::dimension != 1,
-                       typename Block::field_type&>::type
-    access_istl_vector_element(Block& b, const CI& ci, int i)
+    const typename Block::field_type&
+    access_istl_vector_element(istl::tags::block_vector, const Block& b, const CI& ci, int i)
     {
-      assert(i == 1);
-      return b[ci[1]][ci[0]];
+      return access_istl_vector_element(istl::container_tag(b[ci[i]]),b[ci[i]],ci,i-1);
     }
 
-
     template<typename CI, typename Block>
-    typename enable_if<Block::blocklevel >= 3,const typename Block::field_type&>::type
-    access_istl_vector_element(const Block& b, const CI& ci, int i)
+    const typename Block::field_type&
+    access_istl_vector_element(istl::tags::field_vector_1, const Block& b, const CI& ci, int i)
     {
-      return access_istl_vector_element(b[ci[i]],ci,i-1);
+      assert(i == -1);
+      return b[0];
     }
 
     template<typename CI, typename Block>
-    typename enable_if<Block::blocklevel == 2 &&
-                       Block::block_type::dimension == 1,
-                       const typename Block::field_type&>::type
-    access_istl_vector_element(const Block& b, const CI& ci, int i)
+    const typename Block::field_type&
+    access_istl_vector_element(istl::tags::field_vector_n, const Block& b, const CI& ci, int i)
     {
       assert(i == 0);
-      return b[ci[0]][0];
-    }
-
-    template<typename CI, typename Block>
-    typename enable_if<Block::blocklevel == 2 &&
-                       Block::block_type::dimension != 1,
-                       const typename Block::field_type&>::type
-    access_istl_vector_element(const Block& b, const CI& ci, int i)
-    {
-      assert(i == 1);
-      return b[ci[1]][ci[0]];
+      return b[ci[0]];
     }
 
 
     template<typename Vector>
-    void resize_istl_vector(Vector& v, std::size_t size, bool copy_values)
+    void resize_istl_vector(istl::tags::block_vector, Vector& v, std::size_t size, bool copy_values)
     {
       v.resize(size,copy_values);
     }
 
-    template<typename block_type, int block_size>
-    void resize_istl_vector(FieldVector<block_type,block_size>& v, std::size_t size, bool copy_values)
+    template<typename Vector>
+    void resize_istl_vector(istl::tags::field_vector, Vector& v, std::size_t size, bool copy_values)
     {
     }
 
     template<typename Ordering, typename Container>
     void dispatch_istl_vector_allocation(const Ordering& ordering, Container& c, HierarchicContainerAllocationTag tag)
     {
-      allocate_istl_vector(ordering,c);
+      allocate_istl_vector(istl::container_tag(c),ordering,c);
     }
 
     template<typename Ordering, typename Container>
     void dispatch_istl_vector_allocation(const Ordering& ordering, Container& c, FlatContainerAllocationTag tag)
     {
-      resize_istl_vector(c,ordering.blockCount(),false);
+      resize_istl_vector(istl::container_tag(c),c,ordering.blockCount(),false);
     }
 
     template<typename DI, typename CI, typename Container>
-    typename enable_if<!is_same<typename Container::block_type,typename Container::field_type>::value>::type
-    allocate_istl_vector(const OrderingBase<DI,CI>& ordering, Container& c)
+    void allocate_istl_vector(istl::tags::block_vector, const OrderingBase<DI,CI>& ordering, Container& c)
     {
       for (std::size_t i = 0; i < ordering.dynamic_child_count(); ++i)
         {
           if (ordering.container_blocked())
             {
-              resize_istl_vector(c[i],ordering.dynamic_child(i).blockCount(),false);
-              allocate_istl_vector(ordering.dynamic_child(i),c[i]);
+              resize_istl_vector(istl::container_tag(c[i]),c[i],ordering.dynamic_child(i).blockCount(),false);
+              allocate_istl_vector(istl::container_tag(c[i]),ordering.dynamic_child(i),c[i]);
             }
           else
-            allocate_istl_vector(ordering.dynamic_child(i),c);
+            allocate_istl_vector(istl::container_tag(c),ordering.dynamic_child(i),c);
         }
     }
 
     template<typename DI, typename CI, typename Container>
-    typename enable_if<is_same<typename Container::block_type,typename Container::field_type>::value>::type
-    allocate_istl_vector(const OrderingBase<DI,CI>& ordering, Container& c)
+    void allocate_istl_vector(istl::tags::field_vector, const OrderingBase<DI,CI>& ordering, Container& c)
     {
     }
 
@@ -563,12 +554,12 @@ namespace Dune {
 
       E& operator[](const ContainerIndex& ci)
       {
-        return access_istl_vector_element(*_container,ci,ci.size()-1);
+        return access_istl_vector_element(istl::container_tag(*_container),*_container,ci,ci.size()-1);
       }
 
       const E& operator[](const ContainerIndex& ci) const
       {
-        return access_istl_vector_element(*_container,ci,ci.size()-1);
+        return access_istl_vector_element(istl::container_tag(*_container),*_container,ci,ci.size()-1);
       }
 
       typename Dune::template FieldTraits<E>::real_type two_norm() const
