@@ -237,7 +237,7 @@ void test (const GV& gv, const Mapper& mapper, std::string filename, const bool 
   std::stringstream timings_name;
   timings_name << filename << "_timings.txt";
 
-  std::ofstream timings_file(timings_name.str());
+  std::ofstream timings_file(timings_name.str().c_str());
   timings_file << filename << " " << runs << std::endl;
   bh.print(timings_file);
 }
