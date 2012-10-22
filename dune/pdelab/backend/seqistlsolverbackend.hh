@@ -17,11 +17,10 @@
 #include <dune/istl/io.hh>
 #include <dune/istl/superlu.hh>
 
-#include "../constraints/constraints.hh"
-#include "../gridfunctionspace/genericdatahandle.hh"
-#include "../newton/newton.hh"
-#include "istlvectorbackend.hh"
-#include "parallelistlhelper.hh"
+#include <dune/pdelab/constraints/constraints.hh>
+#include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
+#include <dune/pdelab/newton/newton.hh>
+#include <dune/pdelab/backend/istlvectorbackend.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -458,7 +457,6 @@ namespace Dune {
     };
 
     //! \} Sequential Solvers
-
     template<class GO, template<class,class,class,int> class Preconditioner, template<class> class Solver>
     class ISTLBackend_SEQ_AMG
     {
