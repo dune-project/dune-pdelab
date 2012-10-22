@@ -122,15 +122,38 @@ namespace Dune {
           return _border_pattern;
         }
 
-
-        void addEntry(const RowDOFIndex& di,
-                      std::size_t col_gt_index,
-                      std::size_t col_entity_index,
-                      const ColumnTreeIndex& treeIndex)
+        template<typename LFSVCache, typename LFSUCache, typename LocalPattern>
+        void addEntries(const LFSVCache& lfsv_cache, const LFSUCache& lfsu_cache, const LocalPattern& pattern)
         {
           assert(!initialized());
-          _border_pattern[di].insert(ColumnGlobalDOFIndex(this->id(col_gt_index,col_entity_index),treeIndex));
+
+          for (typename LocalPattern::const_iterator it = pattern.begin(),
+                 end_it = pattern.end();
+               it != end_it;
+               ++it)
+            {
+              // skip constrained entries for now. TODO: Is this correct??
+              if (lfsv_cache.constrained(it->i()) || lfsu_cache.constrained(it->j()))
+                continue;
+
+              const typename LFSVCache::DOFIndex& di = lfsv_cache.dof_index(it->i());
+              const typename LFSUCache::DOFIndex& dj = lfsu_cache.dof_index(it->j());
+
+              size_type row_gt_index = GFSV::Ordering::Traits::DOFIndexAccessor::geometryType(di);
+              size_type row_entity_index = GFSV::Ordering::Traits::DOFIndexAccessor::entityIndex(di);
+
+              size_type col_gt_index = GFSU::Ordering::Traits::DOFIndexAccessor::geometryType(dj);
+              size_type col_entity_index = GFSU::Ordering::Traits::DOFIndexAccessor::entityIndex(dj);
+
+              // We are only interested in connections between two border entities.
+              if (!this->isBorderEntity(row_gt_index,row_entity_index) ||
+                  !this->isBorderEntity(col_gt_index,col_entity_index))
+                continue;
+
+              _border_pattern[di].insert(ColumnGlobalDOFIndex(this->id(col_gt_index,col_entity_index),dj.treeIndex()));
+            }
         }
+
 
         template<typename Entity>
         size_type size(const Entity& e) const
@@ -140,7 +163,7 @@ namespace Dune {
           for (size_type i = 0; i < _entity_cache.size(); ++i)
             {
               typename BorderPattern::const_iterator it = _border_pattern.find(_entity_cache.dofIndex(i));
-              if (it == _border_pattern.end())
+              if (!transfer_dof(i,it))
                 continue;
               n += it->second.size();
             }
@@ -155,7 +178,7 @@ namespace Dune {
           for (size_type i = 0; i < _entity_cache.size(); ++i)
             {
               typename BorderPattern::const_iterator it = _border_pattern.find(_entity_cache.dofIndex(i));
-              if (it == _border_pattern.end())
+              if (!transfer_dof(i,it))
                 continue;
               for (typename BorderPattern::mapped_type::const_iterator col_it = it->second.begin(),
                      col_end = it->second.end();
@@ -172,7 +195,7 @@ namespace Dune {
           for (size_type i = 0; i < _entity_cache.size(); ++i)
             {
               typename BorderPattern::const_iterator it = _border_pattern.find(_entity_cache.dofIndex(i));
-              if (it == _border_pattern.end())
+              if (!transfer_dof(i,it))
                 continue;
               for (typename BorderPattern::mapped_type::const_iterator col_it = it->second.begin(),
                      col_end = it->second.end();
@@ -189,6 +212,24 @@ namespace Dune {
         }
 
       private:
+
+        bool transfer_dof(size_type i, typename BorderPattern::const_iterator it) const
+        {
+          // not a border DOF
+          if (it == _border_pattern.end())
+            return false;
+          else
+            return true;
+
+          /* Constraints check moved to addEntry()
+          // check for constraint
+          typename GridOperator::Traits::TrialGridFunctionSpaceConstraints::const_iterator cit = _constraints->find(_entity_cache.containerIndex(i));
+
+          // transfer if DOF is not constrained
+          // TODO: What about non-Dirichlet constraints??
+          return cit == _constraints->end();
+          */
+        }
 
         const GFSU& _gfsu;
         BorderPattern _border_pattern;

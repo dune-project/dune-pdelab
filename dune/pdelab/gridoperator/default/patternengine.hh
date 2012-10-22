@@ -110,23 +110,7 @@ namespace Dune{
         if (local_assembler.reconstructBorderEntries() &&
             !communicationCache().initialized())
           {
-            for (auto& entry : p)
-              {
-                const auto& di = lfsv_cache.dof_index(entry.i());
-                const auto& dj = lfsu_cache.dof_index(entry.j());
-
-                size_type row_geometry_index = LFSV::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::geometryType(di);
-                size_type row_entity_index = LFSV::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::entityIndex(di);
-
-                size_type col_geometry_index = LFSU::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::geometryType(dj);
-                size_type col_entity_index = LFSU::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::entityIndex(dj);
-                // We are only interested in connections between two border entities.
-                if (!communicationCache().isBorderEntity(row_geometry_index,row_entity_index) ||
-                    !communicationCache().isBorderEntity(col_geometry_index,col_entity_index))
-                  continue;
-
-                communicationCache().addEntry(di,col_geometry_index,col_entity_index,dj.treeIndex());
-              }
+            communicationCache().addEntries(lfsv_cache,lfsu_cache,p);
           }
       }
 
