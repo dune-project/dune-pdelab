@@ -466,7 +466,7 @@ namespace Dune {
       typedef typename GO::Traits::Jacobian M;
       typedef typename M::BaseT MatrixType;
       typedef typename GO::Traits::Domain V;
-      typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type VectorType;
+      typedef typename V::BaseT VectorType;
       typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
       typedef Dune::MatrixAdapter<MatrixType,VectorType,VectorType> Operator;
       typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments SmootherArgs;
@@ -526,7 +526,7 @@ namespace Dune {
         Dune::InverseOperatorResult stat;
 
         Solver<VectorType> solver(oop,*amg,reduction,maxiter,verbose);
-        solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
+        solver.apply(z.base(),r.base(),stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
