@@ -34,11 +34,28 @@ namespace Dune {
      */
     struct LexicographicOrderingTag { };
 
+    template<bool v>
+    struct NoConstOrderingSize
+    {
+      static const bool no_const_ordering_size = v;
+    };
+
     /** \brief Tag indicating an arbitrary number of unkowns per entity.
      *
      * class used to pass compile-time parameter to the GridFunctionSpace.
      */
-    struct GridFunctionGeneralMapper {};
+    template<typename Params>
+    struct LeafOrderingTag
+      : public Params
+    {};
+
+    typedef LeafOrderingTag<
+      NoConstOrderingSize<false>
+      > DefaultLeafOrderingTag;
+
+    typedef LeafOrderingTag<
+      NoConstOrderingSize<true>
+      > NonOverlappingLeafOrderingTag;
 
     //! Tag indicating a function space with a single unknown attached to every
     //! entity of a exactly one single codimension.
