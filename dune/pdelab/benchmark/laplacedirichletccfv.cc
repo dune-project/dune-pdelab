@@ -299,10 +299,10 @@ int main(int argc, char** argv)
         Dune::YaspGrid<2> grid(L,N,B,0);
         grid.globalRefine(refine);
 
-        typedef Dune::PDELab::GridFunctionGeneralMapper Mapper;
-        Mapper mapper;
+        typedef Dune::PDELab::DefaultLeafOrderingTag OrderingTag;
+        OrderingTag ordering_tag;
 
-        test(grid.leafView(),mapper,name("Yasp",grid,"full",solve),solve,runs);
+        test(grid.leafView(),ordering_tag,name("Yasp",grid,"full",solve),solve,runs);
       }
 
     // 2D - simplified ordering / backend infrastructure
@@ -343,10 +343,10 @@ int main(int argc, char** argv)
         Dune::YaspGrid<3> grid(L,N,B,0);
         grid.globalRefine(refine);
 
-        typedef Dune::PDELab::GridFunctionGeneralMapper Mapper;
-        Mapper mapper;
+        typedef Dune::PDELab::DefaultLeafOrderingTag OrderingTag;
+        OrderingTag ordering_tag;
 
-        test(grid.leafView(),mapper,name("Yasp",grid,"full",solve),solve,runs);
+        test(grid.leafView(),ordering_tag,name("Yasp",grid,"full",solve),solve,runs);
       }
 
     // 3D - simplified ordering / backend infrastructure

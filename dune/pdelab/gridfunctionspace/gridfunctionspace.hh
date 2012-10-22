@@ -49,7 +49,7 @@ namespace Dune {
     /**
      * This is based on a global FiniteElementMap
      */
-    template<typename G, typename L, typename C, typename B>
+    template<typename G, typename L, typename C, typename B, typename O>
     struct GridFunctionSpaceTraits
     {
       //! True if this grid function space is composed of others.
@@ -81,6 +81,13 @@ namespace Dune {
 
       //! type representing constraints
       typedef C ConstraintsType;
+
+      //! tag describing the ordering.
+      /**
+       * The tag type may contain additional constants and typedefs to
+       * control the behavior of the created ordering.
+       */
+      typedef O OrderingTag;
 
     };
 
@@ -283,7 +290,7 @@ namespace Dune {
      * entity, known at compile-time)
      */
     template<typename GV, typename FEM, typename CE=NoConstraints,
-             typename B=StdVectorBackend, typename P=GridFunctionGeneralMapper>
+             typename B=StdVectorBackend, typename P=DefaultLeafOrderingTag>
     class GridFunctionSpace
       : public TypeTree::LeafNode
       , public GridFunctionOutputParameters
@@ -294,7 +301,7 @@ namespace Dune {
 
     public:
       //! export Traits class
-      typedef GridFunctionSpaceTraits<GV,FEM,CE,B> Traits;
+      typedef GridFunctionSpaceTraits<GV,FEM,CE,B,P> Traits;
       typedef typename GV::Traits::template Codim<0>::Entity Element;
       typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
 

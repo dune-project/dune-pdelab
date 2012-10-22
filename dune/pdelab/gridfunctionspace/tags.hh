@@ -53,6 +53,9 @@ namespace Dune {
       NoConstOrderingSize<false>
       > DefaultLeafOrderingTag;
 
+    //! GridFunctionGeneralMapper is deprecated, use DefaultLeafOrderingTag instead.
+    typedef DefaultLeafOrderingTag GridFunctionGeneralMapper;
+
     typedef LeafOrderingTag<
       NoConstOrderingSize<true>
       > NonOverlappingLeafOrderingTag;

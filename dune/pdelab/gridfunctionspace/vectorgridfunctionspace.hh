@@ -41,7 +41,7 @@ namespace Dune {
              typename LeafBackend,
              typename Constraints = NoConstraints,
              typename OrderingTag = LexicographicOrderingTag,
-             typename LeafOrderingTag = GridFunctionGeneralMapper>
+             typename LeafOrderingTag = DefaultLeafOrderingTag>
     class VectorGridFunctionSpace
       : public TypeTree::PowerNode<GridFunctionSpace<
                                      GV,

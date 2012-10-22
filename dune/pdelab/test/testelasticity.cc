@@ -89,7 +89,7 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
   typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
   typedef Dune::PDELab::ISTLVectorBackend<> ComponentVectorBackend;
 
-  typedef Dune::PDELab::GridFunctionGeneralMapper Mapper;
+  typedef Dune::PDELab::DefaultLeafOrderingTag Mapper;
 
   typedef Dune::PDELab::LexicographicOrderingTag OrderingTag;
   typedef Dune::PDELab::VectorGridFunctionSpace<

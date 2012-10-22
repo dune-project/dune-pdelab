@@ -403,17 +403,18 @@ namespace Dune {
 
     };
 
-    template<typename GFS, typename Transformation, typename SizeTag>
+    template<typename GFS, typename Transformation, typename OrderingTag>
     struct leaf_gfs_to_ordering_descriptor;
 
 
-    template<typename GFS, typename Transformation>
-    struct leaf_gfs_to_ordering_descriptor<GFS,Transformation,GridFunctionGeneralMapper>
+    template<typename GFS, typename Transformation, typename Params>
+    struct leaf_gfs_to_ordering_descriptor<GFS,Transformation,LeafOrderingTag<Params> >
     {
 
       static const bool recursive = false;
 
-      typedef DirectLeafLocalOrdering<typename GFS::Traits::FiniteElementMap,
+      typedef DirectLeafLocalOrdering<typename GFS::Traits::OrderingTag,
+                                      typename GFS::Traits::FiniteElementMap,
                                       typename GFS::Traits::GridView,
                                       typename Transformation::DOFIndex,
                                       typename Transformation::ContainerIndex
@@ -442,7 +443,7 @@ namespace Dune {
     leaf_gfs_to_ordering_descriptor<
       GridFunctionSpace,
       gfs_to_ordering<Params>,
-      typename GridFunctionSpace::SizeTag
+      typename GridFunctionSpace::Traits::OrderingTag
       >
     lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_ordering<Params>* t, LeafGridFunctionSpaceTag tag);
 
@@ -455,7 +456,7 @@ namespace Dune {
       template<typename Node, typename TreePath>
       void leaf(Node& node, TreePath tp)
       {
-        node._fixed_size = node.finiteElementMap().fixedSize();
+        node.update_a_priori_fixed_size();
         any = any || node._fixed_size;
         all = all && node._fixed_size;
       }
@@ -659,7 +660,7 @@ namespace Dune {
 
             std::partial_sum(node._gt_entity_offsets.begin(),node._gt_entity_offsets.end(),node._gt_entity_offsets.begin());
             node._entity_dof_offsets.assign(node._gt_entity_offsets.back() * std::max(node._child_count,static_cast<size_type>(1)),0);
-            node._fixed_size_possible = true;
+            node.setup_fixed_size_possible();
           }
       }
 

@@ -12,7 +12,7 @@
 namespace Dune {
   namespace PDELab {
 
-    template<typename FEM, typename GV, typename DI, typename CI>
+    template<typename OrderingTag, typename FEM, typename GV, typename DI, typename CI>
     class DirectLeafLocalOrdering
       : public TypeTree::LeafNode
     {
@@ -115,9 +115,8 @@ namespace Dune {
 
       void update_a_priori_fixed_size()
       {
-        _fixed_size = _fem->fixedSize();
+        _fixed_size = (!OrderingTag::no_const_ordering_size) && _fem->fixedSize();
       }
-
 
       template<typename It>
       void update_fixed_size(It it, const It end)
@@ -153,7 +152,7 @@ namespace Dune {
         _gt_dof_sizes.assign(GlobalGeometryTypeIndex::size(dim),0);
         _local_gt_dof_sizes.resize(GlobalGeometryTypeIndex::size(dim));
         _max_local_size = 0;
-        _fixed_size_possible = true;
+        _fixed_size_possible = !OrderingTag::no_const_ordering_size;
       }
 
 

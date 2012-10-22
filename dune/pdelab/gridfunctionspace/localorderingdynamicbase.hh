@@ -37,6 +37,10 @@ namespace Dune {
       template<typename>
       friend class GridViewOrdering;
 
+      typedef std::vector<LocalOrderingBase*> ChildVector;
+      typedef typename ChildVector::iterator ChildIterator;
+      typedef typename ChildVector::const_iterator ConstChildIterator;
+
     public:
 
       static const bool has_dynamic_ordering_children = true;
@@ -290,6 +294,26 @@ namespace Dune {
       void disable_container_blocking()
       {
         _container_blocked = false;
+      }
+
+      //! Initial setup of the flag indicating whether a fixed size ordering is possible.
+      /**
+       * For a non-leaf ordering, a fixed size ordering is possible if all children can
+       * support it, so we implement that logic here.
+       *
+       * \note Leaf orderings will usually want to extract this a priori information from somewhere
+       * else, so they should override this method (the correct method will get called even
+       * without a virtual call, as the call happens from a TypeTree visitor that is aware of
+       * the precise type of the ordering).
+       */
+      void setup_fixed_size_possible()
+      {
+        _fixed_size_possible = true;
+        for (ConstChildIterator it = _children.begin(),
+               end_it = _children.end();
+             it != end_it;
+             ++it)
+          _fixed_size_possible = _fixed_size_possible && (*it)->_fixed_size_possible;
       }
 
 

@@ -109,7 +109,7 @@ void test (const GV& gv)
 #ifdef TEST_SIMPLIFIED_INFRASTRUCTURE
   typedef Dune::PDELab::SingleCodimMapper Mapper;
 #else
-  typedef Dune::PDELab::GridFunctionGeneralMapper Mapper;
+  typedef Dune::PDElab::DefaultLeafOrderingTag Mapper;
 #endif
 
   // make function space

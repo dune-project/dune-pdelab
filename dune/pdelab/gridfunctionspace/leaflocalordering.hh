@@ -10,7 +10,7 @@
 namespace Dune {
   namespace PDELab {
 
-    template<typename FEM, typename GV, typename DI, typename CI>
+    template<typename OrderingTag, typename FEM, typename GV, typename DI, typename CI>
     class LeafLocalOrdering
       : public TypeTree::LeafNode
       , public LocalOrderingBase<GV,DI,CI>
@@ -42,6 +42,16 @@ namespace Dune {
       const FEM& finiteElementMap() const
       {
         return *_fem;
+      }
+
+      void update_a_priori_fixed_size()
+      {
+        this->_fixed_size = (!OrderingTag::no_const_ordering_size) && _fem->fixedSize();
+      }
+
+      void setup_fixed_size_possible()
+      {
+        this->_fixed_size_possible =  !OrderingTag::no_const_ordering_size;
       }
 
     private:
@@ -123,14 +133,17 @@ namespace Dune {
 
     };
 
+    template<typename GFS, typename Transformation, typename OrderingTag>
+    struct leaf_gfs_to_local_ordering_descriptor;
 
-    template<typename GFS, typename Transformation>
-    struct leaf_gfs_to_local_ordering_descriptor
+    template<typename GFS, typename Transformation, typename Params>
+    struct leaf_gfs_to_local_ordering_descriptor<GFS,Transformation,LeafOrderingTag<Params> >
     {
 
       static const bool recursive = false;
 
       typedef LeafLocalOrdering<
+        typename GFS::Traits::OrderingTag,
         typename GFS::Traits::FiniteElementMap,
         typename GFS::Traits::GridView,
         typename Transformation::DOFIndex,
@@ -154,7 +167,8 @@ namespace Dune {
     template<typename GFS, typename Params>
     leaf_gfs_to_local_ordering_descriptor<
       GFS,
-      gfs_to_local_ordering<Params>
+      gfs_to_local_ordering<Params>,
+      typename GFS::Traits::OrderingTag
       >
     lookupNodeTransformation(GFS* gfs, gfs_to_local_ordering<Params>* t, LeafGridFunctionSpaceTag tag);
 

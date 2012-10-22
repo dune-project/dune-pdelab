@@ -72,7 +72,7 @@ int main(int argc, char** argv)
     typedef Dune::PDELab::ISTLVectorBackend<> VBE;
     typedef Dune::PDELab::NoConstraints NoConstraints;
 
-    typedef Dune::PDELab::GridFunctionSpace<GV,FEM,NoConstraints,VBE> GFS;
+    typedef Dune::PDELab::GridFunctionSpace<GV,FEM,NoConstraints,VBE,Dune::PDELab::NonOverlappingLeafOrderingTag> GFS;
     GFS gfs(gv,fem);
     gfs.name("x");
 
