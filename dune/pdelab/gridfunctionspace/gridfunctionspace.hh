@@ -49,7 +49,7 @@ namespace Dune {
     /**
      * This is based on a global FiniteElementMap
      */
-    template<typename G, typename L, typename C, typename B, class = void>
+    template<typename G, typename L, typename C, typename B>
     struct GridFunctionSpaceTraits
     {
       //! True if this grid function space is composed of others.
@@ -81,42 +81,8 @@ namespace Dune {
 
       //! type representing constraints
       typedef C ConstraintsType;
+
     };
-
-#if 0
-    //! \brief collect types exported by a leaf grid function space
-    /**
-     * This is based on LocalFiniteElementMap
-     */
-    template<typename G, typename L, typename C, typename B>
-    struct GridFunctionSpaceTraits<G, L, C, B,
-             typename enable_if<AlwaysTrue<typename
-                   L::Traits::LocalFiniteElementType>::value>::type>
-    {
-      enum{
-        //! \brief True if this grid function space is composed of others.
-        isComposite = 0
-      };
-
-      //! \brief the grid view where grid function is defined upon
-      typedef G GridViewType;
-
-      //! \brief vector backend
-      typedef B BackendType;
-
-      //! \brief short cut for size type exported by Backend
-      typedef typename B::size_type SizeType;
-
-      //! \brief finite element map
-      typedef L FiniteElementMapType;
-
-      //! \brief finite element
-      typedef typename L::Traits::LocalFiniteElementType FiniteElementType;
-
-      //! \brief type representing constraints
-      typedef C ConstraintsType;
-    };
-#endif // 0
 
     class StdVectorBackend;
 
