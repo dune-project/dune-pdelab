@@ -89,7 +89,7 @@ namespace Dune {
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename T::Traits::PermTensorType tensor;
-        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
+        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
         tensor = param.A(eg.entity(),localcenter);
 
         // loop over quadrature points
@@ -164,7 +164,7 @@ namespace Dune {
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename T::Traits::PermTensorType tensor;
-        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
+        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
         tensor = param.A(eg.entity(),localcenter);
 
         // loop over quadrature points
@@ -223,7 +223,7 @@ namespace Dune {
         
         // evaluate boundary condition type
         Dune::GeometryType gtface = ig.geometryInInside().type();
-        Dune::FieldVector<DF,dim-1> facecenterlocal = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
+        Dune::FieldVector<DF,dim-1> facecenterlocal = Dune::GenericReferenceElements<DF,dim-1>::general(gtface).position(0,0);
         ConvectionDiffusionBoundaryConditions::Type bctype;
         bctype = param.bctype(ig.intersection(),facecenterlocal);
  
@@ -299,7 +299,7 @@ namespace Dune {
         
         // evaluate boundary condition type
         Dune::GeometryType gtface = ig.geometryInInside().type();
-        Dune::FieldVector<DF,dim-1> facecenterlocal = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
+        Dune::FieldVector<DF,dim-1> facecenterlocal = Dune::GenericReferenceElements<DF,dim-1>::general(gtface).position(0,0);
         ConvectionDiffusionBoundaryConditions::Type bctype;
         bctype = param.bctype(ig.intersection(),facecenterlocal);
  
@@ -464,9 +464,9 @@ namespace Dune {
         
         // evaluate permeability tensors
         const Dune::FieldVector<DF,dim>& 
-          inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
         const Dune::FieldVector<DF,dim>& 
-          outside_local = Dune::ReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
+          outside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
         typename T::Traits::PermTensorType A_s, A_n;
         A_s = param.A(*(ig.inside()),inside_local);
         A_n = param.A(*(ig.outside()),outside_local);
@@ -553,7 +553,7 @@ namespace Dune {
         
         // evaluate permeability tensors
         const Dune::FieldVector<DF,dim>& 
-          inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
         typename T::Traits::PermTensorType A_s;
         A_s = param.A(*(ig.inside()),inside_local);
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
@@ -570,7 +570,7 @@ namespace Dune {
 
         // evaluate boundary condition
         const Dune::FieldVector<DF,dim-1> 
-          face_local = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
+          face_local = Dune::GenericReferenceElements<DF,dim-1>::general(gtface).position(0,0);
         BCType bctype = param.bctype(ig.intersection(),face_local);
         if (bctype != ConvectionDiffusionBoundaryConditions::Neumann)
           return;
@@ -951,7 +951,7 @@ namespace Dune {
 
         // evaluate boundary condition
         const Dune::FieldVector<DF,dim-1> 
-          face_local = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
+          face_local = Dune::GenericReferenceElements<DF,dim-1>::general(gtface).position(0,0);
         BCType bctype = param.bctype(ig.intersection(),face_local);
         if (bctype != ConvectionDiffusionBoundaryConditions::Neumann)
           return;
