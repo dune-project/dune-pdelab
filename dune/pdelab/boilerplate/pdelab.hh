@@ -1180,6 +1180,57 @@ namespace Dune {
 
 
 
+        template<typename GO1, typename GO2>
+        class OneStepGlobalAssembler
+        {
+        public:
+            // export types
+            typedef typename GO1::GO::Traits::MatrixBackend MBE;
+            typedef Dune::PDELab::OneStepGridOperator<typename GO1::GO,typename GO2::GO> GO;
+            typedef typename GO::Jacobian MAT;
+
+            OneStepGlobalAssembler (GO1& go1, GO2& go2)
+            {
+                gop = shared_ptr<GO>(new GO(*go1,*go2));
+            }
+
+            // return grid reference
+            GO& getGO ()
+            {
+                return *gop;
+            }
+
+            // return grid reference const version
+            const GO& getGO () const
+            {
+                return *gop;
+            }
+
+            GO& operator*()
+            {
+                return *gop;
+            }
+
+            GO* operator->()
+            {
+                return gop.operator->();
+            }
+
+            const GO& operator*() const
+            {
+                return *gop;
+            }
+
+            const GO* operator->() const
+            {
+                return gop.operator->();
+            }
+
+        private:
+            shared_ptr<GO> gop;
+        };
+
+
         // packaging of the CG_AMG_SSOR solver: default version is sequential
         template<typename FS, typename ASS, SolverCategory::Category st = SolverCategory::sequential>
         class ISTLSolverBackend_CG_AMG_SSOR
