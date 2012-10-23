@@ -840,14 +840,23 @@ namespace Dune {
       double T;
       int verbose;
       bool no_adapt;
-      double refine_fraction;
-      double coarsen_fraction;
+      double refine_fraction_while_refinement;
+      double coarsen_fraction_while_refinement;
+      double coarsen_fraction_while_coarsening;
+      double timestep_decrease_factor;
+      double timestep_increase_factor;
+      double minenergy_rate;
 
       // results to be reported to the user after evaluating the error
       bool accept;
       bool adapt_dt;
       bool adapt_grid;
       double newdt;
+      double q_s, q_t;
+
+      // state variables
+      bool have_decreased_time_step;
+      bool have_refined_grid;
 
       // the only state variable: accumulated error
       double accumulated_estimated_error_squared;
@@ -856,20 +865,45 @@ namespace Dune {
       TimeAdaptationStrategy (double tol_, double T_, int verbose_=0)
         : scaling(16.0), optimistic_factor(1.0), coarsen_limit(0.5), balance_limit(0.33333), 
           tol(tol_), T(T_), verbose(verbose_), no_adapt(false), 
-          refine_fraction(0.7), coarsen_fraction(0.2),
+          refine_fraction_while_refinement(0.7),
+          coarsen_fraction_while_refinement(0.2), 
+          coarsen_fraction_while_coarsening(0.2), 
+          timestep_decrease_factor(0.5), timestep_increase_factor(1.5), 
           accept(false), adapt_dt(false), adapt_grid(false), newdt(1.0),
-          accumulated_estimated_error_squared(0.0)
+          have_decreased_time_step(false), have_refined_grid(false),
+          accumulated_estimated_error_squared(0.0),
+          minenergy_rate(0.0)
       {
       }
 
-      void setRefineFraction (double s)
+      void setTimeStepDecreaseFactor (double s)
       {
-        refine_fraction=s;
+        timestep_decrease_factor=s;
       }
 
-      void setCoarsenFraction (double s)
+      void setTimeStepIncreaseFactor (double s)
       {
-        coarsen_fraction=s;
+        timestep_increase_factor=s;
+      }
+
+      void setRefineFractionWhileRefinement (double s)
+      {
+        refine_fraction_while_refinement=s;
+      }
+
+      void setCoarsenFractionWhileRefinement (double s)
+      {
+        coarsen_fraction_while_refinement=s;
+      }
+
+      void setCoarsenFractionWhileCoarsening (double s)
+      {
+        coarsen_fraction_while_coarsening=s;
+      }
+
+      void setMinEnergyRate (double s)
+      {
+        minenergy_rate=s;
       }
 
       void setCoarsenLimit (double s)
@@ -922,13 +956,30 @@ namespace Dune {
         return newdt;
       }
 
+      double qs () const
+      {
+        return q_s;
+      }
+
+      double qt () const
+      {
+        return q_t;
+      }
+
       double accumulatedErrorSquared () const
       {
         return accumulated_estimated_error_squared;
       }
 
+      // to be called when new time step is done
+      void startTimeStep ()
+      {
+        have_decreased_time_step = false;
+        have_refined_grid = false;
+      }
+
       template<typename GM, typename X>
-      void evaluate_estimators (GM& grid, double time, double dt, const X& eta_space,  const X& eta_time)
+      void evaluate_estimators (GM& grid, double time, double dt, const X& eta_space,  const X& eta_time, double energy_timeslab)
       {
         accept=false;
         adapt_dt=false;
@@ -938,18 +989,20 @@ namespace Dune {
         double spatial_error = eta_space.one_norm();
         double temporal_error = scaling*eta_time.one_norm();
         double sum = spatial_error + temporal_error;
-        double allowed = optimistic_factor*(tol*tol-accumulated_estimated_error_squared)*dt/(T-time);
-        double q_s = spatial_error/sum;
-        double q_t = temporal_error/sum;
+        //double allowed = optimistic_factor*(tol*tol-accumulated_estimated_error_squared)*dt/(T-time);
+        double allowed = tol*tol*(energy_timeslab+minenergy_rate*dt);
+        q_s = spatial_error/sum;
+        q_t = temporal_error/sum;
 
         // print some statistics
         if (verbose>0)
           std::cout << "+++"
                     << " q_s=" << q_s
                     << " q_t=" << q_t
-                    << " sum=" << sum
-                    << " allowed=" << allowed
+                    << " sum/allowed=" << sum/allowed
+                    // << " allowed=" << allowed
                     << " estimated error=" << sqrt(accumulated_estimated_error_squared+sum)
+                    << " energy_rate=" << energy_timeslab/dt
                     << std::endl;
 
         // for simplicity: a mode that does no adaptation at all
@@ -976,7 +1029,7 @@ namespace Dune {
                 if (q_t<balance_limit)
                   {
                     // spatial error is dominating => increase time step
-                    newdt = 2*dt;
+                    newdt = timestep_increase_factor*dt;
                     adapt_dt = true;
                     if (verbose>1) std::cout << "+++ spatial error dominates: increase time step" << std::endl;
                   }
@@ -985,7 +1038,7 @@ namespace Dune {
                     if (q_s>balance_limit)
                       {
                         // step sizes balanced: coarsen in time
-                        newdt = 2*dt;
+                        newdt = timestep_increase_factor*dt;
                         adapt_dt = true;
                         if (verbose>1) std::cout << "+++ increasing time step" << std::endl;
                       }
@@ -993,7 +1046,8 @@ namespace Dune {
                     double eta_refine, eta_coarsen;
                     if (verbose>1) std::cout << "+++ mark grid for coarsening" << std::endl;
                     //error_distribution(eta_space,20);
-                    Dune::PDELab::error_fraction(eta_space,coarsen_fraction,coarsen_fraction,eta_refine,eta_coarsen);
+                    Dune::PDELab::error_fraction(eta_space,coarsen_fraction_while_coarsening,
+                                                 coarsen_fraction_while_coarsening,eta_refine,eta_coarsen);
                     Dune::PDELab::mark_grid_for_coarsening(grid,eta_space,eta_refine,eta_coarsen,verbose);
                     adapt_grid = true;
                   }
@@ -1004,7 +1058,7 @@ namespace Dune {
                 if (q_t<balance_limit)
                   {
                     // spatial error is dominating => increase time step
-                    newdt = 1.25*dt;
+                    newdt = timestep_increase_factor*dt;
                     adapt_dt = true;
                     if (verbose>1) std::cout << "+++ spatial error dominates: increase time step" << std::endl;
                   }
@@ -1016,31 +1070,38 @@ namespace Dune {
             if (verbose>1) std::cout << "+++ will redo time step" << std::endl;
             if (q_t>1-balance_limit)
               {
-                // temporal error is dominating => deacrease time step only
-                newdt = 0.5*dt;
+                // temporal error is dominating => decrease time step only
+                newdt = timestep_decrease_factor*dt;
                 adapt_dt = true;
-                if (verbose>1) std::cout << "+++ deacreasing time step only" << std::endl;
+                have_decreased_time_step = true;
+                if (verbose>1) std::cout << "+++ decreasing time step only" << std::endl;
               }
             else
               {
                 if (q_t<balance_limit)
                   {
-                    // time steps size not balanced (too small)
-                    newdt = 1.5*dt;
-                    adapt_dt = true;
-                    if (verbose>1) std::cout << "+++ increasing time step" << std::endl;
+                    if (!have_decreased_time_step)
+                      {
+                        // time steps size not balanced (too small)
+                        newdt = timestep_increase_factor*dt;
+                        adapt_dt = true;
+                        if (verbose>1) std::cout << "+++ increasing time step" << std::endl;
+                      }
                   }
                 else
                   {
                     // step sizes balanced: refine in time as well
-                    newdt = 0.5*dt;
+                    newdt = timestep_decrease_factor*dt;
                     adapt_dt = true;
+                    have_decreased_time_step = true;
                     if (verbose>1) std::cout << "+++ decreasing time step" << std::endl;
                   }
                 // refine grid in space
                 double eta_refine, eta_coarsen;
-                if (verbose>1) std::cout << "+++ mark grid for refinement and coarsening" << std::endl;
-                Dune::PDELab::error_fraction(eta_space,refine_fraction,coarsen_fraction,eta_refine,eta_coarsen);
+                if (verbose>1) std::cout << "+++ BINGO mark grid for refinement and coarsening" << std::endl;
+                //error_distribution(eta_space,20);
+                Dune::PDELab::error_fraction(eta_space,refine_fraction_while_refinement,
+                                             coarsen_fraction_while_refinement,eta_refine,eta_coarsen,0);
                 Dune::PDELab::mark_grid(grid,eta_space,eta_refine,eta_coarsen,verbose);
                 adapt_grid = true;
               }
