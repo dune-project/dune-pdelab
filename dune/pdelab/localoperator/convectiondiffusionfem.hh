@@ -699,6 +699,7 @@ namespace Dune {
         // loop over quadrature points
         RF sum(0.0);
         RF fsum_up(0.0);
+        RF fsum_mid(0.0);
         RF fsum_down(0.0);
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
@@ -722,16 +723,18 @@ namespace Dune {
             typename T::Traits::RangeFieldType f_mid = param.f(eg.entity(),it->position());
             param.setTime(time+dt);
             typename T::Traits::RangeFieldType f_up = param.f(eg.entity(),it->position());
+            RF f_average = (1.0/6.0)*f_down + (2.0/3.0)*f_mid + (1.0/6.0)*f_up;
 
             // integrate f-f_average
-            fsum_down += (f_down-f_mid)*(f_down-f_mid)*factor;
-            fsum_up += (f_up-f_mid)*(f_up-f_mid)*factor;
+            fsum_down += (f_down-f_average)*(f_down-f_average)*factor;
+            fsum_mid += (f_mid-f_average)*(f_mid-f_average)*factor;
+            fsum_up += (f_up-f_average)*(f_up-f_average)*factor;
           }
 
         // accumulate cell indicator 
         DF h_T = diameter(eg.geometry());
         r.accumulate(lfsv,0,(h_T*h_T/dt)*sum); // h^2*k_n||jump/k_n||^2
-        r.accumulate(lfsv,0,h_T*h_T*dt*0.5*(fsum_down+fsum_up)); // h^2*||f-time_average(f)||^2_0_s_t
+        r.accumulate(lfsv,0,h_T*h_T * dt*((1.0/6.0)*fsum_down+(2.0/3.0)*fsum_mid+(1.0/6.0)*fsum_up) ); // h^2*||f-time_average(f)||^2_0_s_t
       }
 
       void clearCmax ()
@@ -868,6 +871,7 @@ namespace Dune {
         RF sum(0.0);
         RF sum_grad(0.0);
         RF fsum_grad_up(0.0);
+        RF fsum_grad_mid(0.0);
         RF fsum_grad_down(0.0);
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
@@ -909,18 +913,23 @@ namespace Dune {
             for (size_type i=0; i<lfsu.size(); i++) gradf_mid.axpy(f_mid[i],gradphi[i]);
             Dune::FieldVector<RF,dim> gradf_up(0.0);
             for (size_type i=0; i<lfsu.size(); i++) gradf_up.axpy(f_up[i],gradphi[i]);
+            Dune::FieldVector<RF,dim> gradf_average(0.0);
+            for (size_type i=0; i<lfsu.size(); i++) 
+              gradf_average.axpy((1.0/6.0)*f_down[i]+(2.0/3.0)*f_mid[i]+(1.0/6.0)*f_up[i],gradphi[i]);
 
             // integrate grad(f-f_average)
-            gradf_down -= gradf_mid;
+            gradf_down -= gradf_average;
             fsum_grad_down += (gradf_down*gradf_down)*factor;
-            gradf_up -= gradf_mid;
+            gradf_mid -= gradf_average;
+            fsum_grad_mid += (gradf_mid*gradf_mid)*factor;
+            gradf_up -= gradf_average;
             fsum_grad_up += (gradf_up*gradf_up)*factor;
           }
 
         // accumulate cell indicator 
         DF h_T = diameter(eg.geometry());
         r.accumulate(lfsv,0,dt    * sum_grad);  // k_n*||grad(jump)||^2
-        r.accumulate(lfsv,0,dt*dt * dt*0.5*(fsum_grad_down+fsum_grad_up)); // k_n^2*||grad(f-time_average(f))||^2_s_t
+        r.accumulate(lfsv,0,dt*dt * dt*((1.0/6.0)*fsum_grad_down+(2.0/3.0)*fsum_grad_mid+(1.0/6.0)*fsum_grad_up)); // k_n^2*||grad(f-time_average(f))||^2_s_t
       }
 
       // boundary integral depending on test and ansatz functions
