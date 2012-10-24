@@ -14,38 +14,103 @@
 namespace Dune {
   namespace PDELab {
 
+    //! Communication descriptor for sending one item of type E per DOF.
+    template<typename E>
+    struct DOFDataCommunicationDescriptor
+    {
 
-    /// \brief implement a data handle with a grid function space
-    /// \tparam GFS a grid function space
-    /// \tparam V   a vector container associated with the GFS
-    /// \tparam T   gather/scatter methods with argumemts buffer, and data
-    template<typename GFS, typename V, typename GatherScatter, typename E = typename V::ElementType>
+      typedef E DataType;
+
+      template<typename GFS>
+      bool contains(const GFS& gfs, int dim, int codim) const
+      {
+        return gfs.dataHandleContains(dim,codim);
+      }
+
+      template<typename GFS>
+      bool fixedSize(const GFS& gfs, int dim, int codim) const
+      {
+        return gfs.dataHandleFixedSize(dim,codim);
+      }
+
+      template<typename GFS, typename Entity>
+      std::size_t size(const GFS& gfs, const Entity& e) const
+      {
+        return gfs.dataHandleSize(e);
+      }
+
+    };
+
+    //! Communication descriptor for sending count items of type E per entity with attached DOFs.
+    template<typename E>
+    struct EntityDataCommunicationDescriptor
+    {
+
+      typedef E DataType;
+
+      template<typename GFS>
+      bool contains(const GFS& gfs, int dim, int codim) const
+      {
+        return gfs.dataHandleContains(dim,codim);
+      }
+
+      template<typename GFS>
+      bool fixedSize(const GFS& gfs, int dim, int codim) const
+      {
+        return true;
+      }
+
+      template<typename GFS, typename Entity>
+      std::size_t size(const GFS& gfs, const Entity& e) const
+      {
+        return gfs.dataHandleContains(Entity::dimension,Entity::codimension) ? _count : 0;
+      }
+
+      explicit EntityDataCommunicationDescriptor(std::size_t count = 1)
+        : _count(count)
+      {}
+
+    private:
+
+      const std::size_t _count;
+
+    };
+
+    //! Implement a data handle with a grid function space.
+    /**
+     * \tparam GFS                      a grid function space
+     * \tparam V                        a vector container associated with the GFS
+     * \tparam GatherScatter            gather/scatter methods with argumemts buffer, and data
+     * \tparam CommunicationDescriptor  A descriptor for the communication structure
+     */
+    template<typename GFS, typename V, typename GatherScatter, typename CommunicationDescriptor = DOFDataCommunicationDescriptor<typename V::ElementType> >
     class GFSDataHandle
-      : public Dune::CommDataHandleIF<GFSDataHandle<GFS,V,GatherScatter,E>,E>
+      : public Dune::CommDataHandleIF<GFSDataHandle<GFS,V,GatherScatter,CommunicationDescriptor>,typename CommunicationDescriptor::DataType>
     {
 
     public:
 
-      typedef E DataType;
+      typedef typename CommunicationDescriptor::DataType DataType;
       typedef typename GFS::Traits::SizeType size_type;
 
-      GFSDataHandle(const GFS& gfs, V& v, GatherScatter gather_scatter = GatherScatter())
+      GFSDataHandle(const GFS& gfs, V& v, GatherScatter gather_scatter = GatherScatter(), CommunicationDescriptor communication_descriptor = CommunicationDescriptor())
         : _gfs(gfs)
         , _index_cache(gfs)
         , _local_view(v)
         , _gather_scatter(gather_scatter)
+        , _communication_descriptor(communication_descriptor)
       {}
 
       //! returns true if data for this codim should be communicated
       bool contains(int dim, int codim) const
       {
-        return _gfs.dataHandleContains(dim,codim);
+        return _communication_descriptor.contains(_gfs,dim,codim);
       }
 
       //!  \brief returns true if size per entity of given dim and codim is a constant
       bool fixedsize(int dim, int codim) const
       {
-        return _gfs.dataHandleFixedSize(dim,codim);
+        return _communication_descriptor.fixedSize(_gfs,dim,codim);
       }
 
       /*!  \brief how many objects of type DataType have to be sent for a given entity
@@ -53,9 +118,9 @@ namespace Dune {
         Note: Only the sender side needs to know this size.
       */
       template<typename Entity>
-      size_type size(Entity& e) const
+      size_type size(const Entity& e) const
       {
-        return _gfs.dataHandleSize(e);
+        return _communication_descriptor.size(_gfs,e);
       }
 
       //! \brief pack data from user to message buffer
@@ -92,6 +157,7 @@ namespace Dune {
       mutable IndexCache _index_cache;
       mutable LocalView _local_view;
       mutable GatherScatter _gather_scatter;
+      CommunicationDescriptor _communication_descriptor;
 
     };
 
