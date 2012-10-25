@@ -444,6 +444,12 @@ namespace Dune {
         return ordering().maxLocalSize();
       }
 
+      //! Returns whether this GridFunctionSpace contains entities with PartitionType partition.
+      bool containsPartition(PartitionType partition) const
+      {
+        return ordering().containsPartition(partition);
+      }
+
       //! map index from our index set [0,size()-1] to root index set
       typename Traits::SizeType upMap (typename Traits::SizeType i) const
       {

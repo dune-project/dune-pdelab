@@ -13,6 +13,7 @@ namespace Dune {
 
     template<typename GV, typename DI, typename CI>
     class LocalOrderingBase
+      : public PartitionInfoProvider
     {
 
       friend struct collect_a_priori_fixed_size;
@@ -252,6 +253,9 @@ namespace Dune {
         , _children(Node::CHILDREN,nullptr)
       {
         TypeTree::applyToTree(node,extract_child_bases<LocalOrderingBase>(_children));
+
+        // We contain all grid PartitionTypes that any of our children contain.
+        mergePartitionSets(_children.begin(),_children.end());
       }
 
       bool fixedSize() const

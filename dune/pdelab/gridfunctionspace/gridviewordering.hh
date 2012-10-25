@@ -58,7 +58,10 @@ namespace Dune {
         : NodeT(local_ordering)
         , BaseT(*this,container_blocked,this)
         , _gv(this->template child<0>().gridView())
-      {}
+      {
+        // copy grid partition information from local ordering.
+        this->setPartitionSet(localOrdering());
+      }
 
       virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
       {

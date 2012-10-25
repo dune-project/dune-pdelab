@@ -142,6 +142,12 @@ namespace Dune {
         return gfs().ordering().maxLocalSize();
       }
 
+      //! Returns whether this GridFunctionSpace contains entities with PartitionType partition.
+      bool containsPartition(PartitionType partition) const
+      {
+        return gfs().ordering().containsPartition(partition);
+      }
+
       //! get grid view
       const typename Traits::GridViewType& gridview () const DUNE_DEPRECATED
       {

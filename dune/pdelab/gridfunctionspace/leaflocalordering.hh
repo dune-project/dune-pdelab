@@ -32,7 +32,10 @@ namespace Dune {
         : BaseT(*this,backend_blocked)
         , _fem(fem)
         , _gv(gv)
-      {}
+      {
+        // Extract contained grid PartitionTypes from OrderingTag.
+        this->setPartitionSet(OrderingTag::partition_mask);
+      }
 
       const typename Traits::GridView& gridView() const
       {

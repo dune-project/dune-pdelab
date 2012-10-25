@@ -14,6 +14,7 @@ namespace Dune {
 
     template<typename DI, typename CI>
     class OrderingBase
+      : public PartitionInfoProvider
     {
 
     public:
@@ -106,6 +107,9 @@ namespace Dune {
         , _delegate(delegate)
       {
         TypeTree::applyToTree(node,extract_child_bases<OrderingBase>(_children));
+
+        // We contain all grid PartitionTypes that any of our children contain.
+        mergePartitionSets(_children.begin(),_children.end());
       }
 
       bool container_blocked() const

@@ -15,6 +15,7 @@ namespace Dune {
     template<typename OrderingTag, typename FEM, typename GV, typename DI, typename CI>
     class DirectLeafLocalOrdering
       : public TypeTree::LeafNode
+      , public PartitionInfoProvider
     {
 
       template<typename>
@@ -94,7 +95,10 @@ namespace Dune {
         , _gv(gv)
         , _fixed_size(false)
         , _container_blocked(false)
-      {}
+      {
+        // Extract contained grid PartitionTypes from OrderingTag.
+        this->setPartitionSet(OrderingTag::partition_mask);
+      }
 
       const typename Traits::GridView& gridView() const
       {
