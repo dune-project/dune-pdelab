@@ -664,7 +664,58 @@ namespace Dune {
 
     namespace istl {
 
+      // ********************************************************************************
+      // Helper functions for uniform access to ISTL containers
+      //
+      // The following suite of raw() functions should be used in places where an
+      // algorithm might work on either the bare ISTL container or the PDELab
+      // wrapper and has to access the bare container.
+      // ********************************************************************************
+
+      template<typename V>
+      V& raw(V& v)
+      {
+        return v;
+      }
+
+      template<typename GFS, typename C>
+      typename ISTLBlockVectorContainer<GFS,C>::Container&
+      raw(ISTLBlockVectorContainer<GFS,C>& v)
+      {
+        return v.base();
+      }
+
+      template<typename V>
+      const V& raw(const V& v)
+      {
+        return v;
+      }
+
+      template<typename GFS, typename C>
+      const typename ISTLBlockVectorContainer<GFS,C>::Container&
+      raw(const ISTLBlockVectorContainer<GFS,C>& v)
+      {
+        return v.base();
+      }
+
+      template<typename GFSU, typename GFSV, typename C>
+      typename ISTLMatrixContainer<GFSU,GFSV,C>::Container&
+      raw(ISTLMatrixContainer<GFSU,GFSV,C>& m)
+      {
+        return m.base();
+      }
+
+      template<typename GFSU, typename GFSV, typename C>
+      const typename ISTLMatrixContainer<GFSU,GFSV,C>::Container&
+      raw(const ISTLMatrixContainer<GFSU,GFSV,C>& m)
+      {
+        return m.base();
+      }
+
+
+      // ********************************************************************************
       // TMPs for deducing ISTL block structure from GFS backends
+      // ********************************************************************************
 
       // tag dispatch switch on GFS tag for per-node functor - general version
       template<typename E,typename Node, typename Tag>
