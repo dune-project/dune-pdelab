@@ -181,11 +181,27 @@ namespace Dune {
       template<typename MessageBuffer, typename Entity, typename LocalView>
       bool scatter(MessageBuffer& buff, size_type n, const Entity& e, LocalView& local_view) const
       {
-        if (local_view.size() != n)
-          DUNE_THROW(Exception,"size mismatch in generic data handle");
-        for (std::size_t i = 0; i < local_view.size(); ++i)
-          _gather_scatter.scatter(buff,local_view[i]);
-        return true;
+        if (local_view.cache().gridFunctionSpace().containsPartition(e.partitionType()))
+          {
+            if (local_view.size() != n)
+              DUNE_THROW(Exception,"size mismatch in GridFunctionSpace data handle, have " << local_view.size() << "DOFs, but received " << n);
+
+            for (std::size_t i = 0; i < local_view.size(); ++i)
+              _gather_scatter.scatter(buff,local_view[i]);
+            return true;
+          }
+        else
+          {
+            if (local_view.size() != 0)
+              DUNE_THROW(Exception,"expected no DOFs in partition '" << e.partitionType() << "', but have " << local_view.size());
+
+            for (std::size_t i = 0; i < local_view.size(); ++i)
+              {
+                typename LocalView::ElementType dummy;
+                buff.read(dummy);
+              }
+            return false;
+          }
       }
 
       DataGatherScatter(GatherScatter gather_scatter = GatherScatter())
@@ -218,11 +234,27 @@ namespace Dune {
       template<typename MessageBuffer, typename Entity, typename LocalView>
       bool scatter(MessageBuffer& buff, size_type n, const Entity& e, LocalView& local_view) const
       {
-        if (local_view.size() != n)
-          DUNE_THROW(Exception,"size mismatch in generic data handle");
-        for (std::size_t i = 0; i < local_view.size(); ++i)
-          _gather_scatter.scatter(buff,e,local_view[i]);
-        return true;
+        if (local_view.cache().gridFunctionSpace().containsPartition(e.partitionType()))
+          {
+            if (local_view.size() != n)
+              DUNE_THROW(Exception,"size mismatch in GridFunctionSpace data handle, have " << local_view.size() << "DOFs, but received " << n);
+
+            for (std::size_t i = 0; i < local_view.size(); ++i)
+              _gather_scatter.scatter(buff,e,local_view[i]);
+            return true;
+          }
+        else
+          {
+            if (local_view.size() != 0)
+              DUNE_THROW(Exception,"expected no DOFs in partition '" << e.partitionType() << "', but have " << local_view.size());
+
+            for (std::size_t i = 0; i < local_view.size(); ++i)
+              {
+                typename LocalView::ElementType dummy;
+                buff.read(dummy);
+              }
+            return false;
+          }
       }
 
       DataEntityGatherScatter(GatherScatter gather_scatter = GatherScatter())
@@ -255,11 +287,28 @@ namespace Dune {
       template<typename MessageBuffer, typename Entity, typename LocalView>
       bool scatter(MessageBuffer& buff, size_type n, const Entity& e, LocalView& local_view) const
       {
-        if (local_view.size() != n)
-          DUNE_THROW(Exception,"size mismatch in generic data handle");
-        for (std::size_t i = 0; i < local_view.size(); ++i)
-          _gather_scatter.scatter(buff,local_view.cache().container_index(i),local_view[i]);
-        return true;
+        if (local_view.cache().gridFunctionSpace().containsPartition(e.partitionType()))
+          {
+            if (local_view.size() != n)
+              DUNE_THROW(Exception,"size mismatch in GridFunctionSpace data handle, have " << local_view.size() << "DOFs, but received " << n);
+
+            for (std::size_t i = 0; i < local_view.size(); ++i)
+              _gather_scatter.scatter(buff,local_view.cache().container_index(i),local_view[i]);
+
+            return true;
+          }
+        else
+          {
+            if (local_view.size() != 0)
+              DUNE_THROW(Exception,"expected no DOFs in partition '" << e.partitionType() << "', but have " << local_view.size());
+
+            for (std::size_t i = 0; i < local_view.size(); ++i)
+              {
+                typename LocalView::ElementType dummy;
+                buff.read(dummy);
+              }
+            return false;
+          }
       }
 
       DataContainerIndexGatherScatter(GatherScatter gather_scatter = GatherScatter())
