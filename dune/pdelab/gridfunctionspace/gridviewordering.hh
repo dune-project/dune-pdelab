@@ -54,8 +54,8 @@ namespace Dune {
       }
 
 
-      LeafGridViewOrdering(const typename NodeT::NodeStorage& localOrdering, bool container_blocked)
-        : NodeT(localOrdering)
+      LeafGridViewOrdering(const typename NodeT::NodeStorage& local_ordering, bool container_blocked)
+        : NodeT(local_ordering)
         , BaseT(*this,container_blocked,this)
         , _gv(this->template child<0>().gridView())
       {}
