@@ -34,30 +34,90 @@ namespace Dune {
      */
     struct LexicographicOrderingTag { };
 
+    //! Mixin indicating whether a leaf GridFunctionSpace should never assume a const ordering size.
     template<bool v>
     struct NoConstOrderingSize
     {
       static const bool no_const_ordering_size = v;
     };
 
-    /** \brief Tag indicating an arbitrary number of unkowns per entity.
+    //! Helper for building the bitmask describing the grid partitions contained in a GFS.
+    /**
+     * This struct should be used to construct the bitmask for use by the
+     * PartitionInfoProvider.
+     */
+    template<int p0 = -1, int p1 = -1, int p2 = -1, int p3 = -1, int p4 = -1>
+    struct PartitionSelector
+    {
+
+      static const unsigned int partition_mask =
+        (p0 >= 0 ? 1 << p0 : 0) |
+        (p1 >= 0 ? 1 << p1 : 0) |
+        (p2 >= 0 ? 1 << p2 : 0) |
+        (p3 >= 0 ? 1 << p3 : 0) |
+        (p4 >= 0 ? 1 << p4 : 0);
+
+    };
+
+    //! Tag indicating a standard ordering for a leaf GridfunctionSpace.
+    /**
+     * Any additional policies regarding the ordering should be passed via
+     * the template parameter Params. By itself, this tag indicates that the
+     * user wants to use the standard, MultiIndex-based ordering infrastructure
+     * for this GridFunctionSpace.
      *
-     * class used to pass compile-time parameter to the GridFunctionSpace.
+     * \tparam Params  Parameter struct for passing additional static information
+     *                 to the ordering. This parameter will become the base class
+     *                 of the tag.
      */
     template<typename Params>
     struct LeafOrderingTag
       : public Params
     {};
 
+#ifndef DOXYGEN
+
+    typedef PartitionSelector<
+      InteriorEntity,
+      BorderEntity,
+      OverlapEntity,
+      FrontEntity,
+      GhostEntity
+      > AllPartitionSelector;
+
+    typedef PartitionSelector<
+      InteriorEntity,
+      BorderEntity
+      > NonOverlappingPartitionSelector;
+
+#endif // DOXYGEN
+
+    //! Leaf ordering parameters for standard function spaces.
+    struct DefaultLeafOrderingParams
+      : public NoConstOrderingSize<false>
+      , public AllPartitionSelector
+    {};
+
+    //! Leaf ordering parameters for non-overlapping function spaces.
+    struct NonOverlappingLeafOrderingParams
+      : public NoConstOrderingSize<true>
+      , public NonOverlappingPartitionSelector
+    {};
+
+    //! Default ordering tag for a MultiIndex-based ordering with standard behavior.
     typedef LeafOrderingTag<
-      NoConstOrderingSize<false>
+      DefaultLeafOrderingParams
       > DefaultLeafOrderingTag;
 
     //! GridFunctionGeneralMapper is deprecated, use DefaultLeafOrderingTag instead.
+    /**
+     * \deprecated  Use DefaultLeafOrdering instead.
+     */
     typedef DefaultLeafOrderingTag GridFunctionGeneralMapper;
 
+    //! Ordering tag for a MultiIndex-based ordering on nonoverlapping grids with standard behavior.
     typedef LeafOrderingTag<
-      NoConstOrderingSize<true>
+      NonOverlappingLeafOrderingParams
       > NonOverlappingLeafOrderingTag;
 
     //! Tag indicating a function space with a single unknown attached to every
