@@ -4,8 +4,12 @@
 #define DUNE_PDELAB_GENERICDATAHANDLE_HH
 
 #include <vector>
+#include <set>
 
 #include<dune/common/exceptions.hh>
+#include <dune/common/mpihelper.hh>
+#include <dune/common/static_assert.hh>
+
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/grid/common/gridenums.hh>
 
@@ -478,81 +482,365 @@ namespace Dune {
       {}
     };
 
-    // assign degrees of freedoms to processors
-    // owner is never a ghost
-    class PartitionGatherScatter
-    {
-    public:
-      template<class MessageBuffer, class EntityType, class DataType>
-      void gather (MessageBuffer& buff, const EntityType& e, DataType& data) const
-      {
-        if (e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity)
-          data = (1<<24);
-        buff.write(data);
-      }
 
-      template<class MessageBuffer, class EntityType, class DataType>
-      void scatter (MessageBuffer& buff, const EntityType& e, DataType& data) const
-      {
-        DataType x;
-        buff.read(x);
-        if (e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity)
-          data = x;
-        else
-          data = std::min(data,x);
-      }
-    };
-
-    template<class GFS, class V>
-    class PartitionDataHandle
-      : public GFSDataHandle<GFS,V,DataEntityGatherScatter<PartitionGatherScatter> >
-    {
-      typedef GFSDataHandle<GFS,V,DataEntityGatherScatter<PartitionGatherScatter> > BaseT;
-
-    public:
-
-      PartitionDataHandle (const GFS& gfs_, V& v_)
-        : BaseT(gfs_,v_)
-      {
-        v_ = gfs_.gridView().comm().rank();
-      }
-    };
-
-    // compute dofs assigned to ghost entities
+    //! GatherScatter functor for marking ghost DOFs.
+    /**
+     * This data handle will mark all ghost DOFs (more precisely, all DOFs associated
+     * with entities not part of either the interior or the border partition).
+     *
+     * \note In order to work correctly, the data handle must be communicated on the
+     * Dune::InteriorBorder_All_Interface.
+     */
     class GhostGatherScatter
     {
     public:
-      template<class MessageBuffer, class EntityType, class DataType>
-      void gather (MessageBuffer& buff, const EntityType& e, DataType& data) const
+
+      template<typename MessageBuffer, typename Entity, typename LocalView>
+      bool gather(MessageBuffer& buff, const Entity& e, LocalView& local_view) const
       {
-        if (e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity)
-          data = 1;
-        buff.write(data);
+        // Figure out where we are...
+        const bool ghost = e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity;
+
+        // ... and send something (doesn't really matter what, we'll throw it away on the receiving side).
+        buff.write(ghost);
+
+        return false;
       }
 
-      template<class MessageBuffer, class EntityType, class DataType>
-      void scatter (MessageBuffer& buff, const EntityType& e, DataType& data) const
+      template<typename MessageBuffer, typename Entity, typename LocalView>
+      bool scatter(MessageBuffer& buff, std::size_t n, const Entity& e, LocalView& local_view) const
       {
-        DataType x;
-        buff.read(x);
-        if (e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity)
-          data = 1;
+        // Figure out where we are - we have to do this again on the receiving side due to the asymmetric
+        // communication interface!
+        const bool ghost = e.partitionType()!=Dune::InteriorEntity && e.partitionType()!=Dune::BorderEntity;
+
+        // drain buffer
+        bool dummy;
+        buff.read(dummy);
+
+        for (std::size_t i = 0; i < local_view.size(); ++i)
+            local_view[i] = ghost;
+
+        return true;
       }
+
     };
 
+    //! Data handle for marking ghost DOFs.
+    /**
+     * This data handle will mark all ghost DOFs (more precisely, all DOFs associated
+     * with entities not part of either the interior or the border partition).
+     *
+     * \note In order to work correctly, the data handle must be communicated on the
+     * Dune::InteriorBorder_All_Interface.
+     */
     template<class GFS, class V>
     class GhostDataHandle
-      : public Dune::PDELab::GFSDataHandle<GFS,V,DataEntityGatherScatter<GhostGatherScatter> >
+      : public Dune::PDELab::GFSDataHandle<GFS,
+                                           V,
+                                           GhostGatherScatter,
+                                           EntityDataCommunicationDescriptor<bool> >
     {
-      typedef Dune::PDELab::GFSDataHandle<GFS,V,DataEntityGatherScatter<GhostGatherScatter> > BaseT;
+      typedef Dune::PDELab::GFSDataHandle<
+        GFS,
+        V,
+        GhostGatherScatter,
+        EntityDataCommunicationDescriptor<bool>
+        > BaseT;
+
+      dune_static_assert((is_same<typename V::ElementType,bool>::value),
+                         "GhostDataHandle expects a vector of bool values");
 
     public:
 
-      GhostDataHandle (const GFS& gfs_, V& v_)
+      //! Creates a new GhostDataHandle.
+      /**
+       * Creates a new GhostDataHandle and by default initializes the result vector
+       * with the correct value of false. If you have already done that externally,
+       * you can skip the initialization.
+       *
+       * \param gfs_         The GridFunctionSpace to operate on.
+       * \param v_           The result vector.
+       * \param init_vector  Flag to control whether the result vector will be initialized.
+       */
+      GhostDataHandle(const GFS& gfs_, V& v_, bool init_vector = true)
         : BaseT(gfs_,v_)
       {
-        v_ = static_cast<typename V::ElementType>(0);
+        if (init_vector)
+          v_ = false;
       }
+    };
+
+
+    //! GatherScatter functor for creating a disjoint DOF partitioning.
+    /**
+     * This functor will associate each DOF with a unique rank, creating a nonoverlapping partitioning
+     * of the unknowns. The rank for a DOF is chosen by finding the lowest rank on which the associated
+     * grid entity belongs to either the interior or the border partition.
+     *
+     * \note In order to work correctly, the data handle must be communicated on the
+     * Dune::InteriorBorder_All_Interface and the result vector must be initialized with the MPI rank value.
+     */
+    template<typename RankIndex>
+    class DisjointPartitioningGatherScatter
+    {
+
+    public:
+
+      template<typename MessageBuffer, typename Entity, typename LocalView>
+      bool gather(MessageBuffer& buff, const Entity& e, LocalView& local_view) const
+      {
+        for (std::size_t i = 0; i < local_view.size(); ++i)
+          {
+            // We only gather from interior and border entities, so we can throw in our ownership
+            // claim without any further checks.
+            buff.write(_rank);
+          }
+        return true;
+      }
+
+      template<typename MessageBuffer, typename Entity, typename LocalView>
+      bool scatter(MessageBuffer& buff, std::size_t n, const Entity& e, LocalView& local_view) const
+      {
+        // Value used for DOFs with currently unknown rank.
+        const RankIndex unknown_rank = std::numeric_limits<RankIndex>::max();
+
+        // We can only own this DOF if it is either on the interior or border partition.
+        const bool is_interior_or_border = (e.partitionType()==Dune::InteriorEntity || e.partitionType()==Dune::BorderEntity);
+
+        for (std::size_t i = 0; i < local_view.size(); ++i)
+          {
+            // Get the currently stored owner rank for this DOF.
+            RankIndex current_rank = local_view[i];
+
+            // We only gather from interior and border entities, so we need to make sure
+            // we relinquish any ownership claims on overlap and ghost entities on the
+            // receiving side. We also need to make sure not to overwrite any data already
+            // received, so we only blank the rank value if the currently stored value is
+            // equal to our own rank.
+            if (!is_interior_or_border && current_rank == _rank)
+              current_rank = unknown_rank;
+
+            // Receive data.
+            RankIndex received_rank;
+            buff.read(received_rank);
+
+            // Assign DOFs to minimum rank value.
+            local_view[i] = std::min(current_rank,received_rank);
+          }
+        return true;
+      }
+
+      //! Create a DisjointPartitioningGatherScatter object.
+      /**
+       * \param rank  The MPI rank of the current process.
+       */
+      DisjointPartitioningGatherScatter(RankIndex rank)
+        : _rank(rank)
+      {}
+
+    private:
+
+      const RankIndex _rank;
+
+    };
+
+    //! GatherScatter data handle for creating a disjoint DOF partitioning.
+    /**
+     * This data handle will associate each DOF with a unique rank, creating a nonoverlapping partitioning
+     * of the unknowns. The rank for a DOF is chosen by finding the lowest rank on which the associated
+     * grid entity belongs to either the interior or the border partition.
+     *
+     * \note In order to work correctly, the data handle must be communicated on the
+     * Dune::InteriorBorder_All_Interface and the result vector must be initialized with the MPI rank value.
+     */
+    template<class GFS, class V>
+    class DisjointPartitioningDataHandle
+      : public Dune::PDELab::GFSDataHandle<GFS,
+                                           V,
+                                           DisjointPartitioningGatherScatter<
+                                             typename V::ElementType
+                                             >,
+                                           EntityDataCommunicationDescriptor<
+                                             typename V::ElementType
+                                             >
+                                           >
+    {
+      typedef Dune::PDELab::GFSDataHandle<
+        GFS,
+        V,
+        DisjointPartitioningGatherScatter<
+          typename V::ElementType
+          >,
+        EntityDataCommunicationDescriptor<
+          typename V::ElementType
+          >
+        > BaseT;
+
+    public:
+
+      //! Creates a new DisjointPartitioningDataHandle.
+      /**
+       * Creates a new DisjointPartitioningDataHandle and by default initializes the
+       * result vector with the current MPI rank. If you have already done that
+       * externally, you can skip the initialization.
+       *
+       * \param gfs_         The GridFunctionSpace to operate on.
+       * \param v_           The result vector.
+       * \param init_vector  Flag to control whether the result vector will be initialized.
+       */
+      DisjointPartitioningDataHandle(const GFS& gfs_, V& v_, bool init_vector = true)
+        : BaseT(gfs_,v_,DisjointPartitioningGatherScatter<typename V::ElementType>(gfs_.gridView().comm().rank()))
+      {
+        if (init_vector)
+          v_ = gfs_.gridView().comm().rank();
+      }
+    };
+
+
+    //! GatherScatter functor for marking shared DOFs.
+    /**
+     * This functor will mark all DOFs that exist on multiple processes.
+     *
+     * \note In order to work correctly, the data handle must be communicated on the
+     * Dune::All_All_Interface and the result vector must be initialized with false.
+     */
+    struct SharedDOFGatherScatter
+    {
+
+      template<typename MessageBuffer, typename Entity, typename LocalView>
+      bool gather(MessageBuffer& buff, const Entity& e, LocalView& local_view) const
+      {
+        buff.write(local_view.size() > 0);
+        return false;
+      }
+
+      template<typename MessageBuffer, typename Entity, typename LocalView>
+      bool scatter(MessageBuffer& buff, std::size_t n, const Entity& e, LocalView& local_view) const
+      {
+        bool remote_entity_has_dofs;
+        buff.read(remote_entity_has_dofs);
+
+        for (std::size_t i = 0; i < local_view.size(); ++i)
+          {
+            local_view[i] |= remote_entity_has_dofs;
+          }
+        return true;
+      }
+
+    };
+
+
+    //! Data handle for marking shared DOFs.
+    /**
+     * This data handle will mark all DOFs that exist on multiple processes.
+     *
+     * \note In order to work correctly, the data handle must be communicated on the
+     * Dune::All_All_Interface and the result vector must be initialized with false.
+     */
+    template<class GFS, class V>
+    class SharedDOFDataHandle
+      : public Dune::PDELab::GFSDataHandle<GFS,
+                                           V,
+                                           SharedDOFGatherScatter,
+                                           EntityDataCommunicationDescriptor<bool> >
+    {
+      typedef Dune::PDELab::GFSDataHandle<
+        GFS,
+        V,
+        SharedDOFGatherScatter,
+        EntityDataCommunicationDescriptor<bool>
+        > BaseT;
+
+      dune_static_assert((is_same<typename V::ElementType,bool>::value),
+                         "SharedDOFDataHandle expects a vector of bool values");
+
+    public:
+
+      //! Creates a new SharedDOFDataHandle.
+      /**
+       * Creates a new SharedDOFDataHandle and by default initializes the result vector
+       * with the correct value of false. If you have already done that externally,
+       * you can skip the initialization.
+       *
+       * \param gfs_         The GridFunctionSpace to operate on.
+       * \param v_           The result vector.
+       * \param init_vector  Flag to control whether the result vector will be initialized.
+       */
+      SharedDOFDataHandle(const GFS& gfs_, V& v_, bool init_vector = true)
+        : BaseT(gfs_,v_)
+      {
+        if (init_vector)
+          v_ = false;
+      }
+    };
+
+
+    //! Data handle for collecting set of neighboring MPI ranks.
+    /**
+     * This data handle collects the MPI ranks of all processes that share grid entities
+     * with attached DOFs.
+     *
+     * \note In order to work correctly, the data handle must be communicated on the
+     * Dune::All_All_Interface.
+     */
+    template<typename GFS, typename RankIndex>
+    class GFSNeighborDataHandle
+      : public Dune::CommDataHandleIF<GFSNeighborDataHandle<GFS,RankIndex>,RankIndex>
+    {
+
+      // We deliberately avoid using the GFSDataHandle here, as we don't want to incur the
+      // overhead of invoking the whole GFS infrastructure.
+
+    public:
+
+      typedef RankIndex DataType;
+      typedef typename GFS::Traits::SizeType size_type;
+
+      GFSNeighborDataHandle(const GFS& gfs, RankIndex rank, std::set<RankIndex>& neighbors)
+        : _gfs(gfs)
+        , _rank(rank)
+        , _neighbors(neighbors)
+      {}
+
+      bool contains(int dim, int codim) const
+      {
+        // Only create neighbor relations for codims used by the GFS.
+        return _gfs.dataHandleContains(dim,codim);
+      }
+
+      bool fixedsize(int dim, int codim) const
+      {
+        // We always send a single value, the MPI rank.
+        return true;
+      }
+
+      template<typename Entity>
+      size_type size(Entity& e) const
+      {
+        return 1;
+      }
+
+      template<typename MessageBuffer, typename Entity>
+      void gather(MessageBuffer& buff, const Entity& e) const
+      {
+        buff.write(_rank);
+      }
+
+      template<typename MessageBuffer, typename Entity>
+      void scatter(MessageBuffer& buff, const Entity& e, size_type n)
+      {
+        RankIndex rank;
+        buff.read(rank);
+        _neighbors.insert(rank);
+      }
+
+    private:
+
+      const GFS& _gfs;
+      const RankIndex _rank;
+      std::set<RankIndex>& _neighbors;
+
     };
 
 
