@@ -23,6 +23,34 @@
 #include <dune/pdelab/gridfunctionspace/entityblockedlocalordering.hh>
 #include <dune/pdelab/gridfunctionspace/leaflocalordering.hh>
 
+#include <dune/pdelab/constraints/constraints.hh>
+
+template<typename GFS>
+void check_ordering(const GFS& gfs)
+{
+    const typename GFS::Ordering& ordering = gfs.ordering();
+
+    Dune::PDELab::LocalFunctionSpace<GFS> lfs(gfs);
+
+    typedef typename GFS::Traits::GridView GV;
+
+    typename GV::template Codim<0>::Iterator it = gfs.gridView().template begin<0>();
+
+    lfs.bind(*it);
+
+    for (unsigned i = 0; i < lfs.size(); ++i)
+      {
+        const typename GFS::Ordering::Traits::DOFIndex& di = lfs.dofIndex(i);
+        typename GFS::Ordering::Traits::ContainerIndex ci;
+        ordering.map_index(di.view(),ci);
+        std::cout << di << "    " << ci << std::endl;
+      }
+    typedef typename Dune::PDELab::BackendVectorSelector<GFS,double>::Type V;
+    V x(gfs);
+    x = 0.0;
+    std::cout << std::endl;
+}
+
 
 // test function trees
 template<int dim>
@@ -43,19 +71,23 @@ struct test<2> {
     typedef Dune::PDELab::Q22DLocalFiniteElementMap<float,double> Q22DFEM;
     Q22DFEM q22dfem;
 
+    typedef Dune::PDELab::NoConstraints CON;
+
+    typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+
     // make a grid function space
-    typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS;
+    typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,CON,VBE> P0GFS;
     P0GFS p0gfs(gv,p0fem);
-    typedef Dune::PDELab::GridFunctionSpace<GV,Q12DFEM> GFS1;
+    typedef Dune::PDELab::GridFunctionSpace<GV,Q12DFEM,CON,VBE> GFS1;
     GFS1 gfs1(gv,q12dfem);
-    typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> GFS2;
+    typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM,CON,VBE> GFS2;
     GFS2 gfs2(gv,q22dfem);
 
-    typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,Dune::PDELab::StdVectorBackend> P1GFS;
+    typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,VBE> P1GFS;
 
     P1GFS p1gfs(gfs1,gfs1,gfs1);
 
-    typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,2,Dune::PDELab::StdVectorBackend> PGFS;
+    typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,2,VBE> PGFS;
 
     PGFS pgfs(p1gfs,p1gfs);
 
@@ -92,46 +124,25 @@ struct test<2> {
     */
     // make coefficent Vectors
 
-    auto po = pgfs.ordering();
-    po->update();
+    check_ordering(gfs1);
+    check_ordering(pgfs);
 
-    auto o1 = gfs1.ordering();
-    o1->update();
-
-    Dune::PDELab::LocalFunctionSpace<GFS1> lfs1(gfs1);
-
-    typename GV::template Codim<0>::Iterator it = gv.template begin<0>();
-
-    lfs1.bind(*it);
-
-    for (unsigned i = 0; i < lfs1.size(); ++i)
-      {
-        auto di = lfs1.dofIndex(i);
-        typename GFS1::Ordering::Traits::ContainerIndex ci;
-        gfs1.ordering()->map_index(di.view(),ci);
-        std::cout << di << "    " << ci << std::endl;
-      }
-    typedef typename Dune::PDELab::BackendVectorSelector<GFS1,double>::Type V1;
-    V1 x1(gfs1);
-    x1 = 0.0;
-
-    Dune::PDELab::LocalFunctionSpace<PGFS> plfs(pgfs);
-
-    plfs.bind(*it);
-
-    for (unsigned i = 0; i < plfs.size(); ++i)
-      {
-        auto di = plfs.dofIndex(i);
-        typename GFS1::Ordering::Traits::ContainerIndex ci;
-        po->map_index(di.view(),ci);
-        std::cout << di << "    " << ci << std::endl;
-      }
-
-    typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,Dune::PDELab::StdVectorBackend,Dune::PDELab::EntityBlockedOrderingTag> EBPGFS1;
-
+    typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,VBE,Dune::PDELab::EntityBlockedOrderingTag> EBPGFS1;
     EBPGFS1 ebpgfs1(gfs1);
 
-    auto ebo = ebpgfs1.ordering();
+    check_ordering(ebpgfs1);
+
+    typedef Dune::PDELab::CompositeGridFunctionSpace<
+      VBE,
+      Dune::PDELab::EntityBlockedOrderingTag,
+      GFS1,
+      EBPGFS1,
+      GFS1
+      > EBCGFS1;
+
+    EBCGFS1 ebcgfs1(gfs1,ebpgfs1,gfs1);
+
+    check_ordering(ebcgfs1);
 
     /*
     typedef typename Dune::PDELab::BackendVectorSelector<GFS2,double>::Type V2;
