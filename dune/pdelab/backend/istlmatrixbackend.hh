@@ -387,7 +387,7 @@ namespace Dune {
 
       typedef typename C::field_type ElementType;
       typedef ElementType E;
-      typedef C ContainerType;
+      typedef C Container;
       typedef C BaseT;
       typedef typename C::field_type field_type;
       typedef typename C::block_type block_type;
@@ -657,12 +657,12 @@ namespace Dune {
         return access_istl_matrix_element(istl::container_tag(_container),_container,ri,ci,ri.size()-1,ci.size()-1);
       }
 
-      const ContainerType& base() const
+      const Container& base() const
       {
         return _container;
       }
 
-      ContainerType& base()
+      Container& base()
       {
         return _container;
       }
@@ -681,7 +681,7 @@ namespace Dune {
 
     private:
 
-      ContainerType _container;
+      Container _container;
 
     };
 

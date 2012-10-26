@@ -196,8 +196,8 @@ void test (const GV& gv, const Mapper& mapper, std::string filename, const bool 
       if (solve)
         {
 
-          typedef typename M::ContainerType ISTLM;
-          typedef typename V::ContainerType ISTLV;
+          typedef typename M::Container ISTLM;
+          typedef typename V::Container ISTLV;
 
           // make ISTL solver
           Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());

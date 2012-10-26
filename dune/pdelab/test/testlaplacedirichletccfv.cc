@@ -155,8 +155,8 @@ void test (const GV& gv)
   r = 0.0;
   go.residual(x0,r);
 
-  typedef typename M::ContainerType ISTLM;
-  typedef typename V::ContainerType ISTLV;
+  typedef typename M::Container ISTLM;
+  typedef typename V::Container ISTLV;
 
   // make ISTL solver
   Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());

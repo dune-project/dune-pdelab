@@ -406,7 +406,7 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::ElementType reduction)
       {
-        typedef typename M::ContainerType ISTLM;
+        typedef typename M::Container ISTLM;
         Dune::SuperLU<ISTLM> solver(A.base(), verbose);
         Dune::InverseOperatorResult stat;
         solver.apply(z.base(), r.base(), stat);
