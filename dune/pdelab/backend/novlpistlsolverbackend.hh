@@ -960,14 +960,14 @@ namespace Dune {
       std::map<int,IdType> index2GID_;
     };
       
-    template<class GO, 
+    template<class GO,
              template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
     class ISTLBackend_NOVLP_BASE_PREC
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
-      
+
     public:
       /*! \brief Constructor.
 
@@ -1019,7 +1019,7 @@ namespace Dune {
         typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
         Smoother smoother(mat, steps, 1.0);
         typedef Dune::NonoverlappingSchwarzScalarProduct<VectorType,Comm> PSP;
-        PSP psp(oocc);      
+        PSP psp(oocc);
         typedef Dune::NonoverlappingSchwarzOperator<MatrixType,VectorType,VectorType,Comm> Operator;
         Operator oop(mat,oocc);
         typedef Dune::NonoverlappingBlockPreconditioner<Comm, Smoother> ParSmoother;
@@ -1044,7 +1044,7 @@ namespace Dune {
                                      Dune::InteriorBorder_InteriorBorder_Interface,
                                      Dune::ForwardCommunication);
         }
-        
+
         solver.apply(z,r,stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
@@ -1070,10 +1070,10 @@ namespace Dune {
 
     //! \addtogroup PDELab_novlpsolvers Nonoverlapping Solvers
     //! \{
-    
+
   /**
    * @brief Nonoverlapping parallel BiCGSTAB solver preconditioned by block SSOR.
-   * @tparam GO The type of the grid operator 
+   * @tparam GO The type of the grid operator
    * (or the fakeGOTraits class for the old grid operator space).
    *
    * The solver uses a NonoverlappingBlockPreconditioner with underlying
@@ -1087,10 +1087,10 @@ namespace Dune {
     : public ISTLBackend_NOVLP_BASE_PREC<GO,Dune::SeqSSOR, Dune::BiCGSTABSolver>
   {
     typedef typename GO::Traits::TrialGridFunctionSpace GFS;
-      
+
   public:
     /*! \brief make a linear solver object
-        
+
       \param[in] gfs_ a grid function space
       \param[in] maxiter_ maximum number of iterations to do
       \param[in] steps_ number of SSOR steps to apply as inner iteration
@@ -1110,10 +1110,10 @@ namespace Dune {
     : public ISTLBackend_NOVLP_BASE_PREC<GO,Dune::SeqSSOR, Dune::CGSolver>
   {
     typedef typename GO::Traits::TrialGridFunctionSpace GFS;
-      
+
   public:
     /*! \brief make a linear solver object
-        
+
       \param[in] gfs_ a grid function space
       \param[in] maxiter_ maximum number of iterations to do
       \param[in] steps_ number of SSOR steps to apply as inner iteration
@@ -1126,7 +1126,7 @@ namespace Dune {
   };
     //! \} Nonoverlapping Solvers
     //! \} group Backend
-    
+
     template<class GO,int s, template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
     class ISTLBackend_AMG_NOVLP
@@ -1158,7 +1158,7 @@ namespace Dune {
       {
         params.setDebugLevel(verbose_);
       }
-      
+
       void setparams(Parameters params_)
       {
         params = params_;
@@ -1172,7 +1172,7 @@ namespace Dune {
         psp.make_consistent(x);
         return psp.norm(x);
       }
-      
+
       void apply(M& A, V& z, V& r, typename V::ElementType reduction)
       {
         MatrixType& mat=A.base();
@@ -1197,7 +1197,7 @@ namespace Dune {
         smootherArgs.relaxationFactor = 1;
         //use noAccu or atOnceAccu
         Criterion criterion(params);
-        
+
         int verb=0;
         if (gfs.gridView().comm().rank()==0) verb=verbose;
         //only construct a new AMG if the matrix changes
@@ -1221,12 +1221,12 @@ namespace Dune {
         res.reduction  = stat.reduction;
         res.conv_rate  = stat.conv_rate;
       }
-      
+
       const Dune::PDELab::LinearSolverResult<double>& result() const
       {
         return res;
       }
-      
+
     private:
       const GFS& gfs;
       PHELPER phelper;
@@ -1238,13 +1238,13 @@ namespace Dune {
       bool firstapply;
       Dune::shared_ptr<AMG> amg;
     };
-    
+
     template<class GO, int s=96>
     class ISTLBackend_NOVLP_CG_AMG_SSOR
       : public ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::CGSolver>
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
-      
+
     public:
       ISTLBackend_NOVLP_CG_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000, 
                                     int verbose_=1, bool reuse_=false)
@@ -1257,7 +1257,7 @@ namespace Dune {
       : public ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
-      
+
     public:
       ISTLBackend_NOVLP_BCGS_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000,
                                       int verbose_=1, bool reuse_=false)
@@ -1270,7 +1270,7 @@ namespace Dune {
       : public ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::LoopSolver>
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
-      
+
     public:
       ISTLBackend_NOVLP_LS_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000, 
                                     int verbose_=1, bool reuse_=false)
