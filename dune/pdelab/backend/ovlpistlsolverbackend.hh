@@ -136,10 +136,10 @@ namespace Dune {
     {
     public:
       //! \brief The domain type of the preconditioner.
-      typedef typename Dune::PDELab::BackendVectorSelector<GFS,typename P::domain_type::field_type>::Type 
+      typedef typename Dune::PDELab::BackendVectorSelector<GFS,typename P::domain_type::field_type>::Type
       domain_type;
       //! \brief The range type of the preconditioner.
-      typedef typename Dune::PDELab::BackendVectorSelector<GFS,typename P::range_type::field_type>::Type 
+      typedef typename Dune::PDELab::BackendVectorSelector<GFS,typename P::range_type::field_type>::Type
       range_type;
 
       // define the category
@@ -355,12 +355,12 @@ namespace Dune {
       {
         return helper;
       }
-      
+
     private:
       const GFS& gfs;
       ParallelISTLHelper<GFS> helper;
     };
-    
+
 
     template<typename GFS, typename X>
     class OVLPScalarProduct
@@ -375,8 +375,8 @@ namespace Dune {
       {
         return implementation.dot(x,y);
       }
-      
-       virtual typename X::ElementType norm (const X& x)
+
+      virtual typename X::ElementType norm (const X& x)
       {
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
@@ -384,7 +384,7 @@ namespace Dune {
     private:
       const OVLPScalarProductImplementation<GFS>& implementation;
     };
-    
+
     template<class GFS, class C,
              template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
@@ -404,7 +404,7 @@ namespace Dune {
                                             int steps_=5, int verbose_=1)
         : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), c(c_), maxiter(maxiter_), steps(steps_), verbose(verbose_)
       {}
-      
+
       /*! \brief solve the given linear system
 
         \param[in] A the given matrix
@@ -441,7 +441,7 @@ namespace Dune {
       int steps;
       int verbose;
     };
-    
+
     // Base class for ILU0 as preconditioner
     template<class GFS, class C,
              template<class> class Solver>
@@ -459,7 +459,7 @@ namespace Dune {
       ISTLBackend_OVLP_ILU0_Base (const GFS& gfs_, const C& c_, unsigned maxiter_=5000, int verbose_=1)
         : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), c(c_), maxiter(maxiter_), verbose(verbose_)
       {}
-      
+
       /*! \brief solve the given linear system
 
         \param[in] A the given matrix
@@ -568,7 +568,7 @@ namespace Dune {
       {}
     };
 
-    //! \} Solver    
+    //! \} Solver
 
     template<class GFS, class C, template<typename> class Solver>
     class ISTLBackend_OVLP_SuperLU_Base
@@ -638,7 +638,7 @@ namespace Dune {
       : public ISTLBackend_OVLP_SuperLU_Base<GFS,CC,Dune::BiCGSTABSolver>
     {
     public:
-      
+
       /*! \brief make a linear solver object
 
         \param[in] gfs_ a grid function space
@@ -652,7 +652,7 @@ namespace Dune {
       {}
     };
 
-    /**    
+    /**
      * @brief Overlapping parallel CG solver with SuperLU preconditioner
      * @tparam GFS The Type of the GridFunctionSpace.
      * @tparam CC The Type of the Constraints Container.
@@ -662,7 +662,7 @@ namespace Dune {
       : public ISTLBackend_OVLP_SuperLU_Base<GFS,CC,Dune::CGSolver>
     {
     public:
-      
+
       /*! \brief make a linear solver object
 
         \param[in] gfs_ a grid function space
@@ -670,7 +670,7 @@ namespace Dune {
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      ISTLBackend_OVLP_CG_SuperLU (const GFS& gfs_, const CC& cc_, 
+      ISTLBackend_OVLP_CG_SuperLU (const GFS& gfs_, const CC& cc_,
                                               unsigned maxiter_=5000,
                                               int verbose_=1)
         : ISTLBackend_OVLP_SuperLU_Base<GFS,CC,Dune::CGSolver>(gfs_,cc_,maxiter_,verbose_)
@@ -697,7 +697,7 @@ namespace Dune {
       explicit ISTLBackend_OVLP_ExplicitDiagonal (const ISTLBackend_OVLP_ExplicitDiagonal& other_)
         : gfs(other_.gfs)
       {}
-      
+
       /*! \brief compute global norm of a vector
 
         \param[in] v the given vector
@@ -745,7 +745,7 @@ namespace Dune {
     //! \} Overlapping Solvers
 
     /**
-     * @brief traits class for using AMG with the old grid operator space 
+     * @brief traits class for using AMG with the old grid operator space
      * instead of the new grid operator
      * @tparam MatrixFT The field type of the matrix.
      * @tparam V The type of the BackendVectorSelector
@@ -789,7 +789,7 @@ namespace Dune {
       typedef Dune::Amg::Parameters Parameters;
 
     public:
-      ISTLBackend_AMG(const GFS& gfs_, unsigned maxiter_=5000, 
+      ISTLBackend_AMG(const GFS& gfs_, unsigned maxiter_=5000,
                       int verbose_=1, bool reuse_=false)
         : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), params(15,2000), verbose(verbose_), reuse(reuse_), firstapply(true)
       {
@@ -800,7 +800,7 @@ namespace Dune {
        /*! \brief set AMG parameters
 
         \param[in] params_ a parameter object of Type Dune::Amg::Parameters
-      */     
+      */
       void setparams(Parameters params_)
       {
         params = params_;
@@ -842,7 +842,7 @@ namespace Dune {
         smootherArgs.iterations = 1;
         smootherArgs.relaxationFactor = 1;
         Criterion criterion(params);
-        
+
         int verb=0;
         if (gfs.gridView().comm().rank()==0) verb=verbose;
         //only construct a new AMG if the matrix changes
@@ -884,7 +884,7 @@ namespace Dune {
 
     /**
      * @brief Overlapping parallel conjugate gradient solver preconditioned with AMG smoothed by SSOR
-     * @tparam GO The type of the grid operator 
+     * @tparam GO The type of the grid operator
      * (or the fakeGOTraits class for the old grid operator space).
      * @tparam s The bits to use for the global index.
      */
@@ -899,10 +899,10 @@ namespace Dune {
        * @param gfs_ The grid function space used.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
-       * @param reuse_ Set true, if the Matrix to be used is always identical 
+       * @param reuse_ Set true, if the Matrix to be used is always identical
        * (AMG aggregation is then only performed once).
        */
-      ISTLBackend_CG_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000, 
+      ISTLBackend_CG_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000,
                               int verbose_=1, bool reuse_=false)
         : ISTLBackend_AMG<GO, s, Dune::SeqSSOR, Dune::CGSolver>(gfs_, maxiter_,verbose_,reuse_)
       {}
@@ -910,7 +910,7 @@ namespace Dune {
 
     /**
      * @brief Overlapping parallel BiCGStab solver preconditioned with AMG smoothed by SSOR.
-     * @tparam GO The type of the grid operator 
+     * @tparam GO The type of the grid operator
      * (or the fakeGOTraits class for the old grid operator space).
      * @tparam s The bits to use for the globale index.
      */
@@ -925,7 +925,7 @@ namespace Dune {
        * @param gfs_ The grid function space used.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
-       * @param reuse_ Set true, if the Matrix to be used is always identical 
+       * @param reuse_ Set true, if the Matrix to be used is always identical
        * (AMG aggregation is then only performed once).
        */
       ISTLBackend_BCGS_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000,
@@ -935,7 +935,7 @@ namespace Dune {
     };
 
     //! \} Overlapping Solvers
-    
+
     //! \} group Backend
 
   } // namespace PDELab
