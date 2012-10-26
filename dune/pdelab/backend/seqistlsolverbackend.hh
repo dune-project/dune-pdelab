@@ -74,7 +74,7 @@ namespace Dune {
       template<class V>
       typename Dune::template FieldTraits<typename V::ElementType >::real_type norm(const V& v) const
       {
-        return v.base().two_norm();
+        return istl::raw(v).two_norm();
       }
     };
 
@@ -121,13 +121,13 @@ namespace Dune {
       {
         Dune::MatrixAdapter<typename M::BaseT,
                             typename V::BaseT,
-                            typename W::BaseT> opa(A.base());
+                            typename W::BaseT> opa(istl::raw(A));
         Preconditioner<typename M::BaseT,
                        typename V::BaseT,
-                       typename W::BaseT,1> prec(A.base(), 3, 1.0);
+                       typename W::BaseT,1> prec(istl::raw(A), 3, 1.0);
         Solver<typename V::BaseT> solver(opa, prec, reduction, maxiter, verbose);
         Dune::InverseOperatorResult stat;
-        solver.apply(z.base(), r.base(), stat);
+        solver.apply(istl::raw(z), istl::raw(r), stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -165,13 +165,13 @@ namespace Dune {
       {
         Dune::MatrixAdapter<typename M::BaseT,
                             typename V::BaseT,
-                            typename W::BaseT> opa(A.base());
+                            typename W::BaseT> opa(istl::raw(A));
         Dune::SeqILU0<typename M::BaseT,
                       typename V::BaseT,
-                      typename W::BaseT> ilu0(A.base(), 1.0);
+                      typename W::BaseT> ilu0(istl::raw(A), 1.0);
         Solver<typename V::BaseT> solver(opa, ilu0, reduction, maxiter, verbose);
         Dune::InverseOperatorResult stat;
-        solver.apply(z.base(), r.base(), stat);
+        solver.apply(istl::raw(z), istl::raw(r), stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -209,11 +209,11 @@ namespace Dune {
       {
         Dune::MatrixAdapter<typename M::BaseT,
                             typename V::BaseT,
-                            typename W::BaseT> opa(A.base());
-        Dune::SeqILUn<typename M::BaseT,V,W> ilu0(A.base(), n_, w_);
+                            typename W::BaseT> opa(istl::raw(A));
+        Dune::SeqILUn<typename M::BaseT,V,W> ilu0(istl::raw(A), n_, w_);
         Solver<V> solver(opa, ilu0, reduction, maxiter, verbose);
         Dune::InverseOperatorResult stat;
-        solver.apply(z.base(), r.base(), stat);
+        solver.apply(istl::raw(z), istl::raw(r), stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -407,9 +407,9 @@ namespace Dune {
       void apply(M& A, V& z, W& r, typename W::ElementType reduction)
       {
         typedef typename M::Container ISTLM;
-        Dune::SuperLU<ISTLM> solver(A.base(), verbose);
+        Dune::SuperLU<ISTLM> solver(istl::raw(A), verbose);
         Dune::InverseOperatorResult stat;
-        solver.apply(z.base(), r.base(), stat);
+        solver.apply(istl::raw(z), istl::raw(r), stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -444,7 +444,7 @@ namespace Dune {
       {
         Dune::SeqJac<typename M::BaseT,
                      typename V::BaseT,
-                     typename W::BaseT> jac(A.base(),1,1.0);
+                     typename W::BaseT> jac(istl::raw(A),1,1.0);
         jac.pre(z,r);
         jac.apply(z,r);
         jac.post(z);
@@ -495,7 +495,7 @@ namespace Dune {
       */
       typename V::ElementType norm (const V& v) const
       {
-        return v.base().two_norm();
+        return istl::raw(v).two_norm();
       }
 
       /*! \brief solve the given linear system
@@ -507,7 +507,7 @@ namespace Dune {
       */
       void apply(M& A, V& z, V& r, typename V::ElementType reduction)
       {
-        MatrixType& mat=A.base();
+        MatrixType& mat=istl::raw(A);
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
           Dune::Amg::FirstDiagonal> > Criterion;
         SmootherArgs smootherArgs;
@@ -524,7 +524,7 @@ namespace Dune {
         Dune::InverseOperatorResult stat;
 
         Solver<VectorType> solver(oop,*amg,reduction,maxiter,verbose);
-        solver.apply(z.base(),r.base(),stat);
+        solver.apply(istl::raw(z),istl::raw(r),stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
