@@ -13,15 +13,16 @@
 
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/finiteelementmap/p0fem.hh>
 #include <dune/pdelab/finiteelementmap/p1fem.hh>
 #include <dune/pdelab/finiteelementmap/q12dfem.hh>
 #include <dune/pdelab/finiteelementmap/q1fem.hh>
 #include <dune/pdelab/finiteelementmap/q22dfem.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/gridviewordering.hh>
-#include <dune/pdelab/gridfunctionspace/entityblockedlocalordering.hh>
+#include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
+
+#include <dune/pdelab/backend/istlvectorbackend.hh>
 
 #include <dune/pdelab/constraints/constraints.hh>
 

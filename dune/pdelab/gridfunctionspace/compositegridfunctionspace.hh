@@ -8,11 +8,9 @@
 
 #include <dune/pdelab/common/typetree/compositenodemacros.hh>
 #include <dune/pdelab/common/typetree/utility.hh>
-#include <dune/pdelab/gridfunctionspace/lexicographicordering.hh>
 #include <dune/pdelab/gridfunctionspace/powercompositegridfunctionspacebase.hh>
 #include <dune/pdelab/gridfunctionspace/datahandleprovider.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
-//#include <dune/pdelab/gridfunctionspace/compositeorderingutilities.hh>
 
 namespace Dune {
   namespace PDELab {

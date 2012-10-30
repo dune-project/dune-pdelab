@@ -54,6 +54,7 @@ AC_CONFIG_FILES([
   dune/pdelab/Makefile
   dune/pdelab/multistep/Makefile
   dune/pdelab/newton/Makefile
+  dune/pdelab/ordering/Makefile
   dune/pdelab/stationary/Makefile
   dune/pdelab/test/Makefile
   lib/Makefile

@@ -27,8 +27,8 @@
 #include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include <dune/pdelab/gridfunctionspace/gridviewordering.hh>
-#include <dune/pdelab/gridfunctionspace/lexicographicordering.hh>
+#include <dune/pdelab/ordering/gridviewordering.hh>
+#include <dune/pdelab/ordering/lexicographicordering.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/datahandleprovider.hh>
 #include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>

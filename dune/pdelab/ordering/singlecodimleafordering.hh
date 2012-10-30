@@ -1,10 +1,10 @@
 // -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=8 sw=2 sts=2:
 
-#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_SINGLECODIMLEAFORDERING_HH
-#define DUNE_PDELAB_GRIDFUNCTIONSPACE_SINGLECODIMLEAFORDERING_HH
+#ifndef DUNE_PDELAB_ORDERING_SINGLECODIMLEAFORDERING_HH
+#define DUNE_PDELAB_ORDERING_SINGLECODIMLEAFORDERING_HH
 
-#include <dune/pdelab/gridfunctionspace/orderingutility.hh>
+#include <dune/pdelab/ordering/utility.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 
 namespace Dune {
@@ -100,4 +100,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_GRIDFUNCTIONSPACE_SINGLECODIMLEAFORDERING_HH
+#endif // DUNE_PDELAB_ORDERING_SINGLECODIMLEAFORDERING_HH

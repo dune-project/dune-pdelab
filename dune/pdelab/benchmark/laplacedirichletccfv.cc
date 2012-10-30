@@ -40,7 +40,7 @@
 
 #include <dune/pdelab/gridfunctionspace/vtk.hh>
 #include <dune/pdelab/common/benchmarkhelper.hh>
-#include <dune/pdelab/gridfunctionspace/singlecodimleafordering.hh>
+#include <dune/pdelab/ordering/singlecodimleafordering.hh>
 #include <dune/common/parametertreeparser.hh>
 
 #include "../test/gridexamples.hh"

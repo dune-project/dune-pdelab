@@ -17,6 +17,7 @@ SUBDIRS =					\
 	localoperator			\
 	multistep				\
 	newton					\
+	ordering				\
 	stationary				\
 	test
 

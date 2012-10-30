@@ -34,7 +34,7 @@
 #include"../backend/seqistlsolverbackend.hh"
 
 #include"../gridoperator/gridoperator.hh"
-#include <dune/pdelab/gridfunctionspace/singlecodimleafordering.hh>
+#include <dune/pdelab/ordering/singlecodimleafordering.hh>
 #include <dune/pdelab/gridfunctionspace/vtk.hh>
 
 

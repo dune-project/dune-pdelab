@@ -1,8 +1,8 @@
 // -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=8 sw=2 sts=2:
 
-#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_ORDERINGUTILITY_HH
-#define DUNE_PDELAB_GRIDFUNCTIONSPACE_ORDERINGUTILITY_HH
+#ifndef DUNE_PDELAB_ORDERING_UTILITY_HH
+#define DUNE_PDELAB_ORDERING_UTILITY_HH
 
 #include <vector>
 #include <bitset>
@@ -12,7 +12,7 @@
 #include <dune/pdelab/common/typetree/traversal.hh>
 #include <dune/pdelab/common/typetree/accumulate_static.hh>
 
-#include "localfunctionspace.hh"
+#include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -434,4 +434,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_GRIDFUNCTIONSPACE_ORDERINGUTILITY_HH
+#endif // DUNE_PDELAB_ORDERING_UTILITY_HH

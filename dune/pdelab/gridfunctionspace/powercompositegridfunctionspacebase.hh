@@ -16,7 +16,8 @@
 #include <dune/pdelab/constraints/constraintstransformation.hh>
 
 #include <dune/pdelab/gridfunctionspace/tags.hh>
-#include <dune/pdelab/gridfunctionspace/lexicographicordering.hh>
+#include <dune/pdelab/ordering/lexicographicordering.hh>
+#include <dune/pdelab/ordering/entityblockedlocalordering.hh>
 
 namespace Dune {
   namespace PDELab {

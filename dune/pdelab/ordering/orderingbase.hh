@@ -1,11 +1,11 @@
 // -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=8 sw=2 sts=2:
 
-#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_ORDERINGDYNAMICBASE_HH
-#define DUNE_PDELAB_GRIDFUNCTIONSPACE_ORDERINGDYNAMICBASE_HH
+#ifndef DUNE_PDELAB_ORDERING_ORDERINGBASE_HH
+#define DUNE_PDELAB_ORDERING_ORDERINGBASE_HH
 
 #include <dune/common/shared_ptr.hh>
-#include <dune/pdelab/gridfunctionspace/orderingutility.hh>
+#include <dune/pdelab/ordering/utility.hh>
 
 #include <vector>
 
@@ -166,4 +166,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_GRIDFUNCTIONSPACE_ORDERINGDYNAMICBASE_HH
+#endif // DUNE_PDELAB_ORDERING_ORDERINGBASE_HH

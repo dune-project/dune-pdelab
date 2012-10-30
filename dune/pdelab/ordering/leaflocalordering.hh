@@ -1,11 +1,11 @@
 // -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=8 sw=2 sts=2:
 
-#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_LEAFLOCALORDERING_HH
-#define DUNE_PDELAB_GRIDFUNCTIONSPACE_LEAFLOCALORDERING_HH
+#ifndef DUNE_PDELAB_ORDERING_LEAFLOCALORDERING_HH
+#define DUNE_PDELAB_ORDERING_LEAFLOCALORDERING_HH
 
 #include <dune/pdelab/common/typetree/leafnode.hh>
-#include <dune/pdelab/gridfunctionspace/localorderingdynamicbase.hh>
+#include <dune/pdelab/ordering/localorderingbase.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -179,4 +179,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_GRIDFUNCTIONSPACE_LEAFLOCALORDERING_HH
+#endif // DUNE_PDELAB_ORDERING_LEAFLOCALORDERING_HH

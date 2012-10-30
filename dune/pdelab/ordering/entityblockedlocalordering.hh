@@ -1,8 +1,8 @@
 // -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=8 sw=2 sts=2:
 
-#ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_ENTITYBLOCKEDLOCALORDERING_HH
-#define DUNE_PDELAB_GRIDFUNCTIONSPACE_ENTITYBLOCKEDLOCALORDERING_HH
+#ifndef DUNE_PDELAB_ORDERING_ENTITYBLOCKEDLOCALORDERING_HH
+#define DUNE_PDELAB_ORDERING_ENTITYBLOCKEDLOCALORDERING_HH
 
 #include <cstddef>
 #include <ostream>
@@ -19,7 +19,7 @@
 #include <dune/pdelab/common/typetree/traversal.hh>
 #include <dune/pdelab/common/typetree/visitor.hh>
 
-#include <dune/pdelab/gridfunctionspace/gridviewordering.hh>
+#include <dune/pdelab/ordering/gridviewordering.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -398,4 +398,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_GRIDFUNCTIONSPACE_ENTITYBLOCKEDORDERING_HH
+#endif // DUNE_PDELAB_ORDERING_ENTITYBLOCKEDORDERING_HH
