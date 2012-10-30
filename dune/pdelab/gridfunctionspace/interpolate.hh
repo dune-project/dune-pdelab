@@ -15,7 +15,7 @@
 #include "../common/function.hh"
 
 #include "gridfunctionspace.hh"
-#include <dune/pdelab/gridfunctionspace/lfscontainerindexcache.hh>
+#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -200,7 +200,7 @@ namespace Dune {
       // make local function space
       typedef LocalFunctionSpace<GFS> LFS;
       LFS lfs(gfs);
-      typedef LFSContainerIndexCache<LFS> LFSCache;
+      typedef LFSIndexCache<LFS> LFSCache;
       LFSCache lfs_cache(lfs);
       typedef typename XG::template LocalView<LFSCache> XView;
 

@@ -15,7 +15,7 @@
 
 #include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/lfscontainerindexcache.hh>
+#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 
@@ -215,7 +215,7 @@ namespace Dune {
         {
           for (size_type i = 0; i < size(); ++i)
             {
-              accessBaseContainer(local_container)[i] = (*_container)[_lfs_cache->container_index(i)];
+              accessBaseContainer(local_container)[i] = (*_container)[_lfs_cache->containerIndex(i)];
             }
         }
 
@@ -224,7 +224,7 @@ namespace Dune {
         {
           for (size_type i = 0; i < size(); ++i)
             {
-              (*_container)[_lfs_cache->container_index(i)] = accessBaseContainer(local_container)[i];
+              (*_container)[_lfs_cache->containerIndex(i)] = accessBaseContainer(local_container)[i];
             }
         }
 
@@ -233,7 +233,7 @@ namespace Dune {
         {
           for (size_type i = 0; i < size(); ++i)
             {
-              (*_container)[_lfs_cache->container_index(i)] += accessBaseContainer(local_container)[i];
+              (*_container)[_lfs_cache->containerIndex(i)] += accessBaseContainer(local_container)[i];
             }
         }
 
@@ -243,7 +243,7 @@ namespace Dune {
           for (size_type i = 0; i < child_lfs.size(); ++i)
             {
               const size_type local_index = child_lfs.localIndex(i);
-              accessBaseContainer(local_container)[local_index] = (*_container)[_lfs_cache->container_index(local_index)];
+              accessBaseContainer(local_container)[local_index] = (*_container)[_lfs_cache->containerIndex(local_index)];
             }
         }
 
@@ -253,7 +253,7 @@ namespace Dune {
           for (size_type i = 0; i < child_lfs.size(); ++i)
             {
               const size_type local_index = child_lfs.localIndex(i);
-              (*_container)[_lfs_cache->container_index(local_index)] = accessBaseContainer(local_container)[local_index];
+              (*_container)[_lfs_cache->containerIndex(local_index)] = accessBaseContainer(local_container)[local_index];
             }
         }
 
@@ -263,7 +263,7 @@ namespace Dune {
           for (size_type i = 0; i < child_lfs.size(); ++i)
             {
               const size_type local_index = child_lfs.localIndex(i);
-              (*_container)[_lfs_cache->container_index(local_index)] += accessBaseContainer(local_container)[local_index];
+              (*_container)[_lfs_cache->containerIndex(local_index)] += accessBaseContainer(local_container)[local_index];
             }
         }
 
@@ -274,7 +274,7 @@ namespace Dune {
           for (size_type i = 0; i < child_lfs.size(); ++i)
             {
               const size_type local_index = child_lfs.localIndex(i);
-              accessBaseContainer(local_container)[i] = (*_container)[_lfs_cache->container_index(local_index)];
+              accessBaseContainer(local_container)[i] = (*_container)[_lfs_cache->containerIndex(local_index)];
             }
         }
 
@@ -284,7 +284,7 @@ namespace Dune {
           for (size_type i = 0; i < child_lfs.size(); ++i)
             {
               const size_type local_index = child_lfs.localIndex(i);
-              (*_container)[_lfs_cache->container_index(local_index)] = accessBaseContainer(local_container)[i];
+              (*_container)[_lfs_cache->containerIndex(local_index)] = accessBaseContainer(local_container)[i];
             }
         }
 
@@ -294,7 +294,7 @@ namespace Dune {
           for (size_type i = 0; i < child_lfs.size(); ++i)
             {
               const size_type local_index = child_lfs.localIndex(i);
-              (*_container)[_lfs_cache->container_index(local_index)] += accessBaseContainer(local_container)[i];
+              (*_container)[_lfs_cache->containerIndex(local_index)] += accessBaseContainer(local_container)[i];
             }
         }
 
@@ -305,22 +305,22 @@ namespace Dune {
 
         ElementType& operator[](size_type i)
         {
-          return (*_container)[_lfs_cache->container_index(i)];
+          return (*_container)[_lfs_cache->containerIndex(i)];
         }
 
         const ElementType& operator[](size_type i) const
         {
-          return (*_container)[_lfs_cache->container_index(i)];
+          return (*_container)[_lfs_cache->containerIndex(i)];
         }
 
         ElementType& operator[](const DOFIndex& di)
         {
-          return (*_container)[_lfs_cache->container_index(di)];
+          return (*_container)[_lfs_cache->containerIndex(di)];
         }
 
         const ElementType& operator[](const DOFIndex& di) const
         {
-          return (*_container)[_lfs_cache->container_index(di)];
+          return (*_container)[_lfs_cache->containerIndex(di)];
         }
 
         ElementType& operator[](const ContainerIndex& ci)
@@ -408,7 +408,7 @@ namespace Dune {
         {
           for (size_type i = 0; i < size(); ++i)
             {
-              accessBaseContainer(local_container)[i] = (*_container)[_lfs_cache->container_index(i)];
+              accessBaseContainer(local_container)[i] = (*_container)[_lfs_cache->containerIndex(i)];
             }
         }
 
@@ -418,7 +418,7 @@ namespace Dune {
           for (size_type i = 0; i < child_lfs.size(); ++i)
             {
               const size_type local_index = child_lfs.localIndex(i);
-              accessBaseContainer(local_container)[local_index] = (*_container)[_lfs_cache->container_index(local_index)];
+              accessBaseContainer(local_container)[local_index] = (*_container)[_lfs_cache->containerIndex(local_index)];
             }
         }
 
@@ -428,19 +428,19 @@ namespace Dune {
           for (size_type i = 0; i < child_lfs.size(); ++i)
             {
               const size_type local_index = child_lfs.localIndex(i);
-              accessBaseContainer(local_container)[i] = (*_container)[_lfs_cache->container_index(local_index)];
+              accessBaseContainer(local_container)[i] = (*_container)[_lfs_cache->containerIndex(local_index)];
             }
         }
 
 
         const ElementType& operator[](size_type i) const
         {
-          return (*_container)[_lfs_cache->container_index(i)];
+          return (*_container)[_lfs_cache->containerIndex(i)];
         }
 
         const ElementType& operator[](const DOFIndex& di) const
         {
-          return (*_container)[_lfs_cache->container_index(di)];
+          return (*_container)[_lfs_cache->containerIndex(di)];
         }
 
         const ElementType& operator[](const ContainerIndex& ci) const

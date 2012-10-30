@@ -17,7 +17,7 @@
 #include <dune/pdelab/constraints/constraintstransformation.hh> // backward compatibility
 #include"gridfunctionspace.hh"
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/lfscontainerindexcache.hh>
+#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -139,7 +139,7 @@ namespace Dune {
 	private:
 
       typedef LocalFunctionSpace<GFS> LFS;
-      typedef LFSContainerIndexCache<LFS> LFSCache;
+      typedef LFSIndexCache<LFS> LFSCache;
       typedef typename X::template ConstLocalView<LFSCache> XView;
 
 	  shared_ptr<GFS const> pgfs;

@@ -16,7 +16,7 @@
 
 #include <dune/pdelab/common/unordered_map.hh>
 #include <dune/pdelab/common/borderindexidcache.hh>
-#include <dune/pdelab/gridfunctionspace/entitycontainerindexcache.hh>
+#include <dune/pdelab/gridfunctionspace/entityindexcache.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -133,11 +133,11 @@ namespace Dune {
                ++it)
             {
               // skip constrained entries for now. TODO: Is this correct??
-              if (lfsv_cache.constrained(it->i()) || lfsu_cache.constrained(it->j()))
+              if (lfsv_cache.isConstrained(it->i()) || lfsu_cache.isConstrained(it->j()))
                 continue;
 
-              const typename LFSVCache::DOFIndex& di = lfsv_cache.dof_index(it->i());
-              const typename LFSUCache::DOFIndex& dj = lfsu_cache.dof_index(it->j());
+              const typename LFSVCache::DOFIndex& di = lfsv_cache.dofIndex(it->i());
+              const typename LFSUCache::DOFIndex& dj = lfsu_cache.dofIndex(it->j());
 
               size_type row_gt_index = GFSV::Ordering::Traits::DOFIndexAccessor::geometryType(di);
               size_type row_entity_index = GFSV::Ordering::Traits::DOFIndexAccessor::entityIndex(di);
@@ -234,7 +234,7 @@ namespace Dune {
         const GFSU& _gfsu;
         BorderPattern _border_pattern;
         bool _initialized;
-        mutable EntityContainerIndexCache<GFSV,true> _entity_cache;
+        mutable EntityIndexCache<GFSV,true> _entity_cache;
 
       };
 

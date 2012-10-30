@@ -1,16 +1,16 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_ENTITYCONTAINERINDEXCACHE_HH
-#define DUNE_PDELAB_ENTITYCONTAINERINDEXCACHE_HH
+#ifndef DUNE_PDELAB_ENTITYINDEXCACHE_HH
+#define DUNE_PDELAB_ENTITYINDEXCACHE_HH
 
-#include <dune/pdelab/gridfunctionspace/lfscontainerindexcache.hh>
+#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
 namespace Dune {
   namespace PDELab {
 
 
     template<typename GFS, bool map_dof_indices = false>
-    class EntityContainerIndexCache
+    class EntityIndexCache
     {
 
     public:
@@ -26,7 +26,7 @@ namespace Dune {
       typedef std::vector<CI> CIVector;
       typedef std::vector<DI> DIVector;
 
-      EntityContainerIndexCache(const GFS& gfs)
+      EntityIndexCache(const GFS& gfs)
         : _gfs(gfs)
         , _container_indices(gfs.maxLocalSize())
         , _dof_indices(map_dof_indices ? gfs.maxLocalSize() : 0)
@@ -45,65 +45,16 @@ namespace Dune {
         _size = _gfs.dataHandleIndices(e,_container_indices,_dof_indices,std::integral_constant<bool,map_dof_indices>());
       }
 
-
-      const DI& dof_index(size_type i) const
-      {
-        assert(map_dof_indices);
-        return _dof_indices[i];
-      }
-
       const DI& dofIndex(size_type i) const
       {
         assert(map_dof_indices);
         return _dof_indices[i];
       }
 
-      const CI& container_index(size_type i) const
-      {
-        return _container_indices[i];
-      }
-
       const CI& containerIndex(size_type i) const
       {
         return _container_indices[i];
       }
-
-      /*
-      const CI& container_index(const DI& i) const
-      {
-        // look up DOFIndex i
-        std::pair<typename CIMap::iterator,bool> r = _container_index_map.insert(std::make_pair(std::ref(i),CI()));
-
-        // i did not exist in the cache, map it into the newly inserted container index
-        if (r.second)
-            _lfs.gridFunctionSpace().ordering().map_index(i.view(),r.first->second);
-
-        // return cached container index
-        return r.first->second;
-      }
-
-      bool constrained(size_type i) const
-      {
-        return _dof_flags[i] & DOF_CONSTRAINED;
-      }
-
-      bool dirichlet_constraint(size_type i) const
-      {
-        return _dof_flags[i] & DOF_DIRICHLET;
-      }
-
-      ConstraintsIterator constraints_begin(size_type i) const
-      {
-        assert(constrained(i));
-        return _constraints_iterators[i].first;
-      }
-
-      ConstraintsIterator constraints_end(size_type i) const
-      {
-        assert(constrained(i));
-        return _constraints_iterators[i].second;
-      }
-      */
 
       const GridFunctionSpace& gridFunctionSpace() const
       {
@@ -127,4 +78,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_ENTITYCONTAINERINDEXCACHE_HH
+#endif // DUNE_PDELAB_ENTITYINDEXCACHE_HH

@@ -561,9 +561,9 @@ namespace Dune {
         // make local function space
         typedef LocalFunctionSpace<GFS> LFS;
         LFS lfs_e(gfs);
-        LFSContainerIndexCache<LFS> lfs_cache_e(lfs_e);
+        LFSIndexCache<LFS> lfs_cache_e(lfs_e);
         LFS lfs_f(gfs);
-        LFSContainerIndexCache<LFS> lfs_cache_f(lfs_f);
+        LFSIndexCache<LFS> lfs_cache_f(lfs_f);
 
         // get index set
         const typename GV::IndexSet& is=gfs.gridView().indexSet();

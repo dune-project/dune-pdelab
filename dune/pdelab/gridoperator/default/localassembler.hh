@@ -6,7 +6,7 @@
 #include <dune/pdelab/gridoperator/default/jacobianengine.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/common/typetree.hh>
-#include <dune/pdelab/gridfunctionspace/lfscontainerindexcache.hh>
+#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
 namespace Dune{
   namespace PDELab{
@@ -63,11 +63,11 @@ namespace Dune{
       // Types of local function spaces
       typedef Dune::PDELab::LocalFunctionSpace<GFSU, Dune::PDELab::TrialSpaceTag> LFSU;
       typedef Dune::PDELab::LocalFunctionSpace<GFSV, Dune::PDELab::TestSpaceTag> LFSV;
-      typedef LFSContainerIndexCache<LFSU,CU> LFSUCache;
-      typedef LFSContainerIndexCache<LFSV,CV> LFSVCache;
+      typedef LFSIndexCache<LFSU,CU> LFSUCache;
+      typedef LFSIndexCache<LFSV,CV> LFSVCache;
 
-      typedef LFSContainerIndexCache<LFSU,EmptyTransformation> NoConstraintsLFSUCache;
-      typedef LFSContainerIndexCache<LFSV,EmptyTransformation> NoConstraintsLFSVCache;
+      typedef LFSIndexCache<LFSU,EmptyTransformation> NoConstraintsLFSUCache;
+      typedef LFSIndexCache<LFSV,EmptyTransformation> NoConstraintsLFSVCache;
 
       //! @}
 

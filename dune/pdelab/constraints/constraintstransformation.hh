@@ -51,13 +51,13 @@ namespace Dune {
              lc_it != lc_end;
              ++lc_it)
           {
-            GlobalConstraint& global_constraint = (*this)[index_cache.container_index(lc_it->first)];
+            GlobalConstraint& global_constraint = (*this)[index_cache.containerIndex(lc_it->first)];
             for (LocalEntryIterator le_it = lc_it->second.begin(),
                    le_end = lc_it->second.end();
                  le_it != le_end;
                  ++le_it)
               {
-                global_constraint[index_cache.container_index(le_it->first)] = le_it->second;
+                global_constraint[index_cache.containerIndex(le_it->first)] = le_it->second;
               }
           }
       }

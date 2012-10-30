@@ -6,7 +6,7 @@
 #include <dune/pdelab/backend/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/backend/istl/tags.hh>
-
+#include <dune/pdelab/gridfunctionspace/entityindexcache.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -262,7 +262,7 @@ namespace Dune {
 
             size_type s = 0;
             for (size_type i = 0; i < _index_cache.size(); ++i)
-              s += _v.row_size(_index_cache.container_index(i));
+              s += _v.row_size(_index_cache.containerIndex(i));
             return s;
           }
 
@@ -273,7 +273,7 @@ namespace Dune {
             _index_cache.update(e);
             for (size_type i = 0; i < _index_cache.size(); ++i)
               {
-                const CI& ci = _index_cache.container_index(i);
+                const CI& ci = _index_cache.containerIndex(i);
                 for (RowIterator it = _v.row_begin(ci),
                        end_it = _v.row_end(ci);
                      it != end_it;
@@ -292,7 +292,7 @@ namespace Dune {
             _index_cache.update(e);
             for (size_type i = 0; i < _index_cache.size(); ++i)
               {
-                const CI& ci = _index_cache.container_index(i);
+                const CI& ci = _index_cache.containerIndex(i);
                 for (RowIterator it = _v.row_begin(ci),
                        end_it = _v.row_end(ci);
                      it != end_it;
@@ -307,7 +307,7 @@ namespace Dune {
 
         private:
 
-          typedef EntityContainerIndexCache<GFS> IndexCache;
+          typedef EntityIndexCache<GFS> IndexCache;
           typedef typename IndexCache::ContainerIndex CI;
           typedef typename MatrixElementVector::iterator RowIterator;
 

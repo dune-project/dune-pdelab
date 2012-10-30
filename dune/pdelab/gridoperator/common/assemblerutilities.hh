@@ -249,7 +249,7 @@ namespace Dune{
 
         for (size_t j = 0; j < lfsu_indices.size(); ++j)
           {
-            if (lfsu_indices.constrained(j) && lfsu_indices.dirichlet_constraint(j))
+            if (lfsu_indices.isConstrained(j) && lfsu_indices.isDirichletConstraint(j))
               {
                 // clear out the current column
                 for (size_t i = 0; i < lfsv_indices.size(); ++i)
@@ -289,21 +289,21 @@ namespace Dune{
               if (localcontainer(lfsv,i,lfsu,j) == 0.0)
                 continue;
 
-              const bool constrained_v = lfsv_indices.constrained(i);
-              const bool constrained_u = lfsu_indices.constrained(j);
+              const bool constrained_v = lfsv_indices.isConstrained(i);
+              const bool constrained_u = lfsu_indices.isConstrained(j);
 
               typedef typename LFSVIndexCache::ConstraintsIterator VConstraintsIterator;
               typedef typename LFSUIndexCache::ConstraintsIterator UConstraintsIterator;
 
               if (constrained_v)
                 {
-                  if (lfsv_indices.dirichlet_constraint(i))
+                  if (lfsv_indices.isDirichletConstraint(i))
                     continue;
 
-                  for (VConstraintsIterator vcit = lfsv_indices.constraints_begin(i); vcit != lfsv_indices.constraints_end(i); ++vcit)
+                  for (VConstraintsIterator vcit = lfsv_indices.constraintsBegin(i); vcit != lfsv_indices.constraintsEnd(i); ++vcit)
                     if (constrained_u)
                       {
-                        if (lfsu_indices.dirichlet_constraint(j))
+                        if (lfsu_indices.isDirichletConstraint(j))
                           {
                             T value = localcontainer(lfsv,i,lfsu,j) * vcit->weight();
                             if (value != 0.0)
@@ -311,7 +311,7 @@ namespace Dune{
                           }
                         else
                           {
-                            for (UConstraintsIterator ucit = lfsu_indices.constraints_begin(j); ucit != lfsu_indices.constraints_end(j); ++ucit)
+                            for (UConstraintsIterator ucit = lfsu_indices.constraintsBegin(j); ucit != lfsu_indices.constraintsEnd(j); ++ucit)
                               {
                                 T value = localcontainer(lfsv,i,lfsu,j) * vcit->weight() * ucit->weight();
                                 if (value != 0.0)
@@ -324,7 +324,7 @@ namespace Dune{
                 {
                   if (constrained_u)
                     {
-                      if (lfsu_indices.dirichlet_constraint(j))
+                      if (lfsu_indices.isDirichletConstraint(j))
                         {
                           T value = localcontainer(lfsv,i,lfsu,j);
                           if (value != 0.0)
@@ -332,7 +332,7 @@ namespace Dune{
                         }
                       else
                         {
-                          for (UConstraintsIterator ucit = lfsu_indices.constraints_begin(j); ucit != lfsu_indices.constraints_end(j); ++ucit)
+                          for (UConstraintsIterator ucit = lfsu_indices.constraintsBegin(j); ucit != lfsu_indices.constraintsEnd(j); ++ucit)
                             {
                               T value = localcontainer(lfsv,i,lfsu,j) * ucit->weight();
                               if (value != 0.0)
@@ -376,43 +376,43 @@ namespace Dune{
         typedef typename LFSVIndices::ConstraintsIterator VConstraintsIterator;
         typedef typename LFSUIndices::ConstraintsIterator UConstraintsIterator;
 
-        const bool constrained_v = lfsv_indices.constrained(i);
-        const bool constrained_u = lfsu_indices.constrained(j);
+        const bool constrained_v = lfsv_indices.isConstrained(i);
+        const bool constrained_u = lfsu_indices.isConstrained(j);
 
         add_diagonal_entry(globalpattern,
-                           lfsv_indices.container_index(i),
-                           lfsu_indices.container_index(j)
+                           lfsv_indices.containerIndex(i),
+                           lfsu_indices.containerIndex(j)
                            );
 
         if(!constrained_v)
           {
-            if (!constrained_u || lfsu_indices.dirichlet_constraint(j))
+            if (!constrained_u || lfsu_indices.isDirichletConstraint(j))
               {
-                globalpattern.add_link(lfsv_indices.container_index(i),lfsu_indices.container_index(j));
+                globalpattern.add_link(lfsv_indices.containerIndex(i),lfsu_indices.containerIndex(j));
               }
             else
               {
-                for (UConstraintsIterator gurit = lfsu_indices.constraints_begin(j); gurit != lfsu_indices.constraints_end(j); ++gurit)
-                  globalpattern.add_link(lfsv_indices.container_index(i),gurit->containerIndex());
+                for (UConstraintsIterator gurit = lfsu_indices.constraintsBegin(j); gurit != lfsu_indices.constraintsEnd(j); ++gurit)
+                  globalpattern.add_link(lfsv_indices.containerIndex(i),gurit->containerIndex());
               }
           }
         else
           {
-            if (lfsv_indices.dirichlet_constraint(i))
+            if (lfsv_indices.isDirichletConstraint(i))
               {
-                globalpattern.add_link(lfsv_indices.container_index(i),lfsu_indices.container_index(j));
+                globalpattern.add_link(lfsv_indices.containerIndex(i),lfsu_indices.containerIndex(j));
               }
             else
               {
-                for(VConstraintsIterator gvrit = lfsv_indices.constraints_begin(i); gvrit != lfsv_indices.constraints_end(i); ++gvrit)
+                for(VConstraintsIterator gvrit = lfsv_indices.constraintsBegin(i); gvrit != lfsv_indices.constraintsEnd(i); ++gvrit)
                   {
-                    if (!constrained_u || lfsu_indices.dirichlet_constraint(j))
+                    if (!constrained_u || lfsu_indices.isDirichletConstraint(j))
                       {
-                        globalpattern.add_link(gvrit->containerIndex(),lfsu_indices.container_index(j));
+                        globalpattern.add_link(gvrit->containerIndex(),lfsu_indices.containerIndex(j));
                       }
                     else
                       {
-                        for (UConstraintsIterator gurit = lfsu_indices.constraints_begin(j); gurit != lfsu_indices.constraints_end(j); ++gurit)
+                        for (UConstraintsIterator gurit = lfsu_indices.constraintsBegin(j); gurit != lfsu_indices.constraintsEnd(j); ++gurit)
                           globalpattern.add_link(gvrit->containerIndex(),gurit->containerIndex());
                       }
                   }

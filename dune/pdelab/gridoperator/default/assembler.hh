@@ -90,14 +90,14 @@ namespace Dune{
 
         typedef typename std::conditional<
           LocalAssemblerEngine::needs_constraints_caching,
-          LFSContainerIndexCache<LFSU,CU>,
-          LFSContainerIndexCache<LFSU,EmptyTransformation>
+          LFSIndexCache<LFSU,CU>,
+          LFSIndexCache<LFSU,EmptyTransformation>
           >::type LFSUCache;
 
         typedef typename std::conditional<
           LocalAssemblerEngine::needs_constraints_caching,
-          LFSContainerIndexCache<LFSV,CV>,
-          LFSContainerIndexCache<LFSV,EmptyTransformation>
+          LFSIndexCache<LFSV,CV>,
+          LFSIndexCache<LFSV,EmptyTransformation>
           >::type LFSVCache;
 
         LFSUCache lfsu_cache(lfsu,cu);

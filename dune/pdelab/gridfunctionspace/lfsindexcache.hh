@@ -1,7 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_LFSCONTAINERINDEXCACHE_HH
-#define DUNE_PDELAB_LFSCONTAINERINDEXCACHE_HH
+#ifndef DUNE_PDELAB_LFSINDEXCACHE_HH
+#define DUNE_PDELAB_LFSINDEXCACHE_HH
 
 #include <vector>
 #include <stack>
@@ -151,8 +151,10 @@ namespace Dune {
 
     };
 
+
+
     template<typename LFS, typename C, typename CacheTag>
-    class LFSContainerIndexCacheBase
+    class LFSIndexCacheBase
     {
 
       enum DOFFlags
@@ -201,7 +203,7 @@ namespace Dune {
       typedef std::vector<ConstraintsEntry> ConstraintsVector;
       typedef typename ConstraintsVector::const_iterator ConstraintsIterator;
 
-      LFSContainerIndexCacheBase(const LFS& lfs, const C& constraints)
+      LFSIndexCacheBase(const LFS& lfs, const C& constraints)
         : _lfs(lfs)
         , _container_indices(lfs.maxSize())
         , _dof_flags(lfs.maxSize())
@@ -281,17 +283,17 @@ namespace Dune {
           }
       }
 
-      const DI& dof_index(size_type i) const
+      const DI& dofIndex(size_type i) const
       {
         return _lfs.dofIndex(i);
       }
 
-      const CI& container_index(size_type i) const
+      const CI& containerIndex(size_type i) const
       {
         return _container_indices[i];
       }
 
-      const CI& container_index(const DI& i) const
+      const CI& containerIndex(const DI& i) const
       {
         // look up DOFIndex i
         std::pair<typename CIMap::iterator,bool> r = _container_index_map.insert(std::make_pair(std::ref(i),CI()));
@@ -304,25 +306,25 @@ namespace Dune {
         return r.first->second;
       }
 
-      bool constrained(size_type i) const
+      bool isConstrained(size_type i) const
       {
         return _dof_flags[i] & DOF_CONSTRAINED;
       }
 
-      bool dirichlet_constraint(size_type i) const
+      bool isDirichletConstraint(size_type i) const
       {
         return _dof_flags[i] & DOF_DIRICHLET;
       }
 
-      ConstraintsIterator constraints_begin(size_type i) const
+      ConstraintsIterator constraintsBegin(size_type i) const
       {
-        assert(constrained(i));
+        assert(isConstrained(i));
         return _constraints_iterators[i].first;
       }
 
-      ConstraintsIterator constraints_end(size_type i) const
+      ConstraintsIterator constraintsEnd(size_type i) const
       {
-        assert(constrained(i));
+        assert(isConstrained(i));
         return _constraints_iterators[i].second;
       }
 
@@ -336,7 +338,7 @@ namespace Dune {
         return _lfs.size();
       }
 
-      std::pair<size_type,bool> local_index(const ContainerIndex& ci) const
+      std::pair<size_type,bool> localIndex(const ContainerIndex& ci) const
       {
         if (!_inverse_cache_built)
           build_inverse_cache();
@@ -350,7 +352,7 @@ namespace Dune {
         return _offsets[i];
       }
 
-      size_type extended_offset(size_type i) const
+      size_type extendedOffset(size_type i) const
       {
         if (!_inverse_cache_built)
           build_inverse_cache();
@@ -440,7 +442,7 @@ namespace Dune {
 
 
     template<typename LFS, typename CacheTag>
-    class LFSContainerIndexCacheBase<LFS,EmptyTransformation,CacheTag>
+    class LFSIndexCacheBase<LFS,EmptyTransformation,CacheTag>
     {
 
     public:
@@ -477,14 +479,14 @@ namespace Dune {
       typedef std::vector<ConstraintsEntry> ConstraintsVector;
       typedef typename ConstraintsVector::const_iterator ConstraintsIterator;
 
-      explicit LFSContainerIndexCacheBase(const LFS& lfs)
+      explicit LFSIndexCacheBase(const LFS& lfs)
         : _lfs(lfs)
         , _container_indices(lfs.maxSize())
       {
       }
 
       template<typename C>
-      LFSContainerIndexCacheBase(const LFS& lfs, const C& c)
+      LFSIndexCacheBase(const LFS& lfs, const C& c)
         : _lfs(lfs)
         , _container_indices(lfs.maxSize())
       {
@@ -514,17 +516,17 @@ namespace Dune {
         TypeTree::applyToTree(_lfs.gridFunctionSpace().ordering(),index_mapper);
       }
 
-      const DI& dof_index(size_type i) const
+      const DI& dofIndex(size_type i) const
       {
         return _lfs.dofIndex(i);
       }
 
-      const CI& container_index(size_type i) const
+      const CI& containerIndex(size_type i) const
       {
         return _container_indices[i];
       }
 
-      const CI& container_index(const DI& i) const
+      const CI& containerIndex(const DI& i) const
       {
         // look up DOFIndex i
         std::pair<typename CIMap::iterator,bool> r = _container_index_map.insert(std::make_pair(std::ref(i),CI()));
@@ -537,22 +539,22 @@ namespace Dune {
         return r.first->second;
       }
 
-      bool constrained(size_type i) const
+      bool isConstrained(size_type i) const
       {
         return false;
       }
 
-      bool dirichlet_constraint(size_type i) const
+      bool isDirichletConstraint(size_type i) const
       {
         return false;
       }
 
-      ConstraintsIterator constraints_begin(size_type i) const
+      ConstraintsIterator constraintsBegin(size_type i) const
       {
         return _constraints.begin();
       }
 
-      ConstraintsIterator constraints_end(size_type i) const
+      ConstraintsIterator constraintsEnd(size_type i) const
       {
         return _constraints.end();
       }
@@ -579,7 +581,7 @@ namespace Dune {
 
 
     template<typename LFS, typename C>
-    class LFSContainerIndexCacheBase<LFS,C,SimpleLFSCacheTag>
+    class LFSIndexCacheBase<LFS,C,SimpleLFSCacheTag>
     {
 
       enum DOFFlags
@@ -622,7 +624,7 @@ namespace Dune {
       typedef std::vector<ConstraintsEntry> ConstraintsVector;
       typedef typename ConstraintsVector::const_iterator ConstraintsIterator;
 
-      LFSContainerIndexCacheBase(const LFS& lfs, const C& constraints)
+      LFSIndexCacheBase(const LFS& lfs, const C& constraints)
         : _lfs(lfs)
         , _dof_flags(lfs.maxSize())
         , _constraints_iterators(lfs.maxSize())
@@ -677,40 +679,40 @@ namespace Dune {
           }
       }
 
-      const DI& dof_index(size_type i) const
+      const DI& dofIndex(size_type i) const
       {
         return _lfs.dofIndex(i);
       }
 
-      CI container_index(size_type i) const
+      CI containerIndex(size_type i) const
       {
         return CI(_lfs.dofIndex(i)[0]);
       }
 
-      const CI& container_index(const DI& i) const
+      const CI& containerIndex(const DI& i) const
       {
         return CI(i[0]);
       }
 
-      bool constrained(size_type i) const
+      bool isConstrained(size_type i) const
       {
         return _dof_flags[i] & DOF_CONSTRAINED;
       }
 
-      bool dirichlet_constraint(size_type i) const
+      bool isDirichletConstraint(size_type i) const
       {
         return _dof_flags[i] & DOF_DIRICHLET;
       }
 
-      ConstraintsIterator constraints_begin(size_type i) const
+      ConstraintsIterator constraintsBegin(size_type i) const
       {
-        assert(constrained(i));
+        assert(isConstrained(i));
         return _constraints_iterators[i].first;
       }
 
-      ConstraintsIterator constraints_end(size_type i) const
+      ConstraintsIterator constraintsEnd(size_type i) const
       {
-        assert(constrained(i));
+        assert(isConstrained(i));
         return _constraints_iterators[i].second;
       }
 
@@ -739,7 +741,7 @@ namespace Dune {
 
 
     template<typename LFS>
-    class LFSContainerIndexCacheBase<LFS,EmptyTransformation,SimpleLFSCacheTag>
+    class LFSIndexCacheBase<LFS,EmptyTransformation,SimpleLFSCacheTag>
     {
 
     public:
@@ -774,13 +776,13 @@ namespace Dune {
       typedef std::vector<ConstraintsEntry> ConstraintsVector;
       typedef typename ConstraintsVector::const_iterator ConstraintsIterator;
 
-      explicit LFSContainerIndexCacheBase(const LFS& lfs)
+      explicit LFSIndexCacheBase(const LFS& lfs)
         : _lfs(lfs)
       {
       }
 
       template<typename C>
-      LFSContainerIndexCacheBase(const LFS& lfs, const C& c)
+      LFSIndexCacheBase(const LFS& lfs, const C& c)
         : _lfs(lfs)
       {
       }
@@ -791,32 +793,32 @@ namespace Dune {
         // there's nothing to do here...
       }
 
-      CI container_index(size_type i) const
+      CI containerIndex(size_type i) const
       {
         return CI(_lfs.dofIndex(i)[0]);
       }
 
-      CI container_index(const DI& i) const
+      CI containerIndex(const DI& i) const
       {
         return CI(i[0]);
       }
 
-      bool constrained(size_type i) const
+      bool isConstrained(size_type i) const
       {
         return false;
       }
 
-      bool dirichlet_constraint(size_type i) const
+      bool isDirichletConstraint(size_type i) const
       {
         return false;
       }
 
-      ConstraintsIterator constraints_begin(size_type i) const
+      ConstraintsIterator constraintsBegin(size_type i) const
       {
         return _constraints.begin();
       }
 
-      ConstraintsIterator constraints_end(size_type i) const
+      ConstraintsIterator constraintsEnd(size_type i) const
       {
         return _constraints.end();
       }
@@ -841,20 +843,20 @@ namespace Dune {
 
 
     template<typename LFS, typename C = EmptyTransformation>
-    class LFSContainerIndexCache
-      : public LFSContainerIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag>
+    class LFSIndexCache
+      : public LFSIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag>
     {
 
     public:
 
       template<typename CC>
-      LFSContainerIndexCache(const LFS& lfs, const CC& c)
-        : LFSContainerIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag>(lfs,c)
+      LFSIndexCache(const LFS& lfs, const CC& c)
+        : LFSIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag>(lfs,c)
       {
       }
 
-      explicit LFSContainerIndexCache(const LFS& lfs)
-        : LFSContainerIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag>(lfs)
+      explicit LFSIndexCache(const LFS& lfs)
+        : LFSIndexCacheBase<LFS,C,typename LFS::Traits::GridFunctionSpace::Ordering::CacheTag>(lfs)
       {
       }
 
@@ -864,4 +866,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_LFSCONTAINERINDEXCACHE_HH
+#endif // DUNE_PDELAB_LFSINDEXCACHE_HH

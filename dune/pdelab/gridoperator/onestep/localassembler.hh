@@ -12,7 +12,7 @@
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/common/typetree.hh>
 
-#include <dune/pdelab/gridfunctionspace/lfscontainerindexcache.hh>
+#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
 namespace Dune{
   namespace PDELab{

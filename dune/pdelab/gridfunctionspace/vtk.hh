@@ -7,7 +7,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/gridfunctionspace/lfscontainerindexcache.hh>
+#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/pdelab/common/typetree/visitor.hh>
@@ -77,7 +77,7 @@ namespace Dune {
       friend struct vtk_output_collector;
 
       typedef LocalFunctionSpace<GFS> LFS;
-      typedef LFSContainerIndexCache<LFS> LFSCache;
+      typedef LFSIndexCache<LFS> LFSCache;
       typedef typename X::template ConstLocalView<LFSCache> XView;
       typedef LocalVector<typename X::ElementType> XLocalVector;
       typedef typename GFS::Traits::GridView::template Codim<0>::Entity Cell;

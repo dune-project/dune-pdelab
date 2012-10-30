@@ -484,7 +484,7 @@ namespace Dune {
         {
           for (size_type i = 0; i < N(); ++i)
             for (size_type j = 0; j < M(); ++j)
-              local_container.getEntry(i,j) = (*_container)(_row_cache->container_index(i),_col_cache->container_index(j));
+              local_container.getEntry(i,j) = (*_container)(_row_cache->containerIndex(i),_col_cache->containerIndex(j));
         }
 
         template<typename LC>
@@ -492,7 +492,7 @@ namespace Dune {
         {
           for (size_type i = 0; i < N(); ++i)
             for (size_type j = 0; j < M(); ++j)
-              (*_container)(_row_cache->container_index(i),_col_cache->container_index(j)) = local_container.getEntry(i,j);
+              (*_container)(_row_cache->containerIndex(i),_col_cache->containerIndex(j)) = local_container.getEntry(i,j);
         }
 
         template<typename LC>
@@ -500,7 +500,7 @@ namespace Dune {
         {
           for (size_type i = 0; i < N(); ++i)
             for (size_type j = 0; j < M(); ++j)
-              (*_container)(_row_cache->container_index(i),_col_cache->container_index(j)) += local_container.getEntry(i,j);
+              (*_container)(_row_cache->containerIndex(i),_col_cache->containerIndex(j)) += local_container.getEntry(i,j);
         }
 
         void commit()
@@ -510,22 +510,22 @@ namespace Dune {
 
         ElementType& operator()(size_type i, size_type j)
         {
-          return (*_container)(_row_cache->container_index(i),_col_cache->container_index(j));
+          return (*_container)(_row_cache->containerIndex(i),_col_cache->containerIndex(j));
         }
 
         const ElementType& operator()(size_type i, size_type j) const
         {
-          return (*_container)(_row_cache->container_index(i),_col_cache->container_index(j));
+          return (*_container)(_row_cache->containerIndex(i),_col_cache->containerIndex(j));
         }
 
         ElementType& operator()(const RowDOFIndex& i, const ColDOFIndex& j)
         {
-          return (*_container)(_row_cache->container_index(i),_col_cache->container_index(j));
+          return (*_container)(_row_cache->containerIndex(i),_col_cache->containerIndex(j));
         }
 
         const ElementType& operator()(const RowDOFIndex& i, const ColDOFIndex& j) const
         {
-          return (*_container)(_row_cache->container_index(i),_col_cache->container_index(j));
+          return (*_container)(_row_cache->containerIndex(i),_col_cache->containerIndex(j));
         }
 
         ElementType& operator()(const RowContainerIndex& i, const ColContainerIndex& j)
@@ -540,33 +540,33 @@ namespace Dune {
 
         ElementType& operator()(const RowContainerIndex& i, size_type j)
         {
-          return (*_container)(i,_col_cache->container_index(j));
+          return (*_container)(i,_col_cache->containerIndex(j));
         }
 
         const ElementType& operator()(const RowContainerIndex& i, size_type j) const
         {
-          return (*_container)(i,_col_cache->container_index(j));
+          return (*_container)(i,_col_cache->containerIndex(j));
         }
 
         ElementType& operator()(size_type i, const ColContainerIndex& j)
         {
-          return (*_container)(_row_cache->container_index(i),j);
+          return (*_container)(_row_cache->containerIndex(i),j);
         }
 
         const ElementType& operator()(size_type i, const ColContainerIndex& j) const
         {
-          return (*_container)(_row_cache->container_index(i),j);
+          return (*_container)(_row_cache->containerIndex(i),j);
         }
 
 
         void add(size_type i, size_type j, const ElementType& v)
         {
-          (*_container)(_row_cache->container_index(i),_col_cache->container_index(j)) += v;
+          (*_container)(_row_cache->containerIndex(i),_col_cache->containerIndex(j)) += v;
         }
 
         void add(const RowDOFIndex& i, const ColDOFIndex& j, const ElementType& v)
         {
-          (*_container)(_row_cache->container_index(i),_col_cache->container_index(j)) += v;
+          (*_container)(_row_cache->containerIndex(i),_col_cache->containerIndex(j)) += v;
         }
 
         void add(const RowContainerIndex& i, const ColContainerIndex& j, const ElementType& v)
@@ -576,12 +576,12 @@ namespace Dune {
 
         void add(const RowContainerIndex& i, size_type j, const ElementType& v)
         {
-          (*_container)(i,_col_cache->container_index(j)) += v;
+          (*_container)(i,_col_cache->containerIndex(j)) += v;
         }
 
         void add(size_type i, const ColContainerIndex& j, const ElementType& v)
         {
-          (*_container)(_row_cache->container_index(i),j) += v;
+          (*_container)(_row_cache->containerIndex(i),j) += v;
         }
 
         ISTLMatrixContainer& global_container()

@@ -13,7 +13,7 @@
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/grid/common/gridenums.hh>
 
-#include <dune/pdelab/gridfunctionspace/entitycontainerindexcache.hh>
+#include <dune/pdelab/gridfunctionspace/entityindexcache.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -154,7 +154,7 @@ namespace Dune {
 
     private:
 
-      typedef EntityContainerIndexCache<GFS> IndexCache;
+      typedef EntityIndexCache<GFS> IndexCache;
       typedef typename V::template LocalView<IndexCache> LocalView;
 
       const GFS& _gfs;
@@ -284,7 +284,7 @@ namespace Dune {
       bool gather(MessageBuffer& buff, const Entity& e, const LocalView& local_view) const
       {
         for (std::size_t i = 0; i < local_view.size(); ++i)
-          _gather_scatter.gather(buff,local_view.cache().container_index(i),local_view[i]);
+          _gather_scatter.gather(buff,local_view.cache().containerIndex(i),local_view[i]);
         return false;
       }
 
@@ -297,7 +297,7 @@ namespace Dune {
               DUNE_THROW(Exception,"size mismatch in GridFunctionSpace data handle, have " << local_view.size() << "DOFs, but received " << n);
 
             for (std::size_t i = 0; i < local_view.size(); ++i)
-              _gather_scatter.scatter(buff,local_view.cache().container_index(i),local_view[i]);
+              _gather_scatter.scatter(buff,local_view.cache().containerIndex(i),local_view[i]);
 
             return true;
           }
