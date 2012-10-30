@@ -11,6 +11,7 @@ gridfunctionspace_HEADERS =			\
 	gridfunctionspaceutilities.hh		\
 	interpolate.hh				\
 	intersectionindexset.hh			\
+	leafgridviewordering.hh			\
 	leafordering.hh				\
 	lexicographicordering.hh		\
 	localfunctionspace.hh			\
