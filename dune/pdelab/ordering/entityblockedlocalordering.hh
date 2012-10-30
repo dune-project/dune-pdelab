@@ -54,79 +54,6 @@ namespace Dune {
         return this->child(0).gridView();
       }
 
-      //! update internal data structures
-      /**
-       * This method must be called after initialization and every time the
-       * structure of the dof-vector of one of gfs's children changes.  All
-       * the children must have been set up properly before the call to
-       * update().
-       */
-      void update() {
-        /*
-        Dune::dinfo << asImp().name() << ":" << std::endl;
-
-        if(!NonLeafOrderingBase<SizeType, Imp>::fixedSize())
-          DUNE_THROW(InvalidStateException, className<Imp>() << " works "
-                     "only with children that have a uniform size for all "
-                     "entities of a given geometry type/all intersections");
-
-        asImp().sizeCheck();
-
-        printInfo(dinfo);
-        */
-      }
-
-#if 0
-      //! \brief offset of the block of dofs attached to a given entity (of
-      //!        arbitrary codimension)
-      /**
-       * \note This method should be available for all types of entities
-       *       required by the grid.  It is mostly required for
-       *       communcation, so if it is known that this method is not
-       *       actually called for a given entity type the implementation
-       *       may throw NotImplemented.
-       * \note If the grid does not support a given entity type, it may
-       *       still be possible to get this information using
-       *       entityOffset(const Element &e, std::size_t codim, std::size_t
-       *       subentity).
-       *
-       * \throw NotImplemented        If this EntityType is not supported by
-       *                              the ordering.
-       * \throw InvalidStateException If blocked()==false.
-       */
-      template<class Entity>
-      SizeType entityOffset(const Entity &e) const {
-        return asImp().subMap(0,
-                              asImp().template child<0>().entityOffset(e));
-      }
-      //! \brief offset of the blocks of dofs attached to a given subentity
-      //!        of an element
-      /**
-       * This method determines the starting offset of the block of dofs
-       * attached to a subentity of the given codim 0 entity.  If the grid
-       * (and the ordering) directly support entities of the given
-       * codimension, this is equivalent to calling
-       * entityOffset(*e.subEntity<codim>(subentity)).
-       */
-      template<class Element>
-      SizeType entityOffset(const Element &e, std::size_t codim,
-                            std::size_t subentity) const {
-        return asImp().subMap
-          (0, asImp().template child<0>().entityOffset(e, codim, subentity));
-      }
-      //! offset of the block of dofs attached to a given intersection
-      template<class Intersection>
-      SizeType intersectionOffset(const Intersection &i) const {
-        return asImp().subMap
-          (0, asImp().template child<0>().intersectionOffset(i));
-      }
-
-#endif // 0
-
-    private:
-
-      using BaseT::_container_blocked;
-
     };
 
     template<typename GFS, typename Transformation, typename OrderingTag>
@@ -185,14 +112,12 @@ namespace Dune {
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
         transformed_type r(transformed_type(make_tuple(make_shared<LocalOrdering>(LocalOrderingTransformation::transform(gfs,gfs_to_local_ordering<Transformation>()))),gfs.backend().blocked()));
-        // r.template child<0>()._container_blocked = false;
         return std::move(r);
       }
 
       static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
       {
         transformed_storage_type r(make_shared<transformed_type>(make_tuple(LocalOrderingTransformation::transform_storage(gfs,gfs_to_local_ordering<Transformation>())),gfs->backend().blocked()));
-        // r->template child<0>()._container_blocked = false;
         return std::move(r);
       }
 
@@ -244,75 +169,6 @@ namespace Dune {
       {
         return this->template child<0>().gridView();
       }
-
-      //! update internal data structures
-      /**
-       * This method must be called after initialization and every time the
-       * structure of the dof-vector of one of gfs's children changes.  All
-       * the children must have been set up properly before the call to
-       * update().
-       */
-      void update() {
-        /*
-        Dune::dinfo << asImp().name() << ":" << std::endl;
-
-        if(!NonLeafOrderingBase<SizeType, Imp>::fixedSize())
-          DUNE_THROW(InvalidStateException, className<Imp>() << " works "
-                     "only with children that have a uniform size for all "
-                     "entities of a given geometry type/all intersections");
-
-        asImp().sizeCheck();
-
-        printInfo(dinfo);
-        */
-      }
-
-#if 0
-      //! \brief offset of the block of dofs attached to a given entity (of
-      //!        arbitrary codimension)
-      /**
-       * \note This method should be available for all types of entities
-       *       required by the grid.  It is mostly required for
-       *       communcation, so if it is known that this method is not
-       *       actually called for a given entity type the implementation
-       *       may throw NotImplemented.
-       * \note If the grid does not support a given entity type, it may
-       *       still be possible to get this information using
-       *       entityOffset(const Element &e, std::size_t codim, std::size_t
-       *       subentity).
-       *
-       * \throw NotImplemented        If this EntityType is not supported by
-       *                              the ordering.
-       * \throw InvalidStateException If blocked()==false.
-       */
-      template<class Entity>
-      SizeType entityOffset(const Entity &e) const {
-        return asImp().subMap(0,
-                              asImp().template child<0>().entityOffset(e));
-      }
-      //! \brief offset of the blocks of dofs attached to a given subentity
-      //!        of an element
-      /**
-       * This method determines the starting offset of the block of dofs
-       * attached to a subentity of the given codim 0 entity.  If the grid
-       * (and the ordering) directly support entities of the given
-       * codimension, this is equivalent to calling
-       * entityOffset(*e.subEntity<codim>(subentity)).
-       */
-      template<class Element>
-      SizeType entityOffset(const Element &e, std::size_t codim,
-                            std::size_t subentity) const {
-        return asImp().subMap
-          (0, asImp().template child<0>().entityOffset(e, codim, subentity));
-      }
-      //! offset of the block of dofs attached to a given intersection
-      template<class Intersection>
-      SizeType intersectionOffset(const Intersection &i) const {
-        return asImp().subMap
-          (0, asImp().template child<0>().intersectionOffset(i));
-      }
-
-#endif // 0
 
     };
 
@@ -372,14 +228,12 @@ namespace Dune {
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
         transformed_type r(make_tuple(make_shared<LocalOrdering>(LocalOrderingTransformation::transform(gfs,gfs_to_local_ordering<Transformation>()))),gfs.backend().blocked());
-        // r.template child<0>()._container_blocked = false;
         return std::move(r);
       }
 
       static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
       {
         transformed_storage_type r(make_shared<transformed_type>(make_tuple(LocalOrderingTransformation::transform_storage(gfs,gfs_to_local_ordering<Transformation>())),gfs->backend().blocked()));
-        // r->template child<0>()._container_blocked = false;
         return std::move(r);
       }
 
