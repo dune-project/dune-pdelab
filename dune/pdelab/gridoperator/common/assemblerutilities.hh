@@ -286,6 +286,9 @@ namespace Dune{
           for (size_t j = 0; j<lfsu_indices.size(); ++j)
             {
 
+              if (localcontainer(lfsv,i,lfsu,j) == 0.0)
+                continue;
+
               const bool constrained_v = lfsv_indices.constrained(i);
               const bool constrained_u = lfsu_indices.constrained(j);
 
