@@ -71,11 +71,11 @@ namespace Dune {
         template<typename Ordering, typename TreePath>
         void leaf(const Ordering& ordering, TreePath tp)
         {
-          size_type size = ordering.containerIndices(_entity_index,
-                                                     tp.back(),
-                                                     _ci_it,
-                                                     _ci_end,
-                                                     _di_it);
+          size_type size = ordering.extract_entity_indices(_entity_index,
+                                                           tp.back(),
+                                                           _ci_it,
+                                                           _ci_end,
+                                                           _di_it);
 
           _ci_end += size;
           _ci_it = _ci_end;
@@ -87,10 +87,10 @@ namespace Dune {
         void afterChild(const Ordering& ordering, const Child& child, TreePath tp, ChildIndex childIndex)
         {
           // pop
-          ordering.containerIndices(_entity_index,
-                                    childIndex,
-                                    _stack.top().first,
-                                    _ci_end);
+          ordering.extract_entity_indices(_entity_index,
+                                          childIndex,
+                                          _stack.top().first,
+                                          _ci_end);
 
           if (Ordering::consume_tree_index)
             for (DIIterator it = _stack.top().second;

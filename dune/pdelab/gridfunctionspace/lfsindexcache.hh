@@ -102,7 +102,7 @@ namespace Dune {
       {
         std::size_t leaf_size = *(leaf_size_pos++);
         dof_end += leaf_size;
-        ordering.map_indices(dof_pos,dof_end,container_pos);
+        ordering.map_lfs_indices(dof_pos,dof_end,container_pos);
         dof_pos = dof_end;
         container_pos += leaf_size;
       }
@@ -115,7 +115,7 @@ namespace Dune {
             dof_pos.restore_back();
             dof_end.restore_back();
           }
-        ordering.map_indices(dof_stack.top(),dof_end,container_stack.top());
+        ordering.map_lfs_indices(dof_stack.top(),dof_end,container_stack.top());
         dof_stack.pop();
         container_stack.pop();
       }
@@ -300,7 +300,7 @@ namespace Dune {
 
         // i did not exist in the cache, map it into the newly inserted container index
         if (r.second)
-            _lfs.gridFunctionSpace().ordering().map_index(i.view(),r.first->second);
+            _lfs.gridFunctionSpace().ordering().mapIndex(i.view(),r.first->second);
 
         // return cached container index
         return r.first->second;
@@ -533,7 +533,7 @@ namespace Dune {
 
         // i did not exist in the cache, map it into the newly inserted container index
         if (r.second)
-            _lfs.gridFunctionSpace().ordering().map_index(i.view(),r.first->second);
+            _lfs.gridFunctionSpace().ordering().mapIndex(i.view(),r.first->second);
 
         // return cached container index
         return r.first->second;

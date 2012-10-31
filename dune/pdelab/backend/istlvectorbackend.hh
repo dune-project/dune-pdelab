@@ -129,15 +129,15 @@ namespace Dune {
     template<typename DI, typename CI, typename Container>
     void allocate_istl_vector(istl::tags::block_vector, const OrderingBase<DI,CI>& ordering, Container& c)
     {
-      for (std::size_t i = 0; i < ordering.dynamic_child_count(); ++i)
+      for (std::size_t i = 0; i < ordering.childOrderingCount(); ++i)
         {
-          if (ordering.container_blocked())
+          if (ordering.containerBlocked())
             {
-              resize_istl_vector(istl::container_tag(c[i]),c[i],ordering.dynamic_child(i).blockCount(),false);
-              allocate_istl_vector(istl::container_tag(c[i]),ordering.dynamic_child(i),c[i]);
+              resize_istl_vector(istl::container_tag(c[i]),c[i],ordering.childOrdering(i).blockCount(),false);
+              allocate_istl_vector(istl::container_tag(c[i]),ordering.childOrdering(i),c[i]);
             }
           else
-            allocate_istl_vector(istl::container_tag(c),ordering.dynamic_child(i),c);
+            allocate_istl_vector(istl::container_tag(c),ordering.childOrdering(i),c);
         }
     }
 

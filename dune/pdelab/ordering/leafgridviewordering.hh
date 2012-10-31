@@ -64,17 +64,17 @@ namespace Dune {
 
       virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
       {
-        map_index(di,ci);
+        mapIndex(di,ci);
       }
 
-      typename Traits::ContainerIndex map_index(const typename Traits::DOFIndex& di) const
+      typename Traits::ContainerIndex mapIndex(const typename Traits::DOFIndex& di) const
       {
         typename Traits::ContainerIndex ci;
-        map_index(di.view(),ci);
+        mapIndex(di.view(),ci);
         return ci;
       }
 
-      void map_index(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
+      void mapIndex(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
       {
 
         const typename Traits::SizeType geometry_type_index = Traits::DOFIndexAccessor::geometryType(di);
@@ -115,7 +115,7 @@ namespace Dune {
 
 
       template<typename ItIn, typename ItOut>
-      void map_indices(const ItIn begin, const ItIn end, ItOut out) const
+      void map_lfs_indices(const ItIn begin, const ItIn end, ItOut out) const
       {
         typedef typename Traits::SizeType size_type;
 
@@ -173,9 +173,9 @@ namespace Dune {
 
       template<typename CIOutIterator>
       typename Traits::SizeType
-      containerIndices(const typename Traits::DOFIndex::EntityIndex& ei,
-                       typename Traits::SizeType child_index,
-                       CIOutIterator ci_out, const CIOutIterator ci_end) const
+      extract_entity_indices(const typename Traits::DOFIndex::EntityIndex& ei,
+                             typename Traits::SizeType child_index,
+                             CIOutIterator ci_out, const CIOutIterator ci_end) const
       {
         typedef typename Traits::SizeType size_type;
 

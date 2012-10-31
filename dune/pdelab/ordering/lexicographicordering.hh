@@ -56,7 +56,7 @@ namespace Dune {
         }
 
         template<typename ItIn, typename ItOut>
-        void map_indices(const ItIn begin, const ItIn end, ItOut out) const
+        void map_lfs_indices(const ItIn begin, const ItIn end, ItOut out) const
         {
           if (this->_container_blocked)
             {
@@ -72,9 +72,9 @@ namespace Dune {
 
         template<typename CIOutIterator, typename DIOutIterator = DummyDOFIndexIterator>
         typename Traits::SizeType
-        containerIndices(const typename Traits::DOFIndex::EntityIndex& ei,
-                         typename Traits::SizeType child_index,
-                         CIOutIterator ci_out, const CIOutIterator ci_end) const
+        extract_entity_indices(const typename Traits::DOFIndex::EntityIndex& ei,
+                               typename Traits::SizeType child_index,
+                               CIOutIterator ci_out, const CIOutIterator ci_end) const
         {
           if (this->_container_blocked)
             {

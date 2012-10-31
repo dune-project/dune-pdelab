@@ -43,7 +43,7 @@ void check_ordering(const GFS& gfs)
       {
         const typename GFS::Ordering::Traits::DOFIndex& di = lfs.dofIndex(i);
         typename GFS::Ordering::Traits::ContainerIndex ci;
-        ordering.map_index(di.view(),ci);
+        ordering.mapIndex(di.view(),ci);
         std::cout << di << "    " << ci << std::endl;
       }
     typedef typename Dune::PDELab::BackendVectorSelector<GFS,double>::Type V;

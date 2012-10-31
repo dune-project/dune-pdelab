@@ -206,7 +206,7 @@ namespace Dune {
 
                   ColDOFIndex dj;
                   GFSU::Ordering::Traits::DOFIndexAccessor::store(dj,col_entity.geometryTypeIndex(),col_entity.entityIndex(),col_it->treeIndex());
-                  buf.write(make_tuple(_entity_cache.dofIndex(i).treeIndex(),*col_it,matrix(_entity_cache.containerIndex(i),_gfsu.ordering().map_index(dj))));
+                  buf.write(make_tuple(_entity_cache.dofIndex(i).treeIndex(),*col_it,matrix(_entity_cache.containerIndex(i),_gfsu.ordering().mapIndex(dj))));
                 }
             }
         }
@@ -314,7 +314,7 @@ namespace Dune {
                                                               col_index.second.entityIndex(),
                                                               data.second.treeIndex());
 
-              _pattern.add_link(_gfsv.ordering().map_index(di),_gfsu.ordering().map_index(dj));
+              _pattern.add_link(_gfsv.ordering().mapIndex(di),_gfsu.ordering().mapIndex(dj));
             }
         }
 
@@ -410,7 +410,7 @@ namespace Dune {
                                                               col_index.second.entityIndex(),
                                                               get<1>(data).treeIndex());
 
-              _matrix(_gfsv.ordering().map_index(di),_gfsu.ordering().map_index(dj)) += get<2>(data);
+              _matrix(_gfsv.ordering().mapIndex(di),_gfsu.ordering().mapIndex(dj)) += get<2>(data);
             }
         }
 

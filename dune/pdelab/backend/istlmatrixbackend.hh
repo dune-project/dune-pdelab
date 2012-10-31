@@ -88,7 +88,7 @@ namespace Dune {
       void recursive_add_entry(const RI& ri, const CI& ci)
       {
         this->resize(_row_ordering.blockCount());
-        std::pair<typename unordered_map<std::size_t,SubPattern>::iterator,bool> r = (*this)[ri.back()].insert(make_pair(ci.back(),SubPattern(_row_ordering.dynamic_child(ri.back()),_col_ordering.dynamic_child(ci.back()))));
+        std::pair<typename unordered_map<std::size_t,SubPattern>::iterator,bool> r = (*this)[ri.back()].insert(make_pair(ci.back(),SubPattern(_row_ordering.childOrdering(ri.back()),_col_ordering.childOrdering(ci.back()))));
         r.first->second.recursive_add_entry(ri.back_popped(),ci.back_popped());
       }
 
@@ -329,8 +329,8 @@ namespace Dune {
       for (std::size_t i = 0; i < c.N(); ++i)
         for (typename Pattern::value_type::const_iterator cit = p[i].begin(); cit != p[i].end(); ++cit)
           {
-            allocate_istl_matrix(ordering_v.dynamic_child(i),
-                                 ordering_u.dynamic_child(cit->first),
+            allocate_istl_matrix(ordering_v.childOrdering(i),
+                                 ordering_u.childOrdering(cit->first),
                                  cit->second,
                                  c[i][cit->first]);
           }
@@ -349,8 +349,8 @@ namespace Dune {
       for (std::size_t i = 0; i < c.N(); ++i)
         for (typename Pattern::value_type::iterator cit = p[i].begin(); cit != p[i].end(); ++cit)
           {
-            allocate_istl_matrix(ordering_v.dynamic_child(i),
-                                 ordering_u.dynamic_child(cit->first),
+            allocate_istl_matrix(ordering_v.childOrdering(i),
+                                 ordering_u.childOrdering(cit->first),
                                  cit->second,
                                  c[i][cit->first]);
           }

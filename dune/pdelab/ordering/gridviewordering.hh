@@ -365,10 +365,10 @@ namespace Dune {
                   {
                     for (size_type child_index = 0; child_index < Node::CHILDREN; ++child_index)
                       {
-                        const size_type per_gt_size = node.dynamic_child(child_index)._child_count > 0 ? node.dynamic_child(child_index)._child_count : 1;
-                        const size_type size_offset = node.dynamic_child(child_index)._child_count > 0 ? node.dynamic_child(child_index)._child_count - 1 : 0;
+                        const size_type per_gt_size = node.childOrdering(child_index)._child_count > 0 ? node.childOrdering(child_index)._child_count : 1;
+                        const size_type size_offset = node.childOrdering(child_index)._child_count > 0 ? node.childOrdering(child_index)._child_count - 1 : 0;
 
-                        node._gt_dof_offsets[gt * Node::CHILDREN + child_index] = node.dynamic_child(child_index)._gt_dof_offsets[gt * per_gt_size + size_offset];
+                        node._gt_dof_offsets[gt * Node::CHILDREN + child_index] = node.childOrdering(child_index)._gt_dof_offsets[gt * per_gt_size + size_offset];
                       }
                   }
 
@@ -397,7 +397,7 @@ namespace Dune {
                       {
                         size_type carry = 0;
                         for (size_type child_index = 0; child_index < Node::CHILDREN; ++child_index)
-                          node._entity_dof_offsets[index++] = (carry += node.dynamic_child(child_index).size(geometry_type_index,entity_index));
+                          node._entity_dof_offsets[index++] = (carry += node.childOrdering(child_index).size(geometry_type_index,entity_index));
                       }
                   }
 
@@ -465,17 +465,17 @@ namespace Dune {
 
       virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
       {
-        map_index(di,ci);
+        mapIndex(di,ci);
       }
 
-      typename Traits::ContainerIndex map_index(const typename Traits::DOFIndex& di) const
+      typename Traits::ContainerIndex mapIndex(const typename Traits::DOFIndex& di) const
       {
         typename Traits::ContainerIndex ci;
-        map_index(di.view(),ci);
+        mapIndex(di.view(),ci);
         return ci;
       }
 
-      void map_index(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
+      void mapIndex(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
       {
         typedef typename Traits::SizeType size_type;
         const size_type geometry_type_index = Traits::DOFIndexAccessor::geometryType(di);
@@ -506,7 +506,7 @@ namespace Dune {
       }
 
       template<typename ItIn, typename ItOut>
-      void map_indices(const ItIn begin, const ItIn end, ItOut out) const
+      void map_lfs_indices(const ItIn begin, const ItIn end, ItOut out) const
       {
         typedef typename Traits::SizeType size_type;
         if (_container_blocked)
@@ -548,9 +548,9 @@ namespace Dune {
 
       template<typename CIOutIterator>
       typename Traits::SizeType
-      containerIndices(const typename Traits::DOFIndex::EntityIndex& ei,
-                       typename Traits::SizeType child_index,
-                       CIOutIterator ci_out, const CIOutIterator ci_end) const
+      extract_entity_indices(const typename Traits::DOFIndex::EntityIndex& ei,
+                             typename Traits::SizeType child_index,
+                             CIOutIterator ci_out, const CIOutIterator ci_end) const
       {
         typedef typename Traits::SizeType size_type;
 

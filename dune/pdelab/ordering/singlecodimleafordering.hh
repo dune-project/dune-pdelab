@@ -24,12 +24,12 @@ namespace Dune {
 
       typedef SimpleOrderingTraits<DI,CI> Traits;
 
-      typename Traits::ContainerIndex map_index(const typename Traits::DOFIndex& di) const
+      typename Traits::ContainerIndex mapIndex(const typename Traits::DOFIndex& di) const
       {
         return di[0];
       }
 
-      void map_index(typename Traits::DOFIndex di, typename Traits::ContainerIndex& ci) const
+      void mapIndex(typename Traits::DOFIndex di, typename Traits::ContainerIndex& ci) const
       {
         ci = di[0];
       }

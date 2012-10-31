@@ -34,17 +34,17 @@ namespace Dune {
       }
 
       template<typename ItIn, typename ItOut>
-      void map_indices(const ItIn begin, const ItIn end, ItOut out) const
+      void map_lfs_indices(const ItIn begin, const ItIn end, ItOut out) const
       {
         // don't do anything - this is handled by the specialized GridViewOrdering
       }
 
       template<typename CIOutIterator, typename DIOutIterator = DummyDOFIndexIterator>
       typename Traits::SizeType
-      containerIndices(const typename Traits::DOFIndex::EntityIndex& ei,
-                       typename Traits::SizeType child_index,
-                       CIOutIterator ci_out, const CIOutIterator ci_end,
-                       DIOutIterator di_out = DIOutIterator()) const
+      extract_entity_indices(const typename Traits::DOFIndex::EntityIndex& ei,
+                             typename Traits::SizeType child_index,
+                             CIOutIterator ci_out, const CIOutIterator ci_end,
+                             DIOutIterator di_out = DIOutIterator()) const
       {
         const typename Traits::SizeType s = size(ei);
 

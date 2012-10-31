@@ -86,7 +86,7 @@ namespace Dune {
 
 
       template<typename ItIn, typename ItOut>
-      void map_indices(const ItIn begin, const ItIn end, ItOut out) const
+      void map_lfs_indices(const ItIn begin, const ItIn end, ItOut out) const
       {
         if (_child_count == 0)
           {
@@ -135,10 +135,10 @@ namespace Dune {
 
       template<typename CIOutIterator, typename DIOutIterator = DummyDOFIndexIterator>
       typename Traits::SizeType
-      containerIndices(const typename Traits::DOFIndex::EntityIndex& ei,
-                       typename Traits::SizeType child_index,
-                       CIOutIterator ci_out, const CIOutIterator ci_end,
-                       DIOutIterator di_out = DIOutIterator()) const
+      extract_entity_indices(const typename Traits::DOFIndex::EntityIndex& ei,
+                             typename Traits::SizeType child_index,
+                             CIOutIterator ci_out, const CIOutIterator ci_end,
+                             DIOutIterator di_out = DIOutIterator()) const
       {
         typedef typename Traits::SizeType size_type;
 
@@ -285,12 +285,12 @@ namespace Dune {
 
     protected:
 
-      LocalOrderingBase& dynamic_child(typename Traits::SizeType i)
+      LocalOrderingBase& childOrdering(typename Traits::SizeType i)
       {
         return *_children[i];
       }
 
-      const LocalOrderingBase& dynamic_child(typename Traits::SizeType i) const
+      const LocalOrderingBase& childOrdering(typename Traits::SizeType i) const
       {
         return *_children[i];
       }

@@ -27,21 +27,21 @@ namespace Dune {
 
       static const bool has_dynamic_ordering_children = true;
 
-      typename Traits::ContainerIndex map_index(const typename Traits::DOFIndex& di) const
+      typename Traits::ContainerIndex mapIndex(const typename Traits::DOFIndex& di) const
       {
         typename Traits::ContainerIndex ci;
-        map_index(di.view(),ci);
+        mapIndex(di.view(),ci);
         return ci;
       }
 
-      void map_index(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
+      void mapIndex(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
       {
         if (_delegate)
           _delegate->map_index_dynamic(di,ci);
         else
           {
             typename Traits::SizeType child_index = di.treeIndex().back();
-            _children[child_index]->map_index(di.back_popped(),ci);
+            _children[child_index]->mapIndex(di.back_popped(),ci);
             if (_container_blocked)
               ci.push_back(child_index);
             else
@@ -112,22 +112,22 @@ namespace Dune {
         mergePartitionSets(_children.begin(),_children.end());
       }
 
-      bool container_blocked() const
+      bool containerBlocked() const
       {
         return _container_blocked;
       }
 
-      std::size_t dynamic_child_count() const
+      std::size_t childOrderingCount() const
       {
         return _child_count;
       }
 
-      OrderingBase& dynamic_child(typename Traits::SizeType i)
+      OrderingBase& childOrdering(typename Traits::SizeType i)
       {
         return *_children[i];
       }
 
-      const OrderingBase& dynamic_child(typename Traits::SizeType i) const
+      const OrderingBase& childOrdering(typename Traits::SizeType i) const
       {
         return *_children[i];
       }
