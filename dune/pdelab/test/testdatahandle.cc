@@ -29,8 +29,8 @@ template<int codim, typename GFS>
 void print_info(const GFS& gfs)
 {
   std::cout << "codim " << codim << ":" << std::endl;
-  std::cout << "contains = " << std::boolalpha << gfs.dataHandleContains(2,codim) << "  "
-            << "fixed size = " << gfs.dataHandleFixedSize(2,codim) << std::endl;
+  std::cout << "contains = " << std::boolalpha << gfs.dataHandleContains(codim) << "  "
+            << "fixed size = " << gfs.dataHandleFixedSize(codim) << std::endl;
   std::vector<typename GFS::Ordering::Traits::ContainerIndex> indices;
   typedef typename GFS::Traits::GridView GV;
   GV gv = gfs.gridView();

@@ -242,13 +242,13 @@ namespace Dune {
           //! returns true if data for this codim should be communicated
           bool contains(int dim, int codim) const
           {
-            return _gfs.dataHandleContains(dim,codim);
+            return _gfs.dataHandleContains(codim);
           }
 
           //!  \brief returns true if size per entity of given dim and codim is a constant
           bool fixedsize(int dim, int codim) const
           {
-            return _gfs.dataHandleFixedSize(dim,codim);
+            return _gfs.dataHandleFixedSize(codim);
           }
 
           /*!  \brief how many objects of type DataType have to be sent for a given entity

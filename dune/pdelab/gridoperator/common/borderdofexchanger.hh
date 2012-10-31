@@ -254,8 +254,8 @@ namespace Dune {
         {
           return
             codim > 0 &&
-            (_gfsu.dataHandleContains(dim,codim) ||
-             _gfsv.dataHandleContains(dim,codim));
+            (_gfsu.dataHandleContains(codim) ||
+             _gfsv.dataHandleContains(codim));
         }
 
         bool fixedsize (int dim, int codim) const
@@ -354,8 +354,8 @@ namespace Dune {
         {
           return
             codim > 0 &&
-            (_gfsu.dataHandleContains(dim,codim) ||
-             _gfsv.dataHandleContains(dim,codim));
+            (_gfsu.dataHandleContains(codim) ||
+             _gfsv.dataHandleContains(codim));
         }
 
         bool fixedsize(int dim, int codim) const

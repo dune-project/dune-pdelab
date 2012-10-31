@@ -158,13 +158,13 @@ namespace Dune {
       //------------------------------
 
       //! returns true if data for this codim should be communicated
-      bool dataHandleContains (int dim, int codim) const
+      bool dataHandleContains (int codim) const
       {
         return gfs().ordering().contains(codim);
       }
 
       //! returns true if size per entity of given dim and codim is a constant
-      bool dataHandleFixedSize (int dim, int codim) const
+      bool dataHandleFixedSize (int codim) const
       {
         return gfs().ordering().fixedSize(codim);
       }

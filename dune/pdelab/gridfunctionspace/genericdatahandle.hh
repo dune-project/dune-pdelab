@@ -28,13 +28,13 @@ namespace Dune {
       template<typename GFS>
       bool contains(const GFS& gfs, int dim, int codim) const
       {
-        return gfs.dataHandleContains(dim,codim);
+        return gfs.dataHandleContains(codim);
       }
 
       template<typename GFS>
       bool fixedSize(const GFS& gfs, int dim, int codim) const
       {
-        return gfs.dataHandleFixedSize(dim,codim);
+        return gfs.dataHandleFixedSize(codim);
       }
 
       template<typename GFS, typename Entity>
@@ -55,7 +55,7 @@ namespace Dune {
       template<typename GFS>
       bool contains(const GFS& gfs, int dim, int codim) const
       {
-        return gfs.dataHandleContains(dim,codim);
+        return gfs.dataHandleContains(codim);
       }
 
       template<typename GFS>
@@ -67,7 +67,7 @@ namespace Dune {
       template<typename GFS, typename Entity>
       std::size_t size(const GFS& gfs, const Entity& e) const
       {
-        return gfs.dataHandleContains(Entity::dimension,Entity::codimension) ? _count : 0;
+        return gfs.dataHandleContains(Entity::codimension) ? _count : 0;
       }
 
       explicit EntityDataCommunicationDescriptor(std::size_t count = 1)
@@ -806,7 +806,7 @@ namespace Dune {
       bool contains(int dim, int codim) const
       {
         // Only create neighbor relations for codims used by the GFS.
-        return _gfs.dataHandleContains(dim,codim);
+        return _gfs.dataHandleContains(codim);
       }
 
       bool fixedsize(int dim, int codim) const

@@ -36,7 +36,7 @@ namespace Dune {
       template<typename Entity>
       void update(const Entity& e)
       {
-        if (!_gfs.dataHandleContains(GFS::Traits::GridView::dimension,Entity::codimension))
+        if (!_gfs.dataHandleContains(Entity::codimension))
           {
             _size = 0;
             return;
