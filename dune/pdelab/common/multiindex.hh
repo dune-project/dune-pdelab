@@ -151,6 +151,8 @@ namespace Dune {
       : public ReservedVector<T,n>
     {
 
+      typedef ReservedVector<T,n> base_type;
+
     public:
 
       //! The maximum possible depth of the MultiIndex.
@@ -160,8 +162,6 @@ namespace Dune {
       {
 
         friend class MultiIndex;
-
-        typedef ReservedVector<T,n> base_type;
 
       public:
 
@@ -262,6 +262,15 @@ namespace Dune {
         size_type _size;
 
       };
+
+      MultiIndex()
+      {}
+
+      MultiIndex(const View& view)
+        : base_type(static_cast<const base_type&>(view._mi))
+      {
+        this->resize(view.size());
+      }
 
       void set(typename ReservedVector<T,n>::value_type index)
       {

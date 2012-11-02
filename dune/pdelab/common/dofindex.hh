@@ -97,6 +97,11 @@ namespace Dune {
       DOFIndex()
       {}
 
+      explicit DOFIndex(const View& view)
+        : _entity_index(view._entity_index_view)
+        , _tree_index(view._tree_index_view)
+      {}
+
       View view() const
       {
         return View(*this);
