@@ -117,6 +117,9 @@ namespace Dune {
           //! The type of the child.
           typedef T Type;
 
+          //! The type of the child.
+          typedef T type;
+
           //! The storage type of the child.
           typedef ChildStorageType Storage;
 
