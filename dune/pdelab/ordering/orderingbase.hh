@@ -27,6 +27,8 @@ namespace Dune {
 
       static const bool has_dynamic_ordering_children = true;
 
+      static const bool consume_tree_index = true;
+
       typename Traits::ContainerIndex mapIndex(const typename Traits::DOFIndex& di) const
       {
         typename Traits::ContainerIndex ci;

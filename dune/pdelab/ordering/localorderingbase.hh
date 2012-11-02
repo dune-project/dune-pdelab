@@ -46,6 +46,8 @@ namespace Dune {
 
       static const bool has_dynamic_ordering_children = true;
 
+      static const bool consume_tree_index = true;
+
       typedef LocalOrderingTraits<GV,DI,CI> Traits;
 
       void map_local_index(const typename Traits::SizeType geometry_type_index,
