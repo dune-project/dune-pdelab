@@ -116,6 +116,15 @@ namespace Dune {
       typedef TreePath<i...> type;
     };
 
+    template<typename, typename>
+    struct TreePathConcat;
+
+    template<std::size_t... i, std::size_t... k>
+    struct TreePathConcat<TreePath<i...>,TreePath<k...> >
+    {
+      typedef TreePath<i...,k...> type;
+    };
+
     template<typename... i>
     void print_tree_path(std::ostream& os)
     {}
@@ -389,6 +398,28 @@ namespace Dune {
       public TreePathFront<TP>
     { };
 #endif // DOXYGEN
+
+
+    template<typename, typename>
+    struct TreePathConcat;
+
+    template<typename TP1, typename TP2>
+    struct TreePathConcat
+    {
+      typedef typename TreePathConcat<
+        typename TreePathPushBack<
+          TP1,
+          TreePathFront<TP2>::value
+          >::type,
+        typename TreePathPopFront<TP2>::type
+        >::type type;
+    };
+
+    template<typename TP1>
+    struct TreePathConcat<TP1,TreePath<> >
+    {
+      typedef TP1 type;
+    };
 
 #endif // HAVE_VARIADIC_TEMPLATES
 
