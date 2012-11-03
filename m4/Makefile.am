@@ -1,4 +1,5 @@
 M4FILES =					\
+	cxx0x_template_aliases.m4		\
 	dune-pdelab.m4				\
 	dune-posix-clock.m4			\
 	dune-unordered-containers.m4		\
