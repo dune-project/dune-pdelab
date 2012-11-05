@@ -37,9 +37,9 @@ namespace Dune {
         , _tail_length(0)
       {}
 
-      explicit DOFIndexViewIterator(Iterator it)
+      explicit DOFIndexViewIterator(Iterator it, std::size_t tail_length = 0)
         : DOFIndexViewIterator::iterator_adaptor_(it)
-        , _tail_length(0)
+        , _tail_length(tail_length)
       {}
 
       void cut_back()
@@ -50,6 +50,11 @@ namespace Dune {
       void restore_back()
       {
         --_tail_length;
+      }
+
+      const typename std::iterator_traits<Iterator>::reference raw_index() const
+      {
+        return *(this->base());
       }
 
     private:
