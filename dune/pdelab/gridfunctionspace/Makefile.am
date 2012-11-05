@@ -16,6 +16,7 @@ gridfunctionspace_HEADERS =			\
 	powercompositegridfunctionspacebase.hh	\
 	powergridfunctionspace.hh		\
 	printvector.hh				\
+	subspace.hh				\
 	tags.hh
 
 include $(top_srcdir)/am/global-rules
