@@ -284,6 +284,9 @@ namespace Dune {
         //! The number of children.
         static const std::size_t CHILDREN = Node::CHILDREN;
 
+        //! @name Access to the proxied node
+        //! @{
+
         //! Returns the proxied node.
         template<bool enabled = !proxiedNodeIsConst>
         typename enable_if<enabled,Node&>::type
@@ -291,9 +294,6 @@ namespace Dune {
         {
           return *_node;
         }
-
-        //! @name Access to the proxied node
-        //! @{
 
         //! Returns the proxied node (const version).
         const Node& proxiedNode() const
