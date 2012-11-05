@@ -338,7 +338,7 @@ namespace Dune {
     template<typename Node, typename TreePath>
     typename enable_if<
       TypeTree::TreePathSize<TreePath>::value == 1,
-      const typename Node::template Child<TypeTree::TreePathFront<TreePath>::value>::ConstStorage&
+      typename Node::template Child<TypeTree::TreePathFront<TreePath>::value>::ConstStorage
       >::type
     extract_child_storage(const Node& node, TreePath tp)
     {
