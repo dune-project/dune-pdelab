@@ -462,53 +462,6 @@ namespace Dune {
         return ce;
       }
 
-      //! compute global indices for one element
-      template<typename StorageIterator>
-      void globalIndices (const typename Traits::FiniteElementType& fe,
-                          const Element& e, StorageIterator it, StorageIterator endit) const
-      {
-        typedef FiniteElementInterfaceSwitch<
-          typename Traits::FiniteElementType
-          > FESwitch;
-        // get layout of entity
-        const typename FESwitch::Coefficients &coeffs =
-          FESwitch::coefficients(fe);
-
-        for (std::size_t i=0; i<std::size_t(coeffs.size()); ++i, ++it)
-          {
-            // get geometry type of subentity
-            Dune::GeometryType gt=Dune::GenericReferenceElements<double,GV::Grid::dimension>
-              ::general(fe.type()).type(coeffs.localKey(i).subEntity(),
-                                        coeffs.localKey(i).codim());
-
-            // evaluate consecutive index of subentity
-            int index = gv.indexSet().subIndex(e,
-                                               coeffs.localKey(i).subEntity(),
-                                               coeffs.localKey(i).codim());
-
-            // now compute
-            (*it) = offset[(gtoffset.find(gt)->second)+index]+
-              coeffs.localKey(i).index();
-
-            // make sure we don't write past the end of the iterator range
-            assert(it != endit);
-          }
-      }
-
-      //! Return the offset in the global indices for the given entity
-      template< class Entity >
-      typename Traits::SizeType entityOffset(const Entity &e) const
-      {
-        // get geometry type of subentity
-        Dune::GeometryType gt=e.geometry().type();
-
-        // evaluate consecutive index of subentity
-        int index = gv.indexSet().index(e);
-
-        // now compute
-        return offset[(gtoffset.find(gt)->second)+index];
-      }
-
       //------------------------------
 
       B& backend()
