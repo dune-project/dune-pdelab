@@ -224,6 +224,48 @@ namespace Dune {
       }
 
     } // namespace istl
+
+
+    namespace ISTLParameters {
+
+      enum Blocking
+        {
+          no_blocking,
+          dynamic_blocking,
+          static_blocking
+        };
+    }
+
+    struct istl_vector_backend_tag {};
+
+    template<ISTLParameters::Blocking blocking = ISTLParameters::no_blocking, std::size_t block_size_ = 1>
+    struct ISTLVectorBackend
+    {
+
+      typedef istl_vector_backend_tag tag;
+
+      dune_static_assert((block_size_ > 0),"block size for FieldVector has to be positive");
+
+      typedef std::size_t size_type;
+
+      static const size_type blockSize = block_size_;
+
+      struct Traits
+      {
+        static const ISTLParameters::Blocking block_type = blocking;
+        static const size_type block_size = block_size_;
+        static const bool blocked = blocking != ISTLParameters::no_blocking;
+        static const size_type max_blocking_depth = blocked ? 1 : 0;
+      };
+
+      bool blocked() const
+      {
+        return Traits::blocked;
+      }
+    };
+
+
+
   } // namespace PDELab
 } // namespace Dune
 
