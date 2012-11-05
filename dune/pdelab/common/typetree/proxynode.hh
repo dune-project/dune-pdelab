@@ -266,6 +266,10 @@ namespace Dune {
 
         static const bool proxiedNodeIsConst = IsConst<typename remove_reference<Node>::type>::value;
 
+        // accessor mixins need to be friends for access to proxiedNode()
+        friend class StaticChildAccessors<Node>;
+        friend class DynamicChildAccessors<Node>;
+
       public:
 
         typedef Node ProxiedNode;
@@ -283,6 +287,9 @@ namespace Dune {
 
         //! The number of children.
         static const std::size_t CHILDREN = Node::CHILDREN;
+
+
+      protected:
 
         //! @name Access to the proxied node
         //! @{
@@ -316,8 +323,6 @@ namespace Dune {
         }
 
         //! @}
-
-      protected:
 
         //! @name Constructors
         //! @{
