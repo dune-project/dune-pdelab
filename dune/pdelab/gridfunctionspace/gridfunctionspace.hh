@@ -34,6 +34,8 @@
 #include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
 
+#include <dune/pdelab/backend/istl/tags.hh>
+
 namespace Dune {
   namespace PDELab {
 
@@ -290,7 +292,7 @@ namespace Dune {
      * entity, known at compile-time)
      */
     template<typename GV, typename FEM, typename CE=NoConstraints,
-             typename B=StdVectorBackend, typename P=DefaultLeafOrderingTag>
+             typename B=ISTLVectorBackend<>, typename P=DefaultLeafOrderingTag>
     class GridFunctionSpace
       : public TypeTree::LeafNode
       , public GridFunctionOutputParameters
