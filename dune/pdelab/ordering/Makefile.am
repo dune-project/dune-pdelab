@@ -11,6 +11,7 @@ gridfunctionspace_HEADERS =			\
 	orderingbase.hh				\
 	orderinginterface.hh			\
 	singlecodimleafordering.hh		\
+	subordering.hh				\
 	utility.hh
 
 include $(top_srcdir)/am/global-rules
