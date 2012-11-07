@@ -11,48 +11,13 @@
 #if (HAVE_VARIADIC_TEMPLATES || DOXYGEN)
 #include <dune/pdelab/common/typetree/nodetags.hh>
 #include <dune/pdelab/common/typetree/filters.hh>
+#include <dune/pdelab/common/utility.hh>
 #include <dune/common/tuples.hh>
-#include <dune/common/shared_ptr.hh>
 #include <dune/common/typetraits.hh>
 
 namespace Dune {
   namespace PDELab {
     namespace TypeTree {
-
-      /**
-        \brief ensure that t is wrapped in a shared_ptr<T>
-
-        You have to consider three situations:
-
-        a) t is of type T&
-        t is a stack object and must not be deleted.
-        You create a shared_ptr<T>(&t) with a null_deleter.
-        b) t is of type T*
-        t is a raw pointer and the user os assumed to own this pointer.
-        You create a shared_ptr<T>(t) with a null_deleter.
-        c) t is of type shared_ptr<T>
-        t is already a shared_ptr<T>.
-        You don't have to do anything.
-       */
-      template<typename T>
-      std::shared_ptr<T> ensure_shared_ptr(T & t)
-      {
-        return std::shared_ptr<T>(&t, null_deleter<T>());
-      }
-
-#ifndef DOXYGEN
-      template<typename T>
-      std::shared_ptr<T> ensure_shared_ptr(T * t)
-      {
-        return std::shared_ptr<T>(t, null_deleter<T>());
-      }
-
-      template<typename T>
-      std::shared_ptr<T> & ensure_shared_ptr(std::shared_ptr<T> & t)
-      {
-        return t;
-      }
-#endif
 
       /** \addtogroup Nodes
        *  \ingroup TypeTree
