@@ -11,7 +11,6 @@
 #if (HAVE_VARIADIC_TEMPLATES || DOXYGEN)
 #include <dune/pdelab/common/typetree/nodetags.hh>
 #include <dune/pdelab/common/typetree/filters.hh>
-#include <dune/pdelab/common/utility.hh>
 #include <dune/common/tuples.hh>
 #include <dune/common/typetraits.hh>
 
@@ -191,7 +190,7 @@ namespace Dune {
         template<std::size_t k>
         void setChild(typename Child<k>::type& child, typename enable_if<lazy_enable<k>::value,void*>::type = 0)
         {
-          _node->template childStorage<Child<k>::mapped_index>() = ensure_shared_ptr<typename Child<k>::type>(child);
+          _node->template childStorage<Child<k>::mapped_index>() = stackobject_to_shared_ptr(child);
         }
 
         //! Sets the storage of the i-th child to the passed-in value.
