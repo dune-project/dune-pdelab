@@ -112,9 +112,9 @@ namespace Dune{
         return testGridFunctionSpace().globalSize();
       }
 
-      Assembler & assembler(){ return global_assembler; }
+      Assembler & assembler() const { return global_assembler; }
 
-      LocalAssembler & localAssembler(){ return local_assembler; }
+      LocalAssembler & localAssembler() const { return local_assembler; }
 
       //! Fill pattern of jacobian matrix
       void fill_pattern(Pattern & p) const {

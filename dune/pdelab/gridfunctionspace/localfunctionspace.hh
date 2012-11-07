@@ -813,8 +813,16 @@ namespace Dune {
       friend struct FillIndicesVisitor;
 
     public:
+
       LocalFunctionSpace(const GFS & gfs)
         : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs))
+      {
+        this->_dof_indices = &(this->_dof_index_storage);
+        this->setup(*this);
+      }
+
+      LocalFunctionSpace(shared_ptr<const GFS> pgfs)
+        : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform_storage(pgfs))
       {
         this->_dof_indices = &(this->_dof_index_storage);
         this->setup(*this);

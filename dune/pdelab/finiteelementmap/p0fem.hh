@@ -22,7 +22,7 @@ namespace Dune {
        *             argument.
        */
       P0LocalFiniteElementMap (Dune::GeometryType::BasicType basicType) DUNE_DEPRECATED
-        : SimpleLocalFiniteElementMap< Dune::P0LocalFiniteElement<D,R,d> >(Dune::P0LocalFiniteElement<D,R,d>(basicType))
+        : SimpleLocalFiniteElementMap< Dune::P0LocalFiniteElement<D,R,d> >(Dune::P0LocalFiniteElement<D,R,d>(GeometryType(basicType,d)))
         , _gt(basicType,d)
       {
       }

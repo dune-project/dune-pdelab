@@ -8,6 +8,7 @@
 #include <dune/common/deprecated.hh>
 #include <dune/common/mpihelper.hh>
 #include <dune/common/static_assert.hh>
+#include <dune/common/stdstreams.hh>
 
 #include <dune/istl/owneroverlapcopy.hh>
 #include <dune/istl/solvercategory.hh>

@@ -4,19 +4,20 @@
 #ifndef DUNE_PDELAB_ONESTEP_HH
 #define DUNE_PDELAB_ONESTEP_HH
 
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+#include <ostream>
 #include <vector>
 
 #include <stdio.h>
 
-#include<dune/common/exceptions.hh>
-
-#include<dune/common/fvector.hh>
-#include<dune/common/fmatrix.hh>
+#include <dune/common/exceptions.hh>
+#include <dune/common/fmatrix.hh>
+#include <dune/common/fvector.hh>
 #include <dune/common/ios_state.hh>
 
-#include"../gridoperatorspace/instationarygridoperatorspace.hh"
+#include <dune/pdelab/common/logtag.hh>
+#include <dune/pdelab/gridoperatorspace/instationarygridoperatorspace.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -773,7 +774,7 @@ namespace Dune {
        * there).
        */
       OneStepMethod(const TimeSteppingParameterInterface<T>& method_,
-                    IGOS& igos_, const PDESOLVER& pdesolver_)
+                    IGOS& igos_, PDESOLVER& pdesolver_)
         : method(&method_), igos(igos_), pdesolver(pdesolver_), verbosityLevel(1), step(1)
       {
         if (igos.trialGridFunctionSpace().gridView().comm().rank()>0)
@@ -788,6 +789,9 @@ namespace Dune {
         else
           verbosityLevel = level;
       }
+
+      //! change number of current step
+      void setStepNumber(int newstep) { step = newstep; }
 
       //! Access to the (non) linear solver
       const PDESOLVER & getPDESolver() const
@@ -991,7 +995,7 @@ namespace Dune {
     private:
       const TimeSteppingParameterInterface<T> *method;
       IGOS& igos;
-      PDESOLVER pdesolver;
+      PDESOLVER& pdesolver;
       int verbosityLevel;
       int step;
     };
@@ -1068,6 +1072,9 @@ namespace Dune {
           verbosityLevel = level;
       }
 
+      //! change number of current step
+      void setStepNumber(int newstep) { step = newstep; }
+
       //! redefine the method to be used; can be done before every step
       /**
        * \param method_ Parameter object.
@@ -1094,10 +1101,19 @@ namespace Dune {
       {
         // save formatting attributes
         ios_base_all_saver format_attribute_saver(std::cout);
+        LocalTag mytag;
+        mytag << "ExplicitOneStepMethod::apply(): ";
 
         std::vector<TrlV*> x(1); // vector of pointers to all steps
         x[0] = &xold;         // initially we have only one
+        if(verbosityLevel>=4)
+          std::cout << mytag << "Creating residual vectors alpha and beta..."
+                    << std::endl;
         TstV alpha(igos.testGridFunctionSpace()), beta(igos.testGridFunctionSpace()); // split residual vectors
+        if(verbosityLevel>=4)
+          std::cout << mytag
+                    << "Creating residual vectors alpha and beta... done."
+                    << std::endl;
 
         if (verbosityLevel>=1){
           std::ios_base::fmtflags oldflags = std::cout.flags();
@@ -1117,11 +1133,20 @@ namespace Dune {
         }
 
         // prepare assembler
+        if(verbosityLevel>=4)
+          std::cout << mytag << "Preparing assembler..." << std::endl;
         igos.preStep(*method,time,dt);
+        if(verbosityLevel>=4)
+          std::cout << mytag << "Preparing assembler... done." << std::endl;
 
         // loop over all stages
         for(unsigned r=1; r<=method->s(); ++r)
           {
+            LocalTag stagetag(mytag);
+            stagetag << "stage " << r << ": ";
+            if (verbosityLevel>=4)
+              std::cout << stagetag << "Start." << std::endl;
+
             if (verbosityLevel>=2){
               std::ios_base::fmtflags oldflags = std::cout.flags();
               std::cout << "STAGE "
@@ -1155,7 +1180,12 @@ namespace Dune {
             D = 0.0;
             alpha = 0.0;
             beta = 0.0;
+            if(verbosityLevel>=4)
+              std::cout << stagetag << "Assembling residual..." << std::endl;
             igos.explicit_jacobian_residual(r,x,D,alpha,beta);
+            if(verbosityLevel>=4)
+              std::cout << stagetag << "Assembling residual... done."
+                        << std::endl;
 
             // let time controller compute the optimal dt in first stage
             if (r==1)
@@ -1165,7 +1195,8 @@ namespace Dune {
 
                 if (verbosityLevel>=4){
                   std::ios_base::fmtflags oldflags = std::cout.flags();
-                  std::cout << "current dt: "
+                  std::cout << stagetag
+                            << "current dt: "
                             << std::setw(12) << std::setprecision(4) << std::scientific
                             << dt
                             << " suggested dt: "
@@ -1189,28 +1220,44 @@ namespace Dune {
 
             // combine residual with selected dt
             if (verbosityLevel>=4)
-              std::cout << "axpy ..." << std::endl;
+              std::cout << stagetag
+                        << "Combining residuals with selected dt..."
+                        << std::endl;
             alpha.axpy(dt,beta);
+            if (verbosityLevel>=4)
+              std::cout << stagetag
+                        << "Combining residuals with selected dt... done."
+                        << std::endl;
 
             // solve diagonal system
             if (verbosityLevel>=4)
-              std::cout << "solver ..." << std::endl;
+              std::cout << stagetag << "Solving diagonal system..."
+                        << std::endl;
             ls.apply(D,*x[r],alpha,0.99); // dummy reduction
+            if (verbosityLevel>=4)
+              std::cout << stagetag << "Solving diagonal system... done."
+                        << std::endl;
 
             // stage cleanup
             if (verbosityLevel>=4)
-              std::cout << "postStage ..." << std::endl;
+              std::cout << stagetag << "Cleanup..." << std::endl;
             igos.postStage();
+            if (verbosityLevel>=4)
+              std::cout << stagetag << "Cleanup... done" << std::endl;
 
             if (verbosityLevel>=4)
-              std::cout << "stage " << r << " completed." << std::endl;
+              std::cout << stagetag << "Finished." << std::endl;
           }
 
         // delete intermediate steps
         for(unsigned i=1; i<method->s(); ++i) delete x[i];
 
         // step cleanup
+        if (verbosityLevel>=4)
+          std::cout << mytag << "Cleanup..." << std::endl;
         igos.postStep();
+        if (verbosityLevel>=4)
+          std::cout << mytag << "Cleanup... done." << std::endl;
 
         step++;
         return dt;

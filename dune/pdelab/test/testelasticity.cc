@@ -167,9 +167,9 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
   x += x0;
 
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   Dune::PDELab::add_solution_to_vtk_writer(vtkwriter,gfs,x);
-  vtkwriter.write("testelasticity",Dune::VTKOptions::ascii);
+  vtkwriter.write("testelasticity",Dune::VTK::ascii);
 }
 
 int main(int argc, char** argv)

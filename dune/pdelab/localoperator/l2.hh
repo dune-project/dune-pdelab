@@ -86,7 +86,7 @@ namespace Dune {
             // evaluate u
             RF u=0.0;
             for (size_type i=0; i<lfsu.size(); i++)
-              u += x(lfsu,i)*phi[i];
+              u += RF(x(lfsu,i)*phi[i]);
 
             // u*phi_i
             RF factor = _scaling * it->weight() * eg.geometry().integrationElement(it->position());

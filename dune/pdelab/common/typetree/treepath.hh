@@ -125,7 +125,7 @@ namespace Dune {
       typedef TreePath<i...,k...> type;
     };
 
-    template<typename... i>
+    template<std::size_t... i>
     void print_tree_path(std::ostream& os)
     {}
 

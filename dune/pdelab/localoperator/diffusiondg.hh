@@ -2,11 +2,13 @@
 #ifndef DUNE_PDELAB_DIFFUSIONDG_HH
 #define DUNE_PDELAB_DIFFUSIONDG_HH
 
-#include<dune/common/exceptions.hh>
-#include<dune/common/fvector.hh>
-#include<dune/common/static_assert.hh>
-#include<dune/geometry/quadraturerules.hh>
-#include<dune/geometry/referenceelements.hh>
+#include <dune/common/exceptions.hh>
+#include <dune/common/fvector.hh>
+#include <dune/common/static_assert.hh>
+#include <dune/geometry/quadraturerules.hh>
+#include <dune/geometry/referenceelements.hh>
+
+#include <dune/pdelab/localoperator/defaultimp.hh>
 
 #include "../common/geometrywrapper.hh"
 #include "../gridoperatorspace/gridoperatorspace.hh"
@@ -62,8 +64,8 @@ namespace Dune {
       enum { doLambdaSkeleton = false };
       enum { doLambdaBoundary = true };
 
-      DiffusionDG (const K& k_, const F& f_, const B& bctype_, const G& g_, const J& j_, int dg_method) :
-        k(k_), f(f_), bctype(bctype_), g(g_), j(j_)
+      DiffusionDG (const K& k_, const F& f_, const B& bctype_, const G& g_, const J& j_, int dg_method, int _superintegration_order = 0) :
+        k(k_), f(f_), bctype(bctype_), g(g_), j(j_), superintegration_order(_superintegration_order)
       {
         
         // OBB
@@ -110,12 +112,12 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
-        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0);
+        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0) + superintegration_order;
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename K::Traits::RangeType tensor(0.0);
-        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
+        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
         k.evaluate(eg.entity(),localcenter,tensor);
 
         // loop over quadrature points
@@ -178,20 +180,20 @@ namespace Dune {
         Dune::GeometryType gtface = ig.geometryInInside().type();
         const int qorder = std::max( 0, std::max(
             2 * ( (int)lfsu_s.finiteElement().localBasis().order() - 1 ),
-            2 * ( (int)lfsu_n.finiteElement().localBasis().order() - 1 )));
+            2 * ( (int)lfsu_n.finiteElement().localBasis().order() - 1 ))) + superintegration_order;
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // normal of center in face's reference element
         const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-          Dune::GenericReferenceElements<DF,IG::dimension-1>::
+          Dune::ReferenceElements<DF,IG::dimension-1>::
           general(ig.geometry().type()).position(0,0);
         const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
             
         // evaluate diffusion tensor at elements' centers, assume they are constant over elements
         const Dune::FieldVector<DF,IG::dimension>& 
-          inside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
         const Dune::FieldVector<DF,IG::dimension>& 
-          outside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
+          outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
         typename K::Traits::RangeType permeability_s(0.0);
         typename K::Traits::RangeType permeability_n(0.0);
         k.evaluate(*(ig.inside()),inside_local,permeability_s);
@@ -324,7 +326,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
-        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0);
+        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0) + superintegration_order;
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // evaluate boundary condition type
@@ -333,14 +335,14 @@ namespace Dune {
           {
             // center in face's reference element
             const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-              Dune::GenericReferenceElements<DF,IG::dimension-1>::
+              Dune::ReferenceElements<DF,IG::dimension-1>::
               general(ig.geometry().type()).position(0,0);
             // outer normal, assuming it is constant over whole intersection
             const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
 
             // evaluate diffusion tensor at cell center, assume it is constant over elements
             const Dune::FieldVector<DF,IG::dimension>
-              localcenter = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+              localcenter = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
             typename K::Traits::RangeType tensor(0.0);
             k.evaluate(*ig.inside(),localcenter,tensor);
 
@@ -423,7 +425,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
-        const int qorder = std::max ( 2 * ( (int)lfsv.finiteElement().localBasis().order() - 1 ), 0);
+        const int qorder = std::max ( 2 * ( (int)lfsv.finiteElement().localBasis().order() - 1 ), 0) + superintegration_order;
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         // loop over quadrature points
@@ -468,7 +470,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
-        const int qorder = std::max ( 2 * ( (int)lfsv.finiteElement().localBasis().order() - 1 ), 0);
+        const int qorder = std::max ( 2 * ( (int)lfsv.finiteElement().localBasis().order() - 1 ), 0) + superintegration_order;
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // evaluate boundary condition type
@@ -506,13 +508,13 @@ namespace Dune {
             */
             // center in face's reference element
             const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-              Dune::GenericReferenceElements<DF,IG::dimension-1>::
+              Dune::ReferenceElements<DF,IG::dimension-1>::
               general(ig.geometry().type()).position(0,0);
             // outer normal, assuming it is constant over whole intersection
             const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
             // evaluate diffusion tensor at cell center, assume it is constant over elements
             const Dune::FieldVector<DF,IG::dimension>
-              localcenter = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+              localcenter = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
             typename K::Traits::RangeType tensor(0.0);
             k.evaluate(*ig.inside(),localcenter,tensor);
             // penalty weight for NIPG / SIPG
@@ -586,12 +588,12 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
-        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0);
+        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0) + superintegration_order;
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename K::Traits::RangeType tensor;
-        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
+        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
         k.evaluate(eg.entity(),localcenter,tensor);
 
         // loop over quadrature points
@@ -656,20 +658,20 @@ namespace Dune {
         Dune::GeometryType gtface = ig.geometryInInside().type();
         const int qorder = std::max( 0, std::max(
             2 * ( (int)lfsu_s.finiteElement().localBasis().order() - 1 ),
-            2 * ( (int)lfsu_n.finiteElement().localBasis().order() - 1 )));
+            2 * ( (int)lfsu_n.finiteElement().localBasis().order() - 1 ))) + superintegration_order;
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // center in face's reference element
         const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-          Dune::GenericReferenceElements<DF,IG::dimension-1>::
+          Dune::ReferenceElements<DF,IG::dimension-1>::
           general(ig.geometry().type()).position(0,0);
         const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         const Dune::FieldVector<DF,IG::dimension>& 
-          inside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
         const Dune::FieldVector<DF,IG::dimension>& 
-          outside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
+          outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
         typename K::Traits::RangeType permeability_s(0.0);
         typename K::Traits::RangeType permeability_n(0.0);
         k.evaluate(*(ig.inside()),inside_local,permeability_s);
@@ -816,7 +818,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
-        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0);
+        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0) + superintegration_order;
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // evaluate boundary condition type
@@ -825,14 +827,14 @@ namespace Dune {
           {
             // center in face's reference element
             const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-              Dune::GenericReferenceElements<DF,IG::dimension-1>::
+              Dune::ReferenceElements<DF,IG::dimension-1>::
               general(ig.geometry().type()).position(0,0);
             // outer normal, assuming it is constant over whole intersection
             const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
 
             // evaluate diffusion tensor at cell center, assume it is constant over elements
             const Dune::FieldVector<DF,IG::dimension>
-              localcenter = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+              localcenter = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
             typename K::Traits::RangeType tensor(0.0);
             k.evaluate(*ig.inside(),localcenter,tensor);
 
@@ -903,6 +905,7 @@ namespace Dune {
       double epsilon;
       double sigma;
       double beta;
+      int superintegration_order; // Quadrature order
     };
 
     //! \} group GridFunctionSpace

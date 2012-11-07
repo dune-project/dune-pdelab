@@ -6,6 +6,9 @@
 #if HAVE_PETSC
 
 #include<vector>
+#include <functional>
+#include <algorithm>
+#include <complex>
 
 #include <dune/pdelab/backend/petscutility.hh>
 #include <dune/pdelab/backend/petscvectorbackend.hh>
@@ -47,6 +50,37 @@ namespace Dune {
         (*this)[i].insert(j);
       }
     };
+
+    namespace {
+
+      // Custom ordering functor for row-zeroing map.
+      // Required for complex support, as complex is not ordered by default.
+
+
+      // By default, just use std::less
+      template <class T>
+      struct MapOrdering
+        : public std::less<T>
+      {};
+
+
+      // For std::complex, implement a lexicographic ordering
+      template<typename T>
+      struct MapOrdering<std::complex<T> >
+        : public std::binary_function<
+                   std::complex<T>,
+                   std::complex<T>,
+                   bool>
+      {
+
+        bool operator() (const std::complex<T>& lhs, const std::complex<T>& rhs) {
+          return (lhs.real() < rhs.real()) ||
+            (!(rhs.real() < lhs.real()) && (lhs.imag() < rhs.imag()));
+        }
+
+      };
+
+    } // anonymous namespace
 
 
     struct petsc_types
@@ -227,7 +261,8 @@ namespace Dune {
         , _rowsToClear()
         , _managed(true)
       {
-        PETSC_CALL(MatCreateSeqAIJ(M,N,&(nnz[0]),&_m));
+        PetscInt nz = 0;
+        PETSC_CALL(MatCreateSeqAIJ(PETSC_COMM_SELF,M,N,nz,&(nnz[0]),&_m));
         PETSC_CALL(MatSetOption(_m,MAT_IGNORE_ZERO_ENTRIES,PETSC_TRUE));
         PETSC_CALL(MatSetOption(_m,MAT_NO_OFF_PROC_ZERO_ROWS,PETSC_TRUE)); // we only ever zero our own rows
       }
@@ -318,13 +353,13 @@ namespace Dune {
       Mat _m;
       AccessorState _accessorState;
 
-      std::map<double,std::vector<int> > _rowsToClear;
+      std::map<PetscScalar,std::vector<int>,MapOrdering<PetscScalar> > _rowsToClear;
 
       bool _managed;
 
     private:
 
-      void enqueue_row_clear(size_type i, double diagonal_value)
+      void enqueue_row_clear(size_type i, PetscScalar diagonal_value)
       {
         _rowsToClear[diagonal_value].push_back(i);
       }
@@ -435,22 +470,37 @@ namespace Dune {
           }
       }
 
-      double get(size_type i, size_type j)
+      PetscScalar get(size_type i, size_type j)
       {
         setup(PetscMatrixContainer::readValues);
         return _vals[i * _cols.size() + j];
       }
 
-      void set(size_type i, size_type j, double v)
+      void set(size_type i, size_type j, PetscScalar v)
       {
         setup(PetscMatrixContainer::setValues);
         _vals[i * _cols.size() + j] = v;
       }
 
-      void add(size_type i, size_type j, double v)
+      void add(size_type i, size_type j, PetscScalar v)
       {
         setup(PetscMatrixContainer::addValues);
         _vals[i * _cols.size() + j] += v;
+      }
+
+      void setGlobal(size_type gi, size_type gj, const typename Matrix::field_type& v)
+      {
+        DUNE_THROW(NotImplemented,"Non-Dirichlet constraint is not yet implemented for PETSc backend.");
+      }
+
+      void addGlobal(size_type gi, size_type gj, const typename Matrix::field_type& v)
+      {
+        DUNE_THROW(NotImplemented,"Non-Dirichlet constraint is not yet implemented for PETSc backend.");
+      }
+
+      typename Matrix::field_type getGlobal(size_type gi, size_type gj) const
+      {
+        DUNE_THROW(NotImplemented,"Non-Dirichlet constraint is not yet implemented for PETSc backend.");
       }
 
     private:
@@ -464,7 +514,7 @@ namespace Dune {
       std::vector<int> _cols;
 
     private:
-      std::vector<double> _vals;
+      std::vector<PetscScalar> _vals;
       PetscMatrixContainer::AccessorState _state;
       const size_type _row_offset;
       const size_type _col_offset;
@@ -628,8 +678,6 @@ namespace Dune {
         : public PetscMatrixAccessor<LFSV,LFSU>
       {
 
-        dune_static_assert((is_same<E,double>::value),"Petsc currently only supports double as field type");
-
       public:
 
         Accessor(PetscMatrixContainer& m, const LFSV& lfsv, const LFSU& lfsu)
@@ -643,7 +691,6 @@ namespace Dune {
         : public PetscMatrixContainer
       {
 
-        dune_static_assert((is_same<E,double>::value),"The PETSc backend currently only supports double as a field type");
 
       public:
 
@@ -664,7 +711,7 @@ namespace Dune {
       //! The size type
       typedef typename std::size_t size_type;
 
-      static void clear_row (size_type i, PetscMatrixContainer& c, double diagonal_value)
+      static void clear_row (size_type i, PetscMatrixContainer& c, PetscScalar diagonal_value)
       {
         c.enqueue_row_clear(i,diagonal_value);
       }
@@ -767,19 +814,19 @@ namespace Dune {
 
       typedef PetscNestedMatrixContainer::size_type size_type;
 
-      double get(size_type i, size_type j)
+      PetscScalar get(size_type i, size_type j)
       {
         PetscMatrixAccessorBase& a = accessor(i,j);
         return a.get(i,j);
       }
 
-      void set(size_type i, size_type j, double v)
+      void set(size_type i, size_type j, PetscScalar v)
       {
         PetscMatrixAccessorBase& a = accessor(i,j);
         a.set(i,j,v);
       }
 
-      void add(size_type i, size_type j, double v)
+      void add(size_type i, size_type j, PetscScalar v)
       {
         PetscMatrixAccessorBase& a = accessor(i,j);
         a.add(i,j,v);
@@ -814,7 +861,6 @@ namespace Dune {
         : public PetscNestedMatrixContainer
       {
 
-        dune_static_assert((is_same<E,double>::value),"The PETSc backend currently only supports double as a field type");
 
       public:
 
@@ -830,7 +876,6 @@ namespace Dune {
         : public PetscNestedMatrixAccessor<LFSV,LFSU>
       {
 
-        dune_static_assert((is_same<E,double>::value),"Petsc currently only supports double as field type");
 
       public:
 

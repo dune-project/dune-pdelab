@@ -19,7 +19,7 @@
 
 #include <dune/pdelab/constraints/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
-#include <dune/pdelab/newton/newton.hh>
+#include <dune/pdelab/backend/solver.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 
 namespace Dune {
@@ -65,32 +65,6 @@ namespace Dune {
     // Here we add some standard linear solvers conforming to the linear solver
     // interface required to solve linear and nonlinear problems.
     //==============================================================================
-
-    struct SequentialNorm
-    {/*! \brief compute global norm of a vector
-
-        \param[in] v the given vector
-      */
-      template<class V>
-      typename Dune::template FieldTraits<typename V::ElementType >::real_type norm(const V& v) const
-      {
-        return istl::raw(v).two_norm();
-      }
-    };
-
-    class LinearResultStorage
-    {
-    public:
-      /*! \brief Return access to result data */
-      const Dune::PDELab::LinearSolverResult<double>& result() const
-      {
-        return res;
-      }
-
-    protected:
-      Dune::PDELab::LinearSolverResult<double> res;
-    };
-
 
     template<template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
@@ -314,7 +288,7 @@ namespace Dune {
       {}
     };
 
-    //! Sequential BiCGStab solver with ILU0 preconditioner
+    //! \brief Sequential BiCGStab solver with ILU0 preconditioner
     class ISTLBackend_SEQ_BCGS_ILUn
       : public ISTLBackend_SEQ_ILUn<Dune::BiCGSTABSolver>
     {
@@ -332,7 +306,7 @@ namespace Dune {
       {}
     };
 
-    //! Sequential congute gradient solver with ILU0 preconditioner
+    //! \brief Sequential congute gradient solver with ILU0 preconditioner
     class ISTLBackend_SEQ_CG_ILUn
       : public ISTLBackend_SEQ_ILUn<Dune::CGSolver>
     {
@@ -368,6 +342,23 @@ namespace Dune {
     };
 
     /**
+     * @brief Backend using a MINRes solver preconditioned by SSOR.
+     */
+    class ISTLBackend_SEQ_MINRES_SSOR
+      : public ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::MINRESSolver>
+    {
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
+      */
+      explicit ISTLBackend_SEQ_MINRES_SSOR (unsigned maxiter_=5000, int verbose_=1)
+        : ISTLBackend_SEQ_Base<Dune::SeqSSOR, Dune::MINRESSolver>(maxiter_, verbose_)
+      {}
+    };
+
+    /**
      * @brief Backend for conjugate gradient solver with Jacobi preconditioner.
      */
     class ISTLBackend_SEQ_CG_Jac
@@ -384,6 +375,9 @@ namespace Dune {
     };
 
 #if HAVE_SUPERLU
+    /**
+     * @brief Solver backend using SuperLU as a direct solver.
+     */
     class ISTLBackend_SEQ_SuperLU
       : public SequentialNorm, public LinearResultStorage
     {
@@ -393,6 +387,16 @@ namespace Dune {
         \param[in] verbose_ print messages if true
       */
       explicit ISTLBackend_SEQ_SuperLU (int verbose_=1)
+        : verbose(verbose_)
+      {}
+
+
+      /*! \brief make a linear solver object
+
+        \param[in] maxiter Maximum number of allowed steps (ignored)
+        \param[in] verbose_ print messages if true
+      */
+      ISTLBackend_SEQ_SuperLU (int maxiter, int verbose_)
         : verbose(verbose_)
       {}
 
@@ -457,8 +461,33 @@ namespace Dune {
     };
 
     //! \} Sequential Solvers
-    template<class GO, template<class,class,class,int> class Preconditioner, template<class> class Solver>
-    class ISTLBackend_SEQ_AMG
+
+    /**
+     * @brief Class providing some statistics of the AMG solver.
+     *
+     */
+    struct ISTLAMGStatistics
+    {
+      /**
+       * @brief The needed for computing the parallel information and
+       * for adapting the linear system.
+       */
+      double tprepare;
+      /** @brief the number of levels in the AMG hierarchy. */
+      int levels;
+      /** @brief The time spent in solving the system (without building the hierarchy. */
+      double tsolve;
+      /** @brief The time needed for building the AMG hierarchy (coarsening). */
+      double tsetup;
+      /** @brief The number of iterations performed until convergence was reached. */
+      int iterations;
+      /** @brief True if a direct solver was used on the coarset level. */
+      bool directCoarseLevelSolver;
+    };
+
+    template<class GO, template<class,class,class,int> class Preconditioner, template<class> class Solver,
+              bool skipBlocksizeCheck = false>
+    class ISTLBackend_SEQ_AMG : public LinearResultStorage
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       typedef typename GO::Traits::Jacobian M;
@@ -473,11 +502,21 @@ namespace Dune {
 
     public:
       ISTLBackend_SEQ_AMG(unsigned maxiter_=5000, int verbose_=1,
-                          bool reuse_=false)
+                          bool reuse_=false, bool usesuperlu_=true)
         : maxiter(maxiter_), params(15,2000), verbose(verbose_),
-          reuse(reuse_), firstapply(true)
+          reuse(reuse_), firstapply(true), usesuperlu(usesuperlu_)
       {
+        params.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
         params.setDebugLevel(verbose_);
+#if !HAVE_SUPERLU
+        if (usesuperlu == true)
+          {
+            std::cout << "WARNING: You are using AMG without SuperLU!"
+                      << " Please consider installing SuperLU,"
+                      << " or set the usesuperlu flag to false"
+                      << " to suppress this warning." << std::endl;
+          }
+#endif
       }
 
        /*! \brief set AMG parameters
@@ -507,6 +546,7 @@ namespace Dune {
       */
       void apply(M& A, V& z, V& r, typename V::ElementType reduction)
       {
+        Timer watch;
         MatrixType& mat=istl::raw(A);
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
           Dune::Amg::FirstDiagonal> > Criterion;
@@ -520,11 +560,16 @@ namespace Dune {
         if (reuse==false || firstapply==true){
           amg.reset(new AMG(oop, criterion, smootherArgs));
           firstapply = false;
+          stats.tsetup = watch.elapsed();
+          stats.levels = amg->maxlevels();
+          stats.directCoarseLevelSolver=amg->usesDirectCoarseLevelSolver();
         }
+        watch.reset();
         Dune::InverseOperatorResult stat;
 
         Solver<VectorType> solver(oop,*amg,reduction,maxiter,verbose);
         solver.apply(istl::raw(z),istl::raw(r),stat);
+        stats.tsolve= watch.elapsed();
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -532,20 +577,25 @@ namespace Dune {
         res.conv_rate  = stat.conv_rate;
       }
 
-      /*! \brief Return access to result data */
-      const Dune::PDELab::LinearSolverResult<double>& result() const
+
+      /**
+       * @brief Get statistics of the AMG solver (no of levels, timings).
+       * @return statistis of the AMG solver.
+       */
+      const ISTLAMGStatistics& statistics() const
       {
-        return res;
+        return stats;
       }
 
     private:
-      Dune::PDELab::LinearSolverResult<double> res;
       unsigned maxiter;
       Parameters params;
       int verbose;
       bool reuse;
       bool firstapply;
+      bool usesuperlu;
       Dune::shared_ptr<AMG> amg;
+      ISTLAMGStatistics stats;
     };
 
     //! \addtogroup PDELab_seqsolvers Sequential Solvers
@@ -568,10 +618,12 @@ namespace Dune {
        * @param verbose_ The verbosity level to use.
        * @param reuse_ Set true, if the Matrix to be used is always identical
        * (AMG aggregation is then only performed once).
+       * @param usesuperlu_ Set false, to suppress the no SuperLU warning
        */
       ISTLBackend_SEQ_CG_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1,
-                                  bool reuse_=false)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::CGSolver>(maxiter_,verbose_,reuse_)
+                                  bool reuse_=false, bool usesuperlu_=true)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::CGSolver>
+          (maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
 
@@ -592,10 +644,12 @@ namespace Dune {
        * @param verbose_ The verbosity level to use.
        * @param reuse_ Set true, if the Matrix to be used is always identical
        * (AMG aggregation is then only performed once).
+       * @param usesuperlu_ Set false, to suppress the no SuperLU warning
        */
       ISTLBackend_SEQ_BCGS_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1,
-                                    bool reuse_=false)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::BiCGSTABSolver>(maxiter_, verbose_, reuse_)
+                                    bool reuse_=false, bool usesuperlu_=true)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::BiCGSTABSolver>
+          (maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
 
@@ -616,10 +670,12 @@ namespace Dune {
        * @param verbose_ The verbosity level to use.
        * @param reuse_ Set true, if the Matrix to be used is always identical
        * (AMG aggregation is then only performed once).
+       * @param usesuperlu_ Set false, to suppress the no SuperLU warning
        */
       ISTLBackend_SEQ_BCGS_AMG_SOR(unsigned maxiter_=5000, int verbose_=1,
-                                   bool reuse_=false)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::BiCGSTABSolver>(maxiter_, verbose_,reuse_)
+                                   bool reuse_=false, bool usesuperlu_=true)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::BiCGSTABSolver>
+          (maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
 
@@ -640,10 +696,12 @@ namespace Dune {
        * @param verbose_ The verbosity level to use.
        * @param reuse_ Set true, if the Matrix to be used is always identical
        * (AMG aggregation is then only performed once).
+       * @param usesuperlu_ Set false, to suppress the no SuperLU warning
        */
       ISTLBackend_SEQ_LS_AMG_SSOR(unsigned maxiter_=5000, int verbose_=1,
-                                  bool reuse_=false)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::LoopSolver>(maxiter_, verbose_,reuse_)
+                                  bool reuse_=false, bool usesuperlu_=true)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSSOR, Dune::LoopSolver>
+          (maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
 
@@ -664,10 +722,12 @@ namespace Dune {
        * @param verbose_ The verbosity level to use.
        * @param reuse_ Set true, if the Matrix to be used is always identical
        * (AMG aggregation is then only performed once).
+       * @param usesuperlu_ Set false, to suppress the no SuperLU warning
        */
       ISTLBackend_SEQ_LS_AMG_SOR(unsigned maxiter_=5000, int verbose_=1,
-                                 bool reuse_=false)
-        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::LoopSolver>(maxiter_, verbose_,reuse_)
+                                 bool reuse_=false, bool usesuperlu_=true)
+        : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::LoopSolver>
+          (maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
 

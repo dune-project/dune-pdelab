@@ -3,6 +3,7 @@
 #define DUNE_PDELAB_P0GHOSTCONSTRAINTS_HH
 
 #include "../common/geometrywrapper.hh"
+#include<dune/grid/common/gridenums.hh>
 
 namespace Dune {
   namespace PDELab {

@@ -1,4 +1,5 @@
-PDELab 1.0 ==========
+PDELab
+======
 
 This is the first public release of PDELab, a PDE discretization toolkit built
 on top of the DUNE framework [0]. License information can be found in the file
@@ -11,12 +12,18 @@ This release of PDELab is designed to work with the 2.2 release of the
 DUNE libraries.
 
 
-Caveats =======
+Changes
+=======
+
+
+Caveats
+=======
 
 The following list is a non-exhaustive overview of possible problems you might
 encounter with this release.
 
-Assembler --------
+Assembler
+--------
 
 * The GridOperatorSpace and accompanying InstationaryGridOperatorSpace are
   deprecated and will be removed in the near future. Use GridOperator and
@@ -28,14 +35,16 @@ Assembler --------
 
 * Hanging nodes support is currently restricted to P1 and Q1 spaces.
 
-Solvers -------
+Solvers
+-------
 
 * Both the Newton solver and the linear solve currently allocate a new matrix on
   each call to apply(), which can incur a significant overhead if they are
   called frequently (e.g. for instationary problems). This will be fixed in a
   later release.
 
-Linear Algebra Backends -----------------------
+Linear Algebra Backends
+-----------------------
 
 * Due to changes in the ISTL backend, users who construct their own solvers
   directly from ISTL primitives will have to make sure to use native ISTL types
@@ -66,7 +75,8 @@ Linear Algebra Backends -----------------------
 * The PETSc backend does not work correctly when used in conjunction with
   hanging nodes.
 
-General -------
+General
+-------
 
 * Compile times can be really long for non-trivial problems. Some developers
   have had good success with using the clang compiler instead of GCC during
@@ -85,7 +95,8 @@ General -------
   of the core modules to a dual-licensing scheme.
 
 
-Links =====
+Links
+=====
 
 0. http://www.dune-project.org
 1. http://lists.dune-project.org/mailman/listinfo/dune-pdelab

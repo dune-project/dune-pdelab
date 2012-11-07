@@ -571,6 +571,82 @@ namespace Dune {
       int verbose;
     };
 
+
+    //! \brief Nonoverlapping parallel BiCGStab solver with Jacobi preconditioner
+    template<class GFS>
+    class ISTLBackend_NOVLP_BCGS_Jacobi
+    {
+      typedef istl::ParallelHelper<GFS> PHELPER;
+
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] gfs_ a grid function space
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
+      */
+      explicit ISTLBackend_NOVLP_BCGS_Jacobi (const GFS& gfs_, unsigned maxiter_=5000, int verbose_=1)
+        : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), verbose(verbose_)
+      {}
+
+      /*! \brief compute global norm of a vector
+
+        \param[in] v the given vector
+      */
+      template<class V>
+      typename V::ElementType norm (const V& v) const
+      {
+        V x(v); // make a copy because it has to be made consistent
+        typedef Dune::PDELab::NonoverlappingScalarProduct<GFS,V> PSP;
+        PSP psp(gfs,phelper);
+        psp.make_consistent(x);
+        return psp.norm(x);
+      }
+
+      /*! \brief solve the given linear system
+
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      {
+        typedef Dune::PDELab::NonoverlappingOperator<GFS,M,V,W> POP;
+        POP pop(gfs,A);
+        typedef Dune::PDELab::NonoverlappingScalarProduct<GFS,V> PSP;
+        PSP psp(gfs,phelper);
+
+        typedef NonoverlappingJacobi<typename M::BaseT,typename V::BaseT,typename W::BaseT> PPre;
+        PPre ppre(gfs,istl::raw(A));
+
+        int verb=0;
+        if (gfs.gridView().comm().rank()==0) verb=verbose;
+        Dune::BiCGSTABSolver<typename V::BaseT> solver(pop,psp,ppre,reduction,maxiter,verb);
+        Dune::InverseOperatorResult stat;
+        solver.apply(istl::raw(z),istl::raw(r),stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+        res.conv_rate  = stat.conv_rate;
+      }
+
+      /*! \brief Return access to result data */
+      const Dune::PDELab::LinearSolverResult<double>& result() const
+      {
+        return res;
+      }
+
+    private:
+      const GFS& gfs;
+      PHELPER phelper;
+      Dune::PDELab::LinearSolverResult<double> res;
+      unsigned maxiter;
+      int verbose;
+    };
+
     //! Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
     template<typename GFS>
     class ISTLBackend_NOVLP_ExplicitDiagonal
@@ -809,7 +885,7 @@ namespace Dune {
 
     template<class GO,int s, template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
-    class ISTLBackend_AMG_NOVLP
+    class ISTLBackend_AMG_NOVLP : public LinearResultStorage
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       typedef typename istl::ParallelHelper<GFS> PHELPER;
@@ -832,7 +908,8 @@ namespace Dune {
 
     public:
       ISTLBackend_AMG_NOVLP(const GO& grid_operator, unsigned maxiter_=5000,
-                            int verbose_=1, bool reuse_=false)
+                            int verbose_=1, bool reuse_=false,
+                            bool usesuperlu_=true)
         : _grid_operator(grid_operator)
         , gfs(grid_operator.trialGridFunctionSpace())
         , phelper(gfs,verbose_)
@@ -841,15 +918,51 @@ namespace Dune {
         , verbose(verbose_)
         , reuse(reuse_)
         , firstapply(true)
+        , usesuperlu(usesuperlu_)
       {
+        params.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
         params.setDebugLevel(verbose_);
+#if !HAVE_SUPERLU
+        if (phelper.rank() == 0 && usesuperlu == true)
+          {
+            std::cout << "WARNING: You are using AMG without SuperLU!"
+                      << " Please consider installing SuperLU,"
+                      << " or set the usesuperlu flag to false"
+                      << " to suppress this warning." << std::endl;
+          }
+#endif
       }
 
-      void setparams(Parameters params_)
+       /*! \brief set AMG parameters
+
+        \param[in] params_ a parameter object of Type Dune::Amg::Parameters
+      */
+      void setParameters(const Parameters& params_)
       {
         params = params_;
       }
 
+      void setparams(Parameters params_) DUNE_DEPRECATED_MSG("setparams() is deprecated, use setParameters() instead")
+      {
+        params = params_;
+      }
+
+      /**
+       * @brief Get the parameters describing the behaviuour of AMG.
+       *
+       * The returned object can be adjusted to ones needs and then can be
+       * reset using setParameters.
+       * @return The object holding the parameters of AMG.
+       */
+      const Parameters& parameters() const
+      {
+        return params;
+      }
+
+      /*! \brief compute global norm of a vector
+
+        \param[in] v the given vector
+      */
       typename V::ElementType norm (const V& v) const
       {
         V x(v); // make a copy because it has to be made consistent
@@ -861,6 +974,7 @@ namespace Dune {
 
       void apply(M& A, V& z, V& r, typename V::ElementType reduction)
       {
+        Timer watch;
         MatrixType& mat=istl::raw(A);
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
           Dune::Amg::FirstDiagonal> > Criterion;
@@ -880,6 +994,8 @@ namespace Dune {
         smootherArgs.relaxationFactor = 1;
         //use noAccu or atOnceAccu
         Criterion criterion(params);
+        stats.tprepare=watch.elapsed();
+        watch.reset();
 
         int verb=0;
         if (gfs.gridView().comm().rank()==0) verb=verbose;
@@ -887,7 +1003,11 @@ namespace Dune {
         if (reuse==false || firstapply==true){
           amg.reset(new AMG(oop, criterion, smootherArgs, oocc));
           firstapply = false;
+          stats.tsetup = watch.elapsed();
+          stats.levels = amg->maxlevels();
+          stats.directCoarseLevelSolver=amg->usesDirectCoarseLevelSolver();
         }
+
         Dune::InverseOperatorResult stat;
         // make r consistent
         if (gfs.gridView().comm().size()>1) {
@@ -896,8 +1016,10 @@ namespace Dune {
                                      Dune::InteriorBorder_InteriorBorder_Interface,
                                      Dune::ForwardCommunication);
         }
+        watch.reset();
         Solver<VectorType> solver(oop,sp,*amg,reduction,maxiter,verb);
         solver.apply(istl::raw(z),istl::raw(r),stat);
+        stats.tsolve= watch.elapsed();
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -905,22 +1027,27 @@ namespace Dune {
         res.conv_rate  = stat.conv_rate;
       }
 
-      const Dune::PDELab::LinearSolverResult<double>& result() const
+      /**
+       * @brief Get statistics of the AMG solver (no of levels, timings).
+       * @return statistis of the AMG solver.
+       */
+      const ISTLAMGStatistics& statistics() const
       {
-        return res;
+        return stats;
       }
 
     private:
       const GO& _grid_operator;
       const GFS& gfs;
       PHELPER phelper;
-      Dune::PDELab::LinearSolverResult<double> res;
       unsigned maxiter;
       Parameters params;
       int verbose;
       bool reuse;
       bool firstapply;
+      bool usesuperlu;
       Dune::shared_ptr<AMG> amg;
+      ISTLAMGStatistics stats;
     };
 
     template<class GO, int s=96>
@@ -930,10 +1057,12 @@ namespace Dune {
 
     public:
       ISTLBackend_NOVLP_CG_AMG_SSOR(const GO& grid_operator, unsigned maxiter_=5000,
-                                    int verbose_=1, bool reuse_=false)
-        : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::CGSolver>(grid_operator, maxiter_,verbose_,reuse_)
+                                    int verbose_=1, bool reuse_=false,
+                                    bool usesuperlu_=true)
+        : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::CGSolver>(grid_operator, maxiter_,verbose_,reuse_,usesuperlu_)
       {}
     };
+
 
     template<class GO, int s=96>
     class ISTLBackend_NOVLP_BCGS_AMG_SSOR
@@ -942,8 +1071,9 @@ namespace Dune {
 
     public:
       ISTLBackend_NOVLP_BCGS_AMG_SSOR(const GO& grid_operator, unsigned maxiter_=5000,
-                                      int verbose_=1, bool reuse_=false)
-        : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>(grid_operator, maxiter_,verbose_,reuse_)
+                                      int verbose_=1, bool reuse_=false,
+                                      bool usesuperlu_=true)
+        : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>(grid_operator, maxiter_,verbose_,reuse_,usesuperlu_)
       {}
     };
 
@@ -954,8 +1084,9 @@ namespace Dune {
 
     public:
       ISTLBackend_NOVLP_LS_AMG_SSOR(const GO& grid_operator, unsigned maxiter_=5000,
-                                    int verbose_=1, bool reuse_=false)
-        : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::LoopSolver>(grid_operator, maxiter_,verbose_,reuse_)
+                                    int verbose_=1, bool reuse_=false,
+                                    bool usesuperlu_=true)
+        : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::LoopSolver>(grid_operator, maxiter_,verbose_,reuse_,usesuperlu_)
       {}
     };
 

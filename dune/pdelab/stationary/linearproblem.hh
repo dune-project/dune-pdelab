@@ -3,6 +3,8 @@
 
 #include<dune/common/timer.hh>
 #include<dune/pdelab/backend/backendselector.hh>
+#include<dune/pdelab/constraints/constraints.hh>
+#include<iostream>
 
 namespace Dune {
   namespace PDELab {
@@ -61,6 +63,8 @@ namespace Dune {
         watch.reset();
 
         m = 0.0;
+        Dune::PDELab::set_shifted_dofs(gos.localAssembler().trialConstraints(),0.0,*x); // set hanging node DOFs to zero
+        gos.localAssembler().backtransform(*x); // interpolate hanging nodes adjacent to Dirichlet nodes
         gos.jacobian(*x,m);
 
         timing = watch.elapsed();
@@ -88,13 +92,20 @@ namespace Dune {
         if (gos.trialGridFunctionSpace().gridView().comm().rank()==0)
           std::cout << "=== solving (reduction: " << red << ") ";
         ls.apply(m,z,r,red); // solver makes right hand side consistent
+        linearsolverresult = ls.result();
         timing = watch.elapsed();
         // timing = gos.trialGridFunctionSpace().gridView().comm().max(timing);
         if (gos.trialGridFunctionSpace().gridView().comm().rank()==0)
           std::cout << timing << " s" << std::endl;
 
         // and update
+        Dune::PDELab::set_shifted_dofs(gos.localAssembler().trialConstraints(),0.0,*x); // set hanging node DOFs to zero
         *x -= z;
+        gos.localAssembler().backtransform(*x); // interpolate hanging nodes adjacent to Dirichlet nodes
+      }
+
+      const Dune::PDELab::LinearSolverResult<double>& ls_result() const{
+        return linearsolverresult;
       }
 
     private:
@@ -103,6 +114,7 @@ namespace Dune {
       V* x;
       typename V::ElementType reduction;
       typename V::ElementType mindefect;
+      Dune::PDELab::LinearSolverResult<double> linearsolverresult;
     };
 
   } // namespace PDELab

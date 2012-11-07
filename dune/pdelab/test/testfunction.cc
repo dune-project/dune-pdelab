@@ -83,9 +83,9 @@ void testvtkexport (const GV& gv, const T& t)
   // make a VTKFunction from grid function
   Dune::PDELab::VTKGridFunctionAdapter<GF> vtkf(gf,"blub");
 
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<GF>(gf,"blub")); // VTKWriter takes control
-  vtkwriter.write("single",Dune::VTKOptions::ascii);
+  vtkwriter.write("single",Dune::VTK::ascii);
 }
 
 // a grid function
@@ -174,9 +174,9 @@ void testfunctiontree (const GV& gv)
   std::cout << "number of nodes in T is " << Dune::PDELab::TypeTree::TreeInfo<T>::nodeCount << std::endl;
   std::cout << "number of leaves in T is " << Dune::PDELab::TypeTree::TreeInfo<T>::leafCount << std::endl;
 
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   Dune::PDELab::vtkwriter_tree_addvertexdata(vtkwriter,t);
-  vtkwriter.write("multi",Dune::VTKOptions::ascii);
+  vtkwriter.write("multi",Dune::VTK::ascii);
 }
 
 int main(int argc, char** argv)

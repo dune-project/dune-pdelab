@@ -22,15 +22,43 @@ namespace Dune {
   namespace PDELab {
 
 
-    //! \addtogroup Backend
+    //! \addtogroup GridOperator
     //! \ingroup PDELab
     //! \{
 
+    //! Helper class for adding up matrix entries on border.
     /**
-    * @brief Helper class for adding up matrix entries on border.
-    * @tparam GridOperator The grid operator to work on.
-    * @tparam MatrixType The MatrixType.
-    */
+     *  Utility class for accumulating matrix entries for border-border
+     *  couplings in parallel computations with nonoverlapping domain
+     *  decomposition.
+     *
+     *  For nonoverlapping grids, there is an additional problem related to
+     *  matrix entries that should exist on a given node, but which are only
+     *  present on a remote node. For these entries, we not only need to
+     *  accumulate the matrix values, we also have to create those matrix
+     *  entries in the sparsity pattern, as they cannot be discovered during
+     *  the node-local matrix creation:
+     *
+     *  We look at a 2D example with a nonoverlapping grid,
+     *  two processes and no ghosts with Q1 discretization.
+     *  Process 0 has the left part of the domain
+     *  with three cells and eight vertices (1-8),
+     *  Process 1 the right part with three cells
+     *  and eight vertices (2,4,7-12).
+     *  <pre>
+     *  1 _ 2        2 _ 9 _ 10
+     *  |   |        |   |   |
+     *  3 _ 4 _ 7    4 _ 7 _ 11
+     *  |   |   |        |   |
+     *  5 _ 6 _ 8        8 _ 12
+     *  </pre>
+     *  If we look at vertex 7 and the corresponding entries in the matrix for P0,
+     *  there will be entries for (7,4) and (7,8), but not for (7,2).
+     *  Unfortunately, local pattern creation will not create the link (7,2) on process
+     *  0. This class will find this kind of entry and extend the sparsity pattern appropriately.
+     *
+     * @tparam GridOperator The grid operator to work on.
+     */
     template<typename GridOperator>
     class NonOverlappingBorderDOFExchanger
     {

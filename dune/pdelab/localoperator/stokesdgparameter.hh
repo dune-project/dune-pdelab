@@ -72,7 +72,7 @@ namespace Dune {
         initFromString(method);
       }
 
-      
+
     public:
 
       //! Traits class

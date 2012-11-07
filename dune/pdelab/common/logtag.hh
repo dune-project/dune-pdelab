@@ -69,7 +69,7 @@ int main() {
        * they like.  The flags are restored to their original values by the
        * caller.
        */
-      virtual void writeTag(std::ostream &s) = 0;
+      virtual void writeTag(std::ostream &s) const = 0;
     };
 
     //! A log tag formatter that wraps a unary formatting function or functor
@@ -92,7 +92,7 @@ int main() {
       /**
        * This calls formatFunc(s) to write the tag.
        */
-      virtual void writeTag(std::ostream &s) { formatFunc(s); }
+      virtual void writeTag(std::ostream &s) const { formatFunc(s); }
     };
     //! Convenience function to create a GeneralLogtagFormatter
     template<class FormatFunc>

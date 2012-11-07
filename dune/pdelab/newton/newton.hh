@@ -13,6 +13,8 @@
 #include <dune/common/ios_state.hh>
 #include <dune/common/timer.hh>
 
+#include "../backend/solver.hh"
+
 namespace Dune
 {
     namespace PDELab
@@ -23,20 +25,6 @@ namespace Dune
         class NewtonLinearSolverError : public NewtonError {};
         class NewtonLineSearchError : public NewtonError {};
         class NewtonNotConverged : public NewtonError {};
-
-        // Status information of a linear solver
-        template<class RFType>
-        struct LinearSolverResult
-        {
-            bool converged;            // Solver converged
-            unsigned int iterations;   // number of iterations
-            double elapsed;            // total user time in seconds
-            RFType reduction;          // defect reduction
-            RFType conv_rate;          // convergence rate (average reduction per step)
-
-            LinearSolverResult() :
-                converged(false), iterations(0), elapsed(0.0), reduction(0.0), conv_rate(0.0) {}
-        };
 
         // Status information of Newton's method
         template<class RFType>

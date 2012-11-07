@@ -19,7 +19,6 @@
 
 #include <dune/pdelab/constraints/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
-#include <dune/pdelab/newton/newton.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/backend/istl/parallelhelper.hh>
 #include <dune/pdelab/backend/seqistlsolverbackend.hh>
@@ -351,7 +350,7 @@ namespace Dune {
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
 
-      const  istl::ParallelHelper<GFS>& parallelHelper()
+      const istl::ParallelHelper<GFS>& parallelHelper() const
       {
         return helper;
       }
@@ -607,7 +606,7 @@ namespace Dune {
         PREC prec(gfs,A);
         int verb=0;
         if (gfs.gridView().comm().rank()==0) verb=verbose;
-        Solver<V> solver(pop,psp,prec,reduction,maxiter,verbose);
+        Solver<V> solver(pop,psp,prec,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
         solver.apply(z,r,stat);
         res.converged  = stat.converged;
@@ -747,7 +746,7 @@ namespace Dune {
 
     template<class GO, int s, template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
-    class ISTLBackend_AMG
+    class ISTLBackend_AMG : public LinearResultStorage
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       typedef istl::ParallelHelper<GFS> PHELPER;
@@ -766,24 +765,59 @@ namespace Dune {
 #endif
       typedef typename Dune::Amg::SmootherTraits<ParSmoother>::Arguments SmootherArgs;
       typedef Dune::Amg::AMG<Operator,VectorType,ParSmoother,Comm> AMG;
+
+    public:
+
+      /**
+       * @brief Parameters object to customize matrix hierachy building.
+       */
       typedef Dune::Amg::Parameters Parameters;
 
     public:
       ISTLBackend_AMG(const GFS& gfs_, unsigned maxiter_=5000,
-                      int verbose_=1, bool reuse_=false)
-        : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), params(15,2000), verbose(verbose_), reuse(reuse_), firstapply(true)
+                      int verbose_=1, bool reuse_=false,
+                      bool usesuperlu_=true)
+        : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), params(15,2000),
+          verbose(verbose_), reuse(reuse_), firstapply(true),
+          usesuperlu(usesuperlu_)
       {
         params.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
         params.setDebugLevel(verbose_);
+#if !HAVE_SUPERLU
+        if (gfs.gridView().comm().rank() == 0 && usesuperlu == true)
+          {
+            std::cout << "WARNING: You are using AMG without SuperLU!"
+                      << " Please consider installing SuperLU,"
+                      << " or set the usesuperlu flag to false"
+                      << " to suppress this warning." << std::endl;
+          }
+#endif
       }
 
        /*! \brief set AMG parameters
 
         \param[in] params_ a parameter object of Type Dune::Amg::Parameters
       */
-      void setparams(Parameters params_)
+      void setParameters(const Parameters& params_)
       {
         params = params_;
+      }
+
+      void setparams(Parameters params_) DUNE_DEPRECATED_MSG("setparams() is deprecated, use setParameters() instead")
+      {
+        params = params_;
+      }
+
+      /**
+       * @brief Get the parameters describing the behaviuour of AMG.
+       *
+       * The returned object can be adjusted to ones needs and then can be
+       * reset using setParameters.
+       * @return The object holding the parameters of AMG.
+       */
+      const Parameters& parameters() const
+      {
+        return params;
       }
 
       /*! \brief compute global norm of a vector
@@ -806,6 +840,7 @@ namespace Dune {
       */
       void apply(M& A, V& z, V& r, typename V::ElementType reduction)
       {
+        Timer watch;
         Comm oocc(gfs.gridView().comm());
         MatrixType& mat=istl::raw(A);
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
@@ -822,6 +857,8 @@ namespace Dune {
         smootherArgs.iterations = 1;
         smootherArgs.relaxationFactor = 1;
         Criterion criterion(params);
+        stats.tprepare=watch.elapsed();
+        watch.reset();
 
         int verb=0;
         if (gfs.gridView().comm().rank()==0) verb=verbose;
@@ -829,11 +866,16 @@ namespace Dune {
         if (reuse==false || firstapply==true){
           amg.reset(new AMG(oop, criterion, smootherArgs, oocc));
           firstapply = false;
+          stats.tsetup = watch.elapsed();
+          stats.levels = amg->maxlevels();
+          stats.directCoarseLevelSolver=amg->usesDirectCoarseLevelSolver();
         }
+        watch.reset();
         Solver<VectorType> solver(oop,sp,*amg,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
 
         solver.apply(istl::raw(z),istl::raw(r),stat);
+        stats.tsolve= watch.elapsed();
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -841,22 +883,26 @@ namespace Dune {
         res.conv_rate  = stat.conv_rate;
       }
 
-      /*! \brief Return access to result data */
-      const Dune::PDELab::LinearSolverResult<double>& result() const
+      /**
+       * @brief Get statistics of the AMG solver (no of levels, timings).
+       * @return statistis of the AMG solver.
+       */
+      const ISTLAMGStatistics& statistics() const
       {
-        return res;
+        return stats;
       }
 
     private:
       const GFS& gfs;
       PHELPER phelper;
-      LinearSolverResult<double> res;
       unsigned maxiter;
       Parameters params;
       int verbose;
       bool reuse;
       bool firstapply;
+      bool usesuperlu;
       shared_ptr<AMG> amg;
+      ISTLAMGStatistics stats;
     };
 
     //! \addtogroup PDELab_ovlpsolvers Overlapping Solvers
@@ -881,10 +927,13 @@ namespace Dune {
        * @param verbose_ The verbosity level to use.
        * @param reuse_ Set true, if the Matrix to be used is always identical
        * (AMG aggregation is then only performed once).
+       * @param usesuperlu_ Set false, to suppress the no SuperLU warning
        */
       ISTLBackend_CG_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000,
-                              int verbose_=1, bool reuse_=false)
-        : ISTLBackend_AMG<GO, s, Dune::SeqSSOR, Dune::CGSolver>(gfs_, maxiter_,verbose_,reuse_)
+                              int verbose_=1, bool reuse_=false,
+                              bool usesuperlu_=true)
+        : ISTLBackend_AMG<GO, s, Dune::SeqSSOR, Dune::CGSolver>
+          (gfs_, maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
 
@@ -907,10 +956,42 @@ namespace Dune {
        * @param verbose_ The verbosity level to use.
        * @param reuse_ Set true, if the Matrix to be used is always identical
        * (AMG aggregation is then only performed once).
+       * @param usesuperlu_ Set false, to suppress the no SuperLU warning
        */
       ISTLBackend_BCGS_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000,
-                                int verbose_=1, bool reuse_=false)
-        : ISTLBackend_AMG<GO, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>(gfs_, maxiter_,verbose_,reuse_)
+                                int verbose_=1, bool reuse_=false,
+                                bool usesuperlu_=true)
+        : ISTLBackend_AMG<GO, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>
+          (gfs_, maxiter_, verbose_, reuse_, usesuperlu_)
+      {}
+    };
+
+    /**
+     * @brief Overlapping parallel BiCGStab solver preconditioned with AMG smoothed by ILU0.
+     * @tparam GO The type of the grid operator
+     * (or the fakeGOTraits class for the old grid operator space).
+     * @tparam s The bits to use for the globale index.
+     */
+    template<class GO, int s=96>
+    class ISTLBackend_BCGS_AMG_ILU0
+      : public ISTLBackend_AMG<GO, s, Dune::SeqILU0, Dune::BiCGSTABSolver>
+    {
+      typedef typename GO::Traits::TrialGridFunctionSpace GFS;
+    public:
+      /**
+       * @brief Constructor
+       * @param gfs_ The grid function space used.
+       * @param maxiter_ The maximum number of iterations allowed.
+       * @param verbose_ The verbosity level to use.
+       * @param reuse_ Set true, if the Matrix to be used is always identical
+       * (AMG aggregation is then only performed once).
+       * @param usesuperlu_ Set false, to suppress the no SuperLU warning
+       */
+      ISTLBackend_BCGS_AMG_ILU0(const GFS& gfs_, unsigned maxiter_=5000,
+                                int verbose_=1, bool reuse_=false,
+                                bool usesuperlu_=true)
+        : ISTLBackend_AMG<GO, s, Dune::SeqILU0, Dune::BiCGSTABSolver>
+          (gfs_, maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
 

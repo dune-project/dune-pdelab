@@ -176,7 +176,7 @@ void test (const GV& gv)
   x += x0;
 
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::nonconforming);
   Dune::PDELab::add_solution_to_vtk_writer(vtkwriter,gfs,x);
 
   std::stringstream vtu_name;
@@ -189,7 +189,7 @@ void test (const GV& gv)
 
   vtu_name << "-" << dim << "D";
 
-  vtkwriter.write(vtu_name.str(),Dune::VTKOptions::ascii);
+  vtkwriter.write(vtu_name.str(),Dune::VTK::ascii);
 }
 
 int main(int argc, char** argv)

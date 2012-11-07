@@ -118,9 +118,9 @@ void testp1 (const GV& gv)
   P1DGF p1dgf(p1gfs,p1xg);
 
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<P1DGF>(p1dgf,"p1"));
-  vtkwriter.write("testconstraintsp1",Dune::VTKOptions::ascii);
+  vtkwriter.write("testconstraintsp1",Dune::VTK::ascii);
 }
 
 
@@ -253,13 +253,13 @@ void testpowerp1 (const GV& gv)
   SUB4DGF sub4dgf(sub4gfs,p1mxg);
 
   // output grid function with VTKWriter
-  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::conforming);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<SUB0DGF>(sub0dgf,"comp 0"));
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<SUB1DGF>(sub1dgf,"comp 1"));
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<SUB2DGF>(sub2dgf,"comp 2"));
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<SUB3DGF>(sub3dgf,"comp 3"));
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<SUB4DGF>(sub4dgf,"comp 4"));
-  vtkwriter.write("testconstraintspowerp1",Dune::VTKOptions::ascii);
+  vtkwriter.write("testconstraintspowerp1",Dune::VTK::ascii);
 }
 
 

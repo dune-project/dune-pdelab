@@ -150,7 +150,7 @@ namespace Dune {
       }
 
       //! get grid view
-      const typename Traits::GridViewType& gridview () const DUNE_DEPRECATED
+      const typename Traits::GridViewType& gridview () const DUNE_DEPRECATED_MSG("Use gridView() instead of gridview()")
       {
         return gfs().template child<0>().gridView();
       }

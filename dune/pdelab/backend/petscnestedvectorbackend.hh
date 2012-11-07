@@ -190,10 +190,19 @@ namespace Dune {
       E operator*(const PetscNestedVectorContainer& y) const
       {
         checkin();
-        double dotproduct = 0;
-        PETSC_CALL(VecDot(_v,y._v,&dotproduct));
+        PetscScalar dotproduct = 0;
+        PETSC_CALL(VecTDot(_v,y._v,&dotproduct));
         return dotproduct;
       }
+
+      E dot(const PetscNestedVectorContainer& y) const
+      {
+         checkin();
+         PetscScalar dotproduct = 0;
+         PETSC_CALL(VecDot(_v,y._v,&dotproduct));
+         return dotproduct;
+      }
+
 
       PetscNestedVectorContainer& axpy(const E& a, const PetscNestedVectorContainer& y)
       {
@@ -281,8 +290,8 @@ namespace Dune {
 
     private:
       Vec _v;
-      mutable std::vector<double> _data;
-      mutable std::vector<double*> _sub_data;
+      mutable std::vector<PetscScalar> _data;
+      mutable std::vector<PetscScalar*> _sub_data;
       mutable bool _checkedIn;
 
       void checkin() const
@@ -375,7 +384,6 @@ namespace Dune {
     template<typename T, typename E>
     struct BackendVectorSelectorHelper<PetscNestedVectorBackend,T,E>
     {
-      dune_static_assert((is_same<E,double>::value),"Petsc only supports double for now");
       typedef PetscNestedVectorContainer Type;
     };
 

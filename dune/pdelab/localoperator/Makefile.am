@@ -32,6 +32,7 @@ common_HEADERS =				\
 	stokesdg.hh				\
 	sum.hh					\
         stokesdgparameter.hh                    \
+        stokesparameter.hh                      \
         stokesdg_vecfem.hh                      \
 	transportccfv.hh			\
 	twophaseccfv.hh				\
