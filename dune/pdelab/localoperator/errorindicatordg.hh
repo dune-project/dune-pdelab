@@ -21,6 +21,7 @@
 #include<dune/pdelab/finiteelement/localbasiscache.hh>
 
 #include "convectiondiffusionparameter.hh"
+#include "convectiondiffusiondg.hh"
 #include "eval.hh"
 
 // Note:

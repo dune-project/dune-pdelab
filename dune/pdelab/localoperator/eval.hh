@@ -2,6 +2,20 @@
 #ifndef EVAL_HH
 #define EVAL_HH
 
+#include<vector>
+
+#include<dune/common/exceptions.hh>
+#include<dune/common/fmatrix.hh>
+#include<dune/common/fvector.hh>
+#include<dune/common/static_assert.hh>
+#include<dune/common/typetraits.hh>
+
+#include<dune/geometry/type.hh>
+#include<dune/geometry/quadraturerules.hh>
+
+#include"../common/geometrywrapper.hh"
+#include"../gridoperatorspace/gridoperatorspace.hh"
+
 namespace Dune {
   namespace PDELab {
 
