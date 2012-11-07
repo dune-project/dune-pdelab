@@ -845,7 +845,6 @@ namespace Dune {
       double coarsen_fraction_while_coarsening;
       double timestep_decrease_factor;
       double timestep_increase_factor;
-      double minenergy_rate;
 
       // results to be reported to the user after evaluating the error
       bool accept;
@@ -860,6 +859,7 @@ namespace Dune {
 
       // the only state variable: accumulated error
       double accumulated_estimated_error_squared;
+      double minenergy_rate;
 
     public:
       TimeAdaptationStrategy (double tol_, double T_, int verbose_=0)
