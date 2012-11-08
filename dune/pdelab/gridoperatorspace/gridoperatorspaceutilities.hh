@@ -225,8 +225,40 @@ namespace Dune {
 
        \nosubgrouping
     */
-    class LocalSparsityPattern : public std::vector<SparsityLink>
-    {};
+    class LocalSparsityPattern
+      : public std::vector<SparsityLink>
+    {
+
+    public:
+
+      void push_back(const SparsityLink& link)
+        DUNE_DEPRECATED_MSG("The std::vector-like interface to LocalSparsityPattern is deprecated, use addLink() instead.")
+      {
+        std::vector<SparsityLink>::push_back(link);
+      }
+
+      //! Adds a link between DOF i of lfsv and DOF j of lfsu.
+      /**
+       * This methods adds a link between the DOF i of the test local test space lfsv
+       * and the DOF j of the local ansatz space lfsu.
+       *
+       * \param lfsv  The local test space.
+       * \param i     Index of the DOF in the test space lfsv.
+       * \param lfsu  The local ansatz space.
+       * \param j     Index of the DOF in the ansatz space lfsu.
+       */
+      template<typename LFSV, typename LFSU>
+      void addLink(const LFSV& lfsv, std::size_t i, const LFSU& lfsu, std::size_t j)
+      {
+        std::vector<SparsityLink>::push_back(
+          SparsityLink(
+            lfsv.localIndex(i),
+            lfsu.localIndex(j)
+          )
+        );
+      }
+
+    };
 
     //================================================
     // Default matrix backend

@@ -22,7 +22,7 @@ namespace Dune {
       {
         for (size_t i=0; i<lfsv.size(); ++i)
           for (size_t j=0; j<lfsu.size(); ++j)
-            pattern.push_back(SparsityLink(lfsv.localIndex(i),lfsu.localIndex(j)));
+            pattern.addLink(lfsv,i,lfsu,j);
       }
    };
 
@@ -39,11 +39,11 @@ namespace Dune {
       {
         for (unsigned int i=0; i<lfsv_s.size(); ++i)
           for (unsigned int j=0; j<lfsu_n.size(); ++j)
-            pattern_sn.push_back(SparsityLink(lfsv_s.localIndex(i),lfsu_n.localIndex(j)));
+            pattern_sn.addLink(lfsv_s,i,lfsu_n,j);
 
         for (unsigned int i=0; i<lfsv_n.size(); ++i)
           for (unsigned int j=0; j<lfsu_s.size(); ++j)
-            pattern_ns.push_back(SparsityLink(lfsv_n.localIndex(i),lfsu_s.localIndex(j)));
+            pattern_ns.addLink(lfsv_n,i,lfsu_s,j);
       }
    };
 
@@ -59,7 +59,7 @@ namespace Dune {
       {
         for (unsigned int i=0; i<lfsv_s.size(); ++i)
           for (unsigned int j=0; j<lfsu_s.size(); ++j)
-            pattern_ss.push_back(SparsityLink(lfsv_s.localIndex(i),lfsu_s.localIndex(j)));
+            pattern_ss.addLink(lfsv_s,i,lfsu_s,j);
       }
    };
 

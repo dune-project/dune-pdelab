@@ -757,7 +757,7 @@ namespace Dune {
         for (size_t k=0; k<LFSV::CHILDREN; k++)
           for (size_t i=0; i<lfsv.child(k).size(); ++i)
             for (size_t j=0; j<lfsu.child(k).size(); ++j)
-              pattern.push_back(SparsityLink(lfsv.child(k).localIndex(i),lfsu.child(k).localIndex(j)));
+              pattern.addLink(lfsv.child(k),i,lfsu.child(k),j);
       }
 
       // volume integral depending on test and ansatz functions
