@@ -12,7 +12,6 @@
 #include <dune/common/typetraits.hh>
 
 #include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
-#include <dune/pdelab/gridoperatorspace/localmatrix.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -757,10 +756,10 @@ namespace Dune {
       template<int i>
       struct JacobianVolumeOperation {
         template<typename EG, typename LFSU, typename X, typename LFSV,
-                 typename R>
+                 typename LocalMatrix>
         static void apply(const ArgPtrs& lops, const EG& eg,
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                          LocalMatrix<R>& mat)
+                          LocalMatrix& mat)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
             tuple_element<i,Args>::type::doAlphaVolume>::
@@ -771,10 +770,10 @@ namespace Dune {
       template<int i>
       struct JacobianVolumePostSkeletonOperation {
         template<typename EG, typename LFSU, typename X, typename LFSV,
-                 typename R>
+                 typename LocalMatrix>
         static void apply(const ArgPtrs& lops, const EG& eg,
                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
-                          LocalMatrix<R>& mat)
+                          LocalMatrix& mat)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
             tuple_element<i,Args>::type::doAlphaVolumePostSkeleton>::
@@ -787,12 +786,12 @@ namespace Dune {
       template<int i>
       struct JacobianSkeletonOperation {
         template<typename IG, typename LFSU, typename X, typename LFSV,
-                 typename R>
+                 typename LocalMatrix>
         static void apply(const ArgPtrs& lops, const IG& ig,
                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-                          LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn,
-                          LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn)
+                          LocalMatrix& mat_ss, LocalMatrix& mat_sn,
+                          LocalMatrix& mat_ns, LocalMatrix& mat_nn)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
             tuple_element<i,Args>::type::doAlphaSkeleton>::
@@ -806,10 +805,10 @@ namespace Dune {
       template<int i>
       struct JacobianBoundaryOperation {
         template<typename IG, typename LFSU, typename X, typename LFSV,
-                 typename R>
+                 typename LocalMatrix>
         static void apply(const ArgPtrs& lops, const IG& ig,
                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                          LocalMatrix<R>& mat_ss)
+                          LocalMatrix& mat_ss)
         {
           LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
             tuple_element<i,Args>::type::doAlphaBoundary>::
@@ -825,11 +824,11 @@ namespace Dune {
        *       the calls to the evaluation methods are eliminated at run-time.
        */
       template<typename EG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename LocalMatrix>
       void jacobian_volume
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        LocalMatrix<R>& mat) const
+        LocalMatrix& mat) const
       {
         ForLoop<JacobianVolumeOperation, 0, size-1>::
           apply(lops, eg, lfsu, x, lfsv, mat);
@@ -841,11 +840,11 @@ namespace Dune {
        *       the calls to the evaluation methods are eliminated at run-time.
        */
       template<typename EG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename LocalMatrix>
       void jacobian_volume_post_skeleton
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        LocalMatrix<R>& mat) const
+        LocalMatrix& mat) const
       {
         ForLoop<JacobianVolumePostSkeletonOperation, 0, size-1>::
           apply(lops, eg, lfsu, x, lfsv, mat);
@@ -857,13 +856,13 @@ namespace Dune {
        *       the calls to the evaluation methods are eliminated at run-time.
        */
       template<typename IG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename LocalMatrix>
       void jacobian_skeleton
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-        LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn,
-        LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn) const
+        LocalMatrix& mat_ss, LocalMatrix& mat_sn,
+        LocalMatrix& mat_ns, LocalMatrix& mat_nn) const
       {
         ForLoop<JacobianSkeletonOperation, 0, size-1>::
           apply(lops, ig,
@@ -878,11 +877,11 @@ namespace Dune {
        *       the calls to the evaluation methods are eliminated at run-time.
        */
       template<typename IG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename LocalMatrix>
       void jacobian_boundary
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        LocalMatrix<R>& mat_ss) const
+        LocalMatrix& mat_ss) const
       {
         ForLoop<JacobianBoundaryOperation, 0, size-1>::
           apply(lops, ig, lfsu_s, x_s, lfsv_s, mat_ss);

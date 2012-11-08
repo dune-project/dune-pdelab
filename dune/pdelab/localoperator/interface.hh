@@ -4,7 +4,6 @@
 #define DUNE_PDELAB_LOCALOPERATOR_INTERFACE_HH
 
 #include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
-#include <dune/pdelab/gridoperatorspace/localmatrix.hh>
 #include <dune/pdelab/localoperator/flags.hh>
 
 namespace Dune {
@@ -601,11 +600,11 @@ namespace Dune {
        * jacobian_boundary() methods are called (if they are called at all).
        */
       template<typename EG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename LocalMatrix>
       void jacobian_volume
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        LocalMatrix<R>& mat);
+        LocalMatrix& mat);
 
       //! get an element's jacobian after the intersections have been handled
       /**
@@ -626,11 +625,11 @@ namespace Dune {
        * all).
        */
       template<typename EG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename LocalMatrix>
       void jacobian_volume_post_skeleton
       ( const EG& eg,
         const LFSU& lfsu, const X& x, const LFSV& lfsv,
-        LocalMatrix<R>& mat);
+        LocalMatrix& mat);
 
       //! apply an internal intersections's jacobians
       /**
@@ -668,13 +667,13 @@ namespace Dune {
        * before the call to jacobian_volume_post_skeleton().
        */
       template<typename IG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename LocalMatrix>
       void jacobian_skeleton
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
-        LocalMatrix<R>& mat_ss, LocalMatrix<R>& mat_sn,
-        LocalMatrix<R>& mat_ns, LocalMatrix<R>& mat_nn);
+        LocalMatrix& mat_ss, LocalMatrix& mat_sn,
+        LocalMatrix& mat_ns, LocalMatrix& mat_nn);
       //! get a boundary intersections's jacobian
       /**
        * \param ig     IntersectionGeometry describing the intersection.
@@ -698,11 +697,11 @@ namespace Dune {
        * before the call to jacobian_volume_post_skeleton().
        */
       template<typename IG, typename LFSU, typename X, typename LFSV,
-               typename R>
+               typename LocalMatrix>
       void jacobian_boundary
       ( const IG& ig,
         const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-        LocalMatrix<R>& mat_ss);
+        LocalMatrix& mat_ss);
 
       //! \} Methods to extract the jacobian
     };

@@ -6,8 +6,6 @@
 #include <cmath>
 #include <vector>
 
-#include <dune/pdelab/gridoperatorspace/localmatrix.hh>
-
 namespace Dune {
   namespace PDELab {
 
@@ -187,7 +185,7 @@ namespace Dune {
         X u_s(x_s);
         X u_n(x_n);
 
-        // Notice that in general lfsv.size() != mat.nrows() 
+        // Notice that in general lfsv.size() != mat.nrows()
         ResidualVector down_s(mat_ss.nrows()),up_s(mat_ss.nrows());
         ResidualView downview_s = down_s.weightedAccumulationView(1.0);
         ResidualView upview_s = up_s.weightedAccumulationView(1.0);

@@ -4,7 +4,6 @@
 #define DUNE_PDELAB_LOCALOPERATOR_SCALED_HH
 
 #include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
-#include <dune/pdelab/gridoperatorspace/localmatrix.hh>
 
 namespace Dune {
   namespace PDELab {
