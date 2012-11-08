@@ -13,7 +13,7 @@ namespace Dune{
        assembles the residual vector and the jacobian engine in a
        combined assembling procedure
 
-       \tparam OSLA The local one step assembler 
+       \tparam OSLA The local one step assembler
 
        \tparam doPreStage Boolean indicating whether the const part of
        the residual needs to be assembled
@@ -68,44 +68,44 @@ namespace Dune{
       //! Query methods for the global grid assembler
       //! @{
       bool requireSkeleton() const
-      { return doPreStage ? prestage_engine->requireSkeleton() : false || 
-          residual_engine->requireSkeleton() || 
+      { return doPreStage ? prestage_engine->requireSkeleton() : false ||
+          residual_engine->requireSkeleton() ||
           jacobian_engine->requireSkeleton(); }
       bool requireSkeletonTwoSided() const
-      { return doPreStage ? prestage_engine->requireSkeletonTwoSided() : false|| 
-          residual_engine->requireSkeletonTwoSided() || 
+      { return doPreStage ? prestage_engine->requireSkeletonTwoSided() : false||
+          residual_engine->requireSkeletonTwoSided() ||
           jacobian_engine->requireSkeletonTwoSided(); }
       bool requireUVVolume() const
-      { return doPreStage ? prestage_engine->requireUVVolume() : false || 
-          residual_engine->requireUVVolume() || 
+      { return doPreStage ? prestage_engine->requireUVVolume() : false ||
+          residual_engine->requireUVVolume() ||
           jacobian_engine->requireUVVolume(); }
       bool requireVVolume() const
-      { return doPreStage ? prestage_engine->requireVVolume() : false || 
-          residual_engine->requireVVolume() || 
+      { return doPreStage ? prestage_engine->requireVVolume() : false ||
+          residual_engine->requireVVolume() ||
           jacobian_engine->requireVVolume(); }
       bool requireUVSkeleton() const
-      { return doPreStage ? prestage_engine->requireUVSkeleton() : false || 
-          residual_engine->requireUVSkeleton() || 
+      { return doPreStage ? prestage_engine->requireUVSkeleton() : false ||
+          residual_engine->requireUVSkeleton() ||
           jacobian_engine->requireUVSkeleton(); }
       bool requireVSkeleton() const
-      { return doPreStage ? prestage_engine->requireVSkeleton() : false || 
-          residual_engine->requireVSkeleton() || 
+      { return doPreStage ? prestage_engine->requireVSkeleton() : false ||
+          residual_engine->requireVSkeleton() ||
           jacobian_engine->requireVSkeleton(); }
       bool requireUVBoundary() const
-      { return doPreStage ? prestage_engine->requireUVBoundary() : false || 
-          residual_engine->requireUVBoundary() || 
+      { return doPreStage ? prestage_engine->requireUVBoundary() : false ||
+          residual_engine->requireUVBoundary() ||
           jacobian_engine->requireUVBoundary(); }
       bool requireVBoundary() const
-      { return doPreStage ? prestage_engine->requireVBoundary() : false || 
-          residual_engine->requireVBoundary() || 
+      { return doPreStage ? prestage_engine->requireVBoundary() : false ||
+          residual_engine->requireVBoundary() ||
           jacobian_engine->requireVBoundary(); }
       bool requireUVVolumePostSkeleton() const
-      { return doPreStage ? prestage_engine->requireUVVolumePostSkeleton() : false || 
-          residual_engine->requireUVVolumePostSkeleton() || 
+      { return doPreStage ? prestage_engine->requireUVVolumePostSkeleton() : false ||
+          residual_engine->requireUVVolumePostSkeleton() ||
           jacobian_engine->requireUVVolumePostSkeleton(); }
       bool requireVVolumePostSkeleton() const
-      { return doPreStage ? prestage_engine->requireVVolumePostSkeleton() : false || 
-          residual_engine->requireVVolumePostSkeleton() || 
+      { return doPreStage ? prestage_engine->requireVVolumePostSkeleton() : false ||
+          residual_engine->requireVVolumePostSkeleton() ||
           jacobian_engine->requireVVolumePostSkeleton(); }
 
       //! @}
@@ -335,14 +335,14 @@ namespace Dune{
         jacobian_engine->assembleVBoundary(ig,lfsv_s);
       }
 
-      template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N, 
+      template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N,
                typename LFSU_C, typename LFSV_C>
       void assembleUVEnrichedCoupling(const IG & ig,
                                       const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
                                       const LFSU_N & lfsu_n, const LFSV_N & lfsv_n,
                                       const LFSU_C & lfsu_coupling, const LFSV_C & lfsv_coupling)
       {
-        if(doPreStage) 
+        if(doPreStage)
           prestage_engine->assembleUVEnrichedCoupling(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n,lfsu_coupling,lfsv_coupling);
         residual_engine->setWeights();
         residual_engine->assembleUVEnrichedCoupling(ig,lfsu_s,lfsv_s,lfsu_n,lfsv_n,lfsu_coupling,lfsv_coupling);
@@ -446,34 +446,34 @@ namespace Dune{
       //! Query methods for the global grid assembler
       //! @{
       bool requireSkeleton() const
-      { return prestage_engine->requireSkeleton() || 
+      { return prestage_engine->requireSkeleton() ||
           jacobian_engine->requireSkeleton(); }
       bool requireSkeletonTwoSided() const
-      { return prestage_engine->requireSkeletonTwoSided() || 
+      { return prestage_engine->requireSkeletonTwoSided() ||
           jacobian_engine->requireSkeletonTwoSided(); }
       bool requireUVVolume() const
-      { return prestage_engine->requireUVVolume() || 
+      { return prestage_engine->requireUVVolume() ||
           jacobian_engine->requireUVVolume(); }
       bool requireVVolume() const
-      { return prestage_engine->requireVVolume() || 
+      { return prestage_engine->requireVVolume() ||
           jacobian_engine->requireVVolume(); }
       bool requireUVSkeleton() const
-      { return prestage_engine->requireUVSkeleton() || 
+      { return prestage_engine->requireUVSkeleton() ||
           jacobian_engine->requireUVSkeleton(); }
       bool requireVSkeleton() const
-      { return prestage_engine->requireVSkeleton() || 
+      { return prestage_engine->requireVSkeleton() ||
           jacobian_engine->requireVSkeleton(); }
       bool requireUVBoundary() const
-      { return prestage_engine->requireUVBoundary() || 
+      { return prestage_engine->requireUVBoundary() ||
           jacobian_engine->requireUVBoundary(); }
       bool requireVBoundary() const
-      { return prestage_engine->requireVBoundary() || 
+      { return prestage_engine->requireVBoundary() ||
           jacobian_engine->requireVBoundary(); }
       bool requireUVVolumePostSkeleton() const
-      { return prestage_engine->requireUVVolumePostSkeleton() || 
+      { return prestage_engine->requireUVVolumePostSkeleton() ||
           jacobian_engine->requireUVVolumePostSkeleton(); }
       bool requireVVolumePostSkeleton() const
-      { return prestage_engine->requireVVolumePostSkeleton() || 
+      { return prestage_engine->requireVVolumePostSkeleton() ||
           jacobian_engine->requireVVolumePostSkeleton(); }
 
       //! @}
@@ -673,7 +673,7 @@ namespace Dune{
         jacobian_engine->assembleVBoundary(ig,lfsv_s);
       }
 
-      template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N, 
+      template<typename IG, typename LFSU_S, typename LFSV_S, typename LFSU_N, typename LFSV_N,
                typename LFSU_C, typename LFSV_C>
       void assembleUVEnrichedCoupling(const IG & ig,
                                       const LFSU_S & lfsu_s, const LFSV_S & lfsv_s,
