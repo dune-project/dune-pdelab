@@ -33,7 +33,7 @@ namespace Dune {
       const U & u;
       const G & g;
     };
-    
+
     class LinearElasticity : public FullVolumePattern,
                              public LocalOperatorDefaultFlags,
                              public InstationaryLocalOperatorDefaultMethods<double>,
@@ -73,7 +73,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSU_SUB::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = EG::Geometry::dimension;
         const int dimw = EG::Geometry::dimensionworld;
@@ -89,11 +89,11 @@ namespace Dune {
           // evaluate basis functions
           std::vector<RangeType> phi(lfsu.child(0).size());
           lfsu.child(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
-            
+
           // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
           std::vector<JacobianType> js(lfsu.child(0).size());
           lfsu.child(0).finiteElement().localBasis().evaluateJacobian(it->position(),js);
-            
+
           // transform gradient to real element
           const FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
           std::vector<FieldVector<RF,dim> > gradphi(lfsu.child(0).size());
@@ -105,7 +105,7 @@ namespace Dune {
 
           for(int d=0; d<dim; ++d)
           {
-            // geometric weight 
+            // geometric weight
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
 
             for (size_type i=0; i<lfsu.child(0).size(); i++)
@@ -152,7 +152,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSU::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = EG::Geometry::dimension;
         const int dimw = EG::Geometry::dimensionworld;
@@ -168,11 +168,11 @@ namespace Dune {
           // evaluate basis functions
           std::vector<RangeType> phi(lfsu_hat.child(0).size());
           lfsu_hat.child(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
-            
+
           // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
           std::vector<JacobianType> js(lfsu_hat.child(0).size());
           lfsu_hat.child(0).finiteElement().localBasis().evaluateJacobian(it->position(),js);
-            
+
           // transform gradient to real element
           const FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
           std::vector<FieldVector<RF,dim> > gradphi(lfsu_hat.child(0).size());
@@ -181,11 +181,11 @@ namespace Dune {
             gradphi[i] = 0.0;
             jac.umv(js[i][0],gradphi[i]);
           }
-            
+
           for(int d=0; d<dim; ++d)
           {
             const LFSU & lfsu = lfsu_hat.child(d);
-            
+
             // compute gradient of u
             Dune::FieldVector<RF,dim> gradu(0.0);
             for (size_t i=0; i<lfsu.size(); i++)
@@ -193,7 +193,7 @@ namespace Dune {
               gradu.axpy(x(lfsu,i),gradphi[i]);
             }
 
-            // geometric weight 
+            // geometric weight
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
 
             for (size_type i=0; i<lfsv.child(d).size(); i++)
@@ -235,10 +235,10 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSV::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = EG::Geometry::dimension;
-        
+
         // select quadrature rule
         GeometryType gt = eg.geometry().type();
         const QuadratureRule<DF,dim>& rule = QuadratureRules<DF,dim>::rule(gt,intorder);
@@ -246,10 +246,10 @@ namespace Dune {
         // loop over quadrature points
         for (typename QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
         {
-          // evaluate shape functions 
+          // evaluate shape functions
           std::vector<RangeType> phi(lfsv_hat.child(0).size());
           lfsv_hat.child(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
-            
+
           // evaluate right hand side parameter function
           //typename F::Traits::RangeType y;
           //f.evaluate(eg.entity(),it->position(),y);
@@ -258,11 +258,11 @@ namespace Dune {
 
           // weight
           RF factor = it->weight() * eg.geometry().integrationElement(it->position());
-          
+
           for(int d=0; d<dim; ++d)
           {
             const LFSV & lfsv = lfsv_hat.child(d);
-            
+
             // integrate f
             for (size_type i=0; i<lfsv.size(); i++)
               r.accumulate(lfsv,i, -y[d]*phi[i] * factor);
@@ -286,10 +286,10 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSV::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = IG::Geometry::dimension;
-        
+
         // select quadrature rule
         GeometryType gt = ig.geometry().type();
         const QuadratureRule<DF,dim-1>& rule = QuadratureRules<DF,dim-1>::rule(gt,intorder);
@@ -297,7 +297,7 @@ namespace Dune {
         // loop over quadrature points
         for (typename QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
         {
-          // position of quadrature point in local coordinates of element 
+          // position of quadrature point in local coordinates of element
           Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
 
           Dune::FieldVector<DF,dim> global = ig.geometry().global(it->position());
@@ -305,11 +305,11 @@ namespace Dune {
           if (global[0] != 10.0)
             return;
           std::cout << "BC" << std::endl;
-          
-          // evaluate shape functions 
+
+          // evaluate shape functions
           std::vector<RangeType> phi(lfsv_hat.child(0).size());
           lfsv_hat.child(0).finiteElement().localBasis().evaluateFunction(local,phi);
-            
+
           // evaluate right hand side parameter function
           //typename F::Traits::RangeType y;
           //f.evaluate(eg.entity(),it->position(),y);
@@ -318,18 +318,18 @@ namespace Dune {
 
           // weight
           RF factor = it->weight() * ig.geometry().integrationElement(it->position());
-          
+
           for(int d=0; d<dim; ++d)
           {
             const LFSV & lfsv = lfsv_hat.child(d);
-            
+
             // integrate f
             for (size_type i=0; i<lfsv.size(); i++)
               r.accumulate(lfsv,i, y[d]*phi[i] * factor);
           }
         }
       }
-      
+
     protected:
       int intorder;
       double mu;

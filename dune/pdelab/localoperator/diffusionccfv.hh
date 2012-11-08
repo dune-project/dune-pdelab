@@ -16,11 +16,11 @@
 namespace Dune {
   namespace PDELab {
 
-	// a local operator for solving the Laplace equation with Dirichlet boundary conditions
-	//     - div (k(x) grad u) + a0*u = f in \Omega, 
+    // a local operator for solving the Laplace equation with Dirichlet boundary conditions
+    //     - div (k(x) grad u) + a0*u = f in \Omega,
     //                              u = g on \partial\Omega_D
     //            - k(x) grad u * \nu = j on \partial\Omega_N
-	// with cell centered finite volumes on axiparallel cube grids
+    // with cell centered finite volumes on axiparallel cube grids
     // K : scalar permeability field
     // A0: Helmholtz Term
     // F : source term
@@ -28,23 +28,23 @@ namespace Dune {
     // J : flux boundary condition
     // G : grid function for Dirichlet boundary conditions
     template<typename K, typename A0, typename F, typename B, typename J, typename G>
-	class DiffusionCCFV : public NumericalJacobianApplySkeleton<DiffusionCCFV<K,A0,F,B,J,G> >,
+    class DiffusionCCFV : public NumericalJacobianApplySkeleton<DiffusionCCFV<K,A0,F,B,J,G> >,
                           public NumericalJacobianApplyBoundary<DiffusionCCFV<K,A0,F,B,J,G> >,
                           public NumericalJacobianApplyVolume<DiffusionCCFV<K,A0,F,B,J,G> >,
                           public NumericalJacobianSkeleton<DiffusionCCFV<K,A0,F,B,J,G> >,
                           public NumericalJacobianBoundary<DiffusionCCFV<K,A0,F,B,J,G> >,
                           public NumericalJacobianVolume<DiffusionCCFV<K,A0,F,B,J,G> >,
-                          public FullSkeletonPattern, 
+                          public FullSkeletonPattern,
                           public FullVolumePattern,
                           public LocalOperatorDefaultFlags
 
-	{
-	public:
+    {
+    public:
       // pattern assembly flags
       enum { doPatternVolume = true };
       enum { doPatternSkeleton = true };
 
-	  // residual assembly flags
+      // residual assembly flags
       enum { doAlphaVolume    = true };
       enum { doAlphaSkeleton  = true };
       enum { doAlphaBoundary  = true };
@@ -57,25 +57,25 @@ namespace Dune {
       {}
 
 
-	  // volume integral depending on test and ansatz functions
-	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
-	  {
-		// domain and range field type
+      // volume integral depending on test and ansatz functions
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+      {
+        // domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::DomainFieldType DF;
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeFieldType RF;
+          Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::JacobianType JacobianType;
+          Traits::LocalBasisType::Traits::JacobianType JacobianType;
         typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeType RangeType;
+          Traits::LocalBasisType::Traits::RangeType RangeType;
 
         // dimensions
         const int dim = EG::Geometry::dimension;
 
         // cell center
-        const Dune::FieldVector<DF,dim>& 
+        const Dune::FieldVector<DF,dim>&
           inside_local = Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
 
         // evaluate Helmholtz term
@@ -91,22 +91,22 @@ namespace Dune {
         r.accumulate(lfsu,0,-fvalue*eg.geometry().volume());
       }
 
-	  // skeleton integral depending on test and ansatz functions
+      // skeleton integral depending on test and ansatz functions
       // each face is only visited ONCE!
-	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-	  void alpha_skeleton (const IG& ig, 
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_skeleton (const IG& ig,
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                            R& r_s, R& r_n) const
-	  {
- 		// domain and range field type
+      {
+        // domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
- 		  Traits::LocalBasisType::Traits::DomainFieldType DF;
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename LFSU::Traits::FiniteElementType::
- 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
+          Traits::LocalBasisType::Traits::RangeFieldType RF;
 
         // center in face's reference element
-        const Dune::FieldVector<DF,IG::dimension-1>& 
+        const Dune::FieldVector<DF,IG::dimension-1>&
           face_local = Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
 
         // face volume for integration
@@ -114,9 +114,9 @@ namespace Dune {
           *Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).volume();
 
         // cell centers in references elements
-        const Dune::FieldVector<DF,IG::dimension>& 
+        const Dune::FieldVector<DF,IG::dimension>&
           inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
-        const Dune::FieldVector<DF,IG::dimension>& 
+        const Dune::FieldVector<DF,IG::dimension>&
           outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
 
         // evaluate diffusion coefficient
@@ -126,43 +126,43 @@ namespace Dune {
         typename K::Traits::RangeType k_avg = 2.0/(1.0/(k_inside+1E-30) + 1.0/(k_outside+1E-30));
 
         // cell centers in global coordinates
-        Dune::FieldVector<DF,IG::dimension> 
+        Dune::FieldVector<DF,IG::dimension>
           inside_global = ig.inside()->geometry().global(inside_local);
-        Dune::FieldVector<DF,IG::dimension> 
+        Dune::FieldVector<DF,IG::dimension>
           outside_global = ig.outside()->geometry().global(outside_local);
 
         // distance between the two cell centers
         inside_global -= outside_global;
         RF distance = inside_global.two_norm();
-        
+
         // contribution to residual on inside element, other residual is computed by symmetric call
         r_s.accumulate(lfsu_s,0,k_avg*(x_s(lfsu_s,0)-x_n(lfsu_n,0))*face_volume/distance);
         r_n.accumulate(lfsu_n,0,-k_avg*(x_s(lfsu_s,0)-x_n(lfsu_n,0))*face_volume/distance);
-	  }
+      }
 
-	  // skeleton integral depending on test and ansatz functions
+      // skeleton integral depending on test and ansatz functions
       // We put the Dirchlet evaluation also in the alpha term to save som e geometry evaluations
-	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-	  void alpha_boundary (const IG& ig, 
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_boundary (const IG& ig,
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                            R& r_s) const
-	  {
- 		// domain and range field type
+      {
+        // domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
- 		  Traits::LocalBasisType::Traits::DomainFieldType DF;
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename LFSU::Traits::FiniteElementType::
- 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
+          Traits::LocalBasisType::Traits::RangeFieldType RF;
 
         // center in face's reference element
-        const Dune::FieldVector<DF,IG::dimension-1>& 
+        const Dune::FieldVector<DF,IG::dimension-1>&
           face_local = Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
 
         // face volume for integration
         RF face_volume = ig.geometry().integrationElement(face_local)
           *Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).volume();
-        
+
         // cell center in reference element
-        const Dune::FieldVector<DF,IG::dimension>& 
+        const Dune::FieldVector<DF,IG::dimension>&
           inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
 
         // evaluate boundary condition type
@@ -173,22 +173,22 @@ namespace Dune {
           {
             // Dirichlet boundary
             // distance between cell center and face center
-            Dune::FieldVector<DF,IG::dimension> 
+            Dune::FieldVector<DF,IG::dimension>
               inside_global = ig.inside()->geometry().global(inside_local);
-            Dune::FieldVector<DF,IG::dimension> 
+            Dune::FieldVector<DF,IG::dimension>
               outside_global = ig.geometry().global(face_local);
             inside_global -= outside_global;
             RF distance = inside_global.two_norm();
-            
+
             // evaluate diffusion coefficient
             typename K::Traits::RangeType k_inside;
             k.evaluate(*(ig.inside()),inside_local,k_inside);
-            
+
             // evaluate boundary condition function
             typename G::Traits::DomainType x = ig.geometryInInside().global(face_local);
             typename G::Traits::RangeType y;
             g.evaluate(*(ig.inside()),x,y);
-            
+
             // contribution to residual on inside element
             r_s.accumulate(lfsu_s,0,k_inside*(x_s(lfsu_s,0)-y[0])*face_volume/distance);
           }
@@ -205,7 +205,7 @@ namespace Dune {
             // contribution to residual on inside element
             r_s.accumulate(lfsu_s,0,jvalue*face_volume);
           }
-	  }
+      }
 
     private:
       const K& k;
@@ -214,7 +214,7 @@ namespace Dune {
       const B& b;
       const J& j;
       const G& g;
-	};
+    };
 
     //! \} group GridFunctionSpace
   } // namespace PDELab

@@ -33,7 +33,7 @@ namespace Dune {
     };
 
     /** a local operator for solving the convection-diffusion equation with discontinuous Galerkin
-     *  
+     *
      * \f{align*}{
      *   \nabla\cdot(-A(x) \nabla u + b(x) u) + c(x)u &=& f \mbox{ in } \Omega,  \\
      *                                              u &=& g \mbox{ on } \partial\Omega_D \\
@@ -47,17 +47,17 @@ namespace Dune {
      * \tparam T model of ConvectionDiffusionParameterInterface
      */
     template<typename T, typename FiniteElementMap>
-    class ConvectionDiffusionDG 
+    class ConvectionDiffusionDG
       : public Dune::PDELab::NumericalJacobianApplyVolume<ConvectionDiffusionDG<T,FiniteElementMap> >,
         public Dune::PDELab::NumericalJacobianApplySkeleton<ConvectionDiffusionDG<T,FiniteElementMap> >,
         public Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionDG<T,FiniteElementMap> >,
-        public Dune::PDELab::FullSkeletonPattern, 
+        public Dune::PDELab::FullSkeletonPattern,
         public Dune::PDELab::FullVolumePattern,
         public Dune::PDELab::LocalOperatorDefaultFlags,
         public Dune::PDELab::InstationaryLocalOperatorDefaultMethods<typename T::Traits::RangeFieldType>
     {
       enum { dim = T::Traits::GridViewType::dimension };
- 
+
       typedef typename T::Traits::RangeFieldType Real;
       typedef typename ConvectionDiffusionBoundaryConditions::Type BCType;
 
@@ -73,12 +73,12 @@ namespace Dune {
       enum { doLambdaVolume  = true };
 
       //! constructor: pass parameter object
-      ConvectionDiffusionDG (T& param_, 
-                             ConvectionDiffusionDGMethod::Type method_=ConvectionDiffusionDGMethod::NIPG, 
+      ConvectionDiffusionDG (T& param_,
+                             ConvectionDiffusionDGMethod::Type method_=ConvectionDiffusionDGMethod::NIPG,
                              ConvectionDiffusionDGWeights::Type weights_=ConvectionDiffusionDGWeights::weightsOff,
-                             Real alpha_=0.0, 
+                             Real alpha_=0.0,
                              int intorderadd_=0
-                             ) 
+                             )
         : Dune::PDELab::NumericalJacobianApplyVolume<ConvectionDiffusionDG<T,FiniteElementMap> >(1.0e-7),
           Dune::PDELab::NumericalJacobianApplySkeleton<ConvectionDiffusionDG<T,FiniteElementMap> >(1.0e-7),
           Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionDG<T,FiniteElementMap> >(1.0e-7),
@@ -104,7 +104,7 @@ namespace Dune {
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RangeType;
         typedef typename LFSU::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = EG::Geometry::dimension;
         const int dimw = EG::Geometry::dimensionworld;
@@ -177,7 +177,7 @@ namespace Dune {
 
       // jacobian of volume term
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
-      void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
+      void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             M& mat) const
       {
         // domain and range field type
@@ -190,7 +190,7 @@ namespace Dune {
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RangeType;
         typedef typename LFSU::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = EG::Geometry::dimension;
         const int dimw = EG::Geometry::dimensionworld;
@@ -255,9 +255,9 @@ namespace Dune {
       // skeleton integral depending on test and ansatz functions
       // each face is only visited ONCE!
       template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-      void alpha_skeleton (const IG& ig, 
+      void alpha_skeleton (const IG& ig,
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                            R& r_s, R& r_n) const
       {
         // domain and range field type
@@ -270,16 +270,16 @@ namespace Dune {
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType JacobianType;
         typedef typename LFSV::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = IG::dimension;
         const int intorder = intorderadd+quadrature_factor*std::max(lfsu_s.finiteElement().localBasis().order(),
                                                                     lfsu_n.finiteElement().localBasis().order());
-        
+
         // evaluate permeability tensors
-        const Dune::FieldVector<DF,dim>& 
+        const Dune::FieldVector<DF,dim>&
           inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
-        const Dune::FieldVector<DF,dim>& 
+        const Dune::FieldVector<DF,dim>&
           outside_local = Dune::ReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
         typename T::Traits::PermTensorType A_s, A_n;
         A_s = param.A(*(ig.inside()),inside_local);
@@ -340,7 +340,7 @@ namespace Dune {
             // exact normal
             const Dune::FieldVector<DF,dim> n_F_local = ig.unitOuterNormal(it->position());
 
-            // position of quadrature point in local coordinates of elements 
+            // position of quadrature point in local coordinates of elements
             Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
             Dune::FieldVector<DF,dim> iplocal_n = ig.geometryInOutside().global(it->position());
 
@@ -394,7 +394,7 @@ namespace Dune {
             typename T::Traits::RangeType b = param.b(*(ig.inside()),iplocal_s);
             RF normalflux = b*n_F_local;
             RF omegaup_s, omegaup_n;
-            if (normalflux>=0.0) 
+            if (normalflux>=0.0)
               {
                 omegaup_s = 1.0;
                 omegaup_n = 0.0;
@@ -424,9 +424,9 @@ namespace Dune {
 
             // (non-)symmetric IP term
             RF term3 = (u_s-u_n) * factor;
-            for (size_type i=0; i<lfsu_s.size(); i++) 
+            for (size_type i=0; i<lfsu_s.size(); i++)
               r_s.accumulate(lfsu_s,i,term3 * theta * omega_s * (An_F_s*tgradphi_s[i]));
-            for (size_type i=0; i<lfsu_n.size(); i++) 
+            for (size_type i=0; i<lfsu_n.size(); i++)
               r_n.accumulate(lfsu_n,i,term3 * theta * omega_n * (An_F_n*tgradphi_n[i]));
 
             // standard IP term integral
@@ -439,10 +439,10 @@ namespace Dune {
       }
 
       template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
-      void jacobian_skeleton (const IG& ig, 
+      void jacobian_skeleton (const IG& ig,
                               const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                              const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
-                              M& mat_ss, M& mat_sn, 
+                              const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
+                              M& mat_ss, M& mat_sn,
                               M& mat_ns, M& mat_nn) const
       {
         // domain and range field type
@@ -455,16 +455,16 @@ namespace Dune {
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType JacobianType;
         typedef typename LFSV::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = IG::dimension;
         const int intorder = intorderadd+quadrature_factor*std::max(lfsu_s.finiteElement().localBasis().order(),
                                                                     lfsu_n.finiteElement().localBasis().order());
-        
+
         // evaluate permeability tensors
-        const Dune::FieldVector<DF,dim>& 
+        const Dune::FieldVector<DF,dim>&
           inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
-        const Dune::FieldVector<DF,dim>& 
+        const Dune::FieldVector<DF,dim>&
           outside_local = Dune::ReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
         typename T::Traits::PermTensorType A_s, A_n;
         A_s = param.A(*(ig.inside()),inside_local);
@@ -524,7 +524,7 @@ namespace Dune {
             // exact normal
             const Dune::FieldVector<DF,dim> n_F_local = ig.unitOuterNormal(it->position());
 
-            // position of quadrature point in local coordinates of elements 
+            // position of quadrature point in local coordinates of elements
             Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
             Dune::FieldVector<DF,dim> iplocal_n = ig.geometryInOutside().global(it->position());
 
@@ -562,7 +562,7 @@ namespace Dune {
             typename T::Traits::RangeType b = param.b(*(ig.inside()),iplocal_s);
             RF normalflux = b*n_F_local;
             RF omegaup_s, omegaup_n;
-            if (normalflux>=0.0) 
+            if (normalflux>=0.0)
               {
                 omegaup_s = 1.0;
                 omegaup_n = 0.0;
@@ -620,7 +620,7 @@ namespace Dune {
       // boundary integral depending on test and ansatz functions
       // We put the Dirchlet evaluation also in the alpha term to save some geometry evaluations
       template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-      void alpha_boundary (const IG& ig, 
+      void alpha_boundary (const IG& ig,
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                            R& r_s) const
       {
@@ -634,13 +634,13 @@ namespace Dune {
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType JacobianType;
         typedef typename LFSV::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = IG::dimension;
         const int intorder = intorderadd+quadrature_factor*lfsu_s.finiteElement().localBasis().order();
-        
+
         // evaluate permeability tensors
-        const Dune::FieldVector<DF,dim>& 
+        const Dune::FieldVector<DF,dim>&
           inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
         typename T::Traits::PermTensorType A_s;
         A_s = param.A(*(ig.inside()),inside_local);
@@ -660,7 +660,7 @@ namespace Dune {
         Dune::FieldMatrix<DF,dim,dim> jac;
 
         // evaluate boundary condition
-        const Dune::FieldVector<DF,dim-1> 
+        const Dune::FieldVector<DF,dim-1>
           face_local = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
         BCType bctype = param.bctype(ig.intersection(),face_local);
 
@@ -684,7 +684,7 @@ namespace Dune {
         // loop over quadrature points and integrate normal flux
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
-            // position of quadrature point in local coordinates of elements 
+            // position of quadrature point in local coordinates of elements
             Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
 
             // local normal
@@ -705,17 +705,17 @@ namespace Dune {
               {
                 // evaluate flux boundary condition
                 RF j = param.j(ig.intersection(),it->position());
-                
+
                 // integrate
-                for (size_type i=0; i<lfsv_s.size(); i++) 
+                for (size_type i=0; i<lfsv_s.size(); i++)
                   r_s.accumulate(lfsu_s,i,j * phi_s[i] * factor);
 
                 continue;
               }
 
             // evaluate u
-            RF u_s=0.0; 
-            for (size_type i=0; i<lfsu_s.size(); i++) 
+            RF u_s=0.0;
+            for (size_type i=0; i<lfsu_s.size(); i++)
               u_s += x_s(lfsu_s,i)*phi_s[i];
 
             // evaluate velocity field and upwinding, assume H(div) velocity field => choose any side
@@ -766,7 +766,7 @@ namespace Dune {
 
             // upwind
             RF omegaup_s, omegaup_n;
-            if (normalflux>=0.0) 
+            if (normalflux>=0.0)
               {
                 omegaup_s = 1.0;
                 omegaup_n = 0.0;
@@ -814,13 +814,13 @@ namespace Dune {
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType JacobianType;
         typedef typename LFSV::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = IG::dimension;
         const int intorder = intorderadd+quadrature_factor*lfsu_s.finiteElement().localBasis().order();
-        
+
         // evaluate permeability tensors
-        const Dune::FieldVector<DF,dim>& 
+        const Dune::FieldVector<DF,dim>&
           inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
         typename T::Traits::PermTensorType A_s;
         A_s = param.A(*(ig.inside()),inside_local);
@@ -840,7 +840,7 @@ namespace Dune {
         Dune::FieldMatrix<DF,dim,dim> jac;
 
         // evaluate boundary condition
-        const Dune::FieldVector<DF,dim-1> 
+        const Dune::FieldVector<DF,dim-1>
           face_local = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
         BCType bctype = param.bctype(ig.intersection(),face_local);
 
@@ -867,7 +867,7 @@ namespace Dune {
         // loop over quadrature points and integrate normal flux
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
-            // position of quadrature point in local coordinates of elements 
+            // position of quadrature point in local coordinates of elements
             Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
 
             // local normal
@@ -894,8 +894,8 @@ namespace Dune {
                   DUNE_THROW(Dune::Exception,"Outflow boundary condition on inflow!");
 
                 // convection term
-                for (size_type j=0; j<lfsu_s.size(); j++) 
-                  for (size_type i=0; i<lfsu_s.size(); i++) 
+                for (size_type j=0; j<lfsu_s.size(); j++)
+                  for (size_type i=0; i<lfsu_s.size(); i++)
                     mat_ss.accumulate(lfsu_s,i,lfsu_s,j,phi_s[j] * normalflux * factor * phi_s[i]);
 
                 continue;
@@ -916,7 +916,7 @@ namespace Dune {
 
             // upwind
             RF omegaup_s, omegaup_n;
-            if (normalflux>=0.0) 
+            if (normalflux>=0.0)
               {
                 omegaup_s = 1.0;
                 omegaup_n = 0.0;
@@ -928,23 +928,23 @@ namespace Dune {
               }
 
             // convection term
-            for (size_type j=0; j<lfsu_s.size(); j++) 
-              for (size_type i=0; i<lfsu_s.size(); i++) 
+            for (size_type j=0; j<lfsu_s.size(); j++)
+              for (size_type i=0; i<lfsu_s.size(); i++)
                 mat_ss.accumulate(lfsu_s,i,lfsu_s,j,omegaup_s * phi_s[j] * normalflux * factor * phi_s[i]);
 
             // diffusion term
-            for (size_type j=0; j<lfsu_s.size(); j++) 
-              for (size_type i=0; i<lfsu_s.size(); i++) 
+            for (size_type j=0; j<lfsu_s.size(); j++)
+              for (size_type i=0; i<lfsu_s.size(); i++)
                 mat_ss.accumulate(lfsu_s,i,lfsu_s,j,-(An_F_s*tgradphi_s[j]) * factor * phi_s[i]);
 
             // (non-)symmetric IP term
-            for (size_type j=0; j<lfsu_s.size(); j++) 
-              for (size_type i=0; i<lfsu_s.size(); i++) 
+            for (size_type j=0; j<lfsu_s.size(); j++)
+              for (size_type i=0; i<lfsu_s.size(); i++)
                 mat_ss.accumulate(lfsu_s,i,lfsu_s,j,phi_s[j] * factor * theta * (An_F_s*tgradphi_s[i]));
 
             // standard IP term
-            for (size_type j=0; j<lfsu_s.size(); j++) 
-              for (size_type i=0; i<lfsu_s.size(); i++) 
+            for (size_type j=0; j<lfsu_s.size(); j++)
+              for (size_type i=0; i<lfsu_s.size(); i++)
                 mat_ss.accumulate(lfsu_s,i,lfsu_s,j,penalty_factor * phi_s[j] * phi_s[i] * factor);
           }
       }
@@ -961,12 +961,12 @@ namespace Dune {
         typedef typename LFSV::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RangeType;
         typedef typename LFSV::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = EG::Geometry::dimension;
         const int order = lfsv.finiteElement().localBasis().order();
         const int intorder = intorderadd + 2 * order;
-        
+
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
@@ -974,7 +974,7 @@ namespace Dune {
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
-            // evaluate shape functions 
+            // evaluate shape functions
 #if USECACHE==0
             std::vector<RangeType> phi(lfsv.size());
             lfsv.finiteElement().localBasis().evaluateFunction(it->position(),phi);
