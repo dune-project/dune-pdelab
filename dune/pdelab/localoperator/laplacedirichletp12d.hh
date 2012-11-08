@@ -54,7 +54,7 @@ namespace Dune {
           evaluateJacobian(integrationpoint,gradients);
 
 		// transformation of gradients to real element
-		const Dune::FieldMatrix<DF,2,2> 
+        const typename EG::Geometry::JacobianInverseTransposed
 		  jac = eg.geometry().jacobianInverseTransposed(integrationpoint);
 		Dune::FieldVector<RF,2> gradphi[3];
 		for (int i=0; i<3; i++)

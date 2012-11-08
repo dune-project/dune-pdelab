@@ -301,7 +301,8 @@ namespace Dune {
             lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradients of shape functions to real element
-            const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
+            const typename EG::Geometry::JacobianInverseTransposed jac
+              = eg.geometry().jacobianInverseTransposed(it->position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
             for (size_type i=0; i<lfsu.size(); i++)
               {
