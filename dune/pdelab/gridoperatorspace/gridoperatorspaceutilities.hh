@@ -374,28 +374,28 @@ namespace Dune {
     template<typename LA, bool doIt>
     struct LocalAssemblerCallSwitch
     {
-      template<typename LFSU, typename LFSV>
-      static void pattern_volume (const LA& la, const LFSU& lfsu, const LFSV& lfsv, LocalSparsityPattern& pattern)
+      template<typename LFSU, typename LFSV, typename LocalPattern>
+      static void pattern_volume (const LA& la, const LFSU& lfsu, const LFSV& lfsv, LocalPattern& pattern)
       {
       }
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       static void pattern_volume_post_skeleton
       ( const LA& la,
         const LFSU& lfsu, const LFSV& lfsv,
-        LocalSparsityPattern& pattern)
+        LocalPattern& pattern)
       {
       }
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       static void pattern_skeleton (const LA& la, const LFSU& lfsu_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const LFSV& lfsv_n,
-        LocalSparsityPattern& pattern_sn,
-        LocalSparsityPattern& pattern_ns)
+        LocalPattern& pattern_sn,
+        LocalPattern& pattern_ns)
       {
       }
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       static void pattern_boundary(const LA& la,
         const LFSU& lfsu_s, const LFSV& lfsv_s,
-        LocalSparsityPattern& pattern_ss)
+        LocalPattern& pattern_ss)
       {
       }
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
@@ -486,32 +486,32 @@ namespace Dune {
     template<typename LA>
     struct LocalAssemblerCallSwitch<LA,true>
     {
-      template<typename LFSU, typename LFSV>
-      static void pattern_volume (const LA& la, const LFSU& lfsu, const LFSV& lfsv, LocalSparsityPattern& pattern)
+      template<typename LFSU, typename LFSV, typename LocalPattern>
+      static void pattern_volume (const LA& la, const LFSU& lfsu, const LFSV& lfsv, LocalPattern& pattern)
       {
         la.pattern_volume(lfsu,lfsv,pattern);
       }
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       static void pattern_volume_post_skeleton
       ( const LA& la,
         const LFSU& lfsu, const LFSV& lfsv,
-        LocalSparsityPattern& pattern)
+        LocalPattern& pattern)
       {
         la.pattern_volume_post_skeleton(lfsu,lfsv,pattern);
       }
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       static void pattern_skeleton (const LA& la, const LFSU& lfsu_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const LFSV& lfsv_n,
-        LocalSparsityPattern& pattern_sn,
-        LocalSparsityPattern& pattern_ns)
+        LocalPattern& pattern_sn,
+        LocalPattern& pattern_ns)
       {
         la.pattern_skeleton(lfsu_s,lfsv_s,lfsu_n,lfsv_n,
           pattern_sn, pattern_ns);
       }
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       static void pattern_boundary(const LA& la,
         const LFSU& lfsu_s, const LFSV& lfsv_s,
-        LocalSparsityPattern& pattern_ss)
+        LocalPattern& pattern_ss)
       {
         la.pattern_boundary(lfsu_s,lfsv_s,pattern_ss);
       }

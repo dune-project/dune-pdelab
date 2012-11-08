@@ -3,7 +3,6 @@
 #ifndef DUNE_PDELAB_LOCALOPERATOR_INTERFACE_HH
 #define DUNE_PDELAB_LOCALOPERATOR_INTERFACE_HH
 
-#include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include <dune/pdelab/localoperator/flags.hh>
 
 namespace Dune {
@@ -106,10 +105,10 @@ namespace Dune {
        * given element, it is called *before* the pattern_skeleton() and/or
        * pattern_boundary() methods are called (if they are called at all).
        */
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_volume
       ( const LFSU& lfsu, const LFSV& lfsv,
-        LocalSparsityPattern& pattern);
+        LocalPattern& pattern);
 
       //! \brief get an element's contribution to the sparsity pattern after
       //!        the intersections have been handled
@@ -125,10 +124,10 @@ namespace Dune {
        * given element, it is called *before* the pattern_skeleton() and/or
        * pattern_boundary() methods are called (if they are called at all).
        */
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_volume_post_skeleton
       ( const LFSU& lfsu, const LFSV& lfsv,
-        LocalSparsityPattern& pattern);
+        LocalPattern& pattern);
 
       //! get an internal intersection's contribution to the sparsity pattern
       /**
@@ -151,12 +150,12 @@ namespace Dune {
        * pattern_boundary(), but after the call to pattern_volume() and before
        * the call to pattern_volume_post_skeleton().
        */
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_skeleton
       ( const LFSU& lfsu_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const LFSV& lfsv_n,
-        LocalSparsityPattern& pattern_sn,
-        LocalSparsityPattern& pattern_ns);
+        LocalPattern& pattern_sn,
+        LocalPattern& pattern_ns);
 
       //! get a boundary intersection's contribution to the sparsity pattern
       /**
@@ -174,10 +173,10 @@ namespace Dune {
        * pattern_skeleton(), but after the call to pattern_volume() and before
        * the call to pattern_volume_post_skeleton().
        */
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_boundary
       ( const LFSU& lfsu_s, const LFSV& lfsv_s,
-        LocalSparsityPattern& pattern_ss);
+        LocalPattern& pattern_ss);
 
       //! \} Methods for the sparsity pattern
 

@@ -10,8 +10,6 @@
 #include<dune/geometry/referenceelements.hh>
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/common/function.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include<dune/pdelab/localoperator/pattern.hh>
 #include<dune/pdelab/localoperator/flags.hh>
 #include<dune/pdelab/localoperator/idefault.hh>
@@ -585,9 +583,9 @@ namespace Dune {
       {}
 
       // define sparsity pattern of operator representation
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_volume (const LFSU& lfsu, const LFSV& lfsv,
-                           LocalSparsityPattern& pattern) const
+                           LocalPattern& pattern) const
       {
         // get types
         typedef typename LFSV::template Child<0>::Type DGSpace;

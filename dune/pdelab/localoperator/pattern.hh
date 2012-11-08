@@ -7,11 +7,6 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/static_assert.hh>
 
-#include"../common/geometrywrapper.hh"
-#include"../gridoperatorspace/gridoperatorspace.hh"
-#include"../gridoperatorspace/gridoperatorspaceutilities.hh"
-
-
 namespace Dune {
   namespace PDELab {
 
@@ -21,9 +16,9 @@ namespace Dune {
     public:
 
       // define sparsity pattern of operator representation
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_volume (const LFSU& lfsu, const LFSV& lfsv,
-                           LocalSparsityPattern& pattern) const
+                           LocalPattern& pattern) const
       {
         for (size_t i=0; i<lfsv.size(); ++i)
           for (size_t j=0; j<lfsu.size(); ++j)
@@ -37,10 +32,10 @@ namespace Dune {
     public:
 
       // define sparsity pattern connecting self and neighbor dofs
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_skeleton (const LFSU& lfsu_s, const LFSV& lfsv_s, const LFSU& lfsu_n, const LFSV& lfsv_n,
-                            LocalSparsityPattern& pattern_sn,
-                            LocalSparsityPattern& pattern_ns) const
+                            LocalPattern& pattern_sn,
+                            LocalPattern& pattern_ns) const
       {
         for (unsigned int i=0; i<lfsv_s.size(); ++i)
           for (unsigned int j=0; j<lfsu_n.size(); ++j)
@@ -58,9 +53,9 @@ namespace Dune {
     public:
 
       // define sparsity pattern connecting dofs on boundary elements
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_boundary(const LFSU& lfsu_s, const LFSV& lfsv_s,
-                            LocalSparsityPattern& pattern_ss) const
+                            LocalPattern& pattern_ss) const
       {
         for (unsigned int i=0; i<lfsv_s.size(); ++i)
           for (unsigned int j=0; j<lfsu_s.size(); ++j)
