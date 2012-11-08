@@ -4,6 +4,8 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_TAGS_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_TAGS_HH
 
+#include <dune/grid/common/gridenums.hh>
+
 namespace Dune {
   namespace PDELab {
 

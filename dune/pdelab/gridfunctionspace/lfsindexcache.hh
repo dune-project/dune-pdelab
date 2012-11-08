@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <stack>
+#include <algorithm>
 
 #include <dune/common/reservedvector.hh>
 #include <dune/common/exceptions.hh>
@@ -13,6 +14,7 @@
 #include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/common/unordered_map.hh>
 #include <dune/pdelab/constraints/constraintstransformation.hh>
+#include <dune/pdelab/gridfunctionspace/tags.hh>
 
 #include <boost/iterator/iterator_adaptor.hpp>
 

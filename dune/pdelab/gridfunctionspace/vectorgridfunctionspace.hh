@@ -11,6 +11,8 @@
 #include <dune/pdelab/common/typetree/powernode.hh>
 #include <dune/pdelab/gridfunctionspace/powercompositegridfunctionspacebase.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
 
 namespace Dune {
   namespace PDELab {
