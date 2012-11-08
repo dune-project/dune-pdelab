@@ -6,8 +6,6 @@ common_HEADERS =				\
 	benchmarkhelper.hh                      \
 	borderindexidcache.hh			\
 	clock.hh				\
-	countingptr.hh				\
-	cpstoragepolicy.hh			\
 	crossproduct.hh				\
 	dofindex.hh				\
 	elementmapper.hh			\
