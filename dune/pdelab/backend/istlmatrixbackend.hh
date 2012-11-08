@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_ISTLMATRIXBACKEND_HH
-#define DUNE_ISTLMATRIXBACKEND_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTLMATRIXBACKEND_HH
+#define DUNE_PDELAB_BACKEND_ISTLMATRIXBACKEND_HH
 
 #include<utility>
 #include<vector>
@@ -15,8 +15,7 @@
 
 #include <dune/pdelab/backend/istl/tags.hh>
 
-#include "../gridoperatorspace/localmatrix.hh"
-#include "backendselector.hh"
+#include <dune/pdelab/backend/backendselector.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -690,4 +689,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif
+#endif // DUNE_PDELAB_BACKEND_ISTLMATRIXBACKEND_HH
