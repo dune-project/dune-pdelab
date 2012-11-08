@@ -10,9 +10,9 @@
 
 #include<dune/geometry/type.hh>
 #include<dune/geometry/quadraturerules.hh>
+#include<dune/pdelab/gridfunctionspace/localvector.hh>
+#include<dune/pdelab/gridoperatorspace/localmatrix.hh>
 
-#include"../common/geometrywrapper.hh"
-#include"../gridoperatorspace/gridoperatorspace.hh"
 #include"defaultimp.hh"
 #include"pattern.hh"
 #include"idefault.hh"

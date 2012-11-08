@@ -12,6 +12,11 @@
 #include <dune/common/tupleutility.hh>
 #include <dune/common/typetraits.hh>
 
+#include <dune/pdelab/gridfunctionspace/localvector.hh>
+#include <dune/pdelab/gridoperatorspace/localmatrix.hh>
+
+#include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
+
 namespace Dune {
   namespace PDELab {
     //! \addtogroup LocalOperator

@@ -12,8 +12,8 @@
 #include<dune/geometry/referenceelements.hh>
 #include<dune/geometry/quadraturerules.hh>
 
-#include"../common/geometrywrapper.hh"
-#include"../gridoperatorspace/gridoperatorspace.hh"
+#include <dune/pdelab/common/function.hh>
+
 #include"defaultimp.hh"
 #include"pattern.hh"
 #include"flags.hh"

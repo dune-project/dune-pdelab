@@ -10,9 +10,7 @@
 
 #include <dune/pdelab/localoperator/defaultimp.hh>
 
-#include"../common/geometrywrapper.hh"
 #include"../common/function.hh"
-#include"../gridoperatorspace/gridoperatorspace.hh"
 #include"pattern.hh"
 #include"flags.hh"
 #include"idefault.hh"

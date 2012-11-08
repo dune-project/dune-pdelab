@@ -1,6 +1,10 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef EVAL_HH
-#define EVAL_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_EVAL_HH
+#define DUNE_PDELAB_LOCALOPERATOR_EVAL_HH
+
+#include <vector>
+
+#include <dune/common/fmatrix.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -78,4 +82,4 @@ namespace Dune {
 
   }
 }
-#endif
+#endif // DUNE_PDELAB_LOCALOPERATOR_EVAL_HH

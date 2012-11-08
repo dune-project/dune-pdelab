@@ -4,12 +4,11 @@
 
 #include<dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
+#include <dune/common/fmatrix.hh>
 #include <dune/common/static_assert.hh>
 
 #include <dune/pdelab/localoperator/defaultimp.hh>
 
-#include"../common/geometrywrapper.hh"
-#include"../gridoperatorspace/gridoperatorspace.hh"
 #include"pattern.hh"
 #include"flags.hh"
 

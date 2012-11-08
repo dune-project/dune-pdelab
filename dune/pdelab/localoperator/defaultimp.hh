@@ -6,6 +6,9 @@
 #include <cmath>
 #include <vector>
 
+#include <dune/pdelab/gridfunctionspace/localvector.hh>
+#include <dune/pdelab/gridoperatorspace/localmatrix.hh>
+
 namespace Dune {
   namespace PDELab {
 

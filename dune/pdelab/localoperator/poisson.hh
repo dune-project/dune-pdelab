@@ -15,8 +15,6 @@
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
-#include"../common/geometrywrapper.hh"
-#include"../gridoperatorspace/gridoperatorspace.hh"
 #include"defaultimp.hh"
 #include"idefault.hh"
 #include"pattern.hh"
