@@ -1,9 +1,11 @@
 #ifndef DUNE_PDELAB_DEFAULT_RESIDUALENGINE_HH
 #define DUNE_PDELAB_DEFAULT_RESIDUALENGINE_HH
 
+#include <dune/pdelab/gridfunctionspace/localvector.hh>
+#include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridoperator/common/localassemblerenginebase.hh>
-#include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include <dune/pdelab/constraints/constraints.hh>
+#include <dune/pdelab/localoperator/callswitch.hh>
 
 namespace Dune{
   namespace PDELab{

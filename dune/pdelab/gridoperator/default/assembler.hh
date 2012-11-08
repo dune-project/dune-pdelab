@@ -3,9 +3,10 @@
 
 #include <dune/common/typetraits.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
-#include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/common/elementmapper.hh>
+#include <dune/pdelab/common/geometrywrapper.hh>
 
 namespace Dune{
   namespace PDELab{

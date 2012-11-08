@@ -7,7 +7,7 @@
 #include <vector>
 
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
-#include <dune/pdelab/gridoperatorspace/localmatrix.hh>
+#include <dune/pdelab/gridoperator/common/localmatrix.hh>
 
 namespace Dune {
   namespace PDELab {

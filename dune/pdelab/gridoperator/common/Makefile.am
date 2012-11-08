@@ -8,6 +8,7 @@ gridoperatorcommon_HEADERS =	        \
 	borderdofexchanger.hh		\
 	gridoperatorutilities.hh	\
 	localassemblerenginebase.hh	\
+	localmatrix.hh			\
 	timesteppingparameterinterface.hh
 
 include $(top_srcdir)/am/global-rules

@@ -2,9 +2,11 @@
 #define DUNE_PDELAB_DEFAULT_APPLYJACOBIANENGINE_HH
 
 #include <dune/common/nullptr.hh>
+#include <dune/pdelab/gridfunctionspace/localvector.hh>
+#include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridoperator/common/localassemblerenginebase.hh>
-#include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include <dune/pdelab/constraints/constraints.hh>
+#include <dune/pdelab/localoperator/callswitch.hh>
 
 namespace Dune{
   namespace PDELab{

@@ -11,7 +11,7 @@
 #include <dune/common/tupleutility.hh>
 #include <dune/common/typetraits.hh>
 
-#include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
+#include <dune/pdelab/localoperator/callswitch.hh>
 
 namespace Dune {
   namespace PDELab {

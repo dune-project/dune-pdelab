@@ -11,7 +11,7 @@
 #include<dune/geometry/type.hh>
 #include<dune/geometry/quadraturerules.hh>
 #include<dune/pdelab/gridfunctionspace/localvector.hh>
-#include<dune/pdelab/gridoperatorspace/localmatrix.hh>
+#include<dune/pdelab/gridoperator/common/localmatrix.hh>
 
 #include"defaultimp.hh"
 #include"pattern.hh"

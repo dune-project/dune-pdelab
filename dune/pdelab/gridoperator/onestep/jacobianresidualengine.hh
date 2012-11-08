@@ -1,8 +1,9 @@
 #ifndef DUNE_PDELAB_ONESTEP_JACOBIANRESIDUALENGINE_HH
 #define DUNE_PDELAB_ONESTEP_JACOBIANRESIDUALENGINE_HH
 
+#include <cassert>
+
 #include <dune/pdelab/gridoperator/common/localassemblerenginebase.hh>
-#include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 
 namespace Dune{
   namespace PDELab{

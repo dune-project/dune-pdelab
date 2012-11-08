@@ -8,7 +8,7 @@
 #include <dune/pdelab/common/unordered_set.hh>
 
 #include <dune/pdelab/constraints/constraintstransformation.hh>
-#include <dune/pdelab/gridoperatorspace/localmatrix.hh>
+#include <dune/pdelab/gridoperator/common/localmatrix.hh>
 
 namespace Dune{
   namespace PDELab{
@@ -100,6 +100,103 @@ namespace Dune{
       }
 
     };
+
+
+
+    // ********************************************************************************
+    // default local pattern implementation
+    // ********************************************************************************
+
+    /**
+       \brief Entry in sparsity pattern
+
+       The sparsity pattern of a linear operator is described by by connecting
+       degrees of freedom in one element with degrees of freedom in the
+       same element (intra) or an intersecting element (inter).
+
+       This numbering is with respect to the depth-first canonical order of the
+       degrees of freedom of an entity.
+
+       \nosubgrouping
+    */
+    class SparsityLink : public Dune::tuple<int,int>
+    {
+    public:
+      //! \brief Standard constructor for uninitialized local index
+      SparsityLink ()
+      {}
+
+      //! \brief Initialize all components
+      SparsityLink (int i, int j)
+        : Dune::tuple<int,int>(i,j)
+      {}
+
+      //! \brief Return first component
+      inline int i () const
+      {
+        return Dune::get<0>(*this);
+      }
+
+      //! \brief Return second component
+      inline int j () const
+      {
+        return Dune::get<1>(*this);
+      }
+
+      //! \brief Set both components
+      void set (int i, int j)
+      {
+        Dune::get<0>(*this) = i;
+        Dune::get<1>(*this) = j;
+      }
+    };
+
+    /**
+       \brief Layout description for a sparse linear operator
+       \see SparsityLink
+
+       \nosubgrouping
+    */
+    class LocalSparsityPattern
+      : public std::vector<SparsityLink>
+    {
+
+    public:
+
+      void push_back(const SparsityLink& link)
+        DUNE_DEPRECATED_MSG("The std::vector-like interface to LocalSparsityPattern is deprecated, use addLink() instead.")
+      {
+        std::vector<SparsityLink>::push_back(link);
+      }
+
+      //! Adds a link between DOF i of lfsv and DOF j of lfsu.
+      /**
+       * This methods adds a link between the DOF i of the test local test space lfsv
+       * and the DOF j of the local ansatz space lfsu.
+       *
+       * \param lfsv  The local test space.
+       * \param i     Index of the DOF in the test space lfsv.
+       * \param lfsu  The local ansatz space.
+       * \param j     Index of the DOF in the ansatz space lfsu.
+       */
+      template<typename LFSV, typename LFSU>
+      void addLink(const LFSV& lfsv, std::size_t i, const LFSU& lfsu, std::size_t j)
+      {
+        std::vector<SparsityLink>::push_back(
+          SparsityLink(
+            lfsv.localIndex(i),
+            lfsu.localIndex(j)
+          )
+        );
+      }
+
+    };
+
+
+
+    // ********************************************************************************
+    // Assembler base class
+    // ********************************************************************************
 
     /**
        \brief Base class for local assembler

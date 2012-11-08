@@ -1,5 +1,6 @@
 commondir = $(includedir)/dune/pdelab/localoperator
 common_HEADERS =				\
+	callswitch.hh				\
 	cg_stokes.hh				\
 	convectiondiffusion.hh			\
 	convectiondiffusiondg.hh		\
