@@ -7,7 +7,7 @@
 #include <set>
 
 #include<dune/common/exceptions.hh>
-#include <dune/common/mpihelper.hh>
+#include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/static_assert.hh>
 
 #include <dune/grid/common/datahandleif.hh>

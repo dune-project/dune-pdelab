@@ -8,7 +8,7 @@
 #include <algorithm>
 
 #include <dune/common/deprecated.hh>
-#include <dune/common/mpihelper.hh>
+#include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/tuples.hh>
 
 #include <dune/geometry/typeindex.hh>

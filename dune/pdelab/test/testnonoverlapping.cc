@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include <dune/common/mpihelper.hh>
+#include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/uggrid.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include <dune/grid/io/file/dgfparser/gridptr.hh>
