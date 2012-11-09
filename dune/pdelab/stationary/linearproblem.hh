@@ -6,6 +6,8 @@
 #include<dune/pdelab/constraints/constraints.hh>
 #include<iostream>
 
+#include "../backend/solver.hh"
+
 namespace Dune {
   namespace PDELab {
 

@@ -64,7 +64,7 @@ namespace Dune {
 
       enum { dim = RangeType::dimension };
       // transformation
-      Dune::FieldMatrix<DF,dim,dim> jac;
+      typename EG::Geometry::JacobianInverseTransposed jac;
 
       // transform gradients of shape functions to real element
       jac = eg.geometry().jacobianInverseTransposed( location );

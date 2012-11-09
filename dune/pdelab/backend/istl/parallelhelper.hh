@@ -6,7 +6,7 @@
 #include <limits>
 
 #include <dune/common/deprecated.hh>
-#include <dune/common/mpihelper.hh>
+#include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/static_assert.hh>
 #include <dune/common/stdstreams.hh>
 

@@ -691,7 +691,7 @@ namespace Dune {
         // for coefficient computation
         RF vn[2*dim];    // normal velocities
         RF coeff[2*dim]; // RT0 coefficient
-        Dune::FieldMatrix<typename Traits::DomainFieldType,dim,dim>
+        typename Traits::ElementType::Geometry::JacobianInverseTransposed
           B = e.geometry().jacobianInverseTransposed(x); // the transformation. Assume it is linear
         RF determinant = B.determinant();
 
@@ -922,7 +922,7 @@ namespace Dune {
         // for coefficient computation
         RF vn[2*dim];    // normal velocities
         RF coeff[2*dim]; // RT0 coefficient
-        Dune::FieldMatrix<typename Traits::DomainFieldType,dim,dim>
+        typename Traits::ElementType::Geometry::JacobianInverseTransposed
           B = e.geometry().jacobianInverseTransposed(x); // the transformation. Assume it is linear
         RF determinant = B.determinant();
 

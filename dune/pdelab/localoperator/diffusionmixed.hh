@@ -80,7 +80,8 @@ namespace Dune {
 
         // evaluate transformation which must be linear
         Dune::FieldVector<DF,dim> pos; pos = 0.0;
-        Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(pos);
+        typename EG::Geometry::JacobianInverseTransposed jac;
+        jac = eg.geometry().jacobianInverseTransposed(pos);
         jac.invert();
         RF det = eg.geometry().integrationElement(pos);
 
@@ -230,7 +231,8 @@ namespace Dune {
 
         // evaluate transformation which must be linear
         Dune::FieldVector<DF,dim> pos; pos = 0.0;
-        Dune::FieldMatrix<DF,dimw,dim> jac = ig.inside()->geometry().jacobianInverseTransposed(pos);
+        typename IG::Geometry::JacobianInverseTransposed jac;
+        jac = ig.inside()->geometry().jacobianInverseTransposed(pos);
         jac.invert();
         RF det = ig.inside()->geometry().integrationElement(pos);
 
