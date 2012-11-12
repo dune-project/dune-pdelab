@@ -1,0 +1,7 @@
+doxyerr.log
+Doxyfile
+Doxyfile.in
+doxygen-tag
+doxygen.log
+html/
+pdf/

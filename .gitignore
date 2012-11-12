@@ -1,0 +1,31 @@
+# build artefacts strewn throughout the tree
+.libs/
+.deps/
+*.o
+*.lo
+*.a
+*.la
+Makefile
+Makefile.in
+
+# specific files created by the build system in the module root
+/aclocal.m4
+/am
+/autom4te.cache
+/config.guess
+/config.h
+/config.h.in
+/config.log
+/config.lt
+/config.status
+/config.sub
+/configure
+/configure.lineno
+/depcomp
+/dependencies.m4
+/dune-pdelab.pc
+/install-sh
+/libtool
+/ltmain.sh
+/missing
+/stamp-h1
