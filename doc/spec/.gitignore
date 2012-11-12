@@ -1,0 +1,8 @@
+*.aux
+*.log
+*.out
+*.toc
+multi-step.pdf
+multi-step.dvi
+spec.dvi
+spec.pdf
