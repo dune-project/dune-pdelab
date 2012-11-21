@@ -772,7 +772,10 @@ namespace Dune {
             if (bctype == ConvectionDiffusionBoundaryConditions::Outflow)
               {
                 if (normalflux<-1e-30)
-                  DUNE_THROW(Dune::Exception,"Outflow boundary condition on inflow!");
+                  DUNE_THROW(Dune::Exception,
+                    "Outflow boundary condition on inflow! [b("
+                    << ig.geometry().global(it->position()) << ") = "
+                    << b << ")");
 
                 // convection term
                 RF term1 = u_s * normalflux *factor;
@@ -946,7 +949,10 @@ namespace Dune {
             if (bctype == ConvectionDiffusionBoundaryConditions::Outflow)
               {
                 if (normalflux<-1e-30)
-                  DUNE_THROW(Dune::Exception,"Outflow boundary condition on inflow!");
+                  DUNE_THROW(Dune::Exception,
+                    "Outflow boundary condition on inflow! [b("
+                    << ig.geometry().global(it->position()) << ") = "
+                    << b << ")" << n_F_local << " " << normalflux);
 
                 // convection term
                 for (size_type j=0; j<lfsu_s.size(); j++) 
