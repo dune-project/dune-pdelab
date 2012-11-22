@@ -477,7 +477,7 @@ namespace Dune {
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
 
         // transformation
-        typename IG::Geometry::JacobianInverseTransposed jac;
+        typename IG::Entity::Geometry::JacobianInverseTransposed jac;
 
         // tensor times normal
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
@@ -566,7 +566,7 @@ namespace Dune {
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
 
         // transformation
-        typename IG::Geometry::JacobianInverseTransposed jac;
+        typename IG::Entity::Geometry::JacobianInverseTransposed jac;
 
         // evaluate boundary condition
         const Dune::FieldVector<DF,dim-1> 
