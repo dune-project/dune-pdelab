@@ -1180,13 +1180,13 @@ namespace Dune {
 
 
 
-        template<typename GO1, typename GO2>
+        template<typename GO1, typename GO2, bool implicit = true>
         class OneStepGlobalAssembler
         {
         public:
             // export types
             typedef typename GO1::GO::Traits::MatrixBackend MBE;
-            typedef Dune::PDELab::OneStepGridOperator<typename GO1::GO,typename GO2::GO> GO;
+            typedef Dune::PDELab::OneStepGridOperator<typename GO1::GO,typename GO2::GO,implicit> GO;
             typedef typename GO::Jacobian MAT;
 
             OneStepGlobalAssembler (GO1& go1, GO2& go2)
@@ -1454,6 +1454,82 @@ namespace Dune {
        private:
             shared_ptr<LS> lsp;
         };
+
+        // packaging of a default solver that should always work
+        // in the sequential case : BCGS SSOR
+        template<typename FS, typename ASS, SolverCategory::Category st = SolverCategory::sequential>
+        class ISTLSolverBackend_ExplicitDiagonal
+        {
+        public:
+            // types exported
+            typedef Dune::PDELab::ISTLBackend_SEQ_ExplicitDiagonal LS;
+
+            ISTLSolverBackend_ExplicitDiagonal (const FS& fs, const ASS& ass, unsigned maxiter_=5000, int verbose_=1)
+            {
+                lsp = shared_ptr<LS>(new LS());
+            }
+
+            LS& getLS () {return *lsp;}
+            const LS& getLS () const { return *lsp;}
+            LS& operator*(){return *lsp;}
+            LS* operator->() { return lsp.operator->(); }
+            const LS& operator*() const{return *lsp;}
+            const LS* operator->() const{ return lsp.operator->();}
+
+       private:
+            shared_ptr<LS> lsp;
+        };
+
+        // packaging of a default solver that should always work
+        // in the sequential case : BCGS SSOR
+        template<typename FS, typename ASS>
+        class ISTLSolverBackend_ExplicitDiagonal<FS,ASS,SolverCategory::overlapping>
+        {
+        public:
+            // types exported
+            typedef Dune::PDELab:: ISTLBackend_OVLP_ExplicitDiagonal<typename FS::GFS> LS;
+
+            ISTLSolverBackend_ExplicitDiagonal (const FS& fs, const ASS& ass, unsigned maxiter_=5000, int verbose_=1)
+            {
+                lsp = shared_ptr<LS>(new LS(fs.getGFS()));
+            }
+
+            LS& getLS () {return *lsp;}
+            const LS& getLS () const { return *lsp;}
+            LS& operator*(){return *lsp;}
+            LS* operator->() { return lsp.operator->(); }
+            const LS& operator*() const{return *lsp;}
+            const LS* operator->() const{ return lsp.operator->();}
+
+       private:
+            shared_ptr<LS> lsp;
+        };
+
+        // packaging of a default solver that should always work
+        // in the sequential case : BCGS SSOR
+        template<typename FS, typename ASS>
+        class ISTLSolverBackend_ExplicitDiagonal<FS,ASS,SolverCategory::nonoverlapping>
+        {
+        public:
+            // types exported
+            typedef Dune::PDELab:: ISTLBackend_NOVLP_ExplicitDiagonal<typename FS::GFS> LS;
+
+            ISTLSolverBackend_ExplicitDiagonal (const FS& fs, const ASS& ass, unsigned maxiter_=5000, int verbose_=1)
+            {
+                lsp = shared_ptr<LS>(new LS(fs.getGFS()));
+            }
+
+            LS& getLS () {return *lsp;}
+            const LS& getLS () const { return *lsp;}
+            LS& operator*(){return *lsp;}
+            LS* operator->() { return lsp.operator->(); }
+            const LS& operator*() const{return *lsp;}
+            const LS* operator->() const{ return lsp.operator->();}
+
+       private:
+            shared_ptr<LS> lsp;
+        };
+
 
 } // end namespace PDELab
     } // end namespace Dune
