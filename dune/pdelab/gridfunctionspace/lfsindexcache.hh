@@ -38,6 +38,23 @@ namespace Dune {
 
     public:
 
+      struct proxy
+      {
+
+        explicit proxy(const View& v)
+          : _tmp(v)
+        {}
+
+        View* operator->()
+        {
+          return &_tmp;
+        }
+
+        View _tmp;
+      };
+
+      typedef proxy pointer;
+
       DOFIndexViewIterator()
         : _iterator()
         , _tail_length(0)
@@ -91,6 +108,11 @@ namespace Dune {
       const View dereference() const
       {
         return _iterator->view(_iterator->treeIndex().size() - _tail_length);
+      }
+
+      pointer operator->() const
+      {
+        return pointer(dereference());
       }
 
     private:
