@@ -38,6 +38,21 @@ namespace Dune {
 
     public:
 
+      // Add support for returning non-references from iterator.
+      // We need a little bit of magic to make operator->() work for this iterator
+      // because we return a temporary object from dereference(), and the standard
+      // implementation of operator() in the facade tries to take the address of
+      // that temporary, which the compiler will vehemently object to... ;-)
+      //
+      // So I borrowed the following neat little trick from Boost's iterator library:
+      // The proxy object stores a copy of the temporary View object, and operator()->
+      // returns the proxy object to the caller. As mandated by the standard, the compiler
+      // will then attempt to repeat the operator->() on the returned object and get the
+      // address of the copy stored in the (temporary) proxy object. That proxy object
+      // is guaranteed to live until the next sequence point, and that is precisely as
+      // long as we have to guarantee the validity of the pointer to our View object.
+      // Problem solved - and another example of how difficult it is to get this low-level
+      // stuff implemented on the same level as Boost...
       struct proxy
       {
 
@@ -53,6 +68,7 @@ namespace Dune {
         View _tmp;
       };
 
+      // The proxy object will stand in as a pointer
       typedef proxy pointer;
 
       DOFIndexViewIterator()
