@@ -10,37 +10,74 @@
 #include <dune/common/reservedvector.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/hash.hh>
+#include <dune/common/iteratorfacades.hh>
 
 #include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/common/unordered_map.hh>
 #include <dune/pdelab/constraints/constraintstransformation.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 
-#include <boost/iterator/iterator_adaptor.hpp>
-
-
 namespace Dune {
   namespace PDELab {
 
     template<typename Iterator>
     class DOFIndexViewIterator
-      : public boost::iterator_adaptor<DOFIndexViewIterator<Iterator>,
-                                       Iterator,
-                                       const typename std::iterator_traits<Iterator>::value_type::View,
-                                       boost::use_default,
-                                       const typename std::iterator_traits<Iterator>::value_type::View
-                                       >
+      : public RandomAccessIteratorFacade<DOFIndexViewIterator<Iterator>,
+                                          const typename std::iterator_traits<Iterator>::value_type::View,
+                                          const typename std::iterator_traits<Iterator>::value_type::View
+                                          >
     {
+
+      friend class RandomAccessIteratorFacade<
+        DOFIndexViewIterator,
+        const typename std::iterator_traits<Iterator>::value_type::View,
+        const typename std::iterator_traits<Iterator>::value_type::View
+        >;
+
+      typedef typename std::iterator_traits<Iterator>::value_type::View View;
 
     public:
 
+      // Add support for returning non-references from iterator.
+      // We need a little bit of magic to make operator->() work for this iterator
+      // because we return a temporary object from dereference(), and the standard
+      // implementation of operator() in the facade tries to take the address of
+      // that temporary, which the compiler will vehemently object to... ;-)
+      //
+      // So I borrowed the following neat little trick from Boost's iterator library:
+      // The proxy object stores a copy of the temporary View object, and operator()->
+      // returns the proxy object to the caller. As mandated by the standard, the compiler
+      // will then attempt to repeat the operator->() on the returned object and get the
+      // address of the copy stored in the (temporary) proxy object. That proxy object
+      // is guaranteed to live until the next sequence point, and that is precisely as
+      // long as we have to guarantee the validity of the pointer to our View object.
+      // Problem solved - and another example of how difficult it is to get this low-level
+      // stuff implemented on the same level as Boost...
+      struct proxy
+      {
+
+        explicit proxy(const View& v)
+          : _tmp(v)
+        {}
+
+        View* operator->()
+        {
+          return &_tmp;
+        }
+
+        View _tmp;
+      };
+
+      // The proxy object will stand in as a pointer
+      typedef proxy pointer;
+
       DOFIndexViewIterator()
-        : DOFIndexViewIterator::iterator_adaptor_()
+        : _iterator()
         , _tail_length(0)
       {}
 
       explicit DOFIndexViewIterator(Iterator it, std::size_t tail_length = 0)
-        : DOFIndexViewIterator::iterator_adaptor_(it)
+        : _iterator(it)
         , _tail_length(tail_length)
       {}
 
@@ -56,20 +93,48 @@ namespace Dune {
 
       const typename std::iterator_traits<Iterator>::reference raw_index() const
       {
-        return *(this->base());
+        return *_iterator;
+      }
+
+      bool equals(const DOFIndexViewIterator& other) const
+      {
+        return _iterator == other._iterator;
+      }
+
+      void increment()
+      {
+        ++_iterator;
+      }
+
+      void decrement()
+      {
+        --_iterator;
+      }
+
+      void advance(int n)
+      {
+        _iterator += n;
+      }
+
+      std::ptrdiff_t distanceTo(DOFIndexViewIterator& other) const
+      {
+        return other._iterator - _iterator;
+      }
+
+      const View dereference() const
+      {
+        return _iterator->view(_iterator->treeIndex().size() - _tail_length);
+      }
+
+      pointer operator->() const
+      {
+        return pointer(dereference());
       }
 
     private:
 
-      friend class boost::iterator_core_access;
-      typedef typename std::iterator_traits<Iterator>::value_type::View View;
-
+      Iterator _iterator;
       std::size_t _tail_length;
-
-      const View dereference() const
-      {
-        return this->base()->view(this->base()->treeIndex().size() - _tail_length);
-      }
 
     };
 
