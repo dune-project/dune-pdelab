@@ -35,10 +35,10 @@ public:
 };
 
 #if HAVE_ALUGRID
-class ALUUnitSquare : public Dune::ALUSimplexGrid<2,2> 
+class ALUUnitSquare : public Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming>
 {
 public:
-  ALUUnitSquare () : Dune::ALUSimplexGrid<2,2>("grids/2dsimplex.alu") {}
+  ALUUnitSquare () : Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming>("grids/2dsimplex.alu") {}
 };
 
 #endif //HAVE_ALUGRID
@@ -129,8 +129,8 @@ public:
 
 #ifdef HAVE_ALUGRID
 template<>
-class UnitTriangleMaker<Dune::ALUSimplexGrid<2,2> > {
-  typedef Dune::ALUSimplexGrid<2,2> Grid;
+class UnitTriangleMaker<Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> > {
+  typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
 public:
   static Dune::shared_ptr<Grid> create() {
     return Dune::shared_ptr<Grid>(new Grid("grids/2dtriangle.alu"));
@@ -170,8 +170,8 @@ public:
 
 #ifdef HAVE_ALUGRID
 template<>
-class TriangulatedUnitSquareMaker<Dune::ALUSimplexGrid<2,2> > {
-  typedef Dune::ALUSimplexGrid<2,2> Grid;
+class TriangulatedUnitSquareMaker<Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> > {
+  typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
 public:
   static Dune::shared_ptr<Grid> create() {
     return Dune::shared_ptr<Grid>(new Grid("grids/2dsimplex.alu"));

@@ -102,7 +102,7 @@ int main(int argc, char** argv)
 #ifdef HAVE_ALUGRID
     std::cout << "ALU" << std::endl;
     {
-      typedef Dune::ALUSimplexGrid<2, 2> Grid;
+      typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
 
       Grid grid("grids/2dtriangle.alu");
       //grid->globalRefine(1);

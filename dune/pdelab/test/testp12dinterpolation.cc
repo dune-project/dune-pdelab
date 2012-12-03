@@ -142,9 +142,9 @@ int main(int argc, char** argv)
 #endif
 
 #ifdef HAVE_ALUGRID
-    test(UnitTriangleMaker          <Dune::ALUSimplexGrid<2, 2> >::create(),
+    test(UnitTriangleMaker          <Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> >::create(),
          result, 250000, "alu-triangle");
-    test(TriangulatedUnitSquareMaker<Dune::ALUSimplexGrid<2, 2> >::create(),
+    test(TriangulatedUnitSquareMaker<Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> >::create(),
          result, 250000, "alu-square");
 #endif // HAVE_ALUGRID
 
