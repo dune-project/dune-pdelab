@@ -32,6 +32,7 @@ testpk
 testpoisson
 testrt0
 testrt02dgridfunctionspace
+testrtfem
 testutilities
 test-composed-iis-gfs
 testmultistepcached
