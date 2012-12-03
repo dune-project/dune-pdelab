@@ -2,7 +2,7 @@
 
 2dreentrantcorner-generator.py
   Python Skript used to generate 2dreentrantcorner.dgf.
-  
+
 2dreentrantcorner.dgf
   Pie shaped domain with a reentrant corner.
 

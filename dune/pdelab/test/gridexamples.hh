@@ -17,7 +17,7 @@
 #include <dune/grid/albertagrid/dgfparser.hh>
 #include <dune/grid/albertagrid/gridfactory.hh>
 #endif
-#if HAVE_UG 
+#if HAVE_UG
 #include <dune/grid/uggrid/uggridfactory.hh>
 #endif
 #if HAVE_ALUGRID
