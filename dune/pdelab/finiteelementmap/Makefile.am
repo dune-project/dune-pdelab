@@ -34,6 +34,10 @@ finiteelementmap_HEADERS =			\
 	rt0q2dfem.hh				\
 	rt0q3dfem.hh				\
 	rt0qfem.hh				\
+	rt12dfem.hh				\
+	rt1q2dfem.hh				\
+	rt1q3dfem.hh				\
+	rt2q2dfem.hh				\
 	variablemonomfem.hh
 
 include $(top_srcdir)/am/global-rules
