@@ -26,7 +26,7 @@
 #include "../common/vtkexport.hh"
 #include "../gridfunctionspace/gridfunctionspace.hh"
 #include "../gridfunctionspace/gridfunctionspaceutilities.hh"
-#include "../finiteelementmap/rt02dfem.hh"
+#include "../finiteelementmap/rt0simplex2dfem.hh"
 
 template<typename GV>
 void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
@@ -38,11 +38,11 @@ void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
   filename << "rt02dgridfunctionspace";
   if(suffix != "") filename << "-" << suffix;
 
-  Dune::PDELab::RT02DLocalFiniteElementMap<GV,D,R> fem(gv);   // maps entity to finite element
+  Dune::PDELab::RT0Simplex2DLocalFiniteElementMap<GV,D,R> fem(gv);   // maps entity to finite element
 
   typedef Dune::PDELab::GridFunctionSpace<
     GV,
-    Dune::PDELab::RT02DLocalFiniteElementMap<GV,D,R>
+    Dune::PDELab::RT0Simplex2DLocalFiniteElementMap<GV,D,R>
     > GFS;
   GFS gfs(gv,fem);                    // make grid function space
 

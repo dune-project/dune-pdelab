@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_RT12DFEM_HH
-#define DUNE_PDELAB_RT12DFEM_HH
+#ifndef DUNE_PDELAB_FINITEELEMENTMAP_RT1SIMPLEX2DFEM_HH
+#define DUNE_PDELAB_FINITEELEMENTMAP_RT1SIMPLEX2DFEM_HH
 
 #include <vector>
 #include <dune/localfunctions/raviartthomas/raviartthomas12d.hh>
@@ -12,10 +12,10 @@ namespace Dune {
     //! wrap up element from local functions
     //! \ingroup FiniteElementMap
     template<typename GV, typename D, typename R>
-    class RT12DLocalFiniteElementMap :
+    class RT1Simplex2DLocalFiniteElementMap :
       public LocalFiniteElementMapInterface<
         LocalFiniteElementMapTraits< Dune::RT12DLocalFiniteElement<D,R> >,
-        RT12DLocalFiniteElementMap<GV,D,R> >
+        RT1Simplex2DLocalFiniteElementMap<GV,D,R> >
     {
       typedef Dune::RT12DLocalFiniteElement<D,R> FE;
       typedef typename GV::IndexSet IndexSet;
@@ -25,7 +25,7 @@ namespace Dune {
       typedef LocalFiniteElementMapTraits<FE> Traits;
 
       //! \brief Use when Imp has a standard constructor
-      RT12DLocalFiniteElementMap(const GV& gv_)
+      RT1Simplex2DLocalFiniteElementMap(const GV& gv_)
         : gv(gv_), is(gv_.indexSet()), orient(gv_.size(0))
       {
         // create all variants
@@ -72,4 +72,4 @@ namespace Dune {
   } // end namespace PDELab
 } // end namespace Dune
 
-#endif // DUNE_PDELAB_RT12DFEM_HH
+#endif // DUNE_PDELAB_FINITEELEMENTMAP_RT1SIMPLEX2DFEM_HH

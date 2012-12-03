@@ -1,9 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_RT1Q2DFEM_HH
-#define DUNE_PDELAB_RT1Q2DFEM_HH
+#ifndef DUNE_PDELAB_FINITEELEMENTMAP_RT2CUBE2DFEM_HH
+#define DUNE_PDELAB_FINITEELEMENTMAP_RT2CUBE2DFEM_HH
 
 #include <vector>
-#include <dune/localfunctions/raviartthomas/raviartthomas1q2d.hh>
+#include <dune/localfunctions/raviartthomas/raviartthomas2q2d.hh>
 #include "finiteelementmap.hh"
 
 namespace Dune {
@@ -12,12 +12,12 @@ namespace Dune {
     //! wrap up element from local functions
     //! \ingroup FiniteElementMap
     template<typename GV, typename D, typename R>
-    class RT1Q2DLocalFiniteElementMap :
+    class RT2Cube2DLocalFiniteElementMap :
       public LocalFiniteElementMapInterface<
-        LocalFiniteElementMapTraits< Dune::RT1Q2DLocalFiniteElement<D,R> >,
-        RT1Q2DLocalFiniteElementMap<GV,D,R> >
+        LocalFiniteElementMapTraits< Dune::RT2Q2DLocalFiniteElement<D,R> >,
+        RT2Cube2DLocalFiniteElementMap<GV,D,R> >
     {
-      typedef Dune::RT1Q2DLocalFiniteElement<D,R> FE;
+      typedef Dune::RT2Q2DLocalFiniteElement<D,R> FE;
       typedef typename GV::IndexSet IndexSet;
 
     public:
@@ -25,7 +25,7 @@ namespace Dune {
       typedef LocalFiniteElementMapTraits<FE> Traits;
 
       //! \brief Use when Imp has a standard constructor
-      RT1Q2DLocalFiniteElementMap(const GV& gv_)
+      RT2Cube2DLocalFiniteElementMap (const GV& gv_)
         : gv(gv_), is(gv_.indexSet()), orient(gv_.size(0))
       {
         // create all variants
@@ -45,7 +45,7 @@ namespace Dune {
           orient[myId] = 0;
 
           IntersectionIterator endit = gv.iend(*it);
-          for (IntersectionIterator iit = gv.ibegin(*it); iit!=endit; ++iit)
+          for (IntersectionIterator iit = gv.ibegin(*it); iit != endit; ++iit)
           {
             if (iit->neighbor()
                 && is.template index<0>(*(iit->outside())) > myId)
@@ -58,7 +58,7 @@ namespace Dune {
 
       //! \brief get local basis functions for entity
       template<class EntityType>
-      const typename Traits::FiniteElementType& find(const EntityType& e) const
+      const typename Traits::FiniteElementType& find (const EntityType& e) const
       {
         return variant[orient[is.template index<0>(e)]];
       }
@@ -72,4 +72,4 @@ namespace Dune {
   } // end namespace PDELab
 } // end namespace Dune
 
-#endif // DUNE_PDELAB_RT1Q2DFEM_HH
+#endif // DUNE_PDELAB_FINITEELEMENTMAP_RT2CUBE2DFEM_HH
