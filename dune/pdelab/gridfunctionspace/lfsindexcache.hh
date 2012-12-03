@@ -41,7 +41,7 @@ namespace Dune {
       // Add support for returning non-references from iterator.
       // We need a little bit of magic to make operator->() work for this iterator
       // because we return a temporary object from dereference(), and the standard
-      // implementation of operator() in the facade tries to take the address of
+      // implementation of operator->() in the facade tries to take the address of
       // that temporary, which the compiler will vehemently object to... ;-)
       //
       // So I borrowed the following neat little trick from Boost's iterator library:
