@@ -732,7 +732,7 @@ namespace Dune {
           typedef typename CV::const_iterator global_row_iterator;
           for(global_row_iterator cit = this->pconstraintsv->begin();
               cit != this->pconstraintsv->end(); ++cit)
-            set_trivial_row(cit->first,cit->second,*result);
+            this->set_trivial_row(cit->first,cit->second,*result);
 
           cache->setComposedJacobian(currentStep, result);
           return result;
@@ -906,7 +906,7 @@ namespace Dune {
           typedef typename CV::const_iterator global_row_iterator;
           for(global_row_iterator cit = this->pconstraintsv->begin();
               cit != this->pconstraintsv->end(); ++cit)
-            set_trivial_row(cit->first,cit->second,a);
+            this->set_trivial_row(cit->first,cit->second,a);
         }
       }
 
