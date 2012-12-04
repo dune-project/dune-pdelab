@@ -354,6 +354,9 @@ endif
 check_PROGRAMS += testrtfem
 testrtfem_SOURCES = testrtfem.cc
 
+check_PROGRAMS += testbdmfem
+testbdmfem_SOURCES = testbdmfem.cc
+
 MOSTLYCLEANFILES += poisson_petsc_*.vtu
 
 include $(top_srcdir)/am/global-rules
