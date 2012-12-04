@@ -90,6 +90,18 @@ namespace Dune {
 
     };
 
+#ifndef DOXYGEN
+
+    // Specialization for grids that don't provide a valid topology id for their cells.
+    template<typename GV, typename D, typename R, std::size_t k>
+    class RaviartThomasLocalFiniteElementMap<GV,D,R,k,~0u>
+    {
+      dune_static_assert((AlwaysFalse<GV>::value),
+                         "Your chosen grid does not export a default topology id for its cells."
+                         "please provide the correct value as an additional template parameter.");
+    };
+
+#endif // DOXYGEN
 
   } // end namespace PDELab
 } // end namespace Dune
