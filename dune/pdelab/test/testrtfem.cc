@@ -10,8 +10,10 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/fvector.hh>
+#include <dune/common/typetraits.hh>
 #include <dune/grid/yaspgrid.hh>
 #include <dune/istl/bvector.hh>
+#include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
 #include <dune/pdelab/finiteelementmap/rt0simplex2dfem.hh>
 #include <dune/pdelab/finiteelementmap/rt1simplex2dfem.hh>
 #include <dune/pdelab/finiteelementmap/rt0cube2dfem.hh>
@@ -23,12 +25,15 @@
 #include "gridexamples.hh"
 
 // Run unit tests for given FEM
-template<typename GV, typename FEM>
-void test(GV gv, const FEM& fem)
+template<typename GV, typename FEM, typename BaseFEM>
+void test(GV gv, const FEM& fem, const BaseFEM& baseFEM)
 {
   typename GV::template Codim<0>::Iterator it = gv.template begin<0>();
   const typename FEM::Traits::FiniteElement& fe = fem.find(*it);
-  fe.localBasis().size();
+  const typename BaseFEM::Traits::FiniteElement& bfe = baseFEM.find(*it);
+  dune_static_assert((Dune::is_same<typename FEM::Traits::FiniteElement,typename BaseFEM::Traits::FiniteElement>::value),
+                     "Implementation error in RaviartThomasLocalFiniteElementMap: picked wrong base FEM");
+  assert(fe.localBasis().size() == bfe.localBasis().size());
 }
 
 
@@ -54,17 +59,23 @@ int main(int argc, char** argv)
       typedef GV::Grid::ctype DF;
       typedef double RF;
 
-      typedef Dune::PDELab::RT0Cube2DLocalFiniteElementMap<GV,DF,RF> RT0FEM;
+      typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,RF,0> RT0FEM;
+      typedef Dune::PDELab::RT0Cube2DLocalFiniteElementMap<GV,DF,RF> RT0BASEFEM;
       RT0FEM rt0_fem(gv);
-      test(gv,rt0_fem);
+      RT0BASEFEM rt0_base_fem(gv);
+      test(gv,rt0_fem,rt0_base_fem);
 
-      typedef Dune::PDELab::RT1Cube2DLocalFiniteElementMap<GV,DF,RF> RT1FEM;
+      typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,RF,1> RT1FEM;
+      typedef Dune::PDELab::RT1Cube2DLocalFiniteElementMap<GV,DF,RF> RT1BASEFEM;
       RT1FEM rt1_fem(gv);
-      test(gv,rt1_fem);
+      RT1BASEFEM rt1_base_fem(gv);
+      test(gv,rt1_fem,rt1_base_fem);
 
-      typedef Dune::PDELab::RT2Cube2DLocalFiniteElementMap<GV,DF,RF> RT2FEM;
+      typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,RF,2> RT2FEM;
+      typedef Dune::PDELab::RT2Cube2DLocalFiniteElementMap<GV,DF,RF> RT2BASEFEM;
       RT2FEM rt2_fem(gv);
-      test(gv,rt2_fem);
+      RT2BASEFEM rt2_base_fem(gv);
+      test(gv,rt2_fem,rt2_base_fem);
 
     }
 
@@ -84,13 +95,17 @@ int main(int argc, char** argv)
       typedef GV::Grid::ctype DF;
       typedef double RF;
 
-      typedef Dune::PDELab::RT0Cube3DLocalFiniteElementMap<GV,DF,RF> RT0FEM;
+      typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,RF,0> RT0FEM;
+      typedef Dune::PDELab::RT0Cube3DLocalFiniteElementMap<GV,DF,RF> RT0BASEFEM;
       RT0FEM rt0_fem(gv);
-      test(gv,rt0_fem);
+      RT0BASEFEM rt0_base_fem(gv);
+      test(gv,rt0_fem,rt0_base_fem);
 
-      typedef Dune::PDELab::RT1Cube3DLocalFiniteElementMap<GV,DF,RF> RT1FEM;
+      typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,RF,1> RT1FEM;
+      typedef Dune::PDELab::RT1Cube3DLocalFiniteElementMap<GV,DF,RF> RT1BASEFEM;
       RT1FEM rt1_fem(gv);
-      test(gv,rt1_fem);
+      RT1BASEFEM rt1_base_fem(gv);
+      test(gv,rt1_fem,rt1_base_fem);
 
     }
 
@@ -108,13 +123,17 @@ int main(int argc, char** argv)
       typedef GV::Grid::ctype DF;
       typedef double RF;
 
-      typedef Dune::PDELab::RT0Simplex2DLocalFiniteElementMap<GV,DF,RF> RT0FEM;
+      typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,RF,0> RT0FEM;
+      typedef Dune::PDELab::RT0Simplex2DLocalFiniteElementMap<GV,DF,RF> RT0BASEFEM;
       RT0FEM rt0_fem(gv);
-      test(gv,rt0_fem);
+      RT0BASEFEM rt0_base_fem(gv);
+      test(gv,rt0_fem,rt0_base_fem);
 
-      typedef Dune::PDELab::RT1Simplex2DLocalFiniteElementMap<GV,DF,RF> RT1FEM;
+      typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,RF,1> RT1FEM;
+      typedef Dune::PDELab::RT1Simplex2DLocalFiniteElementMap<GV,DF,RF> RT1BASEFEM;
       RT1FEM rt1_fem(gv);
-      test(gv,rt1_fem);
+      RT1BASEFEM rt1_base_fem(gv);
+      test(gv,rt1_fem,rt1_base_fem);
 
     }
 
