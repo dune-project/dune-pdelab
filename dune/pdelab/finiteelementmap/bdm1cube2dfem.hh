@@ -1,9 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_BDM12DFEM_HH
-#define DUNE_PDELAB_BDM12DFEM_HH
+#ifndef DUNE_PDELAB_FINITEELEMENTMAP_BDM1CUBE2DFEM_HH
+#define DUNE_PDELAB_FINITEELEMENTMAP_BDM1CUBE2DFEM_HH
 
 #include <vector>
-#include <dune/localfunctions/brezzidouglasmarini/brezzidouglasmarini12d.hh>
+#include <dune/localfunctions/brezzidouglasmarini/brezzidouglasmarini1q2d.hh>
 #include "finiteelementmap.hh"
 
 namespace Dune {
@@ -12,10 +12,10 @@ namespace Dune {
     //! wrap up element from local functions
     //! \ingroup FiniteElementMap
     template<typename GV, typename D, typename R>
-    class BDM12DLocalFiniteElementMap :
+    class BDM1Cube2DLocalFiniteElementMap :
       public LocalFiniteElementMapInterface<
-        LocalFiniteElementMapTraits< Dune::BDM12DLocalFiniteElement<D,R> >,
-        BDM12DLocalFiniteElementMap<GV,D,R> >
+        LocalFiniteElementMapTraits<Dune::BDM1Q2DLocalFiniteElement<D,R> >,
+        BDM1Cube2DLocalFiniteElementMap<GV,D,R> >
     {
       typedef Dune::BDM12DLocalFiniteElement<D,R> FE;
       typedef typename GV::IndexSet IndexSet;
@@ -25,11 +25,11 @@ namespace Dune {
       typedef LocalFiniteElementMapTraits<FE> Traits;
 
       //! \brief Use when Imp has a standard constructor
-      BDM12DLocalFiniteElementMap(const GV& gv_)
+      BDM1Cube2DLocalFiniteElementMap(const GV& gv_)
         : gv(gv_), is(gv_.indexSet()), orient(gv_.size(0))
       {
         // create all variants
-        for (int i = 0; i < 8; i++)
+        for (int i = 0; i < 16; i++)
         {
           variant[i] = FE(i);
         }
@@ -65,11 +65,11 @@ namespace Dune {
 
     private:
       const GV& gv;
-      FE variant[8];
+      FE variant[16];
       const IndexSet& is;
       std::vector<unsigned char> orient;
     };
   } // end namespace PDELab
 } // end namespace Dune
 
-#endif // DUNE_PDELAB_BDM12DFEM_HH
+#endif // DUNE_PDELAB_FINITEELEMENTMAP_BDM1CUBE2DFEM_HH
