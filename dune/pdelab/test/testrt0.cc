@@ -12,8 +12,8 @@
 #include<dune/grid/yaspgrid.hh>
 #include <dune/pdelab/backend/backendselector.hh>
 #include"../finiteelementmap/p0fem.hh"
-#include"../finiteelementmap/rt02dfem.hh"
-#include"../finiteelementmap/rt0q2dfem.hh"
+#include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
+#include"../finiteelementmap/rt0cube2dfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include"../gridfunctionspace/interpolate.hh"
@@ -82,8 +82,7 @@ void testrt0 (const GV& gv)
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,double,dim> P0FEM;
   P0FEM p0fem(gt);
   //P0FEM p0fem(Dune::GeometryType::cube);
-  typedef Dune::PDELab::RT02DLocalFiniteElementMap<GV,DF,double> RT0FEM;
-  //typedef Dune::PDELab::RT0Q2DLocalFiniteElementMap<GV,DF,double> RT0FEM;
+  typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,double,0,Dune::GeometryType::simplex> RT0FEM;
   RT0FEM rt0fem(gv);
 
   // make a grid function space
