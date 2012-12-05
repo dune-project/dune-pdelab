@@ -82,7 +82,7 @@ void testrt0 (const GV& gv)
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,double,dim> P0FEM;
   P0FEM p0fem(gt);
   //P0FEM p0fem(Dune::GeometryType::cube);
-  typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,double,0,0> RT0FEM;
+  typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,double,0,Dune::GeometryType::simplex> RT0FEM;
   RT0FEM rt0fem(gv);
   
   // make a grid function space

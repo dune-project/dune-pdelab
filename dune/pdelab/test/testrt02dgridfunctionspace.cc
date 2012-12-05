@@ -38,11 +38,11 @@ void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
   filename << "rt02dgridfunctionspace";
   if(suffix != "") filename << "-" << suffix;
 
-  Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,D,R,0,0> fem(gv);   // maps entity to finite element
+  Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,D,R,0,Dune::GeometryType::simplex> fem(gv);   // maps entity to finite element
 
   typedef Dune::PDELab::GridFunctionSpace<
     GV,
-    Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,D,R,0,0>
+    Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,D,R,0,Dune::GeometryType::simplex>
     > GFS;
   GFS gfs(gv,fem);                    // make grid function space
 
