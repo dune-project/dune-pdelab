@@ -24,7 +24,7 @@ namespace Dune {
 
       //! Template for determining the correct base implementation of RaviartThomasLocalFiniteElementMap.
       /**
-       * This template shoul be specialized for supported variations of the Raviart-Thomas elements.
+       * This template must be specialized for supported variations of the Raviart-Thomas elements.
        * Its member type 'type' will be used as base class of RaviartThomasLocalFiniteElementMap. That
        * type must have a constructor that takes the GridView as single parameter.
        */
@@ -105,6 +105,7 @@ namespace Dune {
      * \tparam GV          The GridView on which to construct the finite element map.
      * \tparam D           The domain field type of the elements.
      * \tparam R           The range field type of the elements.
+     * \tparam k           The order of the finite elements.
      * \tparam basic_type  The GeometryType::BasicType of the grid cells. You only need to provide this
      *                     template parameter for mixed grids (if you don't provide the parameter for a
      *                     mixed grid, you get a compiler error).
