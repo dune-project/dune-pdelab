@@ -17,12 +17,22 @@ namespace Dune {
 
     namespace detail {
 
+      //! Template for determining the correct base implementation of BrezziDouglasMariniLocalFiniteElementMap.
+      /**
+       * This template must be specialized for supported variations of the Brezzi-Douglas-Marini elements.
+       * Its member type 'type' will be used as base class of BrezziDouglasMariniLocalFiniteElementMap. That
+       * type must have a constructor that takes the GridView as single parameter.
+       */
       template<typename GV, int dim, GeometryType::BasicType basic_type, typename D, typename R, std::size_t k>
       struct BrezziDouglasMariniLocalFiniteElementMapBaseSelector
       {
         dune_static_assert((AlwaysFalse<GV>::value),"The requested type of Brezzi-Douglas-Marini element is not implemented, sorry!");
       };
 
+
+      // ********************************************************************************
+      // Specializations
+      // ********************************************************************************
 
       template<typename GV, typename D, typename R>
       struct BrezziDouglasMariniLocalFiniteElementMapBaseSelector<GV,2,GeometryType::simplex,D,R,1>
@@ -41,6 +51,24 @@ namespace Dune {
 #endif // DOXYGEN
 
 
+    //! Brezzi-Douglas-Marini elements of order k.
+    /**
+     * This LocalFiniteElementMap provides BDM elements of order k for the given
+     * GridView GV. It currently supports BDM1 for both simplices and cubes in 2D.
+     *
+     * We try to infer the type of the reference element (cube / simplex) from the GridView, but
+     * that only works for grids with a single element type that is fixed at compile time. For
+     * potentially mixed grids like UGGrid, you need to provide the GeometryType::BasicType of the
+     * cell reference element as an additional template parameter.
+     *
+     * \tparam GV          The GridView on which to construct the finite element map.
+     * \tparam D           The domain field type of the elements.
+     * \tparam R           The range field type of the elements.
+     * \tparam k           The order of the finite elements.
+     * \tparam basic_type  The GeometryType::BasicType of the grid cells. You only need to provide this
+     *                     template parameter for mixed grids (if you don't provide the parameter for a
+     *                     mixed grid, you get a compiler error).
+     */
     template<typename GV,
              typename D,
              typename R,

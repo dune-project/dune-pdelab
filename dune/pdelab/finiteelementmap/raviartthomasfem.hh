@@ -22,12 +22,22 @@ namespace Dune {
 
     namespace detail {
 
+      //! Template for determining the correct base implementation of RaviartThomasLocalFiniteElementMap.
+      /**
+       * This template shoul be specialized for supported variations of the Raviart-Thomas elements.
+       * Its member type 'type' will be used as base class of RaviartThomasLocalFiniteElementMap. That
+       * type must have a constructor that takes the GridView as single parameter.
+       */
       template<typename GV, int dim, GeometryType::BasicType basic_type, typename D, typename R, std::size_t k>
       struct RaviartThomasLocalFiniteElementMapBaseSelector
       {
         dune_static_assert((AlwaysFalse<GV>::value),"The requested type of Raviart-Thomas element is not implemented, sorry!");
       };
 
+
+      // ********************************************************************************
+      // Specializations
+      // ********************************************************************************
 
       template<typename GV, typename D, typename R>
       struct RaviartThomasLocalFiniteElementMapBaseSelector<GV,2,GeometryType::simplex,D,R,0>
@@ -78,6 +88,27 @@ namespace Dune {
 #endif // DOXYGEN
 
 
+    //! Raviart-Thomas elements of order k.
+    /**
+     * This LocalFiniteElementMap provides Raviart-Thomas elements of order k for the given
+     * GridView GV. It currently supports
+     *
+     * * RT0, RT1 and RT2 for cubes in 2D,
+     * * RT0 and RT1 for simplices in 2D,
+     * * RT0 and RT1 for cubes in 3D.
+     *
+     * We try to infer the type of the reference element (cube / simplex) from the GridView, but
+     * that only works for grids with a single element type that is fixed at compile time. For
+     * potentially mixed grids like UGGrid, you need to provide the GeometryType::BasicType of the
+     * cell reference element as an additional template parameter.
+     *
+     * \tparam GV          The GridView on which to construct the finite element map.
+     * \tparam D           The domain field type of the elements.
+     * \tparam R           The range field type of the elements.
+     * \tparam basic_type  The GeometryType::BasicType of the grid cells. You only need to provide this
+     *                     template parameter for mixed grids (if you don't provide the parameter for a
+     *                     mixed grid, you get a compiler error).
+     */
     template<typename GV,
              typename D,
              typename R,
@@ -93,6 +124,7 @@ namespace Dune {
 
     public:
 
+      //! Constructs a finite element map on the GridView gv.
       RaviartThomasLocalFiniteElementMap(const GV& gv)
         : detail::RaviartThomasLocalFiniteElementMapBaseSelector<GV,GV::dimension,basic_type,D,R,k>::type(gv)
       {}
