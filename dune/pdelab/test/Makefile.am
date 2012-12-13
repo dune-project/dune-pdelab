@@ -357,6 +357,12 @@ testordering_SOURCES = testordering.cc
 check_PROGRAMS += testdatahandle
 testdatahandle_SOURCES = testdatahandle.cc
 
+check_PROGRAMS += testrtfem
+testrtfem_SOURCES = testrtfem.cc
+
+check_PROGRAMS += testbdmfem
+testbdmfem_SOURCES = testbdmfem.cc
+
 MOSTLYCLEANFILES += poisson_petsc_*.vtu
 
 check_PROGRAMS += testnonoverlapping

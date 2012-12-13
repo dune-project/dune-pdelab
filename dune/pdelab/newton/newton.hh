@@ -30,14 +30,13 @@ namespace Dune
         template<class RFType>
         struct NewtonResult : LinearSolverResult<RFType>
         {
-//            RFType conv_rate;          // average reduction per Newton iteration
             RFType first_defect;       // the first defect
             RFType defect;             // the final defect
             double assembler_time;     // Cumulative time for matrix assembly
             double linear_solver_time; // Cumulative time for linear sovler
 
             NewtonResult() :
-                first_defect(0.0), defect(0.0), assembler_time(0.0), linear_solver_time(0.0) {} // conv_rate(0.0),
+                first_defect(0.0), defect(0.0), assembler_time(0.0), linear_solver_time(0.0) {}
         };
 
         template<class GOS, class TrlV, class TstV>
@@ -69,6 +68,8 @@ namespace Dune
             RFType prev_defect;
             RFType linear_reduction;
             bool reassembled;
+            RFType reduction;
+            RFType abs_limit;
 
             NewtonBase(GridOperator& go, TrialVector& u_)
                 : gridoperator(go)
@@ -322,23 +323,25 @@ namespace Dune
         public:
             NewtonTerminate(GridOperator& go, TrialVector& u_)
                 : NewtonBase<GOS,TrlV,TstV>(go,u_)
-                , reduction(1e-8)
                 , maxit(40)
                 , force_iteration(false)
-                , abs_limit(1e-12)
-            {}
+            {
+                this->reduction = 1e-8;
+                this->abs_limit = 1e-12;
+            }
 
             NewtonTerminate(GridOperator& go)
                 : NewtonBase<GOS,TrlV,TstV>(go)
-                , reduction(1e-8)
                 , maxit(40)
                 , force_iteration(false)
-                , abs_limit(1e-12)
-            {}
+            {
+                this->reduction = 1e-8;
+                this->abs_limit = 1e-12;
+            }
 
             void setReduction(RFType reduction_)
             {
-                reduction = reduction_;
+                this->reduction = reduction_;
             }
 
             void setMaxIterations(unsigned int maxit_)
@@ -353,15 +356,15 @@ namespace Dune
 
             void setAbsoluteLimit(RFType abs_limit_)
             {
-                abs_limit = abs_limit_;
+                this->abs_limit = abs_limit_;
             }
 
             virtual bool terminate()
             {
                 if (force_iteration && this->res.iterations == 0)
                     return false;
-                this->res.converged = this->res.defect < abs_limit
-                    || this->res.defect < this->res.first_defect * reduction;
+                this->res.converged = this->res.defect < this->abs_limit
+                    || this->res.defect < this->res.first_defect * this->reduction;
                 if (this->res.iterations >= maxit && !this->res.converged)
                     DUNE_THROW(NewtonNotConverged,
                                "NewtonTerminate::terminate(): Maximum iteration count reached");
@@ -369,10 +372,8 @@ namespace Dune
             }
 
         private:
-            RFType reduction;
             unsigned int maxit;
             bool force_iteration;
-            RFType abs_limit;
         };
 
         template<class GOS, class TrlV, class TstV>
@@ -388,18 +389,31 @@ namespace Dune
             NewtonPrepareStep(GridOperator& go, TrialVector& u_)
                 : NewtonBase<GOS,TrlV,TstV>(go,u_)
                 , min_linear_reduction(1e-3)
+                , fixed_linear_reduction(0.0)
                 , reassemble_threshold(0.0)
             {}
 
             NewtonPrepareStep(GridOperator& go)
                 : NewtonBase<GOS,TrlV,TstV>(go)
                 , min_linear_reduction(1e-3)
+                , fixed_linear_reduction(0.0)
                 , reassemble_threshold(0.0)
             {}
 
+            /* with min_linear_reduction > 0, the linear reduction will be
+               determined as mininum of the min_linear_reduction and the
+               linear_reduction needed to achieve second order
+               Newton convergence. */
             void setMinLinearReduction(RFType min_linear_reduction_)
             {
                 min_linear_reduction = min_linear_reduction_;
+            }
+
+            /* with fixed_linear_reduction > 0, the linear reduction
+               rate will always be fixed to min_linear_reduction. */
+            void setFixedLinearReduction(bool fixed_linear_reduction_)
+            {
+                fixed_linear_reduction = fixed_linear_reduction_;
             }
 
             void setReassembleThreshold(RFType reassemble_threshold_)
@@ -419,15 +433,36 @@ namespace Dune
                     this->reassembled = true;
                 }
 
-                this->linear_reduction = std::min(min_linear_reduction,
-                                                   this->res.defect*this->res.defect/
-                                                   (this->prev_defect*this->prev_defect));
+                if (fixed_linear_reduction == true)
+                    this->linear_reduction = min_linear_reduction;
+                else {
+                    // determine maximum defect, where Newton is converged.
+                    RFType stop_defect =
+                        std::max(this->res.first_defect * this->reduction,
+                                 this->abs_limit);
+
+                    /*
+                       To achieve second order convergence of newton
+                       we need a linear reduction of at least
+                       current_defect^2/prev_defect^2.
+                       For the last newton step a linear reduction of
+                       1/10*end_defect/current_defect
+                       is sufficient for convergence.
+                    */
+                    if ( stop_defect/(10*this->res.defect) >
+                         this->res.defect*this->res.defect/(this->prev_defect*this->prev_defect) )
+                        this->linear_reduction =
+                            stop_defect/(10*this->res.defect);
+                    else
+                        this->linear_reduction =
+                            std::min(min_linear_reduction,this->res.defect*this->res.defect/(this->prev_defect*this->prev_defect));
+                }
 
                 this->prev_defect = this->res.defect;
 
                 ios_base_all_saver restorer(std::cout); // store old ios flags
 
-                if (this->verbosity_level >= 4)
+                if (this->verbosity_level >= 3)
                     std::cout << "      requested linear reduction:       "
                               << std::setw(12) << std::setprecision(4) << std::scientific
                               << this->linear_reduction << std::endl;
@@ -435,6 +470,7 @@ namespace Dune
 
         private:
             RFType min_linear_reduction;
+            bool fixed_linear_reduction;
             RFType reassemble_threshold;
         };
 

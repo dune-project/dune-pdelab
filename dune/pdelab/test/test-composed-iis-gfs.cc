@@ -33,7 +33,7 @@ int main(int argc, char** argv)
     {
         Dune::MPIHelper::instance(argc, argv);
 
-        typedef Dune::ALUCubeGrid<3, 3> GridType;
+        typedef Dune::ALUGrid<3,3,Dune::cube,Dune::nonconforming> GridType;
         Dune::FieldVector<double, 3> lower_left(0.0);
         Dune::FieldVector<double, 3> upper_right(1.0);
         Dune::array<unsigned, 3> n;

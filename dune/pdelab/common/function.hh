@@ -1075,7 +1075,7 @@ namespace Dune {
         t->evaluate(e,x,v);
 
         // apply Piola transformation
-        Dune::FieldMatrix<typename Traits::DomainFieldType,Traits::dimRange,Traits::dimRange>
+        typename Traits::ElementType::Geometry::JacobianInverseTransposed
           J = e.geometry().jacobianInverseTransposed(x);
         y = 0;
         J.umtv(v,y);

@@ -231,7 +231,7 @@ namespace Dune {
 
         // evaluate transformation which must be linear
         Dune::FieldVector<DF,dim> pos; pos = 0.0;
-        typename IG::Geometry::JacobianInverseTransposed jac;
+        typename IG::Entity::Geometry::JacobianInverseTransposed jac;
         jac = ig.inside()->geometry().jacobianInverseTransposed(pos);
         jac.invert();
         RF det = ig.inside()->geometry().integrationElement(pos);

@@ -20,6 +20,7 @@ common_HEADERS =				\
 	multiindex.hh				\
 	range.hh				\
 	simpledofindex.hh			\
+	topologyutility.hh			\
 	typetree.hh				\
 	typetraits.hh				\
 	unordered_map.hh			\

@@ -378,7 +378,7 @@ int main(int argc, char** argv)
 #if HAVE_ALUGRID
     {
       static const std::size_t dim = 3;
-      typedef Dune::ALUSimplexGrid<dim, dim> Grid;
+      typedef Dune::ALUGrid<dim,dim,Dune::simplex,Dune::nonconforming> Grid;
       typedef Grid::ctype DF;
       typedef double RF;
       typedef DF Time;

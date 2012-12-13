@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<iostream>
 #include<vector>
@@ -12,8 +12,8 @@
 #include<dune/grid/yaspgrid.hh>
 #include <dune/pdelab/backend/backendselector.hh>
 #include"../finiteelementmap/p0fem.hh"
-#include"../finiteelementmap/rt02dfem.hh"
-#include"../finiteelementmap/rt0q2dfem.hh"
+#include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
+#include"../finiteelementmap/rt0cube2dfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include"../gridfunctionspace/interpolate.hh"
@@ -33,7 +33,7 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,F<GV,RF> > BaseT;
 
   F (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
   {
     typename Traits::DomainType center;
@@ -44,7 +44,7 @@ public:
 };
 
 template<typename GV, typename RF>
-class V 
+class V
   : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,2>,
 													  V<GV,RF> >
 {
@@ -53,9 +53,9 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,V<GV,RF> > BaseT;
 
   V (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
-  {  
+  {
     if (x[0]<0.5)
       {
         y[0] = x[0]/sqrt(2.0);
@@ -70,7 +70,7 @@ public:
 };
 
 
-template<class GV> 
+template<class GV>
 void testrt0 (const GV& gv)
 {
   typedef typename GV::Grid::ctype DF;
@@ -82,14 +82,13 @@ void testrt0 (const GV& gv)
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,double,dim> P0FEM;
   P0FEM p0fem(gt);
   //P0FEM p0fem(Dune::GeometryType::cube);
-  typedef Dune::PDELab::RT02DLocalFiniteElementMap<GV,DF,double> RT0FEM;
-  //typedef Dune::PDELab::RT0Q2DLocalFiniteElementMap<GV,DF,double> RT0FEM;
+  typedef Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,DF,double,0,Dune::GeometryType::simplex> RT0FEM;
   RT0FEM rt0fem(gv);
-  
+
   // make a grid function space
-  typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS; 
+  typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS;
   P0GFS p0gfs(gv,p0fem);
-  typedef Dune::PDELab::GridFunctionSpace<GV,RT0FEM> RT0GFS; 
+  typedef Dune::PDELab::GridFunctionSpace<GV,RT0FEM> RT0GFS;
   RT0GFS rt0gfs(gv,rt0fem);
 
   // make coefficent Vectors
@@ -174,4 +173,4 @@ int main(int argc, char** argv)
     std::cerr << "Unknown exception thrown!" << std::endl;
 	return 1;
   }
-} 
+}

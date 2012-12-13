@@ -1,7 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 
 #include <string>
@@ -26,7 +26,7 @@
 #include "../common/vtkexport.hh"
 #include "../gridfunctionspace/gridfunctionspace.hh"
 #include "../gridfunctionspace/gridfunctionspaceutilities.hh"
-#include "../finiteelementmap/rt02dfem.hh"
+#include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
 
 template<typename GV>
 void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
@@ -38,11 +38,11 @@ void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
   filename << "rt02dgridfunctionspace";
   if(suffix != "") filename << "-" << suffix;
 
-  Dune::PDELab::RT02DLocalFiniteElementMap<GV,D,R> fem(gv);   // maps entity to finite element
+  Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,D,R,0,Dune::GeometryType::simplex> fem(gv);   // maps entity to finite element
 
   typedef Dune::PDELab::GridFunctionSpace<
     GV,
-    Dune::PDELab::RT02DLocalFiniteElementMap<GV,D,R>
+    Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,D,R,0,Dune::GeometryType::simplex>
     > GFS;
   GFS gfs(gv,fem);                    // make grid function space
 
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
 #ifdef HAVE_ALUGRID
     std::cout << "ALU" << std::endl;
     {
-      typedef Dune::ALUSimplexGrid<2, 2> Grid;
+      typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
 
       Grid grid("grids/2dtriangle.alu");
       //grid->globalRefine(1);

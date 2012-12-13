@@ -577,8 +577,7 @@ namespace Dune {
           yhat.axpy(xl[i],yb[i]);
 
         // apply Piola transformation
-        Dune::FieldMatrix<typename Traits::DomainFieldType,
-          GFS::Traits::GridViewType::dimension,GFS::Traits::GridViewType::dimension>
+        typename Traits::ElementType::Geometry::JacobianInverseTransposed
           J = e.geometry().jacobianInverseTransposed(x);
         J.invert();
         y = 0;
