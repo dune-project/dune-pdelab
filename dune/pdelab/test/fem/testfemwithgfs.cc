@@ -13,93 +13,16 @@
 #include <dune/common/typetraits.hh>
 #include <dune/grid/yaspgrid.hh>
 #include <dune/grid/alugrid.hh>
-#include <dune/pdelab/finiteelementmap/brezzidouglasmarinifem.hh>
-#include <dune/pdelab/finiteelementmap/opbfem.hh>
-#include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
-#include <dune/pdelab/finiteelementmap/pkfem.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-
 #include <dune/pdelab/test/gridexamples.hh>
 
 
-#ifdef USE_RT_BDM_FEM_FACTORY
+// Include snippets for the different FEMs
 
-struct RTBDMFEMFactory
-{
+#include "rtbdmfem.hh"
+#include "opbfem.hh"
+#include "pkfem.hh"
 
-  template<typename GV, typename DF, typename RF, Dune::GeometryType::BasicType basic_type>
-  struct FEM
-  {
-    typedef FEM_FACTORY_FEM_CLASS<GV,DF,RF,FEM_FACTORY_ORDER,basic_type> type;
-    typedef Dune::shared_ptr<type> pointer;
-  };
-
-  template<typename GV, typename DF, typename RF, Dune::GeometryType::BasicType basic_type>
-  static typename FEM<GV,DF,RF,basic_type>::pointer create(const GV& gv)
-  {
-    return Dune::make_shared<typename FEM<GV,DF,RF,basic_type>::type>(gv);
-  }
-
-};
-
-#endif
-
-
-#ifdef USE_OPB_FEM_FACTORY
-
-struct OPBFEMFactory
-{
-
-  template<typename GV, typename DF, typename RF, Dune::GeometryType::BasicType basic_type>
-  struct FEM
-  {
-
-#if HAVE_GMP
-    typedef Dune::GMPField<512> CFT;
-#else
-#warning Testing OPBLocalFiniteElementMap without GMP!
-    typedef double CFT;
-#endif
-
-    typedef Dune::PDELab::OPBLocalFiniteElementMap<DF,RF,FEM_FACTORY_ORDER,GV::dimension,basic_type,CFT> type;
-    typedef Dune::shared_ptr<type> pointer;
-  };
-
-  template<typename GV, typename DF, typename RF, Dune::GeometryType::BasicType basic_type>
-  static typename FEM<GV,DF,RF,basic_type>::pointer create(const GV& gv)
-  {
-#if !HAVE_GMP
-    std::cerr << "Warning: Testing OPBLocalFiniteElementMap without GMP!" << std::endl;
-#endif
-    return Dune::make_shared<typename FEM<GV,DF,RF,basic_type>::type>();
-  }
-
-};
-
-#endif
-
-
-#ifdef USE_PK_FEM_FACTORY
-
-struct PKFEMFactory
-{
-
-  template<typename GV, typename DF, typename RF, Dune::GeometryType::BasicType basic_type>
-  struct FEM
-  {
-    typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,RF,FEM_FACTORY_ORDER,GV::dimension> type;
-    typedef Dune::shared_ptr<type> pointer;
-  };
-
-  template<typename GV, typename DF, typename RF, Dune::GeometryType::BasicType basic_type>
-  static typename FEM<GV,DF,RF,basic_type>::pointer create(const GV& gv)
-  {
-    return Dune::make_shared<typename FEM<GV,DF,RF,basic_type>::type>(gv);
-  }
-
-};
-
-#endif
 
 
 // Run unit tests for given FEM

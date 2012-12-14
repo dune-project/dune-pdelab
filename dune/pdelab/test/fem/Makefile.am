@@ -11,6 +11,8 @@ TESTS = $(NORMALTESTS)
 # programs just to build when "make check" is used
 check_PROGRAMS = $(NORMALTESTS)
 
+noinst_HEADERS =
+
 # UG flags must be in front of ALUGrid flags, else when
 # dune/grid/uggrid/ugincludes.hh does #include "parallel.h",
 # ALUGrid-1.14-inst/include/serial/parallel.h will be included...
@@ -33,6 +35,8 @@ LDADD =						\
 	$(UG_LIBS)				\
 	@LDADD@
 
+
+noinst_HEADERS += rtbdmfem.hh
 
 check_PROGRAMS += testrt0simplex2dfem
 testrt0simplex2dfem_SOURCES = testfemwithgfs.cc
@@ -81,6 +85,10 @@ testbdm1cube2dfem_SOURCES = testfemwithgfs.cc
 testbdm1cube2dfem_CPPFLAGS = $(AM_CPPFLAGS) -DFEM_DIM=2 -DFEM_CUBE -DUSE_RT_BDM_FEM_FACTORY -DFEM_FACTORY=RTBDMFEMFactory -DFEM_FACTORY_FEM_CLASS=Dune::PDELab::BrezziDouglasMariniLocalFiniteElementMap -DFEM_FACTORY_ORDER=1
 TESTS += testbdm1cube2dfem
 
+
+
+
+noinst_HEADERS += opbfem.hh
 
 check_PROGRAMS += testopb0cube2dfem
 testopb0cube2dfem_SOURCES = testfemwithgfs.cc
@@ -198,6 +206,9 @@ testopb3simplex3dfem_LDFLAGS = $(AM_LDFLAGS) $(GMP_LDFLAGS)
 testopb3simplex3dfem_LDADD = $(GMP_LIBS) $(LDADD)
 TESTS += testopb3simplex3dfem
 
+
+
+noinst_HEADERS += pkfem.hh
 
 check_PROGRAMS += testp0simplex2dfem
 testp0simplex2dfem_SOURCES = testfemwithgfs.cc
