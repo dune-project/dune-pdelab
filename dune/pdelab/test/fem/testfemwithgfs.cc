@@ -16,6 +16,7 @@
 #include <dune/pdelab/finiteelementmap/brezzidouglasmarinifem.hh>
 #include <dune/pdelab/finiteelementmap/opbfem.hh>
 #include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
+#include <dune/pdelab/finiteelementmap/pkfem.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 
 #include <dune/pdelab/test/gridexamples.hh>
@@ -71,6 +72,29 @@ struct OPBFEMFactory
     std::cerr << "Warning: Testing OPBLocalFiniteElementMap without GMP!" << std::endl;
 #endif
     return Dune::make_shared<typename FEM<GV,DF,RF,basic_type>::type>();
+  }
+
+};
+
+#endif
+
+
+#ifdef USE_PK_FEM_FACTORY
+
+struct PKFEMFactory
+{
+
+  template<typename GV, typename DF, typename RF, Dune::GeometryType::BasicType basic_type>
+  struct FEM
+  {
+    typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,RF,FEM_FACTORY_ORDER,GV::dimension> type;
+    typedef Dune::shared_ptr<type> pointer;
+  };
+
+  template<typename GV, typename DF, typename RF, Dune::GeometryType::BasicType basic_type>
+  static typename FEM<GV,DF,RF,basic_type>::pointer create(const GV& gv)
+  {
+    return Dune::make_shared<typename FEM<GV,DF,RF,basic_type>::type>(gv);
   }
 
 };

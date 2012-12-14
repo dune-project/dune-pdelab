@@ -199,6 +199,48 @@ testopb3simplex3dfem_LDADD = $(GMP_LIBS) $(LDADD)
 TESTS += testopb3simplex3dfem
 
 
+check_PROGRAMS += testp0simplex2dfem
+testp0simplex2dfem_SOURCES = testfemwithgfs.cc
+testp0simplex2dfem_CPPFLAGS = $(AM_CPPFLAGS) -DFEM_DIM=2 -DFEM_SIMPLEX -DUSE_PK_FEM_FACTORY -DFEM_FACTORY=PKFEMFactory -DFEM_FACTORY_ORDER=0
+TESTS += testp0simplex2dfem
+
+check_PROGRAMS += testp1simplex2dfem
+testp1simplex2dfem_SOURCES = testfemwithgfs.cc
+testp1simplex2dfem_CPPFLAGS = $(AM_CPPFLAGS) -DFEM_DIM=2 -DFEM_SIMPLEX -DUSE_PK_FEM_FACTORY -DFEM_FACTORY=PKFEMFactory -DFEM_FACTORY_ORDER=1
+TESTS += testp1simplex2dfem
+
+check_PROGRAMS += testp2simplex2dfem
+testp2simplex2dfem_SOURCES = testfemwithgfs.cc
+testp2simplex2dfem_CPPFLAGS = $(AM_CPPFLAGS) -DFEM_DIM=2 -DFEM_SIMPLEX -DUSE_PK_FEM_FACTORY -DFEM_FACTORY=PKFEMFactory -DFEM_FACTORY_ORDER=2
+TESTS += testp2simplex2dfem
+
+check_PROGRAMS += testp3simplex2dfem
+testp3simplex2dfem_SOURCES = testfemwithgfs.cc
+testp3simplex2dfem_CPPFLAGS = $(AM_CPPFLAGS) -DFEM_DIM=2 -DFEM_SIMPLEX -DUSE_PK_FEM_FACTORY -DFEM_FACTORY=PKFEMFactory -DFEM_FACTORY_ORDER=3
+TESTS += testp3simplex2dfem
+
+
+check_PROGRAMS += testp0simplex3dfem
+testp0simplex3dfem_SOURCES = testfemwithgfs.cc
+testp0simplex3dfem_CPPFLAGS = $(AM_CPPFLAGS) -DFEM_DIM=3 -DFEM_SIMPLEX -DUSE_PK_FEM_FACTORY -DFEM_FACTORY=PKFEMFactory -DFEM_FACTORY_ORDER=0
+TESTS += testp0simplex3dfem
+
+check_PROGRAMS += testp1simplex3dfem
+testp1simplex3dfem_SOURCES = testfemwithgfs.cc
+testp1simplex3dfem_CPPFLAGS = $(AM_CPPFLAGS) -DFEM_DIM=3 -DFEM_SIMPLEX -DUSE_PK_FEM_FACTORY -DFEM_FACTORY=PKFEMFactory -DFEM_FACTORY_ORDER=1
+TESTS += testp1simplex3dfem
+
+check_PROGRAMS += testp2simplex3dfem
+testp2simplex3dfem_SOURCES = testfemwithgfs.cc
+testp2simplex3dfem_CPPFLAGS = $(AM_CPPFLAGS) -DFEM_DIM=3 -DFEM_SIMPLEX -DUSE_PK_FEM_FACTORY -DFEM_FACTORY=PKFEMFactory -DFEM_FACTORY_ORDER=2
+TESTS += testp2simplex3dfem
+
+check_PROGRAMS += testp3simplex3dfem
+testp3simplex3dfem_SOURCES = testfemwithgfs.cc
+testp3simplex3dfem_CPPFLAGS = $(AM_CPPFLAGS) -DFEM_DIM=3 -DFEM_SIMPLEX -DUSE_PK_FEM_FACTORY -DFEM_FACTORY=PKFEMFactory -DFEM_FACTORY_ORDER=3
+TESTS += testp3simplex3dfem
+
+
 include $(top_srcdir)/am/global-rules
 
 DISTCHECK_CONFIGURE_FLAGS = --with-dune=$(DUNEROOT) CXX="$(CXX)" CC="$(CC)"
