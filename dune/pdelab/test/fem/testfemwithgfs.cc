@@ -1,0 +1,285 @@
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// vi: set et ts=4 sw=2 sts=2:
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <iostream>
+
+#include <dune/common/exceptions.hh>
+#include <dune/common/parallel/mpihelper.hh>
+#include <dune/common/fvector.hh>
+#include <dune/common/typetraits.hh>
+#include <dune/grid/yaspgrid.hh>
+#include <dune/grid/alugrid.hh>
+#include <dune/pdelab/finiteelementmap/brezzidouglasmarinifem.hh>
+#include <dune/pdelab/finiteelementmap/opbfem.hh>
+#include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+
+#include <dune/pdelab/test/gridexamples.hh>
+
+
+#ifdef USE_RT_BDM_FEM_FACTORY
+
+struct RTBDMFEMFactory
+{
+
+  template<typename GV, typename DF, typename RF, Dune::GeometryType::BasicType basic_type>
+  struct FEM
+  {
+    typedef FEM_FACTORY_FEM_CLASS<GV,DF,RF,FEM_FACTORY_ORDER,basic_type> type;
+    typedef Dune::shared_ptr<type> pointer;
+  };
+
+  template<typename GV, typename DF, typename RF, Dune::GeometryType::BasicType basic_type>
+  static typename FEM<GV,DF,RF,basic_type>::pointer create(const GV& gv)
+  {
+    return Dune::make_shared<typename FEM<GV,DF,RF,basic_type>::type>(gv);
+  }
+
+};
+
+#endif
+
+
+#ifdef USE_OPB_FEM_FACTORY
+
+struct OPBFEMFactory
+{
+
+  template<typename GV, typename DF, typename RF, Dune::GeometryType::BasicType basic_type>
+  struct FEM
+  {
+
+#if HAVE_GMP
+    typedef Dune::GMPField<512> CFT;
+#else
+#warning Testing OPBLocalFiniteElementMap without GMP!
+    typedef double CFT;
+#endif
+
+    typedef Dune::PDELab::OPBLocalFiniteElementMap<DF,RF,FEM_FACTORY_ORDER,GV::dimension,basic_type,CFT> type;
+    typedef Dune::shared_ptr<type> pointer;
+  };
+
+  template<typename GV, typename DF, typename RF, Dune::GeometryType::BasicType basic_type>
+  static typename FEM<GV,DF,RF,basic_type>::pointer create(const GV& gv)
+  {
+#if !HAVE_GMP
+    std::cerr << "Warning: Testing OPBLocalFiniteElementMap without GMP!" << std::endl;
+#endif
+    return Dune::make_shared<typename FEM<GV,DF,RF,basic_type>::type>();
+  }
+
+};
+
+#endif
+
+
+// Run unit tests for given FEM
+template<typename FEM, typename GV, typename Constraints, typename VBE>
+void test_fem(const FEM& fem, GV gv, const Constraints& constraints, const VBE& vbe)
+{
+
+  typedef Dune::PDELab::GridFunctionSpace<
+    GV,
+    FEM,
+    Constraints,
+    VBE
+    > GFS;
+
+  GFS gfs(gv,fem,constraints,vbe);
+
+  std::cout << gfs.size() << std::endl;
+
+}
+
+
+template<typename RF, typename Constraints, typename VBE>
+void test_2d_cube(const Constraints& constraints, const VBE& vbe)
+{
+
+  // make grid
+  Dune::FieldVector<double,2> L(1.0);
+  Dune::FieldVector<int,2> N(1);
+  Dune::FieldVector<bool,2> B(false);
+  Dune::YaspGrid<2> grid(L,N,B,0);
+  grid.globalRefine(3);
+
+  // get view
+  typedef Dune::YaspGrid<2>::LeafGridView GV;
+  const GV& gv=grid.leafView();
+
+  typedef GV::Grid::ctype DF;
+
+  typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::cube>::type FEM;
+  typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::cube>::pointer PFEM;
+
+  PFEM pfem = FEM_FACTORY::template create<GV,DF,RF,Dune::GeometryType::cube>(gv);
+
+  test_fem(*pfem,gv,constraints,vbe);
+
+}
+
+
+template<typename RF, typename Constraints, typename VBE>
+void test_3d_cube(const Constraints& constraints, const VBE& vbe)
+{
+
+  // make grid
+  Dune::FieldVector<double,3> L(1.0);
+  Dune::FieldVector<int,3> N(1);
+  Dune::FieldVector<bool,3> B(false);
+  Dune::YaspGrid<3> grid(L,N,B,0);
+  grid.globalRefine(3);
+
+  // get view
+  typedef Dune::YaspGrid<3>::LeafGridView GV;
+  const GV& gv=grid.leafView();
+
+  typedef GV::Grid::ctype DF;
+
+  typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::cube>::type FEM;
+  typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::cube>::pointer PFEM;
+
+  PFEM pfem = FEM_FACTORY::template create<GV,DF,RF,Dune::GeometryType::cube>(gv);
+
+  test_fem(*pfem,gv,constraints,vbe);
+
+}
+
+
+template<typename RF, typename Constraints, typename VBE>
+void test_2d_simplex(const Constraints& constraints, const VBE& vbe)
+{
+
+#if HAVE_ALUGRID
+
+    {
+      // make grid
+      typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
+      Dune::shared_ptr<Grid> gridptr = TriangulatedUnitSquareMaker<Grid>::create();
+      Grid& grid = *gridptr;
+      grid.globalRefine(3);
+
+      // get view
+      typedef Grid::LeafGridView GV;
+      const GV& gv=grid.leafView();
+
+      typedef GV::Grid::ctype DF;
+
+      typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::simplex>::type FEM;
+      typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::simplex>::pointer PFEM;
+
+      PFEM pfem = FEM_FACTORY::template create<GV,DF,RF,Dune::GeometryType::simplex>(gv);
+
+      test_fem(*pfem,gv,constraints,vbe);
+    }
+
+#else
+
+#warning Could not find supported 2D simplex grid, 2D simplex tests will be skipped.
+    std::cerr << "Warning: 2D simplex tests were skipped." << std::endl;
+
+#endif
+
+}
+
+
+template<typename RF, typename Constraints, typename VBE>
+void test_3d_simplex(const Constraints& constraints, const VBE& vbe)
+{
+
+#if HAVE_ALUGRID
+
+    {
+      // make grid
+      typedef Dune::ALUGrid<3,3,Dune::simplex,Dune::nonconforming> Grid;
+      Dune::shared_ptr<Grid> gridptr = TriangulatedUnitCubeMaker<Grid>::create();
+      Grid& grid = *gridptr;
+      grid.globalRefine(3);
+
+      // get view
+      typedef Grid::LeafGridView GV;
+      const GV& gv=grid.leafView();
+
+      typedef GV::Grid::ctype DF;
+
+      typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::simplex>::type FEM;
+      typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::simplex>::pointer PFEM;
+
+      PFEM pfem = FEM_FACTORY::template create<GV,DF,RF,Dune::GeometryType::simplex>(gv);
+
+      test_fem(*pfem,gv,constraints,vbe);
+    }
+
+#else
+
+#warning Could not find supported 3D simplex grid, 3D simplex tests will be skipped.
+    std::cerr << "Warning: 3D simplex tests were skipped." << std::endl;
+
+#endif
+
+}
+
+
+int main(int argc, char** argv)
+{
+  try{
+
+    Dune::MPIHelper::instance(argc,argv);
+
+    typedef Dune::PDELab::NoConstraints Constraints;
+    Constraints constraints;
+
+    typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+    VBE vbe;
+
+    typedef double RF;
+
+#if FEM_DIM == 1
+
+#ifdef FEM_CUBE
+    test_1d_cube<RF>(constraints,vbe);
+#endif
+
+#ifdef FEM_SIMPLEX
+    test_1d_simplex<RF>(constraints,vbe);
+#endif
+
+#elif FEM_DIM == 2
+
+#ifdef FEM_CUBE
+    test_2d_cube<RF>(constraints,vbe);
+#endif
+
+#ifdef FEM_SIMPLEX
+    test_2d_simplex<RF>(constraints,vbe);
+#endif
+
+#elif FEM_DIM == 3
+
+#ifdef FEM_CUBE
+    test_3d_cube<RF>(constraints,vbe);
+#endif
+
+#ifdef FEM_SIMPLEX
+    test_3d_simplex<RF>(constraints,vbe);
+#endif
+
+#endif
+
+    // test passed
+    return 0;
+  }
+  catch (Dune::Exception &e){
+    std::cerr << "Dune reported error: " << e << std::endl;
+    return 1;
+  }
+  catch (...){
+    std::cerr << "Unknown exception thrown!" << std::endl;
+    return 1;
+  }
+}

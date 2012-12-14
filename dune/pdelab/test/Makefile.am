@@ -1,5 +1,8 @@
 # $Id: Makefile.am 586 2006-04-28 13:41:31Z mblatt $
 
+SUBDIRS =					\
+	fem
+
 #defined empty so we can add to it later
 NORMALTESTS =
 MOSTLYCLEANFILES =
