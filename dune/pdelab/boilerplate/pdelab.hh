@@ -527,8 +527,8 @@ namespace Dune {
             void make_consistent (const GFS& gfs, DOF& x) const
             {
                 // make vector consistent; this is needed for all overlapping solvers
-                ParallelISTLHelper<GFS> helper(gfs);
-                helper.mask(x);
+                istl::ParallelHelper<GFS> helper(gfs);
+                helper.maskForeignDOFs(istl::raw(x));
                 Dune::PDELab::AddDataHandle<GFS,DOF> adddh(gfs,x);
                 if (gfs.gridView().comm().size()>1)
                     gfs.gridView().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
@@ -732,8 +732,8 @@ namespace Dune {
             void make_consistent (const GFS& gfs, DOF& x) const
             {
                 // make vector consistent; this is needed for all overlapping solvers
-                ParallelISTLHelper<GFS> helper(gfs);
-                helper.mask(x);
+                istl::ParallelHelper<GFS> helper(gfs);
+                helper.maskForeignDOFs(istl::raw(x));
                 Dune::PDELab::AddDataHandle<GFS,DOF> adddh(gfs,x);
                 if (gfs.gridView().comm().size()>1)
                     gfs.gridView().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
@@ -746,7 +746,7 @@ namespace Dune {
         // default implementation, use only specializations below
         template<typename T, typename N, unsigned int degree,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 typename VBET=ISTLVectorBackend<Dune::PB::PkSize<degree,T::dimension>::value> >
+                 typename VBET=ISTLVectorBackend<ISTLParameters::static_blocking,Dune::PB::PkSize<degree,T::dimension>::value> >
         class DGPkSpace
         {
         public:
@@ -839,7 +839,7 @@ namespace Dune {
         // Discontinuous P0 space
         template<typename T, typename N,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 typename VBET=ISTLVectorBackend<1> >
+                 typename VBET=ISTLVectorBackend<> >
         class P0Space
         {
         public:
@@ -973,7 +973,7 @@ namespace Dune {
         {
         public:
             // export types
-            typedef typename FS::VBE::MatrixBackend MBE;
+            typedef ISTLMatrixBackend MBE;
             typedef Dune::PDELab::GridOperator<typename FS::GFS,typename FS::GFS,LOP,MBE,
                                                typename FS::NT,typename FS::NT,typename FS::NT,
                                                typename FS::CC,typename FS::CC> GO;
@@ -1026,7 +1026,7 @@ namespace Dune {
         {
         public:
             // export types
-            typedef typename FS::VBE::MatrixBackend MBE;
+            typedef ISTLMatrixBackend MBE;
             typedef Dune::PDELab::GridOperator<typename FS::GFS,typename FS::GFS,LOP,MBE,
                                                typename FS::NT,typename FS::NT,typename FS::NT,
                                                typename FS::CC,typename FS::CC,true> GO;
@@ -1079,7 +1079,7 @@ namespace Dune {
         {
         public:
             // export types
-            typedef typename FSU::VBE::MatrixBackend MBE;
+            typedef ISTLMatrixBackend MBE;
             typedef Dune::PDELab::GridOperator<typename FSU::GFS,typename FSV::GFS,LOP,MBE,
                                                typename FSU::NT,typename FSU::NT,typename FSU::NT,
                                                typename FSU::CC,typename FSV::CC> GO;
@@ -1132,7 +1132,7 @@ namespace Dune {
         {
         public:
             // export types
-            typedef typename FSU::VBE::MatrixBackend MBE;
+            typedef ISTLMatrixBackend MBE;
             typedef Dune::PDELab::GridOperator<typename FSU::GFS,typename FSV::GFS,LOP,MBE,
                                                typename FSU::NT,typename FSU::NT,typename FSU::NT,
                                                typename FSU::CC,typename FSV::CC,true> GO;
@@ -1186,7 +1186,7 @@ namespace Dune {
         {
         public:
             // export types
-            typedef typename GO1::GO::Traits::MatrixBackend MBE;
+            typedef ISTLMatrixBackend MBE;
             typedef Dune::PDELab::OneStepGridOperator<typename GO1::GO,typename GO2::GO,implicit> GO;
             typedef typename GO::Jacobian MAT;
 
