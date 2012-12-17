@@ -177,7 +177,7 @@ void test (const GV& gv)
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::nonconforming);
-  Dune::PDELab::add_solution_to_vtk_writer(vtkwriter,gfs,x);
+  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x);
 
   std::stringstream vtu_name;
 
