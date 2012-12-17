@@ -103,7 +103,7 @@ static void testdatahandle(const GV& gv)
   gfs1.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
 
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  Dune::PDELab::add_solution_to_vtk_writer(vtkwriter,gfs1,v);
+  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs1,v);
   vtkwriter.write("testdatahandle-gfs1",Dune::VTK::ascii);
 
 #if 0

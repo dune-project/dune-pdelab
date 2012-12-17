@@ -252,7 +252,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  Dune::PDELab::add_solution_to_vtk_writer(vtkwriter,gfs,x);
+  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x);
   vtkwriter.write(filename,Dune::VTK::ascii);
 }
 
