@@ -615,7 +615,7 @@ namespace Dune {
       typedef DGFTreeCommonData<GFS,X,Predicate> Data;
       vtk_output_collector<VTKWriter,Data> collector(vtk_writer,make_shared<Data>(gfs,x),predicate);
       collector.add_solution(name_generator);
-      return std::move(collector);
+      return collector;
     }
 
 
