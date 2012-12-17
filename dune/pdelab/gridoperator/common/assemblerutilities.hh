@@ -262,10 +262,10 @@ namespace Dune{
 
           for(;it!=eit;++it)
             {
-              typename X::block_type block(x[contributor]);
-              block *= it->second;
-              x[it->first] += block;
-              // x[it->first] += it->second * x[contributor];
+              // typename X::block_type block(x[contributor]);
+              // block *= it->second;
+              // x[it->first] += block;
+              x[it->first] += it->second * x[contributor];
             }
         }
 
@@ -297,10 +297,10 @@ namespace Dune{
 
           for(;it!=eit;++it)
             {
-              typename X::block_type block(x[it->first]);
-              block *= it->second;
-              x[contributor] += block;
-              // x[contributor] += it->second * x[it->first]; // PB: 27 Sep 12 this was the old version
+              // typename X::block_type block(x[it->first]);
+              // block *= it->second;
+              // x[contributor] += block;
+              x[contributor] += it->second * x[it->first]; // PB: 27 Sep 12 this was the old version
             }
         }
       }
