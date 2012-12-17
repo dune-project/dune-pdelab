@@ -12,6 +12,7 @@
 #include"../common/typetraits.hh"
 
 #include"../gridfunctionspace/gridfunctionspace.hh"
+#include <dune/pdelab/constraints/constraintstransformation.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -932,6 +933,10 @@ namespace Dune {
       }
       */
     }
+
+    template<typename XG>
+    void set_shifted_dofs (const EmptyTransformation& cg, typename XG::ElementType x, XG& xg)
+    {}
 
     //! @}
 
