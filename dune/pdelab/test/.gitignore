@@ -9,6 +9,7 @@ testanalytic
 testconstraints
 testcountingptr
 testbdmfem
+testdatahandle
 testedges02d
 testedges02dgridfunctionspace
 testedges02dinterpolation
