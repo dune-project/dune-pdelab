@@ -5,6 +5,7 @@
 
 #include <dune/common/fvector.hh>
 #include <dune/pdelab/backend/istl/tags.hh>
+#include <dune/pdelab/backend/istlvectorbackend.hh>
 
 namespace Dune {
   namespace PDELab {
