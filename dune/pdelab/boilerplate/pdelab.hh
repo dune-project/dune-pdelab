@@ -560,7 +560,7 @@ namespace Dune {
         // continuous Lagrange finite elements
         template<typename T, typename N, unsigned int degree, typename BCType,
                  Dune::GeometryType::BasicType gt, MeshType mt, SolverCategory::Category st = SolverCategory::sequential,
-                 typename VBET=ISTLVectorBackend<1> >
+                 typename VBET=ISTLVectorBackend<> >
         class CGSpace {
         public:
 
@@ -591,6 +591,7 @@ namespace Dune {
                 : gv(grid.leafView()), femb(gv), conb(grid,bctype)
             {
                 gfsp = shared_ptr<GFS>(new GFS(gv,femb.getFEM(),conb.getCON()));
+                gfsp->name("cgspace");
                 conb.postGFSHook(*gfsp);
                 ccp = shared_ptr<CC>(new CC());
             }
