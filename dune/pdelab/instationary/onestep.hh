@@ -17,6 +17,7 @@
 #include <dune/common/ios_state.hh>
 
 #include <dune/pdelab/common/logtag.hh>
+#include <dune/pdelab/gridoperator/common/timesteppingparameterinterface.hh>
 
 namespace Dune {
   namespace PDELab {
