@@ -167,8 +167,17 @@ namespace Dune {
       template<typename E>
       struct ConstraintsContainer
       {
+
         //! \brief define Type as the Type of a container of E's
-        typedef ConstraintsTransformation<typename Ordering::Traits::DOFIndex,typename Ordering::Traits::ContainerIndex,E> Type;
+        typedef typename SelectType<
+          is_same<
+            CE,
+            NoConstraints
+            >::value,
+          EmptyTransformation,
+          ConstraintsTransformation<typename Ordering::Traits::DOFIndex,typename Ordering::Traits::ContainerIndex,E>
+          >::Type Type;
+
       private:
         ConstraintsContainer () {}
       };
