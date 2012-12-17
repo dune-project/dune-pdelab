@@ -43,6 +43,24 @@ namespace Dune {
       static const bool no_const_ordering_size = v;
     };
 
+    namespace {
+
+      // Use this compile-time bridge to shup up GCC warnings
+
+      template<int i>
+      struct shift_if_nonnegative
+      {
+        static const unsigned int value = 1 << i;
+      };
+
+      template<>
+      struct shift_if_nonnegative<-1>
+      {
+        static const unsigned int value = 0;
+      };
+
+    }
+
     //! Helper for building the bitmask describing the grid partitions contained in a GFS.
     /**
      * This struct should be used to construct the bitmask for use by the
@@ -53,11 +71,11 @@ namespace Dune {
     {
 
       static const unsigned int partition_mask =
-        (p0 >= 0 ? 1 << p0 : 0) |
-        (p1 >= 0 ? 1 << p1 : 0) |
-        (p2 >= 0 ? 1 << p2 : 0) |
-        (p3 >= 0 ? 1 << p3 : 0) |
-        (p4 >= 0 ? 1 << p4 : 0);
+        shift_if_nonnegative<p0>::value |
+        shift_if_nonnegative<p1>::value |
+        shift_if_nonnegative<p2>::value |
+        shift_if_nonnegative<p3>::value |
+        shift_if_nonnegative<p4>::value;
 
     };
 
