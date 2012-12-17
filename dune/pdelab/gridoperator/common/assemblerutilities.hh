@@ -247,7 +247,13 @@ namespace Dune{
           \boldsymbol{S}_{\boldsymbol{\tilde V}}\f$ is applied
           instead of the full transformation.  */
       template<typename X>
-      void forwardtransform(X & x, const bool postrestrict = false)
+      typename enable_if<
+        AlwaysTrue<X>::value && !is_same<
+          CV,
+          EmptyTransformation
+          >::value
+        >::type
+      forwardtransform(X & x, const bool postrestrict = false)
       {
         typedef typename CV::const_iterator global_col_iterator;
         for (global_col_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit){
@@ -274,12 +280,31 @@ namespace Dune{
             x[cit->first]=0.;
       }
 
+
+      // Disable forwardtransform for EmptyTransformation
+      template<typename X>
+      typename enable_if<
+        AlwaysTrue<X>::value && is_same<
+          CV,
+          EmptyTransformation
+          >::value
+        >::type
+      forwardtransform(X & x, const bool postrestrict = false)
+      {}
+
+
       /** \brief Transforms a vector \f$ \boldsymbol{x} \f$ from \f$
           V'\f$ to \f$ V\f$. If prerestrict == true then
           \f$\boldsymbol{S}^T_{\boldsymbol{\tilde U}}\f$ is applied
           instead of the full transformation.  */
       template<typename X>
-      void backtransform(X & x, const bool prerestrict = false)
+      typename enable_if<
+        AlwaysTrue<X>::value && !is_same<
+          CV,
+          EmptyTransformation
+          >::value
+        >::type
+      backtransform(X & x, const bool prerestrict = false)
       {
         typedef typename CV::const_iterator global_col_iterator;
         for (global_col_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit){
@@ -304,6 +329,18 @@ namespace Dune{
             }
         }
       }
+
+      // disable backtransform for empty transformation
+      template<typename X>
+      typename enable_if<
+        AlwaysTrue<X>::value && is_same<
+          CV,
+          EmptyTransformation
+          >::value
+        >::type
+      backtransform(X & x, const bool prerestrict = false)
+      {}
+
 
     protected:
 
