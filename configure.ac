@@ -58,6 +58,7 @@ AC_CONFIG_FILES([
   dune/pdelab/ordering/Makefile
   dune/pdelab/stationary/Makefile
   dune/pdelab/test/Makefile
+  dune/pdelab/test/fem/Makefile
   lib/Makefile
   m4/Makefile
   Makefile
