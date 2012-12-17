@@ -163,11 +163,13 @@ namespace Dune {
 
       typedef OrderingBase<
         typename GFSV::Ordering::Traits::DOFIndex,
+        typename GFSV::Ordering::Traits::GlobalDOFIndex,
         typename GFSV::Ordering::Traits::ContainerIndex
         > RowOrdering;
 
       typedef OrderingBase<
         typename GFSU::Ordering::Traits::DOFIndex,
+        typename GFSU::Ordering::Traits::GlobalDOFIndex,
         typename GFSU::Ordering::Traits::ContainerIndex
         > ColOrdering;
 

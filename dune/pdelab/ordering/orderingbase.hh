@@ -12,14 +12,14 @@
 namespace Dune {
   namespace PDELab {
 
-    template<typename DI, typename CI>
+    template<typename DI, typename GDI, typename CI>
     class OrderingBase
       : public PartitionInfoProvider
     {
 
     public:
 
-      typedef OrderingTraits<DI,CI> Traits;
+      typedef OrderingTraits<DI,GDI,CI> Traits;
 
       typedef HierarchicContainerAllocationTag ContainerAllocationTag;
 
@@ -98,7 +98,7 @@ namespace Dune {
       }
 
       template<typename Node>
-      OrderingBase(Node& node, bool container_blocked, VirtualOrderingBase<DI,CI>* delegate = nullptr)
+      OrderingBase(Node& node, bool container_blocked, VirtualOrderingBase<DI,GDI,CI>* delegate = nullptr)
         : _container_blocked(container_blocked)
         , _child_count(Node::has_dynamic_ordering_children ? Node::CHILDREN : 0)
         , _children(_child_count,nullptr)
@@ -160,7 +160,7 @@ namespace Dune {
       std::size_t _size;
       std::size_t _block_count;
 
-      const VirtualOrderingBase<DI,CI>* _delegate;
+      const VirtualOrderingBase<DI,GDI,CI>* _delegate;
 
     };
 
