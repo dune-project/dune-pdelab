@@ -14,9 +14,6 @@ namespace Dune {
 
   namespace PDELab {
 
-    template<typename, typename>
-    class ISTLBlockVectorContainer;
-
     namespace istl {
 
       namespace impl {
@@ -108,10 +105,23 @@ namespace Dune {
 
         typedef typename tags::container<V>::type::base_tag vector_tag;
 
-        template<typename, typename>
-        friend class Dune::PDELab::ISTLBlockVectorContainer;
 
       public:
+
+        vector_iterator(vector_reference vector, bool at_end)
+          : _vector(vector)
+          , _at_end(at_end)
+          , _current(nullptr)
+        {
+          if (!_at_end)
+            {
+              get<0>(_iterators) = vector.begin();
+              get<0>(_end) = vector.end();
+              if (!start(vector_tag(),level<0>()))
+                _at_end = true;
+            }
+        }
+
 
         typename BaseT::pointer operator->() const
         {
@@ -239,19 +249,6 @@ namespace Dune {
           return start(tags::block_vector(), level<l>());
         }
 
-        vector_iterator(vector_reference vector, bool at_end)
-          : _vector(vector)
-          , _at_end(at_end)
-          , _current(nullptr)
-        {
-          if (!_at_end)
-            {
-              get<0>(_iterators) = vector.begin();
-              get<0>(_end) = vector.end();
-              if (!start(vector_tag(),level<0>()))
-                _at_end = true;
-            }
-        }
 
         vector_reference _vector;
         bool _at_end;
