@@ -669,6 +669,27 @@ namespace Dune {
       }
     }; // end ConstraintsAssemblerHelper
 
+
+
+    // Disable constraints assembly for empty transformation
+    template<typename F, typename GFS>
+    struct ConstraintsAssemblerHelper<F, GFS, EmptyTransformation, true>
+    {
+      static void assemble(const F& f, const GFS& gfs, EmptyTransformation& cg, const bool verbose)
+      {}
+    };
+
+    // Disable constraints assembly for empty transformation
+    template<typename F, typename GFS>
+    struct ConstraintsAssemblerHelper<F, GFS, EmptyTransformation, false>
+    {
+      static void assemble(const F& f, const GFS& gfs, EmptyTransformation& cg, const bool verbose)
+      {}
+    };
+
+
+
+    // Backwards compatibility shim
     template<typename F, typename GFS, typename CG>
     struct ConstraintsAssemblerHelper<F, GFS, CG, true>
     {
