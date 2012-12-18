@@ -4,6 +4,7 @@
 #define DUNE_PDELAB_BACKEND_ISTL_VECTORITERATOR_HH
 
 #include <iterator>
+#include <cassert>
 
 #include <dune/common/static_assert.hh>
 #include <dune/common/nullptr.hh>
