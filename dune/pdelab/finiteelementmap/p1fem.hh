@@ -14,6 +14,7 @@ namespace Dune {
 	class P1LocalFiniteElementMap
       : public SimpleLocalFiniteElementMap< Dune::P1LocalFiniteElement<D,R,d> >
     {
+    public:
       bool fixedSize() const
       {
         return true;

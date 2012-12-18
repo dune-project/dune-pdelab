@@ -14,6 +14,7 @@ namespace Dune {
     class RannacherTurek2DLocalFiniteElementMap
       : public SimpleLocalFiniteElementMap<RannacherTurek2DLocalFiniteElement<D,R> >
     {
+    public:
       bool fixedSize() const
       {
         return true;
