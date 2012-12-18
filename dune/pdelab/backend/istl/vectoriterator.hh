@@ -53,6 +53,20 @@ namespace Dune {
           typedef tuple<Iterators...,typename T::iterator> type;
         };
 
+
+        template<typename T, typename... Iterators>
+        struct _extract_iterators<T,true,tags::dynamic_vector,Iterators...>
+        {
+          typedef tuple<Iterators...,typename T::const_iterator> type;
+        };
+
+        template<typename T, typename... Iterators>
+        struct _extract_iterators<T,false,tags::dynamic_vector,Iterators...>
+        {
+          typedef tuple<Iterators...,typename T::iterator> type;
+        };
+
+
         template<typename V>
         struct extract_iterators
           : public _extract_iterators<V,false,typename tags::container<V>::type::base_tag>
@@ -180,7 +194,7 @@ namespace Dune {
         }
 
         template<std::size_t l>
-        bool start(tags::field_vector, level<l>)
+        bool start_leaf(level<l>)
         {
           typedef typename tuple_element<l,Iterators>::type iterator;
           iterator& it = get<l>(_iterators);
@@ -193,6 +207,19 @@ namespace Dune {
 
           return true;
         }
+
+        template<std::size_t l>
+        bool start(tags::field_vector, level<l>)
+        {
+          return start_leaf(level<l>());
+        }
+
+        template<std::size_t l>
+        bool start(tags::dynamic_vector, level<l>)
+        {
+          return start_leaf(level<l>());
+        }
+
 
         template<std::size_t l>
         bool start(tags::block_vector, level<l>)
@@ -217,7 +244,7 @@ namespace Dune {
 
 
         template<std::size_t l>
-        bool advance(tags::field_vector, level<l>)
+        bool advance_leaf(level<l>)
         {
           typedef typename tuple_element<l,Iterators>::type iterator;
           iterator& it = get<l>(_iterators);
@@ -231,6 +258,18 @@ namespace Dune {
           _current = &(*it);
 
           return true;
+        }
+
+        template<std::size_t l>
+        bool advance(tags::field_vector, level<l>)
+        {
+          return advance_leaf(level<l>());
+        }
+
+        template<std::size_t l>
+        bool advance(tags::dynamic_vector, level<l>)
+        {
+          return advance_leaf(level<l>());
         }
 
 
