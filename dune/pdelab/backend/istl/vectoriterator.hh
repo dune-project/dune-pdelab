@@ -239,7 +239,6 @@ namespace Dune {
         {
           typedef typename tuple_element<l,Iterators>::type iterator;
           iterator& it = get<l>(_iterators);
-          const iterator& end = get<l>(_end);
 
           if (advance(container_tag(*it),level<l+1>()))
             return true;
