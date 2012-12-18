@@ -476,7 +476,7 @@ namespace Dune {
         , lfs(gfs)
         , lfs_cache(lfs)
         , x_view(x_)
-        , xl(gfs.maxLocalSize())
+        , xl(lfs.size())
       { }
 
       // Evaluate
@@ -490,7 +490,7 @@ namespace Dune {
         x_view.bind(lfs_cache);
 
         // get local coefficients
-        std::vector<typename Traits::RangeFieldType> xl(lfs.size());
+        xl.resize(lfs.size());
         x_view.read(xl);
         x_view.unbind();
 
@@ -530,6 +530,7 @@ namespace Dune {
       mutable LFS lfs;
       mutable LFSCache lfs_cache;
       mutable XView x_view;
+      mutable std::vector<typename Traits::RangeFieldType> xl;
     };
 
     /** \brief DiscreteGridFunction with Piola transformation
@@ -568,7 +569,7 @@ namespace Dune {
        * \copydetails DiscreteGridFunction::DiscreteGridFunction(const GFS&,const X&)
        */
       DiscreteGridFunctionPiola (const GFS& gfs, const X& x_)
-        : pgfs(stackobject_to_shared_ptr(gfs)),
+        : pgfs(stackobject_to_shared_ptr(gfs))
         , lfs(gfs)
         , lfs_cache(lfs)
         , x_view(x_)
