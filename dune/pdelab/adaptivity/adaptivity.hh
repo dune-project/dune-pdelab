@@ -304,6 +304,9 @@ namespace Dune {
       typedef typename Grid::LeafIndexSet IndexSet;
       typedef typename IndexSet::IndexType IndexType;
       typedef LocalFunctionSpace<GFSU> LFSU;
+      typedef LFSIndexCache<LFSU> LFSUCache;
+      typedef typename U::template LocalView<LFSU> UView;
+      typedef typename U::template ConstLocalView<LFSU> ConstUView;
       typedef DiscreteGridFunction<GFSU, U> DGF;
       typedef typename GFSU::Traits::FiniteElementMapType FEM;
       typedef InterpolateBackendStandard IB;
@@ -331,6 +334,8 @@ namespace Dune {
       {
         const IdSet& idset = grid.globalIdSet();
         LFSU lfsu(gfsu);
+        LFSUCache lfsu_cache(lfsu);
+        ConstUView u_view(u);
         DGF dgf(gfsu,u);
         const FEM& fem = gfsu.finiteElementMap();
         IB ib = IB();
@@ -345,8 +350,12 @@ namespace Dune {
 
             // save local coeffs in map
             lfsu.bind(e);
-            //lfsu.vread(u,transferMap[e.level()][idset.id(e)]);
-            lfsu.vread(u,transferMap[idset.id(e)]);
+            lfsu_cache.update();
+            u_view.bind(lfsu_cache);
+
+            typename MapType::mapped_type& saved_data = transferMap[idset.id(e)];
+            saved_data.resize(lfsu.size());
+            u_view.read(saved_data);
 
             // save local coeffs of father in map
             if (e.mightVanish())
@@ -427,11 +436,17 @@ namespace Dune {
       {
         const IdSet& idset = grid.globalIdSet();
         LFSU lfsu(gfsu);
+        LFSUCache lfsu_cache(lfsu);
+        UView u_view(u);
+
         const FEM& fem = gfsu.finiteElementMap();
         IB ib = IB();
         std::vector<typename U::ElementType> ul;
         std::vector<typename U::ElementType> ulc;
+
         U uc(gfsu,0.0);
+        UView uc_view(uc);
+
         const IndexSet& indexset = grid.leafIndexSet();
         std::vector<typename U::ElementType> ug(indexset.size(IndexSet::dimension),0.);
         std::vector<typename U::ElementType> ugc(indexset.size(IndexSet::dimension),0.);
@@ -444,6 +459,10 @@ namespace Dune {
           {
             const Element& e = *it;
             lfsu.bind(e);
+            lfsu_cache.update();
+            u_view.bind(lfsu_cache);
+            uc_view.bind(lfsu_cache);
+
             const IdType& id = idset.id(e);
             const int level = e.level();
 
@@ -471,16 +490,19 @@ namespace Dune {
                 ul.clear();
                 ib.interpolate(fem.find(e),ctlfa,ul);
 
-                lfsu.vadd(ul,u);
+                u_view.add(ul);
               }
             else // this entity is not new and should have data
               {
                 //lfsu.vadd(transferMap[level][id],u);
-                lfsu.vadd(transferMap[id],u);
+                u_view.add(transferMap[id]);
               }
 
             ulc = std::vector<typename U::ElementType>(lfsu.size(),1.0);
-            lfsu.vadd(ulc,uc);
+            uc_view.add(ulc);
+
+            u_view.commit();
+            uc_view.commit();
           }
 
         typedef Dune::PDELab::AddDataHandle<GFSU,U> Handle;
@@ -496,11 +518,15 @@ namespace Dune {
           {
             const Element& e = *it;
             lfsu.bind(e);
+            lfsu_cache.update();
+
+            u_view.bind(lfsu_cache);
+            uc_view.bind(lfsu_cache);
 
             ul = std::vector<typename U::ElementType>(lfsu.size(),0.0);
             ulc = std::vector<typename U::ElementType>(lfsu.size(),0.0);
-            lfsu.vread(u,ul);
-            lfsu.vread(uc,ulc);
+            u_view.read(ul);
+            uc_view.read(ulc);
 
             for (unsigned int i = 0; i<ul.size();++i)
               {
@@ -510,8 +536,12 @@ namespace Dune {
                     ulc[i] = 1.;
                   }
               }
-            lfsu.vwrite(ul,u);
-            lfsu.vwrite(ulc,uc);
+
+            u_view.write(ul);
+            uc_view.write(ulc);
+
+            u_view.commit();
+            uc_view.commit();
           }
       }
 
