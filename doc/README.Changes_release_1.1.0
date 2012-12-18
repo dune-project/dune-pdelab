@@ -11,14 +11,7 @@ Two examples:
 before:
 | typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
 now
-| typedef Dune::PDELab::ISTLVectorBackend<> VBE; (<no_blocking,1> is default)
-
-before:
-| typedef Dune::PDELab::ISTLVectorBackend<2> VBE;
-now
-| typedef Dune::PDELab::ISTLVectorBackend
-|   <Dune::PDELab::ISTLParameters::static_blocking,2> VBE;
-
+| typedef Dune::PDELab::ISTLVectorBackend<> VBE; (no_blocking is default)
 
 Until now, MatrixBackend could be retrieved through the
 ISTLVectorBackend, now it is a class without template parameters,
@@ -29,6 +22,38 @@ Just change
 | typedef VBE::MatrixBackend MBE;
 to
 | typedef Dune::PDELab::ISTLMatrixBackend MBE;
+
+GridFunctionSpaces
+******************
+
+For a CompositeGridfunctionSpace or PowerGridfunctionSpace you now
+need to include the new header:
+| #include<dune/pdelab/gridfunctionspace/subspace.hh>
+and then to block all components of one degree of freedom:
+
+before:
+| typedef Dune::PDELab::ISTLVectorBackend<2> VBE;
+| typedef Dune::PDELab::GridFunctionSpace<GV,FEM0,CON,VBE> GFS0;
+| ...
+| typedef Dune::PDELab::CompositeGridFunctionSpace
+|   <Dune::PDELab::GridFunctionSpaceBlockwiseMapper,GFS0,GFS1> GFS;
+|
+| typedef Dune::PDELab::GridFunctionSubSpace<GFS,0> U0SUB;
+
+now:
+| typedef Dune::PDELab::ISTLVectorBackend<> VBE0;
+| typedef Dune::PDELab::ISTLVectorBackend<> VBE1;
+| typedef Dune::PDELab::GridFunctionSpace<GV,FEM0,CON,VBE0> GFS0;
+| ...
+| typedef Dune::PDELab::ISTLVectorBackend
+|   <Dune::PDELab::ISTLParameters::static_blocking,2> VBE;
+| typedef Dune::PDELab::CompositeGridFunctionSpace
+|   <VBE,Dune::PDELab::EntityBlockedOrderingTag,GFS0,GFS1> GFS;
+|
+| typedef Dune::PDELab::GridFunctionSubSpace
+|   <GFS,Dune::PDELab::TypeTree::TreePath<0> > U0SUB;
+
+If you only need the subspaces for visualization you don't need to extract the SubSpaces explicitly, just use the new functionality describeb below.
 
 VTKWriter
 *********
