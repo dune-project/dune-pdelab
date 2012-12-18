@@ -12,6 +12,7 @@
 #include <dune/istl/bvector.hh>
 
 #include <dune/pdelab/backend/istl/tags.hh>
+#include <dune/pdelab/backend/istl/vectoriterator.hh>
 
 #include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
@@ -129,12 +130,13 @@ namespace Dune {
       typedef GFS GridFunctionSpace;
       typedef Container BaseT;
       typedef typename Container::field_type field_type;
-      typedef typename Container::iterator iterator;
-      typedef typename Container::const_iterator const_iterator;
       typedef typename Container::block_type block_type;
       typedef typename Container::size_type size_type;
 
       typedef typename GFS::Ordering::Traits::ContainerIndex ContainerIndex;
+
+      typedef istl::vector_iterator<C> iterator;
+      typedef istl::vector_iterator<const C> const_iterator;
 
       template<typename LFSCache>
       struct LocalView
@@ -588,24 +590,24 @@ namespace Dune {
 
       iterator begin()
       {
-        return _container->begin();
+        return iterator(*_container,false);
       }
 
 
       const_iterator begin() const
       {
-        return _container->begin();
+        return const_iterator(*_container,false);
       }
 
       iterator end()
       {
-        return _container->end();
+        return iterator(*_container,true);
       }
 
 
       const_iterator end() const
       {
-        return _container->end();
+        return const_iterator(*_container,true);
       }
 
       size_t flatsize() const

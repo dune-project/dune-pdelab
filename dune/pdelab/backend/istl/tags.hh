@@ -19,6 +19,12 @@ namespace Dune {
   template<typename F, int n, int m>
   class FieldMatrix;
 
+  template<typename F>
+  class DynamicVector;
+
+  template<typename F>
+  class DynamicMatrix;
+
   template<typename Block, typename Alloc>
   class BlockVector;
 
@@ -38,6 +44,12 @@ namespace Dune {
         struct block_vector
         {
           typedef block_vector base_tag;
+        };
+
+        //! Tag describing a DynamicVector.
+        struct dynamic_vector
+        {
+          typedef dynamic_vector base_tag;
         };
 
         //! Tag describing an arbitrary FieldVector.
@@ -69,6 +81,12 @@ namespace Dune {
         struct bcrs_matrix
         {
           typedef bcrs_matrix base_tag;
+        };
+
+        //! Tag describing a DynamicMatrix.
+        struct dynamic_matrix
+        {
+          typedef dynamic_matrix base_tag;
         };
 
         //! Tag describing an arbitrary FieldMatrix.
@@ -161,6 +179,11 @@ namespace Dune {
           typedef block_vector type;
         };
 
+        template<typename F>
+        struct container<DynamicVector<F> >
+        {
+          typedef dynamic_vector type;
+        };
 
         template<typename F, int n>
         struct container<FieldVector<F,n> >
@@ -181,6 +204,11 @@ namespace Dune {
           typedef bcrs_matrix type;
         };
 
+        template<typename F>
+        struct container<DynamicMatrix<F> >
+        {
+          typedef dynamic_matrix type;
+        };
 
         template<typename F, int n, int m>
         struct container<FieldMatrix<F,n,m> >
@@ -224,6 +252,57 @@ namespace Dune {
       {
         return typename tags::container<T>::type();
       }
+
+#ifndef DOXYGEN
+
+      namespace impl {
+
+        template<typename T, std::size_t depth, typename Tag>
+        struct nesting_depth;
+
+        template<typename T, std::size_t depth>
+        struct nesting_depth<T,depth,tags::block_vector>
+          : public nesting_depth<typename T::block_type,depth+1,typename tags::container<typename T::block_type>::type::base_tag>
+        {};
+
+        template<typename T, std::size_t depth>
+        struct nesting_depth<T,depth,tags::dynamic_vector>
+          : public integral_constant<std::size_t,depth+1>
+        {};
+
+        template<typename T, std::size_t depth>
+        struct nesting_depth<T,depth,tags::field_vector>
+          : public integral_constant<std::size_t,depth+1>
+        {};
+
+        template<typename T, std::size_t depth>
+        struct nesting_depth<T,depth,tags::bcrs_matrix>
+          : public nesting_depth<typename T::block_type,depth+1,typename tags::container<typename T::block_type>::type::base_tag>
+        {};
+
+        template<typename T, std::size_t depth>
+        struct nesting_depth<T,depth,tags::dynamic_matrix>
+          : public integral_constant<std::size_t,depth+1>
+        {};
+
+        template<typename T, std::size_t depth>
+        struct nesting_depth<T,depth,tags::field_matrix>
+          : public integral_constant<std::size_t,depth+1>
+        {};
+
+      }
+
+#endif // DOXYGEN
+
+      //! TMP for figuring out the depth up to which ISTL containers are nested.
+      /**
+       * This TMP calculates the nesting depth of ISTL containers. A FieldVector or
+       * FieldMatrix has a depth of 1.
+       */
+      template<typename T>
+      struct nesting_depth
+        : public impl::nesting_depth<T,0,typename tags::container<T>::type::base_tag>
+      {};
 
     } // namespace istl
 
