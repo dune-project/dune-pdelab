@@ -3,7 +3,7 @@
 #define DUNE_PDELAB_FINITEELEMENTMAP_BDM1CUBE2DFEM_HH
 
 #include <vector>
-#include <dune/localfunctions/brezzidouglasmarini/brezzidouglasmarini1q2d.hh>
+#include <dune/localfunctions/brezzidouglasmarini/brezzidouglasmarini1cube2d.hh>
 #include "finiteelementmap.hh"
 
 namespace Dune {
@@ -14,7 +14,7 @@ namespace Dune {
     template<typename GV, typename D, typename R>
     class BDM1Cube2DLocalFiniteElementMap :
       public LocalFiniteElementMapInterface<
-        LocalFiniteElementMapTraits<Dune::BDM1Q2DLocalFiniteElement<D,R> >,
+        LocalFiniteElementMapTraits<Dune::BDM1Cube2DLocalFiniteElement<D,R> >,
         BDM1Cube2DLocalFiniteElementMap<GV,D,R> >
     {
       typedef Dune::BDM12DLocalFiniteElement<D,R> FE;

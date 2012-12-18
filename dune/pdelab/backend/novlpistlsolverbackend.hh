@@ -27,6 +27,7 @@
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/backend/istl/blockmatrixdiagonal.hh>
 #include <dune/pdelab/backend/istl/parallelhelper.hh>
+#include <dune/pdelab/backend/seqistlsolverbackend.hh>
 
 namespace Dune {
   namespace PDELab {

@@ -8,6 +8,7 @@
 #include <dune/pdelab/ordering/utility.hh>
 
 #include <vector>
+#include <numeric>
 
 namespace Dune {
   namespace PDELab {

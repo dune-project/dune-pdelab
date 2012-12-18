@@ -13,6 +13,7 @@
 
 #include <dune/geometry/typeindex.hh>
 #include <dune/grid/common/gridenums.hh>
+#include <dune/grid/common/datahandleif.hh>
 
 #include <dune/pdelab/common/unordered_map.hh>
 #include <dune/pdelab/common/borderindexidcache.hh>

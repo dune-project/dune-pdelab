@@ -6,6 +6,7 @@
 #include <numeric>
 
 #include <dune/geometry/type.hh>
+#include <dune/geometry/typeindex.hh>
 #include <dune/grid/common/capabilities.hh>
 
 namespace Dune {

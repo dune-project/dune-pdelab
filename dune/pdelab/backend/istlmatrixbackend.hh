@@ -8,13 +8,13 @@
 
 #include <dune/pdelab/common/unordered_map.hh>
 #include <dune/pdelab/common/unordered_set.hh>
+#include <dune/pdelab/ordering/orderingbase.hh>
 
 #include <dune/common/fmatrix.hh>
 #include <dune/istl/bvector.hh>
 #include <dune/istl/bcrsmatrix.hh>
 
 #include <dune/pdelab/backend/istl/tags.hh>
-
 #include <dune/pdelab/backend/backendselector.hh>
 
 namespace Dune {

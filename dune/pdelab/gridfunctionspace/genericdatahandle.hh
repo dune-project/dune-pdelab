@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <set>
+#include <limits>
 
 #include<dune/common/exceptions.hh>
 #include <dune/common/parallel/mpihelper.hh>

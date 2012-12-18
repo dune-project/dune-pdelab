@@ -4,6 +4,8 @@
 #ifndef DUNE_PDELAB_COMMON_TYPETREE_FILTEREDCOMPOSITENODE_HH
 #define DUNE_PDELAB_COMMON_TYPETREE_FILTEREDCOMPOSITENODE_HH
 
+#include <dune/common/shared_ptr.hh>
+
 #if !(HAVE_VARIADIC_TEMPLATES || DOXYGEN || HEADERCHECK)
 #error The class FilteredCompositeNode requires compiler support for variadic templates, which your compiler lacks.
 #endif

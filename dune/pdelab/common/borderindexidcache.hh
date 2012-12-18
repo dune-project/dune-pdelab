@@ -6,8 +6,10 @@
 #include <vector>
 #include <utility>
 
+#include <dune/common/typetraits.hh>
 #include <dune/geometry/typeindex.hh>
 #include <dune/grid/common/gridenums.hh>
+#include <dune/grid/common/capabilities.hh>
 #include <dune/pdelab/common/unordered_map.hh>
 
 namespace Dune {

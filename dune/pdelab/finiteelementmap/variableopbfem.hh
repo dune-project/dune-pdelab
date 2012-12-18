@@ -5,10 +5,11 @@
 #include <dune/geometry/type.hh>
 
 #include <dune/localfunctions/common/virtualwrappers.hh>
-#include "l2orthonormal.hh"
 #include <dune/common/array.hh>
 #include <dune/common/shared_ptr.hh>
-#include "finiteelementmap.hh"
+#include <dune/pdelab/finiteelementmap/finiteelementmap.hh>
+#include <dune/pdelab/finiteelementmap/l2orthonormal.hh>
+#include <dune/pdelab/finiteelementmap/monomfem.hh>
 
 namespace Dune {
   namespace PDELab {

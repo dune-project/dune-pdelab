@@ -4,6 +4,7 @@
 #include <dune/pdelab/instationary/onestep.hh>
 #include <dune/pdelab/gridoperator/onestep/localassembler.hh>
 #include <dune/pdelab/gridoperator/common/gridoperatorutilities.hh>
+#include <dune/pdelab/constraints/constraints.hh>
 
 namespace Dune{
   namespace PDELab{
