@@ -5,7 +5,6 @@ gridfunctionspace_HEADERS =			\
 	gridviewordering.hh			\
 	leafgridviewordering.hh			\
 	leaflocalordering.hh			\
-	leafordering.hh				\
 	lexicographicordering.hh		\
 	localorderingbase.hh			\
 	orderingbase.hh				\
