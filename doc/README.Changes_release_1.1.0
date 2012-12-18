@@ -1,0 +1,58 @@
+If you want to use your dune-pdelab code from release 1.0.1 with
+release 1.1.0. you have to adapt some things:
+
+ISTL Backends
+*************
+
+Before, the template parameter for the ISTLVectorBackend was the block_size.
+Now, it has two template parameters, the blocking strategy and the block_size.
+Two examples:
+
+before:
+| typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
+now
+| typedef Dune::PDELab::ISTLVectorBackend<> VBE; (<no_blocking,1> is default)
+
+before:
+| typedef Dune::PDELab::ISTLVectorBackend<2> VBE;
+now
+| typedef Dune::PDELab::ISTLVectorBackend
+|   <Dune::PDELab::ISTLParameters::static_blocking,2> VBE;
+
+
+Until now, MatrixBackend could be retrieved through the
+ISTLVectorBackend, now it is a class without template parameters,
+where the field_type will be the one from the corresponding
+GridOperators Jacobian field_type.
+
+Just change
+| typedef VBE::MatrixBackend MBE;
+to
+| typedef Dune::PDELab::ISTLMatrixBackend MBE;
+
+VTKWriter
+*********
+
+With
+| #include<dune/pdelab/gridfunctionspace/vtk.hh>
+there is is now a very convenient way to write vtk files directly
+from GridFunctionSpaces.
+
+before:
+| typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
+| DGF udgf(gfs,u);
+| Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
+| vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>
+|   (udgf,"solution"));
+| vtkwriter.write("testexample",Dune::VTK::appendedraw);
+
+now:
+| gfs.name("solution");
+| Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
+| Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,u);
+| vtkwriter.write("testexample",Dune::VTK::appendedraw);
+
+This also works for non-scalar GridFunctionSpaces.
+By using the new VectorGridFunctionSpace in
+| #include<dune/pdelab/gridfunctionspace/vectorgridfunctionspace.hh>
+it will automatically write a vector instead of a scalar.
