@@ -17,7 +17,7 @@ namespace Dune {
         LocalFiniteElementMapTraits<Dune::BDM1Cube2DLocalFiniteElement<D,R> >,
         BDM1Cube2DLocalFiniteElementMap<GV,D,R> >
     {
-      typedef Dune::BDM12DLocalFiniteElement<D,R> FE;
+      typedef Dune::BDM1Cube2DLocalFiniteElement<D,R> FE;
       typedef typename GV::IndexSet IndexSet;
 
     public:

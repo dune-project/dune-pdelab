@@ -3,7 +3,7 @@
 #define DUNE_PDELAB_FINITEELEMENTMAP_BDM1SIMPLEX2DFEM_HH
 
 #include <vector>
-#include <dune/localfunctions/brezzidouglasmarini/brezzidouglasmarini12d.hh>
+#include <dune/localfunctions/brezzidouglasmarini/brezzidouglasmarini1simplex2d.hh>
 #include "finiteelementmap.hh"
 
 namespace Dune {
@@ -14,10 +14,10 @@ namespace Dune {
     template<typename GV, typename D, typename R>
     class BDM1Simplex2DLocalFiniteElementMap :
       public LocalFiniteElementMapInterface<
-        LocalFiniteElementMapTraits< Dune::BDM12DLocalFiniteElement<D,R> >,
+        LocalFiniteElementMapTraits< Dune::BDM1Simplex2DLocalFiniteElement<D,R> >,
         BDM1Simplex2DLocalFiniteElementMap<GV,D,R> >
     {
-      typedef Dune::BDM12DLocalFiniteElement<D,R> FE;
+      typedef Dune::BDM1Simplex2DLocalFiniteElement<D,R> FE;
       typedef typename GV::IndexSet IndexSet;
 
     public:
