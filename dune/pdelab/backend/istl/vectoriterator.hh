@@ -128,12 +128,8 @@ namespace Dune {
           , _current(nullptr)
         {
           if (!_at_end)
-            {
-              get<0>(_iterators) = vector.begin();
-              get<0>(_end) = vector.end();
-              if (!start(vector_tag(),level<0>()))
-                _at_end = true;
-            }
+            if (!start(vector_tag(),level<0>(),vector))
+              _at_end = true;
         }
 
 
@@ -193,12 +189,15 @@ namespace Dune {
             _at_end = true;
         }
 
-        template<std::size_t l>
-        bool start_leaf(level<l>)
+        template<std::size_t l, typename Block>
+        bool start_leaf(level<l>, Block& block)
         {
           typedef typename tuple_element<l,Iterators>::type iterator;
           iterator& it = get<l>(_iterators);
-          const iterator& end = get<l>(_end);
+          iterator& end = get<l>(_end);
+
+          it = block.begin();
+          end = block.end();
 
           if (it == end)
             return false;
@@ -208,32 +207,32 @@ namespace Dune {
           return true;
         }
 
-        template<std::size_t l>
-        bool start(tags::field_vector, level<l>)
+        template<std::size_t l, typename Block>
+        bool start(tags::field_vector, level<l>, Block& block)
         {
-          return start_leaf(level<l>());
+          return start_leaf(level<l>(),block);
         }
 
-        template<std::size_t l>
-        bool start(tags::dynamic_vector, level<l>)
+        template<std::size_t l, typename Block>
+        bool start(tags::dynamic_vector, level<l>, Block& block)
         {
-          return start_leaf(level<l>());
+          return start_leaf(level<l>(),block);
         }
 
 
-        template<std::size_t l>
-        bool start(tags::block_vector, level<l>)
+        template<std::size_t l, typename Block>
+        bool start(tags::block_vector, level<l>, Block& block)
         {
           typedef typename tuple_element<l,Iterators>::type iterator;
           iterator& it = get<l>(_iterators);
-          const iterator& end = get<l>(_end);
+          iterator& end = get<l>(_end);
+
+          it = block.begin();
+          end = block.end();
 
           while (it != end)
             {
-              get<l+1>(_iterators) = it->begin();
-              get<l+1>(_end) = it->end();
-
-              if (start(container_tag(*it),level<l+1>()))
+              if (start(container_tag(*it),level<l+1>(),*it))
                 return true;
 
               ++it;
@@ -278,13 +277,22 @@ namespace Dune {
         {
           typedef typename tuple_element<l,Iterators>::type iterator;
           iterator& it = get<l>(_iterators);
+          iterator& end = get<l>(_end);
 
           if (advance(container_tag(*it),level<l+1>()))
             return true;
 
           ++it;
 
-          return start(tags::block_vector(), level<l>());
+          while (it != end)
+            {
+              if (start(container_tag(*it),level<l+1>(),*it))
+                return true;
+
+              ++it;
+            }
+
+          return false;
         }
 
 
