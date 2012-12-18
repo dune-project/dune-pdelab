@@ -183,16 +183,18 @@ namespace Dune {
         _statistics_stale = false;
       }
 
-      void print_entry(std::ostream& s, std::string name, const BenchmarkEntry& entry) const
+      void print_entry(std::ostream& s, std::string name, const BenchmarkEntry& entry, bool summary_only = false) const
       {
         s << std::setw(_max_name_len + 1) << std::left << name
           << std::right << std::scientific << std::setw(10) << std::setprecision(2);
-        for (std::vector<Timing>::const_iterator it = entry.timings.begin(), end = entry.timings.end();
-             it != end;
-             ++it)
-          {
-            s << std::setw(10) << it->elapsed();
-          }
+        if (!summary_only)
+          for (std::vector<Timing>::const_iterator it = entry.timings.begin(),
+                 end = entry.timings.end();
+               it != end;
+               ++it)
+            {
+              s << std::setw(10) << it->elapsed();
+            }
         s << std::setw(10) << entry.min
           << std::setw(10) << entry.max
           << std::setw(10) << entry.avg
@@ -201,7 +203,7 @@ namespace Dune {
         s << std::endl;
       }
 
-      void print(std::ostream& s)
+      void print(std::ostream& s, bool summary_only = false)
       {
         ios_base_all_saver ios_saver(s);
 
@@ -212,8 +214,9 @@ namespace Dune {
 
         s << std::setw(_max_name_len + 1) << "";
 
-        for (std::size_t i = 0; i < _max_runs; ++i)
-          s << std::setw(10) << i;
+        if (!summary_only)
+          for (std::size_t i = 0; i < _max_runs; ++i)
+            s << std::setw(10) << i;
 
         s << std::setw(10) << "min"
           << std::setw(10) << "max"
@@ -223,9 +226,9 @@ namespace Dune {
         for (std::map<std::string,BenchmarkEntry>::const_iterator it = _tasks.begin(), end = _tasks.end();
              it != end;
              ++it)
-          print_entry(s,it->first,it->second);
+          print_entry(s,it->first,it->second,summary_only);
 
-        print_entry(s,"total",_run_times);
+        print_entry(s,"total",_run_times,summary_only);
       }
 
     private:
