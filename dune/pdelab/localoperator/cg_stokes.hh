@@ -87,7 +87,6 @@ namespace Dune {
       {
         // dimensions
         const int dim = EG::Geometry::dimension;
-        const int dimw = EG::Geometry::dimensionworld;
 
         // extract local function spaces
         typedef typename LFSU::template Child<0>::Type LFSU_V_PFS;
@@ -380,7 +379,6 @@ namespace Dune {
       {
         // dimensions
         const int dim = EG::Geometry::dimension;
-        const int dimw = EG::Geometry::dimensionworld;
 
 
         // extract local function spaces
