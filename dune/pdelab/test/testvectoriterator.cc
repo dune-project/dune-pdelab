@@ -6,8 +6,11 @@
 #include <iostream>
 #include <algorithm>
 
+#include <dune/common/fvector.hh>
 #include <dune/common/dynvector.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/istl/bvector.hh>
+
+#include <dune/pdelab/backend/istl/vectoriterator.hh>
 
 
 int main(int argc, char** argv)
