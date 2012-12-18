@@ -40,6 +40,22 @@ namespace Dune {
       EdgeS0_5FiniteElementMap(const VertexOrderFactory &voFactory) :
         Base(feFactory(), voFactory)
       { }
+
+      bool fixedSize() const
+      {
+        return false;
+      }
+
+      std::size_t size(GeometryType gt) const
+      {
+        DUNE_THROW(Dune::Exception,"This should not be called!");
+      }
+
+      std::size_t maxLocalSize() const
+      {
+        return Dune::EdgeS0_5Common<Geometry::mydimension>::s;
+      }
+
     };
   }
 }

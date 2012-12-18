@@ -89,6 +89,21 @@ namespace Dune {
         return p;
       }
 
+      bool fixedSize() const
+      {
+        return false;
+      }
+
+      std::size_t size(GeometryType gt) const
+      {
+        DUNE_THROW(Dune::Exception,"This should not be called!");
+      }
+
+      std::size_t maxLocalSize() const
+      {
+        return getFem(maxP).localCoefficients().size();
+      }
+
     private:
       const M & mapper_;
       std::vector<unsigned char> polOrder_;
