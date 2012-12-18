@@ -25,8 +25,11 @@ namespace Dune{
       typedef typename GO1::Traits::LocalAssembler LocalAssemblerDT1;
       //! @}
 
-      //! The local UDG assembler type
+      //! The local assembler type
       typedef OneStepLocalAssembler<OneStepGridOperator,LocalAssemblerDT0,LocalAssemblerDT1> LocalAssembler;
+
+      //! The BorderDOFExchanger
+      typedef typename GO0::BorderDOFExchanger BorderDOFExchanger;
 
       //! The grid operator traits
       typedef Dune::PDELab::GridOperatorTraits
