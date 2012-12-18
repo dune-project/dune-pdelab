@@ -23,6 +23,10 @@ Just change
 to
 | typedef Dune::PDELab::ISTLMatrixBackend MBE;
 
+When using the Dune::PDELab::BackendVectorSelector construct to get the coeffient vector type
+before creating a GridOperator, please remember to include the header of the vector backend
+you are using (default is the ISTL backend in <dune/pdelab/backend/istlvectorbackend.hh>)!
+
 GridFunctionSpaces
 ******************
 

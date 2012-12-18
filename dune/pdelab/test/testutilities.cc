@@ -12,10 +12,12 @@
 #include"../finiteelementmap/q22dfem.hh"
 #include"../finiteelementmap/q12dfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
+#include"../gridfunctionspace/subspace.hh"
 #include"../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include"../gridfunctionspace/interpolate.hh"
 #include"../common/function.hh"
 #include"../common/vtkexport.hh"
+#include"../backend/istlvectorbackend.hh"
 
 // generate a Q1 function and output it
 template<class GV> 
@@ -33,7 +35,8 @@ void testq1 (const GV& gv)
   typedef typename Dune::PDELab::BackendVectorSelector<Q1GFS, double>::Type V;
   V x(q1gfs);
   x = 0.0;
-  x[3] = 1.0;
+  // Don't do this at home: access raw vector
+  Dune::PDELab::istl::raw(x)[3] = 1.0;
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<Q1GFS,V> DGF;
@@ -98,10 +101,10 @@ void testinterpolate (const GV& gv)
   Q1GFS q1gfs(gv,q12dfem);
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> Q2GFS;
   Q2GFS q2gfs(gv,q22dfem);
-  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::GridFunctionSpaceLexicographicMapper,
-    Q1GFS,Q2GFS> CGFS;
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTLVectorBackend<>,
+    Dune::PDELab::LexicographicOrderingTag,Q1GFS,Q2GFS> CGFS;
   CGFS cgfs(q1gfs,q2gfs);
-  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,2> PGFS;
+  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,2,Dune::PDELab::ISTLVectorBackend<> > PGFS;
   PGFS pgfs(q2gfs,q2gfs);
 
   // make coefficent Vectors
@@ -129,13 +132,13 @@ void testinterpolate (const GV& gv)
   Dune::PDELab::interpolate(h,pgfs,pxg); // krass !
 
   // subspaces
-  typedef Dune::PDELab::GridFunctionSubSpace<CGFS,0> SUBGFS0;
+  typedef Dune::PDELab::GridFunctionSubSpace<CGFS,Dune::PDELab::TypeTree::TreePath<0> > SUBGFS0;
   SUBGFS0 subgfs0(cgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<CGFS,1> SUBGFS1;
+  typedef Dune::PDELab::GridFunctionSubSpace<CGFS,Dune::PDELab::TypeTree::TreePath<1> > SUBGFS1;
   SUBGFS1 subgfs1(cgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<PGFS,0> PSUBGFS0;
+  typedef Dune::PDELab::GridFunctionSubSpace<PGFS,Dune::PDELab::TypeTree::TreePath<0> > PSUBGFS0;
   PSUBGFS0 psubgfs0(pgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<PGFS,1> PSUBGFS1;
+  typedef Dune::PDELab::GridFunctionSubSpace<PGFS,Dune::PDELab::TypeTree::TreePath<1> > PSUBGFS1;
   PSUBGFS1 psubgfs1(pgfs);
 
   // make discrete function object
@@ -241,10 +244,10 @@ void testtaylorhood (const GV& gv)
   Q1GFS q1gfs(gv,q12dfem);
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> Q2GFS;
   Q2GFS q2gfs(gv,q22dfem);
-  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,GV::dimension> VGFS;
+  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,GV::dimension,Dune::PDELab::ISTLVectorBackend<> > VGFS;
   VGFS vgfs(q2gfs);
-  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::GridFunctionSpaceLexicographicMapper,
-    VGFS,Q1GFS> THGFS;
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTLVectorBackend<>,
+    Dune::PDELab::LexicographicOrderingTag,VGFS,Q1GFS> THGFS;
   THGFS thgfs(vgfs,q1gfs);
 
   // make coefficent Vector
@@ -274,29 +277,29 @@ void testtaylorhood (const GV& gv)
 
   // check entries of global vector
   for (typename V::size_type i=0; i<xg.flatsize(); i++)
-    std::cout << "[" << i << ":" << V::Backend::access(xg, i) << "] ";
+    std::cout << "[" << i << ":" << Dune::PDELab::istl::raw(xg)[i] << "] ";
   std::cout << std::endl;
 
   // check entries
   for (int i=0; i<25; i++)
-    if (xg[i]!=1.0)
+    if (Dune::PDELab::istl::raw(xg)[i]!=1.0)
       exit(1);
   for (int i=25; i<50; i++)
-    if (xg[i]!=2.0)
+    if (Dune::PDELab::istl::raw(xg)[i]!=2.0)
       exit(1);
   for (int i=50; i<59; i++)
-    if (xg[i]!=3.0)
+    if (Dune::PDELab::istl::raw(xg)[i]!=3.0)
       exit(1);
   std::cout << "all entries correct" << std::endl;
 
   // subspaces
-  typedef Dune::PDELab::GridFunctionSubSpace<THGFS,1> SUBP;
+  typedef Dune::PDELab::GridFunctionSubSpace<THGFS,Dune::PDELab::TypeTree::TreePath<1> > SUBP;
   SUBP subp(thgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<THGFS,0> SUBV;
+  typedef Dune::PDELab::GridFunctionSubSpace<THGFS,Dune::PDELab::TypeTree::TreePath<0> > SUBV;
   SUBV subv(thgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<SUBV,0> SUBV0;
+  typedef Dune::PDELab::GridFunctionSubSpace<SUBV,Dune::PDELab::TypeTree::TreePath<0> > SUBV0;
   SUBV0 subv0(subv);
-  typedef Dune::PDELab::GridFunctionSubSpace<SUBV,1> SUBV1;
+  typedef Dune::PDELab::GridFunctionSubSpace<SUBV,Dune::PDELab::TypeTree::TreePath<1> > SUBV1;
   SUBV1 subv1(subv);
 
 

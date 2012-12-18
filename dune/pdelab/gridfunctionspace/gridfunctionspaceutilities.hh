@@ -712,9 +712,12 @@ namespace Dune {
        */
       VectorDiscreteGridFunction(const GFS& gfs, const X& x_,
                                  std::size_t start = 0)
-        : pgfs(stackobject_to_shared_ptr(gfs)),
-          pxg(stackobject_to_shared_ptr(x_)),
-          lfs(pgfs), xl(pgfs->maxLocalSize()), yb(pgfs->maxLocalSize())
+      : pgfs(stackobject_to_shared_ptr(gfs))
+      , lfs(gfs)
+      , lfs_cache(lfs)
+      , x_view(x_)
+      , xl(gfs.maxLocalSize())
+      , yb(gfs.maxLocalSize())
       {
         for(std::size_t i = 0; i < dimR; ++i)
           remap[i] = i + start;
@@ -735,9 +738,13 @@ namespace Dune {
       template<class Remap>
       VectorDiscreteGridFunction(const GFS& gfs, const X& x_,
                                  const Remap &remap_)
-        : pgfs(stackobject_to_shared_ptr(gfs)),
-          pxg(stackobject_to_shared_ptr(x_)),
-          lfs(pgfs), xl(pgfs->maxLocalSize()), yb(pgfs->maxLocalSize())
+      : pgfs(stackobject_to_shared_ptr(gfs))
+      , lfs(gfs)
+      , lfs_cache(lfs)
+      , x_view(x_)
+      , xl(gfs.maxLocalSize())
+      , yb(gfs.maxLocalSize())
+      ,	px(stackobject_to_shared_ptr(x_))
       {
         for(std::size_t i = 0; i < dimR; ++i)
           remap[i] = remap_[i];
@@ -748,7 +755,10 @@ namespace Dune {
                             typename Traits::RangeType& y) const
       {
         lfs.bind(e);
-        lfs.vread(*pxg,xl);
+        lfs_cache.update();
+        x_view.bind(lfs_cache);
+        x_view.read(xl);
+        x_view.unbind();
         for (unsigned int k=0; k < dimR; k++)
           {
             lfs.child(remap[k]).finiteElement().localBasis().
@@ -766,68 +776,19 @@ namespace Dune {
       }
 
     private:
-      shared_ptr<const GFS> pgfs;
-      shared_ptr<const X> pxg;
+      typedef LocalFunctionSpace<GFS> LFS;
+      typedef LFSIndexCache<LFS> LFSCache;
+      typedef typename X::template ConstLocalView<LFSCache> XView;
+
+      shared_ptr<GFS const> pgfs;
       std::size_t remap[dimR];
-      mutable LocalFunctionSpace<GFS> lfs;
+      mutable LFS lfs;
+      mutable LFSCache lfs_cache;
+      mutable XView x_view;
       mutable std::vector<RF> xl;
       mutable std::vector<RT> yb;
+      shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
     };
-
-
-    /** \brief Copy DOF from child coefficient vector to parent coefficient vector
-     *
-     * \tparam U_CHILD Type of the child coefficient vector
-     * \tparam U Type of the parent coefficient vector
-     * \tparam GFS Type of the parent (power/composite-) grid function space
-     *
-     * \param uChild child coefficient vector
-     * \param uParent parent coefficient vector
-     * \param gfs parent (power/composite) grid function space
-     * \param index of child in parent GFS
-     */
-    template<typename U_CHILD, typename U, typename GFS>
-    void copy_dofs_child_to_parent(U_CHILD& uChild, U& uParent, const GFS& gfs, int child)
-    {
-      if(child >= GFS::CHILDREN)
-        DUNE_THROW(Dune::Exception, "Child index must be smaller than the number of GFS children!");
-
-      typedef typename U_CHILD::Backend CHILD_BE;
-      typedef typename U::Backend BE;
-
-      int n = uChild.flatsize();
-      for(int i=0; i<n; ++i)
-        {
-          BE::access(uParent, gfs.subMap(child, i)) = CHILD_BE::access(uChild, i);
-        }
-    }
-
-    /** \brief Copy DOF from parent coefficient vector to child coefficient vector
-     *
-     * \tparam U Type of the parent coefficient vector
-     * \tparam U_CHILD Type of the child coefficient vector
-     * \tparam GFS Type of the parent (power/composite-) grid function space
-     *
-     * \param uParent parent coefficient vector
-     * \param uChild child coefficient vector
-     * \param gfs parent (power/composite) grid function space
-     * \param index of child in parent GFS
-     */
-    template<typename U, typename U_CHILD, typename GFS>
-    void copy_dofs_parent_to_child(U& uParent, U_CHILD& uChild, const GFS& gfs, int child)
-    {
-      if(child >= GFS::CHILDREN)
-        DUNE_THROW(Dune::Exception, "Child index must be smaller than the number of GFS children!");
-
-      typedef typename U_CHILD::Backend CHILD_BE;
-      typedef typename U::Backend BE;
-
-      int n = uChild.flatsize();
-      for(int i=0; i<n; ++i)
-        {
-          CHILD_BE::access(uChild, i) = BE::access(uParent, gfs.subMap(child, i));
-        }
-    }
 
 
    //! \} group GridFunctionSpace
