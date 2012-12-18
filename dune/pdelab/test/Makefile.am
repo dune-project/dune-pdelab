@@ -372,6 +372,9 @@ check_PROGRAMS += testnonoverlapping
 testnonoverlapping_SOURCES = testnonoverlapping.cc
 testnonoverlapping_CPPFLAGS = $(AM_CPPFLAGS)
 
+check_PROGRAMS += testvectoriterator
+testvectoriterator_SOURCES = testvectoriterator.cc
+
 include $(top_srcdir)/am/global-rules
 
 DISTCHECK_CONFIGURE_FLAGS = --with-dune=$(DUNEROOT) CXX="$(CXX)" CC="$(CC)"

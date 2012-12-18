@@ -49,3 +49,4 @@ testtypetree-legacy
 testinterpolate
 testpoisson-globalfe
 testopbfem
+testvectoriterator
