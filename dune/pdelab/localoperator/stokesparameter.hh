@@ -352,6 +352,30 @@ namespace Dune {
 
     };
 
+    /**
+     * Stokes pressure boundary constraints function
+     */
+    template<typename PRM>
+    class StokesPressureDirichletConstraints
+      : public Dune::PDELab::DirichletConstraintsParameters
+    {
+    private:
+      const PRM & prm_;
+
+    public:
+
+      /** \brief Constructor */
+      StokesPressureDirichletConstraints (const PRM & _prm)
+      : prm_(_prm) { }
+
+      /** Predicate identifying Dirichlet boundaries for velocity. */
+      template<typename I>
+      bool isDirichlet(const I & intersection,
+                       const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      { return false; }
+    };
+
+
 
 #ifndef DOXYGEN
 
