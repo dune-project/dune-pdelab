@@ -6,6 +6,7 @@
 #include <iostream>
 #include <algorithm>
 
+#include <dune/common/dynvector.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 
 
@@ -85,6 +86,64 @@ int main(int argc, char** argv)
          it != end;
          ++it, ++i)
       it->resize(i);
+
+    v = 1;
+
+    std::cout << v.one_norm() << std::endl;
+
+    for (Iterator it = Iterator(v,false),
+           end = Iterator(v,true);
+         it != end;
+         ++it)
+      (*it) *= 3;
+
+    std::cout << v.one_norm() << std::endl;
+  }
+
+  {
+    typedef Dune::BlockVector<Dune::DynamicVector<int> > V;
+    typedef Dune::PDELab::istl::vector_iterator<V> Iterator;
+
+    V v(20);
+    int i = 1;
+    for (V::iterator it = v.begin(),
+           end = v.end();
+         it != end;
+         ++it, ++i)
+      it->resize(i);
+
+    v = 1;
+
+    std::cout << v.one_norm() << std::endl;
+
+    for (Iterator it = Iterator(v,false),
+           end = Iterator(v,true);
+         it != end;
+         ++it)
+      (*it) *= 3;
+
+    std::cout << v.one_norm() << std::endl;
+  }
+
+  {
+    typedef Dune::BlockVector<Dune::BlockVector<Dune::DynamicVector<int> > > V;
+    typedef Dune::PDELab::istl::vector_iterator<V> Iterator;
+
+    V v(20);
+    int i = 1;
+    for (V::iterator it = v.begin(),
+           end = v.end();
+         it != end;
+         ++it, ++i)
+      {
+        it->resize(i);
+        int j = 1;
+        for (V::block_type::iterator it2 = it->begin(),
+           end2 = it->end();
+         it2 != end2;
+         ++it2, ++j)
+          it2->resize(j);
+      }
 
     v = 1;
 
