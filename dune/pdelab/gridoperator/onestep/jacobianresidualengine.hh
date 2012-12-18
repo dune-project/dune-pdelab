@@ -412,6 +412,9 @@ namespace Dune{
       //! The type of the wrapping local assembler
       typedef OSLA OneStepLocalAssembler;
 
+      // Request constraints caching from the global assembler
+      static const bool needs_constraints_caching = true;
+
       //! The type for real numbers
       typedef typename OSLA::Real Real;
 
@@ -606,9 +609,10 @@ namespace Dune{
         jacobian_engine->preAssembly();
       }
 
-      void postAssembly(){
-        prestage_engine->postAssembly();
-        jacobian_engine->postAssembly();
+      template<typename GFSU, typename GFSV>
+      void postAssembly(const GFSU& gfsu, const GFSV& gfsv){
+        prestage_engine->postAssembly(gfsu,gfsv);
+        jacobian_engine->postAssembly(gfsu,gfsv);
       }
 
       //! @}
