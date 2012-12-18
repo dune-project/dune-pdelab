@@ -208,7 +208,7 @@ namespace Dune {
         }
 
         template<std::size_t l, typename Block>
-        bool start(tags::field_vector, level<l>, Block& block)
+        bool start(tags::field_vector_n, level<l>, Block& block)
         {
           return start_leaf(level<l>(),block);
         }
@@ -217,6 +217,13 @@ namespace Dune {
         bool start(tags::dynamic_vector, level<l>, Block& block)
         {
           return start_leaf(level<l>(),block);
+        }
+
+        template<std::size_t l, typename Block>
+        bool start(tags::field_vector_1, level<l>, Block& block)
+        {
+          _current = &(block[0]);
+          return true;
         }
 
 
@@ -260,7 +267,7 @@ namespace Dune {
         }
 
         template<std::size_t l>
-        bool advance(tags::field_vector, level<l>)
+        bool advance(tags::field_vector_n, level<l>)
         {
           return advance_leaf(level<l>());
         }
@@ -269,6 +276,12 @@ namespace Dune {
         bool advance(tags::dynamic_vector, level<l>)
         {
           return advance_leaf(level<l>());
+        }
+
+        template<std::size_t l>
+        bool advance(tags::field_vector_1, level<l>)
+        {
+          return false;
         }
 
 
