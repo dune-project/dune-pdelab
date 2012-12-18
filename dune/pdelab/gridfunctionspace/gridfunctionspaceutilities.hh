@@ -472,9 +472,11 @@ namespace Dune {
        * \param x_  The coefficients vector
        */
       DiscreteGridFunctionGradient (const GFS& gfs, const X& x_)
-        : pgfs(stackobject_to_shared_ptr(gfs)),
-          pxg(stackobject_to_shared_ptr(x_)),
-          lfs(pgfs)
+        : pgfs(stackobject_to_shared_ptr(gfs))
+        , lfs(gfs)
+        , lfs_cache(lfs)
+        , x_view(x_)
+        , xl(gfs.maxLocalSize())
       { }
 
       // Evaluate
@@ -484,10 +486,14 @@ namespace Dune {
       {
         // get and bind local functions space
         lfs.bind(e);
+        lfs_cache.update();
+        x_view.bind(lfs_cache);
 
         // get local coefficients
         std::vector<typename Traits::RangeFieldType> xl(lfs.size());
-        lfs.vread(*pxg,xl);
+        x_view.read(xl);
+        x_view.unbind();
+
 
         // get Jacobian of geometry
         const typename Traits::ElementType::Geometry::Jacobian&
@@ -516,9 +522,14 @@ namespace Dune {
       }
 
     private:
-      shared_ptr<const GFS> pgfs;
-      shared_ptr<const X> pxg;
-      mutable LocalFunctionSpace<GFS> lfs;
+      typedef LocalFunctionSpace<GFS> LFS;
+      typedef LFSIndexCache<LFS> LFSCache;
+      typedef typename X::template ConstLocalView<LFSCache> XView;
+
+      shared_ptr<GFS const> pgfs;
+      mutable LFS lfs;
+      mutable LFSCache lfs_cache;
+      mutable XView x_view;
     };
 
     /** \brief DiscreteGridFunction with Piola transformation
@@ -558,8 +569,11 @@ namespace Dune {
        */
       DiscreteGridFunctionPiola (const GFS& gfs, const X& x_)
         : pgfs(stackobject_to_shared_ptr(gfs)),
-          pxg(stackobject_to_shared_ptr(x_)),
-          lfs(pgfs), xl(pgfs->maxLocalSize()), yb(pgfs->maxLocalSize())
+        , lfs(gfs)
+        , lfs_cache(lfs)
+        , x_view(x_)
+        , xl(pgfs->maxLocalSize())
+        , yb(pgfs->maxLocalSize())
       {
       }
 
@@ -569,7 +583,11 @@ namespace Dune {
       {
         // evaluate shape function on the reference element as before
         lfs.bind(e);
-        lfs.vread(*pxg,xl);
+        lfs_cache.update();
+        x_view.bind(lfs_cache);
+        x_view.read(xl);
+        x_view.unbind();
+
         lfs.finiteElement().localBasis().evaluateFunction(x,yb);
         typename Traits::RangeType yhat;
         yhat = 0;
@@ -592,11 +610,18 @@ namespace Dune {
       }
 
     private:
-      shared_ptr<const GFS> pgfs;
-      shared_ptr<const X> pxg;
-      mutable LocalFunctionSpace<GFS> lfs;
+
+      typedef LocalFunctionSpace<GFS> LFS;
+      typedef LFSIndexCache<LFS> LFSCache;
+      typedef typename X::template ConstLocalView<LFSCache> XView;
+
+      shared_ptr<GFS const> pgfs;
+      mutable LFS lfs;
+      mutable LFSCache lfs_cache;
+      mutable XView x_view;
       mutable std::vector<typename Traits::RangeFieldType> xl;
       mutable std::vector<typename Traits::RangeType> yb;
+
     };
 
     /** \brief DiscreteGridFunction for vector-valued functions
