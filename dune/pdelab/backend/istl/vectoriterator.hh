@@ -11,6 +11,10 @@
 #include <dune/common/tuples.hh>
 #include <dune/pdelab/backend/istl/tags.hh>
 
+#if !HAVE_VARIADIC_TEMPLATES
+#include <dune/common/tupleutility.hh>
+#endif
+
 namespace Dune {
 
   namespace PDELab {
@@ -77,6 +81,68 @@ namespace Dune {
         struct extract_iterators<const V>
           : public _extract_iterators<V,true,typename tags::container<V>::type::base_tag>
         {};
+
+
+#else // HAVE_VARIADIC_TEMPLATES
+
+
+        template<typename T, bool is_const, typename Tag, typename Iterators>
+        struct _extract_iterators;
+
+        template<typename T, typename Iterators>
+        struct _extract_iterators<T,true,tags::block_vector,Iterators>
+          : public _extract_iterators<typename T::block_type,
+                                      true,
+                                      typename tags::container<typename T::block_type>::type::base_tag,
+                                      typename PushBackTuple<Iterators,typename T::const_iterator>::type
+                                      >
+        {};
+
+        template<typename T, typename Iterators>
+        struct _extract_iterators<T,false,tags::block_vector,Iterators>
+          : public _extract_iterators<typename T::block_type,
+                                      false,
+                                      typename tags::container<typename T::block_type>::type::base_tag,
+                                      typename PushBackTuple<Iterators,typename T::iterator>::type
+                                      >
+        {};
+
+        template<typename T, typename Iterators>
+        struct _extract_iterators<T,true,tags::field_vector,Iterators>
+        {
+          typedef typename PushBackTuple<Iterators,typename T::const_iterator>::type type;
+        };
+
+        template<typename T, typename Iterators>
+        struct _extract_iterators<T,false,tags::field_vector,Iterators>
+        {
+          typedef typename PushBackTuple<Iterators,typename T::iterator>::type type;
+        };
+
+
+        template<typename T, typename Iterators>
+        struct _extract_iterators<T,true,tags::dynamic_vector,Iterators>
+        {
+          typedef typename PushBackTuple<Iterators,typename T::const_iterator>::type type;
+        };
+
+        template<typename T, typename Iterators>
+        struct _extract_iterators<T,false,tags::dynamic_vector,Iterators>
+        {
+          typedef typename PushBackTuple<Iterators,typename T::iterator>::type type;
+        };
+
+
+        template<typename V>
+        struct extract_iterators
+          : public _extract_iterators<V,false,typename tags::container<V>::type::base_tag,tuple<> >
+        {};
+
+        template<typename V>
+        struct extract_iterators<const V>
+          : public _extract_iterators<V,true,typename tags::container<V>::type::base_tag,tuple<> >
+        {};
+
 
 #endif // HAVE_VARIADIC_TEMPLATES
 
