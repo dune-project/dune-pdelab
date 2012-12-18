@@ -106,15 +106,12 @@ namespace Dune {
 
       typedef Mapper OrderingTag;
 
+      // TODO: Do not just use constraints from child 0!
       //! extract type for storing constraints
       template<typename E>
       struct ConstraintsContainer
-      {
-        //! \brief define Type as the Type of a container of E's
-        typedef ConstraintsTransformation<typename GridFunctionSpace::Ordering::Traits::DOFIndex,typename GridFunctionSpace::Ordering::Traits::ContainerIndex,E> Type;
-      private:
-        ConstraintsContainer ();
-      };
+        : public GridFunctionSpace::template Child<0>::type::template ConstraintsContainer<E>
+      {};
 
       //! recalculate sizes
       void update ()
