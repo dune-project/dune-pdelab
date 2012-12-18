@@ -22,6 +22,9 @@ namespace Dune {
   template<typename F>
   class DynamicVector;
 
+  template<typename F>
+  class DynamicMatrix;
+
   template<typename Block, typename Alloc>
   class BlockVector;
 
@@ -78,6 +81,12 @@ namespace Dune {
         struct bcrs_matrix
         {
           typedef bcrs_matrix base_tag;
+        };
+
+        //! Tag describing a DynamicMatrix.
+        struct dynamic_matrix
+        {
+          typedef dynamic_matrix base_tag;
         };
 
         //! Tag describing an arbitrary FieldMatrix.
@@ -195,6 +204,11 @@ namespace Dune {
           typedef bcrs_matrix type;
         };
 
+        template<typename F>
+        struct container<DynamicMatrix<F> >
+        {
+          typedef dynamic_matrix type;
+        };
 
         template<typename F, int n, int m>
         struct container<FieldMatrix<F,n,m> >
@@ -264,6 +278,11 @@ namespace Dune {
         template<typename T, std::size_t depth>
         struct nesting_depth<T,depth,tags::bcrs_matrix>
           : public nesting_depth<typename T::block_type,depth+1,typename tags::container<typename T::block_type>::type::base_tag>
+        {};
+
+        template<typename T, std::size_t depth>
+        struct nesting_depth<T,depth,tags::dynamic_matrix>
+          : public integral_constant<std::size_t,depth+1>
         {};
 
         template<typename T, std::size_t depth>
