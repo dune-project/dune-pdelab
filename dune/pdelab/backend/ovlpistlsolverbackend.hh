@@ -218,7 +218,7 @@ namespace Dune {
         \param A_ The matrix to operate on.
       */
       SuperLUSubdomainSolver (const GFS& gfs_, const M& A_)
-        : gfs(gfs_), A(A_), solver(A_,false) // this does the decomposition
+        : gfs(gfs_), solver(istl::raw(A_),false) // this does the decomposition
       {}
 
       /*!
@@ -234,7 +234,7 @@ namespace Dune {
         Dune::InverseOperatorResult stat;
         Y b(d); // need copy, since solver overwrites right hand side
         solver.apply(istl::raw(v),istl::raw(b),stat);
-        if (gfs.gridview().comm().size()>1)
+        if (gfs.gridView().comm().size()>1)
           {
             AddDataHandle<GFS,X> adddh(gfs,v);
             gfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
@@ -248,7 +248,6 @@ namespace Dune {
 
     private:
       const GFS& gfs;
-      const M& A;
       Dune::SuperLU<ISTLM> solver;
     };
 
@@ -282,7 +281,7 @@ namespace Dune {
       */
       RestrictedSuperLUSubdomainSolver (const GFS& gfs_, const M& A_,
                                         const istl::ParallelHelper<GFS>& helper_)
-        : gfs(gfs_), A(A_), solver(A_,false), helper(helper_) // this does the decomposition
+        : gfs(gfs_), solver(istl::raw(A_),false), helper(helper_) // this does the decomposition
       {}
 
       /*!
@@ -300,7 +299,7 @@ namespace Dune {
         solver.apply(istl::raw(v),istl::raw(b),stat);
         if (gfs.gridView().comm().size()>1)
           {
-            helper.mask(v);
+            helper.maskForeignDOFs(istl::raw(v));
             AddDataHandle<GFS,X> adddh(gfs,v);
             gfs.gridView().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
           }
@@ -313,7 +312,6 @@ namespace Dune {
 
     private:
       const GFS& gfs;
-      const M& A;
       Dune::SuperLU<ISTLM> solver;
       const istl::ParallelHelper<GFS>& helper;
     };
