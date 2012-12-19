@@ -43,7 +43,7 @@ namespace Dune {
       // residual assembly flags
       enum { doAlphaVolume = true };
 
-      L2 (int intorder_=2,double scaling=10)
+      L2 (int intorder_=2,double scaling=1.0)
         : intorder(intorder_)
         , _scaling(scaling)
       {}
