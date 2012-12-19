@@ -374,7 +374,10 @@ namespace Dune {
           for (int j=0; j<refelem_e.size(faceindex_e,1,dimension); j++){
             const int index = refelem_e.subEntity(faceindex_e,1,j,dimension);
             if(isHangingNode_e[index].isHanging())
-              e_has_hangingnodes = true;
+              {
+                e_has_hangingnodes = true;
+                break;
+              }
           }
         }
         bool f_has_hangingnodes = false;
@@ -382,7 +385,10 @@ namespace Dune {
           for (int j=0; j<refelem_f.size(faceindex_f,1,dimension); j++){
             const int index = refelem_f.subEntity(faceindex_f,1,j,dimension);
             if(isHangingNode_f[index].isHanging())
-              f_has_hangingnodes = true;
+              {
+                f_has_hangingnodes = true;
+                break;
+              }
           }
         }
 
