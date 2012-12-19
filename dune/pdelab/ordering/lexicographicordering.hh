@@ -66,7 +66,7 @@ namespace Dune {
           else
             {
               for (ItIn in = begin; in != end; ++in, ++out)
-                out->back() += (this->offset(in->treeIndex().back()));
+                out->back() += (this->blockOffset(in->treeIndex().back()));
             }
         }
 
@@ -87,7 +87,7 @@ namespace Dune {
             {
               for (; ci_out != ci_end; ++ci_out)
                 {
-                  ci_out->back() += (this->offset(child_index));
+                  ci_out->back() += (this->blockOffset(child_index));
                 }
             }
 
