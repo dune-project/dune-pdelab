@@ -27,6 +27,7 @@
 #include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
+#include <dune/pdelab/gridfunctionspace/utility.hh>
 #include <dune/pdelab/ordering/gridviewordering.hh>
 #include <dune/pdelab/ordering/lexicographicordering.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
@@ -92,40 +93,6 @@ namespace Dune {
       typedef O OrderingTag;
 
     };
-
-
-    // Empty constraints assembler class
-    class NoConstraints
-    {
-    public:
-      enum { doBoundary = false };
-      enum { doProcessor = false }; // added ParallelStuff
-      enum { doSkeleton = false };
-      enum { doVolume = false }; // might be necessary for cell-centered in parallel
-
-      // methods are here just to show interfaces; they are never called because doX are false above
-      template<typename F, typename I, typename LFS, typename T>
-      void boundary (const F& f, const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo) const
-      {
-      }
-
-      template<typename I, typename LFS, typename T>
-      void processor (const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo) const
-      {
-      }
-
-      template<typename I, typename LFS, typename T>
-      void skeleton (const IntersectionGeometry<I>& ig, const LFS& lfs, T& trafo) const
-      {
-      }
-
-      template<typename E, typename LFS, typename T>
-      void volume (const ElementGeometry<E>& eg, const LFS& lfs, T& trafo) const
-      {
-      }
-
-    };
-
 
     /** \brief A grid function space.
      *

@@ -16,6 +16,7 @@
 #include <dune/pdelab/constraints/constraintstransformation.hh>
 
 #include <dune/pdelab/gridfunctionspace/tags.hh>
+#include <dune/pdelab/gridfunctionspace/utility.hh>
 #include <dune/pdelab/ordering/lexicographicordering.hh>
 #include <dune/pdelab/ordering/entityblockedlocalordering.hh>
 
@@ -110,8 +111,20 @@ namespace Dune {
       //! extract type for storing constraints
       template<typename E>
       struct ConstraintsContainer
-        : public GridFunctionSpace::template Child<0>::type::template ConstraintsContainer<E>
-      {};
+      {
+        typedef typename SelectType<
+          is_same<
+            typename GridFunctionSpace::template Child<0>::type::template ConstraintsContainer<E>::Type,
+            NoConstraints
+            >::value,
+          EmptyTransformation,
+          ConstraintsTransformation<
+            typename GridFunctionSpace::Ordering::Traits::DOFIndex,
+            typename GridFunctionSpace::Ordering::Traits::ContainerIndex,
+            E
+            >
+          >::Type Type;
+      };
 
       //! recalculate sizes
       void update ()
