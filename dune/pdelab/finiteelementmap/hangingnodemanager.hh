@@ -39,6 +39,17 @@ namespace Dune {
 
         bool is_boundary;
 
+        void addLevel(unsigned short level)
+        {
+          minimum_level = std::min(minimum_level,level);
+          maximum_level = std::max(maximum_level,level);
+        }
+
+        void addTouchingLevel(unsigned short level)
+        {
+          minimum_touching_level = std::min(minimum_touching_level,level);
+        }
+
         NodeInfo() : minimum_level(std::numeric_limits<unsigned short>::max()),
                      maximum_level(0),
                      minimum_touching_level(std::numeric_limits<unsigned short>::max()),
@@ -123,18 +134,16 @@ namespace Dune {
           for(IndexType i=0; i<v_size; ++i){
             const VertexEntityPointer vertex = it->template subEntity<dim>(i);
             const IndexType v_globalindex = vertex_mapper.map( *vertex );
-            unsigned short & min = node_info[v_globalindex].minimum_level;
-            unsigned short & max = node_info[v_globalindex].maximum_level;
-            if (level < min) min = level;
-            if (level > max) max = level;
+            NodeInfo& ni = node_info[v_globalindex];
+            ni.addLevel(level);
 
             if(verbosity>1){
               std::cout << "   cell-id=" << cell_mapper.map(*it);
               std::cout << "   level=" << level;
               std::cout << "   v_size=" << v_size;
               std::cout << "   v_globalindex = " << v_globalindex;
-              std::cout << "   maximum_level = " << max;
-              std::cout << "   minimum_level = " << min;
+              std::cout << "   maximum_level = " << ni.maximum_level;
+              std::cout << "   minimum_level = " << ni.minimum_level;
               std::cout << std::endl;
             }
 
@@ -181,16 +190,10 @@ namespace Dune {
                   node_info[v_globalindex].is_boundary=false;
                 */
 
-                if( boundaryFunction.isDirichlet( IntersectionGeometry<Intersection>(*fit,intersection_index),
-                                                  facelocal_position) )
-                  node_info[v_globalindex].is_boundary=true;
-                else
-                  node_info[v_globalindex].is_boundary=false;
-
-                unsigned short & min = node_info[v_globalindex].minimum_touching_level;
-                if( e_level < min) min = e_level;
+                NodeInfo& ni = node_info[v_globalindex];
+                ni.is_boundary = boundaryFunction.isDirichlet(IntersectionGeometry<Intersection>(*fit,intersection_index),facelocal_position);
+                ni.addTouchingLevel(e_level);
               }
-              continue;
             }
 
             const int f_level = fit->outside()->level();
@@ -212,8 +215,7 @@ namespace Dune {
               const int e_v_index = reference_element.subEntity(eLocalIndex,1,i,dim);
               const VertexEntityPointer vertex = it->template subEntity<dim>(e_v_index);
               const IndexType v_globalindex = vertex_mapper.map( *vertex );
-              unsigned short & min = node_info[v_globalindex].minimum_touching_level;
-              if( f_level < min) min = f_level;
+              node_info[v_globalindex].addTouchingLevel(f_level);
             }
 
           } // end of loop over faces

@@ -305,8 +305,8 @@ namespace Dune {
       typedef typename IndexSet::IndexType IndexType;
       typedef LocalFunctionSpace<GFSU> LFSU;
       typedef LFSIndexCache<LFSU> LFSUCache;
-      typedef typename U::template LocalView<LFSU> UView;
-      typedef typename U::template ConstLocalView<LFSU> ConstUView;
+      typedef typename U::template LocalView<LFSUCache> UView;
+      typedef typename U::template ConstLocalView<LFSUCache> ConstUView;
       typedef DiscreteGridFunction<GFSU, U> DGF;
       typedef typename GFSU::Traits::FiniteElementMapType FEM;
       typedef InterpolateBackendStandard IB;
@@ -338,7 +338,6 @@ namespace Dune {
         ConstUView u_view(u);
         DGF dgf(gfsu,u);
         const FEM& fem = gfsu.finiteElementMap();
-        IB ib = IB();
         std::vector<typename U::ElementType> ul;
 
         // iterate over all elems
@@ -649,10 +648,13 @@ namespace Dune {
           NumberType sum_beta=0.0;
           unsigned int alpha_count = 0;
           unsigned int beta_count = 0;
-          for (unsigned int i=0; i<x.N(); i++)
+          for (typename T::const_iterator it = x.begin(),
+                 end = x.end();
+               it != end;
+               ++it)
             {
-              if (x[i]>=eta_alpha) { sum_alpha += x[i]; alpha_count++;}
-              if (x[i]< eta_beta) { sum_beta += x[i]; beta_count++;}
+              if (*it >=eta_alpha) { sum_alpha += *it; alpha_count++;}
+              if (*it < eta_beta) { sum_beta += *it; beta_count++;}
             }
           if (verbose>1)
             {
@@ -803,19 +805,32 @@ namespace Dune {
       unsigned int refine_cnt=0;
       unsigned int coarsen_cnt=0;
 
+      typedef typename X::GridFunctionSpace GFS;
+      typedef LocalFunctionSpace<GFS> LFS;
+      typedef LFSIndexCache<LFS> LFSCache;
+      typedef typename X::template ConstLocalView<LFSCache> XView;
+
+      LFS lfs(x.gridFunctionSpace());
+      LFSCache lfs_cache(lfs);
+      XView x_view(x);
+
       for(;it!=eit;++it)
         {
-          typename IndexSet::IndexType myid = is.template index<0>(*it);
-          if (x[myid]>=refine_threshold)
+          lfs.bind(*it);
+          lfs_cache.update();
+          x_view.bind(lfs_cache);
+
+          if (x_view[0]>=refine_threshold)
             {
               grid.mark(1,*(it));
               refine_cnt++;
             }
-          if (x[myid]<=coarsen_threshold)
+          if (x_view[0]<=coarsen_threshold)
             {
               grid.mark(-1,*(it));
               coarsen_cnt++;
             }
+          x_view.unbind();
         }
       if (verbose>0)
         std::cout << "+++ mark_grid: " << refine_cnt << " marked for refinement, "
@@ -839,15 +854,27 @@ namespace Dune {
 
       unsigned int coarsen_cnt=0;
 
+      typedef typename X::GridFunctionSpace GFS;
+      typedef LocalFunctionSpace<GFS> LFS;
+      typedef LFSIndexCache<LFS> LFSCache;
+      typedef typename X::template ConstLocalView<LFSCache> XView;
+
+      LFS lfs(x.gridFunctionSpace());
+      LFSCache lfs_cache(lfs);
+      XView x_view(x);
+
       for(;it!=eit;++it)
         {
-          typename IndexSet::IndexType myid = is.template index<0>(*it);
-          if (x[myid]>=refine_threshold)
+          lfs.bind(*it);
+          lfs_cache.update();
+          x_view.bind(lfs_cache);
+
+          if (x_view[0]>=refine_threshold)
             {
               grid.mark(-1,*(it));
               coarsen_cnt++;
             }
-          if (x[myid]<=coarsen_threshold)
+          if (x_view[0]<=coarsen_threshold)
             {
               grid.mark(-1,*(it));
               coarsen_cnt++;
