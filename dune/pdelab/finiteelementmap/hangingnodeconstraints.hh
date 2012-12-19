@@ -323,68 +323,6 @@ namespace Dune {
         manager.adaptToIsolatedHangingNodes();
       }
 
-      //! boundary constraints
-      /**
-       * \tparam F  grid function returning boundary condition type
-       * \tparam IG  intersection geometry
-       * \tparam LFS local function space
-       * \tparam T   TransformationType
-       */
-      template<typename F, typename I, typename LFS, typename T>
-      void boundary (const F& f, const IntersectionGeometry<I>& ig,
-                     const LFS& lfs, T& trafo) const
-      {
-        ConformingDirichletConstraints::boundary(f,ig,lfs,trafo);
-        return ;
-
-        typedef IntersectionGeometry<I> Intersection;
-        typedef typename Intersection::EntityPointer CellEntityPointer;
-        typedef typename Intersection::Geometry FaceGeometry;
-        typedef typename FaceGeometry::ctype DT;
-
-        const CellEntityPointer e = ig.inside();
-
-        const Dune::GenericReferenceElement<DT,dimension>& refelem_e
-          = Dune::GenericReferenceElements<DT,dimension>::general(e->type());
-
-        // the return values of the hanging node manager
-        typedef typename std::vector<typename HangingNodeManager::NodeState> FlagVector;
-        const FlagVector isHangingNode_e(manager.hangingNodes(e));
-
-        // just to make sure that the hanging node manager is doing
-        // what is expected of him
-        assert(std::size_t(refelem_e.size(dimension))
-               == isHangingNode_e.size());
-
-        // the LOCAL indices of the faces in the reference element
-        const int faceindex_e = ig.indexInInside();
-
-        typedef typename LFS::Traits::FiniteElementType FiniteElementType;
-        typedef typename FiniteElementType::Traits::LocalCoefficientsType LocalCoefficientType;
-        typedef typename FiniteElementType::Traits::LocalBasisType::Traits::DomainFieldType DFT;
-        typedef typename LFS::Traits::SizeType SizeType;
-
-        bool e_has_hangingnodes = false;
-        {
-          for (int j=0; j<refelem_e.size(faceindex_e,1,dimension); j++){
-            const int index = refelem_e.subEntity(faceindex_e,1,j,dimension);
-            if(isHangingNode_e[index].isHanging())
-              e_has_hangingnodes = true;
-          }
-        }
-        bool f_has_hangingnodes = false;
-
-        if(! e_has_hangingnodes)
-          return;
-
-        HangingNodesConstraintsAssemblerType::
-          assembleConstraints(isHangingNode_e, isHangingNode_e,
-                              e_has_hangingnodes, f_has_hangingnodes,
-                              lfs,lfs,
-                              trafo, trafo,
-                              ig);
-
-      }
 
       //! skeleton constraints
       /**
