@@ -24,14 +24,14 @@ namespace Dune {
       class CubeGridQ1Assembler
       {
       public:
-        template<typename I, typename LFS, typename T, typename FlagVector>
+        template<typename IG, typename LFS, typename T, typename FlagVector>
         static void assembleConstraints(const FlagVector & nodeState_e, const FlagVector & nodeState_f,
                                         const bool & e_has_hangingnodes, const bool & f_has_hangingnodes,
                                         const LFS & lfs_e, const LFS & lfs_f,
                                         T& trafo_e, T& trafo_f,
-                                        const IntersectionGeometry<I>& ig)
+                                        const IG& ig)
         {
-          typedef IntersectionGeometry<I> Intersection;
+          typedef IG Intersection;
           typedef typename Intersection::EntityPointer CellEntityPointer;
           typedef typename Intersection::Geometry FaceGeometry;
           typedef typename FaceGeometry::ctype DT;
@@ -165,7 +165,7 @@ namespace Dune {
       class SimplexGridP1Assembler
       {
       public:
-        template<typename I,
+        template<typename IG,
                  typename LFS,
                  typename T,
                  typename FlagVector>
@@ -175,9 +175,9 @@ namespace Dune {
                                          const bool & f_has_hangingnodes,
                                          const LFS & lfs_e, const LFS & lfs_f,
                                          T& trafo_e, T& trafo_f,
-                                         const IntersectionGeometry<I>& ig)
+                                         const IG& ig)
         {
-          typedef IntersectionGeometry<I> Intersection;
+          typedef IG Intersection;
           typedef typename Intersection::EntityPointer CellEntityPointer;
           typedef typename Intersection::Geometry FaceGeometry;
           typedef typename FaceGeometry::ctype DT;
@@ -330,12 +330,12 @@ namespace Dune {
        * \tparam LFS local function space
        * \tparam T   TransformationType
        */
-      template<typename I, typename LFS, typename T>
-      void skeleton (const IntersectionGeometry<I>& ig,
+      template<typename IG, typename LFS, typename T>
+      void skeleton (const IG& ig,
                      const LFS& lfs_e, const LFS& lfs_f,
                      T& trafo_e, T& trafo_f) const
       {
-        typedef IntersectionGeometry<I> Intersection;
+        typedef IG Intersection;
         typedef typename Intersection::EntityPointer CellEntityPointer;
         typedef typename Intersection::Geometry FaceGeometry;
         typedef typename FaceGeometry::ctype DT;
