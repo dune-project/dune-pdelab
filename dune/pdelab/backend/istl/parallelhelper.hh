@@ -112,19 +112,19 @@ namespace Dune {
 
         // Implementation for block vector; recursively masks blocks.
         template<typename X, typename Mask>
-        void maskForeignDOFS(istl::tags::block_vector, X& x, const Mask& mask) const
+        void maskForeignDOFs(istl::tags::block_vector, X& x, const Mask& mask) const
         {
           typename Mask::const_iterator mask_it = mask.begin();
           for (typename X::iterator it = x.begin(),
                  end_it = x.end();
                it != end_it;
                ++it, ++mask_it)
-            maskForeignDOFS(istl::container_tag(*it),*it,*mask_it);
+            maskForeignDOFs(istl::container_tag(*it),*it,*mask_it);
         }
 
         // Implementation for field vector, iterates over entries and masks them individually.
         template<typename X, typename Mask>
-        void maskForeignDOFS(istl::tags::field_vector, X& x, const Mask& mask) const
+        void maskForeignDOFs(istl::tags::field_vector, X& x, const Mask& mask) const
         {
           typename Mask::const_iterator mask_it = mask.begin();
           for (typename X::iterator it = x.begin(),
