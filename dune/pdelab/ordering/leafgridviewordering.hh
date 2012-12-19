@@ -92,7 +92,9 @@ namespace Dune {
           {
             if (_container_blocked)
               {
-                DUNE_THROW(Dune::Exception,"Not implemented");
+                const typename Traits::SizeType geometry_type_index = Traits::DOFIndexAccessor::geometryType(di);
+                const typename Traits::SizeType entity_index = Traits::DOFIndexAccessor::entityIndex(di);
+                ci.push_back(_gt_dof_offsets[geometry_type_index] + entity_index);
               }
             else
               {
@@ -196,7 +198,11 @@ namespace Dune {
             size_type size = localOrdering()._gt_dof_sizes[geometry_type_index];
             if (_container_blocked)
               {
-                DUNE_THROW(Dune::NotImplemented,"not implemented");
+                for (size_type i = 0; i < size; ++i, ++ci_out)
+                  {
+                    ci_out->push_back(i);
+                    ci_out->push_back(_gt_dof_offsets[geometry_type_index] + entity_index);
+                  }
               }
             else
               {
