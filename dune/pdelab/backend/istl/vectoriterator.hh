@@ -205,6 +205,36 @@ namespace Dune {
         }
 
 
+        // Copy constructor from iterator to const_iterator
+        // We disable this one if the two types are identical to avoid hiding
+        // the default copy constructor
+        template<typename W>
+        vector_iterator(const vector_iterator<W>& r, typename enable_if<is_const && !is_same<V,W>::value && is_same<vector,W>::value,void*>::type = nullptr)
+          : _at_end(r._at_end)
+          , _current(r._current)
+          , _iterators(r._iterators)
+          , _end(r._end)
+        {}
+
+
+        // Assignment operator from iterator to const_iterator
+        // We disable this one if the two types are identical to avoid hiding
+        // the default assignment operator
+        template<typename W>
+        typename enable_if<
+          is_const && !is_same<vector,W>::value && is_same<vector,W>::value,
+          vector_iterator&
+          >::type
+        operator=(const vector_iterator<W>& r)
+        {
+          _at_end = r._at_end;
+          _current =r._current;
+          _iterators = r._iterators;
+          _end = r._end;
+          return *this;
+        }
+
+
         typename BaseT::pointer operator->() const
         {
           assert(!_at_end);
@@ -230,7 +260,12 @@ namespace Dune {
           return tmp;
         }
 
-        bool operator==(const vector_iterator& r) const
+        template<typename W>
+        typename enable_if<
+          is_same<vector,typename vector_iterator<W>::vector>::value,
+          bool
+          >::type
+        operator==(const vector_iterator<W>& r) const
         {
           if (!_at_end)
             {
@@ -242,7 +277,12 @@ namespace Dune {
             return r._at_end;
         }
 
-        bool operator!=(const vector_iterator& r) const
+        template<typename W>
+        typename enable_if<
+          is_same<vector,typename vector_iterator<W>::vector>::value,
+          bool
+          >::type
+        operator!=(const vector_iterator<W>& r) const
         {
           return !operator==(r);
         }
