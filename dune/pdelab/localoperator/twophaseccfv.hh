@@ -647,11 +647,11 @@ namespace Dune {
       const TP& tp;
       const PL& pl;
       const PG& pg;
-      Dune::RT0QLocalFiniteElement<DF,RF,dim> rt0fe;
+      Dune::RT0CubeLocalFiniteElement<DF,RF,dim> rt0fe;
       typename TP::Traits::RangeFieldType time;
 
 
-      typedef typename Dune::RT0QLocalFiniteElement<DF,RF,dim>::Traits::LocalBasisType::Traits::RangeType RT0RangeType;
+      typedef typename Dune::RT0CubeLocalFiniteElement<DF,RF,dim>::Traits::LocalBasisType::Traits::RangeType RT0RangeType;
 
     public:
       typedef Dune::PDELab::GridFunctionTraits<GV,RF,dim,Dune::FieldVector<RF,dim> > Traits;
@@ -878,11 +878,11 @@ namespace Dune {
       const TP& tp;
       const PL& pl;
       const PG& pg;
-      Dune::RT0QLocalFiniteElement<DF,RF,dim> rt0fe;
+      Dune::RT0CubeLocalFiniteElement<DF,RF,dim> rt0fe;
       typename TP::Traits::RangeFieldType time;
 
 
-      typedef typename Dune::RT0QLocalFiniteElement<DF,RF,dim>::Traits::LocalBasisType::Traits::RangeType RT0RangeType;
+      typedef typename Dune::RT0CubeLocalFiniteElement<DF,RF,dim>::Traits::LocalBasisType::Traits::RangeType RT0RangeType;
 
     public:
       typedef Dune::PDELab::GridFunctionTraits<GV,RF,dim,Dune::FieldVector<RF,dim> > Traits;
