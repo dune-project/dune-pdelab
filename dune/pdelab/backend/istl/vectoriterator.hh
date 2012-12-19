@@ -179,7 +179,7 @@ namespace Dune {
       }
 
       template<typename V>
-      struct vector_iterator
+      class vector_iterator
         : public impl::vector_iterator_base<V>
       {
 
@@ -189,6 +189,9 @@ namespace Dune {
         typedef typename BaseT::vector_tag vector_tag;
         typedef typename impl::extract_iterators<V>::type Iterators;
         static const bool is_const = BaseT::is_const;
+
+        template<typename>
+        friend class vector_iterator;
 
       public:
 
