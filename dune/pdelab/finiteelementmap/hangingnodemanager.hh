@@ -91,23 +91,19 @@ namespace Dune {
 
       typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,
                                                         MCMGElementLayout> CellMapper;
-      typedef Dune::MultipleCodimMultipleGeomTypeMapper<GridView,
-                                                        MCMGVertexLayout> VertexMapper;
 
       Grid & grid;
       const BoundaryFunction & boundaryFunction;
       CellMapper cell_mapper;
-      VertexMapper vertex_mapper;
 
     public:
-      size_t map(VertexEntityPointer & e){return vertex_mapper.map(*e);}
 
       void analyzeView()
       {
         cell_mapper.update();
-        vertex_mapper.update();
+        const typename GridView::IndexSet& indexSet = grid.leafView().indexSet();
 
-        node_info = std::vector<NodeInfo>(vertex_mapper.size());
+        node_info = std::vector<NodeInfo>(indexSet.size(dim));
 
         const GridView & gv = grid.leafView();
 
@@ -132,8 +128,7 @@ namespace Dune {
           // cell
           // loop over all vertices of the element
           for(IndexType i=0; i<v_size; ++i){
-            const VertexEntityPointer vertex = it->template subEntity<dim>(i);
-            const IndexType v_globalindex = vertex_mapper.map( *vertex );
+            const IndexType v_globalindex = indexSet.subIndex(*it,i,dim);
             NodeInfo& ni = node_info[v_globalindex];
             ni.addLevel(level);
 
@@ -175,8 +170,7 @@ namespace Dune {
               // loop over vertices on the face
               for(int i=0; i<e_v_size;++i){
                 const int e_v_index = reference_element.subEntity(eLocalIndex,1,i,dim);
-                const VertexEntityPointer vertex = it->template subEntity<dim>(e_v_index);
-                const IndexType v_globalindex = vertex_mapper.map( *vertex );
+                const IndexType v_globalindex = indexSet.subIndex(*it,e_v_index,dim);
 
                 const FacePoint facelocal_position = reference_face_element.position(i,dim-1);
 
@@ -213,8 +207,8 @@ namespace Dune {
             // loop over vertices on the face
             for(int i=0; i<e_v_size;++i){
               const int e_v_index = reference_element.subEntity(eLocalIndex,1,i,dim);
-              const VertexEntityPointer vertex = it->template subEntity<dim>(e_v_index);
-              const IndexType v_globalindex = vertex_mapper.map( *vertex );
+              const IndexType v_globalindex = indexSet.subIndex(*it,e_v_index,dim);
+
               node_info[v_globalindex].addTouchingLevel(f_level);
             }
 
@@ -226,12 +220,12 @@ namespace Dune {
       HangingNodeManager(Grid & _grid, const BoundaryFunction & _boundaryFunction)
         : grid(_grid),
           boundaryFunction(_boundaryFunction),
-          cell_mapper(grid.leafView()),
-          vertex_mapper(grid.leafView())
+          cell_mapper(grid.leafView())
       { analyzeView(); }
 
       const std::vector<NodeState> hangingNodes(const CellEntityPointer & e) const
       {
+        const typename GridView::IndexSet& indexSet = grid.leafView().indexSet();
         std::vector<NodeState> is_hanging;
 
         const Dune::GenericReferenceElement<double,dim> &
@@ -248,8 +242,7 @@ namespace Dune {
         // cell
         // loop over vertices of the element
         for(IndexType i=0; i<v_size; ++i){
-          const VertexEntityPointer & vertex = e->template subEntity<dim>(i);
-          const IndexType v_globalindex = vertex_mapper.map( *vertex );
+          const IndexType v_globalindex = indexSet.subIndex(e,i,dim);
 
           // here we make use of the fact that a node is hanging if and
           // only if it touches a cell of a level smaller than the
@@ -280,6 +273,8 @@ namespace Dune {
       {
         if(verbosity)
           std::cout << "Begin isolation of hanging nodes" << std::endl;
+
+        const typename GridView::IndexSet& indexSet = grid.leafView().indexSet();
 
         size_t iterations(0);
 
@@ -317,11 +312,8 @@ namespace Dune {
             // loop over vertices of the element
             for(IndexType i=0; i<v_size; ++i){
 
-              const VertexEntityPointer & vertex = it->template subEntity<dim>(i);
+              const IndexType v_globalindex = indexSet.subIndex(*it,i,dim);
 
-              //std::cout << "vertex = " << vertex->geometry().center() << std::endl;
-
-              const IndexType v_globalindex = vertex_mapper.map( *vertex );
               const NodeInfo & v_info = node_info[v_globalindex];
 
               //std::cout << "maximum_level = " << v_info.maximum_level << std::endl;
@@ -466,8 +458,7 @@ namespace Dune {
                             //std::cout << "doExtraCheck for node at "
                             // << nb_vertex->geometry().center() << std::endl;
 
-                            const IndexType nb_v_globalindex =
-                              vertex_mapper.map( *nb_vertex );
+                            const IndexType nb_v_globalindex = indexSet.index(*nb_vertex);
 
                             const NodeInfo & nb_v_info = node_info[nb_v_globalindex];
 
