@@ -108,7 +108,9 @@ namespace Dune{
 
       //! @}
 
-      void add_border_pattern(true_type, const LFSVCache& lfsv_cache, const LFSUCache& lfsu_cache, const LocalPattern& p)
+      template<typename LFSVC, typename LFSUC>
+      void add_border_pattern(true_type, const LFSVC& lfsv_cache, const LFSUC& lfsu_cache,
+                              const LocalPattern& p)
       {
         if (local_assembler.reconstructBorderEntries() &&
             !communicationCache().initialized())
@@ -117,10 +119,13 @@ namespace Dune{
           }
       }
 
-      void add_border_pattern(false_type, const LFSVCache& lfsv_cache, const LFSUCache& lfsu_cache, const LocalPattern& p)
+      template<typename LFSVC, typename LFSUC>
+      void add_border_pattern(false_type, const LFSVC& lfsv_cache, const LFSUC& lfsu_cache,
+                              const LocalPattern& p)
       {}
 
-      void add_pattern(const LFSVCache& lfsv_cache, const LFSUCache& lfsu_cache, const LocalPattern& p)
+      template<typename LFSVC, typename LFSUC>
+      void add_pattern(const LFSVC& lfsv_cache, const LFSUC& lfsu_cache, const LocalPattern& p)
       {
         for (size_type k=0; k<p.size(); ++k)
           local_assembler.add_entry(*pattern,
@@ -138,17 +143,17 @@ namespace Dune{
       //! Called when the local function space is about to be rebound or
       //! discarded
       //! @{
-      template<typename EG>
-      void onUnbindLFSUV(const EG & eg, const LFSUCache & lfsu_cache, const LFSVCache & lfsv_cache)
+      template<typename EG, typename LFSUC, typename LFSVC>
+      void onUnbindLFSUV(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         add_pattern(lfsv_cache,lfsu_cache,localpattern);
         localpattern.clear();
       }
 
-      template<typename IG>
+      template<typename IG, typename LFSUC, typename LFSVC>
       void onUnbindLFSUVOutside(const IG& ig,
-                                const LFSUCache& lfsu_s_cache, const LFSVCache& lfsv_s_cache,
-                                const LFSUCache& lfsu_n_cache, const LFSVCache& lfsv_n_cache)
+                                const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache,
+                                const LFSUC& lfsu_n_cache, const LFSVC& lfsv_n_cache)
       {
         add_pattern(lfsv_s_cache,lfsu_n_cache,localpattern_sn);
         localpattern_sn.clear();
@@ -161,16 +166,16 @@ namespace Dune{
       //! Assembling methods
       //! @{
 
-      template<typename EG>
-      void assembleUVVolume(const EG & eg, const LFSUCache & lfsu_cache, const LFSVCache & lfsv_cache)
+      template<typename EG, typename LFSUC, typename LFSVC>
+      void assembleUVVolume(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternVolume>::
           pattern_volume(lop,lfsu_cache.localFunctionSpace(),lfsv_cache.localFunctionSpace(),localpattern);
       }
 
-      template<typename IG>
-      void assembleUVSkeleton(const IG & ig, const LFSUCache & lfsu_s_cache, const LFSVCache & lfsv_s_cache,
-                              const LFSUCache & lfsu_n_cache, const LFSVCache & lfsv_n_cache)
+      template<typename IG, typename LFSUC, typename LFSVC>
+      void assembleUVSkeleton(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
+                              const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternSkeleton>::
           pattern_skeleton(lop,
@@ -179,33 +184,33 @@ namespace Dune{
                            localpattern_sn, localpattern_ns);
       }
 
-      template<typename IG>
-      void assembleUVBoundary(const IG & ig, const LFSUCache & lfsu_s_cache, const LFSVCache & lfsv_s_cache)
+      template<typename IG, typename LFSUC, typename LFSVC>
+      void assembleUVBoundary(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache)
       {
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternBoundary>::
           pattern_boundary(lop,lfsu_s_cache,lfsv_s_cache,localpattern);
       }
 
-      template<typename IG>
+      template<typename IG, typename LFSUC, typename LFSVC>
       static void assembleUVEnrichedCoupling(const IG & ig,
-                                             const LFSUCache & lfsu_s_cache, const LFSVCache & lfsv_s_cache,
-                                             const LFSUCache & lfsu_n_cache, const LFSVCache & lfsv_n_cache,
-                                             const LFSUCache & lfsu_coupling_cache, const LFSVCache & lfsv_coupling_cache)
+                                             const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
+                                             const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache,
+                                             const LFSUC & lfsu_coupling_cache, const LFSVC & lfsv_coupling_cache)
       {
         DUNE_THROW(Dune::NotImplemented,"Assembling of coupling spaces is not implemented for ");
       }
 
-      template<typename IG>
+      template<typename IG, typename LFSVC>
       static void assembleVEnrichedCoupling(const IG & ig,
-                                            const LFSVCache & lfsv_s_cache,
-                                            const LFSVCache & lfsv_n_cache,
-                                            const LFSVCache & lfsv_coupling_cache)
+                                            const LFSVC & lfsv_s_cache,
+                                            const LFSVC & lfsv_n_cache,
+                                            const LFSVC & lfsv_coupling_cache)
       {
         DUNE_THROW(Dune::NotImplemented,"Assembling of coupling spaces is not implemented for ");
       }
 
-      template<typename EG>
-      void assembleUVVolumePostSkeleton(const EG & eg, const LFSUCache & lfsu_cache, const LFSVCache & lfsv_cache)
+      template<typename EG, typename LFSUC, typename LFSVC>
+      void assembleUVVolumePostSkeleton(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternVolumePostSkeleton>::
           pattern_volume_post_skeleton(lop,lfsu_cache.localFunctionSpace(),lfsv_cache.localFunctionSpace(),localpattern);

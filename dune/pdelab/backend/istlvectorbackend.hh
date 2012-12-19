@@ -258,7 +258,10 @@ namespace Dune {
           for (size_type i = 0; i < child_lfs.size(); ++i)
             {
               const size_type local_index = child_lfs.localIndex(i);
-              (*_container)[_lfs_cache->containerIndex(local_index)] = accessBaseContainer(local_container)[i];
+              const ContainerIndex cont_index = _lfs_cache->containerIndex(local_index);
+              const size_type cont_size = (*_container).N();
+              const size_type local_size = accessBaseContainer(local_container).size();
+              (*_container)[cont_index] = accessBaseContainer(local_container)[i];
             }
         }
 

@@ -99,43 +99,43 @@ namespace Dune{
       //! Called immediately after binding of local function space in
       //! global assembler.
       //! @{
-      template<typename EG>
-      void onBindLFSUV(const EG & eg, const LFSUCache & lfsu_cache, const LFSVCache & lfsv_cache){
+      template<typename EG, typename LFSUC, typename LFSVC>
+      void onBindLFSUV(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache){
         global_sl_view.bind(lfsu_cache);
         xl.resize(lfsu_cache.size());
       }
 
-      template<typename EG>
-      void onBindLFSV(const EG & eg, const LFSVCache & lfsv_cache){
+      template<typename EG, typename LFSVC>
+      void onBindLFSV(const EG & eg, const LFSVC & lfsv_cache){
         global_rl_view.bind(lfsv_cache);
         rl.assign(lfsv_cache.size(),0.0);
       }
 
-      template<typename IG>
-      void onBindLFSUVInside(const IG & ig, const LFSUCache & lfsu_cache, const LFSVCache & lfsv_cache){
+      template<typename IG, typename LFSUC, typename LFSVC>
+      void onBindLFSUVInside(const IG & ig, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache){
         global_sl_view.bind(lfsu_cache);
         xl.resize(lfsu_cache.size());
       }
 
-      template<typename IG>
+      template<typename IG, typename LFSUC, typename LFSVC>
       void onBindLFSUVOutside(const IG & ig,
-                              const LFSUCache & lfsu_s_cache, const LFSVCache & lfsv_s_cache,
-                              const LFSUCache & lfsu_n_cache, const LFSVCache & lfsv_n_cache)
+                              const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
+                              const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
         global_sn_view.bind(lfsu_n_cache);
         xn.resize(lfsu_n_cache.size());
       }
 
-      template<typename IG>
-      void onBindLFSVInside(const IG & ig, const LFSVCache & lfsv_cache){
+      template<typename IG, typename LFSVC>
+      void onBindLFSVInside(const IG & ig, const LFSVC & lfsv_cache){
         global_rl_view.bind(lfsv_cache);
         rl.assign(lfsv_cache.size(),0.0);
       }
 
-      template<typename IG>
+      template<typename IG, typename LFSVC>
       void onBindLFSVOutside(const IG & ig,
-                             const LFSVCache & lfsv_s_cache,
-                             const LFSVCache & lfsv_n_cache)
+                             const LFSVC & lfsv_s_cache,
+                             const LFSVC & lfsv_n_cache)
       {
         global_rn_view.bind(lfsv_n_cache);
         rn.assign(lfsv_n_cache.size(),0.0);
@@ -146,22 +146,22 @@ namespace Dune{
       //! Called when the local function space is about to be rebound or
       //! discarded
       //! @{
-      template<typename EG>
-      void onUnbindLFSV(const EG & eg, const LFSVCache & lfsv_cache){
+      template<typename EG, typename LFSVC>
+      void onUnbindLFSV(const EG & eg, const LFSVC & lfsv_cache){
         global_rl_view.add(rl);
         global_rl_view.commit();
       }
 
-      template<typename IG>
-      void onUnbindLFSVInside(const IG & ig, const LFSVCache & lfsv_cache){
+      template<typename IG, typename LFSVC>
+      void onUnbindLFSVInside(const IG & ig, const LFSVC & lfsv_cache){
         global_rl_view.add(rl);
         global_rl_view.commit();
       }
 
-      template<typename IG>
+      template<typename IG, typename LFSVC>
       void onUnbindLFSVOutside(const IG & ig,
-                               const LFSVCache & lfsv_s_cache,
-                               const LFSVCache & lfsv_n_cache)
+                               const LFSVC & lfsv_s_cache,
+                               const LFSVC & lfsv_n_cache)
       {
         global_rn_view.add(rn);
         global_rn_view.commit();
@@ -170,13 +170,16 @@ namespace Dune{
 
       //! Methods for loading of the local function's coefficients
       //! @{
-      void loadCoefficientsLFSUInside(const LFSUCache & lfsu_s_cache){
+      template<typename LFSUC>
+      void loadCoefficientsLFSUInside(const LFSUC & lfsu_s_cache){
         global_sl_view.read(xl);
       }
-      void loadCoefficientsLFSUOutside(const LFSUCache & lfsu_n_cache){
+      template<typename LFSUC>
+      void loadCoefficientsLFSUOutside(const LFSUC & lfsu_n_cache){
         global_sn_view.read(xn);
       }
-      void loadCoefficientsLFSUCoupling(const LFSUCache & lfsu_c_cache)
+      template<typename LFSUC>
+      void loadCoefficientsLFSUCoupling(const LFSUC & lfsu_c_cache)
       {DUNE_THROW(Dune::NotImplemented,"No coupling lfsu available for ");}
       //! @}
 
@@ -206,17 +209,17 @@ namespace Dune{
         return LocalAssembler::isNonOverlapping && eg.entity().partitionType() != Dune::InteriorEntity;
       }
 
-      template<typename EG>
-      void assembleUVVolume(const EG & eg, const LFSUCache & lfsu_cache, const LFSVCache & lfsv_cache)
+      template<typename EG, typename LFSUC, typename LFSVC>
+      void assembleUVVolume(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
           jacobian_apply_volume(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),rl_view);
       }
 
-      template<typename IG>
-      void assembleUVSkeleton(const IG & ig, const LFSUCache & lfsu_s_cache, const LFSVCache & lfsv_s_cache,
-                              const LFSUCache & lfsu_n_cache, const LFSVCache & lfsv_n_cache)
+      template<typename IG, typename LFSUC, typename LFSVC>
+      void assembleUVSkeleton(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
+                              const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
         rl_view.setWeight(local_assembler.weight);
         rn_view.setWeight(local_assembler.weight);
@@ -227,23 +230,23 @@ namespace Dune{
                          rl_view,rn_view);
       }
 
-      template<typename IG>
-      void assembleUVBoundary(const IG & ig, const LFSUCache & lfsu_s_cache, const LFSVCache & lfsv_s_cache)
+      template<typename IG, typename LFSUC, typename LFSVC>
+      void assembleUVBoundary(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache)
       {
         rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
           jacobian_apply_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),rl_view);
       }
 
-      template<typename IG>
+      template<typename IG, typename LFSUC, typename LFSVC>
       static void assembleUVEnrichedCoupling(const IG & ig,
-                                             const LFSUCache & lfsu_s_cache, const LFSVCache & lfsv_s_cache,
-                                             const LFSUCache & lfsu_n_cache, const LFSVCache & lfsv_n_cache,
-                                             const LFSUCache & lfsu_coupling_cache, const LFSVCache & lfsv_coupling_cache)
+                                             const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
+                                             const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache,
+                                             const LFSUC & lfsu_coupling_cache, const LFSVC & lfsv_coupling_cache)
       {DUNE_THROW(Dune::NotImplemented,"Assembling of coupling spaces is not implemented for ");}
 
-      template<typename EG>
-      void assembleUVVolumePostSkeleton(const EG & eg, const LFSUCache & lfsu_cache, const LFSVCache & lfsv_cache)
+      template<typename EG, typename LFSUC, typename LFSVC>
+      void assembleUVVolumePostSkeleton(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::
