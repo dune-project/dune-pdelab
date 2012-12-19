@@ -158,6 +158,7 @@ namespace Dune {
           typedef V vector;
           typedef V& vector_reference;
           typedef typename tags::container<V>::type::base_tag vector_tag;
+          static const bool is_const = false;
         };
 
         template<typename V>
@@ -172,6 +173,7 @@ namespace Dune {
           typedef V vector;
           typedef const V& vector_reference;
           typedef typename tags::container<V>::type::base_tag vector_tag;
+          static const bool is_const = true;
         };
 
       }
@@ -186,6 +188,7 @@ namespace Dune {
         typedef typename BaseT::vector_reference vector_reference;
         typedef typename BaseT::vector_tag vector_tag;
         typedef typename impl::extract_iterators<V>::type Iterators;
+        static const bool is_const = BaseT::is_const;
 
       public:
 
