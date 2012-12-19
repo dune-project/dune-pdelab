@@ -105,7 +105,7 @@ namespace Dune {
         void maskForeignDOFs(X& x) const
         {
           // dispatch to implementation.
-          maskForeignDOFS(istl::container_tag(x),x,_ranks);
+          maskForeignDOFS(istl::container_tag(istl::raw(x)),istl::raw(x),_ranks);
         }
 
       private:
