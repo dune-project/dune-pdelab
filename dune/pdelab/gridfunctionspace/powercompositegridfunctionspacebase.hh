@@ -129,10 +129,8 @@ namespace Dune {
       //! recalculate sizes
       void update ()
       {
-        TypeTree::applyToTree(gfs(),UpdateVisitor());
+        gfs().ordering().update();
       }
-
-
 
       //! get dimension of root finite element space
       typename Traits::SizeType globalSize () const

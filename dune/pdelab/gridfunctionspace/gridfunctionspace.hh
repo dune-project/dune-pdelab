@@ -310,6 +310,11 @@ namespace Dune {
         _name = name;
       }
 
+      void update()
+      {
+        ordering().update();
+      }
+
     private:
       CE defaultce;
       const GV gv;
