@@ -1488,7 +1488,7 @@ namespace Dune {
         {
         public:
             // types exported
-            typedef Dune::PDELab:: ISTLBackend_OVLP_ExplicitDiagonal<typename FS::GFS> LS;
+            typedef Dune::PDELab::ISTLBackend_OVLP_ExplicitDiagonal<typename FS::GFS> LS;
 
             ISTLSolverBackend_ExplicitDiagonal (const FS& fs, const ASS& ass, unsigned maxiter_=5000, int verbose_=1)
             {
@@ -1513,7 +1513,7 @@ namespace Dune {
         {
         public:
             // types exported
-            typedef Dune::PDELab:: ISTLBackend_NOVLP_ExplicitDiagonal<typename FS::GFS> LS;
+            typedef Dune::PDELab::ISTLBackend_NOVLP_ExplicitDiagonal<typename FS::GFS> LS;
 
             ISTLSolverBackend_ExplicitDiagonal (const FS& fs, const ASS& ass, unsigned maxiter_=5000, int verbose_=1)
             {
