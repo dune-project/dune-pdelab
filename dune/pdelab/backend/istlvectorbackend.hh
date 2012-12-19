@@ -615,6 +615,11 @@ namespace Dune {
         return _container->dim();
       }
 
+      const GFS& gridFunctionSpace() const
+      {
+        return _gfs;
+      }
+
     private:
       const GFS& _gfs;
       shared_ptr<Container> _container;
