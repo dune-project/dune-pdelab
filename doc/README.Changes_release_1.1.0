@@ -27,6 +27,37 @@ When using the Dune::PDELab::BackendVectorSelector construct to get the coeffien
 before creating a GridOperator, please remember to include the header of the vector backend
 you are using (default is the ISTL backend in <dune/pdelab/backend/istlvectorbackend.hh>)!
 
+The new PDELab wrappers for vectors do not inherit from the raw ISTL classes anymore. If you
+still need to access the underlying ISTL object, you can access it using the new function
+Dune::PDELab::istl::raw(v). This function will do the right thing, even if v is already a
+simple ISTL object. In that case, the function returns the input unchanged.
+
+For example, replace code like
+| GridOperator::Domain x(gfs);
+| x[4] = 1.0;
+with
+| GridOperator::Domain x(gfs);
+| Dune::PDELab::istl::raw(x)[4] = 1.0;
+
+If you only need to iterator over all scalar values in your vector, it will often be easier
+to switch the loop to iterators:
+
+For blocksize 1, replace
+| for (std::size_t i = 0; i < x.N(); ++i)
+|   x[i] = x[i] * x[i];
+with
+| for (typename X::iterator it = x.begin(); it != x.end(); ++it)
+|   *it = (*it) * (*it);
+
+For blocksize > 1, you can even save some coding this way. The nested loop
+| for (std::size_t i = 0; i < x.N(); ++i)
+|   for (std::size_t ii = 0; ii < x[i].N(); ++ii)
+|     x[i][ii] = x[i][ii] * x[i][ii];
+also becomes a simple
+| for (typename X::iterator it = x.begin(); it != x.end(); ++it)
+|   *it = (*it) * (*it);
+
+
 GridFunctionSpaces
 ******************
 
