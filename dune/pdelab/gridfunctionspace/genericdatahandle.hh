@@ -591,12 +591,10 @@ namespace Dune {
       template<typename MessageBuffer, typename Entity, typename LocalView>
       bool gather(MessageBuffer& buff, const Entity& e, LocalView& local_view) const
       {
-        for (std::size_t i = 0; i < local_view.size(); ++i)
-          {
-            // We only gather from interior and border entities, so we can throw in our ownership
-            // claim without any further checks.
-            buff.write(_rank);
-          }
+        // We only gather from interior and border entities, so we can throw in our ownership
+        // claim without any further checks.
+        buff.write(_rank);
+
         return true;
       }
 
@@ -608,6 +606,10 @@ namespace Dune {
 
         // We can only own this DOF if it is either on the interior or border partition.
         const bool is_interior_or_border = (e.partitionType()==Dune::InteriorEntity || e.partitionType()==Dune::BorderEntity);
+
+        // Receive data.
+        RankIndex received_rank;
+        buff.read(received_rank);
 
         for (std::size_t i = 0; i < local_view.size(); ++i)
           {
@@ -621,10 +623,6 @@ namespace Dune {
             // equal to our own rank.
             if (!is_interior_or_border && current_rank == _rank)
               current_rank = unknown_rank;
-
-            // Receive data.
-            RankIndex received_rank;
-            buff.read(received_rank);
 
             // Assign DOFs to minimum rank value.
             local_view[i] = std::min(current_rank,received_rank);
