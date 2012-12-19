@@ -198,5 +198,54 @@ int main(int argc, char** argv)
     std::cout << v.one_norm() << std::endl;
   }
 
+  // const test
+
+  {
+    typedef Dune::BlockVector<Dune::FieldVector<int,1> > V;
+    typedef Dune::PDELab::istl::vector_iterator<const V> Iterator;
+
+    V v(20);
+    v = 1;
+
+    std::cout << v.one_norm() << std::endl;
+
+    int sum = std::accumulate(Iterator(v,false),Iterator(v,true),0);
+
+    std::cout << sum << std::endl;
+  }
+
+  // non-const -> const assignment test
+
+  {
+    typedef Dune::BlockVector<Dune::FieldVector<int,1> > V;
+    typedef Dune::PDELab::istl::vector_iterator<V> Iterator;
+    typedef Dune::PDELab::istl::vector_iterator<const V> ConstIterator;
+
+    V v(20);
+    v = 1;
+
+    std::cout << v.one_norm() << std::endl;
+
+    int sum = 0;
+
+    for (Iterator it = Iterator(v,false),
+           end = Iterator(v,true);
+         it != end;
+         ++it)
+      {
+        ConstIterator cit(end);
+        cit = it;
+        if (cit != it)
+          {
+            std::cerr << "Equality postcondition failed!" << std::endl;
+            return 1;
+          }
+        sum += *cit;
+      }
+
+    std::cout << sum << std::endl;
+  }
+
+
   return 0;
 }
