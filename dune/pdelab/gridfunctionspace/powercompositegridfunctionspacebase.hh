@@ -115,7 +115,7 @@ namespace Dune {
         typedef typename SelectType<
           is_same<
             typename GridFunctionSpace::template Child<0>::type::template ConstraintsContainer<E>::Type,
-            NoConstraints
+            EmptyTransformation
             >::value,
           EmptyTransformation,
           ConstraintsTransformation<
