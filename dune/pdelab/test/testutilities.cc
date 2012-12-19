@@ -2,6 +2,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif
+
 #include<iostream>
 #include<vector>
 #include<dune/common/parallel/mpihelper.hh>
@@ -229,6 +230,24 @@ public:
   }
 };
 
+template<typename GV, typename RF>
+class VelocityLinear
+  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,2>,
+    VelocityLinear<GV,RF> >
+{
+public:
+  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,2> Traits;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,VelocityLinear<GV,RF> > BaseT;
+
+  VelocityLinear (const GV& gv) : BaseT(gv) {}
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
+                typename Traits::RangeType& y) const
+  {
+  y[0] = 1.0 * x[0];
+  y[1] = 2.0 * x[1];
+  }
+};
+
 // generate a Q1 function and output it
 template<class GV> 
 void testtaylorhood (const GV& gv)
@@ -322,25 +341,112 @@ void testtaylorhood (const GV& gv)
   vtkwriter.write("taylorhood",Dune::VTK::ascii);
 }
 
+template<class GV>
+void testgridfunctions (const GV& gv)
+{
+  // instantiate finite element maps
+  typedef Dune::PDELab::Q22DLocalFiniteElementMap<typename GV::Grid::ctype,double> Q22DFEM;
+  Q22DFEM q22dfem;
+
+  // make a grid function space
+  typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> Q2GFS;
+  Q2GFS q2gfs(gv,q22dfem);
+  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,GV::dimension,Dune::PDELab::ISTLVectorBackend<> > VGFS;
+  VGFS vgfs(q2gfs);
+
+  // make coefficent Vector
+  typedef typename Dune::PDELab::BackendVectorSelector<VGFS, double>::Type V;
+  V xv(vgfs);
+  xv = 0.0;
+
+  // construct a grid function
+  typedef VelocityLinear<GV,double> VelocityLinearType;
+  VelocityLinearType velocity_lin(gv);
+  Dune::PDELab::interpolate(velocity_lin,vgfs,xv);
+
+  // subspaces
+  typedef Dune::PDELab::GridFunctionSubSpace<VGFS,Dune::PDELab::TypeTree::TreePath<0> > SUBV0;
+  SUBV0 subv0(vgfs);
+  typedef Dune::PDELab::GridFunctionSubSpace<VGFS,Dune::PDELab::TypeTree::TreePath<1> > SUBV1;
+  SUBV1 subv1(vgfs);
+
+  // make discrete function object
+  typedef Dune::PDELab::DiscreteGridFunction<SUBV0,V> DGFV0;
+  DGFV0 dgfv0(subv0,xv);
+  typedef Dune::PDELab::DiscreteGridFunction<SUBV1,V> DGFV1;
+  DGFV1 dgfv1(subv1,xv);
+  typedef Dune::PDELab::VectorDiscreteGridFunction<VGFS,V> DGFV;
+  DGFV dgfv(vgfs,xv);
+
+  // scalar gradient gridfunction
+  typedef Dune::PDELab::DiscreteGridFunctionGradient<SUBV0,V> DGFV0G;
+  DGFV0G dgfv0g(subv0,xv);
+  typedef Dune::PDELab::DiscreteGridFunctionGradient<SUBV1,V> DGFV1G;
+  DGFV1G dgfv1g(subv1,xv);
+
+  // vector gradient gridfunction
+  typedef Dune::PDELab::VectorDiscreteGridFunctionGradient<VGFS,V> DGFVG;
+  DGFVG dgfvg(vgfs,xv);
+
+  // check entries of velocity vector
+  for (typename V::size_type i=0; i<xv.flatsize(); i++)
+    std::cout << "[" << i << ":" << Dune::PDELab::istl::raw(xv)[i] << "] ";
+  std::cout << std::endl;
+
+  // values at element centers
+  typename DGFV1G::Traits::DomainType x(0.5);
+  typename DGFV0::Traits::RangeType v0;
+  typename DGFV1::Traits::RangeType v1;
+  typename DGFV0G::Traits::RangeType v0grad;
+  typename DGFV1G::Traits::RangeType v1grad;
+  typename DGFVG::Traits::RangeType vgrad;
+
+  // evaluate gridfunctions
+  for(typename GV::template Codim<0>::Iterator eit = gv.template begin<0>();
+      eit != gv.template end<0>(); ++eit)
+  {
+    dgfv0.evaluate(*eit, x, v0);
+    dgfv1.evaluate(*eit, x, v1);
+    dgfv0g.evaluate(*eit, x, v0grad);
+    dgfv1g.evaluate(*eit, x, v1grad);
+    dgfvg.evaluate(*eit, x, vgrad);
+
+    // check matching components of gradients
+    if (v0grad[0]!=1.0)
+      exit(1);
+    if (v1grad[1]!=2.0)
+      exit(1);
+
+    // check gradients on the diagonal of vgrad
+    if (vgrad[0][0]!=1.0)
+      exit(1);
+    if (vgrad[1][1]!=2.0)
+      exit(1);
+  }
+}
+
 int main(int argc, char** argv)
 {
   try{
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
-	// need a grid in order to test grid functions
-	Dune::FieldVector<double,2> L(1.0);
-	Dune::FieldVector<int,2> N(1);
-	Dune::FieldVector<bool,2> B(false);
-	Dune::YaspGrid<2> grid(L,N,B,0);
-    grid.globalRefine(5);
+    // need a grid in order to test grid functions
+    Dune::FieldVector<double,2> L(1.0);
+    Dune::FieldVector<int,2> N(1);
+    Dune::FieldVector<bool,2> B(false);
+    Dune::YaspGrid<2> grid(L,N,B,0);
+    grid.globalRefine(2);
 
-	testq1(grid.leafView());
+    testq1(grid.leafView());
     testinterpolate(grid.leafView());
     testtaylorhood(grid.levelView(1));
+    testgridfunctions(grid.levelView(1));
 
-	// test passed
-	return 0;
+    std::cout << "All testutilities tests passed." << std::endl;
+
+    // test passed
+    return 0;
 
   }
   catch (Dune::Exception &e){
