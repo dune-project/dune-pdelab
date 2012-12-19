@@ -190,8 +190,7 @@ namespace Dune {
       public:
 
         vector_iterator(vector_reference vector, bool at_end)
-          : _vector(vector)
-          , _at_end(at_end)
+          : _at_end(at_end)
           , _current(nullptr)
         {
           if (!_at_end)
@@ -376,7 +375,6 @@ namespace Dune {
         }
 
 
-        vector_reference _vector;
         bool _at_end;
         typename BaseT::pointer _current;
         Iterators _iterators;
