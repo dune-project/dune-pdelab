@@ -51,3 +51,4 @@ testpoisson-globalfe
 testopbfem
 testvectoriterator
 testvectoriterator-no-variadic-templates
+testnonoverlapping
