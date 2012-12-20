@@ -726,7 +726,6 @@ namespace Dune {
       using BaseT::_container_blocked;
       using BaseT::_fixed_size;
       using BaseT::_max_local_size;
-      using BaseT::_child_offsets;
       using BaseT::_size;
       using BaseT::_block_count;
       using BaseT::_codim_used;
