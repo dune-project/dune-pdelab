@@ -881,6 +881,11 @@ namespace Dune {
         }
     }
 
+    template<typename XG>
+    void copy_constrained_dofs (const EmptyTransformation& cg, const XG& xgin, XG& xgout)
+    {}
+
+
     /**
      * \code
      * #include <dune/pdelab/gridfunctionspace/constraints.hh>
