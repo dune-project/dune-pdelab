@@ -6,7 +6,7 @@
 #include<dune/common/fvector.hh>
 #include<dune/common/static_assert.hh>
 #include<dune/geometry/referenceelements.hh>
-#include<dune/localfunctions/raviartthomas/raviartthomas0q.hh>
+#include<dune/localfunctions/raviartthomas/raviartthomascube.hh>
 
 #include <dune/pdelab/localoperator/defaultimp.hh>
 
@@ -647,11 +647,11 @@ namespace Dune {
       const TP& tp;
       const PL& pl;
       const PG& pg;
-      Dune::RT0CubeLocalFiniteElement<DF,RF,dim> rt0fe;
+      Dune::RaviartThomasCubeLocalFiniteElement<DF,RF,dim,0> rt0fe;
       typename TP::Traits::RangeFieldType time;
 
 
-      typedef typename Dune::RT0CubeLocalFiniteElement<DF,RF,dim>::Traits::LocalBasisType::Traits::RangeType RT0RangeType;
+      typedef typename Dune::RaviartThomasCubeLocalFiniteElement<DF,RF,dim,0>::Traits::LocalBasisType::Traits::RangeType RT0RangeType;
 
     public:
       typedef Dune::PDELab::GridFunctionTraits<GV,RF,dim,Dune::FieldVector<RF,dim> > Traits;
@@ -878,11 +878,11 @@ namespace Dune {
       const TP& tp;
       const PL& pl;
       const PG& pg;
-      Dune::RT0CubeLocalFiniteElement<DF,RF,dim> rt0fe;
+      Dune::RaviartThomasCubeLocalFiniteElement<DF,RF,dim,0> rt0fe;
       typename TP::Traits::RangeFieldType time;
 
 
-      typedef typename Dune::RT0CubeLocalFiniteElement<DF,RF,dim>::Traits::LocalBasisType::Traits::RangeType RT0RangeType;
+      typedef typename Dune::RaviartThomasCubeLocalFiniteElement<DF,RF,dim,0>::Traits::LocalBasisType::Traits::RangeType RT0RangeType;
 
     public:
       typedef Dune::PDELab::GridFunctionTraits<GV,RF,dim,Dune::FieldVector<RF,dim> > Traits;
