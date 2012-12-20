@@ -323,7 +323,6 @@ MOSTLYCLEANFILES += poisson_petsc_*.vtu
 
 check_PROGRAMS += testnonoverlapping
 testnonoverlapping_SOURCES = testnonoverlapping.cc
-testnonoverlapping_CPPFLAGS = $(AM_CPPFLAGS)
 
 check_PROGRAMS += testvectoriterator
 testvectoriterator_SOURCES = testvectoriterator.cc
