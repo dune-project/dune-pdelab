@@ -219,7 +219,6 @@ namespace Dune {
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
 
         // transformation
-        const int dimw = EG::Geometry::dimensionworld;
         typename EG::Geometry::JacobianInverseTransposed jac;
 
         // evaluate speed of sound (assumed constant per element)
