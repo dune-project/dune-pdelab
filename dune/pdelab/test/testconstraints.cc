@@ -11,6 +11,7 @@
 #include <dune/common/shared_ptr.hh>
 #include<dune/common/static_assert.hh>
 #include<dune/grid/yaspgrid.hh>
+#include"../backend/istlvectorbackend.hh"
 #include"../finiteelementmap/p0fem.hh"
 #include"../finiteelementmap/p12dfem.hh"
 #include"../finiteelementmap/pk2dfem.hh"
@@ -18,6 +19,7 @@
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include"../gridfunctionspace/interpolate.hh"
+#include"../gridfunctionspace/subspace.hh"
 #include"../constraints/constraints.hh"
 #include"../common/function.hh"
 #include"../common/vtkexport.hh"
@@ -203,7 +205,7 @@ void testpowerp1 (const GV& gv)
   P1GFS p1gfs(gv,p1fem);
 
   // make m components of type P1
-  typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,m> P1mGFS;
+  typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,m,Dune::PDELab::ISTLVectorBackend<> > P1mGFS;
   P1mGFS p1mgfs(p1gfs);
 
   // make coefficent Vector
@@ -229,15 +231,15 @@ void testpowerp1 (const GV& gv)
   Dune::PDELab::set_constrained_dofs(p1mcg,0.0,p1mxg);
 
   // subspaces
-  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,0> SUB0GFS;
+  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,Dune::PDELab::TypeTree::TreePath<0> > SUB0GFS;
   SUB0GFS sub0gfs(p1mgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,1> SUB1GFS;
+  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,Dune::PDELab::TypeTree::TreePath<1> > SUB1GFS;
   SUB1GFS sub1gfs(p1mgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,2> SUB2GFS;
+  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,Dune::PDELab::TypeTree::TreePath<2> > SUB2GFS;
   SUB2GFS sub2gfs(p1mgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,3> SUB3GFS;
+  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,Dune::PDELab::TypeTree::TreePath<3> > SUB3GFS;
   SUB3GFS sub3gfs(p1mgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,4> SUB4GFS;
+  typedef Dune::PDELab::GridFunctionSubSpace<P1mGFS,Dune::PDELab::TypeTree::TreePath<4> > SUB4GFS;
   SUB4GFS sub4gfs(p1mgfs);
 
   // make discrete function objects (this is not yet generic enough

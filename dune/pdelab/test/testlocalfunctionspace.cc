@@ -8,10 +8,12 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/grid/yaspgrid.hh>
+#include"../backend/istlvectorbackend.hh"
 #include"../finiteelementmap/q22dfem.hh"
 #include"../finiteelementmap/q12dfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../gridfunctionspace/localvector.hh"
+
 
 // test function trees
 template<class GV>
@@ -31,12 +33,12 @@ void test (const GV& gv)
 
   // power grid function space
   typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,2,
-    Dune::PDELab::GridFunctionSpaceLexicographicMapper> PowerGFS;
+    Dune::PDELab::ISTLVectorBackend<>, Dune::PDELab::LexicographicOrderingTag> PowerGFS;
   PowerGFS powergfs(q2gfs);
 
   // composite grid function space
-  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::GridFunctionSpaceLexicographicMapper,
-    PowerGFS,Q1GFS> CompositeGFS;
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTLVectorBackend<>,
+      Dune::PDELab::LexicographicOrderingTag,PowerGFS,Q1GFS> CompositeGFS;
   CompositeGFS compositegfs(powergfs,q1gfs);
 
   // make coefficent Vectors
@@ -49,12 +51,28 @@ void test (const GV& gv)
 
   // make local function space object
   typedef Dune::PDELab::AnySpaceTag Tag;
-  typename Dune::PDELab::LocalFunctionSpace<Q2GFS> q2lfs(q2gfs);
+  typedef typename Dune::PDELab::LocalFunctionSpace<Q2GFS> Q2LFS;
+  Q2LFS q2lfs(q2gfs);
+  typedef Dune::PDELab::LFSIndexCache<Q2LFS> Q2LFSCache;
+  Q2LFSCache q2lfsCache(q2lfs);
+  typedef typename V::template ConstLocalView<Q2LFSCache> VView;
+  VView x_view(x);
   Dune::PDELab::LocalVector<double, Tag> xl(q2lfs.maxSize());
-  typename Dune::PDELab::LocalFunctionSpace<PowerGFS> powerlfs(powergfs);
+
+  typedef typename Dune::PDELab::LocalFunctionSpace<PowerGFS> PowerLFS;
+  PowerLFS powerlfs(powergfs);
+  typedef Dune::PDELab::LFSIndexCache<PowerLFS> PowerLFSCache;
+  PowerLFSCache powerlfsCache(powerlfs);
+  typedef typename VP::template ConstLocalView<PowerLFSCache> VPView;
+  VPView xp_view(xp);
   Dune::PDELab::LocalVector<double, Tag> xlp(powerlfs.maxSize());
-  typename Dune::PDELab::LocalFunctionSpace<CompositeGFS> compositelfs(compositegfs);
+
+  typedef typename Dune::PDELab::LocalFunctionSpace<CompositeGFS> CompositeLFS;
+  CompositeLFS compositelfs(compositegfs);
+  //typedef Dune::PDELab::LFSIndexCache<CompositeLFS> CompositeLFSCache;
+  //CompositeLFSCache compositelfsCache(compositelfs);
   //  std::vector<double> xlc(compositelfs.maxSize());
+
 
   // loop over elements
   typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
@@ -63,13 +81,18 @@ void test (const GV& gv)
 	{
       q2lfs.bind(*it);
       q2lfs.debug();
-      q2lfs.vread(x,xl);
+      q2lfsCache.update();
+      x_view.bind(q2lfsCache);
+      x_view.read(xl);
+      x_view.unbind();
       assert(q2lfs.size() ==
           q2lfs.localVectorSize());
 
       powerlfs.bind(*it);
       powerlfs.debug();
-      powerlfs.vread(xp,xlp);
+      powerlfsCache.update();
+      xp_view.bind(powerlfsCache);
+      xp_view.read(xlp);
       assert(powerlfs.size() ==
           powerlfs.localVectorSize());
       assert(powerlfs.localVectorSize() ==
