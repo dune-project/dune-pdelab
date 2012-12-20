@@ -116,3 +116,9 @@ This also works for non-scalar GridFunctionSpaces.
 By using the new VectorGridFunctionSpace in
 | #include<dune/pdelab/gridfunctionspace/vectorgridfunctionspace.hh>
 it will automatically write a vector instead of a scalar.
+
+GridOperatorSpace
+*****************
+
+The GridOperatorSpace is now completely gone, use the GridOperator instead.
+(For more information on how to do that look at README.Changes_release_1.0.1.)
