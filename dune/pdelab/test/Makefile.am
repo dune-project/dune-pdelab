@@ -182,35 +182,6 @@ testlocalfunctionspace_LDADD =			\
 	$(ALBERTA_LIBS)				\
 	$(LDADD)
 
-NORMALTESTS += testmultistep
-testmultistep_SOURCES = testmultistep.cc
-testmultistep_CPPFLAGS = $(AM_CPPFLAGS)		\
-	$(DUNEMPICPPFLAGS)
-testmultistep_LDFLAGS = $(AM_LDFLAGS)		\
-	$(DUNEMPILDFLAGS)
-testmultistep_LDADD =				\
-	$(DUNEMPILIBS)				\
-	$(LDADD)
-
-MOSTLYCLEANFILES +=					\
-	s*:p*:testmultistep_yasp_P1_1d-*.vtp		\
-	s*:testmultistep_yasp_P1_1d-*.pvtp		\
-	testmultistep_yasp_P1_1d.pvd
-
-NORMALTESTS += testmultistepcached
-testmultistepcached_SOURCES = testmultistepcached.cc
-testmultistepcached_CPPFLAGS = $(AM_CPPFLAGS)	\
-	$(DUNEMPICPPFLAGS)
-testmultistepcached_LDFLAGS = $(AM_LDFLAGS)	\
-	$(DUNEMPILDFLAGS)
-testmultistepcached_LDADD =			\
-	$(DUNEMPILIBS)				\
-	$(LDADD)
-MOSTLYCLEANFILES +=					\
-	s*:p*:testmultistepcached_yasp_P1_1d-*.vtp	\
-	s*:testmultistepcached_yasp_P1_1d-*.pvtp	\
-	testmultistepcached_yasp_P1_1d.pvd
-
 NORMALTESTS += testp12dinterpolation
 testp12dinterpolation_SOURCES = testp12dinterpolation.cc
 testp12dinterpolation_CPPFLAGS = $(AM_CPPFLAGS)				\
@@ -292,24 +263,6 @@ testutilities_LDADD = 				\
 	$(ALBERTA_LIBS)				\
 	$(LDADD)
 MOSTLYCLEANFILES += edger.vtu interpolated.vtu q1.vtu taylorhood.vtu
-
-TESTS += testvectorwave.conf
-check_SCRIPTS += testvectorwave.conf
-check_PROGRAMS += testvectorwave
-testvectorwave_SOURCES = testvectorwave.cc
-MOSTLYCLEANFILES +=				\
-	s*:p*:vectorwave_*.vtu			\
-	s*:vectorwave_*.pvtu			\
-	vectorwave_*.pvd
-
-TESTS += testvectorwavecached.conf
-check_SCRIPTS += testvectorwavecached.conf
-check_PROGRAMS += testvectorwavecached
-testvectorwavecached_SOURCES = testvectorwavecached.cc
-MOSTLYCLEANFILES +=				\
-	s*:p*:vectorwavecached_*.vtu		\
-	s*:vectorwavecached_*.pvtu		\
-	vectorwavecached_*.pvd
 
 check_PROGRAMS += testtypetree testtypetree-no-sfinae testtypetree-no-variadic testtypetree-no-rvalue-refs testtypetree-legacy
 testtypetree_SOURCES = testtypetree.cc
