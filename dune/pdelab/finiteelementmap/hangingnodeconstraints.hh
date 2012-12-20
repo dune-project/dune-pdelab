@@ -24,14 +24,14 @@ namespace Dune {
       class CubeGridQ1Assembler
       {
       public:
-        template<typename I, typename LFS, typename T, typename FlagVector>
+        template<typename IG, typename LFS, typename T, typename FlagVector>
         static void assembleConstraints(const FlagVector & nodeState_e, const FlagVector & nodeState_f,
                                         const bool & e_has_hangingnodes, const bool & f_has_hangingnodes,
                                         const LFS & lfs_e, const LFS & lfs_f,
                                         T& trafo_e, T& trafo_f,
-                                        const IntersectionGeometry<I>& ig) 
+                                        const IG& ig)
         {
-          typedef IntersectionGeometry<I> Intersection;
+          typedef IG Intersection;
           typedef typename Intersection::EntityPointer CellEntityPointer;
           typedef typename Intersection::Geometry FaceGeometry;
           typedef typename FaceGeometry::ctype DT;
@@ -87,7 +87,7 @@ namespace Dune {
           std::vector<int> m(refelement.size(faceindex,1,dimension));
           for (int j=0; j<refelement.size(faceindex,1,dimension); j++)
             m[j] = refelement.subEntity(faceindex,1,j,dimension);
-            
+
           // Find the corresponding entity in the reference element
           for (int j=0; j<refelement.size(faceindex,1,dimension); j++){
 
@@ -97,10 +97,10 @@ namespace Dune {
             if(dimension == 3){
 
               assert(nodeState.size() == 8);
-              
+
               const SizeType i = 4*j;
 
-              // Neigbor relations in local indices on a quadrilateral face: 
+              // Neigbor relations in local indices on a quadrilateral face:
               // {Node, Direct Neighbor, Direct Neighbor, Diagonal Neighbor, Node, ...}
               const unsigned int fi[16] = {0,1,2,3, 1,0,3,2, 2,0,3,1, 3,1,2,0};
 
@@ -108,7 +108,7 @@ namespace Dune {
               if(nodeState[m[j]].isHanging()){
 
                 const SizeType node_coeff_index = mapEntityCoeff[m[j]];
-                
+
                 // If both neighbors are hanging nodes, then this node
                 // is diagonal to the target of the contribution
                 if(nodeState[m[fi[i+1]]].isHanging() && nodeState[m[fi[i+2]]].isHanging()){
@@ -132,7 +132,7 @@ namespace Dune {
               }
 
             } else if(dimension == 2){
-              
+
               assert(nodeState.size() == 4);
 
 
@@ -140,7 +140,7 @@ namespace Dune {
               if(nodeState[m[j]].isHanging()){
 
                 const SizeType node_coeff_index = mapEntityCoeff[m[j]];
-                
+
                 const SizeType n_j = 1-j;
 
                 assert( !nodeState[m[n_j]].isHanging() );
@@ -165,19 +165,19 @@ namespace Dune {
       class SimplexGridP1Assembler
       {
       public:
-        template<typename I, 
-                 typename LFS, 
-                 typename T, 
+        template<typename IG,
+                 typename LFS,
+                 typename T,
                  typename FlagVector>
-        static void assembleConstraints( const FlagVector & nodeState_e, 
+        static void assembleConstraints( const FlagVector & nodeState_e,
                                          const FlagVector & nodeState_f,
-                                         const bool & e_has_hangingnodes, 
+                                         const bool & e_has_hangingnodes,
                                          const bool & f_has_hangingnodes,
                                          const LFS & lfs_e, const LFS & lfs_f,
                                          T& trafo_e, T& trafo_f,
-                                         const IntersectionGeometry<I>& ig) 
+                                         const IG& ig)
         {
-          typedef IntersectionGeometry<I> Intersection;
+          typedef IG Intersection;
           typedef typename Intersection::EntityPointer CellEntityPointer;
           typedef typename Intersection::Geometry FaceGeometry;
           typedef typename FaceGeometry::ctype DT;
@@ -233,7 +233,7 @@ namespace Dune {
           std::vector<int> m(refelement.size(faceindex,1,dimension));
           for (int j=0; j<refelement.size(faceindex,1,dimension); j++)
             m[j] = refelement.subEntity(faceindex,1,j,dimension);
-            
+
           // Find the corresponding entity in the reference element
           for (int j=0; j<refelement.size(faceindex,1,dimension); j++){
 
@@ -248,17 +248,17 @@ namespace Dune {
                 const SizeType node_coeff_index = mapEntityCoeff[m[j]];
 
                 for( int k=1; k<=2; ++k ){
-                  
+
                   const SizeType n_j = (j+k)%3;
-                 
+
                   if( !nodeState[m[n_j]].isHanging() ){
-                
+
                     // If both neighbors are hanging nodes, then this node
                     // is diagonal to the target of the contribution
                     contribution[mapEntityCoeff[ m[n_j] ]] = 0.5;
                     trafo[node_coeff_index] = contribution;
                     // Write into local constraints container
-                    
+
                   }
 
                 }
@@ -309,82 +309,20 @@ namespace Dune {
       enum { doVolume = false };
       enum { dimension = Grid::dimension };
 
-      HangingNodesDirichletConstraints( Grid & grid, 
-                                        bool adaptToIsolatedHangingNotes, 
+      HangingNodesDirichletConstraints( Grid & grid,
+                                        bool adaptToIsolatedHangingNotes,
                                         const BoundaryFunction & _boundaryFunction )
         : manager(grid, _boundaryFunction)
       {
         if(adaptToIsolatedHangingNotes)
           manager.adaptToIsolatedHangingNodes();
       }
-      
+
       void update( Grid & grid ){
         manager.analyzeView();
         manager.adaptToIsolatedHangingNodes();
       }
 
-      //! boundary constraints
-      /**
-       * \tparam F  grid function returning boundary condition type
-       * \tparam IG  intersection geometry
-       * \tparam LFS local function space
-       * \tparam T   TransformationType
-       */
-      template<typename F, typename I, typename LFS, typename T>
-      void boundary (const F& f, const IntersectionGeometry<I>& ig, 
-                     const LFS& lfs, T& trafo) const
-      {
-        ConformingDirichletConstraints::boundary(f,ig,lfs,trafo);
-        return ;
-
-        typedef IntersectionGeometry<I> Intersection;
-        typedef typename Intersection::EntityPointer CellEntityPointer;
-        typedef typename Intersection::Geometry FaceGeometry;
-        typedef typename FaceGeometry::ctype DT;
-        
-        const CellEntityPointer e = ig.inside();
-
-        const Dune::GenericReferenceElement<DT,dimension>& refelem_e
-          = Dune::GenericReferenceElements<DT,dimension>::general(e->type());
-
-        // the return values of the hanging node manager
-        typedef typename std::vector<typename HangingNodeManager::NodeState> FlagVector;
-        const FlagVector isHangingNode_e(manager.hangingNodes(e));
-
-        // just to make sure that the hanging node manager is doing
-        // what is expected of him
-        assert(std::size_t(refelem_e.size(dimension))
-               == isHangingNode_e.size());
-
-        // the LOCAL indices of the faces in the reference element
-        const int faceindex_e = ig.indexInInside();
-        
-        typedef typename LFS::Traits::FiniteElementType FiniteElementType; 
-        typedef typename FiniteElementType::Traits::LocalCoefficientsType LocalCoefficientType;
-        typedef typename FiniteElementType::Traits::LocalBasisType::Traits::DomainFieldType DFT;
-        typedef typename LFS::Traits::SizeType SizeType;
-
-        bool e_has_hangingnodes = false;
-        {
-          for (int j=0; j<refelem_e.size(faceindex_e,1,dimension); j++){
-            const int index = refelem_e.subEntity(faceindex_e,1,j,dimension);
-            if(isHangingNode_e[index].isHanging())
-              e_has_hangingnodes = true;
-          }
-        }
-        bool f_has_hangingnodes = false;
-
-        if(! e_has_hangingnodes)
-          return;
-
-        HangingNodesConstraintsAssemblerType::
-          assembleConstraints(isHangingNode_e, isHangingNode_e,
-                              e_has_hangingnodes, f_has_hangingnodes,
-                              lfs,lfs,
-                              trafo, trafo,
-                              ig);
-        
-      }
 
       //! skeleton constraints
       /**
@@ -392,16 +330,16 @@ namespace Dune {
        * \tparam LFS local function space
        * \tparam T   TransformationType
        */
-      template<typename I, typename LFS, typename T>
-      void skeleton (const IntersectionGeometry<I>& ig, 
-                     const LFS& lfs_e, const LFS& lfs_f, 
+      template<typename IG, typename LFS, typename T>
+      void skeleton (const IG& ig,
+                     const LFS& lfs_e, const LFS& lfs_f,
                      T& trafo_e, T& trafo_f) const
       {
-        typedef IntersectionGeometry<I> Intersection;
+        typedef IG Intersection;
         typedef typename Intersection::EntityPointer CellEntityPointer;
         typedef typename Intersection::Geometry FaceGeometry;
         typedef typename FaceGeometry::ctype DT;
-        
+
         const CellEntityPointer e = ig.inside();
         const CellEntityPointer f = ig.outside();
 
@@ -425,7 +363,7 @@ namespace Dune {
         // the LOCAL indices of the faces in the reference element
         const int faceindex_e = ig.indexInInside();
         const int faceindex_f = ig.indexInOutside();
-        
+
         typedef typename LFS::Traits::FiniteElementType FiniteElementType;
         typedef typename FiniteElementType::Traits::LocalCoefficientsType LocalCoefficientType;
         typedef typename FiniteElementType::Traits::LocalBasisType::Traits::DomainFieldType DFT;
@@ -436,7 +374,10 @@ namespace Dune {
           for (int j=0; j<refelem_e.size(faceindex_e,1,dimension); j++){
             const int index = refelem_e.subEntity(faceindex_e,1,j,dimension);
             if(isHangingNode_e[index].isHanging())
-              e_has_hangingnodes = true;
+              {
+                e_has_hangingnodes = true;
+                break;
+              }
           }
         }
         bool f_has_hangingnodes = false;
@@ -444,7 +385,10 @@ namespace Dune {
           for (int j=0; j<refelem_f.size(faceindex_f,1,dimension); j++){
             const int index = refelem_f.subEntity(faceindex_f,1,j,dimension);
             if(isHangingNode_f[index].isHanging())
-              f_has_hangingnodes = true;
+              {
+                f_has_hangingnodes = true;
+                break;
+              }
           }
         }
 

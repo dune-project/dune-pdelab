@@ -615,24 +615,9 @@ namespace Dune {
         return _container->dim();
       }
 
-      template<typename X>
-      void std_copy_to (std::vector<X>& x) const
+      const GFS& gridFunctionSpace() const
       {
-        // FIXME: do this hierachically
-        size_t n = flatsize();
-        x.resize(n);
-        for (size_t i=0; i<n; i++)
-          x[i] = (*_container)[i][i];
-      }
-
-      template<typename X>
-      void std_copy_from (const std::vector<X>& x)
-      {
-        // FIXME: do this hierachically
-        //test if x has the same size as the container
-        assert (x.size() == flatsize());
-        for (size_t i=0; i<flatsize(); i++)
-          (*_container)[i][i] = x[i];
+        return _gfs;
       }
 
     private:

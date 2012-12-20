@@ -27,30 +27,6 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-#ifndef DOXYGEN // don't use an anomyous namespace - it breaks friend declarations
-
-    //! Visitor for updating the complete GFS tree
-    struct UpdateVisitor
-      : public TypeTree::TreeVisitor
-      , public TypeTree::DynamicTraversal
-    {
-
-      template<typename LeafNode, typename TreePath>
-      void leaf(LeafNode& node, TreePath treePath) const
-      {
-        node.shallowUpdate();
-      }
-
-      template<typename Node, typename TreePath>
-      void post(Node& node, TreePath treePath) const
-      {
-        node.shallowUpdate();
-      }
-
-    };
-
-#endif // DOXYGEN
-
     //! Trait class for the multi component grid function spaces
     template<typename G, typename B, typename M, std::size_t k>
     struct PowerCompositeGridFunctionSpaceTraits
@@ -129,10 +105,8 @@ namespace Dune {
       //! recalculate sizes
       void update ()
       {
-        TypeTree::applyToTree(gfs(),UpdateVisitor());
+        gfs().ordering().update();
       }
-
-
 
       //! get dimension of root finite element space
       typename Traits::SizeType globalSize () const
