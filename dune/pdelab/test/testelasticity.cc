@@ -135,7 +135,7 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
   typedef G<GV,double> GType;
   GType g(gv);
   Dune::PDELab::interpolate(g,gfs,x0);
-  Dune::PDELab::set_nonconstrained_dofs(gfs,cg,0.0,x0);
+  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
 
   // represent operator as a matrix
   typedef typename GOS::Traits::Jacobian M;
@@ -162,13 +162,13 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
   // solve the jacobian system
   r *= -1.0; // need -residual
   V x(gfs,0.0);
-  Dune::PDELab::set_nonconstrained_dofs(gfs,cg,1.0,x);
+  Dune::PDELab::set_nonconstrained_dofs(cg,1.0,x);
   solver.apply(x.base(),r.base(),stat);
   x += x0;
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  Dune::PDELab::add_solution_to_vtk_writer(vtkwriter,gfs,x);
+  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x);
   vtkwriter.write("testelasticity",Dune::VTK::ascii);
 }
 
