@@ -82,6 +82,8 @@ namespace Dune {
       typedef typename Grid::LeafGridView GridView;
       enum {dim = GridView::dimension};
       typedef typename GridView::template Codim<0>::EntityPointer CellEntityPointer;
+      typedef typename GridView::template Codim<0>::Entity Cell;
+
       typedef typename GridView::template Codim<dim>::EntityPointer VertexEntityPointer;
       typedef typename GridView::template Codim<0>::Iterator Iterator;
       typedef typename GridView::IntersectionIterator IntersectionIterator;
@@ -223,14 +225,14 @@ namespace Dune {
           cell_mapper(grid.leafView())
       { analyzeView(); }
 
-      const std::vector<NodeState> hangingNodes(const CellEntityPointer & e) const
+      const std::vector<NodeState> hangingNodes(const Cell& e) const
       {
         const typename GridView::IndexSet& indexSet = grid.leafView().indexSet();
         std::vector<NodeState> is_hanging;
 
         const Dune::GenericReferenceElement<double,dim> &
           reference_element =
-          Dune::GenericReferenceElements<double,dim>::general(e->geometry().type());
+          Dune::GenericReferenceElements<double,dim>::general(e.geometry().type());
 
         // number of vertices in this element
         const IndexType v_size = reference_element.size(dim);
@@ -254,7 +256,7 @@ namespace Dune {
 #ifndef NDEBUG
             if(verbosity>1){
               const Point & local  = reference_element.position(i,dim);
-              const Point global = e->geometry().global(local);
+              const Point global = e.geometry().global(local);
               if(verbosity)
                 std::cout << "Found hanging node with id " << v_globalindex << " at " << global << std::endl;
             }

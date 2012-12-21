@@ -350,8 +350,8 @@ namespace Dune {
 
         // the return values of the hanging node manager
         typedef typename std::vector<typename HangingNodeManager::NodeState> FlagVector;
-        const FlagVector isHangingNode_e(manager.hangingNodes(e));
-        const FlagVector isHangingNode_f(manager.hangingNodes(f));
+        const FlagVector isHangingNode_e(manager.hangingNodes(*e));
+        const FlagVector isHangingNode_f(manager.hangingNodes(*f));
 
         // just to make sure that the hanging node manager is doing
         // what is expected of him
