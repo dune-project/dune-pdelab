@@ -572,8 +572,7 @@ namespace Dune{
       {
         typedef typename C::const_iterator global_row_iterator;
         for (global_row_iterator cit = c.begin(); cit != c.end(); ++cit)
-          if (cit->second.size() == 0)
-            globalcontainer.clear_row(cit->first,1);
+          globalcontainer.clear_row(cit->first,1);
       }
 
       template<typename GFSV, typename GC>
