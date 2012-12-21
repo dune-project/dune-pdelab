@@ -33,14 +33,15 @@ namespace Dune {
         {
           typedef IG Intersection;
           typedef typename Intersection::EntityPointer CellEntityPointer;
+          typedef typename Intersection::Entity Cell;
           typedef typename Intersection::Geometry FaceGeometry;
           typedef typename FaceGeometry::ctype DT;
           typedef typename LFS::Traits::FiniteElementType FiniteElementType;
-          typedef typename FiniteElementType::Traits::LocalCoefficientsType LocalCoefficientType;
           typedef typename FiniteElementType::Traits::LocalBasisType::Traits::DomainFieldType DFT;
           typedef typename FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType RFT;
           typedef typename LFS::Traits::SizeType SizeType;
 
+          typedef typename LFS::Traits::GridFunctionSpace::Traits::GridView::IndexSet IndexSet;
           const CellEntityPointer e = ig.inside();
           const CellEntityPointer f = ! ig.boundary() ? ig.outside() : ig.inside();
 
@@ -57,36 +58,32 @@ namespace Dune {
 
           // Choose local function space etc for element with hanging nodes
           const LFS & lfs = e_has_hangingnodes ? lfs_e : lfs_f;
-          const LocalCoefficientType & localCoefficients =
-            lfs.finiteElement().localCoefficients();
+          const IndexSet& indexSet = lfs.gridFunctionSpace().gridView().indexSet();
 
-          if(dimension == 3){
-            assert(localCoefficients.size()==8);
-          }
-          else{
-            assert(localCoefficients.size()==4);
-          }
-
+          const Cell& cell = *(e_has_hangingnodes ? e : f);
           const int faceindex = e_has_hangingnodes ? ig.indexInInside() : ig.indexInOutside();
           const GRE & refelement = e_has_hangingnodes ? refelement_e : refelement_f;
           const FlagVector & nodeState = e_has_hangingnodes ? nodeState_e : nodeState_f;
           T & trafo = e_has_hangingnodes ? trafo_e : trafo_f;
-
-          // A map mapping the local entity index to the local coefficient index
-          std::vector<SizeType> mapEntityCoeff(localCoefficients.size());
-          for (SizeType i=0; i<localCoefficients.size(); i++){
-            mapEntityCoeff[localCoefficients.localKey(i).subEntity()] = localCoefficients.localKey(i).index() + i;
-            if( localCoefficients.localKey(i).codim() != dimension){
-              DUNE_THROW(Dune::InvalidStateException,
-                         "Local coefficients are expected to be bound to vertex entities");
-            }
-          }//i
 
           // A map mapping the local indices from the face to local
           // indices of the cell
           std::vector<int> m(refelement.size(faceindex,1,dimension));
           for (int j=0; j<refelement.size(faceindex,1,dimension); j++)
             m[j] = refelement.subEntity(faceindex,1,j,dimension);
+
+          // A map mapping the local indices from the face to global gridview indices
+          std::vector<std::size_t> global_vertex_idx(refelement.size(faceindex,1,dimension));
+          for (int j=0; j<refelement.size(faceindex,1,dimension); ++j)
+            global_vertex_idx[j] = indexSet.subIndex(cell,refelement.subEntity(faceindex,1,j,dimension),dimension);
+
+          // Create a DOFIndex that we will use to manually craft the correct dof indices for the constraints trafo
+          // We copy one of the indices from the LocalFunctionSpace; that way, we automatically get the correct
+          // TreeIndex into the DOFIndex and only have to fiddle with the EntityIndex.
+          typename LFS::Traits::DOFIndex dof_index(lfs.dofIndex(0));
+
+          typedef typename LFS::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::GeometryIndex GeometryIndexAccessor;
+          const GeometryType vertex_gt(0);
 
           // Find the corresponding entity in the reference element
           for (int j=0; j<refelement.size(faceindex,1,dimension); j++){
@@ -107,28 +104,52 @@ namespace Dune {
               // Only hanging nodes have contribution to other nodes
               if(nodeState[m[j]].isHanging()){
 
-                const SizeType node_coeff_index = mapEntityCoeff[m[j]];
-
                 // If both neighbors are hanging nodes, then this node
                 // is diagonal to the target of the contribution
-                if(nodeState[m[fi[i+1]]].isHanging() && nodeState[m[fi[i+2]]].isHanging()){
-                  //if(!nodeState[m[fi[i+3]]].isBoundary())
-                    contribution[mapEntityCoeff[m[fi[i+3]]]] = 0.25;
-                    trafo[node_coeff_index] = contribution;
-                }
+                if(nodeState[m[fi[i+1]]].isHanging() && nodeState[m[fi[i+2]]].isHanging())
+                  {
+                    GeometryIndexAccessor::store(dof_index.entityIndex(),
+                                                 vertex_gt,
+                                                 global_vertex_idx[fi[i+3]]);
+
+                    contribution[dof_index] = 0.25;
+
+                    GeometryIndexAccessor::store(dof_index.entityIndex(),
+                                                 vertex_gt,
+                                                 global_vertex_idx[j]);
+
+                    trafo[dof_index] = contribution;
+                  }
                 // Direct neigbor
-                else if(!nodeState[m[fi[i+1]]].isHanging()){
-                  //if(!nodeState[m[fi[i+1]]].isBoundary())
-                    contribution[mapEntityCoeff[m[fi[i+1]]]] = 0.5;
-                    trafo[node_coeff_index] = contribution;
-                }
+                else if(!nodeState[m[fi[i+1]]].isHanging())
+                  {
+                    GeometryIndexAccessor::store(dof_index.entityIndex(),
+                                                 vertex_gt,
+                                                 global_vertex_idx[fi[i+1]]);
+
+                    contribution[dof_index] = 0.5;
+
+                    GeometryIndexAccessor::store(dof_index.entityIndex(),
+                                                 vertex_gt,
+                                                 global_vertex_idx[j]);
+
+                    trafo[dof_index] = contribution;
+                  }
                 // Direct neigbor
-                else if(!nodeState[m[fi[i+2]]].isHanging()){
-                  //if(!nodeState[m[fi[i+2]]].isBoundary())
-                    contribution[mapEntityCoeff[m[fi[i+2]]]] = 0.5;
-                    trafo[node_coeff_index] = contribution;
-                }
-                // Write into local constraints container
+                else if(!nodeState[m[fi[i+2]]].isHanging())
+                  {
+                    GeometryIndexAccessor::store(dof_index.entityIndex(),
+                                                 vertex_gt,
+                                                 global_vertex_idx[fi[i+2]]);
+
+                    contribution[dof_index] = 0.5;
+
+                    GeometryIndexAccessor::store(dof_index.entityIndex(),
+                                                 vertex_gt,
+                                                 global_vertex_idx[j]);
+
+                    trafo[dof_index] = contribution;
+                  }
               }
 
             } else if(dimension == 2){
@@ -139,18 +160,21 @@ namespace Dune {
               // Only hanging nodes have contribution to other nodes
               if(nodeState[m[j]].isHanging()){
 
-                const SizeType node_coeff_index = mapEntityCoeff[m[j]];
-
                 const SizeType n_j = 1-j;
 
                 assert( !nodeState[m[n_j]].isHanging() );
 
-                // If both neighbors are hanging nodes, then this node
-                // is diagonal to the target of the contribution
+                GeometryIndexAccessor::store(dof_index.entityIndex(),
+                                             vertex_gt,
+                                             global_vertex_idx[n_j]);
 
-                contribution[mapEntityCoeff[ m[n_j] ]] = 0.5;
-                trafo[node_coeff_index] = contribution;
-                // Write into local constraints container
+                contribution[dof_index] = 0.5;
+
+                GeometryIndexAccessor::store(dof_index.entityIndex(),
+                                             vertex_gt,
+                                             global_vertex_idx[j]);
+
+                trafo[dof_index] = contribution;
               }
 
             } // end if(dimension==3)
@@ -179,13 +203,14 @@ namespace Dune {
         {
           typedef IG Intersection;
           typedef typename Intersection::EntityPointer CellEntityPointer;
+          typedef typename Intersection::Entity Cell;
           typedef typename Intersection::Geometry FaceGeometry;
           typedef typename FaceGeometry::ctype DT;
           typedef typename LFS::Traits::FiniteElementType FiniteElementType;
-          typedef typename FiniteElementType::Traits::LocalCoefficientsType LocalCoefficientType;
           typedef typename FiniteElementType::Traits::LocalBasisType::Traits::DomainFieldType DFT;
           typedef typename FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType RFT;
           typedef typename LFS::Traits::SizeType SizeType;
+          typedef typename LFS::Traits::GridFunctionSpace::Traits::GridView::IndexSet IndexSet;
 
           const CellEntityPointer e = ig.inside();
           const CellEntityPointer f = ! ig.boundary() ? ig.outside() : ig.inside();
@@ -203,36 +228,32 @@ namespace Dune {
 
           // Choose local function space etc for element with hanging nodes
           const LFS & lfs = e_has_hangingnodes ? lfs_e : lfs_f;
-          const LocalCoefficientType & localCoefficients =
-            lfs.finiteElement().localCoefficients();
+          const IndexSet& indexSet = lfs.gridFunctionSpace().gridView().indexSet();
 
-          if(dimension == 3){
-            assert(localCoefficients.size()==4);
-          }
-          else{
-            assert(localCoefficients.size()==3);
-          }
-
+          const Cell& cell = *(e_has_hangingnodes ? e : f);
           const int faceindex = e_has_hangingnodes ? ig.indexInInside() : ig.indexInOutside();
           const GRE & refelement = e_has_hangingnodes ? refelement_e : refelement_f;
           const FlagVector & nodeState = e_has_hangingnodes ? nodeState_e : nodeState_f;
           T & trafo = e_has_hangingnodes ? trafo_e : trafo_f;
-
-          // A map mapping the local entity index to the local coefficient index
-          std::vector<SizeType> mapEntityCoeff(localCoefficients.size());
-          for (SizeType i=0; i<localCoefficients.size(); i++){
-            mapEntityCoeff[localCoefficients.localKey(i).subEntity()] = localCoefficients.localKey(i).index() + i;
-            if( localCoefficients.localKey(i).codim() != dimension){
-              DUNE_THROW(Dune::InvalidStateException,
-                         "Local coefficients are expected to be bound to vertex entities");
-            }
-          }//i
 
           // A map mapping the local indices from the face to local
           // indices of the cell
           std::vector<int> m(refelement.size(faceindex,1,dimension));
           for (int j=0; j<refelement.size(faceindex,1,dimension); j++)
             m[j] = refelement.subEntity(faceindex,1,j,dimension);
+
+          // A map mapping the local indices from the face to global gridview indices
+          std::vector<std::size_t> global_vertex_idx(refelement.size(faceindex,1,dimension));
+          for (int j=0; j<refelement.size(faceindex,1,dimension); ++j)
+            global_vertex_idx[j] = indexSet.subIndex(cell,refelement.subEntity(faceindex,1,j,dimension),dimension);
+
+          // Create a DOFIndex that we will use to manually craft the correct dof indices for the constraints trafo
+          // We copy one of the indices from the LocalFunctionSpace; that way, we automatically get the correct
+          // TreeIndex into the DOFIndex and only have to fiddle with the EntityIndex.
+          typename LFS::Traits::DOFIndex dof_index(lfs.dofIndex(0));
+
+          typedef typename LFS::Traits::GridFunctionSpace::Ordering::Traits::DOFIndexAccessor::GeometryIndex GeometryIndexAccessor;
+          const GeometryType vertex_gt(0);
 
           // Find the corresponding entity in the reference element
           for (int j=0; j<refelement.size(faceindex,1,dimension); j++){
@@ -245,41 +266,46 @@ namespace Dune {
               assert(nodeState.size() == 4);
               // Only hanging nodes have contribution to other nodes
               if(nodeState[m[j]].isHanging()){
-                const SizeType node_coeff_index = mapEntityCoeff[m[j]];
-
                 for( int k=1; k<=2; ++k ){
 
                   const SizeType n_j = (j+k)%3;
 
-                  if( !nodeState[m[n_j]].isHanging() ){
+                  if( !nodeState[m[n_j]].isHanging() )
+                    {
+                      GeometryIndexAccessor::store(dof_index.entityIndex(),
+                                                   vertex_gt,
+                                                   global_vertex_idx[n_j]);
 
-                    // If both neighbors are hanging nodes, then this node
-                    // is diagonal to the target of the contribution
-                    contribution[mapEntityCoeff[ m[n_j] ]] = 0.5;
-                    trafo[node_coeff_index] = contribution;
-                    // Write into local constraints container
+                      contribution[dof_index] = 0.5;
 
-                  }
+                      GeometryIndexAccessor::store(dof_index.entityIndex(),
+                                                   vertex_gt,
+                                                   global_vertex_idx[j]);
 
+                      trafo[dof_index] = contribution;
+                    }
                 }
-
-
-
               }
-
             } else if(dimension == 2){
 
               assert(nodeState.size() == 3);
               // Only hanging nodes have contribution to other nodes
               if(nodeState[m[j]].isHanging()){
-                const SizeType node_coeff_index = mapEntityCoeff[m[j]];
                 const SizeType n_j = 1-j;
                 assert( !nodeState[m[n_j]].isHanging() );
                 // If both neighbors are hanging nodes, then this node
                 // is diagonal to the target of the contribution
-                contribution[mapEntityCoeff[ m[n_j] ]] = 0.5;
-                trafo[node_coeff_index] = contribution;
-                // Write into local constraints container
+                GeometryIndexAccessor::store(dof_index.entityIndex(),
+                                             vertex_gt,
+                                             global_vertex_idx[n_j]);
+
+                contribution[dof_index] = 0.5;
+
+                GeometryIndexAccessor::store(dof_index.entityIndex(),
+                                             vertex_gt,
+                                             global_vertex_idx[j]);
+
+                trafo[dof_index] = contribution;
               }
 
 
@@ -350,8 +376,8 @@ namespace Dune {
 
         // the return values of the hanging node manager
         typedef typename std::vector<typename HangingNodeManager::NodeState> FlagVector;
-        const FlagVector isHangingNode_e(manager.hangingNodes(e));
-        const FlagVector isHangingNode_f(manager.hangingNodes(f));
+        const FlagVector isHangingNode_e(manager.hangingNodes(*e));
+        const FlagVector isHangingNode_f(manager.hangingNodes(*f));
 
         // just to make sure that the hanging node manager is doing
         // what is expected of him
