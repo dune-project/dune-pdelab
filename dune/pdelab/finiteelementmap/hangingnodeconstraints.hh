@@ -37,7 +37,6 @@ namespace Dune {
           typedef typename Intersection::Geometry FaceGeometry;
           typedef typename FaceGeometry::ctype DT;
           typedef typename LFS::Traits::FiniteElementType FiniteElementType;
-          typedef typename FiniteElementType::Traits::LocalCoefficientsType LocalCoefficientType;
           typedef typename FiniteElementType::Traits::LocalBasisType::Traits::DomainFieldType DFT;
           typedef typename FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType RFT;
           typedef typename LFS::Traits::SizeType SizeType;
@@ -60,16 +59,6 @@ namespace Dune {
           // Choose local function space etc for element with hanging nodes
           const LFS & lfs = e_has_hangingnodes ? lfs_e : lfs_f;
           const IndexSet& indexSet = lfs.gridFunctionSpace().gridView().indexSet();
-
-          const LocalCoefficientType & localCoefficients =
-            lfs.finiteElement().localCoefficients();
-
-          if(dimension == 3){
-            assert(localCoefficients.size()==8);
-          }
-          else{
-            assert(localCoefficients.size()==4);
-          }
 
           const Cell& cell = *(e_has_hangingnodes ? e : f);
           const int faceindex = e_has_hangingnodes ? ig.indexInInside() : ig.indexInOutside();
