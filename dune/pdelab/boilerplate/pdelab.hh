@@ -449,19 +449,26 @@ namespace Dune {
         };
 
         // constraints base template
-        template<typename T, unsigned int degree, Dune::GeometryType::BasicType gt, MeshType mt, SolverCategory::Category st, typename BCType>
+        template<typename Grid, unsigned int degree, Dune::GeometryType::BasicType gt, MeshType mt, SolverCategory::Category st, typename BCType, typename GV = typename Grid::LeafGridView>
         class CGCONBase
         {};
 
-        template<typename T, typename BCType>
-        class CGCONBase<T,1,Dune::GeometryType::simplex,MeshType::nonconforming,SolverCategory::sequential,BCType>
+        template<typename Grid, typename BCType, typename GV>
+        class CGCONBase<Grid,1,Dune::GeometryType::simplex,MeshType::nonconforming,SolverCategory::sequential,BCType,GV>
         {
         public:
-            typedef HangingNodesDirichletConstraints<T,HangingNodesConstraintsAssemblers::SimplexGridP1Assembler,BCType> CON;
-            CGCONBase (T& grid, const BCType& bctype)
+            typedef HangingNodesDirichletConstraints<Grid,HangingNodesConstraintsAssemblers::SimplexGridP1Assembler,BCType> CON;
+
+            CGCONBase (Grid& grid, const BCType& bctype, const GV& gv)
             {
                 conp = shared_ptr<CON>(new CON(grid,true,bctype));
             }
+
+            CGCONBase (Grid& grid, const BCType& bctype)
+            {
+                conp = shared_ptr<CON>(new CON(grid,true,bctype));
+            }
+
             template<typename GFS>
             void postGFSHook (const GFS& gfs) {}
             CON& getCON() {return *conp;}
@@ -472,15 +479,22 @@ namespace Dune {
             shared_ptr<CON> conp;
         };
 
-        template<typename T, typename BCType>
-        class CGCONBase<T,1,Dune::GeometryType::cube,MeshType::nonconforming,SolverCategory::sequential,BCType>
+        template<typename Grid, typename BCType, typename GV>
+        class CGCONBase<Grid,1,Dune::GeometryType::cube,MeshType::nonconforming,SolverCategory::sequential,BCType,GV>
         {
         public:
-            typedef HangingNodesDirichletConstraints<T,HangingNodesConstraintsAssemblers::CubeGridQ1Assembler,BCType> CON;
-            CGCONBase (T& grid, const BCType& bctype)
+            typedef HangingNodesDirichletConstraints<Grid,HangingNodesConstraintsAssemblers::CubeGridQ1Assembler,BCType> CON;
+
+            CGCONBase (Grid& grid, const BCType& bctype, const GV& gv)
             {
                 conp = shared_ptr<CON>(new CON(grid,true,bctype));
             }
+
+            CGCONBase (Grid& grid, const BCType& bctype)
+            {
+                conp = shared_ptr<CON>(new CON(grid,true,bctype));
+            }
+
             template<typename GFS>
             void postGFSHook (const GFS& gfs) {}
             CON& getCON() {return *conp;}
@@ -491,15 +505,22 @@ namespace Dune {
             shared_ptr<CON> conp;
         };
 
-        template<typename T, unsigned int degree, Dune::GeometryType::BasicType gt,typename BCType>
-        class CGCONBase<T,degree,gt,MeshType::conforming,SolverCategory::sequential,BCType>
+        template<typename Grid, unsigned int degree, Dune::GeometryType::BasicType gt,typename BCType, typename GV>
+        class CGCONBase<Grid,degree,gt,MeshType::conforming,SolverCategory::sequential,BCType,GV>
         {
         public:
             typedef ConformingDirichletConstraints CON;
-            CGCONBase (T& grid, const BCType& bctype)
+
+            CGCONBase (Grid& grid, const BCType& bctype, const GV& gv)
             {
                 conp = shared_ptr<CON>(new CON());
             }
+
+            CGCONBase (Grid& grid, const BCType& bctype)
+            {
+                conp = shared_ptr<CON>(new CON());
+            }
+
             template<typename GFS>
             void postGFSHook (const GFS& gfs) {}
             CON& getCON() {return *conp;}
@@ -510,15 +531,22 @@ namespace Dune {
             shared_ptr<CON> conp;
         };
 
-        template<typename T, unsigned int degree, Dune::GeometryType::BasicType gt,typename BCType>
-        class CGCONBase<T,degree,gt,MeshType::conforming,SolverCategory::overlapping,BCType>
+        template<typename Grid, unsigned int degree, Dune::GeometryType::BasicType gt,typename BCType, typename GV>
+        class CGCONBase<Grid,degree,gt,MeshType::conforming,SolverCategory::overlapping,BCType,GV>
         {
         public:
             typedef OverlappingConformingDirichletConstraints CON;
-            CGCONBase (T& grid, const BCType& bctype)
+
+            CGCONBase (Grid& grid, const BCType& bctype, const GV& gv)
             {
                 conp = shared_ptr<CON>(new CON());
             }
+
+            CGCONBase (Grid& grid, const BCType& bctype)
+            {
+                conp = shared_ptr<CON>(new CON());
+            }
+
             template<typename GFS>
             void postGFSHook (const GFS& gfs) {}
             CON& getCON() {return *conp;}
@@ -537,15 +565,22 @@ namespace Dune {
             shared_ptr<CON> conp;
         };
 
-        template<typename T, unsigned int degree, Dune::GeometryType::BasicType gt,typename BCType>
-        class CGCONBase<T,degree,gt,MeshType::conforming,SolverCategory::nonoverlapping,BCType>
+        template<typename Grid, unsigned int degree, Dune::GeometryType::BasicType gt,typename BCType, typename GV>
+        class CGCONBase<Grid,degree,gt,MeshType::conforming,SolverCategory::nonoverlapping,BCType,GV>
         {
         public:
-            typedef NonoverlappingConformingDirichletConstraints CON;
-            CGCONBase (T& grid, const BCType& bctype)
+            typedef NonoverlappingConformingDirichletConstraints<GV> CON;
+
+            CGCONBase (Grid& grid, const BCType& bctype, const GV& gv)
             {
-                conp = shared_ptr<CON>(new CON());
+                conp = shared_ptr<CON>(new CON(gv));
             }
+
+            CGCONBase (Grid& grid, const BCType& bctype)
+            {
+                conp = shared_ptr<CON>(new CON(grid.leafView()));
+            }
+
             template<typename GFS>
             void postGFSHook (const GFS& gfs) { conp->compute_ghosts(gfs); }
             CON& getCON() {return *conp;}
