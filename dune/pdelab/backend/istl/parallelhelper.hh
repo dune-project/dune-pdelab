@@ -293,14 +293,16 @@ namespace Dune {
 
         const bool is_bcrs_matrix =
           is_same<
-            typename istl::tags::container<M>::type::base_tag,
+            typename istl::tags::container<
+              typename istl::raw_type<M>::type
+              >::type::base_tag,
           istl::tags::bcrs_matrix
           >::value;
 
         const bool block_type_is_field_matrix =
           is_same<
             typename istl::tags::container<
-              typename M::block_type
+              typename istl::raw_type<M>::type::block_type
               >::type::base_tag,
           istl::tags::field_matrix
           >::value;
