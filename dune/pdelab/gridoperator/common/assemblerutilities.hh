@@ -463,6 +463,12 @@ namespace Dune{
                               }
                           }
                       }
+                    else
+                      {
+                        T value = localcontainer(lfsv,i,lfsu,j) * vcit->weight();
+                        if (value != 0.0)
+                          globalcontainer_view.add(vcit->containerIndex(),j,value);
+                      }
                 }
               else
                 {
