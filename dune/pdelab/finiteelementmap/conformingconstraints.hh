@@ -234,7 +234,7 @@ namespace Dune {
             const ReferenceElement<typename GV::ctype,GV::dimension>& ref_el =
               ReferenceElements<typename GV::ctype,GV::dimension>::general(it->type());
 
-            for (size_t codim = 1; codim <= GV::dimension; ++codim)
+            for (size_t codim = 0; codim <= GV::dimension; ++codim)
               if (gfs.ordering().contains(codim))
                 {
                   for (int i = 0; i < ref_el.size(codim); ++i)
