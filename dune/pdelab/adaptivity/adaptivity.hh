@@ -701,10 +701,14 @@ namespace Dune {
           NumberType sum_beta=0.0;
           unsigned int alpha_count = 0;
           unsigned int beta_count = 0;
-          for (unsigned int i=0; i<x.N(); i++)
+
+          for (typename T::const_iterator it = x.begin(),
+                 end = x.end();
+               it != end;
+               ++it)
             {
-              if (x[i]>=eta_alpha) { sum_alpha += 1.0; alpha_count++;}
-              if (x[i]< eta_beta) { sum_beta +=1.0; beta_count++;}
+              if (*it>=eta_alpha) { sum_alpha += 1.0; alpha_count++;}
+              if (*it< eta_beta) { sum_beta +=1.0; beta_count++;}
             }
           if (verbose>1)
             {
@@ -752,13 +756,19 @@ namespace Dune {
             eta[k]= 0.5*(left[k]+right[k]);
           std::vector<NumberType> sum(bins,0.0);
           std::vector<int> count(bins,0);
-          for (unsigned int i=0; i<x.N(); i++)
-            for (unsigned int k=0; k<bins; k++)
-              if (x[i]<=eta[k])
-                {
-                  sum[k] += x[i];
-                  count[k] += 1;
-                }
+
+          for (typename T::const_iterator it = x.begin(),
+                 end = x.end();
+               it != end;
+               ++it)
+            {
+              for (unsigned int k=0; k<bins; k++)
+                if (*it<=eta[k])
+                  {
+                    sum[k] += *it;
+                    count[k] += 1;
+                  }
+            }
           // std::cout << std::endl;
           // std::cout << "// step " << j << std::endl;
           // for (unsigned int k=0; k<bins; k++)
