@@ -190,6 +190,9 @@ namespace Dune {
                 ni.is_boundary = boundaryFunction.isDirichlet(IntersectionGeometry<Intersection>(*fit,intersection_index),facelocal_position);
                 ni.addTouchingLevel(e_level);
               }
+
+              // We are done here - the remaining tests are only required for neighbor intersections
+              continue;
             }
 
             const int f_level = fit->outside()->level();
