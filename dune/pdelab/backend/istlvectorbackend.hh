@@ -677,6 +677,25 @@ namespace Dune {
       }
 
 
+      template<typename C>
+      struct raw_type
+      {
+        typedef C type;
+      };
+
+      template<typename GFS, typename C>
+      struct raw_type<ISTLBlockVectorContainer<GFS,C> >
+      {
+        typedef C type;
+      };
+
+      template<typename GFSU, typename GFSV, typename C>
+      struct raw_type<ISTLMatrixContainer<GFSU,GFSV,C> >
+      {
+        typedef C type;
+      };
+
+
       // ********************************************************************************
       // TMPs for deducing ISTL block structure from GFS backends
       // ********************************************************************************
