@@ -601,6 +601,8 @@ namespace Dune {
     void error_fraction(const T& x, typename T::ElementType alpha, typename T::ElementType beta,
                         typename T::ElementType& eta_alpha, typename T::ElementType& eta_beta, int verbose=0)
     {
+      if (verbose>0) 
+        std::cout << "+++ error fraction: alpha=" << alpha << " beta=" << beta << std::endl;
       const int steps=20; // max number of bisection steps
       typedef typename T::ElementType NumberType;
       NumberType total_error = x.one_norm();
@@ -622,11 +624,11 @@ namespace Dune {
               if (x[i]>=eta_alpha) { sum_alpha += x[i]; alpha_count++;}
               if (x[i]< eta_beta) { sum_beta += x[i]; beta_count++;}
             }
-          if (verbose>0)
+          if (verbose>1)
             {
-              std::cout << j << " eta_alpha=" << eta_alpha << " alpha_fraction=" << sum_alpha/total_error 
+              std::cout << "+++ " << j << " eta_alpha=" << eta_alpha << " alpha_fraction=" << sum_alpha/total_error 
                         << " elements: " << alpha_count << " of " << x.N() << std::endl;
-              std::cout << j << " eta_beta=" << eta_beta << " beta_fraction=" << sum_beta/total_error 
+              std::cout << "+++ " << j << " eta_beta=" << eta_beta << " beta_fraction=" << sum_beta/total_error 
                         << " elements: " << beta_count << " of " << x.N() << std::endl;
             }
           if (std::abs(alpha-sum_alpha/total_error) <= 0.01 && std::abs(beta-sum_beta/total_error) <= 0.01) break;
@@ -638,6 +640,11 @@ namespace Dune {
             eta_beta_right = eta_beta;
           else
             eta_beta_left = eta_beta;
+        }
+      if (verbose>0)
+        {
+          std::cout << "+++ refine_threshold=" << eta_alpha 
+                    << " coarsen_threshold=" << eta_beta << std::endl;
         }
     }
 
@@ -667,7 +674,7 @@ namespace Dune {
               if (x[i]>=eta_alpha) { sum_alpha += 1.0; alpha_count++;}
               if (x[i]< eta_beta) { sum_beta +=1.0; beta_count++;}
             }
-          if (verbose>0)
+          if (verbose>1)
             {
               std::cout << j << " eta_alpha=" << eta_alpha << " alpha_fraction=" << sum_alpha/total_error 
                         << " elements: " << alpha_count << " of " << x.N() << std::endl;
@@ -683,6 +690,11 @@ namespace Dune {
             eta_beta_right = eta_beta;
           else
             eta_beta_left = eta_beta;
+        }
+      if (verbose>0)
+        {
+          std::cout << "+++ refine_threshold=" << eta_alpha 
+                    << " coarsen_threshold=" << eta_beta << std::endl;
         }
     }
 
@@ -735,17 +747,18 @@ namespace Dune {
               sum[k] += x[i];
               count[k] += 1;
             }
-      std::cout << "// error distribution" << std::endl;
-      std::cout << " number of elements: " << x.N() << std::endl;
-      std::cout << " max element error:  " << max_error << std::endl;
-      std::cout << " total error:        " << total_error << std::endl;
-      std::cout << " bin #elements eta sum/total " << std::endl;
+      std::cout << "+++ error distribution" << std::endl;
+      std::cout << "+++ number of elements: " << x.N() << std::endl;
+      std::cout << "+++ max element error:  " << max_error << std::endl;
+      std::cout << "+++ total error:        " << total_error << std::endl;
+      std::cout << "+++ bin #elements eta sum/total " << std::endl;
       for (unsigned int k=0; k<bins; k++)
-        std::cout << k+1 << " " << count[k] << " " << eta[k] << " " << sum[k]/total_error << std::endl;
+        std::cout << "+++ " << k+1 << " " << count[k] << " " << eta[k] << " " << sum[k]/total_error << std::endl;
     }
 
     template<typename Grid, typename X>
-    void mark_grid (Grid &grid, const X& x, typename X::ElementType refine_threshold)
+    void mark_grid (Grid &grid, const X& x, typename X::ElementType refine_threshold, 
+                    typename X::ElementType coarsen_threshold, int verbose=0)
     {
       typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator 
         Iterator;
@@ -756,14 +769,346 @@ namespace Dune {
       const IndexSet& is(gv.indexSet());
       Iterator it = grid.template leafbegin<0,Dune::All_Partition>();
       Iterator eit = grid.template leafend<0,Dune::All_Partition>();
-    
+
+      unsigned int refine_cnt=0;
+      unsigned int coarsen_cnt=0;
+
       for(;it!=eit;++it)
         {
           typename IndexSet::IndexType myid = is.template index<0>(*it);
           if (x[myid]>=refine_threshold)
-            grid.mark(1,*(it));
+            {
+              grid.mark(1,*(it));
+              refine_cnt++;
+            }
+          if (x[myid]<=coarsen_threshold)
+            {
+              grid.mark(-1,*(it));
+              coarsen_cnt++;
+            }
         }
+      if (verbose>0)
+        std::cout << "+++ mark_grid: " << refine_cnt << " marked for refinement, " 
+                  << coarsen_cnt << " marked for coarsening" << std::endl;
     }
+
+
+    template<typename Grid, typename X>
+    void mark_grid_for_coarsening (Grid &grid, const X& x, typename X::ElementType refine_threshold,
+                                   typename X::ElementType coarsen_threshold, int verbose=0)
+    {
+      typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator 
+        Iterator;
+      typedef typename Grid::LeafGridView GV;
+      typedef typename GV::IndexSet IndexSet;
+
+      const GV& gv=grid.leafView();
+      const IndexSet& is(gv.indexSet());
+      Iterator it = grid.template leafbegin<0,Dune::All_Partition>();
+      Iterator eit = grid.template leafend<0,Dune::All_Partition>();
+
+      unsigned int coarsen_cnt=0;
+
+      for(;it!=eit;++it)
+        {
+          typename IndexSet::IndexType myid = is.template index<0>(*it);
+          if (x[myid]>=refine_threshold)
+            {
+              grid.mark(-1,*(it));
+              coarsen_cnt++;
+            }
+          if (x[myid]<=coarsen_threshold)
+            {
+              grid.mark(-1,*(it));
+              coarsen_cnt++;
+            }
+        }
+      if (verbose>0)
+        std::cout << "+++ mark_grid_for_coarsening: " 
+                  << coarsen_cnt << " marked for coarsening" << std::endl;
+    }
+
+
+    class TimeAdaptationStrategy
+    {
+      // strategy parameters
+      double scaling;
+      double optimistic_factor;
+      double coarsen_limit;
+      double balance_limit;
+      double tol;
+      double T;
+      int verbose;
+      bool no_adapt;
+      double refine_fraction_while_refinement;
+      double coarsen_fraction_while_refinement;
+      double coarsen_fraction_while_coarsening;
+      double timestep_decrease_factor;
+      double timestep_increase_factor;
+
+      // results to be reported to the user after evaluating the error
+      bool accept;
+      bool adapt_dt;
+      bool adapt_grid;
+      double newdt;
+      double q_s, q_t;
+
+      // state variables
+      bool have_decreased_time_step;
+      bool have_refined_grid;
+
+      // the only state variable: accumulated error
+      double accumulated_estimated_error_squared;
+      double minenergy_rate;
+
+    public:
+      TimeAdaptationStrategy (double tol_, double T_, int verbose_=0)
+        : scaling(16.0), optimistic_factor(1.0), coarsen_limit(0.5), balance_limit(0.33333), 
+          tol(tol_), T(T_), verbose(verbose_), no_adapt(false), 
+          refine_fraction_while_refinement(0.7),
+          coarsen_fraction_while_refinement(0.2), 
+          coarsen_fraction_while_coarsening(0.2), 
+          timestep_decrease_factor(0.5), timestep_increase_factor(1.5), 
+          accept(false), adapt_dt(false), adapt_grid(false), newdt(1.0),
+          have_decreased_time_step(false), have_refined_grid(false),
+          accumulated_estimated_error_squared(0.0),
+          minenergy_rate(0.0)
+      {
+      }
+
+      void setTimeStepDecreaseFactor (double s)
+      {
+        timestep_decrease_factor=s;
+      }
+
+      void setTimeStepIncreaseFactor (double s)
+      {
+        timestep_increase_factor=s;
+      }
+
+      void setRefineFractionWhileRefinement (double s)
+      {
+        refine_fraction_while_refinement=s;
+      }
+
+      void setCoarsenFractionWhileRefinement (double s)
+      {
+        coarsen_fraction_while_refinement=s;
+      }
+
+      void setCoarsenFractionWhileCoarsening (double s)
+      {
+        coarsen_fraction_while_coarsening=s;
+      }
+
+      void setMinEnergyRate (double s)
+      {
+        minenergy_rate=s;
+      }
+
+      void setCoarsenLimit (double s)
+      {
+        coarsen_limit=s;
+      }
+
+      void setBalanceLimit (double s)
+      {
+        balance_limit=s;
+      }
+
+      void setTemporalScaling (double s)
+      {
+        scaling=s;
+      }
+
+      void setOptimisticFactor (double s)
+      {
+        optimistic_factor=s;
+      }
+
+      void setAdaptationOn ()
+      {
+        no_adapt = false;
+      }
+
+      void setAdaptationOff ()
+      {
+        no_adapt = true;
+      }
+
+      bool acceptTimeStep () const
+      {
+        return accept;
+      }
+
+      bool adaptDT () const
+      {
+        return adapt_dt;
+      }
+
+      bool adaptGrid () const
+      {
+        return adapt_grid;
+      }
+
+      double newDT () const
+      {
+        return newdt;
+      }
+
+      double qs () const
+      {
+        return q_s;
+      }
+
+      double qt () const
+      {
+        return q_t;
+      }
+
+      double accumulatedErrorSquared () const
+      {
+        return accumulated_estimated_error_squared;
+      }
+
+      // to be called when new time step is done
+      void startTimeStep ()
+      {
+        have_decreased_time_step = false;
+        have_refined_grid = false;
+      }
+
+      template<typename GM, typename X>
+      void evaluate_estimators (GM& grid, double time, double dt, const X& eta_space,  const X& eta_time, double energy_timeslab)
+      {
+        accept=false;
+        adapt_dt=false;
+        adapt_grid=false;
+        newdt=dt;
+        
+        double spatial_error = eta_space.one_norm();
+        double temporal_error = scaling*eta_time.one_norm();
+        double sum = spatial_error + temporal_error;
+        //double allowed = optimistic_factor*(tol*tol-accumulated_estimated_error_squared)*dt/(T-time);
+        double allowed = tol*tol*(energy_timeslab+minenergy_rate*dt);
+        q_s = spatial_error/sum;
+        q_t = temporal_error/sum;
+
+        // print some statistics
+        if (verbose>0)
+          std::cout << "+++"
+                    << " q_s=" << q_s
+                    << " q_t=" << q_t
+                    << " sum/allowed=" << sum/allowed
+                    // << " allowed=" << allowed
+                    << " estimated error=" << sqrt(accumulated_estimated_error_squared+sum)
+                    << " energy_rate=" << energy_timeslab/dt
+                    << std::endl;
+
+        // for simplicity: a mode that does no adaptation at all
+        if (no_adapt)
+          {
+            accept = true;
+            accumulated_estimated_error_squared += sum;
+            if (verbose>1) std::cout << "+++ no adapt mode" << std::endl;
+            return;
+          }
+
+        // the adaptation strategy
+        if (sum<=allowed)
+          {
+            // we will accept this time step
+            accept = true;
+            if (verbose>1) std::cout << "+++ accepting time step" << std::endl;
+            accumulated_estimated_error_squared += sum;
+
+            // check if grid size or time step needs to be adapted
+            if (sum<coarsen_limit*allowed)
+              {
+                // the error is too small, i.e. the computation is inefficient
+                if (q_t<balance_limit)
+                  {
+                    // spatial error is dominating => increase time step
+                    newdt = timestep_increase_factor*dt;
+                    adapt_dt = true;
+                    if (verbose>1) std::cout << "+++ spatial error dominates: increase time step" << std::endl;
+                  }
+                else
+                  {
+                    if (q_s>balance_limit)
+                      {
+                        // step sizes balanced: coarsen in time
+                        newdt = timestep_increase_factor*dt;
+                        adapt_dt = true;
+                        if (verbose>1) std::cout << "+++ increasing time step" << std::endl;
+                      }
+                    // coarsen grid in space
+                    double eta_refine, eta_coarsen;
+                    if (verbose>1) std::cout << "+++ mark grid for coarsening" << std::endl;
+                    //error_distribution(eta_space,20);
+                    Dune::PDELab::error_fraction(eta_space,coarsen_fraction_while_coarsening,
+                                                 coarsen_fraction_while_coarsening,eta_refine,eta_coarsen);
+                    Dune::PDELab::mark_grid_for_coarsening(grid,eta_space,eta_refine,eta_coarsen,verbose);
+                    adapt_grid = true;
+                  }
+              }
+            else
+              {
+                // modify at least the time step
+                if (q_t<balance_limit)
+                  {
+                    // spatial error is dominating => increase time step
+                    newdt = timestep_increase_factor*dt;
+                    adapt_dt = true;
+                    if (verbose>1) std::cout << "+++ spatial error dominates: increase time step" << std::endl;
+                  }
+              }
+          }
+        else
+          {
+            // error is too large, we need to do something
+            if (verbose>1) std::cout << "+++ will redo time step" << std::endl;
+            if (q_t>1-balance_limit)
+              {
+                // temporal error is dominating => decrease time step only
+                newdt = timestep_decrease_factor*dt;
+                adapt_dt = true;
+                have_decreased_time_step = true;
+                if (verbose>1) std::cout << "+++ decreasing time step only" << std::endl;
+              }
+            else
+              {
+                if (q_t<balance_limit)
+                  {
+                    if (!have_decreased_time_step)
+                      {
+                        // time steps size not balanced (too small)
+                        newdt = timestep_increase_factor*dt;
+                        adapt_dt = true;
+                        if (verbose>1) std::cout << "+++ increasing time step" << std::endl;
+                      }
+                  }
+                else
+                  {
+                    // step sizes balanced: refine in time as well
+                    newdt = timestep_decrease_factor*dt;
+                    adapt_dt = true;
+                    have_decreased_time_step = true;
+                    if (verbose>1) std::cout << "+++ decreasing time step" << std::endl;
+                  }
+                // refine grid in space
+                double eta_refine, eta_coarsen;
+                if (verbose>1) std::cout << "+++ BINGO mark grid for refinement and coarsening" << std::endl;
+                //error_distribution(eta_space,20);
+                Dune::PDELab::error_fraction(eta_space,refine_fraction_while_refinement,
+                                             coarsen_fraction_while_refinement,eta_refine,eta_coarsen,0);
+                Dune::PDELab::mark_grid(grid,eta_space,eta_refine,eta_coarsen,verbose);
+                adapt_grid = true;
+              }
+          }
+      }
+    };
+
 
 
   } // namespace PDELab

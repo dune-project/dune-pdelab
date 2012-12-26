@@ -17,6 +17,7 @@ common_HEADERS =				\
 	logtag.hh				\
 	multiindex.hh				\
 	range.hh				\
+	topologyutility.hh			\
 	typetree.hh                             \
         typetraits.hh                           \
 	vtkexport.hh

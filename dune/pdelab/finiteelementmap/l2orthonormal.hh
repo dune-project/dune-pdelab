@@ -159,7 +159,7 @@ namespace Dune {
     };
 
     // the number of polynomials of at most degree k in space dimension d (as run-time function)
-    int pk_size (int k, int d)
+    inline int pk_size (int k, int d)
     {
       if (k==0) return 1;
       if (d==1) return k+1;
@@ -170,7 +170,7 @@ namespace Dune {
     }
 
     // the number of polynomials of exactly degree k in space dimension d (as run-time function)
-    int pk_size_exact (int k, int d)
+    inline int pk_size_exact (int k, int d)
     {
       if (k==0)
         return 1;
@@ -224,7 +224,7 @@ namespace Dune {
     //=====================================================
 
     //! compute binomial coefficient "n over k"
-    long binomial (long n, long k)
+    inline long binomial (long n, long k)
     {
       if (k>=n)
         {
@@ -716,18 +716,22 @@ namespace Dune {
     void interpolate (const F& f, std::vector<C>& out) const
     {
       // select quadrature rule
+      typedef typename LB::Traits::DomainType DomainType;
+
+      typedef typename FieldTraits<typename LB::Traits::RangeFieldType>::real_type RealFieldType;
+
       typedef typename LB::Traits::RangeFieldType FieldType;
       typedef typename LB::Traits::RangeType RangeType;
       const int d = LB::Traits::dimDomain;
-      const Dune::QuadratureRule<FieldType,d>&
-        rule = Dune::QuadratureRules<FieldType,d>::rule(lb.type(),2*lb.order());
+      const Dune::QuadratureRule<RealFieldType,d>&
+        rule = Dune::QuadratureRules<RealFieldType,d>::rule(lb.type(),2*lb.order());
 
       // prepare result
       out.resize(LB::n);
       for (int i=0; i<LB::n; i++) out[i] = 0.0;
 
       // loop over quadrature points
-      for (typename Dune::QuadratureRule<FieldType,d>::const_iterator
+      for (typename Dune::QuadratureRule<RealFieldType,d>::const_iterator
              it=rule.begin(); it!=rule.end(); ++it)
         {
           // evaluate function at quadrature point

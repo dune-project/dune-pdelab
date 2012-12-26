@@ -16,7 +16,7 @@
 #include <iostream>
 #include "config.h"           // file constructed by ./configure script
 
-#include <dune/common/mpihelper.hh> // include mpi helper class 
+#include <dune/common/parallel/mpihelper.hh> // include mpi helper class 
 #include <dune/common/parametertreeparser.hh>
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/classname.hh>
@@ -67,6 +67,7 @@
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/constraints/constraints.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
+#include <dune/pdelab/gridoperator/onestep.hh>
 #include <dune/pdelab/stationary/linearproblem.hh>
 #include <dune/pdelab/finiteelementmap/pkfem.hh>
 #include <dune/pdelab/finiteelementmap/p0fem.hh>
@@ -77,6 +78,8 @@
 #include <dune/pdelab/finiteelementmap/p0constraints.hh>
 #include <dune/pdelab/finiteelementmap/p0ghostconstraints.hh>
 #include <dune/pdelab/adaptivity/adaptivity.hh>
+#include <dune/pdelab/instationary/onestep.hh>
+#include <dune/pdelab/newton/newton.hh>
 
 namespace Dune {
     namespace PDELab {
@@ -143,6 +146,12 @@ namespace Dune {
                         DUNE_THROW(GridError, className<StructuredGrid>()
                                    << "::StructuredGrid(): grid type must be simplex or cube ");
                     }
+            }
+
+            // return shared pointer
+            Dune::shared_ptr<T> getSharedPtr ()
+            {
+                return gridp;
             }
 
             // return grid reference
@@ -282,6 +291,12 @@ namespace Dune {
 #endif
             }
 
+            // return shared pointer
+            Dune::shared_ptr<Grid> getSharedPtr ()
+            {
+                return gridp;
+            }
+
             // return grid reference
             Grid& getGrid ()
             {
@@ -335,6 +350,12 @@ namespace Dune {
                 Dune::GridFactory<T> factory;
                 Dune::GmshReader<T>::read(factory,filename);
                 gridp = shared_ptr<T>(factory.createGrid());
+            }
+
+            // return shared pointer
+            Dune::shared_ptr<T> getSharedPtr ()
+            {
+                return gridp;
             }
 
             // return grid reference
@@ -1159,6 +1180,57 @@ namespace Dune {
 
 
 
+        template<typename GO1, typename GO2, bool implicit = true>
+        class OneStepGlobalAssembler
+        {
+        public:
+            // export types
+            typedef typename GO1::GO::Traits::MatrixBackend MBE;
+            typedef Dune::PDELab::OneStepGridOperator<typename GO1::GO,typename GO2::GO,implicit> GO;
+            typedef typename GO::Jacobian MAT;
+
+            OneStepGlobalAssembler (GO1& go1, GO2& go2)
+            {
+                gop = shared_ptr<GO>(new GO(*go1,*go2));
+            }
+
+            // return grid reference
+            GO& getGO ()
+            {
+                return *gop;
+            }
+
+            // return grid reference const version
+            const GO& getGO () const
+            {
+                return *gop;
+            }
+
+            GO& operator*()
+            {
+                return *gop;
+            }
+
+            GO* operator->()
+            {
+                return gop.operator->();
+            }
+
+            const GO& operator*() const
+            {
+                return *gop;
+            }
+
+            const GO* operator->() const
+            {
+                return gop.operator->();
+            }
+
+        private:
+            shared_ptr<GO> gop;
+        };
+
+
         // packaging of the CG_AMG_SSOR solver: default version is sequential
         template<typename FS, typename ASS, SolverCategory::Category st = SolverCategory::sequential>
         class ISTLSolverBackend_CG_AMG_SSOR
@@ -1382,6 +1454,82 @@ namespace Dune {
        private:
             shared_ptr<LS> lsp;
         };
+
+        // packaging of a default solver that should always work
+        // in the sequential case : BCGS SSOR
+        template<typename FS, typename ASS, SolverCategory::Category st = SolverCategory::sequential>
+        class ISTLSolverBackend_ExplicitDiagonal
+        {
+        public:
+            // types exported
+            typedef Dune::PDELab::ISTLBackend_SEQ_ExplicitDiagonal LS;
+
+            ISTLSolverBackend_ExplicitDiagonal (const FS& fs, const ASS& ass, unsigned maxiter_=5000, int verbose_=1)
+            {
+                lsp = shared_ptr<LS>(new LS());
+            }
+
+            LS& getLS () {return *lsp;}
+            const LS& getLS () const { return *lsp;}
+            LS& operator*(){return *lsp;}
+            LS* operator->() { return lsp.operator->(); }
+            const LS& operator*() const{return *lsp;}
+            const LS* operator->() const{ return lsp.operator->();}
+
+       private:
+            shared_ptr<LS> lsp;
+        };
+
+        // packaging of a default solver that should always work
+        // in the sequential case : BCGS SSOR
+        template<typename FS, typename ASS>
+        class ISTLSolverBackend_ExplicitDiagonal<FS,ASS,SolverCategory::overlapping>
+        {
+        public:
+            // types exported
+            typedef Dune::PDELab:: ISTLBackend_OVLP_ExplicitDiagonal<typename FS::GFS> LS;
+
+            ISTLSolverBackend_ExplicitDiagonal (const FS& fs, const ASS& ass, unsigned maxiter_=5000, int verbose_=1)
+            {
+                lsp = shared_ptr<LS>(new LS(fs.getGFS()));
+            }
+
+            LS& getLS () {return *lsp;}
+            const LS& getLS () const { return *lsp;}
+            LS& operator*(){return *lsp;}
+            LS* operator->() { return lsp.operator->(); }
+            const LS& operator*() const{return *lsp;}
+            const LS* operator->() const{ return lsp.operator->();}
+
+       private:
+            shared_ptr<LS> lsp;
+        };
+
+        // packaging of a default solver that should always work
+        // in the sequential case : BCGS SSOR
+        template<typename FS, typename ASS>
+        class ISTLSolverBackend_ExplicitDiagonal<FS,ASS,SolverCategory::nonoverlapping>
+        {
+        public:
+            // types exported
+            typedef Dune::PDELab:: ISTLBackend_NOVLP_ExplicitDiagonal<typename FS::GFS> LS;
+
+            ISTLSolverBackend_ExplicitDiagonal (const FS& fs, const ASS& ass, unsigned maxiter_=5000, int verbose_=1)
+            {
+                lsp = shared_ptr<LS>(new LS(fs.getGFS()));
+            }
+
+            LS& getLS () {return *lsp;}
+            const LS& getLS () const { return *lsp;}
+            LS& operator*(){return *lsp;}
+            LS* operator->() { return lsp.operator->(); }
+            const LS& operator*() const{return *lsp;}
+            const LS* operator->() const{ return lsp.operator->();}
+
+       private:
+            shared_ptr<LS> lsp;
+        };
+
 
 } // end namespace PDELab
     } // end namespace Dune
