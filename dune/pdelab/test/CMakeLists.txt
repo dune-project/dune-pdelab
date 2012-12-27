@@ -5,9 +5,6 @@ set(NORMALTESTS  )
 set(MOSTLYCLEANFILES )
 set(check_SCRIPTS  )
 
-# programs just to build when "make check" is used
-set(check_PROGRAMS  ${NORMALTESTS})
-
 set(noinst_HEADERS                                 
         fmt.hh                                  
         gnuplotgraph.hh                         
@@ -129,6 +126,7 @@ list(APPEND MOSTLYCLEANFILES multi.vtu single.vtu)
 
 list(APPEND NORMALTESTS testgridfunctionspace)
 add_executable(testgridfunctionspace testgridfunctionspace.cc)
+target_link_libraries(testgridfunctionspace  dunepdelab ${DUNE_LIBS})
 
 list(APPEND NORMALTESTS testlaplacedirichletccfv)
 add_executable(testlaplacedirichletccfv testlaplacedirichletccfv.cc)
@@ -170,7 +168,6 @@ list(APPEND MOSTLYCLEANFILES testlaplacedirichletp12d.vtu)
 
 list(APPEND NORMALTESTS testelasticity)
 add_executable(testelasticity testelasticity.cc)
-
 target_link_libraries(testelasticity dunepdelab ${DUNE_LIBS})
 add_dune_superlu_flags(testelasticity )
 # The following lines are comment out as the translation is not clear. TODO review
@@ -372,8 +369,8 @@ list(APPEND MOSTLYCLEANFILES
         s*:vectorwave_*.pvtu                    
         vectorwave_*.pvd)
 
-list(APPEND TESTS testvectorwavecached.conf)
-list(APPEND check_SCRIPTS testvectorwavecached.conf)
+list(APPEND TESTS ${CMAKE_CURRENT_BINARY_DIR}/testvectorwavecached.conf)
+list(APPEND check_SCRIPTS ${CMAKE_CURRENT_BINARY_DIR}/testvectorwavecached.conf)
 list(APPEND check_PROGRAMS testvectorwavecached)
 add_executable(testvectorwavecached testvectorwavecached.cc)
 target_link_libraries(testvectorwavecached dunepdelab ${DUNE_LIBS})
@@ -490,6 +487,8 @@ foreach(i ${TESTS} ${NORMALTESTS})
   add_test(${i} ${i})
 endforeach(i ${TESTS})
 
+# programs just to build when "make check" is used
+set(check_PROGRAMS  ${NORMALTESTS})
 
 # We do not want want to build the tests during make all
 # but just build them on demand
