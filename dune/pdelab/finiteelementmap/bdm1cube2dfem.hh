@@ -3,7 +3,7 @@
 #define DUNE_PDELAB_FINITEELEMENTMAP_BDM1CUBE2DFEM_HH
 
 #include <vector>
-#include <dune/localfunctions/brezzidouglasmarini/brezzidouglasmarini1q2d.hh>
+#include <dune/localfunctions/brezzidouglasmarini/brezzidouglasmarini1cube2d.hh>
 #include "finiteelementmap.hh"
 
 namespace Dune {
