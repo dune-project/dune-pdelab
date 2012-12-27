@@ -127,7 +127,7 @@ public:
   }
 };
 
-#ifdef HAVE_ALUGRID
+#if HAVE_ALUGRID
 template<>
 class UnitTriangleMaker<Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> > {
   typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
@@ -168,7 +168,7 @@ public:
   }
 };
 
-#ifdef HAVE_ALUGRID
+#if HAVE_ALUGRID
 template<>
 class TriangulatedUnitSquareMaker<Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> > {
   typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
@@ -252,7 +252,7 @@ public:
   }
 };
 
-#ifdef HAVE_ALBERTA
+#if HAVE_ALBERTA
 # if ALBERTA_DIM == 3
 #  ifndef ALLOW_ALBERTA_MINIMAL_TRIANGULATED_CUBE
 // AlbertaSimplexGrid<3,3> cannot refine the minimal triangulated cube, see
