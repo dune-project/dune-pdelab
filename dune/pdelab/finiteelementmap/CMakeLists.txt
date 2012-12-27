@@ -1,6 +1,9 @@
 set(finiteelementmapdir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/finiteelementmap)
 
-set(finiteelementmap_HEADERS                       
+set(finiteelementmap_HEADERS
+        bdm1cube2dfem.hh
+        bdm1simplex2dfem.hh
+        brezzidouglasmarinifem.hh
         conformingconstraints.hh                
         edges0.5fem.hh                          
         finiteelementmap.hh                     
@@ -26,12 +29,16 @@ set(finiteelementmap_HEADERS
         q1fem.hh                                
         q22dfem.hh                              
         qkdg.hh                                 
-        rannacher_turek2dfem.hh                 
-        rt02dfem.hh                             
-        rt0constraints.hh                       
-        rt0q2dfem.hh                            
-        rt0q3dfem.hh                            
-        rt0qfem.hh                              
+        rannacher_turek2dfem.hh
+	raviartthomasfem.hh
+        rt0constraints.hh
+	rt0cube2dfem.hh
+	rt0cube3dfem.hh
+	rt0simplex2dfem.hh
+	rt1cube2dfem.hh
+	rt1cube3dfem.hh
+	rt1simplex2dfem.hh
+	rt2cube2dfem.hh
         variablemonomfem.hh)
 
 # include not needed for CMake

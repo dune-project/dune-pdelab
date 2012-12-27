@@ -1,6 +1,4 @@
-set(SUBDIRS                                        
-        typetree)
-
+add_subdirectory(typetree)
 set(commondir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/common)
 set(common_HEADERS
         benchmarkhelper.hh
@@ -16,7 +14,8 @@ set(common_HEADERS
         jacobiantocurl.hh                       
         logtag.hh                               
         multiindex.hh                           
-        range.hh                                
+        range.hh
+	topologyutility.hh
         typetree.hh                             
         typetraits.hh                           
         vtkexport.hh)
@@ -33,11 +32,3 @@ dune_add_library(dunepdelab
 	)
 
 install(FILES ${common_HEADERS} DESTINATION ${commondir})
-foreach(i ${SUBDIRS})
-  if(${i} STREQUAL "test")
-    set(opt EXCLUDE_FROM_ALL)
-  endif(${i} STREQUAL "test")
-  add_subdirectory(${i} ${opt})
-endforeach(i ${SUBDIRS})
-
-

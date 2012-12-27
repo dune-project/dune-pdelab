@@ -2,7 +2,8 @@ set(gridoperatordefaultdir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/gridoperator
 
 set(gridoperatordefault_HEADERS                            
         assembler.hh                                    
-        jacobianengine.hh                               
+        jacobianengine.hh
+        jacobianapplyengine.hh
         localassembler.hh                               
         patternengine.hh                                
         residualengine.hh)

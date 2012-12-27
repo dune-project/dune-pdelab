@@ -355,10 +355,18 @@ add_dune_alberta_flags(testutilities )
 #        ${LDADD})
 list(APPEND MOSTLYCLEANFILES edger.vtu interpolated.vtu q1.vtu taylorhood.vtu)
 
-list(APPEND TESTS testvectorwave.conf)
-list(APPEND check_SCRIPTS testvectorwave.conf)
+list(APPEND TESTS ${CMAKE_CURRENT_BINARY_DIR}/testvectorwave.conf)
 list(APPEND check_PROGRAMS testvectorwave)
 add_executable(testvectorwave testvectorwave.cc)
+target_link_libraries(testvectorwave dunepdelab ${DUNE_LIBS})
+
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/testvectorwave.conf
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/testvectorwave.conf ${CMAKE_CURRENT_BINARY_DIR}/testvectorwave.conf
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/testvectorwave.conf testvectorwave
+  )
+list(APPEND check_SCRIPTS testvectorwave.conf)
+
 list(APPEND MOSTLYCLEANFILES 
         s*:p*:vectorwave_*.vtu                  
         s*:vectorwave_*.pvtu                    
@@ -368,6 +376,14 @@ list(APPEND TESTS testvectorwavecached.conf)
 list(APPEND check_SCRIPTS testvectorwavecached.conf)
 list(APPEND check_PROGRAMS testvectorwavecached)
 add_executable(testvectorwavecached testvectorwavecached.cc)
+target_link_libraries(testvectorwavecached dunepdelab ${DUNE_LIBS})
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/testvectorwavecached.conf
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/testvectorwavecached.conf ${CMAKE_CURRENT_BINARY_DIR}/testvectorwavecached.conf
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/testvectorwavecached.conf testvectorwavecached
+  )
+list(APPEND check_SCRIPTS testvectorwavecached.conf)
+
 list(APPEND MOSTLYCLEANFILES 
         s*:p*:vectorwavecached_*.vtu            
         s*:vectorwavecached_*.pvtu              
@@ -375,37 +391,49 @@ list(APPEND MOSTLYCLEANFILES
 
 list(APPEND check_PROGRAMS testtypetree testtypetree-no-sfinae testtypetree-no-variadic testtypetree-no-rvalue-refs testtypetree-legacy)
 add_executable(testtypetree testtypetree.cc)
-
+set_property(TARGET testtypetree APPEND PROPERTY COMPILE_DEFINITIONS TEST_TYPETREE)
 target_link_libraries(testtypetree dunepdelab ${DUNE_LIBS})
+
 add_executable(testtypetree_no_sfinae testtypetree.cc)
-
+set_property(TARGET testtypetree APPEND PROPERTY COMPILE_DEFINITIONS TEST_TYPETREE_NO_SFINAE)
 target_link_libraries(testtypetree_no_sfinae dunepdelab ${DUNE_LIBS})
+
 add_executable(testtypetree_no_variadic testtypetree.cc)
-
+set_property(TARGET testtypetree_no_variadic APPEND PROPERTY
+  COMPILE_DEFINITIONS TEST_TYPETREE_NO_VARIADIC)
 target_link_libraries(testtypetree_no_variadic dunepdelab ${DUNE_LIBS})
+
 add_executable(testtypetree_no_rvalue_refs testtypetree.cc)
-
+set_property(TARGET testtypetree_no_rvalue_refs APPEND PROPERTY
+  COMPILE_DEFINITIONS TEST_TYPETREE_NO_RVALUE_REFERENCES)
 target_link_libraries(testtypetree_no_rvalue_refs dunepdelab ${DUNE_LIBS})
-add_executable(testtypetree_legacy testtypetree.cc)
 
+add_executable(testtypetree_legacy testtypetree.cc)
+set_property(TARGET testtypetree_legacy APPEND PROPERTY
+  COMPILE_DEFINITIONS TEST_TYPETREE_LEGACY)
 target_link_libraries(testtypetree_legacy dunepdelab ${DUNE_LIBS})
 
 list(APPEND check_PROGRAMS testtypetreetransformation)
 add_executable(testtypetreetransformation testtypetreetransformation.cc)
-
+set_property(TARGET testtypetreetransformation APPEND PROPERTY
+  COMPILE_DEFINITIONS TEST_TYPETREE)
 target_link_libraries(testtypetreetransformation dunepdelab ${DUNE_LIBS})
 
 list(APPEND check_PROGRAMS testinterpolate)
 add_executable(testinterpolate testinterpolate.cc)
+target_link_libraries(testinterpolate dunepdelab ${DUNE_LIBS})
 
 list(APPEND check_PROGRAMS testfilteredcompositenode)
 add_executable(testfilteredcompositenode testfilteredcompositenode.cc)
-
+set_property(TARGET testfilteredcompositenode APPEND PROPERTY
+  COMPILE_DEFINITIONS TEST_TYPETREE)
 target_link_libraries(testfilteredcompositenode dunepdelab ${DUNE_LIBS})
 
 list(APPEND check_PROGRAMS testproxynode)
 add_executable(testproxynode testproxynode.cc)
-
+target_link_libraries(testproxynode dunepdelab ${DUNE_LIBS})
+set_property(TARGET testproxynode APPEND PROPERTY
+  COMPILE_DEFINITIONS TEST_TYPETREE)
 target_link_libraries(testproxynode dunepdelab ${DUNE_LIBS})
 
 if(PETSC_FOUND)
@@ -436,6 +464,20 @@ add_dune_gmp_flags(testopbfem )
 # set(testopbfem_ LDADD ${LDADD} ${GMP_LIBS})
 endif(GMP_FOUND )
 
+list(APPEND check_PROGRAMS testrtfem)
+add_executable(testrtfem testrtfem.cc)
+target_link_libraries(testrtfem dunepdelab ${DUNE_LIBS})
+#add_dune_alberta_flags(testrtfem)
+#add_dune_ug_flags(testrtfem)
+#add_dune_alugrid_flags(testrtfem)
+
+list(APPEND check_PROGRAMS testbdmfem)
+add_executable(testbdmfem testbdmfem.cc)
+target_link_libraries(testbdmfem dunepdelab ${DUNE_LIBS})
+add_dune_alberta_flags(testbdmfem)
+add_dune_ug_flags(testbdmfem)
+add_dune_alugrid_flags(testbdmfem)
+
 list(APPEND MOSTLYCLEANFILES poisson_petsc_*.vtu)
 
 # include not needed for CMake
@@ -444,7 +486,7 @@ list(APPEND MOSTLYCLEANFILES poisson_petsc_*.vtu)
 set(DISTCHECK_CONFIGURE_FLAGS  --with-dune=${DUNEROOT} CXX="${CXX}" CC="${CC}")
 
 
-foreach(i ${TESTS})
+foreach(i ${TESTS} ${NORMALTESTS})
   add_test(${i} ${i})
 endforeach(i ${TESTS})
 
@@ -452,4 +494,4 @@ endforeach(i ${TESTS})
 # We do not want want to build the tests during make all
 # but just build them on demand
 add_directory_test_target(_test_target)
-add_dependencies(${_test_target} ${TESTS} ${COMPILE_XFAIL_TESTS})
+add_dependencies(${_test_target} ${TESTS} ${COMPILE_XFAIL_TESTS} ${check_PROGRAMS})
