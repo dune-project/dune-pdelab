@@ -14,10 +14,10 @@ namespace Dune {
     template<typename GV, typename D, typename R>
     class BDM1Cube2DLocalFiniteElementMap :
       public LocalFiniteElementMapInterface<
-        LocalFiniteElementMapTraits<Dune::BDM1Q2DLocalFiniteElement<D,R> >,
+        LocalFiniteElementMapTraits<Dune::BDM1Cube2DLocalFiniteElement<D,R> >,
         BDM1Cube2DLocalFiniteElementMap<GV,D,R> >
     {
-      typedef Dune::BDM12DLocalFiniteElement<D,R> FE;
+      typedef Dune::BDM1Cube2DLocalFiniteElement<D,R> FE;
       typedef typename GV::IndexSet IndexSet;
 
     public:
