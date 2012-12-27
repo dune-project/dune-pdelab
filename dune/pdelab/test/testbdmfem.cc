@@ -77,7 +77,8 @@ int main(int argc, char** argv)
       typedef double RF;
 
       typedef Dune::PDELab::BrezziDouglasMariniLocalFiniteElementMap<GV,DF,RF,1> BDM1FEM;
-      typedef Dune::PDELab::BDM1Cube2DLocalFiniteElementMap<GV,DF,RF> BDM1BASEFEM;
+      typedef Dune::PDELab::BDM1Simplex2DLocalFiniteElementMap<GV,DF,RF> BDM1BASEFEM;
+
       BDM1FEM bdm1_fem(gv);
       BDM1BASEFEM bdm1_base_fem(gv);
       test(gv,bdm1_fem,bdm1_base_fem);
