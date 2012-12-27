@@ -10,14 +10,14 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
-#ifdef HAVE_ALBERTA
+#if HAVE_ALBERTA
 #include <dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/gridfactory.hh>
 #endif
-#ifdef HAVE_ALUGRID
+#if HAVE_ALUGRID
 #include <dune/grid/alugrid.hh>
 #endif
-#ifdef HAVE_UG
+#if HAVE_UG
 #include <dune/grid/uggrid.hh>
 #include <dune/grid/uggrid/uggridfactory.hh>
 #endif
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
     // Grids were found
     int result = 77;
 
-#ifdef HAVE_ALBERTA
+#if HAVE_ALBERTA
     std::cout << "Alberta" << std::endl;
     {
       typedef Dune::AlbertaGrid<2, 2> Grid;
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
 #endif // HAVE_ALBERTA
 
 
-#ifdef HAVE_ALUGRID
+#if HAVE_ALUGRID
     std::cout << "ALU" << std::endl;
     {
       typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
@@ -112,7 +112,7 @@ int main(int argc, char** argv)
     result = 0;
 #endif // HAVE_ALUGRID
 
-#ifdef HAVE_UG
+#if HAVE_UG
     std::cout << "UG" << std::endl;
     {
       typedef Dune::UGGrid<2> Grid;

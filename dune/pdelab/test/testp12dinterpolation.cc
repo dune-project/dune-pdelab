@@ -15,13 +15,13 @@
 #include <dune/geometry/quadraturerules.hh>
 
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
-#ifdef HAVE_ALBERTA
+#if HAVE_ALBERTA
 #include <dune/grid/albertagrid.hh>
 #endif
-#ifdef HAVE_ALUGRID
+#if HAVE_ALUGRID
 #include <dune/grid/alugrid.hh>
 #endif
-#ifdef HAVE_UG
+#if HAVE_UG
 #include <dune/grid/uggrid.hh>
 #endif
 
@@ -131,7 +131,7 @@ int main(int argc, char** argv)
     // Grids were found
     int result = 77;
 
-#ifdef HAVE_ALBERTA
+#if HAVE_ALBERTA
 #if (ALBERTA_DIM != 2)
 #error ALBERTA_DIM is not set to 2 -- please check the Makefile.am
 #endif
@@ -141,14 +141,14 @@ int main(int argc, char** argv)
          result, 250000, "alberta-square");
 #endif
 
-#ifdef HAVE_ALUGRID
+#if HAVE_ALUGRID
     test(UnitTriangleMaker          <Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> >::create(),
          result, 250000, "alu-triangle");
     test(TriangulatedUnitSquareMaker<Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> >::create(),
          result, 250000, "alu-square");
 #endif // HAVE_ALUGRID
 
-#ifdef HAVE_UG
+#if HAVE_UG
     test(UnitTriangleMaker          <Dune::UGGrid<2>            >::create(),
          result, 250000, "ug-triangle");
     test(TriangulatedUnitSquareMaker<Dune::UGGrid<2>            >::create(),
