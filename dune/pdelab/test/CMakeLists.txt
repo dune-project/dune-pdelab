@@ -488,7 +488,7 @@ foreach(i ${TESTS} ${NORMALTESTS})
 endforeach(i ${TESTS})
 
 # programs just to build when "make check" is used
-set(check_PROGRAMS  ${NORMALTESTS})
+set(check_PROGRAMS  ${check_PROGRAMS} ${NORMALTESTS})
 
 # We do not want want to build the tests during make all
 # but just build them on demand
