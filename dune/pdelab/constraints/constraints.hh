@@ -775,6 +775,19 @@ namespace Dune {
         xg[cit->first] = x;
     }
 
+
+#ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
+    template<typename XG>
+    void set_constrained_dofs(const EmptyTransformation& cg,
+                              typename XG::ElementType x,
+                              XG& xg)
+    {}
+
+#endif // DOXYGEN
+
+
     //! check that constrained dofs match a certain value
     /**
      * as if they were set by set_constrained_dofs()
@@ -806,6 +819,7 @@ namespace Dune {
           return false;
       return true;
     }
+
     //! check that constrained dofs match a certain value
     /**
      * \code
@@ -833,6 +847,28 @@ namespace Dune {
                                     FloatCmpOps<typename XG::ElementType>());
     }
 
+
+#ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
+    template<typename XG, typename Cmp>
+    bool check_constrained_dofs(const EmptyConstraints& cg, typename XG::ElementType x,
+                                XG& xg, const Cmp& cmp = Cmp())
+    {
+      return true;
+    }
+
+    // Specialized version for unconstrained spaces
+    template<typename XG>
+    bool check_constrained_dofs(const EmptyConstraints& cg, typename XG::ElementType x,
+                                XG& xg)
+    {
+      return true;
+    }
+
+#endif // DOXYGEN
+
+
     //! transform residual into transformed basis: r -> r~
     /**
      * \code
@@ -856,11 +892,14 @@ namespace Dune {
     }
 
 
+#ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
     template<typename XG>
     void constrain_residual (const EmptyTransformation& cg, XG& xg)
-    {
-    }
+    {}
 
+#endif // DOXYGEN
 
     //! Modify coefficient vector based on constrained dofs as given
     //! in the constraints container
@@ -881,9 +920,15 @@ namespace Dune {
         }
     }
 
+
+#ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
     template<typename XG>
     void copy_constrained_dofs (const EmptyTransformation& cg, const XG& xgin, XG& xgout)
     {}
+
+#endif // DOXYGEN
 
 
     /**
@@ -907,6 +952,18 @@ namespace Dune {
     }
 
 
+#ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
+    template<typename XG>
+    void set_nonconstrained_dofs (const EmptyTransformation& cg, typename XG::ElementType x, XG& xg)
+    {
+      xg = x;
+    }
+
+#endif // DOXYGEN
+
+
     /**
      * \code
      * #include <dune/pdelab/gridfunctionspace/constraints.hh>
@@ -926,6 +983,19 @@ namespace Dune {
           B::access(xgout,i) = B::access(xgin,i);
       */
     }
+
+
+#ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
+    template<typename XG>
+    void copy_nonconstrained_dofs (const EmptyTransformation& cg, const XG& xgin, XG& xgout)
+    {
+      xgout = xgin;
+    }
+
+#endif // DOXYGEN
+
 
     /**
      * \code
@@ -960,9 +1030,15 @@ namespace Dune {
       */
     }
 
+
+#ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
     template<typename XG>
     void set_shifted_dofs (const EmptyTransformation& cg, typename XG::ElementType x, XG& xg)
     {}
+
+#endif // DOXYGEN
 
     //! @}
 
