@@ -852,7 +852,7 @@ namespace Dune {
 
     // Specialized version for unconstrained spaces
     template<typename XG, typename Cmp>
-    bool check_constrained_dofs(const EmptyConstraints& cg, typename XG::ElementType x,
+    bool check_constrained_dofs(const EmptyTransformation& cg, typename XG::ElementType x,
                                 XG& xg, const Cmp& cmp = Cmp())
     {
       return true;
@@ -860,7 +860,7 @@ namespace Dune {
 
     // Specialized version for unconstrained spaces
     template<typename XG>
-    bool check_constrained_dofs(const EmptyConstraints& cg, typename XG::ElementType x,
+    bool check_constrained_dofs(const EmptyTransformation& cg, typename XG::ElementType x,
                                 XG& xg)
     {
       return true;
