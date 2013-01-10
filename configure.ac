@@ -4,7 +4,7 @@ AC_PREREQ(2.50)
 DUNE_AC_INIT # gets module version from dune.module file
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([dune/pdelab/test/testtypetree.cc])
-AM_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 
 # add configure flags needed to create log files for dune-autobuild
 DUNE_AUTOBUILD_FLAGS
