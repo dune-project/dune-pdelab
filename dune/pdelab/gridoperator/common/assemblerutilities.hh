@@ -253,7 +253,7 @@ namespace Dune{
           EmptyTransformation
           >::value
         >::type
-      forwardtransform(X & x, const bool postrestrict = false)
+      forwardtransform(X & x, const bool postrestrict = false) const
       {
         typedef typename CV::const_iterator global_col_iterator;
         for (global_col_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit){
@@ -289,7 +289,7 @@ namespace Dune{
           EmptyTransformation
           >::value
         >::type
-      forwardtransform(X & x, const bool postrestrict = false)
+      forwardtransform(X & x, const bool postrestrict = false) const
       {}
 
 
@@ -304,7 +304,7 @@ namespace Dune{
           EmptyTransformation
           >::value
         >::type
-      backtransform(X & x, const bool prerestrict = false)
+      backtransform(X & x, const bool prerestrict = false) const
       {
         typedef typename CV::const_iterator global_col_iterator;
         for (global_col_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit){
@@ -338,7 +338,7 @@ namespace Dune{
           EmptyTransformation
           >::value
         >::type
-      backtransform(X & x, const bool prerestrict = false)
+      backtransform(X & x, const bool prerestrict = false) const
       {}
 
 
