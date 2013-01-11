@@ -336,11 +336,11 @@ namespace Dune {
       enum { dimension = Grid::dimension };
 
       HangingNodesDirichletConstraints( Grid & grid,
-                                        bool adaptToIsolatedHangingNotes,
+                                        bool adaptToIsolatedHangingNodes,
                                         const BoundaryFunction & _boundaryFunction )
         : manager(grid, _boundaryFunction)
       {
-        if(adaptToIsolatedHangingNotes)
+        if(adaptToIsolatedHangingNodes)
           manager.adaptToIsolatedHangingNodes();
       }
 
