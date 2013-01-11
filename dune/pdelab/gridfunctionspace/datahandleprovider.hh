@@ -276,7 +276,7 @@ namespace Dune {
         return get_size.size();
       }
 
-    private:
+    protected:
 
       const GFS& gfs() const
       {
