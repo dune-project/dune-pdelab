@@ -18,6 +18,7 @@ namespace Dune {
     class ConstraintsTransformation
       : public unordered_map<CI,unordered_map<CI,F> >
     {
+
     public:
       //! export ElementType
       typedef F ElementType;
@@ -42,16 +43,37 @@ namespace Dune {
       template<typename IndexCache>
       void import_local_transformation(const LocalTransformation& local_transformation, const IndexCache& index_cache)
       {
+        typedef typename IndexCache::ContainerIndex ContainerIndex;
+        typedef typename ConstraintsTransformation::iterator GlobalConstraintIterator;
+        typedef typename ConstraintsTransformation::mapped_type GlobalConstraint;
         typedef typename LocalTransformation::const_iterator LocalConstraintIterator;
         typedef typename LocalTransformation::mapped_type::const_iterator LocalEntryIterator;
-        typedef std::unordered_map<CI,F> GlobalConstraint;
 
         for (LocalConstraintIterator lc_it = local_transformation.begin(),
                lc_end = local_transformation.end();
              lc_it != lc_end;
              ++lc_it)
           {
-            GlobalConstraint& global_constraint = (*this)[index_cache.containerIndex(lc_it->first)];
+            const ContainerIndex& ci = index_cache.containerIndex(lc_it->first);
+
+            std::pair<GlobalConstraintIterator,bool> r =
+              this->insert(make_pair(ci,GlobalConstraint()));
+
+            GlobalConstraint& global_constraint = r.first->second;
+
+            // Don't modify an existing Dirichlet constraint
+            if (!r.second && global_constraint.empty())
+              continue;
+
+            // The new constraint is a Dirichlet constraint
+            // Clear out any existing entries in the global constraint and stop
+            if (lc_it->second.empty())
+              {
+                global_constraint.clear();
+                continue;
+              }
+
+            // Accumulate new entries into global constraint
             for (LocalEntryIterator le_it = lc_it->second.begin(),
                    le_end = lc_it->second.end();
                  le_it != le_end;
