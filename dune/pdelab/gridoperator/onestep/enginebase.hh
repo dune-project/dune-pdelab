@@ -118,6 +118,16 @@ namespace Dune{
         lae1 = &lae1_;
       }
 
+      const typename OneStepLocalAssembler::Traits::TrialGridFunctionSpaceConstraints& trialConstraints() const
+      {
+        return localAssemblerEngineDT0().trialConstraints();
+      }
+
+      const typename OneStepLocalAssembler::Traits::TestGridFunctionSpaceConstraints& testConstraints() const
+      {
+        return localAssemblerEngineDT0().testConstraints();
+      }
+
       //! Called immediately after binding of local function space in
       //! global assembler.
       //! @{

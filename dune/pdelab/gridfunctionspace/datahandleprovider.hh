@@ -120,6 +120,12 @@ namespace Dune {
           return _ci_end;
         }
 
+        // Exposed for multidomain support
+        DIIterator di_end() const
+        {
+          return _di_end;
+        }
+
       private:
 
         const EntityIndex& _entity_index;
@@ -270,7 +276,7 @@ namespace Dune {
         return get_size.size();
       }
 
-    private:
+    protected:
 
       const GFS& gfs() const
       {

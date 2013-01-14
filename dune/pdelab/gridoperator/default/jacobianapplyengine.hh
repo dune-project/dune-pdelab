@@ -82,6 +82,18 @@ namespace Dune{
       //! Public access to the wrapping local assembler
       const LocalAssembler & localAssembler() const { return local_assembler; }
 
+      //! Trial space constraints
+      const typename LocalAssembler::Traits::TrialGridFunctionSpaceConstraints& trialConstraints() const
+      {
+        return localAssembler().trialConstraints();
+      }
+
+      //! Test space constraints
+      const typename LocalAssembler::Traits::TestGridFunctionSpaceConstraints& testConstraints() const
+      {
+        return localAssembler().testConstraints();
+      }
+
       //! Set current residual vector. Should be called prior to
       //! assembling.
       void setResidual(Residual & residual_){
