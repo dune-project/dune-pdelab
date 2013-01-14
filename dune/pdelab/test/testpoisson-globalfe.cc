@@ -104,6 +104,12 @@ public:
     return true;
   }
 
+  template<typename I>
+  bool isNeumann(const I & ig, const Dune::FieldVector<typename I::ctype, I::dimension-1> & x) const
+  {
+    return !isDirichlet(ig,x);
+  }
+
 };
 
 // function for Dirichlet boundary conditions and initialization

@@ -181,7 +181,7 @@ namespace Dune {
           {
             // evaluate boundary condition type
             // skip rest if we are on Dirichlet boundary
-            if( bctype.isDirichlet( ig,it->position() ) )
+            if( !bctype.isNeumann( ig,it->position() ) )
               continue;
 
             // position of quadrature point in local coordinates of element
