@@ -158,8 +158,7 @@ namespace Dune {
       enum { doAlphaVolume = true };
 
       PowerL2 (int intorder_=2)
-        : intorder(intorder_),
-          scalar_operator(intorder_)
+        : scalar_operator(intorder_)
       {}
 
       // volume integral depending on test and ansatz functions
@@ -180,7 +179,6 @@ namespace Dune {
       }
 
     private:
-      int intorder;
       L2 scalar_operator;
     };
 
