@@ -23,7 +23,7 @@ namespace Dune {
         struct matrix_element_vector;
 
         // At FieldMatrix level, we keep the whole matrix
-        template<typename E, std::size_t n, std::size_t m>
+        template<typename E, int n, int m>
         struct matrix_element_vector<
           FieldMatrix<E,n,m>
           >
@@ -130,41 +130,41 @@ namespace Dune {
         typename FieldMatrix::field_type* row_begin(tags::field_matrix_1_any, FieldMatrix& c, const CI& ci, int i)
         {
           assert(i == -1);
-          return &(c[0].begin());
+          return &(*c[0].begin());
         }
 
         template<typename FieldMatrix, typename CI>
         typename FieldMatrix::field_type* row_begin(tags::field_matrix_n_any, FieldMatrix& c, const CI& ci, int i)
         {
           assert(i == 0);
-          return &(c[ci[0]].begin());
+          return &(*c[ci[0]].begin());
         }
 
         template<typename FieldMatrix, typename CI>
         typename FieldMatrix::field_type* row_end(tags::field_matrix_1_any, FieldMatrix& c, const CI& ci, int i)
         {
           assert(i == -1);
-          return &(c[0].end());
+          return &(*c[0].end());
         }
 
         template<typename FieldMatrix, typename CI>
         typename FieldMatrix::field_type* row_end(tags::field_matrix_n_any, FieldMatrix& c, const CI& ci, int i)
         {
           assert(i == 0);
-          return &(c[ci[0]].end());
+          return &(*c[ci[0]].end());
         }
 
 
         template<typename BlockVector, typename CI>
         typename BlockVector::field_type* row_begin(tags::block_vector, BlockVector& c, const CI& ci, std::size_t i)
         {
-          return row_begin(container_tag(c[ci[i]][ci[i]]),c[ci[i]][ci[i]],ci,i-1);
+          return row_begin(container_tag(c[ci[i]]),c[ci[i]],ci,i-1);
         }
 
         template<typename BlockVector, typename CI>
         typename BlockVector::field_type* row_end(tags::block_vector, BlockVector& c, const CI& ci, std::size_t i)
         {
-          return row_end(container_tag(c[ci[i]][ci[i]]),c[ci[i]][ci[i]],ci,i-1);
+          return row_end(container_tag(c[ci[i]]),c[ci[i]],ci,i-1);
         }
 
 
