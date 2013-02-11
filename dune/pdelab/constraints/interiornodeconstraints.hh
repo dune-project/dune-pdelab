@@ -55,7 +55,7 @@ namespace Dune {
           unsigned int local_idx = key.subEntity();
           // global idx
 
-          unsigned int idx = lfs.gridFunctionSpace().gridview().indexSet().subIndex(eg.entity(), local_idx, dim);
+          unsigned int idx = lfs.gridFunctionSpace().gridView().indexSet().subIndex(eg.entity(), local_idx, dim);
 
           // update constraints
           if (interior[idx])
@@ -89,9 +89,9 @@ namespace Dune {
           const Entity &entity = *it;
 
           // find boundary faces & associated vertices
-          typedef typename Entity::LevelIntersectionIterator IntersectionIterator; // TODO: get IIT via lfs->gfs->gv
-          IntersectionIterator iit = entity.ilevelbegin();
-          const IntersectionIterator iend = entity.ilevelend();
+          typedef typename GV::IntersectionIterator IntersectionIterator;
+          IntersectionIterator iit = gv.ibegin(entity);
+          const IntersectionIterator iend = gv.iend(entity);
           for (; iit != iend; ++iit)
           {
             if (iit->boundary())
