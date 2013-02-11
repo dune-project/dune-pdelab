@@ -173,9 +173,11 @@ namespace Dune {
 #endif // DOXYGEN
 
 
-      template<typename Matrix>
+      template<typename M>
       struct BlockMatrixDiagonal
       {
+
+        typedef typename raw_type<M>::type Matrix;
 
         struct MatrixElementVector
         {
@@ -186,9 +188,9 @@ namespace Dune {
 
           Container _container;
 
-          MatrixElementVector(const Matrix& m)
+          MatrixElementVector(const M& m)
           {
-            diagonal::matrix_element_vector_from_matrix(container_tag(_container),_container,m);
+            diagonal::matrix_element_vector_from_matrix(container_tag(_container),_container,raw(m));
           }
 
           void invert()
@@ -199,7 +201,7 @@ namespace Dune {
           template<typename X, typename Y>
           void mv(const X& x, Y& y) const
           {
-            diagonal::mv(container_tag(_container),_container,x,y);
+            diagonal::mv(container_tag(_container),_container,raw(x),raw(y));
           }
 
           template<typename ContainerIndex>
