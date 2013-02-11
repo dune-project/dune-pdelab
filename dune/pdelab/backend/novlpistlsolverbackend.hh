@@ -51,10 +51,7 @@ namespace Dune {
      */
     template<typename GFS, typename M, typename X, typename Y>
     class NonoverlappingOperator
-      : public Dune::AssembledLinearOperator<typename M::BaseT,
-                                             typename X::BaseT,
-                                             typename Y::BaseT
-                                             >
+      : public Dune::AssembledLinearOperator<M,X,Y>
     {
     public:
       //! export type of matrix
@@ -115,7 +112,7 @@ namespace Dune {
       virtual void apply (const X& x, Y& y) const
       {
         // apply local operator; now we have sum y_p = sequential y
-        istl::raw(_A_).mv(x,y);
+        istl::raw(_A_).mv(istl::raw(x),istl::raw(y));
 
         // accumulate y on border
         Dune::PDELab::AddDataHandle<GFS,Y> adddh(gfs,y);
@@ -132,7 +129,7 @@ namespace Dune {
       virtual void applyscaleadd (field_type alpha, const X& x, Y& y) const
       {
         // apply local operator; now we have sum y_p = sequential y
-        istl::raw(_A_).usmv(alpha,x,y);
+        istl::raw(_A_).usmv(alpha,istl::raw(x),istl::raw(y));
 
         // accumulate y on border
         Dune::PDELab::AddDataHandle<GFS,Y> adddh(gfs,y);
@@ -479,14 +476,14 @@ namespace Dune {
         typedef NonoverlappingScalarProduct<GFS,V> PSP;
         PSP psp(gfs,phelper);
 
-        typedef NonoverlappingJacobi<typename M::BaseT,typename V::BaseT,typename W::BaseT> PPre;
+        typedef NonoverlappingJacobi<M,V,W> PPre;
         PPre ppre(gfs,istl::raw(A));
 
         int verb=0;
         if (gfs.gridView().comm().rank()==0) verb=verbose;
-        CGSolver<typename V::BaseT> solver(pop,psp,ppre,reduction,maxiter,verb);
+        CGSolver<V> solver(pop,psp,ppre,reduction,maxiter,verb);
         InverseOperatorResult stat;
-        solver.apply(istl::raw(z),istl::raw(r),stat);
+        solver.apply(z,r,stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -619,14 +616,14 @@ namespace Dune {
         typedef Dune::PDELab::NonoverlappingScalarProduct<GFS,V> PSP;
         PSP psp(gfs,phelper);
 
-        typedef NonoverlappingJacobi<typename M::BaseT,typename V::BaseT,typename W::BaseT> PPre;
-        PPre ppre(gfs,istl::raw(A));
+        typedef NonoverlappingJacobi<M,V,W> PPre;
+        PPre ppre(gfs,A);
 
         int verb=0;
         if (gfs.gridView().comm().rank()==0) verb=verbose;
-        Dune::BiCGSTABSolver<typename V::BaseT> solver(pop,psp,ppre,reduction,maxiter,verb);
+        Dune::BiCGSTABSolver<V> solver(pop,psp,ppre,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
-        solver.apply(istl::raw(z),istl::raw(r),stat);
+        solver.apply(z,r,stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
