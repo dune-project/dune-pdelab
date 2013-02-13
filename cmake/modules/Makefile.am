@@ -1,0 +1,10 @@
+MODULES = DunePdelabMacros.cmake \
+  FindPackageMultipass.cmake     \
+  FindPETSc.cmake                \
+  ResolveCompilerPaths.cmake     \
+  UsePETSc.cmake
+
+modulesdir = $(datadir)/cmake/modules
+modules_DATA = ${MODULES}
+
+include $(top_srcdir)/am/global-rules

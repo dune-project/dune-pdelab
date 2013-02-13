@@ -25,6 +25,9 @@ AC_SUBST(AM_LDFLAGS, $DUNE_LDFLAGS)
 AC_SUBST([LDADD], ['$(top_builddir)/lib/libdunepdelab.la $(DUNE_LIBS)'])
 
 AC_CONFIG_FILES([
+  cmake/Makefile
+  cmake/modules/Makefile
+  cmake/pkg/Makefile
   doc/doxygen/Doxyfile
   doc/doxygen/Makefile
   doc/Makefile
