@@ -1,7 +1,7 @@
 # $Id: duneproject 5370 2008-11-15 17:43:24Z christi $
 
 # we need the module file to be able to build via dunecontrol
-EXTRA_DIST =			\
+EXTRA_DIST = CMakeLists.txt			\
 	dune.module		\
 	GPL-2			\
 	GPL-3			\

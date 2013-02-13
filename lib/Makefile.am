@@ -10,3 +10,5 @@ sourcescheck_DUMMY = dummy.cc
 libdunepdelab_la_LIBADD = ../dune/pdelab/common/libpdelabcommon.la
 
 include $(top_srcdir)/am/global-rules
+
+EXTRA_DIST = CMakeLists.txt
