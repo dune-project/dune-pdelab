@@ -327,10 +327,6 @@ testtypetreetransformation_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE
 check_PROGRAMS += testinterpolate
 testinterpolate_SOURCES = testinterpolate.cc
 
-check_PROGRAMS += testfilteredcompositenode
-testfilteredcompositenode_SOURCES = testfilteredcompositenode.cc
-testfilteredcompositenode_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE
-
 check_PROGRAMS += testproxynode
 testproxynode_SOURCES = testproxynode.cc
 testproxynode_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE
