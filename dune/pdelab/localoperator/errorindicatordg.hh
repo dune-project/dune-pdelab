@@ -174,10 +174,10 @@ namespace Dune {
         const int dim = IG::dimension;
         
         // evaluate permeability tensors
-        const Dune::FieldVector<DF,dim>& 
-          inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
-        const Dune::FieldVector<DF,dim>& 
-          outside_local = Dune::ReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
+        const Dune::FieldVector<DF,dim>&
+          inside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+        const Dune::FieldVector<DF,dim>&
+          outside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
         typename T::Traits::PermTensorType A_s, A_n;
         A_s = param.A(*(ig.inside()),inside_local);
         A_n = param.A(*(ig.outside()),outside_local);
@@ -287,8 +287,8 @@ namespace Dune {
         const int dim = IG::dimension;
         
         // evaluate permeability tensors
-        const Dune::FieldVector<DF,dim>& 
-          inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+        const Dune::FieldVector<DF,dim>&
+          inside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
         typename T::Traits::PermTensorType A_s;
         A_s = param.A(*(ig.inside()),inside_local);
 
@@ -305,8 +305,8 @@ namespace Dune {
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
 
         // evaluate boundary condition
-        const Dune::FieldVector<DF,dim-1> 
-          face_local = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
+        const Dune::FieldVector<DF,dim-1>
+          face_local = Dune::GenericReferenceElements<DF,dim-1>::general(gtface).position(0,0);
         BCType bctype = param.bctype(ig.intersection(),face_local);
         if (bctype != ConvectionDiffusionBoundaryConditions::Dirichlet)
           return;
