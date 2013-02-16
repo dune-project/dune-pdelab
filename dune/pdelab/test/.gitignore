@@ -8,7 +8,6 @@ dgfparser.log
 testanalytic
 testconstraints
 testcountingptr
-testbdmfem
 testedges02d
 testedges02dgridfunctionspace
 testedges02dinterpolation
@@ -33,7 +32,6 @@ testpk
 testpoisson
 testrt0
 testrt02dgridfunctionspace
-testrtfem
 testutilities
 test-composed-iis-gfs
 testmultistepcached

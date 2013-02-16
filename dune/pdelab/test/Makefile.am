@@ -1,9 +1,9 @@
 # $Id: Makefile.am 586 2006-04-28 13:41:31Z mblatt $
 
 #defined empty so we can add to it later
-NORMALTESTS =
+NORMALTESTS = 
 MOSTLYCLEANFILES =
-check_SCRIPTS =
+check_SCRIPTS = 
 
 # list of tests to run
 TESTS = $(NORMALTESTS)
@@ -350,12 +350,6 @@ testopbfem_CPPFLAGS = @AM_CPPFLAGS@ $(GMP_CPPFLAGS)
 testopbfem_LDFLAGS = $(AM_LDFLAGS) $(GMP_LDFLAGS)
 testopbfem_LDADD = $(LDADD) $(GMP_LIBS)
 endif
-
-check_PROGRAMS += testrtfem
-testrtfem_SOURCES = testrtfem.cc
-
-check_PROGRAMS += testbdmfem
-testbdmfem_SOURCES = testbdmfem.cc
 
 MOSTLYCLEANFILES += poisson_petsc_*.vtu
 
