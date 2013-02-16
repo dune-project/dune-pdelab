@@ -222,7 +222,7 @@ namespace Dune {
 
         // transformation
         const int dimw = EG::Geometry::dimensionworld;
-        typename EG::Geometry::JacobianInverseTransposed jac;
+        Dune::FieldMatrix<DF,dimw,dim> jac;
 
         // evaluate speed of sound (assumed constant per element)
         Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);

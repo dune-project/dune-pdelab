@@ -361,7 +361,8 @@ namespace Dune {
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
 
         // transformation
-        typename EG::Geometry::JacobianInverseTransposed jac;
+        const int dimw = EG::Geometry::dimensionworld;
+        Dune::FieldMatrix<DF,dimw,dim> jac;
 
         // evaluate parameters (assumed constant per element)
         Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);

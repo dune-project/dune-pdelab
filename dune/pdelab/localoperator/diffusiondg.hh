@@ -108,6 +108,7 @@ namespace Dune {
 
         // dimensionslocal
         const int dim = EG::Geometry::dimension;
+        const int dimw = EG::Geometry::dimensionworld;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -127,8 +128,7 @@ namespace Dune {
             lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradient to real element
-            const typename EG::Geometry::JacobianInverseTransposed jac =
-              eg.geometry().jacobianInverseTransposed(it->position());
+            const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
             for (size_t i=0; i<lfsu.size(); i++)
               {
@@ -216,16 +216,14 @@ namespace Dune {
             lfsv_n.finiteElement().localBasis().evaluateJacobian(local_n,js_n);
 
             // transform gradient to real element
-            typename IG::Entity::Geometry::JacobianInverseTransposed jac_s;
-            jac_s = ig.inside()->geometry().jacobianInverseTransposed(local_s);
+            const Dune::FieldMatrix<DF,dimw,dim> jac_s = ig.inside()->geometry().jacobianInverseTransposed(local_s);
             std::vector<Dune::FieldVector<RF,dim> > gradphi_s(lfsv_s.size());
             for (size_t i=0; i<lfsv_s.size(); i++)
               {
                 gradphi_s[i] = 0.0;
                 jac_s.umv(js_s[i][0],gradphi_s[i]);
               }
-            typename IG::Entity::Geometry::JacobianInverseTransposed jac_n;
-            jac_n = ig.outside()->geometry().jacobianInverseTransposed(local_n);
+            const Dune::FieldMatrix<DF,dimw,dim> jac_n = ig.outside()->geometry().jacobianInverseTransposed(local_n);
             std::vector<Dune::FieldVector<RF,dim> > gradphi_n(lfsv_n.size());
             for (size_t i=0; i<lfsv_n.size(); i++)
               {
@@ -362,8 +360,7 @@ namespace Dune {
                 lfsv.finiteElement().localBasis().evaluateJacobian(local,js);
 
                 // transform gradient to real element
-                typename IG::Entity::Geometry::JacobianInverseTransposed jac;
-                jac = ig.inside()->geometry().jacobianInverseTransposed(local);
+                const Dune::FieldMatrix<DF,dimw,dim> jac = ig.inside()->geometry().jacobianInverseTransposed(local);
                 std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsv.size());
                 for (size_t i=0; i<lfsv.size(); i++)
                   {
@@ -534,8 +531,7 @@ namespace Dune {
                 lfsv.finiteElement().localBasis().evaluateJacobian(local,js);
 
                 // transform gradient to real element
-                typename IG::Entity::Geometry::JacobianInverseTransposed jac;
-                jac = ig.inside()->geometry().jacobianInverseTransposed(local);
+                const Dune::FieldMatrix<DF,dimw,dim> jac = ig.inside()->geometry().jacobianInverseTransposed(local);
                 std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsv.size());
                 for (size_t i=0; i<lfsv.size(); i++)
                   {
@@ -588,6 +584,7 @@ namespace Dune {
 
         // dimensions
         const int dim = EG::Geometry::dimension;
+        const int dimw = EG::Geometry::dimensionworld;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -607,8 +604,7 @@ namespace Dune {
             lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradient to real element
-            typename EG::Geometry::JacobianInverseTransposed jac;
-             jac = eg.geometry().jacobianInverseTransposed(it->position());
+            const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
             for (typename LFSU::Traits::SizeType i=0; i<lfsu.size(); i++)
               {
@@ -698,16 +694,14 @@ namespace Dune {
             lfsv_n.finiteElement().localBasis().evaluateJacobian(local_n,js_n);
 
             // transform gradient to real element
-            typename IG::Entity::Geometry::JacobianInverseTransposed jac_s;
-            jac_s = ig.inside()->geometry().jacobianInverseTransposed(local_s);
+            const Dune::FieldMatrix<DF,dimw,dim> jac_s = ig.inside()->geometry().jacobianInverseTransposed(local_s);
             std::vector<Dune::FieldVector<RF,dim> > gradphi_s(lfsv_s.size());
             for (size_t i=0; i<lfsv_s.size(); i++)
               {
                 gradphi_s[i] = 0.0;
                 jac_s.umv(js_s[i][0],gradphi_s[i]);
               }
-            typename IG::Entity::Geometry::JacobianInverseTransposed jac_n;
-            jac_n = ig.outside()->geometry().jacobianInverseTransposed(local_n);
+            const Dune::FieldMatrix<DF,dimw,dim> jac_n = ig.outside()->geometry().jacobianInverseTransposed(local_n);
             std::vector<Dune::FieldVector<RF,dim> > gradphi_n(lfsv_n.size());
             for (size_t i=0; i<lfsv_n.size(); i++)
               {
@@ -858,8 +852,7 @@ namespace Dune {
                 lfsv.finiteElement().localBasis().evaluateJacobian(local,js);
 
                 // transform gradient to real element
-                typename IG::Entity::Geometry::JacobianInverseTransposed jac;
-                jac = ig.inside()->geometry().jacobianInverseTransposed(local);
+                const Dune::FieldMatrix<DF,dimw,dim> jac = ig.inside()->geometry().jacobianInverseTransposed(local);
                 std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsv.size());
                 for (size_t i=0; i<lfsv.size(); i++)
                   {
