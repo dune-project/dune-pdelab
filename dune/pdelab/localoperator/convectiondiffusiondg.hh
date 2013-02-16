@@ -118,8 +118,8 @@ namespace Dune {
         
         // dimensions
         const int dim = EG::Geometry::dimension;
-        const int order = std::max(lfsu.finiteElement().localBasis().order(),
-            lfsv.finiteElement().localBasis().order());
+        const int dimw = EG::Geometry::dimensionworld;
+        const int order = lfsu.finiteElement().localBasis().order();
         const int intorder = intorderadd + quadrature_factor * order;
 
         // select quadrature rule
@@ -132,7 +132,7 @@ namespace Dune {
         A = param.A(eg.entity(),localcenter);
 
         // transformation
-        typename EG::Geometry::JacobianInverseTransposed jac;
+        Dune::FieldMatrix<DF,dimw,dim> jac;
 
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -212,8 +212,8 @@ namespace Dune {
         
         // dimensions
         const int dim = EG::Geometry::dimension;
-        const int order = std::max(lfsu.finiteElement().localBasis().order(),
-            lfsv.finiteElement().localBasis().order());
+        const int dimw = EG::Geometry::dimensionworld;
+        const int order = lfsu.finiteElement().localBasis().order();
         const int intorder = intorderadd + quadrature_factor * order;
 
         // select quadrature rule
@@ -226,7 +226,7 @@ namespace Dune {
         A = param.A(eg.entity(),localcenter);
 
         // transformation
-        typename EG::Geometry::JacobianInverseTransposed jac;
+        Dune::FieldMatrix<DF,dimw,dim> jac;
 
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -323,7 +323,7 @@ namespace Dune {
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
 
         // transformation
-        typename IG::Entity::Geometry::JacobianInverseTransposed jac;
+        Dune::FieldMatrix<DF,dim,dim> jac;
 
         // tensor times normal
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
@@ -524,7 +524,7 @@ namespace Dune {
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
 
         // transformation
-        typename IG::Entity::Geometry::JacobianInverseTransposed jac;
+        Dune::FieldMatrix<DF,dim,dim> jac;
 
         // tensor times normal
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
