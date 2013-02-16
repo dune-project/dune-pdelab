@@ -3,7 +3,7 @@
 #define DUNE_PDELAB_FINITEELEMENTMAP_RT0CUBE2DFEM_HH
 
 #include<vector>
-#include<dune/localfunctions/raviartthomas/raviartthomas0cube2d.hh>
+#include<dune/localfunctions/raviartthomas/raviartthomas0q2d.hh>
 #include"finiteelementmap.hh"
 
 namespace Dune {
@@ -14,10 +14,10 @@ namespace Dune {
 
     template<typename GV, typename D, typename R>
     class RT0Cube2DLocalFiniteElementMap :
-      public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits< Dune::RT0Cube2DLocalFiniteElement<D,R> >,
+      public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits< Dune::RT0Q2DLocalFiniteElement<D,R> >,
                                             RT0Cube2DLocalFiniteElementMap<GV,D,R> >
     {
-      typedef Dune::RT0Cube2DLocalFiniteElement<D,R> FE;
+      typedef Dune::RT0Q2DLocalFiniteElement<D,R> FE;
       typedef typename GV::IndexSet IndexSet;
 
     public:
