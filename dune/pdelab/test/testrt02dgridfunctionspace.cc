@@ -1,23 +1,23 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 
 #include <string>
 #include <sstream>
 
 #include <dune/common/fvector.hh>
-#include <dune/common/mpihelper.hh>
+#include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
-#ifdef HAVE_ALBERTA
+#if HAVE_ALBERTA
 #include <dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/gridfactory.hh>
 #endif
-#ifdef HAVE_ALUGRID
+#if HAVE_ALUGRID
 #include <dune/grid/alugrid.hh>
 #endif
-#ifdef HAVE_UG
+#if HAVE_UG
 #include <dune/grid/uggrid.hh>
 #include <dune/grid/uggrid/uggridfactory.hh>
 #endif
@@ -26,7 +26,7 @@
 #include "../common/vtkexport.hh"
 #include "../gridfunctionspace/gridfunctionspace.hh"
 #include "../gridfunctionspace/gridfunctionspaceutilities.hh"
-#include "../finiteelementmap/rt02dfem.hh"
+#include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
 
 template<typename GV>
 void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
@@ -38,11 +38,11 @@ void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
   filename << "rt02dgridfunctionspace";
   if(suffix != "") filename << "-" << suffix;
 
-  Dune::PDELab::RT02DLocalFiniteElementMap<GV,D,R> fem(gv);   // maps entity to finite element
+  Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,D,R,0,Dune::GeometryType::simplex> fem(gv);   // maps entity to finite element
 
   typedef Dune::PDELab::GridFunctionSpace<
     GV,
-    Dune::PDELab::RT02DLocalFiniteElementMap<GV,D,R>
+    Dune::PDELab::RaviartThomasLocalFiniteElementMap<GV,D,R,0,Dune::GeometryType::simplex>
     > GFS;
   GFS gfs(gv,fem);                    // make grid function space
 
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
     // Grids were found
     int result = 77;
 
-#ifdef HAVE_ALBERTA
+#if HAVE_ALBERTA
     std::cout << "Alberta" << std::endl;
     {
       typedef Dune::AlbertaGrid<2, 2> Grid;
@@ -99,10 +99,10 @@ int main(int argc, char** argv)
 #endif // HAVE_ALBERTA
 
 
-#ifdef HAVE_ALUGRID
+#if HAVE_ALUGRID
     std::cout << "ALU" << std::endl;
     {
-      typedef Dune::ALUSimplexGrid<2, 2> Grid;
+      typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
 
       Grid grid("grids/2dtriangle.alu");
       //grid->globalRefine(1);
@@ -112,7 +112,7 @@ int main(int argc, char** argv)
     result = 0;
 #endif // HAVE_ALUGRID
 
-#ifdef HAVE_UG
+#if HAVE_UG
     std::cout << "UG" << std::endl;
     {
       typedef Dune::UGGrid<2> Grid;

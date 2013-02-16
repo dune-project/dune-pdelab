@@ -6,7 +6,7 @@
 #include <cstddef>
 
 #include <dune/common/deprecated.hh>
-#include <dune/common/mpihelper.hh>
+#include <dune/common/parallel/mpihelper.hh>
 
 #include <dune/grid/common/gridenums.hh>
 
@@ -573,6 +573,84 @@ namespace Dune {
       int verbose;
     };
 
+
+    //! \brief Nonoverlapping parallel BiCGStab solver with Jacobi preconditioner
+    template<class GFS>
+    class ISTLBackend_NOVLP_BCGS_Jacobi
+    {
+      typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
+
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] gfs_ a grid function space
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ print messages if true
+      */
+      explicit ISTLBackend_NOVLP_BCGS_Jacobi (const GFS& gfs_, unsigned maxiter_=5000, int verbose_=1)
+        : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), verbose(verbose_)
+      {}
+
+      /*! \brief compute global norm of a vector
+
+        \param[in] v the given vector
+      */
+      template<class V>
+      typename V::ElementType norm (const V& v) const
+      {
+        V x(v); // make a copy because it has to be made consistent
+        typedef Dune::PDELab::NonoverlappingScalarProduct<GFS,V> PSP;
+        PSP psp(gfs,phelper);
+        psp.make_consistent(x);
+        return psp.norm(x);
+      }
+
+      /*! \brief solve the given linear system
+
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      {
+        typedef Dune::PDELab::NonoverlappingOperator<GFS,M,V,W> POP;
+        POP pop(gfs,A);
+        typedef Dune::PDELab::NonoverlappingScalarProduct<GFS,V> PSP;
+        PSP psp(gfs,phelper);
+
+        typedef typename M::ElementType MField;
+        typedef typename BackendVectorSelector<GFS,MField>::Type Diagonal;
+        typedef NonoverlappingJacobi<Diagonal,V,W> PPre;
+        PPre ppre(gfs,A);
+
+        int verb=0;
+        if (gfs.gridView().comm().rank()==0) verb=verbose;
+        Dune::BiCGSTABSolver<V> solver(pop,psp,ppre,reduction,maxiter,verb);
+        Dune::InverseOperatorResult stat;
+        solver.apply(z,r,stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+        res.conv_rate  = stat.conv_rate;
+      }
+
+      /*! \brief Return access to result data */
+      const Dune::PDELab::LinearSolverResult<double>& result() const
+      {
+        return res;
+      }
+
+    private:
+      const GFS& gfs;
+      PHELPER phelper;
+      Dune::PDELab::LinearSolverResult<double> res;
+      unsigned maxiter;
+      int verbose;
+    };
+
     //! Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
     template<typename GFS>
     class ISTLBackend_NOVLP_ExplicitDiagonal
@@ -693,7 +771,27 @@ namespace Dune {
         }
       }
 
-      //! A DataHandle class to exchange matrix sparsity patterns
+      /**
+       * @brief A DataHandle class to exchange matrix sparsity patterns.
+       * 
+       *  We look at a 2D example with a nonoverlapping grid,
+       *  two processes and no ghosts with Q1 discretization.
+       *  Process 0 has the left part of the domain
+       *  with three cells and eight vertices (1-8),
+       *  Process 1 the right part with three cells
+       *  and eight vertices (2,4,7-12).
+       *  <pre>
+       *  1 _ 2        2 _ 9 _ 10        
+       *  |   |        |   |   | 
+       *  3 _ 4 _ 7    4 _ 7 _ 11
+       *  |   |   |        |   |
+       *  5 _ 6 _ 8        8 _ 12
+       *  </pre>
+       *  If we look at vertex 7 and the corresponding entries in the matrix for P0,
+       *  there will be entries for (7,4) and (7,8), but not for (7,2).
+       *  The MatPatternExchange class will find these entries and returns a vector "sparsity",
+       *  that contains all missing connections.
+       */
       class MatPatternExchange
         : public CommDataHandleIF<MatPatternExchange,IdType> {
         typedef typename Matrix::RowIterator RowIterator;
@@ -960,7 +1058,7 @@ namespace Dune {
       
     template<class GO, 
              template<class,class,class,int> class Preconditioner,
-             template<class> class Solver>
+             template<class> class Solver, bool skipBlocksizeCheck = false>
     class ISTLBackend_NOVLP_BASE_PREC
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
@@ -1006,7 +1104,7 @@ namespace Dune {
         typedef typename CommSelector<96,Dune::MPIHelper::isFake>::type Comm;
         typedef typename M::BaseT MatrixType;
         MatrixType& mat=A.base();
-        typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type VectorType;
+        typedef typename BlockProcessor<GFS,skipBlocksizeCheck>::template AMGVectorTypeSelector<V>::Type VectorType;
 #if HAVE_MPI
         Comm oocc(gfs.gridView().comm(),Dune::SolverCategory::nonoverlapping);
         typedef VertexExchanger<GO,MatrixType> Exchanger;
@@ -1126,7 +1224,7 @@ namespace Dune {
     //! \} group Backend
     
     template<class GO,int s, template<class,class,class,int> class Preconditioner,
-             template<class> class Solver>
+             template<class> class Solver, bool skipBlocksizeCheck = false>
     class ISTLBackend_AMG_NOVLP : public LinearResultStorage
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
@@ -1134,7 +1232,7 @@ namespace Dune {
       typedef typename GO::Traits::Jacobian M;
       typedef typename M::BaseT MatrixType;
       typedef typename GO::Traits::Domain V;
-      typedef typename BlockProcessor<GFS>::template AMGVectorTypeSelector<V>::Type VectorType;
+      typedef typename BlockProcessor<GFS,skipBlocksizeCheck>::template AMGVectorTypeSelector<V>::Type VectorType;
       typedef typename CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
 #if HAVE_MPI
       typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
@@ -1258,7 +1356,8 @@ namespace Dune {
         }
         watch.reset();
         Solver<VectorType> solver(oop,sp,*amg,reduction,maxiter,verb);
-        solver.apply(BlockProcessor<GFS>::getVector(z),BlockProcessor<GFS>::getVector(r),stat);
+        solver.apply(BlockProcessor<GFS,skipBlocksizeCheck>::getVector(z),
+            BlockProcessor<GFS,skipBlocksizeCheck>::getVector(r),stat);
         stats.tsolve= watch.elapsed();
         res.converged  = stat.converged;
         res.iterations = stat.iterations;

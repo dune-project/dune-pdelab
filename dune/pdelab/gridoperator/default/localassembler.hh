@@ -4,6 +4,7 @@
 #include <dune/pdelab/gridoperator/default/residualengine.hh>
 #include <dune/pdelab/gridoperator/default/patternengine.hh>
 #include <dune/pdelab/gridoperator/default/jacobianengine.hh>
+#include <dune/pdelab/gridoperator/default/jacobianapplyengine.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/common/typetree.hh>
 
@@ -69,23 +70,25 @@ namespace Dune{
       typedef DefaultLocalPatternAssemblerEngine<DefaultLocalAssembler> LocalPatternAssemblerEngine;
       typedef DefaultLocalResidualAssemblerEngine<DefaultLocalAssembler> LocalResidualAssemblerEngine;
       typedef DefaultLocalJacobianAssemblerEngine<DefaultLocalAssembler> LocalJacobianAssemblerEngine;
+      typedef DefaultLocalJacobianApplyAssemblerEngine<DefaultLocalAssembler> LocalJacobianApplyAssemblerEngine;
 
       friend class DefaultLocalPatternAssemblerEngine<DefaultLocalAssembler>;
       friend class DefaultLocalResidualAssemblerEngine<DefaultLocalAssembler>;
       friend class DefaultLocalJacobianAssemblerEngine<DefaultLocalAssembler>;
+      friend class DefaultLocalJacobianApplyAssemblerEngine<DefaultLocalAssembler>;
       //! @}
 
       //! Constructor with empty constraints
       DefaultLocalAssembler (LOP & lop_)
         : lop(lop_),  weight(1.0), doConstraintsPostProcessing(true),
-          pattern_engine(*this), residual_engine(*this), jacobian_engine(*this)
+          pattern_engine(*this), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
       {}
 
       //! Constructor for non trivial constraints
       DefaultLocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_)
         : Base(cu_, cv_),
           lop(lop_),  weight(1.0), doConstraintsPostProcessing(true),
-          pattern_engine(*this), residual_engine(*this), jacobian_engine(*this)
+          pattern_engine(*this), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
       {}
 
       //! Notifies the local assembler about the current time of
@@ -141,6 +144,16 @@ namespace Dune{
         return jacobian_engine;
       }
 
+      //! Returns a reference to the requested engine. This engine is
+      //! completely configured and ready to use.
+      LocalJacobianApplyAssemblerEngine & localJacobianApplyAssemblerEngine
+      (typename Traits::Residual & r, const typename Traits::Solution & x)
+      {
+        jacobian_apply_engine.setResidual(r);
+        jacobian_apply_engine.setSolution(x);
+        return jacobian_apply_engine;
+      }
+
       //! @}
 
       //! \brief Query methods for the assembler engines. Theses methods
@@ -187,6 +200,7 @@ namespace Dune{
       LocalPatternAssemblerEngine  pattern_engine;
       LocalResidualAssemblerEngine residual_engine;
       LocalJacobianAssemblerEngine jacobian_engine;
+      LocalJacobianApplyAssemblerEngine jacobian_apply_engine;
       //! @}
 
     };

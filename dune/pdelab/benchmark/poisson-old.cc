@@ -8,7 +8,7 @@
 #include<vector>
 #include<map>
 #include<string>
-#include<dune/common/mpihelper.hh>
+#include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include <dune/common/shared_ptr.hh>
@@ -333,7 +333,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const bool sol
   std::stringstream timings_name;
   timings_name << filename << "_timings.txt";
 
-  std::ofstream timings_file(timings_name.str());
+  std::ofstream timings_file(timings_name.str().c_str());
   timings_file << filename << " " << runs << std::endl;
   bh.print(timings_file);
 }

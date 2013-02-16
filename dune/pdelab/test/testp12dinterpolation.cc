@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 
 #include <cmath>
@@ -8,20 +8,20 @@
 #include <sstream>
 
 #include <dune/common/fvector.hh>
-#include <dune/common/mpihelper.hh>
+#include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/shared_ptr.hh>
 
 #include <dune/geometry/type.hh>
 #include <dune/geometry/quadraturerules.hh>
 
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
-#ifdef HAVE_ALBERTA
+#if HAVE_ALBERTA
 #include <dune/grid/albertagrid.hh>
 #endif
-#ifdef HAVE_ALUGRID
+#if HAVE_ALUGRID
 #include <dune/grid/alugrid.hh>
 #endif
-#ifdef HAVE_UG
+#if HAVE_UG
 #include <dune/grid/uggrid.hh>
 #endif
 
@@ -50,7 +50,7 @@ public:
     : Base(gv)
   {}
 
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
                               typename Traits::RangeType& y) const
   {
     typename Traits::DomainType center(0.5);
@@ -67,7 +67,7 @@ double interpolationerror (const GV& gv, const FEM &fem)
   typedef typename FEM::Traits::FiniteElementType::Traits
     ::LocalBasisType::Traits::RangeFieldType R;  // range type
 
-  typedef Dune::PDELab::GridFunctionSpace<GV, FEM> GFS;    
+  typedef Dune::PDELab::GridFunctionSpace<GV, FEM> GFS;
   GFS gfs(gv,fem);                    // make grid function space
 
   typedef typename Dune::PDELab::BackendVectorSelector<GFS, R>::Type X;
@@ -93,8 +93,8 @@ void test(Dune::shared_ptr<Grid> grid, int &result, unsigned int maxelements, st
   std::cout << "interpolation level 0" << std::endl;
   double error0 = interpolationerror(grid->leafView(), fem);
   double h0 = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
-  std::cout << "interpolation error: " 
-            << std::setw(8) << grid->leafView().size(0) << " elements, h=" 
+  std::cout << "interpolation error: "
+            << std::setw(8) << grid->leafView().size(0) << " elements, h="
             << std::scientific << h0 << ", error="
             << std::scientific << error0 << std::endl;
 
@@ -104,8 +104,8 @@ void test(Dune::shared_ptr<Grid> grid, int &result, unsigned int maxelements, st
   std::cout << "interpolation level " << grid->maxLevel() << std::endl;
   double errorf = interpolationerror(grid->leafView(), fem);
   double hf = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
-  std::cout << "interpolation error: " 
-            << std::setw(8) << grid->leafView().size(0) << " elements, h=" 
+  std::cout << "interpolation error: "
+            << std::setw(8) << grid->leafView().size(0) << " elements, h="
             << std::scientific << hf << ", error="
             << std::scientific << errorf << std::endl;
 
@@ -131,7 +131,7 @@ int main(int argc, char** argv)
     // Grids were found
     int result = 77;
 
-#ifdef HAVE_ALBERTA
+#if HAVE_ALBERTA
 #if (ALBERTA_DIM != 2)
 #error ALBERTA_DIM is not set to 2 -- please check the Makefile.am
 #endif
@@ -141,14 +141,14 @@ int main(int argc, char** argv)
          result, 250000, "alberta-square");
 #endif
 
-#ifdef HAVE_ALUGRID
-    test(UnitTriangleMaker          <Dune::ALUSimplexGrid<2, 2> >::create(),
+#if HAVE_ALUGRID
+    test(UnitTriangleMaker          <Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> >::create(),
          result, 250000, "alu-triangle");
-    test(TriangulatedUnitSquareMaker<Dune::ALUSimplexGrid<2, 2> >::create(),
+    test(TriangulatedUnitSquareMaker<Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> >::create(),
          result, 250000, "alu-square");
 #endif // HAVE_ALUGRID
 
-#ifdef HAVE_UG
+#if HAVE_UG
     test(UnitTriangleMaker          <Dune::UGGrid<2>            >::create(),
          result, 250000, "ug-triangle");
     test(TriangulatedUnitSquareMaker<Dune::UGGrid<2>            >::create(),

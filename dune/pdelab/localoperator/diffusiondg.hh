@@ -64,8 +64,8 @@ namespace Dune {
       enum { doLambdaSkeleton = false };
       enum { doLambdaBoundary = true };
 
-      DiffusionDG (const K& k_, const F& f_, const B& bctype_, const G& g_, const J& j_, int dg_method) :
-        k(k_), f(f_), bctype(bctype_), g(g_), j(j_)
+      DiffusionDG (const K& k_, const F& f_, const B& bctype_, const G& g_, const J& j_, int dg_method, int _superintegration_order = 0) :
+        k(k_), f(f_), bctype(bctype_), g(g_), j(j_), superintegration_order(_superintegration_order)
       {
         
         // OBB
@@ -108,16 +108,15 @@ namespace Dune {
 
         // dimensionslocal
         const int dim = EG::Geometry::dimension;
-        const int dimw = EG::Geometry::dimensionworld;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
-        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0);
+        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0) + superintegration_order;
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename K::Traits::RangeType tensor(0.0);
-        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
+        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
         k.evaluate(eg.entity(),localcenter,tensor);
 
         // loop over quadrature points
@@ -128,7 +127,8 @@ namespace Dune {
             lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradient to real element
-            const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
+            const typename EG::Geometry::JacobianInverseTransposed jac =
+              eg.geometry().jacobianInverseTransposed(it->position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
             for (size_t i=0; i<lfsu.size(); i++)
               {
@@ -180,20 +180,20 @@ namespace Dune {
         Dune::GeometryType gtface = ig.geometryInInside().type();
         const int qorder = std::max( 0, std::max(
             2 * ( (int)lfsu_s.finiteElement().localBasis().order() - 1 ),
-            2 * ( (int)lfsu_n.finiteElement().localBasis().order() - 1 )));
+            2 * ( (int)lfsu_n.finiteElement().localBasis().order() - 1 ))) + superintegration_order;
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // normal of center in face's reference element
         const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-          Dune::GenericReferenceElements<DF,IG::dimension-1>::
+          Dune::ReferenceElements<DF,IG::dimension-1>::
           general(ig.geometry().type()).position(0,0);
         const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
             
         // evaluate diffusion tensor at elements' centers, assume they are constant over elements
         const Dune::FieldVector<DF,IG::dimension>& 
-          inside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
         const Dune::FieldVector<DF,IG::dimension>& 
-          outside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
+          outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
         typename K::Traits::RangeType permeability_s(0.0);
         typename K::Traits::RangeType permeability_n(0.0);
         k.evaluate(*(ig.inside()),inside_local,permeability_s);
@@ -216,14 +216,16 @@ namespace Dune {
             lfsv_n.finiteElement().localBasis().evaluateJacobian(local_n,js_n);
 
             // transform gradient to real element
-            const Dune::FieldMatrix<DF,dimw,dim> jac_s = ig.inside()->geometry().jacobianInverseTransposed(local_s);
+            typename IG::Entity::Geometry::JacobianInverseTransposed jac_s;
+            jac_s = ig.inside()->geometry().jacobianInverseTransposed(local_s);
             std::vector<Dune::FieldVector<RF,dim> > gradphi_s(lfsv_s.size());
             for (size_t i=0; i<lfsv_s.size(); i++)
               {
                 gradphi_s[i] = 0.0;
                 jac_s.umv(js_s[i][0],gradphi_s[i]);
               }
-            const Dune::FieldMatrix<DF,dimw,dim> jac_n = ig.outside()->geometry().jacobianInverseTransposed(local_n);
+            typename IG::Entity::Geometry::JacobianInverseTransposed jac_n;
+            jac_n = ig.outside()->geometry().jacobianInverseTransposed(local_n);
             std::vector<Dune::FieldVector<RF,dim> > gradphi_n(lfsv_n.size());
             for (size_t i=0; i<lfsv_n.size(); i++)
               {
@@ -326,7 +328,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
-        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0);
+        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0) + superintegration_order;
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // evaluate boundary condition type
@@ -335,14 +337,14 @@ namespace Dune {
           {
             // center in face's reference element
             const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-              Dune::GenericReferenceElements<DF,IG::dimension-1>::
+              Dune::ReferenceElements<DF,IG::dimension-1>::
               general(ig.geometry().type()).position(0,0);
             // outer normal, assuming it is constant over whole intersection
             const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
 
             // evaluate diffusion tensor at cell center, assume it is constant over elements
             const Dune::FieldVector<DF,IG::dimension>
-              localcenter = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+              localcenter = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
             typename K::Traits::RangeType tensor(0.0);
             k.evaluate(*ig.inside(),localcenter,tensor);
 
@@ -360,7 +362,8 @@ namespace Dune {
                 lfsv.finiteElement().localBasis().evaluateJacobian(local,js);
 
                 // transform gradient to real element
-                const Dune::FieldMatrix<DF,dimw,dim> jac = ig.inside()->geometry().jacobianInverseTransposed(local);
+                typename IG::Entity::Geometry::JacobianInverseTransposed jac;
+                jac = ig.inside()->geometry().jacobianInverseTransposed(local);
                 std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsv.size());
                 for (size_t i=0; i<lfsv.size(); i++)
                   {
@@ -425,7 +428,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
-        const int qorder = std::max ( 2 * ( (int)lfsv.finiteElement().localBasis().order() - 1 ), 0);
+        const int qorder = std::max ( 2 * ( (int)lfsv.finiteElement().localBasis().order() - 1 ), 0) + superintegration_order;
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         // loop over quadrature points
@@ -470,7 +473,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
-        const int qorder = std::max ( 2 * ( (int)lfsv.finiteElement().localBasis().order() - 1 ), 0);
+        const int qorder = std::max ( 2 * ( (int)lfsv.finiteElement().localBasis().order() - 1 ), 0) + superintegration_order;
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // evaluate boundary condition type
@@ -508,13 +511,13 @@ namespace Dune {
             */
             // center in face's reference element
             const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-              Dune::GenericReferenceElements<DF,IG::dimension-1>::
+              Dune::ReferenceElements<DF,IG::dimension-1>::
               general(ig.geometry().type()).position(0,0);
             // outer normal, assuming it is constant over whole intersection
             const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
             // evaluate diffusion tensor at cell center, assume it is constant over elements
             const Dune::FieldVector<DF,IG::dimension>
-              localcenter = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+              localcenter = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
             typename K::Traits::RangeType tensor(0.0);
             k.evaluate(*ig.inside(),localcenter,tensor);
             // penalty weight for NIPG / SIPG
@@ -531,7 +534,8 @@ namespace Dune {
                 lfsv.finiteElement().localBasis().evaluateJacobian(local,js);
 
                 // transform gradient to real element
-                const Dune::FieldMatrix<DF,dimw,dim> jac = ig.inside()->geometry().jacobianInverseTransposed(local);
+                typename IG::Entity::Geometry::JacobianInverseTransposed jac;
+                jac = ig.inside()->geometry().jacobianInverseTransposed(local);
                 std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsv.size());
                 for (size_t i=0; i<lfsv.size(); i++)
                   {
@@ -584,16 +588,15 @@ namespace Dune {
 
         // dimensions
         const int dim = EG::Geometry::dimension;
-        const int dimw = EG::Geometry::dimensionworld;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
-        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0);
+        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0) + superintegration_order;
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename K::Traits::RangeType tensor;
-        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
+        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
         k.evaluate(eg.entity(),localcenter,tensor);
 
         // loop over quadrature points
@@ -604,7 +607,8 @@ namespace Dune {
             lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradient to real element
-            const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
+            typename EG::Geometry::JacobianInverseTransposed jac;
+             jac = eg.geometry().jacobianInverseTransposed(it->position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
             for (typename LFSU::Traits::SizeType i=0; i<lfsu.size(); i++)
               {
@@ -658,20 +662,20 @@ namespace Dune {
         Dune::GeometryType gtface = ig.geometryInInside().type();
         const int qorder = std::max( 0, std::max(
             2 * ( (int)lfsu_s.finiteElement().localBasis().order() - 1 ),
-            2 * ( (int)lfsu_n.finiteElement().localBasis().order() - 1 )));
+            2 * ( (int)lfsu_n.finiteElement().localBasis().order() - 1 ))) + superintegration_order;
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // center in face's reference element
         const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-          Dune::GenericReferenceElements<DF,IG::dimension-1>::
+          Dune::ReferenceElements<DF,IG::dimension-1>::
           general(ig.geometry().type()).position(0,0);
         const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         const Dune::FieldVector<DF,IG::dimension>& 
-          inside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
         const Dune::FieldVector<DF,IG::dimension>& 
-          outside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
+          outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
         typename K::Traits::RangeType permeability_s(0.0);
         typename K::Traits::RangeType permeability_n(0.0);
         k.evaluate(*(ig.inside()),inside_local,permeability_s);
@@ -694,14 +698,16 @@ namespace Dune {
             lfsv_n.finiteElement().localBasis().evaluateJacobian(local_n,js_n);
 
             // transform gradient to real element
-            const Dune::FieldMatrix<DF,dimw,dim> jac_s = ig.inside()->geometry().jacobianInverseTransposed(local_s);
+            typename IG::Entity::Geometry::JacobianInverseTransposed jac_s;
+            jac_s = ig.inside()->geometry().jacobianInverseTransposed(local_s);
             std::vector<Dune::FieldVector<RF,dim> > gradphi_s(lfsv_s.size());
             for (size_t i=0; i<lfsv_s.size(); i++)
               {
                 gradphi_s[i] = 0.0;
                 jac_s.umv(js_s[i][0],gradphi_s[i]);
               }
-            const Dune::FieldMatrix<DF,dimw,dim> jac_n = ig.outside()->geometry().jacobianInverseTransposed(local_n);
+            typename IG::Entity::Geometry::JacobianInverseTransposed jac_n;
+            jac_n = ig.outside()->geometry().jacobianInverseTransposed(local_n);
             std::vector<Dune::FieldVector<RF,dim> > gradphi_n(lfsv_n.size());
             for (size_t i=0; i<lfsv_n.size(); i++)
               {
@@ -818,7 +824,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
-        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0);
+        const int qorder = std::max ( 2 * ( (int)lfsu.finiteElement().localBasis().order() - 1 ), 0) + superintegration_order;
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // evaluate boundary condition type
@@ -827,14 +833,14 @@ namespace Dune {
           {
             // center in face's reference element
             const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-              Dune::GenericReferenceElements<DF,IG::dimension-1>::
+              Dune::ReferenceElements<DF,IG::dimension-1>::
               general(ig.geometry().type()).position(0,0);
             // outer normal, assuming it is constant over whole intersection
             const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
 
             // evaluate diffusion tensor at cell center, assume it is constant over elements
             const Dune::FieldVector<DF,IG::dimension>
-              localcenter = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+              localcenter = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
             typename K::Traits::RangeType tensor(0.0);
             k.evaluate(*ig.inside(),localcenter,tensor);
 
@@ -852,7 +858,8 @@ namespace Dune {
                 lfsv.finiteElement().localBasis().evaluateJacobian(local,js);
 
                 // transform gradient to real element
-                const Dune::FieldMatrix<DF,dimw,dim> jac = ig.inside()->geometry().jacobianInverseTransposed(local);
+                typename IG::Entity::Geometry::JacobianInverseTransposed jac;
+                jac = ig.inside()->geometry().jacobianInverseTransposed(local);
                 std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsv.size());
                 for (size_t i=0; i<lfsv.size(); i++)
                   {
@@ -905,6 +912,7 @@ namespace Dune {
       double epsilon;
       double sigma;
       double beta;
+      int superintegration_order; // Quadrature order
     };
 
     //! \} group GridFunctionSpace

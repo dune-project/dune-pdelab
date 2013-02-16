@@ -83,7 +83,7 @@ namespace Dune {
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename K::Traits::RangeType tensor(0.0);
-        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
+        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
         k.evaluate(eg.entity(),localcenter,tensor);
 
         // loop over quadrature points
@@ -94,7 +94,8 @@ namespace Dune {
             lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradient to real element
-            const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
+            const typename EG::Geometry::JacobianInverseTransposed jac =
+              eg.geometry().jacobianInverseTransposed(it->position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
             for (size_type i=0; i<lfsu.size(); i++)
               {
@@ -157,7 +158,7 @@ namespace Dune {
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename K::Traits::RangeType tensor(0.0);
-        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
+        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
         k.evaluate(eg.entity(),localcenter,tensor);
 
         // loop over quadrature points
@@ -168,7 +169,8 @@ namespace Dune {
             lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradient to real element
-            const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
+            const typename EG::Geometry::JacobianInverseTransposed jac =
+              eg.geometry().jacobianInverseTransposed(it->position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
             for (size_type i=0; i<lfsu.size(); i++)
               {

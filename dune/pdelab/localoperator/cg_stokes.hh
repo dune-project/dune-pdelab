@@ -125,7 +125,8 @@ namespace Dune {
             lfsu_v_pfs.child(0).finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradient to real element
-            const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
+            const typename EG::Geometry::JacobianInverseTransposed jac =
+              eg.geometry().jacobianInverseTransposed(it->position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(vsize);
             for (size_t i=0; i<vsize; i++)
               {
@@ -368,7 +369,8 @@ namespace Dune {
             lfsu_v_pfs.child(0).finiteElement().localBasis().evaluateJacobian(it->position(),js);
 
             // transform gradient to real element
-            const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
+            const typename EG::Geometry::JacobianInverseTransposed jac =
+              eg.geometry().jacobianInverseTransposed(it->position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(vsize);
             for (size_t i=0; i<vsize; i++)
               {
@@ -492,18 +494,20 @@ namespace Dune {
       enum { doAlphaVolume = true };
 
       NavierStokesMass (const P & p_, int intorder_=4)
-        : p(p_), intorder(intorder_),
-          scalar_operator(intorder_)
+        : p(p_), intorder(intorder_)
       {}
 
       // volume integral depending on test and ansatz functions
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
-        const typename R::weight_type weight = r.weight();
-        r.setWeight(weight * p.rho());
-        scalar_operator.alpha_volume(eg,lfsu.template child<0>(),x,lfsu.template child<0>(),r);
-        r.setWeight(weight);
+        typedef typename LFSV::template Child<0>::Type LFSV_PFS_V;
+        const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<0>();
+
+        for(unsigned int i=0; i<LFSV_PFS_V::CHILDREN; ++i)
+          {
+            scalar_alpha_volume(eg,lfsv_pfs_v.child(i),x,lfsv_pfs_v.child(i),r);
+          }
       }
 
       // jacobian of volume term
@@ -511,16 +515,108 @@ namespace Dune {
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
                             M& mat) const
       {
-        const typename M::weight_type weight = mat.weight();
-        mat.setWeight(weight * p.rho());
-        scalar_operator.jacobian_volume(eg,lfsu.template child<0>(),x,lfsu.template child<0>(),mat);
-        mat.setWeight(weight);
+        typedef typename LFSV::template Child<0>::Type LFSV_PFS_V;
+        const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<0>();
+
+        for(unsigned int i=0; i<LFSV_PFS_V::CHILDREN; ++i)
+          {
+            scalar_jacobian_volume(eg,lfsv_pfs_v.child(i),x,lfsv_pfs_v.child(i),mat);
+          }
       }
 
     private:
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      void scalar_alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
+                            R& r) const
+      {
+        
+        // Switches between local and global interface
+        typedef FiniteElementInterfaceSwitch<
+          typename LFSU::Traits::FiniteElementType
+          > FESwitch;
+        typedef BasisInterfaceSwitch<
+          typename FESwitch::Basis
+          > BasisSwitch;
+
+        // domain and range field type
+        typedef typename BasisSwitch::DomainField DF;
+        typedef typename BasisSwitch::RangeField RF;
+        typedef typename BasisSwitch::Range RangeType;
+
+        typedef typename LFSU::Traits::SizeType size_type;
+        
+        // dimensions
+        const int dim = EG::Geometry::dimension;
+
+        // select quadrature rule
+        Dune::GeometryType gt = eg.geometry().type();
+        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
+
+        // loop over quadrature points
+        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+          {
+            // evaluate basis functions
+            std::vector<RangeType> phi(lfsu.size());
+            FESwitch::basis(lfsu.finiteElement()).evaluateFunction(it->position(),phi);
+
+            RF rho = p.rho(eg,it->position());
+            // evaluate u
+            RF u=0.0;
+            for (size_type i=0; i<lfsu.size(); i++)
+              u += x(lfsu,i)*phi[i];
+
+            // u*phi_i
+            RF factor = it->weight() * rho * eg.geometry().integrationElement(it->position());
+            
+            for (size_type i=0; i<lfsu.size(); i++)
+              r.accumulate(lfsv,i, u*phi[i]*factor);
+          }
+      }
+
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
+      void scalar_jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
+                            M& mat) const
+      {
+        
+        // Switches between local and global interface
+        typedef FiniteElementInterfaceSwitch<
+          typename LFSU::Traits::FiniteElementType
+          > FESwitch;
+        typedef BasisInterfaceSwitch<
+          typename FESwitch::Basis
+          > BasisSwitch;
+
+        // domain and range field type
+        typedef typename BasisSwitch::DomainField DF;
+        typedef typename BasisSwitch::RangeField RF;
+        typedef typename BasisSwitch::Range RangeType;
+        typedef typename LFSU::Traits::SizeType size_type;
+
+        // dimensions
+        const int dim = EG::Geometry::dimension;
+
+        // select quadrature rule
+        Dune::GeometryType gt = eg.geometry().type();
+        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
+
+        // loop over quadrature points
+        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+          {            
+            // evaluate basis functions
+            std::vector<RangeType> phi(lfsu.size());
+            FESwitch::basis(lfsu.finiteElement()).evaluateFunction(it->position(),phi);
+
+            // integrate phi_j*phi_i
+            RF rho = p.rho(eg,it->position());
+            RF factor = it->weight() * rho * eg.geometry().integrationElement(it->position());
+            for (size_type j=0; j<lfsu.size(); j++)
+              for (size_type i=0; i<lfsu.size(); i++)
+                mat.accumulate(lfsv,i,lfsu,j, phi[j]*phi[i]*factor);
+          }
+      }
+      
       const P & p;
       int intorder;
-      PowerL2 scalar_operator;
     };
 
     //! \} group LocalOperator

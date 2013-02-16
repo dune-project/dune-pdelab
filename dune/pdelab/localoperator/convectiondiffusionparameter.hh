@@ -165,21 +165,21 @@ namespace Dune {
     class ConvectionDiffusionBoundaryConditionAdapter
       : public Dune::PDELab::DirichletConstraintsParameters   /*@\label{bcp:base}@*/
     {
-      const typename T::Traits::GridViewType& gv;
       const T& t;
 
     public:
 
-      ConvectionDiffusionBoundaryConditionAdapter( 
-                                                  const typename T::Traits::GridViewType& gv_, 
+      ConvectionDiffusionBoundaryConditionAdapter(const typename T::Traits::GridViewType& gv_,
                                                   const T& t_ )
-        : gv( gv_ ), t( t_ )
-      {
-      }
-  
+        : t( t_ )
+      {}
+
+      ConvectionDiffusionBoundaryConditionAdapter(const T& t_ )
+        : t( t_ )
+      {}
+
       template<typename I>
-      bool isDirichlet(
-                       const I & ig               /*@\label{bcp:name}@*/
+      bool isDirichlet(const I & ig               /*@\label{bcp:name}@*/
                        , const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
                        ) const
       {

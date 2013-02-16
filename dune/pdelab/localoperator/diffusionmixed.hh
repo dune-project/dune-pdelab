@@ -80,14 +80,15 @@ namespace Dune {
 
         // evaluate transformation which must be linear
         Dune::FieldVector<DF,dim> pos; pos = 0.0;
-        Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(pos);
+        typename EG::Geometry::JacobianInverseTransposed jac;
+        jac = eg.geometry().jacobianInverseTransposed(pos);
         jac.invert();
         RF det = eg.geometry().integrationElement(pos);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename K::Traits::RangeType tensor;
         Dune::GeometryType gt = eg.geometry().type();
-        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
+        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
         k.evaluate(eg.entity(),localcenter,tensor);
         tensor.invert(); // need iverse for mixed method
 
@@ -230,7 +231,8 @@ namespace Dune {
 
         // evaluate transformation which must be linear
         Dune::FieldVector<DF,dim> pos; pos = 0.0;
-        Dune::FieldMatrix<DF,dimw,dim> jac = ig.inside()->geometry().jacobianInverseTransposed(pos);
+        typename IG::Entity::Geometry::JacobianInverseTransposed jac;
+        jac = ig.inside()->geometry().jacobianInverseTransposed(pos);
         jac.invert();
         RF det = ig.inside()->geometry().integrationElement(pos);
 

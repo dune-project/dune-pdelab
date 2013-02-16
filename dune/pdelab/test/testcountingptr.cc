@@ -6,7 +6,7 @@
 #endif
 #include <iostream>
 
-#include <dune/common/mpihelper.hh>
+#include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/exceptions.hh>
 
 #define DUNE_PDELAB_COUNTINGPTR_HH_SILENCE_DEPRECATION_WARNING

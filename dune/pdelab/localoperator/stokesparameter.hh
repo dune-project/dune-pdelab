@@ -114,6 +114,7 @@ namespace Dune {
           TaylorHoodNavierStokesJacobian and NavierStokesMass local
           operator classes.
 
+          \tparam GV    The type of the grid view used.
           \tparam BF    The boundary type function returning an element
                         of StokesBoundaryCondition.
           \tparam NF    The Neumann stress flux boundary function.

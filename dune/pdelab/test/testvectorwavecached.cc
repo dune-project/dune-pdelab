@@ -19,7 +19,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/misc.hh>
-#include <dune/common/mpihelper.hh>
+#include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/parametertree.hh>
 #include <dune/common/parametertreeparser.hh>
 #include <dune/common/shared_ptr.hh>
@@ -376,7 +376,7 @@ int main(int argc, char** argv)
 #if HAVE_ALUGRID
     {
       static const std::size_t dim = 3;
-      typedef Dune::ALUSimplexGrid<dim, dim> Grid;
+      typedef Dune::ALUGrid<dim,dim,Dune::simplex,Dune::nonconforming> Grid;
       typedef Grid::ctype DF;
       typedef double RF;
       typedef DF Time;

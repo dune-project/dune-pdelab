@@ -1,6 +1,9 @@
 finiteelementmapdir = $(includedir)/dune/pdelab/finiteelementmap
 
 finiteelementmap_HEADERS =			\
+	bdm1cube2dfem.hh			\
+	bdm1simplex2dfem.hh			\
+	brezzidouglasmarinifem.hh		\
 	conformingconstraints.hh		\
 	edges0.5fem.hh				\
 	finiteelementmap.hh			\
@@ -27,11 +30,15 @@ finiteelementmap_HEADERS =			\
 	q22dfem.hh				\
 	qkdg.hh					\
 	rannacher_turek2dfem.hh			\
-	rt02dfem.hh				\
+	raviartthomasfem.hh			\
 	rt0constraints.hh			\
-	rt0q2dfem.hh				\
-	rt0q3dfem.hh				\
-	rt0qfem.hh				\
+	rt0cube2dfem.hh				\
+	rt0cube3dfem.hh				\
+	rt0simplex2dfem.hh			\
+	rt1cube2dfem.hh				\
+	rt1cube3dfem.hh				\
+	rt1simplex2dfem.hh			\
+	rt2cube2dfem.hh				\
 	variablemonomfem.hh
 
 include $(top_srcdir)/am/global-rules

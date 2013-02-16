@@ -44,7 +44,7 @@ namespace Dune {
 		dimDomain = n
 	  };
 
-	  //! \brief domain type
+      //! \brief domain type in dim-size coordinates
 	  typedef D DomainType;
 
 	  //! \brief Export type for range field
@@ -241,6 +241,7 @@ namespace Dune {
      */
 	template<typename G, typename T>
 	class FunctionToGridFunctionAdapter :
+      public TypeTree::LeafNode,
 	  public GridFunctionInterface<GridFunctionTraits<
 									 G,
 									 typename T::Traits::RangeFieldType,
@@ -858,7 +859,7 @@ namespace Dune {
      *
      *  This is a convenience class which eases the creation of analytic
      *  GridFunctions.  Classes derived from it need only implement a method
-     *  evaluateGlobal(const DomainType &x_global, RangeType &y) to have a
+     *  evaluateGlobal(const Dune::FieldVector<typename Traits::DomainFieldType,GV::dimensionworld> &x_global, RangeType &y) to have a
      *  full-fledged GridFunction.
      *
      *  \tparam T   The Traits class
@@ -1021,7 +1022,7 @@ namespace Dune {
         t->evaluate(e,x,v);
 
         // apply Piola transformation
-        Dune::FieldMatrix<typename Traits::DomainFieldType,Traits::dimRange,Traits::dimRange>
+        typename Traits::ElementType::Geometry::JacobianInverseTransposed
           J = e.geometry().jacobianInverseTransposed(x);
         y = 0;
         J.umtv(v,y);

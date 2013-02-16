@@ -2,15 +2,15 @@
 
 2dreentrantcorner-generator.py
   Python Skript used to generate 2dreentrantcorner.dgf.
-  
+
 2dreentrantcorner.dgf
   Pie shaped domain with a reentrant corner.
 
 2dsimplex.alu
-  ALUSimplexGrid<2,2> Unit cube.
+  ALUGrid<2,2,simplex,nonconforming> Unit cube.
 
 2dtriangle.alu
-  ALUSimplexGrid<2,2> Unit triangle.
+  ALUGrid<2,2,simplex,nonconforming> Unit triangle.
 
 3dgrid.al
 

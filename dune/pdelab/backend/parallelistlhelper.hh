@@ -4,7 +4,7 @@
 #define DUNE_PARALLELISTLHELPER_HH
 
 #include <dune/common/deprecated.hh>
-#include <dune/common/mpihelper.hh>
+#include <dune/common/parallel/mpihelper.hh>
 #include <dune/common/static_assert.hh>
 #include <dune/common/stdstreams.hh>
 
@@ -36,7 +36,7 @@ namespace Dune {
     //========================================================
 
     // operator that resets result to zero at constrained DOFS
-    template<typename GFS>
+    template<typename GFS, bool skipBlocksizeCheck = false>
     class ParallelISTLHelper
     {
       /**
@@ -383,9 +383,24 @@ namespace Dune {
 
       };
 
-      template<typename GFS>
+
+      template<typename GFS, bool skipBlocksizeCheck>
       struct BlockProcessor
+      {
+      };
+
+      template<typename GFS>
+      struct BlockProcessor<GFS,false>
         : public BlockProcessorHelper<GFS, BlockwiseIndices<GFS>::value,
+                                      GFS::Traits::BackendType::BlockSize>
+      {
+      };
+
+      // This specialiation skips the BlockSizeEqual-checks; user is responsible for providing
+      // a consistent combination of GFS and Backend!
+      template<typename GFS>
+      struct BlockProcessor<GFS,true>
+        : public BlockProcessorHelper<GFS, true,
                                       GFS::Traits::BackendType::BlockSize>
       {
       };
@@ -394,9 +409,9 @@ namespace Dune {
 
 
 #if HAVE_MPI
-    template<typename GFS>
+    template<typename GFS, bool skipBlocksizeCheck>
     template<typename M, typename C>
-    void ParallelISTLHelper<GFS>::createIndexSetAndProjectForAMG(M& m, C& c)
+    void ParallelISTLHelper<GFS,skipBlocksizeCheck>::createIndexSetAndProjectForAMG(M& m, C& c)
     {
       typedef typename GFS::Traits::GridViewType GV;
       const GV& gv = gfs.gridView();
@@ -427,7 +442,7 @@ namespace Dune {
            <<std::endl;
 
       // Maybe divide by block size?
-      BlockProcessor<GFS>::postProcessCount(count);
+      BlockProcessor<GFS,skipBlocksizeCheck>::postProcessCount(count);
 
       dverb<<gv.comm().rank()<<": shared block count is "<< count.touint()
            <<std::endl;
@@ -451,7 +466,7 @@ namespace Dune {
         for (typename V::size_type j=0; j<v[i].N(); ++j)
           if(v[i][j]==1.0 && sharedDOF[i][j]){
             scalarIndices[i][j]=start;
-            BlockProcessor<GFS>::increment(start, ii++);
+            BlockProcessor<GFS,skipBlocksizeCheck>::increment(start, ii++);
           }
 
       // publish global indices for the shared DOFS to other processors.
@@ -480,7 +495,7 @@ namespace Dune {
             else {
               attr = Dune::OwnerOverlapCopyAttributeSet::copy;                
             }
-            BlockProcessor<GFS>::
+            BlockProcessor<GFS,skipBlocksizeCheck>::
               addIndex(scalarIndices[i][j], ii, attr, m, c.indexSet());
           }
         }

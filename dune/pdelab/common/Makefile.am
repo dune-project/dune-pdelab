@@ -3,6 +3,7 @@ SUBDIRS =                                       \
 
 commondir = $(includedir)/dune/pdelab/common
 common_HEADERS =				\
+        benchmarkhelper.hh                      \
 	clock.hh				\
 	countingptr.hh				\
 	cpstoragepolicy.hh			\
@@ -16,6 +17,7 @@ common_HEADERS =				\
 	logtag.hh				\
 	multiindex.hh				\
 	range.hh				\
+	topologyutility.hh			\
 	typetree.hh                             \
         typetraits.hh                           \
 	vtkexport.hh

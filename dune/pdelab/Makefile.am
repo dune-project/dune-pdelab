@@ -3,6 +3,7 @@ SUBDIRS =					\
 	adaptivity				\
 	backend					\
 	benchmark				\
+	boilerplate				\
 	common					\
 	constraints				\
 	experimental				\

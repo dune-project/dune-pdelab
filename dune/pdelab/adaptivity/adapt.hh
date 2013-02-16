@@ -244,6 +244,8 @@ namespace Dune {
         typedef Dune::PDELab::P0LocalFiniteElementMap<Coord,double,GV::dimension> P0FEM;
         typedef GridFunctionSpace<GV,P0FEM> GFSV;
         typedef typename Dune::PDELab::BackendVectorSelector<GFSV,double>::Type V;
+        typedef typename GV::Grid::LeafIndexSet IndexSet;
+        typedef typename IndexSet::IndexType IndexType;
 
         public:
 
@@ -254,7 +256,10 @@ namespace Dune {
          * @param[in] gsop_ A LocalOperator to evaluate on the Intersections, defaults to GradientSmoothnessOperator
          */
         ResidualErrorEstimation(const GFSU& gfsu_, const LOP& lop_ = GradientSmoothnessOperator())
-          : gfsu(gfsu_), lop(lop_) {}
+          : gfsu(gfsu_), lop(lop_), gt(Dune::GeometryType::simplex,GV::dimension) {}
+
+        ResidualErrorEstimation(Dune::GeometryType gt_, const GFSU& gfsu_, const LOP& lop_ = GradientSmoothnessOperator())
+          : gfsu(gfsu_), lop(lop_), gt(gt_) {}
 
         /*! @brief Calculate an estimate of the error.
          *
@@ -263,9 +268,9 @@ namespace Dune {
          */
         void apply(const U& u, V& estimate)
         {
-          //! @todo allgemein
-          static Dune::GeometryType simplex(Dune::GeometryType::simplex,GV::dimension);
-          P0FEM p0fem(simplex);
+          //! @todo allgemein !!!
+          //static Dune::GeometryType simplex(Dune::GeometryType::simplex,GV::dimension);
+          P0FEM p0fem(gt);
           GFSV gfsv(gfsu.gridView(),p0fem);
 
           // make local function spaces
@@ -284,11 +289,15 @@ namespace Dune {
           LV vl;
           LV vl_n;
 
+          const IndexSet& indexset = gfsv.gridView().indexSet();
+
           // traverse grid view
           for (LeafIterator it = gfsu.gridView().template begin<0,Dune::Interior_Partition>();
               it!=gfsu.gridView().template end<0,Dune::Interior_Partition>(); ++it)
           {
             const Element& e = *it;
+            const IndexType index = indexset.index(e);
+
             // bind local function spaces to element
             lfsu.bind(e);
             lfsv.bind(e);
@@ -314,6 +323,10 @@ namespace Dune {
             {
               if (iit->neighbor())
               {
+                // visit interface only once !
+                const IndexType index_n = indexset.index(*(iit->outside()));
+                if (index_n<index) continue;
+
                 // bind local function spaces to neighbor
                 lfsu_n.bind(*(iit->outside()));
                 lfsv_n.bind(*(iit->outside()));
@@ -337,14 +350,25 @@ namespace Dune {
                 lfsv.vadd(vl,estimate);
                 lfsv_n.vadd(vl_n,estimate);
               }
+
+              if (iit->boundary())
+              {
+                vl.assign(lfsv.size(),0.0);
+                LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
+                  alpha_boundary(lop,IntersectionGeometry<Intersection>(*iit,0),
+                                 lfsu,ul,lfsv,vlview);
+                lfsv.vadd(vl,estimate);
+              }
             } // end of intersection
           } // end of element
+          // for (unsigned int i=0; i<gfsv.globalSize(); i++) std::cout << i << " " << estimate[i] << std::endl;; 
         }
 
         private:
 
         const GFSU& gfsu;
         const LOP& lop;
+        Dune::GeometryType gt;
       };
 
     /*! @class AdaptationInterface
@@ -409,7 +433,13 @@ namespace Dune {
       EstimationAdaptation(Grid& grid_, const GFSU& gfsu_, Estimation& estimation_,
           double refine_, double coarsen_ = 0., int min_ = 0, int max_ = std::numeric_limits<int>::max(), bool doCommunicate_ = true)
         : grid(grid_), gfsu(gfsu_), estimation(estimation_),refine(refine_), coarsen(coarsen_),
-        min(min_), max(max_), doCommunicate(doCommunicate_), refinementMap(), localEstimate(0.) {}
+          min(min_), max(max_), doCommunicate(doCommunicate_), refinementMap(), localEstimate(0.),
+          gt(Dune::GeometryType::simplex,GV::dimension) {}
+
+      EstimationAdaptation(Dune::GeometryType gt_, Grid& grid_, const GFSU& gfsu_, Estimation& estimation_,
+          double refine_, double coarsen_ = 0., int min_ = 0, int max_ = std::numeric_limits<int>::max(), bool doCommunicate_ = true)
+        : grid(grid_), gfsu(gfsu_), estimation(estimation_),refine(refine_), coarsen(coarsen_),
+          min(min_), max(max_), doCommunicate(doCommunicate_), refinementMap(), localEstimate(0.), gt(gt_) {}
 
       /*! @brief Prepare information before marking any of the Elements
        *
@@ -417,9 +447,9 @@ namespace Dune {
        */
       void prepare (const U& u)
       {
-        //! @todo allgemein
-        static Dune::GeometryType simplex(Dune::GeometryType::simplex,GV::dimension);
-        P0FEM p0fem(simplex);
+        //! @todo allgemein !!!
+        //        static Dune::GeometryType simplex(Dune::GeometryType::simplex,GV::dimension);
+        P0FEM p0fem(gt);
         GFSV gfsv(gfsu.gridView(),p0fem);
         V estimate(gfsv,0.);
         estimation.apply(u,estimate);
@@ -435,24 +465,30 @@ namespace Dune {
             it!=leafView.template end<0,Dune::Interior_Partition>(); ++it)
         {
           const Element& e = *it;
-          const IndexType& index = indexset.index(e);
+          const IndexType index = indexset.index(e);
           lfsv.bind(e);
           lfsv.vread(estimate,vl);
           tempMultiMap.insert(std::pair<typename V::ElementType,const IndexType>(vl[0],index));
-          localEstimate += vl[0] * e.geometry().volume();
+          localEstimate += vl[0];// * e.geometry().volume();
         }
 
         coarsenNumber = coarsen * leafView.size(0);
         refineNumber = (1. - refine) * leafView.size(0);
 
         unsigned int count = 0;
+        double accumulated_error = 0.0;
+        eta.resize(leafView.size(0));
         for (typename std::multimap<typename V::ElementType, const IndexType>::const_iterator it = tempMultiMap.begin();
             it!=tempMultiMap.end(); ++it)
         {
           refinementMap.insert(std::pair<const IndexType, unsigned int>((*it).second,count++));
+          accumulated_error += std::abs((*it).first);
+          eta[(*it).second] = accumulated_error;
         }
 
+        globalEstimate = localEstimate;
         if (doCommunicate && grid.comm().size() > 1) communicate();
+        std::cout << "prepare: sqrt of sum of local estimators = " << sqrt(globalEstimate) << std::endl;
       }
 
       /*! @brief Estimate the error and mark Elems for refinement
@@ -467,14 +503,19 @@ namespace Dune {
         const IndexType index = indexset.index(e);
         const int i = (refinementMap.find(index))->second;
 
-        if      (i > refineNumber && level < max)
+        // implement true bulk criterion for elliptic problems
+        if (eta[index]>=(1.0-refine)*globalEstimate && level < max)
         {
           grid.mark( 1, e);
         }
-        else if (i < coarsenNumber && level > min)
-        {
-          grid.mark(-1, e);
-        }
+        // if      (i > refineNumber && level < max)
+        // {
+        //   grid.mark( 1, e);
+        // }
+        // else if (i < coarsenNumber && level > min)
+        // {
+        //   grid.mark(-1, e);
+        // }
       }
 
       private:
@@ -485,7 +526,7 @@ namespace Dune {
        */
       void communicate ()
       {
-        double globalEstimate = grid.comm().sum(localEstimate);
+        globalEstimate = grid.comm().sum(localEstimate);
         //! @todo get rid of ghosts and overlap
         int    localNumElem = grid.leafView().size(0);
         int    globalNumElem  = grid.comm().sum(localNumElem);
@@ -503,6 +544,9 @@ namespace Dune {
       const bool doCommunicate;
       MapType refinementMap;
       double localEstimate;
+      std::vector<double> eta;
+      double globalEstimate;
+      Dune::GeometryType gt;
     };
 
     /*! @class TestingAdaptation
