@@ -16,7 +16,7 @@
 #include <iostream>
 #include "config.h"           // file constructed by ./configure script
 
-#include <dune/common/parallel/mpihelper.hh> // include mpi helper class 
+#include <dune/common/mpihelper.hh> // include mpi helper class 
 #include <dune/common/parametertreeparser.hh>
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/classname.hh>

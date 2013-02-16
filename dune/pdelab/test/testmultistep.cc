@@ -16,7 +16,7 @@
 #include <dune/common/fmatrix.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/misc.hh>
-#include <dune/common/parallel/mpihelper.hh>
+#include <dune/common/mpihelper.hh>
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/tuples.hh>
 
