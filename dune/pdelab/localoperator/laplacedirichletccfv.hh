@@ -59,17 +59,17 @@ namespace Dune {
 
         // center in face's reference element
         const Dune::FieldVector<DF,IG::dimension-1>& 
-          face_local = Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
+          face_local = Dune::GenericReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
 
         // face volume for integration
         RF face_volume = ig.geometry().integrationElement(face_local)
-          *Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).volume();
+          *Dune::GenericReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).volume();
 
         // cell centers in references elements
         const Dune::FieldVector<DF,IG::dimension>& 
-          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
         const Dune::FieldVector<DF,IG::dimension>& 
-          outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
+          outside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
 
         // distance between the two cell centers
         Dune::FieldVector<DF,IG::dimension> 
@@ -99,15 +99,15 @@ namespace Dune {
 
         // center in face's reference element
         const Dune::FieldVector<DF,IG::dimension-1>& 
-          face_local = Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
+          face_local = Dune::GenericReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
 
         // face volume for integration
         RF face_volume = ig.geometry().integrationElement(face_local)
-          *Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).volume();
+          *Dune::GenericReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).volume();
         
         // cell center in reference element
         const Dune::FieldVector<DF,IG::dimension>& 
-          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
 
         // distance between cell center and face center
         Dune::FieldVector<DF,IG::dimension> 

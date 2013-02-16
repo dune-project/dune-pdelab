@@ -92,7 +92,7 @@ namespace Dune
 
                 // get permeability for current cell
                 GeometryType gt = eg.geometry().type();
-                FieldVector<ctype,dim> localcenter = ReferenceElements<ctype,dim>::general(gt).position(0,0);
+                FieldVector<ctype,dim> localcenter = GenericReferenceElements<ctype,dim>::general(gt).position(0,0);
                 FieldMatrix<rtype,dim,dim> K = data.K(eg.entity(), localcenter);
 
                 // build matrix W
@@ -151,7 +151,7 @@ namespace Dune
 
                 // get permeability for current cell
                 GeometryType gt = eg.geometry().type();
-                FieldVector<ctype,dim> localcenter = ReferenceElements<ctype,dim>::general(gt).position(0,0);
+                FieldVector<ctype,dim> localcenter = GenericReferenceElements<ctype,dim>::general(gt).position(0,0);
                 FieldMatrix<rtype,dim,dim> K = data.K(eg.entity(), localcenter);
 
                 // build matrix W
@@ -209,7 +209,7 @@ namespace Dune
 
                 // get permeability for current cell
                 GeometryType gt = eg.geometry().type();
-                FieldVector<ctype,dim> localcenter = ReferenceElements<ctype,dim>::general(gt).position(0,0);
+                FieldVector<ctype,dim> localcenter = GenericReferenceElements<ctype,dim>::general(gt).position(0,0);
                 FieldMatrix<rtype,dim,dim> K = data.K(eg.entity(), localcenter);
 
                 // build matrix W
@@ -240,7 +240,7 @@ namespace Dune
                 const CellUnknowns& cell_space = lfsv.template child<0>();
 
                 GeometryType gt = eg.geometry().type();
-                FieldVector<ctype,dim> localcenter = ReferenceElements<ctype,dim>::general(gt).position(0,0);
+                FieldVector<ctype,dim> localcenter = GenericReferenceElements<ctype,dim>::general(gt).position(0,0);
                 r.accumulate(cell_space,0,-cell.volume * data.f(eg.entity(), localcenter));
             }
 
@@ -251,7 +251,7 @@ namespace Dune
                 unsigned int e = cell.num_faces - 1;
 
                 GeometryType gt = ig.intersection().type();
-                FieldVector<ctype,dim-1> center = ReferenceElements<ctype,dim-1>::general(gt).position(0,0);
+                FieldVector<ctype,dim-1> center = GenericReferenceElements<ctype,dim-1>::general(gt).position(0,0);
                 FieldVector<ctype,dim> local_face_center = ig.geometryInInside().global(center);
 
                 if (data.bcType(ig, center) == Data::bcNeumann)

@@ -78,7 +78,7 @@ namespace Dune {
 
         // cell center
         const Dune::FieldVector<DF,dim>& 
-          inside_local = Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+          inside_local = Dune::GenericReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
 
         // evaluate Helmholtz term
         typename A0::Traits::RangeType a0value;
@@ -109,17 +109,17 @@ namespace Dune {
 
         // center in face's reference element
         const Dune::FieldVector<DF,IG::dimension-1>& 
-          face_local = Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
+          face_local = Dune::GenericReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
 
         // face volume for integration
         RF face_volume = ig.geometry().integrationElement(face_local)
-          *Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).volume();
+          *Dune::GenericReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).volume();
 
         // cell centers in references elements
         const Dune::FieldVector<DF,IG::dimension>& 
-          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
         const Dune::FieldVector<DF,IG::dimension>& 
-          outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
+          outside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
 
         // evaluate diffusion coefficient
         typename K::Traits::RangeType k_inside, k_outside;
@@ -157,15 +157,15 @@ namespace Dune {
 
         // center in face's reference element
         const Dune::FieldVector<DF,IG::dimension-1>& 
-          face_local = Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
+          face_local = Dune::GenericReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
 
         // face volume for integration
         RF face_volume = ig.geometry().integrationElement(face_local)
-          *Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).volume();
+          *Dune::GenericReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).volume();
         
         // cell center in reference element
         const Dune::FieldVector<DF,IG::dimension>& 
-          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
 
         // evaluate boundary condition type
         typename B::Traits::RangeType bctype;

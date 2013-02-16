@@ -116,7 +116,7 @@ namespace Dune {
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename K::Traits::RangeType tensor(0.0);
-        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
+        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
         k.evaluate(eg.entity(),localcenter,tensor);
 
         // loop over quadrature points
@@ -185,15 +185,15 @@ namespace Dune {
 
         // normal of center in face's reference element
         const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-          Dune::ReferenceElements<DF,IG::dimension-1>::
+          Dune::GenericReferenceElements<DF,IG::dimension-1>::
           general(ig.geometry().type()).position(0,0);
         const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
             
         // evaluate diffusion tensor at elements' centers, assume they are constant over elements
         const Dune::FieldVector<DF,IG::dimension>& 
-          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
         const Dune::FieldVector<DF,IG::dimension>& 
-          outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
+          outside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
         typename K::Traits::RangeType permeability_s(0.0);
         typename K::Traits::RangeType permeability_n(0.0);
         k.evaluate(*(ig.inside()),inside_local,permeability_s);
@@ -337,14 +337,14 @@ namespace Dune {
           {
             // center in face's reference element
             const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-              Dune::ReferenceElements<DF,IG::dimension-1>::
+              Dune::GenericReferenceElements<DF,IG::dimension-1>::
               general(ig.geometry().type()).position(0,0);
             // outer normal, assuming it is constant over whole intersection
             const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
 
             // evaluate diffusion tensor at cell center, assume it is constant over elements
             const Dune::FieldVector<DF,IG::dimension>
-              localcenter = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+              localcenter = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
             typename K::Traits::RangeType tensor(0.0);
             k.evaluate(*ig.inside(),localcenter,tensor);
 
@@ -511,13 +511,13 @@ namespace Dune {
             */
             // center in face's reference element
             const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-              Dune::ReferenceElements<DF,IG::dimension-1>::
+              Dune::GenericReferenceElements<DF,IG::dimension-1>::
               general(ig.geometry().type()).position(0,0);
             // outer normal, assuming it is constant over whole intersection
             const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
             // evaluate diffusion tensor at cell center, assume it is constant over elements
             const Dune::FieldVector<DF,IG::dimension>
-              localcenter = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+              localcenter = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
             typename K::Traits::RangeType tensor(0.0);
             k.evaluate(*ig.inside(),localcenter,tensor);
             // penalty weight for NIPG / SIPG
@@ -596,7 +596,7 @@ namespace Dune {
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename K::Traits::RangeType tensor;
-        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
+        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
         k.evaluate(eg.entity(),localcenter,tensor);
 
         // loop over quadrature points
@@ -667,15 +667,15 @@ namespace Dune {
 
         // center in face's reference element
         const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-          Dune::ReferenceElements<DF,IG::dimension-1>::
+          Dune::GenericReferenceElements<DF,IG::dimension-1>::
           general(ig.geometry().type()).position(0,0);
         const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         const Dune::FieldVector<DF,IG::dimension>& 
-          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
         const Dune::FieldVector<DF,IG::dimension>& 
-          outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
+          outside_local = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
         typename K::Traits::RangeType permeability_s(0.0);
         typename K::Traits::RangeType permeability_n(0.0);
         k.evaluate(*(ig.inside()),inside_local,permeability_s);
@@ -833,14 +833,14 @@ namespace Dune {
           {
             // center in face's reference element
             const Dune::FieldVector<DF,IG::dimension-1>& face_center =
-              Dune::ReferenceElements<DF,IG::dimension-1>::
+              Dune::GenericReferenceElements<DF,IG::dimension-1>::
               general(ig.geometry().type()).position(0,0);
             // outer normal, assuming it is constant over whole intersection
             const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
 
             // evaluate diffusion tensor at cell center, assume it is constant over elements
             const Dune::FieldVector<DF,IG::dimension>
-              localcenter = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+              localcenter = Dune::GenericReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
             typename K::Traits::RangeType tensor(0.0);
             k.evaluate(*ig.inside(),localcenter,tensor);
 

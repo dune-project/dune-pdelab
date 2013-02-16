@@ -31,7 +31,7 @@ namespace Dune
             {
                 const typename Entity::Geometry& cgeo = ent.geometry();
                 const FieldVector<ctype,dim> center_local
-                    = ReferenceElements<ctype,dim>::general(cgeo.type()).position(0,0);
+                    = GenericReferenceElements<ctype,dim>::general(cgeo.type()).position(0,0);
                 center = cgeo.global(center_local);
                 volume = cgeo.volume();
                 num_faces = 0;
@@ -49,7 +49,7 @@ namespace Dune
             {
                 const typename Intersection::Geometry& fgeo = is.geometry();
                 const FieldVector<ctype,dim-1> face_center_local
-                    = ReferenceElements<ctype,dim-1>::general(fgeo.type()).position(0,0);
+                    = GenericReferenceElements<ctype,dim-1>::general(fgeo.type()).position(0,0);
                 const Vector face_center = fgeo.global(face_center_local);
                 const ctype face_area = fgeo.volume();
 

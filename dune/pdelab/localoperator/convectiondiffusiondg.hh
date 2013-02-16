@@ -128,7 +128,7 @@ namespace Dune {
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename T::Traits::PermTensorType A;
-        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
+        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
         A = param.A(eg.entity(),localcenter);
 
         // transformation
@@ -222,7 +222,7 @@ namespace Dune {
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename T::Traits::PermTensorType A;
-        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
+        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
         A = param.A(eg.entity(),localcenter);
 
         // transformation
@@ -302,9 +302,9 @@ namespace Dune {
         
         // evaluate permeability tensors
         const Dune::FieldVector<DF,dim>& 
-          inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
         const Dune::FieldVector<DF,dim>& 
-          outside_local = Dune::ReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
+          outside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
         typename T::Traits::PermTensorType A_s, A_n;
         A_s = param.A(*(ig.inside()),inside_local);
         A_n = param.A(*(ig.outside()),outside_local);
@@ -504,9 +504,9 @@ namespace Dune {
         
         // evaluate permeability tensors
         const Dune::FieldVector<DF,dim>& 
-          inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
         const Dune::FieldVector<DF,dim>& 
-          outside_local = Dune::ReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
+          outside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
         typename T::Traits::PermTensorType A_s, A_n;
         A_s = param.A(*(ig.inside()),inside_local);
         A_n = param.A(*(ig.outside()),outside_local);
@@ -686,7 +686,7 @@ namespace Dune {
         
         // evaluate permeability tensors
         const Dune::FieldVector<DF,dim>& 
-          inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
         typename T::Traits::PermTensorType A_s;
         A_s = param.A(*(ig.inside()),inside_local);
 
@@ -706,7 +706,7 @@ namespace Dune {
 
         // evaluate boundary condition
         const Dune::FieldVector<DF,dim-1> 
-          face_local = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
+          face_local = Dune::GenericReferenceElements<DF,dim-1>::general(gtface).position(0,0);
         BCType bctype = param.bctype(ig.intersection(),face_local);
 
         // compute weights
@@ -879,7 +879,7 @@ namespace Dune {
         
         // evaluate permeability tensors
         const Dune::FieldVector<DF,dim>& 
-          inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
         typename T::Traits::PermTensorType A_s;
         A_s = param.A(*(ig.inside()),inside_local);
 
@@ -899,7 +899,7 @@ namespace Dune {
 
         // evaluate boundary condition
         const Dune::FieldVector<DF,dim-1> 
-          face_local = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
+          face_local = Dune::GenericReferenceElements<DF,dim-1>::general(gtface).position(0,0);
         BCType bctype = param.bctype(ig.intersection(),face_local);
 
         // compute weights
@@ -1100,10 +1100,10 @@ namespace Dune {
         else
           {
             Dune::GeometryType gt = geo.type();
-            for (int i=0; i<Dune::ReferenceElements<DF,dim>::general(gt).size(dim-1); i++)
+            for (int i=0; i<Dune::GenericReferenceElements<DF,dim>::general(gt).size(dim-1); i++)
               {
-                Dune::FieldVector<DF,dim> x = geo.corner(Dune::ReferenceElements<DF,dim>::general(gt).subEntity(i,dim-1,0,dim));
-                x -= geo.corner(Dune::ReferenceElements<DF,dim>::general(gt).subEntity(i,dim-1,1,dim));
+                Dune::FieldVector<DF,dim> x = geo.corner(Dune::GenericReferenceElements<DF,dim>::general(gt).subEntity(i,dim-1,0,dim));
+                x -= geo.corner(Dune::GenericReferenceElements<DF,dim>::general(gt).subEntity(i,dim-1,1,dim));
                 hmin = std::min(hmin,x.two_norm());
                 hmax = std::max(hmax,x.two_norm());
               }

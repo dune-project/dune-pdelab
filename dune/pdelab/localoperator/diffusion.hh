@@ -83,7 +83,7 @@ namespace Dune {
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename K::Traits::RangeType tensor(0.0);
-        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
+        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
         k.evaluate(eg.entity(),localcenter,tensor);
 
         // loop over quadrature points
@@ -158,7 +158,7 @@ namespace Dune {
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
         typename K::Traits::RangeType tensor(0.0);
-        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
+        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
         k.evaluate(eg.entity(),localcenter,tensor);
 
         // loop over quadrature points

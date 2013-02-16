@@ -364,7 +364,7 @@ namespace Dune {
         typename EG::Geometry::JacobianInverseTransposed jac;
 
         // evaluate parameters (assumed constant per element)
-        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
+        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
         RF mu = param.mu(eg.entity(),localcenter);
         RF eps = param.eps(eg.entity(),localcenter);
         RF sigma = param.sigma(eg.entity(),localcenter);
@@ -453,9 +453,9 @@ namespace Dune {
 
         // evaluate speed of sound (assumed constant per element)
         const Dune::FieldVector<DF,dim>& 
-          inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
         const Dune::FieldVector<DF,dim>& 
-          outside_local = Dune::ReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
+          outside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
         RF mu_s = param.mu(*(ig.inside()),inside_local);
         RF mu_n = param.mu(*(ig.outside()),outside_local);
         RF eps_s = param.eps(*(ig.inside()),inside_local);
@@ -566,7 +566,7 @@ namespace Dune {
 
         // evaluate speed of sound (assumed constant per element)
         const Dune::FieldVector<DF,dim>& 
-          inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::GenericReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
         RF mu_s = param.mu(*(ig.inside()),inside_local);
         RF eps_s = param.eps(*(ig.inside()),inside_local);
         //RF sigma_s = param.sigma(*(ig.inside()),inside_local);

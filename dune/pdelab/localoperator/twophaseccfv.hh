@@ -295,7 +295,7 @@ namespace Dune {
 
         // cell geometry
         const Dune::FieldVector<DF,dim>& 
-          cell_center_local = Dune::ReferenceElements<DF,dim>::general(eg.geometry().type()).position(0,0);
+          cell_center_local = Dune::GenericReferenceElements<DF,dim>::general(eg.geometry().type()).position(0,0);
         RF cell_volume = eg.geometry().volume();
 
 		// contribution from source term
@@ -324,9 +324,9 @@ namespace Dune {
 
         // cell geometries
         const Dune::FieldVector<DF,dim>& 
-          inside_cell_center_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+          inside_cell_center_local = Dune::GenericReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
         const Dune::FieldVector<DF,dim>& 
-          outside_cell_center_local = Dune::ReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
+          outside_cell_center_local = Dune::GenericReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
         Dune::FieldVector<DF,IG::dimension> 
           inside_cell_center_global = ig.inside()->geometry().center();
         Dune::FieldVector<DF,IG::dimension> 
@@ -339,7 +339,7 @@ namespace Dune {
 
         // face geometry
         const Dune::FieldVector<DF,IG::dimension-1>& 
-          face_local = Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
+          face_local = Dune::GenericReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).position(0,0);
         RF face_volume = ig.geometry().volume();
 
         // absolute permeability
@@ -426,7 +426,7 @@ namespace Dune {
 
         // face geometry
         const Dune::FieldVector<DF,dim-1>& 
-          face_local = Dune::ReferenceElements<DF,dim-1>::general(ig.geometry().type()).position(0,0);
+          face_local = Dune::GenericReferenceElements<DF,dim-1>::general(ig.geometry().type()).position(0,0);
         RF face_volume = ig.geometry().volume();
 
         // evaluate boundary condition type
@@ -436,7 +436,7 @@ namespace Dune {
 
         // cell geometry
         const Dune::FieldVector<DF,dim>& 
-          inside_cell_center_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+          inside_cell_center_local = Dune::GenericReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
         Dune::FieldVector<DF,dim> 
           inside_cell_center_global = ig.inside()->geometry().global(inside_cell_center_local);
 
@@ -498,9 +498,9 @@ namespace Dune {
 
         // face geometry
         const Dune::FieldVector<DF,dim-1>& 
-          face_local = Dune::ReferenceElements<DF,dim-1>::general(ig.geometry().type()).position(0,0);
+          face_local = Dune::GenericReferenceElements<DF,dim-1>::general(ig.geometry().type()).position(0,0);
         RF face_volume = ig.geometry().integrationElement(face_local)*
-          Dune::ReferenceElements<DF,dim-1>::general(ig.geometry().type()).volume();
+          Dune::GenericReferenceElements<DF,dim-1>::general(ig.geometry().type()).volume();
 
         // evaluate boundary condition type
         int bc_l = tp.bc_l(ig.intersection(),face_local,time);
@@ -603,7 +603,7 @@ namespace Dune {
 
         // cell geometry
         const Dune::FieldVector<DF,dim>& 
-          cell_center_local = Dune::ReferenceElements<DF,dim>::general(eg.geometry().type()).position(0,0);
+          cell_center_local = Dune::GenericReferenceElements<DF,dim>::general(eg.geometry().type()).position(0,0);
         RF cell_volume = eg.geometry().volume();
 
 		RF phi = tp.phi(eg.entity(),cell_center_local);
@@ -674,7 +674,7 @@ namespace Dune {
       {  
         // cell geometry
         const Dune::FieldVector<DF,dim>& 
-          inside_cell_center_local = Dune::ReferenceElements<DF,dim>::
+          inside_cell_center_local = Dune::GenericReferenceElements<DF,dim>::
           general(e.type()).position(0,0);
         Dune::FieldVector<DF,dim> 
           inside_cell_center_global = e.geometry().global(inside_cell_center_local);
@@ -706,14 +706,14 @@ namespace Dune {
 
             // face geometry
             const Dune::FieldVector<DF,dim-1>& 
-              face_local = Dune::ReferenceElements<DF,dim-1>::general(iit->geometry().type()).position(0,0);
+              face_local = Dune::GenericReferenceElements<DF,dim-1>::general(iit->geometry().type()).position(0,0);
 
 
             // interior face
             if (iit->neighbor())
               {
                 const Dune::FieldVector<DF,dim>& 
-                  outside_cell_center_local = Dune::ReferenceElements<DF,dim>::
+                  outside_cell_center_local = Dune::GenericReferenceElements<DF,dim>::
                   general(iit->outside()->type()).position(0,0);
                 Dune::FieldVector<DF,dim> 
                   outside_cell_center_global = iit->outside()->geometry().global(outside_cell_center_local); 
@@ -905,7 +905,7 @@ namespace Dune {
       { 
         // cell geometry
         const Dune::FieldVector<DF,dim>& 
-          inside_cell_center_local = Dune::ReferenceElements<DF,dim>::
+          inside_cell_center_local = Dune::GenericReferenceElements<DF,dim>::
           general(e.type()).position(0,0);
         Dune::FieldVector<DF,dim> 
           inside_cell_center_global = e.geometry().global(inside_cell_center_local);
@@ -937,13 +937,13 @@ namespace Dune {
 
             // face geometry
             const Dune::FieldVector<DF,dim-1>& 
-              face_local = Dune::ReferenceElements<DF,dim-1>::general(iit->geometry().type()).position(0,0);
+              face_local = Dune::GenericReferenceElements<DF,dim-1>::general(iit->geometry().type()).position(0,0);
 
             // interior face
             if (iit->neighbor())
               {
                 const Dune::FieldVector<DF,dim>& 
-                  outside_cell_center_local = Dune::ReferenceElements<DF,dim>::
+                  outside_cell_center_local = Dune::GenericReferenceElements<DF,dim>::
                   general(iit->outside()->type()).position(0,0);
                 Dune::FieldVector<DF,dim> 
                   outside_cell_center_global = iit->outside()->geometry().global(outside_cell_center_local); 
