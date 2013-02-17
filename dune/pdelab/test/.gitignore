@@ -4,6 +4,8 @@
 *dat
 *gnuplot
 *eps
+*.log
+*.trs
 dgfparser.log
 testanalytic
 testconstraints
@@ -46,3 +48,5 @@ testtypetree-legacy
 testinterpolate
 testpoisson-globalfe
 testopbfem
+testclock
+testproxynode
