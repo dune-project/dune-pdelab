@@ -14,6 +14,8 @@ common_HEADERS =				\
 	diffusionmixed.hh			\
 	diffusionparam.hh			\
 	electrodynamic.hh			\
+	errorindicatordg.hh			\
+	eval.hh					\
 	flags.hh				\
 	idefault.hh				\
 	interface.hh				\
