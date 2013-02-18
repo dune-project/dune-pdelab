@@ -1,11 +1,12 @@
 # $Id: duneproject 5370 2008-11-15 17:43:24Z christi $
 
 # we need the module file to be able to build via dunecontrol
-EXTRA_DIST = CMakeLists.txt			\
-	dune.module		\
-	GPL-2			\
-	GPL-3			\
-	LGPL-3			\
+EXTRA_DIST = CMakeLists.txt                     \
+	dune.module dune-pdelab-config.cmake.in \
+	dune-pdelab-version.cmake.in 		\
+	GPL-2                                   \
+	GPL-3                                   \
+	LGPL-3                                  \
 	RELEASE_NOTES
 
 # don't follow the full GNU-standard
@@ -28,3 +29,7 @@ DISTCHECK_CONFIGURE_FLAGS = --with-dune=$(DUNEROOT) CXX="$(CXX)" CXXFLAGS="$(CXX
 
 include $(top_srcdir)/am/top-rules
 include $(top_srcdir)/am/global-rules
+
+# Distribute and install config.h.cmake
+configdir = $(datadir)/dune-pdelab
+dist_config_DATA = config.h.cmake
