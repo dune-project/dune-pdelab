@@ -1,9 +1,12 @@
 PDELab
 ======
 
-This is the first public release of PDELab, a PDE discretization toolkit built
+This is the 1.1 release of PDELab, a PDE discretization toolkit built
 on top of the DUNE framework [0]. License information can be found in the file
 COPYING.
+
+PDELab 1.1 is a minor feature release mostly focused on fixing bugs, but it also
+includes a number of new features. For details, see the changelog below.
 
 If you need help, please ask on our mailinglist [1]. Bugs can also be submitted
 to the PDELab bugtracker at [2] instead.
@@ -14,6 +17,37 @@ DUNE libraries.
 
 Changes
 =======
+
+PDELab 1.1
+----------
+
+This is the first release of PDELab after the move from Subversion to Git for
+version control. You CANNOT find this release on the Subversion server. If you prefer
+to directly check out the sources instead of using the provided tarballs, please see
+our website for information on how to access the Git repository.
+
+- In the directory boilerplate/ you can find a lot of useful infrastructure classes
+  to simplify writing most PDELab programs. For examples on how to use the boilerplate
+  infrastructure, take a look at the Howto.
+
+- There is now a Jacobi preconditioner for scalar nonoverlapping problems, along
+  with a BiCGStab-based backend using it.
+
+- Improved support for calculations with complex field type.
+
+- The parameter class interface for Stokes problems has been redesigned to increase
+  commonality between CG and DG versions.
+
+- Working adaptivity, including hanging nodes. This functionality is currently restricted
+  to scalar problems.
+
+- Reimplemented support for matrix-free methods using GridOperator::jacobian_apply().
+
+- We fixed most of the deprecation warnings due to deprecated APIs in the core modules.
+
+- Fix for builds from repository with recent versions of autotools.
+
+- Numerous bug fixes.
 
 
 Caveats
