@@ -49,6 +49,12 @@ our website for information on how to access the Git repository.
 
 - Numerous bug fixes.
 
+  - PDELab 1.1-rc1
+    - initial release candidate
+
+  - PDELab 1.1-rc2
+    - fix for compilation problem with boilerplate examples in Howtoy
+    - build tarballs using GNU tar and make sure they work without automake installed
 
 Caveats
 =======
