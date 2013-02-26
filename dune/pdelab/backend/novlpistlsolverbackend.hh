@@ -773,7 +773,7 @@ namespace Dune {
 
       /**
        * @brief A DataHandle class to exchange matrix sparsity patterns.
-       * 
+       *
        *  We look at a 2D example with a nonoverlapping grid,
        *  two processes and no ghosts with Q1 discretization.
        *  Process 0 has the left part of the domain
@@ -781,8 +781,8 @@ namespace Dune {
        *  Process 1 the right part with three cells
        *  and eight vertices (2,4,7-12).
        *  <pre>
-       *  1 _ 2        2 _ 9 _ 10        
-       *  |   |        |   |   | 
+       *  1 _ 2        2 _ 9 _ 10
+       *  |   |        |   |   |
        *  3 _ 4 _ 7    4 _ 7 _ 11
        *  |   |   |        |   |
        *  5 _ 6 _ 8        8 _ 12
@@ -800,7 +800,7 @@ namespace Dune {
         //! Export type of data for message buffer
         typedef IdType DataType;
 
-        /** @brief Returns true if data for given valid codim should be communicated   
+        /** @brief Returns true if data for given valid codim should be communicated
          */
         bool contains (int dim, int codim) const
         {
@@ -827,7 +827,7 @@ namespace Dune {
               if (it != index2GID_.end())
                 n++;
             }
-          
+
           return n;
         }
 
@@ -843,7 +843,7 @@ namespace Dune {
               if (it != index2GID_.end())
                 buff.write(it->second);
             }
-        
+
         }
 
         /** @brief Unpack data from message buffer to user
@@ -858,7 +858,7 @@ namespace Dune {
               buff.read(id);
               // only add entries corresponding to border entities
               typename std::map<IdType,int>::const_iterator it = gid2Index_.find(id);
-              if (it != gid2Index_.end() 
+              if (it != gid2Index_.end()
                   && sparsity_[i].find(it->second) == sparsity_[i].end()
                   && helper_.ghost(it->second,0) != 1<<24)
                 sparsity_[i].insert(it->second);
@@ -883,7 +883,7 @@ namespace Dune {
         */
         MatPatternExchange (const GridView& gridView,
                             const std::map<IdType,int>& g2i,
-                            const std::map<int,IdType>& i2g, Matrix& A, 
+                            const std::map<int,IdType>& i2g, Matrix& A,
                             const ParallelISTLHelper<GFS>& helper)
           : gridView_(gridView), gid2Index_(g2i), index2GID_(i2g),
             sparsity_(A.N()), A_(A), helper_(helper)
@@ -897,7 +897,7 @@ namespace Dune {
         Matrix& A_;
         const ParallelISTLHelper<GFS>& helper_;
       };
-      
+
       //! Local matrix blocks associated with the global id set
       struct MatEntry
       {
@@ -943,7 +943,7 @@ namespace Dune {
             if (it != index2GID_.end())
               n++;
             }
-          
+
             return n;
         }
 
@@ -959,7 +959,7 @@ namespace Dune {
               if (it != index2GID_.end())
                 buff.write(MatEntry(it->second,*j));
             }
-        
+
         }
 
         /** @brief Unpack data from message buffer to user
@@ -1007,7 +1007,7 @@ namespace Dune {
       {
         if (gridView_.comm().size() > 1) {
           Matrix tmp(A);
-          std::size_t nnz=0;        
+          std::size_t nnz=0;
           // get entries from other processes
           MatPatternExchange datahandle(gridView_, gid2Index_, index2GID_, A, helper);
           gridView_.communicate(datahandle, InteriorBorder_InteriorBorder_Interface, ForwardCommunication);
@@ -1055,15 +1055,15 @@ namespace Dune {
       std::map<IdType,int> gid2Index_;
       std::map<int,IdType> index2GID_;
     };
-      
-    template<class GO, 
+
+    template<class GO,
              template<class,class,class,int> class Preconditioner,
              template<class> class Solver, bool skipBlocksizeCheck = false>
     class ISTLBackend_NOVLP_BASE_PREC
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       typedef Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
-      
+
     public:
       /*! \brief Constructor.
 
@@ -1100,7 +1100,7 @@ namespace Dune {
       */
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename V::ElementType reduction)
-      { 
+      {
         typedef typename CommSelector<96,Dune::MPIHelper::isFake>::type Comm;
         typedef typename M::BaseT MatrixType;
         MatrixType& mat=A.base();
@@ -1115,7 +1115,7 @@ namespace Dune {
         typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
         Smoother smoother(mat, steps, 1.0);
         typedef Dune::NonoverlappingSchwarzScalarProduct<VectorType,Comm> PSP;
-        PSP psp(oocc);      
+        PSP psp(oocc);
         typedef Dune::NonoverlappingSchwarzOperator<MatrixType,VectorType,VectorType,Comm> Operator;
         Operator oop(mat,oocc);
         typedef Dune::NonoverlappingBlockPreconditioner<Comm, Smoother> ParSmoother;
@@ -1140,7 +1140,7 @@ namespace Dune {
                                      Dune::InteriorBorder_InteriorBorder_Interface,
                                      Dune::ForwardCommunication);
         }
-        
+
         solver.apply(z,r,stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
@@ -1166,10 +1166,10 @@ namespace Dune {
 
     //! \addtogroup PDELab_novlpsolvers Nonoverlapping Solvers
     //! \{
-    
+
   /**
    * @brief Nonoverlapping parallel BiCGSTAB solver preconditioned by block SSOR.
-   * @tparam GO The type of the grid operator 
+   * @tparam GO The type of the grid operator
    * (or the fakeGOTraits class for the old grid operator space).
    *
    * The solver uses a NonoverlappingBlockPreconditioner with underlying
@@ -1183,10 +1183,10 @@ namespace Dune {
     : public ISTLBackend_NOVLP_BASE_PREC<GO,Dune::SeqSSOR, Dune::BiCGSTABSolver>
   {
     typedef typename GO::Traits::TrialGridFunctionSpace GFS;
-      
+
   public:
     /*! \brief make a linear solver object
-        
+
       \param[in] gfs_ a grid function space
       \param[in] maxiter_ maximum number of iterations to do
       \param[in] steps_ number of SSOR steps to apply as inner iteration
@@ -1206,10 +1206,10 @@ namespace Dune {
     : public ISTLBackend_NOVLP_BASE_PREC<GO,Dune::SeqSSOR, Dune::CGSolver>
   {
     typedef typename GO::Traits::TrialGridFunctionSpace GFS;
-      
+
   public:
     /*! \brief make a linear solver object
-        
+
       \param[in] gfs_ a grid function space
       \param[in] maxiter_ maximum number of iterations to do
       \param[in] steps_ number of SSOR steps to apply as inner iteration
@@ -1221,8 +1221,8 @@ namespace Dune {
     {}
   };
     //! \} Nonoverlapping Solvers
-    //! \} group Backend
-    
+
+
     template<class GO,int s, template<class,class,class,int> class Preconditioner,
              template<class> class Solver, bool skipBlocksizeCheck = false>
     class ISTLBackend_AMG_NOVLP : public LinearResultStorage
@@ -1247,7 +1247,7 @@ namespace Dune {
       typedef Dune::Amg::Parameters Parameters;
 
     public:
-      ISTLBackend_AMG_NOVLP(const GFS& gfs_, unsigned maxiter_=5000, 
+      ISTLBackend_AMG_NOVLP(const GFS& gfs_, unsigned maxiter_=5000,
                             int verbose_=1, bool reuse_=false,
                             bool usesuperlu_=true)
         : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_),
@@ -1261,7 +1261,7 @@ namespace Dune {
         if (gfs.gridView().comm().rank() == 0 && usesuperlu == true)
           {
             std::cout << "WARNING: You are using AMG without SuperLU!"
-                      << " Please consider installing SuperLU," 
+                      << " Please consider installing SuperLU,"
                       << " or set the usesuperlu flag to false"
                       << " to suppress this warning." << std::endl;
           }
@@ -1271,18 +1271,18 @@ namespace Dune {
        /*! \brief set AMG parameters
 
         \param[in] params_ a parameter object of Type Dune::Amg::Parameters
-      */     
+      */
       void setParameters(const Parameters& params_)
       {
         params = params_;
       }
-        
+
       void setparams(Parameters params_)
       {
         params = params_;
       }
 
-      /** 
+      /**
        * @brief Get the parameters describing the behaviuour of AMG.
        *
        * The returned object can be adjusted to ones needs and then can be
@@ -1293,7 +1293,7 @@ namespace Dune {
       {
         return params;
       }
-      
+
       /*! \brief compute global norm of a vector
 
         \param[in] v the given vector
@@ -1306,7 +1306,14 @@ namespace Dune {
         psp.make_consistent(x);
         return psp.norm(x);
       }
-      
+
+      /*! \brief solve the given linear system
+
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
       void apply(M& A, V& z, V& r, typename V::ElementType reduction)
       {
         Timer watch;
@@ -1318,7 +1325,7 @@ namespace Dune {
         typedef VertexExchanger<GO,MatrixType> Exchanger;
         Exchanger exchanger(gfs.gridView());
         exchanger.getextendedmatrix(mat,phelper);
-        exchanger.sumEntries(mat);        
+        exchanger.sumEntries(mat);
         phelper.createIndexSetAndProjectForAMG(mat, oocc);
         Dune::NonoverlappingSchwarzScalarProduct<VectorType,Comm> sp(oocc);
         Operator oop(mat, oocc);
@@ -1334,7 +1341,7 @@ namespace Dune {
         Criterion criterion(params);
         stats.tprepare=watch.elapsed();
         watch.reset();
-        
+
         int verb=0;
         if (gfs.gridView().comm().rank()==0) verb=verbose;
         //only construct a new AMG if the matrix changes
@@ -1345,7 +1352,7 @@ namespace Dune {
           stats.levels = amg->maxlevels();
           stats.directCoarseLevelSolver=amg->usesDirectCoarseLevelSolver();
         }
-        
+
         Dune::InverseOperatorResult stat;
         // make r consistent
         if (gfs.gridView().comm().size()>1) {
@@ -1365,16 +1372,16 @@ namespace Dune {
         res.reduction  = stat.reduction;
         res.conv_rate  = stat.conv_rate;
       }
-      
-      /** 
-       * @brief Get statistics of the AMG solver (no of levels, timings). 
-       * @return statistis of the AMG solver. 
+
+      /**
+       * @brief Get statistics of the AMG solver (no of levels, timings).
+       * @return statistis of the AMG solver.
        */
       const ISTLAMGStatistics& statistics() const
       {
         return stats;
       }
-      
+
     private:
       const GFS& gfs;
       PHELPER phelper;
@@ -1388,14 +1395,39 @@ namespace Dune {
       ISTLAMGStatistics stats;
     };
 
+    //! \addtogroup PDELab_novlpsolvers Nonoverlapping Solvers
+    //! \{
+
+  /**
+   * @brief Nonoverlapping parallel CG solver preconditioned with AMG smoothed by SSOR.
+   * @tparam GO The type of the grid operator
+   * (or the fakeGOTraits class for the old grid operator space).
+   * @tparam s The bits to use for the global index.
+   *
+   * The solver uses AMG with underlying
+   * sequential SSOR preconditioner. The crucial step is to add up the matrix entries
+   * corresponding to the border vertices on each process. This is achieved by
+   * performing a VertexExchanger::sumEntries(Matrix&).
+   */
+
     template<class GO, int s=96>
     class ISTLBackend_NOVLP_CG_AMG_SSOR
       : public ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::CGSolver>
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
-      
+
     public:
-      ISTLBackend_NOVLP_CG_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000, 
+     /**
+       * @brief Constructor
+       * @param gfs_ The grid function space used.
+       * @param maxiter_ The maximum number of iterations allowed.
+       * @param verbose_ The verbosity level to use.
+       * @param reuse_ Set true, if the Matrix to be used is always identical
+       * (AMG aggregation is then only performed once).
+       * @param usesuperlu_ Set false, to suppress the no SuperLU warning
+       */
+
+      ISTLBackend_NOVLP_CG_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000,
                                     int verbose_=1, bool reuse_=false,
                                     bool usesuperlu_=true)
         : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::CGSolver>
@@ -1403,14 +1435,34 @@ namespace Dune {
       {}
     };
 
+  /**
+   * @brief Nonoverlapping parallel BiCGStab solver preconditioned with AMG smoothed by SSOR.
+   * @tparam GO The type of the grid operator
+   * (or the fakeGOTraits class for the old grid operator space).
+   * @tparam s The bits to use for the global index.
+   *
+   * The solver uses AMG with underlying
+   * sequential SSOR preconditioner. The crucial step is to add up the matrix entries
+   * corresponding to the border vertices on each process. This is achieved by
+   * performing a VertexExchanger::sumEntries(Matrix&).
+   */
 
     template<class GO, int s=96>
     class ISTLBackend_NOVLP_BCGS_AMG_SSOR
       : public ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::BiCGSTABSolver>
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
-      
+
     public:
+      /**
+       * @brief Constructor
+       * @param gfs_ The grid function space used.
+       * @param maxiter_ The maximum number of iterations allowed.
+       * @param verbose_ The verbosity level to use.
+       * @param reuse_ Set true, if the Matrix to be used is always identical
+       * (AMG aggregation is then only performed once).
+       * @param usesuperlu_ Set false, to suppress the no SuperLU warning
+       */
       ISTLBackend_NOVLP_BCGS_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000,
                                       int verbose_=1, bool reuse_=false,
                                       bool usesuperlu_=true)
@@ -1419,20 +1471,43 @@ namespace Dune {
       {}
     };
 
+  /**
+   * @brief Nonoverlapping parallel LoopSolver preconditioned with AMG smoothed by SSOR.
+   * @tparam GO The type of the grid operator
+   * (or the fakeGOTraits class for the old grid operator space).
+   * @tparam s The bits to use for the global index.
+   *
+   * The solver uses AMG with underlying
+   * sequential SSOR preconditioner. The crucial step is to add up the matrix entries
+   * corresponding to the border vertices on each process. This is achieved by
+   * performing a VertexExchanger::sumEntries(Matrix&).
+   */
+
     template<class GO, int s=96>
     class ISTLBackend_NOVLP_LS_AMG_SSOR
       : public ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::LoopSolver>
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
-      
+
     public:
-      ISTLBackend_NOVLP_LS_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000, 
+      /**
+       * @brief Constructor
+       * @param gfs_ The grid function space used.
+       * @param maxiter_ The maximum number of iterations allowed.
+       * @param verbose_ The verbosity level to use.
+       * @param reuse_ Set true, if the Matrix to be used is always identical
+       * (AMG aggregation is then only performed once).
+       * @param usesuperlu_ Set false, to suppress the no SuperLU warning
+       */
+      ISTLBackend_NOVLP_LS_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000,
                                     int verbose_=1, bool reuse_=false,
                                     bool usesuperlu_=true)
         : ISTLBackend_AMG_NOVLP<GO, s, Dune::SeqSSOR, Dune::LoopSolver>
           (gfs_, maxiter_, verbose_, reuse_, usesuperlu_)
       {}
     };
+    //! \} Nonoverlapping Solvers
+    //! \} group Backend
 
   } // namespace PDELab
 } // namespace Dune
