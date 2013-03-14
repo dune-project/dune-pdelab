@@ -28,6 +28,8 @@
 namespace Dune {
   namespace PDELab {
 
+    // Recursive accessors for vector entries using tag dispatch
+
     template<typename CI, typename Block>
     typename Block::field_type&
     access_istl_vector_element(istl::tags::block_vector, Block& b, const CI& ci, int i)
