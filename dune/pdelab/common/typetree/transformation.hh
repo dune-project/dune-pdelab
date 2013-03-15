@@ -519,27 +519,39 @@ namespace Dune {
       template<typename S, typename T>
       struct TransformTree<S,T,VariadicCompositeNodeTag,true>
       {
-        typedef typename transform_variadic_composite_node<S,typename S::ChildTypes,T>::transformed_type transformed_type;
-        typedef typename transform_variadic_composite_node<S,typename S::ChildTypes,T>::transformed_storage_type transformed_storage_type;
+
+      private:
+
+        typedef typename S::ChildTypes ChildTypes;
+
+        static typename tuple_index_pack_builder<ChildTypes>::type child_indices()
+        {
+          return typename tuple_index_pack_builder<ChildTypes>::type();
+        }
+
+      public:
+
+        typedef typename transform_variadic_composite_node<S,ChildTypes,T>::transformed_type transformed_type;
+        typedef typename transform_variadic_composite_node<S,ChildTypes,T>::transformed_storage_type transformed_storage_type;
 
         static transformed_type transform(const S& s, T& t)
         {
-          return transform_variadic_composite_node<S,typename S::ChildTypes,T>::transform(s,t,tuple_indices(s.nodeStorage()));
+          return transform_variadic_composite_node<S,ChildTypes,T>::transform(s,t,child_indices());
         }
 
         static transformed_type transform(const S& s, const T& t)
         {
-          return transform_variadic_composite_node<S,typename S::ChildTypes,T>::transform(s,t,tuple_indices(s.nodeStorage()));
+          return transform_variadic_composite_node<S,ChildTypes,T>::transform(s,t,child_indices());
         }
 
         static transformed_storage_type transform_storage(shared_ptr<const S> sp, T& t)
         {
-          return transform_variadic_composite_node<S,typename S::ChildTypes,T>::transform_storage(sp,t,tuple_indices(sp->nodeStorage()));
+          return transform_variadic_composite_node<S,ChildTypes,T>::transform_storage(sp,t,child_indices());
         }
 
         static transformed_storage_type transform_storage(shared_ptr<const S> sp, const T& t)
         {
-          return transform_variadic_composite_node<S,typename S::ChildTypes,T>::transform_storage(sp,t,tuple_indices(sp->nodeStorage()));
+          return transform_variadic_composite_node<S,ChildTypes,T>::transform_storage(sp,t,child_indices());
         }
 
       };

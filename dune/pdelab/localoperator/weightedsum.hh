@@ -13,8 +13,9 @@
 #include <dune/common/typetraits.hh>
 
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
-#include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
-#include <dune/pdelab/gridoperatorspace/localmatrix.hh>
+#include <dune/pdelab/gridoperator/common/localmatrix.hh>
+
+#include <dune/pdelab/localoperator/callswitch.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -243,10 +244,10 @@ namespace Dune {
 
       template<int i>
       struct PatternVolumeOperation {
-        template<typename LFSU, typename LFSV>
+        template<typename LFSU, typename LFSV, typename LocalPattern>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const LFSU& lfsu, const LFSV& lfsv,
-                          LocalSparsityPattern& pattern)
+                          LocalPattern& pattern)
         {
           if(weights[i] != K(0))
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
@@ -257,10 +258,10 @@ namespace Dune {
 
       template<int i>
       struct PatternVolumePostSkeletonOperation {
-        template<typename LFSU, typename LFSV>
+        template<typename LFSU, typename LFSV, typename LocalPattern>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const LFSU& lfsu, const LFSV& lfsv,
-                          LocalSparsityPattern& pattern)
+                          LocalPattern& pattern)
         {
           if(weights[i] != K(0))
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
@@ -271,12 +272,12 @@ namespace Dune {
 
       template<int i>
       struct PatternSkeletonOperation {
-        template<typename LFSU, typename LFSV>
+        template<typename LFSU, typename LFSV, typename LocalPattern>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const LFSU& lfsu_s, const LFSV& lfsv_s,
                           const LFSU& lfsu_n, const LFSV& lfsv_n,
-                          LocalSparsityPattern& pattern_sn,
-                          LocalSparsityPattern& pattern_ns)
+                          LocalPattern& pattern_sn,
+                          LocalPattern& pattern_ns)
         {
           if(weights[i] != K(0))
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
@@ -289,10 +290,10 @@ namespace Dune {
 
       template<int i>
       struct PatternBoundaryOperation {
-        template<typename LFSU, typename LFSV>
+        template<typename LFSU, typename LFSV, typename LocalPattern>
         static void apply(const ArgPtrs& lops, const Weights& weights,
                           const LFSU& lfsu_s, const LFSV& lfsv_s,
-                          LocalSparsityPattern& pattern_ss)
+                          LocalPattern& pattern_ss)
         {
           if(weights[i] != K(0))
             LocalAssemblerCallSwitch<typename tuple_element<i,Args>::type,
@@ -308,10 +309,10 @@ namespace Dune {
        *       pattern, and the calls to the pattern methods are eliminated at
        *       run-time.
        */
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_volume
       ( const LFSU& lfsu, const LFSV& lfsv,
-        LocalSparsityPattern& pattern) const
+        LocalPattern& pattern) const
       {
         ForLoop<PatternVolumeOperation, 0, size-1>::
           apply(lops, weights, lfsu, lfsv, pattern);
@@ -324,10 +325,10 @@ namespace Dune {
        *       pattern, and the calls to the pattern methods are eliminated at
        *       run-time.
        */
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_volume_post_skeleton
       ( const LFSU& lfsu, const LFSV& lfsv,
-        LocalSparsityPattern& pattern) const
+        LocalPattern& pattern) const
       {
         ForLoop<PatternVolumePostSkeletonOperation, 0, size-1>::
           apply(lops, weights, lfsu, lfsv, pattern);
@@ -339,12 +340,12 @@ namespace Dune {
        *       pattern, and the calls to the pattern methods are eliminated at
        *       run-time.
        */
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_skeleton
       ( const LFSU& lfsu_s, const LFSV& lfsv_s,
         const LFSU& lfsu_n, const LFSV& lfsv_n,
-        LocalSparsityPattern& pattern_sn,
-        LocalSparsityPattern& pattern_ns) const
+        LocalPattern& pattern_sn,
+        LocalPattern& pattern_ns) const
       {
         ForLoop<PatternSkeletonOperation, 0, size-1>::
           apply(lops, weights, lfsu_s, lfsv_s, lfsu_n, lfsv_n,
@@ -357,10 +358,10 @@ namespace Dune {
        *       pattern, and the calls to the pattern methods are eliminated at
        *       run-time.
        */
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_boundary
       ( const LFSU& lfsu_s, const LFSV& lfsv_s,
-        LocalSparsityPattern& pattern_ss) const
+        LocalPattern& pattern_ss) const
       {
         ForLoop<PatternBoundaryOperation, 0, size-1>::
           apply(lops, weights, lfsu_s, lfsv_s, pattern_ss);

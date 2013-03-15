@@ -12,8 +12,6 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/pdelab/localoperator/idefault.hh>
 
-#include "../common/geometrywrapper.hh"
-#include "../gridoperatorspace/gridoperatorspace.hh"
 #include "defaultimp.hh"
 #include "pattern.hh"
 #include "flags.hh"
@@ -28,7 +26,7 @@ namespace Dune {
     namespace PDELab {
 
         /** \brief A local operator for solving the stokes equation using a DG discretization
-            
+
             \tparam PRM                 Parameter class for this local operator
             \tparam full_tensor         Flag enabling the assembling of the
                                         full tensor for the viscous stress
@@ -44,7 +42,7 @@ namespace Dune {
             ,public InstationaryLocalOperatorDefaultMethods<double>
         {
             typedef StokesBoundaryCondition BC;
-            typedef typename PRM::Traits::RangeFieldType RF;
+            typedef typename PRM::Traits::RangeField RF;
 
             typedef InstationaryLocalOperatorDefaultMethods<double> InstatBase;
             typedef typename InstatBase::RealType Real;
@@ -68,12 +66,12 @@ namespace Dune {
             /** \brief Constructor
 
                 \param [in] _prm                        Parameter class for this local operator
-                \param [in] _superintegration_order     This number will be added to the order of 
-                                                        quadrature in every integration. It is 
+                \param [in] _superintegration_order     This number will be added to the order of
+                                                        quadrature in every integration. It is
                                                         only needed, when one of the parameters (e.g
                                                         rho, mu) is not constant or the mappings from
-                                                        the reference elements to the cells are 
-                                                        nonlinear. Boundary conditions are assumed to 
+                                                        the reference elements to the cells are
+                                                        nonlinear. Boundary conditions are assumed to
                                                         have the same order as the corresponding
                                                         finite element.
              */
@@ -95,8 +93,7 @@ namespace Dune {
             {
                 // dimensions
                 static const unsigned int dim = EG::Geometry::dimension;
-                static const unsigned int dimw = EG::Geometry::dimensionworld;
-                
+
                 // subspaces
                 dune_static_assert
                   ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
@@ -111,6 +108,9 @@ namespace Dune {
                 typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
                 const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
                 const unsigned int vsize = lfsv_v.size();
+                typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
+                const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
+                const unsigned int psize = lfsv_p.size();
 
                 // domain and range field type
                 typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
@@ -119,6 +119,9 @@ namespace Dune {
                 typedef typename BasisSwitch_V::Range RT;
                 typedef typename BasisSwitch_V::RangeField RF;
                 typedef typename BasisSwitch_V::Range Range_V;
+                typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
+                typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
+                typedef typename BasisSwitch_P::Range Range_P;
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
@@ -129,22 +132,26 @@ namespace Dune {
                 const int qorder = v_order + det_jac_order + superintegration_order;
 
                 const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
-                
+
                 // loop over quadrature points
                 for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
                 {
                     const Dune::FieldVector<DF,dim> local = it->position();
-                    const Dune::FieldVector<DF,dimw> global = eg.geometry().global(local);
-                    
+                    //const Dune::FieldVector<DF,dimw> global = eg.geometry().global(local);
+
                     // values of velocity shape functions
                     std::vector<RT> phi_v(vsize);
                     FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
 
+                    // values of pressure shape functions
+                    std::vector<RT> phi_p(psize);
+                    FESwitch_P::basis(lfsv_p.finiteElement()).evaluateFunction(local,phi_p);
+
                     const RF weight = it->weight() * eg.geometry().integrationElement(it->position());
 
                     // evaluate source term
-                    typename PRM::Traits::RangeType fval(prm.f(eg,local));
-                    
+                    typename PRM::Traits::VelocityRange fval(prm.f(eg,local));
+
                     //================================================//
                     // \int (f*v)
                     //================================================//
@@ -160,6 +167,15 @@ namespace Dune {
                             r.accumulate(lfsv_v,i, fval[d] * val);
                         }
                     }
+
+                    const RF g2 = prm.g2(eg,it->position());
+
+                    // integrate div u * psi_i
+                    for (size_t i=0; i<lfsv_p.size(); i++)
+                    {
+                        r.accumulate(lfsv_p,i, g2 * phi_p[i] * factor);
+                    }
+
                 }
             }
 
@@ -170,7 +186,6 @@ namespace Dune {
             {
                 // dimensions
                 static const unsigned int dim = IG::Geometry::dimension;
-                static const unsigned int dimw = IG::Geometry::dimensionworld;
 
                 // subspaces
                 dune_static_assert
@@ -212,17 +227,17 @@ namespace Dune {
 
                 const int epsilon = prm.epsilonIPSymmetryFactor();
                 const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
-                
+
                 // loop over quadrature points and integrate normal flux
                 for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
                 {
                     // position of quadrature point in local coordinates of element
                     Dune::FieldVector<DF,dim-1> flocal = it->position();
                     Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(flocal);
-                    Dune::FieldVector<DF,dimw> global = ig.geometry().global(flocal);
-                 
+                    //Dune::FieldVector<DF,dimw> global = ig.geometry().global(flocal);
+
                     const RF penalty_factor = prm.getFaceIP(ig,flocal);
-                   
+
                     // value of velocity shape functions
                     std::vector<RT> phi_v(vsize);
                     FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
@@ -239,17 +254,17 @@ namespace Dune {
                     const RF mu = prm.mu(ig,flocal);
 
                     // evaluate boundary condition type
-                    typename PRM::Traits::BoundaryConditionType bctype(prm.bctype(ig,flocal));
+                    typename PRM::Traits::BoundaryCondition::Type bctype(prm.bctype(ig,flocal));
 
                     if (bctype == BC::VelocityDirichlet)
                     {
-                        typename PRM::Traits::RangeType u0(prm.g(ig,flocal));
-                        
+                        typename PRM::Traits::VelocityRange u0(prm.g(ig,flocal));
+
                         //================================================//
                         // \mu \int \nabla v \cdot u_0 \cdot n
                         //================================================//
                         RF factor = mu * weight;
-                        for (unsigned int i=0;i<vsize;++i) 
+                        for (unsigned int i=0;i<vsize;++i)
                         {
                             const RF val = (grad_phi_v[i][0]*normal) * factor;
                             for (unsigned int d=0;d<dim;++d)
@@ -259,7 +274,7 @@ namespace Dune {
 
                                 // Assemble symmetric part for (grad u)^T
                                 if(full_tensor){
-                                
+
                                     for (unsigned int dd=0;dd<dim;++dd)
                                     {
                                         RF Tval = (grad_phi_v[i][0][d]*normal[dd]) * factor;
@@ -273,7 +288,7 @@ namespace Dune {
                         // \int \sigma / |\gamma|^\beta v u_0
                         //================================================//
                         factor = penalty_factor * weight;
-                        for (unsigned int i=0;i<vsize;++i) 
+                        for (unsigned int i=0;i<vsize;++i)
                         {
                             const RF val = phi_v[i] * factor;
                             for (unsigned int d=0;d<dim;++d)
@@ -291,20 +306,20 @@ namespace Dune {
                             r.accumulate(lfsv_p,i, - val * incomp_scaling);
                         }
                     }
-                    if (bctype == BC::PressureDirichlet)
+                    if (bctype == BC::StressNeumann)
                     {
-                        typename PRM::Traits::RangeFieldType p0(prm.j(ig,flocal));
-                    
+                      typename PRM::Traits::VelocityRange stress(prm.j(ig,flocal,normal));
+
                         //std::cout << "Pdirichlet\n";
                         //================================================//
                         // \int p u n
-                        //================================================//            
-                        for (unsigned int i=0;i<vsize;++i) 
+                        //================================================//
+                        for (unsigned int i=0;i<vsize;++i)
                         {
                             for (unsigned int d=0;d<dim;++d)
                             {
                                 const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
-                                RF val = p0*normal[d]*phi_v[i] * weight;
+                                RF val = stress[d]*phi_v[i] * weight;
                                 r.accumulate(lfsv_v,i, val);
                             }
                         }
@@ -358,13 +373,13 @@ namespace Dune {
                 const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
                 const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
-                
+
                 // loop over quadrature points
                 for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
                 {
                     const Dune::FieldVector<DF,dim> local = it->position();
                     const RF mu = prm.mu(eg,local);
-                    
+
                     // and value of pressure shape functions
                     std::vector<RT> phi_p(psize);
                     FESwitch_P::basis(lfsv_p.finiteElement()).evaluateFunction(local,phi_p);
@@ -376,7 +391,7 @@ namespace Dune {
 
                     const RF detj = eg.geometry().integrationElement(it->position());
                     const RF weight = it->weight() * detj;
-                    
+
                     //================================================//
                     // \int (mu*grad_u*grad_v)
                     //================================================//
@@ -394,7 +409,7 @@ namespace Dune {
                                 mat.accumulate(lfsv_v_d,i,lfsv_v_d,j, val);
 
                                 // Assemble symmetric part for (grad u)^T
-                                if(full_tensor){ 
+                                if(full_tensor){
                                   for (unsigned int dd=0; dd<dim; dd++){
                                     RF Tval = (grad_phi_v[j][0][d]*grad_phi_v[i][0][dd])*factor;
                                     const LFSV_V& lfsv_v_dd = lfsv_pfs_v.child(dd);
@@ -409,7 +424,7 @@ namespace Dune {
                     //================================================//
                     // - q * div u
                     // - p * div v
-                    //================================================//            
+                    //================================================//
                     for (size_type j=0; j<psize; j++) // test (q)
                     {
                         RF val = -1.0 * phi_p[j]*weight;
@@ -485,14 +500,14 @@ namespace Dune {
 
                 // loop over quadrature points and integrate normal flux
                 for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
-                {                  
+                {
 
                     // position of quadrature point in local coordinates of element
                     Dune::FieldVector<DF,dim> local_s = ig.geometryInInside().global(it->position());
                     Dune::FieldVector<DF,dim> local_n = ig.geometryInOutside().global(it->position());
 
                     const RF penalty_factor = prm.getFaceIP(ig,it->position());
-                
+
                     // value of velocity shape functions
                     std::vector<RT> phi_v_s(vsize_s);
                     std::vector<RT> phi_v_n(vsize_n);
@@ -516,15 +531,15 @@ namespace Dune {
                     const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(it->position());
                     const RF weight = it->weight()*ig.geometry().integrationElement(it->position());
                     const RF mu = prm.mu(ig,it->position());
-   
+
                     //================================================//
-                    // - (\mu \int < \nabla u > . normal . [v])  
+                    // - (\mu \int < \nabla u > . normal . [v])
                     //================================================//
                     assert(vsize_s == vsize_n);
                     RF factor = mu * weight;
                     for (unsigned int i=0;i<vsize_s;++i)
                     {
-                        for (unsigned int j=0;j<vsize_s;++j) 
+                        for (unsigned int j=0;j<vsize_s;++j)
                         {
                             RF val = (0.5*(grad_phi_v_s[i][0]*normal)*phi_v_s[j]) * factor;
                             for (unsigned int d=0;d<dim;++d)
@@ -534,7 +549,7 @@ namespace Dune {
                                 mat_ss.accumulate(lfsv_s_v,i,lfsv_s_v,j, epsilon*val );
 
                                 // Assemble symmetric part for (grad u)^T
-                                if(full_tensor){ 
+                                if(full_tensor){
 
                                   for (unsigned int dd=0;dd<dim;++dd)
                                     {
@@ -546,7 +561,7 @@ namespace Dune {
                                 }
                             }
                         }
-                        for (unsigned int j=0;j<vsize_n;++j) 
+                        for (unsigned int j=0;j<vsize_n;++j)
                         {
                             // the normal vector flipped, thus the sign flips
                             RF val = (-0.5*(grad_phi_v_s[i][0]*normal)*phi_v_n[j]) * factor;
@@ -558,7 +573,7 @@ namespace Dune {
                                 mat_sn.accumulate(lfsv_s_v,i,lfsv_n_v,j, epsilon*val);
 
                                 // Assemble symmetric part for (grad u)^T
-                                if(full_tensor){ 
+                                if(full_tensor){
 
                                   for (unsigned int dd=0;dd<dim;++dd)
                                     {
@@ -571,9 +586,9 @@ namespace Dune {
                             }
                         }
                     }
-                    for (unsigned int i=0;i<vsize_n;++i) 
+                    for (unsigned int i=0;i<vsize_n;++i)
                     {
-                        for (unsigned int j=0;j<vsize_s;++j) 
+                        for (unsigned int j=0;j<vsize_s;++j)
                         {
                             RF val = (0.5*(grad_phi_v_n[i][0]*normal)*phi_v_s[j]) * factor;
                             for (unsigned int d=0;d<dim;++d)
@@ -584,7 +599,7 @@ namespace Dune {
                                 mat_ns.accumulate(lfsv_n_v,i,lfsv_s_v,j, epsilon*val );
 
                                 // Assemble symmetric part for (grad u)^T
-                                if(full_tensor){ 
+                                if(full_tensor){
 
                                   for (unsigned int dd=0;dd<dim;++dd)
                                     {
@@ -596,7 +611,7 @@ namespace Dune {
                                 }
                             }
                         }
-                        for (unsigned int j=0;j<vsize_n;++j) 
+                        for (unsigned int j=0;j<vsize_n;++j)
                         {
                             // the normal vector flipped, thus the sign flips
                             RF val = (-0.5*(grad_phi_v_n[i][0]*normal)*phi_v_n[j]) * factor;
@@ -607,7 +622,7 @@ namespace Dune {
                                 mat_nn.accumulate(lfsv_n_v,i,lfsv_n_v,j, epsilon*val);
 
                                 // Assemble symmetric part for (grad u)^T
-                                if(full_tensor){ 
+                                if(full_tensor){
 
                                   for (unsigned int dd=0;dd<dim;++dd)
                                     {
@@ -626,7 +641,7 @@ namespace Dune {
                     factor = penalty_factor * weight;
                     for (unsigned int i=0;i<vsize_s;++i)
                     {
-                        for (unsigned int j=0;j<vsize_s;++j) 
+                        for (unsigned int j=0;j<vsize_s;++j)
                         {
                             RF val = phi_v_s[i]*phi_v_s[j] * factor;
                             for (unsigned int d=0;d<dim;++d)
@@ -635,7 +650,7 @@ namespace Dune {
                                 mat_ss.accumulate(lfsv_s_v,j,lfsv_s_v,i, val);
                             }
                         }
-                        for (unsigned int j=0;j<vsize_n;++j) 
+                        for (unsigned int j=0;j<vsize_n;++j)
                         {
                             RF val = phi_v_s[i]*phi_v_n[j] * factor;
                             for (unsigned int d=0;d<dim;++d)
@@ -646,9 +661,9 @@ namespace Dune {
                             }
                         }
                     }
-                    for (unsigned int i=0;i<vsize_n;++i) 
+                    for (unsigned int i=0;i<vsize_n;++i)
                     {
-                        for (unsigned int j=0;j<vsize_s;++j) 
+                        for (unsigned int j=0;j<vsize_s;++j)
                         {
                             RF val = phi_v_n[i]*phi_v_s[j] * factor;
                             for (unsigned int d=0;d<dim;++d)
@@ -658,7 +673,7 @@ namespace Dune {
                                 mat_sn.accumulate(lfsv_s_v,j,lfsv_n_v,i, - val);
                             }
                         }
-                        for (unsigned int j=0;j<vsize_n;++j) 
+                        for (unsigned int j=0;j<vsize_n;++j)
                         {
                             RF val = phi_v_n[i]*phi_v_n[j] * factor;
                             for (unsigned int d=0;d<dim;++d)
@@ -671,10 +686,10 @@ namespace Dune {
                     //================================================//
                     // \int <q> [u] n
                     // \int <p> [v] n
-                    //================================================//            
-                    for (unsigned int i=0;i<vsize_s;++i) 
+                    //================================================//
+                    for (unsigned int i=0;i<vsize_s;++i)
                     {
-                        for (unsigned int j=0;j<psize_s;++j) 
+                        for (unsigned int j=0;j<psize_s;++j)
                         {
                             for (unsigned int d=0;d<dim;++d)
                             {
@@ -684,7 +699,7 @@ namespace Dune {
                                 mat_ss.accumulate(lfsv_s_p,j,lfsv_s_v,i, val * incomp_scaling);
                             }
                         }
-                        for (unsigned int j=0;j<psize_n;++j) 
+                        for (unsigned int j=0;j<psize_n;++j)
                         {
                             for (unsigned int d=0;d<dim;++d)
                             {
@@ -695,9 +710,9 @@ namespace Dune {
                             }
                         }
                     }
-                    for (unsigned int i=0;i<vsize_n;++i) 
+                    for (unsigned int i=0;i<vsize_n;++i)
                     {
-                        for (unsigned int j=0;j<psize_s;++j) 
+                        for (unsigned int j=0;j<psize_s;++j)
                         {
                             for (unsigned int d=0;d<dim;++d)
                             {
@@ -709,7 +724,7 @@ namespace Dune {
                                 mat_sn.accumulate(lfsv_s_p,j,lfsv_n_v,i, val * incomp_scaling);
                             }
                         }
-                        for (unsigned int j=0;j<psize_n;++j) 
+                        for (unsigned int j=0;j<psize_n;++j)
                         {
                             for (unsigned int d=0;d<dim;++d)
                             {
@@ -773,7 +788,7 @@ namespace Dune {
                 const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
                 // evaluate boundary condition type
-                typename PRM::Traits::BoundaryConditionType bctype(prm.bctype(ig,rule.begin()->position()));
+                typename PRM::Traits::BoundaryCondition::Type bctype(prm.bctype(ig,rule.begin()->position()));
 
                 const int epsilon = prm.epsilonIPSymmetryFactor();
                 const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
@@ -785,7 +800,7 @@ namespace Dune {
                     Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
 
                     const RF penalty_factor = prm.getFaceIP(ig,it->position() );
-                    
+
                     // value of velocity shape functions
                     std::vector<RT> phi_v(vsize);
                     FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
@@ -817,7 +832,7 @@ namespace Dune {
                       const RF factor = weight * (1.0 - slip_factor);
 
                         //================================================//
-                        // - (\mu \int \nabla u. normal . v)  
+                        // - (\mu \int \nabla u. normal . v)
                         //================================================//
                         for (unsigned int i=0;i<vsize;++i) // ansatz
                         {
@@ -831,7 +846,7 @@ namespace Dune {
                                     mat.accumulate(lfsv_v,j,lfsv_v,i, epsilon*val);
 
                                     // Assemble symmetric part for (grad u)^T
-                                    if(full_tensor){ 
+                                    if(full_tensor){
 
                                       for (unsigned int dd=0;dd<dim;++dd)
                                         {
@@ -867,7 +882,7 @@ namespace Dune {
                         const RF p_factor = penalty_factor * factor;
                         for (unsigned int i=0;i<vsize;++i)
                         {
-                            for (unsigned int j=0;j<vsize;++j) 
+                            for (unsigned int j=0;j<vsize;++j)
                             {
                                 RF val = phi_v[i]*phi_v[j] * p_factor;
                                 for (unsigned int d=0;d<dim;++d)
@@ -882,9 +897,9 @@ namespace Dune {
                     if (bctype == BC::SlipVelocity)
                     {
                         const RF factor = weight * (slip_factor);
-  
+
                         //================================================//
-                        // - (\mu \int \nabla u. normal . v)  
+                        // - (\mu \int \nabla u. normal . v)
                         //================================================//
 
                         for (unsigned int i=0;i<vsize;++i) // ansatz
@@ -901,7 +916,7 @@ namespace Dune {
                                 for (unsigned int d=0;d<dim;++d)
                                 {
                                     const LFSV_V& lfsv_v_d = lfsv_pfs_v.child(d);
-                                    
+
                                     for (unsigned int dd=0;dd<dim;++dd)
                                       {
                                         const LFSV_V& lfsv_v_dd = lfsv_pfs_v.child(dd);
@@ -919,7 +934,7 @@ namespace Dune {
                         const RF p_factor = penalty_factor * factor;
                         for (unsigned int i=0;i<vsize;++i)
                         {
-                            for (unsigned int j=0;j<vsize;++j) 
+                            for (unsigned int j=0;j<vsize;++j)
                             {
                                 RF val = phi_v[i]*phi_v[j] * p_factor;
                                 for (unsigned int d=0;d<dim;++d)
@@ -947,8 +962,8 @@ namespace Dune {
 
         /** \brief A local operator for solving the navier stokes
             equation using a DG discretization
-            
-            \tparam PRM                 Parameter Class corresponding to the 
+
+            \tparam PRM                 Parameter Class corresponding to the
                                         NavierStokesDGParameters interface
             \tparam full_tensor         Flag enabling the assembling of the
                                         full tensor for the viscous stress
@@ -960,27 +975,27 @@ namespace Dune {
             //! Boundary condition indicator type
             typedef StokesBoundaryCondition BC;
             //! Common range field type
-            typedef typename PRM::Traits::RangeFieldType RF;
-            
+            typedef typename PRM::Traits::RangeField RF;
+
           typedef StokesDG<PRM,full_tensor> StokesLocalOperator;
 
 
         public:
             using StokesLocalOperator::prm;
             using StokesLocalOperator::superintegration_order;
-            
-            NavierStokesDG (PRM & prm_, int superintegration_order_=0) 
+
+            NavierStokesDG (PRM & prm_, int superintegration_order_=0)
                 : StokesLocalOperator(prm_ ,superintegration_order_)
             {}
 
             template<typename EG, typename LFSU, typename X, typename LFSV,
                      typename LocalMatrix>
-            void jacobian_volume( const EG& eg,const LFSU& lfsu, const X& x, 
+            void jacobian_volume( const EG& eg,const LFSU& lfsu, const X& x,
                                   const LFSV& lfsv, LocalMatrix& mat) const
             {
                 // Assemble the Stokes part of the jacobian
                 StokesLocalOperator::jacobian_volume(eg,lfsu,x,lfsv,mat);
-                
+
                 // dimensions
                 static const unsigned int dim = EG::Geometry::dimension;
 
@@ -1013,7 +1028,7 @@ namespace Dune {
                 const int jac_order = gt.isSimplex() ? 0 : 1;
                 const int qorder = 3*v_order - 1 + jac_order + det_jac_order + superintegration_order;
                 const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
-                
+
                 // loop over quadrature points
                 for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
                     {
@@ -1022,7 +1037,7 @@ namespace Dune {
                         // Get density at point
                         const RF rho = prm.rho(eg,local);
                         if(rho == 0) continue;
-                    
+
                         // and value of pressure shape functions
                         std::vector<RT> phi_v(vsize);
                         FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
@@ -1041,7 +1056,7 @@ namespace Dune {
                             for (size_t i=0; i<lfsu_v.size(); i++)
                               vu[d] += x(lfsu_v,i) * phi_v[i];
                         }
-                        
+
                         for(unsigned int dv=0; dv<dim; ++dv){
                             const LFSV_V & lfsv_v = lfsv_pfs_v.child(dv);
 
@@ -1049,8 +1064,8 @@ namespace Dune {
                             Dune::FieldVector<RF,dim> gradu(0.0);
                             for (size_t i=0; i<lfsv_v.size(); i++)
                               gradu.axpy(x(lfsv_v,i),grad_phi_v[i][0]);
-                            
-                            
+
+
                             for(unsigned int du=0; du < dim; ++du){
                                 const LFSV_V & lfsu_v = lfsv_pfs_v.child(du);
 
@@ -1068,7 +1083,7 @@ namespace Dune {
                                 } // j
                             }// i
                         } // dv
-                    
+
                     }
             }
 
@@ -1111,7 +1126,7 @@ namespace Dune {
                 const int jac_order = gt.isSimplex() ? 0 : 1;
                 const int qorder = 3*v_order - 1 + jac_order + det_jac_order + superintegration_order;
                 const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
-                
+
                 // loop over quadrature points
                 for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
                     {
@@ -1120,7 +1135,7 @@ namespace Dune {
                         // Get density at point
                         const RF rho = prm.rho(eg,local);
                         if(rho == 0) continue;
-                    
+
                         // and value of pressure shape functions
                         std::vector<RT> phi_v(vsize);
                         FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
@@ -1139,7 +1154,7 @@ namespace Dune {
                             for (size_t i=0; i<lfsu_v.size(); i++)
                               vu[d] += x(lfsu_v,i) * phi_v[i];
                         }
-                        
+
                         for(unsigned int d=0; d<dim; ++d){
                             const LFSV_V & lfsu_v = lfsv_pfs_v.child(d);
 
@@ -1147,21 +1162,21 @@ namespace Dune {
                             Dune::FieldVector<RF,dim> gradu(0.0);
                             for (size_t i=0; i<lfsu_v.size(); i++)
                               gradu.axpy(x(lfsu_v,i),grad_phi_v[i][0]);
-                            
+
                             //compute u * grad u_d
                             const RF u_nabla_u = vu * gradu;
 
                             for (size_t i=0; i<vsize; i++)
                               r.accumulate(lfsu_v,i, rho * u_nabla_u * phi_v[i] * weight);
                         }
-                    
+
                     }
             }
 
         };
 
         /** \brief A local operator for solving the stokes equation using a DG discretization
-            
+
             \tparam PRM Parameter class for this local operator
          */
         template<typename PRM>
@@ -1172,7 +1187,7 @@ namespace Dune {
             public InstationaryLocalOperatorDefaultMethods<double>
         {
             typedef StokesBoundaryCondition BC;
-            typedef typename PRM::Traits::RangeFieldType RF;
+            typedef typename PRM::Traits::RangeField RF;
 
         public:
 
@@ -1185,12 +1200,12 @@ namespace Dune {
             /** \brief Constructor
 
                 \param [in] _prm                        Parameter class for this local operator
-                \param [in] _superintegration_order     This number will be added to the order of 
-                                                        quadrature in every integration. It is 
+                \param [in] _superintegration_order     This number will be added to the order of
+                                                        quadrature in every integration. It is
                                                         only needed, when one of the parameters (e.g
                                                         rho, mu) is not constant or the mappings from
-                                                        the reference elements to the cells are 
-                                                        nonlinear. Boundary conditions are assumed to 
+                                                        the reference elements to the cells are
+                                                        nonlinear. Boundary conditions are assumed to
                                                         have the same order as the corresponding
                                                         finite element.
              */
@@ -1232,12 +1247,12 @@ namespace Dune {
                 const int det_jac_order = gt.isSimplex() ? 0 : (dim-1);
                 const int qorder = 2*v_order + det_jac_order + superintegration_order;
                 const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
-                
+
                 // loop over quadrature points
                 for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
                 {
                     const Dune::FieldVector<DF,dim> local = it->position();
-                    
+
                     // and value of pressure shape functions
                     std::vector<RT> psi_v(vsize);
                     FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,psi_v);

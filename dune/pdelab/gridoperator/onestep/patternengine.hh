@@ -1,8 +1,8 @@
 #ifndef DUNE_ONE_STEP_PATTERNENGINE_HH
 #define DUNE_ONE_STEP_PATTERNENGINE_HH
 
+#include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridoperator/onestep/enginebase.hh>
-#include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 
 namespace Dune{
   namespace PDELab{
@@ -77,9 +77,11 @@ namespace Dune{
         lae0->preAssembly();
         lae1->preAssembly();
       }
-      void postAssembly(){
-        lae0->postAssembly();
-        lae1->postAssembly();
+
+      template<typename GFSU, typename GFSV>
+      void postAssembly(const GFSU& gfsu, const GFSV& gfsv){
+        lae0->postAssembly(gfsu,gfsv);
+        lae1->postAssembly(gfsu,gfsv);
       }
       //! @}
 

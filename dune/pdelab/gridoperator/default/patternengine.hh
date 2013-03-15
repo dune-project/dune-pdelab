@@ -1,8 +1,12 @@
 #ifndef DUNE_PDELAB_DEFAULT_PATTERNENGINE_HH
 #define DUNE_PDELAB_DEFAULT_PATTERNENGINE_HH
 
+#include <dune/pdelab/gridfunctionspace/localvector.hh>
+#include <dune/pdelab/gridoperator/common/localmatrix.hh>
+#include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridoperator/common/localassemblerenginebase.hh>
-#include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
+#include <dune/pdelab/constraints/constraints.hh>
+#include <dune/pdelab/localoperator/callswitch.hh>
 
 namespace Dune{
   namespace PDELab{
@@ -19,6 +23,9 @@ namespace Dune{
       : public LocalAssemblerEngineBase
     {
     public:
+
+      static const bool needs_constraints_caching = true;
+
       //! The type of the wrapping local assembler
       typedef LA LocalAssembler;
 
@@ -27,12 +34,20 @@ namespace Dune{
 
       //! The local function spaces
       typedef typename LA::LFSU LFSU;
+      typedef typename LA::LFSUCache LFSUCache;
+      typedef typename LFSU::Traits::GridFunctionSpace GFSU;
       typedef typename LA::LFSV LFSV;
+      typedef typename LA::LFSVCache LFSVCache;
+      typedef typename LFSV::Traits::GridFunctionSpace GFSV;
+
 
       //! The type of the solution vector
       typedef typename LA::Traits::MatrixPattern Pattern;
+      typedef typename LA::Traits::BorderPattern BorderPattern;
 
       typedef Dune::PDELab::LocalSparsityPattern LocalPattern;
+
+      typedef std::size_t size_type;
 
       /**
          \brief Constructor
@@ -40,66 +55,121 @@ namespace Dune{
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
-      DefaultLocalPatternAssemblerEngine(const LocalAssembler & local_assembler_)
-        : local_assembler(local_assembler_), lop(local_assembler_.lop),
-          invalid_pattern(static_cast<Pattern*>(0)), pattern(invalid_pattern)
+      DefaultLocalPatternAssemblerEngine(const LocalAssembler & local_assembler_,
+                                         shared_ptr<typename LA::Traits::BorderDOFExchanger> border_dof_exchanger)
+        : local_assembler(local_assembler_)
+        , lop(local_assembler.lop)
+        , pattern(nullptr)
+        , _border_dof_exchanger(border_dof_exchanger)
       {}
 
       //! Public access to the wrapping local assembler
-      const LocalAssembler & localAssembler() const { return local_assembler; }
+      const LocalAssembler & localAssembler() const
+      {
+        return local_assembler;
+      }
+
+      //! Trial space constraints
+      const typename LocalAssembler::Traits::TrialGridFunctionSpaceConstraints& trialConstraints() const
+      {
+        return localAssembler().trialConstraints();
+      }
+
+      //! Test space constraints
+      const typename LocalAssembler::Traits::TestGridFunctionSpaceConstraints& testConstraints() const
+      {
+        return localAssembler().testConstraints();
+      }
 
       //! Set current residual vector. Should be called prior to
       //! assembling.
-      void setPattern(Pattern & pattern_){
+      void setPattern(Pattern & pattern_)
+      {
         pattern = &pattern_;
       }
 
       //! Query methods for the global grid assembler
       //! @{
+
       bool requireSkeleton() const
-      { return local_assembler.doPatternSkeleton(); }
+      {
+        return local_assembler.doPatternSkeleton();
+      }
 
       bool requireUVVolume() const
-      { return local_assembler.doPatternVolume(); }
-      bool requireUVSkeleton() const
-      { return local_assembler.doPatternSkeleton(); }
-      bool requireUVBoundary() const
-      { return local_assembler.doPatternBoundary(); }
-      bool requireUVVolumePostSkeleton() const
-      { return local_assembler.doPatternVolumePostSkeleton(); }
-      //! @}
-
-      //! @}
-
-
-      void add_pattern(const LFSV& lfsv, const LFSU& lfsu, const LocalPattern& p)
       {
-        for (size_t k=0; k<p.size(); ++k)
+        return local_assembler.doPatternVolume();
+      }
+
+      bool requireUVSkeleton() const
+      {
+        return local_assembler.doPatternSkeleton();
+      }
+
+      bool requireUVBoundary() const
+      {
+        return local_assembler.doPatternBoundary();
+      }
+
+      bool requireUVVolumePostSkeleton() const
+      {
+        return local_assembler.doPatternVolumePostSkeleton();
+      }
+
+      //! @}
+
+      //! @}
+
+      template<typename LFSVC, typename LFSUC>
+      void add_border_pattern(true_type, const LFSVC& lfsv_cache, const LFSUC& lfsu_cache,
+                              const LocalPattern& p)
+      {
+        if (local_assembler.reconstructBorderEntries() &&
+            !communicationCache().initialized())
+          {
+            communicationCache().addEntries(lfsv_cache,lfsu_cache,p);
+          }
+      }
+
+      template<typename LFSVC, typename LFSUC>
+      void add_border_pattern(false_type, const LFSVC& lfsv_cache, const LFSUC& lfsu_cache,
+                              const LocalPattern& p)
+      {}
+
+      template<typename LFSVC, typename LFSUC>
+      void add_pattern(const LFSVC& lfsv_cache, const LFSUC& lfsu_cache, const LocalPattern& p)
+      {
+        for (size_type k=0; k<p.size(); ++k)
           local_assembler.add_entry(*pattern,
-                                    lfsv.globalIndex(p[k].i()),
-                                    lfsu.globalIndex(p[k].j())
+                                    lfsv_cache,p[k].i(),
+                                    lfsu_cache,p[k].j()
                                     );
+
+        add_border_pattern(integral_constant<bool,LocalAssembler::isNonOverlapping>(),
+                           lfsv_cache,
+                           lfsu_cache,
+                           p);
       }
 
 
       //! Called when the local function space is about to be rebound or
       //! discarded
       //! @{
-      template<typename EG>
-      void onUnbindLFSUV(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
+      template<typename EG, typename LFSUC, typename LFSVC>
+      void onUnbindLFSUV(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
-        add_pattern(lfsv,lfsu,localpattern);
+        add_pattern(lfsv_cache,lfsu_cache,localpattern);
         localpattern.clear();
       }
 
-      template<typename IG>
+      template<typename IG, typename LFSUC, typename LFSVC>
       void onUnbindLFSUVOutside(const IG& ig,
-                                const LFSU& lfsu_s, const LFSV& lfsv_s,
-                                const LFSU& lfsu_n, const LFSV& lfsv_n)
+                                const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache,
+                                const LFSUC& lfsu_n_cache, const LFSVC& lfsv_n_cache)
       {
-        add_pattern(lfsv_s,lfsu_n,localpattern_sn);
+        add_pattern(lfsv_s_cache,lfsu_n_cache,localpattern_sn);
         localpattern_sn.clear();
-        add_pattern(lfsv_n,lfsu_s,localpattern_ns);
+        add_pattern(lfsv_n_cache,lfsu_s_cache,localpattern_ns);
         localpattern_ns.clear();
       }
 
@@ -108,54 +178,97 @@ namespace Dune{
       //! Assembling methods
       //! @{
 
-      template<typename EG>
-      void assembleUVVolume(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
+      template<typename EG, typename LFSUC, typename LFSVC>
+      void assembleUVVolume(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternVolume>::
-          pattern_volume(lop,lfsu,lfsv,localpattern);
+          pattern_volume(lop,lfsu_cache.localFunctionSpace(),lfsv_cache.localFunctionSpace(),localpattern);
       }
 
-      template<typename IG>
-      void assembleUVSkeleton(const IG & ig, const LFSU & lfsu_s, const LFSV & lfsv_s,
-                              const LFSU & lfsu_n, const LFSV & lfsv_n)
+      template<typename IG, typename LFSUC, typename LFSVC>
+      void assembleUVSkeleton(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
+                              const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternSkeleton>::
-          pattern_skeleton(lop,lfsu_s,lfsv_s,lfsu_n,lfsv_n,
+          pattern_skeleton(lop,
+                           lfsu_s_cache.localFunctionSpace(),lfsv_s_cache.localFunctionSpace(),
+                           lfsu_n_cache.localFunctionSpace(),lfsv_n_cache.localFunctionSpace(),
                            localpattern_sn, localpattern_ns);
       }
 
-      template<typename IG>
-      void assembleUVBoundary(const IG & ig, const LFSU & lfsu_s, const LFSV & lfsv_s)
+      template<typename IG, typename LFSUC, typename LFSVC>
+      void assembleUVBoundary(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache)
       {
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternBoundary>::
-          pattern_boundary(lop,lfsu_s,lfsv_s,localpattern);
+          pattern_boundary(lop,lfsu_s_cache,lfsv_s_cache,localpattern);
       }
 
-      template<typename IG>
+      template<typename IG, typename LFSUC, typename LFSVC>
       static void assembleUVEnrichedCoupling(const IG & ig,
-                                             const LFSU & lfsu_s, const LFSV & lfsv_s,
-                                             const LFSU & lfsu_n, const LFSV & lfsv_n,
-                                             const LFSU & lfsu_coupling, const LFSV & lfsv_coupling)
-      {DUNE_THROW(Dune::NotImplemented,"Assembling of coupling spaces is not implemented for ");}
+                                             const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
+                                             const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache,
+                                             const LFSUC & lfsu_coupling_cache, const LFSVC & lfsv_coupling_cache)
+      {
+        DUNE_THROW(Dune::NotImplemented,"Assembling of coupling spaces is not implemented for ");
+      }
 
-      template<typename IG>
+      template<typename IG, typename LFSVC>
       static void assembleVEnrichedCoupling(const IG & ig,
-                                            const LFSV & lfsv_s,
-                                            const LFSV & lfsv_n,
-                                            const LFSV & lfsv_coupling)
-      {DUNE_THROW(Dune::NotImplemented,"Assembling of coupling spaces is not implemented for ");}
+                                            const LFSVC & lfsv_s_cache,
+                                            const LFSVC & lfsv_n_cache,
+                                            const LFSVC & lfsv_coupling_cache)
+      {
+        DUNE_THROW(Dune::NotImplemented,"Assembling of coupling spaces is not implemented for ");
+      }
 
-      template<typename EG>
-      void assembleUVVolumePostSkeleton(const EG & eg, const LFSU & lfsu, const LFSV & lfsv)
+      template<typename EG, typename LFSUC, typename LFSVC>
+      void assembleUVVolumePostSkeleton(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternVolumePostSkeleton>::
-          pattern_volume_post_skeleton(lop,lfsu,lfsv,localpattern);
+          pattern_volume_post_skeleton(lop,lfsu_cache.localFunctionSpace(),lfsv_cache.localFunctionSpace(),localpattern);
       }
+
+
+      void postAssembly(const GFSU& gfsu, const GFSV& gfsv){
+        post_border_pattern_assembly(integral_constant<bool,LocalAssembler::isNonOverlapping>(),
+                                     gfsu,
+                                     gfsv);
+      }
+
+      void post_border_pattern_assembly(true_type, const GFSU& gfsu, const GFSV& gfsv)
+      {
+        if(local_assembler.doPostProcessing &&
+           local_assembler.reconstructBorderEntries())
+          {
+            communicationCache().finishInitialization();
+
+            typename LA::Traits::BorderDOFExchanger::template PatternExtender<Pattern>
+              data_handle(*_border_dof_exchanger,gfsu,gfsv,*pattern);
+            gfsv.gridView().communicate(data_handle,
+                                        InteriorBorder_InteriorBorder_Interface,
+                                        ForwardCommunication);
+          }
+      }
+
+      void post_border_pattern_assembly(false_type, const GFSU& gfsu, const GFSV& gfsv)
+      {}
 
       //! @}
 
 
     private:
+
+      typename LA::Traits::BorderDOFExchanger::CommunicationCache&
+      communicationCache()
+      {
+        return _border_dof_exchanger->communicationCache();
+      }
+
+      const typename LA::Traits::BorderDOFExchanger::CommunicationCache&
+      communicationCache() const
+      {
+        return _border_dof_exchanger->communicationCache();
+      }
 
       //! Reference to the wrapping local assembler object
       const LocalAssembler & local_assembler;
@@ -163,15 +276,17 @@ namespace Dune{
       //! Reference to the local operator
       const LOP & lop;
 
-      //! Default value indicating an invalid solution pointer
-      Pattern * const invalid_pattern;
-
       //! Pointer to the current matrix pattern container
       Pattern * pattern;
 
       //! Local pattern object used in assembling
       LocalPattern localpattern;
       LocalPattern localpattern_sn, localpattern_ns;
+
+      BorderPattern _border_pattern;
+
+      shared_ptr<typename LA::Traits::BorderDOFExchanger> _border_dof_exchanger;
+
     }; // End of class DefaultLocalPatternAssemblerEngine
 
   }

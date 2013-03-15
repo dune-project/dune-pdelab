@@ -1,0 +1,141 @@
+If you want to use your dune-pdelab code from release 1.0.1 with
+release 1.1.0. you have to adapt some things:
+
+ISTL Backends
+*************
+
+Before, the template parameter for the ISTLVectorBackend was the block_size.
+Now, it has two template parameters, the blocking strategy and the block_size.
+
+before:
+| typedef Dune::PDELab::ISTLVectorBackend<1> VBE;
+now
+| typedef Dune::PDELab::ISTLVectorBackend<> VBE; (no_blocking is default)
+
+Until now, MatrixBackend could be retrieved through the
+ISTLVectorBackend, now it is a class without template parameters,
+where the field_type will be the one from the corresponding
+GridOperators Jacobian field_type.
+
+Just change
+| typedef VBE::MatrixBackend MBE;
+to
+| typedef Dune::PDELab::ISTLMatrixBackend MBE;
+
+When using the Dune::PDELab::BackendVectorSelector construct to get
+the coeffient vector type before creating a GridOperator, please
+remember to include the header of the vector backend you are using
+(default is the ISTL backend in
+<dune/pdelab/backend/istlvectorbackend.hh>)!
+
+The new PDELab wrappers for vectors do not inherit from the raw ISTL
+classes anymore. If you still need to access the underlying ISTL
+object, you can access it using the new function
+Dune::PDELab::istl::raw(v). This function will do the right thing,
+even if v is already a simple ISTL object. In that case, the function
+returns the input unchanged.
+
+For example, replace code like
+| GridOperator::Domain x(gfs);
+| x[4] = 1.0;
+with
+| GridOperator::Domain x(gfs);
+| Dune::PDELab::istl::raw(x)[4] = 1.0;
+
+If you only need to iterator over all scalar values in your vector, it
+will often be easier to switch the loop to iterators:
+
+For blocksize 1, replace
+| for (std::size_t i = 0; i < x.N(); ++i)
+|   x[i] = x[i] * x[i];
+with
+| for (typename X::iterator it = x.begin(); it != x.end(); ++it)
+|   *it = (*it) * (*it);
+
+For blocksize > 1, you can even save some coding this way. The nested loop
+| for (std::size_t i = 0; i < x.N(); ++i)
+|   for (std::size_t ii = 0; ii < x[i].N(); ++ii)
+|     x[i][ii] = x[i][ii] * x[i][ii];
+also becomes a simple
+| for (typename X::iterator it = x.begin(); it != x.end(); ++it)
+|   *it = (*it) * (*it);
+
+
+GridFunctionSpaces
+******************
+
+For a CompositeGridfunctionSpace or PowerGridfunctionSpace you now
+need to include the new header:
+| #include<dune/pdelab/gridfunctionspace/subspace.hh>
+and then to block all components of one degree of freedom:
+
+before:
+| typedef Dune::PDELab::ISTLVectorBackend<2> VBE;
+| typedef Dune::PDELab::GridFunctionSpace<GV,FEM0,CON,VBE> GFS0;
+| ...
+| typedef Dune::PDELab::CompositeGridFunctionSpace
+|   <Dune::PDELab::GridFunctionSpaceBlockwiseMapper,GFS0,GFS1> GFS;
+|
+| typedef Dune::PDELab::GridFunctionSubSpace<GFS,0> U0SUB;
+
+now:
+| typedef Dune::PDELab::ISTLVectorBackend<> VBE0;
+| typedef Dune::PDELab::ISTLVectorBackend<> VBE1;
+| typedef Dune::PDELab::GridFunctionSpace<GV,FEM0,CON,VBE0> GFS0;
+| ...
+| typedef Dune::PDELab::ISTLVectorBackend
+|   <Dune::PDELab::ISTLParameters::static_blocking,2> VBE;
+| typedef Dune::PDELab::CompositeGridFunctionSpace
+|   <VBE,Dune::PDELab::EntityBlockedOrderingTag,GFS0,GFS1> GFS;
+|
+| typedef Dune::PDELab::GridFunctionSubSpace
+|   <GFS,Dune::PDELab::TypeTree::TreePath<0> > U0SUB;
+
+If you only need the subspaces for visualization you don't need to
+extract the SubSpaces explicitly, just use the new functionality
+described below.
+
+VTKWriter
+*********
+
+With
+| #include<dune/pdelab/gridfunctionspace/vtk.hh>
+there is is now a very convenient way to write vtk files directly
+from GridFunctionSpaces.
+
+before:
+| typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
+| DGF udgf(gfs,u);
+| Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
+| vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>
+|   (udgf,"solution"));
+| vtkwriter.write("testexample",Dune::VTK::appendedraw);
+
+now:
+| gfs.name("solution");
+| Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
+| Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,u);
+| vtkwriter.write("testexample",Dune::VTK::appendedraw);
+
+This also works for non-scalar GridFunctionSpaces.
+By using the new VectorGridFunctionSpace in
+| #include<dune/pdelab/gridfunctionspace/vectorgridfunctionspace.hh>
+it will automatically write a vector instead of a scalar.
+
+GridOperatorSpace
+*****************
+
+The GridOperatorSpace is now completely gone, use the GridOperator instead.
+(For more information on how to do that look at README.Changes_release_1.0.1.)
+
+Nonoverlapping Constraints
+**************************
+
+NonoverlappingConformingDirichletConstraints now need the GridView as argument:
+
+before:
+| typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CON;
+| CON con;
+now:
+| typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints<GV> CON;
+| CON con(gv);

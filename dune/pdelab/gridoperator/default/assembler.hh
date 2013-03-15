@@ -3,8 +3,10 @@
 
 #include <dune/common/typetraits.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
-#include <dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
+#include <dune/pdelab/common/elementmapper.hh>
+#include <dune/pdelab/common/geometrywrapper.hh>
 
 namespace Dune{
   namespace PDELab{
@@ -17,7 +19,7 @@ namespace Dune{
        * \tparam nonoverlapping_mode Indicates whether assembling is done for overlap cells
        */
 
-    template<typename GFSU, typename GFSV, bool nonoverlapping_mode=false>
+    template<typename GFSU, typename GFSV, typename CU, typename CV, bool nonoverlapping_mode=false>
     class DefaultAssembler {
     public:
 
@@ -42,9 +44,26 @@ namespace Dune{
       //! Static check on whether this is a Galerkin method
       static const bool isGalerkinMethod = Dune::is_same<GFSU,GFSV>::value;
 
+      DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_, const CU& cu_, const CV& cv_)
+        : gfsu(gfsu_)
+        , gfsv(gfsv_)
+        , cu(cu_)
+        , cv(cv_)
+        , lfsu(gfsu_)
+        , lfsv(gfsv_)
+        , lfsun(gfsu_)
+        , lfsvn(gfsv_)
+      { }
+
       DefaultAssembler (const GFSU& gfsu_, const GFSV& gfsv_)
-        : gfsu(gfsu_), gfsv(gfsv_), lfsu(gfsu_), lfsv(gfsv_),
-          lfsun(gfsu_), lfsvn(gfsv_)
+        : gfsu(gfsu_)
+        , gfsv(gfsv_)
+        , cu()
+        , cv()
+        , lfsu(gfsu_)
+        , lfsv(gfsv_)
+        , lfsun(gfsu_)
+        , lfsvn(gfsv_)
       { }
 
       //! Get the trial grid function space
@@ -70,11 +89,28 @@ namespace Dune{
       {
         typedef typename GV::Traits::template Codim<0>::Entity Element;
 
+        typedef typename std::conditional<
+          LocalAssemblerEngine::needs_constraints_caching,
+          LFSIndexCache<LFSU,CU>,
+          LFSIndexCache<LFSU,EmptyTransformation>
+          >::type LFSUCache;
+
+        typedef typename std::conditional<
+          LocalAssemblerEngine::needs_constraints_caching,
+          LFSIndexCache<LFSV,CV>,
+          LFSIndexCache<LFSV,EmptyTransformation>
+          >::type LFSVCache;
+
+        LFSUCache lfsu_cache(lfsu,cu);
+        LFSVCache lfsv_cache(lfsv,cv);
+        LFSUCache lfsun_cache(lfsun,cu);
+        LFSVCache lfsvn_cache(lfsvn,cv);
+
         // Notify assembler engine about oncoming assembly
         assembler_engine.preAssembly();
 
         // Map each cell to unique id
-        Dune::PDELab::MultiGeomUniqueIDMapper<GV> cell_mapper(gfsu.gridView());
+        ElementMapper<GV> cell_mapper(gfsu.gridView());
 
         // Extract integration requirements from the local assembler
         const bool require_uv_skeleton = assembler_engine.requireUVSkeleton();
@@ -101,24 +137,26 @@ namespace Dune{
 
             // Bind local test function space to element
             lfsv.bind( *it );
+            lfsv_cache.update();
 
             // Notify assembler engine about bind
-            assembler_engine.onBindLFSV(eg,lfsv);
+            assembler_engine.onBindLFSV(eg,lfsv_cache);
 
             // Volume integration
-            assembler_engine.assembleVVolume(eg,lfsv);
+            assembler_engine.assembleVVolume(eg,lfsv_cache);
 
             // Bind local trial function space to element
             lfsu.bind( *it );
+            lfsu_cache.update();
 
             // Notify assembler engine about bind
-            assembler_engine.onBindLFSUV(eg,lfsu,lfsv);
+            assembler_engine.onBindLFSUV(eg,lfsu_cache,lfsv_cache);
 
             // Load coefficients of local functions
-            assembler_engine.loadCoefficientsLFSUInside(lfsu);
+            assembler_engine.loadCoefficientsLFSUInside(lfsu_cache);
 
             // Volume integration
-            assembler_engine.assembleUVVolume(eg,lfsu,lfsv);
+            assembler_engine.assembleUVVolume(eg,lfsu_cache,lfsv_cache);
 
             // Skip if no intersection iterator is needed
             if (require_uv_skeleton || require_v_skeleton ||
@@ -154,37 +192,39 @@ namespace Dune{
                               {
                                 // Bind local test space to neighbor element
                                 lfsvn.bind(*(iit->outside()));
+                                lfsvn_cache.update();
 
                                 // Notify assembler engine about binds
-                                assembler_engine.onBindLFSVOutside(ig,lfsv,lfsvn);
+                                assembler_engine.onBindLFSVOutside(ig,lfsv_cache,lfsvn_cache);
 
                                 // Skeleton integration
-                                assembler_engine.assembleVSkeleton(ig,lfsv,lfsvn);
+                                assembler_engine.assembleVSkeleton(ig,lfsv_cache,lfsvn_cache);
 
                                 if(require_uv_skeleton){
 
                                   // Bind local trial space to neighbor element
                                   lfsun.bind(*(iit->outside()));
+                                  lfsun_cache.update();
 
                                   // Notify assembler engine about binds
                                   assembler_engine.onBindLFSUVOutside(ig,
-                                                                      lfsu,lfsv,
-                                                                      lfsun,lfsvn);
+                                                                      lfsu_cache,lfsv_cache,
+                                                                      lfsun_cache,lfsvn_cache);
 
                                   // Load coefficients of local functions
-                                  assembler_engine.loadCoefficientsLFSUOutside(lfsun);
+                                  assembler_engine.loadCoefficientsLFSUOutside(lfsun_cache);
 
                                   // Skeleton integration
-                                  assembler_engine.assembleUVSkeleton(ig,lfsu,lfsv,lfsun,lfsvn);
+                                  assembler_engine.assembleUVSkeleton(ig,lfsu_cache,lfsv_cache,lfsun_cache,lfsvn_cache);
 
                                   // Notify assembler engine about unbinds
                                   assembler_engine.onUnbindLFSUVOutside(ig,
-                                                                        lfsu,lfsv,
-                                                                        lfsun,lfsvn);
+                                                                        lfsu_cache,lfsv_cache,
+                                                                        lfsun_cache,lfsvn_cache);
                                 }
 
                                 // Notify assembler engine about unbinds
-                                assembler_engine.onUnbindLFSVOutside(ig,lfsv,lfsvn);
+                                assembler_engine.onUnbindLFSVOutside(ig,lfsv_cache,lfsvn_cache);
                               }
                           }
                         break;
@@ -194,11 +234,11 @@ namespace Dune{
                           {
 
                             // Boundary integration
-                            assembler_engine.assembleVBoundary(ig,lfsv);
+                            assembler_engine.assembleVBoundary(ig,lfsv_cache);
 
                             if(require_uv_boundary){
                               // Boundary integration
-                              assembler_engine.assembleUVBoundary(ig,lfsu,lfsv);
+                              assembler_engine.assembleUVBoundary(ig,lfsu_cache,lfsv_cache);
                             }
                           }
                         break;
@@ -208,11 +248,11 @@ namespace Dune{
                           {
 
                             // Processor integration
-                            assembler_engine.assembleVProcessor(ig,lfsv);
+                            assembler_engine.assembleVProcessor(ig,lfsv_cache);
 
                             if(require_uv_processor){
                               // Processor integration
-                              assembler_engine.assembleUVProcessor(ig,lfsu,lfsv);
+                              assembler_engine.assembleUVProcessor(ig,lfsu_cache,lfsv_cache);
                             }
                           }
                         break;
@@ -223,24 +263,24 @@ namespace Dune{
 
             if(require_uv_post_skeleton || require_v_post_skeleton){
               // Volume integration
-              assembler_engine.assembleVVolumePostSkeleton(eg,lfsv);
+              assembler_engine.assembleVVolumePostSkeleton(eg,lfsv_cache);
 
               if(require_uv_post_skeleton){
                 // Volume integration
-                assembler_engine.assembleUVVolumePostSkeleton(eg,lfsu,lfsv);
+                assembler_engine.assembleUVVolumePostSkeleton(eg,lfsu_cache,lfsv_cache);
               }
             }
 
             // Notify assembler engine about unbinds
-            assembler_engine.onUnbindLFSUV(eg,lfsu,lfsv);
+            assembler_engine.onUnbindLFSUV(eg,lfsu_cache,lfsv_cache);
 
             // Notify assembler engine about unbinds
-            assembler_engine.onUnbindLFSV(eg,lfsv);
+            assembler_engine.onUnbindLFSV(eg,lfsv_cache);
 
           } // it
 
         // Notify assembler engine that assembly is finished
-        assembler_engine.postAssembly();
+        assembler_engine.postAssembly(gfsu,gfsv);
 
       }
 
@@ -250,15 +290,27 @@ namespace Dune{
       const GFSU& gfsu;
       const GFSV& gfsv;
 
+      typename SelectType<
+        is_same<CU,EmptyTransformation>::value,
+        const CU,
+        const CU&
+        >::Type cu;
+      typename SelectType<
+        is_same<CV,EmptyTransformation>::value,
+        const CV,
+        const CV&
+        >::Type cv;
+
       /* local function spaces */
-      typedef Dune::PDELab::LocalFunctionSpace<GFSU, Dune::PDELab::TrialSpaceTag> LFSU;
-      typedef Dune::PDELab::LocalFunctionSpace<GFSV, Dune::PDELab::TestSpaceTag> LFSV;
+      typedef LocalFunctionSpace<GFSU, TrialSpaceTag> LFSU;
+      typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
       // local function spaces in local cell
       mutable LFSU lfsu;
       mutable LFSV lfsv;
       // local function spaces in neighbor
       mutable LFSU lfsun;
       mutable LFSV lfsvn;
+
     };
 
   }

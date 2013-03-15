@@ -18,6 +18,12 @@ namespace Dune{
       //! The type of the wrapping local assembler
       typedef OSLA OneStepLocalAssembler;
 
+      // Constraints caching policy
+      static const bool needs_constraints_caching =
+        LAE0::needs_constraints_caching ||
+        LAE1::needs_constraints_caching;
+
+
       //! Types of the subordinate assemblers and engines
       //! @{
       typedef typename OSLA::LocalAssemblerDT0 LocalAssemblerDT0;
@@ -110,6 +116,16 @@ namespace Dune{
       void setLocalAssemblerEngineDT1(LocalAssemblerEngineDT1& lae1_)
       {
         lae1 = &lae1_;
+      }
+
+      const typename OneStepLocalAssembler::Traits::TrialGridFunctionSpaceConstraints& trialConstraints() const
+      {
+        return localAssemblerEngineDT0().trialConstraints();
+      }
+
+      const typename OneStepLocalAssembler::Traits::TestGridFunctionSpaceConstraints& testConstraints() const
+      {
+        return localAssemblerEngineDT0().testConstraints();
       }
 
       //! Called immediately after binding of local function space in

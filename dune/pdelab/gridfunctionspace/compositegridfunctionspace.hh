@@ -8,10 +8,9 @@
 
 #include <dune/pdelab/common/typetree/compositenodemacros.hh>
 #include <dune/pdelab/common/typetree/utility.hh>
-#include <dune/pdelab/gridfunctionspace/lexicographicordering.hh>
 #include <dune/pdelab/gridfunctionspace/powercompositegridfunctionspacebase.hh>
+#include <dune/pdelab/gridfunctionspace/datahandleprovider.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
-#include <dune/pdelab/gridfunctionspace/compositeorderingutilities.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -34,62 +33,97 @@ namespace Dune {
         or \link  GridFunctionSpaceDynamicBlockwiseMapper  GridFunctionSpaceDynamicBlockwiseMapper \endlink
         \tparam Ti are all grid function spaces
     */
-    template<typename OrderingTag,
+    template<typename Backend,
+             typename OrderingTag,
              DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
     class CompositeGridFunctionSpace
-      : public CompositeGridFunctionSpaceBase<DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>
+      : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
       , public PowerCompositeGridFunctionSpaceBase<
           CompositeGridFunctionSpace<
+            Backend,
             OrderingTag,
             DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>,
           typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::
             Type::Traits::GridViewType,
-          typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::
-            Type::Traits::BackendType,
+          Backend,
           OrderingTag,
           DUNE_TYPETREE_COMPOSITENODE_BASETYPE::CHILDREN
         >
+      , public DataHandleProvider<CompositeGridFunctionSpace<Backend,OrderingTag,DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES> >
     {
-      typedef CompositeGridFunctionSpaceBase<DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES> NodeT;
+      typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE NodeT;
 
       typedef PowerCompositeGridFunctionSpaceBase<
         CompositeGridFunctionSpace,
         typename NodeT::template Child<0>::Type::Traits::GridViewType,
-        typename NodeT::template Child<0>::Type::Traits::BackendType,
+        Backend,
         OrderingTag,
         NodeT::CHILDREN> ImplementationBase;
 
       friend class PowerCompositeGridFunctionSpaceBase<
         CompositeGridFunctionSpace,
         typename NodeT::template Child<0>::Type::Traits::GridViewType,
-        typename NodeT::template Child<0>::Type::Traits::BackendType,
+        Backend,
         OrderingTag,
         NodeT::CHILDREN>;
 
-      friend struct gfs_to_ordering<CompositeGridFunctionSpace,OrderingTag>;
-
-      typedef TypeTree::TransformTree<NodeT,gfs_to_ordering<CompositeGridFunctionSpace,OrderingTag> > OrderingTransformation;
+      typedef TypeTree::TransformTree<CompositeGridFunctionSpace,
+                                      gfs_to_ordering<CompositeGridFunctionSpace>
+                                      > ordering_transformation;
 
     public:
       typedef CompositeGridFunctionSpaceTag ImplementationTag;
 
-      typedef typename OrderingTransformation::Type Ordering;
+      typedef typename ordering_transformation::Type Ordering;
 
       typedef typename ImplementationBase::Traits Traits;
 
+      CompositeGridFunctionSpace(const Backend& backend, DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
+        : NodeT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>))
+        , ImplementationBase(backend)
+      { }
+
       CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
         : NodeT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>))
-        , orderingp(make_shared<Ordering>(OrderingTransformation::transform(static_cast<NodeT&>(*this))))
+        , ImplementationBase(Backend())
       { }
 
       //! Direct access to the DOF ordering.
-      const Ordering &ordering() const { return *orderingp; }
+      const Ordering &ordering() const
+      {
+        return *orderingStorage();
+      }
+
+      //! Direct access to the DOF ordering.
+      Ordering &ordering()
+      {
+        return *orderingStorage();
+      }
 
       //! Direct access to the storage of the DOF ordering.
-      shared_ptr<const Ordering> orderingPtr() const { return orderingp; }
+      shared_ptr<const Ordering> orderingStorage() const
+      {
+        if (!_ordering)
+          {
+            _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+            _ordering->update();
+          }
+        return _ordering;
+      }
+
+      //! Direct access to the storage of the DOF ordering.
+      shared_ptr<Ordering> orderingStorage()
+      {
+        if (!_ordering)
+          {
+            _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+            _ordering->update();
+          }
+        return _ordering;
+      }
 
     private:
-      shared_ptr<Ordering> orderingp;
+      mutable shared_ptr<Ordering> _ordering;
 
     };
 

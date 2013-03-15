@@ -9,9 +9,8 @@
 #include <dune/common/shared_ptr.hh>
 
 #include <dune/pdelab/common/typetree/powernode.hh>
-#include <dune/pdelab/gridfunctionspace/lexicographicordering.hh>
-#include <dune/pdelab/gridfunctionspace/orderingbase.hh>
 #include <dune/pdelab/gridfunctionspace/powercompositegridfunctionspacebase.hh>
+#include <dune/pdelab/gridfunctionspace/datahandleprovider.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 
 namespace Dune {
@@ -36,23 +35,29 @@ namespace Dune {
         or \link  GridFunctionSpaceDynamicBlockwiseMapper  GridFunctionSpaceDynamicBlockwiseMapper \endlink
     */
     template<typename T, std::size_t k,
+             typename Backend,
              typename OrderingTag = LexicographicOrderingTag>
-    class PowerGridFunctionSpace :
-      public TypeTree::PowerNode<T,k>,
-      public PowerCompositeGridFunctionSpaceBase<
-        PowerGridFunctionSpace<T, k, OrderingTag>,
-        typename T::Traits::GridViewType,
-        typename T::Traits::BackendType,
-        OrderingTag,
-        k
-      >
+    class PowerGridFunctionSpace
+      : public TypeTree::PowerNode<T,k>
+      , public PowerCompositeGridFunctionSpaceBase<
+          PowerGridFunctionSpace<T, k, Backend, OrderingTag>,
+          typename T::Traits::GridViewType,
+          Backend,
+          OrderingTag,
+          k>
+      , public DataHandleProvider<PowerGridFunctionSpace<T,k,Backend,OrderingTag> >
     {
+
+    public:
+
+      typedef PowerGridFunctionSpaceTag ImplementationTag;
+
       typedef TypeTree::PowerNode<T,k> BaseT;
 
       typedef PowerCompositeGridFunctionSpaceBase<
         PowerGridFunctionSpace,
         typename T::Traits::GridViewType,
-        typename T::Traits::BackendType,
+        Backend,
         OrderingTag,
         k
         > ImplementationBase;
@@ -60,61 +65,52 @@ namespace Dune {
       friend class PowerCompositeGridFunctionSpaceBase<
         PowerGridFunctionSpace,
         typename T::Traits::GridViewType,
-        typename T::Traits::BackendType,
+        Backend,
         OrderingTag,
         k>;
 
-    public:
-      typedef PowerGridFunctionSpaceTag ImplementationTag;
+      typedef TypeTree::TransformTree<PowerGridFunctionSpace,
+                                      gfs_to_ordering<PowerGridFunctionSpace>
+                                      > ordering_transformation;
 
-      typedef typename TransformPowerGFSToOrdering<OrderingTag>::
-        template result<
-          typename ImplementationBase::Traits,
-          const typename T::Ordering,
-          k
-        >::type Ordering;
+    public:
+
+      typedef typename ordering_transformation::Type Ordering;
 
       //! export traits class
       typedef typename ImplementationBase::Traits Traits;
 
-      PowerGridFunctionSpace(T& c)
+      PowerGridFunctionSpace(T& c, const Backend& backend = Backend())
         : BaseT(c)
+        , ImplementationBase(backend)
       {
-        initOrdering();
-      }
-
-      PowerGridFunctionSpace (T& c0,
-                              T& c1)
-        : BaseT(c0,c1)
-      {
-        initOrdering();
       }
 
       PowerGridFunctionSpace (T& c0,
                               T& c1,
-                              T& c2)
-        : BaseT(c0,c1,c2)
+                              const Backend& backend = Backend())
+        : BaseT(c0,c1)
+        , ImplementationBase(backend)
       {
-        initOrdering();
       }
 
       PowerGridFunctionSpace (T& c0,
                               T& c1,
                               T& c2,
-                              T& c3)
-        : BaseT(c0,c1,c2,c3)
+                              const Backend& backend = Backend())
+        : BaseT(c0,c1,c2)
+        , ImplementationBase(backend)
       {
-        initOrdering();
       }
 
       PowerGridFunctionSpace (T& c0,
                               T& c1,
                               T& c2,
                               T& c3,
-                              T& c4)
-        : BaseT(c0,c1,c2,c3,c4)
+                              const Backend& backend = Backend())
+        : BaseT(c0,c1,c2,c3)
+        , ImplementationBase(backend)
       {
-        initOrdering();
       }
 
       PowerGridFunctionSpace (T& c0,
@@ -122,10 +118,10 @@ namespace Dune {
                               T& c2,
                               T& c3,
                               T& c4,
-                              T& c5)
-        : BaseT(c0,c1,c2,c3,c4,c5)
+                              const Backend& backend = Backend())
+        : BaseT(c0,c1,c2,c3,c4)
+        , ImplementationBase(backend)
       {
-        initOrdering();
       }
 
       PowerGridFunctionSpace (T& c0,
@@ -134,10 +130,10 @@ namespace Dune {
                               T& c3,
                               T& c4,
                               T& c5,
-                              T& c6)
-        : BaseT(c0,c1,c2,c3,c4,c5,c6)
+                              const Backend& backend = Backend())
+        : BaseT(c0,c1,c2,c3,c4,c5)
+        , ImplementationBase(backend)
       {
-        initOrdering();
       }
 
       PowerGridFunctionSpace (T& c0,
@@ -147,10 +143,10 @@ namespace Dune {
                               T& c4,
                               T& c5,
                               T& c6,
-                              T& c7)
-        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7)
+                              const Backend& backend = Backend())
+        : BaseT(c0,c1,c2,c3,c4,c5,c6)
+        , ImplementationBase(backend)
       {
-        initOrdering();
       }
 
       PowerGridFunctionSpace (T& c0,
@@ -161,10 +157,10 @@ namespace Dune {
                               T& c5,
                               T& c6,
                               T& c7,
-                              T& c8)
-        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8)
+                              const Backend& backend = Backend())
+        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7)
+        , ImplementationBase(backend)
       {
-        initOrdering();
       }
 
       PowerGridFunctionSpace (T& c0,
@@ -176,29 +172,66 @@ namespace Dune {
                               T& c6,
                               T& c7,
                               T& c8,
-                              T& c9)
-        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8,c9)
+                              const Backend& backend = Backend())
+        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8)
+        , ImplementationBase(backend)
       {
-        initOrdering();
+      }
+
+      PowerGridFunctionSpace (T& c0,
+                              T& c1,
+                              T& c2,
+                              T& c3,
+                              T& c4,
+                              T& c5,
+                              T& c6,
+                              T& c7,
+                              T& c8,
+                              T& c9,
+                              const Backend& backend = Backend())
+        : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8,c9)
+        , ImplementationBase(backend)
+      {
       }
 
       //! Direct access to the DOF ordering.
-      const Ordering &ordering() const { return *orderingp; }
-
-      //! Direct access to the storage of the DOF ordering.
-      shared_ptr<const Ordering> orderingPtr() const { return orderingp; }
-
-    private:
-      void initOrdering() {
-        typename Ordering::NodeStorage transformedChildren;
-        for(std::size_t childIndex = 0; childIndex < BaseT::CHILDREN;
-            ++childIndex)
-          transformedChildren[childIndex] =
-            this->child(childIndex).orderingPtr();
-        orderingp = make_shared<Ordering>(*this, transformedChildren);
+      const Ordering &ordering() const
+      {
+        return *orderingStorage();
       }
 
-      shared_ptr<Ordering> orderingp;
+      //! Direct access to the DOF ordering.
+      Ordering &ordering()
+      {
+        return *orderingStorage();
+      }
+
+      //! Direct access to the storage of the DOF ordering.
+      shared_ptr<const Ordering> orderingStorage() const
+      {
+        if (!_ordering)
+          {
+            _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+            _ordering->update();
+          }
+        return _ordering;
+      }
+
+      //! Direct access to the storage of the DOF ordering.
+      shared_ptr<Ordering> orderingStorage()
+      {
+        if (!_ordering)
+          {
+            _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+            _ordering->update();
+          }
+        return _ordering;
+      }
+
+    private:
+
+      mutable shared_ptr<Ordering> _ordering;
+
     };
 
   } // namespace PDELab

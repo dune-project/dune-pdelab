@@ -50,6 +50,29 @@ namespace Dune {
 		return variant[j];
 	  }
 
+    public:
+
+      bool fixedSize() const
+      {
+        return true;
+      }
+
+      std::size_t size(GeometryType gt) const
+      {
+        if (gt.isVertex())
+          return k > 0 ? 1 : 0;
+        if (gt.isLine())
+          return k > 1 ? k - 1 : 0;
+        if (gt.isTriangle())
+          return k > 2 ? (k-2)*(k-1)/2 : (k == 0);
+        return 0;
+      }
+
+      std::size_t maxLocalSize() const
+      {
+        return (k+1)*(k+2)/2;
+      }
+
 	private:
       FE variant[8];
       const IndexSet& is;
@@ -85,6 +108,28 @@ namespace Dune {
       Pk2DFiniteElementMap(const VertexOrderFactory &voFactory) :
         Base(feFactory(), voFactory)
       { }
+
+      bool fixedSize() const
+      {
+        return true;
+      }
+
+      std::size_t size(GeometryType gt) const
+      {
+        if (gt.isVertex())
+          return k > 0 ? 1 : 0;
+        if (gt.isLine())
+          return k > 1 ? k - 1 : 0;
+        if (gt.isTriangle())
+          return k > 2 ? (k-2)*(k-1)/2 : (k == 0);
+        return 0;
+      }
+
+      std::size_t maxLocalSize() const
+      {
+        return (k+1)*(k+2)/2;
+      }
+
     };
   }
 }

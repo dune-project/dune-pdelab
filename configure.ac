@@ -3,7 +3,7 @@
 AC_PREREQ(2.50)
 DUNE_AC_INIT # gets module version from dune.module file
 AM_INIT_AUTOMAKE
-AC_CONFIG_SRCDIR([dune/pdelab/test/testcountingptr.cc])
+AC_CONFIG_SRCDIR([dune/pdelab/test/testtypetree.cc])
 AC_CONFIG_HEADERS([config.h])
 
 # add configure flags needed to create log files for dune-autobuild
@@ -32,6 +32,7 @@ AC_CONFIG_FILES([
   dune/Makefile
   dune/pdelab/adaptivity/Makefile
   dune/pdelab/backend/Makefile
+  dune/pdelab/backend/istl/Makefile
   dune/pdelab/benchmark/Makefile
   dune/pdelab/boilerplate/Makefile
   dune/pdelab/common/Makefile
@@ -54,8 +55,10 @@ AC_CONFIG_FILES([
   dune/pdelab/Makefile
   dune/pdelab/multistep/Makefile
   dune/pdelab/newton/Makefile
+  dune/pdelab/ordering/Makefile
   dune/pdelab/stationary/Makefile
   dune/pdelab/test/Makefile
+  dune/pdelab/test/fem/Makefile
   lib/Makefile
   m4/Makefile
   Makefile

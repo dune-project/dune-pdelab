@@ -12,8 +12,6 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/pdelab/localoperator/idefault.hh>
 
-#include "../common/geometrywrapper.hh"
-#include "../gridoperatorspace/gridoperatorspace.hh"
 #include "defaultimp.hh"
 #include "pattern.hh"
 #include "flags.hh"
@@ -52,7 +50,7 @@ namespace Dune {
   template<class Basis>
   struct VectorBasisInterfaceSwitch<
     Basis, typename enable_if<Basis::Traits::dimDomain>::type
-    > 
+    >
   {
     //! export vector type of the local coordinates
     typedef typename Basis::Traits::DomainType DomainLocal;
@@ -86,14 +84,14 @@ namespace Dune {
     /** \brief A local operator for solving the stokes equation using
             a DG discretization and a vector valued finite element map
             for the velocity grid function space.
-            
+
         \tparam F velocity source term function
         \tparam B boundary condition function
         \tparam V dirichlet velocity boundary condition function
         \tparam P dirichlet pressure boundary condition function
         \tparam IP a class providing the interior penalty factor for each face
     */
-    template<typename F, typename B, typename V, typename P, 
+    template<typename F, typename B, typename V, typename P,
              typename IP = DefaultInteriorPenalty<typename V::Traits::RangeFieldType> >
     class StokesDGVectorFEM :
       public LocalOperatorDefaultFlags,
@@ -163,7 +161,7 @@ namespace Dune {
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
-                
+
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
@@ -209,7 +207,7 @@ namespace Dune {
             // evaluate source term
             typename F::Traits::RangeType fval;
             f.evaluateGlobal(global,fval);
-                    
+
             {// Integrate (f*v)
               const RF factor = weight;
               for (size_type i=0; i<lfsv_v.size(); i++)
@@ -238,9 +236,9 @@ namespace Dune {
       }
 
       template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-      void alpha_skeleton (const IG& ig, 
+      void alpha_skeleton (const IG& ig,
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                            R& r_s, R& r_n) const
       {
         // dimensions
@@ -277,7 +275,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gt = ig.geometry().type();
-        const Dune::QuadratureRule<DF,dim-1>& rule 
+        const Dune::QuadratureRule<DF,dim-1>& rule
           = Dune::QuadratureRules<DF,dim-1>::rule(gt,qorder);
 
         const typename IG::EntityPointer self = ig.inside();
@@ -412,7 +410,7 @@ namespace Dune {
       }
 
       template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-      void alpha_boundary (const IG& ig, 
+      void alpha_boundary (const IG& ig,
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                            R& r_s) const
       {
@@ -446,7 +444,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gt = ig.geometry().type();
-        const Dune::QuadratureRule<DF,dim-1>& rule 
+        const Dune::QuadratureRule<DF,dim-1>& rule
           = Dune::QuadratureRules<DF,dim-1>::rule(gt,qorder);
 
         const typename IG::EntityPointer self = ig.inside();
@@ -563,7 +561,7 @@ namespace Dune {
       }
 
     private:
-      
+
       template<class M, class RF>
       static void contraction(const M & a, const M & b, RF & v)
       {
@@ -584,7 +582,7 @@ namespace Dune {
           for(int c=0; c<M; ++c)
             result[r] += du[r][c] * n[c];
       }
-      
+
       const F& f;
       const B& b;
       const V& v;

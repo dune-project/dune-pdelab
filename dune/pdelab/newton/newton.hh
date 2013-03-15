@@ -47,7 +47,7 @@ namespace Dune
             typedef TstV TestVector;
 
             typedef typename TestVector::ElementType RFType;
-            typedef typename GOS::template MatrixContainer<RFType>::Type Matrix;
+            typedef typename GOS::Traits::Jacobian Matrix;
 
             typedef NewtonResult<RFType> Result;
 
@@ -106,7 +106,7 @@ namespace Dune
             typedef TstV TestVector;
 
             typedef typename TestVector::ElementType RFType;
-            typedef typename GOS::template MatrixContainer<RFType>::Type Matrix;
+            typedef typename GOS::Traits::Jacobian Matrix;
 
         public:
             typedef NewtonResult<RFType> Result;
@@ -383,7 +383,7 @@ namespace Dune
             typedef TrlV TrialVector;
 
             typedef typename TstV::ElementType RFType;
-            typedef typename GOS::template MatrixContainer<RFType>::Type Matrix;
+            typedef typename GOS::Traits::Jacobian Matrix;
 
         public:
             NewtonPrepareStep(GridOperator& go, TrialVector& u_)
@@ -540,14 +540,14 @@ namespace Dune
                     if (this->verbosity_level >= 4)
                         std::cout << "          trying line search damping factor:   "
                                   << std::setw(12) << std::setprecision(4) << std::scientific
-                                  << lambda 
+                                  << lambda
                                   << std::endl;
 
                     this->u->axpy(-lambda, z);                  // TODO: vector interface
-                    try { 
-                        this->defect(r); 
+                    try {
+                        this->defect(r);
                     }
-                    catch (NewtonDefectError) 
+                    catch (NewtonDefectError)
                         {
                             if (this->verbosity_level >= 4)
                                 std::cout << "          Nans detected" << std::endl;

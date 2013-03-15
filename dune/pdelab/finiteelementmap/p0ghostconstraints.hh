@@ -40,7 +40,7 @@ namespace Dune {
           typename T::RowType empty;
           typedef typename LFS::Traits::SizeType size_type;
           for (size_type i=0; i<lfs.size(); i++){
-            trafo[i] = empty;
+            trafo[lfs.dofIndex(i)] = empty;
           }
         }
 

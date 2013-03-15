@@ -13,8 +13,6 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/finiteelement/localbasiscache.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include<dune/pdelab/localoperator/defaultimp.hh>
 #include<dune/pdelab/localoperator/flags.hh>
 #include<dune/pdelab/localoperator/idefault.hh>
@@ -48,7 +46,7 @@ namespace Dune {
          \param mu permeability
          \param RT matrix to be filled
       */
-      template<typename T1, typename T2, typename T3> 
+      template<typename T1, typename T2, typename T3>
       static void eigenvalues (T1 eps, T1 mu, const Dune::FieldVector<T2,2*dim>& e)
       {
         T1 s = 1.0/sqrt(mu*eps); //speed of light s = 1/sqrt(\mu \epsilon)
@@ -71,7 +69,7 @@ namespace Dune {
          \param n unit outer normal vector
          \param R matrix to be filled
       */
-      template<typename T1, typename T2, typename T3> 
+      template<typename T1, typename T2, typename T3>
       static void eigenvectors (T1 eps, T1 mu, const Dune::FieldVector<T2,dim>& n, Dune::FieldMatrix<T3,2*dim,2*dim>& R)
       {
         T1 a=n[0], b=n[1], c=n[2];
@@ -89,19 +87,19 @@ namespace Dune {
           }
 
         // \lambda_0,1 = s
-        R[0][0] =  re[0];   R[0][1] =  -im[0]; 
-        R[1][0] =  re[1];   R[1][1] =  -im[1];        
-        R[2][0] =  re[2];   R[2][1] =  -im[2];          
-        R[3][0] =  im[0];   R[3][1] =  re[0];          
-        R[4][0] =  im[1];   R[4][1] =  re[1];         
-        R[5][0] =  im[2];   R[5][1] =  re[2];         
-                
+        R[0][0] =  re[0];   R[0][1] =  -im[0];
+        R[1][0] =  re[1];   R[1][1] =  -im[1];
+        R[2][0] =  re[2];   R[2][1] =  -im[2];
+        R[3][0] =  im[0];   R[3][1] =  re[0];
+        R[4][0] =  im[1];   R[4][1] =  re[1];
+        R[5][0] =  im[2];   R[5][1] =  re[2];
+
         // \lambda_2,3 = -s
-        R[0][2] =  im[0];  R[0][3] =  re[0]; 
-        R[1][2] =  im[1];  R[1][3] =  re[1];        
-        R[2][2] =  im[2];  R[2][3] =  re[2];          
-        R[3][2] =  re[0];  R[3][3] =  -im[0];          
-        R[4][2] =  re[1];  R[4][3] =  -im[1];         
+        R[0][2] =  im[0];  R[0][3] =  re[0];
+        R[1][2] =  im[1];  R[1][3] =  re[1];
+        R[2][2] =  im[2];  R[2][3] =  re[2];
+        R[3][2] =  re[0];  R[3][3] =  -im[0];
+        R[4][2] =  re[1];  R[4][3] =  -im[1];
         R[5][2] =  re[2];  R[5][3] =  -im[2];
 
         // \lambda_4,5 = 0
@@ -129,137 +127,137 @@ namespace Dune {
         //     if (c>0)
         //       {
         //         // \lambda_0,1 = s
-        //         R[0][0] =  0;   R[0][1] =  1; 
-        //         R[1][0] =  -1;  R[1][1] =  0;        
-        //         R[2][0] =  0;   R[2][1] =  0;          
-        //         R[3][0] =  1;   R[3][1] =  0;          
-        //         R[4][0] =  0;   R[4][1] =  1;         
-        //         R[5][0] =  0;   R[5][1] =  0;         
-                
+        //         R[0][0] =  0;   R[0][1] =  1;
+        //         R[1][0] =  -1;  R[1][1] =  0;
+        //         R[2][0] =  0;   R[2][1] =  0;
+        //         R[3][0] =  1;   R[3][1] =  0;
+        //         R[4][0] =  0;   R[4][1] =  1;
+        //         R[5][0] =  0;   R[5][1] =  0;
+
         //         // \lambda_2,3 = -s
-        //         R[0][2] =  -1; R[0][3] =  0; 
-        //         R[1][2] =  0;  R[1][3] =  1;        
-        //         R[2][2] =  0;  R[2][3] =  0;          
-        //         R[3][2] =  0;  R[3][3] =  1;          
-        //         R[4][2] =  1;  R[4][3] =  0;         
+        //         R[0][2] =  -1; R[0][3] =  0;
+        //         R[1][2] =  0;  R[1][3] =  1;
+        //         R[2][2] =  0;  R[2][3] =  0;
+        //         R[3][2] =  0;  R[3][3] =  1;
+        //         R[4][2] =  1;  R[4][3] =  0;
         //         R[5][2] =  0;  R[5][3] =  0;
         //       }
         //     else
         //       {
         //         // \lambda_0,1 = s
-        //         R[0][0] =  -1; R[0][1] =  0; 
-        //         R[1][0] =  0;  R[1][1] =  1;        
-        //         R[2][0] =  0;  R[2][1] =  0;          
-        //         R[3][0] =  0;  R[3][1] =  1;          
-        //         R[4][0] =  1;  R[4][1] =  0;         
+        //         R[0][0] =  -1; R[0][1] =  0;
+        //         R[1][0] =  0;  R[1][1] =  1;
+        //         R[2][0] =  0;  R[2][1] =  0;
+        //         R[3][0] =  0;  R[3][1] =  1;
+        //         R[4][0] =  1;  R[4][1] =  0;
         //         R[5][0] =  0;  R[5][1] =  0;
 
         //         // \lambda_2,3 = -s
-        //         R[0][2] =  0;   R[0][3] =  1; 
-        //         R[1][2] =  -1;  R[1][3] =  0;        
-        //         R[2][2] =  0;   R[2][3] =  0;          
-        //         R[3][2] =  1;   R[3][3] =  0;          
-        //         R[4][2] =  0;   R[4][3] =  1;         
-        //         R[5][2] =  0;   R[5][3] =  0;                         
+        //         R[0][2] =  0;   R[0][3] =  1;
+        //         R[1][2] =  -1;  R[1][3] =  0;
+        //         R[2][2] =  0;   R[2][3] =  0;
+        //         R[3][2] =  1;   R[3][3] =  0;
+        //         R[4][2] =  0;   R[4][3] =  1;
+        //         R[5][2] =  0;   R[5][3] =  0;
         //       }
-        //   }  
+        //   }
         // else if (std::abs(std::abs(b)-1)<1e-10)
         //   {
         //     if (b>0)
         //       {
         //         // \lambda_0,1 = s
-        //         R[0][0] =  -1;  R[0][1] =  0; 
-        //         R[1][0] =  0;   R[1][1] =  0;        
-        //         R[2][0] =  0;   R[2][1] =  1;          
-        //         R[3][0] =  0;   R[3][1] =  1;          
-        //         R[4][0] =  0;   R[4][1] =  0;         
-        //         R[5][0] =  1;   R[5][1] =  0;         
-                
+        //         R[0][0] =  -1;  R[0][1] =  0;
+        //         R[1][0] =  0;   R[1][1] =  0;
+        //         R[2][0] =  0;   R[2][1] =  1;
+        //         R[3][0] =  0;   R[3][1] =  1;
+        //         R[4][0] =  0;   R[4][1] =  0;
+        //         R[5][0] =  1;   R[5][1] =  0;
+
         //         // \lambda_2,3 = -s
-        //         R[0][2] =  0;  R[0][3] =  1; 
-        //         R[1][2] =  0;  R[1][3] =  0;        
-        //         R[2][2] =  -1; R[2][3] =  0;          
-        //         R[3][2] =  1;  R[3][3] =  0;          
-        //         R[4][2] =  0;  R[4][3] =  0;         
+        //         R[0][2] =  0;  R[0][3] =  1;
+        //         R[1][2] =  0;  R[1][3] =  0;
+        //         R[2][2] =  -1; R[2][3] =  0;
+        //         R[3][2] =  1;  R[3][3] =  0;
+        //         R[4][2] =  0;  R[4][3] =  0;
         //         R[5][2] =  0;  R[5][3] =  1;
         //       }
         //     else
         //       {
         //         // \lambda_0,1 = s
-        //         R[0][0] =  0;  R[0][1] =  1; 
-        //         R[1][0] =  0;  R[1][1] =  0;        
-        //         R[2][0] =  -1; R[2][1] =  0;          
-        //         R[3][0] =  1;  R[3][1] =  0;          
-        //         R[4][0] =  0;  R[4][1] =  0;         
+        //         R[0][0] =  0;  R[0][1] =  1;
+        //         R[1][0] =  0;  R[1][1] =  0;
+        //         R[2][0] =  -1; R[2][1] =  0;
+        //         R[3][0] =  1;  R[3][1] =  0;
+        //         R[4][0] =  0;  R[4][1] =  0;
         //         R[5][0] =  0;  R[5][1] =  1;
 
         //         // \lambda_2,3 = -s
-        //         R[0][2] =  -1;  R[0][3] =  0; 
-        //         R[1][2] =  0;   R[1][3] =  0;        
-        //         R[2][2] =  0;   R[2][3] =  1;          
-        //         R[3][2] =  0;   R[3][3] =  1;          
-        //         R[4][2] =  0;   R[4][3] =  0;         
-        //         R[5][2] =  1;   R[5][3] =  0;                         
+        //         R[0][2] =  -1;  R[0][3] =  0;
+        //         R[1][2] =  0;   R[1][3] =  0;
+        //         R[2][2] =  0;   R[2][3] =  1;
+        //         R[3][2] =  0;   R[3][3] =  1;
+        //         R[4][2] =  0;   R[4][3] =  0;
+        //         R[5][2] =  1;   R[5][3] =  0;
         //       }
-        //   }  
+        //   }
         // else if (std::abs(std::abs(a)-1)<1e-10)
         //   {
         //     if (a>0)
         //       {
         //         // \lambda_0,1 = s
-        //         R[0][0] =  0;   R[0][1] =  0; 
-        //         R[1][0] =  0;   R[1][1] =  1;        
-        //         R[2][0] =  -1;  R[2][1] =  0;          
-        //         R[3][0] =  0;   R[3][1] =  0;          
-        //         R[4][0] =  1;   R[4][1] =  0;         
-        //         R[5][0] =  0;   R[5][1] =  1;         
-                
+        //         R[0][0] =  0;   R[0][1] =  0;
+        //         R[1][0] =  0;   R[1][1] =  1;
+        //         R[2][0] =  -1;  R[2][1] =  0;
+        //         R[3][0] =  0;   R[3][1] =  0;
+        //         R[4][0] =  1;   R[4][1] =  0;
+        //         R[5][0] =  0;   R[5][1] =  1;
+
         //         // \lambda_2,3 = -s
-        //         R[0][2] =  0;  R[0][3] =  0; 
-        //         R[1][2] =  -1; R[1][3] =  0;        
-        //         R[2][2] =  0;  R[2][3] =  1;          
-        //         R[3][2] =  0;  R[3][3] =  0;          
-        //         R[4][2] =  0;  R[4][3] =  1;         
+        //         R[0][2] =  0;  R[0][3] =  0;
+        //         R[1][2] =  -1; R[1][3] =  0;
+        //         R[2][2] =  0;  R[2][3] =  1;
+        //         R[3][2] =  0;  R[3][3] =  0;
+        //         R[4][2] =  0;  R[4][3] =  1;
         //         R[5][2] =  1;  R[5][3] =  0;
         //       }
         //     else
         //       {
         //         // \lambda_0,1 = s
-        //         R[0][0] =  0;  R[0][1] =  0; 
-        //         R[1][0] =  -1; R[1][1] =  0;        
-        //         R[2][0] =  0;  R[2][1] =  1;          
-        //         R[3][0] =  0;  R[3][1] =  0;          
-        //         R[4][0] =  0;  R[4][1] =  1;         
+        //         R[0][0] =  0;  R[0][1] =  0;
+        //         R[1][0] =  -1; R[1][1] =  0;
+        //         R[2][0] =  0;  R[2][1] =  1;
+        //         R[3][0] =  0;  R[3][1] =  0;
+        //         R[4][0] =  0;  R[4][1] =  1;
         //         R[5][0] =  1;  R[5][1] =  0;
 
         //         // \lambda_2,3 = -s
-        //         R[0][2] =  0;   R[0][3] =  0; 
-        //         R[1][2] =  0;   R[1][3] =  1;        
-        //         R[2][2] =  -1;  R[2][3] =  0;          
-        //         R[3][2] =  0;   R[3][3] =  0;          
-        //         R[4][2] =  1;   R[4][3] =  0;         
-        //         R[5][2] =  0;   R[5][3] =  1;                         
+        //         R[0][2] =  0;   R[0][3] =  0;
+        //         R[1][2] =  0;   R[1][3] =  1;
+        //         R[2][2] =  -1;  R[2][3] =  0;
+        //         R[3][2] =  0;   R[3][3] =  0;
+        //         R[4][2] =  1;   R[4][3] =  0;
+        //         R[5][2] =  0;   R[5][3] =  1;
         //       }
-        //   }  
+        //   }
         // else
         //   {
         //     DUNE_THROW(Dune::Exception,"need axiparallel grids for now!");
 
         //     // \lambda_0,1 = s
-        //     R[0][0] =  b;          R[0][1] =  -(b*b+c*c); 
-        //     R[1][0] =  -a;         R[1][1] =  a*b;        
-        //     R[2][0] =  0;          R[2][1] =  a*c;          
-        //     R[3][0] =  a*c;        R[3][1] =  0;          
-        //     R[4][0] =  b*c;        R[4][1] =  -c;         
-        //     R[5][0] =  -(a*a+b*b); R[5][1] =  b;         
-            
+        //     R[0][0] =  b;          R[0][1] =  -(b*b+c*c);
+        //     R[1][0] =  -a;         R[1][1] =  a*b;
+        //     R[2][0] =  0;          R[2][1] =  a*c;
+        //     R[3][0] =  a*c;        R[3][1] =  0;
+        //     R[4][0] =  b*c;        R[4][1] =  -c;
+        //     R[5][0] =  -(a*a+b*b); R[5][1] =  b;
+
         //     // \lambda_2,3 = -s
-        //     R[0][2] =  -b;         R[0][3] =  -(b*b+c*c); 
-        //     R[1][2] =  a;          R[1][3] =  a*b;        
-        //     R[2][2] =  0;          R[2][3] =  a*c;          
-        //     R[3][2] =  a*c;        R[3][3] =  0;          
-        //     R[4][2] =  b*c;        R[4][3] =  c;         
-        //     R[5][2] =  -(a*a+b*b); R[5][3] =  -b;         
+        //     R[0][2] =  -b;         R[0][3] =  -(b*b+c*c);
+        //     R[1][2] =  a;          R[1][3] =  a*b;
+        //     R[2][2] =  0;          R[2][3] =  a*c;
+        //     R[3][2] =  a*c;        R[3][3] =  0;
+        //     R[4][2] =  b*c;        R[4][3] =  c;
+        //     R[5][2] =  -(a*a+b*b); R[5][3] =  -b;
         //   }
 
         // // \lambda_4,5 = 0
@@ -269,7 +267,7 @@ namespace Dune {
         // R[3][4] =   a;  R[3][5] =   0;
         // R[4][4] =   b;  R[4][5] =   0;
         // R[5][4] =   c;  R[5][5] =   0;
-        
+
         // // apply scaling
         // T1 weps=sqrt(eps);
         // T1 wmu=sqrt(mu);
@@ -282,11 +280,11 @@ namespace Dune {
 
         //std::cout << R << std::endl;
 
-      } 
+      }
     };
 
     /** Spatial local operator for discontinuous Galerkin method for Maxwells Equations
-	  
+
         - \nabla \times (\mu^-1 B) + (\sigma/\epsilon) D = j
         + \nabla \times (\eps^-1 D)                      = 0
 
@@ -297,10 +295,10 @@ namespace Dune {
         - Assumes Galerkin method, i.e. U=V
 
         \tparam T parameter class
-        \tparam FEM Finite Element Map needed to select the cache  
+        \tparam FEM Finite Element Map needed to select the cache
     */
     template<typename T, typename FEM>
-    class DGMaxwellSpatialOperator : 
+    class DGMaxwellSpatialOperator :
       public NumericalJacobianApplyVolume<DGMaxwellSpatialOperator<T,FEM> >,
       public NumericalJacobianVolume<DGMaxwellSpatialOperator<T,FEM> >,
       public NumericalJacobianApplySkeleton<DGMaxwellSpatialOperator<T,FEM> >,
@@ -326,7 +324,7 @@ namespace Dune {
       enum { doLambdaVolume  = true };
 
       // ! constructor
-      DGMaxwellSpatialOperator (T& param_, int overintegration_=0) 
+      DGMaxwellSpatialOperator (T& param_, int overintegration_=0)
         : param(param_), overintegration(overintegration_), cache(20)
       {
       }
@@ -382,7 +380,7 @@ namespace Dune {
             // evaluate state vector u
             Dune::FieldVector<RF,dim*2> u(0.0);
             for (size_type k=0; k<dim*2; k++) // for all components
-              for (size_type j=0; j<dgspace.size(); j++) // for all basis functions 
+              for (size_type j=0; j<dgspace.size(); j++) // for all basis functions
                 u[k] += x(lfsv.child(k),j)*phi[j];
             //std::cout << "  u at " << it->position() << " : " << u << std::endl;
 
@@ -419,7 +417,7 @@ namespace Dune {
               // for all test functions of this component
               for (size_type k=0; k<dgspace.size(); k++)
                 r.accumulate(lfsv.child(i),k,(sigma/eps)*u[i]*phi[k]*factor);
-	    
+
             // std::cout << "  residual: ";
             // for (size_type i=0; i<r.size(); i++) std::cout << r[i] << " ";
             // std::cout << std::endl;
@@ -429,9 +427,9 @@ namespace Dune {
       // skeleton integral depending on test and ansatz functions
       // each face is only visited ONCE!
       template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-      void alpha_skeleton (const IG& ig, 
+      void alpha_skeleton (const IG& ig,
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                            R& r_s, R& r_n) const
       {
         // get types
@@ -452,9 +450,9 @@ namespace Dune {
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
 
         // evaluate speed of sound (assumed constant per element)
-        const Dune::FieldVector<DF,dim>& 
+        const Dune::FieldVector<DF,dim>&
           inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
-        const Dune::FieldVector<DF,dim>& 
+        const Dune::FieldVector<DF,dim>&
           outside_local = Dune::ReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
         RF mu_s = param.mu(*(ig.inside()),inside_local);
         RF mu_n = param.mu(*(ig.outside()),outside_local);
@@ -497,7 +495,7 @@ namespace Dune {
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
-            // position of quadrature point in local coordinates of elements 
+            // position of quadrature point in local coordinates of elements
             Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
             Dune::FieldVector<DF,dim> iplocal_n = ig.geometryInOutside().global(it->position());
 
@@ -508,11 +506,11 @@ namespace Dune {
             // evaluate u from inside and outside
             Dune::FieldVector<RF,dim*2> u_s(0.0);
             for (size_type i=0; i<dim*2; i++) // for all components
-              for (size_type k=0; k<dgspace_s.size(); k++) // for all basis functions 
+              for (size_type k=0; k<dgspace_s.size(); k++) // for all basis functions
                 u_s[i] += x_s(lfsv_s.child(i),k)*phi_s[k];
             Dune::FieldVector<RF,dim*2> u_n(0.0);
             for (size_type i=0; i<dim*2; i++) // for all components
-              for (size_type k=0; k<dgspace_n.size(); k++) // for all basis functions 
+              for (size_type k=0; k<dgspace_n.size(); k++) // for all basis functions
                 u_n[i] += x_n(lfsv_n.child(i),k)*phi_n[k];
 
             // compute numerical flux at integration point
@@ -544,7 +542,7 @@ namespace Dune {
 
       // skeleton integral depending on test and ansatz functions
       template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-      void alpha_boundary (const IG& ig, 
+      void alpha_boundary (const IG& ig,
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                            R& r_s) const
       {
@@ -565,7 +563,7 @@ namespace Dune {
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
 
         // evaluate speed of sound (assumed constant per element)
-        const Dune::FieldVector<DF,dim>& 
+        const Dune::FieldVector<DF,dim>&
           inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
         RF mu_s = param.mu(*(ig.inside()),inside_local);
         RF eps_s = param.eps(*(ig.inside()),inside_local);
@@ -604,7 +602,7 @@ namespace Dune {
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
-            // position of quadrature point in local coordinates of elements 
+            // position of quadrature point in local coordinates of elements
             Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
 
             // evaluate basis functions
@@ -613,7 +611,7 @@ namespace Dune {
             // evaluate u from inside and outside
             Dune::FieldVector<RF,dim*2> u_s(0.0);
             for (size_type i=0; i<dim*2; i++) // for all components
-              for (size_type k=0; k<dgspace_s.size(); k++) // for all basis functions 
+              for (size_type k=0; k<dgspace_s.size(); k++) // for all basis functions
                 u_s[i] += x_s(lfsv_s.child(i),k)*phi_s[k];
             // std::cout << "  u_s " << u_s << std::endl;
 
@@ -690,7 +688,7 @@ namespace Dune {
                     int stages)
       {
       }
-      
+
       //! to be called once before each stage
       void preStage (typename T::Traits::RangeFieldType time, int r)
       {
@@ -706,7 +704,7 @@ namespace Dune {
       {
         return dt;
       }
-      
+
     private:
       T& param;
       int overintegration;
@@ -724,7 +722,7 @@ namespace Dune {
      * \f}
      */
     template<typename T, typename FEM>
-    class DGMaxwellTemporalOperator : 
+    class DGMaxwellTemporalOperator :
       public NumericalJacobianApplyVolume<DGMaxwellTemporalOperator<T,FEM> >,
       public LocalOperatorDefaultFlags,
       public InstationaryLocalOperatorDefaultMethods<typename T::Traits::RangeFieldType>
@@ -742,9 +740,9 @@ namespace Dune {
       {}
 
       // define sparsity pattern of operator representation
-      template<typename LFSU, typename LFSV>
-      void pattern_volume (const LFSU& lfsu, const LFSV& lfsv, 
-                           LocalSparsityPattern& pattern) const
+      template<typename LFSU, typename LFSV, typename LocalPattern>
+      void pattern_volume (const LFSU& lfsu, const LFSV& lfsv,
+                           LocalPattern& pattern) const
       {
         // get types
         typedef typename LFSV::template Child<0>::Type DGSpace;
@@ -758,7 +756,7 @@ namespace Dune {
         for (size_t k=0; k<LFSV::CHILDREN; k++)
           for (size_t i=0; i<lfsv.child(k).size(); ++i)
             for (size_t j=0; j<lfsu.child(k).size(); ++j)
-              pattern.push_back(SparsityLink(lfsv.child(k).localIndex(i),lfsu.child(k).localIndex(j)));
+              pattern.addLink(lfsv.child(k),i,lfsu.child(k),j);
       }
 
       // volume integral depending on test and ansatz functions
@@ -793,7 +791,7 @@ namespace Dune {
             // evaluate u
             Dune::FieldVector<RF,dim*2> u(0.0);
             for (size_type k=0; k<dim*2; k++) // for all components
-              for (size_type j=0; j<dgspace.size(); j++) // for all basis functions 
+              for (size_type j=0; j<dgspace.size(); j++) // for all basis functions
                 u[k] += x(lfsv.child(k),j)*phi[j];
 
             // integrate
@@ -806,7 +804,7 @@ namespace Dune {
 
       // jacobian of volume term
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
-      void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
+      void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             M& mat) const
       {
         // get types

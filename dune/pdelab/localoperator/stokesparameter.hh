@@ -6,385 +6,497 @@
 #include <dune/pdelab/common/function.hh>
 
 namespace Dune {
-    namespace PDELab {
+  namespace PDELab {
 
-        /**
-           These are the boundary condition types as to be returned by
-           the employed boundary type function. 
+    /**
+     * These are the boundary condition types as to be returned by
+     * the employed boundary type function.
+     *
+     * Possible types:
+     *
+     * <ul>
+     *
+     * <li>\a DoNothing : No boundary conditions.
+     *
+     * <li>\a VelocityDirichlet : Dirichlet conditions for velocity.
+     *
+     * <li>\a StressNeumann : Natural Neumann conditions for the
+     * impulse flux. These are equivalent to a fixed pressure
+     * condition \b if \f$ \forall i : n \cdot \nabla v_i = 0 \f$.
+     *
+     * <li>\a SlipVelocity : Smooth transition between slip and no-slip
+     * condition - only works for DG!
+     *
+     * </ul>
+     */
+    struct StokesBoundaryCondition {
+      enum Type {
+        DoNothing = 0,
+        VelocityDirichlet = 1,
+        StressNeumann = 2,
+        SlipVelocity = 3
+      };
+    };
 
-           Possible types:
+    /**
+     * Traits class for the parameter class of a Navier Stokes local operator.
+     */
+    template<typename GV, typename RF>
+    struct NavierStokesParameterTraits
+    {
+      //! \brief the grid view
+      typedef GV GridView;
 
-           <ul>
-
-           <li>\a DoNothing : Do not evaluate boundary integrals.
-
-           <li>\a VelocityDirichlet : Dirichlet conditions for velocity.
-
-           <li>\a PressureDirichlet : Natural Neumann conditions for the
-           impulse flux. These are equivalent to a fixed pressure
-           condition \b if \f$ \forall i : n \cdot \nabla v_i = 0 \f$.
-
-           </ul>
-         */
-        struct StokesBoundaryCondition {
-            enum Type {
-                DoNothing = 0,
-                VelocityDirichlet = 1,
-                PressureDirichlet = 2,
-                SlipVelocity = 3
-            };
-        };
-
-      /** \brief Traits class for the parameter class of a Navier
-       * Stokes local operator  */
-      template<typename GV, typename RF>
-      struct NavierStokesParameterTraits
-      {
-        //! \brief the grid view
-        typedef GV GridView;
-
-        //! \brief Enum for domain dimension
-        enum { 
-          //! \brief dimension of the domain
-          dimDomain = GV::dimension
-        }; 
-
-        //! \brief Export type for domain field
-        typedef typename GV::Grid::ctype DomainField;
-
-        //! \brief domain type
-        typedef Dune::FieldVector<DomainField,dimDomain> Domain;
-
-        //! \brief domain type
-        typedef Dune::FieldVector<DomainField,dimDomain-1> IntersectionDomain;
-
-        //! \brief Export type for range field
-        typedef RF RangeField;
-
-        //! \brief deformation range type
-        typedef Dune::FieldVector<RF,GV::dimensionworld> VelocityRange;
-
-        //! \brief pressure range type
-        typedef Dune::FieldVector<RF,1> PressureRange;
-
-        //! \brief boundary type value
-        typedef StokesBoundaryCondition BoundaryCondition;
-
-        //! grid types
-        typedef typename GV::Traits::template Codim<0>::Entity Element;
-        typedef typename GV::Intersection Intersection;
+      //! \brief Enum for domain dimension
+      enum {
+        //! \brief dimension of the domain
+        dimDomain = GV::dimension
       };
 
+      //! \brief Export type for domain field
+      typedef typename GV::Grid::ctype DomainField;
 
-      /** \brief Compile-time switch allowing the evaluation of a
-          vector valued grid function. */
-      template< typename GF, typename Switch = void >
-      struct evaluateVelocityGridFunction{
-        template< typename Entity, typename Domain, typename Range >
-        static void apply(const GF & gf, const Entity & e, const Domain & x, Range & y)
-        {
-          gf.evaluate(e,x,y);
-        }
+      //! \brief domain type
+      typedef Dune::FieldVector<DomainField,dimDomain> Domain;
+
+      //! \brief domain type
+      typedef Dune::FieldVector<DomainField,dimDomain-1> IntersectionDomain;
+
+      //! \brief Export type for range field
+      typedef RF RangeField;
+
+      //! \brief deformation range type
+      typedef Dune::FieldVector<RF,GV::dimensionworld> VelocityRange;
+
+      //! \brief pressure range type
+      typedef Dune::FieldVector<RF,1> PressureRange;
+
+      //! \brief boundary type value
+      typedef StokesBoundaryCondition BoundaryCondition;
+
+      //! grid types
+      typedef typename GV::Traits::template Codim<0>::Entity Element;
+      typedef typename GV::Intersection Intersection;
+    };
+
+    namespace {
+
+      /**
+       * Compile-time switch allowing the evaluation of a
+       * vector valued grid function.
+       */
+      template<typename GF, typename Entity, typename Domain>
+      typename GF::Traits::RangeType
+      evaluateVelocityGridFunction(const GF& gf,
+                                   const Entity& e,
+                                   const Domain& x)
+      {
+        dune_static_assert(int(GF::Traits::dimRange) == int(Domain::dimension),"dimension of function range does not match grid dimension");
+        typename GF::Traits::RangeType y;
+        gf.evaluate(e,x,y);
+        return y;
       };
 
-      /** \brief Compile-time switch allowing the evaluation of a
-          power grid function. */
-      template< typename GF>
-      struct evaluateVelocityGridFunction
-      <GF,typename Dune::enable_if<
-            Dune::is_same<typename GF::ImplementationTag,
-                          typename Dune::PDELab::PowerGridFunctionTag
-                          >::value 
-            >::type>
+      /**
+       * Compile-time switch allowing the evaluation of a
+       * power grid function.
+       */
+      template<typename GF, typename Entity, typename Domain>
+      FieldVector<typename GF::template Child<0>::Type::Traits::RangeFieldType,GF::CHILDREN>
+      evaluateVelocityGridFunction(const GF& gf,
+                                   const Entity& e,
+                                   const Domain& x)
       {
-        template< typename Entity, typename Domain, typename Range >
-        static void apply(const GF & gf, const Entity & e, const Domain & x, Range & y){
-          typename GF::template Child<0>::Type::Traits::RangeType sy;
-          for(int c=0; c<Domain::dimension; ++c){
-            gf.child(c).evaluate(e,x,sy);
-            y[c] = sy;
+        dune_static_assert(Domain::dimension == GF::CHILDREN,"dimension of function range does not match grid dimension");
+        FieldVector<typename GF::template Child<0>::Type::Traits::RangeFieldType,GF::CHILDREN> y;
+        typename GF::template Child<0>::Type::Traits::RangeType cy;
+        for (int d = 0; d < Domain::dimension; ++d)
+          {
+            gf.child(d).evaluate(e,x,cy);
+            y[d] = cy;
           }
-        }
+        return y;
       };
-
-      /** \brief Default implementation for the parameter class to be
-          used with the Taylor-Hood Navier-Stokes local operator. 
-
-          This is designed to work with the TaylorHoodNavierStokes,
-          TaylorHoodNavierStokesJacobian and NavierStokesMass local
-          operator classes.
-
-          \tparam GV    The type of the grid view used.
-          \tparam BF    The boundary type function returning an element
-                        of StokesBoundaryCondition.
-          \tparam NF    The Neumann stress flux boundary function.
-          \tparam DVF   The Dirichlet velocity function.
-          \tparam RF    The range field type of the Navier-Stokes solution.
-      */
-      template <class GV, class BF, class NF, class DVF, class RF>
-      class TaylorHoodNavierStokesDefaultParameters
-      {
-      public:
-
-        //! Type traits
-        typedef NavierStokesParameterTraits<GV,RF> Traits;
-
-        //! Constructor
-        TaylorHoodNavierStokesDefaultParameters
-        (Dune::ParameterTree config, const BF & _bf, const NF & _nf, const DVF & _dvf):
-          rho_(config.get<double>("rho")), 
-          mu_(config.get<double>("mu")), 
-          bf_(_bf), nf_(_nf), dvf_(_dvf)
-        {}
-
-        /** \brief Density evaluated on a codim 1 geometry. */
-        template<typename IG>
-        RF rho(const IG & ig, const typename Traits::IntersectionDomain & x) const
-        { return rho_; }
-
-        /** \brief Density evaluated on a codim 0 geometry. */
-        template<typename EG>
-        RF rho(const EG & eg, const typename Traits::Domain & x) const
-        { return rho_; }
-
-        /** \brief Viscosity evaluated on a codim 1 geometry. */
-        template<typename IG>
-        RF mu(const IG & ig, const typename Traits::IntersectionDomain & x) const
-        { return mu_; }
-
-        /** \brief Viscosity evaluated on a codim 0 geometry. */
-        template<typename EG>
-        RF mu(const EG & eg, const typename Traits::Domain & x) const
-        { return mu_; }
-
-        /** \brief General source term representing a source of
-            momentum. */
-        template<typename EG>
-        typename Traits::VelocityRange
-        source(const EG & eg, const typename Traits::Domain & x) const
-        { return typename Traits::VelocityRange(0); }
-
-        /** \brief Boundary condition type */
-        template<typename IG>
-        typename Traits::BoundaryCondition::Type
-        bcType(const IG & ig, const typename Traits::IntersectionDomain & x) const
-        {
-          typename Traits::BoundaryCondition::Type y;
-          bf_.evaluate(ig,x,y);
-          return y;
-        }
-        
-        /** \brief Dirichlet velocity */
-        template<typename EG>
-        typename Traits::VelocityRange
-        velocityDirichlet(const EG & eg, const typename Traits::Domain & x)
-        {
-          typename Traits::VelocityRange y;
-          evaluateVelocityGridFunction<typename DVF::template Child<0>::Type>::
-            apply(dvf_.template child<0>(),eg,x,y);
-          return y;
-        }
-
-        /** \brief Dirichlet pressure */
-        template<typename EG>
-        typename Traits::PressureRange
-        pressureDirichlet(const EG & eg, const typename Traits::Domain & x)
-        {
-          typename Traits::PressureRange y(0);
-          return y;
-        }
-        
-        /** \brief Neumann momentum flux */
-        template<typename IG>
-        typename Traits::VelocityRange
-        stress
-        (const IG & ig, 
-         const typename Traits::IntersectionDomain & x, 
-         typename Traits::Domain normal) const
-        {
-          typename NF::Traits::RangeType r;
-          nf_.evaluate(*(ig.inside()),ig.geometryInInside().global(x),r);
-          normal *= r;
-          return normal;
-        }
-
-      private:
-        const RF rho_;
-        const RF mu_;
-        const BF & bf_;
-        const NF & nf_;
-        const DVF & dvf_;
-      };
-
-
-      /** \brief Stokes velocity boundary constraints function */
-      template<typename PRM>
-      class StokesVelocityDirichletConstraints
-        : public Dune::PDELab::DirichletConstraintsParameters
-      {
-      private:
-        const PRM & prm_;
-
-      public:
-
-        /** \brief Constructor */
-        StokesVelocityDirichletConstraints (const PRM & _prm)
-          : prm_(_prm) { }
-
-        /** Predicate identifying Dirichlet boundaries for velocity. */
-        template<typename I>
-        bool isDirichlet(
-                         const I & intersection,
-                         const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-                         ) const
-        {
-          StokesBoundaryCondition::Type bctype =prm_.bcType(intersection,coord);
-          return (bctype == StokesBoundaryCondition::VelocityDirichlet);
-        }
-      };
-
-
-      /** \brief Stokes pressure boundary constraints function */
-      template<typename PRM>
-      class StokesPressureDirichletConstraints
-        : public Dune::PDELab::DirichletConstraintsParameters
-      {
-      private:
-        const PRM & prm_;
-
-      public:
-
-        /** \brief Constructor */
-        StokesPressureDirichletConstraints (const PRM & _prm)
-          : prm_(_prm) { }
-
-        /** Predicate identifying Dirichlet boundaries for velocity. */
-        template<typename I>
-        bool isDirichlet(
-                         const I & intersection,
-                         const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-                         ) const
-        {
-          StokesBoundaryCondition::Type bctype =prm_.bcType(intersection,coord);
-          return (bctype == StokesBoundaryCondition::PressureDirichlet);
-        }
-      };
-     
-
-
-      /*! Adapter that extracts Dirichlet boundary conditions from
-        parameter class.
-
-        \tparam T               Model of TaylorHoodNavierStokesDefaultParameters
-        \tparam rangeDim        Dimension of range of Dirichlet function
-      */
-      template<typename T, int rangeDim>
-      class NavierStokesDirichletFunctionAdapterBase : 
-        public Dune::PDELab::GridFunctionBase<
-        Dune::PDELab::GridFunctionTraits<
-          typename T::Traits::GridView,
-          typename T::Traits::RangeField,
-          rangeDim,Dune::FieldVector<typename T::Traits::RangeField,rangeDim> 
-          >,
-            NavierStokesDirichletFunctionAdapterBase<T,rangeDim> 
-            >
-      {
-      public:
-        //! Traits class
-        typedef Dune::PDELab::GridFunctionTraits<
-        typename T::Traits::GridView,
-        typename T::Traits::RangeField,
-        rangeDim,Dune::FieldVector<typename T::Traits::RangeField,rangeDim> > Traits;
-
-        //! Constructor 
-        NavierStokesDirichletFunctionAdapterBase (T& t_) : t(t_) {}
-
-        void setTime(const double time_){
-          t.setTime(time_);
-        }
-
-        //! Access to underlying grid view
-        inline const typename Traits::GridViewType& getGridView () const { return t.gridView(); }
-  
-      protected:
-        T& t;
-      };
-
-      /*! Adapter that extracts force density Dirichlet boundary
-        conditions from parameter class
-
-        \tparam T Model of TaylorHoodNavierStokesDefaultParameters
-      */
-      template<typename T>
-      class NavierStokesVelocityDirichletFunctionAdapter : 
-        public NavierStokesDirichletFunctionAdapterBase<T,T::Traits::dimDomain>
-      {
-      public:
-        //! Base class
-        typedef NavierStokesDirichletFunctionAdapterBase<T,T::Traits::dimDomain> Base;
-        //! Constructor 
-        NavierStokesVelocityDirichletFunctionAdapter ( T& t_) : Base(t_) {}
-
-        //! Evaluate dirichlet function
-        inline void evaluate (const typename Base::Traits::ElementType& e, 
-                              const typename Base::Traits::DomainType& x, 
-                              typename Base::Traits::RangeType& y) const
-        { y = Base::t.velocityDirichlet (e,x); }
-      };
-
-
-      /*! Adapter that extracts pressure Dirichlet boundary conditions
-        from parameter class
-
-        \tparam T Model of TaylorHoodNavierStokesDefaultParameters
-      */
-      template<typename T>
-      class NavierStokesPressureDirichletFunctionAdapter : public NavierStokesDirichletFunctionAdapterBase<T,1>
-      {
-      public:
-        //! Base class
-        typedef NavierStokesDirichletFunctionAdapterBase<T,1> Base;
-        //! Constructor 
-        NavierStokesPressureDirichletFunctionAdapter ( T& t_) : Base(t_) {}
-
-        //! Evaluate dirichlet function
-        inline void evaluate (const typename Base::Traits::ElementType& e, 
-                              const typename Base::Traits::DomainType& x, 
-                              typename Base::Traits::RangeType& y) const
-        { 
-          y = Base::t.pressureDirichlet(e,x);
-        }
-      };
-   
-      /** \brief Factory for a Dirichlet function which can be used
-          for interpolation. */
-      template < typename PRM >
-      class NavierStokesDirichletFunctionAdapterFactory
-      {
-      public:
-        typedef Dune::PDELab::CompositeGridFunction
-        <NavierStokesVelocityDirichletFunctionAdapter<PRM>,
-         NavierStokesPressureDirichletFunctionAdapter<PRM> >
-        BoundaryDirichletFunction;
-
-        NavierStokesDirichletFunctionAdapterFactory(PRM & prm)
-          : v(prm), p(prm), df(v,p)
-        {}
-
-        BoundaryDirichletFunction & dirichletFunction()
-        {
-          return df;
-        }
-
-      private:
-        NavierStokesVelocityDirichletFunctionAdapter<PRM> v;
-        NavierStokesPressureDirichletFunctionAdapter<PRM> p;
-        BoundaryDirichletFunction df;
-      };
-
-
 
     }
+
+    /**
+     * Default implementation for the parameter class to be
+     * used with the Taylor-Hood Navier-Stokes local operator.
+     *
+     * This is designed to work with the TaylorHoodNavierStokes,
+     * TaylorHoodNavierStokesJacobian and NavierStokesMass local
+     * operator classes.
+     *
+     * \tparam GV    GridView.
+     * \tparam RF    The range field type of the Navier-Stokes solution.
+     * \tparam F     External force term function (vector-valued).
+     * \tparam B     Boundary type function returning an element
+     *               of StokesBoundaryCondition.
+     * \tparam V     Dirichlet velocity function.
+     * \tparam J     Neumann stress boundary function (vector- or scalar-valued).
+     *               Scalar values will be interpreted as the magnitude of a vector
+     *               oriented in outer normal direction.
+     */
+    template <typename GV, typename RF, typename F, typename B, typename V, typename J, bool navier = false, bool tensor = false>
+    class NavierStokesDefaultParameters
+    {
+    public:
+
+      static const bool assemble_navier = navier;
+      static const bool assemble_full_tensor = tensor;
+
+      //! Type traits
+      typedef NavierStokesParameterTraits<GV,RF> Traits;
+
+      //! Constructor
+      NavierStokesDefaultParameters(const Dune::ParameterTree& config,
+                                    F& f,
+                                    B& b,
+                                    V& v,
+                                    J& j)
+        : _rho(config.get<double>("rho"))
+        , _mu(config.get<double>("mu"))
+        , _f(f)
+        , _b(b)
+        , _v(v)
+        , _j(j)
+      {}
+
+      NavierStokesDefaultParameters(const RF& mu,
+                                    const RF& rho,
+                                    F& f,
+                                    B& b,
+                                    V& v,
+                                    J& j)
+        : _rho(rho)
+        , _mu(mu)
+        , _f(f)
+        , _b(b)
+        , _v(v)
+        , _j(j)
+      {}
+
+
+      //! source term
+      template<typename EG>
+      typename Traits::VelocityRange
+      f(const EG& e, const typename Traits::Domain& x) const
+      {
+        typename F::Traits::RangeType fvalue;
+        return evaluateVelocityGridFunction(_f,e.entity(),x);
+      }
+
+      //! boundary condition type from local intersection coordinate
+      template<typename IG>
+      typename Traits::BoundaryCondition::Type
+      bctype(const IG& is,
+             const typename Traits::IntersectionDomain& x) const
+      {
+        typename B::Traits::RangeType y;
+        _b.evaluate(is,x,y);
+        return y;
+      }
+
+      //! Dynamic viscosity value from local cell coordinate
+      template<typename EG>
+      typename Traits::RangeField
+      mu(const EG& e, const typename Traits::Domain& x) const
+      {
+        return _mu;
+      }
+
+      //! Dynamic viscosity value from local intersection coordinate
+      template<typename IG>
+      typename Traits::RangeField
+      mu(const IG& ig, const typename Traits::IntersectionDomain& x) const
+      {
+        return _mu;
+      }
+
+      //! Dynamic viscosity value from local cell coordinate
+      template<typename EG>
+      typename Traits::RangeField
+      rho (const EG& eg, const typename Traits::Domain& x) const
+      {
+        return _rho;
+      }
+
+      //! Dynamic viscosity value from local intersection coordinate
+      template<typename IG>
+      typename Traits::RangeField
+      rho (const IG& ig, const typename Traits::IntersectionDomain& x) const
+      {
+        return _rho;
+      }
+
+      //! Dirichlet boundary condition value from local cell coordinate
+      template<typename EG>
+      typename Traits::VelocityRange
+      g(const EG& e, const typename Traits::Domain& x) const
+      {
+        typename V::Traits::RangeType y;
+        _v.evaluate(e.entity(),x,y);
+        return y;
+      }
+
+      //! Dirichlet boundary condition value from local intersection coordinate
+      template<typename IG>
+      typename Traits::VelocityRange
+      g(const IG& ig, const typename Traits::IntersectionDomain& x) const
+      {
+        typename IG::EntityPointer ep = ig.inside();
+        typename V::Traits::RangeType y;
+        _v.evaluate(*ep,ig.geometryInInside().global(x),y);
+        return y;
+      }
+
+      //! pressure source term
+      template<typename EG>
+      typename Traits::RangeField
+      g2(const EG& e, const typename Traits::Domain& x) const
+      {
+        return 0;
+      }
+
+#ifdef DOXYGEN
+
+      template<typename IG>
+      typename Traits::VelocityRange>
+      j(const IG& ig,
+        const typename Traits::IntersectionDomain& x,
+        const typename Traits::Domain& normal) const;
+
+#else // DOXYGEN
+
+      //! Neumann boundary condition (stress) - version for scalar function
+      template<typename IG>
+      typename enable_if<
+        J::Traits::dimRange == 1 &&
+        (GV::dimension > 1) &&
+        AlwaysTrue<IG>::value, // required to force lazy evaluation
+        typename Traits::VelocityRange
+        >::type
+      j(const IG& ig,
+        const typename Traits::IntersectionDomain& x,
+        typename Traits::Domain normal) const
+      {
+        typename J::Traits::RangeType r;
+        typename IG::EntityPointer ep = ig.inside();
+        _j.evaluate(*ep,ig.geometryInInside().global(x),r);
+        normal *= r;
+        return normal;
+      }
+
+      //! Neumann boundary condition (stress) - version for vector-valued function
+      template<typename IG>
+      typename enable_if<
+        J::Traits::dimRange == GV::dimension &&
+        AlwaysTrue<IG>::value, // required to force lazy evaluation
+        typename Traits::VelocityRange
+        >::type
+      j(const IG& ig,
+        const typename Traits::IntersectionDomain& x,
+        const typename Traits::Domain& normal) const
+      {
+        typename IG::EntityPointer ep = ig.inside();
+        typename J::Traits::RangeType y;
+        _j.evaluate(*ep,ig.geometryInInside().global(x),y);
+        return y;
+      }
+
+#endif // DOXYGEN
+
+      void setTime(RF time)
+      {
+        _f.setTime(time);
+        _b.setTime(time);
+        _v.setTime(time);
+        _j.setTime(time);
+      }
+
+    private:
+      const RF _rho;
+      const RF _mu;
+      const F& _f;
+      const B& _b;
+      const V& _v;
+      const J& _j;
+    };
+
+
+    /**
+     * Stokes velocity boundary constraints function
+     */
+    template<typename PRM>
+    class StokesVelocityDirichletConstraints
+      : public Dune::PDELab::DirichletConstraintsParameters
+    {
+    private:
+      const PRM & prm_;
+
+    public:
+
+      /** \brief Constructor */
+      StokesVelocityDirichletConstraints (const PRM & _prm)
+      : prm_(_prm) { }
+
+      /** Predicate identifying Dirichlet boundaries for velocity. */
+      template<typename I>
+      bool isDirichlet(const I & intersection,
+                       const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      {
+        StokesBoundaryCondition::Type bctype = prm_.bctype(intersection,coord);
+        return (bctype == StokesBoundaryCondition::VelocityDirichlet);
+      }
+
+    };
+
+    /**
+     * Stokes pressure boundary constraints function
+     */
+    template<typename PRM>
+    class StokesPressureDirichletConstraints
+      : public Dune::PDELab::DirichletConstraintsParameters
+    {
+    private:
+      const PRM & prm_;
+
+    public:
+
+      /** \brief Constructor */
+      StokesPressureDirichletConstraints (const PRM & _prm)
+      : prm_(_prm) { }
+
+      /** Predicate identifying Dirichlet boundaries for velocity. */
+      template<typename I>
+      bool isDirichlet(const I & intersection,
+                       const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      { return false; }
+    };
+
+
+
+#ifndef DOXYGEN
+
+    /**
+     * Common base class for NavierStokesParameters -> GridFunction adapters.
+     */
+    template<typename PRM, int rangeDim>
+    class NavierStokesFunctionAdapterBase
+      : public Dune::PDELab::GridFunctionBase<
+          Dune::PDELab::GridFunctionTraits<
+            typename PRM::Traits::GridView,
+            typename PRM::Traits::RangeField,
+            rangeDim,
+            Dune::FieldVector<typename PRM::Traits::RangeField,rangeDim>
+            >,
+          NavierStokesFunctionAdapterBase<PRM,rangeDim>
+          >
+    {
+    public:
+      //! Traits class
+      typedef Dune::PDELab::GridFunctionTraits<
+        typename PRM::Traits::GridView,
+        typename PRM::Traits::RangeField,
+        rangeDim,
+        Dune::FieldVector<typename PRM::Traits::RangeField,rangeDim>
+        > Traits;
+
+      //! Constructor
+      NavierStokesFunctionAdapterBase(PRM& prm)
+        : _prm(prm)
+      {}
+
+      void setTime(const double time)
+      {
+        _prm.setTime(time);
+      }
+
+      const PRM& parameters() const
+      {
+        return _prm;
+      }
+
+      //! Access to underlying grid view
+      const typename Traits::GridViewType& getGridView () const
+      {
+        return _prm.gridView();
+      }
+
+    private:
+      PRM& _prm;
+    };
+
+
+#endif // DOXYGEN
+
+    /**
+     * Adapter that extracts force density Dirichlet boundary
+     * conditions from parameter class
+     *
+     * \tparam PRM   Model of NavierStokesDefaultParameters
+     */
+    template<typename PRM>
+    class NavierStokesVelocityFunctionAdapter
+      : public NavierStokesFunctionAdapterBase<PRM,PRM::Traits::dimDomain>
+    {
+
+      //! Base class
+      typedef NavierStokesFunctionAdapterBase<PRM,PRM::Traits::dimDomain> Base;
+
+      using Base::parameters;
+
+    public:
+
+      typedef typename Base::Traits Traits;
+
+      //! Constructor
+      NavierStokesVelocityFunctionAdapter(PRM& prm)
+        : Base(prm)
+      {}
+
+      //! Evaluate dirichlet function
+      void evaluate (const typename Traits::ElementType& e,
+                     const typename Traits::DomainType& x,
+                     typename Traits::RangeType& y) const
+      {
+        y = parameters().g(e,x);
+      }
+};
+
+
+
+#if 0
+/** \brief Factory for a Dirichlet function which can be used
+    for interpolation. */
+template < typename PRM >
+class NavierStokesDirichletFunctionAdapterFactory
+{
+public:
+  typedef Dune::PDELab::CompositeGridFunction<
+    NavierStokesDirichletFunctionAdapter<PRM>,
+     NavierStokesPressureDirichletFunctionAdapter<PRM> >
+  BoundaryDirichletFunction;
+
+NavierStokesDirichletFunctionAdapterFactory(PRM & prm)
+: v(prm), p(prm), df(v,p)
+{}
+
+BoundaryDirichletFunction & dirichletFunction()
+{
+  return df;
+}
+
+private:
+NavierStokesVelocityDirichletFunctionAdapter<PRM> v;
+NavierStokesPressureDirichletFunctionAdapter<PRM> p;
+BoundaryDirichletFunction df;
+};
+#endif
+
+
+}
 }
 
 #endif

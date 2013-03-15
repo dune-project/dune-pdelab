@@ -7,6 +7,7 @@
 #include <dune/pdelab/gridoperator/default/jacobianapplyengine.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/common/typetree.hh>
+#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
 namespace Dune{
   namespace PDELab{
@@ -26,11 +27,17 @@ namespace Dune{
 
     */
     template<typename GO, typename LOP, bool nonoverlapping_mode = false>
-    class DefaultLocalAssembler : 
+    class DefaultLocalAssembler :
       public Dune::PDELab::LocalAssemblerBase<typename GO::Traits::MatrixBackend,
                                               typename GO::Traits::TrialGridFunctionSpaceConstraints,
                                               typename GO::Traits::TestGridFunctionSpaceConstraints>
     {
+
+      // The GridOperator has to be a friend to modify the do{Pre,Post}Processing flags
+      template<typename, typename, typename,
+               typename, typename, typename, typename,
+               typename, typename, bool>
+      friend class GridOperator;
 
     public:
 
@@ -63,6 +70,12 @@ namespace Dune{
       // Types of local function spaces
       typedef Dune::PDELab::LocalFunctionSpace<GFSU, Dune::PDELab::TrialSpaceTag> LFSU;
       typedef Dune::PDELab::LocalFunctionSpace<GFSV, Dune::PDELab::TestSpaceTag> LFSV;
+      typedef LFSIndexCache<LFSU,CU> LFSUCache;
+      typedef LFSIndexCache<LFSV,CV> LFSVCache;
+
+      typedef LFSIndexCache<LFSU,EmptyTransformation> NoConstraintsLFSUCache;
+      typedef LFSIndexCache<LFSV,EmptyTransformation> NoConstraintsLFSVCache;
+
       //! @}
 
       //! The local assembler engines
@@ -79,16 +92,19 @@ namespace Dune{
       //! @}
 
       //! Constructor with empty constraints
-      DefaultLocalAssembler (LOP & lop_)
-        : lop(lop_),  weight(1.0), doConstraintsPostProcessing(true),
-          pattern_engine(*this), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
+      DefaultLocalAssembler (LOP & lop_, shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
+        : lop(lop_),  weight(1.0), doPreProcessing(true), doPostProcessing(true),
+          pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
+        , _reconstruct_border_entries(isNonOverlapping)
       {}
 
       //! Constructor for non trivial constraints
-      DefaultLocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_)
+      DefaultLocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_,
+                             shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : Base(cu_, cv_),
-          lop(lop_),  weight(1.0), doConstraintsPostProcessing(true),
-          pattern_engine(*this), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
+          lop(lop_),  weight(1.0), doPreProcessing(true), doPostProcessing(true),
+          pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
+        , _reconstruct_border_entries(isNonOverlapping)
       {}
 
       //! Notifies the local assembler about the current time of
@@ -111,6 +127,11 @@ namespace Dune{
       void postStage (){ lop.postStage(); }
       Real suggestTimestep (Real dt) const{return lop.suggestTimestep(dt); }
       //! @}
+
+      bool reconstructBorderEntries() const
+      {
+        return _reconstruct_border_entries;
+      }
 
       //! Access methods which provid "ready to use" engines
       //! @{
@@ -175,12 +196,22 @@ namespace Dune{
       static bool doPatternVolumePostSkeleton()  { return LOP::doPatternVolumePostSkeleton; }
       //! @}
 
-      //! This method allows to set the behavior with regard to the
-      //! post processing of the constraints. It is called by the
+      //! This method allows to set the behavior with regard to any
+      //! preprocessing within the engines. It is called by the
       //! setupGridOperators() method of the GridOperator and should
       //! not be called directly.
-      void constraintsPostProcessing(bool v){
-        doConstraintsPostProcessing = v;
+      void preProcessing(bool v)
+      {
+        doPreProcessing = v;
+      }
+
+      //! This method allows to set the behavior with regard to any
+      //! postprocessing within the engines. It is called by the
+      //! setupGridOperators() method of the GridOperator and should
+      //! not be called directly.
+      void postProcessing(bool v)
+      {
+        doPostProcessing = v;
       }
 
     private:
@@ -191,9 +222,13 @@ namespace Dune{
       //! The current weight of assembling
       RangeField weight;
 
+      //! Indicates whether this local operator has to perform pre
+      //! processing
+      bool doPreProcessing;
+
       //! Indicates whether this local operator has to perform post
-      //! processing with regard to the constraints
-      bool doConstraintsPostProcessing;
+      //! processing
+      bool doPostProcessing;
 
       //! The engine member objects
       //! @{
@@ -202,6 +237,8 @@ namespace Dune{
       LocalJacobianAssemblerEngine jacobian_engine;
       LocalJacobianApplyAssemblerEngine jacobian_apply_engine;
       //! @}
+
+      bool _reconstruct_border_entries;
 
     };
 

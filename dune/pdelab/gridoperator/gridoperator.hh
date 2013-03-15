@@ -2,6 +2,7 @@
 #define DUNE_PDELAB_GRIDOPERATOR_HH
 
 #include <dune/pdelab/gridoperator/common/gridoperatorutilities.hh>
+#include <dune/pdelab/gridoperator/common/borderdofexchanger.hh>
 #include <dune/pdelab/gridoperator/default/localassembler.hh>
 #include <dune/pdelab/gridoperator/default/assembler.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
@@ -34,21 +35,27 @@ namespace Dune{
     public:
 
       //! The global assembler type
-      typedef DefaultAssembler<GFSU,GFSV,nonoverlapping_mode> Assembler;
+      typedef DefaultAssembler<GFSU,GFSV,CU,CV,nonoverlapping_mode> Assembler;
 
       //! The type of the domain (solution).
       typedef typename Dune::PDELab::BackendVectorSelector<GFSU,DF>::Type Domain;
       //! The type of the range (residual).
       typedef typename Dune::PDELab::BackendVectorSelector<GFSV,RF>::Type Range;
       //! The type of the jacobian.
-      typedef typename MB::template Matrix<JF> Jacobian;
+      typedef typename Dune::PDELab::BackendMatrixSelector<MB,Domain,Range,JF>::Type Jacobian;
 
       //! The sparsity pattern container for the jacobian matrix
-      typedef typename MB::Pattern Pattern;
+      typedef typename Jacobian::Pattern Pattern;
 
       //! The local assembler type
       typedef DefaultLocalAssembler<GridOperator,LOP,nonoverlapping_mode>
       LocalAssembler;
+
+      typedef typename SelectType<
+        nonoverlapping_mode,
+        NonOverlappingBorderDOFExchanger<GridOperator>,
+        OverlappingBorderDOFExchanger<GridOperator>
+        >::Type BorderDOFExchanger;
 
       //! The grid operator traits
       typedef Dune::PDELab::GridOperatorTraits
@@ -60,13 +67,19 @@ namespace Dune{
       };
 
       //! Constructor for non trivial constraints
-      GridOperator(const GFSU & gfsu_, const CU & cu_, const GFSV & gfsv_, const CV & cv_, LOP & lop_ )
-        : global_assembler(gfsu_,gfsv_), local_assembler(lop_, cu_, cv_)
+      GridOperator(const GFSU & gfsu_, const CU & cu_, const GFSV & gfsv_, const CV & cv_, LOP & lop_, const MB& mb_ = MB())
+        : global_assembler(gfsu_,gfsv_,cu_,cv_)
+        , dof_exchanger(make_shared<BorderDOFExchanger>(*this))
+        , local_assembler(lop_, cu_, cv_,dof_exchanger)
+        , backend(mb_)
       {}
 
       //! Constructor for empty constraints
-      GridOperator(const GFSU & gfsu_, const GFSV & gfsv_, LOP & lop_)
-        : global_assembler(gfsu_,gfsv_), local_assembler(lop_)
+      GridOperator(const GFSU & gfsu_, const GFSV & gfsv_, LOP & lop_, const MB& mb_ = MB())
+        : global_assembler(gfsu_,gfsv_)
+        , dof_exchanger(make_shared<BorderDOFExchanger>(*this))
+        , local_assembler(lop_,dof_exchanger)
+        , backend(mb_)
       {}
 
       //! Get the trial grid function space
@@ -107,9 +120,10 @@ namespace Dune{
         SetupGridOperator()
           : index(0), size(Dune::tuple_size<GridOperatorTuple>::value) {}
 
-        template <class T>
+        template <typename T>
         void visit(T& elem) {
-          elem.localAssembler().constraintsPostProcessing(index == size-1);
+          elem.localAssembler().doPreProcessing = index == 0;
+          elem.localAssembler().doPostProcessing = index == size-1;
           ++index;
         }
 
@@ -167,9 +181,17 @@ namespace Dune{
         global_assembler.assemble(jacobian_apply_engine);
       }
 
+      void make_consistent(Jacobian& a) const {
+        dof_exchanger->accumulateBorderEntries(*this,a);
+      }
+
     private:
       Assembler global_assembler;
+      shared_ptr<BorderDOFExchanger> dof_exchanger;
+
       mutable LocalAssembler local_assembler;
+      MB backend;
+
     };
 
   }

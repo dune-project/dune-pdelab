@@ -17,6 +17,7 @@
 #include <dune/pdelab/constraints/constraintstransformation.hh> // backward compatibility
 #include"gridfunctionspace.hh"
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -101,9 +102,12 @@ namespace Dune {
        * \param x_  The coefficients vector
        */
       DiscreteGridFunction (const GFS& gfs, const X& x_)
-        : pgfs(stackobject_to_shared_ptr(gfs)),
-          pxg(stackobject_to_shared_ptr(x_)),
-          lfs(pgfs), xl(pgfs->maxLocalSize()), yb(pgfs->maxLocalSize())
+        : pgfs(stackobject_to_shared_ptr(gfs))
+        , lfs(gfs)
+        , lfs_cache(lfs)
+        , x_view(x_)
+        , xl(gfs.maxLocalSize())
+        , yb(gfs.maxLocalSize())
       {
       }
 
@@ -113,9 +117,13 @@ namespace Dune {
        * \param x_  shared pointer to the coefficients vector
        */
       DiscreteGridFunction (shared_ptr<const GFS> gfs, shared_ptr<const X> x_)
-        : pgfs(gfs),
-          pxg(x_),
-          lfs(pgfs), xl(pgfs->maxLocalSize()), yb(pgfs->maxLocalSize())
+        : pgfs(gfs)
+        , lfs(gfs)
+        , lfs_cache(lfs)
+        , x_view(*x_)
+        , xl(gfs.maxLocalSize())
+        , yb(gfs.maxLocalSize())
+        , px(x_) // FIXME: The LocalView should handle a shared_ptr correctly!
       {
       }
 
@@ -128,11 +136,16 @@ namespace Dune {
           typename Dune::PDELab::LocalFunctionSpace<GFS>::Traits::FiniteElementType
           > FESwitch;
         lfs.bind(e);
-        lfs.vread(*pxg,xl);
+        lfs_cache.update();
+        x_view.bind(lfs_cache);
+        x_view.read(xl);
+        x_view.unbind();
         FESwitch::basis(lfs.finiteElement()).evaluateFunction(x,yb);
         y = 0;
         for (unsigned int i=0; i<yb.size(); i++)
+        {
           y.axpy(xl[i],yb[i]);
+        }
       }
 
       //! get a reference to the GridView
@@ -142,11 +155,18 @@ namespace Dune {
       }
 
     private:
-      shared_ptr<const GFS> pgfs;
-      shared_ptr<const X> pxg;
-      mutable LocalFunctionSpace<GFS> lfs;
+
+      typedef LocalFunctionSpace<GFS> LFS;
+      typedef LFSIndexCache<LFS> LFSCache;
+      typedef typename X::template ConstLocalView<LFSCache> XView;
+
+      shared_ptr<GFS const> pgfs;
+      mutable LFS lfs;
+      mutable LFSCache lfs_cache;
+      mutable XView x_view;
       mutable std::vector<typename Traits::RangeFieldType> xl;
       mutable std::vector<typename Traits::RangeType> yb;
+      shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
     };
 
     /** \brief convert a grid function space and a coefficient vector into a
@@ -164,18 +184,18 @@ namespace Dune {
         GridFunctionTraits<
           typename T::Traits::GridViewType,
           typename JacobianToCurl<typename T::Traits::FiniteElementType::
-                                  Traits::Basis::Traits::Jacobian>::CurlField,
-          JacobianToCurl<typename T::Traits::FiniteElementType::Traits::Basis::
-                         Traits::Jacobian>::dimCurl,
+                                  Traits::LocalBasisType::Traits::JacobianType>::CurlField,
+          JacobianToCurl<typename T::Traits::FiniteElementType::Traits::LocalBasisType::
+                         Traits::JacobianType>::dimCurl,
           typename JacobianToCurl<typename T::Traits::FiniteElementType::
-                                  Traits::Basis::Traits::Jacobian>::Curl
+                                  Traits::LocalBasisType::Traits::JacobianType>::Curl
           >,
         DiscreteGridFunctionCurl<T,X>
         >
     {
       typedef T GFS;
-      typedef typename T::Traits::FiniteElementType::Traits::Basis::Traits::
-        Jacobian Jacobian;
+      typedef typename T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::
+        JacobianType Jacobian;
       typedef JacobianToCurl<Jacobian> J2C;
 
     public:
@@ -184,25 +204,21 @@ namespace Dune {
           typename J2C::CurlField, J2C::dimCurl, typename J2C::Curl
         > Traits;
 
-    private:
-      typedef GridFunctionInterface<Traits, DiscreteGridFunctionCurl<T,X> >
-        BaseT;
-
-      shared_ptr<const GFS> pgfs;
-      shared_ptr<const X> pxg;
-      mutable LocalFunctionSpace<GFS> lfs;
-
-    public:
       /** \brief Construct a DiscreteGridFunctionCurl
        *
        * \param gfs_ The GridFunctionsSpace
        * \param x_   The coefficients vector
        */
-      DiscreteGridFunctionCurl(const GFS& gfs_, const X& xg_) :
-        pgfs(stackobject_to_shared_ptr(gfs_)),
-        pxg(stackobject_to_shared_ptr(xg_)),
-        lfs(pgfs)
-      { }
+      DiscreteGridFunctionCurl(const GFS& gfs, const X& x_)
+      : pgfs(stackobject_to_shared_ptr(gfs))
+      , lfs(gfs)
+      , lfs_cache(lfs)
+      , x_view(x_)
+      , xl(gfs.maxLocalSize())
+      , jacobian(gfs.maxLocalSize())
+      , yb(gfs.maxLocalSize())
+      , px(stackobject_to_shared_ptr(x_))
+      {}
 
       // Evaluate
       void evaluate (const typename Traits::ElementType& e,
@@ -211,14 +227,15 @@ namespace Dune {
       {
         static const J2C& j2C = J2C();
 
-        lfs.bind(e);
-        std::vector<typename Traits::RangeFieldType> xl(lfs.size());
-        lfs.vread(*pxg,xl);
-        std::vector<Jacobian> jacobian(lfs.size());
+        lfs.bind();
+        lfs_cache.update();
+        x_view.bind(lfs_cache);
+        x_view.read(xl);
+        x_view.unbind();
+
         lfs.finiteElement().basis().evaluateJacobian(x,jacobian);
 
         y = 0;
-        typename Traits::RangeType yb;
         for (std::size_t i=0; i < lfs.size(); i++) {
           j2C(jacobian[i], yb);
           y.axpy(xl[i], yb);
@@ -228,6 +245,22 @@ namespace Dune {
       //! get a reference to the GridView
       const typename Traits::GridViewType& getGridView() const
       { return pgfs->gridView(); }
+
+    private:
+      typedef GridFunctionInterface<Traits, DiscreteGridFunctionCurl<T,X> >
+        BaseT;
+      typedef LocalFunctionSpace<GFS> LFS;
+      typedef LFSIndexCache<LFS> LFSCache;
+      typedef typename X::template ConstLocalView<LFSCache> XView;
+
+      shared_ptr<GFS const> pgfs;
+      mutable LFS lfs;
+      mutable LFSCache lfs_cache;
+      mutable XView x_view;
+      mutable std::vector<typename Traits::RangeFieldType> xl;
+      mutable std::vector<Jacobian> jacobian;
+      mutable std::vector<typename Traits::RangeType> yb;
+      shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
     };
 
     //! Helper class to calculate the Traits of DiscreteGridFunctionCurl
@@ -349,11 +382,15 @@ namespace Dune {
        * \param x_  The coefficients vector
        */
       DiscreteGridFunctionGlobalCurl (const GFS& gfs, const X& x_)
-        : pgfs(stackobject_to_shared_ptr(gfs)),
-          pxg(stackobject_to_shared_ptr(x_)),
-          lfs(gfs), xl(pgfs->maxLocalSize()), J(pgfs->maxLocalSize())
-      {
-      }
+      : pgfs(stackobject_to_shared_ptr(gfs))
+      , lfs(gfs)
+      , lfs_cache(lfs)
+      , x_view(x_)
+      , xl(gfs.maxLocalSize())
+      , J(gfs.maxLocalSize())
+      , px(stackobject_to_shared_ptr(x_))
+      {}
+
 
       // Evaluate
       inline void evaluate (const typename Traits::ElementType& e,
@@ -361,7 +398,11 @@ namespace Dune {
                             typename Traits::RangeType& y) const
       {
         lfs.bind(e);
-        lfs.vread(*pxg,xl);
+        lfs_cache.update();
+        x_view.bind(lfs_cache);
+        x_view.read(xl);
+        x_view.unbind();
+
         lfs.finiteElement().localBasis().
           evaluateJacobianGlobal(x,J,e.geometry());
         y = 0;
@@ -383,7 +424,7 @@ namespace Dune {
             y[2] += xl[i]*(J[i][1][0] - J[i][0][1]);
             break;
           default:
-            //how did that get passed all the static asserts?
+            //how did that pass all the static asserts?
             std::abort();
           }
       }
@@ -395,11 +436,17 @@ namespace Dune {
       }
 
     private:
-      shared_ptr<const GFS> pgfs;
-      shared_ptr<const X> pxg;
-      mutable LocalFunctionSpace<GFS> lfs;
+      typedef LocalFunctionSpace<GFS> LFS;
+      typedef LFSIndexCache<LFS> LFSCache;
+      typedef typename X::template ConstLocalView<LFSCache> XView;
+
+      shared_ptr<GFS const> pgfs;
+      mutable LFS lfs;
+      mutable LFSCache lfs_cache;
+      mutable XView x_view;
       mutable std::vector<typename Traits::RangeFieldType> xl;
       mutable std::vector<typename T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::JacobianType> J;
+      shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
     };
 
     //! \brief convert a single component function space with a grid function
@@ -453,9 +500,11 @@ namespace Dune {
        * \param x_  The coefficients vector
        */
       DiscreteGridFunctionGradient (const GFS& gfs, const X& x_)
-        : pgfs(stackobject_to_shared_ptr(gfs)),
-          pxg(stackobject_to_shared_ptr(x_)),
-          lfs(pgfs)
+        : pgfs(stackobject_to_shared_ptr(gfs))
+        , lfs(gfs)
+        , lfs_cache(lfs)
+        , x_view(x_)
+        , xl(lfs.size())
       { }
 
       // Evaluate
@@ -465,13 +514,16 @@ namespace Dune {
       {
         // get and bind local functions space
         lfs.bind(e);
+        lfs_cache.update();
+        x_view.bind(lfs_cache);
 
         // get local coefficients
-        std::vector<typename Traits::RangeFieldType> xl(lfs.size());
-        lfs.vread(*pxg,xl);
+        xl.resize(lfs.size());
+        x_view.read(xl);
+        x_view.unbind();
 
         // get Jacobian of geometry
-        const typename Traits::ElementType::Geometry::Jacobian&
+        const typename Traits::ElementType::Geometry::JacobianInverseTransposed
           JgeoIT = e.geometry().jacobianInverseTransposed(x);
 
         // get local Jacobians/gradients of the shape functions
@@ -488,6 +540,7 @@ namespace Dune {
           // sum up global gradients, weighting them with the appropriate coeff
           y.axpy(xl[i], gradphi);
         }
+
       }
 
       //! get a reference to the GridView
@@ -497,9 +550,15 @@ namespace Dune {
       }
 
     private:
-      shared_ptr<const GFS> pgfs;
-      shared_ptr<const X> pxg;
-      mutable LocalFunctionSpace<GFS> lfs;
+      typedef LocalFunctionSpace<GFS> LFS;
+      typedef LFSIndexCache<LFS> LFSCache;
+      typedef typename X::template ConstLocalView<LFSCache> XView;
+
+      shared_ptr<GFS const> pgfs;
+      mutable LFS lfs;
+      mutable LFSCache lfs_cache;
+      mutable XView x_view;
+      mutable std::vector<typename Traits::RangeFieldType> xl;
     };
 
     /** \brief DiscreteGridFunction with Piola transformation
@@ -538,9 +597,12 @@ namespace Dune {
        * \copydetails DiscreteGridFunction::DiscreteGridFunction(const GFS&,const X&)
        */
       DiscreteGridFunctionPiola (const GFS& gfs, const X& x_)
-        : pgfs(stackobject_to_shared_ptr(gfs)),
-          pxg(stackobject_to_shared_ptr(x_)),
-          lfs(pgfs), xl(pgfs->maxLocalSize()), yb(pgfs->maxLocalSize())
+        : pgfs(stackobject_to_shared_ptr(gfs))
+        , lfs(gfs)
+        , lfs_cache(lfs)
+        , x_view(x_)
+        , xl(pgfs->maxLocalSize())
+        , yb(pgfs->maxLocalSize())
       {
       }
 
@@ -550,7 +612,11 @@ namespace Dune {
       {
         // evaluate shape function on the reference element as before
         lfs.bind(e);
-        lfs.vread(*pxg,xl);
+        lfs_cache.update();
+        x_view.bind(lfs_cache);
+        x_view.read(xl);
+        x_view.unbind();
+
         lfs.finiteElement().localBasis().evaluateFunction(x,yb);
         typename Traits::RangeType yhat;
         yhat = 0;
@@ -573,11 +639,18 @@ namespace Dune {
       }
 
     private:
-      shared_ptr<const GFS> pgfs;
-      shared_ptr<const X> pxg;
-      mutable LocalFunctionSpace<GFS> lfs;
+
+      typedef LocalFunctionSpace<GFS> LFS;
+      typedef LFSIndexCache<LFS> LFSCache;
+      typedef typename X::template ConstLocalView<LFSCache> XView;
+
+      shared_ptr<GFS const> pgfs;
+      mutable LFS lfs;
+      mutable LFSCache lfs_cache;
+      mutable XView x_view;
       mutable std::vector<typename Traits::RangeFieldType> xl;
       mutable std::vector<typename Traits::RangeType> yb;
+
     };
 
     /** \brief DiscreteGridFunction for vector-valued functions
@@ -606,7 +679,8 @@ namespace Dune {
               >
             >,
           VectorDiscreteGridFunction<T,X>
-          >
+          >,
+        public TypeTree::LeafNode
     {
       typedef T GFS;
 
@@ -641,9 +715,12 @@ namespace Dune {
        */
       VectorDiscreteGridFunction(const GFS& gfs, const X& x_,
                                  std::size_t start = 0)
-        : pgfs(stackobject_to_shared_ptr(gfs)),
-          pxg(stackobject_to_shared_ptr(x_)),
-          lfs(pgfs), xl(pgfs->maxLocalSize()), yb(pgfs->maxLocalSize())
+      : pgfs(stackobject_to_shared_ptr(gfs))
+      , lfs(gfs)
+      , lfs_cache(lfs)
+      , x_view(x_)
+      , xl(gfs.maxLocalSize())
+      , yb(gfs.maxLocalSize())
       {
         for(std::size_t i = 0; i < dimR; ++i)
           remap[i] = i + start;
@@ -664,9 +741,13 @@ namespace Dune {
       template<class Remap>
       VectorDiscreteGridFunction(const GFS& gfs, const X& x_,
                                  const Remap &remap_)
-        : pgfs(stackobject_to_shared_ptr(gfs)),
-          pxg(stackobject_to_shared_ptr(x_)),
-          lfs(pgfs), xl(pgfs->maxLocalSize()), yb(pgfs->maxLocalSize())
+      : pgfs(stackobject_to_shared_ptr(gfs))
+      , lfs(gfs)
+      , lfs_cache(lfs)
+      , x_view(x_)
+      , xl(gfs.maxLocalSize())
+      , yb(gfs.maxLocalSize())
+      ,	px(stackobject_to_shared_ptr(x_))
       {
         for(std::size_t i = 0; i < dimR; ++i)
           remap[i] = remap_[i];
@@ -677,7 +758,10 @@ namespace Dune {
                             typename Traits::RangeType& y) const
       {
         lfs.bind(e);
-        lfs.vread(*pxg,xl);
+        lfs_cache.update();
+        x_view.bind(lfs_cache);
+        x_view.read(xl);
+        x_view.unbind();
         for (unsigned int k=0; k < dimR; k++)
           {
             lfs.child(remap[k]).finiteElement().localBasis().
@@ -695,68 +779,132 @@ namespace Dune {
       }
 
     private:
-      shared_ptr<const GFS> pgfs;
-      shared_ptr<const X> pxg;
+      typedef LocalFunctionSpace<GFS> LFS;
+      typedef LFSIndexCache<LFS> LFSCache;
+      typedef typename X::template ConstLocalView<LFSCache> XView;
+
+      shared_ptr<GFS const> pgfs;
       std::size_t remap[dimR];
-      mutable LocalFunctionSpace<GFS> lfs;
+      mutable LFS lfs;
+      mutable LFSCache lfs_cache;
+      mutable XView x_view;
       mutable std::vector<RF> xl;
       mutable std::vector<RT> yb;
+      shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
     };
 
-
-  /** \brief Copy DOF from child coefficient vector to parent coefficient vector
-   *
-   * \tparam U_CHILD Type of the child coefficient vector
-   * \tparam U Type of the parent coefficient vector
-   * \tparam GFS Type of the parent (power/composite-) grid function space
-   *
-   * \param uChild child coefficient vector
-   * \param uParent parent coefficient vector
-   * \param gfs parent (power/composite) grid function space
-   * \param index of child in parent GFS
-   */
-  template<typename U_CHILD, typename U, typename GFS>
-  void copy_dofs_child_to_parent(U_CHILD& uChild, U& uParent, const GFS& gfs, int child)
-  {
-    if(child >= GFS::CHILDREN)
-      DUNE_THROW(Dune::Exception, "Child index must be smaller than the number of GFS children!");
-
-    typedef typename U_CHILD::Backend CHILD_BE;
-    typedef typename U::Backend BE;
-
-    int n = uChild.flatsize();
-    for(int i=0; i<n; ++i)
+    /** \brief Equivalent of DiscreteGridFunctionGradient for vector-valued functions
+     *
+     * \tparam T Type of PowerGridFunctionSpace
+     * \tparam X Type of coefficients vector
+     */
+    template<typename T, typename X>
+    class VectorDiscreteGridFunctionGradient
+      : public GridFunctionInterface<
+                 GridFunctionTraits<
+                   typename T::Traits::GridViewType,
+                   typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+                   //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimDomain,
+                   T::CHILDREN,
+                   Dune::FieldMatrix<
+                     typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+                     T::CHILDREN,
+                     T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimDomain
+                   >
+                 >,
+                 VectorDiscreteGridFunctionGradient<T,X>
+               >,
+        public TypeTree::LeafNode
     {
-      BE::access(uParent, gfs.subMap(child, i)) = CHILD_BE::access(uChild, i);
-    }
-  }
+      typedef T GFS;
 
-  /** \brief Copy DOF from parent coefficient vector to child coefficient vector
-   *
-   * \tparam U Type of the parent coefficient vector
-   * \tparam U_CHILD Type of the child coefficient vector
-   * \tparam GFS Type of the parent (power/composite-) grid function space
-   *
-   * \param uParent parent coefficient vector
-   * \param uChild child coefficient vector
-   * \param gfs parent (power/composite) grid function space
-   * \param index of child in parent GFS
-   */
-  template<typename U, typename U_CHILD, typename GFS>
-  void copy_dofs_parent_to_child(U& uParent, U_CHILD& uChild, const GFS& gfs, int child)
-  {
-    if(child >= GFS::CHILDREN)
-      DUNE_THROW(Dune::Exception, "Child index must be smaller than the number of GFS children!");
+      typedef GridFunctionInterface<
+                GridFunctionTraits<
+                  typename T::Traits::GridViewType,
+                  typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+                  //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimDomain,
+                  T::CHILDREN,
+                  Dune::FieldMatrix<
+                    typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+                    T::CHILDREN,
+                    T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimDomain>
+                  >,
+                  VectorDiscreteGridFunctionGradient<T,X>
+                > BaseT;
 
-    typedef typename U_CHILD::Backend CHILD_BE;
-    typedef typename U::Backend BE;
+    public:
+      typedef typename BaseT::Traits Traits;
+      typedef typename T::template Child<0>::Type ChildType;
+      typedef typename ChildType::Traits::FiniteElementType::Traits::LocalBasisType::Traits LBTraits;
 
-    int n = uChild.flatsize();
-    for(int i=0; i<n; ++i)
-    {
-      CHILD_BE::access(uChild, i) = BE::access(uParent, gfs.subMap(child, i));
-    }
-  }
+      typedef typename LBTraits::RangeFieldType RF;
+      typedef typename LBTraits::JacobianType JT;
+
+      VectorDiscreteGridFunctionGradient (const GFS& gfs, const X& x_)
+        : pgfs(stackobject_to_shared_ptr(gfs))
+        , lfs(gfs)
+        , lfs_cache(lfs)
+        , x_view(x_)
+        , xl(gfs.maxLocalSize())
+        , J(gfs.maxLocalSize())
+      {
+      }
+
+      inline void evaluate(const typename Traits::ElementType& e,
+          const typename Traits::DomainType& x,
+          typename Traits::RangeType& y) const
+      {
+        // get and bind local functions space
+        lfs.bind(e);
+        lfs_cache.update();
+        x_view.bind(lfs_cache);
+        x_view.read(xl);
+        x_view.unbind();
+
+        // get Jacobian of geometry
+        const typename Traits::ElementType::Geometry::JacobianInverseTransposed
+          JgeoIT = e.geometry().jacobianInverseTransposed(x);
+
+        y = 0.0;
+
+        // Loop over PowerLFS and calculate gradient for each child separately
+        for(unsigned int k = 0; k != T::CHILDREN; ++k)
+        {
+          // get local Jacobians/gradients of the shape functions
+          std::vector<typename LBTraits::JacobianType> J(lfs.child(k).size());
+          lfs.child(k).finiteElement().localBasis().evaluateJacobian(x,J);
+
+          Dune::FieldVector<RF,LBTraits::dimDomain> gradphi;
+          for (typename LFS::Traits::SizeType i=0; i<lfs.child(k).size(); i++)
+          {
+            gradphi = 0;
+            JgeoIT.umv(J[i][0], gradphi);
+
+            y[k].axpy(xl[lfs.child(k).localIndex(i)], gradphi);
+          }
+        }
+      }
+
+
+      //! \brief get a reference to the GridView
+      inline const typename Traits::GridViewType& getGridView () const
+      {
+        return pgfs->gridView();
+      }
+
+    private:
+      typedef LocalFunctionSpace<GFS> LFS;
+      typedef LFSIndexCache<LFS> LFSCache;
+      typedef typename X::template ConstLocalView<LFSCache> XView;
+
+      shared_ptr<GFS const> pgfs;
+      mutable LFS lfs;
+      mutable LFSCache lfs_cache;
+      mutable XView x_view;
+      mutable std::vector<RF> xl;
+      mutable std::vector<JT> J;
+      shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
+    };
 
 
    //! \} group GridFunctionSpace

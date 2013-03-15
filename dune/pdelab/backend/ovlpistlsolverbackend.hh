@@ -17,9 +17,11 @@
 #include <dune/istl/io.hh>
 #include <dune/istl/superlu.hh>
 
-#include "istlvectorbackend.hh"
-#include "parallelistlhelper.hh"
-#include "seqistlsolverbackend.hh"
+#include <dune/pdelab/constraints/constraints.hh>
+#include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
+#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl/parallelhelper.hh>
+#include <dune/pdelab/backend/seqistlsolverbackend.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -35,14 +37,15 @@ namespace Dune {
 
     // operator that resets result to zero at constrained DOFS
     template<class CC, class M, class X, class Y>
-    class OverlappingOperator : public Dune::AssembledLinearOperator<M,X,Y>
+    class OverlappingOperator
+      : public Dune::AssembledLinearOperator<M,X,Y>
     {
     public:
       //! export types
       typedef M matrix_type;
       typedef X domain_type;
       typedef Y range_type;
-      typedef typename X::field_type field_type;
+      typedef typename X::ElementType field_type;
 
       //redefine the category, that is the only difference
       enum {category=Dune::SolverCategory::overlapping};
@@ -52,16 +55,16 @@ namespace Dune {
       {}
 
       //! apply operator to x:  \f$ y = A(x) \f$
-      virtual void apply (const X& x, Y& y) const
+      virtual void apply (const domain_type& x, range_type& y) const
       {
-        _A_.mv(x,y);
+        istl::raw(_A_).mv(istl::raw(x),istl::raw(y));
         Dune::PDELab::set_constrained_dofs(cc,0.0,y);
       }
 
       //! apply operator to x, scale and add:  \f$ y = y + \alpha A(x) \f$
-      virtual void applyscaleadd (field_type alpha, const X& x, Y& y) const
+      virtual void applyscaleadd (field_type alpha, const domain_type& x, range_type& y) const
       {
-        _A_.usmv(alpha,x,y);
+        istl::raw(_A_).usmv(alpha,istl::raw(x),istl::raw(y));
         Dune::PDELab::set_constrained_dofs(cc,0.0,y);
       }
 
@@ -79,7 +82,8 @@ namespace Dune {
     // new scalar product assuming at least overlap 1
     // uses unique partitioning of nodes for parallelization
     template<class GFS, class X>
-    class OverlappingScalarProduct : public Dune::ScalarProduct<X>
+    class OverlappingScalarProduct
+      : public Dune::ScalarProduct<X>
     {
     public:
       //! export types
@@ -91,7 +95,7 @@ namespace Dune {
 
       /*! \brief Constructor needs to know the grid function space
        */
-      OverlappingScalarProduct (const GFS& gfs_, const ParallelISTLHelper<GFS>& helper_)
+      OverlappingScalarProduct (const GFS& gfs_, const istl::ParallelHelper<GFS>& helper_)
         : gfs(gfs_), helper(helper_)
       {}
 
@@ -103,10 +107,7 @@ namespace Dune {
       virtual field_type dot (const X& x, const X& y)
       {
         // do local scalar product on unique partition
-        field_type sum = 0;
-        for (typename X::size_type i=0; i<x.base().N(); ++i)
-          for (typename X::size_type j=0; j<x.base()[i].N(); ++j)
-            sum += (x.base()[i][j]*y.base()[i][j])*helper.mask(i,j);
+        field_type sum = helper.disjointDot(x,y);
 
         // do global communication
         return gfs.gridView().comm().sum(sum);
@@ -122,21 +123,21 @@ namespace Dune {
 
     private:
       const GFS& gfs;
-      const ParallelISTLHelper<GFS>& helper;
+      const istl::ParallelHelper<GFS>& helper;
     };
 
     // wrapped sequential preconditioner
     template<class CC, class GFS, class P>
     class OverlappingWrappedPreconditioner
-      : public Dune::Preconditioner<typename Dune::PDELab::BackendVectorSelector<GFS,typename P::domain_type::field_type>::Type, 
+      : public Dune::Preconditioner<typename Dune::PDELab::BackendVectorSelector<GFS,typename P::domain_type::field_type>::Type,
                                     typename Dune::PDELab::BackendVectorSelector<GFS,typename P::range_type::field_type>::Type>
     {
     public:
       //! \brief The domain type of the preconditioner.
-      typedef typename Dune::PDELab::BackendVectorSelector<GFS,typename P::domain_type::field_type>::Type 
+      typedef typename Dune::PDELab::BackendVectorSelector<GFS,typename P::domain_type::field_type>::Type
       domain_type;
       //! \brief The range type of the preconditioner.
-      typedef typename Dune::PDELab::BackendVectorSelector<GFS,typename P::range_type::field_type>::Type 
+      typedef typename Dune::PDELab::BackendVectorSelector<GFS,typename P::range_type::field_type>::Type
       range_type;
 
       // define the category
@@ -147,7 +148,7 @@ namespace Dune {
 
       //! Constructor.
       OverlappingWrappedPreconditioner (const GFS& gfs_, P& prec_, const CC& cc_,
-                                        const ParallelISTLHelper<GFS>& helper_)
+                                        const istl::ParallelHelper<GFS>& helper_)
         : gfs(gfs_), prec(prec_), cc(cc_), helper(helper_)
       {}
 
@@ -160,14 +161,14 @@ namespace Dune {
       }
 
       /*!
-        \brief Apply the precondioner.
+        \brief Apply the preconditioner.
       */
       virtual void apply (domain_type& v, const range_type& d)
       {
         range_type dd(d);
         set_constrained_dofs(cc,0.0,dd);
-        prec.apply(v,dd);
-        Dune::PDELab::AddDataHandle<GFS,domain_type,typename domain_type::field_type> adddh(gfs,v);
+        prec.apply(istl::raw(v),istl::raw(dd));
+        Dune::PDELab::AddDataHandle<GFS,domain_type> adddh(gfs,v);
         if (gfs.gridView().comm().size()>1)
           gfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
       }
@@ -177,14 +178,14 @@ namespace Dune {
       */
       virtual void post (domain_type& x)
       {
-        prec.post(x);
+        prec.post(istl::raw(x));
       }
 
     private:
       const GFS& gfs;
       P& prec;
       const CC& cc;
-      const ParallelISTLHelper<GFS>& helper;
+      const istl::ParallelHelper<GFS>& helper;
     };
 
 
@@ -217,7 +218,7 @@ namespace Dune {
         \param A_ The matrix to operate on.
       */
       SuperLUSubdomainSolver (const GFS& gfs_, const M& A_)
-        : gfs(gfs_), A(A_), solver(A_,false) // this does the decomposition
+        : gfs(gfs_), solver(istl::raw(A_),false) // this does the decomposition
       {}
 
       /*!
@@ -232,19 +233,12 @@ namespace Dune {
       {
         Dune::InverseOperatorResult stat;
         Y b(d); // need copy, since solver overwrites right hand side
-        std::stringstream s1;
-        s1 << "b p" << gfs.gridView().comm().rank();
-        // printvector(std::cout,b.base(),s1.str(),s1.str(),8,10,2);
-        solver.apply(v,b,stat);
-        std::stringstream s2;
-        s2 << "v p" << gfs.gridView().comm().rank();
-        // printvector(std::cout,v.base(),s2.str(),s2.str(),8,10,2);
-        Dune::PDELab::AddDataHandle<GFS,X> adddh(gfs,v);
+        solver.apply(istl::raw(v),istl::raw(b),stat);
         if (gfs.gridView().comm().size()>1)
-          gfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
-        std::stringstream s3;
-        s3 << "cv p" << gfs.gridView().comm().rank();
-        // printvector(std::cout,v.base(),s3.str(),s3.str(),8,10,2);
+          {
+            AddDataHandle<GFS,X> adddh(gfs,v);
+            gfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
+          }
       }
 
       /*!
@@ -254,7 +248,6 @@ namespace Dune {
 
     private:
       const GFS& gfs;
-      const M& A;
       Dune::SuperLU<ISTLM> solver;
     };
 
@@ -287,8 +280,8 @@ namespace Dune {
         \param helper_ The parallel istl helper.
       */
       RestrictedSuperLUSubdomainSolver (const GFS& gfs_, const M& A_,
-                                        const ParallelISTLHelper<GFS>& helper_)
-        : gfs(gfs_), A(A_), solver(A_,false), helper(helper_) // this does the decomposition
+                                        const istl::ParallelHelper<GFS>& helper_)
+        : gfs(gfs_), solver(istl::raw(A_),false), helper(helper_) // this does the decomposition
       {}
 
       /*!
@@ -303,11 +296,13 @@ namespace Dune {
       {
         Dune::InverseOperatorResult stat;
         Y b(d); // need copy, since solver overwrites right hand side
-        solver.apply(v,b,stat);
-        helper.mask(v);
-        Dune::PDELab::AddDataHandle<GFS,X> adddh(gfs,v);
+        solver.apply(istl::raw(v),istl::raw(b),stat);
         if (gfs.gridView().comm().size()>1)
-          gfs.gridView().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+          {
+            helper.maskForeignDOFs(istl::raw(v));
+            AddDataHandle<GFS,X> adddh(gfs,v);
+            gfs.gridView().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+          }
       }
 
       /*!
@@ -317,9 +312,8 @@ namespace Dune {
 
     private:
       const GFS& gfs;
-      const M& A;
       Dune::SuperLU<ISTLM> solver;
-      const ParallelISTLHelper<GFS>& helper;
+      const istl::ParallelHelper<GFS>& helper;
     };
 #endif
 
@@ -339,10 +333,7 @@ namespace Dune {
       typename X::ElementType dot (const X& x, const X& y) const
       {
         // do local scalar product on unique partition
-        typename X::ElementType sum = 0;
-        for (typename X::size_type i=0; i<x.base().N(); ++i)
-          for (typename X::size_type j=0; j<x.base()[i].N(); ++j)
-            sum += (x.base()[i][j]*y.base()[i][j])*helper.mask(i,j);
+        typename X::ElementType sum = helper.disjointDot(x,y);
 
         // do global communication
         return gfs.gridView().comm().sum(sum);
@@ -357,16 +348,16 @@ namespace Dune {
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
 
-      const  ParallelISTLHelper<GFS>& parallelHelper() const
+      const istl::ParallelHelper<GFS>& parallelHelper() const
       {
         return helper;
       }
-      
+
     private:
       const GFS& gfs;
-      ParallelISTLHelper<GFS> helper;
+      istl::ParallelHelper<GFS> helper;
     };
-    
+
 
     template<typename GFS, typename X>
     class OVLPScalarProduct
@@ -377,12 +368,13 @@ namespace Dune {
       OVLPScalarProduct(const OVLPScalarProductImplementation<GFS>& implementation_)
         : implementation(implementation_)
       {}
-      virtual typename X::ElementType dot(const X& x, const X& y)
+
+      virtual typename X::BaseT::field_type dot(const X& x, const X& y)
       {
         return implementation.dot(x,y);
       }
-      
-       virtual typename X::ElementType norm (const X& x)
+
+      virtual typename X::BaseT::field_type norm (const X& x)
       {
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
@@ -390,7 +382,7 @@ namespace Dune {
     private:
       const OVLPScalarProductImplementation<GFS>& implementation;
     };
-    
+
     template<class GFS, class C,
              template<class,class,class,int> class Preconditioner,
              template<class> class Solver>
@@ -410,7 +402,7 @@ namespace Dune {
                                             int steps_=5, int verbose_=1)
         : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), c(c_), maxiter(maxiter_), steps(steps_), verbose(verbose_)
       {}
-      
+
       /*! \brief solve the given linear system
 
         \param[in] A the given matrix
@@ -421,13 +413,13 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename V::ElementType reduction)
       {
-        typedef Dune::PDELab::OverlappingOperator<C,M,V,W> POP;
+        typedef OverlappingOperator<C,M,V,W> POP;
         POP pop(c,A);
         typedef OVLPScalarProduct<GFS,V> PSP;
         PSP psp(*this);
-        typedef Preconditioner<M,V,W,1> SeqPrec;
-        SeqPrec seqprec(A,steps,1.0);
-        typedef Dune::PDELab::OverlappingWrappedPreconditioner<C,GFS,SeqPrec> WPREC;
+        typedef Preconditioner<typename M::BaseT,typename V::BaseT,typename W::BaseT,1> SeqPrec;
+        SeqPrec seqprec(istl::raw(A),steps,1.0);
+        typedef OverlappingWrappedPreconditioner<C,GFS,SeqPrec> WPREC;
         WPREC wprec(gfs,seqprec,c,this->parallelHelper());
         int verb=0;
         if (gfs.gridView().comm().rank()==0) verb=verbose;
@@ -447,7 +439,7 @@ namespace Dune {
       int steps;
       int verbose;
     };
-    
+
     // Base class for ILU0 as preconditioner
     template<class GFS, class C,
              template<class> class Solver>
@@ -465,7 +457,7 @@ namespace Dune {
       ISTLBackend_OVLP_ILU0_Base (const GFS& gfs_, const C& c_, unsigned maxiter_=5000, int verbose_=1)
         : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), c(c_), maxiter(maxiter_), verbose(verbose_)
       {}
-      
+
       /*! \brief solve the given linear system
 
         \param[in] A the given matrix
@@ -476,13 +468,13 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename V::ElementType reduction)
       {
-        typedef Dune::PDELab::OverlappingOperator<C,M,V,W> POP;
+        typedef OverlappingOperator<C,M,V,W> POP;
         POP pop(c,A);
         typedef OVLPScalarProduct<GFS,V> PSP;
         PSP psp(*this);
-        typedef SeqILU0<M,V,W,1> SeqPrec;
-        SeqPrec seqprec(A,1.0);
-        typedef Dune::PDELab::OverlappingWrappedPreconditioner<C,GFS,SeqPrec> WPREC;
+        typedef SeqILU0<typename M::BaseT,typename V::BaseT,typename W::BaseT,1> SeqPrec;
+        SeqPrec seqprec(istl::raw(A),1.0);
+        typedef OverlappingWrappedPreconditioner<C,GFS,SeqPrec> WPREC;
         WPREC wprec(gfs,seqprec,c,this->parallelHelper());
         int verb=0;
         if (gfs.gridView().comm().rank()==0) verb=verbose;
@@ -574,7 +566,7 @@ namespace Dune {
       {}
     };
 
-    //! \} Solver    
+    //! \} Solver
 
     template<class GFS, class C, template<typename> class Solver>
     class ISTLBackend_OVLP_SuperLU_Base
@@ -603,12 +595,12 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename V::ElementType reduction)
       {
-        typedef Dune::PDELab::OverlappingOperator<C,M,V,W> POP;
+        typedef OverlappingOperator<C,M,V,W> POP;
         POP pop(c,A);
         typedef OVLPScalarProduct<GFS,V> PSP;
         PSP psp(*this);
 #if HAVE_SUPERLU
-        typedef Dune::PDELab::SuperLUSubdomainSolver<GFS,M,V,W> PREC;
+        typedef SuperLUSubdomainSolver<GFS,M,V,W> PREC;
         PREC prec(gfs,A);
         int verb=0;
         if (gfs.gridView().comm().rank()==0) verb=verbose;
@@ -644,7 +636,7 @@ namespace Dune {
       : public ISTLBackend_OVLP_SuperLU_Base<GFS,CC,Dune::BiCGSTABSolver>
     {
     public:
-      
+
       /*! \brief make a linear solver object
 
         \param[in] gfs_ a grid function space
@@ -658,7 +650,7 @@ namespace Dune {
       {}
     };
 
-    /**    
+    /**
      * @brief Overlapping parallel CG solver with SuperLU preconditioner
      * @tparam GFS The Type of the GridFunctionSpace.
      * @tparam CC The Type of the Constraints Container.
@@ -668,7 +660,7 @@ namespace Dune {
       : public ISTLBackend_OVLP_SuperLU_Base<GFS,CC,Dune::CGSolver>
     {
     public:
-      
+
       /*! \brief make a linear solver object
 
         \param[in] gfs_ a grid function space
@@ -676,7 +668,7 @@ namespace Dune {
         \param[in] maxiter_ maximum number of iterations to do
         \param[in] verbose_ print messages if true
       */
-      ISTLBackend_OVLP_CG_SuperLU (const GFS& gfs_, const CC& cc_, 
+      ISTLBackend_OVLP_CG_SuperLU (const GFS& gfs_, const CC& cc_,
                                               unsigned maxiter_=5000,
                                               int verbose_=1)
         : ISTLBackend_OVLP_SuperLU_Base<GFS,CC,Dune::CGSolver>(gfs_,cc_,maxiter_,verbose_)
@@ -703,7 +695,7 @@ namespace Dune {
       explicit ISTLBackend_OVLP_ExplicitDiagonal (const ISTLBackend_OVLP_ExplicitDiagonal& other_)
         : gfs(other_.gfs)
       {}
-      
+
       /*! \brief compute global norm of a vector
 
         \param[in] v the given vector
@@ -729,13 +721,13 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::ElementType reduction)
       {
-        Dune::SeqJac<M,V,W> jac(A,1,1.0);
-        jac.pre(z,r);
-        jac.apply(z,r);
-        jac.post(z);
+        Dune::SeqJac<typename M::BaseT,typename V::BaseT,typename W::BaseT> jac(istl::raw(A),1,1.0);
+        jac.pre(istl::raw(z),istl::raw(r));
+        jac.apply(istl::raw(z),istl::raw(r));
+        jac.post(istl::raw(z));
         if (gfs.gridView().comm().size()>1)
         {
-          Dune::PDELab::CopyDataHandle<GFS,V> copydh(gfs,z);
+          CopyDataHandle<GFS,V> copydh(gfs,z);
           gfs.gridView().communicate(copydh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
         }
         res.converged  = true;
@@ -750,38 +742,17 @@ namespace Dune {
     };
     //! \} Overlapping Solvers
 
-    /**
-     * @brief traits class for using AMG with the old grid operator space 
-     * instead of the new grid operator
-     * @tparam MatrixFT The field type of the matrix.
-     * @tparam V The type of the BackendVectorSelector
-     * @tparam GOS The type of the old grid operator space.
-     */
-    template<class MatrixFT, class V, class GOS>
-    class fakeGOTraits
-    {
-    public:
-      struct Traits{
-        typedef V Domain;
-        typedef MatrixFT JacobianField;
-        typedef typename V::ElementType DomainField;
-        typedef typename GOS::Traits GOSTraits;
-        typedef typename GOSTraits::TrialGridFunctionSpace TrialGridFunctionSpace;
-        typedef typename GOS::template MatrixContainer<MatrixFT>::Type Jacobian;
-      };
-    };
-
     template<class GO, int s, template<class,class,class,int> class Preconditioner,
-             template<class> class Solver, bool skipBlocksizeCheck = false>
+             template<class> class Solver>
     class ISTLBackend_AMG : public LinearResultStorage
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
-      typedef typename Dune::PDELab::ParallelISTLHelper<GFS> PHELPER;
+      typedef istl::ParallelHelper<GFS> PHELPER;
       typedef typename GO::Traits::Jacobian M;
       typedef typename M::BaseT MatrixType;
       typedef typename GO::Traits::Domain V;
-      typedef typename BlockProcessor<GFS,skipBlocksizeCheck>::template AMGVectorTypeSelector<V>::Type VectorType;
-      typedef typename CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
+      typedef typename V::BaseT VectorType;
+      typedef typename istl::CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
 #if HAVE_MPI
       typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
       typedef Dune::BlockPreconditioner<VectorType,VectorType,Comm,Smoother> ParSmoother;
@@ -794,13 +765,14 @@ namespace Dune {
       typedef Dune::Amg::AMG<Operator,VectorType,ParSmoother,Comm> AMG;
 
     public:
-      
-      /** 
+
+      /**
        * @brief Parameters object to customize matrix hierachy building.
        */
       typedef Dune::Amg::Parameters Parameters;
 
-      ISTLBackend_AMG(const GFS& gfs_, unsigned maxiter_=5000, 
+    public:
+      ISTLBackend_AMG(const GFS& gfs_, unsigned maxiter_=5000,
                       int verbose_=1, bool reuse_=false,
                       bool usesuperlu_=true)
         : gfs(gfs_), phelper(gfs,verbose_), maxiter(maxiter_), params(15,2000),
@@ -813,7 +785,7 @@ namespace Dune {
         if (gfs.gridView().comm().rank() == 0 && usesuperlu == true)
           {
             std::cout << "WARNING: You are using AMG without SuperLU!"
-                      << " Please consider installing SuperLU," 
+                      << " Please consider installing SuperLU,"
                       << " or set the usesuperlu flag to false"
                       << " to suppress this warning." << std::endl;
           }
@@ -823,18 +795,18 @@ namespace Dune {
        /*! \brief set AMG parameters
 
         \param[in] params_ a parameter object of Type Dune::Amg::Parameters
-      */     
+      */
       void setParameters(const Parameters& params_)
       {
         params = params_;
       }
-        
-      void setparams(Parameters params_)
+
+      void setparams(Parameters params_) DUNE_DEPRECATED_MSG("setparams() is deprecated, use setParameters() instead")
       {
         params = params_;
       }
 
-      /** 
+      /**
        * @brief Get the parameters describing the behaviuour of AMG.
        *
        * The returned object can be adjusted to ones needs and then can be
@@ -845,14 +817,14 @@ namespace Dune {
       {
         return params;
       }
-      
+
       /*! \brief compute global norm of a vector
 
         \param[in] v the given vector
       */
       typename V::ElementType norm (const V& v) const
       {
-        typedef Dune::PDELab::OverlappingScalarProduct<GFS,V> PSP;
+        typedef OverlappingScalarProduct<GFS,V> PSP;
         PSP psp(gfs,phelper);
         return psp.norm(v);
       }
@@ -868,11 +840,11 @@ namespace Dune {
       {
         Timer watch;
         Comm oocc(gfs.gridView().comm());
-        MatrixType& mat=A.base();
+        MatrixType& mat=istl::raw(A);
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
           Dune::Amg::FirstDiagonal> > Criterion;
 #if HAVE_MPI
-        phelper.createIndexSetAndProjectForAMG(mat, oocc);
+        phelper.createIndexSetAndProjectForAMG(A, oocc);
         Operator oop(mat, oocc);
         Dune::OverlappingSchwarzScalarProduct<VectorType,Comm> sp(oocc);
 #else
@@ -885,7 +857,7 @@ namespace Dune {
         Criterion criterion(params);
         stats.tprepare=watch.elapsed();
         watch.reset();
-        
+
         int verb=0;
         if (gfs.gridView().comm().rank()==0) verb=verbose;
         //only construct a new AMG if the matrix changes
@@ -899,9 +871,8 @@ namespace Dune {
         watch.reset();
         Solver<VectorType> solver(oop,sp,*amg,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
-        
-        solver.apply(BlockProcessor<GFS,skipBlocksizeCheck>::getVector(z),
-            BlockProcessor<GFS,skipBlocksizeCheck>::getVector(r),stat);
+
+        solver.apply(istl::raw(z),istl::raw(r),stat);
         stats.tsolve= watch.elapsed();
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
@@ -910,15 +881,15 @@ namespace Dune {
         res.conv_rate  = stat.conv_rate;
       }
 
-      /** 
-       * @brief Get statistics of the AMG solver (no of levels, timings). 
-       * @return statistis of the AMG solver. 
+      /**
+       * @brief Get statistics of the AMG solver (no of levels, timings).
+       * @return statistis of the AMG solver.
        */
       const ISTLAMGStatistics& statistics() const
       {
         return stats;
       }
-      
+
     private:
       const GFS& gfs;
       PHELPER phelper;
@@ -928,7 +899,7 @@ namespace Dune {
       bool reuse;
       bool firstapply;
       bool usesuperlu;
-      Dune::shared_ptr<AMG> amg;
+      shared_ptr<AMG> amg;
       ISTLAMGStatistics stats;
     };
 
@@ -937,7 +908,7 @@ namespace Dune {
 
     /**
      * @brief Overlapping parallel conjugate gradient solver preconditioned with AMG smoothed by SSOR
-     * @tparam GO The type of the grid operator 
+     * @tparam GO The type of the grid operator
      * (or the fakeGOTraits class for the old grid operator space).
      * @tparam s The bits to use for the global index.
      */
@@ -952,11 +923,11 @@ namespace Dune {
        * @param gfs_ The grid function space used.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
-       * @param reuse_ Set true, if the Matrix to be used is always identical 
+       * @param reuse_ Set true, if the Matrix to be used is always identical
        * (AMG aggregation is then only performed once).
        * @param usesuperlu_ Set false, to suppress the no SuperLU warning
        */
-      ISTLBackend_CG_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000, 
+      ISTLBackend_CG_AMG_SSOR(const GFS& gfs_, unsigned maxiter_=5000,
                               int verbose_=1, bool reuse_=false,
                               bool usesuperlu_=true)
         : ISTLBackend_AMG<GO, s, Dune::SeqSSOR, Dune::CGSolver>
@@ -966,7 +937,7 @@ namespace Dune {
 
     /**
      * @brief Overlapping parallel BiCGStab solver preconditioned with AMG smoothed by SSOR.
-     * @tparam GO The type of the grid operator 
+     * @tparam GO The type of the grid operator
      * (or the fakeGOTraits class for the old grid operator space).
      * @tparam s The bits to use for the globale index.
      */
@@ -981,7 +952,7 @@ namespace Dune {
        * @param gfs_ The grid function space used.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
-       * @param reuse_ Set true, if the Matrix to be used is always identical 
+       * @param reuse_ Set true, if the Matrix to be used is always identical
        * (AMG aggregation is then only performed once).
        * @param usesuperlu_ Set false, to suppress the no SuperLU warning
        */
@@ -995,7 +966,7 @@ namespace Dune {
 
     /**
      * @brief Overlapping parallel BiCGStab solver preconditioned with AMG smoothed by ILU0.
-     * @tparam GO The type of the grid operator 
+     * @tparam GO The type of the grid operator
      * (or the fakeGOTraits class for the old grid operator space).
      * @tparam s The bits to use for the globale index.
      */
@@ -1010,7 +981,7 @@ namespace Dune {
        * @param gfs_ The grid function space used.
        * @param maxiter_ The maximum number of iterations allowed.
        * @param verbose_ The verbosity level to use.
-       * @param reuse_ Set true, if the Matrix to be used is always identical 
+       * @param reuse_ Set true, if the Matrix to be used is always identical
        * (AMG aggregation is then only performed once).
        * @param usesuperlu_ Set false, to suppress the no SuperLU warning
        */
@@ -1023,7 +994,7 @@ namespace Dune {
     };
 
     //! \} Overlapping Solvers
-    
+
     //! \} group Backend
 
   } // namespace PDELab

@@ -4,6 +4,8 @@
 #ifndef DUNE_PDELAB_COMMON_TYPETREE_FILTEREDCOMPOSITENODE_HH
 #define DUNE_PDELAB_COMMON_TYPETREE_FILTEREDCOMPOSITENODE_HH
 
+#include <dune/common/shared_ptr.hh>
+
 #if !(HAVE_VARIADIC_TEMPLATES || DOXYGEN || HEADERCHECK)
 #error The class FilteredCompositeNode requires compiler support for variadic templates, which your compiler lacks.
 #endif
@@ -12,47 +14,11 @@
 #include <dune/pdelab/common/typetree/nodetags.hh>
 #include <dune/pdelab/common/typetree/filters.hh>
 #include <dune/common/tuples.hh>
-#include <dune/common/shared_ptr.hh>
 #include <dune/common/typetraits.hh>
 
 namespace Dune {
   namespace PDELab {
     namespace TypeTree {
-
-      /**
-        \brief ensure that t is wrapped in a shared_ptr<T>
-
-        You have to consider three situations:
-
-        a) t is of type T&
-        t is a stack object and must not be deleted.
-        You create a shared_ptr<T>(&t) with a null_deleter.
-        b) t is of type T*
-        t is a raw pointer and the user os assumed to own this pointer.
-        You create a shared_ptr<T>(t) with a null_deleter.
-        c) t is of type shared_ptr<T>
-        t is already a shared_ptr<T>.
-        You don't have to do anything.
-       */
-      template<typename T>
-      std::shared_ptr<T> ensure_shared_ptr(T & t)
-      {
-        return std::shared_ptr<T>(&t, null_deleter<T>());
-      }
-
-#ifndef DOXYGEN
-      template<typename T>
-      std::shared_ptr<T> ensure_shared_ptr(T * t)
-      {
-        return std::shared_ptr<T>(t, null_deleter<T>());
-      }
-      
-      template<typename T>
-      std::shared_ptr<T> & ensure_shared_ptr(std::shared_ptr<T> & t)
-      {
-        return t;
-      }
-#endif
 
       /** \addtogroup Nodes
        *  \ingroup TypeTree
@@ -164,6 +130,9 @@ namespace Dune {
           //! The type of the child.
           typedef typename OriginalChild::Type Type;
 
+          //! The type of the child.
+          typedef typename OriginalChild::type type;
+
           //! The storage type of the child.
           typedef typename OriginalChild::Storage Storage;
 
@@ -223,7 +192,7 @@ namespace Dune {
         template<std::size_t k>
         void setChild(typename Child<k>::type& child, typename enable_if<lazy_enable<k>::value,void*>::type = 0)
         {
-          _node->template childStorage<Child<k>::mapped_index>() = ensure_shared_ptr<typename Child<k>::type>(child);
+          _node->template childStorage<Child<k>::mapped_index>() = stackobject_to_shared_ptr(child);
         }
 
         //! Sets the storage of the i-th child to the passed-in value.

@@ -25,66 +25,66 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-	//! traits class holding function signature, same as in local function
+    //! traits class holding function signature, same as in local function
     //! \tparam DF The numeric type of the field representing the domain.
     //! \tparam dimension of the domain.
     //! \tparam D The type of the domain.
     //! \tparam m The dimension of the range.
     //! \tparam RF The numeric type of the field representing the range.
     //! \tparam R The type of the range.
-	template<class DF, int n, class D, class RF, int m, class R>
-	struct FunctionTraits
-	{
-	  //! \brief Export type for domain field
-	  typedef DF DomainFieldType;
-      
-      // Enum for domain dimension
-	  enum {
-		//! \brief dimension of the domain
-		dimDomain = n
-	  };
+    template<class DF, int n, class D, class RF, int m, class R>
+    struct FunctionTraits
+    {
+      //! \brief Export type for domain field
+      typedef DF DomainFieldType;
+
+      //! \brief Enum for domain dimension
+      enum {
+        //! \brief dimension of the domain
+        dimDomain = n
+      };
 
       //! \brief domain type in dim-size coordinates
-	  typedef D DomainType;
+      typedef D DomainType;
 
-	  //! \brief Export type for range field
-	  typedef RF RangeFieldType;
+      //! \brief Export type for range field
+      typedef RF RangeFieldType;
 
-      // Enum for range dimension
-	  enum {
-		//! \brief dimension of the range
-		dimRange = m
-	  };
+      //! \brief Enum for range dimension
+      enum {
+        //! \brief dimension of the range
+        dimRange = m
+      };
 
-	  //! \brief range type
-	  typedef R RangeType;
-	};
+      //! \brief range type
+      typedef R RangeType;
+    };
 
     //! \brief a Function that maps x in DomainType to y in RangeType
     //! \tparam T The type of the function traits
     //! \tparam Imp The type implementing the interface.
-	template<class T, class Imp>
-	class FunctionInterface
-	{
-	public:
-	  //! \brief Export type traits
-	  typedef T Traits;
+    template<class T, class Imp>
+    class FunctionInterface
+    {
+    public:
+      //! \brief Export type traits
+      typedef T Traits;
 
-	  /** \brief Evaluate all basis function at given position
+      /** \brief Evaluate all basis function at given position
 
-		  Evaluates all shape functions at the given position and returns
-		  these values in a vector.
-	  */
-	  inline void evaluate (const typename Traits::DomainType& x,
-							typename Traits::RangeType& y) const
+          Evaluates all shape functions at the given position and returns
+          these values in a vector.
+      */
+      inline void evaluate (const typename Traits::DomainType& x,
+                            typename Traits::RangeType& y) const
 	  {
-		asImp().evaluate(x,y);
+            asImp().evaluate(x,y);
 	  }
 
-	private:
-	  Imp& asImp () {return static_cast<Imp &> (*this);}
-	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
-	};
+    private:
+      Imp& asImp () {return static_cast<Imp &> (*this);}
+      const Imp& asImp () const {return static_cast<const Imp &>(*this);}
+    };
 
     //! \brief Default class for additional methods in instationary functions
     class InstationaryFunctionDefaults
@@ -118,6 +118,54 @@ namespace Dune {
 
     };
 
+
+    //! Mixin base class for specifying output hints to I/O routines like VTK.
+    class GridFunctionOutputParameters
+    {
+
+    public:
+
+      //! Namespace for output-related data types and enums.
+      struct Output
+      {
+        //! The type of the data set.
+        /**
+         * This information can be used by a VTKWriter to pick the correct
+         * VTK data set type.
+         */
+        enum DataSetType
+          {
+            vertexData, //!< A data set with vertex values.
+            cellData    //!< A data set with cell values.
+          };
+      };
+
+      //! Standard constructor.
+      /**
+       * \param dataSetType The type of the data set represented by this function.
+       */
+      GridFunctionOutputParameters(Output::DataSetType dataSetType = Output::vertexData)
+        : _dataSetType(dataSetType)
+      {}
+
+      //! Return the data set type of this function.
+      Output::DataSetType dataSetType() const
+      {
+        return _dataSetType;
+      }
+
+      //! Set the data set type of this function.
+      void setDataSetType(Output::DataSetType dataSetType)
+      {
+        _dataSetType = dataSetType;
+      }
+
+    private:
+
+      Output::DataSetType _dataSetType;
+
+    };
+
     //! \brief traits class holding the function signature, same as in local function
     //! \brief GV The type of the grid view the function lives on.
     //! \brief RF The numeric type used in the range of the function.
@@ -136,10 +184,15 @@ namespace Dune {
     //! \brief a GridFunction maps x in DomainType to y in RangeType
 	template<class T, class Imp>
 	class GridFunctionInterface
+      : public GridFunctionOutputParameters
 	{
 	public:
 	  //! \brief Export type traits
 	  typedef T Traits;
+
+      GridFunctionInterface(Output::DataSetType dataSetType = Output::vertexData)
+        : GridFunctionOutputParameters(dataSetType)
+      {}
 
 	  /** \brief Evaluate the GridFunction at given position
 
@@ -566,7 +619,7 @@ namespace Dune {
         \tparam Scalar type representing time.
     */
     template<typename TT>
-    struct PowerCompositeSetTimeVisitor 
+    struct PowerCompositeSetTimeVisitor
       : public TypeTree::TreeVisitor, public TypeTree::DynamicTraversal
     {
       TT time;

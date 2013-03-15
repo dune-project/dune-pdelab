@@ -5,6 +5,7 @@
 #define DUNE_PDELAB_CONFORMINGCONSTRAINTS_HH
 
 #include <cstddef>
+#include <algorithm>
 
 #include <dune/common/exceptions.hh>
 
@@ -50,7 +51,7 @@ namespace Dune {
       void boundary (const P& param, const IG& ig, const LFS& lfs, T& trafo) const
       {
         typedef FiniteElementInterfaceSwitch<
-          typename LFS::Traits::FiniteElementType
+        typename LFS::Traits::FiniteElementType
           > FESwitch;
         typedef FieldVector<typename IG::ctype, IG::dimension-1> FaceCoord;
 
@@ -62,8 +63,8 @@ namespace Dune {
         const int dim = IG::Entity::Geometry::dimension;
         const Dune::GenericReferenceElement<DT,dim>& refelem = Dune::GenericReferenceElements<DT,dim>::general(gt);
 
-	    const Dune::GenericReferenceElement<DT,dim-1> &
-	      face_refelem = Dune::GenericReferenceElements<DT,dim-1>::general(ig.geometry().type());
+        const Dune::GenericReferenceElement<DT,dim-1> &
+          face_refelem = Dune::GenericReferenceElements<DT,dim-1>::general(ig.geometry().type());
 
         // empty map means Dirichlet constraint
         typename T::RowType empty;
@@ -89,7 +90,7 @@ namespace Dune {
               if (static_cast<int>(FESwitch::coefficients(lfs.finiteElement()).
                                    localKey(i).subEntity())
                   == refelem.subEntity(face,1,j,codim))
-                trafo[i] = empty;
+                trafo[lfs.dofIndex(i)] = empty;
             }
           }
       }
@@ -111,7 +112,7 @@ namespace Dune {
       void processor (const IG& ig, const LFS& lfs, T& trafo) const
       {
         typedef FiniteElementInterfaceSwitch<
-          typename LFS::Traits::FiniteElementType
+        typename LFS::Traits::FiniteElementType
           > FESwitch;
 
         // determine face
@@ -140,12 +141,13 @@ namespace Dune {
             for (int j=0; j<refelem.size(face,1,codim); j++)
               if (FESwitch::coefficients(lfs.finiteElement()).localKey(i).
                   subEntity() == std::size_t(refelem.subEntity(face,1,j,codim)))
-                trafo[i] = empty;
+                trafo[lfs.dofIndex(i)] = empty;
           }
       }
     };
 
     //! extend conforming constraints class by processor boundary
+    template<typename GV>
     class NonoverlappingConformingDirichletConstraints : public ConformingDirichletConstraints
     {
     public:
@@ -161,25 +163,38 @@ namespace Dune {
       void volume (const EG& eg, const LFS& lfs, T& trafo) const
       {
         typedef FiniteElementInterfaceSwitch<
-          typename LFS::Traits::FiniteElementType
+        typename LFS::Traits::FiniteElementType
           > FESwitch;
 
         // nothing to do for interior entities
         if (eg.entity().partitionType()==Dune::InteriorEntity)
           return;
 
+        typedef typename FESwitch::Coefficients Coefficients;
+        const Coefficients& coeffs = FESwitch::coefficients(lfs.finiteElement());
+
         // empty map means Dirichlet constraint
         typename T::RowType empty;
 
-		typedef typename LFS::Traits::GridFunctionSpaceType::Traits::BackendType B;
+        typedef typename LFS::Traits::GridFunctionSpaceType::Traits::BackendType B;
+
+        const ReferenceElement<typename GV::ctype,GV::dimension>& ref_el =
+          ReferenceElements<typename GV::ctype,GV::dimension>::general(eg.entity().type());
 
         // loop over all degrees of freedom and check if it is not owned by this processor
-        for (size_t i=0; i<FESwitch::coefficients(lfs.finiteElement()).size();
-             i++)
+        for (size_t i = 0; i < coeffs.size(); ++i)
           {
-            if (gh[lfs.globalIndex(i)]!=0)
+            size_t codim = coeffs.localKey(i).codim();
+            size_t sub_entity = coeffs.localKey(i).subEntity();
+
+            size_t entity_index = _gv.indexSet().subIndex(eg.entity(),sub_entity,codim);
+            size_t gt_index = GlobalGeometryTypeIndex::index(ref_el.type(sub_entity,codim));
+
+            size_t index = _gt_offsets[gt_index] + entity_index;
+
+            if (_ghosts[index])
               {
-                trafo[i] = empty;
+                trafo[lfs.dofIndex(i)] = empty;
               }
           }
       }
@@ -187,41 +202,66 @@ namespace Dune {
       template<class GFS>
       void compute_ghosts (const GFS& gfs)
       {
-        typedef typename GFS::Traits::GridViewType GV;
+        std::fill(_gt_offsets.begin(),_gt_offsets.end(),0);
+
+        typedef std::vector<GeometryType> GTVector;
+
+        for (size_t codim = 0; codim <= GV::dimension; ++codim)
+          {
+            if (gfs.ordering().contains(codim))
+              {
+                const GTVector& geom_types = _gv.indexSet().geomTypes(codim);
+                for (GTVector::const_iterator it = geom_types.begin(),
+                       end = geom_types.end();
+                     it != end;
+                     ++it)
+                  _gt_offsets[GlobalGeometryTypeIndex::index(*it) + 1] = _gv.indexSet().size(*it);
+              }
+          }
+
+        std::partial_sum(_gt_offsets.begin(),_gt_offsets.end(),_gt_offsets.begin());
+
+        _ghosts.assign(_gt_offsets.back(),true);
+
         typedef typename GV::template Codim<0>::
           template Partition<Interior_Partition>::Iterator Iterator;
-        typedef typename Dune::PDELab::BackendVectorSelector<GFS,int>::Type V;
 
-        gh.assign(gfs.globalSize(), 1);
-        V ighost(gfs, 1);
-        LocalFunctionSpace<GFS> lfs(gfs);
-        LocalVector<int,AnySpaceTag> lv(gfs.maxLocalSize(), 0);
+        for(Iterator it = _gv.template begin<0, Interior_Partition>(),
+              end = _gv.template end<0, Interior_Partition>();
+            it != end;
+            ++it)
+          {
+            const ReferenceElement<typename GV::ctype,GV::dimension>& ref_el =
+              ReferenceElements<typename GV::ctype,GV::dimension>::general(it->type());
 
-        const GV &gv = gfs.gridView();
-        const Iterator &end = gv.template end<0, Interior_Partition>();
-        for(Iterator it = gv.template begin<0, Interior_Partition>();
-            it != end; ++it)
-        {
-          lfs.bind(*it);
-          lfs.vwrite(lv, ighost);
-        }
-        ighost.std_copy_to(gh);
+            for (size_t codim = 0; codim <= GV::dimension; ++codim)
+              if (gfs.ordering().contains(codim))
+                {
+                  for (int i = 0; i < ref_el.size(codim); ++i)
+                    {
+                      size_t entity_index = _gv.indexSet().subIndex(*it,i,codim);
+                      size_t gt_index = GlobalGeometryTypeIndex::index(ref_el.type(i,codim));
+                      size_t index = _gt_offsets[gt_index] + entity_index;
 
-        rank = gv.comm().rank();
+                      _ghosts[index] = false;
+                    }
+                }
+          }
+
       }
 
-      void print ()
-      {
-        std::cout << "/" << rank << "/ " << "ghost size="
-                  << gh.size() << std::endl;
-        for (std::size_t i=0; i<gh.size(); i++)
-          std::cout << "/" << rank << "/ " << "ghost[" << i << "]="
-                    << gh[i] << std::endl;
-      }
+      NonoverlappingConformingDirichletConstraints(const GV& gv)
+        : _gv(gv)
+        , _rank(gv.comm().rank())
+        , _gt_offsets(GlobalGeometryTypeIndex::size(GV::dimension) + 1)
+      {}
 
     private:
-      int rank;
-      std::vector<int> gh;
+
+      GV _gv;
+      int _rank;
+      std::vector<bool> _ghosts;
+      std::vector<size_t> _gt_offsets;
     };
     //! \}
 

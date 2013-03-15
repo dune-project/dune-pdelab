@@ -69,7 +69,7 @@ namespace Dune{
       typedef JF JacobianField;
 
       //! The type of the jacobian.
-      typedef typename MatrixBackend::template Matrix<JacobianField> Jacobian;
+      typedef typename Dune::PDELab::BackendMatrixSelector<MB,Domain,Range,JF>::Type Jacobian;
 
 
       //! The global assembler of the grid operator.

@@ -83,7 +83,7 @@ namespace Dune {
           }
       };
 
-      // extract type of container element 
+      // extract type of container element
       template<class C>
         struct Value
         {
@@ -101,7 +101,7 @@ namespace Dune {
           return c(row);
         }
 
-      // get non const_reference to container element 
+      // get non const_reference to container element
       // note: this method does not depend on T!
       template<typename C>
         static typename C::ElementType& access(C& c, size_type row)

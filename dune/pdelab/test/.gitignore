@@ -11,6 +11,7 @@ testanalytic
 testconstraints
 testcountingptr
 testbdmfem
+testdatahandle
 testedges02d
 testedges02dgridfunctionspace
 testedges02dinterpolation
@@ -52,3 +53,7 @@ testpoisson-globalfe
 testopbfem
 testclock
 testproxynode
+testvectoriterator
+testvectoriterator-no-variadic-templates
+testnonoverlapping
+testfilteredcompositenode

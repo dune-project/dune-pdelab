@@ -29,7 +29,7 @@ struct Counter
 
   ~Counter()
   {
-    std::cout << "Destructed id = " << id() << std::endl;
+    std::cout << "Destructed id = " << _id << std::endl;
   }
 
   Counter& operator=(const Counter& rhs)

@@ -72,8 +72,8 @@ namespace Dune{
         : BaseT(la_),
           invalid_residual(static_cast<Residual*>(0)),
           invalid_solutions(static_cast<Solutions*>(0)),
-          const_residual_0(invalid_residual), 
-          const_residual_1(invalid_residual), 
+          const_residual_0(invalid_residual),
+          const_residual_1(invalid_residual),
           solutions(invalid_solutions)
       {}
 
@@ -154,10 +154,12 @@ namespace Dune{
         la.la0.preStage(la.time+la.osp_method->d(la.stage)*la.dt,la.stage);
         la.la1.preStage(la.time+la.osp_method->d(la.stage)*la.dt,la.stage);
       }
-      void postAssembly()
+
+      template<typename GFSU, typename GFSV>
+      void postAssembly(const GFSU& gfsu, const GFSV& gfsv)
       {
-        lae0->postAssembly();
-        lae1->postAssembly();
+        lae0->postAssembly(gfsu,gfsv);
+        lae1->postAssembly(gfsu,gfsv);
       }
       //! @}
 

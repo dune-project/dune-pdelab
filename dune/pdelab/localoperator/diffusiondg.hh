@@ -10,8 +10,6 @@
 
 #include <dune/pdelab/localoperator/defaultimp.hh>
 
-#include "../common/geometrywrapper.hh"
-#include "../gridoperatorspace/gridoperatorspace.hh"
 #include "defaultimp.hh"
 #include "pattern.hh"
 #include "flags.hh"
@@ -67,7 +65,7 @@ namespace Dune {
       DiffusionDG (const K& k_, const F& f_, const B& bctype_, const G& g_, const J& j_, int dg_method, int _superintegration_order = 0) :
         k(k_), f(f_), bctype(bctype_), g(g_), j(j_), superintegration_order(_superintegration_order)
       {
-        
+
         // OBB
         if (dg_method == 0)
           {
@@ -188,11 +186,11 @@ namespace Dune {
           Dune::ReferenceElements<DF,IG::dimension-1>::
           general(ig.geometry().type()).position(0,0);
         const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
-            
+
         // evaluate diffusion tensor at elements' centers, assume they are constant over elements
-        const Dune::FieldVector<DF,IG::dimension>& 
+        const Dune::FieldVector<DF,IG::dimension>&
           inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
-        const Dune::FieldVector<DF,IG::dimension>& 
+        const Dune::FieldVector<DF,IG::dimension>&
           outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
         typename K::Traits::RangeType permeability_s(0.0);
         typename K::Traits::RangeType permeability_n(0.0);
@@ -672,9 +670,9 @@ namespace Dune {
         const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(face_center);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
-        const Dune::FieldVector<DF,IG::dimension>& 
+        const Dune::FieldVector<DF,IG::dimension>&
           inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
-        const Dune::FieldVector<DF,IG::dimension>& 
+        const Dune::FieldVector<DF,IG::dimension>&
           outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
         typename K::Traits::RangeType permeability_s(0.0);
         typename K::Traits::RangeType permeability_n(0.0);

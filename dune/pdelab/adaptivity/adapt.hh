@@ -361,7 +361,7 @@ namespace Dune {
               }
             } // end of intersection
           } // end of element
-          // for (unsigned int i=0; i<gfsv.globalSize(); i++) std::cout << i << " " << estimate[i] << std::endl;; 
+          // for (unsigned int i=0; i<gfsv.globalSize(); i++) std::cout << i << " " << estimate[i] << std::endl;;
         }
 
         private:

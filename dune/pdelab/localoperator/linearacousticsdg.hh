@@ -10,8 +10,6 @@
 #include<dune/geometry/referenceelements.hh>
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/common/function.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
-#include<dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include<dune/pdelab/localoperator/pattern.hh>
 #include<dune/pdelab/localoperator/flags.hh>
 #include<dune/pdelab/localoperator/idefault.hh>
@@ -221,7 +219,6 @@ namespace Dune {
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
 
         // transformation
-        const int dimw = EG::Geometry::dimensionworld;
         typename EG::Geometry::JacobianInverseTransposed jac;
 
         // evaluate speed of sound (assumed constant per element)
@@ -585,9 +582,9 @@ namespace Dune {
       {}
 
       // define sparsity pattern of operator representation
-      template<typename LFSU, typename LFSV>
+      template<typename LFSU, typename LFSV, typename LocalPattern>
       void pattern_volume (const LFSU& lfsu, const LFSV& lfsv,
-                           LocalSparsityPattern& pattern) const
+                           LocalPattern& pattern) const
       {
         // get types
         typedef typename LFSV::template Child<0>::Type DGSpace;
@@ -601,7 +598,7 @@ namespace Dune {
         for (size_t k=0; k<LFSV::CHILDREN; k++)
           for (size_t i=0; i<lfsv.child(k).size(); ++i)
             for (size_t j=0; j<lfsu.child(k).size(); ++j)
-              pattern.push_back(SparsityLink(lfsv.child(k).localIndex(i),lfsu.child(k).localIndex(j)));
+              pattern.addLink(lfsv.child(k),i,lfsu.child(k),j);
       }
 
       // volume integral depending on test and ansatz functions
