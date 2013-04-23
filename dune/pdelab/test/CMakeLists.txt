@@ -79,21 +79,6 @@ add_dune_alberta_flags(testconstraints )
 #        ${LDADD})
 list(APPEND MOSTLYCLEANFILES testconstraintsp1.vtu testconstraintspowerp1.vtu)
 
-list(APPEND NORMALTESTS testcountingptr)
-add_executable(testcountingptr testcountingptr.cc)
-
-target_link_libraries(testcountingptr dunepdelab ${DUNE_LIBS})
-add_dune_alberta_flags(testcountingptr )
-# The following lines are comment out as the translation is not clear. TODO review
-#
-# set(testcountingptr_ LDFLAGS ${AM_LDFLAGS}         
-#        ${ALBERTA_LDFLAGS})
-# The following lines are comment out as the translation is not clear. TODO review
-#
-# set(testcountingptr_ LDADD                         
-#        ${ALBERTA_LIBS}                         
-#        ${LDADD})
-
 list(APPEND NORMALTESTS testfiniteelementmap)
 add_executable(testfiniteelementmap testfiniteelementmap.cc)
 
@@ -196,45 +181,6 @@ add_dune_alberta_flags(testlocalfunctionspace )
 # set(testlocalfunctionspace_ LDADD                  
 #        ${ALBERTA_LIBS}                         
 #        ${LDADD})
-
-list(APPEND NORMALTESTS testmultistep)
-add_executable(testmultistep testmultistep.cc)
-
-add_dune_mpi_flags(testmultistep )
-target_link_libraries(testmultistep dunepdelab ${DUNE_LIBS})
-# The following lines are comment out as the translation is not clear. TODO review
-#
-# set(testmultistep_ LDFLAGS ${AM_LDFLAGS}           
-#        ${DUNEMPILDFLAGS})
-# The following lines are comment out as the translation is not clear. TODO review
-#
-# set(testmultistep_ LDADD                           
-#        ${DUNEMPILIBS}                          
-#        ${LDADD})
-
-list(APPEND MOSTLYCLEANFILES 
-        s*:p*:testmultistep_yasp_P1_1d-*.vtp            
-        s*:testmultistep_yasp_P1_1d-*.pvtp              
-        testmultistep_yasp_P1_1d.pvd)
-
-list(APPEND NORMALTESTS testmultistepcached)
-add_executable(testmultistepcached testmultistepcached.cc)
-
-add_dune_mpi_flags(testmultistepcached )
-target_link_libraries(testmultistepcached dunepdelab ${DUNE_LIBS})
-# The following lines are comment out as the translation is not clear. TODO review
-#
-# set(testmultistepcached_ LDFLAGS ${AM_LDFLAGS}     
-#        ${DUNEMPILDFLAGS})
-# The following lines are comment out as the translation is not clear. TODO review
-#
-# set(testmultistepcached_ LDADD                     
-#        ${DUNEMPILIBS}                          
-#        ${LDADD})
-list(APPEND MOSTLYCLEANFILES 
-        s*:p*:testmultistepcached_yasp_P1_1d-*.vtp      
-        s*:testmultistepcached_yasp_P1_1d-*.pvtp        
-        testmultistepcached_yasp_P1_1d.pvd)
 
 list(APPEND NORMALTESTS testp12dinterpolation)
 add_executable(testp12dinterpolation testp12dinterpolation.cc)
@@ -352,41 +298,6 @@ add_dune_alberta_flags(testutilities )
 #        ${ALBERTA_LIBS}                         
 #        ${LDADD})
 list(APPEND MOSTLYCLEANFILES edger.vtu interpolated.vtu q1.vtu taylorhood.vtu)
-
-list(APPEND TESTS ${CMAKE_CURRENT_BINARY_DIR}/testvectorwave.conf)
-list(APPEND check_PROGRAMS testvectorwave)
-add_executable(testvectorwave testvectorwave.cc)
-target_link_libraries(testvectorwave dunepdelab ${DUNE_LIBS})
-
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/testvectorwave.conf
-  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/testvectorwave.conf ${CMAKE_CURRENT_BINARY_DIR}/testvectorwave.conf
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/testvectorwave.conf testvectorwave
-  )
-list(APPEND check_SCRIPTS testvectorwave.conf)
-
-list(APPEND MOSTLYCLEANFILES 
-        s*:p*:vectorwave_*.vtu                  
-        s*:vectorwave_*.pvtu                    
-        vectorwave_*.pvd)
-
-list(APPEND TESTS ${CMAKE_CURRENT_BINARY_DIR}/testvectorwavecached.conf)
-list(APPEND check_SCRIPTS ${CMAKE_CURRENT_BINARY_DIR}/testvectorwavecached.conf)
-list(APPEND check_PROGRAMS testvectorwavecached)
-add_executable(testvectorwavecached testvectorwavecached.cc)
-target_link_libraries(testvectorwavecached dunepdelab ${DUNE_LIBS})
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/testvectorwavecached.conf
-  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/testvectorwavecached.conf ${CMAKE_CURRENT_BINARY_DIR}/testvectorwavecached.conf
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/testvectorwavecached.conf testvectorwavecached
-  )
-list(APPEND check_SCRIPTS testvectorwavecached.conf)
-
-list(APPEND MOSTLYCLEANFILES 
-        s*:p*:vectorwavecached_*.vtu            
-        s*:vectorwavecached_*.pvtu              
-        vectorwavecached_*.pvd)
-
 list(APPEND check_PROGRAMS testtypetree testtypetree-no-sfinae testtypetree-no-variadic testtypetree-no-rvalue-refs testtypetree-legacy)
 add_executable(testtypetree testtypetree.cc)
 set_property(TARGET testtypetree APPEND PROPERTY COMPILE_DEFINITIONS TEST_TYPETREE)

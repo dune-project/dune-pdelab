@@ -30,9 +30,9 @@ foreach(element ${elements})
   foreach(dimension ${dimensions})
     foreach(geometry ${geometries})
       foreach(order 0 1)
-        set(target testrt${order}${geometry}${dimension}dfem)
+        set(target test${element}${order}${geometry}${dimension}dfem)
         add_executable(${target} testfemwithgfs.cc)
-        set_property(${target} APPEND PROPERTY COMPILE_DEFINITIONS
+        set_property(TARGET ${target} APPEND PROPERTY COMPILE_DEFINITIONS
           FEM_DIM=${dimension} FEM_${${geometry}_upper}
           ${${element}_use_factory}
           FEM_FACTORY=${${element}_factory}
@@ -48,4 +48,4 @@ endforeach(element ${elements})
 # We do not want want to build the tests during make all
 # but just build them on demand
 add_directory_test_target(_test_target)
-add_dependencies(${_test_target} ${TEST})
+add_dependencies(${_test_target} ${TESTS})
