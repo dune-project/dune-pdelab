@@ -1,5 +1,3 @@
-set(TESTS testrt0simplex2dfem testrt1simplex2dfem testrt0cube2dfem testrt1cube2dfem testrt2cube2dfem testrt0cube3dfem testbdm1simplex2dfem testbdm1cube2dfem testopb0cube2dfem testopb1cube2dfem testopb2cube2dfem testopb3cube2dfem  testopb0simplex2dfem testopb1simplex2dfem testopb2simplex2dfem
-
 set(orders 0 1 2 3)
 set(dimensions 2 3)
 set(geometries simplex cube)
