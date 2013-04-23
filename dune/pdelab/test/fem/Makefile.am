@@ -255,3 +255,5 @@ TESTS += testp3simplex3dfem
 include $(top_srcdir)/am/global-rules
 
 DISTCHECK_CONFIGURE_FLAGS = --with-dune=$(DUNEROOT) CXX="$(CXX)" CC="$(CC)"
+
+EXTRA_DIST = CMakeLists.txt

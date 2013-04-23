@@ -8,7 +8,6 @@ set(common_HEADERS  backendselector.hh
                  istlvectorbackend.hh           
                  novlpistlsolverbackend.hh      
                  ovlpistlsolverbackend.hh       
-                 parallelistlhelper.hh          
                  petscmatrixbackend.hh          
                  petscnestedvectorbackend.hh    
                  petscutility.hh                
@@ -17,6 +16,7 @@ set(common_HEADERS  backendselector.hh
                  solver.hh                          
                  vectorutilities.hh)
 
+add_subdirectory(istl)
 # include not needed for CMake
 # include $(top_srcdir)/am/global-rules
 
