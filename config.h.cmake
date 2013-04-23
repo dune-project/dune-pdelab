@@ -31,4 +31,16 @@
    uses the UG_CPPFLAGS */
 #cmakedefine HAVE_PETSC ENABLE_PETSC
 
+/* Define to 1 if you have the <tr1/unordered_set> header file. */
+#cmakedefine HAVE_TR1_UNORDERED_SET 1
+
+/* Define to 1 if you have the <tr1/unordered_map> header file. */
+#cmakedefine HAVE_TR1_UNORDERED_MAP 1
+
+/* Define to 1 if you have the <unordered_map> header file. */
+#cmakedefine HAVE_UNORDERED_MAP 1
+
+/* Define to 1 if you have the <unordered_set> header file. */
+#cmakedefine HAVE_UNORDERED_SET 1
+
 /* end dune-pdelab */
