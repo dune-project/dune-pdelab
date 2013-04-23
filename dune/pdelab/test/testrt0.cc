@@ -11,6 +11,7 @@
 #include<dune/common/static_assert.hh>
 #include<dune/grid/yaspgrid.hh>
 #include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/backend/istlvectorbackend.hh>
 #include"../finiteelementmap/p0fem.hh"
 #include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
 #include"../finiteelementmap/rt0cube2dfem.hh"

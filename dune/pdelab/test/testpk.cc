@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<iostream>
 #include<vector>
@@ -15,6 +15,7 @@
 #include"../finiteelementmap/p12dfem.hh"
 #include"../finiteelementmap/pk2dfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
+#include"../backend/istlvectorbackend.hh"
 #include"../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include"../gridfunctionspace/interpolate.hh"
 #include"../common/function.hh"
@@ -33,7 +34,7 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,F<GV,RF> > BaseT;
 
   F (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
   {
     typename Traits::DomainType center;
@@ -44,7 +45,7 @@ public:
 };
 
 // generate a Q1 function and output it
-template<class GV> 
+template<class GV>
 void testpk (const GV& gv)
 {
   typedef typename GV::Grid::ctype DF;
@@ -60,13 +61,16 @@ void testpk (const GV& gv)
   P1FEM p1fem;
   typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> PkFEM;
   PkFEM pkfem(gv);
-  
+
+  typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+  typedef Dune::PDELab::NoConstraints CON;
+
   // make a grid function space
-  typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS; 
+  typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,CON,VBE> P0GFS;
   P0GFS p0gfs(gv,p0fem);
-  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM> P1GFS; 
+  typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,CON,VBE> P1GFS;
   P1GFS p1gfs(gv,p1fem);
-  typedef Dune::PDELab::GridFunctionSpace<GV,PkFEM> PkGFS; 
+  typedef Dune::PDELab::GridFunctionSpace<GV,PkFEM,CON,VBE> PkGFS;
   PkGFS pkgfs(gv,pkfem);
 
   // make coefficent Vectors
@@ -148,4 +152,4 @@ int main(int argc, char** argv)
     std::cerr << "Unknown exception thrown!" << std::endl;
 	return 1;
   }
-} 
+}

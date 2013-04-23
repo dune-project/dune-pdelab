@@ -12,6 +12,8 @@
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/common/typetree.hh>
 
+#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
+
 namespace Dune{
   namespace PDELab{
 
@@ -50,7 +52,7 @@ namespace Dune{
       typedef OneStepLocalJacobianAssemblerEngine<OneStepLocalAssembler> LocalJacobianAssemblerEngine;
 
       typedef typename LA1::LocalPatternAssemblerEngine LocalExplicitPatternAssemblerEngine;
-      typedef OneStepExplicitLocalJacobianResidualAssemblerEngine<OneStepLocalAssembler> 
+      typedef OneStepExplicitLocalJacobianResidualAssemblerEngine<OneStepLocalAssembler>
       LocalExplicitJacobianResidualAssemblerEngine;
 
       friend class OneStepLocalPatternAssemblerEngine<OneStepLocalAssembler>;
@@ -61,8 +63,8 @@ namespace Dune{
       //! @}
 
       void static_checks(){
-        dune_static_assert((is_same<typename LA0::Traits::MatrixBackend::Pattern,
-                            typename LA1::Traits::MatrixBackend::Pattern>::value),
+        dune_static_assert((is_same<typename LA0::Traits::Jacobian::Pattern,
+                            typename LA1::Traits::Jacobian::Pattern>::value),
                            "Received two local assemblers which are non-compatible "
                            "due to different matrix pattern types");
         dune_static_assert((is_same<typename LA0::Traits::Jacobian,
@@ -88,8 +90,8 @@ namespace Dune{
       //! Constructor with empty constraints
       OneStepLocalAssembler (LA0 & la0_, LA1 & la1_, typename Traits::Residual & const_residual_)
         : Base(la0_.trialConstraints(),la0_.testConstraints()),
-          la0(la0_), la1(la1_), 
-          const_residual(const_residual_), 
+          la0(la0_), la1(la1_),
+          const_residual(const_residual_),
           time(0.0), dt_mode(MultiplyOperator0ByDT), stage(0),
           pattern_engine(*this), prestage_engine(*this), residual_engine(*this), jacobian_engine(*this),
           explicit_jacobian_residual_engine(*this)
@@ -211,8 +213,8 @@ namespace Dune{
       //! Returns a reference to the requested engine. This engine is
       //! completely configured and ready to use.
       LocalExplicitJacobianResidualAssemblerEngine & localExplicitJacobianResidualAssemblerEngine
-      (typename Traits::Jacobian & a, 
-       typename Traits::Residual & r0, typename Traits::Residual & r1, 
+      (typename Traits::Jacobian & a,
+       typename Traits::Residual & r0, typename Traits::Residual & r1,
        const std::vector<typename Traits::Solution*> & x)
       {
         // Init pre stage engine
@@ -259,7 +261,7 @@ namespace Dune{
        or
 
        dt_factor0 = 1.0 and dt_factor1 = 1.0 / dt
-       
+
        or
 
        dt_factor0 = 1.0 and dt_factor1 = 1.0 .

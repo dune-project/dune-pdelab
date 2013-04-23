@@ -57,6 +57,21 @@ namespace Dune {
       typename Traits::FiniteElementType find(const Element& e) const
       { return factory.make(backend.find(e)); }
 
+      bool fixedSize() const
+      {
+        return backend.fixedSize();
+      }
+
+      std::size_t size(GeometryType gt) const
+      {
+        return dimR * backend.size(gt);
+      }
+
+      std::size_t maxLocalSize() const
+      {
+        return dimR * backend.maxLocalSize();
+      }
+
     };
 
     template<class BackendFEM, std::size_t dimR>

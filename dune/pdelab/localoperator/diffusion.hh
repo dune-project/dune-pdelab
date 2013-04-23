@@ -11,8 +11,6 @@
 #include<dune/geometry/referenceelements.hh>
 #include<dune/geometry/quadraturerules.hh>
 
-#include"../common/geometrywrapper.hh"
-#include"../gridoperatorspace/gridoperatorspace.hh"
 #include"defaultimp.hh"
 #include"pattern.hh"
 #include"flags.hh"
@@ -38,17 +36,17 @@ namespace Dune {
      * \tparam J grid function type giving j
      */
     template<typename K, typename A0, typename F, typename B, typename J>
-	class Diffusion : public NumericalJacobianApplyVolume<Diffusion<K,A0,F,B,J> >,
+    class Diffusion : public NumericalJacobianApplyVolume<Diffusion<K,A0,F,B,J> >,
                       public FullVolumePattern,
                       public LocalOperatorDefaultFlags,
                       public InstationaryLocalOperatorDefaultMethods<double>
       //,public NumericalJacobianVolume<Diffusion<K,A0,F,B,J> >
-	{
-	public:
+    {
+    public:
       // pattern assembly flags
       enum { doPatternVolume = true };
 
-	  // residual assembly flags
+      // residual assembly flags
       enum { doAlphaVolume = true };
       enum { doLambdaVolume = true };
       enum { doLambdaBoundary = true };
@@ -57,22 +55,22 @@ namespace Dune {
         : k(k_), a0(a0_), f(f_), bctype(bctype_), j(j_), intorder(intorder_)
       {}
 
-	  // volume integral depending on test and ansatz functions
-	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
-	  {
-		// domain and range field type
+      // volume integral depending on test and ansatz functions
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+      {
+        // domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::DomainFieldType DF;
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeFieldType RF;
+          Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::JacobianType JacobianType;
+          Traits::LocalBasisType::Traits::JacobianType JacobianType;
         typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeType RangeType;
+          Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSU::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = EG::Geometry::dimension;
         const int dimw = EG::Geometry::dimensionworld;
@@ -130,22 +128,22 @@ namespace Dune {
             for (size_type i=0; i<lfsu.size(); i++)
               r[i] += ( Kgradu*gradphi[i] + y*u*phi[i] )*factor;
           }
-	  }
+      }
 
       // jacobian of volume term
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
+      void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             LocalMatrix<R>& mat) const
       {
-		// domain and range field type
+        // domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::DomainFieldType DF;
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeFieldType RF;
+          Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::JacobianType JacobianType;
+          Traits::LocalBasisType::Traits::JacobianType JacobianType;
         typedef typename LFSU::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeType RangeType;
+          Traits::LocalBasisType::Traits::RangeType RangeType;
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
@@ -182,7 +180,7 @@ namespace Dune {
             std::vector<Dune::FieldVector<RF,dim> > Kgradphi(lfsu.size());
             for (size_type i=0; i<lfsu.size(); i++)
               tensor.mv(gradphi[i],Kgradphi[i]);
-            
+
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
             lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
@@ -199,23 +197,23 @@ namespace Dune {
           }
       }
 
- 	  // volume integral depending only on test functions
-	  template<typename EG, typename LFSV, typename R>
+      // volume integral depending only on test functions
+      template<typename EG, typename LFSV, typename R>
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
-		// domain and range field type
+        // domain and range field type
         typedef typename LFSV::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::DomainFieldType DF;
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename LFSV::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeFieldType RF;
+          Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSV::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeType RangeType;
+          Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSV::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = EG::Geometry::dimension;
-        
+
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
@@ -223,7 +221,7 @@ namespace Dune {
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
-            // evaluate shape functions 
+            // evaluate shape functions
             std::vector<RangeType> phi(lfsv.size());
             lfsv.finiteElement().localBasis().evaluateFunction(it->position(),phi);
 
@@ -239,22 +237,22 @@ namespace Dune {
       }
 
       // boundary integral independen of ansatz functions
- 	  template<typename IG, typename LFSV, typename R>
+      template<typename IG, typename LFSV, typename R>
       void lambda_boundary (const IG& ig, const LFSV& lfsv, R& r) const
       {
-		// domain and range field type
+        // domain and range field type
         typedef typename LFSV::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::DomainFieldType DF;
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename LFSV::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeFieldType RF;
+          Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSV::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeType RangeType;
+          Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSV::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = IG::dimension;
-        
+
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
@@ -265,19 +263,19 @@ namespace Dune {
             // evaluate boundary condition type
             // skip rest if we are on Dirichlet boundary
             if( bctype.isDirichlet( ig,it->position() ) )
-                continue;
+              continue;
 
-            // position of quadrature point in local coordinates of element 
+            // position of quadrature point in local coordinates of element
             Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
 
-            // evaluate test shape functions 
+            // evaluate test shape functions
             std::vector<RangeType> phi(lfsv.size());
             lfsv.finiteElement().localBasis().evaluateFunction(local,phi);
-            
+
             // evaluate flux boundary condition
             typename J::Traits::RangeType y;
             j.evaluate(*(ig.inside()),local,y);
-            
+
             // integrate J
             RF factor = it->weight()*ig.geometry().integrationElement(it->position());
             for (size_type i=0; i<lfsv.size(); i++)
@@ -292,7 +290,7 @@ namespace Dune {
       const B& bctype;
       const J& j;
       int intorder;
-	};
+    };
 
     //! \} group LocalOperator
   } // namespace PDELab

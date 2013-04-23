@@ -1,7 +1,11 @@
+// -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// vi: set et ts=8 sw=2 sts=2:
 #ifndef DUNE_PDELAB_BACKEND_SOLVER_HH
 #define DUNE_PDELAB_BACKEND_SOLVER_HH
 
-#include<dune/common/fvector.hh>
+#include <dune/common/fvector.hh>
+#include <dune/pdelab/backend/istl/tags.hh>
+#include <dune/pdelab/backend/istlvectorbackend.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -18,7 +22,7 @@ namespace Dune {
       template<class V>
       typename Dune::template FieldTraits<typename V::ElementType >::real_type norm(const V& v) const
       {
-        return v.base().two_norm();
+        return istl::raw(v).two_norm();
       }
     };
 
@@ -31,7 +35,7 @@ namespace Dune {
       double elapsed;            // total user time in seconds
       RFType reduction;          // defect reduction
       RFType conv_rate;          // convergence rate (average reduction per step)
-      
+
       LinearSolverResult() :
         converged(false), iterations(0), elapsed(0.0), reduction(0.0), conv_rate(0.0) {}
     };
@@ -48,9 +52,9 @@ namespace Dune {
     protected:
       Dune::PDELab::LinearSolverResult<double> res;
     };
-    
+
     //! \} group Backend
-    
+
   } // end namespace PDELab
 } // end namespace Dune
 

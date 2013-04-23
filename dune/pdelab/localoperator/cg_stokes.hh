@@ -10,9 +10,9 @@
 
 #include<dune/geometry/type.hh>
 #include<dune/geometry/quadraturerules.hh>
+#include<dune/pdelab/gridfunctionspace/localvector.hh>
+#include<dune/pdelab/gridoperator/common/localmatrix.hh>
 
-#include"../common/geometrywrapper.hh"
-#include"../gridoperatorspace/gridoperatorspace.hh"
 #include"defaultimp.hh"
 #include"pattern.hh"
 #include"idefault.hh"
@@ -32,60 +32,61 @@ namespace Dune {
         This class implements a local operator for conforming finite
         element discretizations of the Navier-Stokes equations with
         TaylorHood basis.
-     
+
         \f{align*}{
         u \cdot \nabla u \cdot v - \nabla \cdot ( \nabla u + (\nabla u)^T + p I) &=& 0 \mbox{ in } \Omega, \\
         \nabla \cdot u &=& 0 \mbox{ in } \Omega \\
         u &=& g \mbox{ on } \partial\Omega_D \\
         -\nu (\nabla u + p I ) \nu &=& j \mbox{ on } \partial\Omega_N \\
         \f}
-      
+
         As indicated in the equation above, this implementation
         utilizes only scalar Neumann conditions.
 
       \tparam P A suitable parameter class with the interface of
       TaylorHoodNavierStokesDefaultParameters
 
-      \tparam navier May be set to false, to avoid assembling of
-      navier term in case rho=0.
+        \tparam navier May be set to false, to avoid assembling of
+        navier term in case rho=0.
 
-      \tparam q Quadrature order.
-     */
+        \tparam q Quadrature order.
+    */
 
-    template<typename P, bool navier = true, int qorder=3, bool full_tensor=true>
+    template<typename P>
     class TaylorHoodNavierStokes :
-      public NumericalJacobianApplyVolume<TaylorHoodNavierStokes<P,navier,qorder,full_tensor> >,
-      public NumericalJacobianVolume<TaylorHoodNavierStokes<P,navier,qorder,full_tensor> >,
       public FullVolumePattern,
       public LocalOperatorDefaultFlags,
-      public InstationaryLocalOperatorDefaultMethods<double>
+      public InstationaryLocalOperatorDefaultMethods<typename P::Traits::RangeField>
     {
     public:
       //! Boundary condition indicator type
       typedef StokesBoundaryCondition BC;
-        
+
+      static const bool navier = P::assemble_navier;
+      static const bool full_tensor = P::assemble_full_tensor;
+
       // pattern assembly flags
       enum { doPatternVolume = true };
 
       // residual assembly flags
       enum { doAlphaVolume = true };
+      enum { doLambdaVolume = true };
       enum { doLambdaBoundary = true };
 
       typedef P PhysicalParameters;
 
-      TaylorHoodNavierStokes (const PhysicalParameters & p_)
+      TaylorHoodNavierStokes (const PhysicalParameters & p, std::size_t quadrature_order = 4)
 
-        : NumericalJacobianVolume< TaylorHoodNavierStokes<P,navier,qorder,full_tensor> >(1e-7), 
-          p(p_)
+        : _p(p)
+        , _quadrature_order(quadrature_order)
       {}
-      
+
       // volume integral depending on test and ansatz functions
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         // dimensions
         const int dim = EG::Geometry::dimension;
-        const int dimw = EG::Geometry::dimensionworld;
 
         // extract local function spaces
         typedef typename LFSU::template Child<0>::Type LFSU_V_PFS;
@@ -115,10 +116,13 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
+        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,_quadrature_order);
 
         // loop over quadrature points
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it = rule.begin(),
+               endit = rule.end();
+             it != endit;
+             ++it)
           {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType_V> js(vsize);
@@ -137,20 +141,22 @@ namespace Dune {
             // evaluate basis functions
             std::vector<RT_P> psi(psize);
             lfsu_p.finiteElement().localBasis().evaluateFunction(it->position(),psi);
-            
+
             // compute u (if Navier term enabled)
             Dune::FieldVector<RF,dim> vu(0.0);
 
             std::vector<RT_V> phi(vsize);
-            if(navier){
-              lfsu_v_pfs.child(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
+            if(navier)
+              {
+                lfsu_v_pfs.child(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
 
-              for(int d=0; d<dim; ++d){
-                const LFSU_V & lfsu_v = lfsu_v_pfs.child(d);
-                for (size_t i=0; i<lfsu_v.size(); i++)
-                  vu[d] += x(lfsu_v,i) * phi[i];
+                for(int d=0; d<dim; ++d)
+                  {
+                    const LFSU_V & lfsu_v = lfsu_v_pfs.child(d);
+                    for (size_t i=0; i<lfsu_v.size(); i++)
+                      vu[d] += x(lfsu_v,i) * phi[i];
+                  }
               }
-            }
 
             // Compute velocity jacobian
             Dune::FieldMatrix<RF,dim,dim> jacu(0.0);
@@ -160,31 +166,32 @@ namespace Dune {
                 jacu[d].axpy(x(lfsu_v,i),gradphi[i]);
             }
 
+            // compute pressure
+            RT_P func_p(0.0);
+            for (size_t i=0; i<lfsu_p.size(); i++)
+              func_p += x(lfsu_p,i) * psi[i];
+
+            // Viscosity and density
+            const RF mu = _p.mu(eg,it->position());
+            const RF rho = _p.rho(eg,it->position());
+
+            // geometric weight
+            const RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+
             for(int d=0; d<dim; ++d){
 
               const LFSU_V & lfsu_v = lfsu_v_pfs.child(d);
 
-              // compute pressure
-              RT_P func_p(0.0);
-              for (size_t i=0; i<lfsu_p.size(); i++)
-                func_p += x(lfsu_p,i) * psi[i];
-
               //compute u * grad u_d
               const RF u_nabla_u = vu * jacu[d];
-
-              // Viscosity and density
-              const RF mu = p.mu(eg,it->position());
-              const RF rho = p.rho(eg,it->position());
-
-              // geometric weight 
-              RF factor = it->weight() * eg.geometry().integrationElement(it->position());
 
               for (size_t i=0; i<vsize; i++){
 
                 // integrate grad u * grad phi_i
                 r.accumulate(lfsu_v,i, mu * (jacu[d] * gradphi[i]) * factor);
 
-                if(full_tensor)
+                // integrate (grad u)^T * grad phi_i
+                if (full_tensor)
                   for(int dd=0; dd<dim; ++dd)
                     r.accumulate(lfsu_v,i, mu * (jacu[dd][d] * gradphi[i][dd]) * factor);
 
@@ -205,15 +212,92 @@ namespace Dune {
                 divu += x(lfsu_v_pfs.child(d),i) * gradphi[i][d];
 
             // integrate div u * psi_i
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
-            for (size_t i=0; i<lfsu_p.size(); i++){
-              r.accumulate(lfsu_p,i, - (divu * psi[i]) * factor);
-            }
+            for (size_t i=0; i<lfsu_p.size(); i++)
+              {
+                r.accumulate(lfsu_p,i, -1.0 * divu * psi[i] * factor);
+              }
 
           }
       }
 
-      // jacobian of boundary term
+
+      // volume integral depending on test functions
+      template<typename EG, typename LFSV, typename R>
+      void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
+      {
+        // dimensions
+        const int dim = EG::Geometry::dimension;
+
+        // extract local function spaces
+        typedef typename LFSV::template Child<0>::Type LFSV_V_PFS;
+        const LFSV_V_PFS& lfsv_v_pfs = lfsv.template child<0>();
+
+        typedef typename LFSV_V_PFS::template Child<0>::Type LFSV_V;
+        const unsigned int vsize = lfsv_v_pfs.child(0).size();
+
+        // domain and range field type
+        typedef typename LFSV_V::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        typedef typename LFSV_V::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType RT_V;
+        typedef typename LFSV_V::Traits::SizeType size_type;
+
+        typedef typename LFSV::template Child<1>::Type LFSV_P;
+        const LFSV_P& lfsv_p = lfsv.template child<1>();
+        const unsigned int psize = lfsv_p.size();
+
+        typedef typename LFSV_V::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
+        typedef typename LFSV_P::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType RT_P;
+
+        // select quadrature rule
+        Dune::GeometryType gt = eg.geometry().type();
+        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,_quadrature_order);
+
+        // loop over quadrature points
+        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it = rule.begin(),
+               endit = rule.end();
+             it != endit;
+             ++it)
+          {
+            std::vector<RT_V> phi(vsize);
+            lfsv_v_pfs.child(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
+
+            std::vector<RT_P> psi(psize);
+            lfsv_p.finiteElement().localBasis().evaluateFunction(it->position(),psi);
+
+            // forcing term
+            const Dune::FieldVector<RF,dim> f1 = _p.f(eg,it->position());
+
+            // geometric weight
+            const RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+
+            for(int d=0; d<dim; ++d){
+
+              const LFSV_V & lfsv_v = lfsv_v_pfs.child(d);
+
+              for (size_t i=0; i<vsize; i++)
+                {
+                  // integrate f1 * phi_i
+                  r.accumulate(lfsv_v,i, -f1[d]*phi[i] * factor);
+                }
+
+            }
+
+            const RF g2 = _p.g2(eg,it->position());
+
+            // integrate div u * psi_i
+            for (size_t i=0; i<lfsv_p.size(); i++)
+              {
+                r.accumulate(lfsv_p,i, g2 * psi[i] * factor);
+              }
+
+          }
+      }
+
+
+      // residual of boundary term
       template<typename IG, typename LFSV, typename R>
       void lambda_boundary (const IG& ig, const LFSV& lfsv, R& r) const
       {
@@ -246,18 +330,22 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
-        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
+        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,_quadrature_order);
 
         // loop over quadrature points and integrate normal flux
-        for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it = rule.begin(),
+               endit = rule.end();
+             it != endit;
+             ++it)
           {
             // evaluate boundary condition type
-            typename BC::Type bctype = p.bcType(ig,it->position());
- 
-            // skip rest if we are on Dirichlet boundary
-            if (bctype == BC::VelocityDirichlet) continue;
+            typename BC::Type bctype = _p.bctype(ig,it->position());
 
-            // position of quadrature point in local coordinates of element 
+            // skip rest if we are on Dirichlet boundary
+            if (bctype != BC::StressNeumann)
+              continue;
+
+            // position of quadrature point in local coordinates of element
             Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
 
             // evaluate basis functions
@@ -267,56 +355,22 @@ namespace Dune {
             const RF factor = it->weight() * ig.geometry().integrationElement(it->position());
             const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(it->position());
 
-            // evaluate flux boundary condition. the scalar flux is
-            // assumed to be in normal direction
-            const Dune::FieldVector<DF,dimw> neumann_stress = p.stress(ig,it->position(),normal);
-            
-            for(unsigned int d=0; d<dim; ++d){
+            // evaluate flux boundary condition
+            const Dune::FieldVector<DF,dimw> neumann_stress = _p.j(ig,it->position(),normal);
 
-              const LFSV_V & lfsv_v = lfsv_v_pfs.child(d);
+            for(unsigned int d=0; d<dim; ++d)
+              {
 
-              for (size_t i=0; i<vsize; i++){
-                r.accumulate(lfsv_v,i, neumann_stress[d] * phi[i] * factor);
+                const LFSV_V & lfsv_v = lfsv_v_pfs.child(d);
+
+                for (size_t i=0; i<vsize; i++)
+                  {
+                    r.accumulate(lfsv_v,i, neumann_stress[d] * phi[i] * factor);
+                  }
+
               }
-
-            }
           }
       }
-
-    protected:
-      const P& p;
-    };
-
-    /**
-       \brief A local operator for the Navier-Stokes equations with
-       direct assembling of jacobian.
-
-       This class is derived from TaylorHoodNavierStokes and provides
-       the same interface and functionality.
-     */
-
-    template<typename P, bool navier, int qorder=2, bool full_tensor=true>
-    class TaylorHoodNavierStokesJacobian :
-      public JacobianBasedAlphaVolume< TaylorHoodNavierStokesJacobian<P,navier,qorder,full_tensor> >,
-      public TaylorHoodNavierStokes<P,navier,qorder,full_tensor>
-    {
-    public:
-      // pattern assembly flags
-      enum { doPatternVolume = true };
-
-      // residual assembly flags
-      enum { doAlphaVolume = true };
-      enum { doLambdaBoundary = true };
-
-      typedef P PhysicalParameters;
-
-      typedef TaylorHoodNavierStokes<P,navier,qorder,full_tensor> Base;
-      using Base::p;
-
-      TaylorHoodNavierStokesJacobian (const PhysicalParameters & p_)
-
-        : Base(p_)
-      {}
 
 
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
@@ -325,14 +379,13 @@ namespace Dune {
       {
         // dimensions
         const int dim = EG::Geometry::dimension;
-        const int dimw = EG::Geometry::dimensionworld;
-        
+
 
         // extract local function spaces
         typedef typename LFSU::template Child<0>::Type LFSU_V_PFS;
         const LFSU_V_PFS& lfsu_v_pfs = lfsu.template child<0>();
         const unsigned int vsize = lfsu_v_pfs.child(0).size();
-        
+
         typedef typename LFSU_V_PFS::template Child<0>::Type LFSU_V;
 
         // domain and range field type
@@ -359,10 +412,13 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
+        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,_quadrature_order);
 
         // loop over quadrature points
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it = rule.begin(),
+               endit = rule.end();
+             it != endit;
+             ++it)
           {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType_V> js(vsize);
@@ -396,8 +452,10 @@ namespace Dune {
             }
 
             // Viscosity and density
-            const RF mu = p.mu(eg,it->position());
-            const RF rho = p.rho(eg,it->position());
+            const RF mu = _p.mu(eg,it->position());
+            const RF rho = _p.rho(eg,it->position());
+
+            const RF factor = it->weight() * eg.geometry().integrationElement(it->position());
 
             for(int d=0; d<dim; ++d){
 
@@ -410,7 +468,6 @@ namespace Dune {
                 for(size_t l =0; l < vsize; ++l)
                   gradu_d.axpy(x(lfsv_v,l), gradphi[l]);
 
-              RF factor = it->weight() * eg.geometry().integrationElement(it->position());
               for (size_t i=0; i<lfsv_v.size(); i++){
 
                 // integrate grad phi_u_i * grad phi_v_i (viscous force)
@@ -459,19 +516,11 @@ namespace Dune {
           } // it
       }
 
-      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-      void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
-      {
-        Base::alpha_volume(eg,lfsu,x,lfsv,r);
-      }
-
-      template<typename IG, typename LFSV, typename R>
-      void lambda_boundary (const IG& ig, const LFSV& lfsv, R& r) const
-      {
-        Base::lambda_boundary(ig,lfsv,r);
-      }
-
+    private:
+      const P& _p;
+      const std::size_t _quadrature_order;
     };
+
 
     /** a local operator for the mass term corresponding to the
      * instationary local operator TaylorHoodNavierStokes(Jacobian)
@@ -481,10 +530,11 @@ namespace Dune {
      * \f}
      */
     template< typename P >
-    class NavierStokesMass : public NumericalJacobianApplyVolume<NavierStokesMass<P> >,
-                             public FullVolumePattern,
-                             public LocalOperatorDefaultFlags,
-                             public InstationaryLocalOperatorDefaultMethods<double>
+    class NavierStokesMass
+      : public NumericalJacobianApplyVolume<NavierStokesMass<P> >
+      , public FullVolumePattern
+      , public LocalOperatorDefaultFlags
+      , public InstationaryLocalOperatorDefaultMethods<double>
     {
     public:
       // pattern assembly flags
@@ -512,7 +562,7 @@ namespace Dune {
 
       // jacobian of volume term
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
-      void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
+      void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             M& mat) const
       {
         typedef typename LFSV::template Child<0>::Type LFSV_PFS_V;
@@ -526,10 +576,10 @@ namespace Dune {
 
     private:
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-      void scalar_alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
+      void scalar_alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             R& r) const
       {
-        
+
         // Switches between local and global interface
         typedef FiniteElementInterfaceSwitch<
           typename LFSU::Traits::FiniteElementType
@@ -544,7 +594,7 @@ namespace Dune {
         typedef typename BasisSwitch::Range RangeType;
 
         typedef typename LFSU::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = EG::Geometry::dimension;
 
@@ -567,17 +617,17 @@ namespace Dune {
 
             // u*phi_i
             RF factor = it->weight() * rho * eg.geometry().integrationElement(it->position());
-            
+
             for (size_type i=0; i<lfsu.size(); i++)
               r.accumulate(lfsv,i, u*phi[i]*factor);
           }
       }
 
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
-      void scalar_jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, 
+      void scalar_jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             M& mat) const
       {
-        
+
         // Switches between local and global interface
         typedef FiniteElementInterfaceSwitch<
           typename LFSU::Traits::FiniteElementType
@@ -601,7 +651,7 @@ namespace Dune {
 
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
-          {            
+          {
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
             FESwitch::basis(lfsu.finiteElement()).evaluateFunction(it->position(),phi);
@@ -614,7 +664,7 @@ namespace Dune {
                 mat.accumulate(lfsv,i,lfsu,j, phi[j]*phi[i]*factor);
           }
       }
-      
+
       const P & p;
       int intorder;
     };

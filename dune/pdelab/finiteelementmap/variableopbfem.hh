@@ -5,10 +5,11 @@
 #include <dune/geometry/type.hh>
 
 #include <dune/localfunctions/common/virtualwrappers.hh>
-#include "l2orthonormal.hh"
 #include <dune/common/array.hh>
 #include <dune/common/shared_ptr.hh>
-#include "finiteelementmap.hh"
+#include <dune/pdelab/finiteelementmap/finiteelementmap.hh>
+#include <dune/pdelab/finiteelementmap/l2orthonormal.hh>
+#include <dune/pdelab/finiteelementmap/monomfem.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -65,13 +66,13 @@ namespace Dune {
       {
         return *(finiteElements_[p]);
       }
-      
+
       //! \brief get local basis functions for the default order
       const typename Traits::FiniteElementType& getFEM () const
       {
         return *(finiteElements_[defaultP_]);
       }
-      
+
       template<class EntityType>
       void setOrder (const EntityType& e, unsigned int p)
       {
@@ -87,6 +88,21 @@ namespace Dune {
         unsigned int p = polOrder_[i];
         assert(p <= maxP);
         return p;
+      }
+
+      bool fixedSize() const
+      {
+        return false;
+      }
+
+      std::size_t size(GeometryType gt) const
+      {
+        DUNE_THROW(Dune::Exception,"This should not be called!");
+      }
+
+      std::size_t maxLocalSize() const
+      {
+        return getFem(maxP).localCoefficients().size();
       }
 
     private:

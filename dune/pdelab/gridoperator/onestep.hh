@@ -4,6 +4,7 @@
 #include <dune/pdelab/instationary/onestep.hh>
 #include <dune/pdelab/gridoperator/onestep/localassembler.hh>
 #include <dune/pdelab/gridoperator/common/gridoperatorutilities.hh>
+#include <dune/pdelab/constraints/constraints.hh>
 
 namespace Dune{
   namespace PDELab{
@@ -14,7 +15,7 @@ namespace Dune{
     public:
 
       //! The sparsity pattern container for the jacobian matrix
-      typedef typename GO0::Traits::MatrixBackend::Pattern Pattern;
+      typedef typename GO0::Traits::Jacobian::Pattern Pattern;
 
       //! The global UDG assembler type
       typedef typename GO0::Traits::Assembler Assembler;
@@ -25,8 +26,11 @@ namespace Dune{
       typedef typename GO1::Traits::LocalAssembler LocalAssemblerDT1;
       //! @}
 
-      //! The local UDG assembler type
+      //! The local assembler type
       typedef OneStepLocalAssembler<OneStepGridOperator,LocalAssemblerDT0,LocalAssemblerDT1> LocalAssembler;
+
+      //! The BorderDOFExchanger
+      typedef typename GO0::BorderDOFExchanger BorderDOFExchanger;
 
       //! The grid operator traits
       typedef Dune::PDELab::GridOperatorTraits
@@ -168,10 +172,10 @@ namespace Dune{
 
         local_assembler.setStage(stage);
 
-        typedef typename LocalAssembler::LocalExplicitJacobianResidualAssemblerEngine 
+        typedef typename LocalAssembler::LocalExplicitJacobianResidualAssemblerEngine
           ExplicitJacobianResidualEngine;
-        
-        ExplicitJacobianResidualEngine & jacobian_residual_engine 
+
+        ExplicitJacobianResidualEngine & jacobian_residual_engine
           = local_assembler.localExplicitJacobianResidualAssemblerEngine(a,r0,r1,x);
 
         global_assembler.assemble(jacobian_residual_engine);

@@ -67,13 +67,13 @@ namespace Dune {
       {
         return *(finiteElements_[p]);
       }
-      
+
       //! \brief get local basis functions for the default order
       const typename Traits::FiniteElementType& getFEM () const
       {
         return *(finiteElements_[defaultP_]);
       }
-      
+
       template<class EntityType>
       void setOrder (const EntityType& e, unsigned int p)
       {
@@ -89,6 +89,21 @@ namespace Dune {
         unsigned int p = polOrder_[i];
         assert(p <= maxP);
         return p;
+      }
+
+      bool fixedSize() const
+      {
+        return false;
+      }
+
+      std::size_t size(GeometryType gt) const
+      {
+        DUNE_THROW(VariableElementSize,"VariableMonomLocalFiniteElementMap can contain elements of variable order.");
+      }
+
+      std::size_t maxLocalSize() const
+      {
+        DUNE_THROW(VariableElementSize,"VariableMonomLocalFiniteElementMap can contain elements of variable order.");
       }
 
     private:

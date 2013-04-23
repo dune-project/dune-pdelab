@@ -16,7 +16,7 @@ namespace Dune {
     public:
         enum{doBoundary=true};enum{doProcessor=false};
       enum{doSkeleton=false};enum{doVolume=false};
-      
+
 
       //! boundary constraints
       /**
@@ -31,12 +31,12 @@ namespace Dune {
         typedef typename IG::ctype DT;
         const int dim = IG::dimension;
         const int face = ig.indexInInside();
-        const Dune::GenericReferenceElement<DT,dim-1> & 
-          face_refelem = Dune::GenericReferenceElements<DT,dim-1>::general(ig.geometry().type()); 
+        const Dune::ReferenceElement<DT,dim-1> &
+          face_refelem = Dune::ReferenceElements<DT,dim-1>::general(ig.geometry().type());
         const FieldVector<DT, dim-1> ip = face_refelem.position(0,0);
         if (p.isNeumann(ig,ip)) {
           typename T::RowType empty;              // need not interpolate
-          trafo[face]=empty;
+          trafo[lfs.dofIndex(face)]=empty;
         }
       }
     };

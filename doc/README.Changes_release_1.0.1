@@ -1,0 +1,340 @@
+If you want to use your dune-pdelab code from snapshot2.1 with the current
+trunk (date 07.06.2011) you have to adapt some things:
+
+GridOperator replaces GridOperatorSpace
+***************************************
+
+Stationary case
+---------------
+
+Instead of the deprecated header
+
+| #include<dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
+
+use
+
+| #include<dune/pdelab/gridoperator/gridoperator.hh>
+
+The grid operator needs the template parameters:
+
+ - GFSU GridFunctionSpace for ansatz functions
+ - GFSV GridFunctionSpace for test functions
+ - LOP  local operator
+ - MBE  Matrix Backend
+ - DF   domain field type
+ - RF   range field type
+ - JF   jacobian field type
+ - CU   constraints container (trial space)
+ - CV   constraints container (test space)
+ - novlp_mode switch
+	for nonoverlapping grids (default is false)
+
+An example for a stationary grid operator is:
+
+| typedef Dune::PDELab::GridOperator
+|   <GFSU,GFSV,LOP,MBE,DF,RF,JF,CU,CV,novlp_mode> GO;
+| GO go(gfsu,cu,gfsv,cv,lop);
+
+The three field type template parameters DF, RF and JF are new. The
+names are chosen with regard to the operator mapping which the grid
+operator represents. Hence, DF represents the field type of the
+solution coefficient vector, RF represents the field type of the
+residual vector and JF represents the field type of the jacobian
+matrix of the operator.
+
+Instationary case
+-----------------
+
+You additionally need the header:
+
+| #include<dune/pdelab/gridoperator/onestep.hh>
+
+An example for an instationary grid operator (where TLOP is the time local
+operator) is:
+
+| typedef Dune::PDELab::GridOperator<GFSU,GFSV,LOP,MBE,DF,RF,JF,CU,CV> GO0;
+| GO0 go0(gfsu,cu,gfsv,cv,lop);
+| typedef Dune::PDELab::GridOperator<GFSU,GFSV,TLOP,MBE,DF,RF,JF,CU,CV> GO1;
+| GO1 go1(gfsu,cu,gfsv,cv,tlop);
+| typedef Dune::PDELab::OneStepGridOperator<GO0,GO1> IGO;
+| IGO igo(go0,go1);
+
+To use an explicit time stepping method set the template parameter of
+OneStepGridOperator to false and specify the method through setMethod like
+this:
+
+| typedef Dune::PDELab::OneStepGridOperator<GO0,GO1,false> IGO;
+| IGO c1igo(c1go0,c1go1);
+| igo.setMethod(method);
+
+The new grid operator gives you the appropiate vector and matrix type, so
+instead of:
+
+| typedef typename GFS::template VectorContainer<double>::Type V;
+| typedef typename GO::template MatrixContainer<double>::Type M;
+
+use
+
+| typedef typename GO::Traits::Domain U;
+| typedef typename GO::Traits::Range V;
+| typedef typename GO::Jacobian M;
+
+If you need the vector type before the definition of the grid operator use
+
+| typedef typename Dune::PDELab::BackendVectorSelector<GFS,double>::Type V;
+
+Interface changes for containers in LocalOperator
+*************************************************
+
+The jacobian_*() methods must now accept any class fulfilling the interface
+given below as the local matrix types.  For instance, instead of:
+
+| template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+| void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x,
+|                       const LFSV& lfsv, LocalMatrix<R>& mat) const
+
+use:
+
+| template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
+| void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x,
+|                       const LFSV& lfsv, M& mat) const
+
+M is usually an WeightedMatrixAccumulationView.  To get the type of the
+entries, you use
+
+| typename M::value_type                              // new way
+
+Access to vector entries:
+
+| x[lfsu.localIndex(i)]                               // old way
+| x(lfsu,i)                                           // new way
+
+Access to matrix entries:
+
+| jac(lfsu.localIndex(i),lfsv.localIndex(j))          // old way
+| jac(lfsu,i,lfsv,j)                                  // new way
+
+Accumulate residual:
+
+| r[lfsv.localIndex(j)] += value                      // old way
+| r.accumulate(lfsv,j,value)                          // new way
+
+Accumulate jacobian:
+
+| jac(lfsu.localIndex(i),lfsv.localIndex(j)) += value // old way
+| jac.accumulate(lfsu,i,lfsv,j,value)                 // new way
+
+
+AMG interface changes
+*********************
+
+New template parameter for AMG solvers is the type of the new grid operator
+GO:
+
+| Dune::PDELab::ISTLBackend_CG_AMG_SSOR<GO>;
+| Dune::PDELab::ISTLBackend_BCGS_AMG_SSOR<GO>;
+| Dune::PDELab::ISTLBackend_SEQ_LS_AMG_SSOR<GO>;
+
+The constructor now takes the arguments:
+
+ - gfs_     the grid function space (only for parallel AMG)
+ - maxiter_ the max number of iterations
+ - verbose_ the verbosity
+ - reuse_   determines whether or not to reuse the matrix
+
+If the last argument is set to true, the AMG object will only be built once
+with the first matrix and can be reused, only use this if your matrix stays
+the same as long as the solver object exists!
+
+Until now the second argument was the number of smoothsteps (not the max
+number of iterations which it is now!), this and every other important AMG
+parameter can now be changed through a new parameter class
+dune-istl/dune/istl/paamg/parameters.hh:
+
+| typedef Dune::PDELab::ISTLBackend_CG_AMG_SSOR<GO> LS;
+| Dune::Amg::Parameters params;
+| params.setNoPreSmoothSteps(5);
+| params.setNoPostSmoothSteps(6);
+| params.set...
+| ls.setparams(params);
+
+Using AMG with the old GridOperatorSpace
+----------------------------------------
+
+To use the old grid operator space (GOS) you can use the fakeGOTraits struct:
+
+| typedef Dune::PDELab::fakeGOTraits<Real,U,GOS> GO;
+| class Dune::PDELab::ISTLBackend_SEQ_LS_AMG_SSOR<GO>;
+
+where
+
+ - Real is the type of the matrix entries
+ - U    is the type of the vector
+ - GOS  is the type of the old grid operator space
+
+
+Constraints
+***********
+
+Instead of the deprecated header:
+
+| #include<dune/pdelab/gridfunctionspace/constraints.hh>
+
+use
+
+| #include<dune/pdelab/constraints/constraints.hh>
+| #include<dune/pdelab/constraints/constraintsparameters.hh>
+
+The function call
+
+| Dune::PDELab::constraints(bctype,gfs,cg);
+
+expects an object bctype of a user-defined type BCType implementing the
+boundary condition type.
+
+BCType used to be inheriting from Dune::PDELab::BoundaryGridFunctionBase.
+This is deprecated.
+
+The new way: Depending on your numerical scheme, BCType has to implement a
+specific predicate interface.  Each type of contraints
+(e.g. ConformingDirichletConstraints or RT0Constraints) needs its own set of
+information to decide where DOFs are constraint and where not.  This
+informatation is provided via a predicate (true/false, i.e. constraint/not
+constraint).  Each type of constraints defined its own predicate, some of
+which can be associated with the usual boundary condition types.
+
+Example:
+
+ - ConformingDirichletConstraints:
+
+   When dealing with scalar ansatz functions, Dirichlet boundaries conditions
+   are essential boundary conditions and thus lead to constraint DOFs.  The
+   constraints have to be parametrized with a class, which provides the
+   isDirichlet predicate, i.e. fulfills the
+   Dune::PDELab::DirichletConstraintsParameters interface.
+
+ - RT0Constraints:
+
+   If you consider Raviart-Thomas vector valued ansatz functions Neumann
+   boundary conditions are the essential boundary conditions, which means you
+   have a constraint on the fluxes over a boundary.  The constraints have to
+   be parametrized with a class, which provides the isNeumann predicate,
+   i.e. fulfills the Dune::PDELab::FluxConstraintsParameters interface.
+
+At the moment isDirichlet and isNeumann are the only two predicated used in
+PDELab.  In the future new Types of Constraints and thus new interface may be
+introduced.
+
+Example:
+
+| class BCType : public Dune::PDELab::DirichletConstraintsParameters
+| {
+| public:
+|
+|   template<typename I>
+|   bool isDirichlet
+|   ( const I & intersection,
+|     const Dune::FieldVector<typename I::ctype, I::dimension-1> &coord ) const
+|   {
+|     Dune::FieldVector<typename I::ctype, I::dimension>
+|       xg = intersection.geometry().global( coord );
+|
+|     if ( xg[1]<1E-6 || xg[1]>1.0-1E-6 )
+|       return false; // not Dirichlet
+|     else
+|       return true;  // Dirichlet b.c. on all other boundaries
+|   }
+| };
+
+
+Construction of VectorContainer from Backend
+********************************************
+
+Previously the VectorBackend provided a nested template class to allow the
+user to construct a vector with specific numeric type.  This prevents
+specialisations of traits classes for the vector class in the backend.
+
+Now there is a traits class BackendVectorSelector with two template
+parameters, one for the GridFunctionSpace and one for the numeric type to
+store, that provides the vector class for specific numeric types.
+
+Let GFS be the type of the GridFunctionSpace and R the numeric type
+(e.g. double) then the old code
+
+| typedef typename GFS::template VectorContainer<R>::Type VectorType;
+
+should be changed to
+
+| typedef typename Dune::PDELab::BackendVectorSelector<GFS,R>::Type VectorType;
+
+
+Access to ISTL vector and matrix types
+****************************************
+
+The vector and matrix containers defined by the ISTL backends do not
+inherit from the ISTL types any more. The wrapped ISTL vector / matrix
+can be accessed by calling
+
+| vector.base();
+| matrix.base();
+
+on the container. This is sometimes necessary when calling ISTL code
+that does not work with the wrappers. A common example that many users
+will encounter are printvector() and printmatrix(), where calls like
+
+| Dune::printvector(std::cout, vec, "vector","row");
+| Dune::printmatrix(std::cout, mat, "matrix","row");
+
+should be changed to
+
+| Dune::printvector(std::cout, vec.base(), "vector","row");
+| Dune::printmatrix(std::cout, mat.base(), "matrix","row");
+
+
+
+Various
+*******
+
+ISTL MatrixBackend
+------------------
+
+You can extract an adequate ISTL MatrixBackend (MBE) from the ISTL
+VectorBackend (VBE) through:
+
+| typedef VBE::MatrixBackend MBE;
+
+LocalFunctionSpace
+------------------
+
+Until now it was possible to extract the type of a LocalFunctionSpace from the
+GridFunctionSpace (GFS):
+
+| typedef typename GFS::LocalFunctionSpace LFS;
+
+now you have to write
+
+| typedef Dune::PDELab::LocalFunctionSpace<GFS> LFS;
+
+MultiTypeTree
+-------------
+
+The MultiTypeTree has undergone a complete rewrite.  It is now possible to
+create new TypeTrees by transforming an existing type.  This feature is used
+for e.g. the construction of a LocalFunctionSpace from a GridFunctionSpace.
+This feature will be used easily construct trees of FunctionAdapters and will
+thus allow the user to quickly implements its own adapter classes.
+
+Name change for Mappers in Power-/CompositeGridFunctionSpace
+------------------------------------------------------------
+
+The names of the Mappers describing the nested embedding of sub function spaces
+have been changed to clearly differentiate them from the Mapper types used on the
+leaf function spaces, which serve a different purpose. The replacements are:
+
+GridFunctionSpaceLexicographicMapper -> LexicographicOrderingTag
+GridFunctionSpaceBlockwiseMapper -> BlockwiseOrderingTag
+GridFunctionSpaceComponentBlockwiseMapper -> ComponentBlockwiseOrderingTag
+GridFunctionSpaceDynamicBlockwiseMapper -> DynamicBlockwiseOrderingTag
+
+Apart from those renames, the new Tags provide exactly the same interface and
+functionality as the old mappers.

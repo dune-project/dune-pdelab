@@ -41,6 +41,25 @@ namespace Dune {
       }
 
       /**
+       * Indicates whether the given position should be Neumann-constrained.
+       *
+       * Most of the time, this method will be equivalent to !isDirichlet(...), but
+       * sometimes (in particular in multi-domain scenarios), both methods may return false.
+       *
+       * \param intersection The grid intersection containing the queried location.
+       * \param coord        The position of the queried location in local coordinates
+       *                     of the intersection.
+       *
+       * \returns            true iff the given location should have a Neumann constraint.
+       */
+      template<typename I>
+      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      {
+        return false;
+      }
+
+
+      /**
        * Sets the current time (only required for instationary problems).
        *
        * \note This method only needs to be implement for instationary problems.
@@ -50,7 +69,7 @@ namespace Dune {
       {}
 
     };
-    
+
     /**
      * Dirichlet constraints parameters convenience implementation that does not apply
      * Dirichlet constraints anywhere.
@@ -68,6 +87,15 @@ namespace Dune {
       bool isDirichlet(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
       {
         return false;
+      }
+
+      /**
+       * Predicate implementation that will always return true.
+       */
+      template<typename I>
+      bool isNeumann(const I & intersection, const FieldVector<typename I::ctype, I::dimension-1> & coord) const
+      {
+        return true;
       }
 
       /**
@@ -118,7 +146,7 @@ namespace Dune {
       {}
 
     };
-        
+
     /**
      * Flux (Neumann) constraints parameters convenience implementation that does not apply
      * Neumann constraints anywhere.
@@ -259,4 +287,3 @@ namespace Dune {
 }
 
 #endif // DUNE_PDELAB_CONSTRAINTSPARAMETERS_HH
-

@@ -26,6 +26,7 @@
 #endif
 
 #include "../backend/backendselector.hh"
+#include "../backend/istlvectorbackend.hh"
 #include "../common/function.hh"
 #include "../finiteelementmap/p12dfem.hh"
 #include "../gridfunctionspace/gridfunctionspace.hh"

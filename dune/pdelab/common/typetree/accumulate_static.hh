@@ -275,12 +275,20 @@ accumulate_node_helper<LeafNode,Functor,Reduction,current_value,TreePath,Functor
 
       };
 
+      //! Tag selecting a type reduction algorithm that visits the tree in
+      //! postorder and performs a flat reduction over the resulting type list.
+      struct flattened_reduction;
+
+      //! Tag selecting a type reduction algorithm that visits the tree in
+      //! postorder and performs a bottom-up reduction over the resulting type list.
+      struct bottom_up_reduction;
 
       namespace {
 
         // implementation of the traversal algoritm
 
         //! helper struct to decide whether or not to perform the per-node calculation on the current node. Default case: ignore the node.
+        //! The helper cannot use the Policy parameter, as we want to invoke it with different reductions.
         template<typename Node, typename Functor, typename Reduction, typename current_type, typename TreePath, bool doVisit>
         struct accumulate_type_node_helper
         {
@@ -294,25 +302,75 @@ accumulate_node_helper<LeafNode,Functor,Reduction,current_value,TreePath,Functor
         struct accumulate_type_node_helper<Node,Functor,Reduction,current_type,TreePath,true>
         {
 
-          typedef typename Reduction::template reduce<current_type,typename Functor::template visit<Node,TreePath>::type>::type type;
+          typedef typename Reduction::template reduce<
+            current_type,
+            typename Functor::template visit<
+              Node,
+              TreePath
+              >::type
+            >::type type;
 
         };
 
         //! Per node type algorithm struct. Prototype.
-        template<typename Tree, typename Functor, typename Reduction, typename ParentChildReduction, typename current_type, typename TreePath, typename Tag>
+        template<typename Tree, typename Policy, typename current_type, typename TreePath, typename Tag>
         struct accumulate_type;
 
         //! Leaf node specialization.
-        template<typename LeafNode, typename Functor, typename Reduction, typename ParentChildReduction, typename current_type, typename TreePath>
-        struct accumulate_type<LeafNode,Functor,Reduction,ParentChildReduction,current_type,TreePath,LeafNodeTag>
+        template<typename LeafNode, typename Policy, typename current_type, typename TreePath>
+        struct accumulate_type<LeafNode,Policy,current_type,TreePath,LeafNodeTag>
         {
 
-          typedef typename accumulate_type_node_helper<LeafNode,Functor,Reduction,current_type,TreePath,Functor::template doVisit<LeafNode,TreePath>::value>::type type;
+          typedef typename accumulate_type_node_helper<
+            LeafNode,
+            typename Policy::functor,
+            typename Policy::sibling_reduction,
+            current_type,
+            TreePath,
+            Policy::functor::template doVisit<
+              LeafNode,
+              TreePath>::value
+            >::type type;
 
         };
 
+
+        //! Switch for propagation of current type down the tree based on the algorithm
+        //! specified in the policy.
+        template<typename current_type, typename tree_path, typename start_type, typename reduction_strategy>
+        struct propagate_type_down_tree;
+
+        //! Always continue reduction with the current result type
+        template<typename current_type, typename tree_path, typename start_type>
+        struct propagate_type_down_tree<
+          current_type,
+          tree_path,
+          start_type,
+          flattened_reduction
+          >
+        {
+          typedef current_type type;
+        };
+
+        //! When descending to a new node, do not propagate current result type
+        template<typename current_type, typename tree_path, typename start_type>
+        struct propagate_type_down_tree<
+          current_type,
+          tree_path,
+          start_type,
+          bottom_up_reduction
+          >
+        {
+          typedef typename SelectType<
+            TreePathBack<tree_path>::value == 0,
+            start_type,
+            current_type
+            >::Type type;
+        };
+
+
         //! Iteration over children of a composite node.
-        template<typename Node, typename Functor, typename Reduction, typename ParentChildReduction, typename current_type, typename TreePath, std::size_t i, std::size_t n>
+        template<typename Node, typename Policy, typename current_type, typename TreePath, std::size_t i, std::size_t n>
         struct accumulate_type_over_children
         {
 
@@ -320,57 +378,185 @@ accumulate_node_helper<LeafNode,Functor,Reduction,current_value,TreePath,Functor
 
           typedef typename Node::template Child<i>::Type child;
 
-          typedef typename accumulate_type<child,Functor,Reduction,ParentChildReduction,current_type,child_tree_path,typename child::NodeTag>::type child_result_type;
+          typedef typename accumulate_type<
+            child,
+            Policy,
+            // apply reduction choice (flat / hierarchic)
+            typename propagate_type_down_tree<
+              current_type,
+              child_tree_path,
+              typename Policy::start_type,
+              typename Policy::reduction_strategy
+              >::type,
+            child_tree_path,
+            typename child::NodeTag
+            >::type child_result_type;
 
-          typedef typename accumulate_type_over_children<Node,Functor,Reduction,ParentChildReduction,child_result_type,TreePath,i+1,n>::type type;
+          typedef typename accumulate_type_over_children<
+            Node,
+            Policy,
+            child_result_type,
+            TreePath,
+            i+1,
+            n
+            >::type type;
 
         };
 
         //! end of iteration.
-        template<typename Node, typename Functor, typename Reduction, typename ParentChildReduction, typename current_type, typename TreePath, std::size_t n>
-        struct accumulate_type_over_children<Node,Functor,Reduction,ParentChildReduction,current_type,TreePath,n,n>
+        template<typename Node, typename Policy, typename current_type, typename TreePath, std::size_t n>
+        struct accumulate_type_over_children<Node,Policy,current_type,TreePath,n,n>
         {
 
           typedef current_type type;
 
         };
 
+
         //! Generic composite node specialization. We are doing the calculation at compile time and thus have to use static iteration for
         //! the PowerNode as well.
-        template<typename Node, typename Functor, typename Reduction, typename ParentChildReduction, typename current_type, typename TreePath>
+        template<typename Node, typename Policy, typename current_type, typename TreePath>
         struct accumulate_type_generic_composite_node
         {
 
-          typedef typename accumulate_type_over_children<Node,Functor,Reduction,ParentChildReduction,current_type,TreePath,0,Node::CHILDREN>::type children_result_type;
+          typedef typename accumulate_type_over_children<
+            Node,
+            Policy,
+            current_type,
+            TreePath,
+            0,
+            Node::CHILDREN
+            >::type children_result_type;
 
-          typedef typename accumulate_type_node_helper<Node,Functor,ParentChildReduction,children_result_type,TreePath,Functor::template doVisit<Node,TreePath>::value>::type type;
-
+          typedef typename accumulate_type_node_helper<
+            Node,
+            typename Policy::functor,
+            typename Policy::parent_child_reduction,
+            children_result_type,
+            TreePath,
+            Policy::functor::template doVisit<
+              Node,
+              TreePath
+              >::value
+            >::type type;
 
         };
 
         //! PowerNode specialization.
-        template<typename PowerNode, typename Functor, typename Reduction, typename ParentChildReduction, typename current_type, typename TreePath>
-        struct accumulate_type<PowerNode,Functor,Reduction,ParentChildReduction,current_type,TreePath,PowerNodeTag>
-          : public accumulate_type_generic_composite_node<PowerNode,Functor,Reduction,ParentChildReduction,current_type,TreePath>
+        template<typename PowerNode, typename Policy, typename current_type, typename TreePath>
+        struct accumulate_type<PowerNode,Policy,current_type,TreePath,PowerNodeTag>
+          : public accumulate_type_generic_composite_node<PowerNode,Policy,current_type,TreePath>
         {};
 
         //! CompositeNode specialization.
-        template<typename CompositeNode, typename Functor, typename Reduction, typename ParentChildReduction, typename current_type, typename TreePath>
-        struct accumulate_type<CompositeNode,Functor,Reduction,ParentChildReduction,current_type,TreePath,CompositeNodeTag>
-          : public accumulate_type_generic_composite_node<CompositeNode,Functor,Reduction,ParentChildReduction,current_type,TreePath>
+        template<typename CompositeNode, typename Policy, typename current_type, typename TreePath>
+        struct accumulate_type<CompositeNode,Policy,current_type,TreePath,CompositeNodeTag>
+          : public accumulate_type_generic_composite_node<CompositeNode,Policy,current_type,TreePath>
         {};
 
 #if HAVE_VARIADIC_TEMPLATES
 
         //! VariadicCompositeNode specialization.
-        template<typename VariadicCompositeNode, typename Functor, typename Reduction, typename ParentChildReduction, typename current_type, typename TreePath>
-        struct accumulate_type<VariadicCompositeNode,Functor,Reduction,ParentChildReduction,current_type,TreePath,VariadicCompositeNodeTag>
-          : public accumulate_type_generic_composite_node<VariadicCompositeNode,Functor,Reduction,ParentChildReduction,current_type,TreePath>
+        template<typename VariadicCompositeNode, typename Policy, typename current_type, typename TreePath>
+        struct accumulate_type<VariadicCompositeNode,Policy,current_type,TreePath,VariadicCompositeNodeTag>
+          : public accumulate_type_generic_composite_node<VariadicCompositeNode,Policy,current_type,TreePath>
         {};
 
 #endif // HAVE_VARIADIC_TEMPLATES
 
       } // anonymous namespace
+
+
+      /**
+       * Policy for controlling the static type accumulation algorithm AccumulateType.
+       * See the documentation of nested types for further information.
+       *
+       *
+       * \tparam startType  The start type fed into the initial accumulation step.
+       */
+      template<
+        typename Functor,
+        typename Reduction,
+        typename StartType,
+        typename ParentChildReduction = Reduction,
+        typename ReductionAlgorithm = flattened_reduction
+        >
+      struct TypeAccumulationPolicy
+      {
+
+        /**
+         * The compile-time functor used for visiting each node.
+         *
+         * This functor must implement the following interface:
+         *
+         * \code
+         * struct AccumulationFunctor
+         * {
+         *
+         *   // Decide whether to include the given node in the calculation
+         *   // or to skip it.
+         *   template<typename Node, typename TreePath>
+         *   struct doVisit
+         *   {
+         *     static const bool value = true;
+         *   };
+         *
+         *   // Calculate the per-node result.
+         *   template<typename Node, typename TreePath>
+         *   struct visit
+         *   {
+         *     typedef ... type;
+         *   };
+         *
+         * };
+         * \endcode
+         */
+        typedef Functor functor;
+
+        /**
+         * The reduction operator used to accumulate the per-node results of sibling nodes.
+         *
+         * The reduction operator must implement the following interface:
+         *
+         * \code
+         * struct ReductionOperator
+         * {
+         *
+         *   // combine two per-node results
+         *   template<typename T1, typename T2>
+         *   struct reduce
+         *   {
+         *     typedef ... type;
+         *   };
+         *
+         * };
+         * \endcode
+         */
+        typedef Reduction sibling_reduction;
+
+        /**
+         * The reduction operator used to combine the accumulated result of all
+         * children of a node with the result of the parent node.
+         *
+         * This operator has the same interface as sibling_reduction.
+         */
+        typedef ParentChildReduction parent_child_reduction;
+
+        /**
+         * The initial result type.
+         * This type will be feed as first operand to the reduction operators
+         * when doing the first accumulation (and there is no calculated result
+         * to accumulate with yet).
+         */
+        typedef StartType start_type;
+
+        /**
+         * The strategy for performing the type reduction with regard to the tree structure.
+         * Valid values are flattened_reduction and bottom_up_reduction.
+         */
+        typedef ReductionAlgorithm reduction_strategy;
+      };
+
 
       //! Statically accumulate a type over the nodes of a TypeTree.
       /**
@@ -378,61 +564,24 @@ accumulate_node_helper<LeafNode,Functor,Reduction,current_value,TreePath,Functor
        * calculating an accumulated type at compile time.
        *
        * \tparam Tree        The tree to iterate over.
-       * \tparam Functor     The compile-time functor used for visiting each node.
-       *
-       * This functor must implement the following interface:
-       *
-       * \code
-       * struct AccumulationFunctor
-       * {
-       *
-       *   // Decide whether to include the given node in the calculation
-       *   // or to skip it.
-       *   template<typename Node, typename TreePath>
-       *   struct doVisit
-       *   {
-       *     static const bool value = true;
-       *   };
-       *
-       *   // Calculate the per-node result.
-       *   template<typename Node, typename TreePath>
-       *   struct visit
-       *   {
-       *     typedef ... type;
-       *   };
-       *
-       * };
-       * \endcode
-       *
-       * \tparam Reduction   The reduction operator used to accumulate the per-node
-       *                     results.
-       *
-       * The reduction operator must implement the following interface:
-       *
-       * \code
-       * struct ReductionOperator
-       * {
-       *
-       *   // combine two per-node results
-       *   template<typename T1, typename T2>
-       *   struct reduce
-       *   {
-       *     typedef ... type;
-       *   };
-       *
-       * };
-       * \endcode
-       *
-       * \tparam startType  The start type fed into the initial accumulation step.
+       * \tparam Policy      Model of TypeAccumulationPolicy controlling the behavior
+       *                     of the algorithm.
        */
-      template<typename Tree, typename Functor, typename Reduction, typename startType, typename ParentChildReduction = Reduction>
+      template<typename Tree, typename Policy>
       struct AccumulateType
       {
 
         //! The accumulated result of the computation.
-        typedef typename accumulate_type<Tree,Functor,Reduction,ParentChildReduction,startType,TreePath<>,typename Tree::NodeTag>::type type;
+        typedef typename accumulate_type<
+          Tree,
+          Policy,
+          typename Policy::start_type,
+          TreePath<>,
+          typename Tree::NodeTag
+          >::type type;
 
       };
+
 
       //! \} group Tree Traversal
 

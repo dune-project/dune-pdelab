@@ -13,7 +13,8 @@
 #include <dune/localfunctions/common/localkey.hh>
 
 #include <dune/pdelab/common/typetree.hh>
-#include <dune/pdelab/common/multiindex.hh>
+#include <dune/pdelab/common/dofindex.hh>
+#include <dune/pdelab/common/simpledofindex.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 
@@ -27,6 +28,25 @@ namespace Dune {
     //=======================================
     // local function space base: metaprograms
     //=======================================
+
+    template<typename GFS, typename Tag>
+    struct _build_dof_index_type
+    {
+      typedef Dune::PDELab::DOFIndex<std::size_t,TypeTree::TreeInfo<GFS>::depth,2> type;
+    };
+
+    template<typename GFS>
+    struct _build_dof_index_type<GFS,SingleCodimMapper>
+    {
+      typedef SimpleDOFIndex<typename GFS::Traits::SizeType> type;
+    };
+
+
+    template<typename GFS>
+    struct build_dof_index_type
+    {
+      typedef typename _build_dof_index_type<GFS,typename GFS::OrderingTag>::type type;
+    };
 
     //! GridFunctionSpace to LocalFunctionSpace transformation.
     /**
@@ -48,7 +68,9 @@ namespace Dune {
     struct gfs_to_lfs {
 
       //! The MultiIndex type that will be used in the resulting LocalFunctionSpace tree.
-      typedef Dune::PDELab::MultiIndex<std::size_t,TypeTree::TreeInfo<GFS>::depth> MultiIndex;
+      //typedef Dune::PDELab::MultiIndex<std::size_t,TypeTree::TreeInfo<GFS>::depth> MultiIndex;
+      typedef typename build_dof_index_type<GFS>::type DOFIndex;
+
     };
 
     namespace {
@@ -64,8 +86,7 @@ namespace Dune {
         template<typename LFS, typename Child, typename TreePath, typename ChildIndex>
         void beforeChild(const LFS& lfs, Child& child, TreePath treePath, ChildIndex childIndex) const
         {
-          child.global = lfs.global;
-          child._multi_indices = lfs._multi_indices;
+          child._dof_indices = lfs._dof_indices;
         }
       };
 
@@ -147,11 +168,8 @@ namespace Dune {
         template<typename Node, typename TreePath>
         void leaf(Node& node, TreePath treePath)
         {
-          // get global indices for this finite element
-          node.pgfs->globalIndices(*(node.pfe),e,
-            node.global->begin()+node.offset,
-            node.global->begin()+node.offset+node.n);
-          node.multiIndices(e,node._multi_indices->begin()+node.offset,node._multi_indices->begin()+node.offset+node.n);
+          // setup DOFIndices for this finite element
+          node.dofIndices(e,node._dof_indices->begin()+node.offset,node._dof_indices->begin()+node.offset+node.n);
         }
 
         template<typename Node, typename Child, typename TreePath, typename ChildIndex>
@@ -159,8 +177,8 @@ namespace Dune {
         {
           for (std::size_t i = 0; i<child.n; ++i)
             {
-              (*node.global)[child.offset+i] = node.pgfs->subMap(childIndex,(*node.global)[child.offset+i]);
-              (*node._multi_indices)[child.offset+i].push_back(childIndex);
+              // update tree path for the DOFIndices of the child
+              (*node._dof_indices)[child.offset+i].treeIndex().push_back(childIndex);
             }
         }
 
@@ -178,7 +196,7 @@ namespace Dune {
     //=======================================
 
     //! traits mapping global function space information to local function space
-    template<typename GFS, typename MI>
+    template<typename GFS, typename DI>
     struct LocalFunctionSpaceBaseTraits
     {
       //! \brief Type of the underlying grid function space
@@ -203,17 +221,17 @@ namespace Dune {
       typedef typename std::vector<SizeType> IndexContainer;
 
       //! \brief Type of MultiIndex associated with this LocalFunctionSpace.
-      typedef MI MultiIndex;
+      typedef DI DOFIndex;
 
       //! \brief Type of container to store multiindices.
-      typedef typename std::vector<MI> MultiIndexContainer;
+      typedef typename std::vector<DI> DOFIndexContainer;
 
     };
 
-    template <typename GFS, typename MultiIndex>
+    template <typename GFS, typename DOFIndex>
     class LocalFunctionSpaceBaseNode
     {
-      typedef typename GFS::Traits::BackendType B;
+      typedef typename GFS::Traits::Backend B;
 
       template<typename>
       friend struct PropagateGlobalStorageVisitor;
@@ -224,16 +242,17 @@ namespace Dune {
       template<typename>
       friend struct FillIndicesVisitor;
 
+      template<typename LFS, typename C, typename Tag>
+      friend class LFSIndexCacheBase;
+
     public:
-      typedef LocalFunctionSpaceBaseTraits<GFS,MultiIndex> Traits;
+      typedef LocalFunctionSpaceBaseTraits<GFS,DOFIndex> Traits;
 
       //! \brief construct from global function space
       LocalFunctionSpaceBaseNode (shared_ptr<const GFS> gfs)
         : pgfs(gfs)
-        , global_storage(gfs->maxLocalSize())
-        , global(&global_storage)
-        , _multi_index_storage(gfs->maxLocalSize())
-        , _multi_indices(&_multi_index_storage)
+        , _dof_index_storage()
+        , _dof_indices(&_dof_index_storage)
         , n(0)
       {}
 
@@ -246,7 +265,8 @@ namespace Dune {
       //! \brief get maximum possible size (which is maxLocalSize from grid function space)
       typename Traits::IndexContainer::size_type maxSize () const
       {
-        return pgfs->maxLocalSize();
+        // _dof_indices is always as large as the max local size of the root GFS
+        return _dof_indices->size();
       }
 
       //! \brief get size of an appropriate local vector object
@@ -258,7 +278,7 @@ namespace Dune {
        */
       typename Traits::IndexContainer::size_type localVectorSize () const
       {
-        return global->size();
+        return _dof_indices->size();
       }
 
       //! \brief map index in this local function space to root local function space
@@ -275,43 +295,9 @@ namespace Dune {
        *               call to bind() on this LocalFunctionSpace (e.g. when the MultiIndex is used as a DOF
        *               identifier in a constraints container).
        */
-      const typename Traits::MultiIndex& multiIndex(typename Traits::IndexContainer::size_type index) const
+      const typename Traits::DOFIndex& dofIndex(typename Traits::IndexContainer::size_type index) const
       {
-        return (*_multi_indices)[offset + index];
-      }
-
-      //! \brief map index in this local function space to global index space
-      typename Traits::SizeType globalIndex (typename Traits::IndexContainer::size_type index) const
-      {
-        return (*global)[offset + index];
-      }
-
-      //! \brief extract coefficients for one element from container
-      template<typename GC, typename LC>
-      void vread (const GC& globalcontainer, LC& localcontainer) const
-      {
-        // assert(&global_storage == global); // make sure we call this method only on the root node!
-        localcontainer.resize(n);
-        for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          accessBaseContainer(localcontainer)[k] = B::access(globalcontainer,(*global)[offset + k]);
-      }
-
-      //! \brief write back coefficients for one element to container
-      template<typename GC, typename LC>
-      void vwrite (const LC& localcontainer, GC& globalcontainer) const
-      {
-        // assert(&global_storage == global); // make sure we call this method only on the root node!
-        for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          B::access(globalcontainer,(*global)[offset + k]) = accessBaseContainer(localcontainer)[k];
-      }
-
-      //! \brief add coefficients for one element to container
-      template<typename GC, typename LC>
-      void vadd (const LC& localcontainer, GC& globalcontainer) const
-      {
-        // assert(&global_storage == global); // make sure we call this method only on the root node!
-        for (typename Traits::IndexContainer::size_type k=0; k<n; ++k)
-          B::access(globalcontainer,(*global)[offset + k]) += accessBaseContainer(localcontainer)[k];
+        return (*_dof_indices)[offset + index];
       }
 
       //! \brief print debug information about this local function space
@@ -319,7 +305,7 @@ namespace Dune {
       {
         std::cout << n << " indices = (";
         for (typename Traits::IndexContainer::size_type k=0; k<n; k++)
-          std::cout << (*global)[offset + k] << " ";
+          std::cout << (*_dof_indices)[localIndex(k)] << " ";
         std::cout << ")" << std::endl;
       }
 
@@ -349,40 +335,35 @@ namespace Dune {
       template<typename NodeType>
       void setup(NodeType& node)
       {
+        _dof_index_storage.resize(gridFunctionSpace().ordering().maxLocalSize());
         TypeTree::applyToTree(node,PropagateGlobalStorageVisitor<>());
       }
 
       shared_ptr<GFS const> pgfs;
-      typename Traits::IndexContainer global_storage;
-      typename Traits::IndexContainer* global;
-      typename Traits::MultiIndexContainer _multi_index_storage;
-      typename Traits::MultiIndexContainer* _multi_indices;
+      typename Traits::DOFIndexContainer _dof_index_storage;
+      typename Traits::DOFIndexContainer* _dof_indices;
       typename Traits::IndexContainer::size_type n;
       typename Traits::IndexContainer::size_type offset;
     };
 
 
-    template <typename GFS, typename MultiIndex>
+    template <typename GFS, typename DOFIndex>
     template <typename NodeType>
-    void LocalFunctionSpaceBaseNode<GFS,MultiIndex>::bind (NodeType& node,
-         const typename LocalFunctionSpaceBaseNode<GFS,MultiIndex>::Traits::Element& e)
+    void LocalFunctionSpaceBaseNode<GFS,DOFIndex>::bind (NodeType& node,
+         const typename LocalFunctionSpaceBaseNode<GFS,DOFIndex>::Traits::Element& e)
     {
-      typedef typename LocalFunctionSpaceBaseNode<GFS,MultiIndex>::Traits::Element Element;
+      typedef typename LocalFunctionSpaceBaseNode<GFS,DOFIndex>::Traits::Element Element;
       assert(&node == this);
 
       // compute sizes
       ComputeSizeVisitor<Element> csv(e);
       TypeTree::applyToTree(node,csv);
 
-      global_storage.resize(node.n);
 
       // initialize iterators and fill indices
       FillIndicesVisitor<Element> fiv(e);
       TypeTree::applyToTree(node,fiv);
 
-      // apply upMap
-      for (typename Traits::IndexContainer::size_type i=0; i<n; ++i)
-        global_storage[i] = pgfs->upMap(global_storage[i]);
     }
 
     //=======================================
@@ -390,23 +371,20 @@ namespace Dune {
     //=======================================
 
     //! traits for multi component local function space
-    template<typename GFS, typename MultiIndex, typename N>
-    struct PowerCompositeLocalFunctionSpaceTraits : public LocalFunctionSpaceBaseTraits<GFS,MultiIndex>
+    template<typename GFS, typename DOFIndex, typename N>
+    struct PowerCompositeLocalFunctionSpaceTraits : public LocalFunctionSpaceBaseTraits<GFS,DOFIndex>
     {
       //! type of local function space node
       typedef N NodeType;
     };
 
-    //! Tag denoting a PowerLocalFunctionSpace
-    struct PowerLocalFunctionSpaceTag {};
-
     // local function space for a power grid function space
-    template<typename GFS, typename MultiIndex, typename ChildLFS, std::size_t k>
+    template<typename GFS, typename DOFIndex, typename ChildLFS, std::size_t k>
     class PowerLocalFunctionSpaceNode :
-      public LocalFunctionSpaceBaseNode<GFS,MultiIndex>,
+      public LocalFunctionSpaceBaseNode<GFS,DOFIndex>,
       public TypeTree::PowerNode<ChildLFS,k>
     {
-      typedef LocalFunctionSpaceBaseNode<GFS,MultiIndex> BaseT;
+      typedef LocalFunctionSpaceBaseNode<GFS,DOFIndex> BaseT;
       typedef TypeTree::PowerNode<ChildLFS,k> TreeNode;
 
       template<typename>
@@ -422,7 +400,7 @@ namespace Dune {
       friend struct FillIndicesVisitor;
 
     public:
-      typedef PowerCompositeLocalFunctionSpaceTraits<GFS,MultiIndex,PowerLocalFunctionSpaceNode> Traits;
+      typedef PowerCompositeLocalFunctionSpaceTraits<GFS,DOFIndex,PowerLocalFunctionSpaceNode> Traits;
 
       typedef PowerLocalFunctionSpaceTag ImplementationTag;
 
@@ -453,14 +431,14 @@ namespace Dune {
     };
 
 
-    // transformation template, we need a custom template in order to inject the MultiIndex type into the LocalFunctionSpace
+    // transformation template, we need a custom template in order to inject the DOFIndex type into the LocalFunctionSpace
     template<typename SourceNode, typename Transformation>
     struct power_gfs_to_lfs_template
     {
       template<typename TC>
       struct result
       {
-        typedef PowerLocalFunctionSpaceNode<SourceNode,typename Transformation::MultiIndex,TC,SourceNode::CHILDREN> type;
+        typedef PowerLocalFunctionSpaceNode<SourceNode,typename Transformation::DOFIndex,TC,SourceNode::CHILDREN> type;
       };
     };
 
@@ -478,16 +456,13 @@ namespace Dune {
     // local function space base: composite implementation
     //=======================================
 
-    //! Tag denoting a CompositeLocalFunctionSpace
-    struct CompositeLocalFunctionSpaceTag {};
-
     // local function space for a power grid function space
-    template<typename GFS, typename MultiIndex, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
+    template<typename GFS, typename DOFIndex, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
     class CompositeLocalFunctionSpaceNode
-      : public LocalFunctionSpaceBaseNode<GFS,MultiIndex>
+      : public LocalFunctionSpaceBaseNode<GFS,DOFIndex>
       , public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
     {
-      typedef LocalFunctionSpaceBaseNode<GFS,MultiIndex> BaseT;
+      typedef LocalFunctionSpaceBaseNode<GFS,DOFIndex> BaseT;
       typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE NodeType;
 
       template<typename>
@@ -503,7 +478,7 @@ namespace Dune {
       friend struct FillIndicesVisitor;
 
     public:
-      typedef PowerCompositeLocalFunctionSpaceTraits<GFS,MultiIndex,CompositeLocalFunctionSpaceNode> Traits;
+      typedef PowerCompositeLocalFunctionSpaceTraits<GFS,DOFIndex,CompositeLocalFunctionSpaceNode> Traits;
 
       typedef CompositeLocalFunctionSpaceTag ImplementationTag;
 
@@ -541,7 +516,7 @@ namespace Dune {
       template<typename... TC>
       struct result
       {
-        typedef CompositeLocalFunctionSpaceNode<SourceNode,typename Transformation::MultiIndex,TC...> type;
+        typedef CompositeLocalFunctionSpaceNode<SourceNode,typename Transformation::DOFIndex,TC...> type;
       };
     };
 
@@ -572,7 +547,7 @@ namespace Dune {
                typename TC9>
       struct result
       {
-        typedef CompositeLocalFunctionSpaceNode<SourceNode,typename Transformation::MultiIndex,TC0,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9> type;
+        typedef CompositeLocalFunctionSpaceNode<SourceNode,typename Transformation::DOFIndex,TC0,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9> type;
       };
     };
 
@@ -591,34 +566,9 @@ namespace Dune {
     // local function space base: single component implementation
     //=======================================
 
-    //! Tag denoting a LeafLocalFunctionSpace
-    struct LeafLocalFunctionSpaceTag {};
-
-
-    // SFINAE switch that decides whether the GFS has an intersection IndexSet based on
-    // the presence of the nested type IntersectionIndexSet.
-
-    template<typename GFS, typename = void>
-    struct gfs_has_iis
-      : public integral_constant<bool,false>
-    {};
-
-    template<typename GFS>
-    struct gfs_has_iis<
-      GFS,
-      typename enable_if<
-        Dune::AlwaysTrue<
-          typename GFS::IntersectionIndexSet
-          >::value
-        >::type
-      >
-      : public integral_constant<bool,true>
-    {};
-
-
     //! traits for single component local function space
-    template<typename GFS, typename MultiIndex, typename N>
-    struct LeafLocalFunctionSpaceTraits : public PowerCompositeLocalFunctionSpaceTraits<GFS,MultiIndex,N>
+    template<typename GFS, typename DOFIndex, typename N>
+    struct LeafLocalFunctionSpaceTraits : public PowerCompositeLocalFunctionSpaceTraits<GFS,DOFIndex,N>
     {
       //! Type of local finite element
       typedef typename GFS::Traits::FiniteElementType FiniteElementType;
@@ -633,12 +583,12 @@ namespace Dune {
     };
 
     //! single component local function space
-    template<typename GFS, typename MultiIndex>
+    template<typename GFS, typename DOFIndex>
     class LeafLocalFunctionSpaceNode
-      : public LocalFunctionSpaceBaseNode<GFS,MultiIndex>
+      : public LocalFunctionSpaceBaseNode<GFS,DOFIndex>
       , public TypeTree::LeafNode
     {
-      typedef LocalFunctionSpaceBaseNode<GFS,MultiIndex> BaseT;
+      typedef LocalFunctionSpaceBaseNode<GFS,DOFIndex> BaseT;
 
       template<typename>
       friend struct PropagateGlobalStorageVisitor;
@@ -653,7 +603,7 @@ namespace Dune {
       friend struct FillIndicesVisitor;
 
     public:
-      typedef LeafLocalFunctionSpaceTraits<GFS,MultiIndex,LeafLocalFunctionSpaceNode> Traits;
+      typedef LeafLocalFunctionSpaceTraits<GFS,DOFIndex,LeafLocalFunctionSpaceNode> Traits;
 
       typedef LeafLocalFunctionSpaceTag ImplementationTag;
 
@@ -696,29 +646,9 @@ namespace Dune {
         return this->pgfs->constraints();
       }
 
-      template<typename GFS2, typename Entity>
-      typename enable_if<
-        gfs_has_iis<GFS2>::value,
-        typename GFS2::Traits::GridViewType::IndexSet::IndexType
-        >::type
-      intersectionIndex(const GFS2& gfs, const Entity& e, const Dune::LocalKey& key) const
-      {
-        return gfs.intersectionIndexSet().subIndex(e,key.subEntity());
-      }
-
-      template<typename GFS2, typename Entity>
-      typename enable_if<
-        !gfs_has_iis<GFS2>::value,
-        typename GFS2::Traits::GridViewType::IndexSet::IndexType
-        >::type
-      intersectionIndex(const GFS2& gfs, const Entity& e, const Dune::LocalKey& key) const
-      {
-        DUNE_THROW(Dune::Exception,"This GridFunctionSpace does not support DOFs on intersections.");
-      }
-
       //! Calculates the multiindices associated with the given entity.
-      template<typename Entity, typename MultiIndexIterator>
-      void multiIndices(const Entity& e, MultiIndexIterator it, MultiIndexIterator endit)
+      template<typename Entity, typename DOFIndexIterator>
+      void dofIndices(const Entity& e, DOFIndexIterator it, DOFIndexIterator endit)
       {
         // get layout of entity
         const typename FESwitch::Coefficients &coeffs =
@@ -732,58 +662,42 @@ namespace Dune {
 
         for (std::size_t i = 0; i < std::size_t(coeffs.size()); ++i, ++it)
           {
-            int codim = coeffs.localKey(i).codim();
+            // get geometry type of subentity
+            Dune::GeometryType gt = refEl.type(coeffs.localKey(i).subEntity(),
+                                              coeffs.localKey(i).codim());
 
-            typename GV::IndexSet::IndexType index;
-            GeometryType gt;
+            // evaluate consecutive index of subentity
+            typename GV::IndexSet::IndexType index = gv.indexSet().subIndex(e,
+                                                                            coeffs.localKey(i).subEntity(),
+                                                                            coeffs.localKey(i).codim());
 
-            if (codim == Dune::LocalKey::intersectionCodim)
-              {
-                // intersections do not have a GeometryType
-                gt.makeNone(GV::dimension-1);
-                index = intersectionIndex(this->gridFunctionSpace(),e,coeffs.localKey(i));
-              }
-            else
-              {
-                // get geometry type of subentity
-                gt = refEl.type(coeffs.localKey(i).subEntity(),
-                                coeffs.localKey(i).codim());
-
-                // evaluate consecutive index of subentity
-                index = gv.indexSet().subIndex(e,
-                                               coeffs.localKey(i).subEntity(),
-                                               coeffs.localKey(i).codim());
-              }
-
-            it->set(gt,index,coeffs.localKey(i).index());
+            // store data
+            GFS::Ordering::Traits::DOFIndexAccessor::store(*it,gt,index,coeffs.localKey(i).index());
 
             // make sure we don't write past the end of the iterator range
             assert(it != endit);
           }
       }
 
-      /** \brief write back coefficients for one element to container */
+
       template<typename GC, typename LC>
-      void mwrite (const LC& lc, GC& gc) const
+      void insert_constraints (const LC& lc, GC& gc) const
       {
         // LC and GC are maps of maps
         typedef typename LC::const_iterator local_col_iterator;
-        typedef typename LC::value_type::second_type local_row_type;
-        typedef typename local_row_type::const_iterator local_row_iterator;
+        typedef typename LC::value_type::second_type::const_iterator local_row_iterator;
         typedef typename GC::iterator global_col_iterator;
         typedef typename GC::value_type::second_type global_row_type;
 
         for (local_col_iterator cit=lc.begin(); cit!=lc.end(); ++cit)
           {
-            typename Traits::SizeType i = this->globalIndex(cit->first);
-            // insert empty row in global container if necessary
-            global_col_iterator gcit = gc.find(i);
-            if (gcit==gc.end())
-              gc[i] = global_row_type();
+
+            // look up entry in global map, if not found, insert an empty one.
+            global_col_iterator gcit = gc.insert(std::make_pair(std::ref(this->dofIndex(cit->first)),global_row_type())).first;
 
             // copy row to global container with transformed indices
             for (local_row_iterator rit=(cit->second).begin(); rit!=(cit->second).end(); ++rit)
-              gc[i][this->globalIndex(rit->first)] = rit->second;
+              gcit->second[this->dofIndex(rit->first)] = rit->second;
           }
       }
 
@@ -803,7 +717,7 @@ namespace Dune {
     Dune::PDELab::TypeTree::GenericLeafNodeTransformation<
       GridFunctionSpace,
       gfs_to_lfs<Params>,
-      LeafLocalFunctionSpaceNode<GridFunctionSpace,typename gfs_to_lfs<Params>::MultiIndex>
+      LeafLocalFunctionSpaceNode<GridFunctionSpace,typename gfs_to_lfs<Params>::DOFIndex>
       >
     lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_lfs<Params>* t, LeafGridFunctionSpaceTag tag);
 
@@ -853,19 +767,16 @@ namespace Dune {
       LocalFunctionSpace(const GFS & gfs)
         : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs))
       {
-        this->global = &(this->global_storage);
-        this->_multi_indices = &(this->_multi_index_storage);
         this->setup(*this);
       }
 
       LocalFunctionSpace(const LocalFunctionSpace & lfs)
         : BaseT(lfs)
       {
-        // We need to reset the global pointers in the new LFS tree,
-        // as they are still pointing to the global_storage of the
+        // We need to reset the DOFIndex storage pointers in the new LFS tree,
+        // as they are still pointing to the _dof_index_storage of the
         // old tree.
-        this->global = &(this->global_storage);
-        this->_multi_indices = &(this->_multi_index_storage);
+        this->_dof_indices = &(this->_dof_index_storage);
         this->setup(*this);
       }
 
@@ -901,36 +812,29 @@ namespace Dune {
       template<typename>
       friend struct FillIndicesVisitor;
 
-      // store a copy of the share_ptr to avoid deallocation
-      shared_ptr<const GFS> dummy_pgfs;
-      
     public:
+
       LocalFunctionSpace(const GFS & gfs)
         : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(gfs))
       {
-        this->global = &(this->global_storage);
-        this->_multi_indices = &(this->_multi_index_storage);
+        this->_dof_indices = &(this->_dof_index_storage);
         this->setup(*this);
       }
 
       LocalFunctionSpace(shared_ptr<const GFS> pgfs)
-        : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform(*pgfs)),
-          dummy_pgfs(pgfs)
+        : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform_storage(pgfs))
       {
-        this->global = &(this->global_storage);
-        this->_multi_indices = &(this->_multi_index_storage);
+        this->_dof_indices = &(this->_dof_index_storage);
         this->setup(*this);
       }
 
       LocalFunctionSpace(const LocalFunctionSpace & lfs)
-        : BaseT(lfs),
-          dummy_pgfs(lfs.dummy_pgfs)
+        : BaseT(lfs)
       {
-        // We need to reset the global pointers in the new LFS tree,
-        // as they are still pointing to the global_storage of the
+        // We need to reset the DOFIndex storage pointers in the new LFS tree,
+        // as they are still pointing to the _dof_index_storage of the
         // old tree.
-        this->global = &(this->global_storage);
-        this->_multi_indices = &(this->_multi_index_storage);
+        this->_dof_indices = &(this->_dof_index_storage);
         this->setup(*this);
       }
 

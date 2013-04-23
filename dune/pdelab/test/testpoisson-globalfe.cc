@@ -15,7 +15,6 @@
 
 #include <dune/geometry/generalvertexorder.hh>
 
-#include <dune/grid/io/file/vtk/common.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include <dune/grid/uggrid.hh>
 #include <dune/grid/utility/vertexorderfactory.hh>
@@ -25,12 +24,10 @@
 #include <dune/istl/preconditioners.hh>
 #include <dune/istl/solvers.hh>
 
-#include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/backend/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/istlsolverbackend.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/common/function.hh>
-#include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/constraints/constraints.hh>
 #include <dune/pdelab/constraints/constraintsparameters.hh>
 #include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
@@ -38,10 +35,11 @@
 #include <dune/pdelab/finiteelementmap/q22dfem.hh>
 #include <dune/pdelab/finiteelementmap/pk2dfem.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
-#include <dune/pdelab/gridoperatorspace/gridoperatorspace.hh>
+#include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/localoperator/poisson.hh>
+
+#include <dune/pdelab/gridfunctionspace/vtk.hh>
 
 #include"gridexamples.hh"
 
@@ -102,6 +100,12 @@ public:
         return false;
       }
     return true;
+  }
+
+  template<typename I>
+  bool isNeumann(const I & ig, const Dune::FieldVector<typename I::ctype, I::dimension-1> & x) const
+  {
+    return !isDirichlet(ig,x);
   }
 
 };
@@ -170,10 +174,12 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
     RangeField R;
 
   // make function space
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,
-                                          Dune::PDELab::ISTLVectorBackend<1> >
-    GFS;
+  typedef Dune::PDELab::GridFunctionSpace<
+    GV,FEM,CON,
+    Dune::PDELab::ISTLVectorBackend<>
+    > GFS;
   GFS gfs(gv,fem);
+  gfs.name("solution");
 
   // make constraints map and initialize it from a function
   typedef typename GFS::template ConstraintsContainer<R>::Type C;
@@ -182,76 +188,75 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   ConstraintsParameters constraintsparameters;
   Dune::PDELab::constraints(constraintsparameters,gfs,cg);
 
-  // make coefficent Vector and initialize it from a function
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS, R>::Type V;
-  V x0(gfs);
-  x0 = 0.0;
+  // make local operator
   typedef G<GV,R> GType;
   GType g(gv);
-  Dune::PDELab::interpolate(g,gfs,x0);
-  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
-
-  // make grid function operator
   typedef F<GV,R> FType;
   FType f(gv);
   typedef J<GV,R> JType;
   JType j(gv);
   typedef Dune::PDELab::Poisson<FType,ConstraintsParameters,JType,q> LOP;
   LOP lop(f,constraintsparameters,j);
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
-    LOP,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
-  GOS gos(gfs,cg,gfs,cg,lop);
+
+  // make grid operator
+  typedef Dune::PDELab::GridOperator<
+    GFS,GFS,LOP,
+    Dune::PDELab::ISTLMatrixBackend,
+    R,R,R,C,C
+    > GridOperator;
+  GridOperator gridoperator(gfs,cg,gfs,cg,lop);
+
+  // make coefficent Vector and initialize it from a function
+  typedef typename GridOperator::Traits::Domain V;
+  V x0(gfs,0.0);
+
+  Dune::PDELab::interpolate(g,gfs,x0);
+  Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
+
 
   // represent operator as a matrix
-  typedef typename GOS::template MatrixContainer<R>::Type M;
-  M m(gos);
+  typedef typename GridOperator::Traits::Jacobian M;
+  M m(gridoperator);
   m = 0.0;
-  gos.jacobian(x0,m);
+  gridoperator.jacobian(x0,m);
   // Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
   // evaluate residual w.r.t initial guess
   V r(gfs);
   r = 0.0;
-  gos.residual(x0,r);
+  gridoperator.residual(x0,r);
 
-  // make ISTL solver
-  Dune::MatrixAdapter<M,V,V> opa(m);
-  typedef Dune::PDELab::OnTheFlyOperator<V,V,GOS> ISTLOnTheFlyOperator;
-  ISTLOnTheFlyOperator opb(gos);
-  Dune::SeqSSOR<M,V,V> ssor(m,1,1.0);
-  Dune::SeqILU0<M,V,V> ilu0(m,1.0);
-  Dune::Richardson<V,V> richardson(1.0);
-
-//   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<M,
-//     Dune::Amg::FirstDiagonal> > Criterion;
-//   typedef Dune::SeqSSOR<M,V,V> Smoother;
-//   typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments SmootherArgs;
-//   SmootherArgs smootherArgs;
-//   smootherArgs.iterations = 2;
-//   int maxlevel = 20, coarsenTarget = 100;
-//   Criterion criterion(maxlevel, coarsenTarget);
-//   criterion.setMaxDistance(2);
-//   typedef Dune::Amg::AMG<Dune::MatrixAdapter<M,V,V>,V,Smoother> AMG;
-//   AMG amg(opa,criterion,smootherArgs,1,1);
-
-  Dune::CGSolver<V> solvera(opa,ilu0,1E-10,5000,2);
-  Dune::CGSolver<V> solverb(opb,richardson,1E-10,5000,2);
-  Dune::InverseOperatorResult stat;
-
-  // solve the jacobian system
-  r *= -1.0; // need -residual
   V x(gfs,0.0);
-  solvera.apply(x,r,stat);
-  x += x0;
 
-  // make discrete function object
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-  DGF dgf(gfs,x);
+  {
+    // make ISTL solver
+    using Dune::PDELab::istl::raw;
+    using Dune::PDELab::istl::raw_type;
+
+    Dune::MatrixAdapter<
+      typename raw_type<M>::type,
+      typename raw_type<V>::type,
+      typename raw_type<V>::type
+      > opa(raw(m));
+
+    Dune::SeqILU0<
+      typename raw_type<M>::type,
+      typename raw_type<V>::type,
+      typename raw_type<V>::type
+      > ilu0(raw(m),1.0);
+
+    Dune::CGSolver<typename raw_type<V>::type> solvera(opa,ilu0,1E-10,5000,2);
+    Dune::InverseOperatorResult stat;
+
+    // solve the jacobian system
+    r *= -1.0; // need -residual
+    solvera.apply(raw(x),raw(r),stat);
+    x += x0;
+  }
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>
-                              (dgf,"solution"));
+  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x);
   vtkwriter.write(filename,Dune::VTK::ascii);
 }
 

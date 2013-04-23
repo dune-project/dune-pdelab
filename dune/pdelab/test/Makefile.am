@@ -1,5 +1,8 @@
 # $Id: Makefile.am 586 2006-04-28 13:41:31Z mblatt $
 
+SUBDIRS =					\
+	fem
+
 #defined empty so we can add to it later
 NORMALTESTS =
 MOSTLYCLEANFILES =
@@ -96,16 +99,6 @@ testconstraints_LDADD =				\
 	$(LDADD)
 MOSTLYCLEANFILES += testconstraintsp1.vtu testconstraintspowerp1.vtu
 
-NORMALTESTS += testcountingptr
-testcountingptr_SOURCES = testcountingptr.cc
-testcountingptr_CPPFLAGS = $(AM_CPPFLAGS)	\
-	$(ALBERTA_CPPFLAGS)
-testcountingptr_LDFLAGS = $(AM_LDFLAGS)		\
-	$(ALBERTA_LDFLAGS)
-testcountingptr_LDADD =				\
-	$(ALBERTA_LIBS)				\
-	$(LDADD)
-
 NORMALTESTS += testfiniteelementmap
 testfiniteelementmap_SOURCES = testfiniteelementmap.cc
 testfiniteelementmap_CPPFLAGS = $(AM_CPPFLAGS)	\
@@ -142,7 +135,17 @@ testlaplacedirichletccfv_LDADD =		\
 	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
 	$(ALBERTA_LIBS)				\
 	$(LDADD)
-MOSTLYCLEANFILES += testlaplacedirichletccfv.vtu
+MOSTLYCLEANFILES += testlaplacedirichletccfv-2d.vtu \
+	testlaplacedirichletccfv-3d.vtu
+
+NORMALTESTS += testlaplacedirichletccfv-simplified
+testlaplacedirichletccfv_simplified_SOURCES = $(testlaplacedirichletccfv_SOURCES)
+testlaplacedirichletccfv_simplified_CPPFLAGS = $(testlaplacedirichletccfv_CPPFLAGS)	\
+	-DTEST_SIMPLIFIED_INFRASTRUCTURE
+testlaplacedirichletccfv_simplified_LDFLAGS = $(testlaplacedirichletccfv_LDFLAGS)
+testlaplacedirichletccfv_simplified_LDADD = $(testlaplacedirichletccfv_LDADD)
+MOSTLYCLEANFILES += testlaplacedirichletccfv-simplified-2d.vtu \
+	testlaplacedirichletccfv-simplified-3d.vtu
 
 NORMALTESTS += testlaplacedirichletp12d
 testlaplacedirichletp12d_SOURCES = testlaplacedirichletp12d.cc
@@ -178,35 +181,6 @@ testlocalfunctionspace_LDFLAGS = $(AM_LDFLAGS)	\
 testlocalfunctionspace_LDADD =			\
 	$(ALBERTA_LIBS)				\
 	$(LDADD)
-
-NORMALTESTS += testmultistep
-testmultistep_SOURCES = testmultistep.cc
-testmultistep_CPPFLAGS = $(AM_CPPFLAGS)		\
-	$(DUNEMPICPPFLAGS)
-testmultistep_LDFLAGS = $(AM_LDFLAGS)		\
-	$(DUNEMPILDFLAGS)
-testmultistep_LDADD =				\
-	$(DUNEMPILIBS)				\
-	$(LDADD)
-
-MOSTLYCLEANFILES +=					\
-	s*:p*:testmultistep_yasp_P1_1d-*.vtp		\
-	s*:testmultistep_yasp_P1_1d-*.pvtp		\
-	testmultistep_yasp_P1_1d.pvd
-
-NORMALTESTS += testmultistepcached
-testmultistepcached_SOURCES = testmultistepcached.cc
-testmultistepcached_CPPFLAGS = $(AM_CPPFLAGS)	\
-	$(DUNEMPICPPFLAGS)
-testmultistepcached_LDFLAGS = $(AM_LDFLAGS)	\
-	$(DUNEMPILDFLAGS)
-testmultistepcached_LDADD =			\
-	$(DUNEMPILIBS)				\
-	$(LDADD)
-MOSTLYCLEANFILES +=					\
-	s*:p*:testmultistepcached_yasp_P1_1d-*.vtp	\
-	s*:testmultistepcached_yasp_P1_1d-*.pvtp	\
-	testmultistepcached_yasp_P1_1d.pvd
 
 NORMALTESTS += testp12dinterpolation
 testp12dinterpolation_SOURCES = testp12dinterpolation.cc
@@ -290,24 +264,6 @@ testutilities_LDADD = 				\
 	$(LDADD)
 MOSTLYCLEANFILES += edger.vtu interpolated.vtu q1.vtu taylorhood.vtu
 
-TESTS += testvectorwave.conf
-check_SCRIPTS += testvectorwave.conf
-check_PROGRAMS += testvectorwave
-testvectorwave_SOURCES = testvectorwave.cc
-MOSTLYCLEANFILES +=				\
-	s*:p*:vectorwave_*.vtu			\
-	s*:vectorwave_*.pvtu			\
-	vectorwave_*.pvd
-
-TESTS += testvectorwavecached.conf
-check_SCRIPTS += testvectorwavecached.conf
-check_PROGRAMS += testvectorwavecached
-testvectorwavecached_SOURCES = testvectorwavecached.cc
-MOSTLYCLEANFILES +=				\
-	s*:p*:vectorwavecached_*.vtu		\
-	s*:vectorwavecached_*.pvtu		\
-	vectorwavecached_*.pvd
-
 check_PROGRAMS += testtypetree testtypetree-no-sfinae testtypetree-no-variadic testtypetree-no-rvalue-refs testtypetree-legacy
 testtypetree_SOURCES = testtypetree.cc
 testtypetree_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_TYPETREE
@@ -351,6 +307,12 @@ testopbfem_LDFLAGS = $(AM_LDFLAGS) $(GMP_LDFLAGS)
 testopbfem_LDADD = $(LDADD) $(GMP_LIBS)
 endif
 
+check_PROGRAMS += testordering
+testordering_SOURCES = testordering.cc
+
+check_PROGRAMS += testdatahandle
+testdatahandle_SOURCES = testdatahandle.cc
+
 check_PROGRAMS += testrtfem
 testrtfem_SOURCES = testrtfem.cc
 
@@ -358,6 +320,16 @@ check_PROGRAMS += testbdmfem
 testbdmfem_SOURCES = testbdmfem.cc
 
 MOSTLYCLEANFILES += poisson_petsc_*.vtu
+
+check_PROGRAMS += testnonoverlapping
+testnonoverlapping_SOURCES = testnonoverlapping.cc
+
+check_PROGRAMS += testvectoriterator
+testvectoriterator_SOURCES = testvectoriterator.cc
+
+check_PROGRAMS += testvectoriterator-no-variadic-templates
+testvectoriterator_no_variadic_templates_SOURCES = testvectoriterator.cc
+testvectoriterator_no_variadic_templates_CPPFLAGS = $(AM_CPPFLAGS) -DDISABLE_VARIADIC_TEMPLATES
 
 include $(top_srcdir)/am/global-rules
 

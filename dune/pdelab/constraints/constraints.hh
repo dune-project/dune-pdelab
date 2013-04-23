@@ -12,6 +12,7 @@
 #include"../common/typetraits.hh"
 
 #include"../gridfunctionspace/gridfunctionspace.hh"
+#include <dune/pdelab/constraints/constraintstransformation.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -115,7 +116,7 @@ namespace Dune {
       };
 
 
-      template<typename F, typename IG, typename CG>
+      template<typename F, typename IG, typename CL>
       struct BoundaryConstraintsForParametersLeaf
         : public TypeTree::TreeVisitor
         , public TypeTree::DynamicTraversal
@@ -124,33 +125,28 @@ namespace Dune {
         template<typename LFS, typename TreePath>
         void leaf(const LFS& lfs, TreePath treePath) const
         {
-          // allocate local constraints map
-          CG cl;
 
           // extract constraints type
           typedef typename LFS::Traits::ConstraintsType C;
 
           // iterate over boundary, need intersection iterator
           ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.constraints(),f,ig,lfs,cl);
-
-          // write coefficients into local vector
-          lfs.mwrite(cl,cg);
         }
 
-        BoundaryConstraintsForParametersLeaf(const F& f_, const IG& ig_, CG& cg_)
+        BoundaryConstraintsForParametersLeaf(const F& f_, const IG& ig_, CL& cl_)
           : f(f_)
           , ig(ig_)
-          , cg(cg_)
+          , cl(cl_)
         {}
 
         const F& f;
         const IG& ig;
-        CG& cg;
+        CL& cl;
 
       };
 
 
-      template<typename IG, typename CG>
+      template<typename IG, typename CL>
       struct BoundaryConstraints
         : public BoundaryConstraintsBase
         , public TypeTree::DynamicTraversal
@@ -161,17 +157,11 @@ namespace Dune {
         typename enable_if<F::isLeaf && LFS::isLeaf>::type
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
-          // allocate local constraints map
-          CG cl;
-
           // extract constraints type
           typedef typename LFS::Traits::ConstraintsType C;
 
           // iterate over boundary, need intersection iterator
           ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.constraints(),f,ig,lfs,cl);
-
-          // write coefficients into local vector
-          lfs.mwrite(cl,cg);
         }
 
         // reuse constraints parameter information from f for all LFS children
@@ -180,22 +170,22 @@ namespace Dune {
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
           // traverse LFS tree and reuse parameter information
-          TypeTree::applyToTree(lfs,BoundaryConstraintsForParametersLeaf<F,IG,CG>(f,ig,cg));
+          TypeTree::applyToTree(lfs,BoundaryConstraintsForParametersLeaf<F,IG,CL>(f,ig,cl));
         }
 
-        BoundaryConstraints(const IG& ig_, CG& cg_)
+        BoundaryConstraints(const IG& ig_, CL& cl_)
           : ig(ig_)
-          , cg(cg_)
+          , cl(cl_)
         {}
 
       private:
         const IG& ig;
-        CG& cg;
+        CL& cl;
 
       };
 
 
-      template<typename IG, typename CG>
+      template<typename IG, typename CL>
       struct ProcessorConstraints
         : public TypeTree::TreeVisitor
         , public TypeTree::DynamicTraversal
@@ -204,31 +194,26 @@ namespace Dune {
         template<typename LFS, typename TreePath>
         void leaf(const LFS& lfs, TreePath treePath) const
         {
-          CG cl;
-
           // extract constraints type
           typedef typename LFS::Traits::ConstraintsType C;
 
           // iterate over boundary, need intersection iterator
           ConstraintsCallProcessor<C,C::doProcessor>::processor(lfs.constraints(),ig,lfs,cl);
-
-          // write coefficients into local vector
-          lfs.mwrite(cl,cg);
         }
 
-        ProcessorConstraints(const IG& ig_, CG& cg_)
+        ProcessorConstraints(const IG& ig_, CL& cl_)
           : ig(ig_)
-          , cg(cg_)
+          , cl(cl_)
         {}
 
       private:
         const IG& ig;
-        CG& cg;
+        CL& cl;
 
       };
 
 
-      template<typename IG, typename CG>
+      template<typename IG, typename CL>
       struct SkeletonConstraints
         : public TypeTree::TreePairVisitor
         , public TypeTree::DynamicTraversal
@@ -237,11 +222,6 @@ namespace Dune {
         template<typename LFS, typename TreePath>
         void leaf(const LFS& lfs_e, const LFS& lfs_f, TreePath treePath) const
         {
-          // allocate local constraints map for both elements adjacent
-          // to this intersection
-          CG cl_e;
-          CG cl_f;
-
           // extract constraints type
           typedef typename LFS::Traits::ConstraintsType C;
 
@@ -252,25 +232,23 @@ namespace Dune {
 
           // iterate over boundary, need intersection iterator
           ConstraintsCallSkeleton<C,C::doSkeleton>::skeleton(c,ig,lfs_e,lfs_f,cl_e,cl_f);
-
-          // write coefficients into local vector
-          lfs_e.mwrite(cl_e,cg);
-          lfs_f.mwrite(cl_f,cg);
         }
 
-        SkeletonConstraints(const IG& ig_, CG& cg_)
+        SkeletonConstraints(const IG& ig_, CL& cl_e_, CL& cl_f_)
           : ig(ig_)
-          , cg(cg_)
+          , cl_e(cl_e_)
+          , cl_f(cl_f_)
         {}
 
       private:
         const IG& ig;
-        CG& cg;
+        CL& cl_e;
+        CL& cl_f;
 
       };
 
 
-      template<typename EG, typename CG>
+      template<typename EG, typename CL>
       struct VolumeConstraints
         : public TypeTree::TreeVisitor
         , public TypeTree::DynamicTraversal
@@ -279,28 +257,22 @@ namespace Dune {
         template<typename LFS, typename TreePath>
         void leaf(const LFS& lfs, TreePath treePath) const
         {
-          // allocate local constraints map
-          CG cl;
-
           // extract constraints type
           typedef typename LFS::Traits::ConstraintsType C;
           const C & c = lfs.constraints();
 
           // iterate over boundary, need intersection iterator
           ConstraintsCallVolume<C,C::doVolume>::volume(c,eg,lfs,cl);
-
-          // write coefficients into local vector
-          lfs.mwrite(cl,cg);
         }
 
-        VolumeConstraints(const EG& eg_, CG& cg_)
+        VolumeConstraints(const EG& eg_, CL& cl_)
           : eg(eg_)
-          , cg(cg_)
+          , cl(cl_)
         {}
 
       private:
         const EG& eg;
-        CG& cg;
+        CL& cl;
 
       };
 
@@ -590,7 +562,9 @@ namespace Dune {
         // make local function space
         typedef LocalFunctionSpace<GFS> LFS;
         LFS lfs_e(gfs);
+        LFSIndexCache<LFS> lfs_cache_e(lfs_e);
         LFS lfs_f(gfs);
+        LFSIndexCache<LFS> lfs_cache_f(lfs_f);
 
         // get index set
         const typename GV::IndexSet& is=gfs.gridView().indexSet();
@@ -616,9 +590,13 @@ namespace Dune {
           // bind local function space to element
           lfs_e.bind(*it);
 
+          typedef typename CG::LocalTransformation CL;
+
+          CL cl_self;
+
           // TypeTree::applyToTreePair(p,lfs_e,VolumeConstraints<Element,CG>(ElementGeometry<Element>(*it),cg));
           typedef ElementGeometry<Element> ElementWrapper;
-          TypeTree::applyToTree(lfs_e,VolumeConstraints<ElementWrapper,CG>(ElementWrapper(*it),cg));
+          TypeTree::applyToTree(lfs_e,VolumeConstraints<ElementWrapper,CL>(ElementWrapper(*it),cl_self));
 
           // iterate over intersections and call metaprogram
           unsigned int intersection_index = 0;
@@ -628,14 +606,14 @@ namespace Dune {
             if (iit->boundary())
             {
               typedef IntersectionGeometry<Intersection> IntersectionWrapper;
-              TypeTree::applyToTreePair(p,lfs_e,BoundaryConstraints<IntersectionWrapper,CG>(IntersectionWrapper(*iit,intersection_index),cg));
+              TypeTree::applyToTreePair(p,lfs_e,BoundaryConstraints<IntersectionWrapper,CL>(IntersectionWrapper(*iit,intersection_index),cl_self));
             }
 
             // ParallelStuff: BEGIN support for processor boundaries.
             if ((!iit->boundary()) && (!iit->neighbor()))
             {
               typedef IntersectionGeometry<Intersection> IntersectionWrapper;
-              TypeTree::applyToTree(lfs_e,ProcessorConstraints<IntersectionWrapper,CG>(IntersectionWrapper(*iit,intersection_index),cg));
+              TypeTree::applyToTree(lfs_e,ProcessorConstraints<IntersectionWrapper,CL>(IntersectionWrapper(*iit,intersection_index),cl_self));
             }
             // END support for processor boundaries.
 
@@ -647,11 +625,28 @@ namespace Dune {
               if(id>idn){
                 // bind local function space to element in neighbor
                 lfs_f.bind( *(iit->outside()) );
+
+                CL cl_neighbor;
+
                 typedef IntersectionGeometry<Intersection> IntersectionWrapper;
-                TypeTree::applyToTreePair(lfs_e,lfs_f,SkeletonConstraints<IntersectionWrapper,CG>(IntersectionWrapper(*iit,intersection_index),cg));
+                TypeTree::applyToTreePair(lfs_e,lfs_f,SkeletonConstraints<IntersectionWrapper,CL>(IntersectionWrapper(*iit,intersection_index),cl_self,cl_neighbor));
+
+                if (!cl_neighbor.empty())
+                  {
+                    lfs_cache_f.update();
+                    cg.import_local_transformation(cl_neighbor,lfs_cache_f);
+                  }
+
               }
             }
           }
+
+          if (!cl_self.empty())
+            {
+              lfs_cache_e.update();
+              cg.import_local_transformation(cl_self,lfs_cache_e);
+            }
+
         }
 
         // print result
@@ -674,6 +669,27 @@ namespace Dune {
       }
     }; // end ConstraintsAssemblerHelper
 
+
+
+    // Disable constraints assembly for empty transformation
+    template<typename F, typename GFS>
+    struct ConstraintsAssemblerHelper<F, GFS, EmptyTransformation, true>
+    {
+      static void assemble(const F& f, const GFS& gfs, EmptyTransformation& cg, const bool verbose)
+      {}
+    };
+
+    // Disable constraints assembly for empty transformation
+    template<typename F, typename GFS>
+    struct ConstraintsAssemblerHelper<F, GFS, EmptyTransformation, false>
+    {
+      static void assemble(const F& f, const GFS& gfs, EmptyTransformation& cg, const bool verbose)
+      {}
+    };
+
+
+
+    // Backwards compatibility shim
     template<typename F, typename GFS, typename CG>
     struct ConstraintsAssemblerHelper<F, GFS, CG, true>
     {
@@ -750,14 +766,27 @@ namespace Dune {
      * \param xg The container with the coefficients
      */
     template<typename CG, typename XG>
-    void set_constrained_dofs(const CG& cg, typename XG::ElementType x,
+    void set_constrained_dofs(const CG& cg,
+                              typename XG::ElementType x,
                               XG& xg)
     {
-      typedef typename XG::Backend B;
       typedef typename CG::const_iterator global_col_iterator;
       for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
-        B::access(xg,cit->first) = x;
+        xg[cit->first] = x;
     }
+
+
+#ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
+    template<typename XG>
+    void set_constrained_dofs(const EmptyTransformation& cg,
+                              typename XG::ElementType x,
+                              XG& xg)
+    {}
+
+#endif // DOXYGEN
+
 
     //! check that constrained dofs match a certain value
     /**
@@ -784,13 +813,13 @@ namespace Dune {
     bool check_constrained_dofs(const CG& cg, typename XG::ElementType x,
                                 XG& xg, const Cmp& cmp = Cmp())
     {
-      typedef typename XG::Backend B;
       typedef typename CG::const_iterator global_col_iterator;
       for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
-        if(cmp.ne(B::access(xg,cit->first), x))
+        if(cmp.ne(xg[cit->first], x))
           return false;
       return true;
     }
+
     //! check that constrained dofs match a certain value
     /**
      * \code
@@ -818,6 +847,28 @@ namespace Dune {
                                     FloatCmpOps<typename XG::ElementType>());
     }
 
+
+#ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
+    template<typename XG, typename Cmp>
+    bool check_constrained_dofs(const EmptyTransformation& cg, typename XG::ElementType x,
+                                XG& xg, const Cmp& cmp = Cmp())
+    {
+      return true;
+    }
+
+    // Specialized version for unconstrained spaces
+    template<typename XG>
+    bool check_constrained_dofs(const EmptyTransformation& cg, typename XG::ElementType x,
+                                XG& xg)
+    {
+      return true;
+    }
+
+#endif // DOXYGEN
+
+
     //! transform residual into transformed basis: r -> r~
     /**
      * \code
@@ -829,17 +880,26 @@ namespace Dune {
     {
       typedef typename CG::const_iterator global_col_iterator;
       typedef typename CG::value_type::second_type::const_iterator global_row_iterator;
-      typedef typename XG::Backend B;
 
       for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
         for(global_row_iterator rit = cit->second.begin(); rit!=cit->second.end(); ++rit)
-          B::access(xg,rit->first) += rit->second * B::access(xg,cit->first);
+          xg[rit->first] += rit->second * xg[cit->first];
 
       // extra loop because constrained dofs might have contributions
       // to constrained dofs
       for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
-        B::access(xg,cit->first) = 0;
+        xg[cit->first] = 0;
     }
+
+
+#ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
+    template<typename XG>
+    void constrain_residual (const EmptyTransformation& cg, XG& xg)
+    {}
+
+#endif // DOXYGEN
 
     //! Modify coefficient vector based on constrained dofs as given
     //! in the constraints container
@@ -853,11 +913,23 @@ namespace Dune {
     template<typename CG, typename XG>
     void copy_constrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
     {
-      typedef typename XG::Backend B;
       typedef typename CG::const_iterator global_col_iterator;
       for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
-        B::access(xgout,cit->first) = B::access(xgin,cit->first);
+        {
+          xgout[cit->first] = xgin[cit->first];
+        }
     }
+
+
+#ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
+    template<typename XG>
+    void copy_constrained_dofs (const EmptyTransformation& cg, const XG& xgin, XG& xgout)
+    {}
+
+#endif // DOXYGEN
+
 
     /**
      * \code
@@ -867,11 +939,29 @@ namespace Dune {
     template<typename CG, typename XG>
     void set_nonconstrained_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
     {
+      // FIXME: This is horribly inefficient!
+      XG tmp(xg);
+      xg = x;
+      copy_constrained_dofs(cg,tmp,xg);
+      /*
       typedef typename XG::Backend B;
       for (typename XG::size_type i=0; i<xg.flatsize(); ++i)
         if (cg.find(i)==cg.end())
           B::access(xg,i) = x;
+      */
     }
+
+
+#ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
+    template<typename XG>
+    void set_nonconstrained_dofs (const EmptyTransformation& cg, typename XG::ElementType x, XG& xg)
+    {
+      xg = x;
+    }
+
+#endif // DOXYGEN
 
 
     /**
@@ -882,11 +972,30 @@ namespace Dune {
     template<typename CG, typename XG>
     void copy_nonconstrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
     {
+      // FIXME: This is horribly inefficient!
+      XG tmp(xgin);
+      copy_constrained_dofs(cg,xgout,tmp);
+      xgout = tmp;
+      /*
       typedef typename XG::Backend B;
       for (typename XG::size_type i=0; i<xgin.flatsize(); ++i)
         if (cg.find(i)==cg.end())
           B::access(xgout,i) = B::access(xgin,i);
+      */
     }
+
+
+#ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
+    template<typename XG>
+    void copy_nonconstrained_dofs (const EmptyTransformation& cg, const XG& xgin, XG& xgout)
+    {
+      xgout = xgin;
+    }
+
+#endif // DOXYGEN
+
 
     /**
      * \code
@@ -896,6 +1005,21 @@ namespace Dune {
     template<typename CG, typename XG>
     void set_shifted_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
     {
+      // FIXME: This is horribly inefficient!
+
+      XG tmp(xg);
+      tmp = x;
+
+      typedef typename CG::const_iterator global_col_iterator;
+      for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
+        if (cit->second.size() == 0)
+          {
+            tmp[cit->first] = xg[cit->first];
+          }
+
+      xg = tmp;
+
+      /*
       typedef typename XG::Backend B;
       typedef typename CG::const_iterator global_col_iterator;
       for (typename XG::size_type i=0; i<xg.flatsize(); ++i){
@@ -903,7 +1027,18 @@ namespace Dune {
         if (it == cg.end() || it->second.size() > 0)
           B::access(xg,i) = x;
       }
+      */
     }
+
+
+#ifndef DOXYGEN
+
+    // Specialized version for unconstrained spaces
+    template<typename XG>
+    void set_shifted_dofs (const EmptyTransformation& cg, typename XG::ElementType x, XG& xg)
+    {}
+
+#endif // DOXYGEN
 
     //! @}
 

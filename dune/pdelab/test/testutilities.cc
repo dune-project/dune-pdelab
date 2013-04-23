@@ -2,6 +2,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"     
 #endif
+
 #include<iostream>
 #include<vector>
 #include<dune/common/parallel/mpihelper.hh>
@@ -12,10 +13,12 @@
 #include"../finiteelementmap/q22dfem.hh"
 #include"../finiteelementmap/q12dfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
+#include"../gridfunctionspace/subspace.hh"
 #include"../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include"../gridfunctionspace/interpolate.hh"
 #include"../common/function.hh"
 #include"../common/vtkexport.hh"
+#include"../backend/istlvectorbackend.hh"
 
 // generate a Q1 function and output it
 template<class GV> 
@@ -33,7 +36,8 @@ void testq1 (const GV& gv)
   typedef typename Dune::PDELab::BackendVectorSelector<Q1GFS, double>::Type V;
   V x(q1gfs);
   x = 0.0;
-  x[3] = 1.0;
+  // Don't do this at home: access raw vector
+  Dune::PDELab::istl::raw(x)[3] = 1.0;
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<Q1GFS,V> DGF;
@@ -98,10 +102,10 @@ void testinterpolate (const GV& gv)
   Q1GFS q1gfs(gv,q12dfem);
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> Q2GFS;
   Q2GFS q2gfs(gv,q22dfem);
-  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::GridFunctionSpaceLexicographicMapper,
-    Q1GFS,Q2GFS> CGFS;
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTLVectorBackend<>,
+    Dune::PDELab::LexicographicOrderingTag,Q1GFS,Q2GFS> CGFS;
   CGFS cgfs(q1gfs,q2gfs);
-  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,2> PGFS;
+  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,2,Dune::PDELab::ISTLVectorBackend<> > PGFS;
   PGFS pgfs(q2gfs,q2gfs);
 
   // make coefficent Vectors
@@ -129,13 +133,13 @@ void testinterpolate (const GV& gv)
   Dune::PDELab::interpolate(h,pgfs,pxg); // krass !
 
   // subspaces
-  typedef Dune::PDELab::GridFunctionSubSpace<CGFS,0> SUBGFS0;
+  typedef Dune::PDELab::GridFunctionSubSpace<CGFS,Dune::PDELab::TypeTree::TreePath<0> > SUBGFS0;
   SUBGFS0 subgfs0(cgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<CGFS,1> SUBGFS1;
+  typedef Dune::PDELab::GridFunctionSubSpace<CGFS,Dune::PDELab::TypeTree::TreePath<1> > SUBGFS1;
   SUBGFS1 subgfs1(cgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<PGFS,0> PSUBGFS0;
+  typedef Dune::PDELab::GridFunctionSubSpace<PGFS,Dune::PDELab::TypeTree::TreePath<0> > PSUBGFS0;
   PSUBGFS0 psubgfs0(pgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<PGFS,1> PSUBGFS1;
+  typedef Dune::PDELab::GridFunctionSubSpace<PGFS,Dune::PDELab::TypeTree::TreePath<1> > PSUBGFS1;
   PSUBGFS1 psubgfs1(pgfs);
 
   // make discrete function object
@@ -226,6 +230,24 @@ public:
   }
 };
 
+template<typename GV, typename RF>
+class VelocityLinear
+  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,2>,
+    VelocityLinear<GV,RF> >
+{
+public:
+  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,2> Traits;
+  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,VelocityLinear<GV,RF> > BaseT;
+
+  VelocityLinear (const GV& gv) : BaseT(gv) {}
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
+                typename Traits::RangeType& y) const
+  {
+  y[0] = 1.0 * x[0];
+  y[1] = 2.0 * x[1];
+  }
+};
+
 // generate a Q1 function and output it
 template<class GV> 
 void testtaylorhood (const GV& gv)
@@ -241,10 +263,10 @@ void testtaylorhood (const GV& gv)
   Q1GFS q1gfs(gv,q12dfem);
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> Q2GFS;
   Q2GFS q2gfs(gv,q22dfem);
-  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,GV::dimension> VGFS;
+  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,GV::dimension,Dune::PDELab::ISTLVectorBackend<> > VGFS;
   VGFS vgfs(q2gfs);
-  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::GridFunctionSpaceLexicographicMapper,
-    VGFS,Q1GFS> THGFS;
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTLVectorBackend<>,
+    Dune::PDELab::LexicographicOrderingTag,VGFS,Q1GFS> THGFS;
   THGFS thgfs(vgfs,q1gfs);
 
   // make coefficent Vector
@@ -274,29 +296,29 @@ void testtaylorhood (const GV& gv)
 
   // check entries of global vector
   for (typename V::size_type i=0; i<xg.flatsize(); i++)
-    std::cout << "[" << i << ":" << V::Backend::access(xg, i) << "] ";
+    std::cout << "[" << i << ":" << Dune::PDELab::istl::raw(xg)[i] << "] ";
   std::cout << std::endl;
 
   // check entries
   for (int i=0; i<25; i++)
-    if (xg[i]!=1.0)
+    if (Dune::PDELab::istl::raw(xg)[i]!=1.0)
       exit(1);
   for (int i=25; i<50; i++)
-    if (xg[i]!=2.0)
+    if (Dune::PDELab::istl::raw(xg)[i]!=2.0)
       exit(1);
   for (int i=50; i<59; i++)
-    if (xg[i]!=3.0)
+    if (Dune::PDELab::istl::raw(xg)[i]!=3.0)
       exit(1);
   std::cout << "all entries correct" << std::endl;
 
   // subspaces
-  typedef Dune::PDELab::GridFunctionSubSpace<THGFS,1> SUBP;
+  typedef Dune::PDELab::GridFunctionSubSpace<THGFS,Dune::PDELab::TypeTree::TreePath<1> > SUBP;
   SUBP subp(thgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<THGFS,0> SUBV;
+  typedef Dune::PDELab::GridFunctionSubSpace<THGFS,Dune::PDELab::TypeTree::TreePath<0> > SUBV;
   SUBV subv(thgfs);
-  typedef Dune::PDELab::GridFunctionSubSpace<SUBV,0> SUBV0;
+  typedef Dune::PDELab::GridFunctionSubSpace<SUBV,Dune::PDELab::TypeTree::TreePath<0> > SUBV0;
   SUBV0 subv0(subv);
-  typedef Dune::PDELab::GridFunctionSubSpace<SUBV,1> SUBV1;
+  typedef Dune::PDELab::GridFunctionSubSpace<SUBV,Dune::PDELab::TypeTree::TreePath<1> > SUBV1;
   SUBV1 subv1(subv);
 
 
@@ -319,25 +341,112 @@ void testtaylorhood (const GV& gv)
   vtkwriter.write("taylorhood",Dune::VTK::ascii);
 }
 
+template<class GV>
+void testgridfunctions (const GV& gv)
+{
+  // instantiate finite element maps
+  typedef Dune::PDELab::Q22DLocalFiniteElementMap<typename GV::Grid::ctype,double> Q22DFEM;
+  Q22DFEM q22dfem;
+
+  // make a grid function space
+  typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> Q2GFS;
+  Q2GFS q2gfs(gv,q22dfem);
+  typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,GV::dimension,Dune::PDELab::ISTLVectorBackend<> > VGFS;
+  VGFS vgfs(q2gfs);
+
+  // make coefficent Vector
+  typedef typename Dune::PDELab::BackendVectorSelector<VGFS, double>::Type V;
+  V xv(vgfs);
+  xv = 0.0;
+
+  // construct a grid function
+  typedef VelocityLinear<GV,double> VelocityLinearType;
+  VelocityLinearType velocity_lin(gv);
+  Dune::PDELab::interpolate(velocity_lin,vgfs,xv);
+
+  // subspaces
+  typedef Dune::PDELab::GridFunctionSubSpace<VGFS,Dune::PDELab::TypeTree::TreePath<0> > SUBV0;
+  SUBV0 subv0(vgfs);
+  typedef Dune::PDELab::GridFunctionSubSpace<VGFS,Dune::PDELab::TypeTree::TreePath<1> > SUBV1;
+  SUBV1 subv1(vgfs);
+
+  // make discrete function object
+  typedef Dune::PDELab::DiscreteGridFunction<SUBV0,V> DGFV0;
+  DGFV0 dgfv0(subv0,xv);
+  typedef Dune::PDELab::DiscreteGridFunction<SUBV1,V> DGFV1;
+  DGFV1 dgfv1(subv1,xv);
+  typedef Dune::PDELab::VectorDiscreteGridFunction<VGFS,V> DGFV;
+  DGFV dgfv(vgfs,xv);
+
+  // scalar gradient gridfunction
+  typedef Dune::PDELab::DiscreteGridFunctionGradient<SUBV0,V> DGFV0G;
+  DGFV0G dgfv0g(subv0,xv);
+  typedef Dune::PDELab::DiscreteGridFunctionGradient<SUBV1,V> DGFV1G;
+  DGFV1G dgfv1g(subv1,xv);
+
+  // vector gradient gridfunction
+  typedef Dune::PDELab::VectorDiscreteGridFunctionGradient<VGFS,V> DGFVG;
+  DGFVG dgfvg(vgfs,xv);
+
+  // check entries of velocity vector
+  for (typename V::size_type i=0; i<xv.flatsize(); i++)
+    std::cout << "[" << i << ":" << Dune::PDELab::istl::raw(xv)[i] << "] ";
+  std::cout << std::endl;
+
+  // values at element centers
+  typename DGFV1G::Traits::DomainType x(0.5);
+  typename DGFV0::Traits::RangeType v0;
+  typename DGFV1::Traits::RangeType v1;
+  typename DGFV0G::Traits::RangeType v0grad;
+  typename DGFV1G::Traits::RangeType v1grad;
+  typename DGFVG::Traits::RangeType vgrad;
+
+  // evaluate gridfunctions
+  for(typename GV::template Codim<0>::Iterator eit = gv.template begin<0>();
+      eit != gv.template end<0>(); ++eit)
+  {
+    dgfv0.evaluate(*eit, x, v0);
+    dgfv1.evaluate(*eit, x, v1);
+    dgfv0g.evaluate(*eit, x, v0grad);
+    dgfv1g.evaluate(*eit, x, v1grad);
+    dgfvg.evaluate(*eit, x, vgrad);
+
+    // check matching components of gradients
+    if (v0grad[0]!=1.0)
+      exit(1);
+    if (v1grad[1]!=2.0)
+      exit(1);
+
+    // check gradients on the diagonal of vgrad
+    if (vgrad[0][0]!=1.0)
+      exit(1);
+    if (vgrad[1][1]!=2.0)
+      exit(1);
+  }
+}
+
 int main(int argc, char** argv)
 {
   try{
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
-	// need a grid in order to test grid functions
-	Dune::FieldVector<double,2> L(1.0);
-	Dune::FieldVector<int,2> N(1);
-	Dune::FieldVector<bool,2> B(false);
-	Dune::YaspGrid<2> grid(L,N,B,0);
-    grid.globalRefine(5);
+    // need a grid in order to test grid functions
+    Dune::FieldVector<double,2> L(1.0);
+    Dune::FieldVector<int,2> N(1);
+    Dune::FieldVector<bool,2> B(false);
+    Dune::YaspGrid<2> grid(L,N,B,0);
+    grid.globalRefine(2);
 
-	testq1(grid.leafView());
+    testq1(grid.leafView());
     testinterpolate(grid.leafView());
     testtaylorhood(grid.levelView(1));
+    testgridfunctions(grid.levelView(1));
 
-	// test passed
-	return 0;
+    std::cout << "All testutilities tests passed." << std::endl;
+
+    // test passed
+    return 0;
 
   }
   catch (Dune::Exception &e){

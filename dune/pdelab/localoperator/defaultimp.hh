@@ -6,10 +6,12 @@
 #include <cmath>
 #include <vector>
 
-#include <dune/pdelab/gridoperatorspace/localmatrix.hh>
+#include <dune/pdelab/gridfunctionspace/localvector.hh>
+#include <dune/pdelab/gridoperator/common/localmatrix.hh>
 
 namespace Dune {
   namespace PDELab {
+
     //! \addtogroup LocalOperatorDefaultImp
     //! \ingroup LocalOperator
     //! \{
@@ -56,7 +58,7 @@ namespace Dune {
 
         X u(x);
 
-        // Notice that in general lfsv.size() != mat.nrows() 
+        // Notice that in general lfsv.size() != mat.nrows()
         ResidualVector down(mat.nrows(),0.),up(mat.nrows());
         ResidualView downview = down.weightedAccumulationView(mat.weight());
         ResidualView upview = up.weightedAccumulationView(mat.weight());
@@ -120,7 +122,7 @@ namespace Dune {
 
         X u(x);
 
-        // Notice that in general lfsv.size() != mat.nrows() 
+        // Notice that in general lfsv.size() != mat.nrows()
         ResidualVector down(mat.nrows(),0.),up(mat.nrows());
         ResidualView downview = down.weightedAccumulationView(mat.weight());
         ResidualView upview = up.weightedAccumulationView(mat.weight());
@@ -186,7 +188,7 @@ namespace Dune {
         X u_s(x_s);
         X u_n(x_n);
 
-        // Notice that in general lfsv.size() != mat.nrows() 
+        // Notice that in general lfsv.size() != mat.nrows()
         ResidualVector down_s(mat_ss.nrows()),up_s(mat_ss.nrows());
         ResidualView downview_s = down_s.weightedAccumulationView(1.0);
         ResidualView upview_s = up_s.weightedAccumulationView(1.0);
@@ -275,7 +277,7 @@ namespace Dune {
 
         X u_s(x_s);
 
-        // Notice that in general lfsv.size() != mat.nrows() 
+        // Notice that in general lfsv.size() != mat.nrows()
         ResidualVector down_s(mat_ss.nrows()),up_s(mat_ss.nrows());
         ResidualView downview_s = down_s.weightedAccumulationView(mat_ss.weight());
         ResidualView upview_s = up_s.weightedAccumulationView(mat_ss.weight());;

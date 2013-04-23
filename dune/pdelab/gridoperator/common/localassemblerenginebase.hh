@@ -358,7 +358,8 @@ namespace Dune {
         {
         }
 
-        void postAssembly()
+        template<typename GFSU, typename GFSV>
+        void postAssembly(const GFSU& gfsu, const GFSV& gfsv)
         {
         }
 

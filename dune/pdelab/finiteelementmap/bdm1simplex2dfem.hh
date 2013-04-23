@@ -63,6 +63,27 @@ namespace Dune {
         return variant[orient[is.template index<0>(e)]];
       }
 
+      bool fixedSize() const
+      {
+        return true;
+      }
+
+      std::size_t size(GeometryType gt) const
+      {
+        switch (gt.dim())
+          {
+          case 1:
+            return 2;
+          default:
+            return 0;
+          }
+      }
+
+      std::size_t maxLocalSize() const
+      {
+        return 6;
+      }
+
     private:
       const GV& gv;
       FE variant[8];

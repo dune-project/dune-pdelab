@@ -7,13 +7,13 @@
 
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
+#include<dune/common/fmatrix.hh>
 #include<dune/common/static_assert.hh>
 
 #include<dune/geometry/type.hh>
 #include<dune/geometry/quadraturerules.hh>
+#include<dune/geometry/referenceelements.hh>
 
-#include"../common/geometrywrapper.hh"
-#include"../gridoperatorspace/gridoperatorspace.hh"
 #include"defaultimp.hh"
 #include"pattern.hh"
 #include"flags.hh"
@@ -22,28 +22,28 @@
 namespace Dune {
   namespace PDELab {
 
-	// a local operator for solving the Poisson equation
-	//     div sigma +a_0 u = f         in \Omega, 
-	//                sigma = -K grad u in \Omega, 
+    // a local operator for solving the Poisson equation
+    //     div sigma +a_0 u = f         in \Omega,
+    //                sigma = -K grad u in \Omega,
     //                    u = g         on \partial\Omega_D
     //      sigma \cdot \nu = j         on \partial\Omega_N
-	// with H(div) conforming (mixed) finite elements
+    // with H(div) conforming (mixed) finite elements
     // K : diffusion tensor dependent on position
     // A0: Helmholtz term
     // F : grid function type giving f
     // B : grid function type selecting boundary condition
     // G : grid function type giving g
     template<typename K, typename A0, typename F, typename B, typename G>
-	class DiffusionMixed : public NumericalJacobianApplyVolume<DiffusionMixed<K,A0,F,B,G> >,
+    class DiffusionMixed : public NumericalJacobianApplyVolume<DiffusionMixed<K,A0,F,B,G> >,
                            public NumericalJacobianVolume<DiffusionMixed<K,A0,F,B,G> >,
                            public FullVolumePattern,
                            public LocalOperatorDefaultFlags
-	{
-	public:
+    {
+    public:
       // pattern assembly flags
       enum { doPatternVolume = true };
 
-	  // residual assembly flags
+      // residual assembly flags
       enum { doAlphaVolume = true };
       enum { doLambdaVolume = true };
       enum { doLambdaBoundary = true };
@@ -52,27 +52,27 @@ namespace Dune {
         : k(k_), a0(a0_), f(f_), bctype(bctype_), g(g_), qorder_v(qorder_v_), qorder_p(qorder_p_)
       {}
 
-	  // volume integral depending on test and ansatz functions
-	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
-	  {
+      // volume integral depending on test and ansatz functions
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+      {
         // select the two components
         typedef typename LFSU::template Child<0>::Type VelocitySpace;
         const VelocitySpace& velocityspace = lfsu.template child<0>();
         typedef typename LFSU::template Child<1>::Type PressureSpace;
         const PressureSpace& pressurespace = lfsu.template child<1>();
 
-		// domain and range field type
+        // domain and range field type
         typedef typename VelocitySpace::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::DomainFieldType DF;
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename VelocitySpace::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeFieldType RF;
-		typedef typename VelocitySpace::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::JacobianType VelocityJacobianType;
+          Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename VelocitySpace::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeType VelocityRangeType;
+          Traits::LocalBasisType::Traits::JacobianType VelocityJacobianType;
+        typedef typename VelocitySpace::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::RangeType VelocityRangeType;
         typedef typename PressureSpace::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeType PressureRangeType;
+          Traits::LocalBasisType::Traits::RangeType PressureRangeType;
 
         // dimensions
         const int dim = EG::Geometry::dimension;
@@ -150,7 +150,7 @@ namespace Dune {
             // compute divergence of velocity basis functions on reference element
             std::vector<RF> divergence(velocityspace.size(),0.0);
             for (std::size_t i=0; i<velocityspace.size(); i++)
-              for (int j=0; j<dim; j++) 
+              for (int j=0; j<dim; j++)
                 divergence[i] += vbasis[i][j][j];
 
             // integrate sigma * phi_i
@@ -166,23 +166,23 @@ namespace Dune {
             for (std::size_t i=0; i<pressurespace.size(); i++)
               r.accumulate(pressurespace,i,-divergencesigma*pbasis[i]*factor);
           }
-	  }
+      }
 
- 	  // volume integral depending only on test functions
-	  template<typename EG, typename LFSV, typename R>
+      // volume integral depending only on test functions
+      template<typename EG, typename LFSV, typename R>
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
         // select the two components
         typedef typename LFSV::template Child<1>::Type PressureSpace;
         const PressureSpace& pressurespace = lfsv.template child<1>();
 
-		// domain and range field type
+        // domain and range field type
         typedef typename PressureSpace::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::DomainFieldType DF;
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename PressureSpace::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeFieldType RF;
+          Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename PressureSpace::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeType PressureRangeType;
+          Traits::LocalBasisType::Traits::RangeType PressureRangeType;
 
         // dimensions
         const int dim = EG::Geometry::dimension;
@@ -194,7 +194,7 @@ namespace Dune {
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
-            // evaluate shape functions 
+            // evaluate shape functions
             std::vector<PressureRangeType> pbasis(pressurespace.size());
             pressurespace.finiteElement().localBasis().evaluateFunction(it->position(),pbasis);
 
@@ -210,20 +210,20 @@ namespace Dune {
       }
 
       // boundary integral independen of ansatz functions
- 	  template<typename IG, typename LFSV, typename R>
+      template<typename IG, typename LFSV, typename R>
       void lambda_boundary (const IG& ig, const LFSV& lfsv, R& r) const
       {
         // select the two components
         typedef typename LFSV::template Child<0>::Type VelocitySpace;
         const VelocitySpace& velocityspace = lfsv.template child<0>();
 
-		// domain and range field type
+        // domain and range field type
         typedef typename VelocitySpace::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::DomainFieldType DF;
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename VelocitySpace::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeFieldType RF;
+          Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename VelocitySpace::Traits::FiniteElementType::
-		  Traits::LocalBasisType::Traits::RangeType VelocityRangeType;
+          Traits::LocalBasisType::Traits::RangeType VelocityRangeType;
 
         // dimensions
         const int dim = IG::dimension;
@@ -248,13 +248,13 @@ namespace Dune {
             if( bctype.isNeumann( ig,it->position() ) )
               continue;
 
-            // position of quadrature point in local coordinates of element 
+            // position of quadrature point in local coordinates of element
             Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
 
-            // evaluate test shape functions 
+            // evaluate test shape functions
             std::vector<VelocityRangeType> vbasis(velocityspace.size());
             velocityspace.finiteElement().localBasis().evaluateFunction(local,vbasis);
-            
+
             // transform basis vectors
             std::vector<VelocityRangeType> vtransformedbasis(velocityspace.size());
             for (std::size_t i=0; i<velocityspace.size(); i++)
@@ -266,7 +266,7 @@ namespace Dune {
             // evaluate Dirichlet boundary condition
             typename G::Traits::RangeType y;
             g.evaluate(*(ig.inside()),local,y);
-            
+
             // integrate g v*normal
             RF factor = it->weight()*ig.geometry().integrationElement(it->position())/det;
             for (std::size_t i=0; i<velocityspace.size(); i++)
@@ -280,9 +280,9 @@ namespace Dune {
       const F& f;
       const B& bctype;
       const G& g;
-      int qorder_v; 
+      int qorder_v;
       int qorder_p;
-	};
+    };
 
     //! \} group GridFunctionSpace
   } // namespace PDELab

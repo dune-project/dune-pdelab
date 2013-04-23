@@ -23,6 +23,7 @@
 #endif
 
 #include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/backend/istlvectorbackend.hh>
 #include "../common/vtkexport.hh"
 #include "../gridfunctionspace/gridfunctionspace.hh"
 #include "../gridfunctionspace/gridfunctionspaceutilities.hh"
@@ -48,7 +49,7 @@ void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
 
   typedef typename Dune::PDELab::BackendVectorSelector<GFS, R>::Type X;
   X x(gfs,0.0);                       // make coefficient vector
-  x[2] = 1.0;                         // set a component
+  Dune::PDELab::istl::raw(x)[2] = 1.0;                         // set a component
 
   typedef Dune::PDELab::DiscreteGridFunctionPiola<GFS,X> DGF;
   DGF dgf(gfs,x);                     // make a grid function

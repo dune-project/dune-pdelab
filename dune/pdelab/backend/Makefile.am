@@ -1,4 +1,7 @@
 commondir = $(includedir)/dune/pdelab/backend
+
+SUBDIRS = istl
+
 common_HEADERS = backendselector.hh             \
                  eigenmatrixbackend.hh          \
                  eigensolverbackend.hh          \
@@ -8,7 +11,6 @@ common_HEADERS = backendselector.hh             \
                  istlvectorbackend.hh           \
                  novlpistlsolverbackend.hh      \
                  ovlpistlsolverbackend.hh       \
-                 parallelistlhelper.hh          \
                  petscmatrixbackend.hh          \
                  petscnestedvectorbackend.hh    \
                  petscutility.hh                \

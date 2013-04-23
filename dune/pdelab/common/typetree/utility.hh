@@ -211,7 +211,7 @@ namespace Dune {
        * template<typename T, typename F, std::size_t... i>
        * void apply_to_tuple(const T& t, F f, index_pack<i...> indices)
        * {
-       *   f(get<i>(t))...;
+       *   discard((f(get<i>(t)),0)...);
        * }
        *
        * tuple<int,double,...,char> t;
@@ -219,14 +219,15 @@ namespace Dune {
        * \endcode
        *
        * \sa tuple_indices()
+       * \sa discard()
        */
       template<std::size_t... i>
       struct index_pack {};
 
       //! TMP to build an index_pack containing the sequence 0,...,n-1.
       template<std::size_t n, std::size_t... i>
-      struct build_index_pack
-        : public build_index_pack<n-1,n-1,i...>
+      struct index_pack_builder
+        : public index_pack_builder<n-1,n-1,i...>
       {
 
 #ifdef DOXYGEN
@@ -240,7 +241,7 @@ namespace Dune {
 
       // end of recursion
       template<std::size_t... i>
-      struct build_index_pack<0,i...>
+      struct index_pack_builder<0,i...>
       {
         typedef index_pack<i...> type;
       };
@@ -249,16 +250,35 @@ namespace Dune {
 
       //! TMP to build an index_pack for all elements in the tuple.
       template<typename tuple>
-      struct build_tuple_index_pack
-        : public build_index_pack<tuple_size<tuple>::value>
+      struct tuple_index_pack_builder
+        : public index_pack_builder<tuple_size<tuple>::value>
       {};
 
       //! Generate an index_pack for the tuple t.
       template<typename tuple>
-      typename build_tuple_index_pack<tuple>::type tuple_indices(const tuple& t)
+      typename tuple_index_pack_builder<tuple>::type tuple_indices(const tuple& t)
       {
-        return typename build_tuple_index_pack<tuple>::type();
+        return typename tuple_index_pack_builder<tuple>::type();
       }
+
+      //! Generate an index_pack with the values {0, 1, ..., n-1}.
+      /**
+       * \tparam n The length of the index pack.
+       * \return   index_pack<0,1,...,n-1>.
+       **/
+      template<std::size_t n>
+      typename index_pack_builder<n>::type index_range()
+      {
+        return typename index_pack_builder<n>::type();
+      }
+
+      //! No-op function to make calling a function on a variadic template argument pack legal C++.
+      /**
+       * \sa index_pack
+       */
+      template<typename... Args>
+      void discard(Args&&... args)
+      {}
 
 #endif // HAVE_VARIADIC_TEMPLATES
 

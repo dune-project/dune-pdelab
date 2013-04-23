@@ -1,8 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<iostream>
+#include<sstream>
 #include<vector>
 #include<map>
 #include<dune/common/parallel/mpihelper.hh>
@@ -26,12 +27,16 @@
 #include"../constraints/constraints.hh"
 #include"../common/function.hh"
 #include"../common/vtkexport.hh"
-#include"../gridoperatorspace/gridoperatorspace.hh"
 #include"../localoperator/laplacedirichletccfv.hh"
 #include"../backend/backendselector.hh"
 #include"../backend/istlvectorbackend.hh"
 #include"../backend/istlmatrixbackend.hh"
-#include"../backend/istlsolverbackend.hh"
+#include"../backend/seqistlsolverbackend.hh"
+
+#include"../gridoperator/gridoperator.hh"
+#include <dune/pdelab/ordering/singlecodimleafordering.hh>
+#include <dune/pdelab/gridfunctionspace/vtk.hh>
+
 
 #include"gridexamples.hh"
 
@@ -47,7 +52,7 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,G<GV,RF> > BaseT;
 
   G (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
   {
     typename Traits::DomainType center;
@@ -73,10 +78,10 @@ public:
   B (const GV& gv_) : gv(gv_) {}
 
   template<typename I>
-  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
+  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig,
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
-  {  
+  {
     y = 1; // all is Dirichlet boundary
   }
 
@@ -88,7 +93,7 @@ public:
 };
 
 
-template<class GV> 
+template<class GV>
 void test (const GV& gv)
 {
   typedef typename GV::Grid::ctype DF;
@@ -100,62 +105,91 @@ void test (const GV& gv)
   gt.makeCube(dim);
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,RF,dim> FEM;
   FEM fem(gt); // works only for cubes
-  
-  // make function space
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
-    Dune::PDELab::NoConstraints,Dune::PDELab::ISTLVectorBackend<1> > GFS; 
-  GFS gfs(gv,fem);
 
-  // make coefficent Vector and initialize it from a function
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS, RF>::Type V;
-  V x0(gfs);
-  x0 = 0.0;
+#ifdef TEST_SIMPLIFIED_INFRASTRUCTURE
+  typedef Dune::PDELab::SingleCodimMapper Mapper;
+#else
+  typedef Dune::PDELab::DefaultLeafOrderingTag Mapper;
+#endif
+
+  // make function space
+  typedef Dune::PDELab::GridFunctionSpace<
+    GV,
+    FEM,
+    Dune::PDELab::NoConstraints,
+    Dune::PDELab::ISTLVectorBackend<>,
+    Mapper> GFS;
+  GFS gfs(gv,fem);
+  gfs.name("u");
+  gfs.setDataSetType(GFS::Output::cellData);
+
   typedef G<GV,RF> GType;
   GType g(gv);
-  Dune::PDELab::interpolate(g,gfs,x0);
 
   // make grid function operator
-  Dune::PDELab::LaplaceDirichletCCFV<GType> la(g);
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,Dune::PDELab::LaplaceDirichletCCFV<GType>,Dune::PDELab::EmptyTransformation,Dune::PDELab::EmptyTransformation,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
-  GOS gos(gfs,gfs,la);
+  typedef Dune::PDELab::LaplaceDirichletCCFV<GType> LO;
+  LO lo(g);
+
+  typedef Dune::PDELab::GridOperator<
+    GFS,GFS,LO,
+    Dune::PDELab::ISTLMatrixBackend,
+    RF,RF,RF> GO;
+  GO go(gfs,gfs,lo);
+
+  // make coefficent Vector and initialize it from a function
+  typedef typename GO::Traits::Domain V;
+  V x0(gfs);
+  x0 = 0.0;
+
+  Dune::PDELab::interpolate(g,gfs,x0);
 
   // represent operator as a matrix
-  typedef typename GOS::template MatrixContainer<RF>::Type M;
-  M m(gos);
+  typedef typename GO::Traits::Jacobian M;
+  M m(go);
   m = 0.0;
-  gos.jacobian(x0,m);
-  //Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
+
+  go.jacobian(x0,m);
 
   // evaluate residual w.r.t initial guess
   V r(gfs);
   r = 0.0;
-  gos.residual(x0,r);
+  go.residual(x0,r);
+
+  typedef typename M::Container ISTLM;
+  typedef typename V::Container ISTLV;
 
   // make ISTL solver
-  Dune::MatrixAdapter<M,V,V> opa(m);
-  typedef Dune::PDELab::OnTheFlyOperator<V,V,GOS> ISTLOnTheFlyOperator;
-  ISTLOnTheFlyOperator opb(gos);
-  Dune::SeqSSOR<M,V,V> ssor(m,1,1.0);
-  Dune::SeqILU0<M,V,V> ilu0(m,1.0);
-  Dune::Richardson<V,V> richardson(1.0);
-  Dune::CGSolver<V> solvera(opa,ilu0,1E-10,5000,2);
-  Dune::CGSolver<V> solverb(opb,richardson,1E-10,5000,2);
+  Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());
+  //  typedef Dune::PDELab::OnTheFlyOperator<V,V,GOS> ISTLOnTheFlyOperator;
+  //  ISTLOnTheFlyOperator opb(gos);
+  //  Dune::SeqSSOR<M,V,V> ssor(m,1,1.0);
+  Dune::SeqILU0<ISTLM,ISTLV,ISTLV> ilu0(m.base(),1.0);
+  //  Dune::Richardson<V,V> richardson(1.0);
+  Dune::CGSolver<ISTLV> solvera(opa,ilu0,1E-10,5000,2);
+  //  Dune::CGSolver<V> solverb(opb,richardson,1E-10,5000,2);
   Dune::InverseOperatorResult stat;
 
   // solve the jacobian system
   r *= -1.0; // need -residual
   V x(gfs,0.0);
-  solvera.apply(x,r,stat);
+  solvera.apply(x.base(),r.base(),stat);
   x += x0;
 
-  // make discrete function object
-  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-  DGF dgf(gfs,x);
-  
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::nonconforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"u"));
-  vtkwriter.write("testlaplacedirichletccfv",Dune::VTK::ascii);
+  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x);
+
+  std::stringstream vtu_name;
+
+#ifdef TEST_SIMPLIFIED_INFRASTRUCTURE
+  vtu_name << "testlaplacedirichletccfv-simplified";
+#else
+  vtu_name << "testlaplacedirichletccfv";
+#endif
+
+  vtu_name << "-" << dim << "D";
+
+  vtkwriter.write(vtu_name.str(),Dune::VTK::ascii);
 }
 
 int main(int argc, char** argv)
@@ -173,21 +207,21 @@ int main(int argc, char** argv)
       Dune::FieldVector<bool,2> B(false);
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(3);
-      
+
       test(grid.leafView());
     }
 
     // 3D
     {
-//       std::cout << "3D tests" << std::endl;
-//       // need a grid in order to test grid functions
-//       Dune::FieldVector<double,3> L(1.0);
-//       Dune::FieldVector<int,3> N(1);
-//       Dune::FieldVector<bool,3> B(false);
-//       Dune::YaspGrid<3> grid(L,N,B,0);
-//       grid.globalRefine(1);
-      
-//       test(grid.leafView());
+      std::cout << "3D tests" << std::endl;
+      // need a grid in order to test grid functions
+      Dune::FieldVector<double,3> L(1.0);
+      Dune::FieldVector<int,3> N(1);
+      Dune::FieldVector<bool,3> B(false);
+      Dune::YaspGrid<3> grid(L,N,B,0);
+      grid.globalRefine(3);
+
+      test(grid.leafView());
     }
 
 	// test passed
@@ -202,4 +236,4 @@ int main(int argc, char** argv)
     std::cerr << "Unknown exception thrown!" << std::endl;
 	return 1;
   }
-} 
+}

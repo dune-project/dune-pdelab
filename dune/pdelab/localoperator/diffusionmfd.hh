@@ -1,8 +1,6 @@
 #ifndef DUNE_PDELAB_DIFFUSIONMFD_HH
 #define DUNE_PDELAB_DIFFUSIONMFD_HH
 
-#include "../gridoperatorspace/gridoperatorspaceutilities.hh"
-#include "../gridoperatorspace/localmatrix.hh"
 #include "pattern.hh"
 #include "flags.hh"
 #include "mfdcommon.hh"

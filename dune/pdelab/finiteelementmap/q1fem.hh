@@ -14,12 +14,31 @@
 namespace Dune {
   namespace PDELab {
 
-	//! wrap up element from local functions
+    //! wrap up element from local functions
     //! \ingroup FiniteElementMap
-	template<class D, class R, int d>
-	class Q1LocalFiniteElementMap
-	  : public SimpleLocalFiniteElementMap< Dune::Q1LocalFiniteElement<D,R,d> >
-	{};
+    template<class D, class R, int d>
+    class Q1LocalFiniteElementMap
+      : public SimpleLocalFiniteElementMap< Dune::Q1LocalFiniteElement<D,R,d> >
+    {
+
+    public:
+
+      bool fixedSize() const
+      {
+        return true;
+      }
+
+      std::size_t size(GeometryType gt) const
+      {
+        return gt.isVertex() ? 1 : 0;
+      }
+
+      std::size_t maxLocalSize() const
+      {
+        return 1 << d;
+      }
+
+    };
 
     //! Global-valued finite element map for Q1 elements
     /**
@@ -41,6 +60,21 @@ namespace Dune {
 
     public:
       Q1FiniteElementMap() : Base(feFactory) { }
+
+      bool fixedSize() const
+      {
+        return true;
+      }
+
+      std::size_t size(GeometryType gt) const
+      {
+        return gt.isVertex() ? 1 : 0;
+      }
+
+      std::size_t maxLocalSize() const
+      {
+        return 1 << Geometry::dimension;
+      }
     };
 
     template<class GV, class RF>

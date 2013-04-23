@@ -1,7 +1,6 @@
 mydir = $(includedir)/dune/pdelab/multistep
 my_HEADERS =					\
 	cache.hh				\
-	gridoperatorspace.hh			\
 	method.hh				\
 	parameter.hh
 

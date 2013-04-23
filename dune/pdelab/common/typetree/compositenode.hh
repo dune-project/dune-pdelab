@@ -162,6 +162,9 @@ namespace Dune {
           //! The type of the child.
           typedef typename tuple_element<k,ChildTypes>::type Type;
 
+          //! The type of the child.
+          typedef typename tuple_element<k,ChildTypes>::type type;
+
           //! The storage type of the child.
           typedef typename tuple_element<k,NodeStorage>::type Storage;
 
