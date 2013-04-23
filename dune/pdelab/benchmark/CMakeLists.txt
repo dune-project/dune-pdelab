@@ -12,11 +12,11 @@ set(check_PROGRAMS  ${NORMALTESTS})
 # TRUNK TARGETS FOLLOW
 
 list(APPEND NORMALTESTS poisson)
-add_executable(poisson poisson.cc)
+add_executable(poisson EXCLUDE_FROM_ALL poisson.cc)
 list(APPEND MOSTLYCLEANFILES poisson_*.vtu poisson_*timings.txt)
 
 list(APPEND NORMALTESTS laplacedirichletccfv)
-add_executable(laplacedirichletccfv laplacedirichletccfv.cc)
+add_executable(laplacedirichletccfv EXCLUDE_FROM_ALL laplacedirichletccfv.cc)
 list(APPEND MOSTLYCLEANFILES laplacedirichletccfv_*.vtu laplacedirichletccfv_*timings.txt)
 
 foreach(_test ${NORMALTESTS})
