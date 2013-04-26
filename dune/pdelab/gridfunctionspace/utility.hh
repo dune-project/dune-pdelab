@@ -3,7 +3,7 @@
 #ifndef DUNE_PDELAB_UTILITIES_HH
 #define DUNE_PDELAB_UTILITIES_HH
 
-#include <dune/pdelab/commmon/geometrywrapper.hh>
+#include <dune/pdelab/common/geometrywrapper.hh>
 
 namespace Dune {
   namespace PDELab {
