@@ -184,8 +184,10 @@ namespace Dune {
         Dune::MatrixAdapter<typename M::BaseT,
                             typename V::BaseT,
                             typename W::BaseT> opa(istl::raw(A));
-        Dune::SeqILUn<typename M::BaseT,V,W> ilu0(istl::raw(A), n_, w_);
-        Solver<V> solver(opa, ilu0, reduction, maxiter, verbose);
+        Dune::SeqILUn<typename M::BaseT,
+                      typename V::BaseT,
+                      typename W::BaseT> ilun(istl::raw(A), n_, w_);
+        Solver<typename V::BaseT> solver(opa, ilun, reduction, maxiter, verbose);
         Dune::InverseOperatorResult stat;
         solver.apply(istl::raw(z), istl::raw(r), stat);
         res.converged  = stat.converged;
