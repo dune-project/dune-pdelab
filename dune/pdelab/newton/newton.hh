@@ -34,9 +34,11 @@ namespace Dune
             RFType defect;             // the final defect
             double assembler_time;     // Cumulative time for matrix assembly
             double linear_solver_time; // Cumulative time for linear sovler
+            int linear_solver_iterations; // Total number of linear iterations
 
             NewtonResult() :
-                first_defect(0.0), defect(0.0), assembler_time(0.0), linear_solver_time(0.0) {}
+                first_defect(0.0), defect(0.0), assembler_time(0.0), linear_solver_time(0.0),
+                linear_solver_iterations(0) {}
         };
 
         template<class GOS, class TrlV, class TstV>
@@ -190,6 +192,7 @@ namespace Dune
             this->res.elapsed = 0.0;
             this->res.assembler_time = 0.0;
             this->res.linear_solver_time = 0.0;
+            this->res.linear_solver_iterations = 0;
             result_valid = true;
             Timer timer;
 
@@ -243,10 +246,12 @@ namespace Dune
                     catch (...)
                     {
                         this->res.linear_solver_time += linear_solver_timer.elapsed();
+                        this->res.linear_solver_iterations += this->solver.result().iterations;
                         throw;
                     }
                     double linear_solver_time = linear_solver_timer.elapsed();
                     this->res.linear_solver_time += linear_solver_time;
+                    this->res.linear_solver_iterations += this->solver.result().iterations;
 
                     try
                     {
