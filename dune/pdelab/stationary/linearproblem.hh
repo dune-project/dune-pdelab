@@ -29,18 +29,23 @@ namespace Dune {
     public:
 
       StationaryLinearProblemSolver (const GOS& gos_, V& x_, LS& ls_, typename V::ElementType reduction_, typename V::ElementType mindefect_ = 1e-99)
-        : gos(gos_), ls(ls_), x(&x_), reduction(reduction_), mindefect(mindefect_)
+        : gos(gos_), ls(ls_), x(&x_), reduction(reduction_), mindefect(mindefect_), hangingNodeModifications(true)
       {
       }
 
       StationaryLinearProblemSolver (const GOS& gos_, LS& ls_, V& x_, typename V::ElementType reduction_, typename V::ElementType mindefect_ = 1e-99)
-        : gos(gos_), ls(ls_), x(&x_), reduction(reduction_), mindefect(mindefect_)
+        : gos(gos_), ls(ls_), x(&x_), reduction(reduction_), mindefect(mindefect_), hangingNodeModifications(true)
       {
       }
 
       StationaryLinearProblemSolver (const GOS& gos_, LS& ls_, typename V::ElementType reduction_, typename V::ElementType mindefect_ = 1e-99)
-          : gos(gos_), ls(ls_), x(0), reduction(reduction_), mindefect(mindefect_)
+          : gos(gos_), ls(ls_), x(0), reduction(reduction_), mindefect(mindefect_), hangingNodeModifications(true)
       {
+      }
+
+      void setHangingNodeModifications (bool b)
+      {
+        hangingNodeModifications=b;
       }
 
       void apply (V& x_) {
@@ -65,8 +70,11 @@ namespace Dune {
         watch.reset();
 
         m = 0.0;
-        Dune::PDELab::set_shifted_dofs(gos.localAssembler().trialConstraints(),0.0,*x); // set hanging node DOFs to zero
-        gos.localAssembler().backtransform(*x); // interpolate hanging nodes adjacent to Dirichlet nodes
+        if (hangingNodeModifications)
+          {
+            Dune::PDELab::set_shifted_dofs(gos.localAssembler().trialConstraints(),0.0,*x); // set hanging node DOFs to zero
+            gos.localAssembler().backtransform(*x); // interpolate hanging nodes adjacent to Dirichlet nodes
+          }
         gos.jacobian(*x,m);
 
         timing = watch.elapsed();
@@ -101,9 +109,11 @@ namespace Dune {
           std::cout << timing << " s" << std::endl;
 
         // and update
-        Dune::PDELab::set_shifted_dofs(gos.localAssembler().trialConstraints(),0.0,*x); // set hanging node DOFs to zero
+        if (hangingNodeModifications)
+          Dune::PDELab::set_shifted_dofs(gos.localAssembler().trialConstraints(),0.0,*x); // set hanging node DOFs to zero
         *x -= z;
-        gos.localAssembler().backtransform(*x); // interpolate hanging nodes adjacent to Dirichlet nodes
+        if (hangingNodeModifications)
+          gos.localAssembler().backtransform(*x); // interpolate hanging nodes adjacent to Dirichlet nodes
       }
 
       const Dune::PDELab::LinearSolverResult<double>& ls_result() const{
@@ -117,6 +127,7 @@ namespace Dune {
       typename V::ElementType reduction;
       typename V::ElementType mindefect;
       Dune::PDELab::LinearSolverResult<double> linearsolverresult;
+      bool hangingNodeModifications;
     };
 
   } // namespace PDELab
