@@ -353,6 +353,12 @@ namespace Dune {
         return helper;
       }
 
+      // need also non-const version;
+      istl::ParallelHelper<GFS>& parallelHelper() // P.B.: needed for createIndexSetAndProjectForAMG
+      {
+        return helper;
+      }
+
     private:
       const GFS& gfs;
       istl::ParallelHelper<GFS> helper;
