@@ -616,6 +616,13 @@ namespace Dune {
         _container = e;
       }
 
+      /* constructor from a matrix that is allocated externally
+
+         needed in the AMG for DG preconditioner.
+       */
+      template<typename Cont>
+      ISTLMatrixContainer (Cont& c, bool foo, bool bar) : _container(c) {}
+
       size_type N() const
       {
         return _container.N();
