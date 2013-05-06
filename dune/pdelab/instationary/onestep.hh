@@ -749,6 +749,32 @@ namespace Dune {
     };
 
 
+    // Status information of Newton's method
+    struct OneStepMethodPartialResult
+    {
+      unsigned int timesteps;
+      double assembler_time;
+      double linear_solver_time;
+      int linear_solver_iterations;
+      int nonlinear_solver_iterations;
+
+      OneStepMethodPartialResult() :
+        timesteps(0),
+        assembler_time(0.0),
+        linear_solver_time(0.0),
+        linear_solver_iterations(0),
+        nonlinear_solver_iterations(0)
+      {}
+    };
+
+    struct OneStepMethodResult
+    {
+      OneStepMethodPartialResult total;
+      OneStepMethodPartialResult successful;
+      OneStepMethodResult() : total(), successful()
+      {}
+    };
+
     //! Do one step of a time-stepping scheme
     /**
      * \tparam T          type to represent time values
@@ -760,7 +786,11 @@ namespace Dune {
     template<class T, class IGOS, class PDESOLVER, class TrlV, class TstV = TrlV>
     class OneStepMethod
     {
+      typedef typename PDESOLVER::Result PDESolverResult;
+
     public:
+      typedef OneStepMethodResult Result;
+
       //! construct a new one step scheme
       /**
        * \param method_    Parameter object. This chooses the actual method
@@ -775,7 +805,7 @@ namespace Dune {
        */
       OneStepMethod(const TimeSteppingParameterInterface<T>& method_,
                     IGOS& igos_, PDESOLVER& pdesolver_)
-        : method(&method_), igos(igos_), pdesolver(pdesolver_), verbosityLevel(1), step(1)
+        : method(&method_), igos(igos_), pdesolver(pdesolver_), verbosityLevel(1), step(1), res()
       {
         if (igos.trialGridFunctionSpace().gridView().comm().rank()>0)
           verbosityLevel = 0;
@@ -805,6 +835,11 @@ namespace Dune {
         return pdesolver;
       }
 
+      const Result& result() const
+      {
+        return res;
+      }
+
       //! redefine the method to be used; can be done before every step
       /**
        * \param method_ Parameter object.
@@ -829,6 +864,9 @@ namespace Dune {
       {
         // save formatting attributes
         ios_base_all_saver format_attribute_saver(std::cout);
+
+        // do statistics
+        OneStepMethodPartialResult step_result;
 
         std::vector<TrlV*> x(1); // vector of pointers to all steps
         x[0] = &xold;            // initially we have only one
@@ -888,7 +926,29 @@ namespace Dune {
               }
 
             // solve stage
-            pdesolver.apply(*x[r]);
+            try {
+              pdesolver.apply(*x[r]);
+            }
+            catch (...)
+              {
+                // time step failed -> accumulate to total only
+                PDESolverResult pderes = pdesolver.result();
+                step_result.assembler_time += pderes.assembler_time;
+                step_result.linear_solver_time += pderes.linear_solver_time;
+                step_result.linear_solver_iterations += pderes.linear_solver_iterations;
+                step_result.nonlinear_solver_iterations += pderes.iterations;
+                res.total.assembler_time += step_result.assembler_time;
+                res.total.linear_solver_time += step_result.linear_solver_time;
+                res.total.linear_solver_iterations += step_result.linear_solver_iterations;
+                res.total.nonlinear_solver_iterations += step_result.nonlinear_solver_iterations;
+                res.total.timesteps += 1;
+                throw;
+              }
+            PDESolverResult pderes = pdesolver.result();
+            step_result.assembler_time += pderes.assembler_time;
+            step_result.linear_solver_time += pderes.linear_solver_time;
+            step_result.linear_solver_iterations += pderes.linear_solver_iterations;
+            step_result.nonlinear_solver_iterations += pderes.iterations;
 
             // stage cleanup
             igos.postStage();
@@ -899,6 +959,32 @@ namespace Dune {
 
         // step cleanup
         igos.postStep();
+
+        // update statistics
+        res.total.assembler_time += step_result.assembler_time;
+        res.total.linear_solver_time += step_result.linear_solver_time;
+        res.total.linear_solver_iterations += step_result.linear_solver_iterations;
+        res.total.nonlinear_solver_iterations += step_result.nonlinear_solver_iterations;
+        res.total.timesteps += 1;
+        res.successful.assembler_time += step_result.assembler_time;
+        res.successful.linear_solver_time += step_result.linear_solver_time;
+        res.successful.linear_solver_iterations += step_result.linear_solver_iterations;
+        res.successful.nonlinear_solver_iterations += step_result.nonlinear_solver_iterations;
+        res.successful.timesteps += 1;
+        if (verbosityLevel>=1){
+          std::ios_base::fmtflags oldflags = std::cout.flags();
+          std::cout << "::: timesteps      " << std::setw(6) << res.successful.timesteps
+                    << " (" << res.total.timesteps << ")" << std::endl;
+          std::cout << "::: nl iterations  " << std::setw(6) << res.successful.nonlinear_solver_iterations
+                    << " (" << res.total.nonlinear_solver_iterations << ")" << std::endl;
+          std::cout << "::: lin iterations " << std::setw(6) << res.successful.linear_solver_iterations
+                    << " (" << res.total.linear_solver_iterations << ")" << std::endl;
+          std::cout << "::: assemble time  " << std::setw(12) << std::setprecision(4) << std::scientific
+                    << res.successful.assembler_time << " (" << res.total.assembler_time << ")" << std::endl;
+          std::cout << "::: lin solve time " << std::setw(12) << std::setprecision(4) << std::scientific
+                    << res.successful.linear_solver_time << " (" << res.total.linear_solver_time << ")" << std::endl;
+          std::cout.flags(oldflags);
+        }
 
         step++;
         return dt;
@@ -917,6 +1003,9 @@ namespace Dune {
       template<typename F>
       T apply (T time, T dt, TrlV& xold, F& f, TrlV& xnew)
       {
+        // do statistics
+        OneStepMethodPartialResult step_result;
+
         // save formatting attributes
         ios_base_all_saver format_attribute_saver(std::cout);
 
@@ -976,7 +1065,29 @@ namespace Dune {
             igos.interpolate(r,*x[r-1],f,*x[r]);
 
             // solve stage
-            pdesolver.apply(*x[r]);
+            try {
+              pdesolver.apply(*x[r]);
+            }
+            catch (...)
+              {
+                // time step failed -> accumulate to total only
+                PDESolverResult pderes = pdesolver.result();
+                step_result.assembler_time += pderes.assembler_time;
+                step_result.linear_solver_time += pderes.linear_solver_time;
+                step_result.linear_solver_iterations += pderes.linear_solver_iterations;
+                step_result.nonlinear_solver_iterations += pderes.iterations;
+                res.total.assembler_time += step_result.assembler_time;
+                res.total.linear_solver_time += step_result.linear_solver_time;
+                res.total.linear_solver_iterations += step_result.linear_solver_iterations;
+                res.total.nonlinear_solver_iterations += step_result.nonlinear_solver_iterations;
+                res.total.timesteps += 1;
+                throw;
+              }
+            PDESolverResult pderes = pdesolver.result();
+            step_result.assembler_time += pderes.assembler_time;
+            step_result.linear_solver_time += pderes.linear_solver_time;
+            step_result.linear_solver_iterations += pderes.linear_solver_iterations;
+            step_result.nonlinear_solver_iterations += pderes.iterations;
 
             // stage cleanup
             igos.postStage();
@@ -988,6 +1099,32 @@ namespace Dune {
         // step cleanup
         igos.postStep();
 
+        // update statistics
+        res.total.assembler_time += step_result.assembler_time;
+        res.total.linear_solver_time += step_result.linear_solver_time;
+        res.total.linear_solver_iterations += step_result.linear_solver_iterations;
+        res.total.nonlinear_solver_iterations += step_result.nonlinear_solver_iterations;
+        res.total.timesteps += 1;
+        res.successful.assembler_time += step_result.assembler_time;
+        res.successful.linear_solver_time += step_result.linear_solver_time;
+        res.successful.linear_solver_iterations += step_result.linear_solver_iterations;
+        res.successful.nonlinear_solver_iterations += step_result.nonlinear_solver_iterations;
+        res.successful.timesteps += 1;
+        if (verbosityLevel>=1){
+          std::ios_base::fmtflags oldflags = std::cout.flags();
+          std::cout << "::: timesteps      " << std::setw(6) << res.successful.timesteps
+                    << " (" << res.total.timesteps << ")" << std::endl;
+          std::cout << "::: nl iterations  " << std::setw(6) << res.successful.nonlinear_solver_iterations
+                    << " (" << res.total.nonlinear_solver_iterations << ")" << std::endl;
+          std::cout << "::: lin iterations " << std::setw(6) << res.successful.linear_solver_iterations
+                    << " (" << res.total.linear_solver_iterations << ")" << std::endl;
+          std::cout << "::: assemble time  " << std::setw(12) << std::setprecision(4) << std::scientific
+                    << res.successful.assembler_time << " (" << res.total.assembler_time << ")" << std::endl;
+          std::cout << "::: lin solve time " << std::setw(12) << std::setprecision(4) << std::scientific
+                    << res.successful.linear_solver_time << " (" << res.total.linear_solver_time << ")" << std::endl;
+          std::cout.flags(oldflags);
+        }
+
         step++;
         return dt;
       }
@@ -998,6 +1135,7 @@ namespace Dune {
       PDESOLVER& pdesolver;
       int verbosityLevel;
       int step;
+      Result res;
     };
 
     //! Do one step of an explicit time-stepping scheme
