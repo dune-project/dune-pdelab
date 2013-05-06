@@ -51,9 +51,11 @@ namespace Dune
             typedef typename TestVector::ElementType RFType;
             typedef typename GOS::Traits::Jacobian Matrix;
 
-            typedef NewtonResult<RFType> Result;
 
         public:
+            // export result type
+            typedef NewtonResult<RFType> Result;
+
             void setVerbosityLevel(unsigned int verbosity_level_)
             {
                 if (gridoperator.trialGridFunctionSpace().gridView().comm().rank()>0)
