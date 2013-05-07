@@ -63,9 +63,9 @@ namespace Dune {
       /**
        * \note We support only Galerkin method lfsu==lfsv
        */
-      template<typename EG, typename LFS, typename X, typename R>
+      template<typename EG, typename LFS, typename X, typename M>
       void jacobian_volume (const EG& eg, const LFS& lfsu, const X& x,
-                            const LFS& lfsv, LocalMatrix<R>& mat) const
+                            const LFS& lfsv, M& mat) const
       {
         // domain and range field type
         typedef typename LFS::Traits::FiniteElementType::
@@ -108,7 +108,7 @@ namespace Dune {
 
           for(unsigned i = 0; i < lfsu.size(); ++i)
             for(unsigned j = 0; j < lfsu.size(); ++j)
-              mat(i,j) += factor * (phi[i] * phi[j]);
+              mat.accumulate(lfsv,i,lfsu,j,factor * (phi[i] * phi[j]));
         }
       }
 
@@ -182,9 +182,9 @@ namespace Dune {
       /**
        * \note We support only Galerkin method lfsu==lfsv
        */
-      template<typename EG, typename LFS, typename X, typename R>
+      template<typename EG, typename LFS, typename X, typename M>
       void jacobian_volume (const EG& eg, const LFS& lfsu, const X& x,
-                            const LFS& lfsv, LocalMatrix<R>& mat) const
+                            const LFS& lfsv, M& mat) const
       {
         // domain and range field type
         typedef typename LFS::Traits::FiniteElementType::Traits::Basis::Traits
@@ -234,7 +234,7 @@ namespace Dune {
 
           for(unsigned i = 0; i < lfsu.size(); ++i)
             for(unsigned j = 0; j < lfsu.size(); ++j)
-              mat(i,j) += factor * (rotphi[i] * rotphi[j]);
+              mat.accumulate(lfsv,i,lfsu,j,factor * (rotphi[i] * rotphi[j]));
 
         }
       }
