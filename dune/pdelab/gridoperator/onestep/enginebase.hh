@@ -18,6 +18,8 @@ namespace Dune{
       //! The type of the wrapping local assembler
       typedef OSLA OneStepLocalAssembler;
 
+      typedef typename LAE0::Traits Traits;
+
       // Constraints caching policy
       static const bool needs_constraints_caching =
         LAE0::needs_constraints_caching ||

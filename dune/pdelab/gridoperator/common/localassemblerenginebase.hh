@@ -23,6 +23,9 @@ namespace Dune {
 
       public:
 
+        struct Traits
+        {};
+
         //! @name Query methods - return false by default
         //! @{
 
