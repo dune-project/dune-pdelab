@@ -221,9 +221,9 @@ void test (const GV& gv, const Mapper& mapper, std::string filename, const bool 
       bh.start("I/O",std::cout);
 
       // output grid function with VTKWriter
-      Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTKOptions::nonconforming);
-      Dune::PDELab::add_solution_to_vtk_writer(vtkwriter,gfs,x);
-      vtkwriter.write(filename,Dune::VTKOptions::ascii);
+      Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::nonconforming);
+      Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x);
+      vtkwriter.write(filename,Dune::VTK::ascii);
 
       bh.end("I/O",std::cout);
 
