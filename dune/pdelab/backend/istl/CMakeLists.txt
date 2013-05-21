@@ -1,4 +1,6 @@
 install(FILES blockmatrixdiagonal.hh
+  descriptors.hh
+  forwarddeclarations.hh
   parallelhelper.hh
   tags.hh
   vectorhelpers.hh

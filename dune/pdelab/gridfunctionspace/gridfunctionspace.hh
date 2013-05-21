@@ -35,7 +35,7 @@
 #include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
 
-#include <dune/pdelab/backend/istl/tags.hh>
+#include <dune/pdelab/backend/istl/descriptors.hh>
 
 namespace Dune {
   namespace PDELab {

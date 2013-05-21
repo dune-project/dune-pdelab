@@ -8,6 +8,7 @@
 
 #include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/backend/tags.hh>
+#include <dune/pdelab/backend/istl/descriptors.hh>
 #include <dune/pdelab/backend/istl/vectorhelpers.hh>
 #include <dune/pdelab/backend/istl/vectoriterator.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
