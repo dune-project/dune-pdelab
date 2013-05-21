@@ -1,19 +1,19 @@
 set(commondir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/backend)
-set(common_HEADERS  backendselector.hh             
-                 eigenmatrixbackend.hh          
-                 eigensolverbackend.hh          
-                 eigenvectorbackend.hh          
-                 istlmatrixbackend.hh           
-                 istlsolverbackend.hh           
-                 istlvectorbackend.hh           
-                 novlpistlsolverbackend.hh      
-                 ovlpistlsolverbackend.hh       
-                 petscmatrixbackend.hh          
-                 petscnestedvectorbackend.hh    
-                 petscutility.hh                
-                 petscvectorbackend.hh          
-                 seqistlsolverbackend.hh        
-                 solver.hh                          
+set(common_HEADERS  backendselector.hh
+                 eigenmatrixbackend.hh
+                 eigensolverbackend.hh
+                 eigenvectorbackend.hh
+                 istlmatrixbackend.hh
+                 istlsolverbackend.hh
+                 istlvectorbackend.hh
+                 novlpistlsolverbackend.hh
+                 ovlpistlsolverbackend.hh
+                 petscmatrixbackend.hh
+                 petscnestedvectorbackend.hh
+                 petscutility.hh
+                 petscvectorbackend.hh
+                 seqistlsolverbackend.hh
+                 solver.hh
                  vectorutilities.hh)
 
 add_subdirectory(istl)
