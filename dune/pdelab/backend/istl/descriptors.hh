@@ -5,6 +5,7 @@
 
 #include <dune/common/static_assert.hh>
 #include <dune/pdelab/backend/istl/forwarddeclarations.hh>
+#include <cstddef>
 
 namespace Dune {
   namespace PDELab {

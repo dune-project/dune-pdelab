@@ -3,6 +3,8 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_UTILITY_HH
 #define DUNE_PDELAB_BACKEND_ISTL_UTILITY_HH
 
+#include <dune/common/typetraits.hh>
+
 #include <dune/pdelab/backend/istl/tags.hh>
 
 namespace Dune {

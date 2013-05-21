@@ -24,6 +24,7 @@
 #include <dune/pdelab/constraints/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl/utility.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 
 namespace Dune {

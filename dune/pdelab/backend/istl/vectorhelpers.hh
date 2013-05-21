@@ -3,7 +3,10 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_VECTORHELPERS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_VECTORHELPERS_HH
 
+#include <dune/istl/bvector.hh>
+
 #include <dune/pdelab/backend/istl/tags.hh>
+#include <dune/pdelab/backend/istl/descriptors.hh>
 #include <dune/pdelab/ordering/orderingbase.hh>
 
 namespace Dune {
