@@ -605,69 +605,93 @@ namespace Dune {
 
       template<typename GO>
       ISTLMatrixContainer (const GO& go)
+        : _container(make_shared<Container>())
       {
         Pattern pattern(go.testGridFunctionSpace().ordering(),go.trialGridFunctionSpace().ordering());
         go.fill_pattern(pattern);
         allocate_matrix(go.testGridFunctionSpace().ordering(),
                         go.trialGridFunctionSpace().ordering(),
                         pattern,
-                        _container);
+                        *_container);
       }
 
       template<typename GO>
       ISTLMatrixContainer (const GO& go, const E& e)
+        : _container(make_shared<Container>())
       {
         Pattern pattern(go.testGridFunctionSpace().ordering(),go.trialGridFunctionSpace().ordering());
         go.fill_pattern(pattern);
         allocate_matrix(go.testGridFunctionSpace().ordering(),
                         go.trialGridFunctionSpace().ordering(),
                         pattern,
-                        _container);
+                        *_container);
         _container = e;
       }
 
-      ISTLMatrixContainer () : _container() {}
+      ISTLMatrixContainer ()
+      {}
+
+      ISTLMatrixContainer(const ISTLMatrixContainer& rhs)
+        : _container(make_shared<Container>(*(rhs._container)))
+      {}
+
+      ISTLMatrixContainer& operator=(const ISTLMatrixContainer& rhs)
+      {
+        if (this != &rhs)
+          (*_container) = (*(rhs._container));
+        return *this;
+      }
+
+      void detach()
+      {
+        _container.reset();
+      }
+
+      void attach(shared_ptr<Container> container)
+      {
+        _container = container;
+      }
 
       size_type N() const
       {
-        return _container.N();
+        return _container->N();
       }
 
       size_type M() const
       {
-        return _container.M();
+        return _container->M();
       }
 
       ISTLMatrixContainer& operator= (const E& e)
       {
-        _container = e;
+        (*_container) = e;
         return *this;
       }
 
       ISTLMatrixContainer& operator*= (const E& e)
       {
-        _container *= e;
+        (*_container) *= e;
         return *this;
       }
 
       E& operator()(const RowIndex& ri, const ColIndex& ci)
       {
-        return istl::access_matrix_element(istl::container_tag(_container),_container,ri,ci,ri.size()-1,ci.size()-1);
+        return istl::access_matrix_element(istl::container_tag(*_container),*_container,ri,ci,ri.size()-1,ci.size()-1);
       }
 
       const E& operator()(const RowIndex& ri, const ColIndex& ci) const
       {
-        return istl::access_matrix_element(istl::container_tag(_container),_container,ri,ci,ri.size()-1,ci.size()-1);
+        return istl::access_matrix_element(istl::container_tag(*_container),*_container,ri,ci,ri.size()-1,ci.size()-1);
       }
 
       const Container& base() const
       {
-        return _container;
+        return *_container;
       }
 
       Container& base()
       {
-        return _container;
+        return *_container;
       }
 
       void flush()
@@ -678,13 +702,13 @@ namespace Dune {
 
       void clear_row(const RowIndex& ri, const E& diagonal_entry)
       {
-        istl::clear_matrix_row(istl::container_tag(_container),_container,ri,ri.size()-1);
+        istl::clear_matrix_row(istl::container_tag(*_container),*_container,ri,ri.size()-1);
         (*this)(ri,ri) = diagonal_entry;
       }
 
     private:
 
-      Container _container;
+      shared_ptr<Container> _container;
 
     };
 
