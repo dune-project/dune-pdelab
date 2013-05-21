@@ -213,9 +213,18 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
 
 
   // represent operator as a matrix
+  // There is some weird shuffling around here - please leave it in,
+  // it's there to test the copy constructor and assignment operator of the
+  // matrix wrapper
   typedef typename GridOperator::Traits::Jacobian M;
-  M m(gridoperator);
-  m = 0.0;
+  M m;
+  {
+    M m1(gridoperator);
+    M m2(m1);
+    m2 = 0.0;
+    m = m1;
+    m = m2;
+  }
   gridoperator.jacobian(x0,m);
   //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 
