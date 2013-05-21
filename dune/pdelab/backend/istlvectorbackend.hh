@@ -481,7 +481,12 @@ namespace Dune {
         _container = container;
       }
 
-      shared_ptr<Container> containerStorage()
+      bool attached() const
+      {
+        return bool(_container);
+      }
+
+      const shared_ptr<Container>& storage() const
       {
         return _container;
       }
