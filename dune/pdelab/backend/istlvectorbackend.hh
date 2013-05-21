@@ -717,7 +717,7 @@ namespace Dune {
       {
 
         dune_static_assert(Backend::Traits::block_type != ISTLParameters::dynamic_blocking,
-                           "Dynamcially blocked leaf spaces are not supported by this backend.");
+                           "Dynamically blocked leaf spaces are not supported by this backend.");
 
         // flag for sibling reduction - always true in the leaf case
         static const bool support_no_blocking = true;
