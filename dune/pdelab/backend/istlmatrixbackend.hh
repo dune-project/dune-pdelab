@@ -264,6 +264,7 @@ namespace Dune {
 
       //! Creates an ISTLMatrixContainer with an empty underlying ISTL matrix.
       explicit ISTLMatrixContainer (tags::attached_container)
+        : _container(make_shared<Container>())
       {}
 
       ISTLMatrixContainer(const ISTLMatrixContainer& rhs)
