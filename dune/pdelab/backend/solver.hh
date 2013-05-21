@@ -4,8 +4,7 @@
 #define DUNE_PDELAB_BACKEND_SOLVER_HH
 
 #include <dune/common/fvector.hh>
-#include <dune/pdelab/backend/istl/tags.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl/utility.hh>
 
 namespace Dune {
   namespace PDELab {

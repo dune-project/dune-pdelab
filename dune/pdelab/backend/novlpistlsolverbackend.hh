@@ -25,6 +25,7 @@
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include <dune/pdelab/newton/newton.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/istl/blockmatrixdiagonal.hh>
 #include <dune/pdelab/backend/istl/parallelhelper.hh>
 #include <dune/pdelab/backend/seqistlsolverbackend.hh>

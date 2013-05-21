@@ -5,6 +5,7 @@ common_HEADERS = 				\
 	forwarddeclarations.hh			\
 	parallelhelper.hh			\
 	tags.hh					\
+	utility.hh				\
 	vectorhelpers.hh			\
 	vectoriterator.hh
 

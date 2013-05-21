@@ -5,7 +5,7 @@
 
 #include <dune/pdelab/backend/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
-#include <dune/pdelab/backend/istl/tags.hh>
+#include <dune/pdelab/backend/istl/utility.hh>
 #include <dune/pdelab/gridfunctionspace/entityindexcache.hh>
 
 namespace Dune {

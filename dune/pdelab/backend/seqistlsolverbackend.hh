@@ -21,6 +21,7 @@
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include <dune/pdelab/backend/solver.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istlmatrixbackend.hh>
 
 namespace Dune {
   namespace PDELab {
