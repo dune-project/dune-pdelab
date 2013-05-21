@@ -688,6 +688,12 @@ namespace Dune {
 
     };
 
+    //! Backend using ISTL matrices.
+    /**
+     * ISTLMatrixBackend is a matrix backend descriptor for ISTL matrices. It expects that
+     * both the ansatz and the test function space use ISTL vectors and automatically deduces
+     * the correct matrix type from those two vector backends.
+     */
     struct ISTLMatrixBackend
     {
 
