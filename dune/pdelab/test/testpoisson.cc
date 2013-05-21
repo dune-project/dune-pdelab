@@ -204,9 +204,18 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   GridOperator gridoperator(gfs,cg,gfs,cg,lop);
 
   // make coefficent Vector and initialize it from a function
+  // There is some weird shuffling around here - please leave it in,
+  // it's there to test the copy constructor and assignment operator of the
+  // matrix wrapper
   typedef typename GridOperator::Traits::Domain DV;
-  DV x0(gfs);
-  x0 = 0.0;
+  DV x0(gfs,Dune::PDELab::tags::unattached_container());
+  {
+    DV x1(gfs);
+    DV x2(x1);
+    x2 = 0.0;
+    x0 = x1;
+    x0 = x2;
+  }
 
   Dune::PDELab::interpolate(g,gfs,x0);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
