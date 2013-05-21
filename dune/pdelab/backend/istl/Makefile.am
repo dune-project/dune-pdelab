@@ -3,6 +3,7 @@ common_HEADERS = 				\
 	blockmatrixdiagonal.hh			\
 	parallelhelper.hh			\
 	tags.hh					\
+	vectorhelpers.hh			\
 	vectoriterator.hh
 
 EXTRA_DIST= CMakeLists.txt
