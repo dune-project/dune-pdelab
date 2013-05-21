@@ -3,6 +3,7 @@ common_HEADERS = 				\
 	blockmatrixdiagonal.hh			\
 	descriptors.hh				\
 	forwarddeclarations.hh			\
+	matrixhelpers.hh			\
 	parallelhelper.hh			\
 	tags.hh					\
 	utility.hh				\
