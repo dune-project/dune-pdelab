@@ -204,18 +204,36 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   GridOperator gridoperator(gfs,cg,gfs,cg,lop);
 
   // make coefficent Vector and initialize it from a function
+  // There is some weird shuffling around here - please leave it in,
+  // it's there to test the copy constructor and assignment operator of the
+  // matrix wrapper
   typedef typename GridOperator::Traits::Domain DV;
-  DV x0(gfs);
-  x0 = 0.0;
+  DV x0(gfs,Dune::PDELab::tags::unattached_container());
+  {
+    DV x1(gfs);
+    DV x2(x1);
+    x2 = 0.0;
+    x0 = x1;
+    x0 = x2;
+  }
 
   Dune::PDELab::interpolate(g,gfs,x0);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
 
 
   // represent operator as a matrix
+  // There is some weird shuffling around here - please leave it in,
+  // it's there to test the copy constructor and assignment operator of the
+  // matrix wrapper
   typedef typename GridOperator::Traits::Jacobian M;
-  M m(gridoperator);
-  m = 0.0;
+  M m;
+  {
+    M m1(gridoperator);
+    M m2(m1);
+    m2 = 0.0;
+    m = m1;
+    m = m2;
+  }
   gridoperator.jacobian(x0,m);
   //  Dune::printmatrix(std::cout,m.base(),"global stiffness matrix","row",9,1);
 

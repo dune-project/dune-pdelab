@@ -14,6 +14,7 @@ set(common_HEADERS  backendselector.hh
                  petscvectorbackend.hh
                  seqistlsolverbackend.hh
                  solver.hh
+                 tags.hh
                  vectorutilities.hh)
 
 add_subdirectory(istl)

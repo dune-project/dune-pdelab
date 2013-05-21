@@ -11,6 +11,7 @@
 
 #include <dune/istl/bvector.hh>
 
+#include <dune/pdelab/backend/tags.hh>
 #include <dune/pdelab/backend/istl/tags.hh>
 #include <dune/pdelab/backend/istl/vectoriterator.hh>
 
@@ -30,96 +31,106 @@ namespace Dune {
 
     // Recursive accessors for vector entries using tag dispatch
 
-    template<typename CI, typename Block>
-    typename Block::field_type&
-    access_istl_vector_element(istl::tags::block_vector, Block& b, const CI& ci, int i)
-    {
-      return access_istl_vector_element(istl::container_tag(b[ci[i]]),b[ci[i]],ci,i-1);
-    }
+#ifndef DOXYGEN // All of the following functions are mere implementation details
 
-    template<typename CI, typename Block>
-    typename Block::field_type&
-    access_istl_vector_element(istl::tags::field_vector_1, Block& b, const CI& ci, int i)
-    {
-      assert(i == -1);
-      return b[0];
-    }
+    namespace istl {
 
-    template<typename CI, typename Block>
-    typename Block::field_type&
-    access_istl_vector_element(istl::tags::field_vector_n, Block& b, const CI& ci, int i)
-    {
-      assert(i == 0);
-      return b[ci[0]];
-    }
+      template<typename CI, typename Block>
+      typename Block::field_type&
+      access_vector_element(tags::field_vector_1, Block& b, const CI& ci, int i)
+      {
+        assert(i == -1);
+        return b[0];
+      }
 
+      template<typename CI, typename Block>
+      typename Block::field_type&
+      access_vector_element(tags::field_vector_n, Block& b, const CI& ci, int i)
+      {
+        assert(i == 0);
+        return b[ci[0]];
+      }
 
-    template<typename CI, typename Block>
-    const typename Block::field_type&
-    access_istl_vector_element(istl::tags::block_vector, const Block& b, const CI& ci, int i)
-    {
-      return access_istl_vector_element(istl::container_tag(b[ci[i]]),b[ci[i]],ci,i-1);
-    }
-
-    template<typename CI, typename Block>
-    const typename Block::field_type&
-    access_istl_vector_element(istl::tags::field_vector_1, const Block& b, const CI& ci, int i)
-    {
-      assert(i == -1);
-      return b[0];
-    }
-
-    template<typename CI, typename Block>
-    const typename Block::field_type&
-    access_istl_vector_element(istl::tags::field_vector_n, const Block& b, const CI& ci, int i)
-    {
-      assert(i == 0);
-      return b[ci[0]];
-    }
+      template<typename CI, typename Block>
+      typename Block::field_type&
+      access_vector_element(tags::block_vector, Block& b, const CI& ci, int i)
+      {
+        return access_vector_element(container_tag(b[ci[i]]),b[ci[i]],ci,i-1);
+      }
 
 
-    template<typename Vector>
-    void resize_istl_vector(istl::tags::block_vector, Vector& v, std::size_t size, bool copy_values)
-    {
-      v.resize(size,copy_values);
-    }
+      template<typename CI, typename Block>
+      const typename Block::field_type&
+      access_vector_element(tags::field_vector_1, const Block& b, const CI& ci, int i)
+      {
+        assert(i == -1);
+        return b[0];
+      }
 
-    template<typename Vector>
-    void resize_istl_vector(istl::tags::field_vector, Vector& v, std::size_t size, bool copy_values)
-    {
-    }
+      template<typename CI, typename Block>
+      const typename Block::field_type&
+      access_vector_element(tags::field_vector_n, const Block& b, const CI& ci, int i)
+      {
+        assert(i == 0);
+        return b[ci[0]];
+      }
 
-    template<typename Ordering, typename Container>
-    void dispatch_istl_vector_allocation(const Ordering& ordering, Container& c, HierarchicContainerAllocationTag tag)
-    {
-      allocate_istl_vector(istl::container_tag(c),ordering,c);
-    }
+      template<typename CI, typename Block>
+      const typename Block::field_type&
+      access_vector_element(tags::block_vector, const Block& b, const CI& ci, int i)
+      {
+        return access_istl_vector_element(container_tag(b[ci[i]]),b[ci[i]],ci,i-1);
+      }
 
-    template<typename Ordering, typename Container>
-    void dispatch_istl_vector_allocation(const Ordering& ordering, Container& c, FlatContainerAllocationTag tag)
-    {
-      resize_istl_vector(istl::container_tag(c),c,ordering.blockCount(),false);
-    }
 
-    template<typename DI, typename GDI, typename CI, typename Container>
-    void allocate_istl_vector(istl::tags::block_vector, const OrderingBase<DI,GDI,CI>& ordering, Container& c)
-    {
-      for (std::size_t i = 0; i < ordering.childOrderingCount(); ++i)
-        {
-          if (ordering.containerBlocked())
-            {
-              resize_istl_vector(istl::container_tag(c[i]),c[i],ordering.childOrdering(i).blockCount(),false);
-              allocate_istl_vector(istl::container_tag(c[i]),ordering.childOrdering(i),c[i]);
-            }
-          else
-            allocate_istl_vector(istl::container_tag(c),ordering.childOrdering(i),c);
-        }
-    }
+      template<typename Vector>
+      void resize_vector(tags::block_vector, Vector& v, std::size_t size, bool copy_values)
+      {
+        v.resize(size,copy_values);
+      }
 
-    template<typename DI, typename GDI, typename CI, typename Container>
-    void allocate_istl_vector(istl::tags::field_vector, const OrderingBase<DI,GDI,CI>& ordering, Container& c)
-    {
-    }
+      template<typename Vector>
+      void resize_vector(tags::field_vector, Vector& v, std::size_t size, bool copy_values)
+      {
+      }
+
+      template<typename DI, typename GDI, typename CI, typename Container>
+      void allocate_vector(tags::field_vector, const OrderingBase<DI,GDI,CI>& ordering, Container& c)
+      {
+      }
+
+      template<typename DI, typename GDI, typename CI, typename Container>
+      void allocate_vector(tags::block_vector, const OrderingBase<DI,GDI,CI>& ordering, Container& c)
+      {
+        for (std::size_t i = 0; i < ordering.childOrderingCount(); ++i)
+          {
+            if (ordering.containerBlocked())
+              {
+                resize_vector(container_tag(c[i]),c[i],ordering.childOrdering(i).blockCount(),false);
+                allocate_vector(container_tag(c[i]),ordering.childOrdering(i),c[i]);
+              }
+            else
+              allocate_vector(container_tag(c),ordering.childOrdering(i),c);
+          }
+      }
+
+      template<typename Ordering, typename Container>
+      void dispatch_vector_allocation(const Ordering& ordering, Container& c, HierarchicContainerAllocationTag tag)
+      {
+        allocate_vector(container_tag(c),ordering,c);
+      }
+
+      template<typename Ordering, typename Container>
+      void dispatch_vector_allocation(const Ordering& ordering, Container& c, FlatContainerAllocationTag tag)
+      {
+        resize_vector(container_tag(c),c,ordering.blockCount(),false);
+      }
+
+
+
+    } // namespace istl
+
+#endif // DOXYGEN
 
     template<typename GFS, typename C>
     class ISTLBlockVectorContainer
@@ -442,22 +453,27 @@ namespace Dune {
         : _gfs(rhs._gfs)
         , _container(make_shared<Container>(_gfs.ordering().blockCount()))
       {
-        dispatch_istl_vector_allocation(_gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+        istl::dispatch_vector_allocation(_gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
         (*_container) = rhs.base();
       }
 
-      ISTLBlockVectorContainer (const GFS& gfs)
+      ISTLBlockVectorContainer (const GFS& gfs, tags::attached_container = tags::attached_container())
         : _gfs(gfs)
         , _container(make_shared<Container>(gfs.ordering().blockCount()))
       {
-        dispatch_istl_vector_allocation(gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+        istl::dispatch_vector_allocation(gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
       }
+
+      //! Creates an ISTLBlockVectorContainer without allocating an underlying ISTL vector.
+      ISTLBlockVectorContainer(const GFS& gfs, tags::unattached_container)
+        : _gfs(gfs)
+      {}
 
       ISTLBlockVectorContainer (const GFS& gfs, const E& e)
         : _gfs(gfs)
         , _container(make_shared<Container>(gfs.ordering().blockCount()))
       {
-        dispatch_istl_vector_allocation(gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+        istl::dispatch_vector_allocation(gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
         (*_container)=e;
       }
 
@@ -471,7 +487,12 @@ namespace Dune {
         _container = container;
       }
 
-      shared_ptr<Container> containerStorage()
+      bool attached() const
+      {
+        return bool(_container);
+      }
+
+      const shared_ptr<Container>& storage() const
       {
         return _container;
       }
@@ -483,7 +504,16 @@ namespace Dune {
 
       ISTLBlockVectorContainer& operator= (const ISTLBlockVectorContainer& r)
       {
-        (*_container) = r.base();
+        if (this == &r)
+          return *this;
+        if (attached())
+          {
+            (*_container) = r.base();
+          }
+        else
+          {
+            _container = make_shared<Container>(r.base());
+          }
         return *this;
       }
 
@@ -530,12 +560,12 @@ namespace Dune {
 
       E& operator[](const ContainerIndex& ci)
       {
-        return access_istl_vector_element(istl::container_tag(*_container),*_container,ci,ci.size()-1);
+        return istl::access_vector_element(istl::container_tag(*_container),*_container,ci,ci.size()-1);
       }
 
       const E& operator[](const ContainerIndex& ci) const
       {
-        return access_istl_vector_element(istl::container_tag(*_container),*_container,ci,ci.size()-1);
+        return istl::access_vector_element(istl::container_tag(*_container),*_container,ci,ci.size()-1);
       }
 
       typename Dune::template FieldTraits<E>::real_type two_norm() const
@@ -638,23 +668,34 @@ namespace Dune {
       // wrapper and has to access the bare container.
       // ********************************************************************************
 
+      //! Returns the raw ISTL object associated with v, or v itself it is already an ISTL object.
       template<typename V>
       V& raw(V& v)
       {
         return v;
       }
 
+      //! Returns the raw ISTL object associated with v, or v itself it is already an ISTL object.
+      template<typename V>
+      const V& raw(const V& v)
+      {
+        return v;
+      }
+
+      //! Returns the raw ISTL type associated with C, or C itself it is already an ISTL type.
+      template<typename C>
+      struct raw_type
+      {
+        typedef C type;
+      };
+
+#ifndef DOXYGEN
+
       template<typename GFS, typename C>
       typename ISTLBlockVectorContainer<GFS,C>::Container&
       raw(ISTLBlockVectorContainer<GFS,C>& v)
       {
         return v.base();
-      }
-
-      template<typename V>
-      const V& raw(const V& v)
-      {
-        return v;
       }
 
       template<typename GFS, typename C>
@@ -678,13 +719,6 @@ namespace Dune {
         return m.base();
       }
 
-
-      template<typename C>
-      struct raw_type
-      {
-        typedef C type;
-      };
-
       template<typename GFS, typename C>
       struct raw_type<ISTLBlockVectorContainer<GFS,C> >
       {
@@ -697,10 +731,15 @@ namespace Dune {
         typedef C type;
       };
 
+#endif // DOXYGEN
+
 
       // ********************************************************************************
       // TMPs for deducing ISTL block structure from GFS backends
       // ********************************************************************************
+
+
+#ifndef DOXYGEN // All of the following TMP magic is about irrelevant to the user as can be...
 
       // tag dispatch switch on GFS tag for per-node functor - general version
       template<typename E,typename Node, typename Tag>
@@ -964,7 +1003,12 @@ namespace Dune {
                                                   TypeTree::bottom_up_reduction>
       {};
 
+#endif // DOXYGEN
+
     } // namespace istl
+
+
+#ifndef DOXYGEN
 
     // helper struct invoking the GFS tree -> ISTL vector reduction
     template<typename GFS, typename E>
@@ -984,6 +1028,8 @@ namespace Dune {
     struct BackendVectorSelectorHelper<ISTLVectorBackend<blocking,block_size>, GFS, E>
       : public ISTLVectorSelectorHelper<GFS,E>
     {};
+
+#endif // DOXYGEN
 
   } // namespace PDELab
 } // namespace Dune
