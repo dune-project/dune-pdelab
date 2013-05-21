@@ -11,6 +11,7 @@
 
 #include <dune/istl/bvector.hh>
 
+#include <dune/pdelab/backend/tags.hh>
 #include <dune/pdelab/backend/istl/tags.hh>
 #include <dune/pdelab/backend/istl/vectoriterator.hh>
 
@@ -456,12 +457,17 @@ namespace Dune {
         (*_container) = rhs.base();
       }
 
-      ISTLBlockVectorContainer (const GFS& gfs)
+      ISTLBlockVectorContainer (const GFS& gfs, tags::attached_container = tags::attached_container())
         : _gfs(gfs)
         , _container(make_shared<Container>(gfs.ordering().blockCount()))
       {
         istl::dispatch_vector_allocation(gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
       }
+
+      //! Creates an ISTLBlockVectorContainer without allocating an underlying ISTL vector.
+      ISTLBlockVectorContainer(const GFS& gfs, tags::unattached_container)
+        : _gfs(gfs)
+      {}
 
       ISTLBlockVectorContainer (const GFS& gfs, const E& e)
         : _gfs(gfs)
@@ -498,7 +504,16 @@ namespace Dune {
 
       ISTLBlockVectorContainer& operator= (const ISTLBlockVectorContainer& r)
       {
-        (*_container) = r.base();
+        if (this == &r)
+          return *this;
+        if (attached())
+          {
+            (*_container) = r.base();
+          }
+        else
+          {
+            _container = make_shared<Container>(r.base());
+          }
         return *this;
       }
 

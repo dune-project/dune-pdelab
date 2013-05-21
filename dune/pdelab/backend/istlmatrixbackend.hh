@@ -14,6 +14,7 @@
 #include <dune/istl/bvector.hh>
 #include <dune/istl/bcrsmatrix.hh>
 
+#include <dune/pdelab/backend/tags.hh>
 #include <dune/pdelab/backend/istl/tags.hh>
 #include <dune/pdelab/backend/backendselector.hh>
 
@@ -628,7 +629,13 @@ namespace Dune {
         _container = e;
       }
 
-      ISTLMatrixContainer ()
+
+      //! Creates an ISTLMatrixContainer without allocating an underlying ISTL matrix.
+      explicit ISTLMatrixContainer (tags::unattached_container = tags::unattached_container())
+      {}
+
+      //! Creates an ISTLMatrixContainer with an empty underlying ISTL matrix.
+      explicit ISTLMatrixContainer (tags::attached_container)
       {}
 
       ISTLMatrixContainer(const ISTLMatrixContainer& rhs)
@@ -637,8 +644,16 @@ namespace Dune {
 
       ISTLMatrixContainer& operator=(const ISTLMatrixContainer& rhs)
       {
-        if (this != &rhs)
-          (*_container) = (*(rhs._container));
+        if (this == &rhs)
+          return *this;
+        if (attached())
+          {
+            (*_container) = (*(rhs._container));
+          }
+        else
+          {
+            _container = make_shared<Container>(*(rhs._container));
+          }
         return *this;
       }
 
