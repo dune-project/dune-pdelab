@@ -486,7 +486,7 @@ namespace Dune {
         {
           using namespace std::placeholders;
           std::transform(_container->begin(),_container->end(),y._container->begin(),
-                         _container->begin(),std::bind(std::plus<E>(),std::bind(std::multiplies<E>(),a,_1)));
+                         _container->begin(),std::bind(std::plus<E>(),_1,std::bind(std::multiplies<E>(),a,_2)));
           return *this;
         }
 
