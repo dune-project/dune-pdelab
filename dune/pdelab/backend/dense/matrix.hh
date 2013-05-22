@@ -337,6 +337,28 @@ namespace Dune {
           return *this;
         }
 
+        template<typename V>
+        void mv(const V& x, V& y) const
+        {
+          auto rowit = _container->begin();
+          for (auto& v : y)
+            {
+              v = std::inner_product(rowit,rowit + _cols,x.begin(),E(0));
+              rowit += _cols;
+            }
+        }
+
+        template<typename V>
+        void usmv(const E alpha, const V& x, V& y) const
+        {
+          auto rowit = _container->begin();
+          for (auto& v : y)
+            {
+              v += alpha * std::inner_product(rowit,rowit + _cols,x.begin(),E(0));
+              rowit += _cols;
+            }
+        }
+
         E& operator()(const RowIndex& ri, const ColIndex& ci)
         {
           return (*_container)[ri[0]*_cols + ci[0]];

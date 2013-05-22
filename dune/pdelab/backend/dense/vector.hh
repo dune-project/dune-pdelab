@@ -47,6 +47,10 @@ namespace Dune {
         typedef C Container;
         typedef typename Container::value_type ElementType;
         typedef ElementType E;
+
+        // for ISTL solver compatibility
+        typedef ElementType field_type;
+
         typedef GFS GridFunctionSpace;
         typedef typename Container::size_type size_type;
 
