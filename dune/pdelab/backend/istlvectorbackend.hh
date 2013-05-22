@@ -8,12 +8,12 @@
 
 #include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/backend/tags.hh>
+#include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
 #include <dune/pdelab/backend/istl/vectorhelpers.hh>
 #include <dune/pdelab/backend/istl/vectoriterator.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
-#include <dune/pdelab/gridfunctionspace/localvector.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/backend/backendselector.hh>
 
@@ -39,302 +39,46 @@ namespace Dune {
       typedef istl::vector_iterator<C> iterator;
       typedef istl::vector_iterator<const C> const_iterator;
 
+
+#if HAVE_TEMPLATE_ALIASES
+
+      template<typename LFSCache>
+      using LocalView = UncachedVectorView<ISTLBlockVectorContainer,LFSCache>;
+
+      template<typename LFSCache>
+      using ConstLocalView = ConstUncachedVectorView<const ISTLBlockVectorContainer,LFSCache>;
+
+#else
+
       template<typename LFSCache>
       struct LocalView
+        : public UncachedVectorView<ISTLBlockVectorContainer,LFSCache>
       {
 
-        //dune_static_assert((is_same<typename LFSCache::LocalFunctionSpace::Traits::GridFunctionSpace,GFS>::value),
-        //                   "The LocalFunctionSpace passed to LocalView must belong to the underlying GridFunctionSpace.");
+      LocalView()
+      {}
 
-        typedef E ElementType;
-        //typedef typename LFSCache::LocalFunctionSpace LFS;
-        typedef typename LFSCache::DOFIndex DOFIndex;
-        typedef typename LFSCache::ContainerIndex ContainerIndex;
+      LocalView(ISTLBlockVectorContainer& vc)
+        : UncachedVectorView<ISTLBlockVectorContainer,LFSCache>(vc)
+      {}
 
-        LocalView()
-          : _container(nullptr)
-          , _lfs_cache(nullptr)
-        {}
-
-        LocalView(ISTLBlockVectorContainer& container)
-          : _container(&container)
-          , _lfs_cache(nullptr)
-        {}
-
-        void attach(ISTLBlockVectorContainer& container)
-        {
-          _container = &container;
-        }
-
-        void detach()
-        {
-          _container = nullptr;
-        }
-
-        void bind(const LFSCache& lfs_cache)
-        {
-          _lfs_cache = &lfs_cache;
-        }
-
-        void unbind()
-        {
-        }
-
-        size_type size() const
-        {
-          return _lfs_cache->size();
-        }
-
-        template<typename LC>
-        void read(LC& local_container) const
-        {
-          for (size_type i = 0; i < size(); ++i)
-            {
-              accessBaseContainer(local_container)[i] = (*_container)[_lfs_cache->containerIndex(i)];
-            }
-        }
-
-        template<typename LC>
-        void write(const LC& local_container)
-        {
-          for (size_type i = 0; i < size(); ++i)
-            {
-              (*_container)[_lfs_cache->containerIndex(i)] = accessBaseContainer(local_container)[i];
-            }
-        }
-
-        template<typename LC>
-        void add(const LC& local_container)
-        {
-          for (size_type i = 0; i < size(); ++i)
-            {
-              (*_container)[_lfs_cache->containerIndex(i)] += accessBaseContainer(local_container)[i];
-            }
-        }
-
-        template<typename ChildLFS, typename LC>
-        void read(const ChildLFS& child_lfs, LC& local_container) const
-        {
-          for (size_type i = 0; i < child_lfs.size(); ++i)
-            {
-              const size_type local_index = child_lfs.localIndex(i);
-              accessBaseContainer(local_container)[local_index] = (*_container)[_lfs_cache->containerIndex(local_index)];
-            }
-        }
-
-        template<typename ChildLFS, typename LC>
-        void write(const ChildLFS& child_lfs, const LC& local_container)
-        {
-          for (size_type i = 0; i < child_lfs.size(); ++i)
-            {
-              const size_type local_index = child_lfs.localIndex(i);
-              (*_container)[_lfs_cache->containerIndex(local_index)] = accessBaseContainer(local_container)[local_index];
-            }
-        }
-
-        template<typename ChildLFS, typename LC>
-        void add(const ChildLFS& child_lfs, const LC& local_container)
-        {
-          for (size_type i = 0; i < child_lfs.size(); ++i)
-            {
-              const size_type local_index = child_lfs.localIndex(i);
-              (*_container)[_lfs_cache->containerIndex(local_index)] += accessBaseContainer(local_container)[local_index];
-            }
-        }
-
-
-        template<typename ChildLFS, typename LC>
-        void read_sub_container(const ChildLFS& child_lfs, LC& local_container) const
-        {
-          for (size_type i = 0; i < child_lfs.size(); ++i)
-            {
-              const size_type local_index = child_lfs.localIndex(i);
-              accessBaseContainer(local_container)[i] = (*_container)[_lfs_cache->containerIndex(local_index)];
-            }
-        }
-
-        template<typename ChildLFS, typename LC>
-        void write_sub_container(const ChildLFS& child_lfs, const LC& local_container)
-        {
-          for (size_type i = 0; i < child_lfs.size(); ++i)
-            {
-              const size_type local_index = child_lfs.localIndex(i);
-              (*_container)[_lfs_cache->containerIndex(local_index)] = accessBaseContainer(local_container)[i];
-            }
-        }
-
-        template<typename ChildLFS, typename LC>
-        void add_sub_container(const ChildLFS& child_lfs, const LC& local_container)
-        {
-          for (size_type i = 0; i < child_lfs.size(); ++i)
-            {
-              const size_type local_index = child_lfs.localIndex(i);
-              (*_container)[_lfs_cache->containerIndex(local_index)] += accessBaseContainer(local_container)[i];
-            }
-        }
-
-        void commit()
-        {
-        }
-
-
-        ElementType& operator[](size_type i)
-        {
-          return (*_container)[_lfs_cache->containerIndex(i)];
-        }
-
-        const ElementType& operator[](size_type i) const
-        {
-          return (*_container)[_lfs_cache->containerIndex(i)];
-        }
-
-        ElementType& operator[](const DOFIndex& di)
-        {
-          return (*_container)[_lfs_cache->containerIndex(di)];
-        }
-
-        const ElementType& operator[](const DOFIndex& di) const
-        {
-          return (*_container)[_lfs_cache->containerIndex(di)];
-        }
-
-        ElementType& operator[](const ContainerIndex& ci)
-        {
-          return (*_container)[ci];
-        }
-
-        const ElementType& operator[](const ContainerIndex& ci) const
-        {
-          return (*_container)[ci];
-        }
-
-        ISTLBlockVectorContainer& global_container()
-        {
-          return *_container;
-        }
-
-        const ISTLBlockVectorContainer& global_container() const
-        {
-          return *_container;
-        }
-
-        const LFSCache& cache() const
-        {
-          return *_lfs_cache;
-        }
-
-      private:
-
-        ISTLBlockVectorContainer* _container;
-        const LFSCache* _lfs_cache;
-
-      };
-
+    };
 
       template<typename LFSCache>
       struct ConstLocalView
+        : public ConstUncachedVectorView<const ISTLBlockVectorContainer,LFSCache>
       {
 
-        // dune_static_assert((is_same<typename LFSCache::LocalFunctionSpace::Traits::GridFunctionSpace,GFS>::value),
-        //                    "The LocalFunctionSpace passed to LocalView must belong to the underlying GridFunctionSpace.");
+      ConstLocalView()
+      {}
 
-        typedef E ElementType;
-        typedef typename LFSCache::LocalFunctionSpace LFS;
-        typedef LFS LocalFunctionSpace;
-        typedef typename LFS::Traits::DOFIndex DOFIndex;
-        typedef typename LFS::Traits::GridFunctionSpace::Ordering::Traits::ContainerIndex ContainerIndex;
+      ConstLocalView(const ISTLBlockVectorContainer& vc)
+        : ConstUncachedVectorView<const ISTLBlockVectorContainer,LFSCache>(vc)
+      {}
 
-        ConstLocalView()
-          : _container(nullptr)
-          , _lfs_cache(nullptr)
-        {}
+    };
 
-        ConstLocalView(const ISTLBlockVectorContainer& container)
-          : _container(&container)
-          , _lfs_cache(nullptr)
-        {}
-
-        void attach(const ISTLBlockVectorContainer& container)
-        {
-          _container = &container;
-        }
-
-        void detach()
-        {
-          _container = nullptr;
-        }
-
-        void bind(const LFSCache& lfs_cache)
-        {
-          _lfs_cache = &lfs_cache;
-        }
-
-        void unbind()
-        {
-        }
-
-        size_type size() const
-        {
-          return _lfs_cache->size();
-        }
-
-        template<typename LC>
-        void read(LC& local_container) const
-        {
-          for (size_type i = 0; i < size(); ++i)
-            {
-              accessBaseContainer(local_container)[i] = (*_container)[_lfs_cache->containerIndex(i)];
-            }
-        }
-
-        template<typename ChildLFS, typename LC>
-        void read(const ChildLFS& child_lfs, LC& local_container) const
-        {
-          for (size_type i = 0; i < child_lfs.size(); ++i)
-            {
-              const size_type local_index = child_lfs.localIndex(i);
-              accessBaseContainer(local_container)[local_index] = (*_container)[_lfs_cache->containerIndex(local_index)];
-            }
-        }
-
-        template<typename ChildLFS, typename LC>
-        void read_sub_container(const ChildLFS& child_lfs, LC& local_container) const
-        {
-          for (size_type i = 0; i < child_lfs.size(); ++i)
-            {
-              const size_type local_index = child_lfs.localIndex(i);
-              accessBaseContainer(local_container)[i] = (*_container)[_lfs_cache->containerIndex(local_index)];
-            }
-        }
-
-
-        const ElementType& operator[](size_type i) const
-        {
-          return (*_container)[_lfs_cache->containerIndex(i)];
-        }
-
-        const ElementType& operator[](const DOFIndex& di) const
-        {
-          return (*_container)[_lfs_cache->containerIndex(di)];
-        }
-
-        const ElementType& operator[](const ContainerIndex& ci) const
-        {
-          return (*_container)[ci];
-        }
-
-        const ISTLBlockVectorContainer& global_container() const
-        {
-          return *_container;
-        }
-
-
-      private:
-
-        const ISTLBlockVectorContainer* _container;
-        const LFSCache* _lfs_cache;
-
-      };
+#endif // HAVE_TEMPLATE_ALIASES
 
 
       ISTLBlockVectorContainer(const ISTLBlockVectorContainer& rhs)

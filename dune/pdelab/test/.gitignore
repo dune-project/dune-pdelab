@@ -57,3 +57,4 @@ testvectoriterator
 testvectoriterator-no-variadic-templates
 testnonoverlapping
 testfilteredcompositenode
+testdensebackend
