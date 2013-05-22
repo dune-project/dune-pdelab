@@ -3,6 +3,9 @@
 #ifndef DUNE_PDELAB_COMMON_VECTORUTILITIES_HH
 #define DUNE_PDELAB_COMMON_VECTORUTILITIES_HH
 
+#warning "dune/pdelab/backend/vectorutilities.hh" is deprecated.
+#warning It has not been ported to the new DOF infrastructure and will be removed shortly.
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -13,7 +16,7 @@ namespace Dune {
 
     //! make sure all vector entries are below a certain limit
     template<class Vector>
-    bool checkVectorLimit(const Vector &v, typename Vector::ElementType limit)
+    DUNE_DEPRECATED bool checkVectorLimit(const Vector &v, typename Vector::ElementType limit)
     {
       typedef typename Vector::Backend BE;
       for(std::size_t i = 0; i < v.flatsize(); ++i)
@@ -26,8 +29,8 @@ namespace Dune {
 
     //! make sure all vector entries are below a certain limit
     template<class Communication, class Vector>
-    bool checkVectorLimit(const Communication &comm, const Vector &v,
-                          typename Vector::ElementType limit)
+    DUNE_DEPRECATED bool checkVectorLimit(const Communication &comm, const Vector &v,
+                                          typename Vector::ElementType limit)
     {
       bool good = checkVectorLimit(v, limit);
       return comm.min(good);
@@ -35,7 +38,7 @@ namespace Dune {
 
     //! Calculate infinity norm of all vector entries.
     template<class Vector>
-    typename Vector::ElementType vectorInfNorm(const Vector &v) {
+    DUNE_DEPRECATED typename Vector::ElementType vectorInfNorm(const Vector &v) {
       typedef typename Vector::Backend BE;
       typename Vector::ElementType norm = 0;
       for(std::size_t i = 0; i < v.flatsize(); ++i)
@@ -45,8 +48,8 @@ namespace Dune {
 
     //! Calculate infinity norm of all vector entries.
     template<class Communication, class Vector>
-    typename Vector::ElementType vectorInfNorm(const Communication &comm,
-                                               const Vector &v)
+    DUNE_DEPRECATED typename Vector::ElementType vectorInfNorm(const Communication &comm,
+                                                               const Vector &v)
     {
       typename Vector::ElementType norm = vectorInfNorm(v);
       return comm.max(norm);
