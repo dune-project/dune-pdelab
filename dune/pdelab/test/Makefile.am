@@ -331,6 +331,21 @@ check_PROGRAMS += testvectoriterator-no-variadic-templates
 testvectoriterator_no_variadic_templates_SOURCES = testvectoriterator.cc
 testvectoriterator_no_variadic_templates_CPPFLAGS = $(AM_CPPFLAGS) -DDISABLE_VARIADIC_TEMPLATES
 
+NORMALTESTS += testdensebackend
+testdensebackend_SOURCES = testdensebackend.cc
+testdensebackend_CPPFLAGS = $(AM_CPPFLAGS)		\
+	$(ALBERTA_CPPFLAGS)			\
+	$(SUPERLU_CPPFLAGS)
+testdensebackend_LDFLAGS = $(AM_LDFLAGS)		\
+	$(ALBERTA_LDFLAGS)			\
+	$(SUPERLU_LDFLAGS)
+testdensebackend_LDADD =				\
+	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
+	$(ALBERTA_LIBS)				\
+	$(LDADD)
+MOSTLYCLEANFILES += densebackend_*.vtu
+
+
 include $(top_srcdir)/am/global-rules
 
 DISTCHECK_CONFIGURE_FLAGS = --with-dune=$(DUNEROOT) CXX="$(CXX)" CC="$(CC)"
