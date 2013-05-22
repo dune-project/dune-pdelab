@@ -11,6 +11,9 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
 #include <dune/grid/yaspgrid.hh>
+#include<dune/istl/operators.hh>
+#include<dune/istl/solvers.hh>
+#include<dune/istl/preconditioners.hh>
 
 #include <dune/pdelab/finiteelementmap/q12dfem.hh>
 #include <dune/pdelab/finiteelementmap/q22dfem.hh>
@@ -230,9 +233,23 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   r = 0.0;
   gridoperator.residual(x0,r);
 
+  // make ISTL solver
+  Dune::MatrixAdapter<M,DV,RV> opa(m);
+  // only Richardson - everything else would need ISTL support
+  Dune::Richardson<DV,RV> richardson(1.0);
+
+  Dune::CGSolver<DV> solver(opa,richardson,1E-10,5000,2);
+  Dune::InverseOperatorResult stat;
+
+  // solve the jacobian system
+  r *= -1.0; // need -residual
+  DV x(gfs,0.0);
+  solver.apply(x,r,stat);
+  x += x0;
+
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x0);
+  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x);
   vtkwriter.write(filename,Dune::VTK::ascii);
 }
 
