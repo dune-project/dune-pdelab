@@ -18,6 +18,7 @@ set(common_HEADERS  backendselector.hh
                  tags.hh
                  vectorutilities.hh)
 
+add_subdirectory(common)
 add_subdirectory(dense)
 add_subdirectory(istl)
 # include not needed for CMake

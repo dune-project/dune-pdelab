@@ -1,6 +1,6 @@
 commondir = $(includedir)/dune/pdelab/backend
 
-SUBDIRS = dense istl
+SUBDIRS = common dense istl
 
 common_HEADERS = backendselector.hh             \
 		 dense.hh			\
