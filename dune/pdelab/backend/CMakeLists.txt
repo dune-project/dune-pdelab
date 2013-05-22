@@ -1,5 +1,6 @@
 set(commondir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/backend)
 set(common_HEADERS  backendselector.hh
+                 dense.hh
                  eigenmatrixbackend.hh
                  eigensolverbackend.hh
                  eigenvectorbackend.hh
@@ -17,6 +18,7 @@ set(common_HEADERS  backendselector.hh
                  tags.hh
                  vectorutilities.hh)
 
+add_subdirectory(dense)
 add_subdirectory(istl)
 # include not needed for CMake
 # include $(top_srcdir)/am/global-rules

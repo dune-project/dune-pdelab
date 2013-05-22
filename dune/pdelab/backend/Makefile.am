@@ -1,8 +1,9 @@
 commondir = $(includedir)/dune/pdelab/backend
 
-SUBDIRS = istl
+SUBDIRS = dense istl
 
 common_HEADERS = backendselector.hh             \
+		 dense.hh			\
                  eigenmatrixbackend.hh          \
                  eigensolverbackend.hh          \
                  eigenvectorbackend.hh          \
