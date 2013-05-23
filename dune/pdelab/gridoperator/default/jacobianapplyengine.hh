@@ -200,7 +200,7 @@ namespace Dune{
 
       void postAssembly(){
         if(local_assembler.doPostProcessing){
-            Dune::PDELab::constrain_residual(*(local_assembler.pconstraintsv),global_rl_view.global_container());
+            Dune::PDELab::constrain_residual(*(local_assembler.pconstraintsv),global_rl_view.container());
         }
       }
 
