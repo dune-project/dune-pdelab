@@ -138,11 +138,13 @@ namespace Dune {
       //dune_static_assert((is_same<typename LFSCache::LocalFunctionSpace::Traits::GridFunctionSpace,GFS>::value),
       //                   "The LocalFunctionSpace passed to LocalView must belong to the underlying GridFunctionSpace.");
 
-      using Container = typename ConstUncachedVectorView<V,LFSC>::Container;
-      using ElementType = typename ConstUncachedVectorView<V,LFSC>::ElementType;
-      using size_type = typename ConstUncachedVectorView<V,LFSC>::size_type;
-      using DOFIndex = typename ConstUncachedVectorView<V,LFSC>::DOFIndex;
-      using ContainerIndex = typename ConstUncachedVectorView<V,LFSC>::ContainerIndex;
+      typedef V Container;
+      typedef typename Container::ElementType ElementType;
+      typedef typename Container::size_type size_type;
+
+      typedef LFSC LFSCache;
+      typedef typename LFSCache::DOFIndex DOFIndex;
+      typedef typename LFSCache::ContainerIndex ContainerIndex;
 
       using ConstUncachedVectorView<V,LFSC>::cache;
       using ConstUncachedVectorView<V,LFSC>::size;
