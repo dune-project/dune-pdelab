@@ -4,6 +4,8 @@
 #ifndef DUNE_PDELAB_ORDERING_LEAFLOCALORDERING_HH
 #define DUNE_PDELAB_ORDERING_LEAFLOCALORDERING_HH
 
+#include <dune/localfunctions/common/interfaceswitch.hh>
+#include <dune/localfunctions/common/localkey.hh>
 #include <dune/pdelab/common/typetree/leafnode.hh>
 #include <dune/pdelab/ordering/localorderingbase.hh>
 
