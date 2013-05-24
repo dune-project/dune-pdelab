@@ -194,19 +194,6 @@ namespace Dune {
     lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_ordering<Params>* t, PowerGridFunctionSpaceTag tag);
 
 
-    struct update_direct_children
-      : public TypeTree::DirectChildrenVisitor
-      , public TypeTree::DynamicTraversal
-    {
-
-      template<typename GFS, typename Child, typename TreePath, typename ChildIndex>
-      void afterChild(const GFS& gfs, Child& child, TreePath tp, ChildIndex childIndex) const
-      {
-        child.update();
-      }
-
-    };
-
 
     //! Interface for merging index spaces
     template<typename DI, typename GDI, typename CI, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
@@ -256,7 +243,7 @@ namespace Dune {
 
       void update()
       {
-        TypeTree::applyToTree(*this,update_direct_children());
+        TypeTree::applyToTree(*this,ordering::update_direct_children());
         Base::update();
       }
     };

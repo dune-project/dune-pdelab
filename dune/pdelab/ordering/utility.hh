@@ -17,6 +17,28 @@
 namespace Dune {
   namespace PDELab {
 
+#ifndef DOXYGEN
+
+    namespace ordering {
+
+      // This is an implementation detail of the composite orderings, no need to confuse our users!
+      struct update_direct_children
+        : public TypeTree::DirectChildrenVisitor
+        , public TypeTree::DynamicTraversal
+      {
+
+        template<typename GFS, typename Child, typename TreePath, typename ChildIndex>
+        void afterChild(const GFS& gfs, Child& child, TreePath tp, ChildIndex childIndex) const
+        {
+          child.update();
+        }
+
+      };
+
+    }
+
+#endif // DOXYGEN
+
     struct extract_max_container_depth
     {
 
