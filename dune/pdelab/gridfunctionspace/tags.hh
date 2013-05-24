@@ -5,6 +5,9 @@
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_TAGS_HH
 
 #include <dune/grid/common/gridenums.hh>
+#include <dune/pdelab/common/typetree/utility.hh>
+#include <dune/pdelab/common/dofindex.hh>
+#include <dune/pdelab/common/simpledofindex.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -168,6 +171,56 @@ namespace Dune {
     //! Tag denoting that an ordering will work with the simplified version of
     //! the LFSIndexCache.
     struct SimpleLFSCacheTag {};
+
+
+    template<typename GFS, typename Tag>
+    struct _build_dof_index_type
+    {
+      typedef Dune::PDELab::DOFIndex<std::size_t,TypeTree::TreeInfo<GFS>::depth,2> type;
+    };
+
+    template<typename GFS>
+    struct _build_dof_index_type<GFS,SingleCodimMapper>
+    {
+      typedef SimpleDOFIndex<typename GFS::Traits::SizeType> type;
+    };
+
+
+    template<typename GFS>
+    struct build_dof_index_type
+    {
+      typedef typename _build_dof_index_type<GFS,typename GFS::OrderingTag>::type type;
+    };
+
+
+#ifndef DOXYGEN
+
+    //! GridFunctionSpace to LocalFunctionSpace transformation.
+    /**
+     * gfs_to_lfs describes the transformation of a GridFunctionSpace tree to its corresponding
+     * LocalFunctionSpace tree and holds any information that may be required for performing
+     * the transformation.
+     *
+     * \warning The exact meaning of the template parameter is an implementation detail
+     *          and may change at any time, as the only class that is supposed to instantiate
+     *          the transformation is LocalFunctionSpace. Implementors of custom transformation
+     *          descriptors should only use information exported by gfs_to_lfs. In particular,
+     *          the registration declaration should not make any assumptions on GFS and just
+     *          treat it as some kind of opaque parameter type.
+     *
+     * \tparam GFS  the root GridFunctionSpace that the resulting LocalFunctionSpace tree
+     *              will be based on.
+     */
+    template<typename GFS>
+    struct gfs_to_lfs {
+
+      //! The MultiIndex type that will be used in the resulting LocalFunctionSpace tree.
+      //typedef Dune::PDELab::MultiIndex<std::size_t,TypeTree::TreeInfo<GFS>::depth> MultiIndex;
+      typedef typename build_dof_index_type<GFS>::type DOFIndex;
+
+    };
+
+#endif // DOXYGEN
 
     //! \} group GridFunctionSpace
   } // namespace PDELab
