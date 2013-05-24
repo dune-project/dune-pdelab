@@ -4,6 +4,7 @@
 #ifndef DUNE_PDELAB_ORDERING_DIRECTLEAFLOCALORDERING_HH
 #define DUNE_PDELAB_ORDERING_DIRECTLEAFLOCALORDERING_HH
 
+#include <dune/geometry/referenceelements.hh>
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
 #include <dune/pdelab/common/typetree/leafnode.hh>
@@ -172,7 +173,7 @@ namespace Dune {
 
         _max_local_size = std::max(_max_local_size,coeffs.size());
 
-        const GenericReferenceElement<typename Traits::GridView::ctype, Traits::GridView::dimension>& ref_el = GenericReferenceElements<typename Traits::GridView::ctype,Traits::GridView::dimension>::general(cell.type());
+        const ReferenceElement<typename Traits::GridView::ctype, Traits::GridView::dimension>& ref_el = ReferenceElements<typename Traits::GridView::ctype,Traits::GridView::dimension>::general(cell.type());
 
         for (std::size_t i = 0; i < coeffs.size(); ++i)
           {
@@ -213,8 +214,8 @@ namespace Dune {
 
         typedef typename Traits::SizeType size_type;
 
-        const GenericReferenceElement<typename Traits::GridView::ctype,Traits::GridView::dimension>& ref_el =
-          GenericReferenceElements<typename Traits::GridView::ctype,Traits::GridView::dimension>::general(cell.type());
+        const ReferenceElement<typename Traits::GridView::ctype,Traits::GridView::dimension>& ref_el =
+          ReferenceElements<typename Traits::GridView::ctype,Traits::GridView::dimension>::general(cell.type());
 
         for (std::size_t i = 0; i < coeffs.size(); ++i)
           {
