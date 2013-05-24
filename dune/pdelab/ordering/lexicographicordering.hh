@@ -145,9 +145,6 @@ namespace Dune {
     };
 
 
-    template<typename GFS, typename Transformation, typename OrderingTag>
-    struct power_gfs_to_ordering_descriptor;
-
     template<typename GFS, typename Transformation>
     struct power_gfs_to_ordering_descriptor<GFS,Transformation,LexicographicOrderingTag>
     {
@@ -184,15 +181,7 @@ namespace Dune {
 
     };
 
-
-    template<typename GridFunctionSpace, typename Params>
-    power_gfs_to_ordering_descriptor<
-      GridFunctionSpace,
-      gfs_to_ordering<Params>,
-      typename GridFunctionSpace::OrderingTag
-      >
-    lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_ordering<Params>* t, PowerGridFunctionSpaceTag tag);
-
+    // the generic registration for PowerGridFunctionSpace happens in transformations.hh
 
 
     //! Interface for merging index spaces
@@ -250,9 +239,6 @@ namespace Dune {
 
 #if HAVE_VARIADIC_TEMPLATES
 
-    template<typename GFS, typename Transformation, typename OrderingTag>
-    struct composite_gfs_to_ordering_descriptor;
-
     template<typename GFS, typename Transformation>
     struct composite_gfs_to_ordering_descriptor<GFS,Transformation,LexicographicOrderingTag>
     {
@@ -288,21 +274,11 @@ namespace Dune {
 
     };
 
-
-    template<typename GridFunctionSpace, typename Params>
-    composite_gfs_to_ordering_descriptor<
-      GridFunctionSpace,
-      gfs_to_ordering<Params>,
-      typename GridFunctionSpace::OrderingTag
-      >
-    lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_ordering<Params>* t, CompositeGridFunctionSpaceTag tag);
-
-
 #else // HAVE_VARIADIC_TEMPLATES
 
     //! Node transformation descriptor for CompositeGridFunctionSpace -> LexicographicOrdering (without variadic templates).
-    template<typename GFSNode, typename Transformation>
-    struct CompositeGFSToLexicographicOrderingTransformation
+    template<typename GFS, typename Transformation>
+    struct composite_gfs_to_ordering_descriptor<GFS,Transformation,LexicographicOrderingTag>
     {
 
       static const bool recursive = true;
@@ -381,12 +357,9 @@ namespace Dune {
 
     };
 
-    // Register transformation
-    template<typename GFSNode, typename GFS>
-    CompositeGFSToLexicographicOrderingTransformation<GFSNode,gfs_to_ordering<GFS,LexicographicOrderingTag> >
-    lookupNodeTransformation(GFSNode*, gfs_to_ordering<GFS,LexicographicOrderingTag>*, CompositeGridFunctionSpaceBaseTag);
-
 #endif // HAVE_VARIADIC_TEMPLATES
+
+    // the generic registration for PowerGridFunctionSpace happens in transformations.hh
 
    //! \} group GridFunctionSpace
   } // namespace PDELab

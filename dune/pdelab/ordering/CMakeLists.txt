@@ -10,5 +10,6 @@ install(FILES
   orderinginterface.hh
   singlecodimleafordering.hh
   subordering.hh
+  transformations.hh
   utility.hh
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}//dune/pdelab/gridfunctionspace)
