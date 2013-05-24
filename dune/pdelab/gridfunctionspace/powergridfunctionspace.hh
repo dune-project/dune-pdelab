@@ -80,26 +80,28 @@ namespace Dune {
       //! export traits class
       typedef typename ImplementationBase::Traits Traits;
 
-      PowerGridFunctionSpace(T& c, const Backend& backend = Backend())
+      PowerGridFunctionSpace(T& c, const Backend& backend = Backend(), const OrderingTag ordering_tag = OrderingTag())
         : BaseT(c)
-        , ImplementationBase(backend)
+        , ImplementationBase(backend,ordering_tag)
       {
       }
 
       PowerGridFunctionSpace (T& c0,
                               T& c1,
-                              const Backend& backend = Backend())
+                              const Backend& backend = Backend(),
+                              const OrderingTag ordering_tag = OrderingTag())
         : BaseT(c0,c1)
-        , ImplementationBase(backend)
+        , ImplementationBase(backend,ordering_tag)
       {
       }
 
       PowerGridFunctionSpace (T& c0,
                               T& c1,
                               T& c2,
-                              const Backend& backend = Backend())
+                              const Backend& backend = Backend(),
+                              const OrderingTag ordering_tag = OrderingTag())
         : BaseT(c0,c1,c2)
-        , ImplementationBase(backend)
+        , ImplementationBase(backend,ordering_tag)
       {
       }
 
@@ -107,9 +109,10 @@ namespace Dune {
                               T& c1,
                               T& c2,
                               T& c3,
-                              const Backend& backend = Backend())
+                              const Backend& backend = Backend(),
+                              const OrderingTag ordering_tag = OrderingTag())
         : BaseT(c0,c1,c2,c3)
-        , ImplementationBase(backend)
+        , ImplementationBase(backend,ordering_tag)
       {
       }
 
@@ -118,9 +121,10 @@ namespace Dune {
                               T& c2,
                               T& c3,
                               T& c4,
-                              const Backend& backend = Backend())
+                              const Backend& backend = Backend(),
+                              const OrderingTag ordering_tag = OrderingTag())
         : BaseT(c0,c1,c2,c3,c4)
-        , ImplementationBase(backend)
+        , ImplementationBase(backend,ordering_tag)
       {
       }
 
@@ -130,9 +134,10 @@ namespace Dune {
                               T& c3,
                               T& c4,
                               T& c5,
-                              const Backend& backend = Backend())
+                              const Backend& backend = Backend(),
+                              const OrderingTag ordering_tag = OrderingTag())
         : BaseT(c0,c1,c2,c3,c4,c5)
-        , ImplementationBase(backend)
+        , ImplementationBase(backend,ordering_tag)
       {
       }
 
@@ -143,9 +148,10 @@ namespace Dune {
                               T& c4,
                               T& c5,
                               T& c6,
-                              const Backend& backend = Backend())
+                              const Backend& backend = Backend(),
+                              const OrderingTag ordering_tag = OrderingTag())
         : BaseT(c0,c1,c2,c3,c4,c5,c6)
-        , ImplementationBase(backend)
+        , ImplementationBase(backend,ordering_tag)
       {
       }
 
@@ -157,9 +163,10 @@ namespace Dune {
                               T& c5,
                               T& c6,
                               T& c7,
-                              const Backend& backend = Backend())
+                              const Backend& backend = Backend(),
+                              const OrderingTag ordering_tag = OrderingTag())
         : BaseT(c0,c1,c2,c3,c4,c5,c6,c7)
-        , ImplementationBase(backend)
+        , ImplementationBase(backend,ordering_tag)
       {
       }
 
@@ -172,9 +179,10 @@ namespace Dune {
                               T& c6,
                               T& c7,
                               T& c8,
-                              const Backend& backend = Backend())
+                              const Backend& backend = Backend(),
+                              const OrderingTag ordering_tag = OrderingTag())
         : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8)
-        , ImplementationBase(backend)
+        , ImplementationBase(backend,ordering_tag)
       {
       }
 
@@ -188,9 +196,10 @@ namespace Dune {
                               T& c7,
                               T& c8,
                               T& c9,
-                              const Backend& backend = Backend())
+                              const Backend& backend = Backend(),
+                              const OrderingTag ordering_tag = OrderingTag())
         : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8,c9)
-        , ImplementationBase(backend)
+        , ImplementationBase(backend,ordering_tag)
       {
       }
 
