@@ -5,6 +5,7 @@
 #define DUNE_PDELAB_ORDERING_ORDERINGBASE_HH
 
 #include <dune/common/shared_ptr.hh>
+#include <dune/pdelab/common/exceptions.hh>
 #include <dune/pdelab/ordering/utility.hh>
 
 #include <vector>
@@ -42,12 +43,34 @@ namespace Dune {
           _delegate->map_index_dynamic(di,ci);
         else
           {
-            typename Traits::SizeType child_index = di.treeIndex().back();
+            typedef typename Traits::SizeType size_type;
+            size_type child_index = di.treeIndex().back();
             _children[child_index]->mapIndex(di.back_popped(),ci);
-            if (_container_blocked)
-              ci.push_back(child_index);
+            if (_merge_mode == MergeMode::lexicographic)
+              {
+                if (_container_blocked)
+                  ci.push_back(child_index);
+                else
+                  ci.back() += blockOffset(child_index);
+              }
             else
-              ci.back() += blockOffset(child_index);
+              {
+                size_type child_block_offset = _child_block_merge_offsets[child_index];
+                size_type child_block_size = _child_block_merge_offsets[child_index + 1] - child_block_offset;
+                size_type block_index = ci.back() / child_block_size;
+                size_type offset = ci.back() % child_block_size;
+                if (_container_blocked)
+                  {
+                    ci.back() = child_block_offset + offset;
+                    ci.push_back(block_index);
+                  }
+                else
+                  {
+                    size_type block_size = _child_block_merge_offsets.back();
+                    ci.back() = block_index * block_size + child_block_offset + offset;
+                  }
+              }
+
           }
       }
 
@@ -73,6 +96,7 @@ namespace Dune {
 
       typename Traits::SizeType blockOffset(const typename Traits::SizeType child_index) const
       {
+        assert(_merge_mode == MergeMode::lexicographic);
         return _child_block_offsets[child_index];
       }
 
@@ -81,16 +105,21 @@ namespace Dune {
         return _max_local_size;
       }
 
+      MergeMode::type mergeMode() const
+      {
+        return _merge_mode;
+      }
+
       void update()
       {
         std::fill(_child_size_offsets.begin(),_child_size_offsets.end(),0);
         std::fill(_child_block_offsets.begin(),_child_block_offsets.end(),0);
         _codim_used.reset();
         _codim_fixed_size.set();
-        typename Traits::SizeType block_carry = 0;
-        typename Traits::SizeType size_carry = 0;
         _max_local_size = 0;
         _block_count = 0;
+        typename Traits::SizeType block_carry = 0;
+        typename Traits::SizeType size_carry = 0;
         for (typename Traits::SizeType i = 0; i < _child_count; ++i)
           {
             _child_block_offsets[i+1] = (block_carry += _children[i]->blockCount());
@@ -101,15 +130,34 @@ namespace Dune {
             _max_local_size += _children[i]->maxLocalSize();
           }
         if (_container_blocked)
-          _block_count = _child_count;
+          if (_merge_mode == MergeMode::lexicographic)
+            {
+              _block_count = _child_count;
+            }
+          else
+            {
+              if (_child_block_offsets.back() % _child_block_merge_offsets.back() != 0)
+                DUNE_THROW(OrderingStructureError,
+                           "Invalid ordering structure: "
+                           << "total number of blocks ("
+                           << _child_block_offsets.back()
+                           << ") is not a multiple of the interleaved block size ("
+                           << _child_block_merge_offsets.back()
+                           << ")."
+                           );
+              _block_count = _child_block_offsets.back() / _child_block_merge_offsets.back();
+            }
         else
           _block_count = _child_block_offsets.back();
         _size = _child_size_offsets.back();
       }
 
       template<typename Node>
-      OrderingBase(Node& node, bool container_blocked, VirtualOrderingBase<DI,GDI,CI>* delegate = nullptr)
+      OrderingBase(Node& node,
+                   bool container_blocked,
+                   VirtualOrderingBase<DI,GDI,CI>* delegate = nullptr)
         : _container_blocked(container_blocked)
+        , _merge_mode(MergeMode::lexicographic)
         , _child_count(Node::has_dynamic_ordering_children ? Node::CHILDREN : 0)
         , _children(_child_count,nullptr)
         , _child_size_offsets(Node::CHILDREN + 1,0)
@@ -120,10 +168,32 @@ namespace Dune {
         , _delegate(delegate)
       {
         TypeTree::applyToTree(node,extract_child_bases<OrderingBase>(_children));
-
         // We contain all grid PartitionTypes that any of our children contain.
         mergePartitionSets(_children.begin(),_children.end());
       }
+
+      template<typename Node>
+      OrderingBase(Node& node,
+                   bool container_blocked,
+                   const std::vector<std::size_t>& merge_offsets,
+                   VirtualOrderingBase<DI,GDI,CI>* delegate = nullptr)
+        : _container_blocked(container_blocked)
+        , _merge_mode(MergeMode::interleaved)
+        , _child_count(Node::has_dynamic_ordering_children ? Node::CHILDREN : 0)
+        , _children(_child_count,nullptr)
+        , _child_size_offsets((_child_count > 0 ? _child_count + 1 : 0),0)
+        , _child_block_offsets((_child_count > 0 ? _child_count + 1 : 0),0)
+        , _child_block_merge_offsets(merge_offsets)
+        , _max_local_size(0)
+        , _size(0)
+        , _block_count(0)
+        , _delegate(delegate)
+      {
+        TypeTree::applyToTree(node,extract_child_bases<OrderingBase>(_children));
+        // We contain all grid PartitionTypes that any of our children contain.
+        mergePartitionSets(_children.begin(),_children.end());
+      }
+
 
       bool containerBlocked() const
       {
@@ -159,12 +229,14 @@ namespace Dune {
 
       bool _fixed_size;
       const bool _container_blocked;
+      const MergeMode::type _merge_mode;
 
       const std::size_t _child_count;
       std::vector<OrderingBase*> _children;
 
       std::vector<typename Traits::SizeType> _child_size_offsets;
       std::vector<typename Traits::SizeType> _child_block_offsets;
+      std::vector<typename Traits::SizeType> _child_block_merge_offsets;
       typename Traits::CodimFlag _codim_used;
       typename Traits::CodimFlag _codim_fixed_size;
 

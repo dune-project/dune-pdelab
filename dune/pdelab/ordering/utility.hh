@@ -14,6 +14,17 @@
 namespace Dune {
   namespace PDELab {
 
+    //! Index merging algorithm for global orderings.
+    struct MergeMode
+    {
+
+      enum type {
+        lexicographic, //!< Lexicographically ordered ([i1,i2],[j1,j2] -> [i1,i2,j1,j2]).
+        interleaved  //!< Indices are interleaved according to a user-supplied pattern ([i1,i2],[j1,j2] -> [i1,j1,i2,j2]).
+      };
+
+    };
+
 #ifndef DOXYGEN
 
     namespace ordering {

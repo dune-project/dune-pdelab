@@ -39,6 +39,40 @@ namespace Dune {
      */
     struct LexicographicOrderingTag { };
 
+    //! \brief Indicate interleaved ordering of the unknowns of non-leaf
+    //!        grid function spaces according to a given blocking pattern.
+    /**
+     * This class instructs the non-leaf GridFunctionSpaces to order the dofs
+     * of the child-GridFunctionSpaces in an interleaved manner in the
+     * combined dof-vector. The sizes of the individual blocks have to be passed
+     * to the constructor of the tag.
+     *
+     * \note In the vast majority of scenarios, you will want to use the
+     *       EntityBlockedOrderingTag instead of this one, as it is much less error-prone
+     *       and works in a wider variety of settings. Only use the InterleavedOrderingTag
+     *       if you know that the EntityBlockedOrderingTag will not work for you!
+     */
+    struct InterleavedOrderingTag
+    {
+
+      //! Constructs an InterleavedOrderingTag with a block structure given by the std::vector sizes.
+      InterleavedOrderingTag(std::vector<std::size_t> sizes)
+        : _offsets(sizes.size() + 1,0)
+      {
+        std::partial_sum(sizes.begin(),sizes.end(),_offsets.begin() + 1);
+      }
+
+      //! Returns a list of offsets for the child blocks.
+      const std::vector<std::size_t>& offsets() const
+      {
+        return _offsets;
+      }
+
+    private:
+
+      std::vector<std::size_t> _offsets;
+    };
+
     //! Mixin indicating whether a leaf GridFunctionSpace should never assume a const ordering size.
     template<bool v>
     struct NoConstOrderingSize

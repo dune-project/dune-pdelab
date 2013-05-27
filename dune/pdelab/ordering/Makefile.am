@@ -3,6 +3,7 @@ gridfunctionspace_HEADERS =			\
 	directleaflocalordering.hh		\
 	entityblockedlocalordering.hh		\
 	gridviewordering.hh			\
+	interleavedordering.hh			\
 	leafgridviewordering.hh			\
 	leaflocalordering.hh			\
 	lexicographicordering.hh		\
