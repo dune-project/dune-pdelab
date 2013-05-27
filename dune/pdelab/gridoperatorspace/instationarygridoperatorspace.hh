@@ -208,7 +208,7 @@ namespace Dune {
             if(has_subtriangulation){
               // translate local to global indices and add to global pattern
               for (size_t k=0; k<localpattern.size(); ++k)
-                add_entry(globalpattern,
+                this->add_entry(globalpattern,
                           lfsv.globalIndex(localpattern[k].i()),
                           lfsu.globalIndex(localpattern[k].j())
                           );
@@ -279,13 +279,13 @@ namespace Dune {
                     // translate local to global indices and add to global
                     // pattern
                     for (size_t k=0; k<localpattern_sn.size(); ++k)
-                      add_entry(globalpattern,
+                      this->add_entry(globalpattern,
                                 lfsv.globalIndex(localpattern_sn[k].i()),
                                 lfsun.globalIndex(localpattern_sn[k].j())
                                 );
 
                     for (size_t k=0; k<localpattern_ns.size(); ++k)
-                      add_entry(globalpattern,
+                      this->add_entry(globalpattern,
                                 lfsvn.globalIndex(localpattern_ns[k].i()),
                                 lfsu.globalIndex(localpattern_ns[k].j())
                                 );
@@ -313,7 +313,7 @@ namespace Dune {
                 if(has_subtriangulation){
                   // translate local to global indices and add to global pattern
                   for (size_t k=0; k<localpattern.size(); ++k)
-                    add_entry(globalpattern,
+                    this->add_entry(globalpattern,
                               lfsv.globalIndex(localpattern[k].i()),
                               lfsu.globalIndex(localpattern[k].j())
                               );
@@ -337,7 +337,7 @@ namespace Dune {
 
             // translate local to global indices and add to global pattern
             for (size_t k=0; k<localpattern.size(); ++k)
-              add_entry(globalpattern,
+              this->add_entry(globalpattern,
                         lfsv.globalIndex(localpattern[k].i()),
                         lfsu.globalIndex(localpattern[k].j())
                         );
@@ -932,13 +932,13 @@ namespace Dune {
                 ml_v);
 
             // accumulate to global matrix
-            etadd(lfsv,lfsu,ml,mat); // scheme is normalized 
+            this->etadd(lfsv,lfsu,ml,mat); // scheme is normalized
           }
 
         // set trivial conditions for constrained degrees of freedom
         typedef typename CV::const_iterator global_row_iterator;      
         for (global_row_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit)
-          set_trivial_row(cit->first,cit->second,mat);
+          this->set_trivial_row(cit->first,cit->second,mat);
         
         // set residual to zero on constrained dofs of spatial part (which is scaled by dt)
         Dune::PDELab::constrain_residual(*pconstraintsv,beta);
@@ -1434,7 +1434,7 @@ namespace Dune {
 
                   if(has_subtriangulation){
                     al *= b_rr*dt;
-                    etadd(lfsv,lfsu,al,a);
+                    this->etadd(lfsv,lfsu,al,a);
                   }
                 }
               LocalAssemblerCallSwitch<LM,LM::doAlphaVolume>::
@@ -1442,7 +1442,7 @@ namespace Dune {
                   ml_v);
 
               if(has_subtriangulation)
-                etadd(lfsv,lfsu,ml,a);
+                this->etadd(lfsv,lfsu,ml,a);
               
             } // sit
  
@@ -1525,9 +1525,9 @@ namespace Dune {
                                 al_nn_v);
 
                             // accumulate result
-                            al_sn *= b_rr*dt; etadd(lfsv,lfsun,al_sn,a);
-                            al_ns *= b_rr*dt; etadd(lfsvn,lfsu,al_ns,a);
-                            al_nn *= b_rr*dt; etadd(lfsvn,lfsun,al_nn,a);
+                            al_sn *= b_rr*dt; this->etadd(lfsv,lfsun,al_sn,a);
+                            al_ns *= b_rr*dt; this->etadd(lfsvn,lfsu,al_ns,a);
+                            al_nn *= b_rr*dt; this->etadd(lfsvn,lfsun,al_nn,a);
                           }
                       }
 
@@ -1548,7 +1548,7 @@ namespace Dune {
 
                     if(has_subtriangulation){
                       al *= b_rr*dt;
-                      etadd(lfsv,lfsu,al,a);
+                      this->etadd(lfsv,lfsu,al,a);
                     }
                   } // iit
               }
@@ -1560,17 +1560,17 @@ namespace Dune {
                     jacobian_volume_post_skeleton(la,ElementGeometry<Element>(*it),lfsu,xl,lfsv,
                       al_v);
                   al *= b_rr*dt;
-                  etadd(lfsv,lfsu,al,a);
+                  this->etadd(lfsv,lfsu,al,a);
                 }
 
               // accumulate result (note: a needs to be cleared outside)
-              etadd(lfsv,lfsu,ml,a); // scheme is normalized 
+              this->etadd(lfsv,lfsu,ml,a); // scheme is normalized
             }
           }
 
          typedef typename CV::const_iterator global_row_iterator;     
          for (global_row_iterator cit=pconstraintsv->begin(); cit!=pconstraintsv->end(); ++cit)
-           set_trivial_row(cit->first,cit->second,a);
+           this->set_trivial_row(cit->first,cit->second,a);
 
          //printmatrix(std::cout,a.base(),"global stiffness matrix","row",9,1);
       }
