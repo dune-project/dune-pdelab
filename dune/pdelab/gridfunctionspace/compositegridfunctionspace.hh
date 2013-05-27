@@ -80,12 +80,22 @@ namespace Dune {
 
       CompositeGridFunctionSpace(const Backend& backend, DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
         : NodeT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>))
-        , ImplementationBase(backend)
+        , ImplementationBase(backend,OrderingTag())
+      { }
+
+      CompositeGridFunctionSpace(const OrderingTag& ordering_tag, DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
+        : NodeT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>))
+        , ImplementationBase(Backend(),ordering_tag)
+      { }
+
+      CompositeGridFunctionSpace(const Backend& backend, const OrderingTag& ordering_tag, DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
+        : NodeT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>))
+        , ImplementationBase(backend,ordering_tag)
       { }
 
       CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
         : NodeT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>))
-        , ImplementationBase(Backend())
+        , ImplementationBase(Backend(),OrderingTag())
       { }
 
       //! Direct access to the DOF ordering.

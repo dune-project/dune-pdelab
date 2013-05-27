@@ -5,6 +5,9 @@
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_TAGS_HH
 
 #include <dune/grid/common/gridenums.hh>
+#include <dune/pdelab/common/typetree/utility.hh>
+#include <dune/pdelab/common/dofindex.hh>
+#include <dune/pdelab/common/simpledofindex.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -46,6 +49,40 @@ namespace Dune {
      * child 1 and so on.
      */
     struct LexicographicOrderingTag { };
+
+    //! \brief Indicate interleaved ordering of the unknowns of non-leaf
+    //!        grid function spaces according to a given blocking pattern.
+    /**
+     * This class instructs the non-leaf GridFunctionSpaces to order the dofs
+     * of the child-GridFunctionSpaces in an interleaved manner in the
+     * combined dof-vector. The sizes of the individual blocks have to be passed
+     * to the constructor of the tag.
+     *
+     * \note In the vast majority of scenarios, you will want to use the
+     *       EntityBlockedOrderingTag instead of this one, as it is much less error-prone
+     *       and works in a wider variety of settings. Only use the InterleavedOrderingTag
+     *       if you know that the EntityBlockedOrderingTag will not work for you!
+     */
+    struct InterleavedOrderingTag
+    {
+
+      //! Constructs an InterleavedOrderingTag with a block structure given by the std::vector sizes.
+      InterleavedOrderingTag(std::vector<std::size_t> sizes)
+        : _offsets(sizes.size() + 1,0)
+      {
+        std::partial_sum(sizes.begin(),sizes.end(),_offsets.begin() + 1);
+      }
+
+      //! Returns a list of offsets for the child blocks.
+      const std::vector<std::size_t>& offsets() const
+      {
+        return _offsets;
+      }
+
+    private:
+
+      std::vector<std::size_t> _offsets;
+    };
 
     //! Mixin indicating whether a leaf GridFunctionSpace should never assume a const ordering size.
     template<bool v>
@@ -179,6 +216,56 @@ namespace Dune {
     //! Tag denoting that an ordering will work with the simplified version of
     //! the LFSIndexCache.
     struct SimpleLFSCacheTag {};
+
+
+    template<typename GFS, typename Tag>
+    struct _build_dof_index_type
+    {
+      typedef Dune::PDELab::DOFIndex<std::size_t,TypeTree::TreeInfo<GFS>::depth,2> type;
+    };
+
+    template<typename GFS>
+    struct _build_dof_index_type<GFS,SingleCodimMapper>
+    {
+      typedef SimpleDOFIndex<typename GFS::Traits::SizeType> type;
+    };
+
+
+    template<typename GFS>
+    struct build_dof_index_type
+    {
+      typedef typename _build_dof_index_type<GFS,typename GFS::OrderingTag>::type type;
+    };
+
+
+#ifndef DOXYGEN
+
+    //! GridFunctionSpace to LocalFunctionSpace transformation.
+    /**
+     * gfs_to_lfs describes the transformation of a GridFunctionSpace tree to its corresponding
+     * LocalFunctionSpace tree and holds any information that may be required for performing
+     * the transformation.
+     *
+     * \warning The exact meaning of the template parameter is an implementation detail
+     *          and may change at any time, as the only class that is supposed to instantiate
+     *          the transformation is LocalFunctionSpace. Implementors of custom transformation
+     *          descriptors should only use information exported by gfs_to_lfs. In particular,
+     *          the registration declaration should not make any assumptions on GFS and just
+     *          treat it as some kind of opaque parameter type.
+     *
+     * \tparam GFS  the root GridFunctionSpace that the resulting LocalFunctionSpace tree
+     *              will be based on.
+     */
+    template<typename GFS>
+    struct gfs_to_lfs {
+
+      //! The MultiIndex type that will be used in the resulting LocalFunctionSpace tree.
+      //typedef Dune::PDELab::MultiIndex<std::size_t,TypeTree::TreeInfo<GFS>::depth> MultiIndex;
+      typedef typename build_dof_index_type<GFS>::type DOFIndex;
+
+    };
+
+#endif // DOXYGEN
 
     //! \} group GridFunctionSpace
   } // namespace PDELab

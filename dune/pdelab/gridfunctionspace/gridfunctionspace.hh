@@ -150,40 +150,44 @@ namespace Dune {
       };
 
       //! constructor
-      GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_, const B& backend = B())
+      GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
         : defaultce(ce_)
         , gv(gridview)
         , pfem(stackobject_to_shared_ptr(fem))
         , ce(ce_)
         , _backend(backend)
+        , _ordering_tag(ordering_tag)
       {
       }
 
       //! constructor
-      GridFunctionSpace (const GV& gridview, const shared_ptr<const FEM>& fem, const CE& ce_, const B& backend = B())
+      GridFunctionSpace (const GV& gridview, const shared_ptr<const FEM>& fem, const CE& ce_, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
         : defaultce(ce_)
         , gv(gridview)
         , pfem(fem)
         , ce(ce_)
         , _backend(backend)
+        , _ordering_tag(ordering_tag)
       {
       }
 
       //! constructor
-      GridFunctionSpace (const GV& gridview, const FEM& fem, const B& backend = B())
+      GridFunctionSpace (const GV& gridview, const FEM& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
         : gv(gridview)
         , pfem(stackobject_to_shared_ptr(fem))
         , ce(defaultce)
         , _backend(backend)
+        , _ordering_tag(ordering_tag)
       {
       }
 
       //! constructor
-      GridFunctionSpace (const GV& gridview, const shared_ptr<const FEM>& fem, const B& backend = B())
+      GridFunctionSpace (const GV& gridview, const shared_ptr<const FEM>& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
         : gv(gridview)
         , pfem(fem)
         , ce(defaultce)
         , _backend(backend)
+        , _ordering_tag(ordering_tag)
       {
       }
 
@@ -300,6 +304,16 @@ namespace Dune {
         return _backend;
       }
 
+      OrderingTag& orderingTag()
+      {
+        return _ordering_tag;
+      }
+
+      const OrderingTag& orderingTag() const
+      {
+        return _ordering_tag;
+      }
+
       const std::string& name() const
       {
         return _name;
@@ -323,6 +337,7 @@ namespace Dune {
       typename Traits::SizeType nglobal;
       const CE& ce;
       B _backend;
+      OrderingTag _ordering_tag;
       bool fixed_size;
       std::string _name;
 

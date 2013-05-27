@@ -334,9 +334,6 @@ namespace Dune {
 
     };
 
-    template<typename GFS, typename Transformation, typename OrderingTag>
-    struct leaf_gfs_to_ordering_descriptor;
-
 
     template<typename GFS, typename Transformation, typename Params>
     struct leaf_gfs_to_ordering_descriptor<GFS,Transformation,LeafOrderingTag<Params> >
@@ -368,16 +365,7 @@ namespace Dune {
 
     };
 
-
-
-    template<typename GridFunctionSpace, typename Params>
-    leaf_gfs_to_ordering_descriptor<
-      GridFunctionSpace,
-      gfs_to_ordering<Params>,
-      typename GridFunctionSpace::Traits::OrderingTag
-      >
-    lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_ordering<Params>* t, LeafGridFunctionSpaceTag tag);
-
+    // transformation registration is managed centrally in transformations.hh
 
 
    //! \} group GridFunctionSpace

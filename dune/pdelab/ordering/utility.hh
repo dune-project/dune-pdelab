@@ -9,54 +9,43 @@
 
 #include <dune/pdelab/common/dofindex.hh>
 #include <dune/pdelab/common/globaldofindex.hh>
-#include <dune/pdelab/common/typetree/traversal.hh>
-#include <dune/pdelab/common/typetree/accumulate_static.hh>
-
-#include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
+#include <dune/pdelab/ordering/transformations.hh>
 
 namespace Dune {
   namespace PDELab {
 
-    struct extract_max_container_depth
+    //! Index merging algorithm for global orderings.
+    struct MergeMode
     {
 
-      typedef std::size_t result_type;
-
-      template<typename Node, typename TreePath>
-      struct doVisit
-      {
-        static const bool value = true;
-      };
-
-      template<typename Node, typename TreePath>
-      struct visit
-      {
-        static const std::size_t result = Node::Traits::Backend::Traits::max_blocking_depth;
+      enum type {
+        lexicographic, //!< Lexicographically ordered ([i1,i2],[j1,j2] -> [i1,i2,j1,j2]).
+        interleaved  //!< Indices are interleaved according to a user-supplied pattern ([i1,i2],[j1,j2] -> [i1,j1,i2,j2]).
       };
 
     };
 
-    template<typename RootGFS>
-    struct gfs_to_ordering
-    {
-      static const std::size_t ci_depth =
-        TypeTree::AccumulateValue<RootGFS,
-                                  extract_max_container_depth,
-                                  TypeTree::max<std::size_t>,
-                                  0,
-                                  TypeTree::plus<std::size_t>
-                                  >::result + 1;
+#ifndef DOXYGEN
 
-      typedef typename gfs_to_lfs<RootGFS>::DOFIndex DOFIndex;
-      typedef MultiIndex<std::size_t,ci_depth> ContainerIndex;
-    };
+    namespace ordering {
 
-    template<typename GlobalTransformation>
-    struct gfs_to_local_ordering
-    {
-      typedef typename GlobalTransformation::DOFIndex DOFIndex;
-      typedef typename GlobalTransformation::ContainerIndex ContainerIndex;
-    };
+      // This is an implementation detail of the composite orderings, no need to confuse our users!
+      struct update_direct_children
+        : public TypeTree::DirectChildrenVisitor
+        , public TypeTree::DynamicTraversal
+      {
+
+        template<typename GFS, typename Child, typename TreePath, typename ChildIndex>
+        void afterChild(const GFS& gfs, Child& child, TreePath tp, ChildIndex childIndex) const
+        {
+          child.update();
+        }
+
+      };
+
+    }
+
+#endif // DOXYGEN
 
 
     struct DefaultDOFIndexAccessor

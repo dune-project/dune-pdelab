@@ -3,6 +3,7 @@ gridfunctionspace_HEADERS =			\
 	directleaflocalordering.hh		\
 	entityblockedlocalordering.hh		\
 	gridviewordering.hh			\
+	interleavedordering.hh			\
 	leafgridviewordering.hh			\
 	leaflocalordering.hh			\
 	lexicographicordering.hh		\
@@ -11,6 +12,7 @@ gridfunctionspace_HEADERS =			\
 	orderinginterface.hh			\
 	singlecodimleafordering.hh		\
 	subordering.hh				\
+	transformations.hh			\
 	utility.hh
 
 include $(top_srcdir)/am/global-rules

@@ -56,10 +56,6 @@ namespace Dune {
 
     };
 
-    template<typename GFS, typename Transformation, typename OrderingTag>
-    struct power_gfs_to_local_ordering_descriptor;
-
-
     template<typename GFS, typename Transformation>
     struct power_gfs_to_local_ordering_descriptor<GFS,Transformation,EntityBlockedOrderingTag>
     {
@@ -87,13 +83,6 @@ namespace Dune {
 
     };
 
-    template<typename GFS, typename Params>
-    power_gfs_to_local_ordering_descriptor<
-      GFS,
-      gfs_to_local_ordering<Params>,
-      typename GFS::OrderingTag
-      >
-    lookupNodeTransformation(GFS* gfs, gfs_to_local_ordering<Params>* t, PowerGridFunctionSpaceTag tag);
 
 
     template<typename GFS, typename Transformation>
@@ -123,21 +112,7 @@ namespace Dune {
 
     };
 
-    template<typename GFS, typename Params>
-    power_gfs_to_ordering_descriptor<
-      GFS,
-      gfs_to_ordering<Params>,
-      typename GFS::OrderingTag
-      >
-    lookupNodeTransformation(GFS* gfs, gfs_to_ordering<Params>* t, PowerGridFunctionSpaceTag tag);
-
-
-
-
-
-
-
-
+    // the generic registration for PowerGridFunctionSpace happens in transformations.hh
 
 
     //! Interface for merging index spaces
@@ -172,9 +147,6 @@ namespace Dune {
 
     };
 
-    template<typename GFS, typename Transformation, typename OrderingTag>
-    struct composite_gfs_to_local_ordering_descriptor;
-
 
     template<typename GFS, typename Transformation>
     struct composite_gfs_to_local_ordering_descriptor<GFS,Transformation,EntityBlockedOrderingTag>
@@ -203,15 +175,6 @@ namespace Dune {
 
     };
 
-    template<typename GFS, typename Params>
-    composite_gfs_to_local_ordering_descriptor<
-      GFS,
-      gfs_to_local_ordering<Params>,
-      typename GFS::OrderingTag
-      >
-    lookupNodeTransformation(GFS* gfs, gfs_to_local_ordering<Params>* t, CompositeGridFunctionSpaceTag tag);
-
-
     template<typename GFS, typename Transformation>
     struct composite_gfs_to_ordering_descriptor<GFS,Transformation,EntityBlockedOrderingTag>
     {
@@ -239,13 +202,7 @@ namespace Dune {
 
     };
 
-    template<typename GFS, typename Params>
-    composite_gfs_to_ordering_descriptor<
-      GFS,
-      gfs_to_ordering<Params>,
-      typename GFS::OrderingTag
-      >
-    lookupNodeTransformation(GFS* gfs, gfs_to_ordering<Params>* t, CompositeGridFunctionSpaceTag tag);
+   // the generic registration for CompositeGridFunctionSpace happens in transformations.hh
 
 
    //! \} group GridFunctionSpace

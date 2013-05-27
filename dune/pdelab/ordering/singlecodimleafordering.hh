@@ -4,6 +4,7 @@
 #ifndef DUNE_PDELAB_ORDERING_SINGLECODIMLEAFORDERING_HH
 #define DUNE_PDELAB_ORDERING_SINGLECODIMLEAFORDERING_HH
 
+#include <dune/pdelab/common/typetree/leafnode.hh>
 #include <dune/pdelab/ordering/utility.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 

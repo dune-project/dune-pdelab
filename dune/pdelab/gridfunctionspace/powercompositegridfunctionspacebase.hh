@@ -28,7 +28,7 @@ namespace Dune {
     //! \{
 
     //! Trait class for the multi component grid function spaces
-    template<typename G, typename B, typename M, std::size_t k>
+    template<typename G, typename B, typename O, std::size_t k>
     struct PowerCompositeGridFunctionSpaceTraits
     {
       enum{
@@ -51,14 +51,16 @@ namespace Dune {
       typedef B Backend;
 
       //! \brief mapper
-      typedef M MapperType;
+      typedef O MapperType;
+
+      typedef O OrderingTag;
 
       //! \brief short cut for size type exported by Backend
       typedef typename B::size_type SizeType;
     };
 
     //! Mixin class providing common functionality of PowerGridFunctionSpace and CompositeGridFunctionSpace
-    template<typename GridFunctionSpace, typename GV, typename B, typename Mapper, std::size_t k>
+    template<typename GridFunctionSpace, typename GV, typename B, typename O, std::size_t k>
     class PowerCompositeGridFunctionSpaceBase
     {
 
@@ -79,9 +81,9 @@ namespace Dune {
     public:
 
       //! export traits class
-      typedef PowerCompositeGridFunctionSpaceTraits<GV,B,Mapper,k> Traits;
+      typedef PowerCompositeGridFunctionSpaceTraits<GV,B,O,k> Traits;
 
-      typedef Mapper OrderingTag;
+      typedef O OrderingTag;
 
       // TODO: Do not just use constraints from child 0!
       //! extract type for storing constraints
@@ -155,8 +157,19 @@ namespace Dune {
         return _backend;
       }
 
-      PowerCompositeGridFunctionSpaceBase(const B& backend)
+      OrderingTag& orderingTag()
+      {
+        return _ordering_tag;
+      }
+
+      const OrderingTag& orderingTag() const
+      {
+        return _ordering_tag;
+      }
+
+      PowerCompositeGridFunctionSpaceBase(const B& backend, const OrderingTag& ordering_tag)
         : _backend(backend)
+        , _ordering_tag(ordering_tag)
       {}
 
       const std::string& name() const
@@ -172,6 +185,7 @@ namespace Dune {
     private:
 
       B _backend;
+      OrderingTag _ordering_tag;
       std::string _name;
 
     };
