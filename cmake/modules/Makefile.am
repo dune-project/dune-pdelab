@@ -1,4 +1,5 @@
 MODULES = 				\
+	DuneInitializerList.cmake	\
 	DunePdelabMacros.cmake		\
 	DuneInitializerList.cmake	\
 	FindPackageMultipass.cmake	\
