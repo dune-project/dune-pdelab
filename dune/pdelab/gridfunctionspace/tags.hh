@@ -24,6 +24,17 @@ namespace Dune {
     //! Tag for the intermediate base class of the CompositeGridFunctionSpace.
     struct CompositeGridFunctionSpaceBaseTag {};
 
+    //! \brief Indicate blocking of the unknowns by grid entity.
+    /**
+     * This class instructs the non-leaf GridFunctionSpaces to block the dofs
+     * of the child-GridFunctionSpaces by grid entity, i.e. first all dofs of
+     * all children that belong to vertex 0, then all dofs associated with vertex
+     * 1 etc.
+     *
+     * The EntityBlockedOrdering correctly handles different block sizes for different
+     * GeometryTypes as well as GridFunctionSpaces with variable sizes, e.g. for
+     * $p$-adaptivity and in a MultiDomain context.
+     */
     struct EntityBlockedOrderingTag {};
 
     //! \brief Indicate lexicographic ordering of the unknowns of non-leaf
