@@ -66,6 +66,36 @@ namespace Dune {
     struct InterleavedOrderingTag
     {
 
+#if HAVE_INITIALIZER_LIST || DOXYGEN
+
+      //! Constructs an InterleavedOrderingTag with a block structure given by the initializer list sizes.
+      /**
+       * If you have a sufficiently recent compiler, this constructor enables a much more readable
+       * syntax when creating a GridFunctionSpace. Assuming that GFS is a PowerGridFunctionSpace and VBE its
+       * associated vector backend, you can shorten the verbose
+       *
+       * \code
+       * std::vector<std::size_t> sizes(3);
+       * sizes[0] = 2;
+       * sizes[1] = 5;
+       * sizes[2] = 3;
+       * GFS gfs(child_gfs,VBE(),InterleavedOrderingTag(sizes));
+       * \endcode
+       *
+       * to the much shorter and more readable
+       *
+       * \code
+       * GFS gfs(child_gfs,VBE(),{2,5,3});
+       * \endcode
+       */
+      InterleavedOrderingTag(std::initializer_list<std::size_t> sizes)
+        : _offsets(sizes.size() + 1,0)
+      {
+        std::partial_sum(sizes.begin(),sizes.end(),_offsets.begin() + 1);
+      }
+
+#endif
+
       //! Constructs an InterleavedOrderingTag with a block structure given by the std::vector sizes.
       InterleavedOrderingTag(std::vector<std::size_t> sizes)
         : _offsets(sizes.size() + 1,0)
