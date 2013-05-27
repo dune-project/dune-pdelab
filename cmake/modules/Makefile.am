@@ -1,8 +1,11 @@
-MODULES = DunePdelabMacros.cmake \
-  FindPackageMultipass.cmake     \
-  FindPETSc.cmake                \
-  ResolveCompilerPaths.cmake     \
-  UsePETSc.cmake
+MODULES = 				\
+	DunePdelabMacros.cmake		\
+  FindCXXInitializerList.cmake \
+  FindCXXUnorderedContainers.cmake \
+	FindPackageMultipass.cmake	\
+	FindPETSc.cmake			\
+	ResolveCompilerPaths.cmake	\
+	UsePETSc.cmake
 
 modulesdir = $(datadir)/cmake/modules
 dist_modules_DATA = ${MODULES}
