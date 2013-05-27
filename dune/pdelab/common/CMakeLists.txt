@@ -6,6 +6,7 @@ set(common_HEADERS
         countingptr.hh                          
         cpstoragepolicy.hh                      
         crossproduct.hh                         
+        exceptions.hh
         function.hh                             
         functionutilities.hh                    
         functionwrappers.hh                     

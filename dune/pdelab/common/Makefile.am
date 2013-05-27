@@ -9,6 +9,7 @@ common_HEADERS =				\
 	crossproduct.hh				\
 	dofindex.hh				\
 	elementmapper.hh			\
+	exceptions.hh				\
 	function.hh				\
 	functionutilities.hh			\
 	functionwrappers.hh			\
