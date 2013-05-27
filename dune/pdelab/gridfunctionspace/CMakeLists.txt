@@ -1,12 +1,10 @@
 set(gridfunctionspacedir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/gridfunctionspace)
 set(gridfunctionspace_HEADERS
-  blockwiseordering.hh
   compositegridfunctionspace.hh
   compositeorderingutilities.hh
   constraints.hh
   debug.hh
   dofinfo.hh
-  dynamicblockwiseordering.hh
   genericdatahandle.hh
   gridfunctionspace.hh
   gridfunctionspaceutilities.hh
