@@ -1,7 +1,7 @@
 MODULES = 				\
-	DuneInitializerList.cmake	\
 	DunePdelabMacros.cmake		\
-	DuneInitializerList.cmake	\
+  FindCXXInitializerList.cmake \
+  FindCXXUnorderedContainers.cmake \
 	FindPackageMultipass.cmake	\
 	FindPETSc.cmake			\
 	ResolveCompilerPaths.cmake	\
