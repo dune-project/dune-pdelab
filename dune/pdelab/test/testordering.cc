@@ -21,6 +21,7 @@
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
+#include <dune/pdelab/ordering/interleavedordering.hh>
 
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 
@@ -84,13 +85,26 @@ struct test<2> {
     typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM,CON,VBE> GFS2;
     GFS2 gfs2(gv,q22dfem);
 
-    typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,VBE> P1GFS;
+    typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,VBE,Dune::PDELab::InterleavedOrderingTag> P1GFS;
+    P1GFS p1gfs(gfs1,gfs1,gfs1,VBE(),{1,1,1});
 
-    P1GFS p1gfs(gfs1,gfs1,gfs1);
+    //typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,VBE> P1GFS;
+    //P1GFS p1gfs(gfs1,gfs1,gfs1);
 
-    typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,2,VBE> PGFS;
+    typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::static_blocking,6> NVBE;
 
-    PGFS pgfs(p1gfs,p1gfs);
+    typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,2,NVBE,Dune::PDELab::InterleavedOrderingTag> PGFS;
+    PGFS pgfs(p1gfs,p1gfs,NVBE(),{3,3});
+
+    typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,VBE,Dune::PDELab::EntityBlockedOrderingTag> P2GFS;
+    P2GFS p2gfs(gfs1,gfs1,gfs1);
+
+    typedef Dune::PDELab::PowerGridFunctionSpace<P2GFS,2,NVBE,Dune::PDELab::EntityBlockedOrderingTag> P3GFS;
+    P3GFS p3gfs(p2gfs,p2gfs,NVBE());
+
+
+    //typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,2,VBE> PGFS;
+    //PGFS pgfs(p1gfs,p1gfs);
 
 
     /*
@@ -127,6 +141,7 @@ struct test<2> {
 
     check_ordering(gfs1);
     check_ordering(pgfs);
+    check_ordering(p3gfs);
 
     typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,VBE,Dune::PDELab::EntityBlockedOrderingTag> EBPGFS1;
     EBPGFS1 ebpgfs1(gfs1);

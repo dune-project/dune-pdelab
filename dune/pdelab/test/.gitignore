@@ -51,6 +51,7 @@ testtypetree-legacy
 testinterpolate
 testpoisson-globalfe
 testopbfem
+testordering
 testclock
 testproxynode
 testvectoriterator
