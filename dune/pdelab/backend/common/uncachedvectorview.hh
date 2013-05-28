@@ -149,6 +149,10 @@ namespace Dune {
       using ConstUncachedVectorView<V,LFSC>::cache;
       using ConstUncachedVectorView<V,LFSC>::size;
 
+      // Explicitly pull in operator[] from the base class to work around a problem
+      // with clang not finding the const overloads of the operator from the base class.
+      using ConstUncachedVectorView<V,LFSC>::operator[];
+
       UncachedVectorView()
       {}
 
