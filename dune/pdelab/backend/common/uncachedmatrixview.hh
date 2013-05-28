@@ -191,9 +191,9 @@ namespace Dune {
       using BaseT::N;
       using BaseT::M;
 
-      // Explicitly pull in operator[] from the base class to work around a problem
+      // Explicitly pull in operator() from the base class to work around a problem
       // with clang not finding the const overloads of the operator from the base class.
-      using BaseT::operator[];
+      using BaseT::operator();
 
       UncachedMatrixView()
       {}
