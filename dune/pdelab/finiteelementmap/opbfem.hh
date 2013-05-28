@@ -10,11 +10,11 @@ namespace Dune {
 
     //! wrap up element from local functions
     //! \ingroup FiniteElementMap
-    template<class D, class R, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=R>
+    template<class D, class R, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=R, PB::BasisType basisType = PB::BasisType::Pk>
     class OPBLocalFiniteElementMap
-      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::OPBLocalFiniteElement<D,R,k,d,bt,ComputationFieldType> >
+      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::OPBLocalFiniteElement<D,R,k,d,bt,ComputationFieldType,basisType> >
     {
-
+      typedef PB::BasisTraits<basisType> BasisTraits;
     public:
 
       bool fixedSize() const
@@ -25,14 +25,14 @@ namespace Dune {
       std::size_t size(GeometryType gt) const
       {
         if (gt == GeometryType(bt,d))
-          return Dune::PB::PkSize<k,d>::value;
+          return BasisTraits::template Size<k,d>::value;
         else
           return 0;
       }
 
       std::size_t maxLocalSize() const
       {
-        return Dune::PB::PkSize<k,d>::value;
+        return BasisTraits::template Size<k,d>::value;
       }
 
     };
