@@ -102,7 +102,7 @@ namespace Dune {
 
       std::size_t maxLocalSize() const
       {
-        return getFem(maxP).localCoefficients().size();
+        return getFEM(maxP).localCoefficients().size();
       }
 
     private:
