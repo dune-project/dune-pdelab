@@ -39,7 +39,7 @@ namespace Dune {
     };
 
     /**
-     * Traits class for the parameter class of a Navier Stokes local operator.
+     * Traits class for the parameter class of a Navier-Stokes local operator.
      */
     template<typename GV, typename RF>
     struct NavierStokesParameterTraits
@@ -74,8 +74,9 @@ namespace Dune {
       //! \brief boundary type value
       typedef StokesBoundaryCondition BoundaryCondition;
 
-      //! grid types
+      //! \brief grid element type
       typedef typename GV::Traits::template Codim<0>::Entity Element;
+      //! \brief grid intersection type
       typedef typename GV::Intersection Intersection;
     };
 
@@ -95,7 +96,7 @@ namespace Dune {
         typename GF::Traits::RangeType y;
         gf.evaluate(e,x,y);
         return y;
-      };
+      }
 
       /**
        * Compile-time switch allowing the evaluation of a
@@ -116,7 +117,7 @@ namespace Dune {
             y[d] = cy;
           }
         return y;
-      };
+      }
 
     }
 
@@ -214,18 +215,18 @@ namespace Dune {
         return _mu;
       }
 
-      //! Dynamic viscosity value from local cell coordinate
+      //! Density value from local cell coordinate
       template<typename EG>
       typename Traits::RangeField
-      rho (const EG& eg, const typename Traits::Domain& x) const
+      rho(const EG& eg, const typename Traits::Domain& x) const
       {
         return _rho;
       }
 
-      //! Dynamic viscosity value from local intersection coordinate
+      //! Density value from local intersection coordinate
       template<typename IG>
       typename Traits::RangeField
-      rho (const IG& ig, const typename Traits::IntersectionDomain& x) const
+      rho(const IG& ig, const typename Traits::IntersectionDomain& x) const
       {
         return _rho;
       }
@@ -261,6 +262,7 @@ namespace Dune {
 
 #ifdef DOXYGEN
 
+      //! Neumann boundary condition (stress)
       template<typename IG>
       typename Traits::VelocityRange>
       j(const IG& ig,
@@ -496,7 +498,7 @@ BoundaryDirichletFunction df;
 #endif
 
 
-}
-}
+} // end namespace PDELab
+} // end namespace Dune
 
 #endif
