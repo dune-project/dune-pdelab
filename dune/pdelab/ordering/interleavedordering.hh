@@ -63,7 +63,7 @@ namespace Dune {
             {
               for (ItIn in = begin; in != end; ++in, ++out)
                 {
-                  size_type child_index = in->back();
+                  size_type child_index = in->treeIndex().back();
                   size_type child_block_offset = this->_child_block_merge_offsets[child_index];
                   size_type child_block_size = this->_child_block_merge_offsets[child_index + 1] - child_block_offset;
                   size_type index = out->back();
@@ -77,7 +77,7 @@ namespace Dune {
             {
               for (ItIn in = begin; in != end; ++in, ++out)
                 {
-                  size_type child_index = in->back();
+                  size_type child_index = in->treeIndex().back();
                   size_type child_block_offset = this->_child_block_merge_offsets[child_index];
                   size_type child_block_size = this->_child_block_merge_offsets[child_index + 1] - child_block_offset;
                   size_type block_size = this->_child_block_merge_offsets.back();
