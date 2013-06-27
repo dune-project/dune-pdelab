@@ -43,34 +43,7 @@ namespace Dune {
           _delegate->map_index_dynamic(di,ci);
         else
           {
-            typedef typename Traits::SizeType size_type;
-            size_type child_index = di.treeIndex().back();
-            _children[child_index]->mapIndex(di.back_popped(),ci);
-            if (_merge_mode == MergeMode::lexicographic)
-              {
-                if (_container_blocked)
-                  ci.push_back(child_index);
-                else
-                  ci.back() += blockOffset(child_index);
-              }
-            else
-              {
-                size_type child_block_offset = _child_block_merge_offsets[child_index];
-                size_type child_block_size = _child_block_merge_offsets[child_index + 1] - child_block_offset;
-                size_type block_index = ci.back() / child_block_size;
-                size_type offset = ci.back() % child_block_size;
-                if (_container_blocked)
-                  {
-                    ci.back() = child_block_offset + offset;
-                    ci.push_back(block_index);
-                  }
-                else
-                  {
-                    size_type block_size = _child_block_merge_offsets.back();
-                    ci.back() = block_index * block_size + child_block_offset + offset;
-                  }
-              }
-
+            _mapIndex(di,ci);
           }
       }
 
@@ -115,7 +88,11 @@ namespace Dune {
         std::fill(_child_size_offsets.begin(),_child_size_offsets.end(),0);
         std::fill(_child_block_offsets.begin(),_child_block_offsets.end(),0);
         _codim_used.reset();
+#ifdef MULTIPLE_MEMBRANE_ELEMENTS
+        _codim_fixed_size.reset(); // hack
+#else
         _codim_fixed_size.set();
+#endif
         _max_local_size = 0;
         _block_count = 0;
         typename Traits::SizeType block_carry = 0;
@@ -223,6 +200,44 @@ namespace Dune {
       bool fixedSize(typename Traits::SizeType codim) const
       {
         return _codim_fixed_size.test(codim);
+      }
+
+      void setDelegate(const VirtualOrderingBase<DI,GDI,CI>* delegate)
+      {
+        _delegate = delegate;
+      }
+
+    protected:
+
+      void _mapIndex(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
+      {
+        typedef typename Traits::SizeType size_type;
+        size_type child_index = di.treeIndex().back();
+        _children[child_index]->mapIndex(di.back_popped(),ci);
+        if (_merge_mode == MergeMode::lexicographic)
+          {
+            if (_container_blocked)
+              ci.push_back(child_index);
+            else
+              ci.back() += blockOffset(child_index);
+          }
+        else
+          {
+            size_type child_block_offset = _child_block_merge_offsets[child_index];
+            size_type child_block_size = _child_block_merge_offsets[child_index + 1] - child_block_offset;
+            size_type block_index = ci.back() / child_block_size;
+            size_type offset = ci.back() % child_block_size;
+            if (_container_blocked)
+              {
+                ci.back() = child_block_offset + offset;
+                ci.push_back(block_index);
+              }
+            else
+              {
+                size_type block_size = _child_block_merge_offsets.back();
+                ci.back() = block_index * block_size + child_block_offset + offset;
+              }
+          }
       }
 
     public:
