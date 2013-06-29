@@ -1,54 +1,6 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// vi: set et ts=4 sw=2 sts=2:
 #ifndef DUNE_PDELAB_P0GHOSTCONSTRAINTS_HH
-#define DUNE_PDELAB_P0GHOSTCONSTRAINTS_HH
-
-#include "../common/geometrywrapper.hh"
-#include<dune/grid/common/gridenums.hh>
-
-namespace Dune {
-  namespace PDELab {
-
-    //! \addtogroup Constraints
-    //! \ingroup FiniteElementMap
-    //! \{
-
-    //! Parallel P0 constraints for nonoverlapping grids with ghosts
-    class P0ParallelGhostConstraints
-    {
-    public:
-      enum{doBoundary=false};
-      enum{doProcessor=false};
-      enum{doSkeleton=false};
-      enum{doVolume=true};
-
-      //! volume constraints
-      /**
-       * \tparam EG  element geometry
-       * \tparam LFS local function space
-       * \tparam T   TransformationType
-       */
-
-      template<typename EG, typename LFS, typename T>
-      void volume (const EG& eg, const LFS& lfs, T& trafo) const
-      {
-        // nothing to do for interior entities
-        if (eg.entity().partitionType()==Dune::InteriorEntity)
-          return;
-
-        // constrain ghost entities
-        else if  (eg.entity().partitionType()==Dune::GhostEntity){
-          typename T::RowType empty;
-          typedef typename LFS::Traits::SizeType size_type;
-          for (size_type i=0; i<lfs.size(); i++){
-            trafo[lfs.dofIndex(i)] = empty;
-          }
-        }
-
-      }
-    };
-    //! \}
-
-  }
-}
-
+#warning dune/pdelab/finiteelementmap/p0ghostconstraints.hh is deprecated, please use dune/pdelab/constraints/p0ghostconstraints.hh instead
+#include<dune/pdelab/constraints/p0ghostconstraints.hh>
 #endif

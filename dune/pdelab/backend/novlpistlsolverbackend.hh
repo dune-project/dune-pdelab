@@ -21,7 +21,7 @@
 #include <dune/istl/solvers.hh>
 #include <dune/istl/superlu.hh>
 
-#include <dune/pdelab/constraints/constraints.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include <dune/pdelab/newton/newton.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>

@@ -13,7 +13,7 @@
 #include <dune/pdelab/common/typetree/utility.hh>
 #include <dune/pdelab/common/typetree/transformation.hh>
 #include <dune/pdelab/common/typetree/visitor.hh>
-#include <dune/pdelab/constraints/constraintstransformation.hh>
+#include <dune/pdelab/constraints/common/constraintstransformation.hh>
 
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/utility.hh>
