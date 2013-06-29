@@ -62,10 +62,10 @@
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/backend/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/istlsolverbackend.hh>
-#include <dune/pdelab/constraints/conformingconstraints.hh>
-#include <dune/pdelab/constraints/hangingnodeconstraints.hh>
-#include <dune/pdelab/constraints/p0constraints.hh>
-#include <dune/pdelab/constraints/p0ghostconstraints.hh>
+#include <dune/pdelab/constraints/conforming.hh>
+#include <dune/pdelab/constraints/hangingnode.hh>
+#include <dune/pdelab/constraints/p0.hh>
+#include <dune/pdelab/constraints/p0ghost.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>

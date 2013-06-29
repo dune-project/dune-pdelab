@@ -1,13 +1,13 @@
 set(constraintsdir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/constraints)
 set(constraints_HEADERS
-    conformingconstraints.hh
-    hangingnodeconstraints.hh
+    conforming.hh
+    hangingnode.hh
     hangingnodemanager.hh
-    interiornodeconstraints.hh
-    mdfconstraints.hh
-    p0constraints.hh
-    p0ghostconstraints.hh
-    rt0constraints.hh)
+    interiornode.hh
+    mdf.hh
+    p0.hh
+    p0ghost.hh
+    raviartthomas0.hh)
 
 set(SUBDIRS
     common)

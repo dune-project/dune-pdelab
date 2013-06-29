@@ -1,13 +1,13 @@
 constraintsdir = $(includedir)/dune/pdelab/constraints
 constraints_HEADERS =			\
-	conformingconstraints.hh	\
-	hangingnodeconstraints.hh	\
+	conforming.hh	\
+	hangingnode.hh	\
 	hangingnodemanager.hh		\
-	interiornodeconstraints.hh	\
-	mfdconstraints.hh		\
-	p0constraints.hh		\
-	p0ghostconstraints.hh		\
-	rt0constraints.hh
+	interiornode.hh	\
+	mfd.hh		\
+	p0.hh		\
+	p0ghost.hh		\
+	raviartthomas0.hh
 
 SUBDIRS = common
 

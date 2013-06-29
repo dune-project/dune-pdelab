@@ -8,7 +8,7 @@
 #include<dune/geometry/referenceelements.hh>
 #include<dune/geometry/type.hh>
 #include<dune/pdelab/common/geometrywrapper.hh>
-#include"conformingconstraints.hh"
+#include"conforming.hh"
 #include"hangingnodemanager.hh"
 
 namespace Dune {
