@@ -88,11 +88,7 @@ namespace Dune {
         std::fill(_child_size_offsets.begin(),_child_size_offsets.end(),0);
         std::fill(_child_block_offsets.begin(),_child_block_offsets.end(),0);
         _codim_used.reset();
-#ifdef MULTIPLE_MEMBRANE_ELEMENTS
-        _codim_fixed_size.reset(); // hack
-#else
         _codim_fixed_size.set();
-#endif
         _max_local_size = 0;
         _block_count = 0;
         typename Traits::SizeType block_carry = 0;
