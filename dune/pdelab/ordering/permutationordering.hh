@@ -39,6 +39,7 @@ namespace Dune {
 
       public:
 
+        typedef Base<DI,GDI,CI,Node> This;
         typedef lexicographic_ordering::Base<DI,GDI,CI,Node> BaseT;
         typedef typename BaseT::Traits Traits;
 
@@ -56,6 +57,28 @@ namespace Dune {
           : BaseT(node,container_blocked),
             _perm(ordering_tag.permutation())
         {
+          // Make sure to use 'this' as a delegate in OrderingBase, so the virtual function call
+          // to 'map_index_dynamic' is found!
+          this->setDelegate(this);
+        }
+
+        //! Copy constructor
+        Base(const This& other)
+          : BaseT(other),
+            _perm(other._perm)
+        {
+          // Make sure to use 'this' as a delegate in OrderingBase, so the virtual function call
+          // to 'map_index_dynamic' is found!
+          this->setDelegate(this);
+        }
+
+        Base(This&& other)
+          : BaseT(std::move(other)),
+            _perm(std::move(other._perm))
+        {
+          // Make sure to use 'this' as a delegate in OrderingBase, so the virtual function call
+          // to 'map_index_dynamic' is found!
+          this->setDelegate(this);
         }
 
         template<typename ItIn, typename ItOut>
