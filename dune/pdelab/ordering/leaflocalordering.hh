@@ -139,9 +139,6 @@ namespace Dune {
 
     };
 
-    template<typename GFS, typename Transformation, typename OrderingTag>
-    struct leaf_gfs_to_local_ordering_descriptor;
-
     template<typename GFS, typename Transformation, typename Params>
     struct leaf_gfs_to_local_ordering_descriptor<GFS,Transformation,LeafOrderingTag<Params> >
     {
@@ -169,15 +166,6 @@ namespace Dune {
       }
 
     };
-
-    template<typename GFS, typename Params>
-    leaf_gfs_to_local_ordering_descriptor<
-      GFS,
-      gfs_to_local_ordering<Params>,
-      typename GFS::Traits::OrderingTag
-      >
-    lookupNodeTransformation(GFS* gfs, gfs_to_local_ordering<Params>* t, LeafGridFunctionSpaceTag tag);
-
 
   } // namespace PDELab
 } // namespace Dune
