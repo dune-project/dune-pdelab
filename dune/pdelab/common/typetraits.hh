@@ -35,6 +35,11 @@ namespace Dune {
         is_same<A, CompositeGridFunctionTag>::value;
     };
 
+
+    //! Helper function for generating a pointer to a value of type T in an unevaluated operand setting.
+    template<typename T>
+    T* declptr();
+
   } // end namespace PDELab
 } // end namespace Dune
 
