@@ -1,7 +1,7 @@
 /* begin dune-pdelab
    put the definitions for config.h specific to
    your project here. Everything above will be
-   overwritten 
+   overwritten
 */
 /* begin private */
 /* Name of package */
@@ -45,5 +45,11 @@
 
 /* Define to 1 if you have the <unordered_set> header file. */
 #cmakedefine HAVE_UNORDERED_SET 1
+
+/* Define to 1 if decltype if supported. */
+#cmakedefine HAVE_STD_DECLTYPE 1
+
+/* Define to 1 if GCC's __typeof__ extension is supported. */
+#cmakedefine HAVE_GCC___TYPEOF__ 1
 
 /* end dune-pdelab */
