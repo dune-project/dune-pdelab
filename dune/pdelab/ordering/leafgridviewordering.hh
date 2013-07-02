@@ -68,6 +68,35 @@ namespace Dune {
         this->setPartitionSet(localOrdering());
       }
 
+#ifndef DOXYGEN
+
+// we need to override the default copy / move ctor to fix the delegate pointer, but that is
+// hardly interesting to our users...
+
+      LeafGridViewOrdering(const LeafGridViewOrdering& r)
+        : NodeT(r.nodeStorage())
+        , BaseT(r)
+        , _gv(r._gv)
+        , _gt_dof_offsets(r._gt_dof_offsets)
+      {
+        this->setDelegate(this);
+      }
+
+#if HAVE_RVALUE_REFERENCES
+
+      LeafGridViewOrdering(LeafGridViewOrdering&& r)
+        : NodeT(r.nodeStorage())
+        , BaseT(std::move(r))
+        , _gv(r._gv)
+        , _gt_dof_offsets(std::move(r._gt_dof_offsets))
+      {
+        this->setDelegate(this);
+      }
+
+#endif // HAVE_RVALUE_REFERENCES
+
+#endif // DOXYGEN
+
       virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
       {
         mapIndex(di,ci);

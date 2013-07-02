@@ -464,6 +464,39 @@ namespace Dune {
         this->setPartitionSet(localOrdering());
       }
 
+#ifndef DOXYGEN
+
+// we need to override the default copy / move ctor to fix the delegate pointer, but that is
+// hardly interesting to our users...
+
+      GridViewOrdering(const GridViewOrdering& r)
+        : NodeT(r.nodeStorage())
+        , BaseT(r)
+        , _gv(r._gv)
+        , _gt_dof_offsets(r._gt_dof_offsets)
+        , _gt_entity_offsets(r._gt_entity_offsets)
+        , _entity_dof_offsets(r._entity_dof_offsets)
+      {
+        this->setDelegate(this);
+      }
+
+#if HAVE_RVALUE_REFERENCES
+
+      GridViewOrdering(GridViewOrdering&& r)
+        : NodeT(r.nodeStorage())
+        , BaseT(std::move(r))
+        , _gv(std::move(r._gv))
+        , _gt_dof_offsets(std::move(r._gt_dof_offsets))
+        , _gt_entity_offsets(std::move(r._gt_entity_offsets))
+        , _entity_dof_offsets(std::move(r._entity_dof_offsets))
+      {
+        this->setDelegate(this);
+      }
+
+#endif // HAVE_RVALUE_REFERENCES
+
+#endif // DOXYGEN
+
       LocalOrdering& localOrdering()
       {
         return this->template child<0>();
