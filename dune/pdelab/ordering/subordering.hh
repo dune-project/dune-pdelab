@@ -12,6 +12,7 @@
 #include <dune/pdelab/common/typetree/treepath.hh>
 #include <dune/pdelab/common/typetree/proxynode.hh>
 #include <dune/pdelab/common/typetree/childextraction.hh>
+#include <dune/pdelab/common/partitioninfoprovider.hh>
 #include <dune/pdelab/ordering/utility.hh>
 
 namespace Dune {

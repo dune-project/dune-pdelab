@@ -4,6 +4,7 @@
 #ifndef DUNE_PDELAB_ORDERING_LOCALORDERINGBASE_HH
 #define DUNE_PDELAB_ORDERING_LOCALORDERINGBASE_HH
 
+#include <dune/pdelab/common/partitioninfoprovider.hh>
 #include <dune/pdelab/ordering/utility.hh>
 
 #include <vector>

@@ -8,6 +8,7 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
 #include <dune/pdelab/common/typetree/leafnode.hh>
+#include <dune/pdelab/common/partitioninfoprovider.hh>
 #include <dune/pdelab/ordering/utility.hh>
 
 #include <vector>

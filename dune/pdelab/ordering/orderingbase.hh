@@ -6,6 +6,7 @@
 
 #include <dune/common/shared_ptr.hh>
 #include <dune/pdelab/common/exceptions.hh>
+#include <dune/pdelab/common/partitioninfoprovider.hh>
 #include <dune/pdelab/ordering/utility.hh>
 
 #include <vector>
