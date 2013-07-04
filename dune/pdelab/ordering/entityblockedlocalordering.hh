@@ -24,7 +24,6 @@
 namespace Dune {
   namespace PDELab {
 
-    //! Interface for merging index spaces
     template<typename ChildOrdering, std::size_t k>
     class PowerEntityBlockedLocalOrdering
       : public TypeTree::PowerNode<ChildOrdering,k>
@@ -86,7 +85,7 @@ namespace Dune {
 
 
     template<typename GFS, typename Transformation>
-    struct power_gfs_to_ordering_descriptor<GFS,Transformation,EntityBlockedOrderingTag>
+    struct power_gfs_to_entityblocked_ordering_descriptor
     {
 
       static const bool recursive = false;
@@ -112,10 +111,12 @@ namespace Dune {
 
     };
 
-    // the generic registration for PowerGridFunctionSpace happens in transformations.hh
+    template<typename GFS, typename Transformation>
+    power_gfs_to_entityblocked_ordering_descriptor<GFS,Transformation>
+    register_power_gfs_to_ordering_descriptor(GFS*,Transformation*,EntityBlockedOrderingTag*);
 
 
-    //! Interface for merging index spaces
+
     template<DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
     class CompositeEntityBlockedLocalOrdering
       : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
@@ -176,7 +177,7 @@ namespace Dune {
     };
 
     template<typename GFS, typename Transformation>
-    struct composite_gfs_to_ordering_descriptor<GFS,Transformation,EntityBlockedOrderingTag>
+    struct composite_gfs_to_entityblocked_ordering_descriptor
     {
 
       static const bool recursive = false;
@@ -202,7 +203,9 @@ namespace Dune {
 
     };
 
-   // the generic registration for CompositeGridFunctionSpace happens in transformations.hh
+    template<typename GFS, typename Transformation>
+    composite_gfs_to_entityblocked_ordering_descriptor<GFS,Transformation>
+    register_composite_gfs_to_ordering_descriptor(GFS*,Transformation*,EntityBlockedOrderingTag*);
 
 
    //! \} group GridFunctionSpace
