@@ -1,4 +1,5 @@
 install(FILES
+  decorator.hh
   directleaflocalordering.hh
   entityblockedlocalordering.hh
   gridviewordering.hh

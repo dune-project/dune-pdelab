@@ -1,5 +1,6 @@
 gridfunctionspacedir = $(includedir)/dune/pdelab/gridfunctionspace
 gridfunctionspace_HEADERS =			\
+	decorator.hh				\
 	directleaflocalordering.hh		\
 	entityblockedlocalordering.hh		\
 	gridviewordering.hh			\
