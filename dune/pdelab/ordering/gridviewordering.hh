@@ -658,7 +658,7 @@ namespace Dune {
         if (localOrdering().fixedSize())
           {
             _fixed_size = true;
-            _gt_dof_offsets.resize(gt_index_count + 1);
+            _gt_dof_offsets.assign(gt_index_count + 1,0);
 
             _block_count = 0;
 
