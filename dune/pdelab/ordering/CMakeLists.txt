@@ -10,6 +10,7 @@ install(FILES
   localorderingbase.hh
   orderingbase.hh
   orderinginterface.hh
+  permutedordering.hh
   singlecodimleafordering.hh
   subordering.hh
   transformations.hh
