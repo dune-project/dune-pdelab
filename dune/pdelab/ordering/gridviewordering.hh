@@ -451,9 +451,9 @@ namespace Dune {
        * construction.  This must be done by a seperate call to update().
        * This particular ordering however can be used right away.
        */
-      GridViewOrdering(const typename NodeT::NodeStorage& local_ordering, bool container_blocked)
+      GridViewOrdering(const typename NodeT::NodeStorage& local_ordering, bool container_blocked, typename BaseT::GFSData* gfs_data)
         : NodeT(local_ordering)
-        , BaseT(*this,container_blocked,this)
+        , BaseT(*this,container_blocked,gfs_data,this)
         , _gv(localOrdering().gridView())
       {
         // make sure to switch off container blocking handling in the local ordering,

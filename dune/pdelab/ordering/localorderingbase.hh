@@ -6,6 +6,7 @@
 
 #include <dune/pdelab/common/partitioninfoprovider.hh>
 #include <dune/pdelab/ordering/utility.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspacebase.hh>
 
 #include <vector>
 
@@ -39,6 +40,9 @@ namespace Dune {
       template<typename>
       friend class GridViewOrdering;
 
+      template<typename size_type>
+      friend struct ::Dune::PDELab::impl::update_ordering_data;
+
       typedef std::vector<LocalOrderingBase*> ChildVector;
       typedef typename ChildVector::iterator ChildIterator;
       typedef typename ChildVector::const_iterator ConstChildIterator;
@@ -50,6 +54,12 @@ namespace Dune {
       static const bool consume_tree_index = true;
 
       typedef LocalOrderingTraits<GV,DI,CI> Traits;
+
+    protected:
+
+      typedef impl::GridFunctionSpaceOrderingData<typename Traits::SizeType> GFSData;
+
+    public:
 
       void map_local_index(const typename Traits::SizeType geometry_type_index,
                            const typename Traits::SizeType entity_index,
@@ -250,10 +260,11 @@ namespace Dune {
       }
 
       template<typename Node>
-      LocalOrderingBase(Node& node, bool container_blocked)
+      LocalOrderingBase(Node& node, bool container_blocked, GFSData* gfs_data)
         : _container_blocked(container_blocked)
         , _child_count(Node::CHILDREN)
         , _children(Node::CHILDREN,nullptr)
+        , _gfs_data(gfs_data)
       {
         TypeTree::applyToTree(node,extract_child_bases<LocalOrderingBase>(_children));
 
@@ -284,6 +295,13 @@ namespace Dune {
       typename Traits::SizeType maxLocalSize() const
       {
         return _max_local_size;
+      }
+
+    private:
+
+      bool update_gfs_data_size(typename Traits::SizeType& size, typename Traits::SizeType& block_count) const
+      {
+        return false;
       }
 
     protected:
@@ -324,6 +342,7 @@ namespace Dune {
       }
 
 
+
       bool _fixed_size;
       bool _fixed_size_possible;
       bool _container_blocked;
@@ -338,6 +357,8 @@ namespace Dune {
       std::vector<typename Traits::SizeType> _gt_entity_offsets;
       std::vector<typename Traits::SizeType> _gt_dof_offsets;
       std::vector<typename Traits::SizeType> _entity_dof_offsets;
+
+      GFSData* _gfs_data;
 
     };
 

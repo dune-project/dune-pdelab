@@ -28,6 +28,8 @@ namespace Dune {
         : public OrderingBase<DI,GDI,CI>
       {
 
+        typedef OrderingBase<DI,GDI,CI> BaseT;
+
       public:
 
         typedef typename OrderingBase<DI,GDI,CI>::Traits Traits;
@@ -42,8 +44,8 @@ namespace Dune {
          * construction.  This must be done by a seperate call to update()
          * after all the children have been properly set up.
          */
-        Base(Node& node, bool container_blocked, const OrderingTag& ordering_tag)
-          : OrderingBase<DI,GDI,CI>(node,container_blocked,ordering_tag.offsets(),nullptr)
+        Base(Node& node, bool container_blocked, const OrderingTag& ordering_tag, typename BaseT::GFSData* gfs_data)
+          : BaseT(node,container_blocked,ordering_tag.offsets(),gfs_data,nullptr)
         {
           // This check looks a little weird, but there is always one offset more than
           // there are blocks (the first offsets is 0, and the last one is the "offset
@@ -160,9 +162,9 @@ namespace Dune {
        * \note This constructor must be present for ordering objects not at
        *       the leaf of the tree.
        */
-      PowerInterleavedOrdering(bool container_blocked, const InterleavedOrderingTag& ordering_tag, const typename Node::NodeStorage& children)
+      PowerInterleavedOrdering(bool container_blocked, const InterleavedOrderingTag& ordering_tag, const typename Node::NodeStorage& children, typename Base::GFSData* gfs_data)
         : Node(children)
-        , Base(*this,container_blocked,ordering_tag)
+        , Base(*this,container_blocked,ordering_tag,gfs_data)
       {}
 
       void update()
@@ -203,13 +205,13 @@ namespace Dune {
       template<typename TC>
       static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
       {
-        return typename result<TC>::type(gfs.backend().blocked(),gfs.orderingTag(),children);
+        return typename result<TC>::type(gfs.backend().blocked(),gfs.orderingTag(),children,const_cast<GFS*>(&gfs));
       }
 
       template<typename TC>
       static typename result<TC>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
       {
-        return make_shared<typename result<TC>::type>(gfs->backend().blocked(),gfs->orderingTag(),children);
+        return make_shared<typename result<TC>::type>(gfs->backend().blocked(),gfs->orderingTag(),children,const_cast<GFS*>(gfs.get()));
       }
 
     };
@@ -253,9 +255,9 @@ namespace Dune {
        * \note This constructor must be present for ordering objects not at
        *       the leaf of the tree.
        */
-      CompositeInterleavedOrdering(bool backend_blocked, const InterleavedOrderingTag& ordering_tag, DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
+      CompositeInterleavedOrdering(bool backend_blocked, const InterleavedOrderingTag& ordering_tag, typename Base::GFSData* gfs_data, DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
         : Node(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
-        , Base(*this,backend_blocked,ordering_tag)
+        , Base(*this,backend_blocked,ordering_tag,gfs_data)
       { }
 
       std::string name() const { return "CompositeInterleavedOrdering"; }
@@ -293,13 +295,13 @@ namespace Dune {
       template<typename... TC>
       static typename result<TC...>::type transform(const GFS& gfs, const Transformation& t, shared_ptr<TC>... children)
       {
-        return typename result<TC...>::type(gfs.backend().blocked(),gfs.orderingTag(),children...);
+        return typename result<TC...>::type(gfs.backend().blocked(),gfs.orderingTag(),const_cast<GFS*>(&gfs),children...);
       }
 
       template<typename... TC>
       static typename result<TC...>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, shared_ptr<TC>... children)
       {
-        return make_shared<typename result<TC...>::type>(gfs->backend().blocked(),gfs.orderingTag(),children...);
+        return make_shared<typename result<TC...>::type>(gfs->backend().blocked(),gfs.orderingTag(),const_cast<GFS*>(gfs.get()),children...);
       }
 
     };

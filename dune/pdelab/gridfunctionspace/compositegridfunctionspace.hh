@@ -71,6 +71,9 @@ namespace Dune {
                                       gfs_to_ordering<CompositeGridFunctionSpace>
                                       > ordering_transformation;
 
+      template<typename,typename>
+      friend class GridFunctionSpaceBase;
+
     public:
       typedef CompositeGridFunctionSpaceTag ImplementationTag;
 
@@ -115,8 +118,8 @@ namespace Dune {
       {
         if (!_ordering)
           {
-            _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
-            _ordering->update();
+            create_ordering();
+            this->update(*_ordering);
           }
         return _ordering;
       }
@@ -126,13 +129,22 @@ namespace Dune {
       {
         if (!_ordering)
           {
-            _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
-            _ordering->update();
+            create_ordering();
+            this->update(*_ordering);
           }
         return _ordering;
       }
 
+
     private:
+
+      // This method here is to avoid a double update of the Ordering when the user calls
+      // GFS::update() before GFS::ordering().
+      void create_ordering() const
+      {
+        _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+      }
+
       mutable shared_ptr<Ordering> _ordering;
 
     };

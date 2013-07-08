@@ -59,9 +59,9 @@ namespace Dune {
       }
 
 
-      LeafGridViewOrdering(const typename NodeT::NodeStorage& local_ordering, bool container_blocked)
+      LeafGridViewOrdering(const typename NodeT::NodeStorage& local_ordering, bool container_blocked, typename BaseT::GFSData* gfs_data)
         : NodeT(local_ordering)
-        , BaseT(*this,container_blocked,this)
+        , BaseT(*this,container_blocked,gfs_data,this)
         , _gv(this->template child<0>().gridView())
       {
         // copy grid partition information from local ordering.
@@ -384,12 +384,12 @@ namespace Dune {
 
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
-        return transformed_type(make_tuple(make_shared<LocalOrdering>(gfs.finiteElementMapStorage(),gfs.gridView())),gfs.backend().blocked());
+        return transformed_type(make_tuple(make_shared<LocalOrdering>(gfs.finiteElementMapStorage(),gfs.gridView())),gfs.backend().blocked(),const_cast<GFS*>(&gfs));
       }
 
       static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
       {
-        return make_shared<transformed_type>(make_tuple(make_shared<LocalOrdering>(gfs->finiteElementMapStorage(),gfs->gridView())),gfs->backend().blocked());
+        return make_shared<transformed_type>(make_tuple(make_shared<LocalOrdering>(gfs->finiteElementMapStorage(),gfs->gridView())),gfs->backend().blocked(),const_cast<GFS*>(gfs.get()));
       }
 
     };

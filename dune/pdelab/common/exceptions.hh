@@ -19,6 +19,22 @@ namespace Dune {
     {};
 
 
+    //! GridFunctionSpace-related error.
+    class GridFunctionSpaceError
+      : public Exception
+    {};
+
+    //! Called a GridFunctionSpace method that requires initialization of the space.
+    class UninitializedGridFunctionSpaceError
+      : public GridFunctionSpaceError
+    {};
+
+    //! Called a method on a GridFunctionSpace that is not valid
+    //! at its current place in the function space tree.
+    class GridFunctionSpaceHierarchyError
+      : public GridFunctionSpaceError
+    {};
+
     //! Ordering-related error.
     class OrderingError
       : public Exception

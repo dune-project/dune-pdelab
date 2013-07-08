@@ -4,12 +4,14 @@
 #ifndef DUNE_PDELAB_ORDERING_DIRECTLEAFLOCALORDERING_HH
 #define DUNE_PDELAB_ORDERING_DIRECTLEAFLOCALORDERING_HH
 
+#include <dune/common/nullptr.hh>
 #include <dune/geometry/referenceelements.hh>
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
 #include <dune/pdelab/common/typetree/leafnode.hh>
 #include <dune/pdelab/common/partitioninfoprovider.hh>
 #include <dune/pdelab/ordering/utility.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspacebase.hh>
 
 #include <vector>
 #include <numeric>
@@ -26,9 +28,18 @@ namespace Dune {
       template<typename>
       friend class LeafGridViewOrdering;
 
+      template<typename size_type>
+      friend struct ::Dune::PDELab::impl::update_ordering_data;
+
     public:
 
       typedef LocalOrderingTraits<GV,DI,CI> Traits;
+
+    private:
+
+      typedef impl::GridFunctionSpaceOrderingData<typename Traits::SizeType> GFSData;
+
+    public:
 
       void map_local_index(const typename Traits::SizeType geometry_type_index,
                            const typename Traits::SizeType entity_index,
@@ -100,6 +111,7 @@ namespace Dune {
         , _gv(gv)
         , _fixed_size(false)
         , _container_blocked(false)
+        , _gfs_data(nullptr)
       {
         // Extract contained grid PartitionTypes from OrderingTag.
         this->setPartitionSet(OrderingTag::partition_mask);
@@ -269,6 +281,12 @@ namespace Dune {
         return _max_local_size;
       }
 
+    private:
+
+      bool update_gfs_data_size(typename Traits::SizeType& size, typename Traits::SizeType& block_count) const
+      {
+        return false;
+      }
 
     protected:
 
@@ -289,6 +307,11 @@ namespace Dune {
       std::vector<typename Traits::SizeType> _gt_dof_sizes;
       std::vector<typename Traits::SizeType> _entity_dof_offsets;
       std::vector<typename Traits::SizeType> _local_gt_dof_sizes;
+
+      // This is only here to make the visitor happy that traverses all
+      // Orderings to manipulate the contained GFSData
+      GFSData* _gfs_data;
+
     };
 
 

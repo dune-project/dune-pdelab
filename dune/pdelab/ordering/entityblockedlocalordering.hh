@@ -46,7 +46,7 @@ namespace Dune {
 
       PowerEntityBlockedLocalOrdering(const typename NodeT::NodeStorage& child_storage, bool container_blocked)
         : NodeT(child_storage)
-        , BaseT(*this,container_blocked)
+        , BaseT(*this,container_blocked,nullptr)
       {}
 
       const typename Traits::GridView& gridView() const
@@ -100,13 +100,13 @@ namespace Dune {
 
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
-        transformed_type r(transformed_type(make_tuple(make_shared<LocalOrdering>(LocalOrderingTransformation::transform(gfs,gfs_to_local_ordering<Transformation>()))),gfs.backend().blocked()));
+        transformed_type r(make_tuple(make_shared<LocalOrdering>(LocalOrderingTransformation::transform(gfs,gfs_to_local_ordering<Transformation>()))),gfs.backend().blocked(),const_cast<GFS*>(&gfs));
         return std::move(r);
       }
 
       static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
       {
-        transformed_storage_type r(make_shared<transformed_type>(make_tuple(LocalOrderingTransformation::transform_storage(gfs,gfs_to_local_ordering<Transformation>())),gfs->backend().blocked()));
+        transformed_storage_type r(make_shared<transformed_type>(make_tuple(LocalOrderingTransformation::transform_storage(gfs,gfs_to_local_ordering<Transformation>())),gfs->backend().blocked(),const_cast<GFS*>(gfs.get())));
         return std::move(r);
       }
 
@@ -137,7 +137,7 @@ namespace Dune {
 
       CompositeEntityBlockedLocalOrdering(bool container_blocked, DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
         : Node(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
-        , Base(*this,container_blocked)
+        , Base(*this,container_blocked,nullptr)
       {}
 
       const typename Traits::GridView& gridView() const
@@ -190,13 +190,13 @@ namespace Dune {
 
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
-        transformed_type r(make_tuple(make_shared<LocalOrdering>(LocalOrderingTransformation::transform(gfs,gfs_to_local_ordering<Transformation>()))),gfs.backend().blocked());
+        transformed_type r(make_tuple(make_shared<LocalOrdering>(LocalOrderingTransformation::transform(gfs,gfs_to_local_ordering<Transformation>()))),gfs.backend().blocked(),const_cast<GFS*>(&gfs));
         return std::move(r);
       }
 
       static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
       {
-        transformed_storage_type r(make_shared<transformed_type>(make_tuple(LocalOrderingTransformation::transform_storage(gfs,gfs_to_local_ordering<Transformation>())),gfs->backend().blocked()));
+        transformed_storage_type r(make_shared<transformed_type>(make_tuple(LocalOrderingTransformation::transform_storage(gfs,gfs_to_local_ordering<Transformation>())),gfs->backend().blocked()),const_cast<GFS*>(gfs.get()));
         return std::move(r);
       }
 
