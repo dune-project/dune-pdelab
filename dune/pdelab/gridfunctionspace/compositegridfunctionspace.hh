@@ -116,6 +116,11 @@ namespace Dune {
       //! Direct access to the storage of the DOF ordering.
       shared_ptr<const Ordering> orderingStorage() const
       {
+        if (!this->isRootSpace())
+          {
+            DUNE_THROW(GridFunctionSpaceHierarchyError,
+                       "Ordering can only be obtained for root space in GridFunctionSpace tree.");
+          }
         if (!_ordering)
           {
             create_ordering();
@@ -127,6 +132,11 @@ namespace Dune {
       //! Direct access to the storage of the DOF ordering.
       shared_ptr<Ordering> orderingStorage()
       {
+        if (!this->isRootSpace())
+          {
+            DUNE_THROW(GridFunctionSpaceHierarchyError,
+                       "Ordering can only be obtained for root space in GridFunctionSpace tree.");
+          }
         if (!_ordering)
           {
             create_ordering();
