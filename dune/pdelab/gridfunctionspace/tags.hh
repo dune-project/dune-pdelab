@@ -9,6 +9,8 @@
 #include <dune/pdelab/common/dofindex.hh>
 #include <dune/pdelab/common/simpledofindex.hh>
 
+#include <numeric>
+
 namespace Dune {
   namespace PDELab {
 
