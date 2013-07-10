@@ -180,7 +180,7 @@ namespace Dune {
         //! Re-exported constraints container from the original GridFunctionSpace.
         template<typename E>
         struct ConstraintsContainer
-          : public GFS::ConstraintsContainer<E>
+          : public GFS::template ConstraintsContainer<E>
         {};
 
 #endif // HAVE_TEMPLATE_ALIASES

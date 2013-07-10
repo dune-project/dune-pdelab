@@ -9,6 +9,8 @@
 #include <dune/pdelab/common/dofindex.hh>
 #include <dune/pdelab/common/simpledofindex.hh>
 
+#include <numeric>
+
 namespace Dune {
   namespace PDELab {
 
@@ -112,6 +114,42 @@ namespace Dune {
     private:
 
       std::vector<std::size_t> _offsets;
+    };
+
+
+    //! \brief Indicate permuted ordering of the unknowns of non-leaf
+    //!        grid function spaces according to a given permutation.
+    /**
+     * This class instructs the non-leaf GridFunctionSpaces to reorder the dofs
+     * given by a permutation of indices (in form of a std::vector<size_t>
+     * as handed over in the constructor.
+     *
+     */
+    struct PermutationOrderingTag
+    {
+
+      //! Constructs n PermutationOrderingTag using the permutation given by std::vector perm.
+      PermutationOrderingTag(std::vector<std::size_t> perm)
+      : _perm(perm)
+      {
+      }
+
+      //! Returns the permutation
+      const std::vector<std::size_t>& permutation() const
+      {
+        return _perm;
+      }
+
+      //! Replaces the existing permutation by a new one
+      void updatePermutation(const std::vector<std::size_t>& perm)
+      {
+        assert(perm.size() == _perm.size());
+        _perm = perm;
+      }
+
+    private:
+
+      std::vector<std::size_t> _perm;
     };
 
     //! Mixin indicating whether a leaf GridFunctionSpace should never assume a const ordering size.

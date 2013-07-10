@@ -90,7 +90,7 @@ namespace Dune
       };
 
       //! The size type
-      typedef typename Eigen::SparseMatrix<double, Eigen::RowMajor>::Index size_type;
+      typedef Eigen::SparseMatrix<double, Eigen::RowMajor>::Index size_type;
 
       //! extract type of container element
       template< class C >
