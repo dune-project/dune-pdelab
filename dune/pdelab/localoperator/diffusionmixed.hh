@@ -76,7 +76,6 @@ namespace Dune {
 
         // dimensions
         const int dim = EG::Geometry::dimension;
-        const int dimw = EG::Geometry::dimensionworld;
 
         // evaluate transformation which must be linear
         Dune::FieldVector<DF,dim> pos; pos = 0.0;
@@ -227,7 +226,6 @@ namespace Dune {
 
         // dimensions
         const int dim = IG::dimension;
-        const int dimw = IG::dimensionworld;
 
         // evaluate transformation which must be linear
         Dune::FieldVector<DF,dim> pos; pos = 0.0;

@@ -73,7 +73,6 @@ namespace Dune {
 
         // dimensions
         const int dim = EG::Geometry::dimension;
-        const int dimw = EG::Geometry::dimensionworld;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -148,7 +147,6 @@ namespace Dune {
 
         // dimensions
         const int dim = EG::Geometry::dimension;
-        const int dimw = EG::Geometry::dimensionworld;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
