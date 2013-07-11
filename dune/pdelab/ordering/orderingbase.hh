@@ -198,12 +198,18 @@ namespace Dune {
         return _codim_fixed_size.test(codim);
       }
 
+    protected:
+
+      //! Set the delegate called in mapIndex().
+      /**
+       * When copying an Ordering with a delegate, the derived Ordering
+       * *must* call this method with 'this' as its argument in the copy
+       * and the move constructors!
+       */
       void setDelegate(const VirtualOrderingBase<DI,GDI,CI>* delegate)
       {
         _delegate = delegate;
       }
-
-    protected:
 
       void _mapIndex(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
       {
