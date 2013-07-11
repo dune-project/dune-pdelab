@@ -403,7 +403,7 @@ namespace Dune {
       gfs_to_lfs<Params>,
       power_gfs_to_lfs_template<PowerGridFunctionSpace,gfs_to_lfs<Params> >::template result
       >
-    lookupNodeTransformation(PowerGridFunctionSpace* pgfs, gfs_to_lfs<Params>* t, PowerGridFunctionSpaceTag tag);
+    registerNodeTransformation(PowerGridFunctionSpace* pgfs, gfs_to_lfs<Params>* t, PowerGridFunctionSpaceTag* tag);
 
 
     //=======================================
@@ -481,7 +481,7 @@ namespace Dune {
       gfs_to_lfs<Params>,
       variadic_composite_gfs_to_lfs_template<CompositeGridFunctionSpace,gfs_to_lfs<Params> >::template result
       >
-    lookupNodeTransformation(CompositeGridFunctionSpace* cgfs, gfs_to_lfs<Params>* t, CompositeGridFunctionSpaceTag tag);
+    registerNodeTransformation(CompositeGridFunctionSpace* cgfs, gfs_to_lfs<Params>* t, CompositeGridFunctionSpaceTag* tag);
 
 #else
 
@@ -512,7 +512,7 @@ namespace Dune {
       gfs_to_lfs<Params>,
       composite_gfs_to_lfs_template<CompositeGridFunctionSpace,gfs_to_lfs<Params> >::template result
       >
-    lookupNodeTransformation(CompositeGridFunctionSpace* cgfs, gfs_to_lfs<Params>* t, CompositeGridFunctionSpaceTag tag);
+    registerNodeTransformation(CompositeGridFunctionSpace* cgfs, gfs_to_lfs<Params>* t, CompositeGridFunctionSpaceTag* tag);
 
 #endif
 
@@ -673,7 +673,7 @@ namespace Dune {
       gfs_to_lfs<Params>,
       LeafLocalFunctionSpaceNode<GridFunctionSpace,typename gfs_to_lfs<Params>::DOFIndex>
       >
-    lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_lfs<Params>* t, LeafGridFunctionSpaceTag tag);
+    registerNodeTransformation(GridFunctionSpace* gfs, gfs_to_lfs<Params>* t, LeafGridFunctionSpaceTag* tag);
 
     //=======================================
     // local function facade

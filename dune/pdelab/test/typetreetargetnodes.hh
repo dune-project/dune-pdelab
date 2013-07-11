@@ -160,16 +160,16 @@ struct TestTransformation {};
 // register leaf node
 template<typename SL>
 Dune::PDELab::TypeTree::GenericLeafNodeTransformation<SimpleLeaf,TestTransformation,TargetLeaf>
-lookupNodeTransformation(SL* sl, TestTransformation* t, SimpleLeafTag tag);
+registerNodeTransformation(SL* sl, TestTransformation* t, SimpleLeafTag* tag);
 
 template<typename SP>
 Dune::PDELab::TypeTree::GenericPowerNodeTransformation<SP,TestTransformation,TargetPower>
-lookupNodeTransformation(SP* sp, TestTransformation* t, SimplePowerTag tag);
+registerNodeTransformation(SP* sp, TestTransformation* t, SimplePowerTag* tag);
 
 template<typename SVC>
 Dune::PDELab::TypeTree::GenericVariadicCompositeNodeTransformation<SVC,TestTransformation,TargetVariadicComposite>
-lookupNodeTransformation(SVC* svc, TestTransformation* t, SimpleVariadicCompositeTag tag);
+registerNodeTransformation(SVC* svc, TestTransformation* t, SimpleVariadicCompositeTag* tag);
 
 template<typename SC>
 Dune::PDELab::TypeTree::GenericCompositeNodeTransformation<SC,TestTransformation,TargetComposite>
-lookupNodeTransformation(SC* svc, TestTransformation* t, SimpleCompositeTag tag);
+registerNodeTransformation(SC* svc, TestTransformation* t, SimpleCompositeTag* tag);
