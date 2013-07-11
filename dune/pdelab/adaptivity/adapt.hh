@@ -501,7 +501,7 @@ namespace Dune {
         const int level = e.level();
         const IndexSet& indexset = grid.leafIndexSet();
         const IndexType index = indexset.index(e);
-        const int i = (refinementMap.find(index))->second;
+        // const int i = (refinementMap.find(index))->second;
 
         // implement true bulk criterion for elliptic problems
         if (eta[index]>=(1.0-refine)*globalEstimate && level < max)
@@ -1275,7 +1275,6 @@ namespace Dune {
             LFSU lfsu(gfsu);
             DGF dgf(gfsu,u);
             const FEM& fem = gfsu.finiteElementMap();
-            IB ib = IB();
             std::vector<typename U::ElementType> ul;
 
             // iterate over all elems
