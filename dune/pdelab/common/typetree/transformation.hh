@@ -63,8 +63,7 @@ namespace Dune {
       template<typename S, typename T, typename Tag>
       struct LookupNodeTransformation
       {
-        // TODO: add configure test and replace __typeof__ with a macro
-        typedef __typeof__(registerNodeTransformation(declptr<S>(),declptr<T>(),declptr<Tag>())) type;
+        typedef DUNE_DECLTYPE(registerNodeTransformation(declptr<S>(),declptr<T>(),declptr<Tag>())) type;
         dune_static_assert((!is_same<type,void>::value), "Unable to find valid transformation descriptor");
       };
 
