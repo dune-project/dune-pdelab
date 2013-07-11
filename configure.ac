@@ -43,6 +43,7 @@ AC_CONFIG_FILES([
   dune/pdelab/common/Makefile
   dune/pdelab/common/typetree/Makefile
   dune/pdelab/constraints/Makefile
+  dune/pdelab/constraints/common/Makefile
   dune/pdelab/experimental/common/Makefile
   dune/pdelab/experimental/Makefile
   dune/pdelab/finiteelement/Makefile

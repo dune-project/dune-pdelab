@@ -3,7 +3,7 @@
 
 #include<dune/common/timer.hh>
 #include<dune/pdelab/backend/backendselector.hh>
-#include<dune/pdelab/constraints/constraints.hh>
+#include<dune/pdelab/constraints/common/constraints.hh>
 #include<iostream>
 
 #include "../backend/solver.hh"

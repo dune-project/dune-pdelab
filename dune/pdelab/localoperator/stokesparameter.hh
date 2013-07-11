@@ -1,9 +1,9 @@
 #ifndef DUNE_PDELAB_LOCALOPERATOR_STOKESPARAMETER_HH
 #define DUNE_PDELAB_LOCALOPERATOR_STOKESPARAMETER_HH
 
-#include <dune/pdelab/constraints/constraintsparameters.hh>
 #include <dune/common/parametertree.hh>
 #include <dune/pdelab/common/function.hh>
+#include <dune/pdelab/constraints/common/constraintsparameters.hh>
 
 namespace Dune {
   namespace PDELab {

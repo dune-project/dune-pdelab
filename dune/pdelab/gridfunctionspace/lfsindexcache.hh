@@ -14,7 +14,7 @@
 
 #include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/common/unordered_map.hh>
-#include <dune/pdelab/constraints/constraintstransformation.hh>
+#include <dune/pdelab/constraints/common/constraintstransformation.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 
 namespace Dune {
