@@ -9,6 +9,7 @@
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/array.hh>
 #include <dune/common/tuples.hh>
+#include <dune/pdelab/common/typetraits.hh>
 #include <dune/pdelab/common/typetree/nodetags.hh>
 #include <dune/pdelab/common/typetree/utility.hh>
 
@@ -24,12 +25,14 @@ namespace Dune {
 
 #ifdef DOXYGEN
 
-      //! Look up transformation descriptor to transform SourceNode with Transformation.
+      //! Register transformation descriptor to transform SourceNode with Transformation.
       /**
        * The tree transformation engine expects this function to return a struct describing
        * how to perform the Transformation for The type SourceNode, which has ImplementationTag Tag.
        * This function has to be specialized for every combination of Transformation and Tag that
        * the transformation engine should support.
+       *
+       * \note The arguments are given as pointers to avoid problems with incomplete types.
        *
        * \note The specialization does not have to placed in the namespace Dune::PDELab::TypeTree,
        *       it can simply reside in the same namespace as either the SourceNode or the Tag.
@@ -43,7 +46,7 @@ namespace Dune {
        * \tparam Tag            The implementation tag of the source node.
        */
       template<typename SourceNode, typename Transformation, typename Tag>
-      void lookupNodeTransformation(SourceNode* s, Transformation* t, Tag tag);
+      void registerNodeTransformation(SourceNode*, Transformation*, Tag*);
 
 #else // DOXYGEN
 
@@ -60,15 +63,20 @@ namespace Dune {
       template<typename S, typename T, typename Tag>
       struct LookupNodeTransformation
       {
-        // TODO: add configure test and replace __typeof__ with a macro
-        typedef __typeof__(lookupNodeTransformation(static_cast<S*>(0),static_cast<T*>(0),Tag())) type;
+
+        typedef DUNE_DECLTYPE(registerNodeTransformation(declptr<S>(),declptr<T>(),declptr<Tag>())) lookup_type;
+
+        typedef typename evaluate_if_meta_function<
+          lookup_type
+          >::type type;
+
         dune_static_assert((!is_same<type,void>::value), "Unable to find valid transformation descriptor");
       };
 
       struct EmptyNodeTransformation;
 
       // Specialization for EmptyNode. This is mainly here to save the user from possible
-      // ambiguities when looking up lookupNodeTransformation().
+      // ambiguities when looking up registerNodeTransformation().
       template<typename S, typename T>
       struct LookupNodeTransformation<S,T,EmptyNodeTag>
       {
