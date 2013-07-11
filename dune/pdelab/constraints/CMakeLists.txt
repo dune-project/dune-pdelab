@@ -4,6 +4,7 @@ set(constraints_HEADERS
     hangingnode.hh
     hangingnodemanager.hh
     interiornode.hh
+    interiornodeconstraints.hh
     mdf.hh
     p0.hh
     p0ghost.hh
