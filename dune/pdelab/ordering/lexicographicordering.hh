@@ -36,6 +36,8 @@ namespace Dune {
         : public OrderingBase<DI,GDI,CI>
       {
 
+        typedef OrderingBase<DI,GDI,CI> BaseT;
+
       public:
 
         typedef typename OrderingBase<DI,GDI,CI>::Traits Traits;
@@ -50,8 +52,8 @@ namespace Dune {
          * construction.  This must be done by a seperate call to update()
          * after all the children have been properly set up.
          */
-        Base(Node& node, bool container_blocked)
-          : OrderingBase<DI,GDI,CI>(node,container_blocked,nullptr)
+        Base(Node& node, bool container_blocked, typename BaseT::GFSData* gfs_data)
+          : BaseT(node,container_blocked,gfs_data,nullptr)
         {
         }
 
@@ -127,9 +129,9 @@ namespace Dune {
        * \note This constructor must be present for ordering objects not at
        *       the leaf of the tree.
        */
-      PowerLexicographicOrdering(bool container_blocked, const typename Node::NodeStorage& children)
+      PowerLexicographicOrdering(bool container_blocked, const typename Node::NodeStorage& children, typename Base::GFSData* gfs_data)
         : Node(children)
-        , Base(*this,container_blocked)
+        , Base(*this,container_blocked,gfs_data)
       { }
 
       void update()
@@ -170,13 +172,13 @@ namespace Dune {
       template<typename TC>
       static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
       {
-        return typename result<TC>::type(gfs.backend().blocked(),children);
+        return typename result<TC>::type(gfs.backend().blocked(),children,const_cast<GFS*>(&gfs));
       }
 
       template<typename TC>
       static typename result<TC>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
       {
-        return make_shared<typename result<TC>::type>(gfs->backend().blocked(),children);
+        return make_shared<typename result<TC>::type>(gfs->backend().blocked(),children,const_cast<GFS*>(gfs.get()));
       }
 
     };
@@ -223,9 +225,9 @@ namespace Dune {
        * \note This constructor must be present for ordering objects not at
        *       the leaf of the tree.
        */
-      CompositeLexicographicOrdering(bool backend_blocked, DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
+      CompositeLexicographicOrdering(bool backend_blocked, typename Base::GFSData* gfs_data, DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
         : Node(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
-        , Base(*this,backend_blocked)
+        , Base(*this,backend_blocked,gfs_data)
       { }
 
       std::string name() const { return "CompositeLexicographicOrdering"; }
@@ -263,13 +265,13 @@ namespace Dune {
       template<typename... TC>
       static typename result<TC...>::type transform(const GFS& gfs, const Transformation& t, shared_ptr<TC>... children)
       {
-        return typename result<TC...>::type(gfs.backend().blocked(),children...);
+        return typename result<TC...>::type(gfs.backend().blocked(),const_cast<GFS*>(&gfs),children...);
       }
 
       template<typename... TC>
       static typename result<TC...>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, shared_ptr<TC>... children)
       {
-        return make_shared<typename result<TC...>::type>(gfs->backend().blocked(),children...);
+        return make_shared<typename result<TC...>::type>(gfs->backend().blocked(),const_cast<GFS*>(gfs.get()),children...);
       }
 
     };

@@ -19,6 +19,7 @@ common_HEADERS =				\
 	jacobiantocurl.hh			\
 	logtag.hh				\
 	multiindex.hh				\
+	partitioninfoprovider.hh		\
 	range.hh				\
 	simpledofindex.hh			\
 	topologyutility.hh			\

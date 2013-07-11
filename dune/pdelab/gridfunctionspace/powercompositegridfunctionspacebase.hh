@@ -16,6 +16,7 @@
 #include <dune/pdelab/constraints/common/constraintstransformation.hh>
 
 #include <dune/pdelab/gridfunctionspace/tags.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspacebase.hh>
 #include <dune/pdelab/gridfunctionspace/utility.hh>
 #include <dune/pdelab/ordering/lexicographicordering.hh>
 #include <dune/pdelab/ordering/entityblockedlocalordering.hh>
@@ -62,6 +63,10 @@ namespace Dune {
     //! Mixin class providing common functionality of PowerGridFunctionSpace and CompositeGridFunctionSpace
     template<typename GridFunctionSpace, typename GV, typename B, typename O, std::size_t k>
     class PowerCompositeGridFunctionSpaceBase
+      : public GridFunctionSpaceBase<
+                 GridFunctionSpace,
+                 PowerCompositeGridFunctionSpaceTraits<GV,B,O,k>
+                 >
     {
 
 #ifndef DOXYGEN
@@ -82,6 +87,12 @@ namespace Dune {
 
       //! export traits class
       typedef PowerCompositeGridFunctionSpaceTraits<GV,B,O,k> Traits;
+
+    private:
+
+      typedef GridFunctionSpaceBase<GridFunctionSpace,Traits> BaseT;
+
+    public:
 
       typedef O OrderingTag;
 
@@ -104,37 +115,6 @@ namespace Dune {
           >::Type Type;
       };
 
-      //! recalculate sizes
-      void update ()
-      {
-        gfs().ordering().update();
-      }
-
-      //! get dimension of root finite element space
-      typename Traits::SizeType globalSize () const
-      {
-        return gfs().ordering().size();
-      }
-
-      //! get dimension of this finite element space
-      typename Traits::SizeType size () const
-      {
-        return gfs().ordering().size();
-      }
-
-      //! get max dimension of shape function space
-      typename Traits::SizeType maxLocalSize () const
-      {
-        // this is bullshit !
-        return gfs().ordering().maxLocalSize();
-      }
-
-      //! Returns whether this GridFunctionSpace contains entities with PartitionType partition.
-      bool containsPartition(PartitionType partition) const
-      {
-        return gfs().ordering().containsPartition(partition);
-      }
-
       //! get grid view
       const typename Traits::GridViewType& gridview () const DUNE_DEPRECATED_MSG("Use gridView() instead of gridview()")
       {
@@ -147,46 +127,9 @@ namespace Dune {
         return gfs().template child<0>().gridView();
       }
 
-      B& backend()
-      {
-        return _backend;
-      }
-
-      const B& backend() const
-      {
-        return _backend;
-      }
-
-      OrderingTag& orderingTag()
-      {
-        return _ordering_tag;
-      }
-
-      const OrderingTag& orderingTag() const
-      {
-        return _ordering_tag;
-      }
-
       PowerCompositeGridFunctionSpaceBase(const B& backend, const OrderingTag& ordering_tag)
-        : _backend(backend)
-        , _ordering_tag(ordering_tag)
+        : BaseT(backend,ordering_tag)
       {}
-
-      const std::string& name() const
-      {
-        return _name;
-      }
-
-      void name(const std::string& name)
-      {
-        _name = name;
-      }
-
-    private:
-
-      B _backend;
-      OrderingTag _ordering_tag;
-      std::string _name;
 
     };
 

@@ -6,7 +6,9 @@
 
 #include <dune/common/shared_ptr.hh>
 #include <dune/pdelab/common/exceptions.hh>
+#include <dune/pdelab/common/partitioninfoprovider.hh>
 #include <dune/pdelab/ordering/utility.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspacebase.hh>
 
 #include <vector>
 
@@ -18,9 +20,18 @@ namespace Dune {
       : public PartitionInfoProvider
     {
 
+      template<typename size_type>
+      friend struct ::Dune::PDELab::impl::update_ordering_data;
+
     public:
 
       typedef OrderingTraits<DI,GDI,CI> Traits;
+
+    protected:
+
+      typedef Dune::PDELab::impl::GridFunctionSpaceOrderingData<typename Traits::SizeType> GFSData;
+
+    public:
 
       typedef HierarchicContainerAllocationTag ContainerAllocationTag;
 
@@ -128,6 +139,7 @@ namespace Dune {
       template<typename Node>
       OrderingBase(Node& node,
                    bool container_blocked,
+                   GFSData* gfs_data,
                    VirtualOrderingBase<DI,GDI,CI>* delegate = nullptr)
         : _container_blocked(container_blocked)
         , _merge_mode(MergeMode::lexicographic)
@@ -139,6 +151,7 @@ namespace Dune {
         , _size(0)
         , _block_count(0)
         , _delegate(delegate)
+        , _gfs_data(gfs_data)
       {
         TypeTree::applyToTree(node,extract_child_bases<OrderingBase>(_children));
         // We contain all grid PartitionTypes that any of our children contain.
@@ -149,6 +162,7 @@ namespace Dune {
       OrderingBase(Node& node,
                    bool container_blocked,
                    const std::vector<std::size_t>& merge_offsets,
+                   GFSData* gfs_data,
                    VirtualOrderingBase<DI,GDI,CI>* delegate = nullptr)
         : _container_blocked(container_blocked)
         , _merge_mode(MergeMode::interleaved)
@@ -161,6 +175,7 @@ namespace Dune {
         , _size(0)
         , _block_count(0)
         , _delegate(delegate)
+        , _gfs_data(gfs_data)
       {
         TypeTree::applyToTree(node,extract_child_bases<OrderingBase>(_children));
         // We contain all grid PartitionTypes that any of our children contain.
@@ -242,6 +257,15 @@ namespace Dune {
           }
       }
 
+    private:
+
+      bool update_gfs_data_size(typename Traits::SizeType& size, typename Traits::SizeType& block_count) const
+      {
+        size = _size;
+        block_count = _block_count;
+        return true;
+      }
+
     public:
 
       bool _fixed_size;
@@ -262,6 +286,7 @@ namespace Dune {
       std::size_t _block_count;
 
       const VirtualOrderingBase<DI,GDI,CI>* _delegate;
+      GFSData* _gfs_data;
 
     };
 
