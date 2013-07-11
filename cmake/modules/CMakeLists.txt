@@ -1,7 +1,9 @@
 set(modules
   DunePdelabMacros.cmake
+  FindCXXDecltype.cmake
   FindCXXInitializerList.cmake
   FindCXXUnorderedContainers.cmake
+  FindGCCTypeof.cmake
   FindPackageMultipass.cmake
   FindPETSc.cmake
   ResolveCompilerPaths.cmake
