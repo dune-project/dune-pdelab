@@ -63,7 +63,13 @@ namespace Dune {
       template<typename S, typename T, typename Tag>
       struct LookupNodeTransformation
       {
-        typedef DUNE_DECLTYPE(registerNodeTransformation(declptr<S>(),declptr<T>(),declptr<Tag>())) type;
+
+        typedef DUNE_DECLTYPE(registerNodeTransformation(declptr<S>(),declptr<T>(),declptr<Tag>())) lookup_type;
+
+        typedef typename evaluate_if_meta_function<
+          lookup_type
+          >::type type;
+
         dune_static_assert((!is_same<type,void>::value), "Unable to find valid transformation descriptor");
       };
 
