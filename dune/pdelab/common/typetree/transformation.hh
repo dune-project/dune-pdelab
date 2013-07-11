@@ -9,6 +9,7 @@
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/array.hh>
 #include <dune/common/tuples.hh>
+#include <dune/pdelab/common/typetraits.hh>
 #include <dune/pdelab/common/typetree/nodetags.hh>
 #include <dune/pdelab/common/typetree/utility.hh>
 
@@ -61,7 +62,7 @@ namespace Dune {
       struct LookupNodeTransformation
       {
         // TODO: add configure test and replace __typeof__ with a macro
-        typedef __typeof__(lookupNodeTransformation(static_cast<S*>(0),static_cast<T*>(0),Tag())) type;
+        typedef __typeof__(lookupNodeTransformation(declptr<S>(),declptr<T>(),Tag())) type;
         dune_static_assert((!is_same<type,void>::value), "Unable to find valid transformation descriptor");
       };
 
