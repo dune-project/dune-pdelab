@@ -345,10 +345,10 @@ namespace Dune {
             static const int dimworld = T::dimensionworld;
 
             // constructors
-            UnstructuredGrid (std::string filename)
+            UnstructuredGrid (std::string filename, bool verbose = true, bool insert_boundary_segments=true)
             {
                 Dune::GridFactory<T> factory;
-                Dune::GmshReader<T>::read(factory,filename);
+                Dune::GmshReader<T>::read(factory,filename,verbose,insert_boundary_segments);
                 gridp = shared_ptr<T>(factory.createGrid());
             }
 
