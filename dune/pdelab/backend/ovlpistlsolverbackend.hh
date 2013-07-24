@@ -459,7 +459,7 @@ namespace Dune {
         \param[in] gfs_ a grid function space
         \param[in] c_ a constraints object
         \param[in] maxiter_ maximum number of iterations to do
-        \param[in] verbose_ print messages if true
+        \param[in] verbose_ verbosity level (0=silent)
       */
       ISTLBackend_OVLP_ILU0_Base (const GFS& gfs_, const C& c_, unsigned maxiter_=5000, int verbose_=1)
         : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), c(c_), maxiter(maxiter_), verbose(verbose_)
@@ -497,6 +497,63 @@ namespace Dune {
     private:
       const GFS& gfs;
       const C& c;
+      unsigned maxiter;
+      int steps;
+      int verbose;
+    };
+
+    // Base class for ILUn as preconditioner
+    template<class GFS, class C,
+             template<class> class Solver>
+    class ISTLBackend_OVLP_ILUn_Base
+      : public OVLPScalarProductImplementation<GFS>, public LinearResultStorage
+    {
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] gfs_ a grid function space
+        \param[in] c_ a constraints object
+        \param[in] n_ level for ILUn
+        \param[in] maxiter_ maximum number of iterations to do
+        \param[in] verbose_ verbosity level (0=silent)
+      */
+      ISTLBackend_OVLP_ILUn_Base (const GFS& gfs_, const C& c_, int n_=1, unsigned maxiter_=5000, int verbose_=1)
+        : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), c(c_), n(n_), maxiter(maxiter_), verbose(verbose_)
+      {}
+
+      /*! \brief solve the given linear system
+
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      {
+        typedef OverlappingOperator<C,M,V,W> POP;
+        POP pop(c,A);
+        typedef OVLPScalarProduct<GFS,V> PSP;
+        PSP psp(*this);
+        typedef SeqILUn<typename M::BaseT,typename V::BaseT,typename W::BaseT,1> SeqPrec;
+        SeqPrec seqprec(istl::raw(A),n,1.0);
+        typedef OverlappingWrappedPreconditioner<C,GFS,SeqPrec> WPREC;
+        WPREC wprec(gfs,seqprec,c,this->parallelHelper());
+        int verb=0;
+        if (gfs.gridView().comm().rank()==0) verb=verbose;
+        Solver<V> solver(pop,psp,wprec,reduction,maxiter,verb);
+        Dune::InverseOperatorResult stat;
+        solver.apply(z,r,stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+        res.conv_rate  = stat.conv_rate;
+      }
+    private:
+      const GFS& gfs;
+      const C& c;
+      int n;
       unsigned maxiter;
       int steps;
       int verbose;
@@ -550,6 +607,28 @@ namespace Dune {
       {}
     };
     /**
+     * @brief Overlapping parallel BiCGStab solver with ILU0 preconditioner
+     * @tparam GFS The Type of the GridFunctionSpace.
+     * @tparam CC The Type of the Constraints Container.
+     */
+    template<class GFS, class CC>
+    class ISTLBackend_OVLP_BCGS_ILUn
+      : public ISTLBackend_OVLP_ILUn_Base<GFS,CC,Dune::BiCGSTABSolver>
+    {
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] gfs a grid function space
+        \param[in] cc a constraints container object
+        \param[in] n level for ILUn
+        \param[in] maxiter maximum number of iterations to do
+        \param[in] verbose print messages if true
+      */
+      ISTLBackend_OVLP_BCGS_ILUn (const GFS& gfs, const CC& cc, int n=1, unsigned maxiter=5000, int verbose=1)
+        : ISTLBackend_OVLP_ILUn_Base<GFS,CC,Dune::BiCGSTABSolver>(gfs, cc, n, maxiter, verbose)
+      {}
+    };
+    /**
      * @brief Overlapping parallel CGS solver with SSOR preconditioner
      * @tparam GFS The Type of the GridFunctionSpace.
      * @tparam CC The Type of the Constraints Container.
@@ -571,6 +650,68 @@ namespace Dune {
                                             int steps=5, int verbose=1)
         : ISTLBackend_OVLP_Base<GFS,CC,Dune::SeqSSOR, Dune::CGSolver>(gfs, cc, maxiter, steps, verbose)
       {}
+    };
+
+    /**
+     * @brief Overlapping parallel restarted GMRes solver with ILU0 preconditioner
+     * @tparam GFS The Type of the GridFunctionSpace.
+     * @tparam CC The Type of the Constraints Container.
+     */
+    template<class GFS, class CC>
+    class ISTLBackend_OVLP_GMRES_ILU0
+      : public OVLPScalarProductImplementation<GFS>, public LinearResultStorage
+    {
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] gfs a grid function space
+        \param[in] cc a constraints container object
+        \param[in] maxiter maximum number of iterations to do
+        \param[in] verbose print messages if true
+      */
+        ISTLBackend_OVLP_GMRES_ILU0 (const GFS& gfs_, const CC& cc_, unsigned maxiter_=5000, int verbose_=1,
+            int restart_ = 20, bool recalc_defect_ = false)
+        : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), cc(cc_), maxiter(maxiter_), verbose(verbose_),
+          restart(restart_), recalc_defect(recalc_defect_)
+      {}
+
+      /*! \brief solve the given linear system
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      {
+        typedef OverlappingOperator<CC,M,V,W> POP;
+        POP pop(cc,A);
+        typedef OVLPScalarProduct<GFS,V> PSP;
+        PSP psp(*this);
+        typedef SeqILU0<typename M::BaseT,typename V::BaseT,typename W::BaseT,1> SeqPrec;
+        SeqPrec seqprec(istl::raw(A),1.0);
+        typedef OverlappingWrappedPreconditioner<CC,GFS,SeqPrec> WPREC;
+        WPREC wprec(gfs,seqprec,cc,this->parallelHelper());
+        int verb=0;
+        if (gfs.gridView().comm().rank()==0) verb=verbose;
+        RestartedGMResSolver<V> solver(pop,psp,wprec,reduction,restart,maxiter,verb,recalc_defect);
+        Dune::InverseOperatorResult stat;
+        solver.apply(z,r,stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+        res.conv_rate  = stat.conv_rate;
+      }
+
+    private:
+      const GFS& gfs;
+      const CC& cc;
+      unsigned maxiter;
+      int steps;
+      int verbose;
+      int restart;
+      bool recalc_defect;
     };
 
     //! \} Solver
