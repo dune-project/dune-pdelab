@@ -18,6 +18,7 @@
 #include <dune/pdelab/common/typetree/visitor.hh>
 
 #include <dune/pdelab/gridfunctionspace/tags.hh>
+#include <dune/pdelab/ordering/lexicographicordering.hh>
 #include <dune/pdelab/ordering/utility.hh>
 #include <dune/pdelab/ordering/orderingbase.hh>
 

@@ -2,7 +2,6 @@ set(gridfunctionspacedir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/gridfunctionsp
 set(gridfunctionspace_HEADERS
   compositegridfunctionspace.hh
   compositeorderingutilities.hh
-  constraints.hh
   debug.hh
   dofinfo.hh
   genericdatahandle.hh

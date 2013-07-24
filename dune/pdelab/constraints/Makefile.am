@@ -1,9 +1,15 @@
 constraintsdir = $(includedir)/dune/pdelab/constraints
 constraints_HEADERS =			\
-	constraints.hh				\
-	constraintsparameters.hh			\
-	constraintstransformation.hh	\
-	interiornodeconstraints.hh
+	conforming.hh	\
+	hangingnode.hh	\
+	hangingnodemanager.hh		\
+	interiornode.hh	\
+	mfd.hh		\
+	p0.hh		\
+	p0ghost.hh		\
+	raviartthomas0.hh
+
+SUBDIRS = common
 
 include $(top_srcdir)/am/global-rules
 

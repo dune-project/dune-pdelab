@@ -13,13 +13,12 @@
 #include<dune/geometry/quadraturerules.hh>
 
 #include <dune/pdelab/common/function.hh>
+#include<dune/pdelab/constraints/common/constraintsparameters.hh>
 
 #include"defaultimp.hh"
 #include"pattern.hh"
 #include"flags.hh"
 #include"idefault.hh"
-
-#include<dune/pdelab/constraints/constraintsparameters.hh>
 
 
 namespace Dune {
@@ -262,7 +261,6 @@ namespace Dune {
 
         // dimensions
         const int dim = EG::Geometry::dimension;
-        const int dimw = EG::Geometry::dimensionworld;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();

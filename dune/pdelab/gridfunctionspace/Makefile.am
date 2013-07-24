@@ -1,7 +1,6 @@
 gridfunctionspacedir = $(includedir)/dune/pdelab/gridfunctionspace
 gridfunctionspace_HEADERS =			\
 	compositegridfunctionspace.hh		\
-	constraints.hh				\
 	debug.hh				\
 	dofinfo.hh				\
 	genericdatahandle.hh			\

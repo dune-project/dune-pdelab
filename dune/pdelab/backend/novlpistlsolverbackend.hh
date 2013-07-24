@@ -21,7 +21,7 @@
 #include <dune/istl/solvers.hh>
 #include <dune/istl/superlu.hh>
 
-#include <dune/pdelab/constraints/constraints.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include <dune/pdelab/newton/newton.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
@@ -764,11 +764,11 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename V::ElementType reduction)
       {
-        typedef typename istl::CommSelector<96,Dune::MPIHelper::isFake>::type Comm;
         typedef typename M::BaseT MatrixType;
         MatrixType& mat=istl::raw(A);
         typedef typename V::BaseT VectorType;
 #if HAVE_MPI
+        typedef typename istl::CommSelector<96,Dune::MPIHelper::isFake>::type Comm;
         _grid_operator.make_consistent(A);
         Comm oocc(gfs.gridView().comm(),Dune::SolverCategory::nonoverlapping);
         phelper.createIndexSetAndProjectForAMG(mat, oocc);
@@ -781,7 +781,6 @@ namespace Dune {
         typedef Dune::NonoverlappingBlockPreconditioner<Comm, Smoother> ParSmoother;
         ParSmoother parsmoother(smoother, oocc);
 #else
-        Comm oocc(gfs.gridView().comm());
         typedef Preconditioner<MatrixType,VectorType,VectorType,1> ParSmoother;
         ParSmoother parsmoother(mat, steps, 1.0);
         typedef Dune::SeqScalarProduct<VectorType> PSP;

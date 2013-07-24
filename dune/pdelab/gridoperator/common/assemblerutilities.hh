@@ -7,7 +7,7 @@
 #include <dune/pdelab/common/unordered_map.hh>
 #include <dune/pdelab/common/unordered_set.hh>
 
-#include <dune/pdelab/constraints/constraintstransformation.hh>
+#include <dune/pdelab/constraints/common/constraintstransformation.hh>
 #include <dune/pdelab/gridoperator/common/localmatrix.hh>
 
 namespace Dune{

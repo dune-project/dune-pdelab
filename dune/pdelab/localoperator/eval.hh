@@ -77,7 +77,7 @@ namespace Dune {
       for (size_type i=0; i<lfs.size(); i++)
         gradu.axpy( xlocal(lfs,i), gradphi[i] );
 
-    };
+    }
 
 
   }

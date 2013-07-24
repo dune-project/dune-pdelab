@@ -62,10 +62,14 @@
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/backend/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/istlsolverbackend.hh>
+#include <dune/pdelab/constraints/conforming.hh>
+#include <dune/pdelab/constraints/hangingnode.hh>
+#include <dune/pdelab/constraints/p0.hh>
+#include <dune/pdelab/constraints/p0ghost.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
-#include <dune/pdelab/constraints/constraints.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/gridoperator/onestep.hh>
 #include <dune/pdelab/stationary/linearproblem.hh>
@@ -73,10 +77,6 @@
 #include <dune/pdelab/finiteelementmap/p0fem.hh>
 #include <dune/pdelab/finiteelementmap/opbfem.hh>
 #include <dune/pdelab/finiteelementmap/qkdg.hh>
-#include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
-#include <dune/pdelab/finiteelementmap/hangingnodeconstraints.hh>
-#include <dune/pdelab/finiteelementmap/p0constraints.hh>
-#include <dune/pdelab/finiteelementmap/p0ghostconstraints.hh>
 #include <dune/pdelab/adaptivity/adaptivity.hh>
 #include <dune/pdelab/instationary/onestep.hh>
 #include <dune/pdelab/newton/newton.hh>
@@ -345,10 +345,10 @@ namespace Dune {
             static const int dimworld = T::dimensionworld;
 
             // constructors
-            UnstructuredGrid (std::string filename)
+            UnstructuredGrid (std::string filename, bool verbose = true, bool insert_boundary_segments=true)
             {
                 Dune::GridFactory<T> factory;
-                Dune::GmshReader<T>::read(factory,filename);
+                Dune::GmshReader<T>::read(factory,filename,verbose,insert_boundary_segments);
                 gridp = shared_ptr<T>(factory.createGrid());
             }
 

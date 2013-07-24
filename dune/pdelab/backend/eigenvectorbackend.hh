@@ -91,7 +91,7 @@ namespace Dune {
         };
 
       //! The size type
-      typedef typename Eigen::VectorXd::Index size_type;
+      typedef Eigen::VectorXd::Index size_type;
 
       // get const_reference to container element
       // note: this method does not depend on T!

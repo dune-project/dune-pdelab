@@ -1,45 +1,4 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_P0CONSTRAINTS_HH
-#define DUNE_PDELAB_P0CONSTRAINTS_HH
-
-#include "../common/geometrywrapper.hh"
-
-namespace Dune {
-  namespace PDELab {
-
-    //! \addtogroup Constraints
-    //! \ingroup FiniteElementMap
-    //! \{
-
-    //! Parallel P0 constraints for overlapping grids
-    class P0ParallelConstraints
-    {
-    public:
-      enum{doBoundary=false};
-      enum{doProcessor=true};
-      enum{doSkeleton=false};
-      enum{doVolume=false};
-
-      //! processor constraints
-      /**
-       * \tparam IG  intersection geometry
-       * \tparam LFS local function space
-       * \tparam T   TransformationType
-       */
-      template<typename I, typename LFS, typename T>
-      void processor (const Dune::PDELab::IntersectionGeometry<I>& ig,
-                      const LFS& lfs, T& trafo) const
-      {
-        typename T::RowType empty;
-        typedef typename LFS::Traits::SizeType size_type;
-        for (size_type i=0; i<lfs.size(); i++){
-          trafo[lfs.dofIndex(i)] = empty;
-        }
-      }
-    };
-    //! \}
-
-  }
-}
-
-#endif
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// vi: set et ts=4 sw=2 sts=2:
+#warning dune/pdelab/finiteelementmap/p0constraints.hh is deprecated, please use dune/pdelab/constraints/p0.hh instead
+#include<dune/pdelab/constraints/p0.hh>
