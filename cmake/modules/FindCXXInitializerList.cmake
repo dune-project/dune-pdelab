@@ -23,7 +23,7 @@ check_cxx_source_compiles("
   };
 
   int main(void){
-      A a({1,3,4,5});
+      A a{1,3,4,5};
       return 0;
   }"
   HAVE_INITIALIZER_LIST)
