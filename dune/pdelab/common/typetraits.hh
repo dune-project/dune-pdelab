@@ -55,7 +55,9 @@ namespace Dune {
     };
 
     // // forward decl of Tag defined in function.hh
-    // struct GridFunctionTag;
+    struct GridFunctionTag;
+    struct PowerGridFunctionTag;
+    struct CompositeGridFunctionTag;
 
     template<typename T, typename = void>
     struct IsGridFunction
