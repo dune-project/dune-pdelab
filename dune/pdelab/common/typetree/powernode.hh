@@ -323,12 +323,12 @@ namespace Dune {
         {}
 
         //! Initialize the PowerNode with a copy of the passed-in storage type.
-        PowerNode(const NodeStorage& children)
+        explicit PowerNode(const NodeStorage& children)
           : _children(children)
         {}
 
         //! Initialize all children with copies of a storage object constructed from the parameter \c t.
-        PowerNode (T& t, bool distinct_objects = true)
+        explicit PowerNode (T& t, bool distinct_objects = true)
         {
           if (distinct_objects)
             {
@@ -362,10 +362,12 @@ namespace Dune {
 
 #if HAVE_VARIADIC_TEMPLATES && HAVE_RVALUE_REFERENCES
 
-        template<typename... Children>
-        PowerNode (Children&&... children)
+
+        // this weird signature avoids shadowing other 1-argument constructors
+        template<typename C0, typename C1, typename... Children>
+        PowerNode (C0&& c0, C1&& c1, Children&&... children)
         {
-          assign_reference_pack_to_shared_ptr_array(_children,std::forward<Children>(children)...);
+          assign_reference_pack_to_shared_ptr_array(_children,std::forward<C0>(c0),std::forward<C1>(c1),std::forward<Children>(children)...);
         }
 
 #else
