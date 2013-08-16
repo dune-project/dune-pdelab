@@ -62,7 +62,7 @@ namespace Dune {
       const typename Block::field_type&
       access_vector_element(tags::block_vector, const Block& b, const CI& ci, int i)
       {
-        return access_istl_vector_element(container_tag(b[ci[i]]),b[ci[i]],ci,i-1);
+        return access_vector_element(container_tag(b[ci[i]]),b[ci[i]],ci,i-1);
       }
 
 
