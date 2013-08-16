@@ -198,8 +198,6 @@ namespace Dune {
         , pfem(fem)
         , ce(defaultce)
       {}
-      {
-      }
 
       //! get grid view
       const GV& gridview () const DUNE_DEPRECATED_MSG("Use gridView() instead of gridview()")

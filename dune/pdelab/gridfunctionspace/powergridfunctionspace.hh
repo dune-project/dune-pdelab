@@ -199,9 +199,6 @@ namespace Dune {
         , ImplementationBase(backend,ordering_tag)
       {}
 
-      {
-      }
-
       //! Direct access to the DOF ordering.
       const Ordering &ordering() const
       {
