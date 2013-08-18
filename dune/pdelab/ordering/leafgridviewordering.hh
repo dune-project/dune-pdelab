@@ -59,14 +59,43 @@ namespace Dune {
       }
 
 
-      LeafGridViewOrdering(const typename NodeT::NodeStorage& local_ordering, bool container_blocked)
+      LeafGridViewOrdering(const typename NodeT::NodeStorage& local_ordering, bool container_blocked, typename BaseT::GFSData* gfs_data)
         : NodeT(local_ordering)
-        , BaseT(*this,container_blocked,this)
+        , BaseT(*this,container_blocked,gfs_data,this)
         , _gv(this->template child<0>().gridView())
       {
         // copy grid partition information from local ordering.
         this->setPartitionSet(localOrdering());
       }
+
+#ifndef DOXYGEN
+
+// we need to override the default copy / move ctor to fix the delegate pointer, but that is
+// hardly interesting to our users...
+
+      LeafGridViewOrdering(const LeafGridViewOrdering& r)
+        : NodeT(r.nodeStorage())
+        , BaseT(r)
+        , _gv(r._gv)
+        , _gt_dof_offsets(r._gt_dof_offsets)
+      {
+        this->setDelegate(this);
+      }
+
+#if HAVE_RVALUE_REFERENCES
+
+      LeafGridViewOrdering(LeafGridViewOrdering&& r)
+        : NodeT(r.nodeStorage())
+        , BaseT(std::move(r))
+        , _gv(r._gv)
+        , _gt_dof_offsets(std::move(r._gt_dof_offsets))
+      {
+        this->setDelegate(this);
+      }
+
+#endif // HAVE_RVALUE_REFERENCES
+
+#endif // DOXYGEN
 
       virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
       {
@@ -335,8 +364,8 @@ namespace Dune {
     };
 
 
-    template<typename GFS, typename Transformation, typename Params>
-    struct leaf_gfs_to_ordering_descriptor<GFS,Transformation,LeafOrderingTag<Params> >
+    template<typename GFS, typename Transformation>
+    struct direct_leaf_gfs_to_gridview_ordering_descriptor
     {
 
       static const bool recursive = false;
@@ -355,17 +384,20 @@ namespace Dune {
 
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
-        return transformed_type(make_tuple(make_shared<LocalOrdering>(gfs.finiteElementMapStorage(),gfs.gridView())),gfs.backend().blocked());
+        return transformed_type(make_tuple(make_shared<LocalOrdering>(gfs.finiteElementMapStorage(),gfs.gridView())),gfs.backend().blocked(),const_cast<GFS*>(&gfs));
       }
 
       static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
       {
-        return make_shared<transformed_type>(make_tuple(make_shared<LocalOrdering>(gfs->finiteElementMapStorage(),gfs->gridView())),gfs->backend().blocked());
+        return make_shared<transformed_type>(make_tuple(make_shared<LocalOrdering>(gfs->finiteElementMapStorage(),gfs->gridView())),gfs->backend().blocked(),const_cast<GFS*>(gfs.get()));
       }
 
     };
 
-    // transformation registration is managed centrally in transformations.hh
+
+    template<typename GFS, typename Transformation, typename Params>
+    direct_leaf_gfs_to_gridview_ordering_descriptor<GFS,Transformation>
+    register_leaf_gfs_to_ordering_descriptor(GFS*,Transformation*,LeafOrderingTag<Params>*);
 
 
    //! \} group GridFunctionSpace

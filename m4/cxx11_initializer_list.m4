@@ -24,7 +24,7 @@ AC_DEFUN([INITIALIZER_LIST_CHECK],[
 
         ],
         [
-          A a({1,3,4,5});
+          A a{1,3,4,5};
           return 0;
         ])],
       dune_cv_initializer_list_support=yes,

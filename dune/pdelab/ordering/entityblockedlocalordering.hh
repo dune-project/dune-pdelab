@@ -24,7 +24,6 @@
 namespace Dune {
   namespace PDELab {
 
-    //! Interface for merging index spaces
     template<typename ChildOrdering, std::size_t k>
     class PowerEntityBlockedLocalOrdering
       : public TypeTree::PowerNode<ChildOrdering,k>
@@ -46,7 +45,7 @@ namespace Dune {
 
       PowerEntityBlockedLocalOrdering(const typename NodeT::NodeStorage& child_storage, bool container_blocked)
         : NodeT(child_storage)
-        , BaseT(*this,container_blocked)
+        , BaseT(*this,container_blocked,nullptr)
       {}
 
       const typename Traits::GridView& gridView() const
@@ -86,7 +85,7 @@ namespace Dune {
 
 
     template<typename GFS, typename Transformation>
-    struct power_gfs_to_ordering_descriptor<GFS,Transformation,EntityBlockedOrderingTag>
+    struct power_gfs_to_entityblocked_ordering_descriptor
     {
 
       static const bool recursive = false;
@@ -100,22 +99,24 @@ namespace Dune {
 
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
-        transformed_type r(transformed_type(make_tuple(make_shared<LocalOrdering>(LocalOrderingTransformation::transform(gfs,gfs_to_local_ordering<Transformation>()))),gfs.backend().blocked()));
+        transformed_type r(make_tuple(make_shared<LocalOrdering>(LocalOrderingTransformation::transform(gfs,gfs_to_local_ordering<Transformation>()))),gfs.backend().blocked(),const_cast<GFS*>(&gfs));
         return std::move(r);
       }
 
       static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
       {
-        transformed_storage_type r(make_shared<transformed_type>(make_tuple(LocalOrderingTransformation::transform_storage(gfs,gfs_to_local_ordering<Transformation>())),gfs->backend().blocked()));
+        transformed_storage_type r(make_shared<transformed_type>(make_tuple(LocalOrderingTransformation::transform_storage(gfs,gfs_to_local_ordering<Transformation>())),gfs->backend().blocked(),const_cast<GFS*>(gfs.get())));
         return std::move(r);
       }
 
     };
 
-    // the generic registration for PowerGridFunctionSpace happens in transformations.hh
+    template<typename GFS, typename Transformation>
+    power_gfs_to_entityblocked_ordering_descriptor<GFS,Transformation>
+    register_power_gfs_to_ordering_descriptor(GFS*,Transformation*,EntityBlockedOrderingTag*);
 
 
-    //! Interface for merging index spaces
+
     template<DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
     class CompositeEntityBlockedLocalOrdering
       : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
@@ -137,7 +138,7 @@ namespace Dune {
 
       CompositeEntityBlockedLocalOrdering(bool container_blocked, DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
         : Node(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
-        , Base(*this,container_blocked)
+        , Base(*this,container_blocked,nullptr)
       {}
 
       const typename Traits::GridView& gridView() const
@@ -176,7 +177,7 @@ namespace Dune {
     };
 
     template<typename GFS, typename Transformation>
-    struct composite_gfs_to_ordering_descriptor<GFS,Transformation,EntityBlockedOrderingTag>
+    struct composite_gfs_to_entityblocked_ordering_descriptor
     {
 
       static const bool recursive = false;
@@ -190,19 +191,21 @@ namespace Dune {
 
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
-        transformed_type r(make_tuple(make_shared<LocalOrdering>(LocalOrderingTransformation::transform(gfs,gfs_to_local_ordering<Transformation>()))),gfs.backend().blocked());
+        transformed_type r(make_tuple(make_shared<LocalOrdering>(LocalOrderingTransformation::transform(gfs,gfs_to_local_ordering<Transformation>()))),gfs.backend().blocked(),const_cast<GFS*>(&gfs));
         return std::move(r);
       }
 
       static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
       {
-        transformed_storage_type r(make_shared<transformed_type>(make_tuple(LocalOrderingTransformation::transform_storage(gfs,gfs_to_local_ordering<Transformation>())),gfs->backend().blocked()));
+        transformed_storage_type r(make_shared<transformed_type>(make_tuple(LocalOrderingTransformation::transform_storage(gfs,gfs_to_local_ordering<Transformation>())),gfs->backend().blocked()),const_cast<GFS*>(gfs.get()));
         return std::move(r);
       }
 
     };
 
-   // the generic registration for CompositeGridFunctionSpace happens in transformations.hh
+    template<typename GFS, typename Transformation>
+    composite_gfs_to_entityblocked_ordering_descriptor<GFS,Transformation>
+    register_composite_gfs_to_ordering_descriptor(GFS*,Transformation*,EntityBlockedOrderingTag*);
 
 
    //! \} group GridFunctionSpace

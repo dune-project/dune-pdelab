@@ -71,6 +71,9 @@ namespace Dune {
                                       gfs_to_ordering<CompositeGridFunctionSpace>
                                       > ordering_transformation;
 
+      template<typename,typename>
+      friend class GridFunctionSpaceBase;
+
     public:
       typedef CompositeGridFunctionSpaceTag ImplementationTag;
 
@@ -113,10 +116,15 @@ namespace Dune {
       //! Direct access to the storage of the DOF ordering.
       shared_ptr<const Ordering> orderingStorage() const
       {
+        if (!this->isRootSpace())
+          {
+            DUNE_THROW(GridFunctionSpaceHierarchyError,
+                       "Ordering can only be obtained for root space in GridFunctionSpace tree.");
+          }
         if (!_ordering)
           {
-            _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
-            _ordering->update();
+            create_ordering();
+            this->update(*_ordering);
           }
         return _ordering;
       }
@@ -124,15 +132,29 @@ namespace Dune {
       //! Direct access to the storage of the DOF ordering.
       shared_ptr<Ordering> orderingStorage()
       {
+        if (!this->isRootSpace())
+          {
+            DUNE_THROW(GridFunctionSpaceHierarchyError,
+                       "Ordering can only be obtained for root space in GridFunctionSpace tree.");
+          }
         if (!_ordering)
           {
-            _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
-            _ordering->update();
+            create_ordering();
+            this->update(*_ordering);
           }
         return _ordering;
       }
 
+
     private:
+
+      // This method here is to avoid a double update of the Ordering when the user calls
+      // GFS::update() before GFS::ordering().
+      void create_ordering() const
+      {
+        _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+      }
+
       mutable shared_ptr<Ordering> _ordering;
 
     };

@@ -31,8 +31,8 @@ namespace Dune {
 
       typedef typename BaseT::Traits Traits;
 
-      LeafLocalOrdering(const shared_ptr<const FEM>& fem, const GV& gv, bool backend_blocked)
-        : BaseT(*this,backend_blocked)
+      LeafLocalOrdering(const shared_ptr<const FEM>& fem, const GV& gv, bool backend_blocked, typename BaseT::GFSData* gfs_data)
+        : BaseT(*this,backend_blocked,gfs_data)
         , _fem(fem)
         , _gv(gv)
       {
@@ -139,9 +139,6 @@ namespace Dune {
 
     };
 
-    template<typename GFS, typename Transformation, typename OrderingTag>
-    struct leaf_gfs_to_local_ordering_descriptor;
-
     template<typename GFS, typename Transformation, typename Params>
     struct leaf_gfs_to_local_ordering_descriptor<GFS,Transformation,LeafOrderingTag<Params> >
     {
@@ -160,24 +157,15 @@ namespace Dune {
 
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
-        return transformed_type(gfs.finiteElementMapStorage(),gfs.gridView(),false);
+        return transformed_type(gfs.finiteElementMapStorage(),gfs.gridView(),false,&const_cast<GFS*>(gfs));
       }
 
       static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
       {
-        return make_shared<transformed_type>(gfs->finiteElementMapStorage(),gfs->gridView(),false);
+        return make_shared<transformed_type>(gfs->finiteElementMapStorage(),gfs->gridView(),false,const_cast<GFS*>(gfs.get()));
       }
 
     };
-
-    template<typename GFS, typename Params>
-    leaf_gfs_to_local_ordering_descriptor<
-      GFS,
-      gfs_to_local_ordering<Params>,
-      typename GFS::Traits::OrderingTag
-      >
-    lookupNodeTransformation(GFS* gfs, gfs_to_local_ordering<Params>* t, LeafGridFunctionSpaceTag tag);
-
 
   } // namespace PDELab
 } // namespace Dune

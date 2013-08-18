@@ -498,22 +498,22 @@ namespace Dune {
       // trafo for multi component leaf nodes
       MultiComponentOldStyleConstraintsWrapperDescription<GridFunction,gf_to_constraints>
       >::Type
-    lookupNodeTransformation(GridFunction*, gf_to_constraints*, GridFunctionTag);
+    registerNodeTransformation(GridFunction*, gf_to_constraints*, GridFunctionTag*);
 
     // trafo for power nodes
     template<typename PowerGridFunction>
     Dune::PDELab::TypeTree::SimplePowerNodeTransformation<PowerGridFunction,gf_to_constraints,PowerConstraintsParameters>
-    lookupNodeTransformation(PowerGridFunction*, gf_to_constraints*, PowerGridFunctionTag);
+    registerNodeTransformation(PowerGridFunction*, gf_to_constraints*, PowerGridFunctionTag*);
 
     // trafos for composite nodes
 #if HAVE_VARIADIC_TEMPLATES
     template<typename CompositeGridFunction>
     Dune::PDELab::TypeTree::SimpleVariadicCompositeNodeTransformation<CompositeGridFunction,gf_to_constraints,CompositeConstraintsParameters>
-    lookupNodeTransformation(CompositeGridFunction*, gf_to_constraints*, CompositeGridFunctionTag);
+    registerNodeTransformation(CompositeGridFunction*, gf_to_constraints*, CompositeGridFunctionTag*);
 #else
     template<typename CompositeGridFunction>
     Dune::PDELab::TypeTree::SimpleCompositeNodeTransformation<CompositeGridFunction,gf_to_constraints,CompositeConstraintsParameters>
-    lookupNodeTransformation(CompositeGridFunction*, gf_to_constraints*, CompositeGridFunctionTag);
+    registerNodeTransformation(CompositeGridFunction*, gf_to_constraints*, CompositeGridFunctionTag*);
 #endif
 
     //! construct constraints

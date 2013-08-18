@@ -451,9 +451,9 @@ namespace Dune {
        * construction.  This must be done by a seperate call to update().
        * This particular ordering however can be used right away.
        */
-      GridViewOrdering(const typename NodeT::NodeStorage& local_ordering, bool container_blocked)
+      GridViewOrdering(const typename NodeT::NodeStorage& local_ordering, bool container_blocked, typename BaseT::GFSData* gfs_data)
         : NodeT(local_ordering)
-        , BaseT(*this,container_blocked,this)
+        , BaseT(*this,container_blocked,gfs_data,this)
         , _gv(localOrdering().gridView())
       {
         // make sure to switch off container blocking handling in the local ordering,
@@ -463,6 +463,39 @@ namespace Dune {
         // automatically by LocalOrdering in this case
         this->setPartitionSet(localOrdering());
       }
+
+#ifndef DOXYGEN
+
+// we need to override the default copy / move ctor to fix the delegate pointer, but that is
+// hardly interesting to our users...
+
+      GridViewOrdering(const GridViewOrdering& r)
+        : NodeT(r.nodeStorage())
+        , BaseT(r)
+        , _gv(r._gv)
+        , _gt_dof_offsets(r._gt_dof_offsets)
+        , _gt_entity_offsets(r._gt_entity_offsets)
+        , _entity_dof_offsets(r._entity_dof_offsets)
+      {
+        this->setDelegate(this);
+      }
+
+#if HAVE_RVALUE_REFERENCES
+
+      GridViewOrdering(GridViewOrdering&& r)
+        : NodeT(r.nodeStorage())
+        , BaseT(std::move(r))
+        , _gv(std::move(r._gv))
+        , _gt_dof_offsets(std::move(r._gt_dof_offsets))
+        , _gt_entity_offsets(std::move(r._gt_entity_offsets))
+        , _entity_dof_offsets(std::move(r._entity_dof_offsets))
+      {
+        this->setDelegate(this);
+      }
+
+#endif // HAVE_RVALUE_REFERENCES
+
+#endif // DOXYGEN
 
       LocalOrdering& localOrdering()
       {

@@ -77,6 +77,9 @@ namespace Dune {
         LeafOrderingTag
         > LeafGFS;
 
+      template<typename,typename>
+      friend class GridFunctionSpaceBase;
+
     public:
 
       typedef VectorGridFunctionSpaceTag ImplementationTag;
@@ -129,11 +132,6 @@ namespace Dune {
           }
       }
 
-      std::string name() const
-      {
-        return ImplementationBase::name();
-      }
-
       //! Direct access to the DOF ordering.
       const Ordering &ordering() const
       {
@@ -149,9 +147,14 @@ namespace Dune {
       //! Direct access to the storage of the DOF ordering.
       shared_ptr<const Ordering> orderingStorage() const
       {
+        if (!this->isRootSpace())
+          {
+            DUNE_THROW(GridFunctionSpaceHierarchyError,
+                       "Ordering can only be obtained for root space in GridFunctionSpace tree.");
+          }
         if (!_ordering)
           {
-            _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+            create_ordering();
             _ordering->update();
           }
         return _ordering;
@@ -160,15 +163,27 @@ namespace Dune {
       //! Direct access to the storage of the DOF ordering.
       shared_ptr<Ordering> orderingStorage()
       {
+        if (!this->isRootSpace())
+          {
+            DUNE_THROW(GridFunctionSpaceHierarchyError,
+                       "Ordering can only be obtained for root space in GridFunctionSpace tree.");
+          }
         if (!_ordering)
           {
-            _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+            create_ordering();
             _ordering->update();
           }
         return _ordering;
       }
 
     private:
+
+      // This method here is to avoid a double update of the Ordering when the user calls
+      // GFS::update() before GFS::ordering().
+      void create_ordering() const
+      {
+        _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+      }
 
       mutable shared_ptr<Ordering> _ordering;
 

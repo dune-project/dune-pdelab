@@ -30,6 +30,7 @@
 #include <dune/pdelab/gridfunctionspace/utility.hh>
 #include <dune/pdelab/ordering/gridviewordering.hh>
 #include <dune/pdelab/ordering/lexicographicordering.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspacebase.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/datahandleprovider.hh>
 #include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
@@ -110,15 +111,29 @@ namespace Dune {
              typename B=ISTLVectorBackend<>, typename P=DefaultLeafOrderingTag>
     class GridFunctionSpace
       : public TypeTree::LeafNode
+      , public GridFunctionSpaceBase<
+                 GridFunctionSpace<GV,FEM,CE,B,P>,
+                 GridFunctionSpaceTraits<GV,FEM,CE,B,P>
+                 >
       , public GridFunctionOutputParameters
       , public DataHandleProvider<GridFunctionSpace<GV,FEM,CE,B,P> >
     {
 
       typedef TypeTree::TransformTree<GridFunctionSpace,gfs_to_ordering<GridFunctionSpace> > ordering_transformation;
 
+      template<typename,typename>
+      friend class GridFunctionSpaceBase;
+
     public:
       //! export Traits class
       typedef GridFunctionSpaceTraits<GV,FEM,CE,B,P> Traits;
+
+    private:
+
+      typedef GridFunctionSpaceBase<GridFunctionSpace,Traits> BaseT;
+
+    public:
+
       typedef typename GV::Traits::template Codim<0>::Entity Element;
       typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
 
@@ -151,45 +166,38 @@ namespace Dune {
 
       //! constructor
       GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
-        : defaultce(ce_)
+        : BaseT(backend,ordering_tag)
+        , defaultce(ce_)
         , gv(gridview)
         , pfem(stackobject_to_shared_ptr(fem))
         , ce(ce_)
-        , _backend(backend)
-        , _ordering_tag(ordering_tag)
       {
       }
 
       //! constructor
       GridFunctionSpace (const GV& gridview, const shared_ptr<const FEM>& fem, const CE& ce_, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
-        : defaultce(ce_)
+        : BaseT(backend,ordering_tag)
+        , defaultce(ce_)
         , gv(gridview)
         , pfem(fem)
         , ce(ce_)
-        , _backend(backend)
-        , _ordering_tag(ordering_tag)
-      {
-      }
+      {}
 
       //! constructor
       GridFunctionSpace (const GV& gridview, const FEM& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
-        : gv(gridview)
+        : BaseT(backend,ordering_tag)
+        , gv(gridview)
         , pfem(stackobject_to_shared_ptr(fem))
         , ce(defaultce)
-        , _backend(backend)
-        , _ordering_tag(ordering_tag)
-      {
-      }
+      {}
 
       //! constructor
       GridFunctionSpace (const GV& gridview, const shared_ptr<const FEM>& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
-        : gv(gridview)
+        : BaseT(backend,ordering_tag)
+        , gv(gridview)
         , pfem(fem)
         , ce(defaultce)
-        , _backend(backend)
-        , _ordering_tag(ordering_tag)
-      {
-      }
+      {}
 
       //! get grid view
       const GV& gridview () const DUNE_DEPRECATED_MSG("Use gridView() instead of gridview()")
@@ -221,6 +229,14 @@ namespace Dune {
         return *pfem;
       }
 
+      // return constraints engine
+      const typename Traits::ConstraintsType& constraints () const
+      {
+        return ce;
+      }
+
+      //------------------------------
+
       //! Direct access to the DOF ordering.
       const Ordering &ordering() const
       {
@@ -236,10 +252,15 @@ namespace Dune {
       //! Direct access to the storage of the DOF ordering.
       shared_ptr<const Ordering> orderingStorage() const
       {
+        if (!this->isRootSpace())
+          {
+            DUNE_THROW(GridFunctionSpaceHierarchyError,
+                       "Ordering can only be obtained for root space in GridFunctionSpace tree.");
+          }
         if (!_ordering)
           {
-            _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
-            _ordering->update();
+            create_ordering();
+            this->update(*_ordering);
           }
         return _ordering;
       }
@@ -247,104 +268,32 @@ namespace Dune {
       //! Direct access to the storage of the DOF ordering.
       shared_ptr<Ordering> orderingStorage()
       {
+        if (!this->isRootSpace())
+          {
+            DUNE_THROW(GridFunctionSpaceHierarchyError,
+                       "Ordering can only be obtained for root space in GridFunctionSpace tree.");
+          }
         if (!_ordering)
           {
-            _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
-            _ordering->update();
+            create_ordering();
+            this->update(*_ordering);
           }
         return _ordering;
       }
 
-      //! get dimension of root finite element space
-      typename Traits::SizeType globalSize () const
-      {
-        return ordering().size();
-      }
-
-      //! get dimension of this finite element space
-      typename Traits::SizeType size () const
-      {
-        return ordering().size();
-      }
-
-      //! get max dimension of shape function space
-      //! \todo What are the exact semantics of maxLocalSize?
-      typename Traits::SizeType maxLocalSize () const
-      {
-        return ordering().maxLocalSize();
-      }
-
-      //! Returns whether this GridFunctionSpace contains entities with PartitionType partition.
-      bool containsPartition(PartitionType partition) const
-      {
-        return ordering().containsPartition(partition);
-      }
-
-      //! map index from our index set [0,size()-1] to root index set
-      typename Traits::SizeType upMap (typename Traits::SizeType i) const
-      {
-        return i;
-      }
-
-      // return constraints engine
-      const typename Traits::ConstraintsType& constraints () const
-      {
-        return ce;
-      }
-
-      //------------------------------
-
-      B& backend()
-      {
-        return _backend;
-      }
-
-      const B& backend() const
-      {
-        return _backend;
-      }
-
-      OrderingTag& orderingTag()
-      {
-        return _ordering_tag;
-      }
-
-      const OrderingTag& orderingTag() const
-      {
-        return _ordering_tag;
-      }
-
-      const std::string& name() const
-      {
-        return _name;
-      }
-
-      void name(const std::string& name)
-      {
-        _name = name;
-      }
-
-      void update()
-      {
-        ordering().update();
-      }
-
     private:
+
+      // This method here is to avoid a double update of the Ordering when the user calls
+      // GFS::update() before GFS::ordering().
+      void create_ordering() const
+      {
+        _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+      }
+
       CE defaultce;
       const GV gv;
       shared_ptr<FEM const> pfem;
-      typename Traits::SizeType nlocal;
-      typename Traits::SizeType nglobal;
       const CE& ce;
-      B _backend;
-      OrderingTag _ordering_tag;
-      bool fixed_size;
-      std::string _name;
-
-      typedef std::map<Dune::GeometryType,typename Traits::SizeType> GTOffsetMap;
-      GTOffsetMap gtoffset; // offset in vector for given geometry type
-      std::vector<typename Traits::SizeType> offset; // offset into big vector for each entity;
-      std::set<unsigned int> codimUsed;
 
       mutable shared_ptr<Ordering> _ordering;
     };

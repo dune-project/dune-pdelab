@@ -30,11 +30,12 @@ namespace Dune {
 
     namespace lexicographic_ordering {
 
-      //! Interface for merging index spaces
       template<typename DI, typename GDI, typename CI, typename Node>
       class Base
         : public OrderingBase<DI,GDI,CI>
       {
+
+        typedef OrderingBase<DI,GDI,CI> BaseT;
 
       public:
 
@@ -50,8 +51,8 @@ namespace Dune {
          * construction.  This must be done by a seperate call to update()
          * after all the children have been properly set up.
          */
-        Base(Node& node, bool container_blocked)
-          : OrderingBase<DI,GDI,CI>(node,container_blocked,nullptr)
+        Base(Node& node, bool container_blocked, typename BaseT::GFSData* gfs_data)
+          : BaseT(node,container_blocked,gfs_data,nullptr)
         {
         }
 
@@ -98,7 +99,8 @@ namespace Dune {
       };
     }
 
-    //! Interface for merging index spaces
+
+
     template<typename DI, typename GDI, typename CI, typename Child, std::size_t k>
     class PowerLexicographicOrdering
       : public TypeTree::PowerNode<Child, k>
@@ -127,9 +129,9 @@ namespace Dune {
        * \note This constructor must be present for ordering objects not at
        *       the leaf of the tree.
        */
-      PowerLexicographicOrdering(bool container_blocked, const typename Node::NodeStorage& children)
+      PowerLexicographicOrdering(bool container_blocked, const typename Node::NodeStorage& children, typename Base::GFSData* gfs_data)
         : Node(children)
-        , Base(*this,container_blocked)
+        , Base(*this,container_blocked,gfs_data)
       { }
 
       void update()
@@ -146,7 +148,7 @@ namespace Dune {
 
 
     template<typename GFS, typename Transformation>
-    struct power_gfs_to_ordering_descriptor<GFS,Transformation,LexicographicOrderingTag>
+    struct power_gfs_to_lexicographic_ordering_descriptor
     {
 
       static const bool recursive = true;
@@ -170,16 +172,20 @@ namespace Dune {
       template<typename TC>
       static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
       {
-        return typename result<TC>::type(gfs.backend().blocked(),children);
+        return typename result<TC>::type(gfs.backend().blocked(),children,const_cast<GFS*>(&gfs));
       }
 
       template<typename TC>
       static typename result<TC>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
       {
-        return make_shared<typename result<TC>::type>(gfs->backend().blocked(),children);
+        return make_shared<typename result<TC>::type>(gfs->backend().blocked(),children,const_cast<GFS*>(gfs.get()));
       }
 
     };
+
+    template<typename GFS, typename Transformation>
+    power_gfs_to_lexicographic_ordering_descriptor<GFS,Transformation>
+    register_power_gfs_to_ordering_descriptor(GFS*,Transformation*,LexicographicOrderingTag*);
 
     // the generic registration for PowerGridFunctionSpace happens in transformations.hh
 
@@ -223,9 +229,9 @@ namespace Dune {
        * \note This constructor must be present for ordering objects not at
        *       the leaf of the tree.
        */
-      CompositeLexicographicOrdering(bool backend_blocked, DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
+      CompositeLexicographicOrdering(bool backend_blocked, typename Base::GFSData* gfs_data, DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
         : Node(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
-        , Base(*this,backend_blocked)
+        , Base(*this,backend_blocked,gfs_data)
       { }
 
       std::string name() const { return "CompositeLexicographicOrdering"; }
@@ -240,7 +246,7 @@ namespace Dune {
 #if HAVE_VARIADIC_TEMPLATES
 
     template<typename GFS, typename Transformation>
-    struct composite_gfs_to_ordering_descriptor<GFS,Transformation,LexicographicOrderingTag>
+    struct composite_gfs_to_lexicographic_ordering_descriptor
     {
 
       static const bool recursive = true;
@@ -263,13 +269,13 @@ namespace Dune {
       template<typename... TC>
       static typename result<TC...>::type transform(const GFS& gfs, const Transformation& t, shared_ptr<TC>... children)
       {
-        return typename result<TC...>::type(gfs.backend().blocked(),children...);
+        return typename result<TC...>::type(gfs.backend().blocked(),const_cast<GFS*>(&gfs),children...);
       }
 
       template<typename... TC>
       static typename result<TC...>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, shared_ptr<TC>... children)
       {
-        return make_shared<typename result<TC...>::type>(gfs->backend().blocked(),children...);
+        return make_shared<typename result<TC...>::type>(gfs->backend().blocked(),const_cast<GFS*>(gfs.get()),children...);
       }
 
     };
@@ -278,7 +284,7 @@ namespace Dune {
 
     //! Node transformation descriptor for CompositeGridFunctionSpace -> LexicographicOrdering (without variadic templates).
     template<typename GFS, typename Transformation>
-    struct composite_gfs_to_ordering_descriptor<GFS,Transformation,LexicographicOrderingTag>
+    struct composite_gfs_to_lexicographic_ordering_descriptor
     {
 
       static const bool recursive = true;
@@ -359,7 +365,9 @@ namespace Dune {
 
 #endif // HAVE_VARIADIC_TEMPLATES
 
-    // the generic registration for PowerGridFunctionSpace happens in transformations.hh
+    template<typename GFS, typename Transformation>
+    composite_gfs_to_lexicographic_ordering_descriptor<GFS,Transformation>
+    register_composite_gfs_to_ordering_descriptor(GFS*,Transformation*,LexicographicOrderingTag*);
 
    //! \} group GridFunctionSpace
   } // namespace PDELab

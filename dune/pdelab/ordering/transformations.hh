@@ -5,6 +5,7 @@
 
 #include <cstddef>
 
+#include <dune/pdelab/common/typetraits.hh>
 #include <dune/pdelab/common/typetree/traversal.hh>
 #include <dune/pdelab/common/typetree/accumulate_static.hh>
 #include <dune/pdelab/common/multiindex.hh>
@@ -70,11 +71,20 @@ namespace Dune {
     };
 
 
-
     // Declare PowerGFS to ordering descriptor and register transformation
 
     template<typename GFS, typename Transformation, typename OrderingTag>
-    struct power_gfs_to_ordering_descriptor;
+    struct power_gfs_to_ordering_descriptor
+      : public meta_function
+    {
+      typedef DUNE_DECLTYPE(
+        register_power_gfs_to_ordering_descriptor(
+          declptr<GFS>(),
+          declptr<Transformation>(),
+          declptr<OrderingTag>()
+          )
+        ) type;
+    };
 
     template<typename GridFunctionSpace, typename Params>
     power_gfs_to_ordering_descriptor<
@@ -82,13 +92,23 @@ namespace Dune {
       gfs_to_ordering<Params>,
       typename GridFunctionSpace::OrderingTag
       >
-    lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_ordering<Params>* t, PowerGridFunctionSpaceTag tag);
+    registerNodeTransformation(GridFunctionSpace*, gfs_to_ordering<Params>*, PowerGridFunctionSpaceTag*);
 
 
     // Declare LeafGFS to ordering descriptor and register transformation
 
     template<typename GFS, typename Transformation, typename OrderingTag>
-    struct leaf_gfs_to_ordering_descriptor;
+    struct leaf_gfs_to_ordering_descriptor
+      : public meta_function
+    {
+      typedef DUNE_DECLTYPE(
+        register_leaf_gfs_to_ordering_descriptor(
+          declptr<GFS>(),
+          declptr<Transformation>(),
+          declptr<OrderingTag>()
+          )
+        ) type;
+    };
 
     template<typename GridFunctionSpace, typename Params>
     leaf_gfs_to_ordering_descriptor<
@@ -96,13 +116,23 @@ namespace Dune {
       gfs_to_ordering<Params>,
       typename GridFunctionSpace::Traits::OrderingTag
       >
-    lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_ordering<Params>* t, LeafGridFunctionSpaceTag tag);
+    registerNodeTransformation(GridFunctionSpace*, gfs_to_ordering<Params>*, LeafGridFunctionSpaceTag*);
 
 
     // Declare CompositeGFS to ordering descriptor and register transformation
 
     template<typename GFS, typename Transformation, typename OrderingTag>
-    struct composite_gfs_to_ordering_descriptor;
+    struct composite_gfs_to_ordering_descriptor
+      : public meta_function
+    {
+      typedef DUNE_DECLTYPE(
+        register_composite_gfs_to_ordering_descriptor(
+          declptr<GFS>(),
+          declptr<Transformation>(),
+          declptr<OrderingTag>()
+          )
+        ) type;
+    };
 
     template<typename GridFunctionSpace, typename Params>
     composite_gfs_to_ordering_descriptor<
@@ -110,7 +140,7 @@ namespace Dune {
       gfs_to_ordering<Params>,
       typename GridFunctionSpace::OrderingTag
       >
-    lookupNodeTransformation(GridFunctionSpace* gfs, gfs_to_ordering<Params>* t, CompositeGridFunctionSpaceTag tag);
+    registerNodeTransformation(GridFunctionSpace*, gfs_to_ordering<Params>*, CompositeGridFunctionSpaceTag*);
 
 
     // Declare PowerGFS to local ordering descriptor and register transformation
@@ -124,7 +154,21 @@ namespace Dune {
       gfs_to_local_ordering<Params>,
       typename GFS::OrderingTag
       >
-    lookupNodeTransformation(GFS* gfs, gfs_to_local_ordering<Params>* t, PowerGridFunctionSpaceTag tag);
+    registerNodeTransformation(GFS*, gfs_to_local_ordering<Params>*, PowerGridFunctionSpaceTag*);
+
+
+    // Declare LeafGFS to local ordering descriptor and register transformation
+
+    template<typename GFS, typename Transformation, typename OrderingTag>
+    struct leaf_gfs_to_local_ordering_descriptor;
+
+    template<typename GFS, typename Params>
+    leaf_gfs_to_local_ordering_descriptor<
+      GFS,
+      gfs_to_local_ordering<Params>,
+      typename GFS::Traits::OrderingTag
+      >
+    registerNodeTransformation(GFS*, gfs_to_local_ordering<Params>*, LeafGridFunctionSpaceTag*);
 
 
     // Declare CompositeGFS to ordering descriptor and register transformation
@@ -138,7 +182,7 @@ namespace Dune {
       gfs_to_local_ordering<Params>,
       typename GFS::OrderingTag
       >
-    lookupNodeTransformation(GFS* gfs, gfs_to_local_ordering<Params>* t, CompositeGridFunctionSpaceTag tag);
+    registerNodeTransformation(GFS*, gfs_to_local_ordering<Params>*, CompositeGridFunctionSpaceTag*);
 
 
 #endif // DOXYGEN

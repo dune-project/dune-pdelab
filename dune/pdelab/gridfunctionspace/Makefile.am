@@ -5,6 +5,7 @@ gridfunctionspace_HEADERS =			\
 	dofinfo.hh				\
 	genericdatahandle.hh			\
 	gridfunctionspace.hh			\
+	gridfunctionspacebase.hh		\
 	gridfunctionspaceutilities.hh		\
 	interpolate.hh				\
 	intersectionindexset.hh			\

@@ -5,7 +5,7 @@
 #define DUNE_PDELAB_FINITELEMENTMAP_HH
 
 #include <dune/common/deprecated.hh>
-#include <dune/common/exceptions.hh>
+#include <dune/pdelab/common/exceptions.hh>
 
 #include <dune/geometry/referenceelements.hh>
 

@@ -28,6 +28,8 @@ namespace Dune {
         : public OrderingBase<DI,GDI,CI>
       {
 
+        typedef OrderingBase<DI,GDI,CI> BaseT;
+
       public:
 
         typedef typename OrderingBase<DI,GDI,CI>::Traits Traits;
@@ -42,8 +44,8 @@ namespace Dune {
          * construction.  This must be done by a seperate call to update()
          * after all the children have been properly set up.
          */
-        Base(Node& node, bool container_blocked, const OrderingTag& ordering_tag)
-          : OrderingBase<DI,GDI,CI>(node,container_blocked,ordering_tag.offsets(),nullptr)
+        Base(Node& node, bool container_blocked, const OrderingTag& ordering_tag, typename BaseT::GFSData* gfs_data)
+          : BaseT(node,container_blocked,ordering_tag.offsets(),gfs_data,nullptr)
         {
           // This check looks a little weird, but there is always one offset more than
           // there are blocks (the first offsets is 0, and the last one is the "offset
@@ -131,7 +133,7 @@ namespace Dune {
 
     } // namespace interleaved_ordering
 
-    //! Interface for merging index spaces
+
     template<typename DI, typename GDI, typename CI, typename Child, std::size_t k>
     class PowerInterleavedOrdering
       : public TypeTree::PowerNode<Child, k>
@@ -160,9 +162,9 @@ namespace Dune {
        * \note This constructor must be present for ordering objects not at
        *       the leaf of the tree.
        */
-      PowerInterleavedOrdering(bool container_blocked, const InterleavedOrderingTag& ordering_tag, const typename Node::NodeStorage& children)
+      PowerInterleavedOrdering(bool container_blocked, const InterleavedOrderingTag& ordering_tag, const typename Node::NodeStorage& children, typename Base::GFSData* gfs_data)
         : Node(children)
-        , Base(*this,container_blocked,ordering_tag)
+        , Base(*this,container_blocked,ordering_tag,gfs_data)
       {}
 
       void update()
@@ -179,7 +181,7 @@ namespace Dune {
 
 
     template<typename GFS, typename Transformation>
-    struct power_gfs_to_ordering_descriptor<GFS,Transformation,InterleavedOrderingTag>
+    struct power_gfs_to_interleaved_ordering_descriptor
     {
 
       static const bool recursive = true;
@@ -203,18 +205,23 @@ namespace Dune {
       template<typename TC>
       static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
       {
-        return typename result<TC>::type(gfs.backend().blocked(),gfs.orderingTag(),children);
+        return typename result<TC>::type(gfs.backend().blocked(),gfs.orderingTag(),children,const_cast<GFS*>(&gfs));
       }
 
       template<typename TC>
       static typename result<TC>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
       {
-        return make_shared<typename result<TC>::type>(gfs->backend().blocked(),gfs->orderingTag(),children);
+        return make_shared<typename result<TC>::type>(gfs->backend().blocked(),gfs->orderingTag(),children,const_cast<GFS*>(gfs.get()));
       }
 
     };
 
-    //! Interface for merging index spaces
+    template<typename GFS, typename Transformation>
+    power_gfs_to_interleaved_ordering_descriptor<GFS,Transformation>
+    register_power_gfs_to_ordering_descriptor(GFS*,Transformation*,InterleavedOrderingTag*);
+
+
+
     template<typename DI, typename GDI, typename CI, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
     class CompositeInterleavedOrdering :
       public DUNE_TYPETREE_COMPOSITENODE_BASETYPE,
@@ -253,9 +260,9 @@ namespace Dune {
        * \note This constructor must be present for ordering objects not at
        *       the leaf of the tree.
        */
-      CompositeInterleavedOrdering(bool backend_blocked, const InterleavedOrderingTag& ordering_tag, DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
+      CompositeInterleavedOrdering(bool backend_blocked, const InterleavedOrderingTag& ordering_tag, typename Base::GFSData* gfs_data, DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
         : Node(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
-        , Base(*this,backend_blocked,ordering_tag)
+        , Base(*this,backend_blocked,ordering_tag,gfs_data)
       { }
 
       std::string name() const { return "CompositeInterleavedOrdering"; }
@@ -270,7 +277,7 @@ namespace Dune {
 #if HAVE_VARIADIC_TEMPLATES
 
     template<typename GFS, typename Transformation>
-    struct composite_gfs_to_ordering_descriptor<GFS,Transformation,InterleavedOrderingTag>
+    struct composite_gfs_to_interleaved_ordering_descriptor
     {
 
       static const bool recursive = true;
@@ -293,13 +300,13 @@ namespace Dune {
       template<typename... TC>
       static typename result<TC...>::type transform(const GFS& gfs, const Transformation& t, shared_ptr<TC>... children)
       {
-        return typename result<TC...>::type(gfs.backend().blocked(),gfs.orderingTag(),children...);
+        return typename result<TC...>::type(gfs.backend().blocked(),gfs.orderingTag(),const_cast<GFS*>(&gfs),children...);
       }
 
       template<typename... TC>
       static typename result<TC...>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, shared_ptr<TC>... children)
       {
-        return make_shared<typename result<TC...>::type>(gfs->backend().blocked(),gfs.orderingTag(),children...);
+        return make_shared<typename result<TC...>::type>(gfs->backend().blocked(),gfs.orderingTag(),const_cast<GFS*>(gfs.get()),children...);
       }
 
     };
@@ -308,7 +315,7 @@ namespace Dune {
 
     //! Node transformation descriptor for CompositeGridFunctionSpace -> LexicographicOrdering (without variadic templates).
     template<typename GFS, typename Transformation>
-    struct composite_gfs_to_ordering_descriptor<GFS,Transformation,InterleavedOrderingTag>
+    struct composite_gfs_to_interleaved_ordering_descriptor
     {
 
       static const bool recursive = true;
@@ -388,6 +395,10 @@ namespace Dune {
     };
 
 #endif // HAVE_VARIADIC_TEMPLATES
+
+    template<typename GFS, typename Transformation>
+    composite_gfs_to_interleaved_ordering_descriptor<GFS,Transformation>
+    register_composite_gfs_to_ordering_descriptor(GFS*,Transformation*,InterleavedOrderingTag*);
 
    //! \} group GridFunctionSpace
   } // namespace PDELab
