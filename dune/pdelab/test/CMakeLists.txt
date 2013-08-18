@@ -6,23 +6,23 @@ set(NORMALTESTS  )
 set(MOSTLYCLEANFILES )
 set(check_SCRIPTS  )
 
-set(noinst_HEADERS                                 
-        fmt.hh                                  
-        gnuplotgraph.hh                         
-        gridexamples.hh                         
-        l2difference.hh                         
-        l2norm.hh                               
-        typetreetargetnodes.hh                  
-        typetreetestswitch.hh                   
+set(noinst_HEADERS
+        fmt.hh
+        gnuplotgraph.hh
+        gridexamples.hh
+        l2difference.hh
+        l2norm.hh
+        typetreetargetnodes.hh
+        typetreetestswitch.hh
         typetreetestutility.hh)
 
 
-set(noinst_SCRIPTS                                 
+set(noinst_SCRIPTS
         make_pvd.sh)
 
-set(headercheck_IGNORE                             
-        typetreetargetnodes.hh                  
-        typetreetestswitch.hh                   
+set(headercheck_IGNORE
+        typetreetargetnodes.hh
+        typetreetestswitch.hh
         typetreetestutility.hh)
 
 set(GRIDDIM  2)
@@ -37,12 +37,12 @@ target_link_libraries(testanalytic dunepdelab ${DUNE_LIBS})
 add_dune_alberta_flags(testanalytic )
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testanalytic_ LDFLAGS ${AM_LDFLAGS}            
+# set(testanalytic_ LDFLAGS ${AM_LDFLAGS}
 #        ${ALBERTA_LDFLAGS})
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testanalytic_ LDADD                            
-#        ${ALBERTA_LIBS}                         
+# set(testanalytic_ LDADD
+#        ${ALBERTA_LIBS}
 #        ${LDADD})
 list(APPEND MOSTLYCLEANFILES channel.vtu)
 
@@ -70,12 +70,12 @@ target_link_libraries(testconstraints dunepdelab ${DUNE_LIBS})
 add_dune_alberta_flags(testconstraints )
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testconstraints_ LDFLAGS ${AM_LDFLAGS}         
+# set(testconstraints_ LDFLAGS ${AM_LDFLAGS}
 #        ${ALBERTA_LDFLAGS})
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testconstraints_ LDADD                         
-#        ${ALBERTA_LIBS}                         
+# set(testconstraints_ LDADD
+#        ${ALBERTA_LIBS}
 #        ${LDADD})
 list(APPEND MOSTLYCLEANFILES testconstraintsp1.vtu testconstraintspowerp1.vtu)
 
@@ -86,12 +86,12 @@ target_link_libraries(testfiniteelementmap dunepdelab ${DUNE_LIBS})
 add_dune_alberta_flags(testfiniteelementmap )
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testfiniteelementmap_ LDFLAGS ${AM_LDFLAGS}    
+# set(testfiniteelementmap_ LDFLAGS ${AM_LDFLAGS}
 #        ${ALBERTA_LDFLAGS})
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testfiniteelementmap_ LDADD                    
-#        ${ALBERTA_LIBS}                         
+# set(testfiniteelementmap_ LDADD
+#        ${ALBERTA_LIBS}
 #        ${LDADD})
 
 list(APPEND NORMALTESTS testfunction)
@@ -101,18 +101,26 @@ target_link_libraries(testfunction dunepdelab ${DUNE_LIBS})
 add_dune_alberta_flags(testfunction )
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testfunction_ LDFLAGS ${AM_LDFLAGS}            
+# set(testfunction_ LDFLAGS ${AM_LDFLAGS}
 #        ${ALBERTA_LDFLAGS})
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testfunction_ LDADD                            
-#        ${ALBERTA_LIBS}                         
+# set(testfunction_ LDADD
+#        ${ALBERTA_LIBS}
 #        ${LDADD})
 list(APPEND MOSTLYCLEANFILES multi.vtu single.vtu)
 
 list(APPEND NORMALTESTS testgridfunctionspace)
 add_executable(testgridfunctionspace testgridfunctionspace.cc)
 target_link_libraries(testgridfunctionspace  dunepdelab ${DUNE_LIBS})
+
+list(APPEND NORMALTESTS testordering)
+add_executable(testordering testordering.cc)
+target_link_libraries(testordering  dunepdelab ${DUNE_LIBS})
+
+list(APPEND NORMALTESTS testpermutedordering)
+add_executable(testpermutedordering testpermutedordering.cc)
+target_link_libraries(testpermutedordering  dunepdelab ${DUNE_LIBS})
 
 list(APPEND NORMALTESTS testlaplacedirichletccfv)
 add_executable(testlaplacedirichletccfv testlaplacedirichletccfv.cc)
@@ -122,14 +130,14 @@ add_dune_superlu_flags(testlaplacedirichletccfv )
 add_dune_alberta_flags(testlaplacedirichletccfv )
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testlaplacedirichletccfv_ LDFLAGS ${AM_LDFLAGS}        
-#        ${ALBERTA_LDFLAGS}                              
+# set(testlaplacedirichletccfv_ LDFLAGS ${AM_LDFLAGS}
+#        ${ALBERTA_LDFLAGS}
 #        ${SUPERLU_LDFLAGS})
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testlaplacedirichletccfv_ LDADD                
-#        ${SUPERLU_LDFLAGS} ${SUPERLU_LIBS}      
-#        ${ALBERTA_LIBS}                         
+# set(testlaplacedirichletccfv_ LDADD
+#        ${SUPERLU_LDFLAGS} ${SUPERLU_LIBS}
+#        ${ALBERTA_LIBS}
 #        ${LDADD})
 list(APPEND MOSTLYCLEANFILES testlaplacedirichletccfv.vtu)
 
@@ -141,14 +149,14 @@ add_dune_superlu_flags(testlaplacedirichletp12d )
 add_dune_alberta_flags(testlaplacedirichletp12d )
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testlaplacedirichletp12d_ LDFLAGS ${AM_LDFLAGS}        
-#        ${ALBERTA_LDFLAGS}                              
+# set(testlaplacedirichletp12d_ LDFLAGS ${AM_LDFLAGS}
+#        ${ALBERTA_LDFLAGS}
 #        ${SUPERLU_LDFLAGS})
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testlaplacedirichletp12d_ LDADD                
-#        ${SUPERLU_LDFLAGS} ${SUPERLU_LIBS}      
-#        ${ALBERTA_LIBS}                         
+# set(testlaplacedirichletp12d_ LDADD
+#        ${SUPERLU_LDFLAGS} ${SUPERLU_LIBS}
+#        ${ALBERTA_LIBS}
 #        ${LDADD})
 list(APPEND MOSTLYCLEANFILES testlaplacedirichletp12d.vtu)
 
@@ -158,12 +166,12 @@ target_link_libraries(testelasticity dunepdelab ${DUNE_LIBS})
 add_dune_superlu_flags(testelasticity )
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testelasticity_ LDFLAGS ${AM_LDFLAGS}  
+# set(testelasticity_ LDFLAGS ${AM_LDFLAGS}
 #        ${SUPERLU_LDFLAGS})
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testelasticity_ LDADD          
-#        ${SUPERLU_LDFLAGS} ${SUPERLU_LIBS}      
+# set(testelasticity_ LDADD
+#        ${SUPERLU_LDFLAGS} ${SUPERLU_LIBS}
 #        ${LDADD})
 list(APPEND MOSTLYCLEANFILES testelasticity.vtu)
 
@@ -174,12 +182,12 @@ target_link_libraries(testlocalfunctionspace dunepdelab ${DUNE_LIBS})
 add_dune_alberta_flags(testlocalfunctionspace )
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testlocalfunctionspace_ LDFLAGS ${AM_LDFLAGS}  
+# set(testlocalfunctionspace_ LDFLAGS ${AM_LDFLAGS}
 #        ${ALBERTA_LDFLAGS})
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testlocalfunctionspace_ LDADD                  
-#        ${ALBERTA_LIBS}                         
+# set(testlocalfunctionspace_ LDADD
+#        ${ALBERTA_LIBS}
 #        ${LDADD})
 
 list(APPEND NORMALTESTS testp12dinterpolation)
@@ -189,12 +197,12 @@ target_link_libraries(testp12dinterpolation dunepdelab ${DUNE_LIBS})
 add_dune_alberta_flags(testp12dinterpolation GRIDDIM 2)
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testp12dinterpolation_ LDFLAGS ${AM_LDFLAGS}   
+# set(testp12dinterpolation_ LDFLAGS ${AM_LDFLAGS}
 #        ${ALBERTA2D_LDFLAGS})
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testp12dinterpolation_ LDADD                                   
-#        ${ALBERTA2D_LIBS}                       
+# set(testp12dinterpolation_ LDADD
+#        ${ALBERTA2D_LIBS}
 #        ${LDADD})
 
 list(APPEND NORMALTESTS testpk)
@@ -204,12 +212,12 @@ target_link_libraries(testpk dunepdelab ${DUNE_LIBS})
 add_dune_alberta_flags(testpk )
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testpk_ LDFLAGS ${AM_LDFLAGS}                  
+# set(testpk_ LDFLAGS ${AM_LDFLAGS}
 #        ${ALBERTA_LDFLAGS})
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testpk_ LDADD                                  
-#        ${ALBERTA_LIBS}                         
+# set(testpk_ LDADD
+#        ${ALBERTA_LIBS}
 #        ${LDADD})
 list(APPEND MOSTLYCLEANFILES testpk.vtu)
 
@@ -221,14 +229,14 @@ add_dune_superlu_flags(testpoisson )
 add_dune_alberta_flags(testpoisson )
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testpoisson_ LDFLAGS ${AM_LDFLAGS}             
-#        ${ALBERTA_LDFLAGS}                      
+# set(testpoisson_ LDFLAGS ${AM_LDFLAGS}
+#        ${ALBERTA_LDFLAGS}
 #        ${SUPERLU_LDFLAGS})
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testpoisson_ LDADD                             
-#        ${SUPERLU_LDFLAGS} ${SUPERLU_LIBS}      
-#        ${ALBERTA_LIBS}                         
+# set(testpoisson_ LDADD
+#        ${SUPERLU_LDFLAGS} ${SUPERLU_LIBS}
+#        ${ALBERTA_LIBS}
 #        ${LDADD})
 list(APPEND MOSTLYCLEANFILES poisson_*.vtu)
 
@@ -240,14 +248,14 @@ add_dune_superlu_flags(testpoisson_globalfe )
 add_dune_alberta_flags(testpoisson_globalfe )
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testpoisson_globalfe_ LDFLAGS ${AM_LDFLAGS}    
-#        ${ALBERTA_LDFLAGS}                      
+# set(testpoisson_globalfe_ LDFLAGS ${AM_LDFLAGS}
+#        ${ALBERTA_LDFLAGS}
 #        ${SUPERLU_LDFLAGS})
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testpoisson_globalfe_ LDADD                    
-#        ${SUPERLU_LDFLAGS} ${SUPERLU_LIBS}      
-#        ${ALBERTA_LIBS}                         
+# set(testpoisson_globalfe_ LDADD
+#        ${SUPERLU_LDFLAGS} ${SUPERLU_LIBS}
+#        ${ALBERTA_LIBS}
 #        ${LDADD})
 list(APPEND MOSTLYCLEANFILES poisson_globalfe_*.vtu)
 
@@ -258,12 +266,12 @@ target_link_libraries(testrt0 dunepdelab ${DUNE_LIBS})
 add_dune_alberta_flags(testrt0 )
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testrt0_ LDFLAGS ${AM_LDFLAGS}                 
+# set(testrt0_ LDFLAGS ${AM_LDFLAGS}
 #        ${ALBERTA_LDFLAGS})
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testrt0_ LDADD                                 
-#        ${ALBERTA_LIBS}                         
+# set(testrt0_ LDADD
+#        ${ALBERTA_LIBS}
 #        ${LDADD})
 list(APPEND MOSTLYCLEANFILES testrt0.vtu)
 
@@ -274,12 +282,12 @@ target_link_libraries(testrt02dgridfunctionspace dunepdelab ${DUNE_LIBS})
 add_dune_alberta_flags(testrt02dgridfunctionspace )
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testrt02dgridfunctionspace_ LDFLAGS ${AM_LDFLAGS}      
+# set(testrt02dgridfunctionspace_ LDFLAGS ${AM_LDFLAGS}
 #        ${ALBERTA_LDFLAGS})
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testrt02dgridfunctionspace_ LDADD              
-#        ${ALBERTA_LIBS}                         
+# set(testrt02dgridfunctionspace_ LDADD
+#        ${ALBERTA_LIBS}
 #        ${LDADD})
 list(APPEND MOSTLYCLEANFILES rt02dgridfunctionspace-*.vtu)
 
@@ -290,12 +298,12 @@ target_link_libraries(testutilities dunepdelab ${DUNE_LIBS})
 add_dune_alberta_flags(testutilities )
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testutilities_ LDFLAGS ${AM_LDFLAGS}           
+# set(testutilities_ LDFLAGS ${AM_LDFLAGS}
 #        ${ALBERTA_LDFLAGS})
 # The following lines are comment out as the translation is not clear. TODO review
 #
-# set(testutilities_ LDADD                           
-#        ${ALBERTA_LIBS}                         
+# set(testutilities_ LDADD
+#        ${ALBERTA_LIBS}
 #        ${LDADD})
 list(APPEND MOSTLYCLEANFILES edger.vtu interpolated.vtu q1.vtu taylorhood.vtu)
 list(APPEND check_PROGRAMS testtypetree testtypetree-no-sfinae testtypetree-no-variadic testtypetree-no-rvalue-refs testtypetree-legacy)
