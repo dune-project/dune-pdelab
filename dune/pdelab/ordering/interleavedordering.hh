@@ -133,7 +133,7 @@ namespace Dune {
 
     } // namespace interleaved_ordering
 
-    //! Interface for merging index spaces
+
     template<typename DI, typename GDI, typename CI, typename Child, std::size_t k>
     class PowerInterleavedOrdering
       : public TypeTree::PowerNode<Child, k>
@@ -181,7 +181,7 @@ namespace Dune {
 
 
     template<typename GFS, typename Transformation>
-    struct power_gfs_to_ordering_descriptor<GFS,Transformation,InterleavedOrderingTag>
+    struct power_gfs_to_interleaved_ordering_descriptor
     {
 
       static const bool recursive = true;
@@ -216,7 +216,12 @@ namespace Dune {
 
     };
 
-    //! Interface for merging index spaces
+    template<typename GFS, typename Transformation>
+    power_gfs_to_interleaved_ordering_descriptor<GFS,Transformation>
+    register_power_gfs_to_ordering_descriptor(GFS*,Transformation*,InterleavedOrderingTag*);
+
+
+
     template<typename DI, typename GDI, typename CI, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
     class CompositeInterleavedOrdering :
       public DUNE_TYPETREE_COMPOSITENODE_BASETYPE,
@@ -272,7 +277,7 @@ namespace Dune {
 #if HAVE_VARIADIC_TEMPLATES
 
     template<typename GFS, typename Transformation>
-    struct composite_gfs_to_ordering_descriptor<GFS,Transformation,InterleavedOrderingTag>
+    struct composite_gfs_to_interleaved_ordering_descriptor
     {
 
       static const bool recursive = true;
@@ -310,7 +315,7 @@ namespace Dune {
 
     //! Node transformation descriptor for CompositeGridFunctionSpace -> LexicographicOrdering (without variadic templates).
     template<typename GFS, typename Transformation>
-    struct composite_gfs_to_ordering_descriptor<GFS,Transformation,InterleavedOrderingTag>
+    struct composite_gfs_to_interleaved_ordering_descriptor
     {
 
       static const bool recursive = true;
@@ -390,6 +395,10 @@ namespace Dune {
     };
 
 #endif // HAVE_VARIADIC_TEMPLATES
+
+    template<typename GFS, typename Transformation>
+    composite_gfs_to_interleaved_ordering_descriptor<GFS,Transformation>
+    register_composite_gfs_to_ordering_descriptor(GFS*,Transformation*,InterleavedOrderingTag*);
 
    //! \} group GridFunctionSpace
   } // namespace PDELab

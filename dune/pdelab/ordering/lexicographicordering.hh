@@ -30,7 +30,6 @@ namespace Dune {
 
     namespace lexicographic_ordering {
 
-      //! Interface for merging index spaces
       template<typename DI, typename GDI, typename CI, typename Node>
       class Base
         : public OrderingBase<DI,GDI,CI>
@@ -100,7 +99,8 @@ namespace Dune {
       };
     }
 
-    //! Interface for merging index spaces
+
+
     template<typename DI, typename GDI, typename CI, typename Child, std::size_t k>
     class PowerLexicographicOrdering
       : public TypeTree::PowerNode<Child, k>
@@ -148,7 +148,7 @@ namespace Dune {
 
 
     template<typename GFS, typename Transformation>
-    struct power_gfs_to_ordering_descriptor<GFS,Transformation,LexicographicOrderingTag>
+    struct power_gfs_to_lexicographic_ordering_descriptor
     {
 
       static const bool recursive = true;
@@ -182,6 +182,10 @@ namespace Dune {
       }
 
     };
+
+    template<typename GFS, typename Transformation>
+    power_gfs_to_lexicographic_ordering_descriptor<GFS,Transformation>
+    register_power_gfs_to_ordering_descriptor(GFS*,Transformation*,LexicographicOrderingTag*);
 
     // the generic registration for PowerGridFunctionSpace happens in transformations.hh
 
@@ -242,7 +246,7 @@ namespace Dune {
 #if HAVE_VARIADIC_TEMPLATES
 
     template<typename GFS, typename Transformation>
-    struct composite_gfs_to_ordering_descriptor<GFS,Transformation,LexicographicOrderingTag>
+    struct composite_gfs_to_lexicographic_ordering_descriptor
     {
 
       static const bool recursive = true;
@@ -280,7 +284,7 @@ namespace Dune {
 
     //! Node transformation descriptor for CompositeGridFunctionSpace -> LexicographicOrdering (without variadic templates).
     template<typename GFS, typename Transformation>
-    struct composite_gfs_to_ordering_descriptor<GFS,Transformation,LexicographicOrderingTag>
+    struct composite_gfs_to_lexicographic_ordering_descriptor
     {
 
       static const bool recursive = true;
@@ -361,7 +365,9 @@ namespace Dune {
 
 #endif // HAVE_VARIADIC_TEMPLATES
 
-    // the generic registration for PowerGridFunctionSpace happens in transformations.hh
+    template<typename GFS, typename Transformation>
+    composite_gfs_to_lexicographic_ordering_descriptor<GFS,Transformation>
+    register_composite_gfs_to_ordering_descriptor(GFS*,Transformation*,LexicographicOrderingTag*);
 
    //! \} group GridFunctionSpace
   } // namespace PDELab

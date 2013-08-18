@@ -364,8 +364,8 @@ namespace Dune {
     };
 
 
-    template<typename GFS, typename Transformation, typename Params>
-    struct leaf_gfs_to_ordering_descriptor<GFS,Transformation,LeafOrderingTag<Params> >
+    template<typename GFS, typename Transformation>
+    struct direct_leaf_gfs_to_gridview_ordering_descriptor
     {
 
       static const bool recursive = false;
@@ -394,7 +394,10 @@ namespace Dune {
 
     };
 
-    // transformation registration is managed centrally in transformations.hh
+
+    template<typename GFS, typename Transformation, typename Params>
+    direct_leaf_gfs_to_gridview_ordering_descriptor<GFS,Transformation>
+    register_leaf_gfs_to_ordering_descriptor(GFS*,Transformation*,LeafOrderingTag<Params>*);
 
 
    //! \} group GridFunctionSpace

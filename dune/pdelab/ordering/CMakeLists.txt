@@ -1,4 +1,5 @@
 install(FILES
+  decorator.hh
   directleaflocalordering.hh
   entityblockedlocalordering.hh
   gridviewordering.hh
@@ -9,6 +10,7 @@ install(FILES
   localorderingbase.hh
   orderingbase.hh
   orderinginterface.hh
+  permutedordering.hh
   singlecodimleafordering.hh
   subordering.hh
   transformations.hh

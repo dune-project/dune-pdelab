@@ -310,6 +310,9 @@ endif
 check_PROGRAMS += testordering
 testordering_SOURCES = testordering.cc
 
+check_PROGRAMS += testpermutedordering
+testpermutedordering_SOURCES = testpermutedordering.cc
+
 check_PROGRAMS += testdatahandle
 testdatahandle_SOURCES = testdatahandle.cc
 
