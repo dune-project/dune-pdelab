@@ -45,6 +45,11 @@ namespace Dune {
       : public OrderingError
     {};
 
+    //! A PermutedOrdering got a permutation vector of the wrong size.
+    class PermutedOrderingSizeError
+      : public OrderingError
+    {};
+
   } // namespace PDELab
 } // namespace Dune
 
