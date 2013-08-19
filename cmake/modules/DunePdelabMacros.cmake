@@ -3,6 +3,8 @@ message(AUTHOR_WARNING "TODO: Implement Eigen test.")
 
 find_package(CXXInitializerList)
 find_package(CXXUnorderedContainers)
+find_package(CXXDecltype)
+find_package(GCCTypeof)
 
 function(add_dune_petsc_flags)
   if(PETSC_FOUND)
@@ -22,7 +24,7 @@ function(add_dune_petsc_flags)
       endif(ADD_PETSC_OBJECT)
       include_directories(${PETSC_INCLUDES})
     endif()
-    
+
     set_property(${_prefix} ${ADD_PETSC_UNPARSED_ARGUMENTS} APPEND PROPERTY COMPILE_DEFINITIONS ENABLE_PETSC ${PETSC_DEFINITIONS})
     if(NOT (ADD_PETSC_SOURCE_ONLY OR ADD_PETSC_OBJECT))
       set_property(${_prefix} ${ADD_PETSC_UNPARSED_ARGUMENTS} APPEND PROPERTY LINK_LIBRARIES ${PETSC_LIBRARIES})
