@@ -17,26 +17,11 @@ namespace Dune {
 
   // Tests whether the first template argument is a base class of the second one.
   using std::is_base_of;
-  // C++11 equivalent of Dune::SelectType.
-  using std::conditional;
 
 #elif defined HAVE_TR1_TYPE_TRAITS
 
   // This is already in TR1
   using std::tr1::is_base_of;
-
-  // We have to reimplement std::conditional, but that's trivial...
-  template<bool B, typename T, typename F>
-  struct conditional
-  {
-    typedef T type;
-  };
-
-  template<typename T, typename F>
-  struct conditional<false,T,F>
-  {
-    typedef F type;
-  };
 
 #else
 
