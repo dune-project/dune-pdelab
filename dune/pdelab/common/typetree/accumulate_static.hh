@@ -4,6 +4,8 @@
 #ifndef DUNE_PDELAB_COMMON_TYPETREE_ACCUMULATE_STATIC_HH
 #define DUNE_PDELAB_COMMON_TYPETREE_ACCUMULATE_STATIC_HH
 
+#include <dune/common/typetraits.hh>
+
 #include <dune/pdelab/common/typetree/nodetags.hh>
 #include <dune/pdelab/common/typetree/treepath.hh>
 
@@ -361,11 +363,11 @@ accumulate_node_helper<LeafNode,Functor,Reduction,current_value,TreePath,Functor
           bottom_up_reduction
           >
         {
-          typedef typename SelectType<
+          typedef typename conditional<
             TreePathBack<tree_path>::value == 0,
             start_type,
             current_type
-            >::Type type;
+            >::type type;
         };
 
 
