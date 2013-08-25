@@ -159,15 +159,6 @@ namespace Dune {
       //! \brief Type of the underlying grid function space
       typedef GFS GridFunctionSpace;
 
-      //! \brief Type of the grid view that the underlying grid function space is defined on.
-      typedef typename GFS::Traits::GridViewType GridViewType;
-
-      //! \brief Type of the grid view that the underlying grid function space is defined on.
-      typedef typename GFS::Traits::GridViewType GridView;
-
-      //! \brief Type of codim 0 entity in the grid
-      typedef typename GridViewType::Traits::template Codim<0>::Entity Element;
-
       //! \brief Type to store indices from Backend
       typedef typename GFS::Traits::SizeType SizeType;
 
@@ -270,6 +261,50 @@ namespace Dune {
       }
 
     protected:
+      template<typename NodeType>
+      void setup(NodeType& node)
+      {
+        _dof_index_storage.resize(gridFunctionSpace().ordering().maxLocalSize());
+        TypeTree::applyToTree(node,PropagateGlobalStorageVisitor<>());
+      }
+
+      shared_ptr<GFS const> pgfs;
+      typename Traits::DOFIndexContainer _dof_index_storage;
+      typename Traits::DOFIndexContainer* _dof_indices;
+      typename Traits::IndexContainer::size_type n;
+      typename Traits::IndexContainer::size_type offset;
+    };
+
+    //! traits for local function space on a gridview
+    template<typename GFS, typename DOFIndex>
+    struct GridViewLocalFunctionSpaceBaseTraits : public LocalFunctionSpaceBaseTraits<GFS,DOFIndex>
+    {
+      //! \brief Type of the grid view that the underlying grid function space is defined on.
+      typedef typename GFS::Traits::GridViewType GridViewType;
+
+      //! \brief Type of the grid view that the underlying grid function space is defined on.
+      typedef typename GFS::Traits::GridViewType GridView;
+
+      //! \brief Type of codim 0 entity in the grid
+      typedef typename GridViewType::Traits::template Codim<0>::Entity Element;
+    };
+
+    template <typename GFS, typename DOFIndex>
+    class GridViewLocalFunctionSpaceBaseNode :
+      public LocalFunctionSpaceBaseNode<GFS,DOFIndex>
+    {
+      typedef typename GFS::Traits::Backend B;
+      typedef LocalFunctionSpaceBaseNode<GFS,DOFIndex> BaseT;
+
+    public:
+      typedef GridViewLocalFunctionSpaceBaseTraits<GFS,DOFIndex> Traits;
+
+      //! \brief construct from global function space
+      GridViewLocalFunctionSpaceBaseNode (shared_ptr<const GFS> gfs)
+        : BaseT(gfs)
+      {}
+
+    protected:
       //! \brief bind local function space to entity
       /**
 
@@ -285,28 +320,14 @@ namespace Dune {
        */
       template<typename NodeType>
       void bind (NodeType& node, const typename Traits::Element& e);
-
-      template<typename NodeType>
-      void setup(NodeType& node)
-      {
-        _dof_index_storage.resize(gridFunctionSpace().ordering().maxLocalSize());
-        TypeTree::applyToTree(node,PropagateGlobalStorageVisitor<>());
-      }
-
-      shared_ptr<GFS const> pgfs;
-      typename Traits::DOFIndexContainer _dof_index_storage;
-      typename Traits::DOFIndexContainer* _dof_indices;
-      typename Traits::IndexContainer::size_type n;
-      typename Traits::IndexContainer::size_type offset;
     };
-
 
     template <typename GFS, typename DOFIndex>
     template <typename NodeType>
-    void LocalFunctionSpaceBaseNode<GFS,DOFIndex>::bind (NodeType& node,
-         const typename LocalFunctionSpaceBaseNode<GFS,DOFIndex>::Traits::Element& e)
+    void GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex>::bind (NodeType& node,
+         const typename GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex>::Traits::Element& e)
     {
-      typedef typename LocalFunctionSpaceBaseNode<GFS,DOFIndex>::Traits::Element Element;
+      typedef typename GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex>::Traits::Element Element;
       assert(&node == this);
 
       // compute sizes
@@ -317,7 +338,6 @@ namespace Dune {
       // initialize iterators and fill indices
       FillIndicesVisitor<Element> fiv(e);
       TypeTree::applyToTree(node,fiv);
-
     }
 
     //=======================================
@@ -326,7 +346,7 @@ namespace Dune {
 
     //! traits for multi component local function space
     template<typename GFS, typename DOFIndex, typename N>
-    struct PowerCompositeLocalFunctionSpaceTraits : public LocalFunctionSpaceBaseTraits<GFS,DOFIndex>
+    struct PowerCompositeLocalFunctionSpaceTraits : public GridViewLocalFunctionSpaceBaseTraits<GFS,DOFIndex>
     {
       //! type of local function space node
       typedef N NodeType;
@@ -335,10 +355,10 @@ namespace Dune {
     // local function space for a power grid function space
     template<typename GFS, typename DOFIndex, typename ChildLFS, std::size_t k>
     class PowerLocalFunctionSpaceNode :
-      public LocalFunctionSpaceBaseNode<GFS,DOFIndex>,
+      public GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex>,
       public TypeTree::PowerNode<ChildLFS,k>
     {
-      typedef LocalFunctionSpaceBaseNode<GFS,DOFIndex> BaseT;
+      typedef GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex> BaseT;
       typedef TypeTree::PowerNode<ChildLFS,k> TreeNode;
 
       template<typename>
@@ -413,10 +433,10 @@ namespace Dune {
     // local function space for a power grid function space
     template<typename GFS, typename DOFIndex, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
     class CompositeLocalFunctionSpaceNode
-      : public LocalFunctionSpaceBaseNode<GFS,DOFIndex>
+      : public GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex>
       , public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
     {
-      typedef LocalFunctionSpaceBaseNode<GFS,DOFIndex> BaseT;
+      typedef GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex> BaseT;
       typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE NodeType;
 
       template<typename>
@@ -539,10 +559,10 @@ namespace Dune {
     //! single component local function space
     template<typename GFS, typename DOFIndex>
     class LeafLocalFunctionSpaceNode
-      : public LocalFunctionSpaceBaseNode<GFS,DOFIndex>
+      : public GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex>
       , public TypeTree::LeafNode
     {
-      typedef LocalFunctionSpaceBaseNode<GFS,DOFIndex> BaseT;
+      typedef GridViewLocalFunctionSpaceBaseNode<GFS,DOFIndex> BaseT;
 
       template<typename>
       friend struct PropagateGlobalStorageVisitor;
