@@ -14,7 +14,8 @@
 
 #include <dune/grid/utility/hierarchicsearch.hh>
 
-#include "typetree.hh"
+#include <dune/typetree/typetree.hh>
+
 #include "vtkexport.hh"
 #include "geometrywrapper.hh"
 
@@ -661,7 +662,7 @@ namespace Dune {
       template <typename TT>
       void setTime(TT time){
         PowerCompositeSetTimeVisitor<TT> visitor(time);
-        Dune::PDELab::TypeTree::applyToTree(*this,visitor);
+        Dune::TypeTree::applyToTree(*this,visitor);
       }
 
       PowerGridFunction()
@@ -831,7 +832,7 @@ namespace Dune {
       template <typename TT>
       void setTime(TT time){
         PowerCompositeSetTimeVisitor<TT> visitor(time);
-        Dune::PDELab::TypeTree::applyToTree(*this,visitor);
+        Dune::TypeTree::applyToTree(*this,visitor);
       }
 
 #ifdef DOXYGEN

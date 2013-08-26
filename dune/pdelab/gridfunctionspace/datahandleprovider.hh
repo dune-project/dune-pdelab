@@ -9,7 +9,8 @@
 #include <dune/common/static_assert.hh>
 #include <dune/common/typetraits.hh>
 #include <dune/common/reservedvector.hh>
-#include <dune/pdelab/common/typetree/visitor.hh>
+#include <dune/typetree/visitor.hh>
+
 #include <dune/pdelab/ordering/utility.hh>
 
 namespace Dune {

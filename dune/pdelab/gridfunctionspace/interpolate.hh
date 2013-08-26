@@ -10,11 +10,11 @@
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
-#include "../common/typetree.hh"
-#include "../common/typetree/pairtraversal.hh"
-#include "../common/function.hh"
+#include <dune/typetree/typetree.hh>
+#include <dune/typetree/pairtraversal.hh>
 
-#include "gridfunctionspace.hh"
+#include <dune/pdelab/common/function.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
 namespace Dune {

@@ -170,9 +170,9 @@ void testfunctiontree (const GV& gv)
   typedef Dune::PDELab::CompositeGridFunction<C2,C9> T;
   T t(c2,c9);
 
-  std::cout << "depth of T is " << Dune::PDELab::TypeTree::TreeInfo<T>::depth << std::endl;
-  std::cout << "number of nodes in T is " << Dune::PDELab::TypeTree::TreeInfo<T>::nodeCount << std::endl;
-  std::cout << "number of leaves in T is " << Dune::PDELab::TypeTree::TreeInfo<T>::leafCount << std::endl;
+  std::cout << "depth of T is " << Dune::TypeTree::TreeInfo<T>::depth << std::endl;
+  std::cout << "number of nodes in T is " << Dune::TypeTree::TreeInfo<T>::nodeCount << std::endl;
+  std::cout << "number of leaves in T is " << Dune::TypeTree::TreeInfo<T>::leafCount << std::endl;
 
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   Dune::PDELab::vtkwriter_tree_addvertexdata(vtkwriter,t);

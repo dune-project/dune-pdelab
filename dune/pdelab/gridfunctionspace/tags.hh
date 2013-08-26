@@ -5,7 +5,8 @@
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_TAGS_HH
 
 #include <dune/grid/common/gridenums.hh>
-#include <dune/pdelab/common/typetree/utility.hh>
+#include <dune/typetree/utility.hh>
+
 #include <dune/pdelab/common/dofindex.hh>
 #include <dune/pdelab/common/simpledofindex.hh>
 

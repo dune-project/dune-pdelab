@@ -6,8 +6,9 @@
 
 #include <dune/common/shared_ptr.hh>
 
-#include <dune/pdelab/common/typetree/compositenodemacros.hh>
-#include <dune/pdelab/common/typetree/utility.hh>
+#include <dune/typetree/compositenodemacros.hh>
+#include <dune/typetree/utility.hh>
+
 #include <dune/pdelab/gridfunctionspace/powercompositegridfunctionspacebase.hh>
 #include <dune/pdelab/gridfunctionspace/datahandleprovider.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>

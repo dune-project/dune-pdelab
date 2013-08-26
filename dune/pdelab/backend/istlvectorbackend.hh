@@ -5,8 +5,8 @@
 
 #include <dune/common/fvector.hh>
 #include <dune/istl/bvector.hh>
+#include <dune/typetree/typetree.hh>
 
-#include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/backend/tags.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>

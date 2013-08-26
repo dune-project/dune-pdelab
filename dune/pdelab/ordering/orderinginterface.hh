@@ -8,7 +8,7 @@
 
 #include <dune/common/documentation.hh>
 
-#include <dune/pdelab/common/typetree/nodeinterface.hh>
+#include <dune/typetree/nodeinterface.hh>
 
 namespace Dune {
   namespace PDELab {

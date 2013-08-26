@@ -12,7 +12,8 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
 
-#include <dune/pdelab/common/typetree.hh>
+#include <dune/typetree/typetree.hh>
+
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 
@@ -418,7 +419,7 @@ namespace Dune {
 
     // register PowerGFS -> LocalFunctionSpace transformation
     template<typename PowerGridFunctionSpace, typename Params>
-    Dune::PDELab::TypeTree::TemplatizedGenericPowerNodeTransformation<
+    Dune::TypeTree::TemplatizedGenericPowerNodeTransformation<
       PowerGridFunctionSpace,
       gfs_to_lfs<Params>,
       power_gfs_to_lfs_template<PowerGridFunctionSpace,gfs_to_lfs<Params> >::template result
@@ -496,7 +497,7 @@ namespace Dune {
 
     // register CompositeGFS -> LocalFunctionSpace transformation (variadic version)
     template<typename CompositeGridFunctionSpace, typename Params>
-    Dune::PDELab::TypeTree::TemplatizedGenericVariadicCompositeNodeTransformation<
+    Dune::TypeTree::TemplatizedGenericVariadicCompositeNodeTransformation<
       CompositeGridFunctionSpace,
       gfs_to_lfs<Params>,
       variadic_composite_gfs_to_lfs_template<CompositeGridFunctionSpace,gfs_to_lfs<Params> >::template result
@@ -527,7 +528,7 @@ namespace Dune {
 
     // register CompositeGFS -> LocalFunctionSpace transformation (non-variadic version)
     template<typename CompositeGridFunctionSpace, typename Params>
-    Dune::PDELab::TypeTree::TemplatizedGenericCompositeNodeTransformation<
+    Dune::TypeTree::TemplatizedGenericCompositeNodeTransformation<
       CompositeGridFunctionSpace,
       gfs_to_lfs<Params>,
       composite_gfs_to_lfs_template<CompositeGridFunctionSpace,gfs_to_lfs<Params> >::template result
@@ -688,7 +689,7 @@ namespace Dune {
 
     // Register LeafGFS -> LocalFunctionSpace transformation
     template<typename GridFunctionSpace, typename Params>
-    Dune::PDELab::TypeTree::GenericLeafNodeTransformation<
+    Dune::TypeTree::GenericLeafNodeTransformation<
       GridFunctionSpace,
       gfs_to_lfs<Params>,
       LeafLocalFunctionSpaceNode<GridFunctionSpace,typename gfs_to_lfs<Params>::DOFIndex>
@@ -717,9 +718,9 @@ namespace Dune {
      */
     template <typename GFS, typename TAG>
     class LocalFunctionSpace :
-      public Dune::PDELab::TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::Type
+      public Dune::TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::Type
     {
-      typedef typename Dune::PDELab::TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::Type BaseT;
+      typedef typename Dune::TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::Type BaseT;
       typedef typename BaseT::Traits::IndexContainer::size_type I;
       typedef typename BaseT::Traits::IndexContainer::size_type LocalIndex;
 
@@ -770,9 +771,9 @@ namespace Dune {
     // specialization for AnySpaceTag
     template <typename GFS>
     class LocalFunctionSpace<GFS, AnySpaceTag> :
-      public Dune::PDELab::TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::Type
+      public Dune::TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::Type
     {
-      typedef typename Dune::PDELab::TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::Type BaseT;
+      typedef typename Dune::TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::Type BaseT;
 
       template<typename>
       friend struct PropagateGlobalStorageVisitor;

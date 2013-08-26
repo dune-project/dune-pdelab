@@ -494,7 +494,7 @@ namespace Dune {
     typename conditional<
       (GridFunction::Traits::dimRange == 1),
       // trafo for scalar leaf nodes
-      Dune::PDELab::TypeTree::GenericLeafNodeTransformation<GridFunction,gf_to_constraints,OldStyleConstraintsWrapper<GridFunction> >,
+      Dune::TypeTree::GenericLeafNodeTransformation<GridFunction,gf_to_constraints,OldStyleConstraintsWrapper<GridFunction> >,
       // trafo for multi component leaf nodes
       MultiComponentOldStyleConstraintsWrapperDescription<GridFunction,gf_to_constraints>
       >::type
@@ -502,17 +502,17 @@ namespace Dune {
 
     // trafo for power nodes
     template<typename PowerGridFunction>
-    Dune::PDELab::TypeTree::SimplePowerNodeTransformation<PowerGridFunction,gf_to_constraints,PowerConstraintsParameters>
+    Dune::TypeTree::SimplePowerNodeTransformation<PowerGridFunction,gf_to_constraints,PowerConstraintsParameters>
     registerNodeTransformation(PowerGridFunction*, gf_to_constraints*, PowerGridFunctionTag*);
 
     // trafos for composite nodes
 #if HAVE_VARIADIC_TEMPLATES
     template<typename CompositeGridFunction>
-    Dune::PDELab::TypeTree::SimpleVariadicCompositeNodeTransformation<CompositeGridFunction,gf_to_constraints,CompositeConstraintsParameters>
+    Dune::TypeTree::SimpleVariadicCompositeNodeTransformation<CompositeGridFunction,gf_to_constraints,CompositeConstraintsParameters>
     registerNodeTransformation(CompositeGridFunction*, gf_to_constraints*, CompositeGridFunctionTag*);
 #else
     template<typename CompositeGridFunction>
-    Dune::PDELab::TypeTree::SimpleCompositeNodeTransformation<CompositeGridFunction,gf_to_constraints,CompositeConstraintsParameters>
+    Dune::TypeTree::SimpleCompositeNodeTransformation<CompositeGridFunction,gf_to_constraints,CompositeConstraintsParameters>
     registerNodeTransformation(CompositeGridFunction*, gf_to_constraints*, CompositeGridFunctionTag*);
 #endif
 
@@ -696,7 +696,7 @@ namespace Dune {
       assemble(const F& f, const GFS& gfs, CG& cg, const bool verbose)
       {
         // type of transformed tree
-        typedef typename Dune::PDELab::TypeTree::TransformTree<F,gf_to_constraints> Transformation;
+        typedef typename Dune::TypeTree::TransformTree<F,gf_to_constraints> Transformation;
         typedef typename Transformation::Type P;
         // transform tree
         P p = Transformation::transform(f);

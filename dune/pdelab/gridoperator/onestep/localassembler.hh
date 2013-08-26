@@ -1,6 +1,8 @@
 #ifndef DUNE_PDELAB_ONESTEP_LOCAL_ASSEMBLER_HH
 #define DUNE_PDELAB_ONESTEP_LOCAL_ASSEMBLER_HH
 
+#include <dune/typetree/typetree.hh>
+
 #include <dune/pdelab/gridoperator/onestep/residualengine.hh>
 #include <dune/pdelab/gridoperator/onestep/patternengine.hh>
 #include <dune/pdelab/gridoperator/onestep/jacobianengine.hh>
@@ -10,7 +12,6 @@
 #include <dune/pdelab/gridoperator/common/timesteppingparameterinterface.hh>
 
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
-#include <dune/pdelab/common/typetree.hh>
 
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 

@@ -5,17 +5,21 @@
 #include <sstream>
 
 #include <dune/common/exceptions.hh>
+
 #include <dune/geometry/typeindex.hh>
+
+#include <dune/localfunctions/common/interfaceswitch.hh>
+
+#include <dune/typetree/visitor.hh>
+#include <dune/typetree/traversal.hh>
+
 #include <dune/pdelab/common/function.hh>
+#include <dune/pdelab/common/vtkexport.hh>
+#include <dune/pdelab/common/elementmapper.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
-#include <dune/localfunctions/common/interfaceswitch.hh>
-#include <dune/pdelab/common/typetree/visitor.hh>
-#include <dune/pdelab/common/typetree/traversal.hh>
-#include <dune/pdelab/common/elementmapper.hh>
-#include <dune/pdelab/common/vtkexport.hh>
 
 namespace Dune {
 

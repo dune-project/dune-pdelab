@@ -12,7 +12,8 @@
 #include <dune/common/hash.hh>
 #include <dune/common/iteratorfacades.hh>
 
-#include <dune/pdelab/common/typetree.hh>
+#include <dune/typetree/typetree.hh>
+
 #include <dune/pdelab/common/unordered_map.hh>
 #include <dune/pdelab/constraints/common/constraintstransformation.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>

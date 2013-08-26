@@ -16,8 +16,9 @@
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
+#include <dune/typetree/typetree.hh>
+
 #include <dune/pdelab/common/geometrywrapper.hh>
-#include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/constraints/common/constraintsparameters.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspacetags.hh>
