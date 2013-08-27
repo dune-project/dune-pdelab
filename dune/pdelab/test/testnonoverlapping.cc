@@ -10,8 +10,9 @@
 
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/finiteelementmap/q1fem.hh>
-#include <dune/pdelab/constraints/constraints.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istlmatrixbackend.hh>
 #include <dune/pdelab/localoperator/l2.hh>
 
 #include <dune/pdelab/gridoperator/gridoperator.hh>

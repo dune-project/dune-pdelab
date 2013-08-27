@@ -25,7 +25,7 @@
 
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 
-#include <dune/pdelab/constraints/constraints.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
 
 template<typename GFS>
 void check_ordering(const GFS& gfs)
