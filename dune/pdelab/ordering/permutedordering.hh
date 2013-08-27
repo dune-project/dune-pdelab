@@ -4,7 +4,8 @@
 #ifndef DUNE_PDELAB_ORDERING_PERMUTEDORDERING_HH
 #define DUNE_PDELAB_ORDERING_PERMUTEDORDERING_HH
 
-#include <dune/pdelab/common/typetree.hh>
+#include <dune/typetree/typetree.hh>
+
 #include <dune/pdelab/ordering/utility.hh>
 #include <dune/pdelab/ordering/orderingbase.hh>
 #include <dune/pdelab/ordering/decorator.hh>

@@ -4,7 +4,8 @@
 #ifndef DUNE_PDELAB_ORDERING_LEAFGRIDVIEWORDERING_HH
 #define DUNE_PDELAB_ORDERING_LEAFGRIDVIEWORDERING_HH
 
-#include <dune/pdelab/common/typetree.hh>
+#include <dune/typetree/typetree.hh>
+
 #include <dune/pdelab/ordering/utility.hh>
 #include <dune/pdelab/ordering/orderingbase.hh>
 #include <dune/pdelab/ordering/directleaflocalordering.hh>
@@ -293,7 +294,6 @@ namespace Dune {
             lo.pre_collect_used_geometry_types_from_cell();
 
             typedef typename GV::template Codim<0>::Iterator CellIterator;
-            typedef typename GV::template Codim<0>::Entity Cell;
 
             const CellIterator end_it = _gv.template end<0>();
             for (CellIterator it = _gv.template begin<0>(); it != end_it; ++it)

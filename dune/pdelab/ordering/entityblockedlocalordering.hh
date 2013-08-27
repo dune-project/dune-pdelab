@@ -14,10 +14,10 @@
 #include <dune/common/typetraits.hh>
 #include <dune/common/deprecated.hh>
 
-#include <dune/pdelab/common/typetree/compositenodemacros.hh>
-#include <dune/pdelab/common/typetree/powernode.hh>
-#include <dune/pdelab/common/typetree/traversal.hh>
-#include <dune/pdelab/common/typetree/visitor.hh>
+#include <dune/typetree/compositenodemacros.hh>
+#include <dune/typetree/powernode.hh>
+#include <dune/typetree/traversal.hh>
+#include <dune/typetree/visitor.hh>
 
 #include <dune/pdelab/ordering/gridviewordering.hh>
 

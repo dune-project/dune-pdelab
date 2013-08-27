@@ -20,8 +20,9 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
 
-#include <dune/pdelab/common/typetree/traversal.hh>
-#include <dune/pdelab/common/typetree/visitor.hh>
+#include <dune/typetree/traversal.hh>
+#include <dune/typetree/visitor.hh>
+
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 

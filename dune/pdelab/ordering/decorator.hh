@@ -4,7 +4,8 @@
 #ifndef DUNE_PDELAB_ORDERING_DECORATOR_HH
 #define DUNE_PDELAB_ORDERING_DECORATOR_HH
 
-#include <dune/pdelab/common/typetree.hh>
+#include <dune/typetree/typetree.hh>
+
 #include <dune/pdelab/common/typetraits.hh>
 #include <dune/pdelab/ordering/utility.hh>
 #include <dune/pdelab/ordering/orderingbase.hh>
@@ -105,15 +106,15 @@ namespace Dune {
 
       template<typename GFS,typename Transformation,typename Undecorated,typename GlueTag, typename Tag>
       struct gfs_to_decorator_descriptor
-        : public meta_function
+        : public TypeTree::meta_function
       {
         typedef DUNE_DECLTYPE(
           register_gfs_to_decorator_descriptor(
-            declptr<GFS>(),             // the source GridFunctionSpace
-            declptr<Transformation>(),  // the full transformation descriptor
-            declptr<Undecorated>(),     // the type of the undecorated Ordering to be wrapped in the decorator
-            declptr<GlueTag>(),         // the decorated_ordering_tag for the current decoration nesting level
-            declptr<Tag>()              // the decorator tag
+            TypeTree::declptr<GFS>(),             // the source GridFunctionSpace
+            TypeTree::declptr<Transformation>(),  // the full transformation descriptor
+            TypeTree::declptr<Undecorated>(),     // the type of the undecorated Ordering to be wrapped in the decorator
+            TypeTree::declptr<GlueTag>(),         // the decorated_ordering_tag for the current decoration nesting level
+            TypeTree::declptr<Tag>()              // the decorator tag
             )
           ) type;
       };

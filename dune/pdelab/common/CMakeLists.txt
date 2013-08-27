@@ -1,4 +1,3 @@
-add_subdirectory(typetree)
 set(commondir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/common)
 set(common_HEADERS
         benchmarkhelper.hh
@@ -18,7 +17,6 @@ set(common_HEADERS
         partitioninfoprovider.hh
         range.hh
 	topologyutility.hh
-        typetree.hh
         typetraits.hh
         vtkexport.hh)
 # include not needed for CMake
@@ -29,7 +27,6 @@ dune_add_library(dunepdelab
         clock.cc
         hostname.cc
         logtag.cc
-	_DUNE_TARGET_OBJECTS:pdelabtypetree_
 	ADD_LIBS ${DUNE_LIBS}
 	)
 

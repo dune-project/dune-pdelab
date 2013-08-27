@@ -5,9 +5,10 @@
 
 #include <string>
 
+#include <dune/typetree/compositenodemacros.hh>
+#include <dune/typetree/powernode.hh>
+
 #include <dune/pdelab/common/exceptions.hh>
-#include <dune/pdelab/common/typetree/compositenodemacros.hh>
-#include <dune/pdelab/common/typetree/powernode.hh>
 
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/ordering/utility.hh>

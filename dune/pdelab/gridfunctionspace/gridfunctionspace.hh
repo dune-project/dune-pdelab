@@ -22,9 +22,10 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
 
+#include <dune/typetree/typetree.hh>
+
 #include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/common/geometrywrapper.hh>
-#include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/utility.hh>

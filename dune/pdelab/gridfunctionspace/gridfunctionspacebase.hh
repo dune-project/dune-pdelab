@@ -3,10 +3,11 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_GRIDFUNCTIONSPACEBASE_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_GRIDFUNCTIONSPACEBASE_HH
 
+#include <dune/typetree/visitor.hh>
+#include <dune/typetree/traversal.hh>
+
 #include <dune/pdelab/common/exceptions.hh>
 #include <dune/pdelab/common/partitioninfoprovider.hh>
-#include <dune/pdelab/common/typetree/visitor.hh>
-#include <dune/pdelab/common/typetree/traversal.hh>
 
 namespace Dune {
   namespace PDELab {

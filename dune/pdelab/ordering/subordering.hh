@@ -9,9 +9,11 @@
 
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/array.hh>
-#include <dune/pdelab/common/typetree/treepath.hh>
-#include <dune/pdelab/common/typetree/proxynode.hh>
-#include <dune/pdelab/common/typetree/childextraction.hh>
+
+#include <dune/typetree/treepath.hh>
+#include <dune/typetree/proxynode.hh>
+#include <dune/typetree/childextraction.hh>
+
 #include <dune/pdelab/common/partitioninfoprovider.hh>
 #include <dune/pdelab/ordering/utility.hh>
 

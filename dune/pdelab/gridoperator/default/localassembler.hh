@@ -1,12 +1,13 @@
 #ifndef DUNE_PDELAB_DEFAULT_LOCAL_ASSEMBLER_HH
 #define DUNE_PDELAB_DEFAULT_LOCAL_ASSEMBLER_HH
 
+#include <dune/typetree/typetree.hh>
+
 #include <dune/pdelab/gridoperator/default/residualengine.hh>
 #include <dune/pdelab/gridoperator/default/patternengine.hh>
 #include <dune/pdelab/gridoperator/default/jacobianengine.hh>
 #include <dune/pdelab/gridoperator/default/jacobianapplyengine.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
-#include <dune/pdelab/common/typetree.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
 namespace Dune{

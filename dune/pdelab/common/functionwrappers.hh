@@ -6,7 +6,7 @@
 
 #include <vector>
 
-#include <dune/pdelab/common/typetree/nodetags.hh>
+#include <dune/typetree/nodetags.hh>
 
 #include "function.hh"
 

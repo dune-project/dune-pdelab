@@ -11,19 +11,11 @@ set(noinst_HEADERS
         gnuplotgraph.hh
         gridexamples.hh
         l2difference.hh
-        l2norm.hh
-        typetreetargetnodes.hh
-        typetreetestswitch.hh
-        typetreetestutility.hh)
+        l2norm.hh)
 
 
 set(noinst_SCRIPTS
         make_pvd.sh)
-
-set(headercheck_IGNORE
-        typetreetargetnodes.hh
-        typetreetestswitch.hh
-        typetreetestutility.hh)
 
 set(GRIDDIM  2)
 
@@ -306,52 +298,10 @@ add_dune_alberta_flags(testutilities )
 #        ${ALBERTA_LIBS}
 #        ${LDADD})
 list(APPEND MOSTLYCLEANFILES edger.vtu interpolated.vtu q1.vtu taylorhood.vtu)
-list(APPEND check_PROGRAMS testtypetree testtypetree-no-sfinae testtypetree-no-variadic testtypetree-no-rvalue-refs testtypetree-legacy)
-add_executable(testtypetree testtypetree.cc)
-set_property(TARGET testtypetree APPEND PROPERTY COMPILE_DEFINITIONS TEST_TYPETREE)
-target_link_libraries(testtypetree dunepdelab ${DUNE_LIBS})
-
-add_executable(testtypetree_no_sfinae testtypetree.cc)
-set_property(TARGET testtypetree APPEND PROPERTY COMPILE_DEFINITIONS TEST_TYPETREE_NO_SFINAE)
-target_link_libraries(testtypetree_no_sfinae dunepdelab ${DUNE_LIBS})
-
-add_executable(testtypetree_no_variadic testtypetree.cc)
-set_property(TARGET testtypetree_no_variadic APPEND PROPERTY
-  COMPILE_DEFINITIONS TEST_TYPETREE_NO_VARIADIC)
-target_link_libraries(testtypetree_no_variadic dunepdelab ${DUNE_LIBS})
-
-add_executable(testtypetree_no_rvalue_refs testtypetree.cc)
-set_property(TARGET testtypetree_no_rvalue_refs APPEND PROPERTY
-  COMPILE_DEFINITIONS TEST_TYPETREE_NO_RVALUE_REFERENCES)
-target_link_libraries(testtypetree_no_rvalue_refs dunepdelab ${DUNE_LIBS})
-
-add_executable(testtypetree_legacy testtypetree.cc)
-set_property(TARGET testtypetree_legacy APPEND PROPERTY
-  COMPILE_DEFINITIONS TEST_TYPETREE_LEGACY)
-target_link_libraries(testtypetree_legacy dunepdelab ${DUNE_LIBS})
-
-list(APPEND check_PROGRAMS testtypetreetransformation)
-add_executable(testtypetreetransformation testtypetreetransformation.cc)
-set_property(TARGET testtypetreetransformation APPEND PROPERTY
-  COMPILE_DEFINITIONS TEST_TYPETREE)
-target_link_libraries(testtypetreetransformation dunepdelab ${DUNE_LIBS})
 
 list(APPEND check_PROGRAMS testinterpolate)
 add_executable(testinterpolate testinterpolate.cc)
 target_link_libraries(testinterpolate dunepdelab ${DUNE_LIBS})
-
-list(APPEND check_PROGRAMS testfilteredcompositenode)
-add_executable(testfilteredcompositenode testfilteredcompositenode.cc)
-set_property(TARGET testfilteredcompositenode APPEND PROPERTY
-  COMPILE_DEFINITIONS TEST_TYPETREE)
-target_link_libraries(testfilteredcompositenode dunepdelab ${DUNE_LIBS})
-
-list(APPEND check_PROGRAMS testproxynode)
-add_executable(testproxynode testproxynode.cc)
-target_link_libraries(testproxynode dunepdelab ${DUNE_LIBS})
-set_property(TARGET testproxynode APPEND PROPERTY
-  COMPILE_DEFINITIONS TEST_TYPETREE)
-target_link_libraries(testproxynode dunepdelab ${DUNE_LIBS})
 
 if(PETSC_FOUND)
 list(APPEND check_PROGRAMS testpoisson-petsc)

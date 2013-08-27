@@ -18,6 +18,13 @@ DUNE libraries.
 Changes
 =======
 
+PDELab 2.0
+----------
+
+- The TypeTree library is now an external dependency. See README for information on
+  how to obtain it.
+
+
 PDELab 1.1
 ----------
 

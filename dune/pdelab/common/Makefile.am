@@ -1,6 +1,3 @@
-SUBDIRS =                                       \
-	typetree
-
 commondir = $(includedir)/dune/pdelab/common
 common_HEADERS =				\
 	benchmarkhelper.hh                      \
@@ -23,7 +20,6 @@ common_HEADERS =				\
 	range.hh				\
 	simpledofindex.hh			\
 	topologyutility.hh			\
-	typetree.hh				\
 	typetraits.hh				\
 	unordered_map.hh			\
 	unordered_set.hh			\
@@ -40,7 +36,6 @@ libpdelabcommon_la_CPPFLAGS = $(AM_CPPFLAGS)	\
 libpdelabcommon_la_LDFLAGS = $(AM_LDFLAGS)	\
 	$(POSIX_CLOCK_LDFLAGS)
 libpdelabcommon_la_LIBADD =			\
-	typetree/libpdelabtypetree.la		\
 	$(POSIX_CLOCK_LIBS)
 
 include $(top_srcdir)/am/global-rules
