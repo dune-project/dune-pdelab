@@ -28,6 +28,8 @@ PDELab depends on the following software packages:
 * DUNE core libraries (dune-common, dune-geometry, dune-grid, dune-istl,
   dune-localfunctions) version 2.2.x, and their respective dependencies.
 
+* The dune-typetree library, version 1.0.x, which you can obtain from [10].
+
 * PDELab's compiler requirements differ slightly from the underlying DUNE
   libraries: We require at least GCC 4.0, although we only regurlarly test GCC
   versions from GCC 4.2 onward. Compile times are greatly reduced if the
@@ -63,12 +65,13 @@ full instructions please see [1].
 Links
 -----
 
-0. http://www.dune-project.org/pdelab/
-1. http://www.dune-project.org
-2. http://www.dune-project.org/doc/installation-notes.html
-3. http://dune-project.org/doc/buildsystem/buildsystem.pdf
-4. http://gcc.gnu.org/onlinedocs/libstdc++/faq.html#faq.license
-5. http://www.mcs.anl.gov/petsc/
-6. http://eigen.tuxfamily.org
-8. http://lists.dune-project.org/mailman/listinfo/dune-pdelab
-9. http://users.dune-project.org/projects/dune-pdelab/issues
+ 0. http://www.dune-project.org/pdelab/
+ 1  http://www.dune-project.org
+ 2. http://www.dune-project.org/doc/installation-notes.html
+ 3. http://dune-project.org/doc/buildsystem/buildsystem.pdf
+ 4. http://gcc.gnu.org/onlinedocs/libstdc++/faq.html#faq.license
+ 5. http://www.mcs.anl.gov/petsc/
+ 6. http://eigen.tuxfamily.org
+ 8. http://lists.dune-project.org/mailman/listinfo/dune-pdelab
+ 9. http://users.dune-project.org/projects/dune-pdelab/issues
+10. http://git.dune-project.org/repositories/dune-typetree.
