@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 
 #include<iostream>
@@ -22,13 +22,13 @@
 #include"../backend/istl/utility.hh"
 
 // generate a Q1 function and output it
-template<class GV> 
+template<class GV>
 void testq1 (const GV& gv)
 {
   // instantiate finite element maps
   typedef Dune::PDELab::Q12DLocalFiniteElementMap<typename GV::Grid::ctype,double> Q12DFEM;
   Q12DFEM q12dfem;
-  
+
   // make a grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,Q12DFEM> Q1GFS;
   Q1GFS q1gfs(gv,q12dfem);
@@ -61,7 +61,7 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,F<GV,RF> > BaseT;
 
   F (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
   {
     typename Traits::DomainType center;
@@ -81,7 +81,7 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,G<GV,RF> > BaseT;
 
   G (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
   {
     y = sin(3.1415*x[0])*cos(3*3.1415*x[1]);
@@ -89,7 +89,7 @@ public:
 };
 
 // generate a Q1 function and output it
-template<class GV> 
+template<class GV>
 void testinterpolate (const GV& gv)
 {
   // instantiate finite element maps
@@ -97,7 +97,7 @@ void testinterpolate (const GV& gv)
   Q12DFEM q12dfem;
   typedef Dune::PDELab::Q22DLocalFiniteElementMap<typename GV::Grid::ctype,double> Q22DFEM;
   Q22DFEM q22dfem;
-  
+
   // make a grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,Q12DFEM> Q1GFS;
   Q1GFS q1gfs(gv,q12dfem);
@@ -173,7 +173,7 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,One<GV,RF> > BaseT;
 
   One (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
   {
     y = 1.0;
@@ -190,7 +190,7 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,Two<GV,RF> > BaseT;
 
   Two (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
   {
     y = 2.0;
@@ -207,7 +207,7 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,Three<GV,RF> > BaseT;
 
   Three (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
   {
     y = 3.0;
@@ -215,7 +215,7 @@ public:
 };
 
 template<typename GV, typename RF>
-class Velocity 
+class Velocity
   : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,2>,
 													  Velocity<GV,RF> >
 {
@@ -224,9 +224,9 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,Velocity<GV,RF> > BaseT;
 
   Velocity (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
-  {  
+  {
 	y[0] = 1.0;
 	y[1] = 2.0;
   }
@@ -251,7 +251,7 @@ public:
 };
 
 // generate a Q1 function and output it
-template<class GV> 
+template<class GV>
 void testtaylorhood (const GV& gv)
 {
   // instantiate finite element maps
@@ -259,7 +259,7 @@ void testtaylorhood (const GV& gv)
   Q12DFEM q12dfem;
   typedef Dune::PDELab::Q22DLocalFiniteElementMap<typename GV::Grid::ctype,double> Q22DFEM;
   Q22DFEM q22dfem;
-  
+
   // make a grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,Q12DFEM> Q1GFS;
   Q1GFS q1gfs(gv,q12dfem);
@@ -291,7 +291,7 @@ void testtaylorhood (const GV& gv)
   VelocityType velocity(gv);
   typedef Dune::PDELab::CompositeGridFunction<VelocityType,ThreeType> AlternativeTHType;
   AlternativeTHType alternativeth(velocity,p);
-  
+
   // do interpolation
   Dune::PDELab::interpolate(th,thgfs,xg);
   Dune::PDELab::interpolate(alternativeth,thgfs,xg);
@@ -459,4 +459,4 @@ int main(int argc, char** argv)
     std::cerr << "Unknown exception thrown!" << std::endl;
 	return 1;
   }
-} 
+}
