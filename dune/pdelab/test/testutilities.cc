@@ -19,6 +19,7 @@
 #include"../common/function.hh"
 #include"../common/vtkexport.hh"
 #include"../backend/istlvectorbackend.hh"
+#include"../backend/istl/utility.hh"
 
 // generate a Q1 function and output it
 template<class GV> 
