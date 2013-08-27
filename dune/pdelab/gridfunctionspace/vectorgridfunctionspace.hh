@@ -121,6 +121,11 @@ namespace Dune {
           this->setChild(i,make_shared<LeafGFS>(gv,fem_ptr,leaf_backend,leaf_ordering_tag));
       }
 
+      std::string name() const
+      {
+        return ImplementationBase::name();
+      }
+
       void name(std::string name)
       {
         ImplementationBase::name(name);
