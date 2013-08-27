@@ -41,7 +41,7 @@ void test (const GV& gv)
       Dune::PDELab::LexicographicOrderingTag,PowerGFS,Q1GFS> CompositeGFS;
   CompositeGFS compositegfs(powergfs,q1gfs);
 
-  // make coefficent Vectors - we nned to make copies of the spaces because we stuck
+  // make coefficent Vectors - we need to make copies of the spaces because we stuck
   // them in a hierarchy
   typedef typename Dune::PDELab::BackendVectorSelector<Q2GFS,double>::Type V;
   Q2GFS q2gfs2(gv,q22dfem);
