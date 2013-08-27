@@ -51,11 +51,11 @@ namespace Dune{
       typedef DefaultLocalAssembler<GridOperator,LOP,nonoverlapping_mode>
       LocalAssembler;
 
-      typedef typename SelectType<
+      typedef typename conditional<
         nonoverlapping_mode,
         NonOverlappingBorderDOFExchanger<GridOperator>,
         OverlappingBorderDOFExchanger<GridOperator>
-        >::Type BorderDOFExchanger;
+        >::type BorderDOFExchanger;
 
       //! The grid operator traits
       typedef Dune::PDELab::GridOperatorTraits

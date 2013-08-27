@@ -6,8 +6,6 @@
 
 #include <dune/common/typetraits.hh>
 
-#include "function.hh"
-
 namespace Dune {
 
   // Provide some more C++11 TMP helpers.

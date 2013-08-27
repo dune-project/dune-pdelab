@@ -491,13 +491,13 @@ namespace Dune {
     };
     // trafos for leaf nodes
     template<typename GridFunction>
-    typename SelectType<
+    typename conditional<
       (GridFunction::Traits::dimRange == 1),
       // trafo for scalar leaf nodes
       Dune::PDELab::TypeTree::GenericLeafNodeTransformation<GridFunction,gf_to_constraints,OldStyleConstraintsWrapper<GridFunction> >,
       // trafo for multi component leaf nodes
       MultiComponentOldStyleConstraintsWrapperDescription<GridFunction,gf_to_constraints>
-      >::Type
+      >::type
     registerNodeTransformation(GridFunction*, gf_to_constraints*, GridFunctionTag*);
 
     // trafo for power nodes
