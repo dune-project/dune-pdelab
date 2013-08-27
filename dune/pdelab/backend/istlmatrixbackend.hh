@@ -95,7 +95,7 @@ namespace Dune {
                         go.trialGridFunctionSpace().ordering(),
                         pattern,
                         *_container);
-        _container = e;
+        (*_container) = e;
       }
 
 

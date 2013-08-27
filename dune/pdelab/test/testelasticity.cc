@@ -18,11 +18,11 @@
 #include<dune/istl/io.hh>
 
 #include"../finiteelementmap/q1fem.hh"
-#include"../finiteelementmap/conformingconstraints.hh"
+#include"../constraints/conforming.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include"../gridfunctionspace/interpolate.hh"
-#include"../constraints/constraints.hh"
+#include"../constraints/common/constraints.hh"
 #include"../common/function.hh"
 #include"../common/vtkexport.hh"
 #include"../backend/istlvectorbackend.hh"

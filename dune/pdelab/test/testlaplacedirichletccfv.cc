@@ -24,7 +24,7 @@
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include"../gridfunctionspace/interpolate.hh"
-#include"../constraints/constraints.hh"
+#include"../constraints/common/constraints.hh"
 #include"../common/function.hh"
 #include"../common/vtkexport.hh"
 #include"../localoperator/laplacedirichletccfv.hh"

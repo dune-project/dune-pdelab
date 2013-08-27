@@ -18,11 +18,11 @@
 #include <dune/pdelab/finiteelementmap/q12dfem.hh>
 #include <dune/pdelab/finiteelementmap/q22dfem.hh>
 #include <dune/pdelab/finiteelementmap/q1fem.hh>
-#include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
+#include <dune/pdelab/constraints/conforming.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
-#include <dune/pdelab/constraints/constraints.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/backend/dense.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>

@@ -28,9 +28,9 @@
 #include <dune/pdelab/backend/istlsolverbackend.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/common/function.hh>
-#include <dune/pdelab/constraints/constraints.hh>
-#include <dune/pdelab/constraints/constraintsparameters.hh>
-#include <dune/pdelab/finiteelementmap/conformingconstraints.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
+#include <dune/pdelab/constraints/common/constraintsparameters.hh>
+#include <dune/pdelab/constraints/conforming.hh>
 #include <dune/pdelab/finiteelementmap/q1fem.hh>
 #include <dune/pdelab/finiteelementmap/q22dfem.hh>
 #include <dune/pdelab/finiteelementmap/pk2dfem.hh>
