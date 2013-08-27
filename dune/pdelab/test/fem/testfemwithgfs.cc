@@ -39,7 +39,7 @@ void test_fem(const FEM& fem, GV gv, const Constraints& constraints, const VBE& 
 
   GFS gfs(gv,fem,constraints,vbe);
 
-  std::cout << gfs.size() << std::endl;
+  std::cout << gfs.ordering().size() << std::endl;
 
 }
 

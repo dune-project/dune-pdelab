@@ -76,13 +76,18 @@ struct test<2> {
         Dune::PDELab:: EntityBlockedOrderingTag> PGFS17B;
     PGFS17B pgfs17b(gfs2);
 
-    // make coefficent Vectors
-    typedef typename Dune::PDELab::BackendVectorSelector<GFS1,double>::Type V1;
-    V1 x1(gfs1);
-    x1 = 0.0;
-    typedef typename Dune::PDELab::BackendVectorSelector<GFS2,double>::Type V2;
-    V2 x2(gfs2);
-    x2 = 0.0;
+    // make coefficent Vectors - we need to use copies of the spaces because the original
+    // spaces are now part of a larger hierarchy
+    {
+      typedef typename Dune::PDELab::BackendVectorSelector<GFS1,double>::Type V1;
+      GFS1 gfs1(gv,q12dfem);
+      V1 x1(gfs1);
+      x1 = 0.0;
+      typedef typename Dune::PDELab::BackendVectorSelector<GFS2,double>::Type V2;
+      GFS2 gfs2(gv,q22dfem);
+      V2 x2(gfs2);
+      x2 = 0.0;
+    }
 
     // test composite
     typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTLVectorBackend<>,

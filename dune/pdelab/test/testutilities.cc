@@ -111,7 +111,8 @@ void testinterpolate (const GV& gv)
 
   // make coefficent Vectors
   typedef typename Dune::PDELab::BackendVectorSelector<Q1GFS, double>::Type V;
-  V xg(q1gfs);
+  Q1GFS q1gfs2(gv,q12dfem);
+  V xg(q1gfs2);
   xg = 0.0;
   typedef typename Dune::PDELab::BackendVectorSelector<CGFS, double>::Type CV;
   CV cxg(cgfs);
@@ -129,7 +130,7 @@ void testinterpolate (const GV& gv)
   HType h(f,g);
 
   // do interpolation
-  Dune::PDELab::interpolate(f,q1gfs,xg);
+  Dune::PDELab::interpolate(f,q1gfs2,xg);
   Dune::PDELab::interpolate(h,cgfs,cxg); // krass !
   Dune::PDELab::interpolate(h,pgfs,pxg); // krass !
 
