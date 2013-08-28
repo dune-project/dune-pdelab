@@ -150,14 +150,14 @@ namespace Dune {
       {
 
         //! \brief define Type as the Type of a container of E's
-        typedef typename conditional<
+        typedef typename SelectType<
           is_same<
             CE,
             NoConstraints
             >::value,
           EmptyTransformation,
           ConstraintsTransformation<typename Ordering::Traits::DOFIndex,typename Ordering::Traits::ContainerIndex,E>
-          >::type Type;
+          >::Type Type;
 
       private:
         ConstraintsContainer () {}

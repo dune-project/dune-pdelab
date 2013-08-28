@@ -2,6 +2,7 @@
 #define DUNE_PDELAB_GRIDOPERATOR_HH
 
 #include <dune/common/tupleutility.hh>
+#include <dune/common/typetraits.hh>
 
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/gridoperator/common/borderdofexchanger.hh>
@@ -52,11 +53,11 @@ namespace Dune{
       typedef DefaultLocalAssembler<GridOperator,LOP,nonoverlapping_mode>
       LocalAssembler;
 
-      typedef typename conditional<
+      typedef typename SelectType<
         nonoverlapping_mode,
         NonOverlappingBorderDOFExchanger<GridOperator>,
         OverlappingBorderDOFExchanger<GridOperator>
-        >::type BorderDOFExchanger;
+        >::Type BorderDOFExchanger;
 
       //! The grid operator traits
       typedef Dune::PDELab::GridOperatorTraits
