@@ -6,7 +6,6 @@
 
 #include<dune/common/exceptions.hh>
 #include<dune/common/float_cmp.hh>
-#include<dune/common/typetraits.hh>
 
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/geometrywrapper.hh>
@@ -492,13 +491,13 @@ namespace Dune {
     };
     // trafos for leaf nodes
     template<typename GridFunction>
-    typename SelectType<
+    typename conditional<
       (GridFunction::Traits::dimRange == 1),
       // trafo for scalar leaf nodes
       Dune::TypeTree::GenericLeafNodeTransformation<GridFunction,gf_to_constraints,OldStyleConstraintsWrapper<GridFunction> >,
       // trafo for multi component leaf nodes
       MultiComponentOldStyleConstraintsWrapperDescription<GridFunction,gf_to_constraints>
-      >::Type
+      >::type
     registerNodeTransformation(GridFunction*, gf_to_constraints*, GridFunctionTag*);
 
     // trafo for power nodes

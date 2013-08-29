@@ -290,16 +290,16 @@ namespace Dune{
       const GFSU& gfsu;
       const GFSV& gfsv;
 
-      typename SelectType<
+      typename conditional<
         is_same<CU,EmptyTransformation>::value,
         const CU,
         const CU&
-        >::Type cu;
-      typename SelectType<
+        >::type cu;
+      typename conditional<
         is_same<CV,EmptyTransformation>::value,
         const CV,
         const CV&
-        >::Type cv;
+        >::type cv;
 
       /* local function spaces */
       typedef LocalFunctionSpace<GFSU, TrialSpaceTag> LFSU;
