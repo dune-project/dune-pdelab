@@ -37,7 +37,7 @@ namespace Dune {
         GeometryType gt = ig.intersection().type();
 
         Dune::FieldVector<ctype,dimIntersection> center
-          = GenericReferenceElements<ctype,dimIntersection>::general(gt).position(0,0);
+          = ReferenceElements<ctype,dimIntersection>::general(gt).position(0,0);
         if(b.isDirichlet(ig, center) )
           {
             typename T::RowType empty;

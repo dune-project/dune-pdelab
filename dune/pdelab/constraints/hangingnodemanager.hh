@@ -115,9 +115,9 @@ namespace Dune {
         // loop over all codim<0> leaf elements of the partially refined grid
         for(;it!=eit;++it){
 
-          const Dune::GenericReferenceElement<double,dim> &
+          const Dune::ReferenceElement<double,dim> &
             reference_element =
-            Dune::GenericReferenceElements<double,dim>::general(it->geometry().type());
+            Dune::ReferenceElements<double,dim>::general(it->geometry().type());
 
 
           // level of this element
@@ -157,9 +157,9 @@ namespace Dune {
           // Loop over faces
           for(;fit!=efit;++fit,++intersection_index){
 
-            const Dune::GenericReferenceElement<double,dim-1> &
+            const Dune::ReferenceElement<double,dim-1> &
               reference_face_element =
-              Dune::GenericReferenceElements<double,dim-1>::general(fit->geometry().type());
+              Dune::ReferenceElements<double,dim-1>::general(fit->geometry().type());
 
             const int eLocalIndex =  fit->indexInInside();
             const int e_level = fit->inside()->level();
@@ -233,9 +233,9 @@ namespace Dune {
         const typename GridView::IndexSet& indexSet = grid.leafView().indexSet();
         std::vector<NodeState> is_hanging;
 
-        const Dune::GenericReferenceElement<double,dim> &
+        const Dune::ReferenceElement<double,dim> &
           reference_element =
-          Dune::GenericReferenceElements<double,dim>::general(e.geometry().type());
+          Dune::ReferenceElements<double,dim>::general(e.geometry().type());
 
         // number of vertices in this element
         const IndexType v_size = reference_element.size(dim);
@@ -298,9 +298,9 @@ namespace Dune {
           // loop over all codim<0> leaf elements of the partially refined grid
           for(;it!=eit;++it){
 
-            const Dune::GenericReferenceElement<double,dim> &
+            const Dune::ReferenceElement<double,dim> &
               reference_element =
-              Dune::GenericReferenceElements<double,dim>::general(it->geometry().type());
+              Dune::ReferenceElements<double,dim>::general(it->geometry().type());
 
             //std::cout << "cell center = " << it->geometry().center() << std::endl;
 
@@ -432,9 +432,9 @@ namespace Dune {
                         //
                         // check for the neighbouring element now...
                         //
-                        const Dune::GenericReferenceElement<double,dim> &
+                        const Dune::ReferenceElement<double,dim> &
                           nb_reference_element =
-                          Dune::GenericReferenceElements<double,dim>::general( fit->outside()->geometry().type() );
+                          Dune::ReferenceElements<double,dim>::general( fit->outside()->geometry().type() );
 
                         // number of vertices in that neigbouring element
                         const IndexType nb_v_size = nb_reference_element.size(dim);
