@@ -47,9 +47,9 @@ namespace Dune {
 
           const std::size_t dimension = Intersection::dimension;
 
-          typedef Dune::GenericReferenceElement<DT,dimension> GRE;
-          const GRE& refelement_e = Dune::GenericReferenceElements<DT,dimension>::general(e->type());
-          const GRE& refelement_f = Dune::GenericReferenceElements<DT,dimension>::general(f->type());
+          typedef Dune::ReferenceElement<DT,dimension> GRE;
+          const GRE& refelement_e = Dune::ReferenceElements<DT,dimension>::general(e->type());
+          const GRE& refelement_f = Dune::ReferenceElements<DT,dimension>::general(f->type());
 
           // If both entities have hangingnodes, then the face is
           // conforming and no constraints have to be applied.
@@ -217,9 +217,9 @@ namespace Dune {
 
           const std::size_t dimension = Intersection::dimension;
 
-          typedef Dune::GenericReferenceElement<DT,dimension> GRE;
-          const GRE& refelement_e = Dune::GenericReferenceElements<DT,dimension>::general(e->type());
-          const GRE& refelement_f = Dune::GenericReferenceElements<DT,dimension>::general(f->type());
+          typedef Dune::ReferenceElement<DT,dimension> GRE;
+          const GRE& refelement_e = Dune::ReferenceElements<DT,dimension>::general(e->type());
+          const GRE& refelement_f = Dune::ReferenceElements<DT,dimension>::general(f->type());
 
           // If both entities have hangingnodes, then the face is
           // conforming and no constraints have to be applied.
@@ -369,10 +369,10 @@ namespace Dune {
         const CellEntityPointer e = ig.inside();
         const CellEntityPointer f = ig.outside();
 
-        const Dune::GenericReferenceElement<DT,dimension>& refelem_e
-          = Dune::GenericReferenceElements<DT,dimension>::general(e->type());
-        const Dune::GenericReferenceElement<DT,dimension>& refelem_f
-          = Dune::GenericReferenceElements<DT,dimension>::general(f->type());
+        const Dune::ReferenceElement<DT,dimension>& refelem_e
+          = Dune::ReferenceElements<DT,dimension>::general(e->type());
+        const Dune::ReferenceElement<DT,dimension>& refelem_f
+          = Dune::ReferenceElements<DT,dimension>::general(f->type());
 
         // the return values of the hanging node manager
         typedef typename std::vector<typename HangingNodeManager::NodeState> FlagVector;

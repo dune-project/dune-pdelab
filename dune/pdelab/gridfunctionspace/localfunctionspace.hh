@@ -632,8 +632,8 @@ namespace Dune {
         typedef typename GFS::Traits::GridViewType GV;
         GV gv = this->gridFunctionSpace().gridView();
 
-        const Dune::GenericReferenceElement<double,GV::Grid::dimension>& refEl =
-          Dune::GenericReferenceElements<double,GV::Grid::dimension>::general(this->pfe->type());
+        const Dune::ReferenceElement<double,GV::Grid::dimension>& refEl =
+          Dune::ReferenceElements<double,GV::Grid::dimension>::general(this->pfe->type());
 
         for (std::size_t i = 0; i < std::size_t(coeffs.size()); ++i, ++it)
           {

@@ -99,7 +99,7 @@ namespace Dune {
         Dune::GeometryType gt = eg.geometry().type();
         // Diffusion tensor at cell center
         typename T::Traits::PermTensorType A;
-        Dune::FieldVector<DF,dim> localcenter = Dune::GenericReferenceElements<DF,dim>::general(gt).position(0,0);
+        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
         A = param.A(eg.entity(),localcenter);
         RF epsilon = std::min( A[0][0], A[1][1]);
         if( dim>2 ) epsilon = std::min( A[2][2], epsilon );

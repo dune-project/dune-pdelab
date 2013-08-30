@@ -127,8 +127,8 @@ namespace Dune {
         : gv(gv_), is(gv_.indexSet()), orient(gv_.size(0))
 	  {
         typedef typename GV::Grid::ctype ct;
-        const GenericReferenceElement<ct, dim> &refElem =
-          GenericReferenceElements<ct, dim>::general(FE().type());
+        const ReferenceElement<ct, dim> &refElem =
+          ReferenceElements<ct, dim>::general(FE().type());
 
         const typename GV::Grid::GlobalIdSet &idSet = gv.grid().globalIdSet();
 

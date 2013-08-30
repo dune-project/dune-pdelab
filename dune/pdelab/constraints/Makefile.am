@@ -4,6 +4,7 @@ constraints_HEADERS =			\
 	hangingnode.hh	\
 	hangingnodemanager.hh		\
 	interiornode.hh	\
+	interiornodeconstraints.hh	\
 	mfd.hh		\
 	p0.hh		\
 	p0ghost.hh		\
