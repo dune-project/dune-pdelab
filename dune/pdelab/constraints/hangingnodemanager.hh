@@ -401,7 +401,7 @@ namespace Dune {
                         // the 3 edges of the element face.
                         nEdgeCenters = 3;
                       }
-                      std::vector<Dune::FieldVector<ctype,dim>>
+                      std::vector<Dune::FieldVector<ctype,dim> >
                         edgecenter( nEdgeCenters, Dune::FieldVector<ctype,dim>(0) );
                       //std::cout << " edgecenter = " << edgecenter << std::endl;
 
