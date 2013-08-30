@@ -412,7 +412,7 @@ namespace Dune {
     class CopyDataHandle
       : public GFSDataHandle<GFS,V,DataGatherScatter<CopyGatherScatter> >
     {
-      typedef GFSDataHandle<GFS,V,DataGatherScatter<CopyGatherScatter >> BaseT;
+      typedef GFSDataHandle<GFS,V,DataGatherScatter<CopyGatherScatter> > BaseT;
 
     public:
 
