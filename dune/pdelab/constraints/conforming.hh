@@ -62,10 +62,10 @@ namespace Dune {
         Dune::GeometryType gt = ig.inside()->type();
         typedef typename IG::ctype DT;
         const int dim = IG::Entity::Geometry::dimension;
-        const Dune::GenericReferenceElement<DT,dim>& refelem = Dune::GenericReferenceElements<DT,dim>::general(gt);
+        const Dune::ReferenceElement<DT,dim>& refelem = Dune::ReferenceElements<DT,dim>::general(gt);
 
-        const Dune::GenericReferenceElement<DT,dim-1> &
-          face_refelem = Dune::GenericReferenceElements<DT,dim-1>::general(ig.geometry().type());
+        const Dune::ReferenceElement<DT,dim-1> &
+          face_refelem = Dune::ReferenceElements<DT,dim-1>::general(ig.geometry().type());
 
         // empty map means Dirichlet constraint
         typename T::RowType empty;
@@ -124,7 +124,7 @@ namespace Dune {
         typedef typename IG::ctype DT;
         const int dim = IG::Entity::Geometry::dimension;
 
-        const Dune::GenericReferenceElement<DT,dim>& refelem = Dune::GenericReferenceElements<DT,dim>::general(gt);
+        const Dune::ReferenceElement<DT,dim>& refelem = Dune::ReferenceElements<DT,dim>::general(gt);
 
         // empty map means Dirichlet constraint
         typename T::RowType empty;
