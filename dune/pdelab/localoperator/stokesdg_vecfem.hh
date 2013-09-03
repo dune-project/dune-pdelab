@@ -546,7 +546,7 @@ namespace Dune {
 
           } // DirichletVelocity
 
-          if (bctype == BC::PressureDirichlet){
+          if (bctype == BC::StressNeumann){
             typename P::Traits::RangeType p0;
             p.evaluateGlobal(global,p0);
 
@@ -573,8 +573,8 @@ namespace Dune {
             v += a[r][c] * b[r][c];
       }
 
-      template<class M, class R>
-      static void add_compute_flux(const M & du, const R & n, R & result)
+      template<class DU, class R>
+      static void add_compute_flux(const DU & du, const R & n, R & result)
       {
         const int N = du.N();
         const int M = du.M();
