@@ -20,28 +20,6 @@
 namespace Dune {
   namespace PDELab {
 
-    namespace {
-
-      // ********************************************************************************
-      // utility functions for copying a tree path to an iterator range in reverse order
-      // ********************************************************************************
-
-      template<typename It>
-      void extract_tree_path_elements(TypeTree::TreePath<>, It it)
-      {
-        // end of recursion
-      }
-
-      template<typename TP, typename It>
-      void extract_tree_path_elements(TP, It it)
-      {
-        *it = TypeTree::TreePathBack<TP>::value;
-        extract_tree_path_elements(typename TypeTree::TreePathPopBack<TP>::type(),++it);
-      }
-
-    } // anonymous namespace
-
-
     //! \addtogroup Ordering Ordering
     //! \ingroup PDELab
     //! \{
@@ -119,9 +97,8 @@ namespace Dune {
       SubOrdering(shared_ptr<const BaseOrdering> base_ordering, DOFIndexTreePath)
         : NodeT(TypeTree::extract_child_storage(*base_ordering,TreePath()))
         , _base_ordering(base_ordering)
-        , _tree_path_end(_tree_path.begin() + TypeTree::TreePathSize<DOFIndexTreePath>::value)
+        , _root_path_length(TypeTree::TreePathSize<DOFIndexTreePath>::value)
       {
-        extract_tree_path_elements(DOFIndexTreePath(),_tree_path.begin());
         update();
       }
 
@@ -149,26 +126,18 @@ namespace Dune {
             complete_dof_index(*it);
           }
 
-        // The number of DOFIndex treepath components that still need to be processed.
-        const std::size_t root_tail_length = _tree_path_end - _tree_path.begin();
-
         // Do the mapping up to the root ordering.
         // Avoid spelling out the type of ItIn here (it has to be a DOFIndexViewIterator),
         // so we don't need to include lfsindexcache.hh.
         map_lfs_indices_to_root_space(TreePath(),
-                                      ItIn(_dof_indices.begin(),root_tail_length),
-                                      ItIn(_dof_indices.end(),root_tail_length),
+                                      ItIn(_dof_indices.begin(),_root_path_length),
+                                      ItIn(_dof_indices.end(),_root_path_length),
                                       out);
       }
 
 
     private:
 
-      //! Extends DOFIndex up to the root of the original DOFIndex tree.
-      void complete_dof_index(typename Traits::DOFIndex& di) const
-      {
-        std::copy(_tree_path.begin(),_tree_path_end,std::back_inserter(di.treeIndex()));
-      }
 
       //! Performs the single-level index mapping in the ordering pointed at by TP.
       template<typename TP, typename ItIn, typename ItOut>
@@ -276,8 +245,7 @@ namespace Dune {
     private:
 
       shared_ptr<const BaseOrdering> _base_ordering;
-      array<std::size_t,TypeTree::TreePathSize<TreePath>::value> _tree_path;
-      const typename array<std::size_t,TypeTree::TreePathSize<TreePath>::value>::const_iterator _tree_path_end;
+      const std::size_t _root_path_length;
       mutable std::vector<typename Traits::DOFIndex> _dof_indices;
 
     };

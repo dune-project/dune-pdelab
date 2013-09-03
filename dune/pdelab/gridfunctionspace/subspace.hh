@@ -10,6 +10,7 @@
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/subspacelocalfunctionspace.hh>
 #include <dune/pdelab/ordering/subordering.hh>
 
 namespace Dune {
@@ -155,6 +156,9 @@ namespace Dune {
 
         //! \name Default Functionality for all GridFunctionSpaces
         //! \{
+
+        //! The TreePath from the root of the space hierarchy to this subspace.
+        typedef TreePath SubSpacePath;
 
         //! The base GridFunctionSpace that this GridFunctionSubSpace is based on.
         typedef GFS BaseGridFunctionSpace;
@@ -485,8 +489,10 @@ namespace Dune {
         //! Re-exported Traits from the original GridFunctionSpace.
         typedef typename ChildGridFunctionSpace::Traits Traits;
 
-        //! Re-exported ImplementationTag from the original GridFunctionSpace.
-        typedef typename ChildGridFunctionSpace::ImplementationTag ImplementationTag;
+        //! Our ImplementationTag is derived from the tag of the original GridFunctionSpace.
+        typedef GridFunctionSubSpaceTag<
+          typename ChildGridFunctionSpace::ImplementationTag
+          > ImplementationTag;
 
         //! Returns the root GridFunctionSpace that this subspace view is based on.
         const BaseGridFunctionSpace& baseGridFunctionSpace() const
@@ -509,6 +515,17 @@ namespace Dune {
         const ChildGridFunctionSpace& childGridFunctionSpace() const
         {
           return this->proxiedNode();
+        }
+
+        //! Returns the storage object of the original GridFunctionSpace that we provide a view for.
+        /**
+         * \warning Users should think *at least* twice before using this object in their
+         *          code, as it will usually not do what they want! Due to the way GridFunctionSpaces
+         *          are constructed, it is not aware of the overall structure of the space!
+         */
+        shared_ptr<const ChildGridFunctionSpace> childGridFunctionSpaceStorage() const
+        {
+          return this->proxiedNodeStorage();
         }
 
       private:
