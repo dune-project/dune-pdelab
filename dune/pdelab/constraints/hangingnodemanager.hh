@@ -358,7 +358,6 @@ namespace Dune {
                 unsigned int intersection_index = 0;
                 IntersectionIterator fit = gv.ibegin(*it);
                 IntersectionIterator efit = gv.iend(*it);
-                typedef typename IntersectionIterator::Intersection Intersection;
 
                 bool bJumpOut = false;
 
