@@ -27,6 +27,11 @@ namespace Dune {
 
     struct LeafGridFunctionSpaceTag {};
 
+    template<typename ProxiedGFSTag>
+    struct GridFunctionSubSpaceTag
+      : public ProxiedGFSTag
+    {};
+
     //! Tag for the intermediate base class of the CompositeGridFunctionSpace.
     struct CompositeGridFunctionSpaceBaseTag {};
 
