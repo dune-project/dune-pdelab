@@ -50,7 +50,7 @@ namespace Dune {
     /**
      * SubOrdering presents a read-only view on the components of BaseOrdering contained
      * in the subtree pointed at by TreePath. The TreePath has to be an instantiation of
-     * Dune::PDELab::TypeTree::TreePath and is interpreted from left to right, i.e. a
+     * Dune::TypeTree::TreePath and is interpreted from left to right, i.e. a
      * TypeTree<3,1> means take the fourth child of BaseOrdering and continue to the second
      * child of that ordering.
      *
