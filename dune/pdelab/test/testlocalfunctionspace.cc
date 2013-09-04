@@ -13,6 +13,7 @@
 #include"../finiteelementmap/q12dfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../gridfunctionspace/localvector.hh"
+#include"../gridfunctionspace/subspace.hh"
 
 
 // test function trees
@@ -77,6 +78,11 @@ void test (const GV& gv)
   //CompositeLFSCache compositelfsCache(compositelfs);
   //  std::vector<double> xlc(compositelfs.maxSize());
 
+  typedef Dune::TypeTree::TreePath<1> Path1;
+  typedef Dune::PDELab::GridFunctionSubSpace<CompositeGFS, Path1> SubGFS1;
+  typedef Dune::PDELab::LocalFunctionSpace<SubGFS1> SubLFS1;
+  SubGFS1 subgfs1(compositegfs);
+  SubLFS1 sublfs1(subgfs1);
 
   // loop over elements
   typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
@@ -116,6 +122,21 @@ void test (const GV& gv)
           compositelfs.template child<0>().template child<1>().localVectorSize());
       assert(compositelfs.localVectorSize() ==
           compositelfs.template child<1>().localVectorSize());
+
+      // check LFS<SubSpace<CompositeSpace,1>> == LFS<CompositeSpace>::Child<1>
+      sublfs1.bind(*it);
+      assert(compositelfs.template child<1>().size() == sublfs1.size());
+      for (unsigned int i=0; i<compositelfs.template child<1>().size(); i++)
+      {
+        if ( compositelfs.template child<1>().dofIndex(i) != sublfs1.dofIndex(i) )
+        {
+          std::cout << "DOF " << i << ": \n"
+                    << "LFS::CHILD\t" << compositelfs.template child<1>().dofIndex(i) << "\n"
+                    << "LFS<SUB>\t" << sublfs1.dofIndex(i) << "\n";
+        }
+        assert( compositelfs.template child<1>().dofIndex(i) == sublfs1.dofIndex(i) );
+      }
+
 	}
 }
 
