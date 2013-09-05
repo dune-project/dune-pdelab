@@ -182,10 +182,7 @@ namespace Dune {
       //! Maps di from the DOFIndex subtree to the ContainerIndex in the BaseOrdering - inplace version.
       void mapIndex(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
       {
-        typename Traits::DOFIndex dof_index(di);
-        complete_dof_index(dof_index);
-
-        baseOrdering().mapIndex(dof_index.view(),ci);
+        baseOrdering().mapIndex(di,ci);
       }
 
       //! Returns the size of the BaseOrdering.
