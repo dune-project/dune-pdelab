@@ -65,6 +65,11 @@ namespace Dune {
             complete_dof_index(di);
         }
 
+        std::size_t subSpaceDepth() const
+        {
+          return this->gridFunctionSpace().subSpaceDepth();
+        }
+
       private:
 
         //! Extends DOFIndex up to the root of the original DOFIndex tree.

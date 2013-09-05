@@ -208,6 +208,11 @@ namespace Dune {
         return n;
       }
 
+      std::size_t subSpaceDepth() const
+      {
+        return 0;
+      }
+
       //! \brief get maximum possible size (which is maxLocalSize from grid function space)
       typename Traits::IndexContainer::size_type maxSize () const
       {
