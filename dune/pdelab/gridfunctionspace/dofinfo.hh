@@ -44,7 +44,6 @@ namespace Dune {
     {
       typedef typename GFS::Traits::GridViewType GV;
       typedef typename GV::template Codim<0>::Iterator Iterator;
-      typedef typename Dune::PDELab::BackendVectorSelector<GFS, bool>::Type V;
 
       isInterior = false;
       isOverlap = false;

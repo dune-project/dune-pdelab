@@ -716,11 +716,8 @@ namespace Dune {
     void interpolate (const F& f, std::vector<C>& out) const
     {
       // select quadrature rule
-      typedef typename LB::Traits::DomainType DomainType;
-
       typedef typename FieldTraits<typename LB::Traits::RangeFieldType>::real_type RealFieldType;
 
-      typedef typename LB::Traits::RangeFieldType FieldType;
       typedef typename LB::Traits::RangeType RangeType;
       const int d = LB::Traits::dimDomain;
       const Dune::QuadratureRule<RealFieldType,d>&
