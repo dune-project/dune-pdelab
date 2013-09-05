@@ -246,7 +246,7 @@ namespace Dune {
       protected:
 
         DefaultSubSpaceFeatures(const GFS& gfs)
-          : _ordering(gfs.orderingStorage(),TreePath())
+          : _ordering(gfs.orderingStorage())
         {}
 
       private:

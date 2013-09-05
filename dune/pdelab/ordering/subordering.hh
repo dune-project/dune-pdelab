@@ -93,11 +93,9 @@ namespace Dune {
        *                           the root of the DOFIndex tree to the DOFIndices passed to this
        *                           ordering.
        */
-      template<typename DOFIndexTreePath>
-      SubOrdering(shared_ptr<const BaseOrdering> base_ordering, DOFIndexTreePath)
+      explicit SubOrdering(shared_ptr<const BaseOrdering> base_ordering)
         : NodeT(TypeTree::extract_child_storage(*base_ordering,TreePath()))
         , _base_ordering(base_ordering)
-        , _root_path_length(TypeTree::TreePathSize<DOFIndexTreePath>::value)
       {
         update();
       }
@@ -114,24 +112,14 @@ namespace Dune {
       {
         // Only allocate storage for our local copy of the DOFIndices once
         // we really need it.
-        _dof_indices.resize(maxLocalSize());
-
-        // Copy DOFIndex values from original iterator range and extend them to the root
-        // of the DOFIndex hierarchy.
-        for (typename std::vector<typename Traits::DOFIndex>::iterator it = _dof_indices.begin();
-             begin != end;
-             ++begin, ++it)
-          {
-            *it = begin.raw_index();
-            complete_dof_index(*it);
-          }
+        // _dof_indices.resize(maxLocalSize()); TODO:Remove this thing!
 
         // Do the mapping up to the root ordering.
         // Avoid spelling out the type of ItIn here (it has to be a DOFIndexViewIterator),
         // so we don't need to include lfsindexcache.hh.
         map_lfs_indices_to_root_space(TreePath(),
-                                      ItIn(_dof_indices.begin(),_root_path_length),
-                                      ItIn(_dof_indices.end(),_root_path_length),
+                                      begin,
+                                      end,
                                       out);
       }
 
@@ -245,8 +233,6 @@ namespace Dune {
     private:
 
       shared_ptr<const BaseOrdering> _base_ordering;
-      const std::size_t _root_path_length;
-      mutable std::vector<typename Traits::DOFIndex> _dof_indices;
 
     };
 
