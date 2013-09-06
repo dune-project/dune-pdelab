@@ -29,6 +29,9 @@ namespace Dune {
       template<typename>
       friend class LeafGridViewOrdering;
 
+      template<typename>
+      friend class LeafOrderingBase;
+
       template<typename size_type>
       friend struct ::Dune::PDELab::impl::update_ordering_data;
 
