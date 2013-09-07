@@ -15,7 +15,7 @@
 namespace Dune {
   namespace PDELab {
 
-    template<typename DI, typename GDI, typename CI>
+    template<typename DI, typename CI>
     class OrderingBase
       : public PartitionInfoProvider
     {
@@ -25,7 +25,7 @@ namespace Dune {
 
     public:
 
-      typedef OrderingTraits<DI,GDI,CI> Traits;
+      typedef OrderingTraits<DI,CI> Traits;
 
     protected:
 
@@ -140,7 +140,7 @@ namespace Dune {
       OrderingBase(Node& node,
                    bool container_blocked,
                    GFSData* gfs_data,
-                   VirtualOrderingBase<DI,GDI,CI>* delegate = nullptr)
+                   VirtualOrderingBase<DI,CI>* delegate = nullptr)
         : _container_blocked(container_blocked)
         , _merge_mode(MergeMode::lexicographic)
         , _child_count(Node::has_dynamic_ordering_children ? Node::CHILDREN : 0)
@@ -163,7 +163,7 @@ namespace Dune {
                    bool container_blocked,
                    const std::vector<std::size_t>& merge_offsets,
                    GFSData* gfs_data,
-                   VirtualOrderingBase<DI,GDI,CI>* delegate = nullptr)
+                   VirtualOrderingBase<DI,CI>* delegate = nullptr)
         : _container_blocked(container_blocked)
         , _merge_mode(MergeMode::interleaved)
         , _child_count(Node::has_dynamic_ordering_children ? Node::CHILDREN : 0)
@@ -221,7 +221,7 @@ namespace Dune {
        * *must* call this method with 'this' as its argument in the copy
        * and the move constructors!
        */
-      void setDelegate(const VirtualOrderingBase<DI,GDI,CI>* delegate)
+      void setDelegate(const VirtualOrderingBase<DI,CI>* delegate)
       {
         _delegate = delegate;
       }
@@ -285,7 +285,7 @@ namespace Dune {
       std::size_t _size;
       std::size_t _block_count;
 
-      const VirtualOrderingBase<DI,GDI,CI>* _delegate;
+      const VirtualOrderingBase<DI,CI>* _delegate;
       GFSData* _gfs_data;
 
     };

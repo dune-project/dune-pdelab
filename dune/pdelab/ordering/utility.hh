@@ -179,7 +179,7 @@ namespace Dune {
 
 
 
-    template<typename DI, typename GDI, typename CI>
+    template<typename DI, typename CI>
     struct OrderingTraits
       : public SimpleOrderingTraits<DI,CI>
     {
@@ -197,19 +197,12 @@ namespace Dune {
 
       typedef typename DI::size_type SizeType;
 
-      typedef GDI GlobalDOFIndex;
-
     };
 
 
     template<typename GV, typename DI, typename CI>
     struct LocalOrderingTraits
       : public OrderingTraits<DI,
-                              Dune::PDELab::GlobalDOFIndex<
-                                typename DI::value_type,
-                                DI::max_depth,
-                                typename GV::Grid::GlobalIdSet::IdType
-                                >,
                               CI
                               >
     {
@@ -229,12 +222,14 @@ namespace Dune {
     };
 
 
-    template<typename DI, typename GDI, typename CI>
+    template<typename DI, typename CI>
     class VirtualOrderingBase
     {
     public:
 
-      typedef OrderingTraits<DI,GDI,CI> Traits;
+      typedef OrderingTraits<DI,CI> Traits;
+
+      VirtualOrderingBase() {}
 
       virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const = 0;
     };
