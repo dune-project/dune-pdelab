@@ -43,7 +43,7 @@ namespace Dune {
 
       };
 
-    }
+    } // end namespace ordering
 
 #endif // DOXYGEN
 
