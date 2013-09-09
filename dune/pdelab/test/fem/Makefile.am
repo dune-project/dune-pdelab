@@ -17,6 +17,7 @@ noinst_HEADERS =
 # dune/grid/uggrid/ugincludes.hh does #include "parallel.h",
 # ALUGrid-1.14-inst/include/serial/parallel.h will be included...
 AM_CPPFLAGS = @AM_CPPFLAGS@				\
+	-DGRIDSDIR="\"$(srcdir)/../grids\""	\
 	$(UG_CPPFLAGS)					\
 	$(ALUGRID_CPPFLAGS)				\
 	$(DUNE_CPPFLAGS)				\

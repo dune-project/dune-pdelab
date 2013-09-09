@@ -24,16 +24,16 @@ namespace Dune {
     namespace interleaved_ordering {
 
       //! Interface for merging index spaces
-      template<typename DI, typename GDI, typename CI, typename Node>
+      template<typename DI, typename CI, typename Node>
       class Base
-        : public OrderingBase<DI,GDI,CI>
+        : public OrderingBase<DI,CI>
       {
 
-        typedef OrderingBase<DI,GDI,CI> BaseT;
+        typedef OrderingBase<DI,CI> BaseT;
 
       public:
 
-        typedef typename OrderingBase<DI,GDI,CI>::Traits Traits;
+        typedef typename OrderingBase<DI,CI>::Traits Traits;
 
         typedef InterleavedOrderingTag OrderingTag;
 
@@ -135,21 +135,19 @@ namespace Dune {
     } // namespace interleaved_ordering
 
 
-    template<typename DI, typename GDI, typename CI, typename Child, std::size_t k>
+    template<typename DI, typename CI, typename Child, std::size_t k>
     class PowerInterleavedOrdering
       : public TypeTree::PowerNode<Child, k>
       , public interleaved_ordering::Base<DI,
-                                          GDI,
                                           CI,
-                                          PowerInterleavedOrdering<DI,GDI,CI,Child,k>
+                                          PowerInterleavedOrdering<DI,CI,Child,k>
                                           >
     {
       typedef TypeTree::PowerNode<Child, k> Node;
 
       typedef interleaved_ordering::Base<DI,
-                                         GDI,
                                          CI,
-                                         PowerInterleavedOrdering<DI,GDI,CI,Child,k>
+                                         PowerInterleavedOrdering<DI,CI,Child,k>
                                          > Base;
 
     public:
@@ -193,7 +191,6 @@ namespace Dune {
 
         typedef PowerInterleavedOrdering<
           typename Transformation::DOFIndex,
-          typename TC::Traits::GlobalDOFIndex,
           typename Transformation::ContainerIndex,
           TC,
           GFS::CHILDREN
@@ -223,15 +220,13 @@ namespace Dune {
 
 
 
-    template<typename DI, typename GDI, typename CI, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
+    template<typename DI, typename CI, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
     class CompositeInterleavedOrdering :
       public DUNE_TYPETREE_COMPOSITENODE_BASETYPE,
       public interleaved_ordering::Base<DI,
-                                        GDI,
                                         CI,
                                         CompositeInterleavedOrdering<
                                           DI,
-                                          GDI,
                                           CI,
                                           DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES
                                           >
@@ -241,11 +236,9 @@ namespace Dune {
 
       typedef interleaved_ordering::Base<
         DI,
-        GDI,
         CI,
         CompositeInterleavedOrdering<
           DI,
-          GDI,
           CI,
           DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES
           >
@@ -289,7 +282,6 @@ namespace Dune {
 
         typedef CompositeInterleavedOrdering<
           typename Transformation::DOFIndex,
-          typename extract_first_child<TC...>::type::Traits::GlobalDOFIndex,
           typename Transformation::ContainerIndex,
           TC...
           > type;

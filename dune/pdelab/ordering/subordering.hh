@@ -20,28 +20,6 @@
 namespace Dune {
   namespace PDELab {
 
-    namespace {
-
-      // ********************************************************************************
-      // utility functions for copying a tree path to an iterator range in reverse order
-      // ********************************************************************************
-
-      template<typename It>
-      void extract_tree_path_elements(TypeTree::TreePath<>, It it)
-      {
-        // end of recursion
-      }
-
-      template<typename TP, typename It>
-      void extract_tree_path_elements(TP, It it)
-      {
-        *it = TypeTree::TreePathBack<TP>::value;
-        extract_tree_path_elements(typename TypeTree::TreePathPopBack<TP>::type(),++it);
-      }
-
-    } // anonymous namespace
-
-
     //! \addtogroup Ordering Ordering
     //! \ingroup PDELab
     //! \{
@@ -50,7 +28,7 @@ namespace Dune {
     /**
      * SubOrdering presents a read-only view on the components of BaseOrdering contained
      * in the subtree pointed at by TreePath. The TreePath has to be an instantiation of
-     * Dune::PDELab::TypeTree::TreePath and is interpreted from left to right, i.e. a
+     * Dune::TypeTree::TreePath and is interpreted from left to right, i.e. a
      * TypeTree<3,1> means take the fourth child of BaseOrdering and continue to the second
      * child of that ordering.
      *
@@ -115,13 +93,10 @@ namespace Dune {
        *                           the root of the DOFIndex tree to the DOFIndices passed to this
        *                           ordering.
        */
-      template<typename DOFIndexTreePath>
-      SubOrdering(shared_ptr<const BaseOrdering> base_ordering, DOFIndexTreePath)
+      explicit SubOrdering(shared_ptr<const BaseOrdering> base_ordering)
         : NodeT(TypeTree::extract_child_storage(*base_ordering,TreePath()))
         , _base_ordering(base_ordering)
-        , _tree_path_end(_tree_path.begin() + TypeTree::TreePathSize<DOFIndexTreePath>::value)
       {
-        extract_tree_path_elements(DOFIndexTreePath(),_tree_path.begin());
         update();
       }
 
@@ -137,38 +112,20 @@ namespace Dune {
       {
         // Only allocate storage for our local copy of the DOFIndices once
         // we really need it.
-        _dof_indices.resize(maxLocalSize());
-
-        // Copy DOFIndex values from original iterator range and extend them to the root
-        // of the DOFIndex hierarchy.
-        for (typename std::vector<typename Traits::DOFIndex>::iterator it = _dof_indices.begin();
-             begin != end;
-             ++begin, ++it)
-          {
-            *it = begin.raw_index();
-            complete_dof_index(*it);
-          }
-
-        // The number of DOFIndex treepath components that still need to be processed.
-        const std::size_t root_tail_length = _tree_path_end - _tree_path.begin();
+        // _dof_indices.resize(maxLocalSize()); TODO:Remove this thing!
 
         // Do the mapping up to the root ordering.
         // Avoid spelling out the type of ItIn here (it has to be a DOFIndexViewIterator),
         // so we don't need to include lfsindexcache.hh.
         map_lfs_indices_to_root_space(TreePath(),
-                                      ItIn(_dof_indices.begin(),root_tail_length),
-                                      ItIn(_dof_indices.end(),root_tail_length),
+                                      begin,
+                                      end,
                                       out);
       }
 
 
     private:
 
-      //! Extends DOFIndex up to the root of the original DOFIndex tree.
-      void complete_dof_index(typename Traits::DOFIndex& di) const
-      {
-        std::copy(_tree_path.begin(),_tree_path_end,std::back_inserter(di.treeIndex()));
-      }
 
       //! Performs the single-level index mapping in the ordering pointed at by TP.
       template<typename TP, typename ItIn, typename ItOut>
@@ -225,10 +182,7 @@ namespace Dune {
       //! Maps di from the DOFIndex subtree to the ContainerIndex in the BaseOrdering - inplace version.
       void mapIndex(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
       {
-        typename Traits::DOFIndex dof_index(di);
-        complete_dof_index(dof_index);
-
-        baseOrdering().mapIndex(dof_index.view(),ci);
+        baseOrdering().mapIndex(di,ci);
       }
 
       //! Returns the size of the BaseOrdering.
@@ -276,9 +230,6 @@ namespace Dune {
     private:
 
       shared_ptr<const BaseOrdering> _base_ordering;
-      array<std::size_t,TypeTree::TreePathSize<TreePath>::value> _tree_path;
-      const typename array<std::size_t,TypeTree::TreePathSize<TreePath>::value>::const_iterator _tree_path_end;
-      mutable std::vector<typename Traits::DOFIndex> _dof_indices;
 
     };
 

@@ -77,13 +77,13 @@ namespace Dune {
       {
       }
 
-      template<typename DI, typename GDI, typename CI, typename Container>
-      void allocate_vector(tags::field_vector, const OrderingBase<DI,GDI,CI>& ordering, Container& c)
+      template<typename DI, typename CI, typename Container>
+      void allocate_vector(tags::field_vector, const OrderingBase<DI,CI>& ordering, Container& c)
       {
       }
 
-      template<typename DI, typename GDI, typename CI, typename Container>
-      void allocate_vector(tags::block_vector, const OrderingBase<DI,GDI,CI>& ordering, Container& c)
+      template<typename DI, typename CI, typename Container>
+      void allocate_vector(tags::block_vector, const OrderingBase<DI,CI>& ordering, Container& c)
       {
         for (std::size_t i = 0; i < ordering.childOrderingCount(); ++i)
           {

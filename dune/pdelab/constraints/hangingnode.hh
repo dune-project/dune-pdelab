@@ -36,9 +36,6 @@ namespace Dune {
           typedef typename Intersection::Entity Cell;
           typedef typename Intersection::Geometry FaceGeometry;
           typedef typename FaceGeometry::ctype DT;
-          typedef typename LFS::Traits::FiniteElementType FiniteElementType;
-          typedef typename FiniteElementType::Traits::LocalBasisType::Traits::DomainFieldType DFT;
-          typedef typename FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType RFT;
           typedef typename LFS::Traits::SizeType SizeType;
 
           typedef typename LFS::Traits::GridFunctionSpace::Traits::GridView::IndexSet IndexSet;
@@ -206,9 +203,6 @@ namespace Dune {
           typedef typename Intersection::Entity Cell;
           typedef typename Intersection::Geometry FaceGeometry;
           typedef typename FaceGeometry::ctype DT;
-          typedef typename LFS::Traits::FiniteElementType FiniteElementType;
-          typedef typename FiniteElementType::Traits::LocalBasisType::Traits::DomainFieldType DFT;
-          typedef typename FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType RFT;
           typedef typename LFS::Traits::SizeType SizeType;
           typedef typename LFS::Traits::GridFunctionSpace::Traits::GridView::IndexSet IndexSet;
 
@@ -389,11 +383,6 @@ namespace Dune {
         // the LOCAL indices of the faces in the reference element
         const int faceindex_e = ig.indexInInside();
         const int faceindex_f = ig.indexInOutside();
-
-        typedef typename LFS::Traits::FiniteElementType FiniteElementType;
-        typedef typename FiniteElementType::Traits::LocalCoefficientsType LocalCoefficientType;
-        typedef typename FiniteElementType::Traits::LocalBasisType::Traits::DomainFieldType DFT;
-        typedef typename LFS::Traits::SizeType SizeType;
 
         bool e_has_hangingnodes = false;
         {

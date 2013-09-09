@@ -21,6 +21,8 @@ set(gridfunctionspace_HEADERS
   powercompositegridfunctionspacebase.hh
   powergridfunctionspace.hh
   printvector.hh
+  subspace.hh
+  subspacelocalfunctionspace.hh
   tags.hh)
 
 # include not needed for CMake

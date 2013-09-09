@@ -338,7 +338,6 @@ namespace Dune {
         Y& y) const
       {
         typedef typename X::value_type D;
-        typedef typename X::size_type size_type;
         typedef typename Y::value_type R;
         typedef LocalVector<R,TestSpaceTag,typename Y::weight_type> ResidualVector;
         typedef typename ResidualVector::WeightedAccumulationView ResidualView;
@@ -402,7 +401,6 @@ namespace Dune {
         Y& y) const
       {
         typedef typename X::value_type D;
-        typedef typename X::size_type size_type;
         typedef typename Y::value_type R;
         typedef LocalVector<R,TestSpaceTag,typename Y::weight_type> ResidualVector;
         typedef typename ResidualVector::WeightedAccumulationView ResidualView;
@@ -466,7 +464,6 @@ namespace Dune {
       {
         typedef typename X::value_type D;
         typedef typename Y::value_type R;
-        typedef typename X::size_type size_type;
         typedef LocalVector<R,TestSpaceTag,typename Y::weight_type> ResidualVector;
         typedef typename ResidualVector::WeightedAccumulationView ResidualView;
 
@@ -559,7 +556,6 @@ namespace Dune {
       {
         typedef typename X::value_type D;
         typedef typename Y::value_type R;
-        typedef typename X::size_type size_type;
         typedef LocalVector<R,TestSpaceTag,typename Y::weight_type> ResidualVector;
         typedef typename ResidualVector::WeightedAccumulationView ResidualView;
 

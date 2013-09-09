@@ -49,20 +49,20 @@ public:
 class AlbertaLDomain : public Dune::AlbertaGrid<2,2>
 {
 public:
-  AlbertaLDomain () : Dune::AlbertaGrid<2,2>("grids/ldomain.al") {}
+  AlbertaLDomain () : Dune::AlbertaGrid<2,2>(GRIDSDIR "/ldomain.al") {}
 };
 
 class AlbertaUnitSquare : public Dune::AlbertaGrid<2,2>
 {
 public:
-  AlbertaUnitSquare () : Dune::AlbertaGrid<2,2>("grids/2dgrid.al") {}
+  AlbertaUnitSquare () : Dune::AlbertaGrid<2,2>(GRIDSDIR "/2dgrid.al") {}
 };
 
 class AlbertaReentrantCorner : public Dune::GridPtr<Dune::AlbertaGrid<2,2> >
 {
 public:
   AlbertaReentrantCorner()
-    : Dune::GridPtr<Dune::AlbertaGrid<2,2> >("grids/2dreentrantcorner.dgf")
+    : Dune::GridPtr<Dune::AlbertaGrid<2,2> >(GRIDSDIR "/2dreentrantcorner.dgf")
   { }
 };
 #  endif //ALBERTA_DIM == 2
@@ -133,7 +133,7 @@ class UnitTriangleMaker<Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> > {
   typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
 public:
   static Dune::shared_ptr<Grid> create() {
-    return Dune::shared_ptr<Grid>(new Grid("grids/2dtriangle.alu"));
+    return Dune::shared_ptr<Grid>(new Grid(GRIDSDIR "/2dtriangle.alu"));
   }
 };
 #endif // HAVE_ALUGRID
@@ -174,7 +174,7 @@ class TriangulatedUnitSquareMaker<Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconfo
   typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
 public:
   static Dune::shared_ptr<Grid> create() {
-    return Dune::shared_ptr<Grid>(new Grid("grids/2dsimplex.alu"));
+    return Dune::shared_ptr<Grid>(new Grid(GRIDSDIR "/2dsimplex.alu"));
   }
 };
 #endif // HAVE_ALUGRID

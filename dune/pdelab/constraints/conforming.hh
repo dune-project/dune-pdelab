@@ -177,8 +177,6 @@ namespace Dune {
         // empty map means Dirichlet constraint
         typename T::RowType empty;
 
-        typedef typename LFS::Traits::GridFunctionSpaceType::Traits::BackendType B;
-
         const ReferenceElement<typename GV::ctype,GV::dimension>& ref_el =
           ReferenceElements<typename GV::ctype,GV::dimension>::general(eg.entity().type());
 
