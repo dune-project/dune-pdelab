@@ -63,19 +63,6 @@ namespace Dune{
       //! The matrix pattern
       typedef typename Jacobian::Pattern MatrixPattern;
 
-      //! Extended DOF index, which globally unique
-      typedef Dune::PDELab::GlobalDOFIndex<
-        typename GO::Traits::TrialGridFunctionSpace::Ordering::Traits::DOFIndex::value_type,
-        GO::Traits::TrialGridFunctionSpace::Ordering::Traits::DOFIndex::max_depth,
-        typename GO::Traits::TrialGridFunctionSpace::Traits::GridView::Grid::GlobalIdSet::IdType
-        > GlobalDOFIndex;
-
-      //! Data structure for storing border-border matrix pattern entries in a communication-optimized form
-      typedef unordered_map<
-        typename GO::Traits::TestGridFunctionSpace::Ordering::Traits::DOFIndex,
-        unordered_set<GlobalDOFIndex>
-        > BorderPattern;
-
       //! The helper class to exchange data on the processor boundary
       typedef typename GO::BorderDOFExchanger BorderDOFExchanger;
 

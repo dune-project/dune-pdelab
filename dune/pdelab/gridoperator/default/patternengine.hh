@@ -40,10 +40,12 @@ namespace Dune{
       typedef typename LA::LFSVCache LFSVCache;
       typedef typename LFSV::Traits::GridFunctionSpace GFSV;
 
+      //! helper classes
+      typedef typename LA::Traits::BorderDOFExchanger BorderDOFExchanger;
+      typedef typename BorderDOFExchanger::BorderPattern BorderPattern;
 
       //! The type of the solution vector
       typedef typename LA::Traits::MatrixPattern Pattern;
-      typedef typename LA::Traits::BorderPattern BorderPattern;
 
       typedef Dune::PDELab::LocalSparsityPattern LocalPattern;
 
@@ -285,7 +287,7 @@ namespace Dune{
 
       BorderPattern _border_pattern;
 
-      shared_ptr<typename LA::Traits::BorderDOFExchanger> _border_dof_exchanger;
+      shared_ptr<BorderDOFExchanger> _border_dof_exchanger;
 
     }; // End of class DefaultLocalPatternAssemblerEngine
 

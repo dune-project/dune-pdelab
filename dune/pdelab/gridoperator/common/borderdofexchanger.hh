@@ -77,7 +77,19 @@ namespace Dune {
       typedef typename Grid::Traits::GlobalIdSet IdSet;
       typedef typename IdSet::IdType IdType;
 
-      typedef typename GridOperator::Traits::LocalAssembler::Traits::BorderPattern BorderPattern;
+      //! Extended DOF index, which globally unique
+      typedef Dune::PDELab::GlobalDOFIndex<
+        typename GFSV::Ordering::Traits::DOFIndex::value_type,
+        GFSV::Ordering::Traits::DOFIndex::max_depth,
+        typename GFSV::Traits::GridView::Grid::GlobalIdSet::IdType
+        > GlobalDOFIndex;
+
+      //! Data structure for storing border-border matrix pattern entries in a communication-optimized form
+      typedef unordered_map<
+        typename GFSV::Ordering::Traits::DOFIndex,
+        unordered_set<GlobalDOFIndex>
+        > BorderPattern;
+
       typedef typename GFSV::Ordering::Traits::DOFIndex RowDOFIndex;
       typedef typename GFSU::Ordering::Traits::DOFIndex ColDOFIndex;
 
@@ -511,14 +523,17 @@ namespace Dune {
 
 
     template<typename GridOperator>
-    class OverlappingBorderDOFExchanger
+    class NoDataBorderDOFExchanger
     {
 
     public:
 
-      typedef OverlappingBorderDOFExchanger CommunicationCache;
+      typedef NoDataBorderDOFExchanger CommunicationCache;
 
-      OverlappingBorderDOFExchanger(const GridOperator& grid_operator)
+      //! Data structure for storing border-border matrix pattern entries in a communication-optimized form
+      typedef Empty BorderPattern;
+
+      NoDataBorderDOFExchanger(const GridOperator& grid_operator)
       {}
 
       void accumulateBorderEntries(const GridOperator& grid_operator, typename GridOperator::Traits::Jacobian& matrix)
@@ -533,6 +548,19 @@ namespace Dune {
       {
         return *this;
       }
+
+    };
+
+
+    template<typename GridOperator>
+    class OverlappingBorderDOFExchanger :
+      public NoDataBorderDOFExchanger<GridOperator>
+    {
+
+    public:
+
+      OverlappingBorderDOFExchanger(const GridOperator& grid_operator)
+      {}
 
     };
 
