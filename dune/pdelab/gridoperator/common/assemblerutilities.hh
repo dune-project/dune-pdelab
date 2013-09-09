@@ -4,9 +4,6 @@
 #ifndef DUNE_PDELAB_ASSEMBLERUTILITIES_HH
 #define DUNE_PDELAB_ASSEMBLERUTILITIES_HH
 
-#include <dune/pdelab/common/unordered_map.hh>
-#include <dune/pdelab/common/unordered_set.hh>
-
 #include <dune/pdelab/constraints/common/constraintstransformation.hh>
 #include <dune/pdelab/gridoperator/common/localmatrix.hh>
 

@@ -16,6 +16,7 @@
 #include <dune/grid/common/datahandleif.hh>
 
 #include <dune/pdelab/common/unordered_map.hh>
+#include <dune/pdelab/common/unordered_set.hh>
 #include <dune/pdelab/common/borderindexidcache.hh>
 #include <dune/pdelab/gridfunctionspace/entityindexcache.hh>
 
@@ -533,6 +534,9 @@ namespace Dune {
       //! Data structure for storing border-border matrix pattern entries in a communication-optimized form
       typedef Empty BorderPattern;
 
+      NoDataBorderDOFExchanger()
+      {}
+
       NoDataBorderDOFExchanger(const GridOperator& grid_operator)
       {}
 
@@ -558,6 +562,9 @@ namespace Dune {
     {
 
     public:
+
+      OverlappingBorderDOFExchanger()
+      {}
 
       OverlappingBorderDOFExchanger(const GridOperator& grid_operator)
       {}
