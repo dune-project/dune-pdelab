@@ -172,7 +172,6 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const bool sol
     {
       bh.start_run(std::cout);
       // constants and types
-      typedef typename GV::Grid::ctype DF;
       typedef typename FEM::Traits::FiniteElementType::Traits::
         LocalBasisType::Traits::RangeFieldType R;
 
@@ -281,7 +280,6 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, const bool sol
 
           // make ISTL solver
           Dune::MatrixAdapter<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> opa(m.base());
-          typedef Dune::PDELab::OnTheFlyOperator<typename DV::BaseT,typename RV::BaseT,GridOperator> ISTLOnTheFlyOperator;
           //ISTLOnTheFlyOperator opb(gridoperator);
           Dune::SeqSSOR<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ssor(m.base(),1,1.0);
           Dune::SeqILU0<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ilu0(m.base(),1.0);
@@ -484,7 +482,6 @@ int main(int argc, char** argv)
 
         // make finite element map
         typedef GV::Grid::ctype DF;
-        typedef double R;
         const int k=3;
         const int q=2*k;
         typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
@@ -515,7 +512,6 @@ int main(int argc, char** argv)
 
         // make finite element map
         typedef GV::Grid::ctype DF;
-        typedef double R;
         const int k=3;
         const int q=2*k;
         typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
@@ -545,7 +541,6 @@ int main(int argc, char** argv)
 
         // make finite element map
         typedef GV::Grid::ctype DF;
-        typedef double R;
         const int k=3;
         const int q=2*k;
         typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;

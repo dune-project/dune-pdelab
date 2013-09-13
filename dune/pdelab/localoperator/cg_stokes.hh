@@ -101,7 +101,6 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType RT_V;
         typedef typename LFSU_V::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType JacobianType_V;
-        typedef typename LFSU_V::Traits::SizeType size_type;
 
 
         typedef typename LFSU::template Child<1>::Type LFSU_P;
@@ -239,7 +238,6 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSV_V::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RT_V;
-        typedef typename LFSV_V::Traits::SizeType size_type;
 
         typedef typename LFSV::template Child<1>::Type LFSV_P;
         const LFSV_P& lfsv_p = lfsv.template child<1>();
@@ -312,16 +310,11 @@ namespace Dune {
         const unsigned int vsize = lfsv_v_pfs.child(0).size();
 
         typedef typename LFSV_V::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::JacobianType JacobianType_V;
-        typedef typename LFSV_V::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RT_V;
 
         // the range field type (equal for velocity and pressure)
         typedef typename LFSV_V::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-
-        // the size type (equal for velocity and pressure)
-        typedef typename LFSV_V::Traits::SizeType size_type;
 
         // the domain field type (equal for velocity and pressure)
         typedef typename LFSV_V::Traits::FiniteElementType::
@@ -389,14 +382,11 @@ namespace Dune {
 
         // domain and range field type
         typedef typename LFSU_V::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::DomainFieldType DF_V;
-        typedef typename LFSU_V::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSU_V::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RT_V;
         typedef typename LFSU_V::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType JacobianType_V;
-        typedef typename LFSU_V::Traits::SizeType size_type;
 
 
         typedef typename LFSU::template Child<1>::Type LFSU_P;

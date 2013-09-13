@@ -119,7 +119,6 @@ namespace Dune {
           typename FESwitch::Basis
           > BasisSwitch;
         typedef typename BasisSwitch::DomainField DF;
-        typedef typename BasisSwitch::DomainLocal DomainLocal;
         typedef typename BasisSwitch::RangeField RF;
         typedef typename BasisSwitch::Range Range;
 
