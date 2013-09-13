@@ -18,6 +18,7 @@
 #include <dune/pdelab/common/unordered_map.hh>
 #include <dune/pdelab/common/unordered_set.hh>
 #include <dune/pdelab/common/borderindexidcache.hh>
+#include <dune/pdelab/common/globaldofindex.hh>
 #include <dune/pdelab/gridfunctionspace/entityindexcache.hh>
 
 namespace Dune {
