@@ -65,7 +65,8 @@ namespace Dune {
         template<typename F, typename IG, typename LFS, typename T>
         static void boundary (const C& c, const F& f, const IG& ig, const LFS& lfs, T& trafo)
         {
-          c.boundary(f,ig,lfs,trafo);
+          if (lfs.size())
+            c.boundary(f,ig,lfs,trafo);
         }
       };
       template<typename C>
@@ -74,7 +75,8 @@ namespace Dune {
         template<typename IG, typename LFS, typename T>
         static void processor (const C& c, const IG& ig, const LFS& lfs, T& trafo)
         {
-          c.processor(ig,lfs,trafo);
+          if (lfs.size())
+            c.processor(ig,lfs,trafo);
         }
       };
       template<typename C>
@@ -85,7 +87,8 @@ namespace Dune {
                               const LFS& lfs_e, const LFS& lfs_f,
                               T& trafo_e, T& trafo_f)
         {
-          c.skeleton(ig, lfs_e, lfs_f, trafo_e, trafo_f);
+          if (lfs_e.size() || lfs_f.size())
+            c.skeleton(ig, lfs_e, lfs_f, trafo_e, trafo_f);
         }
       };
       template<typename C>
@@ -94,7 +97,8 @@ namespace Dune {
         template<typename EG, typename LFS, typename T>
         static void volume (const C& c, const EG& eg, const LFS& lfs, T& trafo)
         {
-          c.volume(eg,lfs,trafo);
+          if (lfs.size())
+            c.volume(eg,lfs,trafo);
         }
       };
 
