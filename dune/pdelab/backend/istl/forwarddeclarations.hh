@@ -5,6 +5,8 @@
 
 #ifndef DOXYGEN // These forward declarations are of no concern to Doxygen
 
+#include <dune/common/memory/domain.hh>
+
 namespace Dune {
 
   // ********************************************************************************
@@ -29,6 +31,19 @@ namespace Dune {
   template<typename Block, typename Alloc>
   class BCRSMatrix;
 
+  namespace ISTL {
+
+    template<typename E, typename Alloc, typename D>
+    class Vector;
+
+#if !defined DUNE_ISTL_ELLMATRIX_DECLARED
+    template<typename F_, typename A_, typename D_ = typename Memory::allocator_domain<A_>::type>
+    class ELLMatrix;
+#define DUNE_ISTL_ELLMATRIX_DECLARED 1
+#endif
+
+  }
+
   namespace PDELab {
 
     template<typename GFS, typename C>
@@ -41,6 +56,12 @@ namespace Dune {
 
       template<typename E, typename VV, typename VU>
       struct build_matrix_type;
+
+      template<typename GFS, typename C>
+      class FlatVectorContainer;
+
+      template<typename GFSV, typename GFSU, typename C>
+      class FlatELLMatrixContainer;
 
     } // namespace istl
   } // namespace PDELab

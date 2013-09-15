@@ -66,6 +66,55 @@ namespace Dune {
       };
     };
 
+    namespace istl {
+
+      template<typename Alloc>
+      struct FlatVectorBackend
+      {
+
+        typedef Alloc Allocator;
+        typedef Alloc allocator_type;
+
+        typedef typename Alloc::size_type size_type;
+
+        static const size_type blockSize = 1;
+
+        struct Traits
+        {
+          static const size_type block_size = 1;
+          static const bool blocked = false;
+          static const size_type max_blocking_depth = 0;
+        };
+
+        bool blocked() const
+        {
+          return false;
+        }
+
+      };
+
+      template<typename Alloc>
+      struct FlatMatrixBackend
+      {
+
+        typedef Alloc Allocator;
+        typedef Alloc allocator_type;
+
+        typedef typename Alloc::size_type size_type;
+
+        template<typename VV, typename VU, typename E>
+        struct MatrixHelper
+        {
+          typedef FlatELLMatrixContainer<
+            typename VV::GridFunctionSpace,
+            typename VU::GridFunctionSpace,
+            Dune::ISTL::ELLMatrix<E,Alloc>
+            > type;
+        };
+      };
+
+
+    }
 
   } // namespace PDELab
 } // namespace Dune

@@ -58,6 +58,20 @@ namespace Dune {
         return v.base();
       }
 
+      template<typename GFS, typename C>
+      typename FlatVectorContainer<GFS,C>::Container&
+      raw(FlatVectorContainer<GFS,C>& v)
+      {
+        return v.base();
+      }
+
+      template<typename GFS, typename C>
+      const typename FlatVectorContainer<GFS,C>::Container&
+      raw(const FlatVectorContainer<GFS,C>& v)
+      {
+        return v.base();
+      }
+
       template<typename GFSU, typename GFSV, typename C>
       typename ISTLMatrixContainer<GFSU,GFSV,C>::Container&
       raw(ISTLMatrixContainer<GFSU,GFSV,C>& m)
@@ -72,14 +86,40 @@ namespace Dune {
         return m.base();
       }
 
+      template<typename GFSU, typename GFSV, typename C>
+      typename FlatELLMatrixContainer<GFSU,GFSV,C>::Container&
+      raw(FlatELLMatrixContainer<GFSU,GFSV,C>& m)
+      {
+        return m.base();
+      }
+
+      template<typename GFSU, typename GFSV, typename C>
+      const typename FlatELLMatrixContainer<GFSU,GFSV,C>::Container&
+      raw(const FlatELLMatrixContainer<GFSU,GFSV,C>& m)
+      {
+        return m.base();
+      }
+
       template<typename GFS, typename C>
       struct raw_type<ISTLBlockVectorContainer<GFS,C> >
       {
         typedef C type;
       };
 
+      template<typename GFS, typename C>
+      struct raw_type<FlatVectorContainer<GFS,C> >
+      {
+        typedef C type;
+      };
+
       template<typename GFSU, typename GFSV, typename C>
       struct raw_type<ISTLMatrixContainer<GFSU,GFSV,C> >
+      {
+        typedef C type;
+      };
+
+      template<typename GFSU, typename GFSV, typename C>
+      struct raw_type<FlatELLMatrixContainer<GFSU,GFSV,C> >
       {
         typedef C type;
       };
