@@ -505,8 +505,8 @@ namespace Dune {
       std::vector<std::pair<ConstraintsIterator,ConstraintsIterator> > _constraints_iterators;
       mutable CIMap _container_index_map;
       ConstraintsVector _constraints;
-      mutable size_type _offsets[LFS::CHILDREN];
-      mutable size_type _extended_offsets[LFS::CHILDREN];
+      mutable array<size_type,LFS::CHILDREN> _offsets;
+      mutable array<size_type,LFS::CHILDREN> _extended_offsets;
       mutable bool _inverse_cache_built;
       mutable InverseMap _inverse_map;
 
