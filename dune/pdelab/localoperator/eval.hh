@@ -52,9 +52,6 @@ namespace Dune {
                               ){
 
       typedef typename LFS::Traits::FiniteElementType::
-        Traits::LocalBasisType::Traits::DomainFieldType DF;
-
-      typedef typename LFS::Traits::FiniteElementType::
         Traits::LocalBasisType::Traits::JacobianType JacobianType;
 
       typedef typename LFS::Traits::SizeType size_type;

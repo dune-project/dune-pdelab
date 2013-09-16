@@ -744,9 +744,6 @@ namespace Dune {
       void pattern_volume (const LFSU& lfsu, const LFSV& lfsv,
                            LocalPattern& pattern) const
       {
-        // get types
-        typedef typename LFSV::template Child<0>::Type DGSpace;
-
         // paranoia check number of number of components
         if (LFSU::CHILDREN!=LFSV::CHILDREN)
           DUNE_THROW(Dune::Exception,"need U=V!");
