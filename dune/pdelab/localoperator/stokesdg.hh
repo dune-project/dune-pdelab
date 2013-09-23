@@ -118,10 +118,7 @@ namespace Dune {
                 typedef typename BasisSwitch_V::DomainField DF;
                 typedef typename BasisSwitch_V::Range RT;
                 typedef typename BasisSwitch_V::RangeField RF;
-                typedef typename BasisSwitch_V::Range Range_V;
                 typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-                typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
-                typedef typename BasisSwitch_P::Range Range_P;
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
@@ -211,11 +208,7 @@ namespace Dune {
                 typedef typename BasisSwitch_V::DomainField DF;
                 typedef typename BasisSwitch_V::Range RT;
                 typedef typename BasisSwitch_V::RangeField RF;
-                typedef typename BasisSwitch_V::Range Range_V;
                 typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-                typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
-                typedef typename BasisSwitch_P::Range Range_P;
-                typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
                 Dune::GeometryType gtface = ig.geometry().type();
@@ -358,10 +351,7 @@ namespace Dune {
                 typedef typename BasisSwitch_V::DomainField DF;
                 typedef typename BasisSwitch_V::Range RT;
                 typedef typename BasisSwitch_V::RangeField RF;
-                typedef typename BasisSwitch_V::Range Range_V;
                 typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-                typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
-                typedef typename BasisSwitch_P::Range Range_P;
                 typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
@@ -482,11 +472,7 @@ namespace Dune {
                 typedef typename BasisSwitch_V::DomainField DF;
                 typedef typename BasisSwitch_V::Range RT;
                 typedef typename BasisSwitch_V::RangeField RF;
-                typedef typename BasisSwitch_V::Range Range_V;
                 typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-                typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
-                typedef typename BasisSwitch_P::Range Range_P;
-                typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
                 Dune::GeometryType gtface = ig.geometry().type();
@@ -774,11 +760,7 @@ namespace Dune {
                 typedef typename BasisSwitch_V::DomainField DF;
                 typedef typename BasisSwitch_V::Range RT;
                 typedef typename BasisSwitch_V::RangeField RF;
-                typedef typename BasisSwitch_V::Range Range_V;
                 typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
-                typedef BasisInterfaceSwitch<typename FESwitch_P::Basis > BasisSwitch_P;
-                typedef typename BasisSwitch_P::Range Range_P;
-                typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
                 const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
@@ -1018,8 +1000,6 @@ namespace Dune {
                 typedef typename BasisSwitch_V::DomainField DF;
                 typedef typename BasisSwitch_V::Range RT;
                 typedef typename BasisSwitch_V::RangeField RF;
-                typedef typename BasisSwitch_V::Range Range_V;
-                typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
                 Dune::GeometryType gt = eg.geometry().type();
@@ -1116,8 +1096,6 @@ namespace Dune {
                 typedef typename BasisSwitch_V::DomainField DF;
                 typedef typename BasisSwitch_V::Range RT;
                 typedef typename BasisSwitch_V::RangeField RF;
-                typedef typename BasisSwitch_V::Range Range_V;
-                typedef typename LFSV::Traits::SizeType size_type;
 
                 // select quadrature rule
                 const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();

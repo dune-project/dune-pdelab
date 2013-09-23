@@ -37,9 +37,7 @@ namespace Dune {
       void volume (const EG& eg, const LFS& lfs, T& trafo) const
       {
         typedef typename EG::Entity Entity;
-        typedef typename EG::Geometry Geometry;
-        typedef typename Geometry::ctype ctype;
-        enum { dim = EG::Entity::dimension, dimw = EG::Entity::dimensionworld };
+        enum { dim = Entity::dimension, dimw = Entity::dimensionworld };
 
         // update component
         typename T::RowType empty;

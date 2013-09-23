@@ -281,15 +281,12 @@ namespace Dune {
       {
         // select the two components
         typedef typename LFSV::template Child<liquid>::Type PLSpace;
-        typedef typename LFSV::template Child<gas>::Type PGSpace;
 
         // domain and range field type
         typedef typename PLSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename PLSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename PLSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
 
         // cell geometry
         const Dune::FieldVector<DF,dim>&
@@ -317,8 +314,6 @@ namespace Dune {
           Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename PLSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename PLSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
 
         // cell geometries
         const Dune::FieldVector<DF,dim>&
@@ -491,8 +486,6 @@ namespace Dune {
           Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename PLSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename PLSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
 
         // face geometry
         const Dune::FieldVector<DF,dim-1>&
@@ -596,8 +589,6 @@ namespace Dune {
           Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename PLSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename PLSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
 
         // cell geometry
         const Dune::FieldVector<DF,dim>&
