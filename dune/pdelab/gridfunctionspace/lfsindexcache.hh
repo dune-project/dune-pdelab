@@ -823,8 +823,12 @@ namespace Dune {
       typedef LFS LocalFunctionSpace;
       typedef typename LFS::Traits::GridFunctionSpace GFS;
       typedef typename GFS::Ordering Ordering;
+    private:
       typedef typename Ordering::Traits::ContainerIndex CI;
       typedef typename Ordering::Traits::DOFIndex DI;
+    public:
+      typedef CI ContainerIndex;
+      typedef DI DOFIndex;
       typedef std::size_t size_type;
 
       typedef std::vector<CI> CIVector;
