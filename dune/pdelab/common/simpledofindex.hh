@@ -58,9 +58,16 @@ namespace Dune {
 
     };
 
+    template<typename F>
+    inline std::size_t hash_value(const SimpleDOFIndex<F>& di)
+    {
+      return di.back();
+    }
+
   } // namespace PDELab
 } // namespace Dune
 
+DUNE_DEFINE_HASH(DUNE_HASH_TEMPLATE_ARGS(typename F),DUNE_HASH_TYPE(Dune::PDELab::SimpleDOFIndex<F>))
 
 
 #endif // DUNE_PDELAB_COMMON_SIMPLEDOFINDEX_HH
