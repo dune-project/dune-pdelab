@@ -218,7 +218,8 @@ namespace Dune {
         // do triple matrix product ACG = P^T ADG P
         Dune::Timer watch;
         watch.reset();
-        ACG acg;
+        tags::attached_container attached_container;
+        ACG acg(attached_container);
         {
           PTADG ptadg;
           Dune::transposeMatMultMat(ptadg,Dune::PDELab::istl::raw(pmatrix),Dune::PDELab::istl::raw(A));

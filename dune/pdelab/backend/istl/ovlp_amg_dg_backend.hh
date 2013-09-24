@@ -551,7 +551,8 @@ public:
     // do triple matrix product ACG = P^T ADG P; this is purely local
     Dune::Timer watch;
     watch.reset();
-    CGM acg;
+    tags::attached_container attached_container;
+    CGM acg(attached_container);
     {
       PTADG ptadg;
       Dune::transposeMatMultMat(ptadg,Dune::PDELab::istl::raw(pmatrix),Dune::PDELab::istl::raw(A)); // 1a
