@@ -33,6 +33,12 @@ namespace Dune {
       template<typename GFSV, typename GFSU, typename C>
       class FlatELLMatrixContainer;
 
+      template<typename GFS, typename C>
+      class BlockVectorContainer;
+
+      template<typename GFSV, typename GFSU, typename C>
+      class BELLMatrixContainer;
+
     } // namespace istl
   } // namespace PDELab
 } // namespace Dune

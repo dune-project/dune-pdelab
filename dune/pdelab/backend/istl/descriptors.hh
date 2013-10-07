@@ -114,6 +114,61 @@ namespace Dune {
       };
 
 
+
+      template<typename Alloc>
+      struct BlockVectorBackend
+      {
+
+        typedef Alloc Allocator;
+        typedef Alloc allocator_type;
+
+        typedef typename Alloc::size_type size_type;
+
+        struct Traits
+        {
+          static const size_type max_blocking_depth = 1;
+        };
+
+        bool blocked() const
+        {
+          return true;
+        }
+
+        size_type blockSize() const
+        {
+          return _block_size;
+        }
+
+        BlockVectorBackend(size_type block_size)
+          : _block_size(block_size)
+        {}
+
+      private:
+
+        const size_type _block_size;
+
+      };
+
+      template<typename Alloc>
+      struct BELLMatrixBackend
+      {
+
+        typedef Alloc Allocator;
+        typedef Alloc allocator_type;
+
+        typedef typename Alloc::size_type size_type;
+
+        template<typename VV, typename VU, typename E>
+        struct MatrixHelper
+        {
+          typedef BELLMatrixContainer<
+            typename VV::GridFunctionSpace,
+            typename VU::GridFunctionSpace,
+            Dune::ISTL::BELLMatrix<E,Alloc>
+            > type;
+        };
+      };
+
     }
 
   } // namespace PDELab

@@ -1,4 +1,7 @@
-install(FILES blockmatrixdiagonal.hh
+install(FILES
+  bellmatrixbackend.hh
+  blockmatrixdiagonal.hh
+  blockvectorbackend.hh
   descriptors.hh
   forwarddeclarations.hh
   matrixhelpers.hh
