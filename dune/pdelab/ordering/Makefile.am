@@ -12,6 +12,7 @@ gridfunctionspace_HEADERS =			\
 	localorderingbase.hh			\
 	orderingbase.hh				\
 	orderinginterface.hh			\
+	redblackdg.hh				\
 	permutedordering.hh			\
 	singlecodimleafordering.hh		\
 	subordering.hh				\
