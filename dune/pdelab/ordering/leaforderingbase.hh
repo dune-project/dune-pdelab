@@ -157,6 +157,7 @@ namespace Dune {
                     out->push_back(in->treeIndex().back());
                     const size_type geometry_type_index = Traits::DOFIndexAccessor::geometryType(*in);
                     const size_type entity_index = Traits::DOFIndexAccessor::entityIndex(*in);
+                    assert(localOrdering()._gt_used[geometry_type_index]);
                     out->push_back(_gt_dof_offsets[geometry_type_index] + entity_index);
                   }
               }
@@ -168,6 +169,7 @@ namespace Dune {
                     out->push_back(in->treeIndex().back());
                     const size_type geometry_type_index = Traits::DOFIndexAccessor::geometryType(*in);
                     const size_type entity_index = Traits::DOFIndexAccessor::entityIndex(*in);
+                    assert(localOrdering()._gt_used[geometry_type_index]);
                     out->back() += _gt_dof_offsets[geometry_type_index] + entity_index * localOrdering()._gt_dof_sizes[geometry_type_index];
                   }
               }
@@ -182,6 +184,7 @@ namespace Dune {
                     out->push_back(in->treeIndex().back());
                     const size_type geometry_type_index = Traits::DOFIndexAccessor::geometryType(*in);
                     const size_type entity_index = Traits::DOFIndexAccessor::entityIndex(*in);
+                    assert(localOrdering()._gt_used[geometry_type_index]);
                     out->push_back(localOrdering()._gt_entity_offsets[geometry_type_index] + entity_index);
                   }
               }
@@ -193,6 +196,7 @@ namespace Dune {
                     out->push_back(in->treeIndex().back());
                     const size_type geometry_type_index = Traits::DOFIndexAccessor::geometryType(*in);
                     const size_type entity_index = Traits::DOFIndexAccessor::entityIndex(*in);
+                    assert(localOrdering()._gt_used[geometry_type_index]);
                     out->back() += localOrdering()._entity_dof_offsets[localOrdering()._gt_entity_offsets[geometry_type_index] + entity_index];
                   }
               }
