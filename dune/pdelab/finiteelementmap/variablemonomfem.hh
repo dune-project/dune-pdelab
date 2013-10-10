@@ -18,22 +18,20 @@ namespace Dune {
       struct InitVariableMonomLocalFiniteElementMap
       {
         template<typename C>
-        static void init(C & c)
+        static void init(C & c, GeometryType gt)
         {
           typedef Dune::MonomLocalFiniteElement<D,R,d,p> LFE;
           typedef typename C::value_type ptr;
-          GeometryType cube;
-          cube.makeCube(d);
-          c[p] = ptr(new LocalFiniteElementVirtualImp<LFE>(LFE(cube)));
+          c[p] = ptr(new LocalFiniteElementVirtualImp<LFE>(LFE(gt)));
 
-          InitVariableMonomLocalFiniteElementMap<D,R,d,p-1>::init(c);
+          InitVariableMonomLocalFiniteElementMap<D,R,d,p-1>::init(c,gt);
         }
       };
       template<class D, class R, int d>
       struct InitVariableMonomLocalFiniteElementMap<D,R,d,-1>
       {
         template<typename C>
-        static void init(C & c) {}
+          static void init(C &, GeometryType) {}
       };
     }
 
@@ -49,10 +47,20 @@ namespace Dune {
     public:
       typedef FiniteElementMapTraits<FiniteElementType> Traits;
 
+      /** Construct a VariableMonomLocalFiniteElementMap for GeometryType Dune::cube */
       VariableMonomLocalFiniteElementMap (const M & m, unsigned int defaultP) :
         mapper_(m), polOrder_(mapper_.size(), defaultP), defaultP_(defaultP)
       {
-        InitVariableMonomLocalFiniteElementMap<D,R,d,maxP>::init(finiteElements_);
+        GeometryType cube;
+        cube.makeCube(d);
+        InitVariableMonomLocalFiniteElementMap<D,R,d,maxP>::init(finiteElements_, cube);
+      }
+
+      /** Construct a VariableMonomLocalFiniteElementMap for a given GeometryType gt */
+      VariableMonomLocalFiniteElementMap (const M & m, Dune::GeometryType gt, unsigned int defaultP) :
+        mapper_(m), polOrder_(mapper_.size(), defaultP), defaultP_(defaultP)
+      {
+        InitVariableMonomLocalFiniteElementMap<D,R,d,maxP>::init(finiteElements_, gt);
       }
 
       //! \brief get local basis functions for entity
