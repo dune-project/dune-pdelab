@@ -65,11 +65,11 @@ namespace Dune {
       //! \todo Please doc me!
 	  typedef typename I::EntityPointer EntityPointer;
       //! \todo Please doc me!
-	  typedef typename Entity::ctype ctype;
+      typedef typename Geometry::ctype ctype;
       //! \todo Please doc me!
 	  enum { dimension=Entity::dimension };
       //! \todo Please doc me!
-	  enum { dimensionworld=Entity::dimensionworld };
+      enum { dimensionworld=Geometry::dimensionworld };
 
       //! \todo Please doc me!
       IntersectionGeometry (const I& i_, unsigned int index_)

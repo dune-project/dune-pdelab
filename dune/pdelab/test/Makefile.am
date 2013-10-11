@@ -324,6 +324,10 @@ testdensebackend_LDADD =				\
 MOSTLYCLEANFILES += densebackend_*.vtu
 
 
+NORMALTESTS += test-dg-amg
+test_dg_amg_SOURCES = test-dg-amg.cc
+
+
 include $(top_srcdir)/am/global-rules
 
 DISTCHECK_CONFIGURE_FLAGS = --with-dune=$(DUNEROOT) CXX="$(CXX)" CC="$(CC)"

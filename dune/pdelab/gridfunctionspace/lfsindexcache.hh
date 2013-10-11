@@ -505,8 +505,8 @@ namespace Dune {
       std::vector<std::pair<ConstraintsIterator,ConstraintsIterator> > _constraints_iterators;
       mutable CIMap _container_index_map;
       ConstraintsVector _constraints;
-      mutable size_type _offsets[LFS::CHILDREN];
-      mutable size_type _extended_offsets[LFS::CHILDREN];
+      mutable array<size_type,LFS::CHILDREN> _offsets;
+      mutable array<size_type,LFS::CHILDREN> _extended_offsets;
       mutable bool _inverse_cache_built;
       mutable InverseMap _inverse_map;
 
@@ -823,8 +823,12 @@ namespace Dune {
       typedef LFS LocalFunctionSpace;
       typedef typename LFS::Traits::GridFunctionSpace GFS;
       typedef typename GFS::Ordering Ordering;
+    private:
       typedef typename Ordering::Traits::ContainerIndex CI;
       typedef typename Ordering::Traits::DOFIndex DI;
+    public:
+      typedef CI ContainerIndex;
+      typedef DI DOFIndex;
       typedef std::size_t size_type;
 
       typedef std::vector<CI> CIVector;

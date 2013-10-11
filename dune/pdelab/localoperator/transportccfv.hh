@@ -256,9 +256,6 @@ namespace Dune {
           Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
-        typedef typename LFSU::Traits::GridFunctionSpaceType::Traits::BackendType B;
 
         // face geometry
         const Dune::FieldVector<DF,IG::dimension-1>&
@@ -311,8 +308,6 @@ namespace Dune {
         // domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
         const int dim = EG::Geometry::dimension;
 
         if (!first_stage) return; // time step calculation is only done in first stage
@@ -339,9 +334,6 @@ namespace Dune {
           Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
-        typedef typename LFSU::Traits::GridFunctionSpaceType::Traits::BackendType B;
 
         // face geometry
         const Dune::FieldVector<DF,IG::dimension-1>&
@@ -399,8 +391,6 @@ namespace Dune {
         // domain and range field type
         typedef typename LFSV::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename LFSV::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
         const int dim = EG::Geometry::dimension;
 
         // cell center
@@ -504,10 +494,6 @@ namespace Dune {
         // domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
 
         // dimensions
         const int dim = EG::Geometry::dimension;
@@ -531,13 +517,6 @@ namespace Dune {
         // domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::JacobianType JacobianType;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
-        typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
         const int dim = EG::Geometry::dimension;

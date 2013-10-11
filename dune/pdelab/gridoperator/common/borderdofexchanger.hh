@@ -18,6 +18,7 @@
 #include <dune/pdelab/common/unordered_map.hh>
 #include <dune/pdelab/common/unordered_set.hh>
 #include <dune/pdelab/common/borderindexidcache.hh>
+#include <dune/pdelab/common/globaldofindex.hh>
 #include <dune/pdelab/gridfunctionspace/entityindexcache.hh>
 
 namespace Dune {
@@ -85,12 +86,14 @@ namespace Dune {
         typename GFSV::Traits::GridView::Grid::GlobalIdSet::IdType
         > GlobalDOFIndex;
 
+    public:
       //! Data structure for storing border-border matrix pattern entries in a communication-optimized form
       typedef unordered_map<
         typename GFSV::Ordering::Traits::DOFIndex,
         unordered_set<GlobalDOFIndex>
         > BorderPattern;
 
+    private:
       typedef typename GFSV::Ordering::Traits::DOFIndex RowDOFIndex;
       typedef typename GFSU::Ordering::Traits::DOFIndex ColDOFIndex;
 
@@ -131,13 +134,8 @@ namespace Dune {
           , _entity_cache(go.testGridFunctionSpace())
         {}
 
-        typedef typename GridOperator::Traits::LocalAssembler::Traits::BorderPattern BorderPattern;
-        typedef typename GFSV::Ordering::Traits::DOFIndex RowDOFIndex;
-        typedef typename GFSU::Ordering::Traits::DOFIndex ColDOFIndex;
-
         typedef IdType EntityID;
         typedef typename GFSU::Ordering::Traits::DOFIndex::TreeIndex ColumnTreeIndex;
-        typedef typename GFSU::Ordering::Traits::GlobalDOFIndex ColumnGlobalDOFIndex;
         typedef std::size_t size_type;
 
         bool initialized() const
@@ -192,7 +190,7 @@ namespace Dune {
                   !this->isBorderEntity(col_gt_index,col_entity_index))
                 continue;
 
-              _border_pattern[di].insert(ColumnGlobalDOFIndex(this->id(col_gt_index,col_entity_index),dj.treeIndex()));
+              _border_pattern[di].insert(GlobalDOFIndex(this->id(col_gt_index,col_entity_index),dj.treeIndex()));
             }
         }
 

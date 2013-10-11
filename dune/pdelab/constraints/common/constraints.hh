@@ -65,7 +65,8 @@ namespace Dune {
         template<typename F, typename IG, typename LFS, typename T>
         static void boundary (const C& c, const F& f, const IG& ig, const LFS& lfs, T& trafo)
         {
-          c.boundary(f,ig,lfs,trafo);
+          if (lfs.size())
+            c.boundary(f,ig,lfs,trafo);
         }
       };
       template<typename C>
@@ -74,7 +75,8 @@ namespace Dune {
         template<typename IG, typename LFS, typename T>
         static void processor (const C& c, const IG& ig, const LFS& lfs, T& trafo)
         {
-          c.processor(ig,lfs,trafo);
+          if (lfs.size())
+            c.processor(ig,lfs,trafo);
         }
       };
       template<typename C>
@@ -85,7 +87,8 @@ namespace Dune {
                               const LFS& lfs_e, const LFS& lfs_f,
                               T& trafo_e, T& trafo_f)
         {
-          c.skeleton(ig, lfs_e, lfs_f, trafo_e, trafo_f);
+          if (lfs_e.size() || lfs_f.size())
+            c.skeleton(ig, lfs_e, lfs_f, trafo_e, trafo_f);
         }
       };
       template<typename C>
@@ -94,7 +97,8 @@ namespace Dune {
         template<typename EG, typename LFS, typename T>
         static void volume (const C& c, const EG& eg, const LFS& lfs, T& trafo)
         {
-          c.volume(eg,lfs,trafo);
+          if (lfs.size())
+            c.volume(eg,lfs,trafo);
         }
       };
 
@@ -527,7 +531,7 @@ namespace Dune {
      *             GridFunctionSpace::ConstraintsContainer::Type
      * \tparam isFunction bool to identify old-style parameters, which were implemented the Dune::PDELab::FunctionInterface
      */
-    template<typename P, typename GFS, typename CG, bool isFunction>
+    template<typename P, typename GFS, typename GV, typename CG, bool isFunction>
     struct ConstraintsAssemblerHelper
     {
       //! construct constraints from given boundary condition function
@@ -546,13 +550,9 @@ namespace Dune {
        * \param verbose Print information about the constaints at the end
        */
       static void
-      assemble(const P& p, const GFS& gfs, CG& cg, const bool verbose)
+      assemble(const P& p, const GFS& gfs, const GV& gv, CG& cg, const bool verbose)
       {
-        // clear global constraints
-        cg.clear();
-
         // get some types
-        typedef typename GFS::Traits::GridViewType GV;
         typedef typename GV::Traits::template Codim<0>::Entity Element;
         typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
         typedef typename GV::IntersectionIterator IntersectionIterator;
@@ -566,7 +566,7 @@ namespace Dune {
         LFSIndexCache<LFS> lfs_cache_f(lfs_f);
 
         // get index set
-        const typename GV::IndexSet& is=gfs.gridView().indexSet();
+        const typename GV::IndexSet& is=gv.indexSet();
 
         // helper to compute offset dependent on geometry type
         const int chunk=1<<28;
@@ -574,8 +574,8 @@ namespace Dune {
         std::map<Dune::GeometryType,int> gtoffset;
 
         // loop once over the grid
-        for (ElementIterator it = gfs.gridView().template begin<0>();
-             it!=gfs.gridView().template end<0>(); ++it)
+        for (ElementIterator it = gv.template begin<0>();
+             it!=gv.template end<0>(); ++it)
         {
           // assign offset for geometry type;
           if (gtoffset.find(it->type())==gtoffset.end())
@@ -599,8 +599,8 @@ namespace Dune {
 
           // iterate over intersections and call metaprogram
           unsigned int intersection_index = 0;
-          IntersectionIterator endit = gfs.gridView().iend(*it);
-          for (IntersectionIterator iit = gfs.gridView().ibegin(*it); iit!=endit; ++iit, ++intersection_index)
+          IntersectionIterator endit = gv.iend(*it);
+          for (IntersectionIterator iit = gv.ibegin(*it); iit!=endit; ++iit, ++intersection_index)
           {
             if (iit->boundary())
             {
@@ -671,29 +671,29 @@ namespace Dune {
 
 
     // Disable constraints assembly for empty transformation
-    template<typename F, typename GFS>
-    struct ConstraintsAssemblerHelper<F, GFS, EmptyTransformation, true>
+    template<typename F, typename GFS, typename GV>
+    struct ConstraintsAssemblerHelper<F, GFS, GV, EmptyTransformation, true>
     {
-      static void assemble(const F& f, const GFS& gfs, EmptyTransformation& cg, const bool verbose)
+      static void assemble(const F& f, const GFS& gfs, const GV& gv, EmptyTransformation& cg, const bool verbose)
       {}
     };
 
     // Disable constraints assembly for empty transformation
-    template<typename F, typename GFS>
-    struct ConstraintsAssemblerHelper<F, GFS, EmptyTransformation, false>
+    template<typename F, typename GFS, typename GV>
+    struct ConstraintsAssemblerHelper<F, GFS, GV, EmptyTransformation, false>
     {
-      static void assemble(const F& f, const GFS& gfs, EmptyTransformation& cg, const bool verbose)
+      static void assemble(const F& f, const GFS& gfs, const GV& gv, EmptyTransformation& cg, const bool verbose)
       {}
     };
 
 
 
     // Backwards compatibility shim
-    template<typename F, typename GFS, typename CG>
-    struct ConstraintsAssemblerHelper<F, GFS, CG, true>
+    template<typename F, typename GFS, typename GV, typename CG>
+    struct ConstraintsAssemblerHelper<F, GFS, GV, CG, true>
     {
       static void
-      assemble(const F& f, const GFS& gfs, CG& cg, const bool verbose)
+      assemble(const F& f, const GFS& gfs, const GV& gv, CG& cg, const bool verbose)
       {
         // type of transformed tree
         typedef typename Dune::TypeTree::TransformTree<F,gf_to_constraints> Transformation;
@@ -701,7 +701,7 @@ namespace Dune {
         // transform tree
         P p = Transformation::transform(f);
         // call parameter based implementation
-        ConstraintsAssemblerHelper<P, GFS, CG, IsGridFunction<P>::value>::assemble(p,gfs,cg, verbose);
+        ConstraintsAssemblerHelper<P, GFS, GV, CG, IsGridFunction<P>::value>::assemble(p,gfs,gv,cg,verbose);
       }
     };
 #endif
@@ -723,8 +723,9 @@ namespace Dune {
     void constraints(const GFS& gfs, CG& cg,
                      const bool verbose = false)
     {
+      typedef typename GFS::Traits::GridViewType GV;
       NoConstraintsParameters p;
-      ConstraintsAssemblerHelper<NoConstraintsParameters, GFS, CG, false>::assemble(p,gfs,cg, verbose);
+      ConstraintsAssemblerHelper<NoConstraintsParameters, GFS, GV, CG, false>::assemble(p,gfs,gfs.gridView(),cg,verbose);
     }
 
     //! construct constraints from given constraits parameter tree
@@ -749,7 +750,10 @@ namespace Dune {
     void constraints(const P& p, const GFS& gfs, CG& cg,
                      const bool verbose = false)
     {
-      ConstraintsAssemblerHelper<P, GFS, CG, IsGridFunction<P>::value>::assemble(p,gfs,cg, verbose);
+      typedef typename GFS::Traits::GridViewType GV;
+      // clear global constraints
+      cg.clear();
+      ConstraintsAssemblerHelper<P, GFS, GV, CG, IsGridFunction<P>::value>::assemble(p,gfs,gfs.gridView(),cg,verbose);
     }
 
     //! construct constraints from given boundary condition function
