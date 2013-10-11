@@ -36,9 +36,6 @@ namespace Dune {
           typedef typename Intersection::Entity Cell;
           typedef typename Intersection::Geometry FaceGeometry;
           typedef typename FaceGeometry::ctype DT;
-          typedef typename LFS::Traits::FiniteElementType FiniteElementType;
-          typedef typename FiniteElementType::Traits::LocalBasisType::Traits::DomainFieldType DFT;
-          typedef typename FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType RFT;
           typedef typename LFS::Traits::SizeType SizeType;
 
           typedef typename LFS::Traits::GridFunctionSpace::Traits::GridView::IndexSet IndexSet;
@@ -47,9 +44,9 @@ namespace Dune {
 
           const std::size_t dimension = Intersection::dimension;
 
-          typedef Dune::GenericReferenceElement<DT,dimension> GRE;
-          const GRE& refelement_e = Dune::GenericReferenceElements<DT,dimension>::general(e->type());
-          const GRE& refelement_f = Dune::GenericReferenceElements<DT,dimension>::general(f->type());
+          typedef Dune::ReferenceElement<DT,dimension> GRE;
+          const GRE& refelement_e = Dune::ReferenceElements<DT,dimension>::general(e->type());
+          const GRE& refelement_f = Dune::ReferenceElements<DT,dimension>::general(f->type());
 
           // If both entities have hangingnodes, then the face is
           // conforming and no constraints have to be applied.
@@ -206,9 +203,6 @@ namespace Dune {
           typedef typename Intersection::Entity Cell;
           typedef typename Intersection::Geometry FaceGeometry;
           typedef typename FaceGeometry::ctype DT;
-          typedef typename LFS::Traits::FiniteElementType FiniteElementType;
-          typedef typename FiniteElementType::Traits::LocalBasisType::Traits::DomainFieldType DFT;
-          typedef typename FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType RFT;
           typedef typename LFS::Traits::SizeType SizeType;
           typedef typename LFS::Traits::GridFunctionSpace::Traits::GridView::IndexSet IndexSet;
 
@@ -217,9 +211,9 @@ namespace Dune {
 
           const std::size_t dimension = Intersection::dimension;
 
-          typedef Dune::GenericReferenceElement<DT,dimension> GRE;
-          const GRE& refelement_e = Dune::GenericReferenceElements<DT,dimension>::general(e->type());
-          const GRE& refelement_f = Dune::GenericReferenceElements<DT,dimension>::general(f->type());
+          typedef Dune::ReferenceElement<DT,dimension> GRE;
+          const GRE& refelement_e = Dune::ReferenceElements<DT,dimension>::general(e->type());
+          const GRE& refelement_f = Dune::ReferenceElements<DT,dimension>::general(f->type());
 
           // If both entities have hangingnodes, then the face is
           // conforming and no constraints have to be applied.
@@ -369,10 +363,10 @@ namespace Dune {
         const CellEntityPointer e = ig.inside();
         const CellEntityPointer f = ig.outside();
 
-        const Dune::GenericReferenceElement<DT,dimension>& refelem_e
-          = Dune::GenericReferenceElements<DT,dimension>::general(e->type());
-        const Dune::GenericReferenceElement<DT,dimension>& refelem_f
-          = Dune::GenericReferenceElements<DT,dimension>::general(f->type());
+        const Dune::ReferenceElement<DT,dimension>& refelem_e
+          = Dune::ReferenceElements<DT,dimension>::general(e->type());
+        const Dune::ReferenceElement<DT,dimension>& refelem_f
+          = Dune::ReferenceElements<DT,dimension>::general(f->type());
 
         // the return values of the hanging node manager
         typedef typename std::vector<typename HangingNodeManager::NodeState> FlagVector;
@@ -389,11 +383,6 @@ namespace Dune {
         // the LOCAL indices of the faces in the reference element
         const int faceindex_e = ig.indexInInside();
         const int faceindex_f = ig.indexInOutside();
-
-        typedef typename LFS::Traits::FiniteElementType FiniteElementType;
-        typedef typename FiniteElementType::Traits::LocalCoefficientsType LocalCoefficientType;
-        typedef typename FiniteElementType::Traits::LocalBasisType::Traits::DomainFieldType DFT;
-        typedef typename LFS::Traits::SizeType SizeType;
 
         bool e_has_hangingnodes = false;
         {

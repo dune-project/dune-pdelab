@@ -100,6 +100,7 @@ namespace Dune {
               data._global_size = _global_size;
               data._max_local_size = _max_local_size;
               data._size_available = ordering.update_gfs_data_size(data._size,data._block_count);
+              data.setPartitionSet(ordering);
             }
         }
 

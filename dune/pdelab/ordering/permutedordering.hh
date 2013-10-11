@@ -105,10 +105,8 @@ namespace Dune {
     class PermutedOrdering
       : public TypeTree::VariadicCompositeNode<Ordering>
       , public VirtualOrderingBase<typename Ordering::Traits::DOFIndex,
-                                   typename Ordering::Traits::GlobalDOFIndex,
                                    typename Ordering::Traits::ContainerIndex>
       , public OrderingBase<typename Ordering::Traits::DOFIndex,
-                            typename Ordering::Traits::GlobalDOFIndex,
                             typename Ordering::Traits::ContainerIndex>
     {
     public:
@@ -123,7 +121,6 @@ namespace Dune {
       typedef TypeTree::VariadicCompositeNode<Ordering> NodeT;
 
       typedef OrderingBase<typename Ordering::Traits::DOFIndex,
-                           typename Ordering::Traits::GlobalDOFIndex,
                            typename Ordering::Traits::ContainerIndex> BaseT;
 
     public:

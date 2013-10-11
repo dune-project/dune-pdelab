@@ -32,16 +32,16 @@ namespace Dune {
     namespace permutation_ordering {
 
       //! Interface for merging index spaces
-      template<typename DI, typename GDI, typename CI, typename Node>
+      template<typename DI, typename CI, typename Node>
       class Base
-        : public lexicographic_ordering::Base<DI,GDI,CI,Node>,
-          public VirtualOrderingBase<DI,GDI,CI>
+        : public lexicographic_ordering::Base<DI,CI,Node>,
+          public VirtualOrderingBase<DI,CI>
       {
 
       public:
 
-        typedef Base<DI,GDI,CI,Node> This;
-        typedef lexicographic_ordering::Base<DI,GDI,CI,Node> BaseT;
+        typedef Base<DI,CI,Node> This;
+        typedef lexicographic_ordering::Base<DI,CI,Node> BaseT;
         typedef typename BaseT::Traits Traits;
 
         typedef PermutationOrderingTag OrderingTag;
@@ -125,21 +125,19 @@ namespace Dune {
     }
 
     //! Interface for merging index spaces
-    template<typename DI, typename GDI, typename CI, typename Child, std::size_t k>
+    template<typename DI, typename CI, typename Child, std::size_t k>
     class PowerPermutationOrdering
       : public TypeTree::PowerNode<Child, k>
       , public permutation_ordering::Base<DI,
-                                            GDI,
                                             CI,
-                                            PowerLexicographicOrdering<DI,GDI,CI,Child,k>
+                                            PowerLexicographicOrdering<DI,CI,Child,k>
                                             >
     {
       typedef TypeTree::PowerNode<Child, k> Node;
 
       typedef permutation_ordering::Base<DI,
-                                           GDI,
                                            CI,
-                                           PowerLexicographicOrdering<DI,GDI,CI,Child,k>
+                                           PowerLexicographicOrdering<DI,CI,Child,k>
                                            > Base;
 
     public:
@@ -183,7 +181,6 @@ namespace Dune {
 
         typedef PowerPermutationOrdering<
           typename Transformation::DOFIndex,
-          typename TC::Traits::GlobalDOFIndex,
           typename Transformation::ContainerIndex,
           TC,
           GFS::CHILDREN
@@ -211,15 +208,13 @@ namespace Dune {
 
 
     //! Interface for merging index spaces
-    template<typename DI, typename GDI, typename CI, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
+    template<typename DI, typename CI, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
     class CompositePermutationOrdering :
       public DUNE_TYPETREE_COMPOSITENODE_BASETYPE,
       public permutation_ordering::Base<DI,
-                                          GDI,
                                           CI,
                                           CompositePermutationOrdering<
                                             DI,
-                                            GDI,
                                             CI,
                                             DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES
                                             >
@@ -229,11 +224,9 @@ namespace Dune {
 
       typedef permutation_ordering::Base<
         DI,
-        GDI,
         CI,
         CompositePermutationOrdering<
           DI,
-          GDI,
           CI,
           DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES
           >
@@ -278,7 +271,6 @@ namespace Dune {
 
         typedef CompositePermutationOrdering<
           typename Transformation::DOFIndex,
-          typename extract_first_child<TC...>::type::Traits::GlobalDOFIndex,
           typename Transformation::ContainerIndex,
           TC...
           > type;

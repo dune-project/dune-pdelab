@@ -208,6 +208,11 @@ namespace Dune {
         return n;
       }
 
+      std::size_t subSpaceDepth() const
+      {
+        return 0;
+      }
+
       //! \brief get maximum possible size (which is maxLocalSize from grid function space)
       typename Traits::IndexContainer::size_type maxSize () const
       {
@@ -632,8 +637,8 @@ namespace Dune {
         typedef typename GFS::Traits::GridViewType GV;
         GV gv = this->gridFunctionSpace().gridView();
 
-        const Dune::GenericReferenceElement<double,GV::Grid::dimension>& refEl =
-          Dune::GenericReferenceElements<double,GV::Grid::dimension>::general(this->pfe->type());
+        const Dune::ReferenceElement<double,GV::Grid::dimension>& refEl =
+          Dune::ReferenceElements<double,GV::Grid::dimension>::general(this->pfe->type());
 
         for (std::size_t i = 0; i < std::size_t(coeffs.size()); ++i, ++it)
           {
@@ -769,6 +774,8 @@ namespace Dune {
     };
 
     // specialization for AnySpaceTag
+    // WARNING: If you modify this class, make sure to also fix the specialization in
+    // subspacelocalfunctionspace.hh!
     template <typename GFS>
     class LocalFunctionSpace<GFS, AnySpaceTag> :
       public Dune::TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::Type

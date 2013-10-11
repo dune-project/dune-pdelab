@@ -207,9 +207,10 @@ namespace Dune {
 
       map_dof_indices_to_container_indices(DOFIterator dof_begin,
                                            ContainerIterator container_begin,
-                                           LeafSizeIterator leaf_size_begin)
-        : dof_pos(dof_begin)
-        , dof_end(dof_begin)
+                                           LeafSizeIterator leaf_size_begin,
+                                           std::size_t dof_index_tail_length = 0)
+        : dof_pos(dof_begin,dof_index_tail_length)
+        , dof_end(dof_begin,dof_index_tail_length)
         , container_pos(container_begin)
         , leaf_size_pos(leaf_size_begin)
       {}
@@ -308,7 +309,7 @@ namespace Dune {
           typename CIVector::iterator,
           typename LeafSizeVector::const_iterator,
           TypeTree::TreeInfo<Ordering>::depth
-          > index_mapper(_lfs._dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin());
+          > index_mapper(_lfs._dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin(),_lfs.subSpaceDepth());
         TypeTree::applyToTree(_lfs.gridFunctionSpace().ordering(),index_mapper);
 
         _constraints.resize(0);
@@ -585,7 +586,7 @@ namespace Dune {
           typename CIVector::iterator,
           typename LeafSizeVector::const_iterator,
           TypeTree::TreeInfo<Ordering>::depth
-          > index_mapper(_lfs._dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin());
+          > index_mapper(_lfs._dof_indices->begin(),_container_indices.begin(),leaf_sizes.begin(),_lfs.subSpaceDepth());
         TypeTree::applyToTree(_lfs.gridFunctionSpace().ordering(),index_mapper);
       }
 

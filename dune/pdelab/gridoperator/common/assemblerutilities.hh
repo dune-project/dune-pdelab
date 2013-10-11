@@ -4,9 +4,6 @@
 #ifndef DUNE_PDELAB_ASSEMBLERUTILITIES_HH
 #define DUNE_PDELAB_ASSEMBLERUTILITIES_HH
 
-#include <dune/pdelab/common/unordered_map.hh>
-#include <dune/pdelab/common/unordered_set.hh>
-
 #include <dune/pdelab/constraints/common/constraintstransformation.hh>
 #include <dune/pdelab/gridoperator/common/localmatrix.hh>
 
@@ -63,14 +60,7 @@ namespace Dune{
       //! The matrix pattern
       typedef typename Jacobian::Pattern MatrixPattern;
 
-      //! Data structure for storing border-border matrix pattern entries in a communication-optimized form
-      typedef unordered_map<
-        typename GO::Traits::TestGridFunctionSpace::Ordering::Traits::DOFIndex,
-        unordered_set<
-          typename GO::Traits::TrialGridFunctionSpace::Ordering::Traits::GlobalDOFIndex
-          >
-        > BorderPattern;
-
+      //! The helper class to exchange data on the processor boundary
       typedef typename GO::BorderDOFExchanger BorderDOFExchanger;
 
     };

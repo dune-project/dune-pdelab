@@ -44,7 +44,6 @@ namespace Dune {
     {
       typedef typename GFS::Traits::GridViewType GV;
       typedef typename GV::template Codim<0>::Iterator Iterator;
-      typedef typename Dune::PDELab::BackendVectorSelector<GFS, bool>::Type V;
 
       isInterior = false;
       isOverlap = false;
@@ -91,9 +90,9 @@ namespace Dune {
       typedef typename GV::template Codim<0>::Iterator Iterator;
       typedef typename GV::template Codim<0>::Geometry Geometry;
       typedef FieldVector<typename GV::ctype, GV::dimensionworld> Domain;
-      typedef GenericReferenceElements<typename GV::ctype, GV::dimension>
+      typedef ReferenceElements<typename GV::ctype, GV::dimension>
         Refelems;
-      typedef GenericReferenceElement<typename GV::ctype, GV::dimension>
+      typedef ReferenceElement<typename GV::ctype, GV::dimension>
         Refelem;
       typedef FiniteElementInterfaceSwitch<typename LocalFunctionSpace<GFS>::
                                            Traits::FiniteElementType> FESwitch;
@@ -145,9 +144,9 @@ namespace Dune {
     {
       typedef typename GFS::Traits::GridViewType GV;
       typedef typename GV::template Codim<0>::Iterator Iterator;
-      typedef GenericReferenceElements<typename GV::ctype, GV::dimension>
+      typedef ReferenceElements<typename GV::ctype, GV::dimension>
         Refelems;
-      typedef GenericReferenceElement<typename GV::ctype, GV::dimension>
+      typedef ReferenceElement<typename GV::ctype, GV::dimension>
         Refelem;
       typedef FiniteElementInterfaceSwitch<typename LocalFunctionSpace<GFS>::
                                            Traits::FiniteElementType> FESwitch;

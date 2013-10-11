@@ -3,8 +3,8 @@
 
 #Name of the module
 Module: dune-pdelab
-Version: 2.0-dev
+Version: 3.0-exadev
 Maintainer: dune-pdelab@dune-project.org
 #depending on
-Depends: dune-common (>= 2.3) dune-geometry (>= 2.3) dune-grid (>= 2.3) dune-localfunctions (>= 2.3) dune-istl (>= 2.3) dune-typetree (>= 1.0)
+Depends: dune-common (>= 2.3) dune-geometry (>= 2.3) dune-grid (>= 2.3) dune-localfunctions (>= 2.3) dune-istl (>= 2.3) dune-typetree (>= 1.0) dune-functions (>= 2.3)
 Whitespace-Hook: Yes
