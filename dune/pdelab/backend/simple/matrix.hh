@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_BACKEND_DENSE_MATRIX_HH
-#define DUNE_PDELAB_BACKEND_DENSE_MATRIX_HH
+#ifndef DUNE_PDELAB_BACKEND_SIMPLE_MATRIX_HH
+#define DUNE_PDELAB_BACKEND_SIMPLE_MATRIX_HH
 
 #include <vector>
 #include <algorithm>
@@ -12,11 +12,11 @@
 #include <dune/pdelab/backend/tags.hh>
 #include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
-#include <dune/pdelab/backend/dense/descriptors.hh>
+#include <dune/pdelab/backend/simple/descriptors.hh>
 
 namespace Dune {
   namespace PDELab {
-    namespace dense {
+    namespace simple {
 
       template<typename GFSV, typename GFSU, typename C>
       class MatrixContainer
@@ -202,9 +202,9 @@ namespace Dune {
 
       };
 
-    } // namespace dense
+    } // namespace simple
 
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_BACKEND_DENSE_MATRIX_HH
+#endif // DUNE_PDELAB_BACKEND_SIMPLE_MATRIX_HH

@@ -1,6 +1,6 @@
-commondir = $(includedir)/dune/pdelab/backend/dense
+simpledir = $(includedir)/dune/pdelab/backend/simple
 
-common_HEADERS = \
+simple_HEADERS = \
 	descriptors.hh				\
 	matrix.hh				\
 	vector.hh

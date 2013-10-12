@@ -1,7 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_BACKEND_DENSE_VECTOR_HH
-#define DUNE_PDELAB_BACKEND_DENSE_VECTOR_HH
+#ifndef DUNE_PDELAB_BACKEND_SIMPLE_VECTOR_HH
+#define DUNE_PDELAB_BACKEND_SIMPLE_VECTOR_HH
 
 #include <algorithm>
 #include <functional>
@@ -17,12 +17,12 @@
 #include <dune/pdelab/backend/tags.hh>
 #include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
-#include <dune/pdelab/backend/dense/descriptors.hh>
+#include <dune/pdelab/backend/simple/descriptors.hh>
 
 namespace Dune {
   namespace PDELab {
 
-    namespace dense {
+    namespace simple {
 
       namespace {
 
@@ -310,18 +310,18 @@ namespace Dune {
 #ifndef DOXYGEN
 
     template<typename GFS, typename E>
-    struct DenseVectorSelectorHelper
+    struct SimpleVectorSelectorHelper
     {
 
       using vector_type = typename GFS::Traits::Backend::template vector_type<E>;
 
-      using Type = dense::VectorContainer<GFS,vector_type>;
+      using Type = simple::VectorContainer<GFS,vector_type>;
 
     };
 
     template<template<typename> class Container, typename GFS, typename E>
-    struct BackendVectorSelectorHelper<DenseVectorBackend<Container>, GFS, E>
-      : public DenseVectorSelectorHelper<GFS,E>
+    struct BackendVectorSelectorHelper<SimpleVectorBackend<Container>, GFS, E>
+      : public SimpleVectorSelectorHelper<GFS,E>
     {};
 
 #endif // DOXYGEN
@@ -329,4 +329,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_BACKEND_DENSE_VECTOR_HH
+#endif // DUNE_PDELAB_BACKEND_SIMPLE_VECTOR_HH

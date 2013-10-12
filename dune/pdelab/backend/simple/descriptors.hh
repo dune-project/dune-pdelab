@@ -1,7 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_BACKEND_DENSE_DESCRIPTORS_HH
-#define DUNE_PDELAB_BACKEND_DENSE_DESCRIPTORS_HH
+#ifndef DUNE_PDELAB_BACKEND_SIMPLE_DESCRIPTORS_HH
+#define DUNE_PDELAB_BACKEND_SIMPLE_DESCRIPTORS_HH
 
 #include <vector>
 
@@ -10,7 +10,7 @@ namespace Dune {
 
 #ifndef DOXYGEN
 
-    namespace dense {
+    namespace simple {
 
       template<typename GFS, typename C>
       class VectorContainer;
@@ -25,8 +25,8 @@ namespace Dune {
 
 #endif // DOXYGEN
 
-    template<template<typename> class Container = dense::default_vector>
-    struct DenseVectorBackend
+    template<template<typename> class Container = simple::default_vector>
+    struct SimpleVectorBackend
     {
       template<typename E>
       using vector_type = Container<E>;
@@ -46,8 +46,8 @@ namespace Dune {
 
     };
 
-    template<template<typename> class Container = dense::default_vector>
-    struct DenseMatrixBackend
+    template<template<typename> class Container = simple::default_vector>
+    struct SimpleMatrixBackend
     {
 
       typedef std::size_t size_type;
@@ -59,11 +59,11 @@ namespace Dune {
       template<typename VV, typename VU, typename E>
       struct MatrixHelper
       {
-        typedef dense::MatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,Container<E> > type;
+        typedef simple::MatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,Container<E> > type;
       };
     };
 
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_BACKEND_DENSE_DESCRIPTORS_HH
+#endif // DUNE_PDELAB_BACKEND_SIMPLE_DESCRIPTORS_HH

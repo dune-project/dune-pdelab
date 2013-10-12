@@ -1,9 +1,8 @@
 commondir = $(includedir)/dune/pdelab/backend
 
-SUBDIRS = common dense istl
+SUBDIRS = common simple istl
 
 common_HEADERS = backendselector.hh             \
-		 dense.hh			\
                  eigenmatrixbackend.hh          \
                  eigensolverbackend.hh          \
                  eigenvectorbackend.hh          \
@@ -17,7 +16,8 @@ common_HEADERS = backendselector.hh             \
                  petscutility.hh                \
                  petscvectorbackend.hh          \
                  seqistlsolverbackend.hh        \
-                 solver.hh	                \
+                 simple.hh                      \
+                 solver.hh                      \
                  tags.hh
 
 include $(top_srcdir)/am/global-rules
