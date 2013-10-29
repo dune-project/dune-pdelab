@@ -673,6 +673,11 @@ namespace Dune {
         orderingp->update();
       }
 
+      void shallowUpdate()
+      {
+        update();
+      }
+
       bool fixedSize() const
       {
         return fixed_size;
