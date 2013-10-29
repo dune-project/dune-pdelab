@@ -996,6 +996,11 @@ namespace Dune {
         orderingp->update();
       }
 
+      void shallowUpdate()
+      {
+        update();
+      }
+
       bool fixedSize() const
       {
         return true; // true by definition
@@ -1375,6 +1380,11 @@ namespace Dune {
 
         // update ordering
         orderingp->update();
+      }
+
+      void shallowUpdate()
+      {
+        update();
       }
 
       bool fixedSize() const
