@@ -85,6 +85,9 @@ namespace Dune {
       //! Direct access to the DOF ordering.
       const Ordering &ordering() const { return *orderingp; }
 
+      //! Direct access to the DOF ordering.
+      Ordering &ordering() { return *orderingp; }
+
       //! Direct access to the storage of the DOF ordering.
       shared_ptr<const Ordering> orderingPtr() const { return orderingp; }
 
