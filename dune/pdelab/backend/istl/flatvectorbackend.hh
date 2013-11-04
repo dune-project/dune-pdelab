@@ -32,6 +32,7 @@ namespace Dune {
       typedef GFS GridFunctionSpace;
       typedef Container BaseT;
       typedef typename Container::value_type field_type;
+      typedef typename Container::value_type value_type;
       typedef typename Container::size_type size_type;
 
       typedef typename GFS::Ordering::Traits::ContainerIndex ContainerIndex;
@@ -100,7 +101,6 @@ namespace Dune {
         : _gfs(gfs)
         , _container(make_shared<Container>(gfs.ordering().blockCount()))
       {
-        istl::dispatch_vector_allocation(gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
         (*_container)=e;
       }
 

@@ -40,7 +40,7 @@ namespace Dune {
 
     private:
 
-      static const size_type block_size = Container::block_size;
+      static const size_type kernel_block_size = Container::kernel_block_size;
       static const size_type block_shift = Container::block_shift;
       static const size_type block_mask = Container::block_mask;
 
@@ -97,14 +97,14 @@ namespace Dune {
         pattern.sizes(layout.rowLength());
         layout.allocateCols();
         auto index_streamer = pattern.indexStreamer();
-        typedef StridedIterator<size_type*,block_size> It;
+        typedef StridedIterator<size_type*,kernel_block_size> It;
         size_type* col_index = layout.colIndex();
         for (size_type b = 0, blocks = layout.blocks(); b < blocks; ++b)
           {
             size_type block_length = layout.blockLength(b);
             // use signed indices here to avoid underflows in nonpadded_block_size!
             typedef typename Container::LayoutBuilder::Allocator::difference_type diff_t;
-            diff_t nonpadded_block_size = std::max(std::min(diff_t(block_size),diff_t(rows) - diff_t(b * block_size)),diff_t(0));
+            diff_t nonpadded_block_size = std::max(std::min(diff_t(kernel_block_size),diff_t(rows) - diff_t(b * kernel_block_size)),diff_t(0));
             for (diff_t i = 0; i < nonpadded_block_size; ++i)
               {
                 It col_begin(col_index+i);
@@ -112,13 +112,13 @@ namespace Dune {
                 It row_end = index_streamer.streamRow(col_begin);
                 std::fill(row_end,col_end,(row_end != col_begin ? row_end[-1] : size_type(0)));
               }
-            for (diff_t i = nonpadded_block_size; i < block_size; ++i)
+            for (diff_t i = nonpadded_block_size; i < kernel_block_size; ++i)
               {
                 It col_begin(col_index+i);
                 It col_end(col_begin + block_length);
                 std::fill(col_begin,col_end,size_type(0));
               }
-            col_index += block_size * block_length;
+            col_index += kernel_block_size * block_length;
           }
         return layout.layout();
       }
