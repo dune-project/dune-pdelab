@@ -190,6 +190,7 @@ namespace Dune {
           {
             ci_out->back() = _tag.permutation()[ci_out->back()];
           }
+        return 0;
       }
 
       void update()
