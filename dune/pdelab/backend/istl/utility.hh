@@ -4,6 +4,7 @@
 #define DUNE_PDELAB_BACKEND_ISTL_UTILITY_HH
 
 #include <dune/common/typetraits.hh>
+#include <dune/common/parametertree.hh>
 
 #include <dune/pdelab/backend/istl/tags.hh>
 
@@ -217,6 +218,51 @@ namespace Dune {
       struct nesting_depth
         : public impl::nesting_depth<T,0,typename tags::container<T>::type::base_tag>
       {};
+
+
+      class MatrixParameters
+      {
+
+      public:
+
+        typedef std::size_t size_type;
+
+        explicit MatrixParameters(size_type entries_per_row, double overflow_fraction = 0.05)
+          : _entries_per_row(entries_per_row)
+          , _overflow_fraction(overflow_fraction)
+        {}
+
+        explicit MatrixParameters(const ParameterTree& parameters)
+          : _entries_per_row(parameters.get<size_type>("entries_per_row"))
+          , _overflow_fraction(parameters.get<double>("overflow_fraction",0.05))
+        {}
+
+        void setEntriesPerRow(size_type entries_per_row)
+        {
+          _entries_per_row = entries_per_row;
+        }
+
+        void setOverflowFraction(double overflow_fraction)
+        {
+          _overflow_fraction = overflow_fraction;
+        }
+
+        size_type entriesPerRow() const
+        {
+          return _entries_per_row;
+        }
+
+        double overflowFraction() const
+        {
+          return _overflow_fraction;
+        }
+
+      private:
+
+        size_type _entries_per_row;
+        double _overflow_fraction;
+
+      };
 
     } // namespace istl
   } // namespace PDELab
