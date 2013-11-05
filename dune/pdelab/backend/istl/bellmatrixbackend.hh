@@ -127,20 +127,28 @@ namespace Dune {
 
     public:
 
-      template<typename GO>
-      explicit BELLMatrixContainer (const GO& go, size_type entries_per_row = 10)
+      template<typename GO, typename Parameters>
+      explicit BELLMatrixContainer (const GO& go, Parameters parameters)
         : _container(make_shared<Container>(go.testGridFunctionSpace().backend().blockSize(),go.trialGridFunctionSpace().backend().blockSize()))
       {
-        Pattern pattern(go.testGridFunctionSpace().ordering(),go.trialGridFunctionSpace().ordering(),entries_per_row);
+        Pattern pattern(
+          go.testGridFunctionSpace().ordering(),
+          go.trialGridFunctionSpace().ordering(),
+          parameters.entriesPerRow()
+          );
         go.fill_pattern(pattern);
         _container->setLayout(buildLayout(pattern));
       }
 
-      template<typename GO>
-      BELLMatrixContainer (const GO& go, const E& e)
+      template<typename GO, typename Parameters>
+      BELLMatrixContainer (const GO& go, Parameters parameters, const E& e)
         : _container(make_shared<Container>(go.testGridFunctionSpace().backend().blockSize(),go.trialGridFunctionSpace().backend().blockSize()))
       {
-        Pattern pattern(go.testGridFunctionSpace().ordering(),go.trialGridFunctionSpace().ordering());
+        Pattern pattern(
+          go.testGridFunctionSpace().ordering(),
+          go.trialGridFunctionSpace().ordering(),
+          parameters.entriesPerRow()
+          );
         go.fill_pattern(pattern);
         _container->setLayout(buildLayout(pattern));
         (*_container) = e;
