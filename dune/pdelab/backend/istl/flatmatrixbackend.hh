@@ -125,20 +125,28 @@ namespace Dune {
 
     public:
 
-      template<typename GO>
-      explicit FlatELLMatrixContainer (const GO& go, size_type entries_per_row = 10)
+      template<typename GO, typename Parameters>
+      explicit FlatELLMatrixContainer (const GO& go, Parameters parameters)
         : _container(make_shared<Container>())
       {
-        Pattern pattern(go.testGridFunctionSpace().ordering(),go.trialGridFunctionSpace().ordering(),entries_per_row);
+        Pattern pattern(
+          go.testGridFunctionSpace().ordering(),
+          go.trialGridFunctionSpace().ordering(),
+          parameters.entriesPerRow()
+          );
         go.fill_pattern(pattern);
         _container->setLayout(buildLayout(pattern));
       }
 
-      template<typename GO>
-      FlatELLMatrixContainer (const GO& go, const E& e)
+      template<typename GO, typename Parameters>
+      FlatELLMatrixContainer (const GO& go, Parameters parameters, const E& e)
         : _container(make_shared<Container>())
       {
-        Pattern pattern(go.testGridFunctionSpace().ordering(),go.trialGridFunctionSpace().ordering());
+        Pattern pattern(
+          go.testGridFunctionSpace().ordering(),
+          go.trialGridFunctionSpace().ordering(),
+          parameters.entriesPerRow()
+          );
         go.fill_pattern(pattern);
         _container->setLayout(buildLayout(pattern));
         (*_container) = e;
