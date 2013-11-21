@@ -627,6 +627,8 @@ namespace Dune {
             {
                 gfsp = shared_ptr<GFS>(new GFS(gv,femb.getFEM(),conb.getCON()));
                 gfsp->name("cgspace");
+                // initialize ordering
+                gfsp->update();
                 conb.postGFSHook(*gfsp);
                 ccp = shared_ptr<CC>(new CC());
             }
@@ -808,6 +810,8 @@ namespace Dune {
             {
                 femp = shared_ptr<FEM>(new FEM());
                 gfsp = shared_ptr<GFS>(new GFS(gv,*femp));
+                // initialize ordering
+                gfsp->update();
                 ccp = shared_ptr<CC>(new CC());
             }
 
@@ -901,6 +905,8 @@ namespace Dune {
             {
                 femp = shared_ptr<FEM>(new FEM(Dune::GeometryType(gt,dim)));
                 gfsp = shared_ptr<GFS>(new GFS(gv,*femp));
+                // initialize ordering
+                gfsp->update();
                 ccp = shared_ptr<CC>(new CC());
             }
 
