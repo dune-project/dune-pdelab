@@ -372,7 +372,7 @@ namespace Dune {
       private:
 
         const CommunicationCache& _communication_cache;
-        const GridView& _grid_view;
+        GridView _grid_view;
         const GFSU& _gfsu;
         const GFSV& _gfsv;
         Pattern& _pattern;
@@ -469,7 +469,7 @@ namespace Dune {
       private:
 
         const CommunicationCache& _communication_cache;
-        const GridView& _grid_view;
+        GridView _grid_view;
         const GFSU& _gfsu;
         const GFSV& _gfsv;
         Matrix& _matrix;

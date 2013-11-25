@@ -54,7 +54,7 @@ class B
                                                                                            Dune::FieldVector<int,1> >,
                                                   B<GV> >
 {
-  const GV& gv;
+  GV gv;
 
 public:
   typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> > Traits;
@@ -153,7 +153,7 @@ class Bm
                                                                                            Dune::FieldVector<int,m> >,
                                                   Bm<GV,m> >
 {
-  const GV& gv;
+  GV gv;
 
 public:
   typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,m,Dune::FieldVector<int,m> > Traits;

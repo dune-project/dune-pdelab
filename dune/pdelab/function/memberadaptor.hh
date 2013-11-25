@@ -48,7 +48,7 @@ namespace Dune {
 
       const Class &obj;
       Member member;
-      const GV &gv;
+      GV gv;
 
     public:
       //! Construct an adaptor object
@@ -133,7 +133,7 @@ namespace Dune {
 
       const Class &obj;
       Member member;
-      const GV &gv;
+      GV gv;
 
     public:
       //! Construct an adaptor object
@@ -224,7 +224,7 @@ namespace Dune {
 
       const Class &obj;
       Member member;
-      const GV &gv;
+      GV gv;
 
     public:
       //! Construct an adaptor object

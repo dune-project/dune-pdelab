@@ -158,7 +158,7 @@ namespace Dune {
     class BCTypeParam_CD
       : public Dune::PDELab::DirichletConstraintsParameters   /*@\label{bcp:base}@*/
     {
-      const typename T::Traits::GridViewType& gv;
+      const typename T::Traits::GridViewType gv;
       const T& t;
 
     public:
@@ -211,7 +211,7 @@ namespace Dune {
       }
 
     private:
-      const typename Traits::GridViewType& g;
+      typename Traits::GridViewType g;
       const T& t;
     };
 

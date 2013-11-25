@@ -138,7 +138,7 @@ namespace Dune {
 		std::cout << "number of intersections " << intersection_counter << std::endl;
 	  }
 
-	  const GV& gv;       // our grid view
+      GV gv;       // our grid view
 	  const IndexSet& is; // index set of the grid view
 
 	  // we assume that the mesh is conforming in the

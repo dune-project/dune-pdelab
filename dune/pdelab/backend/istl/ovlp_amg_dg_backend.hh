@@ -99,7 +99,7 @@ namespace Dune {
 
     private:
       const GFS& gfs;
-      const GV& gv;
+      GV gv;
       const IndexSet& indexSet;
       const Grid& grid;
       const GlobalIdSet& globalIdSet;
@@ -237,7 +237,7 @@ namespace Dune {
     private:
       const GFS& gfs;
       M& m;
-      const GV& gv;
+      GV gv;
       const IndexSet& indexSet;
       const Grid& grid;
       const GlobalIdSet& globalIdSet;

@@ -144,7 +144,7 @@ namespace Dune {
       typedef typename GV::ctype DF;
       static const std::size_t dim = GV::dimension;
 
-      const GV &gv;
+      GV gv;
       const IdSet &idSet;
       EP ep;
 
