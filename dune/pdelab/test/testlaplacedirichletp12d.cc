@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
 #include<iostream>
 #include<vector>
@@ -48,7 +48,7 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,G<GV,RF> > BaseT;
 
   G (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
   {
     typename Traits::DomainType center;
@@ -74,10 +74,10 @@ public:
   B (const GV& gv_) : gv(gv_) {}
 
   template<typename I>
-  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
+  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig,
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
-  {  
+  {
     y = 1; // all is Dirichlet boundary
   }
 
@@ -89,7 +89,7 @@ public:
 };
 
 // generate a P1 function and output it
-template<class GV> 
+template<class GV>
 void testp1 (const GV& gv)
 {
   typedef typename GV::Grid::ctype DF;
@@ -97,10 +97,10 @@ void testp1 (const GV& gv)
   // instantiate finite element maps
   typedef Dune::PDELab::P12DLocalFiniteElementMap<DF,double> FEM;
   FEM fem;
-  
+
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
-    Dune::PDELab::ConformingDirichletConstraints,Dune::PDELab::ISTLVectorBackend<1> > GFS; 
+    Dune::PDELab::ConformingDirichletConstraints,Dune::PDELab::ISTLVectorBackend<1> > GFS;
   GFS gfs(gv,fem);
 
   // make constraints map and initialize it from a function
@@ -171,7 +171,7 @@ void testp1 (const GV& gv)
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
   DGF dgf(gfs,x);
-  
+
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"p1"));
@@ -201,4 +201,4 @@ int main(int argc, char** argv)
     std::cerr << "Unknown exception thrown!" << std::endl;
 	return 1;
   }
-} 
+}
