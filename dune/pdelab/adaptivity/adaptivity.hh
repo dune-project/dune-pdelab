@@ -9,6 +9,7 @@
 #include<limits>
 #include<vector>
 #include<map>
+#include<dune/common/dynmatrix.hh>
 #include<dune/geometry/quadraturerules.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/gridfunctionspace/localfunctionspace.hh>
@@ -35,31 +36,38 @@ namespace Dune {
      *         e.g. a child or grandchild. Useful if the GridFunctionSpace the coefficients originate from is
      *         no longer available (think adaptation).
      *
-     *  @tparam CoeffType Type of the interpreted coefficients
-     *  @tparam DGF       The DiscreteGridFunction this should mimic
+     *  @tparam Traits_   DiscreteGridFunctionTraits for this function
      *  @tparam FEM       The FiniteElementMap used
-     *  @tparam E         Type for Elems
+     *  @tparam E         Type of grid cells
+     *  @tparam CoeffType vector type of the interpreted coefficients
      */
-    template<class CoeffType, class DGF, class FEM, class E>
-    class CoeffsToLocalFunctionAdapter : public FunctionInterface<typename DGF::Traits,
-                                                                  CoeffsToLocalFunctionAdapter<CoeffType,DGF,FEM,E> >
+    template<typename Traits_, typename FEM, typename E, typename CoeffType>
+    class CoeffsToLocalFunctionAdapter
+      : public FunctionInterface<Traits_,
+                                 CoeffsToLocalFunctionAdapter<Traits_,FEM,E,CoeffType> >
     {
 
     public:
 
-      typedef typename DGF::Traits Traits;
+      typedef Traits_ Traits;
       typedef typename FEM::Traits::FiniteElementType FiniteElement;
+      typedef CoeffType Coefficients;
+      typedef E Cell;
 
       /** @brief The constructor.
        *
-       *  @param[in] coeff_ A vector of coefficients
        *  @param[in] fem_ A FiniteElementMap used for interpretation of the coefficients
        *  @param[in] from_ The Elem on which the LocalFunction lives
        *  @param[in] to_ The Elem on which the LocalFunction is evaluated (should be e.g. a child
        *             of from_ to make the values of the shape functions meaningful)
        */
-      CoeffsToLocalFunctionAdapter (const std::vector<CoeffType>& coeff_, const FEM& fem_, const E& from_, const E& to_)
-        : coeff(coeff_), fem(fem_), from(from_), to(to_), fe(fem.find(from)) {}
+      CoeffsToLocalFunctionAdapter (const FEM& fem_, const Cell& from_, const Cell& to_)
+        : coeff(nullptr)
+        , fem(fem_)
+        , from(from_)
+        , to(to_)
+        , fe(fem.find(from))
+      {}
 
       /** @brief Special version of the constructor with to = from.
        *
@@ -67,8 +75,13 @@ namespace Dune {
        *  @param[in] fem_ A FiniteElementMap used for interpretation of the coefficients
        *  @param[in] elem_ The Elem on which the LocalFunction lives
        */
-      CoeffsToLocalFunctionAdapter (const std::vector<CoeffType>& coeff_, const FEM& fem_, const E& elem_)
-        : coeff(coeff_), fem(fem_), from(elem_), to(elem_), fe(fem.find(from)) {}
+      CoeffsToLocalFunctionAdapter (const FEM& fem_, const Cell& elem_)
+        : coeff(nullptr)
+        , fem(fem_)
+        , from(elem_)
+        , to(elem_)
+        , fe(fem.find(from))
+      {}
 
       /** @brief Evaluate the LocalFunction at the given position
        *
@@ -77,21 +90,29 @@ namespace Dune {
        */
       inline void evaluate (const typename Traits::DomainType& x, typename Traits::RangeType& y) const
       {
-        std::vector<typename Traits::RangeType> yVector;
+        yVector.resize(std::max(yVector.size(),static_cast<std::size_t>(fe.localBasis().size())));
+        std::fill(yVector.begin(),yVector.end(),typename Traits::RangeType(0));
         fe.localBasis().evaluateFunction(from.geometry().local(to.geometry().global(x)),yVector);
-        if (yVector.size() != coeff.size()) DUNE_THROW(Dune::Exception,"Coefficient vector has wrong length in CoeffsToLocalFunctionAdapter");
+        if (yVector.size() != coeff->size()) DUNE_THROW(Dune::Exception,"Coefficient vector has wrong length in CoeffsToLocalFunctionAdapter");
         typename Traits::RangeType sum=0.0;
         for (unsigned int i = 0; i < yVector.size(); ++i)
-          sum += yVector[i]*coeff[i];
+          sum += yVector[i]*(*coeff)[i];
         y = sum;
       }
 
+      void setCoefficients(const Coefficients& coefficients)
+      {
+        coeff = &coefficients;
+      }
+
     private:
-      const std::vector<CoeffType>& coeff;
+      const Coefficients* coeff;
       const FEM& fem;
-      const E& from;
-      const E& to;
+      const Cell& from;
+      const Cell& to;
       const FiniteElement& fe;
+      mutable std::vector<typename Traits::RangeType> yVector;
+
     };
 
 
@@ -113,11 +134,17 @@ namespace Dune {
 
     public:
 
+      typedef DynamicMatrix<typename U::ElementType> MassMatrix;
+      typedef typename MassMatrix::row_type MassMatrixRow;
+
       /*! @brief The constructor.
        *
        * @todo Doc params!
        */
-      explicit L2Projection(int intorder_=2) : intorder(intorder_), haveMatrix(), matrix() {}
+      explicit L2Projection(int intorder_=2)
+        : intorder(intorder_)
+        , _inverse_mass_matrices(GlobalGeometryTypeIndex::size(Element::dimension))
+      {}
 
       /*! @brief Calculate the L2 scalar product of functions X and Y on e, but in the geometry of its ancestor
        *
@@ -184,86 +211,92 @@ namespace Dune {
        * @todo Doc template params
        * @todo Doc params
        */
-      template <class CTLFA, class FEM>
-      const std::vector<double>& inverseMassMatrix(const Element& e, const FEM& fem, int k)
+      template <typename FEM>
+      const MassMatrixRow& inverseMassMatrix(const Element& e, const FEM& fem, int k)
       {
-        const Dune::GeometryType gt = e.geometry().type();
-        if (haveMatrix.find(gt) != haveMatrix.end())
-          {
-            return matrix[gt][k];
-          }
+        const GeometryType gt = e.geometry().type();
+        MassMatrix& inverse_mass_matrix = _inverse_mass_matrices[GlobalGeometryTypeIndex::index(gt)];
+        // if the matrix isn't empty, it has already been cached
+        if (inverse_mass_matrix.N() > 0)
+          return inverse_mass_matrix[k];
 
-        const int localSize = (fem.find(e)).localBasis().size();
+        const int local_size = (fem.find(e)).localBasis().size();
+        typedef CoeffsToLocalFunctionAdapter<
+          typename DiscreteGridFunction<GFSU, U>::Traits,
+          FEM,
+          Element,
+          std::vector<double>
+          > CTLFA;
         typename CTLFA::Traits::RangeType x;
         typename CTLFA::Traits::RangeType y;
 
-        std::vector<std::vector<typename U::ElementType> > massMatrix(localSize,std::vector<typename U::ElementType>(localSize,0.));
-        std::vector<std::vector<typename U::ElementType> > inverseMatrix(localSize,std::vector<typename U::ElementType>(localSize,0.));
+        inverse_mass_matrix.resize(local_size,local_size);
+        MassMatrix mass_matrix(local_size,local_size);
 
-        std::vector<double> phi_i(localSize,0.), phi_j(localSize,0.);
-        CTLFA ctlfa_i(phi_i,fem,e,e);
-        CTLFA ctlfa_j(phi_j,fem,e,e);
+        std::vector<double> phi_i(local_size), phi_j(local_size);
+        CTLFA ctlfa_i(fem,e,e);
+        ctlfa_i.setCoefficients(phi_i);
+        CTLFA ctlfa_j(fem,e,e);
+        ctlfa_j.setCoefficients(phi_j);
 
-        for (int i = 0; i < localSize; ++i)
+        for (int i = 0; i < local_size; ++i)
           {
             ++phi_i[i];
-            for (int j = 0; j < localSize; ++j)
+            for (int j = 0; j < local_size; ++j)
               {
                 ++phi_j[j];
-                (*this).template apply<CTLFA,CTLFA>(e,e,ctlfa_i,ctlfa_j,massMatrix[i][j]);
+                (*this).template apply<CTLFA,CTLFA>(e,e,ctlfa_i,ctlfa_j,mass_matrix[i][j]);
                 --phi_j[j];
               }
             --phi_i[i];
           }
 
-        for (int i = 0; i < localSize; ++i)
+        for (int i = 0; i < local_size; ++i)
           {
-            inverseMatrix[i][i] = 1.;
+            inverse_mass_matrix[i][i] = 1.;
           }
 
-        for (int i = 0; i < localSize; ++i)
+        for (int i = 0; i < local_size; ++i)
           {
-            for (int j = 0; j < localSize; ++j)
+            for (int j = 0; j < local_size; ++j)
               {
                 if (i != j)
                   {
-                    const typename U::ElementType factor = massMatrix[j][i]/massMatrix[i][i];
-                    for (int l = 0; l < localSize; ++l)
+                    const typename U::ElementType factor = mass_matrix[j][i]/mass_matrix[i][i];
+                    for (int l = 0; l < local_size; ++l)
                       {
-                        massMatrix[j][l] -= factor * massMatrix[i][l];
-                        inverseMatrix[j][l] -= factor * inverseMatrix[i][l];
+                        mass_matrix[j][l] -= factor * mass_matrix[i][l];
+                        inverse_mass_matrix[j][l] -= factor * inverse_mass_matrix[i][l];
                       }
                   }
               }
           }
-        for (int i = localSize - 1; i >= 0; --i)
+        for (int i = local_size - 1; i >= 0; --i)
           {
-            for (int j = localSize - 1; j >= 0; --j)
+            for (int j = local_size - 1; j >= 0; --j)
               {
                 if (i != j)
                   {
-                    const typename U::ElementType factor = massMatrix[j][i]/massMatrix[i][i];
-                    for (int l = localSize - 1; l >= 0; --l)
+                    const typename U::ElementType factor = mass_matrix[j][i]/mass_matrix[i][i];
+                    for (int l = local_size - 1; l >= 0; --l)
                       {
-                        massMatrix[j][l] -= factor * massMatrix[i][l];
-                        inverseMatrix[j][l] -= factor * inverseMatrix[i][l];
+                        mass_matrix[j][l] -= factor * mass_matrix[i][l];
+                        inverse_mass_matrix[j][l] -= factor * inverse_mass_matrix[i][l];
                       }
                   }
               }
           }
-        for (int i = 0; i < localSize; ++i)
+        for (int i = 0; i < local_size; ++i)
           {
-            const typename U::ElementType factor = massMatrix[i][i];
-            for (int j = 0; j < localSize; ++j)
+            const typename U::ElementType factor = mass_matrix[i][i];
+            for (int j = 0; j < local_size; ++j)
               {
-                massMatrix[i][j] /= factor;
-                inverseMatrix[i][j] /= factor;
+                mass_matrix[i][j] /= factor;
+                inverse_mass_matrix[i][j] /= factor;
               }
           }
 
-        matrix.insert(std::pair<Dune::GeometryType,std::vector<std::vector<typename U::ElementType> > >(gt,inverseMatrix));
-        haveMatrix.insert(gt);
-        return matrix[gt][k];
+        return inverse_mass_matrix[k];
       }
 
     private:
@@ -271,8 +304,7 @@ namespace Dune {
       const int intorder;
 
       // only for inverseMassMatrix
-      std::set<Dune::GeometryType> haveMatrix;
-      std::map<Dune::GeometryType, std::vector<std::vector<typename U::ElementType> > > matrix;
+      std::vector<MassMatrix> _inverse_mass_matrices;
     };
 
 
@@ -310,7 +342,8 @@ namespace Dune {
       typedef DiscreteGridFunction<GFSU, U> DGF;
       typedef typename GFSU::Traits::FiniteElementMapType FEM;
       typedef InterpolateBackendStandard IB;
-      typedef CoeffsToLocalFunctionAdapter<typename U::ElementType,DGF,FEM,Element> CTLFA;
+      typedef CoeffsToLocalFunctionAdapter<typename DGF::Traits,FEM,Element,typename Projection::MassMatrixRow> BackupCTLFA;
+      typedef CoeffsToLocalFunctionAdapter<typename DGF::Traits,FEM,Element,std::vector<typename U::ElementType> > ReplayCTLFA;
       typedef typename FEM::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeType RangeType;
 
     public:
@@ -338,7 +371,8 @@ namespace Dune {
         ConstUView u_view(u);
         DGF dgf(gfsu,u);
         const FEM& fem = gfsu.finiteElementMap();
-        std::vector<typename U::ElementType> ul;
+        typedef std::vector<typename U::ElementType> DOFVector;
+        DOFVector ul;
 
         // iterate over all elems
         LeafGridView leafView = grid.leafView();
@@ -353,6 +387,9 @@ namespace Dune {
             u_view.bind(lfsu_cache);
 
             typename MapType::mapped_type& saved_data = transferMap[idset.id(e)];
+            //extract_lfs_leaf_sizes(lfsu,saved_data.offsets().begin()+1);
+            // convert to offsets
+            //std::partial_sum(saved_data.offsets().begin(),saved_data.offsets().end(),saved_data.offsets().begin());
             saved_data.resize(lfsu.size());
             u_view.read(saved_data);
 
@@ -361,11 +398,12 @@ namespace Dune {
               {
                 ElementPointer father = e.father();
 
-                projection.template inverseMassMatrix<CTLFA,FEM>(e,fem,0);
+                //projection.inverseMassMatrix(e,fem,0);
                 {
                   const int localSize = (fem.find(*father)).localBasis().size();
-                  std::vector<typename U::ElementType> uCoarse(localSize,0.);
-                  std::vector<typename U::ElementType> coarseBasis(localSize,0.);
+                  DOFVector& uCoarse = transferMap[idset.id(*father)];
+                  uCoarse.resize(localSize);
+                  std::fill(uCoarse.begin(),uCoarse.end(),typename DOFVector::value_type(0));
                   const typename Element::HierarchicIterator& hbegin = (*father).hbegin(grid.maxLevel());
                   const typename Element::HierarchicIterator& hend   = (*father).hend(grid.maxLevel());
 
@@ -376,18 +414,18 @@ namespace Dune {
                         {
                           typedef GridFunctionToLocalFunctionAdapter<DGF> GFTLFA;
                           GFTLFA gftlfa(dgf,*hit);
-                          CTLFA  ctlfa(coarseBasis,fem,*father,*hit);
+                          BackupCTLFA  ctlfa(fem,*father,*hit);
 
                           // iterate over canonical basis vectors
-                          for (unsigned int i = 0; i < coarseBasis.size(); ++i)
+                          for (unsigned int i = 0; i < localSize; ++i)
                             {
-                              coarseBasis = projection.template inverseMassMatrix<CTLFA,FEM>(e,fem,i);
-                              projection.template apply<GFTLFA,CTLFA>(*father,*hit,gftlfa,ctlfa,uCoarse[i]);
+                              ctlfa.setCoefficients(projection.inverseMassMatrix(e,fem,i));
+                              projection.template apply<GFTLFA,BackupCTLFA>(*father,*hit,gftlfa,ctlfa,uCoarse[i]);
                             }
                         }
                     }
                   //transferMap[(*father).level()][idset.id(*father)] = uCoarse;
-                  transferMap[idset.id(*father)] = uCoarse;
+                  //transferMap[idset.id(*father)] = uCoarse;
                 }
 
                 // conforming grids may need this
@@ -396,8 +434,9 @@ namespace Dune {
                     father = (*father).father();
                     {
                       const int localSize = (fem.find(*father)).localBasis().size();
-                      std::vector<typename U::ElementType> uCoarse(localSize,0.);
-                      std::vector<typename U::ElementType> coarseBasis(localSize,0.);
+                      DOFVector& uCoarse = transferMap[idset.id(*father)];
+                      uCoarse.resize(localSize);
+                      std::fill(uCoarse.begin(),uCoarse.end(),typename DOFVector::value_type(0));
                       const typename Element::HierarchicIterator& hbegin = (*father).hbegin(grid.maxLevel());
                       const typename Element::HierarchicIterator& hend   = (*father).hend(grid.maxLevel());
 
@@ -408,18 +447,18 @@ namespace Dune {
                             {
                               typedef GridFunctionToLocalFunctionAdapter<DGF> GFTLFA;
                               GFTLFA gftlfa(dgf,*hit);
-                              CTLFA  ctlfa(coarseBasis,fem,*father,*hit);
+                              BackupCTLFA  ctlfa(fem,*father,*hit);
 
                               // iterate over canonical basis vectors
-                              for (unsigned int i = 0; i < coarseBasis.size(); ++i)
+                              for (unsigned int i = 0; i < localSize; ++i)
                                 {
-                                  coarseBasis = projection.template inverseMassMatrix<CTLFA,FEM>(e,fem,i);
-                                  projection.template apply<GFTLFA,CTLFA>(*father,*hit,gftlfa,ctlfa,uCoarse[i]);
+                                  ctlfa.setCoefficients(projection.inverseMassMatrix(e,fem,i));
+                                  projection.template apply<GFTLFA,BackupCTLFA>(*father,*hit,gftlfa,ctlfa,uCoarse[i]);
                                 }
                             }
                         }
                       //transferMap[(*father).level()][idset.id(*father)] = uCoarse;
-                      transferMap[idset.id(*father)] = uCoarse;
+                      //transferMap[idset.id(*father)] = uCoarse;
                     }
                   }
               }
@@ -447,9 +486,9 @@ namespace Dune {
         UView uc_view(uc);
 
         const IndexSet& indexset = grid.leafIndexSet();
-        std::vector<typename U::ElementType> ug(indexset.size(IndexSet::dimension),0.);
-        std::vector<typename U::ElementType> ugc(indexset.size(IndexSet::dimension),0.);
-        Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGElementLayout> mapper(grid);
+        //std::vector<typename U::ElementType> ug(indexset.size(IndexSet::dimension),0.);
+        //std::vector<typename U::ElementType> ugc(indexset.size(IndexSet::dimension),0.);
+        //Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGElementLayout> mapper(grid);
 
         // iterate over all elems
         LeafGridView leafView = grid.leafView();
@@ -484,9 +523,11 @@ namespace Dune {
                 // this one has the data
                 const Element& Ancestor = *pAncestor;
                 //CTLFA ctlfa(transferMap[levelAncestor][idset.id(Ancestor)],fem,Ancestor,e);
-                CTLFA ctlfa(transferMap[idset.id(Ancestor)],fem,Ancestor,e);
+                ReplayCTLFA ctlfa(fem,Ancestor,e);
+                ctlfa.setCoefficients(transferMap[idset.id(Ancestor)]);
 
-                ul.clear();
+                ul.resize(lfsu.size());
+                std::fill(ul.begin(),ul.end(),typename U::ElementType(0));
                 ib.interpolate(fem.find(e),ctlfa,ul);
 
                 u_view.add(ul);
