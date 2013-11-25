@@ -360,6 +360,17 @@ namespace Dune {
         update();
       }
 
+      // We need a custom copy constructor to create a new ordering because the
+      // ordering contains a callback pointer to the GridFunctionSpace
+      GridFunctionSpace (const GridFunctionSpace& r)
+        : gv(r.gv)
+        , pfem(r.pfem)
+        , ce(r.ce)
+      {
+        orderingp = make_shared<Ordering>(*this);
+        update();
+      }
+
       //! get grid view
       const GV& gridview () const DUNE_DEPRECATED_MSG("Use gridView() instead of gridview()")
       {
@@ -753,6 +764,17 @@ namespace Dune {
         update();
       }
 
+      // We need a custom copy constructor to create a new ordering because the
+      // ordering contains a callback pointer to the GridFunctionSpace
+      GridFunctionSpace (const GridFunctionSpace& r)
+        : gv(r.gv)
+        , pfem(r.pfem)
+        , ce(r.ce)
+      {
+        orderingp = make_shared<Ordering>(*this);
+        update();
+      }
+
       // get grid view
       const GV& gridview () const DUNE_DEPRECATED_MSG("Use gridView() instead of gridview()")
       {
@@ -1136,6 +1158,18 @@ namespace Dune {
 
       GridFunctionSpace (const GV& gridview, const FEM& fem)
         : gv(gridview), pfem(stackobject_to_shared_ptr(fem)), iis(dummyiis), ce(defaultce)
+      {
+        orderingp = make_shared<Ordering>(*this);
+        update();
+      }
+
+      // We need a custom copy constructor to create a new ordering because the
+      // ordering contains a callback pointer to the GridFunctionSpace
+      GridFunctionSpace (const GridFunctionSpace& r)
+        : gv(r.gv)
+        , pfem(r.pfem)
+        , iis(r.iis)
+        , ce(r.ce)
       {
         orderingp = make_shared<Ordering>(*this);
         update();
