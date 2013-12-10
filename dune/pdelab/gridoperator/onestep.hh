@@ -234,6 +234,13 @@ namespace Dune{
         return suggested_dt;
       }
 
+      void update()
+      {
+        go0.update();
+        go1.update();
+        const_residual = Range(go0.testGridFunctionSpace());
+      }
+
     private:
       Assembler & global_assembler;
       GO0 & go0;
