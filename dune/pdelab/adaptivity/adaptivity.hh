@@ -56,7 +56,7 @@ namespace Dune {
             // convert to offsets
             std::partial_sum(leaf_offsets.begin(),leaf_offsets.end(),leaf_offsets.begin());
             // sanity check
-            assert(leaf_offsets.back() == lfs.size());
+            assert(leaf_offsets.back() == _lfs.size());
           }
       }
 
