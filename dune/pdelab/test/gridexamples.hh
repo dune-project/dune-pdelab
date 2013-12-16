@@ -28,9 +28,18 @@
 class YaspUnitSquare : public Dune::YaspGrid<2>
 {
 public:
+
+  static Dune::array<int,2> extents(int e)
+  {
+    Dune::array<int,2> r;
+    std::fill(r.begin(),r.end(),e);
+    return r;
+  }
+
   YaspUnitSquare () : Dune::YaspGrid<2>(Dune::FieldVector<double,2>(1.0),
-					  Dune::FieldVector<int,2>(1),
-					  Dune::FieldVector<bool,2>(false),0)
+                                        extents(1),
+                                        std::bitset<2>(false),
+                                        0)
   {}
 };
 
