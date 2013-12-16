@@ -1,6 +1,5 @@
 set(mydir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/finiteelement)
-set(my_HEADERS                                     
-        interfaceswitch.hh  
+set(my_HEADERS
         localbasiscache.hh)
 
 # include not needed for CMake

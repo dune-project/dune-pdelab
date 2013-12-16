@@ -20,24 +20,7 @@ namespace Dune {
         //! Dirichlet boundary condition (prescribed value)
         Dirichlet = 1
       };
-      //! Test for Dirichlet boundary condition
-      static bool isDirichlet (int i) DUNE_DEPRECATED
-      {
-        static std::ostream & warning =
-          std::cerr << "Warning! Please update your code "
-                    << "to use the DiffusionBoundaryCondition enum" << std::endl;
-        warning << std::flush;
-        return (i>0);
-      }
-      //! Test for Neumann boundary condition
-      static bool isNeumann (int i) DUNE_DEPRECATED
-      {
-        static std::ostream & warning =
-          std::cerr << "Warning! Please update your code "
-                    << "to use the DiffusionBoundaryCondition enum" << std::endl;
-        warning << std::flush;
-        return (i<1);
-      }
+
       //! Test for Dirichlet boundary condition
       static bool isDirichlet (Type i)
       {

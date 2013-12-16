@@ -50,9 +50,6 @@ namespace Dune {
       //! The size_type of the underlying container.
       typedef typename C::size_type size_type;
 
-      //! A special wrapper type to enable backwards compatibility with current containers when directly accessing entries.
-      typedef WeightedContainerEntryProxy<value_type,weight_type> reference;
-
       //! Returns the weight associated with this view.
       /**
        * \note This can be used together with rawAccumulate() to avoid applying the weight at
@@ -96,24 +93,6 @@ namespace Dune {
       {
         _modified = true;
         _container(lfsv,i,lfsu,j) += v;
-      }
-
-      //! Returns a reference proxy to an entry of the underlying container.
-      /**
-       * \returns A proxy that wraps the entry in the underlying container and
-       *          only allows application of operator+=() and operator-=(). In
-       *          both cases, the argument will automatically be multiplied by
-       *          the weight associated with this view.
-       *
-       * \deprecated Direct access to the individual container entries is deprecated
-       *             and will be removed in a future release. Please use accumulate()
-       *             or a combination of weight() and rawAccumulate() to update the
-       *             entries of this container.
-       */
-      reference operator()(size_type i, size_type j) DUNE_DEPRECATED
-      {
-        _modified = true;
-        return reference(_container(i,j),_weight);
       }
 
       //! Returns the number of rows of the underlying container.
@@ -272,18 +251,6 @@ namespace Dune {
             _cols = c;
           }
 
-          //! Direct access to the (i,j)-th entry.
-          T& operator() (size_type i, size_type j) DUNE_DEPRECATED
-          {
-            return getEntry(i,j);
-          }
-
-          //! Direct access to the (i,j)-th entry (const version).
-          const T& operator() (size_type i, size_type j) const DUNE_DEPRECATED
-          {
-            return getEntry(i,j);
-          }
-
           //! Access the value associated with the i-th DOF of lfsv and the j-th DOF of lfsu.
           /**
            * \param lfsv The LocalFunctionSpace whose DOF will determine the row index of the entry.
@@ -350,33 +317,6 @@ namespace Dune {
                   accessBaseContainer(y)[i] += alpha * getEntry(i,j) * accessBaseContainer(x)[j];
               }
           }
-
-          // ********************************************************************************
-          // compatilibity methods to make sure LocalMatrix works with local operators that
-          // have already been converted to the new style of accessing the jacobian
-          // ********************************************************************************
-
-          weight_type weight() DUNE_DEPRECATED
-          {
-            return 1.0;
-          }
-
-          template<typename LFSU, typename LFSV>
-          void DUNE_DEPRECATED accumulate(const LFSV& lfsv, size_type i,
-                                          const LFSU& lfsu, size_type j,
-                                          value_type v)
-          {
-            (*this)(lfsv,i,lfsu,j) += v;
-          }
-
-          template<typename LFSU, typename LFSV>
-          void DUNE_DEPRECATED rawAccumulate(const LFSV& lfsv, size_type i,
-                                             const LFSU& lfsu, size_type j,
-                                             value_type v)
-          {
-            (*this)(lfsv,i,lfsu,j) += v;
-          }
-
 
           //! Returns a weighted accumulate-only view of this matrix with the given weight.
           WeightedAccumulationView weightedAccumulationView(weight_type weight)

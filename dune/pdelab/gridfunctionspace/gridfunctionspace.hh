@@ -198,12 +198,6 @@ namespace Dune {
       {}
 
       //! get grid view
-      const GV& gridview () const DUNE_DEPRECATED_MSG("Use gridView() instead of gridview()")
-      {
-        return gv;
-      }
-
-      //! get grid view
       const GV& gridView () const
       {
         return gv;
@@ -219,12 +213,6 @@ namespace Dune {
       shared_ptr<const FEM> finiteElementMapStorage () const
       {
         return pfem;
-      }
-
-      //! get finite element map
-      const FEM& localFiniteElementMap () const DUNE_DEPRECATED
-      {
-        return *pfem;
       }
 
       // return constraints engine
