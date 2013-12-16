@@ -58,7 +58,11 @@ namespace Dune{
       typedef typename GO::Traits::Jacobian Jacobian;
 
       //! The matrix pattern
-      typedef typename Jacobian::Pattern MatrixPattern;
+      typedef typename MatrixBackend::template Pattern<
+        Jacobian,
+        TestGridFunctionSpace,
+        TrialGridFunctionSpace
+        > MatrixPattern;
 
       //! The helper class to exchange data on the processor boundary
       typedef typename GO::BorderDOFExchanger BorderDOFExchanger;

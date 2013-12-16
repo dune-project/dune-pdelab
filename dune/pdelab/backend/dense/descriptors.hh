@@ -51,6 +51,10 @@ namespace Dune {
 
       typedef std::size_t size_type;
 
+      template<typename Matrix, typename GFSV, typename GFSU>
+      struct Pattern
+      {};
+
       template<typename VV, typename VU, typename E>
       struct MatrixHelper
       {
