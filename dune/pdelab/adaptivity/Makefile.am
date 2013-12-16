@@ -1,5 +1,5 @@
-commondir = $(includedir)/dune/pdelab/adaptivity
-common_HEADERS = adapt.hh adaptivity.hh
+adaptivitydir = $(includedir)/dune/pdelab/adaptivity
+adaptivity_HEADERS = adapt.hh adaptivity.hh
 
 include $(top_srcdir)/am/global-rules
 
