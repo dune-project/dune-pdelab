@@ -2,7 +2,6 @@ pdelabdir = $(includedir)/dune/pdelab
 SUBDIRS =					\
 	adaptivity				\
 	backend					\
-	benchmark				\
 	boilerplate				\
 	common					\
 	constraints				\

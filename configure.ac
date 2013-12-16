@@ -38,7 +38,6 @@ AC_CONFIG_FILES([
   dune/pdelab/backend/common/Makefile
   dune/pdelab/backend/dense/Makefile
   dune/pdelab/backend/istl/Makefile
-  dune/pdelab/benchmark/Makefile
   dune/pdelab/boilerplate/Makefile
   dune/pdelab/common/Makefile
   dune/pdelab/constraints/Makefile
