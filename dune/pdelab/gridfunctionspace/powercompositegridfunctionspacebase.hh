@@ -15,9 +15,9 @@
 #include <dune/typetree/visitor.hh>
 
 #include <dune/pdelab/constraints/common/constraintstransformation.hh>
+#include <dune/pdelab/constraints/noconstraints.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspacebase.hh>
-#include <dune/pdelab/gridfunctionspace/utility.hh>
 #include <dune/pdelab/ordering/lexicographicordering.hh>
 #include <dune/pdelab/ordering/entityblockedlocalordering.hh>
 
