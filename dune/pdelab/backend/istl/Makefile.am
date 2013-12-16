@@ -7,6 +7,7 @@ common_HEADERS = 				\
 	matrixhelpers.hh			\
 	ovlp_amg_dg_backend.hh			\
 	parallelhelper.hh			\
+	patternstatistics.hh			\
 	seq_amg_dg_backend.hh			\
 	tags.hh					\
 	utility.hh				\

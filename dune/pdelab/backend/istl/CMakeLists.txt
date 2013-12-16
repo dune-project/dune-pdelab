@@ -3,6 +3,7 @@ install(FILES blockmatrixdiagonal.hh
   forwarddeclarations.hh
   matrixhelpers.hh
   parallelhelper.hh
+  patternstatistics.hh
   tags.hh
   utility.hh
   vectorhelpers.hh
