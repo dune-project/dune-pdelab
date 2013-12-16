@@ -35,7 +35,7 @@
 #include"../common/function.hh"
 #include"../common/vtkexport.hh"
 #include"../backend/istlvectorbackend.hh"
-#include"../backend/istlmatrixbackend.hh"
+#include"../backend/istl/bcrsmatrixbackend.hh"
 #include"../gridoperator/gridoperator.hh"
 #include"../backend/istlsolverbackend.hh"
 #include"../localoperator/laplacedirichletp12d.hh"
@@ -196,12 +196,20 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   typedef Dune::PDELab::Poisson<FType,ConstraintsParameters,JType,q> LOP;
   LOP lop(f,constraintsparameters,j);
 
+#ifdef OLD_BACKEND
+  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  MBE mbe;
+#else
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(27); // 27 is too large / correct for all test cases, so should work fine
+#endif
+
   // make grid operator
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,
-                                     Dune::PDELab::ISTLMatrixBackend,
+                                     MBE,
                                      double,double,double,
                                      C,C> GridOperator;
-  GridOperator gridoperator(gfs,cg,gfs,cg,lop);
+  GridOperator gridoperator(gfs,cg,gfs,cg,lop,mbe);
 
   // make coefficent Vector and initialize it from a function
   // There is some weird shuffling around here - please leave it in,
@@ -228,7 +236,12 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   typedef typename GridOperator::Traits::Jacobian M;
   M m;
   {
+    Dune::Timer patternTimer;
     M m1(gridoperator);
+    std::cout << "pattern creation:" << patternTimer.elapsed() << std::endl;
+#ifndef OLD_BACKEND
+    std::cout << m1.patternStatistics() << std::endl;
+#endif
     M m2(m1);
     m2 = 0.0;
     m = m1;
