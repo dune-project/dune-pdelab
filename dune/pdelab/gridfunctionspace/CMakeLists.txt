@@ -12,7 +12,6 @@ set(gridfunctionspace_HEADERS
   localvector.hh
   powercompositegridfunctionspacebase.hh
   powergridfunctionspace.hh
-  printvector.hh
   subspace.hh
   subspacelocalfunctionspace.hh
   tags.hh)
