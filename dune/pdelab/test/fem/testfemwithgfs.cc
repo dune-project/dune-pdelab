@@ -61,7 +61,6 @@ void test_2d_cube(const Constraints& constraints, const VBE& vbe)
 
   typedef GV::Grid::ctype DF;
 
-  typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::cube>::type FEM;
   typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::cube>::pointer PFEM;
 
   PFEM pfem = FEM_FACTORY::template create<GV,DF,RF,Dune::GeometryType::cube>(gv);
@@ -88,7 +87,6 @@ void test_3d_cube(const Constraints& constraints, const VBE& vbe)
 
   typedef GV::Grid::ctype DF;
 
-  typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::cube>::type FEM;
   typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::cube>::pointer PFEM;
 
   PFEM pfem = FEM_FACTORY::template create<GV,DF,RF,Dune::GeometryType::cube>(gv);
@@ -117,7 +115,6 @@ void test_2d_simplex(const Constraints& constraints, const VBE& vbe)
 
       typedef GV::Grid::ctype DF;
 
-      typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::simplex>::type FEM;
       typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::simplex>::pointer PFEM;
 
       PFEM pfem = FEM_FACTORY::template create<GV,DF,RF,Dune::GeometryType::simplex>(gv);
@@ -154,7 +151,6 @@ void test_3d_simplex(const Constraints& constraints, const VBE& vbe)
 
       typedef GV::Grid::ctype DF;
 
-      typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::simplex>::type FEM;
       typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::simplex>::pointer PFEM;
 
       PFEM pfem = FEM_FACTORY::template create<GV,DF,RF,Dune::GeometryType::simplex>(gv);
