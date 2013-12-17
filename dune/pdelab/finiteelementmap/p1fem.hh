@@ -1,17 +1,20 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_P1FEM_HH
-#define DUNE_PDELAB_P1FEM_HH
+#ifndef DUNE_PDELAB_FINITEELEMENTMAP_P1FEM_HH
+#define DUNE_PDELAB_FINITEELEMENTMAP_P1FEM_HH
 
-#include<dune/localfunctions/lagrange/p1.hh>
-#include"finiteelementmap.hh"
+#warning dune/pdelab/finiteelementmap/p1fem.hh and P1LocalFiniteElementMap are deprecated, please use dune/pdelab/finiteelementmap/pkfem.hh and PkLocalFiniteElementMap instead
+
+#include <dune/common/deprecated.hh>
+#include <dune/localfunctions/lagrange/p1.hh>
+#include "finiteelementmap.hh"
 
 namespace Dune {
   namespace PDELab {
 
-	//! wrap up element from local functions
+    //! wrap up element from local functions
     //! \ingroup FiniteElementMap
-	template<class D, class R, int d>
-	class P1LocalFiniteElementMap
+    template<class D, class R, int d>
+    class DUNE_DEPRECATED_MSG("Please use PkLocalFiniteElementMap instead") P1LocalFiniteElementMap
       : public SimpleLocalFiniteElementMap< Dune::P1LocalFiniteElement<D,R,d> >
     {
     public:
@@ -34,4 +37,4 @@ namespace Dune {
   }
 }
 
-#endif
+#endif // DUNE_PDELAB_FINITEELEMENTMAP_P1FEM_HH
