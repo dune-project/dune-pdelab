@@ -4,17 +4,21 @@
 #ifndef DUNE_PDELAB_Q22DFEM_HH
 #define DUNE_PDELAB_Q22DFEM_HH
 
-#include<dune/localfunctions/lagrange/q2.hh>
+#warning dune/pdelab/finiteelementmap/q22dfem.hh and Q22DLocalFiniteElementMap are deprecated, please use dune/pdelab/finiteelementmap/qkfem.hh and QkLocalFiniteElementMap instead
 
-#include"finiteelementmap.hh"
+#include <dune/common/deprecated.hh>
+#include <dune/localfunctions/lagrange/q2.hh>
+
+#include "finiteelementmap.hh"
 #include <dune/pdelab/finiteelementmap/global.hh>
+
 namespace Dune {
   namespace PDELab {
 
     //! wrap up element from local functions
     //! \ingroup FiniteElementMap
     template<class D, class R>
-    class Q22DLocalFiniteElementMap
+    class DUNE_DEPRECATED_MSG("Please use QkLocalFiniteElementMap instead") Q22DLocalFiniteElementMap
       : public SimpleLocalFiniteElementMap< Dune::Q2LocalFiniteElement<D,R,2> >
     {
 
@@ -48,7 +52,7 @@ namespace Dune {
      * \tparam RF       Range field type.
      */
     template<class Geometry, class RF>
-    class Q22DFiniteElementMap
+    class DUNE_DEPRECATED_MSG("Please use QkLocalFiniteElementMap instead") Q22DFiniteElementMap
       : public GeometryFiniteElementMap<
           Q2FiniteElementFactory<Geometry, RF>
           >
