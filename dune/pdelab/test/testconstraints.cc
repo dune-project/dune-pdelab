@@ -2,28 +2,24 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include<iostream>
-#include<vector>
-#include<map>
-#include<dune/common/parallel/mpihelper.hh>
-#include<dune/common/exceptions.hh>
-#include<dune/common/fvector.hh>
-#include <dune/common/shared_ptr.hh>
-#include<dune/common/static_assert.hh>
-#include<dune/grid/yaspgrid.hh>
-#include"../backend/istlvectorbackend.hh"
-#include"../finiteelementmap/p0fem.hh"
-#include"../finiteelementmap/p12dfem.hh"
-#include"../finiteelementmap/pk2dfem.hh"
-#include"../finiteelementmap/conformingconstraints.hh"
-#include"../gridfunctionspace/gridfunctionspace.hh"
-#include"../gridfunctionspace/gridfunctionspaceutilities.hh"
-#include"../gridfunctionspace/interpolate.hh"
-#include"../gridfunctionspace/subspace.hh"
-#include"../constraints/constraints.hh"
-#include"../common/function.hh"
-#include"../common/vtkexport.hh"
-#include"gridexamples.hh"
+
+#include <iostream>
+#include <vector>
+#include <map>
+#include <dune/common/parallel/mpihelper.hh>
+#include <dune/grid/yaspgrid.hh>
+#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/finiteelementmap/p0fem.hh>
+#include <dune/pdelab/finiteelementmap/pkfem.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
+#include <dune/pdelab/constraints/conforming.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
+#include <dune/pdelab/gridfunctionspace/interpolate.hh>
+#include <dune/pdelab/gridfunctionspace/subspace.hh>
+#include <dune/pdelab/common/function.hh>
+#include <dune/pdelab/common/vtkexport.hh>
+#include "gridexamples.hh"
 
 
 // define some grid functions to interpolate from
@@ -85,8 +81,8 @@ void testp1 (const GV& gv)
   typedef typename GV::Grid::ctype DF;
 
   // instantiate finite element maps
-  typedef Dune::PDELab::P12DLocalFiniteElementMap<DF,double> P1FEM;
-  P1FEM p1fem;
+  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,double,1> P1FEM;
+  P1FEM p1fem(gv);
 
   // make constrained space
   typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,Dune::PDELab::ConformingDirichletConstraints> P1GFS;
@@ -197,8 +193,8 @@ void testpowerp1 (const GV& gv)
   const int m=5;
 
   // instantiate finite element map
-  typedef Dune::PDELab::P12DLocalFiniteElementMap<DF,double> P1FEM;
-  P1FEM p1fem;
+  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,double,1> P1FEM;
+  P1FEM p1fem(gv);
 
   // make constrained space
   typedef Dune::PDELab::GridFunctionSpace<GV,P1FEM,Dune::PDELab::ConformingDirichletConstraints> P1GFS;
