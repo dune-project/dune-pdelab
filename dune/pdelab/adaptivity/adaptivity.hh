@@ -882,7 +882,6 @@ namespace Dune {
       //typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator
       //  Iterator;
       typedef typename Grid::template Partition<Dune::All_Partition>::LeafGridView GV;
-      typedef typename GV::IndexSet IndexSet;
       typedef typename GV::template Codim<0>::Iterator Iterator;
 
       const GV& gv=grid.template leafView<Dune::All_Partition>();
