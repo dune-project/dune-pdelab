@@ -21,6 +21,9 @@ namespace Dune {
 
     public:
 
+      QkLocalFiniteElementMap(const GV& gv)
+      {}
+
       bool fixedSize() const
       {
         return true;
