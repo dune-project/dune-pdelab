@@ -34,8 +34,8 @@ namespace Dune {
             return gt.isVertex() ? 1 : 0;
           case 2:
             {
-              if (GV::dimension != 2)
-                DUNE_THROW(NotImplemented,"QkLocalFiniteElementMap is only implemented for k <= 2");
+              if (GV::dimension != 2 && GV::dimension != 3)
+                DUNE_THROW(NotImplemented,"QkLocalFiniteElementMap with k = 2 is only implemented for d = 2,3");
               // Q1 simply attaches a single DOF to each subentity
               return 1;
             }
