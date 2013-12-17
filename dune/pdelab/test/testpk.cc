@@ -12,8 +12,7 @@
 #include<dune/grid/yaspgrid.hh>
 #include <dune/pdelab/backend/backendselector.hh>
 #include"../finiteelementmap/p0fem.hh"
-#include"../finiteelementmap/p12dfem.hh"
-#include"../finiteelementmap/pk2dfem.hh"
+#include"../finiteelementmap/pkfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
 #include"../backend/istlvectorbackend.hh"
 #include"../gridfunctionspace/gridfunctionspaceutilities.hh"
@@ -57,9 +56,9 @@ void testpk (const GV& gv)
   gt.makeSimplex(dim);
   typedef Dune::PDELab::P0LocalFiniteElementMap<DF,double,dim> P0FEM;
   P0FEM p0fem(gt);
-  typedef Dune::PDELab::P12DLocalFiniteElementMap<DF,double> P1FEM;
-  P1FEM p1fem;
-  typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> PkFEM;
+  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,double,1> P1FEM;
+  P1FEM p1fem(gv);
+  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,double,k> PkFEM;
   PkFEM pkfem(gv);
 
   typedef Dune::PDELab::ISTLVectorBackend<> VBE;
