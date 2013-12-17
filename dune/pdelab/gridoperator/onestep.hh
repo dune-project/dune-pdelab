@@ -241,6 +241,11 @@ namespace Dune{
         const_residual = Range(go0.testGridFunctionSpace());
       }
 
+      const typename Traits::MatrixBackend& matrixBackend() const
+      {
+        return go0.matrixBackend();
+      }
+
     private:
       Assembler & global_assembler;
       GO0 & go0;
