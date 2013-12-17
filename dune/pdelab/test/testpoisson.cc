@@ -4,43 +4,33 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include<iostream>
-#include<vector>
-#include<map>
-#include<string>
-#include<dune/common/parallel/mpihelper.hh>
-#include<dune/common/exceptions.hh>
-#include<dune/common/fvector.hh>
-#include <dune/common/shared_ptr.hh>
-#include<dune/common/static_assert.hh>
-#include<dune/grid/yaspgrid.hh>
-#include<dune/istl/bvector.hh>
-#include<dune/istl/operators.hh>
-#include<dune/istl/solvers.hh>
-#include<dune/istl/preconditioners.hh>
-#include<dune/istl/io.hh>
-#include<dune/istl/paamg/amg.hh>
 
-#include"../finiteelementmap/p0fem.hh"
-#include"../finiteelementmap/p12dfem.hh"
-#include"../finiteelementmap/pk2dfem.hh"
-#include"../finiteelementmap/q12dfem.hh"
-#include"../finiteelementmap/q22dfem.hh"
-#include"../finiteelementmap/q1fem.hh"
-#include"../finiteelementmap/conformingconstraints.hh"
-#include"../gridfunctionspace/gridfunctionspace.hh"
-#include"../gridfunctionspace/gridfunctionspaceutilities.hh"
-#include"../gridfunctionspace/interpolate.hh"
-#include"../constraints/common/constraints.hh"
-#include"../common/function.hh"
-#include"../common/vtkexport.hh"
-#include"../backend/istlvectorbackend.hh"
-#include"../backend/istl/bcrsmatrixbackend.hh"
-#include"../gridoperator/gridoperator.hh"
-#include"../backend/istlsolverbackend.hh"
-#include"../localoperator/laplacedirichletp12d.hh"
-#include"../localoperator/poisson.hh"
-#include"../gridfunctionspace/vtk.hh"
+#include <iostream>
+#include <vector>
+#include <map>
+#include <string>
+
+#include <dune/common/parallel/mpihelper.hh>
+#include <dune/grid/yaspgrid.hh>
+
+#include <dune/pdelab/finiteelementmap/p0fem.hh>
+#include <dune/pdelab/finiteelementmap/p12dfem.hh>
+#include <dune/pdelab/finiteelementmap/pk2dfem.hh>
+#include <dune/pdelab/finiteelementmap/qkfem.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
+#include <dune/pdelab/constraints/conforming.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
+#include <dune/pdelab/gridfunctionspace/interpolate.hh>
+#include <dune/pdelab/common/function.hh>
+#include <dune/pdelab/common/vtkexport.hh>
+#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
+#include <dune/pdelab/gridoperator/gridoperator.hh>
+#include <dune/pdelab/backend/istlsolverbackend.hh>
+#include <dune/pdelab/localoperator/laplacedirichletp12d.hh>
+#include <dune/pdelab/localoperator/poisson.hh>
+#include <dune/pdelab/gridfunctionspace/vtk.hh>
 
 #include"gridexamples.hh"
 
@@ -307,8 +297,8 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
+      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::bitset<2> B(false);
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(3);
 
@@ -318,7 +308,7 @@ int main(int argc, char** argv)
 
       // make finite element map
       typedef GV::Grid::ctype DF;
-      typedef Dune::PDELab::Q12DLocalFiniteElementMap<DF,double> FEM;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,1> FEM;
       FEM fem;
 
       // solve problem
@@ -329,8 +319,8 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
+      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::bitset<2> B(false);
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(3);
 
@@ -340,19 +330,19 @@ int main(int argc, char** argv)
 
       // make finite element map
       typedef GV::Grid::ctype DF;
-      typedef Dune::PDELab::Q22DLocalFiniteElementMap<DF,double> FEM;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,2> FEM;
       FEM fem;
 
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q2_2d");
     }
 
-    // YaspGrid Q2 3D test
+    // YaspGrid Q1 3D test
     {
       // make grid
       Dune::FieldVector<double,3> L(1.0);
-      Dune::FieldVector<int,3> N(1);
-      Dune::FieldVector<bool,3> B(false);
+      Dune::array<int,3> N(Dune::fill_array<int,3>(1));
+      std::bitset<3> B(false);
       Dune::YaspGrid<3> grid(L,N,B,0);
       grid.globalRefine(3);
 
@@ -362,11 +352,33 @@ int main(int argc, char** argv)
 
       // make finite element map
       typedef GV::Grid::ctype DF;
-      typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,double,3> FEM;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,1> FEM;
       FEM fem;
 
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q1_3d");
+    }
+
+    // YaspGrid Q2 3D test
+    {
+      // make grid
+      Dune::FieldVector<double,3> L(1.0);
+      Dune::array<int,3> N(Dune::fill_array<int,3>(1));
+      std::bitset<3> B(false);
+      Dune::YaspGrid<3> grid(L,N,B,0);
+      grid.globalRefine(3);
+
+      // get view
+      typedef Dune::YaspGrid<3>::LeafGridView GV;
+      const GV& gv=grid.leafView();
+
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,2> FEM;
+      FEM fem;
+
+      // solve problem
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q2_3d");
     }
 
     // UG Pk 2D test
@@ -382,7 +394,6 @@ int main(int argc, char** argv)
 
       // make finite element map
       typedef GV::Grid::ctype DF;
-      typedef double R;
       const int k=3;
       const int q=2*k;
       typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
@@ -428,7 +439,6 @@ int main(int argc, char** argv)
 
       // make finite element map
       typedef GV::Grid::ctype DF;
-      typedef double R;
       const int k=3;
       const int q=2*k;
       typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
