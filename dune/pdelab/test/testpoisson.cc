@@ -309,7 +309,7 @@ int main(int argc, char** argv)
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,1> FEM;
-      FEM fem;
+      FEM fem(gv);
 
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q1_2d");
@@ -331,7 +331,7 @@ int main(int argc, char** argv)
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,2> FEM;
-      FEM fem;
+      FEM fem(gv);
 
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q2_2d");
@@ -353,7 +353,7 @@ int main(int argc, char** argv)
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,1> FEM;
-      FEM fem;
+      FEM fem(gv);
 
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q1_3d");
@@ -375,7 +375,7 @@ int main(int argc, char** argv)
       // make finite element map
       typedef GV::Grid::ctype DF;
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,2> FEM;
-      FEM fem;
+      FEM fem(gv);
 
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_yasp_Q2_3d");
