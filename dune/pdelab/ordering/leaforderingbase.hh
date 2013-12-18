@@ -115,7 +115,7 @@ namespace Dune {
                 // This check is needed to avoid a horrid stream of compiler warnings about
                 // exceeding array bounds in ReservedVector!
                 if (ci.size() < ci.capacity())
-                  ci.push_back(localOrdering()._gt_entity_offsets[geometry_type_index] + entity_index);
+                  ci.push_back(_gt_dof_offsets[geometry_type_index] + entity_index);
                 else
                   {
                     DUNE_THROW(Dune::Exception,"Container blocking incompatible with backend structure");
