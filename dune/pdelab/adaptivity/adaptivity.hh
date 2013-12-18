@@ -618,7 +618,6 @@ namespace Dune {
 
     };
 
-
     /*! grid adaptation as a function
      *
      * @brief adapt a grid, corresponding function space and solution vectors
@@ -630,7 +629,7 @@ namespace Dune {
      * @tparam X          Container class for DOF vectors
      */
     template<class Grid, class GFS, class X>
-    void adapt_grid (Grid& grid, GFS& gfs, X& x1, int int_order = 2)
+    void adapt_grid (Grid& grid, GFS& gfs, X& x1, int int_order)
     {
       typedef L2Projection<GFS,X> Projection;
       Projection projection(gfs,int_order);
@@ -670,10 +669,10 @@ namespace Dune {
      * @tparam Projection Projection used when Elems vanish
      */
     template<class Grid, class GFS, class X>
-    void adapt_grid (Grid& grid, GFS& gfs, X& x1, X& x2)
+    void adapt_grid (Grid& grid, GFS& gfs, X& x1, X& x2, int int_order)
     {
       typedef L2Projection<GFS,X> Projection;
-      Projection projection(gfs);
+      Projection projection(gfs,int_order);
 
       GridAdaptor<Grid,GFS,X,Projection> grid_adaptor(gfs);
 
@@ -701,6 +700,28 @@ namespace Dune {
       // clean up
       grid.postAdapt();
     }
+
+    // deprecated versions which always force the mass matrix integration order to 2
+    // function attributes are only allowed on function declarations, not defitions, so we have to do the double
+    // dance of first declaring and then immediately defining those functions...
+    template<class Grid, class GFS, class X>
+    void adapt_grid (Grid& grid, GFS& gfs, X& x1) DUNE_DEPRECATED_MSG("Please use the version of adapt_grid() that explicity specifies the integration order instead");
+
+    template<class Grid, class GFS, class X>
+    void adapt_grid (Grid& grid, GFS& gfs, X& x1, X& x2) DUNE_DEPRECATED_MSG("Please use the version of adapt_grid() that explicity specifies the integration order instead");
+
+    template<class Grid, class GFS, class X>
+    void adapt_grid (Grid& grid, GFS& gfs, X& x1)
+    {
+      adapt_grid(grid,gfs,x1,2);
+    }
+
+    template<class Grid, class GFS, class X>
+    void adapt_grid (Grid& grid, GFS& gfs, X& x1, X& x2)
+    {
+      adapt_grid(grid,gfs,x1,x2,2);
+    }
+
 
 
     template<typename T>
