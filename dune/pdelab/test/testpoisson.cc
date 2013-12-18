@@ -158,7 +158,6 @@ template<typename GV, typename FEM, typename CON, int q>
 void poisson (const GV& gv, const FEM& fem, std::string filename)
 {
   // constants and types
-  typedef typename GV::Grid::ctype DF;
   typedef typename FEM::Traits::FiniteElementType::Traits::
     LocalBasisType::Traits::RangeFieldType R;
 
@@ -247,7 +246,6 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
 
   // make ISTL solver
   Dune::MatrixAdapter<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> opa(m.base());
-  typedef Dune::PDELab::OnTheFlyOperator<typename DV::BaseT,typename RV::BaseT,GridOperator> ISTLOnTheFlyOperator;
   //ISTLOnTheFlyOperator opb(gridoperator);
   Dune::SeqSSOR<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ssor(m.base(),1,1.0);
   Dune::SeqILU0<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ilu0(m.base(),1.0);
