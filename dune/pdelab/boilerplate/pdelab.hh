@@ -14,7 +14,6 @@
 
 // first of all we include a lot of dune grids and pdelab files
 #include <iostream>
-#include "config.h"           // file constructed by ./configure script
 
 #include <dune/common/parallel/mpihelper.hh> // include mpi helper class
 #include <dune/common/parametertreeparser.hh>
@@ -60,7 +59,7 @@
 #include <dune/pdelab/common/functionutilities.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
-#include <dune/pdelab/backend/istlmatrixbackend.hh>
+#include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include <dune/pdelab/backend/istlsolverbackend.hh>
 #include <dune/pdelab/constraints/conforming.hh>
 #include <dune/pdelab/constraints/hangingnode.hh>
@@ -76,6 +75,7 @@
 #include <dune/pdelab/finiteelementmap/pkfem.hh>
 #include <dune/pdelab/finiteelementmap/p0fem.hh>
 #include <dune/pdelab/finiteelementmap/opbfem.hh>
+#include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/finiteelementmap/qkdg.hh>
 #include <dune/pdelab/adaptivity/adaptivity.hh>
 #include <dune/pdelab/instationary/onestep.hh>
@@ -211,8 +211,8 @@ namespace Dune {
 
                 // copy data to correct types for YaspGrid
                 Dune::FieldVector<double,dimworld> L(1.0);
-                Dune::FieldVector<int,dimworld> N(cells);
-                Dune::FieldVector<bool,dimworld> B(false);
+                Dune::array<int,dimworld> N(Dune::fill_array<int,dimworld>(cells));
+                std::bitset<dimworld> B(false);
 
                 // instantiate the grid
 #if HAVE_MPI
@@ -240,8 +240,8 @@ namespace Dune {
 
                 // copy data to correct types for YaspGrid
                 Dune::FieldVector<double,dimworld> L;
-                Dune::FieldVector<int,dimworld> N;
-                Dune::FieldVector<bool,dimworld> B(false);
+                Dune::array<int,dimworld> N;
+                std::bitset<dimworld> B(false);
                 for (size_t i=0; i<dimworld; i++)
                     {
                         L[i] = upper_right[i];
@@ -274,8 +274,8 @@ namespace Dune {
 
                 // copy data to correct types for YaspGrid
                 Dune::FieldVector<double,dimworld> L;
-                Dune::FieldVector<int,dimworld> N;
-                Dune::FieldVector<bool,dimworld> B(false);
+                Dune::array<int,dimworld> N;
+                std::bitset<dimworld> B(false);
                 for (size_t i=0; i<dimworld; i++)
                     {
                         L[i] = upper_right[i];
@@ -408,7 +408,7 @@ namespace Dune {
         class CGFEMBase<GV,C,R,degree,dim,Dune::GeometryType::simplex>
         {
         public:
-            typedef PkLocalFiniteElementMap<GV,C,R,degree,dim> FEM;
+            typedef PkLocalFiniteElementMap<GV,C,R,degree> FEM;
 
             CGFEMBase (const GV& gridview)
             {
@@ -426,11 +426,11 @@ namespace Dune {
         class CGFEMBase<GV,C,R,degree,dim,Dune::GeometryType::cube>
         {
         public:
-            typedef QkCGLocalFiniteElementMap<C,R,degree,dim> FEM;
+            typedef QkLocalFiniteElementMap<GV,C,R,degree> FEM;
 
             CGFEMBase (const GV& gridview)
             {
-                femp = shared_ptr<FEM>(new FEM());
+                femp = shared_ptr<FEM>(new FEM(gridview));
             }
 
             FEM& getFEM() {return *femp;}
