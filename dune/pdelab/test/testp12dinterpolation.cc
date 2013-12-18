@@ -7,9 +7,7 @@
 #include <string>
 #include <sstream>
 
-#include <dune/common/fvector.hh>
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/shared_ptr.hh>
 
 #include <dune/geometry/type.hh>
 #include <dune/geometry/quadraturerules.hh>
@@ -25,13 +23,13 @@
 #include <dune/grid/uggrid.hh>
 #endif
 
-#include "../backend/backendselector.hh"
-#include "../backend/istlvectorbackend.hh"
-#include "../common/function.hh"
-#include "../finiteelementmap/p12dfem.hh"
-#include "../gridfunctionspace/gridfunctionspace.hh"
-#include "../gridfunctionspace/gridfunctionspaceutilities.hh"
-#include "../gridfunctionspace/interpolate.hh"
+#include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/common/function.hh>
+#include <dune/pdelab/finiteelementmap/pkfem.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
+#include <dune/pdelab/gridfunctionspace/interpolate.hh>
 
 #include "gridexamples.hh"
 #include "l2difference.hh"
@@ -64,8 +62,6 @@ template<typename GV, typename FEM>
 double interpolationerror (const GV& gv, const FEM &fem)
 {
   typedef typename FEM::Traits::FiniteElementType::Traits
-    ::LocalBasisType::Traits::DomainFieldType D; // domain type
-  typedef typename FEM::Traits::FiniteElementType::Traits
     ::LocalBasisType::Traits::RangeFieldType R;  // range type
 
   typedef Dune::PDELab::GridFunctionSpace<GV, FEM> GFS;
@@ -88,8 +84,8 @@ void test(Dune::shared_ptr<Grid> grid, int &result, unsigned int maxelements, st
   std::cout << std::endl
             << "Testing P12D interpolation with " << name << std::endl;
 
-  typedef Dune::PDELab::P12DLocalFiniteElementMap<typename Grid::ctype, double> FEM;
-  FEM fem;
+  typedef Dune::PDELab::PkLocalFiniteElementMap<typename Grid::LeafGridView, double, double, 1> FEM;
+  FEM fem(grid->leafGridView());
 
   std::cout << "interpolation level 0" << std::endl;
   double error0 = interpolationerror(grid->leafView(), fem);

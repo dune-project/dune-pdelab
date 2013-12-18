@@ -7,7 +7,6 @@
 #include <string>
 #include <sstream>
 
-#include <dune/common/fvector.hh>
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #if HAVE_ALBERTA
@@ -25,9 +24,9 @@
 #include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/backend/istl/utility.hh>
-#include "../common/vtkexport.hh"
-#include "../gridfunctionspace/gridfunctionspace.hh"
-#include "../gridfunctionspace/gridfunctionspaceutilities.hh"
+#include <dune/pdelab/common/vtkexport.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
 
 template<typename GV>

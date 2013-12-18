@@ -3,31 +3,30 @@
 #include "config.h"
 #endif
 
-#include<iostream>
-#include<vector>
-#include<dune/common/parallel/mpihelper.hh>
-#include<dune/common/exceptions.hh>
-#include<dune/common/fvector.hh>
-#include<dune/grid/yaspgrid.hh>
+#include <iostream>
+#include <vector>
+
+#include <dune/common/parallel/mpihelper.hh>
+#include <dune/grid/yaspgrid.hh>
+
 #include <dune/pdelab/backend/backendselector.hh>
-#include"../finiteelementmap/q22dfem.hh"
-#include"../finiteelementmap/q12dfem.hh"
-#include"../gridfunctionspace/gridfunctionspace.hh"
-#include"../gridfunctionspace/subspace.hh"
-#include"../gridfunctionspace/gridfunctionspaceutilities.hh"
-#include"../gridfunctionspace/interpolate.hh"
-#include"../common/function.hh"
-#include"../common/vtkexport.hh"
-#include"../backend/istlvectorbackend.hh"
-#include"../backend/istl/utility.hh"
+#include  <dune/pdelab/finiteelementmap/qkfem.hh>
+#include  <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include  <dune/pdelab/gridfunctionspace/subspace.hh>
+#include  <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
+#include  <dune/pdelab/gridfunctionspace/interpolate.hh>
+#include  <dune/pdelab/common/function.hh>
+#include  <dune/pdelab/common/vtkexport.hh>
+#include  <dune/pdelab/backend/istlvectorbackend.hh>
+#include  <dune/pdelab/backend/istl/utility.hh>
 
 // generate a Q1 function and output it
 template<class GV>
 void testq1 (const GV& gv)
 {
   // instantiate finite element maps
-  typedef Dune::PDELab::Q12DLocalFiniteElementMap<typename GV::Grid::ctype,double> Q12DFEM;
-  Q12DFEM q12dfem;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,double,double,1> Q12DFEM;
+  Q12DFEM q12dfem(gv);
 
   // make a grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,Q12DFEM> Q1GFS;
@@ -93,10 +92,10 @@ template<class GV>
 void testinterpolate (const GV& gv)
 {
   // instantiate finite element maps
-  typedef Dune::PDELab::Q12DLocalFiniteElementMap<typename GV::Grid::ctype,double> Q12DFEM;
-  Q12DFEM q12dfem;
-  typedef Dune::PDELab::Q22DLocalFiniteElementMap<typename GV::Grid::ctype,double> Q22DFEM;
-  Q22DFEM q22dfem;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,double,double,1> Q12DFEM;
+  Q12DFEM q12dfem(gv);
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,double,double,2> Q22DFEM;
+  Q22DFEM q22dfem(gv);
 
   // make a grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,Q12DFEM> Q1GFS;
@@ -255,10 +254,10 @@ template<class GV>
 void testtaylorhood (const GV& gv)
 {
   // instantiate finite element maps
-  typedef Dune::PDELab::Q12DLocalFiniteElementMap<typename GV::Grid::ctype,double> Q12DFEM;
-  Q12DFEM q12dfem;
-  typedef Dune::PDELab::Q22DLocalFiniteElementMap<typename GV::Grid::ctype,double> Q22DFEM;
-  Q22DFEM q22dfem;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,double,double,1> Q12DFEM;
+  Q12DFEM q12dfem(gv);
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,typename GV::ctype,double,2> Q22DFEM;
+  Q22DFEM q22dfem(gv);
 
   // make a grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,Q12DFEM> Q1GFS;
@@ -347,8 +346,8 @@ template<class GV>
 void testgridfunctions (const GV& gv)
 {
   // instantiate finite element maps
-  typedef Dune::PDELab::Q22DLocalFiniteElementMap<typename GV::Grid::ctype,double> Q22DFEM;
-  Q22DFEM q22dfem;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,typename GV::ctype,double,2> Q22DFEM;
+  Q22DFEM q22dfem(gv);
 
   // make a grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> Q2GFS;
@@ -435,8 +434,8 @@ int main(int argc, char** argv)
 
     // need a grid in order to test grid functions
     Dune::FieldVector<double,2> L(1.0);
-    Dune::FieldVector<int,2> N(1);
-    Dune::FieldVector<bool,2> B(false);
+    Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+    std::bitset<2> B(false);
     Dune::YaspGrid<2> grid(L,N,B,0);
     grid.globalRefine(2);
 
