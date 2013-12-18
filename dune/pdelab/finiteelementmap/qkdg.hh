@@ -701,7 +701,7 @@ namespace Dune {
     {
     public:
 
-      fQkCGLocalFiniteElementMap() DUNE_DEPRECATED_MSG("Please use QkLocalFiniteElementMap instead")
+      QkCGLocalFiniteElementMap() DUNE_DEPRECATED_MSG("Please use QkLocalFiniteElementMap instead")
       {}
 
       bool fixedSize() const
