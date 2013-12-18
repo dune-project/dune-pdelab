@@ -134,7 +134,8 @@ namespace Dune {
             NodeInfo& ni = node_info[v_globalindex];
             ni.addLevel(level);
 
-            if(verbosity>1){
+            if(verbosity>10){
+              // This will produce a lot of output on the screen!
               std::cout << "   cell-id=" << cell_mapper.map(*it);
               std::cout << "   level=" << level;
               std::cout << "   v_size=" << v_size;
@@ -329,7 +330,8 @@ namespace Dune {
                 reiterate = true;    // Once an element has to be refined, the procedure needs to be repeated!
                 refinements++;       // Count the number of refinements.
 
-                if(verbosity>1){
+                if(verbosity>10){
+                  // This will produce a lot of output on the screen!
                   std::cout << "   cell-id=" << cell_mapper.map(*it);
                   std::cout << "   level=" << level;
                   std::cout << "   v_size=" << v_size;
@@ -474,7 +476,8 @@ namespace Dune {
                               reiterate = true;    // Once an element has to be refined, the procedure needs to be repeated!
                               refinements++;       // Count the number of refinements.
 
-                              if(verbosity){
+                              if(verbosity>10){
+                                // This will produce a lot of output on the screen!
                                 std::cout << "   cell-id=" << cell_mapper.map(*it);
                                 std::cout << "   level=" << level;
                                 std::cout << "   v_size=" << v_size;

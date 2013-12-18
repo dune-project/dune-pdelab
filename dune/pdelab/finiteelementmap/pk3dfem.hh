@@ -24,7 +24,7 @@ namespace Dune
         : fem::PkLocalFiniteElementMapBase<GV,D,R,k,3>(gv)
       {}
 
+    };
   }
 }
-
 #endif // DUNE_PDELAB_FINITELEMENTMAP_HH_PK3DFEM_HH
