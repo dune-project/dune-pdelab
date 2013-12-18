@@ -62,7 +62,7 @@ int main(int argc, char** argv)
     grid.loadBalance();
 
     typedef Grid::Partition<Dune::InteriorBorder_Partition>::LeafGridView GV;
-    GV gv = grid.leafView<Dune::InteriorBorder_Partition>();
+    GV gv = grid.leafGridView<Dune::InteriorBorder_Partition>();
 
     typedef GV::ctype DF;
     typedef double RF;

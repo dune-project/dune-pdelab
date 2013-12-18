@@ -197,7 +197,7 @@ int main(int argc, char** argv)
     Dune::YaspGrid<2> grid(L,N,B,0);
     grid.globalRefine(level);
 
-    testp1(grid.leafView(), mu, lambda, g);
+    testp1(grid.leafGridView(), mu, lambda, g);
 
     // test passed
     return 0;

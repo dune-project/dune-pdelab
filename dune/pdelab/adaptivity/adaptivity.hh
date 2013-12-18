@@ -553,7 +553,7 @@ namespace Dune {
         Visitor visitor(gfsu,projection,u,_leaf_offset_cache,transfer_map);
 
         // iterate over all elems
-        LeafGridView leafView = grid.leafView();
+        LeafGridView leafView = grid.leafGridView();
         for (LeafIterator it = leafView.template begin<0,Dune::Interior_Partition>();
              it!=leafView.template end<0,Dune::Interior_Partition>(); ++it)
           {
@@ -577,7 +577,7 @@ namespace Dune {
         Visitor visitor(gfsu,u,uc,_leaf_offset_cache);
 
         // iterate over all elems
-        LeafGridView leafView = grid.leafView();
+        LeafGridView leafView = grid.leafGridView();
         for (LeafIterator it = leafView.template begin<0,Dune::Interior_Partition>();
              it!=leafView.template end<0,Dune::Interior_Partition>(); ++it)
           {
@@ -884,7 +884,7 @@ namespace Dune {
       typedef typename Grid::template Partition<Dune::All_Partition>::LeafGridView GV;
       typedef typename GV::template Codim<0>::Iterator Iterator;
 
-      const GV& gv=grid.template leafView<Dune::All_Partition>();
+      const GV& gv=grid.template leafGridView<Dune::All_Partition>();
       //Iterator it = grid.template leafbegin<0,Dune::All_Partition>();
       //Iterator eit = grid.template leafend<0,Dune::All_Partition>();
       Iterator it = gv.template begin<0>();
@@ -935,7 +935,7 @@ namespace Dune {
       typedef typename Grid::LeafGridView GV;
       typedef typename GV::IndexSet IndexSet;
 
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
       const IndexSet& is(gv.indexSet());
       Iterator it = grid.template leafbegin<0,Dune::All_Partition>();
       Iterator eit = grid.template leafend<0,Dune::All_Partition>();

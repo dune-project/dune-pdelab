@@ -92,7 +92,7 @@ int main(int argc, char** argv)
       Grid *grid = gf.createGrid();
       //grid->globalRefine(1);
 
-      rt02DGridFunctionSpace(grid->leafView(), "alberta");
+      rt02DGridFunctionSpace(grid->leafGridView(), "alberta");
 
       Dune::GridFactory<Grid>::destroyGrid(grid);
     }
@@ -108,7 +108,7 @@ int main(int argc, char** argv)
       Grid grid("grids/2dtriangle.alu");
       //grid->globalRefine(1);
 
-      rt02DGridFunctionSpace(grid.leafView(), "alu");
+      rt02DGridFunctionSpace(grid.leafGridView(), "alu");
     }
     result = 0;
 #endif // HAVE_ALUGRID
@@ -135,7 +135,7 @@ int main(int argc, char** argv)
       Grid *grid = gf.createGrid();
       //grid->globalRefine(1);
 
-      rt02DGridFunctionSpace(grid->leafView(), "ug");
+      rt02DGridFunctionSpace(grid->leafGridView(), "ug");
 
       delete grid;
     }

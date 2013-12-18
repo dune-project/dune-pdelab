@@ -257,7 +257,7 @@ int main(int argc, char** argv)
       Dune::YaspGrid<2> grid(helper.getCommunicator(),L,N,B,1);
       // grid.globalRefine(1);
 
-      testdatahandle(grid.leafView());
+      testdatahandle(grid.leafGridView());
     }
 
 #if 0
@@ -271,7 +271,7 @@ int main(int argc, char** argv)
       Dune::YaspGrid<3> grid(L,N,B,1);
       grid.globalRefine(1);
 
-      testleafgridfunction(grid.leafView());
+      testleafgridfunction(grid.leafGridView());
     }
 #endif
   // test passed

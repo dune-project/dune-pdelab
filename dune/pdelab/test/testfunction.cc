@@ -207,12 +207,12 @@ int main(int argc, char** argv)
 
     // run algorithm on a grid
     std::cout << "instantiate grid functions on a grid" << std::endl;
-    testgridfunction(grid.leafView(),F<Dune::YaspGrid<2>::ctype>());
+    testgridfunction(grid.leafGridView(),F<Dune::YaspGrid<2>::ctype>());
 
     // run algorithm on a grid
     std::cout << "testing vtk output" << std::endl;
-    testvtkexport(grid.leafView(),F<Dune::YaspGrid<2>::ctype>());
-    testfunctiontree(grid.leafView());
+    testvtkexport(grid.leafGridView(),F<Dune::YaspGrid<2>::ctype>());
+    testfunctiontree(grid.leafGridView());
 
     // test passed
     return 0;

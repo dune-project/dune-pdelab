@@ -215,8 +215,8 @@ int main(int argc, char** argv)
       Dune::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createCubeGrid(l,u,N);
       grid->globalRefine(1);
 
-      std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafView().template begin<0>()->type()) << std::endl;
-      testleafgridfunction<true>(grid->leafView());
+      std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafGridView().template begin<0>()->type()) << std::endl;
+      testleafgridfunction<true>(grid->leafGridView());
     }
 
     {
@@ -230,8 +230,8 @@ int main(int argc, char** argv)
       Dune::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(l,u,N);
       grid->globalRefine(1);
 
-      std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafView().template begin<0>()->type()) << std::endl;
-      testleafgridfunction<false>(grid->leafView());
+      std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafGridView().template begin<0>()->type()) << std::endl;
+      testleafgridfunction<false>(grid->leafGridView());
     }
 
     // 3D
@@ -244,7 +244,7 @@ int main(int argc, char** argv)
       Dune::YaspGrid<3> grid(L,N,B,0);
       grid.globalRefine(1);
 
-      testleafgridfunction<true>(grid.leafView());
+      testleafgridfunction<true>(grid.leafGridView());
     }
 
     // test passed

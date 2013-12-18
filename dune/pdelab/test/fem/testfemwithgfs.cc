@@ -58,7 +58,7 @@ void test_2d_cube(const Constraints& constraints, const VBE& vbe)
 
   // get view
   typedef Dune::YaspGrid<2>::LeafGridView GV;
-  const GV& gv=grid.leafView();
+  const GV& gv=grid.leafGridView();
 
   typedef GV::Grid::ctype DF;
 
@@ -86,7 +86,7 @@ void test_3d_cube(const Constraints& constraints, const VBE& vbe)
 
   // get view
   typedef Dune::YaspGrid<3>::LeafGridView GV;
-  const GV& gv=grid.leafView();
+  const GV& gv=grid.leafGridView();
 
   typedef GV::Grid::ctype DF;
 
@@ -114,7 +114,7 @@ void test_2d_simplex(const Constraints& constraints, const VBE& vbe)
 
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       typedef GV::Grid::ctype DF;
 
@@ -150,7 +150,7 @@ void test_3d_simplex(const Constraints& constraints, const VBE& vbe)
 
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       typedef GV::Grid::ctype DF;
 

@@ -88,21 +88,21 @@ void test(Dune::shared_ptr<Grid> grid, int &result, unsigned int maxelements, st
   FEM fem(grid->leafGridView());
 
   std::cout << "interpolation level 0" << std::endl;
-  double error0 = interpolationerror(grid->leafView(), fem);
-  double h0 = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
+  double error0 = interpolationerror(grid->leafGridView(), fem);
+  double h0 = std::pow(1/double(grid->leafGridView().size(0)), 1/double(Grid::dimension));
   std::cout << "interpolation error: "
-            << std::setw(8) << grid->leafView().size(0) << " elements, h="
+            << std::setw(8) << grid->leafGridView().size(0) << " elements, h="
             << std::scientific << h0 << ", error="
             << std::scientific << error0 << std::endl;
 
-  while((unsigned int)(grid->leafView().size(0)) < maxelements)
+  while((unsigned int)(grid->leafGridView().size(0)) < maxelements)
     grid->globalRefine(1);
 
   std::cout << "interpolation level " << grid->maxLevel() << std::endl;
-  double errorf = interpolationerror(grid->leafView(), fem);
-  double hf = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
+  double errorf = interpolationerror(grid->leafGridView(), fem);
+  double hf = std::pow(1/double(grid->leafGridView().size(0)), 1/double(Grid::dimension));
   std::cout << "interpolation error: "
-            << std::setw(8) << grid->leafView().size(0) << " elements, h="
+            << std::setw(8) << grid->leafGridView().size(0) << " elements, h="
             << std::scientific << hf << ", error="
             << std::scientific << errorf << std::endl;
 

@@ -120,23 +120,23 @@ int main(int argc, char** argv)
 #if HAVE_UG
     Dune::shared_ptr<Dune::UGGrid<2> > uggrid(TriangulatedLDomainMaker<Dune::UGGrid<2> >::create());
   	uggrid->globalRefine(4);
-    testpk(uggrid->leafView());
+    testpk(uggrid->leafGridView());
 #endif
 
 #if HAVE_ALBERTA
  	AlbertaLDomain albertagrid;
   	albertagrid.globalRefine(4);
-    testpk(albertagrid.leafView());
+    testpk(albertagrid.leafGridView());
 
  	AlbertaReentrantCorner albertagridr;
   	albertagridr->globalRefine(4);
-    testpk(albertagridr->leafView());
+    testpk(albertagridr->leafGridView());
 #endif
 
 #if HAVE_ALUGRID
  	ALUUnitSquare alugrid;
   	alugrid.globalRefine(4);
-    testpk(alugrid.leafView());
+    testpk(alugrid.leafGridView());
 #endif
 
 	// test passed

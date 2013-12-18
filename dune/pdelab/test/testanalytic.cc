@@ -74,7 +74,7 @@ int main(int argc, char** argv)
     std::bitset<3> B3(false);
     Dune::YaspGrid<3> grid(L3,N3,B3,0);
     grid.globalRefine(4);
-    testuserfriendly(grid.leafView());
+    testuserfriendly(grid.leafGridView());
 
     // test passed
     return 0;

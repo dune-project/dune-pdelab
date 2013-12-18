@@ -578,7 +578,7 @@ namespace Dune {
 
             CGCONBase (Grid& grid, const BCType& bctype)
             {
-                conp = shared_ptr<CON>(new CON(grid.leafView()));
+                conp = shared_ptr<CON>(new CON(grid.leafGridView()));
             }
 
             template<typename GFS>
@@ -623,7 +623,7 @@ namespace Dune {
 
             // constructor making the grid function space an all that is needed
             CGSpace (Grid& grid, const BCType& bctype)
-                : gv(grid.leafView()), femb(gv), conb(grid,bctype)
+                : gv(grid.leafGridView()), femb(gv), conb(grid,bctype)
             {
                 gfsp = shared_ptr<GFS>(new GFS(gv,femb.getFEM(),conb.getCON()));
                 gfsp->name("cgspace");

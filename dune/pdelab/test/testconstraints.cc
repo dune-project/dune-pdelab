@@ -271,8 +271,8 @@ int main(int argc, char** argv)
 #if HAVE_UG
     Dune::shared_ptr<Dune::UGGrid<2> > uggrid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
   	uggrid->globalRefine(4);
-    testp1(uggrid->leafView());
-    testpowerp1(uggrid->leafView());
+    testp1(uggrid->leafGridView());
+    testpowerp1(uggrid->leafGridView());
 #endif
 
 	// test passed

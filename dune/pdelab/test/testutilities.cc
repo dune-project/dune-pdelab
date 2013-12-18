@@ -439,10 +439,10 @@ int main(int argc, char** argv)
     Dune::YaspGrid<2> grid(L,N,B,0);
     grid.globalRefine(2);
 
-    testq1(grid.leafView());
-    testinterpolate(grid.leafView());
-    testtaylorhood(grid.levelView(1));
-    testgridfunctions(grid.levelView(1));
+    testq1(grid.leafGridView());
+    testinterpolate(grid.leafGridView());
+    testtaylorhood(grid.levelGridView(1));
+    testgridfunctions(grid.levelGridView(1));
 
     std::cout << "All testutilities tests passed." << std::endl;
 

@@ -202,7 +202,7 @@ int main(int argc, char** argv)
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(3);
 
-      test(grid.leafView());
+      test(grid.leafGridView());
     }
 
     // 3D
@@ -215,7 +215,7 @@ int main(int argc, char** argv)
       Dune::YaspGrid<3> grid(L,N,B,0);
       grid.globalRefine(3);
 
-      test(grid.leafView());
+      test(grid.leafGridView());
     }
 
 	// test passed

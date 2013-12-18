@@ -140,26 +140,26 @@ int main(int argc, char** argv)
       std::bitset<2> B(false);
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(5);
-      testrt0(grid.leafView());
+      testrt0(grid.leafGridView());
       return 0;
     }
 
 #if HAVE_UG
     Dune::shared_ptr<Dune::UGGrid<2> > uggrid(TriangulatedLDomainMaker<Dune::UGGrid<2> >::create());
   	uggrid->globalRefine(4);
-    testrt0(uggrid->leafView());
+    testrt0(uggrid->leafGridView());
 #endif
 
 #if HAVE_ALBERTA
  	AlbertaLDomain albertagrid;
   	albertagrid.globalRefine(4);
-    testrt0(albertagrid.leafView());
+    testrt0(albertagrid.leafGridView());
 #endif
 
 #if HAVE_ALUGRID
  	ALUUnitSquare alugrid;
   	alugrid.globalRefine(5);
-    testrt0(alugrid.leafView());
+    testrt0(alugrid.leafGridView());
 #endif
 
 	// test passed

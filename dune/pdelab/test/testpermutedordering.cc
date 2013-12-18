@@ -294,7 +294,7 @@ int main(int argc, char** argv)
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(1);
 
-      testpermutedordering(grid.leafView());
+      testpermutedordering(grid.leafGridView());
     }
 
     // test passed

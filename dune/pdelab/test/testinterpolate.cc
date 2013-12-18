@@ -127,7 +127,7 @@ int main(int argc, char** argv)
     Dune::YaspGrid<2> grid(L,N,B,0);
     grid.globalRefine(1);
 
-    test_interpolate(grid.leafView());
+    test_interpolate(grid.leafGridView());
 
 	// test passed
 	return 0;
