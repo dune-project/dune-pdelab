@@ -2,19 +2,18 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <iostream>
+
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/exceptions.hh>
-#include <dune/common/fvector.hh>
 #include <dune/grid/yaspgrid.hh>
 #include <dune/pdelab/backend/backendselector.hh>
-#include "../finiteelementmap/p0fem.hh"
-#include "../finiteelementmap/q22dfem.hh"
-#include "../finiteelementmap/q1fem.hh"
-#include "../gridfunctionspace/gridfunctionspace.hh"
-#include "../backend/istlvectorbackend.hh"
-#include "../common/function.hh"
-#include "../gridfunctionspace/interpolate.hh"
+#include <dune/pdelab/finiteelementmap/p0fem.hh>
+#include <dune/pdelab/finiteelementmap/qkfem.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/common/function.hh>
+#include <dune/pdelab/gridfunctionspace/interpolate.hh>
 
 template<typename GV, std::size_t range_dim>
 struct interpolation_function
@@ -45,10 +44,10 @@ static void test_interpolate(const GV& gv)
   gt.makeCube(2);
   typedef Dune::PDELab::P0LocalFiniteElementMap<double,double,GV::dimension> P0FEM;
   P0FEM p0fem(gt);
-  typedef Dune::PDELab::Q1LocalFiniteElementMap<double,double,GV::dimension> Q12DFEM;
-  Q12DFEM q12dfem;
-  typedef Dune::PDELab::Q22DLocalFiniteElementMap<double,double> Q22DFEM;
-  Q22DFEM q22dfem;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,double,double,1> Q12DFEM;
+  Q12DFEM q12dfem(gv);
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,double,double,2> Q22DFEM;
+  Q22DFEM q22dfem(gv);
 
   // make a grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS;
@@ -123,8 +122,8 @@ int main(int argc, char** argv)
     std::cout << "interpolation tests (2D)" << std::endl;
     // need a grid in order to test grid functions
     Dune::FieldVector<double,2> L(1.0);
-    Dune::FieldVector<int,2> N(1);
-    Dune::FieldVector<bool,2> B(false);
+    Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+    std::bitset<2> B(false);
     Dune::YaspGrid<2> grid(L,N,B,0);
     grid.globalRefine(1);
 

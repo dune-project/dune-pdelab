@@ -7,18 +7,14 @@
 
 #include <iostream>
 
-#include <dune/common/exceptions.hh>
-#include <dune/common/fvector.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
 #include <dune/grid/yaspgrid.hh>
 
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/finiteelementmap/p0fem.hh>
-#include <dune/pdelab/finiteelementmap/p1fem.hh>
-#include <dune/pdelab/finiteelementmap/q12dfem.hh>
-#include <dune/pdelab/finiteelementmap/q1fem.hh>
-#include <dune/pdelab/finiteelementmap/q22dfem.hh>
+#include <dune/pdelab/finiteelementmap/pkfem.hh>
+#include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 
 // test function trees
@@ -35,10 +31,10 @@ struct test<2> {
     gt.makeCube(2);
     typedef Dune::PDELab::P0LocalFiniteElementMap<float,double,GV::dimension> P0FEM;
     P0FEM p0fem(gt);
-    typedef Dune::PDELab::Q12DLocalFiniteElementMap<float,double> Q12DFEM;
-    Q12DFEM q12dfem;
-    typedef Dune::PDELab::Q22DLocalFiniteElementMap<float,double> Q22DFEM;
-    Q22DFEM q22dfem;
+    typedef Dune::PDELab::QkLocalFiniteElementMap<GV,float,double,1> Q12DFEM;
+    Q12DFEM q12dfem(gv);
+    typedef Dune::PDELab::QkLocalFiniteElementMap<GV,float,double,2> Q22DFEM;
+    Q22DFEM q22dfem(gv);
 
     // make a grid function space
     typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS;
@@ -127,10 +123,10 @@ struct test<3> {
     gt.makeCube(3);
     typedef Dune::PDELab::P0LocalFiniteElementMap<float,double,GV::dimension> P0FEM;
     P0FEM p0fem(gt);
-    typedef Dune::PDELab::P1LocalFiniteElementMap<float,double,3> P1FEM;
-    P1FEM p1fem;
-    typedef Dune::PDELab::Q1LocalFiniteElementMap<float,double,3> Q1FEM;
-    Q1FEM q1fem;
+    typedef Dune::PDELab::PkLocalFiniteElementMap<GV,float,double,1> P1FEM;
+    P1FEM p1fem(gv);
+    typedef Dune::PDELab::QkLocalFiniteElementMap<GV,float,double,1> Q1FEM;
+    Q1FEM q1fem(gv);
 
     // make a grid function space
     typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS;
@@ -161,8 +157,8 @@ int main(int argc, char** argv)
       std::cout << "2D tests" << std::endl;
       // need a grid in order to test grid functions
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
+      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::bitset<2> B(false);
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(1);
 
@@ -174,8 +170,8 @@ int main(int argc, char** argv)
       std::cout << "3D tests" << std::endl;
       // need a grid in order to test grid functions
       Dune::FieldVector<double,3> L(1.0);
-      Dune::FieldVector<int,3> N(1);
-      Dune::FieldVector<bool,3> B(false);
+      Dune::array<int,3> N(Dune::fill_array<int,3>(1));
+      std::bitset<3> B(false);
       Dune::YaspGrid<3> grid(L,N,B,0);
       grid.globalRefine(1);
 

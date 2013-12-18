@@ -2,38 +2,29 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include<iostream>
-#include<sstream>
-#include<vector>
-#include<map>
-#include<dune/common/parallel/mpihelper.hh>
-#include<dune/common/exceptions.hh>
-#include<dune/common/fvector.hh>
-#include<dune/common/static_assert.hh>
-#include<dune/grid/yaspgrid.hh>
-#include<dune/istl/bvector.hh>
-#include<dune/istl/operators.hh>
-#include<dune/istl/solvers.hh>
-#include<dune/istl/preconditioners.hh>
-#include<dune/istl/io.hh>
-//#include<dune/istl/paamg/amg.hh>
 
-#include"../finiteelementmap/p0fem.hh"
-#include"../finiteelementmap/p12dfem.hh"
-#include"../finiteelementmap/pk2dfem.hh"
-#include"../gridfunctionspace/gridfunctionspace.hh"
-#include"../gridfunctionspace/gridfunctionspaceutilities.hh"
-#include"../gridfunctionspace/interpolate.hh"
-#include"../constraints/common/constraints.hh"
-#include"../common/function.hh"
-#include"../common/vtkexport.hh"
-#include"../localoperator/laplacedirichletccfv.hh"
-#include"../backend/backendselector.hh"
-#include"../backend/istlvectorbackend.hh"
-#include"../backend/istlmatrixbackend.hh"
-#include"../backend/seqistlsolverbackend.hh"
+#include <iostream>
+#include <sstream>
+#include <vector>
+#include <map>
 
-#include"../gridoperator/gridoperator.hh"
+#include <dune/common/parallel/mpihelper.hh>
+#include <dune/grid/yaspgrid.hh>
+
+#include <dune/pdelab/finiteelementmap/p0fem.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
+#include <dune/pdelab/gridfunctionspace/interpolate.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
+#include <dune/pdelab/common/function.hh>
+#include <dune/pdelab/common/vtkexport.hh>
+#include <dune/pdelab/localoperator/laplacedirichletccfv.hh>
+#include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
+#include <dune/pdelab/backend/seqistlsolverbackend.hh>
+
+#include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/ordering/singlecodimleafordering.hh>
 #include <dune/pdelab/gridfunctionspace/vtk.hh>
 
@@ -130,11 +121,14 @@ void test (const GV& gv)
   typedef Dune::PDELab::LaplaceDirichletCCFV<GType> LO;
   LO lo(g);
 
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+  MBE mbe(GV::dimension == 2 ? 5 : 7); // P0 on quadrilaterals
+
   typedef Dune::PDELab::GridOperator<
     GFS,GFS,LO,
-    Dune::PDELab::ISTLMatrixBackend,
+    MBE,
     RF,RF,RF> GO;
-  GO go(gfs,gfs,lo);
+  GO go(gfs,gfs,lo,mbe);
 
   // make coefficent Vector and initialize it from a function
   typedef typename GO::Traits::Domain V;
@@ -203,8 +197,8 @@ int main(int argc, char** argv)
       std::cout << "2D tests" << std::endl;
       // need a grid in order to test grid functions
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
+      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::bitset<2> B(false);
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(3);
 
@@ -216,8 +210,8 @@ int main(int argc, char** argv)
       std::cout << "3D tests" << std::endl;
       // need a grid in order to test grid functions
       Dune::FieldVector<double,3> L(1.0);
-      Dune::FieldVector<int,3> N(1);
-      Dune::FieldVector<bool,3> B(false);
+      Dune::array<int,3> N(Dune::fill_array<int,3>(1));
+      std::bitset<3> B(false);
       Dune::YaspGrid<3> grid(L,N,B,0);
       grid.globalRefine(3);
 

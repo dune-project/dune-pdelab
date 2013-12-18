@@ -14,8 +14,7 @@
 #include <dune/grid/yaspgrid.hh>
 
 #include <dune/pdelab/finiteelementmap/p0fem.hh>
-#include <dune/pdelab/finiteelementmap/p12dfem.hh>
-#include <dune/pdelab/finiteelementmap/pk2dfem.hh>
+#include <dune/pdelab/finiteelementmap/pkfem.hh>
 #include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/constraints/conforming.hh>
@@ -396,7 +395,7 @@ int main(int argc, char** argv)
       typedef GV::Grid::ctype DF;
       const int k=3;
       const int q=2*k;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,double,k> FEM;
       FEM fem(gv);
 
       // solve problem
@@ -441,7 +440,7 @@ int main(int argc, char** argv)
       typedef GV::Grid::ctype DF;
       const int k=3;
       const int q=2*k;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,double,k> FEM;
       FEM fem(gv);
 
       // solve problem
