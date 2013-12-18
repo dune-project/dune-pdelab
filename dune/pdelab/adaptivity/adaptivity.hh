@@ -1111,6 +1111,11 @@ namespace Dune {
         return q_t;
       }
 
+      double endT() const
+      {
+        return T;
+      }
+
       double accumulatedErrorSquared () const
       {
         return accumulated_estimated_error_squared;
