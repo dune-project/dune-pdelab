@@ -93,16 +93,6 @@ testconstraints_LDADD =				\
 	$(LDADD)
 MOSTLYCLEANFILES += testconstraintsp1.vtu testconstraintspowerp1.vtu
 
-NORMALTESTS += testfiniteelementmap
-testfiniteelementmap_SOURCES = testfiniteelementmap.cc
-testfiniteelementmap_CPPFLAGS = $(AM_CPPFLAGS)	\
-	$(ALBERTA_CPPFLAGS)
-testfiniteelementmap_LDFLAGS = $(AM_LDFLAGS)	\
-	$(ALBERTA_LDFLAGS)
-testfiniteelementmap_LDADD =			\
-	$(ALBERTA_LIBS)				\
-	$(LDADD)
-
 NORMALTESTS += testfunction
 testfunction_SOURCES = testfunction.cc
 testfunction_CPPFLAGS = $(AM_CPPFLAGS)		\

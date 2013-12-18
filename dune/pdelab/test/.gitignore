@@ -22,7 +22,6 @@ testedges03dinterpolationglobal
 testelasticity
 testelectrodynamic
 testelectrodynamic-newmark
-testfiniteelementmap
 testfunction
 testgridfunctionspace
 testlaplacedirichletccfv
