@@ -38,7 +38,8 @@ namespace Dune {
         static const size_type max_blocking_depth = 0;
       };
 
-      bool blocked() const
+      template<typename GFS>
+      bool blocked(const GFS& gfs) const
       {
         return false;
       }

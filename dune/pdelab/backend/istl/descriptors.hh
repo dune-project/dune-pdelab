@@ -40,22 +40,24 @@ namespace Dune {
       {
         static const ISTLParameters::Blocking block_type = blocking;
         static const size_type block_size = block_size_;
+
+        static const bool blocked = blocking != ISTLParameters::no_blocking;
+
+        static const size_type max_blocking_depth = blocked ? 1 : 0;
+      };
+
+      template<typename GFS>
+      bool blocked(const GFS& gfs) const
+      {
         // We have to make an exception for static blocking and block_size == 1:
         // In that case, the ISTL backends expect the redundant index information
         // at that level to be elided, and keeping it in here will break vector
         // and matrix accesses.
         // To work around that problem, we override the user and just turn off
         // blocking internally.
-        static const bool blocked =
-          blocking != ISTLParameters::no_blocking
-          && (block_size > 1 || blocking != ISTLParameters::static_blocking);
-        static const size_type max_blocking_depth = blocked ? 1 : 0;
-      };
-
-      bool blocked() const
-      {
-        return Traits::blocked;
+        return Traits::blocked && (blocking != ISTLParameters::static_blocking || !GFS::isLeaf || block_size_ > 1);
       }
+
     };
 
     //! Backend using ISTL matrices.
