@@ -9,6 +9,7 @@ set(SUBDIRS
         finiteelement
         finiteelementmap
         function
+	ordering
         gridfunctionspace
         gridoperator
         gridoperatorspace

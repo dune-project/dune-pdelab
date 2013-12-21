@@ -6,6 +6,7 @@ install(FILES
   interleavedordering.hh
   leafgridviewordering.hh
   leaflocalordering.hh
+  leaforderingbase.hh
   lexicographicordering.hh
   localorderingbase.hh
   orderingbase.hh
@@ -15,4 +16,4 @@ install(FILES
   subordering.hh
   transformations.hh
   utility.hh
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}//dune/pdelab/gridfunctionspace)
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}//dune/pdelab/ordering)

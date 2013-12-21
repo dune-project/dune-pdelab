@@ -5,8 +5,10 @@ set(headercheck_IGNORE  assembler.hh)
 set(gridoperatorcommon_HEADERS             
         assembler.hh                    
         assemblerutilities.hh           
+	borderdofexchanger.hh
         gridoperatorutilities.hh        
         localassemblerenginebase.hh     
+	localmatrix.hh
         timesteppingparameterinterface.hh)
 
 # include not needed for CMake

@@ -1,12 +1,15 @@
 set(gridfunctionspacedir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/gridfunctionspace)
 set(gridfunctionspace_HEADERS
   compositegridfunctionspace.hh
+  datahandleprovider.hh
+  entityindexcache.hh
   genericdatahandle.hh
   gridfunctionspace.hh
   gridfunctionspacebase.hh
   gridfunctionspaceutilities.hh
   interpolate.hh
   intersectionindexset.hh
+  lfsindexcache.hh
   localfunctionspace.hh
   localfunctionspacetags.hh
   localvector.hh
@@ -14,6 +17,10 @@ set(gridfunctionspace_HEADERS
   powergridfunctionspace.hh
   subspace.hh
   subspacelocalfunctionspace.hh
-  tags.hh)
+  tags.hh
+  utility.hh
+  vectorgridfunctionspace.hh
+  vtk.hh
+)
 
 install(FILES ${gridfunctionspace_HEADERS} DESTINATION ${gridfunctionspacedir})
