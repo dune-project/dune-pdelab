@@ -11,9 +11,7 @@ set(constraints_HEADERS
     p0ghost.hh
     raviartthomas0.hh)
 
-add_subdirectory(common)
-# include not needed for CMake
-# include $(top_srcdir)/am/global-rules
+set(SUBDIRS common)
 
 foreach(i ${SUBDIRS})
   if(${i} STREQUAL "test")
