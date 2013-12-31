@@ -633,6 +633,7 @@ namespace Dune{
       {
         prestage_engine->assembleUVVolume(eg,lfsu,lfsv);
         la.setWeight(-1.0);
+        prestage_engine->setTimeInLastStage();
         jacobian_engine->assembleUVVolume(eg,lfsu,lfsv);
       }
 
@@ -641,6 +642,7 @@ namespace Dune{
       {
         prestage_engine->assembleVVolume(eg,lfsv);
         la.setWeight(-1.0);
+        prestage_engine->setTimeInLastStage();
         jacobian_engine->assembleVVolume(eg,lfsv);
       }
 
