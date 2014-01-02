@@ -61,7 +61,8 @@ namespace Dune {
         void bind(const E& e)
         {
           LFS::bind(e);
-          for (auto& di : this->_dof_index_storage)
+          for (auto& di= this->_dof_index_storage.begin(), end=this->_dof_index_storage.end();
+               di!=end; ++di)
             complete_dof_index(di);
         }
 
