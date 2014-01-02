@@ -84,11 +84,11 @@ namespace Dune {
 
       private:
 
-        const size_type _nnz;
-        const size_type _longest_row;
-        const size_type _overflow_count;
-        const size_type _estimate;
-        const size_type _rows;
+        size_type _nnz;
+        size_type _longest_row;
+        size_type _overflow_count;
+        size_type _estimate;
+        size_type _rows;
 
       };
 
