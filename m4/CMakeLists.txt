@@ -9,7 +9,7 @@ set(M4FILES
   gcc___typeof__.m4
   petsc.m4)
 
-set(aclocaldir  ${CMAKE_INSTALL_DATADIR}/aclocal)
+set(aclocaldir  ${CMAKE_INSTALL_DATADIR}/dune/aclocal)
 set(aclocal_DATA  ${M4FILES})
 
 set(EXTRA_DIST  ${M4FILES})
