@@ -113,7 +113,6 @@ namespace Dune {
           typename GFSV::Ordering::ContainerAllocationTag
           >::type BaseT;
 
-        template<typename EntriesPerRow>
         Pattern(const RowOrdering& row_ordering, const ColOrdering& col_ordering)
           : BaseT(row_ordering,col_ordering)
         {}
