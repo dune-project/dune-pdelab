@@ -285,8 +285,10 @@ testopbfem_LDFLAGS = $(AM_LDFLAGS) $(GMP_LDFLAGS)
 testopbfem_LDADD = $(LDADD) $(GMP_LIBS)
 endif
 
+if ALUGRID
 check_PROGRAMS += testordering
 testordering_SOURCES = testordering.cc
+endif
 
 check_PROGRAMS += testpermutedordering
 testpermutedordering_SOURCES = testpermutedordering.cc
