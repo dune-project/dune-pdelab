@@ -2,20 +2,22 @@
 #ifndef DUNE_PDELAB_LINEARELASTICITY_HH
 #define DUNE_PDELAB_LINEARELASTICITY_HH
 
-#include<vector>
+#include <vector>
 
-#include<dune/common/exceptions.hh>
-#include<dune/common/fvector.hh>
-#include<dune/common/static_assert.hh>
+#include <dune/common/exceptions.hh>
+#include <dune/common/fvector.hh>
+#include <dune/common/static_assert.hh>
 
-#include<dune/geometry/type.hh>
-#include<dune/geometry/referenceelements.hh>
-#include<dune/geometry/quadraturerules.hh>
+#include <dune/geometry/type.hh>
+#include <dune/geometry/referenceelements.hh>
+#include <dune/geometry/quadraturerules.hh>
 
-#include"defaultimp.hh"
-#include"pattern.hh"
-#include"flags.hh"
-#include"idefault.hh"
+#include "defaultimp.hh"
+#include "pattern.hh"
+#include "flags.hh"
+#include "idefault.hh"
+
+#include "linearelasticityparameter.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -23,28 +25,23 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-    template<typename F, typename B, typename U, typename G>
-    class LinearElasticityParameters
-    {
-      double lambda;
-      double mu;
-      const F & f;
-      const B & b;
-      const U & u;
-      const G & g;
-    };
-
-    /**
-       \todo check LFSU size
-       \todo check LFSU == LFSV
+    /** a local operator for solving the the linear elasticity problem using conforming FEM
+     *
+     * \tparam T model of LinearElasticityParameterInterface
+     *
+     * \todo check LFSU size
+     * \todo check LFSU == LFSV
      */
+    template<typename T>
     class LinearElasticity : public FullVolumePattern,
                              public LocalOperatorDefaultFlags,
-                             public InstationaryLocalOperatorDefaultMethods<double>,
-                             public JacobianBasedAlphaVolume<LinearElasticity>,
-                             public NumericalJacobianVolume<LinearElasticity>
+                             public InstationaryLocalOperatorDefaultMethods<typename T::Traits::DomainType>,
+                             public JacobianBasedAlphaVolume<LinearElasticity<T> >,
+                             public NumericalJacobianVolume<LinearElasticity<T> >
     {
     public:
+
+      typedef T ParameterType;
 
       // pattern assembly flags
       enum { doPatternVolume = true };
@@ -54,8 +51,8 @@ namespace Dune {
       enum { doLambdaVolume = true };
       enum { doLambdaBoundary = true };
 
-      LinearElasticity (double m, double l, double _g, int intorder_=4)
-        : intorder(intorder_), mu(m), lambda(l), g(_g)
+      LinearElasticity (const ParameterType & p, int intorder=4)
+        : intorder_(intorder), param_(p)
       {}
 
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
@@ -83,7 +80,7 @@ namespace Dune {
 
         // select quadrature rule
         GeometryType gt = eg.geometry().type();
-        const QuadratureRule<DF,dim>& rule = QuadratureRules<DF,dim>::rule(gt,intorder);
+        const QuadratureRule<DF,dim>& rule = QuadratureRules<DF,dim>::rule(gt,intorder_);
 
         // loop over quadrature points
         for (typename QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -105,6 +102,10 @@ namespace Dune {
             gradphi[i] = 0.0;
             jac.umv(js[i][0],gradphi[i]);
           }
+
+          // material parameters
+          RF mu = param_.mu(eg.entity(),it->position());
+          RF lambda = param_.lambda(eg.entity(),it->position());
 
           for(int d=0; d<dim; ++d)
           {
@@ -163,7 +164,7 @@ namespace Dune {
 
         // select quadrature rule
         GeometryType gt = eg.geometry().type();
-        const QuadratureRule<DF,dim>& rule = QuadratureRules<DF,dim>::rule(gt,intorder);
+        const QuadratureRule<DF,dim>& rule = QuadratureRules<DF,dim>::rule(gt,intorder_);
 
         // loop over quadrature points
         for (typename QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -185,6 +186,10 @@ namespace Dune {
             gradphi[i] = 0.0;
             jac.umv(js[i][0],gradphi[i]);
           }
+
+          // material parameters
+          RF mu = param_.mu(eg.entity(),it->position());
+          RF lambda = param_.lambda(eg.entity(),it->position());
 
           for(int d=0; d<dim; ++d)
           {
@@ -245,7 +250,7 @@ namespace Dune {
 
         // select quadrature rule
         GeometryType gt = eg.geometry().type();
-        const QuadratureRule<DF,dim>& rule = QuadratureRules<DF,dim>::rule(gt,intorder);
+        const QuadratureRule<DF,dim>& rule = QuadratureRules<DF,dim>::rule(gt,intorder_);
 
         // loop over quadrature points
         for (typename QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -255,10 +260,8 @@ namespace Dune {
           lfsv_hat.child(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
 
           // evaluate right hand side parameter function
-          //typename F::Traits::RangeType y;
-          //f.evaluate(eg.entity(),it->position(),y);
           FieldVector<RF,dim> y(0.0);
-          y[dim-1] = -g;
+          param_.f(eg.entity(),it->position(),y);
 
           // weight
           RF factor = it->weight() * eg.geometry().integrationElement(it->position());
@@ -296,7 +299,7 @@ namespace Dune {
 
         // select quadrature rule
         GeometryType gt = ig.geometry().type();
-        const QuadratureRule<DF,dim-1>& rule = QuadratureRules<DF,dim-1>::rule(gt,intorder);
+        const QuadratureRule<DF,dim-1>& rule = QuadratureRules<DF,dim-1>::rule(gt,intorder_);
 
         // loop over quadrature points
         for (typename QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -304,21 +307,18 @@ namespace Dune {
           // position of quadrature point in local coordinates of element
           Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
 
-          Dune::FieldVector<DF,dim> global = ig.geometry().global(it->position());
-
-          if (global[0] != 10.0)
-            return;
-          std::cout << "BC" << std::endl;
+          // evaluate boundary condition type
+          // skip rest if we are on Dirichlet boundary
+          if( param_.isDirichlet( ig.intersection(), it->position() ) )
+            continue;
 
           // evaluate shape functions
           std::vector<RangeType> phi(lfsv_hat.child(0).size());
           lfsv_hat.child(0).finiteElement().localBasis().evaluateFunction(local,phi);
 
-          // evaluate right hand side parameter function
-          //typename F::Traits::RangeType y;
-          //f.evaluate(eg.entity(),it->position(),y);
+          // evaluate surface force
           FieldVector<RF,dim> y(0.0);
-          y[dim-1] = 0.001;
+          // param_.g(eg.entity(),it->position(),y);
 
           // weight
           RF factor = it->weight() * ig.geometry().integrationElement(it->position());
@@ -335,10 +335,8 @@ namespace Dune {
       }
 
     protected:
-      int intorder;
-      double mu;
-      double lambda;
-      double g;
+      int intorder_;
+      const ParameterType & param_;
     };
 
     //! \} group LocalOperator
