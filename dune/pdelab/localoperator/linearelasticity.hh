@@ -34,6 +34,10 @@ namespace Dune {
       const G & g;
     };
 
+    /**
+       \todo check LFSU size
+       \todo check LFSU == LFSV
+     */
     class LinearElasticity : public FullVolumePattern,
                              public LocalOperatorDefaultFlags,
                              public InstationaryLocalOperatorDefaultMethods<double>,
@@ -41,8 +45,6 @@ namespace Dune {
                              public NumericalJacobianVolume<LinearElasticity>
     {
     public:
-#warning TODO: check LFSU size
-#warning TODO: check LFSU == LFSV
 
       // pattern assembly flags
       enum { doPatternVolume = true };
