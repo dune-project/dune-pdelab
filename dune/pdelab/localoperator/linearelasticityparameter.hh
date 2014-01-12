@@ -88,13 +88,13 @@ namespace Dune {
         asImp().g(e,x,y);
       }
 
-      //! Neumann boundary condition (surface force)
-      void
-      g (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
-        typename Traits::RangeType & y) const
-      {
-        asImp().g(e,x,y);
-      }
+      // //! Neumann boundary condition (surface force)
+      // void
+      // g (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
+      //   typename Traits::RangeType & y) const
+      // {
+      //   asImp().g(e,x,y);
+      // }
 
       //! First Lame parameter
       typename Traits::RangeFieldType

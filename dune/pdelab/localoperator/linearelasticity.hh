@@ -27,6 +27,8 @@ namespace Dune {
 
     /** a local operator for solving the the linear elasticity problem using conforming FEM
      *
+     * \note we only support Dirichlet and homogeneous Neumann boundary conditions
+     *
      * \tparam T model of LinearElasticityParameterInterface
      *
      * \todo check LFSU size
@@ -318,6 +320,7 @@ namespace Dune {
 
           // evaluate surface force
           FieldVector<RF,dim> y(0.0);
+          // currently we only implement homogeneous Neumann (e.g. Stress) BC
           // param_.g(eg.entity(),it->position(),y);
 
           // weight
