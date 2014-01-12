@@ -144,7 +144,7 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
 
   // model description
   typedef ModelProblem<GV> Param;
-  Dune::FieldVector<double, dim> G(0.0); G[dim-1] = constG;
+  Dune::FieldVector<double, dim> G(0.0); G[dim-1] = -constG;
   Param param(G, mu, lambda);
 
   // make constraints map and initialize it from a function
@@ -221,8 +221,8 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
-    double mu = 1.0;
-    double lambda = 1.0;
+    double mu = 100.0;
+    double lambda = 10000.0;
     double g = 1.0;
     int level=5;
 
