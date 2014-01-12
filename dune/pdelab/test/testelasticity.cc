@@ -51,18 +51,63 @@ public:
 };
 
 // define some boundary grid functions to define boundary conditions
-class BCType
-  : public Dune::PDELab::DirichletConstraintsParameters
+template<typename GV>
+class ModelProblem
+  : public Dune::PDELab::LinearElasticityParameterInterface<
+  Dune::PDELab::LinearElasticityParameterTraits<GV, double>,
+  ModelProblem<GV> >
 {
 public:
-  template<typename I>
-  bool isDirichlet(const I & intersection,
-    const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord) const
+
+  typedef Dune::PDELab::LinearElasticityParameterTraits<GV, double> Traits;
+
+  ModelProblem(typename Traits::RangeType G,
+    typename Traits::RangeFieldType l,
+    typename Traits::RangeFieldType m) :
+    G_(G), lambda_(l), mu_(m)
+  {}
+
+  void
+  f (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
+    typename Traits::RangeType & y) const
   {
-    Dune::FieldVector<typename I::ctype, I::dimension>
-      xg = intersection.geometry().global( coord );
+    y = G_;
+  }
+
+  template<typename I>
+  bool isDirichlet(const I & ig,
+    const typename Traits::IntersectionDomainType & coord
+    ) const
+  {
+    typename Traits::DomainType xg = ig.geometry().global( coord );
     return (xg[0] == 0.0); // || xg[0] == szX);  // Dirichlet b.c. on left & right boundary
   }
+
+  void
+  u (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
+    typename Traits::RangeType & y) const
+  {
+    y = 0.0;
+  }
+
+  typename Traits::RangeFieldType
+  lambda (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    return lambda_;
+  }
+
+  typename Traits::RangeFieldType
+  mu (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    return mu_;
+  }
+
+private:
+
+  typename Traits::RangeType G_;
+  typename Traits::RangeFieldType lambda_;
+  typename Traits::RangeFieldType mu_;
+
 };
 
 // generate a P1 function and output it
@@ -97,20 +142,23 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
   GFS gfs(gv,fem);
   gfs.name("displacement");
 
+  // model description
+  typedef ModelProblem<GV> Param;
+  Dune::FieldVector<double, dim> G(0.0); G[dim-1] = constG;
+  Param param(G, mu, lambda);
+
   // make constraints map and initialize it from a function
   typedef typename GFS::template ConstraintsContainer<double>::Type C;
   C cg;
   cg.clear();
-  // Dune::PDELab::PowerConstraintsParameters<BCType,dim> b;
-  BCType b;
-  Dune::PDELab::constraints(b,gfs,cg);
+  Dune::PDELab::constraints(param,gfs,cg);
 
   std::cout << gfs.size() << " DOFs\n";
   std::cout << cg.size() << " constraint DOFs\n";
 
   // make local operator
-  typedef Dune::PDELab::LinearElasticity LO;
-  LO lo(mu, lambda, constG);
+  typedef Dune::PDELab::LinearElasticity<Param> LO;
+  LO lo(param);
 
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
   MBE mbe(9); // 2D Q1
@@ -127,9 +175,9 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
   typedef typename GOS::Traits::Domain V;
   V x0(gfs);
   x0 = 0.0;
-  typedef G<GV,double> GType;
-  GType g(gv);
-  Dune::PDELab::interpolate(g,gfs,x0);
+  typedef Dune::PDELab::LinearElasticityDirichletExtensionAdapter<Param> Displacement;
+  Displacement u_fnkt(gv, param);
+  Dune::PDELab::interpolate(u_fnkt,gfs,x0);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
 
   // represent operator as a matrix
