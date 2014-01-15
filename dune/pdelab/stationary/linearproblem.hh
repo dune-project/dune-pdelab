@@ -59,7 +59,7 @@ namespace Dune {
         , _x(&x)
         , _reduction(reduction)
         , _min_defect(min_defect)
-        , _hanging_node_modifications(true)
+        , _hanging_node_modifications(false)
         , _keep_matrix(true)
         , _verbose(verbose)
       {}
@@ -70,7 +70,7 @@ namespace Dune {
         , _x(&x)
         , _reduction(reduction)
         , _min_defect(min_defect)
-        , _hanging_node_modifications(true)
+        , _hanging_node_modifications(false)
         , _keep_matrix(true)
         , _verbose(verbose)
       {}
@@ -81,7 +81,7 @@ namespace Dune {
         , _x(nullptr)
         , _reduction(reduction)
         , _min_defect(min_defect)
-        , _hanging_node_modifications(true)
+        , _hanging_node_modifications(false)
         , _keep_matrix(true)
         , _verbose(verbose)
       {}
