@@ -101,6 +101,8 @@ namespace Dune {
        * verbosity                  | 1             | control amount of debug output
        *
        * Apart from reduction, all parmaters have a default value and are optional.
+       * The actual reduction for a call to apply() is calculated as r = max(reduction,min_defect/start_defect),
+       * where start defect is the norm of the residual of x.
        */
       StationaryLinearProblemSolver(const GO& go, LS& ls, V& x, const ParameterTree& params)
         : _go(go)
@@ -128,6 +130,8 @@ namespace Dune {
        * verbosity                  | 1             | control amount of debug output
        *
        * Apart from reduction, all parmaters have a default value and are optional.
+       * The actual reduction for a call to apply() is calculated as r = max(reduction,min_defect/start_defect),
+       * where start defect is the norm of the residual of x.
        */
       StationaryLinearProblemSolver(const GO& go, LS& ls, const ParameterTree& params)
         : _go(go)
@@ -226,7 +230,7 @@ namespace Dune {
         // compute correction
         watch.reset();
         V z(_go.trialGridFunctionSpace(),0.0);
-        typename V::ElementType red = std::min(_reduction,defect/_min_defect);
+        typename V::ElementType red = std::max(_reduction,_min_defect/defect);
         if (_go.trialGridFunctionSpace().gridView().comm().rank()==0)
           std::cout << "=== solving (reduction: " << red << ") ";
         _ls.apply(*_jacobian,z,r,red); // solver makes right hand side consistent
