@@ -243,7 +243,7 @@ namespace Dune {
         _res.reduction = _linear_solver_result.reduction;
         _res.conv_rate = _linear_solver_result.conv_rate;
         _res.first_defect = defect;
-        _res.defect = defect*_reduction;
+        _res.defect = defect*_linear_solver_result.reduction;
         _res.linear_solver_iterations = _linear_solver_result.iterations;
 
         // and update
