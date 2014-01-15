@@ -85,6 +85,61 @@ namespace Dune {
         , _keep_matrix(true)
         , _verbose(verbose)
       {}
+
+      //! Construct a StationaryLinearProblemSolver for the given objects and read parameters from a ParameterTree.
+      /**
+       * This constructor reads the parameter controlling its operation from a passed-in ParameterTree
+       * instead of requiring the user to specify all of them as individual constructor parameters.
+       * Currently the following parameters are read:
+       *
+       * Name                       | Default Value | Explanation
+       * -------------------------- | ------------- | -----------
+       * reduction                  |               | Required relative defect reduction
+       * min_defect                 | 1e-99         | minimum absolute defect at which to stop
+       * hanging_node_modifications | false         | perform required transformations for hanging nodes
+       * keep_matrix                | true          | keep matrix between calls to apply() (but reassemble values every time)
+       * verbosity                  | 1             | control amount of debug output
+       *
+       * Apart from reduction, all parmaters have a default value and are optional.
+       */
+      StationaryLinearProblemSolver(const GO& go, LS& ls, V& x, const ParameterTree& params)
+        : _go(go)
+        , _ls(ls)
+        , _x(&x)
+        , _reduction(params.get<typename V::ElementType>("reduction"))
+        , _min_defect(params.get<typename V::ElementType>("min_defect",1e-99))
+        , _hanging_node_modifications(params.get<bool>("hanging_node_modifications",false))
+        , _keep_matrix(params.get<bool>("keep_matrix",true))
+        , _verbose(params.get<int>("verbosity",1))
+      {}
+
+      //! Construct a StationaryLinearProblemSolver for the given objects and read parameters from a ParameterTree.
+      /**
+       * This constructor reads the parameter controlling its operation from a passed-in ParameterTree
+       * instead of requiring the user to specify all of them as individual constructor parameters.
+       * Currently the following parameters are read:
+       *
+       * Name                       | Default Value | Explanation
+       * -------------------------- | ------------- | -----------
+       * reduction                  |               | Required relative defect reduction
+       * min_defect                 | 1e-99         | minimum absolute defect at which to stop
+       * hanging_node_modifications | false         | perform required transformations for hanging nodes
+       * keep_matrix                | true          | keep matrix between calls to apply() (but reassemble values every time)
+       * verbosity                  | 1             | control amount of debug output
+       *
+       * Apart from reduction, all parmaters have a default value and are optional.
+       */
+      StationaryLinearProblemSolver(const GO& go, LS& ls, const ParameterTree& params)
+        : _go(go)
+        , _ls(ls)
+        , _x(nullptr)
+        , _reduction(params.get<typename V::ElementType>("reduction"))
+        , _min_defect(params.get<typename V::ElementType>("min_defect",1e-99))
+        , _hanging_node_modifications(params.get<bool>("hanging_node_modifications",false))
+        , _keep_matrix(params.get<bool>("keep_matrix",true))
+        , _verbose(params.get<int>("verbosity",1))
+      {}
+
       //! Set whether the solver should apply the necessary transformations for calculations on hanging nodes.
       void setHangingNodeModifications(bool b)
       {
