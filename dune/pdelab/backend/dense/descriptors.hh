@@ -38,7 +38,8 @@ namespace Dune {
         static const size_type max_blocking_depth = 0;
       };
 
-      bool blocked() const
+      template<typename GFS>
+      bool blocked(const GFS& gfs) const
       {
         return false;
       }
@@ -50,6 +51,10 @@ namespace Dune {
     {
 
       typedef std::size_t size_type;
+
+      template<typename Matrix, typename GFSV, typename GFSU>
+      struct Pattern
+      {};
 
       template<typename VV, typename VU, typename E>
       struct MatrixHelper

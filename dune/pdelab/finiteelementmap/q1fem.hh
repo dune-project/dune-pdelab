@@ -4,9 +4,12 @@
 #ifndef DUNE_PDELAB_Q1FEM_HH
 #define DUNE_PDELAB_Q1FEM_HH
 
+#warning dune/pdelab/finiteelementmap/q1fem.hh, Q1LocalFiniteElementMap and Q1FiniteElementMap are deprecated, please use dune/pdelab/finiteelementmap/qkfem.hh and QkLocalFiniteElementMap instead
+
 #include <cstddef>
 
-#include<dune/localfunctions/lagrange/q1.hh>
+#include <dune/common/deprecated.hh>
+#include <dune/localfunctions/lagrange/q1.hh>
 
 #include <dune/pdelab/finiteelementmap/global.hh>
 #include"finiteelementmap.hh"
@@ -17,7 +20,7 @@ namespace Dune {
     //! wrap up element from local functions
     //! \ingroup FiniteElementMap
     template<class D, class R, int d>
-    class Q1LocalFiniteElementMap
+    class DUNE_DEPRECATED_MSG("Please use QkLocalFiniteElementMap instead") Q1LocalFiniteElementMap
       : public SimpleLocalFiniteElementMap< Dune::Q1LocalFiniteElement<D,R,d> >
     {
 
@@ -50,7 +53,7 @@ namespace Dune {
      * \tparam RF       Range field type.
      */
     template<class Geometry, class RF>
-    class Q1FiniteElementMap
+    class DUNE_DEPRECATED_MSG("Please use QkLocalFiniteElementMap instead") Q1FiniteElementMap
       : public GeometryFiniteElementMap<Q1FiniteElementFactory<Geometry, RF> >
     {
       typedef Q1FiniteElementFactory<Geometry, RF> FEFactory;

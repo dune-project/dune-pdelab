@@ -56,6 +56,11 @@ namespace Dune {
         return _gt_offsets[LocalGeometryTypeIndex::index(e.type())] + _index_set.index(e);
       }
 
+      size_type size() const
+      {
+        return _index_set.size(0);
+      }
+
       ElementMapperBase(const GV& gv)
         : _gt_offsets(LocalGeometryTypeIndex::size(dim) + 1)
         , _index_set(gv.indexSet())
@@ -87,6 +92,11 @@ namespace Dune {
       size_type map(const Element& e) const
       {
         return _index_set.index(e);
+      }
+
+      size_type size() const
+      {
+        return _index_set.size(0);
       }
 
       ElementMapperBase(const GV& gv)
@@ -157,6 +167,12 @@ namespace Dune {
       size_type map(const Element& e) const
       {
         return BaseT::map(e);
+      }
+
+      //! Return the number of elements in the map.
+      size_type size() const
+      {
+        return BaseT::size();
       }
 
     };

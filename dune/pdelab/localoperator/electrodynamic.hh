@@ -72,7 +72,6 @@ namespace Dune {
           Traits::Basis::Traits BasisTraits;
 
         typedef typename BasisTraits::DomainField DF;
-        typedef typename BasisTraits::DomainLocal DomainLocal;
         static const unsigned dimDLocal = BasisTraits::dimDomainLocal;
 
         typedef typename BasisTraits::RangeField RF;
@@ -191,11 +190,9 @@ namespace Dune {
           BasisTraits;
 
         typedef typename BasisTraits::DomainField DF;
-        typedef typename BasisTraits::DomainLocal DomainLocal;
         static const unsigned dimDLocal = BasisTraits::dimDomainLocal;
 
         typedef typename BasisTraits::RangeField RF;
-        typedef typename BasisTraits::Range Range;
         static const unsigned dimR = BasisTraits::dimRange;
 
         typedef typename BasisTraits::Jacobian Jacobian;

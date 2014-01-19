@@ -1,116 +1,30 @@
-#ifndef DUNE_PDELAB_PK3DFEM_HH
-#define DUNE_PDELAB_PK3DFEM_HH
+// -*- tab-width: 4; indent-tabs-mode: nil -*-
+#ifndef DUNE_PDELAB_FINITELEMENTMAP_HH_PK3DFEM_HH
+#define DUNE_PDELAB_FINITELEMENTMAP_HH_PK3DFEM_HH
 
-#include<dune/common/exceptions.hh>
+#warning dune/pdelab/finiteelementmap/pk3dfem.hh and Pk3DLocalFiniteElementMap are deprecated, please use dune/pdelab/finiteelementmap/pkfem.hh and PkLocalFiniteElementMap instead
 
-#include<dune/localfunctions/lagrange/pk3d.hh>
-#include"finiteelementmap.hh"
+#include <dune/common/deprecated.hh>
+
+#include <dune/pdelab/finiteelementmap/pkfem.hh>
 
 namespace Dune
 {
   namespace PDELab
   {
 
-    //! wrap up element from local functions
-    //! \ingroup FiniteElementMap
-
     template<typename GV, typename D, typename R, unsigned int k>
-    class Pk3DLocalFiniteElementMap :
-      public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits< Dune::Pk3DLocalFiniteElement<D,R,k> >,
-                                            Pk3DLocalFiniteElementMap<GV,D,R,k> >
+    class DUNE_DEPRECATED_MSG("Please use PkLocalFiniteElementMap instead") Pk3DLocalFiniteElementMap
+      : public fem::PkLocalFiniteElementMapBase<GV,D,R,k,3>
     {
-      typedef Dune::Pk3DLocalFiniteElement<D,R,k> FE;
-      typedef typename GV::IndexSet IndexSet;
 
     public:
-      //! \brief export type of the signature
-      typedef LocalFiniteElementMapTraits<FE> Traits;
 
-      //! \brief Use when Imp has a standard constructor
-      Pk3DLocalFiniteElementMap (const GV& gv_) : is(gv_.indexSet())
-      {
-        for (int i = 0; i < 256; ++i)
-          perm_index[i] = 0;
+      Pk3DLocalFiniteElementMap(const GV& gv)
+        : fem::PkLocalFiniteElementMapBase<GV,D,R,k,3>(gv)
+      {}
 
-        // create all variants by iterating over all permutations
-        unsigned int n = 0;
-        unsigned int vertexmap[4];
-        for(vertexmap[0] = 0; vertexmap[0] < 4; ++vertexmap[0])
-          {
-            for(vertexmap[1] = 0; vertexmap[1] < 4; ++vertexmap[1])
-              {
-                if (vertexmap[0] == vertexmap[1])
-                  continue;
-                for(vertexmap[2] = 0; vertexmap[2] < 4; ++vertexmap[2])
-                  {
-                    if (vertexmap[0] == vertexmap[2] ||
-                        vertexmap[1] == vertexmap[2])
-                      continue;
-                    vertexmap[3] = 6 - vertexmap[0] - vertexmap[1] - vertexmap[2];
-                    variant[n] = FE(vertexmap);
-                    perm_index[compressPerm(vertexmap)] = n++;
-                  }
-              }
-          }
-      }
-
-      //! \brief get local basis functions for entity
-      template<class EntityType>
-      const typename Traits::FiniteElementType& find (const EntityType& e) const
-      {
-        // get the vertex indices
-        unsigned int vertexmap[4];
-        for (unsigned int i = 0; i < 4; ++i)
-          vertexmap[i] = is.subIndex(e,i,3);
-
-        // reduce the indices to the interval 0..3
-        for (unsigned int i = 0; i < 4; ++i)
-          {
-            int min_index = -1;
-            for (unsigned int j = 0; j < 4; ++j)
-              if ((min_index < 0 || vertexmap[j] < vertexmap[min_index]) && vertexmap[j] >= i)
-                min_index = j;
-            assert(min_index >= 0);
-            vertexmap[min_index] = i;
-          }
-        return variant[perm_index[compressPerm(vertexmap)]];
-      }
-
-      bool fixedSize() const
-      {
-        return true;
-      }
-
-      std::size_t size(GeometryType gt) const
-      {
-        if (gt.isVertex())
-          return k > 0 ? 1 : 0;
-        if (gt.isLine())
-          return k > 1 ? k - 1 : 0;
-        if (gt.isTriangle())
-          return k > 2 ? (k-2)*(k-1)/2 : 0;
-        if (gt.isTetrahedron())
-          return k == 0 ? 1 : (k-3)*(k-2)*(k-1)/6;
-        return 0;
-      }
-
-      std::size_t maxLocalSize() const
-      {
-        return (k+1)*(k+2)*(k+3)/6;
-      }
-
-    private:
-      FE variant[24];
-      unsigned int perm_index[256];
-      const IndexSet& is;
-
-      unsigned int compressPerm(const unsigned int vertexmap[4]) const
-      {
-        return vertexmap[0] + (vertexmap[1]<<2) + (vertexmap[2]<<4) + (vertexmap[3]<<6);
-      }
     };
-
   }
 }
-
-#endif // DUNE_PDELAB_PK3DFEM_HH
+#endif // DUNE_PDELAB_FINITELEMENTMAP_HH_PK3DFEM_HH

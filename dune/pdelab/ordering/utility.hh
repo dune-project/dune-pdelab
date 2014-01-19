@@ -196,6 +196,7 @@ namespace Dune {
       typedef typename DI::View::TreeIndex TreeIndexView;
 
       typedef typename DI::size_type SizeType;
+      typedef typename DI::size_type size_type;
 
     };
 

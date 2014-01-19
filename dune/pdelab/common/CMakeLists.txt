@@ -1,33 +1,35 @@
 set(commondir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/common)
 set(common_HEADERS
-        benchmarkhelper.hh
-        clock.hh
-        countingptr.hh
-        cpstoragepolicy.hh
-        crossproduct.hh
-        exceptions.hh
-        function.hh
-        functionutilities.hh
-        functionwrappers.hh
-        geometrywrapper.hh
-        hostname.hh
-        jacobiantocurl.hh
-        logtag.hh
-        multiindex.hh
-        partitioninfoprovider.hh
-        range.hh
-	topologyutility.hh
-        typetraits.hh
-        vtkexport.hh)
-# include not needed for CMake
-# include $(top_srcdir)/am/global-rules
-
+  benchmarkhelper.hh
+  borderindexidcache.hh
+  clock.hh
+  crossproduct.hh
+  dofindex.hh
+  elementmapper.hh
+  exceptions.hh
+  function.hh
+  functionutilities.hh
+  functionwrappers.hh
+  geometrywrapper.hh
+  globaldofindex.hh
+  hostname.hh
+  jacobiantocurl.hh
+  logtag.hh
+  multiindex.hh
+  partitioninfoprovider.hh
+  range.hh
+  simpledofindex.hh
+  topologyutility.hh
+  typetraits.hh
+  unordered_map.hh
+  unordered_set.hh
+  utility.hh
+  vtkexport.hh)
 
 dune_add_library(dunepdelab
-        clock.cc
-        hostname.cc
-        logtag.cc
-	ADD_LIBS ${DUNE_LIBS}
-	)
+  clock.cc
+  hostname.cc
+  logtag.cc
+  ADD_LIBS ${DUNE_LIBS})
 
 install(FILES ${common_HEADERS} DESTINATION ${commondir})

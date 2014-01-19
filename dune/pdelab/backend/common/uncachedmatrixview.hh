@@ -146,12 +146,6 @@ namespace Dune {
         return *_container;
       }
 
-
-      const Container& global_container() const DUNE_DEPRECATED_MSG("global_container() is deprecated, use container() instead.")
-      {
-        return *_container;
-      }
-
     protected:
 
       M_* _container;
@@ -274,11 +268,6 @@ namespace Dune {
       }
 
       Container& container()
-      {
-        return *(this->_container);
-      }
-
-      Container& global_container() DUNE_DEPRECATED_MSG("global_container() is deprecated, use container() instead.")
       {
         return *(this->_container);
       }

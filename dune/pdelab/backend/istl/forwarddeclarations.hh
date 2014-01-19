@@ -19,7 +19,7 @@ namespace Dune {
     template<typename GFS, typename C>
     class ISTLBlockVectorContainer;
 
-    template<typename GFSV, typename GFSU, typename C>
+    template<typename GFSV, typename GFSU, typename C, typename Stats>
     class ISTLMatrixContainer;
 
     namespace istl {

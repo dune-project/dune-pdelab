@@ -111,12 +111,6 @@ namespace Dune {
         return *_container;
       }
 
-
-      const Container& global_container() const DUNE_DEPRECATED_MSG("global_container() is deprecated, use container() instead.")
-      {
-        return *_container;
-      }
-
       const LFSCache& cache() const
       {
         return *_lfs_cache;
@@ -247,12 +241,6 @@ namespace Dune {
 
 
       Container& container()
-      {
-        return *(this->_container);
-      }
-
-
-      Container& global_container() DUNE_DEPRECATED_MSG("global_container() is deprecated, use container() instead.")
       {
         return *(this->_container);
       }

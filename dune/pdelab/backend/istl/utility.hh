@@ -87,16 +87,16 @@ namespace Dune {
         return v.base();
       }
 
-      template<typename GFSU, typename GFSV, typename C>
-      typename ISTLMatrixContainer<GFSU,GFSV,C>::Container&
-      raw(ISTLMatrixContainer<GFSU,GFSV,C>& m)
+      template<typename GFSU, typename GFSV, typename C, typename Stats>
+      typename ISTLMatrixContainer<GFSU,GFSV,C,Stats>::Container&
+      raw(ISTLMatrixContainer<GFSU,GFSV,C,Stats>& m)
       {
         return m.base();
       }
 
-      template<typename GFSU, typename GFSV, typename C>
-      const typename ISTLMatrixContainer<GFSU,GFSV,C>::Container&
-      raw(const ISTLMatrixContainer<GFSU,GFSV,C>& m)
+      template<typename GFSU, typename GFSV, typename C, typename Stats>
+      const typename ISTLMatrixContainer<GFSU,GFSV,C,Stats>::Container&
+      raw(const ISTLMatrixContainer<GFSU,GFSV,C,Stats>& m)
       {
         return m.base();
       }
@@ -147,8 +147,8 @@ namespace Dune {
         typedef C type;
       };
 
-      template<typename GFSU, typename GFSV, typename C>
-      struct raw_type<ISTLMatrixContainer<GFSU,GFSV,C> >
+      template<typename GFSU, typename GFSV, typename C, typename Stats>
+      struct raw_type<ISTLMatrixContainer<GFSU,GFSV,C,Stats> >
       {
         typedef C type;
       };

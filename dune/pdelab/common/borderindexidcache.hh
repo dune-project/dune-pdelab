@@ -81,8 +81,6 @@ namespace Dune {
       BorderIndexIdCache(const GFS& gfs)
         : _gfs(gfs)
         , _grid_view(gfs.gridView())
-        , _index_set(_grid_view.indexSet())
-        , _id_set(_grid_view.grid().globalIdSet())
       {
         update();
       }
@@ -92,19 +90,21 @@ namespace Dune {
         _border_entities.resize(GlobalGeometryTypeIndex::size(Grid::dimension));
         _index_to_id.resize(GlobalGeometryTypeIndex::size(Grid::dimension));
 
+        const typename GridView::IndexSet& index_set = _grid_view.indexSet();
+
         // Skip codim 0 - cells can't ever be border entities
         for (int codim = 1; codim <= Grid::dimension; ++codim)
           {
             if (!_gfs.ordering().contains(codim))
               continue;
 
-            const std::vector<GeometryType>& geometry_types = _index_set.geomTypes(codim);
+            const std::vector<GeometryType>& geometry_types = index_set.geomTypes(codim);
             for (typename std::vector<GeometryType>::const_iterator it = geometry_types.begin(),
                    end_it = geometry_types.end();
                  it != end_it;
                  ++it)
               {
-                _border_entities[GlobalGeometryTypeIndex::index(*it)].resize(_index_set.size(*it));
+                _border_entities[GlobalGeometryTypeIndex::index(*it)].resize(index_set.size(*it));
                 _index_to_id[GlobalGeometryTypeIndex::index(*it)];
               }
           }
@@ -148,9 +148,7 @@ namespace Dune {
     private:
 
       const GFS& _gfs;
-      const GridView& _grid_view;
-      const typename GridView::IndexSet& _index_set;
-      const typename Grid::GlobalIdSet& _id_set;
+      GridView _grid_view;
       BorderEntitySet _border_entities;
       IndexToIdMap _index_to_id;
       IdToIndexMap _id_to_index;
@@ -161,6 +159,9 @@ namespace Dune {
         >::type
       create_for_codim()
       {
+        const typename GridView::IndexSet& index_set = _grid_view.indexSet();
+        const typename Grid::GlobalIdSet& id_set = _grid_view.grid().globalIdSet();
+
         if (_gfs.ordering().contains(codim))
           {
             typedef typename GridView::template Codim<codim>::template Partition<InteriorBorder_Partition>::Iterator EntityIterator;
@@ -169,14 +170,14 @@ namespace Dune {
                  it != end_it;
                  ++it)
               {
-                index_type index = _index_set.index(*it);
+                index_type index = index_set.index(*it);
                 size_type gt_index = GlobalGeometryTypeIndex::index(it->type());
 
                 bool border_entity = _border_entities[gt_index][index] = (it->partitionType() == BorderEntity);
                 if (!border_entity)
                   continue;
 
-                id_type id = _id_set.id(*it);
+                id_type id = id_set.id(*it);
 
                 _index_to_id[gt_index][index] = id;
                 _id_to_index[id] = EntityIndex(gt_index,index);

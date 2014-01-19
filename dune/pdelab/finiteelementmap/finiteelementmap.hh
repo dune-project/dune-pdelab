@@ -124,7 +124,7 @@ namespace Dune {
 
 	  //! \brief construct EdgeSLocalFiniteElementMap
 	  EdgeS0LocalFiniteElementMap (const GV& gv_)
-        : gv(gv_), is(gv_.indexSet()), orient(gv_.size(0))
+        : gv(gv_), orient(gv_.size(0))
 	  {
         typedef typename GV::Grid::ctype ct;
         const ReferenceElement<ct, dim> &refElem =
@@ -140,10 +140,12 @@ namespace Dune {
         // compute orientation for all elements
         typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
 
+        const typename GV::IndexSet& indexSet = gv.indexSet();
+
         // loop once over the grid
         for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
           {
-            unsigned int elemid = is.template index<0>(*it);
+            unsigned int elemid = indexSet.template index<0>(*it);
             orient[elemid] = 0;
 
             std::vector<typename GV::Grid::GlobalIdSet::IdType> vid(refElem.size(dim));
@@ -165,13 +167,12 @@ namespace Dune {
 	  template<class EntityType>
       const typename Traits::FiniteElementType& find (const EntityType& e) const
 	  {
-        return variant[orient[is.template index<0>(e)]];
+        return variant[orient[gv.indexSet().template index<0>(e)]];
 	  }
 
 	private:
-      const GV& gv;
+      GV gv;
       std::vector<FE> variant;
-      const IndexSet& is;
       std::vector<unsigned char> orient;
     };
 

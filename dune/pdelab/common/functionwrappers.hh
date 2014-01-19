@@ -139,10 +139,6 @@ namespace Dune {
                            std::vector<typename Traits::RangeType>& y)
       { }
 
-      //! hide non-const getGridView() since we cannot implement it
-      DUNE_DEPRECATED
-	  inline const typename Traits::GridViewType& getGridView ();
-
     public:
 #ifdef DOXYGEN
       //! construct a PointwiseGridFunctionAdapter

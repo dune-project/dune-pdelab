@@ -1,29 +1,28 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <iostream>
 
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/exceptions.hh>
-#include <dune/common/fvector.hh>
 
-#include<dune/grid/yaspgrid.hh>
+#include <dune/grid/yaspgrid.hh>
 
-#include"../common/function.hh"
-#include"../common/vtkexport.hh"
+#include <dune/pdelab/common/function.hh>
+#include <dune/pdelab/common/vtkexport.hh>
 
 // an analytic scalar function
 template<typename T>
 class F : public Dune::PDELab::FunctionInterface<
   Dune::PDELab::FunctionTraits<T,2,Dune::FieldVector<T,2>,
-							   T,1,Dune::FieldVector<T,1> >,
+                               T,1,Dune::FieldVector<T,1> >,
   F<T> >
 {
 public:
   inline void evaluate (const Dune::FieldVector<T,2>& x,
-						Dune::FieldVector<T,1>& y) const
+                        Dune::FieldVector<T,1>& y) const
   {
-	y = sin(3*3.1415*x[0])*cos(7*3.1415*x[1]);
+    y = sin(3*3.1415*x[0])*cos(7*3.1415*x[1]);
   }
 };
 
@@ -31,15 +30,15 @@ public:
 template<typename T>
 class G : public Dune::PDELab::FunctionInterface<
   Dune::PDELab::FunctionTraits<T,2,Dune::FieldVector<T,2>,
-							   T,2,Dune::FieldVector<T,2> >,
+                               T,2,Dune::FieldVector<T,2> >,
   G<T> >
 {
 public:
   inline void evaluate (const Dune::FieldVector<T,2>& x,
-						Dune::FieldVector<T,2>& y) const
+                        Dune::FieldVector<T,2>& y) const
   {
-	y[0] =  x.two_norm()*x[1];
-	y[1] = -x.two_norm()*x[0];
+    y[0] =  x.two_norm()*x[1];
+    y[1] = -x.two_norm()*x[0];
   }
 };
 
@@ -54,22 +53,22 @@ void testgridfunction (const GV& gv, const T& t)
 
   typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
   for (ElementIterator it = gv.template begin<0>();
-	   it!=gv.template end<0>(); ++it)
-	{
-	  typename T::Traits::DomainType x(0.0);
-	  typename T::Traits::RangeType y;
-	  gf.evaluate(*it,x,y);
+       it!=gv.template end<0>(); ++it)
+    {
+      typename T::Traits::DomainType x(0.0);
+      typename T::Traits::RangeType y;
+      gf.evaluate(*it,x,y);
 
-	  // make a function in local coordinates from the grid function
-	  Dune::PDELab::GridFunctionToLocalFunctionAdapter<GF>
-		lf(gf,*it);
-	  lf.evaluate(x,y);
+      // make a function in local coordinates from the grid function
+      Dune::PDELab::GridFunctionToLocalFunctionAdapter<GF>
+        lf(gf,*it);
+      lf.evaluate(x,y);
 
-	  // make a function in local coordinates from the global function
-	  Dune::PDELab::GlobalFunctionToLocalFunctionAdapter<T,typename ElementIterator::Entity>
-		lg(t,*it);
-	  lg.evaluate(x,y);
-	}
+      // make a function in local coordinates from the global function
+      Dune::PDELab::GlobalFunctionToLocalFunctionAdapter<T,typename ElementIterator::Entity>
+        lg(t,*it);
+      lg.evaluate(x,y);
+    }
 }
 
 // iterate over grid view and use analytic function as grid function through adapter
@@ -99,21 +98,21 @@ public:
   L (const G& g_) : g(g_) {}
 
   inline void evaluate (const Dune::FieldVector<T,2>& x,
-						Dune::FieldVector<T,1>& y) const
+                        Dune::FieldVector<T,1>& y) const
   {
-	y = sin(3*3.1415*x[0])*cos(7*3.1415*x[1]);
+    y = sin(3*3.1415*x[0])*cos(7*3.1415*x[1]);
   }
 
   inline void evaluate (const ElementType& e,
-						const Dune::FieldVector<T,2>& x,
-						Dune::FieldVector<T,1>& y) const
+                        const Dune::FieldVector<T,2>& x,
+                        Dune::FieldVector<T,1>& y) const
   {
-	evaluate(e.geometry().global(x),y);
+    evaluate(e.geometry().global(x),y);
   }
 
   inline const G& getGridView () const
   {
-	return g;
+    return g;
   }
 
 private:
@@ -185,46 +184,46 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
-	std::cout << "instantiate and evaluate some functions" << std::endl;
+    std::cout << "instantiate and evaluate some functions" << std::endl;
 
-	// instantiate F and evaluate
-	F<float> f;
-	Dune::FieldVector<float,2> x;
-	x[0] = 1.0; x[1] = 2.0;
-	Dune::FieldVector<float,1> y;
-	f.evaluate(x,y);
+    // instantiate F and evaluate
+    F<float> f;
+    Dune::FieldVector<float,2> x;
+    x[0] = 1.0; x[1] = 2.0;
+    Dune::FieldVector<float,1> y;
+    f.evaluate(x,y);
 
-	// instantiate G and evaluate
-	G<float> g;
-	Dune::FieldVector<float,2> u;
-	g.evaluate(x,u);
+    // instantiate G and evaluate
+    G<float> g;
+    Dune::FieldVector<float,2> u;
+    g.evaluate(x,u);
 
-	// need a grid in order to test grid functions
-	Dune::FieldVector<double,2> L(1.0);
-	Dune::FieldVector<int,2> N(1);
-	Dune::FieldVector<bool,2> B(false);
-	Dune::YaspGrid<2> grid(L,N,B,0);
-        grid.globalRefine(6);
+    // need a grid in order to test grid functions
+    Dune::FieldVector<double,2> L(1.0);
+    Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+    std::bitset<2> B(false);
+    Dune::YaspGrid<2> grid(L,N,B,0);
+    grid.globalRefine(6);
 
-	// run algorithm on a grid
-	std::cout << "instantiate grid functions on a grid" << std::endl;
-	testgridfunction(grid.leafView(),F<Dune::YaspGrid<2>::ctype>());
+    // run algorithm on a grid
+    std::cout << "instantiate grid functions on a grid" << std::endl;
+    testgridfunction(grid.leafGridView(),F<Dune::YaspGrid<2>::ctype>());
 
-	// run algorithm on a grid
-	std::cout << "testing vtk output" << std::endl;
-	testvtkexport(grid.leafView(),F<Dune::YaspGrid<2>::ctype>());
-	testfunctiontree(grid.leafView());
+    // run algorithm on a grid
+    std::cout << "testing vtk output" << std::endl;
+    testvtkexport(grid.leafGridView(),F<Dune::YaspGrid<2>::ctype>());
+    testfunctiontree(grid.leafGridView());
 
-	// test passed
-	return 0;
+    // test passed
+    return 0;
 
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
-	return 1;
+    return 1;
   }
   catch (...){
     std::cerr << "Unknown exception thrown!" << std::endl;
-	return 1;
+    return 1;
   }
 }

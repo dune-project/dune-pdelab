@@ -87,7 +87,7 @@ namespace Dune {
       }
 
     private:
-      const typename Traits::GridViewType& g;
+      typename Traits::GridViewType g;
       const T& t;
     };
 

@@ -140,8 +140,8 @@ namespace Dune {
     };
 
 
-    template<typename Container>
-    struct extract_lfs_leaf_sizes
+    template<typename Iterator>
+    struct extract_lfs_leaf_size_visitor
       : public TypeTree::TreeVisitor
       , public TypeTree::DynamicTraversal
     {
@@ -149,16 +149,25 @@ namespace Dune {
       template<typename LeafLFS, typename TreePath>
       void leaf(const LeafLFS& leaf_lfs, TreePath tp)
       {
-        leaf_sizes.push_back(leaf_lfs.size());
+        (*it) = leaf_lfs.size();
+        ++it;
       }
 
-      extract_lfs_leaf_sizes(Container& leaf_sizes_)
-        : leaf_sizes(leaf_sizes_)
+      extract_lfs_leaf_size_visitor(Iterator leaf_size_container_iterator)
+        : it(leaf_size_container_iterator)
       {}
 
-      Container& leaf_sizes;
+      Iterator it;
 
     };
+
+    template<typename LFS, typename Iterator>
+    Iterator extract_lfs_leaf_sizes(const LFS& lfs, Iterator it)
+    {
+      extract_lfs_leaf_size_visitor<Iterator> visitor(it);
+      TypeTree::applyToTree(lfs,visitor);
+      return visitor.it;
+    }
 
 
     template<typename DOFIterator,
@@ -300,8 +309,8 @@ namespace Dune {
         // extract size for all leaf spaces (into a flat list)
         typedef ReservedVector<size_type,TypeTree::TreeInfo<LFS>::leafCount> LeafSizeVector;
         LeafSizeVector leaf_sizes;
-        extract_lfs_leaf_sizes<LeafSizeVector> leaf_size_extractor(leaf_sizes);
-        TypeTree::applyToTree(_lfs,leaf_size_extractor);
+        leaf_sizes.resize(TypeTree::TreeInfo<LFS>::leafCount);
+        extract_lfs_leaf_sizes(_lfs,leaf_sizes.begin());
 
         // perform the actual mapping
         map_dof_indices_to_container_indices<
@@ -505,8 +514,8 @@ namespace Dune {
       std::vector<std::pair<ConstraintsIterator,ConstraintsIterator> > _constraints_iterators;
       mutable CIMap _container_index_map;
       ConstraintsVector _constraints;
-      mutable size_type _offsets[LFS::CHILDREN];
-      mutable size_type _extended_offsets[LFS::CHILDREN];
+      mutable array<size_type,LFS::CHILDREN> _offsets;
+      mutable array<size_type,LFS::CHILDREN> _extended_offsets;
       mutable bool _inverse_cache_built;
       mutable InverseMap _inverse_map;
 
@@ -577,8 +586,8 @@ namespace Dune {
         // extract size for all leaf spaces (into a flat list)
         typedef ReservedVector<size_type,TypeTree::TreeInfo<LFS>::leafCount> LeafSizeVector;
         LeafSizeVector leaf_sizes;
-        extract_lfs_leaf_sizes<LeafSizeVector> leaf_size_extractor(leaf_sizes);
-        TypeTree::applyToTree(_lfs,leaf_size_extractor);
+        leaf_sizes.resize(TypeTree::TreeInfo<LFS>::leafCount);
+        extract_lfs_leaf_sizes(_lfs,leaf_sizes.begin());
 
         // perform the actual mapping
         map_dof_indices_to_container_indices<
@@ -823,8 +832,12 @@ namespace Dune {
       typedef LFS LocalFunctionSpace;
       typedef typename LFS::Traits::GridFunctionSpace GFS;
       typedef typename GFS::Ordering Ordering;
+    private:
       typedef typename Ordering::Traits::ContainerIndex CI;
       typedef typename Ordering::Traits::DOFIndex DI;
+    public:
+      typedef CI ContainerIndex;
+      typedef DI DOFIndex;
       typedef std::size_t size_type;
 
       typedef std::vector<CI> CIVector;

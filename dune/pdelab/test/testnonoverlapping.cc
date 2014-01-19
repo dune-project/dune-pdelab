@@ -9,7 +9,7 @@
 #include <dune/grid/io/file/dgfparser/dgfug.hh>
 
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/finiteelementmap/q1fem.hh>
+#include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/backend/istlmatrixbackend.hh>
@@ -62,13 +62,13 @@ int main(int argc, char** argv)
     grid.loadBalance();
 
     typedef Grid::Partition<Dune::InteriorBorder_Partition>::LeafGridView GV;
-    GV gv = grid.leafView<Dune::InteriorBorder_Partition>();
+    GV gv = grid.leafGridView<Dune::InteriorBorder_Partition>();
 
     typedef GV::ctype DF;
     typedef double RF;
 
-    typedef Dune::PDELab::Q1LocalFiniteElementMap<DF,RF,2> FEM;
-    FEM fem;
+    typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,RF,1> FEM;
+    FEM fem(gv);
 
     typedef Dune::PDELab::ISTLVectorBackend<> VBE;
     typedef Dune::PDELab::NoConstraints NoConstraints;

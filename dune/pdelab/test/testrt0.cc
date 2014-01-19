@@ -2,25 +2,25 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include<iostream>
 #include<vector>
-#include<dune/common/parallel/mpihelper.hh>
-#include<dune/common/exceptions.hh>
-#include<dune/common/fvector.hh>
-#include <dune/common/shared_ptr.hh>
-#include<dune/common/static_assert.hh>
-#include<dune/grid/yaspgrid.hh>
+
+#include <dune/common/parallel/mpihelper.hh>
+#include <dune/grid/yaspgrid.hh>
+
 #include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
-#include"../finiteelementmap/p0fem.hh"
+#include <dune/pdelab/finiteelementmap/p0fem.hh>
 #include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
-#include"../finiteelementmap/rt0cube2dfem.hh"
-#include"../gridfunctionspace/gridfunctionspace.hh"
-#include"../gridfunctionspace/gridfunctionspaceutilities.hh"
-#include"../gridfunctionspace/interpolate.hh"
-#include"../common/function.hh"
-#include"../common/vtkexport.hh"
-#include"gridexamples.hh"
+#include <dune/pdelab/finiteelementmap/rt0cube2dfem.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
+#include <dune/pdelab/gridfunctionspace/interpolate.hh>
+#include <dune/pdelab/common/function.hh>
+#include <dune/pdelab/common/vtkexport.hh>
+
+#include "gridexamples.hh"
 
 
 // define some grid functions to interpolate from
@@ -136,30 +136,30 @@ int main(int argc, char** argv)
     if (false)
     {
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
+      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::bitset<2> B(false);
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(5);
-      testrt0(grid.leafView());
+      testrt0(grid.leafGridView());
       return 0;
     }
 
 #if HAVE_UG
     Dune::shared_ptr<Dune::UGGrid<2> > uggrid(TriangulatedLDomainMaker<Dune::UGGrid<2> >::create());
   	uggrid->globalRefine(4);
-    testrt0(uggrid->leafView());
+    testrt0(uggrid->leafGridView());
 #endif
 
 #if HAVE_ALBERTA
  	AlbertaLDomain albertagrid;
   	albertagrid.globalRefine(4);
-    testrt0(albertagrid.leafView());
+    testrt0(albertagrid.leafGridView());
 #endif
 
 #if HAVE_ALUGRID
  	ALUUnitSquare alugrid;
   	alugrid.globalRefine(5);
-    testrt0(alugrid.leafView());
+    testrt0(alugrid.leafGridView());
 #endif
 
 	// test passed

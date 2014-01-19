@@ -16,7 +16,7 @@ namespace Dune
     template< class GridView, class VTK = VTKWriter<GridView> >
     class PVDWriter : public VTK
     {
-        const GridView & gv;
+        GridView gv;
         std::string basename;
         PDELab::FilenameHelper fn;
         std::string path;

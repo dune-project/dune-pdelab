@@ -25,15 +25,13 @@
 
 #include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
-#include <dune/pdelab/common/geometrywrapper.hh>
+#include <dune/pdelab/constraints/noconstraints.hh>
 #include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/datahandleprovider.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspacebase.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
-#include <dune/pdelab/gridfunctionspace/utility.hh>
 #include <dune/pdelab/ordering/gridviewordering.hh>
 #include <dune/pdelab/ordering/lexicographicordering.hh>
 
@@ -199,12 +197,6 @@ namespace Dune {
       {}
 
       //! get grid view
-      const GV& gridview () const DUNE_DEPRECATED_MSG("Use gridView() instead of gridview()")
-      {
-        return gv;
-      }
-
-      //! get grid view
       const GV& gridView () const
       {
         return gv;
@@ -220,12 +212,6 @@ namespace Dune {
       shared_ptr<const FEM> finiteElementMapStorage () const
       {
         return pfem;
-      }
-
-      //! get finite element map
-      const FEM& localFiniteElementMap () const DUNE_DEPRECATED
-      {
-        return *pfem;
       }
 
       // return constraints engine

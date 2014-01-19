@@ -193,13 +193,13 @@ namespace Dune {
       template<typename TC>
       static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
       {
-        return typename result<TC>::type(gfs.backend().blocked(),gfs->orderingTag(),children);
+        return typename result<TC>::type(gfs.backend().blocked(gfs),gfs->orderingTag(),children);
       }
 
       template<typename TC>
       static typename result<TC>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
       {
-        return make_shared<typename result<TC>::type>(gfs->backend().blocked(),gfs->orderingTag(),children);
+        return make_shared<typename result<TC>::type>(gfs->backend().blocked(*gfs),gfs->orderingTag(),children);
       }
 
     };
@@ -282,13 +282,13 @@ namespace Dune {
       template<typename... TC>
       static typename result<TC...>::type transform(const GFS& gfs, const Transformation& t, shared_ptr<TC>... children)
       {
-        return typename result<TC...>::type(gfs.backend().blocked(),gfs.orderingTag(),children...);
+        return typename result<TC...>::type(gfs.backend().blocked(gfs),gfs.orderingTag(),children...);
       }
 
       template<typename... TC>
       static typename result<TC...>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, shared_ptr<TC>... children)
       {
-        return make_shared<typename result<TC...>::type>(gfs->backend().blocked(),gfs.orderingTag(),children...);
+        return make_shared<typename result<TC...>::type>(gfs->backend().blocked(*gfs),gfs.orderingTag(),children...);
       }
 
     };

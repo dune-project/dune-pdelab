@@ -71,21 +71,6 @@ add_dune_alberta_flags(testconstraints )
 #        ${LDADD})
 list(APPEND MOSTLYCLEANFILES testconstraintsp1.vtu testconstraintspowerp1.vtu)
 
-list(APPEND NORMALTESTS testfiniteelementmap)
-add_executable(testfiniteelementmap testfiniteelementmap.cc)
-
-target_link_libraries(testfiniteelementmap dunepdelab ${DUNE_LIBS})
-add_dune_alberta_flags(testfiniteelementmap )
-# The following lines are comment out as the translation is not clear. TODO review
-#
-# set(testfiniteelementmap_ LDFLAGS ${AM_LDFLAGS}
-#        ${ALBERTA_LDFLAGS})
-# The following lines are comment out as the translation is not clear. TODO review
-#
-# set(testfiniteelementmap_ LDADD
-#        ${ALBERTA_LIBS}
-#        ${LDADD})
-
 list(APPEND NORMALTESTS testfunction)
 add_executable(testfunction testfunction.cc)
 

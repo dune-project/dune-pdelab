@@ -103,11 +103,11 @@ namespace Dune {
       void analyzeView()
       {
         cell_mapper.update();
-        const typename GridView::IndexSet& indexSet = grid.leafView().indexSet();
+        const typename GridView::IndexSet& indexSet = grid.leafGridView().indexSet();
 
         node_info = std::vector<NodeInfo>(indexSet.size(dim));
 
-        const GridView & gv = grid.leafView();
+        const GridView & gv = grid.leafGridView();
 
         Iterator it = gv.template begin<0>();
         Iterator eit = gv.template end<0>();
@@ -134,7 +134,8 @@ namespace Dune {
             NodeInfo& ni = node_info[v_globalindex];
             ni.addLevel(level);
 
-            if(verbosity>1){
+            if(verbosity>10){
+              // This will produce a lot of output on the screen!
               std::cout << "   cell-id=" << cell_mapper.map(*it);
               std::cout << "   level=" << level;
               std::cout << "   v_size=" << v_size;
@@ -225,12 +226,12 @@ namespace Dune {
       HangingNodeManager(Grid & _grid, const BoundaryFunction & _boundaryFunction)
         : grid(_grid),
           boundaryFunction(_boundaryFunction),
-          cell_mapper(grid.leafView())
+          cell_mapper(grid.leafGridView())
       { analyzeView(); }
 
       const std::vector<NodeState> hangingNodes(const Cell& e) const
       {
-        const typename GridView::IndexSet& indexSet = grid.leafView().indexSet();
+        const typename GridView::IndexSet& indexSet = grid.leafGridView().indexSet();
         std::vector<NodeState> is_hanging;
 
         const Dune::ReferenceElement<double,dim> &
@@ -279,7 +280,7 @@ namespace Dune {
         if(verbosity)
           std::cout << "Begin isolation of hanging nodes" << std::endl;
 
-        const typename GridView::IndexSet& indexSet = grid.leafView().indexSet();
+        const typename GridView::IndexSet& indexSet = grid.leafGridView().indexSet();
 
         size_t iterations(0);
 
@@ -290,7 +291,7 @@ namespace Dune {
           size_t refinements(0);
           reiterate = false;
 
-          const GridView & gv = grid.leafView();
+          const GridView & gv = grid.leafGridView();
 
           Iterator it = gv.template begin<0>();
           Iterator eit = gv.template end<0>();
@@ -329,7 +330,8 @@ namespace Dune {
                 reiterate = true;    // Once an element has to be refined, the procedure needs to be repeated!
                 refinements++;       // Count the number of refinements.
 
-                if(verbosity>1){
+                if(verbosity>10){
+                  // This will produce a lot of output on the screen!
                   std::cout << "   cell-id=" << cell_mapper.map(*it);
                   std::cout << "   level=" << level;
                   std::cout << "   v_size=" << v_size;
@@ -474,7 +476,8 @@ namespace Dune {
                               reiterate = true;    // Once an element has to be refined, the procedure needs to be repeated!
                               refinements++;       // Count the number of refinements.
 
-                              if(verbosity){
+                              if(verbosity>10){
+                                // This will produce a lot of output on the screen!
                                 std::cout << "   cell-id=" << cell_mapper.map(*it);
                                 std::cout << "   level=" << level;
                                 std::cout << "   v_size=" << v_size;

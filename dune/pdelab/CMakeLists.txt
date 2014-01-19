@@ -1,24 +1,23 @@
 set(pdelabdir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab)
-set(SUBDIRS                                        
-        adaptivity                              
-        backend                                 
-        benchmark                               
-        boilerplate                             
-        common                                  
-        constraints                             
-        experimental                            
-        finiteelement                   
-        finiteelementmap                
-        function                                
-        gridfunctionspace               
-        gridoperator                    
-        gridoperatorspace               
-        instationary                            
-        linearsolver                    
-        localoperator                   
-        multistep                               
-        newton                                  
-        stationary                              
+set(SUBDIRS
+        adaptivity
+        backend
+        boilerplate
+        common
+        constraints
+        experimental
+        finiteelement
+        finiteelementmap
+        function
+        gridfunctionspace
+        gridoperator
+        gridoperatorspace
+        instationary
+        linearsolver
+        localoperator
+        multistep
+        newton
+        stationary
         test)
 
 # include not needed for CMake
@@ -29,4 +28,5 @@ foreach(i ${SUBDIRS})
     set(opt EXCLUDE_FROM_ALL)
   endif(${i} STREQUAL "test")
   add_subdirectory(${i} ${opt})
+  unset(opt)
 endforeach(i ${SUBDIRS})

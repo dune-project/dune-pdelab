@@ -42,7 +42,7 @@ int main(int argc, char** argv)
             Dune::StructuredGridFactory<GridType>::createCubeGrid(lower_left, upper_right, n);
         GridType& grid = *grid_ptr;
         typedef GridType::LeafGridView GV;
-        const GV& gridview = grid.leafView();
+        const GV& gridview = grid.leafGridView();
 
         grid.globalRefine(1);
         grid.mark(1, *gridview.begin<0>());

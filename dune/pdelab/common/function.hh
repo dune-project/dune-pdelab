@@ -212,14 +212,6 @@ namespace Dune {
 	  }
 
       //! \brief get a reference to the GridView
-      /* \note This is deprecated in favor of "getGridView() const" */
-      DUNE_DEPRECATED
-	  inline const typename Traits::GridViewType& getGridView ()
-	  {
-		return asImp().getGridView();
-	  }
-
-      //! \brief get a reference to the GridView
 	  inline const typename Traits::GridViewType& getGridView () const
 	  {
 		return asImp().getGridView();

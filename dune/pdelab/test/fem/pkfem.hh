@@ -11,7 +11,7 @@ struct PKFEMFactory
   template<typename GV, typename DF, typename RF, Dune::GeometryType::BasicType basic_type>
   struct FEM
   {
-    typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,RF,FEM_FACTORY_ORDER,GV::dimension> type;
+    typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,RF,FEM_FACTORY_ORDER> type;
     typedef Dune::shared_ptr<type> pointer;
   };
 

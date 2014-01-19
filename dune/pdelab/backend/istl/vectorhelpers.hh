@@ -3,6 +3,8 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_VECTORHELPERS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_VECTORHELPERS_HH
 
+#include <dune/common/typetraits.hh>
+
 #include <dune/istl/bvector.hh>
 
 #include <dune/pdelab/backend/istl/tags.hh>
@@ -115,7 +117,7 @@ namespace Dune {
       // ********************************************************************************
 
       // tag dispatch switch on GFS tag for per-node functor - general version
-      template<typename E,typename Node, typename Tag>
+      template<typename E,typename Node, typename Tag, bool isLeafTag = IsBaseOf<LeafGridFunctionSpaceTag,Tag>::value >
       struct vector_descriptor_helper
       {
         // export backend type, as the actual TMP is in the parent reduction functor
@@ -163,8 +165,8 @@ namespace Dune {
       };
 
       // Tag dispatch for leaf spaces - extract leaf descriptor.
-      template<typename E, typename Node>
-      struct vector_descriptor_helper<E,Node,LeafGridFunctionSpaceTag>
+      template<typename E, typename Node, typename Tag>
+        struct vector_descriptor_helper<E,Node,Tag, /* is LeafTag */ true>
       {
         typedef leaf_vector_descriptor<E,typename Node::Traits::Backend> type;
       };

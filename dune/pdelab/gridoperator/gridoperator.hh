@@ -46,7 +46,7 @@ namespace Dune{
       typedef typename Dune::PDELab::BackendMatrixSelector<MB,Domain,Range,JF>::Type Jacobian;
 
       //! The sparsity pattern container for the jacobian matrix
-      typedef typename Jacobian::Pattern Pattern;
+      typedef typename MB::template Pattern<Jacobian,GFSV,GFSU> Pattern;
 
       //! The local assembler type
       typedef DefaultLocalAssembler<GridOperator,LOP,nonoverlapping_mode>
@@ -178,12 +178,24 @@ namespace Dune{
       //! Apply jacobian matrix without explicitly assembling it
       void jacobian_apply(const Domain & x, Range & r) const {
         typedef typename LocalAssembler::LocalJacobianApplyAssemblerEngine JacobianApplyEngine;
-        JacobianApplyEngine & jacobian_apply_engine = local_assembler.localJacobianApplyAssemblerEngine(r,x);
+       JacobianApplyEngine & jacobian_apply_engine = local_assembler.localJacobianApplyAssemblerEngine(r,x);
         global_assembler.assemble(jacobian_apply_engine);
       }
 
       void make_consistent(Jacobian& a) const {
         dof_exchanger->accumulateBorderEntries(*this,a);
+      }
+
+      void update()
+      {
+        // the DOF exchanger has matrix information, so we need to update it
+        dof_exchanger->update(*this);
+      }
+
+      //! Get the matrix backend for this grid operator.
+      const typename Traits::MatrixBackend& matrixBackend() const
+      {
+        return backend;
       }
 
     private:
