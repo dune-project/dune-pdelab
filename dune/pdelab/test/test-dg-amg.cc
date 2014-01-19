@@ -180,11 +180,11 @@ int main(int argc, char **argv)
   typedef GenericEllipticProblem<GM::LeafGridView,NumberType> Problem;
   Problem problem;
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
-  BCType bctype(grid->leafView(),problem);
+  BCType bctype(grid->leafGridView(),problem);
 
   // make DG finite element space
   typedef Dune::PDELab::DGPkSpace<GM,NumberType,degree,elemtype,solvertype> FS;
-  FS fs(grid->leafView());
+  FS fs(grid->leafGridView());
   fs.assembleConstraints(bctype);
   //std::cout << "number of constraints is " << fs.getCC().size() << std::endl;
 
@@ -203,7 +203,7 @@ int main(int argc, char **argv)
   typedef AuxilliaryBoundaryCondition<GM::LeafGridView,NumberType> AuxilliaryProblem;
   AuxilliaryProblem auxilliaryproblem;
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<AuxilliaryProblem> CGBCType;
-  CGBCType cgbctype(grid->leafView(),auxilliaryproblem);
+  CGBCType cgbctype(grid->leafGridView(),auxilliaryproblem);
   typedef Dune::PDELab::CGSpace<GM,NumberType,1,CGBCType,elemtype,meshtype,solvertype> CGFS;
   CGFS cgfs(*grid,cgbctype);
   cgfs.assembleConstraints(cgbctype);
@@ -228,7 +228,7 @@ int main(int argc, char **argv)
   slp.apply();
 
   // output grid to VTK file
-  // Dune::SubsamplingVTKWriter<GM::LeafGridView> vtkwriter(grid->leafView(),2*(degree-1));
+  // Dune::SubsamplingVTKWriter<GM::LeafGridView> vtkwriter(grid->leafGridView(),2*(degree-1));
   // FS::DGF xdgf(fs.getGFS(),x);
   // vtkwriter.addVertexData(new FS::VTKF(xdgf,"x_h"));
   // vtkwriter.pwrite("poisson_uniform","vtk","",Dune::VTK::appendedraw);

@@ -7,7 +7,6 @@
 #include <string>
 #include <sstream>
 
-#include <dune/common/fvector.hh>
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #if HAVE_ALBERTA
@@ -25,9 +24,9 @@
 #include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/backend/istl/utility.hh>
-#include "../common/vtkexport.hh"
-#include "../gridfunctionspace/gridfunctionspace.hh"
-#include "../gridfunctionspace/gridfunctionspaceutilities.hh"
+#include <dune/pdelab/common/vtkexport.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
 
 template<typename GV>
@@ -93,7 +92,7 @@ int main(int argc, char** argv)
       Grid *grid = gf.createGrid();
       //grid->globalRefine(1);
 
-      rt02DGridFunctionSpace(grid->leafView(), "alberta");
+      rt02DGridFunctionSpace(grid->leafGridView(), "alberta");
 
       Dune::GridFactory<Grid>::destroyGrid(grid);
     }
@@ -109,7 +108,7 @@ int main(int argc, char** argv)
       Grid grid("grids/2dtriangle.alu");
       //grid->globalRefine(1);
 
-      rt02DGridFunctionSpace(grid.leafView(), "alu");
+      rt02DGridFunctionSpace(grid.leafGridView(), "alu");
     }
     result = 0;
 #endif // HAVE_ALUGRID
@@ -136,7 +135,7 @@ int main(int argc, char** argv)
       Grid *grid = gf.createGrid();
       //grid->globalRefine(1);
 
-      rt02DGridFunctionSpace(grid->leafView(), "ug");
+      rt02DGridFunctionSpace(grid->leafGridView(), "ug");
 
       delete grid;
     }

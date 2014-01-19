@@ -7,9 +7,7 @@
 #include <string>
 #include <sstream>
 
-#include <dune/common/fvector.hh>
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/shared_ptr.hh>
 
 #include <dune/geometry/type.hh>
 #include <dune/geometry/quadraturerules.hh>
@@ -25,13 +23,13 @@
 #include <dune/grid/uggrid.hh>
 #endif
 
-#include "../backend/backendselector.hh"
-#include "../backend/istlvectorbackend.hh"
-#include "../common/function.hh"
-#include "../finiteelementmap/p12dfem.hh"
-#include "../gridfunctionspace/gridfunctionspace.hh"
-#include "../gridfunctionspace/gridfunctionspaceutilities.hh"
-#include "../gridfunctionspace/interpolate.hh"
+#include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/common/function.hh>
+#include <dune/pdelab/finiteelementmap/pkfem.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
+#include <dune/pdelab/gridfunctionspace/interpolate.hh>
 
 #include "gridexamples.hh"
 #include "l2difference.hh"
@@ -64,8 +62,6 @@ template<typename GV, typename FEM>
 double interpolationerror (const GV& gv, const FEM &fem)
 {
   typedef typename FEM::Traits::FiniteElementType::Traits
-    ::LocalBasisType::Traits::DomainFieldType D; // domain type
-  typedef typename FEM::Traits::FiniteElementType::Traits
     ::LocalBasisType::Traits::RangeFieldType R;  // range type
 
   typedef Dune::PDELab::GridFunctionSpace<GV, FEM> GFS;
@@ -88,25 +84,25 @@ void test(Dune::shared_ptr<Grid> grid, int &result, unsigned int maxelements, st
   std::cout << std::endl
             << "Testing P12D interpolation with " << name << std::endl;
 
-  typedef Dune::PDELab::P12DLocalFiniteElementMap<typename Grid::ctype, double> FEM;
-  FEM fem;
+  typedef Dune::PDELab::PkLocalFiniteElementMap<typename Grid::LeafGridView, double, double, 1> FEM;
+  FEM fem(grid->leafGridView());
 
   std::cout << "interpolation level 0" << std::endl;
-  double error0 = interpolationerror(grid->leafView(), fem);
-  double h0 = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
+  double error0 = interpolationerror(grid->leafGridView(), fem);
+  double h0 = std::pow(1/double(grid->leafGridView().size(0)), 1/double(Grid::dimension));
   std::cout << "interpolation error: "
-            << std::setw(8) << grid->leafView().size(0) << " elements, h="
+            << std::setw(8) << grid->leafGridView().size(0) << " elements, h="
             << std::scientific << h0 << ", error="
             << std::scientific << error0 << std::endl;
 
-  while((unsigned int)(grid->leafView().size(0)) < maxelements)
+  while((unsigned int)(grid->leafGridView().size(0)) < maxelements)
     grid->globalRefine(1);
 
   std::cout << "interpolation level " << grid->maxLevel() << std::endl;
-  double errorf = interpolationerror(grid->leafView(), fem);
-  double hf = std::pow(1/double(grid->leafView().size(0)), 1/double(Grid::dimension));
+  double errorf = interpolationerror(grid->leafGridView(), fem);
+  double hf = std::pow(1/double(grid->leafGridView().size(0)), 1/double(Grid::dimension));
   std::cout << "interpolation error: "
-            << std::setw(8) << grid->leafView().size(0) << " elements, h="
+            << std::setw(8) << grid->leafGridView().size(0) << " elements, h="
             << std::scientific << hf << ", error="
             << std::scientific << errorf << std::endl;
 

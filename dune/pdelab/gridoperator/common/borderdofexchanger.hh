@@ -118,6 +118,11 @@ namespace Dune {
         , _grid_view(grid_operator.testGridFunctionSpace().gridView())
       {}
 
+      void update(const GridOperator& grid_operator)
+      {
+        _communication_cache = make_shared<CommunicationCache>(grid_operator);
+      }
+
       class CommunicationCache
         : public BorderIndexIdCache<GFSV>
       {
@@ -372,7 +377,7 @@ namespace Dune {
       private:
 
         const CommunicationCache& _communication_cache;
-        const GridView& _grid_view;
+        GridView _grid_view;
         const GFSU& _gfsu;
         const GFSV& _gfsv;
         Pattern& _pattern;
@@ -469,7 +474,7 @@ namespace Dune {
       private:
 
         const CommunicationCache& _communication_cache;
-        const GridView& _grid_view;
+        GridView _grid_view;
         const GFSU& _gfsu;
         const GFSV& _gfsv;
         Matrix& _matrix;
@@ -550,6 +555,9 @@ namespace Dune {
       {
         return *this;
       }
+
+      void update(const GridOperator& grid_operator)
+      {}
 
     };
 

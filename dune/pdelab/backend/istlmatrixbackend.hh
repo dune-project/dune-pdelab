@@ -2,6 +2,7 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTLMATRIXBACKEND_HH
 #define DUNE_PDELAB_BACKEND_ISTLMATRIXBACKEND_HH
 
+#include <dune/common/typetraits.hh>
 #include <dune/pdelab/backend/tags.hh>
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
 #include <dune/pdelab/backend/istl/matrixhelpers.hh>
@@ -10,7 +11,7 @@
 namespace Dune {
   namespace PDELab {
 
-    template<typename GFSV, typename GFSU, typename C>
+    template<typename GFSV, typename GFSU, typename C, typename Stats>
     class ISTLMatrixContainer
     {
 
@@ -31,6 +32,20 @@ namespace Dune {
       typedef typename GFSU::Ordering::Traits::ContainerIndex ColIndex;
 
       typedef typename istl::build_pattern_type<C,GFSV,GFSU,typename GFSV::Ordering::ContainerAllocationTag>::type Pattern;
+
+      typedef Stats PatternStatistics;
+
+#ifndef DOXYGEN
+
+      // some trickery to avoid exposing average users to the fact that there might
+      // be multiple statistics objects
+      typedef typename conditional<
+        (C::blocklevel > 2),
+        std::vector<PatternStatistics>,
+        PatternStatistics
+        >::type StatisticsReturnType;
+
+#endif // DOXYGEN
 
 #if HAVE_TEMPLATE_ALIASES
 
@@ -77,27 +92,16 @@ namespace Dune {
       ISTLMatrixContainer (const GO& go)
         : _container(make_shared<Container>())
       {
-        Pattern pattern(go.testGridFunctionSpace().ordering(),go.trialGridFunctionSpace().ordering());
-        go.fill_pattern(pattern);
-        allocate_matrix(go.testGridFunctionSpace().ordering(),
-                        go.trialGridFunctionSpace().ordering(),
-                        pattern,
-                        *_container);
+        _stats = go.matrixBackend().buildPattern(go,*this);
       }
 
       template<typename GO>
       ISTLMatrixContainer (const GO& go, const E& e)
         : _container(make_shared<Container>())
       {
-        Pattern pattern(go.testGridFunctionSpace().ordering(),go.trialGridFunctionSpace().ordering());
-        go.fill_pattern(pattern);
-        allocate_matrix(go.testGridFunctionSpace().ordering(),
-                        go.trialGridFunctionSpace().ordering(),
-                        pattern,
-                        *_container);
+        _stats = go.matrixBackend().buildPattern(go,*this);
         (*_container) = e;
       }
-
 
       //! Creates an ISTLMatrixContainer without allocating an underlying ISTL matrix.
       explicit ISTLMatrixContainer (tags::unattached_container = tags::unattached_container())
@@ -116,6 +120,7 @@ namespace Dune {
       {
         if (this == &rhs)
           return *this;
+        _stats.clear();
         if (attached())
           {
             (*_container) = (*(rhs._container));
@@ -127,9 +132,38 @@ namespace Dune {
         return *this;
       }
 
+      //! Returns pattern statistics for all contained BCRSMatrix objects.
+      const StatisticsReturnType& patternStatistics() const
+      {
+        return patternStatistics(integral_constant<bool,(C::blocklevel > 2)>());
+      }
+
+#ifndef DOXYGEN
+
+    private:
+
+      const PatternStatistics& patternStatistics(false_type multiple) const
+      {
+        if (_stats.empty())
+          DUNE_THROW(InvalidStateException,"no pattern statistics available");
+        return _stats[0];
+      }
+
+      const std::vector<PatternStatistics>& patternStatistics(true_type multiple) const
+      {
+        if (_stats.empty())
+          DUNE_THROW(InvalidStateException,"no pattern statistics available");
+        return _stats;
+      }
+
+    public:
+
+#endif
+
       void detach()
       {
         _container.reset();
+        _stats.clear();
       }
 
       void attach(shared_ptr<Container> container)
@@ -204,6 +238,7 @@ namespace Dune {
     private:
 
       shared_ptr<Container> _container;
+      std::vector<PatternStatistics> _stats;
 
     };
 

@@ -17,10 +17,8 @@
 #include <dune/grid/utility/structuredgridfactory.hh>
 
 #include <dune/pdelab/finiteelementmap/p0fem.hh>
-#include <dune/pdelab/finiteelementmap/p1fem.hh>
-#include <dune/pdelab/finiteelementmap/q12dfem.hh>
-#include <dune/pdelab/finiteelementmap/q1fem.hh>
-#include <dune/pdelab/finiteelementmap/q22dfem.hh>
+#include <dune/pdelab/finiteelementmap/pkfem.hh>
+#include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/finiteelementmap/variablemonomfem.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
@@ -83,10 +81,10 @@ struct test<2,true> {
     gt.makeCube(2);
     typedef Dune::PDELab::P0LocalFiniteElementMap<float,double,GV::dimension> P0FEM;
     P0FEM p0fem(gt);
-    typedef Dune::PDELab::Q12DLocalFiniteElementMap<float,double> Q12DFEM;
-    Q12DFEM q12dfem;
-    typedef Dune::PDELab::Q22DLocalFiniteElementMap<float,double> Q22DFEM;
-    Q22DFEM q22dfem;
+    typedef Dune::PDELab::QkLocalFiniteElementMap<GV,float,double,1> Q12DFEM;
+    Q12DFEM q12dfem(gv);
+    typedef Dune::PDELab::QkLocalFiniteElementMap<GV,float,double,2> Q22DFEM;
+    Q22DFEM q22dfem(gv);
     typedef Dune::SingleCodimSingleGeomTypeMapper<GV, 0> CellMapper;
     CellMapper cellmapper(gv);
     typedef Dune::PDELab::VariableMonomLocalFiniteElementMap<CellMapper,float,double,GV::dimension> MonomFEM;
@@ -178,10 +176,8 @@ struct test<3,true> {
     gt.makeCube(3);
     typedef Dune::PDELab::P0LocalFiniteElementMap<float,double,GV::dimension> P0FEM;
     P0FEM p0fem(gt);
-    typedef Dune::PDELab::P1LocalFiniteElementMap<float,double,3> P1FEM;
-    P1FEM p1fem;
-    typedef Dune::PDELab::Q1LocalFiniteElementMap<float,double,3> Q1FEM;
-    Q1FEM q1fem;
+    typedef Dune::PDELab::QkLocalFiniteElementMap<GV,float,double,1> Q1FEM;
+    Q1FEM q1fem(gv);
 
     // make a grid function space
     typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS;
@@ -208,50 +204,48 @@ int main(int argc, char** argv)
     Dune::MPIHelper::instance(argc, argv);
 
     // 2D
-    if (1) {
+    {
       std::cout << "2D tests" << std::endl;
       // need a grid in order to test grid functions
       // typedef Dune::YaspGrid<2> Grid;
-      typedef Dune::ALUCubeGrid<2,2> Grid;
+      typedef Dune::ALUGrid<2,2,Dune::cube,Dune::nonconforming> Grid;
       Dune::FieldVector<double,2> l(0.0);
       Dune::FieldVector<double,2> u(1.0);
       Dune::array<unsigned int,2> N = {1,1};
       Dune::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createCubeGrid(l,u,N);
       grid->globalRefine(1);
 
-      std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafView().template begin<0>()->type()) << std::endl;
-      testleafgridfunction<true>(grid->leafView());
+      std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafGridView().template begin<0>()->type()) << std::endl;
+      testleafgridfunction<true>(grid->leafGridView());
     }
 
-    if (1) {
+    {
       std::cout << "2D tests" << std::endl;
       // need a grid in order to test grid functions
       // typedef Dune::YaspGrid<2> Grid;
-      typedef Dune::ALUSimplexGrid<2,2> Grid;
+      typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::conforming> Grid;
       Dune::FieldVector<double,2> l(0.0);
       Dune::FieldVector<double,2> u(1.0);
-      Dune::array<unsigned int,2> N = {1,1};
+      Dune::array<unsigned int,2> N = {{1,1}};
       Dune::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(l,u,N);
       grid->globalRefine(1);
 
-      std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafView().template begin<0>()->type()) << std::endl;
-      testleafgridfunction<false>(grid->leafView());
+      std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafGridView().template begin<0>()->type()) << std::endl;
+      testleafgridfunction<false>(grid->leafGridView());
     }
 
-#if 0
     // 3D
     {
       std::cout << "3D tests" << std::endl;
       // need a grid in order to test grid functions
       Dune::FieldVector<double,3> L(1.0);
-      Dune::FieldVector<int,3> N(1);
-      Dune::FieldVector<bool,3> B(false);
+      Dune::array<int,3> N(Dune::fill_array<int,3>(1));
+      std::bitset<3> B(false);
       Dune::YaspGrid<3> grid(L,N,B,0);
-      grid.globalRefine<true>(1);
+      grid.globalRefine(1);
 
-      testleafgridfunction(grid.leafView());
+      testleafgridfunction<true>(grid.leafGridView());
     }
-#endif
 
     // test passed
     return 0;

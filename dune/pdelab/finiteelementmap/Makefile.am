@@ -29,6 +29,7 @@ finiteelementmap_HEADERS =			\
 	q1fem.hh				\
 	q22dfem.hh				\
 	qkdg.hh					\
+	qkfem.hh				\
 	rannacher_turek2dfem.hh			\
 	raviartthomasfem.hh			\
 	rt0constraints.hh			\

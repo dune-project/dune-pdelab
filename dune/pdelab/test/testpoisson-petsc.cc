@@ -267,7 +267,7 @@ int main(int argc, char** argv)
 
       // get view
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
@@ -289,7 +289,7 @@ int main(int argc, char** argv)
 
       // get view
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;
@@ -311,7 +311,7 @@ int main(int argc, char** argv)
 
       // get view
       typedef Dune::YaspGrid<3>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
       typedef GV::Grid::ctype DF;

@@ -16,7 +16,7 @@ namespace Dune{
     public:
 
       //! The sparsity pattern container for the jacobian matrix
-      typedef typename GO0::Traits::Jacobian::Pattern Pattern;
+      typedef typename GO0::Pattern Pattern;
 
       //! The global UDG assembler type
       typedef typename GO0::Traits::Assembler Assembler;
@@ -232,6 +232,18 @@ namespace Dune{
         if (trialGridFunctionSpace().gridView().comm().size()>1)
           suggested_dt =  trialGridFunctionSpace().gridView().comm().min(suggested_dt);
         return suggested_dt;
+      }
+
+      void update()
+      {
+        go0.update();
+        go1.update();
+        const_residual = Range(go0.testGridFunctionSpace());
+      }
+
+      const typename Traits::MatrixBackend& matrixBackend() const
+      {
+        return go0.matrixBackend();
       }
 
     private:

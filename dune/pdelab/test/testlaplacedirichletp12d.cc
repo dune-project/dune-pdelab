@@ -1,40 +1,30 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifdef HAVE_CONFIG_H
-#include "config.h"     
+#include "config.h"
 #endif
-#include<iostream>
-#include<vector>
-#include<map>
-#include<dune/common/parallel/mpihelper.hh>
-#include<dune/common/exceptions.hh>
-#include<dune/common/fvector.hh>
-#include <dune/common/shared_ptr.hh>
-#include<dune/common/static_assert.hh>
-#include<dune/grid/yaspgrid.hh>
-#include<dune/istl/bvector.hh>
-#include<dune/istl/operators.hh>
-#include<dune/istl/solvers.hh>
-#include<dune/istl/preconditioners.hh>
-#include<dune/istl/io.hh>
-//#include<dune/istl/paamg/amg.hh>
 
-#include"../finiteelementmap/p0fem.hh"
-#include"../finiteelementmap/p12dfem.hh"
-#include"../finiteelementmap/pk2dfem.hh"
-#include"../finiteelementmap/conformingconstraints.hh"
-#include"../gridfunctionspace/gridfunctionspace.hh"
-#include"../gridfunctionspace/gridfunctionspaceutilities.hh"
-#include"../gridfunctionspace/interpolate.hh"
-#include"../constraints/constraints.hh"
-#include"../common/function.hh"
-#include"../common/vtkexport.hh"
-#include"../gridoperatorspace/gridoperatorspace.hh"
-#include"../localoperator/laplacedirichletp12d.hh"
-#include"../backend/istlvectorbackend.hh"
-#include"../backend/istlmatrixbackend.hh"
-#include"../backend/istlsolverbackend.hh"
+#include <iostream>
+#include <vector>
+#include <map>
 
-#include"gridexamples.hh"
+#include <dune/common/parallel/mpihelper.hh>
+#include <dune/grid/yaspgrid.hh>
+
+#include <dune/pdelab/finiteelementmap/p0fem.hh>
+#include <dune/pdelab/finiteelementmap/pkfem.hh>
+#include <dune/pdelab/constraints/conforming.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
+#include <dune/pdelab/gridfunctionspace/interpolate.hh>
+#include <dune/pdelab/common/function.hh>
+#include <dune/pdelab/common/vtkexport.hh>
+#include <dune/pdelab/gridoperator/gridoperator.hh>
+#include <dune/pdelab/localoperator/laplacedirichletp12d.hh>
+#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
+#include <dune/pdelab/backend/istlsolverbackend.hh>
+
+#include "gridexamples.hh"
 
 
 // define some grid functions to interpolate from
@@ -48,7 +38,7 @@ public:
   typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,G<GV,RF> > BaseT;
 
   G (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x, 
+  inline void evaluateGlobal (const typename Traits::DomainType& x,
 							  typename Traits::RangeType& y) const
   {
     typename Traits::DomainType center;
@@ -65,7 +55,7 @@ class B
                                                                                            Dune::FieldVector<int,1> >,
                                                   B<GV> >
 {
-  const GV& gv;
+  GV gv;
 
 public:
   typedef Dune::PDELab::BoundaryGridFunctionTraits<GV,int,1,Dune::FieldVector<int,1> > Traits;
@@ -74,10 +64,10 @@ public:
   B (const GV& gv_) : gv(gv_) {}
 
   template<typename I>
-  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig, 
+  inline void evaluate (const Dune::PDELab::IntersectionGeometry<I>& ig,
                         const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
-  {  
+  {
     y = 1; // all is Dirichlet boundary
   }
 
@@ -89,18 +79,22 @@ public:
 };
 
 // generate a P1 function and output it
-template<class GV> 
+template<class GV>
 void testp1 (const GV& gv)
 {
   typedef typename GV::Grid::ctype DF;
 
   // instantiate finite element maps
-  typedef Dune::PDELab::P12DLocalFiniteElementMap<DF,double> FEM;
-  FEM fem;
-  
+  typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,double,1> FEM;
+  FEM fem(gv);
+
   // make function space
-  typedef Dune::PDELab::GridFunctionSpace<GV,FEM,
-    Dune::PDELab::ConformingDirichletConstraints,Dune::PDELab::ISTLVectorBackend<1> > GFS; 
+  typedef Dune::PDELab::GridFunctionSpace<
+    GV,
+    FEM,
+    Dune::PDELab::ConformingDirichletConstraints,
+    Dune::PDELab::ISTLVectorBackend<1>
+    > GFS;
   GFS gfs(gv,fem);
 
   // make constraints map and initialize it from a function
@@ -122,7 +116,8 @@ void testp1 (const GV& gv)
 
   // make grid function operator
   Dune::PDELab::LaplaceDirichletP12D la;
-  typedef Dune::PDELab::GridOperatorSpace<GFS,GFS,
+  typedef Dune::PDELab::GridOperator<
+    GFS,GFS,
     Dune::PDELab::LaplaceDirichletP12D,C,C,Dune::PDELab::ISTLBCRSMatrixBackend<1,1> > GOS;
   GOS gos(gfs,cg,gfs,cg,la);
 
@@ -171,7 +166,7 @@ void testp1 (const GV& gv)
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
   DGF dgf(gfs,x);
-  
+
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"p1"));
@@ -187,7 +182,7 @@ int main(int argc, char** argv)
 #if HAVE_UG
     Dune::shared_ptr<Dune::UGGrid<2> > uggrid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
   	uggrid->globalRefine(3);
-    testp1(uggrid->leafView());
+    testp1(uggrid->leafGridView());
 #endif
 
 	// test passed
@@ -201,4 +196,4 @@ int main(int argc, char** argv)
     std::cerr << "Unknown exception thrown!" << std::endl;
 	return 1;
   }
-} 
+}

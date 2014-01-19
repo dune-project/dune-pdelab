@@ -85,7 +85,7 @@ namespace Dune {
       }
 
     private:
-      const GV& gv;
+      GV gv;
       FE variant[8];
       const IndexSet& is;
       std::vector<unsigned char> orient;

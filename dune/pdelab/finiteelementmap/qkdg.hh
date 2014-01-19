@@ -5,6 +5,7 @@
 #define DUNE_QkDG_LOCALFINITEELEMENT_HH
 
 #include <dune/common/fvector.hh>
+#include <dune/common/deprecated.hh>
 
 #include <dune/geometry/type.hh>
 
@@ -695,10 +696,13 @@ namespace Dune {
     //! wrap up element from local functions
     //! \ingroup FiniteElementMap
     template<class D, class R, int k, int d>
-    class QkCGLocalFiniteElementMap
+    class DUNE_DEPRECATED_MSG("Please use QkLocalFiniteElementMap instead") QkCGLocalFiniteElementMap
       : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::QkCGLocalFiniteElement<D,R,k,d> >
     {
     public:
+
+      QkCGLocalFiniteElementMap() DUNE_DEPRECATED_MSG("Please use QkLocalFiniteElementMap instead")
+      {}
 
       bool fixedSize() const
       {

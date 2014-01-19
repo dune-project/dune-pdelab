@@ -2,8 +2,7 @@
 
 # we need the module file to be able to build via dunecontrol
 EXTRA_DIST = CMakeLists.txt                     \
-	dune.module dune-pdelab-config.cmake.in \
-	dune-pdelab-version.cmake.in 		\
+	dune.module                             \
 	GPL-2                                   \
 	GPL-3                                   \
 	LGPL-3                                  \

@@ -9,11 +9,11 @@
 #include<limits>
 #include<vector>
 #include<map>
+#include<dune/common/dynmatrix.hh>
 #include<dune/geometry/quadraturerules.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 
-// for CTLFA
 #include<dune/pdelab/common/function.hh>
 // for InterpolateBackendStandard
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
@@ -26,256 +26,481 @@
 namespace Dune {
   namespace PDELab {
 
-    /*! @class CoeffsToLocalFunctionAdapter
-     *
-     *  @brief A wrapper class interpreting coefficients as a LocalFunction
-     *
-     *         A wrapper class interpreting a vector of coefficients (and a local finite element)
-     *         as a LocalFunction living on an Elem. The function may be evaluated on another Elem,
-     *         e.g. a child or grandchild. Useful if the GridFunctionSpace the coefficients originate from is
-     *         no longer available (think adaptation).
-     *
-     *  @tparam CoeffType Type of the interpreted coefficients
-     *  @tparam DGF       The DiscreteGridFunction this should mimic
-     *  @tparam FEM       The FiniteElementMap used
-     *  @tparam E         Type for Elems
-     */
-    template<class CoeffType, class DGF, class FEM, class E>
-    class CoeffsToLocalFunctionAdapter : public FunctionInterface<typename DGF::Traits,
-                                                                  CoeffsToLocalFunctionAdapter<CoeffType,DGF,FEM,E> >
+
+    template<typename GFS>
+    struct LeafOffsetCache
     {
 
-    public:
+      typedef typename GFS::Traits::GridView::template Codim<0>::Entity Cell;
+      typedef LocalFunctionSpace<GFS> LFS;
 
-      typedef typename DGF::Traits Traits;
-      typedef typename FEM::Traits::FiniteElementType FiniteElement;
+        // we need an additional entry because we store offsets and we also want the
+        // offset after the last leaf for size calculations
+      typedef array<std::size_t,TypeTree::TreeInfo<GFS>::leafCount + 1> LeafOffsets;
 
-      /** @brief The constructor.
-       *
-       *  @param[in] coeff_ A vector of coefficients
-       *  @param[in] fem_ A FiniteElementMap used for interpretation of the coefficients
-       *  @param[in] from_ The Elem on which the LocalFunction lives
-       *  @param[in] to_ The Elem on which the LocalFunction is evaluated (should be e.g. a child
-       *             of from_ to make the values of the shape functions meaningful)
-       */
-      CoeffsToLocalFunctionAdapter (const std::vector<CoeffType>& coeff_, const FEM& fem_, const E& from_, const E& to_)
-        : coeff(coeff_), fem(fem_), from(from_), to(to_), fe(fem.find(from)) {}
-
-      /** @brief Special version of the constructor with to = from.
-       *
-       *  @param[in] coeff_ A vector of coefficients
-       *  @param[in] fem_ A FiniteElementMap used for interpretation of the coefficients
-       *  @param[in] elem_ The Elem on which the LocalFunction lives
-       */
-      CoeffsToLocalFunctionAdapter (const std::vector<CoeffType>& coeff_, const FEM& fem_, const E& elem_)
-        : coeff(coeff_), fem(fem_), from(elem_), to(elem_), fe(fem.find(from)) {}
-
-      /** @brief Evaluate the LocalFunction at the given position
-       *
-       *  @param[in]  x The position in local coordinates
-       *  @param[out] y The result of the evaluation
-       */
-      inline void evaluate (const typename Traits::DomainType& x, typename Traits::RangeType& y) const
+      const LeafOffsets& operator[](GeometryType gt) const
       {
-        std::vector<typename Traits::RangeType> yVector;
-        fe.localBasis().evaluateFunction(from.geometry().local(to.geometry().global(x)),yVector);
-        if (yVector.size() != coeff.size()) DUNE_THROW(Dune::Exception,"Coefficient vector has wrong length in CoeffsToLocalFunctionAdapter");
-        typename Traits::RangeType sum=0.0;
-        for (unsigned int i = 0; i < yVector.size(); ++i)
-          sum += yVector[i]*coeff[i];
-        y = sum;
+        const LeafOffsets& leaf_offsets = _leaf_offset_cache[GlobalGeometryTypeIndex::index(gt)];
+        // make sure we have data for this geometry type
+        assert(leaf_offsets.back() > 0);
+        return leaf_offsets;
       }
 
-    private:
-      const std::vector<CoeffType>& coeff;
-      const FEM& fem;
-      const E& from;
-      const E& to;
-      const FiniteElement& fe;
+      void update(const Cell& e)
+      {
+        LeafOffsets& leaf_offsets = _leaf_offset_cache[GlobalGeometryTypeIndex::index(e.type())];
+        if (leaf_offsets.back() == 0)
+          {
+            _lfs.bind(e);
+            extract_lfs_leaf_sizes(_lfs,leaf_offsets.begin()+1);
+            // convert to offsets
+            std::partial_sum(leaf_offsets.begin(),leaf_offsets.end(),leaf_offsets.begin());
+            // sanity check
+            assert(leaf_offsets.back() == _lfs.size());
+          }
+      }
+
+      explicit LeafOffsetCache(const GFS& gfs)
+        : _lfs(gfs)
+        , _leaf_offset_cache(GlobalGeometryTypeIndex::size(Cell::dimension))
+      {}
+
+      LFS _lfs;
+      std::vector<LeafOffsets> _leaf_offset_cache;
+
     };
+
+
+    namespace {
+
+      template<typename MassMatrices,typename Cell>
+      struct inverse_mass_matrix_calculator
+        : public TypeTree::TreeVisitor
+        , public TypeTree::DynamicTraversal
+      {
+
+        static const int dim  = Cell::Geometry::dimension;
+        typedef std::size_t size_type;
+        typedef typename MassMatrices::value_type MassMatrix;
+        typedef typename MassMatrix::field_type DF;
+        typedef typename Dune::QuadratureRule<DF,dim>::const_iterator QRIterator;
+
+        template<typename GFS, typename TreePath>
+        void leaf(const GFS& gfs, TreePath treePath)
+        {
+          typedef typename GFS::Traits::FiniteElementMap FEM;
+          const FEM& fem = gfs.finiteElementMap();
+          typedef typename FEM::Traits::FiniteElement FiniteElement;
+          const FiniteElement& fe = fem.find(_element);
+          size_type local_size = fe.localBasis().size();
+
+          MassMatrix& mass_matrix = _mass_matrices[_leaf_index];
+          mass_matrix.resize(local_size,local_size);
+
+
+          std::vector<typename FiniteElement::Traits::LocalBasisType::Traits::RangeType> phi;
+          phi.resize(std::max(phi.size(),local_size));
+
+          for (QRIterator it = _quadrature_rule.begin(); it != _quadrature_rule.end(); ++it)
+            {
+              //std::fill(yVector.begin(),yVector.end(),typename Traits::RangeType(0));
+              fe.localBasis().evaluateFunction(it->position(),phi);
+              const DF factor = it->weight();
+
+              for (int i = 0; i < local_size; ++i)
+                for (int j = 0; j < local_size; ++j)
+                  mass_matrix[i][j] += phi[i] * phi[j] * factor;
+            }
+
+          mass_matrix.invert();
+          ++_leaf_index;
+
+        }
+
+        inverse_mass_matrix_calculator(MassMatrices& mass_matrices, const Cell& element, size_type intorder)
+          : _element(element)
+          , _mass_matrices(mass_matrices)
+          , _quadrature_rule(QuadratureRules<DF,dim>::rule(element.type(),intorder))
+          , _leaf_index(0)
+        {}
+
+        const Cell& _element;
+        MassMatrices& _mass_matrices;
+        const QuadratureRule<DF,dim>& _quadrature_rule;
+        size_type _leaf_index;
+
+      };
+
+    } // anonymous namespace
 
 
     /*! @class L2Projection
      *
      * @brief @todo
      *
-     * @tparam GFSU Type of ansatz space
-     * @tparam U    Container class for the solution
+     * @tparam GFS Type of ansatz space
+     * @tparam U   Container class for the solution
      */
-    template<class GFSU, class U>
+    template<class GFS, class U>
     class L2Projection
     {
-      typedef typename GFSU::Traits::GridViewType::Grid Grid;
+      typedef typename GFS::Traits::GridViewType::Grid Grid;
       typedef typename Grid::template Codim<0>::Entity Element;
-      typedef LocalFunctionSpace<GFSU> LFSU;
-      typedef typename LFSU::Traits::FiniteElementType::
-      Traits::LocalBasisType::Traits::DomainFieldType DF;
+      typedef LocalFunctionSpace<GFS> LFS;
+      typedef typename U::ElementType DF;
 
     public:
+
+      typedef DynamicMatrix<typename U::ElementType> MassMatrix;
+      typedef array<MassMatrix,TypeTree::TreeInfo<GFS>::leafCount> MassMatrices;
 
       /*! @brief The constructor.
        *
        * @todo Doc params!
        */
-      explicit L2Projection(int intorder_=2) : intorder(intorder_), haveMatrix(), matrix() {}
-
-      /*! @brief Calculate the L2 scalar product of functions X and Y on e, but in the geometry of its ancestor
-       *
-       * @todo Doc template params
-       * @todo params
-       */
-      template<typename F1, typename F2>
-      void apply (const Element& father, const Element& e, F1& X, F2& Y, typename U::ElementType& u) const
-      {
-        Dune::GeometryType gt = e.geometry().type();
-
-        const int dim  = Element::Geometry::dimension;
-        const QuadratureRule<DF,dim>& rule = QuadratureRules<DF,dim>::rule(gt,intorder);
-        typename F1::Traits::RangeType x;
-        typename F2::Traits::RangeType y;
-
-        // iterate over quadrature points
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
-          {
-            X.evaluate(it->position(),x);
-            Y.evaluate(it->position(),y);
-            const typename U::ElementType factor = it->weight()
-              * e.geometry().integrationElement(it->position())
-              / father.geometry().integrationElement(father.geometry().local(e.geometry().global(it->position())));
-
-            u += x * y * factor;
-          }
-      }
-
-      /*! @brief Calculate the L2 norm of X - Y on e, but in the geometry of its ancestor
-       *
-       * @todo Doc template params
-       * @todo Doc params
-       */
-      template<typename F1, typename F2>
-      void error (const Element& father, const Element& e, F1& X, F2& Y, typename U::ElementType& u) const
-      {
-        Dune::GeometryType gt = e.geometry().type();
-
-        const int dim  = Element::Geometry::dimension;
-        const QuadratureRule<DF,dim>& rule = QuadratureRules<DF,dim>::rule(gt,intorder);
-        typename F1::Traits::RangeType x;
-        typename F2::Traits::RangeType y;
-
-        typename U::ElementType temp = 0.;
-
-        // iterate over quadrature points
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
-          {
-            X.evaluate(it->position(),x);
-            Y.evaluate(it->position(),y);
-            const typename U::ElementType factor = it->weight();
-            //  * e.geometry().integrationElement(it->position());
-            //  / father.geometry().integrationElement(father.geometry().local(e.geometry().global(it->position())));
-
-            temp += (x-y) * (x-y) * factor;
-          }
-
-        u += sqrt(temp);
-      }
+      explicit L2Projection(const GFS& gfs, int intorder = 2)
+        : _gfs(gfs)
+        , _intorder(intorder)
+        , _inverse_mass_matrices(GlobalGeometryTypeIndex::size(Element::dimension))
+      {}
 
       /*! @brief Calculate the inverse local mass matrix, used in the local L2 projection
        *
        * @todo Doc template params
        * @todo Doc params
        */
-      template <class CTLFA, class FEM>
-      const std::vector<double>& inverseMassMatrix(const Element& e, const FEM& fem, int k)
+      const MassMatrices& inverseMassMatrices(const Element& e)
       {
-        const Dune::GeometryType gt = e.geometry().type();
-        if (haveMatrix.find(gt) != haveMatrix.end())
-          {
-            return matrix[gt][k];
-          }
+        const GeometryType gt = e.geometry().type();
+        MassMatrices& inverse_mass_matrices = _inverse_mass_matrices[GlobalGeometryTypeIndex::index(gt)];
+        // if the matrix isn't empty, it has already been cached
+        if (inverse_mass_matrices[0].N() > 0)
+          return inverse_mass_matrices;
 
-        const int localSize = (fem.find(e)).localBasis().size();
-        typename CTLFA::Traits::RangeType x;
-        typename CTLFA::Traits::RangeType y;
+        inverse_mass_matrix_calculator<MassMatrices,Element> calculate_mass_matrices(
+          inverse_mass_matrices,
+          e,
+          _intorder
+          );
 
-        std::vector<std::vector<typename U::ElementType> > massMatrix(localSize,std::vector<typename U::ElementType>(localSize,0.));
-        std::vector<std::vector<typename U::ElementType> > inverseMatrix(localSize,std::vector<typename U::ElementType>(localSize,0.));
+        TypeTree::applyToTree(_gfs,calculate_mass_matrices);
 
-        std::vector<double> phi_i(localSize,0.), phi_j(localSize,0.);
-        CTLFA ctlfa_i(phi_i,fem,e,e);
-        CTLFA ctlfa_j(phi_j,fem,e,e);
-
-        for (int i = 0; i < localSize; ++i)
-          {
-            ++phi_i[i];
-            for (int j = 0; j < localSize; ++j)
-              {
-                ++phi_j[j];
-                (*this).template apply<CTLFA,CTLFA>(e,e,ctlfa_i,ctlfa_j,massMatrix[i][j]);
-                --phi_j[j];
-              }
-            --phi_i[i];
-          }
-
-        for (int i = 0; i < localSize; ++i)
-          {
-            inverseMatrix[i][i] = 1.;
-          }
-
-        for (int i = 0; i < localSize; ++i)
-          {
-            for (int j = 0; j < localSize; ++j)
-              {
-                if (i != j)
-                  {
-                    const typename U::ElementType factor = massMatrix[j][i]/massMatrix[i][i];
-                    for (int l = 0; l < localSize; ++l)
-                      {
-                        massMatrix[j][l] -= factor * massMatrix[i][l];
-                        inverseMatrix[j][l] -= factor * inverseMatrix[i][l];
-                      }
-                  }
-              }
-          }
-        for (int i = localSize - 1; i >= 0; --i)
-          {
-            for (int j = localSize - 1; j >= 0; --j)
-              {
-                if (i != j)
-                  {
-                    const typename U::ElementType factor = massMatrix[j][i]/massMatrix[i][i];
-                    for (int l = localSize - 1; l >= 0; --l)
-                      {
-                        massMatrix[j][l] -= factor * massMatrix[i][l];
-                        inverseMatrix[j][l] -= factor * inverseMatrix[i][l];
-                      }
-                  }
-              }
-          }
-        for (int i = 0; i < localSize; ++i)
-          {
-            const typename U::ElementType factor = massMatrix[i][i];
-            for (int j = 0; j < localSize; ++j)
-              {
-                massMatrix[i][j] /= factor;
-                inverseMatrix[i][j] /= factor;
-              }
-          }
-
-        matrix.insert(std::pair<Dune::GeometryType,std::vector<std::vector<typename U::ElementType> > >(gt,inverseMatrix));
-        haveMatrix.insert(gt);
-        return matrix[gt][k];
+        return inverse_mass_matrices;
       }
 
     private:
 
-      const int intorder;
-
-      // only for inverseMassMatrix
-      std::set<Dune::GeometryType> haveMatrix;
-      std::map<Dune::GeometryType, std::vector<std::vector<typename U::ElementType> > > matrix;
+      const GFS& _gfs;
+      int _intorder;
+      std::vector<MassMatrices> _inverse_mass_matrices;
     };
 
 
+    template<typename GFS, typename DOFVector, typename TransferMap>
+    struct backup_visitor
+      : public TypeTree::TreeVisitor
+      , public TypeTree::DynamicTraversal
+    {
+
+      typedef LocalFunctionSpace<GFS> LFS;
+      typedef LFSIndexCache<LFS> LFSCache;
+      typedef Dune::PDELab::LeafOffsetCache<GFS> LeafOffsetCache;
+
+      typedef typename GFS::Traits::GridView::Grid::LocalIdSet IDSet;
+      typedef typename GFS::Traits::GridView::template Codim<0>::Entity Cell;
+      typedef typename GFS::Traits::GridView::template Codim<0>::EntityPointer CellPointer;
+      typedef typename Cell::Geometry Geometry;
+      static const int dim = Geometry::dimension;
+      typedef typename Cell::HierarchicIterator HierarchicIterator;
+      typedef typename DOFVector::ElementType RF;
+      typedef typename TransferMap::mapped_type LocalDOFVector;
+
+
+      typedef L2Projection<typename LFS::Traits::GridFunctionSpace,DOFVector> Projection;
+      typedef typename Projection::MassMatrices MassMatrices;
+      typedef typename Projection::MassMatrix MassMatrix;
+
+      typedef std::size_t size_type;
+      typedef typename GFS::Traits::GridView::ctype DF;
+
+      template<typename LFSLeaf, typename TreePath>
+      void leaf(const LFSLeaf& leaf_lfs, TreePath treePath)
+      {
+
+        typedef typename LFSLeaf::Traits::GridFunctionSpace::Traits::FiniteElementMap FEM;
+        typedef typename FEM::Traits::FiniteElement FE;
+        const FEM& fem = leaf_lfs.gridFunctionSpace().finiteElementMap();
+        size_type fine_offset = _leaf_offset_cache[_current->type()][_leaf_index];
+        size_type coarse_offset = _leaf_offset_cache[_ancestor->type()][_leaf_index];
+
+        typedef typename FE::Traits::LocalBasisType::Traits::RangeType Range;
+
+        const MassMatrix& inverse_mass_matrix = _projection.inverseMassMatrices(*_element)[_leaf_index];
+
+        std::vector<Range> coarse_phi;
+        std::vector<Range> fine_phi;
+
+        Geometry fine_geometry = _current->geometry();
+        Geometry coarse_geometry = _ancestor->geometry();
+
+        const QuadratureRule<DF,dim>& rule = QuadratureRules<DF,dim>::rule(_current->type(),_int_order);
+        // iterate over quadrature points
+        for (typename QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+          {
+            typename Geometry::LocalCoordinate coarse_local = coarse_geometry.local(fine_geometry.global(it->position()));
+            const FE* fe = &fem.find(*_current);
+            fe->localBasis().evaluateFunction(it->position(),fine_phi);
+            fe = &fem.find(*_ancestor);
+            fe->localBasis().evaluateFunction(coarse_local,coarse_phi);
+            const DF factor = it->weight()
+              * fine_geometry.integrationElement(it->position())
+              / coarse_geometry.integrationElement(coarse_local);
+
+            Range val(0.0);
+            for (size_type i = 0; i < fine_phi.size(); ++i)
+              {
+                val.axpy(_u_fine[fine_offset + i],fine_phi[i]);
+              }
+
+            for (size_type i = 0; i < coarse_phi.size(); ++i)
+              {
+                Range x(0.0);
+                for (size_type j = 0; j < inverse_mass_matrix.M(); ++j)
+                  x.axpy(inverse_mass_matrix[i][j],coarse_phi[j]);
+                (*_u_coarse)[coarse_offset + i] += factor * (x * val);
+              }
+          }
+
+        ++_leaf_index;
+      }
+
+      void operator()(const Cell& element)
+      {
+        _element = &element;
+
+        _lfs.bind(element);
+        _lfs_cache.update();
+        _u_view.bind(_lfs_cache);
+        _u_coarse = &_transfer_map[_id_set.id(element)];
+        _u_coarse->resize(_lfs.size());
+        _u_view.read(*_u_coarse);
+        _u_view.unbind();
+
+        _leaf_offset_cache.update(element);
+
+        size_type max_level = _lfs.gridFunctionSpace().gridView().grid().maxLevel();
+
+        CellPointer ancestor(element);
+        while (ancestor->mightVanish())
+          {
+            // work around UG bug!
+            if (!ancestor->hasFather())
+              break;
+
+            ancestor = ancestor->father();
+            _ancestor = &(*ancestor);
+
+            _u_coarse = &_transfer_map[_id_set.id(*_ancestor)];
+            // don't project more than once
+            if (_u_coarse->size() > 0)
+              continue;
+            _u_coarse->resize(_leaf_offset_cache[_ancestor->type()].back());
+            std::fill(_u_coarse->begin(),_u_coarse->end(),RF(0));
+
+            for (HierarchicIterator hit = _ancestor->hbegin(max_level),
+                   hend = _ancestor->hend(max_level);
+                 hit != hend;
+                 ++hit)
+              {
+                // only evaluate on entities with data
+                if (hit->isLeaf())
+                  {
+                    _current = &(*hit);
+                    // reset leaf_index for next run over tree
+                    _leaf_index = 0;
+                    // load data
+                    _lfs.bind(*hit);
+                    _leaf_offset_cache.update(*hit);
+                    _lfs_cache.update();
+                    _u_view.bind(_lfs_cache);
+                    _u_fine.resize(_lfs_cache.size());
+                    _u_view.read(_u_fine);
+                    _u_view.unbind();
+                    // do projection on all leafs
+                    TypeTree::applyToTree(_lfs,*this);
+                  }
+              }
+          }
+      }
+
+      backup_visitor(const GFS& gfs,
+                     Projection& projection,
+                     const DOFVector& u,
+                     LeafOffsetCache& leaf_offset_cache,
+                     TransferMap& transfer_map,
+                     std::size_t int_order = 2)
+        : _lfs(gfs)
+        , _lfs_cache(_lfs)
+        , _id_set(gfs.gridView().grid().localIdSet())
+        , _element(nullptr)
+        , _ancestor(nullptr)
+        , _current(nullptr)
+        , _projection(projection)
+        , _u_view(u)
+        , _transfer_map(transfer_map)
+        , _u_coarse(nullptr)
+        , _leaf_offset_cache(leaf_offset_cache)
+        , _int_order(int_order)
+        , _leaf_index(0)
+      {}
+
+      LFS _lfs;
+      LFSCache _lfs_cache;
+      const IDSet& _id_set;
+      const Cell* _element;
+      const Cell* _ancestor;
+      const Cell* _current;
+      Projection& _projection;
+      typename DOFVector::template ConstLocalView<LFSCache> _u_view;
+      TransferMap& _transfer_map;
+      LocalDOFVector* _u_coarse;
+      LeafOffsetCache& _leaf_offset_cache;
+      size_type _int_order;
+      size_type _leaf_index;
+      LocalDOFVector _u_fine;
+
+    };
+
+
+
+    template<typename GFS, typename DOFVector, typename CountVector>
+    struct replay_visitor
+      : public TypeTree::TreeVisitor
+      , public TypeTree::DynamicTraversal
+    {
+
+      typedef LocalFunctionSpace<GFS> LFS;
+      typedef LFSIndexCache<LFS> LFSCache;
+      typedef Dune::PDELab::LeafOffsetCache<GFS> LeafOffsetCache;
+
+      typedef typename LFS::Traits::GridFunctionSpace::Traits::GridView::template Codim<0>::Entity Cell;
+      typedef typename Cell::Geometry Geometry;
+      typedef typename DOFVector::ElementType RF;
+      typedef std::vector<RF> LocalDOFVector;
+      typedef std::vector<typename CountVector::ElementType> LocalCountVector;
+
+      typedef std::size_t size_type;
+
+      template<typename FiniteElement>
+      struct coarse_function
+      {
+
+        template<typename X, typename Y>
+        void evaluate(const X& x, Y& y) const
+        {
+          _phi.resize(_finite_element.localBasis().size());
+          _finite_element.localBasis().evaluateFunction(_coarse_geometry.local(_fine_geometry.global(x)),_phi);
+          y = 0;
+          for (size_type i = 0; i < _phi.size(); ++i)
+            y.axpy(_dofs[_offset + i],_phi[i]);
+        }
+
+        coarse_function(const FiniteElement& finite_element, Geometry coarse_geometry, Geometry fine_geometry, const LocalDOFVector& dofs, size_type offset)
+          : _finite_element(finite_element)
+          , _coarse_geometry(coarse_geometry)
+          , _fine_geometry(fine_geometry)
+          , _dofs(dofs)
+          , _offset(offset)
+        {}
+
+        const FiniteElement& _finite_element;
+        Geometry _coarse_geometry;
+        Geometry _fine_geometry;
+        const LocalDOFVector& _dofs;
+        mutable std::vector<typename FiniteElement::Traits::LocalBasisType::Traits::RangeType> _phi;
+        size_type _offset;
+
+      };
+
+
+      template<typename LeafLFS, typename TreePath>
+      void leaf(const LeafLFS& leaf_lfs, TreePath treePath)
+      {
+
+        typedef typename LeafLFS::Traits::GridFunctionSpace::Traits::FiniteElementMap FEM;
+        const FEM& fem = leaf_lfs.gridFunctionSpace().finiteElementMap();
+        size_type element_offset = _leaf_offset_cache[_element->type()][_leaf_index];
+        size_type ancestor_offset = _leaf_offset_cache[_ancestor->type()][_leaf_index];
+
+        coarse_function<typename FEM::Traits::FiniteElement> f(fem.find(*_ancestor),_ancestor->geometry(),_element->geometry(),*_u_coarse,ancestor_offset);
+        const typename FEM::Traits::FiniteElement& fe = fem.find(*_element);
+
+        _u_tmp.resize(fe.localBasis().size());
+        std::fill(_u_tmp.begin(),_u_tmp.end(),RF(0.0));
+        fe.localInterpolation().interpolate(f,_u_tmp);
+        std::copy(_u_tmp.begin(),_u_tmp.end(),_u_fine.begin() + element_offset);
+
+        ++_leaf_index;
+      }
+
+      void operator()(const Cell& element, const Cell& ancestor, const LocalDOFVector& u_coarse)
+      {
+        _element = &element;
+        _ancestor = &ancestor;
+        _u_coarse = &u_coarse;
+        _lfs.bind(*_element);
+        _leaf_offset_cache.update(*_element);
+        _lfs_cache.update();
+        _u_view.bind(_lfs_cache);
+
+        // test identity using ids
+        if (_lfs.gridFunctionSpace().gridView().grid().localIdSet().id(element) ==
+            _lfs.gridFunctionSpace().gridView().grid().localIdSet().id(ancestor))
+          {
+            // no interpolation necessary, just copy the saved data
+            _u_view.add(*_u_coarse);
+          }
+        else
+          {
+            _u_fine.resize(_lfs_cache.size());
+            std::fill(_u_fine.begin(),_u_fine.end(),RF(0));
+            _leaf_index = 0;
+            TypeTree::applyToTree(_lfs,*this);
+            _u_view.add(_u_fine);
+          }
+        _u_view.commit();
+
+        _uc_view.bind(_lfs_cache);
+        _counts.resize(_lfs_cache.size(),1);
+        _uc_view.add(_counts);
+        _uc_view.commit();
+      }
+
+      replay_visitor(const GFS& gfs, DOFVector& u, CountVector& uc, LeafOffsetCache& leaf_offset_cache)
+        : _lfs(gfs)
+        , _lfs_cache(_lfs)
+        , _element(nullptr)
+        , _ancestor(nullptr)
+        , _u_view(u)
+        , _uc_view(uc)
+        , _leaf_offset_cache(leaf_offset_cache)
+        , _leaf_index(0)
+      {}
+
+      LFS _lfs;
+      LFSCache _lfs_cache;
+      const Cell* _element;
+      const Cell* _ancestor;
+      typename DOFVector::template LocalView<LFSCache> _u_view;
+      typename CountVector::template LocalView<LFSCache> _uc_view;
+      const LocalDOFVector* _u_coarse;
+      LeafOffsetCache& _leaf_offset_cache;
+      size_type _leaf_index;
+      LocalDOFVector _u_fine;
+      LocalDOFVector _u_tmp;
+      LocalCountVector _counts;
+
+    };
 
 
     /*! @class GridAdaptor
@@ -299,22 +524,11 @@ namespace Dune {
       ::template Partition<Dune::Interior_Partition>::Iterator LeafIterator;
       typedef typename Grid::template Codim<0>::Entity Element;
       typedef typename Grid::template Codim<0>::EntityPointer ElementPointer;
-      typedef typename Grid::GlobalIdSet IdSet;
-      typedef typename IdSet::IdType IdType;
-      typedef typename Grid::LeafIndexSet IndexSet;
-      typedef typename IndexSet::IndexType IndexType;
-      typedef LocalFunctionSpace<GFSU> LFSU;
-      typedef LFSIndexCache<LFSU> LFSUCache;
-      typedef typename U::template LocalView<LFSUCache> UView;
-      typedef typename U::template ConstLocalView<LFSUCache> ConstUView;
-      typedef DiscreteGridFunction<GFSU, U> DGF;
-      typedef typename GFSU::Traits::FiniteElementMapType FEM;
-      typedef InterpolateBackendStandard IB;
-      typedef CoeffsToLocalFunctionAdapter<typename U::ElementType,DGF,FEM,Element> CTLFA;
-      typedef typename FEM::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeType RangeType;
+      typedef typename Grid::LocalIdSet IDSet;
+      typedef typename IDSet::IdType ID;
 
     public:
-      typedef std::map<IdType,std::vector<typename U::ElementType> > MapType;
+      typedef unordered_map<ID,std::vector<typename U::ElementType> > MapType;
 
 
       /*! @brief The constructor.
@@ -323,106 +537,27 @@ namespace Dune {
        * @param gfsu_       The ansatz space, we need to update it
        * @param projection_ The Projection used when Elems vanish
        */
-      GridAdaptor() {}
+      explicit GridAdaptor(const GFSU& gfs)
+        : _leaf_offset_cache(gfs)
+      {}
 
       /* @brief @todo
        *
        * @param[in]  u           The solution that will be saved
        * @param[out] transferMap The map containing the solution during adaptation
        */
-      void backupData(Grid& grid, GFSU& gfsu, Projection& projection, U& u, MapType& transferMap)
+      void backupData(Grid& grid, GFSU& gfsu, Projection& projection, U& u, MapType& transfer_map)
       {
-        const IdSet& idset = grid.globalIdSet();
-        LFSU lfsu(gfsu);
-        LFSUCache lfsu_cache(lfsu);
-        ConstUView u_view(u);
-        DGF dgf(gfsu,u);
-        const FEM& fem = gfsu.finiteElementMap();
-        std::vector<typename U::ElementType> ul;
+        typedef backup_visitor<GFSU,U,MapType> Visitor;
+
+        Visitor visitor(gfsu,projection,u,_leaf_offset_cache,transfer_map);
 
         // iterate over all elems
-        LeafGridView leafView = grid.leafView();
+        LeafGridView leafView = grid.leafGridView();
         for (LeafIterator it = leafView.template begin<0,Dune::Interior_Partition>();
              it!=leafView.template end<0,Dune::Interior_Partition>(); ++it)
           {
-            const Element& e = *it;
-
-            // save local coeffs in map
-            lfsu.bind(e);
-            lfsu_cache.update();
-            u_view.bind(lfsu_cache);
-
-            typename MapType::mapped_type& saved_data = transferMap[idset.id(e)];
-            saved_data.resize(lfsu.size());
-            u_view.read(saved_data);
-
-            // save local coeffs of father in map
-            if (e.mightVanish())
-              {
-                ElementPointer father = e.father();
-
-                projection.template inverseMassMatrix<CTLFA,FEM>(e,fem,0);
-                {
-                  const int localSize = (fem.find(*father)).localBasis().size();
-                  std::vector<typename U::ElementType> uCoarse(localSize,0.);
-                  std::vector<typename U::ElementType> coarseBasis(localSize,0.);
-                  const typename Element::HierarchicIterator& hbegin = (*father).hbegin(grid.maxLevel());
-                  const typename Element::HierarchicIterator& hend   = (*father).hend(grid.maxLevel());
-
-                  for (typename Element::HierarchicIterator hit = hbegin; hit != hend; ++hit)
-                    {
-                      // only evaluate on entities with data
-                      if ((*hit).isLeaf())
-                        {
-                          typedef GridFunctionToLocalFunctionAdapter<DGF> GFTLFA;
-                          GFTLFA gftlfa(dgf,*hit);
-                          CTLFA  ctlfa(coarseBasis,fem,*father,*hit);
-
-                          // iterate over canonical basis vectors
-                          for (unsigned int i = 0; i < coarseBasis.size(); ++i)
-                            {
-                              coarseBasis = projection.template inverseMassMatrix<CTLFA,FEM>(e,fem,i);
-                              projection.template apply<GFTLFA,CTLFA>(*father,*hit,gftlfa,ctlfa,uCoarse[i]);
-                            }
-                        }
-                    }
-                  //transferMap[(*father).level()][idset.id(*father)] = uCoarse;
-                  transferMap[idset.id(*father)] = uCoarse;
-                }
-
-                // conforming grids may need this
-                while ((*father).mightVanish())
-                  {
-                    father = (*father).father();
-                    {
-                      const int localSize = (fem.find(*father)).localBasis().size();
-                      std::vector<typename U::ElementType> uCoarse(localSize,0.);
-                      std::vector<typename U::ElementType> coarseBasis(localSize,0.);
-                      const typename Element::HierarchicIterator& hbegin = (*father).hbegin(grid.maxLevel());
-                      const typename Element::HierarchicIterator& hend   = (*father).hend(grid.maxLevel());
-
-                      for (typename Element::HierarchicIterator hit = hbegin; hit != hend; ++hit)
-                        {
-                          // only evaluate on entities with data
-                          if ((*hit).isLeaf())
-                            {
-                              typedef GridFunctionToLocalFunctionAdapter<DGF> GFTLFA;
-                              GFTLFA gftlfa(dgf,*hit);
-                              CTLFA  ctlfa(coarseBasis,fem,*father,*hit);
-
-                              // iterate over canonical basis vectors
-                              for (unsigned int i = 0; i < coarseBasis.size(); ++i)
-                                {
-                                  coarseBasis = projection.template inverseMassMatrix<CTLFA,FEM>(e,fem,i);
-                                  projection.template apply<GFTLFA,CTLFA>(*father,*hit,gftlfa,ctlfa,uCoarse[i]);
-                                }
-                            }
-                        }
-                      //transferMap[(*father).level()][idset.id(*father)] = uCoarse;
-                      transferMap[idset.id(*father)] = uCoarse;
-                    }
-                  }
-              }
+            visitor(*it);
           }
       }
 
@@ -431,121 +566,57 @@ namespace Dune {
        * @param[out] u           The solution after adaptation
        * @param[in]  transferMap The map that contains the information for the rebuild of u
        */
-      void replayData(Grid& grid, GFSU& gfsu, Projection& projection, U& u, MapType& transferMap)
+      void replayData(Grid& grid, GFSU& gfsu, Projection& projection, U& u, const MapType& transfer_map)
       {
-        const IdSet& idset = grid.globalIdSet();
-        LFSU lfsu(gfsu);
-        LFSUCache lfsu_cache(lfsu);
-        UView u_view(u);
+        const IDSet& id_set = grid.globalIdSet();
 
-        const FEM& fem = gfsu.finiteElementMap();
-        IB ib = IB();
-        std::vector<typename U::ElementType> ul;
-        std::vector<typename U::ElementType> ulc;
+        typedef typename BackendVectorSelector<GFSU,int>::Type CountVector;
+        CountVector uc(gfsu,0);
 
-        U uc(gfsu,0.0);
-        UView uc_view(uc);
-
-        const IndexSet& indexset = grid.leafIndexSet();
-        std::vector<typename U::ElementType> ug(indexset.size(IndexSet::dimension),0.);
-        std::vector<typename U::ElementType> ugc(indexset.size(IndexSet::dimension),0.);
-        Dune::LeafMultipleCodimMultipleGeomTypeMapper<Grid,Dune::MCMGElementLayout> mapper(grid);
+        typedef replay_visitor<GFSU,U,CountVector> Visitor;
+        Visitor visitor(gfsu,u,uc,_leaf_offset_cache);
 
         // iterate over all elems
-        LeafGridView leafView = grid.leafView();
+        LeafGridView leafView = grid.leafGridView();
         for (LeafIterator it = leafView.template begin<0,Dune::Interior_Partition>();
              it!=leafView.template end<0,Dune::Interior_Partition>(); ++it)
           {
             const Element& e = *it;
-            lfsu.bind(e);
-            lfsu_cache.update();
-            u_view.bind(lfsu_cache);
-            uc_view.bind(lfsu_cache);
 
-            const IdType& id = idset.id(e);
-            const int level = e.level();
+            ElementPointer ancestor(e);
 
-            if (e.isNew()) // id is not in map, we have to interpolate
+            typename MapType::const_iterator map_it;
+            while ((map_it = transfer_map.find(id_set.id(*ancestor))) == transfer_map.end())
               {
-                // find ancestor with data
-                int levelAncestor = level - 1;
-                ElementPointer pAncestor = e.father();
-                //while (transferMap[levelAncestor].find(idset.id(*pAncestor)) == transferMap[levelAncestor].end())
-                while (transferMap.find(idset.id(*pAncestor)) == transferMap.end())
-                  {
-                    //this ancestor does not have data, check next one
-                    if (levelAncestor == 0)
-                      DUNE_THROW(Dune::Exception,
-                                 "transferMap of GridAdaptor didn't contain ancestor of element with id " << id);
-                    pAncestor = (*pAncestor).father();
-                    --levelAncestor;
-                  }
-
-                // this one has the data
-                const Element& Ancestor = *pAncestor;
-                //CTLFA ctlfa(transferMap[levelAncestor][idset.id(Ancestor)],fem,Ancestor,e);
-                CTLFA ctlfa(transferMap[idset.id(Ancestor)],fem,Ancestor,e);
-
-                ul.clear();
-                ib.interpolate(fem.find(e),ctlfa,ul);
-
-                u_view.add(ul);
-              }
-            else // this entity is not new and should have data
-              {
-                //lfsu.vadd(transferMap[level][id],u);
-                u_view.add(transferMap[id]);
+                if (!ancestor->hasFather())
+                  DUNE_THROW(Exception,
+                             "transferMap of GridAdaptor didn't contain ancestor of element with id " << id_set.id(*ancestor));
+                ancestor = ancestor->father();
               }
 
-            ulc = std::vector<typename U::ElementType>(lfsu.size(),1.0);
-            uc_view.add(ulc);
-
-            u_view.commit();
-            uc_view.commit();
+            visitor(e,*ancestor,map_it->second);
           }
 
-        typedef Dune::PDELab::AddDataHandle<GFSU,U> Handle;
-        Handle addHandle1(gfsu,u);
+        typedef Dune::PDELab::AddDataHandle<GFSU,U> DOFHandle;
+        DOFHandle addHandle1(gfsu,u);
         leafView.communicate (addHandle1,
                               Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
-        Handle addHandle2(gfsu,uc);
+        typedef Dune::PDELab::AddDataHandle<GFSU,CountVector> CountHandle;
+        CountHandle addHandle2(gfsu,uc);
         leafView.communicate (addHandle2,
                               Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
 
-        for (LeafIterator it = leafView.template begin<0,Dune::Interior_Partition>();
-             it!=leafView.template end<0,Dune::Interior_Partition>(); ++it)
-          {
-            const Element& e = *it;
-            lfsu.bind(e);
-            lfsu_cache.update();
-
-            u_view.bind(lfsu_cache);
-            uc_view.bind(lfsu_cache);
-
-            ul = std::vector<typename U::ElementType>(lfsu.size(),0.0);
-            ulc = std::vector<typename U::ElementType>(lfsu.size(),0.0);
-            u_view.read(ul);
-            uc_view.read(ulc);
-
-            for (unsigned int i = 0; i<ul.size();++i)
-              {
-                if(ulc[i]>1)
-                  {
-                    ul[i] /= ulc[i];
-                    ulc[i] = 1.;
-                  }
-              }
-
-            u_view.write(ul);
-            uc_view.write(ulc);
-
-            u_view.commit();
-            uc_view.commit();
-          }
+        // normalize multiple-interpolated DOFs by taking the arithmetic average
+        typename CountVector::iterator ucit = uc.begin();
+        for (typename U::iterator uit = u.begin(), uend = u.end(); uit != uend; ++uit, ++ucit)
+          (*uit) /= ((*ucit) > 0 ? (*ucit) : 1.0);
       }
 
-    };
+    private:
 
+      LeafOffsetCache<GFSU> _leaf_offset_cache;
+
+    };
 
     /*! grid adaptation as a function
      *
@@ -556,12 +627,14 @@ namespace Dune {
      * @tparam Grid       Type of the grid we want to adapt
      * @tparam GFS        Type of ansatz space, we need to update it after adaptation
      * @tparam X          Container class for DOF vectors
-     * @tparam Projection Projection used when Elems vanish
      */
-    template<class Grid, class GFS, class X, class Projection=L2Projection<GFS,X> >
-    void adapt_grid (Grid& grid, GFS& gfs, X& x1, Projection projection=L2Projection<GFS,X>() )
+    template<class Grid, class GFS, class X>
+    void adapt_grid (Grid& grid, GFS& gfs, X& x1, int int_order)
     {
-      GridAdaptor<Grid,GFS,X,Projection> grid_adaptor;
+      typedef L2Projection<GFS,X> Projection;
+      Projection projection(gfs,int_order);
+
+      GridAdaptor<Grid,GFS,X,Projection> grid_adaptor(gfs);
 
       // prepare the grid for refinement
       grid.preAdapt();
@@ -595,10 +668,13 @@ namespace Dune {
      * @tparam X          Container class for DOF vectors
      * @tparam Projection Projection used when Elems vanish
      */
-    template<class Grid, class GFS, class X, class Projection=L2Projection<GFS,X> >
-    void adapt_grid (Grid& grid, GFS& gfs, X& x1, X& x2, Projection projection=L2Projection<GFS,X>() )
+    template<class Grid, class GFS, class X>
+    void adapt_grid (Grid& grid, GFS& gfs, X& x1, X& x2, int int_order)
     {
-      GridAdaptor<Grid,GFS,X,Projection> grid_adaptor;
+      typedef L2Projection<GFS,X> Projection;
+      Projection projection(gfs,int_order);
+
+      GridAdaptor<Grid,GFS,X,Projection> grid_adaptor(gfs);
 
       // prepare the grid for refinement
       grid.preAdapt();
@@ -624,6 +700,28 @@ namespace Dune {
       // clean up
       grid.postAdapt();
     }
+
+    // deprecated versions which always force the mass matrix integration order to 2
+    // function attributes are only allowed on function declarations, not defitions, so we have to do the double
+    // dance of first declaring and then immediately defining those functions...
+    template<class Grid, class GFS, class X>
+    void adapt_grid (Grid& grid, GFS& gfs, X& x1) DUNE_DEPRECATED_MSG("Please use the version of adapt_grid() that explicity specifies the integration order instead");
+
+    template<class Grid, class GFS, class X>
+    void adapt_grid (Grid& grid, GFS& gfs, X& x1, X& x2) DUNE_DEPRECATED_MSG("Please use the version of adapt_grid() that explicity specifies the integration order instead");
+
+    template<class Grid, class GFS, class X>
+    void adapt_grid (Grid& grid, GFS& gfs, X& x1)
+    {
+      adapt_grid(grid,gfs,x1,2);
+    }
+
+    template<class Grid, class GFS, class X>
+    void adapt_grid (Grid& grid, GFS& gfs, X& x1, X& x2)
+    {
+      adapt_grid(grid,gfs,x1,x2,2);
+    }
+
 
 
     template<typename T>
@@ -800,17 +898,18 @@ namespace Dune {
 
     template<typename Grid, typename X>
     void mark_grid (Grid &grid, const X& x, typename X::ElementType refine_threshold,
-                    typename X::ElementType coarsen_threshold, int verbose=0)
+                    typename X::ElementType coarsen_threshold, int min_level = 0, int max_level = std::numeric_limits<int>::max(), int verbose=0)
     {
-      typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator
-        Iterator;
-      typedef typename Grid::LeafGridView GV;
-      typedef typename GV::IndexSet IndexSet;
+      //typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator
+      //  Iterator;
+      typedef typename Grid::template Partition<Dune::All_Partition>::LeafGridView GV;
+      typedef typename GV::template Codim<0>::Iterator Iterator;
 
-      const GV& gv=grid.leafView();
-      const IndexSet& is(gv.indexSet());
-      Iterator it = grid.template leafbegin<0,Dune::All_Partition>();
-      Iterator eit = grid.template leafend<0,Dune::All_Partition>();
+      const GV& gv=grid.template leafGridView<Dune::All_Partition>();
+      //Iterator it = grid.template leafbegin<0,Dune::All_Partition>();
+      //Iterator eit = grid.template leafend<0,Dune::All_Partition>();
+      Iterator it = gv.template begin<0>();
+      Iterator eit = gv.template end<0>();
 
       unsigned int refine_cnt=0;
       unsigned int coarsen_cnt=0;
@@ -830,12 +929,12 @@ namespace Dune {
           lfs_cache.update();
           x_view.bind(lfs_cache);
 
-          if (x_view[0]>=refine_threshold)
+          if (x_view[0]>=refine_threshold && it->level() < max_level)
             {
               grid.mark(1,*(it));
               refine_cnt++;
             }
-          if (x_view[0]<=coarsen_threshold)
+          if (x_view[0]<=coarsen_threshold && it->level() > min_level)
             {
               grid.mark(-1,*(it));
               coarsen_cnt++;
@@ -857,7 +956,7 @@ namespace Dune {
       typedef typename Grid::LeafGridView GV;
       typedef typename GV::IndexSet IndexSet;
 
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
       const IndexSet& is(gv.indexSet());
       Iterator it = grid.template leafbegin<0,Dune::All_Partition>();
       Iterator eit = grid.template leafend<0,Dune::All_Partition>();
@@ -1031,6 +1130,11 @@ namespace Dune {
       double qt () const
       {
         return q_t;
+      }
+
+      double endT() const
+      {
+        return T;
       }
 
       double accumulatedErrorSquared () const

@@ -2,18 +2,18 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include<iostream>
-#include<vector>
-#include<dune/common/parallel/mpihelper.hh>
-#include<dune/common/exceptions.hh>
-#include<dune/common/fvector.hh>
-#include<dune/grid/yaspgrid.hh>
-#include"../backend/istlvectorbackend.hh"
-#include"../finiteelementmap/q22dfem.hh"
-#include"../finiteelementmap/q12dfem.hh"
-#include"../gridfunctionspace/gridfunctionspace.hh"
-#include"../gridfunctionspace/localvector.hh"
-#include"../gridfunctionspace/subspace.hh"
+
+#include <iostream>
+#include <vector>
+
+#include <dune/common/parallel/mpihelper.hh>
+#include <dune/grid/yaspgrid.hh>
+
+#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/finiteelementmap/qkfem.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/gridfunctionspace/localvector.hh>
+#include <dune/pdelab/gridfunctionspace/subspace.hh>
 
 
 // test function trees
@@ -21,10 +21,10 @@ template<class GV>
 void test (const GV& gv)
 {
   // instantiate finite element maps
-  typedef Dune::PDELab::Q22DLocalFiniteElementMap<float,double> Q22DFEM;
-  Q22DFEM q22dfem;
-  typedef Dune::PDELab::Q12DLocalFiniteElementMap<float,double> Q12DFEM;
-  Q12DFEM q12dfem;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,float,double,2> Q22DFEM;
+  Q22DFEM q22dfem(gv);
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,float,double,1> Q12DFEM;
+  Q12DFEM q12dfem(gv);
 
   // make a grid function space
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> Q2GFS;
@@ -87,8 +87,8 @@ void test (const GV& gv)
   // loop over elements
   typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
   for (ElementIterator it = gv.template begin<0>();
-	   it!=gv.template end<0>(); ++it)
-	{
+       it!=gv.template end<0>(); ++it)
+    {
       q2lfs.bind(*it);
       q2lfs.debug();
       q2lfsCache.update();
@@ -137,7 +137,7 @@ void test (const GV& gv)
         assert( compositelfs.template child<1>().dofIndex(i) == sublfs1.dofIndex(i) );
       }
 
-	}
+    }
 }
 
 int main(int argc, char** argv)
@@ -146,25 +146,25 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
-	// need a grid in order to test grid functions
-	Dune::FieldVector<double,2> L(1.0);
-	Dune::FieldVector<int,2> N(1);
-	Dune::FieldVector<bool,2> B(false);
-	Dune::YaspGrid<2> grid(L,N,B,0);
+    // need a grid in order to test grid functions
+    Dune::FieldVector<double,2> L(1.0);
+    Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+    std::bitset<2> B(false);
+    Dune::YaspGrid<2> grid(L,N,B,0);
     grid.globalRefine(1);
 
-	test(grid.leafView());
+    test(grid.leafGridView());
 
-	// test passed
-	return 0;
+    // test passed
+    return 0;
 
   }
   catch (Dune::Exception &e){
     std::cerr << "Dune reported error: " << e << std::endl;
-	return 1;
+    return 1;
   }
   catch (...){
     std::cerr << "Unknown exception thrown!" << std::endl;
-	return 1;
+    return 1;
   }
 }

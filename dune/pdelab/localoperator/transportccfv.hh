@@ -119,7 +119,7 @@ namespace Dune {
                                                                                  Dune::FieldVector<int,1> >,
                                                       BoundaryConditionType_Transport<T> >
     {
-      const typename T::Traits::GridViewType& gv;
+      typename T::Traits::GridViewType gv;
       const T& t;
 
     public:
@@ -178,7 +178,7 @@ namespace Dune {
       }
 
     private:
-      const typename Traits::GridViewType& g;
+      typename Traits::GridViewType g;
       const T& t;
     };
 

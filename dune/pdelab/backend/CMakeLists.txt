@@ -16,7 +16,7 @@ set(common_HEADERS  backendselector.hh
                  seqistlsolverbackend.hh
                  solver.hh
                  tags.hh
-                 vectorutilities.hh)
+                 )
 
 add_subdirectory(common)
 add_subdirectory(dense)

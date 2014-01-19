@@ -6,7 +6,6 @@
 #include <vector>
 #include <algorithm>
 #include <functional>
-#include <dune/common/deprecated.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspacetags.hh>
 
 /** \file
@@ -16,48 +15,6 @@
 
 namespace Dune {
   namespace PDELab {
-
-#ifndef DOXYGEN
-
-    //! A proxy class to make the new weighted residual and jacobian containers backwards compatible.
-    /**
-     * This proxy for a single entry of a weighted local vector / local matrix only supports
-     * the two operations operator+=() and operator-=(). In both cases, the argument will
-     * be multiplied by the weight associated with the corresponding weighted container.
-     */
-    template<typename T, typename W>
-    class WeightedContainerEntryProxy
-    {
-
-    public:
-
-      template<typename U>
-      void operator+=(const U& r)
-      {
-        _value += _weight * r;
-      }
-
-      template<typename U>
-      void operator-=(const U& r)
-      {
-        _value -= _weight * r;
-      }
-
-      WeightedContainerEntryProxy(T& value, W weight)
-        : _value(value)
-        , _weight(weight)
-      {}
-
-    private:
-
-      void operator=(const WeightedContainerEntryProxy&);
-
-      T& _value;
-      const W _weight;
-    };
-
-
-#endif // DOXYGEN
 
     /**
      * \addtogroup PDELab
@@ -93,29 +50,8 @@ namespace Dune {
         return WeightedAccumulationView(container(),weight*this->weight());
       }
 
-      //! A special wrapper type to enable backwards compatibility with current containers when directly accessing entries.
-      typedef WeightedContainerEntryProxy<value_type,weight_type> reference;
-
       //! The size_type of the underlying container.
       typedef typename Container::size_type size_type;
-
-      //! Returns a reference proxy to an entry of the underlying container.
-      /**
-       * \returns A proxy that wraps the entry in the underlying container and
-       *          only allows application of operator+=() and operator-=(). In
-       *          both cases, the argument will automatically be multiplied by
-       *          the weight associated with this view.
-       *
-       * \deprecated Direct access to the individual container entries is deprecated
-       *             and will be removed in a future release. Please use accumulate()
-       *             or a combination of weight() and rawAccumulate() to update the
-       *             entries of this container.
-       */
-      reference operator[] (size_type n) DUNE_DEPRECATED
-      {
-        _modified = true;
-        return reference(_container[n],_weight);
-      }
 
       //! Returns the weight associated with this view.
       /**
@@ -305,18 +241,6 @@ namespace Dune {
         return *this;
       }
 
-      //! Direct access to the i-th entry.
-      reference operator[](size_type i) DUNE_DEPRECATED
-      {
-        return _container[i];
-      }
-
-      //! Direct acces to the i-th entry (const version).
-      const_reference DUNE_DEPRECATED operator[](size_type i) const
-      {
-        return _container[i];
-      }
-
       //! The size of the container.
       size_type size() const
       {
@@ -333,28 +257,6 @@ namespace Dune {
       void assign(size_type size, const T& value)
       {
         _container.assign(size,value);
-      }
-
-      // ********************************************************************************
-      // compatilibity methods to make sure LocalVector works with local operators that
-      // have already been converted to the new style of accessing the residual
-      // ********************************************************************************
-
-      weight_type weight() DUNE_DEPRECATED
-      {
-        return 1.0;
-      }
-
-      template<typename LFS>
-      void DUNE_DEPRECATED accumulate(const LFS& lfs, size_type n, value_type v)
-      {
-        (*this)(lfs,n) += v;
-      }
-
-      template<typename LFS>
-      void DUNE_DEPRECATED rawAccumulate(const LFS& lfs, size_type n, value_type v)
-      {
-        (*this)(lfs,n) += v;
       }
 
       //! Returns the underlying, std::vector-like storage container.

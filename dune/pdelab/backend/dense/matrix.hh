@@ -37,9 +37,6 @@ namespace Dune {
         typedef typename GFSV::Ordering::Traits::ContainerIndex RowIndex;
         typedef typename GFSU::Ordering::Traits::ContainerIndex ColIndex;
 
-        // We have to provide some kind of type for the pattern to make the GridOperator happy
-        typedef int Pattern;
-
         template<typename RowCache, typename ColCache>
         using LocalView = UncachedMatrixView<MatrixContainer,RowCache,ColCache>;
 

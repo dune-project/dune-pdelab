@@ -7,12 +7,8 @@
 
 #include <iostream>
 
-#include <dune/common/exceptions.hh>
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/fvector.hh>
-#include <dune/common/typetraits.hh>
 #include <dune/grid/yaspgrid.hh>
-#include <dune/istl/bvector.hh>
 #include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
 #include <dune/pdelab/finiteelementmap/rt0simplex2dfem.hh>
 #include <dune/pdelab/finiteelementmap/rt1simplex2dfem.hh>
@@ -33,7 +29,8 @@ void test(GV gv, const FEM& fem, const BaseFEM& baseFEM)
   const typename BaseFEM::Traits::FiniteElement& bfe = baseFEM.find(*it);
   dune_static_assert((Dune::is_same<typename FEM::Traits::FiniteElement,typename BaseFEM::Traits::FiniteElement>::value),
                      "Implementation error in RaviartThomasLocalFiniteElementMap: picked wrong base FEM");
-  assert(fe.localBasis().size() == bfe.localBasis().size());
+  if (fe.localBasis().size() != bfe.localBasis().size())
+    DUNE_THROW(Dune::InvalidStateException,"finite elements should be of same size");
 }
 
 
@@ -47,14 +44,14 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
+      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::bitset<2> B(false);
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(3);
 
       // get view
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       typedef GV::Grid::ctype DF;
       typedef double RF;
@@ -83,14 +80,14 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,3> L(1.0);
-      Dune::FieldVector<int,3> N(1);
-      Dune::FieldVector<bool,3> B(false);
+      Dune::array<int,3> N(Dune::fill_array<int,3>(1));
+      std::bitset<3> B(false);
       Dune::YaspGrid<3> grid(L,N,B,0);
       grid.globalRefine(3);
 
       // get view
       typedef Dune::YaspGrid<3>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       typedef GV::Grid::ctype DF;
       typedef double RF;
@@ -118,7 +115,7 @@ int main(int argc, char** argv)
 
       // get view
       typedef ALUUnitSquare::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       typedef GV::Grid::ctype DF;
       typedef double RF;

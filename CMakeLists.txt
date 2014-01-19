@@ -12,7 +12,7 @@ if(NOT (dune-common_DIR OR dune-common_ROOT OR
 endif()
 
 #find dune-common and set the module path
-find_package(dune-common)
+find_package(dune-common REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${dune-common_MODULE_PATH}
   "${PROJECT_SOURCE_DIR}/cmake/modules")
 
@@ -59,6 +59,7 @@ foreach(i ${SUBDIRS})
     set(opt "EXCLUDE_FROM_ALL")
   endif(${i} STREQUAL "test")
   add_subdirectory(${i} ${opt})
+  unset(opt)
 endforeach(i ${SUBDIRS})
 
 add_subdirectory(cmake/modules)

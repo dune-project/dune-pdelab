@@ -226,7 +226,11 @@ namespace Dune {
     //! compute binomial coefficient "n over k"
     inline long binomial (long n, long k)
     {
-      if (k>=n)
+      // pick the shorter version of
+      // n*(n-1)*...*(k+1)/((n-k)*(n-k-1)*...*1)
+      // and
+      // n*(n-1)*...*(n-k+1)/(k*(k-1)*...*1)
+      if (2*k>=n)
         {
           long nominator=1;
           for (long i=k+1; i<=n; i++) nominator *= i;

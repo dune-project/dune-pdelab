@@ -1,8 +1,12 @@
-install(FILES blockmatrixdiagonal.hh
+install(FILES
+  bcrsmatrixbackend.hh
+  bcrspattern.hh
+  blockmatrixdiagonal.hh
   descriptors.hh
   forwarddeclarations.hh
   matrixhelpers.hh
   parallelhelper.hh
+  patternstatistics.hh
   tags.hh
   utility.hh
   vectorhelpers.hh

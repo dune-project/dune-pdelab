@@ -17,15 +17,7 @@ namespace Dune {
 	  : public SimpleLocalFiniteElementMap< Dune::P0LocalFiniteElement<D,R,d> >
 	{
     public:
-      /**
-       * \deprecated Use the constructor that takes a Dune::GeometryType
-       *             argument.
-       */
-      P0LocalFiniteElementMap (Dune::GeometryType::BasicType basicType) DUNE_DEPRECATED
-        : SimpleLocalFiniteElementMap< Dune::P0LocalFiniteElement<D,R,d> >(Dune::P0LocalFiniteElement<D,R,d>(GeometryType(basicType,d)))
-        , _gt(basicType,d)
-      {
-      }
+
       P0LocalFiniteElementMap (const Dune::GeometryType& type)
         : SimpleLocalFiniteElementMap< Dune::P0LocalFiniteElement<D,R,d> >(Dune::P0LocalFiniteElement<D,R,d>(type))
         , _gt(type)

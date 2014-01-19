@@ -15,9 +15,9 @@
 #include <dune/typetree/visitor.hh>
 
 #include <dune/pdelab/constraints/common/constraintstransformation.hh>
+#include <dune/pdelab/constraints/noconstraints.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspacebase.hh>
-#include <dune/pdelab/gridfunctionspace/utility.hh>
 #include <dune/pdelab/ordering/lexicographicordering.hh>
 #include <dune/pdelab/ordering/entityblockedlocalordering.hh>
 
@@ -114,12 +114,6 @@ namespace Dune {
             >
           >::type Type;
       };
-
-      //! get grid view
-      const typename Traits::GridViewType& gridview () const DUNE_DEPRECATED_MSG("Use gridView() instead of gridview()")
-      {
-        return gfs().template child<0>().gridView();
-      }
 
       //! get grid view
       const typename Traits::GridViewType& gridView () const

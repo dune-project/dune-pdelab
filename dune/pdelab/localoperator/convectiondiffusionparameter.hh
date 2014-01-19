@@ -21,7 +21,7 @@ namespace Dune {
   namespace PDELab {
 
     /** \brief Traits class for convection diffusion parameters
-     * 
+     *
      * A class supplying parameters to a convection-diffusion local
      * operator has to define a public traits class exporting the needed
      * types and constants.
@@ -33,10 +33,10 @@ namespace Dune {
       typedef GV GridViewType;
 
       //! \brief Enum for domain dimension
-      enum { 
+      enum {
         //! \brief dimension of the domain
         dimDomain = GV::dimension
-      }; 
+      };
 
       //! \brief Export type for domain field
       typedef typename GV::Grid::ctype DomainFieldType;
@@ -70,7 +70,7 @@ namespace Dune {
     };
 
     /** \brief Parameter class for solving the linear convection-diffusion equation
-     * 
+     *
      * A parameter class for the linear convection-diffusion equation
      * \f{align*}{
      *   -\nabla\cdot(A(x) \nabla u) + b(x)\cdot \nabla u + c(x)u &=& f \mbox{ in } \Omega,  \\
@@ -112,14 +112,14 @@ namespace Dune {
       }
 
       //! sink term
-      typename Traits::RangeFieldType 
+      typename Traits::RangeFieldType
       c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
       {
         return 0.0;
       }
 
       //! source term
-      typename Traits::RangeFieldType 
+      typename Traits::RangeFieldType
       f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
       {
         return 0.0;
@@ -134,7 +134,7 @@ namespace Dune {
       }
 
       //! Dirichlet boundary condition value
-      typename Traits::RangeFieldType 
+      typename Traits::RangeFieldType
       g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
       {
         typename Traits::DomainType xglobal = e.geometry().global(x);
@@ -142,14 +142,14 @@ namespace Dune {
       }
 
       //! Neumann boundary condition
-      typename Traits::RangeFieldType 
+      typename Traits::RangeFieldType
       j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
       {
         return 0.0;
       }
 
       //! outflow boundary condition
-      typename Traits::RangeFieldType 
+      typename Traits::RangeFieldType
       o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
       {
         return 0.0;
@@ -195,7 +195,7 @@ namespace Dune {
     \tparam T  model of ConvectionDiffusionParameterInterface
   */
   template<typename T>
-  class ConvectionDiffusionDirichletExtensionAdapter 
+  class ConvectionDiffusionDirichletExtensionAdapter
     : public Dune::PDELab::GridFunctionBase<Dune::PDELab::GridFunctionTraits<typename T::Traits::GridViewType,
                                                                              typename T::Traits::RangeFieldType,
                                                                              1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> >
@@ -206,16 +206,16 @@ namespace Dune {
                                              typename T::Traits::RangeFieldType,
                                              1,Dune::FieldVector<typename T::Traits::RangeFieldType,1> > Traits;
 
-    //! constructor 
+    //! constructor
     ConvectionDiffusionDirichletExtensionAdapter (const typename Traits::GridViewType& g_, T& t_)
     : g(g_), t(t_)
     {}
 
     //! \copydoc GridFunctionBase::evaluate()
-    inline void evaluate (const typename Traits::ElementType& e, 
-                          const typename Traits::DomainType& x, 
+    inline void evaluate (const typename Traits::ElementType& e,
+                          const typename Traits::DomainType& x,
                           typename Traits::RangeType& y) const
-    {  
+    {
       y = t.g(e,x);
     }
 
@@ -228,9 +228,9 @@ namespace Dune {
     {
       t.setTime(time_);
     }
-  
+
   private:
-    const typename Traits::GridViewType& g;
+    const typename Traits::GridViewType g;
     T& t;
   };
 
@@ -241,7 +241,7 @@ namespace Dune {
   \tparam T  model of ConvectionDiffusionParameterInterface
 */
 template<typename T>
-class ConvectionDiffusionExactGradientAdapter 
+class ConvectionDiffusionExactGradientAdapter
   : public Dune::PDELab::GridFunctionBase<Dune::PDELab::GridFunctionTraits<typename T::Traits::GridViewType,
                                                                            typename T::Traits::RangeFieldType,
                                                                            T::Traits::GridViewType::dimension,Dune::FieldVector<typename T::Traits::RangeFieldType,T::Traits::GridViewType::dimension> >
@@ -252,14 +252,14 @@ public:
                                            typename T::Traits::RangeFieldType,
                                            T::Traits::GridViewType::dimension,Dune::FieldVector<typename T::Traits::RangeFieldType,T::Traits::GridViewType::dimension> > Traits;
 
-  //! constructor 
+  //! constructor
   ConvectionDiffusionExactGradientAdapter (const typename Traits::GridViewType& g_, const T& t_) : g(g_), t(t_) {}
 
   //! \copydoc GridFunctionBase::evaluate()
-  inline void evaluate (const typename Traits::ElementType& e, 
-                        const typename Traits::DomainType& x, 
+  inline void evaluate (const typename Traits::ElementType& e,
+                        const typename Traits::DomainType& x,
                         typename Traits::RangeType& y) const
-  {  
+  {
     y = t.gradient(e,x);
   }
 
@@ -267,14 +267,14 @@ public:
   {
     return g;
   }
-  
+
 private:
-  const typename Traits::GridViewType& g;
+  const typename Traits::GridViewType g;
   const T& t;
 };
 
     /** \brief Adapter to get ConvectionDiffusion parameter object from the old style separate parameter grid functions
-     * 
+     *
      */
     template<typename K, typename A0, typename F, typename B, typename G, typename J>
     class ConvectionDiffusion_Diffusion_Adapter
@@ -310,7 +310,7 @@ private:
       }
 
       //! sink term
-      typename Traits::RangeFieldType 
+      typename Traits::RangeFieldType
       c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
       {
         typename A0::Traits::RangeType y;
@@ -319,7 +319,7 @@ private:
       }
 
       //! source term
-      typename Traits::RangeFieldType 
+      typename Traits::RangeFieldType
       f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
       {
         typename F::Traits::RangeType y;
@@ -338,7 +338,7 @@ private:
       }
 
       //! Dirichlet boundary condition value
-      typename Traits::RangeFieldType 
+      typename Traits::RangeFieldType
       g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
       {
         typename G::Traits::RangeType y;
@@ -347,7 +347,7 @@ private:
       }
 
       //! Neumann boundary condition
-      typename Traits::RangeFieldType 
+      typename Traits::RangeFieldType
       j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
       {
         typename J::Traits::RangeType y;
@@ -356,7 +356,7 @@ private:
       }
 
       //! outflow boundary condition
-      typename Traits::RangeFieldType 
+      typename Traits::RangeFieldType
       o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
       {
         return 0.0;

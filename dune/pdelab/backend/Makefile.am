@@ -18,8 +18,7 @@ common_HEADERS = backendselector.hh             \
                  petscvectorbackend.hh          \
                  seqistlsolverbackend.hh        \
                  solver.hh	                \
-                 tags.hh			\
-                 vectorutilities.hh
+                 tags.hh
 
 include $(top_srcdir)/am/global-rules
 

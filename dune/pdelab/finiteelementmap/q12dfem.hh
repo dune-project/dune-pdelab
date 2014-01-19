@@ -2,8 +2,11 @@
 #ifndef DUNE_PDELAB_Q12DFEM_HH
 #define DUNE_PDELAB_Q12DFEM_HH
 
-#include<dune/localfunctions/lagrange/q1.hh>
-#include"finiteelementmap.hh"
+#warning dune/pdelab/finiteelementmap/q12dfem.hh and Q12DLocalFiniteElementMap are deprecated, please use dune/pdelab/finiteelementmap/qkfem.hh and QkLocalFiniteElementMap instead
+
+#include <dune/common/deprecated.hh>
+#include <dune/localfunctions/lagrange/q1.hh>
+#include "finiteelementmap.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -11,7 +14,7 @@ namespace Dune {
     //! wrap up element from local functions
     //! \ingroup FiniteElementMap
     template<class D, class R>
-    class Q12DLocalFiniteElementMap
+    class DUNE_DEPRECATED_MSG("Please use QkLocalFiniteElementMap instead") Q12DLocalFiniteElementMap
       : public SimpleLocalFiniteElementMap< Dune::Q1LocalFiniteElement<D,R,2> >
     {
 

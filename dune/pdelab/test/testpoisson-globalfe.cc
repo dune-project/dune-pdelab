@@ -20,13 +20,9 @@
 #include <dune/grid/utility/vertexorderfactory.hh>
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/istl/operators.hh>
-#include <dune/istl/preconditioners.hh>
-#include <dune/istl/solvers.hh>
-
-#include <dune/pdelab/backend/istlmatrixbackend.hh>
-#include <dune/pdelab/backend/istlsolverbackend.hh>
 #include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
+#include <dune/pdelab/backend/istlsolverbackend.hh>
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/constraints/common/constraintsparameters.hh>
@@ -169,7 +165,6 @@ template<typename GV, typename FEM, typename CON, int q>
 void poisson (const GV& gv, const FEM& fem, std::string filename)
 {
   // constants and types
-  typedef typename GV::Grid::ctype DF;
   typedef typename FEM::Traits::FiniteElementType::Traits::Basis::Traits::
     RangeField R;
 
@@ -274,14 +269,14 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
+      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::bitset<2> B(false);
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(3);
 
       // get view
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
       typedef Dune::PDELab::Q1FiniteElementMap<GV::Codim<0>::Geometry, double>
@@ -297,14 +292,14 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
+      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      std::bitset<2> B(false);
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(3);
 
       // get view
       typedef Dune::YaspGrid<2>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
       typedef Dune::PDELab::Q22DFiniteElementMap<
@@ -321,14 +316,14 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,3> L(1.0);
-      Dune::FieldVector<int,3> N(1);
-      Dune::FieldVector<bool,3> B(false);
+      Dune::array<int,3> N(Dune::fill_array<int,3>(1));
+      std::bitset<3> B(false);
       Dune::YaspGrid<3> grid(L,N,B,0);
       grid.globalRefine(3);
 
       // get view
       typedef Dune::YaspGrid<3>::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
       typedef Dune::PDELab::Q1FiniteElementMap<GV::Codim<0>::Geometry, double>
@@ -350,11 +345,9 @@ int main(int argc, char** argv)
 
       // get view
       typedef Dune::UGGrid<2>::LeafGridView GV;
-      const GV& gv=grid->leafView();
+      const GV& gv=grid->leafGridView();
 
       // make finite element map
-      typedef GV::Grid::ctype DF;
-      typedef double R;
       const int k=3;
       const int q=2*k;
       typedef Dune::VertexOrderByIdFactory<GV::Grid::GlobalIdSet>
@@ -379,11 +372,9 @@ int main(int argc, char** argv)
 
       // get view
       typedef AlbertaUnitSquare::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
-      typedef GV::Grid::ctype DF;
-      typedef double R;
       const int k=3;
       const int q=2*k;
       typedef Dune::VertexOrderByIdFactory<GV::Grid::GlobalIdSet>
@@ -408,11 +399,9 @@ int main(int argc, char** argv)
 
       // get view
       typedef ALUUnitSquare::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       // make finite element map
-      typedef GV::Grid::ctype DF;
-      typedef double R;
       const int k=3;
       const int q=2*k;
       typedef Dune::VertexOrderByIdFactory<GV::Grid::GlobalIdSet>

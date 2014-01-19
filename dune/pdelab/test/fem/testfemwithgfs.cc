@@ -50,18 +50,18 @@ void test_2d_cube(const Constraints& constraints, const VBE& vbe)
 
   // make grid
   Dune::FieldVector<double,2> L(1.0);
-  Dune::FieldVector<int,2> N(1);
-  Dune::FieldVector<bool,2> B(false);
+  Dune::array<int,2> N;
+  std::fill(N.begin(),N.end(),1);
+  std::bitset<2> B(false);
   Dune::YaspGrid<2> grid(L,N,B,0);
   grid.globalRefine(3);
 
   // get view
   typedef Dune::YaspGrid<2>::LeafGridView GV;
-  const GV& gv=grid.leafView();
+  const GV& gv=grid.leafGridView();
 
   typedef GV::Grid::ctype DF;
 
-  typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::cube>::type FEM;
   typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::cube>::pointer PFEM;
 
   PFEM pfem = FEM_FACTORY::template create<GV,DF,RF,Dune::GeometryType::cube>(gv);
@@ -77,18 +77,19 @@ void test_3d_cube(const Constraints& constraints, const VBE& vbe)
 
   // make grid
   Dune::FieldVector<double,3> L(1.0);
-  Dune::FieldVector<int,3> N(1);
-  Dune::FieldVector<bool,3> B(false);
+  Dune::array<int,3> N;
+  std::fill(N.begin(),N.end(),1);
+  std::bitset<3> B(false);
+
   Dune::YaspGrid<3> grid(L,N,B,0);
   grid.globalRefine(3);
 
   // get view
   typedef Dune::YaspGrid<3>::LeafGridView GV;
-  const GV& gv=grid.leafView();
+  const GV& gv=grid.leafGridView();
 
   typedef GV::Grid::ctype DF;
 
-  typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::cube>::type FEM;
   typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::cube>::pointer PFEM;
 
   PFEM pfem = FEM_FACTORY::template create<GV,DF,RF,Dune::GeometryType::cube>(gv);
@@ -113,11 +114,10 @@ void test_2d_simplex(const Constraints& constraints, const VBE& vbe)
 
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       typedef GV::Grid::ctype DF;
 
-      typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::simplex>::type FEM;
       typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::simplex>::pointer PFEM;
 
       PFEM pfem = FEM_FACTORY::template create<GV,DF,RF,Dune::GeometryType::simplex>(gv);
@@ -150,11 +150,10 @@ void test_3d_simplex(const Constraints& constraints, const VBE& vbe)
 
       // get view
       typedef Grid::LeafGridView GV;
-      const GV& gv=grid.leafView();
+      const GV& gv=grid.leafGridView();
 
       typedef GV::Grid::ctype DF;
 
-      typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::simplex>::type FEM;
       typedef typename FEM_FACTORY::template FEM<GV,DF,RF,Dune::GeometryType::simplex>::pointer PFEM;
 
       PFEM pfem = FEM_FACTORY::template create<GV,DF,RF,Dune::GeometryType::simplex>(gv);

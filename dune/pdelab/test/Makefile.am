@@ -33,13 +33,12 @@ AM_LDFLAGS = @AM_LDFLAGS@			\
 	$(DUNEMPILDFLAGS)			\
 	$(PARMETIS_LDFLAGS)
 LDADD =						\
+	@LDADD@                                 \
 	$(PARMETIS_LIBS)			\
 	$(ALUGRID_LIBS)				\
 	$(AMIRAMESH_LIBS)			\
-	$(DUNE_LIBS)				\
 	$(DUNEMPILIBS)				\
-	$(UG_LIBS)				\
-	@LDADD@
+	$(UG_LIBS)
 
 noinst_HEADERS =				\
 	fmt.hh					\
@@ -65,8 +64,9 @@ testanalytic_CPPFLAGS = $(AM_CPPFLAGS)		\
 testanalytic_LDFLAGS = $(AM_LDFLAGS)		\
 	$(ALBERTA_LDFLAGS)
 testanalytic_LDADD =				\
-	$(ALBERTA_LIBS)				\
-	$(LDADD)
+	$(LDADD)                                \
+	$(ALBERTA_LIBS)
+
 MOSTLYCLEANFILES += channel.vtu
 
 NORMALTESTS += testclock
@@ -89,19 +89,9 @@ testconstraints_CPPFLAGS = $(AM_CPPFLAGS)	\
 testconstraints_LDFLAGS = $(AM_LDFLAGS)		\
 	$(ALBERTA_LDFLAGS)
 testconstraints_LDADD =				\
-	$(ALBERTA_LIBS)				\
-	$(LDADD)
+        $(LDADD)                                \
+	$(ALBERTA_LIBS)
 MOSTLYCLEANFILES += testconstraintsp1.vtu testconstraintspowerp1.vtu
-
-NORMALTESTS += testfiniteelementmap
-testfiniteelementmap_SOURCES = testfiniteelementmap.cc
-testfiniteelementmap_CPPFLAGS = $(AM_CPPFLAGS)	\
-	$(ALBERTA_CPPFLAGS)
-testfiniteelementmap_LDFLAGS = $(AM_LDFLAGS)	\
-	$(ALBERTA_LDFLAGS)
-testfiniteelementmap_LDADD =			\
-	$(ALBERTA_LIBS)				\
-	$(LDADD)
 
 NORMALTESTS += testfunction
 testfunction_SOURCES = testfunction.cc
@@ -110,8 +100,8 @@ testfunction_CPPFLAGS = $(AM_CPPFLAGS)		\
 testfunction_LDFLAGS = $(AM_LDFLAGS)		\
 	$(ALBERTA_LDFLAGS)
 testfunction_LDADD =				\
-	$(ALBERTA_LIBS)				\
-	$(LDADD)
+        $(LDADD)                                \
+	$(ALBERTA_LIBS)
 MOSTLYCLEANFILES += multi.vtu single.vtu
 
 NORMALTESTS += testgridfunctionspace
@@ -126,9 +116,9 @@ testlaplacedirichletccfv_LDFLAGS = $(AM_LDFLAGS)	\
 	$(ALBERTA_LDFLAGS)				\
 	$(SUPERLU_LDFLAGS)
 testlaplacedirichletccfv_LDADD =		\
+	$(LDADD)                                \
 	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
-	$(ALBERTA_LIBS)				\
-	$(LDADD)
+	$(ALBERTA_LIBS)
 MOSTLYCLEANFILES += testlaplacedirichletccfv-2d.vtu \
 	testlaplacedirichletccfv-3d.vtu
 
@@ -164,9 +154,9 @@ testelasticity_CPPFLAGS = $(AM_CPPFLAGS)	\
 	$(SUPERLU_CPPFLAGS)
 testelasticity_LDFLAGS = $(AM_LDFLAGS)	\
 	$(SUPERLU_LDFLAGS)
-testelasticity_LDADD =		\
-	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
-	$(LDADD)
+testelasticity_LDADD =		            \
+	$(LDADD)                            \
+	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)
 MOSTLYCLEANFILES += testelasticity.vtu
 
 NORMALTESTS += testlocalfunctionspace
@@ -176,8 +166,8 @@ testlocalfunctionspace_CPPFLAGS = $(AM_CPPFLAGS)	\
 testlocalfunctionspace_LDFLAGS = $(AM_LDFLAGS)	\
 	$(ALBERTA_LDFLAGS)
 testlocalfunctionspace_LDADD =			\
-	$(ALBERTA_LIBS)				\
-	$(LDADD)
+        $(LDADD)                                \
+	$(ALBERTA_LIBS)
 
 NORMALTESTS += testp12dinterpolation
 testp12dinterpolation_SOURCES = testp12dinterpolation.cc
@@ -186,8 +176,8 @@ testp12dinterpolation_CPPFLAGS = $(AM_CPPFLAGS)				\
 testp12dinterpolation_LDFLAGS = $(AM_LDFLAGS)	\
 	$(ALBERTA2D_LDFLAGS)
 testp12dinterpolation_LDADD =					\
-	$(ALBERTA2D_LIBS)			\
-	$(LDADD)
+	$(LDADD)                                \
+	$(ALBERTA2D_LIBS)
 
 NORMALTESTS += testpk
 testpk_SOURCES = testpk.cc
@@ -196,8 +186,8 @@ testpk_CPPFLAGS = $(AM_CPPFLAGS)		\
 testpk_LDFLAGS = $(AM_LDFLAGS)			\
 	$(ALBERTA_LDFLAGS)
 testpk_LDADD =					\
-	$(ALBERTA_LIBS)				\
-	$(LDADD)
+	$(LDADD)                                \
+	$(ALBERTA_LIBS)
 MOSTLYCLEANFILES += testpk.vtu
 
 NORMALTESTS += testpoisson
@@ -209,9 +199,24 @@ testpoisson_LDFLAGS = $(AM_LDFLAGS)		\
 	$(ALBERTA_LDFLAGS)			\
 	$(SUPERLU_LDFLAGS)
 testpoisson_LDADD =				\
+	$(LDADD)                                \
 	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
-	$(ALBERTA_LIBS)				\
-	$(LDADD)
+	$(ALBERTA_LIBS)
+MOSTLYCLEANFILES += poisson_*.vtu
+
+NORMALTESTS += testpoisson-old
+testpoisson_old_SOURCES = testpoisson.cc
+testpoisson_old_CPPFLAGS = $(AM_CPPFLAGS)	\
+	$(ALBERTA_CPPFLAGS)			\
+	$(SUPERLU_CPPFLAGS)			\
+	-DOLD_BACKEND
+testpoisson_old_LDFLAGS = $(AM_LDFLAGS)		\
+	$(ALBERTA_LDFLAGS)			\
+	$(SUPERLU_LDFLAGS)
+testpoisson_old_LDADD =				\
+	$(LDADD)                                \
+	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
+	$(ALBERTA_LIBS)
 MOSTLYCLEANFILES += poisson_*.vtu
 
 NORMALTESTS += testpoisson-globalfe
@@ -223,9 +228,9 @@ testpoisson_globalfe_LDFLAGS = $(AM_LDFLAGS)	\
 	$(ALBERTA_LDFLAGS)			\
 	$(SUPERLU_LDFLAGS)
 testpoisson_globalfe_LDADD =			\
+	$(LDADD)                                \
 	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
-	$(ALBERTA_LIBS)				\
-	$(LDADD)
+	$(ALBERTA_LIBS)
 MOSTLYCLEANFILES += poisson_globalfe_*.vtu
 
 NORMALTESTS += testrt0
@@ -235,8 +240,8 @@ testrt0_CPPFLAGS = $(AM_CPPFLAGS)		\
 testrt0_LDFLAGS = $(AM_LDFLAGS)			\
 	$(ALBERTA_LDFLAGS)
 testrt0_LDADD = 				\
-	$(ALBERTA_LIBS)				\
-	$(LDADD)
+	$(LDADD)                                \
+	$(ALBERTA_LIBS)
 MOSTLYCLEANFILES += testrt0.vtu
 
 NORMALTESTS += testrt02dgridfunctionspace
@@ -246,8 +251,8 @@ testrt02dgridfunctionspace_CPPFLAGS = $(AM_CPPFLAGS)	\
 testrt02dgridfunctionspace_LDFLAGS = $(AM_LDFLAGS)	\
 	$(ALBERTA_LDFLAGS)
 testrt02dgridfunctionspace_LDADD = 		\
-	$(ALBERTA_LIBS)				\
-	$(LDADD)
+	$(LDADD)                                \
+	$(ALBERTA_LIBS)
 MOSTLYCLEANFILES += rt02dgridfunctionspace-*.vtu
 
 NORMALTESTS += testutilities
@@ -257,8 +262,8 @@ testutilities_CPPFLAGS = $(AM_CPPFLAGS)		\
 testutilities_LDFLAGS = $(AM_LDFLAGS)		\
 	$(ALBERTA_LDFLAGS)
 testutilities_LDADD = 				\
-	$(ALBERTA_LIBS)				\
-	$(LDADD)
+	$(LDADD)                                \
+	$(ALBERTA_LIBS)
 MOSTLYCLEANFILES += edger.vtu interpolated.vtu q1.vtu taylorhood.vtu
 
 check_PROGRAMS += testinterpolate
@@ -318,9 +323,9 @@ testdensebackend_LDFLAGS = $(AM_LDFLAGS)		\
 	$(ALBERTA_LDFLAGS)			\
 	$(SUPERLU_LDFLAGS)
 testdensebackend_LDADD =				\
+	$(LDADD)                                \
 	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
-	$(ALBERTA_LIBS)				\
-	$(LDADD)
+	$(ALBERTA_LIBS)
 MOSTLYCLEANFILES += densebackend_*.vtu
 
 
