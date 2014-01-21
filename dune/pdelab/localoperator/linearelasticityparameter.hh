@@ -17,9 +17,9 @@
 namespace Dune {
   namespace PDELab {
 
-    /** \brief Traits class for linear acoustics parameters
+    /** \brief Traits class for linear elasticity parameters
      *
-     * A class supplying parameters to a linear-acoustics local
+     * A class supplying parameters to a linear-elasticity local
      * operator has to define a public traits class exporting the needed
      * types and constants.
      */
