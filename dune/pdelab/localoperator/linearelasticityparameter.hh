@@ -13,6 +13,7 @@
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/functionutilities.hh>
+#include<dune/pdelab/constraints/common/constraintsparameters.hh>
 
 namespace Dune {
   namespace PDELab {
