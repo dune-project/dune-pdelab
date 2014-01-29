@@ -22,7 +22,7 @@ DUNE_CHECK_ALL
 # implicitly set the Dune-flags everywhere
 AC_SUBST(AM_CPPFLAGS, '$(DUNE_CPPFLAGS) -I$(top_srcdir)')
 AC_SUBST(AM_LDFLAGS, $DUNE_LDFLAGS)
-AC_SUBST([LDADD], ['$(top_builddir)/lib/libdunepdelab.la $(DUNE_LIBS)'])
+AC_SUBST([LDADD], '$(top_builddir)/lib/libdunepdelab.la $(DUNE_LIBS)')
 
 AC_CONFIG_FILES([
   cmake/Makefile

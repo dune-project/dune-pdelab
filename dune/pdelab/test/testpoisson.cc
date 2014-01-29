@@ -416,7 +416,7 @@ int main(int argc, char** argv)
       typedef double R;
       const int k=3;
       const int q=2*k;
-      typedef Dune::PDELab::Pk2DLocalFiniteElementMap<GV,DF,double,k> FEM;
+      typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,double,k> FEM;
       FEM fem(gv);
 
       // solve problem

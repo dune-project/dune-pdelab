@@ -13,6 +13,7 @@ Makefile.in
 /am
 /autom4te.cache
 /build-cmake
+/compile
 /config.guess
 /config.h
 /config.h.in

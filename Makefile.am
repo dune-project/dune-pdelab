@@ -32,3 +32,7 @@ include $(top_srcdir)/am/global-rules
 # Distribute and install config.h.cmake
 configdir = $(datadir)/dune-pdelab
 dist_config_DATA = config.h.cmake
+
+# Generate package configuration files for finding
+# installed modules with CMake
+include $(top_srcdir)/am/cmake-pkg-config
