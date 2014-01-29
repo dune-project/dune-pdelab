@@ -152,10 +152,10 @@ NORMALTESTS += testelasticity
 testelasticity_SOURCES = testelasticity.cc
 testelasticity_CPPFLAGS = $(AM_CPPFLAGS)	\
 	$(SUPERLU_CPPFLAGS)
-testelasticity_LDFLAGS = $(AM_LDFLAGS)	\
-	$(SUPERLU_LDFLAGS)
-testelasticity_LDADD =		            \
-	$(LDADD)                            \
+testelasticity_LDFLAGS = $(AM_LDFLAGS)	#\
+#	$(SUPERLU_LDFLAGS)
+testelasticity_LDADD =		          \
+	$(LDADD)                          \
 	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)
 MOSTLYCLEANFILES += testelasticity.vtu
 
@@ -302,8 +302,10 @@ testopbfem_LDFLAGS = $(AM_LDFLAGS) $(GMP_LDFLAGS)
 testopbfem_LDADD = $(LDADD) $(GMP_LIBS)
 endif
 
+if ALUGRID
 check_PROGRAMS += testordering
 testordering_SOURCES = testordering.cc
+endif
 
 check_PROGRAMS += testpermutedordering
 testpermutedordering_SOURCES = testpermutedordering.cc
