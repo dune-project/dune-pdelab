@@ -1,5 +1,3 @@
-# $Id: Makefile.am 586 2006-04-28 13:41:31Z mblatt $
-
 SUBDIRS =					\
 	fem
 
@@ -152,8 +150,7 @@ NORMALTESTS += testelasticity
 testelasticity_SOURCES = testelasticity.cc
 testelasticity_CPPFLAGS = $(AM_CPPFLAGS)	\
 	$(SUPERLU_CPPFLAGS)
-testelasticity_LDFLAGS = $(AM_LDFLAGS)	#\
-#	$(SUPERLU_LDFLAGS)
+testelasticity_LDFLAGS = $(AM_LDFLAGS)
 testelasticity_LDADD =		          \
 	$(LDADD)                          \
 	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)
