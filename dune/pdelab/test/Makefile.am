@@ -152,8 +152,7 @@ NORMALTESTS += testelasticity
 testelasticity_SOURCES = testelasticity.cc
 testelasticity_CPPFLAGS = $(AM_CPPFLAGS)	\
 	$(SUPERLU_CPPFLAGS)
-testelasticity_LDFLAGS = $(AM_LDFLAGS)	#\
-#	$(SUPERLU_LDFLAGS)
+testelasticity_LDFLAGS = $(AM_LDFLAGS)
 testelasticity_LDADD =		          \
 	$(LDADD)                          \
 	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)
