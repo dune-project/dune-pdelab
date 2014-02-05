@@ -413,7 +413,6 @@ int main(int argc, char** argv)
 
       // make finite element map
       typedef GV::Grid::ctype DF;
-      typedef double R;
       const int k=3;
       const int q=2*k;
       typedef Dune::PDELab::PkLocalFiniteElementMap<GV,DF,double,k> FEM;
