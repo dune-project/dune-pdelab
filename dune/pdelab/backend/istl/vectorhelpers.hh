@@ -24,7 +24,10 @@ namespace Dune {
       typename Block::field_type&
       access_vector_element(tags::field_vector_1, Block& b, const CI& ci, int i)
       {
-        assert(i == -1);
+        // usually we are at the end of the multi-index (-1),
+        // but we might be in a PowerFunctionSpace of size 1,
+        // then we are at the lowest multi-index component (0)
+        assert(i == -1 || i == 0);
         return b[0];
       }
 
@@ -48,7 +51,10 @@ namespace Dune {
       const typename Block::field_type&
       access_vector_element(tags::field_vector_1, const Block& b, const CI& ci, int i)
       {
-        assert(i == -1);
+        // usually we are at the end of the multi-index (-1),
+        // but we might be in a PowerFunctionSpace of size 1,
+        // then we are at the lowest multi-index component (0)
+        assert(i == -1 || i == 0);
         return b[0];
       }
 
