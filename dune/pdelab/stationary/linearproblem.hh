@@ -100,7 +100,7 @@ namespace Dune {
        * keep_matrix                | true          | keep matrix between calls to apply() (but reassemble values every time)
        * verbosity                  | 1             | control amount of debug output
        *
-       * Apart from reduction, all parmaters have a default value and are optional.
+       * Apart from reduction, all parameters have a default value and are optional.
        * The actual reduction for a call to apply() is calculated as r = max(reduction,min_defect/start_defect),
        * where start defect is the norm of the residual of x.
        */
@@ -129,7 +129,7 @@ namespace Dune {
        * keep_matrix                | true          | keep matrix between calls to apply() (but reassemble values every time)
        * verbosity                  | 1             | control amount of debug output
        *
-       * Apart from reduction, all parmaters have a default value and are optional.
+       * Apart from reduction, all parameters have a default value and are optional.
        * The actual reduction for a call to apply() is calculated as r = max(reduction,min_defect/start_defect),
        * where start defect is the norm of the residual of x.
        */
