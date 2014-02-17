@@ -728,7 +728,7 @@ namespace Dune {
       ConstraintsAssemblerHelper<NoConstraintsParameters, GFS, GV, CG, false>::assemble(p,gfs,gfs.gridView(),cg,verbose);
     }
 
-    //! construct constraints from given constraits parameter tree
+    //! construct constraints from given constraints parameter tree
     /**
      * \code
      * #include <dune/pdelab/constraints/common/constraints.hh>

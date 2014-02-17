@@ -38,9 +38,9 @@ namespace Dune {
      * \tparam B grid function type selecting boundary condition
      * \tparam J grid function type giving j
      */
-    template<typename F, typename B, typename J, int qorder=1>
-	class Poisson : public NumericalJacobianApplyVolume<Poisson<F,B,J,qorder> >,
-                    public NumericalJacobianVolume<Poisson<F,B,J,qorder> >,
+    template<typename F, typename B, typename J>
+    class Poisson : public NumericalJacobianApplyVolume<Poisson<F,B,J> >,
+                    public NumericalJacobianVolume<Poisson<F,B,J> >,
                     public FullVolumePattern,
                     public LocalOperatorDefaultFlags
 	{
@@ -53,8 +53,13 @@ namespace Dune {
       enum { doLambdaVolume = true };
       enum { doLambdaBoundary = true };
 
-      Poisson (const F& f_, const B& bctype_, const J& j_)
-        : f(f_), bctype(bctype_), j(j_)
+      /** \brief Constructor
+       *
+       * \param quadOrder Order of the quadrature rule used for integrating over the element
+       */
+      Poisson (const F& f_, const B& bctype_, const J& j_, unsigned int quadOrder)
+        : f(f_), bctype(bctype_), j(j_),
+        quadOrder_(quadOrder)
       {}
 
 	  // volume integral depending on test and ansatz functions
@@ -78,7 +83,7 @@ namespace Dune {
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
         const Dune::QuadratureRule<DF,dimLocal>& rule =
-          Dune::QuadratureRules<DF,dimLocal>::rule(gt,qorder);
+          Dune::QuadratureRules<DF,dimLocal>::rule(gt,quadOrder_);
 
         // loop over quadrature points
         for(typename Dune::QuadratureRule<DF,dimLocal>::const_iterator it =
@@ -128,7 +133,7 @@ namespace Dune {
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
         const Dune::QuadratureRule<DF,dimLocal>& rule =
-          Dune::QuadratureRules<DF,dimLocal>::rule(gt,qorder);
+          Dune::QuadratureRules<DF,dimLocal>::rule(gt,quadOrder_);
 
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dimLocal>::const_iterator it =
@@ -172,7 +177,7 @@ namespace Dune {
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
         const Dune::QuadratureRule<DF,dimLocal>& rule =
-          Dune::QuadratureRules<DF,dimLocal>::rule(gtface,qorder);
+          Dune::QuadratureRules<DF,dimLocal>::rule(gtface,quadOrder_);
 
         // loop over quadrature points and integrate normal flux
         for (typename Dune::QuadratureRule<DF,dimLocal>::const_iterator it =
@@ -206,6 +211,9 @@ namespace Dune {
       const F& f;
       const B& bctype;
       const J& j;
+
+      // Quadrature rule order
+      unsigned int quadOrder_;
 	};
 
     //! \brief a local operator for solving the Poisson equation in
@@ -224,12 +232,12 @@ namespace Dune {
      *
      * \note The grid functions need to support the member function setTime().
      */
-    template<typename Time, typename F, typename B, typename J, int qorder=1>
+    template<typename Time, typename F, typename B, typename J>
     class InstationaryPoisson
-      : public Poisson<F,B,J,qorder>,
+      : public Poisson<F,B,J>,
         public InstationaryLocalOperatorDefaultMethods<Time>
     {
-      typedef Poisson<F,B,J,qorder> Base;
+      typedef Poisson<F,B,J> Base;
       typedef InstationaryLocalOperatorDefaultMethods<Time> IDefault;
 
     protected:
@@ -240,8 +248,8 @@ namespace Dune {
 
     public:
       //! construct InstationaryPoisson
-      InstationaryPoisson(F& f_, B& bctype_, J& j_)
-        : Base(f_, bctype_, j_)
+      InstationaryPoisson(F& f_, B& bctype_, J& j_, unsigned int quadOrder)
+        : Base(f_, bctype_, j_, quadOrder)
         , f(f_)
         , bctype(bctype_)
         , j(j_)
