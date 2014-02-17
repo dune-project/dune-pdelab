@@ -1,6 +1,9 @@
 set(constraintsdir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/constraints)
 set(constraints_HEADERS
     conforming.hh
+    constraints.hh
+    constraintsparameters.hh
+    constraintstransformation.hh
     hangingnode.hh
     hangingnodemanager.hh
     interiornode.hh

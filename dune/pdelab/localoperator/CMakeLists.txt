@@ -20,7 +20,8 @@ set(common_HEADERS
         l2.hh                                   
         laplacedirichletccfv.hh                 
         laplacedirichletp12d.hh                 
-        linearelasticity.hh                     
+        linearelasticity.hh
+        linearelasticityparameter.hh
         linearacousticsdg.hh                    
         linearacousticsparameter.hh             
         maxwelldg.hh                            

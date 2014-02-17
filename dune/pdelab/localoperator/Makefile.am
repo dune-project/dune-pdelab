@@ -24,6 +24,7 @@ common_HEADERS =				\
 	laplacedirichletccfv.hh			\
 	laplacedirichletp12d.hh			\
         linearelasticity.hh                     \
+	linearelasticityparameter.hh		\
 	linearacousticsdg.hh			\
 	linearacousticsparameter.hh		\
 	maxwelldg.hh				\

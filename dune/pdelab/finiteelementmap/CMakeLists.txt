@@ -40,7 +40,9 @@ set(finiteelementmap_HEADERS
 	rt1cube3dfem.hh
 	rt1simplex2dfem.hh
 	rt2cube2dfem.hh
-        variablemonomfem.hh)
+        variablemonomfem.hh
+        variableopbfem.hh
+        variableqkdgfem.hh)
 
 # include not needed for CMake
 # include $(top_srcdir)/am/global-rules

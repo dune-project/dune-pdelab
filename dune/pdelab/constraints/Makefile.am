@@ -1,6 +1,9 @@
 constraintsdir = $(includedir)/dune/pdelab/constraints
 constraints_HEADERS =				\
 	conforming.hh				\
+	constraints.hh				\
+	constraintsparameters.hh		\
+	constraintstransformation.hh		\
 	hangingnode.hh				\
 	hangingnodemanager.hh			\
 	interiornode.hh				\
