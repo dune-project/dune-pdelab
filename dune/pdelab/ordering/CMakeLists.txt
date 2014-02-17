@@ -15,4 +15,4 @@ install(FILES
   subordering.hh
   transformations.hh
   utility.hh
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}//dune/pdelab/gridfunctionspace)
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/ordering)
