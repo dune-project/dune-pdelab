@@ -18,6 +18,9 @@ namespace Dune {
       template<typename GFSV, typename GFSU, typename C>
       class MatrixContainer;
 
+      template<typename GFSV, typename GFSU, template<typename> class C, typename ET, typename I=std::size_t >
+      class SparseMatrixContainer;
+
       template<typename E>
       using default_vector = std::vector<E>;
 
@@ -60,6 +63,19 @@ namespace Dune {
       struct MatrixHelper
       {
         typedef simple::MatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,Container<E> > type;
+      };
+    };
+
+    template<template<typename> class Container = simple::default_vector>
+    struct SimpleSparseMatrixBackend
+    {
+
+      typedef std::size_t size_type;
+
+      template<typename VV, typename VU, typename E>
+      struct MatrixHelper
+      {
+        typedef simple::SparseMatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,Container, E > type;
       };
     };
 
