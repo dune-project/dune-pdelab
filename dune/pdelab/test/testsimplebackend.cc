@@ -149,7 +149,7 @@ public:
 //===============================================================
 
 // generate a P1 function and output it
-template<typename GV, typename FEM, typename CON>
+template<typename GV, typename FEM, typename CON, typename MBE>
 void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 {
   // constants and types
@@ -185,7 +185,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 
   // make grid operator
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,
-                                     Dune::PDELab::SimpleMatrixBackend<>,
+                                     MBE,
                                      double,double,double,
                                      C,C> GridOperator;
   GridOperator gridoperator(gfs,cg,gfs,cg,lop);
@@ -280,7 +280,12 @@ int main(int argc, char** argv)
       FEM fem(gv);
 
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"simplebackend_yasp_Q1_2d",2);
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
+              Dune::PDELab::SimpleMatrixBackend<>
+              >(gv,fem,"simplebackend_yasp_Q1_2d",1);
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
+              Dune::PDELab::SimpleSparseMatrixBackend<>
+              >(gv,fem,"simplesparsebackend_yasp_Q1_2d",1);
     }
 
     // YaspGrid Q2 2D test
@@ -301,7 +306,14 @@ int main(int argc, char** argv)
       FEM fem(gv);
 
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"simplebackend_yasp_Q2_2d",2);
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
+              Dune::PDELab::SimpleMatrixBackend<>
+              >(gv,fem,"simplebackend_yasp_Q2_2d",2);
+
+      // and again with the space matrix
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
+              Dune::PDELab::SimpleSparseMatrixBackend<>
+              >(gv,fem,"simplesparsebackend_yasp_Q2_2d",2);
     }
 
     // test passed
