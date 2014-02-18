@@ -6,5 +6,6 @@
 #include <dune/pdelab/backend/simple/descriptors.hh>
 #include <dune/pdelab/backend/simple/vector.hh>
 #include <dune/pdelab/backend/simple/matrix.hh>
+#include <dune/pdelab/backend/simple/sparse.hh>
 
 #endif // DUNE_PDELAB_BACKEND_SIMPLE_HH
