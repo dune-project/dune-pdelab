@@ -21,6 +21,9 @@ namespace Dune {
       template<typename GFSV, typename GFSU, template<typename> class C, typename ET, typename I=std::size_t >
       class SparseMatrixContainer;
 
+      template<typename _RowOrdering, typename _ColOrdering>
+      class SparseMatrixPattern;
+
       template<typename E>
       using default_vector = std::vector<E>;
 
@@ -71,6 +74,53 @@ namespace Dune {
     {
 
       typedef std::size_t size_type;
+
+#if HAVE_TEMPLATE_ALIASES || DOXYGEN
+
+      //! The type of the pattern object passed to the GridOperator for pattern construction.
+      template<typename Matrix, typename GFSV, typename GFSU>
+      using Pattern = simple::SparseMatrixPattern<
+        OrderingBase<
+          typename GFSV::Ordering::Traits::DOFIndex,
+          typename GFSV::Ordering::Traits::ContainerIndex
+          >,
+        OrderingBase<
+          typename GFSU::Ordering::Traits::DOFIndex,
+          typename GFSU::Ordering::Traits::ContainerIndex> >;
+
+#else // HAVE_TEMPLATE_ALIASES
+
+      template<typename Matrix, typename GFSV, typename GFSU>
+      struct Pattern
+        : public simple::SparseMatrixPattern<
+        OrderingBase<
+          typename GFSV::Ordering::Traits::DOFIndex,
+          typename GFSV::Ordering::Traits::ContainerIndex
+          >,
+        OrderingBase<
+          typename GFSU::Ordering::Traits::DOFIndex,
+          typename GFSU::Ordering::Traits::ContainerIndex> >
+      {
+
+        typedef SparseMatrixPattern<
+          typedef OrderingBase<
+            typename GFSV::Ordering::Traits::DOFIndex,
+            typename GFSV::Ordering::Traits::ContainerIndex
+            >,
+          OrderingBase<
+            typename GFSU::Ordering::Traits::DOFIndex,
+            typename GFSU::Ordering::Traits::ContainerIndex> > BaseT;
+
+        typedef BaseT::RowOrdering RowOrdering;
+        typedef BaseT::ColOrdering ColOrdering;
+
+        Pattern(const RowOrdering& row_ordering, const ColOrdering& col_ordering)
+          : BaseT(row_ordering,col_ordering)
+        {}
+
+      };
+
+#endif // HAVE_TEMPLATE_ALIASES
 
       template<typename VV, typename VU, typename E>
       struct MatrixHelper
