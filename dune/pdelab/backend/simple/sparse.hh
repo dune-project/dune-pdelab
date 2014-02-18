@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <functional>
 #include <numeric>
+#include <unordered_set>
 
 #include <dune/common/typetraits.hh>
 #include <dune/common/shared_ptr.hh>
@@ -18,14 +19,17 @@ namespace Dune {
   namespace PDELab {
     namespace simple {
 
-      template<typename RowOrdering, typename ColOrdering>
+      template<typename _RowOrdering, typename _ColOrdering>
       class SparseMatrixPattern
-        : public std::vector< unordered_map<std::size_t> >
+        : public std::vector< std::unordered_set<std::size_t> >
       {
 
       public:
 
-        typedef std::unordered_map<std::size_t> col_type;
+        typedef _RowOrdering RowOrdering;
+        typedef _ColOrdering ColOrdering;
+
+        typedef std::unordered_set<std::size_t> col_type;
 
         template<typename RI, typename CI>
         void add_link(const RI& ri, const CI& ci)
@@ -50,7 +54,8 @@ namespace Dune {
       struct SparseMatrixData
       {
         typedef ET ElementType;
-        typedef ET index_type;
+        typedef I  index_type;
+        typedef std::size_t size_type;
         std::size_t _rows;
         std::size_t _cols;
         std::size_t _non_zeros;
@@ -66,7 +71,7 @@ namespace Dune {
          nnz 		Number of nonzero elements
          data 		CSR format data array of the matrix
          indices 	CSR format index array of the matrix
-         indptr 	CSR format index pointer array of the matrix
+         rowptr 	CSR format index pointer array of the matrix
 
          \example
          Consider the following 3x3 matrix
@@ -77,9 +82,9 @@ namespace Dune {
          nnz=6
          data=[1 2 3 4 5 6]
          indices=[0 2 2 0 1 2]
-         indptr=[0 2 3 6]
+         rowptr=[0 2 3 6]
        */
-      template<typename GFSV, typename GFSU, template<typename> class C, typename ET, typename I=std::size_t >
+      template<typename GFSV, typename GFSU, template<typename> class C, typename ET, typename I>
       class SparseMatrixContainer
       {
 
@@ -99,10 +104,10 @@ namespace Dune {
         typedef typename GFSU::Ordering::Traits::ContainerIndex ColIndex;
 
         template<typename RowCache, typename ColCache>
-        using LocalView = UncachedMatrixView<MatrixContainer,RowCache,ColCache>;
+        using LocalView = UncachedMatrixView<SparseMatrixContainer,RowCache,ColCache>;
 
         template<typename RowCache, typename ColCache>
-        using ConstLocalView = ConstUncachedMatrixView<const MatrixContainer,RowCache,ColCache>;
+        using ConstLocalView = ConstUncachedMatrixView<const SparseMatrixContainer,RowCache,ColCache>;
 
         typedef OrderingBase<
           typename GFSV::Ordering::Traits::DOFIndex,
@@ -114,32 +119,32 @@ namespace Dune {
           typename GFSU::Ordering::Traits::ContainerIndex
           > ColOrdering;
 
-        typedef Pattern<RowOrdering,ColOrdering> Pattern;
+        typedef SparseMatrixPattern<RowOrdering,ColOrdering> Pattern;
 
         template<typename GO>
         SparseMatrixContainer(const GO& go)
           : _container(make_shared<Container>())
         {
-          allocate_matrix(_container, go, E(0));
+          allocate_matrix(_container, go, ElementType(0));
         }
 
         template<typename GO>
-        SparseMatrixContainer(const GO& go, const E& e)
+        SparseMatrixContainer(const GO& go, const ElementType& e)
           : _container(make_shared<Container>())
         {
           allocate_matrix(_container, go, e);
         }
 
-        //! Creates an ISTLMatrixContainer without allocating an underlying ISTL matrix.
-        explicit MatrixContainer(tags::unattached_container = tags::unattached_container())
+        //! Creates an SparseMatrixContainer without allocating an underlying ISTL matrix.
+        explicit SparseMatrixContainer(tags::unattached_container = tags::unattached_container())
         {}
 
-        //! Creates an ISTLMatrixContainer with an empty underlying ISTL matrix.
-        explicit MatrixContainer(tags::attached_container)
+        //! Creates an SparseMatrixContainer with an empty underlying ISTL matrix.
+        explicit SparseMatrixContainer(tags::attached_container)
         : _container(make_shared<Container>())
         {}
 
-        MatrixContainer(const MatrixContainer& rhs)
+        SparseMatrixContainer(const SparseMatrixContainer& rhs)
           : _container(make_shared<Container>(*(rhs._container)))
         {
           _container->_rows = 0;
@@ -147,7 +152,7 @@ namespace Dune {
           _container->_non_zeros = 0;
         }
 
-        MatrixContainer& operator=(const MatrixContainer& rhs)
+        SparseMatrixContainer& operator=(const SparseMatrixContainer& rhs)
         {
           if (this == &rhs)
             return *this;
@@ -159,6 +164,7 @@ namespace Dune {
           {
             _container = make_shared<Container>(*(rhs._container));
           }
+          return *this;
         }
 
         void detach()
@@ -173,7 +179,7 @@ namespace Dune {
 
         bool attached() const
         {
-          return bool(_data);
+          return bool(_container);
         }
 
         const shared_ptr<Container>& storage() const
@@ -191,59 +197,73 @@ namespace Dune {
           return _container->_cols;
         }
 
-        MatrixContainer& operator=(const E& e)
+        SparseMatrixContainer& operator=(const ElementType& e)
         {
-          std::fill(_container->begin(),_container->end(),e);
+          std::fill(_container->_data.begin(),_container->_data.end(),e);
           return *this;
         }
 
-        MatrixContainer& operator*=(const E& e)
+        SparseMatrixContainer& operator*=(const ElementType& e)
         {
           using namespace std::placeholders;
-          std::transform(_container->begin(),_container->end(),_container->begin(),std::bind(std::multiplies<E>(),e,_1));
+          std::transform(_container->_data.begin(),_container->_data.end(),_container->_data.begin(),std::bind(std::multiplies<ET>(),e,_1));
           return *this;
         }
 
         template<typename V>
         void mv(const V& x, V& y) const
         {
-          auto rowit = _container->begin();
-          for (auto& v : y)
+          for (std::size_t r = 0; r < y.base().size(); ++r)
           {
-            v = std::inner_product(rowit,rowit + _cols,x.begin(),E(0));
-            rowit += _cols;
+            std::size_t begin = _container->_rowoffset[r];
+            std::size_t end = _container->_rowoffset[r+1];
+            auto & v = y.base()[r];
+            v = ElementType(0);
+            for (std::size_t i = begin; i != end; ++i)
+            {
+              // v = std::inner_product(begin,end,x.begin(),ElementType(0));
+              std::size_t c = _container->_colindex[i];
+              v += _container->_data[i] * x.base()[c];
+            }
           }
         }
 
         template<typename V>
-        void usmv(const E alpha, const V& x, V& y) const
+        void usmv(const ElementType alpha, const V& x, V& y) const
         {
-          auto rowit = _container->begin();
-          for (auto& v : y)
+          for (std::size_t r = 0; r < y.base().size(); ++r)
           {
-            v += alpha * std::inner_product(rowit,rowit + _cols,x.begin(),E(0));
-            rowit += _cols;
+            std::size_t begin = _container->_rowoffset[r];
+            std::size_t end = _container->_rowoffset[r+1];
+            ElementType v(0);
+            for (std::size_t i = begin; i != end; ++i)
+            {
+              // v += alpha * std::inner_product(begin,end,x.begin(),ElementType(0));
+              std::size_t c = _container->_colindex[i];
+              v += _container->_data[i] * x.base()[c];
+            }
+            y.base()[r] += alpha * v;
           }
         }
 
-        E& operator()(const RowIndex& ri, const ColIndex& ci)
+        ElementType& operator()(const RowIndex& ri, const ColIndex& ci)
         {
           // entries are in ascending order
           auto begin = _container->_colindex.begin() + _container->_rowoffset[ri[0]];
           auto end = _container->_colindex.begin() + _container->_rowoffset[ri[0]+1];
           auto it = std::lower_bound(begin,end,ci[0]);
-          assert(it != _container->_colindex.end());
-          return _container->data[it - _container->_colindex.begin()];
+          assert (it != end);
+          return _container->_data[it - _container->_colindex.begin()];
         }
 
-        const E& operator()(const RowIndex& ri, const ColIndex& ci) const
+        const ElementType& operator()(const RowIndex& ri, const ColIndex& ci) const
         {
           // entries are in ascending order
           auto begin = _container->_colindex.begin() + _container->_rowoffset[ri[0]];
           auto end = _container->_colindex.begin() + _container->_rowoffset[ri[0]+1];
           auto it = std::lower_bound(begin,end,ci[0]);
-          assert(it != _container->_colindex.end());
-          return _container->data[it - _container->_colindex.begin()];
+          assert(it != end);
+          return _container->_data[it - _container->_colindex.begin()];
         }
 
         const Container& base() const
@@ -262,15 +282,17 @@ namespace Dune {
         void finalize()
         {}
 
-        void clear_row(const RowIndex& ri, const E& diagonal_entry)
+        void clear_row(const RowIndex& ri, const ElementType& diagonal_entry)
         {
-          std::fill(_container->_data.begin() + _container->_rowoffset[ri[0]], _container->begin() + _container->_rowoffset[ri[0]+1], E(0));
+          std::fill(
+            _container->_data.begin() + _container->_rowoffset[ri[0]],
+            _container->_data.begin() + _container->_rowoffset[ri[0]+1], ElementType(0));
           (*this)(ri,ri) = diagonal_entry;
         }
 
       protected:
         template<typename GO>
-        void allocate_matrix(shared_ptr<Container> c, const GO & go, const E & e)
+        static void allocate_matrix(shared_ptr<Container> & c, const GO & go, const ElementType& e)
         {
           typedef typename Pattern::col_type col_type;
           Pattern pattern(go.testGridFunctionSpace().ordering(),go.trialGridFunctionSpace().ordering());
@@ -280,29 +302,32 @@ namespace Dune {
           c->_cols = go.trialGridFunctionSpace().size();
           // compute row offsets
           c->_rowoffset.resize(c->_rows+1);
-          std::partial_sum(
-            pattern.begin(), pattern.end(), c->_rowoffset.begin()+1,
-            [](size_t x, const col_type & entry) -> size_t { return x+entry.size();}
-            );
+          size_type offset = 0;
+          auto calc_offset = [=](const col_type & entry) mutable -> size_t { offset += entry.size(); return offset; };
+          std::transform(pattern.begin(), pattern.end(),
+            c->_rowoffset.begin()+1,
+            calc_offset);
           // compute non-zeros
-          c->_non_zeros = c->_rowoffsets.back();
+          c->_non_zeros = c->_rowoffset.back();
           // allocate col/data vectors
           c->_data.resize(c->_non_zeros, e);
           c->_colindex.resize(c->_non_zeros);
           // copy pattern
           auto colit = c->_colindex.begin();
           c->_rowoffset[0] = 0;
-          for (size_t r = 0; r < pattern.size(); r++)
+          for (auto & row : pattern)
           {
-            std::copy(pattern[r].begin(),pattern[r].end(),colit);
+            auto last = std::copy(row.begin(),row.end(),colit);
+            std::sort(colit, last);
+            colit = last;
           }
+
         }
 
         shared_ptr< Container > _container;
       };
 
     } // namespace simple
-
   } // namespace PDELab
 } // namespace Dune
 
