@@ -209,36 +209,22 @@ namespace Dune {
         template<typename V>
         void mv(const V& x, V& y) const
         {
-          for (std::size_t r = 0; r < y.base().size(); ++r)
+          assert(y.N() == N());
+          assert(x.N() == M());
+          for (std::size_t r = 0; r < N(); ++r)
           {
-            std::size_t begin = _container->_rowoffset[r];
-            std::size_t end = _container->_rowoffset[r+1];
-            auto & v = y.base()[r];
-            v = ElementType(0);
-            for (std::size_t i = begin; i != end; ++i)
-            {
-              // v = std::inner_product(begin,end,x.begin(),ElementType(0));
-              std::size_t c = _container->_colindex[i];
-              v += _container->_data[i] * x.base()[c];
-            }
+            y.base()[r] = sparse_inner_product(r,x);
           }
         }
 
         template<typename V>
         void usmv(const ElementType alpha, const V& x, V& y) const
         {
-          for (std::size_t r = 0; r < y.base().size(); ++r)
+          assert(y.N() == N());
+          assert(x.N() == M());
+          for (std::size_t r = 0; r < N(); ++r)
           {
-            std::size_t begin = _container->_rowoffset[r];
-            std::size_t end = _container->_rowoffset[r+1];
-            ElementType v(0);
-            for (std::size_t i = begin; i != end; ++i)
-            {
-              // v += alpha * std::inner_product(begin,end,x.begin(),ElementType(0));
-              std::size_t c = _container->_colindex[i];
-              v += _container->_data[i] * x.base()[c];
-            }
-            y.base()[r] += alpha * v;
+            y.base()[r] += alpha * sparse_inner_product(r,x);
           }
         }
 
@@ -317,7 +303,21 @@ namespace Dune {
             std::sort(colit, last);
             colit = last;
           }
+        }
 
+        template<typename V>
+        ElementType sparse_inner_product (std::size_t row, const V & x) const {
+            std::size_t begin = _container->_rowoffset[row];
+            std::size_t end = _container->_rowoffset[row+1];
+            auto accu = [](const ElementType & a, const ElementType & b) -> ElementType { return a+b; };
+            auto mult = [=](const ElementType & a, const index_type & i) -> ElementType { return a * x.base()[i]; };
+            return std::inner_product(
+              &_container->_data[begin],
+              &_container->_data[end],
+              &_container->_colindex[begin],
+              ElementType(0),
+              accu, mult
+              );
         }
 
         shared_ptr< Container > _container;
