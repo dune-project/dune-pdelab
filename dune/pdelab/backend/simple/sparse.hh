@@ -146,11 +146,7 @@ namespace Dune {
 
         SparseMatrixContainer(const SparseMatrixContainer& rhs)
           : _container(make_shared<Container>(*(rhs._container)))
-        {
-          _container->_rows = 0;
-          _container->_cols = 0;
-          _container->_non_zeros = 0;
-        }
+        {}
 
         SparseMatrixContainer& operator=(const SparseMatrixContainer& rhs)
         {
