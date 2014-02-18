@@ -185,7 +185,7 @@ namespace Dune {
 
         size_type N() const
         {
-          return _container->_cols;
+          return _container->_rows;
         }
 
         size_type M() const
