@@ -52,8 +52,7 @@ void test_2d_cube(const Constraints& constraints, const VBE& vbe)
   Dune::FieldVector<double,2> L(1.0);
   Dune::array<int,2> N;
   std::fill(N.begin(),N.end(),1);
-  std::bitset<2> B(false);
-  Dune::YaspGrid<2> grid(L,N,B,0);
+  Dune::YaspGrid<2> grid(L,N);
   grid.globalRefine(3);
 
   // get view
@@ -79,9 +78,8 @@ void test_3d_cube(const Constraints& constraints, const VBE& vbe)
   Dune::FieldVector<double,3> L(1.0);
   Dune::array<int,3> N;
   std::fill(N.begin(),N.end(),1);
-  std::bitset<3> B(false);
 
-  Dune::YaspGrid<3> grid(L,N,B,0);
+  Dune::YaspGrid<3> grid(L,N);
   grid.globalRefine(3);
 
   // get view

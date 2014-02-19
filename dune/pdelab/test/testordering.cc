@@ -240,8 +240,7 @@ int main(int argc, char** argv)
       // need a grid in order to test grid functions
       Dune::FieldVector<double,3> L(1.0);
       Dune::array<int,3> N(Dune::fill_array<int,3>(1));
-      std::bitset<3> B(false);
-      Dune::YaspGrid<3> grid(L,N,B,0);
+      Dune::YaspGrid<3> grid(L,N);
       grid.globalRefine(1);
 
       testleafgridfunction<true>(grid.leafGridView());

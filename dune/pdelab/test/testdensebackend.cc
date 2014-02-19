@@ -267,8 +267,7 @@ int main(int argc, char** argv)
       // make grid
       Dune::FieldVector<double,2> L(1.0);
       Dune::array<int,2> N(Dune::fill_array<int,2>(1));
-      std::bitset<2> B(false);
-      Dune::YaspGrid<2> grid(L,N,B,0);
+      Dune::YaspGrid<2> grid(L,N);
       grid.globalRefine(3);
 
       // get view
@@ -289,8 +288,7 @@ int main(int argc, char** argv)
       // make grid
       Dune::FieldVector<double,2> L(1.0);
       Dune::array<int,2> N(Dune::fill_array<int,2>(1));
-      std::bitset<2> B(false);
-      Dune::YaspGrid<2> grid(L,N,B,0);
+      Dune::YaspGrid<2> grid(L,N);
       grid.globalRefine(3);
 
       // get view
