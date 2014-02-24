@@ -199,11 +199,11 @@ namespace Dune {
 
       collect_used_geometry_types_from_cell(const Cell& cell_)
         : cell(cell_)
-        , ref_el(Dune::ReferenceElements<typename Cell::ctype,Cell::dimension>::general(cell_.type()))
+        , ref_el(Dune::ReferenceElements<typename Cell::Geometry::ctype,Cell::dimension>::general(cell_.type()))
       {}
 
       const Cell& cell;
-      const Dune::ReferenceElement<typename Cell::ctype,Cell::dimension>& ref_el;
+      const Dune::ReferenceElement<typename Cell::Geometry::ctype,Cell::dimension>& ref_el;
 
     };
 

@@ -38,6 +38,7 @@ testrt02dgridfunctionspace
 testrtfem
 testutilities
 test-composed-iis-gfs
+test-dg-amg
 testmultistepcached
 testvectorwavecached
 testvectorwave
