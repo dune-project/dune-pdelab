@@ -18,7 +18,7 @@ namespace Dune {
       template<typename GFSV, typename GFSU, typename C>
       class MatrixContainer;
 
-      template<typename GFSV, typename GFSU, template<typename> class C, typename ET, typename I=std::size_t >
+      template<typename GFSV, typename GFSU, template<typename> class C, typename ET, typename I>
       class SparseMatrixContainer;
 
       template<typename _RowOrdering, typename _ColOrdering>
@@ -69,11 +69,11 @@ namespace Dune {
       };
     };
 
-    template<template<typename> class Container = simple::default_vector>
+    template<template<typename> class Container = simple::default_vector, typename IndexType = std::size_t>
     struct SimpleSparseMatrixBackend
     {
 
-      typedef std::size_t size_type;
+      typedef IndexType size_type;
 
 #if HAVE_TEMPLATE_ALIASES || DOXYGEN
 
@@ -125,7 +125,7 @@ namespace Dune {
       template<typename VV, typename VU, typename E>
       struct MatrixHelper
       {
-        typedef simple::SparseMatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,Container, E > type;
+        typedef simple::SparseMatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,Container, E, size_type> type;
       };
     };
 
