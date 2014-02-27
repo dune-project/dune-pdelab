@@ -255,7 +255,7 @@ namespace Dune {
 
         Container& base()
         {
-          return _container;
+          return *_container;
         }
 
         void flush()
