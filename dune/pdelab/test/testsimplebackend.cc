@@ -282,10 +282,10 @@ int main(int argc, char** argv)
       // solve problem
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
               Dune::PDELab::SimpleMatrixBackend<>
-              >(gv,fem,"simplebackend_yasp_Q1_2d",1);
+              >(gv,fem,"simplebackend_yasp_Q1_2d",2);
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
               Dune::PDELab::SimpleSparseMatrixBackend<>
-              >(gv,fem,"simplesparsebackend_yasp_Q1_2d",1);
+              >(gv,fem,"simplesparsebackend_yasp_Q1_2d",2);
     }
 
     // YaspGrid Q2 2D test
