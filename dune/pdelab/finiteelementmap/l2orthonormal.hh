@@ -18,13 +18,13 @@
 #include<dune/localfunctions/common/localfiniteelementtraits.hh>
 
 /** @defgroup PB Polynomial Basis
+ *  @ingroup FiniteElementMap
  *  @{
  */
 
 /** @file
  *  @brief This file defines polynomial basis functions on the reference
  *         element in a generic way
- *
  */
 
 namespace Dune {
