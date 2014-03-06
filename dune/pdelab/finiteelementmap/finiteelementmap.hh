@@ -12,8 +12,7 @@
 namespace Dune {
   namespace PDELab {
 
-    //! \addtogroup FiniteElementMap
-    //! \ingroup PDELab
+    //! \ingroup FiniteElementMap
     //! \{
 
     class FiniteElementMapError : public Exception {};
