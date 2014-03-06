@@ -55,6 +55,46 @@ namespace Dune {
         return asImp().find(e);
       }
 
+      /** @name Size calculation
+       *  The FiniteElementMap provides different methods to compute
+       *  the size of the GridFunctionSpace (if possible) without
+       *  iterating the grid. The approach is as follows (pseudo code):
+       *
+       *  \code
+       *  computeNumberOfDofs(GridView, FEM):
+       *    if(FEM.fixedSize()):
+       *      sum(FEM.size(gt)*GridView.size(gt) for gt in GeometryTypes)
+       *    else
+       *      sum(FEM.find(E).basis().size() for E in GridView.entities<0>())
+       *  \endcode
+       */
+      /** @{ */
+      /** \brief a FiniteElementMap is fixedSize iif the size of the local
+       * functions space for each GeometryType is fixed.
+       */
+      bool fixedSize() const
+      {
+        return asImp().fixedSize();
+      }
+      /** \brief if the FiniteElementMap is fixedSize, the size
+       * methods computes the number of DOFs for given GeometryType.
+       */
+      std::size_t size(GeometryType gt) const
+      {
+        return asImp().size();
+      }
+      /** @} */
+
+      /** \brief compute an upper bound for the local number of DOFs.
+       *
+       * this upper bound is used to avoid reallocations in
+       * std::vectors used during the assembly.
+       */
+      std::size_t maxLocalSize() const
+      {
+        return asImp().maxLocalSize();
+      }
+
     private:
       Imp& asImp () {return static_cast<Imp &> (*this);}
       const Imp& asImp () const {return static_cast<const Imp &>(*this);}
