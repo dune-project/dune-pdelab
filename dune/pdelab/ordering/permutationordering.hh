@@ -25,8 +25,7 @@
 namespace Dune {
   namespace PDELab {
 
-    //! \addtogroup GridFunctionSpace
-    //! \ingroup PDELab
+    //! \addtogroup Ordering
     //! \{
 
     namespace permutation_ordering {
@@ -380,7 +379,7 @@ namespace Dune {
 
     // the generic registration for PowerGridFunctionSpace happens in transformations.hh
 
-   //! \} group GridFunctionSpace
+   //! \} group Ordering
   } // namespace PDELab
 } // namespace Dune
 

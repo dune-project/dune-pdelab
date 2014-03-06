@@ -13,8 +13,7 @@
 namespace Dune {
   namespace PDELab {
 
-    //! \addtogroup GridFunctionSpace
-    //! \ingroup PDELab
+    //! \addtogroup Ordering
     //! \{
 
     //===============================================================
@@ -158,7 +157,7 @@ namespace Dune {
       SizeType intersectionOffset(const Intersection &i) const;
     };
 
-   //! \} group GridFunctionSpace
+   //! \} group Ordering
   } // namespace PDELab
 } // namespace Dune
 

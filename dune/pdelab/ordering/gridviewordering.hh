@@ -16,8 +16,7 @@
 namespace Dune {
   namespace PDELab {
 
-    //! \addtogroup GridFunctionSpace
-    //! \ingroup PDELab
+    //! \addtogroup Ordering
     //! \{
 
     struct collect_a_priori_fixed_size
@@ -773,7 +772,7 @@ namespace Dune {
     };
 
 
-   //! \} group GridFunctionSpace
+   //! \} group Ordering
   } // namespace PDELab
 } // namespace Dune
 

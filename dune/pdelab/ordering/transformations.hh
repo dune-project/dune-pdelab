@@ -25,6 +25,9 @@
 namespace Dune {
   namespace PDELab {
 
+    //! \addtogroup Ordering
+    //! \{
+
 #ifndef DOXYGEN
 
     struct extract_max_container_depth
@@ -187,6 +190,8 @@ namespace Dune {
 
 
 #endif // DOXYGEN
+
+    //! \} group ordering
 
   } // namespace PDELab
 } // namespace Dune

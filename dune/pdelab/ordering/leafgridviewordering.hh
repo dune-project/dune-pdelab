@@ -10,8 +10,7 @@
 namespace Dune {
   namespace PDELab {
 
-    //! \addtogroup GridFunctionSpace
-    //! \ingroup PDELab
+    //! \addtogroup Ordering
     //! \{
 
     //! Gridview ordering for leaf spaces
@@ -187,8 +186,7 @@ namespace Dune {
     direct_leaf_gfs_to_gridview_ordering_descriptor<GFS,Transformation>
     register_leaf_gfs_to_ordering_descriptor(GFS*,Transformation*,LeafOrderingTag<Params>*);
 
-
-   //! \} group GridFunctionSpace
+   //! \} group Ordering
   } // namespace PDELab
 } // namespace Dune
 

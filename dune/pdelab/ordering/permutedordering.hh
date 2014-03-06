@@ -97,7 +97,6 @@ namespace Dune {
     } // namespace ordering
 
     //! \addtogroup Ordering
-    //! \ingroup PDELab
     //! \{
 
     //! Ordering that permutes top-level ContainerIndex entries.

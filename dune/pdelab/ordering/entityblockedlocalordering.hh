@@ -24,6 +24,9 @@
 namespace Dune {
   namespace PDELab {
 
+    //! \addtogroup Ordering
+    //! \{
+
     template<typename ChildOrdering, std::size_t k>
     class PowerEntityBlockedLocalOrdering
       : public TypeTree::PowerNode<ChildOrdering,k>
@@ -208,7 +211,7 @@ namespace Dune {
     register_composite_gfs_to_ordering_descriptor(GFS*,Transformation*,EntityBlockedOrderingTag*);
 
 
-   //! \} group GridFunctionSpace
+   //! \} group Ordering
   } // namespace PDELab
 } // namespace Dune
 
