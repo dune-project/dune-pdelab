@@ -24,13 +24,14 @@ namespace Dune {
 
 namespace PDELab {
 
-template<typename GFS, typename V>
+template<typename GFS, typename F>
 class DiscreteGridViewFunction
   : public Functions::GridViewFunction<typename GFS::Traits::GridView,
-                            typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType
-                            >
+                                       typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType
+                                       >
 {
 
+  typedef typename BackendVectorSelector<GFS,F>::Type V;
   typedef Functions::GridViewFunction<
     typename GFS::Traits::GridView,
     typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType
@@ -39,6 +40,7 @@ class DiscreteGridViewFunction
 public:
 
   typedef typename Base::Element Element;
+  typedef typename BackendVectorSelector<GFS,F>::Type Vector;
 
   class LocalFunction
     : public Base::ElementFunction
@@ -53,7 +55,7 @@ public:
     typedef typename EBase::Domain Domain;
     typedef typename EBase::Range Range;
 
-    LocalFunction(shared_ptr<const DiscreteGridViewFunction> dgvf)
+    LocalFunction(const DiscreteGridViewFunction * const dgvf)
       : _dgvf(dgvf)
       , _lfs(dgvf->gridFunctionSpace())
       , _lfs_cache(_lfs)
@@ -63,7 +65,7 @@ public:
       , _element(nullptr)
     {}
 
-    virtual typename EBase::Derivative* derivative() const DUNE_FINAL
+    virtual typename EBase::DerivativeBasePointer derivative() const DUNE_FINAL
     {
       DUNE_THROW(NotImplemented,"bla");
     }
@@ -104,11 +106,11 @@ public:
 
   private:
 
-    typedef Dune::PDELab::LocalFunctionSpace<GFS> LFS;
-    typedef Dune::PDELab::LFSIndexCache<LFS> LFSCache;
+    typedef LocalFunctionSpace<GFS> LFS;
+    typedef LFSIndexCache<LFS> LFSCache;
     typedef typename V::template ConstLocalView<LFSCache> XView;
 
-    shared_ptr<DiscreteGridViewFunction const> _dgvf;
+    const DiscreteGridViewFunction * const _dgvf;
     LFS _lfs;
     LFSCache _lfs_cache;
     XView _x_view;
@@ -123,10 +125,10 @@ public:
 
   virtual typename Base::LocalFunctionBasePointer localFunction() const  DUNE_FINAL
   {
-    return make_shared<LocalFunction>(std::static_pointer_cast<const DiscreteGridViewFunction>(this->shared_from_this()));
+    return make_shared<LocalFunction>(this);
   }
 
-  virtual typename Base::Derivative* derivative() const DUNE_FINAL
+  virtual typename Base::DerivativeBasePointer derivative() const DUNE_FINAL
   {
     DUNE_THROW(NotImplemented,"not implemented");
   }
@@ -138,13 +140,19 @@ public:
 
   DiscreteGridViewFunction(const GFS& gfs, const V& v)
     : Base(gfs.gridView())
-    , _gfs(gfs)
+    , _pgfs(shared_ptr_from_stackobject(gfs))
+    , _v(shared_ptr_from_stackobject(v))
+  {}
+
+  DiscreteGridViewFunction(std::shared_ptr<const GFS> pgfs, std::shared_ptr<const V> v)
+    : Base(pgfs->gridView())
+    , _pgfs(pgfs)
     , _v(v)
   {}
 
   const GFS& gridFunctionSpace() const
   {
-    return _gfs;
+    return *_pgfs;
   }
 
   const V& dofs() const
@@ -154,8 +162,8 @@ public:
 
 private:
 
-  const GFS& _gfs;
-  const V& _v;
+  const shared_ptr<const GFS> _pgfs;
+  const shared_ptr<const V> _v;
 
 };
 
