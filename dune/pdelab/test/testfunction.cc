@@ -11,6 +11,11 @@
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 
+#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/finiteelementmap/p0fem.hh>
+#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/function/discretegridviewfunction.hh>
+
 // an analytic scalar function
 template<typename T>
 class F : public Dune::PDELab::FunctionInterface<
@@ -178,6 +183,33 @@ void testfunctiontree (const GV& gv)
   vtkwriter.write("multi",Dune::VTK::ascii);
 }
 
+template<class GV>
+void testgridviewfunction (const GV& gv)
+{
+    Dune::GeometryType gt;
+    gt.makeCube(2);
+    typedef Dune::PDELab::P0LocalFiniteElementMap<float,double,GV::dimension> P0FEM;
+    P0FEM p0fem(gt);
+    // make a grid function space
+    typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS;
+    P0GFS p0gfs(gv,p0fem);
+    // make vector
+    typedef typename Dune::PDELab::BackendVectorSelector<P0GFS,double>::Type Vector;
+    Vector x(p0gfs);
+    // make functions
+    Dune::PDELab::DiscreteGridViewFunction<P0GFS,double> dgvf(p0gfs,x);
+    // make local functions
+    auto localf = Dune::Functions::localFunction(dgvf);
+    // iterate grid and evaluate local function
+    for (auto it=gv.template begin<0>(); it!=gv.template end<0>(); ++it)
+    {
+        localf->bind(*it);
+        Dune::FieldVector<double,1> value;
+        localf->evaluate(it->geometry().center(), value);
+        localf->unbind();
+    }
+}
+
 int main(int argc, char** argv)
 {
   try{
@@ -212,6 +244,8 @@ int main(int argc, char** argv)
     std::cout << "testing vtk output" << std::endl;
     testvtkexport(grid.leafGridView(),F<Dune::YaspGrid<2>::ctype>());
     testfunctiontree(grid.leafGridView());
+
+    testgridviewfunction(grid.leafGridView());
 
     // test passed
     return 0;
