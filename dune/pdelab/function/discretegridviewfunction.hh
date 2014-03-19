@@ -27,30 +27,61 @@ template<typename DGVF>
 class DiscreteLocalGridViewFunction;
 
 template<typename GFS, typename F>
+struct DiscreteGridViewFunctionTraits
 class DiscreteGridViewFunction
   : public Functions::GridViewFunction<typename GFS::Traits::GridView,
                                        typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType
                                        >
 {
+  typedef GFS GridFunctionSpace;
+  typedef typename GFS::Traits::GridView GridView;
+  typedef Functions::GridViewEntitySet<GridView, 0> EntitySet;
 
-  typedef typename BackendVectorSelector<GFS,F>::Type V;
-  typedef Functions::GridViewFunction<
-    typename GFS::Traits::GridView,
-    typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType
-    > Base;
+  typedef typename EntitySet::GlobalCoordinate Domain;
+  typedef typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType Range;
+  typedef Functions::GridViewFunction<GridView, Range> FunctionInterface;
+
+  typedef F VectorFieldType;
+  typedef typename BackendVectorSelector<GridFunctionSpace,VectorFieldType>::Type Vector;
+};
+
+template<typename GFS, typename F>
+class DiscreteGridViewFunction
+  : public DiscreteGridViewFunctionBase< DiscreteLocalGridViewFunction<GFS,F> >
+{
+  typedef DiscreteGridViewFunctionBase< DiscreteLocalGridViewFunction<GFS,F> > Base;
+public:
+
+  typedef typename Base::GridFunctionSpace GridFunctionSpace;
+  typedef typename Base::Vector Vector;
+
+  DiscreteGridViewFunction(const GridFunctionSpace& gfs, const Vector& v)
+    : Base(stackobject_to_shared_ptr(gfs),stackobject_to_shared_ptr(v))
+  {}
+
+  DiscreteGridViewFunction(std::shared_ptr<const GridFunctionSpace> pgfs, std::shared_ptr<const Vector> v)
+    : Base(pgfs,v)
+  {}
+};
+
+template<typename LocalFnkt>
+class DiscreteGridViewFunctionBase
+  : public LocalFnkt::Traits::FunctionInterface
+{
+
+  typedef typename LocalFnkt::Traits Traits;
+  typedef typename Traits::FunctionInterface Base;
 
 public:
 
   typedef typename Base::Element Element;
-  typedef GFS GridFunctionSpace;
-  typedef typename BackendVectorSelector<GFS,F>::Type Vector;
-
-  typedef DiscreteLocalGridViewFunction<
-    DiscreteGridViewFunction
-    > LocalFunction;
-
   typedef typename Base::Domain Domain;
   typedef typename Base::Range Range;
+
+  typedef LocalFnkt LocalFunction;
+
+  typedef typename Traits::GridFunctionSpace GridFunctionSpace;
+  typedef typename Traits::Vector Vector;
 
   virtual typename Base::LocalFunctionBasePointer localFunction() const  DUNE_FINAL
   {
@@ -67,13 +98,7 @@ public:
     DUNE_THROW(NotImplemented,"not implemented");
   }
 
-  DiscreteGridViewFunction(const GFS& gfs, const V& v)
-    : Base(gfs.gridView())
-    , _pgfs(stackobject_to_shared_ptr(gfs))
-    , _v(stackobject_to_shared_ptr(v))
-  {}
-
-  DiscreteGridViewFunction(std::shared_ptr<const GFS> pgfs, std::shared_ptr<const V> v)
+  DiscreteGridViewFunctionBase(std::shared_ptr<const GridFunctionSpace> pgfs, std::shared_ptr<const Vector> v)
     : Base(pgfs->gridView())
     , _pgfs(pgfs)
     , _v(v)
@@ -84,36 +109,37 @@ public:
     return *_pgfs;
   }
 
-  const V& dofs() const
+  const Vector& dofs() const
   {
     return *_v;
   }
 
 private:
 
-  friend LocalFunction;
-
-  const shared_ptr<const GFS> _pgfs;
-  const shared_ptr<const V> _v;
+  const shared_ptr<const GridFunctionSpace> _pgfs;
+  const shared_ptr<const Vector> _v;
 
 };
 
-template<typename DGVF>
+template<typename GFS, typename V>
 class DiscreteLocalGridViewFunction
-  : public DGVF::Base::LocalFunction
+  : public DiscreteGridViewFunctionTraits<GFS,V>::FunctionInterface::LocalFunction
 {
 
-  typedef DGVF DiscreteGridViewFunction;
-  typedef typename DGVF::Vector Vector;
-  typedef typename DGVF::GridFunctionSpace GFS;
-  typedef typename DGVF::Base::LocalFunction EBase;
+public:
+  typedef DiscreteGridViewFunctionTraits<GFS,V> Traits;
+
+private:
+  typedef typename Traits::FunctionInterface::LocalFunction Base;
 
 public:
 
-  typedef typename EBase::LocalContext Element;
+  typedef typename Base::LocalContext Element;
+  typedef typename Base::Domain Domain;
+  typedef typename Base::Range Range;
 
-  typedef typename EBase::Domain Domain;
-  typedef typename EBase::Range Range;
+  typedef typename Traits::Vector Vector;
+  typedef typename Traits::GridFunctionSpace GridFunctionSpace;
 
   DiscreteLocalGridViewFunction(const shared_ptr<const GFS> gfs, const shared_ptr<const Vector> v)
     : _pgfs(gfs)
@@ -126,7 +152,7 @@ public:
     , _element(nullptr)
   {}
 
-  virtual typename EBase::DerivativeBasePointer derivative() const DUNE_FINAL
+  virtual typename Base::DerivativeBasePointer derivative() const DUNE_FINAL
   {
     DUNE_THROW(NotImplemented,"bla");
   }
