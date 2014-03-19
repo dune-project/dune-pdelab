@@ -43,10 +43,10 @@ public:
   typedef typename BackendVectorSelector<GFS,F>::Type Vector;
 
   class LocalFunction
-    : public Base::ElementFunction
+    : public Base::LocalFunction
   {
 
-    typedef typename Base::LocaFunction EBase;
+    typedef typename Base::LocalFunction EBase;
 
   public:
 
@@ -140,8 +140,8 @@ public:
 
   DiscreteGridViewFunction(const GFS& gfs, const V& v)
     : Base(gfs.gridView())
-    , _pgfs(shared_ptr_from_stackobject(gfs))
-    , _v(shared_ptr_from_stackobject(v))
+    , _pgfs(stackobject_to_shared_ptr(gfs))
+    , _v(stackobject_to_shared_ptr(v))
   {}
 
   DiscreteGridViewFunction(std::shared_ptr<const GFS> pgfs, std::shared_ptr<const V> v)
@@ -157,7 +157,7 @@ public:
 
   const V& dofs() const
   {
-    return _v;
+    return *_v;
   }
 
 private:
