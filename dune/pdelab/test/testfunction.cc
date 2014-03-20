@@ -208,7 +208,7 @@ void testgridviewfunction (const GV& gv)
     {
         localf->bind(*it);
         Dune::FieldVector<double,1> value;
-        Dune::FieldMatrix<double,1,dim> jacobian;
+        Dune::FieldMatrix<double,dim,1> jacobian;
         Dune::FieldMatrix<double,dim,dim> hessian;
         localf->evaluate(it->geometry().center(), value);
         Dune::Functions::derivative(localf)->
