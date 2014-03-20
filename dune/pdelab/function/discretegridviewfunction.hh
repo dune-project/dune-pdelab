@@ -23,6 +23,28 @@
 namespace Dune {
 namespace PDELab {
 
+template<class DT, class RT, int N>
+struct EvaluateDerivativeTraits
+{
+  typedef typename Functions::DerivativeTraits<
+    DT,
+    typename EvaluateDerivativeTraits<DT,RT,N-1>::RangeType
+    >::DerivativeRange Range;
+};
+
+template<class DT, class RT>
+struct EvaluateDerivativeTraits<DT,RT,1>
+{
+  typedef typename Functions::DerivativeTraits<
+    DT, RT>::DerivativeRange Range;
+};
+
+template<class DT, class RT>
+struct EvaluateDerivativeTraits<DT,RT,0>
+{
+  typedef RT Range;
+};
+
 template<typename LocalFunction>
 class DiscreteGridViewFunctionBase;
 
@@ -40,11 +62,27 @@ struct DiscreteGridViewFunctionTraits
   typedef Functions::GridViewEntitySet<GridView, 0> EntitySet;
 
   typedef typename EntitySet::GlobalCoordinate Domain;
+  //! range type of the function
   typedef typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType Range;
   typedef Functions::GridViewFunction<GridView, Range> FunctionInterface;
 
   typedef F VectorFieldType;
   typedef typename BackendVectorSelector<GridFunctionSpace,VectorFieldType>::Type Vector;
+};
+
+template<typename GFS, typename F, int N>
+struct DiscreteGridViewFunctionDerivativeTraits :
+    public DiscreteGridViewFunctionTraits<GFS,F>
+{
+  //! range type of the N'th derivative
+  typedef typename EvaluateDerivativeTraits<
+    typename DiscreteGridViewFunctionTraits<GFS,F>::Domain,
+    typename DiscreteGridViewFunctionTraits<GFS,F>::Range,
+    N
+    >::Range Range;
+  typedef Functions::GridViewFunction<
+    typename DiscreteGridViewFunctionTraits<GFS,F>::GridView,
+    Range> FunctionInterface;
 };
 
 template<typename GFS, typename F>
