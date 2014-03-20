@@ -243,6 +243,9 @@ class DiscreteLocalGridViewFunction
   using Base::_lfs;
   using Base::_yb;
   using Base::_xl;
+  using Base::_pgfs;
+  using Base::_v;
+  using Base::_element;
 
 public:
 
@@ -252,13 +255,18 @@ public:
   typedef typename Base::Vector Vector;
   typedef typename Base::GridFunctionSpace GridFunctionSpace;
 
+  typedef DiscreteLocalGridViewFunctionJacobian<GFS,V> Derivative;
+
   DiscreteLocalGridViewFunction(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
     : Base(gfs,v)
   {}
 
   virtual typename Base::DerivativeBasePointer derivative() const DUNE_FINAL
   {
-    DUNE_THROW(NotImplemented,"bla");
+    shared_ptr<Derivative> diff = make_shared<Derivative>(_pgfs,_v);
+    // TODO: do we really want this?
+    if (_element) diff->bind(*_element);
+    return diff;
   }
 
   virtual void evaluate(const Domain& coord, Range& r) const DUNE_FINAL
