@@ -12,7 +12,7 @@
 #include <dune/pdelab/common/vtkexport.hh>
 
 #include <dune/pdelab/backend/istlvectorbackend.hh>
-#include <dune/pdelab/finiteelementmap/p0fem.hh>
+#include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/function/discretegridviewfunction.hh>
 
@@ -186,26 +186,51 @@ void testfunctiontree (const GV& gv)
 template<class GV>
 void testgridviewfunction (const GV& gv)
 {
-    Dune::GeometryType gt;
-    gt.makeCube(2);
-    typedef Dune::PDELab::P0LocalFiniteElementMap<float,double,GV::dimension> P0FEM;
-    P0FEM p0fem(gt);
+    enum { dim = GV::dimension };
+    typedef Dune::PDELab::QkLocalFiniteElementMap<GV,float,double,1> Q1FEM;
+    Q1FEM q1fem(gv);
     // make a grid function space
-    typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS;
-    P0GFS p0gfs(gv,p0fem);
+    typedef Dune::PDELab::GridFunctionSpace<GV,Q1FEM> Q1GFS;
+    Q1GFS q1gfs(gv,q1fem);
     // make vector
-    typedef typename Dune::PDELab::BackendVectorSelector<P0GFS,double>::Type Vector;
-    Vector x(p0gfs);
+    typedef typename Dune::PDELab::BackendVectorSelector<Q1GFS,double>::Type Vector;
+    Vector x(q1gfs);
     // make functions
-    Dune::PDELab::DiscreteGridViewFunction<P0GFS,double> dgvf(p0gfs,x);
+    typedef Dune::PDELab::DiscreteGridViewFunction<Q1GFS,double> DiscreteFunction;
+    DiscreteFunction dgvf(q1gfs,x);
     // make local functions
-    auto localf = Dune::Functions::localFunction(dgvf);
+    typedef typename DiscreteFunction::LocalFunction LocalFunction;
+    Dune::shared_ptr<LocalFunction>
+        localf = Dune::Functions::localFunction(dgvf);
     // iterate grid and evaluate local function
+    static const int maxDiffOrder = LocalFunction::Traits::maxDiffOrder;
+    std::cout << "max diff order: " << maxDiffOrder << std::endl;
+    std::cout << "checking for:\n";
+    std::cout << "\tevaluate\n";
+    if (maxDiffOrder >= 1)
+        std::cout << "\tjacobian\n";
+    if (maxDiffOrder >= 2)
+        std::cout << "\thessian\n";
+    if (maxDiffOrder >= 3)
+        std::cout << "\tdiff(3)\n";
     for (auto it=gv.template begin<0>(); it!=gv.template end<0>(); ++it)
     {
         localf->bind(*it);
         Dune::FieldVector<double,1> value;
+        Dune::FieldMatrix<double,1,dim> jacobian;
+        Dune::FieldMatrix<double,dim,dim> hessian;
         localf->evaluate(it->geometry().center(), value);
+        if (maxDiffOrder >= 1)
+            Dune::Functions::derivative(localf)->
+                evaluate(it->geometry().center(), jacobian);
+        if (maxDiffOrder >= 2)
+            Dune::Functions::derivative(
+                Dune::Functions::derivative(localf))->
+                evaluate(it->geometry().center(), hessian);
+        if (maxDiffOrder >= 3)
+            Dune::Functions::derivative(
+                Dune::Functions::derivative(
+                    Dune::Functions::derivative(localf)));
         localf->unbind();
     }
 }
