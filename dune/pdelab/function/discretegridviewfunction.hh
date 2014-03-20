@@ -23,15 +23,17 @@
 namespace Dune {
 namespace PDELab {
 
-template<typename DGVF>
+template<typename LocalFunction>
+class DiscreteGridViewFunctionBase;
+
+template<typename GFS, typename F>
+class DiscreteLocalGridViewFunctionBase;
+
+template<typename GFS, typename F>
 class DiscreteLocalGridViewFunction;
 
 template<typename GFS, typename F>
 struct DiscreteGridViewFunctionTraits
-class DiscreteGridViewFunction
-  : public Functions::GridViewFunction<typename GFS::Traits::GridView,
-                                       typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType
-                                       >
 {
   typedef GFS GridFunctionSpace;
   typedef typename GFS::Traits::GridView GridView;
@@ -122,7 +124,7 @@ private:
 };
 
 template<typename GFS, typename V>
-class DiscreteLocalGridViewFunction
+class DiscreteLocalGridViewFunctionBase
   : public DiscreteGridViewFunctionTraits<GFS,V>::FunctionInterface::LocalFunction
 {
 
@@ -141,7 +143,7 @@ public:
   typedef typename Traits::Vector Vector;
   typedef typename Traits::GridFunctionSpace GridFunctionSpace;
 
-  DiscreteLocalGridViewFunction(const shared_ptr<const GFS> gfs, const shared_ptr<const Vector> v)
+  DiscreteLocalGridViewFunctionBase(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
     : _pgfs(gfs)
     , _v(v)
     , _lfs(*_pgfs)
@@ -151,11 +153,6 @@ public:
     , _yb(_pgfs->maxLocalSize())
     , _element(nullptr)
   {}
-
-  virtual typename Base::DerivativeBasePointer derivative() const DUNE_FINAL
-  {
-    DUNE_THROW(NotImplemented,"bla");
-  }
 
   virtual void bind(const Element& element) DUNE_FINAL
   {
@@ -172,16 +169,6 @@ public:
     _element = nullptr;
   }
 
-  virtual void evaluate(const Domain& coord, Range& r) const DUNE_FINAL
-  {
-    _lfs.finiteElement().localBasis().evaluateFunction(coord,_yb);
-    r = 0;
-    for (unsigned int i = 0; i < _yb.size(); ++i)
-      {
-        r.axpy(_xl[i],_yb[i]);
-      }
-  }
-
   virtual const Element& localContext() const  DUNE_FINAL
   {
 #ifndef NDEBUG
@@ -191,13 +178,13 @@ public:
     return *_element;
   }
 
-private:
+protected:
 
-  typedef LocalFunctionSpace<GFS> LFS;
+  typedef LocalFunctionSpace<GridFunctionSpace> LFS;
   typedef LFSIndexCache<LFS> LFSCache;
   typedef typename Vector::template ConstLocalView<LFSCache> XView;
 
-  const shared_ptr<const GFS> _pgfs;
+  const shared_ptr<const GridFunctionSpace> _pgfs;
   const shared_ptr<const Vector> _v;
   LFS _lfs;
   LFSCache _lfs_cache;
@@ -205,6 +192,46 @@ private:
   mutable std::vector<typename Vector::ElementType> _xl;
   mutable std::vector<Range> _yb;
   const Element* _element;
+
+};
+
+template<typename GFS, typename V>
+class DiscreteLocalGridViewFunction
+  : public DiscreteLocalGridViewFunctionBase<GFS,V>
+{
+
+  typedef DiscreteLocalGridViewFunctionBase<GFS,V> Base;
+
+  using Base::_lfs;
+  using Base::_yb;
+  using Base::_xl;
+
+public:
+
+  typedef typename Base::Domain Domain;
+  typedef typename Base::Range Range;
+
+  typedef typename Base::Vector Vector;
+  typedef typename Base::GridFunctionSpace GridFunctionSpace;
+
+  DiscreteLocalGridViewFunction(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
+    : Base(gfs,v)
+  {}
+
+  virtual typename Base::DerivativeBasePointer derivative() const DUNE_FINAL
+  {
+    DUNE_THROW(NotImplemented,"bla");
+  }
+
+  virtual void evaluate(const Domain& coord, Range& r) const DUNE_FINAL
+  {
+    _lfs.finiteElement().localBasis().evaluateFunction(coord,_yb);
+    r = 0;
+    for (unsigned int i = 0; i < _yb.size(); ++i)
+      {
+        r.axpy(_xl[i],_yb[i]);
+      }
+  }
 
 };
 
