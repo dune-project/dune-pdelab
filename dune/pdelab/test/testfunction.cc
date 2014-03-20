@@ -188,6 +188,7 @@ void testfunctiontree (const GV& gv)
 template<class GV>
 void testgridviewfunction (const GV& gv)
 {
+    enum { dim = GV::dimension };
     Dune::GeometryType gt;
     gt.makeCube(2);
     typedef Dune::PDELab::P0LocalFiniteElementMap<float,double,GV::dimension> P0FEM;
@@ -207,7 +208,11 @@ void testgridviewfunction (const GV& gv)
     {
         localf->bind(*it);
         Dune::FieldVector<double,1> value;
+        Dune::FieldMatrix<double,1,dim> jacobian;
+        Dune::FieldMatrix<double,dim,dim> hessian;
         localf->evaluate(it->geometry().center(), value);
+        Dune::Functions::derivative(localf)->
+            evaluate(it->geometry().center(), jacobian);
         localf->unbind();
     }
 }
