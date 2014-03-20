@@ -128,7 +128,7 @@ public:
 
   virtual typename Base::LocalFunctionBasePointer localFunction() const  DUNE_FINAL
   {
-    return make_shared<LocalFunction>(_pgfs, _v);
+    return make_shared<LocalFunction>(pgfs_, v_);
   }
 
   virtual typename Base::DerivativeBasePointer derivative() const DUNE_FINAL
@@ -143,24 +143,24 @@ public:
 
   DiscreteGridViewFunctionBase(std::shared_ptr<const GridFunctionSpace> pgfs, std::shared_ptr<const Vector> v)
     : Base(pgfs->gridView())
-    , _pgfs(pgfs)
-    , _v(v)
+    , pgfs_(pgfs)
+    , v_(v)
   {}
 
   const GridFunctionSpace& gridFunctionSpace() const
   {
-    return *_pgfs;
+    return *pgfs_;
   }
 
   const Vector& dofs() const
   {
-    return *_v;
+    return *v_;
   }
 
 private:
 
-  const shared_ptr<const GridFunctionSpace> _pgfs;
-  const shared_ptr<const Vector> _v;
+  const shared_ptr<const GridFunctionSpace> pgfs_;
+  const shared_ptr<const Vector> v_;
 
 };
 
@@ -182,38 +182,38 @@ public:
   typedef typename Traits::GridFunctionSpace GridFunctionSpace;
 
   DiscreteLocalGridViewFunctionBase(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
-    : _pgfs(gfs)
-    , _v(v)
-    , _lfs(*_pgfs)
-    , _lfs_cache(_lfs)
-    , _x_view(*_v)
-    , _xl(_pgfs->maxLocalSize())
-    , _yb(_pgfs->maxLocalSize())
-    , _element(nullptr)
+    : pgfs_(gfs)
+    , v_(v)
+    , lfs_(*pgfs_)
+    , lfs_cache_(lfs_)
+    , x_view_(*v_)
+    , xl_(pgfs_->maxLocalSize())
+    , yb_(pgfs_->maxLocalSize())
+    , element_(nullptr)
   {}
 
   virtual void bind(const Element& element) DUNE_FINAL
   {
-    _element = &element;
-    _lfs.bind(element);
-    _lfs_cache.update();
-    _x_view.bind(_lfs_cache);
-    _x_view.read(_xl);
-    _x_view.unbind();
+    element_ = &element;
+    lfs_.bind(element);
+    lfs_cache_.update();
+    x_view_.bind(lfs_cache_);
+    x_view_.read(xl_);
+    x_view_.unbind();
   }
 
   virtual void unbind() DUNE_FINAL
   {
-    _element = nullptr;
+    element_ = nullptr;
   }
 
   virtual const Element& localContext() const  DUNE_FINAL
   {
 #ifndef NDEBUG
-    if (!_element)
+    if (!element_)
       DUNE_THROW(InvalidStateException,"bla");
 #endif
-    return *_element;
+    return *element_;
   }
 
 protected:
@@ -222,14 +222,14 @@ protected:
   typedef LFSIndexCache<LFS> LFSCache;
   typedef typename Vector::template ConstLocalView<LFSCache> XView;
 
-  const shared_ptr<const GridFunctionSpace> _pgfs;
-  const shared_ptr<const Vector> _v;
-  LFS _lfs;
-  LFSCache _lfs_cache;
-  XView _x_view;
-  mutable std::vector<typename Vector::ElementType> _xl;
-  mutable std::vector<Range> _yb;
-  const Element* _element;
+  const shared_ptr<const GridFunctionSpace> pgfs_;
+  const shared_ptr<const Vector> v_;
+  LFS lfs_;
+  LFSCache lfs_cache_;
+  XView x_view_;
+  mutable std::vector<typename Vector::ElementType> xl_;
+  mutable std::vector<Range> yb_;
+  const Element* element_;
 
 };
 
@@ -240,12 +240,12 @@ class DiscreteLocalGridViewFunction
 
   typedef DiscreteLocalGridViewFunctionBase< DiscreteGridViewFunctionTraits<GFS,V> > Base;
 
-  using Base::_lfs;
-  using Base::_yb;
-  using Base::_xl;
-  using Base::_pgfs;
-  using Base::_v;
-  using Base::_element;
+  using Base::lfs_;
+  using Base::yb_;
+  using Base::xl_;
+  using Base::pgfs_;
+  using Base::v_;
+  using Base::element_;
 
 public:
 
@@ -263,19 +263,19 @@ public:
 
   virtual typename Base::DerivativeBasePointer derivative() const DUNE_FINAL
   {
-    shared_ptr<Derivative> diff = make_shared<Derivative>(_pgfs,_v);
+    shared_ptr<Derivative> diff = make_shared<Derivative>(pgfs_,v_);
     // TODO: do we really want this?
-    if (_element) diff->bind(*_element);
+    if (element_) diff->bind(*element_);
     return diff;
   }
 
   virtual void evaluate(const Domain& coord, Range& r) const DUNE_FINAL
   {
-    _lfs.finiteElement().localBasis().evaluateFunction(coord,_yb);
+    lfs_.finiteElement().localBasis().evaluateFunction(coord,yb_);
     r = 0;
-    for (unsigned int i = 0; i < _yb.size(); ++i)
+    for (unsigned int i = 0; i < yb_.size(); ++i)
       {
-        r.axpy(_xl[i],_yb[i]);
+        r.axpy(xl_[i],yb_[i]);
       }
   }
 
@@ -288,10 +288,10 @@ class DiscreteLocalGridViewFunctionJacobian
 
   typedef DiscreteLocalGridViewFunctionBase< DiscreteGridViewFunctionDerivativeTraits<GFS,V,1> > Base;
 
-  using Base::_lfs;
-  using Base::_yb;
-  using Base::_xl;
-  using Base::_element;
+  using Base::lfs_;
+  using Base::yb_;
+  using Base::xl_;
+  using Base::element_;
 
 public:
 
@@ -314,21 +314,21 @@ public:
   {
     // get Jacobian of geometry
     const typename Base::Element::Geometry::JacobianInverseTransposed
-      JgeoIT = _element->geometry().jacobianInverseTransposed(coord);
+      JgeoIT = element_->geometry().jacobianInverseTransposed(coord);
 
     // get local Jacobians/gradients of the shape functions
-    _lfs.finiteElement().localBasis().evaluateJacobian(coord,_yb);
+    lfs_.finiteElement().localBasis().evaluateJacobian(coord,yb_);
 
     typename Base::Range gradphi;
     r = 0;
-    for(unsigned int i = 0; i < _yb.size(); ++i) {
+    for(unsigned int i = 0; i < yb_.size(); ++i) {
       // compute global gradient of shape function i
       gradphi = 0;
       // TODO: in general this must be a matrix matrix product
-      JgeoIT.umv(_yb[i][0], gradphi);
+      JgeoIT.umv(yb_[i][0], gradphi);
 
       // sum up global gradients, weighting them with the appropriate coeff
-      r.axpy(_xl[i], gradphi);
+      r.axpy(xl_[i], gradphi);
     }
   }
 
