@@ -54,6 +54,9 @@ class DiscreteLocalGridViewFunctionBase;
 template<typename GFS, typename F>
 class DiscreteLocalGridViewFunction;
 
+template<typename GFS, typename V>
+class DiscreteLocalGridViewFunctionJacobian;
+
 template<typename GFS, typename F>
 struct DiscreteGridViewFunctionTraits
 {
@@ -266,6 +269,59 @@ public:
       {
         r.axpy(_xl[i],_yb[i]);
       }
+  }
+
+};
+
+template<typename GFS, typename V>
+class DiscreteLocalGridViewFunctionJacobian
+  : public DiscreteLocalGridViewFunctionBase< DiscreteGridViewFunctionDerivativeTraits<GFS,V,1> >
+{
+
+  typedef DiscreteLocalGridViewFunctionBase< DiscreteGridViewFunctionDerivativeTraits<GFS,V,1> > Base;
+
+  using Base::_lfs;
+  using Base::_yb;
+  using Base::_xl;
+  using Base::_element;
+
+public:
+
+  typedef typename Base::Domain Domain;
+  typedef typename Base::Range Range;
+
+  typedef typename Base::Vector Vector;
+  typedef typename Base::GridFunctionSpace GridFunctionSpace;
+
+  DiscreteLocalGridViewFunctionJacobian(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
+    : Base(gfs,v)
+  {}
+
+  virtual typename Base::DerivativeBasePointer derivative() const DUNE_FINAL
+  {
+    DUNE_THROW(NotImplemented,"sorry, no further derivatives");
+  }
+
+  virtual void evaluate(const Domain& coord, Range& r) const DUNE_FINAL
+  {
+    // get Jacobian of geometry
+    const typename Base::Element::Geometry::JacobianInverseTransposed
+      JgeoIT = _element->geometry().jacobianInverseTransposed(coord);
+
+    // get local Jacobians/gradients of the shape functions
+    _lfs.finiteElement().localBasis().evaluateJacobian(coord,_yb);
+
+    typename Base::Range gradphi;
+    r = 0;
+    for(unsigned int i = 0; i < _yb.size(); ++i) {
+      // compute global gradient of shape function i
+      gradphi = 0;
+      // TODO: in general this must be a matrix matrix product
+      JgeoIT.umv(_yb[i][0], gradphi);
+
+      // sum up global gradients, weighting them with the appropriate coeff
+      r.axpy(_xl[i], gradphi);
+    }
   }
 
 };
