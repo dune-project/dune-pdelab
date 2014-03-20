@@ -26,7 +26,7 @@ namespace PDELab {
 template<typename LocalFunction>
 class DiscreteGridViewFunctionBase;
 
-template<typename GFS, typename F>
+template<typename Traits>
 class DiscreteLocalGridViewFunctionBase;
 
 template<typename GFS, typename F>
@@ -123,18 +123,15 @@ private:
 
 };
 
-template<typename GFS, typename V>
+template<typename T>
 class DiscreteLocalGridViewFunctionBase
-  : public DiscreteGridViewFunctionTraits<GFS,V>::FunctionInterface::LocalFunction
+  : public T::FunctionInterface::LocalFunction
 {
 
-public:
-  typedef DiscreteGridViewFunctionTraits<GFS,V> Traits;
-
-private:
-  typedef typename Traits::FunctionInterface::LocalFunction Base;
+  typedef typename T::FunctionInterface::LocalFunction Base;
 
 public:
+  typedef T Traits;
 
   typedef typename Base::LocalContext Element;
   typedef typename Base::Domain Domain;
@@ -197,10 +194,10 @@ protected:
 
 template<typename GFS, typename V>
 class DiscreteLocalGridViewFunction
-  : public DiscreteLocalGridViewFunctionBase<GFS,V>
+  : public DiscreteLocalGridViewFunctionBase< DiscreteGridViewFunctionTraits<GFS,V> >
 {
 
-  typedef DiscreteLocalGridViewFunctionBase<GFS,V> Base;
+  typedef DiscreteLocalGridViewFunctionBase< DiscreteGridViewFunctionTraits<GFS,V> > Base;
 
   using Base::_lfs;
   using Base::_yb;
