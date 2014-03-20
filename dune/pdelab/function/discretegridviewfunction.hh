@@ -45,6 +45,18 @@ struct EvaluateDerivativeTraits<DT,RT,0>
   typedef RT Range;
 };
 
+template<typename R>
+struct LFERangeTraits
+{
+  typedef R Range;
+};
+
+template<typename F, int n, int m>
+struct LFERangeTraits< FieldMatrix<F,n,m> >
+{
+  typedef FieldMatrix<F,m,n> Range;
+};
+
 template<typename LocalFunction>
 class DiscreteGridViewFunctionBase;
 
@@ -228,7 +240,8 @@ protected:
   LFSCache lfs_cache_;
   XView x_view_;
   mutable std::vector<typename Vector::ElementType> xl_;
-  mutable std::vector<Range> yb_;
+  typedef typename LFERangeTraits<Range>::Range LFERange;
+  mutable std::vector<LFERange> yb_;
   const Element* element_;
 
 };
