@@ -29,32 +29,20 @@ struct EvaluateDerivativeTraits
   typedef typename Functions::DerivativeTraits<
     DT,
     typename EvaluateDerivativeTraits<DT,RT,N-1>::RangeType
-    >::DerivativeRange Range;
+    >::DerivativeRange DerivativeRange;
 };
 
 template<class DT, class RT>
 struct EvaluateDerivativeTraits<DT,RT,1>
 {
   typedef typename Functions::DerivativeTraits<
-    DT, RT>::DerivativeRange Range;
+    DT, RT>::DerivativeRange DerivativeRange;
 };
 
 template<class DT, class RT>
 struct EvaluateDerivativeTraits<DT,RT,0>
 {
-  typedef RT Range;
-};
-
-template<typename R>
-struct LFERangeTraits
-{
-  typedef R Range;
-};
-
-template<typename F, int n, int m>
-struct LFERangeTraits< FieldMatrix<F,n,m> >
-{
-  typedef FieldMatrix<F,m,n> Range;
+  typedef RT DerivativeRange;
 };
 
 template<typename LocalFunction>
@@ -83,6 +71,9 @@ struct DiscreteGridViewFunctionTraits
 
   typedef F VectorFieldType;
   typedef typename BackendVectorSelector<GridFunctionSpace,VectorFieldType>::Type Vector;
+
+  typedef Range LFERange;
+  enum { RangeExists = 1 };
 };
 
 template<typename GFS, typename F, int N>
@@ -94,10 +85,23 @@ struct DiscreteGridViewFunctionDerivativeTraits :
     typename DiscreteGridViewFunctionTraits<GFS,F>::Domain,
     typename DiscreteGridViewFunctionTraits<GFS,F>::Range,
     N
-    >::Range Range;
+    >::DerivativeRange DerivativeRange;
   typedef Functions::GridViewFunction<
     typename DiscreteGridViewFunctionTraits<GFS,F>::GridView,
-    Range> FunctionInterface;
+    DerivativeRange> FunctionInterface;
+  enum { RangeExists =
+         ((GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::diffOrder > N)
+           &&
+           std::is_same<DerivativeRange,Functions::InvalidRange>::value
+           ) ? 1 : 0 };
+};
+
+template<typename GFS, typename F>
+struct DiscreteGridViewFunctionJacobianTraits :
+    public DiscreteGridViewFunctionDerivativeTraits<GFS,F,1>
+{
+  typedef typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::JacobianType Jacobian;
+  typedef Jacobian LFERange;
 };
 
 template<typename GFS, typename F>
@@ -240,7 +244,7 @@ protected:
   LFSCache lfs_cache_;
   XView x_view_;
   mutable std::vector<typename Vector::ElementType> xl_;
-  typedef typename LFERangeTraits<Range>::Range LFERange;
+  typedef typename Traits::LFERange LFERange;
   mutable std::vector<LFERange> yb_;
   const Element* element_;
 
@@ -296,10 +300,10 @@ public:
 
 template<typename GFS, typename V>
 class DiscreteLocalGridViewFunctionJacobian
-  : public DiscreteLocalGridViewFunctionBase< DiscreteGridViewFunctionDerivativeTraits<GFS,V,1> >
+  : public DiscreteLocalGridViewFunctionBase< DiscreteGridViewFunctionJacobianTraits<GFS,V> >
 {
 
-  typedef DiscreteLocalGridViewFunctionBase< DiscreteGridViewFunctionDerivativeTraits<GFS,V,1> > Base;
+  typedef DiscreteLocalGridViewFunctionBase< DiscreteGridViewFunctionJacobianTraits<GFS,V> > Base;
 
   using Base::lfs_;
   using Base::yb_;
@@ -347,7 +351,7 @@ public:
 
 };
 
-} // end of namespace Dune::Functions
+} // end of namespace Dune::PDELab
 } // end of namespace Dune
 
 #endif // DUNE_PDELAB_FUNCTION_DISCRETEGRIDVIEWFUNCTION_HH
