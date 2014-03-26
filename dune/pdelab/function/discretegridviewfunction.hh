@@ -349,7 +349,6 @@ public:
 
     Range gradphi;
     r = 0;
-    // TODO: generalize this to work for arbitrary matrices r, yb_, gradphi
     for(std::size_t i = 0; i < yb_.size(); ++i) {
       assert(gradphi.size() == yb_[i].size());
       for(std::size_t j = 0; j < gradphi.size(); ++j) {
@@ -404,17 +403,29 @@ struct DiscreteLocalGridViewFunctionDerivativeCheck<GFS,V,N,true>
   }
 };
 
+template<typename T>
+struct isHessian
+{
+  static const bool value = false;
+};
+
+template<typename K, int N>
+struct isHessian< FieldMatrix<K,N,N> >
+{
+  static const bool value = true;
+};
+
 template<typename GFS, typename V, int N>
 class DiscreteLocalGridViewFunctionDerivative
   : public DiscreteLocalGridViewFunctionBase<
   DiscreteGridViewFunctionTraits<GFS,V,N>,
-  typename DiscreteGridViewFunctionTraits<GFS,V,N>::Range
+  typename DiscreteGridViewFunctionTraits<GFS,V,N>::BasicRange
   >
 {
 
   typedef DiscreteLocalGridViewFunctionBase<
     DiscreteGridViewFunctionTraits<GFS,V,N>,
-    typename DiscreteGridViewFunctionTraits<GFS,V,N>::Range
+    typename DiscreteGridViewFunctionTraits<GFS,V,N>::BasicRange
     > Base;
 
   using Base::lfs_;
@@ -448,8 +459,7 @@ public:
 
   virtual void evaluate(const Domain& coord, Range& r) const DUNE_FINAL
   {
-    DUNE_THROW(NotImplemented, "Derivate of order " << N << " is not (yet) implemented.");
-    // TODO: we currently assume affine geometries.
+    // TODO: we currently require affine geometries.
     if (! element_->geometry().affine())
       DUNE_THROW(NotImplemented, "Due to missing features in the Geometry interface, "
         "the computation of higher derivatives (>=2) works only for affine transformations.");
@@ -457,20 +467,36 @@ public:
     const typename Base::Element::Geometry::JacobianInverseTransposed
       JgeoIT = element_->geometry().jacobianInverseTransposed(coord);
 
-    // // get local Jacobians/gradients of the shape functions
-    // lfs_.finiteElement().localBasis().evaluateJacobian(coord,yb_);
+    // TODO: we currently only implement the hessian...
+    //       a proper implementation will require TMP magic.
+    static const unsigned int dim = Base::Traits::GridView::dimensionworld;
+    static_assert(
+      isHessian<Range>::value,
+      "We currently only higher order derivative we support is the Heassian of scalar functions");
 
-    // typename Base::Range gradphi;
-    // r = 0;
-    // for(unsigned int i = 0; i < yb_.size(); ++i) {
-    //   // compute global gradient of shape function i
-    //   gradphi = 0;
-    //   // TODO: in general this must be a matrix matrix product
-    //   JgeoIT.umv(yb_[i][0], gradphi);
-
-    //   // sum up global gradients, weighting them with the appropriate coeff
-    //   r.axpy(xl_[i], gradphi);
-    // }
+    // get local hessian of the shape functions
+    r = 0;
+    array<std::size_t, dim> directions;
+    for(std::size_t i = 0; i < dim; ++i) {
+      for(std::size_t j = i; j < dim; ++j) {
+        directions[0] = 0;
+        directions[1] = 0;
+        directions[i]++;
+        directions[j]++;
+        lfs_.finiteElement().localBasis().evaluate(directions,coord,yb_);
+        assert( yb_.size() == 1); // TODO: we only implement the hessian of scalar functions
+        for(std::size_t n = 0; n < yb_.size(); ++n) {
+          // sum up derivatives, weighting them with the appropriate coeff
+          r[i][j] += xl_[i] * yb_[j];
+        }
+        // use symmetry of the hessian
+        if (i != j) r[i][j] = r[j][i];
+      }
+    }
+    // transform back to global coordinates
+    for(std::size_t i = 0; i < dim; ++i)
+      for(std::size_t j = i; j < dim; ++j)
+        r[i][j] *= JgeoIT[i][j] * JgeoIT[i][j];
   }
 
 };
