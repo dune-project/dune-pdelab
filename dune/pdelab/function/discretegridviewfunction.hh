@@ -28,7 +28,7 @@ struct EvaluateDerivativeTraits
 {
   typedef typename Functions::DerivativeTraits<
     DT,
-    typename EvaluateDerivativeTraits<DT,RT,N-1>::RangeType
+    typename EvaluateDerivativeTraits<DT,RT,N-1>::DerivativeRange
     >::DerivativeRange DerivativeRange;
 };
 
@@ -48,7 +48,7 @@ struct EvaluateDerivativeTraits<DT,RT,0>
 template<typename LocalFunction>
 class DiscreteGridViewFunctionBase;
 
-template<typename Traits>
+template<typename Traits, typename LFERange>
 class DiscreteLocalGridViewFunctionBase;
 
 template<typename GFS, typename F>
@@ -57,51 +57,44 @@ class DiscreteLocalGridViewFunction;
 template<typename GFS, typename V>
 class DiscreteLocalGridViewFunctionJacobian;
 
-template<typename GFS, typename F>
+template<typename GFS, typename V, int N>
+class DiscreteLocalGridViewFunctionDerivative;
+
+  template<typename GFS, typename F, int N>
 struct DiscreteGridViewFunctionTraits
 {
+  //! the GridFunctionSpace we are operating on
   typedef GFS GridFunctionSpace;
+  //! the underlying GridView
   typedef typename GFS::Traits::GridView GridView;
+  //! the type of the corresponding codim-0 EntitySet
   typedef Functions::GridViewEntitySet<GridView, 0> EntitySet;
 
+  //! domain type (aka. coordinate type of the world dimensions)
   typedef typename EntitySet::GlobalCoordinate Domain;
-  //! range type of the function
-  typedef typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType Range;
-  typedef Functions::GridViewFunction<GridView, Range> FunctionInterface;
-
+  //! range type of the initial function
+  typedef typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType BasicRange;
+  //! data type of the vector container
   typedef F VectorFieldType;
+  //! type of the vector container
   typedef typename BackendVectorSelector<GridFunctionSpace,VectorFieldType>::Type Vector;
 
-  typedef Range LFERange;
-  enum { RangeExists = 1 };
-};
-
-template<typename GFS, typename F, int N>
-struct DiscreteGridViewFunctionDerivativeTraits :
-    public DiscreteGridViewFunctionTraits<GFS,F>
-{
   //! range type of the N'th derivative
-  typedef typename EvaluateDerivativeTraits<
-    typename DiscreteGridViewFunctionTraits<GFS,F>::Domain,
-    typename DiscreteGridViewFunctionTraits<GFS,F>::Range,
-    N
-    >::DerivativeRange DerivativeRange;
-  typedef Functions::GridViewFunction<
-    typename DiscreteGridViewFunctionTraits<GFS,F>::GridView,
-    DerivativeRange> FunctionInterface;
-  enum { RangeExists =
-         ((GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::diffOrder > N)
-           &&
-           std::is_same<DerivativeRange,Functions::InvalidRange>::value
-           ) ? 1 : 0 };
-};
+  typedef typename EvaluateDerivativeTraits<Domain, BasicRange, N>::DerivativeRange Range;
 
-template<typename GFS, typename F>
-struct DiscreteGridViewFunctionJacobianTraits :
-    public DiscreteGridViewFunctionDerivativeTraits<GFS,F,1>
-{
-  typedef typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::JacobianType Jacobian;
-  typedef Jacobian LFERange;
+  //! the function interface we are providing
+  typedef Functions::GridViewFunction<GridView, Range> FunctionInterface;
+
+  //! export how often the initial function can be differentiated
+  enum { maxDiffOrder = 1 }; // GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::diffOrder };
+  //! export which derivative we are currently evaluating
+  enum { diffOrder = N };
+  //! export whether the range for the N'th derivative exists
+  enum { RangeExists =
+         ( (diffOrder > maxDiffOrder)
+           ||
+           std::is_same<Range,Functions::InvalidRange>::value
+           ) ? 0 : 1 };
 };
 
 template<typename GFS, typename F>
@@ -180,7 +173,7 @@ private:
 
 };
 
-template<typename T>
+template<typename T, typename LFERange>
 class DiscreteLocalGridViewFunctionBase
   : public T::FunctionInterface::LocalFunction
 {
@@ -244,7 +237,6 @@ protected:
   LFSCache lfs_cache_;
   XView x_view_;
   mutable std::vector<typename Vector::ElementType> xl_;
-  typedef typename Traits::LFERange LFERange;
   mutable std::vector<LFERange> yb_;
   const Element* element_;
 
@@ -252,10 +244,16 @@ protected:
 
 template<typename GFS, typename V>
 class DiscreteLocalGridViewFunction
-  : public DiscreteLocalGridViewFunctionBase< DiscreteGridViewFunctionTraits<GFS,V> >
+  : public DiscreteLocalGridViewFunctionBase<
+  DiscreteGridViewFunctionTraits<GFS,V,0>,
+  typename DiscreteGridViewFunctionTraits<GFS,V,0>::Range
+  >
 {
 
-  typedef DiscreteLocalGridViewFunctionBase< DiscreteGridViewFunctionTraits<GFS,V> > Base;
+  typedef DiscreteLocalGridViewFunctionBase<
+    DiscreteGridViewFunctionTraits<GFS,V,0>,
+    typename DiscreteGridViewFunctionTraits<GFS,V,0>::Range
+    > Base;
 
   using Base::lfs_;
   using Base::yb_;
@@ -300,14 +298,22 @@ public:
 
 template<typename GFS, typename V>
 class DiscreteLocalGridViewFunctionJacobian
-  : public DiscreteLocalGridViewFunctionBase< DiscreteGridViewFunctionJacobianTraits<GFS,V> >
+  : public DiscreteLocalGridViewFunctionBase<
+  DiscreteGridViewFunctionTraits<GFS,V,1>,
+  typename DiscreteGridViewFunctionTraits<GFS,V,1>::Range
+  >
 {
 
-  typedef DiscreteLocalGridViewFunctionBase< DiscreteGridViewFunctionJacobianTraits<GFS,V> > Base;
+  typedef DiscreteLocalGridViewFunctionBase<
+    DiscreteGridViewFunctionTraits<GFS,V,1>,
+    typename DiscreteGridViewFunctionTraits<GFS,V,1>::Range
+    > Base;
 
   using Base::lfs_;
   using Base::yb_;
   using Base::xl_;
+  using Base::pgfs_;
+  using Base::v_;
   using Base::element_;
 
 public:
@@ -322,9 +328,14 @@ public:
     : Base(gfs,v)
   {}
 
+  typedef DiscreteLocalGridViewFunctionDerivative<GFS,V,2> Derivative;
+
   virtual typename Base::DerivativeBasePointer derivative() const DUNE_FINAL
   {
-    DUNE_THROW(NotImplemented,"sorry, no further derivatives");
+    shared_ptr<Derivative> diff = make_shared<Derivative>(pgfs_,v_);
+    // TODO: do we really want this?
+    if (element_) diff->bind(*element_);
+    return diff;
   }
 
   virtual void evaluate(const Domain& coord, Range& r) const DUNE_FINAL
@@ -336,17 +347,130 @@ public:
     // get local Jacobians/gradients of the shape functions
     lfs_.finiteElement().localBasis().evaluateJacobian(coord,yb_);
 
-    typename Base::Range gradphi;
+    Range gradphi;
     r = 0;
-    for(unsigned int i = 0; i < yb_.size(); ++i) {
-      // compute global gradient of shape function i
-      gradphi = 0;
-      // TODO: in general this must be a matrix matrix product
-      JgeoIT.umv(yb_[i][0], gradphi);
+    // TODO: generalize this to work for arbitrary matrices r, yb_, gradphi
+    for(std::size_t i = 0; i < yb_.size(); ++i) {
+      assert(gradphi.size() == yb_[i].size());
+      for(std::size_t j = 0; j < gradphi.size(); ++j) {
+        // compute global gradient of shape function i
+        // graphi += {J^{-1}}^T * yb_i0
+        JgeoIT.mv(yb_[i][j], gradphi[j]);
 
-      // sum up global gradients, weighting them with the appropriate coeff
-      r.axpy(xl_[i], gradphi);
+        // sum up global gradients, weighting them with the appropriate coeff
+        // r \in R^{1,dim}
+        // r_0 += xl_i * grad \phi
+        r[j].axpy(xl_[i], gradphi[j]);
+      }
     }
+  }
+
+};
+
+template<typename GFS, typename V, int N,
+         bool DerivativeExists = DiscreteGridViewFunctionTraits<GFS,V,N>::RangeExists >
+struct DiscreteLocalGridViewFunctionDerivativeCheck
+{
+  typedef DiscreteLocalGridViewFunctionBase<
+    DiscreteGridViewFunctionTraits<GFS,V,N>,
+    typename DiscreteGridViewFunctionTraits<GFS,V,N>::Range
+    > Base;
+  typedef DiscreteLocalGridViewFunctionDerivative<GFS,V,N+1> Derivative;
+  typedef typename Base::Vector Vector;
+  typedef typename Base::GridFunctionSpace GridFunctionSpace;
+
+  static
+  shared_ptr<Derivative> derivative(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
+  {
+    DUNE_THROW(NotImplemented,"sorry, no further derivatives");
+  }
+};
+
+template<typename GFS, typename V, int N>
+struct DiscreteLocalGridViewFunctionDerivativeCheck<GFS,V,N,true>
+{
+  typedef DiscreteLocalGridViewFunctionBase<
+    DiscreteGridViewFunctionTraits<GFS,V,N>,
+    typename DiscreteGridViewFunctionTraits<GFS,V,N>::Range
+    > Base;
+  typedef DiscreteLocalGridViewFunctionDerivative<GFS,V,N+1> Derivative;
+  typedef typename Base::Vector Vector;
+  typedef typename Base::GridFunctionSpace GridFunctionSpace;
+
+  static
+  shared_ptr<Derivative> derivative(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
+  {
+    return make_shared<Derivative>(gfs,v);
+  }
+};
+
+template<typename GFS, typename V, int N>
+class DiscreteLocalGridViewFunctionDerivative
+  : public DiscreteLocalGridViewFunctionBase<
+  DiscreteGridViewFunctionTraits<GFS,V,N>,
+  typename DiscreteGridViewFunctionTraits<GFS,V,N>::Range
+  >
+{
+
+  typedef DiscreteLocalGridViewFunctionBase<
+    DiscreteGridViewFunctionTraits<GFS,V,N>,
+    typename DiscreteGridViewFunctionTraits<GFS,V,N>::Range
+    > Base;
+
+  using Base::lfs_;
+  using Base::yb_;
+  using Base::xl_;
+  using Base::pgfs_;
+  using Base::v_;
+  using Base::element_;
+
+public:
+
+  typedef typename Base::Domain Domain;
+  typedef typename Base::Range Range;
+
+  typedef typename Base::Vector Vector;
+  typedef typename Base::GridFunctionSpace GridFunctionSpace;
+
+  typedef typename DiscreteLocalGridViewFunctionDerivativeCheck<GFS,V,N>::Derivative Derivative;
+
+  DiscreteLocalGridViewFunctionDerivative(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
+    : Base(gfs,v)
+  {}
+
+  virtual typename Base::DerivativeBasePointer derivative() const DUNE_FINAL
+  {
+    shared_ptr<Derivative> diff = DiscreteLocalGridViewFunctionDerivativeCheck<GFS,V,N>::derivative(pgfs_,v_);
+    // TODO: do we really want this?
+    if (element_) diff->bind(*element_);
+    return diff;
+  }
+
+  virtual void evaluate(const Domain& coord, Range& r) const DUNE_FINAL
+  {
+    DUNE_THROW(NotImplemented, "Derivate of order " << N << " is not (yet) implemented.");
+    // TODO: we currently assume affine geometries.
+    if (! element_->geometry().affine())
+      DUNE_THROW(NotImplemented, "Due to missing features in the Geometry interface, "
+        "the computation of higher derivatives (>=2) works only for affine transformations.");
+    // get Jacobian of geometry
+    const typename Base::Element::Geometry::JacobianInverseTransposed
+      JgeoIT = element_->geometry().jacobianInverseTransposed(coord);
+
+    // // get local Jacobians/gradients of the shape functions
+    // lfs_.finiteElement().localBasis().evaluateJacobian(coord,yb_);
+
+    // typename Base::Range gradphi;
+    // r = 0;
+    // for(unsigned int i = 0; i < yb_.size(); ++i) {
+    //   // compute global gradient of shape function i
+    //   gradphi = 0;
+    //   // TODO: in general this must be a matrix matrix product
+    //   JgeoIT.umv(yb_[i][0], gradphi);
+
+    //   // sum up global gradients, weighting them with the appropriate coeff
+    //   r.axpy(xl_[i], gradphi);
+    // }
   }
 
 };
