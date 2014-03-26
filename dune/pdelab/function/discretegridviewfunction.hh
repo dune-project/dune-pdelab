@@ -48,19 +48,7 @@ struct EvaluateDerivativeTraits<DT,RT,0>
 template<typename LocalFunction>
 class DiscreteGridViewFunctionBase;
 
-template<typename Traits, typename LFERange>
-class DiscreteLocalGridViewFunctionBase;
-
-template<typename GFS, typename F>
-class DiscreteLocalGridViewFunction;
-
-template<typename GFS, typename V>
-class DiscreteLocalGridViewFunctionJacobian;
-
-template<typename GFS, typename V, int N>
-class DiscreteLocalGridViewFunctionDerivative;
-
-  template<typename GFS, typename F, int N>
+template<typename GFS, typename F, int N>
 struct DiscreteGridViewFunctionTraits
 {
   //! the GridFunctionSpace we are operating on
@@ -96,6 +84,19 @@ struct DiscreteGridViewFunctionTraits
            std::is_same<Range,Functions::InvalidRange>::value
            ) ? 0 : 1 };
 };
+
+template<typename Traits, typename LFERange>
+class DiscreteLocalGridViewFunctionBase;
+
+template<typename GFS, typename F>
+class DiscreteLocalGridViewFunction;
+
+template<typename GFS, typename V>
+class DiscreteLocalGridViewFunctionJacobian;
+
+template<typename GFS, typename V, int N,
+         bool DerivativeExists = DiscreteGridViewFunctionTraits<GFS,V,N+1>::RangeExists>
+class DiscreteLocalGridViewFunctionDerivative;
 
 template<typename GFS, typename F>
 class DiscreteGridViewFunction
@@ -329,6 +330,7 @@ public:
   {}
 
   typedef DiscreteLocalGridViewFunctionDerivative<GFS,V,2> Derivative;
+  // typedef typename DiscreteLocalGridViewFunctionDerivativeCheck<GFS,V,2>::Derivative Derivative;
 
   virtual typename Base::DerivativeBasePointer derivative() const DUNE_FINAL
   {
@@ -366,56 +368,19 @@ public:
 
 };
 
-template<typename GFS, typename V, int N,
-         bool DerivativeExists = DiscreteGridViewFunctionTraits<GFS,V,N>::RangeExists >
-struct DiscreteLocalGridViewFunctionDerivativeCheck
-{
-  typedef DiscreteLocalGridViewFunctionBase<
-    DiscreteGridViewFunctionTraits<GFS,V,N>,
-    typename DiscreteGridViewFunctionTraits<GFS,V,N>::Range
-    > Base;
-  typedef DiscreteLocalGridViewFunctionDerivative<GFS,V,N+1> Derivative;
-  typedef typename Base::Vector Vector;
-  typedef typename Base::GridFunctionSpace GridFunctionSpace;
+// template<typename T>
+// struct isHessian
+// {
+//   static const bool value = false;
+// };
 
-  static
-  shared_ptr<Derivative> derivative(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
-  {
-    DUNE_THROW(NotImplemented,"sorry, no further derivatives");
-  }
-};
+// template<typename K, int N>
+// struct isHessian< FieldMatrix<K,N,N> >
+// {
+//   static const bool value = true;
+// };
 
-template<typename GFS, typename V, int N>
-struct DiscreteLocalGridViewFunctionDerivativeCheck<GFS,V,N,true>
-{
-  typedef DiscreteLocalGridViewFunctionBase<
-    DiscreteGridViewFunctionTraits<GFS,V,N>,
-    typename DiscreteGridViewFunctionTraits<GFS,V,N>::Range
-    > Base;
-  typedef DiscreteLocalGridViewFunctionDerivative<GFS,V,N+1> Derivative;
-  typedef typename Base::Vector Vector;
-  typedef typename Base::GridFunctionSpace GridFunctionSpace;
-
-  static
-  shared_ptr<Derivative> derivative(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
-  {
-    return make_shared<Derivative>(gfs,v);
-  }
-};
-
-template<typename T>
-struct isHessian
-{
-  static const bool value = false;
-};
-
-template<typename K, int N>
-struct isHessian< FieldMatrix<K,N,N> >
-{
-  static const bool value = true;
-};
-
-template<typename GFS, typename V, int N>
+template<typename GFS, typename V, int N, bool>
 class DiscreteLocalGridViewFunctionDerivative
   : public DiscreteLocalGridViewFunctionBase<
   DiscreteGridViewFunctionTraits<GFS,V,N>,
@@ -443,7 +408,8 @@ public:
   typedef typename Base::Vector Vector;
   typedef typename Base::GridFunctionSpace GridFunctionSpace;
 
-  typedef typename DiscreteLocalGridViewFunctionDerivativeCheck<GFS,V,N>::Derivative Derivative;
+//  typedef typename DiscreteLocalGridViewFunctionDerivativeCheck<GFS,V,N>::Derivative Derivative;
+  typedef DiscreteLocalGridViewFunctionDerivative<GFS,V,N+1> Derivative;
 
   DiscreteLocalGridViewFunctionDerivative(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
     : Base(gfs,v)
@@ -451,7 +417,8 @@ public:
 
   virtual typename Base::DerivativeBasePointer derivative() const DUNE_FINAL
   {
-    shared_ptr<Derivative> diff = DiscreteLocalGridViewFunctionDerivativeCheck<GFS,V,N>::derivative(pgfs_,v_);
+    shared_ptr<Derivative> diff = make_shared<Derivative>(pgfs_,v_);
+      //DiscreteLocalGridViewFunctionDerivativeCheck<GFS,V,N>::derivative(pgfs_,v_);
     // TODO: do we really want this?
     if (element_) diff->bind(*element_);
     return diff;
@@ -470,9 +437,9 @@ public:
     // TODO: we currently only implement the hessian...
     //       a proper implementation will require TMP magic.
     static const unsigned int dim = Base::Traits::GridView::dimensionworld;
-    static_assert(
-      isHessian<Range>::value,
-      "We currently only higher order derivative we support is the Heassian of scalar functions");
+    // static_assert(
+    //   isHessian<Range>::value,
+    //   "We currently only higher order derivative we support is the Hessian of scalar functions");
 
     // get local hessian of the shape functions
     r = 0;
@@ -497,6 +464,54 @@ public:
     for(std::size_t i = 0; i < dim; ++i)
       for(std::size_t j = i; j < dim; ++j)
         r[i][j] *= JgeoIT[i][j] * JgeoIT[i][j];
+  }
+
+};
+
+template<typename GFS, typename V, int N>
+class DiscreteLocalGridViewFunctionDerivative<GFS,V,N,false>
+  : public DiscreteLocalGridViewFunctionBase<
+  DiscreteGridViewFunctionTraits<GFS,V,N>,
+  typename DiscreteGridViewFunctionTraits<GFS,V,N>::BasicRange
+  >
+{
+
+  typedef DiscreteLocalGridViewFunctionBase<
+    DiscreteGridViewFunctionTraits<GFS,V,N>,
+    typename DiscreteGridViewFunctionTraits<GFS,V,N>::BasicRange
+    > Base;
+
+  using Base::lfs_;
+  using Base::yb_;
+  using Base::xl_;
+  using Base::pgfs_;
+  using Base::v_;
+  using Base::element_;
+
+public:
+
+  typedef typename Base::Domain Domain;
+  typedef typename Base::Range Range;
+
+  typedef typename Base::Vector Vector;
+  typedef typename Base::GridFunctionSpace GridFunctionSpace;
+
+  typedef DiscreteLocalGridViewFunctionDerivative<GFS,V,N+1> Derivative;
+
+  DiscreteLocalGridViewFunctionDerivative(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
+    : Base(gfs,v)
+  {
+    DUNE_THROW(InvalidStateException, N << "th derivative not available");
+  }
+
+  virtual typename Base::DerivativeBasePointer derivative() const DUNE_FINAL
+  {
+    DUNE_THROW(InvalidStateException, N << "th derivative not available, thus you can't call any methods.");
+  }
+
+  virtual void evaluate(const Domain& coord, Range& r) const DUNE_FINAL
+  {
+    DUNE_THROW(InvalidStateException, N << "th derivative not available, thus you can't call any methods.");
   }
 
 };
