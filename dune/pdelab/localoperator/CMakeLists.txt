@@ -18,6 +18,7 @@ set(common_HEADERS
         idefault.hh                             
         interface.hh                            
         l2.hh                                   
+        laplace.hh
         laplacedirichletccfv.hh                 
         laplacedirichletp12d.hh                 
         linearelasticity.hh
