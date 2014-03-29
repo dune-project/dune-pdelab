@@ -70,8 +70,6 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSU_SUB::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType JacobianType;
-        typedef typename LFSU_SUB::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSU_SUB::Traits::SizeType size_type;
 
@@ -87,10 +85,6 @@ namespace Dune {
         // loop over quadrature points
         for (typename QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
         {
-          // evaluate basis functions
-          std::vector<RangeType> phi(lfsu.child(0).size());
-          lfsu.child(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
-
           // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
           std::vector<JacobianType> js(lfsu.child(0).size());
           lfsu.child(0).finiteElement().localBasis().evaluateJacobian(it->position(),js);
@@ -154,8 +148,6 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType JacobianType;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSU::Traits::SizeType size_type;
 
@@ -171,10 +163,6 @@ namespace Dune {
         // loop over quadrature points
         for (typename QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
         {
-          // evaluate basis functions
-          std::vector<RangeType> phi(lfsu_hat.child(0).size());
-          lfsu_hat.child(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
-
           // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
           std::vector<JacobianType> js(lfsu_hat.child(0).size());
           lfsu_hat.child(0).finiteElement().localBasis().evaluateJacobian(it->position(),js);
