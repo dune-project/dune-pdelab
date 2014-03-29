@@ -42,7 +42,6 @@ namespace Dune {
      */
     template<typename F, typename B, typename J>
     class Poisson : public NumericalJacobianApplyVolume<Poisson<F,B,J> >,
-                    public NumericalJacobianVolume<Poisson<F,B,J> >,
                     public FullVolumePattern,
                     public LocalOperatorDefaultFlags
 	{
@@ -72,6 +71,21 @@ namespace Dune {
         laplace_.alpha_volume(eg, lfsu, x, lfsv, r);
 	  }
 
+      /** \brief Compute the Laplace stiffness matrix for the element given in 'eg'
+       *
+       * \tparam M Type of the element stiffness matrix
+       *
+       * \param [in]  eg The grid element we are assembling on
+       * \param [in]  lfsu Local ansatz function space basis
+       * \param [in]  lfsv Local test function space basis
+       * \param [in]  x Current configuration; gets ignored for linear problems like this one
+       * \param [out] matrix Element stiffness matrix
+       */
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
+      void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & matrix) const
+      {
+        laplace_.jacobian_volume(eg, lfsu, x, lfsv, matrix);
+      }
  	  // volume integral depending only on test functions
 	  template<typename EG, typename LFSV, typename R>
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
