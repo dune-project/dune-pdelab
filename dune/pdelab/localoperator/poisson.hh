@@ -15,6 +15,8 @@
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
+#include <dune/pdelab/localoperator/laplace.hh>
+
 #include"defaultimp.hh"
 #include"idefault.hh"
 #include"pattern.hh"
@@ -59,6 +61,7 @@ namespace Dune {
        */
       Poisson (const F& f_, const B& bctype_, const J& j_, unsigned int quadOrder)
         : f(f_), bctype(bctype_), j(j_),
+        laplace_(quadOrder),
         quadOrder_(quadOrder)
       {}
 
@@ -66,50 +69,7 @@ namespace Dune {
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
 	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
 	  {
-		// domain and range field type
-        typedef FiniteElementInterfaceSwitch<
-          typename LFSU::Traits::FiniteElementType
-          > FESwitch;
-        typedef BasisInterfaceSwitch<
-          typename FESwitch::Basis
-          > BasisSwitch;
-        typedef typename BasisSwitch::DomainField DF;
-        typedef typename BasisSwitch::RangeField RF;
-
-        // dimensions
-        static const int dimLocal = EG::Geometry::mydimension;
-        static const int dimGlobal = EG::Geometry::coorddimension;
-
-        // select quadrature rule
-        Dune::GeometryType gt = eg.geometry().type();
-        const Dune::QuadratureRule<DF,dimLocal>& rule =
-          Dune::QuadratureRules<DF,dimLocal>::rule(gt,quadOrder_);
-
-        // loop over quadrature points
-        for(typename Dune::QuadratureRule<DF,dimLocal>::const_iterator it =
-              rule.begin(); it!=rule.end(); ++it)
-          {
-            // evaluate gradient of shape functions
-            // (we assume Galerkin method lfsu=lfsv)
-            std::vector<Dune::FieldMatrix<RF,1,dimGlobal> >
-              gradphiu(lfsu.size());
-            BasisSwitch::gradient(FESwitch::basis(lfsu.finiteElement()),
-                                  eg.geometry(), it->position(), gradphiu);
-            std::vector<Dune::FieldMatrix<RF,1,dimGlobal> >
-              gradphiv(lfsv.size());
-            BasisSwitch::gradient(FESwitch::basis(lfsv.finiteElement()),
-                                  eg.geometry(), it->position(), gradphiv);
-
-            // compute gradient of u
-            Dune::FieldVector<RF,dimGlobal> gradu(0.0);
-            for (size_t i=0; i<lfsu.size(); i++)
-              gradu.axpy(x(lfsu,i),gradphiu[i][0]);
-
-            // integrate grad u * grad phi_i
-            RF factor = r.weight() * it->weight() * eg.geometry().integrationElement(it->position());
-            for (size_t i=0; i<lfsv.size(); i++)
-              r.rawAccumulate(lfsv,i,(gradu*gradphiv[i][0])*factor);
-          }
+        laplace_.alpha_volume(eg, lfsu, x, lfsv, r);
 	  }
 
  	  // volume integral depending only on test functions
@@ -211,6 +171,9 @@ namespace Dune {
       const F& f;
       const B& bctype;
       const J& j;
+
+      // Laplace assembler to handle the matrix assembly
+      Laplace laplace_;
 
       // Quadrature rule order
       unsigned int quadOrder_;
