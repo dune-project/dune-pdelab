@@ -103,11 +103,11 @@ namespace Dune {
           RF mu = param_.mu(eg.entity(),it->position());
           RF lambda = param_.lambda(eg.entity(),it->position());
 
+          // geometric weight
+          RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+
           for(int d=0; d<dim; ++d)
           {
-            // geometric weight
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
-
             for (size_type i=0; i<lfsu.child(0).size(); i++)
             {
               for (int k=0; k<dim; k++)
@@ -181,6 +181,9 @@ namespace Dune {
           RF mu = param_.mu(eg.entity(),it->position());
           RF lambda = param_.lambda(eg.entity(),it->position());
 
+          // geometric weight
+          RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+
           for(int d=0; d<dim; ++d)
           {
             const LFSU & lfsu = lfsu_hat.child(d);
@@ -191,9 +194,6 @@ namespace Dune {
             {
               gradu.axpy(x(lfsu,i),gradphi[i]);
             }
-
-            // geometric weight
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
 
             for (size_type i=0; i<lfsv.child(d).size(); i++)
             {
