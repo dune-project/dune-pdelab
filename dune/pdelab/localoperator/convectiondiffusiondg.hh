@@ -186,7 +186,7 @@ namespace Dune {
             // evaluate reaction term
             typename T::Traits::RangeFieldType c = param.c(eg.entity(),it->position());
 
-            // integrate (K grad u - bu)*grad phi_i + a*u*phi_i
+            // integrate (A grad u - bu)*grad phi_i + a*u*phi_i
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_type i=0; i<lfsv.size(); i++)
               r.accumulate(lfsv,i,( Agradu*gradpsi[i] - u*(b*gradpsi[i]) + c*u*psi[i] )*factor);
@@ -262,7 +262,7 @@ namespace Dune {
             // evaluate reaction term
             typename T::Traits::RangeFieldType c = param.c(eg.entity(),it->position());
 
-            // integrate (K grad u - bu)*grad phi_i + a*u*phi_i
+            // integrate (A grad u - bu)*grad phi_i + a*u*phi_i
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_type j=0; j<lfsu.size(); j++)
               for (size_type i=0; i<lfsu.size(); i++)
