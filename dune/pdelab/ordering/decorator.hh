@@ -13,6 +13,9 @@
 namespace Dune {
   namespace PDELab {
 
+    //! \addtogroup Ordering
+    //! \{
+
     namespace ordering {
 
 #ifndef DOXYGEN
@@ -387,6 +390,8 @@ namespace Dune {
       register_composite_gfs_to_ordering_descriptor(GFS*,Transformation*,decorated_ordering_tag<D,U>*);
 
     } // namespace ordering
+
+    //! \} group ordering
 
   } // namespace PDELab
 } // namespace Dune

@@ -269,7 +269,7 @@ namespace Dune {
     MatrixExchangeDataHandle<GFS,M> mexdh(gfs,matrix,l2g,g2l,matrix2);
     if (gfs.gridView().comm().size()>1)
       gfs.gridView().communicate(mexdh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
-  };
+  }
 
   //***********************************************************
   // The DG/AMG preconditioner in the overlapping case

@@ -20,6 +20,9 @@
 namespace Dune {
   namespace PDELab {
 
+    //! \addtogroup Ordering
+    //! \{
+
     template<typename OrderingTag, typename FEM, typename GV, typename DI, typename CI>
     class DirectLeafLocalOrdering
       : public TypeTree::LeafNode
@@ -318,6 +321,7 @@ namespace Dune {
 
     };
 
+    //! \} group ordering
 
   } // namespace PDELab
 } // namespace Dune

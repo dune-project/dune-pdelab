@@ -20,8 +20,7 @@
 namespace Dune {
   namespace PDELab {
 
-    //! \addtogroup Ordering Ordering
-    //! \ingroup PDELab
+    //! \addtogroup Ordering
     //! \{
 
     //! A view on a subtree of a multi-component ordering.

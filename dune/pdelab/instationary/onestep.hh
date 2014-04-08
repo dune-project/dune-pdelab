@@ -23,15 +23,6 @@ namespace Dune {
   namespace PDELab {
 
     /**
-     * @defgroup OneStepMethod One-step methods
-     * @ingroup PDELab
-     *
-     * @brief Time stepping with one step methods.
-     *
-     * Use the class OneStepMethod to create a one step method.
-     * the actual method is chosen by providing the constructor
-     * with the correct parameter class, e.g. ExplicitEulerParameter.
-     *
      *  @addtogroup OneStepMethod
      *  @{
      */

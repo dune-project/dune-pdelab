@@ -12,6 +12,9 @@
 namespace Dune {
   namespace PDELab {
 
+    //! \addtogroup Ordering
+    //! \{
+
     template<typename GV, typename DI, typename CI>
     class SingleCodimLeafOrdering
       : public TypeTree::LeafNode
@@ -98,6 +101,7 @@ namespace Dune {
 
     };
 
+    //! \} group ordering
 
   } // namespace PDELab
 } // namespace Dune
