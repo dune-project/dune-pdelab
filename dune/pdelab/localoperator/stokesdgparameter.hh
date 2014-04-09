@@ -157,7 +157,7 @@ namespace Dune {
     {
 
       //!  of base class
-      typedef StokesDGParameters<GV,F,B,V,J,IP> Base;
+      typedef StokesDGParameters<GV,RF,F,B,V,J,IP> Base;
 
     public:
 
