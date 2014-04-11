@@ -1,10 +1,14 @@
 #ifndef DUNE_PDELAB_SEQ_AMG_DG_BACKEND_HH
 #define DUNE_PDELAB_SEQ_AMG_DG_BACKEND_HH
 
+#include <dune/istl/matrixmatrix.hh>
+
 #include <dune/grid/common/datahandleif.hh>
+
 #include <dune/pdelab/backend/istlvectorbackend.hh>
 #include <dune/pdelab/backend/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/ovlpistlsolverbackend.hh>
+#include <dune/pdelab/gridoperator/gridoperator.hh>
 
 namespace Dune {
   namespace PDELab {
