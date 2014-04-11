@@ -5,6 +5,7 @@
 *.lo
 *.a
 *.la
+*~
 Makefile
 Makefile.in
 
