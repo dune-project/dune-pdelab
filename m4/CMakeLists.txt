@@ -1,11 +1,8 @@
 set(M4FILES
-  cxx0x_template_aliases.m4
-  cxx11_decltype.m4
   dune-unordered-containers.m4
   dune-pdelab.m4
   dune-posix-clock.m4
   eigen.m4
-  gcc___typeof__.m4
   petsc.m4)
 
 set(aclocaldir  ${CMAKE_INSTALL_DATADIR}/dune/aclocal)
