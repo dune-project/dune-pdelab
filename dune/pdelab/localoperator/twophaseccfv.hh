@@ -414,8 +414,6 @@ namespace Dune {
           Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename PLSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename PLSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
 
         // face geometry
         const Dune::FieldVector<DF,dim-1>&
