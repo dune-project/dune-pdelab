@@ -176,7 +176,7 @@ namespace Dune {
             for (size_type i=0; i<lfsu.size(); i++)
               gradu.axpy(x(lfsu,i),gradphi[i]);
 
-            // compute K * gradient of u
+            // compute A * gradient of u
             Dune::FieldVector<RF,dim> Agradu(0.0);
             A.umv(gradu,Agradu);
 
