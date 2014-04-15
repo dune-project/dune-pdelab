@@ -31,6 +31,7 @@ finiteelementmap_HEADERS =			\
 	qkdg.hh					\
 	qkfem.hh				\
 	rannacher_turek2dfem.hh			\
+	rannacherturekfem.hh			\
 	raviartthomasfem.hh			\
 	rt0constraints.hh			\
 	rt0cube2dfem.hh				\
