@@ -138,6 +138,22 @@ foreach(dimension ${dimensions})
 endforeach(dimension ${dimensions})
 
 
+# Rannacher-Turek in 2D and 3D for cube
+
+foreach(dimension ${dimensions})
+  set(target testrannacherturekcube${dimension}dfem)
+  add_executable(${target} testfemwithgfs.cc)
+  set_property(TARGET ${target} APPEND PROPERTY COMPILE_DEFINITIONS
+    FEM_DIM=${dimension} FEM_CUBE
+    USE_RANNACHER_TUREK_FEM_FACTORY
+    FEM_FACTORY=RannacherTurekFEMFactory
+    GRIDSDIR="${CMAKE_SOURCE_DIR}/grids" )
+  add_dune_gmp_flags(${target})
+  add_dune_alugrid_flags(${target})
+  list(APPEND TESTS ${target})
+endforeach(dimension ${dimensions})
+
+
 # We do not want want to build the tests during make all
 # but just build them on demand
 add_directory_test_target(_test_target)

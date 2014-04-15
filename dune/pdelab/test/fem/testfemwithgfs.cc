@@ -22,7 +22,7 @@
 #include "rtbdmfem.hh"
 #include "opbfem.hh"
 #include "pkfem.hh"
-
+#include "rannacherturekfem.hh"
 
 
 // Run unit tests for given FEM
