@@ -288,8 +288,6 @@ namespace Dune {
         RF epsilon_s = std::min( A_s[0][0], A_s[1][1]);
         if( dim>2 ) epsilon_s = std::min( A_s[2][2], epsilon_s );
 
-        const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
-
         // select quadrature rule
         const int pOrder_s = lfsu_s.finiteElement().localBasis().order();
         const int intorder = 2 * pOrder_s;
