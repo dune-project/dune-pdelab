@@ -357,7 +357,7 @@ namespace Dune {
         // penalty factor
         RF penalty_factor = (alpha/h_F) * harmonic_average * degree*(degree+dim-1);
 
-        // loop over quadrature points and integrate normal flux
+        // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
             // exact normal
@@ -562,7 +562,7 @@ namespace Dune {
         // penalty factor
         RF penalty_factor = (alpha/h_F) * harmonic_average * degree*(degree+dim-1);
 
-        // loop over quadrature points and integrate normal flux
+        // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
             // exact normal
@@ -729,7 +729,7 @@ namespace Dune {
         // penalty factor
         RF penalty_factor = (alpha/h_F) * harmonic_average * degree*(degree+dim-1);
 
-        // loop over quadrature points and integrate normal flux
+        // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
             // position of quadrature point in local coordinates of elements
@@ -927,7 +927,7 @@ namespace Dune {
         // Neumann boundary makes no contribution to boundary
         if (bctype == ConvectionDiffusionBoundaryConditions::Neumann) return;
 
-        // loop over quadrature points and integrate normal flux
+        // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
             // position of quadrature point in local coordinates of elements
