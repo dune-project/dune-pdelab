@@ -153,7 +153,12 @@ foreach(dimension ${dimensions})
   list(APPEND TESTS ${target})
 endforeach(dimension ${dimensions})
 
-
+# add test include property manually because the folder is not called "test"
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  PROPERTY TEST_INCLUDE_FILE ${CMAKE_CURRENT_BINARY_DIR}/BuildTests.cmake)
+foreach(_test ${TESTS})
+  add_test(${_test} ${_test})
+endforeach()
 # We do not want want to build the tests during make all
 # but just build them on demand
 add_directory_test_target(_test_target)

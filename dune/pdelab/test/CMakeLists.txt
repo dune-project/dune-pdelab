@@ -1,4 +1,4 @@
-add_subdirectory(fem)
+add_subdirectory(fem EXCLUDE_FROM_ALL)
 
 # TODO: install subfolder grids and all its contents
 # TODO: install make_pvd.sh
