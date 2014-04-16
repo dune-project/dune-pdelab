@@ -105,7 +105,7 @@ int main(int argc, char** argv)
     {
       typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
 
-      Grid grid("grids/2dtriangle.alu");
+      Grid grid(GRIDSDIR "/2dtriangle.alu");
       //grid->globalRefine(1);
 
       rt02DGridFunctionSpace(grid.leafGridView(), "alu");

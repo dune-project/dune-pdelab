@@ -38,7 +38,7 @@ foreach(geometry ${geometries})
       FEM_FACTORY=RTBDMFEMFactory
       FEM_FACTORY_FEM_CLASS=Dune::PDELab::RaviartThomasLocalFiniteElementMap
       FEM_FACTORY_ORDER=${order}
-      GRIDSDIR="${CMAKE_SOURCE_DIR}/grids" )
+      GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids")
     add_dune_gmp_flags(${target})
     add_dune_alugrid_flags(${target})
     list(APPEND TESTS ${target})
@@ -56,7 +56,7 @@ set_property(TARGET ${target} APPEND PROPERTY COMPILE_DEFINITIONS
   FEM_FACTORY=RTBDMFEMFactory
   FEM_FACTORY_FEM_CLASS=Dune::PDELab::RaviartThomasLocalFiniteElementMap
   FEM_FACTORY_ORDER=2
-  GRIDSDIR="${CMAKE_SOURCE_DIR}/grids")
+  GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids")
 add_dune_gmp_flags(${target})
 add_dune_alugrid_flags(${target})
 list(APPEND TESTS ${target})
@@ -73,7 +73,7 @@ foreach(order 0 1)
     FEM_FACTORY=RTBDMFEMFactory
     FEM_FACTORY_FEM_CLASS=Dune::PDELab::RaviartThomasLocalFiniteElementMap
     FEM_FACTORY_ORDER=${order}
-    GRIDSDIR="${CMAKE_SOURCE_DIR}/grids" )
+    GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids")
   add_dune_gmp_flags(${target})
   add_dune_alugrid_flags(${target})
   list(APPEND TESTS ${target})
@@ -91,7 +91,7 @@ foreach(geometry ${geometries})
     FEM_FACTORY=RTBDMFEMFactory
     FEM_FACTORY_FEM_CLASS=Dune::PDELab::BrezziDouglasMariniLocalFiniteElementMap
     FEM_FACTORY_ORDER=1
-    GRIDSDIR="${CMAKE_SOURCE_DIR}/grids" )
+    GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids")
   add_dune_gmp_flags(${target})
   add_dune_alugrid_flags(${target})
   list(APPEND TESTS ${target})
@@ -110,7 +110,7 @@ foreach(dimension ${dimensions})
         USE_OPB_FEM_FACTORY
         FEM_FACTORY=OPBFEMFactory
         FEM_FACTORY_ORDER=${order}
-        GRIDSDIR="${CMAKE_SOURCE_DIR}/grids" )
+        GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids")
       add_dune_gmp_flags(${target})
       add_dune_alugrid_flags(${target})
       list(APPEND TESTS ${target})
@@ -130,7 +130,7 @@ foreach(dimension ${dimensions})
       USE_PK_FEM_FACTORY
       FEM_FACTORY=PKFEMFactory
       FEM_FACTORY_ORDER=${order}
-      GRIDSDIR="${CMAKE_SOURCE_DIR}/grids" )
+      GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids")
     add_dune_gmp_flags(${target})
     add_dune_alugrid_flags(${target})
     list(APPEND TESTS ${target})
@@ -147,7 +147,7 @@ foreach(dimension ${dimensions})
     FEM_DIM=${dimension} FEM_CUBE
     USE_RANNACHER_TUREK_FEM_FACTORY
     FEM_FACTORY=RannacherTurekFEMFactory
-    GRIDSDIR="${CMAKE_SOURCE_DIR}/grids" )
+    GRIDSDIR="${CMAKE_CURRENT_SOURCE_DIR}/grids")
   add_dune_gmp_flags(${target})
   add_dune_alugrid_flags(${target})
   list(APPEND TESTS ${target})

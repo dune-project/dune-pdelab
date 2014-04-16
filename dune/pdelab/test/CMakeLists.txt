@@ -163,7 +163,7 @@ foreach(i ${NORMALTESTS})
   add_test(${i} ${i})
   set_property(TARGET ${i}
     APPEND PROPERTY
-    COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_SOURCE_DIR}/grids\"")
+    COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"")
 endforeach(i ${NORMALTESTS})
 
 # We do not want want to build the tests during make all
