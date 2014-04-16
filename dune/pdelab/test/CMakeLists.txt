@@ -52,12 +52,10 @@ target_link_libraries(testgridfunctionspace dunepdelab ${DUNE_LIBS})
 if(ALUGRID_FOUND)
   list(APPEND NORMALTESTS testordering)
   add_executable(testordering testordering.cc)
-  add_dune_alugrid_flags(testordering)
   target_link_libraries(testordering dunepdelab ${DUNE_LIBS})
 
   list(APPEND NORMALTESTS testpermutedordering)
   add_executable(testpermutedordering testpermutedordering.cc)
-  add_dune_alugrid_flags(testpermutedordering)
   target_link_libraries(testpermutedordering dunepdelab ${DUNE_LIBS})
 endif(ALUGRID_FOUND)
 
@@ -152,18 +150,20 @@ endif(GMP_FOUND )
 list(APPEND NORMALTESTS testrtfem)
 add_executable(testrtfem testrtfem.cc)
 target_link_libraries(testrtfem dunepdelab ${DUNE_LIBS})
-add_dune_alugrid_flags(testrtfem)
 
 list(APPEND NORMALTESTS testbdmfem)
 add_executable(testbdmfem testbdmfem.cc)
 target_link_libraries(testbdmfem dunepdelab ${DUNE_LIBS})
-add_dune_alugrid_flags(testbdmfem)
 
 foreach(i ${NORMALTESTS})
   add_test(${i} ${i})
+  # add different flags and directory to example grids
   set_property(TARGET ${i}
     APPEND PROPERTY
     COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"")
+  add_dune_alugrid_flags(${i})
+  add_dune_ug_flags(${i})
+  add_dune_parmetis_flags(${i})
 endforeach(i ${NORMALTESTS})
 
 # We do not want want to build the tests during make all
