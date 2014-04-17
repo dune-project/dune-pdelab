@@ -7,7 +7,8 @@
 #warning dune/pdelab/finiteelementmap/q22dfem.hh and Q22DLocalFiniteElementMap are deprecated, please use dune/pdelab/finiteelementmap/qkfem.hh and QkLocalFiniteElementMap instead
 
 #include <dune/common/deprecated.hh>
-#include <dune/localfunctions/lagrange/q2.hh>
+#include <dune/localfunctions/lagrange/qk.hh>
+#include <dune/localfunctions/lagrange/q2.hh> // for Q2FiniteElementFactory
 
 #include "finiteelementmap.hh"
 #include <dune/pdelab/finiteelementmap/global.hh>
@@ -19,7 +20,7 @@ namespace Dune {
     //! \ingroup FiniteElementMap
     template<class D, class R>
     class DUNE_DEPRECATED_MSG("Please use QkLocalFiniteElementMap instead") Q22DLocalFiniteElementMap
-      : public SimpleLocalFiniteElementMap< Dune::Q2LocalFiniteElement<D,R,2> >
+      : public SimpleLocalFiniteElementMap< Dune::QkLocalFiniteElement<D,R,2,2> >
     {
 
     public:
