@@ -78,7 +78,7 @@ namespace Dune {
       StationaryLinearProblemSolver (const GO& go, LS& ls, typename V::ElementType reduction, typename V::ElementType min_defect = 1e-99, int verbose=1)
         : _go(go)
         , _ls(ls)
-        , _x(nullptr)
+        , _x()
         , _reduction(reduction)
         , _min_defect(min_defect)
         , _hanging_node_modifications(false)
@@ -136,7 +136,7 @@ namespace Dune {
       StationaryLinearProblemSolver(const GO& go, LS& ls, const ParameterTree& params)
         : _go(go)
         , _ls(ls)
-        , _x(nullptr)
+        , _x()
         , _reduction(params.get<typename V::ElementType>("reduction"))
         , _min_defect(params.get<typename V::ElementType>("min_defect",1e-99))
         , _hanging_node_modifications(params.get<bool>("hanging_node_modifications",false))
@@ -258,14 +258,14 @@ namespace Dune {
           _go.localAssembler().backtransform(*_x); // interpolate hanging nodes adjacent to Dirichlet nodes
 
         if (!_keep_matrix)
-          _jacobian = nullptr;
+          _jacobian.reset();
       }
 
       //! Discard the stored Jacobian matrix.
       void discardMatrix()
       {
         if(_jacobian)
-          _jacobian = nullptr;
+          _jacobian.reset();
       }
 
       const Dune::PDELab::LinearSolverResult<double>& ls_result() const{
