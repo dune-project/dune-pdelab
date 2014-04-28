@@ -1308,6 +1308,115 @@ namespace Dune {
             shared_ptr<GO> gop;
         };
 
+
+        template<typename FS, typename LOP, SolverCategory::Category st = SolverCategory::sequential>
+        class GalerkinGlobalAssemblerNewBackend
+        {
+        public:
+            // export types
+            typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+            typedef Dune::PDELab::GridOperator<typename FS::GFS,typename FS::GFS,LOP,MBE,
+                                               typename FS::NT,typename FS::NT,typename FS::NT,
+                                               typename FS::CC,typename FS::CC> GO;
+            typedef typename GO::Jacobian MAT;
+
+            GalerkinGlobalAssemblerNewBackend (const FS& fs, LOP& lop, const MBE& mbe)
+            {
+                gop = shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,mbe));
+            }
+
+            // return grid reference
+            GO& getGO ()
+            {
+                return *gop;
+            }
+
+            // return grid reference const version
+            const GO& getGO () const
+            {
+                return *gop;
+            }
+
+            GO& operator*()
+            {
+                return *gop;
+            }
+
+            GO* operator->()
+            {
+                return gop.operator->();
+            }
+
+            const GO& operator*() const
+            {
+                return *gop;
+            }
+
+            const GO* operator->() const
+            {
+                return gop.operator->();
+            }
+
+        private:
+            shared_ptr<GO> gop;
+        };
+
+        // nonoverlapping variant
+        template<typename FS, typename LOP>
+        class GalerkinGlobalAssemblerNewBackend<FS,LOP,SolverCategory::nonoverlapping>
+        {
+        public:
+            // export types
+            typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+            typedef Dune::PDELab::GridOperator<typename FS::GFS,typename FS::GFS,LOP,MBE,
+                                               typename FS::NT,typename FS::NT,typename FS::NT,
+                                               typename FS::CC,typename FS::CC,true> GO;
+            typedef typename GO::Jacobian MAT;
+
+            GalerkinGlobalAssemblerNewBackend (const FS& fs, LOP& lop, const MBE& mbe)
+            {
+                gop = shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,mbe));
+            }
+
+            // return grid reference
+            GO& getGO ()
+            {
+                return *gop;
+            }
+
+            // return grid reference const version
+            const GO& getGO () const
+            {
+                return *gop;
+            }
+
+            GO& operator*()
+            {
+                return *gop;
+            }
+
+            GO* operator->()
+            {
+                return gop.operator->();
+            }
+
+            const GO& operator*() const
+            {
+                return *gop;
+            }
+
+            const GO* operator->() const
+            {
+                return gop.operator->();
+            }
+
+        private:
+            shared_ptr<GO> gop;
+        };
+
+
+
+
         // variant with two different function spaces
         template<typename FSU, typename FSV, typename LOP, SolverCategory::Category st>
         class GlobalAssembler
