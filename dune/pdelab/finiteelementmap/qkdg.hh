@@ -84,6 +84,43 @@ namespace Dune
       return result;
     }
 
+    //! Lagrange polynomials of degree k at equidistant points as a class
+    template<class D, class R, int k>
+    class EquidistantLagrangePolynomials
+    {
+    public:
+      // ith Lagrange polynomial of degree k in one dimension
+      R p (int i, D x) const
+      {
+        R result(1.0);
+        for (int j=0; j<=k; j++)
+          if (j!=i) result *= (k*x-j)/(i-j);
+        return result;
+      }
+
+      // derivative of ith Lagrange polynomial of degree k in one dimension
+      R dp (int i, D x) const
+      {
+        R result(0.0);
+
+        for (int j=0; j<=k; j++)
+          if (j!=i)
+            {
+              R prod( (k*1.0)/(i-j) );
+              for (int l=0; l<=k; l++)
+                if (l!=i && l!=j) prod *= (k*x-l)/(i-l);
+              result += prod;
+            }
+          return result;
+      }
+
+      // get ith Lagrange point
+      R x (int i)
+      {
+        return i/((1.0)*(k+1));
+      }
+    };
+
     template<int k, int d>
     Dune::FieldVector<int,d> multiindex (int i)
     {
@@ -246,7 +283,7 @@ namespace Dune
       template<typename F, typename C>
       void interpolate (const F& f, std::vector<C>& out) const
       {
-        typename LB::Traits::DomainType x(0);
+        typename LB::Traits::DomainType x(0.0);
         typename LB::Traits::RangeType y;
         f.evaluate(x,y);
         out.resize(1);
