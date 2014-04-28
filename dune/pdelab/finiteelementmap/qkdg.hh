@@ -283,7 +283,7 @@ namespace Dune
       template<typename F, typename C>
       void interpolate (const F& f, std::vector<C>& out) const
       {
-        typename LB::Traits::DomainType x(0.0);
+        typename LB::Traits::DomainType x(0.5);
         typename LB::Traits::RangeType y;
         f.evaluate(x,y);
         out.resize(1);
