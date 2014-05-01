@@ -796,7 +796,11 @@ namespace Dune {
             static const int dim = T::dimension;
             static const int dimworld = T::dimensionworld;
             typedef N NT;
+#ifdef HAVE_GMP
+            typedef OPBLocalFiniteElementMap<ctype,NT,degree,dim,gt,Dune::GMPField<512>,Dune::PB::BasisType::Pk> FEM;
+#else
             typedef OPBLocalFiniteElementMap<ctype,NT,degree,dim,gt> FEM;
+#endif
             typedef DGCONBase<st> CONB;
             typedef typename CONB::CON CON;
             typedef VBET VBE;
