@@ -296,7 +296,8 @@ namespace Dune {
       struct Order
       {
         enum{
-          value = d*k
+          // value = d*k
+          value = k
         };
       };
 
