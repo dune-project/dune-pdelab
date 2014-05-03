@@ -95,6 +95,22 @@ namespace Dune {
         _stats = go.matrixBackend().buildPattern(go,*this);
       }
 
+      /** \brief Construct matrix container using an externally given matrix as storage
+       *
+       * \tparam GO GridOperator type used to assemble into the matrix
+       *
+       * \param go GridOperator object used to assemble into the matrix
+       * \param container ISTL matrix type that stores the actual data
+       *
+       * This ISTLMatrixContainer constructor will reassemble the matrix occupation pattern.
+       */
+      template<typename GO>
+      ISTLMatrixContainer (const GO& go, Container& container)
+        : _container(Dune::stackobject_to_shared_ptr(container))
+      {
+        _stats = go.matrixBackend().buildPattern(go,*this);
+      }
+
       template<typename GO>
       ISTLMatrixContainer (const GO& go, const E& e)
         : _container(make_shared<Container>())
