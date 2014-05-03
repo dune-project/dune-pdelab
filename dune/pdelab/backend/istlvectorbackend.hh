@@ -101,6 +101,19 @@ namespace Dune {
         : _gfs(gfs)
       {}
 
+      /** \brief Constructs an ISTLBlockVectorContainer for an explicitly given vector object
+       *
+       * \param gfs GridFunctionSpace that determines the size and the blocking of the vector
+       * \param container The actual ISTL container class
+       */
+      ISTLBlockVectorContainer (const GFS& gfs, Container& container)
+        : _gfs(gfs)
+        , _container(stackobject_to_shared_ptr(container))
+      {
+        _container->resize(gfs.ordering().blockCount());
+        istl::dispatch_vector_allocation(gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
+      }
+
       ISTLBlockVectorContainer (const GFS& gfs, const E& e)
         : _gfs(gfs)
         , _container(make_shared<Container>(gfs.ordering().blockCount()))
