@@ -114,6 +114,18 @@ namespace Dune {
           : _gfs(gfs)
         {}
 
+        /** \brief Constructs an VectorContainer for an explicitly given vector object
+         *
+         * \param gfs GridFunctionSpace that determines the size and the blocking of the vector
+         * \param container The actual container class
+         */
+        VectorContainer (const GFS& gfs, Container& container)
+          : _gfs(gfs)
+          , _container(stackobject_to_shared_ptr(container))
+        {
+          _container->resize(gfs.ordering().blockCount());
+        }
+
         VectorContainer (const GFS& gfs, const E& e)
           : _gfs(gfs)
           , _container(make_shared<Container>(gfs.ordering().blockCount(),e))
