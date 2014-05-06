@@ -8,6 +8,7 @@
 #if HAVE_EIGEN
 
 #include <Eigen/Dense>
+#include <Eigen/Sparse>
 
 namespace Dune {
   namespace PDELab {
@@ -16,11 +17,14 @@ namespace Dune {
 
     namespace EIGEN {
 
-      template<typename GFS, typename C>
+      template<typename GFS, typename E>
       class VectorContainer;
 
-      template<typename GFSV, typename GFSU>
+      template<typename GFSV, typename GFSU, typename ET, int _Options>
       class MatrixContainer;
+
+      template<typename M>
+      struct MatrixPatternInserter;
 
     }
 
@@ -47,81 +51,41 @@ namespace Dune {
 
     };
 
-    // struct EigenMatrixBackend
-    // {
+    template<int _Options = Eigen::RowMajor>
+    struct EigenMatrixBackend
+    {
 
-    //   typedef std::size_t size_type;
+      typedef std::size_t size_type;
 
-    //   template<typename Matrix, typename GFSV, typename GFSU>
-    //   struct Pattern
-    //   {};
+#if HAVE_TEMPLATE_ALIASES || DOXYGEN
 
-    //   template<typename VV, typename VU, typename E>
-    //   struct MatrixHelper
-    //   {
-    //     typedef EIGEN::MatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,Container<E> > type;
-    //   };
-    // };
+      //! The type of the pattern object passed to the GridOperator for pattern construction.
+      template<typename Matrix, typename GFSV, typename GFSU>
+      using Pattern = EIGEN::MatrixPatternInserter<Matrix>;
 
-//     template<template<typename> class Container = eigen::default_vector, typename IndexType = std::size_t>
-//     struct EigenSparseMatrixBackend
-//     {
+#else // HAVE_TEMPLATE_ALIASES
 
-//       typedef IndexType size_type;
+      template<typename Matrix, typename GFSV, typename GFSU>
+      struct Pattern
+        : public EIGEN::MatrixPatternInserter<Matrix>
+      {
 
-// #if HAVE_TEMPLATE_ALIASES || DOXYGEN
+        typedef EIGEN::MatrixPatternInserter<Matrix> BaseT;
 
-//       //! The type of the pattern object passed to the GridOperator for pattern construction.
-//       template<typename Matrix, typename GFSV, typename GFSU>
-//       using Pattern = eigen::SparseMatrixPattern<
-//         OrderingBase<
-//           typename GFSV::Ordering::Traits::DOFIndex,
-//           typename GFSV::Ordering::Traits::ContainerIndex
-//           >,
-//         OrderingBase<
-//           typename GFSU::Ordering::Traits::DOFIndex,
-//           typename GFSU::Ordering::Traits::ContainerIndex> >;
+        Pattern(Matrix & m)
+          : BaseT(m)
+        {}
 
-// #else // HAVE_TEMPLATE_ALIASES
+      };
 
-//       template<typename Matrix, typename GFSV, typename GFSU>
-//       struct Pattern
-//         : public eigen::SparseMatrixPattern<
-//         OrderingBase<
-//           typename GFSV::Ordering::Traits::DOFIndex,
-//           typename GFSV::Ordering::Traits::ContainerIndex
-//           >,
-//         OrderingBase<
-//           typename GFSU::Ordering::Traits::DOFIndex,
-//           typename GFSU::Ordering::Traits::ContainerIndex> >
-//       {
+#endif // HAVE_TEMPLATE_ALIASES
 
-//         typedef SparseMatrixPattern<
-//           typedef OrderingBase<
-//             typename GFSV::Ordering::Traits::DOFIndex,
-//             typename GFSV::Ordering::Traits::ContainerIndex
-//             >,
-//           OrderingBase<
-//             typename GFSU::Ordering::Traits::DOFIndex,
-//             typename GFSU::Ordering::Traits::ContainerIndex> > BaseT;
-
-//         typedef BaseT::RowOrdering RowOrdering;
-//         typedef BaseT::ColOrdering ColOrdering;
-
-//         Pattern(const RowOrdering& row_ordering, const ColOrdering& col_ordering)
-//           : BaseT(row_ordering,col_ordering)
-//         {}
-
-//       };
-
-// #endif // HAVE_TEMPLATE_ALIASES
-
-      // template<typename VV, typename VU, typename E>
-      // struct MatrixHelper
-      // {
-      //   typedef EIGEN::MatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace,Container, E, size_type> type;
-      // };
-    // };
+      template<typename VV, typename VU, typename E>
+      struct MatrixHelper
+      {
+        typedef EIGEN::MatrixContainer<typename VV::GridFunctionSpace,typename VU::GridFunctionSpace, E, _Options> type;
+      };
+    };
 
   } // namespace PDELab
 } // namespace Dune

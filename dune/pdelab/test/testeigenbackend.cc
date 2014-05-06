@@ -153,7 +153,7 @@ public:
 template<typename GV, typename FEM, typename CON>
 void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 {
-//  typedef Dune::PDELab::EigenMatrixBackend<> MBE;
+  typedef Dune::PDELab::EigenMatrixBackend<> MBE;
 
   // constants and types
   typedef typename FEM::Traits::FiniteElementType::Traits::

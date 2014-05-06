@@ -32,8 +32,8 @@ namespace Dune
         M & _matrix;
       };
 
-      template<typename GFSV, typename GFSU, typename ET, int _Options = Eigen::RowMajor>
-      class SparseMatrixContainer
+      template<typename GFSV, typename GFSU, typename ET, int _Options>
+      class MatrixContainer
       {
 
       public:
@@ -52,10 +52,10 @@ namespace Dune
         typedef typename GFSU::Ordering::Traits::ContainerIndex ColIndex;
 
         template<typename RowCache, typename ColCache>
-        using LocalView = UncachedMatrixView<SparseMatrixContainer,RowCache,ColCache>;
+        using LocalView = UncachedMatrixView<MatrixContainer,RowCache,ColCache>;
 
         template<typename RowCache, typename ColCache>
-        using ConstLocalView = ConstUncachedMatrixView<const SparseMatrixContainer,RowCache,ColCache>;
+        using ConstLocalView = ConstUncachedMatrixView<const MatrixContainer,RowCache,ColCache>;
 
         typedef OrderingBase<
           typename GFSV::Ordering::Traits::DOFIndex,
@@ -70,33 +70,33 @@ namespace Dune
         typedef MatrixPatternInserter<Container> Pattern;
 
         template<typename GO>
-        SparseMatrixContainer(const GO& go, int avg_per_row)
+        MatrixContainer(const GO& go, int avg_per_row)
           : _container(make_shared<Container>())
         {
           allocate_matrix(_container, go, avg_per_row, ElementType(0));
         }
 
         template<typename GO>
-        SparseMatrixContainer(const GO& go, int avg_per_row, const ElementType& e)
+        MatrixContainer(const GO& go, int avg_per_row, const ElementType& e)
           : _container(make_shared<Container>())
         {
           allocate_matrix(_container, go, avg_per_row, e);
         }
 
-        //! Creates an SparseMatrixContainer without allocating an underlying ISTL matrix.
-        explicit SparseMatrixContainer(tags::unattached_container = tags::unattached_container())
+        //! Creates an MatrixContainer without allocating an underlying Eigen matrix.
+        explicit MatrixContainer(tags::unattached_container = tags::unattached_container())
         {}
 
-        //! Creates an SparseMatrixContainer with an empty underlying ISTL matrix.
-        explicit SparseMatrixContainer(tags::attached_container)
+        //! Creates an MatrixContainer with an empty underlying Eigen matrix.
+        explicit MatrixContainer(tags::attached_container)
         : _container(make_shared<Container>())
         {}
 
-        SparseMatrixContainer(const SparseMatrixContainer& rhs)
+        MatrixContainer(const MatrixContainer& rhs)
           : _container(make_shared<Container>(*(rhs._container)))
         {}
 
-        SparseMatrixContainer& operator=(const SparseMatrixContainer& rhs)
+        MatrixContainer& operator=(const MatrixContainer& rhs)
         {
           if (this == &rhs)
             return *this;
@@ -141,7 +141,7 @@ namespace Dune
           return _container->cols();
         }
 
-        SparseMatrixContainer& operator=(const ElementType& e)
+        MatrixContainer& operator=(const ElementType& e)
         {
           if(!_container->isCompressed()) _container->makeCompressed();
           for (int i=0; i<_container->nonZeros(); i++)
@@ -151,7 +151,7 @@ namespace Dune
           return *this;
         }
 
-        SparseMatrixContainer& operator*=(const ElementType& e)
+        MatrixContainer& operator*=(const ElementType& e)
         {
           (*_container) *= e;
           return *this;
