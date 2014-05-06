@@ -1223,10 +1223,18 @@ namespace Dune {
        * \param[in]  time start of time step
        * \param[in]  dt suggested time step size
        * \param[in]  xold value at begin of time step
+       * \param[in]  limiter
        * \param[in,out] xnew value at end of time step; contains initial guess for first substep on entry
        * \return time step size
        */
       T apply (T time, T dt, TrlV& xold, TrlV& xnew)
+      {
+        DefaultLimiter limiter;
+        return apply(time,dt,xold,xnew,limiter);
+      }
+
+      template<typename Limiter>
+      T apply (T time, T dt, TrlV& xold, TrlV& xnew, Limiter& limiter)
       {
         // save formatting attributes
         ios_base_all_saver format_attribute_saver(std::cout);
@@ -1309,6 +1317,10 @@ namespace Dune {
             D = 0.0;
             alpha = 0.0;
             beta = 0.0;
+
+            //apply slope limiter to old solution (e.g for finite volume reconstruction scheme)
+            limiter.prestage(*x[r-1]);
+
             if(verbosityLevel>=4)
               std::cout << stagetag << "Assembling residual..." << std::endl;
             igos.explicit_jacobian_residual(r,x,D,alpha,beta);
@@ -1367,6 +1379,9 @@ namespace Dune {
               std::cout << stagetag << "Solving diagonal system... done."
                         << std::endl;
 
+            // apply slope limiter to new solution (e.g DG scheme)
+            limiter.poststage(*x[r]);
+
             // stage cleanup
             if (verbosityLevel>=4)
               std::cout << stagetag << "Cleanup..." << std::endl;
@@ -1393,6 +1408,20 @@ namespace Dune {
       }
 
     private:
+
+      //! dummy default limiter
+      class DefaultLimiter
+      {
+      public:
+        template<typename V>
+        void prestage(V& v)
+        {}
+
+        template<typename V>
+        void poststage(V& v)
+        {}
+      };
+
       const TimeSteppingParameterInterface<T> *method;
       IGOS& igos;
       LS& ls;
