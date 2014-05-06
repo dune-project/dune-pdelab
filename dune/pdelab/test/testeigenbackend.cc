@@ -186,7 +186,6 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   typedef Dune::PDELab::Poisson<FType,ConstraintsParameters,JType> LOP;
   LOP lop(f,constraintsparameters,j,q);
 
-#if 0
   // make grid operator
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,
                                      MBE,
@@ -218,7 +217,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   typedef typename GridOperator::Traits::Jacobian M;
   M m;
   {
-    M m1(gridoperator);
+    M m1(gridoperator, 27);
     M m2(m1);
     m2 = 0.0;
     m = m1;
@@ -236,6 +235,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   r = 0.0;
   gridoperator.residual(x0,r);
 
+#if 0
   // make EIGEN solver
   Dune::PDELab::EigenBackend_BiCGSTAB_Diagonal solver;
 
