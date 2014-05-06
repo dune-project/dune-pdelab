@@ -14,18 +14,19 @@ namespace Dune {
 
     namespace EIGEN {
 
-      template<typename GFS, typename E>
-        class VectorContainer
+      template<typename GFS, typename ET>
+      class VectorContainer
       {
       public:
-        typedef Eigen::Matrix<E, Eigen::Dynamic, 1> Container;
-        typedef E ElementType;
+        typedef Eigen::Matrix<ET, Eigen::Dynamic, 1> Container;
+        typedef ET ElementType;
+        typedef ET E;
 
         // for ISTL solver compatibility
         typedef ElementType field_type;
 
         typedef GFS GridFunctionSpace;
-        typedef typename Container::size_type size_type;
+          typedef std::size_t size_type;
 
         typedef typename GFS::Ordering::Traits::ContainerIndex ContainerIndex;
 
