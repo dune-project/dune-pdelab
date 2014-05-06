@@ -317,18 +317,15 @@ testvectoriterator_no_variadic_templates_CPPFLAGS = $(AM_CPPFLAGS) -DDISABLE_VAR
 
 NORMALTESTS += testsimplebackend
 testsimplebackend_SOURCES = testsimplebackend.cc
-testsimplebackend_CPPFLAGS = $(AM_CPPFLAGS)		\
-	$(ALBERTA_CPPFLAGS)			\
-	$(SUPERLU_CPPFLAGS)
-testsimplebackend_LDFLAGS = $(AM_LDFLAGS)		\
-	$(ALBERTA_LDFLAGS)			\
-	$(SUPERLU_LDFLAGS)
-testsimplebackend_LDADD =				\
-	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
-	$(ALBERTA_LIBS)				\
-	$(LDADD)
 MOSTLYCLEANFILES += simplebackend_*.vtu
 
+
+NORMALTESTS += testeigenbackend
+testeigenbackend_SOURCES = testeigenbackend.cc
+testeigenbackend_CXXFLAGS = @AM_CPPFLAGS@ $(EIGEN_CPPFLAGS) $(EIGEN_CXXFLAGS)
+testeigenbackend_LDFLAGS = $(AM_LDFLAGS) $(EIGEN_LDFLAGS)
+testeigenbackend_LDADD = $(LDADD) $(EIGEN_LIBS)
+MOSTLYCLEANFILES += eigenbackend_*.vtu
 
 NORMALTESTS += test-dg-amg
 test_dg_amg_SOURCES = test-dg-amg.cc
