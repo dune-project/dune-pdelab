@@ -1,5 +1,5 @@
-#ifndef DUNE_PDELAB_EIGENVECTORBACKEND_HH
-#define DUNE_PDELAB_EIGENVECTORBACKEND_HH
+#ifndef DUNE_PDELAB_BACKEND_EIGEN_VECTOR_HH
+#define DUNE_PDELAB_BACKEND_EIGEN_VECTOR_HH
 
 #if HAVE_EIGEN
 
@@ -292,7 +292,7 @@ namespace Dune {
 
 #endif
 
-#endif // DUNE_PDELAB_EIGENVECTORBACKEND_HH
+#endif // DUNE_PDELAB_BACKEND_EIGEN_VECTOR_HH
 
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
