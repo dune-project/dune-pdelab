@@ -43,12 +43,12 @@ namespace Dune {
 
       bool fixedSize() const
       {
-        return false;
+        return true;
       }
 
       std::size_t size(GeometryType gt) const
       {
-        DUNE_THROW(Dune::Exception,"This should not be called!");
+        return gt.isLine() : 1 : 0;
       }
 
       std::size_t maxLocalSize() const
