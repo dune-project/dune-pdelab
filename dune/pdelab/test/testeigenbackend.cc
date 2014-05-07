@@ -249,6 +249,17 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
     x += x0;
   }
 
+  x = 0.0;
+  // test the solver backend
+  {
+    // make EIGEN solver
+    Dune::PDELab::EigenBackend_BiCGSTAB_Diagonal solver;
+    // solve the jacobian system
+    r *= -1.0; // need -residual
+    solver.apply(m,x,r,1e-10);
+    x += x0;
+  }
+
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x);
