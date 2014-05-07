@@ -169,13 +169,13 @@ namespace Dune {
 
         VectorContainer& operator+=(const VectorContainer& y)
         {
-          (*_container) += y._container;
+          (*_container) += (*y._container);
           return *this;
         }
 
         VectorContainer& operator-= (const VectorContainer& y)
         {
-          (*_container) -= y._container;
+          (*_container) -= (*y._container);
           return *this;
         }
 
