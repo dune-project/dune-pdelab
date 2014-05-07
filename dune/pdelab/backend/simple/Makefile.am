@@ -1,8 +1,9 @@
-commondir = $(includedir)/dune/pdelab/backend/dense
+simpledir = $(includedir)/dune/pdelab/backend/simple
 
-common_HEADERS = \
+simple_HEADERS = \
 	descriptors.hh				\
 	matrix.hh				\
+	sparse.hh				\
 	vector.hh
 
 include $(top_srcdir)/am/global-rules
