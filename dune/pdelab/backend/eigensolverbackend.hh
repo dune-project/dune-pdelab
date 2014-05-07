@@ -44,16 +44,17 @@ namespace Dune {
         \param[in] reduction to be achieved
       */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename W::Scalar reduction)
+      void apply(M& A, V& z, W& r, typename W::field_type reduction)
       {
         // PreconditionerImp preconditioner;
-        Eigen::BiCGSTAB<M, PreconditionerImp> solver;
+        typedef typename M::Container Mat;
+        Eigen::BiCGSTAB<Mat, PreconditionerImp> solver;
         solver.setMaxIterations(maxiter);
         solver.setTolerance(reduction);
         Dune::Timer watch;
         watch.reset();
-        solver.compute(A);
-        z.base() = solver.solve(r);
+        solver.compute(A.base());
+        z.base() = solver.solve(r.base());
         double elapsed = watch.elapsed();
 
         res.converged  = solver.info() == Eigen::ComputationInfo::Success;
@@ -75,15 +76,15 @@ namespace Dune {
       int verbose;
     };
 
-    // class EigenBackend_BiCGSTAB_IILU
-    //   : public EigenBackend_BiCGSTAB_Base<Eigen::IncompleteLUT<double> >
-    // {
-    // public:
-    //     explicit EigenBackend_BiCGSTAB_IILU(unsigned maxiter_=5000)
-    //       : EigenBackend_BiCGSTAB_Base(maxiter_)
-    //     {
-    //     }
-    // };
+    class EigenBackend_BiCGSTAB_IILU
+      : public EigenBackend_BiCGSTAB_Base<Eigen::IncompleteLUT<double> >
+    {
+    public:
+        explicit EigenBackend_BiCGSTAB_IILU(unsigned maxiter_=5000)
+          : EigenBackend_BiCGSTAB_Base(maxiter_)
+        {
+        }
+    };
 
     class EigenBackend_BiCGSTAB_Diagonal
       : public EigenBackend_BiCGSTAB_Base<Eigen::DiagonalPreconditioner<double> >
@@ -116,24 +117,25 @@ namespace Dune {
         \param[in] reduction to be achieved
         */
       template<class M, class V, class W>
-        void apply(M& A, V& z, W& r, typename W::Scalar reduction)
-        {
-          Eigen::ConjugateGradient<M, UpLo, Preconditioner> solver;
-          solver.setMaxIterations(maxiter);
-          solver.setTolerance(reduction);
-          Dune::Timer watch;
-          watch.reset();
-          solver.compute(A);
-          z.base() = solver.solve(r);
-          double elapsed = watch.elapsed();
+      void apply(M& A, V& z, W& r, typename W::field_type reduction)
+      {
+        typedef typename M::Container Mat;
+        Eigen::ConjugateGradient<Mat, UpLo, Preconditioner> solver;
+        solver.setMaxIterations(maxiter);
+        solver.setTolerance(reduction);
+        Dune::Timer watch;
+        watch.reset();
+        solver.compute(A.base());
+        z.base() = solver.solve(r.base());
+        double elapsed = watch.elapsed();
 
 
-          res.converged  = solver.info() == Eigen::ComputationInfo::Success;
-          res.iterations = solver.iterations();
-          res.elapsed    = elapsed;
-          res.reduction  = solver.error();
-          res.conv_rate  = 0;
-        }
+        res.converged  = solver.info() == Eigen::ComputationInfo::Success;
+        res.iterations = solver.iterations();
+        res.elapsed    = elapsed;
+        res.reduction  = solver.error();
+        res.conv_rate  = 0;
+      }
 
     private:
       unsigned maxiter;
@@ -141,14 +143,14 @@ namespace Dune {
     };
 
 
-    // class EigenBackend_CG_IILU_Up
-    //   : public EigenBackend_CG_Base<Eigen::IncompleteLUT<double>, Eigen::Upper >
-    // {
-    // public:
-    //     explicit EigenBackend_CG_IILU_Up(unsigned maxiter_=5000)
-    //       : EigenBackend_CG_Base(maxiter_)
-    //     {}
-    // };
+    class EigenBackend_CG_IILU_Up
+      : public EigenBackend_CG_Base<Eigen::IncompleteLUT<double>, Eigen::Upper >
+    {
+    public:
+        explicit EigenBackend_CG_IILU_Up(unsigned maxiter_=5000)
+          : EigenBackend_CG_Base(maxiter_)
+        {}
+    };
 
     class EigenBackend_CG_Diagonal_Up
       : public EigenBackend_CG_Base<Eigen::DiagonalPreconditioner<double>, Eigen::Upper >
@@ -159,14 +161,14 @@ namespace Dune {
         {}
     };
 
-    // class EigenBackend_CG_IILU_Lo
-    //   : public EigenBackend_CG_Base<Eigen::IncompleteLUT<double>, Eigen::Lower >
-    // {
-    // public:
-    //     explicit EigenBackend_CG_IILU_Lo(unsigned maxiter_=5000)
-    //       : EigenBackend_CG_Base(maxiter_)
-    //     {}
-    // };
+    class EigenBackend_CG_IILU_Lo
+      : public EigenBackend_CG_Base<Eigen::IncompleteLUT<double>, Eigen::Lower >
+    {
+    public:
+        explicit EigenBackend_CG_IILU_Lo(unsigned maxiter_=5000)
+          : EigenBackend_CG_Base(maxiter_)
+        {}
+    };
 
     class EigenBackend_CG_Diagonal_Lo
       : public EigenBackend_CG_Base<Eigen::DiagonalPreconditioner<double>, Eigen::Lower >
@@ -198,21 +200,22 @@ namespace Dune {
         \param[in] reduction to be achieved
         */
       template<class M, class V, class W>
-        void apply(M& A, V& z, W& r, typename W::Scalar reduction)
-        {
-          Solver<M, UpLo> solver;
-          Dune::Timer watch;
-          watch.reset();
-          solver.compute(A);
-          z.base() = solver.solve(r);
-          double elapsed = watch.elapsed();
+      void apply(M& A, V& z, W& r, typename W::field_type reduction)
+      {
+        typedef typename M::Container Mat;
+        Solver<Mat, UpLo> solver;
+        Dune::Timer watch;
+        watch.reset();
+        solver.compute(A.base());
+        z.base() = solver.solve(r.base());
+        double elapsed = watch.elapsed();
 
-          res.converged  = solver.info() == Eigen::ComputationInfo::Success;
-          res.iterations = solver.iterations();
-          res.elapsed    = elapsed;
-          res.reduction  = solver.error();
-          res.conv_rate  = 0;
-        }
+        res.converged  = solver.info() == Eigen::ComputationInfo::Success;
+        res.iterations = solver.iterations();
+        res.elapsed    = elapsed;
+        res.reduction  = solver.error();
+        res.conv_rate  = 0;
+      }
     private:
     };
 
@@ -303,20 +306,21 @@ namespace Dune {
         \param[in] reduction to be achieved
         */
       template<class M, class V, class W>
-        void apply(M& A, V& z, W& r, typename W::Scalar reduction)
-        {
-          Dune::Timer watch;
-          watch.reset();
-          Eigen::JacobiSVD<M, Eigen::ColPivHouseholderQRPreconditioner> solver(A, flags_);
-          z.base() = solver.solve(r);
-          double elapsed = watch.elapsed();
+      void apply(M& A, V& z, W& r, typename W::field_type reduction)
+      {
+        Dune::Timer watch;
+        watch.reset();
+        typedef typename M::Container Mat;
+        Eigen::JacobiSVD<Mat, Eigen::ColPivHouseholderQRPreconditioner> solver(A, flags_);
+        z.base() = solver.solve(r.base());
+        double elapsed = watch.elapsed();
 
-          res.converged  = solver.info() == Eigen::ComputationInfo::Success;
-          res.iterations = solver.iterations();
-          res.elapsed    = elapsed;
-          res.reduction  = solver.error();
-          res.conv_rate  = 0;
-        }
+        res.converged  = solver.info() == Eigen::ComputationInfo::Success;
+        res.iterations = solver.iterations();
+        res.elapsed    = elapsed;
+        res.reduction  = solver.error();
+        res.conv_rate  = 0;
+      }
     private:
       unsigned int flags_;
     };

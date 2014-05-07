@@ -6,6 +6,7 @@
 #include <dune/pdelab/backend/eigen/descriptors.hh>
 #include <dune/pdelab/backend/eigen/vector.hh>
 #include <dune/pdelab/backend/eigen/matrix.hh>
+#include <dune/pdelab/backend/eigensolverbackend.hh>
 // #include <dune/pdelab/backend/eigen/solvers.hh>
 
 #endif // DUNE_PDELAB_BACKEND_EIGEN_HH
