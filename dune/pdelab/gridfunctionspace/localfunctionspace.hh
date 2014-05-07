@@ -613,13 +613,6 @@ namespace Dune {
         return *pfe;
       }
 
-      //! \brief get local finite element
-      const typename Traits::FiniteElementType& localFiniteElement () const
-        DUNE_DEPRECATED
-      {
-        return *pfe;
-      }
-
       //! \brief get constraints engine
       const typename Traits::ConstraintsType& constraints () const
       {
