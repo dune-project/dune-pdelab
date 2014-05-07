@@ -48,7 +48,7 @@ namespace Dune {
 
       std::size_t size(GeometryType gt) const
       {
-        return gt.isLine() : 1 : 0;
+        return gt.isLine() ? 1 : 0;
       }
 
       std::size_t maxLocalSize() const

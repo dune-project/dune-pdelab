@@ -139,7 +139,7 @@ if (petsc_conf_rules AND petsc_conf_variables AND NOT petsc_config_current)
 include ${petsc_conf_rules}
 include ${petsc_conf_variables}
 show :
-        -@echo -n \${\${VARIABLE}}
+\t-@echo -n \${\${VARIABLE}}
 ")
 
   macro (PETSC_GET_VARIABLE name var)
