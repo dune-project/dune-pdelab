@@ -133,7 +133,7 @@ add_executable(testinterpolate testinterpolate.cc)
 target_link_libraries(testinterpolate dunepdelab ${DUNE_LIBS})
 
 if(PETSC_FOUND)
-  list(APPEND NORMALTESTS testpoisson-petsc)
+  list(APPEND NORMALTESTS testpoisson_petsc)
   add_executable(testpoisson_petsc testpoisson-petsc.cc)
   target_link_libraries(testpoisson_petsc dunepdelab ${DUNE_LIBS})
   add_dune_petsc_flags(testpoisson_petsc)
