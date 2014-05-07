@@ -7,6 +7,7 @@
 
 #if HAVE_EIGEN
 
+#include <dune/pdelab/backend/common/uncachedmatrixview.hh>
 #include <Eigen/Sparse>
 
 namespace Dune
@@ -26,7 +27,7 @@ namespace Dune
         template<typename RI, typename CI>
         void add_link(const RI& ri, const CI& ci)
         {
-          _matrix.coeffRef(ri.back(),ci.back());
+          _matrix.coeffRef(ri.back(),ci.back()) = 0.0;
         }
 
         M & _matrix;
@@ -102,11 +103,11 @@ namespace Dune
             return *this;
           if (attached())
           {
-            (*_container) = (*(rhs._container));
+            base() = rhs.base();
           }
           else
           {
-            _container = make_shared<Container>(*(rhs._container));
+            _container = make_shared<Container>(rhs.base());
           }
           return *this;
         }
@@ -145,7 +146,7 @@ namespace Dune
         {
           if(!_container->isCompressed()) _container->makeCompressed();
           for (int i=0; i<_container->nonZeros(); i++)
-            _container->valuePtr()[i] = 1.0;
+            _container->valuePtr()[i] = e;
           // we require a sufficiently new Eigen version to use setConstant (newer than in debian testing)
           // _container->setConstant(e);
           return *this;
@@ -153,20 +154,20 @@ namespace Dune
 
         MatrixContainer& operator*=(const ElementType& e)
         {
-          (*_container) *= e;
+          base() *= e;
           return *this;
         }
 
         template<typename V>
         void mv(const V& x, V& y) const
         {
-          y = (*_container) * x;
+          y.base() = base() * x.base();
         }
 
         template<typename V>
         void usmv(const ElementType alpha, const V& x, V& y) const
         {
-          y += alpha * (*_container) * x;
+          y.base() += alpha * (base() * x.base());
         }
 
         ElementType& operator()(const RowIndex& ri, const ColIndex& ci)
@@ -176,7 +177,7 @@ namespace Dune
 
         const ElementType operator()(const RowIndex& ri, const ColIndex& ci) const
         {
-          return _container->coeff(ri[0],ci[0]);
+          return _container->coeffRef(ri[0],ci[0]);
         }
 
         const Container& base() const
@@ -198,7 +199,7 @@ namespace Dune
         void clear_row(const RowIndex& ri, const ElementType& diagonal_entry)
         {
           _container->middleRows(ri[0],1) *= 0.0;
-          (*this)(ri,ri) = diagonal_entry;
+          _container->coeffRef(ri[0],ri[0]) = diagonal_entry;
         }
 
       protected:
