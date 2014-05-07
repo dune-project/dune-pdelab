@@ -234,21 +234,25 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   r = 0.0;
   gridoperator.residual(x0,r);
 
-#if 0
-  // make EIGEN solver
-  Dune::PDELab::EigenBackend_BiCGSTAB_Diagonal solver;
-
-  // solve the jacobian system
-  r *= -1.0; // need -residual
   DV x(gfs,0.0);
-  solver.apply(m,x,r,1e-10);
-  x += x0;
+  // test the container interface
+  {
+    // make ISTL solver
+    Dune::MatrixAdapter<M,DV,RV> opa(m);
+    // only Richardson - everything else would need ISTL support
+    Dune::Richardson<DV,RV> richardson(1.0);
+    Dune::CGSolver<DV> solver(opa,richardson,1E-10,5000,2);
+    Dune::InverseOperatorResult stat;
+    // solve the jacobian system
+    r *= -1.0; // need -residual
+    solver.apply(x,r,stat);
+    x += x0;
+  }
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x);
   vtkwriter.write(filename,Dune::VTK::ascii);
-#endif
 }
 
 //===============================================================
@@ -261,8 +265,29 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
-    // YaspGrid Q2 2D test
+    // YaspGrid Q1 2D test
     {
+      // make grid
+      Dune::FieldVector<double,2> L(1.0);
+      Dune::array<int,2> N(Dune::fill_array<int,2>(1));
+      Dune::YaspGrid<2> grid(L,N);
+      grid.globalRefine(3);
+
+      // get view
+      typedef Dune::YaspGrid<2>::LeafGridView GV;
+      const GV& gv=grid.leafGridView();
+
+      // make finite element map
+      typedef GV::Grid::ctype DF;
+      typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,double,1> FEM;
+      FEM fem(gv);
+
+      // solve problem
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"eigenbackend_yasp_Q1_2d",2);
+    }
+
+    // YaspGrid Q2 2D test
+    if (0) {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
       Dune::array<int,2> N(Dune::fill_array<int,2>(1));
