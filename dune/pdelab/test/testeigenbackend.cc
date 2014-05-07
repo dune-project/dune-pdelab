@@ -20,7 +20,6 @@
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/common/function.hh>
-#include <dune/pdelab/backend/simple.hh>
 #include <dune/pdelab/backend/eigen.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/localoperator/laplacedirichletp12d.hh>
