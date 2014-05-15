@@ -23,7 +23,11 @@ namespace Dune{
     {
     public:
 
-      static const bool needs_constraints_caching = true;
+      template<typename TrialConstraintsContainer, typename TestConstraintsContainer>
+      bool needsConstraintsCaching(const TrialConstraintsContainer& cu, const TestConstraintsContainer& cv) const
+      {
+        return false;
+      }
 
       //! The type of the wrapping local assembler
       typedef LA LocalAssembler;

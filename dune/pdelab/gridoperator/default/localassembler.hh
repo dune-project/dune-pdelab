@@ -74,8 +74,8 @@ namespace Dune{
       typedef LFSIndexCache<LFSU,CU> LFSUCache;
       typedef LFSIndexCache<LFSV,CV> LFSVCache;
 
-      typedef LFSIndexCache<LFSU,EmptyTransformation> NoConstraintsLFSUCache;
-      typedef LFSIndexCache<LFSV,EmptyTransformation> NoConstraintsLFSVCache;
+      typedef LFSUCache NoConstraintsLFSUCache;
+      typedef LFSVCache NoConstraintsLFSVCache;
 
       //! @}
 

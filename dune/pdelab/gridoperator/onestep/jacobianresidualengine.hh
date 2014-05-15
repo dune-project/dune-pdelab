@@ -23,8 +23,11 @@ namespace Dune{
       //! The type of the wrapping local assembler
       typedef OSLA OneStepLocalAssembler;
 
-      // Request constraints caching from the global assembler
-      static const bool needs_constraints_caching = true;
+      template<typename TrialConstraintsContainer, typename TestConstraintsContainer>
+      bool needsConstraintsCaching(const TrialConstraintsContainer& cu, const TestConstraintsContainer& cv) const
+      {
+        return cu.containsNonDirichletConstraints() || cv.containsNonDirichletConstraints();
+      }
 
       //! The type for real numbers
       typedef typename OSLA::Real Real;

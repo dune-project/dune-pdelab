@@ -89,22 +89,16 @@ namespace Dune{
       {
         typedef typename GV::Traits::template Codim<0>::Entity Element;
 
-        typedef typename std::conditional<
-          LocalAssemblerEngine::needs_constraints_caching,
-          LFSIndexCache<LFSU,CU>,
-          LFSIndexCache<LFSU,EmptyTransformation>
-          >::type LFSUCache;
+        typedef LFSIndexCache<LFSU,CU> LFSUCache;
 
-        typedef typename std::conditional<
-          LocalAssemblerEngine::needs_constraints_caching,
-          LFSIndexCache<LFSV,CV>,
-          LFSIndexCache<LFSV,EmptyTransformation>
-          >::type LFSVCache;
+        typedef LFSIndexCache<LFSV,CV> LFSVCache;
 
-        LFSUCache lfsu_cache(lfsu,cu);
-        LFSVCache lfsv_cache(lfsv,cv);
-        LFSUCache lfsun_cache(lfsun,cu);
-        LFSVCache lfsvn_cache(lfsvn,cv);
+        const bool needs_constraints_caching = assembler_engine.needsConstraintsCaching(cu,cv);
+
+        LFSUCache lfsu_cache(lfsu,cu,needs_constraints_caching);
+        LFSVCache lfsv_cache(lfsv,cv,needs_constraints_caching);
+        LFSUCache lfsun_cache(lfsun,cu,needs_constraints_caching);
+        LFSVCache lfsvn_cache(lfsvn,cv,needs_constraints_caching);
 
         // Notify assembler engine about oncoming assembly
         assembler_engine.preAssembly();
