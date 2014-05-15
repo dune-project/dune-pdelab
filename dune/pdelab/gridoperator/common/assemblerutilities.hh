@@ -428,8 +428,8 @@ namespace Dune{
       /** \brief Add local matrix to global matrix,
           and apply Dirichlet constraints in a symmetric
           fashion. Apart from that, identical to etadd(). */
-      template<typename T, typename GCView>
-      void etadd_symmetric (const LocalMatrix<T>& localcontainer, GCView& globalcontainer_view) const
+      template<typename M, typename GCView>
+      void etadd_symmetric (M& localcontainer, GCView& globalcontainer_view) const
       {
 
         typedef typename GCView::RowIndexCache LFSVIndexCache;
@@ -463,9 +463,11 @@ namespace Dune{
       }
 
 
-      template<typename T, typename GCView>
-      void etadd (const LocalMatrix<T>& localcontainer, GCView& globalcontainer_view) const
+      template<typename M, typename GCView>
+      void etadd (const M& localcontainer, GCView& globalcontainer_view) const
       {
+
+        typedef typename M::value_type T;
 
         typedef typename GCView::RowIndexCache LFSVIndexCache;
         typedef typename GCView::ColIndexCache LFSUIndexCache;
