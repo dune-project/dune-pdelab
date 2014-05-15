@@ -75,7 +75,7 @@ namespace Dune{
       typedef LFSIndexCache<LFSV,CV> LFSVCache;
 
       typedef LFSUCache NoConstraintsLFSUCache DUNE_DEPRECATED_MSG("NoConstraintsLFSUCache is deprecated, use LFSUCache instead and use the runtime interface to disable constraints caching");
-      typedef LFSVCache NoConstraintsLFSVCache DUNE_DEPRECATED_MSG("NoConstraintsLFSVCache is deprecated, use LFSVCache instead and use the runtime interface to disable constraints caching");;
+      typedef LFSVCache NoConstraintsLFSVCache DUNE_DEPRECATED_MSG("NoConstraintsLFSVCache is deprecated, use LFSVCache instead and use the runtime interface to disable constraints caching");
 
       //! @}
 
