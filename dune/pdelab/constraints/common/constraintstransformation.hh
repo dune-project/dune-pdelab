@@ -19,6 +19,8 @@ namespace Dune {
       : public unordered_map<CI,unordered_map<CI,F> >
     {
 
+      typedef unordered_map<CI,unordered_map<CI,F> > BaseT;
+
     public:
       //! export ElementType
       typedef F ElementType;
@@ -35,10 +37,34 @@ namespace Dune {
 
         typedef unordered_map<DI,F> RowType;
 
+        bool containsNonDirichletConstraints() const
+        {
+          // if any row is not empty, there are non-Dirichlet constraints
+          // TODO: replace with std::any_of + lambda after 2.0 release
+          typedef typename LocalTransformation::const_iterator It;
+          for (It it = this->begin(),
+                 end = this->end();
+               it != end;
+               ++it)
+            if (!it->second.empty())
+              return true;
+          return false;
+        }
+
       };
 
       //! export RowType
       typedef typename ConstraintsTransformation::mapped_type RowType;
+
+      ConstraintsTransformation()
+        : _contains_non_dirichlet_constraints(false)
+      {}
+
+      void clear()
+      {
+        BaseT::clear();
+        _contains_non_dirichlet_constraints = false;
+      }
 
       template<typename IndexCache>
       void import_local_transformation(const LocalTransformation& local_transformation, const IndexCache& index_cache)
@@ -73,6 +99,9 @@ namespace Dune {
                 continue;
               }
 
+            // We have a non-Dirichlet constraint
+            _contains_non_dirichlet_constraints = true;
+
             // Accumulate new entries into global constraint
             for (LocalEntryIterator le_it = lc_it->second.begin(),
                    le_end = lc_it->second.end();
@@ -84,10 +113,27 @@ namespace Dune {
           }
       }
 
+      bool containsNonDirichletConstraints() const
+      {
+        return _contains_non_dirichlet_constraints;
+      }
+
+    private:
+
+      bool _contains_non_dirichlet_constraints;
+
     };
 
     class EmptyTransformation : public ConstraintsTransformation<char,char,char>
     {
+
+    public:
+
+      bool containsNonDirichletConstraints() const
+      {
+        return false;
+      }
+
     };
 
    //! \} group GridFunctionSpace

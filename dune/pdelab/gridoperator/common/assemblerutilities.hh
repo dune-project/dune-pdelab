@@ -365,6 +365,65 @@ namespace Dune{
             globalcontainer_view.add(i,j,localcontainer(i,j));
       }
 
+      template<typename M, typename GCView>
+      void scatter_jacobian(M& local_container, GCView& global_container_view, bool symmetric_mode) const
+      {
+        typedef typename GCView::RowIndexCache LFSVIndexCache;
+        typedef typename GCView::ColIndexCache LFSUIndexCache;
+
+        const LFSVIndexCache& lfsv_indices = global_container_view.rowIndexCache();
+        const LFSUIndexCache& lfsu_indices = global_container_view.colIndexCache();
+
+        if (lfsv_indices.constraintsCachingEnabled() && lfsu_indices.constraintsCachingEnabled())
+          if (symmetric_mode)
+            etadd_symmetric(local_container,global_container_view);
+          else
+            etadd(local_container,global_container_view);
+        else
+          {
+
+            typedef typename LFSVIndexCache::LocalFunctionSpace LFSV;
+            const LFSV& lfsv = lfsv_indices.localFunctionSpace();
+
+            typedef typename LFSUIndexCache::LocalFunctionSpace LFSU;
+            const LFSU& lfsu = lfsu_indices.localFunctionSpace();
+
+            // optionally clear out columns that belong to Dirichlet-constrained DOFs to keep matrix symmetric
+            if (symmetric_mode)
+              {
+                typedef typename LFSUIndexCache::ContainerIndex CI;
+
+                for (size_t j = 0; j < lfsu_indices.size(); ++j)
+                  {
+                    const CI& container_index = lfsu_indices.containerIndex(j);
+                    const typename CU::const_iterator cit = pconstraintsu->find(container_index);
+                    if (cit != pconstraintsu->end())
+                      {
+                        // make sure we only have Dirichlet constraints
+                        assert(cit->second.empty());
+                        // clear out the current column
+                        for (size_t i = 0; i < lfsv_indices.size(); ++i)
+                          {
+                            // we do not need to update the residual, since the solution
+                            // (i.e. the correction) for the Dirichlet DOF is 0 by definition
+                            local_container(lfsv,i,lfsu,j) = 0.0;
+                          }
+                      }
+                  }
+              }
+
+            // write entries without considering constraints.
+            // Dirichlet-constrained rows will be fixed in a postprocessing step.
+            for (size_t i = 0; i<lfsv_indices.size(); ++i)
+              for (size_t j = 0; j<lfsu_indices.size(); ++j)
+                {
+                  // skip 0 entries because they might not be present in the pattern
+                  if (local_container(lfsv,i,lfsu,j) == 0.0)
+                    continue;
+                  global_container_view.add(i,j,local_container(lfsv,i,lfsu,j));
+                }
+          }
+      }
 
       /** \brief Add local matrix to global matrix,
           and apply Dirichlet constraints in a symmetric
