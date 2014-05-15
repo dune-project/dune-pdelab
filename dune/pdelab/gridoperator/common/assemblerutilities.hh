@@ -365,8 +365,15 @@ namespace Dune{
             globalcontainer_view.add(i,j,localcontainer(i,j));
       }
 
+      //! Scatter local jacobian to global container.
       template<typename M, typename GCView>
-      void scatter_jacobian(M& local_container, GCView& global_container_view, bool symmetric_mode) const
+      typename enable_if<
+        AlwaysTrue<M>::value && !is_same<
+          CV,
+          EmptyTransformation
+          >::value
+      >::type
+      scatter_jacobian(M& local_container, GCView& global_container_view, bool symmetric_mode) const
       {
         typedef typename GCView::RowIndexCache LFSVIndexCache;
         typedef typename GCView::ColIndexCache LFSUIndexCache;
@@ -423,6 +430,40 @@ namespace Dune{
                   global_container_view.add(i,j,local_container(lfsv,i,lfsu,j));
                 }
           }
+      }
+
+      // specialization for empty constraints container
+      template<typename M, typename GCView>
+      typename enable_if<
+        AlwaysTrue<M>::value && is_same<
+          CV,
+          EmptyTransformation
+          >::value
+      >::type
+      scatter_jacobian(M& local_container, GCView& global_container_view, bool symmetric_mode) const
+      {
+        typedef typename GCView::RowIndexCache LFSVIndexCache;
+        typedef typename GCView::ColIndexCache LFSUIndexCache;
+
+        const LFSVIndexCache& lfsv_indices = global_container_view.rowIndexCache();
+        const LFSUIndexCache& lfsu_indices = global_container_view.colIndexCache();
+
+        typedef typename LFSVIndexCache::LocalFunctionSpace LFSV;
+        const LFSV& lfsv = lfsv_indices.localFunctionSpace();
+
+        typedef typename LFSUIndexCache::LocalFunctionSpace LFSU;
+        const LFSU& lfsu = lfsu_indices.localFunctionSpace();
+
+        // write entries without considering constraints.
+        // Dirichlet-constrained rows will be fixed in a postprocessing step.
+        for (size_t i = 0; i<lfsv_indices.size(); ++i)
+          for (size_t j = 0; j<lfsu_indices.size(); ++j)
+            {
+              // skip 0 entries because they might not be present in the pattern
+              if (local_container(lfsv,i,lfsu,j) == 0.0)
+                continue;
+              global_container_view.add(i,j,local_container(lfsv,i,lfsu,j));
+            }
       }
 
       /** \brief Add local matrix to global matrix,
