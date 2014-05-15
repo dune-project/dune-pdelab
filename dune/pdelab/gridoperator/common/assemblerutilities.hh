@@ -429,7 +429,7 @@ namespace Dune{
           and apply Dirichlet constraints in a symmetric
           fashion. Apart from that, identical to etadd(). */
       template<typename T, typename GCView>
-      void etadd_symmetric (const LocalMatrix<T>& localcontainer, GCView& globalcontainer_view) const
+      void etadd_symmetric (LocalMatrix<T>& localcontainer, GCView& globalcontainer_view) const
       {
 
         typedef typename GCView::RowIndexCache LFSVIndexCache;
