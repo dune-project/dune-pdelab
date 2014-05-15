@@ -20,20 +20,34 @@ namespace Dune {
             struct InitPkQkLocalFiniteElementMap
             {
                 template<typename C>
-                static void init(C & c)
+                static void init(C & c, unsigned int order)
                 {
-                    typedef Dune::QkLocalFiniteElement<D,R,d,k> QkLFE;
-                    typedef Dune::PkLocalFiniteElement<D,R,d,k> PkLFE;
-                    typedef typename C::value_type ptr;
-                    c[0] = ptr(new LocalFiniteElementVirtualImp<QkLFE>(QkLFE()));
-                    c[1] = ptr(new LocalFiniteElementVirtualImp<PkLFE>(PkLFE()));
+                    if (order == k)
+                    {
+                        typedef Dune::QkLocalFiniteElement<D,R,d,k> QkLFE;
+                        typedef Dune::PkLocalFiniteElement<D,R,d,k> PkLFE;
+                        typedef typename C::value_type ptr;
+                        c[0] = ptr(new LocalFiniteElementVirtualImp<QkLFE>(QkLFE()));
+                        c[1] = ptr(new LocalFiniteElementVirtualImp<PkLFE>(PkLFE()));
+                    }
+                    else
+                        InitPkQkLocalFiniteElementMap<D,R,d,k-1>::init(c,order);
+                }
+            };
+            template<class D, class R, int d>
+            struct InitPkQkLocalFiniteElementMap<D,R,d,-1>
+            {
+                template<typename C>
+                    static void init(C & c, unsigned int order)
+                {
+                    DUNE_THROW(Exception, "Sorry, but we failed to initialize a QkPk FiniteElementMap of order " << order);
                 }
             };
         }
 
         //! FiniteElementMap which provides PkQkLocalFiniteElement instances, depending on the geometry type
         //! \ingroup FiniteElementMap
-        template<class D, class R, int d, int k>
+        template<class D, class R, int d, int maxP=6>
         class PkQkLocalFiniteElementMap
         {
             //! Type of finite element from local functions
@@ -43,7 +57,12 @@ namespace Dune {
 
             PkQkLocalFiniteElementMap ()
             {
-                InitPkQkLocalFiniteElementMap<D,R,d,k>::init(finiteElements_);
+                InitPkQkLocalFiniteElementMap<D,R,d,maxP>::init(finiteElements_,maxP);
+            }
+
+            PkQkLocalFiniteElementMap (unsigned int order)
+            {
+                InitPkQkLocalFiniteElementMap<D,R,d,maxP>::init(finiteElements_,order);
             }
 
             //! \brief get local basis functions for entity
