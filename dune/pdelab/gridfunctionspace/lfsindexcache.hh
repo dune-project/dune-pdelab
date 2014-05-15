@@ -662,6 +662,11 @@ namespace Dune {
         return _lfs.size();
       }
 
+      bool constraintsCachingEnabled() const
+      {
+        return false;
+      }
+
     private:
 
       const LFS& _lfs;
