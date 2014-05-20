@@ -63,8 +63,7 @@ namespace Dune {
         // domain and range field type
         typedef typename LFSU_SUB::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename LFSU_SUB::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        typedef typename M::value_type RF;
         typedef typename LFSU_SUB::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType JacobianType;
 
@@ -141,8 +140,7 @@ namespace Dune {
         // domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        typedef typename R::value_type RF;
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType JacobianType;
 
@@ -225,8 +223,7 @@ namespace Dune {
         // domain and range field type
         typedef typename LFSV::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename LFSV::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        typedef typename R::value_type RF;
         typedef typename LFSV::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RangeType;
 
@@ -274,8 +271,7 @@ namespace Dune {
         // domain and range field type
         typedef typename LFSV::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename LFSV::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
+        typedef typename R::value_type RF;
         typedef typename LFSV::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RangeType;
 
