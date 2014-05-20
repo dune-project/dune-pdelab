@@ -37,9 +37,7 @@ namespace Dune {
     template<typename T>
     class LinearElasticity : public FullVolumePattern,
                              public LocalOperatorDefaultFlags,
-                             public InstationaryLocalOperatorDefaultMethods<typename T::Traits::DomainType>,
-                             public JacobianBasedAlphaVolume<LinearElasticity<T> >,
-                             public NumericalJacobianVolume<LinearElasticity<T> >
+                             public InstationaryLocalOperatorDefaultMethods<typename T::Traits::DomainType>
     {
     public:
 
