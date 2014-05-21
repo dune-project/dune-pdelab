@@ -211,6 +211,80 @@ namespace Dune {
           //! An accumulate-only view of this container that automatically applies a weight to all contributions.
           typedef WeightedMatrixAccumulationView<LocalMatrix> WeightedAccumulationView;
 
+          struct iterator
+            : public Dune::BidirectionalIteratorFacade<iterator,value_type>
+          {
+
+            iterator()
+              : _m(nullptr)
+              , _i(0)
+              , _j(0)
+            {}
+
+            iterator(LocalMatrix& m, size_type i, size_type j)
+              : _m(&m)
+              , _i(i)
+              , _j(j)
+            {}
+
+            bool equals(const iterator& other) const
+            {
+              return _m == other._m && _i == other._i && _j == other._j;
+            }
+
+            value_type& dereference() const
+            {
+              return _m->getEntry(_i,_j);
+            }
+
+            void increment()
+            {
+              if (_j < _m->ncols() - 1)
+                ++_j;
+              else
+                {
+                  ++_i;
+                  _j = 0;
+                }
+            }
+
+            void decrement()
+            {
+              if (_j > 0)
+                --_j;
+              else
+                {
+                  --_i;
+                  _j = _m->ncols() - 1;
+                }
+            }
+
+            size_type row() const
+            {
+              return _i;
+            }
+
+            size_type col() const
+            {
+              return _j;
+            }
+
+            LocalMatrix* _m;
+            size_type _i;
+            size_type _j;
+
+          };
+
+          iterator begin()
+          {
+            return iterator(*this,0,0);
+          }
+
+          iterator end()
+          {
+            return iterator(*this,nrows(),0);
+          }
+
           //! Default constructor
           LocalMatrix () {}
 
