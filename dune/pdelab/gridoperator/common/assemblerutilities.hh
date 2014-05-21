@@ -421,14 +421,13 @@ namespace Dune{
 
             // write entries without considering constraints.
             // Dirichlet-constrained rows will be fixed in a postprocessing step.
-            for (size_t i = 0; i<lfsv_indices.size(); ++i)
-              for (size_t j = 0; j<lfsu_indices.size(); ++j)
-                {
-                  // skip 0 entries because they might not be present in the pattern
-                  if (local_container(lfsv,i,lfsu,j) == 0.0)
-                    continue;
-                  global_container_view.add(i,j,local_container(lfsv,i,lfsu,j));
-                }
+            for (auto it = local_container.begin(); it != local_container.end(); ++it)
+              {
+                // skip 0 entries because they might not be present in the pattern
+                if (*it == 0.0)
+                  continue;
+                global_container_view.add(it.row(),it.col(),*it);
+              }
           }
       }
 
@@ -456,14 +455,13 @@ namespace Dune{
 
         // write entries without considering constraints.
         // Dirichlet-constrained rows will be fixed in a postprocessing step.
-        for (size_t i = 0; i<lfsv_indices.size(); ++i)
-          for (size_t j = 0; j<lfsu_indices.size(); ++j)
-            {
-              // skip 0 entries because they might not be present in the pattern
-              if (local_container(lfsv,i,lfsu,j) == 0.0)
-                continue;
-              global_container_view.add(i,j,local_container(lfsv,i,lfsu,j));
-            }
+        for (auto it = local_container.begin(); it != local_container.end(); ++it)
+          {
+            // skip 0 entries because they might not be present in the pattern
+            if (*it == 0.0)
+              continue;
+            global_container_view.add(it.row(),it.col(),*it);
+          }
       }
 
       /** \brief Add local matrix to global matrix,
