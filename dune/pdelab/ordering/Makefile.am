@@ -14,6 +14,7 @@ gridfunctionspace_HEADERS =			\
 	orderinginterface.hh			\
 	permutationordering.hh			\
 	permutedordering.hh			\
+	redblackdg.hh				\
 	singlecodimleafordering.hh		\
 	subordering.hh				\
 	transformations.hh			\

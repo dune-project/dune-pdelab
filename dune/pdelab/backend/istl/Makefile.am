@@ -2,6 +2,7 @@ commondir = $(includedir)/dune/pdelab/backend/istl
 common_HEADERS = 				\
 	bcrsmatrixbackend.hh			\
 	bcrspattern.hh				\
+	bellmatrixbackend.hh			\
 	blockmatrixdiagonal.hh			\
 	cg_to_dg_prolongation.hh		\
 	descriptors.hh				\
