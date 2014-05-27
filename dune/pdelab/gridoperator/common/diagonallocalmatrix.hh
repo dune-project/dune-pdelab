@@ -1,10 +1,10 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
-#ifndef DUNE_PDELAB_GRIDOPERATOR_COMMON_LOCALMATRIX_HH
-#define DUNE_PDELAB_GRIDOPERATOR_COMMON_LOCALMATRIX_HH
+#ifndef DUNE_PDELAB_GRIDOPERATOR_COMMON_DIAGONALLOCALMATRIX_HH
+#define DUNE_PDELAB_GRIDOPERATOR_COMMON_DIAGONALLOCALMATRIX_HH
 
-#include <dune/pdelab/gridfunctionspace/localvector.hh>
+#include <dune/pdelab/gridoperator/common/localmatrix.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -13,160 +13,6 @@ namespace Dune {
      * \addtogroup PDELab
      * \{
      */
-
-    //! An accumulate-only view on a local matrix that automatically takes into account an accumulation weight.
-    template<typename C>
-    class WeightedMatrixAccumulationView
-    {
-
-    public:
-
-      //! The type of the underlying container.
-      typedef C Container;
-
-      //! The type of the storage container underlying the LocalVector.
-      /**
-       * \warning This is not a matrix-like container anymore, but a std::vector-like one!
-       */
-      typedef typename Container::BaseContainer BaseContainer;
-
-      //! The value type of the entries.
-      typedef typename C::value_type value_type;
-
-      //! The type of the weight applied when accumulating contributions.
-      typedef typename C::weight_type weight_type;
-
-      //! \brief Export this type for uniform handling of the containers
-      //!        themselves and their views.
-      typedef WeightedMatrixAccumulationView WeightedAccumulationView;
-
-      //! \brief Returns a WeighedAccumulationView with some weight in
-      //!        addition to this view's weight
-      WeightedAccumulationView weightedAccumulationView(weight_type weight)
-      {
-        return WeightedAccumulationView(container(),weight*this->weight());
-      }
-
-      //! The size_type of the underlying container.
-      typedef typename C::size_type size_type;
-
-      //! Returns the weight associated with this view.
-      /**
-       * \note This can be used together with rawAccumulate() to avoid applying the weight at
-       * each loop iteration.
-       */
-      weight_type weight()
-      {
-        _modified = true;
-        return _weight;
-      }
-
-      //! Resets the weighting coefficient of the view.
-      /**
-       * \warning Only call this method when you know what you are doing! It is especially not meant
-       *          to be called from inside local operators.
-       */
-      void setWeight(weight_type weight)
-      {
-        _weight = weight;
-      }
-
-      //! Applies the current weight to v and adds the result to the matrix entry associated with the i-th entry of lfsv and the j-th entry of lfsu.
-      template<typename LFSU, typename LFSV>
-      void accumulate(const LFSV& lfsv, size_type i,
-                      const LFSU& lfsu, size_type j,
-                      value_type v)
-      {
-        _modified = true;
-        _container(lfsv,i,lfsu,j) += _weight * v;
-      }
-
-      //! Adds v to the (i,j)-th entry of the underlying container without applying the current weight.
-      /**
-       * \warning When using this method, you must take care of applying the weight yourself, otherwise
-       *          your program may exhibit strange behavior or even calculate wrong results!
-       */
-      template<typename LFSU, typename LFSV>
-      void rawAccumulate(const LFSV& lfsv, size_type i,
-                         const LFSU& lfsu, size_type j,
-                         value_type v)
-      {
-        _modified = true;
-        _container(lfsv,i,lfsu,j) += v;
-      }
-
-      //! Returns the number of rows of the underlying container.
-      size_type nrows() const
-      {
-        return _container.nrows();
-      }
-
-      //! Returns the number of colums of the underlying container.
-      size_type ncols() const
-      {
-        return _container.ncols();
-      }
-
-      //! Returns whether this view has been written to.
-      bool modified() const
-      {
-        return _modified;
-      }
-
-      //! Resets the modification state of the view to not modified.
-      /**
-       * \warning Never call this method from within a local operator, or
-       *          your local residual / matrix contributions will be lost!
-       */
-      void resetModified()
-      {
-        _modified = false;
-      }
-
-      //! Returns the container (of type LocalMatrix) that this view is based on.
-      Container& container()
-      {
-        _modified = true;
-        return _container;
-      }
-
-      //! Returns the container (of type LocalMatrix) that this view is based on (const version).
-      const Container& container() const
-      {
-        return _container;
-      }
-
-      //! Returns the storage container of the underlying LocalMatrix.
-      /**
-       * \warning This is not a matrix-like container anymore, but a std::vector-like one!
-       */
-      BaseContainer& base()
-      {
-        _modified = true;
-        return _container.base();
-      }
-
-      //! Returns the storage container of the underlying LocalVector (const version).
-      /**
-       * \warning This is not a matrix-like container anymore, but a std::vector-like one!
-       */
-      const BaseContainer& base() const
-      {
-        return _container.base();
-      }
-
-      //! Constructor
-      WeightedMatrixAccumulationView(Container& container, weight_type weight)
-        : _container(container)
-        , _weight(weight)
-        , _modified(false)
-      {}
-
-    private:
-      Container& _container;
-      weight_type _weight;
-      bool _modified;
-    };
 
 
     //! A dense matrix for storing data associated with the degrees of freedom of a pair of LocalFunctionSpaces.
@@ -179,7 +25,7 @@ namespace Dune {
      * \tparam T            The type of values to store in the matrix.
      * \tparam W            The type of weight applied in a WeightedAccumulationView.
      */	template<typename T, typename W = T>
-     class LocalMatrix
+     class DiagonalLocalMatrix
         {
         public:
 
@@ -209,7 +55,7 @@ namespace Dune {
           typedef W weight_type;
 
           //! An accumulate-only view of this container that automatically applies a weight to all contributions.
-          typedef WeightedMatrixAccumulationView<LocalMatrix> WeightedAccumulationView;
+          typedef WeightedMatrixAccumulationView<DiagonalLocalMatrix> WeightedAccumulationView;
 
           struct iterator
             : public Dune::BidirectionalIteratorFacade<iterator,value_type>
@@ -218,45 +64,31 @@ namespace Dune {
             iterator()
               : _m(nullptr)
               , _i(0)
-              , _j(0)
             {}
 
-            iterator(LocalMatrix& m, size_type i, size_type j)
+            iterator(DiagonalLocalMatrix& m, size_type i)
               : _m(&m)
               , _i(i)
-              , _j(j)
             {}
 
             bool equals(const iterator& other) const
             {
-              return _m == other._m && _i == other._i && _j == other._j;
+              return _m == other._m && _i == other._i;
             }
 
             value_type& dereference() const
             {
-              return _m->getEntry(_i,_j);
+              return _m->getEntry(_i,_i);
             }
 
             void increment()
             {
-              if (_j < _m->ncols() - 1)
-                ++_j;
-              else
-                {
-                  ++_i;
-                  _j = 0;
-                }
+              ++_i;
             }
 
             void decrement()
             {
-              if (_j > 0)
-                --_j;
-              else
-                {
-                  --_i;
-                  _j = _m->ncols() - 1;
-                }
+              --_i;
             }
 
             size_type row() const
@@ -266,52 +98,56 @@ namespace Dune {
 
             size_type col() const
             {
-              return _j;
+              return _i;
             }
 
-            LocalMatrix* _m;
+            DiagonalLocalMatrix* _m;
             size_type _i;
-            size_type _j;
 
           };
 
           iterator begin()
           {
-            return iterator(*this,0,0);
+            return iterator(*this,0);
           }
 
           iterator end()
           {
-            return iterator(*this,nrows(),0);
+            return iterator(*this,nrows());
           }
 
           //! Default constructor
-          LocalMatrix () {}
+          DiagonalLocalMatrix () {}
 
           //! Construct a LocalMatrix with r rows and c columns.
-          LocalMatrix (size_type r, size_type c)
-            : _container(r*c)
+          DiagonalLocalMatrix (size_type r, size_type c)
+            : _container(r)
             , _rows(r)
             , _cols(c)
-          {}
+          {
+            assert(r == c);
+          }
 
           //! Construct a LocalMatrix with r rows and c columns and initialize its entries with t.
-          LocalMatrix (size_type r, size_type c, const T& t)
-            : _container(r*c,t)
+          DiagonalLocalMatrix (size_type r, size_type c, const T& t)
+            : _container(r,t)
             , _rows(r)
             , _cols(c)
-          {}
+          {
+            assert(r == c);
+          }
 
           //! Resize the matrix.
           void resize (size_type r, size_type c)
           {
-            _container.resize(r*c);
+            assert(r == c);
+            _container.resize(r);
             _rows = r;
             _cols = c;
           }
 
           //! Assign t to all entries of the matrix.
-          LocalMatrix& operator=(const T& t)
+          DiagonalLocalMatrix& operator=(const T& t)
           {
             std::fill(_container.begin(),_container.end(),t);
             return *this;
@@ -320,7 +156,8 @@ namespace Dune {
           //! Resize the matrix and assign t to all entries.
           void assign (size_type r, size_type c, const T& t)
           {
-            _container.assign(r*c,t);
+            assert(r == c);
+            _container.assign(r,t);
             _rows = r;
             _cols = c;
           }
@@ -352,7 +189,7 @@ namespace Dune {
           }
 
           //! Multiplies all entries of the matrix with x.
-          LocalMatrix& operator *= (const T& x)
+          DiagonalLocalMatrix& operator *= (const T& x)
           {
             std::transform(_container.begin(),_container.end(),_container.begin(),std::bind1st(std::multiplies<T>(),x));
             return *this;
@@ -370,7 +207,7 @@ namespace Dune {
             return _cols;
           }
 
-          //! y = A x
+          //! y += A x
           template<class X, class R>
           void umv (const X& x, R& y) const
           {
@@ -381,7 +218,7 @@ namespace Dune {
               }
           }
 
-          //! y = alpha A x
+          //! y += alpha A x
           template<class X, class R>
           void usmv (const value_type& alpha, const X& x, R& y) const
           {
@@ -427,7 +264,8 @@ namespace Dune {
            */
           value_type& getEntry(size_type i, size_type j)
           {
-            return _container[j*_rows + i];
+            assert(i == j);
+            return _container[i];
           }
 
           //! Direct (unmapped) access to the (i,j)-th entry of the matrix (const version).
@@ -441,7 +279,8 @@ namespace Dune {
            */
           const value_type& getEntry(size_type i, size_type j) const
           {
-            return _container[j*_rows + i];
+            assert(i == j);
+            return _container[i];
           }
 
         private:
@@ -450,18 +289,6 @@ namespace Dune {
           size_type _rows, _cols;
      };
 
-    template<class Stream, class T, class W>
-    Stream &operator<<(Stream &stream, const LocalMatrix<T,W> &m) {
-      for(int r = 0; r < m.nrows(); ++r) {
-        if(m.ncols() >= 1)
-          stream << m.getEntry(r, 0);
-        for(int c = 1; c < m.ncols(); ++c)
-          stream << "\t" << m.getEntry(r, c);
-        stream << "\n";
-      }
-      return stream;
-    }
-
     /**
      * \} group PDELab
      */
@@ -469,4 +296,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_GRIDOPERATOR_COMMON_LOCALMATRIX_HH
+#endif // DUNE_PDELAB_GRIDOPERATOR_COMMON_DIAGONALLOCALMATRIX_HH

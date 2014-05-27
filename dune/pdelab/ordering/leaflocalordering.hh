@@ -24,10 +24,10 @@ namespace Dune {
     {
 
       template<typename>
-      friend struct collect_used_geometry_types_from_cell;
+      friend struct collect_used_geometry_types_from_cell_visitor;
 
       template<typename>
-      friend struct extract_per_entity_sizes_from_cell;
+      friend struct extract_per_entity_sizes_from_cell_visitor;
 
       typedef LocalOrderingBase<GV,DI,CI> BaseT;
 

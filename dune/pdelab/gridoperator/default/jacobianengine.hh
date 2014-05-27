@@ -4,9 +4,11 @@
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 #include <dune/pdelab/gridoperator/common/localmatrix.hh>
+#include <dune/pdelab/gridoperator/common/diagonallocalmatrix.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridoperator/common/localassemblerenginebase.hh>
 #include <dune/pdelab/localoperator/callswitch.hh>
+#include <dune/pdelab/localoperator/flags.hh>
 
 namespace Dune{
   namespace PDELab{
@@ -287,7 +289,14 @@ namespace Dune{
       typedef Dune::PDELab::TestSpaceTag LocalTestSpaceTag;
 
       typedef Dune::PDELab::LocalVector<SolutionElement, LocalTrialSpaceTag> SolutionVector;
-      typedef Dune::PDELab::LocalMatrix<JacobianElement> JacobianMatrix;
+      typedef typename std::conditional<
+        std::is_base_of<
+          lop::DiagonalJacobian,
+          LOP
+          >::value,
+        Dune::PDELab::DiagonalLocalMatrix<JacobianElement>,
+        Dune::PDELab::LocalMatrix<JacobianElement>
+        >::type JacobianMatrix;
 
       SolutionVector xl;
       SolutionVector xn;

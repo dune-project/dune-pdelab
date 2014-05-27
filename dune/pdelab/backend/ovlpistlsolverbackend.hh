@@ -881,8 +881,8 @@ namespace Dune {
         res.converged  = true;
         res.iterations = 1;
         res.elapsed    = 0.0;
-        res.reduction  = reduction;
-        res.conv_rate  = reduction; // pow(reduction,1.0/1)
+        res.reduction  = static_cast<double>(reduction);
+        res.conv_rate  = static_cast<double>(reduction); // pow(reduction,1.0/1)
       }
 
     private:
@@ -911,6 +911,8 @@ namespace Dune {
 #endif
       typedef typename Dune::Amg::SmootherTraits<ParSmoother>::Arguments SmootherArgs;
       typedef Dune::Amg::AMG<Operator,VectorType,ParSmoother,Comm> AMG;
+
+      typedef typename V::ElementType RF;
 
     public:
 
@@ -1017,7 +1019,7 @@ namespace Dune {
           stats.directCoarseLevelSolver=amg->usesDirectCoarseLevelSolver();
         }
         watch.reset();
-        Solver<VectorType> solver(oop,sp,*amg,reduction,maxiter,verb);
+        Solver<VectorType> solver(oop,sp,*amg,RF(reduction),maxiter,verb);
         Dune::InverseOperatorResult stat;
 
         solver.apply(istl::raw(z),istl::raw(r),stat);
