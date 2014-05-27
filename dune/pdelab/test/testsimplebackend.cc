@@ -20,7 +20,7 @@
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/common/function.hh>
-#include <dune/pdelab/backend/dense.hh>
+#include <dune/pdelab/backend/simple.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/localoperator/laplacedirichletp12d.hh>
 #include <dune/pdelab/localoperator/poisson.hh>
@@ -149,8 +149,8 @@ public:
 //===============================================================
 
 // generate a P1 function and output it
-template<typename GV, typename FEM, typename CON, int q>
-void poisson (const GV& gv, const FEM& fem, std::string filename)
+template<typename GV, typename FEM, typename CON, typename MBE>
+void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 {
   // constants and types
   typedef typename FEM::Traits::FiniteElementType::Traits::
@@ -161,7 +161,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
     GV,
     FEM,
     CON,
-    Dune::PDELab::DenseVectorBackend<>
+    Dune::PDELab::SimpleVectorBackend<>
     > GFS;
   GFS gfs(gv,fem);
   gfs.name("solution");
@@ -180,12 +180,12 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   FType f(gv);
   typedef J<GV,R> JType;
   JType j(gv);
-  typedef Dune::PDELab::Poisson<FType,ConstraintsParameters,JType,q> LOP;
-  LOP lop(f,constraintsparameters,j);
+  typedef Dune::PDELab::Poisson<FType,ConstraintsParameters,JType> LOP;
+  LOP lop(f,constraintsparameters,j,q);
 
   // make grid operator
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,
-                                     Dune::PDELab::DenseMatrixBackend<>,
+                                     MBE,
                                      double,double,double,
                                      C,C> GridOperator;
   GridOperator gridoperator(gfs,cg,gfs,cg,lop);
@@ -267,8 +267,7 @@ int main(int argc, char** argv)
       // make grid
       Dune::FieldVector<double,2> L(1.0);
       Dune::array<int,2> N(Dune::fill_array<int,2>(1));
-      std::bitset<2> B(false);
-      Dune::YaspGrid<2> grid(L,N,B,0);
+      Dune::YaspGrid<2> grid(L,N);
       grid.globalRefine(3);
 
       // get view
@@ -281,7 +280,12 @@ int main(int argc, char** argv)
       FEM fem(gv);
 
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"densebackend_yasp_Q1_2d");
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
+              Dune::PDELab::SimpleMatrixBackend<>
+              >(gv,fem,"simplebackend_yasp_Q1_2d",2);
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
+              Dune::PDELab::SimpleSparseMatrixBackend<>
+              >(gv,fem,"simplesparsebackend_yasp_Q1_2d",2);
     }
 
     // YaspGrid Q2 2D test
@@ -289,8 +293,7 @@ int main(int argc, char** argv)
       // make grid
       Dune::FieldVector<double,2> L(1.0);
       Dune::array<int,2> N(Dune::fill_array<int,2>(1));
-      std::bitset<2> B(false);
-      Dune::YaspGrid<2> grid(L,N,B,0);
+      Dune::YaspGrid<2> grid(L,N);
       grid.globalRefine(3);
 
       // get view
@@ -303,7 +306,14 @@ int main(int argc, char** argv)
       FEM fem(gv);
 
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"densebackend_yasp_Q2_2d");
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
+              Dune::PDELab::SimpleMatrixBackend<>
+              >(gv,fem,"simplebackend_yasp_Q2_2d",2);
+
+      // and again with the space matrix
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,
+              Dune::PDELab::SimpleSparseMatrixBackend<>
+              >(gv,fem,"simplesparsebackend_yasp_Q2_2d",2);
     }
 
     // test passed

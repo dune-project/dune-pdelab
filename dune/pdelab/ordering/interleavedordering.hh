@@ -17,8 +17,7 @@
 namespace Dune {
   namespace PDELab {
 
-    //! \addtogroup GridFunctionSpace
-    //! \ingroup PDELab
+    //! \addtogroup Ordering
     //! \{
 
     namespace interleaved_ordering {
@@ -393,7 +392,7 @@ namespace Dune {
     composite_gfs_to_interleaved_ordering_descriptor<GFS,Transformation>
     register_composite_gfs_to_ordering_descriptor(GFS*,Transformation*,InterleavedOrderingTag*);
 
-   //! \} group GridFunctionSpace
+   //! \} group Ordering
   } // namespace PDELab
 } // namespace Dune
 

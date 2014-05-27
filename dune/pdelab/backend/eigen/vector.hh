@@ -1,63 +1,40 @@
-// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
-// vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_BACKEND_DENSE_VECTOR_HH
-#define DUNE_PDELAB_BACKEND_DENSE_VECTOR_HH
+#ifndef DUNE_PDELAB_BACKEND_EIGEN_VECTOR_HH
+#define DUNE_PDELAB_BACKEND_EIGEN_VECTOR_HH
 
-#include <algorithm>
-#include <functional>
-#include <numeric>
+#if HAVE_EIGEN
 
-#include <dune/common/fvector.hh>
 #include <dune/common/shared_ptr.hh>
-#include <dune/istl/bvector.hh>
-
-#include <dune/pdelab/backend/tags.hh>
-#include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/backend/tags.hh>
 #include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
-#include <dune/pdelab/backend/dense/descriptors.hh>
+#include <Eigen/Dense>
 
 namespace Dune {
   namespace PDELab {
 
-    namespace dense {
+    namespace EIGEN {
 
-      namespace {
-
-        // For some reason std::bind cannot directly deduce the correct version
-        // of Dune::fvmeta::abs2, so we package it into a functor to help it along.
-        template<typename K>
-        struct abs2
-        {
-          typename FieldTraits<K>::real_type operator()(const K& k) const
-          {
-            return Dune::fvmeta::abs2(k);
-          }
-        };
-
-      }
-
-      template<typename GFS, typename C>
+      template<typename GFS, typename ET>
       class VectorContainer
       {
-
       public:
-        typedef C Container;
-        typedef typename Container::value_type ElementType;
-        typedef ElementType E;
+        typedef Eigen::Matrix<ET, Eigen::Dynamic, 1> Container;
+        typedef ET ElementType;
+        typedef ET E;
 
         // for ISTL solver compatibility
         typedef ElementType field_type;
 
         typedef GFS GridFunctionSpace;
-        typedef typename Container::size_type size_type;
+          typedef std::size_t size_type;
 
         typedef typename GFS::Ordering::Traits::ContainerIndex ContainerIndex;
 
-        typedef typename Container::iterator iterator;
-        typedef typename Container::const_iterator const_iterator;
+        typedef ElementType* iterator;
+        typedef const ElementType* const_iterator;
+        // #warning iterators does not work well with Eigen
+        // typedef typename Container::iterator iterator;
+        // typedef typename Container::const_iterator const_iterator;
 
 #if HAVE_TEMPLATE_ALIASES
 
@@ -114,9 +91,21 @@ namespace Dune {
           : _gfs(gfs)
         {}
 
+        /** \brief Constructs an VectorContainer for an explicitly given vector object
+         *
+         * \param gfs GridFunctionSpace that determines the size and the blocking of the vector
+         * \param container The actual container class
+         */
+        VectorContainer (const GFS& gfs, Container& container)
+          : _gfs(gfs)
+          , _container(stackobject_to_shared_ptr(container))
+        {
+          _container->resize(gfs.ordering().blockCount());
+        }
+
         VectorContainer (const GFS& gfs, const E& e)
           : _gfs(gfs)
-          , _container(make_shared<Container>(gfs.ordering().blockCount(),e))
+          , _container(make_shared<Container>(Container::Constant(gfs.ordering().blockCount(),e)))
         {}
 
         void detach()
@@ -161,87 +150,76 @@ namespace Dune {
 
         VectorContainer& operator=(const E& e)
         {
-          std::fill(_container->begin(),_container->end(),e);
+          (*_container) = Container::Constant(N(),e);
           return *this;
         }
 
         VectorContainer& operator*=(const E& e)
         {
-          std::transform(_container->begin(),_container->end(),_container->begin(),
-                         std::bind(std::multiplies<E>(),e,std::placeholders::_1));
+          (*_container) *= e;
           return *this;
         }
 
 
         VectorContainer& operator+=(const E& e)
         {
-          std::transform(_container->begin(),_container->end(),_container->begin(),
-                         std::bind(std::plus<E>(),e,std::placeholders::_1));
+          (*_container) += Container::Constant(N(),e);
           return *this;
         }
 
         VectorContainer& operator+=(const VectorContainer& y)
         {
-          std::transform(_container->begin(),_container->end(),y._container->begin(),
-                         _container->begin(),std::plus<E>());
+          (*_container) += (*y._container);
           return *this;
         }
 
         VectorContainer& operator-= (const VectorContainer& y)
         {
-          std::transform(_container->begin(),_container->end(),y._container->begin(),
-                         _container->begin(),std::minus<E>());
+          (*_container) -= (*y._container);
           return *this;
         }
 
         E& operator[](const ContainerIndex& ci)
         {
-          return (*_container)[ci[0]];
+          return (*_container)(ci[0]);
         }
 
         const E& operator[](const ContainerIndex& ci) const
         {
-          return (*_container)[ci[0]];
+          return (*_container)(ci[0]);
         }
 
         typename Dune::template FieldTraits<E>::real_type two_norm() const
         {
-          using namespace std::placeholders;
-          typedef typename Dune::template FieldTraits<E>::real_type Real;
-          return std::sqrt(std::accumulate(_container->begin(),_container->end(),Real(0),std::bind(std::plus<Real>(),_1,std::bind(abs2<E>(),_2))));
+          return _container->norm();
         }
 
         typename Dune::template FieldTraits<E>::real_type one_norm() const
         {
-          using namespace std::placeholders;
-          typedef typename Dune::template FieldTraits<E>::real_type Real;
-          return std::accumulate(_container->begin(),_container->end(),Real(0),std::bind(std::plus<Real>(),_1,std::bind(std::abs<E>,_2)));
+          return _container->template lpNorm<1>();
         }
 
         typename Dune::template FieldTraits<E>::real_type infinity_norm() const
         {
-          if (_container->size() == 0)
-            return 0;
-          using namespace std::placeholders;
-          typedef typename Dune::template FieldTraits<E>::real_type Real;
-          return *std::max_element(_container->begin(),_container->end(),std::bind(std::less<Real>(),std::bind(std::abs<E>,_1),std::bind(std::abs<E>,_2)));
+          return _container->template lpNorm<Eigen::Infinity>();
         }
 
+        //! (*this)^T y
         E operator*(const VectorContainer& y) const
         {
-          return std::inner_product(_container->begin(),_container->end(),y._container->begin(),E(0));
+          return _container->transpose() * (*y._container);
         }
 
+        //! (*this)^+ y
         E dot(const VectorContainer& y) const
         {
-          return std::inner_product(_container->begin(),_container->end(),y._container->begin(),E(0),std::plus<E>(),Dune::dot<E,E>);
+          return _container->dot(*y._container);
         }
 
+        //! vector space axpy operation ( *this += a y )
         VectorContainer& axpy(const E& a, const VectorContainer& y)
         {
-          using namespace std::placeholders;
-          std::transform(_container->begin(),_container->end(),y._container->begin(),
-                         _container->begin(),std::bind(std::plus<E>(),_1,std::bind(std::multiplies<E>(),a,_2)));
+          (*_container) += a * (*y._container);
           return *this;
         }
 
@@ -258,22 +236,22 @@ namespace Dune {
 
         iterator begin()
         {
-          return _container->begin();
+          return _container->data();
         }
 
         const_iterator begin() const
         {
-          return _container->begin();
+          return _container->data();
         }
 
         iterator end()
         {
-          return _container->end();
+          return _container->data() + N();
         }
 
         const_iterator end() const
         {
-          return _container->end();
+          return _container->data() + N();
         }
 
         size_t flatsize() const
@@ -289,27 +267,23 @@ namespace Dune {
       private:
         const GFS& _gfs;
         shared_ptr<Container> _container;
+
       };
 
-
-    }
+    } // end namespace EIGEN
 
 
 #ifndef DOXYGEN
 
     template<typename GFS, typename E>
-    struct DenseVectorSelectorHelper
+    struct EigenVectorSelectorHelper
     {
-
-      using vector_type = typename GFS::Traits::Backend::template vector_type<E>;
-
-      using Type = dense::VectorContainer<GFS,vector_type>;
-
+      using Type = EIGEN::VectorContainer<GFS, E>;
     };
 
-    template<template<typename> class Container, typename GFS, typename E>
-    struct BackendVectorSelectorHelper<DenseVectorBackend<Container>, GFS, E>
-      : public DenseVectorSelectorHelper<GFS,E>
+    template<typename GFS, typename E>
+    struct BackendVectorSelectorHelper<EigenVectorBackend, GFS, E>
+      : public EigenVectorSelectorHelper<GFS,E>
     {};
 
 #endif // DOXYGEN
@@ -317,4 +291,9 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_BACKEND_DENSE_VECTOR_HH
+#endif
+
+#endif // DUNE_PDELAB_BACKEND_EIGEN_VECTOR_HH
+
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// vi: set et ts=4 sw=2 sts=2:

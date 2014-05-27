@@ -24,7 +24,11 @@ namespace Dune{
     {
     public:
 
-      static const bool needs_constraints_caching = false;
+      template<typename TrialConstraintsContainer, typename TestConstraintsContainer>
+      bool needsConstraintsCaching(const TrialConstraintsContainer& cu, const TestConstraintsContainer& cv) const
+      {
+        return false;
+      }
 
       //! The type of the wrapping local assembler
       typedef LA LocalAssembler;
@@ -42,10 +46,10 @@ namespace Dune{
 
       //! The local function spaces
       typedef typename LA::LFSU LFSU;
-      typedef typename LA::NoConstraintsLFSUCache LFSUCache;
+      typedef typename LA::LFSUCache LFSUCache;
       typedef typename LFSU::Traits::GridFunctionSpace GFSU;
       typedef typename LA::LFSV LFSV;
-      typedef typename LA::NoConstraintsLFSVCache LFSVCache;
+      typedef typename LA::LFSVCache LFSVCache;
       typedef typename LFSV::Traits::GridFunctionSpace GFSV;
 
       typedef typename Solution::template ConstLocalView<LFSUCache> SolutionView;

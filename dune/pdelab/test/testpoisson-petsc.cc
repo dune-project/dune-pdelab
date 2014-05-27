@@ -161,8 +161,8 @@ public:
 //===============================================================
 
 // generate a P1 function and output it
-template<typename GV, typename FEM, typename CON, int q>
-void poisson (const GV& gv, const FEM& fem, std::string filename)
+template<typename GV, typename FEM, typename CON>
+void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 {
   // constants and types
   typedef typename GV::Grid::ctype DF;
@@ -188,8 +188,8 @@ void poisson (const GV& gv, const FEM& fem, std::string filename)
   FType f(gv);
   typedef J<GV,R> JType;
   JType j(gv);
-  typedef Dune::PDELab::Poisson<FType,ConstraintsParameters,JType,q> LOP;
-  LOP lop(f,constraintsparameters,j);
+  typedef Dune::PDELab::Poisson<FType,ConstraintsParameters,JType> LOP;
+  LOP lop(f,constraintsparameters,j,q);
 
   // make grid operator
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,
@@ -260,9 +260,9 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
-      Dune::YaspGrid<2> grid(L,N,B,0);
+      Dune::array<int,2> N;
+      std::fill(N.begin(), N.end(), 1);
+      Dune::YaspGrid<2> grid(L,N);
       grid.globalRefine(3);
 
       // get view
@@ -282,9 +282,9 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
-      Dune::YaspGrid<2> grid(L,N,B,0);
+      Dune::array<int,2> N;
+      std::fill(N.begin(), N.end(), 1);
+      Dune::YaspGrid<2> grid(L,N);
       grid.globalRefine(3);
 
       // get view
@@ -304,9 +304,9 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,3> L(1.0);
-      Dune::FieldVector<int,3> N(1);
-      Dune::FieldVector<bool,3> B(false);
-      Dune::YaspGrid<3> grid(L,N,B,0);
+      Dune::array<int,3> N;
+      std::fill(N.begin(), N.end(), 1);
+      Dune::YaspGrid<3> grid(L,N);
       grid.globalRefine(3);
 
       // get view
@@ -319,7 +319,7 @@ int main(int argc, char** argv)
       FEM fem;
 
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints,2>(gv,fem,"poisson_petsc_yasp_Q1_3d");
+      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_petsc_yasp_Q1_3d",2);
     }
 
     // test passed

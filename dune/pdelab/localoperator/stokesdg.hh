@@ -81,9 +81,10 @@ namespace Dune {
             {}
 
             // Store current dt
-            void preStep (RealType , RealType dt, int )
+            void preStep (RealType time, RealType dt, int )
             {
               current_dt = dt;
+              prm.setTime(time+dt);
             }
 
             // volume integral depending only on test functions,

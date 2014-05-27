@@ -15,6 +15,8 @@
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
+#include <dune/pdelab/localoperator/laplace.hh>
+
 #include"defaultimp.hh"
 #include"idefault.hh"
 #include"pattern.hh"
@@ -38,9 +40,8 @@ namespace Dune {
      * \tparam B grid function type selecting boundary condition
      * \tparam J grid function type giving j
      */
-    template<typename F, typename B, typename J, int qorder=1>
-	class Poisson : public NumericalJacobianApplyVolume<Poisson<F,B,J,qorder> >,
-                    public NumericalJacobianVolume<Poisson<F,B,J,qorder> >,
+    template<typename F, typename B, typename J>
+    class Poisson : public NumericalJacobianApplyVolume<Poisson<F,B,J> >,
                     public FullVolumePattern,
                     public LocalOperatorDefaultFlags
 	{
@@ -53,60 +54,38 @@ namespace Dune {
       enum { doLambdaVolume = true };
       enum { doLambdaBoundary = true };
 
-      Poisson (const F& f_, const B& bctype_, const J& j_)
-        : f(f_), bctype(bctype_), j(j_)
+      /** \brief Constructor
+       *
+       * \param quadOrder Order of the quadrature rule used for integrating over the element
+       */
+      Poisson (const F& f_, const B& bctype_, const J& j_, unsigned int quadOrder)
+        : f(f_), bctype(bctype_), j(j_),
+        laplace_(quadOrder),
+        quadOrder_(quadOrder)
       {}
 
 	  // volume integral depending on test and ansatz functions
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
 	  void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
 	  {
-		// domain and range field type
-        typedef FiniteElementInterfaceSwitch<
-          typename LFSU::Traits::FiniteElementType
-          > FESwitch;
-        typedef BasisInterfaceSwitch<
-          typename FESwitch::Basis
-          > BasisSwitch;
-        typedef typename BasisSwitch::DomainField DF;
-        typedef typename BasisSwitch::RangeField RF;
-
-        // dimensions
-        static const int dimLocal = EG::Geometry::mydimension;
-        static const int dimGlobal = EG::Geometry::coorddimension;
-
-        // select quadrature rule
-        Dune::GeometryType gt = eg.geometry().type();
-        const Dune::QuadratureRule<DF,dimLocal>& rule =
-          Dune::QuadratureRules<DF,dimLocal>::rule(gt,qorder);
-
-        // loop over quadrature points
-        for(typename Dune::QuadratureRule<DF,dimLocal>::const_iterator it =
-              rule.begin(); it!=rule.end(); ++it)
-          {
-            // evaluate gradient of shape functions
-            // (we assume Galerkin method lfsu=lfsv)
-            std::vector<Dune::FieldMatrix<RF,1,dimGlobal> >
-              gradphiu(lfsu.size());
-            BasisSwitch::gradient(FESwitch::basis(lfsu.finiteElement()),
-                                  eg.geometry(), it->position(), gradphiu);
-            std::vector<Dune::FieldMatrix<RF,1,dimGlobal> >
-              gradphiv(lfsv.size());
-            BasisSwitch::gradient(FESwitch::basis(lfsv.finiteElement()),
-                                  eg.geometry(), it->position(), gradphiv);
-
-            // compute gradient of u
-            Dune::FieldVector<RF,dimGlobal> gradu(0.0);
-            for (size_t i=0; i<lfsu.size(); i++)
-              gradu.axpy(x(lfsu,i),gradphiu[i][0]);
-
-            // integrate grad u * grad phi_i
-            RF factor = r.weight() * it->weight() * eg.geometry().integrationElement(it->position());
-            for (size_t i=0; i<lfsv.size(); i++)
-              r.rawAccumulate(lfsv,i,(gradu*gradphiv[i][0])*factor);
-          }
+        laplace_.alpha_volume(eg, lfsu, x, lfsv, r);
 	  }
 
+      /** \brief Compute the Laplace stiffness matrix for the element given in 'eg'
+       *
+       * \tparam M Type of the element stiffness matrix
+       *
+       * \param [in]  eg The grid element we are assembling on
+       * \param [in]  lfsu Local ansatz function space basis
+       * \param [in]  lfsv Local test function space basis
+       * \param [in]  x Current configuration; gets ignored for linear problems like this one
+       * \param [out] matrix Element stiffness matrix
+       */
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
+      void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, M & matrix) const
+      {
+        laplace_.jacobian_volume(eg, lfsu, x, lfsv, matrix);
+      }
  	  // volume integral depending only on test functions
 	  template<typename EG, typename LFSV, typename R>
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
@@ -128,7 +107,7 @@ namespace Dune {
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
         const Dune::QuadratureRule<DF,dimLocal>& rule =
-          Dune::QuadratureRules<DF,dimLocal>::rule(gt,qorder);
+          Dune::QuadratureRules<DF,dimLocal>::rule(gt,quadOrder_);
 
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dimLocal>::const_iterator it =
@@ -172,7 +151,7 @@ namespace Dune {
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
         const Dune::QuadratureRule<DF,dimLocal>& rule =
-          Dune::QuadratureRules<DF,dimLocal>::rule(gtface,qorder);
+          Dune::QuadratureRules<DF,dimLocal>::rule(gtface,quadOrder_);
 
         // loop over quadrature points and integrate normal flux
         for (typename Dune::QuadratureRule<DF,dimLocal>::const_iterator it =
@@ -206,6 +185,12 @@ namespace Dune {
       const F& f;
       const B& bctype;
       const J& j;
+
+      // Laplace assembler to handle the matrix assembly
+      Laplace laplace_;
+
+      // Quadrature rule order
+      unsigned int quadOrder_;
 	};
 
     //! \brief a local operator for solving the Poisson equation in
@@ -224,12 +209,12 @@ namespace Dune {
      *
      * \note The grid functions need to support the member function setTime().
      */
-    template<typename Time, typename F, typename B, typename J, int qorder=1>
+    template<typename Time, typename F, typename B, typename J>
     class InstationaryPoisson
-      : public Poisson<F,B,J,qorder>,
+      : public Poisson<F,B,J>,
         public InstationaryLocalOperatorDefaultMethods<Time>
     {
-      typedef Poisson<F,B,J,qorder> Base;
+      typedef Poisson<F,B,J> Base;
       typedef InstationaryLocalOperatorDefaultMethods<Time> IDefault;
 
     protected:
@@ -240,8 +225,8 @@ namespace Dune {
 
     public:
       //! construct InstationaryPoisson
-      InstationaryPoisson(F& f_, B& bctype_, J& j_)
-        : Base(f_, bctype_, j_)
+      InstationaryPoisson(F& f_, B& bctype_, J& j_, unsigned int quadOrder)
+        : Base(f_, bctype_, j_, quadOrder)
         , f(f_)
         , bctype(bctype_)
         , j(j_)

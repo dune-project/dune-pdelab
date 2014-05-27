@@ -313,20 +313,17 @@ check_PROGRAMS += testvectoriterator-no-variadic-templates
 testvectoriterator_no_variadic_templates_SOURCES = testvectoriterator.cc
 testvectoriterator_no_variadic_templates_CPPFLAGS = $(AM_CPPFLAGS) -DDISABLE_VARIADIC_TEMPLATES
 
-NORMALTESTS += testdensebackend
-testdensebackend_SOURCES = testdensebackend.cc
-testdensebackend_CPPFLAGS = $(AM_CPPFLAGS)		\
-	$(ALBERTA_CPPFLAGS)			\
-	$(SUPERLU_CPPFLAGS)
-testdensebackend_LDFLAGS = $(AM_LDFLAGS)		\
-	$(ALBERTA_LDFLAGS)			\
-	$(SUPERLU_LDFLAGS)
-testdensebackend_LDADD =				\
-	$(LDADD)                                \
-	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
-	$(ALBERTA_LIBS)
-MOSTLYCLEANFILES += densebackend_*.vtu
+NORMALTESTS += testsimplebackend
+testsimplebackend_SOURCES = testsimplebackend.cc
+MOSTLYCLEANFILES += simplebackend_*.vtu
 
+
+NORMALTESTS += testeigenbackend
+testeigenbackend_SOURCES = testeigenbackend.cc
+testeigenbackend_CXXFLAGS = @AM_CPPFLAGS@ $(EIGEN_CPPFLAGS) $(EIGEN_CXXFLAGS)
+testeigenbackend_LDFLAGS = $(AM_LDFLAGS) $(EIGEN_LDFLAGS)
+testeigenbackend_LDADD = $(LDADD) $(EIGEN_LIBS)
+MOSTLYCLEANFILES += eigenbackend_*.vtu
 
 NORMALTESTS += test-dg-amg
 test_dg_amg_SOURCES = test-dg-amg.cc

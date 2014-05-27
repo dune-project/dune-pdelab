@@ -125,6 +125,13 @@ namespace Dune{
       void loadCoefficientsLFSUCoupling(const LFSU & lfsu_c){}
       //! @}
 
+      //! Method setting time for la1 local assembler.
+      //! This function must be called for explicit methods
+      //! before jacobian_engine->assemble.. was called
+      void setTimeInLastStage()
+      {
+        la.la1.setTime(la.time+la.osp_method->d(la.stage)*la.dt);
+      }
 
       //! Notifier functions, called immediately before and after assembling
       //! @{

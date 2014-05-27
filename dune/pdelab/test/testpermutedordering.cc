@@ -107,12 +107,21 @@ static void testpermutedordering(const GV& gv)
   GFS2 gfs2(gv,q22dfem);
 
   typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,VBE,Dune::PDELab::InterleavedOrderingTag> P1GFS;
-  P1GFS p1gfs(gfs1,gfs1,gfs1,VBE(),{1,1,1});
+
+#if HAVE_INITIALIZER_LIST
+  P1GFS p1gfs(gfs1,gfs1,gfs1,VBE(),{{1,1,1}});
+#else
+  std::vector<std::size_t> p1_gfs_block_sizes(3);
+  std::fill(p1_gfs_block_sizes.begin(),p1_gfs_block_sizes.end(),1);
+  P1GFS p1gfs(gfs1,gfs1,gfs1,VBE(),p1_gfs_block_sizes);
+#endif
 
   typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::static_blocking,6> NVBE;
 
   typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,2,NVBE,Dune::PDELab::InterleavedOrderingTag> PGFS;
-  PGFS pgfs(p1gfs,p1gfs,NVBE(),{3,3});
+  std::vector<std::size_t> p_gfs_block_sizes(2);
+  std::fill(p_gfs_block_sizes.begin(),p_gfs_block_sizes.end(),3);
+  PGFS pgfs(p1gfs,p1gfs,NVBE(),p_gfs_block_sizes);
 
   typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,VBE,Dune::PDELab::EntityBlockedOrderingTag> P2GFS;
   P2GFS p2gfs(gfs1,gfs1,gfs1);
@@ -290,8 +299,7 @@ int main(int argc, char** argv)
       // need a grid in order to test Orderings
       Dune::FieldVector<double,2> L(1.0);
       Dune::array<int,2> N(Dune::fill_array<int,2>(1));
-      std::bitset<2> B(false);
-      Dune::YaspGrid<2> grid(L,N,B,0);
+      Dune::YaspGrid<2> grid(L,N);
       grid.globalRefine(1);
 
       testpermutedordering(grid.leafGridView());

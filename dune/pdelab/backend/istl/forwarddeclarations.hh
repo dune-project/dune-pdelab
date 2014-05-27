@@ -5,6 +5,8 @@
 
 #ifndef DOXYGEN // These forward declarations are of no concern to Doxygen
 
+#include <dune/common/version.hh>
+
 namespace Dune {
 
   // ********************************************************************************
@@ -17,8 +19,20 @@ namespace Dune {
   template<typename F, int n, int m>
   class FieldMatrix;
 
+  // DynamicVector grew allocator support some time after the 2.3 release,
+  // so we have to adjust the forward declaration accordingly
+
+#if DUNE_VERSION_NEWER(DUNE_COMMON,2,4)
+
+  template<typename F, typename Allocator>
+  class DynamicVector;
+
+#else
+
   template<typename F>
   class DynamicVector;
+
+#endif
 
   template<typename F>
   class DynamicMatrix;

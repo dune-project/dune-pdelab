@@ -3,8 +3,12 @@
 #ifndef DUNE_VTK_PVDWRITER_HH
 #define DUNE_VTK_PVDWRITER_HH
 
+#warning dune/pdelab/instationary/pvdwriter.hh and the class PVDWriter are deprecated, please use VTKSequenceWriter or SubsamplingVTKSequenceWriter from dune-grid instead
+
+
 #include <vector>
 #include <fstream>
+#include <dune/common/deprecated.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
 #include "onestep.hh"
 
@@ -14,7 +18,7 @@ namespace Dune
 {
 
     template< class GridView, class VTK = VTKWriter<GridView> >
-    class PVDWriter : public VTK
+    class DUNE_DEPRECATED_MSG("Use VTKSequenceWriter from dune-grid instead") PVDWriter : public VTK
     {
         GridView gv;
         std::string basename;

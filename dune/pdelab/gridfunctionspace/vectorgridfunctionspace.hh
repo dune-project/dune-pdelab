@@ -67,6 +67,18 @@ namespace Dune {
                                                    Backend,
                                                    OrderingTag,
                                                    k>
+
+      , public DataHandleProvider<VectorGridFunctionSpace<
+                                    GV,
+                                    FEM,
+                                    k,
+                                    Backend,
+                                    LeafBackend,
+                                    Constraints,
+                                    OrderingTag,
+                                    LeafOrderingTag
+                                    > >
+
       , public GridFunctionOutputParameters
     {
 

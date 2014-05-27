@@ -51,6 +51,7 @@ namespace Dune {
 #endif // DOXYGEN
 
 
+    //! \ingroup FiniteElementMap
     //! Brezzi-Douglas-Marini elements of order k.
     /**
      * This LocalFiniteElementMap provides BDM elements of order k for the given

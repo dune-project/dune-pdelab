@@ -77,6 +77,7 @@
 #include <dune/pdelab/finiteelementmap/opbfem.hh>
 #include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/finiteelementmap/qkdg.hh>
+#include <dune/pdelab/finiteelementmap/qkdggl.hh>
 #include <dune/pdelab/adaptivity/adaptivity.hh>
 #include <dune/pdelab/instationary/onestep.hh>
 #include <dune/pdelab/newton/newton.hh>
@@ -795,7 +796,11 @@ namespace Dune {
             static const int dim = T::dimension;
             static const int dimworld = T::dimensionworld;
             typedef N NT;
+#ifdef HAVE_GMP
+            typedef OPBLocalFiniteElementMap<ctype,NT,degree,dim,gt,Dune::GMPField<512>,Dune::PB::BasisType::Pk> FEM;
+#else
             typedef OPBLocalFiniteElementMap<ctype,NT,degree,dim,gt> FEM;
+#endif
             typedef DGCONBase<st> CONB;
             typedef typename CONB::CON CON;
             typedef VBET VBE;
@@ -873,6 +878,298 @@ namespace Dune {
             shared_ptr<GFS> gfsp;
             shared_ptr<CC> ccp;
         };
+
+        // Discontinuous space
+        // default implementation, use only specializations below
+        template<typename T, typename N, unsigned int degree,
+                 Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
+                 //typename VBET=ISTLVectorBackend<ISTLParameters::static_blocking,Dune::PB::PkSize<degree,T::dimension>::value> >
+                 typename VBET=ISTLVectorBackend<> >
+        class DGQkOPBSpace
+        {
+        public:
+
+            // export types
+            typedef T Grid;
+            typedef typename T::LeafGridView GV;
+            typedef typename T::ctype ctype;
+            static const int dim = T::dimension;
+            static const int dimworld = T::dimensionworld;
+            typedef N NT;
+#ifdef HAVE_GMP
+            typedef OPBLocalFiniteElementMap<ctype,NT,degree,dim,gt,Dune::GMPField<512>,Dune::PB::BasisType::Qk> FEM;
+#else
+            typedef OPBLocalFiniteElementMap<ctype,NT,degree,dim,gt,N,Dune::PB::BasisType::Qk> FEM;
+#endif
+            typedef DGCONBase<st> CONB;
+            typedef typename CONB::CON CON;
+            typedef VBET VBE;
+            typedef GridFunctionSpace<GV,FEM,CON,VBE> GFS;
+            typedef typename BackendVectorSelector<GFS,N>::Type DOF;
+            typedef Dune::PDELab::DiscreteGridFunction<GFS,DOF> DGF;
+            typedef typename GFS::template ConstraintsContainer<N>::Type CC;
+            typedef VTKGridFunctionAdapter<DGF> VTKF;
+
+            // constructor making the grid function space an all that is needed
+            DGQkOPBSpace (const GV& gridview) : gv(gridview), conb()
+            {
+                femp = shared_ptr<FEM>(new FEM());
+                gfsp = shared_ptr<GFS>(new GFS(gv,*femp));
+                // initialize ordering
+                gfsp->update();
+                ccp = shared_ptr<CC>(new CC());
+            }
+
+            FEM& getFEM() { return *femp; }
+            const FEM& getFEM() const { return *femp; }
+
+            // return gfs reference
+            GFS& getGFS () { return *gfsp; }
+
+            // return gfs reference const version
+            const GFS& getGFS () const {return *gfsp;}
+
+            // return gfs reference
+            CC& getCC () { return *ccp;}
+
+            // return gfs reference const version
+            const CC& getCC () const { return *ccp;}
+
+            template<class BCTYPE>
+            void assembleConstraints (const BCTYPE& bctype)
+            {
+                ccp->clear();
+                constraints(bctype,*gfsp,*ccp);
+            }
+
+            void clearConstraints ()
+            {
+                ccp->clear();
+            }
+
+            void setConstrainedDOFS (DOF& x, NT nt) const
+            {
+                set_constrained_dofs(*ccp,nt,x);
+                conb.make_consistent(*gfsp,x);
+            }
+
+            void setNonConstrainedDOFS (DOF& x, NT nt) const
+            {
+                set_nonconstrained_dofs(*ccp,nt,x);
+                conb.make_consistent(*gfsp,x);
+            }
+
+            void copyConstrainedDOFS (const DOF& xin, DOF& xout) const
+            {
+                copy_constrained_dofs(*ccp,xin,xout);
+                conb.make_consistent(*gfsp,xout);
+            }
+
+            void copyNonConstrainedDOFS (const DOF& xin, DOF& xout) const
+            {
+                copy_nonconstrained_dofs(*ccp,xin,xout);
+                conb.make_consistent(*gfsp,xout);
+            }
+
+        private:
+            GV gv; // need this object here because FEM and GFS store a const reference !!
+            CONB conb;
+            shared_ptr<FEM> femp;
+            shared_ptr<GFS> gfsp;
+            shared_ptr<CC> ccp;
+        };
+
+        // Discontinuous space
+        // default implementation, use only specializations below
+        template<typename T, typename N, unsigned int degree,
+                 Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
+                 typename VBET=ISTLVectorBackend<ISTLParameters::static_blocking,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
+        class DGQkSpace
+        {
+        public:
+
+            // export types
+            typedef T Grid;
+            typedef typename T::LeafGridView GV;
+            typedef typename T::ctype ctype;
+            static const int dim = T::dimension;
+            static const int dimworld = T::dimensionworld;
+            typedef N NT;
+            typedef QkDGLocalFiniteElementMap<ctype,NT,degree,dim> FEM;
+            typedef DGCONBase<st> CONB;
+            typedef typename CONB::CON CON;
+            typedef VBET VBE;
+            typedef GridFunctionSpace<GV,FEM,CON,VBE> GFS;
+            typedef typename BackendVectorSelector<GFS,N>::Type DOF;
+            typedef Dune::PDELab::DiscreteGridFunction<GFS,DOF> DGF;
+            typedef typename GFS::template ConstraintsContainer<N>::Type CC;
+            typedef VTKGridFunctionAdapter<DGF> VTKF;
+
+            // constructor making the grid function space an all that is needed
+            DGQkSpace (const GV& gridview) : gv(gridview), conb()
+            {
+                femp = shared_ptr<FEM>(new FEM());
+                gfsp = shared_ptr<GFS>(new GFS(gv,*femp));
+                // initialize ordering
+                gfsp->update();
+                ccp = shared_ptr<CC>(new CC());
+            }
+
+            FEM& getFEM() { return *femp; }
+            const FEM& getFEM() const { return *femp; }
+
+            // return gfs reference
+            GFS& getGFS () { return *gfsp; }
+
+            // return gfs reference const version
+            const GFS& getGFS () const {return *gfsp;}
+
+            // return gfs reference
+            CC& getCC () { return *ccp;}
+
+            // return gfs reference const version
+            const CC& getCC () const { return *ccp;}
+
+            template<class BCTYPE>
+            void assembleConstraints (const BCTYPE& bctype)
+            {
+                ccp->clear();
+                constraints(bctype,*gfsp,*ccp);
+            }
+
+            void clearConstraints ()
+            {
+                ccp->clear();
+            }
+
+            void setConstrainedDOFS (DOF& x, NT nt) const
+            {
+                set_constrained_dofs(*ccp,nt,x);
+                conb.make_consistent(*gfsp,x);
+            }
+
+            void setNonConstrainedDOFS (DOF& x, NT nt) const
+            {
+                set_nonconstrained_dofs(*ccp,nt,x);
+                conb.make_consistent(*gfsp,x);
+            }
+
+            void copyConstrainedDOFS (const DOF& xin, DOF& xout) const
+            {
+                copy_constrained_dofs(*ccp,xin,xout);
+                conb.make_consistent(*gfsp,xout);
+            }
+
+            void copyNonConstrainedDOFS (const DOF& xin, DOF& xout) const
+            {
+                copy_nonconstrained_dofs(*ccp,xin,xout);
+                conb.make_consistent(*gfsp,xout);
+            }
+
+        private:
+            GV gv; // need this object here because FEM and GFS store a const reference !!
+            CONB conb;
+            shared_ptr<FEM> femp;
+            shared_ptr<GFS> gfsp;
+            shared_ptr<CC> ccp;
+        };
+
+
+        // Discontinuous space using QK with Gauss Lobatto points (use only for cube elements)
+        template<typename T, typename N, unsigned int degree,
+                 Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
+                 //typename VBET=ISTLVectorBackend<ISTLParameters::static_blocking,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
+                 typename VBET=ISTLVectorBackend<> >
+        class DGQkGLSpace
+        {
+        public:
+
+            // export types
+            typedef T Grid;
+            typedef typename T::LeafGridView GV;
+            typedef typename T::ctype ctype;
+            static const int dim = T::dimension;
+            static const int dimworld = T::dimensionworld;
+            typedef N NT;
+            typedef QkDGGLLocalFiniteElementMap<ctype,NT,degree,dim> FEM;
+            typedef DGCONBase<st> CONB;
+            typedef typename CONB::CON CON;
+            typedef VBET VBE;
+            typedef GridFunctionSpace<GV,FEM,CON,VBE> GFS;
+            typedef typename BackendVectorSelector<GFS,N>::Type DOF;
+            typedef Dune::PDELab::DiscreteGridFunction<GFS,DOF> DGF;
+            typedef typename GFS::template ConstraintsContainer<N>::Type CC;
+            typedef VTKGridFunctionAdapter<DGF> VTKF;
+
+            // constructor making the grid function space an all that is needed
+            DGQkGLSpace (const GV& gridview) : gv(gridview), conb()
+            {
+                femp = shared_ptr<FEM>(new FEM());
+                gfsp = shared_ptr<GFS>(new GFS(gv,*femp));
+                // initialize ordering
+                gfsp->update();
+                ccp = shared_ptr<CC>(new CC());
+            }
+
+            FEM& getFEM() { return *femp; }
+            const FEM& getFEM() const { return *femp; }
+
+            // return gfs reference
+            GFS& getGFS () { return *gfsp; }
+
+            // return gfs reference const version
+            const GFS& getGFS () const {return *gfsp;}
+
+            // return gfs reference
+            CC& getCC () { return *ccp;}
+
+            // return gfs reference const version
+            const CC& getCC () const { return *ccp;}
+
+            template<class BCTYPE>
+            void assembleConstraints (const BCTYPE& bctype)
+            {
+                ccp->clear();
+                constraints(bctype,*gfsp,*ccp);
+            }
+
+            void clearConstraints ()
+            {
+                ccp->clear();
+            }
+
+            void setConstrainedDOFS (DOF& x, NT nt) const
+            {
+                set_constrained_dofs(*ccp,nt,x);
+                conb.make_consistent(*gfsp,x);
+            }
+
+            void setNonConstrainedDOFS (DOF& x, NT nt) const
+            {
+                set_nonconstrained_dofs(*ccp,nt,x);
+                conb.make_consistent(*gfsp,x);
+            }
+
+            void copyConstrainedDOFS (const DOF& xin, DOF& xout) const
+            {
+                copy_constrained_dofs(*ccp,xin,xout);
+                conb.make_consistent(*gfsp,xout);
+            }
+
+            void copyNonConstrainedDOFS (const DOF& xin, DOF& xout) const
+            {
+                copy_nonconstrained_dofs(*ccp,xin,xout);
+                conb.make_consistent(*gfsp,xout);
+            }
+
+        private:
+            GV gv; // need this object here because FEM and GFS store a const reference !!
+            CONB conb;
+            shared_ptr<FEM> femp;
+            shared_ptr<GFS> gfsp;
+            shared_ptr<CC> ccp;
+        };
+
 
 
         // Discontinuous P0 space
@@ -1113,6 +1410,115 @@ namespace Dune {
         private:
             shared_ptr<GO> gop;
         };
+
+
+        template<typename FS, typename LOP, SolverCategory::Category st = SolverCategory::sequential>
+        class GalerkinGlobalAssemblerNewBackend
+        {
+        public:
+            // export types
+            typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+            typedef Dune::PDELab::GridOperator<typename FS::GFS,typename FS::GFS,LOP,MBE,
+                                               typename FS::NT,typename FS::NT,typename FS::NT,
+                                               typename FS::CC,typename FS::CC> GO;
+            typedef typename GO::Jacobian MAT;
+
+            GalerkinGlobalAssemblerNewBackend (const FS& fs, LOP& lop, const MBE& mbe)
+            {
+                gop = shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,mbe));
+            }
+
+            // return grid reference
+            GO& getGO ()
+            {
+                return *gop;
+            }
+
+            // return grid reference const version
+            const GO& getGO () const
+            {
+                return *gop;
+            }
+
+            GO& operator*()
+            {
+                return *gop;
+            }
+
+            GO* operator->()
+            {
+                return gop.operator->();
+            }
+
+            const GO& operator*() const
+            {
+                return *gop;
+            }
+
+            const GO* operator->() const
+            {
+                return gop.operator->();
+            }
+
+        private:
+            shared_ptr<GO> gop;
+        };
+
+        // nonoverlapping variant
+        template<typename FS, typename LOP>
+        class GalerkinGlobalAssemblerNewBackend<FS,LOP,SolverCategory::nonoverlapping>
+        {
+        public:
+            // export types
+            typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+            typedef Dune::PDELab::GridOperator<typename FS::GFS,typename FS::GFS,LOP,MBE,
+                                               typename FS::NT,typename FS::NT,typename FS::NT,
+                                               typename FS::CC,typename FS::CC,true> GO;
+            typedef typename GO::Jacobian MAT;
+
+            GalerkinGlobalAssemblerNewBackend (const FS& fs, LOP& lop, const MBE& mbe)
+            {
+                gop = shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,mbe));
+            }
+
+            // return grid reference
+            GO& getGO ()
+            {
+                return *gop;
+            }
+
+            // return grid reference const version
+            const GO& getGO () const
+            {
+                return *gop;
+            }
+
+            GO& operator*()
+            {
+                return *gop;
+            }
+
+            GO* operator->()
+            {
+                return gop.operator->();
+            }
+
+            const GO& operator*() const
+            {
+                return *gop;
+            }
+
+            const GO* operator->() const
+            {
+                return gop.operator->();
+            }
+
+        private:
+            shared_ptr<GO> gop;
+        };
+
+
+
 
         // variant with two different function spaces
         template<typename FSU, typename FSV, typename LOP, SolverCategory::Category st>

@@ -16,8 +16,8 @@
 #include"convectiondiffusionparameter.hh"
 
 #ifndef USECACHE
-//#define USECACHE 1
-#define USECACHE 0
+#define USECACHE 1
+//#define USECACHE 0
 #endif
 
 /**
@@ -176,7 +176,7 @@ namespace Dune {
             for (size_type i=0; i<lfsu.size(); i++)
               gradu.axpy(x(lfsu,i),gradphi[i]);
 
-            // compute K * gradient of u
+            // compute A * gradient of u
             Dune::FieldVector<RF,dim> Agradu(0.0);
             A.umv(gradu,Agradu);
 
@@ -186,7 +186,7 @@ namespace Dune {
             // evaluate reaction term
             typename T::Traits::RangeFieldType c = param.c(eg.entity(),it->position());
 
-            // integrate (K grad u - bu)*grad phi_i + a*u*phi_i
+            // integrate (A grad u - bu)*grad phi_i + a*u*phi_i
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_type i=0; i<lfsv.size(); i++)
               r.accumulate(lfsv,i,( Agradu*gradpsi[i] - u*(b*gradpsi[i]) + c*u*psi[i] )*factor);
@@ -262,7 +262,7 @@ namespace Dune {
             // evaluate reaction term
             typename T::Traits::RangeFieldType c = param.c(eg.entity(),it->position());
 
-            // integrate (K grad u - bu)*grad phi_i + a*u*phi_i
+            // integrate (A grad u - bu)*grad phi_i + a*u*phi_i
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             for (size_type j=0; j<lfsu.size(); j++)
               for (size_type i=0; i<lfsu.size(); i++)
@@ -357,7 +357,7 @@ namespace Dune {
         // penalty factor
         RF penalty_factor = (alpha/h_F) * harmonic_average * degree*(degree+dim-1);
 
-        // loop over quadrature points and integrate normal flux
+        // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
             // exact normal
@@ -562,7 +562,7 @@ namespace Dune {
         // penalty factor
         RF penalty_factor = (alpha/h_F) * harmonic_average * degree*(degree+dim-1);
 
-        // loop over quadrature points and integrate normal flux
+        // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
             // exact normal
@@ -710,7 +710,7 @@ namespace Dune {
         // evaluate boundary condition
         const Dune::FieldVector<DF,dim-1>
           face_local = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
-        BCType bctype = param.bctype(ig.intersection(),face_local);
+        //BCType bctype = param.bctype(ig.intersection(),face_local);
 
         // compute weights
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
@@ -729,9 +729,11 @@ namespace Dune {
         // penalty factor
         RF penalty_factor = (alpha/h_F) * harmonic_average * degree*(degree+dim-1);
 
-        // loop over quadrature points and integrate normal flux
+        // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
+            BCType bctype = param.bctype(ig.intersection(),it->position());
+
             // position of quadrature point in local coordinates of elements
             Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
 
@@ -905,7 +907,7 @@ namespace Dune {
         // evaluate boundary condition
         const Dune::FieldVector<DF,dim-1>
           face_local = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
-        BCType bctype = param.bctype(ig.intersection(),face_local);
+        //BCType bctype = param.bctype(ig.intersection(),face_local);
 
         // compute weights
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
@@ -925,11 +927,14 @@ namespace Dune {
         RF penalty_factor = (alpha/h_F) * harmonic_average * degree*(degree+dim-1);
 
         // Neumann boundary makes no contribution to boundary
-        if (bctype == ConvectionDiffusionBoundaryConditions::Neumann) return;
+        //if (bctype == ConvectionDiffusionBoundaryConditions::Neumann) return;
 
-        // loop over quadrature points and integrate normal flux
+        // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
+            BCType bctype = param.bctype(ig.intersection(),it->position());
+            if (bctype == ConvectionDiffusionBoundaryConditions::Neumann) continue;
+
             // position of quadrature point in local coordinates of elements
             Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
 

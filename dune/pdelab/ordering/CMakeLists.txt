@@ -10,9 +10,10 @@ install(FILES
   localorderingbase.hh
   orderingbase.hh
   orderinginterface.hh
+  permutationordering.hh
   permutedordering.hh
   singlecodimleafordering.hh
   subordering.hh
   transformations.hh
   utility.hh
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}//dune/pdelab/gridfunctionspace)
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/ordering)

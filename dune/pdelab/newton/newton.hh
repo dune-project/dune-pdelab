@@ -12,6 +12,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/ios_state.hh>
 #include <dune/common/timer.hh>
+#include <dune/common/parametertree.hh>
 
 #include <dune/pdelab/backend/solver.hh>
 
@@ -514,6 +515,11 @@ namespace Dune
         strategy = strategy_;
       }
 
+      void setLineSearchStrategy(std::string strategy_)
+      {
+        strategy = strategyFromName(strategy_);
+      }
+
       void setLineSearchMaxIterations(unsigned int maxit_)
       {
         maxit = maxit_;
@@ -618,6 +624,17 @@ namespace Dune
                     << lambda << std::endl;
       }
 
+    protected:
+      /** helper function to get the different strategies from their name */
+      Strategy strategyFromName(const std::string & s) {
+        if (s == "noLineSearch")
+          return noLineSearch;
+        if (s == "hackbuschReusken")
+          return hackbuschReusken;
+        if (s == "hackbuschReuskenAcceptBest")
+          return hackbuschReuskenAcceptBest;
+      }
+
     private:
       Strategy strategy;
       unsigned int maxit;
@@ -649,6 +666,68 @@ namespace Dune
         , NewtonLineSearch<GOS,TrlV,TstV>(go)
         , NewtonPrepareStep<GOS,TrlV,TstV>(go)
       {}
+      //! interpret a parameter tree as a set of options for the newton solver
+      /**
+
+         example configuration:
+
+         \code
+         [NewtonParameters]
+
+         ReassembleThreshold = 0.1
+         LineSearchMaxIterations = 10
+         MaxIterations = 7
+         AbsoluteLimit = 1e-6
+         Reduction = 1e-4
+         LinearReduction = 1e-3
+         LineSearchDamping  = 0.9
+         \endcode
+
+         and invocation in the code:
+         \code
+         newton.setParameters(param.sub("NewtonParameters"));
+         \endcode
+      */
+      void setParameters(Dune::ParameterTree & param)
+      {
+        typedef typename TstV::ElementType RFType;
+        if (param.hasKey("VerbosityLevel"))
+          this->setVerbosityLevel(
+            param.get<unsigned int>("VerbosityLevel"));
+        if (param.hasKey("VerbosityLevel"))
+          this->setVerbosityLevel(
+            param.get<unsigned int>("VerbosityLevel"));
+        if (param.hasKey("Reduction"))
+          this->setReduction(
+            param.get<RFType>("Reduction"));
+        if (param.hasKey("MaxIterations"))
+          this->setMaxIterations(
+            param.get<unsigned int>("MaxIterations"));
+        if (param.hasKey("ForceIteration"))
+          this->setForceIteration(
+            param.get<bool>("ForceIteration"));
+        if (param.hasKey("AbsoluteLimit"))
+          this->setAbsoluteLimit(
+            param.get<RFType>("AbsoluteLimit"));
+        if (param.hasKey("MinLinearReduction"))
+          this->setMinLinearReduction(
+            param.get<RFType>("MinLinearReduction"));
+        if (param.hasKey("FixedLinearReduction"))
+          this->setFixedLinearReduction(
+            param.get<bool>("FixedLinearReduction"));
+        if (param.hasKey("ReassembleThreshold"))
+          this->setReassembleThreshold(
+            param.get<RFType>("ReassembleThreshold"));
+        if (param.hasKey("LineSearchStrategy"))
+          this->setLineSearchStrategy(
+            param.get<std::string>("LineSearchStrategy"));
+        if (param.hasKey("LineSearchMaxIterations"))
+          this->setLineSearchMaxIterations(
+            param.get<unsigned int>("LineSearchMaxIterations"));
+        if (param.hasKey("LineSearchDampingFactor"))
+          this->setLineSearchDampingFactor(
+            param.get<RFType>("LineSearchDampingFactor"));
+      }
     };
   }
 }

@@ -15,8 +15,7 @@
 namespace Dune {
   namespace PDELab {
 
-    //! \addtogroup MultiStepMethods Multi-Step Methods
-    //! \ingroup PDELab
+    //! \addtogroup MultiStepMethods
     //! \{
 
     //! Base exception for cache related errors

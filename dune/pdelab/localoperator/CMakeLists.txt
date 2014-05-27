@@ -18,9 +18,12 @@ set(common_HEADERS
         idefault.hh                             
         interface.hh                            
         l2.hh                                   
+        l2volumefunctional.hh
+        laplace.hh
         laplacedirichletccfv.hh                 
         laplacedirichletp12d.hh                 
-        linearelasticity.hh                     
+        linearelasticity.hh
+        linearelasticityparameter.hh
         linearacousticsdg.hh                    
         linearacousticsparameter.hh             
         maxwelldg.hh                            

@@ -1,4 +1,4 @@
-mydir = $(includedir)/dune/pdelab/linearproblem
+mydir = $(includedir)/dune/pdelab/linearsolver
 
 my_HEADERS =					\
 	stationarymatrix.hh

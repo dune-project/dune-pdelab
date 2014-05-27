@@ -14,6 +14,9 @@
 namespace Dune {
   namespace PDELab {
 
+    //! \addtogroup Ordering
+    //! \{
+
     //! Index merging algorithm for global orderings.
     struct MergeMode
     {
@@ -326,7 +329,7 @@ namespace Dune {
 
     };
 
-   //! \} group GridFunctionSpace
+   //! \} group Ordering
   } // namespace PDELab
 } // namespace Dune
 

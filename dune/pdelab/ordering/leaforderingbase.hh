@@ -13,8 +13,7 @@
 namespace Dune {
   namespace PDELab {
 
-    //! \addtogroup GridFunctionSpace
-    //! \ingroup PDELab
+    //! \addtogroup Ordering
     //! \{
 
     //! Generic infrastructure for orderings for leaf spaces
@@ -288,7 +287,7 @@ namespace Dune {
 
     };
 
-   //! \} group GridFunctionSpace
+   //! \} group Ordering
   } // namespace PDELab
 } // namespace Dune
 

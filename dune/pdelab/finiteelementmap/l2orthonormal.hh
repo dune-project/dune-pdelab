@@ -8,6 +8,8 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/gmpfield.hh>
+#include<dune/common/shared_ptr.hh>
+#include<dune/common/array.hh>
 
 #include<dune/geometry/referenceelements.hh>
 #include<dune/geometry/quadraturerules.hh>
@@ -18,13 +20,13 @@
 #include<dune/localfunctions/common/localfiniteelementtraits.hh>
 
 /** @defgroup PB Polynomial Basis
+ *  @ingroup FiniteElementMap
  *  @{
  */
 
 /** @file
  *  @brief This file defines polynomial basis functions on the reference
  *         element in a generic way
- *
  */
 
 namespace Dune {
@@ -219,6 +221,98 @@ namespace Dune {
       DUNE_THROW(Dune::NotImplemented,"Polynomial degree greater than 24 in pk_multiindex");
     }
 
+    // the number of polynomials of at most degree k in space dimension d (as run-time function)
+    inline int qk_size (int k, int d)
+    {
+      int n = 1;
+      for (int i=0; i<d; ++i)
+        n *= (k+1);
+      return n;
+    }
+
+    // map integer 0<=i<qk_size(k,d) to multiindex
+    template<int d>
+    void qk_multiindex (int i, int k, MultiIndex<d>& alpha)
+    {
+      for (int j = 0; j<d; ++j) {
+        alpha[j] = i % (k+1);
+        i /= (k+1);
+      }
+    }
+
+    //=====================================================
+    // Traits classes to group Pk and Qk specifics
+    //=====================================================
+    enum BasisType {
+      Pk, Qk
+    };
+
+    template <BasisType basisType>
+    struct BasisTraits;
+
+    template <>
+    struct BasisTraits<BasisType::Pk>
+    {
+      template <int k, int d>
+      struct Size
+      {
+        enum{
+          value = PkSize<k,d>::value
+        };
+      };
+
+      template <int k, int d>
+      struct Order
+      {
+        enum{
+          value = k
+        };
+      };
+
+      static int size(int k, int d)
+      {
+        return pk_size(k,d);
+      }
+
+      template <int d>
+      static void multiindex(int i, int k, MultiIndex<d>& alpha)
+      {
+        pk_multiindex(i,alpha);
+      }
+    };
+
+    template <>
+    struct BasisTraits<BasisType::Qk>
+    {
+      template <int k, int d>
+      struct Size
+      {
+        enum{
+          value = QkSize<k,d>::value
+        };
+      };
+
+      template <int k, int d>
+      struct Order
+      {
+        enum{
+          // value = d*k
+          value = k
+        };
+      };
+
+      static int size(int k, int d)
+      {
+        return qk_size(k,d);
+      }
+
+      template <int d>
+      static void multiindex(int i, int k, MultiIndex<d>& alpha)
+      {
+        return qk_multiindex(i,k,alpha);
+      }
+    };
+
     //=====================================================
     // Integration kernels for monomials
     //=====================================================
@@ -412,22 +506,28 @@ namespace Dune {
      *  \tparam d                       The space dimension.
      *  \tparam GeometryType::BasicType The reference element
      *  \tparam ComputationFieldType    Type to do computations with. Might be high precission.
+     *  \tparam basisType               Type of the polynomial basis. eiter Pk or Qk
      */
-    template<typename FieldType, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=FieldType>
+    template<typename FieldType, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=FieldType, BasisType basisType = BasisType::Pk>
     class OrthonormalPolynomialBasis
     {
+      typedef BasisTraits<basisType> Traits;
     public:
-      enum{ n = PkSize<k,d>::value };
+      enum{ n = Traits::template Size<k,d>::value };
       typedef Dune::FieldMatrix<FieldType,n,n> LowprecMat;
       typedef Dune::FieldMatrix<ComputationFieldType,n,n> HighprecMat;
 
       // construct orthonormal basis
       OrthonormalPolynomialBasis ()
+        : coeffs(new LowprecMat)
       {
+        for (int i=0; i<d; ++i)
+          gradcoeffs[i].reset(new LowprecMat());
         // compute index to multiindex map
         for (int i=0; i<n; i++)
           {
-            pk_multiindex(i,alpha[i]);
+            alpha[i].reset(new MultiIndex<d>());
+            Traits::multiindex(i,k,*alpha[i]);
             //std::cout << "i=" << i << " alpha_i=" << alpha[i] << std::endl;
           }
 
@@ -437,11 +537,15 @@ namespace Dune {
       // construct orthonormal basis from an other basis
       template<class LFE>
       OrthonormalPolynomialBasis (const LFE & lfe)
+        : coeffs(new LowprecMat)
       {
+        for (int i=0; i<d; ++i)
+          gradcoeffs[i].reset(new LowprecMat());
         // compute index to multiindex map
         for (int i=0; i<n; i++)
           {
-            pk_multiindex(i,alpha[i]);
+            alpha[i].reset(new MultiIndex<d>());
+            Traits::multiindex(i,k,*alpha[i]);
             //std::cout << "i=" << i << " alpha_i=" << alpha[i] << std::endl;
           }
 
@@ -451,7 +555,7 @@ namespace Dune {
       // return dimension of P_l
       int size (int l)
       {
-        return pk_size(l,d);
+        return Traits::size(l,d);
       }
 
       // evaluate all basis polynomials at given point
@@ -461,9 +565,9 @@ namespace Dune {
         std::fill(r.begin(),r.end(),0.0);
         for (int j=0; j<n; ++j)
           {
-            const FieldType monomial_value = MonomialEvaluate<FieldType,d-1>::compute(x,alpha[j]);
+            const FieldType monomial_value = MonomialEvaluate<FieldType,d-1>::compute(x,*alpha[j]);
             for (int i=j; i<n; ++i)
-              r[i] += coeffs[i][j] * monomial_value;
+              r[i] += (*coeffs)[i][j] * monomial_value;
           }
       }
 
@@ -475,10 +579,10 @@ namespace Dune {
 
         for (int j=0; j<n; ++j)
           {
-            const FieldType monomial_value = MonomialEvaluate<FieldType,d-1>::compute(x,alpha[j]);
+            const FieldType monomial_value = MonomialEvaluate<FieldType,d-1>::compute(x,*alpha[j]);
             for (int i=j; i<n; ++i)
               for (int s=0; s<d; ++s)
-                r[i][0][s] += gradcoeffs[s][i][j]*monomial_value;
+                r[i][0][s] += (*gradcoeffs[s])[i][j]*monomial_value;
           }
       }
 
@@ -489,11 +593,11 @@ namespace Dune {
         if (l>k)
           DUNE_THROW(Dune::RangeError,"l>k in OrthonormalPolynomialBasis::evaluateFunction");
 
-        for (int i=0; i<pk_size(l,d); i++)
+        for (int i=0; i<Traits::size(l,d); i++)
           {
             FieldType sum(0.0);
             for (int j=0; j<=i; j++)
-              sum = sum + coeffs[i][j]*MonomialEvaluate<FieldType,d-1>::compute(x,alpha[j]);
+              sum = sum + (*coeffs)[i][j]*MonomialEvaluate<FieldType,d-1>::compute(x,*alpha[j]);
             r[i] = sum;
           }
       }
@@ -505,23 +609,24 @@ namespace Dune {
         if (l>k)
           DUNE_THROW(Dune::RangeError,"l>k in OrthonormalPolynomialBasis::evaluateFunction");
 
-        for (int i=0; i<pk_size(l,d); i++)
+        for (int i=0; i<Traits::size(l,d); i++)
           {
             FieldType sum[d];
             for (int s=0; s<d; s++)
               {
                 sum[s] = 0.0;
                 for (int j=0; j<=i; j++)
-                  sum[s] += gradcoeffs[s][i][j]*MonomialEvaluate<FieldType,d-1>::compute(x,alpha[j]);
+                  sum[s] += (*gradcoeffs[s])[i][j]*MonomialEvaluate<FieldType,d-1>::compute(x,*alpha[j]);
               }
             for (int s=0; s<d; s++) r[i][0][s] = sum[s];
           }
       }
 
     private:
-      MultiIndex<d> alpha[n]; // store index to multiindex map
-      LowprecMat coeffs; // coefficients with respect to monomials
-      LowprecMat gradcoeffs[d]; // coefficients of gradient
+      // store multiindices and coefficients on heap
+      Dune::array<Dune::shared_ptr<MultiIndex<d> >,n> alpha; // store index to multiindex map
+      Dune::shared_ptr<LowprecMat> coeffs; // coefficients with respect to monomials
+      Dune::array<Dune::shared_ptr<LowprecMat>,d > gradcoeffs; // coefficients of gradient
 
       // compute orthonormalized shapefunctions from a given set of coefficients
       void orthonormalize()
@@ -542,17 +647,17 @@ namespace Dune {
         for (int s=0; s<d; s++)
           for (int i=0; i<n; i++)
             for (int j=0; j<=i; j++)
-              gradcoeffs[s][i][j] = 0;
+              (*gradcoeffs[s])[i][j] = 0;
         for (int i=0; i<n; i++)
           for (int j=0; j<=i; j++)
             for (int s=0; s<d; s++)
-              if (alpha[j][s]>0)
+              if ((*alpha[j])[s]>0)
                 {
-                  MultiIndex<d> beta = alpha[j]; // get exponents
+                  MultiIndex<d> beta = *alpha[j]; // get exponents
                   FieldType factor = beta[s];
                   beta[s] -= 1;
                   int l = invert_index(beta);
-                  gradcoeffs[s][i][l] += coeffs[i][j]*factor;
+                  (*gradcoeffs[s])[i][l] += (*coeffs)[i][j]*factor;
                 }
 
         // for (int s=0; s<d; s++)
@@ -575,7 +680,7 @@ namespace Dune {
           {
             bool found(true);
             for (int j=0; j<d; j++)
-              if (a[j]!=alpha[i][j]) found=false;
+              if (a[j]!=(*alpha[i])[j]) found=false;
             if (found) return i;
           }
         DUNE_THROW(Dune::RangeError,"index not found in invertindex");
@@ -610,7 +715,7 @@ namespace Dune {
                 for (int l=0; l<=j; l++)
                   {
                     MultiIndex<d> a;
-                    for (int m=0; m<d; m++) a[m] = alpha[i][m] + alpha[l][m];
+                    for (int m=0; m<d; m++) a[m] = (*alpha[i])[m] + (*alpha[l])[m];
                     bi[j] = bi[j] + c[j][l]*integrator.integrate(a);
                   }
                 for (int l=0; l<=j; l++)
@@ -620,7 +725,7 @@ namespace Dune {
             // scale ith polynomial
             ComputationFieldType s2(0.0);
             MultiIndex<d> a;
-            for (int m=0; m<d; m++) a[m] = alpha[i][m] + alpha[i][m];
+            for (int m=0; m<d; m++) a[m] = (*alpha[i])[m] + (*alpha[i])[m];
             s2 = s2 + integrator.integrate(a);
             for (int j=0; j<i; j++)
               s2 = s2 - bi[j]*bi[j];
@@ -633,7 +738,7 @@ namespace Dune {
         // store coefficients in low precission type
         for (int i=0; i<n; i++)
           for (int j=0; j<n; j++)
-            coeffs[i][j] = c[i][j];
+            (*coeffs)[i][j] = c[i][j];
 
         delete p;
 
@@ -645,16 +750,17 @@ namespace Dune {
 
   // define the local finite element here
 
-  template<class D, class R, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=R>
+  template<class D, class R, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=R, PB::BasisType basisType = PB::BasisType::Pk>
   class OPBLocalBasis
   {
-    typedef Dune::PB::OrthonormalPolynomialBasis<R,k,d,bt,ComputationFieldType> PolynomialBasis;
+    typedef PB::BasisTraits<basisType> BasisTraits;
+    typedef Dune::PB::OrthonormalPolynomialBasis<R,k,d,bt,ComputationFieldType,basisType> PolynomialBasis;
     PolynomialBasis opb;
     Dune::GeometryType gt;
 
   public:
     typedef Dune::LocalBasisTraits<D,d,Dune::FieldVector<D,d>,R,1,Dune::FieldVector<R,1>,Dune::FieldMatrix<R,1,d>, 0> Traits;
-    enum{ n = Dune::PB::PkSize<k,d>::value };
+    enum{ n = BasisTraits::template Size<k,d>::value };
 
     OPBLocalBasis (int order_) : opb(), gt(bt,d) {}
 
@@ -680,16 +786,16 @@ namespace Dune {
 
     //! \brief Polynomial order of the shape functions
     unsigned int order () const  {
-      return k;
+      return BasisTraits::template Order<k,d>::value;
     }
 
     Dune::GeometryType type () const { return gt; }
   };
 
-  template<int k, int d>
+  template<int k, int d, PB::BasisType basisType = PB::BasisType::Pk>
   class OPBLocalCoefficients
   {
-    enum{ n = Dune::PB::PkSize<k,d>::value };
+    enum{ n = PB::BasisTraits<basisType>::template Size<k,d>::value };
   public:
     OPBLocalCoefficients (int order_) : li(n)  {
       for (int i=0; i<n; i++) li[i] = Dune::LocalKey(0,0,i);
@@ -752,17 +858,17 @@ namespace Dune {
     }
   };
 
-  template<class D, class R, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=R>
+  template<class D, class R, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=R, PB::BasisType basisType = PB::BasisType::Pk>
   class OPBLocalFiniteElement
   {
     Dune::GeometryType gt;
-    OPBLocalBasis<D,R,k,d,bt,ComputationFieldType> basis;
-    OPBLocalCoefficients<k,d> coefficients;
-    OPBLocalInterpolation<OPBLocalBasis<D,R,k,d,bt,ComputationFieldType> > interpolation;
+    OPBLocalBasis<D,R,k,d,bt,ComputationFieldType,basisType> basis;
+    OPBLocalCoefficients<k,d,basisType> coefficients;
+    OPBLocalInterpolation<OPBLocalBasis<D,R,k,d,bt,ComputationFieldType,basisType> > interpolation;
   public:
-    typedef Dune::LocalFiniteElementTraits<OPBLocalBasis<D,R,k,d,bt,ComputationFieldType>,
-                                           OPBLocalCoefficients<k,d>,
-                                           OPBLocalInterpolation<OPBLocalBasis<D,R,k,d,bt,ComputationFieldType> > > Traits;
+    typedef Dune::LocalFiniteElementTraits<OPBLocalBasis<D,R,k,d,bt,ComputationFieldType,basisType>,
+                                           OPBLocalCoefficients<k,d,basisType>,
+                                           OPBLocalInterpolation<OPBLocalBasis<D,R,k,d,bt,ComputationFieldType,basisType> > > Traits;
 
     OPBLocalFiniteElement ()
       : gt(bt,d), basis(k), coefficients(k), interpolation(basis,k)

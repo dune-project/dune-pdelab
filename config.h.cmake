@@ -31,9 +31,6 @@
    uses the UG_CPPFLAGS */
 #cmakedefine HAVE_PETSC ENABLE_PETSC
 
-/* Define to 1 if std::initializer_list is supported. */
-#cmakedefine HAVE_INITIALIZER_LIST 1
-
 /* Define to 1 if you have the <tr1/unordered_set> header file. */
 #cmakedefine HAVE_TR1_UNORDERED_SET 1
 

@@ -40,7 +40,7 @@ public:
 class ALUUnitSquare : public Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming>
 {
 public:
-  ALUUnitSquare () : Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming>("grids/2dsimplex.alu") {}
+  ALUUnitSquare () : Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming>(GRIDSDIR "/2dsimplex.alu") {}
 };
 
 #endif //HAVE_ALUGRID

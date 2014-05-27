@@ -19,8 +19,9 @@ set(common_HEADERS  backendselector.hh
                  )
 
 add_subdirectory(common)
-add_subdirectory(dense)
+add_subdirectory(eigen)
 add_subdirectory(istl)
+add_subdirectory(simple)
 # include not needed for CMake
 # include $(top_srcdir)/am/global-rules
 

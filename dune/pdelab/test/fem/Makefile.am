@@ -253,6 +253,19 @@ testp3simplex3dfem_CPPFLAGS = $(AM_CPPFLAGS) -DFEM_DIM=3 -DFEM_SIMPLEX -DUSE_PK_
 TESTS += testp3simplex3dfem
 
 
+noinst_HEADERS += rannacherturekfem.hh
+
+check_PROGRAMS += testrannacherturekcube2dfem
+testrannacherturekcube2dfem_SOURCES = testfemwithgfs.cc
+testrannacherturekcube2dfem_CPPFLAGS = $(AM_CPPFLAGS) -DFEM_DIM=2 -DFEM_CUBE -DUSE_RANNACHER_TUREK_FEM_FACTORY -DFEM_FACTORY=RannacherTurekFEMFactory
+TESTS += testrannacherturekcube2dfem
+
+check_PROGRAMS += testrannacherturekcube3dfem
+testrannacherturekcube3dfem_SOURCES = testfemwithgfs.cc
+testrannacherturekcube3dfem_CPPFLAGS = $(AM_CPPFLAGS) -DFEM_DIM=3 -DFEM_CUBE -DUSE_RANNACHER_TUREK_FEM_FACTORY -DFEM_FACTORY=RannacherTurekFEMFactory
+TESTS += testrannacherturekcube2dfem
+
+
 include $(top_srcdir)/am/global-rules
 
 DISTCHECK_CONFIGURE_FLAGS = --with-dune=$(DUNEROOT) CXX="$(CXX)" CC="$(CC)"

@@ -375,7 +375,7 @@ namespace Dune {
         RF w_g = (x_s(lfsu_s,gas)-x_n(lfsu_n,gas))/distance + aavg(rho_g_inside,rho_g_outside)*gn; // determines direction
         RF nu_g = aavg(tp.nu_g(*(ig.inside()),inside_cell_center_local,x_s(lfsu_s,gas)),
                        tp.nu_g(*(ig.outside()),outside_cell_center_local,x_n(lfsu_n,gas)));
-        if (w_l*w_g<0) // new evaluation necessary only if signs differ
+        if (w_l*w_g<=0) // new evaluation necessary only if signs differ
           {
             if (w_g>=0) // upwind capillary pressure on face
               {
@@ -414,8 +414,6 @@ namespace Dune {
           Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename PLSpace::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename PLSpace::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
 
         // face geometry
         const Dune::FieldVector<DF,dim-1>&

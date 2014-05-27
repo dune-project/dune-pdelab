@@ -2,7 +2,7 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_PATTERNSTATISTICS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_PATTERNSTATISTICS_HH
 
-#include <ostream>
+#include <iostream>
 
 namespace Dune {
   namespace PDELab {

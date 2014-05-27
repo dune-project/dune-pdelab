@@ -2,6 +2,8 @@
 #ifndef DUNE_PDELAB_RANNACHER_TUREK2DFEM_HH
 #define DUNE_PDELAB_RANNACHER_TUREK2DFEM_HH
 
+#warning dune/pdelab/finiteelementmap/rannacher_turek2dfem.hh and RannacherTurek2DLocalFiniteElementMap are deprecated, please use dune/pdelab/finiteelementmap/rannacherturekfem.hh and RannacherTurekLocalFiniteElementMap instead
+
 #include<dune/localfunctions/rannacherturek.hh>
 #include"finiteelementmap.hh"
 
@@ -11,8 +13,8 @@ namespace Dune {
     //! wrap up element from local functions
     //! \ingroup FiniteElementMap
     template<class D, class R>
-    class RannacherTurek2DLocalFiniteElementMap
-      : public SimpleLocalFiniteElementMap<RannacherTurek2DLocalFiniteElement<D,R> >
+    class DUNE_DEPRECATED_MSG("Please use RannacherTurekLocalFiniteElementMap instead") RannacherTurek2DLocalFiniteElementMap
+      : public SimpleLocalFiniteElementMap<RannacherTurekLocalFiniteElement<D,R,2> >
     {
     public:
       bool fixedSize() const

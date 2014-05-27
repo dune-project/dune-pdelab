@@ -117,11 +117,11 @@ namespace Dune {
        */
       DiscreteGridFunction (shared_ptr<const GFS> gfs, shared_ptr<const X> x_)
         : pgfs(gfs)
-        , lfs(gfs)
+        , lfs(*gfs)
         , lfs_cache(lfs)
         , x_view(*x_)
-        , xl(gfs.maxLocalSize())
-        , yb(gfs.maxLocalSize())
+        , xl(gfs->maxLocalSize())
+        , yb(gfs->maxLocalSize())
         , px(x_) // FIXME: The LocalView should handle a shared_ptr correctly!
       {
       }

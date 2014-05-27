@@ -12,81 +12,122 @@
 namespace Dune {
   namespace PDELab {
 
-    //! \addtogroup FiniteElementMap
-    //! \ingroup PDELab
+    //! \ingroup FiniteElementMap
     //! \{
 
+    //! \brief general FiniteElementMap exception
     class FiniteElementMapError : public Exception {};
+    //! \brief FiniteElementMap exception concerning the computation of the FiniteElementMap size
     class VariableElementSize : public FiniteElementMapError {};
 
-	//! collect types exported by a finite element map
-	template<class T>
+    //! \brief collect types exported by a finite element map
+    template<class T>
     struct FiniteElementMapTraits
-	{
+    {
       //! Type of finite element from local functions
       typedef T FiniteElementType;
 
       //! Type of finite element from local functions
       typedef T FiniteElement;
-	};
+    };
 
-    //! collect types exported by a finite element map
+    //! \brief collect types exported by a finite element map
     template<class T>
     struct LocalFiniteElementMapTraits : FiniteElementMapTraits<T> {};
 
-	//! interface for a finite element map
-	template<class T, class Imp>
-	class LocalFiniteElementMapInterface
-	{
-	public:
-	  //! \brief Export traits
-	  typedef T Traits;
+    //! \brief interface for a finite element map
+    template<class T, class Imp>
+    class LocalFiniteElementMapInterface
+    {
+    public:
+      //! \brief Export traits
+      typedef T Traits;
 
-	  /** \brief Return local basis for the given entity.
+      /** \brief Return local basis for the given entity.
 
-		  The return value is a reference to Traits::LocalBasisType. If
-		  there is a different local basis for two elements then this
-		  type must be polymorphic.
-	  */
-	  template<class EntityType>
+          The return value is a reference to Traits::LocalBasisType. If
+          there is a different local basis for two elements then this
+          type must be polymorphic.
+      */
+      template<class EntityType>
       const typename Traits::FiniteElementType& find (const EntityType& e) const
-	  {
-		return asImp().find(e);
-	  }
+      {
+        return asImp().find(e);
+      }
 
-	private:
-	  Imp& asImp () {return static_cast<Imp &> (*this);}
-	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
-	};
+      /** @name Size calculation
+       *  The FiniteElementMap provides different methods to compute
+       *  the size of the GridFunctionSpace (if possible) without
+       *  iterating the grid. The approach is as follows (pseudo code):
+       *
+       *  \code
+       *  computeNumberOfDofs(GridView, FEM):
+       *    if(FEM.fixedSize()):
+       *      sum(FEM.size(gt)*GridView.size(gt) for gt in GeometryTypes)
+       *    else
+       *      sum(FEM.find(E).basis().size() for E in GridView.entities<0>())
+       *  \endcode
+       */
+      /** @{ */
+      /** \brief a FiniteElementMap is fixedSize iif the size of the local
+       * functions space for each GeometryType is fixed.
+       */
+      bool fixedSize() const
+      {
+        return asImp().fixedSize();
+      }
+      /** \brief if the FiniteElementMap is fixedSize, the size
+       * methods computes the number of DOFs for given GeometryType.
+       */
+      std::size_t size(GeometryType gt) const
+      {
+        return asImp().size();
+      }
+      /** @} */
 
-	//! simple implementation where all entities have the same finite element
-	template<class Imp>
-	class SimpleLocalFiniteElementMap :
-	  public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits<Imp>,
-											SimpleLocalFiniteElementMap<Imp> >
-	{
-	public:
-	  //! \brief export type of the signature
-	  typedef LocalFiniteElementMapTraits<Imp> Traits;
+      /** \brief compute an upper bound for the local number of DOFs.
+       *
+       * this upper bound is used to avoid reallocations in
+       * std::vectors used during the assembly.
+       */
+      std::size_t maxLocalSize() const
+      {
+        return asImp().maxLocalSize();
+      }
 
-	  //! \brief Use when Imp has a standard constructor
-	  SimpleLocalFiniteElementMap ()
-	  {}
+    private:
+      Imp& asImp () {return static_cast<Imp &> (*this);}
+      const Imp& asImp () const {return static_cast<const Imp &>(*this);}
+    };
 
-	  //! \brief Constructor where an instance of Imp can be provided
-	  SimpleLocalFiniteElementMap (const Imp& imp_) : imp(imp_)
-	  {}
+    //! simple implementation where all entities have the same finite element
+    template<class Imp>
+    class SimpleLocalFiniteElementMap :
+      public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits<Imp>,
+                                            SimpleLocalFiniteElementMap<Imp> >
+    {
+    public:
+      //! \brief export type of the signature
+      typedef LocalFiniteElementMapTraits<Imp> Traits;
 
-	  //! \brief get local basis functions for entity
-	  template<class EntityType>
+      //! \brief Use when Imp has a standard constructor
+      SimpleLocalFiniteElementMap ()
+      {}
+
+      //! \brief Constructor where an instance of Imp can be provided
+      SimpleLocalFiniteElementMap (const Imp& imp_) : imp(imp_)
+      {}
+
+      //! \brief get local basis functions for entity
+      template<class EntityType>
       const typename Traits::FiniteElementType& find (const EntityType& e) const
-	  {
-		return imp;
-	  }
+      {
+        return imp;
+      }
 
-	private:
-	  Imp imp; // create once
-	};
+    private:
+      Imp imp; // create once
+    };
 
     /** \brief implementation for finite elements requiring oriented edges
      *
@@ -119,13 +160,13 @@ namespace Dune {
       static const int dim = GV::dimension;
 
     public:
-	  //! \brief export type of the signature
-	  typedef LocalFiniteElementMapTraits<FE> Traits;
+      //! \brief export type of the signature
+      typedef LocalFiniteElementMapTraits<FE> Traits;
 
-	  //! \brief construct EdgeSLocalFiniteElementMap
-	  EdgeS0LocalFiniteElementMap (const GV& gv_)
+      //! \brief construct EdgeSLocalFiniteElementMap
+      EdgeS0LocalFiniteElementMap (const GV& gv_)
         : gv(gv_), orient(gv_.size(0))
-	  {
+      {
         typedef typename GV::Grid::ctype ct;
         const ReferenceElement<ct, dim> &refElem =
           ReferenceElements<ct, dim>::general(FE().type());
@@ -163,14 +204,14 @@ namespace Dune {
           }
       }
 
-	  //! \brief get local basis functions for entity
-	  template<class EntityType>
+      //! \brief get local basis functions for entity
+      template<class EntityType>
       const typename Traits::FiniteElementType& find (const EntityType& e) const
-	  {
+      {
         return variant[orient[gv.indexSet().template index<0>(e)]];
-	  }
+      }
 
-	private:
+    private:
       GV gv;
       std::vector<FE> variant;
       std::vector<unsigned char> orient;

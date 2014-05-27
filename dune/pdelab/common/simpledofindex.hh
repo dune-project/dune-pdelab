@@ -4,6 +4,7 @@
 #define DUNE_PDELAB_COMMON_SIMPLEDOFINDEX_HH
 
 #include <dune/common/fvector.hh>
+#include <dune/common/hash.hh>
 
 namespace Dune {
   namespace PDELab {

@@ -15,6 +15,9 @@
 namespace Dune {
   namespace PDELab {
 
+    //! \addtogroup Ordering
+    //! \{
+
     template<typename DI, typename CI>
     class OrderingBase
       : public PartitionInfoProvider
@@ -290,6 +293,7 @@ namespace Dune {
 
     };
 
+    //! \}
 
   } // namespace PDELab
 } // namespace Dune

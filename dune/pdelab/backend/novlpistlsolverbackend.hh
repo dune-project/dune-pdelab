@@ -69,28 +69,6 @@ namespace Dune {
 
       //! Construct a non-overlapping operator
       /**
-       * \param gfs_    GridFunctionsSpace for the vectors.
-       * \param A       Matrix for this operator.  This should be the locally
-       *                assembled matrix.
-       * \param helper_ Helper for parallel communication (not used).
-       *
-       * \note The constructed object stores references to all the objects
-       *       given as parameters here.  They should be valid for as long as
-       *       the constructed object is used.  They are not needed to
-       *       destruct the constructed object.
-       *
-       * \deprecated The helper_ parameter is unused.  Use the constructor
-       *             without the helper_ parameter instead.
-       */
-      NonoverlappingOperator (const GFS& gfs_, const M& A,
-                              const istl::ParallelHelper<GFS>& helper_)
-        DUNE_DEPRECATED
-        : gfs(gfs_), _A_(A)
-      {
-      }
-
-      //! Construct a non-overlapping operator
-      /**
        * \param gfs_ GridFunctionsSpace for the vectors.
        * \param A    Matrix for this operator.  This should be the locally
        *             assembled matrix.

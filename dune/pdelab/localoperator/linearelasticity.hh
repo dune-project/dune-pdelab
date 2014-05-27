@@ -37,9 +37,7 @@ namespace Dune {
     template<typename T>
     class LinearElasticity : public FullVolumePattern,
                              public LocalOperatorDefaultFlags,
-                             public InstationaryLocalOperatorDefaultMethods<typename T::Traits::DomainType>,
-                             public JacobianBasedAlphaVolume<LinearElasticity<T> >,
-                             public NumericalJacobianVolume<LinearElasticity<T> >
+                             public InstationaryLocalOperatorDefaultMethods<typename T::Traits::DomainType>
     {
     public:
 
@@ -70,8 +68,6 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSU_SUB::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType JacobianType;
-        typedef typename LFSU_SUB::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSU_SUB::Traits::SizeType size_type;
 
@@ -87,10 +83,6 @@ namespace Dune {
         // loop over quadrature points
         for (typename QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
         {
-          // evaluate basis functions
-          std::vector<RangeType> phi(lfsu.child(0).size());
-          lfsu.child(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
-
           // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
           std::vector<JacobianType> js(lfsu.child(0).size());
           lfsu.child(0).finiteElement().localBasis().evaluateJacobian(it->position(),js);
@@ -109,11 +101,11 @@ namespace Dune {
           RF mu = param_.mu(eg.entity(),it->position());
           RF lambda = param_.lambda(eg.entity(),it->position());
 
+          // geometric weight
+          RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+
           for(int d=0; d<dim; ++d)
           {
-            // geometric weight
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
-
             for (size_type i=0; i<lfsu.child(0).size(); i++)
             {
               for (int k=0; k<dim; k++)
@@ -154,8 +146,6 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::JacobianType JacobianType;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSU::Traits::SizeType size_type;
 
@@ -171,10 +161,6 @@ namespace Dune {
         // loop over quadrature points
         for (typename QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
         {
-          // evaluate basis functions
-          std::vector<RangeType> phi(lfsu_hat.child(0).size());
-          lfsu_hat.child(0).finiteElement().localBasis().evaluateFunction(it->position(),phi);
-
           // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
           std::vector<JacobianType> js(lfsu_hat.child(0).size());
           lfsu_hat.child(0).finiteElement().localBasis().evaluateJacobian(it->position(),js);
@@ -193,6 +179,9 @@ namespace Dune {
           RF mu = param_.mu(eg.entity(),it->position());
           RF lambda = param_.lambda(eg.entity(),it->position());
 
+          // geometric weight
+          RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+
           for(int d=0; d<dim; ++d)
           {
             const LFSU & lfsu = lfsu_hat.child(d);
@@ -203,9 +192,6 @@ namespace Dune {
             {
               gradu.axpy(x(lfsu,i),gradphi[i]);
             }
-
-            // geometric weight
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
 
             for (size_type i=0; i<lfsv.child(d).size(); i++)
             {

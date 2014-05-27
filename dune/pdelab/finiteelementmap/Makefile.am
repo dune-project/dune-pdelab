@@ -31,6 +31,7 @@ finiteelementmap_HEADERS =			\
 	qkdg.hh					\
 	qkfem.hh				\
 	rannacher_turek2dfem.hh			\
+	rannacherturekfem.hh			\
 	raviartthomasfem.hh			\
 	rt0constraints.hh			\
 	rt0cube2dfem.hh				\
@@ -40,7 +41,9 @@ finiteelementmap_HEADERS =			\
 	rt1cube3dfem.hh				\
 	rt1simplex2dfem.hh			\
 	rt2cube2dfem.hh				\
-	variablemonomfem.hh
+	variablemonomfem.hh			\
+	variableopbfem.hh			\
+	variableqkdgfem.hh
 
 include $(top_srcdir)/am/global-rules
 

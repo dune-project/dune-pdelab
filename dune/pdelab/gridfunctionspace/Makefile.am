@@ -1,12 +1,15 @@
 gridfunctionspacedir = $(includedir)/dune/pdelab/gridfunctionspace
 gridfunctionspace_HEADERS =			\
 	compositegridfunctionspace.hh		\
+	datahandleprovider.hh			\
+	entityindexcache.hh			\
 	genericdatahandle.hh			\
 	gridfunctionspace.hh			\
 	gridfunctionspacebase.hh		\
 	gridfunctionspaceutilities.hh		\
 	interpolate.hh				\
 	intersectionindexset.hh			\
+	lfsindexcache.hh			\
 	localfunctionspace.hh			\
 	localfunctionspacetags.hh		\
 	localvector.hh				\
@@ -14,7 +17,10 @@ gridfunctionspace_HEADERS =			\
 	powergridfunctionspace.hh		\
 	subspace.hh				\
 	subspacelocalfunctionspace.hh		\
-	tags.hh
+	tags.hh					\
+	utility.hh				\
+	vectorgridfunctionspace.hh		\
+	vtk.hh
 
 include $(top_srcdir)/am/global-rules
 

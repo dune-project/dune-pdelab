@@ -1,4 +1,4 @@
-set(mydir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/linearproblem)
+set(mydir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/linearsolver)
 
 set(my_HEADERS                                     
         stationarymatrix.hh)

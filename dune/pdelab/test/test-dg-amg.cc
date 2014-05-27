@@ -166,6 +166,7 @@ int main(int argc, char **argv)
   const Dune::SolverCategory::Category solvertype = Dune::SolverCategory::overlapping;
   typedef double NumberType;
 
+#if HAVE_MPI
   // make grid
   //typedef Dune::UGGrid<dim> GM;
   //typedef Dune::ALUSimplexGrid<dim,dim> GM;
@@ -232,6 +233,8 @@ int main(int argc, char **argv)
   // FS::DGF xdgf(fs.getGFS(),x);
   // vtkwriter.addVertexData(new FS::VTKF(xdgf,"x_h"));
   // vtkwriter.pwrite("poisson_uniform","vtk","",Dune::VTK::appendedraw);
+
+#endif // HAVE_MPI
 
   // done
   return 0;
