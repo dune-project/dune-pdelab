@@ -184,7 +184,7 @@ namespace Dune {
 
 
     template<typename Cell>
-    struct collect_used_geometry_types_from_cell
+    struct collect_used_geometry_types_from_cell_visitor
       : public TypeTree::TreeVisitor
       , public TypeTree::DynamicTraversal
     {
@@ -196,7 +196,7 @@ namespace Dune {
           node.collect_used_geometry_types_from_cell(cell);
       }
 
-      collect_used_geometry_types_from_cell(const Cell& cell_)
+      collect_used_geometry_types_from_cell_visitor(const Cell& cell_)
         : cell(cell_)
         , ref_el(Dune::ReferenceElements<typename Cell::Geometry::ctype,Cell::dimension>::general(cell_.type()))
       {}
@@ -268,7 +268,7 @@ namespace Dune {
 
 
     template<typename GV>
-    struct extract_per_entity_sizes_from_cell
+    struct extract_per_entity_sizes_from_cell_visitor
       : public TypeTree::TreeVisitor
       , public TypeTree::DynamicTraversal
     {
@@ -284,7 +284,7 @@ namespace Dune {
           node.extract_per_entity_sizes_from_cell(*cell,gt_sizes);
       }
 
-      extract_per_entity_sizes_from_cell(const GV& gv_)
+      extract_per_entity_sizes_from_cell_visitor(const GV& gv_)
         : gv(gv_)
         , cell(nullptr)
         , ref_el(nullptr)
@@ -668,13 +668,13 @@ namespace Dune {
             const CellIterator end_it = _gv.template end<0>();
             for (CellIterator it = _gv.template begin<0>(); it != end_it; ++it)
               {
-                TypeTree::applyToTree(localOrdering(),collect_used_geometry_types_from_cell<Cell>(*it));
+                TypeTree::applyToTree(localOrdering(),collect_used_geometry_types_from_cell_visitor<Cell>(*it));
               }
             TypeTree::applyToTree(localOrdering(),post_collect_used_geometry_types<GV>(_gv,geom_types));
             // allocate
 
             //TypeTree::applyToTree(localOrdering(),pre_extract_per_entity_sizes<GV>(_gv));
-            extract_per_entity_sizes_from_cell<GV> visitor(_gv);
+            extract_per_entity_sizes_from_cell_visitor<GV> visitor(_gv);
             for (CellIterator it = _gv.template begin<0>(); it != end_it; ++it)
               {
                 visitor.set_cell(*it);
