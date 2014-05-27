@@ -82,6 +82,24 @@ namespace Dune
 
             //! \} Special flags
         };
+
+
+        //! Namespace with decorator classes that influence assembler behavior.
+        namespace lop {
+
+            //! Decorator base class for local operators that have a diagonal jacobian matrix.
+            /**
+             * By inheriting from this decorator class, local operators assert that
+             * their jacobian is completely diagonal.
+             * This information can be used by the assembler to e.g. switch to a diagonal
+             * local matrix that gets passed to the LocalOperator, which can save a lot of
+             * memory bandwidth for large local function spaces.
+             */
+            struct DiagonalJacobian
+            {};
+
+        }
+
         //! \} group LocalOperator
     }
 }
