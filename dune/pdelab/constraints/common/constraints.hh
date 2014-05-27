@@ -891,7 +891,7 @@ namespace Dune {
       // extra loop because constrained dofs might have contributions
       // to constrained dofs
       for (global_col_iterator cit=cg.begin(); cit!=cg.end(); ++cit)
-        xg[cit->first] = 0;
+        xg[cit->first] = typename XG::ElementType(0);
     }
 
 

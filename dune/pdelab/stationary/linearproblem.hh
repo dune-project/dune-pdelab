@@ -198,7 +198,7 @@ namespace Dune {
         else if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
           std::cout << "=== matrix setup skipped (matrix already allocated)" << std::endl;
 
-        (*_jacobian) = 0.0;
+        (*_jacobian) = Real(0.0);
         if (_hanging_node_modifications)
           {
             Dune::PDELab::set_shifted_dofs(_go.localAssembler().trialConstraints(),0.0,*_x); // set hanging node DOFs to zero
@@ -246,8 +246,8 @@ namespace Dune {
         _res.elapsed = _linear_solver_result.elapsed;
         _res.reduction = _linear_solver_result.reduction;
         _res.conv_rate = _linear_solver_result.conv_rate;
-        _res.first_defect = defect;
-        _res.defect = defect*_linear_solver_result.reduction;
+        _res.first_defect = static_cast<double>(defect);
+        _res.defect = static_cast<double>(defect)*_linear_solver_result.reduction;
         _res.linear_solver_iterations = _linear_solver_result.iterations;
 
         // and update

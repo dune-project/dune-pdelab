@@ -1314,7 +1314,7 @@ namespace Dune {
 
             // compute residuals and jacobian
             if (verbosityLevel>=4) std::cout << "assembling D, alpha, beta ..." << std::endl;
-            D = 0.0;
+            D = Real(0.0);
             alpha = 0.0;
             beta = 0.0;
 
