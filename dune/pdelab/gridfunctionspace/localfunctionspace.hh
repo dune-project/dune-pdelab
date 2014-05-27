@@ -266,7 +266,7 @@ namespace Dune {
         return *pgfs;
       }
 
-    protected:
+    public:
       template<typename NodeType>
       void setup(NodeType& node)
       {
@@ -681,7 +681,7 @@ namespace Dune {
         BaseT::bind(*this,e);
       }
 
-    private:
+      //    private:
       typename FESwitch::Store pfe;
     };
 
