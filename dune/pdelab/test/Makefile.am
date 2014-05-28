@@ -311,10 +311,6 @@ endif
 check_PROGRAMS += testvectoriterator
 testvectoriterator_SOURCES = testvectoriterator.cc
 
-check_PROGRAMS += testvectoriterator-no-variadic-templates
-testvectoriterator_no_variadic_templates_SOURCES = testvectoriterator.cc
-testvectoriterator_no_variadic_templates_CPPFLAGS = $(AM_CPPFLAGS) -DDISABLE_VARIADIC_TEMPLATES
-
 NORMALTESTS += testsimplebackend
 testsimplebackend_SOURCES = testsimplebackend.cc
 MOSTLYCLEANFILES += simplebackend_*.vtu
