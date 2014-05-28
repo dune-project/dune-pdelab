@@ -370,7 +370,7 @@ namespace Dune {
             return _cols;
           }
 
-          //! y = A x
+          //! y += A x
           template<class X, class R>
           void umv (const X& x, R& y) const
           {
@@ -381,7 +381,7 @@ namespace Dune {
               }
           }
 
-          //! y = alpha A x
+          //! y += alpha A x
           template<class X, class R>
           void usmv (const value_type& alpha, const X& x, R& y) const
           {
