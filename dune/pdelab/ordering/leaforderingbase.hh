@@ -73,8 +73,6 @@ namespace Dune {
         this->setDelegate(this);
       }
 
-#if HAVE_RVALUE_REFERENCES
-
       LeafOrderingBase(LeafOrderingBase&& r)
         : NodeT(r.nodeStorage())
         , BaseT(std::move(r))
@@ -82,8 +80,6 @@ namespace Dune {
       {
         this->setDelegate(this);
       }
-
-#endif // HAVE_RVALUE_REFERENCES
 
 #endif // DOXYGEN
 

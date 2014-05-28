@@ -276,11 +276,7 @@ namespace Dune {
                                istl::raw(matrix),
                                stats
                                );
-#if HAVE_RVALUE_REFERENCES
           return std::move(stats);
-#else
-          return stats;
-#endif
         }
 
         //! Constructs a BCRSMatrixBackend.

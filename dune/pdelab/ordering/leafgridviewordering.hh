@@ -45,14 +45,10 @@ namespace Dune {
         , _gv(r._gv)
       {}
 
-#if HAVE_RVALUE_REFERENCES
-
       LeafGridViewOrdering(LeafGridViewOrdering&& r)
         : BaseT(std::move(r))
         , _gv(r._gv)
       {}
-
-#endif // HAVE_RVALUE_REFERENCES
 
 #endif // DOXYGEN
 

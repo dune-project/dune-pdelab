@@ -144,8 +144,6 @@ namespace Dune {
 
       typedef GFSTraits Traits;
 
-#if HAVE_RVALUE_REFERENCES
-
       template<typename Backend_, typename OrderingTag_>
       GridFunctionSpaceBase(Backend_&& backend, OrderingTag_&& ordering_tag)
         : _backend(std::forward<Backend_>(backend))
@@ -153,21 +151,6 @@ namespace Dune {
       {
         TypeTree::applyToTree(gfs(),impl::reset_root_space_flag());
       }
-
-#else
-
-      GridFunctionSpaceBase(const B& backend, const OrderingTag& ordering_tag)
-        : _backend(backend)
-        , _ordering_tag(ordering_tag)
-        , _size(0)
-        , _global_size(0)
-        , _is_root_space(true)
-        , _initialized(false)
-      {
-        TypeTree::applyToTree(gfs(),impl::reset_root_space_flag());
-      }
-
-#endif
 
       typename Traits::SizeType size() const
       {

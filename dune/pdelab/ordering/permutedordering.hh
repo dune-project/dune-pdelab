@@ -72,13 +72,9 @@ namespace Dune {
           : decorated_ordering_tag<Permuted<OrderingTag>,OrderingTag>(tag)
         {}
 
-#if HAVE_RVALUE_REFERENCES
-
         Permuted(OrderingTag&& tag)
           : decorated_ordering_tag<Permuted<OrderingTag>,OrderingTag>(std::move(tag))
         {}
-
-#endif // HAVE_RVALUE_REFERENCES
 
         template<std::size_t i>
         const permuted::base_holder<i>& permuted() const
@@ -152,8 +148,6 @@ namespace Dune {
         this->setDelegate(this);
       }
 
-#if HAVE_RVALUE_REFERENCES
-
       PermutedOrdering(PermutedOrdering&& r)
         : NodeT(r.nodeStorage())
         , BaseT(std::move(r))
@@ -161,8 +155,6 @@ namespace Dune {
       {
         this->setDelegate(this);
       }
-
-#endif // HAVE_RVALUE_REFERENCES
 
       virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
       {

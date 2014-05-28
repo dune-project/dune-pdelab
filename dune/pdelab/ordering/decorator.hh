@@ -96,13 +96,9 @@ namespace Dune {
           : Undecorated(u)
         {}
 
-#if HAVE_RVALUE_REFERENCES
-
         decorated_ordering_tag(Undecorated&& u)
           : Undecorated(std::move(u))
         {}
-
-#endif // HAVE_RVALUE_REFERENCES
 
       };
 
