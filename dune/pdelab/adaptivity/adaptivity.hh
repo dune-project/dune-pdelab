@@ -9,6 +9,7 @@
 #include<limits>
 #include<vector>
 #include<map>
+#include<unordered_map>
 #include<dune/common/dynmatrix.hh>
 #include<dune/geometry/quadraturerules.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
@@ -528,7 +529,7 @@ namespace Dune {
       typedef typename IDSet::IdType ID;
 
     public:
-      typedef unordered_map<ID,std::vector<typename U::ElementType> > MapType;
+      typedef std::unordered_map<ID,std::vector<typename U::ElementType> > MapType;
 
 
       /*! @brief The constructor.

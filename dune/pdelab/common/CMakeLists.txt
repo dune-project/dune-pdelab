@@ -21,8 +21,6 @@ set(common_HEADERS
   simpledofindex.hh
   topologyutility.hh
   typetraits.hh
-  unordered_map.hh
-  unordered_set.hh
   utility.hh
   vtkexport.hh)
 

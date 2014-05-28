@@ -3,8 +3,9 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_CONSTRAINTSTRANSFORMATION_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_CONSTRAINTSTRANSFORMATION_HH
 
+#include <unordered_map>
+
 #include <dune/common/tuples.hh>
-#include <dune/pdelab/common/unordered_map.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -16,10 +17,10 @@ namespace Dune {
     //! \brief a class holding transformation for constrained spaces
     template<typename DI, typename CI, typename F>
     class ConstraintsTransformation
-      : public unordered_map<CI,unordered_map<CI,F> >
+      : public std::unordered_map<CI,std::unordered_map<CI,F> >
     {
 
-      typedef unordered_map<CI,unordered_map<CI,F> > BaseT;
+      typedef std::unordered_map<CI,std::unordered_map<CI,F> > BaseT;
 
     public:
       //! export ElementType
@@ -27,7 +28,7 @@ namespace Dune {
       typedef F Field;
 
       class LocalTransformation
-        : public unordered_map<DI,unordered_map<DI,F> >
+        : public std::unordered_map<DI,std::unordered_map<DI,F> >
       {
 
       public:
@@ -35,7 +36,7 @@ namespace Dune {
         typedef F ElementType;
         typedef F Field;
 
-        typedef unordered_map<DI,F> RowType;
+        typedef std::unordered_map<DI,F> RowType;
 
         bool containsNonDirichletConstraints() const
         {

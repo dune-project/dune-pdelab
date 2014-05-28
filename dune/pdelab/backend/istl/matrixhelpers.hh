@@ -5,12 +5,12 @@
 
 #include<utility>
 #include<vector>
+#include <unordered_map>
+#include <unordered_set>
 
 #include <dune/common/fmatrix.hh>
 #include <dune/istl/bcrsmatrix.hh>
 
-#include <dune/pdelab/common/unordered_map.hh>
-#include <dune/pdelab/common/unordered_set.hh>
 #include <dune/pdelab/ordering/orderingbase.hh>
 #include <dune/pdelab/backend/istl/tags.hh>
 
@@ -61,7 +61,7 @@ namespace Dune {
 
       template<typename RowOrdering, typename ColOrdering, typename SubPattern_ = void>
       class Pattern
-        : public std::vector<unordered_map<std::size_t,SubPattern_> >
+        : public std::vector<std::unordered_map<std::size_t,SubPattern_> >
       {
 
       public:
@@ -78,7 +78,7 @@ namespace Dune {
         void recursive_add_entry(const RI& ri, const CI& ci)
         {
           this->resize(_row_ordering.blockCount());
-          std::pair<typename unordered_map<std::size_t,SubPattern>::iterator,bool> r = (*this)[ri.back()].insert(make_pair(ci.back(),SubPattern(_row_ordering.childOrdering(ri.back()),_col_ordering.childOrdering(ci.back()))));
+          std::pair<typename std::unordered_map<std::size_t,SubPattern>::iterator,bool> r = (*this)[ri.back()].insert(make_pair(ci.back(),SubPattern(_row_ordering.childOrdering(ri.back()),_col_ordering.childOrdering(ci.back()))));
           r.first->second.recursive_add_entry(ri.back_popped(),ci.back_popped());
         }
 
@@ -96,7 +96,7 @@ namespace Dune {
 
       template<typename RowOrdering, typename ColOrdering>
       class Pattern<RowOrdering,ColOrdering,void>
-        : public std::vector<unordered_set<std::size_t> >
+        : public std::vector<std::unordered_set<std::size_t> >
       {
 
       public:

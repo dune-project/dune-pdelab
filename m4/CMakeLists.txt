@@ -1,5 +1,4 @@
 set(M4FILES
-  dune-unordered-containers.m4
   dune-pdelab.m4
   dune-posix-clock.m4
   eigen.m4
