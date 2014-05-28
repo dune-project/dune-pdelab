@@ -92,7 +92,7 @@ namespace Dune {
                                    const Entity& e,
                                    const Domain& x)
       {
-        dune_static_assert(int(GF::Traits::dimRange) == int(Domain::dimension),"dimension of function range does not match grid dimension");
+        static_assert(int(GF::Traits::dimRange) == int(Domain::dimension),"dimension of function range does not match grid dimension");
         typename GF::Traits::RangeType y;
         gf.evaluate(e,x,y);
         return y;
@@ -108,7 +108,7 @@ namespace Dune {
                                    const Entity& e,
                                    const Domain& x)
       {
-        dune_static_assert(Domain::dimension == GF::CHILDREN,"dimension of function range does not match grid dimension");
+        static_assert(Domain::dimension == GF::CHILDREN,"dimension of function range does not match grid dimension");
         FieldVector<typename GF::template Child<0>::Type::Traits::RangeFieldType,GF::CHILDREN> y;
         typename GF::template Child<0>::Type::Traits::RangeType cy;
         for (int d = 0; d < Domain::dimension; ++d)

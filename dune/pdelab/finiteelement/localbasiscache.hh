@@ -6,7 +6,6 @@
 #include<map>
 
 #include<dune/common/exceptions.hh>
-#include<dune/common/static_assert.hh>
 
 namespace Dune {
   namespace PDELab {

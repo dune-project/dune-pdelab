@@ -3,7 +3,6 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_TAGS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_TAGS_HH
 
-#include <dune/common/static_assert.hh>
 #include <dune/common/documentation.hh>
 #include <dune/pdelab/backend/istl/forwarddeclarations.hh>
 #include <cstddef>

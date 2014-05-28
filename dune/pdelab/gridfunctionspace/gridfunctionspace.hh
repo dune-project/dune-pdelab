@@ -11,7 +11,6 @@
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/shared_ptr.hh>
-#include <dune/common/static_assert.hh>
 #include <dune/common/stdstreams.hh>
 #include <dune/common/typetraits.hh>
 

@@ -27,8 +27,8 @@ void test(GV gv, const FEM& fem, const BaseFEM& baseFEM)
   typename GV::template Codim<0>::Iterator it = gv.template begin<0>();
   const typename FEM::Traits::FiniteElement& fe = fem.find(*it);
   const typename BaseFEM::Traits::FiniteElement& bfe = baseFEM.find(*it);
-  dune_static_assert((Dune::is_same<typename FEM::Traits::FiniteElement,typename BaseFEM::Traits::FiniteElement>::value),
-                     "Implementation error in RaviartThomasLocalFiniteElementMap: picked wrong base FEM");
+  static_assert((Dune::is_same<typename FEM::Traits::FiniteElement,typename BaseFEM::Traits::FiniteElement>::value),
+                "Implementation error in RaviartThomasLocalFiniteElementMap: picked wrong base FEM");
   if (fe.localBasis().size() != bfe.localBasis().size())
     DUNE_THROW(Dune::InvalidStateException,"finite elements should be of same size");
 }

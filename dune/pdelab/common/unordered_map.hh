@@ -8,8 +8,6 @@
     \brief Provide common name for std::unordered_map and std::unordered_multimap classes in Dune::PDELab namespace.
 */
 
-#include <dune/common/static_assert.hh>
-
 // Try to find an unordered_map implementation
 #ifdef HAVE_UNORDERED_MAP
 
@@ -45,7 +43,7 @@ namespace Dune {
              >
     class unordered_map
     {
-      dune_static_assert(Dune::AlwaysFalse<Key>::value,"Unable to find implementation for unordered_map.");
+      static_assert(Dune::AlwaysFalse<Key>::value,"Unable to find implementation for unordered_map.");
     };
 
     template<typename Key,
@@ -56,7 +54,7 @@ namespace Dune {
              >
     class unordered_multimap
     {
-      dune_static_assert(Dune::AlwaysFalse<Key>::value,"Unable to find implementation for unordered_multimap.");
+      static_assert(Dune::AlwaysFalse<Key>::value,"Unable to find implementation for unordered_multimap.");
     };
 
 #endif

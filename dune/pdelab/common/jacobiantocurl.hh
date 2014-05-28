@@ -6,7 +6,6 @@
 #include <cstddef>
 
 #include <dune/common/fvector.hh>
-#include <dune/common/static_assert.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -55,7 +54,7 @@ namespace Dune {
      */
     template<typename Jacobian>
     class JacobianToCurl<Jacobian, 1, 2> {
-      dune_static_assert
+      static_assert
       ( Jacobian::rows == 1 && Jacobian::cols == 2, "This specialization "
         "works only for dimRange == 1 and dimDomain == 2");
 
@@ -96,7 +95,7 @@ namespace Dune {
      */
     template<typename Jacobian>
     class JacobianToCurl<Jacobian, 2, 2> {
-      dune_static_assert
+      static_assert
       ( Jacobian::rows == 2 && Jacobian::cols == 2, "This specialization "
         "works only for dimRange == 2 and dimDomain == 2");
 
@@ -131,7 +130,7 @@ namespace Dune {
      */
     template<typename Jacobian>
     class JacobianToCurl<Jacobian, 3, 3> {
-      dune_static_assert
+      static_assert
       ( Jacobian::rows == 3 && Jacobian::cols == 3, "This specialization "
         "works only for dimRange == 3 and dimDomain == 3");
 
@@ -153,4 +152,3 @@ namespace Dune {
 } //namespace Dune
 
 #endif // DUNE_PDELAB_COMMON_JACOBIANTOCURL_HH
-

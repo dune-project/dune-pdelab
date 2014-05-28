@@ -8,7 +8,6 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fmatrix.hh>
 #include<dune/common/fvector.hh>
-#include<dune/common/static_assert.hh>
 #include<dune/common/typetraits.hh>
 
 #include<dune/geometry/type.hh>
@@ -79,9 +78,9 @@ namespace Dune {
         static const unsigned dimR = BasisTraits::dimRange;
 
         // static checks
-        dune_static_assert(dimR == 3 || dimR == 2,
-                           "Works only in 2D or 3D");
-        dune_static_assert
+        static_assert(dimR == 3 || dimR == 2,
+                      "Works only in 2D or 3D");
+        static_assert
           ((Dune::is_same<typename EG::Geometry::ctype, DF>::value),
            "Grids ctype and Finite Elements DomainFieldType must match");
 
@@ -199,9 +198,9 @@ namespace Dune {
         typedef FieldVector<RF, CurlTraits<dimR>::dim> Curl;
 
         // static checks
-        dune_static_assert(dimR == 3 || dimR == 2,
+        static_assert(dimR == 3 || dimR == 2,
                            "Works only in 2D or 3D");
-        dune_static_assert
+        static_assert
           ((Dune::is_same<typename EG::Geometry::ctype, DF>::value),
            "Grids ctype and Finite Elements DomainFieldType must match");
 

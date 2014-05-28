@@ -9,7 +9,6 @@
 
 #include<dune/common/exceptions.hh>
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/static_assert.hh>
 
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/grid/common/gridenums.hh>
@@ -549,8 +548,8 @@ namespace Dune {
         EntityDataCommunicationDescriptor<bool>
         > BaseT;
 
-      dune_static_assert((is_same<typename V::ElementType,bool>::value),
-                         "GhostDataHandle expects a vector of bool values");
+      static_assert((is_same<typename V::ElementType,bool>::value),
+                    "GhostDataHandle expects a vector of bool values");
 
     public:
 
@@ -751,8 +750,8 @@ namespace Dune {
         EntityDataCommunicationDescriptor<bool>
         > BaseT;
 
-      dune_static_assert((is_same<typename V::ElementType,bool>::value),
-                         "SharedDOFDataHandle expects a vector of bool values");
+      static_assert((is_same<typename V::ElementType,bool>::value),
+                    "SharedDOFDataHandle expects a vector of bool values");
 
     public:
 

@@ -6,7 +6,6 @@
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
-#include <dune/common/static_assert.hh>
 
 #include <dune/geometry/type.hh>
 #include <dune/geometry/referenceelements.hh>
@@ -74,7 +73,7 @@ namespace Dune {
         // dimensions
         const int dim = EG::Geometry::dimension;
         const int dimw = EG::Geometry::dimensionworld;
-        dune_static_assert(dim == dimw, "doesn't work on manifolds");
+        static_assert(dim == dimw, "doesn't work on manifolds");
 
         // select quadrature rule
         GeometryType gt = eg.geometry().type();
@@ -152,7 +151,7 @@ namespace Dune {
         // dimensions
         const int dim = EG::Geometry::dimension;
         const int dimw = EG::Geometry::dimensionworld;
-        dune_static_assert(dim == dimw, "doesn't work on manifolds");
+        static_assert(dim == dimw, "doesn't work on manifolds");
 
         // select quadrature rule
         GeometryType gt = eg.geometry().type();

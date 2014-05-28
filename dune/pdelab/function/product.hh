@@ -6,7 +6,6 @@
 // #include <cstddef>
 
 #include <dune/common/fvector.hh>
-#include <dune/common/static_assert.hh>
 #include <dune/common/typetraits.hh>
 
 #include <dune/pdelab/common/function.hh>
@@ -24,11 +23,11 @@ namespace Dune {
           FieldVector<typename GF1::Traits::RangeFieldType, 1> >,
         ProductGridFunctionAdapter<GF1,GF2> >
     {
-      dune_static_assert(unsigned(GF1::Traits::dimRange) ==
-                         unsigned(GF2::Traits::dimRange),
-                         "ProductGridFunctionAdapter: Operands must have "
-                         "matching range dimensions, or one operand must be "
-                         "scalar-valued.");
+      static_assert(unsigned(GF1::Traits::dimRange) ==
+                    unsigned(GF2::Traits::dimRange),
+                    "ProductGridFunctionAdapter: Operands must have "
+                    "matching range dimensions, or one operand must be "
+                    "scalar-valued.");
 
       typedef GridFunctionTraits<
         typename GF1::Traits::GridViewType,

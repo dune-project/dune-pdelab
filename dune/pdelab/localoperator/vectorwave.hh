@@ -9,7 +9,6 @@
 #include <vector>
 
 #include <dune/common/fvector.hh>
-#include <dune/common/static_assert.hh>
 
 #include <dune/geometry/type.hh>
 #include <dune/geometry/quadraturerules.hh>
@@ -228,9 +227,9 @@ RangeField mu(const Domain& xg) const;
           typedef typename J2CU::Curl CurlU;
           typedef typename J2CV::Curl CurlV;
 
-          dune_static_assert(J2CU::dimCurl == J2CV::dimCurl, "Curl dimension "
-                             "of ansatz and test functions must match in "
-                             "VectorWave::R0");
+          static_assert(J2CU::dimCurl == J2CV::dimCurl, "Curl dimension "
+                        "of ansatz and test functions must match in "
+                        "VectorWave::R0");
 
           // select quadrature rule
           typedef QuadratureRules<DF,dimDLocal> QRs;

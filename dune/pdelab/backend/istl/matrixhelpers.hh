@@ -53,7 +53,7 @@ namespace Dune {
       struct build_matrix_type
       {
 
-        dune_static_assert(static_cast<int>(RV::blocklevel) == static_cast<int>(CV::blocklevel),"Both vectors must have identical blocking depth");
+        static_assert(static_cast<int>(RV::blocklevel) == static_cast<int>(CV::blocklevel),"Both vectors must have identical blocking depth");
 
         typedef typename recursive_build_matrix_type<E,RV,CV,RV::blocklevel>::type type;
 

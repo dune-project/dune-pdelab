@@ -2,7 +2,6 @@
 #ifndef DUNE_PDELAB_FINITEELEMENTMAP_RAVIARTTHOMASFEM_HH
 #define DUNE_PDELAB_FINITEELEMENTMAP_RAVIARTTHOMASFEM_HH
 
-#include <dune/common/static_assert.hh>
 #include <dune/grid/common/capabilities.hh>
 
 #include <dune/pdelab/common/topologyutility.hh>
@@ -31,7 +30,7 @@ namespace Dune {
       template<typename GV, int dim, GeometryType::BasicType basic_type, typename D, typename R, std::size_t k>
       struct RaviartThomasLocalFiniteElementMapBaseSelector
       {
-        dune_static_assert((AlwaysFalse<GV>::value),"The requested type of Raviart-Thomas element is not implemented, sorry!");
+        static_assert((AlwaysFalse<GV>::value),"The requested type of Raviart-Thomas element is not implemented, sorry!");
       };
 
 
@@ -138,9 +137,9 @@ namespace Dune {
     template<typename GV, typename D, typename R, std::size_t k>
     class RaviartThomasLocalFiniteElementMap<GV,D,R,k,GeometryType::none>
     {
-      dune_static_assert((AlwaysFalse<GV>::value),
-                         "Your chosen grid does not export a usable topology id for its cells."
-                         "Please provide the correct GeometryType::BasicType as an additional template parameter.");
+      static_assert((AlwaysFalse<GV>::value),
+                    "Your chosen grid does not export a usable topology id for its cells."
+                    "Please provide the correct GeometryType::BasicType as an additional template parameter.");
     };
 
 #endif // DOXYGEN
