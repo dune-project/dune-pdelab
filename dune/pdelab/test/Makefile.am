@@ -319,6 +319,7 @@ NORMALTESTS += testsimplebackend
 testsimplebackend_SOURCES = testsimplebackend.cc
 MOSTLYCLEANFILES += simplebackend_*.vtu
 
+if EIGEN
 
 NORMALTESTS += testeigenbackend
 testeigenbackend_SOURCES = testeigenbackend.cc
@@ -326,6 +327,8 @@ testeigenbackend_CXXFLAGS = @AM_CPPFLAGS@ $(EIGEN_CPPFLAGS) $(EIGEN_CXXFLAGS)
 testeigenbackend_LDFLAGS = $(AM_LDFLAGS) $(EIGEN_LDFLAGS)
 testeigenbackend_LDADD = $(LDADD) $(EIGEN_LIBS)
 MOSTLYCLEANFILES += eigenbackend_*.vtu
+
+endif
 
 NORMALTESTS += test-dg-amg
 test_dg_amg_SOURCES = test-dg-amg.cc
