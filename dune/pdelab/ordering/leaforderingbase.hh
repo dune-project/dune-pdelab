@@ -19,7 +19,7 @@ namespace Dune {
     //! Generic infrastructure for orderings for leaf spaces
     template<typename LocalOrdering>
     class LeafOrderingBase
-      : public TypeTree::VariadicCompositeNode<LocalOrdering>
+      : public TypeTree::CompositeNode<LocalOrdering>
       , public VirtualOrderingBase<typename LocalOrdering::Traits::DOFIndex,
                                    typename LocalOrdering::Traits::ContainerIndex>
       , public OrderingBase<typename LocalOrdering::Traits::DOFIndex,
@@ -34,7 +34,7 @@ namespace Dune {
 
     protected:
 
-      typedef TypeTree::VariadicCompositeNode<LocalOrdering> NodeT;
+      typedef TypeTree::CompositeNode<LocalOrdering> NodeT;
 
       typedef OrderingBase<typename LocalOrdering::Traits::DOFIndex,
                            typename LocalOrdering::Traits::ContainerIndex> BaseT;

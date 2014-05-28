@@ -12,7 +12,7 @@
 #include <dune/common/exceptions.hh>
 #include <dune/common/stdstreams.hh>
 
-#include <dune/typetree/compositenodemacros.hh>
+#include <dune/typetree/compositenode.hh>
 #include <dune/typetree/powernode.hh>
 #include <dune/typetree/traversal.hh>
 #include <dune/typetree/visitor.hh>
@@ -207,19 +207,19 @@ namespace Dune {
 
 
     //! Interface for merging index spaces
-    template<typename DI, typename CI, DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
+    template<typename DI, typename CI, typename... Children>
     class CompositePermutationOrdering :
-      public DUNE_TYPETREE_COMPOSITENODE_BASETYPE,
+      public TypeTree::CompositeNode<Children...>,
       public permutation_ordering::Base<DI,
                                           CI,
                                           CompositePermutationOrdering<
                                             DI,
                                             CI,
-                                            DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES
+                                            Children...
                                             >
                                           >
     {
-      typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE Node;
+      typedef TypeTree::CompositeNode<Children...> Node;
 
       typedef permutation_ordering::Base<
         DI,
@@ -227,7 +227,7 @@ namespace Dune {
         CompositePermutationOrdering<
           DI,
           CI,
-          DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES
+          Children...
           >
         > Base;
 
@@ -242,8 +242,8 @@ namespace Dune {
        *       the leaf of the tree.
        */
       CompositePermutationOrdering(bool backend_blocked, const PermutationOrderingTag& ordering_tag,
-          DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
-        : Node(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
+          Dune::shared_ptr<Children>... children)
+        : Node(children...)
         , Base(*this,backend_blocked,ordering_tag)
       { }
 
@@ -255,8 +255,6 @@ namespace Dune {
         Base::update();
       }
     };
-
-#if HAVE_VARIADIC_TEMPLATES
 
     template<typename GFS, typename Transformation>
     struct composite_gfs_to_ordering_descriptor<GFS,Transformation,PermutationOrderingTag>
@@ -291,91 +289,6 @@ namespace Dune {
       }
 
     };
-
-#else // HAVE_VARIADIC_TEMPLATES
-
-    //! Node transformation descriptor for CompositeGridFunctionSpace -> PermutationOrdering (without variadic templates).
-    template<typename GFS, typename Transformation>
-    struct composite_gfs_to_ordering_descriptor<GFS,Transformation,PermutationOrderingTag>
-    {
-
-      static const bool recursive = true;
-
-      template<typename TC0,
-               typename TC1,
-               typename TC2,
-               typename TC3,
-               typename TC4,
-               typename TC5,
-               typename TC6,
-               typename TC7,
-               typename TC8,
-               typename TC9>
-      struct result
-      {
-        // TODO: FIXME - this has not been changed to new interface yet!
-        typedef CompositePermutationOrdering<typename Transformation::GridFunctionSpace::Traits::SizeType,
-                                               TC0,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9> type;
-        typedef shared_ptr<type> storage_type;
-      };
-
-      template<typename TC0,
-               typename TC1,
-               typename TC2,
-               typename TC3,
-               typename TC4,
-               typename TC5,
-               typename TC6,
-               typename TC7,
-               typename TC8,
-               typename TC9>
-      static typename result<TC0,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9>::type
-      transform(const GFSNode& s,
-                const Transformation& t,
-                shared_ptr<TC0> c0,
-                shared_ptr<TC1> c1,
-                shared_ptr<TC2> c2,
-                shared_ptr<TC3> c3,
-                shared_ptr<TC4> c4,
-                shared_ptr<TC5> c5,
-                shared_ptr<TC6> c6,
-                shared_ptr<TC7> c7,
-                shared_ptr<TC8> c8,
-                shared_ptr<TC9> c9)
-      {
-        return typename result<TC0,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9>::type(t.asGridFunctionSpace(s),t.asGridFunctionSpace(s).orderingTag(),c0,c1,c2,c3,c4,c5,c6,c7,c8,c9);
-      }
-
-      template<typename TC0,
-               typename TC1,
-               typename TC2,
-               typename TC3,
-               typename TC4,
-               typename TC5,
-               typename TC6,
-               typename TC7,
-               typename TC8,
-               typename TC9>
-      static typename result<TC0,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9>::storage_type
-      transform_storage(shared_ptr<const GFSNode> s,
-                        const Transformation& t,
-                        shared_ptr<TC0> c0,
-                        shared_ptr<TC1> c1,
-                        shared_ptr<TC2> c2,
-                        shared_ptr<TC3> c3,
-                        shared_ptr<TC4> c4,
-                        shared_ptr<TC5> c5,
-                        shared_ptr<TC6> c6,
-                        shared_ptr<TC7> c7,
-                        shared_ptr<TC8> c8,
-                        shared_ptr<TC9> c9)
-      {
-        return make_shared<typename result<TC0,TC1,TC2,TC3,TC4,TC5,TC6,TC7,TC8,TC9>::type>(t.asGridFunctionSpace(s),t.asGridFunctionSpace(s).orderingTag(),c0,c1,c2,c3,c4,c5,c6,c7,c8,c9);
-      }
-
-    };
-
-#endif // HAVE_VARIADIC_TEMPLATES
 
     // the generic registration for PowerGridFunctionSpace happens in transformations.hh
 

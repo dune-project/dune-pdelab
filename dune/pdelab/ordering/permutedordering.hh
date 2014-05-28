@@ -98,7 +98,7 @@ namespace Dune {
     //! Ordering that permutes top-level ContainerIndex entries.
     template<typename Ordering>
     class PermutedOrdering
-      : public TypeTree::VariadicCompositeNode<Ordering>
+      : public TypeTree::CompositeNode<Ordering>
       , public VirtualOrderingBase<typename Ordering::Traits::DOFIndex,
                                    typename Ordering::Traits::ContainerIndex>
       , public OrderingBase<typename Ordering::Traits::DOFIndex,
@@ -113,7 +113,7 @@ namespace Dune {
 
     private:
 
-      typedef TypeTree::VariadicCompositeNode<Ordering> NodeT;
+      typedef TypeTree::CompositeNode<Ordering> NodeT;
 
       typedef OrderingBase<typename Ordering::Traits::DOFIndex,
                            typename Ordering::Traits::ContainerIndex> BaseT;

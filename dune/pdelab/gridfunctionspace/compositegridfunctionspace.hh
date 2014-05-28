@@ -6,7 +6,7 @@
 
 #include <dune/common/shared_ptr.hh>
 
-#include <dune/typetree/compositenodemacros.hh>
+#include <dune/typetree/compositenode.hh>
 #include <dune/typetree/utility.hh>
 
 #include <dune/pdelab/gridfunctionspace/powercompositegridfunctionspacebase.hh>
@@ -36,23 +36,23 @@ namespace Dune {
     */
     template<typename Backend,
              typename OrderingTag,
-             DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
+             typename... Children>
     class CompositeGridFunctionSpace
-      : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
+      : public TypeTree::CompositeNode<Children...>
       , public PowerCompositeGridFunctionSpaceBase<
           CompositeGridFunctionSpace<
             Backend,
             OrderingTag,
-            DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>,
-          typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::
+            Children...>,
+          typename TypeTree::CompositeNode<Children...>::template Child<0>::
             Type::Traits::GridViewType,
           Backend,
           OrderingTag,
-          DUNE_TYPETREE_COMPOSITENODE_BASETYPE::CHILDREN
+          TypeTree::CompositeNode<Children...>::CHILDREN
         >
-      , public DataHandleProvider<CompositeGridFunctionSpace<Backend,OrderingTag,DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES> >
+      , public DataHandleProvider<CompositeGridFunctionSpace<Backend,OrderingTag,Children...> >
     {
-      typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE NodeT;
+      typedef TypeTree::CompositeNode<Children...> NodeT;
 
       typedef PowerCompositeGridFunctionSpaceBase<
         CompositeGridFunctionSpace,
@@ -82,23 +82,23 @@ namespace Dune {
 
       typedef typename ImplementationBase::Traits Traits;
 
-      CompositeGridFunctionSpace(const Backend& backend, DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : NodeT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>))
+      CompositeGridFunctionSpace(const Backend& backend, Children&... children)
+        : NodeT(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>(children)...)
         , ImplementationBase(backend,OrderingTag())
       { }
 
-      CompositeGridFunctionSpace(const OrderingTag& ordering_tag, DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : NodeT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>))
+      CompositeGridFunctionSpace(const OrderingTag& ordering_tag, Children&... children)
+        : NodeT(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>(children)...)
         , ImplementationBase(Backend(),ordering_tag)
       { }
 
-      CompositeGridFunctionSpace(const Backend& backend, const OrderingTag& ordering_tag, DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : NodeT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>))
+      CompositeGridFunctionSpace(const Backend& backend, const OrderingTag& ordering_tag, Children&... children)
+        : NodeT(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>(children)...)
         , ImplementationBase(backend,ordering_tag)
       { }
 
-      CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : NodeT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>))
+      CompositeGridFunctionSpace(Children&... children)
+        : NodeT(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>(children)...)
         , ImplementationBase(Backend(),OrderingTag())
       { }
 

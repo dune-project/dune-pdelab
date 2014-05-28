@@ -653,7 +653,7 @@ namespace Dune {
       template <typename TT>
       void setTime(TT time){
         PowerCompositeSetTimeVisitor<TT> visitor(time);
-        Dune::TypeTree::applyToTree(*this,visitor);
+        TypeTree::applyToTree(*this,visitor);
       }
 
       PowerGridFunction()
@@ -795,12 +795,12 @@ namespace Dune {
      *             unused.  Currently, up to 9 slots are supported, making 8
      *             the maximum n.
      */
-    template<DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
+    template<typename... Children>
     class CompositeGridFunction
-      : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
+      : public TypeTree::CompositeNode<Children...>
     {
 
-      typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE BaseT;
+      typedef TypeTree::CompositeNode<Children...> BaseT;
 
     public:
 
@@ -814,8 +814,8 @@ namespace Dune {
       CompositeGridFunction()
       {}
 
-      CompositeGridFunction (DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename BaseT::template Child<0>::Type>))
+      CompositeGridFunction (Children&... children)
+        : BaseT(TypeTree::assertGridViewType<typename BaseT::template Child<0>::Type>(children)...)
       {
       }
 
@@ -823,7 +823,7 @@ namespace Dune {
       template <typename TT>
       void setTime(TT time){
         PowerCompositeSetTimeVisitor<TT> visitor(time);
-        Dune::TypeTree::applyToTree(*this,visitor);
+        TypeTree::applyToTree(*this,visitor);
       }
 
 #ifdef DOXYGEN

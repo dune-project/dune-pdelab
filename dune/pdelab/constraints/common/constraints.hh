@@ -282,18 +282,18 @@ namespace Dune {
 
     } // anonymous namespace
 
-    template<DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN_FOR_SPECIALIZATION>
+    template<typename... Children>
     struct CompositeConstraintsOperator
-      : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
+      : public TypeTree::CompositeNode<Children...>
     {
-      typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE BaseT;
+      typedef TypeTree::CompositeNode<Children...> BaseT;
 
-      CompositeConstraintsOperator(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
+      CompositeConstraintsOperator(Children&... children)
+        : BaseT(children...)
       {}
 
-      CompositeConstraintsOperator(DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
-        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
+      CompositeConstraintsOperator(Dune::shared_ptr<Children>... children)
+        : BaseT(children...)
       {}
 
       // aggregate flags
@@ -302,18 +302,18 @@ namespace Dune {
 
     };
 
-    template<DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN_FOR_SPECIALIZATION>
+    template<typename... Children>
     struct CompositeConstraintsParameters
-      : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
+      : public TypeTree::CompositeNode<Children...>
     {
-      typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE BaseT;
+      typedef TypeTree::CompositeNode<Children...> BaseT;
 
-      CompositeConstraintsParameters(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
+      CompositeConstraintsParameters(Children&... children)
+        : BaseT(children...)
       {}
 
-      CompositeConstraintsParameters(DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
-        : BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
+      CompositeConstraintsParameters(Dune::shared_ptr<Children>... children)
+        : BaseT(children...)
       {}
     };
 
@@ -498,7 +498,7 @@ namespace Dune {
     typename conditional<
       (GridFunction::Traits::dimRange == 1),
       // trafo for scalar leaf nodes
-      Dune::TypeTree::GenericLeafNodeTransformation<GridFunction,gf_to_constraints,OldStyleConstraintsWrapper<GridFunction> >,
+      TypeTree::GenericLeafNodeTransformation<GridFunction,gf_to_constraints,OldStyleConstraintsWrapper<GridFunction> >,
       // trafo for multi component leaf nodes
       MultiComponentOldStyleConstraintsWrapperDescription<GridFunction,gf_to_constraints>
       >::type
@@ -506,19 +506,13 @@ namespace Dune {
 
     // trafo for power nodes
     template<typename PowerGridFunction>
-    Dune::TypeTree::SimplePowerNodeTransformation<PowerGridFunction,gf_to_constraints,PowerConstraintsParameters>
+    TypeTree::SimplePowerNodeTransformation<PowerGridFunction,gf_to_constraints,PowerConstraintsParameters>
     registerNodeTransformation(PowerGridFunction*, gf_to_constraints*, PowerGridFunctionTag*);
 
     // trafos for composite nodes
-#if HAVE_VARIADIC_TEMPLATES
     template<typename CompositeGridFunction>
-    Dune::TypeTree::SimpleVariadicCompositeNodeTransformation<CompositeGridFunction,gf_to_constraints,CompositeConstraintsParameters>
+    TypeTree::SimpleCompositeNodeTransformation<CompositeGridFunction,gf_to_constraints,CompositeConstraintsParameters>
     registerNodeTransformation(CompositeGridFunction*, gf_to_constraints*, CompositeGridFunctionTag*);
-#else
-    template<typename CompositeGridFunction>
-    Dune::TypeTree::SimpleCompositeNodeTransformation<CompositeGridFunction,gf_to_constraints,CompositeConstraintsParameters>
-    registerNodeTransformation(CompositeGridFunction*, gf_to_constraints*, CompositeGridFunctionTag*);
-#endif
 
     //! construct constraints
     /**
@@ -696,7 +690,7 @@ namespace Dune {
       assemble(const F& f, const GFS& gfs, const GV& gv, CG& cg, const bool verbose)
       {
         // type of transformed tree
-        typedef typename Dune::TypeTree::TransformTree<F,gf_to_constraints> Transformation;
+        typedef typename TypeTree::TransformTree<F,gf_to_constraints> Transformation;
         typedef typename Transformation::Type P;
         // transform tree
         P p = Transformation::transform(f);

@@ -14,7 +14,7 @@
 #include <dune/common/typetraits.hh>
 #include <dune/common/deprecated.hh>
 
-#include <dune/typetree/compositenodemacros.hh>
+#include <dune/typetree/compositenode.hh>
 #include <dune/typetree/powernode.hh>
 #include <dune/typetree/traversal.hh>
 #include <dune/typetree/visitor.hh>
@@ -120,18 +120,18 @@ namespace Dune {
 
 
 
-    template<DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
+    template<typename... Children>
     class CompositeEntityBlockedLocalOrdering
-      : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
-      , public LocalOrderingBase<typename DUNE_TYPETREE_COMPOSITENODE_FIRST_CHILD::Traits::GridView,
-                                 typename DUNE_TYPETREE_COMPOSITENODE_FIRST_CHILD::Traits::DOFIndex,
-                                 typename DUNE_TYPETREE_COMPOSITENODE_FIRST_CHILD::Traits::ContainerIndex>
+      : public TypeTree::CompositeNode<Children...>
+      , public LocalOrderingBase<typename first_type<Children...>::type::Traits::GridView,
+                                 typename first_type<Children...>::type::Traits::DOFIndex,
+                                 typename first_type<Children...>::type::Traits::ContainerIndex>
     {
 
-      typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE Node;
-      typedef LocalOrderingBase<typename DUNE_TYPETREE_COMPOSITENODE_FIRST_CHILD::Traits::GridView,
-                                typename DUNE_TYPETREE_COMPOSITENODE_FIRST_CHILD::Traits::DOFIndex,
-                                typename DUNE_TYPETREE_COMPOSITENODE_FIRST_CHILD::Traits::ContainerIndex> Base;
+      typedef TypeTree::CompositeNode<Children...> Node;
+      typedef LocalOrderingBase<typename first_type<Children...>::type::Traits::GridView,
+                                typename first_type<Children...>::type::Traits::DOFIndex,
+                                typename first_type<Children...>::type::Traits::ContainerIndex> Base;
 
     public:
 
@@ -139,8 +139,8 @@ namespace Dune {
 
       static const bool consume_tree_index = true;
 
-      CompositeEntityBlockedLocalOrdering(bool container_blocked, DUNE_TYPETREE_COMPOSITENODE_STORAGE_CONSTRUCTOR_SIGNATURE)
-        : Node(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES)
+      CompositeEntityBlockedLocalOrdering(bool container_blocked, Dune::shared_ptr<Children>... children)
+        : Node(children...)
         , Base(*this,container_blocked,nullptr)
       {}
 
