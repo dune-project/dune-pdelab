@@ -1,5 +1,5 @@
-If you want to use your dune-pdelab code from release 1.0.1 with
-release 1.1.0. you have to adapt some things:
+If you want to use your dune-pdelab code from release 1.1 with
+release 2.0. you have to adapt some things:
 
 ISTL Backends
 *************

@@ -39,7 +39,8 @@ PDELab depends on the following software packages:
 The following software is optional
 
 * PETSc 3.3 [5] - there is an experimental backend for PETSc vectors and
-  matrices. See RELEASE_NOTES for details.
+  matrices. See RELEASE_NOTES for details. WARNING: The PETSC backend is
+  currently broken.
 
 * Eigen 3.1.0 [6] - there is an experimental backend for Eigen vectors and
   matrices as well as some solvers. See RELEASE_NOTES for details.
