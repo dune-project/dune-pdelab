@@ -25,6 +25,13 @@ WARNING: Do not try to use PDELab 2.0 with the 2.3.0 release of the core modules
 Changes
 =======
 
+PDELab 3.0
+----------
+
+- PDELab has updated its minimum compiler requirements. You now need a compiler that is at
+  least compatible with GCC 4.5 in C++11 mode.
+
+
 PDELab 2.0
 ----------
 
