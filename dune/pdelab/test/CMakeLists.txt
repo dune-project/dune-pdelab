@@ -145,6 +145,11 @@ if(GMP_FOUND)
   add_executable(testopbfem testopbfem.cc)
   target_link_libraries(testopbfem dunepdelab ${DUNE_LIBS})
   add_dune_gmp_flags(testopbfem)
+
+  list(APPEND NORMALTESTS test-dg-amg)
+  add_executable(test-dg-amg test-dg-amg.cc)
+  target_link_libraries(test-dg-amg dunepdelab ${DUNE_LIBS})
+  add_dune_gmp_flags(test-dg-amg)
 endif(GMP_FOUND )
 
 list(APPEND NORMALTESTS testrtfem)
@@ -154,6 +159,10 @@ target_link_libraries(testrtfem dunepdelab ${DUNE_LIBS})
 list(APPEND NORMALTESTS testbdmfem)
 add_executable(testbdmfem testbdmfem.cc)
 target_link_libraries(testbdmfem dunepdelab ${DUNE_LIBS})
+
+list(APPEND NORMALTESTS testvectoriterator)
+add_executable(testvectoriterator testvectoriterator.cc)
+target_link_libraries(testvectoriterator dunepdelab ${DUNE_LIBS})
 
 foreach(i ${NORMALTESTS})
   add_test(${i} ${i})
