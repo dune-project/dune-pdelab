@@ -12,19 +12,11 @@ finiteelementmap_HEADERS =			\
 	monomfem.hh				\
 	opbfem.hh				\
 	p0fem.hh				\
-	p12dfem.hh				\
-	p1fem.hh				\
 	pk1dbasis.hh				\
-	pk2dfem.hh				\
-	pk3dfem.hh				\
 	pkfem.hh				\
 	powerfem.hh				\
-	q12dfem.hh				\
-	q1fem.hh				\
-	q22dfem.hh				\
 	qkdg.hh					\
 	qkfem.hh				\
-	rannacher_turek2dfem.hh			\
 	rannacherturekfem.hh			\
 	raviartthomasfem.hh			\
 	rt0cube2dfem.hh				\
