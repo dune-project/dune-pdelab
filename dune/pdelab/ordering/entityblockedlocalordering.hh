@@ -124,15 +124,15 @@ namespace Dune {
     template<typename... Children>
     class CompositeEntityBlockedLocalOrdering
       : public TypeTree::CompositeNode<Children...>
-      , public LocalOrderingBase<typename TypeTree::first_type<Children...>::type::Traits::GridView,
-                                 typename TypeTree::first_type<Children...>::type::Traits::DOFIndex,
-                                 typename TypeTree::first_type<Children...>::type::Traits::ContainerIndex>
+      , public LocalOrderingBase<typename first_type<Children...>::type::Traits::GridView,
+                                 typename first_type<Children...>::type::Traits::DOFIndex,
+                                 typename first_type<Children...>::type::Traits::ContainerIndex>
     {
 
       typedef TypeTree::CompositeNode<Children...> Node;
-      typedef LocalOrderingBase<typename TypeTree::first_type<Children...>::type::Traits::GridView,
-                                typename TypeTree::first_type<Children...>::type::Traits::DOFIndex,
-                                typename TypeTree::first_type<Children...>::type::Traits::ContainerIndex> Base;
+      typedef LocalOrderingBase<typename first_type<Children...>::type::Traits::GridView,
+                                typename first_type<Children...>::type::Traits::DOFIndex,
+                                typename first_type<Children...>::type::Traits::ContainerIndex> Base;
 
     public:
 
