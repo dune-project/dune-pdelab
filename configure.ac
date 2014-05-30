@@ -52,7 +52,6 @@ AC_CONFIG_FILES([
   dune/pdelab/gridoperator/common/Makefile
   dune/pdelab/gridoperator/default/Makefile
   dune/pdelab/gridoperator/onestep/Makefile
-  dune/pdelab/gridoperatorspace/Makefile
   dune/pdelab/instationary/Makefile
   dune/pdelab/linearsolver/Makefile
   dune/pdelab/localoperator/Makefile

@@ -11,7 +11,6 @@ set(SUBDIRS
         function
         gridfunctionspace
         gridoperator
-        gridoperatorspace
         instationary
         linearsolver
         localoperator
