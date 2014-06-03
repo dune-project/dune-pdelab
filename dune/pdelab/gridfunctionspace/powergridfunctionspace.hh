@@ -200,6 +200,12 @@ namespace Dune {
         , ImplementationBase(backend,ordering_tag)
       {}
 
+      template<typename... Children>
+      PowerGridFunctionSpace(shared_ptr<Children>... children)
+        : BaseT(children...)
+        , ImplementationBase(Backend(),OrderingTag())
+      {}
+
       //! Direct access to the DOF ordering.
       const Ordering &ordering() const
       {
