@@ -229,8 +229,11 @@ namespace Dune {
             , _oend(p._overflow.end())
           {
             // catch corner case with completely empty row
-            if ((!_at_end) && _it == _end)
-              _at_end = _oit != _oend && _oit->first == _row;
+            if ((!_at_end) && (_it == _end || *_it == empty))
+              {
+                _in_overflow = true;
+                _at_end = _oit == _oend || _oit->first != _row;
+              }
           }
 
           size_type _row;
