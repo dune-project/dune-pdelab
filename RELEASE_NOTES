@@ -123,7 +123,7 @@ PDELab 2.0
 
 - The constructors of the StationaryLinearProblemSolver have been modified to use same order of parameters
   as the one of the Newton solver. Moreover, there are now also constructors that load the parameters from
-  a Dune::ParamterTree. The old constructors have been deprecated and will be removed after PDELab 2.0.
+  a Dune::ParameterTree. The old constructors have been deprecated and will be removed after PDELab 2.0.
 
 - The Eigen backend is mostly functional now and works correctly with the new ordering infrastructure.
 
