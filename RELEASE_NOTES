@@ -1,7 +1,7 @@
 PDELab
 ======
 
-This is the 2.0 release of PDELab, a PDE discretization toolkit built
+This is the 2.0.0-rc1 release of PDELab, a PDE discretization toolkit built
 on top of the DUNE framework [0]. License information can be found in the file
 COPYING.
 
@@ -132,6 +132,11 @@ PDELab 2.0
 
 - It is now possible to use a diagonal local matrix for the jacobian assembly to reduce the required memory
   from N^2 to N if N is the number of DOFs per element.
+
+Releasy history
+
+  - PDELab 2.0.0-rc1
+    - initial release candidate
 
 
 PDELab 1.1
