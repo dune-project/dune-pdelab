@@ -162,22 +162,30 @@ namespace Dune {
       };
 
       //! constructor
-      GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce_, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
+      GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
         : BaseT(backend,ordering_tag)
-        , defaultce(ce_)
         , gv(gridview)
         , pfem(stackobject_to_shared_ptr(fem))
-        , ce(ce_)
+        , _pce(stackobject_to_shared_ptr(ce))
       {
       }
 
       //! constructor
-      GridFunctionSpace (const GV& gridview, const shared_ptr<const FEM>& fem, const CE& ce_, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
+      GridFunctionSpace (const GV& gridview, const shared_ptr<const FEM>& fem, const CE& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
+      DUNE_DEPRECATED_MSG("Use either a constructor that passes both FiniteElementMap and ConstraintsEngine as const reference \
+(for objects with externally controlled lifetime) or as shared_ptr (this GridFunctionSpace will assume shared ownership of both objects).")
         : BaseT(backend,ordering_tag)
-        , defaultce(ce_)
         , gv(gridview)
         , pfem(fem)
-        , ce(ce_)
+        , _pce(stackobject_to_shared_ptr(ce))
+      {}
+
+      //! constructor
+      GridFunctionSpace (const GV& gridview, const shared_ptr<const FEM>& fem, const shared_ptr<const CE>& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
+        : BaseT(backend,ordering_tag)
+        , gv(gridview)
+        , pfem(fem)
+        , _pce(ce)
       {}
 
       //! constructor
@@ -185,7 +193,7 @@ namespace Dune {
         : BaseT(backend,ordering_tag)
         , gv(gridview)
         , pfem(stackobject_to_shared_ptr(fem))
-        , ce(defaultce)
+        , _pce(make_shared<CE>())
       {}
 
       //! constructor
@@ -193,7 +201,7 @@ namespace Dune {
         : BaseT(backend,ordering_tag)
         , gv(gridview)
         , pfem(fem)
-        , ce(defaultce)
+        , _pce(make_shared<CE>())
       {}
 
       //! get grid view
@@ -214,10 +222,16 @@ namespace Dune {
         return pfem;
       }
 
-      // return constraints engine
+      //! return constraints engine
       const typename Traits::ConstraintsType& constraints () const
       {
-        return ce;
+        return *_pce;
+      }
+
+      //! return storage of constraints engine
+      shared_ptr<const CE> constraintsStorage () const
+      {
+        return _pce;
       }
 
       //------------------------------
@@ -295,10 +309,9 @@ namespace Dune {
         _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
       }
 
-      CE defaultce;
       GV gv;
       shared_ptr<FEM const> pfem;
-      const CE& ce;
+      shared_ptr<CE const> _pce;
 
       mutable shared_ptr<Ordering> _ordering;
     };
