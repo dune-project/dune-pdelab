@@ -279,6 +279,8 @@ namespace Dune {
           {
             // convert per-entity sizes to offsets
             std::partial_sum(_entity_dof_offsets.begin(),_entity_dof_offsets.end(),_entity_dof_offsets.begin());
+            _fixed_size = false;
+            _codim_fixed_size.reset();
           }
       }
 

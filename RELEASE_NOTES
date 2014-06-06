@@ -1,7 +1,7 @@
 PDELab
 ======
 
-This is the 2.0 release of PDELab, a PDE discretization toolkit built
+This is the 2.0.0-rc1 release of PDELab, a PDE discretization toolkit built
 on top of the DUNE framework [0]. License information can be found in the file
 COPYING.
 
@@ -130,7 +130,7 @@ PDELab 2.0
 
 - The constructors of the StationaryLinearProblemSolver have been modified to use same order of parameters
   as the one of the Newton solver. Moreover, there are now also constructors that load the parameters from
-  a Dune::ParamterTree. The old constructors have been deprecated and will be removed after PDELab 2.0.
+  a Dune::ParameterTree. The old constructors have been deprecated and will be removed after PDELab 2.0.
 
 - The Eigen backend is mostly functional now and works correctly with the new ordering infrastructure.
 
@@ -139,6 +139,11 @@ PDELab 2.0
 
 - It is now possible to use a diagonal local matrix for the jacobian assembly to reduce the required memory
   from N^2 to N if N is the number of DOFs per element.
+
+Releasy history
+
+  - PDELab 2.0.0-rc1
+    - initial release candidate
 
 
 PDELab 1.1

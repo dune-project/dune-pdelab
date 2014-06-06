@@ -116,10 +116,12 @@ namespace Dune {
               }
             std::partial_sum(_gt_dof_offsets.begin(),_gt_dof_offsets.end(),_gt_dof_offsets.begin());
             _block_count = _gt_dof_offsets.back();
+            _codim_fixed_size.set();
           }
         else
           {
             _block_count = _size = lo._entity_dof_offsets.back();
+            _codim_fixed_size.reset();
           }
 
         _fixed_size = lo._fixed_size;

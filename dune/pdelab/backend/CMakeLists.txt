@@ -1,6 +1,6 @@
 set(commondir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/backend)
 set(common_HEADERS  backendselector.hh
-                 dense.hh
+                 eigen.hh
                  eigenmatrixbackend.hh
                  eigensolverbackend.hh
                  eigenvectorbackend.hh
@@ -14,6 +14,7 @@ set(common_HEADERS  backendselector.hh
                  petscutility.hh
                  petscvectorbackend.hh
                  seqistlsolverbackend.hh
+                 simple.hh
                  solver.hh
                  tags.hh
                  )
