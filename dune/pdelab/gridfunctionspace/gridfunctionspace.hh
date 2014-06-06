@@ -296,7 +296,7 @@ namespace Dune {
       }
 
       CE defaultce;
-      const GV gv;
+      GV gv;
       shared_ptr<FEM const> pfem;
       const CE& ce;
 
