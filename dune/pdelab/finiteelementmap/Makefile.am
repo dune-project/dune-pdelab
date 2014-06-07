@@ -24,11 +24,13 @@ finiteelementmap_HEADERS =			\
 	pk2dfem.hh				\
 	pk3dfem.hh				\
 	pkfem.hh				\
+	pkqkfem.hh				\
 	powerfem.hh				\
 	q12dfem.hh				\
 	q1fem.hh				\
 	q22dfem.hh				\
 	qkdg.hh					\
+	qkdggl.hh				\
 	qkfem.hh				\
 	rannacher_turek2dfem.hh			\
 	rannacherturekfem.hh			\
