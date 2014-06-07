@@ -1,5 +1,6 @@
 set(commondir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/localoperator)
 set(common_HEADERS
+  callswitch.hh
   cg_stokes.hh
   convectiondiffusion.hh
   convectiondiffusiondg.hh
@@ -14,6 +15,8 @@ set(common_HEADERS
   diffusionmixed.hh
   diffusionparam.hh
   electrodynamic.hh
+  errorindicatordg.hh
+  eval.hh
   flags.hh
   idefault.hh
   interface.hh
