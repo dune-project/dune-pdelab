@@ -6,6 +6,7 @@ set(gridoperatorcommon_HEADERS
   assembler.hh
   assemblerutilities.hh
   borderdofexchanger.hh
+  diagonallocalmatrix.hh
   gridoperatorutilities.hh
   localassemblerenginebase.hh
   localmatrix.hh
