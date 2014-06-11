@@ -2,12 +2,16 @@ set(gridoperatorcommondir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/gridoperator/
 
 set(headercheck_IGNORE  assembler.hh)
 
-set(gridoperatorcommon_HEADERS             
-        assembler.hh                    
-        assemblerutilities.hh           
-        gridoperatorutilities.hh        
-        localassemblerenginebase.hh     
-        timesteppingparameterinterface.hh)
+set(gridoperatorcommon_HEADERS
+  assembler.hh
+  assemblerutilities.hh
+  borderdofexchanger.hh
+  diagonallocalmatrix.hh
+  gridoperatorutilities.hh
+  localassemblerenginebase.hh
+  localmatrix.hh
+  timesteppingparameterinterface.hh
+  )
 
 # include not needed for CMake
 # include $(top_srcdir)/am/global-rules

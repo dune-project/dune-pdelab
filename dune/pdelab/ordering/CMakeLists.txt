@@ -6,6 +6,7 @@ install(FILES
   interleavedordering.hh
   leafgridviewordering.hh
   leaflocalordering.hh
+  leaforderingbase.hh
   lexicographicordering.hh
   localorderingbase.hh
   orderingbase.hh

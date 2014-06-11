@@ -100,7 +100,7 @@ namespace Dune {
           // compress first number to [0,2]
           unsigned int n0_compressed = (n0 > n1) + (n0 > n2);
           // translate to permutation index
-          return _variant[2 * n0_compressed + (n2 > n1)];
+          return _variant[2 * n0_compressed + (n1 > n2)];
         }
 
         bool fixedSize() const

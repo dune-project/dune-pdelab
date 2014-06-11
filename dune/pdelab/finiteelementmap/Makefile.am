@@ -14,8 +14,10 @@ finiteelementmap_HEADERS =			\
 	p0fem.hh				\
 	pk1dbasis.hh				\
 	pkfem.hh				\
+	pkqkfem.hh				\
 	powerfem.hh				\
 	qkdg.hh					\
+	qkdggl.hh				\
 	qkfem.hh				\
 	rannacherturekfem.hh			\
 	raviartthomasfem.hh			\
