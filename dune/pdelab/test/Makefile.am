@@ -168,13 +168,13 @@ testlocalfunctionspace_LDADD =			\
         $(LDADD)                                \
 	$(ALBERTA_LIBS)
 
-NORMALTESTS += testp12dinterpolation
-testp12dinterpolation_SOURCES = testp12dinterpolation.cc
-testp12dinterpolation_CPPFLAGS = $(AM_CPPFLAGS)				\
+NORMALTESTS += testpk2dinterpolation
+testpk2dinterpolation_SOURCES = testpk2dinterpolation.cc
+testpk2dinterpolation_CPPFLAGS = $(AM_CPPFLAGS)				\
 	$(ALBERTA2D_CPPFLAGS)
-testp12dinterpolation_LDFLAGS = $(AM_LDFLAGS)	\
+testpk2dinterpolation_LDFLAGS = $(AM_LDFLAGS)	\
 	$(ALBERTA2D_LDFLAGS)
-testp12dinterpolation_LDADD =					\
+testpk2dinterpolation_LDADD =					\
 	$(LDADD)                                \
 	$(ALBERTA2D_LIBS)
 
