@@ -4,6 +4,8 @@
 #ifndef DUNE_PDELAB_GRIDOPERATOR_COMMON_LOCALMATRIX_HH
 #define DUNE_PDELAB_GRIDOPERATOR_COMMON_LOCALMATRIX_HH
 
+#include <dune/common/iteratorfacades.hh>
+
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 
 namespace Dune {

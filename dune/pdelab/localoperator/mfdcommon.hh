@@ -1,6 +1,7 @@
 #ifndef DUNE_PDELAB_MFDCOMMON_HH
 #define DUNE_PDELAB_MFDCOMMON_HH
 
+#include <iomanip>
 #include <vector>
 #include <dune/common/fvector.hh>
 #include <dune/geometry/referenceelements.hh>
