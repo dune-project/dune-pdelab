@@ -23,7 +23,13 @@ add_subdirectory(common)
 add_subdirectory(eigen)
 add_subdirectory(istl)
 add_subdirectory(simple)
-# include not needed for CMake
-# include $(top_srcdir)/am/global-rules
+
+if(NOT HAVE_EIGEN)
+  exclude_from_headercheck(
+    eigen.hh
+    eigenmatrixbackend.hh
+    eigensolverbackend.hh
+    eigenvectorbackend.hh)
+endif()
 
 install(FILES ${common_HEADERS} DESTINATION ${commondir})
