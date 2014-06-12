@@ -146,7 +146,7 @@ int main(int argc, char** argv)
          result, 250000, "alberta-triangle");
     test(TriangulatedUnitSquareMaker<Dune::AlbertaGrid<2, 2>    >(),
          result, 250000, "alberta-square");
-#endif
+#endif // HAVE_ALBERTA
 
 #if HAVE_ALUGRID
     test(UnitTriangleMaker          <Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> >(),
