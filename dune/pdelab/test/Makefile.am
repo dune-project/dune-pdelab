@@ -55,7 +55,8 @@ GRIDDIM = 2
 
 # scripts are not distributed automatically
 # but since this is need for make all:
-EXTRA_DIST = CMakeLists.txt make_pvd.sh
+EXTRA_DIST = CMakeLists.txt make_pvd.sh \
+             grids grids/*
 
 NORMALTESTS += testanalytic
 testanalytic_SOURCES = testanalytic.cc
