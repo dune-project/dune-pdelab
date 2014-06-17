@@ -8,8 +8,8 @@
 
     These classes are experimental !
 
-    To see an example how they might simplify your life see
-    dune-pdelab-howto/src/convection-diffusion/tutorial.cc
+    To see examples how they might simplify your life see
+    dune-pdelab-howto/src/boilerplatetutorial/*.cc
 */
 
 // first of all we include a lot of dune grids and pdelab files
