@@ -9,6 +9,7 @@
 #include <dune/common/static_assert.hh>
 #include <dune/common/typetraits.hh>
 #include <dune/common/reservedvector.hh>
+#include <dune/common/std/constexpr.hh>
 #include <dune/typetree/visitor.hh>
 
 #include <dune/pdelab/ordering/utility.hh>
@@ -43,6 +44,37 @@ namespace Dune {
       private:
 
         std::size_t _size;
+        const EntityIndex& _entity_index;
+
+      };
+
+
+      template<typename EntityIndex, typename OffsetIterator>
+      struct get_leaf_offsets_for_entity
+        : public TypeTree::TreeVisitor
+        , public TypeTree::DynamicTraversal
+      {
+
+        template<typename Ordering, typename TreePath>
+        void leaf(const Ordering& ordering, TreePath tp)
+        {
+          *(++_oit) = ordering.size(_entity_index);
+        }
+
+        get_leaf_offsets_for_entity(const EntityIndex& entity_index, OffsetIterator oit)
+          : _oit(oit)
+          , _entity_index(entity_index)
+        {}
+
+        //! Export current position of offset iterator - required for MultiDomain support
+        OffsetIterator offsetIterator() const
+        {
+          return _oit;
+        }
+
+      private:
+
+        OffsetIterator _oit;
         const EntityIndex& _entity_index;
 
       };
@@ -232,12 +264,13 @@ namespace Dune {
       }
 
       //! return vector of global indices associated with the given entity
-      template<typename Entity, typename ContainerIndex, typename DOFIndex, bool map_dof_indices>
-      size_type dataHandleIndices (const Entity& e,
-                                   std::vector<ContainerIndex>& container_indices,
-                                   std::vector<DOFIndex>& dof_indices,
-                                   std::integral_constant<bool,map_dof_indices> map_dof_indices_value
-                                   ) const
+      template<typename Entity, typename ContainerIndex, typename DOFIndex, typename OffsetIterator, bool map_dof_indices>
+      void dataHandleIndices (const Entity& e,
+                              std::vector<ContainerIndex>& container_indices,
+                              std::vector<DOFIndex>& dof_indices,
+                              OffsetIterator oit,
+                              std::integral_constant<bool,map_dof_indices> map_dof_indices_value
+                              ) const
       {
         typedef typename GFS::Ordering Ordering;
 
@@ -253,10 +286,15 @@ namespace Dune {
           gfs().gridView().indexSet().index(e)
         );
 
-        get_size_for_entity<EntityIndex> get_size(ei);
-        TypeTree::applyToTree(gfs().ordering(),get_size);
+        get_leaf_offsets_for_entity<EntityIndex,OffsetIterator> get_offsets(ei,oit);
+        TypeTree::applyToTree(gfs().ordering(),get_offsets);
+        OffsetIterator end_oit = oit + (TypeTree::TreeInfo<Ordering>::leafCount + 1);
 
-        container_indices.resize(get_size.size());
+        // convert sizes to offsets - last entry contains total size
+        std::partial_sum(oit,end_oit,oit);
+        size_type size = *(oit + TypeTree::TreeInfo<Ordering>::leafCount);
+
+        container_indices.resize(size);
         // Clear index state
         for (typename std::vector<ContainerIndex>::iterator it = container_indices.begin(),
                endit = container_indices.end();
@@ -264,7 +302,7 @@ namespace Dune {
              ++it)
           it->clear();
 
-        setup_dof_indices(dof_indices,get_size.size(),ei,map_dof_indices_value);
+        setup_dof_indices(dof_indices,size,ei,map_dof_indices_value);
 
         indices_for_entity<
           DOFIndex,
@@ -274,7 +312,6 @@ namespace Dune {
           > extract_indices(ei,container_indices.begin(),dof_indices_begin(dof_indices,map_dof_indices_value));
         TypeTree::applyToTree(gfs().ordering(),extract_indices);
 
-        return get_size.size();
       }
 
     protected:

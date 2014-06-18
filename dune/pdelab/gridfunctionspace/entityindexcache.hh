@@ -3,6 +3,9 @@
 #ifndef DUNE_PDELAB_ENTITYINDEXCACHE_HH
 #define DUNE_PDELAB_ENTITYINDEXCACHE_HH
 
+#include <dune/common/array.hh>
+#include <dune/typetree/utility.hh>
+
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
 namespace Dune {
@@ -26,23 +29,30 @@ namespace Dune {
       typedef std::vector<CI> CIVector;
       typedef std::vector<DI> DIVector;
 
+    private:
+
+      static const size_type leaf_count = TypeTree::TreeInfo<Ordering>::leafCount;
+
+    public:
+
+      typedef array<size_type,leaf_count + 1> Offsets;
+
       EntityIndexCache(const GFS& gfs)
         : _gfs(gfs)
         , _container_indices(gfs.maxLocalSize())
         , _dof_indices(map_dof_indices ? gfs.maxLocalSize() : 0)
-        , _size(0)
-      {}
+      {
+        std::fill(_offsets.begin(),_offsets.end(),0);
+      }
 
       template<typename Entity>
       void update(const Entity& e)
       {
+        std::fill(_offsets.begin(),_offsets.end(),0);
         if (!_gfs.dataHandleContains(Entity::codimension))
-          {
-            _size = 0;
-            return;
-          }
+          return;
 
-        _size = _gfs.dataHandleIndices(e,_container_indices,_dof_indices,std::integral_constant<bool,map_dof_indices>());
+        _gfs.dataHandleIndices(e,_container_indices,_dof_indices,_offsets.begin(),std::integral_constant<bool,map_dof_indices>());
       }
 
       const DI& dofIndex(size_type i) const
@@ -63,7 +73,12 @@ namespace Dune {
 
       size_type size() const
       {
-        return _size;
+        return _offsets[leaf_count];
+      }
+
+      const Offsets& offsets() const
+      {
+        return _offsets;
       }
 
     private:
@@ -71,7 +86,7 @@ namespace Dune {
       const GFS& _gfs;
       CIVector _container_indices;
       DIVector _dof_indices;
-      size_type _size;
+      Offsets _offsets;
 
     };
 
