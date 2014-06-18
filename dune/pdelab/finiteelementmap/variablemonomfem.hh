@@ -49,24 +49,24 @@ namespace Dune {
 
       /** Construct a VariableMonomLocalFiniteElementMap for GeometryType Dune::cube */
       VariableMonomLocalFiniteElementMap (const M & m, unsigned int defaultP) :
-        mapper_(m), polOrder_(mapper_.size(), defaultP), defaultP_(defaultP)
+        gt_(Dune::GeometryType::cube,d), mapper_(m), polOrder_(mapper_.size(), defaultP), defaultP_(defaultP)
       {
-        GeometryType cube;
-        cube.makeCube(d);
-        InitVariableMonomLocalFiniteElementMap<D,R,d,maxP>::init(finiteElements_, cube);
+        InitVariableMonomLocalFiniteElementMap<D,R,d,maxP>::init(finiteElements_, gt_);
       }
 
       /** Construct a VariableMonomLocalFiniteElementMap for a given GeometryType gt */
       VariableMonomLocalFiniteElementMap (const M & m, Dune::GeometryType gt, unsigned int defaultP) :
-        mapper_(m), polOrder_(mapper_.size(), defaultP), defaultP_(defaultP)
+        gt_(gt), mapper_(m), polOrder_(mapper_.size(), defaultP), defaultP_(defaultP)
       {
-        InitVariableMonomLocalFiniteElementMap<D,R,d,maxP>::init(finiteElements_, gt);
+        InitVariableMonomLocalFiniteElementMap<D,R,d,maxP>::init(finiteElements_, gt_);
       }
 
       //! \brief get local basis functions for entity
       template<class EntityType>
       const typename Traits::FiniteElementType& find (const EntityType& e) const
       {
+        if (e.type() != gt_)
+          DUNE_THROW(InvalidGeometryType,"Unsupported geometry type: Support only " << gt_ << ", but got " << e.type());
         return getFEM(getOrder(e));
       }
 
@@ -115,6 +115,7 @@ namespace Dune {
       }
 
     private:
+      const Dune::GeometryType gt_;
       const M & mapper_;
       std::vector<unsigned char> polOrder_;
       unsigned int defaultP_;
