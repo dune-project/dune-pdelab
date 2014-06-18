@@ -209,6 +209,26 @@ namespace Dune {
         return gfs().ordering().fixedSize(codim);
       }
 
+      //! Returns true if the sizes of the leaf orderings in this tree should be sent as part of the communcation.
+      /**
+       * The MultiDomain extensions require knowledge about the size of the individual
+       * orderings, which might belong to separate subdomains. Otherwise it is possible
+       * to have size mismatches for entities with codim > 0 if there are protruding edges
+       * in the parallel mesh partitioning.
+       *
+       * By default, this method will always return false. It must be overridden for cases
+       * where the data actually needs to be sent.
+       *
+       * This flag also modifies the behavior of the generic data handles, which will automatically
+       * send, receive and process the additional information. Note that if sendLeafSizes() returns
+       * true, the underlying DataHandleIF of the grid will always use the data type char to be able
+       * to send different types of data, which will automatically be marshalled to / from a byte stream.
+       */
+      DUNE_CONSTEXPR bool sendLeafSizes() const
+      {
+        return false;
+      }
+
       /*! how many objects of type DataType have to be sent for a given entity
 
         Note: Only the sender side needs to know this size.

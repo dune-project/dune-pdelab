@@ -14,6 +14,7 @@
 #include <dune/grid/common/datahandleif.hh>
 #include <dune/grid/common/gridenums.hh>
 
+#include <dune/pdelab/common/polymorphicbufferwrapper.hh>
 #include <dune/pdelab/gridfunctionspace/entityindexcache.hh>
 
 namespace Dune {
@@ -24,7 +25,16 @@ namespace Dune {
     struct DOFDataCommunicationDescriptor
     {
 
-      typedef E DataType;
+      typedef char DataType;
+
+      //! size type to use if communicating leaf ordering sizes
+      typedef std::size_t size_type;
+
+      // Wrap the grid's communication buffer to enable sending leaf ordering sizes along with the data
+      static const bool wrap_buffer = true;
+
+      // export original data type to fix up size information forwarded to standard gather / scatter functors
+      typedef E OriginalDataType;
 
       template<typename GFS>
       bool contains(const GFS& gfs, int dim, int codim) const
@@ -41,7 +51,8 @@ namespace Dune {
       template<typename GFS, typename Entity>
       std::size_t size(const GFS& gfs, const Entity& e) const
       {
-        return gfs.dataHandleSize(e);
+        // include size of leaf ordering offsets if necessary
+        return gfs.dataHandleSize(e) * sizeof(E) + (gfs.sendLeafSizes() ? TypeTree::TreeInfo<typename GFS::Ordering>::leafCount * sizeof(size_type) : 0);
       }
 
     };
@@ -52,6 +63,10 @@ namespace Dune {
     {
 
       typedef E DataType;
+
+      // Data is per entity, so we don't need to send leaf ordering size and thus can avoid wrapping the
+      // grid's communication buffer
+      static const bool wrap_buffer = false;
 
       template<typename GFS>
       bool contains(const GFS& gfs, int dim, int codim) const
@@ -98,6 +113,8 @@ namespace Dune {
       typedef typename CommunicationDescriptor::DataType DataType;
       typedef typename GFS::Traits::SizeType size_type;
 
+      static const size_type leaf_count = TypeTree::TreeInfo<typename GFS::Ordering>::leafCount;
+
       GFSDataHandle(const GFS& gfs, V& v, GatherScatter gather_scatter = GatherScatter(), CommunicationDescriptor communication_descriptor = CommunicationDescriptor())
         : _gfs(gfs)
         , _index_cache(gfs)
@@ -128,9 +145,39 @@ namespace Dune {
         return _communication_descriptor.size(_gfs,e);
       }
 
-      //! \brief pack data from user to message buffer
+      //! \brief pack data from user to message buffer - version with support for sending leaf ordering sizes
       template<typename MessageBuffer, typename Entity>
-      void gather(MessageBuffer& buff, const Entity& e) const
+      typename enable_if<
+        CommunicationDescriptor::wrap_buffer && AlwaysTrue<Entity>::value // we can only support this if the buffer is wrapped
+        >::type
+      gather(MessageBuffer& buff, const Entity& e) const
+      {
+        PolymorphicBufferWrapper<MessageBuffer> buf_wrapper(buff);
+        _index_cache.update(e);
+        _local_view.bind(_index_cache);
+        if (_gfs.sendLeafSizes())
+          {
+            // send the leaf ordering offsets as exported by the EntityIndexCache
+            for (auto it = _index_cache.offsets().begin() + 1,
+                   end_it = _index_cache.offsets().end();
+                 it != end_it;
+                 ++it)
+              {
+                buf_wrapper.write(static_cast<typename CommunicationDescriptor::size_type>(*it));
+              }
+          }
+        // send the normal data
+        if (_gather_scatter.gather(buf_wrapper,e,_local_view))
+          _local_view.commit();
+        _local_view.unbind();
+      }
+
+      //! \brief pack data from user to message buffer - version without support for sending leaf ordering sizes
+      template<typename MessageBuffer, typename Entity>
+      typename enable_if<
+        !CommunicationDescriptor::wrap_buffer && AlwaysTrue<Entity>::value
+        >::type
+      gather(MessageBuffer& buff, const Entity& e) const
       {
         _index_cache.update(e);
         _local_view.bind(_index_cache);
@@ -142,16 +189,68 @@ namespace Dune {
       /*! \brief unpack data from message buffer to user
 
         n is the number of objects sent by the sender
+
+        This is the version with support for receiving leaf ordering sizes
       */
       template<typename MessageBuffer, typename Entity>
-      void scatter(MessageBuffer& buff, const Entity& e, size_type n)
+      typename enable_if<
+        CommunicationDescriptor::wrap_buffer && AlwaysTrue<Entity>::value // we require the buffer to be wrapped
+        >::type
+      scatter(MessageBuffer& buff, const Entity& e, size_type n)
+      {
+        PolymorphicBufferWrapper<MessageBuffer> buf_wrapper(buff);
+        _index_cache.update(e);
+        _local_view.bind(_index_cache);
+        bool needs_commit = false;
+        if (_gfs.sendLeafSizes())
+          {
+            // receive leaf ordering offsets and store in local array
+            typename IndexCache::Offsets remote_offsets = {{0}};
+            for (auto it = remote_offsets.begin() + 1,
+                   end_it = remote_offsets.end();
+                 it != end_it;
+                 ++it)
+              {
+                typename CommunicationDescriptor::size_type data = 0;
+                buf_wrapper.read(data);
+                *it = data;
+              }
+            // call special version of scatter() that can handle empty leafs in the ordering tree
+            needs_commit = _gather_scatter.scatter(buf_wrapper,remote_offsets,_index_cache.offsets(),e,_local_view);
+          }
+        else
+          {
+            // call standard version of scatter - make sure to fix the reported communication size
+            needs_commit = _gather_scatter.scatter(buf_wrapper,n / sizeof(typename CommunicationDescriptor::OriginalDataType),e,_local_view);
+          }
+
+        if (needs_commit)
+          _local_view.commit();
+
+        _local_view.unbind();
+      }
+
+      /*! \brief unpack data from message buffer to user
+
+        n is the number of objects sent by the sender
+
+        This is the version without support for receiving leaf ordering sizes
+      */
+      template<typename MessageBuffer, typename Entity>
+      typename enable_if<
+        !CommunicationDescriptor::wrap_buffer && AlwaysTrue<Entity>::value
+        >::type
+      scatter(MessageBuffer& buff, const Entity& e, size_type n)
       {
         _index_cache.update(e);
         _local_view.bind(_index_cache);
+
         if (_gather_scatter.scatter(buff,n,e,_local_view))
           _local_view.commit();
+
         _local_view.unbind();
       }
+
 
     private:
 
@@ -183,6 +282,7 @@ namespace Dune {
         return false;
       }
 
+      // default scatter - requires function space structure to be identical on sender and receiver side
       template<typename MessageBuffer, typename Entity, typename LocalView>
       bool scatter(MessageBuffer& buff, size_type n, const Entity& e, LocalView& local_view) const
       {
@@ -201,6 +301,67 @@ namespace Dune {
               DUNE_THROW(Exception,"expected no DOFs in partition '" << e.partitionType() << "', but have " << local_view.size());
 
             for (std::size_t i = 0; i < local_view.size(); ++i)
+              {
+                typename LocalView::ElementType dummy;
+                buff.read(dummy);
+              }
+            return false;
+          }
+      }
+
+      // enhanced scatter with support for function spaces with different structure on sender and receiver side
+      template<typename MessageBuffer, typename Offsets, typename Entity, typename LocalView>
+      bool scatter(MessageBuffer& buff, const Offsets& remote_offsets, const Offsets& local_offsets, const Entity& e, LocalView& local_view) const
+      {
+        if (local_view.cache().gridFunctionSpace().containsPartition(e.partitionType()))
+          {
+            // the idea here is this:
+            // the compile time structure of the overall function space (and its ordering) will be identical on both sides
+            // of the communication, but one side may be missing information on some leaf orderings, e.g. because the DOF
+            // belongs to a MultiDomain subdomain that only has an active grid cell on one side of the communication.
+            // So we step through the leaves and simply ignore any block where one of the two sides is of size 0.
+            // Otherwise, it's business as usual: we make sure that the sizes from both sides match and then process all
+            // data with the DOF-local gather / scatter functor.
+            size_type remote_i = 0;
+            size_type local_i = 0;
+            bool needs_commit = false;
+            for (size_type block = 1; block < local_offsets.size(); ++block)
+              {
+                // we didn't get any data - just ignore
+                if (remote_offsets[block] == remote_i)
+                  {
+                    local_i = local_offsets[block];
+                    continue;
+                  }
+
+                // we got data for DOFs we don't have - drain buffer
+                if (local_offsets[block] == local_i)
+                  {
+                    for (; remote_i < remote_offsets[block]; ++remote_i)
+                      {
+                        typename LocalView::ElementType dummy;
+                        buff.read(dummy);
+                      }
+                    continue;
+                  }
+
+                if (remote_offsets[block] - remote_i != local_offsets[block] - local_i)
+                  DUNE_THROW(Exception,"size mismatch in GridFunctionSpace data handle block " << block << ", have " << local_offsets[block] - local_i << "DOFs, but received " << remote_offsets[block] - remote_i);
+
+                for (; local_i < local_offsets[block]; ++local_i)
+                  _gather_scatter.scatter(buff,local_view[local_i]);
+
+                remote_i = remote_offsets[block];
+                needs_commit = true;
+              }
+            return needs_commit;
+          }
+        else
+          {
+            if (local_view.size() != 0)
+              DUNE_THROW(Exception,"expected no DOFs in partition '" << e.partitionType() << "', but have " << local_view.size());
+
+            for (std::size_t i = 0; i < remote_offsets.back(); ++i)
               {
                 typename LocalView::ElementType dummy;
                 buff.read(dummy);
@@ -236,6 +397,7 @@ namespace Dune {
         return false;
       }
 
+      // see documentation in DataGatherScatter for further info on the scatter() implementations
       template<typename MessageBuffer, typename Entity, typename LocalView>
       bool scatter(MessageBuffer& buff, size_type n, const Entity& e, LocalView& local_view) const
       {
@@ -254,6 +416,61 @@ namespace Dune {
               DUNE_THROW(Exception,"expected no DOFs in partition '" << e.partitionType() << "', but have " << local_view.size());
 
             for (std::size_t i = 0; i < local_view.size(); ++i)
+              {
+                typename LocalView::ElementType dummy;
+                buff.read(dummy);
+              }
+            return false;
+          }
+      }
+
+      // see documentation in DataGatherScatter for further info on the scatter() implementations
+      template<typename MessageBuffer, typename Offsets, typename Entity, typename LocalView>
+      bool scatter(MessageBuffer& buff, const Offsets& remote_offsets, const Offsets& local_offsets, const Entity& e, LocalView& local_view) const
+      {
+        if (local_view.cache().gridFunctionSpace().containsPartition(e.partitionType()))
+          {
+            size_type remote_i = 0;
+            size_type local_i = 0;
+            bool needs_commit = false;
+            for (size_type block = 1; block < local_offsets.size(); ++block)
+              {
+
+                // we didn't get any data - just ignore
+                if (remote_offsets[block] == remote_i)
+                  {
+                    local_i = local_offsets[block];
+                    continue;
+                  }
+
+                // we got data for DOFs we don't have - drain buffer
+                if (local_offsets[block] == local_i)
+                  {
+                    for (; remote_i < remote_offsets[block]; ++remote_i)
+                      {
+                        typename LocalView::ElementType dummy;
+                        buff.read(dummy);
+                      }
+                    continue;
+                  }
+
+                if (remote_offsets[block] - remote_i != local_offsets[block] - local_i)
+                  DUNE_THROW(Exception,"size mismatch in GridFunctionSpace data handle block " << block << ", have " << local_offsets[block] - local_i << "DOFs, but received " << remote_offsets[block] - remote_i);
+
+                for (; local_i < local_offsets[block]; ++local_i)
+                  _gather_scatter.scatter(buff,e,local_view[local_i]);
+
+                remote_i = remote_offsets[block];
+                needs_commit = true;
+              }
+            return needs_commit;
+          }
+        else
+          {
+            if (local_view.size() != 0)
+              DUNE_THROW(Exception,"expected no DOFs in partition '" << e.partitionType() << "', but have " << local_view.size());
+
+            for (std::size_t i = 0; i < remote_offsets.back(); ++i)
               {
                 typename LocalView::ElementType dummy;
                 buff.read(dummy);
@@ -289,6 +506,7 @@ namespace Dune {
         return false;
       }
 
+      // see documentation in DataGatherScatter for further info on the scatter() implementations
       template<typename MessageBuffer, typename Entity, typename LocalView>
       bool scatter(MessageBuffer& buff, size_type n, const Entity& e, LocalView& local_view) const
       {
@@ -315,6 +533,62 @@ namespace Dune {
             return false;
           }
       }
+
+      // see documentation in DataGatherScatter for further info on the scatter() implementations
+      template<typename MessageBuffer, typename Offsets, typename Entity, typename LocalView>
+      bool scatter(MessageBuffer& buff, const Offsets& remote_offsets, const Offsets& local_offsets, const Entity& e, LocalView& local_view) const
+      {
+        if (local_view.cache().gridFunctionSpace().containsPartition(e.partitionType()))
+          {
+            size_type remote_i = 0;
+            size_type local_i = 0;
+            bool needs_commit = false;
+            for (size_type block = 1; block < local_offsets.size(); ++block)
+              {
+
+                // we didn't get any data - just ignore
+                if (remote_offsets[block] == remote_i)
+                  {
+                    local_i = local_offsets[block];
+                    continue;
+                  }
+
+                // we got data for DOFs we don't have - drain buffer
+                if (local_offsets[block] == local_i)
+                  {
+                    for (; remote_i < remote_offsets[block]; ++remote_i)
+                      {
+                        typename LocalView::ElementType dummy;
+                        buff.read(dummy);
+                      }
+                    continue;
+                  }
+
+                if (remote_offsets[block] - remote_i != local_offsets[block] - local_i)
+                  DUNE_THROW(Exception,"size mismatch in GridFunctionSpace data handle block " << block << ", have " << local_offsets[block] - local_i << "DOFs, but received " << remote_offsets[block] - remote_i);
+
+                for (; local_i < local_offsets[block]; ++local_i)
+                  _gather_scatter.scatter(buff,local_view.cache().containerIndex(local_i),local_view[local_i]);
+
+                remote_i = remote_offsets[block];
+                needs_commit = true;
+              }
+            return needs_commit;
+          }
+        else
+          {
+            if (local_view.size() != 0)
+              DUNE_THROW(Exception,"expected no DOFs in partition '" << e.partitionType() << "', but have " << local_view.size());
+
+            for (std::size_t i = 0; i < remote_offsets.back(); ++i)
+              {
+                typename LocalView::ElementType dummy;
+                buff.read(dummy);
+              }
+            return false;
+          }
+      }
+
 
       DataContainerIndexGatherScatter(GatherScatter gather_scatter = GatherScatter())
         : _gather_scatter(gather_scatter)
