@@ -1,7 +1,7 @@
 PDELab
 ======
 
-This is version 2.0.0-rc1 of the PDELab library.
+This is version 2.0.0-rc2 of the PDELab library.
 
 PDELab[0] is a PDE solver toolbox built on top of DUNE, the Distributed and Unified
 Numerics Environment [1].
@@ -28,10 +28,9 @@ Dependencies
 PDELab depends on the following software packages:
 
 * DUNE core libraries (dune-common, dune-geometry, dune-grid, dune-istl,
-  dune-localfunctions) version 2.3.1+, and their respective dependencies. As
-  of now, version 2.3.1 of the core modules has not been released yet, so you
-  will have to check out the branch releases/2.0. Using the 2.3.0 release WILL
-  NOT WORK due to a number of critical bugs in that version!
+  dune-localfunctions) version 2.3.1+, and their respective dependencies.
+
+  Using the 2.3.0 release WILL NOT WORK due to a number of critical bugs in that version!
 
 * The dune-typetree library, version 2.3.x, which you can obtain from [10].
 
