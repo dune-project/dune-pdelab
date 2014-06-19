@@ -8,8 +8,9 @@
 
     These classes are experimental !
 
-    To see examples how they might simplify your life see
-    dune-pdelab-howto/src/boilerplatetutorial/*.cc
+    To see examples how they might simplify your life, have a look at the
+    dune-pdelab-howto module, in particular at the examples in
+    dune-pdelab-howto/src/boilerplatetutorial/.
 */
 
 // first of all we include a lot of dune grids and pdelab files
