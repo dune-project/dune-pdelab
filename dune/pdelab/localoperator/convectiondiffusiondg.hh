@@ -707,11 +707,6 @@ namespace Dune {
         // transformation
         Dune::FieldMatrix<DF,dim,dim> jac;
 
-        // evaluate boundary condition
-        const Dune::FieldVector<DF,dim-1>
-          face_local = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
-        //BCType bctype = param.bctype(ig.intersection(),face_local);
-
         // compute weights
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
         Dune::FieldVector<RF,dim> An_F_s;
@@ -903,11 +898,6 @@ namespace Dune {
 
         // transformation
         Dune::FieldMatrix<DF,dim,dim> jac;
-
-        // evaluate boundary condition
-        const Dune::FieldVector<DF,dim-1>
-          face_local = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
-        //BCType bctype = param.bctype(ig.intersection(),face_local);
 
         // compute weights
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
