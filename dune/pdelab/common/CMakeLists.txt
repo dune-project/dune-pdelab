@@ -17,6 +17,7 @@ set(common_HEADERS
   logtag.hh
   multiindex.hh
   partitioninfoprovider.hh
+  polymorphicbufferwrapper.hh
   range.hh
   simpledofindex.hh
   topologyutility.hh

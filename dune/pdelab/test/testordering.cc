@@ -162,7 +162,7 @@ struct test<2,false> {
     typedef Dune::SingleCodimSingleGeomTypeMapper<GV, 0> CellMapper;
     CellMapper cellmapper(gv);
     typedef Dune::PDELab::VariableMonomLocalFiniteElementMap<CellMapper,float,double,GV::dimension> MonomFEM;
-    MonomFEM monomfem(cellmapper,2);
+    MonomFEM monomfem(cellmapper,gv.indexSet().geomTypes(0)[0],2);
 
     typedef Dune::PDELab::NoConstraints CON;
 
@@ -220,7 +220,7 @@ int main(int argc, char** argv)
       typedef Dune::ALUGrid<2,2,Dune::cube,Dune::nonconforming> Grid;
       Dune::FieldVector<double,2> l(0.0);
       Dune::FieldVector<double,2> u(1.0);
-      Dune::array<unsigned int,2> N = {1,1};
+      Dune::array<unsigned int,2> N = {{1,1}};
       Dune::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createCubeGrid(l,u,N);
       grid->globalRefine(1);
 

@@ -28,7 +28,7 @@ testlaplacedirichletccfv
 testlaplacedirichletp12d
 testlocalfunctionspace
 testmultistep
-testp12dinterpolation
+testpk2dinterpolation
 testpatternskeletoncallswitch
 testpk
 testpoisson

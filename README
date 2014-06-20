@@ -1,7 +1,7 @@
 PDELab
 ======
 
-This is version 2.0.0-rc1 of the PDELab library.
+This is version 2.0.0-rc2 of the PDELab library.
 
 PDELab[0] is a PDE solver toolbox built on top of DUNE, the Distributed and Unified
 Numerics Environment [1].

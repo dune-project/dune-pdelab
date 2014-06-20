@@ -19,6 +19,8 @@ namespace Dune {
     class FiniteElementMapError : public Exception {};
     //! \brief FiniteElementMap exception concerning the computation of the FiniteElementMap size
     class VariableElementSize : public FiniteElementMapError {};
+    //! \brief FiniteElementMap exception raised when trying to obtain a finite element for an unsupported GeometryType.
+    class InvalidGeometryType : public FiniteElementMapError {};
 
     //! \brief collect types exported by a finite element map
     template<class T>
