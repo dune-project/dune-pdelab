@@ -6,8 +6,14 @@ on top of the DUNE framework [0]. License information can be found in the file
 COPYING.
 
 PDELab 2.0 is a major release containing a large number of new features and improvements.
-Some of those changes  feature release mostly focused on fixing bugs, but it also
-includes a number of new features. For details, see the changelog below.
+Most importantly, the DOF handling and the interface to linear algebra have been completely
+rewritten, bringing improvements like faster and more memory-efficient matrix pattern
+construction, easier iteration over DOF vectors, built-in support for applying arbitrary
+permutations to the DOF order, among others. Another important new feature is the ability
+to do computations on non-overlapping grids without storing the ghost DOFs, reducing both
+the parallelization overhead and the complexity of the underlying code, in particular when
+using AMG. Finally, it is now possible to do adaptive calculations with nested function spaces.
+For details and an overview of the bug fixes in this release, see the changelog below.
 
 If you need help, please ask on our mailinglist [1]. Bugs can also be submitted
 to the PDELab bugtracker at [2] instead.
