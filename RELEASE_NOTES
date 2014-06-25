@@ -1,7 +1,7 @@
 PDELab
 ======
 
-This is the 2.0.0-rc2 release of PDELab, a PDE discretization toolkit built
+This is the 2.0.0 release of PDELab, a PDE discretization toolkit built
 on top of the DUNE framework [0]. License information can be found in the file
 COPYING.
 
@@ -138,6 +138,11 @@ PDELab 2.0
   from N^2 to N if N is the number of DOFs per element.
 
 Releasy history
+
+  - PDELab 2.0.0
+    - Fix instructions for obtaining dune-typetree.
+    - Link libdunepdelab against libdunecommon.
+    - Documentation fixes.
 
   - PDELab 2.0.0-rc2
     - Buildsystem fixes to include missing headers etc.
