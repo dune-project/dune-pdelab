@@ -17,6 +17,7 @@ common_HEADERS =				\
 	lockmanager.hh				\
 	logtag.hh				\
 	multiindex.hh				\
+	nullmutex.hh				\
 	partitioninfoprovider.hh		\
 	range.hh				\
 	simpledofindex.hh			\
@@ -31,7 +32,8 @@ noinst_LTLIBRARIES = libpdelabcommon.la
 libpdelabcommon_la_SOURCES =			\
 	clock.cc				\
 	hostname.cc				\
-	logtag.cc
+	logtag.cc				\
+	nullmutex.cc
 libpdelabcommon_la_CPPFLAGS = $(AM_CPPFLAGS)	\
 	$(POSIX_CLOCK_CPPFLAGS)
 libpdelabcommon_la_LDFLAGS = $(AM_LDFLAGS)	\
