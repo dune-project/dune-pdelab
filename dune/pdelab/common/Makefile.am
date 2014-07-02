@@ -14,6 +14,7 @@ common_HEADERS =				\
 	globaldofindex.hh			\
 	hostname.hh				\
 	jacobiantocurl.hh			\
+	lockmanager.hh				\
 	logtag.hh				\
 	multiindex.hh				\
 	partitioninfoprovider.hh		\
