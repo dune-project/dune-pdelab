@@ -6,6 +6,7 @@
 *eps
 *.log
 *.trs
+/testcoloredtbbgridoperator
 /testtbbgridoperator
 dgfparser.log
 testanalytic

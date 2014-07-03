@@ -74,6 +74,17 @@ testclock_CPPFLAGS = @AM_CPPFLAGS@
 testclock_LDFLAGS = @AM_LDFLAGS@
 testclock_LDADD = @LDADD@
 
+NORMALTESTS += testcoloredtbbgridoperator
+testcoloredtbbgridoperator_SOURCES = testcoloredtbbgridoperator.cc
+testcoloredtbbgridoperator_CPPFLAGS = $(AM_CPPFLAGS)	\
+	$(TBB_CPPFLAGS)
+testcoloredtbbgridoperator_LDFLAGS = $(AM_LDFLAGS)	\
+	$(TBB_LDFLAGS)
+testcoloredtbbgridoperator_LDADD =		\
+	$(TBB_LIBS)				\
+	$(LDADD)
+MOSTLYCLEANFILES += coloredtbbgridoperator_*.vtu
+
 # disable IntersectionIndexSet test for now, we know it's broken
 # if ALUGRID
 # NORMALTESTS += test-composed-iis-gfs
