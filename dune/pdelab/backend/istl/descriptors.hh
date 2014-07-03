@@ -3,7 +3,6 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_DESCRIPTORS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_DESCRIPTORS_HH
 
-#include <dune/common/static_assert.hh>
 #include <dune/pdelab/backend/istl/forwarddeclarations.hh>
 #include <dune/pdelab/backend/istl/matrixhelpers.hh>
 #include <dune/pdelab/backend/istl/utility.hh>
@@ -30,7 +29,7 @@ namespace Dune {
 
       typedef istl_vector_backend_tag tag;
 
-      dune_static_assert((block_size_ > 0),"block size for FieldVector has to be positive");
+      static_assert((block_size_ > 0),"block size for FieldVector has to be positive");
 
       typedef std::size_t size_type;
 

@@ -130,9 +130,9 @@ namespace Dune {
                            && (!LFS::isLeaf)>::type
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
-          dune_static_assert((TypeTree::TreeInfo<LFS>::depth == 2),
-                             "Automatic interpolation of vector-valued function " \
-                             "is restricted to trees of depth 1");
+          static_assert((TypeTree::TreeInfo<LFS>::depth == 2),
+                        "Automatic interpolation of vector-valued function " \
+                        "is restricted to trees of depth 1");
 
           typedef GridFunctionToLocalFunctionAdapter<F> LF;
           LF localf(f,e);
@@ -147,13 +147,13 @@ namespace Dune {
                            (!LFS::isLeaf)>::type
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
-          dune_static_assert((TypeTree::TreeInfo<LFS>::depth == 2),
-                             "Automatic interpolation of vector-valued function " \
-                             "is restricted to trees of depth 1");
-          dune_static_assert(LFS::CHILDREN == F::Traits::dimRange,
-                             "Number of children and dimension of range type " \
-                             "must match for automatic interpolation of " \
-                             "vector-valued function");
+          static_assert((TypeTree::TreeInfo<LFS>::depth == 2),
+                        "Automatic interpolation of vector-valued function " \
+                        "is restricted to trees of depth 1");
+          static_assert(LFS::CHILDREN == F::Traits::dimRange,
+                        "Number of children and dimension of range type " \
+                        "must match for automatic interpolation of "    \
+                        "vector-valued function");
 
           typedef GridFunctionToLocalFunctionAdapter<F> LF;
           LF localf(f,e);

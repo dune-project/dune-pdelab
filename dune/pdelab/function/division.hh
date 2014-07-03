@@ -3,8 +3,6 @@
 #ifndef DUNE_PDELAB_FUNCTION_DIVISION_HH
 #define DUNE_PDELAB_FUNCTION_DIVISION_HH
 
-#include <dune/common/static_assert.hh>
-
 #include <dune/pdelab/common/function.hh>
 
 namespace Dune {
@@ -20,8 +18,8 @@ namespace Dune {
       : public GridFunctionBase<typename GF1::Traits,
                                 DivisionGridFunctionAdapter<GF1,GF2> >
     {
-      dune_static_assert(GF2::Traits::dimRange == 1, "Range dimension must be "
-                         "1 for the divisor of a DivisionGridFunctionAdapter");
+      static_assert(GF2::Traits::dimRange == 1, "Range dimension must be "
+                    "1 for the divisor of a DivisionGridFunctionAdapter");
       typedef typename GF1::Traits T;
       typedef GridFunctionBase<T, DivisionGridFunctionAdapter<GF1,GF2>
               > Base;

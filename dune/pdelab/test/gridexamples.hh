@@ -6,7 +6,6 @@
 
 #include <dune/common/fvector.hh>
 #include <dune/common/shared_ptr.hh>
-#include <dune/common/static_assert.hh>
 
 #include <dune/geometry/type.hh>
 
@@ -72,8 +71,8 @@ public:
 
 template<typename Grid>
 class TriangulatedLDomainMaker {
-  dune_static_assert(Grid::dimension == 2, "Dimension of grid must be 2");
-  dune_static_assert(Grid::dimensionworld == 2, "Dimension of world must be 2");
+  static_assert(Grid::dimension == 2, "Dimension of grid must be 2");
+  static_assert(Grid::dimensionworld == 2, "Dimension of world must be 2");
 public:
   static Dune::shared_ptr<Grid> create() {
     Dune::GridFactory<Grid> gf;
@@ -108,8 +107,8 @@ public:
 
 template<typename Grid>
 class UnitTriangleMaker {
-  dune_static_assert(Grid::dimension == 2, "Dimension of grid must be 2");
-  dune_static_assert(Grid::dimensionworld == 2, "Dimension of world must be 2");
+  static_assert(Grid::dimension == 2, "Dimension of grid must be 2");
+  static_assert(Grid::dimensionworld == 2, "Dimension of world must be 2");
 public:
   static Dune::shared_ptr<Grid> create() {
     Dune::GridFactory<Grid> gf;
@@ -147,8 +146,8 @@ public:
 
 template<typename Grid>
 class TriangulatedUnitSquareMaker {
-  dune_static_assert(Grid::dimension == 2, "Dimension of grid must be 2");
-  dune_static_assert(Grid::dimensionworld == 2, "Dimension of world must be 2");
+  static_assert(Grid::dimension == 2, "Dimension of grid must be 2");
+  static_assert(Grid::dimensionworld == 2, "Dimension of world must be 2");
 public:
   static Dune::shared_ptr<Grid> create() {
     Dune::GridFactory<Grid> gf;
@@ -188,8 +187,8 @@ public:
 
 template<typename Grid>
 class UnitTetrahedronMaker {
-  dune_static_assert(Grid::dimension == 3, "Dimension of grid must be 3");
-  dune_static_assert(Grid::dimensionworld == 3, "Dimension of world must be 3");
+  static_assert(Grid::dimension == 3, "Dimension of grid must be 3");
+  static_assert(Grid::dimensionworld == 3, "Dimension of world must be 3");
 public:
   static Dune::shared_ptr<Grid> create() {
     Dune::GridFactory<Grid> gf;
@@ -219,8 +218,8 @@ public:
 // AlbertaSimplexGrid<3,3> cannot refine this, see Flyspry#569
 template<typename Grid>
 class TriangulatedUnitCubeMaker {
-  dune_static_assert(Grid::dimension == 3, "Dimension of grid must be 3");
-  dune_static_assert(Grid::dimensionworld == 3, "Dimension of world must be 3");
+  static_assert(Grid::dimension == 3, "Dimension of grid must be 3");
+  static_assert(Grid::dimensionworld == 3, "Dimension of world must be 3");
 public:
   static Dune::shared_ptr<Grid> create() {
     Dune::GridFactory<Grid> gf;
@@ -277,8 +276,8 @@ class TriangulatedUnitCubeMaker<Dune::AlbertaGrid<3,3> >
 // (0,7) as a common edge
 template<typename Grid>
 class KuhnTriangulatedUnitCubeMaker {
-  dune_static_assert(Grid::dimension == 3, "Dimension of grid must be 3");
-  dune_static_assert(Grid::dimensionworld == 3, "Dimension of world must be 3");
+  static_assert(Grid::dimension == 3, "Dimension of grid must be 3");
+  static_assert(Grid::dimensionworld == 3, "Dimension of world must be 3");
 public:
   static Dune::shared_ptr<Grid> create() {
     Dune::GridFactory<Grid> gf;

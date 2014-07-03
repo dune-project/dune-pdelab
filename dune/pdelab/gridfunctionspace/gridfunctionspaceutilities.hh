@@ -8,7 +8,6 @@
 
 #include<dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
-#include <dune/common/static_assert.hh>
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
@@ -273,13 +272,13 @@ namespace Dune {
      * \note This the non-specialized version of the
      *       DiscreteGridFunctionCurlTraits template.  It must be specialized
      *       for different values of dimRangeOfBasis.  If this non-specialized
-     *       version is instantiated, dune_static_assert() will be triggered.
+     *       version is instantiated, static_assert() will be triggered.
      */
     template<typename GV, typename RangeFieldType, int dimRangeOfBasis>
     struct DiscreteGridFunctionCurlTraits {
-      dune_static_assert(AlwaysFalse<GV>::value,
-                         "DiscreteGridFunctionCurl (and friends) work in 2D "
-                         "and 3D only");
+      static_assert(AlwaysFalse<GV>::value,
+                    "DiscreteGridFunctionCurl (and friends) work in 2D and 3D "
+                    "only");
     };
     //! Helper class to calculate the Traits of DiscreteGridFunctionCurl (1D)
     /**
@@ -294,9 +293,9 @@ namespace Dune {
                                   RangeFieldType, 2,
                                   FieldVector<RangeFieldType, 2> >
     {
-      dune_static_assert(GV::dimensionworld == 2,
-                         "World dimension of grid must be 2 for the curl of a "
-                         "scalar (1D) quantity");
+      static_assert(GV::dimensionworld == 2,
+                    "World dimension of grid must be 2 for the curl of a "
+                    "scalar (1D) quantity");
     };
     //! Helper class to calculate the Traits of DiscreteGridFunctionCurl (2D)
     /**
@@ -310,9 +309,9 @@ namespace Dune {
                                   RangeFieldType, 1,
                                   FieldVector<RangeFieldType, 1> >
     {
-      dune_static_assert(GV::dimensionworld == 2,
-                         "World dimension of grid must be 2 for the curl of a"
-                         "2D quantity");
+      static_assert(GV::dimensionworld == 2,
+                    "World dimension of grid must be 2 for the curl of a 2D "
+                    "quantity");
     };
     //! Helper class to calculate the Traits of DiscreteGridFunctionCurl (3D)
     /**
@@ -326,9 +325,9 @@ namespace Dune {
                                   RangeFieldType, 3,
                                   FieldVector<RangeFieldType, 3> >
     {
-      dune_static_assert(GV::dimensionworld == 3,
-                         "World dimension of grid must be 3 for the curl of a"
-                         "3D quantity");
+      static_assert(GV::dimensionworld == 3,
+                    "World dimension of grid must be 3 for the curl of a 3D "
+                    "quantity");
     };
 
     //! \brief convert a single component function space with experimental

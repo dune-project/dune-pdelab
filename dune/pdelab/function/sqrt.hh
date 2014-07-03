@@ -3,8 +3,6 @@
 #ifndef DUNE_PDELAB_FUNCTION_SQRT_HH
 #define DUNE_PDELAB_FUNCTION_SQRT_HH
 
-#include <dune/common/static_assert.hh>
-
 #include <dune/pdelab/common/function.hh>
 
 namespace Dune {
@@ -19,8 +17,8 @@ namespace Dune {
       : public GridFunctionBase<typename GF::Traits,
                                 SqrtGridFunctionAdapter<GF> >
     {
-      dune_static_assert(GF::Traits::dimRange == 1, "Dimension of range must "
-                         "be 1 to take the sqrt");
+      static_assert(GF::Traits::dimRange == 1, "Dimension of range must "
+                    "be 1 to take the sqrt");
 
       typedef typename GF::Traits T;
       typedef GridFunctionBase<T, SqrtGridFunctionAdapter<GF> >

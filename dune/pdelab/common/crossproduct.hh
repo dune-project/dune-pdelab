@@ -4,7 +4,6 @@
 #define DUNE_PDELAB_COMMON_CROSSPRODUCT_HH
 
 #include <dune/common/fvector.hh>
-#include <dune/common/static_assert.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -25,8 +24,8 @@ namespace Dune {
      */
     template<unsigned dimB_, unsigned dimC_>
     class CrossProduct {
-      dune_static_assert(AlwaysFalse<CrossProduct>::value,
-                         "CrossProduct cannot be used unspecialized");
+      static_assert(AlwaysFalse<CrossProduct>::value,
+                    "CrossProduct cannot be used unspecialized");
     public:
       //! dimension of \f$A\f$
       static const unsigned dimA;

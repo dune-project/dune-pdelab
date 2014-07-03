@@ -6,7 +6,6 @@
 #include <vector>
 #include <stack>
 
-#include <dune/common/static_assert.hh>
 #include <dune/common/typetraits.hh>
 #include <dune/common/reservedvector.hh>
 #include <dune/typetree/visitor.hh>
@@ -241,8 +240,8 @@ namespace Dune {
       {
         typedef typename GFS::Ordering Ordering;
 
-        dune_static_assert((is_same<ContainerIndex,typename Ordering::Traits::ContainerIndex>::value),
-                           "dataHandleContainerIndices() called with invalid ContainerIndex type.");
+        static_assert((is_same<ContainerIndex,typename Ordering::Traits::ContainerIndex>::value),
+                      "dataHandleContainerIndices() called with invalid ContainerIndex type.");
 
         typedef typename Ordering::Traits::DOFIndex::EntityIndex EntityIndex;
         EntityIndex ei;

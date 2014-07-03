@@ -5,7 +5,6 @@
 
 #include<dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
-#include <dune/common/static_assert.hh>
 
 namespace Dune {
   namespace PDELab {

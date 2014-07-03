@@ -6,7 +6,6 @@
 #include <sstream>
 
 #include <dune/common/deprecated.hh>
-#include <dune/common/static_assert.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/typetraits.hh>
 #include <dune/common/fvector.hh>
@@ -300,14 +299,14 @@ namespace Dune {
 								 typename T::Traits::RangeFieldType,
 								 T::Traits::dimRange,
 								 typename T::Traits::RangeType> Traits;
-      dune_static_assert(
+      static_assert(
        (is_same<typename T::Traits::DomainFieldType,
                 typename Traits::DomainFieldType>::value),
        "GridView's and wrapped Functions DomainFieldType don't match");
-      dune_static_assert(
+      static_assert(
        T::Traits::dimDomain==Traits::dimDomain,
        "GridView's and wrapped Functions dimDomain don't match");
-      dune_static_assert(
+      static_assert(
        (is_same<typename T::Traits::DomainType,
                 typename Traits::DomainType>::value),
        "GridView's and wrapped Functions DomainType don't match");
@@ -967,7 +966,7 @@ namespace Dune {
                             typename Traits::RangeType& y) const
       {
         // ensure correct size
-        dune_static_assert((static_cast<int>(T::Traits::GridViewType::dimension)==static_cast<int>(T::Traits::dimRange)),"number of components must equal dimension");
+        static_assert((static_cast<int>(T::Traits::GridViewType::dimension)==static_cast<int>(T::Traits::dimRange)),"number of components must equal dimension");
 
         // evaluate velocity
         typename T::Traits::RangeType v;
