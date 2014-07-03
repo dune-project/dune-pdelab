@@ -67,6 +67,17 @@ testanalytic_LDADD =				\
 
 MOSTLYCLEANFILES += channel.vtu
 
+NORMALTESTS += testbatchedtbbgridoperator
+testbatchedtbbgridoperator_SOURCES = testbatchedtbbgridoperator.cc
+testbatchedtbbgridoperator_CPPFLAGS = $(AM_CPPFLAGS)	\
+	$(TBB_CPPFLAGS)
+testbatchedtbbgridoperator_LDFLAGS = $(AM_LDFLAGS)	\
+	$(TBB_LDFLAGS)
+testbatchedtbbgridoperator_LDADD =		\
+	$(TBB_LIBS)				\
+	$(LDADD)
+MOSTLYCLEANFILES += batchedtbbgridoperator_*.vtu
+
 NORMALTESTS += testclock
 testclock_SOURCES = testclock.cc
 # don't include all the grid stuff
