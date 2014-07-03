@@ -149,6 +149,17 @@ MOSTLYCLEANFILES += testlaplacedirichletccfv-2d.vtu \
 NORMALTESTS += testlockmanager
 testlockmanager_SOURCES = testlockmanager.cc
 
+NORMALTESTS += testtbbgridoperator
+testtbbgridoperator_SOURCES = testtbbgridoperator.cc
+testtbbgridoperator_CPPFLAGS = $(AM_CPPFLAGS)	\
+	$(TBB_CPPFLAGS)
+testtbbgridoperator_LDFLAGS = $(AM_LDFLAGS)	\
+	$(TBB_LDFLAGS)
+testtbbgridoperator_LDADD =			\
+	$(TBB_LIBS)				\
+	$(LDADD)
+MOSTLYCLEANFILES += tbbgridoperator_*.vtu
+
 NORMALTESTS += testelasticity
 testelasticity_SOURCES = testelasticity.cc
 testelasticity_CPPFLAGS = $(AM_CPPFLAGS)	\
