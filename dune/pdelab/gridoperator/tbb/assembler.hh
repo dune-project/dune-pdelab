@@ -463,6 +463,136 @@ namespace Dune{
       }
     };
 
+
+    //! Assembler for TBB with coloring
+    /**
+     * \tparam Coloring            Coloring information for the partitioning.
+     * \tparam Partitioning        Partitioning to use for parallel traversal.
+     * \tparam GFSU                GridFunctionSpace for ansatz functions
+     * \tparam GFSV                GridFunctionSpace for test functions
+     * \tparam CU                  Constraints of ansatz functions
+     * \tparam CV                  Constraints of test functions
+     * \tparam nonoverlapping_mode Indicates whether assembling is done for
+     *                             overlap cells
+     */
+    template<typename Coloring, typename Partitioning, typename GFSU,
+             typename GFSV, typename CU, typename CV,
+             bool nonoverlapping_mode=false>
+    class ColoredTBBAssembler :
+      public TBBAssembler<Partitioning, GFSU, GFSV, CU, CV,
+                          nonoverlapping_mode>
+    {
+      typedef TBBAssembler<Partitioning, GFSU, GFSV, CU, CV,
+                           nonoverlapping_mode> Base;
+      template<class LocalAssemblerEngine>
+      class AssembleBody;
+
+    public:
+      ColoredTBBAssembler(const GFSU& gfsu_, const GFSV& gfsv_, const CU& cu_,
+                          const CV& cv_) :
+        Base(gfsu_, gfsv_, cu_, cv_)
+      { }
+
+      ColoredTBBAssembler(const GFSU& gfsu_, const GFSV& gfsv_) :
+        Base(gfsu_, gfsv_)
+      { }
+
+      void setColoring(const shared_ptr<const Coloring> &coloring)
+      {
+        coloring_ = coloring;
+      }
+
+      template<class LocalAssemblerEngine>
+      void assemble(LocalAssemblerEngine & assembler_engine) const
+      {
+        typedef typename Base::Element Element;
+
+        // Notify assembler engine about oncoming assembly
+        assembler_engine.preAssembly();
+
+        // Map each cell to unique id
+        ElementMapper<typename Base::GV> cell_mapper(this->gfsu.gridView());
+
+        // enumerate representatives
+        std::vector<std::vector<std::size_t> >
+          representatives(coloring_->colors());
+        {
+          std::vector<std::size_t> colorsize(coloring_->colors(), 0);
+          for(typename Partitioning::Size p = 0;
+              p < this->partitioning->partitions();
+              ++p)
+          {
+            ++colorsize[coloring_->color(p)];
+          }
+          for(std::size_t c = 0; c < colorsize.size(); ++c)
+            representatives[c].reserve(colorsize[c]);
+        }
+        for(typename Partitioning::Size p = 0;
+            p < this->partitioning->partitions();
+            ++p)
+        {
+          representatives[coloring_->color(p)].push_back(p);
+        }
+
+        // loop over colors
+        for(const auto &cr : representatives)
+        {
+          AssembleBody<LocalAssemblerEngine>
+            body(*this, assembler_engine, cell_mapper, cr);
+          tbb::blocked_range<std::size_t> range(0, cr.size());
+
+          if(TBBAssemblerSplit<LocalAssemblerEngine>::value)
+            tbb::parallel_reduce(range, body);
+          else
+            body(range);
+        }
+
+        // Notify assembler engine that assembly is finished
+        assembler_engine.postAssembly(this->gfsu,this->gfsv);
+      }
+
+    private:
+      shared_ptr<const Coloring> coloring_;
+    };
+
+    template<typename Coloring, typename Partitioning, typename GFSU,
+             typename GFSV, typename CU, typename CV,
+             bool nonoverlapping_mode>
+    template<class LocalAssemblerEngine>
+    class ColoredTBBAssembler<Coloring, Partitioning, GFSU, GFSV, CU, CV,
+                              nonoverlapping_mode>::AssembleBody :
+      public ColoredTBBAssembler::Base::
+        template AssembleBody<LocalAssemblerEngine>
+    {
+      typedef typename ColoredTBBAssembler::Base::
+        template AssembleBody<LocalAssemblerEngine> Base;
+
+    public:
+      typedef typename ColoredTBBAssembler::GV GV;
+      typedef typename Base::Assembler Assembler;
+      AssembleBody(const Assembler &assembler_, LocalAssemblerEngine &engine_,
+                   const ElementMapper<GV> &cell_mapper_,
+                   const std::vector<std::size_t> &representatives) :
+        Base(assembler_, engine_, cell_mapper_),
+        representatives_(representatives)
+      { }
+
+      AssembleBody(AssembleBody &other, tbb::split split) :
+        Base(other, split),
+        representatives_(other.representatives_)
+      { }
+
+      void operator()(const tbb::blocked_range<std::size_t> &range)
+      {
+        // for all partitions in tbb-range
+        for(std::size_t p = range.begin(); p != range.end(); ++p)
+          Base::operator()(representatives_[p]);
+      }
+
+    private:
+      const std::vector<std::size_t> &representatives_;
+    };
+
   }
 }
 #endif //  DUNE_PDELAB_TBB_ASSEMBLER_HH
