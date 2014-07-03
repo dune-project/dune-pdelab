@@ -11,7 +11,6 @@
 
 #include <dune/common/deprecated.hh>
 #include <dune/common/shared_ptr.hh>
-#include <dune/common/static_assert.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -179,15 +178,15 @@ namespace Dune {
       template<typename LC>
       void read(LC& local_container) const
       {
-        dune_static_assert(AlwaysFalse<LC>::value, "read not supported for "
-                           "ThreadedVectorView");
+        static_assert(AlwaysFalse<LC>::value, "read not supported for "
+                      "ThreadedVectorView");
       }
 
       template<typename LC>
       void write(const LC& local_container)
       {
-        dune_static_assert(AlwaysFalse<LC>::value, "write not supported for "
-                           "ThreadedVectorView");
+        static_assert(AlwaysFalse<LC>::value, "write not supported for "
+                      "ThreadedVectorView");
       }
 
       template<typename LC>
@@ -202,15 +201,15 @@ namespace Dune {
       template<typename ChildLFS, typename LC>
       void read(const ChildLFS& child_lfs, LC& local_container) const
       {
-        dune_static_assert(AlwaysFalse<LC>::value, "read not supported for "
-                           "ThreadedVectorView");
+        static_assert(AlwaysFalse<LC>::value, "read not supported for "
+                      "ThreadedVectorView");
       }
 
       template<typename ChildLFS, typename LC>
       void write(const ChildLFS& child_lfs, const LC& local_container)
       {
-        dune_static_assert(AlwaysFalse<LC>::value, "write not supported for "
-                           "ThreadedVectorView");
+        static_assert(AlwaysFalse<LC>::value, "write not supported for "
+                      "ThreadedVectorView");
       }
 
       template<typename ChildLFS, typename LC>
@@ -228,15 +227,15 @@ namespace Dune {
       template<typename ChildLFS, typename LC>
       void read_sub_container(const ChildLFS& child_lfs, LC& local_container) const
       {
-        dune_static_assert(AlwaysFalse<LC>::value, "read_sub_container not "
-                           "supported for ThreadedVectorView");
+        static_assert(AlwaysFalse<LC>::value, "read_sub_container not "
+                      "supported for ThreadedVectorView");
       }
 
       template<typename ChildLFS, typename LC>
       void write_sub_container(const ChildLFS& child_lfs, const LC& local_container)
       {
-        dune_static_assert(AlwaysFalse<LC>::value, "write_sub_container not "
-                           "supported for ThreadedVectorView");
+        static_assert(AlwaysFalse<LC>::value, "write_sub_container not "
+                      "supported for ThreadedVectorView");
       }
 
       template<typename ChildLFS, typename LC>
@@ -254,8 +253,8 @@ namespace Dune {
       template<typename IndexType>
       const ElementType& operator[](const IndexType& i) const
       {
-        dune_static_assert(AlwaysFalse<IndexType>::value, "element access "
-                           "(read) not supported for ThreadedVectorView");
+        static_assert(AlwaysFalse<IndexType>::value, "element access "
+                      "(read) not supported for ThreadedVectorView");
       }
 
       Proxy operator[](size_type i)

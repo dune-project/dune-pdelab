@@ -9,7 +9,6 @@
 #include <dune/common/deprecated.hh>
 #include <dune/common/nullptr.hh>
 #include <dune/common/shared_ptr.hh>
-#include <dune/common/static_assert.hh>
 #include <dune/common/typetraits.hh>
 
 namespace Dune {
@@ -150,7 +149,7 @@ namespace Dune {
       typedef ThreadedMatrixBuffer<Container, Mutex> Buffer;
       typedef typename Buffer::reference Proxy;
 
-      dune_static_assert(
+      static_assert(
         (is_same<
            typename RowCache::LocalFunctionSpace::Traits::GridFunctionSpace,
            typename Container::TestGridFunctionSpace
@@ -159,7 +158,7 @@ namespace Dune {
         "underlying GFSV"
         );
 
-      dune_static_assert(
+      static_assert(
         (is_same<
            typename ColCache::LocalFunctionSpace::Traits::GridFunctionSpace,
            typename Container::TrialGridFunctionSpace
@@ -248,15 +247,15 @@ namespace Dune {
       template<typename LC>
       void read(LC& local_container) const
       {
-        dune_static_assert(AlwaysFalse<LC>::value, "read not supported for "
-                           "ThreadedMatrixView");
+        static_assert(AlwaysFalse<LC>::value, "read not supported for "
+                      "ThreadedMatrixView");
       }
 
       template<typename LC>
       void write(const LC& local_container)
       {
-        dune_static_assert(AlwaysFalse<LC>::value, "write not supported for "
-                           "ThreadedMatrixView");
+        static_assert(AlwaysFalse<LC>::value, "write not supported for "
+                      "ThreadedMatrixView");
       }
 
       template<typename LC>
@@ -274,8 +273,8 @@ namespace Dune {
       const ElementType &operator()(const RowIndexType &row,
                                     const ColIndexType &column) const
       {
-        dune_static_assert(AlwaysFalse<RowIndexType>::value, "element access "
-                           "(read) not supported for ThreadedMatrixView");
+        static_assert(AlwaysFalse<RowIndexType>::value, "element access "
+                      "(read) not supported for ThreadedMatrixView");
       }
 
       Proxy operator()(const RowContainerIndex& i, const ColContainerIndex& j)
