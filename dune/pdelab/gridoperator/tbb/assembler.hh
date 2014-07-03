@@ -2,6 +2,8 @@
 #define DUNE_PDELAB_TBB_ASSEMBLER_HH
 
 #include <cstddef>
+#include <iostream>
+#include <ostream>
 #include <vector>
 #include <type_traits>
 
@@ -97,6 +99,7 @@ namespace Dune{
         , gfsv(gfsv_)
         , cu(cu_)
         , cv(cv_)
+        , verbosity(0)
       { }
 
       TBBAssembler (const GFSU& gfsu_, const GFSV& gfsv_)
@@ -104,6 +107,7 @@ namespace Dune{
         , gfsv(gfsv_)
         , cu()
         , cv()
+        , verbosity(0)
       { }
 
       //! Get the trial grid function space
@@ -133,6 +137,11 @@ namespace Dune{
       void setColoring(const shared_ptr<Coloring> &coloring)
       { }
 
+      void setVerbosity(unsigned verbosity_)
+      {
+        verbosity = verbosity_;
+      }
+
       template<class LocalAssemblerEngine>
       void assemble(LocalAssemblerEngine & assembler_engine) const
       {
@@ -149,9 +158,17 @@ namespace Dune{
 
         tbb::blocked_range<std::size_t> range(0, partitioning->partitions());
         if(TBBAssemblerSplit<LocalAssemblerEngine>::value)
+        {
+          if(verbosity > 0 && gfsu.gridView().comm().rank() == 0)
+            std::cout << "TBBAssembler: parallel iteration" << std::endl;
           tbb::parallel_reduce(range, body);
+        }
         else
+        {
+          if(verbosity > 0 && gfsu.gridView().comm().rank() == 0)
+            std::cout << "TBBAssembler: sequential iteration" << std::endl;
           body(range);
+        }
 
         // Notify assembler engine that assembly is finished
         assembler_engine.postAssembly(gfsu,gfsv);
@@ -176,6 +193,8 @@ namespace Dune{
         const CV&
         >::type cv;
 
+    protected:
+      unsigned verbosity;
     };
 
     template<typename Partitioning, typename GFSU, typename GFSV, typename CU,
@@ -524,6 +543,16 @@ namespace Dune{
             ++p)
         {
           representatives[coloring_->color(p)].push_back(p);
+        }
+
+        if(this->verbosity > 0 && this->gfsu.gridView().comm().rank() == 0)
+        {
+          if(TBBAssemblerSplit<LocalAssemblerEngine>::value)
+            std::cout << "ColoredTBBAssembler: parallel iteration"
+                      << std::endl;
+          else
+            std::cout << "ColoredTBBAssembler: sequential iteration"
+                      << std::endl;
         }
 
         // loop over colors
