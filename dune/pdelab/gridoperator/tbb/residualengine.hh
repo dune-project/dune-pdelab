@@ -1,10 +1,17 @@
-#ifndef DUNE_PDELAB_DEFAULT_RESIDUALENGINE_HH
-#define DUNE_PDELAB_DEFAULT_RESIDUALENGINE_HH
+#ifndef DUNE_PDELAB_TBB_RESIDUALENGINE_HH
+#define DUNE_PDELAB_TBB_RESIDUALENGINE_HH
 
+#include <cstddef>
+#include <mutex>
+
+#include <tbb/tbb_stddef.h>
+
+#include <dune/pdelab/backend/common/threadedvectorview.hh>
+#include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridoperator/common/localassemblerenginebase.hh>
-#include <dune/pdelab/constraints/common/constraints.hh>
+#include <dune/pdelab/gridoperator/default/residualengine.hh>
 #include <dune/pdelab/localoperator/callswitch.hh>
 
 namespace Dune{
@@ -18,16 +25,12 @@ namespace Dune{
 
     */
     template<typename LA>
-    class DefaultLocalResidualAssemblerEngine
+    class TBBLocalResidualAssemblerEngine
       : public LocalAssemblerEngineBase
     {
     public:
 
-      template<typename TrialConstraintsContainer, typename TestConstraintsContainer>
-      bool needsConstraintsCaching(const TrialConstraintsContainer& cu, const TestConstraintsContainer& cv) const
-      {
-        return false;
-      }
+      static const bool needs_constraints_caching = true;
 
       //! The type of the wrapping local assembler
       typedef LA LocalAssembler;
@@ -50,9 +53,14 @@ namespace Dune{
       typedef typename LA::LFSV LFSV;
       typedef typename LA::LFSVCache LFSVCache;
       typedef typename LFSV::Traits::GridFunctionSpace GFSV;
+      typedef typename GFSU::Traits::GridView GridView;
 
       typedef typename Solution::template ConstLocalView<LFSUCache> SolutionView;
       typedef typename Residual::template LocalView<LFSVCache> ResidualView;
+
+      //! Lock manager used for updating the residual
+      typedef typename LA::LockManager LockManager;
+      typedef typename LockManager::value_type Mutex;
 
       /**
          \brief Constructor
@@ -60,35 +68,25 @@ namespace Dune{
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
-      DefaultLocalResidualAssemblerEngine(const LocalAssembler & local_assembler_)
+      TBBLocalResidualAssemblerEngine(const LocalAssembler & local_assembler_)
         : local_assembler(local_assembler_), lop(local_assembler_.lop),
           rl_view(rl,1.0),
           rn_view(rn,1.0)
       {}
 
-      //! copy contructor
-      /**
-       * \note This does not create an exact copy.  Instead it copies the
-       *       global views, such that they point to the same global vector.
-       *       Local matrices/vectors are constructed freshly without copying
-       *       the content.  Views into the local matrices/vectors are
-       *       constructed freshly so they reference the local matrices/vector
-       *       in the new object, and are given unit weight.  This essentially
-       *       creates an engine object that is not currently bound to any
-       *       entity, but otherwise behaves like the object it was contructed
-       *       from.
-       * \note This constructor is needed to implement splitting constructors
-       *       in derived classes.
-       */
-      DefaultLocalResidualAssemblerEngine
-      (const DefaultLocalResidualAssemblerEngine &other) :
-        local_assembler(other.local_assembler), lop(other.lop),
-        global_rl_view(other.global_rl_view),
-        global_rn_view(other.global_rn_view),
-        global_sl_view(other.global_sl_view),
-        global_sn_view(other.global_sn_view),
-        rl_view(rl,1.0),
-        rn_view(rn,1.0)
+      TBBLocalResidualAssemblerEngine(TBBLocalResidualAssemblerEngine &other,
+                                      tbb::split)
+        : local_assembler(other.local_assembler), lop(other.lop),
+          lockmgr(other.lockmgr),
+          global_rl_view(other.global_rl_view),
+          global_rn_view(other.global_rn_view),
+          global_sl_view(other.global_sl_view),
+          global_sn_view(other.global_sn_view),
+          rl_view(rl,1.0),
+          rn_view(rn,1.0)
+      {}
+
+      void join(TBBLocalResidualAssemblerEngine &other)
       { }
 
       //! Query methods for the global grid assembler
@@ -144,6 +142,12 @@ namespace Dune{
         global_sn_view.attach(solution_);
       }
 
+      //! Set Lock manager.  Should be called prior to assembling.
+      void setLockManager(LockManager & lockmgr_)
+      {
+        lockmgr = &lockmgr_;
+      }
+
       //! Called immediately after binding of local function space in
       //! global assembler.
       //! @{
@@ -196,12 +200,14 @@ namespace Dune{
       //! @{
       template<typename EG, typename LFSVC>
       void onUnbindLFSV(const EG & eg, const LFSVC & lfsv_cache){
+        std::lock_guard<Mutex> guard((*lockmgr)[eg.entity()]);
         global_rl_view.add(rl);
         global_rl_view.commit();
       }
 
       template<typename IG, typename LFSVC>
       void onUnbindLFSVInside(const IG & ig, const LFSVC & lfsv_cache){
+        std::lock_guard<Mutex> guard((*lockmgr)[*ig.inside()]);
         global_rl_view.add(rl);
         global_rl_view.commit();
       }
@@ -211,6 +217,7 @@ namespace Dune{
                                const LFSVC & lfsv_s_cache,
                                const LFSVC & lfsv_n_cache)
       {
+        std::lock_guard<Mutex> guard((*lockmgr)[*ig.outside()]);
         global_rn_view.add(rn);
         global_rn_view.commit();
       }
@@ -352,6 +359,8 @@ namespace Dune{
       //! Reference to the local operator
       const LOP & lop;
 
+      LockManager *lockmgr;
+
       //! Pointer to the current residual vector in which to assemble
       ResidualView global_rl_view;
       ResidualView global_rn_view;
@@ -386,4 +395,4 @@ namespace Dune{
 
   }
 }
-#endif
+#endif // DUNE_PDELAB_TBB_RESIDUALENGINE_HH

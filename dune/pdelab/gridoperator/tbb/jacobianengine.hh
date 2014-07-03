@@ -1,14 +1,22 @@
-#ifndef DUNE_PDELAB_DEFAULT_JACOBIANENGINE_HH
-#define DUNE_PDELAB_DEFAULT_JACOBIANENGINE_HH
+#ifndef DUNE_PDELAB_TBB_JACOBIANENGINE_HH
+#define DUNE_PDELAB_TBB_JACOBIANENGINE_HH
 
+#include <cstddef>
+#include <mutex>
+
+#include <tbb/tbb_stddef.h>
+
+#include <dune/common/exceptions.hh>
+#include <dune/common/shared_ptr.hh>
+
+#include <dune/pdelab/backend/common/threadedmatrixview.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
-#include <dune/pdelab/gridoperator/common/localmatrix.hh>
-#include <dune/pdelab/gridoperator/common/diagonallocalmatrix.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridoperator/common/localassemblerenginebase.hh>
+#include <dune/pdelab/gridoperator/common/localmatrix.hh>
+#include <dune/pdelab/gridoperator/default/jacobianengine.hh>
 #include <dune/pdelab/localoperator/callswitch.hh>
-#include <dune/pdelab/localoperator/flags.hh>
 
 namespace Dune{
   namespace PDELab{
@@ -21,16 +29,12 @@ namespace Dune{
 
     */
     template<typename LA>
-    class DefaultLocalJacobianAssemblerEngine
+    class TBBLocalJacobianAssemblerEngine
       : public LocalAssemblerEngineBase
     {
     public:
 
-      template<typename TrialConstraintsContainer, typename TestConstraintsContainer>
-      bool needsConstraintsCaching(const TrialConstraintsContainer& cu, const TestConstraintsContainer& cv)
-      {
-        return cu.containsNonDirichletConstraints() || cv.containsNonDirichletConstraints();
-      }
+      static const bool needs_constraints_caching = true;
 
       //! The type of the wrapping local assembler
       typedef LA LocalAssembler;
@@ -45,6 +49,7 @@ namespace Dune{
       typedef typename LA::LFSV LFSV;
       typedef typename LA::LFSVCache LFSVCache;
       typedef typename LFSV::Traits::GridFunctionSpace GFSV;
+      typedef typename GFSU::Traits::GridView GridView;
 
       //! The type of the jacobian matrix
       typedef typename LA::Traits::Jacobian Jacobian;
@@ -56,13 +61,17 @@ namespace Dune{
       typedef typename Solution::ElementType SolutionElement;
       typedef typename Solution::template ConstLocalView<LFSUCache> SolutionView;
 
+      //! Lock manager used for updating the residual
+      typedef typename LA::LockManager LockManager;
+      typedef typename LockManager::value_type Mutex;
+
       /**
          \brief Constructor
 
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
-      DefaultLocalJacobianAssemblerEngine(const LocalAssembler & local_assembler_)
+      TBBLocalJacobianAssemblerEngine(const LocalAssembler & local_assembler_)
         : local_assembler(local_assembler_), lop(local_assembler_.lop),
           al_view(al,1.0),
           al_sn_view(al_sn,1.0),
@@ -70,33 +79,23 @@ namespace Dune{
           al_nn_view(al_nn,1.0)
       {}
 
-      //! copy contructor
-      /**
-       * \note This does not create an exact copy.  Instead it copies the
-       *       global views, such that they point to the same global vector.
-       *       Local matrices/vectors are constructed freshly without copying
-       *       the content.  Views into the local matrices/vectors are
-       *       constructed freshly so they reference the local matrices/vector
-       *       in the new object, and are given unit weight.  This essentially
-       *       creates an engine object that is not currently bound to any
-       *       entity, but otherwise behaves like the object it was contructed
-       *       from.
-       * \note This constructor is needed to implement splitting constructors
-       *       in derived classes.
-       */
-      DefaultLocalJacobianAssemblerEngine
-      (const DefaultLocalJacobianAssemblerEngine &other) :
-        local_assembler(other.local_assembler), lop(other.lop),
-        global_s_s_view(other.global_s_s_view),
-        global_s_n_view(other.global_s_n_view),
-        global_a_ss_view(other.global_a_ss_view),
-        global_a_sn_view(other.global_a_sn_view),
-        global_a_ns_view(other.global_a_ns_view),
-        global_a_nn_view(other.global_a_nn_view),
-        al_view(al,1.0),
-        al_sn_view(al_sn,1.0),
-        al_ns_view(al_ns,1.0),
-        al_nn_view(al_nn,1.0)
+      TBBLocalJacobianAssemblerEngine(TBBLocalJacobianAssemblerEngine &other,
+                                      tbb::split)
+        : local_assembler(other.local_assembler), lop(other.lop),
+          lockmgr(other.lockmgr),
+          global_s_s_view(other.global_s_s_view),
+          global_s_n_view(other.global_s_n_view),
+          global_a_ss_view(other.global_a_ss_view),
+          global_a_sn_view(other.global_a_sn_view),
+          global_a_ns_view(other.global_a_ns_view),
+          global_a_nn_view(other.global_a_nn_view),
+          al_view(al,1.0),
+          al_sn_view(al_sn,1.0),
+          al_ns_view(al_ns,1.0),
+          al_nn_view(al_nn,1.0)
+      {}
+
+      void join(TBBLocalJacobianAssemblerEngine &other)
       { }
 
       //! Query methods for the global grid assembler
@@ -146,6 +145,12 @@ namespace Dune{
         global_s_n_view.attach(solution_);
       }
 
+      //! Set Lock manager.  Should be called prior to assembling.
+      void setLockManager(LockManager & lockmgr_)
+      {
+        lockmgr = &lockmgr_;
+      }
+
       //! Called immediately after binding of local function space in
       //! global assembler.
       //! @{
@@ -179,7 +184,8 @@ namespace Dune{
       //! @{
       template<typename EG, typename LFSUC, typename LFSVC>
       void onUnbindLFSUV(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache){
-        local_assembler.scatter_jacobian(al,global_a_ss_view,false);
+        std::lock_guard<Mutex> guard((*lockmgr)[eg.entity()]);
+        local_assembler.etadd(al,global_a_ss_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -187,9 +193,18 @@ namespace Dune{
                                 const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
                                 const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
-        local_assembler.scatter_jacobian(al_sn,global_a_sn_view,false);
-        local_assembler.scatter_jacobian(al_ns,global_a_ns_view,false);
-        local_assembler.scatter_jacobian(al_nn,global_a_nn_view,false);
+        std::unique_lock<Mutex> locks((*lockmgr)[*ig.inside()],
+                                      std::defer_lock);
+        std::unique_lock<Mutex> lockn((*lockmgr)[*ig.outside()],
+                                      std::defer_lock);
+        // avoid trying to lock the same lock twice
+        if(locks.mutex() == lockn.mutex())
+          locks.lock();
+        else
+          std::lock(locks, lockn);
+        local_assembler.etadd(al_sn,global_a_sn_view);
+        local_assembler.etadd(al_ns,global_a_ns_view);
+        local_assembler.etadd(al_nn,global_a_nn_view);
       }
 
       //! @}
@@ -302,6 +317,8 @@ namespace Dune{
       //! Reference to the local operator
       const LOP & lop;
 
+      LockManager *lockmgr;
+
       //! Pointer to the current solution vector for which to assemble
       SolutionView global_s_s_view;
       SolutionView global_s_n_view;
@@ -318,14 +335,7 @@ namespace Dune{
       typedef Dune::PDELab::TestSpaceTag LocalTestSpaceTag;
 
       typedef Dune::PDELab::LocalVector<SolutionElement, LocalTrialSpaceTag> SolutionVector;
-      typedef typename std::conditional<
-        std::is_base_of<
-          lop::DiagonalJacobian,
-          LOP
-          >::value,
-        Dune::PDELab::DiagonalLocalMatrix<JacobianElement>,
-        Dune::PDELab::LocalMatrix<JacobianElement>
-        >::type JacobianMatrix;
+      typedef Dune::PDELab::LocalMatrix<JacobianElement> JacobianMatrix;
 
       SolutionVector xl;
       SolutionVector xn;
@@ -342,8 +352,8 @@ namespace Dune{
 
       //! @}
 
-    }; // End of class DefaultLocalJacobianAssemblerEngine
+    }; // End of class TBBLocalJacobianAssemblerEngine
 
   }
 }
-#endif
+#endif // DUNE_PDELAB_TBB_JACOBIANENGINE_HH
