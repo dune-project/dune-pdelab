@@ -17,6 +17,38 @@
 namespace Dune{
   namespace PDELab{
 
+    //! \brief simple wrapper about DefaultLocalResidualAssemblerEngine with
+    //!        splitting support
+    /**
+     * \note We don't simply want to copy the default engine or add a
+     *       splitting contructor to it since we want to be able to
+     *       differentiate between engines with and without tbb support.
+     *       I.e. even when coloring is employed in a manner suffiently for
+     *       some engines, it may not be sufficient for other engines
+     *       (e.g. pattern).
+     */
+    template<typename LA>
+    class ColoredTBBLocalResidualAssemblerEngine :
+      public DefaultLocalResidualAssemblerEngine<LA>
+    {
+      typedef DefaultLocalResidualAssemblerEngine<LA> Base;
+    public:
+      //! \brief Constructor
+      /**
+       * \param [in] local_assembler_ The local assembler object which
+       *                              creates this engine
+       */
+      ColoredTBBLocalResidualAssemblerEngine(const LA &local_assembler_) :
+      Base(local_assembler_)
+      { }
+      ColoredTBBLocalResidualAssemblerEngine
+      ( ColoredTBBLocalResidualAssemblerEngine &other, tbb::split) :
+        Base(other)
+      { }
+      void join(ColoredTBBLocalResidualAssemblerEngine &other)
+      { }
+    };
+
     /**
        \brief The local assembler engine for DUNE grids which
        assembles the residual vector
