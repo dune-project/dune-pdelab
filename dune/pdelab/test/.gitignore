@@ -6,6 +6,9 @@
 *eps
 *.log
 *.trs
+/testbatchedtbbgridoperator
+/testcoloredtbbgridoperator
+/testtbbgridoperator
 dgfparser.log
 testanalytic
 testconstraints

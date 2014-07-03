@@ -2,11 +2,13 @@ set(gridoperatordir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/gridoperator)
 set(SUBDIRS                                        
         common                                  
         default                                 
-        onestep)
+        onestep
+        tbb)
 
 set(gridoperator_HEADERS                           
         gridoperator.hh                         
-        onestep.hh)
+        onestep.hh
+        tbb.hh)
 
 # include not needed for CMake
 # include $(top_srcdir)/am/global-rules
