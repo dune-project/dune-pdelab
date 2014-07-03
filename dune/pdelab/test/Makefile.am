@@ -67,12 +67,34 @@ testanalytic_LDADD =				\
 
 MOSTLYCLEANFILES += channel.vtu
 
+NORMALTESTS += testbatchedtbbgridoperator
+testbatchedtbbgridoperator_SOURCES = testbatchedtbbgridoperator.cc
+testbatchedtbbgridoperator_CPPFLAGS = $(AM_CPPFLAGS)	\
+	$(TBB_CPPFLAGS)
+testbatchedtbbgridoperator_LDFLAGS = $(AM_LDFLAGS)	\
+	$(TBB_LDFLAGS)
+testbatchedtbbgridoperator_LDADD =		\
+	$(TBB_LIBS)				\
+	$(LDADD)
+MOSTLYCLEANFILES += batchedtbbgridoperator_*.vtu
+
 NORMALTESTS += testclock
 testclock_SOURCES = testclock.cc
 # don't include all the grid stuff
 testclock_CPPFLAGS = @AM_CPPFLAGS@
 testclock_LDFLAGS = @AM_LDFLAGS@
 testclock_LDADD = @LDADD@
+
+NORMALTESTS += testcoloredtbbgridoperator
+testcoloredtbbgridoperator_SOURCES = testcoloredtbbgridoperator.cc
+testcoloredtbbgridoperator_CPPFLAGS = $(AM_CPPFLAGS)	\
+	$(TBB_CPPFLAGS)
+testcoloredtbbgridoperator_LDFLAGS = $(AM_LDFLAGS)	\
+	$(TBB_LDFLAGS)
+testcoloredtbbgridoperator_LDADD =		\
+	$(TBB_LIBS)				\
+	$(LDADD)
+MOSTLYCLEANFILES += coloredtbbgridoperator_*.vtu
 
 # disable IntersectionIndexSet test for now, we know it's broken
 # if ALUGRID
@@ -148,6 +170,17 @@ MOSTLYCLEANFILES += testlaplacedirichletccfv-2d.vtu \
 
 NORMALTESTS += testlockmanager
 testlockmanager_SOURCES = testlockmanager.cc
+
+NORMALTESTS += testtbbgridoperator
+testtbbgridoperator_SOURCES = testtbbgridoperator.cc
+testtbbgridoperator_CPPFLAGS = $(AM_CPPFLAGS)	\
+	$(TBB_CPPFLAGS)
+testtbbgridoperator_LDFLAGS = $(AM_LDFLAGS)	\
+	$(TBB_LDFLAGS)
+testtbbgridoperator_LDADD =			\
+	$(TBB_LIBS)				\
+	$(LDADD)
+MOSTLYCLEANFILES += tbbgridoperator_*.vtu
 
 NORMALTESTS += testelasticity
 testelasticity_SOURCES = testelasticity.cc
