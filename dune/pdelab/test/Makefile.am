@@ -146,6 +146,9 @@ MOSTLYCLEANFILES += testlaplacedirichletccfv-2d.vtu \
 # 	$(LDADD)
 # MOSTLYCLEANFILES += testlaplacedirichletp12d.vtu
 
+NORMALTESTS += testlockmanager
+testlockmanager_SOURCES = testlockmanager.cc
+
 NORMALTESTS += testelasticity
 testelasticity_SOURCES = testelasticity.cc
 testelasticity_CPPFLAGS = $(AM_CPPFLAGS)	\
