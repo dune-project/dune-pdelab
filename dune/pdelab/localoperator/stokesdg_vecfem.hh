@@ -4,7 +4,6 @@
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
-#include <dune/common/static_assert.hh>
 #include <dune/common/parametertree.hh>
 
 #include <dune/geometry/quadraturerules.hh>
@@ -135,7 +134,7 @@ namespace Dune {
         static const unsigned int dimw = EG::Geometry::dimensionworld;
 
         // subspaces
-        dune_static_assert
+        static_assert
           ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDGVectorFEM");
 
         typedef typename LFSV::template Child<VBLOCK>::Type LFSV_V;
@@ -246,7 +245,7 @@ namespace Dune {
         static const unsigned int dimw = IG::Geometry::dimensionworld;
 
         // subspaces
-        dune_static_assert
+        static_assert
           ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDGVectorFEM");
 
         typedef typename LFSV::template Child<VBLOCK>::Type LFSV_V;
@@ -419,7 +418,7 @@ namespace Dune {
         static const unsigned int dimw = IG::Geometry::dimensionworld;
 
         // subspaces
-        dune_static_assert
+        static_assert
           ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDGVectorFEM");
 
         typedef typename LFSV::template Child<VBLOCK>::Type LFSV_V;

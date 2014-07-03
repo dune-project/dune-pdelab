@@ -94,7 +94,7 @@ namespace Dune {
     template<typename GFSV, typename GFSVB, typename GFSU, typename GFSUB>
     struct petsc_matrix_builder
     {
-      dune_static_assert((AlwaysFalse<GFSV>::value),"Unsupported combination of trial and test space blocking");
+      static_assert((AlwaysFalse<GFSV>::value),"Unsupported combination of trial and test space blocking");
     };
 
     template<typename GFSV, typename GFSU>
@@ -247,7 +247,7 @@ namespace Dune {
         , _rowsToClear()
         , _managed(true)
       {
-        dune_static_assert((is_same<typename GO::Traits::MatrixBackend,PetscMatrixBackend>::value),"Wrong matrix backend type");
+        static_assert((is_same<typename GO::Traits::MatrixBackend,PetscMatrixBackend>::value),"Wrong matrix backend type");
 
         Pattern pattern(go.globalSizeV(),go.globalSizeU());
         go.fill_pattern(pattern);
@@ -579,7 +579,7 @@ namespace Dune {
       template<typename GO>
       PetscNestedMatrixContainer (const GO& go)
       {
-        dune_static_assert((is_same<typename GO::Traits::MatrixBackend,PetscNestedMatrixBackend>::value),"Wrong matrix backend type");
+        static_assert((is_same<typename GO::Traits::MatrixBackend,PetscNestedMatrixBackend>::value),"Wrong matrix backend type");
 
         Pattern pattern(go.globalSizeV(),go.globalSizeU());
         go.fill_pattern(pattern);

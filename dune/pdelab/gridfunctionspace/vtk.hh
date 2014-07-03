@@ -266,8 +266,8 @@ namespace Dune {
             >::Basis
           > BasisSwitch;
 
-        dune_static_assert(BasisSwitch::dimRange == 1,
-                           "Automatic conversion to vector-valued function only supported for scalar components");
+        static_assert(BasisSwitch::dimRange == 1,
+                      "Automatic conversion to vector-valued function only supported for scalar components");
 
         typedef GridFunctionInterface<
           GridFunctionTraits<

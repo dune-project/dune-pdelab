@@ -4,7 +4,6 @@
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
-#include <dune/common/static_assert.hh>
 #include <dune/common/parametertreeparser.hh>
 
 #include <dune/geometry/quadraturerules.hh>
@@ -96,13 +95,13 @@ namespace Dune {
                 static const unsigned int dim = EG::Geometry::dimension;
 
                 // subspaces
-                dune_static_assert
+                static_assert
                   ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
 
                 typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
                 const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
 
-                dune_static_assert
+                static_assert
                   ((LFSV_PFS_V::CHILDREN == dim),"You seem to use the wrong function space for StokesDG");
 
                 // we assume all velocity components are the same type
@@ -186,13 +185,13 @@ namespace Dune {
                 static const unsigned int dim = IG::Geometry::dimension;
 
                 // subspaces
-                dune_static_assert
+                static_assert
                     ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
 
                 typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
                 const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
 
-                dune_static_assert
+                static_assert
                     ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
 
                 // ... we assume all velocity components are the same
@@ -331,11 +330,11 @@ namespace Dune {
                 static const unsigned int dim = EG::Geometry::dimension;
 
                 // subspaces
-                dune_static_assert
+                static_assert
                     ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
                 typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
                 const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
-                dune_static_assert
+                static_assert
                     ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
 
                 // ... we assume all velocity components are the same
@@ -446,13 +445,13 @@ namespace Dune {
                 static const unsigned int dimw = IG::Geometry::dimensionworld;
 
                 // subspaces
-                dune_static_assert
+                static_assert
                     ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
 
                 typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
                 const LFSV_PFS_V& lfsv_s_pfs_v = lfsv_s.template child<VBLOCK>();
                 const LFSV_PFS_V& lfsv_n_pfs_v = lfsv_n.template child<VBLOCK>();
-                dune_static_assert
+                static_assert
                     ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
 
                 // ... we assume all velocity components are the same
@@ -739,12 +738,12 @@ namespace Dune {
                 static const unsigned int dimw = IG::Geometry::dimensionworld;
 
                 // subspaces
-                dune_static_assert
+                static_assert
                     ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
 
                 typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
                 const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
-                dune_static_assert
+                static_assert
                     ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
 
                 // ... we assume all velocity components are the same
@@ -983,11 +982,11 @@ namespace Dune {
                 static const unsigned int dim = EG::Geometry::dimension;
 
                 // subspaces
-                dune_static_assert
+                static_assert
                     ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
                 typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
                 const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
-                dune_static_assert
+                static_assert
                     ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
 
                 // ... we assume all velocity components are the same
@@ -1079,11 +1078,11 @@ namespace Dune {
                 static const unsigned int dim = EG::Geometry::dimension;
 
                 // subspaces
-                dune_static_assert
+                static_assert
                     ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
                 typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
                 const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
-                dune_static_assert
+                static_assert
                     ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
 
                 // ... we assume all velocity components are the same
@@ -1204,7 +1203,7 @@ namespace Dune {
                 // subspaces
                 typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
                 const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
-                dune_static_assert
+                static_assert
                     ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesMassDG");
 
                 // ... we assume all velocity components are the same

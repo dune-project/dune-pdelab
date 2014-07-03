@@ -8,8 +8,6 @@
     \brief Provide common name for std::unordered_set and std::unordered_multiset classes in Dune::PDELab namespace.
 */
 
-#include <dune/common/static_assert.hh>
-
 // Try to find an unordered_set implementation
 #ifdef HAVE_UNORDERED_SET
 
@@ -44,7 +42,7 @@ namespace Dune {
              >
     class unordered_set
     {
-      dune_static_assert(Dune::AlwaysFalse<Key>::value,"Unable to find implementation for unordered_set.");
+      static_assert(Dune::AlwaysFalse<Key>::value,"Unable to find implementation for unordered_set.");
     };
 
     template<typename Key,
@@ -54,7 +52,7 @@ namespace Dune {
              >
     class unordered_multiset
     {
-      dune_static_assert(Dune::AlwaysFalse<Key>::value,"Unable to find implementation for unordered_multiset.");
+      static_assert(Dune::AlwaysFalse<Key>::value,"Unable to find implementation for unordered_multiset.");
     };
 
 #endif

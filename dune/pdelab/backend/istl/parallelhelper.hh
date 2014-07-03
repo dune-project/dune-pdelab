@@ -7,7 +7,6 @@
 
 #include <dune/common/deprecated.hh>
 #include <dune/common/parallel/mpihelper.hh>
-#include <dune/common/static_assert.hh>
 #include <dune/common/stdstreams.hh>
 
 #include <dune/istl/owneroverlapcopy.hh>
@@ -337,7 +336,7 @@ namespace Dune {
           >::value;
 
         // We assume M to be a BCRSMatrix in the following, so better check for that
-        dune_static_assert(is_bcrs_matrix && block_type_is_field_matrix, "matrix structure not compatible with AMG");
+        static_assert(is_bcrs_matrix && block_type_is_field_matrix, "matrix structure not compatible with AMG");
 
         // ********************************************************************************
         // In the following, the code will always assume that all DOFs stored in a single

@@ -136,8 +136,8 @@ namespace Dune {
       struct leaf_vector_descriptor
       {
 
-        dune_static_assert(Backend::Traits::block_type != ISTLParameters::dynamic_blocking,
-                           "Dynamically blocked leaf spaces are not supported by this backend.");
+        static_assert(Backend::Traits::block_type != ISTLParameters::dynamic_blocking,
+                      "Dynamically blocked leaf spaces are not supported by this backend.");
 
         // flag for sibling reduction - always true in the leaf case
         static const bool support_no_blocking = true;
@@ -279,9 +279,9 @@ namespace Dune {
 
         // Throw an assertion if the user requests static blocking at this level,
         // but we cannot support it.
-        dune_static_assert((Backend::Traits::block_type != ISTLParameters::static_blocking) ||
-                           Child::support_cascaded_blocking,
-                           "invalid blocking structure.");
+        static_assert((Backend::Traits::block_type != ISTLParameters::static_blocking) ||
+                      Child::support_cascaded_blocking,
+                      "invalid blocking structure.");
 
         // If we block statically, we create bigger blocks, otherwise the
         // block size doesn't change.
@@ -314,9 +314,9 @@ namespace Dune {
         >
         : public Data
       {
-        dune_static_assert(Data::support_no_blocking,
-                           "Cannot combine incompatible child block structures without static blocking. "
-                           "Did you want to apply static blocking at this level?");
+        static_assert(Data::support_no_blocking,
+                      "Cannot combine incompatible child block structures without static blocking. "
+                      "Did you want to apply static blocking at this level?");
 
         // Just forward the child vector type
         typedef typename Data::child_vector_type vector_type;
@@ -330,9 +330,9 @@ namespace Dune {
         >
         : public Data
       {
-        dune_static_assert(Data::support_no_blocking,
-                           "Incompatible child block structures detected, cannot perform dynamic blocking. "
-                           "Did you want to apply static blocking at this level?");
+        static_assert(Data::support_no_blocking,
+                      "Incompatible child block structures detected, cannot perform dynamic blocking. "
+                      "Did you want to apply static blocking at this level?");
 
         // Wrap the child vector type in another BlockVector
         typedef BlockVector<typename Data::child_vector_type> vector_type;

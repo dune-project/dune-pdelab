@@ -851,7 +851,7 @@ namespace Dune {
       template<class V>
       typename V::ElementType norm(const V& v) const
       {
-        dune_static_assert
+        static_assert
           (AlwaysFalse<V>::value,
            "ISTLBackend_OVLP_ExplicitDiagonal::norm() should not be "
            "neccessary, so we skipped the implementation.  If you have a "

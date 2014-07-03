@@ -6,7 +6,6 @@
 #include <cstddef>
 
 #include <dune/common/forloop.hh>
-#include <dune/common/static_assert.hh>
 #include <dune/common/tuples.hh>
 #include <dune/common/tupleutility.hh>
 #include <dune/common/typetraits.hh>
@@ -197,10 +196,10 @@ namespace Dune {
       //! \brief Whether to visit the skeleton methods from both sides
       enum { doSkeletonTwoSided          =
              AccFlag<TwoSidedSkeletonRequiredValue>::value  };
-      dune_static_assert(!(AccFlag<OneSidedSkeletonRequiredValue>::value &&
-                           AccFlag<TwoSidedSkeletonRequiredValue>::value),
-                         "Some summands require a one-sided skelton, others a "
-                         "two-sided skeleton.  This is not supported.");
+      static_assert(!(AccFlag<OneSidedSkeletonRequiredValue>::value &&
+                      AccFlag<TwoSidedSkeletonRequiredValue>::value),
+                    "Some summands require a one-sided skelton, others a "
+                    "two-sided skeleton.  This is not supported.");
 
       //! \} Control flags
 

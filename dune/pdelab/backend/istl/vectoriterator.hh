@@ -6,7 +6,6 @@
 #include <iterator>
 #include <cassert>
 
-#include <dune/common/static_assert.hh>
 #include <dune/common/nullptr.hh>
 #include <dune/common/tuples.hh>
 #include <dune/pdelab/backend/istl/tags.hh>
