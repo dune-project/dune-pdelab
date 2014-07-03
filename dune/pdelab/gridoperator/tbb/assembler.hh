@@ -192,17 +192,9 @@ namespace Dune{
       typedef LocalFunctionSpace<GFSU, TrialSpaceTag> LFSU;
       typedef LocalFunctionSpace<GFSV, TestSpaceTag> LFSV;
 
-      typedef typename std::conditional<
-        LocalAssemblerEngine::needs_constraints_caching,
-        LFSIndexCache<LFSU, CU>,
-        LFSIndexCache<LFSU, EmptyTransformation>
-        >::type LFSUCache;
+      typedef LFSIndexCache<LFSU,CU> LFSUCache;
 
-      typedef typename std::conditional<
-        LocalAssemblerEngine::needs_constraints_caching,
-        LFSIndexCache<LFSV, CV>,
-        LFSIndexCache<LFSV, EmptyTransformation>
-        >::type LFSVCache;
+      typedef LFSIndexCache<LFSV,CV> LFSVCache;
 
       const Assembler &assembler;
 
