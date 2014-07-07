@@ -181,7 +181,7 @@ namespace Dune{
       const GFSU& gfsu;
       const GFSV& gfsv;
 
-    private:
+    protected:
       typename conditional<
         is_same<CU,EmptyTransformation>::value,
         const CU,
@@ -193,7 +193,6 @@ namespace Dune{
         const CV&
         >::type cv;
 
-    protected:
       unsigned verbosity;
     };
 
