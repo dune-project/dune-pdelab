@@ -4,10 +4,15 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include<algorithm>
+#include<bitset>
 #include<iostream>
 #include<vector>
 #include<map>
 #include<string>
+
+#include<dune/common/array.hh>
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
@@ -207,8 +212,8 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int chunk_size
   FType f(gv);
   typedef J<GV,R> JType;
   JType j(gv);
-  typedef Dune::PDELab::Poisson<FType,ConstraintsParameters,JType,q> LOP;
-  LOP lop(f,constraintsparameters,j);
+  typedef Dune::PDELab::Poisson<FType,ConstraintsParameters,JType> LOP;
+  LOP lop(f,constraintsparameters,j,q);
 
   // make grid operator
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,
@@ -322,8 +327,9 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
+      Dune::array<int,2> N;
+      std::fill(N.begin(), N.end(), 1);
+      std::bitset<2> B;
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(3);
 
@@ -344,8 +350,9 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,2> L(1.0);
-      Dune::FieldVector<int,2> N(1);
-      Dune::FieldVector<bool,2> B(false);
+      Dune::array<int,2> N;
+      std::fill(N.begin(), N.end(), 1);
+      std::bitset<2> B;
       Dune::YaspGrid<2> grid(L,N,B,0);
       grid.globalRefine(atoi(argv[1]));
 
@@ -367,8 +374,9 @@ int main(int argc, char** argv)
     {
       // make grid
       Dune::FieldVector<double,3> L(1.0);
-      Dune::FieldVector<int,3> N(1);
-      Dune::FieldVector<bool,3> B(false);
+      Dune::array<int,3> N;
+      std::fill(N.begin(), N.end(), 1);
+      std::bitset<3> B;
       Dune::YaspGrid<3> grid(L,N,B,0);
       grid.globalRefine(3);
 
