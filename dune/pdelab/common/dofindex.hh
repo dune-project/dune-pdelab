@@ -39,7 +39,7 @@ namespace Dune {
         typedef const array<T,entity_n>& EntityIndex;
         typedef typename MultiIndex<T,tree_n>::View TreeIndex;
 
-        const EntityIndex& entityIndex() const
+        EntityIndex entityIndex() const
         {
           return _entity_index_view;
         }
@@ -84,7 +84,7 @@ namespace Dune {
           , _tree_index_view(dof_index._tree_index.view(size))
         {}
 
-        View(const EntityIndex& entity_index, const TreeIndex& tree_index)
+        View(EntityIndex entity_index, const TreeIndex& tree_index)
           : _entity_index_view(entity_index)
           , _tree_index_view(tree_index)
         {}
