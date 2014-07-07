@@ -28,123 +28,119 @@ namespace Dune {
     // local function space base: metaprograms
     //=======================================
 
-    namespace {
+    // the bogus template parameter is necessary to make GCC honor the friend declaration
+    // in the LocalFunctionSpace (probably a GCC bug)
+    template<typename = int>
+    struct PropagateGlobalStorageVisitor
+      : public TypeTree::TreeVisitor
+      , public TypeTree::DynamicTraversal
+    {
 
-      // the bogus template parameter is necessary to make GCC honor the friend declaration
-      // in the LocalFunctionSpace (probably a GCC bug)
-      template<typename = int>
-      struct PropagateGlobalStorageVisitor
-        : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
+      template<typename LFS, typename Child, typename TreePath, typename ChildIndex>
+      void beforeChild(const LFS& lfs, Child& child, TreePath treePath, ChildIndex childIndex) const
       {
+        child._dof_indices = lfs._dof_indices;
+      }
+    };
 
-        template<typename LFS, typename Child, typename TreePath, typename ChildIndex>
-        void beforeChild(const LFS& lfs, Child& child, TreePath treePath, ChildIndex childIndex) const
-        {
-          child._dof_indices = lfs._dof_indices;
-        }
-      };
+    // This visitor is not used in standard PDELab code, but is necessary for MultiDomain
+    // It is defined here due to the necessary friend declarations in the local function spaces.
+    // for template parameter see above
+    template<typename = int>
+    struct ClearSizeVisitor
+      : public TypeTree::TreeVisitor
+      , public TypeTree::DynamicTraversal
+    {
 
-      // This visitor is not used in standard PDELab code, but is necessary for MultiDomain
-      // It is defined here due to the necessary friend declarations in the local function spaces.
-      // for template parameter see above
-      template<typename = int>
-      struct ClearSizeVisitor
-        : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
+      template<typename Node, typename TreePath>
+      void pre(Node& node, TreePath treePath)
       {
+        leaf(node,treePath);
+      }
 
-        template<typename Node, typename TreePath>
-        void pre(Node& node, TreePath treePath)
-        {
-          leaf(node,treePath);
-        }
-
-        template<typename Node, typename TreePath>
-        void leaf(Node& node, TreePath treePath)
-        {
-          node.offset = offset;
-          node.n = 0;
-        }
-
-        ClearSizeVisitor(std::size_t offset_)
-          : offset(offset_)
-        {}
-
-        const std::size_t offset;
-
-      };
-
-
-      template<typename Entity>
-      struct ComputeSizeVisitor
-        : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
+      template<typename Node, typename TreePath>
+      void leaf(Node& node, TreePath treePath)
       {
+        node.offset = offset;
+        node.n = 0;
+      }
 
-        template<typename Node, typename TreePath>
-        void pre(Node& node, TreePath treePath)
-        {
-          node.offset = offset;
-        }
+      ClearSizeVisitor(std::size_t offset_)
+        : offset(offset_)
+      {}
 
-        template<typename Node, typename TreePath>
-        void post(Node& node, TreePath treePath)
-        {
-          node.n = offset - node.offset;
-        }
+      const std::size_t offset;
 
-        template<typename Node, typename TreePath>
-        void leaf(Node& node, TreePath treePath)
-        {
-          node.offset = offset;
-          Node::FESwitch::setStore(node.pfe, node.pgfs->finiteElementMap().find(e));
-          node.n = Node::FESwitch::basis(*node.pfe).size();
-          offset += node.n;
-        }
-
-        ComputeSizeVisitor(const Entity& entity, std::size_t offset = 0)
-          : e(entity)
-          , offset(offset)
-        {}
-
-        const Entity& e;
-        std::size_t offset;
-
-      };
+    };
 
 
-      template<typename Entity>
-      struct FillIndicesVisitor
-        : public TypeTree::TreeVisitor
-        , public TypeTree::DynamicTraversal
+    template<typename Entity>
+    struct ComputeSizeVisitor
+      : public TypeTree::TreeVisitor
+      , public TypeTree::DynamicTraversal
+    {
+
+      template<typename Node, typename TreePath>
+      void pre(Node& node, TreePath treePath)
       {
+        node.offset = offset;
+      }
 
-        template<typename Node, typename TreePath>
-        void leaf(Node& node, TreePath treePath)
-        {
-          // setup DOFIndices for this finite element
-          node.dofIndices(e,node._dof_indices->begin()+node.offset,node._dof_indices->begin()+node.offset+node.n);
-        }
+      template<typename Node, typename TreePath>
+      void post(Node& node, TreePath treePath)
+      {
+        node.n = offset - node.offset;
+      }
 
-        template<typename Node, typename Child, typename TreePath, typename ChildIndex>
-        void afterChild(const Node& node, const Child& child, TreePath treePath, ChildIndex childIndex)
-        {
-          for (std::size_t i = 0; i<child.n; ++i)
-            {
-              // update tree path for the DOFIndices of the child
-              (*node._dof_indices)[child.offset+i].treeIndex().push_back(childIndex);
-            }
-        }
+      template<typename Node, typename TreePath>
+      void leaf(Node& node, TreePath treePath)
+      {
+        node.offset = offset;
+        Node::FESwitch::setStore(node.pfe, node.pgfs->finiteElementMap().find(e));
+        node.n = Node::FESwitch::basis(*node.pfe).size();
+        offset += node.n;
+      }
 
-        FillIndicesVisitor(const Entity& entity)
-          : e(entity)
-        {}
+      ComputeSizeVisitor(const Entity& entity, std::size_t offset = 0)
+        : e(entity)
+        , offset(offset)
+      {}
 
-        const Entity& e;
-      };
+      const Entity& e;
+      std::size_t offset;
 
-    } // end empty namespace
+    };
+
+
+    template<typename Entity>
+    struct FillIndicesVisitor
+      : public TypeTree::TreeVisitor
+      , public TypeTree::DynamicTraversal
+    {
+
+      template<typename Node, typename TreePath>
+      void leaf(Node& node, TreePath treePath)
+      {
+        // setup DOFIndices for this finite element
+        node.dofIndices(e,node._dof_indices->begin()+node.offset,node._dof_indices->begin()+node.offset+node.n);
+      }
+
+      template<typename Node, typename Child, typename TreePath, typename ChildIndex>
+      void afterChild(const Node& node, const Child& child, TreePath treePath, ChildIndex childIndex)
+      {
+        for (std::size_t i = 0; i<child.n; ++i)
+          {
+            // update tree path for the DOFIndices of the child
+            (*node._dof_indices)[child.offset+i].treeIndex().push_back(childIndex);
+          }
+      }
+
+      FillIndicesVisitor(const Entity& entity)
+        : e(entity)
+      {}
+
+      const Entity& e;
+    };
 
     //=======================================
     // local function space base: base class
