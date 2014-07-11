@@ -729,6 +729,9 @@ namespace Dune {
           {
             BCType bctype = param.bctype(ig.intersection(),it->position());
 
+            if (bctype == ConvectionDiffusionBoundaryConditions::None)
+              continue;
+
             // position of quadrature point in local coordinates of elements
             Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
 
@@ -923,7 +926,10 @@ namespace Dune {
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
             BCType bctype = param.bctype(ig.intersection(),it->position());
-            if (bctype == ConvectionDiffusionBoundaryConditions::Neumann) continue;
+
+            if (bctype == ConvectionDiffusionBoundaryConditions::None ||
+                bctype == ConvectionDiffusionBoundaryConditions::Neumann)
+              continue;
 
             // position of quadrature point in local coordinates of elements
             Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
