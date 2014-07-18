@@ -694,9 +694,6 @@ namespace Dune
         if (param.hasKey("VerbosityLevel"))
           this->setVerbosityLevel(
             param.get<unsigned int>("VerbosityLevel"));
-        if (param.hasKey("VerbosityLevel"))
-          this->setVerbosityLevel(
-            param.get<unsigned int>("VerbosityLevel"));
         if (param.hasKey("Reduction"))
           this->setReduction(
             param.get<RFType>("Reduction"));
