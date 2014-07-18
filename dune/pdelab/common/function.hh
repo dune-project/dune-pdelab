@@ -331,7 +331,7 @@ namespace Dune {
       }
 
     private:
-      const G& g;
+      G g;
       const T& t;
     };
 
