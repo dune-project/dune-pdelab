@@ -377,7 +377,7 @@ namespace Dune {
       {}
     };
 
-#if HAVE_SUPERLU
+#if HAVE_SUPERLU || DOXYGEN
     /**
      * @brief Solver backend using SuperLU as a direct solver.
      */
@@ -427,7 +427,7 @@ namespace Dune {
     private:
       int verbose;
     };
-#endif // HAVE_SUPERLU
+#endif // HAVE_SUPERLU || DOXYGEN
 
     //! Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
     class ISTLBackend_SEQ_ExplicitDiagonal
