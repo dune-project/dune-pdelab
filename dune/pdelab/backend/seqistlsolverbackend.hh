@@ -16,6 +16,7 @@
 #include <dune/istl/paamg/pinfo.hh>
 #include <dune/istl/io.hh>
 #include <dune/istl/superlu.hh>
+#include <dune/istl/umfpack.hh>
 
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
