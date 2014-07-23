@@ -9,4 +9,4 @@ set(gridoperatortbb_HEADERS
 # include not needed for CMake
 # include $(top_srcdir)/am/global-rules
 
-install(FILES ${gridoperatortbb_HEADERS} DESTINATION ${gridoperatortbbdir})
+install(FILES ${gridoperatortbb_HEADERS} DESTINATION ${gridoperatortbbtdir})
