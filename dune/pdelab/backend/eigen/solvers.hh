@@ -4,15 +4,17 @@
 #define DUNE_PDELAB_EIGEN_SOLVERS_HH
 
 #include <dune/common/deprecated.hh>
+#include <dune/common/timer.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
 #include <dune/pdelab/constraints/common/constraints.hh>
 
-#include "solver.hh"
+#include "../solver.hh"
 
 #if HAVE_EIGEN
 
 #include <Eigen/Eigen>
+#include <Eigen/Sparse>
 
 namespace Dune {
   namespace PDELab {

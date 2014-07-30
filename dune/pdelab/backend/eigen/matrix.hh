@@ -8,6 +8,8 @@
 #if HAVE_EIGEN
 
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
+#include <dune/pdelab/backend/tags.hh>
+#include <dune/pdelab/ordering/orderingbase.hh>
 #include <Eigen/Sparse>
 
 namespace Dune

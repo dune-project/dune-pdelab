@@ -4,9 +4,13 @@
 #if HAVE_EIGEN
 
 #include <dune/common/shared_ptr.hh>
+
+#include <dune/istl/bvector.hh>
+
 #include <dune/pdelab/backend/tags.hh>
 #include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
+#include "descriptors.hh"
 #include <Eigen/Dense>
 
 namespace Dune {

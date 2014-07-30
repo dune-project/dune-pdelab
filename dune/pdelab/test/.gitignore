@@ -19,6 +19,7 @@ testedges02dinterpolationglobal
 testedges03dfem
 testedges03dgridfunctionspaceglobal
 testedges03dinterpolationglobal
+testeigenbackend
 testelasticity
 testelectrodynamic
 testelectrodynamic-newmark
@@ -36,6 +37,7 @@ testpoisson-old
 testrt0
 testrt02dgridfunctionspace
 testrtfem
+testsimplebackend
 testutilities
 test-composed-iis-gfs
 test-dg-amg

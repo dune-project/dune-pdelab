@@ -3,6 +3,8 @@
 #ifndef DUNE_PDELAB_COMMON_POLYMORPHICBUFFERWRAPPER_HH
 #define DUNE_PDELAB_COMMON_POLYMORPHICBUFFERWRAPPER_HH
 
+#include <cstddef>
+
 namespace Dune {
   namespace PDELab {
 
