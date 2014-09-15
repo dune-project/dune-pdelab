@@ -18,6 +18,8 @@
 #endif
 #if HAVE_ALUGRID
 #include <dune/grid/alugrid.hh>
+#elif HAVE_DUNE_ALUGRID
+#include <dune/alugrid/grid.hh>
 #endif
 #if HAVE_UG
 #include <dune/grid/uggrid.hh>
@@ -148,12 +150,12 @@ int main(int argc, char** argv)
          result, 250000, "alberta-square");
 #endif // HAVE_ALBERTA
 
-#if HAVE_ALUGRID
+#if HAVE_ALUGRID || HAVE_DUNE_ALUGRID
     test(UnitTriangleMaker          <Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> >(),
          result, 250000, "alu-triangle");
     test(TriangulatedUnitSquareMaker<Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> >(),
          result, 250000, "alu-square");
-#endif // HAVE_ALUGRID
+#endif // HAVE_ALUGRID || HAVE_DUNE_ALUGRID
 
 #if HAVE_UG
     test(UnitTriangleMaker          <Dune::UGGrid<2>            >(),

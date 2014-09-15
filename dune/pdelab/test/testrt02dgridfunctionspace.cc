@@ -15,6 +15,8 @@
 #endif
 #if HAVE_ALUGRID
 #include <dune/grid/alugrid.hh>
+#elif  HAVE_DUNE_ALUGRID
+#include <dune/alugrid/grid.hh>
 #endif
 #if HAVE_UG
 #include <dune/grid/uggrid.hh>
@@ -100,7 +102,7 @@ int main(int argc, char** argv)
 #endif // HAVE_ALBERTA
 
 
-#if HAVE_ALUGRID
+#if HAVE_ALUGRID || HAVE_DUNE_ALUGRID
     std::cout << "ALU" << std::endl;
     {
       typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
@@ -111,7 +113,7 @@ int main(int argc, char** argv)
       rt02DGridFunctionSpace(grid.leafGridView(), "alu");
     }
     result = 0;
-#endif // HAVE_ALUGRID
+#endif // HAVE_ALUGRID || HAVE_DUNE_ALUGRID
 
 #if HAVE_UG
     std::cout << "UG" << std::endl;

@@ -155,7 +155,7 @@ int main(int argc, char** argv)
     testrt0(albertagrid.leafGridView());
 #endif
 
-#if HAVE_ALUGRID
+#if HAVE_ALUGRID || HAVE_DUNE_ALUGRID
  	ALUUnitSquare alugrid;
   	alugrid.globalRefine(5);
     testrt0(alugrid.leafGridView());

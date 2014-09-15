@@ -22,6 +22,8 @@
 #if HAVE_ALUGRID
 #include<dune/grid/alugrid.hh>
 #include<dune/grid/alugrid/3d/alu3dgridfactory.hh>
+#elif HAVE_DUNE_ALUGRID
+#include <dune/alugrid/grid.hh>
 #endif
 
 class YaspUnitSquare : public Dune::YaspGrid<2>
@@ -35,14 +37,14 @@ public:
   {}
 };
 
-#if HAVE_ALUGRID
+#if HAVE_ALUGRID || HAVE_DUNE_ALUGRID
 class ALUUnitSquare : public Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming>
 {
 public:
   ALUUnitSquare () : Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming>(GRIDSDIR "/2dsimplex.alu") {}
 };
 
-#endif //HAVE_ALUGRID
+#endif //HAVE_ALUGRID || HAVE_DUNE_ALUGRID
 
 
 #if HAVE_ALBERTA
@@ -128,7 +130,7 @@ public:
   }
 };
 
-#if HAVE_ALUGRID
+#if HAVE_ALUGRID || HAVE_DUNE_ALUGRID
 template<>
 class UnitTriangleMaker<Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> > {
   typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
@@ -137,7 +139,7 @@ public:
     return Dune::shared_ptr<Grid>(new Grid(GRIDSDIR "/2dtriangle.alu"));
   }
 };
-#endif // HAVE_ALUGRID
+#endif // HAVE_ALUGRID || HAVE_DUNE_ALUGRID
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -169,7 +171,7 @@ public:
   }
 };
 
-#if HAVE_ALUGRID
+#if HAVE_ALUGRID || HAVE_DUNE_ALUGRID
 template<>
 class TriangulatedUnitSquareMaker<Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> > {
   typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
@@ -178,7 +180,7 @@ public:
     return Dune::shared_ptr<Grid>(new Grid(GRIDSDIR "/2dsimplex.alu"));
   }
 };
-#endif // HAVE_ALUGRID
+#endif // HAVE_ALUGRID || HAVE_DUNE_ALUGRID
 
 //////////////////////////////////////////////////////////////////////
 //

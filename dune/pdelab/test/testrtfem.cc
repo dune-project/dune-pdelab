@@ -104,7 +104,7 @@ int main(int argc, char** argv)
 
     }
 
-#if HAVE_ALUGRID
+#if HAVE_ALUGRID || HAVE_DUNE_ALUGRID
 
     {
       // 2D simplex tests

@@ -132,7 +132,7 @@ int main(int argc, char** argv)
     testpk(albertagridr->leafGridView());
 #endif
 
-#if HAVE_ALUGRID
+#if HAVE_ALUGRID || HAVE_DUNE_ALUGRID
  	ALUUnitSquare alugrid;
   	alugrid.globalRefine(4);
     testpk(alugrid.leafGridView());
