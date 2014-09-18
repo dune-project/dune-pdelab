@@ -103,13 +103,6 @@ add_dune_superlu_flags(testpoisson)
 add_dune_alberta_flags(testpoisson GRIDDIM 2)
 list(APPEND MOSTLYCLEANFILES poisson_*.vtu)
 
-list(APPEND NORMALTESTS testpoisson_globalfe)
-add_executable(testpoisson_globalfe testpoisson-globalfe.cc)
-target_link_libraries(testpoisson_globalfe dunepdelab ${DUNE_LIBS})
-add_dune_superlu_flags(testpoisson_globalfe)
-add_dune_alberta_flags(testpoisson_globalfe GRIDDIM 2)
-list(APPEND MOSTLYCLEANFILES poisson_globalfe_*.vtu)
-
 list(APPEND NORMALTESTS testrt0)
 add_executable(testrt0 testrt0.cc)
 target_link_libraries(testrt0 dunepdelab ${DUNE_LIBS})
