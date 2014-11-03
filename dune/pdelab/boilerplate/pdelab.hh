@@ -983,7 +983,8 @@ namespace Dune {
         // default implementation, use only specializations below
         template<typename T, typename N, unsigned int degree,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 typename VBET=ISTLVectorBackend<ISTLParameters::static_blocking,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
+                 //typename VBET=ISTLVectorBackend<ISTLParameters::static_blocking,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
+                 typename VBET=ISTLVectorBackend<> >
         class DGQkSpace
         {
         public:
@@ -1677,6 +1678,60 @@ namespace Dune {
         private:
             shared_ptr<GO> gop;
         };
+
+
+
+        // packaging of the CG_AMG_SSOR solver: default version is sequential
+        template<typename FS, typename ASS, SolverCategory::Category st = SolverCategory::sequential>
+        class ISTLSolverBackend_SEQ_SuperLU
+        {
+        public:
+            // types exported
+            typedef ISTLBackend_SEQ_SuperLU LS;
+
+            ISTLSolverBackend_SEQ_SuperLU (const FS& fs, const ASS& ass, unsigned maxiter_=5000,
+                                           int verbose_=1, bool reuse_=false, bool usesuperlu_=true)
+            {
+                lsp = shared_ptr<LS>(new LS(verbose_));
+            }
+
+            LS& getLS () {return *lsp;}
+            const LS& getLS () const { return *lsp;}
+            LS& operator*(){return *lsp;}
+            LS* operator->() { return lsp.operator->(); }
+            const LS& operator*() const{return *lsp;}
+            const LS* operator->() const{ return lsp.operator->();}
+
+       private:
+            shared_ptr<LS> lsp;
+        };
+
+
+        // packaging of the CG_AMG_SSOR solver: default version is sequential
+        template<typename FS, typename ASS, SolverCategory::Category st = SolverCategory::sequential>
+        class ISTLSolverBackend_SEQ_BiCGStab_ILU
+        {
+        public:
+            // types exported
+            typedef ISTLBackend_SEQ_BCGS_ILU0 LS;
+
+            ISTLSolverBackend_SEQ_BiCGStab_ILU (const FS& fs, const ASS& ass, unsigned maxiter_=5000,
+                                           int verbose_=1, bool reuse_=false, bool usesuperlu_=true)
+            {
+                lsp = shared_ptr<LS>(new LS(maxiter_,verbose_));
+            }
+
+            LS& getLS () {return *lsp;}
+            const LS& getLS () const { return *lsp;}
+            LS& operator*(){return *lsp;}
+            LS* operator->() { return lsp.operator->(); }
+            const LS& operator*() const{return *lsp;}
+            const LS* operator->() const{ return lsp.operator->();}
+
+       private:
+            shared_ptr<LS> lsp;
+        };
+
 
 
         // packaging of the CG_AMG_SSOR solver: default version is sequential
