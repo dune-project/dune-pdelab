@@ -14,6 +14,7 @@
 
 // first of all we include a lot of dune grids and pdelab files
 #include <iostream>
+#include <memory>
 
 #include <dune/common/parallel/mpihelper.hh> // include mpi helper class
 #include <dune/common/parametertreeparser.hh>
@@ -71,6 +72,9 @@
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/gridoperator/onestep.hh>
+#if HAVE_TBB
+#include <dune/pdelab/gridoperator/tbb.hh>
+#endif
 #include <dune/pdelab/stationary/linearproblem.hh>
 #include <dune/pdelab/finiteelementmap/pkfem.hh>
 #include <dune/pdelab/finiteelementmap/p0fem.hh>
@@ -1518,6 +1522,128 @@ namespace Dune {
             shared_ptr<GO> gop;
         };
 
+#if HAVE_TBB
+        // TBB variant of GalerkinGlobalAssemblerNewBackend
+        template<typename Partitioning, typename LockManager, typename FS,
+                 typename LOP,
+                 SolverCategory::Category st = SolverCategory::sequential>
+        class TBBGalerkinGlobalAssemblerNewBackend
+        {
+        public:
+            // export types
+            typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+            typedef Dune::PDELab::TBBGridOperator<
+                Partitioning, typename FS::GFS, typename FS::GFS, LOP, MBE,
+                typename FS::NT, typename FS::NT, typename FS::NT, LockManager,
+                typename FS::CC, typename FS::CC> GO;
+            typedef typename GO::Jacobian MAT;
+
+            TBBGalerkinGlobalAssemblerNewBackend
+            ( const std::shared_ptr<LockManager> &lockManager, const FS& fs,
+              LOP& lop, const MBE& mbe)
+            {
+                gop = std::make_shared<GO>(fs.getGFS(), fs.getCC(),
+                                           fs.getGFS(), fs.getCC(),
+                                           lop, lockManager, mbe);
+            }
+
+            // return grid reference
+            GO& getGO ()
+            {
+                return *gop;
+            }
+
+            // return grid reference const version
+            const GO& getGO () const
+            {
+                return *gop;
+            }
+
+            GO& operator*()
+            {
+                return *gop;
+            }
+
+            GO* operator->()
+            {
+                return gop.operator->();
+            }
+
+            const GO& operator*() const
+            {
+                return *gop;
+            }
+
+            const GO* operator->() const
+            {
+                return gop.operator->();
+            }
+
+        private:
+            std::shared_ptr<GO> gop;
+        };
+
+        // TBB variant of GalerkinGlobalAssemblerNewBackend
+        // nonoverlapping variant
+        template<typename Partitioning, typename LockManager, typename FS,
+                 typename LOP>
+        class TBBGalerkinGlobalAssemblerNewBackend<
+            Partitioning, LockManager, FS, LOP, SolverCategory::nonoverlapping>
+        {
+        public:
+            // export types
+            typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
+            typedef Dune::PDELab::TBBGridOperator<
+                Partitioning, typename FS::GFS, typename FS::GFS, LOP, MBE,
+                typename FS::NT, typename FS::NT, typename FS::NT, LockManager,
+                typename FS::CC, typename FS::CC, true> GO;
+            typedef typename GO::Jacobian MAT;
+
+            TBBGalerkinGlobalAssemblerNewBackend
+            ( const std::shared_ptr<LockManager> &lockManager, const FS& fs,
+              LOP& lop, const MBE& mbe)
+            {
+                gop = std::make_shared<GO>(fs.getGFS(), fs.getCC(),
+                                           fs.getGFS(), fs.getCC(),
+                                           lop, lockManager, mbe);
+            }
+
+            // return grid reference
+            GO& getGO ()
+            {
+                return *gop;
+            }
+
+            // return grid reference const version
+            const GO& getGO () const
+            {
+                return *gop;
+            }
+
+            GO& operator*()
+            {
+                return *gop;
+            }
+
+            GO* operator->()
+            {
+                return gop.operator->();
+            }
+
+            const GO& operator*() const
+            {
+                return *gop;
+            }
+
+            const GO* operator->() const
+            {
+                return gop.operator->();
+            }
+
+        private:
+            std::shared_ptr<GO> gop;
+        };
+#endif // HAVE_TBB
 
 
 
