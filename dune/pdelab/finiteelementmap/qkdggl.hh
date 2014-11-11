@@ -61,7 +61,7 @@ namespace Dune
             w_gl[newj] = it->weight();
             count++;
           }
-        for (size_t j=0; j<matched_size/2; j++)
+        for (int j=0; j<matched_size/2; j++)
           if (xi_gl[j]>0.5)
             {
               R temp=xi_gl[j];
