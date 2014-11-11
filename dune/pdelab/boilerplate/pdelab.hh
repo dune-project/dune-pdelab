@@ -243,7 +243,7 @@ namespace Dune {
                 Dune::FieldVector<double,dimworld> L;
                 Dune::array<int,dimworld> N;
                 std::bitset<dimworld> B(false);
-                for (size_t i=0; i<dimworld; i++)
+                for (int i=0; i<dimworld; i++)
                     {
                         L[i] = upper_right[i];
                         N[i] = cells[i];
