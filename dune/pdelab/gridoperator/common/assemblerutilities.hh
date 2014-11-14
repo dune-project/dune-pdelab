@@ -447,12 +447,6 @@ namespace Dune{
         const LFSVIndexCache& lfsv_indices = global_container_view.rowIndexCache();
         const LFSUIndexCache& lfsu_indices = global_container_view.colIndexCache();
 
-        typedef typename LFSVIndexCache::LocalFunctionSpace LFSV;
-        const LFSV& lfsv = lfsv_indices.localFunctionSpace();
-
-        typedef typename LFSUIndexCache::LocalFunctionSpace LFSU;
-        const LFSU& lfsu = lfsu_indices.localFunctionSpace();
-
         // write entries without considering constraints.
         // Dirichlet-constrained rows will be fixed in a postprocessing step.
         for (auto it = local_container.begin(); it != local_container.end(); ++it)
