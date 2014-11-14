@@ -170,6 +170,8 @@ MOSTLYCLEANFILES += testlaplacedirichletccfv-2d.vtu \
 
 NORMALTESTS += testlockmanager
 testlockmanager_SOURCES = testlockmanager.cc
+testlockmanager_LDFLAGS = $(AM_LDFLAGS)		\
+	$(STD_THREAD_LDFLAGS)
 
 NORMALTESTS += testtbbgridoperator
 testtbbgridoperator_SOURCES = testtbbgridoperator.cc
