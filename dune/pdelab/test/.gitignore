@@ -8,6 +8,7 @@
 *.trs
 /testbatchedtbbgridoperator
 /testcoloredtbbgridoperator
+/testlockmanager
 /testtbbgridoperator
 dgfparser.log
 testanalytic

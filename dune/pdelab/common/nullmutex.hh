@@ -21,9 +21,11 @@ namespace Dune {
     class NullMutex
     {
     public:
+#if ! SILENCE_NULLMUTEX_WARNING
       DUNE_DEPRECATED_MSG("Warning: Dune::PDELab::NullMutex should only be "
                           "used for debugging/benchmarking purposes, any "
                           "actual results will probably be bogus.")
+#endif
         NullMutex();
       inline void lock() {}
       inline void unlock() {}
