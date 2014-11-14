@@ -2,7 +2,10 @@
 #define DUNE_PDELAB_TBB_JACOBIANENGINE_HH
 
 #include <cstddef>
+#include <memory>
 #include <mutex>
+
+#include <boost/utility.hpp>
 
 #include <tbb/tbb_stddef.h>
 
@@ -33,8 +36,13 @@ namespace Dune{
      */
     template<class LA>
     class ColoredTBBLocalJacobianAssemblerEngine :
+      private boost::base_from_member<
+        const std::shared_ptr<typename LA::LocalOperator> >,
       public DefaultLocalJacobianAssemblerEngine<LA>
     {
+      typedef typename LA::LocalOperator LOP;
+      typedef boost::base_from_member<const std::shared_ptr<LOP> >
+        LOPStorage;
       typedef DefaultLocalJacobianAssemblerEngine<LA> Base;
     public:
       //! \brief Constructor
@@ -43,14 +51,19 @@ namespace Dune{
        *                              creates this engine
        */
       ColoredTBBLocalJacobianAssemblerEngine(const LA &local_assembler_) :
-      Base(local_assembler_)
+        LOPStorage(stackobject_to_shared_ptr(local_assembler_.lop)),
+        Base(local_assembler_)
       { }
       ColoredTBBLocalJacobianAssemblerEngine
       ( ColoredTBBLocalJacobianAssemblerEngine &other, tbb::split) :
-        Base(other)
+        LOPStorage(std::make_shared<LOP>(*other.LOPStorage::member,
+                                         tbb::split())),
+        Base(other, *LOPStorage::member)
       { }
       void join(ColoredTBBLocalJacobianAssemblerEngine &other)
-      { }
+      {
+        LOPStorage::member->join(*other.LOPStorage::member);
+      }
     };
 
     /**
@@ -107,7 +120,8 @@ namespace Dune{
       */
       BatchedTBBLocalJacobianAssemblerEngine
         (const LocalAssembler & local_assembler_)
-        : local_assembler(local_assembler_), lop(local_assembler_.lop),
+        : local_assembler(local_assembler_),
+          lop(stackobject_to_shared_ptr(local_assembler_.lop)),
           al_view(al,1.0),
           al_sn_view(al_sn,1.0),
           al_ns_view(al_ns,1.0),
@@ -116,7 +130,8 @@ namespace Dune{
 
       BatchedTBBLocalJacobianAssemblerEngine
         (BatchedTBBLocalJacobianAssemblerEngine &other, tbb::split)
-        : local_assembler(other.local_assembler), lop(other.lop),
+        : local_assembler(other.local_assembler),
+          lop(std::make_shared<LOP>(*other.lop, tbb::split())),
           global_s_s_view(other.global_s_s_view),
           global_s_n_view(other.global_s_n_view),
           global_a_ss_view(make_shared<typename JacobianView::Buffer>
@@ -136,6 +151,7 @@ namespace Dune{
         other.global_a_sn_view.commit();
         other.global_a_ns_view.commit();
         other.global_a_nn_view.commit();
+        lop->join(*other.lop);
       }
 
       //! Query methods for the global grid assembler
@@ -299,7 +315,8 @@ namespace Dune{
       {
         al_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
-          jacobian_volume(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),al_view);
+          jacobian_volume(*lop, eg, lfsu_cache.localFunctionSpace(), xl,
+                          lfsv_cache.localFunctionSpace(), al_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -312,7 +329,11 @@ namespace Dune{
         al_nn_view.setWeight(local_assembler.weight);
 
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
-          jacobian_skeleton(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),lfsu_n_cache.localFunctionSpace(),xn,lfsv_n_cache.localFunctionSpace(),al_view,al_sn_view,al_ns_view,al_nn_view);
+          jacobian_skeleton(*lop, ig, lfsu_s_cache.localFunctionSpace(), xl,
+                            lfsv_s_cache.localFunctionSpace(),
+                            lfsu_n_cache.localFunctionSpace(), xn,
+                            lfsv_n_cache.localFunctionSpace(), al_view,
+                            al_sn_view, al_ns_view, al_nn_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -320,7 +341,8 @@ namespace Dune{
       {
         al_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
-          jacobian_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),al_view);
+          jacobian_boundary(*lop, ig, lfsu_s_cache.localFunctionSpace(), xl,
+                            lfsv_s_cache.localFunctionSpace(), al_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -342,7 +364,10 @@ namespace Dune{
       {
         al_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::
-          jacobian_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),al_view);
+          jacobian_volume_post_skeleton(*lop, eg,
+                                        lfsu_cache.localFunctionSpace(), xl,
+                                        lfsv_cache.localFunctionSpace(),
+                                        al_view);
       }
 
       //! @}
@@ -353,7 +378,7 @@ namespace Dune{
       const LocalAssembler & local_assembler;
 
       //! Reference to the local operator
-      const LOP & lop;
+      const std::shared_ptr<LOP> lop;
 
       //! Pointer to the current solution vector for which to assemble
       SolutionView global_s_s_view;
@@ -441,7 +466,8 @@ namespace Dune{
          creates this engine
       */
       TBBLocalJacobianAssemblerEngine(const LocalAssembler & local_assembler_)
-        : local_assembler(local_assembler_), lop(local_assembler_.lop),
+        : local_assembler(local_assembler_),
+          lop(stackobject_to_shared_ptr(local_assembler_.lop)),
           al_view(al,1.0),
           al_sn_view(al_sn,1.0),
           al_ns_view(al_ns,1.0),
@@ -450,7 +476,8 @@ namespace Dune{
 
       TBBLocalJacobianAssemblerEngine(TBBLocalJacobianAssemblerEngine &other,
                                       tbb::split)
-        : local_assembler(other.local_assembler), lop(other.lop),
+        : local_assembler(other.local_assembler),
+          lop(std::make_shared<LOP>(*other.lop, tbb::split())),
           lockmgr(other.lockmgr),
           global_s_s_view(other.global_s_s_view),
           global_s_n_view(other.global_s_n_view),
@@ -465,7 +492,9 @@ namespace Dune{
       {}
 
       void join(TBBLocalJacobianAssemblerEngine &other)
-      { }
+      {
+        lop->join(*other.lop);
+      }
 
       //! Query methods for the global grid assembler
       //! @{
@@ -630,7 +659,8 @@ namespace Dune{
       {
         al_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
-          jacobian_volume(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),al_view);
+          jacobian_volume(*lop, eg, lfsu_cache.localFunctionSpace(), xl,
+                          lfsv_cache.localFunctionSpace(), al_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -643,7 +673,11 @@ namespace Dune{
         al_nn_view.setWeight(local_assembler.weight);
 
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
-          jacobian_skeleton(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),lfsu_n_cache.localFunctionSpace(),xn,lfsv_n_cache.localFunctionSpace(),al_view,al_sn_view,al_ns_view,al_nn_view);
+          jacobian_skeleton(*lop, ig, lfsu_s_cache.localFunctionSpace(), xl,
+                            lfsv_s_cache.localFunctionSpace(),
+                            lfsu_n_cache.localFunctionSpace(), xn,
+                            lfsv_n_cache.localFunctionSpace(), al_view,
+                            al_sn_view, al_ns_view, al_nn_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -651,7 +685,8 @@ namespace Dune{
       {
         al_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
-          jacobian_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),al_view);
+          jacobian_boundary(*lop, ig, lfsu_s_cache.localFunctionSpace(), xl,
+                            lfsv_s_cache.localFunctionSpace(), al_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -673,7 +708,10 @@ namespace Dune{
       {
         al_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::
-          jacobian_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),al_view);
+          jacobian_volume_post_skeleton(*lop, eg,
+                                        lfsu_cache.localFunctionSpace(), xl,
+                                        lfsv_cache.localFunctionSpace(),
+                                        al_view);
       }
 
       //! @}
@@ -684,7 +722,7 @@ namespace Dune{
       const LocalAssembler & local_assembler;
 
       //! Reference to the local operator
-      const LOP & lop;
+      const std::shared_ptr<LOP> lop;
 
       LockManager *lockmgr;
 

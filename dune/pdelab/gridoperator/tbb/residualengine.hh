@@ -2,9 +2,14 @@
 #define DUNE_PDELAB_TBB_RESIDUALENGINE_HH
 
 #include <cstddef>
+#include <memory>
 #include <mutex>
 
+#include <boost/utility.hpp>
+
 #include <tbb/tbb_stddef.h>
+
+#include <dune/common/shared_ptr.hh>
 
 #include <dune/pdelab/backend/common/threadedvectorview.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
@@ -29,8 +34,13 @@ namespace Dune{
      */
     template<typename LA>
     class ColoredTBBLocalResidualAssemblerEngine :
+      private boost::base_from_member<
+        const std::shared_ptr<typename LA::LocalOperator> >,
       public DefaultLocalResidualAssemblerEngine<LA>
     {
+      typedef typename LA::LocalOperator LOP;
+      typedef boost::base_from_member<const std::shared_ptr<LOP> >
+        LOPStorage;
       typedef DefaultLocalResidualAssemblerEngine<LA> Base;
     public:
       //! \brief Constructor
@@ -39,14 +49,19 @@ namespace Dune{
        *                              creates this engine
        */
       ColoredTBBLocalResidualAssemblerEngine(const LA &local_assembler_) :
-      Base(local_assembler_)
+        LOPStorage(stackobject_to_shared_ptr(local_assembler_.lop)),
+        Base(local_assembler_)
       { }
       ColoredTBBLocalResidualAssemblerEngine
       ( ColoredTBBLocalResidualAssemblerEngine &other, tbb::split) :
-        Base(other)
+        LOPStorage(std::make_shared<LOP>(*other.LOPStorage::member,
+                                         tbb::split())),
+        Base(other, *LOPStorage::member)
       { }
       void join(ColoredTBBLocalResidualAssemblerEngine &other)
-      { }
+      {
+        LOPStorage::member->join(*other.LOPStorage::member);
+      }
     };
 
     /**
@@ -103,14 +118,16 @@ namespace Dune{
       */
       BatchedTBBLocalResidualAssemblerEngine
         (const LocalAssembler & local_assembler_)
-        : local_assembler(local_assembler_), lop(local_assembler_.lop),
+        : local_assembler(local_assembler_),
+          lop(stackobject_to_shared_ptr(local_assembler_.lop)),
           rl_view(rl,1.0),
           rn_view(rn,1.0)
       {}
 
       BatchedTBBLocalResidualAssemblerEngine
         (BatchedTBBLocalResidualAssemblerEngine &other, tbb::split)
-        : local_assembler(other.local_assembler), lop(other.lop),
+        : local_assembler(other.local_assembler),
+          lop(std::make_shared<LOP>(*other.lop, tbb::split())),
           global_rl_view(make_shared<typename ResidualView::Buffer>
                          (*other.global_rl_view.buffer())),
           global_rn_view(global_rl_view.buffer()),
@@ -124,6 +141,7 @@ namespace Dune{
       {
         other.global_rl_view.commit();
         other.global_rn_view.commit();
+        lop->join(*other.lop);
       }
 
       //! Query methods for the global grid assembler
@@ -308,7 +326,8 @@ namespace Dune{
       {
         rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
-          alpha_volume(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),rl_view);
+          alpha_volume(*lop, eg, lfsu_cache.localFunctionSpace(), xl,
+                       lfsv_cache.localFunctionSpace(), rl_view);
       }
 
       template<typename EG, typename LFSVC>
@@ -316,7 +335,7 @@ namespace Dune{
       {
         rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaVolume>::
-          lambda_volume(lop,eg,lfsv_cache.localFunctionSpace(),rl_view);
+          lambda_volume(*lop, eg, lfsv_cache.localFunctionSpace(), rl_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -326,7 +345,7 @@ namespace Dune{
         rl_view.setWeight(local_assembler.weight);
         rn_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
-          alpha_skeleton(lop,ig,
+          alpha_skeleton(*lop, ig,
                          lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),
                          lfsu_n_cache.localFunctionSpace(),xn,lfsv_n_cache.localFunctionSpace(),
                          rl_view,rn_view);
@@ -338,7 +357,8 @@ namespace Dune{
         rl_view.setWeight(local_assembler.weight);
         rn_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaSkeleton>::
-          lambda_skeleton(lop, ig, lfsv_s_cache.localFunctionSpace(), lfsv_n_cache.localFunctionSpace(), rl_view, rn_view);
+          lambda_skeleton(*lop, ig, lfsv_s_cache.localFunctionSpace(),
+                          lfsv_n_cache.localFunctionSpace(), rl_view, rn_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -346,7 +366,8 @@ namespace Dune{
       {
         rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
-          alpha_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),rl_view);
+          alpha_boundary(*lop, ig, lfsu_s_cache.localFunctionSpace(), xl,
+                         lfsv_s_cache.localFunctionSpace(), rl_view);
       }
 
       template<typename IG, typename LFSVC>
@@ -354,7 +375,8 @@ namespace Dune{
       {
         rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaBoundary>::
-          lambda_boundary(lop,ig,lfsv_s_cache.localFunctionSpace(),rl_view);
+          lambda_boundary(*lop, ig, lfsv_s_cache.localFunctionSpace(),
+                          rl_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -376,7 +398,9 @@ namespace Dune{
       {
         rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::
-          alpha_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),rl_view);
+          alpha_volume_post_skeleton(*lop, eg, lfsu_cache.localFunctionSpace(),
+                                     xl, lfsv_cache.localFunctionSpace(),
+                                     rl_view);
       }
 
       template<typename EG, typename LFSVC>
@@ -384,7 +408,9 @@ namespace Dune{
       {
         rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaVolumePostSkeleton>::
-          lambda_volume_post_skeleton(lop,eg,lfsv_cache.localFunctionSpace(),rl_view);
+          lambda_volume_post_skeleton(*lop, eg,
+                                      lfsv_cache.localFunctionSpace(),
+                                      rl_view);
       }
 
       //! @}
@@ -395,7 +421,7 @@ namespace Dune{
       const LocalAssembler & local_assembler;
 
       //! Reference to the local operator
-      const LOP & lop;
+      const shared_ptr<LOP> lop;
 
       //! Pointer to the current residual vector in which to assemble
       ResidualView global_rl_view;
@@ -481,14 +507,16 @@ namespace Dune{
          creates this engine
       */
       TBBLocalResidualAssemblerEngine(const LocalAssembler & local_assembler_)
-        : local_assembler(local_assembler_), lop(local_assembler_.lop),
+        : local_assembler(local_assembler_),
+          lop(stackobject_to_shared_ptr(local_assembler_.lop)),
           rl_view(rl,1.0),
           rn_view(rn,1.0)
       {}
 
       TBBLocalResidualAssemblerEngine(TBBLocalResidualAssemblerEngine &other,
                                       tbb::split)
-        : local_assembler(other.local_assembler), lop(other.lop),
+        : local_assembler(other.local_assembler),
+          lop(std::make_shared<LOP>(*other.lop, tbb::split())),
           lockmgr(other.lockmgr),
           global_rl_view(other.global_rl_view),
           global_rn_view(other.global_rn_view),
@@ -499,7 +527,9 @@ namespace Dune{
       {}
 
       void join(TBBLocalResidualAssemblerEngine &other)
-      { }
+      {
+        lop->join(*other.lop);
+      }
 
       //! Query methods for the global grid assembler
       //! @{
@@ -682,7 +712,8 @@ namespace Dune{
       {
         rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
-          alpha_volume(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),rl_view);
+          alpha_volume(*lop, eg, lfsu_cache.localFunctionSpace(), xl,
+                       lfsv_cache.localFunctionSpace(), rl_view);
       }
 
       template<typename EG, typename LFSVC>
@@ -690,7 +721,7 @@ namespace Dune{
       {
         rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaVolume>::
-          lambda_volume(lop,eg,lfsv_cache.localFunctionSpace(),rl_view);
+          lambda_volume(*lop, eg, lfsv_cache.localFunctionSpace(), rl_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -700,7 +731,7 @@ namespace Dune{
         rl_view.setWeight(local_assembler.weight);
         rn_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
-          alpha_skeleton(lop,ig,
+          alpha_skeleton(*lop, ig,
                          lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),
                          lfsu_n_cache.localFunctionSpace(),xn,lfsv_n_cache.localFunctionSpace(),
                          rl_view,rn_view);
@@ -712,7 +743,8 @@ namespace Dune{
         rl_view.setWeight(local_assembler.weight);
         rn_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaSkeleton>::
-          lambda_skeleton(lop, ig, lfsv_s_cache.localFunctionSpace(), lfsv_n_cache.localFunctionSpace(), rl_view, rn_view);
+          lambda_skeleton(*lop, ig, lfsv_s_cache.localFunctionSpace(),
+                          lfsv_n_cache.localFunctionSpace(), rl_view, rn_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -720,7 +752,8 @@ namespace Dune{
       {
         rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
-          alpha_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),rl_view);
+          alpha_boundary(*lop, ig, lfsu_s_cache.localFunctionSpace(), xl,
+                         lfsv_s_cache.localFunctionSpace(), rl_view);
       }
 
       template<typename IG, typename LFSVC>
@@ -728,7 +761,8 @@ namespace Dune{
       {
         rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaBoundary>::
-          lambda_boundary(lop,ig,lfsv_s_cache.localFunctionSpace(),rl_view);
+          lambda_boundary(*lop, ig, lfsv_s_cache.localFunctionSpace(),
+                          rl_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -750,7 +784,9 @@ namespace Dune{
       {
         rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::
-          alpha_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),rl_view);
+          alpha_volume_post_skeleton(*lop, eg, lfsu_cache.localFunctionSpace(),
+                                     xl, lfsv_cache.localFunctionSpace(),
+                                     rl_view);
       }
 
       template<typename EG, typename LFSVC>
@@ -758,7 +794,9 @@ namespace Dune{
       {
         rl_view.setWeight(local_assembler.weight);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaVolumePostSkeleton>::
-          lambda_volume_post_skeleton(lop,eg,lfsv_cache.localFunctionSpace(),rl_view);
+          lambda_volume_post_skeleton(*lop, eg,
+                                      lfsv_cache.localFunctionSpace(),
+                                      rl_view);
       }
 
       //! @}
@@ -769,7 +807,7 @@ namespace Dune{
       const LocalAssembler & local_assembler;
 
       //! Reference to the local operator
-      const LOP & lop;
+      const shared_ptr<LOP> lop;
 
       LockManager *lockmgr;
 

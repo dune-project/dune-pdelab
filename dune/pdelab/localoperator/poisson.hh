@@ -6,6 +6,10 @@
 
 #include<vector>
 
+#if HAVE_TBB
+#include "tbb/tbb_stddef.h"
+#endif
+
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 
@@ -56,12 +60,28 @@ namespace Dune {
       /** \brief Constructor
        *
        * \param quadOrder Order of the quadrature rule used for integrating over the element
+       *
+       * \note For multithreading evaluating f_, bctype_, and j_ must be
+       *       thread safe.
        */
       Poisson (const F& f_, const B& bctype_, const J& j_, unsigned int quadOrder)
         : f(f_), bctype(bctype_), j(j_),
         laplace_(quadOrder),
         quadOrder_(quadOrder)
       {}
+
+#if HAVE_TBB
+      Poisson(Poisson &other, tbb::split) :
+        f(other.f), bctype(other.bctype), j(other.j),
+        laplace_(other.laplace_, tbb::split()),
+        quadOrder_(other.quadOrder_)
+      { }
+
+      void join(Poisson &other)
+      {
+        laplace_.join(other.laplace_);
+      }
+#endif // HAVE_TBB
 
 	  // volume integral depending on test and ansatz functions
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>

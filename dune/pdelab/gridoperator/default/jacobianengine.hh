@@ -70,7 +70,7 @@ namespace Dune{
           al_nn_view(al_nn,1.0)
       {}
 
-      //! copy contructor
+      //! splitting constructor support
       /**
        * \note This does not create an exact copy.  Instead it copies the
        *       global views, such that they point to the same global vector.
@@ -85,8 +85,8 @@ namespace Dune{
        *       in derived classes.
        */
       DefaultLocalJacobianAssemblerEngine
-      (const DefaultLocalJacobianAssemblerEngine &other) :
-        local_assembler(other.local_assembler), lop(other.lop),
+      (const DefaultLocalJacobianAssemblerEngine &other, const LOP &otherlop) :
+        local_assembler(other.local_assembler), lop(otherlop),
         global_s_s_view(other.global_s_s_view),
         global_s_n_view(other.global_s_n_view),
         global_a_ss_view(other.global_a_ss_view),
