@@ -1807,6 +1807,7 @@ namespace Dune {
 
 
 
+#if HAVE_SUPERLU
         // packaging of the CG_AMG_SSOR solver: default version is sequential
         template<typename FS, typename ASS, SolverCategory::Category st = SolverCategory::sequential>
         class ISTLSolverBackend_SEQ_SuperLU
@@ -1831,6 +1832,7 @@ namespace Dune {
        private:
             shared_ptr<LS> lsp;
         };
+#endif // HAVE_SUPERLU
 
 
         // packaging of the CG_AMG_SSOR solver: default version is sequential
