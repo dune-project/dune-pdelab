@@ -3,6 +3,9 @@
 #include "config.h"
 #endif
 
+// silence the nullmutex warning
+#define SILENCE_NULLMUTEX_WARNING 1
+
 #include <chrono>
 #include <cstddef>
 #include <iostream>
