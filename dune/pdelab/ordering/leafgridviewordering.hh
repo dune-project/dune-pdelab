@@ -165,16 +165,16 @@ namespace Dune {
       typedef LeafGridViewOrdering<LocalOrdering> GridViewOrdering;
 
       typedef GridViewOrdering transformed_type;
-      typedef shared_ptr<transformed_type> transformed_storage_type;
+      typedef std::shared_ptr<transformed_type> transformed_storage_type;
 
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
-        return transformed_type(make_tuple(make_shared<LocalOrdering>(gfs.finiteElementMapStorage(),gfs.gridView())),gfs.backend().blocked(gfs),const_cast<GFS*>(&gfs));
+        return transformed_type(make_tuple(std::make_shared<LocalOrdering>(gfs.finiteElementMapStorage(),gfs.gridView())),gfs.backend().blocked(gfs),const_cast<GFS*>(&gfs));
       }
 
-      static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
+      static transformed_storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t)
       {
-        return make_shared<transformed_type>(make_tuple(make_shared<LocalOrdering>(gfs->finiteElementMapStorage(),gfs->gridView())),gfs->backend().blocked(*gfs),const_cast<GFS*>(gfs.get()));
+        return std::make_shared<transformed_type>(make_tuple(std::make_shared<LocalOrdering>(gfs->finiteElementMapStorage(),gfs->gridView())),gfs->backend().blocked(*gfs),const_cast<GFS*>(gfs.get()));
       }
 
     };

@@ -20,7 +20,7 @@ struct OPBFEMFactory
 #endif
 
     typedef Dune::PDELab::OPBLocalFiniteElementMap<DF,RF,FEM_FACTORY_ORDER,GV::dimension,basic_type,CFT> type;
-    typedef Dune::shared_ptr<type> pointer;
+    typedef std::shared_ptr<type> pointer;
   };
 
   template<typename GV, typename DF, typename RF, Dune::GeometryType::BasicType basic_type>

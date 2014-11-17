@@ -378,7 +378,7 @@ int main(int argc, char** argv)
 #if HAVE_UG
     {
       // make grid
-      Dune::shared_ptr<Dune::UGGrid<2> > grid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
+      std::shared_ptr<Dune::UGGrid<2> > grid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
       grid->globalRefine(4);
 
       // get view

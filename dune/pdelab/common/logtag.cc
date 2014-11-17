@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <ios>
 #include <ostream>
+#include <memory>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -18,7 +19,6 @@
 #endif // HAVE_MPI
 
 #include <dune/common/ios_state.hh>
-#include <dune/common/shared_ptr.hh>
 
 #include <dune/pdelab/common/clock.hh>
 #include <dune/pdelab/common/hostname.hh>
@@ -28,9 +28,9 @@
 namespace Dune {
   namespace PDELab {
 
-    shared_ptr<LogtagFormatterBase>
+    std::shared_ptr<LogtagFormatterBase>
     makeGeneralLogtagFormatter(std::ostream &(&formatFunc)(std::ostream&)) {
-      return make_shared<
+      return std::make_shared<
         GeneralLogtagFormatter<std::ostream &(*)(std::ostream&)>
         >(&formatFunc);
     }
@@ -38,17 +38,17 @@ namespace Dune {
     // anonymous namespace to avoid potential clashed with other compilation
     // units that might provide the name logtagFormatter
     namespace {
-      shared_ptr<LogtagFormatterBase> &logtagFormatter() {
-        static shared_ptr<LogtagFormatterBase> formatter =
+      std::shared_ptr<LogtagFormatterBase> &logtagFormatter() {
+        static std::shared_ptr<LogtagFormatterBase> formatter =
           makeGeneralLogtagFormatter(hostPidWallUserLogtagFormatFunc);
         return formatter;
       }
     }
 
-    const shared_ptr<LogtagFormatterBase> &getLogtagFormatter()
+    const std::shared_ptr<LogtagFormatterBase> &getLogtagFormatter()
     { return logtagFormatter(); }
     void
-    setLogtagFormatter(const shared_ptr<LogtagFormatterBase> &formatter) {
+    setLogtagFormatter(const std::shared_ptr<LogtagFormatterBase> &formatter) {
       if(!formatter)
         logtagFormatter() =
           makeGeneralLogtagFormatter(hostPidWallUserLogtagFormatFunc);

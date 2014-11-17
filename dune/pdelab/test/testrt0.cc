@@ -144,7 +144,7 @@ int main(int argc, char** argv)
     }
 
 #if HAVE_UG
-    Dune::shared_ptr<Dune::UGGrid<2> > uggrid(TriangulatedLDomainMaker<Dune::UGGrid<2> >::create());
+    std::shared_ptr<Dune::UGGrid<2> > uggrid(TriangulatedLDomainMaker<Dune::UGGrid<2> >::create());
   	uggrid->globalRefine(4);
     testrt0(uggrid->leafGridView());
 #endif

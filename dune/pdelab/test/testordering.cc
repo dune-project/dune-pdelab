@@ -6,6 +6,7 @@
 #endif
 
 #include <iostream>
+#include <memory>
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
@@ -221,7 +222,7 @@ int main(int argc, char** argv)
       Dune::FieldVector<double,2> l(0.0);
       Dune::FieldVector<double,2> u(1.0);
       Dune::array<unsigned int,2> N = {{1,1}};
-      Dune::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createCubeGrid(l,u,N);
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createCubeGrid(l,u,N);
       grid->globalRefine(1);
 
       std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafGridView().template begin<0>()->type()) << std::endl;
@@ -236,7 +237,7 @@ int main(int argc, char** argv)
       Dune::FieldVector<double,2> l(0.0);
       Dune::FieldVector<double,2> u(1.0);
       Dune::array<unsigned int,2> N = {{1,1}};
-      Dune::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(l,u,N);
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(l,u,N);
       grid->globalRefine(1);
 
       std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafGridView().template begin<0>()->type()) << std::endl;

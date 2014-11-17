@@ -462,7 +462,7 @@ namespace Dune {
         template<typename LFS, typename TreePath>
         void add_vector_solution(const LFS& lfs, TreePath tp, VectorGridFunctionSpaceTag tag)
         {
-          add_to_vtk_writer(make_shared<DGFTreeVectorFunction<LFS,Data> >(lfs,data),tp);
+          add_to_vtk_writer(std::make_shared<DGFTreeVectorFunction<LFS,Data> >(lfs,data),tp);
         }
 
         //! Tag dispatch-based switch that creates a vector-valued function for a VectorGridFunctionSpace.
@@ -534,7 +534,7 @@ namespace Dune {
         leaf(const LFS& lfs, TreePath tp)
         {
           if (predicate(lfs))
-            add_to_vtk_writer(make_shared<DGFTreeLeafFunction<LFS,Data> >(lfs,data),tp);
+            add_to_vtk_writer(std::make_shared<DGFTreeLeafFunction<LFS,Data> >(lfs,data),tp);
         }
 
 
@@ -629,7 +629,7 @@ namespace Dune {
                            const Predicate& predicate = Predicate())
     {
       typedef vtk::DGFTreeCommonData<GFS,X,Predicate> Data;
-      vtk::OutputCollector<VTKWriter,Data> collector(vtk_writer,make_shared<Data>(gfs,x),predicate);
+      vtk::OutputCollector<VTKWriter,Data> collector(vtk_writer,std::make_shared<Data>(gfs,x),predicate);
       collector.addSolution(name_generator);
       return collector;
     }

@@ -35,7 +35,7 @@ namespace Dune {
 
       typedef typename BaseT::Traits Traits;
 
-      LeafLocalOrdering(const shared_ptr<const FEM>& fem, const GV& gv, bool backend_blocked, typename BaseT::GFSData* gfs_data)
+      LeafLocalOrdering(const std::shared_ptr<const FEM>& fem, const GV& gv, bool backend_blocked, typename BaseT::GFSData* gfs_data)
         : BaseT(*this,backend_blocked,gfs_data)
         , _fem(fem)
         , _gv(gv)
@@ -137,7 +137,7 @@ namespace Dune {
           }
       }
 
-      shared_ptr<const FEM> _fem;
+      std::shared_ptr<const FEM> _fem;
       GV _gv;
       typename FESwitch::Store _pfe;
 
@@ -157,16 +157,16 @@ namespace Dune {
         typename Transformation::ContainerIndex
         > transformed_type;
 
-      typedef shared_ptr<transformed_type> transformed_storage_type;
+      typedef std::shared_ptr<transformed_type> transformed_storage_type;
 
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
         return transformed_type(gfs.finiteElementMapStorage(),gfs.gridView(),false,&const_cast<GFS*>(gfs));
       }
 
-      static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
+      static transformed_storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t)
       {
-        return make_shared<transformed_type>(gfs->finiteElementMapStorage(),gfs->gridView(),false,const_cast<GFS*>(gfs.get()));
+        return std::make_shared<transformed_type>(gfs->finiteElementMapStorage(),gfs->gridView(),false,const_cast<GFS*>(gfs.get()));
       }
 
     };

@@ -74,14 +74,14 @@ namespace Dune
 
         template<typename GO>
         MatrixContainer(const GO& go, int avg_per_row)
-          : _container(make_shared<Container>())
+          : _container(std::make_shared<Container>())
         {
           allocate_matrix(_container, go, avg_per_row, ElementType(0));
         }
 
         template<typename GO>
         MatrixContainer(const GO& go, int avg_per_row, const ElementType& e)
-          : _container(make_shared<Container>())
+          : _container(std::make_shared<Container>())
         {
           allocate_matrix(_container, go, avg_per_row, e);
         }
@@ -92,11 +92,11 @@ namespace Dune
 
         //! Creates an MatrixContainer with an empty underlying Eigen matrix.
         explicit MatrixContainer(tags::attached_container)
-        : _container(make_shared<Container>())
+        : _container(std::make_shared<Container>())
         {}
 
         MatrixContainer(const MatrixContainer& rhs)
-          : _container(make_shared<Container>(*(rhs._container)))
+          : _container(std::make_shared<Container>(*(rhs._container)))
         {}
 
         MatrixContainer& operator=(const MatrixContainer& rhs)
@@ -109,7 +109,7 @@ namespace Dune
           }
           else
           {
-            _container = make_shared<Container>(rhs.base());
+            _container = std::make_shared<Container>(rhs.base());
           }
           return *this;
         }
@@ -119,7 +119,7 @@ namespace Dune
           _container.reset();
         }
 
-        void attach(shared_ptr<Container> container)
+        void attach(std::shared_ptr<Container> container)
         {
           _container = container;
         }
@@ -129,7 +129,7 @@ namespace Dune
           return bool(_container);
         }
 
-        const shared_ptr<Container>& storage() const
+        const std::shared_ptr<Container>& storage() const
         {
           return _container;
         }
@@ -206,7 +206,7 @@ namespace Dune
 
       protected:
         template<typename GO>
-        static void allocate_matrix(shared_ptr<Container> & c, const GO & go, int avg_per_row, const ElementType& e)
+        static void allocate_matrix(std::shared_ptr<Container> & c, const GO & go, int avg_per_row, const ElementType& e)
         {
           // guess size
           int rows = go.testGridFunctionSpace().ordering().blockCount();
@@ -220,7 +220,7 @@ namespace Dune
           c->makeCompressed();
         }
 
-        shared_ptr< Container > _container;
+        std::shared_ptr< Container > _container;
       };
 
     } // end namespace EIGEN

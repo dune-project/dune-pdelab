@@ -292,7 +292,7 @@ namespace Dune {
         : BaseT(children...)
       {}
 
-      CompositeConstraintsOperator(Dune::shared_ptr<Children>... children)
+      CompositeConstraintsOperator(std::shared_ptr<Children>... children)
         : BaseT(children...)
       {}
 
@@ -312,7 +312,7 @@ namespace Dune {
         : BaseT(children...)
       {}
 
-      CompositeConstraintsParameters(Dune::shared_ptr<Children>... children)
+      CompositeConstraintsParameters(std::shared_ptr<Children>... children)
         : BaseT(children...)
       {}
     };
@@ -412,7 +412,7 @@ namespace Dune {
         : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8,c9)
       {}
 
-      PowerConstraintsParameters (const array<shared_ptr<T>,k>& children)
+      PowerConstraintsParameters (const array<std::shared_ptr<T>,k>& children)
         : BaseT(children)
       {}
     };
@@ -424,12 +424,12 @@ namespace Dune {
     class OldStyleConstraintsWrapper
       : public TypeTree::LeafNode
     {
-      shared_ptr<const F> _f;
+      std::shared_ptr<const F> _f;
       unsigned int _i;
     public:
 
       template<typename Transformation>
-      OldStyleConstraintsWrapper(shared_ptr<const F> f, const Transformation& t, unsigned int i=0)
+      OldStyleConstraintsWrapper(std::shared_ptr<const F> f, const Transformation& t, unsigned int i=0)
         : _f(f)
         , _i(i)
       {}
@@ -473,23 +473,23 @@ namespace Dune {
       enum { dim = F::Traits::dimRange };
       typedef OldStyleConstraintsWrapper<F> node_type;
       typedef PowerConstraintsParameters<node_type, dim> transformed_type;
-      typedef shared_ptr<transformed_type> transformed_storage_type;
+      typedef std::shared_ptr<transformed_type> transformed_storage_type;
 
       static transformed_type transform(const F& s, const Transformation& t)
       {
-        shared_ptr<const F> sp = stackobject_to_shared_ptr(s);
-        array<shared_ptr<node_type>, dim> childs;
+        std::shared_ptr<const F> sp = stackobject_to_shared_ptr(s);
+        array<std::shared_ptr<node_type>, dim> childs;
         for (int i=0; i<dim; i++)
-          childs[i] = make_shared<node_type>(sp,t,i);
+          childs[i] = std::make_shared<node_type>(sp,t,i);
         return transformed_type(childs);
       }
 
-      static transformed_storage_type transform_storage(shared_ptr<const F> s, const Transformation& t)
+      static transformed_storage_type transform_storage(std::shared_ptr<const F> s, const Transformation& t)
       {
-        array<shared_ptr<node_type>, dim> childs;
+        array<std::shared_ptr<node_type>, dim> childs;
         for (int i=0; i<dim; i++)
-          childs[i] = make_shared<node_type>(s,t,i);
-        return make_shared<transformed_type>(childs);
+          childs[i] = std::make_shared<node_type>(s,t,i);
+        return std::make_shared<transformed_type>(childs);
       }
 
     };

@@ -195,7 +195,7 @@ namespace Dune {
       typedef LocalFunctionSpaceBaseTraits<GFS,DOFIndex> Traits;
 
       //! \brief construct from global function space
-      LocalFunctionSpaceBaseNode (shared_ptr<const GFS> gfs)
+      LocalFunctionSpaceBaseNode (std::shared_ptr<const GFS> gfs)
         : pgfs(gfs)
         , _dof_index_storage()
         , _dof_indices(&_dof_index_storage)
@@ -274,7 +274,7 @@ namespace Dune {
         TypeTree::applyToTree(node,PropagateGlobalStorageVisitor<>());
       }
 
-      shared_ptr<GFS const> pgfs;
+      std::shared_ptr<GFS const> pgfs;
       typename Traits::DOFIndexContainer _dof_index_storage;
       typename Traits::DOFIndexContainer* _dof_indices;
       typename Traits::IndexContainer::size_type n;
@@ -306,7 +306,7 @@ namespace Dune {
       typedef GridViewLocalFunctionSpaceBaseTraits<GFS,DOFIndex> Traits;
 
       //! \brief construct from global function space
-      GridViewLocalFunctionSpaceBaseNode (shared_ptr<const GFS> gfs)
+      GridViewLocalFunctionSpaceBaseNode (std::shared_ptr<const GFS> gfs)
         : BaseT(gfs)
       {}
 
@@ -386,9 +386,9 @@ namespace Dune {
 
       //! \brief initialize with grid function space
       template<typename Transformation>
-      PowerLocalFunctionSpaceNode (shared_ptr<const GFS> gfs,
+      PowerLocalFunctionSpaceNode (std::shared_ptr<const GFS> gfs,
                                    const Transformation& t,
-                                   const array<shared_ptr<ChildLFS>,k>& children)
+                                   const array<std::shared_ptr<ChildLFS>,k>& children)
         : BaseT(gfs)
         , TreeNode(children)
       {}
@@ -396,7 +396,7 @@ namespace Dune {
       template<typename Transformation>
       PowerLocalFunctionSpaceNode (const GFS& gfs,
                                    const Transformation& t,
-                                   const array<shared_ptr<ChildLFS>,k>& children)
+                                   const array<std::shared_ptr<ChildLFS>,k>& children)
         : BaseT(stackobject_to_shared_ptr(gfs))
         , TreeNode(children)
       {}
@@ -463,9 +463,9 @@ namespace Dune {
       typedef CompositeLocalFunctionSpaceTag ImplementationTag;
 
       template<typename Transformation>
-      CompositeLocalFunctionSpaceNode (shared_ptr<const GFS> gfs,
+      CompositeLocalFunctionSpaceNode (std::shared_ptr<const GFS> gfs,
                                        const Transformation& t,
-                                       Dune::shared_ptr<Children>... children)
+                                       std::shared_ptr<Children>... children)
         : BaseT(gfs)
         , NodeType(children...)
       {}
@@ -473,7 +473,7 @@ namespace Dune {
       template<typename Transformation>
       CompositeLocalFunctionSpaceNode (const GFS& gfs,
                                        const Transformation& t,
-                                       Dune::shared_ptr<Children>... children)
+                                       std::shared_ptr<Children>... children)
         : BaseT(stackobject_to_shared_ptr(gfs))
         , NodeType(children...)
       {}
@@ -562,7 +562,7 @@ namespace Dune {
 
       //! \brief initialize with grid function space
       template<typename Transformation>
-      LeafLocalFunctionSpaceNode (shared_ptr<const GFS> gfs, const Transformation& t)
+      LeafLocalFunctionSpaceNode (std::shared_ptr<const GFS> gfs, const Transformation& t)
         : BaseT(gfs)
       {
       }
@@ -762,7 +762,7 @@ namespace Dune {
         this->setup(*this);
       }
 
-      LocalFunctionSpace(shared_ptr<const GFS> pgfs)
+      LocalFunctionSpace(std::shared_ptr<const GFS> pgfs)
         : BaseT(*TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform_storage(pgfs))
       {
         this->_dof_indices = &(this->_dof_index_storage);

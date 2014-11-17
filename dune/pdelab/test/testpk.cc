@@ -3,11 +3,11 @@
 #include "config.h"
 #endif
 #include<iostream>
+#include<memory>
 #include<vector>
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
-#include <dune/common/shared_ptr.hh>
 #include<dune/grid/yaspgrid.hh>
 #include <dune/pdelab/backend/backendselector.hh>
 #include"../finiteelementmap/p0fem.hh"
@@ -117,7 +117,7 @@ int main(int argc, char** argv)
     Dune::MPIHelper::instance(argc, argv);
 
 #if HAVE_UG
-    Dune::shared_ptr<Dune::UGGrid<2> > uggrid(TriangulatedLDomainMaker<Dune::UGGrid<2> >::create());
+    std::shared_ptr<Dune::UGGrid<2> > uggrid(TriangulatedLDomainMaker<Dune::UGGrid<2> >::create());
   	uggrid->globalRefine(4);
     testpk(uggrid->leafGridView());
 #endif

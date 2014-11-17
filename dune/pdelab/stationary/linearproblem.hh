@@ -188,7 +188,7 @@ namespace Dune {
 
         if (!_jacobian)
           {
-            _jacobian = make_shared<M>(_go);
+            _jacobian = std::make_shared<M>(_go);
             timing = watch.elapsed();
             if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
               std::cout << "=== matrix setup (max) " << timing << " s" << std::endl;

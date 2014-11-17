@@ -211,16 +211,16 @@ namespace Dune {
         {
 
           typedef PermutedOrdering<Undecorated> transformed_type;
-          typedef shared_ptr<transformed_type> transformed_storage_type;
+          typedef std::shared_ptr<transformed_type> transformed_storage_type;
 
-          static transformed_type transform(const GFS& gfs, const Transformation& t, shared_ptr<Undecorated> undecorated)
+          static transformed_type transform(const GFS& gfs, const Transformation& t, std::shared_ptr<Undecorated> undecorated)
           {
             return transformed_type(make_tuple(undecorated),gfs.orderingTag().template permuted<Tag::level>());
           }
 
-          static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs_pointer, const Transformation& t, shared_ptr<Undecorated> undecorated)
+          static transformed_storage_type transform_storage(std::shared_ptr<const GFS> gfs_pointer, const Transformation& t, std::shared_ptr<Undecorated> undecorated)
           {
-            return make_shared<transformed_type>(make_tuple(undecorated),gfs_pointer->orderingTag().template permuted<Tag::level>());
+            return std::make_shared<transformed_type>(make_tuple(undecorated),gfs_pointer->orderingTag().template permuted<Tag::level>());
           }
 
         };

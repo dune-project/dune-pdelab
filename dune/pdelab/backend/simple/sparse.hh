@@ -6,10 +6,10 @@
 #include <algorithm>
 #include <functional>
 #include <numeric>
+#include <memory>
 #include <unordered_set>
 
 #include <dune/common/typetraits.hh>
-#include <dune/common/shared_ptr.hh>
 #include <dune/pdelab/backend/tags.hh>
 #include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
@@ -123,14 +123,14 @@ namespace Dune {
 
         template<typename GO>
         SparseMatrixContainer(const GO& go)
-          : _container(make_shared<Container>())
+          : _container(std::make_shared<Container>())
         {
           allocate_matrix(_container, go, ElementType(0));
         }
 
         template<typename GO>
         SparseMatrixContainer(const GO& go, const ElementType& e)
-          : _container(make_shared<Container>())
+          : _container(std::make_shared<Container>())
         {
           allocate_matrix(_container, go, e);
         }
@@ -141,11 +141,11 @@ namespace Dune {
 
         //! Creates an SparseMatrixContainer with an empty underlying ISTL matrix.
         explicit SparseMatrixContainer(tags::attached_container)
-        : _container(make_shared<Container>())
+        : _container(std::make_shared<Container>())
         {}
 
         SparseMatrixContainer(const SparseMatrixContainer& rhs)
-          : _container(make_shared<Container>(*(rhs._container)))
+          : _container(std::make_shared<Container>(*(rhs._container)))
         {}
 
         SparseMatrixContainer& operator=(const SparseMatrixContainer& rhs)
@@ -158,7 +158,7 @@ namespace Dune {
           }
           else
           {
-            _container = make_shared<Container>(*(rhs._container));
+            _container = std::make_shared<Container>(*(rhs._container));
           }
           return *this;
         }
@@ -168,7 +168,7 @@ namespace Dune {
           _container.reset();
         }
 
-        void attach(shared_ptr<Container> container)
+        void attach(std::shared_ptr<Container> container)
         {
           _container = container;
         }
@@ -178,7 +178,7 @@ namespace Dune {
           return bool(_container);
         }
 
-        const shared_ptr<Container>& storage() const
+        const std::shared_ptr<Container>& storage() const
         {
           return _container;
         }
@@ -274,7 +274,7 @@ namespace Dune {
 
       protected:
         template<typename GO>
-        static void allocate_matrix(shared_ptr<Container> & c, const GO & go, const ElementType& e)
+        static void allocate_matrix(std::shared_ptr<Container> & c, const GO & go, const ElementType& e)
         {
           typedef typename Pattern::col_type col_type;
           Pattern pattern(go.testGridFunctionSpace().ordering(),go.trialGridFunctionSpace().ordering());
@@ -320,7 +320,7 @@ namespace Dune {
               );
         }
 
-        shared_ptr< Container > _container;
+        std::shared_ptr< Container > _container;
       };
 
     } // namespace simple

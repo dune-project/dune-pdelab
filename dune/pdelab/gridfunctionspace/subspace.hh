@@ -288,7 +288,7 @@ namespace Dune {
         }
 
         //! Returns the storage object for the finite element map of this space.
-        shared_ptr<const typename Traits::FiniteElementMap> finiteElementMapStorage () const
+        std::shared_ptr<const typename Traits::FiniteElementMap> finiteElementMapStorage () const
         {
           return subSpace().childGridFunctionSpace().finiteElementMapStorage();
         }
@@ -426,7 +426,7 @@ namespace Dune {
 
 
         //! Construct a GridFunctionSubSpace from the storage object of a root space.
-        explicit GridFunctionSubSpace(shared_ptr<const GFS> gfs_storage)
+        explicit GridFunctionSubSpace(std::shared_ptr<const GFS> gfs_storage)
           : NodeT(TypeTree::extract_child_storage(*gfs_storage,TreePath()))
           , FeatureT(*gfs_storage)
           , _base_gfs(gfs_storage)
@@ -457,7 +457,7 @@ namespace Dune {
          *       copy constructor.
          */
         template<typename TP>
-        explicit GridFunctionSubSpace(shared_ptr<const GridFunctionSubSpace<GFS,TP> > gfs_storage, typename enable_if<!is_same<TP,TreePath>::value,void*>::type = nullptr)
+        explicit GridFunctionSubSpace(std::shared_ptr<const GridFunctionSubSpace<GFS,TP> > gfs_storage, typename enable_if<!is_same<TP,TreePath>::value,void*>::type = nullptr)
           : NodeT(TypeTree::extract_child_storage(gfs_storage->baseGridFunctionSpace(),TreePath()))
           , FeatureT(gfs_storage->baseGridFunctionSpace())
           , _base_gfs(gfs_storage->baseGridFunctionSpaceStorage())
@@ -506,7 +506,7 @@ namespace Dune {
         }
 
         //! Returns the storage object of the root GridFunctionSpace that this subspace view is based on.
-        shared_ptr<const BaseGridFunctionSpace> baseGridFunctionSpaceStorage() const
+        std::shared_ptr<const BaseGridFunctionSpace> baseGridFunctionSpaceStorage() const
         {
           return _base_gfs;
         }
@@ -528,14 +528,14 @@ namespace Dune {
          *          code, as it will usually not do what they want! Due to the way GridFunctionSpaces
          *          are constructed, it is not aware of the overall structure of the space!
          */
-        shared_ptr<const ChildGridFunctionSpace> childGridFunctionSpaceStorage() const
+        std::shared_ptr<const ChildGridFunctionSpace> childGridFunctionSpaceStorage() const
         {
           return this->proxiedNodeStorage();
         }
 
       private:
 
-        shared_ptr<const GFS> _base_gfs;
+        std::shared_ptr<const GFS> _base_gfs;
 
       };
 
@@ -611,7 +611,7 @@ namespace Dune {
 
     public:
 
-      explicit GridFunctionSubSpace(shared_ptr<const GFS> gfs_storage)
+      explicit GridFunctionSubSpace(std::shared_ptr<const GFS> gfs_storage)
         : BaseT(gfs_storage)
       {}
 
@@ -657,7 +657,7 @@ namespace Dune {
 
     public:
 
-      explicit GridFunctionSubSpace(shared_ptr<const SubSpace> gfs_storage)
+      explicit GridFunctionSubSpace(std::shared_ptr<const SubSpace> gfs_storage)
         : BaseT(gfs_storage->baseGridFunctionSpaceStorage())
       {}
 

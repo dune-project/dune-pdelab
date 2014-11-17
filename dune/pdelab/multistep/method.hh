@@ -6,9 +6,9 @@
 
 #include <iomanip>
 #include <iostream>
+#include <memory>
 
 #include <dune/common/ios_state.hh>
-#include <dune/common/shared_ptr.hh>
 #include <dune/common/timer.hh>
 
 #include <dune/pdelab/multistep/parameter.hh>
@@ -241,7 +241,7 @@ namespace Dune {
        * The old values are expected in the cache of the GridOperatorSpace.
        * The computed value is store in the cache as well.
        */
-      shared_ptr<const TrialV> apply(T time, T dt)
+      std::shared_ptr<const TrialV> apply(T time, T dt)
       {
         Timer allTimer;
         Timer subTimer;
@@ -278,7 +278,7 @@ namespace Dune {
           std::cout << "== setup result vector" << std::endl;
           subTimer.reset();
         }
-        shared_ptr<TrialV>
+        std::shared_ptr<TrialV>
           xnew(new TrialV(*mgos.getCache()->getUnknowns(step-1)));
         if(verbosity >= 2)
           std::cout << "== setup result vector (" << subTimer.elapsed() << "s)"
@@ -332,7 +332,7 @@ namespace Dune {
        * The computed value is store in the cache as well.
        */
       template<typename F>
-      shared_ptr<const TrialV> apply(T time, T dt, F& f)
+      std::shared_ptr<const TrialV> apply(T time, T dt, F& f)
       {
         Timer allTimer;
         Timer subTimer;
@@ -369,7 +369,7 @@ namespace Dune {
           std::cout << "== setup result vector" << std::endl;
           subTimer.reset();
         }
-        shared_ptr<TrialV> xnew(new TrialV(mgos.trialGridFunctionSpace()));
+        std::shared_ptr<TrialV> xnew(new TrialV(mgos.trialGridFunctionSpace()));
         // set boundary conditions and initial value
         f.setTime(time+dt);
         mgos.interpolate(*mgos.getCache()->getUnknowns(step-1),f,*xnew);

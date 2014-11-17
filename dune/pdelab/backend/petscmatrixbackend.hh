@@ -117,7 +117,7 @@ namespace Dune {
         for (Pattern::const_iterator it = pattern.begin(); it != pattern.end(); ++it, ++oit)
           (*oit) = it->size();
 
-        return make_shared<PetscMatrixContainer>(M,N,nnz);
+        return std::make_shared<PetscMatrixContainer>(M,N,nnz);
       }
     };
 
@@ -135,7 +135,7 @@ namespace Dune {
 
         MatrixArray matrices(N*M);
         recursive_matrix_builder<GFSV,GFSU>::build_children(gfsv,gfsu,pattern,matrices);
-        return make_shared<PetscNestedMatrixContainer>(M,N,matrices);
+        return std::make_shared<PetscNestedMatrixContainer>(M,N,matrices);
       }
     };
 
@@ -798,8 +798,8 @@ namespace Dune {
           {
             Mat submat;
             PETSC_CALL(MatNestGetSubMat(_m.base(),mi,mj,&submat));
-            shared_ptr<PetscMatrixContainer> c(make_shared<PetscMatrixContainer>(submat,false));
-            a = make_shared<PetscMatrixAccessorBase>(*c,(*(row+1))-(*row),(*(col+1))-(*col),_global_row_offsets[mi],_global_col_offsets[mj]);
+            shared_ptr<PetscMatrixContainer> c(std::make_shared<PetscMatrixContainer>(submat,false));
+            a = std::make_shared<PetscMatrixAccessorBase>(*c,(*(row+1))-(*row),(*(col+1))-(*col),_global_row_offsets[mi],_global_col_offsets[mj]);
             a->_rows = _row_indices[mi];
             a->_cols = _col_indices[mj];
             _accessors[mi*N + mj] = a;
@@ -837,8 +837,8 @@ namespace Dune {
       PetscNestedMatrixContainer& _m;
       const LFSV& _lfsv;
       const LFSU& _lfsu;
-      std::vector<shared_ptr<PetscMatrixAccessorBase> > _accessors;
-      std::vector<shared_ptr<PetscMatrixContainer> > _matrices;
+      std::vector<std::shared_ptr<PetscMatrixAccessorBase> > _accessors;
+      std::vector<std::shared_ptr<PetscMatrixContainer> > _matrices;
       std::vector<std::size_t> _local_row_offsets;
       std::vector<std::size_t> _local_col_offsets;
       std::vector<std::size_t> _global_row_offsets;

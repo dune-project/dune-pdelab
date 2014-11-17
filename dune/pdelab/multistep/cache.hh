@@ -6,11 +6,11 @@
 
 #include <cstddef>
 #include <map>
+#include <memory>
 #include <utility>
 #include <vector>
 
 #include <dune/common/exceptions.hh>
-#include <dune/common/shared_ptr.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -235,11 +235,11 @@ namespace Dune {
       typedef MultiStepCachePolicy<Step, Time> Policy;
 
     private:
-      typedef std::map<Step, shared_ptr<const Matrix> > MatrixMap;
+      typedef std::map<Step, std::shared_ptr<const Matrix> > MatrixMap;
       typedef typename MatrixMap::const_iterator MatrixIterator;
-      typedef std::map<Step, shared_ptr<const VectorV> > ResidualMap;
+      typedef std::map<Step, std::shared_ptr<const VectorV> > ResidualMap;
       typedef typename ResidualMap::const_iterator ResidualIterator;
-      typedef std::map<Step, shared_ptr<const VectorU> > UnknownMap;
+      typedef std::map<Step, std::shared_ptr<const VectorU> > UnknownMap;
       typedef typename UnknownMap::const_iterator UnknownIterator;
 
       // non-linear caching across time steps
@@ -256,15 +256,15 @@ namespace Dune {
       UnknownMap unknowns;
 
       // policy object
-      shared_ptr<Policy> policy;
+      std::shared_ptr<Policy> policy;
 
     public:
 
       //! \name construction and policy management
       //! \{
 
-      MultiStepCache(const shared_ptr<Policy> &policy_ =
-                           shared_ptr<Policy>(new Policy)) :
+      MultiStepCache(const std::shared_ptr<Policy> &policy_ =
+                           std::shared_ptr<Policy>(new Policy)) :
         policy(policy_)
       {
         if(!policy)
@@ -272,11 +272,11 @@ namespace Dune {
                      "MultiStepCache constructed with policy == NULL");
       }
 
-      shared_ptr<Policy> getPolicy()
+      std::shared_ptr<Policy> getPolicy()
       { return policy; }
-      shared_ptr<const Policy> getPolicy() const
+      std::shared_ptr<const Policy> getPolicy() const
       { return policy; }
-      void setPolicy(const shared_ptr<Policy>& policy_)
+      void setPolicy(const std::shared_ptr<Policy>& policy_)
       {
         if(!policy_)
           DUNE_THROW(CacheError, "MultiStepCache::setPolicy(): attempt to set "
@@ -302,7 +302,7 @@ namespace Dune {
        * \throw NotInCache if the requested residual value is not in the
        *                   cache.
        */
-      shared_ptr<const VectorV>
+      std::shared_ptr<const VectorV>
       getResidualValue(std::size_t order, Step step) const {
         if(order < residualValues.size()) {
           ResidualIterator it = residualValues[order].find(step);
@@ -325,7 +325,7 @@ namespace Dune {
        *                       for the given order and step.
        */
       void setResidualValue(std::size_t order, Step step,
-                            const shared_ptr<const VectorV> &residualValue)
+                            const std::shared_ptr<const VectorV> &residualValue)
       {
         if(!policy->cacheResidualValue(order, step))
           return;
@@ -357,7 +357,7 @@ namespace Dune {
        *       Jacobians of the same order.  As a consequence, this method
        *       only works on the mutable cache.
        */
-      shared_ptr<const Matrix>
+      std::shared_ptr<const Matrix>
       getJacobian(std::size_t order, Step step) {
         if(order < jacobians.size()) {
           MatrixIterator it = jacobians[order].find(step);
@@ -386,7 +386,7 @@ namespace Dune {
        *                       the given order and step.
        */
       void setJacobian(std::size_t order, Step step,
-                       const shared_ptr<const Matrix> &jacobian)
+                       const std::shared_ptr<const Matrix> &jacobian)
       {
         if(!policy->cacheJacobian(order, step))
           return;
@@ -417,7 +417,7 @@ namespace Dune {
        *       zero-residuals of the same order.  As a consequence, this
        *       method only works on the mutable cache.
        */
-      shared_ptr<const VectorV>
+      std::shared_ptr<const VectorV>
       getZeroResidual(std::size_t order, Step step) const {
         if(order < zeroResiduals.size()) {
           ResidualIterator it = zeroResiduals[order].find(step);
@@ -447,7 +447,7 @@ namespace Dune {
        *                       for the given order and step.
        */
       void setZeroResidual(std::size_t order, Step step,
-                           const shared_ptr<const VectorV> &zeroResidual)
+                           const std::shared_ptr<const VectorV> &zeroResidual)
       {
         if(!policy->cacheZeroResidual(order, step))
           return;
@@ -478,7 +478,7 @@ namespace Dune {
        *       composed Jacobians of other times steps.  As a consequence,
        *       this method only works on the mutable cache.
        */
-      shared_ptr<const Matrix>
+      std::shared_ptr<const Matrix>
       getComposedJacobian(Step step) {
         MatrixIterator it = composedJacobians.find(step);
         const MatrixIterator &end = composedJacobians.end();
@@ -504,7 +504,7 @@ namespace Dune {
        *                       Jacobian for the given step.
        */
       void setComposedJacobian(Step step,
-                               const shared_ptr<const Matrix> &jacobian)
+                               const std::shared_ptr<const Matrix> &jacobian)
       {
         if(!policy->cacheComposedJacobian(step))
           return;
@@ -528,7 +528,7 @@ namespace Dune {
        * \throw NotInCache if the cache does not contain a vector of unknowns
        *                   for the given step.
        */
-      shared_ptr<const VectorU>
+      std::shared_ptr<const VectorU>
       getUnknowns(Step step) const {
         UnknownIterator it = unknowns.find(step);
         if(it != unknowns.end())
@@ -544,7 +544,7 @@ namespace Dune {
        * \throw AlreadyInCache if the cache already contains a vector of
        *                       unknowns for the given order and step.
        */
-      void setUnknowns(Step step, const shared_ptr<const VectorU> &unknowns_) {
+      void setUnknowns(Step step, const std::shared_ptr<const VectorU> &unknowns_) {
         if(unknowns[step])
           DUNE_THROW(AlreadyInCache, "Unknowns u_" << step << " are already "
                      "in the cache!");

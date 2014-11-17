@@ -164,7 +164,7 @@ namespace Dune {
         this->setup(*this);
       }
 
-      LocalFunctionSpace(shared_ptr<const GFS> pgfs)
+      LocalFunctionSpace(std::shared_ptr<const GFS> pgfs)
         : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform_storage(pgfs))
       {
         this->_dof_indices = &(this->_dof_index_storage);

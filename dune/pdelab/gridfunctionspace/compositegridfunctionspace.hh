@@ -4,7 +4,7 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_COMPOSITEGRIDFUNCTIONSPACE_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_COMPOSITEGRIDFUNCTIONSPACE_HH
 
-#include <dune/common/shared_ptr.hh>
+#include <memory>
 
 #include <dune/typetree/compositenode.hh>
 #include <dune/typetree/utility.hh>
@@ -110,22 +110,22 @@ namespace Dune {
       // constructors for heap-constructed children passed in as shared_ptrs
       // ********************************************************************************
 
-      CompositeGridFunctionSpace(const Backend& backend, shared_ptr<Children>... children)
+      CompositeGridFunctionSpace(const Backend& backend, std::shared_ptr<Children>... children)
         : NodeT(children...)
         , ImplementationBase(backend,OrderingTag())
       { }
 
-      CompositeGridFunctionSpace(const OrderingTag& ordering_tag, shared_ptr<Children>... children)
+      CompositeGridFunctionSpace(const OrderingTag& ordering_tag, std::shared_ptr<Children>... children)
         : NodeT(children...)
         , ImplementationBase(Backend(),ordering_tag)
       { }
 
-      CompositeGridFunctionSpace(const Backend& backend, const OrderingTag& ordering_tag, shared_ptr<Children>... children)
+      CompositeGridFunctionSpace(const Backend& backend, const OrderingTag& ordering_tag, std::shared_ptr<Children>... children)
         : NodeT(children...)
         , ImplementationBase(backend,ordering_tag)
       { }
 
-      CompositeGridFunctionSpace(shared_ptr<Children>... children)
+      CompositeGridFunctionSpace(std::shared_ptr<Children>... children)
         : NodeT(children...)
         , ImplementationBase(Backend(),OrderingTag())
       { }
@@ -164,7 +164,7 @@ namespace Dune {
       }
 
       //! Direct access to the storage of the DOF ordering.
-      shared_ptr<const Ordering> orderingStorage() const
+      std::shared_ptr<const Ordering> orderingStorage() const
       {
         if (!this->isRootSpace())
           {
@@ -180,7 +180,7 @@ namespace Dune {
       }
 
       //! Direct access to the storage of the DOF ordering.
-      shared_ptr<Ordering> orderingStorage()
+      std::shared_ptr<Ordering> orderingStorage()
       {
         if (!this->isRootSpace())
           {
@@ -202,10 +202,10 @@ namespace Dune {
       // GFS::update() before GFS::ordering().
       void create_ordering() const
       {
-        _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+        _ordering = std::make_shared<Ordering>(ordering_transformation::transform(*this));
       }
 
-      mutable shared_ptr<Ordering> _ordering;
+      mutable std::shared_ptr<Ordering> _ordering;
 
     };
 

@@ -90,7 +90,7 @@ namespace Dune {
 
       template<typename GO>
       ISTLMatrixContainer (const GO& go)
-        : _container(make_shared<Container>())
+        : _container(std::make_shared<Container>())
       {
         _stats = go.matrixBackend().buildPattern(go,*this);
       }
@@ -113,7 +113,7 @@ namespace Dune {
 
       template<typename GO>
       ISTLMatrixContainer (const GO& go, const E& e)
-        : _container(make_shared<Container>())
+        : _container(std::make_shared<Container>())
       {
         _stats = go.matrixBackend().buildPattern(go,*this);
         (*_container) = e;
@@ -125,11 +125,11 @@ namespace Dune {
 
       //! Creates an ISTLMatrixContainer with an empty underlying ISTL matrix.
       explicit ISTLMatrixContainer (tags::attached_container)
-        : _container(make_shared<Container>())
+        : _container(std::make_shared<Container>())
       {}
 
       ISTLMatrixContainer(const ISTLMatrixContainer& rhs)
-        : _container(make_shared<Container>(*(rhs._container)))
+        : _container(std::make_shared<Container>(*(rhs._container)))
       {}
 
       ISTLMatrixContainer& operator=(const ISTLMatrixContainer& rhs)
@@ -143,7 +143,7 @@ namespace Dune {
           }
         else
           {
-            _container = make_shared<Container>(*(rhs._container));
+            _container = std::make_shared<Container>(*(rhs._container));
           }
         return *this;
       }
@@ -182,7 +182,7 @@ namespace Dune {
         _stats.clear();
       }
 
-      void attach(shared_ptr<Container> container)
+      void attach(std::shared_ptr<Container> container)
       {
         _container = container;
       }
@@ -192,7 +192,7 @@ namespace Dune {
         return bool(_container);
       }
 
-      const shared_ptr<Container>& storage() const
+      const std::shared_ptr<Container>& storage() const
       {
         return _container;
       }
@@ -253,7 +253,7 @@ namespace Dune {
 
     private:
 
-      shared_ptr<Container> _container;
+      std::shared_ptr<Container> _container;
       std::vector<PatternStatistics> _stats;
 
     };

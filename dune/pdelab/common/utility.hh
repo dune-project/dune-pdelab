@@ -4,6 +4,8 @@
 #ifndef DUNE_PDELAB_COMMON_UTILITY_HH
 #define DUNE_PDELAB_COMMON_UTILITY_HH
 
+#include <memory>
+
 #include <dune/common/shared_ptr.hh>
 
 namespace Dune {
@@ -30,21 +32,21 @@ namespace Dune {
      *  You don't have to do anything.
      */
     template<typename T>
-    shared_ptr<T> ensure_shared_ptr(T & t)
+    std::shared_ptr<T> ensure_shared_ptr(T & t)
     {
-      return shared_ptr<T>(&t, null_deleter<T>());
+      return std::shared_ptr<T>(&t, null_deleter<T>());
     }
 
 #ifndef DOXYGEN
 
     template<typename T>
-    shared_ptr<T> ensure_shared_ptr(T * t)
+    std::shared_ptr<T> ensure_shared_ptr(T * t)
     {
-      return shared_ptr<T>(t, null_deleter<T>());
+      return std::shared_ptr<T>(t, null_deleter<T>());
     }
 
     template<typename T>
-    shared_ptr<T> & ensure_shared_ptr(shared_ptr<T> & t)
+    std::shared_ptr<T> & ensure_shared_ptr(std::shared_ptr<T> & t)
     {
       return t;
     }

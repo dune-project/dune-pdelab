@@ -114,13 +114,13 @@ namespace Dune {
       \param[in] gridView The grid view to operate on.
       */
       NonOverlappingBorderDOFExchanger(const GridOperator& grid_operator)
-        : _communication_cache(make_shared<CommunicationCache>(grid_operator))
+        : _communication_cache(std::make_shared<CommunicationCache>(grid_operator))
         , _grid_view(grid_operator.testGridFunctionSpace().gridView())
       {}
 
       void update(const GridOperator& grid_operator)
       {
-        _communication_cache = make_shared<CommunicationCache>(grid_operator);
+        _communication_cache = std::make_shared<CommunicationCache>(grid_operator);
       }
 
       class CommunicationCache

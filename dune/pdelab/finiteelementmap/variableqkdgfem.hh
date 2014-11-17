@@ -2,11 +2,12 @@
 #ifndef DUNE_PDELAB_VARIABLEQKDGFEM_HH
 #define DUNE_PDELAB_VARIABLEQKDGFEM_HH
 
+#include <memory>
+
 #include <dune/geometry/type.hh>
 
 #include <dune/localfunctions/common/virtualwrappers.hh>
 #include <dune/common/array.hh>
-#include <dune/common/shared_ptr.hh>
 #include "finiteelementmap.hh"
 #include "qkdg.hh"
 
@@ -108,9 +109,8 @@ namespace Dune {
       const M & mapper_;
       std::vector<unsigned char> polOrder_;
       unsigned int defaultP_;
-      Dune::array< Dune::shared_ptr<FiniteElementType>, maxP+1 > finiteElements_;
+      Dune::array< std::shared_ptr<FiniteElementType>, maxP+1 > finiteElements_;
     };
-
 
 
   }

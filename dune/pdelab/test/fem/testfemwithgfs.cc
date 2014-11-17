@@ -105,7 +105,7 @@ void test_2d_simplex(const Constraints& constraints, const VBE& vbe)
     {
       // make grid
       typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
-      Dune::shared_ptr<Grid> gridptr = TriangulatedUnitSquareMaker<Grid>::create();
+      std::shared_ptr<Grid> gridptr = TriangulatedUnitSquareMaker<Grid>::create();
       Grid& grid = *gridptr;
       grid.globalRefine(3);
 
@@ -141,7 +141,7 @@ void test_3d_simplex(const Constraints& constraints, const VBE& vbe)
     {
       // make grid
       typedef Dune::ALUGrid<3,3,Dune::simplex,Dune::nonconforming> Grid;
-      Dune::shared_ptr<Grid> gridptr = TriangulatedUnitCubeMaker<Grid>::create();
+      std::shared_ptr<Grid> gridptr = TriangulatedUnitCubeMaker<Grid>::create();
       Grid& grid = *gridptr;
       grid.globalRefine(3);
 

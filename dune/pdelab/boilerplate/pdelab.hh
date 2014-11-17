@@ -15,10 +15,10 @@
 
 // first of all we include a lot of dune grids and pdelab files
 #include <iostream>
+#include <memory>
 
 #include <dune/common/parallel/mpihelper.hh> // include mpi helper class
 #include <dune/common/parametertreeparser.hh>
-#include <dune/common/shared_ptr.hh>
 #include <dune/common/classname.hh>
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
@@ -151,7 +151,7 @@ namespace Dune {
             }
 
             // return shared pointer
-            Dune::shared_ptr<T> getSharedPtr ()
+            std::shared_ptr<T> getSharedPtr ()
             {
                 return gridp;
             }
@@ -190,7 +190,7 @@ namespace Dune {
 
 
         private:
-            Dune::shared_ptr<T> gridp; // hold a shared pointer to a grid
+            std::shared_ptr<T> gridp; // hold a shared pointer to a grid
         };
 
         // specialization for yaspgrid; treats paralle case right
@@ -218,9 +218,9 @@ namespace Dune {
 
                 // instantiate the grid
 #if HAVE_MPI
-                gridp = shared_ptr<Grid>(new Grid(Dune::MPIHelper::getCommunicator(),L,N,B,overlap));
+                gridp = std::shared_ptr<Grid>(new Grid(Dune::MPIHelper::getCommunicator(),L,N,B,overlap));
 #else
-                gridp = shared_ptr<Grid>(new Grid(L,N,B,overlap));
+                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap));
 #endif
             }
 
@@ -252,9 +252,9 @@ namespace Dune {
 
                 // instantiate the grid
 #if HAVE_MPI
-                gridp = shared_ptr<Grid>(new Grid(Dune::MPIHelper::getCommunicator(),L,N,B,overlap));
+                gridp = std::shared_ptr<Grid>(new Grid(Dune::MPIHelper::getCommunicator(),L,N,B,overlap));
 #else
-                gridp = shared_ptr<Grid>(new Grid(L,N,B,overlap));
+                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap));
 #endif
             }
 
@@ -287,14 +287,14 @@ namespace Dune {
 
                 // instantiate the grid
 #if HAVE_MPI
-                gridp = shared_ptr<Grid>(new Grid(Dune::MPIHelper::getCommunicator(),L,N,B,overlap));
+                gridp = std::shared_ptr<Grid>(new Grid(Dune::MPIHelper::getCommunicator(),L,N,B,overlap));
 #else
-                gridp = shared_ptr<Grid>(new Grid(L,N,B,overlap));
+                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap));
 #endif
             }
 
             // return shared pointer
-            Dune::shared_ptr<Grid> getSharedPtr ()
+            std::shared_ptr<Grid> getSharedPtr ()
             {
                 return gridp;
             }
@@ -332,7 +332,7 @@ namespace Dune {
             }
 
         private:
-            Dune::shared_ptr<Grid> gridp; // hold a shared pointer to a grid
+            std::shared_ptr<Grid> gridp; // hold a shared pointer to a grid
         };
 
         // unstructured grid read from gmsh file
@@ -351,11 +351,11 @@ namespace Dune {
             {
                 Dune::GridFactory<T> factory;
                 Dune::GmshReader<T>::read(factory,filename,verbose,insert_boundary_segments);
-                gridp = shared_ptr<T>(factory.createGrid());
+                gridp = std::shared_ptr<T>(factory.createGrid());
             }
 
             // return shared pointer
-            Dune::shared_ptr<T> getSharedPtr ()
+            std::shared_ptr<T> getSharedPtr ()
             {
                 return gridp;
             }
@@ -393,7 +393,7 @@ namespace Dune {
             }
 
         private:
-            Dune::shared_ptr<T> gridp; // hold a shared pointer to a grid
+            std::shared_ptr<T> gridp; // hold a shared pointer to a grid
         };
 
 
@@ -414,14 +414,14 @@ namespace Dune {
 
             CGFEMBase (const GV& gridview)
             {
-                femp = shared_ptr<FEM>(new FEM(gridview));
+                femp = std::shared_ptr<FEM>(new FEM(gridview));
             }
 
             FEM& getFEM() {return *femp;}
             const FEM& getFEM() const {return *femp;}
 
         private:
-            shared_ptr<FEM> femp;
+            std::shared_ptr<FEM> femp;
         };
 
         template<typename GV, typename C, typename R, unsigned int degree, unsigned int dim>
@@ -432,14 +432,14 @@ namespace Dune {
 
             CGFEMBase (const GV& gridview)
             {
-                femp = shared_ptr<FEM>(new FEM(gridview));
+                femp = std::shared_ptr<FEM>(new FEM(gridview));
             }
 
             FEM& getFEM() {return *femp;}
             const FEM& getFEM() const {return *femp;}
 
         private:
-            shared_ptr<FEM> femp;
+            std::shared_ptr<FEM> femp;
         };
 
         //============================================================================
@@ -463,12 +463,12 @@ namespace Dune {
 
             CGCONBase (Grid& grid, const BCType& bctype, const GV& gv)
             {
-                conp = shared_ptr<CON>(new CON(grid,true,bctype));
+                conp = std::shared_ptr<CON>(new CON(grid,true,bctype));
             }
 
             CGCONBase (Grid& grid, const BCType& bctype)
             {
-                conp = shared_ptr<CON>(new CON(grid,true,bctype));
+                conp = std::shared_ptr<CON>(new CON(grid,true,bctype));
             }
 
             template<typename GFS>
@@ -478,7 +478,7 @@ namespace Dune {
             template<typename GFS, typename DOF>
             void make_consistent (const GFS& gfs, DOF& x) const {}
         private:
-            shared_ptr<CON> conp;
+            std::shared_ptr<CON> conp;
         };
 
         template<typename Grid, typename BCType, typename GV>
@@ -489,12 +489,12 @@ namespace Dune {
 
             CGCONBase (Grid& grid, const BCType& bctype, const GV& gv)
             {
-                conp = shared_ptr<CON>(new CON(grid,true,bctype));
+                conp = std::shared_ptr<CON>(new CON(grid,true,bctype));
             }
 
             CGCONBase (Grid& grid, const BCType& bctype)
             {
-                conp = shared_ptr<CON>(new CON(grid,true,bctype));
+                conp = std::shared_ptr<CON>(new CON(grid,true,bctype));
             }
 
             template<typename GFS>
@@ -504,7 +504,7 @@ namespace Dune {
             template<typename GFS, typename DOF>
             void make_consistent (const GFS& gfs, DOF& x) const {}
         private:
-            shared_ptr<CON> conp;
+            std::shared_ptr<CON> conp;
         };
 
         template<typename Grid, unsigned int degree, Dune::GeometryType::BasicType gt,typename BCType, typename GV>
@@ -515,12 +515,12 @@ namespace Dune {
 
             CGCONBase (Grid& grid, const BCType& bctype, const GV& gv)
             {
-                conp = shared_ptr<CON>(new CON());
+                conp = std::shared_ptr<CON>(new CON());
             }
 
             CGCONBase (Grid& grid, const BCType& bctype)
             {
-                conp = shared_ptr<CON>(new CON());
+                conp = std::shared_ptr<CON>(new CON());
             }
 
             template<typename GFS>
@@ -530,7 +530,7 @@ namespace Dune {
             template<typename GFS, typename DOF>
             void make_consistent (const GFS& gfs, DOF& x) const {}
         private:
-            shared_ptr<CON> conp;
+            std::shared_ptr<CON> conp;
         };
 
         template<typename Grid, unsigned int degree, Dune::GeometryType::BasicType gt,typename BCType, typename GV>
@@ -541,12 +541,12 @@ namespace Dune {
 
             CGCONBase (Grid& grid, const BCType& bctype, const GV& gv)
             {
-                conp = shared_ptr<CON>(new CON());
+                conp = std::shared_ptr<CON>(new CON());
             }
 
             CGCONBase (Grid& grid, const BCType& bctype)
             {
-                conp = shared_ptr<CON>(new CON());
+                conp = std::shared_ptr<CON>(new CON());
             }
 
             template<typename GFS>
@@ -564,7 +564,7 @@ namespace Dune {
                     gfs.gridView().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
             }
         private:
-            shared_ptr<CON> conp;
+            std::shared_ptr<CON> conp;
         };
 
         template<typename Grid, unsigned int degree, Dune::GeometryType::BasicType gt,typename BCType, typename GV>
@@ -575,12 +575,12 @@ namespace Dune {
 
             CGCONBase (Grid& grid, const BCType& bctype, const GV& gv)
             {
-                conp = shared_ptr<CON>(new CON(gv));
+                conp = std::shared_ptr<CON>(new CON(gv));
             }
 
             CGCONBase (Grid& grid, const BCType& bctype)
             {
-                conp = shared_ptr<CON>(new CON(grid.leafGridView()));
+                conp = std::shared_ptr<CON>(new CON(grid.leafGridView()));
             }
 
             template<typename GFS>
@@ -590,7 +590,7 @@ namespace Dune {
             template<typename GFS, typename DOF>
             void make_consistent (const GFS& gfs, DOF& x) const {}
         private:
-            shared_ptr<CON> conp;
+            std::shared_ptr<CON> conp;
         };
 
 
@@ -627,12 +627,12 @@ namespace Dune {
             CGSpace (Grid& grid, const BCType& bctype)
                 : gv(grid.leafGridView()), femb(gv), conb(grid,bctype)
             {
-                gfsp = shared_ptr<GFS>(new GFS(gv,femb.getFEM(),conb.getCON()));
+                gfsp = std::shared_ptr<GFS>(new GFS(gv,femb.getFEM(),conb.getCON()));
                 gfsp->name("cgspace");
                 // initialize ordering
                 gfsp->update();
                 conb.postGFSHook(*gfsp);
-                ccp = shared_ptr<CC>(new CC());
+                ccp = std::shared_ptr<CC>(new CC());
             }
 
             FEM& getFEM()
@@ -708,8 +708,8 @@ namespace Dune {
             GV gv; // need this object here because FEM and GFS store a const reference !!
             FEMB femb;
             CONB conb;
-            shared_ptr<GFS> gfsp;
-            shared_ptr<CC> ccp;
+            std::shared_ptr<GFS> gfsp;
+            std::shared_ptr<CC> ccp;
         };
 
 
@@ -729,14 +729,14 @@ namespace Dune {
             typedef NoConstraints CON;
             DGCONBase ()
             {
-                conp = shared_ptr<CON>(new CON());
+                conp = std::shared_ptr<CON>(new CON());
             }
             CON& getCON() {return *conp;}
             const CON& getCON() const {return *conp;}
             template<typename GFS, typename DOF>
             void make_consistent (const GFS& gfs, DOF& x) const {}
         private:
-            shared_ptr<CON> conp;
+            std::shared_ptr<CON> conp;
         };
 
         template<>
@@ -746,14 +746,14 @@ namespace Dune {
             typedef P0ParallelGhostConstraints CON;
             DGCONBase ()
             {
-                conp = shared_ptr<CON>(new CON());
+                conp = std::shared_ptr<CON>(new CON());
             }
             CON& getCON() {return *conp;}
             const CON& getCON() const {return *conp;}
             template<typename GFS, typename DOF>
             void make_consistent (const GFS& gfs, DOF& x) const {}
         private:
-            shared_ptr<CON> conp;
+            std::shared_ptr<CON> conp;
         };
 
         template<>
@@ -763,7 +763,7 @@ namespace Dune {
             typedef P0ParallelConstraints CON;
             DGCONBase ()
             {
-                conp = shared_ptr<CON>(new CON());
+                conp = std::shared_ptr<CON>(new CON());
             }
             CON& getCON() {return *conp;}
             const CON& getCON() const {return *conp;}
@@ -778,7 +778,7 @@ namespace Dune {
                     gfs.gridView().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
             }
         private:
-            shared_ptr<CON> conp;
+            std::shared_ptr<CON> conp;
         };
 
         // Discontinuous space
@@ -814,11 +814,11 @@ namespace Dune {
             // constructor making the grid function space an all that is needed
             DGPkSpace (const GV& gridview) : gv(gridview), conb()
             {
-                femp = shared_ptr<FEM>(new FEM());
-                gfsp = shared_ptr<GFS>(new GFS(gv,*femp));
+                femp = std::shared_ptr<FEM>(new FEM());
+                gfsp = std::shared_ptr<GFS>(new GFS(gv,*femp));
                 // initialize ordering
                 gfsp->update();
-                ccp = shared_ptr<CC>(new CC());
+                ccp = std::shared_ptr<CC>(new CC());
             }
 
             FEM& getFEM() { return *femp; }
@@ -875,9 +875,9 @@ namespace Dune {
         private:
             GV gv; // need this object here because FEM and GFS store a const reference !!
             CONB conb;
-            shared_ptr<FEM> femp;
-            shared_ptr<GFS> gfsp;
-            shared_ptr<CC> ccp;
+            std::shared_ptr<FEM> femp;
+            std::shared_ptr<GFS> gfsp;
+            std::shared_ptr<CC> ccp;
         };
 
         // Discontinuous space
@@ -914,11 +914,11 @@ namespace Dune {
             // constructor making the grid function space an all that is needed
             DGQkOPBSpace (const GV& gridview) : gv(gridview), conb()
             {
-                femp = shared_ptr<FEM>(new FEM());
-                gfsp = shared_ptr<GFS>(new GFS(gv,*femp));
+                femp = std::shared_ptr<FEM>(new FEM());
+                gfsp = std::shared_ptr<GFS>(new GFS(gv,*femp));
                 // initialize ordering
                 gfsp->update();
-                ccp = shared_ptr<CC>(new CC());
+                ccp = std::shared_ptr<CC>(new CC());
             }
 
             FEM& getFEM() { return *femp; }
@@ -975,9 +975,9 @@ namespace Dune {
         private:
             GV gv; // need this object here because FEM and GFS store a const reference !!
             CONB conb;
-            shared_ptr<FEM> femp;
-            shared_ptr<GFS> gfsp;
-            shared_ptr<CC> ccp;
+            std::shared_ptr<FEM> femp;
+            std::shared_ptr<GFS> gfsp;
+            std::shared_ptr<CC> ccp;
         };
 
         // Discontinuous space
@@ -1009,11 +1009,11 @@ namespace Dune {
             // constructor making the grid function space an all that is needed
             DGQkSpace (const GV& gridview) : gv(gridview), conb()
             {
-                femp = shared_ptr<FEM>(new FEM());
-                gfsp = shared_ptr<GFS>(new GFS(gv,*femp));
+                femp = std::shared_ptr<FEM>(new FEM());
+                gfsp = std::shared_ptr<GFS>(new GFS(gv,*femp));
                 // initialize ordering
                 gfsp->update();
-                ccp = shared_ptr<CC>(new CC());
+                ccp = std::shared_ptr<CC>(new CC());
             }
 
             FEM& getFEM() { return *femp; }
@@ -1070,9 +1070,9 @@ namespace Dune {
         private:
             GV gv; // need this object here because FEM and GFS store a const reference !!
             CONB conb;
-            shared_ptr<FEM> femp;
-            shared_ptr<GFS> gfsp;
-            shared_ptr<CC> ccp;
+            std::shared_ptr<FEM> femp;
+            std::shared_ptr<GFS> gfsp;
+            std::shared_ptr<CC> ccp;
         };
 
 
@@ -1105,11 +1105,11 @@ namespace Dune {
             // constructor making the grid function space an all that is needed
             DGQkGLSpace (const GV& gridview) : gv(gridview), conb()
             {
-                femp = shared_ptr<FEM>(new FEM());
-                gfsp = shared_ptr<GFS>(new GFS(gv,*femp));
+                femp = std::shared_ptr<FEM>(new FEM());
+                gfsp = std::shared_ptr<GFS>(new GFS(gv,*femp));
                 // initialize ordering
                 gfsp->update();
-                ccp = shared_ptr<CC>(new CC());
+                ccp = std::shared_ptr<CC>(new CC());
             }
 
             FEM& getFEM() { return *femp; }
@@ -1166,9 +1166,9 @@ namespace Dune {
         private:
             GV gv; // need this object here because FEM and GFS store a const reference !!
             CONB conb;
-            shared_ptr<FEM> femp;
-            shared_ptr<GFS> gfsp;
-            shared_ptr<CC> ccp;
+            std::shared_ptr<FEM> femp;
+            std::shared_ptr<GFS> gfsp;
+            std::shared_ptr<CC> ccp;
         };
 
 
@@ -1201,11 +1201,11 @@ namespace Dune {
             // constructor making the grid function space an all that is needed
             P0Space (const GV& gridview) : gv(gridview), conb()
             {
-                femp = shared_ptr<FEM>(new FEM(Dune::GeometryType(gt,dim)));
-                gfsp = shared_ptr<GFS>(new GFS(gv,*femp));
+                femp = std::shared_ptr<FEM>(new FEM(Dune::GeometryType(gt,dim)));
+                gfsp = std::shared_ptr<GFS>(new GFS(gv,*femp));
                 // initialize ordering
                 gfsp->update();
-                ccp = shared_ptr<CC>(new CC());
+                ccp = std::shared_ptr<CC>(new CC());
             }
 
             FEM& getFEM() { return *femp; }
@@ -1262,9 +1262,9 @@ namespace Dune {
         private:
             GV gv; // need this object here because FEM and GFS store a const reference !!
             CONB conb;
-            shared_ptr<FEM> femp;
-            shared_ptr<GFS> gfsp;
-            shared_ptr<CC> ccp;
+            std::shared_ptr<FEM> femp;
+            std::shared_ptr<GFS> gfsp;
+            std::shared_ptr<CC> ccp;
         };
 
 
@@ -1320,7 +1320,7 @@ namespace Dune {
 
             GalerkinGlobalAssembler (const FS& fs, LOP& lop)
             {
-                gop = shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop));
+                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop));
             }
 
             // return grid reference
@@ -1356,7 +1356,7 @@ namespace Dune {
             }
 
         private:
-            shared_ptr<GO> gop;
+            std::shared_ptr<GO> gop;
         };
 
         // nonoverlapping variant
@@ -1373,7 +1373,7 @@ namespace Dune {
 
             GalerkinGlobalAssembler (const FS& fs, LOP& lop)
             {
-                gop = shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop));
+                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop));
             }
 
             // return grid reference
@@ -1409,7 +1409,7 @@ namespace Dune {
             }
 
         private:
-            shared_ptr<GO> gop;
+            std::shared_ptr<GO> gop;
         };
 
 
@@ -1426,7 +1426,7 @@ namespace Dune {
 
             GalerkinGlobalAssemblerNewBackend (const FS& fs, LOP& lop, const MBE& mbe)
             {
-                gop = shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,mbe));
+                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,mbe));
             }
 
             // return grid reference
@@ -1462,7 +1462,7 @@ namespace Dune {
             }
 
         private:
-            shared_ptr<GO> gop;
+            std::shared_ptr<GO> gop;
         };
 
         // nonoverlapping variant
@@ -1479,7 +1479,7 @@ namespace Dune {
 
             GalerkinGlobalAssemblerNewBackend (const FS& fs, LOP& lop, const MBE& mbe)
             {
-                gop = shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,mbe));
+                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,mbe));
             }
 
             // return grid reference
@@ -1515,7 +1515,7 @@ namespace Dune {
             }
 
         private:
-            shared_ptr<GO> gop;
+            std::shared_ptr<GO> gop;
         };
 
 
@@ -1535,7 +1535,7 @@ namespace Dune {
 
             GlobalAssembler (const FSU& fsu, const FSV& fsv, LOP& lop)
             {
-                gop = shared_ptr<GO>(new GO(fsu.getGFS(),fsu.getCC(),fsv.getGFS(),fsv.getCC(),lop));
+                gop = std::shared_ptr<GO>(new GO(fsu.getGFS(),fsu.getCC(),fsv.getGFS(),fsv.getCC(),lop));
             }
 
             // return grid reference
@@ -1571,7 +1571,7 @@ namespace Dune {
             }
 
         private:
-            shared_ptr<GO> gop;
+            std::shared_ptr<GO> gop;
         };
 
         // nonoverlapping variant
@@ -1588,7 +1588,7 @@ namespace Dune {
 
             GlobalAssembler (const FSU& fsu, const FSV& fsv, LOP& lop)
             {
-                gop = shared_ptr<GO>(new GO(fsu.getGFS(),fsu.getCC(),fsv.getGFS(),fsv.getCC(),lop));
+                gop = std::shared_ptr<GO>(new GO(fsu.getGFS(),fsu.getCC(),fsv.getGFS(),fsv.getCC(),lop));
             }
 
             // return grid reference
@@ -1624,7 +1624,7 @@ namespace Dune {
             }
 
         private:
-            shared_ptr<GO> gop;
+            std::shared_ptr<GO> gop;
         };
 
 
@@ -1640,7 +1640,7 @@ namespace Dune {
 
             OneStepGlobalAssembler (GO1& go1, GO2& go2)
             {
-                gop = shared_ptr<GO>(new GO(*go1,*go2));
+                gop = std::shared_ptr<GO>(new GO(*go1,*go2));
             }
 
             // return grid reference
@@ -1676,7 +1676,7 @@ namespace Dune {
             }
 
         private:
-            shared_ptr<GO> gop;
+            std::shared_ptr<GO> gop;
         };
 
 
@@ -1691,7 +1691,7 @@ namespace Dune {
             ISTLSolverBackend_CG_AMG_SSOR (const FS& fs, const ASS& ass, unsigned maxiter_=5000,
                                            int verbose_=1, bool reuse_=false, bool usesuperlu_=true)
             {
-                lsp = shared_ptr<LS>(new LS(maxiter_,verbose_,reuse_,usesuperlu_));
+                lsp = std::shared_ptr<LS>(new LS(maxiter_,verbose_,reuse_,usesuperlu_));
             }
 
             LS& getLS () {return *lsp;}
@@ -1702,7 +1702,7 @@ namespace Dune {
             const LS* operator->() const{ return lsp.operator->();}
 
        private:
-            shared_ptr<LS> lsp;
+            std::shared_ptr<LS> lsp;
         };
 
         // packaging of the CG_AMG_SSOR solver: nonoverlapping version
@@ -1716,7 +1716,7 @@ namespace Dune {
             ISTLSolverBackend_CG_AMG_SSOR (const FS& fs, const ASS& ass, unsigned maxiter_=5000,
                                            int verbose_=1, bool reuse_=false, bool usesuperlu_=true)
             {
-                lsp = shared_ptr<LS>(new LS(fs.getGFS(),maxiter_,verbose_,reuse_,usesuperlu_));
+                lsp = std::shared_ptr<LS>(new LS(fs.getGFS(),maxiter_,verbose_,reuse_,usesuperlu_));
             }
 
             LS& getLS () {return *lsp;}
@@ -1727,7 +1727,7 @@ namespace Dune {
             const LS* operator->() const{ return lsp.operator->();}
 
        private:
-            shared_ptr<LS> lsp;
+            std::shared_ptr<LS> lsp;
         };
 
         // packaging of the CG_AMG_SSOR solver: overlapping version
@@ -1741,7 +1741,7 @@ namespace Dune {
             ISTLSolverBackend_CG_AMG_SSOR (const FS& fs, const ASS& ass, unsigned maxiter_=5000,
                                            int verbose_=1, bool reuse_=false, bool usesuperlu_=true)
             {
-                lsp = shared_ptr<LS>(new LS(fs.getGFS(),maxiter_,verbose_,reuse_,usesuperlu_));
+                lsp = std::shared_ptr<LS>(new LS(fs.getGFS(),maxiter_,verbose_,reuse_,usesuperlu_));
             }
 
             LS& getLS () {return *lsp;}
@@ -1752,7 +1752,7 @@ namespace Dune {
             const LS* operator->() const{ return lsp.operator->();}
 
         private:
-            shared_ptr<LS> lsp;
+            std::shared_ptr<LS> lsp;
         };
 
         // packaging of the CG_SSOR solver: default version is sequential
@@ -1766,7 +1766,7 @@ namespace Dune {
             ISTLSolverBackend_CG_SSOR (const FS& fs, const ASS& ass, unsigned maxiter_=5000,
                                        int steps_=5, int verbose_=1)
             {
-                lsp = shared_ptr<LS>(new LS(maxiter_,verbose_));
+                lsp = std::shared_ptr<LS>(new LS(maxiter_,verbose_));
             }
 
             LS& getLS () {return *lsp;}
@@ -1777,7 +1777,7 @@ namespace Dune {
             const LS* operator->() const{ return lsp.operator->();}
 
        private:
-            shared_ptr<LS> lsp;
+            std::shared_ptr<LS> lsp;
         };
 
         // packaging of the CG_SSOR solver: nonoverlapping version
@@ -1791,7 +1791,7 @@ namespace Dune {
             ISTLSolverBackend_CG_SSOR (const FS& fs, const ASS& ass, unsigned maxiter_=5000,
                                        int steps_=5, int verbose_=1)
             {
-                lsp = shared_ptr<LS>(new LS(fs.getGFS(),maxiter_,steps_,verbose_));
+                lsp = std::shared_ptr<LS>(new LS(fs.getGFS(),maxiter_,steps_,verbose_));
             }
 
             LS& getLS () {return *lsp;}
@@ -1802,7 +1802,7 @@ namespace Dune {
             const LS* operator->() const{ return lsp.operator->();}
 
        private:
-            shared_ptr<LS> lsp;
+            std::shared_ptr<LS> lsp;
         };
 
         // packaging of the CG_SSOR solver: overlapping version
@@ -1816,7 +1816,7 @@ namespace Dune {
             ISTLSolverBackend_CG_SSOR (const FS& fs, const ASS& ass, unsigned maxiter_=5000,
                                        int steps_=5, int verbose_=1)
             {
-                lsp = shared_ptr<LS>(new LS(fs.getGFS(),fs.getCC(),maxiter_,steps_,verbose_));
+                lsp = std::shared_ptr<LS>(new LS(fs.getGFS(),fs.getCC(),maxiter_,steps_,verbose_));
             }
 
             LS& getLS () {return *lsp;}
@@ -1827,7 +1827,7 @@ namespace Dune {
             const LS* operator->() const{ return lsp.operator->();}
 
        private:
-            shared_ptr<LS> lsp;
+            std::shared_ptr<LS> lsp;
         };
 
 
@@ -1842,7 +1842,7 @@ namespace Dune {
 
             ISTLSolverBackend_IterativeDefault (const FS& fs, const ASS& ass, unsigned maxiter_=5000, int verbose_=1)
             {
-                lsp = shared_ptr<LS>(new LS(maxiter_,verbose_));
+                lsp = std::shared_ptr<LS>(new LS(maxiter_,verbose_));
             }
 
             LS& getLS () {return *lsp;}
@@ -1853,7 +1853,7 @@ namespace Dune {
             const LS* operator->() const{ return lsp.operator->();}
 
        private:
-            shared_ptr<LS> lsp;
+            std::shared_ptr<LS> lsp;
         };
 
         // in the nonoverlapping case : BCGS Jacobi
@@ -1866,7 +1866,7 @@ namespace Dune {
 
             ISTLSolverBackend_IterativeDefault (const FS& fs, const ASS& ass, unsigned maxiter_=5000, int verbose_=1)
             {
-                lsp = shared_ptr<LS>(new LS(fs.getGFS(),maxiter_,verbose_));
+                lsp = std::shared_ptr<LS>(new LS(fs.getGFS(),maxiter_,verbose_));
             }
 
             LS& getLS () {return *lsp;}
@@ -1877,7 +1877,7 @@ namespace Dune {
             const LS* operator->() const{ return lsp.operator->();}
 
        private:
-            shared_ptr<LS> lsp;
+            std::shared_ptr<LS> lsp;
         };
 
         // in the overlapping case : BCGS SSORk
@@ -1890,7 +1890,7 @@ namespace Dune {
 
             ISTLSolverBackend_IterativeDefault (const FS& fs, const ASS& ass, unsigned maxiter_=5000, int verbose_=1)
             {
-                lsp = shared_ptr<LS>(new LS(fs.getGFS(),fs.getCC(),maxiter_,3,verbose_));
+                lsp = std::shared_ptr<LS>(new LS(fs.getGFS(),fs.getCC(),maxiter_,3,verbose_));
             }
 
             LS& getLS () {return *lsp;}
@@ -1901,7 +1901,7 @@ namespace Dune {
             const LS* operator->() const{ return lsp.operator->();}
 
        private:
-            shared_ptr<LS> lsp;
+            std::shared_ptr<LS> lsp;
         };
 
         // packaging of a default solver that should always work
@@ -1915,7 +1915,7 @@ namespace Dune {
 
             ISTLSolverBackend_ExplicitDiagonal (const FS& fs, const ASS& ass, unsigned maxiter_=5000, int verbose_=1)
             {
-                lsp = shared_ptr<LS>(new LS());
+                lsp = std::shared_ptr<LS>(new LS());
             }
 
             LS& getLS () {return *lsp;}
@@ -1926,7 +1926,7 @@ namespace Dune {
             const LS* operator->() const{ return lsp.operator->();}
 
        private:
-            shared_ptr<LS> lsp;
+            std::shared_ptr<LS> lsp;
         };
 
         // packaging of a default solver that should always work
@@ -1940,7 +1940,7 @@ namespace Dune {
 
             ISTLSolverBackend_ExplicitDiagonal (const FS& fs, const ASS& ass, unsigned maxiter_=5000, int verbose_=1)
             {
-                lsp = shared_ptr<LS>(new LS(fs.getGFS()));
+                lsp = std::shared_ptr<LS>(new LS(fs.getGFS()));
             }
 
             LS& getLS () {return *lsp;}
@@ -1951,7 +1951,7 @@ namespace Dune {
             const LS* operator->() const{ return lsp.operator->();}
 
        private:
-            shared_ptr<LS> lsp;
+            std::shared_ptr<LS> lsp;
         };
 
         // packaging of a default solver that should always work
@@ -1965,7 +1965,7 @@ namespace Dune {
 
             ISTLSolverBackend_ExplicitDiagonal (const FS& fs, const ASS& ass, unsigned maxiter_=5000, int verbose_=1)
             {
-                lsp = shared_ptr<LS>(new LS(fs.getGFS()));
+                lsp = std::shared_ptr<LS>(new LS(fs.getGFS()));
             }
 
             LS& getLS () {return *lsp;}
@@ -1976,7 +1976,7 @@ namespace Dune {
             const LS* operator->() const{ return lsp.operator->();}
 
        private:
-            shared_ptr<LS> lsp;
+            std::shared_ptr<LS> lsp;
         };
 
 

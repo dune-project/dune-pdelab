@@ -195,20 +195,20 @@ namespace Dune {
           GFS::CHILDREN
           > type;
 
-        typedef shared_ptr<type> storage_type;
+        typedef std::shared_ptr<type> storage_type;
 
       };
 
       template<typename TC>
-      static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
+      static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<std::shared_ptr<TC>,GFS::CHILDREN>& children)
       {
         return typename result<TC>::type(gfs.backend().blocked(gfs),gfs.orderingTag(),children,const_cast<GFS*>(&gfs));
       }
 
       template<typename TC>
-      static typename result<TC>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
+      static typename result<TC>::storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t, const array<std::shared_ptr<TC>,GFS::CHILDREN>& children)
       {
-        return make_shared<typename result<TC>::type>(gfs->backend().blocked(*gfs),gfs->orderingTag(),children,const_cast<GFS*>(gfs.get()));
+        return std::make_shared<typename result<TC>::type>(gfs->backend().blocked(*gfs),gfs->orderingTag(),children,const_cast<GFS*>(gfs.get()));
       }
 
     };
@@ -253,7 +253,7 @@ namespace Dune {
        * \note This constructor must be present for ordering objects not at
        *       the leaf of the tree.
        */
-      CompositeInterleavedOrdering(bool backend_blocked, const InterleavedOrderingTag& ordering_tag, typename Base::GFSData* gfs_data, Dune::shared_ptr<Children>... children)
+      CompositeInterleavedOrdering(bool backend_blocked, const InterleavedOrderingTag& ordering_tag, typename Base::GFSData* gfs_data, std::shared_ptr<Children>... children)
         : Node(children...)
         , Base(*this,backend_blocked,ordering_tag,gfs_data)
       { }
@@ -283,20 +283,20 @@ namespace Dune {
           TC...
           > type;
 
-        typedef shared_ptr<type> storage_type;
+        typedef std::shared_ptr<type> storage_type;
 
       };
 
       template<typename... TC>
-      static typename result<TC...>::type transform(const GFS& gfs, const Transformation& t, shared_ptr<TC>... children)
+      static typename result<TC...>::type transform(const GFS& gfs, const Transformation& t, std::shared_ptr<TC>... children)
       {
         return typename result<TC...>::type(gfs.backend().blocked(gfs),gfs.orderingTag(),const_cast<GFS*>(&gfs),children...);
       }
 
       template<typename... TC>
-      static typename result<TC...>::storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t, shared_ptr<TC>... children)
+      static typename result<TC...>::storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t, std::shared_ptr<TC>... children)
       {
-        return make_shared<typename result<TC...>::type>(gfs->backend().blocked(*gfs),gfs.orderingTag(),const_cast<GFS*>(gfs.get()),children...);
+        return std::make_shared<typename result<TC...>::type>(gfs->backend().blocked(*gfs),gfs.orderingTag(),const_cast<GFS*>(gfs.get()),children...);
       }
 
     };
