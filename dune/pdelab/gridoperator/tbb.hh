@@ -81,9 +81,8 @@ namespace Dune{
                       const MB& mb_ = MB())
         : global_assembler(gfsu_,gfsv_,cu_,cv_)
         , dof_exchanger(make_shared<BorderDOFExchanger>(*this))
-        , local_assembler(lop_, cu_, cv_,dof_exchanger)
+        , local_assembler(lop_, cu_, cv_,dof_exchanger, lock_manager_)
         , backend(mb_)
-        , lock_manager(lock_manager_)
       {}
 
       //! Constructor for empty constraints
@@ -92,9 +91,8 @@ namespace Dune{
                       const MB& mb_ = MB())
         : global_assembler(gfsu_,gfsv_)
         , dof_exchanger(make_shared<BorderDOFExchanger>(*this))
-        , local_assembler(lop_,dof_exchanger)
+        , local_assembler(lop_,dof_exchanger, lock_manager_)
         , backend(mb_)
-        , lock_manager(lock_manager_)
       {}
 
       //! Get the trial grid function space
@@ -179,7 +177,7 @@ namespace Dune{
       void residual(const Domain & x, Range & r) const {
         typedef typename LocalAssembler::LocalResidualAssemblerEngine ResidualEngine;
         ResidualEngine & residual_engine =
-          local_assembler.localResidualAssemblerEngine(r,x, *lock_manager);
+          local_assembler.localResidualAssemblerEngine(r,x);
         global_assembler.assemble(residual_engine);
       }
 
@@ -187,7 +185,7 @@ namespace Dune{
       void jacobian(const Domain & x, Jacobian & a) const {
         typedef typename LocalAssembler::LocalJacobianAssemblerEngine JacobianEngine;
         JacobianEngine & jacobian_engine =
-          local_assembler.localJacobianAssemblerEngine(a,x, *lock_manager);
+          local_assembler.localJacobianAssemblerEngine(a,x);
         global_assembler.assemble(jacobian_engine);
       }
 
@@ -220,8 +218,6 @@ namespace Dune{
 
       mutable LocalAssembler local_assembler;
       MB backend;
-
-      shared_ptr<LockManager> lock_manager;
     };
 
     //! \brief Grid operator implementation using tbb parallel algorithms,

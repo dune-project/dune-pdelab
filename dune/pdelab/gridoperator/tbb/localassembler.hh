@@ -102,20 +102,24 @@ namespace Dune{
       //! Constructor with empty constraints
       TBBLocalAssembler
       ( LOP & lop_,
-        shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
+        shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger,
+        const std::shared_ptr<LockManager> &lockManager)
         : lop(lop_),  weight(1.0), doPreProcessing(true), doPostProcessing(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
         , _reconstruct_border_entries(isNonOverlapping)
+        , lockManager_(lockManager)
       {}
 
       //! Constructor for non trivial constraints
       TBBLocalAssembler
       ( LOP & lop_, const CU& cu_, const CV& cv_,
-        shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
+        shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger,
+        const std::shared_ptr<LockManager> &lockManager)
         : Base(cu_, cv_),
           lop(lop_),  weight(1.0), doPreProcessing(true), doPostProcessing(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
         , _reconstruct_border_entries(isNonOverlapping)
+        , lockManager_(lockManager)
       {}
 
       //! Notifies the local assembler about the current time of
@@ -159,24 +163,22 @@ namespace Dune{
       //! Returns a reference to the requested engine. This engine is
       //! completely configured and ready to use.
       LocalResidualAssemblerEngine & localResidualAssemblerEngine
-      (typename Traits::Residual & r, const typename Traits::Solution & x,
-       LockManager &lock_manager)
+      (typename Traits::Residual & r, const typename Traits::Solution & x)
       {
         residual_engine.setResidual(r);
         residual_engine.setSolution(x);
-        residual_engine.setLockManager(lock_manager);
+        residual_engine.setLockManager(*lockManager_);
         return residual_engine;
       }
 
       //! Returns a reference to the requested engine. This engine is
       //! completely configured and ready to use.
       LocalJacobianAssemblerEngine & localJacobianAssemblerEngine
-      (typename Traits::Jacobian & a, const typename Traits::Solution & x,
-       LockManager &lock_manager)
+      (typename Traits::Jacobian & a, const typename Traits::Solution & x)
       {
         jacobian_engine.setJacobian(a);
         jacobian_engine.setSolution(x);
-        jacobian_engine.setLockManager(lock_manager);
+        jacobian_engine.setLockManager(*lockManager_);
         return jacobian_engine;
       }
 
@@ -255,6 +257,8 @@ namespace Dune{
 
       bool _reconstruct_border_entries;
 
+      //! The lock manager to use for the local engines.
+      std::shared_ptr<LockManager> lockManager_;
     };
 
     /**
