@@ -118,7 +118,8 @@ namespace Dune{
       */
       BatchedTBBLocalJacobianAssemblerEngine
         (const LocalAssembler & local_assembler_)
-        : local_assembler(local_assembler_), lop(*local_assembler_.lop),
+        : local_assembler(local_assembler_),
+          lop(local_assembler_.localOperator()),
           al_view(al,1.0),
           al_sn_view(al_sn,1.0),
           al_ns_view(al_ns,1.0),

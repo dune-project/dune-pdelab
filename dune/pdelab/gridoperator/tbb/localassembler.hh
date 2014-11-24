@@ -148,6 +148,11 @@ namespace Dune{
       }
 #endif // HAVE_TBB
 
+      //! get a reference to the local operator
+      LOP &localOperator() { return *lop; }
+      //! get a reference to the local operator
+      const LOP &localOperator() const { return *lop; }
+
       //! Notifies the local assembler about the current time of
       //! assembling. Should be called before assembling if the local
       //! operator has time dependencies.
@@ -439,6 +444,11 @@ namespace Dune{
       }
 #endif // HAVE_TBB
 
+      //! get a reference to the local operator
+      LOP &localOperator() { return *lop; }
+      //! get a reference to the local operator
+      const LOP &localOperator() const { return *lop; }
+
       //! Notifies the local assembler about the current time of
       //! assembling. Should be called before assembling if the local
       //! operator has time dependencies.
@@ -708,6 +718,11 @@ namespace Dune{
         lop->join(*other.lop);
       }
 #endif // HAVE_TBB
+
+      //! get a reference to the local operator
+      LOP &localOperator() { return *lop; }
+      //! get a reference to the local operator
+      const LOP &localOperator() const { return *lop; }
 
       //! Notifies the local assembler about the current time of
       //! assembling. Should be called before assembling if the local
