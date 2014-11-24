@@ -100,7 +100,7 @@ namespace Dune{
         shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger,
         const std::shared_ptr<LockManager> &lockManager)
         : lop(stackobject_to_shared_ptr(lop_)),
-          weight(1.0),
+          weight_(1.0),
           doPreProcessing_(true),
           doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
@@ -115,7 +115,7 @@ namespace Dune{
         const std::shared_ptr<LockManager> &lockManager)
         : Base(cu_, cv_),
           lop(stackobject_to_shared_ptr(lop_)),
-          weight(1.0),
+          weight_(1.0),
           doPreProcessing_(true),
           doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
@@ -128,7 +128,7 @@ namespace Dune{
       TBBLocalAssembler(TBBLocalAssembler &other, tbb::split)
         : Base(other),
           lop(std::make_shared<LOP>(*other.lop, tbb::split())),
-          weight(other.weight),
+          weight_(other.weight_),
           doPreProcessing_(other.doPreProcessing_),
           doPostProcessing_(other.doPostProcessing_),
           // pass a dummy value here, we can do the border dof exchange only
@@ -160,9 +160,12 @@ namespace Dune{
         lop->setTime(time_);
       }
 
+      //! Obtain the weight that was set last
+      RangeField weight() const { return weight_; }
+
       //! Notifies the assembler about the current weight of assembling.
-      void setWeight(RangeField weight_){
-        weight = weight_;
+      void setWeight(RangeField weight){
+        weight_ = weight;
       }
 
       //! Time stepping interface
@@ -280,7 +283,7 @@ namespace Dune{
       std::shared_ptr<LOP> lop;
 
       //! The current weight of assembling
-      RangeField weight;
+      RangeField weight_;
 
       //! Indicates whether this local operator has to perform pre
       //! processing
@@ -396,7 +399,7 @@ namespace Dune{
         : lop(stackobject_to_shared_ptr(lop_)),
           residual_mutex(std::make_shared<Mutex>()),
           jacobian_mutex(std::make_shared<Mutex>()),
-          weight(1.0),
+          weight_(1.0),
           doPreProcessing_(true),
           doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
@@ -411,7 +414,7 @@ namespace Dune{
           lop(stackobject_to_shared_ptr(lop_)),
           residual_mutex(std::make_shared<Mutex>()),
           jacobian_mutex(std::make_shared<Mutex>()),
-          weight(1.0),
+          weight_(1.0),
           doPreProcessing_(true),
           doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
@@ -425,7 +428,7 @@ namespace Dune{
           lop(std::make_shared<LOP>(*other.lop, tbb::split())),
           residual_mutex(other.residual_mutex),
           jacobian_mutex(other.jacobian_mutex),
-          weight(other.weight),
+          weight_(other.weight_),
           doPreProcessing_(other.doPreProcessing_),
           doPostProcessing_(other.doPostProcessing_),
           // pass a dummy value here, we can do the border dof exchange only
@@ -456,9 +459,12 @@ namespace Dune{
         lop->setTime(time_);
       }
 
+      //! Obtain the weight that was set last
+      RangeField weight() const { return weight_; }
+
       //! Notifies the assembler about the current weight of assembling.
-      void setWeight(RangeField weight_){
-        weight = weight_;
+      void setWeight(RangeField weight){
+        weight_ = weight;
       }
 
       //! Time stepping interface
@@ -583,7 +589,7 @@ namespace Dune{
       std::shared_ptr<Mutex> jacobian_mutex;
 
       //! The current weight of assembling
-      RangeField weight;
+      RangeField weight_;
 
       //! Indicates whether this local operator has to perform pre
       //! processing
@@ -675,7 +681,7 @@ namespace Dune{
       ( LOP & lop_,
         shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : lop(stackobject_to_shared_ptr(lop_)),
-          weight(1.0),
+          weight_(1.0),
           doPreProcessing_(true),
           doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
@@ -688,7 +694,7 @@ namespace Dune{
         shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : Base(cu_, cv_),
           lop(stackobject_to_shared_ptr(lop_)),
-          weight(1.0),
+          weight_(1.0),
           doPreProcessing_(true),
           doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
@@ -700,7 +706,7 @@ namespace Dune{
       ColoredTBBLocalAssembler(ColoredTBBLocalAssembler &other, tbb::split)
         : Base(other),
           lop(std::make_shared<LOP>(*other.lop, tbb::split())),
-          weight(other.weight),
+          weight_(other.weight_),
           doPreProcessing_(other.doPreProcessing_),
           doPostProcessing_(other.doPostProcessing_),
           // pass a dummy value here, we can do the border dof exchange only
@@ -731,9 +737,12 @@ namespace Dune{
         lop->setTime(time_);
       }
 
+      //! Obtain the weight that was set last
+      RangeField weight() const { return weight_; }
+
       //! Notifies the assembler about the current weight of assembling.
-      void setWeight(RangeField weight_){
-        weight = weight_;
+      void setWeight(RangeField weight){
+        weight_ = weight;
       }
 
       //! Time stepping interface
@@ -849,7 +858,7 @@ namespace Dune{
       std::shared_ptr<LOP> lop;
 
       //! The current weight of assembling
-      RangeField weight;
+      RangeField weight_;
 
       //! Indicates whether this local operator has to perform pre
       //! processing

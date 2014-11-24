@@ -302,6 +302,9 @@ namespace Dune {
 
       /** @} */
 
+      //! Obtain the weight that was set last
+      RangeField weight() const { return weight_; }
+
       //! Set current weight of assembling
       template<class RF>
       void setWeight(RF weight);

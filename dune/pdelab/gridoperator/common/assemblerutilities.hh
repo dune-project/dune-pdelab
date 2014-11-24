@@ -365,6 +365,7 @@ namespace Dune{
             globalcontainer_view.add(i,j,localcontainer(i,j));
       }
 
+    public:
       //! Scatter local jacobian to global container.
       template<typename M, typename GCView>
       typename enable_if<
@@ -458,6 +459,7 @@ namespace Dune{
           }
       }
 
+    protected:
       /** \brief Add local matrix to global matrix,
           and apply Dirichlet constraints in a symmetric
           fashion. Apart from that, identical to etadd(). */
@@ -602,6 +604,7 @@ namespace Dune{
       add_diagonal_entry(Pattern& pattern, const RI& ri, const CI& ci) const
       {}
 
+    public:
       /** \brief Adding matrix entry to pattern with respect to the
           constraints contributions. This assembles the entries addressed
           by etadd(..). See the documentation there for more information
@@ -658,6 +661,7 @@ namespace Dune{
           }
       }
 
+    protected:
       /** \brief insert dirichlet constraints for row and assemble
           T^T_U in constrained rows
       */
@@ -674,6 +678,7 @@ namespace Dune{
       {
       }
 
+    public:
       template<typename GFSV, typename GC>
       void handle_dirichlet_constraints(const GFSV& gfsv, GC& globalcontainer) const
       {
@@ -682,6 +687,7 @@ namespace Dune{
         globalcontainer.finalize();
       }
 
+    protected:
       /* constraints */
       const CU* pconstraintsu;
       const CV* pconstraintsv;

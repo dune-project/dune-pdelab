@@ -98,7 +98,7 @@ namespace Dune{
       //! Constructor with empty constraints
       DefaultLocalAssembler (LOP & lop_, shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : lop(stackobject_to_shared_ptr(lop_)),
-          weight(1.0),
+          weight_(1.0),
           doPreProcessing_(true),
           doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
@@ -110,7 +110,7 @@ namespace Dune{
                              shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : Base(cu_, cv_),
           lop(stackobject_to_shared_ptr(lop_)),
-          weight(1.0),
+          weight_(1.0),
           doPreProcessing_(true),
           doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
@@ -122,7 +122,7 @@ namespace Dune{
       DefaultLocalAssembler(DefaultLocalAssembler &other, tbb::split)
         : Base(other),
           lop(std::make_shared<LOP>(*other.lop, tbb::split())),
-          weight(other.weight),
+          weight_(other.weight_),
           doPreProcessing_(other.doPreProcessing_),
           doPostProcessing_(other.doPostProcessing_),
           // pass a dummy value here, we can do the border dof exchange only
@@ -153,9 +153,12 @@ namespace Dune{
         lop->setTime(time_);
       }
 
+      //! Obtain the weight that was set last
+      RangeField weight() const { return weight_; }
+
       //! Notifies the assembler about the current weight of assembling.
-      void setWeight(RangeField weight_){
-        weight = weight_;
+      void setWeight(RangeField weight){
+        weight_ = weight;
       }
 
       //! Time stepping interface
@@ -271,7 +274,7 @@ namespace Dune{
       std::shared_ptr<LOP> lop;
 
       //! The current weight of assembling
-      RangeField weight;
+      RangeField weight_;
 
       //! Indicates whether this local operator has to perform pre
       //! processing
