@@ -62,7 +62,7 @@ namespace Dune{
          creates this engine
       */
       DefaultLocalJacobianApplyAssemblerEngine(const LocalAssembler & local_assembler_)
-        : local_assembler(local_assembler_), lop(local_assembler_.lop),
+        : local_assembler(local_assembler_), lop(*local_assembler_.lop),
           rl_view(rl,1.0),
           rn_view(rn,1.0)
       {}

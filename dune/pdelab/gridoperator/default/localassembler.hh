@@ -1,6 +1,14 @@
 #ifndef DUNE_PDELAB_DEFAULT_LOCAL_ASSEMBLER_HH
 #define DUNE_PDELAB_DEFAULT_LOCAL_ASSEMBLER_HH
 
+#include <memory>
+
+#if HAVE_TBB
+#include <tbb/tbb_stddef.h>
+#endif
+
+#include <dune/common/shared_ptr.hh>
+
 #include <dune/typetree/typetree.hh>
 
 #include <dune/pdelab/gridoperator/default/residualengine.hh>
@@ -94,7 +102,10 @@ namespace Dune{
 
       //! Constructor with empty constraints
       DefaultLocalAssembler (LOP & lop_, shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
-        : lop(lop_),  weight(1.0), doPreProcessing(true), doPostProcessing(true),
+        : lop(stackobject_to_shared_ptr(lop_)),
+          weight(1.0),
+          doPreProcessing(true),
+          doPostProcessing(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
         , _reconstruct_border_entries(isNonOverlapping)
       {}
@@ -103,16 +114,43 @@ namespace Dune{
       DefaultLocalAssembler (LOP & lop_, const CU& cu_, const CV& cv_,
                              shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : Base(cu_, cv_),
-          lop(lop_),  weight(1.0), doPreProcessing(true), doPostProcessing(true),
+          lop(stackobject_to_shared_ptr(lop_)),
+          weight(1.0),
+          doPreProcessing(true),
+          doPostProcessing(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
         , _reconstruct_border_entries(isNonOverlapping)
       {}
+
+#if HAVE_TBB
+      //! Splitting constructor
+      DefaultLocalAssembler(DefaultLocalAssembler &other, tbb::split)
+        : Base(other),
+          lop(std::make_shared<LOP>(*other.lop, tbb::split())),
+          weight(other.weight),
+          doPreProcessing(other.doPreProcessing),
+          doPostProcessing(other.doPostProcessing),
+          // pass a dummy value here, we can do the border dof exchange only
+          // on the original pattern engine anyway
+          pattern_engine(*this,nullptr),
+          residual_engine(*this),
+          jacobian_engine(*this),
+          jacobian_apply_engine(*this),
+          _reconstruct_border_entries(other._reconstruct_border_entries)
+      {}
+
+      //! join state from other local assembler
+      void join(DefaultLocalAssembler &other)
+      {
+        lop->join(*other.lop);
+      }
+#endif // HAVE_TBB
 
       //! Notifies the local assembler about the current time of
       //! assembling. Should be called before assembling if the local
       //! operator has time dependencies.
       void setTime(Real time_){
-        lop.setTime(time_);
+        lop->setTime(time_);
       }
 
       //! Notifies the assembler about the current weight of assembling.
@@ -122,11 +160,11 @@ namespace Dune{
 
       //! Time stepping interface
       //! @{
-      void preStage (Real time_, int r_) { lop.preStage(time_,r_); }
-      void preStep (Real time_, Real dt_, std::size_t stages_){ lop.preStep(time_,dt_,stages_); }
-      void postStep (){ lop.postStep(); }
-      void postStage (){ lop.postStage(); }
-      Real suggestTimestep (Real dt) const{return lop.suggestTimestep(dt); }
+      void preStage (Real time_, int r_) { lop->preStage(time_,r_); }
+      void preStep (Real time_, Real dt_, std::size_t stages_){ lop->preStep(time_,dt_,stages_); }
+      void postStep (){ lop->postStep(); }
+      void postStage (){ lop->postStage(); }
+      Real suggestTimestep (Real dt) const{return lop->suggestTimestep(dt); }
       //! @}
 
       bool reconstructBorderEntries() const
@@ -218,7 +256,7 @@ namespace Dune{
     private:
 
       //! The local operator
-      LOP & lop;
+      std::shared_ptr<LOP> lop;
 
       //! The current weight of assembling
       RangeField weight;

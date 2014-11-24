@@ -63,41 +63,12 @@ namespace Dune{
          creates this engine
       */
       DefaultLocalJacobianAssemblerEngine(const LocalAssembler & local_assembler_)
-        : local_assembler(local_assembler_), lop(local_assembler_.lop),
+        : local_assembler(local_assembler_), lop(*local_assembler_.lop),
           al_view(al,1.0),
           al_sn_view(al_sn,1.0),
           al_ns_view(al_ns,1.0),
           al_nn_view(al_nn,1.0)
       {}
-
-      //! splitting constructor support
-      /**
-       * \note This does not create an exact copy.  Instead it copies the
-       *       global views, such that they point to the same global vector.
-       *       Local matrices/vectors are constructed freshly without copying
-       *       the content.  Views into the local matrices/vectors are
-       *       constructed freshly so they reference the local matrices/vector
-       *       in the new object, and are given unit weight.  This essentially
-       *       creates an engine object that is not currently bound to any
-       *       entity, but otherwise behaves like the object it was contructed
-       *       from.
-       * \note This constructor is needed to implement splitting constructors
-       *       in derived classes.
-       */
-      DefaultLocalJacobianAssemblerEngine
-      (const DefaultLocalJacobianAssemblerEngine &other, const LOP &otherlop) :
-        local_assembler(other.local_assembler), lop(otherlop),
-        global_s_s_view(other.global_s_s_view),
-        global_s_n_view(other.global_s_n_view),
-        global_a_ss_view(other.global_a_ss_view),
-        global_a_sn_view(other.global_a_sn_view),
-        global_a_ns_view(other.global_a_ns_view),
-        global_a_nn_view(other.global_a_nn_view),
-        al_view(al,1.0),
-        al_sn_view(al_sn,1.0),
-        al_ns_view(al_ns,1.0),
-        al_nn_view(al_nn,1.0)
-      { }
 
       //! Query methods for the global grid assembler
       //! @{

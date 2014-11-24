@@ -326,6 +326,58 @@ namespace Dune {
 
     };
 
+    //! Interface class for engine factories
+    /**
+     * An engine factory is used when an assembler needs to duplicate a
+     * hierarchy of local assemblers and engines.  This can become necessary
+     * for multithreaded grid operators.
+     *
+     * The local assemblers serve two functions:
+     * \li They form a tree, and the leaves contain pointers to the local
+     *     operators.  This can be used to communicate properties of the
+     *     assembly such as the current time or weight to the local operators.
+     * \li They provide storage for the assembly engines, and provide methods
+     *     to obtain references to and configure the engines.
+     *
+     * The configuration of the engines is done by the gridoperator, because
+     * only the grid operator knows which engine to use.  But only the
+     * assembler knows when to create a new thread, and thus when the
+     * hierarchy of local assemblers and engines needs to be duplicated.
+     *
+     * To make it possible for the assembler to configure a duplicate engine
+     * correctly we provide engine factories as an abstraction.  The grid
+     * operator creates an engine factory object, and hands it to the
+     * assembler.  It encapsulates into the factory object all information
+     * necessary to confingure a new engine given a hierarchy of local
+     * operators.
+     *
+     * Configuration of an engine object includes information such as the
+     * location of a residual vector or jacobian matrix to assemble into;
+     * pointers to other engines this engine uses to do its work; or a lock
+     * manager for multi-threaded assembly, if applicable.
+     *
+     * An engine factory is copy constructible, and it does not matter which
+     * copy of an engine factory is used to obtain an engine from a given
+     * hierarchy.  Other constructors are up to the particular engine.
+     *
+     * \note This interface is defined intentionally in such a way that a
+     *       lambda-function can fulfill it.  In particular that means there
+     *       is no member type for the type of the engine.
+     */
+    template<class Engine>
+    struct LocalAssemblerEngineFactoryInterface {
+      //! copy constructor
+      LocalAssemblerEngineFactoryInterface
+        (const LocalAssemblerEngineFactoryInterface &);
+      //! configure an engine from the local assembler la.
+      /**
+       * \note This returns a reference; the engine object is owned by the la
+       *       object in the current architecture.
+       */
+      template<class LocalAssembler>
+      Engine &operator()(LocalAssembler &la) const;
+    };
+
     /** \brief The grid operator represents an operator mapping which
         corresponds to the (possibly nonlinear) algebraic problem
         resulting from the discretization of a PDE.
