@@ -243,7 +243,7 @@ namespace Dune{
 
       void post_border_pattern_assembly(true_type, const GFSU& gfsu, const GFSV& gfsv)
       {
-        if(local_assembler.doPostProcessing &&
+        if(local_assembler.doPostProcessing() &&
            local_assembler.reconstructBorderEntries())
           {
             communicationCache().finishInitialization();

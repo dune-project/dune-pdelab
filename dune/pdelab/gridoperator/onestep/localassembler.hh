@@ -55,12 +55,6 @@ namespace Dune{
       typedef typename LA1::LocalPatternAssemblerEngine LocalExplicitPatternAssemblerEngine;
       typedef OneStepExplicitLocalJacobianResidualAssemblerEngine<OneStepLocalAssembler>
       LocalExplicitJacobianResidualAssemblerEngine;
-
-      friend class OneStepLocalPatternAssemblerEngine<OneStepLocalAssembler>;
-      friend class OneStepLocalPreStageAssemblerEngine<OneStepLocalAssembler>;
-      friend class OneStepLocalResidualAssemblerEngine<OneStepLocalAssembler>;
-      friend class OneStepLocalJacobianAssemblerEngine<OneStepLocalAssembler>;
-      friend class OneStepExplicitLocalJacobianResidualAssemblerEngine<OneStepLocalAssembler>;
       //! @}
 
       void static_checks(){

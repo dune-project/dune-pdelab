@@ -278,7 +278,7 @@ namespace Dune{
         global_rl_view.commit();
         global_rn_view.commit();
 
-        if(local_assembler.doPostProcessing)
+        if(local_assembler.doPostProcessing())
           {
             Dune::PDELab::constrain_residual(*(local_assembler.pconstraintsv),global_rl_view.container());
           }

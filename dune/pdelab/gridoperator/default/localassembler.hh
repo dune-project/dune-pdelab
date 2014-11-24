@@ -93,19 +93,14 @@ namespace Dune{
       typedef DefaultLocalResidualAssemblerEngine<DefaultLocalAssembler> LocalResidualAssemblerEngine;
       typedef DefaultLocalJacobianAssemblerEngine<DefaultLocalAssembler> LocalJacobianAssemblerEngine;
       typedef DefaultLocalJacobianApplyAssemblerEngine<DefaultLocalAssembler> LocalJacobianApplyAssemblerEngine;
-
-      friend class DefaultLocalPatternAssemblerEngine<DefaultLocalAssembler>;
-      friend class DefaultLocalResidualAssemblerEngine<DefaultLocalAssembler>;
-      friend class DefaultLocalJacobianAssemblerEngine<DefaultLocalAssembler>;
-      friend class DefaultLocalJacobianApplyAssemblerEngine<DefaultLocalAssembler>;
       //! @}
 
       //! Constructor with empty constraints
       DefaultLocalAssembler (LOP & lop_, shared_ptr<typename GO::BorderDOFExchanger> border_dof_exchanger)
         : lop(stackobject_to_shared_ptr(lop_)),
           weight(1.0),
-          doPreProcessing(true),
-          doPostProcessing(true),
+          doPreProcessing_(true),
+          doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
         , _reconstruct_border_entries(isNonOverlapping)
       {}
@@ -116,8 +111,8 @@ namespace Dune{
         : Base(cu_, cv_),
           lop(stackobject_to_shared_ptr(lop_)),
           weight(1.0),
-          doPreProcessing(true),
-          doPostProcessing(true),
+          doPreProcessing_(true),
+          doPostProcessing_(true),
           pattern_engine(*this,border_dof_exchanger), residual_engine(*this), jacobian_engine(*this), jacobian_apply_engine(*this)
         , _reconstruct_border_entries(isNonOverlapping)
       {}
@@ -128,8 +123,8 @@ namespace Dune{
         : Base(other),
           lop(std::make_shared<LOP>(*other.lop, tbb::split())),
           weight(other.weight),
-          doPreProcessing(other.doPreProcessing),
-          doPostProcessing(other.doPostProcessing),
+          doPreProcessing_(other.doPreProcessing_),
+          doPostProcessing_(other.doPostProcessing_),
           // pass a dummy value here, we can do the border dof exchange only
           // on the original pattern engine anyway
           pattern_engine(*this,nullptr),
@@ -235,14 +230,26 @@ namespace Dune{
       static bool doPatternVolumePostSkeleton()  { return LOP::doPatternVolumePostSkeleton; }
       //! @}
 
+      //! Query whether to do preprocessing in the engines
+      /**
+       * This method is used by the engines.
+       */
+      bool doPreProcessing() const { return doPreProcessing_; }
+
       //! This method allows to set the behavior with regard to any
       //! preprocessing within the engines. It is called by the
       //! setupGridOperators() method of the GridOperator and should
       //! not be called directly.
       void preProcessing(bool v)
       {
-        doPreProcessing = v;
+        doPreProcessing_ = v;
       }
+
+      //! Query whether to do postprocessing in the engines
+      /**
+       * This method is used by the engines.
+       */
+      bool doPostProcessing() const { return doPostProcessing_; }
 
       //! This method allows to set the behavior with regard to any
       //! postprocessing within the engines. It is called by the
@@ -250,7 +257,7 @@ namespace Dune{
       //! not be called directly.
       void postProcessing(bool v)
       {
-        doPostProcessing = v;
+        doPostProcessing_ = v;
       }
 
     private:
@@ -263,11 +270,11 @@ namespace Dune{
 
       //! Indicates whether this local operator has to perform pre
       //! processing
-      bool doPreProcessing;
+      bool doPreProcessing_;
 
       //! Indicates whether this local operator has to perform post
       //! processing
-      bool doPostProcessing;
+      bool doPostProcessing_;
 
       //! The engine member objects
       //! @{

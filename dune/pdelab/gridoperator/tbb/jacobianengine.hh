@@ -263,7 +263,7 @@ namespace Dune{
         global_a_nn_view.commit();
         global_a_nn_view.detach();
 
-        if(local_assembler.doPostProcessing){
+        if(local_assembler.doPostProcessing()){
           local_assembler.handle_dirichlet_constraints(gfsv,jacobian);
         }
       }

@@ -135,8 +135,8 @@ namespace Dune{
 
         template <typename T>
         void visit(T& elem) {
-          elem.localAssembler().doPreProcessing = index == 0;
-          elem.localAssembler().doPostProcessing = index == size-1;
+          elem.localAssembler().preProcessing(index == 0);
+          elem.localAssembler().postProcessing(index == size-1);
           ++index;
         }
 
@@ -343,8 +343,8 @@ namespace Dune{
 
         template <typename T>
         void visit(T& elem) {
-          elem.localAssembler().doPreProcessing = index == 0;
-          elem.localAssembler().doPostProcessing = index == size-1;
+          elem.localAssembler().preProcessing(index == 0);
+          elem.localAssembler().postProcessing(index == size-1);
           ++index;
         }
 
@@ -553,8 +553,8 @@ namespace Dune{
 
         template <typename T>
         void visit(T& elem) {
-          elem.localAssembler().doPreProcessing = index == 0;
-          elem.localAssembler().doPostProcessing = index == size-1;
+          elem.localAssembler().preProcessing(index == 0);
+          elem.localAssembler().postProcessing(index == size-1);
           ++index;
         }
 
