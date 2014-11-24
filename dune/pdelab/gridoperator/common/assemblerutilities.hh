@@ -442,12 +442,6 @@ namespace Dune{
       >::type
       scatter_jacobian(M& local_container, GCView& global_container_view, bool symmetric_mode) const
       {
-        typedef typename GCView::RowIndexCache LFSVIndexCache;
-        typedef typename GCView::ColIndexCache LFSUIndexCache;
-
-        const LFSVIndexCache& lfsv_indices = global_container_view.rowIndexCache();
-        const LFSUIndexCache& lfsu_indices = global_container_view.colIndexCache();
-
         // write entries without considering constraints.
         // Dirichlet-constrained rows will be fixed in a postprocessing step.
         for (auto it = local_container.begin(); it != local_container.end(); ++it)
