@@ -116,7 +116,8 @@ namespace Dune{
       */
       BatchedTBBLocalResidualAssemblerEngine
         (const LocalAssembler & local_assembler_)
-        : local_assembler(local_assembler_), lop(*local_assembler_.lop),
+        : local_assembler(local_assembler_),
+          lop(local_assembler_.localOperator()),
           rl_view(rl,1.0),
           rn_view(rn,1.0)
       {}
@@ -280,7 +281,8 @@ namespace Dune{
 
         if(local_assembler.doPostProcessing())
           {
-            Dune::PDELab::constrain_residual(*(local_assembler.pconstraintsv),global_rl_view.container());
+            Dune::PDELab::constrain_residual(local_assembler.testConstraints(),
+                                             global_rl_view.container());
           }
       }
 
