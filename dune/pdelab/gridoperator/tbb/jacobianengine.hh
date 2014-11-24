@@ -79,7 +79,11 @@ namespace Dune{
       typedef typename LA::Mutex Mutex;
     public:
 
-      static const bool needs_constraints_caching = true;
+      template<typename TrialConstraintsContainer, typename TestConstraintsContainer>
+      bool needsConstraintsCaching(const TrialConstraintsContainer& cu, const TestConstraintsContainer& cv)
+      {
+        return cu.containsNonDirichletConstraints() || cv.containsNonDirichletConstraints();
+      }
 
       //! The type of the wrapping local assembler
       typedef LA LocalAssembler;
@@ -94,7 +98,6 @@ namespace Dune{
       typedef typename LA::LFSV LFSV;
       typedef typename LA::LFSVCache LFSVCache;
       typedef typename LFSV::Traits::GridFunctionSpace GFSV;
-      typedef typename GFSU::Traits::GridView GridView;
 
       //! The type of the jacobian matrix
       typedef typename LA::Traits::Jacobian Jacobian;
@@ -214,7 +217,7 @@ namespace Dune{
       //! @{
       template<typename EG, typename LFSUC, typename LFSVC>
       void onUnbindLFSUV(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache){
-        local_assembler.etadd(al,global_a_ss_view);
+        local_assembler.scatter_jacobian(al,global_a_ss_view,false);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -222,9 +225,9 @@ namespace Dune{
                                 const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
                                 const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
-        local_assembler.etadd(al_sn,global_a_sn_view);
-        local_assembler.etadd(al_ns,global_a_ns_view);
-        local_assembler.etadd(al_nn,global_a_nn_view);
+        local_assembler.scatter_jacobian(al_sn,global_a_sn_view,false);
+        local_assembler.scatter_jacobian(al_ns,global_a_ns_view,false);
+        local_assembler.scatter_jacobian(al_nn,global_a_nn_view,false);
       }
 
       //! @}
@@ -376,7 +379,14 @@ namespace Dune{
       typedef Dune::PDELab::TestSpaceTag LocalTestSpaceTag;
 
       typedef Dune::PDELab::LocalVector<SolutionElement, LocalTrialSpaceTag> SolutionVector;
-      typedef Dune::PDELab::LocalMatrix<JacobianElement> JacobianMatrix;
+      typedef typename std::conditional<
+        std::is_base_of<
+          lop::DiagonalJacobian,
+          LOP
+          >::value,
+        Dune::PDELab::DiagonalLocalMatrix<JacobianElement>,
+        Dune::PDELab::LocalMatrix<JacobianElement>
+        >::type JacobianMatrix;
 
       SolutionVector xl;
       SolutionVector xn;

@@ -77,7 +77,11 @@ namespace Dune{
       typedef typename LA::Mutex Mutex;
     public:
 
-      static const bool needs_constraints_caching = true;
+      template<typename TrialConstraintsContainer, typename TestConstraintsContainer>
+      bool needsConstraintsCaching(const TrialConstraintsContainer& cu, const TestConstraintsContainer& cv) const
+      {
+        return false;
+      }
 
       //! The type of the wrapping local assembler
       typedef LA LocalAssembler;
@@ -100,7 +104,6 @@ namespace Dune{
       typedef typename LA::LFSV LFSV;
       typedef typename LA::LFSVCache LFSVCache;
       typedef typename LFSV::Traits::GridFunctionSpace GFSV;
-      typedef typename GFSU::Traits::GridView GridView;
 
       typedef typename Solution::template ConstLocalView<LFSUCache> SolutionView;
       typedef ThreadedVectorView<Residual, LFSVCache, Mutex> ResidualView;

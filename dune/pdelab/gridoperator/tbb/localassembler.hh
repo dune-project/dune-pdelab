@@ -75,8 +75,8 @@ namespace Dune{
       typedef LFSIndexCache<LFSU,CU> LFSUCache;
       typedef LFSIndexCache<LFSV,CV> LFSVCache;
 
-      typedef LFSIndexCache<LFSU,EmptyTransformation> NoConstraintsLFSUCache;
-      typedef LFSIndexCache<LFSV,EmptyTransformation> NoConstraintsLFSVCache;
+      typedef LFSUCache NoConstraintsLFSUCache DUNE_DEPRECATED_MSG("NoConstraintsLFSUCache is deprecated, use LFSUCache instead and use the runtime interface to disable constraints caching");
+      typedef LFSVCache NoConstraintsLFSVCache DUNE_DEPRECATED_MSG("NoConstraintsLFSVCache is deprecated, use LFSVCache instead and use the runtime interface to disable constraints caching");
 
       typedef typename GO::LockManager LockManager;
 
@@ -136,8 +136,8 @@ namespace Dune{
           weight(other.weight),
           doPreProcessing(other.doPreProcessing),
           doPostProcessing(other.doPostProcessing),
-          // pass a dummy value here, we can do the border dof exchange on
-          // only on the original pattern engine anyway
+          // pass a dummy value here, we can do the border dof exchange only
+          // on the original pattern engine anyway
           pattern_engine(*this,nullptr),
           residual_engine(*this),
           jacobian_engine(*this),
@@ -360,8 +360,8 @@ namespace Dune{
       typedef LFSIndexCache<LFSU,CU> LFSUCache;
       typedef LFSIndexCache<LFSV,CV> LFSVCache;
 
-      typedef LFSIndexCache<LFSU,EmptyTransformation> NoConstraintsLFSUCache;
-      typedef LFSIndexCache<LFSV,EmptyTransformation> NoConstraintsLFSVCache;
+      typedef LFSUCache NoConstraintsLFSUCache DUNE_DEPRECATED_MSG("NoConstraintsLFSUCache is deprecated, use LFSUCache instead and use the runtime interface to disable constraints caching");
+      typedef LFSVCache NoConstraintsLFSVCache DUNE_DEPRECATED_MSG("NoConstraintsLFSVCache is deprecated, use LFSVCache instead and use the runtime interface to disable constraints caching");
 
       //! @}
 
@@ -633,8 +633,9 @@ namespace Dune{
       typedef LFSIndexCache<LFSU,CU> LFSUCache;
       typedef LFSIndexCache<LFSV,CV> LFSVCache;
 
-      typedef LFSIndexCache<LFSU,EmptyTransformation> NoConstraintsLFSUCache;
-      typedef LFSIndexCache<LFSV,EmptyTransformation> NoConstraintsLFSVCache;
+      typedef LFSUCache NoConstraintsLFSUCache DUNE_DEPRECATED_MSG("NoConstraintsLFSUCache is deprecated, use LFSUCache instead and use the runtime interface to disable constraints caching");
+      typedef LFSVCache NoConstraintsLFSVCache DUNE_DEPRECATED_MSG("NoConstraintsLFSVCache is deprecated, use LFSVCache instead and use the runtime interface to disable constraints caching");
+
       //! @}
 
       //! The local assembler engines
@@ -819,6 +820,7 @@ namespace Dune{
       }
 
     private:
+
       //! The local operator
       std::shared_ptr<LOP> lop;
 

@@ -181,6 +181,7 @@ namespace Dune{
 
         // Notify assembler engine that assembly is finished
         assembler_engine.postAssembly(gfsu,gfsv);
+
       }
 
     protected:
@@ -190,7 +191,6 @@ namespace Dune{
       const GFSU& gfsu;
       const GFSV& gfsv;
 
-    protected:
       typename conditional<
         is_same<CU,EmptyTransformation>::value,
         const CU,
