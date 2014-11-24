@@ -511,7 +511,7 @@ namespace Dune{
 
       LockManager *lockmgr;
 
-    }; // End of class DefaultLocalResidualAssemblerEngine
+    }; // End of class TBBLocalResidualAssemblerEngine
 
   }
 }
