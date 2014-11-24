@@ -70,13 +70,13 @@ namespace Dune{
        is reached, obtaining a lock on the vector to prevent races.
 
        \tparam LA The local assembler
+       \tparam Mutex type of mutex to use.
 
     */
-    template<typename LA>
+    template<typename LA, typename Mutex>
     class BatchedTBBLocalJacobianAssemblerEngine
       : public LocalAssemblerEngineBase
     {
-      typedef typename LA::Mutex Mutex;
     public:
 
       template<typename TrialConstraintsContainer, typename TestConstraintsContainer>

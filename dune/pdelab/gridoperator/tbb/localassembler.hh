@@ -376,10 +376,10 @@ namespace Dune{
       //! @{
       typedef DefaultLocalPatternAssemblerEngine<BatchedTBBLocalAssembler>
         LocalPatternAssemblerEngine;
-      typedef BatchedTBBLocalResidualAssemblerEngine<BatchedTBBLocalAssembler>
-        LocalResidualAssemblerEngine;
-      typedef BatchedTBBLocalJacobianAssemblerEngine<BatchedTBBLocalAssembler>
-        LocalJacobianAssemblerEngine;
+      typedef BatchedTBBLocalResidualAssemblerEngine
+        <BatchedTBBLocalAssembler, Mutex> LocalResidualAssemblerEngine;
+      typedef BatchedTBBLocalJacobianAssemblerEngine
+        <BatchedTBBLocalAssembler, Mutex> LocalJacobianAssemblerEngine;
       typedef DefaultLocalJacobianApplyAssemblerEngine
         <BatchedTBBLocalAssembler> LocalJacobianApplyAssemblerEngine;
       //! @}
