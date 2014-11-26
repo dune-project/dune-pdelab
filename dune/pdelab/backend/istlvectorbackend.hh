@@ -27,6 +27,7 @@ namespace Dune {
     public:
       typedef typename C::field_type ElementType;
       typedef ElementType E;
+      typedef ElementType value_type;
       typedef C Container;
       typedef GFS GridFunctionSpace;
       typedef Container BaseT;
