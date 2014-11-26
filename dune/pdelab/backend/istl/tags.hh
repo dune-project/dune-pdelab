@@ -4,6 +4,7 @@
 #define DUNE_PDELAB_BACKEND_ISTL_TAGS_HH
 
 #include <dune/common/documentation.hh>
+#include <dune/istl/forwarddeclarations.hh>
 #include <dune/pdelab/backend/istl/forwarddeclarations.hh>
 #include <cstddef>
 
@@ -23,6 +24,18 @@ namespace Dune {
         struct block_vector
         {
           typedef block_vector base_tag;
+        };
+
+        //! Tag describing a Dune::ISTL::Vector
+        struct vector
+        {
+          typedef vector base_tag;
+        };
+
+        //! Tag describing a Dune::ISTL::BlockVector
+        struct dynamic_block_vector
+        {
+          typedef dynamic_block_vector base_tag;
         };
 
         //! Tag describing a DynamicVector.
@@ -61,6 +74,19 @@ namespace Dune {
         {
           typedef bcrs_matrix base_tag;
         };
+
+        //! Tag describing a Dune::ISTL::ELLMatrix
+        struct ell_matrix
+        {
+          typedef ell_matrix base_tag;
+        };
+
+        //! Tag describing a Dune::ISTL::BELLMatrix
+        struct bell_matrix
+        {
+          typedef bell_matrix base_tag;
+        };
+
 
         //! Tag describing a DynamicMatrix.
         struct dynamic_matrix
@@ -158,6 +184,18 @@ namespace Dune {
           typedef block_vector type;
         };
 
+        template<typename F, typename A, typename D>
+        struct container<Dune::ISTL::Vector<F,A,D> >
+        {
+          typedef vector type;
+        };
+
+        template<typename F, typename A, typename D>
+        struct container<Dune::ISTL::BlockVector<F,A,D> >
+        {
+          typedef dynamic_block_vector type;
+        };
+
 
         // DynamicVector grew allocator support some time after the 2.3 release,
         // so we have to adjust the forward declaration accordingly
@@ -197,6 +235,18 @@ namespace Dune {
         struct container<BCRSMatrix<Block,Alloc> >
         {
           typedef bcrs_matrix type;
+        };
+
+        template<typename F, typename A, typename D>
+        struct container<Dune::ISTL::ELLMatrix<F,A,D> >
+        {
+          typedef ell_matrix type;
+        };
+
+        template<typename F, typename A, typename D>
+        struct container<Dune::ISTL::BELLMatrix<F,A,D> >
+        {
+          typedef bell_matrix type;
         };
 
         template<typename F>
