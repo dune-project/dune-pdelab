@@ -158,7 +158,7 @@ namespace Dune{
       void fill_pattern(Pattern & p) const {
         typedef typename LocalAssembler::LocalPatternAssemblerEngine PatternEngine;
         global_assembler.assemble
-          ([&,p](LocalAssembler &la) mutable -> PatternEngine&
+          ([&p](LocalAssembler &la) mutable -> PatternEngine&
                 { return la.localPatternAssemblerEngine(p); },
            local_assembler);
       }
@@ -167,7 +167,7 @@ namespace Dune{
       void residual(const Domain & x, Range & r) const {
         typedef typename LocalAssembler::LocalResidualAssemblerEngine ResidualEngine;
         global_assembler.assemble
-          ([&,r,x](LocalAssembler &la) mutable -> ResidualEngine&
+          ([&r,&x](LocalAssembler &la) mutable -> ResidualEngine&
                 { return la.localResidualAssemblerEngine(r,x); },
            local_assembler);
       }
@@ -176,7 +176,7 @@ namespace Dune{
       void jacobian(const Domain & x, Jacobian & a) const {
         typedef typename LocalAssembler::LocalJacobianAssemblerEngine JacobianEngine;
         global_assembler.assemble
-          ([&,a,x](LocalAssembler &la) mutable -> JacobianEngine&
+          ([&a,&x](LocalAssembler &la) mutable -> JacobianEngine&
                 { return la.localJacobianAssemblerEngine(a,x); },
            local_assembler);
       }
@@ -185,7 +185,7 @@ namespace Dune{
       void jacobian_apply(const Domain & x, Range & r) const {
         typedef typename LocalAssembler::LocalJacobianApplyAssemblerEngine JacobianApplyEngine;
         global_assembler.assemble
-          ([&,r,x](LocalAssembler &la) -> JacobianApplyEngine&
+          ([&r,&x](LocalAssembler &la) -> JacobianApplyEngine&
                 { return la.localJacobianApplyAssemblerEngine(r,x); },
            local_assembler);
       }
