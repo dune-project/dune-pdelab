@@ -333,7 +333,7 @@ namespace Dune{
         require_v_post_skeleton(other.require_v_post_skeleton),
         require_skeleton_two_sided(other.require_skeleton_two_sided)
       {
-        other.engine.split(engine);
+        engine.split(other.engine);
       }
 
       void operator()(const tbb::blocked_range<std::size_t> &range)
@@ -516,7 +516,7 @@ namespace Dune{
        */
       void join(AssembleBody &other)
       {
-        other.engine.join(engine);
+        engine.join(other.engine);
         TBBAssemblerSplit<LocalAssembler>::join(*localAssembler,
                                                 *other.localAssembler);
       }

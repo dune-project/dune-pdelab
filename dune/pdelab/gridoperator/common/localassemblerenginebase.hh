@@ -377,12 +377,11 @@ namespace Dune {
         //! @name Multithreading support
         //! @{
 
-        //! initialize another engine from this engine.
+        //! initialize this engine from another engine.
         /**
-         * This is called instead of \c other.preAssembly().  It is an
-         * oppertunity to do any setup that is needed at the begin of a
-         * thread.  It can also be used to copy or split data from \c *this to
-         * \c other.
+         * This is called instead of \c preAssembly().  It is an oppertunity
+         * to do any setup that is needed at the begin of a thread.  It can
+         * also be used to copy or split data from \c other to \c *this.
 
          */
         void split(LocalAssemblerEngineBase &other)
