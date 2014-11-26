@@ -158,36 +158,11 @@ namespace Dune {
           >::PromotedType
         disjointDot(const X& x, const Y& y) const
         {
-          typedef typename raw_type<X>::type XC;
-          assert(raw(x).blockSize() == raw(y).blockSize());
-          assert(raw(x).blockSize() == raw(_ranks).blockSize());
-          typedef typename PromotionTraits<
-            typename X::field_type,
-            typename Y::field_type
-            >::PromotedType result_type;
-          return tbb::parallel_reduce(
-            raw(x).iteration_range(),
-            result_type(0),
-            [&](const typename XC::range_type& r, result_type result) -> result_type
-            {
-              const int rank = this->_rank;
-              return result + Dune::Kernel::vec::blocked::masked_dot<
-                typename X::field_type,
-                typename Y::field_type,
-                int,
-                typename X::size_type,
-                XC::alignment,
-                XC::kernel_block_size>(
-                  raw(x).data()+r.begin() * raw(x).blockSize(),
-                  raw(y).data()+r.begin() * raw(x).blockSize(),
-                  raw(_ranks).data()+r.begin() * raw(x).blockSize(),
-                  [rank](const typename X::field_type&, const typename Y::field_type&, int dof_rank)
-                  {
-                    return dof_rank == rank;
-                  },
-                  r.block_count() * raw(x).blockSize());
-            },
-            std::plus<result_type>());
+          return disjointDot(istl::container_tag(istl::raw(x)),
+                             istl::raw(x),
+                             istl::raw(y),
+                             istl::raw(_ranks)
+                             );
         }
 
 
