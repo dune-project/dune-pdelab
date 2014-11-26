@@ -26,6 +26,8 @@
 #include <dune/pdelab/backend/istl/utility.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 
+#include <dune/pdelab/backend/istl/blockvectorbackend.hh>
+
 namespace Dune {
   namespace PDELab {
     namespace istl {
@@ -148,7 +150,7 @@ namespace Dune {
           return _ghosts[i];
         }
 
-        //! Calculates the (rank-local) dot product of x and y on the disjoint partition defined by the helper.
+        //! Calculates the (rank-local) dot product of x and y on the disjoint partition defined by the helper
         template<typename X, typename Y>
         typename PromotionTraits<
           typename X::field_type,
@@ -156,12 +158,38 @@ namespace Dune {
           >::PromotedType
         disjointDot(const X& x, const Y& y) const
         {
-          return disjointDot(istl::container_tag(istl::raw(x)),
-                             istl::raw(x),
-                             istl::raw(y),
-                             istl::raw(_ranks)
-                             );
+          typedef typename raw_type<X>::type XC;
+          assert(raw(x).blockSize() == raw(y).blockSize());
+          assert(raw(x).blockSize() == raw(_ranks).blockSize());
+          typedef typename PromotionTraits<
+            typename X::field_type,
+            typename Y::field_type
+            >::PromotedType result_type;
+          return tbb::parallel_reduce(
+            raw(x).iteration_range(),
+            result_type(0),
+            [&](const typename XC::range_type& r, result_type result) -> result_type
+            {
+              const int rank = this->_rank;
+              return result + Dune::Kernel::vec::blocked::masked_dot<
+                typename X::field_type,
+                typename Y::field_type,
+                int,
+                typename X::size_type,
+                XC::alignment,
+                XC::kernel_block_size>(
+                  raw(x).data()+r.begin() * raw(x).blockSize(),
+                  raw(y).data()+r.begin() * raw(x).blockSize(),
+                  raw(_ranks).data()+r.begin() * raw(x).blockSize(),
+                  [rank](const typename X::field_type&, const typename Y::field_type&, int dof_rank)
+                  {
+                    return dof_rank == rank;
+                  },
+                  r.block_count() * raw(x).blockSize());
+            },
+            std::plus<result_type>());
         }
+
 
       private:
 

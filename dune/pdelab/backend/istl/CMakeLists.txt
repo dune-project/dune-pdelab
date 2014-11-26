@@ -1,7 +1,9 @@
 install(FILES
   bcrsmatrixbackend.hh
   bcrspattern.hh
+  bellmatrixbackend.hh
   blockmatrixdiagonal.hh
+  blockvectorbackend.hh
   descriptors.hh
   forwarddeclarations.hh
   matrixhelpers.hh

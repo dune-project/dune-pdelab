@@ -154,6 +154,234 @@ namespace Dune {
 
     };
 
+    namespace istl {
+
+#ifndef DOXYGEN
+
+      namespace flat {
+
+        // forward declaration for backend
+        template<typename GFSV, typename GFSU>
+        struct Pattern;
+
+      }
+
+#endif // DOXYGEN
+
+      template<typename Alloc>
+      struct FlatVectorBackend
+      {
+
+        typedef Alloc Allocator;
+        typedef Alloc allocator_type;
+
+        typedef typename Alloc::size_type size_type;
+
+        static const size_type blockSize = 1;
+
+        struct Traits
+        {
+          static const size_type block_size = 1;
+          static const bool blocked = false;
+          static const size_type max_blocking_depth = 0;
+        };
+
+        template<typename GFS>
+        bool blocked(const GFS& gfs) const
+        {
+          return false;
+        }
+
+      };
+
+      template<typename Alloc>
+      struct FlatMatrixBackend
+      {
+
+        typedef Alloc Allocator;
+        typedef Alloc allocator_type;
+
+        // The ELL matrix construction process does not collect statistics, so provide a dummy type here.
+        typedef int Statistics;
+
+#if HAVE_TEMPLATE_ALIASES || DOXYGEN
+
+        //! The type of the pattern object passed to the GridOperator for pattern construction.
+        template<typename Matrix, typename GFSV, typename GFSU>
+        using Pattern = flat::Pattern<typename GFSV::Ordering,typename GFSU::Ordering>;
+
+#else // HAVE_TEMPLATE_ALIASES
+
+        template<typename Matrix, typename GFSV, typename GFSU>
+        struct Pattern
+          : public flat::Pattern<typename GFSV::Ordering,typename GFSU::Ordering>
+        {
+
+          typedef OrderingBase<
+            typename GFSV::Ordering::Traits::DOFIndex,
+            typename GFSV::Ordering::Traits::ContainerIndex
+            > RowOrdering;
+
+          typedef OrderingBase<
+            typename GFSU::Ordering::Traits::DOFIndex,
+            typename GFSU::Ordering::Traits::ContainerIndex
+            > ColOrdering;
+
+          typedef flat::Pattern<typename GFSV::Ordering,typename GFSU::Ordering> BaseT;
+
+          Pattern(const RowOrdering& row_ordering, const ColOrdering& col_ordering)
+            : BaseT(row_ordering,col_ordering)
+          {}
+
+        };
+
+#endif // HAVE_TEMPLATE_ALIASES
+
+        typedef typename Alloc::size_type size_type;
+
+        template<typename VV, typename VU, typename E>
+        struct MatrixHelper
+        {
+          typedef FlatELLMatrixContainer<
+            typename VV::GridFunctionSpace,
+            typename VU::GridFunctionSpace,
+            Dune::ISTL::ELLMatrix<E,Alloc>
+            > type;
+        };
+
+
+        template<typename GridOperator, typename Matrix>
+        std::vector<Statistics> buildPattern(const GridOperator& grid_operator, Matrix& matrix) const
+        {
+          Pattern<
+            Matrix,
+            typename GridOperator::Traits::TestGridFunctionSpace,
+            typename GridOperator::Traits::TrialGridFunctionSpace
+            > pattern(grid_operator.testGridFunctionSpace().ordering(),grid_operator.trialGridFunctionSpace().ordering());
+          grid_operator.fill_pattern(pattern);
+          allocate_matrix(grid_operator.testGridFunctionSpace().ordering(),
+                          grid_operator.trialGridFunctionSpace().ordering(),
+                          pattern,
+                          istl::raw(matrix)
+                          );
+          return std::vector<Statistics>();
+        }
+
+      };
+
+
+
+      template<typename Alloc>
+      struct BlockVectorBackend
+      {
+
+        typedef Alloc Allocator;
+        typedef Alloc allocator_type;
+
+        typedef typename Alloc::size_type size_type;
+
+        struct Traits
+        {
+          static const size_type max_blocking_depth = 1;
+        };
+
+        template<typename GFS>
+        bool blocked(const GFS& gfs) const
+        {
+          return true;
+        }
+
+        size_type blockSize() const
+        {
+          return _block_size;
+        }
+
+        BlockVectorBackend(size_type block_size)
+          : _block_size(block_size)
+        {}
+
+      private:
+
+        const size_type _block_size;
+
+      };
+
+      template<typename Alloc>
+      struct BELLMatrixBackend
+      {
+
+        typedef Alloc Allocator;
+        typedef Alloc allocator_type;
+
+        typedef typename Alloc::size_type size_type;
+
+      // The BELL matrix construction process does not collect statistics, so provide a dummy type here.
+      typedef int Statistics;
+
+#if HAVE_TEMPLATE_ALIASES || DOXYGEN
+
+        //! The type of the pattern object passed to the GridOperator for pattern construction.
+        template<typename Matrix, typename GFSV, typename GFSU>
+        using Pattern = flat::Pattern<typename GFSV::Ordering,typename GFSU::Ordering>;
+
+#else // HAVE_TEMPLATE_ALIASES
+
+        template<typename Matrix, typename GFSV, typename GFSU>
+        struct Pattern
+          : public flat::Pattern<typename GFSV::Ordering,typename GFSU::Ordering>
+        {
+
+          typedef OrderingBase<
+            typename GFSV::Ordering::Traits::DOFIndex,
+            typename GFSV::Ordering::Traits::ContainerIndex
+            > RowOrdering;
+
+          typedef OrderingBase<
+            typename GFSU::Ordering::Traits::DOFIndex,
+            typename GFSU::Ordering::Traits::ContainerIndex
+            > ColOrdering;
+
+          typedef flat::Pattern<typename GFSV::Ordering,typename GFSU::Ordering> BaseT;
+
+          Pattern(const RowOrdering& row_ordering, const ColOrdering& col_ordering)
+            : BaseT(row_ordering,col_ordering)
+          {}
+
+        };
+
+#endif // HAVE_TEMPLATE_ALIASES
+
+        template<typename VV, typename VU, typename E>
+        struct MatrixHelper
+        {
+          typedef BELLMatrixContainer<
+            typename VV::GridFunctionSpace,
+            typename VU::GridFunctionSpace,
+            Dune::ISTL::BELLMatrix<E,Alloc>
+            > type;
+        };
+
+        template<typename GridOperator, typename Matrix>
+        std::vector<Statistics> buildPattern(const GridOperator& grid_operator, Matrix& matrix) const
+        {
+          Pattern<
+            Matrix,
+            typename GridOperator::Traits::TestGridFunctionSpace,
+            typename GridOperator::Traits::TrialGridFunctionSpace
+            > pattern(grid_operator.testGridFunctionSpace().ordering(),grid_operator.trialGridFunctionSpace().ordering());
+          grid_operator.fill_pattern(pattern);
+          allocate_matrix(grid_operator.testGridFunctionSpace().ordering(),
+                          grid_operator.trialGridFunctionSpace().ordering(),
+                          pattern,
+                          istl::raw(matrix)
+                          );
+          return std::vector<Statistics>();
+        }
+
+      };
+
+    }
+
   } // namespace PDELab
 } // namespace Dune
 

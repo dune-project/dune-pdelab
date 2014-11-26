@@ -6,6 +6,8 @@
 #ifndef DOXYGEN // These forward declarations are of no concern to Doxygen
 
 #include <dune/common/version.hh>
+#include <dune/istl/forwarddeclarations.hh>
+
 
 namespace Dune {
 
@@ -55,6 +57,18 @@ namespace Dune {
 
       template<typename E, typename VV, typename VU>
       struct build_matrix_type;
+
+      template<typename GFS, typename C>
+      class FlatVectorContainer;
+
+      template<typename GFSV, typename GFSU, typename C>
+      class FlatELLMatrixContainer;
+
+      template<typename GFS, typename C>
+      class BlockVectorContainer;
+
+      template<typename GFSV, typename GFSU, typename C>
+      class BELLMatrixContainer;
 
     } // namespace istl
   } // namespace PDELab
