@@ -151,8 +151,6 @@ namespace Dune{
       void assemble(const EngineFactory &engineFactory,
                     LocalAssembler &la) const
       {
-        typedef typename GV::Traits::template Codim<0>::Entity Element;
-
         auto &assembler_engine = engineFactory(la);
 
         // Notify assembler engine about oncoming assembly
@@ -565,8 +563,6 @@ namespace Dune{
       void assemble(const EngineFactory &engineFactory,
                     LocalAssembler &la) const
       {
-        typedef typename Base::Element Element;
-
         auto &assembler_engine = engineFactory(la);
 
         // Notify assembler engine about oncoming assembly
