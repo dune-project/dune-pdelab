@@ -58,7 +58,7 @@ namespace Dune{
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
-      OneStepLocalJacobianAssemblerEngine(const LocalAssembler & local_assembler_)
+      OneStepLocalJacobianAssemblerEngine(LocalAssembler & local_assembler_)
         : BaseT(local_assembler_),
           invalid_jacobian(static_cast<Jacobian*>(0)),
           invalid_solution(static_cast<Solution*>(0)),
@@ -118,6 +118,24 @@ namespace Dune{
         lae0->postAssembly(gfsu,gfsv);
         lae1->postAssembly(gfsu,gfsv);
       }
+      //! @}
+
+      //! @name Multithreading support
+      //! @{
+
+      //! initialize another engine from this engine.
+      /**
+       * This is called instead of \c other.preAssembly().  It is an
+       * oppertunity to do any setup that is needed at the begin of a thread.
+       * It can also be used to copy or split data from \c *this to \c other.
+       */
+      void split(OneStepLocalJacobianAssemblerEngine &other)
+      {
+        BaseT::split(other);
+        b_rr = other.b_rr;
+        d_r = other.d_r;
+      }
+
       //! @}
 
     private:

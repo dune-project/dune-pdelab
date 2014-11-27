@@ -471,6 +471,27 @@ namespace Dune{
       }
       //! @}
 
+      //! @name Multithreading support
+      //! @{
+
+      //! initialize another engine from this engine.
+      /**
+       * This is called instead of \c other.preAssembly().  It is an
+       * oppertunity to do any setup that is needed at the begin of a thread.
+       * It can also be used to copy or split data from \c *this to \c other.
+       */
+      void split(OneStepLocalPreStageAssemblerEngine &other)
+      {
+        BaseT::split(other);
+        a = other.a;
+        b = other.b;
+        d = other.d;
+        do0 = other.do0;
+        do1 = other.do1;
+      }
+
+      //! @}
+
     private:
 
       //! Default value indicating an invalid residual pointer

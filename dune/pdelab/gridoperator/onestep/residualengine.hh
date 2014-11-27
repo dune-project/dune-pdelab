@@ -65,7 +65,7 @@ namespace Dune{
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
-      OneStepLocalResidualAssemblerEngine(const LocalAssembler & local_assembler_)
+      OneStepLocalResidualAssemblerEngine(LocalAssembler & local_assembler_)
         : BaseT(local_assembler_),
           invalid_residual(static_cast<Residual*>(0)),
           invalid_solution(static_cast<Solution*>(0)),
@@ -198,6 +198,24 @@ namespace Dune{
 
       //! Coefficients of time stepping scheme
       Real b_rr, d_r;
+
+      //! @name Multithreading support
+      //! @{
+
+      //! initialize another engine from this engine.
+      /**
+       * This is called instead of \c other.preAssembly().  It is an
+       * oppertunity to do any setup that is needed at the begin of a thread.
+       * It can also be used to copy or split data from \c *this to \c other.
+       */
+      void split(OneStepLocalResidualAssemblerEngine &other)
+      {
+        BaseT::split(other);
+        b_rr = other.b_rr;
+        d_r = other.d_r;
+      }
+
+      //! @}
 
     }; // End of class OneStepLocalResidualAssemblerEngine
 

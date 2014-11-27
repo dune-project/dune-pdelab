@@ -49,7 +49,7 @@ namespace Dune{
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
-      OneStepLocalAssemblerEngineBase(const LocalAssembler & local_assembler_)
+      OneStepLocalAssemblerEngineBase(LocalAssembler & local_assembler_)
         : invalid_lae0(static_cast<LocalAssemblerEngineDT0*>(0)),
           invalid_lae1(static_cast<LocalAssemblerEngineDT1*>(0)),
           la(local_assembler_),
@@ -87,6 +87,9 @@ namespace Dune{
       { return lae0->requireUVVolumePostSkeleton() || lae1->requireUVVolumePostSkeleton();}
       bool requireVVolumePostSkeleton() const
       { return lae0->requireVVolumePostSkeleton() || lae1->requireVVolumePostSkeleton(); }
+      //! whether this engine handles updates in a threadsafe manner
+      bool threadSafe() const
+      { return lae0->threadSafe() && lae1->threadSafe(); }
       //! @}
 
 
@@ -425,6 +428,35 @@ namespace Dune{
       }
       //! @}
 
+      //! @name Multithreading support
+      //! @{
+
+      //! initialize another engine from this engine.
+      /**
+       * This is called instead of \c other.preAssembly().  It is an
+       * oppertunity to do any setup that is needed at the begin of a thread.
+       * It can also be used to copy or split data from \c *this to \c other.
+       */
+      void split(OneStepLocalAssemblerEngineBase &other)
+      {
+        implicit = other.implicit;
+        lae0->split(*other.lae0);
+        lae1->split(*other.lae1);
+      }
+
+      //! join the state of other into this engine
+      /**
+       * This is called instead of \c other.postAssembly() when the engine
+       * other is no longer needed and had split called previously.
+       */
+      void join(OneStepLocalAssemblerEngineBase &other)
+      {
+        lae0->join(*other.lae0);
+        lae1->join(*other.lae1);
+      }
+
+      //! @}
+
     private:
 
       LocalAssemblerEngineDT0 * const invalid_lae0;
@@ -434,7 +466,7 @@ namespace Dune{
 
       //! Reference to the wrapping local assembler object which
       //! constructed this engine
-      const LocalAssembler & la;
+      LocalAssembler & la;
 
       LocalAssemblerEngineDT0 * lae0;
       LocalAssemblerEngineDT1 * lae1;

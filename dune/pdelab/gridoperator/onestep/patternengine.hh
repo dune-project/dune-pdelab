@@ -51,7 +51,7 @@ namespace Dune{
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
-      OneStepLocalPatternAssemblerEngine(const LocalAssembler & la_)
+      OneStepLocalPatternAssemblerEngine(LocalAssembler & la_)
         : BaseT(la_),
           invalid_pattern(static_cast<Pattern*>(0)), pattern(invalid_pattern)
       {}
