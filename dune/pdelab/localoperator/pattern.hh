@@ -19,10 +19,26 @@ namespace Dune {
       void pattern_volume (const LFSU& lfsu, const LFSV& lfsv,
                            LocalPattern& pattern) const
       {
-        for (size_t i=0; i<lfsv.size(); ++i)
-          for (size_t j=0; j<lfsu.size(); ++j)
-            pattern.addLink(lfsv,i,lfsu,j);
+        if (_block_optimization)
+          {
+            if (lfsu.size() > 0 && lfsv.size() > 0)
+              pattern.addLink(lfsv,0,lfsu,0);
+          }
+        else
+          {
+            for (size_t i=0; i<lfsv.size(); ++i)
+              for (size_t j=0; j<lfsu.size(); ++j)
+                pattern.addLink(lfsv,i,lfsu,j);
+          }
       }
+
+      FullVolumePattern(bool block_optimization = false)
+        : _block_optimization(block_optimization)
+      {}
+
+    private:
+      const bool _block_optimization;
+
    };
 
     //! sparsity pattern generator
@@ -36,14 +52,33 @@ namespace Dune {
                             LocalPattern& pattern_sn,
                             LocalPattern& pattern_ns) const
       {
-        for (unsigned int i=0; i<lfsv_s.size(); ++i)
-          for (unsigned int j=0; j<lfsu_n.size(); ++j)
-            pattern_sn.addLink(lfsv_s,i,lfsu_n,j);
+        if (_block_optimization)
+          {
+            if (lfsv_s.size() > 0 && lfsu_n.size() > 0)
+              pattern_sn.addLink(lfsv_s,0,lfsu_n,0);
 
-        for (unsigned int i=0; i<lfsv_n.size(); ++i)
-          for (unsigned int j=0; j<lfsu_s.size(); ++j)
-            pattern_ns.addLink(lfsv_n,i,lfsu_s,j);
+            if (lfsv_n.size() > 0 && lfsu_s.size() > 0)
+              pattern_ns.addLink(lfsv_n,0,lfsu_s,0);
+          }
+        else
+          {
+            for (unsigned int i=0; i<lfsv_s.size(); ++i)
+              for (unsigned int j=0; j<lfsu_n.size(); ++j)
+                pattern_sn.addLink(lfsv_s,i,lfsu_n,j);
+
+            for (unsigned int i=0; i<lfsv_n.size(); ++i)
+              for (unsigned int j=0; j<lfsu_s.size(); ++j)
+                pattern_ns.addLink(lfsv_n,i,lfsu_s,j);
+          }
       }
+
+      FullSkeletonPattern(bool block_optimization = false)
+        : _block_optimization(block_optimization)
+      {}
+
+    private:
+      const bool _block_optimization;
+
    };
 
     //! sparsity pattern generator
@@ -56,10 +91,26 @@ namespace Dune {
       void pattern_boundary(const LFSU& lfsu_s, const LFSV& lfsv_s,
                             LocalPattern& pattern_ss) const
       {
-        for (unsigned int i=0; i<lfsv_s.size(); ++i)
-          for (unsigned int j=0; j<lfsu_s.size(); ++j)
-            pattern_ss.addLink(lfsv_s,i,lfsu_s,j);
+        if (_block_optimization)
+          {
+            if (lfsu_s.size() > 0 && lfsv_s.size() > 0)
+              pattern.addLink(lfsv_s,0,lfsu_s,0);
+          }
+        else
+          {
+            for (unsigned int i=0; i<lfsv_s.size(); ++i)
+              for (unsigned int j=0; j<lfsu_s.size(); ++j)
+                pattern_ss.addLink(lfsv_s,i,lfsu_s,j);
+          }
       }
+
+      FullBoundaryPattern(bool block_optimization = false)
+        : _block_optimization(block_optimization)
+      {}
+
+    private:
+      const bool _block_optimization;
+
    };
 
     //! \} group GridFunctionSpace
