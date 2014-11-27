@@ -80,16 +80,18 @@ namespace Dune{
         assert(solution != invalid_solution);
 
         // Initialize the engines of the two wrapped local assemblers
-        setLocalAssemblerEngineDT0(la.la0.localJacobianAssemblerEngine(*jacobian,*solution));
-        setLocalAssemblerEngineDT1(la.la1.localJacobianAssemblerEngine(*jacobian,*solution));
+        setLocalAssemblerEngineDT0
+          (la.child0().localJacobianAssemblerEngine(*jacobian,*solution));
+        setLocalAssemblerEngineDT1
+          (la.child1().localJacobianAssemblerEngine(*jacobian,*solution));
       }
 
       //! When multiple engines are combined in one assembling
       //! procedure, this method allows to reset the weights which may
       //! have been changed by the other engines.
       void setWeights(){
-        la.la0.setWeight(b_rr * la.dt_factor0);
-        la.la1.setWeight(la.dt_factor1);
+        la.child0().setWeight(b_rr * la.dt_factor0());
+        la.child1().setWeight(la.dt_factor1());
       }
 
       //! Notifier functions, called immediately before and after assembling
@@ -100,15 +102,15 @@ namespace Dune{
         lae1->preAssembly();
 
         // Extract the coefficients of the time step scheme
-        b_rr = la.osp_method->b(la.stage,la.stage);
-        d_r = la.osp_method->d(la.stage);
+        b_rr = la.method().b(la.stage(),la.stage());
+        d_r = la.method().d(la.stage());
 
         // Here we only want to know whether this stage is implicit
         implicit = std::abs(b_rr) > 1e-6;
 
         // prepare local operators for stage
-        la.la0.setTime(la.time + d_r * la.dt);
-        la.la1.setTime(la.time + d_r * la.dt);
+        la.child0().setTime(la.timeAtStage());
+        la.child1().setTime(la.timeAtStage());
 
         setWeights();
       }

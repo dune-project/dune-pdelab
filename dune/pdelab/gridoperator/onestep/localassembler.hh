@@ -111,8 +111,8 @@ namespace Dune{
           const_residual(other.const_residual),
           time(other.time),
           dt(other.dt),
-          dt_factor0(other.dt_factor0),
-          dt_factor1(other.dt_factor1),
+          dt_factor0_(other.dt_factor0_),
+          dt_factor1_(other.dt_factor1_),
           dt_mode(other.dt_mode),
           stage_(other.stage_),
           pattern_engine(*this), prestage_engine(*this), residual_engine(*this), jacobian_engine(*this),
@@ -136,16 +136,16 @@ namespace Dune{
 
         // This switch decides which term will be multiplied with dt
         if(dt_mode == DivideOperator1ByDT){
-          dt_factor0 = 1.0;
-          dt_factor1 = 1.0 / dt;
+          dt_factor0_ = 1.0;
+          dt_factor1_ = 1.0 / dt;
         }
         else if(dt_mode == MultiplyOperator0ByDT){
-          dt_factor0 = dt;
-          dt_factor1 = 1.0;
+          dt_factor0_ = dt;
+          dt_factor1_ = 1.0;
         }
         else if(dt_mode == DoNotAssembleDT){
-          dt_factor0 = 1.0;
-          dt_factor1 = 1.0;
+          dt_factor0_ = 1.0;
+          dt_factor1_ = 1.0;
         }
         else{
           DUNE_THROW(Dune::Exception,"Unknown mode for assembling of time step size!");
@@ -160,10 +160,17 @@ namespace Dune{
         osp_method = & method_;
       }
 
+      //! Get the one step method parameters
+      const OneStepParameters &method() const
+      { return *osp_method; }
+
       //! Set the current stage of the one step scheme
-      void setStage(int stage_){
-        stage = stage_;
+      void setStage(int stage){
+        stage_ = stage;
       }
+
+      //! Get the current stage of the one step scheme
+      int stage() const { return stage_; }
 
       enum DTAssemblingMode { DivideOperator1ByDT, MultiplyOperator0ByDT, DoNotAssembleDT };
 
@@ -181,7 +188,7 @@ namespace Dune{
 
       //! Access time at given stage
       Real timeAtStage(){
-        return time+osp_method->d(stage)*dt;
+        return time+osp_method->d(stage_)*dt;
       }
 
       void setWeight(const Real weight){
@@ -261,6 +268,12 @@ namespace Dune{
 
       //! @}
 
+      LA0 &child0() { return *la0; }
+      LA1 &child1() { return *la1; }
+
+      Real dt_factor0() const { return dt_factor0_; }
+      Real dt_factor1() const { return dt_factor1_; }
+
     private:
 
       //! The local assemblers for the temporal derivative of order
@@ -286,25 +299,25 @@ namespace Dune{
       /** The time step factors for assembling. Depending on the value
        of \a dt_mode, it will hold:
 
-       dt_factor0 = dt and dt_factor1 = 1.0
+       dt_factor0_ = dt and dt_factor1_ = 1.0
 
        or
 
-       dt_factor0 = 1.0 and dt_factor1 = 1.0 / dt
+       dt_factor0_ = 1.0 and dt_factor1_ = 1.0 / dt
 
        or
 
-       dt_factor0 = 1.0 and dt_factor1 = 1.0 .
+       dt_factor0_ = 1.0 and dt_factor1_ = 1.0 .
 
       */
-      Real dt_factor0, dt_factor1;
+      Real dt_factor0_, dt_factor1_;
 
       //! Determines, whether the time step size will be multiplied
       //! with the time derivative term of first of zero-th order.
       DTAssemblingMode dt_mode;
 
       //! The current stage of the one step scheme
-      int stage;
+      int stage_;
 
       //! The engine member objects
       //! @{

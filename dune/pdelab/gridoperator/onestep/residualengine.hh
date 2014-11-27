@@ -97,8 +97,10 @@ namespace Dune{
 
         // Initialize the engines of the two wrapped local assemblers
         assert(solution != invalid_solution);
-        setLocalAssemblerEngineDT0(la.la0.localResidualAssemblerEngine(*residual_0,*solution));
-        setLocalAssemblerEngineDT1(la.la1.localResidualAssemblerEngine(*residual_1,*solution));
+        setLocalAssemblerEngineDT0
+          (la.child0().localResidualAssemblerEngine(*residual_0,*solution));
+        setLocalAssemblerEngineDT1
+          (la.child1().localResidualAssemblerEngine(*residual_1,*solution));
       }
 
       //! Set current const residual vectors. Must be called before
@@ -120,16 +122,18 @@ namespace Dune{
 
         // Initialize the engines of the two wrapped local assemblers
         assert(solution != invalid_solution);
-        setLocalAssemblerEngineDT0(la.la0.localResidualAssemblerEngine(*residual_0,*solution));
-        setLocalAssemblerEngineDT1(la.la1.localResidualAssemblerEngine(*residual_1,*solution));
+        setLocalAssemblerEngineDT0
+          (la.child0().localResidualAssemblerEngine(*residual_0,*solution));
+        setLocalAssemblerEngineDT1
+          (la.child1().localResidualAssemblerEngine(*residual_1,*solution));
       }
 
       //! When multiple engines are combined in one assembling
       //! procedure, this method allows to reset the weights which may
       //! have been changed by the other engines.
       void setWeights(){
-        la.la0.setWeight(b_rr * la.dt_factor0);
-        la.la1.setWeight(la.dt_factor1);
+        la.child0().setWeight(b_rr * la.dt_factor0());
+        la.child1().setWeight(la.dt_factor1());
       }
 
       //! Notifier functions, called immediately before and after assembling
@@ -140,13 +144,13 @@ namespace Dune{
         lae1->preAssembly();
 
         // Extract the coefficients of the time step scheme
-        b_rr = la.osp_method->b(la.stage,la.stage);
-        d_r = la.osp_method->d(la.stage);
+        b_rr = la.method().b(la.stage(),la.stage());
+        d_r = la.method().d(la.stage());
         implicit = std::abs(b_rr) > 1e-6;
 
         // prepare local operators for stage
-        la.la0.setTime(la.time + d_r * la.dt);
-        la.la1.setTime(la.time + d_r * la.dt);
+        la.child0().setTime(la.timeAtStage());
+        la.child1().setTime(la.timeAtStage());
 
         setWeights();
       }
