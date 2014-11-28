@@ -94,7 +94,7 @@ namespace Dune {
         if (_block_optimization)
           {
             if (lfsu_s.size() > 0 && lfsv_s.size() > 0)
-              pattern.addLink(lfsv_s,0,lfsu_s,0);
+              pattern_ss.addLink(lfsv_s,0,lfsu_s,0);
           }
         else
           {
