@@ -42,7 +42,7 @@ namespace Dune {
 
       //! evaluate basis functions at a point
       const std::vector<RangeType>&
-      evaluateFunction (const DomainType& position, const LocalBasisType& localbasis) const
+      evaluateFunction (const DomainType& position, const LocalBasisType& localbasis)
       {
         typename FunctionCache::iterator it = functioncache.find(position);
         if (it!=functioncache.end()) return it->second;
@@ -54,7 +54,7 @@ namespace Dune {
 
       //! evaluate Jacobians at a point
       const std::vector<JacobianType>&
-      evaluateJacobian (const DomainType& position, const LocalBasisType& localbasis) const
+      evaluateJacobian (const DomainType& position, const LocalBasisType& localbasis)
       {
         typename JacobianCache::iterator it = jacobiancache.find(position);
         if (it!=jacobiancache.end()) return it->second;
@@ -64,9 +64,29 @@ namespace Dune {
         return it->second;
       }
 
+      //! evaluate basis functions at a point
+      const std::vector<RangeType>&
+      evaluateFunction (const DomainType& position, const LocalBasisType& localbasis) const
+      {
+        auto it = functioncache.find(position);
+        if (it!=functioncache.end()) return it->second;
+        std::cerr << "cache does not have basis functions at position " << position << std::endl;
+        DUNE_THROW(Exception,"cache does not have basis functions at position " << position);
+      }
+
+      //! evaluate Jacobians at a point
+      const std::vector<JacobianType>&
+      evaluateJacobian (const DomainType& position, const LocalBasisType& localbasis) const
+      {
+        auto it = jacobiancache.find(position);
+        if (it!=jacobiancache.end()) return it->second;
+        std::cerr << "cache does not have basis jacobians at position " << position << std::endl;
+        DUNE_THROW(Exception,"cache does not have basis jacobians at position " << position);
+      }
+
     private:
-      mutable FunctionCache functioncache;
-      mutable JacobianCache jacobiancache;
+      FunctionCache functioncache;
+      JacobianCache jacobiancache;
     };
 
   }

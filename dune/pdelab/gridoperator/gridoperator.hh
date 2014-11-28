@@ -123,8 +123,8 @@ namespace Dune{
 
         template <typename T>
         void visit(T& elem) {
-          elem.localAssembler().doPreProcessing = index == 0;
-          elem.localAssembler().doPostProcessing = index == size-1;
+          elem.localAssembler().preProcessing(index == 0);
+          elem.localAssembler().postProcessing(index == size-1);
           ++index;
         }
 
@@ -157,29 +157,37 @@ namespace Dune{
       //! Fill pattern of jacobian matrix
       void fill_pattern(Pattern & p) const {
         typedef typename LocalAssembler::LocalPatternAssemblerEngine PatternEngine;
-        PatternEngine & pattern_engine = local_assembler.localPatternAssemblerEngine(p);
-        global_assembler.assemble(pattern_engine);
+        global_assembler.assemble
+          ([&p](LocalAssembler &la) -> PatternEngine&
+                { return la.localPatternAssemblerEngine(p); },
+           local_assembler);
       }
 
       //! Assemble residual
       void residual(const Domain & x, Range & r) const {
         typedef typename LocalAssembler::LocalResidualAssemblerEngine ResidualEngine;
-        ResidualEngine & residual_engine = local_assembler.localResidualAssemblerEngine(r,x);
-        global_assembler.assemble(residual_engine);
+        global_assembler.assemble
+          ([&r,&x](LocalAssembler &la) -> ResidualEngine&
+                { return la.localResidualAssemblerEngine(r,x); },
+           local_assembler);
       }
 
       //! Assembler jacobian
       void jacobian(const Domain & x, Jacobian & a) const {
         typedef typename LocalAssembler::LocalJacobianAssemblerEngine JacobianEngine;
-        JacobianEngine & jacobian_engine = local_assembler.localJacobianAssemblerEngine(a,x);
-        global_assembler.assemble(jacobian_engine);
+        global_assembler.assemble
+          ([&a,&x](LocalAssembler &la) -> JacobianEngine&
+                { return la.localJacobianAssemblerEngine(a,x); },
+           local_assembler);
       }
 
       //! Apply jacobian matrix without explicitly assembling it
       void jacobian_apply(const Domain & x, Range & r) const {
         typedef typename LocalAssembler::LocalJacobianApplyAssemblerEngine JacobianApplyEngine;
-       JacobianApplyEngine & jacobian_apply_engine = local_assembler.localJacobianApplyAssemblerEngine(r,x);
-        global_assembler.assemble(jacobian_apply_engine);
+        global_assembler.assemble
+          ([&r,&x](LocalAssembler &la) -> JacobianApplyEngine&
+                { return la.localJacobianApplyAssemblerEngine(r,x); },
+           local_assembler);
       }
 
       void make_consistent(Jacobian& a) const {

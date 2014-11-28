@@ -124,10 +124,18 @@ namespace Dune {
 
     };
 
-    class EmptyTransformation : public ConstraintsTransformation<char,char,char>
+    class EmptyTransformation : public ConstraintsTransformation<size_t,size_t,size_t>
     {
+      typedef ConstraintsTransformation<size_t,size_t,size_t> BaseT;
+      typedef BaseT::key_type key_type;
 
     public:
+
+      template<typename T>
+      BaseT::const_iterator find (const T& t) const
+      {
+        return this->end();
+      }
 
       bool containsNonDirichletConstraints() const
       {

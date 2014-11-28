@@ -6,6 +6,10 @@
 
 #include <vector>
 
+#if HAVE_TBB
+#include "tbb/tbb_stddef.h"
+#endif
+
 #include <dune/common/fvector.hh>
 
 #include <dune/geometry/type.hh>
@@ -51,6 +55,15 @@ namespace Dune {
       Laplace (unsigned int quadOrder)
       : quadOrder_(quadOrder)
       {}
+
+#if HAVE_TBB
+      Laplace(Laplace &other, tbb::split) :
+        quadOrder_(other.quadOrder_)
+      { }
+
+      void join(Laplace &other)
+      { }
+#endif // HAVE_TBB
 
       /** \brief Compute Laplace matrix times a given vector for one element
        *

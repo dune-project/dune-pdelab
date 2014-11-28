@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_BACKEND_ISTL_FLATMATRIXBACKEND_HH
-#define DUNE_PDELAB_BACKEND_ISTL_FLATMATRIXBACKEND_HH
+#ifndef DUNE_PDELAB_BACKEND_ISTL_BELLMATRIXBACKEND_HH
+#define DUNE_PDELAB_BACKEND_ISTL_BELLMATRIXBACKEND_HH
 
 #include <dune/common/iteratoradapters.hh>
 
@@ -272,4 +272,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // DUNE_PDELAB_BACKEND_ISTL_FLATMATRIXBACKEND_HH
+#endif // DUNE_PDELAB_BACKEND_ISTL_BELLMATRIXBACKEND_HH

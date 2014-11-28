@@ -31,7 +31,7 @@ namespace Dune{
     struct TBBAssemblerSplit
     {
       static constexpr bool value = false;
-      static shared_ptr<T> split(T &other)
+      static shared_ptr<T> split(const shared_ptr<T> &other)
       {
         DUNE_THROW(NotImplemented, className<T>() << " does not support "
                    "splitting");
@@ -46,9 +46,9 @@ namespace Dune{
     struct TBBAssemblerSplit<T, true>
     {
       static constexpr bool value = true;
-      static shared_ptr<T> split(T &other)
+      static shared_ptr<T> split(const shared_ptr<T> &other)
       {
-        return shared_ptr<T>(new T(other, tbb::split()));
+        return make_shared<T>(*other, tbb::split());
       }
       static void join(T &self, T &other)
       {
@@ -69,7 +69,7 @@ namespace Dune{
              typename CV, bool nonoverlapping_mode=false>
     class TBBAssembler {
     protected:
-      template<class LocalAssemblerEngine>
+      template<class EngineFactory, class LocalAssembler>
       class AssembleBody;
 
     public:
@@ -142,10 +142,16 @@ namespace Dune{
         verbosity = verbosity_;
       }
 
-      template<class LocalAssemblerEngine>
-      void assemble(LocalAssemblerEngine & assembler_engine) const
+      //! do the assembly
+      /**
+       * \param engineFactory Factory object used to get the engine.
+       * \param la            Local assembler to get the engine from.
+       */
+      template<class EngineFactory, class LocalAssembler>
+      void assemble(const EngineFactory &engineFactory,
+                    LocalAssembler &la) const
       {
-        typedef typename GV::Traits::template Codim<0>::Entity Element;
+        auto &assembler_engine = engineFactory(la);
 
         // Notify assembler engine about oncoming assembly
         assembler_engine.preAssembly();
@@ -153,11 +159,12 @@ namespace Dune{
         // Map each cell to unique id
         ElementMapper<GV> cell_mapper(gfsu.gridView());
 
-        AssembleBody<LocalAssemblerEngine>
-          body(*this, assembler_engine, cell_mapper);
+        AssembleBody<EngineFactory, LocalAssembler>
+          body(*this, engineFactory, la, assembler_engine, cell_mapper);
 
         tbb::blocked_range<std::size_t> range(0, partitioning->partitions());
-        if(TBBAssemblerSplit<LocalAssemblerEngine>::value)
+        if(TBBAssemblerSplit<LocalAssembler>::value &&
+           assembler_engine.threadSafe())
         {
           if(verbosity > 0 && gfsu.gridView().comm().rank() == 0)
             std::cout << "TBBAssembler: parallel iteration" << std::endl;
@@ -172,6 +179,7 @@ namespace Dune{
 
         // Notify assembler engine that assembly is finished
         assembler_engine.postAssembly(gfsu,gfsv);
+
       }
 
     protected:
@@ -181,7 +189,6 @@ namespace Dune{
       const GFSU& gfsu;
       const GFSV& gfsv;
 
-    protected:
       typename conditional<
         is_same<CU,EmptyTransformation>::value,
         const CU,
@@ -198,7 +205,7 @@ namespace Dune{
 
     template<typename Partitioning, typename GFSU, typename GFSV, typename CU,
              typename CV, bool nonoverlapping_mode>
-    template<class LocalAssemblerEngine>
+    template<class EngineFactory, class LocalAssembler>
     class TBBAssembler<Partitioning, GFSU, GFSV, CU, CV,
                        nonoverlapping_mode>::AssembleBody
     {
@@ -216,7 +223,12 @@ namespace Dune{
 
       const Assembler &assembler;
 
-      shared_ptr<LocalAssemblerEngine> engine;
+      EngineFactory engineFactory;
+      std::shared_ptr<LocalAssembler> localAssembler;
+    protected:
+      typedef decltype(engineFactory(*localAssembler)) LocalAssemblerEngine;
+    private:
+      LocalAssemblerEngine &engine;
 
       // Map each cell to unique id
       const ElementMapper<GV> &cell_mapper;
@@ -245,10 +257,23 @@ namespace Dune{
       const bool require_skeleton_two_sided;
 
     public:
-      AssembleBody(const Assembler &assembler_, LocalAssemblerEngine &engine_,
+      //! construct assembly body
+      /**
+       * This constructor is used to construct the initial body.  \c
+       * preAssemble() is not automatically called on the engine passed in
+       * here; it should be called externally before the call to operator().
+       * Also, \c postAssemble() should be called on the engine after the call
+       * to operator().
+       */
+      AssembleBody(const Assembler &assembler_,
+                   const EngineFactory &engineFactory_,
+                   LocalAssembler &localAssembler_,
+                   LocalAssemblerEngine &engine_,
                    const ElementMapper<GV> &cell_mapper_) :
         assembler(assembler_),
-        engine(stackobject_to_shared_ptr(engine_)),
+        engineFactory(engineFactory_),
+        localAssembler(stackobject_to_shared_ptr(localAssembler_)),
+        engine(engine_),
         cell_mapper(cell_mapper_),
         lfsu(assembler.gfsu),
         lfsv(assembler.gfsv),
@@ -259,20 +284,33 @@ namespace Dune{
         lfsun_cache(lfsun, assembler.cu),
         lfsvn_cache(lfsvn, assembler.cv),
         // Extract integration requirements from the local assembler
-        require_uv_skeleton(engine->requireUVSkeleton()),
-        require_v_skeleton(engine->requireVSkeleton()),
-        require_uv_boundary(engine->requireUVBoundary()),
-        require_v_boundary(engine->requireVBoundary()),
-        require_uv_processor(engine->requireUVBoundary()),
-        require_v_processor(engine->requireVBoundary()),
-        require_uv_post_skeleton(engine->requireUVVolumePostSkeleton()),
-        require_v_post_skeleton(engine->requireVVolumePostSkeleton()),
-        require_skeleton_two_sided(engine->requireSkeletonTwoSided())
+        require_uv_skeleton(engine.requireUVSkeleton()),
+        require_v_skeleton(engine.requireVSkeleton()),
+        require_uv_boundary(engine.requireUVBoundary()),
+        require_v_boundary(engine.requireVBoundary()),
+        require_uv_processor(engine.requireUVBoundary()),
+        require_v_processor(engine.requireVBoundary()),
+        require_uv_post_skeleton(engine.requireUVVolumePostSkeleton()),
+        require_v_post_skeleton(engine.requireVVolumePostSkeleton()),
+        require_skeleton_two_sided(engine.requireSkeletonTwoSided())
       { }
 
-      AssembleBody(AssembleBody &other, tbb::split split) :
+      //! splitting constructor
+      /**
+       * split another body from a template.
+       *
+       * The local assemblers are split too; if they don't have a splitting
+       * constructor an exception is thrown.  An assembler engine is obtained
+       * using the engine factory from the newly constructed local assembler.
+       * \c other.engine.split(this->engine) is called to notify the new
+       * engine that it is for a worker thread.
+       */
+      AssembleBody(AssembleBody &other, tbb::split) :
         assembler(other.assembler),
-        engine(TBBAssemblerSplit<LocalAssemblerEngine>::split(*other.engine)),
+        engineFactory(other.engineFactory),
+        localAssembler(TBBAssemblerSplit<LocalAssembler>
+                       ::split(other.localAssembler)),
+        engine(engineFactory(*localAssembler)),
         cell_mapper(other.cell_mapper),
         lfsu(assembler.gfsu),
         lfsv(assembler.gfsv),
@@ -292,7 +330,9 @@ namespace Dune{
         require_uv_post_skeleton(other.require_uv_post_skeleton),
         require_v_post_skeleton(other.require_v_post_skeleton),
         require_skeleton_two_sided(other.require_skeleton_two_sided)
-      { }
+      {
+        engine.split(other.engine);
+      }
 
       void operator()(const tbb::blocked_range<std::size_t> &range)
       {
@@ -315,7 +355,7 @@ namespace Dune{
 
           ElementGeometry<Element> eg(e);
 
-          if(engine->assembleCell(eg))
+          if(engine.assembleCell(eg))
             continue;
 
           // Bind local test function space to element
@@ -323,23 +363,23 @@ namespace Dune{
           lfsv_cache.update();
 
           // Notify assembler engine about bind
-          engine->onBindLFSV(eg,lfsv_cache);
+          engine.onBindLFSV(eg,lfsv_cache);
 
           // Volume integration
-          engine->assembleVVolume(eg,lfsv_cache);
+          engine.assembleVVolume(eg,lfsv_cache);
 
           // Bind local trial function space to element
           lfsu.bind( e );
           lfsu_cache.update();
 
           // Notify assembler engine about bind
-          engine->onBindLFSUV(eg,lfsu_cache,lfsv_cache);
+          engine.onBindLFSUV(eg,lfsu_cache,lfsv_cache);
 
           // Load coefficients of local functions
-          engine->loadCoefficientsLFSUInside(lfsu_cache);
+          engine.loadCoefficientsLFSUInside(lfsu_cache);
 
           // Volume integration
-          engine->assembleUVVolume(eg,lfsu_cache,lfsv_cache);
+          engine.assembleUVVolume(eg,lfsu_cache,lfsv_cache);
 
           // Skip if no intersection iterator is needed
           if (require_uv_skeleton || require_v_skeleton ||
@@ -379,10 +419,10 @@ namespace Dune{
                     lfsvn_cache.update();
 
                     // Notify assembler engine about binds
-                    engine->onBindLFSVOutside(ig,lfsv_cache,lfsvn_cache);
+                    engine.onBindLFSVOutside(ig,lfsv_cache,lfsvn_cache);
 
                     // Skeleton integration
-                    engine->assembleVSkeleton(ig,lfsv_cache,lfsvn_cache);
+                    engine.assembleVSkeleton(ig,lfsv_cache,lfsvn_cache);
 
                     if(require_uv_skeleton)
                     {
@@ -391,23 +431,23 @@ namespace Dune{
                       lfsun_cache.update();
 
                       // Notify assembler engine about binds
-                      engine->onBindLFSUVOutside(ig, lfsu_cache, lfsv_cache,
-                                                 lfsun_cache, lfsvn_cache);
+                      engine.onBindLFSUVOutside(ig, lfsu_cache, lfsv_cache,
+                                                lfsun_cache, lfsvn_cache);
 
                       // Load coefficients of local functions
-                      engine->loadCoefficientsLFSUOutside(lfsun_cache);
+                      engine.loadCoefficientsLFSUOutside(lfsun_cache);
 
                       // Skeleton integration
-                      engine->assembleUVSkeleton(ig, lfsu_cache, lfsv_cache,
-                                                 lfsun_cache, lfsvn_cache);
+                      engine.assembleUVSkeleton(ig, lfsu_cache, lfsv_cache,
+                                                lfsun_cache, lfsvn_cache);
 
                       // Notify assembler engine about unbinds
-                      engine->onUnbindLFSUVOutside(ig, lfsu_cache, lfsv_cache,
-                                                   lfsun_cache, lfsvn_cache);
+                      engine.onUnbindLFSUVOutside(ig, lfsu_cache, lfsv_cache,
+                                                  lfsun_cache, lfsvn_cache);
                     }
 
                     // Notify assembler engine about unbinds
-                    engine->onUnbindLFSVOutside(ig,lfsv_cache,lfsvn_cache);
+                    engine.onUnbindLFSVOutside(ig,lfsv_cache,lfsvn_cache);
                   }
                 }
                 break;
@@ -416,12 +456,12 @@ namespace Dune{
                 if(require_uv_boundary || require_v_boundary )
                 {
                   // Boundary integration
-                  engine->assembleVBoundary(ig,lfsv_cache);
+                  engine.assembleVBoundary(ig,lfsv_cache);
 
                   if(require_uv_boundary)
                   {
                     // Boundary integration
-                    engine->assembleUVBoundary(ig,lfsu_cache,lfsv_cache);
+                    engine.assembleUVBoundary(ig,lfsu_cache,lfsv_cache);
                   }
                 }
                 break;
@@ -430,12 +470,12 @@ namespace Dune{
                 if(require_uv_processor || require_v_processor )
                 {
                   // Processor integration
-                  engine->assembleVProcessor(ig,lfsv_cache);
+                  engine.assembleVProcessor(ig,lfsv_cache);
 
                   if(require_uv_processor)
                   {
                     // Processor integration
-                    engine->assembleUVProcessor(ig,lfsu_cache,lfsv_cache);
+                    engine.assembleUVProcessor(ig,lfsu_cache,lfsv_cache);
                   }
                 }
                 break;
@@ -448,28 +488,35 @@ namespace Dune{
           if(require_uv_post_skeleton || require_v_post_skeleton)
           {
             // Volume integration
-            engine->assembleVVolumePostSkeleton(eg,lfsv_cache);
+            engine.assembleVVolumePostSkeleton(eg,lfsv_cache);
 
             if(require_uv_post_skeleton)
             {
               // Volume integration
-              engine->assembleUVVolumePostSkeleton(eg, lfsu_cache, lfsv_cache);
+              engine.assembleUVVolumePostSkeleton(eg, lfsu_cache, lfsv_cache);
             }
           }
 
           // Notify assembler engine about unbinds
-          engine->onUnbindLFSUV(eg,lfsu_cache,lfsv_cache);
+          engine.onUnbindLFSUV(eg,lfsu_cache,lfsv_cache);
 
           // Notify assembler engine about unbinds
-          engine->onUnbindLFSV(eg,lfsv_cache);
+          engine.onUnbindLFSV(eg,lfsv_cache);
 
         } // partition
       }
 
     public:
+      //! join another body
+      /**
+       * This calls join() first on the engines and then on the local
+       * assemblers.
+       */
       void join(AssembleBody &other)
       {
-        TBBAssemblerSplit<LocalAssemblerEngine>::join(*engine, *other.engine);
+        engine.join(other.engine);
+        TBBAssemblerSplit<LocalAssembler>::join(*localAssembler,
+                                                *other.localAssembler);
       }
     };
 
@@ -494,7 +541,7 @@ namespace Dune{
     {
       typedef TBBAssembler<Partitioning, GFSU, GFSV, CU, CV,
                            nonoverlapping_mode> Base;
-      template<class LocalAssemblerEngine>
+      template<class EngineFactory, class LocalAssembler>
       class AssembleBody;
 
     public:
@@ -512,10 +559,11 @@ namespace Dune{
         coloring_ = coloring;
       }
 
-      template<class LocalAssemblerEngine>
-      void assemble(LocalAssemblerEngine & assembler_engine) const
+      template<class EngineFactory, class LocalAssembler>
+      void assemble(const EngineFactory &engineFactory,
+                    LocalAssembler &la) const
       {
-        typedef typename Base::Element Element;
+        auto &assembler_engine = engineFactory(la);
 
         // Notify assembler engine about oncoming assembly
         assembler_engine.preAssembly();
@@ -544,9 +592,11 @@ namespace Dune{
           representatives[coloring_->color(p)].push_back(p);
         }
 
+        bool parallel = TBBAssemblerSplit<LocalAssembler>::value
+          && assembler_engine.threadSafe();
         if(this->verbosity > 0 && this->gfsu.gridView().comm().rank() == 0)
         {
-          if(TBBAssemblerSplit<LocalAssemblerEngine>::value)
+          if(parallel)
             std::cout << "ColoredTBBAssembler: parallel iteration"
                       << std::endl;
           else
@@ -557,11 +607,11 @@ namespace Dune{
         // loop over colors
         for(const auto &cr : representatives)
         {
-          AssembleBody<LocalAssemblerEngine>
-            body(*this, assembler_engine, cell_mapper, cr);
+          AssembleBody<EngineFactory, LocalAssembler>
+            body(*this, engineFactory, la, assembler_engine, cell_mapper, cr);
           tbb::blocked_range<std::size_t> range(0, cr.size());
 
-          if(TBBAssemblerSplit<LocalAssemblerEngine>::value)
+          if(parallel)
             tbb::parallel_reduce(range, body);
           else
             body(range);
@@ -578,22 +628,28 @@ namespace Dune{
     template<typename Coloring, typename Partitioning, typename GFSU,
              typename GFSV, typename CU, typename CV,
              bool nonoverlapping_mode>
-    template<class LocalAssemblerEngine>
+    template<class EngineFactory, class LocalAssembler>
     class ColoredTBBAssembler<Coloring, Partitioning, GFSU, GFSV, CU, CV,
                               nonoverlapping_mode>::AssembleBody :
       public ColoredTBBAssembler::Base::
-        template AssembleBody<LocalAssemblerEngine>
+    template AssembleBody<EngineFactory, LocalAssembler>
     {
       typedef typename ColoredTBBAssembler::Base::
-        template AssembleBody<LocalAssemblerEngine> Base;
+        template AssembleBody<EngineFactory, LocalAssembler> Base;
+
+      typedef typename Base::LocalAssemblerEngine LocalAssemblerEngine;
 
     public:
       typedef typename ColoredTBBAssembler::GV GV;
       typedef typename Base::Assembler Assembler;
-      AssembleBody(const Assembler &assembler_, LocalAssemblerEngine &engine_,
+      AssembleBody(const Assembler &assembler_,
+                   const EngineFactory &engineFactory_,
+                   LocalAssembler &localAssembler_,
+                   LocalAssemblerEngine &engine_,
                    const ElementMapper<GV> &cell_mapper_,
                    const std::vector<std::size_t> &representatives) :
-        Base(assembler_, engine_, cell_mapper_),
+        Base(assembler_, engineFactory_, localAssembler_, engine_,
+             cell_mapper_),
         representatives_(representatives)
       { }
 

@@ -1,6 +1,14 @@
 #ifndef DUNE_PDELAB_ONESTEP_LOCAL_ASSEMBLER_HH
 #define DUNE_PDELAB_ONESTEP_LOCAL_ASSEMBLER_HH
 
+#include <memory>
+
+#if HAVE_TBB
+#include <tbb/tbb_stddef.h>
+#endif
+
+#include <dune/common/shared_ptr.hh>
+
 #include <dune/typetree/typetree.hh>
 
 #include <dune/pdelab/gridoperator/onestep/residualengine.hh>
@@ -55,12 +63,6 @@ namespace Dune{
       typedef typename LA1::LocalPatternAssemblerEngine LocalExplicitPatternAssemblerEngine;
       typedef OneStepExplicitLocalJacobianResidualAssemblerEngine<OneStepLocalAssembler>
       LocalExplicitJacobianResidualAssemblerEngine;
-
-      friend class OneStepLocalPatternAssemblerEngine<OneStepLocalAssembler>;
-      friend class OneStepLocalPreStageAssemblerEngine<OneStepLocalAssembler>;
-      friend class OneStepLocalResidualAssemblerEngine<OneStepLocalAssembler>;
-      friend class OneStepLocalJacobianAssemblerEngine<OneStepLocalAssembler>;
-      friend class OneStepExplicitLocalJacobianResidualAssemblerEngine<OneStepLocalAssembler>;
       //! @}
 
       void static_checks(){
@@ -91,12 +93,39 @@ namespace Dune{
       //! Constructor with empty constraints
       OneStepLocalAssembler (LA0 & la0_, LA1 & la1_, typename Traits::Residual & const_residual_)
         : Base(la0_.trialConstraints(),la0_.testConstraints()),
-          la0(la0_), la1(la1_),
+          la0(stackobject_to_shared_ptr(la0_)),
+          la1(stackobject_to_shared_ptr(la1_)),
           const_residual(const_residual_),
-          time(0.0), dt_mode(MultiplyOperator0ByDT), stage(0),
+          time(0.0), dt_mode(MultiplyOperator0ByDT), stage_(0),
           pattern_engine(*this), prestage_engine(*this), residual_engine(*this), jacobian_engine(*this),
           explicit_jacobian_residual_engine(*this)
       { static_checks(); }
+
+#if HAVE_TBB
+      //! Splitting constructor
+      OneStepLocalAssembler(OneStepLocalAssembler &other, tbb::split)
+        : Base(other),
+          la0(std::make_shared<LA0>(*other.la0, tbb::split())),
+          la1(std::make_shared<LA1>(*other.la1, tbb::split())),
+          osp_method(other.osp_method),
+          const_residual(other.const_residual),
+          time(other.time),
+          dt(other.dt),
+          dt_factor0_(other.dt_factor0_),
+          dt_factor1_(other.dt_factor1_),
+          dt_mode(other.dt_mode),
+          stage_(other.stage_),
+          pattern_engine(*this), prestage_engine(*this), residual_engine(*this), jacobian_engine(*this),
+          explicit_jacobian_residual_engine(*this)
+      {}
+
+      //! join state from other local assembler
+      void join(OneStepLocalAssembler &other)
+      {
+        la0->join(*other.la0);
+        la1->join(*other.la1);
+      }
+#endif // HAVE_TBB
 
       //! Notifies the local assembler about the current time of
       //! assembling. Should be called before assembling if the local
@@ -107,23 +136,23 @@ namespace Dune{
 
         // This switch decides which term will be multiplied with dt
         if(dt_mode == DivideOperator1ByDT){
-          dt_factor0 = 1.0;
-          dt_factor1 = 1.0 / dt;
+          dt_factor0_ = 1.0;
+          dt_factor1_ = 1.0 / dt;
         }
         else if(dt_mode == MultiplyOperator0ByDT){
-          dt_factor0 = dt;
-          dt_factor1 = 1.0;
+          dt_factor0_ = dt;
+          dt_factor1_ = 1.0;
         }
         else if(dt_mode == DoNotAssembleDT){
-          dt_factor0 = 1.0;
-          dt_factor1 = 1.0;
+          dt_factor0_ = 1.0;
+          dt_factor1_ = 1.0;
         }
         else{
           DUNE_THROW(Dune::Exception,"Unknown mode for assembling of time step size!");
         }
 
-        la0.preStep(time_,dt_, stages_);
-        la1.preStep(time_,dt_, stages_);
+        la0->preStep(time_,dt_, stages_);
+        la1->preStep(time_,dt_, stages_);
       }
 
       //! Set the one step method parameters
@@ -131,10 +160,17 @@ namespace Dune{
         osp_method = & method_;
       }
 
+      //! Get the one step method parameters
+      const OneStepParameters &method() const
+      { return *osp_method; }
+
       //! Set the current stage of the one step scheme
-      void setStage(int stage_){
-        stage = stage_;
+      void setStage(int stage){
+        stage_ = stage;
       }
+
+      //! Get the current stage of the one step scheme
+      int stage() const { return stage_; }
 
       enum DTAssemblingMode { DivideOperator1ByDT, MultiplyOperator0ByDT, DoNotAssembleDT };
 
@@ -152,12 +188,12 @@ namespace Dune{
 
       //! Access time at given stage
       Real timeAtStage(){
-        return time+osp_method->d(stage)*dt;
+        return time+osp_method->d(stage_)*dt;
       }
 
       void setWeight(const Real weight){
-        la0.setWeight(weight);
-        la1.setWeight(weight);
+        la0->setWeight(weight);
+        la1->setWeight(weight);
       }
 
       //! Access methods which provid "ready to use" engines
@@ -208,7 +244,7 @@ namespace Dune{
       LocalExplicitPatternAssemblerEngine & localExplicitPatternAssemblerEngine
       (typename Traits::MatrixPattern & p)
       {
-        return la1.localPatternAssemblerEngine(p);
+        return la1->localPatternAssemblerEngine(p);
       }
 
       //! Returns a reference to the requested engine. This engine is
@@ -225,20 +261,26 @@ namespace Dune{
 
         // Init jacobian engine
         explicit_jacobian_residual_engine.setLocalJacobianEngine
-          (la1.localJacobianAssemblerEngine(a,*(x[stage])));
+          (la1->localJacobianAssemblerEngine(a,*(x[stage_])));
 
         return explicit_jacobian_residual_engine;
       }
 
       //! @}
 
+      LA0 &child0() { return *la0; }
+      LA1 &child1() { return *la1; }
+
+      Real dt_factor0() const { return dt_factor0_; }
+      Real dt_factor1() const { return dt_factor1_; }
+
     private:
 
       //! The local assemblers for the temporal derivative of order
       //! one and zero
       //! @{
-      LA0 & la0;
-      LA1 & la1;
+      std::shared_ptr<LA0> la0;
+      std::shared_ptr<LA1> la1;
       //! @}
 
       //! The one step parameter object containing the generalized
@@ -257,25 +299,25 @@ namespace Dune{
       /** The time step factors for assembling. Depending on the value
        of \a dt_mode, it will hold:
 
-       dt_factor0 = dt and dt_factor1 = 1.0
+       dt_factor0_ = dt and dt_factor1_ = 1.0
 
        or
 
-       dt_factor0 = 1.0 and dt_factor1 = 1.0 / dt
+       dt_factor0_ = 1.0 and dt_factor1_ = 1.0 / dt
 
        or
 
-       dt_factor0 = 1.0 and dt_factor1 = 1.0 .
+       dt_factor0_ = 1.0 and dt_factor1_ = 1.0 .
 
       */
-      Real dt_factor0, dt_factor1;
+      Real dt_factor0_, dt_factor1_;
 
       //! Determines, whether the time step size will be multiplied
       //! with the time derivative term of first of zero-th order.
       DTAssemblingMode dt_mode;
 
       //! The current stage of the one step scheme
-      int stage;
+      int stage_;
 
       //! The engine member objects
       //! @{

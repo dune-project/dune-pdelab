@@ -64,7 +64,7 @@ namespace Dune{
       DefaultLocalPatternAssemblerEngine(const LocalAssembler & local_assembler_,
                                          shared_ptr<typename LA::Traits::BorderDOFExchanger> border_dof_exchanger)
         : local_assembler(local_assembler_)
-        , lop(local_assembler.lop)
+        , lop(local_assembler.localOperator())
         , pattern(nullptr)
         , _border_dof_exchanger(border_dof_exchanger)
       {}
@@ -243,7 +243,7 @@ namespace Dune{
 
       void post_border_pattern_assembly(true_type, const GFSU& gfsu, const GFSV& gfsv)
       {
-        if(local_assembler.doPostProcessing &&
+        if(local_assembler.doPostProcessing() &&
            local_assembler.reconstructBorderEntries())
           {
             communicationCache().finishInitialization();
