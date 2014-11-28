@@ -159,7 +159,7 @@ public:
 
 // generate a P1 function and output it
 template<typename GV, typename FEM, typename CON>
-void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
+bool poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 {
   // constants and types
   typedef typename FEM::Traits::FiniteElementType::Traits::
@@ -283,21 +283,30 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   r *= -1.0; // need -residual
   DV x(gfs,0.0);
   solvera.apply(x.base(),r.base(),stat);
+  if(!stat.converged)
+  {
+    std::cerr << "Error: solver did not converge" << std::endl;
+    return false;
+  }
   x += x0;
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
   Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x);
   vtkwriter.write(filename,Dune::VTK::ascii);
+
+  return true;
 }
 
 //===============================================================
 // Main program with grid setup
 //===============================================================
 
-void pass(int &result) {
-  if(result == 77)
-    result = 0;
+void accumulate_result(int &acc, bool good) {
+  if(good && acc == 77)
+    acc = 0;
+  if(!good)
+    acc = 1;
 }
 
 int main(int argc, char** argv)
@@ -327,8 +336,8 @@ int main(int argc, char** argv)
       FEM fem(gv);
 
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"batchedtbbgridoperator_yasp_Q1_2d",2);
-      pass(result);
+      bool good = poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"batchedtbbgridoperator_yasp_Q1_2d",2);
+      accumulate_result(result, good);
     }
 
     {
@@ -350,8 +359,8 @@ int main(int argc, char** argv)
       FEM fem(gv);
 
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"batchedtbbgridoperator_yasp_Q2_2d",2);
-      pass(result);
+      bool good = poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"batchedtbbgridoperator_yasp_Q2_2d",2);
+      accumulate_result(result, good);
     }
 
     {
@@ -373,8 +382,8 @@ int main(int argc, char** argv)
       FEM fem(gv);
 
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"batchedtbbgridoperator_yasp_Q1_3d",2);
-      pass(result);
+      bool good = poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"batchedtbbgridoperator_yasp_Q1_3d",2);
+      accumulate_result(result, good);
     }
 
     {
@@ -396,8 +405,8 @@ int main(int argc, char** argv)
       FEM fem(gv);
 
       // solve problem
-      poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"batchedtbbgridoperator_yasp_Q2_3d",2);
-      pass(result);
+      bool good = poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"batchedtbbgridoperator_yasp_Q2_3d",2);
+      accumulate_result(result, good);
     }
 
     // test passed

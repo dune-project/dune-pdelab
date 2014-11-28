@@ -58,7 +58,7 @@ namespace Dune{
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
-      OneStepLocalJacobianAssemblerEngine(const LocalAssembler & local_assembler_)
+      OneStepLocalJacobianAssemblerEngine(LocalAssembler & local_assembler_)
         : BaseT(local_assembler_),
           invalid_jacobian(static_cast<Jacobian*>(0)),
           invalid_solution(static_cast<Solution*>(0)),
@@ -80,16 +80,18 @@ namespace Dune{
         assert(solution != invalid_solution);
 
         // Initialize the engines of the two wrapped local assemblers
-        setLocalAssemblerEngineDT0(la.la0.localJacobianAssemblerEngine(*jacobian,*solution));
-        setLocalAssemblerEngineDT1(la.la1.localJacobianAssemblerEngine(*jacobian,*solution));
+        setLocalAssemblerEngineDT0
+          (la.child0().localJacobianAssemblerEngine(*jacobian,*solution));
+        setLocalAssemblerEngineDT1
+          (la.child1().localJacobianAssemblerEngine(*jacobian,*solution));
       }
 
       //! When multiple engines are combined in one assembling
       //! procedure, this method allows to reset the weights which may
       //! have been changed by the other engines.
       void setWeights(){
-        la.la0.setWeight(b_rr * la.dt_factor0);
-        la.la1.setWeight(la.dt_factor1);
+        la.child0().setWeight(b_rr * la.dt_factor0());
+        la.child1().setWeight(la.dt_factor1());
       }
 
       //! Notifier functions, called immediately before and after assembling
@@ -100,15 +102,15 @@ namespace Dune{
         lae1->preAssembly();
 
         // Extract the coefficients of the time step scheme
-        b_rr = la.osp_method->b(la.stage,la.stage);
-        d_r = la.osp_method->d(la.stage);
+        b_rr = la.method().b(la.stage(),la.stage());
+        d_r = la.method().d(la.stage());
 
         // Here we only want to know whether this stage is implicit
         implicit = std::abs(b_rr) > 1e-6;
 
         // prepare local operators for stage
-        la.la0.setTime(la.time + d_r * la.dt);
-        la.la1.setTime(la.time + d_r * la.dt);
+        la.child0().setTime(la.timeAtStage());
+        la.child1().setTime(la.timeAtStage());
 
         setWeights();
       }
@@ -118,6 +120,24 @@ namespace Dune{
         lae0->postAssembly(gfsu,gfsv);
         lae1->postAssembly(gfsu,gfsv);
       }
+      //! @}
+
+      //! @name Multithreading support
+      //! @{
+
+      //! initialize another engine from this engine.
+      /**
+       * This is called instead of \c other.preAssembly().  It is an
+       * oppertunity to do any setup that is needed at the begin of a thread.
+       * It can also be used to copy or split data from \c *this to \c other.
+       */
+      void split(OneStepLocalJacobianAssemblerEngine &other)
+      {
+        BaseT::split(other);
+        b_rr = other.b_rr;
+        d_r = other.d_r;
+      }
+
       //! @}
 
     private:

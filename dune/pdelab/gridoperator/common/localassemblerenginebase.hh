@@ -99,6 +99,12 @@ namespace Dune {
           return false;
         }
 
+        //! whether this engine handles updates in a threadsafe manner
+        bool threadSafe() const
+        {
+          return false;
+        }
+
         //! @}
 
         //! @name Callbacks for LocalFunctionSpace binding and unbinding events
@@ -363,6 +369,31 @@ namespace Dune {
 
         template<typename GFSU, typename GFSV>
         void postAssembly(const GFSU& gfsu, const GFSV& gfsv)
+        {
+        }
+
+        //! @}
+
+        //! @name Multithreading support
+        //! @{
+
+        //! initialize this engine from another engine.
+        /**
+         * This is called instead of \c preAssembly().  It is an oppertunity
+         * to do any setup that is needed at the begin of a thread.  It can
+         * also be used to copy or split data from \c other to \c *this.
+
+         */
+        void split(LocalAssemblerEngineBase &other)
+        {
+        }
+
+        //! join the state of other into this engine
+        /**
+         * This is called instead of \c other.postAssembly() when the engine
+         * other is no longer needed and had split called previously.
+         */
+        void join(LocalAssemblerEngineBase &other)
         {
         }
 

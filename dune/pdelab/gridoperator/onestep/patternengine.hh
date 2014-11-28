@@ -51,7 +51,7 @@ namespace Dune{
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
-      OneStepLocalPatternAssemblerEngine(const LocalAssembler & la_)
+      OneStepLocalPatternAssemblerEngine(LocalAssembler & la_)
         : BaseT(la_),
           invalid_pattern(static_cast<Pattern*>(0)), pattern(invalid_pattern)
       {}
@@ -64,15 +64,17 @@ namespace Dune{
         pattern = &pattern_;
 
         // Initialize the engines of the two wrapped local assemblers
-        setLocalAssemblerEngineDT0(la.la0.localPatternAssemblerEngine(pattern_));
-        setLocalAssemblerEngineDT1(la.la1.localPatternAssemblerEngine(pattern_));
+        setLocalAssemblerEngineDT0
+          (la.child0().localPatternAssemblerEngine(pattern_));
+        setLocalAssemblerEngineDT1
+          (la.child1().localPatternAssemblerEngine(pattern_));
       }
 
 
       //! @name Notification functions
       //! @{
       void preAssembly(){
-        implicit = la.osp_method->implicit();
+        implicit = la.method().implicit();
 
         lae0->preAssembly();
         lae1->preAssembly();

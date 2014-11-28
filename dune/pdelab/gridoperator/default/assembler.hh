@@ -84,6 +84,19 @@ namespace Dune{
       //     sub_triangulation(ST(gfsu_.gridview(),Dune::PDELab::NoSubTriangulationImp()))
       // { }
 
+      //! do the assembly
+      /**
+       * \param engineFactory Factory object used to get the engine.
+       * \param la            Local assembler to get the engine from.
+       */
+      template<class EngineFactory, class LocalAssembler>
+      void assemble(const EngineFactory &engineFactory,
+                    LocalAssembler &la) const
+      {
+        assemble(engineFactory(la));
+      }
+
+    private:
       template<class LocalAssemblerEngine>
       void assemble(LocalAssemblerEngine & assembler_engine) const
       {
@@ -277,8 +290,6 @@ namespace Dune{
         assembler_engine.postAssembly(gfsu,gfsv);
 
       }
-
-    private:
 
       /* global function spaces */
       const GFSU& gfsu;

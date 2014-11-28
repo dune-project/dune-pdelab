@@ -125,12 +125,16 @@ namespace Dune{
       void fill_pattern(Pattern & p) const {
         if(implicit){
           typedef typename LocalAssembler::LocalPatternAssemblerEngine PatternEngine;
-          PatternEngine & pattern_engine = local_assembler.localPatternAssemblerEngine(p);
-          global_assembler.assemble(pattern_engine);
+          global_assembler.assemble
+            ([&p](LocalAssembler &la) -> PatternEngine&
+                  { return la.localPatternAssemblerEngine(p); },
+             local_assembler);
         } else {
           typedef typename LocalAssembler::LocalExplicitPatternAssemblerEngine PatternEngine;
-          PatternEngine & pattern_engine = local_assembler.localExplicitPatternAssemblerEngine(p);
-          global_assembler.assemble(pattern_engine);
+          global_assembler.assemble
+            ([&p](LocalAssembler &la) -> PatternEngine&
+                  { return la.localExplicitPatternAssemblerEngine(p); },
+             local_assembler);
         }
       }
 
@@ -140,8 +144,10 @@ namespace Dune{
 
         typedef typename LocalAssembler::LocalPreStageAssemblerEngine PreStageEngine;
         local_assembler.setStage(stage);
-        PreStageEngine & prestage_engine = local_assembler.localPreStageAssemblerEngine(x);
-        global_assembler.assemble(prestage_engine);
+        global_assembler.assemble
+          ([&x](LocalAssembler &la) -> PreStageEngine&
+                { return la.localPreStageAssemblerEngine(x); },
+           local_assembler);
         //Dune::printvector(std::cout,const_residual.base(),"const residual","row",4,9,1);
       }
 
@@ -150,8 +156,10 @@ namespace Dune{
         if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
 
         typedef typename LocalAssembler::LocalResidualAssemblerEngine ResidualEngine;
-        ResidualEngine & residual_engine = local_assembler.localResidualAssemblerEngine(r,x);
-        global_assembler.assemble(residual_engine);
+        global_assembler.assemble
+          ([&r,&x](LocalAssembler &la) -> ResidualEngine&
+                { return la.localResidualAssemblerEngine(r,x); },
+           local_assembler);
         //Dune::printvector(std::cout,r.base(),"residual","row",4,9,1);
       }
 
@@ -160,8 +168,10 @@ namespace Dune{
         if(!implicit){DUNE_THROW(Dune::Exception,"This function should not be called in explicit mode");}
 
         typedef typename LocalAssembler::LocalJacobianAssemblerEngine JacobianEngine;
-        JacobianEngine & jacobian_engine = local_assembler.localJacobianAssemblerEngine(a,x);
-        global_assembler.assemble(jacobian_engine);
+        global_assembler.assemble
+          ([&a,&x](LocalAssembler &la) -> JacobianEngine&
+                { return la.localJacobianAssemblerEngine(a,x); },
+           local_assembler);
         //printmatrix(std::cout,a.base(),"global stiffness matrix","row",9,1);
       }
 
@@ -176,10 +186,13 @@ namespace Dune{
         typedef typename LocalAssembler::LocalExplicitJacobianResidualAssemblerEngine
           ExplicitJacobianResidualEngine;
 
-        ExplicitJacobianResidualEngine & jacobian_residual_engine
-          = local_assembler.localExplicitJacobianResidualAssemblerEngine(a,r0,r1,x);
-
-        global_assembler.assemble(jacobian_residual_engine);
+        global_assembler.assemble
+          ([&a,&r0,&r1,&x](LocalAssembler &la)
+             -> ExplicitJacobianResidualEngine&
+           {
+             return la.localExplicitJacobianResidualAssemblerEngine(a,r0,r1,x);
+           },
+           local_assembler);
       }
 
       //! Interpolate constrained values from given function f
