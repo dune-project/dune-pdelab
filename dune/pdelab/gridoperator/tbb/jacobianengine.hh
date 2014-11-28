@@ -5,8 +5,6 @@
 #include <memory>
 #include <mutex>
 
-#include <boost/utility.hpp>
-
 #include <tbb/tbb_stddef.h>
 
 #include <dune/common/exceptions.hh>
