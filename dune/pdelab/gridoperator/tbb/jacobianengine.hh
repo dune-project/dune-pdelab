@@ -13,6 +13,7 @@
 #include <dune/pdelab/backend/common/threadedmatrixview.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
+#include <dune/pdelab/gridoperator/common/gridoperatorutilities.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridoperator/common/localassemblerenginebase.hh>
 #include <dune/pdelab/gridoperator/common/localmatrix.hh>
@@ -305,8 +306,10 @@ namespace Dune{
       void assembleUVVolume(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         al_view.setWeight(local_assembler.weight());
+        HP_TIMER_START(jacobian_volume);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
           jacobian_volume(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),al_view);
+        HP_TIMER_STOP(jacobian_volume);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -317,17 +320,20 @@ namespace Dune{
         al_sn_view.setWeight(local_assembler.weight());
         al_ns_view.setWeight(local_assembler.weight());
         al_nn_view.setWeight(local_assembler.weight());
-
+        HP_TIMER_START(jacobian_skeleton);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
           jacobian_skeleton(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),lfsu_n_cache.localFunctionSpace(),xn,lfsv_n_cache.localFunctionSpace(),al_view,al_sn_view,al_ns_view,al_nn_view);
+        HP_TIMER_STOP(jacobian_skeleton);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
       void assembleUVBoundary(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache)
       {
         al_view.setWeight(local_assembler.weight());
+        HP_TIMER_START(jacobian_boundary);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
           jacobian_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),al_view);
+        HP_TIMER_STOP(jacobian_boundary);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>

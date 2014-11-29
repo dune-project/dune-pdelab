@@ -5,6 +5,19 @@
 #define DUNE_PDELAB_GRIDOPERATORUTILITIES_HH
 
 #include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/common/timer.hh>
+
+HP_DECLARE_TIMER(alpha_volume)
+HP_DECLARE_TIMER(alpha_skeleton)
+HP_DECLARE_TIMER(alpha_boundary)
+
+HP_DECLARE_TIMER(lambda_volume)
+HP_DECLARE_TIMER(lambda_skeleton)
+HP_DECLARE_TIMER(lambda_boundary)
+
+HP_DECLARE_TIMER(jacobian_volume)
+HP_DECLARE_TIMER(jacobian_skeleton)
+HP_DECLARE_TIMER(jacobian_boundary)
 
 namespace Dune{
   namespace PDELab{
