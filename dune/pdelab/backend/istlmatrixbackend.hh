@@ -248,7 +248,7 @@ namespace Dune {
       void clear_row(const RowIndex& ri, const E& diagonal_entry)
       {
         istl::clear_matrix_row(istl::container_tag(*_container),*_container,ri,ri.size()-1);
-        (*this)(ri,ri) = diagonal_entry;
+        istl::write_matrix_element_if_exists(diagonal_entry,istl::container_tag(*_container),*_container,ri,ri,ri.size()-1,ri.size()-1);
       }
 
     private:

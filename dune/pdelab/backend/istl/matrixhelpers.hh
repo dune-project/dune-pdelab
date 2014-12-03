@@ -295,6 +295,45 @@ namespace Dune {
       }
 
 
+      template<typename T, typename RI, typename CI, typename Block>
+      void write_matrix_element_if_exists(const T& v, tags::field_matrix_1_1, Block& b, const RI& ri, const CI& ci, int i, int j)
+      {
+        assert(i == -1);
+        assert(j == -1);
+        b[0][0] = v;
+      }
+
+      template<typename T, typename RI, typename CI, typename Block>
+      void write_matrix_element_if_exists(const T& v, tags::field_matrix_n_m, Block& b, const RI& ri, const CI& ci, int i, int j)
+      {
+        assert(i == 0);
+        assert(j == 0);
+        b[ri[0]][ci[0]] = v;
+      }
+
+      template<typename T, typename RI, typename CI, typename Block>
+      void write_matrix_element_if_exists(const T& v, tags::field_matrix_1_m, Block& b, const RI& ri, const CI& ci, int i, int j)
+      {
+        assert(i == -1);
+        assert(j == 0);
+        b[0][ci[0]] = v;
+      }
+
+      template<typename T, typename RI, typename CI, typename Block>
+      void write_matrix_element_if_exists(const T& v, tags::field_matrix_n_1, Block& b, const RI& ri, const CI& ci, int i, int j)
+      {
+        assert(i == 0);
+        assert(j == -1);
+        b[ri[0]][0] = v;
+      }
+
+      template<typename T, typename RI, typename CI, typename Block>
+      void write_matrix_element_if_exists(const T& v, tags::bcrs_matrix, Block& b, const RI& ri, const CI& ci, int i, int j)
+      {
+        if (b.exists(ri[i],ci[j]))
+          write_matrix_element_if_exists(v,container_tag(b[ri[i]][ci[j]]),b[ri[i]][ci[j]],ri,ci,i-1,j-1);
+      }
+
 
       template<typename OrderingV, typename OrderingU, typename Pattern, typename Container>
       typename enable_if<
