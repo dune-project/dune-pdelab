@@ -590,12 +590,54 @@ namespace Dune {
           return *this;
         }
 
+        template<template<typename...> class Function, typename TreePath, typename... Params>
+        OutputCollector& addCellFunction(TreePath tp, std::string name, Params&&... params)
+        {
+          typedef typename TypeTree::extract_child_type<typename Data::LFS,TreePath>::type LFS;
+          typedef Function<LFS,Data,Params...> DGF;
+          _vtk_writer.addCellData(
+            new VTKGridFunctionAdapter<DGF>(
+              make_shared<DGF>(
+                TypeTree::extract_child(
+                  _data->_lfs,
+                  tp
+                ),
+                _data,
+                std::forward<Params>(params)...
+              ),
+              name
+            )
+          );
+          return *this;
+        }
+
         template<typename Factory, typename TreePath>
         OutputCollector& addVertexFunction(Factory factory, TreePath tp, std::string name)
         {
           typedef typename TypeTree::extract_child_type<typename Data::LFS,TreePath>::type LFS;
           typedef typename std::remove_reference<decltype(*factory.create(TypeTree::extract_child(_data->_lfs,tp),_data))>::type DGF;
           _vtk_writer.addVertexData(new VTKGridFunctionAdapter<DGF>(factory.create(TypeTree::extract_child(_data->_lfs,tp),_data),name));
+          return *this;
+        }
+
+        template<template<typename...> class Function, typename TreePath, typename... Params>
+        OutputCollector& addVertexFunction(TreePath tp, std::string name, Params&&... params)
+        {
+          typedef typename TypeTree::extract_child_type<typename Data::LFS,TreePath>::type LFS;
+          typedef Function<LFS,Data,Params...> DGF;
+          _vtk_writer.addVertexData(
+            new VTKGridFunctionAdapter<DGF>(
+              make_shared<DGF>(
+                TypeTree::extract_child(
+                  _data->_lfs,
+                  tp
+                ),
+                _data,
+                std::forward<Params>(params)...
+              ),
+              name
+            )
+          );
           return *this;
         }
 
