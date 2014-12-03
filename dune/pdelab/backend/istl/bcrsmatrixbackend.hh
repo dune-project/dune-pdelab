@@ -82,6 +82,44 @@ namespace Dune {
         };
 
 
+        // leaf BCRSMatrix
+        template<typename OrderingV, typename OrderingU, typename Pattern, typename Container, typename StatsVector>
+        typename enable_if<
+          is_same<typename Pattern::SubPattern,void>::value
+          >::type
+        allocate_bcrs_matrix(const OrderingV& ordering_v,
+                             const OrderingU& ordering_u,
+                             Pattern& p,
+                             Container& c,
+                             StatsVector& stats)
+        {
+          c.setSize(ordering_v.blockCount(),ordering_u.blockCount(),0);
+          c.setBuildMode(Container::random);
+
+          std::vector<typename Pattern::size_type> row_sizes(p.sizes());
+
+          typename Pattern::size_type nnz = 0;
+          typename Pattern::size_type longest_row = 0;
+
+          for (typename Pattern::size_type i = 0; i < c.N(); ++i)
+            {
+              nnz += row_sizes[i];
+              longest_row = std::max(longest_row,row_sizes[i]);
+              c.setrowsize(i,row_sizes[i]);
+            }
+          c.endrowsizes();
+
+          stats.push_back(typename StatsVector::value_type(nnz,longest_row,p.overflowCount(),p.entriesPerRow(),ordering_v.blockCount()));
+
+          for (typename Pattern::size_type i = 0; i < c.N(); ++i)
+            c.setIndices(i,p.begin(i),p.end(i));
+
+          // free temporary index storage in pattern before allocating data array in matrix
+          p.clear();
+          // allocate data array
+          c.endindices();
+        }
+
 
         // ********************************************************************************
         // nested matrix allocation
@@ -120,50 +158,12 @@ namespace Dune {
           for (std::size_t i = 0; i < c.N(); ++i)
             for (std::size_t j = 0; j < c.M(); ++j)
               {
-                allocate_matrix(ordering_v.childOrdering(i),
-                                ordering_u.childOrdering(j),
-                                p.subPattern(i,j),
-                                c[i][j],
-                                stats);
+                allocate_bcrs_matrix(ordering_v.childOrdering(i),
+                                     ordering_u.childOrdering(j),
+                                     p.subPattern(i,j),
+                                     c[i][j],
+                                     stats);
               }
-        }
-
-        // leaf BCRSMatrix
-        template<typename OrderingV, typename OrderingU, typename Pattern, typename Container, typename StatsVector>
-        typename enable_if<
-          is_same<typename Pattern::SubPattern,void>::value
-          >::type
-        allocate_bcrs_matrix(const OrderingV& ordering_v,
-                             const OrderingU& ordering_u,
-                             Pattern& p,
-                             Container& c,
-                             StatsVector& stats)
-        {
-          c.setSize(ordering_v.blockCount(),ordering_u.blockCount(),0);
-          c.setBuildMode(Container::random);
-
-          std::vector<typename Pattern::size_type> row_sizes(p.sizes());
-
-          typename Pattern::size_type nnz = 0;
-          typename Pattern::size_type longest_row = 0;
-
-          for (typename Pattern::size_type i = 0; i < c.N(); ++i)
-            {
-              nnz += row_sizes[i];
-              longest_row = std::max(longest_row,row_sizes[i]);
-              c.setrowsize(i,row_sizes[i]);
-            }
-          c.endrowsizes();
-
-          stats.push_back(typename StatsVector::value_type(nnz,longest_row,p.overflowCount(),p.entriesPerRow(),ordering_v.blockCount()));
-
-          for (typename Pattern::size_type i = 0; i < c.N(); ++i)
-            c.setIndices(i,p.begin(i),p.end(i));
-
-          // free temporary index storage in pattern before allocating data array in matrix
-          p.clear();
-          // allocate data array
-          c.endindices();
         }
 
       } // anonymous namespace
