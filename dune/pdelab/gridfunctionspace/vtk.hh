@@ -585,7 +585,7 @@ namespace Dune {
         OutputCollector& addCellFunction(Factory factory, TreePath tp, std::string name)
         {
           typedef typename TypeTree::extract_child_type<typename Data::LFS,TreePath>::type LFS;
-          typedef typename Factory::template create_type<LFS,Data>::type DGF;
+          typedef typename std::remove_reference<decltype(*factory.create(TypeTree::extract_child(_data->_lfs,tp),_data))>::type DGF;
           _vtk_writer.addCellData(new VTKGridFunctionAdapter<DGF>(factory.create(TypeTree::extract_child(_data->_lfs,tp),_data),name));
           return *this;
         }
@@ -594,7 +594,7 @@ namespace Dune {
         OutputCollector& addVertexFunction(Factory factory, TreePath tp, std::string name)
         {
           typedef typename TypeTree::extract_child_type<typename Data::LFS,TreePath>::type LFS;
-          typedef typename Factory::template create_type<LFS,Data>::type DGF;
+          typedef typename std::remove_reference<decltype(*factory.create(TypeTree::extract_child(_data->_lfs,tp),_data))>::type DGF;
           _vtk_writer.addVertexData(new VTKGridFunctionAdapter<DGF>(factory.create(TypeTree::extract_child(_data->_lfs,tp),_data),name));
           return *this;
         }
