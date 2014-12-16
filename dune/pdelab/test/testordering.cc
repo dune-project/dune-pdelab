@@ -163,7 +163,7 @@ struct test<2,false> {
     typedef Dune::SingleCodimSingleGeomTypeMapper<GV, 0> CellMapper;
     CellMapper cellmapper(gv);
     typedef Dune::PDELab::VariableMonomLocalFiniteElementMap<CellMapper,float,double,GV::dimension> MonomFEM;
-    MonomFEM monomfem(cellmapper,gv.indexSet().geomTypes(0)[0],2);
+    MonomFEM monomfem(cellmapper,gv.indexSet().types(0)[0],2);
 
     typedef Dune::PDELab::NoConstraints CON;
 

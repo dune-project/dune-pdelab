@@ -98,14 +98,10 @@ namespace Dune {
             if (!_gfs.ordering().contains(codim))
               continue;
 
-            const std::vector<GeometryType>& geometry_types = index_set.geomTypes(codim);
-            for (typename std::vector<GeometryType>::const_iterator it = geometry_types.begin(),
-                   end_it = geometry_types.end();
-                 it != end_it;
-                 ++it)
+            for (auto gt : index_set.types(codim))
               {
-                _border_entities[GlobalGeometryTypeIndex::index(*it)].resize(index_set.size(*it));
-                _index_to_id[GlobalGeometryTypeIndex::index(*it)];
+                _border_entities[GlobalGeometryTypeIndex::index(gt)].resize(index_set.size(gt));
+                _index_to_id[GlobalGeometryTypeIndex::index(gt)];
               }
           }
         create_for_codim<Grid::dimension>();

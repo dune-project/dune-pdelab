@@ -65,7 +65,7 @@ namespace Dune {
 
         for (size_type cc = 0; cc <= dim; ++cc)
           {
-            const GTVector& per_codim_geom_types = _gv.indexSet().geomTypes(cc);
+            auto per_codim_geom_types = _gv.indexSet().types(cc);
             std::copy(per_codim_geom_types.begin(),per_codim_geom_types.end(),std::back_inserter(geom_types));
           }
 

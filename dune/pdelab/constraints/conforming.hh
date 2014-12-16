@@ -203,18 +203,12 @@ namespace Dune {
       {
         std::fill(_gt_offsets.begin(),_gt_offsets.end(),0);
 
-        typedef std::vector<GeometryType> GTVector;
-
         for (size_t codim = 0; codim <= GV::dimension; ++codim)
           {
             if (gfs.ordering().contains(codim))
               {
-                const GTVector& geom_types = _gv.indexSet().geomTypes(codim);
-                for (GTVector::const_iterator it = geom_types.begin(),
-                       end = geom_types.end();
-                     it != end;
-                     ++it)
-                  _gt_offsets[GlobalGeometryTypeIndex::index(*it) + 1] = _gv.indexSet().size(*it);
+                for (auto gt : _gv.indexSet().types(codim))
+                  _gt_offsets[GlobalGeometryTypeIndex::index(gt) + 1] = _gv.indexSet().size(gt);
               }
           }
 
