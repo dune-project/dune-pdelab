@@ -107,6 +107,57 @@ namespace Dune {
       };
 
 
+      namespace {
+
+        // recursive helper for undecorated_ordering that traverses down the Ordering tree level times
+
+        // end of recursion
+        template<typename Ordering>
+        const Ordering& _unwind_decorators(const Ordering& ordering, std::integral_constant<std::size_t,0>)
+        {
+          return ordering;
+        }
+
+        // recursive implementation - this uses decltype to avoid implementing a separate meta function
+        // for calculating the return type
+        template<typename Ordering, std::size_t level>
+        auto _unwind_decorators(const Ordering& ordering, std::integral_constant<std::size_t,level>)
+          -> decltype(
+            _unwind_decorators(
+              ordering.template child<0>(),
+              std::integral_constant<std::size_t,level-1>()
+              )
+            )
+        {
+          return _unwind_decorators(
+            ordering.template child<0>(),
+            std::integral_constant<std::size_t,level-1>()
+            );
+        }
+
+      }
+
+
+      //! Unwinds the stack of decorators on top of the base ordering of gfs and returns the base ordering.
+      /**
+       * This support functionality is required for the DataHandleProvider of dune-multidomaingrid.
+       */
+      template<typename GFS>
+      auto undecorated_ordering(const GFS& gfs)
+        -> decltype(
+          _unwind_decorators(
+            gfs.ordering(),
+            impl::decoration_level<typename GFS::OrderingTag>()
+            )
+          )
+      {
+        return _unwind_decorators(
+          gfs.ordering(),
+          impl::decoration_level<typename GFS::OrderingTag>()
+          );
+      }
+
+
       template<typename GFS,typename Transformation,typename Undecorated,typename GlueTag, typename Tag>
       struct gfs_to_decorator_descriptor
         : public TypeTree::meta_function
