@@ -164,6 +164,10 @@ list(APPEND NORMALTESTS testvectoriterator)
 add_executable(testvectoriterator testvectoriterator.cc)
 target_link_libraries(testvectoriterator dunepdelab ${DUNE_LIBS})
 
+list(APPEND NORMALTESTS testpermutedordering)
+add_executable(testpermutedordering testpermutedordering.cc)
+target_link_libraries(testpermutedordering dunepdelab ${DUNE_LIBS})
+
 foreach(i ${NORMALTESTS})
   add_test(${i} ${i})
   # add different flags and directory to example grids
