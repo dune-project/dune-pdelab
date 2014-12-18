@@ -26,7 +26,6 @@
 #include <dune/geometry/type.hh>
 #include <dune/geometry/quadraturerules.hh>
 
-#include <dune/grid/sgrid.hh> // load sgrid definition
 #include <dune/grid/onedgrid.hh>
 #include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 #include <dune/grid/yaspgrid.hh>
