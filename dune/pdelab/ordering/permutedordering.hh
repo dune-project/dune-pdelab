@@ -202,6 +202,16 @@ namespace Dune {
                      << " != "
                      << this->blockCount()
                      );
+        else
+          {
+            auto& mutable_tag = const_cast<ordering::permuted::tag_base&>(_tag);
+            mutable_tag.permutation().resize(this->blockCount());
+            std::iota(
+              mutable_tag.permutation().begin(),
+              mutable_tag.permutation().end(),
+              0
+              );
+          }
       }
 
     private:
