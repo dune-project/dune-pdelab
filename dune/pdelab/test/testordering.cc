@@ -13,7 +13,7 @@
 #include <dune/common/parallel/mpihelper.hh>
 
 #include <dune/grid/yaspgrid.hh>
-#include <dune/grid/alugrid.hh>
+#include <dune/alugrid/grid.hh>
 #include <dune/grid/common/scsgmapper.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 
