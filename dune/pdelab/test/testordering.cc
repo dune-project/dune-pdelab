@@ -107,13 +107,14 @@ struct test<2,true> {
 
     typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,VBE,Dune::PDELab::InterleavedOrderingTag> P1GFS;
 
-#if HAVE_INITIALIZER_LIST
+    {
+      // keep this block around to test the vector-based constructor of the ordering tag
+      std::vector<std::size_t> p1_gfs_block_sizes(3);
+      std::fill(p1_gfs_block_sizes.begin(),p1_gfs_block_sizes.end(),1);
+      P1GFS p1gfs(gfs1,gfs1,gfs1,VBE(),p1_gfs_block_sizes);
+    }
+
     P1GFS p1gfs(gfs1,gfs1,gfs1,VBE(),{{1,1,1}});
-#else
-    std::vector<std::size_t> p1_gfs_block_sizes(3);
-    std::fill(p1_gfs_block_sizes.begin(),p1_gfs_block_sizes.end(),1);
-    P1GFS p1gfs(gfs1,gfs1,gfs1,VBE(),p1_gfs_block_sizes);
-#endif
 
     typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::static_blocking,6> NVBE;
 

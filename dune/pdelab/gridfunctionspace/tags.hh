@@ -74,8 +74,6 @@ namespace Dune {
     struct InterleavedOrderingTag
     {
 
-#if HAVE_INITIALIZER_LIST || DOXYGEN
-
       //! Constructs an InterleavedOrderingTag with a block structure given by the initializer list sizes.
       /**
        * If you have a sufficiently recent compiler, this constructor enables a much more readable
@@ -101,8 +99,6 @@ namespace Dune {
       {
         std::partial_sum(sizes.begin(),sizes.end(),_offsets.begin() + 1);
       }
-
-#endif
 
       //! Constructs an InterleavedOrderingTag with a block structure given by the std::vector sizes.
       InterleavedOrderingTag(std::vector<std::size_t> sizes)
