@@ -7,7 +7,7 @@
 #include <dune/geometry/type.hh>
 
 #include <dune/localfunctions/common/virtualwrappers.hh>
-#include <dune/localfunctions/monom.hh>
+#include <dune/localfunctions/monomial.hh>
 #include <dune/common/array.hh>
 #include "finiteelementmap.hh"
 
@@ -21,7 +21,7 @@ namespace Dune {
         template<typename C>
         static void init(C & c, GeometryType gt)
         {
-          typedef Dune::MonomLocalFiniteElement<D,R,d,p> LFE;
+          typedef Dune::MonomialLocalFiniteElement<D,R,d,p> LFE;
           typedef typename C::value_type ptr;
           c[p] = ptr(new LocalFiniteElementVirtualImp<LFE>(LFE(gt)));
 
@@ -42,7 +42,7 @@ namespace Dune {
     class VariableMonomLocalFiniteElementMap
     {
       typedef typename FixedOrderLocalBasisTraits<
-        typename MonomLocalFiniteElement<D,R,d,0>::Traits::LocalBasisType::Traits,0>::Traits T;
+        typename MonomialLocalFiniteElement<D,R,d,0>::Traits::LocalBasisType::Traits,0>::Traits T;
       //! Type of finite element from local functions
       typedef LocalFiniteElementVirtualInterface<T> FiniteElementType;
     public:
