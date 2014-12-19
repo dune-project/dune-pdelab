@@ -61,6 +61,7 @@ template<typename GFS>
 void check_permuted_ordering(GFS gfs)
 {
   gfs.update();
+  check_ordering_reference(gfs);
   std::size_t i = gfs.blockCount();
   auto& permutation = gfs.orderingTag().permutation();
   permutation.resize(i);
