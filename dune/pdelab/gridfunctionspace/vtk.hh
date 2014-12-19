@@ -622,6 +622,7 @@ namespace Dune {
         template<template<typename...> class Function, typename TreePath, typename... Params>
         OutputCollector& addVertexFunction(TreePath tp, std::string name, Params&&... params)
         {
+          typedef typename TypeTree::extract_child_type<typename Data::LFS,TreePath>::type LFS;
           typedef Function<LFS,Data,Params...> DGF;
           _vtk_writer.addVertexData(
             new VTKGridFunctionAdapter<DGF>(
