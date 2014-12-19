@@ -87,14 +87,14 @@ namespace Dune {
       void setOrder (const EntityType& e, unsigned int p)
       {
         assert(p <= maxP);
-        unsigned int i = mapper_.map(e);
+        unsigned int i = mapper_.index(e);
         polOrder_[i] = p;
       }
 
       template<class EntityType>
       unsigned int getOrder (const EntityType& e) const
       {
-        unsigned int i = mapper_.map(e);
+        unsigned int i = mapper_.index(e);
         unsigned int p = polOrder_[i];
         assert(p <= maxP);
         return p;
