@@ -12,6 +12,10 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
 #include"../common/function.hh"
+//--------------------------------------------//
+// TODO
+// Is the header "jacobiantocurl.hh" really used?
+//--------------------------------------------//
 #include <dune/pdelab/common/jacobiantocurl.hh>
 #include"gridfunctionspace.hh"
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
@@ -176,6 +180,10 @@ namespace Dune {
      * \tparam T Type of GridFunctionSpace
      * \tparam X Type of coefficients vector
      */
+    //--------------------------------------------//
+    // TODO
+    // Is the following class really used?
+    //--------------------------------------------//
     template<typename T, typename X>
     class DiscreteGridFunctionCurl :
       public GridFunctionInterface<
@@ -261,6 +269,10 @@ namespace Dune {
       std::shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
     };
 
+    //--------------------------------------------//
+    // TODO
+    // Are the following traits really used?
+    //--------------------------------------------//
     //! Helper class to calculate the Traits of DiscreteGridFunctionCurl
     /**
      * \tparam GV              Type of the GridView.
@@ -346,6 +358,10 @@ namespace Dune {
      *           evaluateJacobianGlobal() method.
      * \tparam X Type of coefficients vector
      */
+    //--------------------------------------------//
+    // TODO
+    // Is the following class really used?
+    //--------------------------------------------//
     template<typename T, typename X>
     class DiscreteGridFunctionGlobalCurl
       : public GridFunctionInterface<
