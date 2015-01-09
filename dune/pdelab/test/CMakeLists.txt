@@ -53,10 +53,6 @@ if(ALUGRID_FOUND)
   list(APPEND NORMALTESTS testordering)
   add_executable(testordering testordering.cc)
   target_link_libraries(testordering dunepdelab ${DUNE_LIBS})
-
-  list(APPEND NORMALTESTS testpermutedordering)
-  add_executable(testpermutedordering testpermutedordering.cc)
-  target_link_libraries(testpermutedordering dunepdelab ${DUNE_LIBS})
 endif(ALUGRID_FOUND)
 
 list(APPEND NORMALTESTS testlaplacedirichletccfv)
