@@ -173,7 +173,7 @@ namespace Dune {
         typename FieldMatrix::field_type* row_end(tags::field_matrix_1_any, FieldMatrix& c, const CI& ci, int i)
         {
           assert(i == -1);
-          typedef typename FieldMatrix::row_type::iterator it = c[0].end();
+          typename FieldMatrix::row_type::iterator it = c[0].end();
           --it;
           return &(*it) + 1;
         }
@@ -183,7 +183,7 @@ namespace Dune {
         typename FieldMatrix::field_type* row_end(tags::field_matrix_n_any, FieldMatrix& c, const CI& ci, int i)
         {
           assert(i == 0);
-          typedef typename FieldMatrix::row_type::iterator it = c[ci[0]].end();
+          typename FieldMatrix::row_type::iterator it = c[ci[0]].end();
           --it;
           return &(*it) + 1;
         }
