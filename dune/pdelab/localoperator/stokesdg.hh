@@ -161,7 +161,7 @@ namespace Dune {
                         for (size_type i=0; i<vsize; i++)
                         {
                             RF val = phi_v[i]*factor;
-                            r.accumulate(lfsv_v,i, fval[d] * val);
+                            r.accumulate(lfsv_v,i, -fval[d] * val);
                         }
                     }
 
