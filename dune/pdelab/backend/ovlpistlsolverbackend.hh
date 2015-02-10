@@ -670,9 +670,9 @@ namespace Dune {
         \param[in] verbose print messages if true
       */
         ISTLBackend_OVLP_GMRES_ILU0 (const GFS& gfs_, const CC& cc_, unsigned maxiter_=5000, int verbose_=1,
-            int restart_ = 20, bool recalc_defect_ = false)
+                                     int restart_ = 20)
         : OVLPScalarProductImplementation<GFS>(gfs_), gfs(gfs_), cc(cc_), maxiter(maxiter_), verbose(verbose_),
-          restart(restart_), recalc_defect(recalc_defect_)
+          restart(restart_)
       {}
 
       /*! \brief solve the given linear system
@@ -694,7 +694,7 @@ namespace Dune {
         WPREC wprec(gfs,seqprec,cc,this->parallelHelper());
         int verb=0;
         if (gfs.gridView().comm().rank()==0) verb=verbose;
-        RestartedGMResSolver<V> solver(pop,psp,wprec,reduction,restart,maxiter,verb,recalc_defect);
+        RestartedGMResSolver<V> solver(pop,psp,wprec,reduction,restart,maxiter,verb);
         Dune::InverseOperatorResult stat;
         solver.apply(z,r,stat);
         res.converged  = stat.converged;
@@ -711,7 +711,6 @@ namespace Dune {
       int steps;
       int verbose;
       int restart;
-      bool recalc_defect;
     };
 
     //! \} Solver
