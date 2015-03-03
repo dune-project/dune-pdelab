@@ -6,7 +6,6 @@
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridoperator/default/jacobianapplyengine.hh>
-#include <dune/pdelab/gridoperator/default/jacobianengine.hh>
 #include <dune/pdelab/gridoperator/default/patternengine.hh>
 #include <dune/pdelab/gridoperator/tbb/jacobianengine.hh>
 #include <dune/pdelab/gridoperator/tbb/residualengine.hh>
