@@ -180,8 +180,7 @@ namespace Dune{
         global_sn_view.attach(solution_);
       }
 
-      //! Set current solution vector. Should be called prior to
-      //! assembling.
+      //! Set how many writes to batch up.
       void setAutocommit(std::size_t autocommit)
       {
         global_rl_view.buffer()->set_autocommit(autocommit);
