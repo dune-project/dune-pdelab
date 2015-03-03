@@ -5,8 +5,8 @@
 
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
-#include <dune/pdelab/gridoperator/default/jacobianapplyengine.hh>
 #include <dune/pdelab/gridoperator/default/patternengine.hh>
+#include <dune/pdelab/gridoperator/tbb/jacobianapplyengine.hh>
 #include <dune/pdelab/gridoperator/tbb/jacobianengine.hh>
 #include <dune/pdelab/gridoperator/tbb/residualengine.hh>
 
@@ -89,7 +89,7 @@ namespace Dune{
         LocalResidualAssemblerEngine;
       typedef TBBLocalJacobianAssemblerEngine<TBBLocalAssembler>
         LocalJacobianAssemblerEngine;
-      typedef DefaultLocalJacobianApplyAssemblerEngine<TBBLocalAssembler>
+      typedef TBBLocalJacobianApplyAssemblerEngine<TBBLocalAssembler>
         LocalJacobianApplyAssemblerEngine;
       //! @}
 
@@ -222,6 +222,7 @@ namespace Dune{
       {
         jacobian_apply_engine.setResidual(r);
         jacobian_apply_engine.setSolution(x);
+        jacobian_apply_engine.setLockManager(*lockManager_);
         return jacobian_apply_engine;
       }
 
@@ -387,8 +388,8 @@ namespace Dune{
         <BatchedTBBLocalAssembler, Mutex> LocalResidualAssemblerEngine;
       typedef BatchedTBBLocalJacobianAssemblerEngine
         <BatchedTBBLocalAssembler, Mutex> LocalJacobianAssemblerEngine;
-      typedef DefaultLocalJacobianApplyAssemblerEngine
-        <BatchedTBBLocalAssembler> LocalJacobianApplyAssemblerEngine;
+      typedef BatchedTBBLocalJacobianApplyAssemblerEngine
+        <BatchedTBBLocalAssembler, Mutex> LocalJacobianApplyAssemblerEngine;
       //! @}
 
       //! Constructor with empty constraints
@@ -517,7 +518,7 @@ namespace Dune{
       LocalJacobianApplyAssemblerEngine & localJacobianApplyAssemblerEngine
       (typename Traits::Residual & r, const typename Traits::Solution & x)
       {
-        jacobian_apply_engine.setResidual(r);
+        jacobian_apply_engine.setResidual(r, *residual_mutex);
         jacobian_apply_engine.setSolution(x);
         return jacobian_apply_engine;
       }
@@ -671,7 +672,7 @@ namespace Dune{
         LocalResidualAssemblerEngine;
       typedef ColoredTBBLocalJacobianAssemblerEngine<ColoredTBBLocalAssembler>
         LocalJacobianAssemblerEngine;
-      typedef DefaultLocalJacobianApplyAssemblerEngine
+      typedef ColoredTBBLocalJacobianApplyAssemblerEngine
         <ColoredTBBLocalAssembler> LocalJacobianApplyAssemblerEngine;
       //! @}
 
