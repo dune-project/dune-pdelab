@@ -2,6 +2,7 @@ set(gridoperatortbbtdir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/gridoperator/tb
 
 set(gridoperatortbb_HEADERS
         assembler.hh
+        jacobianapplyengine.hh
         jacobianengine.hh
         localassembler.hh
         residualengine.hh)

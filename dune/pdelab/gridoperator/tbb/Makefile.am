@@ -2,6 +2,7 @@ tbbdir = $(includedir)/dune/pdelab/gridoperator/tbb
 
 tbb_HEADERS =					\
 	assembler.hh				\
+	jacobianapplyengine.hh			\
 	jacobianengine.hh			\
 	localassembler.hh			\
 	residualengine.hh

@@ -1,5 +1,5 @@
-#ifndef DUNE_PDELAB_TBB_RESIDUALENGINE_HH
-#define DUNE_PDELAB_TBB_RESIDUALENGINE_HH
+#ifndef DUNE_PDELAB_TBB_JACOBIANAPPLYENGINE_HH
+#define DUNE_PDELAB_TBB_JACOBIANAPPLYENGINE_HH
 
 #include <cstddef>
 #include <memory>
@@ -15,14 +15,14 @@
 #include <dune/pdelab/gridoperator/common/gridoperatorutilities.hh>
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridoperator/common/localassemblerenginebase.hh>
-#include <dune/pdelab/gridoperator/default/residualengine.hh>
+#include <dune/pdelab/gridoperator/default/jacobianapplyengine.hh>
 #include <dune/pdelab/localoperator/callswitch.hh>
 
 namespace Dune{
   namespace PDELab{
 
-    //! \brief simple wrapper about DefaultLocalResidualAssemblerEngine with
-    //!        splitting support
+    //! \brief simple wrapper about DefaultLocalJacobianApplyAssemblerEngine
+    //!        with splitting support
     /**
      * \note We don't simply want to copy the default engine or add a
      *       splitting contructor to it since we want to be able to
@@ -32,35 +32,35 @@ namespace Dune{
      *       (e.g. pattern).
      */
     template<typename LA>
-    class ColoredTBBLocalResidualAssemblerEngine :
-      public DefaultLocalResidualAssemblerEngine<LA>
+    class ColoredTBBLocalJacobianApplyAssemblerEngine :
+      public DefaultLocalJacobianApplyAssemblerEngine<LA>
     {
       typedef typename LA::LocalOperator LOP;
-      typedef DefaultLocalResidualAssemblerEngine<LA> Base;
+      typedef DefaultLocalJacobianApplyAssemblerEngine<LA> Base;
     public:
       //! \brief Constructor
       /**
        * \param [in] local_assembler_ The local assembler object which
        *                              creates this engine
        */
-      ColoredTBBLocalResidualAssemblerEngine(const LA &local_assembler_) :
+      ColoredTBBLocalJacobianApplyAssemblerEngine(const LA &local_assembler_) :
         Base(local_assembler_)
       { }
 
       //! whether this engine handles updates in a threadsafe manner
       /**
        * This engine is to be used with a colored partitioning.  Although we
-       * don't do anything differently from the default residual engine, we
-       * declare ourselves thread safe.
+       * don't do anything differently from the default jacobianapply engine,
+       * we declare ourselves thread safe.
        */
       bool threadSafe() const
       { return true; }
 
-    };
+    }; // End of class ColoredTBBLocalJacobianApplyAssemblerEngine
 
     /**
        \brief The local assembler engine for DUNE grids which
-       assembles the residual vector
+       assembles the local application of the Jacobian
 
        This version is for uses with threaded assemblers.  It collects the
        to-be-updated entries in a buffer and writes them once the commit limit
@@ -71,7 +71,7 @@ namespace Dune{
 
     */
     template<typename LA, typename Mutex>
-    class BatchedTBBLocalResidualAssemblerEngine
+    class BatchedTBBLocalJacobianApplyAssemblerEngine
       : public LocalAssemblerEngineBase
     {
     public:
@@ -113,7 +113,7 @@ namespace Dune{
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
-      BatchedTBBLocalResidualAssemblerEngine
+      BatchedTBBLocalJacobianApplyAssemblerEngine
         (const LocalAssembler & local_assembler_)
         : local_assembler(local_assembler_),
           lop(local_assembler_.localOperator()),
@@ -124,25 +124,17 @@ namespace Dune{
       //! Query methods for the global grid assembler
       //! @{
       bool requireSkeleton() const
-      { return ( local_assembler.doAlphaSkeleton() || local_assembler.doLambdaSkeleton() ); }
+      { return local_assembler.doAlphaSkeleton(); }
       bool requireSkeletonTwoSided() const
       { return local_assembler.doSkeletonTwoSided(); }
       bool requireUVVolume() const
       { return local_assembler.doAlphaVolume(); }
-      bool requireVVolume() const
-      { return local_assembler.doLambdaVolume(); }
       bool requireUVSkeleton() const
       { return local_assembler.doAlphaSkeleton(); }
-      bool requireVSkeleton() const
-      { return local_assembler.doLambdaSkeleton(); }
       bool requireUVBoundary() const
       { return local_assembler.doAlphaBoundary(); }
-      bool requireVBoundary() const
-      { return local_assembler.doLambdaBoundary(); }
       bool requireUVVolumePostSkeleton() const
       { return local_assembler.doAlphaVolumePostSkeleton(); }
-      bool requireVVolumePostSkeleton() const
-      { return local_assembler.doLambdaVolumePostSkeleton(); }
       //! this engine handles updates in a threadsafe manner
       bool threadSafe() const
       { return true; }
@@ -277,11 +269,10 @@ namespace Dune{
         global_rl_view.commit();
         global_rn_view.commit();
 
-        if(local_assembler.doPostProcessing())
-          {
-            Dune::PDELab::constrain_residual(local_assembler.testConstraints(),
-                                             global_rl_view.container());
-          }
+        if(local_assembler.doPostProcessing()){
+          Dune::PDELab::constrain_residual(local_assembler.testConstraints(),
+                                           global_rl_view.container());
+        }
       }
 
       //! @}
@@ -294,7 +285,7 @@ namespace Dune{
        * This is called instead of \c other.postAssembly() when the engine
        * other is no longer needed and had split called previously.
        */
-      void join(BatchedTBBLocalResidualAssemblerEngine &other)
+      void join(BatchedTBBLocalJacobianApplyAssemblerEngine &other)
       {
         other.global_rl_view.commit();
         other.global_rn_view.commit();
@@ -321,20 +312,8 @@ namespace Dune{
       void assembleUVVolume(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         rl_view.setWeight(local_assembler.weight());
-        HP_TIMER_START(alpha_volume);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolume>::
-          alpha_volume(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),rl_view);
-        HP_TIMER_STOP(alpha_volume);
-      }
-
-      template<typename EG, typename LFSVC>
-      void assembleVVolume(const EG & eg, const LFSVC & lfsv_cache)
-      {
-        rl_view.setWeight(local_assembler.weight());
-        HP_TIMER_START(lambda_volume);
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaVolume>::
-          lambda_volume(lop,eg,lfsv_cache.localFunctionSpace(),rl_view);
-        HP_TIMER_STOP(lambda_volume);
+          jacobian_apply_volume(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),rl_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -343,44 +322,19 @@ namespace Dune{
       {
         rl_view.setWeight(local_assembler.weight());
         rn_view.setWeight(local_assembler.weight());
-        HP_TIMER_START(alpha_skeleton);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaSkeleton>::
-          alpha_skeleton(lop,ig,
+          jacobian_apply_skeleton(lop,ig,
                          lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),
                          lfsu_n_cache.localFunctionSpace(),xn,lfsv_n_cache.localFunctionSpace(),
                          rl_view,rn_view);
-        HP_TIMER_STOP(alpha_skeleton);
-      }
-
-      template<typename IG, typename LFSVC>
-      void assembleVSkeleton(const IG & ig, const LFSVC & lfsv_s_cache, const LFSVC & lfsv_n_cache)
-      {
-        rl_view.setWeight(local_assembler.weight());
-        rn_view.setWeight(local_assembler.weight());
-        HP_TIMER_START(lambda_skeleton);
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaSkeleton>::
-          lambda_skeleton(lop, ig, lfsv_s_cache.localFunctionSpace(), lfsv_n_cache.localFunctionSpace(), rl_view, rn_view);
-        HP_TIMER_STOP(lambda_skeleton);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
       void assembleUVBoundary(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache)
       {
         rl_view.setWeight(local_assembler.weight());
-        HP_TIMER_START(alpha_boundary);
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaBoundary>::
-          alpha_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),rl_view);
-        HP_TIMER_STOP(alpha_boundary);
-      }
-
-      template<typename IG, typename LFSVC>
-      void assembleVBoundary(const IG & ig, const LFSVC & lfsv_s_cache)
-      {
-        rl_view.setWeight(local_assembler.weight());
-        HP_TIMER_START(lambda_boundary);
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaBoundary>::
-          lambda_boundary(lop,ig,lfsv_s_cache.localFunctionSpace(),rl_view);
-        HP_TIMER_STOP(lambda_boundary);
+          jacobian_apply_boundary(lop,ig,lfsu_s_cache.localFunctionSpace(),xl,lfsv_s_cache.localFunctionSpace(),rl_view);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>
@@ -390,27 +344,12 @@ namespace Dune{
                                              const LFSUC & lfsu_coupling_cache, const LFSVC & lfsv_coupling_cache)
       {DUNE_THROW(Dune::NotImplemented,"Assembling of coupling spaces is not implemented for ");}
 
-      template<typename IG, typename LFSVC>
-      static void assembleVEnrichedCoupling(const IG & ig,
-                                            const LFSVC & lfsv_s_cache,
-                                            const LFSVC & lfsv_n_cache,
-                                            const LFSVC & lfsv_coupling_cache)
-      {DUNE_THROW(Dune::NotImplemented,"Assembling of coupling spaces is not implemented for ");}
-
       template<typename EG, typename LFSUC, typename LFSVC>
       void assembleUVVolumePostSkeleton(const EG & eg, const LFSUC & lfsu_cache, const LFSVC & lfsv_cache)
       {
         rl_view.setWeight(local_assembler.weight());
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doAlphaVolumePostSkeleton>::
-          alpha_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),rl_view);
-      }
-
-      template<typename EG, typename LFSVC>
-      void assembleVVolumePostSkeleton(const EG & eg, const LFSVC & lfsv_cache)
-      {
-        rl_view.setWeight(local_assembler.weight());
-        Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doLambdaVolumePostSkeleton>::
-          lambda_volume_post_skeleton(lop,eg,lfsv_cache.localFunctionSpace(),rl_view);
+          jacobian_apply_volume_post_skeleton(lop,eg,lfsu_cache.localFunctionSpace(),xl,lfsv_cache.localFunctionSpace(),rl_view);
       }
 
       //! @}
@@ -453,20 +392,20 @@ namespace Dune{
       typename ResidualVector::WeightedAccumulationView rn_view;
       //! @}
 
-    }; // End of class BatchedTBBLocalResidualAssemblerEngine
+    }; // End of class BatchedTBBLocalJacobianApplyAssemblerEngine
 
     /**
        \brief The local assembler engine for DUNE grids which
-       assembles the residual vector
+       assembles the local application of the Jacobian
 
        \tparam LA The local assembler
 
     */
     template<typename LA>
-    class TBBLocalResidualAssemblerEngine
-      : public DefaultLocalResidualAssemblerEngine<LA>
+    class TBBLocalJacobianApplyAssemblerEngine
+      : public DefaultLocalJacobianApplyAssemblerEngine<LA>
     {
-      typedef DefaultLocalResidualAssemblerEngine<LA> Base;
+      typedef DefaultLocalJacobianApplyAssemblerEngine<LA> Base;
     public:
       typedef typename Base::LocalAssembler LocalAssembler;
 
@@ -480,8 +419,9 @@ namespace Dune{
          \param [in] local_assembler_ The local assembler object which
          creates this engine
       */
-      TBBLocalResidualAssemblerEngine(const LocalAssembler & local_assembler_)
-      : Base(local_assembler_)
+      TBBLocalJacobianApplyAssemblerEngine
+      (const LocalAssembler & local_assembler_) :
+        Base(local_assembler_)
       {}
 
       //! this engine handles updates in a threadsafe manner
@@ -523,8 +463,8 @@ namespace Dune{
 
       LockManager *lockmgr;
 
-    }; // End of class TBBLocalResidualAssemblerEngine
+    }; // End of class TBBLocalJacobianApplyAssemblerEngine
 
   }
 }
-#endif // DUNE_PDELAB_TBB_RESIDUALENGINE_HH
+#endif // DUNE_PDELAB_TBB_JACOBIANAPPLYENGINE_HH
