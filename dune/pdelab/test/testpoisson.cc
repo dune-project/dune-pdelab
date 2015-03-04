@@ -246,10 +246,13 @@ bool poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 
   // make ISTL solver
   Dune::MatrixAdapter<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> opa(m.base());
-  //ISTLOnTheFlyOperator opb(gridoperator);
+  typedef Dune::PDELab::OnTheFlyOperator<DV,RV,
+                                         GridOperator> ISTLOnTheFlyOperator;
+  ISTLOnTheFlyOperator opb(gridoperator);
   Dune::SeqSSOR<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ssor(m.base(),1,1.0);
   Dune::SeqILU0<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ilu0(m.base(),1.0);
   Dune::Richardson<typename DV::BaseT,typename RV::BaseT> richardson(1.0);
+  Dune::Richardson<DV,RV> richardsonb(1.0);
 
 //   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<M,
 //     Dune::Amg::FirstDiagonal> > Criterion;
@@ -264,24 +267,43 @@ bool poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 //   AMG amg(opa,criterion,smootherArgs,1,1);
 
   Dune::CGSolver<typename DV::BaseT> solvera(opa,ilu0,1E-10,5000,2);
-  // FIXME: Use ISTLOnTheFlyOperator in the second solver again
-  Dune::CGSolver<typename DV::BaseT> solverb(opa,richardson,1E-10,5000,2);
+  Dune::CGSolver<DV> solverb(opb,richardsonb,1E-10,5000,2);
   Dune::InverseOperatorResult stat;
 
-  // solve the jacobian system
-  r *= -1.0; // need -residual
-  DV x(gfs,0.0);
-  solvera.apply(x.base(),r.base(),stat);
+  std::cout << "Solve with assembled matrix" << std::endl;
+  DV xa(gfs,0.0);
+  {
+    RV ra = r;
+    ra *= -1.0; // need -residual
+    solvera.apply(xa.base(),ra.base(),stat);
+  }
   if(!stat.converged)
   {
     std::cerr << "Error: matrix solver did not converge" << std::endl;
     return false;
   }
-  x += x0;
+  xa += x0;
+
+  std::cout << "Solve with on-the-fly assembly" << std::endl;
+  DV xb(gfs,0.0);
+  {
+    RV rb = r;
+    rb *= -1.0; // need -residual
+    solverb.apply(xb,rb,stat);
+  }
+  if(!stat.converged)
+  {
+    std::cerr << "Error: on-the-fly solver did not converge" << std::endl;
+    return false;
+  }
+  xb += x0;
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,x);
+  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,xa,
+        Dune::PDELab::vtk::DefaultFunctionNameGenerator("matrix"));
+  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfs,xb,
+        Dune::PDELab::vtk::DefaultFunctionNameGenerator("on_the_fly"));
   vtkwriter.write(filename,Dune::VTK::ascii);
 
   return true;
