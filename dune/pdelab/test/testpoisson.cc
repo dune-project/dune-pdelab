@@ -290,8 +290,9 @@ int main(int argc, char** argv)
     //Maybe initialize Mpi
     Dune::MPIHelper::instance(argc, argv);
 
-    // YaspGrid Q1 2D test
     {
+      std::cout << "#### Testing YaspGrid Q1 2D" << std::endl;
+
       // make grid
       Dune::FieldVector<double,2> L(1.0);
       Dune::array<int,2> N(Dune::fill_array<int,2>(1));
@@ -311,8 +312,9 @@ int main(int argc, char** argv)
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_yasp_Q1_2d",2);
     }
 
-    // YaspGrid Q2 2D test
     {
+      std::cout << "#### Testing YaspGrid Q2 2D" << std::endl;
+
       // make grid
       Dune::FieldVector<double,2> L(1.0);
       Dune::array<int,2> N(Dune::fill_array<int,2>(1));
@@ -332,8 +334,9 @@ int main(int argc, char** argv)
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_yasp_Q2_2d",2);
     }
 
-    // YaspGrid Q1 3D test
     {
+      std::cout << "#### Testing YaspGrid Q1 3D" << std::endl;
+
       // make grid
       Dune::FieldVector<double,3> L(1.0);
       Dune::array<int,3> N(Dune::fill_array<int,3>(1));
@@ -353,8 +356,9 @@ int main(int argc, char** argv)
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_yasp_Q1_3d",2);
     }
 
-    // YaspGrid Q2 3D test
     {
+      std::cout << "#### Testing YaspGrid Q2 3D" << std::endl;
+
       // make grid
       Dune::FieldVector<double,3> L(1.0);
       Dune::array<int,3> N(Dune::fill_array<int,3>(1));
@@ -374,9 +378,10 @@ int main(int argc, char** argv)
       poisson<GV,FEM,Dune::PDELab::ConformingDirichletConstraints>(gv,fem,"poisson_yasp_Q2_3d",2);
     }
 
-    // UG Pk 2D test
 #if HAVE_UG
     {
+      std::cout << "#### Testing UG P3 2D" << std::endl;
+
       // make grid
       Dune::shared_ptr<Dune::UGGrid<2> > grid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
       grid->globalRefine(4);
@@ -399,6 +404,8 @@ int main(int argc, char** argv)
 
 #if HAVE_ALBERTA
     {
+      std::cout << "#### Testing Alberta P3 2D" << std::endl;
+
       // make grid
       AlbertaUnitSquare grid;
       grid.globalRefine(8);
@@ -421,6 +428,8 @@ int main(int argc, char** argv)
 
 #if HAVE_ALUGRID
     {
+      std::cout << "#### Testing ALUGrid(simplex) P3 2D" << std::endl;
+
       // make grid
       ALUUnitSquare grid;
       grid.globalRefine(4);
