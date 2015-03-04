@@ -58,7 +58,7 @@ public:
 
   F (const GV& gv) : BaseT(gv) {}
   inline void evaluateGlobal (const typename Traits::DomainType& x,
-							  typename Traits::RangeType& y) const
+                              typename Traits::RangeType& y) const
   {
     if (x[0]>0.25 && x[0]<0.375 && x[1]>0.25 && x[1]<0.375)
       y = 50.0;
@@ -113,12 +113,12 @@ public:
 
   G (const GV& gv) : BaseT(gv) {}
   inline void evaluateGlobal (const typename Traits::DomainType& x,
-							  typename Traits::RangeType& y) const
+                              typename Traits::RangeType& y) const
   {
     typename Traits::DomainType center;
     for (int i=0; i<GV::dimension; i++) center[i] = 0.5;
     center -= x;
-	y = exp(-center.two_norm2());
+    y = exp(-center.two_norm2());
   }
 };
 
@@ -134,7 +134,7 @@ public:
 
   J (const GV& gv) : BaseT(gv) {}
   inline void evaluateGlobal (const typename Traits::DomainType& x,
-							  typename Traits::RangeType& y) const
+                              typename Traits::RangeType& y) const
   {
     if (x[1]<1E-6 || x[1]>1.0-1E-6)
       {
@@ -495,7 +495,7 @@ int main(int argc, char** argv)
     }
 #endif
 
-	// test passed
+    // test passed
     return result;
   }
   catch (Dune::Exception &e){
