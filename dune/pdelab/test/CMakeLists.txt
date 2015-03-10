@@ -99,6 +99,10 @@ add_dune_superlu_flags(testpoisson)
 add_dune_alberta_flags(testpoisson GRIDDIM 2)
 list(APPEND MOSTLYCLEANFILES poisson_*.vtu)
 
+list(APPEND NORMALTESTS testchunkedblockordering)
+add_executable(testchunkedblockordering testchunkedblockordering.cc)
+target_link_libraries(testchunkedblockordering dunepdelab ${DUNE_LIBS})
+
 list(APPEND NORMALTESTS testrt0)
 add_executable(testrt0 testrt0.cc)
 target_link_libraries(testrt0 dunepdelab ${DUNE_LIBS})

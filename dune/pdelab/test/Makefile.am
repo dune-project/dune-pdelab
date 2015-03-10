@@ -298,6 +298,9 @@ endif
 check_PROGRAMS += testvectoriterator
 testvectoriterator_SOURCES = testvectoriterator.cc
 
+check_PROGRAMS += testchunkedblockordering
+testchunkedblockordering_SOURCES = testchunkedblockordering.cc
+
 NORMALTESTS += testsimplebackend
 testsimplebackend_SOURCES = testsimplebackend.cc
 MOSTLYCLEANFILES += simplebackend_*.vtu
