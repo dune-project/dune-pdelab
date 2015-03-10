@@ -251,7 +251,7 @@ namespace Dune {
         template<typename TC>
         static typename result<TC>::storage_type transform_storage(std::shared_ptr<const GFS> gfs_pointer, const Transformation& t, const array<std::shared_ptr<TC>,GFS::CHILDREN>& children)
         {
-          return result<TC>::decorator_descriptor::transform(gfs_pointer,t,result<TC>::undecorated_descriptor::transform(gfs_pointer,t,children));
+          return result<TC>::decorator_descriptor::transform(gfs_pointer,t,result<TC>::undecorated_descriptor::transform_storage(gfs_pointer,t,children));
         }
 
       };
@@ -287,9 +287,9 @@ namespace Dune {
           return decorator_descriptor::transform(gfs,t,std::make_shared<undecorated_type>(undecorated_descriptor::transform(gfs,t)));
         }
 
-        static transformed_storage_type transform(std::shared_ptr<const GFS>& gfs_pointer, const Transformation& t)
+        static transformed_storage_type transform_storage(std::shared_ptr<const GFS>& gfs_pointer, const Transformation& t)
         {
-          return decorator_descriptor::transform(gfs_pointer,t,undecorated_descriptor::transform(gfs_pointer,t));
+          return decorator_descriptor::transform_storage(gfs_pointer,t,undecorated_descriptor::transform_storage(gfs_pointer,t));
         }
 
       };
@@ -367,7 +367,7 @@ namespace Dune {
         template<typename... TC>
         static typename result<TC...>::storage_type transform_storage(std::shared_ptr<const GFS> gfs_pointer, const Transformation& t, std::shared_ptr<TC>... children)
         {
-          return result<TC...>::decorator_descriptor::transform(gfs_pointer,t,result<TC...>::undecorated_descriptor::transform(gfs_pointer,t,children...));
+          return result<TC...>::decorator_descriptor::transform_storage(gfs_pointer,t,result<TC...>::undecorated_descriptor::transform(gfs_pointer,t,children...));
         }
 
       };
@@ -403,9 +403,9 @@ namespace Dune {
           return decorator_descriptor::transform(gfs,t,std::make_shared<undecorated_type>(undecorated_descriptor::transform(gfs,t)));
         }
 
-        static transformed_storage_type transform(std::shared_ptr<const GFS>& gfs_pointer, const Transformation& t)
+        static transformed_storage_type transform_storage(std::shared_ptr<const GFS>& gfs_pointer, const Transformation& t)
         {
-          return decorator_descriptor::transform(gfs_pointer,t,undecorated_descriptor::transform(gfs_pointer,t));
+          return decorator_descriptor::transform_storage(gfs_pointer,t,undecorated_descriptor::transform(gfs_pointer,t));
         }
 
       };
