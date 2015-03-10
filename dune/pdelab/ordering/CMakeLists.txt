@@ -1,4 +1,5 @@
 install(FILES
+  chunkedblockordering.hh
   decorator.hh
   directleaflocalordering.hh
   entityblockedlocalordering.hh
