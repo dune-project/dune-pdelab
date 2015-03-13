@@ -176,7 +176,7 @@ namespace Dune{
                           {
                             // compute unique id for neighbor
 
-                            const typename GV::IndexSet::IndexType idn = cell_mapper.map(*(iit->outside()));
+                            const typename GV::IndexSet::IndexType idn = cell_mapper.map(iit->outside());
 
                             // Visit face if id is bigger
                             bool visit_face = ids > idn || require_skeleton_two_sided;
@@ -185,7 +185,7 @@ namespace Dune{
                             if (visit_face)
                               {
                                 // Bind local test space to neighbor element
-                                lfsvn.bind(*(iit->outside()));
+                                lfsvn.bind(iit->outside());
                                 lfsvn_cache.update();
 
                                 // Notify assembler engine about binds
@@ -197,7 +197,7 @@ namespace Dune{
                                 if(require_uv_skeleton){
 
                                   // Bind local trial space to neighbor element
-                                  lfsun.bind(*(iit->outside()));
+                                  lfsun.bind(iit->outside());
                                   lfsun_cache.update();
 
                                   // Notify assembler engine about binds
