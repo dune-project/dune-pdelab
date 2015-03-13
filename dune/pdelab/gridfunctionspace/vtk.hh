@@ -445,10 +445,10 @@ namespace Dune {
           switch (dgf->dataSetType())
             {
             case DGF::Output::vertexData:
-              vtk_writer.addVertexData(new VTKGridFunctionAdapter<DGF>(dgf,name.c_str()));
+              vtk_writer.addVertexData(std::make_shared<VTKGridFunctionAdapter<DGF> >(dgf,name.c_str()));
               break;
             case DGF::Output::cellData:
-              vtk_writer.addCellData(new VTKGridFunctionAdapter<DGF>(dgf,name.c_str()));
+              vtk_writer.addCellData(std::make_shared<VTKGridFunctionAdapter<DGF> >(dgf,name.c_str()));
               break;
             default:
               DUNE_THROW(NotImplemented,"Unsupported data set type");
