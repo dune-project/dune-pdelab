@@ -1,5 +1,6 @@
 include(UsePETSc)
-message(AUTHOR_WARNING "TODO: Implement Eigen test.")
+
+find_package(Eigen3)
 
 function(add_dune_petsc_flags)
   if(PETSC_FOUND)
