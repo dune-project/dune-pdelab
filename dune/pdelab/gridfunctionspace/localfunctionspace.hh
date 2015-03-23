@@ -103,9 +103,9 @@ namespace Dune {
           offset += node.n;
         }
 
-        ComputeSizeVisitor(const Entity& entity, std::size_t offset = 0)
+        ComputeSizeVisitor(const Entity& entity, std::size_t offset_ = 0)
           : e(entity)
-          , offset(offset)
+          , offset(offset_)
         {}
 
         const Entity& e;
