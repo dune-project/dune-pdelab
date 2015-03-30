@@ -80,10 +80,16 @@ namespace Dune {
             {}
 
             // Store current dt
-            void preStep (RealType time, RealType dt, int )
+            void preStep (RealType , RealType dt, int )
             {
               current_dt = dt;
-              prm.setTime(time+dt);
+            }
+
+            // set time in parameter class
+            void setTime(Real t)
+            {
+                InstatBase::setTime(t);
+                prm.setTime(t);
             }
 
             // volume integral depending only on test functions,
