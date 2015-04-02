@@ -1,4 +1,4 @@
-o// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+// -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_INTERPOLATE_HH
@@ -78,6 +78,9 @@ namespace Dune {
         : public TypeTree::TreeVisitor
         , public TypeTree::DynamicTraversal
       {
+        using Domain = typename Functions::SignatureTraits<LF>::Domain;
+        using Range = typename Functions::SignatureTraits<LF>::Range;
+        using RangeField = typename FieldTraits<Range>::field_type;
 
         template<typename LFS, typename TreePath>
         void leaf(const LFS& lfs, TreePath treePath) const
@@ -86,12 +89,8 @@ namespace Dune {
 
            // call interpolate for the basis
           int index = treePath.back();
-          using Domain = typename LFS::Traits::Element::Geometry::LocalCoordinate;
-          using Range = decltype(lf(std::declval<Domain>()));
-          using RangeField = typename FieldTraits<Range>::field_type;
           auto f = [&](const Domain& x) -> RangeField { return lf(x)[index]; };
-
-          using LocalFunction = typename Dune::Functions::FunctionFromCallable<RangeField(Domain), decltype(f), TypeTree::EmptyNode>;
+           using LocalFunction = typename Dune::Functions::FunctionFromCallable<RangeField(Domain), decltype(f), Empty>;
           LocalFunction fnkt(f);
 
           ib.interpolate(lfs.finiteElement(), fnkt, xl);
@@ -124,23 +123,19 @@ namespace Dune {
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
           std::vector<typename XG::ElementType> xl(lfs.size());
-
-          // call interpolate for the basis
-          using FiniteElement = typename LFS::Traits::FiniteElement;
-          using LocalBasisRange = typename FiniteElement::Traits::LocalBasisType::Traits::RangeType;
-          using LocalDomain = typename LFS::Traits::Element::Geometry::LocalCoordinate;
-          using FunctionBaseClass = typename Dune::LocalFiniteElementFunctionBase<FiniteElement>::type;
-          using LocalFunction = typename Dune::Functions::FunctionFromCallable<LocalBasisRange(LocalDomain), F, TypeTree::EmptyNode>;
+           // call interpolate for the basis
+          using Domain = typename Functions::SignatureTraits<F>::Domain;
+          using Range = typename Functions::SignatureTraits<F>::Range;
+          using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F, Empty>;
           LocalFunction lf(f);
           ib.interpolate(lfs.finiteElement(), lf, xl);
-
           // write coefficients into local vector
           xg.write_sub_container(lfs,xl);
         }
 
         // interpolate PowerLFS from scalar-valued function
         template<typename F, typename LFS, typename TreePath,
-                 typename Range = decltype(std::declval<F>()(std::declval<typename E::Geometry::LocalCoordinate>()))>
+                 typename Range = typename Functions::SignatureTraits<F>::Range>
         typename std::enable_if<F::isLeaf &&
                            std::is_convertible<typename FieldTraits< Range >::field_type, Range>::value &&
                            (!LFS::isLeaf)>::type
@@ -149,20 +144,17 @@ namespace Dune {
           static_assert((TypeTree::TreeInfo<LFS>::depth == 2),
                         "Automatic interpolation of vector-valued function " \
                         "is restricted to trees of depth 1");
-
           // call interpolate for the basis
-          using LocalDomain = typename E::Geometry::LocalCoordinate;
-          using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(LocalDomain), F, TypeTree::EmptyNode>;
+          using Domain = typename Functions::SignatureTraits<F>::Domain;
+          using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F, Empty>;
           LocalFunction lf(f);
-
           TypeTree::applyToTree(lfs,InterpolateLeafFromScalarVisitor<IB,LocalFunction,XG>(ib,lf,xg));
-,localf,xg));
 
         }
 
         // interpolate PowerLFS from vector-valued function
         template<typename F, typename LFS, typename TreePath,
-                 typename Range = decltype(std::declval<F>()(std::declval<typename E::Geometry::LocalCoordinate>()))>
+                 typename Range = typename Functions::SignatureTraits<F>::Range>
         typename std::enable_if<F::isLeaf &&
                           (! std::is_convertible<typename FieldTraits< Range >::field_type, Range>::value) &&
                           (!LFS::isLeaf)>::type
@@ -209,13 +201,15 @@ namespace Dune {
     void interpolate (const F& f, const GFS& gfs, XG& xg)
     {
       // this is the leaf version now
-      auto lf = makeLocalFunctionTree(f);
 
       // get some types
       using EntitySet = typename GFS::Traits::EntitySet;
       using Element = typename EntitySet::Element;
 
       auto entity_set = gfs.entitySet();
+
+      // make local function
+      auto lf = makeLocalFunctionTree(f, gfs.gridView());
 
       // make local function space
       typedef LocalFunctionSpace<GFS> LFS;
