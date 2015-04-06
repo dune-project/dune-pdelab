@@ -204,12 +204,13 @@ namespace Dune {
     template<typename F, typename GFS, typename XG>
     void interpolate (const F& f, const GFS& gfs, XG& xg)
     {
-      auto lf = makeLocalFunctionTree(f);
-
       // get some types
       typedef typename GFS::Traits::GridViewType GV;
       typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
       typedef typename GV::Traits::template Codim<0>::Entity Element;
+
+      // make local function
+      auto lf = makeLocalFunctionTree(f, gfs.gridView());
 
       // make local function space
       typedef LocalFunctionSpace<GFS> LFS;
