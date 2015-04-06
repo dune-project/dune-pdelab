@@ -289,35 +289,43 @@ namespace PDELab {
     between the following cases:
 
     a) HasFreeLocalFunction, but no NodeTag -> call localView(f) -> LocalViewLeafNodeWrapper
-    b) operator(), but no Tag -> assert(false) // makeAnalyticGridViewFunction -> LocalViewLeafNodeWrapper
+    b) operator(), but no Tag -> makeAnalyticGridViewFunction -> LocalViewLeafNodeWrapper
     c) HasFreeLocalFunction and NodeTag -> call localView(f)
     d) GridFunctionTag -> create a LocalGridViewFunctionAdapter
   */
-  template<class F,
+  template<class F, class GV,
            typename std::enable_if<
              // case (a)
-             Dune::Functions::Concept::models< Dune::Functions::Imp::HasFreeLocalFunction, F>()
+             models< Dune::Functions::Imp::HasFreeLocalFunction, F>()
              and
              not(TypeTree::has_node_tag<typename std::decay<F>::type>::value), int>::type = 0>
-  auto makeLocalFunctionTree(F&& f)
-    -> Imp::LocalFunctionLeafNodeWrapper< decltype(localView(f)) >
+  auto makeLocalFunctionTree(const F& f, const GV & gv)
+    -> Imp::LocalFunctionLeafNodeWrapper< decltype(localFunction(f)) >
   {
-    return Imp::LocalFunctionLeafNodeWrapper< decltype(localView(f)) >(localView(std::forward(f)));
+    return Imp::LocalFunctionLeafNodeWrapper< decltype(localFunction(f)) >(localFunction(f));
   }
 
-// template<class F>
-// void makeLocalFunctionTree(F&& f)
-// {
-//     static_assert(AlwaysFalse<F>::value, "can't create a local function from this");
-// }
+  template<class F, class GV,
+           // case (b)
+           typename std::enable_if<
+             Functions::IsCallable<F>::value
+             and
+             not(models< Dune::Functions::Imp::HasFreeLocalFunction, F>())
+             and
+             not(TypeTree::has_node_tag<typename std::decay<F>::type>::value), int>::type = 0>
+  auto makeLocalFunctionTree(const F& f, const GV & gv)
+    -> decltype(makeLocalFunctionTree(Functions::makeAnalyticGridViewFunction(f,gv), gv))
+  {
+    return makeLocalFunctionTree(Functions::makeAnalyticGridViewFunction(f,gv), gv);
+  }
 
-  template<class F,
+  template<class F, class GV,
            typename std::enable_if<
              // case (c)
-             Dune::Functions::Concept::models< Dune::Functions::Imp::HasFreeLocalFunction, F>()
+             models< Dune::Functions::Imp::HasFreeLocalFunction, F>()
              and
              TypeTree::has_node_tag<typename std::decay<F>::type>::value, int>::type = 0>
-  auto makeLocalFunctionTree(F&& f)
+  auto makeLocalFunctionTree(F&& f, const GV & gv)
     -> decltype(localView(f))
   {
     return localView(std::forward(f));
@@ -337,11 +345,11 @@ namespace PDELab {
   Dune::TypeTree::SimpleCompositeNodeTransformation<CompositeNode,GridFunctionToLocalViewTransformation,CompositeLocalFunction>
   registerNodeTransformation(CompositeNode* c, GridFunctionToLocalViewTransformation* t, CompositeGridFunctionTag* tag);
 
-  template<class F,
+  template<class F, class GV,
            typename std::enable_if<
              // case (d)
              IsGridFunction<F>::value, int>::type = 0>
-  auto makeLocalFunctionTree(const F& f)
+  auto makeLocalFunctionTree(const F& f, const GV & gv)
   -> typename Dune::TypeTree::TransformTree<typename std::decay<F>::type,
                                             GridFunctionToLocalViewTransformation>::transformed_type
   {
