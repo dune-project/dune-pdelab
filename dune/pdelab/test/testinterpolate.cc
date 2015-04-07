@@ -7,6 +7,7 @@
 
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
+#include <dune/functions/gridfunctions/analyticgridviewfunction.hh>
 #include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/finiteelementmap/p0fem.hh>
 #include <dune/pdelab/finiteelementmap/qkfem.hh>
@@ -37,7 +38,7 @@ public:
 
 
 template<class GV>
-static void test_interpolate(const GV& gv)
+static void test_interpolate_old_interface(const GV& gv)
 {
   // instantiate finite element maps
   Dune::GeometryType gt;
@@ -108,9 +109,33 @@ static void test_interpolate(const GV& gv)
 
   // interpolate
   Dune::PDELab::interpolate(f,gfs,x);
+}
 
-  //Dune::VTKWriter<GV> vtkwriter(gv);
-  //Dune::PDELab::vtkwriter_tree_addvertexdata(vtkwriter,
+template<class GV>
+static void test_interpolate(const GV& gv)
+{
+  // instantiate finite element maps
+  Dune::GeometryType gt;
+  gt.makeCube(2);
+  typedef Dune::PDELab::P0LocalFiniteElementMap<double,double,GV::dimension> P0FEM;
+  P0FEM p0fem(gt);
+
+  // make a grid function space
+  typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM> P0GFS;
+  P0GFS p0gfs(gv,p0fem);
+
+  // make coefficent Vector
+  typedef typename Dune::PDELab::BackendVectorSelector<P0GFS, double>::Type V;
+  V x(p0gfs,0.0);
+
+  // interpolate from lambda
+  {
+      typedef Dune::FieldVector<typename GV::ctype, GV::dimension> Domain;
+      auto f = [](const Domain& x) {return x[0];};
+      auto lf = Dune::Functions::makeAnalyticGridViewFunction(f, gv);
+      Dune::PDELab::interpolate(lf,p0gfs,x);
+      Dune::PDELab::interpolate(f,p0gfs,x);
+  }
 }
 
 int main(int argc, char** argv)
@@ -126,6 +151,7 @@ int main(int argc, char** argv)
     Dune::YaspGrid<2> grid(L,N);
     grid.globalRefine(1);
 
+    // test_interpolate_old_interface(grid.leafGridView());
     test_interpolate(grid.leafGridView());
 
 	// test passed
