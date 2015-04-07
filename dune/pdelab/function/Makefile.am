@@ -1,6 +1,11 @@
 myincdir = $(includedir)/dune/pdelab/function
 
 myinc_HEADERS =					\
+	localfunction.hh				\
+	localfunctionhelper.hh				\
+	oldinterfaceadapter.hh				\
+	tags.hh				\
+	\
 	const.hh				\
 	division.hh				\
 	inverse.hh				\

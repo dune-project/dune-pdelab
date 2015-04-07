@@ -17,7 +17,7 @@
 #include <dune/typetree/pairtraversal.hh>
 
 #include <dune/pdelab/common/function.hh>
-#include <dune/pdelab/function/oldinterfaceadapter.hh>
+#include <dune/pdelab/function/localfunction.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
