@@ -307,8 +307,14 @@ namespace PDELab {
 
   template<class F, class GV,
            // case (b)
-           typename Signature = typename Functions::SignatureTraits<decltype(&F::operator())>::RawSignature,
+#if 0
+           typename Signature = typename Functions::SignatureTraits<F>::RawSignature,
            typename std::enable_if<
+#else
+           typename std::enable_if<
+             Functions::IsCallable<F>::value
+             and
+#endif
              not(Dune::Functions::Concept::models< Dune::Functions::Imp::HasFreeLocalFunction, F>())
              and
              not(TypeTree::has_node_tag<typename std::decay<F>::type>::value), int>::type = 0>
