@@ -16,6 +16,12 @@
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 
+template<typename Coord>
+double x_component(const Coord & x)
+{
+    return x[0];
+}
+
 template<typename GV, std::size_t range_dim>
 struct interpolation_function
   : public Dune::PDELab::AnalyticGridFunctionBase<
@@ -128,6 +134,14 @@ static void test_interpolate(const GV& gv)
   typedef typename Dune::PDELab::BackendVectorSelector<P0GFS, double>::Type V;
   V x(p0gfs,0.0);
 
+  // interpolate from global function
+  {
+      typedef Dune::FieldVector<typename GV::ctype, GV::dimension> Domain;
+      auto f = x_component<Domain>;
+      auto lf = Dune::Functions::makeAnalyticGridViewFunction(f, gv);
+      Dune::PDELab::interpolate(lf,p0gfs,x);
+//      Dune::PDELab::interpolate(f,p0gfs,x);
+  }
   // interpolate from lambda
   {
       typedef Dune::FieldVector<typename GV::ctype, GV::dimension> Domain;
