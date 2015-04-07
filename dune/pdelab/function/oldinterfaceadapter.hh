@@ -307,7 +307,7 @@ namespace PDELab {
 
   template<class F, class GV,
            // case (b)
-           typename Signature = typename Functions::SignatureTraits<F>::RawSignature,
+           typename Signature = typename Functions::SignatureTraits<decltype(&F::operator())>::RawSignature,
            typename std::enable_if<
              not(Dune::Functions::Concept::models< Dune::Functions::Imp::HasFreeLocalFunction, F>())
              and
