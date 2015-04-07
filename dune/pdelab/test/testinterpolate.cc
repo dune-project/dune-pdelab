@@ -16,8 +16,13 @@
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 
+double x_component_A(const Dune::FieldVector<double,2> & x)
+{
+    return x[0];
+}
+
 template<typename Coord>
-double x_component(const Coord & x)
+double x_component_B(const Coord & x)
 {
     return x[0];
 }
@@ -136,11 +141,20 @@ static void test_interpolate(const GV& gv)
 
   // interpolate from global function
   {
-      typedef Dune::FieldVector<typename GV::ctype, GV::dimension> Domain;
-      auto f = x_component<Domain>;
+      auto f = x_component_A;
       auto lf = Dune::Functions::makeAnalyticGridViewFunction(f, gv);
       Dune::PDELab::interpolate(lf,p0gfs,x);
-//      Dune::PDELab::interpolate(f,p0gfs,x);
+      Dune::PDELab::interpolate(x_component_A,p0gfs,x);
+      Dune::PDELab::interpolate(f,p0gfs,x);
+  }
+  // interpolate from global template function
+  {
+      typedef Dune::FieldVector<typename GV::ctype, GV::dimension> Domain;
+      auto f = x_component_B<Domain>;
+      auto lf = Dune::Functions::makeAnalyticGridViewFunction(f, gv);
+      Dune::PDELab::interpolate(lf,p0gfs,x);
+      Dune::PDELab::interpolate(x_component_B<Domain>,p0gfs,x);
+      Dune::PDELab::interpolate(f,p0gfs,x);
   }
   // interpolate from lambda
   {
