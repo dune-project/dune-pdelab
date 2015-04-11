@@ -88,7 +88,7 @@ void testvtkexport (const GV& gv, const T& t)
   Dune::PDELab::VTKGridFunctionAdapter<GF> vtkf(gf,"blub");
 
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<GF>(gf,"blub")); // VTKWriter takes control
+  vtkwriter.addVertexData(Dune::make_shared< Dune::PDELab::VTKGridFunctionAdapter<GF> >(gf,"blub")); // VTKWriter takes control
   vtkwriter.write("single",Dune::VTK::ascii);
 }
 
