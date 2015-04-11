@@ -4,6 +4,7 @@
 
 #include <iostream>
 
+#include <dune/common/math.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
 #include <dune/grid/yaspgrid.hh>
@@ -22,7 +23,8 @@ public:
   inline void evaluate (const Dune::FieldVector<T,2>& x,
                         Dune::FieldVector<T,1>& y) const
   {
-    y = sin(3*3.1415*x[0])*cos(7*3.1415*x[1]);
+    y = sin(3*Dune::StandardMathematicalConstants<T>::pi()*x[0])
+      * cos(7*Dune::StandardMathematicalConstants<T>::pi()*x[1]);
   }
 };
 
