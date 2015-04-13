@@ -104,9 +104,9 @@ void testpk (const GV& gv)
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P0DGF>(p0dgf,"p0"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<P1DGF>(p1dgf,"p1"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PkDGF>(pkdgf,"pk"));
+  vtkwriter.addCellData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<P0DGF> >(p0dgf,"p0"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<P1DGF> >(p1dgf,"p1"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<PkDGF> >(pkdgf,"pk"));
   vtkwriter.write("testpk",Dune::VTK::ascii);
 }
 

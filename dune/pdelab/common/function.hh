@@ -1110,7 +1110,7 @@ namespace Dune {
           name << s;
           for (std::size_t i=0; i < treePath.size(); ++i)
             name << "_" << treePath.element(i);
-          w.addVertexData(new VTKGridFunctionAdapter<T>(t,name.str()));
+          w.addVertexData(make_shared< VTKGridFunctionAdapter<T> >(t,name.str()));
         }
       };
 
