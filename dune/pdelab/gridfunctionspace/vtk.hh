@@ -585,7 +585,7 @@ namespace Dune {
         OutputCollector& addCellFunction(Factory factory, TreePath tp, std::string name)
         {
           typedef typename std::remove_reference<decltype(*factory.create(TypeTree::extract_child(_data->_lfs,tp),_data))>::type DGF;
-          _vtk_writer.addCellData(new VTKGridFunctionAdapter<DGF>(factory.create(TypeTree::extract_child(_data->_lfs,tp),_data),name));
+          _vtk_writer.addCellData(std::make_shared<VTKGridFunctionAdapter<DGF> >(factory.create(TypeTree::extract_child(_data->_lfs,tp),_data),name));
           return *this;
         }
 
@@ -595,8 +595,8 @@ namespace Dune {
           typedef typename TypeTree::extract_child_type<typename Data::LFS,TreePath>::type LFS;
           typedef Function<LFS,Data,Params...> DGF;
           _vtk_writer.addCellData(
-            new VTKGridFunctionAdapter<DGF>(
-              make_shared<DGF>(
+            std::make_shared<VTKGridFunctionAdapter<DGF> >(
+              std::make_shared<DGF>(
                 TypeTree::extract_child(
                   _data->_lfs,
                   tp
@@ -615,7 +615,7 @@ namespace Dune {
         {
           typedef typename TypeTree::extract_child_type<typename Data::LFS,TreePath>::type LFS;
           typedef typename std::remove_reference<decltype(*factory.create(TypeTree::extract_child(_data->_lfs,tp),_data))>::type DGF;
-          _vtk_writer.addVertexData(new VTKGridFunctionAdapter<DGF>(factory.create(TypeTree::extract_child(_data->_lfs,tp),_data),name));
+          _vtk_writer.addVertexData(std::make_shared<VTKGridFunctionAdapter<DGF> >(factory.create(TypeTree::extract_child(_data->_lfs,tp),_data),name));
           return *this;
         }
 
@@ -625,8 +625,8 @@ namespace Dune {
           typedef typename TypeTree::extract_child_type<typename Data::LFS,TreePath>::type LFS;
           typedef Function<LFS,Data,Params...> DGF;
           _vtk_writer.addVertexData(
-            new VTKGridFunctionAdapter<DGF>(
-              make_shared<DGF>(
+            std::make_shared<VTKGridFunctionAdapter<DGF> >(
+              std::make_shared<DGF>(
                 TypeTree::extract_child(
                   _data->_lfs,
                   tp

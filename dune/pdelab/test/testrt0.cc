@@ -122,8 +122,8 @@ void testrt0 (const GV& gv)
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P0DGF>(p0dgf,"p0"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<RT0DGF>(rt0dgf,"rt0"));
+  vtkwriter.addCellData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<P0DGF> >(p0dgf,"p0"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<RT0DGF> >(rt0dgf,"rt0"));
   vtkwriter.write("testrt0",Dune::VTK::ascii);
 }
 

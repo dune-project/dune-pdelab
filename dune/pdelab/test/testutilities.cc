@@ -45,7 +45,7 @@ void testq1 (const GV& gv)
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"test"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(dgf,"test"));
   vtkwriter.write("q1",Dune::VTK::ascii);
 }
 
@@ -155,10 +155,10 @@ void testinterpolate (const GV& gv)
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF0>(dgf0,"comp 0"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF1>(dgf1,"comp 1"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF0>(pdgf0,"comp 3"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PDGF1>(pdgf1,"comp 4"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF0> >(dgf0,"comp 0"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF1> >(dgf1,"comp 1"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<PDGF0> >(pdgf0,"comp 3"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<PDGF1> >(pdgf1,"comp 4"));
   vtkwriter.write("interpolated",Dune::VTK::ascii);
 }
 
@@ -335,10 +335,10 @@ void testtaylorhood (const GV& gv)
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGFV0>(dgfv0,"v0"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGFV1>(dgfv1,"v1"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGFV>(dgfv,"v"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGFP>(dgfp,"p"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGFV0> >(dgfv0,"v0"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGFV1> >(dgfv1,"v1"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGFV> >(dgfv,"v"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGFP> >(dgfp,"p"));
   vtkwriter.write("taylorhood",Dune::VTK::ascii);
 }
 

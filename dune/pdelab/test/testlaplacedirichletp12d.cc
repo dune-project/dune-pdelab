@@ -169,7 +169,7 @@ void testp1 (const GV& gv)
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"p1"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(dgf,"p1"));
   vtkwriter.write("testlaplacedirichletp12d",Dune::VTK::ascii);
 }
 
