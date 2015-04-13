@@ -198,14 +198,13 @@ void testgridviewfunction (const GV& gv)
     typedef typename Dune::PDELab::BackendVectorSelector<Q1GFS,double>::Type Vector;
     Vector x(q1gfs);
     // make functions
-    typedef Dune::PDELab::DiscreteGridViewFunction<Q1GFS,double> DiscreteFunction;
+    typedef Dune::PDELab::DiscreteGridViewFunction<Q1GFS,Vector> DiscreteFunction;
     DiscreteFunction dgvf(q1gfs,x);
     // make local functions
     typedef typename DiscreteFunction::LocalFunction LocalFunction;
-    Dune::shared_ptr<LocalFunction>
-        localf = Dune::Functions::localFunction(dgvf);
+    auto localf = localFunction(dgvf);
     // iterate grid and evaluate local function
-    static const int maxDiffOrder = LocalFunction::Traits::maxDiffOrder;
+    static const int maxDiffOrder = 0; // LocalFunction::Traits::maxDiffOrder;
     std::cout << "max diff order: " << maxDiffOrder << std::endl;
     std::cout << "checking for:\n";
     std::cout << "\tevaluate\n";
@@ -217,23 +216,20 @@ void testgridviewfunction (const GV& gv)
         std::cout << "\tdiff(3)\n";
     for (auto it=gv.template begin<0>(); it!=gv.template end<0>(); ++it)
     {
-        localf->bind(*it);
+        localf.bind(*it);
         Dune::FieldVector<double,1> value;
         Dune::FieldMatrix<double,1,dim> jacobian;
         Dune::FieldMatrix<double,dim,dim> hessian;
-        localf->evaluate(it->geometry().center(), value);
+        value = localf(it->geometry().center());
         if (maxDiffOrder >= 1)
-            Dune::Functions::derivative(localf)->
-                evaluate(it->geometry().center(), jacobian);
+            jacobian = derivative(localf)(it->geometry().center());
         if (maxDiffOrder >= 2)
-            Dune::Functions::derivative(
-                Dune::Functions::derivative(localf))->
-                evaluate(it->geometry().center(), hessian);
+            hessian = derivative(derivative(localf))(it->geometry().center());
         if (maxDiffOrder >= 3)
-            Dune::Functions::derivative(
-                Dune::Functions::derivative(
-                    Dune::Functions::derivative(localf)));
-        localf->unbind();
+            derivative(
+                derivative(
+                    derivative(localf)));
+        localf.unbind();
     }
 }
 
