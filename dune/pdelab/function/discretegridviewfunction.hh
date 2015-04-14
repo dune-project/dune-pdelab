@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <vector>
 #include <memory>
+#include <type_traits>
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
@@ -23,29 +24,34 @@ namespace Dune {
 namespace PDELab {
 
 namespace Imp {
-  template<typename R, typename R2>
-  struct DiscreteGridViewFunctionRange;
+  template<typename... T>
+  struct common_type : std::common_type<T...> {};
   template<typename T, int N, typename R2>
-  struct DiscreteGridViewFunctionRange<FieldVector<T,N>, R2>
+  struct common_type<FieldVector<T,N>, R2>
   {
-    typedef FieldVector<R2,N> type;
-    typedef FieldVector<R2,N> vector;
-  };
-  template<typename T, typename R2>
-  struct DiscreteGridViewFunctionRange<FieldVector<T,1>, R2>
-  {
-    typedef R2 type;
-    typedef FieldVector<R2,1> vector;
+    using type = FieldVector<typename std::common_type<T,R2>::type,N>;
   };
   template<typename T, int N, typename R2>
-  struct DiscreteGridViewFunctionRange<FieldVector<T,N>, FieldVector<R2,N>>
+  struct common_type<FieldVector<T,N>, FieldVector<R2,N>>
   {
-    typedef FieldVector<R2,N> type;
-    typedef FieldVector<R2,N> vector;
+    using type = FieldVector<typename std::common_type<T,R2>::type,N>;
   };
 };
 
-template<typename GFS, typename V, unsigned int diffOrder = 0>
+template<typename Signature, typename E, template<class> class D, int B,
+         int diffOrder>
+struct DiscreteGridViewFunctionTraits :
+  Functions::Imp::GridFunctionTraits<
+    typename DiscreteGridViewFunctionTraits<Signature,E,D,B,diffOrder-1>::DerivativeSignature
+    ,E,D,B>
+{};
+
+template<typename Signature, typename E, template<class> class D, int B>
+struct DiscreteGridViewFunctionTraits<Signature,E,D,B,0> :
+  Functions::Imp::GridFunctionTraits<Signature,E,D,B>
+{};
+
+template<typename GFS, typename V, int diffOrder = 0>
 class DiscreteGridViewFunction
 {
 public:
@@ -53,17 +59,19 @@ public:
   using EntitySet = Functions::GridViewEntitySet<GridView, 0>;
 
   using Domain = typename EntitySet::GlobalCoordinate;
-  using LocalBasisRange = typename GFS::Traits::FiniteElementMap::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType;
-  using RangeField = typename V::ElementType;
-  using Range = typename Imp::DiscreteGridViewFunctionRange<LocalBasisRange, RangeField>::type;
-  using RangeVector = typename Imp::DiscreteGridViewFunctionRange<LocalBasisRange, RangeField>::vector;
+  using LocalBasisTraits = typename GFS::Traits::FiniteElementMap::Traits::FiniteElement::Traits::LocalBasisType::Traits;
+  using LocalBasisRange = typename LocalBasisTraits::RangeType;
+  using VectorRange = typename V::ElementType;
+  using ElementaryRange = typename Imp::common_type<LocalBasisRange, VectorRange>::type;
 
   using LocalDomain = typename EntitySet::LocalCoordinate;
   using Element = typename EntitySet::Element;
 
   using Traits =
-    Functions::Imp::GridFunctionTraits<Range(Domain), EntitySet,
-                                       Functions::DefaultDerivativeTraits, 16>;
+    DiscreteGridViewFunctionTraits<ElementaryRange(Domain), EntitySet,
+                                   Functions::DefaultDerivativeTraits, 16, diffOrder>;
+
+  using Range = typename Traits::Range; // this is actually either the Range, the Jacobian or Hessian
 
   using Basis = GFS;
   using GridFunctionSpace = GFS;
@@ -80,7 +88,6 @@ public:
     using GlobalFunction = DiscreteGridViewFunction;
     using Domain = LocalDomain;
     using Range = GlobalFunction::Range;
-    using RangeVector = GlobalFunction::RangeVector;
     using Element = GlobalFunction::Element;
     using size_type = std::size_t;
 
@@ -128,6 +135,15 @@ public:
       return *element_;
     }
 
+    friend typename DiscreteGridViewFunction<GFS,V,diffOrder+1>::LocalFunction derivative(const LocalFunction& t)
+    {
+      typename DiscreteGridViewFunction<GFS,V,diffOrder+1>::LocalFunction
+        diff(t.pgfs_, t.v_);
+      // TODO: do we really want this?
+      if (t.element_) diff.bind(*t.element_);
+      return diff;
+    }
+
     /**
      * \brief Evaluate LocalFunction at bound element.
      *
@@ -137,25 +153,50 @@ public:
      * you have to call bind() again in order to make operator()
      * usable.
      */
-    std::enable_if<diffOrder == 0, Range>
-    operator()(const Domain& coord) const
+    Range
+    operator()(const Domain& coord)
     {
-      RangeVector r(0);
+      Range r;
+      evaluate<LocalBasisTraits::diffOrder>(coord, r);
+      return r;
+    };
+
+  private:
+    using ElementaryJacobian =
+      DiscreteGridViewFunctionTraits<ElementaryRange(Domain), EntitySet,
+                                     Functions::DefaultDerivativeTraits, 16, 1>;
+    using ElementaryHessian =
+      DiscreteGridViewFunctionTraits<ElementaryRange(Domain), EntitySet,
+                                     Functions::DefaultDerivativeTraits, 16, 2>;
+
+    template<int maxDiffOrder, typename... T>
+    void evaluate(const T&...) const
+    {
+      if (diffOrder > 2) DUNE_THROW(NotImplemented,
+        "Derivatives are only implemented up to degree 2");
+      if (diffOrder > maxDiffOrder) DUNE_THROW(NotImplemented,
+        "Derivative of degree " << diffOrder << "is not provided by the local basis");
+      DUNE_THROW(Exception, "unexpected error");
+    };
+
+    template<int maxDiffOrder>
+    void evaluate(const Domain& coord,
+      ElementaryRange& r) const
+    {
       auto& basis = lfs_.finiteElement().localBasis();
       basis.evaluateFunction(coord,yb_);
       for (size_type i = 0; i < yb_.size(); ++i)
       {
         r.axpy(xl_[i],yb_[i]);
       }
-      return r;
     }
 
-    std::enable_if<diffOrder == 1, Jacobian>
-    operator()(const Domain& coord) const
+    template<int maxDiffOrder>
+    typename std::enable_if<maxDiffOrder >= 1>::type
+    evaluate(const Domain& coord, ElementaryJacobian & r) const
     {
-      Jacobian r(0);
       // get Jacobian of geometry
-      const typename Base::Element::Geometry::JacobianInverseTransposed
+      const typename Element::Geometry::JacobianInverseTransposed
         JgeoIT = element_->geometry().jacobianInverseTransposed(coord);
 
       // get local Jacobians/gradients of the shape functions
@@ -179,26 +220,26 @@ public:
       return r;
     }
 
-    std::enable_if<diffOrder == 2, Hessian>
-    operator()(const Domain& coord) const
+    template<int maxDiffOrder>
+    typename std::enable_if<maxDiffOrder >= 2>::type
+    evaluate(const Domain& coord, ElementaryHessian& r) const
     {
       // TODO: we currently require affine geometries.
       if (! element_->geometry().affine())
         DUNE_THROW(NotImplemented, "Due to missing features in the Geometry interface, "
           "the computation of higher derivatives (>=2) works only for affine transformations.");
       // get Jacobian of geometry
-      const typename Base::Element::Geometry::JacobianInverseTransposed
+      const typename Element::Geometry::JacobianInverseTransposed
         JgeoIT = element_->geometry().jacobianInverseTransposed(coord);
 
       // TODO: we currently only implement the hessian...
       //       a proper implementation will require TMP magic.
-      static const unsigned int dim = Base::Traits::GridView::dimensionworld;
+      static const unsigned int dim = GridView::dimensionworld;
       // static_assert(
       //   isHessian<Range>::value,
       //   "We currently only higher order derivative we support is the Hessian of scalar functions");
 
       // get local hessian of the shape functions
-      Hessian r = 0;
       array<std::size_t, dim> directions;
       for(std::size_t i = 0; i < dim; ++i) {
         for(std::size_t j = i; j < dim; ++j) {
@@ -224,15 +265,6 @@ public:
       return r;
     }
 
-    friend typename Traits::LocalFunctionTraits::DerivativeInterface derivative(const LocalFunction& t)
-    {
-      DUNE_THROW(NotImplemented,"not implemented");
-      // shared_ptr<Derivative> diff = make_shared<Derivative>(pgfs_,v_);
-      // // TODO: do we really want this?
-      // if (element_) diff->bind(*element_);
-      // return diff;
-    }
-
   protected:
 
     const shared_ptr<const GridFunctionSpace> pgfs_;
@@ -240,8 +272,8 @@ public:
     LFS lfs_;
     LFSCache lfs_cache_;
     XView x_view_;
-    mutable std::vector<RangeVector> xl_;
-    mutable std::vector<RangeVector> yb_;
+    mutable std::vector<ElementaryRange> xl_;
+    mutable std::vector<ElementaryRange> yb_;
     const Element* element_;
   };
 
@@ -274,9 +306,9 @@ public:
     DUNE_THROW(NotImplemented,"not implemented");
   }
 
-  friend typename Traits::DerivativeInterface derivative(const DiscreteGridViewFunction& t)
+  friend DiscreteGridViewFunction<GFS,V,diffOrder+1> derivative(const DiscreteGridViewFunction& t)
   {
-    DUNE_THROW(NotImplemented,"not implemented");
+    return DiscreteGridViewFunction<GFS,V,diffOrder+1>(t.pgfs_, t.v_);
   }
 
   friend LocalFunction localFunction(const DiscreteGridViewFunction& t)
