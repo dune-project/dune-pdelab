@@ -90,6 +90,7 @@ public:
   using Basis = GFS;
   using GridFunctionSpace = GFS;
   using Vector = V;
+  enum { maxDiffOrder = LocalBasisTraits::diffOrder - diffOrder };
 
   class LocalFunction
   {
@@ -104,6 +105,8 @@ public:
     using Range = GlobalFunction::Range;
     using Element = GlobalFunction::Element;
     using size_type = std::size_t;
+
+    enum { maxDiffOrder = LocalBasisTraits::diffOrder - diffOrder };
 
     LocalFunction(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
       : pgfs_(gfs)
@@ -182,45 +185,42 @@ public:
     Range
     operator()(const Domain& coord)
     {
-      Range r;
-      evaluate<LocalBasisTraits::diffOrder>(coord, r);
-      return r;
+      return evaluate<LocalBasisTraits::diffOrder, diffOrder>(coord);
     };
 
   private:
-    using ElementaryJacobian =
-      DiscreteGridViewFunctionTraits<ElementaryRange(Domain), EntitySet,
-                                     Functions::DefaultDerivativeTraits, 16, 1>;
-    using ElementaryHessian =
-      DiscreteGridViewFunctionTraits<ElementaryRange(Domain), EntitySet,
-                                     Functions::DefaultDerivativeTraits, 16, 2>;
-
-    template<int maxDiffOrder, typename... T>
-    void evaluate(const T&...) const
+    template<int maxDiffOrder, int dOrder>
+    typename std::enable_if<(dOrder > 2 or dOrder > maxDiffOrder),
+      Range>::type
+    evaluate(const Domain& coord) const
     {
       if (diffOrder > 2) DUNE_THROW(NotImplemented,
         "Derivatives are only implemented up to degree 2");
       if (diffOrder > maxDiffOrder) DUNE_THROW(NotImplemented,
-        "Derivative of degree " << diffOrder << "is not provided by the local basis");
-      DUNE_THROW(Exception, "unexpected error");
+        "Derivative of degree " << diffOrder << " is not provided by the local basis");
     };
 
-    template<int maxDiffOrder>
-    void evaluate(const Domain& coord,
-      ElementaryRange& r) const
+    template<int maxDiffOrder, int dOrder>
+    typename std::enable_if<dOrder == 0,
+      Range>::type
+    evaluate(const Domain& coord) const
     {
+      Range r(0);
       auto& basis = lfs_.finiteElement().localBasis();
       basis.evaluateFunction(coord,yb_);
       for (size_type i = 0; i < yb_.size(); ++i)
       {
         r.axpy(xl_[i],yb_[i]);
       }
+      return r;
     }
 
-    template<int maxDiffOrder>
-    typename std::enable_if<maxDiffOrder >= 1>::type
-    evaluate(const Domain& coord, ElementaryJacobian & r) const
+    template<int maxDiffOrder, int dOrder>
+    typename std::enable_if<maxDiffOrder >= 1 and dOrder == 1,
+      Range>::type
+    evaluate(const Domain& coord) const
     {
+      Range r(0);
       // get Jacobian of geometry
       const typename Element::Geometry::JacobianInverseTransposed
         JgeoIT = element_->geometry().jacobianInverseTransposed(coord);
@@ -246,10 +246,12 @@ public:
       return r;
     }
 
-    template<int maxDiffOrder>
-    typename std::enable_if<maxDiffOrder >= 2>::type
-    evaluate(const Domain& coord, ElementaryHessian& r) const
+    template<int maxDiffOrder, int dOrder>
+    typename std::enable_if<maxDiffOrder >= 2 and dOrder == 2,
+      Range>::type
+    evaluate(const Domain& coord) const
     {
+      Range r(0);
       // TODO: we currently require affine geometries.
       if (! element_->geometry().affine())
         DUNE_THROW(NotImplemented, "Due to missing features in the Geometry interface, "
@@ -287,7 +289,6 @@ public:
       for(std::size_t i = 0; i < dim; ++i)
         for(std::size_t j = i; j < dim; ++j)
           r[i][j] *= JgeoIT[i][j] * JgeoIT[i][j];
-
       return r;
     }
 
@@ -299,7 +300,7 @@ public:
     LFSCache lfs_cache_;
     XView x_view_;
     mutable std::vector<ElementaryRange> xl_;
-    mutable std::vector<ElementaryRange> yb_;
+    mutable std::vector<Range> yb_;
     const Element* element_;
   };
 
