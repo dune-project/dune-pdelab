@@ -45,7 +45,7 @@ namespace Imp {
   };
 };
 
-template<typename GFS, typename V>
+template<typename GFS, typename V, unsigned int diffOrder = 0>
 class DiscreteGridViewFunction
 {
 public:
@@ -137,7 +137,8 @@ public:
      * you have to call bind() again in order to make operator()
      * usable.
      */
-    Range operator()(const Domain& coord) const
+    std::enable_if<diffOrder == 0, Range>
+    operator()(const Domain& coord) const
     {
       RangeVector r(0);
       auto& basis = lfs_.finiteElement().localBasis();
@@ -146,6 +147,80 @@ public:
       {
         r.axpy(xl_[i],yb_[i]);
       }
+      return r;
+    }
+
+    std::enable_if<diffOrder == 1, Jacobian>
+    operator()(const Domain& coord) const
+    {
+      Jacobian r(0);
+      // get Jacobian of geometry
+      const typename Base::Element::Geometry::JacobianInverseTransposed
+        JgeoIT = element_->geometry().jacobianInverseTransposed(coord);
+
+      // get local Jacobians/gradients of the shape functions
+      lfs_.finiteElement().localBasis().evaluateJacobian(coord,yb_);
+
+      Range gradphi;
+      r = 0;
+      for(std::size_t i = 0; i < yb_.size(); ++i) {
+        assert(gradphi.size() == yb_[i].size());
+        for(std::size_t j = 0; j < gradphi.size(); ++j) {
+          // compute global gradient of shape function i
+          // graphi += {J^{-1}}^T * yb_i0
+          JgeoIT.mv(yb_[i][j], gradphi[j]);
+
+          // sum up global gradients, weighting them with the appropriate coeff
+          // r \in R^{1,dim}
+          // r_0 += xl_i * grad \phi
+          r[j].axpy(xl_[i], gradphi[j]);
+        }
+      }
+      return r;
+    }
+
+    std::enable_if<diffOrder == 2, Hessian>
+    operator()(const Domain& coord) const
+    {
+      // TODO: we currently require affine geometries.
+      if (! element_->geometry().affine())
+        DUNE_THROW(NotImplemented, "Due to missing features in the Geometry interface, "
+          "the computation of higher derivatives (>=2) works only for affine transformations.");
+      // get Jacobian of geometry
+      const typename Base::Element::Geometry::JacobianInverseTransposed
+        JgeoIT = element_->geometry().jacobianInverseTransposed(coord);
+
+      // TODO: we currently only implement the hessian...
+      //       a proper implementation will require TMP magic.
+      static const unsigned int dim = Base::Traits::GridView::dimensionworld;
+      // static_assert(
+      //   isHessian<Range>::value,
+      //   "We currently only higher order derivative we support is the Hessian of scalar functions");
+
+      // get local hessian of the shape functions
+      Hessian r = 0;
+      array<std::size_t, dim> directions;
+      for(std::size_t i = 0; i < dim; ++i) {
+        for(std::size_t j = i; j < dim; ++j) {
+          directions[0] = 0;
+          directions[1] = 0;
+          directions[i]++;
+          directions[j]++;
+          lfs_.finiteElement().localBasis().evaluate(directions,coord,yb_);
+          assert( yb_.size() == 1); // TODO: we only implement the hessian of scalar functions
+          for(std::size_t n = 0; n < yb_.size(); ++n) {
+            // sum up derivatives, weighting them with the appropriate coeff
+            r[i][j] += xl_[i] * yb_[j];
+          }
+          // use symmetry of the hessian
+          if (i != j) r[i][j] = r[j][i];
+        }
+      }
+      // transform back to global coordinates
+      for(std::size_t i = 0; i < dim; ++i)
+        for(std::size_t j = i; j < dim; ++j)
+          r[i][j] *= JgeoIT[i][j] * JgeoIT[i][j];
+
       return r;
     }
 
