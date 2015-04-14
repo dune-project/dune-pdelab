@@ -204,7 +204,8 @@ void testgridviewfunction (const GV& gv)
     typedef typename DiscreteFunction::LocalFunction LocalFunction;
     auto localf = localFunction(dgvf);
     // iterate grid and evaluate local function
-    static const int maxDiffOrder = 0; // LocalFunction::Traits::maxDiffOrder;
+    static const int maxDiffOrder =
+        LocalFunction::maxDiffOrder;
     std::cout << "max diff order: " << maxDiffOrder << std::endl;
     std::cout << "checking for:\n";
     std::cout << "\tevaluate\n";
