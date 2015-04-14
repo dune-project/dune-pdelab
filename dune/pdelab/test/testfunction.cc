@@ -3,6 +3,7 @@
 #endif
 
 #include <iostream>
+#include <cassert>
 
 #include <dune/common/math.hh>
 #include <dune/common/parallel/mpihelper.hh>
@@ -200,10 +201,14 @@ void testgridviewfunction (const GV& gv)
     // make functions
     typedef Dune::PDELab::DiscreteGridViewFunction<QkGFS,Vector> DiscreteFunction;
     DiscreteFunction dgvf(qkgfs,x);
+    // interpolate linear function
+    using Domain = Dune::FieldVector<typename GV::ctype, GV::dimension>;
+    auto f = [](const Domain& x) {return x[0];};
+    Dune::PDELab::interpolate(f,qkgfs,x);
     // make local functions
     auto localf = localFunction(dgvf);
     // iterate grid and evaluate local function
-    static const int maxDiffOrder = 0; // ...::maxDiffOrder;
+    static const int maxDiffOrder = decltype(localf)::maxDiffOrder;
     std::cout << "max diff order: " << maxDiffOrder << std::endl;
     std::cout << "checking for:\n";
     std::cout << "\tevaluate\n";
@@ -218,14 +223,18 @@ void testgridviewfunction (const GV& gv)
         localf.bind(*it);
         Dune::FieldVector<double,1> value;
         Dune::FieldMatrix<double,1,dim> jacobian;
-// #warning assignement from FieldVector to FieldMatrix is broken
-//         Dune::FieldVector<double,dim> jacobian;
         Dune::FieldMatrix<double,dim,dim> hessian;
-        value = localf(it->geometry().center());
-        if (maxDiffOrder >= 1)
-            jacobian = derivative(localf)(it->geometry().center());
-        if (maxDiffOrder >= 2)
-            hessian = derivative(derivative(localf))(it->geometry().center());
+        auto pos = it->geometry().local(it->geometry().center());
+        value = localf(pos);
+        assert(std::abs(value - it->geometry().center()[0]) < 1e-6);
+        if (maxDiffOrder >= 1) {
+            jacobian = derivative(localf)(pos);
+            assert(std::abs(jacobian[0][0] - 1.0) < 1e-6);
+            assert(std::abs(jacobian[0][1]) < 1e-6);
+        }
+        if (maxDiffOrder >= 2) {
+            hessian = derivative(derivative(localf))(pos);
+        }
         if (maxDiffOrder >= 3)
             derivative(
                 derivative(
