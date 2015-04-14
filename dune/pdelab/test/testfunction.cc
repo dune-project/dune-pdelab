@@ -185,21 +185,21 @@ void testfunctiontree (const GV& gv)
   vtkwriter.write("multi",Dune::VTK::ascii);
 }
 
-template<class GV>
+template<int k, class GV>
 void testgridviewfunction (const GV& gv)
 {
     enum { dim = GV::dimension };
-    typedef Dune::PDELab::QkLocalFiniteElementMap<GV,float,double,1> Q1FEM;
-    Q1FEM q1fem(gv);
+    typedef Dune::PDELab::QkLocalFiniteElementMap<GV,float,double,k> QkFEM;
+    QkFEM qkfem(gv);
     // make a grid function space
-    typedef Dune::PDELab::GridFunctionSpace<GV,Q1FEM> Q1GFS;
-    Q1GFS q1gfs(gv,q1fem);
+    typedef Dune::PDELab::GridFunctionSpace<GV,QkFEM> QkGFS;
+    QkGFS qkgfs(gv,qkfem);
     // make vector
-    typedef typename Dune::PDELab::BackendVectorSelector<Q1GFS,double>::Type Vector;
-    Vector x(q1gfs);
+    typedef typename Dune::PDELab::BackendVectorSelector<QkGFS,double>::Type Vector;
+    Vector x(qkgfs);
     // make functions
-    typedef Dune::PDELab::DiscreteGridViewFunction<Q1GFS,Vector> DiscreteFunction;
-    DiscreteFunction dgvf(q1gfs,x);
+    typedef Dune::PDELab::DiscreteGridViewFunction<QkGFS,Vector> DiscreteFunction;
+    DiscreteFunction dgvf(qkgfs,x);
     // make local functions
     typedef typename DiscreteFunction::LocalFunction LocalFunction;
     auto localf = localFunction(dgvf);
@@ -268,7 +268,9 @@ int main(int argc, char** argv)
     testvtkexport(grid.leafGridView(),F<Dune::YaspGrid<2>::ctype>());
     testfunctiontree(grid.leafGridView());
 
-    testgridviewfunction(grid.leafGridView());
+    testgridviewfunction<1>(grid.leafGridView());
+    testgridviewfunction<2>(grid.leafGridView());
+    // testgridviewfunction<3>(grid.leafGridView());
 
     // test passed
     return 0;
