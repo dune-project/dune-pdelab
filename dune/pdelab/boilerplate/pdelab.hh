@@ -216,11 +216,7 @@ namespace Dune {
                 std::bitset<dimworld> B(false);
 
                 // instantiate the grid
-#if HAVE_MPI
-                gridp = std::shared_ptr<Grid>(new Grid(Dune::MPIHelper::getCommunicator(),L,N,B,overlap));
-#else
-                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap));
-#endif
+                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap,Dune::MPIHelper::getCollectiveCommunication()));
             }
 
             // constructor with sizes given
@@ -250,11 +246,7 @@ namespace Dune {
                     }
 
                 // instantiate the grid
-#if HAVE_MPI
-                gridp = std::shared_ptr<Grid>(new Grid(Dune::MPIHelper::getCommunicator(),L,N,B,overlap));
-#else
-                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap));
-#endif
+                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap,Dune::MPIHelper::getCollectiveCommunication()));
             }
 
             // constructor with periodicity argument
@@ -285,11 +277,7 @@ namespace Dune {
                     }
 
                 // instantiate the grid
-#if HAVE_MPI
-                gridp = std::shared_ptr<Grid>(new Grid(Dune::MPIHelper::getCommunicator(),L,N,B,overlap));
-#else
-                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap));
-#endif
+                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap,Dune::MPIHelper::getCollectiveCommunication()));
             }
 
             // return shared pointer
