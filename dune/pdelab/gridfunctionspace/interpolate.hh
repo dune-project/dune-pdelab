@@ -87,7 +87,7 @@ namespace Dune {
         {
           std::vector<typename XG::ElementType> xl(lfs.size());
 
-          using LFSRange = typename LFS::Traits::LocalBasisType::Traits::RangeType;
+          using LFSRange = typename LFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType;
           static_assert(std::is_convertible<LFSRange, typename FieldTraits< LFSRange >::field_type>::value,
             "only interpolation into scalar leaf function spaces is implemented");
 
@@ -103,7 +103,6 @@ namespace Dune {
           xg.write_sub_container(lfs,xl);
 
           // increment index
-          assert(index == treePath.back());
           index++;
         }
 
@@ -116,7 +115,7 @@ namespace Dune {
 
         const IB& ib;
         const LF& lf;
-        std::size_t index;
+        mutable std::size_t index;
         XG& xg;
 
       };
