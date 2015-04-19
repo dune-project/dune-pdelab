@@ -87,8 +87,7 @@ namespace Dune {
         {
           std::vector<typename XG::ElementType> xl(lfs.size());
 
-           // call interpolate for the basis
-          int index = treePath.back();
+          // call interpolate for the basis
           auto f = [&](const Domain& x) -> RangeField { return lf(x)[index]; };
            using LocalFunction = typename Dune::Functions::FunctionFromCallable<RangeField(Domain), decltype(f), Empty>;
           LocalFunction fnkt(f);
@@ -97,16 +96,22 @@ namespace Dune {
 
           // write coefficients into local vector
           xg.write_sub_container(lfs,xl);
+
+          // increment index
+          assert(index == treePath.back());
+          index++;
         }
 
         InterpolateLeafFromVectorVisitor(const IB& ib_, const LF& lf_, XG& xg_)
           : ib(ib_)
           , lf(lf_)
+          , index(0)
           , xg(xg_)
         {}
 
         const IB& ib;
         const LF& lf;
+        std::size_t index;
         XG& xg;
 
       };
