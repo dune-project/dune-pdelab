@@ -87,8 +87,13 @@ namespace Dune {
         {
           std::vector<typename XG::ElementType> xl(lfs.size());
 
+          using LFSRange = typename LFS::Traits::LocalBasisType::Traits::RangeType;
+          static_assert(std::is_convertible<LFSRange, typename FieldTraits< LFSRange >::field_type>::value,
+            "only interpolation into scalar leaf function spaces is implemented");
+
           // call interpolate for the basis
           auto f = [&](const Domain& x) -> RangeField { return lf(x)[index]; };
+
            using LocalFunction = typename Dune::Functions::FunctionFromCallable<RangeField(Domain), decltype(f), Empty>;
           LocalFunction fnkt(f);
 
@@ -146,9 +151,6 @@ namespace Dune {
                            (!LFS::isLeaf)>::type
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
-          static_assert((TypeTree::TreeInfo<LFS>::depth == 2),
-                        "Automatic interpolation of vector-valued function " \
-                        "is restricted to trees of depth 1");
           // call interpolate for the basis
           using Domain = typename Functions::SignatureTraits<F>::Domain;
           using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F, Empty>;
@@ -165,9 +167,6 @@ namespace Dune {
                           (!LFS::isLeaf)>::type
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
-          static_assert((TypeTree::TreeInfo<LFS>::depth == 2),
-                        "Automatic interpolation of vector-valued function " \
-                        "is restricted to trees of depth 1");
           static_assert(TypeTree::StaticDegree<LFS>::value == Range::dimension,
                         "Number of children and dimension of range type " \
                         "must match for automatic interpolation of "    \
