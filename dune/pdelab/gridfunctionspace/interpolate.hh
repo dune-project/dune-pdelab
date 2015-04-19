@@ -167,8 +167,8 @@ namespace Dune {
           static_assert((TypeTree::TreeInfo<LFS>::depth == 2),
                         "Automatic interpolation of vector-valued function " \
                         "is restricted to trees of depth 1");
-          static_assert(LFS::CHILDREN == Range::dimension,
-                        "Number of children and dimension of range type " \
+          static_assert((TypeTree::TreeInfo<LFS>::leafCount == Range::dimension),
+                        "Number of leaf nodes and dimension of range type " \
                         "must match for automatic interpolation of "    \
                         "vector-valued function");
 
