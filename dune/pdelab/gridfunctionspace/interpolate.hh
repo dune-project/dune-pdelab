@@ -137,7 +137,7 @@ namespace Dune {
         template<typename F, typename LFS, typename TreePath,
                  typename Range = typename Functions::SignatureTraits<F>::Range>
         typename std::enable_if<F::isLeaf &&
-                           std::is_convertible<typename FieldTraits< Range >::field_type, Range>::value &&
+                           std::is_convertible<Range, typename FieldTraits< Range >::field_type>::value &&
                            (!LFS::isLeaf)>::type
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
@@ -156,7 +156,7 @@ namespace Dune {
         template<typename F, typename LFS, typename TreePath,
                  typename Range = typename Functions::SignatureTraits<F>::Range>
         typename std::enable_if<F::isLeaf &&
-                          (! std::is_convertible<typename FieldTraits< Range >::field_type, Range>::value) &&
+                          (!std::is_convertible<Range, typename FieldTraits< Range >::field_type>::value) &&
                           (!LFS::isLeaf)>::type
         leaf(const F& f, const LFS& lfs, TreePath treePath) const
         {
