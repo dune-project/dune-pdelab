@@ -138,6 +138,14 @@ static void test_interpolate(const GV& gv)
   using V = Dune::PDELab::Backend::Vector<P0GFS, double>;
   V x(p0gfs,0.0);
 
+  // interpolate from old-style scalar function
+  {
+      using scalar_interpolation_function = interpolation_function<GV,1>;
+      scalar_interpolation_function f(gv);
+      auto f2 = f;
+      Dune::PDELab::interpolate(f,p0gfs,x);
+      Dune::PDELab::interpolate(f2,p0gfs,x);
+  }
   // interpolate from global function
   {
       auto f = x_component_A;
