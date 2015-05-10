@@ -290,13 +290,17 @@ namespace Dune {
         // normal: assume faces are planar
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
 
+        // store inside and outside cells
+        auto inside_cell = ig.inside();
+        auto outside_cell = ig.outside();
+
         // evaluate speed of sound (assumed constant per element)
         const Dune::FieldVector<DF,dim>&
-            inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,dim>::general(inside_cell.type()).position(0,0);
         const Dune::FieldVector<DF,dim>&
-            outside_local = Dune::ReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
-        RF c_s = param.c(*(ig.inside()),inside_local);
-        RF c_n = param.c(*(ig.outside()),outside_local);
+          outside_local = Dune::ReferenceElements<DF,dim>::general(outside_cell.type()).position(0,0);
+        RF c_s = param.c(inside_cell,inside_local);
+        RF c_n = param.c(outside_cell,outside_local);
 
         // compute A+ (outgoing waves)
         Dune::FieldMatrix<DF,dim+1,dim+1> RT;
@@ -400,10 +404,12 @@ namespace Dune {
         // normal: assume faces are planar
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
 
+        auto cell = ig.inside();
+
         // evaluate speed of sound (assumed constant per element)
         const Dune::FieldVector<DF,dim>&
-            inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
-        RF c_s = param.c(*(ig.inside()),inside_local);
+            inside_local = Dune::ReferenceElements<DF,dim>::general(cell.type()).position(0,0);
+        RF c_s = param.c(cell,inside_local);
 
         // compute A+ (outgoing waves)
         Dune::FieldMatrix<DF,dim+1,dim+1> RT;
