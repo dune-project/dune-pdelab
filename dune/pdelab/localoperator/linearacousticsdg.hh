@@ -211,10 +211,12 @@ namespace Dune {
         // get local function space that is identical for all components
         const DGSpace& dgspace = lfsv.template child<0>();
 
+        auto geometry = eg.geometry();
+
         // select quadrature rule
         const int order = dgspace.finiteElement().localBasis().order();
         const int intorder = overintegration+2*order;
-        Dune::GeometryType gt = eg.geometry().type();
+        Dune::GeometryType gt = geometry.type();
 
         // transformation
         typename EG::Geometry::JacobianInverseTransposed jac;
@@ -224,7 +226,7 @@ namespace Dune {
         RF c2 = param.c(eg.entity(),localcenter);
         c2 = c2*c2; // square it
 
-        // std::cout << "alpha_volume center=" << eg.geometry().center() << std::endl;
+        // std::cout << "alpha_volume center=" << geometry.center() << std::endl;
 
         // loop over quadrature points
         for (const auto& ip : Dune::QuadratureRules<DF,dim>::rule(gt,intorder))
@@ -243,13 +245,13 @@ namespace Dune {
             const std::vector<JacobianType>& js = cache[order].evaluateJacobian(ip.position(),dgspace.finiteElement().localBasis());
 
             // compute global gradients
-            jac = eg.geometry().jacobianInverseTransposed(ip.position());
+            jac = geometry.jacobianInverseTransposed(ip.position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(dgspace.size());
             for (size_type i=0; i<dgspace.size(); i++)
               jac.mv(js[i][0],gradphi[i]);
 
             // integrate
-            RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
+            RF factor = ip.weight() * geometry.integrationElement(ip.position());
             for (size_type k=0; k<dgspace.size(); k++) // loop over all vector-valued (!) basis functions (with identical components)
               {
                 // component i=0
@@ -327,13 +329,15 @@ namespace Dune {
           for (int j=0; j<=dim; j++)
             A_minus_n[i][j] = -c_n*alpha[i]*beta[j];
 
+        auto geometry = ig.geometry();
+
         // select quadrature rule
         const int order_s = dgspace_s.finiteElement().localBasis().order();
         const int order_n = dgspace_n.finiteElement().localBasis().order();
         const int intorder = overintegration+1+2*std::max(order_s,order_n);
-        Dune::GeometryType gtface = ig.geometry().type();
+        Dune::GeometryType gtface = geometry.type();
 
-        // std::cout << "alpha_skeleton center=" << ig.geometry().center() << std::endl;
+        // std::cout << "alpha_skeleton center=" << geometry.center() << std::endl;
 
         // loop over quadrature points
         for (const auto& ip : Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder))
@@ -364,7 +368,7 @@ namespace Dune {
             // std::cout << "  after A_minus*u_n " << f << std::endl;
 
             // integrate
-            RF factor = ip.weight() * ig.geometry().integrationElement(ip.position());
+            RF factor = ip.weight() * geometry.integrationElement(ip.position());
             for (size_type k=0; k<dgspace_s.size(); k++) // loop over all vector-valued (!) basis functions (with identical components)
               for (size_type i=0; i<=dim; i++) // loop over all components
             r_s.accumulate(lfsv_s.child(i),k, f[i]*phi_s[k]*factor);
@@ -436,12 +440,14 @@ namespace Dune {
           for (int j=0; j<=dim; j++)
             A_minus_n[i][j] = -c_s*alpha[i]*beta[j];
 
+        auto geometry = ig.geometry();
+
         // select quadrature rule
         const int order_s = dgspace_s.finiteElement().localBasis().order();
         const int intorder = overintegration+1+2*order_s;
-        Dune::GeometryType gtface = ig.geometry().type();
+        Dune::GeometryType gtface = geometry.type();
 
-        // std::cout << "alpha_boundary center=" << ig.geometry().center() << std::endl;
+        // std::cout << "alpha_boundary center=" << geometry.center() << std::endl;
 
         // loop over quadrature points
         for (const auto& ip : Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder))
@@ -471,7 +477,7 @@ namespace Dune {
             // std::cout << "  after A_minus*u_n " << f << std::endl;
 
             // integrate
-            RF factor = ip.weight() * ig.geometry().integrationElement(ip.position());
+            RF factor = ip.weight() * geometry.integrationElement(ip.position());
             for (size_type k=0; k<dgspace_s.size(); k++) // loop over all vector-valued (!) basis functions (with identical components)
               for (size_type i=0; i<=dim; i++) // loop over all components
             r_s.accumulate(lfsv_s.child(i),k, f[i]*phi_s[k]*factor);
@@ -499,10 +505,12 @@ namespace Dune {
         // get local function space that is identical for all components
         const DGSpace& dgspace = lfsv.template child<0>();
 
+        auto geometry = eg.geometry();
+
         // select quadrature rule
         const int order_s = dgspace.finiteElement().localBasis().order();
         const int intorder = overintegration+2*order_s;
-        Dune::GeometryType gt = eg.geometry().type();
+        Dune::GeometryType gt = geometry.type();
 
         // loop over quadrature points
         for (const auto& ip : Dune::QuadratureRules<DF,dim>::rule(gt,intorder))
@@ -514,7 +522,7 @@ namespace Dune {
             const std::vector<RangeType>& phi = cache[order_s].evaluateFunction(ip.position(),dgspace.finiteElement().localBasis());
 
             // integrate
-            RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
+            RF factor = ip.weight() * geometry.integrationElement(ip.position());
             for (size_type k=0; k<=dim; k++) // for all components
               for (size_type i=0; i<dgspace.size(); i++) // for all test functions of this component
             r.accumulate(lfsv.child(k),i, - q[k]*phi[i]*factor);
@@ -616,10 +624,12 @@ namespace Dune {
         // get local function space that is identical for all components
         const DGSpace& dgspace = lfsv.template child<0>();
 
+        auto geometry = eg.geometry();
+
         // select quadrature rule
         const int order = dgspace.finiteElement().localBasis().order();
         const int intorder = overintegration+2*order;
-        Dune::GeometryType gt = eg.geometry().type();
+        Dune::GeometryType gt = geometry.type();
 
         // loop over quadrature points
         for (const auto& ip : Dune::QuadratureRules<DF,dim>::rule(gt,intorder))
@@ -634,7 +644,7 @@ namespace Dune {
             u[k] += x(lfsv.child(k),j)*phi[j];
 
             // integrate
-            RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
+            RF factor = ip.weight() * geometry.integrationElement(ip.position());
             for (size_type k=0; k<=dim; k++) // for all components
               for (size_type i=0; i<dgspace.size(); i++) // for all test functions of this component
             r.accumulate(lfsv.child(k),i, u[k]*phi[i]*factor);
@@ -659,10 +669,12 @@ namespace Dune {
         // get local function space that is identical for all components
         const DGSpace& dgspace = lfsv.template child<0>();
 
+        auto geometry = eg.geometry();
+
         // select quadrature rule
         const int order = dgspace.finiteElement().localBasis().order();
         const int intorder = overintegration+2*order;
-        Dune::GeometryType gt = eg.geometry().type();
+        Dune::GeometryType gt = geometry.type();
 
         // loop over quadrature points
         for (const auto& ip : Dune::QuadratureRules<DF,dim>::rule(gt,intorder))
@@ -671,7 +683,7 @@ namespace Dune {
             const std::vector<RangeType>& phi = cache[order].evaluateFunction(ip.position(),dgspace.finiteElement().localBasis());
 
             // integrate
-            RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
+            RF factor = ip.weight() * geometry.integrationElement(ip.position());
             for (size_type k=0; k<=dim; k++) // for all components
               for (size_type i=0; i<dgspace.size(); i++) // for all test functions of this component
                 for (size_type j=0; j<dgspace.size(); j++) // for all ansatz functions of this component
