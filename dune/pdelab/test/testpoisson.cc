@@ -419,7 +419,7 @@ int main(int argc, char** argv)
     }
 #endif
 
-#if HAVE_ALUGRID || HAVE_DUNE_ALUGRID
+#if HAVE_DUNE_ALUGRID
     {
       // make grid
       ALUUnitSquare grid;

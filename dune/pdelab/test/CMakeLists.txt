@@ -27,11 +27,11 @@ add_executable(testclock testclock.cc)
 target_link_libraries(testclock dunepdelab ${DUNE_LIBS})
 
 # disable IntersectionIndexSet test for now, we know it's broken
-# if(ALUGRID_FOUND)
+# if(dune_alugrid_FOUND)
 #   list(APPEND NORMALTESTS test_composed_iis_gfs)
 #   add_executable(test_composed_iis_gfs test-composed-iis-gfs.cc)
 #   add_dune_alugrid_flags(test_composed_iis_gfs)
-# endif(ALUGRID_FOUND )
+# endif(dune_alugrid_FOUND)
 
 list(APPEND NORMALTESTS testconstraints)
 add_executable(testconstraints testconstraints.cc)
@@ -167,7 +167,7 @@ foreach(i ${NORMALTESTS})
   set_property(TARGET ${i}
     APPEND PROPERTY
     COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"")
-  add_dune_alugrid_flags(${i})
+  add_dune_dune_alugrid_flags(${i})
   add_dune_ug_flags(${i})
   add_dune_parmetis_flags(${i})
   add_dune_mpi_flags(${i})

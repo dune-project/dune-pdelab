@@ -20,14 +20,14 @@ check_PROGRAMS = $(NORMALTESTS)
 AM_CPPFLAGS = @AM_CPPFLAGS@				\
 	-DGRIDSDIR="\"$(srcdir)/grids\""			\
 	$(UG_CPPFLAGS)					\
-	$(ALUGRID_CPPFLAGS)				\
+	$(DUNE_ALUGRID_CPPFLAGS)				\
 	$(AMIRAMESH_CPPFLAGS)				\
 	$(DUNE_CPPFLAGS)				\
 	$(DUNEMPICPPFLAGS)				\
 	$(PARMETIS_CPPFLAGS)
 AM_LDFLAGS = @AM_LDFLAGS@			\
 	$(UG_LDFLAGS)				\
-	$(ALUGRID_LDFLAGS)			\
+	$(DUNE_ALUGRID_LDFLAGS)			\
 	$(AMIRAMESH_LDFLAGS)			\
 	$(DUNE_LDFLAGS)				\
 	$(DUNEMPILDFLAGS)			\
@@ -35,7 +35,7 @@ AM_LDFLAGS = @AM_LDFLAGS@			\
 LDADD =						\
 	@LDADD@                                 \
 	$(PARMETIS_LIBS)			\
-	$(ALUGRID_LIBS)				\
+	$(DUNE_ALUGRID_LIBS)				\
 	$(AMIRAMESH_LIBS)			\
 	$(DUNEMPILIBS)				\
 	$(UG_LIBS)
@@ -78,10 +78,10 @@ testclock_LDFLAGS = @AM_LDFLAGS@
 testclock_LDADD = @LDADD@
 
 # disable IntersectionIndexSet test for now, we know it's broken
-# if ALUGRID
+# if DUNE_ALUGRID
 # NORMALTESTS += test-composed-iis-gfs
 # test_composed_iis_gfs_SOURCES = test-composed-iis-gfs.cc
-# endif ALUGRID
+# endif DUNE_ALUGRID
 
 NORMALTESTS += testconstraints
 testconstraints_SOURCES = testconstraints.cc
@@ -271,7 +271,7 @@ testopbfem_LDFLAGS = $(AM_LDFLAGS) $(GMP_LDFLAGS)
 testopbfem_LDADD = $(LDADD) $(GMP_LIBS)
 endif
 
-if ALUGRID
+if DUNE_ALUGRID
 check_PROGRAMS += testordering
 testordering_SOURCES = testordering.cc
 endif

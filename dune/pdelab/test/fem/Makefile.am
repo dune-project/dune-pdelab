@@ -19,18 +19,18 @@ noinst_HEADERS =
 AM_CPPFLAGS = @AM_CPPFLAGS@				\
 	-DGRIDSDIR="\"$(srcdir)/../grids\""	\
 	$(UG_CPPFLAGS)					\
-	$(ALUGRID_CPPFLAGS)				\
+	$(DUNE_ALUGRID_CPPFLAGS)				\
 	$(DUNE_CPPFLAGS)				\
 	$(DUNEMPICPPFLAGS)
 
 AM_LDFLAGS = @AM_LDFLAGS@			\
 	$(UG_LDFLAGS)				\
-	$(ALUGRID_LDFLAGS)			\
+	$(DUNE_ALUGRID_LDFLAGS)			\
 	$(DUNE_LDFLAGS)				\
 	$(DUNEMPILDFLAGS)
 
 LDADD =						\
-	$(ALUGRID_LIBS)				\
+	$(DUNE_ALUGRID_LIBS)				\
 	$(DUNE_LIBS)				\
 	$(DUNEMPILIBS)				\
 	$(UG_LIBS)				\
