@@ -167,7 +167,9 @@ foreach(i ${NORMALTESTS})
   set_property(TARGET ${i}
     APPEND PROPERTY
     COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"")
-  add_dune_dune_alugrid_flags(${i})
+  if(dune_alugrid_FOUND)
+    add_dune_dune_alugrid_flags(${i})
+  endif()
   add_dune_ug_flags(${i})
   add_dune_parmetis_flags(${i})
   add_dune_mpi_flags(${i})
