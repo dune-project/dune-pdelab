@@ -170,6 +170,7 @@ foreach(i ${NORMALTESTS})
   add_dune_alugrid_flags(${i})
   add_dune_ug_flags(${i})
   add_dune_parmetis_flags(${i})
+  add_dune_mpi_flags(${i})
 endforeach(i ${NORMALTESTS})
 
 # We do not want want to build the tests during make all
