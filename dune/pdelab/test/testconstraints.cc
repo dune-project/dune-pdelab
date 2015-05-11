@@ -252,8 +252,8 @@ void testpowerp1 (const GV& gv)
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  vtkwriter.addVertexData(std::make_shared< Dune::PDELab::VTKGridFunctionAdapter ><SUB0DGF>(sub0dgf,"comp 0"));
-  vtkwriter.addVertexData(std::make_shared< Dune::PDELab::VTKGridFunctionAdapter ><SUB1DGF>(sub1dgf,"comp 1"));
+  vtkwriter.addVertexData(std::make_shared< Dune::PDELab::VTKGridFunctionAdapter<SUB0DGF> >(sub0dgf,"comp 0"));
+  vtkwriter.addVertexData(std::make_shared< Dune::PDELab::VTKGridFunctionAdapter<SUB1DGF> >(sub1dgf,"comp 1"));
   vtkwriter.addVertexData(std::make_shared< Dune::PDELab::VTKGridFunctionAdapter<SUB2DGF> >(sub2dgf,"comp 2"));
   vtkwriter.addVertexData(std::make_shared< Dune::PDELab::VTKGridFunctionAdapter<SUB3DGF> >(sub3dgf,"comp 3"));
   vtkwriter.addVertexData(std::make_shared< Dune::PDELab::VTKGridFunctionAdapter<SUB4DGF> >(sub4dgf,"comp 4"));
