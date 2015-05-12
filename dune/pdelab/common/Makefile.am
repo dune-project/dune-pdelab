@@ -23,7 +23,8 @@ common_HEADERS =				\
 	topologyutility.hh			\
 	typetraits.hh				\
 	utility.hh				\
-	vtkexport.hh
+	vtkexport.hh			\
+	instationaryfilenamehelper.hh
 
 noinst_LTLIBRARIES = libpdelabcommon.la
 libpdelabcommon_la_SOURCES =			\

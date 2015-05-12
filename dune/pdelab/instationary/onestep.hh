@@ -19,6 +19,9 @@
 #include <dune/pdelab/common/logtag.hh>
 #include <dune/pdelab/gridoperator/common/timesteppingparameterinterface.hh>
 
+// TODO: Remove include after PDELab 2.4
+#include <dune/pdelab/common/instationaryfilenamehelper.hh>
+
 namespace Dune {
   namespace PDELab {
 
@@ -1430,44 +1433,6 @@ namespace Dune {
       M D;
       TimeControllerInterface<T> *tc;
       bool allocated;
-    };
-
-    class FilenameHelper
-    {
-    public:
-      FilenameHelper(const char *basename_, int i_=0)
-        : i(i_)
-      {
-        sprintf(basename,"%s",basename_);
-      }
-
-      FilenameHelper(const std::string & basename_, int i_=0)
-        : i(i_)
-      {
-        sprintf(basename,"%s",basename_.c_str());
-      }
-
-      const char *getName (int i_)
-      {
-        sprintf(fname,"%s-%05d",basename,i_);
-        return fname;
-      }
-
-      const char *getName ()
-      {
-        sprintf(fname,"%s-%05d",basename,i);
-        return fname;
-      }
-
-      void increment ()
-      {
-        i++;
-      }
-
-    private:
-      char fname[255];
-      char basename[255];
-      int i;
     };
 
     /** @} */
