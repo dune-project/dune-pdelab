@@ -40,8 +40,10 @@ namespace Dune {
 
         bool containsNonDirichletConstraints() const
         {
-          return std::any_of(this->begin(), this->end(),
-            [] (auto && t) -> bool { return (!t.second.empty()) });
+          return std::any_of(
+            this->begin(), this->end(),
+            [] (const std::pair<DI,RowType> & c)
+                -> bool { return (!c.second.empty()); });
         }
 
       };
