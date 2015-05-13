@@ -544,6 +544,10 @@ namespace Dune {
       static void
       assemble(const P& p, const GFS& gfs, const GV& gv, CG& cg, const bool verbose)
       {
+        // get some types
+        typedef typename GV::Traits::template Codim<0>::Entity Element;
+        typedef typename GV::Intersection Intersection;
+
         // make local function space
         typedef LocalFunctionSpace<GFS> LFS;
         LFS lfs_e(gfs);
