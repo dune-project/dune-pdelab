@@ -564,7 +564,7 @@ namespace Dune {
         std::map<Dune::GeometryType,int> gtoffset;
 
         // loop once over the grid
-        for (auto&& cell : elements(gv))
+        for (const auto& cell : elements(gv))
         {
           // assign offset for geometry type;
           if (gtoffset.find(cell.type())==gtoffset.end())
@@ -588,7 +588,7 @@ namespace Dune {
 
           // iterate over intersections and call metaprogram
           unsigned int intersection_index = 0;
-          for (auto&& intersection : intersections(gv,cell))
+          for (const auto& intersection : intersections(gv,cell))
           {
             if (intersection.boundary())
             {
@@ -606,7 +606,7 @@ namespace Dune {
 
             if (intersection.neighbor()){
 
-              auto&& outside_cell = intersection.outside();
+              auto outside_cell = intersection.outside();
               Dune::GeometryType gtn = outside_cell.type();
               const typename GV::IndexSet::IndexType idn = is.index(outside_cell)+gtoffset[gtn];
 
@@ -646,10 +646,10 @@ namespace Dune {
 
           std::cout << cg.size() << " constrained degrees of freedom" << std::endl;
 
-          for (auto&& col : cg)
+          for (const auto& col : cg)
           {
             std::cout << col.first << ": "; // col index
-            for (auto&& row : col.second)
+            for (const auto& row : col.second)
               std::cout << "(" << row.first << "," << row.second << ") "; // row index , value
             std::cout << std::endl;
           }
@@ -763,7 +763,7 @@ namespace Dune {
                               XG& xg)
     {
       typedef typename CG::const_iterator global_col_iterator;
-      for (auto && col : cg)
+      for (const auto& col : cg)
         xg[col.first] = x;
     }
 
@@ -806,7 +806,7 @@ namespace Dune {
                                 XG& xg, const Cmp& cmp = Cmp())
     {
       typedef typename CG::const_iterator global_col_iterator;
-      for (auto && col : cg)
+      for (const auto& col : cg)
         if(cmp.ne(xg[col.first], x))
           return false;
       return true;
@@ -873,13 +873,13 @@ namespace Dune {
       typedef typename CG::const_iterator global_col_iterator;
       typedef typename CG::value_type::second_type::const_iterator global_row_iterator;
 
-      for (auto && col : cg)
-        for (auto&& row : col.second)
+      for (const auto& col : cg)
+        for (const auto& row : col.second)
           xg[row.first] += row.second * xg[col.first];
 
       // extra loop because constrained dofs might have contributions
       // to constrained dofs
-      for (auto && col : cg)
+      for (const auto& col : cg)
         xg[col.first] = typename XG::ElementType(0);
     }
 
@@ -906,7 +906,7 @@ namespace Dune {
     void copy_constrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
     {
       typedef typename CG::const_iterator global_col_iterator;
-      for (auto && col : cg)
+      for (const auto& col : cg)
         xgout[col.first] = xgin[col.first];
     }
 
@@ -988,7 +988,7 @@ namespace Dune {
       tmp = x;
 
       typedef typename CG::const_iterator global_col_iterator;
-      for (auto && col : cg)
+      for (const auto& col : cg)
       {
         // this is our marker for Dirichlet constraints
         if (col.second.size() == 0)

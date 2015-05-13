@@ -70,7 +70,7 @@ namespace Dune {
         typedef typename LocalTransformation::const_iterator LocalConstraintIterator;
         typedef typename LocalTransformation::mapped_type::const_iterator LocalEntryIterator;
 
-        for (auto && local_constraint : local_transformation)
+        for (const auto& local_constraint : local_transformation)
           {
             const ContainerIndex& ci = index_cache.containerIndex(local_constraint.first);
 
@@ -95,7 +95,7 @@ namespace Dune {
             _contains_non_dirichlet_constraints = true;
 
             // Accumulate new entries into global constraint
-            for (auto && local_entry : local_constraint.second)
+            for (const auto& local_entry : local_constraint.second)
               global_constraint[index_cache.containerIndex(local_entry.first)] = local_entry.second;
           }
       }

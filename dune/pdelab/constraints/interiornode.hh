@@ -79,10 +79,10 @@ namespace Dune {
           interior[i] = true;
 
         // loop over all cells
-        for(auto && entity : cells(gv))
+        for(const auto& entity : cells(gv))
         {
           // find boundary faces & associated vertices
-          for (auto && intersection : intersection(gv,entity))
+          for (const auto& intersection : intersection(gv,entity))
           {
             if (intersection.boundary())
             {
