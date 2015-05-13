@@ -578,10 +578,11 @@ namespace Dune {
             offset += chunk;
           }
 
-          const typename GV::IndexSet::IndexType id = is.index(*it)+gtoffset[it->type()];
+          Element inside = *it;
+          const typename GV::IndexSet::IndexType id = is.index(inside)+gtoffset[inside.type()];
 
           // bind local function space to element
-          lfs_e.bind(*it);
+          lfs_e.bind(inside);
 
           typedef typename CG::LocalTransformation CL;
 
@@ -589,40 +590,43 @@ namespace Dune {
 
           // TypeTree::applyToTreePair(p,lfs_e,VolumeConstraints<Element,CG>(ElementGeometry<Element>(*it),cg));
           typedef ElementGeometry<Element> ElementWrapper;
-          TypeTree::applyToTree(lfs_e,VolumeConstraints<ElementWrapper,CL>(ElementWrapper(*it),cl_self));
+          TypeTree::applyToTree(lfs_e,VolumeConstraints<ElementWrapper,CL>(ElementWrapper(inside),cl_self));
 
           // iterate over intersections and call metaprogram
           unsigned int intersection_index = 0;
-          IntersectionIterator endit = gv.iend(*it);
-          for (IntersectionIterator iit = gv.ibegin(*it); iit!=endit; ++iit, ++intersection_index)
+          IntersectionIterator endit = gv.iend(inside);
+          for (IntersectionIterator iit = gv.ibegin(inside); iit!=endit; ++iit, ++intersection_index)
           {
-            if (iit->boundary())
+            Intersection intersection = *iit;
+
+            if (intersection.boundary())
             {
               typedef IntersectionGeometry<Intersection> IntersectionWrapper;
-              TypeTree::applyToTreePair(p,lfs_e,BoundaryConstraints<IntersectionWrapper,CL>(IntersectionWrapper(*iit,intersection_index),cl_self));
+              TypeTree::applyToTreePair(p,lfs_e,BoundaryConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self));
             }
 
             // ParallelStuff: BEGIN support for processor boundaries.
-            if ((!iit->boundary()) && (!iit->neighbor()))
+            if ((!intersection.boundary()) && (!intersection.neighbor()))
             {
               typedef IntersectionGeometry<Intersection> IntersectionWrapper;
-              TypeTree::applyToTree(lfs_e,ProcessorConstraints<IntersectionWrapper,CL>(IntersectionWrapper(*iit,intersection_index),cl_self));
+              TypeTree::applyToTree(lfs_e,ProcessorConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self));
             }
             // END support for processor boundaries.
 
-            if (iit->neighbor()){
+            if (intersection.neighbor()){
 
-              Dune::GeometryType gtn = iit->outside()->type();
-              const typename GV::IndexSet::IndexType idn = is.index(*(iit->outside()))+gtoffset[gtn];
+              Element outside = intersection.outside();
+              Dune::GeometryType gtn = outside.type();
+              const typename GV::IndexSet::IndexType idn = is.index(outside)+gtoffset[gtn];
 
               if(id>idn){
                 // bind local function space to element in neighbor
-                lfs_f.bind( *(iit->outside()) );
+                lfs_f.bind( outside );
 
                 CL cl_neighbor;
 
                 typedef IntersectionGeometry<Intersection> IntersectionWrapper;
-                TypeTree::applyToTreePair(lfs_e,lfs_f,SkeletonConstraints<IntersectionWrapper,CL>(IntersectionWrapper(*iit,intersection_index),cl_self,cl_neighbor));
+                TypeTree::applyToTreePair(lfs_e,lfs_f,SkeletonConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self,cl_neighbor));
 
                 if (!cl_neighbor.empty())
                   {
