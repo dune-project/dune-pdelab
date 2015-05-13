@@ -921,20 +921,14 @@ namespace Dune {
      * \code
      * #include <dune/pdelab/constraints/common/constraints.hh>
      * \endcode
+     * \todo reimplement; this is horribly inefficient
      */
     template<typename CG, typename XG>
     void set_nonconstrained_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
     {
-      // FIXME: This is horribly inefficient!
       XG tmp(xg);
       xg = x;
       copy_constrained_dofs(cg,tmp,xg);
-      /*
-      typedef typename XG::Backend B;
-      for (typename XG::size_type i=0; i<xg.flatsize(); ++i)
-        if (cg.find(i)==cg.end())
-          B::access(xg,i) = x;
-      */
     }
 
 
@@ -954,20 +948,14 @@ namespace Dune {
      * \code
      * #include <dune/pdelab/constraints/common/constraints.hh>
      * \endcode
+     * \todo reimplement; this is horribly inefficient
      */
     template<typename CG, typename XG>
     void copy_nonconstrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
     {
-      // FIXME: This is horribly inefficient!
       XG tmp(xgin);
       copy_constrained_dofs(cg,xgout,tmp);
       xgout = tmp;
-      /*
-      typedef typename XG::Backend B;
-      for (typename XG::size_type i=0; i<xgin.flatsize(); ++i)
-        if (cg.find(i)==cg.end())
-          B::access(xgout,i) = B::access(xgin,i);
-      */
     }
 
 
@@ -987,12 +975,11 @@ namespace Dune {
      * \code
      * #include <dune/pdelab/constraints/common/constraints.hh>
      * \endcode
+     * \todo reimplement; this is horribly inefficient
      */
     template<typename CG, typename XG>
     void set_shifted_dofs (const CG& cg, typename XG::ElementType x, XG& xg)
     {
-      // FIXME: This is horribly inefficient!
-
       XG tmp(xg);
       tmp = x;
 
@@ -1007,16 +994,6 @@ namespace Dune {
       }
 
       xg = tmp;
-
-      /*
-      typedef typename XG::Backend B;
-      typedef typename CG::const_iterator global_col_iterator;
-      for (typename XG::size_type i=0; i<xg.flatsize(); ++i){
-        global_col_iterator it = cg.find(i);
-        if (it == cg.end() || it->second.size() > 0)
-          B::access(xg,i) = x;
-      }
-      */
     }
 
 
