@@ -40,16 +40,8 @@ namespace Dune {
 
         bool containsNonDirichletConstraints() const
         {
-          // if any row is not empty, there are non-Dirichlet constraints
-          // TODO: replace with std::any_of + lambda after 2.0 release
-          typedef typename LocalTransformation::const_iterator It;
-          for (It it = this->begin(),
-                 end = this->end();
-               it != end;
-               ++it)
-            if (!it->second.empty())
-              return true;
-          return false;
+          return std::any_of(this->begin(), this->end(),
+            [] (auto && t) -> bool { return (!t.second.empty()) });
         }
 
       };
