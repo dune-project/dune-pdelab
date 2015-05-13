@@ -68,12 +68,9 @@ namespace Dune {
         typedef typename LocalTransformation::const_iterator LocalConstraintIterator;
         typedef typename LocalTransformation::mapped_type::const_iterator LocalEntryIterator;
 
-        for (LocalConstraintIterator lc_it = local_transformation.begin(),
-               lc_end = local_transformation.end();
-             lc_it != lc_end;
-             ++lc_it)
+        for (auto && local_constraint : local_transformation)
           {
-            const ContainerIndex& ci = index_cache.containerIndex(lc_it->first);
+            const ContainerIndex& ci = index_cache.containerIndex(local_constraint.first);
 
             std::pair<GlobalConstraintIterator,bool> r =
               this->insert(make_pair(ci,GlobalConstraint()));
@@ -86,7 +83,7 @@ namespace Dune {
 
             // The new constraint is a Dirichlet constraint
             // Clear out any existing entries in the global constraint and stop
-            if (lc_it->second.empty())
+            if (local_constraint.second.empty())
               {
                 global_constraint.clear();
                 continue;
@@ -96,13 +93,8 @@ namespace Dune {
             _contains_non_dirichlet_constraints = true;
 
             // Accumulate new entries into global constraint
-            for (LocalEntryIterator le_it = lc_it->second.begin(),
-                   le_end = lc_it->second.end();
-                 le_it != le_end;
-                 ++le_it)
-              {
-                global_constraint[index_cache.containerIndex(le_it->first)] = le_it->second;
-              }
+            for (auto && local_entry : local_constraint.second)
+              global_constraint[index_cache.containerIndex(local_entry.first)] = local_entry.second;
           }
       }
 
