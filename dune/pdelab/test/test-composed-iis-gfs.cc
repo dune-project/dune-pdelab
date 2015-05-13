@@ -15,7 +15,7 @@
 #include<dune/common/fvector.hh>
 #include<dune/common/parallel/mpihelper.hh>
 
-#include<dune/grid/alugrid.hh>
+#include<dune/alugrid/grid.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 
 #include<dune/pdelab/backend/istlvectorbackend.hh>

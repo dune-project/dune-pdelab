@@ -39,8 +39,8 @@
 #if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
-#if HAVE_ALUGRID
-#include<dune/grid/alugrid.hh>
+#if HAVE_DUNE_ALUGRID
+#include<dune/alugrid/grid.hh>
 #include<dune/grid/io/file/dgfparser/dgfalu.hh>
 #include<dune/grid/io/file/dgfparser/dgfparser.hh>
 #endif
