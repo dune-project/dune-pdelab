@@ -18,7 +18,7 @@ PDELab 2.4
 ----------
 
 - PDELab has updated its minimum compiler requirements. You now need a compiler that is at
-  least compatible with GCC 4.5 in C++11 mode.
+  least compatible with GCC 4.7 in C++11 mode.
 
 - PDELab 2.4-dev requires at least version 2.4-dev of the core modules.
 
