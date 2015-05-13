@@ -237,18 +237,19 @@ namespace Dune {
       g(const EG& e, const typename Traits::Domain& x) const
       {
         typename V::Traits::RangeType y;
-        _v.evaluate(e.entity(),x,y);
+        _v.evaluate(e,x,y);
         return y;
       }
 
       //! Dirichlet boundary condition value from local intersection coordinate
       template<typename IG>
       typename Traits::VelocityRange
+      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use entity-based version instead!")
       g(const IG& ig, const typename Traits::IntersectionDomain& x) const
       {
-        typename IG::EntityPointer ep = ig.inside();
+        auto e = ig.inside();
         typename V::Traits::RangeType y;
-        _v.evaluate(*ep,ig.geometryInInside().global(x),y);
+        _v.evaluate(e,ig.geometryInInside().global(x),y);
         return y;
       }
 
@@ -284,8 +285,8 @@ namespace Dune {
         typename Traits::Domain normal) const
       {
         typename J::Traits::RangeType r;
-        typename IG::EntityPointer ep = ig.inside();
-        _j.evaluate(*ep,ig.geometryInInside().global(x),r);
+        auto e = ig.inside();
+        _j.evaluate(e,ig.geometryInInside().global(x),r);
         normal *= r;
         return normal;
       }
@@ -301,9 +302,9 @@ namespace Dune {
         const typename Traits::IntersectionDomain& x,
         const typename Traits::Domain& normal) const
       {
-        typename IG::EntityPointer ep = ig.inside();
+        auto e = ig.inside();
         typename J::Traits::RangeType y;
-        _j.evaluate(*ep,ig.geometryInInside().global(x),y);
+        _j.evaluate(e,ig.geometryInInside().global(x),y);
         return y;
       }
 
