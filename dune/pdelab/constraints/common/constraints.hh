@@ -12,6 +12,7 @@
 #include<dune/pdelab/common/typetraits.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include"constraintstransformation.hh"
+#include"constraintsparameters.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -456,9 +457,6 @@ namespace Dune {
         return bctype[_i] == 0;
       }
     };
-
-    //! empty ConstraintsParameters class, needed for the TMP without any parameters
-    class NoConstraintsParameters : public TypeTree::LeafNode {};
 
     // Tag to name trafo GridFunction -> OldStyleConstraintsWrapper
     struct gf_to_constraints {};

@@ -281,6 +281,17 @@ namespace Dune {
 
     };
 
+    /**
+     * Empty parameters to allow running the assembler for NoConstraints
+     *
+     * \note This class does not do anything. It only works, because the
+     *       NoConstraints don't even try to assemble anything.
+     *
+     * \remark it is also used internally for the
+     *       Dune::PDELab::constraints assembler TMP without any parameters
+     */
+    class NoConstraintsParameters : public TypeTree::LeafNode {};
+
     //! \}
 
   }
