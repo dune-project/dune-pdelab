@@ -903,12 +903,10 @@ namespace Dune {
     {
       //typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator
       //  Iterator;
-      typedef typename Grid::template Partition<Dune::All_Partition>::LeafGridView GV;
+      typedef typename Grid::LeafGridView GV;
       typedef typename GV::template Codim<0>::Iterator Iterator;
 
-      const GV& gv=grid.template leafGridView<Dune::All_Partition>();
-      //Iterator it = grid.template leafbegin<0,Dune::All_Partition>();
-      //Iterator eit = grid.template leafend<0,Dune::All_Partition>();
+      const GV& gv = grid.leafGridView();
       Iterator it = gv.template begin<0>();
       Iterator eit = gv.template end<0>();
 
@@ -957,10 +955,10 @@ namespace Dune {
       typedef typename Grid::LeafGridView GV;
       typedef typename GV::IndexSet IndexSet;
 
-      const GV& gv=grid.leafGridView();
+      const GV& gv = grid.leafGridView();
       const IndexSet& is(gv.indexSet());
-      Iterator it = grid.template leafbegin<0,Dune::All_Partition>();
-      Iterator eit = grid.template leafend<0,Dune::All_Partition>();
+      Iterator it = gv.template begin<0>();
+      Iterator eit = gv.template end<0>();
 
       unsigned int coarsen_cnt=0;
 
