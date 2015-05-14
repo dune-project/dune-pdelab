@@ -905,8 +905,6 @@ namespace Dune {
       typedef typename GV::template Codim<0>::Iterator Iterator;
 
       const GV& gv = grid.leafGridView();
-      Iterator it = gv.template begin<0>();
-      Iterator eit = gv.template end<0>();
 
       unsigned int refine_cnt=0;
       unsigned int coarsen_cnt=0;
@@ -920,20 +918,20 @@ namespace Dune {
       LFSCache lfs_cache(lfs);
       XView x_view(x);
 
-      for(;it!=eit;++it)
+      for(const auto& cell : elements(gv))
         {
-          lfs.bind(*it);
+          lfs.bind(cell);
           lfs_cache.update();
           x_view.bind(lfs_cache);
 
-          if (x_view[0]>=refine_threshold && it->level() < max_level)
+          if (x_view[0]>=refine_threshold && cell.level() < max_level)
             {
-              grid.mark(1,*(it));
+              grid.mark(1,cell);
               refine_cnt++;
             }
-          if (x_view[0]<=coarsen_threshold && it->level() > min_level)
+          if (x_view[0]<=coarsen_threshold && cell.level() > min_level)
             {
-              grid.mark(-1,*(it));
+              grid.mark(-1,cell);
               coarsen_cnt++;
             }
           x_view.unbind();
@@ -954,9 +952,6 @@ namespace Dune {
       typedef typename GV::IndexSet IndexSet;
 
       const GV& gv = grid.leafGridView();
-      const IndexSet& is(gv.indexSet());
-      Iterator it = gv.template begin<0>();
-      Iterator eit = gv.template end<0>();
 
       unsigned int coarsen_cnt=0;
 
@@ -969,20 +964,20 @@ namespace Dune {
       LFSCache lfs_cache(lfs);
       XView x_view(x);
 
-      for(;it!=eit;++it)
+      for(const auto& cell : elements(gv))
         {
-          lfs.bind(*it);
+          lfs.bind(cell);
           lfs_cache.update();
           x_view.bind(lfs_cache);
 
           if (x_view[0]>=refine_threshold)
             {
-              grid.mark(-1,*(it));
+              grid.mark(-1,cell);
               coarsen_cnt++;
             }
           if (x_view[0]<=coarsen_threshold)
             {
-              grid.mark(-1,*(it));
+              grid.mark(-1,cell);
               coarsen_cnt++;
             }
         }
