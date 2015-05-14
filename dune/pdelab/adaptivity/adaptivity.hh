@@ -209,7 +209,6 @@ namespace Dune {
 
       typedef typename GFS::Traits::GridView::Grid::LocalIdSet IDSet;
       typedef typename GFS::Traits::GridView::template Codim<0>::Entity Cell;
-      typedef typename GFS::Traits::GridView::template Codim<0>::EntityPointer CellPointer;
       typedef typename Cell::Geometry Geometry;
       static const int dim = Geometry::dimension;
       typedef typename Cell::HierarchicIterator HierarchicIterator;
@@ -291,15 +290,15 @@ namespace Dune {
 
         size_type max_level = _lfs.gridFunctionSpace().gridView().grid().maxLevel();
 
-        CellPointer ancestor(element);
-        while (ancestor->mightVanish())
+        Cell ancestor = element;
+        while (ancestor.mightVanish())
           {
             // work around UG bug!
-            if (!ancestor->hasFather())
+            if (!ancestor.hasFather())
               break;
 
-            ancestor = ancestor->father();
-            _ancestor = &(*ancestor);
+            ancestor = ancestor.father();
+            _ancestor = &ancestor;
 
             _u_coarse = &_transfer_map[_id_set.id(*_ancestor)];
             // don't project more than once
@@ -524,7 +523,6 @@ namespace Dune {
       typedef typename LeafGridView::template Codim<0>
       ::template Partition<Dune::Interior_Partition>::Iterator LeafIterator;
       typedef typename Grid::template Codim<0>::Entity Element;
-      typedef typename Grid::template Codim<0>::EntityPointer ElementPointer;
       typedef typename Grid::LocalIdSet IDSet;
       typedef typename IDSet::IdType ID;
 
@@ -584,18 +582,18 @@ namespace Dune {
           {
             const Element& e = *it;
 
-            ElementPointer ancestor(e);
+            Element ancestor = e;
 
             typename MapType::const_iterator map_it;
-            while ((map_it = transfer_map.find(id_set.id(*ancestor))) == transfer_map.end())
+            while ((map_it = transfer_map.find(id_set.id(ancestor))) == transfer_map.end())
               {
-                if (!ancestor->hasFather())
+                if (!ancestor.hasFather())
                   DUNE_THROW(Exception,
-                             "transferMap of GridAdaptor didn't contain ancestor of element with id " << id_set.id(*ancestor));
-                ancestor = ancestor->father();
+                             "transferMap of GridAdaptor didn't contain ancestor of element with id " << id_set.id(ancestor));
+                ancestor = ancestor.father();
               }
 
-            visitor(e,*ancestor,map_it->second);
+            visitor(e,ancestor,map_it->second);
           }
 
         typedef Dune::PDELab::AddDataHandle<GFSU,U> DOFHandle;
