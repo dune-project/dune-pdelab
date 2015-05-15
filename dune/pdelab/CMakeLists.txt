@@ -5,7 +5,6 @@ set(SUBDIRS
         boilerplate
         common
         constraints
-        experimental
         finiteelement
         finiteelementmap
         function
