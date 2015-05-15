@@ -18,51 +18,27 @@ list(APPEND CMAKE_MODULE_PATH ${dune-common_MODULE_PATH}
 
 #include the dune macros
 include(DuneMacros)
-
 # start a dune project with information from dune.module
 dune_project()
 
-# $Id: duneproject 5370 2008-11-15 17:43:24Z christi $
+# To have enable all packages work with cmake-2.8, the module
+# libraries need to be added before the call to dune_enable_all_packages()
+# With cmake 3.1, one would use the MODULE_LIBRARIES argument of
+# dune_enable_all_packages() instead.
+dune_add_library(dunepdelab
+  dune/pdelab/common/clock.cc
+  dune/pdelab/common/hostname.cc
+  dune/pdelab/common/logtag.cc
+  ADD_LIBS ${DUNE_LIBS})
+dune_register_package_flags(LIBRARIES dunepdelab)
 
-# we need the module file to be able to build via dunecontrol
-set(EXTRA_DIST                     
-        dune.module             
-        GPL-2                   
-        GPL-3                   
-        LGPL-3                  
-        RELEASE_NOTES)
+# Use the enable all packages feature
+dune_enable_all_packages()
 
-# don't follow the full GNU-standard
-# we need automake 1.5
-set(AUTOMAKE_OPTIONS  foreign 1.5)
-
-# All subdirectories that must (or can) be handled before the library is built
-set(SUBDIRS                                        
-        doc                                     
-        dune                                    
-        m4)
-# The library subdirectory itself
-list(APPEND SUBDIRS lib)
-# All subdirectories that must (or can) be handled after the library is built
-# none yet...
-
-# pass most important options when "make distcheck" is used
-set(DISTCHECK_CONFIGURE_FLAGS  --with-dune=${DUNEROOT} CXX="${CXX}" CXXFLAGS="${CXXFLAGS}" CC="${CC}")
-
-# include not needed for CMake
-# include $(top_srcdir)/am/top-rules
-# include not needed for CMake
-# include $(top_srcdir)/am/global-rules
-
-foreach(i ${SUBDIRS})
-  if(${i} STREQUAL "test")
-    set(opt "EXCLUDE_FROM_ALL")
-  endif(${i} STREQUAL "test")
-  add_subdirectory(${i} ${opt})
-  unset(opt)
-endforeach(i ${SUBDIRS})
-
+add_subdirectory(doc)
+add_subdirectory(dune)
 add_subdirectory(cmake/modules)
+add_subdirectory(lib)
 
 # finalize the dune project, e.g. generating config.h etc.
 finalize_dune_project(GENERATE_CONFIG_H_CMAKE)

@@ -25,10 +25,4 @@ set(common_HEADERS
   utility.hh
   vtkexport.hh)
 
-dune_add_library(dunepdelab
-  clock.cc
-  hostname.cc
-  logtag.cc
-  ADD_LIBS ${DUNE_LIBS})
-
 install(FILES ${common_HEADERS} DESTINATION ${commondir})
