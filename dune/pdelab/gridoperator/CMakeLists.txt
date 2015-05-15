@@ -1,21 +1,7 @@
-set(gridoperatordir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/gridoperator)
-set(SUBDIRS                                        
-        common                                  
-        default                                 
-        onestep)
+add_subdirectory(common)
+add_subdirectory(default)
+add_subdirectory(onestep)
 
-set(gridoperator_HEADERS                           
-        gridoperator.hh                         
-        onestep.hh)
-
-# include not needed for CMake
-# include $(top_srcdir)/am/global-rules
-
-install(FILES ${gridoperator_HEADERS} DESTINATION ${gridoperatordir})
-foreach(i ${SUBDIRS})
-  if(${i} STREQUAL "test")
-    set(opt EXCLUDE_FROM_ALL)
-  endif(${i} STREQUAL "test")
-  add_subdirectory(${i} ${opt})
-  unset(opt)
-endforeach(i ${SUBDIRS})
+install(FILES gridoperator.hh
+              onestep.hh
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/gridoperator)

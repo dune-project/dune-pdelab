@@ -1,3 +1,4 @@
+include(DunePdelabTestMacros)
 include(UsePETSc)
 
 find_package(Eigen3)
