@@ -16,8 +16,10 @@
 #  * sets additional flags and defines on the target (this allows to write loops over lists of flags)
 #  * registers the test
 #
-# The following feature can be used optionally:
+# The following features can be used optionally:
 #  * parallel test execution.
+#  * add flags for the alberta grid manager through ALBERTA_{GRID,WORLD}DIM. This is necessary,
+#    as Alberta is the only external package that cannot be handled through dune_enable_all_packages()
 
 # This target will be used to build all tests
 add_custom_target(build_tests)
@@ -57,6 +59,13 @@ function(pdelab_add_test)
     PUBLIC
     ${PDELABTEST_COMPILE_OPTIONS}
     )
+
+  if(NOT "${PDELABTEST_ALBERTA_GRIDDIM}" STREQUAL "")
+    if("${PDELABTEST_ALBERTA_WORLDDIM}" STREQUAL "")
+      set(PDELABTEST_ALBERTA_WORLDDIM ${PDELABTEST_ALBERTA_GRIDDIM})
+    endif()
+    add_dune_alberta_flags(${PDELABTEST_NAME} GRIDDIM ${PDELABTEST_ALBERTA_GRIDDIM} WORLDDIM ${PDELABTEST_ALBERTA_WORLDDIM})
+  endif()
 
   if("${PDELABTEST_COMMAND}" STREQUAL "")
     set(PDELABTEST_COMMAND "${PDELABTEST_NAME}")
