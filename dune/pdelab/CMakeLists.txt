@@ -1,32 +1,19 @@
-set(pdelabdir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab)
-set(SUBDIRS
-        adaptivity
-        backend
-        boilerplate
-        common
-        constraints
-        experimental
-        finiteelement
-        finiteelementmap
-        function
-        gridfunctionspace
-        gridoperator
-        instationary
-        linearsolver
-        localoperator
-        multistep
-        newton
-        ordering
-        stationary
-        test)
-
-# include not needed for CMake
-# include $(top_srcdir)/am/global-rules
-
-foreach(i ${SUBDIRS})
-  if(${i} STREQUAL "test")
-    set(opt EXCLUDE_FROM_ALL)
-  endif(${i} STREQUAL "test")
-  add_subdirectory(${i} ${opt})
-  unset(opt)
-endforeach(i ${SUBDIRS})
+add_subdirectory(adaptivity)
+add_subdirectory(backend)
+add_subdirectory(boilerplate)
+add_subdirectory(common)
+add_subdirectory(constraints)
+add_subdirectory(experimental)
+add_subdirectory(finiteelement)
+add_subdirectory(finiteelementmap)
+add_subdirectory(function)
+add_subdirectory(gridfunctionspace)
+add_subdirectory(gridoperator)
+add_subdirectory(instationary)
+add_subdirectory(linearsolver)
+add_subdirectory(localoperator)
+add_subdirectory(multistep)
+add_subdirectory(newton)
+add_subdirectory(ordering)
+add_subdirectory(stationary)
+add_subdirectory(test)
