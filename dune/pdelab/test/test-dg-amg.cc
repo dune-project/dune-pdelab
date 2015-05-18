@@ -228,6 +228,7 @@ int main(int argc, char **argv)
 
   /////////////////// OVERLAPPING
   // make linear solver and solve problem
+#if HAVE_MPI
   {
       typedef Dune::PDELab::ISTLBackend_OVLP_AMG_4_DG<ASSEMBLER::GO,FS::CC,CGFS::GFS,CGFS::CC,
                                                       Dune::PDELab::CG2DGProlongation,Dune::SeqSSOR,Dune::CGSolver> LS;
@@ -237,6 +238,7 @@ int main(int argc, char **argv)
       slp.setHangingNodeModifications(false);
       slp.apply();
   }
+#endif // HAVE_MPI
 
   // done
   return 0;
