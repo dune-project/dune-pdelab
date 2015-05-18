@@ -35,6 +35,12 @@ if(GMP_FOUND)
   pdelab_add_test(NAME test-dg-amg)
 endif(GMP_FOUND)
 
+# Include periodic tests. Must run in parallel.
+pdelab_add_test(NAME testpoisson-periodic-2d-deg1 SOURCES testpoisson-periodic-2d.cc MPIRANKS 2 COMPILE_DEFINITIONS "DEGREE=1")
+pdelab_add_test(NAME testpoisson-periodic-2d-deg2 SOURCES testpoisson-periodic-2d.cc MPIRANKS 2 COMPILE_DEFINITIONS "DEGREE=2")
+pdelab_add_test(NAME testpoisson-periodic-3d-deg1 SOURCES testpoisson-periodic-3d.cc MPIRANKS 4 COMPILE_DEFINITIONS "DEGREE=1")
+pdelab_add_test(NAME testpoisson-periodic-3d-deg2 SOURCES testpoisson-periodic-3d.cc MPIRANKS 4 COMPILE_DEFINITIONS "DEGREE=2")
+
 set_tests_properties(
   testpk2dinterpolation
   testrt02dgridfunctionspace
