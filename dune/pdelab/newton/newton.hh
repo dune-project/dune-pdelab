@@ -100,7 +100,7 @@ namespace Dune
       virtual void prepare_step(Matrix& A, TestVector& r) = 0;
       virtual void line_search(TrialVector& z, TestVector& r) = 0;
       virtual void defect(TestVector& r) = 0;
-    };
+    }; // end class NewtonBase
 
     template<class GOS, class S, class TrlV, class TstV>
     class NewtonSolver : public virtual NewtonBase<GOS,TrlV,TstV>
@@ -176,7 +176,7 @@ namespace Dune
 
       Solver& solver;
       bool result_valid;
-    };
+    }; // end class NewtonSolver
 
     template<class GOS, class S, class TrlV, class TstV>
     void NewtonSolver<GOS,S,TrlV,TstV>::apply(TrialVector& u_)
@@ -202,6 +202,11 @@ namespace Dune
       try
         {
           TestVector r(this->gridoperator.testGridFunctionSpace());
+          // residual calculation in member function "defect":
+          //--------------------------------------------------
+          // - set residual vector to zero
+          // - calculate new residual
+          // - store norm of residual in "this->res.defect"
           this->defect(r);
           this->res.first_defect = this->res.defect;
           this->prev_defect = this->res.defect;
@@ -227,6 +232,12 @@ namespace Dune
               Timer assembler_timer;
               try
                 {
+                  // jacobian calculation in member function "prepare_step"
+                  //-------------------------------------------------------
+                  // - if above reassemble threshold
+                  //   - set jacobian to zero
+                  //   - calculate new jacobian
+                  // - set linear reduction
                   this->prepare_step(A,r);
                 }
               catch (...)
@@ -244,6 +255,10 @@ namespace Dune
               Timer linear_solver_timer;
               try
                 {
+                  // solution of linear system in member function "linearSolve"
+                  //-----------------------------------------------------------
+                  // - set initial guess for correction z to zero
+                  // - call linear solver
                   this->linearSolve(A, z, r);
                 }
               catch (...)
@@ -258,6 +273,8 @@ namespace Dune
 
               try
                 {
+                  // line search with correction z
+                  // the undamped version is also integrated in here
                   this->line_search(z, r);
                 }
               catch (NewtonLineSearchError)
@@ -300,8 +317,8 @@ namespace Dune
                           << ".  Reduction (total): "
                           << std::setw(12) << std::setprecision(4) << std::scientific
                           << this->res.reduction << std::endl;
-            }
-        }
+            } // end while
+        } // end try
       catch(...)
         {
           this->res.elapsed = timer.elapsed();
@@ -318,7 +335,7 @@ namespace Dune
                   << this->res.reduction
                   << "   (" << std::setprecision(4) << this->res.elapsed << "s)"
                   << std::endl;
-    }
+    } // end apply
 
     template<class GOS, class TrlV, class TstV>
     class NewtonTerminate : public virtual NewtonBase<GOS,TrlV,TstV>
@@ -382,7 +399,7 @@ namespace Dune
     private:
       unsigned int maxit;
       bool force_iteration;
-    };
+    }; // end class NewtonTerminate
 
     template<class GOS, class TrlV, class TstV>
     class NewtonPrepareStep : public virtual NewtonBase<GOS,TrlV,TstV>
@@ -480,7 +497,7 @@ namespace Dune
       RFType min_linear_reduction;
       bool fixed_linear_reduction;
       RFType reassemble_threshold;
-    };
+    }; // end class NewtonPrepareStep
 
     template<class GOS, class TrlV, class TstV>
     class NewtonLineSearch : public virtual NewtonBase<GOS,TrlV,TstV>
@@ -622,7 +639,7 @@ namespace Dune
           std::cout << "          line search damping factor:   "
                     << std::setw(12) << std::setprecision(4) << std::scientific
                     << lambda << std::endl;
-      }
+      } // end line_search
 
     protected:
       /** helper function to get the different strategies from their name */
@@ -639,7 +656,7 @@ namespace Dune
       Strategy strategy;
       unsigned int maxit;
       RFType damping_factor;
-    };
+    }; // end class NewtonLineSearch
 
     template<class GOS, class S, class TrlV, class TstV = TrlV>
     class Newton : public NewtonSolver<GOS,S,TrlV,TstV>
@@ -725,8 +742,8 @@ namespace Dune
           this->setLineSearchDampingFactor(
             param.get<RFType>("LineSearchDampingFactor"));
       }
-    };
-  }
-}
+    }; // end class Newton
+  } // end namespace PDELab
+} // end namespace Dune
 
 #endif // DUNE_PDELAB_NEWTON_HH
