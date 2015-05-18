@@ -817,13 +817,15 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType>::real_type reduction)
       {
-        Dune::MatrixAdapter<typename M::BaseT,
-          typename V::BaseT,
-          typename W::BaseT> opa(istl::raw(A));
-        Dune::SeqILU0<typename M::BaseT,
-          typename V::BaseT,
-          typename W::BaseT> ilu0(istl::raw(A), 1.0);
-        Dune::RestartedGMResSolver<typename V::BaseT> solver(opa,ilu0,reduction,restart,maxiter,verbose);
+        Dune::MatrixAdapter<
+          typename istl::raw_type<M>::type,
+          typename istl::raw_type<V>::type,
+          typename istl::raw_type<W>::type> opa(istl::raw(A));
+        Dune::SeqILU0<
+          typename istl::raw_type<M>::type,
+          typename istl::raw_type<V>::type,
+          typename istl::raw_type<W>::type> ilu0(istl::raw(A), 1.0);
+        Dune::RestartedGMResSolver<typename istl::raw_type<V>::type> solver(opa,ilu0,reduction,restart,maxiter,verbose);
         Dune::InverseOperatorResult stat;
         solver.apply(istl::raw(z), istl::raw(r), stat);
         res.converged  = stat.converged;

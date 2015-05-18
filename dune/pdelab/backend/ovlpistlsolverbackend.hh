@@ -688,7 +688,10 @@ namespace Dune {
         POP pop(cc,A);
         typedef OVLPScalarProduct<GFS,V> PSP;
         PSP psp(*this);
-        typedef SeqILU0<typename M::BaseT,typename V::BaseT,typename W::BaseT,1> SeqPrec;
+        typedef SeqILU0<
+          typename istl::raw_type<M>::type,
+          typename istl::raw_type<V>::type,
+          typename istl::raw_type<W>::type,1> SeqPrec;
         SeqPrec seqprec(istl::raw(A),1.0);
         typedef OverlappingWrappedPreconditioner<CC,GFS,SeqPrec> WPREC;
         WPREC wprec(gfs,seqprec,cc,this->parallelHelper());
