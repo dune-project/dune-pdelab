@@ -16,6 +16,7 @@
 #include <dune/istl/paamg/pinfo.hh>
 #include <dune/istl/io.hh>
 #include <dune/istl/superlu.hh>
+#include <dune/istl/umfpack.hh>
 
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
@@ -377,7 +378,7 @@ namespace Dune {
       {}
     };
 
-#if HAVE_SUPERLU
+#if HAVE_SUPERLU || DOXYGEN
     /**
      * @brief Solver backend using SuperLU as a direct solver.
      */
@@ -427,7 +428,59 @@ namespace Dune {
     private:
       int verbose;
     };
-#endif // HAVE_SUPERLU
+#endif // HAVE_SUPERLU || DOXYGEN
+
+#if HAVE_UMFPACK || DOXYGEN
+    /**
+     * @brief Solver backend using UMFPack as a direct solver.
+     */
+    class ISTLBackend_SEQ_UMFPack
+      : public SequentialNorm, public LinearResultStorage
+    {
+    public:
+      /*! \brief make a linear solver object
+
+        \param[in] verbose_ print messages if true
+      */
+      explicit ISTLBackend_SEQ_UMFPack (int verbose_=1)
+        : verbose(verbose_)
+      {}
+
+
+      /*! \brief make a linear solver object
+
+        \param[in] maxiter Maximum number of allowed steps (ignored)
+        \param[in] verbose_ print messages if true
+      */
+      ISTLBackend_SEQ_UMFPack (int maxiter, int verbose_)
+        : verbose(verbose_)
+      {}
+
+      /*! \brief solve the given linear system
+
+        \param[in] A the given matrix
+        \param[out] z the solution vector to be computed
+        \param[in] r right hand side
+        \param[in] reduction to be achieved
+      */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename W::ElementType reduction)
+      {
+        typedef typename M::Container ISTLM;
+        Dune::UMFPack<ISTLM> solver(istl::raw(A), verbose);
+        Dune::InverseOperatorResult stat;
+        solver.apply(istl::raw(z), istl::raw(r), stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+        res.conv_rate  = stat.conv_rate;
+      }
+
+    private:
+      int verbose;
+    };
+#endif // HAVE_UMFPACK || DOXYGEN
 
     //! Solver to be used for explicit time-steppers with (block-)diagonal mass matrix
     class ISTLBackend_SEQ_ExplicitDiagonal
@@ -597,7 +650,7 @@ namespace Dune {
       bool reuse;
       bool firstapply;
       bool usesuperlu;
-      Dune::shared_ptr<AMG> amg;
+      std::shared_ptr<AMG> amg;
       ISTLAMGStatistics stats;
     };
 
@@ -732,6 +785,58 @@ namespace Dune {
         : ISTLBackend_SEQ_AMG<GO, Dune::SeqSOR, Dune::LoopSolver>
           (maxiter_, verbose_, reuse_, usesuperlu_)
       {}
+    };
+
+    /** \brief Linear solver backend for Restarted GMRes
+        preconditioned with ILU(0)
+
+    */
+
+    class ISTLBackend_SEQ_GMRES_ILU0
+      : public SequentialNorm, public LinearResultStorage
+    {
+    public :
+
+      /** \brief make linear solver object
+
+          \param[in] restart_ number of iterations when GMRes has to be restarted
+          \param[in] maxiter_ maximum number of iterations to do
+          \param[in] verbose_ print messages if true
+      */
+      explicit ISTLBackend_SEQ_GMRES_ILU0(int restart_ = 200, int maxiter_ = 5000, int verbose_ = 1)
+        : restart(restart_), maxiter(maxiter_), verbose(verbose_)
+      {}
+
+      /** \brief solve the given linear system
+
+          \param[in] A the given matrix
+          \param[out] z the solution vector to be computed
+          \param[in] r right hand side
+          \param[in] reduction to be achieved
+      */
+      template<class M, class V, class W>
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType>::real_type reduction)
+      {
+        Dune::MatrixAdapter<
+          typename istl::raw_type<M>::type,
+          typename istl::raw_type<V>::type,
+          typename istl::raw_type<W>::type> opa(istl::raw(A));
+        Dune::SeqILU0<
+          typename istl::raw_type<M>::type,
+          typename istl::raw_type<V>::type,
+          typename istl::raw_type<W>::type> ilu0(istl::raw(A), 1.0);
+        Dune::RestartedGMResSolver<typename istl::raw_type<V>::type> solver(opa,ilu0,reduction,restart,maxiter,verbose);
+        Dune::InverseOperatorResult stat;
+        solver.apply(istl::raw(z), istl::raw(r), stat);
+        res.converged  = stat.converged;
+        res.iterations = stat.iterations;
+        res.elapsed    = stat.elapsed;
+        res.reduction  = stat.reduction;
+        res.conv_rate  = stat.conv_rate;
+      }
+
+    private :
+      int restart, maxiter, verbose;
     };
 
     //! \} group Sequential Solvers

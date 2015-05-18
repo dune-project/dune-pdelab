@@ -265,6 +265,7 @@ namespace Dune {
       template<typename Node>
       LocalOrderingBase(Node& node, bool container_blocked, GFSData* gfs_data)
         : _container_blocked(container_blocked)
+        , _max_local_size(0)
         , _child_count(Node::CHILDREN)
         , _children(Node::CHILDREN,nullptr)
         , _gfs_data(gfs_data)

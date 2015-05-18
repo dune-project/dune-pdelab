@@ -206,7 +206,7 @@ namespace Dune{
       void assembleUVBoundary(const IG & ig, const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache)
       {
         Dune::PDELab::LocalAssemblerCallSwitch<LOP,LOP::doPatternBoundary>::
-          pattern_boundary(lop,lfsu_s_cache,lfsv_s_cache,localpattern);
+          pattern_boundary(lop,lfsu_s_cache.localFunctionSpace(),lfsv_s_cache.localFunctionSpace(),localpattern);
       }
 
       template<typename IG, typename LFSUC, typename LFSVC>

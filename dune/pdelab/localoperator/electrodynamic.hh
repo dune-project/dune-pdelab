@@ -78,7 +78,8 @@ namespace Dune {
         static const unsigned dimR = BasisTraits::dimRange;
 
         // static checks
-        static_assert(dimR == 3 || dimR == 2, "Works only in 2D or 3D");
+        static_assert(dimR == 3 || dimR == 2,
+                      "Works only in 2D or 3D");
         static_assert
           ((Dune::is_same<typename EG::Geometry::ctype, DF>::value),
            "Grids ctype and Finite Elements DomainFieldType must match");
@@ -197,7 +198,8 @@ namespace Dune {
         typedef FieldVector<RF, CurlTraits<dimR>::dim> Curl;
 
         // static checks
-        static_assert(dimR == 3 || dimR == 2, "Works only in 2D or 3D");
+        static_assert(dimR == 3 || dimR == 2,
+                           "Works only in 2D or 3D");
         static_assert
           ((Dune::is_same<typename EG::Geometry::ctype, DF>::value),
            "Grids ctype and Finite Elements DomainFieldType must match");

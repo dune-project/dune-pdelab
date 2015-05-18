@@ -19,12 +19,11 @@ common_HEADERS =				\
 	multiindex.hh				\
 	nullmutex.hh				\
 	partitioninfoprovider.hh		\
+	polymorphicbufferwrapper.hh		\
 	range.hh				\
 	simpledofindex.hh			\
 	topologyutility.hh			\
 	typetraits.hh				\
-	unordered_map.hh			\
-	unordered_set.hh			\
 	utility.hh				\
 	vtkexport.hh
 
@@ -39,6 +38,7 @@ libpdelabcommon_la_CPPFLAGS = $(AM_CPPFLAGS)	\
 libpdelabcommon_la_LDFLAGS = $(AM_LDFLAGS)	\
 	$(POSIX_CLOCK_LDFLAGS)
 libpdelabcommon_la_LIBADD =			\
+	$(DUNE_COMMON_LIBS)			\
 	$(POSIX_CLOCK_LIBS)
 
 include $(top_srcdir)/am/global-rules

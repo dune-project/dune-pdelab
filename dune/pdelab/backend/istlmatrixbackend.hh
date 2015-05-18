@@ -90,7 +90,7 @@ namespace Dune {
 
       template<typename GO>
       ISTLMatrixContainer (const GO& go)
-        : _container(make_shared<Container>())
+        : _container(std::make_shared<Container>())
       {
         _stats = go.matrixBackend().buildPattern(go,*this);
       }
@@ -113,7 +113,7 @@ namespace Dune {
 
       template<typename GO>
       ISTLMatrixContainer (const GO& go, const E& e)
-        : _container(make_shared<Container>())
+        : _container(std::make_shared<Container>())
       {
         _stats = go.matrixBackend().buildPattern(go,*this);
         (*_container) = e;
@@ -125,11 +125,11 @@ namespace Dune {
 
       //! Creates an ISTLMatrixContainer with an empty underlying ISTL matrix.
       explicit ISTLMatrixContainer (tags::attached_container)
-        : _container(make_shared<Container>())
+        : _container(std::make_shared<Container>())
       {}
 
       ISTLMatrixContainer(const ISTLMatrixContainer& rhs)
-        : _container(make_shared<Container>(*(rhs._container)))
+        : _container(std::make_shared<Container>(*(rhs._container)))
       {}
 
       ISTLMatrixContainer& operator=(const ISTLMatrixContainer& rhs)
@@ -143,7 +143,7 @@ namespace Dune {
           }
         else
           {
-            _container = make_shared<Container>(*(rhs._container));
+            _container = std::make_shared<Container>(*(rhs._container));
           }
         return *this;
       }
@@ -182,7 +182,7 @@ namespace Dune {
         _stats.clear();
       }
 
-      void attach(shared_ptr<Container> container)
+      void attach(std::shared_ptr<Container> container)
       {
         _container = container;
       }
@@ -192,7 +192,7 @@ namespace Dune {
         return bool(_container);
       }
 
-      const shared_ptr<Container>& storage() const
+      const std::shared_ptr<Container>& storage() const
       {
         return _container;
       }
@@ -248,12 +248,12 @@ namespace Dune {
       void clear_row(const RowIndex& ri, const E& diagonal_entry)
       {
         istl::clear_matrix_row(istl::container_tag(*_container),*_container,ri,ri.size()-1);
-        (*this)(ri,ri) = diagonal_entry;
+        istl::write_matrix_element_if_exists(diagonal_entry,istl::container_tag(*_container),*_container,ri,ri,ri.size()-1,ri.size()-1);
       }
 
     private:
 
-      shared_ptr<Container> _container;
+      std::shared_ptr<Container> _container;
       std::vector<PatternStatistics> _stats;
 
     };

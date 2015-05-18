@@ -4,11 +4,10 @@
 #ifndef DUNE_PDELAB_COMMON_LOGTAG_HH
 #define DUNE_PDELAB_COMMON_LOGTAG_HH
 
+#include <memory>
 #include <ostream>
 #include <sstream>
 #include <string>
-
-#include <dune/common/shared_ptr.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -96,23 +95,23 @@ int main() {
     };
     //! Convenience function to create a GeneralLogtagFormatter
     template<class FormatFunc>
-    shared_ptr<LogtagFormatterBase>
+    std::shared_ptr<LogtagFormatterBase>
     makeGeneralLogtagFormatter(const FormatFunc &formatFunc)
-    { return make_shared<GeneralLogtagFormatter<FormatFunc> >(formatFunc); }
+    { return std::make_shared<GeneralLogtagFormatter<FormatFunc> >(formatFunc); }
     //! Convenience function to create a GeneralLogtagFormatter
-    extern shared_ptr<LogtagFormatterBase>
+    extern std::shared_ptr<LogtagFormatterBase>
     makeGeneralLogtagFormatter(std::ostream &(&formatFunc)(std::ostream&));
 
     //! get the log tag formatter currently used by logtag()
-    extern const shared_ptr<LogtagFormatterBase> &getLogtagFormatter();
+    extern const std::shared_ptr<LogtagFormatterBase> &getLogtagFormatter();
     //! set a new log tag formatter to be used by logtag()
     /**
      * Calling this with a 0-pointer or no argument restores reinitializes to
      * the formatter in use at startup.
      */
     extern void
-    setLogtagFormatter(const shared_ptr<LogtagFormatterBase> &formatter
-                       = shared_ptr<LogtagFormatterBase>());
+    setLogtagFormatter(const std::shared_ptr<LogtagFormatterBase> &formatter
+                       = std::shared_ptr<LogtagFormatterBase>());
     //! set a new log tag format function to be used by logtag()
     /**
      * This automatically wraps the function into a GeneralLogtagFormatter
@@ -140,7 +139,7 @@ int main() {
      * exception.
      */
     class WithLogtag {
-      shared_ptr<LogtagFormatterBase> savedFormatter;
+      std::shared_ptr<LogtagFormatterBase> savedFormatter;
 
     public:
       template<class FormatFunc>

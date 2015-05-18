@@ -4,6 +4,7 @@
 
 #include <iostream>
 
+#include <dune/common/math.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
 #include <dune/grid/yaspgrid.hh>
@@ -22,7 +23,8 @@ public:
   inline void evaluate (const Dune::FieldVector<T,2>& x,
                         Dune::FieldVector<T,1>& y) const
   {
-    y = sin(3*3.1415*x[0])*cos(7*3.1415*x[1]);
+    y = sin(3*Dune::StandardMathematicalConstants<T>::pi()*x[0])
+      * cos(7*Dune::StandardMathematicalConstants<T>::pi()*x[1]);
   }
 };
 
@@ -83,7 +85,7 @@ void testvtkexport (const GV& gv, const T& t)
   Dune::PDELab::VTKGridFunctionAdapter<GF> vtkf(gf,"blub");
 
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<GF>(gf,"blub")); // VTKWriter takes control
+  vtkwriter.addVertexData(Dune::make_shared< Dune::PDELab::VTKGridFunctionAdapter<GF> >(gf,"blub")); // VTKWriter takes control
   vtkwriter.write("single",Dune::VTK::ascii);
 }
 

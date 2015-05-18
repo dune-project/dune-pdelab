@@ -84,7 +84,7 @@ namespace Dune {
 
       ISTLBlockVectorContainer(const ISTLBlockVectorContainer& rhs)
         : _gfs(rhs._gfs)
-        , _container(make_shared<Container>(_gfs.ordering().blockCount()))
+        , _container(std::make_shared<Container>(_gfs.ordering().blockCount()))
       {
         istl::dispatch_vector_allocation(_gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
         (*_container) = rhs.base();
@@ -92,7 +92,7 @@ namespace Dune {
 
       ISTLBlockVectorContainer (const GFS& gfs, tags::attached_container = tags::attached_container())
         : _gfs(gfs)
-        , _container(make_shared<Container>(gfs.ordering().blockCount()))
+        , _container(std::make_shared<Container>(gfs.ordering().blockCount()))
       {
         istl::dispatch_vector_allocation(gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
       }
@@ -117,7 +117,7 @@ namespace Dune {
 
       ISTLBlockVectorContainer (const GFS& gfs, const E& e)
         : _gfs(gfs)
-        , _container(make_shared<Container>(gfs.ordering().blockCount()))
+        , _container(std::make_shared<Container>(gfs.ordering().blockCount()))
       {
         istl::dispatch_vector_allocation(gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
         (*_container)=e;
@@ -128,7 +128,7 @@ namespace Dune {
         _container.reset();
       }
 
-      void attach(shared_ptr<Container> container)
+      void attach(std::shared_ptr<Container> container)
       {
         _container = container;
       }
@@ -138,7 +138,7 @@ namespace Dune {
         return bool(_container);
       }
 
-      const shared_ptr<Container>& storage() const
+      const std::shared_ptr<Container>& storage() const
       {
         return _container;
       }
@@ -158,7 +158,7 @@ namespace Dune {
           }
         else
           {
-            _container = make_shared<Container>(r.base());
+            _container = std::make_shared<Container>(r.base());
           }
         return *this;
       }
@@ -300,7 +300,7 @@ namespace Dune {
 
     private:
       const GFS& _gfs;
-      shared_ptr<Container> _container;
+      std::shared_ptr<Container> _container;
     };
 
 

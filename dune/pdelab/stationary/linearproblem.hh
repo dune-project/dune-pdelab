@@ -173,12 +173,12 @@ namespace Dune {
         return _res;
       }
 
-      void apply(V& x) {
+      void apply(V& x, bool reuse_matrix = false) {
         _x = &x;
-        apply();
+        apply(reuse_matrix);
       }
 
-      void apply ()
+      void apply (bool reuse_matrix = false)
       {
         Dune::Timer watch;
         double timing,assembler_time=0;
@@ -188,7 +188,7 @@ namespace Dune {
 
         if (!_jacobian)
           {
-            _jacobian = make_shared<M>(_go);
+            _jacobian = std::make_shared<M>(_go);
             timing = watch.elapsed();
             if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
               std::cout << "=== matrix setup (max) " << timing << " s" << std::endl;
@@ -198,18 +198,28 @@ namespace Dune {
         else if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
           std::cout << "=== matrix setup skipped (matrix already allocated)" << std::endl;
 
-        (*_jacobian) = Real(0.0);
         if (_hanging_node_modifications)
           {
             Dune::PDELab::set_shifted_dofs(_go.localAssembler().trialConstraints(),0.0,*_x); // set hanging node DOFs to zero
             _go.localAssembler().backtransform(*_x); // interpolate hanging nodes adjacent to Dirichlet nodes
           }
-        _go.jacobian(*_x,*_jacobian);
+
+        if (!reuse_matrix)
+          {
+            (*_jacobian) = Real(0.0);
+            _go.jacobian(*_x,*_jacobian);
+          }
 
         timing = watch.elapsed();
         // timing = gos.trialGridFunctionSpace().gridView().comm().max(timing);
         if (_go.trialGridFunctionSpace().gridView().comm().rank()==0 && _verbose>=1)
-          std::cout << "=== matrix assembly (max) " << timing << " s" << std::endl;
+          {
+            if (reuse_matrix)
+              std::cout << "=== matrix assembly SKIPPED" << std::endl;
+            else
+              std::cout << "=== matrix assembly (max) " << timing << " s" << std::endl;
+          }
+
         assembler_time += timing;
 
         // assemble residual
@@ -271,6 +281,17 @@ namespace Dune {
       const Dune::PDELab::LinearSolverResult<double>& ls_result() const{
         return _linear_solver_result;
       }
+
+      typename V::ElementType reduction() const
+      {
+        return _reduction;
+      }
+
+      void setReduction(typename V::ElementType reduction)
+      {
+        _reduction = reduction;
+      }
+
 
     private:
       const GO& _go;

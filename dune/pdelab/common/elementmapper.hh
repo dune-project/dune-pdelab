@@ -38,13 +38,9 @@ namespace Dune {
         std::fill(_gt_offsets.begin(),_gt_offsets.end(),0);
 
         // extract per-GeometryType sizes in codim 0
-        typedef std::vector<GeometryType> GTVector;
-        const GTVector& geometry_types = _index_set.geomTypes(0);
-        for (typename GTVector::const_iterator it = geometry_types.begin(), end = geometry_types.end();
-             it != end;
-             ++it)
+        for (auto gt : _index_set.types(0))
           {
-            _gt_offsets[LocalGeometryTypeIndex::index(*it) + 1] = _index_set.size(*it);
+            _gt_offsets[LocalGeometryTypeIndex::index(gt) + 1] = _index_set.size(gt);
           }
 
         // convert to offsets

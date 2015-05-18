@@ -6,8 +6,8 @@
 
 #include <algorithm>
 #include <iterator>
+#include <memory>
 
-#include <dune/common/shared_ptr.hh>
 #include <dune/common/array.hh>
 
 #include <dune/typetree/treepath.hh>
@@ -92,7 +92,7 @@ namespace Dune {
        *                           the root of the DOFIndex tree to the DOFIndices passed to this
        *                           ordering.
        */
-      explicit SubOrdering(shared_ptr<const BaseOrdering> base_ordering)
+      explicit SubOrdering(std::shared_ptr<const BaseOrdering> base_ordering)
         : NodeT(TypeTree::extract_child_storage(*base_ordering,TreePath()))
         , _base_ordering(base_ordering)
       {
@@ -228,7 +228,7 @@ namespace Dune {
 
     private:
 
-      shared_ptr<const BaseOrdering> _base_ordering;
+      std::shared_ptr<const BaseOrdering> _base_ordering;
 
     };
 

@@ -8,7 +8,7 @@
 #include<string>
 #include<vector>
 
-#include<dune/common/shared_ptr.hh>
+#include <dune/common/shared_ptr.hh>
 
 #include<dune/grid/io/file/vtk/vtkwriter.hh>
 
@@ -64,7 +64,7 @@ namespace Dune {
        * VTKWriter, it will be mapped to the component \c remap_[c] of the
        * GridFunction.
        */
-      VTKGridFunctionAdapter(const shared_ptr<const T>& t_, std::string s_,
+      VTKGridFunctionAdapter(const std::shared_ptr<const T>& t_, std::string s_,
                              const std::vector<std::size_t> &remap_ =
                                rangeVector(std::size_t(T::Traits::dimRange)))
         : t(t_), s(s_), remap(remap_)
@@ -92,7 +92,7 @@ namespace Dune {
       }
 
     private:
-      shared_ptr<const T> t;
+      std::shared_ptr<const T> t;
       std::string s;
       std::vector<std::size_t> remap;
     };
@@ -115,11 +115,11 @@ namespace Dune {
      * GridFunction.
      */
     template<class GF>
-    shared_ptr<VTKGridFunctionAdapter<GF> > makeVTKGridFunctionAdapter
-    ( const shared_ptr<GF> &gf, const std::string &name,
+    std::shared_ptr<VTKGridFunctionAdapter<GF> > makeVTKGridFunctionAdapter
+    ( const std::shared_ptr<GF> &gf, const std::string &name,
       const std::vector<std::size_t> &remap =
         rangeVector(std::size_t(GF::Traits::dimRange)))
-    { return make_shared<VTKGridFunctionAdapter<GF> >(gf, name, remap); }
+    { return std::make_shared<VTKGridFunctionAdapter<GF> >(gf, name, remap); }
 
     //! construct a VTKGridFunctionAdapter
     /**
@@ -139,11 +139,11 @@ namespace Dune {
      * GridFunction.
      */
     template<class GF>
-    shared_ptr<VTKGridFunctionAdapter<GF> > makeVTKGridFunctionAdapter
+    std::shared_ptr<VTKGridFunctionAdapter<GF> > makeVTKGridFunctionAdapter
     ( const GF &gf, const std::string &name,
       const std::vector<std::size_t> &remap =
         rangeVector(std::size_t(GF::Traits::dimRange)))
-    { return make_shared<VTKGridFunctionAdapter<GF> >(stackobject_to_shared_ptr(gf), name, remap); }
+    { return std::make_shared<VTKGridFunctionAdapter<GF> >(stackobject_to_shared_ptr(gf), name, remap); }
 
     //! construct a VTKGridFunctionAdapter
     /**
@@ -161,11 +161,11 @@ namespace Dune {
      * GridFunction.
      */
     template<class GF>
-    shared_ptr<VTKGridFunctionAdapter<GF> > makeVTKGridFunctionAdapter
-    ( const shared_ptr<const GF> &gf, const std::string &name,
+    std::shared_ptr<VTKGridFunctionAdapter<GF> > makeVTKGridFunctionAdapter
+    ( const std::shared_ptr<const GF> &gf, const std::string &name,
       const std::vector<std::size_t> &remap =
         rangeVector(std::size_t(GF::Traits::dimRange)))
-    { return make_shared<VTKGridFunctionAdapter<GF> >(gf, name, remap); }
+    { return std::make_shared<VTKGridFunctionAdapter<GF> >(gf, name, remap); }
 
     /** vizualize order of a hp-FiniteElementMap so it can be used with the VTKWriter from dune-grid.
         @tparam GV GridView to vizualize on

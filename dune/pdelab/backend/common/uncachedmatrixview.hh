@@ -18,7 +18,7 @@ namespace Dune {
       typedef typename remove_const<M_>::type Container;
 
       static_assert(
-        (is_same<
+        (std::is_same<
            typename RowCache::LocalFunctionSpace::Traits::GridFunctionSpace,
            typename Container::TestGridFunctionSpace
            >::value),
@@ -26,7 +26,7 @@ namespace Dune {
         );
 
       static_assert(
-        (is_same<
+        (std::is_same<
            typename ColCache::LocalFunctionSpace::Traits::GridFunctionSpace,
            typename Container::TrialGridFunctionSpace
            >::value),

@@ -45,14 +45,10 @@ namespace Dune {
         , _gv(r._gv)
       {}
 
-#if HAVE_RVALUE_REFERENCES
-
       LeafGridViewOrdering(LeafGridViewOrdering&& r)
         : BaseT(std::move(r))
         , _gv(r._gv)
       {}
-
-#endif // HAVE_RVALUE_REFERENCES
 
 #endif // DOXYGEN
 
@@ -69,7 +65,7 @@ namespace Dune {
 
         for (size_type cc = 0; cc <= dim; ++cc)
           {
-            const GTVector& per_codim_geom_types = _gv.indexSet().geomTypes(cc);
+            auto per_codim_geom_types = _gv.indexSet().types(cc);
             std::copy(per_codim_geom_types.begin(),per_codim_geom_types.end(),std::back_inserter(geom_types));
           }
 
@@ -120,10 +116,12 @@ namespace Dune {
               }
             std::partial_sum(_gt_dof_offsets.begin(),_gt_dof_offsets.end(),_gt_dof_offsets.begin());
             _block_count = _gt_dof_offsets.back();
+            _codim_fixed_size.set();
           }
         else
           {
             _block_count = _size = lo._entity_dof_offsets.back();
+            _codim_fixed_size.reset();
           }
 
         _fixed_size = lo._fixed_size;
@@ -167,16 +165,16 @@ namespace Dune {
       typedef LeafGridViewOrdering<LocalOrdering> GridViewOrdering;
 
       typedef GridViewOrdering transformed_type;
-      typedef shared_ptr<transformed_type> transformed_storage_type;
+      typedef std::shared_ptr<transformed_type> transformed_storage_type;
 
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
-        return transformed_type(make_tuple(make_shared<LocalOrdering>(gfs.finiteElementMapStorage(),gfs.gridView())),gfs.backend().blocked(gfs),const_cast<GFS*>(&gfs));
+        return transformed_type(make_tuple(std::make_shared<LocalOrdering>(gfs.finiteElementMapStorage(),gfs.gridView())),gfs.backend().blocked(gfs),const_cast<GFS*>(&gfs));
       }
 
-      static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs, const Transformation& t)
+      static transformed_storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t)
       {
-        return make_shared<transformed_type>(make_tuple(make_shared<LocalOrdering>(gfs->finiteElementMapStorage(),gfs->gridView())),gfs->backend().blocked(*gfs),const_cast<GFS*>(gfs.get()));
+        return std::make_shared<transformed_type>(make_tuple(std::make_shared<LocalOrdering>(gfs->finiteElementMapStorage(),gfs->gridView())),gfs->backend().blocked(*gfs),const_cast<GFS*>(gfs.get()));
       }
 
     };

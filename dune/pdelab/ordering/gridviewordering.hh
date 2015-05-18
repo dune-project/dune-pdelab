@@ -418,7 +418,7 @@ namespace Dune {
 
     template<typename LocalOrdering>
     class GridViewOrdering
-      : public TypeTree::VariadicCompositeNode<LocalOrdering>
+      : public TypeTree::CompositeNode<LocalOrdering>
       , public VirtualOrderingBase<typename LocalOrdering::Traits::DOFIndex,
                                    typename LocalOrdering::Traits::ContainerIndex>
       , public OrderingBase<typename LocalOrdering::Traits::DOFIndex,
@@ -433,7 +433,7 @@ namespace Dune {
 
     private:
 
-      typedef TypeTree::VariadicCompositeNode<LocalOrdering> NodeT;
+      typedef TypeTree::CompositeNode<LocalOrdering> NodeT;
       typedef OrderingBase<
         typename LocalOrdering::Traits::DOFIndex,
         typename LocalOrdering::Traits::ContainerIndex
@@ -477,8 +477,6 @@ namespace Dune {
         this->setDelegate(this);
       }
 
-#if HAVE_RVALUE_REFERENCES
-
       GridViewOrdering(GridViewOrdering&& r)
         : NodeT(r.nodeStorage())
         , BaseT(std::move(r))
@@ -489,8 +487,6 @@ namespace Dune {
       {
         this->setDelegate(this);
       }
-
-#endif // HAVE_RVALUE_REFERENCES
 
 #endif // DOXYGEN
 
@@ -640,7 +636,7 @@ namespace Dune {
 
         for (size_type cc = 0; cc <= dim; ++cc)
           {
-            const GTVector& per_codim_geom_types = _gv.indexSet().geomTypes(cc);
+            auto per_codim_geom_types = _gv.indexSet().types(cc);
             std::copy(per_codim_geom_types.begin(),per_codim_geom_types.end(),std::back_inserter(geom_types));
           }
 

@@ -72,13 +72,9 @@ namespace Dune {
           : decorated_ordering_tag<Permuted<OrderingTag>,OrderingTag>(tag)
         {}
 
-#if HAVE_RVALUE_REFERENCES
-
         Permuted(OrderingTag&& tag)
           : decorated_ordering_tag<Permuted<OrderingTag>,OrderingTag>(std::move(tag))
         {}
-
-#endif // HAVE_RVALUE_REFERENCES
 
         template<std::size_t i>
         const permuted::base_holder<i>& permuted() const
@@ -102,7 +98,7 @@ namespace Dune {
     //! Ordering that permutes top-level ContainerIndex entries.
     template<typename Ordering>
     class PermutedOrdering
-      : public TypeTree::VariadicCompositeNode<Ordering>
+      : public TypeTree::CompositeNode<Ordering>
       , public VirtualOrderingBase<typename Ordering::Traits::DOFIndex,
                                    typename Ordering::Traits::ContainerIndex>
       , public OrderingBase<typename Ordering::Traits::DOFIndex,
@@ -117,7 +113,7 @@ namespace Dune {
 
     private:
 
-      typedef TypeTree::VariadicCompositeNode<Ordering> NodeT;
+      typedef TypeTree::CompositeNode<Ordering> NodeT;
 
       typedef OrderingBase<typename Ordering::Traits::DOFIndex,
                            typename Ordering::Traits::ContainerIndex> BaseT;
@@ -152,8 +148,6 @@ namespace Dune {
         this->setDelegate(this);
       }
 
-#if HAVE_RVALUE_REFERENCES
-
       PermutedOrdering(PermutedOrdering&& r)
         : NodeT(r.nodeStorage())
         , BaseT(std::move(r))
@@ -161,8 +155,6 @@ namespace Dune {
       {
         this->setDelegate(this);
       }
-
-#endif // HAVE_RVALUE_REFERENCES
 
       virtual void map_index_dynamic(typename Traits::DOFIndexView di, typename Traits::ContainerIndex& ci) const
       {
@@ -203,6 +195,16 @@ namespace Dune {
                      << " != "
                      << this->blockCount()
                      );
+        else
+          {
+            auto& mutable_tag = const_cast<ordering::permuted::tag_base&>(_tag);
+            mutable_tag.permutation().resize(this->blockCount());
+            std::iota(
+              mutable_tag.permutation().begin(),
+              mutable_tag.permutation().end(),
+              0
+              );
+          }
       }
 
     private:
@@ -220,16 +222,16 @@ namespace Dune {
         {
 
           typedef PermutedOrdering<Undecorated> transformed_type;
-          typedef shared_ptr<transformed_type> transformed_storage_type;
+          typedef std::shared_ptr<transformed_type> transformed_storage_type;
 
-          static transformed_type transform(const GFS& gfs, const Transformation& t, shared_ptr<Undecorated> undecorated)
+          static transformed_type transform(const GFS& gfs, const Transformation& t, std::shared_ptr<Undecorated> undecorated)
           {
             return transformed_type(make_tuple(undecorated),gfs.orderingTag().template permuted<Tag::level>());
           }
 
-          static transformed_storage_type transform_storage(shared_ptr<const GFS> gfs_pointer, const Transformation& t, shared_ptr<Undecorated> undecorated)
+          static transformed_storage_type transform_storage(std::shared_ptr<const GFS> gfs_pointer, const Transformation& t, std::shared_ptr<Undecorated> undecorated)
           {
-            return make_shared<transformed_type>(make_tuple(undecorated),gfs_pointer->orderingTag().template permuted<Tag::level>());
+            return std::make_shared<transformed_type>(make_tuple(undecorated),gfs_pointer->orderingTag().template permuted<Tag::level>());
           }
 
         };

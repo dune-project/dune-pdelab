@@ -5,10 +5,10 @@
 #include <vector>
 #include <algorithm>
 #include <functional>
+#include <memory>
 #include <numeric>
 
 #include <dune/common/typetraits.hh>
-#include <dune/common/shared_ptr.hh>
 #include <dune/pdelab/backend/tags.hh>
 #include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
@@ -48,14 +48,14 @@ namespace Dune {
         MatrixContainer(const GO& go)
           : _rows(go.testGridFunctionSpace().size())
           , _cols(go.trialGridFunctionSpace().size())
-          , _container(make_shared<Container>(_rows*_cols,E(0)))
+          , _container(std::make_shared<Container>(_rows*_cols,E(0)))
         {}
 
         template<typename GO>
         MatrixContainer(const GO& go, const E& e)
           : _rows(go.testGridFunctionSpace().size())
           , _cols(go.trialGridFunctionSpace().size())
-          , _container(make_shared<Container>(_rows*_cols,e))
+          , _container(std::make_shared<Container>(_rows*_cols,e))
         {}
 
         //! Creates an ISTLMatrixContainer without allocating an underlying ISTL matrix.
@@ -68,13 +68,13 @@ namespace Dune {
         explicit MatrixContainer(tags::attached_container)
           : _rows(0)
           , _cols(0)
-          , _container(make_shared<Container>())
+          , _container(std::make_shared<Container>())
         {}
 
         MatrixContainer(const MatrixContainer& rhs)
           : _rows(rhs._rows)
           , _cols(rhs._cols)
-          , _container(make_shared<Container>(*(rhs._container)))
+          , _container(std::make_shared<Container>(*(rhs._container)))
         {}
 
         MatrixContainer& operator=(const MatrixContainer& rhs)
@@ -92,7 +92,7 @@ namespace Dune {
             }
           else
             {
-              _container = make_shared<Container>(*(rhs._container));
+              _container = std::make_shared<Container>(*(rhs._container));
             }
           return *this;
         }
@@ -102,7 +102,7 @@ namespace Dune {
           _container.reset();
         }
 
-        void attach(shared_ptr<Container> container)
+        void attach(std::shared_ptr<Container> container)
         {
           _container = container;
         }
@@ -112,7 +112,7 @@ namespace Dune {
           return bool(_container);
         }
 
-        const shared_ptr<Container>& storage() const
+        const std::shared_ptr<Container>& storage() const
         {
           return _container;
         }
@@ -198,8 +198,7 @@ namespace Dune {
 
         std::size_t _rows;
         std::size_t _cols;
-        shared_ptr<Container> _container;
-
+        std::shared_ptr<Container> _container;
       };
 
     } // namespace simple

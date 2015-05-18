@@ -3,8 +3,9 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_CONSTRAINTSTRANSFORMATION_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_CONSTRAINTSTRANSFORMATION_HH
 
+#include <unordered_map>
+
 #include <dune/common/tuples.hh>
-#include <dune/pdelab/common/unordered_map.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -16,10 +17,10 @@ namespace Dune {
     //! \brief a class holding transformation for constrained spaces
     template<typename DI, typename CI, typename F>
     class ConstraintsTransformation
-      : public unordered_map<CI,unordered_map<CI,F> >
+      : public std::unordered_map<CI,std::unordered_map<CI,F> >
     {
 
-      typedef unordered_map<CI,unordered_map<CI,F> > BaseT;
+      typedef std::unordered_map<CI,std::unordered_map<CI,F> > BaseT;
 
     public:
       //! export ElementType
@@ -27,7 +28,7 @@ namespace Dune {
       typedef F Field;
 
       class LocalTransformation
-        : public unordered_map<DI,unordered_map<DI,F> >
+        : public std::unordered_map<DI,std::unordered_map<DI,F> >
       {
 
       public:
@@ -35,20 +36,14 @@ namespace Dune {
         typedef F ElementType;
         typedef F Field;
 
-        typedef unordered_map<DI,F> RowType;
+        typedef std::unordered_map<DI,F> RowType;
 
         bool containsNonDirichletConstraints() const
         {
-          // if any row is not empty, there are non-Dirichlet constraints
-          // TODO: replace with std::any_of + lambda after 2.0 release
-          typedef typename LocalTransformation::const_iterator It;
-          for (It it = this->begin(),
-                 end = this->end();
-               it != end;
-               ++it)
-            if (!it->second.empty())
-              return true;
-          return false;
+          return std::any_of(
+            this->begin(), this->end(),
+            [] (const std::pair<DI,RowType> & c)
+                -> bool { return (!c.second.empty()); });
         }
 
       };
@@ -75,12 +70,9 @@ namespace Dune {
         typedef typename LocalTransformation::const_iterator LocalConstraintIterator;
         typedef typename LocalTransformation::mapped_type::const_iterator LocalEntryIterator;
 
-        for (LocalConstraintIterator lc_it = local_transformation.begin(),
-               lc_end = local_transformation.end();
-             lc_it != lc_end;
-             ++lc_it)
+        for (const auto& local_constraint : local_transformation)
           {
-            const ContainerIndex& ci = index_cache.containerIndex(lc_it->first);
+            const ContainerIndex& ci = index_cache.containerIndex(local_constraint.first);
 
             std::pair<GlobalConstraintIterator,bool> r =
               this->insert(make_pair(ci,GlobalConstraint()));
@@ -93,7 +85,7 @@ namespace Dune {
 
             // The new constraint is a Dirichlet constraint
             // Clear out any existing entries in the global constraint and stop
-            if (lc_it->second.empty())
+            if (local_constraint.second.empty())
               {
                 global_constraint.clear();
                 continue;
@@ -103,13 +95,8 @@ namespace Dune {
             _contains_non_dirichlet_constraints = true;
 
             // Accumulate new entries into global constraint
-            for (LocalEntryIterator le_it = lc_it->second.begin(),
-                   le_end = lc_it->second.end();
-                 le_it != le_end;
-                 ++le_it)
-              {
-                global_constraint[index_cache.containerIndex(le_it->first)] = le_it->second;
-              }
+            for (const auto& local_entry : local_constraint.second)
+              global_constraint[index_cache.containerIndex(local_entry.first)] = local_entry.second;
           }
       }
 

@@ -11,5 +11,5 @@ Version: @VERSION@
 Description: dune-pdelab module
 URL: http://dune-project.org/
 Requires: ${DEPENDENCIES}
-Libs: -L${libdir}
+Libs: -L${libdir} -ldunepdelab
 Cflags: -I${includedir}

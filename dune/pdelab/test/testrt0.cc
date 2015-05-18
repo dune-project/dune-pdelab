@@ -122,8 +122,8 @@ void testrt0 (const GV& gv)
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P0DGF>(p0dgf,"p0"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<RT0DGF>(rt0dgf,"rt0"));
+  vtkwriter.addCellData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<P0DGF> >(p0dgf,"p0"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<RT0DGF> >(rt0dgf,"rt0"));
   vtkwriter.write("testrt0",Dune::VTK::ascii);
 }
 
@@ -144,7 +144,7 @@ int main(int argc, char** argv)
     }
 
 #if HAVE_UG
-    Dune::shared_ptr<Dune::UGGrid<2> > uggrid(TriangulatedLDomainMaker<Dune::UGGrid<2> >::create());
+    std::shared_ptr<Dune::UGGrid<2> > uggrid(TriangulatedLDomainMaker<Dune::UGGrid<2> >::create());
   	uggrid->globalRefine(4);
     testrt0(uggrid->leafGridView());
 #endif
@@ -155,7 +155,7 @@ int main(int argc, char** argv)
     testrt0(albertagrid.leafGridView());
 #endif
 
-#if HAVE_ALUGRID
+#if HAVE_DUNE_ALUGRID
  	ALUUnitSquare alugrid;
   	alugrid.globalRefine(5);
     testrt0(alugrid.leafGridView());

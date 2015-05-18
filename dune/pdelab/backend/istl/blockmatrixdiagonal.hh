@@ -102,6 +102,16 @@ namespace Dune {
         }
 
 
+        // We don't know the type of the container that stores the actual field values (double, complex,...)
+        // Moreover, there might be different containers in case of heterogeneous matrices (multidomain etc.)
+        // In order to communicate the matrix blocks, we need to stream the single row inside the lowest-level
+        // diagonal matrix block for each DOF.
+        // The following set of functions extracts this information from the container and provides a simple
+        // interface that uses pointers to the field type as iterators.
+        //
+        // WARNING: This assumes that matrix blocks at the lowest level are dense and stored in column-major format!
+        //
+
         template<typename FieldMatrix, typename CI>
         std::size_t row_size(tags::field_matrix, const FieldMatrix& c, const CI& ci, int i)
         {
@@ -126,6 +136,8 @@ namespace Dune {
           return row_size(container_tag(c[0]),c[0]);
         }
 
+        // FieldMatrix with a single row is special because the last-level index isn't stored, so we have to
+        // manually extract row 0.
         template<typename FieldMatrix, typename CI>
         typename FieldMatrix::field_type* row_begin(tags::field_matrix_1_any, FieldMatrix& c, const CI& ci, int i)
         {
@@ -140,20 +152,45 @@ namespace Dune {
           return &(*c[ci[0]].begin());
         }
 
+
+        // The end iterators are a little tricky: We want a pointer to the memory location directly after the last
+        // entry for the given row. In theory, we could get this location by dereferencing the end() iterator and
+        // then taking the address of that location, but we are not allowed to dereference an end() iterator. So
+        // we instead decrement the end() iterator by one, take the (valid) address of the element at that location
+        // and increment that pointer by 1. Yay for ugly hackery! :-P
+
+        // With a 1x1 matrix, we can simply take the address directly following the begin() iterator's target.
+        template<typename FieldMatrix, typename CI>
+        typename FieldMatrix::field_type* row_end(tags::field_matrix_1_1, FieldMatrix& c, const CI& ci, int i)
+        {
+          assert(i == -1);
+          return &(*c[0].begin()) + 1;
+        }
+
+        // For any other matrix, we perform the decrement iterator / increment address of target dance...
+        // Once for the optimized storage scheme of single row matrices...
         template<typename FieldMatrix, typename CI>
         typename FieldMatrix::field_type* row_end(tags::field_matrix_1_any, FieldMatrix& c, const CI& ci, int i)
         {
           assert(i == -1);
-          return &(*c[0].end());
+          typename FieldMatrix::row_type::iterator it = c[0].end();
+          --it;
+          return &(*it) + 1;
         }
 
+        // ... and once for the general case.
         template<typename FieldMatrix, typename CI>
         typename FieldMatrix::field_type* row_end(tags::field_matrix_n_any, FieldMatrix& c, const CI& ci, int i)
         {
           assert(i == 0);
-          return &(*c[ci[0]].end());
+          typename FieldMatrix::row_type::iterator it = c[ci[0]].end();
+          --it;
+          return &(*it) + 1;
         }
 
+
+        // These are the standard begin() and end() methods for BlockVector. They recursvely call row_begin()
+        // to arrive at the lowest level block structure.
 
         template<typename BlockVector, typename CI>
         typename BlockVector::field_type* row_begin(tags::block_vector, BlockVector& c, const CI& ci, std::size_t i)

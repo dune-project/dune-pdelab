@@ -4,7 +4,6 @@
 #ifndef DUNE_PDELAB_ORDERING_ORDERINGBASE_HH
 #define DUNE_PDELAB_ORDERING_ORDERINGBASE_HH
 
-#include <dune/common/shared_ptr.hh>
 #include <dune/pdelab/common/exceptions.hh>
 #include <dune/pdelab/common/partitioninfoprovider.hh>
 #include <dune/pdelab/ordering/utility.hh>

@@ -129,13 +129,13 @@ namespace Dune {
       // Preconstruct children - it is important that the children are set before entering the constructor
       // of ImplementationBase!
       static typename BaseT::NodeStorage create_components(const GV& gv,
-                                                           shared_ptr<const FEM> fem_ptr,
+                                                           std::shared_ptr<const FEM> fem_ptr,
                                                            const LeafBackend& leaf_backend,
                                                            const LeafOrderingTag& leaf_ordering_tag)
       {
         typename BaseT::NodeStorage r;
         for (std::size_t i = 0; i < k; ++i)
-          r[i] = make_shared<LeafGFS>(gv,fem_ptr,leaf_backend,leaf_ordering_tag);
+          r[i] = std::make_shared<LeafGFS>(gv,fem_ptr,leaf_backend,leaf_ordering_tag);
         return r;
       }
 
@@ -197,7 +197,7 @@ namespace Dune {
       }
 
       //! Direct access to the storage of the DOF ordering.
-      shared_ptr<const Ordering> orderingStorage() const
+      std::shared_ptr<const Ordering> orderingStorage() const
       {
         if (!this->isRootSpace())
           {
@@ -213,7 +213,7 @@ namespace Dune {
       }
 
       //! Direct access to the storage of the DOF ordering.
-      shared_ptr<Ordering> orderingStorage()
+      std::shared_ptr<Ordering> orderingStorage()
       {
         if (!this->isRootSpace())
           {
@@ -234,10 +234,10 @@ namespace Dune {
       // GFS::update() before GFS::ordering().
       void create_ordering() const
       {
-        _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+        _ordering = std::make_shared<Ordering>(ordering_transformation::transform(*this));
       }
 
-      mutable shared_ptr<Ordering> _ordering;
+      mutable std::shared_ptr<Ordering> _ordering;
 
     };
 

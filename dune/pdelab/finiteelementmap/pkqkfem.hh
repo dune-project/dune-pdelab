@@ -2,12 +2,13 @@
 #ifndef DUNE_PDELAB_PKQKFEM_HH
 #define DUNE_PDELAB_PKQKFEM_HH
 
+#include <memory>
+
 #include <dune/geometry/type.hh>
 
 #include <dune/localfunctions/common/virtualwrappers.hh>
 #include <dune/localfunctions/common/virtualinterface.hh>
 #include <dune/common/array.hh>
-#include <dune/common/shared_ptr.hh>
 #include "finiteelementmap.hh"
 #include "qkfem.hh"
 #include "pkfem.hh"
@@ -103,7 +104,7 @@ namespace Dune {
             }
 
         private:
-            Dune::array< Dune::shared_ptr<FiniteElementType>, 2 > finiteElements_;
+            Dune::array< std::shared_ptr<FiniteElementType>, 2 > finiteElements_;
         };
     }
 }

@@ -1,6 +1,5 @@
 MODULES = 				\
 	DunePdelabMacros.cmake		\
-	FindCXXUnorderedContainers.cmake \
 	FindPackageMultipass.cmake	\
 	FindPETSc.cmake			\
 	ResolveCompilerPaths.cmake	\

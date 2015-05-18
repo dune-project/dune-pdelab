@@ -223,4 +223,3 @@ namespace Dune {
 } //namespace Dune
 
 #endif // DUNE_PDELAB_COMMON_CROSSPRODUCT_HH
-

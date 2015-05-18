@@ -2,12 +2,13 @@
 #ifndef DUNE_PDELAB_VARIABLEMONOMFEM_HH
 #define DUNE_PDELAB_VARIABLEMONOMFEM_HH
 
+#include <memory>
+
 #include <dune/geometry/type.hh>
 
 #include <dune/localfunctions/common/virtualwrappers.hh>
-#include <dune/localfunctions/monom.hh>
+#include <dune/localfunctions/monomial.hh>
 #include <dune/common/array.hh>
-#include <dune/common/shared_ptr.hh>
 #include "finiteelementmap.hh"
 
 namespace Dune {
@@ -20,7 +21,7 @@ namespace Dune {
         template<typename C>
         static void init(C & c, GeometryType gt)
         {
-          typedef Dune::MonomLocalFiniteElement<D,R,d,p> LFE;
+          typedef Dune::MonomialLocalFiniteElement<D,R,d,p> LFE;
           typedef typename C::value_type ptr;
           c[p] = ptr(new LocalFiniteElementVirtualImp<LFE>(LFE(gt)));
 
@@ -35,13 +36,13 @@ namespace Dune {
       };
     }
 
-    //! FiniteElementMap which provides MonomLocalFiniteElement instances, depending on the local polynomial degree
+    //! FiniteElementMap which provides MonomialLocalFiniteElement instances, depending on the local polynomial degree
     //! \ingroup FiniteElementMap
     template<class M, class D, class R, int d, int maxP=6>
     class VariableMonomLocalFiniteElementMap
     {
       typedef typename FixedOrderLocalBasisTraits<
-        typename MonomLocalFiniteElement<D,R,d,0>::Traits::LocalBasisType::Traits,0>::Traits T;
+        typename MonomialLocalFiniteElement<D,R,d,0>::Traits::LocalBasisType::Traits,0>::Traits T;
       //! Type of finite element from local functions
       typedef LocalFiniteElementVirtualInterface<T> FiniteElementType;
     public:
@@ -49,24 +50,24 @@ namespace Dune {
 
       /** Construct a VariableMonomLocalFiniteElementMap for GeometryType Dune::cube */
       VariableMonomLocalFiniteElementMap (const M & m, unsigned int defaultP) :
-        mapper_(m), polOrder_(mapper_.size(), defaultP), defaultP_(defaultP)
+        gt_(Dune::GeometryType::cube,d), mapper_(m), polOrder_(mapper_.size(), defaultP), defaultP_(defaultP)
       {
-        GeometryType cube;
-        cube.makeCube(d);
-        InitVariableMonomLocalFiniteElementMap<D,R,d,maxP>::init(finiteElements_, cube);
+        InitVariableMonomLocalFiniteElementMap<D,R,d,maxP>::init(finiteElements_, gt_);
       }
 
       /** Construct a VariableMonomLocalFiniteElementMap for a given GeometryType gt */
       VariableMonomLocalFiniteElementMap (const M & m, Dune::GeometryType gt, unsigned int defaultP) :
-        mapper_(m), polOrder_(mapper_.size(), defaultP), defaultP_(defaultP)
+        gt_(gt), mapper_(m), polOrder_(mapper_.size(), defaultP), defaultP_(defaultP)
       {
-        InitVariableMonomLocalFiniteElementMap<D,R,d,maxP>::init(finiteElements_, gt);
+        InitVariableMonomLocalFiniteElementMap<D,R,d,maxP>::init(finiteElements_, gt_);
       }
 
       //! \brief get local basis functions for entity
       template<class EntityType>
       const typename Traits::FiniteElementType& find (const EntityType& e) const
       {
+        if (e.type() != gt_)
+          DUNE_THROW(InvalidGeometryType,"Unsupported geometry type: Support only " << gt_ << ", but got " << e.type());
         return getFEM(getOrder(e));
       }
 
@@ -86,14 +87,14 @@ namespace Dune {
       void setOrder (const EntityType& e, unsigned int p)
       {
         assert(p <= maxP);
-        unsigned int i = mapper_.map(e);
+        unsigned int i = mapper_.index(e);
         polOrder_[i] = p;
       }
 
       template<class EntityType>
       unsigned int getOrder (const EntityType& e) const
       {
-        unsigned int i = mapper_.map(e);
+        unsigned int i = mapper_.index(e);
         unsigned int p = polOrder_[i];
         assert(p <= maxP);
         return p;
@@ -115,10 +116,11 @@ namespace Dune {
       }
 
     private:
+      const Dune::GeometryType gt_;
       const M & mapper_;
       std::vector<unsigned char> polOrder_;
       unsigned int defaultP_;
-      Dune::array< Dune::shared_ptr<FiniteElementType>, maxP+1 > finiteElements_;
+      Dune::array< std::shared_ptr<FiniteElementType>, maxP+1 > finiteElements_;
     };
 
 

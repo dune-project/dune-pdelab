@@ -425,7 +425,7 @@ int main(int argc, char** argv)
       std::cout << "#### Testing UG P3 2D" << std::endl;
 
       // make grid
-      Dune::shared_ptr<Dune::UGGrid<2> > grid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
+      std::shared_ptr<Dune::UGGrid<2> > grid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
       grid->globalRefine(4);
 
       // get view
@@ -470,7 +470,7 @@ int main(int argc, char** argv)
     }
 #endif
 
-#if HAVE_ALUGRID
+#if HAVE_DUNE_ALUGRID
     {
       std::cout << "#### Testing ALUGrid(simplex) P3 2D" << std::endl;
 

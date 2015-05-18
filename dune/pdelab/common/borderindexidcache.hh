@@ -5,12 +5,12 @@
 
 #include <vector>
 #include <utility>
+#include <unordered_map>
 
 #include <dune/common/typetraits.hh>
 #include <dune/geometry/typeindex.hh>
 #include <dune/grid/common/gridenums.hh>
 #include <dune/grid/common/capabilities.hh>
-#include <dune/pdelab/common/unordered_map.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -67,13 +67,13 @@ namespace Dune {
         > BorderEntitySet;
 
       typedef std::vector<
-        unordered_map<
+        std::unordered_map<
           index_type,
           id_type
           >
         > IndexToIdMap;
 
-      typedef unordered_map<
+      typedef std::unordered_map<
         id_type,
         EntityIndex
         > IdToIndexMap;
@@ -98,14 +98,10 @@ namespace Dune {
             if (!_gfs.ordering().contains(codim))
               continue;
 
-            const std::vector<GeometryType>& geometry_types = index_set.geomTypes(codim);
-            for (typename std::vector<GeometryType>::const_iterator it = geometry_types.begin(),
-                   end_it = geometry_types.end();
-                 it != end_it;
-                 ++it)
+            for (auto gt : index_set.types(codim))
               {
-                _border_entities[GlobalGeometryTypeIndex::index(*it)].resize(index_set.size(*it));
-                _index_to_id[GlobalGeometryTypeIndex::index(*it)];
+                _border_entities[GlobalGeometryTypeIndex::index(gt)].resize(index_set.size(gt));
+                _index_to_id[GlobalGeometryTypeIndex::index(gt)];
               }
           }
         create_for_codim<Grid::dimension>();

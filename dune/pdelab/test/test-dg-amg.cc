@@ -166,10 +166,7 @@ int main(int argc, char **argv)
   const Dune::SolverCategory::Category solvertype = Dune::SolverCategory::overlapping;
   typedef double NumberType;
 
-#if HAVE_MPI
   // make grid
-  //typedef Dune::UGGrid<dim> GM;
-  //typedef Dune::ALUSimplexGrid<dim,dim> GM;
   typedef Dune::YaspGrid<dim> GM;
   typedef Dune::PDELab::StructuredGrid<GM> Grid;
   Grid grid(elemtype,cells,1);
@@ -217,23 +214,30 @@ int main(int argc, char **argv)
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,DGCC2,DGCC2> DGGO2;
   DGGO2 dggo2(fs.getGFS(),dgcc2,fs.getGFS(),dgcc2,lop);
 
+  /////////////////// SEQUENTIAL
   // make linear solver and solve problem
-  typedef Dune::PDELab::ISTLBackend_OVLP_AMG_4_DG<ASSEMBLER::GO,FS::CC,CGFS::GFS,CGFS::CC,
-                                                  Dune::PDELab::CG2DGProlongation,Dune::SeqSSOR,Dune::CGSolver> LS;
-  LS ls(assembler.getGO(),fs.getCC(),cgfs.getGFS(),cgfs.getCC(),1000,3);
-  //typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_SSORk<FS::GFS,FS::CC> LS;
-  //LS ls(fs.getGFS(),fs.getCC(),5000,5,2);
-  typedef Dune::PDELab::StationaryLinearProblemSolver<DGGO2,LS,V> SLP;
-  SLP slp(dggo2,x,ls,1e-8);
-  slp.setHangingNodeModifications(false);
-  slp.apply();
+  {
+      typedef Dune::PDELab::ISTLBackend_SEQ_AMG_4_DG<ASSEMBLER::GO,CGFS::GFS,
+                                                     Dune::PDELab::CG2DGProlongation,Dune::SeqSSOR,Dune::CGSolver> LS;
+      LS ls(assembler.getGO(),cgfs.getGFS(),1000,3);
+      typedef Dune::PDELab::StationaryLinearProblemSolver<DGGO2,LS,V> SLP;
+      SLP slp(dggo2,ls,x,1e-8);
+      slp.setHangingNodeModifications(false);
+      slp.apply();
+  }
 
-  // output grid to VTK file
-  // Dune::SubsamplingVTKWriter<GM::LeafGridView> vtkwriter(grid->leafGridView(),2*(degree-1));
-  // FS::DGF xdgf(fs.getGFS(),x);
-  // vtkwriter.addVertexData(new FS::VTKF(xdgf,"x_h"));
-  // vtkwriter.pwrite("poisson_uniform","vtk","",Dune::VTK::appendedraw);
-
+  /////////////////// OVERLAPPING
+  // make linear solver and solve problem
+#if HAVE_MPI
+  {
+      typedef Dune::PDELab::ISTLBackend_OVLP_AMG_4_DG<ASSEMBLER::GO,FS::CC,CGFS::GFS,CGFS::CC,
+                                                      Dune::PDELab::CG2DGProlongation,Dune::SeqSSOR,Dune::CGSolver> LS;
+      LS ls(assembler.getGO(),fs.getCC(),cgfs.getGFS(),cgfs.getCC(),1000,3);
+      typedef Dune::PDELab::StationaryLinearProblemSolver<DGGO2,LS,V> SLP;
+      SLP slp(dggo2,ls,x,1e-8);
+      slp.setHangingNodeModifications(false);
+      slp.apply();
+  }
 #endif // HAVE_MPI
 
   // done

@@ -70,7 +70,7 @@ namespace Dune{
       //! Constructor for non trivial constraints
       GridOperator(const GFSU & gfsu_, const CU & cu_, const GFSV & gfsv_, const CV & cv_, LOP & lop_, const MB& mb_ = MB())
         : global_assembler(gfsu_,gfsv_,cu_,cv_)
-        , dof_exchanger(make_shared<BorderDOFExchanger>(*this))
+        , dof_exchanger(std::make_shared<BorderDOFExchanger>(*this))
         , local_assembler(lop_, cu_, cv_,dof_exchanger)
         , backend(mb_)
       {}
@@ -78,7 +78,7 @@ namespace Dune{
       //! Constructor for empty constraints
       GridOperator(const GFSU & gfsu_, const GFSV & gfsv_, LOP & lop_, const MB& mb_ = MB())
         : global_assembler(gfsu_,gfsv_)
-        , dof_exchanger(make_shared<BorderDOFExchanger>(*this))
+        , dof_exchanger(std::make_shared<BorderDOFExchanger>(*this))
         , local_assembler(lop_,dof_exchanger)
         , backend(mb_)
       {}

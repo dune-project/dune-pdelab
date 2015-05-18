@@ -96,15 +96,62 @@ namespace Dune {
           : Undecorated(u)
         {}
 
-#if HAVE_RVALUE_REFERENCES
-
         decorated_ordering_tag(Undecorated&& u)
           : Undecorated(std::move(u))
         {}
 
-#endif // HAVE_RVALUE_REFERENCES
-
       };
+
+
+      namespace {
+
+        // recursive helper for undecorated_ordering that traverses down the Ordering tree level times
+
+        // end of recursion
+        template<typename Ordering>
+        const Ordering& _unwind_decorators(const Ordering& ordering, std::integral_constant<std::size_t,0>)
+        {
+          return ordering;
+        }
+
+        // recursive implementation - this uses decltype to avoid implementing a separate meta function
+        // for calculating the return type
+        template<typename Ordering, std::size_t level>
+        auto _unwind_decorators(const Ordering& ordering, std::integral_constant<std::size_t,level>)
+          -> decltype(
+            _unwind_decorators(
+              ordering.template child<0>(),
+              std::integral_constant<std::size_t,level-1>()
+              )
+            )
+        {
+          return _unwind_decorators(
+            ordering.template child<0>(),
+            std::integral_constant<std::size_t,level-1>()
+            );
+        }
+
+      }
+
+
+      //! Unwinds the stack of decorators on top of the base ordering of gfs and returns the base ordering.
+      /**
+       * This support functionality is required for the DataHandleProvider of dune-multidomaingrid.
+       */
+      template<typename GFS>
+      auto undecorated_ordering(const GFS& gfs)
+        -> decltype(
+          _unwind_decorators(
+            gfs.ordering(),
+            impl::decoration_level<typename GFS::OrderingTag>()
+            )
+          )
+      {
+        return _unwind_decorators(
+          gfs.ordering(),
+          impl::decoration_level<typename GFS::OrderingTag>()
+          );
+      }
 
 
       template<typename GFS,typename Transformation,typename Undecorated,typename GlueTag, typename Tag>
@@ -150,10 +197,10 @@ namespace Dune {
 
         static transformed_type transform(const GFS& gfs, const Transformation& t)
         {
-          return decorator_descriptor::transform(gfs,t,make_shared<undecorated_type>(undecorated_descriptor::transform(gfs,t)));
+          return decorator_descriptor::transform(gfs,t,std::make_shared<undecorated_type>(undecorated_descriptor::transform(gfs,t)));
         }
 
-        static transformed_storage_type transform(shared_ptr<const GFS>& gfs_pointer, const Transformation& t)
+        static transformed_storage_type transform(std::shared_ptr<const GFS>& gfs_pointer, const Transformation& t)
         {
           return decorator_descriptor::transform(gfs_pointer,t,undecorated_descriptor::transform(gfs_pointer,t));
         }
@@ -196,15 +243,15 @@ namespace Dune {
         };
 
         template<typename TC>
-        static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
+        static typename result<TC>::type transform(const GFS& gfs, const Transformation& t, const array<std::shared_ptr<TC>,GFS::CHILDREN>& children)
         {
-          return result<TC>::decorator_descriptor::transform(gfs,t,make_shared<typename result<TC>::undecorated_type>(result<TC>::undecorated_descriptor::transform(gfs,t,children)));
+          return result<TC>::decorator_descriptor::transform(gfs,t,std::make_shared<typename result<TC>::undecorated_type>(result<TC>::undecorated_descriptor::transform(gfs,t,children)));
         }
 
         template<typename TC>
-        static typename result<TC>::storage_type transform_storage(shared_ptr<const GFS> gfs_pointer, const Transformation& t, const array<shared_ptr<TC>,GFS::CHILDREN>& children)
+        static typename result<TC>::storage_type transform_storage(std::shared_ptr<const GFS> gfs_pointer, const Transformation& t, const array<std::shared_ptr<TC>,GFS::CHILDREN>& children)
         {
-          return result<TC>::decorator_descriptor::transform(gfs_pointer,t,result<TC>::undecorated_descriptor::transform(gfs_pointer,t,children));
+          return result<TC>::decorator_descriptor::transform(gfs_pointer,t,result<TC>::undecorated_descriptor::transform_storage(gfs_pointer,t,children));
         }
 
       };
@@ -237,12 +284,12 @@ namespace Dune {
 
         static transformed_type transform(const GFS& gfs, const Transformation& t)
         {
-          return decorator_descriptor::transform(gfs,t,make_shared<undecorated_type>(undecorated_descriptor::transform(gfs,t)));
+          return decorator_descriptor::transform(gfs,t,std::make_shared<undecorated_type>(undecorated_descriptor::transform(gfs,t)));
         }
 
-        static transformed_storage_type transform(shared_ptr<const GFS>& gfs_pointer, const Transformation& t)
+        static transformed_storage_type transform_storage(std::shared_ptr<const GFS>& gfs_pointer, const Transformation& t)
         {
-          return decorator_descriptor::transform(gfs_pointer,t,undecorated_descriptor::transform(gfs_pointer,t));
+          return decorator_descriptor::transform_storage(gfs_pointer,t,undecorated_descriptor::transform_storage(gfs_pointer,t));
         }
 
       };
@@ -312,15 +359,15 @@ namespace Dune {
         };
 
         template<typename... TC>
-        static typename result<TC...>::type transform(const GFS& gfs, const Transformation& t, shared_ptr<TC>... children)
+        static typename result<TC...>::type transform(const GFS& gfs, const Transformation& t, std::shared_ptr<TC>... children)
         {
-          return result<TC...>::decorator_descriptor::transform(gfs,t,make_shared<typename result<TC...>::undecorated_type>(result<TC...>::undecorated_descriptor::transform(gfs,t,children...)));
+          return result<TC...>::decorator_descriptor::transform(gfs,t,std::make_shared<typename result<TC...>::undecorated_type>(result<TC...>::undecorated_descriptor::transform(gfs,t,children...)));
         }
 
         template<typename... TC>
-        static typename result<TC...>::storage_type transform_storage(shared_ptr<const GFS> gfs_pointer, const Transformation& t, shared_ptr<TC>... children)
+        static typename result<TC...>::storage_type transform_storage(std::shared_ptr<const GFS> gfs_pointer, const Transformation& t, std::shared_ptr<TC>... children)
         {
-          return result<TC...>::decorator_descriptor::transform(gfs_pointer,t,result<TC...>::undecorated_descriptor::transform(gfs_pointer,t,children...));
+          return result<TC...>::decorator_descriptor::transform_storage(gfs_pointer,t,result<TC...>::undecorated_descriptor::transform(gfs_pointer,t,children...));
         }
 
       };
@@ -353,12 +400,12 @@ namespace Dune {
 
         static transformed_type transform(const GFS& gfs, const Transformation& t)
         {
-          return decorator_descriptor::transform(gfs,t,make_shared<undecorated_type>(undecorated_descriptor::transform(gfs,t)));
+          return decorator_descriptor::transform(gfs,t,std::make_shared<undecorated_type>(undecorated_descriptor::transform(gfs,t)));
         }
 
-        static transformed_storage_type transform(shared_ptr<const GFS>& gfs_pointer, const Transformation& t)
+        static transformed_storage_type transform_storage(std::shared_ptr<const GFS>& gfs_pointer, const Transformation& t)
         {
-          return decorator_descriptor::transform(gfs_pointer,t,undecorated_descriptor::transform(gfs_pointer,t));
+          return decorator_descriptor::transform_storage(gfs_pointer,t,undecorated_descriptor::transform(gfs_pointer,t));
         }
 
       };

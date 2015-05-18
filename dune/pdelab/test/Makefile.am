@@ -18,14 +18,14 @@ check_PROGRAMS = $(NORMALTESTS)
 AM_CPPFLAGS = @AM_CPPFLAGS@				\
 	-DGRIDSDIR="\"$(srcdir)/grids\""			\
 	$(UG_CPPFLAGS)					\
-	$(ALUGRID_CPPFLAGS)				\
+	$(DUNE_ALUGRID_CPPFLAGS)				\
 	$(AMIRAMESH_CPPFLAGS)				\
 	$(DUNE_CPPFLAGS)				\
 	$(DUNEMPICPPFLAGS)				\
 	$(PARMETIS_CPPFLAGS)
 AM_LDFLAGS = @AM_LDFLAGS@			\
 	$(UG_LDFLAGS)				\
-	$(ALUGRID_LDFLAGS)			\
+	$(DUNE_ALUGRID_LDFLAGS)			\
 	$(AMIRAMESH_LDFLAGS)			\
 	$(DUNE_LDFLAGS)				\
 	$(DUNEMPILDFLAGS)			\
@@ -33,7 +33,7 @@ AM_LDFLAGS = @AM_LDFLAGS@			\
 LDADD =						\
 	@LDADD@                                 \
 	$(PARMETIS_LIBS)			\
-	$(ALUGRID_LIBS)				\
+	$(DUNE_ALUGRID_LIBS)				\
 	$(AMIRAMESH_LIBS)			\
 	$(DUNEMPILIBS)				\
 	$(UG_LIBS)
@@ -53,7 +53,8 @@ GRIDDIM = 2
 
 # scripts are not distributed automatically
 # but since this is need for make all:
-EXTRA_DIST = CMakeLists.txt make_pvd.sh
+EXTRA_DIST = CMakeLists.txt make_pvd.sh \
+             grids grids/*
 
 NORMALTESTS += testanalytic
 testanalytic_SOURCES = testanalytic.cc
@@ -97,10 +98,10 @@ testcoloredtbbgridoperator_LDADD =		\
 MOSTLYCLEANFILES += coloredtbbgridoperator_*.vtu
 
 # disable IntersectionIndexSet test for now, we know it's broken
-# if ALUGRID
+# if DUNE_ALUGRID
 # NORMALTESTS += test-composed-iis-gfs
 # test_composed_iis_gfs_SOURCES = test-composed-iis-gfs.cc
-# endif ALUGRID
+# endif DUNE_ALUGRID
 
 NORMALTESTS += testconstraints
 testconstraints_SOURCES = testconstraints.cc
@@ -204,13 +205,13 @@ testlocalfunctionspace_LDADD =			\
         $(LDADD)                                \
 	$(ALBERTA_LIBS)
 
-NORMALTESTS += testp12dinterpolation
-testp12dinterpolation_SOURCES = testp12dinterpolation.cc
-testp12dinterpolation_CPPFLAGS = $(AM_CPPFLAGS)				\
+NORMALTESTS += testpk2dinterpolation
+testpk2dinterpolation_SOURCES = testpk2dinterpolation.cc
+testpk2dinterpolation_CPPFLAGS = $(AM_CPPFLAGS)				\
 	$(ALBERTA2D_CPPFLAGS)
-testp12dinterpolation_LDFLAGS = $(AM_LDFLAGS)	\
+testpk2dinterpolation_LDFLAGS = $(AM_LDFLAGS)	\
 	$(ALBERTA2D_LDFLAGS)
-testp12dinterpolation_LDADD =					\
+testpk2dinterpolation_LDADD =					\
 	$(LDADD)                                \
 	$(ALBERTA2D_LIBS)
 
@@ -253,37 +254,6 @@ testpoisson_old_LDADD =				\
 	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
 	$(ALBERTA_LIBS)
 MOSTLYCLEANFILES += poisson_*.vtu
-
-NORMALTESTS += testflatbackend
-testflatbackend_SOURCES = testflatbackend.cc
-testflatbackend_CPPFLAGS = $(AM_CPPFLAGS)	\
-	$(ALBERTA_CPPFLAGS)			\
-	$(SUPERLU_CPPFLAGS)			\
-	$(TBB_CPPFLAGS)
-testflatbackend_LDFLAGS = $(AM_LDFLAGS)		\
-	$(ALBERTA_LDFLAGS)			\
-	$(SUPERLU_LDFLAGS)			\
-	$(TBB_LDFLAGS)
-testflatbackend_LDADD =				\
-	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
-	$(ALBERTA_LIBS)				\
-	$(TBB_LIBS)				\
-	$(LDADD)
-MOSTLYCLEANFILES += flatbackend_*.vtu
-
-NORMALTESTS += testpoisson-globalfe
-testpoisson_globalfe_SOURCES = testpoisson-globalfe.cc
-testpoisson_globalfe_CPPFLAGS = $(AM_CPPFLAGS)	\
-	$(ALBERTA_CPPFLAGS)			\
-	$(SUPERLU_CPPFLAGS)
-testpoisson_globalfe_LDFLAGS = $(AM_LDFLAGS)	\
-	$(ALBERTA_LDFLAGS)			\
-	$(SUPERLU_LDFLAGS)
-testpoisson_globalfe_LDADD =			\
-	$(LDADD)                                \
-	$(SUPERLU_LDFLAGS) $(SUPERLU_LIBS)	\
-	$(ALBERTA_LIBS)
-MOSTLYCLEANFILES += poisson_globalfe_*.vtu
 
 NORMALTESTS += testrt0
 testrt0_SOURCES = testrt0.cc
@@ -337,7 +307,7 @@ testopbfem_LDFLAGS = $(AM_LDFLAGS) $(GMP_LDFLAGS)
 testopbfem_LDADD = $(LDADD) $(GMP_LIBS)
 endif
 
-if ALUGRID
+if DUNE_ALUGRID
 check_PROGRAMS += testordering
 testordering_SOURCES = testordering.cc
 endif
@@ -364,14 +334,14 @@ endif
 check_PROGRAMS += testvectoriterator
 testvectoriterator_SOURCES = testvectoriterator.cc
 
-check_PROGRAMS += testvectoriterator-no-variadic-templates
-testvectoriterator_no_variadic_templates_SOURCES = testvectoriterator.cc
-testvectoriterator_no_variadic_templates_CPPFLAGS = $(AM_CPPFLAGS) -DDISABLE_VARIADIC_TEMPLATES
+check_PROGRAMS += testchunkedblockordering
+testchunkedblockordering_SOURCES = testchunkedblockordering.cc
 
 NORMALTESTS += testsimplebackend
 testsimplebackend_SOURCES = testsimplebackend.cc
 MOSTLYCLEANFILES += simplebackend_*.vtu
 
+if EIGEN
 
 NORMALTESTS += testeigenbackend
 testeigenbackend_SOURCES = testeigenbackend.cc
@@ -380,9 +350,18 @@ testeigenbackend_LDFLAGS = $(AM_LDFLAGS) $(EIGEN_LDFLAGS)
 testeigenbackend_LDADD = $(LDADD) $(EIGEN_LIBS)
 MOSTLYCLEANFILES += eigenbackend_*.vtu
 
+endif
+
+
+if GMP
+
 NORMALTESTS += test-dg-amg
 test_dg_amg_SOURCES = test-dg-amg.cc
+test_dg_amg_CXXFLAGS = @AM_CPPFLAGS@ $(GMP_CPPFLAGS)
+test_dg_amg_LDFLAGS = $(AM_LDFLAGS) $(GMP_LDFLAGS)
+test_dg_amg_LDADD = $(GMP_LIBS) $(LDADD)
 
+endif
 
 include $(top_srcdir)/am/global-rules
 

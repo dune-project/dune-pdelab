@@ -6,9 +6,9 @@
 
 #include <limits>
 #include <ostream>
+#include <memory>
 
 #include <dune/common/debugstream.hh>
-#include <dune/common/shared_ptr.hh>
 
 #include <dune/geometry/quadraturerules.hh>
 #include <dune/geometry/type.hh>
@@ -171,7 +171,7 @@ sum = gf.getGridView().comm().sum(sum);
        * the next time setGridFunction is called, if this GridFunctionProbe
        * holds the last reference at that time.
        */
-      void setGridFunction(const Dune::shared_ptr<const GF> &gf) {
+      void setGridFunction(const std::shared_ptr<const GF> &gf) {
         gfsp = gf;
         gfp = &*gf;
       }
@@ -212,9 +212,9 @@ sum = gf.getGridView().comm().sum(sum);
       }
 
     private:
-      Dune::shared_ptr<const GF> gfsp;
+      std::shared_ptr<const GF> gfsp;
       const GF *gfp;
-      Dune::shared_ptr<EPtr> e;
+      std::shared_ptr<EPtr> e;
       Domain xl;
       int evalRank;
     };

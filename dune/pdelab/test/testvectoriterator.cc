@@ -3,12 +3,9 @@
 
 #include "config.h"
 
-#ifdef DISABLE_VARIADIC_TEMPLATES
-#undef HAVE_VARIADIC_TEMPLATES
-#endif
-
 #include <iostream>
 #include <algorithm>
+#include <numeric>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/dynvector.hh>

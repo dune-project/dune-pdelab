@@ -6,13 +6,14 @@
 #endif
 
 #include <iostream>
+#include <memory>
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/parallel/mpihelper.hh>
 
 #include <dune/grid/yaspgrid.hh>
-#include <dune/grid/alugrid.hh>
+#include <dune/alugrid/grid.hh>
 #include <dune/grid/common/scsgmapper.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 
@@ -106,13 +107,14 @@ struct test<2,true> {
 
     typedef Dune::PDELab::PowerGridFunctionSpace<GFS1,3,VBE,Dune::PDELab::InterleavedOrderingTag> P1GFS;
 
-#if HAVE_INITIALIZER_LIST
+    {
+      // keep this block around to test the vector-based constructor of the ordering tag
+      std::vector<std::size_t> p1_gfs_block_sizes(3);
+      std::fill(p1_gfs_block_sizes.begin(),p1_gfs_block_sizes.end(),1);
+      P1GFS p1gfs(gfs1,gfs1,gfs1,VBE(),p1_gfs_block_sizes);
+    }
+
     P1GFS p1gfs(gfs1,gfs1,gfs1,VBE(),{{1,1,1}});
-#else
-    std::vector<std::size_t> p1_gfs_block_sizes(3);
-    std::fill(p1_gfs_block_sizes.begin(),p1_gfs_block_sizes.end(),1);
-    P1GFS p1gfs(gfs1,gfs1,gfs1,VBE(),p1_gfs_block_sizes);
-#endif
 
     typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::static_blocking,6> NVBE;
 
@@ -162,7 +164,7 @@ struct test<2,false> {
     typedef Dune::SingleCodimSingleGeomTypeMapper<GV, 0> CellMapper;
     CellMapper cellmapper(gv);
     typedef Dune::PDELab::VariableMonomLocalFiniteElementMap<CellMapper,float,double,GV::dimension> MonomFEM;
-    MonomFEM monomfem(cellmapper,2);
+    MonomFEM monomfem(cellmapper,gv.indexSet().types(0)[0],2);
 
     typedef Dune::PDELab::NoConstraints CON;
 
@@ -220,8 +222,8 @@ int main(int argc, char** argv)
       typedef Dune::ALUGrid<2,2,Dune::cube,Dune::nonconforming> Grid;
       Dune::FieldVector<double,2> l(0.0);
       Dune::FieldVector<double,2> u(1.0);
-      Dune::array<unsigned int,2> N(Dune::fill_array<unsigned int,2>(1));
-      Dune::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createCubeGrid(l,u,N);
+      Dune::array<unsigned int,2> N = {{1,1}};
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createCubeGrid(l,u,N);
       grid->globalRefine(1);
 
       std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafGridView().begin<0>()->type()) << std::endl;
@@ -235,8 +237,8 @@ int main(int argc, char** argv)
       typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::conforming> Grid;
       Dune::FieldVector<double,2> l(0.0);
       Dune::FieldVector<double,2> u(1.0);
-      Dune::array<unsigned int,2> N(Dune::fill_array<unsigned int,2>(1));
-      Dune::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(l,u,N);
+      Dune::array<unsigned int,2> N = {{1,1}};
+      std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createSimplexGrid(l,u,N);
       grid->globalRefine(1);
 
       std::cout << Dune::GlobalGeometryTypeIndex::index(grid->leafGridView().begin<0>()->type()) << std::endl;

@@ -21,6 +21,12 @@ namespace Dune {
         };
     }
 
+    template<typename T>
+    DUNE_CONSTEXPR bool deactivate_standard_blocking_for_ordering(const T&)
+    {
+      return false;
+    }
+
     struct istl_vector_backend_tag {};
 
     template<ISTLParameters::Blocking blocking = ISTLParameters::no_blocking, std::size_t block_size_ = 1>
@@ -48,6 +54,8 @@ namespace Dune {
       template<typename GFS>
       bool blocked(const GFS& gfs) const
       {
+        if (deactivate_standard_blocking_for_ordering(gfs.orderingTag()))
+          return false;
         // We have to make an exception for static blocking and block_size == 1:
         // In that case, the ISTL backends expect the redundant index information
         // at that level to be elided, and keeping it in here will break vector

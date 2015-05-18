@@ -50,6 +50,11 @@ namespace Dune {
       : public OrderingError
     {};
 
+    //! The block size of a ChunkedBlockOrdering does not divide the block count of the underlying ordering.
+    class ChunkedBlockOrderingSizeError
+      : public OrderingError
+    {};
+
   } // namespace PDELab
 } // namespace Dune
 

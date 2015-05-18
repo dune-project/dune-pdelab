@@ -3,11 +3,11 @@
 #include "config.h"
 #endif
 #include<iostream>
+#include<memory>
 #include<vector>
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
-#include <dune/common/shared_ptr.hh>
 #include<dune/grid/yaspgrid.hh>
 #include <dune/pdelab/backend/backendselector.hh>
 #include"../finiteelementmap/p0fem.hh"
@@ -104,9 +104,9 @@ void testpk (const GV& gv)
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  vtkwriter.addCellData(new Dune::PDELab::VTKGridFunctionAdapter<P0DGF>(p0dgf,"p0"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<P1DGF>(p1dgf,"p1"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<PkDGF>(pkdgf,"pk"));
+  vtkwriter.addCellData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<P0DGF> >(p0dgf,"p0"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<P1DGF> >(p1dgf,"p1"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<PkDGF> >(pkdgf,"pk"));
   vtkwriter.write("testpk",Dune::VTK::ascii);
 }
 
@@ -117,7 +117,7 @@ int main(int argc, char** argv)
     Dune::MPIHelper::instance(argc, argv);
 
 #if HAVE_UG
-    Dune::shared_ptr<Dune::UGGrid<2> > uggrid(TriangulatedLDomainMaker<Dune::UGGrid<2> >::create());
+    std::shared_ptr<Dune::UGGrid<2> > uggrid(TriangulatedLDomainMaker<Dune::UGGrid<2> >::create());
   	uggrid->globalRefine(4);
     testpk(uggrid->leafGridView());
 #endif
@@ -132,7 +132,7 @@ int main(int argc, char** argv)
     testpk(albertagridr->leafGridView());
 #endif
 
-#if HAVE_ALUGRID
+#if HAVE_DUNE_ALUGRID
  	ALUUnitSquare alugrid;
   	alugrid.globalRefine(4);
     testpk(alugrid.leafGridView());

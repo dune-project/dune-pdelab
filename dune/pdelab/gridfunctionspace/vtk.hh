@@ -445,10 +445,10 @@ namespace Dune {
           switch (dgf->dataSetType())
             {
             case DGF::Output::vertexData:
-              vtk_writer.addVertexData(new VTKGridFunctionAdapter<DGF>(dgf,name.c_str()));
+              vtk_writer.addVertexData(std::make_shared<VTKGridFunctionAdapter<DGF> >(dgf,name.c_str()));
               break;
             case DGF::Output::cellData:
-              vtk_writer.addCellData(new VTKGridFunctionAdapter<DGF>(dgf,name.c_str()));
+              vtk_writer.addCellData(std::make_shared<VTKGridFunctionAdapter<DGF> >(dgf,name.c_str()));
               break;
             default:
               DUNE_THROW(NotImplemented,"Unsupported data set type");
@@ -462,7 +462,7 @@ namespace Dune {
         template<typename LFS, typename TreePath>
         void add_vector_solution(const LFS& lfs, TreePath tp, VectorGridFunctionSpaceTag tag)
         {
-          add_to_vtk_writer(make_shared<DGFTreeVectorFunction<LFS,Data> >(lfs,data),tp);
+          add_to_vtk_writer(std::make_shared<DGFTreeVectorFunction<LFS,Data> >(lfs,data),tp);
         }
 
         //! Tag dispatch-based switch that creates a vector-valued function for a VectorGridFunctionSpace.
@@ -534,7 +534,7 @@ namespace Dune {
         leaf(const LFS& lfs, TreePath tp)
         {
           if (predicate(lfs))
-            add_to_vtk_writer(make_shared<DGFTreeLeafFunction<LFS,Data> >(lfs,data),tp);
+            add_to_vtk_writer(std::make_shared<DGFTreeLeafFunction<LFS,Data> >(lfs,data),tp);
         }
 
 
@@ -584,18 +584,58 @@ namespace Dune {
         template<typename Factory, typename TreePath>
         OutputCollector& addCellFunction(Factory factory, TreePath tp, std::string name)
         {
+          typedef typename std::remove_reference<decltype(*factory.create(TypeTree::extract_child(_data->_lfs,tp),_data))>::type DGF;
+          _vtk_writer.addCellData(std::make_shared<VTKGridFunctionAdapter<DGF> >(factory.create(TypeTree::extract_child(_data->_lfs,tp),_data),name));
+          return *this;
+        }
+
+        template<template<typename...> class Function, typename TreePath, typename... Params>
+        OutputCollector& addCellFunction(TreePath tp, std::string name, Params&&... params)
+        {
           typedef typename TypeTree::extract_child_type<typename Data::LFS,TreePath>::type LFS;
-          typedef typename Factory::template create_type<LFS,Data>::type DGF;
-          _vtk_writer.addCellData(new VTKGridFunctionAdapter<DGF>(factory.create(TypeTree::extract_child(_data->_lfs,tp),_data),name));
+          typedef Function<LFS,Data,Params...> DGF;
+          _vtk_writer.addCellData(
+            std::make_shared<VTKGridFunctionAdapter<DGF> >(
+              std::make_shared<DGF>(
+                TypeTree::extract_child(
+                  _data->_lfs,
+                  tp
+                ),
+                _data,
+                std::forward<Params>(params)...
+              ),
+              name
+            )
+          );
           return *this;
         }
 
         template<typename Factory, typename TreePath>
         OutputCollector& addVertexFunction(Factory factory, TreePath tp, std::string name)
         {
+          typedef typename std::remove_reference<decltype(*factory.create(TypeTree::extract_child(_data->_lfs,tp),_data))>::type DGF;
+          _vtk_writer.addVertexData(std::make_shared<VTKGridFunctionAdapter<DGF> >(factory.create(TypeTree::extract_child(_data->_lfs,tp),_data),name));
+          return *this;
+        }
+
+        template<template<typename...> class Function, typename TreePath, typename... Params>
+        OutputCollector& addVertexFunction(TreePath tp, std::string name, Params&&... params)
+        {
           typedef typename TypeTree::extract_child_type<typename Data::LFS,TreePath>::type LFS;
-          typedef typename Factory::template create_type<LFS,Data>::type DGF;
-          _vtk_writer.addVertexData(new VTKGridFunctionAdapter<DGF>(factory.create(TypeTree::extract_child(_data->_lfs,tp),_data),name));
+          typedef Function<LFS,Data,Params...> DGF;
+          _vtk_writer.addVertexData(
+            std::make_shared<VTKGridFunctionAdapter<DGF> >(
+              std::make_shared<DGF>(
+                TypeTree::extract_child(
+                  _data->_lfs,
+                  tp
+                ),
+                _data,
+                std::forward<Params>(params)...
+              ),
+              name
+            )
+          );
           return *this;
         }
 
@@ -629,7 +669,7 @@ namespace Dune {
                            const Predicate& predicate = Predicate())
     {
       typedef vtk::DGFTreeCommonData<GFS,X,Predicate> Data;
-      vtk::OutputCollector<VTKWriter,Data> collector(vtk_writer,make_shared<Data>(gfs,x),predicate);
+      vtk::OutputCollector<VTKWriter,Data> collector(vtk_writer,std::make_shared<Data>(gfs,x),predicate);
       collector.addSolution(name_generator);
       return collector;
     }

@@ -5,6 +5,8 @@
 
 #include <vector>
 
+#include <dune/pdelab/ordering/orderingbase.hh>
+
 namespace Dune {
   namespace PDELab {
 

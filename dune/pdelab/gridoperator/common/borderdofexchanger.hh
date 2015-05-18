@@ -6,6 +6,8 @@
 #include <cstddef>
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
+#include <unordered_set>
 
 #include <dune/common/deprecated.hh>
 #include <dune/common/parallel/mpihelper.hh>
@@ -15,8 +17,6 @@
 #include <dune/grid/common/gridenums.hh>
 #include <dune/grid/common/datahandleif.hh>
 
-#include <dune/pdelab/common/unordered_map.hh>
-#include <dune/pdelab/common/unordered_set.hh>
 #include <dune/pdelab/common/borderindexidcache.hh>
 #include <dune/pdelab/common/globaldofindex.hh>
 #include <dune/pdelab/gridfunctionspace/entityindexcache.hh>
@@ -88,9 +88,9 @@ namespace Dune {
 
     public:
       //! Data structure for storing border-border matrix pattern entries in a communication-optimized form
-      typedef unordered_map<
+      typedef std::unordered_map<
         typename GFSV::Ordering::Traits::DOFIndex,
-        unordered_set<GlobalDOFIndex>
+        std::unordered_set<GlobalDOFIndex>
         > BorderPattern;
 
     private:
@@ -114,13 +114,13 @@ namespace Dune {
       \param[in] gridView The grid view to operate on.
       */
       NonOverlappingBorderDOFExchanger(const GridOperator& grid_operator)
-        : _communication_cache(make_shared<CommunicationCache>(grid_operator))
+        : _communication_cache(std::make_shared<CommunicationCache>(grid_operator))
         , _grid_view(grid_operator.testGridFunctionSpace().gridView())
       {}
 
       void update(const GridOperator& grid_operator)
       {
-        _communication_cache = make_shared<CommunicationCache>(grid_operator);
+        _communication_cache = std::make_shared<CommunicationCache>(grid_operator);
       }
 
       class CommunicationCache

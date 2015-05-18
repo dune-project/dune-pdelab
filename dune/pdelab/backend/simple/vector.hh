@@ -5,10 +5,10 @@
 
 #include <algorithm>
 #include <functional>
+#include <memory>
 #include <numeric>
 
 #include <dune/common/fvector.hh>
-#include <dune/common/shared_ptr.hh>
 #include <dune/istl/bvector.hh>
 
 #include <dune/pdelab/backend/tags.hh>
@@ -101,12 +101,12 @@ namespace Dune {
 
         VectorContainer(const VectorContainer& rhs)
           : _gfs(rhs._gfs)
-          , _container(make_shared<Container>(*(rhs._container)))
+          , _container(std::make_shared<Container>(*(rhs._container)))
         {}
 
         VectorContainer (const GFS& gfs, tags::attached_container = tags::attached_container())
           : _gfs(gfs)
-          , _container(make_shared<Container>(gfs.ordering().blockCount()))
+          , _container(std::make_shared<Container>(gfs.ordering().blockCount()))
         {}
 
         //! Creates a VectorContainer without allocating storage.
@@ -128,7 +128,7 @@ namespace Dune {
 
         VectorContainer (const GFS& gfs, const E& e)
           : _gfs(gfs)
-          , _container(make_shared<Container>(gfs.ordering().blockCount(),e))
+          , _container(std::make_shared<Container>(gfs.ordering().blockCount(),e))
         {}
 
         void detach()
@@ -136,7 +136,7 @@ namespace Dune {
           _container.reset();
         }
 
-        void attach(shared_ptr<Container> container)
+        void attach(std::shared_ptr<Container> container)
         {
           _container = container;
         }
@@ -146,7 +146,7 @@ namespace Dune {
           return bool(_container);
         }
 
-        const shared_ptr<Container>& storage() const
+        const std::shared_ptr<Container>& storage() const
         {
           return _container;
         }
@@ -166,7 +166,7 @@ namespace Dune {
             }
           else
             {
-              _container = make_shared<Container>(*(r._container));
+              _container = std::make_shared<Container>(*(r._container));
             }
           return *this;
         }
@@ -300,7 +300,7 @@ namespace Dune {
 
       private:
         const GFS& _gfs;
-        shared_ptr<Container> _container;
+        std::shared_ptr<Container> _container;
       };
 
 

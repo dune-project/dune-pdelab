@@ -117,7 +117,7 @@ void testp1 (const GV& gv)
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<P1DGF>(p1dgf,"p1"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<P1DGF> >(p1dgf,"p1"));
   vtkwriter.write("testconstraintsp1",Dune::VTK::ascii);
 }
 
@@ -252,11 +252,11 @@ void testpowerp1 (const GV& gv)
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<SUB0DGF>(sub0dgf,"comp 0"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<SUB1DGF>(sub1dgf,"comp 1"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<SUB2DGF>(sub2dgf,"comp 2"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<SUB3DGF>(sub3dgf,"comp 3"));
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<SUB4DGF>(sub4dgf,"comp 4"));
+  vtkwriter.addVertexData(std::make_shared< Dune::PDELab::VTKGridFunctionAdapter<SUB0DGF> >(sub0dgf,"comp 0"));
+  vtkwriter.addVertexData(std::make_shared< Dune::PDELab::VTKGridFunctionAdapter<SUB1DGF> >(sub1dgf,"comp 1"));
+  vtkwriter.addVertexData(std::make_shared< Dune::PDELab::VTKGridFunctionAdapter<SUB2DGF> >(sub2dgf,"comp 2"));
+  vtkwriter.addVertexData(std::make_shared< Dune::PDELab::VTKGridFunctionAdapter<SUB3DGF> >(sub3dgf,"comp 3"));
+  vtkwriter.addVertexData(std::make_shared< Dune::PDELab::VTKGridFunctionAdapter<SUB4DGF> >(sub4dgf,"comp 4"));
   vtkwriter.write("testconstraintspowerp1",Dune::VTK::ascii);
 }
 
@@ -269,7 +269,7 @@ int main(int argc, char** argv)
     Dune::MPIHelper::instance(argc, argv);
 
 #if HAVE_UG
-    Dune::shared_ptr<Dune::UGGrid<2> > uggrid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
+    std::shared_ptr<Dune::UGGrid<2> > uggrid(TriangulatedUnitSquareMaker<Dune::UGGrid<2> >::create());
   	uggrid->globalRefine(4);
     testp1(uggrid->leafGridView());
     testpowerp1(uggrid->leafGridView());

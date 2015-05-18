@@ -116,7 +116,7 @@ namespace Dune {
         // lfsu: CG
         // lfsv: DG
         CG2DGHelper::ComputeCG2DGVisitor<R> cg2dg(mat);
-        Dune::TypeTree::applyToTreePair(lfsu, lfsv, cg2dg);
+        TypeTree::applyToTreePair(lfsu, lfsv, cg2dg);
       }
     public:
       // pattern assembly flags

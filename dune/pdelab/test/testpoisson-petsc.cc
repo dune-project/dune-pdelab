@@ -11,7 +11,6 @@
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
-#include <dune/common/shared_ptr.hh>
 #include<dune/grid/yaspgrid.hh>
 #include<dune/istl/bvector.hh>
 #include<dune/istl/operators.hh>
@@ -238,7 +237,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 
   // output grid function with VTKWriter
   Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"solution"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(dgf,"solution"));
   vtkwriter.write(filename,Dune::VTK::ascii);
 }
 

@@ -330,12 +330,12 @@ namespace Dune {
 		return g;
 	  }
 
-	private:
-	  const G& g;
-	  const T& t;
-	};
+    private:
+      G g;
+      const T& t;
+    };
 
-	/** \brief make a Function from a GridFunction
+    /** \brief make a Function from a GridFunction
      *
      *  \tparam GF The GridFunction type
      */
@@ -572,19 +572,19 @@ namespace Dune {
      *  \tparam Imp Class implementing the function.  Imp must be derived from
      *              GridFunctionBase in some way (Barton-Nackman-Trick).
      */
-	template<class T, class Imp>
-	class GridFunctionBase
+    template<class T, class Imp>
+    class GridFunctionBase
       : public GridFunctionInterface<T,Imp>
       , public TypeTree::LeafNode
-	{
-	public:
+    {
+    public:
       typedef GridFunctionTag ImplementationTag;
       //! Type of the GridView
-	  typedef typename T::GridViewType GridViewType;
-	};
+      typedef typename T::GridViewType GridViewType;
+    };
 
 
-	/** \brief leaf of a function tree
+    /** \brief leaf of a function tree
      *
      *  Classes derived from this class implement a \ref GridFunctionTree.
      *
@@ -592,16 +592,16 @@ namespace Dune {
      *  \tparam Imp Class implementing the function.  Imp must be derived from
      *              GridFunctionBase in some way (Barton-Nackman-Trick).
      */
-	template<class T, class Imp>
-	class BoundaryGridFunctionBase
+    template<class T, class Imp>
+    class BoundaryGridFunctionBase
       : public BoundaryGridFunctionInterface<T,Imp>
       , public TypeTree::LeafNode
-	{
-	public:
+    {
+    public:
       typedef GridFunctionTag ImplementationTag;
       //! Type of the GridView
-	  typedef typename T::GridViewType GridViewType;
-	};
+      typedef typename T::GridViewType GridViewType;
+    };
 
 
     /** \brief Visitor for Power- and CompositeGridFunctions calling
@@ -626,41 +626,41 @@ namespace Dune {
 
     struct PowerGridFunctionTag {};
 
-	/** \brief product of identical functions
+    /** \brief product of identical functions
      *
      *  This collects k instances of T in a \ref GridFunctionTree.
      *
      *  \tparam T The type of the children of this node in the tree.
      *  \tparam k The number of children this node has.
      */
-	template<class T, std::size_t k>
-	class PowerGridFunction
+    template<class T, std::size_t k>
+    class PowerGridFunction
       : public TypeTree::PowerNode<T,k>
-	{
+    {
 
       typedef TypeTree::PowerNode<T,k> BaseT;
 
-	public:
+    public:
 
       typedef PowerCompositeGridFunctionTraits<typename T::GridViewType> Traits;
 
       typedef PowerGridFunctionTag ImplementationTag;
 
       //! record the GridView
-	  typedef typename T::GridViewType GridViewType;
+      typedef typename T::GridViewType GridViewType;
 
       //! Set the time in all leaf nodes of this function tree
       template <typename TT>
       void setTime(TT time){
         PowerCompositeSetTimeVisitor<TT> visitor(time);
-        Dune::TypeTree::applyToTree(*this,visitor);
+        TypeTree::applyToTree(*this,visitor);
       }
 
       PowerGridFunction()
       {}
 
       //! Construct a PowerGridFunction with k clones of the function t
-	  PowerGridFunction (T& t)
+      PowerGridFunction (T& t)
         : BaseT(t) {}
 
       /** \brief Initialize all children with different function objects
@@ -672,7 +672,7 @@ namespace Dune {
        *           used to initialize the first child, the second pointer for
        *           the second child and so on.
        */
-	  // TODO: PowerGridFunction (T** t) : ...
+      // TODO: PowerGridFunction (T** t) : ...
 
 #ifdef DOXYGEN
       /** \brief Initialize all children with different function objects
@@ -782,7 +782,7 @@ namespace Dune {
       }
 
 #endif // DOXYGEN
-	};
+    };
 
     struct CompositeGridFunctionTag {};
 
@@ -795,35 +795,35 @@ namespace Dune {
      *             unused.  Currently, up to 9 slots are supported, making 8
      *             the maximum n.
      */
-	template<DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
-	class CompositeGridFunction
-	  : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
-	{
+    template<typename... Children>
+    class CompositeGridFunction
+      : public TypeTree::CompositeNode<Children...>
+    {
 
-      typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE BaseT;
+      typedef TypeTree::CompositeNode<Children...> BaseT;
 
-	public:
+    public:
 
       typedef CompositeGridFunctionTag ImplementationTag;
 
       typedef PowerCompositeGridFunctionTraits<typename BaseT::template Child<0>::Type::GridViewType> Traits;
 
       //! record the GridView
-	  typedef typename BaseT::template Child<0>::Type::GridViewType GridViewType;
+      typedef typename BaseT::template Child<0>::Type::GridViewType GridViewType;
 
       CompositeGridFunction()
       {}
 
-	  CompositeGridFunction (DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-		: BaseT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename BaseT::template Child<0>::Type>))
-	  {
-	  }
+      CompositeGridFunction (Children&... children)
+        : BaseT(TypeTree::assertGridViewType<typename BaseT::template Child<0>::Type>(children)...)
+      {
+      }
 
       //! Set the time in all leaf nodes of this function tree
       template <typename TT>
       void setTime(TT time){
         PowerCompositeSetTimeVisitor<TT> visitor(time);
-        Dune::TypeTree::applyToTree(*this,visitor);
+        TypeTree::applyToTree(*this,visitor);
       }
 
 #ifdef DOXYGEN
@@ -836,9 +836,9 @@ namespace Dune {
        *  The actual number of arguments for this constructor corresponds to
        *  the number of slots used in the template parameter list of the class.
        */
-	  CompositeGridFunction (T0& t0, T1& t1, ...) {}
+      CompositeGridFunction (T0& t0, T1& t1, ...) {}
 #endif //DOXYGEN
-	};
+    };
 
     //========================================================
     // helper template to turn an ordinary GridFunction into a
@@ -889,18 +889,18 @@ namespace Dune {
       }
     };
 
-	//=======================================
-	// helper template for analytic functions
-	//=======================================
+    //=======================================
+    // helper template for analytic functions
+    //=======================================
 
-	//! function signature for analytic functions on a grid
-	template<typename GV, typename RF, int m>
-	struct AnalyticGridFunctionTraits
-	  : public GridFunctionTraits<GV, RF, m, Dune::FieldVector<RF,m> >
-	{
-	};
+    //! function signature for analytic functions on a grid
+    template<typename GV, typename RF, int m>
+    struct AnalyticGridFunctionTraits
+      : public GridFunctionTraits<GV, RF, m, Dune::FieldVector<RF,m> >
+    {
+    };
 
-	/** \brief an analytic grid function
+    /** \brief an analytic grid function
      *
      *  This is a convenience class which eases the creation of analytic
      *  GridFunctions.  Classes derived from it need only implement a method
@@ -912,34 +912,34 @@ namespace Dune {
      *              AnalyticGridFunctionBase in some way
      *              (Barton-Nackman-Trick).
      */
-	template<typename T, typename Imp>
-	class AnalyticGridFunctionBase
-	  : public GridFunctionBase<T,AnalyticGridFunctionBase<T,Imp> >
-	{
-	public:
-	  typedef T Traits;
+    template<typename T, typename Imp>
+    class AnalyticGridFunctionBase
+      : public GridFunctionBase<T,AnalyticGridFunctionBase<T,Imp> >
+    {
+    public:
+      typedef T Traits;
 
       //! Construct an Analytic GridFunctionBase given a GridView g_
-	  AnalyticGridFunctionBase (const typename Traits::GridViewType& g_) : g(g_) {}
+      AnalyticGridFunctionBase (const typename Traits::GridViewType& g_) : g(g_) {}
 
       //! \copydoc GridFunctionBase::evaluate()
-	  inline void evaluate (const typename Traits::ElementType& e,
-							const typename Traits::DomainType& x,
-							typename Traits::RangeType& y) const
-	  {
-		asImp().evaluateGlobal(e.geometry().global(x),y);
-	  }
+      inline void evaluate (const typename Traits::ElementType& e,
+                            const typename Traits::DomainType& x,
+                            typename Traits::RangeType& y) const
+      {
+        asImp().evaluateGlobal(e.geometry().global(x),y);
+      }
 
-	  inline const typename Traits::GridViewType& getGridView () const
-	  {
-		return g;
-	  }
+      inline const typename Traits::GridViewType& getGridView () const
+      {
+        return g;
+      }
 
-	private:
+    private:
       typename Traits::GridViewType g;
-	  Imp& asImp () {return static_cast<Imp &> (*this);}
-	  const Imp& asImp () const {return static_cast<const Imp &>(*this);}
-	};
+      Imp& asImp () {return static_cast<Imp &> (*this);}
+      const Imp& asImp () const {return static_cast<const Imp &>(*this);}
+    };
 
 
     // Adapter takes a vector-valued grid function and provides evaluation
@@ -1085,9 +1085,9 @@ namespace Dune {
     };
 
 
-	//==========================
-	// template metaprograms
-	//==========================
+    //==========================
+    // template metaprograms
+    //==========================
 
     namespace {
 
@@ -1110,7 +1110,7 @@ namespace Dune {
           name << s;
           for (std::size_t i=0; i < treePath.size(); ++i)
             name << "_" << treePath.element(i);
-          w.addVertexData(new VTKGridFunctionAdapter<T>(t,name.str()));
+          w.addVertexData(make_shared< VTKGridFunctionAdapter<T> >(t,name.str()));
         }
       };
 
@@ -1121,12 +1121,12 @@ namespace Dune {
      *  \tparam GV The GridView for the VTKWriter
      *  \tparam T  The \ref GridFunctionTree
      */
-	template<typename GV, typename T>
-	void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t, std::string s = "data")
-	{
+    template<typename GV, typename T>
+    void vtkwriter_tree_addvertexdata (Dune::VTKWriter<GV>& w, const T& t, std::string s = "data")
+    {
       AddGridFunctionsToVTKWriter<Dune::VTKWriter<GV> > visitor(w,s);
       TypeTree::applyToTree(t,visitor);
-	}
+    }
 
     //! \} GridFunctionTree
 

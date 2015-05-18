@@ -12,7 +12,6 @@
 #include <dune/common/fvector.hh>
 #include <dune/common/typetraits.hh>
 #include <dune/grid/yaspgrid.hh>
-#include <dune/grid/alugrid.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/test/gridexamples.hh>
 
@@ -101,12 +100,12 @@ template<typename RF, typename Constraints, typename VBE>
 void test_2d_simplex(const Constraints& constraints, const VBE& vbe)
 {
 
-#if HAVE_ALUGRID
+#if HAVE_DUNE_ALUGRID
 
     {
       // make grid
       typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
-      Dune::shared_ptr<Grid> gridptr = TriangulatedUnitSquareMaker<Grid>::create();
+      std::shared_ptr<Grid> gridptr = TriangulatedUnitSquareMaker<Grid>::create();
       Grid& grid = *gridptr;
       grid.globalRefine(3);
 
@@ -137,12 +136,12 @@ template<typename RF, typename Constraints, typename VBE>
 void test_3d_simplex(const Constraints& constraints, const VBE& vbe)
 {
 
-#if HAVE_ALUGRID
+#if HAVE_DUNE_ALUGRID
 
     {
       // make grid
       typedef Dune::ALUGrid<3,3,Dune::simplex,Dune::nonconforming> Grid;
-      Dune::shared_ptr<Grid> gridptr = TriangulatedUnitCubeMaker<Grid>::create();
+      std::shared_ptr<Grid> gridptr = TriangulatedUnitCubeMaker<Grid>::create();
       Grid& grid = *gridptr;
       grid.globalRefine(3);
 

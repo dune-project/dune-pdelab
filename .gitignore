@@ -13,7 +13,7 @@ Makefile.in
 /aclocal.m4
 /am
 /autom4te.cache
-/build-cmake
+/build-*
 /compile
 /config.guess
 /config.h

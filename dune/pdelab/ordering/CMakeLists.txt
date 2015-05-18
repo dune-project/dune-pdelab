@@ -1,4 +1,5 @@
 install(FILES
+  chunkedblockordering.hh
   decorator.hh
   directleaflocalordering.hh
   entityblockedlocalordering.hh
@@ -6,6 +7,7 @@ install(FILES
   interleavedordering.hh
   leafgridviewordering.hh
   leaflocalordering.hh
+  leaforderingbase.hh
   lexicographicordering.hh
   localorderingbase.hh
   orderingbase.hh

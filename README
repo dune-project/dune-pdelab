@@ -1,6 +1,8 @@
 PDELab
 ======
 
+This is version 2.4-dev of the PDELab library.
+
 PDELab[0] is a PDE solver toolbox built on top of DUNE, the Distributed and Unified
 Numerics Environment [1].
 
@@ -26,20 +28,20 @@ Dependencies
 PDELab depends on the following software packages:
 
 * DUNE core libraries (dune-common, dune-geometry, dune-grid, dune-istl,
-  dune-localfunctions) version 2.2.x, and their respective dependencies.
+  dune-localfunctions) version 2.4-dev, and their respective dependencies.
 
-* The dune-typetree library, version 1.0.x, which you can obtain from [10].
+* The dune-typetree library, version 2.4-dev. You can obtain a source package from [0] or
+  clone the repository at [10].
 
 * PDELab's compiler requirements differ slightly from the underlying DUNE
-  libraries: We require at least GCC 4.0, although we only regurlarly test GCC
-  versions from GCC 4.2 onward. Compile times are greatly reduced if the
-  compiler supports the new C++11 standard (GCC 4.3 and newer). PDELab is not
-  regularly tested with ICC, but we also support the clang compiler (3.1+).
+  libraries: We require at least GCC 4.7 in C++11 mode. PDELab should also work
+  with very recent versions of ICC (icpc 15.0.1+) and current clang (3.4+).
 
 The following software is optional
 
 * PETSc 3.3 [5] - there is an experimental backend for PETSc vectors and
-  matrices. See RELEASE_NOTES for details.
+  matrices. See RELEASE_NOTES for details. WARNING: The PETSC backend is
+  currently broken.
 
 * Eigen 3.1.0 [6] - there is an experimental backend for Eigen vectors and
   matrices as well as some solvers. See RELEASE_NOTES for details.

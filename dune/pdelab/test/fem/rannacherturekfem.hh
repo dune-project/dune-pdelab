@@ -12,7 +12,7 @@ struct RannacherTurekFEMFactory
   struct FEM
   {
     typedef Dune::PDELab::RannacherTurekLocalFiniteElementMap<DF,RF,GV::dimension> type;
-    typedef Dune::shared_ptr<type> pointer;
+    typedef std::shared_ptr<type> pointer;
   };
 
   template<typename GV, typename DF, typename RF, Dune::GeometryType::BasicType basic_type>

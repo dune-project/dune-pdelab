@@ -3,12 +3,13 @@
 
 #include<iostream>
 #include<algorithm>
+#include<memory>
+
 #include<dune/common/fvector.hh>
 #include<dune/common/fmatrix.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/common/gmpfield.hh>
-#include<dune/common/shared_ptr.hh>
 #include<dune/common/array.hh>
 
 #include<dune/geometry/referenceelements.hh>
@@ -624,9 +625,9 @@ namespace Dune {
 
     private:
       // store multiindices and coefficients on heap
-      Dune::array<Dune::shared_ptr<MultiIndex<d> >,n> alpha; // store index to multiindex map
-      Dune::shared_ptr<LowprecMat> coeffs; // coefficients with respect to monomials
-      Dune::array<Dune::shared_ptr<LowprecMat>,d > gradcoeffs; // coefficients of gradient
+      Dune::array<std::shared_ptr<MultiIndex<d> >,n> alpha; // store index to multiindex map
+      std::shared_ptr<LowprecMat> coeffs; // coefficients with respect to monomials
+      Dune::array<std::shared_ptr<LowprecMat>,d > gradcoeffs; // coefficients of gradient
 
       // compute orthonormalized shapefunctions from a given set of coefficients
       void orthonormalize()

@@ -13,8 +13,8 @@
 #include <dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/gridfactory.hh>
 #endif
-#if HAVE_ALUGRID
-#include <dune/grid/alugrid.hh>
+#if HAVE_DUNE_ALUGRID
+#include <dune/alugrid/grid.hh>
 #endif
 #if HAVE_UG
 #include <dune/grid/uggrid.hh>
@@ -55,7 +55,7 @@ void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
   DGF dgf(gfs,x);                     // make a grid function
 
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,3);  // plot result
-  vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(dgf,"rt02d"));
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(dgf,"rt02d"));
   vtkwriter.write(filename.str(),Dune::VTK::ascii);
 }
 
@@ -100,7 +100,7 @@ int main(int argc, char** argv)
 #endif // HAVE_ALBERTA
 
 
-#if HAVE_ALUGRID
+#if HAVE_DUNE_ALUGRID
     std::cout << "ALU" << std::endl;
     {
       typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
@@ -111,7 +111,7 @@ int main(int argc, char** argv)
       rt02DGridFunctionSpace(grid.leafGridView(), "alu");
     }
     result = 0;
-#endif // HAVE_ALUGRID
+#endif // HAVE_DUNE_ALUGRID
 
 #if HAVE_UG
     std::cout << "UG" << std::endl;

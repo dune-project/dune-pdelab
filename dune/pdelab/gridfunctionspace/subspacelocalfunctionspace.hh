@@ -89,11 +89,19 @@ namespace Dune {
 
     } // namespace gfs
 
+#ifndef HAVE_TEMPLATE_ALIASES
+
+      // forward declaration for use in LocalFunctionSpace specialization.
+      template<typename GFS, typename TreePath>
+      class GridFunctionSubSpace;
+
+#endif
 
     // specialized version of LocalFunctionSpace interface class
     // This class injects SubSpaceLocalFunctionSpaceNode as an intermediate base class
     // to fix the DOFIndex handling in bind().
     template <typename BaseGFS, typename SubSpaceTreePath>
+#if DOXYGEN || HAVE_TEMPLATE_ALIASES
     class LocalFunctionSpace<gfs::GridFunctionSubSpace<BaseGFS,SubSpaceTreePath>, AnySpaceTag>
       : public gfs::SubSpaceLocalFunctionSpaceNode<gfs::GridFunctionSubSpace<BaseGFS,SubSpaceTreePath>,
                                                    typename TypeTree::TransformTree<
@@ -105,9 +113,27 @@ namespace Dune {
                                                                 >
                                                      >::Type
                                                    >
+#else
+    class LocalFunctionSpace<GridFunctionSubSpace<BaseGFS,SubSpaceTreePath>, AnySpaceTag>
+      : public gfs::SubSpaceLocalFunctionSpaceNode<GridFunctionSubSpace<BaseGFS,SubSpaceTreePath>,
+                                                   typename TypeTree::TransformTree<
+                                                     GridFunctionSubSpace<BaseGFS,SubSpaceTreePath>,
+                                                     gfs_to_lfs<GridFunctionSubSpace<
+                                                                  BaseGFS,
+                                                                  SubSpaceTreePath
+                                                                  >
+                                                                >
+                                                     >::Type
+                                                   >
+#endif
+
     {
 
+#if HAVE_TEMPLATE_ALIASES
       typedef gfs::GridFunctionSubSpace<BaseGFS,SubSpaceTreePath> GFS;
+#else
+      typedef GridFunctionSubSpace<BaseGFS,SubSpaceTreePath> GFS;
+#endif
 
       typedef gfs::SubSpaceLocalFunctionSpaceNode<
         GFS,
@@ -138,7 +164,7 @@ namespace Dune {
         this->setup(*this);
       }
 
-      LocalFunctionSpace(shared_ptr<const GFS> pgfs)
+      LocalFunctionSpace(std::shared_ptr<const GFS> pgfs)
         : BaseT(TypeTree::TransformTree<GFS,gfs_to_lfs<GFS> >::transform_storage(pgfs))
       {
         this->_dof_indices = &(this->_dof_index_storage);

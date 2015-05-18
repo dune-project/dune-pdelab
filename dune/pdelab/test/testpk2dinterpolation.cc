@@ -16,8 +16,8 @@
 #if HAVE_ALBERTA
 #include <dune/grid/albertagrid.hh>
 #endif
-#if HAVE_ALUGRID
-#include <dune/grid/alugrid.hh>
+#if HAVE_DUNE_ALUGRID
+#include <dune/alugrid/grid.hh>
 #endif
 #if HAVE_UG
 #include <dune/grid/uggrid.hh>
@@ -78,13 +78,13 @@ double interpolationerror (const GV& gv, const FEM &fem)
   return l2difference(u,v,4);
 }
 
-template<typename Grid>
-void test(Dune::shared_ptr<Grid> grid, int &result, unsigned int maxelements, std::string name)
+template<int k, typename Grid>
+void run_test(std::shared_ptr<Grid> grid, int &result, unsigned int maxelements, std::string name)
 {
   std::cout << std::endl
-            << "Testing P12D interpolation with " << name << std::endl;
+            << "Testing P" << k << "2D interpolation with " << name << std::endl;
 
-  typedef Dune::PDELab::PkLocalFiniteElementMap<typename Grid::LeafGridView, double, double, 1> FEM;
+  typedef Dune::PDELab::PkLocalFiniteElementMap<typename Grid::LeafGridView, double, double, k> FEM;
   FEM fem(grid->leafGridView());
 
   std::cout << "interpolation level 0" << std::endl;
@@ -113,10 +113,20 @@ void test(Dune::shared_ptr<Grid> grid, int &result, unsigned int maxelements, st
   if(result != 1)
     result = 0;
 
-  if(total_convergence < 1.7) {
-    std::cout << "Error: interpolation total convergence < 1.7" << std::endl;
+  const double min_convergence[] = {1.7, 2.7, 3.7};
+
+  if(total_convergence < min_convergence[k-1]) {
+    std::cout << "Error: interpolation total convergence < " << min_convergence[k-1] << std::endl;
     result = 1;
   }
+}
+
+template<typename GridFactory>
+void test(const GridFactory& gf, int &result, unsigned int maxelements, std::string name)
+{
+  run_test<1>(gf.create(),result,maxelements,name);
+  run_test<2>(gf.create(),result,maxelements,name);
+  run_test<3>(gf.create(),result,maxelements,name);
 }
 
 int main(int argc, char** argv)
@@ -132,23 +142,23 @@ int main(int argc, char** argv)
 #if (ALBERTA_DIM != 2)
 #error ALBERTA_DIM is not set to 2 -- please check the Makefile.am
 #endif
-    test(UnitTriangleMaker          <Dune::AlbertaGrid<2, 2>    >::create(),
+    test(UnitTriangleMaker          <Dune::AlbertaGrid<2, 2>    >(),
          result, 250000, "alberta-triangle");
-    test(TriangulatedUnitSquareMaker<Dune::AlbertaGrid<2, 2>    >::create(),
+    test(TriangulatedUnitSquareMaker<Dune::AlbertaGrid<2, 2>    >(),
          result, 250000, "alberta-square");
-#endif
+#endif // HAVE_ALBERTA
 
-#if HAVE_ALUGRID
-    test(UnitTriangleMaker          <Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> >::create(),
+#if HAVE_DUNE_ALUGRID
+    test(UnitTriangleMaker          <Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> >(),
          result, 250000, "alu-triangle");
-    test(TriangulatedUnitSquareMaker<Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> >::create(),
+    test(TriangulatedUnitSquareMaker<Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> >(),
          result, 250000, "alu-square");
-#endif // HAVE_ALUGRID
+#endif // HAVE_DUNE_ALUGRID
 
 #if HAVE_UG
-    test(UnitTriangleMaker          <Dune::UGGrid<2>            >::create(),
+    test(UnitTriangleMaker          <Dune::UGGrid<2>            >(),
          result, 250000, "ug-triangle");
-    test(TriangulatedUnitSquareMaker<Dune::UGGrid<2>            >::create(),
+    test(TriangulatedUnitSquareMaker<Dune::UGGrid<2>            >(),
          result, 250000, "ug-square");
 #endif // HAVE_ALBERTA
 

@@ -90,6 +90,8 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
+#elif defined HEADERCHECK
+#warning Skipped header check due to missing Eigen.
 #else
 #error You need Eigen to use the Eigen backend
 #endif // HAVE_EIGEN

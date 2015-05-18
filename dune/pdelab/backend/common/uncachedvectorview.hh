@@ -129,9 +129,6 @@ namespace Dune {
       : public ConstUncachedVectorView<V,LFSC>
     {
 
-      //static_assert((is_same<typename LFSCache::LocalFunctionSpace::Traits::GridFunctionSpace,GFS>::value),
-      //              "The LocalFunctionSpace passed to LocalView must belong to the underlying GridFunctionSpace.");
-
       typedef V Container;
       typedef typename Container::ElementType ElementType;
       typedef typename Container::size_type size_type;

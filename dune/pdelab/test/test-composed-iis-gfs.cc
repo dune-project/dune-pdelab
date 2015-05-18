@@ -15,7 +15,7 @@
 #include<dune/common/fvector.hh>
 #include<dune/common/parallel/mpihelper.hh>
 
-#include<dune/grid/alugrid.hh>
+#include<dune/alugrid/grid.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 
 #include<dune/pdelab/backend/istlvectorbackend.hh>
@@ -38,7 +38,7 @@ int main(int argc, char** argv)
         Dune::FieldVector<double, 3> upper_right(1.0);
         Dune::array<unsigned, 3> n;
         n.fill(1);
-        Dune::shared_ptr<GridType> grid_ptr =
+        std::shared_ptr<GridType> grid_ptr =
             Dune::StructuredGridFactory<GridType>::createCubeGrid(lower_left, upper_right, n);
         GridType& grid = *grid_ptr;
         typedef GridType::LeafGridView GV;

@@ -160,11 +160,7 @@ namespace Dune {
         {
           std::vector<size_type> r(_row_ordering.blockCount());
           sizes(r.begin());
-#if HAVE_RVALUE_REFERENCES
           return std::move(r);
-#else
-          return r;
-#endif
         }
 
         //! Iterator over all column indices for a given row, unique but in arbitrary order.
@@ -229,8 +225,11 @@ namespace Dune {
             , _oend(p._overflow.end())
           {
             // catch corner case with completely empty row
-            if ((!_at_end) && _it == _end)
-              _at_end = _oit != _oend && _oit->first == _row;
+            if ((!_at_end) && (_it == _end || *_it == empty))
+              {
+                _in_overflow = true;
+                _at_end = _oit == _oend || _oit->first != _row;
+              }
           }
 
           size_type _row;

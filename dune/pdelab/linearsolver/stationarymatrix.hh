@@ -6,8 +6,8 @@
 
 #include <iostream>
 #include <ostream>
+#include <memory>
 
-#include <dune/common/shared_ptr.hh>
 #include <dune/common/timer.hh>
 
 #include <dune/pdelab/backend/backendselector.hh>
@@ -37,7 +37,7 @@ namespace Dune {
 
       const GOS& gos;
       SB& sb;
-      shared_ptr<Matrix> m;
+      std::shared_ptr<Matrix> m;
       Coeff reduction;
       Coeff mindefect;
 

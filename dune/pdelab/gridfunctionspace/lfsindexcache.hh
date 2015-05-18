@@ -6,6 +6,7 @@
 #include <vector>
 #include <stack>
 #include <algorithm>
+#include <unordered_map>
 
 #include <dune/common/reservedvector.hh>
 #include <dune/common/exceptions.hh>
@@ -14,7 +15,6 @@
 
 #include <dune/typetree/typetree.hh>
 
-#include <dune/pdelab/common/unordered_map.hh>
 #include <dune/pdelab/constraints/common/constraintstransformation.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
 
@@ -260,9 +260,9 @@ namespace Dune {
       typedef std::size_t size_type;
 
       typedef std::vector<CI> CIVector;
-      typedef unordered_map<DI,CI> CIMap;
+      typedef std::unordered_map<DI,CI> CIMap;
 
-      typedef unordered_map<const CI*,std::pair<size_type,bool> > InverseMap;
+      typedef std::unordered_map<const CI*,std::pair<size_type,bool> > InverseMap;
 
       struct ConstraintsEntry
         : public std::pair<const CI*,typename C::mapped_type::mapped_type>
@@ -550,7 +550,7 @@ namespace Dune {
       typedef std::size_t size_type;
 
       typedef std::vector<CI> CIVector;
-      typedef unordered_map<DI,CI> CIMap;
+      typedef std::unordered_map<DI,CI> CIMap;
 
       struct ConstraintsEntry
         : public std::pair<const CI*,double>
@@ -700,7 +700,7 @@ namespace Dune {
       typedef std::size_t size_type;
 
       typedef std::vector<CI> CIVector;
-      typedef unordered_map<DI,CI> CIMap;
+      typedef std::unordered_map<DI,CI> CIMap;
 
       struct ConstraintsEntry
         : public std::pair<CI,typename C::mapped_type::mapped_type>
@@ -856,7 +856,7 @@ namespace Dune {
       typedef std::size_t size_type;
 
       typedef std::vector<CI> CIVector;
-      typedef unordered_map<DI,CI> CIMap;
+      typedef std::unordered_map<DI,CI> CIMap;
 
       struct ConstraintsEntry
         : public std::pair<const CI*,double>

@@ -4,9 +4,9 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_COMPOSITEGRIDFUNCTIONSPACE_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_COMPOSITEGRIDFUNCTIONSPACE_HH
 
-#include <dune/common/shared_ptr.hh>
+#include <memory>
 
-#include <dune/typetree/compositenodemacros.hh>
+#include <dune/typetree/compositenode.hh>
 #include <dune/typetree/utility.hh>
 
 #include <dune/pdelab/gridfunctionspace/powercompositegridfunctionspacebase.hh>
@@ -36,23 +36,23 @@ namespace Dune {
     */
     template<typename Backend,
              typename OrderingTag,
-             DUNE_TYPETREE_COMPOSITENODE_TEMPLATE_CHILDREN>
+             typename... Children>
     class CompositeGridFunctionSpace
-      : public DUNE_TYPETREE_COMPOSITENODE_BASETYPE
+      : public TypeTree::CompositeNode<Children...>
       , public PowerCompositeGridFunctionSpaceBase<
           CompositeGridFunctionSpace<
             Backend,
             OrderingTag,
-            DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES>,
-          typename DUNE_TYPETREE_COMPOSITENODE_BASETYPE::template Child<0>::
+            Children...>,
+          typename TypeTree::CompositeNode<Children...>::template Child<0>::
             Type::Traits::GridViewType,
           Backend,
           OrderingTag,
-          DUNE_TYPETREE_COMPOSITENODE_BASETYPE::CHILDREN
+          TypeTree::CompositeNode<Children...>::CHILDREN
         >
-      , public DataHandleProvider<CompositeGridFunctionSpace<Backend,OrderingTag,DUNE_TYPETREE_COMPOSITENODE_CHILDTYPES> >
+      , public DataHandleProvider<CompositeGridFunctionSpace<Backend,OrderingTag,Children...> >
     {
-      typedef DUNE_TYPETREE_COMPOSITENODE_BASETYPE NodeT;
+      typedef TypeTree::CompositeNode<Children...> NodeT;
 
       typedef PowerCompositeGridFunctionSpaceBase<
         CompositeGridFunctionSpace,
@@ -82,25 +82,54 @@ namespace Dune {
 
       typedef typename ImplementationBase::Traits Traits;
 
-      CompositeGridFunctionSpace(const Backend& backend, DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : NodeT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>))
+      // ********************************************************************************
+      // constructors for stack-constructed children passed in by reference
+      // ********************************************************************************
+
+      CompositeGridFunctionSpace(const Backend& backend, Children&... children)
+        : NodeT(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>(children)...)
         , ImplementationBase(backend,OrderingTag())
       { }
 
-      CompositeGridFunctionSpace(const OrderingTag& ordering_tag, DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : NodeT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>))
+      CompositeGridFunctionSpace(const OrderingTag& ordering_tag, Children&... children)
+        : NodeT(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>(children)...)
         , ImplementationBase(Backend(),ordering_tag)
       { }
 
-      CompositeGridFunctionSpace(const Backend& backend, const OrderingTag& ordering_tag, DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : NodeT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>))
+      CompositeGridFunctionSpace(const Backend& backend, const OrderingTag& ordering_tag, Children&... children)
+        : NodeT(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>(children)...)
         , ImplementationBase(backend,ordering_tag)
       { }
 
-      CompositeGridFunctionSpace(DUNE_TYPETREE_COMPOSITENODE_CONSTRUCTOR_SIGNATURE)
-        : NodeT(DUNE_TYPETREE_COMPOSITENODE_CHILDVARIABLES_THROUGH_FUNCTION(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>))
+      CompositeGridFunctionSpace(Children&... children)
+        : NodeT(TypeTree::assertGridViewType<typename NodeT::template Child<0>::Type>(children)...)
         , ImplementationBase(Backend(),OrderingTag())
       { }
+
+      // ********************************************************************************
+      // constructors for heap-constructed children passed in as shared_ptrs
+      // ********************************************************************************
+
+      CompositeGridFunctionSpace(const Backend& backend, std::shared_ptr<Children>... children)
+        : NodeT(children...)
+        , ImplementationBase(backend,OrderingTag())
+      { }
+
+      CompositeGridFunctionSpace(const OrderingTag& ordering_tag, std::shared_ptr<Children>... children)
+        : NodeT(children...)
+        , ImplementationBase(Backend(),ordering_tag)
+      { }
+
+      CompositeGridFunctionSpace(const Backend& backend, const OrderingTag& ordering_tag, std::shared_ptr<Children>... children)
+        : NodeT(children...)
+        , ImplementationBase(backend,ordering_tag)
+      { }
+
+      CompositeGridFunctionSpace(std::shared_ptr<Children>... children)
+        : NodeT(children...)
+        , ImplementationBase(Backend(),OrderingTag())
+      { }
+
 
       //! Direct access to the DOF ordering.
       const Ordering &ordering() const
@@ -135,7 +164,7 @@ namespace Dune {
       }
 
       //! Direct access to the storage of the DOF ordering.
-      shared_ptr<const Ordering> orderingStorage() const
+      std::shared_ptr<const Ordering> orderingStorage() const
       {
         if (!this->isRootSpace())
           {
@@ -151,7 +180,7 @@ namespace Dune {
       }
 
       //! Direct access to the storage of the DOF ordering.
-      shared_ptr<Ordering> orderingStorage()
+      std::shared_ptr<Ordering> orderingStorage()
       {
         if (!this->isRootSpace())
           {
@@ -173,10 +202,10 @@ namespace Dune {
       // GFS::update() before GFS::ordering().
       void create_ordering() const
       {
-        _ordering = make_shared<Ordering>(ordering_transformation::transform(*this));
+        _ordering = std::make_shared<Ordering>(ordering_transformation::transform(*this));
       }
 
-      mutable shared_ptr<Ordering> _ordering;
+      mutable std::shared_ptr<Ordering> _ordering;
 
     };
 

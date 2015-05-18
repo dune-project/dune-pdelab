@@ -21,6 +21,7 @@ AC_DEFUN([DUNE_EIGEN], [
   AC_DEFINE([HAVE_EIGEN], ENABLE_EIGEN,
     [This is only true if EIGEN was found by configure 
      _and_ if the application uses the EIGEN_CXXFLAGS])
+  DUNE_ADD_ALL_PKG([EIGEN], [\${EIGEN_CXXFLAGS}], [], [])
 
   # add automake conditionsl
   AM_CONDITIONAL(EIGEN, test x$HAVE_EIGEN = xyes)

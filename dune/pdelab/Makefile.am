@@ -5,13 +5,11 @@ SUBDIRS =					\
 	boilerplate				\
 	common					\
 	constraints				\
-	experimental				\
 	finiteelement			\
 	finiteelementmap		\
 	function				\
 	gridfunctionspace		\
 	gridoperator			\
-	gridoperatorspace		\
 	instationary				\
 	linearsolver			\
 	localoperator			\

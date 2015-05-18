@@ -93,6 +93,10 @@ namespace Dune {
         template<typename Entity>
         const typename Traits::FiniteElementType& find (const Entity& e) const
         {
+
+          if (!e.type().isSimplex())
+            DUNE_THROW(InvalidGeometryType,"PkLocalFiniteElementMap only works for simplices!");
+
           const typename GV::IndexSet& is = _gv.indexSet();
           unsigned int n0 = is.subIndex(e,0,2);
           unsigned int n1 = is.subIndex(e,1,2);
@@ -100,7 +104,7 @@ namespace Dune {
           // compress first number to [0,2]
           unsigned int n0_compressed = (n0 > n1) + (n0 > n2);
           // translate to permutation index
-          return _variant[2 * n0_compressed + (n2 > n1)];
+          return _variant[2 * n0_compressed + (n1 > n2)];
         }
 
         bool fixedSize() const
@@ -182,6 +186,10 @@ namespace Dune {
         template<typename Entity>
         const typename Traits::FiniteElementType& find (const Entity& e) const
         {
+
+          if (!e.type().isSimplex())
+            DUNE_THROW(InvalidGeometryType,"PkLocalFiniteElementMap only works for simplices!");
+
           // get the vertex indices
           const typename GV::IndexSet& is = _gv.indexSet();
           unsigned int vertexmap[4];

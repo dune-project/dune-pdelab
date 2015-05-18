@@ -24,7 +24,7 @@ namespace Dune {
     class PetscNestedVectorContainer
     {
 
-      typedef std::vector<shared_ptr<PetscVectorContainer> > ChildContainer;
+      typedef std::vector<std::shared_ptr<PetscVectorContainer> > ChildContainer;
 
     public:
       typedef PetscScalar ElementType;
@@ -48,7 +48,7 @@ namespace Dune {
         template<typename T, typename Child, typename TreePath, typename ChildIndex>
         void beforeChild(T&& t, Child&& child, TreePath treePath, ChildIndex childIndex)
         {
-          _children[childIndex] = make_shared<PetscVectorContainer>(child);
+          _children[childIndex] = std::make_shared<PetscVectorContainer>(child);
         }
 
         ChildContainer& _children;

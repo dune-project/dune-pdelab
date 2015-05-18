@@ -27,6 +27,18 @@
 
 /* end private */
 
+/* Define to the version of dune-pdelab */
+#define DUNE_PDELAB_VERSION "${DUNE_PDELAB_VERSION}"
+
+/* Define to the major version of dune-pdelab */
+#define DUNE_PDELAB_VERSION_MAJOR ${DUNE_PDELAB_VERSION_MAJOR}
+
+/* Define to the minor version of dune-pdelab */
+#define DUNE_PDELAB_VERSION_MINOR ${DUNE_PDELAB_VERSION_MINOR}
+
+/* Define to the revision of dune-pdelab */
+#define DUNE_PDELAB_VERSION_REVISION ${DUNE_PDELAB_VERSION_REVISION}
+
 /* This is only true if PETSc was found by configure _and_ if the application
    uses the UG_CPPFLAGS */
 #cmakedefine HAVE_PETSC ENABLE_PETSC

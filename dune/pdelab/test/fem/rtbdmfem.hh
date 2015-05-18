@@ -13,7 +13,7 @@ struct RTBDMFEMFactory
   struct FEM
   {
     typedef FEM_FACTORY_FEM_CLASS<GV,DF,RF,FEM_FACTORY_ORDER,basic_type> type;
-    typedef Dune::shared_ptr<type> pointer;
+    typedef std::shared_ptr<type> pointer;
   };
 
   template<typename GV, typename DF, typename RF, Dune::GeometryType::BasicType basic_type>

@@ -1,28 +1,163 @@
 PDELab
 ======
 
-This is the 1.1 release of PDELab, a PDE discretization toolkit built
+This is the 2.4-dev version of PDELab, a PDE discretization toolkit built
 on top of the DUNE framework [0]. License information can be found in the file
 COPYING.
 
-PDELab 1.1 is a minor feature release mostly focused on fixing bugs, but it also
-includes a number of new features. For details, see the changelog below.
+PDELab 2.4 is a minor release. For details and an overview of the bug fixes in this release,
+see the changelog below.
 
 If you need help, please ask on our mailinglist [1]. Bugs can also be submitted
 to the PDELab bugtracker at [2] instead.
 
-This release of PDELab is designed to work with the 2.2 release of the
-DUNE libraries.
-
-
 Changes
 =======
+
+PDELab 2.4
+----------
+
+- PDELab has updated its minimum compiler requirements. You now need a compiler that is at
+  least compatible with GCC 4.7 in C++11 mode.
+
+- PDELab 2.4-dev requires at least version 2.4-dev of the core modules.
+
+- In stride with the changes to the core modules, a lot of backwards compatibility code for
+  older compilers was removed.
+
+- The method g() in the parameter class for the convection diffusion operators now expects
+  an unwrapped entity (that means you have to call it with `eg.entity()` instead of just `eg`).
+  The version of g() that can be called with an intersection has been deprecated, please always
+  call the version taking an entity.
 
 PDELab 2.0
 ----------
 
 - The TypeTree library is now an external dependency. See README for information on
   how to obtain it.
+
+- PDELab now supports building with CMake in addition to autotools.
+
+- The DOF handling and the linear algebra backends have been completely rewritten to allow
+  for more flexibility (nested vectors / matrices, more elaborate blocking / DOF reordering).
+  Most of these changes are transparent to the average user, but you will have to change the
+  typedef of your vector and matrix backends. Changing the matrix backend might also speed up
+  matrix pattern construction (see below for further details). If you have been working with
+  some of the internals of the GridFunctionSpace (e.g. by writing your own discrete grid functions
+  that need to load data from a solution vector), you will have to adapt your code to the new
+  index mapping and DOF access structure. See the file doc/README.Changes-2.0 for further details.
+
+- There has been an important change to the way nested GridFunctionSpaces can be used: It is no longer
+  allowed to use a GridFunctionSpace on its own and then integrate it into a larger system of spaces at
+  a later time. Trying to do so will result in an exception at run time. This change was necessary as
+  part of the move to the new DOF handling.
+
+- There is a new, vastly improved pattern building algorithm for ISTL matrices, which is a lot faster
+  than the old version and also avoid the problem of requiring twice as much memory as the final matrix
+  during pattern construction. This new algorithm can be selected by using  (less memory, a lot faster).
+  You can select the new algorithm by using the new class Dune::PDELab::istl::BCRSMatrixBackend. The
+  new algorithm requires you to supply an approximate guesstimate of the average number of matrix entries
+  per row, which you pass to the constructor of the matrix backend. That matrix backend is then passed
+  to the constructor of the GridOperator. After matrix construction, you can query the matrix container
+  for statistics about the pattern creation process, in particular about the quality of your guess. If
+  your guess was bad, the performance (both memory and run time wise) will slowly degrade, so you should
+  try to pass in a good value, even though it does not have to be optimal. All of the examples in the
+  Howto have been ported to the new backend and can be used as a template for porting user programs.
+
+- There are a number of new finite element maps, e.g. Brezzi-Douglas-Marini, a larger number of
+  Raviart-Thomas elements, and new QkDG finite element maps.
+
+- General overhaul of many FiniteElementMaps: Instead of having different classes depending
+  on the order and dimension, there is now usually a single class that can be parameterized
+  using template parameters. The old headers and classes have been deprecated and will be
+  removed after the 2.0 release.
+
+- As part of the new DOF handling, FiniteElementMaps now need to export some information about
+  the DOF layout, in particular whether they are fixed size (i.e. always attach the same number
+  of DOFs to an entity of given GeometryType) and if they do, the number of those DOFs. This
+  extra information allows us to avoid a grid traversal for fixed size FEMs.
+
+- The ExplicitOneStepMethod now supports limiters. There is a rather minimal interface (the limiter
+  gets called at the beginning of each stage with the old solution and at the end of each stage with
+  the new one). It uses a virtual interface, allowing you to switch limiters at run time.
+
+- Nonoverlapping grids can now be used without creating DOFs on the ghost partition, improving surface-to-
+  volume ratio and simplifying the AMG implementation for nonoverlapping grids. In order to use this
+  mode, you have to pass a special OrderingTag to the leaf GridFunctionSpaces and define them on a GridView
+  that is restricted to the InteriorBorder partition. See dune/pdelab/test/testnonoverlapping.cc for
+  an example.
+
+- The constraints files were cleaned up. Now all constraints files have been moved to the directory
+  dune/pdelab/constraints (instead of the previous split between dune/pdelab/constraints and
+  dune/pdelab/finiteelementmap). The infrastructure headers are now in dune/pdelab/constraints/common.
+  The old headers are still there in this release, but they have been deprecated and will be removed after
+  2.0.
+
+- There is new support infrastructure for automatically disassembling the GridFunctionSpace of a system
+  and outputting all of the components to a VTK file. See doc/README.Changes-2.0 for further information.
+
+- The new VectorGridFunctionSpace can be used to represent vector-valued fields. It acts like a combination
+  of a scalar GridFunctionSpace and a PowerGridFunctionSpace on top of it. As an added bonus, it will
+  automatically be detected by the new VTK output code and will be written as a vector-valued solution to
+  VTK.
+
+- The adaptivity support has been fixed and now also works for systems of variables. As long as there are
+  no hanging nodes, it should also work for arbitrary discretizations.
+
+- The new PermutedOrdering is a decorator that can be used to wrap an existing ordering tag and perform
+  arbitrary permutations of the DOFs in that underlying ordering.
+
+- The ISTL vector backend now provides an iterator for flat iteration over the scalar entries in the vector,
+  automatically traversing a possible block structure. This can be very useful when you want to simply dump
+  or load the contents of a vector for debug or restart purposes.
+
+- The GridOperatorSpace, which had been broken for a long time, has now been completely removed.
+
+- The GridFunctionSpace data handles have been completely rewritten and now support communication per
+  entity or per DOF. To avoid code duplication, they have been split into data handles and gather/scatter
+  objects responsible for the actual data handling.
+
+- There have been numerous improvements and bugfixes in the local operators.
+
+- The method Dune::PDELab::istl::raw(x) provides idempotent access to the naked ISTL objects from the
+  PDELab wrappers. They will also work correctly if passed an unpacked ISTL objects by returning the
+  object itself.
+
+- The StdVectorBackend is gone, but you can use the new simple backend instead. This new backend even
+  provides a basic CRS matrix.
+
+- The constructors of the StationaryLinearProblemSolver have been modified to use same order of parameters
+  as the one of the Newton solver. Moreover, there are now also constructors that load the parameters from
+  a Dune::ParameterTree. The old constructors have been deprecated and will be removed after PDELab 2.0.
+
+- The Eigen backend is mostly functional now and works correctly with the new ordering infrastructure.
+
+- A number of optimizations to the GridOperator and its engines make for important performance improvements
+  when working with higher-order methods that have a large number of DOFs per element.
+
+- It is now possible to use a diagonal local matrix for the jacobian assembly to reduce the required memory
+  from N^2 to N if N is the number of DOFs per element.
+
+Releasy history
+
+  - PDELab 2.0.0
+    - Fix instructions for obtaining dune-typetree.
+    - Link libdunepdelab against libdunecommon.
+    - Documentation fixes.
+
+  - PDELab 2.0.0-rc2
+    - Buildsystem fixes to include missing headers etc.
+    - Improved handling of constraints engine storage in GridFunctionSpace
+    - Fix PkFEM for k >= 3 in 2D, which was broken due to a bug in the variant
+      selection. Also extended interpolation tests to cover this case.
+    - Improvements to coding style and correctness in some places
+    - Check for correct cell GeometryType in PkFEM and VariableMonomFEM
+    - Fix broken testordering
+    - Add infrastructure support required for parallel computations with the
+      dune-multidomain extension module
+
+  - PDELab 2.0.0-rc1
+    - initial release candidate
 
 
 PDELab 1.1
@@ -66,6 +201,7 @@ our website for information on how to access the Git repository.
   - PDELab 1.1-rc1
     - initial release candidate
 
+
 Caveats
 =======
 
@@ -74,16 +210,6 @@ encounter with this release.
 
 Assembler
 --------
-
-* The GridOperatorSpace and accompanying InstationaryGridOperatorSpace are
-  deprecated and will be removed in the near future. Use GridOperator and
-  OneStepGridOperator instead.
-
-* The GridOperatorSpace for multi-step methods has not been ported to the new
-  GridOperator pattern yet. If you use multi-step methods, you will have to keep
-  using the MultiStepGridOperatorSpace for now.
-
-* Hanging nodes support is currently restricted to P1 and Q1 spaces.
 
 Solvers
 -------
@@ -103,27 +229,9 @@ Linear Algebra Backends
   src/convection-diffusion/poisson.cc in dune-pdelab-howto. In general, we
   encourage usage of the predefined solver backends, though.
 
-* Matrix allocation currently requires a lot of memory (roughly twice as much as
-  the matrix after allocation) and can take disproportionately long, especially
-  for problems with simple spaces and operators. This will be fixed in a later
-  release.
+* The PETSc [3] backend is currently broken.
 
-* The alternative backends for PETSc [3] and Eigen [4] are still in very
-  experimental stage and do not offer as much functionality as the default ISTL
-  backend:
-
-  - The PETSc backend does not work for parallel computations and only provides
-    facilities for assembling jacobian and residual. Users will have to
-    construct their own solvers using native PETSc functionality. The backend
-    should work with PETSc 3.3.
-
-  - The Eigen backend does not work for parallel computations either, but it
-    provides a number of ready-to-use solvers. The backend does not support
-    blocking of DOFs. The backend requires at least a prerelease version of
-    Eigen 3.1.0.
-
-* The PETSc backend does not work correctly when used in conjunction with
-  hanging nodes.
+* The alternative backends for Eigen [4] is not as mature as the ISTL backend yet.
 
 General
 -------
@@ -132,18 +240,8 @@ General
   have had good success with using the clang compiler instead of GCC during
   development and bug-testing to reduce compile times.
 
-* If you are still using a *really* ancient version of PDELab, have a look at
-  doc/README.changes for an overview of the major API changes that might keep
-  your code from compiling.
-
-* Starting with the current release, PDELab is dual-licensed under both LGPL3+
-  and GPL 2 with a special runtime exception - the details can be found in the
-  file COPYING. Please note that for now, you cannot actually make use of the
-  LGPL3+ license yet, as the DUNE core modules are exclusively licensed under
-  GPL 2 with runtime exception, which is not compatible with LGPL3+. Instead,
-  this licensing change should be seen as preparation for a possible future move
-  of the core modules to a dual-licensing scheme.
-
+* After PDELab 2.0, the minimum compiler requirement of PDELab will be increased
+  to GCC 4.5. Please be aware of this change in minimum requirements.
 
 Links
 =====

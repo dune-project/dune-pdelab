@@ -114,7 +114,7 @@ namespace Dune {
        * \param gfs shared pointer to the GridFunctionsSpace
        * \param x_  shared pointer to the coefficients vector
        */
-      DiscreteGridFunction (shared_ptr<const GFS> gfs, shared_ptr<const X> x_)
+      DiscreteGridFunction (std::shared_ptr<const GFS> gfs, std::shared_ptr<const X> x_)
         : pgfs(gfs)
         , lfs(*gfs)
         , lfs_cache(lfs)
@@ -158,13 +158,13 @@ namespace Dune {
       typedef LFSIndexCache<LFS> LFSCache;
       typedef typename X::template ConstLocalView<LFSCache> XView;
 
-      shared_ptr<GFS const> pgfs;
+      std::shared_ptr<GFS const> pgfs;
       mutable LFS lfs;
       mutable LFSCache lfs_cache;
       mutable XView x_view;
       mutable std::vector<typename Traits::RangeFieldType> xl;
       mutable std::vector<typename Traits::RangeType> yb;
-      shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
+      std::shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
     };
 
     /** \brief convert a grid function space and a coefficient vector into a
@@ -251,14 +251,14 @@ namespace Dune {
       typedef LFSIndexCache<LFS> LFSCache;
       typedef typename X::template ConstLocalView<LFSCache> XView;
 
-      shared_ptr<GFS const> pgfs;
+      std::shared_ptr<GFS const> pgfs;
       mutable LFS lfs;
       mutable LFSCache lfs_cache;
       mutable XView x_view;
       mutable std::vector<typename Traits::RangeFieldType> xl;
       mutable std::vector<Jacobian> jacobian;
       mutable std::vector<typename Traits::RangeType> yb;
-      shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
+      std::shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
     };
 
     //! Helper class to calculate the Traits of DiscreteGridFunctionCurl
@@ -277,8 +277,8 @@ namespace Dune {
     template<typename GV, typename RangeFieldType, int dimRangeOfBasis>
     struct DiscreteGridFunctionCurlTraits {
       static_assert(AlwaysFalse<GV>::value,
-                    "DiscreteGridFunctionCurl (and friends) work in 2D and 3D "
-                    "only");
+                    "DiscreteGridFunctionCurl (and friends) work in 2D "
+                    "and 3D only");
     };
     //! Helper class to calculate the Traits of DiscreteGridFunctionCurl (1D)
     /**
@@ -310,8 +310,8 @@ namespace Dune {
                                   FieldVector<RangeFieldType, 1> >
     {
       static_assert(GV::dimensionworld == 2,
-                    "World dimension of grid must be 2 for the curl of a 2D "
-                    "quantity");
+                    "World dimension of grid must be 2 for the curl of a"
+                    "2D quantity");
     };
     //! Helper class to calculate the Traits of DiscreteGridFunctionCurl (3D)
     /**
@@ -326,8 +326,8 @@ namespace Dune {
                                   FieldVector<RangeFieldType, 3> >
     {
       static_assert(GV::dimensionworld == 3,
-                    "World dimension of grid must be 3 for the curl of a 3D "
-                    "quantity");
+                    "World dimension of grid must be 3 for the curl of a"
+                    "3D quantity");
     };
 
     //! \brief convert a single component function space with experimental
@@ -438,13 +438,13 @@ namespace Dune {
       typedef LFSIndexCache<LFS> LFSCache;
       typedef typename X::template ConstLocalView<LFSCache> XView;
 
-      shared_ptr<GFS const> pgfs;
+      std::shared_ptr<GFS const> pgfs;
       mutable LFS lfs;
       mutable LFSCache lfs_cache;
       mutable XView x_view;
       mutable std::vector<typename Traits::RangeFieldType> xl;
       mutable std::vector<typename T::Traits::FiniteElementType::Traits::LocalBasisType::Traits::JacobianType> J;
-      shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
+      std::shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
     };
 
     //! \brief convert a single component function space with a grid function
@@ -552,7 +552,7 @@ namespace Dune {
       typedef LFSIndexCache<LFS> LFSCache;
       typedef typename X::template ConstLocalView<LFSCache> XView;
 
-      shared_ptr<GFS const> pgfs;
+      std::shared_ptr<GFS const> pgfs;
       mutable LFS lfs;
       mutable LFSCache lfs_cache;
       mutable XView x_view;
@@ -642,7 +642,7 @@ namespace Dune {
       typedef LFSIndexCache<LFS> LFSCache;
       typedef typename X::template ConstLocalView<LFSCache> XView;
 
-      shared_ptr<GFS const> pgfs;
+      std::shared_ptr<GFS const> pgfs;
       mutable LFS lfs;
       mutable LFSCache lfs_cache;
       mutable XView x_view;
@@ -781,14 +781,14 @@ namespace Dune {
       typedef LFSIndexCache<LFS> LFSCache;
       typedef typename X::template ConstLocalView<LFSCache> XView;
 
-      shared_ptr<GFS const> pgfs;
+      std::shared_ptr<GFS const> pgfs;
       std::size_t remap[dimR];
       mutable LFS lfs;
       mutable LFSCache lfs_cache;
       mutable XView x_view;
       mutable std::vector<RF> xl;
       mutable std::vector<RT> yb;
-      shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
+      std::shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
     };
 
     /** \brief Equivalent of DiscreteGridFunctionGradient for vector-valued functions
@@ -895,13 +895,13 @@ namespace Dune {
       typedef LFSIndexCache<LFS> LFSCache;
       typedef typename X::template ConstLocalView<LFSCache> XView;
 
-      shared_ptr<GFS const> pgfs;
+      std::shared_ptr<GFS const> pgfs;
       mutable LFS lfs;
       mutable LFSCache lfs_cache;
       mutable XView x_view;
       mutable std::vector<RF> xl;
       mutable std::vector<JT> J;
-      shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
+      std::shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
     };
 
 
