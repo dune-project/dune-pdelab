@@ -13,6 +13,7 @@ common_HEADERS =				\
 	geometrywrapper.hh			\
 	globaldofindex.hh			\
 	hostname.hh				\
+	instationaryfilenamehelper.hh			\
 	jacobiantocurl.hh			\
 	logtag.hh				\
 	multiindex.hh				\
@@ -23,8 +24,7 @@ common_HEADERS =				\
 	topologyutility.hh			\
 	typetraits.hh				\
 	utility.hh				\
-	vtkexport.hh			\
-	instationaryfilenamehelper.hh
+	vtkexport.hh
 
 noinst_LTLIBRARIES = libpdelabcommon.la
 libpdelabcommon_la_SOURCES =			\
