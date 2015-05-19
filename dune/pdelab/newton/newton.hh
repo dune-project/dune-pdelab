@@ -65,6 +65,18 @@ namespace Dune
           verbosity_level = verbosity_level_;
       }
 
+      //! Set whether the jacobian matrix should be kept across calls to apply().
+      void setKeepMatrix(bool b)
+      {
+        keep_matrix = b;
+      }
+
+      //! Return whether the jacobian matrix is kept across calls to apply().
+      bool keepMatrix() const
+      {
+        return keep_matrix;
+      }
+
     protected:
       const GridOperator& gridoperator;
       TrialVector *u;
@@ -106,18 +118,6 @@ namespace Dune
       virtual void prepare_step(Matrix& A, TestVector& r) = 0;
       virtual void line_search(TrialVector& z, TestVector& r) = 0;
       virtual void defect(TestVector& r) = 0;
-
-      //! Set whether the jacobian matrix should be kept across calls to apply().
-      void setKeepMatrix(bool b)
-      {
-        keep_matrix = b;
-      }
-
-      //! Return whether the jacobian matrix is kept across calls to apply().
-      bool keepMatrix() const
-      {
-        return keep_matrix;
-      }
     }; // end class NewtonBase
 
     template<class GOS, class S, class TrlV, class TstV>
