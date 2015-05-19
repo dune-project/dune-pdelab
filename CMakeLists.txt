@@ -29,7 +29,9 @@ dune_add_library(dunepdelab
   dune/pdelab/common/clock.cc
   dune/pdelab/common/hostname.cc
   dune/pdelab/common/logtag.cc
-  ADD_LIBS ${DUNE_LIBS})
+  )
+dune_target_enable_all_packages(dunepdelab)
+
 dune_register_package_flags(LIBRARIES dunepdelab)
 
 # Use the enable all packages feature
