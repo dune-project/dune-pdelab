@@ -1,8 +1,8 @@
 // -*- tab-width: 2; indent-tabs-mode: nil -*-
 // vi: set et ts=2 sw=2 sts=2:
 
-#ifndef DUNE_PDELAB_ONESTEPPARAMETER_HH
-#define DUNE_PDELAB_ONESTEPPARAMETER_HH
+#ifndef DUNE_PDELAB_INSTATIONARY_ONESTEPPARAMETER_HH
+#define DUNE_PDELAB_INSTATIONARY_ONESTEPPARAMETER_HH
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/fmatrix.hh>

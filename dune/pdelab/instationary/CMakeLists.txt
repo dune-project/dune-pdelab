@@ -1,5 +1,7 @@
 set(instationarydir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/instationary)
 set(instationary_HEADERS
+  explicitonestep.hh
+  implicitonestep.hh
   onestep.hh
   onestepparameter.hh
   pvdwriter.hh)

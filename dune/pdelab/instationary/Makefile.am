@@ -1,5 +1,7 @@
 instationarydir = $(includedir)/dune/pdelab/instationary
-instationary_HEADERS = onestep.hh         \
+instationary_HEADERS = explicitonestep.hh			\
+											 implicitonestep.hh			\
+											 onestep.hh         \
 											 onestepparameter.hh		\
                        pvdwriter.hh
 
