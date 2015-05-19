@@ -131,7 +131,7 @@ namespace Dune {
         const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
         const int det_jac_order = gt.isSimplex() ? 0 : (dim-1);
         const int jac_order = gt.isSimplex() ? 0 : 1;
-        const int qorder = 2*v_order - 2 + 2*jac_order + det_jac_order + superintegration_order;
+        const int qorder = 3*v_order - 1 + jac_order + det_jac_order + superintegration_order;
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
@@ -141,6 +141,20 @@ namespace Dune {
           {
             const Dune::FieldVector<DF,dim> local = ip.position();
             const RF mu = prm.mu(eg,local);
+            const RF rho = prm.rho(eg,local);
+
+            // compute u (if Navier term enabled)
+            std::vector<RT> phi_v(vsize);
+            Dune::FieldVector<RF,dim> vu(0.0);
+            if(navier) {
+              FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
+
+              for(unsigned int d=0; d<dim; ++d) {
+                const LFSV_V& lfsu_v = lfsv_pfs_v.child(d);
+                for(size_type i=0; i<vsize; i++)
+                  vu[d] += x(lfsu_v,i) * phi_v[i];
+              }
+            } // end navier
 
             // and value of pressure shape functions
             std::vector<RT> phi_p(psize);
@@ -154,54 +168,63 @@ namespace Dune {
             const RF detj = eg.geometry().integrationElement(ip.position());
             const RF weight = ip.weight() * detj;
 
-            //================================================//
-            // \int (mu*grad_u*grad_v)
-            //================================================//
-            const RF factor = mu * weight;
-            for (size_type j=0; j<vsize; j++)
-              {
-                for (size_type i=0; i<vsize; i++)
-                  {
-                    // grad_phi_j*grad_phi_i
-                    RF val = (grad_phi_v[j][0]*grad_phi_v[i][0])*factor;
+            for(unsigned int dv = 0; dv<dim; ++dv) {
+              const LFSV_V& lfsv_v = lfsv_pfs_v.child(dv);
 
-                    for (unsigned int d=0; d<dim; d++)
-                      {
-                        const LFSV_V& lfsv_v_d = lfsv_pfs_v.child(d);
-                        mat.accumulate(lfsv_v_d,i,lfsv_v_d,j, val);
+              // gradient of dv-th velocity component
+              Dune::FieldVector<RF,dim> gradu_dv(0.0);
+              if(navier)
+                for(size_type l=0; l<vsize; ++l)
+                  gradu_dv.axpy(x(lfsv_v,l), grad_phi_v[l]);
 
-                        // Assemble symmetric part for (grad u)^T
-                        if(full_tensor){
-                          for (unsigned int dd=0; dd<dim; dd++){
-                            RF Tval = (grad_phi_v[j][0][d]*grad_phi_v[i][0][dd])*factor;
-                            const LFSV_V& lfsv_v_dd = lfsv_pfs_v.child(dd);
-                            mat.accumulate(lfsv_v_d,i,lfsv_v_dd,j, Tval);
-                          }
-                        }
+              for(size_type i=0; i<vsize; i++) {
 
-                      }
+                for(size_type j=0; j<vsize; j++) {
+                  //================================================//
+                  // \int (mu*grad_u*grad_v)
+                  //================================================//
+                  mat.accumulate(lfsv_v,i,lfsv_v,j, mu * (grad_phi_v[j][0]*grad_phi_v[i][0]) * weight);
+
+                  // Assemble symmetric part for (grad u)^T
+                  if(full_tensor)
+                    for(unsigned int du = 0; du<dim; ++du) {
+                      const LFSV_V& lfsu_v = lfsv_pfs_v.child(du);
+                      mat.accumulate(lfsv_v,i,lfsu_v,j, mu * (grad_phi_v[j][0][dv]*grad_phi_v[i][0][du]) * weight);
+                    }
+                }
+
+                //================================================//
+                // - q * div u
+                // - p * div v
+                //================================================//
+                for(size_type j=0; j<psize; j++) {
+                  mat.accumulate(lfsv_p,j,lfsv_v,i, -phi_p[j] * grad_phi_v[i][0][dv] * incomp_scaling * weight);
+                  mat.accumulate(lfsv_v,i,lfsv_p,j, -phi_p[j] * grad_phi_v[i][0][dv] * weight);
+                }
+
+                //================================================//
+                // non-linear convection term
+                //================================================//
+                if(navier) {
+
+                  // block diagonal contribution
+                  for(size_type j=0; j<vsize; j++)
+                    mat.accumulate(lfsv_v,i,lfsv_v,j, rho * (vu * grad_phi_v[j][0]) * phi_v[i] * weight);
+
+                  // remaining contribution
+                  for(unsigned int du = 0; du < dim; ++du) {
+                    const LFSV_V& lfsu_v = lfsv_pfs_v.child(du);
+                    for(size_type j=0; j<vsize; j++)
+                      mat.accumulate(lfsv_v,i,lfsu_v,j, rho * phi_v[j] * gradu_dv[du] * phi[i] * weight);
                   }
-              }
 
-            //================================================//
-            // - q * div u
-            // - p * div v
-            //================================================//
-            for (size_type j=0; j<psize; j++) // test (q)
-              {
-                RF val = -1.0 * phi_p[j]*weight;
-                for (size_type i=0; i<vsize; i++) // ansatz (u)
-                  {
-                    for (unsigned int d=0; d<dim; d++)
-                      {
-                        const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
-                        mat.accumulate(lfsv_p,j,lfsv_v,i, val*grad_phi_v[i][0][d] * incomp_scaling);
-                        mat.accumulate(lfsv_v,i,lfsv_p,j, val*grad_phi_v[i][0][d]);
-                      }
-                  }
-              }
-          }
-      }
+                } // end navier
+
+              } // end i
+            } // end dv
+
+          } // end loop quadrature points
+      } // end jacobian_volume
 
       // jacobian of skeleton term
       template<typename IG, typename LFSU, typename X, typename LFSV,
