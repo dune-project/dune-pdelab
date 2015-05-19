@@ -77,6 +77,13 @@ namespace Dune
         return keep_matrix;
       }
 
+      //! Discard the stored Jacobian matrix.
+      void discardMatrix()
+      {
+        if(A)
+          A.reset();
+      }
+
     protected:
       const GridOperator& gridoperator;
       TrialVector *u;
