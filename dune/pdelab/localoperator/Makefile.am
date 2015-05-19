@@ -7,6 +7,7 @@ common_HEADERS =				\
 	convectiondiffusionfem.hh		\
 	convectiondiffusionparameter.hh		\
 	defaultimp.hh				\
+	dgnavierstokesparameter.hh			\
 	dgparameter.hh				\
 	diffusion.hh				\
 	diffusionccfv.hh			\
