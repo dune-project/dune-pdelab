@@ -5,6 +5,7 @@ install(FILES callswitch.hh
               convectiondiffusionfem.hh
               convectiondiffusionparameter.hh
               defaultimp.hh
+              dgnavierstokes.hh
               dgnavierstokesparameter.hh
               dgparameter.hh
               diffusion.hh
