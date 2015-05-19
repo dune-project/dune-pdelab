@@ -215,7 +215,7 @@ namespace Dune {
                   for(unsigned int du = 0; du < dim; ++du) {
                     const LFSV_V& lfsu_v = lfsv_pfs_v.child(du);
                     for(size_type j=0; j<vsize; j++)
-                      mat.accumulate(lfsv_v,i,lfsu_v,j, rho * phi_v[j] * gradu_dv[du] * phi[i] * weight);
+                      mat.accumulate(lfsv_v,i,lfsu_v,j, rho * phi_v[j] * gradu_dv[du] * phi_v[i] * weight);
                   }
 
                 } // end navier

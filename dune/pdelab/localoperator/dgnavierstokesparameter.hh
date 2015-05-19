@@ -29,7 +29,7 @@ namespace Dune {
         \tparam IP          A class providing the interior penalty for each face.
 
     */
-    template<typename GV, typename RF, typename F, typename B, typename B, typename V, typename J,
+    template<typename GV, typename RF, typename F, typename B, typename V, typename J,
              bool navier = false, bool full_tensor = false, typename IP = DefaultInteriorPenalty<typename V::Traits::RangeFieldType> >
     class DGNavierStokesParameters :
       public NavierStokesDefaultParameters<GV,RF,F,B,V,J,navier,full_tensor>
