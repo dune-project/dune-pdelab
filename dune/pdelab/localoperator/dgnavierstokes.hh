@@ -92,6 +92,136 @@ namespace Dune {
         prm.setTime(t);
       }
 
+      // volume integral depending on test and ansatz functions
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+      {
+        // dimensions
+        const unsigned int dim = EG::Geometry::dimension;
+
+        // subspaces
+        static_assert
+          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
+        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
+        const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
+        static_assert
+          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
+
+        // ... we assume all velocity components are the same
+        typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
+        const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
+        const unsigned int vsize = lfsv_v.size();
+        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
+        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
+        const unsigned int psize = lfsv_p.size();
+
+        // domain and range field type
+        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
+        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+        typedef typename BasisSwitch_V::DomainField DF;
+        typedef typename BasisSwitch_V::Range RT;
+        typedef typename BasisSwitch_V::RangeField RF;
+        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
+        typedef typename LFSV::Traits::SizeType size_type;
+
+        // select quadrature rule
+        Dune::GeometryType gt = eg.geometry().type();
+        const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
+        const int det_jac_order = gt.isSimplex() ? 0 : (dim-1);
+        const int jac_order = gt.isSimplex() ? 0 : 1;
+        const int qorder = 3*v_order - 1 + jac_order + det_jac_order + superintegration_order;
+        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
+
+        const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
+
+        // loop over quadrature points
+        for (const auto& ip : rule)
+          {
+            const Dune::FieldVector<DF,dim> local = ip.position();
+            const RF mu = prm.mu(eg,local);
+            const RF rho = prm.rho(eg,local);
+
+            // compute u (if Navier term enabled)
+            std::vector<RT> phi_v(vsize);
+            Dune::FieldVector<RF,dim> vu(0.0);
+            if(navier) {
+              FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
+
+              for(unsigned int d=0; d<dim; ++d) {
+                const LFSV_V& lfsu_v = lfsv_pfs_v.child(d);
+                for(size_type i=0; i<vsize; i++)
+                  vu[d] += x(lfsu_v,i) * phi_v[i];
+              }
+            } // end navier
+
+            // and value of pressure shape functions
+            std::vector<RT> phi_p(psize);
+            FESwitch_P::basis(lfsv_p.finiteElement()).evaluateFunction(local,phi_p);
+
+            // compute pressure
+            RF p(0.0);
+            for(size_type i=0; i<psize; i++)
+              p += x(lfsv_p,i) * phi_p[i];
+
+            // compute gradients
+            std::vector<Dune::FieldMatrix<RF,1,dim> > grad_phi_v(vsize);
+            BasisSwitch_V::gradient(FESwitch_V::basis(lfsv_v.finiteElement()),
+                                    eg.geometry(), local, grad_phi_v);
+
+            // compute velocity jacobian
+            Dune::FieldMatrix<RF,dim,dim> jacu(0.0);
+            for(unsigned int d = 0; d<dim; ++d) {
+              const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
+              for(size_type i=0; i<vsize; i++)
+                jacu[d].axpy(x(lfsv_v,i), grad_phi_v[i][0]);
+            }
+
+            const RF detj = eg.geometry().integrationElement(ip.position());
+            const RF weight = ip.weight() * detj;
+
+            for(unsigned int d = 0; d<dim; ++d) {
+              const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
+
+              for(size_type i=0; i<vsize; i++) {
+                //================================================//
+                // \int (mu*grad_u*grad_v)
+                //================================================//
+                r.accumulate(lfsv_v,i, mu * (jacu[d]*grad_phi_v[i][0]) * weight);
+
+                // Assemble symmetric part for (grad u)^T
+                if(full_tensor)
+                  for(unsigned int dd = 0; dd<dim; ++dd)
+                    r.accumulate(lfsv_v,i, mu * jacu[dd][d] * grad_phi_v[i][dd] * weight);
+
+                //================================================//
+                // \int -p \nabla\cdot v
+                //================================================//
+                r.accumulate(lfsv_v,i, -p * grad_phi_v[i][0][d] * weight);
+
+                //================================================//
+                // \int \rho ((u\cdot\nabla ) u )\cdot v
+                //================================================//
+                if(navier) {
+                  // compute u * grad u_d
+                  const RF u_nabla_u = vu * jacu[d];
+
+                  r.accumulate(lfsv_v,i, rho * u_nabla_u * phi_v[i] * weight);
+                } // end navier
+
+              } // end i
+            } // end d
+
+            //================================================//
+            // \int -q \nabla\cdot u
+            //================================================//
+            for(size_type i=0; i<psize; i++)
+              for(unsigned int d = 0; d < dim; ++d)
+                // divergence of u is the trace of the velocity jacobian
+                r.accumulate(lfsv_p,i, -jacu[d][d] * phi_p[i] * incomp_scaling * weight);
+
+          } // end loop quadrature points
+      } // end alpha_volume
+
       // jacobian of volume term
       template<typename EG, typename LFSU, typename X, typename LFSV,
                typename LocalMatrix>
@@ -203,7 +333,7 @@ namespace Dune {
                 }
 
                 //================================================//
-                // non-linear convection term
+                // \int \rho ((u\cdot\nabla ) u )\cdot v
                 //================================================//
                 if(navier) {
 
