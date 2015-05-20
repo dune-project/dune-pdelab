@@ -67,8 +67,6 @@ namespace Dune {
         typedef typename IndexCache::ContainerIndex ContainerIndex;
         typedef typename ConstraintsTransformation::iterator GlobalConstraintIterator;
         typedef typename ConstraintsTransformation::mapped_type GlobalConstraint;
-        typedef typename LocalTransformation::const_iterator LocalConstraintIterator;
-        typedef typename LocalTransformation::mapped_type::const_iterator LocalEntryIterator;
 
         for (const auto& local_constraint : local_transformation)
           {
