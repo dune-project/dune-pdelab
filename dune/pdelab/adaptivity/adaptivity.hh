@@ -102,11 +102,10 @@ namespace Dune {
           std::vector<typename FiniteElement::Traits::LocalBasisType::Traits::RangeType> phi;
           phi.resize(std::max(phi.size(),local_size));
 
-          for (QRIterator it = _quadrature_rule.begin(); it != _quadrature_rule.end(); ++it)
+          for (const auto& ip : _quadrature_rule)
             {
-              //std::fill(yVector.begin(),yVector.end(),typename Traits::RangeType(0));
-              fe.localBasis().evaluateFunction(it->position(),phi);
-              const DF factor = it->weight();
+              fe.localBasis().evaluateFunction(ip.position(),phi);
+              const DF factor = ip.weight();
 
               for (int i = 0; i < local_size; ++i)
                 for (int j = 0; j < local_size; ++j)
@@ -243,17 +242,16 @@ namespace Dune {
         Geometry fine_geometry = _current->geometry();
         Geometry coarse_geometry = _ancestor->geometry();
 
-        const QuadratureRule<DF,dim>& rule = QuadratureRules<DF,dim>::rule(_current->type(),_int_order);
         // iterate over quadrature points
-        for (typename QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : QuadratureRules<DF,dim>::rule(_current.type(),_int_order))
           {
-            typename Geometry::LocalCoordinate coarse_local = coarse_geometry.local(fine_geometry.global(it->position()));
             const FE* fe = &fem.find(*_current);
-            fe->localBasis().evaluateFunction(it->position(),fine_phi);
             fe = &fem.find(*_ancestor);
+            typename Geometry::LocalCoordinate coarse_local = coarse_geometry.local(fine_geometry.global(ip.position()));
+            fe->localBasis().evaluateFunction(ip.position(),fine_phi);
             fe->localBasis().evaluateFunction(coarse_local,coarse_phi);
-            const DF factor = it->weight()
-              * fine_geometry.integrationElement(it->position())
+            const DF factor = ip.weight()
+              * fine_geometry.integrationElement(ip.position())
               / coarse_geometry.integrationElement(coarse_local);
 
             Range val(0.0);
