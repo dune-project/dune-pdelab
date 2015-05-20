@@ -191,7 +191,7 @@ namespace Dune {
 
     private:
 
-      const GFS& _gfs;
+      GFS _gfs;
       int _intorder;
       std::vector<MassMatrices> _inverse_mass_matrices;
     };
@@ -904,7 +904,7 @@ namespace Dune {
       typedef typename Grid::LeafGridView GV;
       typedef typename GV::template Codim<0>::Iterator Iterator;
 
-      const GV& gv = grid.leafGridView();
+      GV gv = grid.leafGridView();
 
       unsigned int refine_cnt=0;
       unsigned int coarsen_cnt=0;
@@ -952,6 +952,7 @@ namespace Dune {
       typedef typename GV::IndexSet IndexSet;
 
       const GV& gv = grid.leafGridView();
+      GV gv = grid.leafGridView();
 
       unsigned int coarsen_cnt=0;
 
