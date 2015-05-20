@@ -541,12 +541,8 @@ namespace Dune {
         Visitor visitor(gfsu,projection,u,_leaf_offset_cache,transfer_map);
 
         // iterate over all elems
-        LeafGridView leafView = grid.leafGridView();
-        for (LeafIterator it = leafView.template begin<0,Dune::Interior_Partition>();
-             it!=leafView.template end<0,Dune::Interior_Partition>(); ++it)
-          {
-            visitor(*it);
-          }
+        for(const auto& cell : elements(grid.leafGridView(),Partitions::interior))
+          visitor(cell);
       }
 
       /* @brief @todo
@@ -566,12 +562,9 @@ namespace Dune {
 
         // iterate over all elems
         LeafGridView leafView = grid.leafGridView();
-        for (LeafIterator it = leafView.template begin<0,Dune::Interior_Partition>();
-             it!=leafView.template end<0,Dune::Interior_Partition>(); ++it)
+        for (const auto& cell : elements(leafView,Partitions::interior))
           {
-            const Element& e = *it;
-
-            Element ancestor = e;
+            Element ancestor = cell;
 
             typename MapType::const_iterator map_it;
             while ((map_it = transfer_map.find(id_set.id(ancestor))) == transfer_map.end())
