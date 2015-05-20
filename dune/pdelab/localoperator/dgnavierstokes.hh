@@ -484,32 +484,53 @@ namespace Dune {
               const LFSV_V & lfsv_s_v = lfsv_s_pfs_v.child(d);
               const LFSV_V & lfsv_n_v = lfsv_n_pfs_v.child(d);
 
+              //================================================//
+              // diffusion term
+              //================================================//
               RF val = 0.5 * ((jacu_s[d] * normal) + (jacu_n[d] * normal)) * factor;
               for(unsigned int i=0; i<vsize_s; i++) {
                 r_s.accumulate(lfsv_s_v,i, -val * phi_v_s[i]);
                 r_n.accumulate(lfsv_n_v,i, val * phi_v_n[i]);
 
-                //============================================
-                // TODO add contribution from full tensor
-                //============================================
+                if(full_tensor) {
+                  for(unsigned int dd=0; dd<dim; ++dd) {
+                    RF Tval = 0.5 * (jacu_s[dd][d] + jacu_n[dd][d]) * normal[dd] * factor;
+                    r_s.accumulate(lfsv_s_v,i, -Tval * phi_v_s[i]);
+                    r_n.accumulate(lfsv_n_v,i, Tval * phi_v_n[i]);
+                  }
+                }
               } // end i
 
+              //================================================//
+              // (non-)symmetric IP term
+              //================================================//
               RF jumpu_d  = u_s[d] - u_n[d];
               for(unsigned int i=0; i<vsize_s; i++) {
                 r_s.accumulate(lfsv_s_v,i, epsilon * 0.5 * (grad_phi_v_s[i][0] * normal) * jumpu_d * factor);
                 r_n.accumulate(lfsv_n_v,i, epsilon * 0.5 * (grad_phi_v_n[i][0] * normal) * jumpu_d * factor);
 
-                //============================================
-                // TODO add contribution from full tensor
-                //============================================
+                if(full_tensor) {
+                  for(unsigned int dd=0; dd<dim; ++dd) {
+                    const LFSV_V& lfsv_s_v_dd = lfsv_s_pfs_v.child(dd);
+                    const LFSV_V& lfsv_n_v_dd = lfsv_n_pfs_v.child(dd);
+
+                    r_s.accumulate(lfsv_s_v_dd,i, epsilon * 0.5 * grad_phi_v_s[i][0][d] * normal[dd] * jumpu_d * factor);
+                    r_n.accumulate(lfsv_n_v_dd,i, epsilon * 0.5 * grad_phi_v_n[i][0][d] * normal[dd] * jumpu_d * factor);
+                  }
+                }
               } // end i
 
+              //================================================//
+              // standard IP term integral
+              //================================================//
               for(unsigned int i=0; i<vsize_s; i++) {
                 r_s.accumulate(lfsv_s_v,i, penalty_factor * jumpu_d * phi_v_s[i] * weight);
                 r_n.accumulate(lfsv_n_v,i, -penalty_factor * jumpu_d * phi_v_n[i] * weight);
               } // end i
 
+              //================================================//
               // pressure-velocity-coupling in momentum equation
+              //================================================//
               RF mean_p = 0.5*(p_s + p_n);
               for(unsigned int i=0; i<vsize_s; i++) {
                 r_s.accumulate(lfsv_s_v,i, mean_p * phi_v_s[i] * normal[d] * weight);
@@ -517,7 +538,9 @@ namespace Dune {
               } // end i
             } // end d
 
+            //================================================//
             // incompressibility constraint
+            //================================================//
             RF jumpu_n = (u_s*normal) - (u_n*normal);
             for(unsigned int i=0; i<psize_s; i++) {
               r_s.accumulate(lfsv_s_p,i, 0.5 * phi_p_s[i] * jumpu_n * incomp_scaling * weight);
