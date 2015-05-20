@@ -881,10 +881,7 @@ namespace Dune {
     void mark_grid (Grid &grid, const X& x, typename X::ElementType refine_threshold,
                     typename X::ElementType coarsen_threshold, int min_level = 0, int max_level = std::numeric_limits<int>::max(), int verbose=0)
     {
-      //typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator
-      //  Iterator;
       typedef typename Grid::LeafGridView GV;
-      typedef typename GV::template Codim<0>::Iterator Iterator;
 
       GV gv = grid.leafGridView();
 
@@ -928,12 +925,8 @@ namespace Dune {
     void mark_grid_for_coarsening (Grid &grid, const X& x, typename X::ElementType refine_threshold,
                                    typename X::ElementType coarsen_threshold, int verbose=0)
     {
-      typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator
-        Iterator;
       typedef typename Grid::LeafGridView GV;
-      typedef typename GV::IndexSet IndexSet;
 
-      const GV& gv = grid.leafGridView();
       GV gv = grid.leafGridView();
 
       unsigned int coarsen_cnt=0;
