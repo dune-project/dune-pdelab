@@ -447,213 +447,132 @@ namespace Dune {
             const RF weight = ip.weight()*ig.geometry().integrationElement(ip.position());
             const RF mu = prm.mu(ig,ip.position());
 
-            //================================================//
-            // - (\mu \int < \nabla u > . normal . [v])
-            //================================================//
             assert(vsize_s == vsize_n);
-            RF factor = mu * weight;
-            for (unsigned int i=0;i<vsize_s;++i)
-              {
-                for (unsigned int j=0;j<vsize_s;++j)
-                  {
-                    RF val = (0.5*(grad_phi_v_s[i][0]*normal)*phi_v_s[j]) * factor;
-                    for (unsigned int d=0;d<dim;++d)
-                      {
-                        const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
-                        mat_ss.accumulate(lfsv_s_v,j,lfsv_s_v,i, - val);
-                        mat_ss.accumulate(lfsv_s_v,i,lfsv_s_v,j, epsilon*val );
+            const RF factor = mu * weight;
 
-                        // Assemble symmetric part for (grad u)^T
-                        if(full_tensor){
+            for(unsigned int d = 0; d < dim; ++d) {
+              const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
+              const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
 
-                          for (unsigned int dd=0;dd<dim;++dd)
-                            {
-                              RF Tval = (0.5*(grad_phi_v_s[i][0][d]*normal[dd])*phi_v_s[j]) * factor;
-                              const LFSV_V& lfsv_s_v_dd = lfsv_s_pfs_v.child(dd);
-                              mat_ss.accumulate(lfsv_s_v,j,lfsv_s_v_dd,i, - Tval);
-                              mat_ss.accumulate(lfsv_s_v_dd,i,lfsv_s_v,j, epsilon*Tval );
-                            }
-                        }
-                      }
-                  }
-                for (unsigned int j=0;j<vsize_n;++j)
-                  {
-                    // the normal vector flipped, thus the sign flips
-                    RF val = (-0.5*(grad_phi_v_s[i][0]*normal)*phi_v_n[j]) * factor;
-                    for (unsigned int d=0;d<dim;++d)
-                      {
-                        const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
-                        const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
-                        mat_ns.accumulate(lfsv_n_v,j,lfsv_s_v,i,- val);
-                        mat_sn.accumulate(lfsv_s_v,i,lfsv_n_v,j, epsilon*val);
+              //================================================//
+              // - (\mu \int < \nabla u > . normal . [v])
+              // \mu \int \frac{\sigma}{|\gamma|^\beta} [u] \cdot [v]
+              //================================================//
+              for(unsigned int i=0; i<vsize_s; ++i) {
 
-                        // Assemble symmetric part for (grad u)^T
-                        if(full_tensor){
+                for(unsigned int j=0; j<vsize_s; ++j) {
+                  RF val = (0.5*(grad_phi_v_s[i][0]*normal)*phi_v_s[j]) * factor;
+                  mat_ss.accumulate(lfsv_s_v,j,lfsv_s_v,i, -val);
+                  mat_ss.accumulate(lfsv_s_v,i,lfsv_s_v,j, epsilon * val);
+                  mat_ss.accumulate(lfsv_s_v,i,lfsv_s_v,j, phi_v_s[i] * phi_v_s[j] * penalty_factor * weight);
 
-                          for (unsigned int dd=0;dd<dim;++dd)
-                            {
-                              RF Tval = (-0.5*(grad_phi_v_s[i][0][d]*normal[dd])*phi_v_n[j]) * factor;
-                              const LFSV_V& lfsv_s_v_dd = lfsv_s_pfs_v.child(dd);
-                              mat_ns.accumulate(lfsv_n_v,j,lfsv_s_v_dd,i,- Tval);
-                              mat_sn.accumulate(lfsv_s_v_dd,i,lfsv_n_v,j, epsilon*Tval);
-                            }
-                        }
-                      }
+                  // Assemble symmetric part for (grad u)^T
+                  if(full_tensor) {
+                    for(unsigned int dd = 0; dd < dim; ++dd) {
+                      RF Tval = (0.5*(grad_phi_v_s[i][0][d]*normal[dd])*phi_v_s[j]) * factor;
+                      const LFSV_V& lfsv_s_v_dd = lfsv_s_pfs_v.child(dd);
+                      mat_ss.accumulate(lfsv_s_v,j,lfsv_s_v_dd,i, - Tval);
+                      mat_ss.accumulate(lfsv_s_v_dd,i,lfsv_s_v,j, epsilon*Tval );
+                    }
                   }
-              }
-            for (unsigned int i=0;i<vsize_n;++i)
-              {
-                for (unsigned int j=0;j<vsize_s;++j)
-                  {
-                    RF val = (0.5*(grad_phi_v_n[i][0]*normal)*phi_v_s[j]) * factor;
-                    for (unsigned int d=0;d<dim;++d)
-                      {
-                        const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
-                        const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
-                        mat_sn.accumulate(lfsv_s_v,j,lfsv_n_v,i, - val);
-                        mat_ns.accumulate(lfsv_n_v,i,lfsv_s_v,j, epsilon*val );
+                }
 
-                        // Assemble symmetric part for (grad u)^T
-                        if(full_tensor){
+                for(unsigned int j=0; j<vsize_n; ++j) {
+                  // the normal vector flipped, thus the sign flips
+                  RF val = (-0.5*(grad_phi_v_s[i][0]*normal)*phi_v_n[j]) * factor;
+                  mat_ns.accumulate(lfsv_n_v,j,lfsv_s_v,i,- val);
+                  mat_sn.accumulate(lfsv_s_v,i,lfsv_n_v,j, epsilon*val);
+                  mat_ns.accumulate(lfsv_n_v,j,lfsv_s_v,i, -phi_v_s[i] * phi_v_n[j] * penalty_factor * weight);
 
-                          for (unsigned int dd=0;dd<dim;++dd)
-                            {
-                              RF Tval = (0.5*(grad_phi_v_n[i][0][d]*normal[dd])*phi_v_s[j]) * factor;
-                              const LFSV_V& lfsv_n_v_dd = lfsv_n_pfs_v.child(dd);
-                              mat_sn.accumulate(lfsv_s_v,j,lfsv_n_v_dd,i, - Tval);
-                              mat_ns.accumulate(lfsv_n_v_dd,i,lfsv_s_v,j, epsilon*Tval );
-                            }
-                        }
-                      }
+                  // Assemble symmetric part for (grad u)^T
+                  if(full_tensor) {
+                    for (unsigned int dd=0;dd<dim;++dd) {
+                      RF Tval = (-0.5*(grad_phi_v_s[i][0][d]*normal[dd])*phi_v_n[j]) * factor;
+                      const LFSV_V& lfsv_s_v_dd = lfsv_s_pfs_v.child(dd);
+                      mat_ns.accumulate(lfsv_n_v,j,lfsv_s_v_dd,i,- Tval);
+                      mat_sn.accumulate(lfsv_s_v_dd,i,lfsv_n_v,j, epsilon*Tval);
+                    }
                   }
-                for (unsigned int j=0;j<vsize_n;++j)
-                  {
-                    // the normal vector flipped, thus the sign flips
-                    RF val = (-0.5*(grad_phi_v_n[i][0]*normal)*phi_v_n[j]) * factor;
-                    for (unsigned int d=0;d<dim;++d)
-                      {
-                        const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
-                        mat_nn.accumulate(lfsv_n_v,j,lfsv_n_v,i,- val);
-                        mat_nn.accumulate(lfsv_n_v,i,lfsv_n_v,j, epsilon*val);
+                }
+              } // end i
 
-                        // Assemble symmetric part for (grad u)^T
-                        if(full_tensor){
+              for(unsigned int i=0; i<vsize_n; ++i) {
 
-                          for (unsigned int dd=0;dd<dim;++dd)
-                            {
-                              RF Tval = (-0.5*(grad_phi_v_n[i][0][d]*normal[dd])*phi_v_n[j]) * factor;
-                              const LFSV_V& lfsv_n_v_dd = lfsv_n_pfs_v.child(dd);
-                              mat_nn.accumulate(lfsv_n_v,j,lfsv_n_v_dd,i,- Tval);
-                              mat_nn.accumulate(lfsv_n_v_dd,i,lfsv_n_v,j, epsilon*Tval);
-                            }
-                        }
-                      }
-                  }
-              }
-            //================================================//
-            // \mu \int \sigma / |\gamma|^\beta v u
-            //================================================//
-            factor = penalty_factor * weight;
-            for (unsigned int i=0;i<vsize_s;++i)
-              {
-                for (unsigned int j=0;j<vsize_s;++j)
-                  {
-                    RF val = phi_v_s[i]*phi_v_s[j] * factor;
-                    for (unsigned int d=0;d<dim;++d)
-                      {
-                        const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
-                        mat_ss.accumulate(lfsv_s_v,j,lfsv_s_v,i, val);
-                      }
-                  }
-                for (unsigned int j=0;j<vsize_n;++j)
-                  {
-                    RF val = phi_v_s[i]*phi_v_n[j] * factor;
-                    for (unsigned int d=0;d<dim;++d)
-                      {
-                        const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
-                        const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
-                        mat_ns.accumulate(lfsv_n_v,j,lfsv_s_v,i, - val);
-                      }
-                  }
-              }
-            for (unsigned int i=0;i<vsize_n;++i)
-              {
-                for (unsigned int j=0;j<vsize_s;++j)
-                  {
-                    RF val = phi_v_n[i]*phi_v_s[j] * factor;
-                    for (unsigned int d=0;d<dim;++d)
-                      {
-                        const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
-                        const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
-                        mat_sn.accumulate(lfsv_s_v,j,lfsv_n_v,i, - val);
-                      }
-                  }
-                for (unsigned int j=0;j<vsize_n;++j)
-                  {
-                    RF val = phi_v_n[i]*phi_v_n[j] * factor;
-                    for (unsigned int d=0;d<dim;++d)
-                      {
-                        const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
-                        mat_nn.accumulate(lfsv_n_v,j,lfsv_n_v,i, val);
-                      }
-                  }
-              }
-            //================================================//
-            // \int <q> [u] n
-            // \int <p> [v] n
-            //================================================//
-            for (unsigned int i=0;i<vsize_s;++i)
-              {
-                for (unsigned int j=0;j<psize_s;++j)
-                  {
-                    for (unsigned int d=0;d<dim;++d)
-                      {
-                        const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
-                        RF val = 0.5*(phi_p_s[j]*normal[d]*phi_v_s[i]) * weight;
-                        mat_ss.accumulate(lfsv_s_v,i,lfsv_s_p,j, val);
-                        mat_ss.accumulate(lfsv_s_p,j,lfsv_s_v,i, val * incomp_scaling);
-                      }
-                  }
-                for (unsigned int j=0;j<psize_n;++j)
-                  {
-                    for (unsigned int d=0;d<dim;++d)
-                      {
-                        const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.child(d);
-                        RF val = 0.5*(phi_p_n[j]*normal[d]*phi_v_s[i]) * weight;
-                        mat_sn.accumulate(lfsv_s_v,i,lfsv_n_p,j, val);
-                        mat_ns.accumulate(lfsv_n_p,j,lfsv_s_v,i, val * incomp_scaling);
-                      }
-                  }
-              }
-            for (unsigned int i=0;i<vsize_n;++i)
-              {
-                for (unsigned int j=0;j<psize_s;++j)
-                  {
-                    for (unsigned int d=0;d<dim;++d)
-                      {
-                        const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
+                for(unsigned int j=0; j<vsize_s; ++j) {
+                  RF val = (0.5*(grad_phi_v_n[i][0]*normal)*phi_v_s[j]) * factor;
+                  mat_sn.accumulate(lfsv_s_v,j,lfsv_n_v,i, - val);
+                  mat_ns.accumulate(lfsv_n_v,i,lfsv_s_v,j, epsilon*val );
+                  mat_sn.accumulate(lfsv_s_v,j,lfsv_n_v,i, -phi_v_n[i] * phi_v_s[j] * penalty_factor * weight);
 
-                        // the normal vector flipped, thus the sign flips
-                        RF val = -0.5*(phi_p_s[j]*normal[d]*phi_v_n[i]) * weight;
-                        mat_ns.accumulate(lfsv_n_v,i,lfsv_s_p,j, val);
-                        mat_sn.accumulate(lfsv_s_p,j,lfsv_n_v,i, val * incomp_scaling);
-                      }
+                  // Assemble symmetric part for (grad u)^T
+                  if(full_tensor) {
+                    for (unsigned int dd=0;dd<dim;++dd) {
+                      RF Tval = (0.5*(grad_phi_v_n[i][0][d]*normal[dd])*phi_v_s[j]) * factor;
+                      const LFSV_V& lfsv_n_v_dd = lfsv_n_pfs_v.child(dd);
+                      mat_sn.accumulate(lfsv_s_v,j,lfsv_n_v_dd,i, - Tval);
+                      mat_ns.accumulate(lfsv_n_v_dd,i,lfsv_s_v,j, epsilon*Tval );
+                    }
                   }
-                for (unsigned int j=0;j<psize_n;++j)
-                  {
-                    for (unsigned int d=0;d<dim;++d)
-                      {
-                        const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.child(d);
+                }
 
-                        // the normal vector flipped, thus the sign flips
-                        RF val = -0.5*(phi_p_n[j]*normal[d]*phi_v_n[i]) * weight;
-                        mat_nn.accumulate(lfsv_n_v,i,lfsv_n_p,j, val);
-                        mat_nn.accumulate(lfsv_n_p,j,lfsv_n_v,i, val * incomp_scaling);
-                      }
+                for(unsigned int j=0; j<vsize_n; ++j) {
+                  // the normal vector flipped, thus the sign flips
+                  RF val = (-0.5*(grad_phi_v_n[i][0]*normal)*phi_v_n[j]) * factor;
+                  mat_nn.accumulate(lfsv_n_v,j,lfsv_n_v,i, - val);
+                  mat_nn.accumulate(lfsv_n_v,i,lfsv_n_v,j, epsilon*val);
+                  mat_nn.accumulate(lfsv_n_v,j,lfsv_n_v,i, phi_v_n[i] * phi_v_n[j] * penalty_factor * weight);
+
+                  // Assemble symmetric part for (grad u)^T
+                  if(full_tensor) {
+                    for (unsigned int dd=0;dd<dim;++dd) {
+                      RF Tval = (-0.5*(grad_phi_v_n[i][0][d]*normal[dd])*phi_v_n[j]) * factor;
+                      const LFSV_V& lfsv_n_v_dd = lfsv_n_pfs_v.child(dd);
+                      mat_nn.accumulate(lfsv_n_v,j,lfsv_n_v_dd,i,- Tval);
+                      mat_nn.accumulate(lfsv_n_v_dd,i,lfsv_n_v,j, epsilon*Tval);
+                    }
                   }
-              }
-          }
-      }
+                }
+              } // end i
+
+              //================================================//
+              // \int <q> [u] n
+              // \int <p> [v] n
+              //================================================//
+              for(unsigned int i=0; i<vsize_s; ++i) {
+
+                for(unsigned int j=0; j<psize_s; ++j) {
+                  RF val = 0.5*(phi_p_s[j]*normal[d]*phi_v_s[i]) * weight;
+                  mat_ss.accumulate(lfsv_s_v,i,lfsv_s_p,j, val);
+                  mat_ss.accumulate(lfsv_s_p,j,lfsv_s_v,i, val * incomp_scaling);
+                }
+
+                for(unsigned int j=0; j<psize_n; ++j) {
+                  RF val = 0.5*(phi_p_n[j]*normal[d]*phi_v_s[i]) * weight;
+                  mat_sn.accumulate(lfsv_s_v,i,lfsv_n_p,j, val);
+                  mat_ns.accumulate(lfsv_n_p,j,lfsv_s_v,i, val * incomp_scaling);
+                }
+              } // end i
+
+              for(unsigned int i=0; i<vsize_n; ++i) {
+
+                for (unsigned int j=0; j<psize_s;++j) {
+                  // the normal vector flipped, thus the sign flips
+                  RF val = -0.5*(phi_p_s[j]*normal[d]*phi_v_n[i]) * weight;
+                  mat_ns.accumulate(lfsv_n_v,i,lfsv_s_p,j, val);
+                  mat_sn.accumulate(lfsv_s_p,j,lfsv_n_v,i, val * incomp_scaling);
+                }
+
+                for (unsigned int j=0; j<psize_n;++j) {
+                  // the normal vector flipped, thus the sign flips
+                  RF val = -0.5*(phi_p_n[j]*normal[d]*phi_v_n[i]) * weight;
+                  mat_nn.accumulate(lfsv_n_v,i,lfsv_n_p,j, val);
+                  mat_nn.accumulate(lfsv_n_p,j,lfsv_n_v,i, val * incomp_scaling);
+                }
+              } // end i
+            } // end d
+
+          } // end loop quadrature points
+      } // end jacobian_skeleton
 
       // jacobian of boundary term
       template<typename IG, typename LFSU, typename X, typename LFSV,
