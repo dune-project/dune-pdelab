@@ -356,6 +356,177 @@ namespace Dune {
           } // end loop quadrature points
       } // end jacobian_volume
 
+      // skeleton integral depending on test and ansatz functions
+      // each face is only visited ONCE!
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_skeleton (const IG& ig,
+                           const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
+                           R& r_s, R& r_n) const
+      {
+        // dimensions
+        const unsigned int dim = IG::Geometry::dimension;
+        const unsigned int dimw = IG::Geometry::dimensionworld;
+
+        // subspaces
+        static_assert
+          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
+
+        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
+        const LFSV_PFS_V& lfsv_s_pfs_v = lfsv_s.template child<VBLOCK>();
+        const LFSV_PFS_V& lfsv_n_pfs_v = lfsv_n.template child<VBLOCK>();
+        static_assert
+          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
+
+        // ... we assume all velocity components are the same
+        typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
+        const LFSV_V& lfsv_s_v = lfsv_s_pfs_v.template child<0>();
+        const LFSV_V& lfsv_n_v = lfsv_n_pfs_v.template child<0>();
+        const unsigned int vsize_s = lfsv_s_v.size();
+        const unsigned int vsize_n = lfsv_n_v.size();
+        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
+        const LFSV_P& lfsv_s_p = lfsv_s.template child<PBLOCK>();
+        const LFSV_P& lfsv_n_p = lfsv_n.template child<PBLOCK>();
+        const unsigned int psize_s = lfsv_s_p.size();
+        const unsigned int psize_n = lfsv_n_p.size();
+
+        // domain and range field type
+        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
+        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+        typedef typename BasisSwitch_V::DomainField DF;
+        typedef typename BasisSwitch_V::Range RT;
+        typedef typename BasisSwitch_V::RangeField RF;
+        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
+
+        // make copy of inside and outside cell w.r.t. the intersection
+        auto inside_cell = ig.inside();
+        auto outside_cell = ig.outside();
+
+        // select quadrature rule
+        Dune::GeometryType gtface = ig.geometry().type();
+        const int v_order = FESwitch_V::basis(lfsv_s_v.finiteElement()).order();
+        const int det_jac_order = gtface.isSimplex() ? 0 : (dim-2);
+        const int qorder = 2*v_order + det_jac_order + superintegration_order;
+        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
+
+        const int epsilon = prm.epsilonIPSymmetryFactor();
+        const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
+
+        // loop over quadrature points and integrate normal flux
+        for (const auto& ip : rule)
+          {
+
+            // position of quadrature point in local coordinates of element
+            Dune::FieldVector<DF,dim> local_s = ig.geometryInInside().global(ip.position());
+            Dune::FieldVector<DF,dim> local_n = ig.geometryInOutside().global(ip.position());
+
+            const RF penalty_factor = prm.getFaceIP(ig,ip.position());
+
+            // value of velocity shape functions
+            std::vector<RT> phi_v_s(vsize_s);
+            std::vector<RT> phi_v_n(vsize_n);
+            FESwitch_V::basis(lfsv_s_v.finiteElement()).evaluateFunction(local_s,phi_v_s);
+            FESwitch_V::basis(lfsv_n_v.finiteElement()).evaluateFunction(local_n,phi_v_n);
+
+            // evaluate u
+            assert(vsize_s == vsize_n);
+            Dune::FieldVector<RF,dim> u_s(0.0), u_n(0.0);
+            for(unsigned int d=0; d<dim; ++d) {
+              const LFSV_V & lfsv_s_v = lfsv_s_pfs_v.child(d);
+              const LFSV_V & lfsv_n_v = lfsv_n_pfs_v.child(d);
+              for(unsigned int i=0; i<vsize_s; i++) {
+                u_s[d] += x_s(lfsv_s_v,i) * phi_v_s[i];
+                u_n[d] += x_n(lfsv_n_v,i) * phi_v_n[i];
+              }
+            }
+
+            // value of pressure shape functions
+            std::vector<RT> phi_p_s(psize_s);
+            std::vector<RT> phi_p_n(psize_n);
+            FESwitch_P::basis(lfsv_s_p.finiteElement()).evaluateFunction(local_s,phi_p_s);
+            FESwitch_P::basis(lfsv_n_p.finiteElement()).evaluateFunction(local_n,phi_p_n);
+
+            // evaluate pressure
+            assert(psize_s == psize_n);
+            RF p_s(0.0), p_n(0.0);
+            for(unsigned int i=0; i<psize_s; i++) {
+              p_s += x_s(lfsv_s_p,i) * phi_p_s[i];
+              p_n += x_n(lfsv_n_p,i) * phi_p_n[i];
+            }
+
+            // compute gradients
+            std::vector<Dune::FieldMatrix<RF,1,dim> > grad_phi_v_s(vsize_s);
+            BasisSwitch_V::gradient(FESwitch_V::basis(lfsv_s_v.finiteElement()),
+                                    inside_cell.geometry(), local_s, grad_phi_v_s);
+
+            std::vector<Dune::FieldMatrix<RF,1,dim> > grad_phi_v_n(vsize_n);
+            BasisSwitch_V::gradient(FESwitch_V::basis(lfsv_n_v.finiteElement()),
+                                    outside_cell.geometry(), local_n, grad_phi_v_n);
+
+            // evaluate velocity jacobian
+            Dune::FieldMatrix<RF,dim,dim> jacu_s(0.0), jacu_n(0.0);
+            for(unsigned int d=0; d<dim; ++d) {
+              const LFSV_V & lfsv_s_v = lfsv_s_pfs_v.child(d);
+              const LFSV_V & lfsv_n_v = lfsv_n_pfs_v.child(d);
+              for(unsigned int i=0; i<vsize_s; i++) {
+                jacu_s[d].axpy(x_s(lfsv_s_v,i), grad_phi_v_s[i][0]);
+                jacu_n[d].axpy(x_n(lfsv_n_v,i), grad_phi_v_n[i][0]);
+              }
+            }
+
+            const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(ip.position());
+            const RF weight = ip.weight()*ig.geometry().integrationElement(ip.position());
+            const RF mu = prm.mu(ig,ip.position());
+
+            const RF factor = mu * weight;
+
+            for(unsigned int d=0; d<dim; ++d) {
+              const LFSV_V & lfsv_s_v = lfsv_s_pfs_v.child(d);
+              const LFSV_V & lfsv_n_v = lfsv_n_pfs_v.child(d);
+
+              RF val = 0.5 * ((jacu_s[d] * normal) + (jacu_n[d] * normal)) * factor;
+              for(unsigned int i=0; i<vsize_s; i++) {
+                r_s.accumulate(lfsv_s_v,i, -val * phi_v_s[i]);
+                r_n.accumulate(lfsv_n_v,i, val * phi_v_n[i]);
+
+                //============================================
+                // TODO add contribution from full tensor
+                //============================================
+              } // end i
+
+              RF jumpu_d  = u_s[d] - u_n[d];
+              for(unsigned int i=0; i<vsize_s; i++) {
+                r_s.accumulate(lfsv_s_v,i, epsilon * 0.5 * (grad_phi_v_s[i][0] * normal) * jumpu_d * factor);
+                r_n.accumulate(lfsv_n_v,i, epsilon * 0.5 * (grad_phi_v_n[i][0] * normal) * jumpu_d * factor);
+
+                //============================================
+                // TODO add contribution from full tensor
+                //============================================
+              } // end i
+
+              for(unsigned int i=0; i<vsize_s; i++) {
+                r_s.accumulate(lfsv_s_v,i, penalty_factor * jumpu_d * phi_v_s[i] * weight);
+                r_n.accumulate(lfsv_n_v,i, -penalty_factor * jumpu_d * phi_v_n[i] * weight);
+              } // end i
+
+              // pressure-velocity-coupling in momentum equation
+              RF mean_p = 0.5*(p_s + p_n);
+              for(unsigned int i=0; i<vsize_s; i++) {
+                r_s.accumulate(lfsv_s_v,i, mean_p * phi_v_s[i] * normal[d] * weight);
+                r_n.accumulate(lfsv_n_v,i, -mean_p * phi_v_n[i] * normal[d] * weight);
+              } // end i
+            } // end d
+
+            // incompressibility constraint
+            RF jumpu_n = (u_s*normal) - (u_n*normal);
+            for(unsigned int i=0; i<psize_s; i++) {
+              r_s.accumulate(lfsv_s_p,i, 0.5 * phi_p_s[i] * jumpu_n * incomp_scaling * weight);
+              r_n.accumulate(lfsv_n_p,i, 0.5 * phi_p_n[i] * jumpu_n * incomp_scaling * weight);
+            } // end i
+
+          } // end loop quadrature points
+      } // end alpha_skeleton
+
       // jacobian of skeleton term
       template<typename IG, typename LFSU, typename X, typename LFSV,
                typename LocalMatrix>
