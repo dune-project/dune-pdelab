@@ -512,11 +512,8 @@ namespace Dune {
 
                 if(full_tensor) {
                   for(unsigned int dd=0; dd<dim; ++dd) {
-                    const LFSV_V& lfsv_s_v_dd = lfsv_s_pfs_v.child(dd);
-                    const LFSV_V& lfsv_n_v_dd = lfsv_n_pfs_v.child(dd);
-
-                    r_s.accumulate(lfsv_s_v_dd,i, epsilon * 0.5 * grad_phi_v_s[i][0][d] * normal[dd] * jumpu_d * factor);
-                    r_n.accumulate(lfsv_n_v_dd,i, epsilon * 0.5 * grad_phi_v_n[i][0][d] * normal[dd] * jumpu_d * factor);
+                    r_s.accumulate(lfsv_s_v,i, epsilon * 0.5 * grad_phi_v_s[i][0][dd] * (u_s[dd] - u_n[dd]) * normal[d] * factor);
+                    r_n.accumulate(lfsv_n_v,i, epsilon * 0.5 * grad_phi_v_n[i][0][dd] * (u_s[dd] - u_n[dd]) * normal[d] * factor);
                   }
                 }
               } // end i
@@ -898,11 +895,12 @@ namespace Dune {
                     r.accumulate(lfsv_v,i, -val * phi_v[i]);
                     r.accumulate(lfsv_v,i, epsilon * mu * (grad_phi_v[i][0] * normal) * u[d] * factor);
 
-                    //============================================
-                    // TODO
-                    // add contribution from tull tensor
-                    //============================================
-
+                    if(full_tensor) {
+                      for(unsigned int dd=0; dd<dim; ++dd) {
+                        r.accumulate(lfsv_v,i, -mu * jacu[dd][d] * normal[dd] * phi_v[i] * factor);
+                        r.accumulate(lfsv_v,i, epsilon * mu * grad_phi_v[i][0][dd] * u[dd] * normal[d] * factor);
+                      }
+                    }
                   } // end i
 
                   //================================================//
