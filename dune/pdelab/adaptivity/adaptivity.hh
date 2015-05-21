@@ -102,11 +102,10 @@ namespace Dune {
           std::vector<typename FiniteElement::Traits::LocalBasisType::Traits::RangeType> phi;
           phi.resize(std::max(phi.size(),local_size));
 
-          for (QRIterator it = _quadrature_rule.begin(); it != _quadrature_rule.end(); ++it)
+          for (const auto& ip : _quadrature_rule)
             {
-              //std::fill(yVector.begin(),yVector.end(),typename Traits::RangeType(0));
-              fe.localBasis().evaluateFunction(it->position(),phi);
-              const DF factor = it->weight();
+              fe.localBasis().evaluateFunction(ip.position(),phi);
+              const DF factor = ip.weight();
 
               for (int i = 0; i < local_size; ++i)
                 for (int j = 0; j < local_size; ++j)
@@ -191,7 +190,7 @@ namespace Dune {
 
     private:
 
-      const GFS& _gfs;
+      GFS _gfs;
       int _intorder;
       std::vector<MassMatrices> _inverse_mass_matrices;
     };
@@ -209,7 +208,6 @@ namespace Dune {
 
       typedef typename GFS::Traits::GridView::Grid::LocalIdSet IDSet;
       typedef typename GFS::Traits::GridView::template Codim<0>::Entity Cell;
-      typedef typename GFS::Traits::GridView::template Codim<0>::EntityPointer CellPointer;
       typedef typename Cell::Geometry Geometry;
       static const int dim = Geometry::dimension;
       typedef typename Cell::HierarchicIterator HierarchicIterator;
@@ -231,30 +229,29 @@ namespace Dune {
         typedef typename LFSLeaf::Traits::GridFunctionSpace::Traits::FiniteElementMap FEM;
         typedef typename FEM::Traits::FiniteElement FE;
         const FEM& fem = leaf_lfs.gridFunctionSpace().finiteElementMap();
-        size_type fine_offset = _leaf_offset_cache[_current->type()][_leaf_index];
-        size_type coarse_offset = _leaf_offset_cache[_ancestor->type()][_leaf_index];
+        size_type fine_offset = _leaf_offset_cache[_current.type()][_leaf_index];
+        size_type coarse_offset = _leaf_offset_cache[_ancestor.type()][_leaf_index];
 
         typedef typename FE::Traits::LocalBasisType::Traits::RangeType Range;
 
-        const MassMatrix& inverse_mass_matrix = _projection.inverseMassMatrices(*_element)[_leaf_index];
+        const MassMatrix& inverse_mass_matrix = _projection.inverseMassMatrices(_element)[_leaf_index];
 
         std::vector<Range> coarse_phi;
         std::vector<Range> fine_phi;
 
-        Geometry fine_geometry = _current->geometry();
-        Geometry coarse_geometry = _ancestor->geometry();
+        Geometry fine_geometry = _current.geometry();
+        Geometry coarse_geometry = _ancestor.geometry();
 
-        const QuadratureRule<DF,dim>& rule = QuadratureRules<DF,dim>::rule(_current->type(),_int_order);
         // iterate over quadrature points
-        for (typename QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : QuadratureRules<DF,dim>::rule(_current.type(),_int_order))
           {
-            typename Geometry::LocalCoordinate coarse_local = coarse_geometry.local(fine_geometry.global(it->position()));
-            const FE* fe = &fem.find(*_current);
-            fe->localBasis().evaluateFunction(it->position(),fine_phi);
-            fe = &fem.find(*_ancestor);
+            typename Geometry::LocalCoordinate coarse_local = coarse_geometry.local(fine_geometry.global(ip.position()));
+            const FE* fe = &fem.find(_current);
+            fe->localBasis().evaluateFunction(ip.position(),fine_phi);
+            fe = &fem.find(_ancestor);
             fe->localBasis().evaluateFunction(coarse_local,coarse_phi);
-            const DF factor = it->weight()
-              * fine_geometry.integrationElement(it->position())
+            const DF factor = ip.weight()
+              * fine_geometry.integrationElement(ip.position())
               / coarse_geometry.integrationElement(coarse_local);
 
             Range val(0.0);
@@ -277,51 +274,47 @@ namespace Dune {
 
       void operator()(const Cell& element)
       {
-        _element = &element;
+        _element = element;
 
-        _lfs.bind(element);
+        _lfs.bind(_element);
         _lfs_cache.update();
         _u_view.bind(_lfs_cache);
-        _u_coarse = &_transfer_map[_id_set.id(element)];
+        _u_coarse = &_transfer_map[_id_set.id(_element)];
         _u_coarse->resize(_lfs.size());
         _u_view.read(*_u_coarse);
         _u_view.unbind();
 
-        _leaf_offset_cache.update(element);
+        _leaf_offset_cache.update(_element);
 
         size_type max_level = _lfs.gridFunctionSpace().gridView().grid().maxLevel();
 
-        CellPointer ancestor(element);
-        while (ancestor->mightVanish())
+        _ancestor = _element;
+        while (_ancestor.mightVanish())
           {
             // work around UG bug!
-            if (!ancestor->hasFather())
+            if (!_ancestor.hasFather())
               break;
 
-            ancestor = ancestor->father();
-            _ancestor = &(*ancestor);
+            _ancestor = _ancestor.father();
 
-            _u_coarse = &_transfer_map[_id_set.id(*_ancestor)];
+            _u_coarse = &_transfer_map[_id_set.id(_ancestor)];
             // don't project more than once
             if (_u_coarse->size() > 0)
               continue;
-            _u_coarse->resize(_leaf_offset_cache[_ancestor->type()].back());
+            _u_coarse->resize(_leaf_offset_cache[_ancestor.type()].back());
             std::fill(_u_coarse->begin(),_u_coarse->end(),RF(0));
 
-            for (HierarchicIterator hit = _ancestor->hbegin(max_level),
-                   hend = _ancestor->hend(max_level);
-                 hit != hend;
-                 ++hit)
+            for (const auto& child : descendantElements(_ancestor,max_level))
               {
                 // only evaluate on entities with data
-                if (hit->isLeaf())
+                if (child.isLeaf())
                   {
-                    _current = &(*hit);
+                    _current = child;
                     // reset leaf_index for next run over tree
                     _leaf_index = 0;
                     // load data
-                    _lfs.bind(*hit);
-                    _leaf_offset_cache.update(*hit);
+                    _lfs.bind(_current);
+                    _leaf_offset_cache.update(_current);
                     _lfs_cache.update();
                     _u_view.bind(_lfs_cache);
                     _u_fine.resize(_lfs_cache.size());
@@ -343,9 +336,6 @@ namespace Dune {
         : _lfs(gfs)
         , _lfs_cache(_lfs)
         , _id_set(gfs.gridView().grid().localIdSet())
-        , _element(nullptr)
-        , _ancestor(nullptr)
-        , _current(nullptr)
         , _projection(projection)
         , _u_view(u)
         , _transfer_map(transfer_map)
@@ -358,9 +348,9 @@ namespace Dune {
       LFS _lfs;
       LFSCache _lfs_cache;
       const IDSet& _id_set;
-      const Cell* _element;
-      const Cell* _ancestor;
-      const Cell* _current;
+      Cell _element;
+      Cell _ancestor;
+      Cell _current;
       Projection& _projection;
       typename DOFVector::template ConstLocalView<LFSCache> _u_view;
       TransferMap& _transfer_map;
@@ -430,11 +420,11 @@ namespace Dune {
 
         typedef typename LeafLFS::Traits::GridFunctionSpace::Traits::FiniteElementMap FEM;
         const FEM& fem = leaf_lfs.gridFunctionSpace().finiteElementMap();
-        size_type element_offset = _leaf_offset_cache[_element->type()][_leaf_index];
-        size_type ancestor_offset = _leaf_offset_cache[_ancestor->type()][_leaf_index];
+        size_type element_offset = _leaf_offset_cache[_element.type()][_leaf_index];
+        size_type ancestor_offset = _leaf_offset_cache[_ancestor.type()][_leaf_index];
 
-        coarse_function<typename FEM::Traits::FiniteElement> f(fem.find(*_ancestor),_ancestor->geometry(),_element->geometry(),*_u_coarse,ancestor_offset);
-        const typename FEM::Traits::FiniteElement& fe = fem.find(*_element);
+        coarse_function<typename FEM::Traits::FiniteElement> f(fem.find(_ancestor),_ancestor.geometry(),_element.geometry(),*_u_coarse,ancestor_offset);
+        const typename FEM::Traits::FiniteElement& fe = fem.find(_element);
 
         _u_tmp.resize(fe.localBasis().size());
         std::fill(_u_tmp.begin(),_u_tmp.end(),RF(0.0));
@@ -446,11 +436,11 @@ namespace Dune {
 
       void operator()(const Cell& element, const Cell& ancestor, const LocalDOFVector& u_coarse)
       {
-        _element = &element;
-        _ancestor = &ancestor;
+        _element = element;
+        _ancestor = ancestor;
         _u_coarse = &u_coarse;
-        _lfs.bind(*_element);
-        _leaf_offset_cache.update(*_element);
+        _lfs.bind(_element);
+        _leaf_offset_cache.update(_element);
         _lfs_cache.update();
         _u_view.bind(_lfs_cache);
 
@@ -480,8 +470,6 @@ namespace Dune {
       replay_visitor(const GFS& gfs, DOFVector& u, CountVector& uc, LeafOffsetCache& leaf_offset_cache)
         : _lfs(gfs)
         , _lfs_cache(_lfs)
-        , _element(nullptr)
-        , _ancestor(nullptr)
         , _u_view(u)
         , _uc_view(uc)
         , _leaf_offset_cache(leaf_offset_cache)
@@ -490,8 +478,8 @@ namespace Dune {
 
       LFS _lfs;
       LFSCache _lfs_cache;
-      const Cell* _element;
-      const Cell* _ancestor;
+      Cell _element;
+      Cell _ancestor;
       typename DOFVector::template LocalView<LFSCache> _u_view;
       typename CountVector::template LocalView<LFSCache> _uc_view;
       const LocalDOFVector* _u_coarse;
@@ -524,7 +512,6 @@ namespace Dune {
       typedef typename LeafGridView::template Codim<0>
       ::template Partition<Dune::Interior_Partition>::Iterator LeafIterator;
       typedef typename Grid::template Codim<0>::Entity Element;
-      typedef typename Grid::template Codim<0>::EntityPointer ElementPointer;
       typedef typename Grid::LocalIdSet IDSet;
       typedef typename IDSet::IdType ID;
 
@@ -554,12 +541,8 @@ namespace Dune {
         Visitor visitor(gfsu,projection,u,_leaf_offset_cache,transfer_map);
 
         // iterate over all elems
-        LeafGridView leafView = grid.leafGridView();
-        for (LeafIterator it = leafView.template begin<0,Dune::Interior_Partition>();
-             it!=leafView.template end<0,Dune::Interior_Partition>(); ++it)
-          {
-            visitor(*it);
-          }
+        for(const auto& cell : elements(grid.leafGridView(),Partitions::interior))
+          visitor(cell);
       }
 
       /* @brief @todo
@@ -579,23 +562,20 @@ namespace Dune {
 
         // iterate over all elems
         LeafGridView leafView = grid.leafGridView();
-        for (LeafIterator it = leafView.template begin<0,Dune::Interior_Partition>();
-             it!=leafView.template end<0,Dune::Interior_Partition>(); ++it)
+        for (const auto& cell : elements(leafView,Partitions::interior))
           {
-            const Element& e = *it;
-
-            ElementPointer ancestor(e);
+            Element ancestor = cell;
 
             typename MapType::const_iterator map_it;
-            while ((map_it = transfer_map.find(id_set.id(*ancestor))) == transfer_map.end())
+            while ((map_it = transfer_map.find(id_set.id(ancestor))) == transfer_map.end())
               {
-                if (!ancestor->hasFather())
+                if (!ancestor.hasFather())
                   DUNE_THROW(Exception,
-                             "transferMap of GridAdaptor didn't contain ancestor of element with id " << id_set.id(*ancestor));
-                ancestor = ancestor->father();
+                             "transferMap of GridAdaptor didn't contain ancestor of element with id " << id_set.id(ancestor));
+                ancestor = ancestor.father();
               }
 
-            visitor(e,*ancestor,map_it->second);
+            visitor(cell,ancestor,map_it->second);
           }
 
         typedef Dune::PDELab::AddDataHandle<GFSU,U> DOFHandle;
@@ -901,16 +881,9 @@ namespace Dune {
     void mark_grid (Grid &grid, const X& x, typename X::ElementType refine_threshold,
                     typename X::ElementType coarsen_threshold, int min_level = 0, int max_level = std::numeric_limits<int>::max(), int verbose=0)
     {
-      //typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator
-      //  Iterator;
-      typedef typename Grid::template Partition<Dune::All_Partition>::LeafGridView GV;
-      typedef typename GV::template Codim<0>::Iterator Iterator;
+      typedef typename Grid::LeafGridView GV;
 
-      const GV& gv=grid.template leafGridView<Dune::All_Partition>();
-      //Iterator it = grid.template leafbegin<0,Dune::All_Partition>();
-      //Iterator eit = grid.template leafend<0,Dune::All_Partition>();
-      Iterator it = gv.template begin<0>();
-      Iterator eit = gv.template end<0>();
+      GV gv = grid.leafGridView();
 
       unsigned int refine_cnt=0;
       unsigned int coarsen_cnt=0;
@@ -924,20 +897,20 @@ namespace Dune {
       LFSCache lfs_cache(lfs);
       XView x_view(x);
 
-      for(;it!=eit;++it)
+      for(const auto& cell : elements(gv))
         {
-          lfs.bind(*it);
+          lfs.bind(cell);
           lfs_cache.update();
           x_view.bind(lfs_cache);
 
-          if (x_view[0]>=refine_threshold && it->level() < max_level)
+          if (x_view[0]>=refine_threshold && cell.level() < max_level)
             {
-              grid.mark(1,*(it));
+              grid.mark(1,cell);
               refine_cnt++;
             }
-          if (x_view[0]<=coarsen_threshold && it->level() > min_level)
+          if (x_view[0]<=coarsen_threshold && cell.level() > min_level)
             {
-              grid.mark(-1,*(it));
+              grid.mark(-1,cell);
               coarsen_cnt++;
             }
           x_view.unbind();
@@ -952,15 +925,9 @@ namespace Dune {
     void mark_grid_for_coarsening (Grid &grid, const X& x, typename X::ElementType refine_threshold,
                                    typename X::ElementType coarsen_threshold, int verbose=0)
     {
-      typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator
-        Iterator;
       typedef typename Grid::LeafGridView GV;
-      typedef typename GV::IndexSet IndexSet;
 
-      const GV& gv=grid.leafGridView();
-      const IndexSet& is(gv.indexSet());
-      Iterator it = grid.template leafbegin<0,Dune::All_Partition>();
-      Iterator eit = grid.template leafend<0,Dune::All_Partition>();
+      GV gv = grid.leafGridView();
 
       unsigned int coarsen_cnt=0;
 
@@ -973,20 +940,20 @@ namespace Dune {
       LFSCache lfs_cache(lfs);
       XView x_view(x);
 
-      for(;it!=eit;++it)
+      for(const auto& cell : elements(gv))
         {
-          lfs.bind(*it);
+          lfs.bind(cell);
           lfs_cache.update();
           x_view.bind(lfs_cache);
 
           if (x_view[0]>=refine_threshold)
             {
-              grid.mark(-1,*(it));
+              grid.mark(-1,cell);
               coarsen_cnt++;
             }
           if (x_view[0]<=coarsen_threshold)
             {
-              grid.mark(-1,*(it));
+              grid.mark(-1,cell);
               coarsen_cnt++;
             }
         }

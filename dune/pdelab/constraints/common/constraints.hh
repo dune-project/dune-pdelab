@@ -640,9 +640,6 @@ namespace Dune {
         // print result
         if(verbose){
           std::cout << "constraints:" << std::endl;
-          typedef typename CG::iterator global_col_iterator;
-          typedef typename CG::value_type::second_type global_row_type;
-          typedef typename global_row_type::iterator global_row_iterator;
 
           std::cout << cg.size() << " constrained degrees of freedom" << std::endl;
 
@@ -762,7 +759,6 @@ namespace Dune {
                               typename XG::ElementType x,
                               XG& xg)
     {
-      typedef typename CG::const_iterator global_col_iterator;
       for (const auto& col : cg)
         xg[col.first] = x;
     }
@@ -805,7 +801,6 @@ namespace Dune {
     bool check_constrained_dofs(const CG& cg, typename XG::ElementType x,
                                 XG& xg, const Cmp& cmp = Cmp())
     {
-      typedef typename CG::const_iterator global_col_iterator;
       for (const auto& col : cg)
         if(cmp.ne(xg[col.first], x))
           return false;
@@ -870,9 +865,6 @@ namespace Dune {
     template<typename CG, typename XG>
     void constrain_residual (const CG& cg, XG& xg)
     {
-      typedef typename CG::const_iterator global_col_iterator;
-      typedef typename CG::value_type::second_type::const_iterator global_row_iterator;
-
       for (const auto& col : cg)
         for (const auto& row : col.second)
           xg[row.first] += row.second * xg[col.first];
@@ -905,7 +897,6 @@ namespace Dune {
     template<typename CG, typename XG>
     void copy_constrained_dofs (const CG& cg, const XG& xgin, XG& xgout)
     {
-      typedef typename CG::const_iterator global_col_iterator;
       for (const auto& col : cg)
         xgout[col.first] = xgin[col.first];
     }
@@ -987,7 +978,6 @@ namespace Dune {
       XG tmp(xg);
       tmp = x;
 
-      typedef typename CG::const_iterator global_col_iterator;
       for (const auto& col : cg)
       {
         // this is our marker for Dirichlet constraints
