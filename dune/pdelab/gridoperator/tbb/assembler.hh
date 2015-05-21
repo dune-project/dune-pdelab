@@ -16,8 +16,6 @@
 #include <dune/common/shared_ptr.hh>
 #include <dune/common/typetraits.hh>
 
-#include <dune/grid/utility/intersectionrange.hh>
-
 #include <dune/pdelab/gridoperator/common/assemblerutilities.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
