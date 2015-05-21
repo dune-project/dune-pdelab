@@ -768,6 +768,173 @@ namespace Dune {
           } // end loop quadrature points
       } // end jacobian_skeleton
 
+      // boundary term
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_boundary (const IG& ig,
+                           const LFSU& lfsu, const X& x, const LFSV& lfsv,
+                           R& r) const
+      {
+        // dimensions
+        const unsigned int dim = IG::Geometry::dimension;
+        const unsigned int dimw = IG::Geometry::dimensionworld;
+
+        // subspaces
+        static_assert
+          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
+
+        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
+        const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
+        static_assert
+          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
+
+        // ... we assume all velocity components are the same
+        typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
+        const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
+        const unsigned int vsize = lfsv_v.size();
+        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
+        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
+        const unsigned int psize = lfsv_p.size();
+
+        // domain and range field type
+        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
+        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+        typedef typename BasisSwitch_V::DomainField DF;
+        typedef typename BasisSwitch_V::Range RT;
+        typedef typename BasisSwitch_V::RangeField RF;
+        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
+
+        // make copy of inside cell w.r.t. the boundary
+        auto inside_cell = ig.inside();
+
+        // select quadrature rule
+        const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
+        Dune::GeometryType gtface = ig.geometry().type();
+        const int det_jac_order = gtface.isSimplex() ? 0 : (dim-1);
+        const int qorder = 2*v_order + det_jac_order + superintegration_order;
+        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
+
+        const int epsilon = prm.epsilonIPSymmetryFactor();
+        const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
+
+        // loop over quadrature points and integrate normal flux
+        for (const auto& ip : rule)
+          {
+            // position of quadrature point in local coordinates of element
+            Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(ip.position());
+
+            const RF penalty_factor = prm.getFaceIP(ig,ip.position() );
+
+            // value of velocity shape functions
+            std::vector<RT> phi_v(vsize);
+            FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
+
+            // evaluate u
+            Dune::FieldVector<RF,dim> u(0.0);
+            for(unsigned int d=0; d<dim; ++d) {
+              const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
+              for(unsigned int i=0; i<vsize; i++)
+                u[d] += x(lfsv_v,i) * phi_v[i];
+            }
+
+            // value of pressure shape functions
+            std::vector<RT> phi_p(psize);
+            FESwitch_P::basis(lfsv_p.finiteElement()).evaluateFunction(local,phi_p);
+
+            // evaluate pressure
+            RF p(0.0);
+            for(unsigned int i=0; i<psize; i++)
+              p += x(lfsv_p,i) * phi_p[i];
+
+            // compute gradients
+            std::vector<Dune::FieldMatrix<RF,1,dim> > grad_phi_v(vsize);
+            BasisSwitch_V::gradient(FESwitch_V::basis(lfsv_v.finiteElement()),
+                                    inside_cell.geometry(), local, grad_phi_v);
+
+            // evaluate velocity jacobian
+            Dune::FieldMatrix<RF,dim,dim> jacu(0.0);
+            for(unsigned int d=0; d<dim; ++d) {
+              const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
+              for(unsigned int i=0; i<vsize; i++)
+                jacu[d].axpy(x(lfsv_v,i), grad_phi_v[i][0]);
+            }
+
+            const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(ip.position());
+            const RF weight = ip.weight()*ig.geometry().integrationElement(ip.position());
+            const RF mu = prm.mu(ig,ip.position());
+
+            // evaluate boundary condition type
+            typename PRM::Traits::BoundaryCondition::Type bctype(prm.bctype(ig,ip.position()));
+
+            // Slip factor smoothly switching between slip and no slip conditions.
+            RF slip_factor = 0.0;
+            typedef NavierStokesDGImp::VariableBoundarySlipSwitch<PRM> BoundarySlipSwitch;
+            if (bctype == BC::SlipVelocity)
+              // Calls boundarySlip(..) function of parameter
+              // class if available, i.e. if
+              // enable_variable_slip is defined. Otherwise
+              // returns 1.0;
+              slip_factor = BoundarySlipSwitch::boundarySlip(prm,ig,ip.position());
+
+            // velocity boundary condition
+            if (bctype == BC::VelocityDirichlet || bctype == BC::SlipVelocity)
+              {
+                // on BC::VelocityDirichlet: 1.0 - slip_factor = 1.0
+                const RF factor = weight * (1.0 - slip_factor);
+
+                for(unsigned int d = 0; d < dim; ++d) {
+                  const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
+
+                  //======================
+                  // TODO
+                  // Put loops over i together!
+                  //======================
+
+                  //================================================//
+                  // - (\mu \int \nabla u. normal . v)
+                  //================================================//
+                  RF val = (jacu[d] * normal) * factor * mu;
+                  for(unsigned int i=0; i<vsize; i++) {
+                    r.accumulate(lfsv_v,i, -val * phi_v[i]);
+                    r.accumulate(lfsv_v,i, epsilon * mu * (grad_phi_v[i][0] * normal) * u[d] * factor);
+
+                    //============================================
+                    // TODO
+                    // add contribution from tull tensor
+                    //============================================
+
+                  } // end i
+
+                  //================================================//
+                  // \mu \int \sigma / |\gamma|^\beta v u
+                  //================================================//
+                  for(unsigned int i=0; i<vsize; i++) {
+                    r.accumulate(lfsv_v,i, u[d] * phi_v[i] * penalty_factor * factor);
+                  } // end i
+
+                  //================================================//
+                  // \int p v n
+                  //================================================//
+                  for(unsigned int i=0; i<vsize; i++) {
+                    r.accumulate(lfsv_v,i, p * phi_v[i] * normal[d] * weight);
+                  } // end i
+                } // end d
+
+                //================================================//
+                // \int q u n
+                //================================================//
+                for(unsigned int i=0; i<psize; i++) {
+                  r.accumulate(lfsv_p,i, phi_p[i] * (u * normal) * incomp_scaling * weight);
+                }
+              } // Velocity Dirichlet
+
+            //============================================
+            // TODO
+            // At the moment I don't care about slip velocity
+            // boundary conditions.
+            //============================================
+          } // end loop quadrature points
+      } // end alpha_boundary
+
       // jacobian of boundary term
       template<typename IG, typename LFSU, typename X, typename LFSV,
                typename LocalMatrix>
@@ -814,9 +981,6 @@ namespace Dune {
         const int qorder = 2*v_order + det_jac_order + superintegration_order;
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
-        // evaluate boundary condition type
-        typename PRM::Traits::BoundaryCondition::Type bctype(prm.bctype(ig,rule.begin()->position()));
-
         const int epsilon = prm.epsilonIPSymmetryFactor();
         const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
 
@@ -842,6 +1006,9 @@ namespace Dune {
             const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(ip.position());
             const RF weight = ip.weight()*ig.geometry().integrationElement(ip.position());
             const RF mu = prm.mu(ig,ip.position());
+
+            // evaluate boundary condition type
+            typename PRM::Traits::BoundaryCondition::Type bctype(prm.bctype(ig,ip.position()));
 
             // Slip factor smoothly switching between slip and no slip conditions.
             RF slip_factor = 0.0;
