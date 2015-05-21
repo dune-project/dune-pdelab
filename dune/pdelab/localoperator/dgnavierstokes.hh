@@ -882,16 +882,11 @@ namespace Dune {
                 for(unsigned int d = 0; d < dim; ++d) {
                   const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
 
-                  //======================
-                  // TODO
-                  // Put loops over i together!
-                  //======================
-
-                  //================================================//
-                  // - (\mu \int \nabla u. normal . v)
-                  //================================================//
                   RF val = (jacu[d] * normal) * factor * mu;
                   for(unsigned int i=0; i<vsize; i++) {
+                    //================================================//
+                    // - (\mu \int \nabla u. normal . v)
+                    //================================================//
                     r.accumulate(lfsv_v,i, -val * phi_v[i]);
                     r.accumulate(lfsv_v,i, epsilon * mu * (grad_phi_v[i][0] * normal) * u[d] * factor);
 
@@ -901,19 +896,15 @@ namespace Dune {
                         r.accumulate(lfsv_v,i, epsilon * mu * grad_phi_v[i][0][dd] * u[dd] * normal[d] * factor);
                       }
                     }
-                  } // end i
 
-                  //================================================//
-                  // \mu \int \sigma / |\gamma|^\beta v u
-                  //================================================//
-                  for(unsigned int i=0; i<vsize; i++) {
+                    //================================================//
+                    // \mu \int \sigma / |\gamma|^\beta v u
+                    //================================================//
                     r.accumulate(lfsv_v,i, u[d] * phi_v[i] * penalty_factor * factor);
-                  } // end i
 
-                  //================================================//
-                  // \int p v n
-                  //================================================//
-                  for(unsigned int i=0; i<vsize; i++) {
+                    //================================================//
+                    // \int p v n
+                    //================================================//
                     r.accumulate(lfsv_v,i, p * phi_v[i] * normal[d] * weight);
                   } // end i
                 } // end d
