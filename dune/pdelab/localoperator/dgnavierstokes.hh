@@ -856,129 +856,114 @@ namespace Dune {
             // velocity boundary condition
             if (bctype == BC::VelocityDirichlet || bctype == BC::SlipVelocity)
               {
+                // on BC::VelocityDirichlet: 1.0 - slip_factor = 1.0
                 const RF factor = weight * (1.0 - slip_factor);
 
-                //================================================//
-                // - (\mu \int \nabla u. normal . v)
-                //================================================//
-                for (unsigned int i=0;i<vsize;++i) // ansatz
-                  {
-                    for (unsigned int j=0;j<vsize;++j) // test
-                      {
-                        RF val = ((grad_phi_v[j][0]*normal)*phi_v[i]) * factor * mu;
-                        for (unsigned int d=0;d<dim;++d)
-                          {
-                            const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
-                            mat.accumulate(lfsv_v,i,lfsv_v,j, - val);
-                            mat.accumulate(lfsv_v,j,lfsv_v,i, epsilon*val);
+                for(unsigned int d = 0; d < dim; ++d) {
+                  const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
 
-                            // Assemble symmetric part for (grad u)^T
-                            if(full_tensor){
+                  for(unsigned int i=0; i<vsize; i++) {
 
-                              for (unsigned int dd=0;dd<dim;++dd)
-                                {
-                                  RF Tval = ((grad_phi_v[j][0][d]*normal[dd])*phi_v[i]) * factor * mu;
-                                  const LFSV_V& lfsv_v_dd = lfsv_pfs_v.child(dd);
-                                  mat.accumulate(lfsv_v,i,lfsv_v_dd,j, - Tval);
-                                  mat.accumulate(lfsv_v_dd,j,lfsv_v,i, epsilon*Tval);
-                                }
-                            }
-                          }
+                    for(unsigned int j=0; j<vsize; j++) {
+                      //================================================//
+                      // - (\mu \int \nabla u. normal . v)
+                      //================================================//
+                      RF val = ((grad_phi_v[j][0]*normal)*phi_v[i]) * factor * mu;
+                      mat.accumulate(lfsv_v,i,lfsv_v,j, - val);
+                      mat.accumulate(lfsv_v,j,lfsv_v,i, epsilon*val);
+
+                      // Assemble symmetric part for (grad u)^T
+                      if(full_tensor) {
+                        for(unsigned int dd = 0; dd < dim; ++dd) {
+                          const LFSV_V& lfsv_v_dd = lfsv_pfs_v.child(dd);
+                          RF Tval = ((grad_phi_v[j][0][d]*normal[dd])*phi_v[i]) * factor * mu;
+                          mat.accumulate(lfsv_v,i,lfsv_v_dd,j, - Tval);
+                          mat.accumulate(lfsv_v_dd,j,lfsv_v,i, epsilon*Tval);
+                        }
                       }
-                  }
-                //================================================//
-                // \int q u n
-                // \int p v n
-                //================================================//
-                for (unsigned int i=0;i<vsize;++i) // ansatz
-                  {
-                    for (unsigned int j=0;j<psize;++j) // test
-                      {
-                        for (unsigned int d=0;d<dim;++d)
-                          {
-                            const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
-                            RF val = (phi_p[j]*normal[d]*phi_v[i]) * weight;
-                            mat.accumulate(lfsv_p,j,lfsv_v,i, val * incomp_scaling); // q u n
-                            mat.accumulate(lfsv_v,i,lfsv_p,j, val); // p v n
-                          }
-                      }
-                  }
-                //================================================//
-                // \mu \int \sigma / |\gamma|^\beta v u
-                //================================================//
-                const RF p_factor = penalty_factor * factor;
-                for (unsigned int i=0;i<vsize;++i)
-                  {
-                    for (unsigned int j=0;j<vsize;++j)
-                      {
-                        RF val = phi_v[i]*phi_v[j] * p_factor;
-                        for (unsigned int d=0;d<dim;++d)
-                          {
-                            const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
-                            mat.accumulate(lfsv_v,j,lfsv_v,i, val);
-                          }
-                      }
-                  }
+                      //================================================//
+                      // \mu \int \sigma / |\gamma|^\beta v u
+                      //================================================//
+                      mat.accumulate(lfsv_v,j,lfsv_v,i, phi_v[i] * phi_v[j] * penalty_factor * factor);
+                    }
+
+                    //================================================//
+                    // \int q u n
+                    // \int p v n
+                    //================================================//
+                    for(unsigned int j=0; j<psize; j++) {
+                      mat.accumulate(lfsv_p,j,lfsv_v,i, (phi_p[j]*normal[d]*phi_v[i]) * weight * incomp_scaling);
+                      mat.accumulate(lfsv_v,i,lfsv_p,j, (phi_p[j]*normal[d]*phi_v[i]) * weight);
+                    }
+                  } // end i
+                } // end d
 
               } // Velocity Dirichlet
-            if (bctype == BC::SlipVelocity)
-              {
-                const RF factor = weight * (slip_factor);
 
-                //================================================//
-                // - (\mu \int \nabla u. normal . v)
-                //================================================//
+            //============================================
+            // TODO
+            // At the moment I don't care about slip velocity
+            // boundary conditions.
+            //============================================
 
-                for (unsigned int i=0;i<vsize;++i) // ansatz
-                  {
-                    for (unsigned int j=0;j<vsize;++j) // test
-                      {
-                        RF ten_sum = 1.0;
+            // if (bctype == BC::SlipVelocity)
+            //   {
+            //     const RF factor = weight * (slip_factor);
 
-                        // Assemble symmetric part for (grad u)^T
-                        if(full_tensor)
-                          ten_sum = 2.0;
+            //     //================================================//
+            //     // - (\mu \int \nabla u. normal . v)
+            //     //================================================//
 
-                        RF val = ten_sum * ((grad_phi_v[j][0]*normal)*phi_v[i]) * factor * mu;
-                        for (unsigned int d=0;d<dim;++d)
-                          {
-                            const LFSV_V& lfsv_v_d = lfsv_pfs_v.child(d);
+            //     for (unsigned int i=0;i<vsize;++i) // ansatz
+            //       {
+            //         for (unsigned int j=0;j<vsize;++j) // test
+            //           {
+            //             RF ten_sum = 1.0;
 
-                            for (unsigned int dd=0;dd<dim;++dd)
-                              {
-                                const LFSV_V& lfsv_v_dd = lfsv_pfs_v.child(dd);
+            //             // Assemble symmetric part for (grad u)^T
+            //             if(full_tensor)
+            //               ten_sum = 2.0;
 
-                                mat.accumulate(lfsv_v_dd,i,lfsv_v_d,j, -val*normal[d]*normal[dd]);
-                                mat.accumulate(lfsv_v_d,j,lfsv_v_dd,i, epsilon*val*normal[d]*normal[dd]);
-                              }
-                          }
-                      }
-                  }
+            //             RF val = ten_sum * ((grad_phi_v[j][0]*normal)*phi_v[i]) * factor * mu;
+            //             for (unsigned int d=0;d<dim;++d)
+            //               {
+            //                 const LFSV_V& lfsv_v_d = lfsv_pfs_v.child(d);
 
-                //================================================//
-                // \mu \int \sigma / |\gamma|^\beta v u
-                //================================================//
-                const RF p_factor = penalty_factor * factor;
-                for (unsigned int i=0;i<vsize;++i)
-                  {
-                    for (unsigned int j=0;j<vsize;++j)
-                      {
-                        RF val = phi_v[i]*phi_v[j] * p_factor;
-                        for (unsigned int d=0;d<dim;++d)
-                          {
-                            const LFSV_V& lfsv_v_d = lfsv_pfs_v.child(d);
-                            for (unsigned int dd=0;dd<dim;++dd)
-                              {
-                                const LFSV_V& lfsv_v_dd = lfsv_pfs_v.child(dd);
-                                mat.accumulate(lfsv_v_d,j,lfsv_v_dd,i, val*normal[d]*normal[dd]);
-                              }
-                          }
-                      }
-                  }
+            //                 for (unsigned int dd=0;dd<dim;++dd)
+            //                   {
+            //                     const LFSV_V& lfsv_v_dd = lfsv_pfs_v.child(dd);
 
-              } // Slip Velocity
-          }
-      }
+            //                     mat.accumulate(lfsv_v_dd,i,lfsv_v_d,j, -val*normal[d]*normal[dd]);
+            //                     mat.accumulate(lfsv_v_d,j,lfsv_v_dd,i, epsilon*val*normal[d]*normal[dd]);
+            //                   }
+            //               }
+            //           }
+            //       }
+
+            //     //================================================//
+            //     // \mu \int \sigma / |\gamma|^\beta v u
+            //     //================================================//
+            //     const RF p_factor = penalty_factor * factor;
+            //     for (unsigned int i=0;i<vsize;++i)
+            //       {
+            //         for (unsigned int j=0;j<vsize;++j)
+            //           {
+            //             RF val = phi_v[i]*phi_v[j] * p_factor;
+            //             for (unsigned int d=0;d<dim;++d)
+            //               {
+            //                 const LFSV_V& lfsv_v_d = lfsv_pfs_v.child(d);
+            //                 for (unsigned int dd=0;dd<dim;++dd)
+            //                   {
+            //                     const LFSV_V& lfsv_v_dd = lfsv_pfs_v.child(dd);
+            //                     mat.accumulate(lfsv_v_d,j,lfsv_v_dd,i, val*normal[d]*normal[dd]);
+            //                   }
+            //               }
+            //           }
+            //       }
+
+            //   } // Slip Velocity
+          } // end loop quadrature points
+      } // end jacobian_boundary
 
       // volume integral depending only on test functions,
       // contains f on the right hand side
