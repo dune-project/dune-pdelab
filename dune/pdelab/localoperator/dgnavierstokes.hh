@@ -980,6 +980,226 @@ namespace Dune {
           }
       }
 
+      // volume integral depending only on test functions,
+      // contains f on the right hand side
+      template<typename EG, typename LFSV, typename R>
+      void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
+      {
+        // dimensions
+        static const unsigned int dim = EG::Geometry::dimension;
+
+        // subspaces
+        static_assert
+          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
+
+        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
+        const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
+
+        static_assert
+          ((LFSV_PFS_V::CHILDREN == dim),"You seem to use the wrong function space for StokesDG");
+
+        // we assume all velocity components are the same type
+        typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
+        const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
+        const unsigned int vsize = lfsv_v.size();
+        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
+        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
+        const unsigned int psize = lfsv_p.size();
+
+        // domain and range field type
+        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
+        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+        typedef typename BasisSwitch_V::DomainField DF;
+        typedef typename BasisSwitch_V::Range RT;
+        typedef typename BasisSwitch_V::RangeField RF;
+        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
+        typedef typename LFSV::Traits::SizeType size_type;
+
+        // select quadrature rule
+        Dune::GeometryType gt = eg.geometry().type();
+        const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
+        const int det_jac_order = gt.isSimplex() ?  0 : (dim-1);
+        // quad order is velocity order + det_jac order + superintegration
+        const int qorder = v_order + det_jac_order + superintegration_order;
+
+        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
+
+        // loop over quadrature points
+        for (const auto& ip : rule)
+          {
+            const Dune::FieldVector<DF,dim> local = ip.position();
+            //const Dune::FieldVector<DF,dimw> global = eg.geometry().global(local);
+
+            // values of velocity shape functions
+            std::vector<RT> phi_v(vsize);
+            FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
+
+            // values of pressure shape functions
+            std::vector<RT> phi_p(psize);
+            FESwitch_P::basis(lfsv_p.finiteElement()).evaluateFunction(local,phi_p);
+
+            const RF weight = ip.weight() * eg.geometry().integrationElement(ip.position());
+
+            // evaluate source term
+            typename PRM::Traits::VelocityRange fval(prm.f(eg,local));
+
+            //================================================//
+            // \int (f*v)
+            //================================================//
+            const RF factor = weight;
+            for (unsigned int d=0; d<dim; d++) {
+              const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
+
+              // and store for each velocity component
+              for (size_type i=0; i<vsize; i++) {
+                RF val = phi_v[i]*factor;
+                r.accumulate(lfsv_v,i, -fval[d] * val);
+              }
+            }
+
+            const RF g2 = prm.g2(eg,ip.position());
+
+            // integrate div u * psi_i
+            for (size_t i=0; i<lfsv_p.size(); i++) {
+              r.accumulate(lfsv_p,i, g2 * phi_p[i] * factor);
+            }
+
+          } // end loop quadrature points
+      } // end lambda_volume
+
+      // boundary integral independent of ansatz functions,
+      // Neumann and Dirichlet boundary conditions, DG penalty term's right hand side
+      template<typename IG, typename LFSV, typename R>
+      void lambda_boundary (const IG& ig, const LFSV& lfsv, R& r) const
+      {
+        // dimensions
+        static const unsigned int dim = IG::Geometry::dimension;
+
+        // subspaces
+        static_assert
+          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
+
+        typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
+        const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
+
+        static_assert
+          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
+
+        // ... we assume all velocity components are the same
+        typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
+        const LFSV_V& lfsv_v = lfsv_pfs_v.template child<0>();
+        const unsigned int vsize = lfsv_v.size();
+        typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
+        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
+        const unsigned int psize = lfsv_p.size();
+
+        // domain and range field type
+        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
+        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+        typedef typename BasisSwitch_V::DomainField DF;
+        typedef typename BasisSwitch_V::Range RT;
+        typedef typename BasisSwitch_V::RangeField RF;
+        typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
+
+        // make copy of inside cell w.r.t. the boundary
+        auto inside_cell = ig.inside();
+
+        // select quadrature rule
+        Dune::GeometryType gtface = ig.geometry().type();
+        const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
+        const int det_jac_order = gtface.isSimplex() ? 0 : (dim-2);
+        const int jac_order = gtface.isSimplex() ? 0 : 1;
+        const int qorder = 2*v_order + det_jac_order + jac_order + superintegration_order;
+        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
+
+        const int epsilon = prm.epsilonIPSymmetryFactor();
+        const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
+
+        // loop over quadrature points and integrate normal flux
+        for (const auto& ip : rule)
+          {
+            // position of quadrature point in local coordinates of element
+            Dune::FieldVector<DF,dim-1> flocal = ip.position();
+            Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(flocal);
+            //Dune::FieldVector<DF,dimw> global = ig.geometry().global(flocal);
+
+            const RF penalty_factor = prm.getFaceIP(ig,flocal);
+
+            // value of velocity shape functions
+            std::vector<RT> phi_v(vsize);
+            FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
+            // and value of pressure shape functions
+            std::vector<RT> phi_p(psize);
+            FESwitch_P::basis(lfsv_p.finiteElement()).evaluateFunction(local,phi_p);
+
+            std::vector<Dune::FieldMatrix<RF,1,dim> > grad_phi_v(vsize);
+            BasisSwitch_V::gradient(FESwitch_V::basis(lfsv_v.finiteElement()),
+                                    inside_cell.geometry(), local, grad_phi_v);
+
+            const Dune::FieldVector<DF,dim> normal = ig.unitOuterNormal(ip.position());
+            const RF weight = ip.weight()*ig.geometry().integrationElement(ip.position());
+            const RF mu = prm.mu(ig,flocal);
+
+            // evaluate boundary condition type
+            typename PRM::Traits::BoundaryCondition::Type bctype(prm.bctype(ig,flocal));
+
+            if (bctype == BC::VelocityDirichlet)
+              {
+                typename PRM::Traits::VelocityRange u0(prm.g(inside_cell,local));
+
+                RF factor = mu * weight;
+                for(unsigned int d = 0; d < dim; ++d) {
+                  const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
+
+                  for(unsigned int i=0; i<vsize; i++) {
+                    //================================================//
+                    // \mu \int \nabla v \cdot u_0 \cdot n
+                    //================================================//
+                    r.accumulate(lfsv_v,i, -epsilon * (grad_phi_v[i][0] * normal) * factor * u0[d]);
+
+                    // Assemble symmetric part for (grad u)^T
+                    if(full_tensor) {
+                      for(unsigned int dd = 0; dd < dim; ++dd) {
+                        const LFSV_V& lfsv_v_dd = lfsv_pfs_v.child(dd);
+                        RF Tval = (grad_phi_v[i][0][d]*normal[dd]) * factor;
+                        r.accumulate(lfsv_v_dd,i, -epsilon * Tval * u0[d]);
+                      }
+                    }
+                    //================================================//
+                    // \int \sigma / |\gamma|^\beta v u_0
+                    //================================================//
+                    r.accumulate(lfsv_v,i, -phi_v[i] * penalty_factor * u0[d] * weight);
+
+                  } // end i
+                } // end d
+
+                //================================================//
+                // \int q u_0 n
+                //================================================//
+                for (unsigned int i=0;i<psize;++i) // test
+                  {
+                    RF val = phi_p[i]*(u0 * normal) * weight;
+                    r.accumulate(lfsv_p,i, - val * incomp_scaling);
+                  }
+              } // end BC velocity
+            if (bctype == BC::StressNeumann)
+              {
+                typename PRM::Traits::VelocityRange stress(prm.j(ig,flocal,normal));
+
+                //std::cout << "Pdirichlet\n";
+                //================================================//
+                // \int p u n
+                //================================================//
+                for(unsigned int d = 0; d < dim; ++d) {
+                  const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
+
+                  for(unsigned int i=0; i<vsize; i++)
+                    r.accumulate(lfsv_v,i, stress[d] * phi_v[i] * weight);
+                }
+              }
+          } // end loop quadrature points
+      } // end lambda_boundary
+
     private :
       const PRM& prm;
       const int superintegration_order;
