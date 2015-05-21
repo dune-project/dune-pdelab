@@ -75,7 +75,7 @@ namespace Dune {
                                                   have the same order as the corresponding
                                                   finite element.
       */
-      DGNavierStokes (const PRM& _prm, int _superintegration_order=0) :
+      DGNavierStokes (PRM& _prm, int _superintegration_order=0) :
         prm(_prm), superintegration_order(_superintegration_order),
         current_dt(1.0)
       {}
@@ -192,7 +192,7 @@ namespace Dune {
                 // Assemble symmetric part for (grad u)^T
                 if(full_tensor)
                   for(unsigned int dd = 0; dd<dim; ++dd)
-                    r.accumulate(lfsv_v,i, mu * jacu[dd][d] * grad_phi_v[i][dd] * weight);
+                    r.accumulate(lfsv_v,i, mu * jacu[dd][d] * grad_phi_v[i][0][dd] * weight);
 
                 //================================================//
                 // \int -p \nabla\cdot v
@@ -306,7 +306,7 @@ namespace Dune {
               Dune::FieldVector<RF,dim> gradu_dv(0.0);
               if(navier)
                 for(size_type l=0; l<vsize; ++l)
-                  gradu_dv.axpy(x(lfsv_v,l), grad_phi_v[l]);
+                  gradu_dv.axpy(x(lfsv_v,l), grad_phi_v[l][0]);
 
               for(size_type i=0; i<vsize; i++) {
 
@@ -1354,7 +1354,7 @@ namespace Dune {
       } // end lambda_boundary
 
     private :
-      const PRM& prm;
+      PRM& prm;
       const int superintegration_order;
       Real current_dt;
     }; // end class DGNavierStokes
