@@ -464,9 +464,9 @@ namespace Dune{
                                 const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
                                 const LFSUC & lfsu_n_cache, const LFSVC & lfsv_n_cache)
       {
-        std::unique_lock<Mutex> locks((*lockmgr)[*ig.inside()],
+        std::unique_lock<Mutex> locks((*lockmgr)[ig.inside()],
                                       std::defer_lock);
-        std::unique_lock<Mutex> lockn((*lockmgr)[*ig.outside()],
+        std::unique_lock<Mutex> lockn((*lockmgr)[ig.outside()],
                                       std::defer_lock);
         // avoid trying to lock the same lock twice
         if(locks.mutex() == lockn.mutex())

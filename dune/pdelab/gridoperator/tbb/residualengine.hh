@@ -505,7 +505,7 @@ namespace Dune{
 
       template<typename IG, typename LFSVC>
       void onUnbindLFSVInside(const IG & ig, const LFSVC & lfsv_cache){
-        std::lock_guard<Mutex> guard((*lockmgr)[*ig.inside()]);
+        std::lock_guard<Mutex> guard((*lockmgr)[ig.inside()]);
         Base::onUnbindLFSVInside(ig, lfsv_cache);
       }
 
@@ -514,7 +514,7 @@ namespace Dune{
                                const LFSVC & lfsv_s_cache,
                                const LFSVC & lfsv_n_cache)
       {
-        std::lock_guard<Mutex> guard((*lockmgr)[*ig.outside()]);
+        std::lock_guard<Mutex> guard((*lockmgr)[ig.outside()]);
         Base::onUnbindLFSVOutside(ig, lfsv_s_cache, lfsv_n_cache);
       }
       //! @}

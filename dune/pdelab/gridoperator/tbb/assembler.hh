@@ -387,10 +387,8 @@ namespace Dune{
             // Traverse intersections
             unsigned int intersection_index = 0;
 
-            const auto &irange = intersections(assembler.gfsu.gridView(), e);
-            for(auto iit = irange.begin(); iit != irange.end(); ++iit)
+            for(const auto& is : intersections(assembler.gfsu.gridView(),e))
             {
-              const auto &is = *iit;
               IntersectionGeometry<Intersection> ig(is,intersection_index);
 
               switch (IntersectionType::get(is))
@@ -402,9 +400,11 @@ namespace Dune{
               case IntersectionType::periodic:
                 if (require_uv_skeleton || require_v_skeleton)
                 {
+                  auto outside_entity = is.outside();
+
                   // compute unique id for neighbor
                   const typename GV::IndexSet::IndexType idn =
-                    cell_mapper.map(*is.outside());
+                    cell_mapper.map(outside_entity);
 
                   // Visit face if id is bigger
                   bool visit_face = ids > idn || require_skeleton_two_sided;
@@ -413,7 +413,7 @@ namespace Dune{
                   if (visit_face)
                   {
                     // Bind local test space to neighbor element
-                    lfsvn.bind(*is.outside());
+                    lfsvn.bind(outside_entity);
                     lfsvn_cache.update();
 
                     // Notify assembler engine about binds
@@ -425,7 +425,7 @@ namespace Dune{
                     if(require_uv_skeleton)
                     {
                       // Bind local trial space to neighbor element
-                      lfsun.bind(*is.outside());
+                      lfsun.bind(outside_entity);
                       lfsun_cache.update();
 
                       // Notify assembler engine about binds
