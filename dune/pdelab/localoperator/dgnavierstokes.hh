@@ -17,6 +17,7 @@
 #include <dune/pdelab/localoperator/pattern.hh>
 #include <dune/pdelab/localoperator/flags.hh>
 #include <dune/pdelab/localoperator/dgnavierstokesparameter.hh>
+#include <dune/pdelab/localoperator/navierstokesmass.hh>
 
 #ifndef VBLOCK
 #define VBLOCK 0

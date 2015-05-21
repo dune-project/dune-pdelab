@@ -32,6 +32,7 @@ install(FILES callswitch.hh
               maxwelldg.hh
               maxwellparameter.hh
               mfdcommon.hh
+              navierstokesmass.hh
               pattern.hh
               poisson.hh
               scaled.hh
