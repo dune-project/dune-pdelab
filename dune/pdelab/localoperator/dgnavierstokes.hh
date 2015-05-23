@@ -686,9 +686,6 @@ namespace Dune {
                     }
                   }
                 }
-              } // end i
-
-              for(unsigned int i=0; i<vsize_n; ++i) {
 
                 for(unsigned int j=0; j<vsize_s; ++j) {
                   RF val = (0.5*(grad_phi_v_n[i][0]*normal)*phi_v_s[j]) * factor;
@@ -724,14 +721,11 @@ namespace Dune {
                     }
                   }
                 }
-              } // end i
 
-              //================================================//
-              // \int <q> [u] n
-              // \int <p> [v] n
-              //================================================//
-              for(unsigned int i=0; i<vsize_s; ++i) {
-
+                //================================================//
+                // \int <q> [u] n
+                // \int <p> [v] n
+                //================================================//
                 for(unsigned int j=0; j<psize_s; ++j) {
                   RF val = 0.5*(phi_p_s[j]*normal[d]*phi_v_s[i]) * weight;
                   mat_ss.accumulate(lfsv_s_v,i,lfsv_s_p,j, val);
@@ -743,9 +737,6 @@ namespace Dune {
                   mat_sn.accumulate(lfsv_s_v,i,lfsv_n_p,j, val);
                   mat_ns.accumulate(lfsv_n_p,j,lfsv_s_v,i, val * incomp_scaling);
                 }
-              } // end i
-
-              for(unsigned int i=0; i<vsize_n; ++i) {
 
                 for (unsigned int j=0; j<psize_s;++j) {
                   // the normal vector flipped, thus the sign flips
