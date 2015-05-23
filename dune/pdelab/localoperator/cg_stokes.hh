@@ -200,17 +200,11 @@ namespace Dune {
 
             }
 
-            // compute divergence of u
-            RF divu(0.0);
-            for (size_t i=0; i<vsize; i++)
-              for(int d=0; d<dim; ++d)
-                divu += x(lfsu_v_pfs.child(d),i) * gradphi[i][d];
-
             // integrate div u * psi_i
-            for (size_t i=0; i<lfsu_p.size(); i++)
-              {
-                r.accumulate(lfsu_p,i, -1.0 * divu * psi[i] * factor);
-              }
+            for (size_t i=0; i<psize; i++)
+                for(int d=0; d<dim; ++d)
+                    // divergence of u is the trace of the velocity jacobian
+                    r.accumulate(lfsu_p,i, -1.0 * jacu[d][d] * psi[i] * factor);
 
           }
       }
@@ -279,7 +273,7 @@ namespace Dune {
             const RF g2 = _p.g2(eg,ip.position());
 
             // integrate div u * psi_i
-            for (size_t i=0; i<lfsv_p.size(); i++)
+            for (size_t i=0; i<psize; i++)
               {
                 r.accumulate(lfsv_p,i, g2 * psi[i] * factor);
               }
@@ -461,7 +455,7 @@ namespace Dune {
                 }
 
                 // integrate grad_d phi_v_d * p_u (pressure force)
-                for (size_t j=0; j<lfsu_p.size(); j++)
+                for (size_t j=0; j<psize; j++)
                   mat.accumulate(lfsv_v,i,lfsu_p,j, - (gradphi[i][d] * psi[j]) * factor);
 
                 if(navier){
@@ -483,7 +477,7 @@ namespace Dune {
 
               }
 
-              for (size_t i=0; i<lfsu_p.size(); i++){
+              for (size_t i=0; i<psize; i++){
                 for (size_t j=0; j<lfsu_v.size(); j++)
                   mat.accumulate(lfsu_p,i,lfsu_v,j, - (gradphi[j][d] * psi[i]) * factor);
               }
