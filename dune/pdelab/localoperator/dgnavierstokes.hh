@@ -908,11 +908,33 @@ namespace Dune {
                 }
               } // Velocity Dirichlet
 
-            //============================================
-            // TODO
-            // At the moment I don't care about slip velocity
-            // boundary conditions.
-            //============================================
+            if(bctype == BC::SlipVelocity)
+              {
+                const RF factor = weight * (slip_factor);
+
+                RF ten_sum = 1.0;
+                if(full_tensor)
+                  ten_sum = 2.0;
+
+                for(unsigned int d = 0; d < dim; ++d) {
+                  const LFSV_V& lfsv_v = lfsv_pfs_v.child(d);
+
+                  for(unsigned int i=0; i<vsize; i++) {
+                    //================================================//
+                    // - (\mu \int \nabla u. normal . v)
+                    //================================================//
+                    for(unsigned int dd = 0; dd < dim; ++dd)
+                      r.accumulate(lfsv_v,i, -ten_sum * mu * (jacu[dd] * normal) * normal[dd] *phi_v[i] * normal[d] * factor);
+                    r.accumulate(lfsv_v,i, epsilon * ten_sum * mu * (u * normal) * (grad_phi_v[i][0] * normal) * normal[d] * factor);
+
+                    //================================================//
+                    // \mu \int \sigma / |\gamma|^\beta v u
+                    //================================================//
+                    r.accumulate(lfsv_v,i, penalty_factor * (u * normal) * phi_v[i] * normal[d] * factor);
+                  } // end i
+                } // end d
+
+              } // Slip Velocity
           } // end loop quadrature points
       } // end alpha_boundary
 
