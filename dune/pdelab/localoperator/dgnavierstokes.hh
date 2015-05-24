@@ -102,11 +102,11 @@ namespace Dune {
 
         // subspaces
         static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
+          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
         typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
         const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
         static_assert
-          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
+          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
 
         // ... we assume all velocity components are the same
         typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
@@ -234,11 +234,11 @@ namespace Dune {
 
         // subspaces
         static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
+          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
         typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
         const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
         static_assert
-          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
+          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
 
         // ... we assume all velocity components are the same
         typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
@@ -371,13 +371,13 @@ namespace Dune {
 
         // subspaces
         static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
+          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
 
         typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
         const LFSV_PFS_V& lfsv_s_pfs_v = lfsv_s.template child<VBLOCK>();
         const LFSV_PFS_V& lfsv_n_pfs_v = lfsv_n.template child<VBLOCK>();
         static_assert
-          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
+          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
 
         // ... we assume all velocity components are the same
         typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
@@ -563,13 +563,13 @@ namespace Dune {
 
         // subspaces
         static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
+          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
 
         typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
         const LFSV_PFS_V& lfsv_s_pfs_v = lfsv_s.template child<VBLOCK>();
         const LFSV_PFS_V& lfsv_n_pfs_v = lfsv_n.template child<VBLOCK>();
         static_assert
-          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
+          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
 
         // ... we assume all velocity components are the same
         typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
@@ -769,12 +769,12 @@ namespace Dune {
 
         // subspaces
         static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
+          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
 
         typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
         const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
         static_assert
-          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
+          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
 
         // ... we assume all velocity components are the same
         typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
@@ -951,12 +951,12 @@ namespace Dune {
 
         // subspaces
         static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
+          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
 
         typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
         const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
         static_assert
-          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
+          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
 
         // ... we assume all velocity components are the same
         typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
@@ -1139,13 +1139,13 @@ namespace Dune {
 
         // subspaces
         static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
+          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
 
         typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
         const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
 
         static_assert
-          ((LFSV_PFS_V::CHILDREN == dim),"You seem to use the wrong function space for StokesDG");
+          ((LFSV_PFS_V::CHILDREN == dim),"You seem to use the wrong function space for DGNavierStokes");
 
         // we assume all velocity components are the same type
         typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
@@ -1226,13 +1226,13 @@ namespace Dune {
 
         // subspaces
         static_assert
-          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for StokesDG");
+          ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokes");
 
         typedef typename LFSV::template Child<VBLOCK>::Type LFSV_PFS_V;
         const LFSV_PFS_V& lfsv_pfs_v = lfsv.template child<VBLOCK>();
 
         static_assert
-          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for StokesDG");
+          ((LFSV_PFS_V::CHILDREN == dim), "You seem to use the wrong function space for DGNavierStokes");
 
         // ... we assume all velocity components are the same
         typedef typename LFSV_PFS_V::template Child<0>::Type LFSV_V;
