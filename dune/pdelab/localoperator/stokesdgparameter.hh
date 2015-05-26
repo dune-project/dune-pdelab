@@ -147,7 +147,7 @@ namespace Dune {
         \tparam J Neumann stress boundary function (vector- or scalar-valued).
                   Scalar values will be interpreted as the magnitude of a vector
                   oriented in outer normal direction.
-                  For prescribed pressure you can use $J=p \cdot n$.
+                  For prescribed pressure you can use \f$J=p \cdot n\f$.
         \tparam IP A class providing the interior penalty factor for each face
     */
     template<typename GV, typename RF, typename F, typename B, typename V, typename J,
