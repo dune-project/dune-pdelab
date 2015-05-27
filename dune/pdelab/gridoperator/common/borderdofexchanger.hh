@@ -109,10 +109,12 @@ namespace Dune {
         > ValueMPIData;
 
     public:
-      /*! \brief Constructor. Sets up the local to global relations.
-
-      \param[in] gridView The grid view to operate on.
-      */
+      /*!
+       * \brief Constructor. Sets up the local to global relations.
+       *
+       * \param[in] grid_operator The grid operator to access grid view
+       *                          and communication cache.
+       */
       NonOverlappingBorderDOFExchanger(const GridOperator& grid_operator)
         : _communication_cache(std::make_shared<CommunicationCache>(grid_operator))
         , _grid_view(grid_operator.testGridFunctionSpace().gridView())
@@ -481,9 +483,12 @@ namespace Dune {
 
       };
 
-      /** @brief Sums up the entries corresponding to border vertices.
-      @param matrix Matrix to operate on.
-      */
+      /**
+       * \brief Sums up the entries corresponding to border vertices.
+       *
+       * \param grid_operator Grid operator.
+       * \param matrix Matrix to operate on.
+       */
       void accumulateBorderEntries(const GridOperator& grid_operator, Matrix& matrix)
       {
         if (_grid_view.comm().size() > 1)

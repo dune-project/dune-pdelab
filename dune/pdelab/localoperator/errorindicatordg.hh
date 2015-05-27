@@ -30,16 +30,17 @@
 namespace Dune {
   namespace PDELab {
 
-    /** a local operator for residual-based error estimation
+    /**
+     * \brief a local operator for residual-based error estimation
      *
      * A call to residual() of a grid operator space will assemble
-     * the quantity \eta_T^2 for each cell. Note that the squares
-     * of the cell indicator \eta_T is stored. To compute the global
+     * the quantity \f$\eta_T^2\f$ for each cell. Note that the squares
+     * of the cell indicator \f$\eta_T\f$ is stored. To compute the global
      * error estimate sum up all values and take the square root.
      *
      * Assumptions and limitations:
-     * - Assumes that LFSU is P_1/Q_1 finite element space
-     *   and LFSV is a P_0 finite element space (one value per cell).
+     * - Assumes that LFSU is \f$P_1\f$/\f$Q_1\f$ finite element space
+     *   and LFSV is a \f$P_0\f$ finite element space (one value per cell).
      * - Convection term is ignored (but reaction term is included)
      *
      * \tparam T model of ConvectionDiffusionParameterInterface

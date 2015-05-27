@@ -27,7 +27,7 @@ namespace Dune {
      *   of its geometry type (usually just the index value of some Grid IndexSet),
      * - a tuple of entity-local indices.
      *
-     * The length of this index tuple is limited by the template parameter \ref n, which will
+     * The length of this index tuple is limited by the template parameter \p n, which will
      * usually be equal to the maximum depth of the current GridFunctionSpace tree. Moreover,
      * there will never be two identical index tuples associated with the same grid entity.
      *
