@@ -521,9 +521,7 @@ namespace Dune {
 
       /*! @brief The constructor.
        *
-       * @param grid_       The grid we want to adapt
-       * @param gfsu_       The ansatz space, we need to update it
-       * @param projection_ The Projection used when Elems vanish
+       * @param gfs         The ansatz space, we need to update it
        */
       explicit GridAdaptor(const GFSU& gfs)
         : _leaf_offset_cache(gfs)

@@ -545,7 +545,7 @@ namespace Dune {
        *               inside entity.
        * \param lfsv_s LocalFunctionSpace of the test GridFunctionSpace in the
        *               inside entity.
-       * \param r_s    Local part of the residual in the inside entity.
+       * \param y_s    Local part of the residual in the inside entity.
        *
        * \note This is different from alpha_boundary(), since the result will
        *       be linear in \c x, whereas alpha_boundary() may include

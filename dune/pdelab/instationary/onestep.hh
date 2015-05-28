@@ -1149,7 +1149,7 @@ namespace Dune {
       /**
        * \param method_    Parameter object.
        * \param igos_      Assembler object (instationary grid operator space).
-       * \param pdesolver_ solver object (typically Newton).
+       * \param ls_        linear solver object.
        *
        * The contructed method object stores references to the object it is
        * constructed with, so these objects should be valid for as long as the
@@ -1171,7 +1171,7 @@ namespace Dune {
       /**
        * \param method_    Parameter object.
        * \param igos_      Assembler object (instationary grid operator space).
-       * \param pdesolver_ solver object (typically Newton).
+       * \param ls_        Linear solver object.
        * \param tc_        a time controller object
        *
        * The contructed method object stores references to the object it is
@@ -1223,7 +1223,6 @@ namespace Dune {
        * \param[in]  time start of time step
        * \param[in]  dt suggested time step size
        * \param[in]  xold value at begin of time step
-       * \param[in]  limiter
        * \param[in,out] xnew value at end of time step; contains initial guess for first substep on entry
        * \return time step size
        */

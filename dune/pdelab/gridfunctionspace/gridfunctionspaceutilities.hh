@@ -204,7 +204,7 @@ namespace Dune {
 
       /** \brief Construct a DiscreteGridFunctionCurl
        *
-       * \param gfs_ The GridFunctionsSpace
+       * \param gfs  The GridFunctionsSpace
        * \param x_   The coefficients vector
        */
       DiscreteGridFunctionCurl(const GFS& gfs, const X& x_)

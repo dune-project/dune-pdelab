@@ -43,7 +43,7 @@ namespace Dune {
       /**
        * \param parameters_ Parameter object.
        * \param mgos_       Assembler object (MultiStepGridOperatorSpace).
-       * \param pdesolver_  Solver object (typically Newton).
+       * \param pdeSolver_  Solver object (typically Newton).
        *
        * The contructed method object stores references to the object it is
        * constructed with, so these objects should be valid for as long as the

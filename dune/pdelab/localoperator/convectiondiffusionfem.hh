@@ -349,13 +349,13 @@ namespace Dune {
     /** a local operator for residual-based error estimation
      *
      * A call to residual() of a grid operator space will assemble
-     * the quantity \eta_T^2 for each cell. Note that the squares
-     * of the cell indicator \eta_T is stored. To compute the global
+     * the quantity \f$\eta_T^2\f$ for each cell. Note that the squares
+     * of the cell indicator \f$\eta_T\f$ is stored. To compute the global
      * error estimate sum up all values and take the square root.
      *
      * Assumptions and limitations:
-     * - Assumes that LFSU is P_k/Q_k finite element space
-     *   and LFSV is a P_0 finite element space (one value per cell).
+     * - Assumes that LFSU is \f$P_k\f$/\f$Q_k\f$ finite element space
+     *   and LFSV is a \f$P_0\f$ finite element space (one value per cell).
      *   However, the second order derivatives are ignored!
      * - Convection term is ignored (but reaction term is included)
      *
@@ -631,13 +631,13 @@ namespace Dune {
     /** a local operator for evaluating the temporal part of error estimator
      *
      * A call to residual() of a grid operator space will assemble
-     * the quantity \eta_T^2 for each cell. Note that the squares
-     * of the cell indicator \eta_T is stored. To compute the global
+     * the quantity \f$\eta_T^2\f$ for each cell. Note that the squares
+     * of the cell indicator \f$\eta_T\f$ is stored. To compute the global
      * error estimate sum up all values and take the square root.
      *
      * Assumptions and limitations:
-     * - Assumes that LFSU is P_k/Q_k finite element space
-     *   and LFSV is a P_0 finite element space (one value per cell).
+     * - Assumes that LFSU is \f$P_k\f$/\f$Q_k\f$ finite element space
+     *   and LFSV is a \f$P_0\f$ finite element space (one value per cell).
      * - Assumes that x is the jump from one time interval to the next, i.e. x=xnew-xold.
      * - Data oscillation part is currently not yet implemented
      *
@@ -788,13 +788,13 @@ namespace Dune {
     /** a local operator for evaluating the temporal part of error estimator
      *
      * A call to residual() of a grid operator space will assemble
-     * the quantity \eta_T^2 for each cell. Note that the squares
-     * of the cell indicator \eta_T is stored. To compute the global
+     * the quantity \f$\eta_T^2\f$ for each cell. Note that the squares
+     * of the cell indicator \f$\eta_T\f$ is stored. To compute the global
      * error estimate sum up all values and take the square root.
      *
      * Assumptions and limitations:
-     * - Assumes that LFSU is P_k/Q_k finite element space
-     *   and LFSV is a P_0 finite element space (one value per cell).
+     * - Assumes that LFSU is \f$P_k\f$/\f$Q_k\f$ finite element space
+     *   and LFSV is a \f$P_0\f$ finite element space (one value per cell).
      * - Assumes that x is the jump from one time interval to the next, i.e. x=xnew-xold.
      * - Neumann boundary part not completely implemented
      *

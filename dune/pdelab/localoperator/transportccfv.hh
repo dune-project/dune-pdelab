@@ -15,12 +15,12 @@
 namespace Dune {
   namespace PDELab {
 
-	//! traits class for two phase parameter class
-	template<typename GV, typename RF>
-	struct TransportParameterTraits
-	{
-	  //! \brief the grid view
-	  typedef GV GridViewType;
+    //! traits class for two phase parameter class
+    template<typename GV, typename RF>
+    struct TransportParameterTraits
+    {
+      //! \brief the grid view
+      typedef GV GridViewType;
 
       //! \brief Enum for domain dimension
       enum {
@@ -182,18 +182,19 @@ namespace Dune {
       const T& t;
     };
 
-    /** a local operator for a cell-centered finite folume scheme for
-        the transport equation
-
-        \nabla \cdot \{v u - D \nabla u \} = q in \Omega
-        u = g on \Gamma_D
-        \{v u - D \nabla u \} \cdot \nu = j on \Gamma_N
-        outflow on \Gamma_O
-
-        Can be used for stationary and time-dependent computations
-
-        \tparam TP  parameter class implementing ComponentTransportParameterInterface
-    */
+    /**
+     * \brief A local operator for a cell-centered finite volume scheme for
+     * the transport equation
+     *
+     * \f$\nabla \cdot \{v u - D \nabla u \} = q\f$ in \f$\Omega\f$
+     * \f$u = g\f$ on \f$\Gamma_D\f$
+     * \f$\{v u - D \nabla u \} \cdot \nu = j\f$ on \f$\Gamma_N\f$
+     * outflow on \f$\Gamma_O\f$
+     *
+     * Can be used for stationary and time-dependent computations
+     *
+     * \tparam TP parameter class implementing ComponentTransportParameterInterface
+     */
     template<typename TP>
     class CCFVSpatialTransportOperator :
       public NumericalJacobianApplySkeleton<CCFVSpatialTransportOperator<TP> >,
