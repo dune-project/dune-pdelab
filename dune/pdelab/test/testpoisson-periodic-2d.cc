@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     GM grid (coords,periodic,overlap);
 
     // Solve problem
-    poisson<GM, NumberType, dim, DEGREE> (grid);
+    poisson<GM, NumberType, dim> (grid);
 
   } catch (Dune::Exception &e) {
     std::cerr << e << std::endl;
