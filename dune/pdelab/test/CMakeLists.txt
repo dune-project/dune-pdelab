@@ -32,10 +32,12 @@ if(GMP_FOUND)
 endif(GMP_FOUND)
 
 # Include periodic tests. Must run in parallel.
-pdelab_add_test(NAME testpoisson-periodic-2d-deg1 SOURCES testpoisson-periodic-2d.cc MPIRANKS 2 COMPILE_DEFINITIONS "DEGREE=1")
-pdelab_add_test(NAME testpoisson-periodic-2d-deg2 SOURCES testpoisson-periodic-2d.cc MPIRANKS 2 COMPILE_DEFINITIONS "DEGREE=2")
-pdelab_add_test(NAME testpoisson-periodic-3d-deg1 SOURCES testpoisson-periodic-3d.cc MPIRANKS 4 COMPILE_DEFINITIONS "DEGREE=1")
-pdelab_add_test(NAME testpoisson-periodic-3d-deg2 SOURCES testpoisson-periodic-3d.cc MPIRANKS 4 COMPILE_DEFINITIONS "DEGREE=2")
+foreach(degree IN ITEMS 1 2)
+  foreach(dg IN ITEMS 0 1)
+    pdelab_add_test(NAME testpoisson-periodic-2d-deg${degree}-dg${dg} SOURCES testpoisson-periodic-2d.cc MPIRANKS 2 COMPILE_DEFINITIONS "DEGREE=${degree}" "DG=${dg}")
+    pdelab_add_test(NAME testpoisson-periodic-3d-deg${degree}-dg${dg} SOURCES testpoisson-periodic-3d.cc MPIRANKS 4 COMPILE_DEFINITIONS "DEGREE=${degree}" "DG=${dg}")
+  endforeach()
+endforeach()
 
 set_tests_properties(
   testpk2dinterpolation

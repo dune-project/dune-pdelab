@@ -9,6 +9,7 @@
 
 #include <dune/pdelab/boilerplate/pdelab.hh>
 #include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
+#include <dune/pdelab/localoperator/convectiondiffusiondg.hh>
 
 // Poisson problem definition
 template<typename GV, typename RF>
@@ -83,7 +84,7 @@ public:
 };
 
 // Problem solver
-template<typename GridType, typename NumberType, int dim, int degree>
+template<typename GridType, typename NumberType, int dim>
 void poisson (GridType& grid)
 {
     const Dune::PDELab::MeshType meshtype = Dune::PDELab::MeshType::conforming;
@@ -97,26 +98,40 @@ void poisson (GridType& grid)
     BCType bctype(grid.leafGridView(),problem);
 
     // make a finite element space
-    typedef Dune::PDELab::CGSpace<GridType,NumberType,degree,BCType,elemtype,meshtype,solvertype> FS;
+#if DG == 0
+    typedef Dune::PDELab::CGSpace<GridType,NumberType,DEGREE,BCType,elemtype,meshtype,solvertype> FS;
     FS fs(grid,bctype);
+#else
+    typedef Dune::PDELab::DGQkSpace<GridType,NumberType,DEGREE,elemtype,solvertype> FS;
+    FS fs(grid.leafGridView());
+#endif
 
     // make a degree of freedom vector and initialize it with a function
     typedef typename FS::DOF V;
     V x(fs.getGFS(),0.0);
 
+#if DG == 0
     typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
     G g(grid.leafGridView(),problem);
     Dune::PDELab::interpolate(g,fs.getGFS(),x);
+#endif
 
     // assemble constraints
     fs.assembleConstraints(bctype);
     fs.setNonConstrainedDOFS(x,0.0);
 
     // assembler for finite elemenent problem
+#if DG == 0
     typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,typename FS::FEM> LOP;
     LOP lop(problem);
     typedef Dune::PDELab::GalerkinGlobalAssembler<FS,LOP,solvertype> ASSEMBLER;
     ASSEMBLER assembler(fs,lop);
+#else
+    typedef Dune::PDELab::ConvectionDiffusionDG<Problem,typename FS::FEM> LOP;
+    LOP lop(problem,Dune::PDELab::ConvectionDiffusionDGMethod::SIPG,Dune::PDELab::ConvectionDiffusionDGWeights::weightsOn,2.0);
+    typedef Dune::PDELab::GalerkinGlobalAssembler<FS,LOP,solvertype> ASSEMBLER;
+    ASSEMBLER assembler(fs,lop);
+#endif
 
     // make linear solver and solve problem
     typedef Dune::PDELab::ISTLSolverBackend_IterativeDefault<FS,ASSEMBLER,solvertype> SBE;
@@ -127,10 +142,10 @@ void poisson (GridType& grid)
     slp.apply();
 
     // output grid to VTK file
-    Dune::SubsamplingVTKWriter<typename GridType::LeafGridView> vtkwriter(grid.leafGridView(),degree-1);
+    Dune::SubsamplingVTKWriter<typename GridType::LeafGridView> vtkwriter(grid.leafGridView(),DEGREE-1);
     typename FS::DGF xdgf(fs.getGFS(),x);
     vtkwriter.addVertexData(new typename FS::VTKF(xdgf,"x_h"));
-    auto out_name = "poisson_periodic_" + std::to_string(dim) + "d_q" + std::to_string(degree);
+    auto out_name = "poisson_periodic_" + std::to_string(dim) + "d_q" + std::to_string(DEGREE) + "_dg" + std::to_string(DG);
     vtkwriter.write(out_name, Dune::VTK::appendedraw);
 }
 
