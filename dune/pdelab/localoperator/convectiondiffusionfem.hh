@@ -88,12 +88,12 @@ namespace Dune {
         tensor = param.A(eg.entity(),localcenter);
 
         // loop over quadrature points
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // evaluate basis functions
             // std::vector<RangeType> phi(lfsu.size());
-            // lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
-            const std::vector<RangeType>& phi = cache.evaluateFunction(it->position(),lfsu.finiteElement().localBasis());
+            // lfsu.finiteElement().localBasis().evaluateFunction(ip.position(),phi);
+            const std::vector<RangeType>& phi = cache.evaluateFunction(ip.position(),lfsu.finiteElement().localBasis());
 
             // evaluate u
             RF u=0.0;
@@ -102,12 +102,12 @@ namespace Dune {
 
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             // std::vector<JacobianType> js(lfsu.size());
-            // lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
-            const std::vector<JacobianType>& js = cache.evaluateJacobian(it->position(),lfsu.finiteElement().localBasis());
+            // lfsu.finiteElement().localBasis().evaluateJacobian(ip.position(),js);
+            const std::vector<JacobianType>& js = cache.evaluateJacobian(ip.position(),lfsu.finiteElement().localBasis());
 
             // transform gradients of shape functions to real element
             const typename EG::Geometry::JacobianInverseTransposed jac =
-              eg.geometry().jacobianInverseTransposed(it->position());
+              eg.geometry().jacobianInverseTransposed(ip.position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
             for (size_type i=0; i<lfsu.size(); i++)
               jac.mv(js[i][0],gradphi[i]);
@@ -122,12 +122,12 @@ namespace Dune {
             tensor.umv(gradu,Agradu);
 
             // evaluate velocity field, sink term and source term
-            typename T::Traits::RangeType b = param.b(eg.entity(),it->position());
-            typename T::Traits::RangeFieldType c = param.c(eg.entity(),it->position());
-            typename T::Traits::RangeFieldType f = param.f(eg.entity(),it->position());
+            typename T::Traits::RangeType b = param.b(eg.entity(),ip.position());
+            typename T::Traits::RangeFieldType c = param.c(eg.entity(),ip.position());
+            typename T::Traits::RangeFieldType f = param.f(eg.entity(),ip.position());
 
             // integrate (A grad u)*grad phi_i - u b*grad phi_i + c*u*phi_i
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+            RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
             for (size_type i=0; i<lfsu.size(); i++)
               r.accumulate(lfsu,i,( Agradu*gradphi[i] - u*(b*gradphi[i]) + (c*u-f)*phi[i] )*factor);
           }
@@ -163,16 +163,16 @@ namespace Dune {
         tensor = param.A(eg.entity(),localcenter);
 
         // loop over quadrature points
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             // std::vector<JacobianType> js(lfsu.size());
-            // lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
-            const std::vector<JacobianType>& js = cache.evaluateJacobian(it->position(),lfsu.finiteElement().localBasis());
+            // lfsu.finiteElement().localBasis().evaluateJacobian(ip.position(),js);
+            const std::vector<JacobianType>& js = cache.evaluateJacobian(ip.position(),lfsu.finiteElement().localBasis());
 
             // transform gradient to real element
             const typename EG::Geometry::JacobianInverseTransposed jac
-              = eg.geometry().jacobianInverseTransposed(it->position());
+              = eg.geometry().jacobianInverseTransposed(ip.position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
             std::vector<Dune::FieldVector<RF,dim> > Agradphi(lfsu.size());
             for (size_type i=0; i<lfsu.size(); i++)
@@ -183,15 +183,15 @@ namespace Dune {
 
             // evaluate basis functions
             // std::vector<RangeType> phi(lfsu.size());
-            // lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
-            const std::vector<RangeType>& phi = cache.evaluateFunction(it->position(),lfsu.finiteElement().localBasis());
+            // lfsu.finiteElement().localBasis().evaluateFunction(ip.position(),phi);
+            const std::vector<RangeType>& phi = cache.evaluateFunction(ip.position(),lfsu.finiteElement().localBasis());
 
             // evaluate velocity field, sink term and source te
-            typename T::Traits::RangeType b = param.b(eg.entity(),it->position());
-            typename T::Traits::RangeFieldType c = param.c(eg.entity(),it->position());
+            typename T::Traits::RangeType b = param.b(eg.entity(),ip.position());
+            typename T::Traits::RangeFieldType c = param.c(eg.entity(),ip.position());
 
             // integrate (A grad phi_j)*grad phi_i - phi_j b*grad phi_i + c*phi_j*phi_i
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+            RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
             for (size_type j=0; j<lfsu.size(); j++)
               for (size_type i=0; i<lfsu.size(); i++)
                 mat.accumulate(lfsu,i,lfsu,j,( Agradphi[j]*gradphi[i]-phi[j]*(b*gradphi[i])+c*phi[j]*phi[i] )*factor);
@@ -234,10 +234,10 @@ namespace Dune {
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
 
         // loop over quadrature points and integrate normal flux
-        for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // position of quadrature point in local coordinates of element
-            Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
+            Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(ip.position());
 
             // evaluate shape functions (assume Galerkin method)
             // std::vector<RangeType> phi(lfsu_s.size());
@@ -247,10 +247,10 @@ namespace Dune {
             if (bctype==ConvectionDiffusionBoundaryConditions::Neumann)
               {
                 // evaluate flux boundary condition
-                typename T::Traits::RangeFieldType j = param.j(ig.intersection(),it->position());
+                typename T::Traits::RangeFieldType j = param.j(ig.intersection(),ip.position());
 
                 // integrate j
-                RF factor = it->weight()*ig.geometry().integrationElement(it->position());
+                RF factor = ip.weight()*ig.geometry().integrationElement(ip.position());
                 for (size_type i=0; i<lfsu_s.size(); i++)
                   r_s.accumulate(lfsu_s,i,j*phi[i]*factor);
               }
@@ -264,13 +264,13 @@ namespace Dune {
 
                 // evaluate velocity field and outer unit normal
                 typename T::Traits::RangeType b = param.b(inside_cell,local);
-                const Dune::FieldVector<DF,dim> n = ig.unitOuterNormal(it->position());
+                const Dune::FieldVector<DF,dim> n = ig.unitOuterNormal(ip.position());
 
                 // evaluate outflow boundary condition
-                typename T::Traits::RangeFieldType o = param.o(ig.intersection(),it->position());
+                typename T::Traits::RangeFieldType o = param.o(ig.intersection(),ip.position());
 
                 // integrate o
-                RF factor = it->weight()*ig.geometry().integrationElement(it->position());
+                RF factor = ip.weight()*ig.geometry().integrationElement(ip.position());
                 for (size_type i=0; i<lfsu_s.size(); i++)
                   r_s.accumulate(lfsu_s,i,( (b*n)*u + o)*phi[i]*factor);
               }
@@ -314,10 +314,10 @@ namespace Dune {
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
 
         // loop over quadrature points and integrate normal flux
-        for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // position of quadrature point in local coordinates of element
-            Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
+            Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(ip.position());
 
             // evaluate shape functions (assume Galerkin method)
             // std::vector<RangeType> phi(lfsu_s.size());
@@ -326,10 +326,10 @@ namespace Dune {
 
             // evaluate velocity field and outer unit normal
             typename T::Traits::RangeType b = param.b(inside_cell,local);
-            const Dune::FieldVector<DF,dim> n = ig.unitOuterNormal(it->position());
+            const Dune::FieldVector<DF,dim> n = ig.unitOuterNormal(ip.position());
 
             // integrate
-            RF factor = it->weight()*ig.geometry().integrationElement(it->position());
+            RF factor = ip.weight()*ig.geometry().integrationElement(ip.position());
             for (size_type j=0; j<lfsu_s.size(); j++)
               for (size_type i=0; i<lfsu_s.size(); i++)
                 mat_s.accumulate(lfsu_s,i,lfsu_s,j,(b*n)*phi[j]*phi[i]*factor);
@@ -414,11 +414,11 @@ namespace Dune {
 
         // loop over quadrature points
         RF sum(0.0);
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
-            lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
+            lfsu.finiteElement().localBasis().evaluateFunction(ip.position(),phi);
 
             // evaluate u
             RF u=0.0;
@@ -426,13 +426,13 @@ namespace Dune {
               u += x(lfsu,i)*phi[i];
 
             // evaluate reaction term
-            typename T::Traits::RangeFieldType c = param.c(eg.entity(),it->position());
+            typename T::Traits::RangeFieldType c = param.c(eg.entity(),ip.position());
 
             // evaluate right hand side parameter function
-            typename T::Traits::RangeFieldType f = param.f(eg.entity(),it->position());
+            typename T::Traits::RangeFieldType f = param.f(eg.entity(),ip.position());
 
             // integrate f^2
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+            RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
             sum += (f*f-c*c*u*u)*factor;
           }
 
@@ -492,11 +492,11 @@ namespace Dune {
 
         // loop over quadrature points and integrate normal flux
         RF sum(0.0);
-        for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // position of quadrature point in local coordinates of elements
-            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
-            Dune::FieldVector<DF,dim> iplocal_n = ig.geometryInOutside().global(it->position());
+            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(ip.position());
+            Dune::FieldVector<DF,dim> iplocal_n = ig.geometryInOutside().global(ip.position());
 
             // evaluate gradient of basis functions
             std::vector<JacobianType> gradphi_s(lfsu_s.size());
@@ -521,7 +521,7 @@ namespace Dune {
               gradu_n.axpy(x_n(lfsu_n,i),tgradphi_n[i]);
 
             // integrate
-            RF factor = it->weight() * ig.geometry().integrationElement(it->position());
+            RF factor = ip.weight() * ig.geometry().integrationElement(ip.position());
             RF jump = (An_F_s*gradu_s)-(An_F_n*gradu_n);
             sum += 0.25*jump*jump*factor;
           }
@@ -580,10 +580,10 @@ namespace Dune {
 
         // loop over quadrature points and integrate normal flux
         RF sum(0.0);
-        for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // position of quadrature point in local coordinates of elements
-            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
+            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(ip.position());
 
             // evaluate gradient of basis functions
             std::vector<JacobianType> gradphi_s(lfsu_s.size());
@@ -600,10 +600,10 @@ namespace Dune {
               gradu_s.axpy(x_s(lfsu_s,i),tgradphi_s[i]);
 
             // evaluate flux boundary condition
-            RF j = param.j(ig.intersection(),it->position());
+            RF j = param.j(ig.intersection(),ip.position());
 
             // integrate
-            RF factor = it->weight() * ig.geometry().integrationElement(it->position());
+            RF factor = ip.weight() * ig.geometry().integrationElement(ip.position());
             RF jump = j+(An_F_s*gradu_s);
             sum += jump*jump*factor;
           }
@@ -704,11 +704,11 @@ namespace Dune {
         RF fsum_up(0.0);
         RF fsum_mid(0.0);
         RF fsum_down(0.0);
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
-            lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
+            lfsu.finiteElement().localBasis().evaluateFunction(ip.position(),phi);
 
             // evaluate u
             RF u=0.0;
@@ -716,16 +716,16 @@ namespace Dune {
               u += x(lfsu,i)*phi[i];
 
             // integrate f^2
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+            RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
             sum += u*u*factor;
 
             // evaluate right hand side parameter function
             param.setTime(time);
-            typename T::Traits::RangeFieldType f_down = param.f(eg.entity(),it->position());
+            typename T::Traits::RangeFieldType f_down = param.f(eg.entity(),ip.position());
             param.setTime(time+0.5*dt);
-            typename T::Traits::RangeFieldType f_mid = param.f(eg.entity(),it->position());
+            typename T::Traits::RangeFieldType f_mid = param.f(eg.entity(),ip.position());
             param.setTime(time+dt);
-            typename T::Traits::RangeFieldType f_up = param.f(eg.entity(),it->position());
+            typename T::Traits::RangeFieldType f_up = param.f(eg.entity(),ip.position());
             RF f_average = (1.0/6.0)*f_down + (2.0/3.0)*f_mid + (1.0/6.0)*f_up;
 
             // integrate f-f_average
@@ -875,11 +875,11 @@ namespace Dune {
         RF fsum_grad_up(0.0);
         RF fsum_grad_mid(0.0);
         RF fsum_grad_down(0.0);
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
-            lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
+            lfsu.finiteElement().localBasis().evaluateFunction(ip.position(),phi);
 
             // evaluate u
             RF u=0.0;
@@ -887,16 +887,16 @@ namespace Dune {
               u += x(lfsu,i)*phi[i];
 
             // integrate jump
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+            RF factor = ip.weight() * eg.geometry().integrationElement(ip.position());
             sum += u*u*factor;
 
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType> js(lfsu.size());
-            lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
+            lfsu.finiteElement().localBasis().evaluateJacobian(ip.position(),js);
 
             // transform gradients of shape functions to real element
             const typename EG::Geometry::JacobianInverseTransposed jac =
-              eg.geometry().jacobianInverseTransposed(it->position());
+              eg.geometry().jacobianInverseTransposed(ip.position());
             std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsu.size());
             for (size_type i=0; i<lfsu.size(); i++)
               jac.mv(js[i][0],gradphi[i]);
@@ -966,18 +966,18 @@ namespace Dune {
         // loop over quadrature points and integrate
         RF sum_up(0.0);
         RF sum_down(0.0);
-        for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // evaluate flux boundary condition
             param.setTime(time);
-            RF j_down = param.j(ig.intersection(),it->position());
+            RF j_down = param.j(ig.intersection(),ip.position());
             param.setTime(time+0.5*dt);
-            RF j_mid = param.j(ig.intersection(),it->position());
+            RF j_mid = param.j(ig.intersection(),ip.position());
             param.setTime(time+dt);
-            RF j_up = param.j(ig.intersection(),it->position());
+            RF j_up = param.j(ig.intersection(),ip.position());
 
             // integrate
-            RF factor = it->weight() * ig.geometry().integrationElement(it->position());
+            RF factor = ip.weight() * ig.geometry().integrationElement(ip.position());
             sum_down += (j_down-j_mid)*(j_down-j_mid)*factor;
             sum_up += (j_up-j_mid)*(j_up-j_mid)*factor;
           }
