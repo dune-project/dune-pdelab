@@ -16,7 +16,7 @@
 #include"defaultimp.hh"
 #include"pattern.hh"
 #include"flags.hh"
-#include "diffusionparam.hh"
+#include "convectiondiffusionparameter.hh"
 
 namespace Dune {
   namespace PDELab {
@@ -27,17 +27,20 @@ namespace Dune {
     //                    u = g         on \partial\Omega_D
     //      sigma \cdot \nu = j         on \partial\Omega_N
     // with H(div) conforming (mixed) finite elements
-    // K : diffusion tensor dependent on position
-    // A0: Helmholtz term
-    // F : grid function type giving f
-    // B : grid function type selecting boundary condition
-    // G : grid function type giving g
-    template<typename K, typename A0, typename F, typename B, typename G>
-    class DiffusionMixed : public NumericalJacobianApplyVolume<DiffusionMixed<K,A0,F,B,G> >,
-                           public NumericalJacobianVolume<DiffusionMixed<K,A0,F,B,G> >,
+    // param.A : diffusion tensor dependent on position
+    // param.c : Helmholtz term
+    // param.f : grid function type giving f
+    // param.bctype : grid function type selecting boundary condition
+    // param.g : grid function type giving g
+    template<typename PARAM>
+    class DiffusionMixed : public NumericalJacobianApplyVolume<DiffusionMixed<PARAM> >,
+                           public NumericalJacobianVolume<DiffusionMixed<PARAM> >,
                            public FullVolumePattern,
                            public LocalOperatorDefaultFlags
     {
+
+      typedef typename ConvectionDiffusionBoundaryConditions::Type BCType;
+
     public:
       // pattern assembly flags
       enum { doPatternVolume = true };
@@ -47,9 +50,14 @@ namespace Dune {
       enum { doLambdaVolume = true };
       enum { doLambdaBoundary = true };
 
-      DiffusionMixed (const K& k_, const A0& a0_, const F& f_, const B& bctype_, const G& g_, int qorder_v_=2, int qorder_p_=1)
-        : k(k_), a0(a0_), f(f_), bctype(bctype_), g(g_), qorder_v(qorder_v_), qorder_p(qorder_p_)
-      {}
+      DiffusionMixed ( const PARAM& param_,
+                       int qorder_v_=2,
+                       int qorder_p_=1 )
+        : param(param_),
+          qorder_v(qorder_v_),
+          qorder_p(qorder_p_)
+      {
+      }
 
       // volume integral depending on test and ansatz functions
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
@@ -84,10 +92,12 @@ namespace Dune {
         RF det = eg.geometry().integrationElement(pos);
 
         // evaluate diffusion tensor at cell center, assume it is constant over elements
-        typename K::Traits::RangeType tensor;
+        //typename K::Traits::RangeType tensor;
         Dune::GeometryType gt = eg.geometry().type();
         Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
-        k.evaluate(eg.entity(),localcenter,tensor);
+
+        typename PARAM::Traits::PermTensorType tensor;
+        tensor = param.A(eg.entity(),localcenter);
         tensor.invert(); // need iverse for mixed method
 
         // \sigma\cdot v term
@@ -136,9 +146,8 @@ namespace Dune {
             for (std::size_t i=0; i<pressurespace.size(); i++)
               u.axpy(x(pressurespace,i),pbasis[i]);
 
-            // evaluate Helmholtz term
-            typename A0::Traits::RangeType a0value;
-            a0.evaluate(eg.entity(),it->position(),a0value);
+            // evaluate Helmholtz term (reaction term)
+            typename PARAM::Traits::RangeFieldType a0value = param.c(eg.entity(),it->position());
 
             // integrate a0 * u * q
             RF factor = it->weight();
@@ -197,8 +206,7 @@ namespace Dune {
             pressurespace.finiteElement().localBasis().evaluateFunction(it->position(),pbasis);
 
             // evaluate right hand side parameter function
-            typename F::Traits::RangeType y;
-            f.evaluate(eg.entity(),it->position(),y);
+            RF y = param.f(eg.entity(),it->position());
 
             // integrate f
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
@@ -226,12 +234,14 @@ namespace Dune {
         // dimensions
         const int dim = IG::dimension;
 
+        auto inside_cell = ig.inside();
+
         // evaluate transformation which must be linear
         Dune::FieldVector<DF,dim> pos; pos = 0.0;
         typename IG::Entity::Geometry::JacobianInverseTransposed jac;
-        jac = ig.inside()->geometry().jacobianInverseTransposed(pos);
+        jac = inside_cell.geometry().jacobianInverseTransposed(pos);
         jac.invert();
-        RF det = ig.inside()->geometry().integrationElement(pos);
+        RF det = inside_cell.geometry().integrationElement(pos);
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
@@ -241,8 +251,11 @@ namespace Dune {
         for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
             // evaluate boundary condition type
+            BCType bctype = param.bctype(ig.intersection(),it->position());
             // skip rest if we are on Neumann boundary
-            if( bctype.isNeumann( ig,it->position() ) )
+
+            if (bctype == Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann)
+            //if (bctype == ConvectionDiffusionBoundaryConditions::Neumann)
               continue;
 
             // position of quadrature point in local coordinates of element
@@ -261,8 +274,7 @@ namespace Dune {
               }
 
             // evaluate Dirichlet boundary condition
-            typename G::Traits::RangeType y;
-            g.evaluate(*(ig.inside()),local,y);
+            RF y = param.g(inside_cell,local);
 
             // integrate g v*normal
             RF factor = it->weight()*ig.geometry().integrationElement(it->position())/det;
@@ -272,11 +284,7 @@ namespace Dune {
       }
 
     private:
-      const K& k;
-      const A0& a0;
-      const F& f;
-      const B& bctype;
-      const G& g;
+      const PARAM& param;
       int qorder_v;
       int qorder_p;
     };
