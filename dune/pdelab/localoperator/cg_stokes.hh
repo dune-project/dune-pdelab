@@ -74,10 +74,10 @@ namespace Dune {
 
       typedef P PhysicalParameters;
 
-      TaylorHoodNavierStokes (const PhysicalParameters & p, std::size_t quadrature_order = 4)
+      TaylorHoodNavierStokes (const PhysicalParameters & p, int superintegration_order_ = 0)
 
         : _p(p)
-        , _quadrature_order(quadrature_order)
+        , superintegration_order(superintegration_order_)
       {}
 
       // volume integral depending on test and ansatz functions
@@ -114,7 +114,11 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,_quadrature_order);
+        const int v_order = lfsu_v_pfs.child(0).finiteElement().localBasis().order();
+        const int det_jac_order = gt.isSimplex() ? 0 : (dim-1);
+        const int jac_order = gt.isSimplex() ? 0 : 1;
+        const int qorder = 3*v_order - 1 + jac_order + det_jac_order + superintegration_order;
+        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         // loop over quadrature points
         for (const auto& ip : rule)
@@ -241,7 +245,10 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,_quadrature_order);
+        const int v_order = lfsv_v_pfs.child(0).finiteElement().localBasis().order();
+        const int det_jac_order = gt.isSimplex() ?  0 : (dim-1);
+        const int qorder = 2*v_order + det_jac_order + superintegration_order;
+        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         // loop over quadrature points
         for (const auto& ip : rule)
@@ -310,7 +317,11 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
-        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,_quadrature_order);
+        const int v_order = lfsv_v_pfs.child(0).finiteElement().localBasis().order();
+        const int det_jac_order = gtface.isSimplex() ? 0 : (dim-2);
+        const int jac_order = gtface.isSimplex() ? 0 : 1;
+        const int qorder = 2*v_order + det_jac_order + jac_order + superintegration_order;
+        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
 
         // loop over quadrature points and integrate normal flux
         for (const auto& ip : rule)
@@ -386,7 +397,11 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,_quadrature_order);
+        const int v_order = lfsu_v_pfs.child(0).finiteElement().localBasis().order();
+        const int det_jac_order = gt.isSimplex() ? 0 : (dim-1);
+        const int jac_order = gt.isSimplex() ? 0 : 1;
+        const int qorder = 3*v_order - 1 + jac_order + det_jac_order + superintegration_order;
+        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         // loop over quadrature points
         for (const auto& ip : rule)
@@ -489,7 +504,7 @@ namespace Dune {
 
     private:
       const P& _p;
-      const std::size_t _quadrature_order;
+      const int superintegration_order;
     };
 
     //! \} group LocalOperator

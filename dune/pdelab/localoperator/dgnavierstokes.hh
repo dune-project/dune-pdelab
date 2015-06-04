@@ -1168,8 +1168,7 @@ namespace Dune {
         Dune::GeometryType gt = eg.geometry().type();
         const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
         const int det_jac_order = gt.isSimplex() ?  0 : (dim-1);
-        // quad order is velocity order + det_jac order + superintegration
-        const int qorder = v_order + det_jac_order + superintegration_order;
+        const int qorder = 2*v_order + det_jac_order + superintegration_order;
 
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 

@@ -34,8 +34,8 @@ namespace Dune {
       // residual assembly flags
       enum { doAlphaVolume = true };
 
-      NavierStokesMass (const PRM & p_, int intorder_=4)
-        : p(p_), intorder(intorder_)
+      NavierStokesMass (const PRM & p_, int superintegration_order_ = 0)
+        : p(p_), superintegration_order(superintegration_order_)
       {}
 
       // volume integral depending on test and ansatz functions
@@ -91,7 +91,10 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
+        const int v_order = FESwitch::basis(lfsu.finiteElement()).order();
+        const int det_jac_order = gt.isSimplex() ? 0 : (dim-1);
+        const int qorder = 2*v_order + det_jac_order + superintegration_order;
+        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         // loop over quadrature points
         for (const auto& ip : rule)
@@ -138,7 +141,10 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
+        const int v_order = FESwitch::basis(lfsu.finiteElement()).order();
+        const int det_jac_order = gt.isSimplex() ? 0 : (dim-1);
+        const int qorder = 2*v_order + det_jac_order + superintegration_order;
+        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
         // loop over quadrature points
         for (const auto& ip : rule)
@@ -157,7 +163,7 @@ namespace Dune {
       }
 
       const PRM& p;
-      int intorder;
+      const int superintegration_order;
     }; // end class NavierStokesMass
 
   } // end namespace PDELab
