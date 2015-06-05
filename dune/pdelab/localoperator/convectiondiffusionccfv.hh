@@ -4,7 +4,7 @@
 
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
-#include<dune/common/static_assert.hh>
+#include<dune/common/typetraits.hh>
 #include<dune/geometry/referenceelements.hh>
 
 #include<dune/pdelab/common/geometrywrapper.hh>
@@ -116,7 +116,7 @@ namespace Dune {
           inside_local(Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0));
 
         // evaluate source and sink term
-        typename T::Traits::RangeFieldType f = param.f(eg.entity(),inside_local);
+        // typename T::Traits::RangeFieldType f = param.f(eg.entity(),inside_local);
         typename T::Traits::RangeFieldType c = param.c(eg.entity(),inside_local);
 
         // and accumulate
@@ -146,17 +146,20 @@ namespace Dune {
         RF face_volume = ig.geometry().integrationElement(face_local)
           *Dune::ReferenceElements<DF,dim-1>::general(ig.geometry().type()).volume();
 
+        auto cell_inside = ig.inside();
+        auto cell_outside = ig.outside();
+
         // cell centers in references elements
         const Dune::FieldVector<DF,dim>
-          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(cell_inside.type()).position(0,0);
         const Dune::FieldVector<DF,dim>
-          outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
+          outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(cell_outside.type()).position(0,0);
 
         // evaluate diffusion coefficient from either side and take harmonic average
         typename T::Traits::PermTensorType tensor_inside;
-        tensor_inside = param.A(*(ig.inside()),inside_local);
+        tensor_inside = param.A(cell_inside,inside_local);
         typename T::Traits::PermTensorType tensor_outside;
-        tensor_outside = param.A(*(ig.outside()),outside_local);
+        tensor_outside = param.A(cell_outside,outside_local);
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
         Dune::FieldVector<RF,dim> An_F;
         tensor_inside.mv(n_F,An_F);
@@ -167,16 +170,16 @@ namespace Dune {
 
         // evaluate convective term
         Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(face_local);
-        typename T::Traits::RangeType b = param.b(*(ig.inside()),iplocal_s);
+        typename T::Traits::RangeType b = param.b(cell_inside,iplocal_s);
         RF vn = b*n_F;
         RF u_upwind=0;
         if (vn>=0) u_upwind = x_s(lfsu_s,0); else u_upwind = x_n(lfsu_n,0);
 
         // cell centers in global coordinates
         Dune::FieldVector<DF,IG::dimension>
-          inside_global = ig.inside()->geometry().global(inside_local);
+          inside_global = cell_inside.geometry().global(inside_local);
         Dune::FieldVector<DF,IG::dimension>
-          outside_global = ig.outside()->geometry().global(outside_local);
+          outside_global = cell_outside.geometry().global(outside_local);
 
         // distance between the two cell centers
         inside_global -= outside_global;
@@ -209,17 +212,20 @@ namespace Dune {
         RF face_volume = ig.geometry().integrationElement(face_local)
           *Dune::ReferenceElements<DF,dim-1>::general(ig.geometry().type()).volume();
 
+        auto cell_inside = ig.inside();
+        auto cell_outside = ig.outside();
+
         // cell centers in references elements
         const Dune::FieldVector<DF,dim>
-          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(cell_inside.type()).position(0,0);
         const Dune::FieldVector<DF,dim>
-          outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
+          outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(cell_outside.type()).position(0,0);
 
         // evaluate diffusion coefficient from either side and take harmonic average
         typename T::Traits::PermTensorType tensor_inside;
-        tensor_inside = param.A(*(ig.inside()),inside_local);
+        tensor_inside = param.A(cell_inside,inside_local);
         typename T::Traits::PermTensorType tensor_outside;
-        tensor_outside = param.A(*(ig.outside()),outside_local);
+        tensor_outside = param.A(cell_outside,outside_local);
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
         Dune::FieldVector<RF,dim> An_F;
         tensor_inside.mv(n_F,An_F);
@@ -230,14 +236,14 @@ namespace Dune {
 
         // evaluate convective term
         Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(face_local);
-        typename T::Traits::RangeType b = param.b(*(ig.inside()),iplocal_s);
+        typename T::Traits::RangeType b = param.b(cell_inside,iplocal_s);
         RF vn = b*n_F;
 
         // cell centers in global coordinates
         Dune::FieldVector<DF,IG::dimension>
-          inside_global = ig.inside()->geometry().global(inside_local);
+          inside_global = cell_inside.geometry().global(inside_local);
         Dune::FieldVector<DF,IG::dimension>
-          outside_global = ig.outside()->geometry().global(outside_local);
+          outside_global = cell_outside.geometry().global(outside_local);
 
         // distance between the two cell centers
         inside_global -= outside_global;
@@ -282,9 +288,11 @@ namespace Dune {
         RF face_volume = ig.geometry().integrationElement(face_local)
           *Dune::ReferenceElements<DF,dim-1>::general(ig.geometry().type()).volume();
 
+        auto cell_inside = ig.inside();
+
         // cell center in reference element
         const Dune::FieldVector<DF,dim>
-          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(cell_inside.type()).position(0,0);
 
         // evaluate boundary condition type
         BCType bctype;
@@ -294,14 +302,14 @@ namespace Dune {
           {
             // Dirichlet boundary
             // distance between cell center and face center
-            Dune::FieldVector<DF,dim> inside_global = ig.inside()->geometry().global(inside_local);
+            Dune::FieldVector<DF,dim> inside_global = cell_inside.geometry().global(inside_local);
             Dune::FieldVector<DF,dim> outside_global = ig.geometry().global(face_local);
             inside_global -= outside_global;
             RF distance = inside_global.two_norm();
 
             // evaluate diffusion coefficient
             typename T::Traits::PermTensorType tensor_inside;
-            tensor_inside = param.A(*(ig.inside()),inside_local);
+            tensor_inside = param.A(cell_inside,inside_local);
             const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
             Dune::FieldVector<RF,dim> An_F;
             tensor_inside.mv(n_F,An_F);
@@ -309,10 +317,10 @@ namespace Dune {
 
             // evaluate boundary condition function
             Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(face_local);
-            RF g = param.g(*(ig.inside()),iplocal_s);
+            RF g = param.g(cell_inside,iplocal_s);
 
             // velocity needed for convection term
-            typename T::Traits::RangeType b = param.b(*(ig.inside()),iplocal_s);
+            typename T::Traits::RangeType b = param.b(cell_inside,iplocal_s);
             const Dune::FieldVector<DF,dim> n = ig.centerUnitOuterNormal();
 
             // contribution to residual on inside element, assumes that Dirichlet boundary is inflow
@@ -339,7 +347,7 @@ namespace Dune {
           {
             // evaluate velocity field and outer unit normal
             Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(face_local);
-            typename T::Traits::RangeType b = param.b(*(ig.inside()),iplocal_s);
+            typename T::Traits::RangeType b = param.b(cell_inside,iplocal_s);
             const Dune::FieldVector<DF,dim> n = ig.centerUnitOuterNormal();
 
             // evaluate outflow boundary condition
@@ -372,9 +380,11 @@ namespace Dune {
         RF face_volume = ig.geometry().integrationElement(face_local)
           *Dune::ReferenceElements<DF,dim-1>::general(ig.geometry().type()).volume();
 
+        auto cell_inside = ig.inside();
+
         // cell center in reference element
         const Dune::FieldVector<DF,dim>
-          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(cell_inside.type()).position(0,0);
 
         // evaluate boundary condition type
         BCType bctype;
@@ -385,14 +395,14 @@ namespace Dune {
           {
             // Dirichlet boundary
             // distance between cell center and face center
-            Dune::FieldVector<DF,dim> inside_global = ig.inside()->geometry().global(inside_local);
+            Dune::FieldVector<DF,dim> inside_global = cell_inside.geometry().global(inside_local);
             Dune::FieldVector<DF,dim> outside_global = ig.geometry().global(face_local);
             inside_global -= outside_global;
             RF distance = inside_global.two_norm();
 
             // evaluate diffusion coefficient
             typename T::Traits::PermTensorType tensor_inside;
-            tensor_inside = param.A(*(ig.inside()),inside_local);
+            tensor_inside = param.A(cell_inside,inside_local);
             const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
             Dune::FieldVector<RF,dim> An_F;
             tensor_inside.mv(n_F,An_F);
@@ -408,7 +418,7 @@ namespace Dune {
           {
             // evaluate velocity field and outer unit normal
             Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(face_local);
-            typename T::Traits::RangeType b = param.b(*(ig.inside()),iplocal_s);
+            typename T::Traits::RangeType b = param.b(cell_inside,iplocal_s);
             const Dune::FieldVector<DF,dim> n = ig.centerUnitOuterNormal();
 
             // integrate o
