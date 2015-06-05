@@ -64,6 +64,7 @@ namespace Dune {
       }
 
     protected:
+      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!")
       StokesDGParameters(const std::string & method, const RF mu, const RF rho,
                          F & f, B & b, V & v, J & j, IP & ip)
         : Base(mu,rho,f,b,v,j),
@@ -78,6 +79,7 @@ namespace Dune {
       //! Traits class
       typedef typename Base::Traits Traits;
 
+      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!")
       StokesDGParameters(const std::string & method, const RF mu,
                          F & f, B & b, V & v, J & j, IP & ip)
         : Base(mu,1.0,f,b,v,j),
@@ -86,6 +88,7 @@ namespace Dune {
         initFromString(method);
       }
 
+      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!")
       StokesDGParameters(const Dune::ParameterTree & configuration,
                          F & f, B & b, V & v, J & j, IP & ip)
         : Base(configuration,f,b,v,j),
@@ -161,11 +164,13 @@ namespace Dune {
 
     public:
 
+      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!")
       NavierStokesDGParameters(const std::string & method, const RF mu, const RF rho,
                                F & f, B & b, V & v, J & j, IP & ip)
         : Base(method,mu,rho,f,b,v,j,ip)
       {}
 
+      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!")
       NavierStokesDGParameters(const Dune::ParameterTree & configuration,
                                F & f, B & b, V & v, J & j, IP & ip)
         : Base(configuration,f,b,v,j,ip)

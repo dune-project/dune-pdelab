@@ -74,6 +74,7 @@ namespace Dune {
                                                         have the same order as the corresponding
                                                         finite element.
              */
+            DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokes instead!")
             StokesDG (PRM & _prm, int _superintegration_order=0) :
               prm(_prm), superintegration_order(_superintegration_order),
               current_dt(1.0)
@@ -982,6 +983,7 @@ namespace Dune {
             using StokesLocalOperator::prm;
             using StokesLocalOperator::superintegration_order;
 
+            DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokes instead!")
             NavierStokesDG (PRM & prm_, int superintegration_order_=0)
                 : StokesLocalOperator(prm_ ,superintegration_order_)
             {}
@@ -1203,6 +1205,7 @@ namespace Dune {
                                                         have the same order as the corresponding
                                                         finite element.
              */
+            DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use NavierStokesMass instead!")
             StokesMassDG (PRM & _prm, int _superintegration_order=0) :
                 prm(_prm), superintegration_order(_superintegration_order)
             {}
