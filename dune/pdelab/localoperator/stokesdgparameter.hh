@@ -24,7 +24,7 @@ namespace Dune {
     */
     template<typename GV, typename RF, typename F, typename B, typename V, typename J,
              typename IP = DefaultInteriorPenalty<typename V::Traits::RangeFieldType> >
-    class StokesDGParameters
+    class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!") StokesDGParameters
       : public NavierStokesDefaultParameters<GV,RF,F,B,V,J>
     {
     private:
@@ -152,7 +152,7 @@ namespace Dune {
     */
     template<typename GV, typename RF, typename F, typename B, typename V, typename J,
              typename IP = DefaultInteriorPenalty<typename V::Traits::RangeField> >
-    class NavierStokesDGParameters
+    class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!") NavierStokesDGParameters
       : public StokesDGParameters<GV,RF,F,B,V,J,IP>
     {
 

@@ -31,7 +31,7 @@ namespace Dune {
                                         full tensor for the viscous stress
          */
         template<typename PRM, bool full_tensor = true>
-        class StokesDG :
+        class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokes instead!") StokesDG :
             public LocalOperatorDefaultFlags,
             public FullSkeletonPattern, public FullVolumePattern
             //
@@ -967,7 +967,7 @@ namespace Dune {
                                         full tensor for the viscous stress
          */
         template<typename PRM, bool full_tensor = true>
-        class NavierStokesDG : public StokesDG<PRM,full_tensor>
+        class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokes instead!") NavierStokesDG : public StokesDG<PRM,full_tensor>
         {
         public:
             //! Boundary condition indicator type
@@ -1174,7 +1174,7 @@ namespace Dune {
             \tparam PRM Parameter class for this local operator
          */
         template<typename PRM>
-        class StokesMassDG :
+        class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use NavierStokesMass instead!") StokesMassDG :
             public LocalOperatorDefaultFlags,
             public FullVolumePattern,
             public JacobianBasedAlphaVolume< StokesMassDG<PRM> >,
