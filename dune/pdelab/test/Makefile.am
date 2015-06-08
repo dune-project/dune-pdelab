@@ -307,10 +307,10 @@ testopbfem_LDFLAGS = $(AM_LDFLAGS) $(GMP_LDFLAGS)
 testopbfem_LDADD = $(LDADD) $(GMP_LIBS)
 endif
 
-if DUNE_ALUGRID
+if HAVE_DUNE_ALUGRID
 check_PROGRAMS += testordering
 testordering_SOURCES = testordering.cc
-endif
+endif HAVE_DUNE_ALUGRID
 
 check_PROGRAMS += testpermutedordering
 testpermutedordering_SOURCES = testpermutedordering.cc
