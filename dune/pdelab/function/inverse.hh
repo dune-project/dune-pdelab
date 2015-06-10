@@ -3,6 +3,8 @@
 #ifndef DUNE_PDELAB_FUNCTION_INVERSE_HH
 #define DUNE_PDELAB_FUNCTION_INVERSE_HH
 
+#warning this header is deprecated
+
 #include <dune/pdelab/common/function.hh>
 
 namespace Dune {
@@ -30,7 +32,7 @@ namespace Dune {
     public:
       typedef typename Base::Traits Traits;
 
-      InverseGridFunctionAdapter(GF& gf_)
+      InverseGridFunctionAdapter(GF& gf_) DUNE_DEPRECATED
         : gf(gf_)
       { }
 
