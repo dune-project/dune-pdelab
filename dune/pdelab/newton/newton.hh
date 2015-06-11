@@ -65,9 +65,31 @@ namespace Dune
           verbosity_level = verbosity_level_;
       }
 
+      //! Set whether the jacobian matrix should be kept across calls to apply().
+      void setKeepMatrix(bool b)
+      {
+        keep_matrix = b;
+      }
+
+      //! Return whether the jacobian matrix is kept across calls to apply().
+      bool keepMatrix() const
+      {
+        return keep_matrix;
+      }
+
+      //! Discard the stored Jacobian matrix.
+      void discardMatrix()
+      {
+        if(A)
+          A.reset();
+      }
+
     protected:
-      GridOperator& gridoperator;
+      const GridOperator& gridoperator;
       TrialVector *u;
+      std::shared_ptr<TrialVector> z;
+      std::shared_ptr<TestVector> r;
+      std::shared_ptr<Matrix> A;
       Result res;
       unsigned int verbosity_level;
       RFType prev_defect;
@@ -75,20 +97,23 @@ namespace Dune
       bool reassembled;
       RFType reduction;
       RFType abs_limit;
+      bool keep_matrix;
 
-      NewtonBase(GridOperator& go, TrialVector& u_)
+      NewtonBase(const GridOperator& go, TrialVector& u_)
         : gridoperator(go)
         , u(&u_)
         , verbosity_level(1)
+        , keep_matrix(true)
       {
         if (gridoperator.trialGridFunctionSpace().gridView().comm().rank()>0)
           verbosity_level = 0;
       }
 
-      NewtonBase(GridOperator& go)
+      NewtonBase(const GridOperator& go)
         : gridoperator(go)
         , u(0)
         , verbosity_level(1)
+        , keep_matrix(true)
       {
         if (gridoperator.trialGridFunctionSpace().gridView().comm().rank()>0)
           verbosity_level = 0;
@@ -100,7 +125,7 @@ namespace Dune
       virtual void prepare_step(Matrix& A, TestVector& r) = 0;
       virtual void line_search(TrialVector& z, TestVector& r) = 0;
       virtual void defect(TestVector& r) = 0;
-    };
+    }; // end class NewtonBase
 
     template<class GOS, class S, class TrlV, class TstV>
     class NewtonSolver : public virtual NewtonBase<GOS,TrlV,TstV>
@@ -116,13 +141,13 @@ namespace Dune
     public:
       typedef NewtonResult<RFType> Result;
 
-      NewtonSolver(GridOperator& go, TrialVector& u_, Solver& solver_)
+      NewtonSolver(const GridOperator& go, TrialVector& u_, Solver& solver_)
         : NewtonBase<GOS,TrlV,TstV>(go,u_)
         , solver(solver_)
         , result_valid(false)
       {}
 
-      NewtonSolver(GridOperator& go, Solver& solver_)
+      NewtonSolver(const GridOperator& go, Solver& solver_)
         : NewtonBase<GOS,TrlV,TstV>(go)
         , solver(solver_)
         , result_valid(false)
@@ -176,7 +201,7 @@ namespace Dune
 
       Solver& solver;
       bool result_valid;
-    };
+    }; // end class NewtonSolver
 
     template<class GOS, class S, class TrlV, class TstV>
     void NewtonSolver<GOS,S,TrlV,TstV>::apply(TrialVector& u_)
@@ -201,8 +226,16 @@ namespace Dune
 
       try
         {
-          TestVector r(this->gridoperator.testGridFunctionSpace());
-          this->defect(r);
+          if(!this->r) {
+            // std::cout << "=== Setting up residual vector ..." << std::endl;
+            this->r = std::make_shared<TestVector>(this->gridoperator.testGridFunctionSpace());
+          }
+          // residual calculation in member function "defect":
+          //--------------------------------------------------
+          // - set residual vector to zero
+          // - calculate new residual
+          // - store norm of residual in "this->res.defect"
+          this->defect(*this->r);
           this->res.first_defect = this->res.defect;
           this->prev_defect = this->res.defect;
 
@@ -215,8 +248,14 @@ namespace Dune
                         << this->res.defect << std::endl;
             }
 
-          Matrix A(this->gridoperator);
-          TrialVector z(this->gridoperator.trialGridFunctionSpace());
+          if(!this->A) {
+            // std::cout << "==== Setting up jacobian matrix ... " << std::endl;
+            this->A = std::make_shared<Matrix>(this->gridoperator);
+          }
+          if(!this->z) {
+            // std::cout << "==== Setting up correction vector ... " << std::endl;
+            this->z = std::make_shared<TrialVector>(this->gridoperator.trialGridFunctionSpace());
+          }
 
           while (!this->terminate())
             {
@@ -227,7 +266,13 @@ namespace Dune
               Timer assembler_timer;
               try
                 {
-                  this->prepare_step(A,r);
+                  // jacobian calculation in member function "prepare_step"
+                  //-------------------------------------------------------
+                  // - if above reassemble threshold
+                  //   - set jacobian to zero
+                  //   - calculate new jacobian
+                  // - set linear reduction
+                  this->prepare_step(*this->A,*this->r);
                 }
               catch (...)
                 {
@@ -244,7 +289,11 @@ namespace Dune
               Timer linear_solver_timer;
               try
                 {
-                  this->linearSolve(A, z, r);
+                  // solution of linear system in member function "linearSolve"
+                  //-----------------------------------------------------------
+                  // - set initial guess for correction z to zero
+                  // - call linear solver
+                  this->linearSolve(*this->A, *this->z, *this->r);
                 }
               catch (...)
                 {
@@ -258,7 +307,9 @@ namespace Dune
 
               try
                 {
-                  this->line_search(z, r);
+                  // line search with correction z
+                  // the undamped version is also integrated in here
+                  this->line_search(*this->z, *this->r);
                 }
               catch (NewtonLineSearchError)
                 {
@@ -300,8 +351,8 @@ namespace Dune
                           << ".  Reduction (total): "
                           << std::setw(12) << std::setprecision(4) << std::scientific
                           << this->res.reduction << std::endl;
-            }
-        }
+            } // end while
+        } // end try
       catch(...)
         {
           this->res.elapsed = timer.elapsed();
@@ -318,7 +369,10 @@ namespace Dune
                   << this->res.reduction
                   << "   (" << std::setprecision(4) << this->res.elapsed << "s)"
                   << std::endl;
-    }
+
+      if(!this->keep_matrix)
+        this->A.reset();
+    } // end apply
 
     template<class GOS, class TrlV, class TstV>
     class NewtonTerminate : public virtual NewtonBase<GOS,TrlV,TstV>
@@ -329,7 +383,7 @@ namespace Dune
       typedef typename TstV::ElementType RFType;
 
     public:
-      NewtonTerminate(GridOperator& go, TrialVector& u_)
+      NewtonTerminate(const GridOperator& go, TrialVector& u_)
         : NewtonBase<GOS,TrlV,TstV>(go,u_)
         , maxit(40)
         , force_iteration(false)
@@ -338,7 +392,7 @@ namespace Dune
         this->abs_limit = 1e-12;
       }
 
-      NewtonTerminate(GridOperator& go)
+      NewtonTerminate(const GridOperator& go)
         : NewtonBase<GOS,TrlV,TstV>(go)
         , maxit(40)
         , force_iteration(false)
@@ -382,7 +436,7 @@ namespace Dune
     private:
       unsigned int maxit;
       bool force_iteration;
-    };
+    }; // end class NewtonTerminate
 
     template<class GOS, class TrlV, class TstV>
     class NewtonPrepareStep : public virtual NewtonBase<GOS,TrlV,TstV>
@@ -394,14 +448,14 @@ namespace Dune
       typedef typename GOS::Traits::Jacobian Matrix;
 
     public:
-      NewtonPrepareStep(GridOperator& go, TrialVector& u_)
+      NewtonPrepareStep(const GridOperator& go, TrialVector& u_)
         : NewtonBase<GOS,TrlV,TstV>(go,u_)
         , min_linear_reduction(1e-3)
         , fixed_linear_reduction(0.0)
         , reassemble_threshold(0.0)
       {}
 
-      NewtonPrepareStep(GridOperator& go)
+      NewtonPrepareStep(const GridOperator& go)
         : NewtonBase<GOS,TrlV,TstV>(go)
         , min_linear_reduction(1e-3)
         , fixed_linear_reduction(0.0)
@@ -480,7 +534,7 @@ namespace Dune
       RFType min_linear_reduction;
       bool fixed_linear_reduction;
       RFType reassemble_threshold;
-    };
+    }; // end class NewtonPrepareStep
 
     template<class GOS, class TrlV, class TstV>
     class NewtonLineSearch : public virtual NewtonBase<GOS,TrlV,TstV>
@@ -496,14 +550,14 @@ namespace Dune
                       hackbuschReusken,
                       hackbuschReuskenAcceptBest };
 
-      NewtonLineSearch(GridOperator& go, TrialVector& u_)
+      NewtonLineSearch(const GridOperator& go, TrialVector& u_)
         : NewtonBase<GOS,TrlV,TstV>(go,u_)
         , strategy(hackbuschReusken)
         , maxit(10)
         , damping_factor(0.5)
       {}
 
-      NewtonLineSearch(GridOperator& go)
+      NewtonLineSearch(const GridOperator& go)
         : NewtonBase<GOS,TrlV,TstV>(go)
         , strategy(hackbuschReusken)
         , maxit(10)
@@ -622,7 +676,7 @@ namespace Dune
           std::cout << "          line search damping factor:   "
                     << std::setw(12) << std::setprecision(4) << std::scientific
                     << lambda << std::endl;
-      }
+      } // end line_search
 
     protected:
       /** helper function to get the different strategies from their name */
@@ -639,7 +693,7 @@ namespace Dune
       Strategy strategy;
       unsigned int maxit;
       RFType damping_factor;
-    };
+    }; // end class NewtonLineSearch
 
     template<class GOS, class S, class TrlV, class TstV = TrlV>
     class Newton : public NewtonSolver<GOS,S,TrlV,TstV>
@@ -652,14 +706,14 @@ namespace Dune
       typedef TrlV TrialVector;
 
     public:
-      Newton(GridOperator& go, TrialVector& u_, Solver& solver_)
+      Newton(const GridOperator& go, TrialVector& u_, Solver& solver_)
         : NewtonBase<GOS,TrlV,TstV>(go,u_)
         , NewtonSolver<GOS,S,TrlV,TstV>(go,u_,solver_)
         , NewtonTerminate<GOS,TrlV,TstV>(go,u_)
         , NewtonLineSearch<GOS,TrlV,TstV>(go,u_)
         , NewtonPrepareStep<GOS,TrlV,TstV>(go,u_)
       {}
-      Newton(GridOperator& go, Solver& solver_)
+      Newton(const GridOperator& go, Solver& solver_)
         : NewtonBase<GOS,TrlV,TstV>(go)
         , NewtonSolver<GOS,S,TrlV,TstV>(go,solver_)
         , NewtonTerminate<GOS,TrlV,TstV>(go)
@@ -724,9 +778,13 @@ namespace Dune
         if (param.hasKey("LineSearchDampingFactor"))
           this->setLineSearchDampingFactor(
             param.get<RFType>("LineSearchDampingFactor"));
+        // TODO: This is the only setting written in small letters and with underscore.
+        if (param.hasKey("keep_matrix"))
+          this->keep_matrix(
+            param.get<bool>("keep_matrix"));
       }
-    };
-  }
-}
+    }; // end class Newton
+  } // end namespace PDELab
+} // end namespace Dune
 
 #endif // DUNE_PDELAB_NEWTON_HH
