@@ -1,50 +1,52 @@
 # Downloaded from https://github.com/jedbrown/cmake-modules/blob/master/ResolveCompilerPaths.cmake
-# Last update 2012/09/20
+# Last update 2015/06/14
 # Licenced under CMake's BSD Licence
 #
-## ResolveCompilerPaths - this module defines two macros
+#
+# ResolveCompilerPaths - this module defines two macros
 #
 # RESOLVE_LIBRARIES (XXX_LIBRARIES LINK_LINE)
-# This macro is intended to be used by FindXXX.cmake modules.
-# It parses a compiler link line and resolves all libraries
-# (-lfoo) using the library path contexts (-L/path) in scope.
-# The result in XXX_LIBRARIES is the list of fully resolved libs.
-# Example:
+#  This macro is intended to be used by FindXXX.cmake modules.
+#  It parses a compiler link line and resolves all libraries
+#  (-lfoo) using the library path contexts (-L/path) in scope.
+#  The result in XXX_LIBRARIES is the list of fully resolved libs.
+#  Example:
 #
-# RESOLVE_LIBRARIES (FOO_LIBRARIES "-L/A -la -L/B -lb -lc -ld")
+#    RESOLVE_LIBRARIES (FOO_LIBRARIES "-L/A -la -L/B -lb -lc -ld")
 #
-# will be resolved to
+#  will be resolved to
 #
-# FOO_LIBRARIES:STRING="/A/liba.so;/B/libb.so;/A/libc.so;/usr/lib/libd.so"
+#    FOO_LIBRARIES:STRING="/A/liba.so;/B/libb.so;/A/libc.so;/usr/lib/libd.so"
 #
-# if the filesystem looks like
+#  if the filesystem looks like
 #
-# /A: liba.so libc.so
-# /B: liba.so libb.so
-# /usr/lib: liba.so libb.so libc.so libd.so
+#    /A:       liba.so         libc.so
+#    /B:       liba.so libb.so
+#    /usr/lib: liba.so libb.so libc.so libd.so
 #
-# and /usr/lib is a system directory.
+#  and /usr/lib is a system directory.
 #
-# Note: If RESOLVE_LIBRARIES() resolves a link line differently from
-# the native linker, there is a bug in this macro (please report it).
+#  Note: If RESOLVE_LIBRARIES() resolves a link line differently from
+#  the native linker, there is a bug in this macro (please report it).
 #
 # RESOLVE_INCLUDES (XXX_INCLUDES INCLUDE_LINE)
-# This macro is intended to be used by FindXXX.cmake modules.
-# It parses a compile line and resolves all includes
-# (-I/path/to/include) to a list of directories. Other flags are ignored.
-# Example:
+#  This macro is intended to be used by FindXXX.cmake modules.
+#  It parses a compile line and resolves all includes
+#  (-I/path/to/include) to a list of directories.  Other flags are ignored.
+#  Example:
 #
-# RESOLVE_INCLUDES (FOO_INCLUDES "-I/A -DBAR='\"irrelevant -I/string here\"' -I/B")
+#    RESOLVE_INCLUDES (FOO_INCLUDES "-I/A -DBAR='\"irrelevant -I/string here\"' -I/B")
 #
-# will be resolved to
+#  will be resolved to
 #
-# FOO_INCLUDES:STRING="/A;/B"
+#    FOO_INCLUDES:STRING="/A;/B"
 #
-# assuming both directories exist.
-# Note: as currently implemented, the -I/string will be picked up mistakenly (cry, cry)
+#  assuming both directories exist.
+#  Note: as currently implemented, the -I/string will be picked up mistakenly (cry, cry)
+include (CorrectWindowsPaths)
 
 macro (RESOLVE_LIBRARIES LIBS LINK_LINE)
-  string (REGEX MATCHALL "((-L|-l|-Wl)([^\" ]+|\"[^\"]+\")|/[^\" ]+(a|so|dll))" _all_tokens "${LINK_LINE}")
+  string (REGEX MATCHALL "((-L|-l|-Wl)([^\" ]+|\"[^\"]+\")|[^\" ]+\\.(a|so|dll|lib))" _all_tokens "${LINK_LINE}")
   set (_libs_found)
   set (_directory_list)
   foreach (token ${_all_tokens})
@@ -52,18 +54,28 @@ macro (RESOLVE_LIBRARIES LIBS LINK_LINE)
       # If it's a library path, add it to the list
       string (REGEX REPLACE "^-L" "" token ${token})
       string (REGEX REPLACE "//" "/" token ${token})
+      convert_cygwin_path(token)
       list (APPEND _directory_list ${token})
-    elseif (token MATCHES "^(-l([^\" ]+|\"[^\"]+\")|/[^\" ]+(a|so|dll))")
+    elseif (token MATCHES "^(-l([^\" ]+|\"[^\"]+\")|[^\" ]+\\.(a|so|dll|lib))")
       # It's a library, resolve the path by looking in the list and then (by default) in system directories
-      string (REGEX REPLACE "^-l" "" token ${token})
+      if (WIN32) #windows expects "libfoo", linux expects "foo"
+        string (REGEX REPLACE "^-l" "lib" token ${token})
+      else (WIN32)
+        string (REGEX REPLACE "^-l" "" token ${token})
+      endif (WIN32)
       set (_root)
-      if (token MATCHES "^/") # We have an absolute path, add root to the search path
-set (_root "/")
+      if (token MATCHES "^/")   # We have an absolute path
+        #separate into a path and a library name:
+        string (REGEX MATCH "[^/]*\\.(a|so|dll|lib)$" libname ${token})
+        string (REGEX MATCH ".*[^${libname}$]" libpath ${token})
+        convert_cygwin_path(libpath)
+        set (_directory_list ${_directory_list} ${libpath})
+        set (token ${libname})
       endif (token MATCHES "^/")
       set (_lib "NOTFOUND" CACHE FILEPATH "Cleared" FORCE)
       find_library (_lib ${token} HINTS ${_directory_list} ${_root})
       if (_lib)
-string (REPLACE "//" "/" _lib ${_lib})
+    string (REPLACE "//" "/" _lib ${_lib})
         list (APPEND _libs_found ${_lib})
       else (_lib)
         message (STATUS "Unable to find library ${token}")
@@ -82,10 +94,11 @@ endmacro (RESOLVE_LIBRARIES)
 
 macro (RESOLVE_INCLUDES INCS COMPILE_LINE)
   string (REGEX MATCHALL "-I([^\" ]+|\"[^\"]+\")" _all_tokens "${COMPILE_LINE}")
-  set (_incs_found)
+  set (_incs_found "")
   foreach (token ${_all_tokens})
     string (REGEX REPLACE "^-I" "" token ${token})
     string (REGEX REPLACE "//" "/" token ${token})
+    convert_cygwin_path(token)
     if (EXISTS ${token})
       list (APPEND _incs_found ${token})
     else (EXISTS ${token})
