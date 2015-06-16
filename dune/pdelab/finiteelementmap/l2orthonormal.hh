@@ -757,7 +757,7 @@ namespace Dune {
 
   // define the local finite element here
 
-  template<class D, class R, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=DefaultComputationalFieldType, PB::BasisType basisType = PB::BasisType::Pk>
+  template<class D, class R, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=Dune::PB::DefaultComputationalFieldType, PB::BasisType basisType = PB::BasisType::Pk>
   class OPBLocalBasis
   {
     typedef PB::BasisTraits<basisType> BasisTraits;
@@ -865,7 +865,7 @@ namespace Dune {
     }
   };
 
-  template<class D, class R, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=DefaultComputationalFieldType, PB::BasisType basisType = PB::BasisType::Pk>
+  template<class D, class R, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=Dune::PB::DefaultComputationalFieldType, PB::BasisType basisType = PB::BasisType::Pk>
   class OPBLocalFiniteElement
   {
     Dune::GeometryType gt;
