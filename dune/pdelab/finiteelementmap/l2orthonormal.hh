@@ -7,9 +7,9 @@
 
 #include<dune/common/fvector.hh>
 #include<dune/common/fmatrix.hh>
+#include<dune/common/gmpfield.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
-#include<dune/common/gmpfield.hh>
 #include<dune/common/array.hh>
 
 #include<dune/geometry/referenceelements.hh>
@@ -32,6 +32,12 @@
 
 namespace Dune {
   namespace PB {
+
+#if HAVE_GMP
+    typedef GMPField<512> DefaultComputationalFieldType;
+#else
+    typedef double DefaultComputationalFieldType;
+#endif
 
     //=====================================================
     // TMPs for computing number of basis functions in P_k
@@ -751,7 +757,7 @@ namespace Dune {
 
   // define the local finite element here
 
-  template<class D, class R, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=R, PB::BasisType basisType = PB::BasisType::Pk>
+  template<class D, class R, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=DefaultComputationalFieldType, PB::BasisType basisType = PB::BasisType::Pk>
   class OPBLocalBasis
   {
     typedef PB::BasisTraits<basisType> BasisTraits;
@@ -859,7 +865,7 @@ namespace Dune {
     }
   };
 
-  template<class D, class R, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=R, PB::BasisType basisType = PB::BasisType::Pk>
+  template<class D, class R, int k, int d, Dune::GeometryType::BasicType bt, typename ComputationFieldType=DefaultComputationalFieldType, PB::BasisType basisType = PB::BasisType::Pk>
   class OPBLocalFiniteElement
   {
     Dune::GeometryType gt;
