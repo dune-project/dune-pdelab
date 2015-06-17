@@ -35,3 +35,9 @@ if(GMP_FOUND)
   pdelab_add_test(NAME testopbfem)
   pdelab_add_test(NAME test-dg-amg)
 endif(GMP_FOUND)
+
+set_tests_properties(
+  testpk2dinterpolation
+  testrt02dgridfunctionspace
+  PROPERTIES SKIP_RETURN_CODE 77
+)
