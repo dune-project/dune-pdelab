@@ -28,7 +28,7 @@ if(dune-alugrid_FOUND)
 endif(dune-alugrid_FOUND)
 
 if(PETSC_FOUND)
-  pdelab_add_test(NAME testpoisson_petsc)
+  pdelab_add_test(NAME testpoisson-petsc)
 endif(PETSC_FOUND)
 
 if(GMP_FOUND)
