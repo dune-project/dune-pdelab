@@ -30,10 +30,10 @@ namespace Dune {
     class StationaryMatrixLinearSolver
     {
       typedef typename GOS::template MatrixContainer<Coeff>::Type Matrix;
-      typedef typename Dune::PDELab::BackendVectorSelector
-        <typename GOS::Traits::TrialGridFunctionSpace, Coeff>::Type VectorU;
-      typedef typename Dune::PDELab::BackendVectorSelector
-        <typename GOS::Traits::TestGridFunctionSpace, Coeff>::Type VectorV;
+      using VectorU = Dune::PDELab::Backend::Vector
+        <typename GOS::Traits::TrialGridFunctionSpace, Coeff>;
+      using VectorV = Dune::PDELab::Backend::Vector
+        <typename GOS::Traits::TestGridFunctionSpace, Coeff>;
 
       const GOS& gos;
       SB& sb;

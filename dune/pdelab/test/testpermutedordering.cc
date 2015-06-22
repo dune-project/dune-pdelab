@@ -44,7 +44,7 @@ void check_ordering_reference(const GFS& gfs)
         ordering.mapIndex(di.view(),ci);
         std::cout << di << "    " << ci << std::endl;
       }
-    typedef typename Dune::PDELab::BackendVectorSelector<GFS,double>::Type V;
+    using V = Dune::PDELab::Backend::Vector<GFS,double>;
     V x(gfs);
     x = 0.0;
     std::cout << std::endl;

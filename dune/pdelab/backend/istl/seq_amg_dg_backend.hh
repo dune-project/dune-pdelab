@@ -153,7 +153,7 @@ namespace Dune {
       typedef typename Vector::field_type field_type;
 
       // vectors and matrices on CG level
-      typedef typename Dune::PDELab::BackendVectorSelector<CGGFS,field_type>::Type CGV; // wrapped istl CG vector
+      using CGV = Dune::PDELab::Backend::Vector<CGGFS,field_type>; // wrapped istl CG vector
       typedef typename CGV::BaseT CGVector;                               // istl CG vector
 
       // prolongation matrix

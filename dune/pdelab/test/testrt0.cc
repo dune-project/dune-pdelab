@@ -93,12 +93,10 @@ void testrt0 (const GV& gv)
   RT0GFS rt0gfs(gv,rt0fem);
 
   // make coefficent Vectors
-  typedef typename Dune::PDELab::BackendVectorSelector<P0GFS, double>::Type
-    P0V;
+  using P0V = Dune::PDELab::Backend::Vector<P0GFS, double>;
   P0V p0xg(p0gfs);
   p0xg = 0.0;
-  typedef typename Dune::PDELab::BackendVectorSelector<RT0GFS, double>::Type
-    RT0V;
+  using RT0V = Dune::PDELab::Backend::Vector<RT0GFS, double>;
   RT0V rt0xg(rt0gfs);
   rt0xg = 0.0;
 

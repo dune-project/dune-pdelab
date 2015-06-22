@@ -20,6 +20,29 @@ namespace Dune {
       typedef typename Backend::template MatrixHelper<VV,VU,E>::type Type;
     };
 
+    namespace Backend
+    {
+      /**
+       * \brief alias of the return type of BackendVectorSelector
+       *
+       * This alias can be used as a short hand for retrieving the vector type for
+       * a grid function space and a given field type. The typedef
+       * \code
+       * typedef typename Dune::PDELab::BackendVectorSelector<GFS,FT>::Type Vec;
+       * \endcode
+       * simplifies to
+       * \code
+       * typedef Dune::PDELab::Backend::Vector<GFS,FT> Vec;
+       * \endcode
+       * or
+       * \code
+       * using Vec = Dune::PDELab::Backend::Vector<GFS,FT>;
+       * \endcode
+       *
+       **/
+      template<typename GridFunctionSpace, typename FieldType>
+      using Vector = typename BackendVectorSelector<GridFunctionSpace, FieldType>::Type;
+    }
   }
 }
 

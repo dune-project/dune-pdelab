@@ -90,7 +90,7 @@ static void testdatahandle(const GV& gv)
   GFS3 gfs3(gv,q22dfem);
   gfs3.name("gfs3");
 
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS1,int>::Type V;
+  using V = Dune::PDELab::Backend::Vector<GFS1,int>;
 
   V v(gfs1);
   v = 1;
@@ -199,10 +199,10 @@ static void testdatahandle(const GV& gv)
   PGFS17B pgfs17b(gfs2);
 
   // make coefficent Vectors
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS1,double>::Type V1;
+  using V1 = Dune::PDELab::Backend::Vector<GFS1,double>;
   V1 x1(gfs1);
   x1 = 0.0;
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS2,double>::Type V2;
+  using V2 = Dune::PDELab::Backend::Vector<GFS2,double>;
   V2 x2(gfs2);
   x2 = 0.0;
 
