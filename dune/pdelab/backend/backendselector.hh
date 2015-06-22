@@ -42,6 +42,27 @@ namespace Dune {
        **/
       template<typename GridFunctionSpace, typename FieldType>
       using Vector = typename BackendVectorSelector<GridFunctionSpace, FieldType>::Type;
+
+      /**
+       * \brief alias of the return type of BackendMatrixSelector
+       *
+       * This alias can be used as a short hand for retrieving the matrix type for
+       * given matrix backend, domain, range and field type.
+       * \code
+       * typedef typename Dune::PDELab::BackendMatrixSelector<Backend,VU,VV,E>::Type Mat;
+       * \endcode
+       * simplifies to
+       * \code
+       * typedef Dune::PDELab::Backend::Matrix<Backend,VU,VV,E> Mat;
+       * \endcode
+       * or
+       * \code
+       * using Mat = Dune::PDELab::Backend::Matrix<Backend,VU,VV,E>;
+       * \endcode
+       *
+       **/
+      template<typename Backend, typename VU, typename VV, typename E>
+      using Matrix = typename BackendMatrixSelector<Backend, VU, VV, E>::Type;
     }
   }
 }
