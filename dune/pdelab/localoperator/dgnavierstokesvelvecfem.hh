@@ -686,8 +686,8 @@ namespace Dune {
                 Dune::FieldVector<DF,dimw> flux_jac_phi_j(0.0);
                 add_compute_flux(jac_phi_v_s[j],normal,flux_jac_phi_j);
 
-                mat_ss.accumulate(lfsv_v_s,i,lfsu_v_s,j, -mu * 0.5 * (flux_jac_phi_j*phi_v_s[i]) * weight);
-                mat_ss.accumulate(lfsv_v_s,i,lfsu_v_s,j, mu * epsilon * 0.5 * (flux_jac_phi_i*phi_v_s[j]) * weight);
+                mat_ss.accumulate(lfsv_v_s,i,lfsu_v_s,j, -0.5 * (flux_jac_phi_j*phi_v_s[i]) * factor);
+                mat_ss.accumulate(lfsv_v_s,i,lfsu_v_s,j, epsilon * 0.5 * (flux_jac_phi_i*phi_v_s[j]) * factor);
                 mat_ss.accumulate(lfsv_v_s,i,lfsu_v_s,j, penalty_factor * (phi_v_s[j]*phi_v_s[i]) * weight);
               }
 
@@ -695,8 +695,8 @@ namespace Dune {
                 Dune::FieldVector<DF,dimw> flux_jac_phi_j(0.0);
                 add_compute_flux(jac_phi_v_n[j],normal,flux_jac_phi_j);
 
-                mat_sn.accumulate(lfsv_v_s,i,lfsu_v_n,j, -mu * 0.5 * (flux_jac_phi_j*phi_v_s[i]) * weight);
-                mat_sn.accumulate(lfsv_v_s,i,lfsu_v_n,j, -mu * epsilon * 0.5 * (flux_jac_phi_i*phi_v_n[j]) * weight);
+                mat_sn.accumulate(lfsv_v_s,i,lfsu_v_n,j, -0.5 * (flux_jac_phi_j*phi_v_s[i]) * factor);
+                mat_sn.accumulate(lfsv_v_s,i,lfsu_v_n,j, -epsilon * 0.5 * (flux_jac_phi_i*phi_v_n[j]) * factor);
                 mat_sn.accumulate(lfsv_v_s,i,lfsu_v_n,j, -penalty_factor * (phi_v_n[j]*phi_v_s[i]) * weight);
               }
 
@@ -730,8 +730,8 @@ namespace Dune {
                 Dune::FieldVector<DF,dimw> flux_jac_phi_j(0.0);
                 add_compute_flux(jac_phi_v_s[j],normal,flux_jac_phi_j);
 
-                mat_ns.accumulate(lfsv_v_n,i,lfsu_v_s,j, mu * 0.5 * (flux_jac_phi_j*phi_v_n[i]) * weight);
-                mat_ns.accumulate(lfsv_v_n,i,lfsu_v_s,j, mu * epsilon * 0.5 * (flux_jac_phi_i*phi_v_s[j]) * weight);
+                mat_ns.accumulate(lfsv_v_n,i,lfsu_v_s,j, 0.5 * (flux_jac_phi_j*phi_v_n[i]) * factor);
+                mat_ns.accumulate(lfsv_v_n,i,lfsu_v_s,j, epsilon * 0.5 * (flux_jac_phi_i*phi_v_s[j]) * factor);
                 mat_ns.accumulate(lfsv_v_n,i,lfsu_v_s,j, -penalty_factor * (phi_v_s[j]*phi_v_n[i]) * weight);
               }
 
@@ -739,8 +739,8 @@ namespace Dune {
                 Dune::FieldVector<DF,dimw> flux_jac_phi_j(0.0);
                 add_compute_flux(jac_phi_v_n[j],normal,flux_jac_phi_j);
 
-                mat_nn.accumulate(lfsv_v_n,i,lfsu_v_n,j, mu * 0.5 * (flux_jac_phi_j*phi_v_n[i]) * weight);
-                mat_nn.accumulate(lfsv_v_n,i,lfsu_v_n,j, -mu * epsilon * 0.5 * (flux_jac_phi_i*phi_v_n[j]) * weight);
+                mat_nn.accumulate(lfsv_v_n,i,lfsu_v_n,j, 0.5 * (flux_jac_phi_j*phi_v_n[i]) * factor);
+                mat_nn.accumulate(lfsv_v_n,i,lfsu_v_n,j, -epsilon * 0.5 * (flux_jac_phi_i*phi_v_n[j]) * factor);
                 mat_nn.accumulate(lfsv_v_n,i,lfsu_v_n,j, penalty_factor * (phi_v_n[j]*phi_v_n[i]) * weight);
               }
 
@@ -902,7 +902,7 @@ namespace Dune {
               //================================================//
               // incompressibility constraint
               //================================================//
-              for(size_type i=0; lfsv_p.size(); i++) {
+              for(size_type i=0; i<lfsv_p.size(); i++) {
                 r.accumulate(lfsv_p,i, phi_p[i] * (jump*normal) * incomp_scaling * weight);
               }
             } // Velocity Dirichlet
@@ -910,7 +910,7 @@ namespace Dune {
             if (bctype == BC::StressNeumann) {
               typename PRM::Traits::VelocityRange stress(prm.j(ig,ip.position(),normal));
 
-              for(size_type i=0; lfsv_v.size(); i++) {
+              for(size_type i=0; i<lfsv_v.size(); i++) {
                 r.accumulate(lfsv_v,i, (stress*phi_v[i]) * weight);
               }
             } // Pressure Dirichlet
