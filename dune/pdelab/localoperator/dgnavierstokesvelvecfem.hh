@@ -155,7 +155,6 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         const unsigned int dim = EG::Geometry::dimension;
-        const unsigned int dimw = EG::Geometry::dimensionworld;
 
         // subspaces
         static_assert
@@ -219,7 +218,7 @@ namespace Dune {
             // evaluate jacobian of velocity shape functions on reference element
             std::vector<Dune::FieldMatrix<RF,dim,dim> > jac_phi_v(lfsu_v.size());
             VectorBasisSwitch_V::jacobian
-              (FESwitch_V::basis(lfsv_v.finiteElement()), eg.geometry(), it->position(), jac_phi_v);
+              (FESwitch_V::basis(lfsv_v.finiteElement()), eg.geometry(), local, jac_phi_v);
 
             // compute divergence of test functions
             std::vector<RF> div_phi_v(lfsv_v.size(),0.0);
@@ -256,7 +255,7 @@ namespace Dune {
               if(navier) {
                 // compute (grad u) u (matrix-vector product)
                 Range_V nabla_u_u(0.0);
-                jac_u.mv(u,nabla_u_u);
+                jac_u.mv(val_u,nabla_u_u);
                 r.accumulate(lfsv_v, i, rho * (nabla_u_u*phi_v[i]) * weight);
               } // end navier
 
@@ -279,7 +278,6 @@ namespace Dune {
                             LocalMatrix& mat) const
       {
         const unsigned int dim = EG::Geometry::dimension;
-        const unsigned int dimw = EG::Geometry::dimensionworld;
 
         // subspaces
        static_assert
@@ -338,7 +336,7 @@ namespace Dune {
             // evaluate jacobian of velocity shape functions on reference element
             std::vector<Dune::FieldMatrix<RF,dim,dim> > jac_phi_v(lfsu_v.size());
             VectorBasisSwitch_V::jacobian
-              (FESwitch_V::basis(lfsv_v.finiteElement()), eg.geometry(), it->position(), jac_phi_v);
+              (FESwitch_V::basis(lfsv_v.finiteElement()), eg.geometry(), local, jac_phi_v);
 
             assert(lfsu_v.size() == lfsv_v.size());
             // compute divergence of velocity shape functions
@@ -346,6 +344,14 @@ namespace Dune {
             for (size_type i=0; i<lfsv_v.size(); i++)
               for (size_type d=0; d<dim; d++)
                 div_phi_v[i] += jac_phi_v[i][d][d];
+
+            // compute velocity jacobian (if Navier term enabled)
+            Dune::FieldMatrix<RF,dim,dim> jac_u(0.0);
+            if(navier) {
+              for (size_type i=0; i<lfsu_v.size(); i++){
+                jac_u.axpy(x(lfsu_v,i),jac_phi_v[i]);
+              }
+            }
 
             const RF detj = eg.geometry().integrationElement(ip.position());
             const RF weight = ip.weight() * detj;
@@ -432,7 +438,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometry().type();
-        const int v_order = FESwitch_V::basis(lfsv_s_v.finiteElement()).order();
+        const int v_order = FESwitch_V::basis(lfsv_v_s.finiteElement()).order();
         const int det_jac_order = gtface.isSimplex() ? 0 : (dim-2);
         const int qorder = 2*v_order + det_jac_order + superintegration_order;
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
@@ -522,7 +528,7 @@ namespace Dune {
               //================================================//
               Dune::FieldVector<DF,dimw> flux_jac_phi(0.0);
               add_compute_flux(jac_phi_v_s[i],normal,flux_jac_phi);
-              r_s.accumulate(lfsv_v_s, i, epsilon * 0.5 * (flux * jump) * factor);
+              r_s.accumulate(lfsv_v_s, i, epsilon * 0.5 * (flux_jac_phi * jump) * factor);
 
               //================================================//
               // standard IP term integral
@@ -547,7 +553,7 @@ namespace Dune {
               //================================================//
               Dune::FieldVector<DF,dimw> flux_jac_phi(0.0);
               add_compute_flux(jac_phi_v_n[i],normal,flux_jac_phi);
-              r_n.accumulate(lfsv_v_n, i, epsilon * 0.5 * (flux * jump) * factor);
+              r_n.accumulate(lfsv_v_n, i, epsilon * 0.5 * (flux_jac_phi * jump) * factor);
 
               //================================================//
               // standard IP term integral
@@ -618,7 +624,7 @@ namespace Dune {
 
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometry().type();
-        const int v_order = FESwitch_V::basis(lfsv_s_v.finiteElement()).order();
+        const int v_order = FESwitch_V::basis(lfsv_v_s.finiteElement()).order();
         const int det_jac_order = gtface.isSimplex() ? 0 : (dim-2);
         const int qorder = 2*v_order + det_jac_order + superintegration_order;
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
@@ -787,12 +793,12 @@ namespace Dune {
           ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokesVelVecFEM");
 
         typedef typename LFSV::template Child<VBLOCK>::Type LFSV_V;
-        const LFSV_V& lfsv_v = lfsv_s.template child<VBLOCK>();
-        const LFSV_V& lfsu_v = lfsu_s.template child<VBLOCK>();
+        const LFSV_V& lfsv_v = lfsv.template child<VBLOCK>();
+        const LFSV_V& lfsu_v = lfsu.template child<VBLOCK>();
 
         typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
-        const LFSV_P& lfsv_p = lfsv_s.template child<PBLOCK>();
-        const LFSV_P& lfsu_p = lfsu_s.template child<PBLOCK>();
+        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
+        const LFSV_P& lfsu_p = lfsu.template child<PBLOCK>();
 
         // domain and range field type
         typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
@@ -829,7 +835,7 @@ namespace Dune {
 
             // values of velocity shape functions
             std::vector<Range_V> phi_v(lfsv_v.size());
-            FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(locals,phi_v);
+            FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
 
             // values of pressure shape functions
             std::vector<Range_P> phi_p(lfsv_p.size());
@@ -848,7 +854,7 @@ namespace Dune {
             // compute u and velocity jacobian
             Range_V val_u(0.0);
             Dune::FieldMatrix<RF,dim,dim> jac_u(0.0);
-            for (size_type i=0; i<lfsu_v_s.size(); i++){
+            for (size_type i=0; i<lfsu_v.size(); i++){
               val_u.axpy(x(lfsu_v,i),phi_v[i]);
               jac_u.axpy(x(lfsu_v,i),jac_phi_v[i]);
             }
@@ -902,7 +908,7 @@ namespace Dune {
             } // Velocity Dirichlet
 
             if (bctype == BC::StressNeumann) {
-              typename PRM::Traits::VelocityRange stress(prm.j(ig,flocal,normal));
+              typename PRM::Traits::VelocityRange stress(prm.j(ig,ip.position(),normal));
 
               for(size_type i=0; lfsv_v.size(); i++) {
                 r.accumulate(lfsv_v,i, (stress*phi_v[i]) * weight);
@@ -928,12 +934,12 @@ namespace Dune {
           ((LFSV::CHILDREN == 2), "You seem to use the wrong function space for DGNavierStokesVelVecFEM");
 
         typedef typename LFSV::template Child<VBLOCK>::Type LFSV_V;
-        const LFSV_V& lfsv_v = lfsv_s.template child<VBLOCK>();
-        const LFSV_V& lfsu_v = lfsu_s.template child<VBLOCK>();
+        const LFSV_V& lfsv_v = lfsv.template child<VBLOCK>();
+        const LFSV_V& lfsu_v = lfsu.template child<VBLOCK>();
 
         typedef typename LFSV::template Child<PBLOCK>::Type LFSV_P;
-        const LFSV_P& lfsv_p = lfsv_s.template child<PBLOCK>();
-        const LFSV_P& lfsu_p = lfsu_s.template child<PBLOCK>();
+        const LFSV_P& lfsv_p = lfsv.template child<PBLOCK>();
+        const LFSV_P& lfsu_p = lfsu.template child<PBLOCK>();
 
         // domain and range field type
         typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
@@ -970,7 +976,7 @@ namespace Dune {
 
             // values of velocity shape functions
             std::vector<Range_V> phi_v(lfsv_v.size());
-            FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(locals,phi_v);
+            FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
 
             // values of pressure shape functions
             std::vector<Range_P> phi_p(lfsv_p.size());
