@@ -51,7 +51,14 @@ namespace Dune {
   //! Switch for uniform treatment of local and global basis classes
   template<class Basis>
   struct VectorBasisInterfaceSwitch<
-    Basis, typename enable_if<Basis::Traits::dimDomain>::type
+    Basis, typename enable_if<
+             Std::to_true_type<
+               integral_constant<
+                 std::size_t,
+                 Basis::Traits::dimDomain
+                 >
+               >::value
+             >::type
     >
   {
     //! export vector type of the local coordinates
@@ -74,7 +81,7 @@ namespace Dune {
       RangeField, dimRange, Geometry::coorddimension> > ljac(basis.size());
       basis.evaluateJacobian(xl, ljac);
 
-      const typename Geometry::Jacobian& geojac =
+      const typename Geometry::JacobianInverseTransposed& geojac =
         geometry.jacobianInverseTransposed(xl);
 
       for(std::size_t i = 0; i < basis.size(); ++i)
