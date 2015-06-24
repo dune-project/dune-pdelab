@@ -80,6 +80,7 @@
 #include <dune/pdelab/finiteelementmap/qkdggl.hh>
 #include <dune/pdelab/adaptivity/adaptivity.hh>
 #include <dune/pdelab/instationary/onestep.hh>
+#include <dune/pdelab/common/instationaryfilenamehelper.hh>
 #include <dune/pdelab/newton/newton.hh>
 
 namespace Dune {

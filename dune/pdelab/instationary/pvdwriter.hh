@@ -18,7 +18,7 @@ namespace Dune
 {
 
     template< class GridView, class VTK = VTKWriter<GridView> >
-    class DUNE_DEPRECATED_MSG("Use VTKSequenceWriter from dune-grid instead") PVDWriter : public VTK
+    class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4. Please use VTKSequenceWriter from DUNE-Grid instead!") PVDWriter : public VTK
     {
         GridView gv;
         std::string basename;

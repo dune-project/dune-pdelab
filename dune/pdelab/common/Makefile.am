@@ -13,6 +13,7 @@ common_HEADERS =				\
 	geometrywrapper.hh			\
 	globaldofindex.hh			\
 	hostname.hh				\
+	instationaryfilenamehelper.hh		\
 	jacobiantocurl.hh			\
 	logtag.hh				\
 	multiindex.hh				\

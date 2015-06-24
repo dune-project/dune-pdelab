@@ -11,6 +11,7 @@ install(FILES benchmarkhelper.hh
               geometrywrapper.hh
               globaldofindex.hh
               hostname.hh
+              instationaryfilenamehelper.hh
               jacobiantocurl.hh
               logtag.hh
               multiindex.hh
