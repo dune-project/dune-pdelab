@@ -55,21 +55,21 @@ namespace Dune{
       typedef DF DomainField;
 
       //! The type of the domain (solution).
-      typedef typename Dune::PDELab::BackendVectorSelector<GFSU,DF>::Type Domain;
+      using Domain = Dune::PDELab::Backend::Vector<GFSU,DF>;
 
 
       //! The field type of the range (residual).
       typedef RF RangeField;
 
       //! The type of the range (residual).
-      typedef typename Dune::PDELab::BackendVectorSelector<GFSV,RF>::Type Range;
+      using Range = Dune::PDELab::Backend::Vector<GFSV,RF>;
 
 
       //! The field type of the jacobian.
       typedef JF JacobianField;
 
       //! The type of the jacobian.
-      typedef typename Dune::PDELab::BackendMatrixSelector<MB,Domain,Range,JF>::Type Jacobian;
+      using Jacobian = Dune::PDELab::Backend::Matrix<MB,Domain,Range,JF>;
 
 
       //! The global assembler of the grid operator.

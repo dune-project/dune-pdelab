@@ -47,7 +47,7 @@ void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
     > GFS;
   GFS gfs(gv,fem);                    // make grid function space
 
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS, R>::Type X;
+  using X = Dune::PDELab::Backend::Vector<GFS, R>;
   X x(gfs,0.0);                       // make coefficient vector
   Dune::PDELab::istl::raw(x)[2] = 1.0;                         // set a component
 

@@ -130,16 +130,14 @@ namespace Dune {
     // wrapped sequential preconditioner
     template<class CC, class GFS, class P>
     class OverlappingWrappedPreconditioner
-      : public Dune::Preconditioner<typename Dune::PDELab::BackendVectorSelector<GFS,typename P::domain_type::field_type>::Type,
-                                    typename Dune::PDELab::BackendVectorSelector<GFS,typename P::range_type::field_type>::Type>
+      : public Dune::Preconditioner<Dune::PDELab::Backend::Vector<GFS,typename P::domain_type::field_type>,
+                                    Dune::PDELab::Backend::Vector<GFS,typename P::range_type::field_type>>
     {
     public:
       //! \brief The domain type of the preconditioner.
-      typedef typename Dune::PDELab::BackendVectorSelector<GFS,typename P::domain_type::field_type>::Type
-      domain_type;
+      using domain_type = Dune::PDELab::Backend::Vector<GFS,typename P::domain_type::field_type>;
       //! \brief The range type of the preconditioner.
-      typedef typename Dune::PDELab::BackendVectorSelector<GFS,typename P::range_type::field_type>::Type
-      range_type;
+      using range_type = Dune::PDELab::Backend::Vector<GFS,typename P::range_type::field_type>;
 
       // define the category
       enum {

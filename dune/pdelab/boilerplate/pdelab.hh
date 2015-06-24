@@ -605,7 +605,7 @@ namespace Dune {
             typedef GridFunctionSpace<GV,FEM,CON,VBE> GFS;
 
             typedef N NT;
-            typedef typename BackendVectorSelector<GFS,N>::Type DOF;
+            using DOF = Backend::Vector<GFS,N>;
             typedef Dune::PDELab::DiscreteGridFunction<GFS,DOF> DGF;
             typedef typename GFS::template ConstraintsContainer<N>::Type CC;
             typedef VTKGridFunctionAdapter<DGF> VTKF;
@@ -793,7 +793,7 @@ namespace Dune {
             typedef typename CONB::CON CON;
             typedef VBET VBE;
             typedef GridFunctionSpace<GV,FEM,CON,VBE> GFS;
-            typedef typename BackendVectorSelector<GFS,N>::Type DOF;
+            using DOF = Backend::Vector<GFS,N>;
             typedef Dune::PDELab::DiscreteGridFunction<GFS,DOF> DGF;
             typedef typename GFS::template ConstraintsContainer<N>::Type CC;
             typedef VTKGridFunctionAdapter<DGF> VTKF;
@@ -893,7 +893,7 @@ namespace Dune {
             typedef typename CONB::CON CON;
             typedef VBET VBE;
             typedef GridFunctionSpace<GV,FEM,CON,VBE> GFS;
-            typedef typename BackendVectorSelector<GFS,N>::Type DOF;
+            using DOF = Backend::Vector<GFS,N>;
             typedef Dune::PDELab::DiscreteGridFunction<GFS,DOF> DGF;
             typedef typename GFS::template ConstraintsContainer<N>::Type CC;
             typedef VTKGridFunctionAdapter<DGF> VTKF;
@@ -988,7 +988,7 @@ namespace Dune {
             typedef typename CONB::CON CON;
             typedef VBET VBE;
             typedef GridFunctionSpace<GV,FEM,CON,VBE> GFS;
-            typedef typename BackendVectorSelector<GFS,N>::Type DOF;
+            using DOF = Backend::Vector<GFS,N>;
             typedef Dune::PDELab::DiscreteGridFunction<GFS,DOF> DGF;
             typedef typename GFS::template ConstraintsContainer<N>::Type CC;
             typedef VTKGridFunctionAdapter<DGF> VTKF;
@@ -1084,7 +1084,7 @@ namespace Dune {
             typedef typename CONB::CON CON;
             typedef VBET VBE;
             typedef GridFunctionSpace<GV,FEM,CON,VBE> GFS;
-            typedef typename BackendVectorSelector<GFS,N>::Type DOF;
+            using DOF = Backend::Vector<GFS,N>;
             typedef Dune::PDELab::DiscreteGridFunction<GFS,DOF> DGF;
             typedef typename GFS::template ConstraintsContainer<N>::Type CC;
             typedef VTKGridFunctionAdapter<DGF> VTKF;
@@ -1180,7 +1180,7 @@ namespace Dune {
             typedef typename CONB::CON CON;
             typedef VBET VBE;
             typedef GridFunctionSpace<GV,FEM,CON,VBE> GFS;
-            typedef typename BackendVectorSelector<GFS,N>::Type DOF;
+            using DOF = Backend::Vector<GFS,N>;
             typedef Dune::PDELab::DiscreteGridFunction<GFS,DOF> DGF;
             typedef typename GFS::template ConstraintsContainer<N>::Type CC;
             typedef VTKGridFunctionAdapter<DGF> VTKF;

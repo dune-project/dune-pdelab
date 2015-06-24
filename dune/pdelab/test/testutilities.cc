@@ -33,7 +33,7 @@ void testq1 (const GV& gv)
   Q1GFS q1gfs(gv,q12dfem);
 
   // make coefficent Vectors
-  typedef typename Dune::PDELab::BackendVectorSelector<Q1GFS, double>::Type V;
+  using V = Dune::PDELab::Backend::Vector<Q1GFS, double>;
   V x(q1gfs);
   x = 0.0;
   // Don't do this at home: access raw vector
@@ -109,14 +109,14 @@ void testinterpolate (const GV& gv)
   PGFS pgfs(q2gfs,q2gfs);
 
   // make coefficent Vectors
-  typedef typename Dune::PDELab::BackendVectorSelector<Q1GFS, double>::Type V;
+  using V = Dune::PDELab::Backend::Vector<Q1GFS, double>;
   Q1GFS q1gfs2(gv,q12dfem);
   V xg(q1gfs2);
   xg = 0.0;
-  typedef typename Dune::PDELab::BackendVectorSelector<CGFS, double>::Type CV;
+  using CV = Dune::PDELab::Backend::Vector<CGFS, double>;
   CV cxg(cgfs);
   cxg = 0.0;
-  typedef typename Dune::PDELab::BackendVectorSelector<PGFS, double>::Type PV;
+  using PV = Dune::PDELab::Backend::Vector<PGFS, double>;
   PV pxg(pgfs);
   pxg = 0.0;
 
@@ -271,7 +271,7 @@ void testtaylorhood (const GV& gv)
   THGFS thgfs(vgfs,q1gfs);
 
   // make coefficent Vector
-  typedef typename Dune::PDELab::BackendVectorSelector<THGFS, double>::Type V;
+  using V = Dune::PDELab::Backend::Vector<THGFS, double>;
   V xg(thgfs);
   xg = 0.0;
 
@@ -356,7 +356,7 @@ void testgridfunctions (const GV& gv)
   VGFS vgfs(q2gfs);
 
   // make coefficent Vector
-  typedef typename Dune::PDELab::BackendVectorSelector<VGFS, double>::Type V;
+  using V = Dune::PDELab::Backend::Vector<VGFS, double>;
   V xv(vgfs);
   xv = 0.0;
 

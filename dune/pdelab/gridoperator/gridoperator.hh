@@ -39,11 +39,11 @@ namespace Dune{
       typedef DefaultAssembler<GFSU,GFSV,CU,CV,nonoverlapping_mode> Assembler;
 
       //! The type of the domain (solution).
-      typedef typename Dune::PDELab::BackendVectorSelector<GFSU,DF>::Type Domain;
+      using Domain = Dune::PDELab::Backend::Vector<GFSU,DF>;
       //! The type of the range (residual).
-      typedef typename Dune::PDELab::BackendVectorSelector<GFSV,RF>::Type Range;
+      using Range = Dune::PDELab::Backend::Vector<GFSV,RF>;
       //! The type of the jacobian.
-      typedef typename Dune::PDELab::BackendMatrixSelector<MB,Domain,Range,JF>::Type Jacobian;
+      using Jacobian = Dune::PDELab::Backend::Matrix<MB,Domain,Range,JF>;
 
       //! The sparsity pattern container for the jacobian matrix
       typedef typename MB::template Pattern<Jacobian,GFSV,GFSU> Pattern;

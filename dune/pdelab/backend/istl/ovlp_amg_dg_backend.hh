@@ -296,8 +296,8 @@ namespace Dune {
            class CGGFS, class CGPrec, class CGCC,
            class P, class DGHelper, class Comm>
   class OvlpDGAMGPrec
-    : public Dune::Preconditioner<typename Dune::PDELab::BackendVectorSelector<DGGFS,typename DGPrec::domain_type::field_type>::Type,
-                                  typename Dune::PDELab::BackendVectorSelector<DGGFS,typename DGPrec::range_type::field_type>::Type>
+    : public Dune::Preconditioner<Dune::PDELab::Backend::Vector<DGGFS,typename DGPrec::domain_type::field_type>,
+                                  Dune::PDELab::Backend::Vector<DGGFS,typename DGPrec::range_type::field_type>>
   {
     const DGGFS& dggfs;
     DGMatrix& dgmatrix;
@@ -312,12 +312,12 @@ namespace Dune {
     int n1,n2;
 
   public:
-    typedef typename Dune::PDELab::BackendVectorSelector<DGGFS,typename DGPrec::domain_type::field_type>::Type V;
-    typedef typename Dune::PDELab::BackendVectorSelector<DGGFS,typename DGPrec::range_type::field_type>::Type W;
+    using V = Dune::PDELab::Backend::Vector<DGGFS,typename DGPrec::domain_type::field_type>;
+    using W = Dune::PDELab::Backend::Vector<DGGFS,typename DGPrec::range_type::field_type>;
     typedef typename V::BaseT X;
     typedef typename W::BaseT Y;
-    typedef typename Dune::PDELab::BackendVectorSelector<CGGFS,typename CGPrec::domain_type::field_type>::Type CGV;
-    typedef typename Dune::PDELab::BackendVectorSelector<CGGFS,typename CGPrec::range_type::field_type>::Type CGW;
+    using CGV = Dune::PDELab::Backend::Vector<CGGFS,typename CGPrec::domain_type::field_type>;
+    using CGW = Dune::PDELab::Backend::Vector<CGGFS,typename CGPrec::range_type::field_type>;
 
     // define the category
     enum {
@@ -461,7 +461,7 @@ public:
   typedef typename Vector::field_type field_type;
 
   // vectors and matrices on CG level
-  typedef typename Dune::PDELab::BackendVectorSelector<CGGFS,field_type>::Type CGV; // wrapped istl CG vector
+  using CGV = Dune::PDELab::Backend::Vector<CGGFS,field_type>; // wrapped istl CG vector
   typedef typename CGV::BaseT CGVector;                               // istl CG vector
 
   // prolongation matrix

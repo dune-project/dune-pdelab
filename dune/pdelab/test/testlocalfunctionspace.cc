@@ -44,11 +44,11 @@ void test (const GV& gv)
 
   // make coefficent Vectors - we need to make copies of the spaces because we stuck
   // them in a hierarchy
-  typedef typename Dune::PDELab::BackendVectorSelector<Q2GFS,double>::Type V;
+  using V = Dune::PDELab::Backend::Vector<Q2GFS,double>;
   Q2GFS q2gfs2(gv,q22dfem);
   V x(q2gfs2);
   x = 0.0;
-  typedef typename Dune::PDELab::BackendVectorSelector<PowerGFS,double>::Type VP;
+  using VP = Dune::PDELab::Backend::Vector<PowerGFS,double>;
   Q2GFS q2gfs_pc(gv,q22dfem);
   PowerGFS powergfs2(q2gfs_pc);
   VP xp(powergfs2);

@@ -48,9 +48,9 @@ namespace Dune {
         typedef int RankIndex;
 
         //! Type used to store owner rank values of all DOFs.
-        typedef typename Dune::PDELab::BackendVectorSelector<GFS,RankIndex>::Type RankVector;
+        using RankVector = Dune::PDELab::Backend::Vector<GFS,RankIndex>;
         //! Type used to store ghost flag of all DOFs.
-        typedef typename Dune::PDELab::BackendVectorSelector<GFS,bool>::Type GhostVector;
+        using GhostVector = Dune::PDELab::Backend::Vector<GFS,bool>;
 
         //! ContainerIndex of the underlying GridFunctionSpace.
         typedef typename GFS::Ordering::Traits::ContainerIndex ContainerIndex;
@@ -325,7 +325,7 @@ namespace Dune {
         const bool need_communication = _gfs.gridView().comm().size() > 1;
 
         // First find out which dofs we share with other processors
-        typedef typename BackendVectorSelector<GFS,bool>::Type BoolVector;
+        using BoolVector = Backend::Vector<GFS,bool>;
         BoolVector sharedDOF(_gfs, false);
 
         if (need_communication)
@@ -351,7 +351,7 @@ namespace Dune {
         // Compute start index start_p = \sum_{i=0}^{i<p} counts_i
         GlobalIndex start = std::accumulate(counts.begin(),counts.begin() + _rank,GlobalIndex(0));
 
-        typedef typename Dune::PDELab::BackendVectorSelector<GFS,GlobalIndex>::Type GIVector;
+        using GIVector = Dune::PDELab::Backend::Vector<GFS,GlobalIndex>;
         GIVector scalarIndices(_gfs, std::numeric_limits<GlobalIndex>::max());
 
         for (size_type i = 0; i < sharedDOF.N(); ++i)

@@ -106,7 +106,7 @@ void testp1 (const GV& gv)
   Dune::PDELab::constraints(b,gfs,cg);
 
   // make coefficent Vector and initialize it from a function
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,double>::Type V;
+  using V = Dune::PDELab::Backend::Vector<GFS,double>;
   V x0(gfs);
   x0 = 0.0;
   typedef G<GV,double> GType;

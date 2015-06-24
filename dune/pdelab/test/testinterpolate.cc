@@ -84,7 +84,7 @@ static void test_interpolate(const GV& gv)
   GFS gfs(gfs1,pgfs,cgfs,pgfs,cgfs);
 
   // make coefficent Vector
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS, double>::Type V;
+  using V = Dune::PDELab::Backend::Vector<GFS, double>;
   V x(gfs,0.0);
 
   // build interpolation function tree

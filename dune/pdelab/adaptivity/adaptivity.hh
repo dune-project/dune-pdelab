@@ -552,7 +552,7 @@ namespace Dune {
       {
         const IDSet& id_set = grid.globalIdSet();
 
-        typedef typename BackendVectorSelector<GFSU,int>::Type CountVector;
+        using CountVector = Backend::Vector<GFSU,int>;
         CountVector uc(gfsu,0);
 
         typedef replay_visitor<GFSU,U,CountVector> Visitor;

@@ -75,11 +75,11 @@ struct test<2> {
     // make coefficent Vectors - we need to use copies of the spaces because the original
     // spaces are now part of a larger hierarchy
     {
-      typedef typename Dune::PDELab::BackendVectorSelector<GFS1,double>::Type V1;
+      using V1 = Dune::PDELab::Backend::Vector<GFS1,double>;
       GFS1 gfs1(gv,q12dfem);
       V1 x1(gfs1);
       x1 = 0.0;
-      typedef typename Dune::PDELab::BackendVectorSelector<GFS2,double>::Type V2;
+      using V2 = Dune::PDELab::Backend::Vector<GFS2,double>;
       GFS2 gfs2(gv,q22dfem);
       V2 x2(gfs2);
       x2 = 0.0;

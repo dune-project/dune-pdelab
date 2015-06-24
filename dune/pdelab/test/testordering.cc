@@ -61,7 +61,7 @@ void check_ordering(const GFS& gfs)
       }
     }
 
-    typedef typename Dune::PDELab::BackendVectorSelector<GFS,double>::Type V;
+    using V = Dune::PDELab::Backend::Vector<GFS,double>;
     V x(gfs);
     x = 0.0;
     std::cout << std::endl;
