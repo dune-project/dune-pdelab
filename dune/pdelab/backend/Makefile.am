@@ -7,6 +7,7 @@ common_HEADERS = backendselector.hh             \
                  eigenmatrixbackend.hh          \
                  eigensolverbackend.hh          \
                  eigenvectorbackend.hh          \
+                 istl.hh                        \
                  istlmatrixbackend.hh           \
                  istlsolverbackend.hh           \
                  istlvectorbackend.hh           \
