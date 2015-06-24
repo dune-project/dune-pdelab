@@ -27,7 +27,9 @@ namespace Dune {
     class MaxwellEigenvectors
     {};
 
-    /** \brief provide matrix which contains rowwise the eigenvectors of linear acoustics problem
+    /** \brief provide matrix which contains column-wise the eigenvectors of
+               maxwell problem
+
         \tparam dim the space dimension
     */
     template<>
