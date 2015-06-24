@@ -9,7 +9,6 @@ install(FILES callswitch.hh
               diffusion.hh
               diffusionccfv.hh
               diffusiondg.hh
-              diffusionmfd.hh
               diffusionmixed.hh
               diffusionparam.hh
               electrodynamic.hh
@@ -29,7 +28,6 @@ install(FILES callswitch.hh
               linearacousticsparameter.hh
               maxwelldg.hh
               maxwellparameter.hh
-              mfdcommon.hh
               pattern.hh
               poisson.hh
               scaled.hh
