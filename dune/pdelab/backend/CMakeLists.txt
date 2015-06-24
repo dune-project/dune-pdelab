@@ -21,10 +21,6 @@ install(FILES backendselector.hh
               istlvectorbackend.hh
               novlpistlsolverbackend.hh
               ovlpistlsolverbackend.hh
-              petscmatrixbackend.hh
-              petscnestedvectorbackend.hh
-              petscutility.hh
-              petscvectorbackend.hh
               seqistlsolverbackend.hh
               simple.hh
               solver.hh
