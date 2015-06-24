@@ -10,7 +10,7 @@ common_HEADERS = 				\
 	istlsolverbackend.hh			\
 	istlvectorbackend.hh			\
 	matrixhelpers.hh			\
-	mnovlpistlsolverbackend.hh		\
+	novlpistlsolverbackend.hh		\
 	ovlp_amg_dg_backend.hh			\
 	ovlpistlsolverbackend.hh		\
 	parallelhelper.hh			\
