@@ -11,10 +11,9 @@
 #include <dune/common/fvector.hh>
 #include <dune/istl/bvector.hh>
 
-#include <dune/pdelab/backend/tags.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
-#include <dune/pdelab/backend/tags.hh>
+#include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/backend/simple/descriptors.hh>

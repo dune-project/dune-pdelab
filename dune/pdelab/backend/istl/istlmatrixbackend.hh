@@ -3,7 +3,7 @@
 #define DUNE_PDELAB_BACKEND_ISTLMATRIXBACKEND_HH
 
 #include <dune/common/typetraits.hh>
-#include <dune/pdelab/backend/tags.hh>
+#include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
 #include <dune/pdelab/backend/istl/matrixhelpers.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
