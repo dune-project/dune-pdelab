@@ -17,7 +17,7 @@
 namespace Dune {
   namespace PDELab {
 
-    /** a local operator for solving convection-diffusion equation with standard FEM
+    /** a local operator for solving convection-diffusion equation with CCFV
      *
      * \f{align*}{
      *   \nabla\cdot(-A(x) \nabla u + b(x) u) + c(x)u &=& f \mbox{ in } \Omega,  \\
