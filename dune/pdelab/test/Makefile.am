@@ -77,12 +77,6 @@ testclock_CPPFLAGS = @AM_CPPFLAGS@
 testclock_LDFLAGS = @AM_LDFLAGS@
 testclock_LDADD = @LDADD@
 
-# disable IntersectionIndexSet test for now, we know it's broken
-# if DUNE_ALUGRID
-# NORMALTESTS += test-composed-iis-gfs
-# test_composed_iis_gfs_SOURCES = test-composed-iis-gfs.cc
-# endif DUNE_ALUGRID
-
 NORMALTESTS += testconstraints
 testconstraints_SOURCES = testconstraints.cc
 testconstraints_CPPFLAGS = $(AM_CPPFLAGS)	\

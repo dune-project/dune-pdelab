@@ -11,7 +11,6 @@ common_HEADERS =				\
 	diffusion.hh				\
 	diffusionccfv.hh			\
 	diffusiondg.hh				\
-	diffusionmfd.hh				\
 	diffusionmixed.hh			\
 	diffusionparam.hh			\
 	electrodynamic.hh			\
@@ -31,7 +30,6 @@ common_HEADERS =				\
 	linearacousticsparameter.hh		\
 	maxwelldg.hh				\
 	maxwellparameter.hh			\
-	mfdcommon.hh				\
 	pattern.hh				\
 	poisson.hh				\
 	scaled.hh				\
