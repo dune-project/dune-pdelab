@@ -11,7 +11,7 @@
 
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/backend/istl/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/finiteelementmap/p0fem.hh>
 #include <dune/pdelab/finiteelementmap/pkfem.hh>
 #include <dune/pdelab/finiteelementmap/qkfem.hh>

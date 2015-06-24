@@ -20,9 +20,7 @@
 #include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/localoperator/laplacedirichletp12d.hh>
-#include <dune/pdelab/backend/istl/istlvectorbackend.hh>
-#include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
-#include <dune/pdelab/backend/istl/istlsolverbackend.hh>
+#include <dune/pdelab/backend/istl.hh>
 
 #include "gridexamples.hh"
 

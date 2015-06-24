@@ -26,7 +26,7 @@
 #include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
 #include <dune/pdelab/ordering/interleavedordering.hh>
 
-#include <dune/pdelab/backend/istl/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl.hh>
 
 #include <dune/pdelab/constraints/common/constraints.hh>
 

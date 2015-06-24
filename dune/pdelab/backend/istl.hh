@@ -4,7 +4,10 @@
 #include <dune/pdelab/backend/istl/istlvectorbackend.hh>
 #include <dune/pdelab/backend/istl/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/istl/istlsolverbackend.hh>
+#include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include <dune/pdelab/backend/istl/seq_amg_dg_backend.hh>
 #include <dune/pdelab/backend/istl/ovlp_amg_dg_backend.hh>
+#include <dune/pdelab/backend/istl/cg_to_dg_prolongation.hh>
+#include <dune/pdelab/backend/istl/utility.hh>
 
 #endif // DUNE_PDELAB_BACKEND_ISTL_HH

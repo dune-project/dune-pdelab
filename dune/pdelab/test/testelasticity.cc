@@ -17,11 +17,9 @@
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/backend/istl/istlvectorbackend.hh>
-#include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
+#include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/localoperator/linearelasticity.hh>
-#include <dune/pdelab/backend/istl/istlsolverbackend.hh>
 
 #include <dune/pdelab/gridfunctionspace/vectorgridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/vtk.hh>
