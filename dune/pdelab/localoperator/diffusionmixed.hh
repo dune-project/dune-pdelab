@@ -253,10 +253,9 @@ namespace Dune {
           {
             // evaluate boundary condition type
             BCType bctype = param.bctype(ig.intersection(),ip.position());
-            // skip rest if we are on Neumann boundary
 
-            if (bctype == Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann)
-            //if (bctype == ConvectionDiffusionBoundaryConditions::Neumann)
+            // skip rest if we are on Neumann boundary
+            if (bctype == ConvectionDiffusionBoundaryConditions::Neumann)
               continue;
 
             // position of quadrature point in local coordinates of element
