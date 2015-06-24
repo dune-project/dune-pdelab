@@ -46,7 +46,7 @@ namespace Dune {
             for (IntersectionIterator iit = gv.ibegin(*it); iit!=endit; ++iit)
               if (iit->neighbor())
                 {
-                  if (is.template index<0>(*(iit->outside()))>myid)
+                  if (is.template index<0>(iit->outside())>myid)
                     orient[myid] |= 1<<iit->indexInInside();
                 }
           }
