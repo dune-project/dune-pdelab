@@ -27,10 +27,6 @@ if(dune-alugrid_FOUND)
   #pdelab_add_test(NAME test_composed_iis_gfs)
 endif(dune-alugrid_FOUND)
 
-if(PETSC_FOUND)
-  pdelab_add_test(NAME testpoisson-petsc)
-endif(PETSC_FOUND)
-
 if(GMP_FOUND)
   pdelab_add_test(NAME testopbfem)
   pdelab_add_test(NAME test-dg-amg)

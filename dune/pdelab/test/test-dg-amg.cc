@@ -8,9 +8,7 @@
 #include <dune/pdelab/localoperator/convectiondiffusiondg.hh>
 #include <dune/pdelab/localoperator/l2.hh>
 
-#include <dune/pdelab/backend/istl/cg_to_dg_prolongation.hh>
-#include <dune/pdelab/backend/istl/seq_amg_dg_backend.hh>
-#include <dune/pdelab/backend/istl/ovlp_amg_dg_backend.hh>
+#include <dune/pdelab/backend/istl.hh>
 
 /** Parameter class for the stationary convection-diffusion equation of the following form:
  *

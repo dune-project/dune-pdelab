@@ -1,6 +1,7 @@
 commondir = $(includedir)/dune/pdelab/backend/common
 
 common_HEADERS =				\
+	tags.hh					\
 	uncachedmatrixview.hh			\
 	uncachedvectorview.hh
 

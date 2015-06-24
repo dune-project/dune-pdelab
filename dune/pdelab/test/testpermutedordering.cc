@@ -22,7 +22,7 @@
 #include <dune/pdelab/ordering/interleavedordering.hh>
 #include <dune/pdelab/ordering/permutedordering.hh>
 
-#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl.hh>
 
 template<typename GFS>
 void check_ordering_reference(const GFS& gfs)

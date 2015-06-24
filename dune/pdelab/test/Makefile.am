@@ -255,14 +255,6 @@ MOSTLYCLEANFILES += edger.vtu interpolated.vtu q1.vtu taylorhood.vtu
 check_PROGRAMS += testinterpolate
 testinterpolate_SOURCES = testinterpolate.cc
 
-if PETSC
-check_PROGRAMS += testpoisson-petsc
-testpoisson_petsc_SOURCES = testpoisson-petsc.cc
-testpoisson_petsc_CPPFLAGS = @AM_CPPFLAGS@ $(PETSC_CPPFLAGS)
-testpoisson_petsc_LDFLAGS = $(AM_LDFLAGS) $(PETSC_LDFLAGS)
-testpoisson_petsc_LDADD = $(LDADD) $(PETSC_LIBS)
-endif
-
 if GMP
 check_PROGRAMS += testopbfem
 testopbfem_SOURCES = testopbfem.cc
@@ -287,8 +279,6 @@ testrtfem_SOURCES = testrtfem.cc
 
 check_PROGRAMS += testbdmfem
 testbdmfem_SOURCES = testbdmfem.cc
-
-MOSTLYCLEANFILES += poisson_petsc_*.vtu
 
 if UG
 check_PROGRAMS += testnonoverlapping
