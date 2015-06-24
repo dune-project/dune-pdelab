@@ -13,7 +13,7 @@
 #include"../finiteelementmap/p0fem.hh"
 #include"../finiteelementmap/pkfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
-#include"../backend/istlvectorbackend.hh"
+#include"../backend/istl/istlvectorbackend.hh"
 #include"../gridfunctionspace/gridfunctionspaceutilities.hh"
 #include"../gridfunctionspace/interpolate.hh"
 #include"../common/function.hh"

@@ -2,7 +2,7 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_BCRSMATRIXBACKEND_HH
 #define DUNE_PDELAB_BACKEND_ISTL_BCRSMATRIXBACKEND_HH
 
-#include <dune/pdelab/backend/istlmatrixbackend.hh>
+#include <dune/pdelab/backend/istl/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/istl/bcrspattern.hh>
 #include <dune/pdelab/backend/istl/patternstatistics.hh>
 

@@ -58,9 +58,9 @@
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/functionutilities.hh>
 #include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl/istlvectorbackend.hh>
 #include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
-#include <dune/pdelab/backend/istlsolverbackend.hh>
+#include <dune/pdelab/backend/istl/istlsolverbackend.hh>
 #include <dune/pdelab/constraints/conforming.hh>
 #include <dune/pdelab/constraints/hangingnode.hh>
 #include <dune/pdelab/constraints/p0.hh>

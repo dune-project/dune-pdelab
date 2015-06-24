@@ -17,7 +17,7 @@
 #include <dune/pdelab/finiteelementmap/qkdg.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/powergridfunctionspace.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl/istlvectorbackend.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include <dune/pdelab/gridfunctionspace/vtk.hh>
 

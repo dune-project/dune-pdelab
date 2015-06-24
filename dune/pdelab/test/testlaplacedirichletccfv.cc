@@ -20,9 +20,9 @@
 #include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/localoperator/laplacedirichletccfv.hh>
 #include <dune/pdelab/backend/backendselector.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl/istlvectorbackend.hh>
 #include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
-#include <dune/pdelab/backend/seqistlsolverbackend.hh>
+#include <dune/pdelab/backend/istl/seqistlsolverbackend.hh>
 
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/ordering/singlecodimleafordering.hh>

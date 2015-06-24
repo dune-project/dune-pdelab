@@ -5,9 +5,9 @@
 
 #include <dune/grid/common/datahandleif.hh>
 
-#include <dune/pdelab/backend/istlvectorbackend.hh>
-#include <dune/pdelab/backend/istlmatrixbackend.hh>
-#include <dune/pdelab/backend/ovlpistlsolverbackend.hh>
+#include <dune/pdelab/backend/istl/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl/istlmatrixbackend.hh>
+#include <dune/pdelab/backend/istl/ovlpistlsolverbackend.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/localoperator/flags.hh>
 #include <dune/pdelab/localoperator/idefault.hh>

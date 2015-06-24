@@ -11,7 +11,7 @@
 #include <dune/pdelab/finiteelementmap/p0fem.hh>
 #include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl/istlvectorbackend.hh>
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/gridfunctionspace/interpolate.hh>
 

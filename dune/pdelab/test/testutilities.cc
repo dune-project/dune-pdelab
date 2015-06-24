@@ -17,7 +17,7 @@
 #include  <dune/pdelab/gridfunctionspace/interpolate.hh>
 #include  <dune/pdelab/common/function.hh>
 #include  <dune/pdelab/common/vtkexport.hh>
-#include  <dune/pdelab/backend/istlvectorbackend.hh>
+#include  <dune/pdelab/backend/istl/istlvectorbackend.hh>
 #include  <dune/pdelab/backend/istl/utility.hh>
 
 // generate a Q1 function and output it

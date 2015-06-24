@@ -18,7 +18,7 @@
 #include<dune/alugrid/grid.hh>
 #include <dune/grid/utility/structuredgridfactory.hh>
 
-#include<dune/pdelab/backend/istlvectorbackend.hh>
+#include<dune/pdelab/backend/istl/istlvectorbackend.hh>
 #include<dune/pdelab/finiteelementmap/mfdconstraints.hh>
 #include<dune/pdelab/finiteelementmap/mimeticfem.hh>
 #include<dune/pdelab/finiteelementmap/p0fem.hh>
