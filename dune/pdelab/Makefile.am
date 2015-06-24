@@ -13,7 +13,6 @@ SUBDIRS =					\
 	instationary				\
 	linearsolver			\
 	localoperator			\
-	multistep				\
 	newton					\
 	ordering				\
 	stationary				\
