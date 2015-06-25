@@ -8,7 +8,6 @@ gridfunctionspace_HEADERS =			\
 	gridfunctionspacebase.hh		\
 	gridfunctionspaceutilities.hh		\
 	interpolate.hh				\
-	intersectionindexset.hh			\
 	lfsindexcache.hh			\
 	localfunctionspace.hh			\
 	localfunctionspacetags.hh		\

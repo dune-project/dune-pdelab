@@ -23,8 +23,6 @@ pdelab_add_test(NAME testpermutedordering)
 
 if(dune-alugrid_FOUND)
   pdelab_add_test(NAME testordering)
-  #disable IntersectionIndexSet test for now, we know it's broken
-  #pdelab_add_test(NAME test_composed_iis_gfs)
 endif(dune-alugrid_FOUND)
 
 if(GMP_FOUND)
