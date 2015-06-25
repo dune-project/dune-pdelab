@@ -3,9 +3,8 @@
 #ifndef DUNE_PDELAB_GRIDFUNCTIONSPACE_CONSTRAINTSTRANSFORMATION_HH
 #define DUNE_PDELAB_GRIDFUNCTIONSPACE_CONSTRAINTSTRANSFORMATION_HH
 
+#include <algorithm>
 #include <unordered_map>
-
-#include <dune/common/tuples.hh>
 
 namespace Dune {
   namespace PDELab {
