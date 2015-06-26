@@ -4,6 +4,7 @@
 #define DUNE_PDELAB_BACKEND_ISTL_UTILITY_HH
 
 #include <dune/common/typetraits.hh>
+#include <dune/common/deprecated.hh>
 
 #include <dune/pdelab/backend/istl/tags.hh>
 
@@ -23,6 +24,7 @@ namespace Dune {
 
       //! Returns the raw ISTL object associated with v, or v itself it is already an ISTL object.
       template<typename V>
+      DUNE_DEPRECATED_MSG("raw() is deprecated and will be removed after PDELab 2.4. Use Backend::native() instead")
       V& raw(V& v)
       {
         return v;
@@ -30,6 +32,7 @@ namespace Dune {
 
       //! Returns the raw ISTL object associated with v, or v itself it is already an ISTL object.
       template<typename V>
+      DUNE_DEPRECATED_MSG("raw() is deprecated and will be removed after PDELab 2.4. Use Backend::native() instead")
       const V& raw(const V& v)
       {
         return v;
@@ -37,6 +40,7 @@ namespace Dune {
 
       //! Returns the raw ISTL type associated with C, or C itself it is already an ISTL type.
       template<typename C>
+      DUNE_DEPRECATED_MSG("raw_type<> is deprecated and will be removed after PDELab 2.4. Use Backend::Native<> instead")
       struct raw_type
       {
         typedef C type;
