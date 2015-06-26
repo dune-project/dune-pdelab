@@ -19,13 +19,17 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
-    struct PowerGridFunctionSpaceTag {};
+    struct FunctionSpaceTag {};
+
+    struct GridFunctionSpaceTag : public FunctionSpaceTag {};
+
+    struct PowerGridFunctionSpaceTag : public GridFunctionSpaceTag {};
 
     struct VectorGridFunctionSpaceTag : public PowerGridFunctionSpaceTag {};
 
-    struct CompositeGridFunctionSpaceTag {};
+    struct CompositeGridFunctionSpaceTag : public GridFunctionSpaceTag {};
 
-    struct LeafGridFunctionSpaceTag {};
+    struct LeafGridFunctionSpaceTag : public GridFunctionSpaceTag {};
 
     template<typename ProxiedGFSTag>
     struct GridFunctionSubSpaceTag
