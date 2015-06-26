@@ -429,7 +429,7 @@ namespace Dune {
 
           static const bool value =
             // Do not descend into children of VectorGridFunctionSpace
-            !is_same<
+            !std::is_convertible<
               typename LFS::Traits::GridFunctionSpace::ImplementationTag,
               VectorGridFunctionSpaceTag
             >::value;
@@ -469,8 +469,8 @@ namespace Dune {
         /**
          * This is the default version for different types of spaces that does nothing.
          */
-        template<typename LFS, typename TreePath, typename Tag>
-        void add_vector_solution(const LFS& lfs, TreePath tp, Tag tag)
+        template<typename LFS, typename TreePath>
+        void add_vector_solution(const LFS& lfs, TreePath tp, GridFunctionSpaceTag tag)
         {
           // do nothing here - not a vector space
         }
