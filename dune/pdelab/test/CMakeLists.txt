@@ -39,6 +39,10 @@ foreach(degree IN ITEMS 1 2)
   endforeach()
 endforeach()
 
+if (UG_FOUND)
+  pdelab_add_test(NAME testadaptivity)
+endif (UG_FOUND)
+
 set_tests_properties(
   testpk2dinterpolation
   testrt02dgridfunctionspace
