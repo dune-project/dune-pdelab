@@ -58,14 +58,16 @@ namespace Dune {
       //! apply operator to x:  \f$ y = A(x) \f$
       virtual void apply (const domain_type& x, range_type& y) const
       {
-        istl::raw(_A_).mv(istl::raw(x),istl::raw(y));
+        using Backend::native;
+        native(_A_).mv(native(x),native(y));
         Dune::PDELab::set_constrained_dofs(cc,0.0,y);
       }
 
       //! apply operator to x, scale and add:  \f$ y = y + \alpha A(x) \f$
       virtual void applyscaleadd (field_type alpha, const domain_type& x, range_type& y) const
       {
-        istl::raw(_A_).usmv(alpha,istl::raw(x),istl::raw(y));
+        using Backend::native;
+        native(_A_).usmv(alpha,native(x),native(y));
         Dune::PDELab::set_constrained_dofs(cc,0.0,y);
       }
 
@@ -166,7 +168,7 @@ namespace Dune {
       {
         range_type dd(d);
         set_constrained_dofs(cc,0.0,dd);
-        prec.apply(istl::raw(v),istl::raw(dd));
+        prec.apply(Backend::native(v),Backend::native(dd));
         Dune::PDELab::AddDataHandle<GFS,domain_type> adddh(gfs,v);
         if (gfs.gridView().comm().size()>1)
           gfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
@@ -177,7 +179,7 @@ namespace Dune {
       */
       virtual void post (domain_type& x)
       {
-        prec.post(istl::raw(x));
+        prec.post(Backend::native(x));
       }
 
     private:
@@ -193,7 +195,7 @@ namespace Dune {
     template<class GFS, class M, class X, class Y>
     class SuperLUSubdomainSolver : public Dune::Preconditioner<X,Y>
     {
-      typedef typename M::BaseT ISTLM;
+      typedef Backend::Native<M> ISTLM;
 
     public:
       //! \brief The domain type of the preconditioner.
@@ -217,7 +219,7 @@ namespace Dune {
         \param A_ The matrix to operate on.
       */
       SuperLUSubdomainSolver (const GFS& gfs_, const M& A_)
-        : gfs(gfs_), solver(istl::raw(A_),false) // this does the decomposition
+        : gfs(gfs_), solver(Backend::native(A_),false) // this does the decomposition
       {}
 
       /*!
@@ -232,7 +234,7 @@ namespace Dune {
       {
         Dune::InverseOperatorResult stat;
         Y b(d); // need copy, since solver overwrites right hand side
-        solver.apply(istl::raw(v),istl::raw(b),stat);
+        solver.apply(Backend::native(v),Backend::native(b),stat);
         if (gfs.gridView().comm().size()>1)
           {
             AddDataHandle<GFS,X> adddh(gfs,v);
@@ -280,7 +282,7 @@ namespace Dune {
       */
       RestrictedSuperLUSubdomainSolver (const GFS& gfs_, const M& A_,
                                         const istl::ParallelHelper<GFS>& helper_)
-        : gfs(gfs_), solver(istl::raw(A_),false), helper(helper_) // this does the decomposition
+        : gfs(gfs_), solver(Backend::native(A_),false), helper(helper_) // this does the decomposition
       {}
 
       /*!
@@ -293,12 +295,13 @@ namespace Dune {
       */
       virtual void apply (X& v, const Y& d)
       {
+        using Backend::native;
         Dune::InverseOperatorResult stat;
         Y b(d); // need copy, since solver overwrites right hand side
-        solver.apply(istl::raw(v),istl::raw(b),stat);
+        solver.apply(native(v),native(b),stat);
         if (gfs.gridView().comm().size()>1)
           {
-            helper.maskForeignDOFs(istl::raw(v));
+            helper.maskForeignDOFs(native(v));
             AddDataHandle<GFS,X> adddh(gfs,v);
             gfs.gridView().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
           }
@@ -418,12 +421,19 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename V::ElementType reduction)
       {
+        using Backend::Native;
+        using Backend::native;
         typedef OverlappingOperator<C,M,V,W> POP;
         POP pop(c,A);
         typedef OVLPScalarProduct<GFS,V> PSP;
         PSP psp(*this);
-        typedef Preconditioner<typename M::BaseT,typename V::BaseT,typename W::BaseT,1> SeqPrec;
-        SeqPrec seqprec(istl::raw(A),steps,1.0);
+        typedef Preconditioner<
+          Native<M>,
+          Native<V>,
+          Native<W>,
+          1
+          > SeqPrec;
+        SeqPrec seqprec(native(A),steps,1.0);
         typedef OverlappingWrappedPreconditioner<C,GFS,SeqPrec> WPREC;
         WPREC wprec(gfs,seqprec,c,this->parallelHelper());
         int verb=0;
@@ -473,12 +483,19 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename V::ElementType reduction)
       {
+        using Backend::Native;
+        using Backend::native;
         typedef OverlappingOperator<C,M,V,W> POP;
         POP pop(c,A);
         typedef OVLPScalarProduct<GFS,V> PSP;
         PSP psp(*this);
-        typedef SeqILU0<typename M::BaseT,typename V::BaseT,typename W::BaseT,1> SeqPrec;
-        SeqPrec seqprec(istl::raw(A),1.0);
+        typedef SeqILU0<
+          Native<M>,
+          Native<V>,
+          Native<W>,
+          1
+          > SeqPrec;
+        SeqPrec seqprec(native(A),1.0);
         typedef OverlappingWrappedPreconditioner<C,GFS,SeqPrec> WPREC;
         WPREC wprec(gfs,seqprec,c,this->parallelHelper());
         int verb=0;
@@ -529,12 +546,19 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename V::ElementType reduction)
       {
+        using Backend::Native;
+        using Backend::native;
         typedef OverlappingOperator<C,M,V,W> POP;
         POP pop(c,A);
         typedef OVLPScalarProduct<GFS,V> PSP;
         PSP psp(*this);
-        typedef SeqILUn<typename M::BaseT,typename V::BaseT,typename W::BaseT,1> SeqPrec;
-        SeqPrec seqprec(istl::raw(A),n,1.0);
+        typedef SeqILUn<
+          Native<M>,
+          Native<V>,
+          Native<W>,
+          1
+          > SeqPrec;
+        SeqPrec seqprec(native(A),n,1.0);
         typedef OverlappingWrappedPreconditioner<C,GFS,SeqPrec> WPREC;
         WPREC wprec(gfs,seqprec,c,this->parallelHelper());
         int verb=0;
@@ -682,15 +706,19 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename V::ElementType reduction)
       {
+        using Backend::Native;
+        using Backend::native;
         typedef OverlappingOperator<CC,M,V,W> POP;
         POP pop(cc,A);
         typedef OVLPScalarProduct<GFS,V> PSP;
         PSP psp(*this);
         typedef SeqILU0<
-          typename istl::raw_type<M>::type,
-          typename istl::raw_type<V>::type,
-          typename istl::raw_type<W>::type,1> SeqPrec;
-        SeqPrec seqprec(istl::raw(A),1.0);
+          Native<M>,
+          Native<V>,
+          Native<W>,
+          1
+          > SeqPrec;
+        SeqPrec seqprec(native(A),1.0);
         typedef OverlappingWrappedPreconditioner<CC,GFS,SeqPrec> WPREC;
         WPREC wprec(gfs,seqprec,cc,this->parallelHelper());
         int verb=0;
@@ -869,10 +897,16 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::ElementType reduction)
       {
-        Dune::SeqJac<typename M::BaseT,typename V::BaseT,typename W::BaseT> jac(istl::raw(A),1,1.0);
-        jac.pre(istl::raw(z),istl::raw(r));
-        jac.apply(istl::raw(z),istl::raw(r));
-        jac.post(istl::raw(z));
+        using Backend::Native;
+        using Backend::native;
+        Dune::SeqJac<
+          Native<M>,
+          Native<V>,
+          Native<W>
+          > jac(native(A),1,1.0);
+        jac.pre(native(z),native(r));
+        jac.apply(native(z),native(r));
+        jac.post(native(z));
         if (gfs.gridView().comm().size()>1)
         {
           CopyDataHandle<GFS,V> copydh(gfs,z);
@@ -897,9 +931,9 @@ namespace Dune {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       typedef istl::ParallelHelper<GFS> PHELPER;
       typedef typename GO::Traits::Jacobian M;
-      typedef typename M::BaseT MatrixType;
+      typedef Backend::Native<M> MatrixType;
       typedef typename GO::Traits::Domain V;
-      typedef typename V::BaseT VectorType;
+      typedef Backend::Native<V> VectorType;
       typedef typename istl::CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
 #if HAVE_MPI
       typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
@@ -990,7 +1024,7 @@ namespace Dune {
       {
         Timer watch;
         Comm oocc(gfs.gridView().comm());
-        MatrixType& mat=istl::raw(A);
+        MatrixType& mat=Backend::native(A);
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
           Dune::Amg::FirstDiagonal> > Criterion;
 #if HAVE_MPI
@@ -1022,7 +1056,7 @@ namespace Dune {
         Solver<VectorType> solver(oop,sp,*amg,RF(reduction),maxiter,verb);
         Dune::InverseOperatorResult stat;
 
-        solver.apply(istl::raw(z),istl::raw(r),stat);
+        solver.apply(Backend::native(z),Backend::native(r),stat);
         stats.tsolve= watch.elapsed();
         res.converged  = stat.converged;
         res.iterations = stat.iterations;

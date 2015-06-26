@@ -95,15 +95,19 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::ElementType reduction)
       {
-        Dune::MatrixAdapter<typename M::BaseT,
-                            typename V::BaseT,
-                            typename W::BaseT> opa(istl::raw(A));
-        Preconditioner<typename M::BaseT,
-                       typename V::BaseT,
-                       typename W::BaseT,1> prec(istl::raw(A), 3, 1.0);
-        Solver<typename V::BaseT> solver(opa, prec, reduction, maxiter, verbose);
+        using Backend::Native;
+        using Backend::native;
+
+        Dune::MatrixAdapter<Native<M>,
+                            Native<V>,
+                            Native<W>> opa(native(A));
+        Preconditioner<Native<M>,
+                       Native<V>,
+                       Native<W>,
+                       1> prec(native(A), 3, 1.0);
+        Solver<Native<V>> solver(opa, prec, reduction, maxiter, verbose);
         Dune::InverseOperatorResult stat;
-        solver.apply(istl::raw(z), istl::raw(r), stat);
+        solver.apply(native(z), native(r), stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -139,15 +143,18 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType >::real_type reduction)
       {
-        Dune::MatrixAdapter<typename M::BaseT,
-                            typename V::BaseT,
-                            typename W::BaseT> opa(istl::raw(A));
-        Dune::SeqILU0<typename M::BaseT,
-                      typename V::BaseT,
-                      typename W::BaseT> ilu0(istl::raw(A), 1.0);
-        Solver<typename V::BaseT> solver(opa, ilu0, reduction, maxiter, verbose);
+        using Backend::Native;
+        using Backend::native;
+        Dune::MatrixAdapter<Native<M>,
+                            Native<V>,
+                            Native<W>> opa(native(A));
+        Dune::SeqILU0<Native<M>,
+                      Native<V>,
+                      Native<W>
+                      > ilu0(native(A), 1.0);
+        Solver<Native<V>> solver(opa, ilu0, reduction, maxiter, verbose);
         Dune::InverseOperatorResult stat;
-        solver.apply(istl::raw(z), istl::raw(r), stat);
+        solver.apply(native(z), native(r), stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -183,15 +190,19 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::ElementType reduction)
       {
-        Dune::MatrixAdapter<typename M::BaseT,
-                            typename V::BaseT,
-                            typename W::BaseT> opa(istl::raw(A));
-        Dune::SeqILUn<typename M::BaseT,
-                      typename V::BaseT,
-                      typename W::BaseT> ilun(istl::raw(A), n_, w_);
-        Solver<typename V::BaseT> solver(opa, ilun, reduction, maxiter, verbose);
+        using Backend::Native;
+        using Backend::native;
+        Dune::MatrixAdapter<Native<M>,
+                            Native<V>,
+                            Native<W>
+                            > opa(native(A));
+        Dune::SeqILUn<Native<M>,
+                      Native<V>,
+                      Native<W>
+                      > ilun(native(A), n_, w_);
+        Solver<Native<V>> solver(opa, ilun, reduction, maxiter, verbose);
         Dune::InverseOperatorResult stat;
-        solver.apply(istl::raw(z), istl::raw(r), stat);
+        solver.apply(native(z), native(r), stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -414,10 +425,12 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::ElementType reduction)
       {
-        typedef typename M::Container ISTLM;
-        Dune::SuperLU<ISTLM> solver(istl::raw(A), verbose);
+        using Backend::Native;
+        using Backend::native;
+        using ISTLM = Native<M>;
+        Dune::SuperLU<ISTLM> solver(native(A), verbose);
         Dune::InverseOperatorResult stat;
-        solver.apply(istl::raw(z), istl::raw(r), stat);
+        solver.apply(native(z), native(r), stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -466,10 +479,11 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::ElementType reduction)
       {
-        typedef typename M::Container ISTLM;
-        Dune::UMFPack<ISTLM> solver(istl::raw(A), verbose);
+        using Backend::native;
+        using ISTLM = Backend::Native<M>;
+        Dune::UMFPack<ISTLM> solver(native(A), verbose);
         Dune::InverseOperatorResult stat;
-        solver.apply(istl::raw(z), istl::raw(r), stat);
+        solver.apply(native(z), native(r), stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;
@@ -502,9 +516,11 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::ElementType reduction)
       {
-        Dune::SeqJac<typename M::BaseT,
-                     typename V::BaseT,
-                     typename W::BaseT> jac(istl::raw(A),1,1.0);
+        using Backend::Native;
+        Dune::SeqJac<Native<M>,
+                     Native<V>,
+                     Native<W>
+                     > jac(Backend::native(A),1,1.0);
         jac.pre(z,r);
         jac.apply(z,r);
         jac.post(z);
@@ -547,9 +563,9 @@ namespace Dune {
     {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       typedef typename GO::Traits::Jacobian M;
-      typedef typename M::BaseT MatrixType;
+      typedef Backend::Native<M> MatrixType;
       typedef typename GO::Traits::Domain V;
-      typedef typename V::BaseT VectorType;
+      typedef Backend::Native<V> VectorType;
       typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
       typedef Dune::MatrixAdapter<MatrixType,VectorType,VectorType> Operator;
       typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments SmootherArgs;
@@ -603,7 +619,7 @@ namespace Dune {
       void apply(M& A, V& z, V& r, typename V::ElementType reduction)
       {
         Timer watch;
-        MatrixType& mat=istl::raw(A);
+        MatrixType& mat = Backend::native(A);
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
           Dune::Amg::FirstDiagonal> > Criterion;
         SmootherArgs smootherArgs;
@@ -624,7 +640,7 @@ namespace Dune {
         Dune::InverseOperatorResult stat;
 
         Solver<VectorType> solver(oop,*amg,reduction,maxiter,verbose);
-        solver.apply(istl::raw(z),istl::raw(r),stat);
+        solver.apply(Backend::native(z),Backend::native(r),stat);
         stats.tsolve= watch.elapsed();
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
@@ -817,17 +833,21 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType>::real_type reduction)
       {
+        using Backend::Native;
+        using Backend::native;
         Dune::MatrixAdapter<
-          typename istl::raw_type<M>::type,
-          typename istl::raw_type<V>::type,
-          typename istl::raw_type<W>::type> opa(istl::raw(A));
+          Native<M>,
+          Native<V>,
+          Native<W>
+          > opa(native(A));
         Dune::SeqILU0<
-          typename istl::raw_type<M>::type,
-          typename istl::raw_type<V>::type,
-          typename istl::raw_type<W>::type> ilu0(istl::raw(A), 1.0);
-        Dune::RestartedGMResSolver<typename istl::raw_type<V>::type> solver(opa,ilu0,reduction,restart,maxiter,verbose);
+          Native<M>,
+          Native<V>,
+          Native<W>
+          > ilu0(native(A), 1.0);
+        Dune::RestartedGMResSolver<Native<V>> solver(opa,ilu0,reduction,restart,maxiter,verbose);
         Dune::InverseOperatorResult stat;
-        solver.apply(istl::raw(z), istl::raw(r), stat);
+        solver.apply(native(z), native(r), stat);
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
         res.elapsed    = stat.elapsed;

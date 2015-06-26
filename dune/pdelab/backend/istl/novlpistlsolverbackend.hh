@@ -55,11 +55,11 @@ namespace Dune {
     {
     public:
       //! export type of matrix
-      typedef typename M::BaseT matrix_type;
+      using matrix_type = Backend::Native<M>;
       //! export type of vectors the matrix is applied to
-      typedef typename X::BaseT domain_type;
+      using domain_type = Backend::Native<X>;
       //! export type of result vectors
-      typedef typename Y::BaseT range_type;
+      using range_type = Backend::Native<Y>;
       //! export type of the entries for x
       typedef typename X::field_type field_type;
 
@@ -89,8 +89,9 @@ namespace Dune {
        */
       virtual void apply (const X& x, Y& y) const
       {
+        using Backend::native;
         // apply local operator; now we have sum y_p = sequential y
-        istl::raw(_A_).mv(istl::raw(x),istl::raw(y));
+        native(_A_).mv(native(x),native(y));
 
         // accumulate y on border
         Dune::PDELab::AddDataHandle<GFS,Y> adddh(gfs,y);
@@ -106,8 +107,9 @@ namespace Dune {
        */
       virtual void applyscaleadd (field_type alpha, const X& x, Y& y) const
       {
+        using Backend::native;
         // apply local operator; now we have sum y_p = sequential y
-        istl::raw(_A_).usmv(alpha,istl::raw(x),istl::raw(y));
+        native(_A_).usmv(alpha,native(x),native(y));
 
         // accumulate y on border
         Dune::PDELab::AddDataHandle<GFS,Y> adddh(gfs,y);
@@ -455,7 +457,7 @@ namespace Dune {
         PSP psp(gfs,phelper);
 
         typedef NonoverlappingJacobi<M,V,W> PPre;
-        PPre ppre(gfs,istl::raw(A));
+        PPre ppre(gfs,Backend::native(A));
 
         int verb=0;
         if (gfs.gridView().comm().rank()==0) verb=verbose;
@@ -741,9 +743,9 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename V::ElementType reduction)
       {
-        typedef typename M::BaseT MatrixType;
-        MatrixType& mat=istl::raw(A);
-        typedef typename V::BaseT VectorType;
+        using MatrixType = Backend::Native<M>;
+        MatrixType& mat = Backend::native(A);
+        using VectorType = Backend::Native<W>;
 #if HAVE_MPI
         typedef typename istl::CommSelector<96,Dune::MPIHelper::isFake>::type Comm;
         _grid_operator.make_consistent(A);
@@ -865,9 +867,9 @@ namespace Dune {
       typedef typename GO::Traits::TrialGridFunctionSpace GFS;
       typedef typename istl::ParallelHelper<GFS> PHELPER;
       typedef typename GO::Traits::Jacobian M;
-      typedef typename M::BaseT MatrixType;
+      typedef Backend::Native<M> MatrixType;
       typedef typename GO::Traits::Domain V;
-      typedef typename V::BaseT VectorType;
+      typedef Backend::Native<V> VectorType;
       typedef typename istl::CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
 #if HAVE_MPI
       typedef Preconditioner<MatrixType,VectorType,VectorType,1> Smoother;
@@ -950,7 +952,7 @@ namespace Dune {
       void apply(M& A, V& z, V& r, typename V::ElementType reduction)
       {
         Timer watch;
-        MatrixType& mat=istl::raw(A);
+        MatrixType& mat = Backend::native(A);
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<MatrixType,
           Dune::Amg::FirstDiagonal> > Criterion;
 #if HAVE_MPI
@@ -993,7 +995,7 @@ namespace Dune {
         }
         watch.reset();
         Solver<VectorType> solver(oop,sp,*amg,reduction,maxiter,verb);
-        solver.apply(istl::raw(z),istl::raw(r),stat);
+        solver.apply(Backend::native(z),Backend::native(r),stat);
         stats.tsolve= watch.elapsed();
         res.converged  = stat.converged;
         res.iterations = stat.iterations;
