@@ -20,9 +20,16 @@ namespace Dune {
 
       template<typename GFS, typename ET>
       class VectorContainer
+        : public Backend::impl::Wrapper<Eigen::Matrix<ET, Eigen::Dynamic, 1>>
       {
       public:
         typedef Eigen::Matrix<ET, Eigen::Dynamic, 1> Container;
+
+      private:
+
+        friend Backend::impl::Wrapper<Container>;
+
+      public:
         typedef ET ElementType;
         typedef ET E;
 
@@ -238,6 +245,20 @@ namespace Dune {
           return *_container;
         }
 
+      private:
+
+        Container& native ()
+        {
+          return *_container;
+        }
+
+        const Container& native () const
+        {
+          return *_container;
+        }
+
+      public:
+
         iterator begin()
         {
           return _container->data();
@@ -285,10 +306,16 @@ namespace Dune {
       using Type = EIGEN::VectorContainer<GFS, E>;
     };
 
-    template<typename GFS, typename E>
-    struct BackendVectorSelectorHelper<EigenVectorBackend, GFS, E>
-      : public EigenVectorSelectorHelper<GFS,E>
-    {};
+    namespace Backend {
+      namespace impl {
+
+        template<typename GFS, typename E>
+        struct BackendVectorSelectorHelper<EigenVectorBackend, GFS, E>
+          : public EigenVectorSelectorHelper<GFS,E>
+        {};
+
+      } // namespace impl
+    } // namespace Backend
 
 #endif // DOXYGEN
 

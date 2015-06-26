@@ -40,7 +40,10 @@ namespace Dune {
 
       template<typename GFS, typename C>
       class VectorContainer
+        : public Backend::impl::Wrapper<C>
       {
+
+        friend Backend::impl::Wrapper<C>;
 
       public:
         typedef C Container;
@@ -267,6 +270,20 @@ namespace Dune {
           return *_container;
         }
 
+      private:
+
+        Container& native ()
+        {
+          return *_container;
+        }
+
+        const Container& native () const
+        {
+          return *_container;
+        }
+
+      public:
+
         iterator begin()
         {
           return _container->begin();
@@ -318,10 +335,16 @@ namespace Dune {
 
     };
 
-    template<template<typename> class Container, typename GFS, typename E>
-    struct BackendVectorSelectorHelper<SimpleVectorBackend<Container>, GFS, E>
-      : public SimpleVectorSelectorHelper<GFS,E>
-    {};
+    namespace Backend {
+      namespace impl {
+
+        template<template<typename> class Container, typename GFS, typename E>
+        struct BackendVectorSelectorHelper<SimpleVectorBackend<Container>, GFS, E>
+          : public SimpleVectorSelectorHelper<GFS,E>
+        {};
+
+      } // namespace impl
+    } // namespace Backend
 
 #endif // DOXYGEN
 

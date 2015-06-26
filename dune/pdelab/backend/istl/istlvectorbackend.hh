@@ -22,7 +22,10 @@ namespace Dune {
 
     template<typename GFS, typename C>
     class ISTLBlockVectorContainer
+      : public Backend::impl::Wrapper<C>
     {
+
+      friend Backend::impl::Wrapper<C>;
 
     public:
       typedef typename C::field_type ElementType;
@@ -255,6 +258,21 @@ namespace Dune {
         return *_container;
       }
 
+    private:
+
+      // for debugging and AMG access
+      Container& native ()
+      {
+        return *_container;
+      }
+
+      const Container& native () const
+      {
+        return *_container;
+      }
+
+    public:
+
       operator Container&()
       {
         return *_container;
@@ -322,10 +340,16 @@ namespace Dune {
 
     };
 
-    template<ISTLParameters::Blocking blocking, std::size_t block_size, typename GFS, typename E>
-    struct BackendVectorSelectorHelper<ISTLVectorBackend<blocking,block_size>, GFS, E>
-      : public ISTLVectorSelectorHelper<GFS,E>
-    {};
+    namespace Backend {
+      namespace impl {
+
+        template<ISTLParameters::Blocking blocking, std::size_t block_size, typename GFS, typename E>
+        struct BackendVectorSelectorHelper<ISTLVectorBackend<blocking,block_size>, GFS, E>
+          : public ISTLVectorSelectorHelper<GFS,E>
+        {};
+
+      } // namespace impl
+    } // namespace Backend
 
 #endif // DOXYGEN
 

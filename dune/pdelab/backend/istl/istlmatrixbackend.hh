@@ -13,7 +13,10 @@ namespace Dune {
 
     template<typename GFSV, typename GFSU, typename C, typename Stats>
     class ISTLMatrixContainer
+      : public Backend::impl::Wrapper<C>
     {
+
+      friend Backend::impl::Wrapper<C>;
 
     public:
 
@@ -238,6 +241,20 @@ namespace Dune {
       {
         return *_container;
       }
+
+    private:
+
+      const Container& native() const
+      {
+        return *_container;
+      }
+
+      Container& native()
+      {
+        return *_container;
+      }
+
+    public:
 
       void flush()
       {}

@@ -37,11 +37,19 @@ namespace Dune
 
       template<typename GFSV, typename GFSU, typename ET, int _Options>
       class MatrixContainer
+        : public Backend::impl::Wrapper<Eigen::SparseMatrix<ET,_Options>>
       {
 
       public:
 
         typedef Eigen::SparseMatrix<ET,_Options> Container;
+
+      private:
+
+        friend Backend::impl::Wrapper<Container>;
+
+      public:
+
         typedef ET ElementType;
 
         typedef ElementType field_type;
@@ -191,6 +199,20 @@ namespace Dune
         {
           return *_container;
         }
+
+      private:
+
+        const Container& native() const
+        {
+          return *_container;
+        }
+
+        Container& native()
+        {
+          return *_container;
+        }
+
+      public:
 
         void flush()
         {}

@@ -86,11 +86,19 @@ namespace Dune {
        */
       template<typename GFSV, typename GFSU, template<typename> class C, typename ET, typename I>
       class SparseMatrixContainer
+        : public Backend::impl::Wrapper<SparseMatrixData<C,ET,I> >
       {
 
       public:
 
         typedef SparseMatrixData<C,ET,I> Container;
+
+      private:
+
+        friend Backend::impl::Wrapper<Container>;
+
+      public:
+
         typedef ET ElementType;
 
         typedef ElementType field_type;
@@ -257,6 +265,20 @@ namespace Dune {
         {
           return *_container;
         }
+
+      private:
+
+        const Container& native() const
+        {
+          return *_container;
+        }
+
+        Container& native()
+        {
+          return *_container;
+        }
+
+      public:
 
         void flush()
         {}
