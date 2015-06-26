@@ -48,15 +48,17 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::field_type reduction)
       {
+        using Backend::Native;
+        usinb Backend::native;
         // PreconditionerImp preconditioner;
-        typedef typename M::Container Mat;
+        using Mat = Native<M>;
         Eigen::BiCGSTAB<Mat, PreconditionerImp> solver;
         solver.setMaxIterations(maxiter);
         solver.setTolerance(reduction);
         Dune::Timer watch;
         watch.reset();
-        solver.compute(A.base());
-        z.base() = solver.solve(r.base());
+        solver.compute(native(A));
+        native(z) = solver.solve(native(r));
         double elapsed = watch.elapsed();
 
         res.converged  = solver.info() == Eigen::ComputationInfo::Success;
@@ -70,7 +72,7 @@ namespace Dune {
       template<class V>
       typename Dune::template FieldTraits<typename V::ElementType >::real_type norm(const V& v) const
       {
-        return v.base().norm();
+        return native(v).norm();
       }
 
     private:
@@ -121,14 +123,15 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::field_type reduction)
       {
-        typedef typename M::Container Mat;
+        using Backend::native;
+        using Mat = Backend::Native<M>;
         Eigen::ConjugateGradient<Mat, UpLo, Preconditioner> solver;
         solver.setMaxIterations(maxiter);
         solver.setTolerance(reduction);
         Dune::Timer watch;
         watch.reset();
-        solver.compute(A.base());
-        z.base() = solver.solve(r.base());
+        solver.compute(native(A));
+        native(z) = solver.solve(native(r));
         double elapsed = watch.elapsed();
 
 
@@ -204,12 +207,13 @@ namespace Dune {
       template<class M, class V, class W>
       void apply(M& A, V& z, W& r, typename W::field_type reduction)
       {
-        typedef typename M::Container Mat;
+        using Backend::native;
+        using Mat = Backend::Native<M>;
         Solver<Mat, UpLo> solver;
         Dune::Timer watch;
         watch.reset();
-        solver.compute(A.base());
-        z.base() = solver.solve(r.base());
+        solver.compute(native(A));
+        native(z) = solver.solve(native(r));
         double elapsed = watch.elapsed();
 
         res.converged  = solver.info() == Eigen::ComputationInfo::Success;
@@ -312,9 +316,10 @@ namespace Dune {
       {
         Dune::Timer watch;
         watch.reset();
-        typedef typename M::Container Mat;
+        using Backend::native;
+        using Mat = Backend::Native<M>;
         Eigen::JacobiSVD<Mat, Eigen::ColPivHouseholderQRPreconditioner> solver(A, flags_);
-        z.base() = solver.solve(r.base());
+        native(z) = solver.solve(native(r));
         double elapsed = watch.elapsed();
 
         res.converged  = solver.info() == Eigen::ComputationInfo::Success;
