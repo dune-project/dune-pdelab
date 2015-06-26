@@ -20,6 +20,7 @@ pdelab_add_test(NAME testrtfem COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_S
 pdelab_add_test(NAME testbdmfem COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"")
 pdelab_add_test(NAME testvectoriterator)
 pdelab_add_test(NAME testpermutedordering)
+pdelab_add_test(NAME testsimplebackend COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"")
 
 if(dune-alugrid_FOUND)
   pdelab_add_test(NAME testordering)
