@@ -49,7 +49,7 @@ namespace Dune {
       void apply(M& A, V& z, W& r, typename W::field_type reduction)
       {
         using Backend::Native;
-        usinb Backend::native;
+        using Backend::native;
         // PreconditionerImp preconditioner;
         using Mat = Native<M>;
         Eigen::BiCGSTAB<Mat, PreconditionerImp> solver;
