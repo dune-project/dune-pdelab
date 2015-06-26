@@ -47,7 +47,7 @@ void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
 
   using X = Dune::PDELab::Backend::Vector<GFS, R>;
   X x(gfs,0.0);                       // make coefficient vector
-  Dune::PDELab::istl::raw(x)[2] = 1.0;                         // set a component
+  Dune::PDELab::Backend::native(x)[2] = 1.0;                         // set a component
 
   typedef Dune::PDELab::DiscreteGridFunctionPiola<GFS,X> DGF;
   DGF dgf(gfs,x);                     // make a grid function

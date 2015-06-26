@@ -35,7 +35,7 @@ void testq1 (const GV& gv)
   V x(q1gfs);
   x = 0.0;
   // Don't do this at home: access raw vector
-  Dune::PDELab::istl::raw(x)[3] = 1.0;
+  Dune::PDELab::Backend::native(x)[3] = 1.0;
 
   // make discrete function object
   typedef Dune::PDELab::DiscreteGridFunction<Q1GFS,V> DGF;
@@ -295,18 +295,18 @@ void testtaylorhood (const GV& gv)
 
   // check entries of global vector
   for (typename V::size_type i=0; i<xg.flatsize(); i++)
-    std::cout << "[" << i << ":" << Dune::PDELab::istl::raw(xg)[i] << "] ";
+    std::cout << "[" << i << ":" << Dune::PDELab::Backend::native(xg)[i] << "] ";
   std::cout << std::endl;
 
   // check entries
   for (int i=0; i<25; i++)
-    if (Dune::PDELab::istl::raw(xg)[i]!=1.0)
+    if (Dune::PDELab::Backend::native(xg)[i]!=1.0)
       exit(1);
   for (int i=25; i<50; i++)
-    if (Dune::PDELab::istl::raw(xg)[i]!=2.0)
+    if (Dune::PDELab::Backend::native(xg)[i]!=2.0)
       exit(1);
   for (int i=50; i<59; i++)
-    if (Dune::PDELab::istl::raw(xg)[i]!=3.0)
+    if (Dune::PDELab::Backend::native(xg)[i]!=3.0)
       exit(1);
   std::cout << "all entries correct" << std::endl;
 
@@ -389,7 +389,7 @@ void testgridfunctions (const GV& gv)
 
   // check entries of velocity vector
   for (typename V::size_type i=0; i<xv.flatsize(); i++)
-    std::cout << "[" << i << ":" << Dune::PDELab::istl::raw(xv)[i] << "] ";
+    std::cout << "[" << i << ":" << Dune::PDELab::Backend::native(xv)[i] << "] ";
   std::cout << std::endl;
 
   // values at element centers
