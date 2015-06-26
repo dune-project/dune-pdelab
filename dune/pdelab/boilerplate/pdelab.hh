@@ -544,7 +544,7 @@ namespace Dune {
             {
                 // make vector consistent; this is needed for all overlapping solvers
                 istl::ParallelHelper<GFS> helper(gfs);
-                helper.maskForeignDOFs(istl::raw(x));
+                helper.maskForeignDOFs(Backend::native(x));
                 Dune::PDELab::AddDataHandle<GFS,DOF> adddh(gfs,x);
                 if (gfs.gridView().comm().size()>1)
                     gfs.gridView().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
@@ -758,7 +758,7 @@ namespace Dune {
             {
                 // make vector consistent; this is needed for all overlapping solvers
                 istl::ParallelHelper<GFS> helper(gfs);
-                helper.maskForeignDOFs(istl::raw(x));
+                helper.maskForeignDOFs(Backend::native(x));
                 Dune::PDELab::AddDataHandle<GFS,DOF> adddh(gfs,x);
                 if (gfs.gridView().comm().size()>1)
                     gfs.gridView().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
