@@ -6,6 +6,7 @@
 
 #include<vector>
 
+#include<dune/common/deprecated.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 
@@ -40,7 +41,8 @@ namespace Dune {
      * \tparam J grid function type giving j
      */
     template<typename F, typename B, typename J>
-    class Poisson : public NumericalJacobianApplyVolume<Poisson<F,B,J> >,
+    class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4. Please use ConvectionDiffusionFEM instead!") Poisson
+                  : public NumericalJacobianApplyVolume<Poisson<F,B,J> >,
                     public FullVolumePattern,
                     public LocalOperatorDefaultFlags
 	{
@@ -209,7 +211,7 @@ namespace Dune {
      * \note The grid functions need to support the member function setTime().
      */
     template<typename Time, typename F, typename B, typename J>
-    class InstationaryPoisson
+    class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4. Please use ConvectionDiffusionFEM instead!") InstationaryPoisson
       : public Poisson<F,B,J>,
         public InstationaryLocalOperatorDefaultMethods<Time>
     {
