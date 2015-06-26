@@ -273,7 +273,7 @@ namespace Dune {
           allocate_bcrs_matrix(grid_operator.testGridFunctionSpace().ordering(),
                                grid_operator.trialGridFunctionSpace().ordering(),
                                pattern,
-                               istl::raw(matrix),
+                               Backend::native(matrix),
                                stats
                                );
           return std::move(stats);

@@ -214,7 +214,7 @@ namespace Dune {
       struct BlockMatrixDiagonal
       {
 
-        typedef typename raw_type<M>::type Matrix;
+        typedef Backend::Native<M> Matrix;
 
         struct MatrixElementVector
         {
@@ -227,7 +227,7 @@ namespace Dune {
 
           MatrixElementVector(const M& m)
           {
-            diagonal::matrix_element_vector_from_matrix(container_tag(_container),_container,raw(m));
+            diagonal::matrix_element_vector_from_matrix(container_tag(_container),_container,Backend::native(m));
           }
 
           void invert()
@@ -238,7 +238,7 @@ namespace Dune {
           template<typename X, typename Y>
           void mv(const X& x, Y& y) const
           {
-            diagonal::mv(container_tag(_container),_container,raw(x),raw(y));
+            diagonal::mv(container_tag(_container),_container,Backend::native(x),Backend::native(y));
           }
 
           template<typename ContainerIndex>

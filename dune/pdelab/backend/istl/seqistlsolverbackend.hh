@@ -606,7 +606,7 @@ namespace Dune {
       */
       typename V::ElementType norm (const V& v) const
       {
-        return istl::raw(v).two_norm();
+        return Backend::native(v).two_norm();
       }
 
       /*! \brief solve the given linear system

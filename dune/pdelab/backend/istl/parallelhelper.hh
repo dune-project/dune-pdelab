@@ -104,8 +104,9 @@ namespace Dune {
         template<typename X>
         void maskForeignDOFs(X& x) const
         {
+          using Backend::native;
           // dispatch to implementation.
-          maskForeignDOFs(istl::container_tag(istl::raw(x)),istl::raw(x),istl::raw(_ranks));
+          maskForeignDOFs(istl::container_tag(native(x)),native(x),native(_ranks));
         }
 
       private:
@@ -156,10 +157,11 @@ namespace Dune {
           >::PromotedType
         disjointDot(const X& x, const Y& y) const
         {
-          return disjointDot(istl::container_tag(istl::raw(x)),
-                             istl::raw(x),
-                             istl::raw(y),
-                             istl::raw(_ranks)
+          using Backend::native;
+          return disjointDot(istl::container_tag(native(x)),
+                             native(x),
+                             native(y),
+                             native(_ranks)
                              );
         }
 
@@ -294,7 +296,7 @@ namespace Dune {
         const bool is_bcrs_matrix =
           is_same<
             typename istl::tags::container<
-              typename istl::raw_type<M>::type
+              Backend::Native<M>
               >::type::base_tag,
           istl::tags::bcrs_matrix
           >::value;
@@ -302,7 +304,7 @@ namespace Dune {
         const bool block_type_is_field_matrix =
           is_same<
             typename istl::tags::container<
-              typename istl::raw_type<M>::type::block_type
+              Backend::Native<M>
               >::type::base_tag,
           istl::tags::field_matrix
           >::value;

@@ -348,10 +348,11 @@ namespace Dune {
     */
     virtual void pre (V& x, W& b)
     {
-      dgprec.pre(Dune::PDELab::istl::raw(x),Dune::PDELab::istl::raw(b));
+      using Backend::native;
+      dgprec.pre(native(x),native(b));
       CGW cgd(cggfs,0.0);
       CGV cgv(cggfs,0.0);
-      cgprec.pre(Dune::PDELab::istl::raw(cgv),Dune::PDELab::istl::raw(cgd));
+      cgprec.pre(native(cgv),native(cgd));
     }
 
     /*!
@@ -369,12 +370,13 @@ namespace Dune {
       // pre-smoothing on DG matrix
       for (int i=0; i<n1; i++)
         {
+          using Backend::native;
           v = 0.0;
-          dgprec.apply(Dune::PDELab::istl::raw(v),Dune::PDELab::istl::raw(d));
+          dgprec.apply(native(v),native(d));
           Dune::PDELab::AddDataHandle<DGGFS,V> adddh(dggfs,v);
           if (dggfs.gridView().comm().size()>1)
             dggfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
-          dgmatrix.mmv(Dune::PDELab::istl::raw(v),Dune::PDELab::istl::raw(d));
+          dgmatrix.mmv(native(v),native(d));
           Dune::PDELab::set_constrained_dofs(dgcc,0.0,d);
           x += v;
         }
@@ -382,21 +384,21 @@ namespace Dune {
       // restrict defect to CG subspace
       dghelper.maskForeignDOFs(d); // DG defect is additive for overlap 1, but in case we use more
       CGW cgd(cggfs,0.0);
-      p.mtv(Dune::PDELab::istl::raw(d),Dune::PDELab::istl::raw(cgd));
+      p.mtv(native(d),native(cgd));
       Dune::PDELab::AddDataHandle<CGGFS,CGW> adddh(cggfs,cgd);
       if (cggfs.gridView().comm().size()>1)
         cggfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication); // now we have consistent defect on coarse grid
       Dune::PDELab::set_constrained_dofs(cgcc,0.0,cgd);
-      comm.project(Dune::PDELab::istl::raw(cgd));
+      comm.project(native(cgd));
       CGV cgv(cggfs,0.0);
 
 
       // call preconditioner
-      cgprec.apply(Dune::PDELab::istl::raw(cgv),Dune::PDELab::istl::raw(cgd));
+      cgprec.apply(native(cgv),native(cgd));
 
       // prolongate correction
-      p.mv(Dune::PDELab::istl::raw(cgv),Dune::PDELab::istl::raw(v));
-      dgmatrix.mmv(Dune::PDELab::istl::raw(v),Dune::PDELab::istl::raw(d));
+      p.mv(native(cgv),native(v));
+      dgmatrix.mmv(native(v),native(d));
       Dune::PDELab::set_constrained_dofs(dgcc,0.0,d);
       x += v;
 
@@ -404,11 +406,11 @@ namespace Dune {
       for (int i=0; i<n2; i++)
         {
           v = 0.0;
-          dgprec.apply(Dune::PDELab::istl::raw(v),Dune::PDELab::istl::raw(d));
+          dgprec.apply(native(v),native(d));
           Dune::PDELab::AddDataHandle<DGGFS,V> adddh(dggfs,v);
           if (dggfs.gridView().comm().size()>1)
             dggfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
-          dgmatrix.mmv(Dune::PDELab::istl::raw(v),Dune::PDELab::istl::raw(d));
+          dgmatrix.mmv(native(v),native(d));
           Dune::PDELab::set_constrained_dofs(dgcc,0.0,d);
           x += v;
         }
@@ -421,9 +423,9 @@ namespace Dune {
     */
     virtual void post (V& x)
     {
-      dgprec.post(Dune::PDELab::istl::raw(x));
+      dgprec.post(native(x));
       CGV cgv(cggfs,0.0);
-      cgprec.post(Dune::PDELab::istl::raw(cgv));
+      cgprec.post(native(cgv));
     }
   };
 
@@ -543,6 +545,7 @@ public:
   */
   void apply (M& A, V& z, V& r, typename V::ElementType reduction)
   {
+    using Backend::native;
     // make operator and scalar product for overlapping solver
     typedef Dune::PDELab::OverlappingOperator<DGCC,M,V,V> POP;
     POP pop(dgcc,A);
@@ -563,13 +566,13 @@ public:
     CGM acg(attached_container);
     {
       PTADG ptadg;
-      Dune::transposeMatMultMat(ptadg,Dune::PDELab::istl::raw(pmatrix),Dune::PDELab::istl::raw(A)); // 1a
-      //Dune::transposeMatMultMat(ptadg,Dune::PDELab::istl::raw(pmatrix),Dune::PDELab::istl::raw(A2));   // 1b
-      Dune::matMultMat(Dune::PDELab::istl::raw(acg),ptadg,Dune::PDELab::istl::raw(pmatrix));
+      Dune::transposeMatMultMat(ptadg,native(pmatrix),native(A)); // 1a
+      //Dune::transposeMatMultMat(ptadg,native(pmatrix),native(A2));   // 1b
+      Dune::matMultMat(native(acg),ptadg,native(pmatrix));
     }
     double triple_product_time = watch.elapsed();
     if (verbose>0 && gfs.gridView().comm().rank()==0) std::cout << "=== triple matrix product " << triple_product_time << " s" << std::endl;
-    //Dune::printmatrix(std::cout,Dune::PDELab::istl::raw(acg),"triple product matrix","row",10,2);
+    //Dune::printmatrix(std::cout,native(acg),"triple product matrix","row",10,2);
     CGV cgx(cggfs,0.0);     // need vector to call jacobian
     cggo.jacobian(cgx,acg); // insert trivial rows at processor boundaries
     //std::cout << "CG constraints: " << cgcc.size() << " out of " << cggfs.globalSize() << std::endl;
@@ -589,7 +592,7 @@ public:
     CGHELPER cghelper(cggfs,2);
     cghelper.createIndexSetAndProjectForAMG(acg,oocc);
     typedef Dune::OverlappingSchwarzOperator<CGMatrix,CGVector,CGVector,Comm> ParCGOperator;
-    ParCGOperator paroop(Dune::PDELab::istl::raw(acg),oocc);
+    ParCGOperator paroop(native(acg),oocc);
     Dune::OverlappingSchwarzScalarProduct<CGVector,Comm> sp(oocc);
     typedef Dune::Amg::Parameters Parameters; // AMG parameters (might be nice to change from outside)
     Parameters params(15,2000);
@@ -619,11 +622,11 @@ public:
 
     // set up hybrid DG/CG preconditioner
     typedef DGPrec<Matrix,Vector,Vector,1> DGPrecType;
-    DGPrecType dgprec(Dune::PDELab::istl::raw(A),1,0.92);
-    //DGPrecType dgprec(Dune::PDELab::istl::raw(A),0.92);
+    DGPrecType dgprec(native(A),1,0.92);
+    //DGPrecType dgprec(native(A),0.92);
     typedef Dune::PDELab::istl::ParallelHelper<GFS> DGHELPER;
     typedef OvlpDGAMGPrec<GFS,Matrix,DGPrecType,DGCC,CGGFS,AMG,CGCC,P,DGHELPER,Comm> HybridPrec;
-    HybridPrec hybridprec(gfs,Dune::PDELab::istl::raw(A),dgprec,dgcc,cggfs,amg,cgcc,Dune::PDELab::istl::raw(pmatrix),
+    HybridPrec hybridprec(gfs,native(A),dgprec,dgcc,cggfs,amg,cgcc,native(pmatrix),
                           this->parallelHelper(),oocc,3,3);
 
     // /********/
@@ -633,7 +636,7 @@ public:
     // CGV cgxx(cggfs,0.0);
     // CGV cgdd(cggfs,1.0);
     // Dune::InverseOperatorResult statstat;
-    // testsolver.apply(Dune::PDELab::istl::raw(cgxx),Dune::PDELab::istl::raw(cgdd),statstat);
+    // testsolver.apply(native(cgxx),native(cgdd),statstat);
     // /********/
 
     // set up solver

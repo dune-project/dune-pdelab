@@ -155,7 +155,7 @@ namespace Dune {
         allocate_matrix(grid_operator.testGridFunctionSpace().ordering(),
                         grid_operator.trialGridFunctionSpace().ordering(),
                         pattern,
-                        istl::raw(matrix)
+                        Backend::native(matrix)
                         );
         return std::vector<Statistics>();
       }

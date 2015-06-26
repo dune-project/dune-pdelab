@@ -207,7 +207,7 @@ namespace Dune {
       */
       typename V::ElementType norm (const V& v) const
       {
-        return Dune::PDELab::istl::raw(v).two_norm();
+        return Backend::native(v).two_norm();
       }
 
       /*! \brief solve the given linear system
@@ -219,14 +219,15 @@ namespace Dune {
       */
       void apply (M& A, V& z, V& r, typename V::ElementType reduction)
       {
+        using Backend::native;
         // do triple matrix product ACG = P^T ADG P
         Dune::Timer watch;
         watch.reset();
         ACG acg;
         {
           PTADG ptadg;
-          Dune::transposeMatMultMat(ptadg,Dune::PDELab::istl::raw(pmatrix),Dune::PDELab::istl::raw(A));
-          Dune::matMultMat(acg,ptadg,Dune::PDELab::istl::raw(pmatrix));
+          Dune::transposeMatMultMat(ptadg,native(pmatrix),native(A));
+          Dune::matMultMat(acg,ptadg,native(pmatrix));
         }
         double triple_product_time = watch.elapsed();
         if (verbose>0) std::cout << "=== triple matrix product " << triple_product_time << " s" << std::endl;
@@ -261,10 +262,10 @@ namespace Dune {
         if (verbose>0) std::cout << "=== AMG setup " <<amg_setup_time << " s" << std::endl;
 
         // set up hybrid DG/CG preconditioner
-        Dune::MatrixAdapter<Matrix,Vector,Vector> op(Dune::PDELab::istl::raw(A));
-        DGPrec<Matrix,Vector,Vector,1> dgprec(Dune::PDELab::istl::raw(A),1,1);
+        Dune::MatrixAdapter<Matrix,Vector,Vector> op(native(A));
+        DGPrec<Matrix,Vector,Vector,1> dgprec(native(A),1,1);
         typedef SeqDGAMGPrec<Matrix,DGPrec<Matrix,Vector,Vector,1>,AMG,P> HybridPrec;
-        HybridPrec hybridprec(Dune::PDELab::istl::raw(A),dgprec,amg,Dune::PDELab::istl::raw(pmatrix),2,2);
+        HybridPrec hybridprec(native(A),dgprec,amg,native(pmatrix),2,2);
 
         // set up solver
         Solver<Vector> solver(op,hybridprec,reduction,maxiter,verbose);
@@ -272,7 +273,7 @@ namespace Dune {
         // solve
         Dune::InverseOperatorResult stat;
         watch.reset();
-        solver.apply(Dune::PDELab::istl::raw(z),Dune::PDELab::istl::raw(r),stat);
+        solver.apply(native(z),native(r),stat);
         double amg_solve_time = watch.elapsed();
         if (verbose>0) std::cout << "=== Hybrid total solve time " << amg_solve_time+amg_setup_time+triple_product_time << " s" << std::endl;
         res.converged  = stat.converged;
