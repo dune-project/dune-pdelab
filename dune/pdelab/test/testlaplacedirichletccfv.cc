@@ -19,7 +19,6 @@
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/localoperator/laplacedirichletccfv.hh>
-#include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/backend/istl.hh>
 
 #include <dune/pdelab/gridoperator/gridoperator.hh>

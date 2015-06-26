@@ -21,7 +21,6 @@
 #include <dune/grid/uggrid/uggridfactory.hh>
 #endif
 
-#include <dune/pdelab/backend/backendselector.hh>
 #include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>

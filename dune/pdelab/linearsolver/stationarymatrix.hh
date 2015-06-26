@@ -10,7 +10,7 @@
 
 #include <dune/common/timer.hh>
 
-#include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/backend/interface.hh>
 
 namespace Dune {
   namespace PDELab {

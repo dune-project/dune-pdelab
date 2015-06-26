@@ -8,7 +8,7 @@
 #include <dune/istl/bvector.hh>
 
 #include <dune/pdelab/backend/common/tags.hh>
-#include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include "descriptors.hh"
 #include <Eigen/Dense>

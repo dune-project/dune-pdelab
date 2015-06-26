@@ -22,7 +22,7 @@
 
 #include <dune/typetree/typetree.hh>
 
-#include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
 #include <dune/pdelab/constraints/noconstraints.hh>
 #include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>

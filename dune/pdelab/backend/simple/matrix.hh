@@ -10,7 +10,7 @@
 
 #include <dune/common/typetraits.hh>
 #include <dune/pdelab/backend/common/tags.hh>
-#include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
 #include <dune/pdelab/backend/simple/descriptors.hh>
 

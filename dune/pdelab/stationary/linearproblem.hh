@@ -7,7 +7,7 @@
 #include <dune/common/deprecated.hh>
 #include <dune/common/parametertree.hh>
 
-#include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/backend/solver.hh>
 

@@ -7,6 +7,7 @@
 #include <dune/istl/bvector.hh>
 #include <dune/typetree/typetree.hh>
 
+#include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/backend/common/uncachedvectorview.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
@@ -15,7 +16,6 @@
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
-#include <dune/pdelab/backend/backendselector.hh>
 
 namespace Dune {
   namespace PDELab {

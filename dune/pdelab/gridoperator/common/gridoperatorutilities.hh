@@ -4,7 +4,7 @@
 #ifndef DUNE_PDELAB_GRIDOPERATORUTILITIES_HH
 #define DUNE_PDELAB_GRIDOPERATORUTILITIES_HH
 
-#include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/backend/interface.hh>
 
 namespace Dune{
   namespace PDELab{

@@ -9,7 +9,6 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/grid/yaspgrid.hh>
-#include <dune/pdelab/backend/backendselector.hh>
 #include"../finiteelementmap/p0fem.hh"
 #include"../finiteelementmap/pkfem.hh"
 #include"../gridfunctionspace/gridfunctionspace.hh"
