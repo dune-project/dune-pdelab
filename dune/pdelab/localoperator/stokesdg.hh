@@ -2,6 +2,8 @@
 #ifndef DUNE_PDELAB_STOKESDG_HH
 #define DUNE_PDELAB_STOKESDG_HH
 
+#warning This file is deprecated, include the header dune/pdelab/localoperator/dgnavierstokes.hh instead!
+
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/parametertreeparser.hh>
