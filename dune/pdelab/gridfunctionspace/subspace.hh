@@ -398,6 +398,7 @@ namespace Dune {
                                                         TreePath
                                                         >::type::ImplementationTag
                                          >
+        , public GridFunctionOutputParameters
       {
 
         typedef TypeTree::ProxyNode<
@@ -430,7 +431,9 @@ namespace Dune {
           : NodeT(TypeTree::extract_child_storage(*gfs_storage,TreePath()))
           , FeatureT(*gfs_storage)
           , _base_gfs(gfs_storage)
-        {}
+        {
+          setDataSetType(childGridFunctionSpace().dataSetType());
+        }
 
 #if HAVE_TEMPLATE_ALIASES
 
@@ -443,7 +446,9 @@ namespace Dune {
           : NodeT(TypeTree::extract_child_storage(gfs,TreePath()))
           , FeatureT(gfs)
           , _base_gfs(stackobject_to_shared_ptr(gfs))
-        {}
+        {
+          setDataSetType(childGridFunctionSpace().dataSetType());
+        }
 
         //! Construct a GridFunctionSubSpace from the storage of another GridFunctionSubSpace.
         /**
@@ -461,7 +466,9 @@ namespace Dune {
           : NodeT(TypeTree::extract_child_storage(gfs_storage->baseGridFunctionSpace(),TreePath()))
           , FeatureT(gfs_storage->baseGridFunctionSpace())
           , _base_gfs(gfs_storage->baseGridFunctionSpaceStorage())
-        {}
+        {
+          setDataSetType(childGridFunctionSpace().dataSetType());
+        }
 
 #endif // HAVE_TEMPLATE_ALIASES
 
@@ -481,7 +488,9 @@ namespace Dune {
           : NodeT(TypeTree::extract_child_storage(gfs.baseGridFunctionSpace(),TreePath()))
           , FeatureT(gfs.baseGridFunctionSpace())
           , _base_gfs(gfs.baseGridFunctionSpaceStorage())
-        {}
+        {
+          setDataSetType(childGridFunctionSpace().dataSetType());
+        }
 
       public:
 
@@ -531,6 +540,16 @@ namespace Dune {
         std::shared_ptr<const ChildGridFunctionSpace> childGridFunctionSpaceStorage() const
         {
           return this->proxiedNodeStorage();
+        }
+
+        std::string name() const
+        {
+          return childGridFunctionSpace().name();
+        }
+
+        void name(const std::string& name)
+        {
+          childGridFunctionSpace().name(name);
         }
 
       private:
