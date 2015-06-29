@@ -12,7 +12,7 @@ namespace Dune {
 
   namespace PDELab{
 
-    namespace tags {
+    namespace Backend {
 
       //! \addtogroup backend_tags Tags
       //! \brief Tags for controlling behavior within the Backend subsystem.
@@ -28,6 +28,13 @@ namespace Dune {
       {};
 
       //! \} group backend_tags
+
+    }
+
+    namespace tags {
+
+      using unattached_container DUNE_DEPRECATED_MSG("unattached_containers was moved to the namespace Dune::PDELab::Backend for PDELab 2.4. Please update your code accordingly.") = Backend::unattached_container;
+      using attached_container DUNE_DEPRECATED_MSG("unattached_containers was moved to the namespace Dune::PDELab::Backend for PDELab 2.4. Please update your code accordingly.") = Backend::attached_container;
 
     }
 
