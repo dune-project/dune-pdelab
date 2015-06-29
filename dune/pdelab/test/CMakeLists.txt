@@ -22,6 +22,10 @@ pdelab_add_test(NAME testvectoriterator)
 pdelab_add_test(NAME testpermutedordering)
 pdelab_add_test(NAME testsimplebackend COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"")
 
+if(EIGEN3_FOUND)
+  pdelab_add_test(NAME testeigenbackend COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"")
+endif(EIGEN3_FOUND)
+
 if(dune-alugrid_FOUND)
   pdelab_add_test(NAME testordering)
 endif(dune-alugrid_FOUND)
