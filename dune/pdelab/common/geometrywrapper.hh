@@ -72,7 +72,9 @@ namespace Dune {
       //! \todo Please doc me!
       enum { dimension=Entity::dimension };
       //! \todo Please doc me!
-      enum { dimensionworld=Geometry::dimensionworld };
+      static const int DUNE_DEPRECATED_MSG("Geometry::dimensionworld is deprecated in dune-grid 2.4") dimensionworld=Geometry::dimensionworld;
+      /** \brief Dimension of the image space of the geometry */
+      enum { coorddimension=Geometry::coorddimension };
 
       //! \todo Please doc me!
       IntersectionGeometry (const I& i_, unsigned int index_)
@@ -174,7 +176,7 @@ namespace Dune {
 
         The returned vector may depend on local position within the intersection.
       */
-      Dune::FieldVector<ctype, dimensionworld> outerNormal (const Dune::FieldVector<ctype, dimension-1>& local) const
+      Dune::FieldVector<ctype, coorddimension> outerNormal (const Dune::FieldVector<ctype, dimension-1>& local) const
       {
         return i.outerNormal(local);
       }
@@ -185,7 +187,7 @@ namespace Dune {
         method is redundant but it may be more efficent to use this function
         rather than computing the integration element via intersectionGlobal().
       */
-      Dune::FieldVector<ctype, dimensionworld> integrationOuterNormal (const Dune::FieldVector<ctype, dimension-1>& local) const
+      Dune::FieldVector<ctype, coorddimension> integrationOuterNormal (const Dune::FieldVector<ctype, dimension-1>& local) const
       {
         return i.integrationOuterNormal(local);
       }
@@ -195,7 +197,7 @@ namespace Dune {
         The returned vector may depend on the local position within the intersection.
         It is scaled to have unit length.
       */
-      Dune::FieldVector<ctype, dimensionworld> unitOuterNormal (const Dune::FieldVector<ctype, dimension-1>& local) const
+      Dune::FieldVector<ctype, coorddimension> unitOuterNormal (const Dune::FieldVector<ctype, dimension-1>& local) const
       {
         return i.unitOuterNormal(local);
       }
@@ -205,7 +207,7 @@ namespace Dune {
         The returned vector may depend on the local position within the intersection.
         It is scaled to have unit length.
       */
-      Dune::FieldVector<ctype, dimensionworld> centerUnitOuterNormal () const
+      Dune::FieldVector<ctype, coorddimension> centerUnitOuterNormal () const
       {
         return i.centerUnitOuterNormal();
       }

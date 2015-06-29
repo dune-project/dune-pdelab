@@ -61,7 +61,7 @@ namespace Dune {
         // find all local indices of this face
         Dune::GeometryType gt = ig.inside().type();
         typedef typename IG::ctype DT;
-        const int dim = IG::Entity::Geometry::dimension;
+        const int dim = IG::Entity::dimension;
         const Dune::ReferenceElement<DT,dim>& refelem = Dune::ReferenceElements<DT,dim>::general(gt);
 
         const Dune::ReferenceElement<DT,dim-1> &
@@ -122,7 +122,7 @@ namespace Dune {
         // find all local indices of this face
         Dune::GeometryType gt = ig.inside().type();
         typedef typename IG::ctype DT;
-        const int dim = IG::Entity::Geometry::dimension;
+        const int dim = IG::Entity::dimension;
 
         const Dune::ReferenceElement<DT,dim>& refelem = Dune::ReferenceElements<DT,dim>::general(gt);
 

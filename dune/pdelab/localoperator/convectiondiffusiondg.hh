@@ -113,7 +113,7 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Entity::dimension;
         const int order = std::max(lfsu.finiteElement().localBasis().order(),
             lfsv.finiteElement().localBasis().order());
         const int intorder = intorderadd + quadrature_factor * order;
@@ -209,7 +209,7 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Entity::dimension;
         const int order = std::max(lfsu.finiteElement().localBasis().order(),
             lfsv.finiteElement().localBasis().order());
         const int intorder = intorderadd + quadrature_factor * order;
@@ -1043,7 +1043,7 @@ namespace Dune {
         typedef typename LFSV::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Entity::dimension;
         const int order = lfsv.finiteElement().localBasis().order();
         const int intorder = intorderadd + 2 * order;
 

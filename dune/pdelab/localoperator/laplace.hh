@@ -138,7 +138,7 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Entity::dimension;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
