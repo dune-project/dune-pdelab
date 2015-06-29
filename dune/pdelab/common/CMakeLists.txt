@@ -10,6 +10,7 @@ install(FILES benchmarkhelper.hh
               functionwrappers.hh
               geometrywrapper.hh
               globaldofindex.hh
+              gridtraits.hh
               hostname.hh
               instationaryfilenamehelper.hh
               jacobiantocurl.hh

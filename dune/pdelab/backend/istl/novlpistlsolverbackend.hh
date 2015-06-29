@@ -21,6 +21,7 @@
 #include <dune/istl/solvers.hh>
 #include <dune/istl/superlu.hh>
 
+#include <dune/pdelab/common/gridtraits.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include <dune/pdelab/backend/istl/istlvectorbackend.hh>
@@ -95,7 +96,8 @@ namespace Dune {
 
         // accumulate y on border
         Dune::PDELab::AddDataHandle<GFS,Y> adddh(gfs,y);
-        if (gfs.gridView().comm().size()>1)
+        if (gfs.gridView().comm().size() > 1
+          || Dune::PDELab::requiresCommOnSequential<typename GFS::Traits::GridViewType::Grid>::v(gfs.gridView().grid()))
           gfs.gridView().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
       }
 
@@ -113,7 +115,7 @@ namespace Dune {
 
         // accumulate y on border
         Dune::PDELab::AddDataHandle<GFS,Y> adddh(gfs,y);
-        if (gfs.gridView().comm().size()>1)
+        if (gfs.gridView().comm().size() > 1)
           gfs.gridView().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
       }
 
@@ -172,7 +174,7 @@ namespace Dune {
       void make_consistent (X& x) const
       {
         Dune::PDELab::AddDataHandle<GFS,X> adddh(gfs,x);
-        if (gfs.gridView().comm().size()>1)
+        if (gfs.gridView().comm().size() > 1)
           gfs.gridView().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
       }
 
@@ -673,7 +675,8 @@ namespace Dune {
         jac.pre(z,r);
         jac.apply(z,r);
         jac.post(z);
-        if (gfs.gridView().comm().size()>1)
+        if (gfs.gridView().comm().size() > 1
+          || Dune::PDELab::requiresCommOnSequential<typename GFS::Traits::GridViewType::Grid>::v(gfs.gridView().grid()))
         {
           Dune::PDELab::AddDataHandle<GFS,V> adddh(gfs,z);
           gfs.gridView().communicate(adddh,Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
@@ -772,7 +775,9 @@ namespace Dune {
         Solver<VectorType> solver(oop,psp,parsmoother,reduction,maxiter,verb);
         Dune::InverseOperatorResult stat;
         //make r consistent
-        if (gfs.gridView().comm().size()>1){
+        if (gfs.gridView().comm().size() > 1
+          || Dune::PDELab::requiresCommOnSequential<typename GFS::Traits::GridViewType::Grid>::v(gfs.gridView().grid()))
+        {
           Dune::PDELab::AddDataHandle<GFS,V> adddh(gfs,r);
           gfs.gridView().communicate(adddh,
                                      Dune::InteriorBorder_InteriorBorder_Interface,
@@ -987,7 +992,9 @@ namespace Dune {
 
         Dune::InverseOperatorResult stat;
         // make r consistent
-        if (gfs.gridView().comm().size()>1) {
+        if (gfs.gridView().comm().size() > 1
+          || Dune::PDELab::requiresCommOnSequential<typename GFS::Traits::GridViewType::Grid>::v(gfs.gridView().grid()))
+        {
           Dune::PDELab::AddDataHandle<GFS,V> adddh(gfs,r);
           gfs.gridView().communicate(adddh,
                                      Dune::InteriorBorder_InteriorBorder_Interface,

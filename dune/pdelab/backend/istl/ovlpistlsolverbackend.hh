@@ -17,6 +17,7 @@
 #include <dune/istl/io.hh>
 #include <dune/istl/superlu.hh>
 
+#include <dune/pdelab/common/gridtraits.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include <dune/pdelab/backend/istl/istlvectorbackend.hh>
@@ -170,7 +171,8 @@ namespace Dune {
         set_constrained_dofs(cc,0.0,dd);
         prec.apply(Backend::native(v),Backend::native(dd));
         Dune::PDELab::AddDataHandle<GFS,domain_type> adddh(gfs,v);
-        if (gfs.gridView().comm().size()>1)
+        if (gfs.gridView().comm().size() > 1
+          || Dune::PDELab::requiresCommOnSequential<typename GFS::Traits::GridViewType::Grid>::v(gfs.gridView().grid()))
           gfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
       }
 
@@ -235,11 +237,12 @@ namespace Dune {
         Dune::InverseOperatorResult stat;
         Y b(d); // need copy, since solver overwrites right hand side
         solver.apply(Backend::native(v),Backend::native(b),stat);
-        if (gfs.gridView().comm().size()>1)
-          {
-            AddDataHandle<GFS,X> adddh(gfs,v);
-            gfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
-          }
+        if (gfs.gridView().comm().size() > 1
+          || Dune::PDELab::requiresCommOnSequential<typename GFS::Traits::GridViewType::Grid>::v(gfs.gridView().grid()))
+        {
+          AddDataHandle<GFS,X> adddh(gfs,v);
+          gfs.gridView().communicate(adddh,Dune::All_All_Interface,Dune::ForwardCommunication);
+        }
       }
 
       /*!
@@ -299,12 +302,13 @@ namespace Dune {
         Dune::InverseOperatorResult stat;
         Y b(d); // need copy, since solver overwrites right hand side
         solver.apply(native(v),native(b),stat);
-        if (gfs.gridView().comm().size()>1)
-          {
-            helper.maskForeignDOFs(native(v));
-            AddDataHandle<GFS,X> adddh(gfs,v);
-            gfs.gridView().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
-          }
+        if (gfs.gridView().comm().size() > 1
+          || Dune::PDELab::requiresCommOnSequential<typename GFS::Traits::GridViewType::Grid>::v(gfs.gridView().grid()))
+        {
+          helper.maskForeignDOFs(native(v));
+          AddDataHandle<GFS,X> adddh(gfs,v);
+          gfs.gridView().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
+        }
       }
 
       /*!
@@ -907,7 +911,8 @@ namespace Dune {
         jac.pre(native(z),native(r));
         jac.apply(native(z),native(r));
         jac.post(native(z));
-        if (gfs.gridView().comm().size()>1)
+        if (gfs.gridView().comm().size() > 1
+          || Dune::PDELab::requiresCommOnSequential<typename GFS::Traits::GridViewType::Grid>::v(gfs.gridView().grid()))
         {
           CopyDataHandle<GFS,V> copydh(gfs,z);
           gfs.gridView().communicate(copydh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
