@@ -44,7 +44,7 @@
 #cmakedefine HAVE_PETSC ENABLE_PETSC
 
 /* This is only true if Eigen3 was found by configure */
-#cmakedefine HAVE_EIGEN 1
+#cmakedefine HAVE_EIGEN ENABLE_EIGEN
 
 /* Define to 1 if you have the <tr1/unordered_set> header file. */
 #cmakedefine HAVE_TR1_UNORDERED_SET 1
