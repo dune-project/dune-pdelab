@@ -3,6 +3,7 @@
 
 #ifndef DUNE_PDELAB_POISSON_HH
 #define DUNE_PDELAB_POISSON_HH
+#warning "The file dune/pdelab/localoperator/poisson.hh is deprecated. Please use the ConvectionDiffusionFEM local operator from dune/pdelab/localoperator/convectiondiffusionfem.hh instead."
 
 #include<vector>
 
