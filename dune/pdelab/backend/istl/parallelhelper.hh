@@ -304,7 +304,7 @@ namespace Dune {
         const bool block_type_is_field_matrix =
           is_same<
             typename istl::tags::container<
-              Backend::Native<M>
+              typename Backend::Native<M>::block_type
               >::type::base_tag,
           istl::tags::field_matrix
           >::value;
