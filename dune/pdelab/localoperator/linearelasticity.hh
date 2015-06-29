@@ -70,8 +70,8 @@ namespace Dune {
         typedef typename LFSU_SUB::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
-        const int dimw = EG::Geometry::dimensionworld;
+        const int dim = EG::Entity::dimension;
+        const int dimw = EG::Geometry::coorddimension;
         static_assert(dim == dimw, "doesn't work on manifolds");
 
         // select quadrature rule
@@ -148,8 +148,8 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
-        const int dimw = EG::Geometry::dimensionworld;
+        const int dim = EG::Entity::dimension;
+        const int dimw = EG::Geometry::coorddimension;
         static_assert(dim == dimw, "doesn't work on manifolds");
 
         // select quadrature rule
@@ -232,7 +232,7 @@ namespace Dune {
         typedef typename LFSV::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Entity::dimension;
 
         // select quadrature rule
         const auto& geometry = eg.geometry();
@@ -281,7 +281,7 @@ namespace Dune {
         typedef typename LFSV::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = IG::Geometry::dimension;
+        const int dim = IG::Entity::dimension;
 
         // select quadrature rule
         const auto& geometryInInside = ig.geometryInInside();
