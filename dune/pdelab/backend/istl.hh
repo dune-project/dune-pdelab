@@ -1,9 +1,9 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_HH
 #define DUNE_PDELAB_BACKEND_ISTL_HH
 
-#include <dune/pdelab/backend/istl/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/istl/istlsolverbackend.hh>
 #include <dune/pdelab/backend/istl/vector.hh>
+#include <dune/pdelab/backend/istl/bcrsmatrix.hh>
 #include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include <dune/pdelab/backend/istl/seq_amg_dg_backend.hh>
 #include <dune/pdelab/backend/istl/ovlp_amg_dg_backend.hh>

@@ -21,8 +21,8 @@
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include <dune/pdelab/backend/solver.hh>
-#include <dune/pdelab/backend/istl/istlmatrixbackend.hh>
 #include <dune/pdelab/backend/istl/vector.hh>
+#include <dune/pdelab/backend/istl/bcrsmatrix.hh>
 
 namespace Dune {
   namespace PDELab {

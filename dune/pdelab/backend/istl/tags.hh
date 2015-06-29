@@ -194,7 +194,7 @@ namespace Dune {
 
 
         template<typename Block, typename Alloc>
-        struct container<BCRSMatrix<Block,Alloc> >
+        struct container<Dune::BCRSMatrix<Block,Alloc> >
         {
           typedef bcrs_matrix type;
         };

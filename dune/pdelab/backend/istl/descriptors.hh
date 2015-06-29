@@ -131,7 +131,7 @@ namespace Dune {
       template<typename VV, typename VU, typename E>
       struct MatrixHelper
       {
-        typedef ISTLMatrixContainer<
+        typedef istl::BCRSMatrix<
           typename VV::GridFunctionSpace,
           typename VU::GridFunctionSpace,
           typename istl::build_matrix_type<
