@@ -166,7 +166,7 @@ namespace Dune {
         typedef E element_type;
 
         // The ISTL vector type associated with the current subtree.
-        typedef BlockVector<FieldVector<E,block_size> > vector_type;
+        typedef Dune::BlockVector<FieldVector<E,block_size> > vector_type;
 
       };
 
@@ -230,7 +230,7 @@ namespace Dune {
           Sibling::cumulative_block_size + Child::cumulative_block_size;
 
         // The ISTL vector type associated with the current subtree.
-        typedef BlockVector<FieldVector<element_type,block_size> > vector_type;
+        typedef Dune::BlockVector<FieldVector<element_type,block_size> > vector_type;
 
       };
 
@@ -335,7 +335,7 @@ namespace Dune {
                       "Did you want to apply static blocking at this level?");
 
         // Wrap the child vector type in another BlockVector
-        typedef BlockVector<typename Data::child_vector_type> vector_type;
+        typedef Dune::BlockVector<typename Data::child_vector_type> vector_type;
       };
 
       // dispatch switch on blocking type - static blocking case

@@ -19,8 +19,8 @@
 
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
-#include <dune/pdelab/backend/istl/istlvectorbackend.hh>
 #include <dune/pdelab/backend/istl/istlmatrixbackend.hh>
+#include <dune/pdelab/backend/istl/vector.hh>
 #include <dune/pdelab/backend/istl/parallelhelper.hh>
 #include <dune/pdelab/backend/istl/seqistlsolverbackend.hh>
 

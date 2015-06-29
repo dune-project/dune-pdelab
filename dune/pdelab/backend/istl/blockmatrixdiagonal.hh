@@ -4,7 +4,7 @@
 #define DUNE_PDELAB_BACKEND_ISTL_BLOCKMATRIXDIAGONAL_HH
 
 #include <dune/pdelab/backend/istl/istlmatrixbackend.hh>
-#include <dune/pdelab/backend/istl/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl/vector.hh>
 #include <dune/pdelab/backend/istl/utility.hh>
 #include <dune/pdelab/gridfunctionspace/entityindexcache.hh>
 

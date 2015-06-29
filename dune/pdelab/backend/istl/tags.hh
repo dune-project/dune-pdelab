@@ -153,7 +153,7 @@ namespace Dune {
 
 
         template<typename Block, typename Alloc>
-        struct container<BlockVector<Block,Alloc> >
+        struct container<Dune::BlockVector<Block,Alloc> >
         {
           typedef block_vector type;
         };
