@@ -362,6 +362,7 @@ namespace Dune {
     */
     virtual void apply (V& x, const W& b)
     {
+      using Backend::native;
       // need local copies to store defect and solution
       W d(b);
       Dune::PDELab::set_constrained_dofs(dgcc,0.0,d);
@@ -423,9 +424,9 @@ namespace Dune {
     */
     virtual void post (V& x)
     {
-      dgprec.post(native(x));
+      dgprec.post(Backend::native(x));
       CGV cgv(cggfs,0.0);
-      cgprec.post(native(cgv));
+      cgprec.post(Backend::native(cgv));
     }
   };
 
