@@ -29,7 +29,7 @@ PDELab 2.4
   older compilers was removed.
 
 - The method g() in the parameter class for the convection diffusion operators now expects
-  an unwrapped entity (that means you have to call it with `eg.entity()` instead of just `eg`).
+  an unwrapped entity (that means you have to call it with `eg.entity()` instead of just `eg()`.
   The version of g() that can be called with an intersection has been deprecated, please always
   call the version taking an entity.
 
