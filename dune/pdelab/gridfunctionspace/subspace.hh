@@ -361,7 +361,26 @@ namespace Dune {
 
 #endif // DOXYGEN
 
+      //! Mixin class which inherits from GridFunctionOutputParameters iff T inherits from GridFunctionOutputParameters
+      template<class T, bool Enable = std::is_base_of<GridFunctionOutputParameters, T>::value>
+      class GridFunctionSubSpaceOutputParameters
+      {
+      public:
+        void inheritDataSetType(const T & t) {}
+      };
 
+#ifndef DOXYGEN
+      template<class T>
+      class GridFunctionSubSpaceOutputParameters<T,true> :
+        public GridFunctionOutputParameters
+      {
+      public:
+        void inheritDataSetType(const T & t)
+        {
+          setDataSetType(t.dataSetType());
+        }
+      };
+#endif
 
       // ********************************************************************************
       // GridFunctionSubSpace implementation
@@ -398,7 +417,7 @@ namespace Dune {
                                                         TreePath
                                                         >::type::ImplementationTag
                                          >
-        , public GridFunctionOutputParameters
+        , public GridFunctionSubSpaceOutputParameters<typename TypeTree::extract_child_type<GFS,TreePath>::type>
       {
 
         typedef TypeTree::ProxyNode<
@@ -432,7 +451,7 @@ namespace Dune {
           , FeatureT(*gfs_storage)
           , _base_gfs(gfs_storage)
         {
-          setDataSetType(childGridFunctionSpace().dataSetType());
+          this->inheritDataSetType(childGridFunctionSpace());
         }
 
 #if HAVE_TEMPLATE_ALIASES
@@ -447,7 +466,7 @@ namespace Dune {
           , FeatureT(gfs)
           , _base_gfs(stackobject_to_shared_ptr(gfs))
         {
-          setDataSetType(childGridFunctionSpace().dataSetType());
+          this->inheritDataSetType(childGridFunctionSpace());
         }
 
         //! Construct a GridFunctionSubSpace from the storage of another GridFunctionSubSpace.
@@ -472,7 +491,7 @@ namespace Dune {
 
 #endif // HAVE_TEMPLATE_ALIASES
 
-        //! Construct a GridFunctionSubSpace another GridFunctionSubSpace.
+        //! Construct a GridFunctionSubSpace from another GridFunctionSubSpace.
         /**
          * This constructor is used to implement the non-nesting behavior by extracting the
          * original root space from the GridFunctionSubSpace and using that space for initialization.
@@ -489,7 +508,7 @@ namespace Dune {
           , FeatureT(gfs.baseGridFunctionSpace())
           , _base_gfs(gfs.baseGridFunctionSpaceStorage())
         {
-          setDataSetType(childGridFunctionSpace().dataSetType());
+          this->inheritDataSetType(childGridFunctionSpace());
         }
 
       public:
