@@ -20,6 +20,9 @@ PDELab 2.4
 - PDELab has updated its minimum compiler requirements. You now need a compiler that is at
   least compatible with GCC 4.7 in C++11 mode.
 
+- The PDELab build system now uses the dune_enable_all_packages() feature and thus requires
+  at least CMake 2.8.12 to build.
+
 - PDELab 2.4-dev requires at least version 2.4-dev of the core modules.
 
 - In stride with the changes to the core modules, a lot of backwards compatibility code for

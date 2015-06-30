@@ -2,7 +2,7 @@
 project("dune-pdelab" C CXX)
 
 # general stuff
-cmake_minimum_required(VERSION 2.8.6)
+cmake_minimum_required(VERSION 2.8.12)
 
 # guess dune-common build dir
 if(NOT (dune-common_DIR OR dune-common_ROOT OR
