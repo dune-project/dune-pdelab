@@ -94,8 +94,13 @@ namespace Dune {
         };
     }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
     template<ISTLParameters::Blocking blocking = ISTLParameters::no_blocking, std::size_t block_size = 1>
     using ISTLVectorBackend DUNE_DEPRECATED_MSG("Use istl::VectorBackend instead") = istl::VectorBackend<static_cast<istl::Blocking>(blocking),block_size>;
+
+#pragma GCC diagnostic pop
 
     //! Backend using ISTL matrices.
     /**
