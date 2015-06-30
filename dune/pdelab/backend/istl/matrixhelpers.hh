@@ -141,7 +141,7 @@ namespace Dune {
       };
 
       template<typename B, typename A, int blocklevel>
-      struct requires_pattern<BCRSMatrix<B,A>,blocklevel>
+      struct requires_pattern<Dune::BCRSMatrix<B,A>,blocklevel>
       {
         static const bool value = true;
       };

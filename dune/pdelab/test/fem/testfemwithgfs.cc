@@ -177,7 +177,7 @@ int main(int argc, char** argv)
     typedef Dune::PDELab::NoConstraints Constraints;
     Constraints constraints;
 
-    typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+    typedef Dune::PDELab::istl::VectorBackend<> VBE;
     VBE vbe;
 
     typedef double RF;

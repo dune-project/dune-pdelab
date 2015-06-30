@@ -56,16 +56,16 @@ static void test_interpolate(const GV& gv)
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> GFS2;
   GFS2 gfs2(gv,q22dfem);
   typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM,Dune::PDELab::NoConstraints,
-                                          Dune::PDELab::ISTLVectorBackend<> > GFS3;
+                                          Dune::PDELab::istl::VectorBackend<> > GFS3;
   GFS3 gfs3(gv,q22dfem);
 
   // test power
-  typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,3,Dune::PDELab::ISTLVectorBackend<> > PGFS;
+  typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,3,Dune::PDELab::istl::VectorBackend<> > PGFS;
   PGFS pgfs(gfs2,gfs2,gfs2);
 
   // test composite
   typedef Dune::PDELab::CompositeGridFunctionSpace<
-    Dune::PDELab::ISTLVectorBackend<>,
+    Dune::PDELab::istl::VectorBackend<>,
     Dune::PDELab::LexicographicOrderingTag,
     P0GFS,GFS1,GFS2,GFS3
     > CGFS;
@@ -75,7 +75,7 @@ static void test_interpolate(const GV& gv)
   // master space - contains power and composite twice, once for interpolation from
   // scalar function, once for interpolation from vector function
   typedef Dune::PDELab::CompositeGridFunctionSpace<
-    Dune::PDELab::ISTLVectorBackend<>,
+    Dune::PDELab::istl::VectorBackend<>,
     Dune::PDELab::LexicographicOrderingTag,
     GFS1,PGFS,CGFS,PGFS,CGFS
     > GFS;

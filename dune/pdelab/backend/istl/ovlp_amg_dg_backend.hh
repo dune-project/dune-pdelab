@@ -5,8 +5,8 @@
 
 #include <dune/grid/common/datahandleif.hh>
 
-#include <dune/pdelab/backend/istl/istlvectorbackend.hh>
-#include <dune/pdelab/backend/istl/istlmatrixbackend.hh>
+#include <dune/pdelab/backend/istl/vector.hh>
+#include <dune/pdelab/backend/istl/bcrsmatrix.hh>
 #include <dune/pdelab/backend/istl/ovlpistlsolverbackend.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/localoperator/flags.hh>
@@ -362,6 +362,7 @@ namespace Dune {
     */
     virtual void apply (V& x, const W& b)
     {
+      using Backend::native;
       // need local copies to store defect and solution
       W d(b);
       Dune::PDELab::set_constrained_dofs(dgcc,0.0,d);
@@ -423,9 +424,9 @@ namespace Dune {
     */
     virtual void post (V& x)
     {
-      dgprec.post(native(x));
+      dgprec.post(Backend::native(x));
       CGV cgv(cggfs,0.0);
-      cgprec.post(native(cgv));
+      cgprec.post(Backend::native(cgv));
     }
   };
 
@@ -467,7 +468,7 @@ public:
   typedef typename CGV::BaseT CGVector;                               // istl CG vector
 
   // prolongation matrix
-  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
   typedef Dune::PDELab::EmptyTransformation CC;
   typedef TransferLOP CGTODGLOP; // local operator
   typedef Dune::PDELab::GridOperator<CGGFS,GFS,CGTODGLOP,MBE,field_type,field_type,field_type,CC,CC> PGO;
@@ -488,6 +489,7 @@ private:
   unsigned maxiter;
   int verbose;
   bool usesuperlu;
+  std::size_t low_order_space_entries_per_row;
 
   CGTODGLOP cgtodglop;  // local operator to assemble prolongation matrix
   PGO pgo;              // grid operator to assemble prolongation matrix
@@ -513,10 +515,20 @@ public:
   /** make backend object
    */
   ISTLBackend_OVLP_AMG_4_DG(DGGO& dggo_, const DGCC& dgcc_, CGGFS& cggfs_, const CGCC& cgcc_,
-                            unsigned maxiter_=5000, int verbose_=1, bool usesuperlu_=true) :
-    Dune::PDELab::OVLPScalarProductImplementation<typename DGGO::Traits::TrialGridFunctionSpace>(dggo_.trialGridFunctionSpace()),
-    gfs(dggo_.trialGridFunctionSpace()), dggo(dggo_), dgcc(dgcc_), cggfs(cggfs_), cgcc(cgcc_), maxiter(maxiter_), verbose(verbose_), usesuperlu(usesuperlu_),
-    cgtodglop(), pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop), pmatrix(pgo)
+                            unsigned maxiter_=5000, int verbose_=1, bool usesuperlu_=true)
+    : Dune::PDELab::OVLPScalarProductImplementation<typename DGGO::Traits::TrialGridFunctionSpace>(dggo_.trialGridFunctionSpace())
+    , gfs(dggo_.trialGridFunctionSpace())
+    , dggo(dggo_)
+    , dgcc(dgcc_)
+    , cggfs(cggfs_)
+    , cgcc(cgcc_)
+    , maxiter(maxiter_)
+    , verbose(verbose_)
+    , usesuperlu(usesuperlu_)
+    , low_order_space_entries_per_row(StaticPower<3,GFS::Traits::GridView::dimension>::power)
+    , cgtodglop()
+    , pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop,MBE(low_order_space_entries_per_row))
+    , pmatrix(pgo)
   {
 #if !HAVE_SUPERLU
     if (usesuperlu == true)
@@ -535,6 +547,44 @@ public:
     CGV cgx(cggfs,0.0);         // need vector to call jacobian
     pgo.jacobian(cgx,pmatrix);
   }
+
+
+  /** make backend object
+   */
+  ISTLBackend_OVLP_AMG_4_DG(DGGO& dggo_, const DGCC& dgcc_, CGGFS& cggfs_, const CGCC& cgcc_,
+                            const ParameterTree& params)
+    : Dune::PDELab::OVLPScalarProductImplementation<typename DGGO::Traits::TrialGridFunctionSpace>(dggo_.trialGridFunctionSpace())
+    , gfs(dggo_.trialGridFunctionSpace())
+    , dggo(dggo_)
+    , dgcc(dgcc_)
+    , cggfs(cggfs_)
+    , cgcc(cgcc_)
+    , maxiter(params.get<int>("max_iterations",5000))
+    , verbose(params.get<int>("verbose",1))
+    , usesuperlu(params.get<bool>("use_superlu",true))
+    , low_order_space_entries_per_row(params.get<std::size_t>("low_order_space.entries_per_row",StaticPower<3,GFS::Traits::GridView::dimension>::power))
+    , cgtodglop()
+    , pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop,MBE(low_order_space_entries_per_row))
+    , pmatrix(pgo)
+  {
+#if !HAVE_SUPERLU
+    if (usesuperlu == true)
+      {
+        if (gfs.gridView().comm().rank()==0)
+          std::cout << "WARNING: You are using AMG without SuperLU!"
+                    << " Please consider installing SuperLU,"
+                    << " or set the usesuperlu flag to false"
+                    << " to suppress this warning." << std::endl;
+      }
+#endif
+
+    // assemble prolongation matrix; this will not change from one apply to the next
+    pmatrix = 0.0;
+    if (verbose>0 && gfs.gridView().comm().rank()==0) std::cout << "allocated prolongation matrix of size " << pmatrix.N() << " x " << pmatrix.M() << std::endl;
+    CGV cgx(cggfs,0.0);         // need vector to call jacobian
+    pgo.jacobian(cgx,pmatrix);
+  }
+
 
   /*! \brief solve the given linear system
 
@@ -556,13 +606,13 @@ public:
     // make grid operator with empty local operator => matrix data type and constraints assembly
     EmptyLop emptylop;
     typedef Dune::PDELab::GridOperator<CGGFS,CGGFS,EmptyLop,MBE,field_type,field_type,field_type,CGCC,CGCC> CGGO;
-    CGGO cggo(cggfs,cgcc,cggfs,cgcc,emptylop);
+    CGGO cggo(cggfs,cgcc,cggfs,cgcc,emptylop,MBE(low_order_space_entries_per_row));
     typedef typename CGGO::Jacobian CGM;
 
     // do triple matrix product ACG = P^T ADG P; this is purely local
     Dune::Timer watch;
     watch.reset();
-    tags::attached_container attached_container;
+    Backend::attached_container attached_container;
     CGM acg(attached_container);
     {
       PTADG ptadg;
@@ -579,7 +629,7 @@ public:
 
     // NOW we need to insert the processor boundary conditions in DG matrix
     typedef Dune::PDELab::GridOperator<GFS,GFS,EmptyLop,MBE,field_type,field_type,field_type,DGCC,DGCC> DGGOEmpty;
-    DGGOEmpty dggoempty(gfs,dgcc,gfs,dgcc,emptylop);
+    DGGOEmpty dggoempty(gfs,dgcc,gfs,dgcc,emptylop,MBE(1 << GFS::Traits::GridView::dimension));
     dggoempty.jacobian(z,A);
 
     // and in the residual

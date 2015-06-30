@@ -1,12 +1,15 @@
 #ifndef DUNE_PDELAB_SEQ_AMG_DG_BACKEND_HH
 #define DUNE_PDELAB_SEQ_AMG_DG_BACKEND_HH
 
+#include <dune/common/power.hh>
+#include <dune/common/parametertree.hh>
+
 #include <dune/istl/matrixmatrix.hh>
 
 #include <dune/grid/common/datahandleif.hh>
 
-#include <dune/pdelab/backend/istl/istlvectorbackend.hh>
-#include <dune/pdelab/backend/istl/istlmatrixbackend.hh>
+#include <dune/pdelab/backend/istl/vector.hh>
+#include <dune/pdelab/backend/istl/bcrsmatrix.hh>
 #include <dune/pdelab/backend/istl/ovlpistlsolverbackend.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 
@@ -157,7 +160,7 @@ namespace Dune {
       typedef typename CGV::BaseT CGVector;                               // istl CG vector
 
       // prolongation matrix
-      typedef Dune::PDELab::ISTLMatrixBackend MBE;
+      typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
       typedef Dune::PDELab::EmptyTransformation CC;
       typedef TransferLOP CGTODGLOP; // local operator
       typedef Dune::PDELab::GridOperator<CGGFS,GFS,CGTODGLOP,MBE,field_type,field_type,field_type,CC,CC> PGO;
@@ -174,6 +177,7 @@ namespace Dune {
       unsigned maxiter;
       int verbose;
       bool usesuperlu;
+      std::size_t low_order_space_entries_per_row;
 
       CGTODGLOP cgtodglop;  // local operator to assemble prolongation matrix
       PGO pgo;              // grid operator to assemble prolongation matrix
@@ -181,8 +185,15 @@ namespace Dune {
 
     public:
       ISTLBackend_SEQ_AMG_4_DG(DGGO& dggo_, CGGFS& cggfs_, unsigned maxiter_=5000, int verbose_=1, bool usesuperlu_=true)
-        : dggo(dggo_), cggfs(cggfs_), maxiter(maxiter_), verbose(verbose_), usesuperlu(usesuperlu_),
-          cgtodglop(), pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop), pmatrix(pgo)
+        : dggo(dggo_)
+        , cggfs(cggfs_)
+        , maxiter(maxiter_)
+        , verbose(verbose_)
+        , usesuperlu(usesuperlu_)
+        , low_order_space_entries_per_row(StaticPower<3,GFS::Traits::GridView::dimension>::power)
+        , cgtodglop()
+        , pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop,MBE(low_order_space_entries_per_row))
+        , pmatrix(pgo)
       {
 #if !HAVE_SUPERLU
         if (usesuperlu == true)
@@ -193,6 +204,29 @@ namespace Dune {
                       << " to suppress this warning." << std::endl;
           }
 #endif
+      }
+
+      ISTLBackend_SEQ_AMG_4_DG(DGGO& dggo_, CGGFS& cggfs_, const ParameterTree& params)//unsigned maxiter_=5000, int verbose_=1, bool usesuperlu_=true)
+        : dggo(dggo_)
+        , cggfs(cggfs_)
+        , maxiter(params.get<int>("max_iterations",5000))
+        , verbose(params.get<int>("verbose",1))
+        , usesuperlu(params.get<bool>("use_superlu",true))
+        , low_order_space_entries_per_row(params.get<std::size_t>("low_order_space.entries_per_row",StaticPower<3,GFS::Traits::GridView::dimension>::power))
+        , cgtodglop()
+        , pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop,MBE(low_order_space_entries_per_row))
+        , pmatrix(pgo)
+      {
+#if !HAVE_SUPERLU
+        if (usesuperlu == true)
+          {
+            std::cout << "WARNING: You are using AMG without SuperLU!"
+                      << " Please consider installing SuperLU,"
+                      << " or set the usesuperlu flag to false"
+                      << " to suppress this warning." << std::endl;
+          }
+#endif
+
 
         // assemble prolongation matrix; this will not change from one apply to the next
         pmatrix = 0.0;

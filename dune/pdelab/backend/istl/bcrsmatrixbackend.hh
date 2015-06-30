@@ -2,7 +2,7 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_BCRSMATRIXBACKEND_HH
 #define DUNE_PDELAB_BACKEND_ISTL_BCRSMATRIXBACKEND_HH
 
-#include <dune/pdelab/backend/istl/istlmatrixbackend.hh>
+#include <dune/pdelab/backend/istl/bcrsmatrix.hh>
 #include <dune/pdelab/backend/istl/bcrspattern.hh>
 #include <dune/pdelab/backend/istl/patternstatistics.hh>
 
@@ -244,7 +244,7 @@ namespace Dune {
         template<typename VV, typename VU, typename E>
         struct MatrixHelper
         {
-          typedef ISTLMatrixContainer<
+          typedef BCRSMatrix<
             typename VV::GridFunctionSpace,
             typename VU::GridFunctionSpace,
             typename build_matrix_type<

@@ -583,7 +583,7 @@ namespace Dune {
         // continuous Lagrange finite elements
         template<typename T, typename N, unsigned int degree, typename BCType,
                  Dune::GeometryType::BasicType gt, MeshType mt, SolverCategory::Category st = SolverCategory::sequential,
-                 typename VBET=ISTLVectorBackend<> >
+                 typename VBET=istl::VectorBackend<> >
         class CGSpace {
         public:
 
@@ -771,7 +771,7 @@ namespace Dune {
         // default implementation, use only specializations below
         template<typename T, typename N, unsigned int degree,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 typename VBET=ISTLVectorBackend<ISTLParameters::static_blocking,Dune::PB::PkSize<degree,T::dimension>::value> >
+                 typename VBET=istl::VectorBackend<istl::Blocking::fixed,Dune::PB::PkSize<degree,T::dimension>::value> >
         class DGPkSpace
         {
         public:
@@ -870,8 +870,8 @@ namespace Dune {
         // default implementation, use only specializations below
         template<typename T, typename N, unsigned int degree,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 //typename VBET=ISTLVectorBackend<ISTLParameters::static_blocking,Dune::PB::PkSize<degree,T::dimension>::value> >
-                 typename VBET=ISTLVectorBackend<> >
+                 //typename VBET=istl::VectorBackend<istl::Blocking::fixed,Dune::PB::PkSize<degree,T::dimension>::value> >
+                 typename VBET=istl::VectorBackend<> >
         class DGQkOPBSpace
         {
         public:
@@ -970,7 +970,7 @@ namespace Dune {
         // default implementation, use only specializations below
         template<typename T, typename N, unsigned int degree,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 typename VBET=ISTLVectorBackend<ISTLParameters::static_blocking,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
+                 typename VBET=istl::VectorBackend<istl::Blocking::fixed,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
         class DGQkSpace
         {
         public:
@@ -1065,8 +1065,8 @@ namespace Dune {
         // Discontinuous space using QK with Gauss Lobatto points (use only for cube elements)
         template<typename T, typename N, unsigned int degree,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 //typename VBET=ISTLVectorBackend<ISTLParameters::static_blocking,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
-                 typename VBET=ISTLVectorBackend<> >
+                 //typename VBET=istl::VectorBackend<istl::Blocking::fixed,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
+                 typename VBET=istl::VectorBackend<> >
         class DGQkGLSpace
         {
         public:
@@ -1162,7 +1162,7 @@ namespace Dune {
         // Discontinuous P0 space
         template<typename T, typename N,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 typename VBET=ISTLVectorBackend<> >
+                 typename VBET=istl::VectorBackend<> >
         class P0Space
         {
         public:

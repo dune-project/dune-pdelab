@@ -144,13 +144,15 @@ public:
 template<typename GV, typename FEM, typename CON>
 void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
 {
+  using Dune::PDELab::Backend::native;
+
   // constants and types
   typedef typename FEM::Traits::FiniteElementType::Traits::
     LocalBasisType::Traits::RangeFieldType R;
 
   // make function space
   typedef Dune::PDELab::GridFunctionSpace<GV,FEM,CON,
-    Dune::PDELab::ISTLVectorBackend<> > GFS;
+    Dune::PDELab::istl::VectorBackend<> > GFS;
   GFS gfs(gv,fem);
   gfs.name("solution");
 
@@ -233,10 +235,10 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   gridoperator.residual(x0,r);
 
   // make ISTL solver
-  Dune::MatrixAdapter<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> opa(m.base());
+  Dune::MatrixAdapter<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> opa(native(m));
   //ISTLOnTheFlyOperator opb(gridoperator);
-  Dune::SeqSSOR<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ssor(m.base(),1,1.0);
-  Dune::SeqILU0<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ilu0(m.base(),1.0);
+  Dune::SeqSSOR<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ssor(native(m),1,1.0);
+  Dune::SeqILU0<typename M::BaseT,typename DV::BaseT,typename RV::BaseT> ilu0(native(m),1.0);
   Dune::Richardson<typename DV::BaseT,typename RV::BaseT> richardson(1.0);
 
 //   typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<M,
@@ -259,7 +261,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   // solve the jacobian system
   r *= -1.0; // need -residual
   DV x(gfs,0.0);
-  solvera.apply(x.base(),r.base(),stat);
+  solvera.apply(native(x),native(r),stat);
   x += x0;
 
   // output grid function with VTKWriter
