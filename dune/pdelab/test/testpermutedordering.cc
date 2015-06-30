@@ -117,7 +117,7 @@ static void testpermutedordering(const GV& gv)
 
   P1GFS p1gfs(gfs1,gfs1,gfs1,VBE(),{{1,1,1}});
 
-  typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::blocking::fixed,6> NVBE;
+  typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::fixed,6> NVBE;
 
   typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,2,NVBE,Dune::PDELab::InterleavedOrderingTag> PGFS;
   std::vector<std::size_t> p_gfs_block_sizes(2);
