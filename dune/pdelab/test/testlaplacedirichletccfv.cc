@@ -105,7 +105,7 @@ void test (const GV& gv)
     GV,
     FEM,
     Dune::PDELab::NoConstraints,
-    Dune::PDELab::ISTLVectorBackend<>,
+    Dune::PDELab::istl::VectorBackend<>,
     Mapper> GFS;
   GFS gfs(gv,fem);
   gfs.name("u");

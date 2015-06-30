@@ -122,7 +122,7 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
 
   // make function space
   typedef Dune::PDELab::ConformingDirichletConstraints Constraints;
-  typedef Dune::PDELab::ISTLVectorBackend<> ComponentVectorBackend;
+  typedef Dune::PDELab::istl::VectorBackend<> ComponentVectorBackend;
 
   typedef Dune::PDELab::DefaultLeafOrderingTag Mapper;
 
@@ -131,7 +131,7 @@ void testp1 (const GV& gv, double mu, double lambda, double constG)
     GV,
     FEM,
     dim,
-    Dune::PDELab::ISTLVectorBackend<>,
+    Dune::PDELab::istl::VectorBackend<>,
     ComponentVectorBackend,
     Constraints,
     OrderingTag,

@@ -34,11 +34,11 @@ void test (const GV& gv)
 
   // power grid function space
   typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,2,
-    Dune::PDELab::ISTLVectorBackend<>, Dune::PDELab::LexicographicOrderingTag> PowerGFS;
+    Dune::PDELab::istl::VectorBackend<>, Dune::PDELab::LexicographicOrderingTag> PowerGFS;
   PowerGFS powergfs(q2gfs);
 
   // composite grid function space
-  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTLVectorBackend<>,
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::istl::VectorBackend<>,
       Dune::PDELab::LexicographicOrderingTag,PowerGFS,Q1GFS> CompositeGFS;
   CompositeGFS compositegfs(powergfs,q1gfs);
 

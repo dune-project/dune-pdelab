@@ -44,31 +44,31 @@ struct test<2> {
     typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM> GFS2;
     GFS2 gfs2(gv,q22dfem);
     typedef Dune::PDELab::GridFunctionSpace<GV,Q22DFEM,Dune::PDELab::NoConstraints,
-      Dune::PDELab::ISTLVectorBackend<> > GFS3;
+      Dune::PDELab::istl::VectorBackend<> > GFS3;
     GFS3 gfs3(gv,q22dfem);
 
     // test power
-    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,2,Dune::PDELab::ISTLVectorBackend<> > PGFS2;
+    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,2,Dune::PDELab::istl::VectorBackend<> > PGFS2;
     PGFS2 pgfs2(gfs2,gfs2);
-    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,3,Dune::PDELab::ISTLVectorBackend<> > PGFS3;
+    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,3,Dune::PDELab::istl::VectorBackend<> > PGFS3;
     PGFS3 pgfs3(gfs2,gfs2,gfs2);
-    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,4,Dune::PDELab::ISTLVectorBackend<> > PGFS4;
+    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,4,Dune::PDELab::istl::VectorBackend<> > PGFS4;
     PGFS4 pgfs4(gfs2,gfs2,gfs2,gfs2);
-    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,5,Dune::PDELab::ISTLVectorBackend<> > PGFS5;
+    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,5,Dune::PDELab::istl::VectorBackend<> > PGFS5;
     PGFS5 pgfs5(gfs2,gfs2,gfs2,gfs2,gfs2);
-    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,6,Dune::PDELab::ISTLVectorBackend<> > PGFS6;
+    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,6,Dune::PDELab::istl::VectorBackend<> > PGFS6;
     PGFS6 pgfs6(gfs2,gfs2,gfs2,gfs2,gfs2,gfs2);
-    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,7,Dune::PDELab::ISTLVectorBackend<> > PGFS7;
+    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,7,Dune::PDELab::istl::VectorBackend<> > PGFS7;
     PGFS7 pgfs7(gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2);
-    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,8,Dune::PDELab::ISTLVectorBackend<> > PGFS8;
+    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,8,Dune::PDELab::istl::VectorBackend<> > PGFS8;
     PGFS8 pgfs8(gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2);
-    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,9,Dune::PDELab::ISTLVectorBackend<> > PGFS9;
+    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,9,Dune::PDELab::istl::VectorBackend<> > PGFS9;
     PGFS9 pgfs9(gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2);
-    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,10,Dune::PDELab::ISTLVectorBackend<> > PGFS10;
+    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,10,Dune::PDELab::istl::VectorBackend<> > PGFS10;
     PGFS10 pgfs10(gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2,gfs2);
-    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,17,Dune::PDELab::ISTLVectorBackend<> > PGFS17;
+    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,17,Dune::PDELab::istl::VectorBackend<> > PGFS17;
     PGFS17 pgfs17(gfs2);
-    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,17,Dune::PDELab::ISTLVectorBackend<>,
+    typedef Dune::PDELab::PowerGridFunctionSpace<GFS2,17,Dune::PDELab::istl::VectorBackend<>,
         Dune::PDELab:: EntityBlockedOrderingTag> PGFS17B;
     PGFS17B pgfs17b(gfs2);
 
@@ -86,28 +86,28 @@ struct test<2> {
     }
 
     // test composite
-    typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTLVectorBackend<>,
+    typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::istl::VectorBackend<>,
         Dune::PDELab::LexicographicOrderingTag,GFS1,PGFS2> CGFS2;
     CGFS2 cgfs2(gfs1,pgfs2);
-    typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTLVectorBackend<>,
+    typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::istl::VectorBackend<>,
         Dune::PDELab::LexicographicOrderingTag,GFS1,PGFS2,CGFS2> CGFS3;
     CGFS3 cgfs3(gfs1,pgfs2,cgfs2);
-    typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTLVectorBackend<>,
+    typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::istl::VectorBackend<>,
         Dune::PDELab::LexicographicOrderingTag,GFS1,PGFS2,CGFS2,CGFS3> CGFS4;
     CGFS4 cgfs4(gfs1,pgfs2,cgfs2,cgfs3);
-    typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTLVectorBackend<>,
+    typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::istl::VectorBackend<>,
         Dune::PDELab::LexicographicOrderingTag,GFS1,PGFS2,CGFS2,CGFS3,CGFS4> CGFS5;
     CGFS5 cgfs5(gfs1,pgfs2,cgfs2,cgfs3,cgfs4);
-    typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTLVectorBackend<>,
+    typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::istl::VectorBackend<>,
         Dune::PDELab::LexicographicOrderingTag,GFS1,PGFS2,CGFS2,CGFS3,CGFS4,CGFS5> CGFS6;
     CGFS6 cgfs6(gfs1,pgfs2,cgfs2,cgfs3,cgfs4,cgfs5);
-    typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTLVectorBackend<>,
+    typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::istl::VectorBackend<>,
         Dune::PDELab::LexicographicOrderingTag,GFS1,PGFS2,CGFS2,CGFS3,CGFS4,CGFS5,CGFS6> CGFS7;
     CGFS7 cgfs7(gfs1,pgfs2,cgfs2,cgfs3,cgfs4,cgfs5,cgfs6);
-    typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTLVectorBackend<>,
+    typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::istl::VectorBackend<>,
         Dune::PDELab::LexicographicOrderingTag,GFS1,PGFS2,CGFS2,CGFS3,CGFS4,CGFS5,CGFS6,CGFS7> CGFS8;
     CGFS8 cgfs8(gfs1,pgfs2,cgfs2,cgfs3,cgfs4,cgfs5,cgfs6,cgfs7);
-    typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTLVectorBackend<>,
+    typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::istl::VectorBackend<>,
         Dune::PDELab::LexicographicOrderingTag,GFS1,PGFS2,CGFS2,CGFS3,CGFS4,CGFS5,CGFS6,CGFS7,CGFS8> CGFS9;
     CGFS9 cgfs9(gfs1,pgfs2,cgfs2,cgfs3,cgfs4,cgfs5,cgfs6,cgfs7,cgfs8);
   }

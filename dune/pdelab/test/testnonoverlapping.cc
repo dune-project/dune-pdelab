@@ -69,7 +69,7 @@ int main(int argc, char** argv)
     typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,RF,1> FEM;
     FEM fem(gv);
 
-    typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+    typedef Dune::PDELab::istl::VectorBackend<> VBE;
     typedef Dune::PDELab::NoConstraints NoConstraints;
 
     typedef Dune::PDELab::GridFunctionSpace<GV,FEM,NoConstraints,VBE,Dune::PDELab::NonOverlappingLeafOrderingTag> GFS;
