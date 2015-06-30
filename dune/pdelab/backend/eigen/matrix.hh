@@ -95,11 +95,11 @@ namespace Dune
         }
 
         //! Creates an MatrixContainer without allocating an underlying Eigen matrix.
-        explicit MatrixContainer(tags::unattached_container = tags::unattached_container())
+        explicit MatrixContainer(Backend::unattached_container = Backend::unattached_container())
         {}
 
         //! Creates an MatrixContainer with an empty underlying Eigen matrix.
-        explicit MatrixContainer(tags::attached_container)
+        explicit MatrixContainer(Backend::attached_container)
         : _container(std::make_shared<Container>())
         {}
 

@@ -191,7 +191,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   // it's there to test the copy constructor and assignment operator of the
   // matrix wrapper
   typedef typename GridOperator::Traits::Domain DV;
-  DV x0(gfs,Dune::PDELab::tags::unattached_container());
+  DV x0(gfs,Dune::PDELab::Backend::unattached_container());
   {
     DV x1(gfs);
     DV x2(x1);

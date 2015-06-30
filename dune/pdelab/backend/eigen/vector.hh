@@ -92,13 +92,13 @@ namespace Dune {
           , _container(std::make_shared<Container>(*(rhs._container)))
         {}
 
-        VectorContainer (const GFS& gfs, tags::attached_container = tags::attached_container())
+        VectorContainer (const GFS& gfs, Backend::attached_container = Backend::attached_container())
           : _gfs(gfs)
           , _container(std::make_shared<Container>(gfs.ordering().blockCount()))
         {}
 
         //! Creates a VectorContainer without allocating storage.
-        VectorContainer(const GFS& gfs, tags::unattached_container)
+        VectorContainer(const GFS& gfs, Backend::unattached_container)
           : _gfs(gfs)
         {}
 

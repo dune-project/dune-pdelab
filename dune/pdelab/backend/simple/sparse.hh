@@ -144,11 +144,11 @@ namespace Dune {
         }
 
         //! Creates an SparseMatrixContainer without allocating an underlying ISTL matrix.
-        explicit SparseMatrixContainer(tags::unattached_container = tags::unattached_container())
+        explicit SparseMatrixContainer(Backend::unattached_container = Backend::unattached_container())
         {}
 
         //! Creates an SparseMatrixContainer with an empty underlying ISTL matrix.
-        explicit SparseMatrixContainer(tags::attached_container)
+        explicit SparseMatrixContainer(Backend::attached_container)
         : _container(std::make_shared<Container>())
         {}
 

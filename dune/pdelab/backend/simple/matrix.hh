@@ -62,13 +62,13 @@ namespace Dune {
         {}
 
         //! Creates an ISTLMatrixContainer without allocating an underlying ISTL matrix.
-        explicit MatrixContainer(tags::unattached_container = tags::unattached_container())
+        explicit MatrixContainer(Backend::unattached_container = Backend::unattached_container())
           : _rows(0)
           , _cols(0)
         {}
 
         //! Creates an ISTLMatrixContainer with an empty underlying ISTL matrix.
-        explicit MatrixContainer(tags::attached_container)
+        explicit MatrixContainer(Backend::attached_container)
           : _rows(0)
           , _cols(0)
           , _container(std::make_shared<Container>())
