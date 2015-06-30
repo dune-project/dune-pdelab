@@ -90,7 +90,7 @@ namespace Dune {
           , _container(std::make_shared<Container>(_gfs.ordering().blockCount()))
         {
           istl::dispatch_vector_allocation(_gfs.ordering(),*_container,typename GFS::Ordering::ContainerAllocationTag());
-          (*_container) = rhs.base();
+          (*_container) = rhs.native();
         }
 
         BlockVector (const GFS& gfs, Backend::attached_container = Backend::attached_container())
@@ -157,11 +157,11 @@ namespace Dune {
             return *this;
           if (attached())
             {
-              (*_container) = r.base();
+              (*_container) = r.native();
             }
           else
             {
-              _container = std::make_shared<Container>(r.base());
+              _container = std::make_shared<Container>(r.native());
             }
           return *this;
         }
@@ -187,13 +187,13 @@ namespace Dune {
 
         BlockVector& operator+= (const BlockVector& e)
         {
-          (*_container)+= e.base();
+          (*_container)+= e.native();
           return *this;
         }
 
         BlockVector& operator-= (const BlockVector& e)
         {
-          (*_container)-= e.base();
+          (*_container)-= e.native();
           return *this;
         }
 
@@ -234,27 +234,31 @@ namespace Dune {
 
         E operator*(const BlockVector& y) const
         {
-          return (*_container)*y.base();
+          return (*_container)*y.native();
         }
 
         E dot(const BlockVector& y) const
         {
-          return _container->dot(y.base());
+          return _container->dot(y.native());
         }
 
         BlockVector& axpy(const E& a, const BlockVector& y)
         {
-          _container->axpy(a, y.base());
+          _container->axpy(a, y.native());
           return *this;
         }
 
         // for debugging and AMG access
-        Container& base ()
+        Container&
+        DUNE_DEPRECATED_MSG("base() is deprecated and will be removed after PDELab 2.4. Use Backend::native() instead.")
+        base ()
         {
           return *_container;
         }
 
-        const Container& base () const
+        const Container&
+        DUNE_DEPRECATED_MSG("base() is deprecated and will be removed after PDELab 2.4. Use Backend::native() instead.")
+        base () const
         {
           return *_container;
         }

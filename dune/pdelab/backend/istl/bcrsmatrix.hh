@@ -233,12 +233,16 @@ namespace Dune {
           return istl::access_matrix_element(istl::container_tag(*_container),*_container,ri,ci,ri.size()-1,ci.size()-1);
         }
 
-        const Container& base() const
+        const Container&
+        DUNE_DEPRECATED_MSG("base() is deprecated and will be removed after PDELab 2.4. Use Backend::native() instead.")
+        base() const
         {
           return *_container;
         }
 
-        Container& base()
+        Container&
+        DUNE_DEPRECATED_MSG("base() is deprecated and will be removed after PDELab 2.4. Use Backend::native() instead.")
+        base()
         {
           return *_container;
         }

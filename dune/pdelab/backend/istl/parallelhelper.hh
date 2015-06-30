@@ -22,6 +22,7 @@
 
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/gridfunctionspace/genericdatahandle.hh>
+#include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/istl/vector.hh>
 #include <dune/pdelab/backend/istl/utility.hh>
 #include <dune/pdelab/gridfunctionspace/tags.hh>
@@ -258,7 +259,7 @@ namespace Dune {
         // restricted to a single DOF.
         bool owned_for_amg(std::size_t i) const
         {
-          return _ranks.base()[i][0] == _rank;
+          return Backend::native(_ranks)[i][0] == _rank;
         }
 
         // Checks whether a matrix block is associated with a ghost entity. Used for the AMG
@@ -266,7 +267,7 @@ namespace Dune {
         // restricted to a single DOF.
         bool is_ghost_for_amg(std::size_t i) const
         {
-          return _ghosts.base()[i][0];
+          return Backend::native(_ghosts)[i][0];
         }
 
 #endif // HAVE_MPI
@@ -292,6 +293,8 @@ namespace Dune {
       template<typename M, typename C>
       void ParallelHelper<GFS>::createIndexSetAndProjectForAMG(M& m, C& c)
       {
+
+        using Backend::native;
 
         const bool is_bcrs_matrix =
           is_same<
@@ -341,7 +344,7 @@ namespace Dune {
         GlobalIndex count = 0;
 
         for (size_type i = 0; i < sharedDOF.N(); ++i)
-          if (owned_for_amg(i) && sharedDOF.base()[i][0])
+          if (owned_for_amg(i) && native(sharedDOF)[i][0])
             ++count;
 
         dverb << gv.comm().rank() << ": shared block count is " << count.touint() << std::endl;
@@ -357,9 +360,9 @@ namespace Dune {
         GIVector scalarIndices(_gfs, std::numeric_limits<GlobalIndex>::max());
 
         for (size_type i = 0; i < sharedDOF.N(); ++i)
-          if (owned_for_amg(i) && sharedDOF.base()[i][0])
+          if (owned_for_amg(i) && native(sharedDOF)[i][0])
             {
-              scalarIndices.base()[i][0] = start;
+              native(scalarIndices)[i][0] = start;
               ++start;
             }
 
@@ -375,7 +378,7 @@ namespace Dune {
         for (size_type i=0; i<scalarIndices.N(); ++i)
           {
             Dune::OwnerOverlapCopyAttributeSet::AttributeSet attr;
-            if(scalarIndices.base()[i][0] != std::numeric_limits<GlobalIndex>::max())
+            if(native(scalarIndices)[i][0] != std::numeric_limits<GlobalIndex>::max())
               {
                 // global index exist in index set
                 if (owned_for_amg(i))
@@ -392,7 +395,7 @@ namespace Dune {
                   {
                     attr = Dune::OwnerOverlapCopyAttributeSet::copy;
                   }
-                c.indexSet().add(scalarIndices.base()[i][0], typename C::ParallelIndexSet::LocalIndex(i,attr));
+                c.indexSet().add(native(scalarIndices)[i][0], typename C::ParallelIndexSet::LocalIndex(i,attr));
               }
           }
         c.indexSet().endResize();
