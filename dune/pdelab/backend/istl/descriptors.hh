@@ -73,7 +73,9 @@ namespace Dune {
      * both the ansatz and the test function space use ISTL vectors and automatically deduces
      * the correct matrix type from those two vector backends.
      */
-    struct ISTLMatrixBackend
+    struct
+    DUNE_DEPRECATED_MSG("ISTLMatrixBackend has been deprecated and will be removed after the release of PDELab 2.4. Use istl::BCRSMatrixBackend with the newer pattern construction method instead")
+    ISTLMatrixBackend
     {
 
       typedef std::size_t size_type;
