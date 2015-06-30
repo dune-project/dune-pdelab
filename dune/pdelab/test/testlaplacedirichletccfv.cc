@@ -84,6 +84,8 @@ public:
 template<class GV>
 void test (const GV& gv)
 {
+  using Dune::PDELab::Backend::native;
+
   typedef typename GV::Grid::ctype DF;
   typedef double RF;
   const int dim = GV::dimension;
@@ -150,11 +152,11 @@ void test (const GV& gv)
   typedef typename V::Container ISTLV;
 
   // make ISTL solver
-  Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());
+  Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(native(m));
   //  typedef Dune::PDELab::OnTheFlyOperator<V,V,GOS> ISTLOnTheFlyOperator;
   //  ISTLOnTheFlyOperator opb(gos);
   //  Dune::SeqSSOR<M,V,V> ssor(m,1,1.0);
-  Dune::SeqILU0<ISTLM,ISTLV,ISTLV> ilu0(m.base(),1.0);
+  Dune::SeqILU0<ISTLM,ISTLV,ISTLV> ilu0(native(m),1.0);
   //  Dune::Richardson<V,V> richardson(1.0);
   Dune::CGSolver<ISTLV> solvera(opa,ilu0,1E-10,5000,2);
   //  Dune::CGSolver<V> solverb(opb,richardson,1E-10,5000,2);
@@ -163,7 +165,7 @@ void test (const GV& gv)
   // solve the jacobian system
   r *= -1.0; // need -residual
   V x(gfs,0.0);
-  solvera.apply(x.base(),r.base(),stat);
+  solvera.apply(native(x),native(r),stat);
   x += x0;
 
   // output grid function with VTKWriter

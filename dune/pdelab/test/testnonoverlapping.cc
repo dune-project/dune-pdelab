@@ -113,7 +113,7 @@ int main(int argc, char** argv)
               }
             std::cout << std::endl;
 
-            Dune::printmatrix(std::cout,A.base(),"","");
+            Dune::printmatrix(std::cout,Dune::PDELab::Backend::native(A),"","");
 
           }
 

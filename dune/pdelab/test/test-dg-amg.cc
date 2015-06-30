@@ -193,7 +193,7 @@ int main(int argc, char **argv)
   // allocate solution vector; DG has no essential boundary conditions
   typedef FS::DOF V;
   V x(fs.getGFS(),0.0);
-  std::cout << "number of elements is " << x.base().N() << std::endl;
+  std::cout << "number of elements is " << Dune::PDELab::Backend::native(x).N() << std::endl;
 
   // CG space
   typedef AuxilliaryBoundaryCondition<GM::LeafGridView,NumberType> AuxilliaryProblem;
