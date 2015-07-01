@@ -166,6 +166,132 @@ namespace Dune {
       const int superintegration_order;
     }; // end class NavierStokesMass
 
+    /** \brief A local operator for the mass term corresponding to the
+        instationary part in the Navier-Stokes equations
+        using a vector-valued Finite Element map for the velocity grid function space.
+
+        \f{align*}{
+        \int_\Omega \rho u\cdot v dx
+        \f}
+    */
+    template<typename PRM>
+    class NavierStokesVelVecMass :
+      public FullVolumePattern ,
+      public LocalOperatorDefaultFlags ,
+      public InstationaryLocalOperatorDefaultMethods<double>
+    {
+    public:
+      // pattern assembly flags
+      enum { doPatternVolume = true };
+
+      // residual assembly flags
+      enum { doAlphaVolume = true };
+
+      NavierStokesVelVecMass (const PRM & p_, int superintegration_order_ = 0)
+        : p(p_), superintegration_order(superintegration_order_)
+      {}
+
+      // volume integral depending on test and ansatz functions
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+      {
+        // dimensions
+        const int dim = EG::Geometry::dimension;
+
+        // subspaces
+        typedef typename LFSV::template Child<0>::Type LFSV_V;
+        const LFSV_V& lfsv_v = lfsv.template child<0>();
+        const LFSV_V& lfsu_v = lfsu.template child<0>();
+
+        // domain and range field type
+        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
+        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+        typedef typename BasisSwitch_V::DomainField DF;
+        typedef typename BasisSwitch_V::RangeField RF;
+        typedef typename BasisSwitch_V::Range Range_V;
+        typedef typename LFSV::Traits::SizeType size_type;
+
+        // select quadrature rule
+        Dune::GeometryType gt = eg.geometry().type();
+        const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
+        const int det_jac_order = gt.isSimplex() ? 0 : (dim-1);
+        const int qorder = 2*v_order + det_jac_order + superintegration_order;
+        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
+
+        // loop over quadrature points
+        for (const auto& ip : rule)
+          {
+            const Dune::FieldVector<DF,dim> local = ip.position();
+            const RF rho = p.rho(eg,local);
+
+            // compute basis functions
+            std::vector<Range_V> phi_v(lfsv_v.size());
+            FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
+
+            // compute u
+            Range_V u(0.0);
+            for(size_type i=0; i<lfsu_v.size(); i++)
+              u.axpy(x(lfsu_v,i),phi_v[i]);
+
+            const RF factor = ip.weight() * rho * eg.geometry().integrationElement(ip.position());
+
+            for(size_type i=0; i<lfsv_v.size(); i++)
+              r.accumulate(lfsv_v,i, (u*phi_v[i]) * factor);
+
+          } // end loop quadrature points
+      } // end alpha_volume
+
+      // jacobian of volume term
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
+      void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
+                            M& mat) const
+      {
+        // dimensions
+        const int dim = EG::Geometry::dimension;
+
+        // subspaces
+        typedef typename LFSV::template Child<0>::Type LFSV_V;
+        const LFSV_V& lfsv_v = lfsv.template child<0>();
+        const LFSV_V& lfsu_v = lfsu.template child<0>();
+
+        // domain and range field type
+        typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
+        typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
+        typedef typename BasisSwitch_V::DomainField DF;
+        typedef typename BasisSwitch_V::RangeField RF;
+        typedef typename BasisSwitch_V::Range Range_V;
+        typedef typename LFSV::Traits::SizeType size_type;
+
+        // select quadrature rule
+        Dune::GeometryType gt = eg.geometry().type();
+        const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
+        const int det_jac_order = gt.isSimplex() ? 0 : (dim-1);
+        const int qorder = 2*v_order + det_jac_order + superintegration_order;
+        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
+
+        // loop over quadrature points
+        for (const auto& ip : rule)
+          {
+            const Dune::FieldVector<DF,dim> local = ip.position();
+            const RF rho = p.rho(eg,local);
+
+            // compute basis functions
+            std::vector<Range_V> phi_v(lfsv_v.size());
+            FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,phi_v);
+
+            const RF factor = ip.weight() * rho * eg.geometry().integrationElement(ip.position());
+
+            for(size_type i=0; i<lfsv_v.size(); i++)
+              for(size_type j=0; j<lfsu_v.size(); j++)
+                mat.accumulate(lfsv_v,i,lfsu_v,j, (phi_v[j]*phi_v[i]) * factor);
+          } // end loop quadrature points
+      } // end jacobian_volume
+
+    private :
+      const PRM& p;
+      const int superintegration_order;
+    }; // end class NavierStokesVelVecMass
+
   } // end namespace PDELab
 } // end namespace Dune
 #endif
