@@ -52,45 +52,11 @@ namespace Dune {
 
 #endif // DOXYGEN
 
-#if HAVE_TEMPLATE_ALIASES
-
         template<typename RowCache, typename ColCache>
         using LocalView = UncachedMatrixView<BCRSMatrix,RowCache,ColCache>;
 
         template<typename RowCache, typename ColCache>
         using ConstLocalView = ConstUncachedMatrixView<const BCRSMatrix,RowCache,ColCache>;
-
-#else
-
-        template<typename RowCache, typename ColCache>
-        struct LocalView
-          : public UncachedMatrixView<BCRSMatrix,RowCache,ColCache>
-        {
-
-          LocalView()
-          {}
-
-          LocalView(BCRSMatrix& mc)
-            : UncachedMatrixView<BCRSMatrix,RowCache,ColCache>(mc)
-          {}
-
-        };
-
-        template<typename RowCache, typename ColCache>
-        struct ConstLocalView
-          : public ConstUncachedMatrixView<const BCRSMatrix,RowCache,ColCache>
-        {
-
-          ConstLocalView()
-          {}
-
-          ConstLocalView(const BCRSMatrix& mc)
-            : ConstUncachedMatrixView<const BCRSMatrix,RowCache,ColCache>(mc)
-          {}
-
-        };
-
-#endif // HAVE_TEMPLATE_ALIASES
 
         template<typename GO>
         explicit BCRSMatrix (const GO& go)

@@ -118,8 +118,6 @@ namespace Dune {
       // The default matrix construction method does not collect statistics, so provide a dummy type here.
       typedef int Statistics;
 
-#if HAVE_TEMPLATE_ALIASES || DOXYGEN
-
       //! The type of the pattern object passed to the GridOperator for pattern construction.
       template<typename Matrix, typename GFSV, typename GFSU>
       using Pattern = typename istl::build_pattern_type<
@@ -128,42 +126,6 @@ namespace Dune {
         GFSU,
         typename GFSV::Ordering::ContainerAllocationTag
         >::type;
-
-#else // HAVE_TEMPLATE_ALIASES
-
-      template<typename Matrix, typename GFSV, typename GFSU>
-      struct Pattern
-        : public istl::build_pattern_type<typename Matrix::Container,
-                                          GFSV,
-                                          GFSU,
-                                          typename GFSV::Ordering::ContainerAllocationTag
-                                          >::type
-      {
-
-        typedef OrderingBase<
-          typename GFSV::Ordering::Traits::DOFIndex,
-          typename GFSV::Ordering::Traits::ContainerIndex
-          > RowOrdering;
-
-        typedef OrderingBase<
-          typename GFSU::Ordering::Traits::DOFIndex,
-          typename GFSU::Ordering::Traits::ContainerIndex
-          > ColOrdering;
-
-        typedef typename istl::build_pattern_type<
-          typename Matrix::Container,
-          GFSV,
-          GFSU,
-          typename GFSV::Ordering::ContainerAllocationTag
-          >::type BaseT;
-
-        Pattern(const RowOrdering& row_ordering, const ColOrdering& col_ordering)
-          : BaseT(row_ordering,col_ordering)
-        {}
-
-      };
-
-#endif // HAVE_TEMPLATE_ALIASES
 
       template<typename VV, typename VU, typename E>
       struct MatrixHelper

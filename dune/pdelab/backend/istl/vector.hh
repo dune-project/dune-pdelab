@@ -44,45 +44,11 @@ namespace Dune {
         typedef istl::vector_iterator<const C> const_iterator;
 
 
-#if HAVE_TEMPLATE_ALIASES
-
         template<typename LFSCache>
         using LocalView = UncachedVectorView<BlockVector,LFSCache>;
 
         template<typename LFSCache>
         using ConstLocalView = ConstUncachedVectorView<const BlockVector,LFSCache>;
-
-#else
-
-        template<typename LFSCache>
-        struct LocalView
-          : public UncachedVectorView<BlockVector,LFSCache>
-        {
-
-        LocalView()
-        {}
-
-        LocalView(BlockVector& vc)
-          : UncachedVectorView<BlockVector,LFSCache>(vc)
-        {}
-
-      };
-
-        template<typename LFSCache>
-        struct ConstLocalView
-          : public ConstUncachedVectorView<const BlockVector,LFSCache>
-        {
-
-        ConstLocalView()
-        {}
-
-        ConstLocalView(const BlockVector& vc)
-          : ConstUncachedVectorView<const BlockVector,LFSCache>(vc)
-        {}
-
-      };
-
-#endif // HAVE_TEMPLATE_ALIASES
 
 
         BlockVector(const BlockVector& rhs)
