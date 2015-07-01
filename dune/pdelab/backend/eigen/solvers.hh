@@ -184,7 +184,7 @@ namespace Dune {
         {}
     };
 
-    template<template<class, int> class Solver, int UpLo>
+    template<template<class, int, class> class Solver, int UpLo>
       class EigenBackend_SPD_Base
       : public SequentialNorm, public LinearResultStorage
     {
@@ -209,7 +209,10 @@ namespace Dune {
       {
         using Backend::native;
         using Mat = Backend::Native<M>;
-        Solver<Mat, UpLo> solver;
+        // use the approximate minimum degree algorithm for the ordering in
+        // the solver. This reproduces the default ordering for the Cholesky
+        // type solvers.
+        Solver<Mat, UpLo, Eigen::AMDOrdering<typename Mat::Index> > solver;
         Dune::Timer watch;
         watch.reset();
         solver.compute(native(A));
