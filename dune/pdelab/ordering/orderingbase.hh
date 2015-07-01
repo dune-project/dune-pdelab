@@ -143,7 +143,8 @@ namespace Dune {
                    bool container_blocked,
                    GFSData* gfs_data,
                    VirtualOrderingBase<DI,CI>* delegate = nullptr)
-        : _container_blocked(container_blocked)
+        : _fixed_size(false)
+        , _container_blocked(container_blocked)
         , _merge_mode(MergeMode::lexicographic)
         , _child_count(Node::has_dynamic_ordering_children ? Node::CHILDREN : 0)
         , _children(_child_count,nullptr)
