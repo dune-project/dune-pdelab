@@ -730,36 +730,6 @@ namespace Dune {
 
     };
 
-    //! wrap up element from local functions
-    //! \ingroup FiniteElementMap
-    template<class D, class R, int k, int d>
-    class DUNE_DEPRECATED_MSG("Please use QkLocalFiniteElementMap instead") QkCGLocalFiniteElementMap
-      : public Dune::PDELab::SimpleLocalFiniteElementMap< Dune::QkCGLocalFiniteElement<D,R,k,d> >
-    {
-    public:
-
-      QkCGLocalFiniteElementMap() DUNE_DEPRECATED_MSG("Please use QkLocalFiniteElementMap instead")
-      {}
-
-      bool fixedSize() const
-      {
-        return true;
-      }
-
-      std::size_t size(GeometryType gt) const
-      {
-        if (k==2) return 1;
-        if (gt.dim()==0) return 1;
-        return 0;
-      }
-
-      std::size_t maxLocalSize() const
-      {
-        return Dune::QkStuff::QkSize<k,d>::value;
-      }
-
-    };
-
   }
 }
 
