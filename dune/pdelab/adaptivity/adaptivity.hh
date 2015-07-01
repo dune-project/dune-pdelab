@@ -680,28 +680,6 @@ namespace Dune {
       grid.postAdapt();
     }
 
-    // deprecated versions which always force the mass matrix integration order to 2
-    // function attributes are only allowed on function declarations, not defitions, so we have to do the double
-    // dance of first declaring and then immediately defining those functions...
-    template<class Grid, class GFS, class X>
-    void adapt_grid (Grid& grid, GFS& gfs, X& x1) DUNE_DEPRECATED_MSG("Please use the version of adapt_grid() that explicity specifies the integration order instead");
-
-    template<class Grid, class GFS, class X>
-    void adapt_grid (Grid& grid, GFS& gfs, X& x1, X& x2) DUNE_DEPRECATED_MSG("Please use the version of adapt_grid() that explicity specifies the integration order instead");
-
-    template<class Grid, class GFS, class X>
-    void adapt_grid (Grid& grid, GFS& gfs, X& x1)
-    {
-      adapt_grid(grid,gfs,x1,2);
-    }
-
-    template<class Grid, class GFS, class X>
-    void adapt_grid (Grid& grid, GFS& gfs, X& x1, X& x2)
-    {
-      adapt_grid(grid,gfs,x1,x2,2);
-    }
-
-
 
     template<typename T>
     void error_fraction(const T& x, typename T::ElementType alpha, typename T::ElementType beta,
