@@ -57,28 +57,9 @@ namespace Dune {
 
       typedef std::size_t size_type;
 
-#if HAVE_TEMPLATE_ALIASES || DOXYGEN
-
       //! The type of the pattern object passed to the GridOperator for pattern construction.
       template<typename Matrix, typename GFSV, typename GFSU>
       using Pattern = EIGEN::MatrixPatternInserter<typename Matrix::Container>;
-
-#else // HAVE_TEMPLATE_ALIASES
-
-      template<typename Matrix, typename GFSV, typename GFSU>
-      struct Pattern
-        : public EIGEN::MatrixPatternInserter<typename Matrix::Container>
-      {
-
-        typedef EIGEN::MatrixPatternInserter<typename Matrix::Container> BaseT;
-
-        Pattern(Matrix & m)
-          : BaseT(m)
-        {}
-
-      };
-
-#endif // HAVE_TEMPLATE_ALIASES
 
       template<typename VV, typename VU, typename E>
       struct MatrixHelper
