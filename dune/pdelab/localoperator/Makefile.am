@@ -9,6 +9,7 @@ common_HEADERS =				\
 	defaultimp.hh				\
 	dgnavierstokes.hh			\
 	dgnavierstokesparameter.hh		\
+	dgnavierstokesvelvecfem.hh 		\
 	dgparameter.hh				\
 	diffusion.hh				\
 	diffusionccfv.hh			\
