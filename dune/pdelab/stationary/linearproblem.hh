@@ -4,7 +4,6 @@
 #include <iostream>
 
 #include <dune/common/timer.hh>
-#include <dune/common/deprecated.hh>
 #include <dune/common/parametertree.hh>
 
 #include <dune/pdelab/backend/interface.hh>
@@ -52,17 +51,6 @@ namespace Dune {
 
     public:
       typedef StationaryLinearProblemSolverResult<double> Result;
-
-      StationaryLinearProblemSolver(const GO& go, V& x, LS& ls, typename V::ElementType reduction, typename V::ElementType min_defect = 1e-99, int verbose=1) DUNE_DEPRECATED_MSG("Use StationaryLinearProblemSolver(const GO&, LS&, V&, ...) instead.")
-        : _go(go)
-        , _ls(ls)
-        , _x(&x)
-        , _reduction(reduction)
-        , _min_defect(min_defect)
-        , _hanging_node_modifications(false)
-        , _keep_matrix(true)
-        , _verbose(verbose)
-      {}
 
       StationaryLinearProblemSolver(const GO& go, LS& ls, V& x, typename V::ElementType reduction, typename V::ElementType min_defect = 1e-99, int verbose=1)
         : _go(go)
