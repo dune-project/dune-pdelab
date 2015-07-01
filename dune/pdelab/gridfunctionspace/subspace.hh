@@ -27,8 +27,6 @@ namespace Dune {
 
 #ifndef DOXYGEN
 
-#if HAVE_TEMPLATE_ALIASES
-
     // Specialization of DOFIndex type deduction TMP - the DOFIndex
     // of a subspace must be large enough to contain DOFIndex values
     // for the complete tree rooted in the base space.
@@ -37,27 +35,6 @@ namespace Dune {
     {
       typedef typename GFS::Ordering::Traits::DOFIndex type;
     };
-
-#else // HAVE_TEMPLATE_ALIASES
-
-    // without template aliases, the visible type of GridFunctionSubSpace is directly
-    // contained in the PDELab namespace, so we have to forward declare and  specialize
-    // build_dof_index_type for the interface class as well.
-
-    // forward declaration
-    template<typename GFS, typename TreePath>
-    class GridFunctionSubSpace;
-
-    // Specialization of DOFIndex type deduction TMP - the DOFIndex
-    // of a subspace must be large enough to contain DOFIndex values
-    // for the complete tree rooted in the base space.
-    template<typename GFS, typename TP>
-    struct build_dof_index_type<GridFunctionSubSpace<GFS,TP> >
-    {
-      typedef typename GFS::Ordering::Traits::DOFIndex type;
-    };
-
-#endif // HAVE_TEMPLATE_ALIASES
 
 #endif // DOXYGEN
 
@@ -173,21 +150,9 @@ namespace Dune {
         typedef typename ChildGridFunctionSpace::OrderingTag OrderingTag;
 
 
-#if HAVE_TEMPLATE_ALIASES
-
         //! Re-exported constraints container from the original GridFunctionSpace.
         template<typename E>
         using Constraintscontainer = typename GFS::template ConstraintsContainer<E>;
-
-#else // HAVE_TEMPLATE_ALIASES
-
-        //! Re-exported constraints container from the original GridFunctionSpace.
-        template<typename E>
-        struct ConstraintsContainer
-          : public GFS::template ConstraintsContainer<E>
-        {};
-
-#endif // HAVE_TEMPLATE_ALIASES
 
         //! The ordering used by this GridFunctionSubSpace.
         typedef SubOrdering<
@@ -436,14 +401,7 @@ namespace Dune {
             >::type::ImplementationTag
           > FeatureT;
 
-#if HAVE_TEMPLATE_ALIASES
       public:
-#else
-      protected:
-#endif
-        // If we don't have template aliases, force the user to use the wrapper class
-        // by making the constructors protected.
-
 
         //! Construct a GridFunctionSubSpace from the storage object of a root space.
         explicit GridFunctionSubSpace(std::shared_ptr<const GFS> gfs_storage)
@@ -453,8 +411,6 @@ namespace Dune {
         {
           this->inheritDataSetType(childGridFunctionSpace());
         }
-
-#if HAVE_TEMPLATE_ALIASES
 
         // We can mask out the following constructors if we don't have template aliases,
         // as we perform the necessary reference <-> shared_ptr conversions in the derived
@@ -488,8 +444,6 @@ namespace Dune {
         {
           setDataSetType(childGridFunctionSpace().dataSetType());
         }
-
-#endif // HAVE_TEMPLATE_ALIASES
 
         //! Construct a GridFunctionSubSpace from another GridFunctionSubSpace.
         /**
@@ -577,7 +531,7 @@ namespace Dune {
 
       };
 
-#if HAVE_TEMPLATE_ALIASES && !DOXYGEN
+#ifndef DOXYGEN
 
 
       //! Helper TMP to construct non-nested GridFunctionSubSpaces - default case.
@@ -608,12 +562,10 @@ namespace Dune {
           > type;
       };
 
-#endif // HAVE_TEMPLATE_ALIASES && !DOXYGEN
+#endif // DOXYGEN
 
     } // namespace gfs
 
-
-#if HAVE_TEMPLATE_ALIASES
 
 #if DOXYGEN
 
@@ -628,86 +580,6 @@ namespace Dune {
     using GridFunctionSubSpace = typename gfs::construct_sub_space<GFS,TreePath>::type;
 
 #endif // DOXYGEN
-
-#else // HAVE_TEMPLATE_ALIASES
-
-
-    //! \copydoc Dune::PDELab::gfs::GridFunctionSubSpace
-    /**
-     * Without template alias support, this interface class inherits from the actual, de-nested
-     * implementation.
-     */
-    template<typename GFS, typename TreePath>
-    class GridFunctionSubSpace
-      : public gfs::GridFunctionSubSpace<GFS,TreePath>
-    {
-
-      typedef gfs::GridFunctionSubSpace<
-        GFS,
-        TreePath
-        > BaseT;
-
-    public:
-
-      explicit GridFunctionSubSpace(std::shared_ptr<const GFS> gfs_storage)
-        : BaseT(gfs_storage)
-      {}
-
-      explicit GridFunctionSubSpace(const GFS& gfs)
-        : BaseT(stackobject_to_shared_ptr(gfs))
-      {}
-
-    };
-
-
-#ifndef DOXYGEN
-
-    //! \copydoc Dune::PDELab::gfs::GridFunctionSubSpace
-    /**
-     * Without template alias support, this interface class inherits from the actual, de-nested
-     * implementation.
-     */
-    template<typename BaseGFS, typename SubSpaceTreePath, typename TreePath>
-    class GridFunctionSubSpace<GridFunctionSubSpace<BaseGFS,SubSpaceTreePath>,TreePath>
-      : public gfs::GridFunctionSubSpace<typename GridFunctionSubSpace<
-                                           BaseGFS,
-                                           SubSpaceTreePath
-                                           >::BaseGridFunctionSpace,
-                                         typename TypeTree::TreePathConcat<
-                                           SubSpaceTreePath,
-                                           TreePath
-                                           >::type
-                                         >
-    {
-
-      typedef gfs::GridFunctionSubSpace<
-        typename GridFunctionSubSpace<
-          BaseGFS,
-          SubSpaceTreePath
-          >::BaseGridFunctionSpace,
-        typename TypeTree::TreePathConcat<
-          SubSpaceTreePath,
-          TreePath
-          >::type
-        > BaseT;
-
-      typedef GridFunctionSubSpace<BaseGFS,SubSpaceTreePath> SubSpace;
-
-    public:
-
-      explicit GridFunctionSubSpace(std::shared_ptr<const SubSpace> gfs_storage)
-        : BaseT(gfs_storage->baseGridFunctionSpaceStorage())
-      {}
-
-      explicit GridFunctionSubSpace(const SubSpace& gfs)
-        : BaseT(gfs.baseGridFunctionSpaceStorage())
-      {}
-
-    };
-
-#endif // DOXYGEN
-
-#endif // HAVE_TEMPLATE_ALIASES
 
     //! \}
 
