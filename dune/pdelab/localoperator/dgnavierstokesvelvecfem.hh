@@ -91,7 +91,7 @@ namespace Dune {
   };
 
     /** \brief A local operator for solving the stokes equation using
-        a DG discretization and a vector valued finite element map
+        a DG discretization and a vector-valued finite element map
         for the velocity grid function space.
 
         \tparam PRM Parameter class for this local operator.
