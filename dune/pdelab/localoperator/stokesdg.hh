@@ -31,7 +31,7 @@ namespace Dune {
                                         full tensor for the viscous stress
          */
         template<typename PRM, bool full_tensor = true>
-        class StokesDG :
+        class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokes instead!") StokesDG :
             public LocalOperatorDefaultFlags,
             public FullSkeletonPattern, public FullVolumePattern
             //
@@ -74,6 +74,7 @@ namespace Dune {
                                                         have the same order as the corresponding
                                                         finite element.
              */
+            DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokes instead!")
             StokesDG (PRM & _prm, int _superintegration_order=0) :
               prm(_prm), superintegration_order(_superintegration_order),
               current_dt(1.0)
@@ -967,7 +968,7 @@ namespace Dune {
                                         full tensor for the viscous stress
          */
         template<typename PRM, bool full_tensor = true>
-        class NavierStokesDG : public StokesDG<PRM,full_tensor>
+        class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokes instead!") NavierStokesDG : public StokesDG<PRM,full_tensor>
         {
         public:
             //! Boundary condition indicator type
@@ -982,6 +983,7 @@ namespace Dune {
             using StokesLocalOperator::prm;
             using StokesLocalOperator::superintegration_order;
 
+            DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokes instead!")
             NavierStokesDG (PRM & prm_, int superintegration_order_=0)
                 : StokesLocalOperator(prm_ ,superintegration_order_)
             {}
@@ -1174,7 +1176,7 @@ namespace Dune {
             \tparam PRM Parameter class for this local operator
          */
         template<typename PRM>
-        class StokesMassDG :
+        class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use NavierStokesMass instead!") StokesMassDG :
             public LocalOperatorDefaultFlags,
             public FullVolumePattern,
             public JacobianBasedAlphaVolume< StokesMassDG<PRM> >,
@@ -1203,6 +1205,7 @@ namespace Dune {
                                                         have the same order as the corresponding
                                                         finite element.
              */
+            DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use NavierStokesMass instead!")
             StokesMassDG (PRM & _prm, int _superintegration_order=0) :
                 prm(_prm), superintegration_order(_superintegration_order)
             {}

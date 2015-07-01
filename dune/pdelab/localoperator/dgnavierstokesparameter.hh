@@ -1,35 +1,42 @@
-#ifndef DUNE_PDELAB_LOCALOPERATOR_STOKESDGPARAMETER_HH
-#define DUNE_PDELAB_LOCALOPERATOR_STOKESDGPARAMETER_HH
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
+// vi: set et ts=2 sw=2 sts=2:
+
+#ifndef DUNE_PDELAB_LOCALOPERATOR_DGNAVIERSTOKESPARAMETER_HH
+#define DUNE_PDELAB_LOCALOPERATOR_DGNAVIERSTOKESPARAMETER_HH
 
 #include <dune/common/parametertreeparser.hh>
-
 #include <dune/pdelab/common/geometrywrapper.hh>
-
-#include "dgparameter.hh"
-#include "stokesparameter.hh"
+#include <dune/pdelab/localoperator/dgparameter.hh>
+#include <dune/pdelab/localoperator/stokesparameter.hh>
 
 namespace Dune {
   namespace PDELab {
 
-    /** \brief Parameter class for local operator StokesDG
+    /** \brief Parameter class for local operator DGNavierStokes.
 
-        \tparam F Momentum source term function
-        \tparam B Boundary condition function
-        \tparam V Dirichlet velocity boundary condition function
-        \tparam J Neumann stress boundary function (vector- or scalar-valued).
-                  Scalar values will be interpreted as the magnitude of a vector
-                  oriented in outer normal direction.
-                  For prescribed pressure you can use \f$J=p \cdot n\f$.
-        \tparam IP A class providing the interior penalty factor for each face
+        \tparam GV          GridView.
+        \tparam RF          The range field type of the Navier-Stokes solution.
+        \tparam F           Momentum source term function
+        \tparam B           Boundary condition function
+        \tparam V           Dirichlet velocity boundary condition function
+        \tparam J           Neumann stress boundary function (vector- or scalar-valued).
+                            Scalar values will be interpreted as the magnitude of a vector
+                            oriented in outer normal direction.
+                            For prescribed pressure you can use $J=p \cdot n$.
+        \tparam navier      Flag turning the local operator to a Navier-Stokes one.
+        \tparam full_tensor Flag enabling the assembling of the
+                            full tensor of the viscous stress.
+        \tparam IP          A class providing the interior penalty for each face.
+
     */
     template<typename GV, typename RF, typename F, typename B, typename V, typename J,
-             typename IP = DefaultInteriorPenalty<typename V::Traits::RangeFieldType> >
-    class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!") StokesDGParameters
-      : public NavierStokesDefaultParameters<GV,RF,F,B,V,J>
+             bool navier = false, bool full_tensor = false, typename IP = DefaultInteriorPenalty<typename V::Traits::RangeFieldType> >
+    class DGNavierStokesParameters :
+      public NavierStokesDefaultParameters<GV,RF,F,B,V,J,navier,full_tensor>
     {
-    private:
 
-      typedef NavierStokesDefaultParameters<GV,RF,F,B,V,J> Base;
+      //! Typedef of base class
+      typedef NavierStokesDefaultParameters<GV,RF,F,B,V,J,navier,full_tensor> Base;
 
       void initFromString(const std::string & method)
       {
@@ -63,37 +70,26 @@ namespace Dune {
         DUNE_THROW(Dune::Exception, "Unknown DG type " << method);
       }
 
-    protected:
-      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!")
-      StokesDGParameters(const std::string & method, const RF mu, const RF rho,
-                         F & f, B & b, V & v, J & j, IP & ip)
-        : Base(mu,rho,f,b,v,j),
-          _ip(ip)
-      {
-        initFromString(method);
-      }
-
-
-    public:
+    public :
 
       //! Traits class
       typedef typename Base::Traits Traits;
 
-      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!")
-      StokesDGParameters(const std::string & method, const RF mu,
-                         F & f, B & b, V & v, J & j, IP & ip)
-        : Base(mu,1.0,f,b,v,j),
-          _ip(ip)
+      //! Constructor
+      DGNavierStokesParameters(const std::string& method, const RF mu, const RF rho,
+                               F& f, B& b, V& v, J& j, IP& ip) :
+        Base(mu,rho,f,b,v,j) ,
+        _ip(ip)
       {
         initFromString(method);
       }
 
-      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!")
-      StokesDGParameters(const Dune::ParameterTree & configuration,
-                         F & f, B & b, V & v, J & j, IP & ip)
-        : Base(configuration,f,b,v,j),
-          _ip(ip),
-          _epsilon(configuration.get<int>("epsilon"))
+      //! Constructor
+      DGNavierStokesParameters(const Dune::ParameterTree& configuration,
+                               F& f, B& b, V& v, J& j, IP& ip) :
+        Base(configuration,f,b,v,j) ,
+        _ip(ip) ,
+        _epsilon(configuration.get<int>("epsilon"))
       {}
 
 
@@ -139,44 +135,7 @@ namespace Dune {
 
       IP & _ip;              // Interior penalty
       int _epsilon;          // IP symmetry factor
-    };
-
-
-    /** \brief Parameter class for local operator NavierStokesDG
-
-        \tparam F Momentum source term function
-        \tparam B Boundary condition function
-        \tparam V Dirichlet velocity boundary condition function
-        \tparam J Neumann stress boundary function (vector- or scalar-valued).
-                  Scalar values will be interpreted as the magnitude of a vector
-                  oriented in outer normal direction.
-                  For prescribed pressure you can use \f$J=p \cdot n\f$.
-        \tparam IP A class providing the interior penalty factor for each face
-    */
-    template<typename GV, typename RF, typename F, typename B, typename V, typename J,
-             typename IP = DefaultInteriorPenalty<typename V::Traits::RangeField> >
-    class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!") NavierStokesDGParameters
-      : public StokesDGParameters<GV,RF,F,B,V,J,IP>
-    {
-
-      //!  of base class
-      typedef StokesDGParameters<GV,RF,F,B,V,J,IP> Base;
-
-    public:
-
-      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!")
-      NavierStokesDGParameters(const std::string & method, const RF mu, const RF rho,
-                               F & f, B & b, V & v, J & j, IP & ip)
-        : Base(method,mu,rho,f,b,v,j,ip)
-      {}
-
-      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesParameters instead!")
-      NavierStokesDGParameters(const Dune::ParameterTree & configuration,
-                               F & f, B & b, V & v, J & j, IP & ip)
-        : Base(configuration,f,b,v,j,ip)
-      {}
-
-    };
+    }; // end class DGNavierStokesParameters
 
 
     namespace NavierStokesDGImp{
@@ -229,8 +188,6 @@ namespace Dune {
       /** @} */
     }
 
-
-  }
-}
-
+  } // end namespace PDELab
+} // end namespace Dune
 #endif

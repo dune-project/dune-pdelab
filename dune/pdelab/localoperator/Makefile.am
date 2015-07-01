@@ -7,6 +7,8 @@ common_HEADERS =				\
 	convectiondiffusionfem.hh		\
 	convectiondiffusionparameter.hh		\
 	defaultimp.hh				\
+	dgnavierstokes.hh			\
+	dgnavierstokesparameter.hh			\
 	dgparameter.hh				\
 	diffusion.hh				\
 	diffusionccfv.hh			\
@@ -30,6 +32,7 @@ common_HEADERS =				\
 	linearacousticsparameter.hh		\
 	maxwelldg.hh				\
 	maxwellparameter.hh			\
+	navierstokesmass.hh			\
 	pattern.hh				\
 	poisson.hh				\
 	scaled.hh				\
