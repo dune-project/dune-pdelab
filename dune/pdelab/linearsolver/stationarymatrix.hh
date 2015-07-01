@@ -9,6 +9,9 @@
 #include <memory>
 
 #include <dune/common/timer.hh>
+#include <dune/common/deprecated.hh>
+
+#warning <dune/pdelab/linearsolver/stationarymatrix.hh> and StationaryMatrixLinearSolver are deprecated and will be removed after PDELab 2.4. Please use LinearProblemSolver instead.
 
 #include <dune/pdelab/backend/interface.hh>
 
@@ -27,7 +30,9 @@ namespace Dune {
      * \tparam Coeff Type of the matrix/vector entries
      */
     template<class GOS, class SB, class Coeff>
-    class StationaryMatrixLinearSolver
+    class
+    DUNE_DEPRECATED_MSG("StationaryMatrixLinearSolver is deprecated and will be removed after PDELab 2.4. Please use LinearProblemSolver instead.")
+    StationaryMatrixLinearSolver
     {
       typedef typename GOS::template MatrixContainer<Coeff>::Type Matrix;
       using VectorU = Dune::PDELab::Backend::Vector
