@@ -7,6 +7,7 @@ install(FILES callswitch.hh
               defaultimp.hh
               dgnavierstokes.hh
               dgnavierstokesparameter.hh
+              dgnavierstokesvelvecfem.hh
               dgparameter.hh
               diffusion.hh
               diffusionccfv.hh

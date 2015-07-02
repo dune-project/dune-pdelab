@@ -2,6 +2,8 @@
 #ifndef DUNE_PDELAB_STOKESDG_VECFEM_HH
 #define DUNE_PDELAB_STOKESDG_VECFEM_HH
 
+#warning This file is deprecated and will be removed after the DUNE-PDELab 2.4 release! Include the header dune/pdelab/localoperator/dgnavierstokesvelvecfem.hh instead!
+
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/parametertree.hh>
@@ -92,7 +94,7 @@ namespace Dune {
     */
     template<typename F, typename B, typename V, typename P,
              typename IP = DefaultInteriorPenalty<typename V::Traits::RangeFieldType> >
-    class StokesDGVectorFEM :
+    class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesVelVecFEM instead!") StokesDGVectorFEM :
       public LocalOperatorDefaultFlags,
       public FullSkeletonPattern, public FullVolumePattern,
       public Dune::PDELab::NumericalJacobianApplyVolume<StokesDGVectorFEM<F,B,V,P,IP> >,
@@ -118,6 +120,7 @@ namespace Dune {
       enum { doAlphaSkeleton  = true };
       enum { doAlphaBoundary  = true };
 
+      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokesVelVecFEM instead!")
       StokesDGVectorFEM (const Dune::ParameterTree & configuration,const IP & ip_factor_, const RF mu_,
                          const F & _f, const B & _b, const V & _v, const P & _p, int _qorder=4) :
         f(_f), b(_b), v(_v), p(_p), qorder(_qorder), mu(mu_), ip_factor(ip_factor_)
