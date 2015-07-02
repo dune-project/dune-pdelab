@@ -204,6 +204,12 @@ namespace Dune {
                       << " to suppress this warning." << std::endl;
           }
 #endif
+
+        // assemble prolongation matrix; this will not change from one apply to the next
+        pmatrix = 0.0;
+        if (verbose>0) std::cout << "allocated prolongation matrix of size " << pmatrix.N() << " x " << pmatrix.M() << std::endl;
+        CGV cgx(cggfs,0.0);         // need vector to call jacobian
+        pgo.jacobian(cgx,pmatrix);
       }
 
       ISTLBackend_SEQ_AMG_4_DG(DGGO& dggo_, CGGFS& cggfs_, const ParameterTree& params)//unsigned maxiter_=5000, int verbose_=1, bool usesuperlu_=true)
