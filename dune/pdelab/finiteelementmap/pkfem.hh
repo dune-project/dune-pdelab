@@ -245,44 +245,18 @@ namespace Dune {
 
       };
 
-
-#ifndef DOXYGEN
-
-      template<unsigned int d>
-      struct DUNE_DEPRECATED_MSG("The fifth template parameter for PkLocalFiniteElementMap (the dimension) is deprecated") warn_deprecated_pk_interface
-      {
-        warn_deprecated_pk_interface() DUNE_DEPRECATED_MSG("The fifth template parameter for PkLocalFiniteElementMap (the dimension) is deprecated")
-          {}
-      };
-
-      template<>
-      struct warn_deprecated_pk_interface<0>
-      {
-        warn_deprecated_pk_interface()
-        {}
-      };
-
-#endif // DOXYGEN
-
-
     } // namespace fem
 
 
-    template<typename GV, typename D, typename R, unsigned int k, unsigned int d = 0>
+    template<typename GV, typename D, typename R, unsigned int k>
     class PkLocalFiniteElementMap
       : public fem::PkLocalFiniteElementMapBase<GV,D,R,k,GV::dimension>
-#ifndef DOXYGEN
-      , public fem::warn_deprecated_pk_interface<d>
-#endif
     {
 
     public:
 
       PkLocalFiniteElementMap(const GV& gv)
         : fem::PkLocalFiniteElementMapBase<GV,D,R,k,GV::dimension>(gv)
-#ifndef DOXYGEN
-        , fem::warn_deprecated_pk_interface<d>()
-#endif
       {}
 
     };

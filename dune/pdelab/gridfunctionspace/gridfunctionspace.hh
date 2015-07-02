@@ -170,16 +170,6 @@ namespace Dune {
       }
 
       //! constructor
-      GridFunctionSpace (const GV& gridview, const std::shared_ptr<const FEM>& fem, const CE& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
-      DUNE_DEPRECATED_MSG("Use either a constructor that passes both FiniteElementMap and ConstraintsEngine as const reference \
-(for objects with externally controlled lifetime) or as shared_ptr (this GridFunctionSpace will assume shared ownership of both objects).")
-        : BaseT(backend,ordering_tag)
-        , gv(gridview)
-        , pfem(fem)
-        , _pce(stackobject_to_shared_ptr(ce))
-      {}
-
-      //! constructor
       GridFunctionSpace (const GV& gridview, const std::shared_ptr<const FEM>& fem, const std::shared_ptr<const CE>& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
         : BaseT(backend,ordering_tag)
         , gv(gridview)

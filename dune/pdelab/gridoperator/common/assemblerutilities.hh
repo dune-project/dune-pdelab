@@ -158,13 +158,10 @@ namespace Dune{
       : public std::vector<SparsityLink>
     {
 
-    public:
+      // make push_back() inaccessible
+      using std::vector<SparsityLink>::push_back;
 
-      void push_back(const SparsityLink& link)
-        DUNE_DEPRECATED_MSG("The std::vector-like interface to LocalSparsityPattern is deprecated, use addLink() instead.")
-      {
-        std::vector<SparsityLink>::push_back(link);
-      }
+    public:
 
       //! Adds a link between DOF i of lfsv and DOF j of lfsu.
       /**
