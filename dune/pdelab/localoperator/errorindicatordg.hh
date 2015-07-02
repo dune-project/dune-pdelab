@@ -168,14 +168,17 @@ namespace Dune {
         // dimensions
         const int dim = IG::dimension;
 
+        auto cell_inside = ig.inside();
+        auto cell_outside = ig.outside();
+
         // evaluate permeability tensors
         const Dune::FieldVector<DF,dim>&
-          inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,dim>::general(cell_inside.type()).position(0,0);
         const Dune::FieldVector<DF,dim>&
-          outside_local = Dune::ReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
+          outside_local = Dune::ReferenceElements<DF,dim>::general(cell_outside.type()).position(0,0);
         typename T::Traits::PermTensorType A_s, A_n;
-        A_s = param.A(*(ig.inside()),inside_local);
-        A_n = param.A(*(ig.outside()),outside_local);
+        A_s = param.A(cell_inside,inside_local);
+        A_n = param.A(cell_outside,outside_local);
 
         RF epsilon_s = std::min( A_s[0][0], A_s[1][1]);
         if( dim>2 ) epsilon_s = std::min( A_s[2][2], epsilon_s );
@@ -202,8 +205,8 @@ namespace Dune {
             Dune::FieldVector<DF,dim> iplocal_n = ig.geometryInOutside().global(it->position());
 
             // Diffusion tensor at quadrature point
-            typename T::Traits::PermTensorType A_s = param.A( *(ig.inside()), iplocal_s );
-            typename T::Traits::PermTensorType A_n = param.A( *(ig.outside()), iplocal_n);
+            typename T::Traits::PermTensorType A_s = param.A( cell_inside, iplocal_s );
+            typename T::Traits::PermTensorType A_n = param.A( cell_outside, iplocal_n);
 
             Dune::FieldVector<RF,dim> An_F_s;
             A_s.mv(n_F,An_F_s);
@@ -227,10 +230,10 @@ namespace Dune {
             /**********************/
 
             Dune::FieldVector<RF,dim> gradu_s(0.0);
-            evalGradient( iplocal_s, *(ig.inside()), lfsu_s, x_s, gradu_s );
+            evalGradient( iplocal_s, cell_inside, lfsu_s, x_s, gradu_s );
 
             Dune::FieldVector<RF,dim> gradu_n(0.0);
-            evalGradient( iplocal_n, *(ig.outside()), lfsu_n, x_n, gradu_n );
+            evalGradient( iplocal_n, cell_outside, lfsu_n, x_n, gradu_n );
 
 
             // integrate
@@ -279,11 +282,13 @@ namespace Dune {
         // dimensions
         const int dim = IG::dimension;
 
+        auto cell_inside = ig.inside();
+
         // evaluate permeability tensors
         const Dune::FieldVector<DF,dim>&
-          inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,dim>::general(cell_inside.type()).position(0,0);
         typename T::Traits::PermTensorType A_s;
-        A_s = param.A(*(ig.inside()),inside_local);
+        A_s = param.A(cell_inside,inside_local);
 
         RF epsilon_s = std::min( A_s[0][0], A_s[1][1]);
         if( dim>2 ) epsilon_s = std::min( A_s[2][2], epsilon_s );
@@ -310,7 +315,7 @@ namespace Dune {
             Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
 
             // evaluate Dirichlet boundary condition
-            RF gDirichlet = param.g( *(ig.inside()), iplocal_s );
+            RF gDirichlet = param.g( cell_inside, iplocal_s );
 
             /**********************/
             /* Evaluate Functions */

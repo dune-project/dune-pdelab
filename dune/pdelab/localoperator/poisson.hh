@@ -60,6 +60,7 @@ namespace Dune {
        *
        * \param quadOrder Order of the quadrature rule used for integrating over the element
        */
+      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use the local operator ConvectionDiffusionFEM instead!")
       Poisson (const F& f_, const B& bctype_, const J& j_, unsigned int quadOrder)
         : f(f_), bctype(bctype_), j(j_),
         laplace_(quadOrder),
