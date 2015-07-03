@@ -42,6 +42,7 @@ common_HEADERS =				\
         stokesdgparameter.hh                    \
         stokesparameter.hh                      \
         stokesdg_vecfem.hh                      \
+	taylorhoodnavierstokes.hh  		\
 	transportccfv.hh			\
 	twophaseccfv.hh				\
 	vectorwave.hh				\
