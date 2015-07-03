@@ -12,6 +12,10 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
 #include"../common/function.hh"
+//--------------------------------------------//
+// TODO
+// Is the header "jacobiantocurl.hh" really used?
+//--------------------------------------------//
 #include <dune/pdelab/common/jacobiantocurl.hh>
 #include"gridfunctionspace.hh"
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
@@ -176,6 +180,10 @@ namespace Dune {
      * \tparam T Type of GridFunctionSpace
      * \tparam X Type of coefficients vector
      */
+    //--------------------------------------------//
+    // TODO
+    // Is the following class really used?
+    //--------------------------------------------//
     template<typename T, typename X>
     class DiscreteGridFunctionCurl :
       public GridFunctionInterface<
@@ -261,6 +269,10 @@ namespace Dune {
       std::shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
     };
 
+    //--------------------------------------------//
+    // TODO
+    // Are the following traits really used?
+    //--------------------------------------------//
     //! Helper class to calculate the Traits of DiscreteGridFunctionCurl
     /**
      * \tparam GV              Type of the GridView.
@@ -346,6 +358,10 @@ namespace Dune {
      *           evaluateJacobianGlobal() method.
      * \tparam X Type of coefficients vector
      */
+    //--------------------------------------------//
+    // TODO
+    // Is the following class really used?
+    //--------------------------------------------//
     template<typename T, typename X>
     class DiscreteGridFunctionGlobalCurl
       : public GridFunctionInterface<
@@ -904,6 +920,424 @@ namespace Dune {
       std::shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
     };
 
+    /** \brief Helper class to compute a single derivative of the basis functions
+
+        \tparam Mat the matrix type of the geometry
+
+        \tparam RF the underlying field type of Mat,
+        needed especially for the template specialization
+
+        \tparam std::size_t the size of Mat,
+        needed especially for the template specialization
+
+    */
+
+    template<typename Mat, typename RF, std::size_t size>
+    struct SingleDerivativeComputationHelper {
+      /**
+       * tparam T the gradient of the shape function on the reference element
+       *
+       * param t the gradient of the shape function on the reference element
+       which has to be inserted
+      */
+      template<typename T>
+      static inline RF compute_derivative(const Mat& mat, const T& t, const unsigned int k)
+      {
+        // setting this to zero is just a test if the template specialization work
+        Dune::FieldVector<RF,size> grad_phi(0.0);
+        mat.umv(t,grad_phi);
+        return grad_phi[k];
+        // return 0.0;
+      }
+    };
+
+    // template specialization for FieldMatrix
+    template<typename RF, std::size_t size>
+    struct SingleDerivativeComputationHelper<Dune::FieldMatrix<RF,size,size>,RF,size> {
+      template<typename T>
+      static inline RF compute_derivative(const Dune::FieldMatrix<RF,size,size>& mat, const T& t, const unsigned int k)
+      {
+        return mat[k]*t;
+      }
+    };
+
+    // template specialization for DiagonalMatrix
+    template<typename RF, std::size_t size>
+    struct SingleDerivativeComputationHelper<Dune::DiagonalMatrix<RF,size>,RF,size> {
+      template<typename T>
+      static inline RF compute_derivative(const Dune::DiagonalMatrix<RF,size>& mat, const T& t, const unsigned int k)
+      {
+        return mat[k][k]*t[k];
+      }
+    };
+
+    /** \brief compute divergence of vector-valued functions
+
+        \tparam T Type of VectorGridFunctionSpace
+
+        \tparam X Type of coefficients vector
+
+    */
+
+    template<typename T, typename X>
+    class VectorDiscreteGridFunctionDiv
+      : public Dune::PDELab::GridFunctionInterface<
+      Dune::PDELab::GridFunctionTraits<
+        typename T::Traits::GridViewType,
+        typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+        T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange,
+        typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeType>,
+      VectorDiscreteGridFunctionDiv<T,X> >
+      , public TypeTree::LeafNode
+    {
+      typedef T GFS;
+
+      typedef Dune::PDELab::GridFunctionInterface<
+        Dune::PDELab::GridFunctionTraits<
+          typename T::Traits::GridViewType,
+          typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+          T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange,
+          typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeType>,
+        VectorDiscreteGridFunctionDiv<T,X> > BaseT;
+    public :
+      typedef typename BaseT::Traits Traits;
+      typedef typename T::template Child<0>::Type ChildType;
+      typedef typename ChildType::Traits::FiniteElementType::Traits::LocalBasisType::Traits LBTraits;
+
+      typedef typename LBTraits::RangeFieldType RF;
+      typedef typename LBTraits::JacobianType JT;
+
+      VectorDiscreteGridFunctionDiv(const GFS& gfs, const X& x_)
+        : pgfs(stackobject_to_shared_ptr(gfs))
+        , lfs(gfs)
+        , lfs_cache(lfs)
+        , x_view(x_)
+        , xl(gfs.maxLocalSize())
+        , J(gfs.maxLocalSize())
+      {
+        static_assert(LBTraits::dimDomain == T::CHILDREN,
+                           "dimDomain and number of children has to be the same");
+      }
+
+      inline void evaluate(const typename Traits::ElementType& e,
+                           const typename Traits::DomainType& x,
+                           typename Traits::RangeType& y) const
+      {
+        // get and bind local functions space
+        lfs.bind(e);
+        lfs_cache.update();
+        x_view.bind(lfs_cache);
+        x_view.read(xl);
+        x_view.unbind();
+
+        // get Jacobian of geometry
+        const typename Traits::ElementType::Geometry::JacobianInverseTransposed
+          JgeoIT = e.geometry().jacobianInverseTransposed(x);
+
+        const typename Traits::ElementType::Geometry::JacobianInverseTransposed::size_type N =
+          Traits::ElementType::Geometry::JacobianInverseTransposed::rows;
+
+        y = 0.0;
+
+        // loop over VectorGFS and calculate k-th derivative of k-th child
+        for(unsigned int k=0; k != T::CHILDREN; ++k) {
+
+          // get local Jacobians/gradients of the shape functions
+          std::vector<typename LBTraits::JacobianType> J(lfs.child(k).size());
+          lfs.child(k).finiteElement().localBasis().evaluateJacobian(x,J);
+
+          RF d_k_phi;
+          for(typename LFS::Traits::SizeType i=0; i<lfs.child(k).size(); i++) {
+            // compute k-th derivative of k-th child
+            d_k_phi =
+              SingleDerivativeComputationHelper<
+                typename Traits::ElementType::Geometry::JacobianInverseTransposed,
+              typename Traits::ElementType::Geometry::JacobianInverseTransposed::field_type,
+              N>::template compute_derivative<typename LBTraits::JacobianType::row_type>
+              (JgeoIT,J[i][0],k);
+
+            y += xl[lfs.child(k).localIndex(i)] * d_k_phi;
+          }
+        }
+      }
+
+      //! \brief get a reference to the GridView
+      inline const typename Traits::GridViewType& getGridView() const
+      {
+        return pgfs->gridView();
+      }
+
+    private :
+      typedef Dune::PDELab::LocalFunctionSpace<GFS> LFS;
+      typedef Dune::PDELab::LFSIndexCache<LFS> LFSCache;
+      typedef typename X::template ConstLocalView<LFSCache> XView;
+
+      shared_ptr<GFS const> pgfs;
+      mutable LFS lfs;
+      mutable LFSCache lfs_cache;
+      mutable XView x_view;
+      mutable std::vector<RF> xl;
+      mutable std::vector<JT> J;
+      shared_ptr<const X> px;
+    };
+
+    template<typename T, typename X, std::size_t dimR = T::CHILDREN>
+    class VectorDiscreteGridFunctionCurl
+    {
+      typedef T GFS;
+    public :
+      VectorDiscreteGridFunctionCurl(const GFS& gfs, const X& x)
+      {
+        static_assert(AlwaysFalse<typename GFS::Traits::GridViewType>::value,
+                           "curl computation can only be done in two or three dimensions");
+      }
+    };
+
+    // specialization for curl in 3D
+    template<typename T, typename X>
+    class VectorDiscreteGridFunctionCurl<T,X,3>
+      : public Dune::PDELab::GridFunctionInterface<
+      Dune::PDELab::GridFunctionTraits<
+        typename T::Traits::GridViewType,
+        typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+        //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange,
+        T::CHILDREN,
+        Dune::FieldVector<
+          typename T::template Child<0>::Type::Traits::FiniteElementType
+          ::Traits::LocalBasisType::Traits::RangeFieldType,
+          //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange
+          T::CHILDREN
+          >
+        >,
+      VectorDiscreteGridFunctionCurl<T,X>
+      >
+      , public TypeTree::LeafNode
+    {
+      typedef T GFS;
+
+      typedef Dune::PDELab::GridFunctionInterface<
+        Dune::PDELab::GridFunctionTraits<
+          typename T::Traits::GridViewType,
+          typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+          //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange,
+          T::CHILDREN,
+          Dune::FieldVector<
+            typename T::template Child<0>::Type::Traits::FiniteElementType
+            ::Traits::LocalBasisType::Traits::RangeFieldType,
+            //T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange
+            T::CHILDREN
+            >
+          >,
+        VectorDiscreteGridFunctionCurl<T,X> > BaseT;
+
+    public :
+      typedef typename BaseT::Traits Traits;
+      typedef typename T::template Child<0>::Type ChildType;
+      typedef typename ChildType::Traits::FiniteElementType::Traits::LocalBasisType::Traits LBTraits;
+
+      typedef typename LBTraits::RangeFieldType RF;
+      typedef typename LBTraits::JacobianType JT;
+
+      VectorDiscreteGridFunctionCurl(const GFS& gfs, const X& x_)
+        : pgfs(stackobject_to_shared_ptr(gfs))
+        , lfs(gfs)
+        , lfs_cache(lfs)
+        , x_view(x_)
+        , xl(gfs.maxLocalSize())
+        , J(gfs.maxLocalSize())
+      {
+        static_assert(LBTraits::dimDomain == T::CHILDREN,
+                           "dimDomain and number of children has to be the same");
+      }
+
+      inline void evaluate(const typename Traits::ElementType& e,
+                           const typename Traits::DomainType& x,
+                           typename Traits::RangeType& y) const
+      {
+        // get and bind local functions space
+        lfs.bind(e);
+        lfs_cache.update();
+        x_view.bind(lfs_cache);
+        x_view.read(xl);
+        x_view.unbind();
+
+        // get Jacobian of geometry
+        const typename Traits::ElementType::Geometry::JacobianInverseTransposed
+          JgeoIT = e.geometry().jacobianInverseTransposed(x);
+
+        const typename Traits::ElementType::Geometry::JacobianInverseTransposed::size_type N =
+          Traits::ElementType::Geometry::JacobianInverseTransposed::rows;
+
+        y = 0.0;
+
+        // some handy variables for the curl in 3D
+        int i1, i2;
+
+        // loop over VectorGFS and calculate k-th derivative of k-th child
+        for(unsigned int k=0; k != T::CHILDREN; ++k) {
+
+          // get local Jacobians/gradients of the shape functions
+          std::vector<typename LBTraits::JacobianType> J(lfs.child(k).size());
+          lfs.child(k).finiteElement().localBasis().evaluateJacobian(x,J);
+
+          // pick out the right derivative and component for the curl computation
+          i1 = (k+1)%3;
+          i2 = (k+2)%3;
+
+          RF d_k_phi;
+          for(typename LFS::Traits::SizeType i=0; i<lfs.child(k).size(); i++) {
+            // compute i2-th derivative of k-th child
+            d_k_phi =
+              SingleDerivativeComputationHelper<
+                typename Traits::ElementType::Geometry::JacobianInverseTransposed,
+              typename Traits::ElementType::Geometry::JacobianInverseTransposed::field_type,
+              N>::template compute_derivative<typename LBTraits::JacobianType::row_type>
+              (JgeoIT,J[i][0],i2);
+
+            y[i1] += xl[lfs.child(k).localIndex(i)] * d_k_phi;
+
+            // compute i1-th derivative of k-th child
+            d_k_phi =
+              SingleDerivativeComputationHelper<
+                typename Traits::ElementType::Geometry::JacobianInverseTransposed,
+              typename Traits::ElementType::Geometry::JacobianInverseTransposed::field_type,
+              N>::template compute_derivative<typename LBTraits::JacobianType::row_type>
+              (JgeoIT,J[i][0],i1);
+
+            y[i2] -= xl[lfs.child(k).localIndex(i)] * d_k_phi;
+          }
+        }
+      }
+
+      //! \brief get a reference to the GridView
+      inline const typename Traits::GridViewType& getGridView() const
+      {
+        return pgfs->gridView();
+      }
+
+    private :
+      typedef Dune::PDELab::LocalFunctionSpace<GFS> LFS;
+      typedef Dune::PDELab::LFSIndexCache<LFS> LFSCache;
+      typedef typename X::template ConstLocalView<LFSCache> XView;
+
+      shared_ptr<GFS const> pgfs;
+      mutable LFS lfs;
+      mutable LFSCache lfs_cache;
+      mutable XView x_view;
+      mutable std::vector<RF> xl;
+      mutable std::vector<JT> J;
+      shared_ptr<const X> px;
+    };
+
+    //template specialization for curl in 2D
+    template<typename T, typename X>
+    class VectorDiscreteGridFunctionCurl<T,X,2>
+      : public Dune::PDELab::GridFunctionInterface<
+      Dune::PDELab::GridFunctionTraits<
+        typename T::Traits::GridViewType,
+        typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+        T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange,
+        typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeType>,
+      VectorDiscreteGridFunctionDiv<T,X> >
+      , public TypeTree::LeafNode
+    {
+      typedef T GFS;
+
+      typedef Dune::PDELab::GridFunctionInterface<
+        Dune::PDELab::GridFunctionTraits<
+          typename T::Traits::GridViewType,
+          typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
+          T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimRange,
+          typename T::template Child<0>::Type::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeType>,
+        VectorDiscreteGridFunctionDiv<T,X> > BaseT;
+    public :
+      typedef typename BaseT::Traits Traits;
+      typedef typename T::template Child<0>::Type ChildType;
+      typedef typename ChildType::Traits::FiniteElementType::Traits::LocalBasisType::Traits LBTraits;
+
+      typedef typename LBTraits::RangeFieldType RF;
+      typedef typename LBTraits::JacobianType JT;
+
+      VectorDiscreteGridFunctionCurl(const GFS& gfs, const X& x_)
+        : pgfs(stackobject_to_shared_ptr(gfs))
+        , lfs(gfs)
+        , lfs_cache(lfs)
+        , x_view(x_)
+        , xl(gfs.maxLocalSize())
+        , J(gfs.maxLocalSize())
+      {
+        static_assert(LBTraits::dimDomain == T::CHILDREN,
+                           "dimDomain and number of children has to be the same");
+      }
+
+      inline void evaluate(const typename Traits::ElementType& e,
+                           const typename Traits::DomainType& x,
+                           typename Traits::RangeType& y) const
+      {
+        // get and bind local functions space
+        lfs.bind(e);
+        lfs_cache.update();
+        x_view.bind(lfs_cache);
+        x_view.read(xl);
+        x_view.unbind();
+
+        // get Jacobian of geometry
+        const typename Traits::ElementType::Geometry::JacobianInverseTransposed
+          JgeoIT = e.geometry().jacobianInverseTransposed(x);
+
+        const typename Traits::ElementType::Geometry::JacobianInverseTransposed::size_type N =
+          Traits::ElementType::Geometry::JacobianInverseTransposed::rows;
+
+        y = 0.0;
+
+        // some handy variables for the curl computation in 2D
+        RF sign = -1.0;
+        int i2;
+
+        // loop over VectorGFS and calculate k-th derivative of k-th child
+        for(unsigned int k=0; k != T::CHILDREN; ++k) {
+
+          // get local Jacobians/gradients of the shape functions
+          std::vector<typename LBTraits::JacobianType> J(lfs.child(k).size());
+          lfs.child(k).finiteElement().localBasis().evaluateJacobian(x,J);
+
+          RF d_k_phi;
+          // pick out the right derivative
+          i2 = 1-k;
+          for(typename LFS::Traits::SizeType i=0; i<lfs.child(k).size(); i++) {
+            // compute i2-th derivative of k-th child
+            d_k_phi =
+              SingleDerivativeComputationHelper<
+                typename Traits::ElementType::Geometry::JacobianInverseTransposed,
+              typename Traits::ElementType::Geometry::JacobianInverseTransposed::field_type,
+              N>::template compute_derivative<typename LBTraits::JacobianType::row_type>
+              (JgeoIT,J[i][0],i2);
+
+            y += sign * xl[lfs.child(k).localIndex(i)] * d_k_phi;
+          }
+          sign *= -1.0;
+        }
+      }
+
+      //! \brief get a reference to the GridView
+      inline const typename Traits::GridViewType& getGridView() const
+      {
+        return pgfs->gridView();
+      }
+
+    private :
+      typedef Dune::PDELab::LocalFunctionSpace<GFS> LFS;
+      typedef Dune::PDELab::LFSIndexCache<LFS> LFSCache;
+      typedef typename X::template ConstLocalView<LFSCache> XView;
+
+      shared_ptr<GFS const> pgfs;
+      mutable LFS lfs;
+      mutable LFSCache lfs_cache;
+      mutable XView x_view;
+      mutable std::vector<RF> xl;
+      mutable std::vector<JT> J;
+      shared_ptr<const X> px;
+    };
 
    //! \} group GridFunctionSpace
   } // namespace PDELab

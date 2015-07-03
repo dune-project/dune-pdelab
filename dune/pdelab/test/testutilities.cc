@@ -387,6 +387,14 @@ void testgridfunctions (const GV& gv)
   typedef Dune::PDELab::VectorDiscreteGridFunctionGradient<VGFS,V> DGFVG;
   DGFVG dgfvg(vgfs,xv);
 
+  // divergence gridfunction of vector
+  typedef Dune::PDELab::VectorDiscreteGridFunctionDiv<VGFS,V> DGFVD;
+  DGFVD dgfvd(vgfs,xv);
+
+  // curl gridfunction of vector
+  typedef Dune::PDELab::VectorDiscreteGridFunctionCurl<VGFS,V> DGFVC;
+  DGFVC dgfvc(vgfs,xv);
+
   // check entries of velocity vector
   for (typename V::size_type i=0; i<xv.flatsize(); i++)
     std::cout << "[" << i << ":" << Dune::PDELab::Backend::native(xv)[i] << "] ";
@@ -399,6 +407,8 @@ void testgridfunctions (const GV& gv)
   typename DGFV0G::Traits::RangeType v0grad;
   typename DGFV1G::Traits::RangeType v1grad;
   typename DGFVG::Traits::RangeType vgrad;
+  typename DGFVD::Traits::RangeType vdiv;
+  typename DGFVC::Traits::RangeType vcurl;
 
   // evaluate gridfunctions
   for(typename GV::template Codim<0>::Iterator eit = gv.template begin<0>();
@@ -409,6 +419,8 @@ void testgridfunctions (const GV& gv)
     dgfv0g.evaluate(*eit, x, v0grad);
     dgfv1g.evaluate(*eit, x, v1grad);
     dgfvg.evaluate(*eit, x, vgrad);
+    dgfvd.evaluate(*eit, x, vdiv);
+    dgfvc.evaluate(*eit, x, vcurl);
 
     // check matching components of gradients
     if (v0grad[0]!=1.0)
@@ -420,6 +432,14 @@ void testgridfunctions (const GV& gv)
     if (vgrad[0][0]!=1.0)
       exit(1);
     if (vgrad[1][1]!=2.0)
+      exit(1);
+
+    // check divergence
+    if(vdiv[0]!=3.0)
+      exit(1);
+
+    // check curl
+    if(vcurl[0]!=0.0)
       exit(1);
   }
 }
