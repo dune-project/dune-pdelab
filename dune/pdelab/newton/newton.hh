@@ -688,6 +688,7 @@ namespace Dune
           return hackbuschReusken;
         if (s == "hackbuschReuskenAcceptBest")
           return hackbuschReuskenAcceptBest;
+        DUNE_THROW(Exception, "unknown linesearch strategy" << s);
       }
 
     private:
