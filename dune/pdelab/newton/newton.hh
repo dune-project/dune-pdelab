@@ -58,66 +58,66 @@ namespace Dune
       // export result type
       typedef NewtonResult<RFType> Result;
 
-      void setVerbosityLevel(unsigned int verbosity_level_)
+      void setVerbosityLevel(unsigned int verbosity_level)
       {
-        if (gridoperator.trialGridFunctionSpace().gridView().comm().rank()>0)
-          verbosity_level = 0;
+        if (gridoperator_.trialGridFunctionSpace().gridView().comm().rank()>0)
+          verbosity_level_ = 0;
         else
-          verbosity_level = verbosity_level_;
+          verbosity_level_ = verbosity_level;
       }
 
       //! Set whether the jacobian matrix should be kept across calls to apply().
       void setKeepMatrix(bool b)
       {
-        keep_matrix = b;
+        keep_matrix_ = b;
       }
 
       //! Return whether the jacobian matrix is kept across calls to apply().
       bool keepMatrix() const
       {
-        return keep_matrix;
+        return keep_matrix_;
       }
 
       //! Discard the stored Jacobian matrix.
       void discardMatrix()
       {
-        if(A)
-          A.reset();
+        if(A_)
+          A_.reset();
       }
 
     protected:
-      const GridOperator& gridoperator;
-      TrialVector *u;
-      std::shared_ptr<TrialVector> z;
-      std::shared_ptr<TestVector> r;
-      std::shared_ptr<Matrix> A;
-      Result res;
-      unsigned int verbosity_level;
-      RFType prev_defect;
-      RFType linear_reduction;
-      bool reassembled;
-      RFType reduction;
-      RFType abs_limit;
-      bool keep_matrix;
+      const GridOperator& gridoperator_;
+      TrialVector *u_;
+      std::shared_ptr<TrialVector> z_;
+      std::shared_ptr<TestVector> r_;
+      std::shared_ptr<Matrix> A_;
+      Result res_;
+      unsigned int verbosity_level_;
+      RFType prev_defect_;
+      RFType linear_reduction_;
+      bool reassembled_;
+      RFType reduction_;
+      RFType abs_limit_;
+      bool keep_matrix_;
 
-      NewtonBase(const GridOperator& go, TrialVector& u_)
-        : gridoperator(go)
-        , u(&u_)
-        , verbosity_level(1)
-        , keep_matrix(true)
+      NewtonBase(const GridOperator& go, TrialVector& u)
+        : gridoperator_(go)
+        , u_(&u)
+        , verbosity_level_(1)
+        , keep_matrix_(true)
       {
-        if (gridoperator.trialGridFunctionSpace().gridView().comm().rank()>0)
-          verbosity_level = 0;
+        if (gridoperator_.trialGridFunctionSpace().gridView().comm().rank()>0)
+          verbosity_level_ = 0;
       }
 
       NewtonBase(const GridOperator& go)
-        : gridoperator(go)
-        , u(0)
-        , verbosity_level(1)
-        , keep_matrix(true)
+        : gridoperator_(go)
+        , u_(0)
+        , verbosity_level_(1)
+        , keep_matrix_(true)
       {
-        if (gridoperator.trialGridFunctionSpace().gridView().comm().rank()>0)
-          verbosity_level = 0;
+        if (gridoperator_.trialGridFunctionSpace().gridView().comm().rank()>0)
+          verbosity_level_ = 0;
       }
 
       virtual ~NewtonBase() { }
@@ -142,16 +142,16 @@ namespace Dune
     public:
       typedef NewtonResult<RFType> Result;
 
-      NewtonSolver(const GridOperator& go, TrialVector& u_, Solver& solver_)
+      NewtonSolver(const GridOperator& go, TrialVector& u_, Solver& solver)
         : NewtonBase<GOS,TrlV,TstV>(go,u_)
-        , solver(solver_)
-        , result_valid(false)
+        , solver_(solver)
+        , result_valid_(false)
       {}
 
-      NewtonSolver(const GridOperator& go, Solver& solver_)
+      NewtonSolver(const GridOperator& go, Solver& solver)
         : NewtonBase<GOS,TrlV,TstV>(go)
-        , solver(solver_)
-        , result_valid(false)
+        , solver_(solver)
+        , result_valid_(false)
       {}
 
       void apply();
@@ -160,19 +160,19 @@ namespace Dune
 
       const Result& result() const
       {
-        if (!result_valid)
+        if (!result_valid_)
           DUNE_THROW(NewtonError,
                      "NewtonSolver::result() called before NewtonSolver::solve()");
-        return this->res;
+        return this->res_;
       }
 
     protected:
       virtual void defect(TestVector& r)
       {
         r = 0.0;                                        // TODO: vector interface
-        this->gridoperator.residual(*this->u, r);
-        this->res.defect = this->solver.norm(r);                    // TODO: solver interface
-        if (!std::isfinite(this->res.defect))
+        this->gridoperator_.residual(*this->u_, r);
+        this->res_.defect = this->solver_.norm(r);                    // TODO: solver interface
+        if (!std::isfinite(this->res_.defect))
           DUNE_THROW(NewtonDefectError,
                      "NewtonSolver::defect(): Non-linear defect is NaN or Inf");
       }
@@ -181,87 +181,87 @@ namespace Dune
     private:
       void linearSolve(Matrix& A, TrialVector& z, TestVector& r) const
       {
-        if (this->verbosity_level >= 4)
+        if (this->verbosity_level_ >= 4)
           std::cout << "      Solving linear system..." << std::endl;
         z = 0.0;                                        // TODO: vector interface
-        this->solver.apply(A, z, r, this->linear_reduction);        // TODO: solver interface
+        this->solver_.apply(A, z, r, this->linear_reduction_);        // TODO: solver interface
 
         ios_base_all_saver restorer(std::cout); // store old ios flags
 
-        if (!this->solver.result().converged)                 // TODO: solver interface
+        if (!this->solver_.result().converged)                 // TODO: solver interface
           DUNE_THROW(NewtonLinearSolverError,
                      "NewtonSolver::linearSolve(): Linear solver did not converge "
-                     "in " << this->solver.result().iterations << " iterations");
-        if (this->verbosity_level >= 4)
+                     "in " << this->solver_.result().iterations << " iterations");
+        if (this->verbosity_level_ >= 4)
           std::cout << "          linear solver iterations:     "
-                    << std::setw(12) << solver.result().iterations << std::endl
+                    << std::setw(12) << solver_.result().iterations << std::endl
                     << "          linear defect reduction:      "
                     << std::setw(12) << std::setprecision(4) << std::scientific
-                    << solver.result().reduction << std::endl;
+                    << solver_.result().reduction << std::endl;
       }
 
-      Solver& solver;
-      bool result_valid;
+      Solver& solver_;
+      bool result_valid_;
     }; // end class NewtonSolver
 
     template<class GOS, class S, class TrlV, class TstV>
-    void NewtonSolver<GOS,S,TrlV,TstV>::apply(TrialVector& u_)
+    void NewtonSolver<GOS,S,TrlV,TstV>::apply(TrialVector& u)
     {
-      this->u = &u_;
+      this->u_ = &u;
       apply();
     }
 
     template<class GOS, class S, class TrlV, class TstV>
     void NewtonSolver<GOS,S,TrlV,TstV>::apply()
     {
-      this->res.iterations = 0;
-      this->res.converged = false;
-      this->res.reduction = 1.0;
-      this->res.conv_rate = 1.0;
-      this->res.elapsed = 0.0;
-      this->res.assembler_time = 0.0;
-      this->res.linear_solver_time = 0.0;
-      this->res.linear_solver_iterations = 0;
-      result_valid = true;
+      this->res_.iterations = 0;
+      this->res_.converged = false;
+      this->res_.reduction = 1.0;
+      this->res_.conv_rate = 1.0;
+      this->res_.elapsed = 0.0;
+      this->res_.assembler_time = 0.0;
+      this->res_.linear_solver_time = 0.0;
+      this->res_.linear_solver_iterations = 0;
+      result_valid_ = true;
       Timer timer;
 
       try
         {
-          if(!this->r) {
+          if(!this->r_) {
             // std::cout << "=== Setting up residual vector ..." << std::endl;
-            this->r = std::make_shared<TestVector>(this->gridoperator.testGridFunctionSpace());
+            this->r_ = std::make_shared<TestVector>(this->gridoperator_.testGridFunctionSpace());
           }
           // residual calculation in member function "defect":
           //--------------------------------------------------
           // - set residual vector to zero
           // - calculate new residual
-          // - store norm of residual in "this->res.defect"
-          this->defect(*this->r);
-          this->res.first_defect = this->res.defect;
-          this->prev_defect = this->res.defect;
+          // - store norm of residual in "this->res_.defect"
+          this->defect(*this->r_);
+          this->res_.first_defect = this->res_.defect;
+          this->prev_defect_ = this->res_.defect;
 
-          if (this->verbosity_level >= 2)
+          if (this->verbosity_level_ >= 2)
             {
               // store old ios flags
               ios_base_all_saver restorer(std::cout);
               std::cout << "  Initial defect: "
                         << std::setw(12) << std::setprecision(4) << std::scientific
-                        << this->res.defect << std::endl;
+                        << this->res_.defect << std::endl;
             }
 
-          if(!this->A) {
+          if(!this->A_) {
             // std::cout << "==== Setting up jacobian matrix ... " << std::endl;
-            this->A = std::make_shared<Matrix>(this->gridoperator);
+            this->A_ = std::make_shared<Matrix>(this->gridoperator_);
           }
-          if(!this->z) {
+          if(!this->z_) {
             // std::cout << "==== Setting up correction vector ... " << std::endl;
-            this->z = std::make_shared<TrialVector>(this->gridoperator.trialGridFunctionSpace());
+            this->z_ = std::make_shared<TrialVector>(this->gridoperator_.trialGridFunctionSpace());
           }
 
           while (!this->terminate())
             {
-              if (this->verbosity_level >= 3)
-                std::cout << "  Newton iteration " << this->res.iterations
+              if (this->verbosity_level_ >= 3)
+                std::cout << "  Newton iteration " << this->res_.iterations
                           << " --------------------------------" << std::endl;
 
               Timer assembler_timer;
@@ -273,16 +273,16 @@ namespace Dune
                   //   - set jacobian to zero
                   //   - calculate new jacobian
                   // - set linear reduction
-                  this->prepare_step(*this->A,*this->r);
+                  this->prepare_step(*this->A_,*this->r_);
                 }
               catch (...)
                 {
-                  this->res.assembler_time += assembler_timer.elapsed();
+                  this->res_.assembler_time += assembler_timer.elapsed();
                   throw;
                 }
               double assembler_time = assembler_timer.elapsed();
-              this->res.assembler_time += assembler_time;
-              if (this->verbosity_level >= 3)
+              this->res_.assembler_time += assembler_time;
+              if (this->verbosity_level_ >= 3)
                 std::cout << "      matrix assembly time:             "
                           << std::setw(12) << std::setprecision(4) << std::scientific
                           << assembler_time << std::endl;
@@ -294,85 +294,85 @@ namespace Dune
                   //-----------------------------------------------------------
                   // - set initial guess for correction z to zero
                   // - call linear solver
-                  this->linearSolve(*this->A, *this->z, *this->r);
+                  this->linearSolve(*this->A_, *this->z_, *this->r_);
                 }
               catch (...)
                 {
-                  this->res.linear_solver_time += linear_solver_timer.elapsed();
-                  this->res.linear_solver_iterations += this->solver.result().iterations;
+                  this->res_.linear_solver_time += linear_solver_timer.elapsed();
+                  this->res_.linear_solver_iterations += this->solver_.result().iterations;
                   throw;
                 }
               double linear_solver_time = linear_solver_timer.elapsed();
-              this->res.linear_solver_time += linear_solver_time;
-              this->res.linear_solver_iterations += this->solver.result().iterations;
+              this->res_.linear_solver_time += linear_solver_time;
+              this->res_.linear_solver_iterations += this->solver_.result().iterations;
 
               try
                 {
                   // line search with correction z
                   // the undamped version is also integrated in here
-                  this->line_search(*this->z, *this->r);
+                  this->line_search(*this->z_, *this->r_);
                 }
               catch (NewtonLineSearchError)
                 {
-                  if (this->reassembled)
+                  if (this->reassembled_)
                     throw;
-                  if (this->verbosity_level >= 3)
+                  if (this->verbosity_level_ >= 3)
                     std::cout << "      line search failed - trying again with reassembled matrix" << std::endl;
                   continue;
                 }
 
-              this->res.reduction = this->res.defect/this->res.first_defect;
-              this->res.iterations++;
-              this->res.conv_rate = std::pow(this->res.reduction, 1.0/this->res.iterations);
+              this->res_.reduction = this->res_.defect/this->res_.first_defect;
+              this->res_.iterations++;
+              this->res_.conv_rate = std::pow(this->res_.reduction, 1.0/this->res_.iterations);
 
               // store old ios flags
               ios_base_all_saver restorer(std::cout);
 
-              if (this->verbosity_level >= 3)
+              if (this->verbosity_level_ >= 3)
                 std::cout << "      linear solver time:               "
                           << std::setw(12) << std::setprecision(4) << std::scientific
                           << linear_solver_time << std::endl
                           << "      defect reduction (this iteration):"
                           << std::setw(12) << std::setprecision(4) << std::scientific
-                          << this->res.defect/this->prev_defect << std::endl
+                          << this->res_.defect/this->prev_defect_ << std::endl
                           << "      defect reduction (total):         "
                           << std::setw(12) << std::setprecision(4) << std::scientific
-                          << this->res.reduction << std::endl
+                          << this->res_.reduction << std::endl
                           << "      new defect:                       "
                           << std::setw(12) << std::setprecision(4) << std::scientific
-                          << this->res.defect << std::endl;
-              if (this->verbosity_level == 2)
-                std::cout << "  Newton iteration " << std::setw(2) << this->res.iterations
+                          << this->res_.defect << std::endl;
+              if (this->verbosity_level_ == 2)
+                std::cout << "  Newton iteration " << std::setw(2) << this->res_.iterations
                           << ".  New defect: "
                           << std::setw(12) << std::setprecision(4) << std::scientific
-                          << this->res.defect
+                          << this->res_.defect
                           << ".  Reduction (this): "
                           << std::setw(12) << std::setprecision(4) << std::scientific
-                          << this->res.defect/this->prev_defect
+                          << this->res_.defect/this->prev_defect_
                           << ".  Reduction (total): "
                           << std::setw(12) << std::setprecision(4) << std::scientific
-                          << this->res.reduction << std::endl;
+                          << this->res_.reduction << std::endl;
             } // end while
         } // end try
       catch(...)
         {
-          this->res.elapsed = timer.elapsed();
+          this->res_.elapsed = timer.elapsed();
           throw;
         }
-      this->res.elapsed = timer.elapsed();
+      this->res_.elapsed = timer.elapsed();
 
       ios_base_all_saver restorer(std::cout); // store old ios flags
 
-      if (this->verbosity_level == 1)
-        std::cout << "  Newton converged after " << std::setw(2) << this->res.iterations
+      if (this->verbosity_level_ == 1)
+        std::cout << "  Newton converged after " << std::setw(2) << this->res_.iterations
                   << " iterations.  Reduction: "
                   << std::setw(12) << std::setprecision(4) << std::scientific
-                  << this->res.reduction
-                  << "   (" << std::setprecision(4) << this->res.elapsed << "s)"
+                  << this->res_.reduction
+                  << "   (" << std::setprecision(4) << this->res_.elapsed << "s)"
                   << std::endl;
 
-      if(!this->keep_matrix)
-        this->A.reset();
+      if(!this->keep_matrix_)
+        this->A_.reset();
     } // end apply
 
     template<class GOS, class TrlV, class TstV>
@@ -386,57 +386,57 @@ namespace Dune
     public:
       NewtonTerminate(const GridOperator& go, TrialVector& u_)
         : NewtonBase<GOS,TrlV,TstV>(go,u_)
-        , maxit(40)
-        , force_iteration(false)
+        , maxit_(40)
+        , force_iteration_(false)
       {
-        this->reduction = 1e-8;
-        this->abs_limit = 1e-12;
+        this->reduction_ = 1e-8;
+        this->abs_limit_ = 1e-12;
       }
 
       NewtonTerminate(const GridOperator& go)
         : NewtonBase<GOS,TrlV,TstV>(go)
-        , maxit(40)
-        , force_iteration(false)
+        , maxit_(40)
+        , force_iteration_(false)
       {
-        this->reduction = 1e-8;
-        this->abs_limit = 1e-12;
+        this->reduction_ = 1e-8;
+        this->abs_limit_ = 1e-12;
       }
 
-      void setReduction(RFType reduction_)
+      void setReduction(RFType reduction)
       {
-        this->reduction = reduction_;
+        this->reduction_ = reduction;
       }
 
-      void setMaxIterations(unsigned int maxit_)
+      void setMaxIterations(unsigned int maxit)
       {
-        maxit = maxit_;
+        maxit_ = maxit;
       }
 
-      void setForceIteration(bool force_iteration_)
+      void setForceIteration(bool force_iteration)
       {
-        force_iteration = force_iteration_;
+        force_iteration_ = force_iteration;
       }
 
       void setAbsoluteLimit(RFType abs_limit_)
       {
-        this->abs_limit = abs_limit_;
+        this->abs_limit_ = abs_limit_;
       }
 
       virtual bool terminate()
       {
-        if (force_iteration && this->res.iterations == 0)
+        if (force_iteration_ && this->res_.iterations == 0)
           return false;
-        this->res.converged = this->res.defect < this->abs_limit
-          || this->res.defect < this->res.first_defect * this->reduction;
-        if (this->res.iterations >= maxit && !this->res.converged)
+        this->res_.converged = this->res_.defect < this->abs_limit_
+          || this->res_.defect < this->res_.first_defect * this->reduction_;
+        if (this->res_.iterations >= maxit_ && !this->res_.converged)
           DUNE_THROW(NewtonNotConverged,
                      "NewtonTerminate::terminate(): Maximum iteration count reached");
-        return this->res.converged;
+        return this->res_.converged;
       }
 
     private:
-      unsigned int maxit;
-      bool force_iteration;
+      unsigned int maxit_;
+      bool force_iteration_;
     }; // end class NewtonTerminate
 
     template<class GOS, class TrlV, class TstV>
@@ -451,16 +451,16 @@ namespace Dune
     public:
       NewtonPrepareStep(const GridOperator& go, TrialVector& u_)
         : NewtonBase<GOS,TrlV,TstV>(go,u_)
-        , min_linear_reduction(1e-3)
-        , fixed_linear_reduction(0.0)
-        , reassemble_threshold(0.0)
+        , min_linear_reduction_(1e-3)
+        , fixed_linear_reduction_(0.0)
+        , reassemble_threshold_(0.0)
       {}
 
       NewtonPrepareStep(const GridOperator& go)
         : NewtonBase<GOS,TrlV,TstV>(go)
-        , min_linear_reduction(1e-3)
-        , fixed_linear_reduction(0.0)
-        , reassemble_threshold(0.0)
+        , min_linear_reduction_(1e-3)
+        , fixed_linear_reduction_(0.0)
+        , reassemble_threshold_(0.0)
       {}
 
       /**\brief set the minimal reduction in the linear solver
@@ -469,18 +469,18 @@ namespace Dune
          determined as mininum of the min_linear_reduction and the
          linear_reduction needed to achieve second order
          Newton convergence. */
-      void setMinLinearReduction(RFType min_linear_reduction_)
+      void setMinLinearReduction(RFType min_linear_reduction)
       {
-        min_linear_reduction = min_linear_reduction_;
+        min_linear_reduction_ = min_linear_reduction;
       }
 
       /**\brief set a fixed reduction in the linear solver (overwrites setMinLinearReduction)
 
          \note with fixed_linear_reduction > 0, the linear reduction
          rate will always be fixed to min_linear_reduction. */
-      void setFixedLinearReduction(bool fixed_linear_reduction_)
+      void setFixedLinearReduction(bool fixed_linear_reduction)
       {
-        fixed_linear_reduction = fixed_linear_reduction_;
+        fixed_linear_reduction_ = fixed_linear_reduction;
       }
 
       /**\brief set a threshold, when the linear operator is reassembled
@@ -490,30 +490,30 @@ namespace Dune
          given threshold the linear operator is reassembled to ensure
          convergence.
        */
-      void setReassembleThreshold(RFType reassemble_threshold_)
+      void setReassembleThreshold(RFType reassemble_threshold)
       {
-        reassemble_threshold = reassemble_threshold_;
+        reassemble_threshold_ = reassemble_threshold;
       }
 
       virtual void prepare_step(Matrix& A, TstV& )
       {
-        this->reassembled = false;
-        if (this->res.defect/this->prev_defect > reassemble_threshold)
+        this->reassembled_ = false;
+        if (this->res_.defect/this->prev_defect_ > reassemble_threshold_)
           {
-            if (this->verbosity_level >= 3)
+            if (this->verbosity_level_ >= 3)
               std::cout << "      Reassembling matrix..." << std::endl;
             A = 0.0;                                    // TODO: Matrix interface
-            this->gridoperator.jacobian(*this->u, A);
-            this->reassembled = true;
+            this->gridoperator_.jacobian(*this->u_, A);
+            this->reassembled_ = true;
           }
 
-        if (fixed_linear_reduction == true)
-          this->linear_reduction = min_linear_reduction;
+        if (fixed_linear_reduction_ == true)
+          this->linear_reduction_ = min_linear_reduction_;
         else {
           // determine maximum defect, where Newton is converged.
           RFType stop_defect =
-            std::max(this->res.first_defect * this->reduction,
-                     this->abs_limit);
+            std::max(this->res_.first_defect * this->reduction_,
+                     this->abs_limit_);
 
           /*
             To achieve second order convergence of newton
@@ -523,29 +523,29 @@ namespace Dune
             1/10*end_defect/current_defect
             is sufficient for convergence.
           */
-          if ( stop_defect/(10*this->res.defect) >
-               this->res.defect*this->res.defect/(this->prev_defect*this->prev_defect) )
-            this->linear_reduction =
-              stop_defect/(10*this->res.defect);
+          if ( stop_defect/(10*this->res_.defect) >
+               this->res_.defect*this->res_.defect/(this->prev_defect_*this->prev_defect_) )
+            this->linear_reduction_ =
+              stop_defect/(10*this->res_.defect);
           else
-            this->linear_reduction =
-              std::min(min_linear_reduction,this->res.defect*this->res.defect/(this->prev_defect*this->prev_defect));
+            this->linear_reduction_ =
+              std::min(min_linear_reduction_,this->res_.defect*this->res_.defect/(this->prev_defect_*this->prev_defect_));
         }
 
-        this->prev_defect = this->res.defect;
+        this->prev_defect_ = this->res_.defect;
 
         ios_base_all_saver restorer(std::cout); // store old ios flags
 
-        if (this->verbosity_level >= 3)
+        if (this->verbosity_level_ >= 3)
           std::cout << "      requested linear reduction:       "
                     << std::setw(12) << std::setprecision(4) << std::scientific
-                    << this->linear_reduction << std::endl;
+                    << this->linear_reduction_ << std::endl;
       }
 
     private:
-      RFType min_linear_reduction;
-      bool fixed_linear_reduction;
-      RFType reassemble_threshold;
+      RFType min_linear_reduction_;
+      bool fixed_linear_reduction_;
+      RFType reassemble_threshold_;
     }; // end class NewtonPrepareStep
 
     template<class GOS, class TrlV, class TstV>
@@ -564,95 +564,95 @@ namespace Dune
 
       NewtonLineSearch(const GridOperator& go, TrialVector& u_)
         : NewtonBase<GOS,TrlV,TstV>(go,u_)
-        , strategy(hackbuschReusken)
-        , maxit(10)
-        , damping_factor(0.5)
+        , strategy_(hackbuschReusken)
+        , maxit_(10)
+        , damping_factor_(0.5)
       {}
 
       NewtonLineSearch(const GridOperator& go)
         : NewtonBase<GOS,TrlV,TstV>(go)
-        , strategy(hackbuschReusken)
-        , maxit(10)
-        , damping_factor(0.5)
+        , strategy_(hackbuschReusken)
+        , maxit_(10)
+        , damping_factor_(0.5)
       {}
 
-      void setLineSearchStrategy(Strategy strategy_)
+      void setLineSearchStrategy(Strategy strategy)
       {
-        strategy = strategy_;
+        strategy_ = strategy;
       }
 
-      void setLineSearchStrategy(std::string strategy_)
+      void setLineSearchStrategy(std::string strategy)
       {
-        strategy = strategyFromName(strategy_);
+        strategy_ = strategyFromName(strategy);
       }
 
-      void setLineSearchMaxIterations(unsigned int maxit_)
+      void setLineSearchMaxIterations(unsigned int maxit)
       {
-        maxit = maxit_;
+        maxit_ = maxit;
       }
 
-      void setLineSearchDampingFactor(RFType damping_factor_)
+      void setLineSearchDampingFactor(RFType damping_factor)
       {
-        damping_factor = damping_factor_;
+        damping_factor_ = damping_factor;
       }
 
       virtual void line_search(TrialVector& z, TestVector& r)
       {
-        if (strategy == noLineSearch)
+        if (strategy_ == noLineSearch)
           {
-            this->u->axpy(-1.0, z);                     // TODO: vector interface
+            this->u_->axpy(-1.0, z);                     // TODO: vector interface
             this->defect(r);
             return;
           }
 
-        if (this->verbosity_level >= 4)
+        if (this->verbosity_level_ >= 4)
           std::cout << "      Performing line search..." << std::endl;
         RFType lambda = 1.0;
         RFType best_lambda = 0.0;
-        RFType best_defect = this->res.defect;
-        TrialVector prev_u(*this->u);  // TODO: vector interface
+        RFType best_defect = this->res_.defect;
+        TrialVector prev_u(*this->u_);  // TODO: vector interface
         unsigned int i = 0;
         ios_base_all_saver restorer(std::cout); // store old ios flags
 
         while (1)
           {
-            if (this->verbosity_level >= 4)
+            if (this->verbosity_level_ >= 4)
               std::cout << "          trying line search damping factor:   "
                         << std::setw(12) << std::setprecision(4) << std::scientific
                         << lambda
                         << std::endl;
 
-            this->u->axpy(-lambda, z);                  // TODO: vector interface
+            this->u_->axpy(-lambda, z);                  // TODO: vector interface
             try {
               this->defect(r);
             }
             catch (NewtonDefectError)
               {
-                if (this->verbosity_level >= 4)
+                if (this->verbosity_level_ >= 4)
                   std::cout << "          Nans detected" << std::endl;
               }       // ignore NaNs and try again with lower lambda
 
-            if (this->res.defect <= (1.0 - lambda/4) * this->prev_defect)
+            if (this->res_.defect <= (1.0 - lambda/4) * this->prev_defect_)
               {
-                if (this->verbosity_level >= 4)
+                if (this->verbosity_level_ >= 4)
                   std::cout << "          line search converged" << std::endl;
                 break;
               }
 
-            if (this->res.defect < best_defect)
+            if (this->res_.defect < best_defect)
               {
-                best_defect = this->res.defect;
+                best_defect = this->res_.defect;
                 best_lambda = lambda;
               }
 
-            if (++i >= maxit)
+            if (++i >= maxit_)
               {
-                if (this->verbosity_level >= 4)
+                if (this->verbosity_level_ >= 4)
                   std::cout << "          max line search iterations exceeded" << std::endl;
-                switch (strategy)
+                switch (strategy_)
                   {
                   case hackbuschReusken:
-                    *this->u = prev_u;
+                    *this->u_ = prev_u;
                     this->defect(r);
                     DUNE_THROW(NewtonLineSearchError,
                                "NewtonLineSearch::line_search(): line search failed, "
@@ -661,7 +661,7 @@ namespace Dune
                   case hackbuschReuskenAcceptBest:
                     if (best_lambda == 0.0)
                       {
-                        *this->u = prev_u;
+                        *this->u_ = prev_u;
                         this->defect(r);
                         DUNE_THROW(NewtonLineSearchError,
                                    "NewtonLineSearch::line_search(): line search failed, "
@@ -670,8 +670,8 @@ namespace Dune
                       }
                     if (best_lambda != lambda)
                       {
-                        *this->u = prev_u;
-                        this->u->axpy(-best_lambda, z);
+                        *this->u_ = prev_u;
+                        this->u_->axpy(-best_lambda, z);
                         this->defect(r);
                       }
                     break;
@@ -681,10 +681,10 @@ namespace Dune
                 break;
               }
 
-            lambda *= damping_factor;
-            *this->u = prev_u;                          // TODO: vector interface
+            lambda *= damping_factor_;
+            *this->u_ = prev_u;                          // TODO: vector interface
           }
-        if (this->verbosity_level >= 4)
+        if (this->verbosity_level_ >= 4)
           std::cout << "          line search damping factor:   "
                     << std::setw(12) << std::setprecision(4) << std::scientific
                     << lambda << std::endl;
@@ -703,9 +703,9 @@ namespace Dune
       }
 
     private:
-      Strategy strategy;
-      unsigned int maxit;
-      RFType damping_factor;
+      Strategy strategy_;
+      unsigned int maxit_;
+      RFType damping_factor_;
     }; // end class NewtonLineSearch
 
     template<class GOS, class S, class TrlV, class TstV = TrlV>
