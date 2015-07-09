@@ -463,7 +463,9 @@ namespace Dune
         , reassemble_threshold(0.0)
       {}
 
-      /* with min_linear_reduction > 0, the linear reduction will be
+      /**\brief set the minimal reduction in the linear solver
+
+         \note with min_linear_reduction > 0, the linear reduction will be
          determined as mininum of the min_linear_reduction and the
          linear_reduction needed to achieve second order
          Newton convergence. */
@@ -472,13 +474,22 @@ namespace Dune
         min_linear_reduction = min_linear_reduction_;
       }
 
-      /* with fixed_linear_reduction > 0, the linear reduction
+      /**\brief set a fixed reduction in the linear solver (overwrites setMinLinearReduction)
+
+         \note with fixed_linear_reduction > 0, the linear reduction
          rate will always be fixed to min_linear_reduction. */
       void setFixedLinearReduction(bool fixed_linear_reduction_)
       {
         fixed_linear_reduction = fixed_linear_reduction_;
       }
 
+      /**\brief set a threshold, when the linear operator is reassembled
+
+         We allow to keep the linear operator over several newton
+         iterations. If the reduction in the newton drops below a
+         given threshold the linear operator is reassembled to ensure
+         convergence.
+       */
       void setReassembleThreshold(RFType reassemble_threshold_)
       {
         reassemble_threshold = reassemble_threshold_;
