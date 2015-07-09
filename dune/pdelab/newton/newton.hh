@@ -779,10 +779,9 @@ namespace Dune
         if (param.hasKey("LineSearchDampingFactor"))
           this->setLineSearchDampingFactor(
             param.get<RFType>("LineSearchDampingFactor"));
-        // TODO: This is the only setting written in small letters and with underscore.
-        if (param.hasKey("keep_matrix"))
-          this->keep_matrix(
-            param.get<bool>("keep_matrix"));
+        if (param.hasKey("KeepMatrix"))
+          this->setKeepMatrix(
+            param.get<bool>("KeepMatrix"));
       }
     }; // end class Newton
   } // end namespace PDELab
