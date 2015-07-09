@@ -558,9 +558,15 @@ namespace Dune
       typedef typename TestVector::ElementType RFType;
 
     public:
-      enum Strategy { noLineSearch,
-                      hackbuschReusken,
-                      hackbuschReuskenAcceptBest };
+      enum Strategy {
+        /** \brief don't do any linesearch or damping */
+        noLineSearch,
+        /** \brief perform a linear search for the optimal damping parameter with multiples of damping
+
+         the strategy was described in <a href="http://dx.doi.org/10.1007/BF01406516">[Hackbusch and Reusken, 1989]</a> */
+        hackbuschReusken,
+        /** \brief same as hackbuschReusken, but doesn't fail if the best update is still not good enough */
+        hackbuschReuskenAcceptBest };
 
       NewtonLineSearch(const GridOperator& go, TrialVector& u_)
         : NewtonBase<GOS,TrlV,TstV>(go,u_)
@@ -626,7 +632,7 @@ namespace Dune
             try {
               this->defect(r);
             }
-            catch (NewtonDefectError)
+             catch (NewtonDefectError)
               {
                 if (this->verbosity_level_ >= 4)
                   std::cout << "          Nans detected" << std::endl;
