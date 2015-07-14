@@ -12,10 +12,6 @@
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
 #include"../common/function.hh"
-//--------------------------------------------//
-// TODO
-// Is the header "jacobiantocurl.hh" really used?
-//--------------------------------------------//
 #include <dune/pdelab/common/jacobiantocurl.hh>
 #include"gridfunctionspace.hh"
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
@@ -180,10 +176,6 @@ namespace Dune {
      * \tparam T Type of GridFunctionSpace
      * \tparam X Type of coefficients vector
      */
-    //--------------------------------------------//
-    // TODO
-    // Is the following class really used?
-    //--------------------------------------------//
     template<typename T, typename X>
     class DiscreteGridFunctionCurl :
       public GridFunctionInterface<
@@ -269,10 +261,6 @@ namespace Dune {
       std::shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
     };
 
-    //--------------------------------------------//
-    // TODO
-    // Are the following traits really used?
-    //--------------------------------------------//
     //! Helper class to calculate the Traits of DiscreteGridFunctionCurl
     /**
      * \tparam GV              Type of the GridView.
@@ -358,10 +346,6 @@ namespace Dune {
      *           evaluateJacobianGlobal() method.
      * \tparam X Type of coefficients vector
      */
-    //--------------------------------------------//
-    // TODO
-    // Is the following class really used?
-    //--------------------------------------------//
     template<typename T, typename X>
     class DiscreteGridFunctionGlobalCurl
       : public GridFunctionInterface<
@@ -920,25 +904,24 @@ namespace Dune {
       std::shared_ptr<const X> px; // FIXME: dummy pointer to make sure we take ownership of X
     };
 
-    /** \brief Helper class to compute a single derivative of the basis functions
+    /** \brief Helper class to compute a single derivative of scalar basis functions.
 
-        \tparam Mat the matrix type of the geometry
+        \tparam Mat  The matrix type of the geometry transformation.
+        \tparam RF   The underlying field type of Mat,
+                     needed especially for the template specialization.
+        \tparam size The size of Mat,
+                     needed especially for the template specialization
 
-        \tparam RF the underlying field type of Mat,
-        needed especially for the template specialization
-
-        \tparam std::size_t the size of Mat,
-        needed especially for the template specialization
+        * The k-th derivative of scalar basis functions is calculated from the
+        * matrix-vector product of the geometry transformation and the gradient
+        * on the reference element by picking out the k-th component.
 
     */
-
     template<typename Mat, typename RF, std::size_t size>
     struct SingleDerivativeComputationHelper {
       /**
-       * tparam T the gradient of the shape function on the reference element
-       *
-       * param t the gradient of the shape function on the reference element
-       which has to be inserted
+       * \param[in] mat The jacobian of the geometry transformation.
+       * \param[in] t   The gradient of the shape function on the reference element.
       */
       template<typename T>
       static inline RF compute_derivative(const Mat& mat, const T& t, const unsigned int k)
@@ -951,9 +934,21 @@ namespace Dune {
       }
     };
 
-    // template specialization for FieldMatrix
+    /** \brief Template specialization for Dune::FieldMatrix.
+     *
+     * This is a template specialization if the matrix type of the geometry transformation
+     * is equal to a Dune::FieldMatrix. The k-th component of the matrix-vector product
+     * can then be calculated as a scalar product of the k-th row of the geometry
+     * transformation with the gradient on the reference element.
+     *
+     */
     template<typename RF, std::size_t size>
     struct SingleDerivativeComputationHelper<Dune::FieldMatrix<RF,size,size>,RF,size> {
+      /**
+       * \param[in] mat The jacobian of the geometry transformation,
+       *                has to be a Dune::FieldMatrix.
+       * \param[in] t   The gradient of the shape function on the reference element.
+       */
       template<typename T>
       static inline RF compute_derivative(const Dune::FieldMatrix<RF,size,size>& mat, const T& t, const unsigned int k)
       {
@@ -961,9 +956,23 @@ namespace Dune {
       }
     };
 
-    // template specialization for DiagonalMatrix
+    /** \brief Template specialization for Dune::DiagonalMatrix.
+     *
+     * This is a template specialization if the matrix type of the geometry transformation
+     * is equal to a Dune::DiagonalMatrix. The k-th component of the matrix-vector product
+     * can then be calculated as the product of the k-th diagonal element of the
+     * geometry transformation with the k-th derivative of the gradient on the reference
+     * element.
+     * This specialization especially occurs for YaspGrid.
+     *
+     */
     template<typename RF, std::size_t size>
     struct SingleDerivativeComputationHelper<Dune::DiagonalMatrix<RF,size>,RF,size> {
+      /**
+       * \param[in] mat The jacobian of the geometry transformation,
+       *                has to be a Dune::DiagonalMatrix.
+       * \param[in] t   The gradient of the shape function on the reference element.
+       */
       template<typename T>
       static inline RF compute_derivative(const Dune::DiagonalMatrix<RF,size>& mat, const T& t, const unsigned int k)
       {
@@ -971,14 +980,16 @@ namespace Dune {
       }
     };
 
-    /** \brief compute divergence of vector-valued functions
+    /** \brief Compute divergence of vector-valued functions.
 
-        \tparam T Type of VectorGridFunctionSpace
+        \tparam T Type of VectorGridFunctionSpace.
+        \tparam X Type of coefficients vector.
 
-        \tparam X Type of coefficients vector
+        * The grid function space should be a vector grid function space
+        * consisting of scalar-valued function spaces. The divergence will be
+        * a single component function.
 
     */
-
     template<typename T, typename X>
     class VectorDiscreteGridFunctionDiv
       : public Dune::PDELab::GridFunctionInterface<
@@ -1079,8 +1090,20 @@ namespace Dune {
       mutable std::vector<RF> xl;
       mutable std::vector<JT> J;
       shared_ptr<const X> px;
-    };
+    }; // end class VectorDiscreteGridFunctionDiv
 
+    /** \brief Compute curl of vector-valued functions.
+
+        \tparam T Type of VectorGridFunctionSpace.
+        \tparam X Type of coefficients vector.
+        \tparam dimR The number of components the curl should be taken of.
+
+        \note This is the non-specialized version of VectorDiscreteGridFunctionCurl.
+              There is a specialized version for the values of dimR equal to 2 or 3.
+              If this non-specialized version is instantiated, a static_assert()
+              will be triggered.
+
+     */
     template<typename T, typename X, std::size_t dimR = T::CHILDREN>
     class VectorDiscreteGridFunctionCurl
     {
@@ -1089,11 +1112,20 @@ namespace Dune {
       VectorDiscreteGridFunctionCurl(const GFS& gfs, const X& x)
       {
         static_assert(AlwaysFalse<typename GFS::Traits::GridViewType>::value,
-                           "curl computation can only be done in two or three dimensions");
+                      "Curl computation can only be done in two or three dimensions");
       }
     };
 
-    // specialization for curl in 3D
+    /** \brief Compute curl of vector-valued functions (3D).
+
+        \tparam T Type of VectorGridFunctionSpace.
+        \tparam X Type of coefficients vector.
+
+        * This is the specialized version for dimR == 3. It takes the curl of a
+        * 3D-valued function and the result will be a 3-component vector
+        * consisting of scalar-valued functions.
+
+     */
     template<typename T, typename X>
     class VectorDiscreteGridFunctionCurl<T,X,3>
       : public Dune::PDELab::GridFunctionInterface<
@@ -1173,7 +1205,7 @@ namespace Dune {
         // some handy variables for the curl in 3D
         int i1, i2;
 
-        // loop over VectorGFS and calculate k-th derivative of k-th child
+        // loop over childs of VectorGFS
         for(unsigned int k=0; k != T::CHILDREN; ++k) {
 
           // get local Jacobians/gradients of the shape functions
@@ -1227,9 +1259,18 @@ namespace Dune {
       mutable std::vector<RF> xl;
       mutable std::vector<JT> J;
       shared_ptr<const X> px;
-    };
+    }; // end class VectorDiscreteGridFunctionCurl (3D)
 
-    //template specialization for curl in 2D
+    /** \brief Compute curl of vector-valued functions (2D).
+
+        \tparam T Type of VectorGridFunctionSpace.
+        \tparam X Type of coefficients vector.
+
+        * This is the specialized version for dimR == 2. It takes the curl of a
+        * 2D-valued function and the result will be a single component
+        * scalar-valued function.
+
+     */
     template<typename T, typename X>
     class VectorDiscreteGridFunctionCurl<T,X,2>
       : public Dune::PDELab::GridFunctionInterface<
@@ -1294,7 +1335,7 @@ namespace Dune {
         RF sign = -1.0;
         int i2;
 
-        // loop over VectorGFS and calculate k-th derivative of k-th child
+        // loop over childs of VectorGFS
         for(unsigned int k=0; k != T::CHILDREN; ++k) {
 
           // get local Jacobians/gradients of the shape functions
@@ -1337,7 +1378,7 @@ namespace Dune {
       mutable std::vector<RF> xl;
       mutable std::vector<JT> J;
       shared_ptr<const X> px;
-    };
+    }; // end class VectorDiscreteGridFunctionCurl (2D)
 
    //! \} group GridFunctionSpace
   } // namespace PDELab
