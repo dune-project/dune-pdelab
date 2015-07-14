@@ -27,8 +27,8 @@ namespace Dune {
       template<typename C, bool doIt>
       struct ConstraintsCallBoundary
       {
-        template<typename F, typename IG, typename LFS, typename T>
-        static void boundary (const C& c, const F& f, const IG& ig, const LFS& lfs, T& trafo)
+        template<typename P, typename IG, typename LFS, typename T>
+        static void boundary (const C& c, const P& p, const IG& ig, const LFS& lfs, T& trafo)
         {
         }
       };
@@ -53,8 +53,8 @@ namespace Dune {
       template<typename C, bool doIt>
       struct ConstraintsCallVolume
       {
-        template<typename EG, typename LFS, typename T>
-        static void volume (const C& c, const EG& eg, const LFS& lfs, T& trafo)
+        template<typename P, typename EG, typename LFS, typename T>
+        static void volume (const C& c, const P&, const EG& eg, const LFS& lfs, T& trafo)
         {
         }
       };
@@ -63,11 +63,11 @@ namespace Dune {
       template<typename C>
       struct ConstraintsCallBoundary<C,true>
       {
-        template<typename F, typename IG, typename LFS, typename T>
-        static void boundary (const C& c, const F& f, const IG& ig, const LFS& lfs, T& trafo)
+        template<typename P, typename IG, typename LFS, typename T>
+        static void boundary (const C& c, const P& p, const IG& ig, const LFS& lfs, T& trafo)
         {
           if (lfs.size())
-            c.boundary(f,ig,lfs,trafo);
+            c.boundary(p,ig,lfs,trafo);
         }
       };
       template<typename C>
@@ -95,24 +95,24 @@ namespace Dune {
       template<typename C>
       struct ConstraintsCallVolume<C,true>
       {
-        template<typename EG, typename LFS, typename T>
-        static void volume (const C& c, const EG& eg, const LFS& lfs, T& trafo)
+        template<typename P, typename EG, typename LFS, typename T>
+        static void volume (const C& c, const P& p, const EG& eg, const LFS& lfs, T& trafo)
         {
           if (lfs.size())
-            c.volume(eg,lfs,trafo);
+            c.volume(p,eg,lfs,trafo);
         }
       };
 
 
-      struct BoundaryConstraintsBase
+      struct ParameterizedConstraintsBase
         : public TypeTree::TreePairVisitor
       {
         // This acts as a catch-all for unsupported leaf- / non-leaf combinations in the two
         // trees. It is necessary because otherwise, the visitor would fall back to the default
         // implementation in TreeVisitor, which simply does nothing. The resulting bugs would
         // probably be hell to find...
-        template<typename F, typename LFS, typename TreePath>
-        void leaf(const F& f, const LFS& lfs, TreePath treePath) const
+        template<typename P, typename LFS, typename TreePath>
+        void leaf(const P& p, const LFS& lfs, TreePath treePath) const
         {
           static_assert((AlwaysFalse<F>::Value),
                         "unsupported combination of function and LocalFunctionSpace");
@@ -120,7 +120,7 @@ namespace Dune {
       };
 
 
-      template<typename F, typename IG, typename CL>
+      template<typename P, typename IG, typename CL>
       struct BoundaryConstraintsForParametersLeaf
         : public TypeTree::TreeVisitor
         , public TypeTree::DynamicTraversal
@@ -134,16 +134,16 @@ namespace Dune {
           typedef typename LFS::Traits::ConstraintsType C;
 
           // iterate over boundary, need intersection iterator
-          ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.constraints(),f,ig,lfs,cl);
+          ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.constraints(),p,ig,lfs,cl);
         }
 
-        BoundaryConstraintsForParametersLeaf(const F& f_, const IG& ig_, CL& cl_)
-          : f(f_)
+        BoundaryConstraintsForParametersLeaf(const P& p_, const IG& ig_, CL& cl_)
+          : p(p_)
           , ig(ig_)
           , cl(cl_)
         {}
 
-        const F& f;
+        const P& p;
         const IG& ig;
         CL& cl;
 
@@ -152,29 +152,29 @@ namespace Dune {
 
       template<typename IG, typename CL>
       struct BoundaryConstraints
-        : public BoundaryConstraintsBase
+        : public ParameterizedConstraintsBase
         , public TypeTree::DynamicTraversal
       {
 
         // standard case - leaf in both trees
-        template<typename F, typename LFS, typename TreePath>
-        typename enable_if<F::isLeaf && LFS::isLeaf>::type
-        leaf(const F& f, const LFS& lfs, TreePath treePath) const
+        template<typename P, typename LFS, typename TreePath>
+        typename enable_if<P::isLeaf && LFS::isLeaf>::type
+        leaf(const P& p, const LFS& lfs, TreePath treePath) const
         {
           // extract constraints type
           typedef typename LFS::Traits::ConstraintsType C;
 
           // iterate over boundary, need intersection iterator
-          ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.constraints(),f,ig,lfs,cl);
+          ConstraintsCallBoundary<C,C::doBoundary>::boundary(lfs.constraints(),p,ig,lfs,cl);
         }
 
-        // reuse constraints parameter information from f for all LFS children
-        template<typename F, typename LFS, typename TreePath>
-        typename enable_if<F::isLeaf && (!LFS::isLeaf)>::type
-        leaf(const F& f, const LFS& lfs, TreePath treePath) const
+        // reuse constraints parameter information from p for all LFS children
+        template<typename P, typename LFS, typename TreePath>
+        typename enable_if<P::isLeaf && (!LFS::isLeaf)>::type
+        leaf(const P& p, const LFS& lfs, TreePath treePath) const
         {
           // traverse LFS tree and reuse parameter information
-          TypeTree::applyToTree(lfs,BoundaryConstraintsForParametersLeaf<F,IG,CL>(f,ig,cl));
+          TypeTree::applyToTree(lfs,BoundaryConstraintsForParametersLeaf<P,IG,CL>(p,ig,cl));
         }
 
         BoundaryConstraints(const IG& ig_, CL& cl_)
@@ -252,8 +252,8 @@ namespace Dune {
       };
 
 
-      template<typename EG, typename CL>
-      struct VolumeConstraints
+      template<typename P, typename EG, typename CL>
+      struct VolumeConstraintsForParametersLeaf
         : public TypeTree::TreeVisitor
         , public TypeTree::DynamicTraversal
       {
@@ -266,7 +266,52 @@ namespace Dune {
           const C & c = lfs.constraints();
 
           // iterate over boundary, need intersection iterator
-          ConstraintsCallVolume<C,C::doVolume>::volume(c,eg,lfs,cl);
+          ConstraintsCallVolume<C,C::doVolume>::volume(c,p,eg,lfs,cl);
+        }
+
+        VolumeConstraintsForParametersLeaf(const P& p_, const EG& eg_, CL& cl_)
+          : p(p_)
+          , eg(eg_)
+          , cl(cl_)
+        {}
+
+      private:
+        const P& p;
+        const EG& eg;
+        CL& cl;
+
+      };
+
+
+      template<typename EG, typename CL>
+      struct VolumeConstraints
+        : public ParameterizedConstraintsBase
+        , public TypeTree::DynamicTraversal
+      {
+
+        // standard case - leaf in both trees
+        template<typename P, typename LFS, typename TreePath>
+        typename enable_if<P::isLeaf && LFS::isLeaf>::type
+        leaf(const P& p, const LFS& lfs, TreePath treePath) const
+        {
+          // allocate local constraints map
+          CL cl;
+
+          // extract constraints type
+          typedef typename LFS::Traits::ConstraintsType C;
+          const C & c = lfs.constraints();
+
+          // iterate over boundary, need intersection iterator
+          ConstraintsCallVolume<C,C::doVolume>::volume(c,p,eg,lfs,cl);
+        }
+
+        // reuse constraints parameter information from p for all LFS children
+        template<typename P, typename LFS, typename TreePath>
+        typename enable_if<P::isLeaf && (!LFS::isLeaf)>::type
+        leaf(const P& p, const LFS& lfs, TreePath treePath) const
+        {
+          // traverse LFS tree and reuse parameter information
+          TypeTree::applyToTree(lfs,VolumeConstraintsForParametersLeaf<P,EG,CL>(p,eg,cl));
         }
 
         VolumeConstraints(const EG& eg_, CL& cl_)
@@ -582,9 +627,8 @@ namespace Dune {
 
           CL cl_self;
 
-          // TypeTree::applyToTreePair(p,lfs_e,VolumeConstraints<Element,CG>(ElementGeometry<Element>(*it),cg));
           typedef ElementGeometry<Element> ElementWrapper;
-          TypeTree::applyToTree(lfs_e,VolumeConstraints<ElementWrapper,CL>(ElementWrapper(cell),cl_self));
+          TypeTree::applyToTreePair(p,lfs_e,VolumeConstraints<ElementWrapper,CL>(ElementWrapper(cell),cl_self));
 
           // iterate over intersections and call metaprogram
           unsigned int intersection_index = 0;

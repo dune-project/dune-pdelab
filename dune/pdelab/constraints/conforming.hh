@@ -160,11 +160,11 @@ namespace Dune {
        * \tparam LFS local function space
        * \tparam T   TransformationType
        */
-      template<typename EG, typename LFS, typename T>
-      void volume (const EG& eg, const LFS& lfs, T& trafo) const
+      template<typename P, typename EG, typename LFS, typename T>
+      void volume (const P& param, const EG& eg, const LFS& lfs, T& trafo) const
       {
         typedef FiniteElementInterfaceSwitch<
-        typename LFS::Traits::FiniteElementType
+          typename LFS::Traits::FiniteElementType
           > FESwitch;
 
         auto entity = eg.entity();
