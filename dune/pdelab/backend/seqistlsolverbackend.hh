@@ -2,5 +2,5 @@
 // vi: set et ts=8 sw=2 sts=2:
 #ifndef DUNE_SEQISTLSOLVERBACKEND_HH
 #warning "The file dune/pdelab/backend/seqistlsolverbackend.hh is deprecated. Please use dune/pdelab/backend/istl.hh instead."
-#include <dune/pdelab/backend/istl/seqistlsolverbackend.hh>
+#include <dune/pdelab/backend/istl.hh>
 #endif
