@@ -114,7 +114,7 @@ namespace Dune {
         template<typename P, typename LFS, typename TreePath>
         void leaf(const P& p, const LFS& lfs, TreePath treePath) const
         {
-          static_assert((AlwaysFalse<F>::Value),
+          static_assert((AlwaysFalse<P>::Value),
                         "unsupported combination of function and LocalFunctionSpace");
         }
       };
