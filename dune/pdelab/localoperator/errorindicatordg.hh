@@ -2,23 +2,19 @@
 #ifndef DUNE_PDELAB_ERRORINDICATORDG_HH
 #define DUNE_PDELAB_ERRORINDICATORDG_HH
 
-#include<vector>
+#include <algorithm>
+#include <vector>
 
-#include<dune/common/exceptions.hh>
-#include<dune/common/fvector.hh>
-#include<dune/geometry/type.hh>
-#include<dune/geometry/referenceelements.hh>
-#include<dune/geometry/quadraturerules.hh>
+#include <dune/common/fvector.hh>
 
-#include<dune/pdelab/localoperator/pattern.hh>
-#include<dune/pdelab/localoperator/flags.hh>
-#include<dune/pdelab/localoperator/idefault.hh>
-#include<dune/pdelab/localoperator/defaultimp.hh>
-#include<dune/pdelab/finiteelement/localbasiscache.hh>
+#include <dune/geometry/quadraturerules.hh>
+#include <dune/geometry/referenceelements.hh>
 
-#include "convectiondiffusionparameter.hh"
-#include "convectiondiffusiondg.hh"
-#include "eval.hh"
+#include <dune/pdelab/localoperator/convectiondiffusiondg.hh>
+#include <dune/pdelab/localoperator/convectiondiffusionparameter.hh>
+#include <dune/pdelab/localoperator/eval.hh>
+#include <dune/pdelab/localoperator/flags.hh>
+
 
 // Note:
 // The residual-based error estimator implemented here (for h-refinement only!)
