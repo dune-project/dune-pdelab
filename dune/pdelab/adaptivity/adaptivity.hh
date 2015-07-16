@@ -107,8 +107,8 @@ namespace Dune {
               fe.localBasis().evaluateFunction(ip.position(),phi);
               const DF factor = ip.weight();
 
-              for (int i = 0; i < local_size; ++i)
-                for (int j = 0; j < local_size; ++j)
+              for (size_type i = 0; i < local_size; ++i)
+                for (size_type j = 0; j < local_size; ++j)
                   mass_matrix[i][j] += phi[i] * phi[j] * factor;
             }
 

@@ -2,23 +2,19 @@
 #ifndef DUNE_PDELAB_ERRORINDICATORDG_HH
 #define DUNE_PDELAB_ERRORINDICATORDG_HH
 
-#include<vector>
+#include <algorithm>
+#include <vector>
 
-#include<dune/common/exceptions.hh>
-#include<dune/common/fvector.hh>
-#include<dune/geometry/type.hh>
-#include<dune/geometry/referenceelements.hh>
-#include<dune/geometry/quadraturerules.hh>
+#include <dune/common/fvector.hh>
 
-#include<dune/pdelab/localoperator/pattern.hh>
-#include<dune/pdelab/localoperator/flags.hh>
-#include<dune/pdelab/localoperator/idefault.hh>
-#include<dune/pdelab/localoperator/defaultimp.hh>
-#include<dune/pdelab/finiteelement/localbasiscache.hh>
+#include <dune/geometry/quadraturerules.hh>
+#include <dune/geometry/referenceelements.hh>
 
-#include "convectiondiffusionparameter.hh"
-#include "convectiondiffusiondg.hh"
-#include "eval.hh"
+#include <dune/pdelab/localoperator/convectiondiffusiondg.hh>
+#include <dune/pdelab/localoperator/convectiondiffusionparameter.hh>
+#include <dune/pdelab/localoperator/eval.hh>
+#include <dune/pdelab/localoperator/flags.hh>
+
 
 // Note:
 // The residual-based error estimator implemented here (for h-refinement only!)
@@ -92,28 +88,41 @@ namespace Dune {
         // dimensions
         const int dim = EG::Geometry::dimension;
 
-        // pOrder is constant on all grid elements (h-adaptive scheme).
-        const int pOrder = lfsu.finiteElement().localBasis().order();
-        const int intorder = 2 * pOrder;
+        // extract objects
+        auto cell = eg.entity();
+        auto geo  = eg.geometry();
 
-        Dune::GeometryType gt = eg.geometry().type();
+        const auto &gt = geo.type();
+
+        const auto &ref = Dune::ReferenceElements<DF,dim>::general(gt);
+
+        const auto &localcenter = ref.position(0,0);
+
         // Diffusion tensor at cell center
-        typename T::Traits::PermTensorType A;
-        Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
-        A = param.A(eg.entity(),localcenter);
+        auto A = param.A(cell,localcenter);
+
+        static_assert(dim == 2 || dim == 3,
+                      "The computation of epsilon looks very "
+                      "much like it will only work in 2D or 3D.  If you think "
+                      "otherwise, replace this static assert with a comment "
+                      "that explains why.  --Jö");
         RF epsilon = std::min( A[0][0], A[1][1]);
         if( dim>2 ) epsilon = std::min( A[2][2], epsilon );
 
         // select quadrature rule
-        const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
+        // pOrder is constant on all grid elements (h-adaptive scheme).
+        const int pOrder = lfsu.finiteElement().localBasis().order();
+        const int intorder = 2 * pOrder;
+        const auto rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
+
+        RF sum(0.0);
+        std::vector<RangeType> phi(lfsu.size());
 
         // loop over quadrature points
-        RF sum(0.0);
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto &qp : rule)
           {
             // evaluate basis functions
-            std::vector<RangeType> phi(lfsu.size());
-            lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
+            lfsu.finiteElement().localBasis().evaluateFunction(qp.position(),phi);
 
             // evaluate u
             RF u=0.0;
@@ -121,21 +130,25 @@ namespace Dune {
               u += x(lfsu,i)*phi[i];
 
             // evaluate reaction term
-            typename T::Traits::RangeFieldType c = param.c(eg.entity(),it->position());
+            auto c = param.c(cell,qp.position());
 
             // evaluate right hand side parameter function
-            typename T::Traits::RangeFieldType f = param.f(eg.entity(),it->position());
-
-            // integrate f^2
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+            auto f = param.f(cell,qp.position());
 
             // evaluate convection term
-            typename T::Traits::RangeType beta
-              = param.b(eg.entity(),it->position());
+            auto beta = param.b(cell,qp.position());
 
-            // compute gradient of u_h
+
+            /**********************/
+            /* Evaluate Gradients */
+            /**********************/
+
             Dune::FieldVector<RF,dim> gradu(0.0);
-            evalGradient( it->position(), eg.entity(), lfsu, x, gradu );
+            evalGradient( qp.position(), cell, lfsu, x, gradu );
+
+
+            // integrate f^2
+            RF factor = qp.weight() * geo.integrationElement(qp.position());
 
             RF square = f - (beta*gradu) - c*u; // + eps * Laplacian_u (TODO for pMax=2)
             square *= square;
@@ -143,10 +156,12 @@ namespace Dune {
           }
 
         // accumulate cell indicator
-        DF h_T = diameter(eg.geometry());
+        DF h_T = diameter(geo);
 
         // L.Zhu: First term, interior residual squared
         RF eta_RK = h_T * h_T / pOrder / pOrder / epsilon * sum;
+
+        // add contributions
         r.accumulate( lfsv, 0, eta_RK );
       }
 
@@ -168,18 +183,33 @@ namespace Dune {
         // dimensions
         const int dim = IG::dimension;
 
+        // extract objects
         auto cell_inside = ig.inside();
         auto cell_outside = ig.outside();
 
-        // evaluate permeability tensors
-        const Dune::FieldVector<DF,dim>&
-          inside_local = Dune::ReferenceElements<DF,dim>::general(cell_inside.type()).position(0,0);
-        const Dune::FieldVector<DF,dim>&
-          outside_local = Dune::ReferenceElements<DF,dim>::general(cell_outside.type()).position(0,0);
-        typename T::Traits::PermTensorType A_s, A_n;
-        A_s = param.A(cell_inside,inside_local);
-        A_n = param.A(cell_outside,outside_local);
+        auto geo            = ig.geometry();
+        auto geo_in_inside  = ig.geometryInInside();
+        auto geo_in_outside = ig.geometryInOutside();
 
+        const auto &gtface = geo.type();
+
+        const auto &insideRef =
+          Dune::ReferenceElements<DF,dim>::general(cell_inside.type());
+        const auto &outsideRef =
+          Dune::ReferenceElements<DF,dim>::general(cell_outside.type());
+
+        const auto &inside_local = insideRef.position(0,0);
+        const auto &outside_local = outsideRef.position(0,0);
+
+        // evaluate permeability tensors
+        auto A_s = param.A(cell_inside,inside_local);
+        auto A_n = param.A(cell_outside,outside_local);
+
+        static_assert(dim == 2 || dim == 3,
+                      "The computation of epsilon_s and epsilon_n looks very "
+                      "much like it will only work in 2D or 3D.  If you think "
+                      "otherwise, replace this static assert with a comment "
+                      "that explains why.  --Jö");
         RF epsilon_s = std::min( A_s[0][0], A_s[1][1]);
         if( dim>2 ) epsilon_s = std::min( A_s[2][2], epsilon_s );
 
@@ -189,24 +219,23 @@ namespace Dune {
         // select quadrature rule
         const int pOrder_s = lfsu_s.finiteElement().localBasis().order();
         const int intorder = 2*pOrder_s;
-        Dune::GeometryType gtface = ig.geometryInInside().type();
-        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
+        const auto& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
 
-        const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
+        const auto &n_F = ig.centerUnitOuterNormal();
 
         RF flux_jump_L2normSquare(0.0);
         RF uh_jump_L2normSquare(0.0);
 
         // loop over quadrature points and integrate normal flux
-        for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto &qp : rule)
           {
             // position of quadrature point in local coordinates of elements
-            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
-            Dune::FieldVector<DF,dim> iplocal_n = ig.geometryInOutside().global(it->position());
+            const auto &iplocal_s = geo_in_inside .global(qp.position());
+            const auto &iplocal_n = geo_in_outside.global(qp.position());
 
             // Diffusion tensor at quadrature point
-            typename T::Traits::PermTensorType A_s = param.A( cell_inside, iplocal_s );
-            typename T::Traits::PermTensorType A_n = param.A( cell_outside, iplocal_n);
+            A_s = param.A( cell_inside,  iplocal_s );
+            A_n = param.A( cell_outside, iplocal_n );
 
             Dune::FieldVector<RF,dim> An_F_s;
             A_s.mv(n_F,An_F_s);
@@ -237,7 +266,7 @@ namespace Dune {
 
 
             // integrate
-            RF factor = it->weight() * ig.geometry().integrationElement(it->position());
+            RF factor = qp.weight() * geo.integrationElement(qp.position());
 
             // evaluate flux jump term
             RF flux_jump = (An_F_s*gradu_s)-(An_F_n*gradu_n);
@@ -262,7 +291,6 @@ namespace Dune {
         // add contributions from both sides of the intersection
         r_s.accumulate( lfsv_s, 0, eta_Ek_s + eta_Jk_s );
         r_n.accumulate( lfsv_n, 0, eta_Ek_n + eta_Jk_n );
-
       }
 
 
@@ -282,37 +310,50 @@ namespace Dune {
         // dimensions
         const int dim = IG::dimension;
 
+        // extract objects
         auto cell_inside = ig.inside();
 
-        // evaluate permeability tensors
-        const Dune::FieldVector<DF,dim>&
-          inside_local = Dune::ReferenceElements<DF,dim>::general(cell_inside.type()).position(0,0);
-        typename T::Traits::PermTensorType A_s;
-        A_s = param.A(cell_inside,inside_local);
+        auto geo            = ig.geometry();
+        auto geo_in_inside  = ig.geometryInInside();
 
+        const auto &gtface = geo.type();
+
+        const auto &ref =
+          Dune::ReferenceElements<DF,dim-1>::general(gtface);
+        const auto &insideRef =
+          Dune::ReferenceElements<DF,dim>::general(cell_inside.type());
+
+        const auto &inside_local = insideRef.position(0,0);
+
+        // evaluate permeability tensors
+        auto A_s = param.A(cell_inside,inside_local);
+
+        static_assert(dim == 2 || dim == 3,
+                      "The computation of epsilon_s looks very "
+                      "much like it will only work in 2D or 3D.  If you think "
+                      "otherwise, replace this static assert with a comment "
+                      "that explains why.  --Jö");
         RF epsilon_s = std::min( A_s[0][0], A_s[1][1]);
         if( dim>2 ) epsilon_s = std::min( A_s[2][2], epsilon_s );
 
         // select quadrature rule
         const int pOrder_s = lfsu_s.finiteElement().localBasis().order();
-        const int intorder = 2 * pOrder_s;
-
-        Dune::GeometryType gtface = ig.geometryInInside().type();
-        const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
+        const int intorder = 2*pOrder_s;
+        const auto& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
 
         // evaluate boundary condition
-        const Dune::FieldVector<DF,dim-1>
-          face_local = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
+        const auto &face_local = ref.position(0,0);
         BCType bctype = param.bctype(ig.intersection(),face_local);
         if (bctype != ConvectionDiffusionBoundaryConditions::Dirichlet)
           return;
 
-        // loop over quadrature points and integrate normal flux
         RF uh_jump_L2normSquare(0.0);
-        for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+
+        // loop over quadrature points and integrate normal flux
+        for (const auto &qp : rule)
           {
             // position of quadrature point in local coordinates of elements
-            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
+            const auto &iplocal_s = geo_in_inside .global(qp.position());
 
             // evaluate Dirichlet boundary condition
             RF gDirichlet = param.g( cell_inside, iplocal_s );
@@ -324,13 +365,13 @@ namespace Dune {
             // evaluate uDG_s
             RF uDG_s=0.0;
             evalFunction( iplocal_s, lfsu_s, x_s, uDG_s );
-            RF jump_uDG = uDG_s - gDirichlet;
 
             // integrate
-            RF factor = it->weight() * ig.geometry().integrationElement(it->position());
+            RF factor = qp.weight() * geo.integrationElement(qp.position());
 
+            // evaluate jump term
+            RF jump_uDG = uDG_s - gDirichlet;
             uh_jump_L2normSquare += jump_uDG * jump_uDG * factor;
-
           }
 
         // accumulate indicator
@@ -339,6 +380,7 @@ namespace Dune {
         // L.Zhu: third term, edge jumps on the Dirichlet boundary
         RF eta_Jk_s = (gamma / h_face + h_face / epsilon_s) * uh_jump_L2normSquare;
 
+        // add contributions
         r_s.accumulate( lfsv_s, 0, eta_Jk_s );  // boundary edge
       }
 
