@@ -19,7 +19,7 @@ list(APPEND CMAKE_MODULE_PATH ${dune-common_MODULE_PATH}
 #include the dune macros
 include(DuneMacros)
 
-set(DUNE_DISABLE_TEST_MAGIC 1)
+set(DUNE_TEST_MAGIC OFF)
 # start a dune project with information from dune.module
 dune_project()
 
