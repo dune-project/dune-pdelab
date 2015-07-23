@@ -172,8 +172,12 @@ namespace Dune {
       typedef typename Dune::MatMultMatResult<PTADG,P>::type ACG; // istl coarse space matrix
       typedef ACG CGMatrix; // another name
 
+      // AMG parameters
+      typedef Dune::Amg::Parameters Parameters;
+
       DGGO& dggo;
       CGGFS& cggfs;
+      Parameters amg_parameters;
       unsigned maxiter;
       int verbose;
       bool usesuperlu;
@@ -187,6 +191,7 @@ namespace Dune {
       ISTLBackend_SEQ_AMG_4_DG(DGGO& dggo_, CGGFS& cggfs_, unsigned maxiter_=5000, int verbose_=1, bool usesuperlu_=true)
         : dggo(dggo_)
         , cggfs(cggfs_)
+        , amg_parameters(15,2000)
         , maxiter(maxiter_)
         , verbose(verbose_)
         , usesuperlu(usesuperlu_)
@@ -195,6 +200,8 @@ namespace Dune {
         , pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop,MBE(low_order_space_entries_per_row))
         , pmatrix(pgo)
       {
+        amg_parameters.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
+        amg_parameters.setDebugLevel(verbose_);
 #if !HAVE_SUPERLU
         if (usesuperlu == true)
           {
@@ -215,6 +222,7 @@ namespace Dune {
       ISTLBackend_SEQ_AMG_4_DG(DGGO& dggo_, CGGFS& cggfs_, const ParameterTree& params)//unsigned maxiter_=5000, int verbose_=1, bool usesuperlu_=true)
         : dggo(dggo_)
         , cggfs(cggfs_)
+        , amg_parameters(15,2000)
         , maxiter(params.get<int>("max_iterations",5000))
         , verbose(params.get<int>("verbose",1))
         , usesuperlu(params.get<bool>("use_superlu",true))
@@ -223,6 +231,8 @@ namespace Dune {
         , pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop,MBE(low_order_space_entries_per_row))
         , pmatrix(pgo)
       {
+        amg_parameters.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
+        amg_parameters.setDebugLevel(params.get<int>("verbose",1));
 #if !HAVE_SUPERLU
         if (usesuperlu == true)
           {
@@ -248,6 +258,27 @@ namespace Dune {
       typename V::ElementType norm (const V& v) const
       {
         return Backend::native(v).two_norm();
+      }
+
+      /*! \brief set AMG parameters
+
+        \param[in] amg_parameters_ a parameter object of Type Dune::Amg::Parameters
+      */
+      void setParameters(const Parameters& amg_parameters_)
+      {
+        amg_parameters = amg_parameters_;
+      }
+
+      /**
+       * @brief Get the parameters describing the behaviuour of AMG.
+       *
+       * The returned object can be adjusted to ones needs and then can be
+       * reset using setParameters.
+       * @return The object holding the parameters of AMG.
+       */
+      const Parameters& parameters() const
+      {
+        return amg_parameters;
       }
 
       /*! \brief solve the given linear system
@@ -277,24 +308,13 @@ namespace Dune {
         typedef ACG CGMatrix;
         typedef Dune::MatrixAdapter<CGMatrix,CGVector,CGVector> CGOperator;
         CGOperator cgop(acg);
-        typedef Dune::Amg::Parameters Parameters; // AMG parameters (might be nice to change from outside)
-        Parameters params(15,2000);
-        params.setDefaultValuesIsotropic(CGGFS::Traits::GridViewType::Traits::Grid::dimension);
-        params.setDebugLevel(verbose);
-        params.setCoarsenTarget(1000);
-        params.setMaxLevel(20);
-        params.setProlongationDampingFactor(1.8);
-        params.setNoPreSmoothSteps(2);
-        params.setNoPostSmoothSteps(2);
-        params.setGamma(1);
-        params.setAdditive(false);
         typedef Dune::SeqSSOR<CGMatrix,CGVector,CGVector,1> Smoother;
         typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments SmootherArgs;
         SmootherArgs smootherArgs;
-        smootherArgs.iterations = 2;
+        smootherArgs.iterations = 1;
         smootherArgs.relaxationFactor = 1.0;
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<CGMatrix,Dune::Amg::FirstDiagonal> > Criterion;
-        Criterion criterion(params);
+        Criterion criterion(amg_parameters);
         typedef Dune::Amg::AMG<CGOperator,CGVector,Smoother> AMG;
         watch.reset();
         AMG amg(cgop,criterion,smootherArgs);
