@@ -172,29 +172,20 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
   typedef Dune::PDELab::ISTLBackend_OVLP_BCGS_ILU0<FS, C> LS;
   LS ls(fs, cg);
 
-  typedef Dune::PDELab::Newton<IGO,LS,V> PDESOLVER;
-  PDESOLVER pdesolver(igo,ls);
-  pdesolver.setReassembleThreshold(0.0);
-  pdesolver.setVerbosityLevel(0);
-  pdesolver.setReduction(0.9);
-  pdesolver.setMinLinearReduction(1e-9);
+  typedef Dune::PDELab::StationaryLinearProblemSolver<IGO,LS,V> PDESOLVER;
+  PDESOLVER pdesolver(igo,ls,1e-10);
 
   Dune::PDELab::OneStepMethod<NumberType,IGO,PDESOLVER,V,V> osm(method,igo,pdesolver);
   osm.setVerbosityLevel(2);
 
-  // graphics for initial guess
-  Dune::PDELab::FilenameHelper fn(basename);
-  { // start a new block to automatically delete the VTKWriter object
-    typedef Dune::PDELab::DiscreteGridFunction<FS,V> DGF;
-    Dune::SubsamplingVTKWriter<typename GM::LeafGridView> vtkwriter(grid.leafGridView(),degree-1);
-    DGF xdgf(fs,x);
-    vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"x_h"));
-    vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
-    fn.increment();
-  }
+  Dune::SubsamplingVTKSequenceWriter<typename GM::LeafGridView> vtkwriter(grid.leafGridView(),degree-1,basename,"","");
+  typedef Dune::PDELab::DiscreteGridFunction<FS,V> DGF;
+  DGF xdgf(fs,x);
+  vtkwriter.addVertexData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"x_h"));
 
   // time loop
   NumberType time = 0.0;
+  vtkwriter.write(time,Dune::VTK::appendedraw);
   while (time<T-1e-10)
     {
       problem.setTime(time+dt);
@@ -203,19 +194,12 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
       V xnew(fs,0.0);
       osm.apply(time,dt,x,xnew);
 
-      // output to VTK file
-      {
-        typedef Dune::PDELab::DiscreteGridFunction<FS,V> DGF;
-        Dune::SubsamplingVTKWriter<typename GM::LeafGridView> vtkwriter(grid.leafGridView(),degree-1);
-        DGF xdgf(fs,xnew);
-        vtkwriter.addVertexData(new Dune::PDELab::VTKGridFunctionAdapter<DGF>(xdgf,"x_h"));
-        vtkwriter.write(fn.getName(),Dune::VTK::appendedraw);
-        fn.increment();
-      }
-
       // accept time step
       x = xnew;
       time += dt;
+
+      // VTK output
+      vtkwriter.write(time,Dune::VTK::appendedraw);
     }
 }
 
