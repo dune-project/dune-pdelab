@@ -144,7 +144,7 @@ void poisson (GridType& grid)
     // output grid to VTK file
     Dune::SubsamplingVTKWriter<typename GridType::LeafGridView> vtkwriter(grid.leafGridView(),DEGREE-1);
     typename FS::DGF xdgf(fs.getGFS(),x);
-    vtkwriter.addVertexData(new typename FS::VTKF(xdgf,"x_h"));
+    vtkwriter.addVertexData(std::make_shared<typename FS::VTKF>(xdgf,"x_h"));
     auto out_name = "poisson_periodic_" + std::to_string(dim) + "d_q" + std::to_string(DEGREE) + "_dg" + std::to_string(DG);
     vtkwriter.write(out_name, Dune::VTK::appendedraw);
 }
