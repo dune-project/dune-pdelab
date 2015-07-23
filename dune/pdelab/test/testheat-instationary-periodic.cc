@@ -148,9 +148,9 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
 
   // make grid operator space for time-dependent problem
   typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
-  LOP lop(problem,4);
+  LOP lop(problem,1);
   typedef Dune::PDELab::L2 MLOP;
-  MLOP mlop(4);
+  MLOP mlop(2*degree + 2);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
   MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
   //Dune::PDELab::FractionalStepParameter<Real> method;
@@ -233,6 +233,7 @@ int main(int argc, char **argv)
 
     std::bitset<dim> periodic (false);
     periodic[0] = true;
+    periodic[1] = true;
     int overlap = 1;
 
     GM grid(L,N,periodic, overlap);
