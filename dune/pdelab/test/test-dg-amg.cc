@@ -179,7 +179,7 @@ int main(int argc, char **argv)
   BCType bctype(grid->leafGridView(),problem);
 
   // make DG finite element space
-  typedef Dune::PDELab::DGPkSpace<GM,NumberType,degree,elemtype,solvertype> FS;
+  typedef Dune::PDELab::DGQkSpace<GM,NumberType,degree,elemtype,solvertype> FS;
   FS fs(grid->leafGridView());
   fs.assembleConstraints(bctype);
   //std::cout << "number of constraints is " << fs.getCC().size() << std::endl;
@@ -218,6 +218,16 @@ int main(int argc, char **argv)
       typedef Dune::PDELab::ISTLBackend_SEQ_AMG_4_DG<ASSEMBLER::GO,CGFS::GFS,
                                                      Dune::PDELab::CG2DGProlongation,Dune::SeqSSOR,Dune::CGSolver> LS;
       LS ls(assembler.getGO(),cgfs.getGFS(),1000,3);
+      // set parameters for AMG in CG-subspace
+      Dune::Amg::Parameters params = ls.parameters();
+      params.setCoarsenTarget(2000);
+      params.setMaxLevel(20);
+      params.setProlongationDampingFactor(1.8);
+      params.setNoPreSmoothSteps(2);
+      params.setNoPostSmoothSteps(2);
+      params.setGamma(1);
+      params.setAdditive(false);
+      ls.setParameters(params);
       typedef Dune::PDELab::StationaryLinearProblemSolver<DGGO2,LS,V> SLP;
       SLP slp(dggo2,ls,x,1e-8);
       slp.setHangingNodeModifications(false);
@@ -225,12 +235,24 @@ int main(int argc, char **argv)
   }
 
   /////////////////// OVERLAPPING
+  // reset initial iterate
+  x = 0.0;
   // make linear solver and solve problem
 #if HAVE_MPI
   {
       typedef Dune::PDELab::ISTLBackend_OVLP_AMG_4_DG<ASSEMBLER::GO,FS::CC,CGFS::GFS,CGFS::CC,
                                                       Dune::PDELab::CG2DGProlongation,Dune::SeqSSOR,Dune::CGSolver> LS;
       LS ls(assembler.getGO(),fs.getCC(),cgfs.getGFS(),cgfs.getCC(),1000,3);
+      // set parameters for AMG in CG-subspace
+      Dune::Amg::Parameters params = ls.parameters();
+      params.setCoarsenTarget(2000);
+      params.setMaxLevel(20);
+      params.setProlongationDampingFactor(1.8);
+      params.setNoPreSmoothSteps(2);
+      params.setNoPostSmoothSteps(2);
+      params.setGamma(1);
+      params.setAdditive(false);
+      ls.setParameters(params);
       typedef Dune::PDELab::StationaryLinearProblemSolver<DGGO2,LS,V> SLP;
       SLP slp(dggo2,ls,x,1e-8);
       slp.setHangingNodeModifications(false);
