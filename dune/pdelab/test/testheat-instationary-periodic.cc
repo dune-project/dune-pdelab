@@ -232,7 +232,7 @@ int main(int argc, char **argv)
 
   double T = 0.075;
   double dt = 0.0075;
-  int cells = 32;
+  int cells = 128;
 
   // start try/catch block to get error messages from dune
   try {
@@ -245,7 +245,7 @@ int main(int argc, char **argv)
 
     typedef Dune::YaspGrid<dim> GM;
     Dune::FieldVector<double,dim> L(1.0);
-    Dune::array<int,dim> N(Dune::fill_array<int,dim>(8));
+    Dune::array<int,dim> N(Dune::fill_array<int,dim>(cells));
 
     std::bitset<dim> periodic (false);
     periodic[0] = true;
