@@ -1,4 +1,4 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -6,7 +6,7 @@
 #include <dune/pdelab/boilerplate/pdelab.hh>
 #include <dune/pdelab/localoperator/l2.hh>
 
-#include <dune/pdelab/localoperator/convectiondiffusion.hh>
+#include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
 
 //***********************************************************************
 //***********************************************************************
@@ -14,87 +14,90 @@
 //***********************************************************************
 //***********************************************************************
 
+/** \brief Parameter class for solving the linear convection-diffusion equation
+ *
+ * A parameter class for the linear convection-diffusion equation
+ * \f{align*}{
+ *   -\nabla\cdot(A(x) \nabla u) + b(x)\cdot \nabla u + c(x)u &=& f \mbox{ in } \Omega,  \\
+ *                                                          u &=& g \mbox{ on } \partial\Omega_D \\
+ *                            (b(x,u) - A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_N \\
+ *                                    -(A(x)\nabla u) \cdot n &=& o \mbox{ on } \partial\Omega_O
+ * \f}
+ * Note:
+ *  - This formulation is valid for velocity fields which are non-divergence free.
+ *  - Outflow boundary conditions should only be set on the outflow boundary
+ *
+ * \tparam T a traits class defining the necessary types
+ */
 const double kx = 3.0, ky = 3.0;
-//! base class for parameter class
 template<typename GV, typename RF>
-class ConvectionDiffusionProblem :
-  public Dune::PDELab::ConvectionDiffusionParameterInterface<
-  Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF>,
-  ConvectionDiffusionProblem<GV,RF>
-  >
+class ConvectionDiffusionModelProblem
 {
+  typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
+
 public:
   typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
-  //! source/reaction term
+  //! tensor diffusion coefficient
+  typename Traits::PermTensorType
+  A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    typename Traits::PermTensorType I;
+    for (std::size_t i=0; i<Traits::dimDomain; i++)
+      for (std::size_t j=0; j<Traits::dimDomain; j++)
+        I[i][j] = (i==j) ? 1 : 0;
+    return I;
+  }
+
+  //! velocity field
+  typename Traits::RangeType
+  b (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    typename Traits::RangeType v(0.0);
+    return v;
+  }
+
+  //! sink term
   typename Traits::RangeFieldType
-  f (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
-     typename Traits::RangeFieldType u) const
+  c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
     return 0.0;
   }
 
-  //! nonlinearity under gradient
+  //! source term
   typename Traits::RangeFieldType
-  w (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
-     typename Traits::RangeFieldType u) const
+  f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-    return u;
-  }
-
-  //! nonlinear scaling of diffusion tensor
-  typename Traits::RangeFieldType
-  v (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
-     typename Traits::RangeFieldType u) const
-  {
-    return 1.0;
-  }
-
-  //! tensor permeability
-  typename Traits::PermTensorType
-  D (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
-  {
-    typename Traits::PermTensorType kabs;
-    for (std::size_t i=0; i<Traits::dimDomain; i++)
-      for (std::size_t j=0; j<Traits::dimDomain; j++)
-        kabs[i][j] = (i==j) ? 1 : 0;
-    return kabs;
-  }
-
-  //! nonlinear flux vector
-  typename Traits::RangeType
-  q (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
-     typename Traits::RangeFieldType u) const
-  {
-    typename Traits::RangeType flux;
-    flux[0] = 0.0;
-    flux[1] = 0.0;
-    return flux;
+    typename Traits::DomainType xglobal = e.geometry().global(x);
+    return 0.0;
   }
 
   //! boundary condition type function
-  template<typename I>
-  bool isDirichlet(
-                   const I & intersection,               /*@\label{bcp:name}@*/
-                   const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
-                   ) const
+  BCType
+  bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
-    return true;  // Dirichlet b.c. on all boundaries
+    typename Traits::DomainType xglobal = is.geometry().global(x);
+    return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
   }
 
   //! Dirichlet boundary condition value
   typename Traits::RangeFieldType
-  g (const typename Traits::ElementType& e, const typename Traits::DomainType& xlocal) const
+  g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-    typename Traits::DomainType x = e.geometry().global(xlocal);
-
-    return std::exp(-(kx*kx+ky*ky)*M_PI*M_PI*time) * sin(kx*M_PI*x[0]) * sin(ky*M_PI*x[1]);
+    typename Traits::DomainType xglobal = e.geometry().global(x);
+    return std::exp(-(kx*kx+ky*ky)*M_PI*M_PI*time) * sin(kx*M_PI*xglobal[0]) * sin(ky*M_PI*xglobal[1]);
   }
 
   //! Neumann boundary condition
   typename Traits::RangeFieldType
-  j (const typename Traits::ElementType& e, const typename Traits::DomainType& x,
-     typename Traits::RangeFieldType u) const
+  j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
+  {
+    return 0.0;
+  }
+
+  //! outflow boundary condition
+  typename Traits::RangeFieldType
+  o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
     return 0.0;
   }
@@ -108,7 +111,6 @@ public:
 private:
   RF time;
 };
-
 
 //***********************************************************************
 //***********************************************************************
@@ -133,10 +135,11 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
   FS fs(grid.leafGridView(),fem);
 
   // define problem parameters
-  typedef ConvectionDiffusionProblem<GV,NumberType> Problem;
+  typedef ConvectionDiffusionModelProblem<GV,NumberType> Problem;
   Problem problem;
-  Dune::PDELab::BCTypeParam_CD<Problem> bctype(grid.leafGridView(),problem);
-  typedef Dune::PDELab::DirichletBoundaryCondition_CD<Problem> G;
+  typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> BCType;
+  BCType bctype(grid.leafGridView(),problem);
+  typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
   G g(grid.leafGridView(),problem);
 
   typedef typename FS::template ConstraintsContainer<NumberType>::Type C;
@@ -144,14 +147,14 @@ void do_simulation (double T, double dt, GM& grid, std::string basename)
   Dune::PDELab::constraints(bctype, fs, cg);
 
   // make grid operator space for time-dependent problem
-  typedef Dune::PDELab::ConvectionDiffusion<Problem> LOP;
+  typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
   LOP lop(problem,4);
   typedef Dune::PDELab::L2 MLOP;
   MLOP mlop(4);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
   MBE mbe(5); // Maximal number of nonzeroes per row can be cross-checked by patternStatistics().
   //Dune::PDELab::FractionalStepParameter<Real> method;
-  Dune::PDELab::Alexander3Parameter<NumberType> method;
+  Dune::PDELab::Alexander2Parameter<NumberType> method;
   typedef Dune::PDELab::GridOperator<FS,FS,LOP,MBE,NumberType,NumberType,NumberType,C,C> GO0;
   GO0 go0(fs,cg,fs,cg,lop,mbe);
   typedef Dune::PDELab::GridOperator<FS,FS,MLOP,MBE,NumberType,NumberType,NumberType,C,C> GO1;
