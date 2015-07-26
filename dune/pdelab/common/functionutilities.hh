@@ -97,7 +97,7 @@ sum = gf.getGridView().comm().sum(sum);
     template<typename GF>
     class GridFunctionProbe {
       typedef typename GF::Traits::GridViewType GV;
-      typedef typename GV::template Codim<0>::EntityPointer EPtr;
+      typedef typename GV::template Codim<0>::Entity Entity;
       typedef typename GF::Traits::DomainType Domain;
       typedef typename GF::Traits::RangeType Range;
 
@@ -120,18 +120,18 @@ sum = gf.getGridView().comm().sum(sum);
         evalRank = gfp->getGridView().comm().size();
         int myRank = gfp->getGridView().comm().rank();
         try {
-          e.reset(new EPtr
+          e.reset(new Entity
                   (HierarchicSearch<typename GV::Grid, typename GV::IndexSet>
                    (gfp->getGridView().grid(), gfp->getGridView().indexSet()).
                    template findEntity<Interior_Partition>(xg)));
           // make sure only interior entities are accepted
-          if((*e)->partitionType() == InteriorEntity)
+          if(e->partitionType() == InteriorEntity)
             evalRank = myRank;
         }
         catch(const Dune::GridError&) { /* do nothing */ }
         evalRank = gfp->getGridView().comm().min(evalRank);
         if(myRank == evalRank)
-          xl = (*e)->geometry().local(xg);
+          xl = e->geometry().local(xg);
         else
           e.reset();
         if(myRank == 0 && evalRank == gfp->getGridView().comm().size())
@@ -189,7 +189,7 @@ sum = gf.getGridView().comm().sum(sum);
           val = std::numeric_limits<RF>::quiet_NaN();
         else {
           if(gfp->getGridView().comm().rank() == evalRank)
-            gfp->evaluate(**e, xl, val);
+            gfp->evaluate(*e, xl, val);
           gfp->getGridView().comm().broadcast(&val,1,evalRank);
         }
       }
@@ -214,7 +214,7 @@ sum = gf.getGridView().comm().sum(sum);
     private:
       std::shared_ptr<const GF> gfsp;
       const GF *gfp;
-      std::shared_ptr<EPtr> e;
+      std::shared_ptr<Entity> e;
       Domain xl;
       int evalRank;
     };
