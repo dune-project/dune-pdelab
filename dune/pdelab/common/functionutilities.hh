@@ -51,34 +51,25 @@ sum = gf.getGridView().comm().sum(sum);
                                typename GF::Traits::RangeType& sum,
                                unsigned qorder = 1) {
       typedef typename GF::Traits::GridViewType GV;
-      typedef typename GV::template Codim<0>::
-        template Partition<Interior_Partition>::Iterator EIterator;
       typedef typename GV::template Codim<0>::Geometry Geometry;
       typedef typename GF::Traits::RangeType Range;
       typedef typename GF::Traits::DomainFieldType DF;
       static const int dimD = GF::Traits::dimDomain;
       typedef Dune::QuadratureRule<DF,dimD> QR;
       typedef Dune::QuadratureRules<DF,dimD> QRs;
-      typedef typename QR::const_iterator QIterator;
 
       sum = 0;
       Range val;
-      const EIterator eend = gf.getGridView().template end<0,
-        Interior_Partition>();
-      for(EIterator eit = gf.getGridView().template begin<0,
-            Interior_Partition>(); eit != eend; ++eit) {
-        const Geometry& geo = eit->geometry();
+      for(const auto& cell : elements(gf.getGridView(),Dune::Partitions::interior)) {
+        const Geometry& geo = cell.geometry();
         Dune::GeometryType gt = geo.type();
         const QR& rule = QRs::rule(gt,qorder);
-        const QIterator qend = rule.end();
-
-        for (QIterator qit=rule.begin(); qit != qend; ++qit)
-        {
+        for (const auto& qip : rule) {
           // evaluate the given grid functions at integration point
-          gf.evaluate(*eit,qit->position(),val);
+          gf.evaluate(cell,qip.position(),val);
 
           // accumulate error
-          val *= qit->weight() * geo.integrationElement(qit->position());
+          val *= qip.weight() * geo.integrationElement(qip.position());
           sum += val;
         }
       }
