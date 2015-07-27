@@ -65,8 +65,8 @@ public:
 
   // Evaluate
   inline void evaluate (const typename Traits::ElementType& e,
-            const typename Traits::DomainType& x,
-            typename Traits::RangeType& y) const
+                        const typename Traits::DomainType& x,
+                        typename Traits::RangeType& y) const
   {
     // get and bind local functions space
     lfs.bind(e);
@@ -79,7 +79,7 @@ public:
     lview.unbind();
 
     // get Jacobian of geometry
-    const typename Traits::ElementType::Geometry::Jacobian
+    const typename Traits::ElementType::Geometry::JacobianInverseTransposed
       JgeoIT(e.geometry().jacobianInverseTransposed(x));
 
     // get local Jacobians/gradients of the shape functions
