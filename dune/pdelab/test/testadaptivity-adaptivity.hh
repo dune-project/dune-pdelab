@@ -1,6 +1,8 @@
 template<class Grid, class GV>
 void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
 {
+  using Dune::PDELab::Backend::native;
+
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
   typedef double Real;
@@ -79,7 +81,7 @@ void adaptivity (Grid& grid, const GV& gv, int startLevel, int maxLevel)
     estgo.residual(u,eta);
 
     for (unsigned int i=0; i<eta.flatsize(); i++)
-      eta.base()[i] = sqrt(eta.base()[i]); // eta contains squares
+      native(eta)[i] = sqrt(native(eta)[i]); // eta contains squares
 
     // Use eta to refine the grid following two different strategies based
     // (1) element fraction

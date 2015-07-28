@@ -51,6 +51,10 @@ namespace Dune {
         // dimensions
         const int dim = IG::dimension;
 
+        // make copy of inside and outside w.r.t. the intersection
+        auto inside_cell = ig.inside();
+        auto outside_cell = ig.outside();
+
         // select quadrature rule
         const int intorder = 2*lfsu_s.finiteElement().localBasis().order();
         Dune::GeometryType gtface = ig.geometryInInside().type();
@@ -61,11 +65,11 @@ namespace Dune {
 
         // loop over quadrature points and integrate normal flux
         RF sum(0.0);
-        for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& ip : rule)
           {
             // position of quadrature point in local coordinates of elements
-            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
-            Dune::FieldVector<DF,dim> iplocal_n = ig.geometryInOutside().global(it->position());
+            Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(ip.position());
+            Dune::FieldVector<DF,dim> iplocal_n = ig.geometryInOutside().global(ip.position());
 
             // evaluate gradient of basis functions
             std::vector<JacobianType> gradphi_s(lfsu_s.size());
@@ -74,10 +78,10 @@ namespace Dune {
             lfsu_n.finiteElement().localBasis().evaluateJacobian(iplocal_n,gradphi_n);
 
             // transform gradients of shape functions to real element
-            Dune::FieldMatrix<DF,dim,dim> jac = ig.inside()->geometry().jacobianInverseTransposed(iplocal_s);
+            Dune::FieldMatrix<DF,dim,dim> jac = inside_cell.geometry().jacobianInverseTransposed(iplocal_s);
             std::vector<Dune::FieldVector<RF,dim> > tgradphi_s(lfsu_s.size());
             for (size_type i=0; i<lfsu_s.size(); i++) jac.mv(gradphi_s[i][0],tgradphi_s[i]);
-            jac = ig.outside()->geometry().jacobianInverseTransposed(iplocal_n);
+            jac = outside_cell.geometry().jacobianInverseTransposed(iplocal_n);
             std::vector<Dune::FieldVector<RF,dim> > tgradphi_n(lfsu_n.size());
             for (size_type i=0; i<lfsu_n.size(); i++) jac.mv(gradphi_n[i][0],tgradphi_n[i]);
 
@@ -90,20 +94,18 @@ namespace Dune {
               gradu_n.axpy(x_n(lfsu_n,i),tgradphi_n[i]);
 
             // integrate
-            RF factor = it->weight() * ig.geometry().integrationElement(it->position());
+            RF factor = ip.weight() * ig.geometry().integrationElement(ip.position());
             RF jump = (n_F*gradu_s)-(n_F*gradu_n);
             sum += 0.25*jump*jump*factor;
           }
 
         // accumulate indicator
-        DF h_T = std::max( diameter(ig.inside()->geometry()),
-                           diameter(ig.outside()->geometry()) );
+        DF h_T = std::max( diameter(inside_cell.geometry()),
+                           diameter(outside_cell.geometry()) );
 
         r_s.accumulate(lfsv_s,0,h_T*sum);
         r_n.accumulate(lfsv_n,0,h_T*sum);
       }
-
-
 
     private:
 
