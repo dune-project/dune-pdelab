@@ -21,6 +21,7 @@ pdelab_add_test(NAME testbdmfem COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_
 pdelab_add_test(NAME testvectoriterator)
 pdelab_add_test(NAME testpermutedordering)
 pdelab_add_test(NAME testsimplebackend COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"")
+pdelab_add_test(NAME test-transport-ccfv)
 
 if(EIGEN3_FOUND)
   pdelab_add_test(NAME testeigenbackend COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"")
@@ -40,3 +41,5 @@ set_tests_properties(
   testrt02dgridfunctionspace
   PROPERTIES SKIP_RETURN_CODE 77
 )
+
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vtk)
