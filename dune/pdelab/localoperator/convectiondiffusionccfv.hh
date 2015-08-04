@@ -1,4 +1,4 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_CONVECTIONDIFFUSIONCCFV_HH
 #define DUNE_PDELAB_CONVECTIONDIFFUSIONCCFV_HH
 
@@ -20,7 +20,7 @@ namespace Dune {
     /** a local operator for solving the linear convection-diffusion equation with CCFV
      *
      * \f{align*}{
-     *   d(x) \dfrac{\partial u}{\partial t} + \nabla\cdot(-A(x) \nabla u + b(x) u) + c(x)u &=& f \mbox{ in } \Omega,  \\
+     *   \nabla\cdot(-A(x) \nabla u + b(x) u) + c(x)u &=& f \mbox{ in } \Omega,  \\
      *                                         u(t,x) &=& g(t,x) \mbox{ on } \partial\Omega_D \\
      *                (b(x) u - A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_N \\
      *                        -(A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_O
@@ -33,17 +33,15 @@ namespace Dune {
      * \tparam TP model of ConvectionDiffusionParameterInterface
      */
     template<typename TP>
-    class ConvectionDiffusionCCFV : public NumericalJacobianApplySkeleton<ConvectionDiffusionCCFV<TP> >,
-                                    public NumericalJacobianApplyBoundary<ConvectionDiffusionCCFV<TP> >,
-                                    public NumericalJacobianApplyVolume<ConvectionDiffusionCCFV<TP> >,
-    // public NumericalJacobianSkeleton<ConvectionDiffusionCCFV<TP> >,
-     // public NumericalJacobianBoundary<ConvectionDiffusionCCFV<TP> >,
-     // public NumericalJacobianVolume<ConvectionDiffusionCCFV<TP> >,
-                                    public FullSkeletonPattern,
-                                    public FullVolumePattern,
-                                    public LocalOperatorDefaultFlags,
-                                    public InstationaryLocalOperatorDefaultMethods<typename TP::Traits::RangeFieldType>
-
+    class ConvectionDiffusionCCFV
+      :
+      // public NumericalJacobianSkeleton<ConvectionDiffusionCCFV<TP> >,
+      // public NumericalJacobianBoundary<ConvectionDiffusionCCFV<TP> >,
+      // public NumericalJacobianVolume<ConvectionDiffusionCCFV<TP> >,
+      public FullSkeletonPattern,
+      public FullVolumePattern,
+      public LocalOperatorDefaultFlags,
+      public InstationaryLocalOperatorDefaultMethods<typename TP::Traits::RangeFieldType>
     {
       typedef typename ConvectionDiffusionBoundaryConditions::Type BCType;
 
@@ -523,10 +521,12 @@ namespace Dune {
      * \f}
      */
     template<class TP>
-    class ConvectionDiffusionCCFV_TemporalOperator : public NumericalJacobianApplyVolume<ConvectionDiffusionCCFV_TemporalOperator<TP> >,
-                                 public FullVolumePattern,
-                                 public LocalOperatorDefaultFlags,
-                                 public InstationaryLocalOperatorDefaultMethods<typename TP::Traits::RangeFieldType>
+    class ConvectionDiffusionCCFVTemporalOperator
+      :
+      // public NumericalJacobianApplyVolume<ConvectionDiffusionCCFVTemporalOperator<TP> >,
+      public FullVolumePattern,
+      public LocalOperatorDefaultFlags,
+      public InstationaryLocalOperatorDefaultMethods<typename TP::Traits::RangeFieldType>
     {
     public:
       // pattern assembly flags
@@ -535,7 +535,7 @@ namespace Dune {
       // residual assembly flags
       enum { doAlphaVolume = true };
 
-      ConvectionDiffusionCCFV_TemporalOperator (TP& param_)
+      ConvectionDiffusionCCFVTemporalOperator (TP& param_)
         : param(param_)
       {
       }

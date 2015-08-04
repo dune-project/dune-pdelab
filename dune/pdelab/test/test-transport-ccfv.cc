@@ -16,7 +16,7 @@
 #include<dune/common/fvector.hh>
 #include<dune/common/typetraits.hh>
 #include<dune/common/timer.hh>
-#include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+#include<dune/grid/io/file/vtk.hh>
 #include<dune/grid/io/file/gmshreader.hh>
 #include<dune/grid/yaspgrid.hh>
 #include<dune/istl/bvector.hh>
@@ -235,13 +235,12 @@ void stationary (const GV& gv)
   newton.apply();
 
   // <<<8>>> graphical output
-  {
-    typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-    DGF xdgf(gfs,x);
-    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-    vtkwriter.addCellData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"solution"));
-    vtkwriter.write("test_transport_ccfv_stationary",Dune::VTK::appendedraw);
-  }
+  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+  DGF xdgf(gfs,x);
+  Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
+  vtkwriter.addCellData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"solution"));
+  vtkwriter.write("test_transport_ccfv_stationary",Dune::VTK::appendedraw);
+
 }
 
 
@@ -282,7 +281,7 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   // <<<4>>> Make grid operator
   typedef Dune::PDELab::ConvectionDiffusionCCFV<Param> LOP;
   LOP lop(param);
-  typedef Dune::PDELab::ConvectionDiffusionCCFV_TemporalOperator<Param> SLOP;
+  typedef Dune::PDELab::ConvectionDiffusionCCFVTemporalOperator<Param> SLOP;
   SLOP slop(param);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
   MBE mbe(5); // number of nonzero entries per row can be cross-checked by patternStatistics().
@@ -321,15 +320,12 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
   xold = 0.0;
 
   // <<<10>>> graphics for initial guess
-  Dune::PDELab::FilenameHelper fn("test_transport_ccfv_implicit_fs");
-  {
-    typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-    DGF xdgf(gfs,xold);
-    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-    vtkwriter.addCellData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"solution"));
-    vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
-    fn.increment();
-  }
+  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+  DGF xdgf(gfs,xold);
+  Dune::VTKSequenceWriter<GV> vtkwriter(gv,"test_transport_ccfv_implicit_fs","vtk","");
+  vtkwriter.addCellData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"solution"));
+  vtkwriter.write(0.0,Dune::VTK::appendedraw);
+
 
   // <<<11>>> time loop
   Real time = 0.0;
@@ -341,15 +337,10 @@ void implicit_scheme (const GV& gv, double Tend, double timestep)
       osm.apply(time,dt,xold,x);
 
       // graphics
-      typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-      DGF xdgf(gfs,x);
-      Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-      vtkwriter.addCellData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"solution"));
-      vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
-      fn.increment();
-
       xold = x;
       time += dt;
+      vtkwriter.write(time,Dune::VTK::appendedraw);
+
     }
 }
 
@@ -391,7 +382,7 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   // <<<5>>> Make grid operator space
   typedef Dune::PDELab::ConvectionDiffusionCCFV<Param> LOP;
   LOP lop(param);
-  typedef Dune::PDELab::ConvectionDiffusionCCFV_TemporalOperator<Param> SLOP;
+  typedef Dune::PDELab::ConvectionDiffusionCCFVTemporalOperator<Param> SLOP;
   SLOP slop(param);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
   MBE mbe(5); // number of nonzero entries per row can be cross-checked by patternStatistics().
@@ -425,15 +416,12 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
   xold = 0.0;
 
   // <<<10>>> graphics for initial guess
-  Dune::PDELab::FilenameHelper fn("test_transport_ccfv_explicit_euler");
-  {
-    typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-    DGF xdgf(gfs,xold);
-    Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-    vtkwriter.addCellData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"solution"));
-    vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
-    fn.increment();
-  }
+  typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
+  DGF xdgf(gfs,xold);
+  Dune::VTKSequenceWriter<GV> vtkwriter(gv,"test_transport_ccfv_explicit_euler","vtk","");
+  vtkwriter.addCellData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"solution"));
+  vtkwriter.write(0.0,Dune::VTK::appendedraw);
+
 
   // <<<11>>> time loop
   Real time = 0.0;
@@ -445,15 +433,10 @@ void explicit_scheme (const GV& gv, double Tend, double timestep)
       dt = osm.apply(time,dt,xold,x);
 
       // graphics
-      typedef Dune::PDELab::DiscreteGridFunction<GFS,V> DGF;
-      DGF xdgf(gfs,x);
-      Dune::VTKWriter<GV> vtkwriter(gv,Dune::VTK::conforming);
-      vtkwriter.addCellData(std::make_shared<Dune::PDELab::VTKGridFunctionAdapter<DGF> >(xdgf,"solution"));
-      vtkwriter.pwrite(fn.getName(),"vtk","",Dune::VTK::appendedraw);
-      fn.increment();
-
       xold = x;
       time += dt;
+      vtkwriter.write(time,Dune::VTK::appendedraw);
+
     }
 }
 
@@ -518,7 +501,7 @@ int main(int argc, char** argv)
       int overlap=o;
       Dune::YaspGrid<dim> grid(L,N,periodic,overlap,helper.getCommunicator());
       typedef Dune::YaspGrid<dim>::LeafGridView GV;
-      const GV& gv=grid.leafGridView();
+      const GV gv = grid.leafGridView();
 
       if( choice==1 ){
         std::cout << "\n stationary" << std::endl;
