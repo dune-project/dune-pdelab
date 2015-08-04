@@ -1,7 +1,9 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_DIFFUSIONCCFV_HH
 #define DUNE_PDELAB_DIFFUSIONCCFV_HH
+#warning "The file dune/pdelab/localoperator/diffusionccfv.hh is deprecated. Please use the ConvectionDiffusionCCFV local operator from dune/pdelab/localoperator/convectiondiffusionccfv.hh instead."
 
+#include<dune/common/deprecated.hh>
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 #include<dune/geometry/referenceelements.hh>
@@ -27,7 +29,7 @@ namespace Dune {
     // J : flux boundary condition
     // G : grid function for Dirichlet boundary conditions
     template<typename K, typename A0, typename F, typename B, typename J, typename G>
-    class DiffusionCCFV : public NumericalJacobianApplySkeleton<DiffusionCCFV<K,A0,F,B,J,G> >,
+    class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4. Please use ConvectionDiffusionCCFV instead!") DiffusionCCFV : public NumericalJacobianApplySkeleton<DiffusionCCFV<K,A0,F,B,J,G> >,
                           public NumericalJacobianApplyBoundary<DiffusionCCFV<K,A0,F,B,J,G> >,
                           public NumericalJacobianApplyVolume<DiffusionCCFV<K,A0,F,B,J,G> >,
                           public NumericalJacobianSkeleton<DiffusionCCFV<K,A0,F,B,J,G> >,
@@ -51,6 +53,7 @@ namespace Dune {
       enum { doLambdaSkeleton = false };
       enum { doLambdaBoundary = false };
 
+      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use the local operator ConvectionDiffusionCCFV instead!")
       DiffusionCCFV (const K& k_, const A0& a0_, const F& f_, const B& b_, const J& j_, const G& g_)
         : k(k_), a0(a0_), f(f_), b(b_), j(j_), g(g_)
       {}
@@ -106,23 +109,26 @@ namespace Dune {
         RF face_volume = ig.geometry().integrationElement(face_local)
           *Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).volume();
 
+        auto cell_inside = ig.inside();
+        auto cell_outside = ig.outside();
+
         // cell centers in references elements
         const Dune::FieldVector<DF,IG::dimension>&
-          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(cell_inside.type()).position(0,0);
         const Dune::FieldVector<DF,IG::dimension>&
-          outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.outside()->type()).position(0,0);
+          outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(cell_outside.type()).position(0,0);
 
         // evaluate diffusion coefficient
         typename K::Traits::RangeType k_inside, k_outside;
-        k.evaluate(*(ig.inside()),inside_local,k_inside);
-        k.evaluate(*(ig.outside()),outside_local,k_outside);
+        k.evaluate(cell_inside,inside_local,k_inside);
+        k.evaluate(cell_outside,outside_local,k_outside);
         typename K::Traits::RangeType k_avg = 2.0/(1.0/(k_inside+1E-30) + 1.0/(k_outside+1E-30));
 
         // cell centers in global coordinates
         Dune::FieldVector<DF,IG::dimension>
-          inside_global = ig.inside()->geometry().global(inside_local);
+          inside_global = cell_inside.geometry().global(inside_local);
         Dune::FieldVector<DF,IG::dimension>
-          outside_global = ig.outside()->geometry().global(outside_local);
+          outside_global = cell_outside.geometry().global(outside_local);
 
         // distance between the two cell centers
         inside_global -= outside_global;
@@ -154,9 +160,11 @@ namespace Dune {
         RF face_volume = ig.geometry().integrationElement(face_local)
           *Dune::ReferenceElements<DF,IG::dimension-1>::general(ig.geometry().type()).volume();
 
+        auto cell_inside = ig.inside();
+
         // cell center in reference element
         const Dune::FieldVector<DF,IG::dimension>&
-          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(ig.inside()->type()).position(0,0);
+          inside_local = Dune::ReferenceElements<DF,IG::dimension>::general(cell_inside.type()).position(0,0);
 
         // evaluate boundary condition type
         typename B::Traits::RangeType bctype;
@@ -167,7 +175,7 @@ namespace Dune {
             // Dirichlet boundary
             // distance between cell center and face center
             Dune::FieldVector<DF,IG::dimension>
-              inside_global = ig.inside()->geometry().global(inside_local);
+              inside_global = cell_inside.geometry().global(inside_local);
             Dune::FieldVector<DF,IG::dimension>
               outside_global = ig.geometry().global(face_local);
             inside_global -= outside_global;
@@ -175,12 +183,12 @@ namespace Dune {
 
             // evaluate diffusion coefficient
             typename K::Traits::RangeType k_inside;
-            k.evaluate(*(ig.inside()),inside_local,k_inside);
+            k.evaluate(cell_inside,inside_local,k_inside);
 
             // evaluate boundary condition function
             typename G::Traits::DomainType x = ig.geometryInInside().global(face_local);
             typename G::Traits::RangeType y;
-            g.evaluate(*(ig.inside()),x,y);
+            g.evaluate(cell_inside,x,y);
 
             // contribution to residual on inside element
             r_s.accumulate(lfsu_s,0,k_inside*(x_s(lfsu_s,0)-y[0])*face_volume/distance);
@@ -193,7 +201,7 @@ namespace Dune {
             //evaluate boundary function
             typename J::Traits::DomainType x = ig.geometryInInside().global(face_local);
             typename J::Traits::RangeType jvalue;
-            j.evaluate(*(ig.inside()),x,jvalue);
+            j.evaluate(cell_inside,x,jvalue);
 
             // contribution to residual on inside element
             r_s.accumulate(lfsu_s,0,jvalue*face_volume);
