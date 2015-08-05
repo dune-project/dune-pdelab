@@ -88,10 +88,17 @@ function(pdelab_add_test)
 
   if(${register_test})
     # by default, the test is run by simply invoking the built executable
-    add_test(
+    _add_test(
       NAME ${PDELABTEST_NAME}
       COMMAND ${PDELABTEST_COMMAND}
       )
   endif()
-
 endfunction()
+
+# Override the builtin add_test command to give a warning if used from within dune-pdelab
+macro(add_test)
+  if(CMAKE_PROJECT_NAME STREQUAL dune-pdelab)
+    message(WARNING "You are using the command add_test from within dune-pdelab. Please use pdelab_add_test instead.")
+  endif()
+  _add_test(${ARGN})
+endmacro()
