@@ -151,13 +151,13 @@ namespace Dune {
       // vectors and matrices on DG level
       typedef typename DGGO::Traits::Jacobian M; // wrapped istl DG matrix
       typedef typename DGGO::Traits::Domain V;   // wrapped istl DG vector
-      typedef typename M::BaseT Matrix;          // istl DG matrix
-      typedef typename V::BaseT Vector;          // istl DG vector
+      typedef Backend::Native<M> Matrix;         // istl DG matrix
+      typedef Backend::Native<V> Vector;         // istl DG vector
       typedef typename Vector::field_type field_type;
 
       // vectors and matrices on CG level
       using CGV = Dune::PDELab::Backend::Vector<CGGFS,field_type>; // wrapped istl CG vector
-      typedef typename CGV::BaseT CGVector;                               // istl CG vector
+      typedef Backend::Native<CGV> CGVector;                       // istl CG vector
 
       // prolongation matrix
       typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
@@ -165,40 +165,50 @@ namespace Dune {
       typedef TransferLOP CGTODGLOP; // local operator
       typedef Dune::PDELab::GridOperator<CGGFS,GFS,CGTODGLOP,MBE,field_type,field_type,field_type,CC,CC> PGO;
       typedef typename PGO::Jacobian PMatrix; // wrapped ISTL prolongation matrix
-      typedef typename PMatrix::BaseT P;      // ISTL prolongation matrix
+      typedef Backend::Native<PMatrix> P;     // ISTL prolongation matrix
 
       // CG subspace matrix
       typedef typename Dune::TransposedMatMultMatResult<P,Matrix>::type PTADG;
       typedef typename Dune::MatMultMatResult<PTADG,P>::type ACG; // istl coarse space matrix
       typedef ACG CGMatrix; // another name
 
-      // AMG parameters
+      // AMG in CG-subspace
+      typedef Dune::MatrixAdapter<CGMatrix,CGVector,CGVector> CGOperator;
+      typedef Dune::SeqSSOR<CGMatrix,CGVector,CGVector,1> Smoother;
+      typedef Dune::Amg::AMG<CGOperator,CGVector,Smoother> AMG;
       typedef Dune::Amg::Parameters Parameters;
 
       DGGO& dggo;
       CGGFS& cggfs;
+      std::shared_ptr<AMG> amg;
       Parameters amg_parameters;
       unsigned maxiter;
       int verbose;
+      bool reuse;
+      bool firstapply;
       bool usesuperlu;
       std::size_t low_order_space_entries_per_row;
 
       CGTODGLOP cgtodglop;  // local operator to assemble prolongation matrix
       PGO pgo;              // grid operator to assemble prolongation matrix
       PMatrix pmatrix;      // wrapped prolongation matrix
+      ACG acg;              // CG-subspace matrix
 
     public:
-      ISTLBackend_SEQ_AMG_4_DG(DGGO& dggo_, CGGFS& cggfs_, unsigned maxiter_=5000, int verbose_=1, bool usesuperlu_=true)
+      ISTLBackend_SEQ_AMG_4_DG(DGGO& dggo_, CGGFS& cggfs_, unsigned maxiter_=5000, int verbose_=1, bool reuse_=false, bool usesuperlu_=true)
         : dggo(dggo_)
         , cggfs(cggfs_)
         , amg_parameters(15,2000)
         , maxiter(maxiter_)
         , verbose(verbose_)
+        , reuse(reuse_)
+        , firstapply(true)
         , usesuperlu(usesuperlu_)
         , low_order_space_entries_per_row(StaticPower<3,GFS::Traits::GridView::dimension>::power)
         , cgtodglop()
         , pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop,MBE(low_order_space_entries_per_row))
         , pmatrix(pgo)
+        , acg()
       {
         amg_parameters.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
         amg_parameters.setDebugLevel(verbose_);
@@ -281,6 +291,18 @@ namespace Dune {
         return amg_parameters;
       }
 
+      //! Set whether the AMG should be reused again during call to apply().
+      void setReuse(bool reuse_)
+      {
+        reuse = reuse_;
+      }
+
+      //! Return whether the AMG is reused during call to apply()
+      bool getReuse() const
+      {
+        return reuse;
+      }
+
       /*! \brief solve the given linear system
 
         \param[in] A the given matrix
@@ -294,38 +316,48 @@ namespace Dune {
         // do triple matrix product ACG = P^T ADG P
         Dune::Timer watch;
         watch.reset();
-        ACG acg;
-        {
+        // only do triple matrix product if the matrix changes
+        double triple_product_time = 0.0;
+        // no need to set acg here back to zero, this is done in matMultmat
+        if(reuse == false || firstapply == true) {
           PTADG ptadg;
           Dune::transposeMatMultMat(ptadg,native(pmatrix),native(A));
           Dune::matMultMat(acg,ptadg,native(pmatrix));
+          triple_product_time = watch.elapsed();
+          if (verbose>0)
+            std::cout << "=== triple matrix product " << triple_product_time << " s" << std::endl;
+          //Dune::printmatrix(std::cout,acg,"triple product matrix","row",10,2);
         }
-        double triple_product_time = watch.elapsed();
-        if (verbose>0) std::cout << "=== triple matrix product " << triple_product_time << " s" << std::endl;
-        //Dune::printmatrix(std::cout,acg,"triple product matrix","row",10,2);
+        else if (verbose>0)
+          std::cout << "=== reuse CG matrix, SKIPPING triple matrix product " << std::endl;
 
         // set up AMG solver for the CG subspace
-        typedef ACG CGMatrix;
-        typedef Dune::MatrixAdapter<CGMatrix,CGVector,CGVector> CGOperator;
         CGOperator cgop(acg);
-        typedef Dune::SeqSSOR<CGMatrix,CGVector,CGVector,1> Smoother;
         typedef typename Dune::Amg::SmootherTraits<Smoother>::Arguments SmootherArgs;
         SmootherArgs smootherArgs;
         smootherArgs.iterations = 1;
         smootherArgs.relaxationFactor = 1.0;
         typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<CGMatrix,Dune::Amg::FirstDiagonal> > Criterion;
         Criterion criterion(amg_parameters);
-        typedef Dune::Amg::AMG<CGOperator,CGVector,Smoother> AMG;
         watch.reset();
-        AMG amg(cgop,criterion,smootherArgs);
-        double amg_setup_time = watch.elapsed();
-        if (verbose>0) std::cout << "=== AMG setup " <<amg_setup_time << " s" << std::endl;
+
+        // only construct a new AMG for the CG-subspace if the matrix changes
+        double amg_setup_time = 0.0;
+        if(reuse == false || firstapply == true) {
+          amg.reset(new AMG(cgop,criterion,smootherArgs));
+          firstapply = false;
+          amg_setup_time = watch.elapsed();
+          if (verbose>0)
+            std::cout << "=== AMG setup " <<amg_setup_time << " s" << std::endl;
+        }
+        else if (verbose>0)
+          std::cout << "=== reuse CG matrix, SKIPPING AMG setup " << std::endl;
 
         // set up hybrid DG/CG preconditioner
         Dune::MatrixAdapter<Matrix,Vector,Vector> op(native(A));
         DGPrec<Matrix,Vector,Vector,1> dgprec(native(A),1,1);
         typedef SeqDGAMGPrec<Matrix,DGPrec<Matrix,Vector,Vector,1>,AMG,P> HybridPrec;
-        HybridPrec hybridprec(native(A),dgprec,amg,native(pmatrix),2,2);
+        HybridPrec hybridprec(native(A),dgprec,*amg,native(pmatrix),2,2);
 
         // set up solver
         Solver<Vector> solver(op,hybridprec,reduction,maxiter,verbose);
