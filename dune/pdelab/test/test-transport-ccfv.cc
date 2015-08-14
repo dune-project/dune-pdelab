@@ -501,7 +501,7 @@ int main(int argc, char** argv)
       int overlap=o;
       Dune::YaspGrid<dim> grid(L,N,periodic,overlap,helper.getCommunicator());
       typedef Dune::YaspGrid<dim>::LeafGridView GV;
-      const GV gv = grid.leafGridView();
+      GV gv = grid.leafGridView();
 
       if( choice==1 ){
         std::cout << "\n stationary" << std::endl;
