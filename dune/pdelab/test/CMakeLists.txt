@@ -35,6 +35,20 @@ if(GMP_FOUND)
   pdelab_add_test(NAME test-dg-amg)
 endif(GMP_FOUND)
 
+# Include periodic tests. Must run in parallel.
+foreach(degree IN ITEMS 1 2)
+  foreach(dg IN ITEMS 0 1)
+    pdelab_add_test(NAME testpoisson-periodic-2d-deg${degree}-dg${dg}-parallel SOURCES testpoisson-periodic-2d.cc MPIRANKS 2 COMPILE_DEFINITIONS "DEGREE=${degree}" "DG=${dg}")
+    pdelab_add_test(NAME testpoisson-periodic-2d-deg${degree}-dg${dg}-sequential SOURCES testpoisson-periodic-2d.cc COMPILE_DEFINITIONS "DEGREE=${degree}" "DG=${dg}")
+    pdelab_add_test(NAME testpoisson-periodic-3d-deg${degree}-dg${dg}-parallel SOURCES testpoisson-periodic-3d.cc MPIRANKS 4 COMPILE_DEFINITIONS "DEGREE=${degree}" "DG=${dg}")
+    pdelab_add_test(NAME testpoisson-periodic-3d-deg${degree}-dg${dg}-sequential SOURCES testpoisson-periodic-3d.cc COMPILE_DEFINITIONS "DEGREE=${degree}" "DG=${dg}")
+  endforeach()
+endforeach()
+
+if (UG_FOUND)
+  pdelab_add_test(NAME testadaptivity)
+endif (UG_FOUND)
+
 set_tests_properties(
   testpk2dinterpolation
   testrt02dgridfunctionspace
