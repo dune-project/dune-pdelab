@@ -27,7 +27,7 @@
 #include <dune/geometry/quadraturerules.hh>
 
 #include <dune/grid/onedgrid.hh>
-#include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+#include <dune/grid/io/file/vtk.hh>
 #include <dune/grid/yaspgrid.hh>
 #if HAVE_UG
 #include <dune/grid/uggrid.hh>
