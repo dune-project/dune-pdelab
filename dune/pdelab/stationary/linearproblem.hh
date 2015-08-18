@@ -230,7 +230,7 @@ namespace Dune {
         V z(_go.trialGridFunctionSpace(),0.0);
         typename V::ElementType red = std::max(_reduction,_min_defect/defect);
         if (_go.trialGridFunctionSpace().gridView().comm().rank()==0)
-          std::cout << "=== solving (reduction: " << red << ") ";
+          std::cout << "=== solving (reduction: " << red << ") " << std::endl;
         _ls.apply(*_jacobian,z,r,red); // solver makes right hand side consistent
         _linear_solver_result = _ls.result();
         timing = watch.elapsed();
