@@ -122,7 +122,7 @@ namespace Dune {
             }
 
         private:
-            Dune::array< std::shared_ptr<FiniteElementType>, 2 > finiteElements_;
+            std::array< std::shared_ptr<FiniteElementType>, 2 > finiteElements_;
         };
     }
 }

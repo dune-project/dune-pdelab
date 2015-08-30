@@ -35,7 +35,7 @@ namespace Dune {
 
     public:
 
-      typedef array<size_type,leaf_count + 1> Offsets;
+      typedef std::array<size_type,leaf_count + 1> Offsets;
 
       EntityIndexCache(const GFS& gfs)
         : _gfs(gfs)
