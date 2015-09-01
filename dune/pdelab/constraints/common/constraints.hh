@@ -458,7 +458,7 @@ namespace Dune {
         : BaseT(c0,c1,c2,c3,c4,c5,c6,c7,c8,c9)
       {}
 
-      PowerConstraintsParameters (const array<std::shared_ptr<T>,k>& children)
+      PowerConstraintsParameters (const std::array<std::shared_ptr<T>,k>& children)
         : BaseT(children)
       {}
     };
@@ -521,7 +521,7 @@ namespace Dune {
       static transformed_type transform(const F& s, const Transformation& t)
       {
         std::shared_ptr<const F> sp = stackobject_to_shared_ptr(s);
-        array<std::shared_ptr<node_type>, dim> childs;
+        std::array<std::shared_ptr<node_type>, dim> childs;
         for (int i=0; i<dim; i++)
           childs[i] = std::make_shared<node_type>(sp,t,i);
         return transformed_type(childs);
@@ -529,7 +529,7 @@ namespace Dune {
 
       static transformed_storage_type transform_storage(std::shared_ptr<const F> s, const Transformation& t)
       {
-        array<std::shared_ptr<node_type>, dim> childs;
+        std::array<std::shared_ptr<node_type>, dim> childs;
         for (int i=0; i<dim; i++)
           childs[i] = std::make_shared<node_type>(s,t,i);
         return std::make_shared<transformed_type>(childs);

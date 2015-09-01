@@ -79,7 +79,7 @@ namespace Dune {
           std::copy(_tree_path.begin(),_tree_path.end(),std::back_inserter(di.treeIndex()));
         }
 
-        array<std::size_t,TypeTree::TreePathSize<typename GFS::SubSpacePath>::value> _tree_path;
+        std::array<std::size_t,TypeTree::TreePathSize<typename GFS::SubSpacePath>::value> _tree_path;
 
       };
 

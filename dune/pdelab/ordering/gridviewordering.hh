@@ -445,7 +445,7 @@ namespace Dune {
       //! Construct ordering object
       /**
        * In general, an ordering object is not properly setup after
-       * construction.  This must be done by a seperate call to update().
+       * construction.  This must be done by a separate call to update().
        * This particular ordering however can be used right away.
        */
       GridViewOrdering(const typename NodeT::NodeStorage& local_ordering, bool container_blocked, typename BaseT::GFSData* gfs_data)

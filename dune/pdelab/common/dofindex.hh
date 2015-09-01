@@ -154,7 +154,7 @@ namespace Dune {
       //! The maximum possible length of the tuple of entity-local indices.
       static const std::size_t max_depth = tree_n;
 
-      typedef array<T,entity_capacity> EntityIndex;
+      typedef std::array<T,entity_capacity> EntityIndex;
       typedef MultiIndex<T,max_depth> TreeIndex;
 
       typedef typename TreeIndex::size_type size_type;
@@ -170,7 +170,7 @@ namespace Dune {
         static const std::size_t max_depth = tree_n;
         static const std::size_t entity_capacity = entity_n;
 
-        typedef const array<T,entity_n>& EntityIndex;
+        typedef const std::array<T,entity_n>& EntityIndex;
         typedef typename MultiIndex<T,tree_n>::View TreeIndex;
 
         EntityIndex& entityIndex() const

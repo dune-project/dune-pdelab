@@ -388,7 +388,7 @@ namespace Dune {
       template<typename Transformation>
       PowerLocalFunctionSpaceNode (std::shared_ptr<const GFS> gfs,
                                    const Transformation& t,
-                                   const array<std::shared_ptr<ChildLFS>,k>& children)
+                                   const std::array<std::shared_ptr<ChildLFS>,k>& children)
         : BaseT(gfs)
         , TreeNode(children)
       {}
@@ -396,7 +396,7 @@ namespace Dune {
       template<typename Transformation>
       PowerLocalFunctionSpaceNode (const GFS& gfs,
                                    const Transformation& t,
-                                   const array<std::shared_ptr<ChildLFS>,k>& children)
+                                   const std::array<std::shared_ptr<ChildLFS>,k>& children)
         : BaseT(stackobject_to_shared_ptr(gfs))
         , TreeNode(children)
       {}

@@ -129,7 +129,7 @@ namespace Dune {
         }
 
       private:
-        array<FE,6> _variant;
+        std::array<FE,6> _variant;
         GV _gv;
 
       };
@@ -239,8 +239,8 @@ namespace Dune {
           return vertexmap[0] + (vertexmap[1]<<2) + (vertexmap[2]<<4) + (vertexmap[3]<<6);
         }
 
-        array<FE,24> _variant;
-        array<unsigned int,256> _perm_index;
+        std::array<FE,24> _variant;
+        std::array<unsigned int,256> _perm_index;
         GV _gv;
 
       };
