@@ -13,52 +13,26 @@ namespace Dune {
     //! \ingroup FiniteElementMap
     template<typename GV, typename D, typename R>
     class RT1Cube2DLocalFiniteElementMap :
-      public LocalFiniteElementMapInterface<
-        LocalFiniteElementMapTraits< Dune::RT1Cube2DLocalFiniteElement<D,R> >,
-        RT1Cube2DLocalFiniteElementMap<GV,D,R> >
+      public RTLocalFiniteElementMap<
+        GV,
+        Dune::RT1Cube2DLocalFiniteElement<D,R>,
+        RT1Cube2DLocalFiniteElementMap<GV,D,R>,
+        16>
     {
       typedef Dune::RT1Cube2DLocalFiniteElement<D,R> FE;
-      typedef typename GV::IndexSet IndexSet;
 
     public:
       //! \brief export type of the signature
       typedef LocalFiniteElementMapTraits<FE> Traits;
 
       //! \brief Use when Imp has a standard constructor
-      RT1Cube2DLocalFiniteElementMap(const GV& gv_)
-        : gv(gv_), is(gv_.indexSet()), orient(gv_.size(0))
-      {
-        // create all variants
-        for (int i = 0; i < 16; i++)
-          variant[i] = FE(i);
-
-        // compute orientation for all elements
-        typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
-        typedef typename GV::IntersectionIterator IntersectionIterator;
-
-        // loop once over the grid
-        for(const auto& cell : elements(gv))
-        {
-          unsigned int myId = is.index(cell);
-          orient[myId] = 0;
-
-          for (const auto& intersection : intersections(gv,cell))
-          {
-            if (intersection.neighbor()
-                && is.index(intersection.outside()) > myId)
-            {
-              orient[myId] |= 1 << intersection.indexInInside();
-            }
-          }
-        }
-      }
-
-      //! \brief get local basis functions for entity
-      template<class EntityType>
-      const typename Traits::FiniteElementType& find(const EntityType& e) const
-      {
-        return variant[orient[is.template index<0>(e)]];
-      }
+      RT1Cube2DLocalFiniteElementMap(const GV& gv)
+        : RTLocalFiniteElementMap<
+          GV,
+          Dune::RT1Cube2DLocalFiniteElement<D,R>,
+          RT1Cube2DLocalFiniteElementMap<GV,D,R>,
+          16>(gv)
+      {}
 
       bool fixedSize() const
       {
@@ -83,11 +57,6 @@ namespace Dune {
         return 12;
       }
 
-    private:
-      GV gv;
-      FE variant[16];
-      const IndexSet& is;
-      std::vector<unsigned char> orient;
     };
   } // end namespace PDELab
 } // end namespace Dune
