@@ -51,34 +51,25 @@ sum = gf.getGridView().comm().sum(sum);
                                typename GF::Traits::RangeType& sum,
                                unsigned qorder = 1) {
       typedef typename GF::Traits::GridViewType GV;
-      typedef typename GV::template Codim<0>::
-        template Partition<Interior_Partition>::Iterator EIterator;
       typedef typename GV::template Codim<0>::Geometry Geometry;
       typedef typename GF::Traits::RangeType Range;
       typedef typename GF::Traits::DomainFieldType DF;
       static const int dimD = GF::Traits::dimDomain;
       typedef Dune::QuadratureRule<DF,dimD> QR;
       typedef Dune::QuadratureRules<DF,dimD> QRs;
-      typedef typename QR::const_iterator QIterator;
 
       sum = 0;
       Range val;
-      const EIterator eend = gf.getGridView().template end<0,
-        Interior_Partition>();
-      for(EIterator eit = gf.getGridView().template begin<0,
-            Interior_Partition>(); eit != eend; ++eit) {
-        const Geometry& geo = eit->geometry();
+      for(const auto& cell : elements(gf.getGridView(),Dune::Partitions::interior)) {
+        const Geometry& geo = cell.geometry();
         Dune::GeometryType gt = geo.type();
         const QR& rule = QRs::rule(gt,qorder);
-        const QIterator qend = rule.end();
-
-        for (QIterator qit=rule.begin(); qit != qend; ++qit)
-        {
+        for (const auto& qip : rule) {
           // evaluate the given grid functions at integration point
-          gf.evaluate(*eit,qit->position(),val);
+          gf.evaluate(cell,qip.position(),val);
 
           // accumulate error
-          val *= qit->weight() * geo.integrationElement(qit->position());
+          val *= qip.weight() * geo.integrationElement(qip.position());
           sum += val;
         }
       }
@@ -97,7 +88,7 @@ sum = gf.getGridView().comm().sum(sum);
     template<typename GF>
     class GridFunctionProbe {
       typedef typename GF::Traits::GridViewType GV;
-      typedef typename GV::template Codim<0>::EntityPointer EPtr;
+      typedef typename GV::template Codim<0>::Entity Entity;
       typedef typename GF::Traits::DomainType Domain;
       typedef typename GF::Traits::RangeType Range;
 
@@ -120,18 +111,18 @@ sum = gf.getGridView().comm().sum(sum);
         evalRank = gfp->getGridView().comm().size();
         int myRank = gfp->getGridView().comm().rank();
         try {
-          e.reset(new EPtr
+          e.reset(new Entity
                   (HierarchicSearch<typename GV::Grid, typename GV::IndexSet>
                    (gfp->getGridView().grid(), gfp->getGridView().indexSet()).
                    template findEntity<Interior_Partition>(xg)));
           // make sure only interior entities are accepted
-          if((*e)->partitionType() == InteriorEntity)
+          if(e->partitionType() == InteriorEntity)
             evalRank = myRank;
         }
         catch(const Dune::GridError&) { /* do nothing */ }
         evalRank = gfp->getGridView().comm().min(evalRank);
         if(myRank == evalRank)
-          xl = (*e)->geometry().local(xg);
+          xl = e->geometry().local(xg);
         else
           e.reset();
         if(myRank == 0 && evalRank == gfp->getGridView().comm().size())
@@ -189,7 +180,7 @@ sum = gf.getGridView().comm().sum(sum);
           val = std::numeric_limits<RF>::quiet_NaN();
         else {
           if(gfp->getGridView().comm().rank() == evalRank)
-            gfp->evaluate(**e, xl, val);
+            gfp->evaluate(*e, xl, val);
           gfp->getGridView().comm().broadcast(&val,1,evalRank);
         }
       }
@@ -214,7 +205,7 @@ sum = gf.getGridView().comm().sum(sum);
     private:
       std::shared_ptr<const GF> gfsp;
       const GF *gfp;
-      std::shared_ptr<EPtr> e;
+      std::shared_ptr<Entity> e;
       Domain xl;
       int evalRank;
     };
