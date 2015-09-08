@@ -737,7 +737,8 @@ namespace Dune {
             for (int j=0; j<i; j++)
               s2 = s2 - bi[j]*bi[j];
             ComputationFieldType s(1.0);
-            s = s/std::sqrt(s2);
+            using std::sqrt;
+            s = s/sqrt(s2);
             for (int l=0; l<=i; l++)
               c[i][l] = s*c[i][l];
           }
