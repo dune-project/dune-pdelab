@@ -1,4 +1,4 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_CONVECTIONDIFFUSIONCCFV_HH
 #define DUNE_PDELAB_CONVECTIONDIFFUSIONCCFV_HH
 
@@ -17,12 +17,12 @@
 namespace Dune {
   namespace PDELab {
 
-    /** a local operator for solving convection-diffusion equation with CCFV
+    /** a local operator for solving the linear convection-diffusion equation with CCFV
      *
      * \f{align*}{
      *   \nabla\cdot(-A(x) \nabla u + b(x) u) + c(x)u &=& f \mbox{ in } \Omega,  \\
-     *                                              u &=& g \mbox{ on } \partial\Omega_D \\
-     *                (b(x,u) - A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_N \\
+     *                                         u(t,x) &=& g(t,x) \mbox{ on } \partial\Omega_D \\
+     *                (b(x) u - A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_N \\
      *                        -(A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_O
      * \f}
      * Note:
@@ -30,20 +30,18 @@ namespace Dune {
      *  - Assumes that the tensor is diagonal !
      *  - Outflow boundary conditions should only be set on the outflow boundary
      *
-     * \tparam T model of ConvectionDiffusionParameterInterface
+     * \tparam TP model of ConvectionDiffusionParameterInterface
      */
-    template<typename T>
-    class ConvectionDiffusionCCFV : public NumericalJacobianApplySkeleton<ConvectionDiffusionCCFV<T> >,
-                                    public NumericalJacobianApplyBoundary<ConvectionDiffusionCCFV<T> >,
-                                    public NumericalJacobianApplyVolume<ConvectionDiffusionCCFV<T> >,
-    // public NumericalJacobianSkeleton<ConvectionDiffusionCCFV<T> >,
-     // public NumericalJacobianBoundary<ConvectionDiffusionCCFV<T> >,
-     // public NumericalJacobianVolume<ConvectionDiffusionCCFV<T> >,
-                                    public FullSkeletonPattern,
-                                    public FullVolumePattern,
-                                    public LocalOperatorDefaultFlags,
-                                    public InstationaryLocalOperatorDefaultMethods<typename T::Traits::RangeFieldType>
-
+    template<typename TP>
+    class ConvectionDiffusionCCFV
+      :
+      // public NumericalJacobianSkeleton<ConvectionDiffusionCCFV<TP> >,
+      // public NumericalJacobianBoundary<ConvectionDiffusionCCFV<TP> >,
+      // public NumericalJacobianVolume<ConvectionDiffusionCCFV<TP> >,
+      public FullSkeletonPattern,
+      public FullVolumePattern,
+      public LocalOperatorDefaultFlags,
+      public InstationaryLocalOperatorDefaultMethods<typename TP::Traits::RangeFieldType>
     {
       typedef typename ConvectionDiffusionBoundaryConditions::Type BCType;
 
@@ -56,11 +54,11 @@ namespace Dune {
       enum { doAlphaVolume    = true };
       enum { doAlphaSkeleton  = true };
       enum { doAlphaBoundary  = true };
-      enum { doLambdaVolume   = false };
+      enum { doLambdaVolume   = true };
       enum { doLambdaSkeleton = false };
       enum { doLambdaBoundary = false };
 
-      ConvectionDiffusionCCFV (T& param_) : param(param_)
+      ConvectionDiffusionCCFV (TP& param_) : param(param_)
       {}
 
       // volume integral depending on test and ansatz functions
@@ -84,12 +82,11 @@ namespace Dune {
         const Dune::FieldVector<DF,dim>
           inside_local(Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0));
 
-        // evaluate source and sink term
-        typename T::Traits::RangeFieldType f = param.f(eg.entity(),inside_local);
-        typename T::Traits::RangeFieldType c = param.c(eg.entity(),inside_local);
+        // evaluate reaction term
+        typename TP::Traits::RangeFieldType c = param.c(eg.entity(),inside_local);
 
         // and accumulate
-        r.accumulate(lfsu,0,(c*x(lfsu,0)-f)*eg.geometry().volume());
+        r.accumulate(lfsu,0,(c*x(lfsu,0))*eg.geometry().volume());
       }
 
       // jacobian of volume term
@@ -115,9 +112,8 @@ namespace Dune {
         const Dune::FieldVector<DF,dim>
           inside_local(Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0));
 
-        // evaluate source and sink term
-        // typename T::Traits::RangeFieldType f = param.f(eg.entity(),inside_local);
-        typename T::Traits::RangeFieldType c = param.c(eg.entity(),inside_local);
+        // evaluate reaction term
+        typename TP::Traits::RangeFieldType c = param.c(eg.entity(),inside_local);
 
         // and accumulate
         mat.accumulate(lfsu,0,lfsu,0,c*eg.geometry().volume());
@@ -156,9 +152,9 @@ namespace Dune {
           outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(cell_outside.type()).position(0,0);
 
         // evaluate diffusion coefficient from either side and take harmonic average
-        typename T::Traits::PermTensorType tensor_inside;
+        typename TP::Traits::PermTensorType tensor_inside;
         tensor_inside = param.A(cell_inside,inside_local);
-        typename T::Traits::PermTensorType tensor_outside;
+        typename TP::Traits::PermTensorType tensor_outside;
         tensor_outside = param.A(cell_outside,outside_local);
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
         Dune::FieldVector<RF,dim> An_F;
@@ -170,7 +166,7 @@ namespace Dune {
 
         // evaluate convective term
         Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(face_local);
-        typename T::Traits::RangeType b = param.b(cell_inside,iplocal_s);
+        typename TP::Traits::RangeType b = param.b(cell_inside,iplocal_s);
         RF vn = b*n_F;
         RF u_upwind=0;
         if (vn>=0) u_upwind = x_s(lfsu_s,0); else u_upwind = x_n(lfsu_n,0);
@@ -222,9 +218,9 @@ namespace Dune {
           outside_local = Dune::ReferenceElements<DF,IG::dimension>::general(cell_outside.type()).position(0,0);
 
         // evaluate diffusion coefficient from either side and take harmonic average
-        typename T::Traits::PermTensorType tensor_inside;
+        typename TP::Traits::PermTensorType tensor_inside;
         tensor_inside = param.A(cell_inside,inside_local);
-        typename T::Traits::PermTensorType tensor_outside;
+        typename TP::Traits::PermTensorType tensor_outside;
         tensor_outside = param.A(cell_outside,outside_local);
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
         Dune::FieldVector<RF,dim> An_F;
@@ -236,7 +232,7 @@ namespace Dune {
 
         // evaluate convective term
         Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(face_local);
-        typename T::Traits::RangeType b = param.b(cell_inside,iplocal_s);
+        typename TP::Traits::RangeType b = param.b(cell_inside,iplocal_s);
         RF vn = b*n_F;
 
         // cell centers in global coordinates
@@ -265,6 +261,33 @@ namespace Dune {
             mat_nn.accumulate(lfsu_n,0,lfsu_n,0,  -vn*face_volume );
           }
       }
+
+
+
+
+      // post skeleton: compute time step allowable for cell; to be done later
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_volume_post_skeleton(const EG& eg, const LFSU& lfsu, const X& x,
+                                      const LFSV& lfsv, R& r) const
+      {
+        // domain and range field type
+        typedef typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
+        const int dim = EG::Geometry::dimension;
+
+        if (!first_stage) return; // time step calculation is only done in first stage
+
+        // cell center
+        const Dune::FieldVector<DF,dim>&
+          inside_local = Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+
+        // compute optimal dt for this cell
+        typename TP::Traits::RangeFieldType cellcapacity = param.d(eg.entity(),inside_local)*eg.geometry().volume();
+        typename TP::Traits::RangeFieldType celldt = cellcapacity/(cellinflux+1E-30);
+        dtmin = std::min(dtmin,celldt);
+      }
+
+
 
       // skeleton integral depending on test and ansatz functions
       // We put the Dirchlet evaluation also in the alpha term to save some geometry evaluations
@@ -308,7 +331,7 @@ namespace Dune {
             RF distance = inside_global.two_norm();
 
             // evaluate diffusion coefficient
-            typename T::Traits::PermTensorType tensor_inside;
+            typename TP::Traits::PermTensorType tensor_inside;
             tensor_inside = param.A(cell_inside,inside_local);
             const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
             Dune::FieldVector<RF,dim> An_F;
@@ -320,7 +343,7 @@ namespace Dune {
             RF g = param.g(cell_inside,iplocal_s);
 
             // velocity needed for convection term
-            typename T::Traits::RangeType b = param.b(cell_inside,iplocal_s);
+            typename TP::Traits::RangeType b = param.b(cell_inside,iplocal_s);
             const Dune::FieldVector<DF,dim> n = ig.centerUnitOuterNormal();
 
             // contribution to residual on inside element, assumes that Dirichlet boundary is inflow
@@ -335,7 +358,7 @@ namespace Dune {
             // evaluate flux boundary condition
 
             //evaluate boundary function
-            typename T::Traits::RangeFieldType j = param.j(ig.intersection(),face_local);
+            typename TP::Traits::RangeFieldType j = param.j(ig.intersection(),face_local);
 
             // contribution to residual on inside element
             r_s.accumulate(lfsu_s,0,j*face_volume);
@@ -347,11 +370,11 @@ namespace Dune {
           {
             // evaluate velocity field and outer unit normal
             Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(face_local);
-            typename T::Traits::RangeType b = param.b(cell_inside,iplocal_s);
+            typename TP::Traits::RangeType b = param.b(cell_inside,iplocal_s);
             const Dune::FieldVector<DF,dim> n = ig.centerUnitOuterNormal();
 
             // evaluate outflow boundary condition
-            typename T::Traits::RangeFieldType o = param.o(ig.intersection(),face_local);
+            typename TP::Traits::RangeFieldType o = param.o(ig.intersection(),face_local);
 
             // integrate o
             r_s.accumulate(lfsu_s,0,((b*n)*x_s(lfsu_s,0) + o)*face_volume);
@@ -401,7 +424,7 @@ namespace Dune {
             RF distance = inside_global.two_norm();
 
             // evaluate diffusion coefficient
-            typename T::Traits::PermTensorType tensor_inside;
+            typename TP::Traits::PermTensorType tensor_inside;
             tensor_inside = param.A(cell_inside,inside_local);
             const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
             Dune::FieldVector<RF,dim> An_F;
@@ -418,7 +441,7 @@ namespace Dune {
           {
             // evaluate velocity field and outer unit normal
             Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(face_local);
-            typename T::Traits::RangeType b = param.b(cell_inside,iplocal_s);
+            typename TP::Traits::RangeType b = param.b(cell_inside,iplocal_s);
             const Dune::FieldVector<DF,dim> n = ig.centerUnitOuterNormal();
 
             // integrate o
@@ -428,15 +451,143 @@ namespace Dune {
           }
       }
 
+      // volume integral depending only on test functions
+      template<typename EG, typename LFSV, typename R>
+      void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
+      {
+        // domain and range field type
+        typedef typename LFSV::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
+        const int dim = EG::Geometry::dimension;
+
+        // cell center
+        const Dune::FieldVector<DF,dim>&
+          inside_local = Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+
+        // evaluate source and sink term
+        typename TP::Traits::RangeFieldType f = param.f(eg.entity(),inside_local);
+
+        r.accumulate(lfsv,0,-f*eg.geometry().volume());
+      }
+
       //! set time in parameter class
-      void setTime (double t)
+      void setTime (typename TP::Traits::RangeFieldType t)
       {
         param.setTime(t);
       }
 
+      //! to be called once before each time step
+      void preStep (typename TP::Traits::RangeFieldType time, typename TP::Traits::RangeFieldType dt,
+                    int stages)
+      {
+      }
+
+      //! to be called once before each stage
+      void preStage (typename TP::Traits::RangeFieldType time, int r)
+      {
+        if (r==1)
+          {
+            first_stage = true;
+            dtmin = 1E100;
+          }
+        else first_stage = false;
+      }
+
+      //! to be called once at the end of each stage
+      void postStage ()
+      {
+      }
+
+      //! to be called once before each stage
+      typename TP::Traits::RangeFieldType suggestTimestep (typename TP::Traits::RangeFieldType dt) const
+      {
+        return dtmin;
+      }
+
     private:
-      T& param;
+      TP& param;
+      bool first_stage;
+      mutable typename TP::Traits::RangeFieldType dtmin; // accumulate minimum dt here
+      mutable typename TP::Traits::RangeFieldType cellinflux;
     };
+
+
+
+
+    /** a local operator for the weighted mass matrix (capacity term d(x))
+     *
+     * \f{align*}{
+         \int_\Omega d(x) uv dx
+     * \f}
+     */
+    template<class TP>
+    class ConvectionDiffusionCCFVTemporalOperator
+      :
+      // public NumericalJacobianApplyVolume<ConvectionDiffusionCCFVTemporalOperator<TP> >,
+      public FullVolumePattern,
+      public LocalOperatorDefaultFlags,
+      public InstationaryLocalOperatorDefaultMethods<typename TP::Traits::RangeFieldType>
+    {
+    public:
+      // pattern assembly flags
+      enum { doPatternVolume = true };
+
+      // residual assembly flags
+      enum { doAlphaVolume = true };
+
+      ConvectionDiffusionCCFVTemporalOperator (TP& param_)
+        : param(param_)
+      {
+      }
+
+      // volume integral depending on test and ansatz functions
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
+      void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
+      {
+        // domain and range field type
+        typedef typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
+
+        // dimensions
+        const int dim = EG::Geometry::dimension;
+
+        // cell center
+        const Dune::FieldVector<DF,dim>&
+          inside_local = Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+        // capacity term
+        typename TP::Traits::RangeFieldType capacity = param.d(eg.entity(),inside_local);
+
+        // residual contribution
+        r.accumulate(lfsu,0,capacity*x(lfsu,0)*eg.geometry().volume());
+      }
+
+      // jacobian of volume term
+      template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
+      void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
+                            M& mat) const
+      {
+        // domain and range field type
+        typedef typename LFSU::Traits::FiniteElementType::
+          Traits::LocalBasisType::Traits::DomainFieldType DF;
+
+        // dimensions
+        const int dim = EG::Geometry::dimension;
+
+        // cell center
+        const Dune::FieldVector<DF,dim>&
+          inside_local = Dune::ReferenceElements<DF,dim>::general(eg.entity().type()).position(0,0);
+
+        // capacity term
+        typename TP::Traits::RangeFieldType capacity = param.d(eg.entity(),inside_local);
+
+        // residual contribution
+        mat.accumulate(lfsu,0,lfsu,0,capacity*eg.geometry().volume());
+      }
+
+    private:
+      TP& param;
+    };
+
 
     //! \} group GridFunctionSpace
   } // namespace PDELab
