@@ -30,27 +30,24 @@ namespace Dune {
       {
         // create all variants
         for (int i = 0; i < 16; i++)
-        {
           variant[i] = FE(i);
-        }
 
         // compute orientation for all elements
         typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
         typedef typename GV::IntersectionIterator IntersectionIterator;
 
         // loop once over the grid
-        for (ElementIterator it = gv.template begin<0>(); it != gv.template end<0>(); ++it)
+        for(const auto& cell : elements(gv))
         {
-          unsigned int myId = is.template index<0>(*it);
+          unsigned int myId = is.index(cell);
           orient[myId] = 0;
 
-          IntersectionIterator endit = gv.iend(*it);
-          for (IntersectionIterator iit = gv.ibegin(*it); iit!=endit; ++iit)
+          for (const auto& intersection : intersections(gv,cell))
           {
-            if (iit->neighbor()
-                && is.template index<0>(*(iit->outside())) > myId)
+            if (intersection.neighbor()
+                && is.index(intersection.outside()) > myId)
             {
-              orient[myId] |= 1 << iit->indexInInside();
+              orient[myId] |= 1 << intersection.indexInInside();
             }
           }
         }

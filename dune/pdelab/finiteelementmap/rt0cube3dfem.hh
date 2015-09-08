@@ -11,11 +11,11 @@ namespace Dune {
 
     //! wrap up element from local functions
     //! \ingroup FiniteElementMap
-
     template<typename GV, typename D, typename R>
     class RT0Cube3DLocalFiniteElementMap :
-      public LocalFiniteElementMapInterface<LocalFiniteElementMapTraits< Dune::RT0Cube3DLocalFiniteElement<D,R> >,
-                                            RT0Cube3DLocalFiniteElementMap<GV,D,R> >
+      public LocalFiniteElementMapInterface<
+        LocalFiniteElementMapTraits< Dune::RT0Cube3DLocalFiniteElement<D,R> >,
+        RT0Cube3DLocalFiniteElementMap<GV,D,R> >
     {
       typedef Dune::RT0Cube3DLocalFiniteElement<D,R> FE;
       typedef typename GV::IndexSet IndexSet;
@@ -37,17 +37,18 @@ namespace Dune {
         typedef typename GV::IntersectionIterator IntersectionIterator;
 
         // loop once over the grid
-        for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
+        for(const auto& cell : elements(gv))
           {
-            unsigned int myid = is.template index<0>(*it);
-            orient[myid] = 0;
+          unsigned int myId = is.index(cell);
+          orient[myId] = 0;
 
-            IntersectionIterator endit = gv.iend(*it);
-            for (IntersectionIterator iit = gv.ibegin(*it); iit!=endit; ++iit)
-              if (iit->neighbor())
+          for (const auto& intersection : intersections(gv,cell))
                 {
-                  if (is.template index<0>(iit->outside())>myid)
-                    orient[myid] |= 1<<iit->indexInInside();
+            if (intersection.neighbor()
+                && is.index(intersection.outside()) > myId)
+            {
+              orient[myId] |= 1 << intersection.indexInInside();
+            }
                 }
           }
       }
@@ -80,7 +81,7 @@ namespace Dune {
       const IndexSet& is;
       std::vector<unsigned char> orient;
     };
-  }
-}
+  } // end namespace PDELab
+} // end namespace Dune
 
 #endif // DUNE_PDELAB_FINITEELEMENTMAP_RT0CUBE3DFEM_HH
