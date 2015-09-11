@@ -76,7 +76,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType RangeType;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         // cell center
         const Dune::FieldVector<DF,dim>
@@ -106,7 +106,7 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         // cell center
         const Dune::FieldVector<DF,dim>
@@ -273,7 +273,7 @@ namespace Dune {
         // domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         if (!first_stage) return; // time step calculation is only done in first stage
 
@@ -458,7 +458,7 @@ namespace Dune {
         // domain and range field type
         typedef typename LFSV::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         // cell center
         const Dune::FieldVector<DF,dim>&
@@ -549,7 +549,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::DomainFieldType DF;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         // cell center
         const Dune::FieldVector<DF,dim>&
@@ -571,7 +571,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::DomainFieldType DF;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         // cell center
         const Dune::FieldVector<DF,dim>&

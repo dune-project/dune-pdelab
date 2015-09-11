@@ -80,7 +80,7 @@ namespace Dune {
         , public TypeTree::DynamicTraversal
       {
 
-        static const int dim  = Cell::Geometry::dimension;
+        static const int dim  = Cell::Geometry::mydimension;
         typedef std::size_t size_type;
         typedef typename MassMatrices::value_type MassMatrix;
         typedef typename MassMatrix::field_type DF;
@@ -209,7 +209,7 @@ namespace Dune {
       typedef typename GFS::Traits::GridView::Grid::LocalIdSet IDSet;
       typedef typename GFS::Traits::GridView::template Codim<0>::Entity Cell;
       typedef typename Cell::Geometry Geometry;
-      static const int dim = Geometry::dimension;
+      static const int dim = Geometry::mydimension;
       typedef typename Cell::HierarchicIterator HierarchicIterator;
       typedef typename DOFVector::ElementType RF;
       typedef typename TransferMap::mapped_type LocalDOFVector;
