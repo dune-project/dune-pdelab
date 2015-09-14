@@ -47,8 +47,8 @@ public:
     // method
 
     // dimensions
-    const int dim = EG::Geometry::dimension;
-    const int dimw = EG::Geometry::dimensionworld;
+    const int dim = EG::Geometry::mydimension;
+    const int coorddim = EG::Geometry::coorddimension;
 
     // extract some types
     typedef typename LFSU::Traits::FiniteElementType::
@@ -59,7 +59,7 @@ public:
       Traits::LocalBasisType::Traits::JacobianType Jacobian;
     typedef typename LFSU::Traits::FiniteElementType::
       Traits::LocalBasisType::Traits::RangeType Range;
-    typedef Dune::FieldVector<RF,dimw> Gradient;
+    typedef Dune::FieldVector<RF,coorddim> Gradient;
     typedef typename LFSU::Traits::SizeType size_type;
 
     // select quadrature rule
