@@ -5,6 +5,10 @@
 *.lo
 *.a
 *.la
+*.vtu
+*.pvtu
+*.pvd
+*.patch
 *~
 Makefile
 Makefile.in
