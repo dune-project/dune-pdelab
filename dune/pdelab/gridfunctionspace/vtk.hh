@@ -603,8 +603,7 @@ namespace Dune {
                 std::forward<Params>(params)...
               ),
               name
-            )
-          );
+            );
           return *this;
         }
 
@@ -630,8 +629,7 @@ namespace Dune {
                 std::forward<Params>(params)...
               ),
               name
-            )
-          );
+            );
           return *this;
         }
 
