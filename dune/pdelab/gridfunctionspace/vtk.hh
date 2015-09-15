@@ -584,22 +584,20 @@ namespace Dune {
         template<typename Factory, typename TreePath>
         OutputCollector& addCellFunction(Factory factory, TreePath tp, std::string name)
         {
-          typedef typename std::remove_reference<decltype(*factory.create(TypeTree::extract_child(_data->_lfs,tp),_data))>::type DGF;
-          _vtk_writer.addCellData(std::make_shared<VTKGridFunctionAdapter<DGF> >(factory.create(TypeTree::extract_child(_data->_lfs,tp),_data),name));
+          typedef typename std::remove_reference<decltype(*factory.create(_data->_lfs.child(tp),_data))>::type DGF;
+          _vtk_writer.addCellData(std::make_shared<VTKGridFunctionAdapter<DGF> >(factory.create(_data->_lfs.child(tp),_data),name));
           return *this;
         }
 
         template<template<typename...> class Function, typename TreePath, typename... Params>
         OutputCollector& addCellFunction(TreePath tp, std::string name, Params&&... params)
         {
-          typedef typename TypeTree::extract_child_type<typename Data::LFS,TreePath>::type LFS;
+          using LFS = TypeTree::ChildForTreePath<typename Data::LFS,TreePath>;
           typedef Function<LFS,Data,Params...> DGF;
           _vtk_writer.addCellData(
             std::make_shared<VTKGridFunctionAdapter<DGF> >(
               std::make_shared<DGF>(
-                TypeTree::extract_child(
-                  _data->_lfs,
-                  tp
+                _data->_lfs.child(tp)
                 ),
                 _data,
                 std::forward<Params>(params)...
@@ -613,22 +611,20 @@ namespace Dune {
         template<typename Factory, typename TreePath>
         OutputCollector& addVertexFunction(Factory factory, TreePath tp, std::string name)
         {
-          typedef typename std::remove_reference<decltype(*factory.create(TypeTree::extract_child(_data->_lfs,tp),_data))>::type DGF;
-          _vtk_writer.addVertexData(std::make_shared<VTKGridFunctionAdapter<DGF> >(factory.create(TypeTree::extract_child(_data->_lfs,tp),_data),name));
+          typedef typename std::remove_reference<decltype(*factory.create(_data->_lfs.child(tp),_data))>::type DGF;
+          _vtk_writer.addVertexData(std::make_shared<VTKGridFunctionAdapter<DGF> >(factory.create(_data->_lfs.child(tp),_data),name));
           return *this;
         }
 
         template<template<typename...> class Function, typename TreePath, typename... Params>
         OutputCollector& addVertexFunction(TreePath tp, std::string name, Params&&... params)
         {
-          typedef typename TypeTree::extract_child_type<typename Data::LFS,TreePath>::type LFS;
+          using LFS = TypeTree::ChildForTreePath<typename Data::LFS,TreePath>;
           typedef Function<LFS,Data,Params...> DGF;
           _vtk_writer.addVertexData(
             std::make_shared<VTKGridFunctionAdapter<DGF> >(
               std::make_shared<DGF>(
-                TypeTree::extract_child(
-                  _data->_lfs,
-                  tp
+                _data->_lfs.child(tp)
                 ),
                 _data,
                 std::forward<Params>(params)...

@@ -64,7 +64,7 @@ namespace Dune {
         {
 
           // Get the ordering at the current subtree position.
-          typedef typename TypeTree::extract_child_type<Ordering,OrderingTP>::type SubOrdering;
+          using SubOrdering = TypeTree::ChildForTreePath<Ordering,OrderingTP>;
 
           // Only descend in the GFS tree if the current ordering child consumes a tree index entry.
           typedef typename conditional<
@@ -141,7 +141,7 @@ namespace Dune {
         typedef GFS BaseGridFunctionSpace;
 
         //! The type of the original GridFunctionSpace that is the root of this GridFunctionSpace.
-        typedef typename TypeTree::extract_child_type<GFS,TreePath>::type ChildGridFunctionSpace;
+        using ChildGridFunctionSpace = TypeTree::ChildForTreePath<GFS,TreePath>;
 
         //! Re-exported Traits from the original GridFunctionSpace.
         typedef typename ChildGridFunctionSpace::Traits Traits;
@@ -238,7 +238,7 @@ namespace Dune {
       public:
 
         //! The type of the original GridFunctionSpace that is the root of this GridFunctionSpace.
-        typedef typename TypeTree::extract_child_type<GFS,TreePath>::type ChildGridFunctionSpace;
+        using ChildGridFunctionSpace = TypeTree::ChildForTreePath<GFS,TreePath>;
 
         //! Re-exported Traits from the original GridFunctionSpace.
         typedef typename ChildGridFunctionSpace::Traits Traits;
@@ -376,30 +376,18 @@ namespace Dune {
        */
       template<typename GFS, typename TreePath>
       class GridFunctionSubSpace
-        : public TypeTree::ProxyNode<const typename TypeTree::extract_child_type<GFS,TreePath>::type>
-        , public SubSpaceFeatureProvider<GFS,TreePath,typename TypeTree::extract_child_type<
-                                                        GFS,
-                                                        TreePath
-                                                        >::type::ImplementationTag
-                                         >
-        , public GridFunctionSubSpaceOutputParameters<typename TypeTree::extract_child_type<GFS,TreePath>::type>
+        : public TypeTree::ProxyNode<const TypeTree::ChildForTreePath<GFS,TreePath>>
+        , public SubSpaceFeatureProvider<GFS,TreePath,typename TypeTree::ChildForTreePath<GFS,TreePath>::ImplementationTag>
+        , public GridFunctionSubSpaceOutputParameters<TypeTree::ChildForTreePath<GFS,TreePath>>
       {
 
-        typedef TypeTree::ProxyNode<
-          const typename TypeTree::extract_child_type<
-            GFS,
-            TreePath
-            >::type
-          > NodeT;
+        using NodeT = TypeTree::ProxyNode<const TypeTree::ChildForTreePath<GFS,TreePath>>;
 
-        typedef SubSpaceFeatureProvider<
+        using FeatureT = SubSpaceFeatureProvider<
           GFS,
           TreePath,
-          typename TypeTree::extract_child_type<
-            GFS,
-            TreePath
-            >::type::ImplementationTag
-          > FeatureT;
+          typename TypeTree::ChildForTreePath<GFS,TreePath>::ImplementationTag
+          >;
 
       public:
 
@@ -471,7 +459,7 @@ namespace Dune {
         typedef GFS BaseGridFunctionSpace;
 
         //! The type of the original GridFunctionSpace that is the root of this GridFunctionSpace.
-        typedef typename TypeTree::extract_child_type<GFS,TreePath>::type ChildGridFunctionSpace;
+        using ChildGridFunctionSpace = TypeTree::ChildForTreePath<GFS,TreePath>;
 
         //! Re-exported Traits from the original GridFunctionSpace.
         typedef typename ChildGridFunctionSpace::Traits Traits;
