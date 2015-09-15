@@ -48,11 +48,11 @@ namespace Dune {
      */
     template<typename BaseOrdering_, typename TreePath>
     class SubOrdering
-      : public TypeTree::ProxyNode<const typename TypeTree::extract_child_type<BaseOrdering_,TreePath>::type>
+      : public TypeTree::ProxyNode<const TypeTree::ChildForTreePath<BaseOrdering_,TreePath>>
       , public PartitionInfoProvider
     {
 
-      typedef typename TypeTree::ProxyNode<const typename TypeTree::extract_child_type<BaseOrdering_,TreePath>::type> NodeT;
+      using NodeT = TypeTree::ProxyNode<const TypeTree::ChildForTreePath<BaseOrdering_,TreePath>>;
 
     public:
 
@@ -60,7 +60,7 @@ namespace Dune {
       typedef BaseOrdering_ BaseOrdering;
 
       //! The target ordering that makes up the root of this SubOrdering view.
-      typedef typename TypeTree::extract_child_type<BaseOrdering,TreePath>::type TargetOrdering;
+      using TargetOrdering = TypeTree::ChildForTreePath<BaseOrdering,TreePath>;
 
       //! Forwarded Ordering traits from BaseOrdering.
       typedef typename BaseOrdering::Traits Traits;
@@ -93,7 +93,7 @@ namespace Dune {
        *                           ordering.
        */
       explicit SubOrdering(std::shared_ptr<const BaseOrdering> base_ordering)
-        : NodeT(TypeTree::extract_child_storage(*base_ordering,TreePath()))
+        : NodeT(base_ordering->child(TreePath()))
         , _base_ordering(base_ordering)
       {
         update();
@@ -130,7 +130,7 @@ namespace Dune {
       template<typename TP, typename ItIn, typename ItOut>
       void map_lfs_indices_in_ancestor(TP tp, ItIn& begin, ItIn& end, ItOut out) const
       {
-        typedef typename TypeTree::extract_child_type<BaseOrdering,TP>::type Ordering;
+        using Ordering = TypeTree::ChildForTreePath<BaseOrdering,TP>;
 
         // This logic needs to be replicated from the IndexCache visitor, as we bypass
         // the tree-visiting algorithm and work our way up the tree all by ourselves.
@@ -143,7 +143,7 @@ namespace Dune {
           }
 
         // Call the single-level mapping step of our ancestor ordering.
-        TypeTree::extract_child(baseOrdering(),tp).map_lfs_indices(begin,end,out);
+        baseOrdering().child(tp).map_lfs_indices(begin,end,out);
       }
 
       // Template recursion for walking up the TreePath to the BaseOrdering
