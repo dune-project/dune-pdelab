@@ -143,7 +143,7 @@ namespace Dune {
           }
 
         // Call the single-level mapping step of our ancestor ordering.
-        baseOrdering().child(tp).map_lfs_indices(begin,end,out);
+        TypeTree::child(baseOrdering(),tp).map_lfs_indices(begin,end,out);
       }
 
       // Template recursion for walking up the TreePath to the BaseOrdering
