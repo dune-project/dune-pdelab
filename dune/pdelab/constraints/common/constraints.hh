@@ -671,6 +671,7 @@ namespace Dune {
 
               }
             }
+            ++intersection_index;
           }
 
           if (!cl_self.empty())
