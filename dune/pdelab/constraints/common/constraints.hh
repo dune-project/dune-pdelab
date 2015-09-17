@@ -568,7 +568,7 @@ namespace Dune {
      *             GridFunctionSpace::ConstraintsContainer::Type
      * \tparam isFunction bool to identify old-style parameters, which were implemented the Dune::PDELab::FunctionInterface
      */
-    template<typename P, typename GFS, typename GV, typename CG, bool isFunction>
+    template<typename P, typename GFS, typename CG, bool isFunction>
     struct ConstraintsAssemblerHelper
     {
       //! construct constraints from given boundary condition function
@@ -587,11 +587,14 @@ namespace Dune {
        * \param verbose Print information about the constaints at the end
        */
       static void
-      assemble(const P& p, const GFS& gfs, const GV& gv, CG& cg, const bool verbose)
+      assemble(const P& p, const GFS& gfs, CG& cg, const bool verbose)
       {
         // get some types
+        using GV = typename GFS::Traits::GridView;
         typedef typename GV::Traits::template Codim<0>::Entity Element;
         typedef typename GV::Intersection Intersection;
+
+        GV gv = gfs.gridView();
 
         // make local function space
         typedef LocalFunctionSpace<GFS> LFS;
@@ -702,29 +705,29 @@ namespace Dune {
 
 
     // Disable constraints assembly for empty transformation
-    template<typename F, typename GFS, typename GV>
-    struct ConstraintsAssemblerHelper<F, GFS, GV, EmptyTransformation, true>
+    template<typename F, typename GFS>
+    struct ConstraintsAssemblerHelper<F, GFS, EmptyTransformation, true>
     {
-      static void assemble(const F& f, const GFS& gfs, const GV& gv, EmptyTransformation& cg, const bool verbose)
+      static void assemble(const F& f, const GFS& gfs, EmptyTransformation& cg, const bool verbose)
       {}
     };
 
     // Disable constraints assembly for empty transformation
-    template<typename F, typename GFS, typename GV>
-    struct ConstraintsAssemblerHelper<F, GFS, GV, EmptyTransformation, false>
+    template<typename F, typename GFS>
+    struct ConstraintsAssemblerHelper<F, GFS, EmptyTransformation, false>
     {
-      static void assemble(const F& f, const GFS& gfs, const GV& gv, EmptyTransformation& cg, const bool verbose)
+      static void assemble(const F& f, const GFS& gfs, EmptyTransformation& cg, const bool verbose)
       {}
     };
 
 
 
     // Backwards compatibility shim
-    template<typename F, typename GFS, typename GV, typename CG>
-    struct ConstraintsAssemblerHelper<F, GFS, GV, CG, true>
+    template<typename F, typename GFS, typename CG>
+    struct ConstraintsAssemblerHelper<F, GFS, CG, true>
     {
       static void
-      assemble(const F& f, const GFS& gfs, const GV& gv, CG& cg, const bool verbose)
+      assemble(const F& f, const GFS& gfs, CG& cg, const bool verbose)
       {
         // type of transformed tree
         typedef typename TypeTree::TransformTree<F,gf_to_constraints> Transformation;
@@ -732,7 +735,7 @@ namespace Dune {
         // transform tree
         P p = Transformation::transform(f);
         // call parameter based implementation
-        ConstraintsAssemblerHelper<P, GFS, GV, CG, IsGridFunction<P>::value>::assemble(p,gfs,gv,cg,verbose);
+        ConstraintsAssemblerHelper<P, GFS, CG, IsGridFunction<P>::value>::assemble(p,gfs,cg,verbose);
       }
     };
 #endif
@@ -754,9 +757,8 @@ namespace Dune {
     void constraints(const GFS& gfs, CG& cg,
                      const bool verbose = false)
     {
-      typedef typename GFS::Traits::GridViewType GV;
       NoConstraintsParameters p;
-      ConstraintsAssemblerHelper<NoConstraintsParameters, GFS, GV, CG, false>::assemble(p,gfs,gfs.gridView(),cg,verbose);
+      ConstraintsAssemblerHelper<NoConstraintsParameters, GFS, CG, false>::assemble(p,gfs,cg,verbose);
     }
 
     //! construct constraints from given constraints parameter tree
@@ -781,10 +783,9 @@ namespace Dune {
     void constraints(const P& p, const GFS& gfs, CG& cg,
                      const bool verbose = false)
     {
-      typedef typename GFS::Traits::GridViewType GV;
       // clear global constraints
       cg.clear();
-      ConstraintsAssemblerHelper<P, GFS, GV, CG, IsGridFunction<P>::value>::assemble(p,gfs,gfs.gridView(),cg,verbose);
+      ConstraintsAssemblerHelper<P, GFS, CG, IsGridFunction<P>::value>::assemble(p,gfs,cg,verbose);
     }
 
     //! construct constraints from given boundary condition function
