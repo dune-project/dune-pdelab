@@ -237,7 +237,7 @@ namespace Dune {
                                Backend::native(matrix),
                                stats
                                );
-          return std::move(stats);
+          return stats;
         }
 
         //! Constructs a BCRSMatrixBackend.
