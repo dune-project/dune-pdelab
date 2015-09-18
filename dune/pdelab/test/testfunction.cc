@@ -12,7 +12,7 @@
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 
-#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/function/discretegridviewfunction.hh>
@@ -197,14 +197,15 @@ void testgridviewfunction (const GV& gv)
     // make vector
     typedef typename Dune::PDELab::BackendVectorSelector<Q1GFS,double>::Type Vector;
     Vector x(q1gfs);
-    // make functions
-    typedef Dune::PDELab::DiscreteGridViewFunction<Q1GFS,double> DiscreteFunction;
-    DiscreteFunction dgvf(q1gfs,x);
-    // make local functions
-    typedef typename DiscreteFunction::LocalFunction LocalFunction;
-    Dune::shared_ptr<LocalFunction>
-        localf = Dune::Functions::localFunction(dgvf);
+    // // make functions
+    // typedef Dune::PDELab::DiscreteGridViewFunction<Q1GFS,double> DiscreteFunction;
+    // DiscreteFunction dgvf(q1gfs,x);
+    // // make local functions
+    // // using LocalFunction = typename DiscreteFunction::LocalFunction;
+    // auto localf = localFunction(dgvf); // localFunction is found via ADL
     // iterate grid and evaluate local function
+    typedef Dune::PDELab::DiscreteLocalGridViewFunction<Q1GFS,double> LocalFunction;
+    LocalFunction localf(stackobject_to_shared_ptr(q1gfs),stackobject_to_shared_ptr(x));
     static const int maxDiffOrder = LocalFunction::Traits::maxDiffOrder;
     std::cout << "max diff order: " << maxDiffOrder << std::endl;
     std::cout << "checking for:\n";
@@ -223,16 +224,16 @@ void testgridviewfunction (const GV& gv)
         Dune::FieldMatrix<double,dim,dim> hessian;
         localf->evaluate(it->geometry().center(), value);
         if (maxDiffOrder >= 1)
-            Dune::Functions::derivative(localf)->
+            derivative(localf)-> // derivatiive is found via ADL
                 evaluate(it->geometry().center(), jacobian);
         if (maxDiffOrder >= 2)
-            Dune::Functions::derivative(
-                Dune::Functions::derivative(localf))->
+            derivative(
+                derivative(localf))->
                 evaluate(it->geometry().center(), hessian);
         if (maxDiffOrder >= 3)
-            Dune::Functions::derivative(
-                Dune::Functions::derivative(
-                    Dune::Functions::derivative(localf)));
+            derivative(
+                derivative(
+                    derivative(localf)));
         localf->unbind();
     }
 }
