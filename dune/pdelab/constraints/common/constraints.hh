@@ -590,80 +590,67 @@ namespace Dune {
       assemble(const P& p, const GFS& gfs, CG& cg, const bool verbose)
       {
         // get some types
-        using GV = typename GFS::Traits::GridView;
-        typedef typename GV::Traits::template Codim<0>::Entity Element;
-        typedef typename GV::Intersection Intersection;
+        using ES = typename GFS::Traits::EntitySet;
+        using Element = typename ES::Traits::Element;
+        using Intersection = typename ES::Traits::Intersection;
 
-        GV gv = gfs.gridView();
+        ES es = gfs.entitySet();
 
         // make local function space
-        typedef LocalFunctionSpace<GFS> LFS;
+        using LFS = LocalFunctionSpace<GFS>;
         LFS lfs_e(gfs);
         LFSIndexCache<LFS> lfs_cache_e(lfs_e);
         LFS lfs_f(gfs);
         LFSIndexCache<LFS> lfs_cache_f(lfs_f);
 
         // get index set
-        const typename GV::IndexSet& is=gv.indexSet();
-
-        // helper to compute offset dependent on geometry type
-        const int chunk=1<<28;
-        int offset = 0;
-        std::map<Dune::GeometryType,int> gtoffset;
+        auto& is = es.indexSet();
 
         // loop once over the grid
-        for (const auto& cell : elements(gv))
+        for (const auto& element : elements(es))
         {
-          // assign offset for geometry type;
-          if (gtoffset.find(cell.type())==gtoffset.end())
-          {
-            gtoffset[cell.type()] = offset;
-            offset += chunk;
-          }
 
-          const typename GV::IndexSet::IndexType id = is.index(cell)+gtoffset[cell.type()];
+          auto id = is.uniqueIndex(element);
 
           // bind local function space to element
-          lfs_e.bind(cell);
+          lfs_e.bind(element);
 
-          typedef typename CG::LocalTransformation CL;
+          using CL = typename CG::LocalTransformation;
 
           CL cl_self;
 
-          typedef ElementGeometry<Element> ElementWrapper;
-          TypeTree::applyToTreePair(p,lfs_e,VolumeConstraints<ElementWrapper,CL>(ElementWrapper(cell),cl_self));
+          using ElementWrapper = ElementGeometry<Element>;
+          using IntersectionWrapper = IntersectionGeometry<Intersection>;
+
+          TypeTree::applyToTreePair(p,lfs_e,VolumeConstraints<ElementWrapper,CL>(ElementWrapper(element),cl_self));
 
           // iterate over intersections and call metaprogram
           unsigned int intersection_index = 0;
-          for (const auto& intersection : intersections(gv,cell))
+          for (const auto& intersection : intersections(es,element))
           {
             if (intersection.boundary())
             {
-              typedef IntersectionGeometry<Intersection> IntersectionWrapper;
               TypeTree::applyToTreePair(p,lfs_e,BoundaryConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self));
             }
 
             // ParallelStuff: BEGIN support for processor boundaries.
             if ((!intersection.boundary()) && (!intersection.neighbor()))
             {
-              typedef IntersectionGeometry<Intersection> IntersectionWrapper;
               TypeTree::applyToTree(lfs_e,ProcessorConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self));
             }
             // END support for processor boundaries.
 
             if (intersection.neighbor()){
 
-              auto outside_cell = intersection.outside();
-              Dune::GeometryType gtn = outside_cell.type();
-              const typename GV::IndexSet::IndexType idn = is.index(outside_cell)+gtoffset[gtn];
+              auto outside_element = intersection.outside();
+              auto idn = is.uniqueIndex(outside_element);
 
-              if(id>idn){
+              if(id > idn){
                 // bind local function space to element in neighbor
-                lfs_f.bind(outside_cell);
+                lfs_f.bind(outside_element);
 
                 CL cl_neighbor;
 
-                typedef IntersectionGeometry<Intersection> IntersectionWrapper;
                 TypeTree::applyToTreePair(lfs_e,lfs_f,SkeletonConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self,cl_neighbor));
 
                 if (!cl_neighbor.empty())
