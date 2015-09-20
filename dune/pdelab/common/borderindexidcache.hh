@@ -160,20 +160,16 @@ namespace Dune {
 
         if (_gfs.ordering().contains(codim))
           {
-            typedef typename GridView::template Codim<codim>::template Partition<InteriorBorder_Partition>::Iterator EntityIterator;
-            for (EntityIterator it = _grid_view.template begin<codim,InteriorBorder_Partition>(),
-                   end_it = _grid_view.template end<codim,InteriorBorder_Partition>();
-                 it != end_it;
-                 ++it)
+            for (const auto& e : entities(_grid_view,Codim<codim>{},Partitions::interiorBorder))
               {
-                index_type index = index_set.index(*it);
-                size_type gt_index = GlobalGeometryTypeIndex::index(it->type());
+                index_type index = index_set.index(e);
+                size_type gt_index = GlobalGeometryTypeIndex::index(e.type());
 
-                bool border_entity = _border_entities[gt_index][index] = (it->partitionType() == BorderEntity);
+                bool border_entity = _border_entities[gt_index][index] = (e.partitionType() == BorderEntity);
                 if (!border_entity)
                   continue;
 
-                id_type id = id_set.id(*it);
+                id_type id = id_set.id(e);
 
                 _index_to_id[gt_index][index] = id;
                 _id_to_index[id] = EntityIndex(gt_index,index);
