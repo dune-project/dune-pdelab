@@ -58,9 +58,6 @@ namespace Dune{
       //! The base class of this local assembler
       typedef Dune::PDELab::LocalAssemblerBase<typename Traits::MatrixBackend,CU,CV> Base;
 
-      //! The current grid view type
-      typedef typename GFSU::Traits::GridViewType GridView;
-
       //! The local operator
       typedef LOP LocalOperator;
 
