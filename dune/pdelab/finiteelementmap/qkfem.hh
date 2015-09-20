@@ -29,6 +29,21 @@ namespace Dune {
         return true;
       }
 
+      bool hasDOFs(int codim) const
+      {
+        switch(k)
+          {
+          case 1:
+            return codim == GV::dimension;
+          case 2:
+            if (GV::dimension != 2 && GV::dimension != 3)
+              DUNE_THROW(NotImplemented,"QkLocalFiniteElementMap with k = 2 is only implemented for d = 2,3");
+            return 1;
+          default:
+            DUNE_THROW(NotImplemented,"QkLocalFiniteElementMap is only implemented for k <= 2");
+          }
+      }
+
       std::size_t size(GeometryType gt) const
       {
         switch (k)

@@ -40,13 +40,27 @@ namespace Dune {
           return true;
         }
 
+        bool hasDOFs(int codim) const
+        {
+          switch (codim)
+            {
+            case 1: // vertex
+              return k > 0;
+            case 0: // line
+              return k != 1;
+            default:
+              assert(false && "Invalid codim specified!");
+            }
+          return false;
+        }
+
         std::size_t size(GeometryType gt) const
         {
-        if (gt.isVertex())
-          return k > 0 ? 1 : 0;
-        if (gt.isLine())
-          return k > 0 ? k - 1 : 1;
-        return 0;
+          if (gt.isVertex())
+            return k > 0 ? 1 : 0;
+          if (gt.isLine())
+            return k > 0 ? k - 1 : 1;
+          return 0;
         }
 
         std::size_t maxLocalSize() const
@@ -110,6 +124,22 @@ namespace Dune {
         bool fixedSize() const
         {
           return true;
+        }
+
+        bool hasDOFs(int codim) const
+        {
+          switch (codim)
+            {
+            case 2: // vertex
+              return k > 0;
+            case 1: // line
+              return k > 1;
+            case 0: // triangle
+              return k > 2 || k == 0;
+            default:
+              assert(false && "Invalid codim specified!");
+            }
+          return false;
         }
 
         std::size_t size(GeometryType gt) const
@@ -212,6 +242,24 @@ namespace Dune {
         bool fixedSize() const
         {
           return true;
+        }
+
+        bool hasDOFs(int codim) const
+        {
+          switch (codim)
+            {
+            case 3: // vertex
+              return k > 0;
+            case 2: // line
+              return k > 1;
+            case 1: // triangle
+              return k > 2;
+            case 0: // tetrahedron
+              return k == 0 || k > 3;
+            default:
+              assert(false && "Invalid codim specified!");
+            }
+          return false;
         }
 
         std::size_t size(GeometryType gt) const

@@ -62,6 +62,11 @@ namespace Dune {
         return backend.fixedSize();
       }
 
+      bool hasDOFs(int codim) const
+      {
+        return backend.hasDOFs(codim);
+      }
+
       std::size_t size(GeometryType gt) const
       {
         return dimR * backend.size(gt);
