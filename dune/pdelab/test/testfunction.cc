@@ -218,23 +218,27 @@ void testgridviewfunction (const GV& gv)
         std::cout << "\tdiff(3)\n";
     for (auto it=gv.template begin<0>(); it!=gv.template end<0>(); ++it)
     {
-        localf->bind(*it);
+        localf.bind(*it);
         Dune::FieldVector<double,1> value;
         Dune::FieldMatrix<double,1,dim> jacobian;
         Dune::FieldMatrix<double,dim,dim> hessian;
-        localf->evaluate(it->geometry().center(), value);
+        value = localf(it->geometry().center());
         if (maxDiffOrder >= 1)
-            derivative(localf)-> // derivatiive is found via ADL
-                evaluate(it->geometry().center(), jacobian);
+        {
+            auto df = derivative(localf); // derivative is found via ADL
+            df.bind(*it);
+            jacobian = df(it->geometry().center());
+        }
         if (maxDiffOrder >= 2)
-            derivative(
-                derivative(localf))->
-                evaluate(it->geometry().center(), hessian);
+        {
+            auto ddf = derivative(derivative(localf));
+            ddf.bind(*it);
+            hessian = ddf(it->geometry().center());
+
+        }
         if (maxDiffOrder >= 3)
-            derivative(
-                derivative(
-                    derivative(localf)));
-        localf->unbind();
+            derivative(derivative(derivative(localf)));
+        localf.unbind();
     }
 }
 
