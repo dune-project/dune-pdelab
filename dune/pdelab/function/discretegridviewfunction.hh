@@ -9,7 +9,7 @@
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
-#include <dune/common/static_assert.hh>
+#include <dune/common/std/final.hh>
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
@@ -18,6 +18,7 @@
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
+#include <dune/functions/common/defaultderivativetraits.hh>
 #include <dune/functions/gridfunctions/gridviewfunction.hh>
 
 namespace Dune {
@@ -26,23 +27,24 @@ namespace PDELab {
 template<class DT, class RT, int N>
 struct EvaluateDerivativeTraits
 {
-  typedef typename Functions::DerivativeTraits<
-    DT,
-    typename EvaluateDerivativeTraits<DT,RT,N-1>::DerivativeRange
-    >::DerivativeRange DerivativeRange;
+  using DerivativeRange =
+    typename Functions::DefaultDerivativeTraits<
+      typename EvaluateDerivativeTraits<DT,RT,N-1>::DerivativeRange(DT)
+    >::Range;
 };
 
 template<class DT, class RT>
 struct EvaluateDerivativeTraits<DT,RT,1>
 {
-  typedef typename Functions::DerivativeTraits<
-    DT, RT>::DerivativeRange DerivativeRange;
+  using DerivativeRange =
+    typename Functions::DefaultDerivativeTraits<
+    RT(DT)>::Range;
 };
 
 template<class DT, class RT>
 struct EvaluateDerivativeTraits<DT,RT,0>
 {
-  typedef RT DerivativeRange;
+  using DerivativeRange = RT;
 };
 
 template<typename LocalFunction>
@@ -52,26 +54,26 @@ template<typename GFS, typename F, int N>
 struct DiscreteGridViewFunctionTraits
 {
   //! the GridFunctionSpace we are operating on
-  typedef GFS GridFunctionSpace;
+  using GridFunctionSpace = GFS;
   //! the underlying GridView
-  typedef typename GFS::Traits::GridView GridView;
+  using GridView = typename GFS::Traits::GridView;
   //! the type of the corresponding codim-0 EntitySet
-  typedef Functions::GridViewEntitySet<GridView, 0> EntitySet;
+  using EntitySet = Functions::GridViewEntitySet<GridView, 0>;
 
   //! domain type (aka. coordinate type of the world dimensions)
-  typedef typename EntitySet::GlobalCoordinate Domain;
+  using Domain = typename EntitySet::GlobalCoordinate;
   //! range type of the initial function
-  typedef typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType BasicRange;
+  using BasicRange = typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType;
   //! data type of the vector container
-  typedef F VectorFieldType;
+  using VectorFieldType = F;
   //! type of the vector container
-  typedef typename BackendVectorSelector<GridFunctionSpace,VectorFieldType>::Type Vector;
+  using Vector = typename BackendVectorSelector<GridFunctionSpace,VectorFieldType>::Type;
 
   //! range type of the N'th derivative
-  typedef typename EvaluateDerivativeTraits<Domain, BasicRange, N>::DerivativeRange Range;
+  using Range = typename EvaluateDerivativeTraits<Domain, BasicRange, N>::DerivativeRange;
 
   //! the function interface we are providing
-  typedef Functions::GridViewFunction<GridView, Range> FunctionInterface;
+  using FunctionInterface = Functions::GridViewFunction<GridView, Range>;
 
   //! export how often the initial function can be differentiated
   enum { maxDiffOrder = 1 }; // GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::diffOrder };
@@ -79,7 +81,7 @@ struct DiscreteGridViewFunctionTraits
   enum { diffOrder = N };
   //! export whether the range for the N'th derivative exists
   enum { RangeExists =
-         ( (diffOrder > maxDiffOrder)
+         ( (std::size_t(diffOrder) > std::size_t(maxDiffOrder))
            ||
            std::is_same<Range,Functions::InvalidRange>::value
            ) ? 0 : 1 };
@@ -176,20 +178,19 @@ private:
 
 template<typename T, typename LFERange>
 class DiscreteLocalGridViewFunctionBase
-  : public T::FunctionInterface::LocalFunction
 {
-
-  typedef typename T::FunctionInterface::LocalFunction Base;
-
 public:
   typedef T Traits;
 
-  typedef typename Base::LocalContext Element;
-  typedef typename Base::Domain Domain;
-  typedef typename Base::Range Range;
+  #warning
+  // using GlobalFunction = DiscreteGridViewFunction<???>;
+  using GlobalFunction = int;
+  using Domain = typename Traits::Domain;
+  using Range = typename Traits::Range;
+  using Element = typename Traits::EntitySet::Element;
 
-  typedef typename Traits::Vector Vector;
-  typedef typename Traits::GridFunctionSpace GridFunctionSpace;
+  using Vector = typename Traits::Vector;
+  using GridFunctionSpace = typename Traits::GridFunctionSpace;
 
   DiscreteLocalGridViewFunctionBase(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
     : pgfs_(gfs)
@@ -202,7 +203,7 @@ public:
     , element_(nullptr)
   {}
 
-  virtual void bind(const Element& element) DUNE_FINAL
+  void bind(const Element& element)
   {
     element_ = &element;
     lfs_.bind(element);
@@ -212,12 +213,12 @@ public:
     x_view_.unbind();
   }
 
-  virtual void unbind() DUNE_FINAL
+  void unbind()
   {
     element_ = nullptr;
   }
 
-  virtual const Element& localContext() const  DUNE_FINAL
+  const Element& localContext() const
   {
 #ifndef NDEBUG
     if (!element_)
@@ -265,34 +266,34 @@ class DiscreteLocalGridViewFunction
 
 public:
 
-  typedef typename Base::Domain Domain;
-  typedef typename Base::Range Range;
+  using GlobalFunction = typename Base::GlobalFunction;
+  using Element = typename Base::Element;
+  using Domain = typename Base::Domain;
+  using Range = typename Base::Range;
 
-  typedef typename Base::Vector Vector;
-  typedef typename Base::GridFunctionSpace GridFunctionSpace;
+  using Vector = typename Base::Vector;
+  using GridFunctionSpace = typename Base::GridFunctionSpace;
 
-  typedef DiscreteLocalGridViewFunctionJacobian<GFS,V> Derivative;
+  using LocalDerivative = DiscreteLocalGridViewFunctionJacobian<GFS,V>;
 
   DiscreteLocalGridViewFunction(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
     : Base(gfs,v)
   {}
 
-  virtual typename Base::DerivativeBasePointer derivative() const DUNE_FINAL
-  {
-    shared_ptr<Derivative> diff = make_shared<Derivative>(pgfs_,v_);
-    // TODO: do we really want this?
-    if (element_) diff->bind(*element_);
-    return diff;
-  }
-
-  virtual void evaluate(const Domain& coord, Range& r) const DUNE_FINAL
+  Range operator()(const Domain& coord)
   {
     lfs_.finiteElement().localBasis().evaluateFunction(coord,yb_);
-    r = 0;
+    Range r(0);
     for (unsigned int i = 0; i < yb_.size(); ++i)
-      {
-        r.axpy(xl_[i],yb_[i]);
-      }
+    {
+      r.axpy(xl_[i],yb_[i]);
+    }
+    return r;
+  }
+
+  friend LocalDerivative derivative(const DiscreteLocalGridViewFunction& f)
+  {
+    return LocalDerivative(f.pgfs_,f.v_);
   }
 
 };
@@ -319,28 +320,21 @@ class DiscreteLocalGridViewFunctionJacobian
 
 public:
 
-  typedef typename Base::Domain Domain;
-  typedef typename Base::Range Range;
+  using GlobalFunction = typename Base::GlobalFunction;
+  using Element = typename Base::Element;
+  using Domain = typename Base::Domain;
+  using Range = typename Base::Range;
 
-  typedef typename Base::Vector Vector;
-  typedef typename Base::GridFunctionSpace GridFunctionSpace;
+  using Vector = typename Base::Vector;
+  using GridFunctionSpace = typename Base::GridFunctionSpace;
 
   DiscreteLocalGridViewFunctionJacobian(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
     : Base(gfs,v)
   {}
 
-  typedef DiscreteLocalGridViewFunctionDerivative<GFS,V,2> Derivative;
-  // typedef typename DiscreteLocalGridViewFunctionDerivativeCheck<GFS,V,2>::Derivative Derivative;
+  using LocalDerivative = DiscreteLocalGridViewFunctionDerivative<GFS,V,2>;
 
-  virtual typename Base::DerivativeBasePointer derivative() const DUNE_FINAL
-  {
-    shared_ptr<Derivative> diff = make_shared<Derivative>(pgfs_,v_);
-    // TODO: do we really want this?
-    if (element_) diff->bind(*element_);
-    return diff;
-  }
-
-  virtual void evaluate(const Domain& coord, Range& r) const DUNE_FINAL
+  Range operator()(const Domain& coord)
   {
     // get Jacobian of geometry
     const typename Base::Element::Geometry::JacobianInverseTransposed
@@ -350,7 +344,7 @@ public:
     lfs_.finiteElement().localBasis().evaluateJacobian(coord,yb_);
 
     Range gradphi;
-    r = 0;
+    Range r(0);
     for(std::size_t i = 0; i < yb_.size(); ++i) {
       assert(gradphi.size() == yb_[i].size());
       for(std::size_t j = 0; j < gradphi.size(); ++j) {
@@ -364,21 +358,16 @@ public:
         r[j].axpy(xl_[i], gradphi[j]);
       }
     }
+
+    return r;
+  }
+
+  friend LocalDerivative derivative(const DiscreteLocalGridViewFunctionJacobian & f)
+  {
+    return LocalDerivative(f.pgfs_,f.v_);
   }
 
 };
-
-// template<typename T>
-// struct isHessian
-// {
-//   static const bool value = false;
-// };
-
-// template<typename K, int N>
-// struct isHessian< FieldMatrix<K,N,N> >
-// {
-//   static const bool value = true;
-// };
 
 template<typename GFS, typename V, int N, bool>
 class DiscreteLocalGridViewFunctionDerivative
@@ -408,27 +397,17 @@ public:
   typedef typename Base::Vector Vector;
   typedef typename Base::GridFunctionSpace GridFunctionSpace;
 
-//  typedef typename DiscreteLocalGridViewFunctionDerivativeCheck<GFS,V,N>::Derivative Derivative;
-  typedef DiscreteLocalGridViewFunctionDerivative<GFS,V,N+1> Derivative;
+  using LocalDerivative = DiscreteLocalGridViewFunctionDerivative<GFS,V,N+1>;
 
   DiscreteLocalGridViewFunctionDerivative(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
     : Base(gfs,v)
   {}
 
-  virtual typename Base::DerivativeBasePointer derivative() const DUNE_FINAL
-  {
-    shared_ptr<Derivative> diff = make_shared<Derivative>(pgfs_,v_);
-      //DiscreteLocalGridViewFunctionDerivativeCheck<GFS,V,N>::derivative(pgfs_,v_);
-    // TODO: do we really want this?
-    if (element_) diff->bind(*element_);
-    return diff;
-  }
-
-  virtual void evaluate(const Domain& coord, Range& r) const DUNE_FINAL
+  Range evaluate(const Domain& coord)
   {
     // TODO: we currently require affine geometries.
     if (! element_->geometry().affine())
-      DUNE_THROW(NotImplemented, "Due to missing features in the Geometry interface, "
+      DUNE_THROW(NotImplemented, "Due to missing higher derivatives in the Geometry interface, "
         "the computation of higher derivatives (>=2) works only for affine transformations.");
     // get Jacobian of geometry
     const typename Base::Element::Geometry::JacobianInverseTransposed
@@ -442,7 +421,7 @@ public:
     //   "We currently only higher order derivative we support is the Hessian of scalar functions");
 
     // get local hessian of the shape functions
-    r = 0;
+    Range r(0);
     array<std::size_t, dim> directions;
     for(std::size_t i = 0; i < dim; ++i) {
       for(std::size_t j = i; j < dim; ++j) {
@@ -464,6 +443,11 @@ public:
     for(std::size_t i = 0; i < dim; ++i)
       for(std::size_t j = i; j < dim; ++j)
         r[i][j] *= JgeoIT[i][j] * JgeoIT[i][j];
+  }
+
+  friend LocalDerivative derivative(const DiscreteLocalGridViewFunctionDerivative & f)
+  {
+    return LocalDerivative(f.pgfs_,f.v_);
   }
 
 };
@@ -496,7 +480,7 @@ public:
   typedef typename Base::Vector Vector;
   typedef typename Base::GridFunctionSpace GridFunctionSpace;
 
-  typedef DiscreteLocalGridViewFunctionDerivative<GFS,V,N+1> Derivative;
+  using LocalDerivative = DiscreteLocalGridViewFunctionDerivative<GFS,V,N+1>;
 
   DiscreteLocalGridViewFunctionDerivative(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
     : Base(gfs,v)
@@ -504,12 +488,12 @@ public:
     DUNE_THROW(InvalidStateException, N << "th derivative not available");
   }
 
-  virtual typename Base::DerivativeBasePointer derivative() const DUNE_FINAL
+  friend LocalDerivative derivative(const DiscreteLocalGridViewFunctionDerivative &)
   {
     DUNE_THROW(InvalidStateException, N << "th derivative not available, thus you can't call any methods.");
   }
 
-  virtual void evaluate(const Domain& coord, Range& r) const DUNE_FINAL
+  Range operator()(const Domain& coord)
   {
     DUNE_THROW(InvalidStateException, N << "th derivative not available, thus you can't call any methods.");
   }
