@@ -189,26 +189,27 @@ template<class GV>
 void testgridviewfunction (const GV& gv)
 {
     enum { dim = GV::dimension };
+    using RF = double;
     // make a grid function space
-    using Q1FEM = Dune::PDELab::QkLocalFiniteElementMap<GV,float,double,1>;
+    using Q1FEM = Dune::PDELab::QkLocalFiniteElementMap<GV,typename GV::ctype,RF,1>;
     using Q1GFS = Dune::PDELab::GridFunctionSpace<GV,Q1FEM>;
     Q1FEM q1fem(gv);
     Q1GFS q1gfs(gv,q1fem);
     // make vector
-    using Vector = typename Dune::PDELab::BackendVectorSelector<Q1GFS,double>::Type;
+    using Vector = typename Dune::PDELab::BackendVectorSelector<Q1GFS,RF>::Type;
     Vector x(q1gfs);
     // make functions
-    using DiscreteFunction = Dune::PDELab::DiscreteGridViewFunction<Q1GFS,double>;
+    using DiscreteFunction = Dune::PDELab::DiscreteGridViewFunction<Q1GFS,RF>;
     DiscreteFunction dgvf(q1gfs,x);
     // make sure we fulfill the grid-view-function concept
     using Coordinate = typename GV::template Codim<0>::Geometry::GlobalCoordinate;
-    using Signature = double(Coordinate);
-    constexpr bool isGridViewFunction =
-        Dune::Functions::Concept::isGridViewFunction<DiscreteFunction,Signature,GV>();
-    static_assert(isGridViewFunction, "DiscreteGridViewFunction does not fulfill the GridViewFunction interface");
+    using Signature = RF(Coordinate);
+    static_assert(
+        Dune::Functions::Concept::isGridViewFunction<DiscreteFunction,Signature,GV>(),
+        "DiscreteGridViewFunction does not fulfill the GridViewFunction interface");
     // make local functions
     auto localf = localFunction(dgvf); // localFunction is found via ADL
-    using LocalFunction = Dune::PDELab::DiscreteLocalGridViewFunction<Q1GFS,double>;
+    using LocalFunction = Dune::PDELab::DiscreteLocalGridViewFunction<Q1GFS,RF>;
     static_assert(std::is_same<LocalFunction, typename DiscreteFunction::LocalFunction>::value,"LocalFunction typedef in DiscreteGridViewFunction is broken");
     static_assert(std::is_same<LocalFunction, decltype(localf)>::value,"localFunction return type of DiscreteGridViewFunction is broken");
     // evaluate local function and it's derivatives
@@ -225,9 +226,9 @@ void testgridviewfunction (const GV& gv)
     for (auto it=gv.template begin<0>(); it!=gv.template end<0>(); ++it)
     {
         localf.bind(*it);
-        Dune::FieldVector<double,1> value;
-        Dune::FieldMatrix<double,1,dim> jacobian;
-        Dune::FieldMatrix<double,dim,dim> hessian;
+        Dune::FieldVector<RF,1> value;
+        Dune::FieldMatrix<RF,1,dim> jacobian;
+        Dune::FieldMatrix<RF,dim,dim> hessian;
         value = localf(it->geometry().center());
         if (maxDiffOrder >= 1)
         {
