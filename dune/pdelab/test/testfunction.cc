@@ -197,15 +197,15 @@ void testgridviewfunction (const GV& gv)
     // make vector
     typedef typename Dune::PDELab::BackendVectorSelector<Q1GFS,double>::Type Vector;
     Vector x(q1gfs);
-    // // make functions
-    // typedef Dune::PDELab::DiscreteGridViewFunction<Q1GFS,double> DiscreteFunction;
-    // DiscreteFunction dgvf(q1gfs,x);
-    // // make local functions
-    // // using LocalFunction = typename DiscreteFunction::LocalFunction;
-    // auto localf = localFunction(dgvf); // localFunction is found via ADL
-    // iterate grid and evaluate local function
-    typedef Dune::PDELab::DiscreteLocalGridViewFunction<Q1GFS,double> LocalFunction;
-    LocalFunction localf(stackobject_to_shared_ptr(q1gfs),stackobject_to_shared_ptr(x));
+    // make functions
+    typedef Dune::PDELab::DiscreteGridViewFunction<Q1GFS,double> DiscreteFunction;
+    DiscreteFunction dgvf(q1gfs,x);
+    // make local functions
+    // using LocalFunction = typename DiscreteFunction::LocalFunction;
+    using LocalFunction = Dune::PDELab::DiscreteLocalGridViewFunction<Q1GFS,double>;
+    static_assert(std::is_same<LocalFunction, typename DiscreteFunction::LocalFunction>::value,"typedef in DiscreteGridViewFunction is broken");
+    // LocalFunction localf(stackobject_to_shared_ptr(q1gfs),stackobject_to_shared_ptr(x));
+    LocalFunction localf = localFunction(dgvf); // localFunction is found via ADL
     static const int maxDiffOrder = LocalFunction::Traits::maxDiffOrder;
     std::cout << "max diff order: " << maxDiffOrder << std::endl;
     std::cout << "checking for:\n";
