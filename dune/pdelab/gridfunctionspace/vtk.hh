@@ -15,7 +15,6 @@
 
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/common/elementmapper.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
@@ -98,11 +97,12 @@ namespace Dune {
         typedef LFSIndexCache<LFS> LFSCache;
         typedef typename X::template ConstLocalView<LFSCache> XView;
         typedef LocalVector<typename X::ElementType> XLocalVector;
-        typedef typename GFS::Traits::GridView::template Codim<0>::Entity Cell;
+        using EntitySet = typename GFS::Traits::EntitySet;
+        using Cell = typename EntitySet::Traits::Element;
+        using IndexSet = typename EntitySet::Traits::IndexSet;
         typedef typename GFS::Traits::SizeType size_type;
-        typedef typename GFS::Traits::GridView::IndexSet IndexSet;
 
-        static const size_type dim = GFS::Traits::GridView::dimension;
+        static const auto dim = EntitySet::dimension;
 
       public:
 
@@ -115,7 +115,7 @@ namespace Dune {
           , _lfs_cache(_lfs)
           , _x_view(x)
           , _x_local(_lfs.maxSize())
-          , _element_mapper(gfs.gridView())
+          , _index_set(gfs.entitySet().indexSet())
           , _current_cell_index(std::numeric_limits<size_type>::max())
         {}
 
@@ -123,7 +123,7 @@ namespace Dune {
 
         void bind(const Cell& cell)
         {
-          size_type cell_index = _element_mapper.map(cell);
+          auto cell_index = _index_set.uniqueIndex(cell);
           if (_current_cell_index == cell_index)
             return;
 
@@ -139,7 +139,7 @@ namespace Dune {
         LFSCache _lfs_cache;
         XView _x_view;
         XLocalVector _x_local;
-        ElementMapper<typename GFS::Traits::GridView> _element_mapper;
+        const IndexSet& _index_set;
         size_type _current_cell_index;
 
       };
