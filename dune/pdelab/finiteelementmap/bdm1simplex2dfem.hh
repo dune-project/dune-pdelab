@@ -55,7 +55,7 @@ namespace Dune {
       template<class EntityType>
       const typename Traits::FiniteElementType& find(const EntityType& e) const
       {
-        return variant[orient[is.template index<0>(e)]];
+        return variant[orient[is.index(e)]];
       }
 
       bool fixedSize() const
