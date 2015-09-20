@@ -9,7 +9,6 @@
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
-#include <dune/common/std/final.hh>
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 
@@ -104,11 +103,11 @@ template<typename GFS, typename F>
 class DiscreteGridViewFunction
   : public DiscreteGridViewFunctionBase< DiscreteLocalGridViewFunction<GFS,F> >
 {
-  typedef DiscreteGridViewFunctionBase< DiscreteLocalGridViewFunction<GFS,F> > Base;
+  using Base = DiscreteGridViewFunctionBase< DiscreteLocalGridViewFunction<GFS,F> >;
 public:
 
-  typedef typename Base::GridFunctionSpace GridFunctionSpace;
-  typedef typename Base::Vector Vector;
+  using GridFunctionSpace = typename Base::GridFunctionSpace;
+  using Vector = typename Base::Vector;
 
   DiscreteGridViewFunction(const GridFunctionSpace& gfs, const Vector& v)
     : Base(stackobject_to_shared_ptr(gfs),stackobject_to_shared_ptr(v))
@@ -121,41 +120,40 @@ public:
 
 template<typename LocalFnkt>
 class DiscreteGridViewFunctionBase
-  : public LocalFnkt::Traits::FunctionInterface
 {
 
-  typedef typename LocalFnkt::Traits Traits;
-  typedef typename Traits::FunctionInterface Base;
+  using Traits = typename LocalFnkt::Traits;
 
 public:
 
-  typedef typename Base::Element Element;
-  typedef typename Base::Domain Domain;
-  typedef typename Base::Range Range;
+  using Domain = typename Traits::Domain;
+  using Range = typename Traits::Range;
+  using Element = typename Traits::EntitySet::Element;
 
-  typedef LocalFnkt LocalFunction;
+  using Vector = typename Traits::Vector;
+  using GridFunctionSpace = typename Traits::GridFunctionSpace;
 
-  typedef typename Traits::GridFunctionSpace GridFunctionSpace;
-  typedef typename Traits::Vector Vector;
+  using LocalFunction = LocalFnkt;
 
-  virtual typename Base::LocalFunctionBasePointer localFunction() const  DUNE_FINAL
+  using Derivative = void;
+
+  friend LocalFunction localFunction(const DiscreteGridViewFunctionBase & f)
   {
-    return make_shared<LocalFunction>(pgfs_, v_);
+    return LocalFunction(f.pgfs_, f.v_);
   }
 
-  virtual typename Base::DerivativeBasePointer derivative() const DUNE_FINAL
+  friend Derivative derivative()
   {
     DUNE_THROW(NotImplemented,"not implemented");
   }
 
-  virtual void evaluate(const Domain& domain, Range& r) const DUNE_FINAL
+  Range operator()(const Domain& domain)
   {
     DUNE_THROW(NotImplemented,"not implemented");
   }
 
   DiscreteGridViewFunctionBase(std::shared_ptr<const GridFunctionSpace> pgfs, std::shared_ptr<const Vector> v)
-    : Base(pgfs->gridView())
-    , pgfs_(pgfs)
+    : pgfs_(pgfs)
     , v_(v)
   {}
 
