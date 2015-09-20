@@ -31,13 +31,13 @@ namespace Dune {
     template<typename ChildOrdering, std::size_t k>
     class PowerEntityBlockedLocalOrdering
       : public TypeTree::PowerNode<ChildOrdering,k>
-      , public LocalOrderingBase<typename ChildOrdering::Traits::GridView,
+      , public LocalOrderingBase<typename ChildOrdering::Traits::EntitySet,
                                  typename ChildOrdering::Traits::DOFIndex,
                                  typename ChildOrdering::Traits::ContainerIndex>
     {
 
       typedef TypeTree::PowerNode<ChildOrdering,k> NodeT;
-      typedef LocalOrderingBase<typename ChildOrdering::Traits::GridView,
+      typedef LocalOrderingBase<typename ChildOrdering::Traits::EntitySet,
                                 typename ChildOrdering::Traits::DOFIndex,
                                 typename ChildOrdering::Traits::ContainerIndex> BaseT;
 
@@ -52,9 +52,9 @@ namespace Dune {
         , BaseT(*this,container_blocked,nullptr)
       {}
 
-      const typename Traits::GridView& gridView() const
+      const typename Traits::EntitySet& entitySet() const
       {
-        return this->child(0).gridView();
+        return this->child(0).entitySet();
       }
 
     };
@@ -124,13 +124,13 @@ namespace Dune {
     template<typename... Children>
     class CompositeEntityBlockedLocalOrdering
       : public TypeTree::CompositeNode<Children...>
-      , public LocalOrderingBase<typename first_type<Children...>::type::Traits::GridView,
+      , public LocalOrderingBase<typename first_type<Children...>::type::Traits::EntitySet,
                                  typename first_type<Children...>::type::Traits::DOFIndex,
                                  typename first_type<Children...>::type::Traits::ContainerIndex>
     {
 
       typedef TypeTree::CompositeNode<Children...> Node;
-      typedef LocalOrderingBase<typename first_type<Children...>::type::Traits::GridView,
+      typedef LocalOrderingBase<typename first_type<Children...>::type::Traits::EntitySet,
                                 typename first_type<Children...>::type::Traits::DOFIndex,
                                 typename first_type<Children...>::type::Traits::ContainerIndex> Base;
 
@@ -145,9 +145,9 @@ namespace Dune {
         , Base(*this,container_blocked,nullptr)
       {}
 
-      const typename Traits::GridView& gridView() const
+      const typename Traits::EntitySet& entitySet() const
       {
-        return this->template child<0>().gridView();
+        return this->template child<0>().entitySet();
       }
 
     };

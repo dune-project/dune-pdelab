@@ -16,7 +16,7 @@ namespace Dune {
     //! \addtogroup Ordering
     //! \{
 
-    template<typename GV, typename DI, typename CI>
+    template<typename ES, typename DI, typename CI>
     class LocalOrderingBase
       : public PartitionInfoProvider
     {
@@ -56,7 +56,7 @@ namespace Dune {
 
       static const bool consume_tree_index = true;
 
-      typedef LocalOrderingTraits<GV,DI,CI> Traits;
+      typedef LocalOrderingTraits<ES,DI,CI> Traits;
 
     protected:
 

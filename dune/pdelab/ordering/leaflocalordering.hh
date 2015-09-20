@@ -17,10 +17,10 @@ namespace Dune {
     //! \addtogroup Ordering
     //! \{
 
-    template<typename OrderingTag, typename FEM, typename GV, typename DI, typename CI>
+    template<typename OrderingTag, typename FEM, typename ES, typename DI, typename CI>
     class LeafLocalOrdering
       : public TypeTree::LeafNode
-      , public LocalOrderingBase<GV,DI,CI>
+      , public LocalOrderingBase<ES,DI,CI>
     {
 
       template<typename>
@@ -29,24 +29,29 @@ namespace Dune {
       template<typename>
       friend struct extract_per_entity_sizes_from_cell_visitor;
 
-      typedef LocalOrderingBase<GV,DI,CI> BaseT;
+      typedef LocalOrderingBase<ES,DI,CI> BaseT;
 
     public:
 
       typedef typename BaseT::Traits Traits;
 
-      LeafLocalOrdering(const std::shared_ptr<const FEM>& fem, const GV& gv, bool backend_blocked, typename BaseT::GFSData* gfs_data)
+      LeafLocalOrdering(const std::shared_ptr<const FEM>& fem, const ES& es, bool backend_blocked, typename BaseT::GFSData* gfs_data)
         : BaseT(*this,backend_blocked,gfs_data)
         , _fem(fem)
-        , _gv(gv)
+        , _es(es)
       {
         // Extract contained grid PartitionTypes from OrderingTag.
         this->setPartitionSet(OrderingTag::partition_mask);
       }
 
+      const typename Traits::EntitySet& entitySet() const
+      {
+        return _es;
+      }
+
       const typename Traits::GridView& gridView() const
       {
-        return _gv;
+        return _es.gridView();
       }
 
       const FEM& finiteElementMap() const
@@ -54,9 +59,17 @@ namespace Dune {
         return *_fem;
       }
 
+      template<typename CodimMask>
+      void collect_used_codims(CodimMask& codims) const
+      {
+        for (typename ES::dim_type codim = 0; codim <= ES::dimension; ++codim)
+          if (_fem->hasDOFs(codim))
+            codims.set(codim);
+      }
+
       void update_a_priori_fixed_size()
       {
-        this->_fixed_size = (!OrderingTag::no_const_ordering_size) && _fem->fixedSize();
+        this->_fixed_size = _fem->fixedSize();
       }
 
       void setup_fixed_size_possible()
@@ -70,7 +83,7 @@ namespace Dune {
       typename FEM::Traits::FiniteElement
       > FESwitch;
 
-      void collect_used_geometry_types_from_cell(const typename Traits::GridView::template Codim<0>::Entity& cell)
+      void collect_used_geometry_types_from_cell(const typename Traits::EntitySet::Element& cell)
       {
         FESwitch::setStore(_pfe,_fem->find(cell));
 
@@ -79,8 +92,8 @@ namespace Dune {
 
         this->_max_local_size = std::max(this->_max_local_size,coeffs.size());
 
-        const ReferenceElement<typename Traits::GridView::ctype,Traits::GridView::dimension>& ref_el =
-          ReferenceElements<typename Traits::GridView::ctype,Traits::GridView::dimension>::general(cell.type());
+        const auto& ref_el =
+          ReferenceElements<typename Traits::EntitySet::Traits::CoordinateField,Traits::EntitySet::dimension>::general(cell.type());
 
         for (std::size_t i = 0; i < coeffs.size(); ++i)
           {
@@ -92,7 +105,7 @@ namespace Dune {
       }
 
 
-      void extract_per_entity_sizes_from_cell(const typename Traits::GridView::template Codim<0>::Entity& cell,
+      void extract_per_entity_sizes_from_cell(const typename Traits::EntitySet::Element& cell,
                                               std::vector<typename Traits::SizeType>& gt_sizes)
       {
         if (this->_fixed_size_possible)
@@ -107,8 +120,8 @@ namespace Dune {
 
         typedef typename Traits::SizeType size_type;
 
-        const ReferenceElement<typename Traits::GridView::ctype,Traits::GridView::dimension>& ref_el =
-          ReferenceElements<typename Traits::GridView::ctype,Traits::GridView::dimension>::general(cell.type());
+        const auto& ref_el =
+          ReferenceElements<typename Traits::EntitySet::Traits::CoordinateField,Traits::EntitySet::dimension>::general(cell.type());
 
         for (std::size_t i = 0; i < coeffs.size(); ++i)
           {
@@ -116,7 +129,7 @@ namespace Dune {
             GeometryType gt = ref_el.type(key.subEntity(),key.codim());
             const size_type geometry_type_index = GlobalGeometryTypeIndex::index(gt);
 
-            const size_type entity_index = _gv.indexSet().subIndex(cell,key.subEntity(),key.codim());
+            const size_type entity_index = _es.indexSet().subIndex(cell,key.subEntity(),key.codim());
             const size_type index = this->_gt_entity_offsets[geometry_type_index] + entity_index;
             gt_sizes[geometry_type_index] = this->_entity_dof_offsets[index] = std::max(this->_entity_dof_offsets[index],static_cast<size_type>(key.index() + 1));
           }
@@ -138,7 +151,7 @@ namespace Dune {
       }
 
       std::shared_ptr<const FEM> _fem;
-      GV _gv;
+      ES _es;
       typename FESwitch::Store _pfe;
 
     };
@@ -152,7 +165,7 @@ namespace Dune {
       typedef LeafLocalOrdering<
         typename GFS::Traits::OrderingTag,
         typename GFS::Traits::FiniteElementMap,
-        typename GFS::Traits::GridView,
+        typename GFS::Traits::EntitySet,
         typename Transformation::DOFIndex,
         typename Transformation::ContainerIndex
         > transformed_type;
@@ -161,12 +174,12 @@ namespace Dune {
 
       static transformed_type transform(const GFS& gfs, const Transformation& t)
       {
-        return transformed_type(gfs.finiteElementMapStorage(),gfs.gridView(),false,&const_cast<GFS*>(gfs));
+        return transformed_type(gfs.finiteElementMapStorage(),gfs.entitySet(),false,&const_cast<GFS*>(gfs));
       }
 
       static transformed_storage_type transform_storage(std::shared_ptr<const GFS> gfs, const Transformation& t)
       {
-        return std::make_shared<transformed_type>(gfs->finiteElementMapStorage(),gfs->gridView(),false,const_cast<GFS*>(gfs.get()));
+        return std::make_shared<transformed_type>(gfs->finiteElementMapStorage(),gfs->entitySet(),false,const_cast<GFS*>(gfs.get()));
       }
 
     };
