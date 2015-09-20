@@ -189,23 +189,29 @@ template<class GV>
 void testgridviewfunction (const GV& gv)
 {
     enum { dim = GV::dimension };
-    typedef Dune::PDELab::QkLocalFiniteElementMap<GV,float,double,1> Q1FEM;
-    Q1FEM q1fem(gv);
     // make a grid function space
-    typedef Dune::PDELab::GridFunctionSpace<GV,Q1FEM> Q1GFS;
+    using Q1FEM = Dune::PDELab::QkLocalFiniteElementMap<GV,float,double,1>;
+    using Q1GFS = Dune::PDELab::GridFunctionSpace<GV,Q1FEM>;
+    Q1FEM q1fem(gv);
     Q1GFS q1gfs(gv,q1fem);
     // make vector
-    typedef typename Dune::PDELab::BackendVectorSelector<Q1GFS,double>::Type Vector;
+    using Vector = typename Dune::PDELab::BackendVectorSelector<Q1GFS,double>::Type;
     Vector x(q1gfs);
     // make functions
-    typedef Dune::PDELab::DiscreteGridViewFunction<Q1GFS,double> DiscreteFunction;
+    using DiscreteFunction = Dune::PDELab::DiscreteGridViewFunction<Q1GFS,double>;
     DiscreteFunction dgvf(q1gfs,x);
+    // make sure we fulfill the grid-view-function concept
+    using Coordinate = typename GV::template Codim<0>::Geometry::GlobalCoordinate;
+    using Signature = double(Coordinate);
+    constexpr bool isGridViewFunction =
+        Dune::Functions::Concept::isGridViewFunction<DiscreteFunction,Signature,GV>();
+    static_assert(isGridViewFunction, "DiscreteGridViewFunction does not fulfill the GridViewFunction interface");
     // make local functions
-    // using LocalFunction = typename DiscreteFunction::LocalFunction;
+    auto localf = localFunction(dgvf); // localFunction is found via ADL
     using LocalFunction = Dune::PDELab::DiscreteLocalGridViewFunction<Q1GFS,double>;
-    static_assert(std::is_same<LocalFunction, typename DiscreteFunction::LocalFunction>::value,"typedef in DiscreteGridViewFunction is broken");
-    // LocalFunction localf(stackobject_to_shared_ptr(q1gfs),stackobject_to_shared_ptr(x));
-    LocalFunction localf = localFunction(dgvf); // localFunction is found via ADL
+    static_assert(std::is_same<LocalFunction, typename DiscreteFunction::LocalFunction>::value,"LocalFunction typedef in DiscreteGridViewFunction is broken");
+    static_assert(std::is_same<LocalFunction, decltype(localf)>::value,"localFunction return type of DiscreteGridViewFunction is broken");
+    // evaluate local function and it's derivatives
     static const int maxDiffOrder = LocalFunction::Traits::maxDiffOrder;
     std::cout << "max diff order: " << maxDiffOrder << std::endl;
     std::cout << "checking for:\n";
