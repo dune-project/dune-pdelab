@@ -44,8 +44,7 @@ namespace Dune {
             Backend,
             OrderingTag,
             Children...>,
-          typename TypeTree::CompositeNode<Children...>::template Child<0>::
-            Type::Traits::GridViewType,
+          typename TypeTree::Child<TypeTree::CompositeNode<Children...>,0>::Traits::EntitySet,
           Backend,
           OrderingTag,
           TypeTree::CompositeNode<Children...>::CHILDREN
@@ -56,14 +55,14 @@ namespace Dune {
 
       typedef PowerCompositeGridFunctionSpaceBase<
         CompositeGridFunctionSpace,
-        typename NodeT::template Child<0>::Type::Traits::GridViewType,
+        typename TypeTree::Child<NodeT,0>::Traits::EntitySet,
         Backend,
         OrderingTag,
         NodeT::CHILDREN> ImplementationBase;
 
       friend class PowerCompositeGridFunctionSpaceBase<
         CompositeGridFunctionSpace,
-        typename NodeT::template Child<0>::Type::Traits::GridViewType,
+        typename TypeTree::Child<NodeT,0>::Traits::EntitySet,
         Backend,
         OrderingTag,
         NodeT::CHILDREN>;

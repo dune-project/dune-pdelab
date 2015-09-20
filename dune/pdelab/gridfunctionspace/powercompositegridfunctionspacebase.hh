@@ -42,10 +42,12 @@ namespace Dune {
 
       const static std::size_t CHILDREN = k;
 
-      //! \brief the grid view where grid function is defined upon
-      typedef G GridViewType;
+      using EntitySet = G;
 
-      typedef G GridView;
+      using GridView = typename EntitySet::GridView;
+
+      //! \brief the grid view where grid function is defined upon
+      using GridViewType = GridView;
 
       //! \brief vector backend
       typedef B BackendType;
@@ -117,9 +119,15 @@ namespace Dune {
       };
 
       //! get grid view
-      const typename Traits::GridViewType& gridView () const
+      const typename Traits::GridView& gridView () const
       {
         return gfs().template child<0>().gridView();
+      }
+
+      //! get grid view partition
+      const typename Traits::EntitySet& entitySet () const
+      {
+        return gfs().template child<0>().entitySet();
       }
 
       PowerCompositeGridFunctionSpaceBase(const B& backend, const OrderingTag& ordering_tag)

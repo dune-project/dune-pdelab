@@ -291,8 +291,10 @@ namespace Dune {
       //! \brief Type of the grid view that the underlying grid function space is defined on.
       typedef typename GFS::Traits::GridViewType GridView;
 
+      using EntitySet = typename GFS::Traits::EntitySet;
+
       //! \brief Type of codim 0 entity in the grid
-      typedef typename GridViewType::Traits::template Codim<0>::Entity Element;
+      using Element = typename EntitySet::Element;
     };
 
     template <typename GFS, typename DOFIndex>
@@ -593,22 +595,22 @@ namespace Dune {
         const typename FESwitch::Coefficients &coeffs =
           FESwitch::coefficients(*pfe);
 
-        typedef typename GFS::Traits::GridViewType GV;
-        GV gv = this->gridFunctionSpace().gridView();
+        using EntitySet = typename GFS::Traits::EntitySet;
+        auto es = this->gridFunctionSpace().entitySet();
 
-        const Dune::ReferenceElement<double,GV::Grid::dimension>& refEl =
-          Dune::ReferenceElements<double,GV::Grid::dimension>::general(this->pfe->type());
+        const Dune::ReferenceElement<double,EntitySet::dimension>& refEl =
+          Dune::ReferenceElements<double,EntitySet::dimension>::general(this->pfe->type());
 
         for (std::size_t i = 0; i < std::size_t(coeffs.size()); ++i, ++it)
           {
             // get geometry type of subentity
-            Dune::GeometryType gt = refEl.type(coeffs.localKey(i).subEntity(),
-                                              coeffs.localKey(i).codim());
+            auto gt = refEl.type(coeffs.localKey(i).subEntity(),
+                                 coeffs.localKey(i).codim());
 
             // evaluate consecutive index of subentity
-            typename GV::IndexSet::IndexType index = gv.indexSet().subIndex(e,
-                                                                            coeffs.localKey(i).subEntity(),
-                                                                            coeffs.localKey(i).codim());
+            auto index = es.indexSet().subIndex(e,
+                                                coeffs.localKey(i).subEntity(),
+                                                coeffs.localKey(i).codim());
 
             // store data
             GFS::Ordering::Traits::DOFIndexAccessor::store(*it,gt,index,coeffs.localKey(i).index());
