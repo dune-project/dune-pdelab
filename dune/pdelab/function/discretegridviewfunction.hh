@@ -128,14 +128,16 @@ public:
 
   using Domain = typename Traits::Domain;
   using Range = typename Traits::Range;
-  using Element = typename Traits::EntitySet::Element;
+  using EntitySet = typename Traits::EntitySet;
+  using Element = typename EntitySet::Element;
 
   using Vector = typename Traits::Vector;
   using GridFunctionSpace = typename Traits::GridFunctionSpace;
 
   using LocalFunction = LocalFnkt;
 
-  using Derivative = void;
+  #warning
+  using Derivative = DiscreteGridViewFunctionBase;
 
   friend LocalFunction localFunction(const DiscreteGridViewFunctionBase & f)
   {
@@ -147,7 +149,7 @@ public:
     DUNE_THROW(NotImplemented,"not implemented");
   }
 
-  Range operator()(const Domain& domain)
+  Range operator()(const Domain& domain) const
   {
     DUNE_THROW(NotImplemented,"not implemented");
   }
@@ -155,6 +157,7 @@ public:
   DiscreteGridViewFunctionBase(std::shared_ptr<const GridFunctionSpace> pgfs, std::shared_ptr<const Vector> v)
     : pgfs_(pgfs)
     , v_(v)
+    , entitySet_(pgfs->gridView())
   {}
 
   const GridFunctionSpace& gridFunctionSpace() const
@@ -167,10 +170,19 @@ public:
     return *v_;
   }
 
+  /**
+   * \brief Get associated EntitySet
+   */
+  const EntitySet& entitySet() const
+  {
+    return entitySet_;
+  }
+
 private:
 
   const shared_ptr<const GridFunctionSpace> pgfs_;
   const shared_ptr<const Vector> v_;
+  EntitySet entitySet_;
 
 };
 
@@ -278,7 +290,7 @@ public:
     : Base(gfs,v)
   {}
 
-  Range operator()(const Domain& coord)
+  Range operator()(const Domain& coord) const
   {
     lfs_.finiteElement().localBasis().evaluateFunction(coord,yb_);
     Range r(0);
@@ -332,7 +344,7 @@ public:
 
   using LocalDerivative = DiscreteLocalGridViewFunctionDerivative<GFS,V,2>;
 
-  Range operator()(const Domain& coord)
+  Range operator()(const Domain& coord) const
   {
     // get Jacobian of geometry
     const typename Base::Element::Geometry::JacobianInverseTransposed
@@ -491,7 +503,7 @@ public:
     DUNE_THROW(InvalidStateException, N << "th derivative not available, thus you can't call any methods.");
   }
 
-  Range operator()(const Domain& coord)
+  Range operator()(const Domain& coord) const
   {
     DUNE_THROW(InvalidStateException, N << "th derivative not available, thus you can't call any methods.");
   }
