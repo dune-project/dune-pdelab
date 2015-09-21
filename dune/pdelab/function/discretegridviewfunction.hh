@@ -17,74 +17,104 @@
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 
-#include <dune/functions/common/defaultderivativetraits.hh>
+#include <dune/functions/gridfunctions/gridfunction.hh>
 #include <dune/functions/gridfunctions/gridviewfunction.hh>
 
 namespace Dune {
 namespace PDELab {
 
-template<class DT, class RT, int N>
-struct EvaluateDerivativeTraits
-{
-  using DerivativeRange =
-    typename Functions::DefaultDerivativeTraits<
-      typename EvaluateDerivativeTraits<DT,RT,N-1>::DerivativeRange(DT)
-    >::Range;
-};
+  namespace Imp {
+/**
+   \todo use GridViewTraits
+   \todo fix relation to LocalDerivativeTraits
+ */
 
-template<class DT, class RT>
-struct EvaluateDerivativeTraits<DT,RT,1>
-{
-  using DerivativeRange =
-    typename Functions::DefaultDerivativeTraits<
-    RT(DT)>::Range;
-};
+    template<class Signature, int NthDerivative, template<class> class DerivativeTraits>
+    struct EvaluateDerivativeTraits;
 
-template<class DT, class RT>
-struct EvaluateDerivativeTraits<DT,RT,0>
-{
-  using DerivativeRange = RT;
-};
+    template<class DT, class RT, int NthDerivative, template<class> class DerivativeTraits>
+    struct EvaluateDerivativeTraits<RT(DT), NthDerivative, DerivativeTraits>
+    {
+      using InputRange =
+        typename EvaluateDerivativeTraits<DT(RT),NthDerivative-1,DerivativeTraits>::Range;
+      using Range = typename DerivativeTraits<InputRange(DT)>::Range;
+    };
+
+    template<class DT, class RT, template<class> class DerivativeTraits>
+    struct EvaluateDerivativeTraits<RT(DT), 1, DerivativeTraits>
+    {
+      using Range = typename DerivativeTraits<RT(DT)>::Range;
+    };
+
+    template<class DT, class RT, template<class> class DerivativeTraits>
+    struct EvaluateDerivativeTraits<RT(DT), 0, DerivativeTraits>
+    {
+      using Range = RT;
+    };
+
+    template<typename GFS, typename F, int NthDerivative,
+             template<class> class DerivativeTraits=Functions::DefaultDerivativeTraits,
+             std::size_t bufferSize = 16>
+    struct DiscreteGridViewFunctionTraits
+    {
+      //! the GridFunctionSpace we are operating on
+      using GridFunctionSpace = GFS;
+      //! the underlying GridView
+      using GridView = typename GFS::Traits::GridView;
+      //! the type of the corresponding codim-0 EntitySet
+      using EntitySet = Functions::GridViewEntitySet<GridView, 0>;
+      //! the type of the codim-0 entity
+      using Element = typename EntitySet::Element;
+
+      //! domain type (aka. coordinate type of the world dimensions)
+      using Domain = typename EntitySet::GlobalCoordinate;
+      //! range type of the initial function
+      using BasicRange = typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType;
+      //! data type of the vector container
+      using VectorFieldType = F;
+      //! type of the vector container
+      using Vector = typename BackendVectorSelector<GridFunctionSpace,VectorFieldType>::Type;
+
+      //! range type of the N'th derivative
+      using Range = typename EvaluateDerivativeTraits<BasicRange(Domain), NthDerivative, DerivativeTraits>::Range;
+
+      //! Signature of the function
+      using Signature = Range(Domain);
+
+      //! the function interface we are providing
+      using FunctionInterface = Functions::GridViewFunction<GridView, Range>;
+
+      //! Signature of the derivative
+      using LocalSignature = Range(typename EntitySet::LocalCoordinate);
+
+      //! DerivativeTraits for the local functions
+      template<class R>
+        using LocalDerivativeTraits = typename Dune::Functions::LocalDerivativeTraits<EntitySet, DerivativeTraits>::template Traits<R>;
+
+      //! LocalFunctionTraits associated with this type
+      using LocalFunctionTraits = typename Dune::Functions::Imp::LocalFunctionTraits<LocalSignature, Element, LocalDerivativeTraits, bufferSize>;
+
+      //! Interface type of the local function
+      using LocalFunctionInterface = Dune::Functions::LocalFunction<LocalSignature, Element, LocalDerivativeTraits, bufferSize>;
+
+      //! export how often the initial function can be differentiated
+      enum { maxDiffOrder = 1 }; // GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::diffOrder };
+      //! export which derivative we are currently evaluating
+      enum { diffOrder = NthDerivative };
+      //! export whether the range for the N'th derivative exists
+      enum { RangeExists =
+             ( (std::size_t(diffOrder) > std::size_t(maxDiffOrder))
+               ||
+               std::is_same<Range,Functions::InvalidRange>::value
+               ) ? 0 : 1 };
+    };
+
+  } // end namespace Imp
+
+  /* Forward Declarations */
 
 template<typename LocalFunction>
 class DiscreteGridViewFunctionBase;
-
-template<typename GFS, typename F, int N>
-struct DiscreteGridViewFunctionTraits
-{
-  //! the GridFunctionSpace we are operating on
-  using GridFunctionSpace = GFS;
-  //! the underlying GridView
-  using GridView = typename GFS::Traits::GridView;
-  //! the type of the corresponding codim-0 EntitySet
-  using EntitySet = Functions::GridViewEntitySet<GridView, 0>;
-
-  //! domain type (aka. coordinate type of the world dimensions)
-  using Domain = typename EntitySet::GlobalCoordinate;
-  //! range type of the initial function
-  using BasicRange = typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType;
-  //! data type of the vector container
-  using VectorFieldType = F;
-  //! type of the vector container
-  using Vector = typename BackendVectorSelector<GridFunctionSpace,VectorFieldType>::Type;
-
-  //! range type of the N'th derivative
-  using Range = typename EvaluateDerivativeTraits<Domain, BasicRange, N>::DerivativeRange;
-
-  //! the function interface we are providing
-  using FunctionInterface = Functions::GridViewFunction<GridView, Range>;
-
-  //! export how often the initial function can be differentiated
-  enum { maxDiffOrder = 1 }; // GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::diffOrder };
-  //! export which derivative we are currently evaluating
-  enum { diffOrder = N };
-  //! export whether the range for the N'th derivative exists
-  enum { RangeExists =
-         ( (std::size_t(diffOrder) > std::size_t(maxDiffOrder))
-           ||
-           std::is_same<Range,Functions::InvalidRange>::value
-           ) ? 0 : 1 };
-};
 
 template<typename Traits, typename LFERange>
 class DiscreteLocalGridViewFunctionBase;
@@ -93,7 +123,7 @@ template<typename GFS, typename F>
 class DiscreteLocalGridViewFunction;
 
 template<typename GFS, typename V, int N,
-         bool DerivativeExists = DiscreteGridViewFunctionTraits<GFS,V,N+1>::RangeExists>
+         bool DerivativeExists = Imp::DiscreteGridViewFunctionTraits<GFS,V,N+1>::RangeExists>
 class DiscreteLocalGridViewFunctionDerivative;
 
 template<typename GFS, typename F>
@@ -119,14 +149,14 @@ template<typename LocalFnkt>
 class DiscreteGridViewFunctionBase
 {
 
-  using Traits = typename LocalFnkt::Traits;
-
 public:
+
+  using Traits = typename LocalFnkt::GlobalTraits;
 
   using Domain = typename Traits::Domain;
   using Range = typename Traits::Range;
   using EntitySet = typename Traits::EntitySet;
-  using Element = typename EntitySet::Element;
+  using Element = typename Traits::Element;
 
   using Vector = typename Traits::Vector;
   using GridFunctionSpace = typename Traits::GridFunctionSpace;
@@ -187,15 +217,17 @@ template<typename T, typename LFERange>
 class DiscreteLocalGridViewFunctionBase
 {
 public:
-  typedef T Traits;
+  using GlobalTraits = T;
+  using Traits = typename GlobalTraits::LocalFunctionTraits;
 
   using GlobalFunction = int;
   using Domain = typename Traits::Domain;
   using Range = typename Traits::Range;
-  using Element = typename Traits::EntitySet::Element;
+  using LocalContext = typename Traits::LocalContext;
+  using Element = LocalContext;
 
-  using Vector = typename Traits::Vector;
-  using GridFunctionSpace = typename Traits::GridFunctionSpace;
+  using Vector = typename GlobalTraits::Vector;
+  using GridFunctionSpace = typename GlobalTraits::GridFunctionSpace;
 
   DiscreteLocalGridViewFunctionBase(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
     : pgfs_(gfs)
@@ -252,14 +284,14 @@ protected:
 template<typename GFS, typename V>
 class DiscreteLocalGridViewFunction
   : public DiscreteLocalGridViewFunctionBase<
-  DiscreteGridViewFunctionTraits<GFS,V,0>,
-  typename DiscreteGridViewFunctionTraits<GFS,V,0>::Range
+  Imp::DiscreteGridViewFunctionTraits<GFS,V,0>,
+  typename Imp::DiscreteGridViewFunctionTraits<GFS,V,0>::Range
   >
 {
 
   typedef DiscreteLocalGridViewFunctionBase<
-    DiscreteGridViewFunctionTraits<GFS,V,0>,
-    typename DiscreteGridViewFunctionTraits<GFS,V,0>::Range
+    Imp::DiscreteGridViewFunctionTraits<GFS,V,0>,
+    typename Imp::DiscreteGridViewFunctionTraits<GFS,V,0>::Range
     > Base;
 
   using Base::lfs_;
@@ -307,14 +339,14 @@ public:
 template<typename GFS, typename V, bool DerivativeExists>
 class DiscreteLocalGridViewFunctionDerivative<GFS,V,1,DerivativeExists>
   : public DiscreteLocalGridViewFunctionBase<
-  DiscreteGridViewFunctionTraits<GFS,V,1>,
-  typename DiscreteGridViewFunctionTraits<GFS,V,1>::Range
+  Imp::DiscreteGridViewFunctionTraits<GFS,V,1>,
+  typename Imp::DiscreteGridViewFunctionTraits<GFS,V,1>::Range
   >
 {
 
   typedef DiscreteLocalGridViewFunctionBase<
-    DiscreteGridViewFunctionTraits<GFS,V,1>,
-    typename DiscreteGridViewFunctionTraits<GFS,V,1>::Range
+    Imp::DiscreteGridViewFunctionTraits<GFS,V,1>,
+    typename Imp::DiscreteGridViewFunctionTraits<GFS,V,1>::Range
     > Base;
 
   using Base::lfs_;
@@ -378,14 +410,14 @@ public:
 template<typename GFS, typename V, int N, bool>
 class DiscreteLocalGridViewFunctionDerivative
   : public DiscreteLocalGridViewFunctionBase<
-  DiscreteGridViewFunctionTraits<GFS,V,N>,
-  typename DiscreteGridViewFunctionTraits<GFS,V,N>::BasicRange
+  Imp::DiscreteGridViewFunctionTraits<GFS,V,N>,
+  typename Imp::DiscreteGridViewFunctionTraits<GFS,V,N>::BasicRange
   >
 {
 
   typedef DiscreteLocalGridViewFunctionBase<
-    DiscreteGridViewFunctionTraits<GFS,V,N>,
-    typename DiscreteGridViewFunctionTraits<GFS,V,N>::BasicRange
+    Imp::DiscreteGridViewFunctionTraits<GFS,V,N>,
+    typename Imp::DiscreteGridViewFunctionTraits<GFS,V,N>::BasicRange
     > Base;
 
   using Base::lfs_;
@@ -461,14 +493,14 @@ public:
   template<typename GFS, typename V, int N>
 class DiscreteLocalGridViewFunctionNoDerivative
   : public DiscreteLocalGridViewFunctionBase<
-  DiscreteGridViewFunctionTraits<GFS,V,N>,
-  typename DiscreteGridViewFunctionTraits<GFS,V,N>::BasicRange
+  Imp::DiscreteGridViewFunctionTraits<GFS,V,N>,
+  typename Imp::DiscreteGridViewFunctionTraits<GFS,V,N>::BasicRange
   >
 {
 
   typedef DiscreteLocalGridViewFunctionBase<
-    DiscreteGridViewFunctionTraits<GFS,V,N>,
-    typename DiscreteGridViewFunctionTraits<GFS,V,N>::BasicRange
+    Imp::DiscreteGridViewFunctionTraits<GFS,V,N>,
+    typename Imp::DiscreteGridViewFunctionTraits<GFS,V,N>::BasicRange
     > Base;
 
 public:

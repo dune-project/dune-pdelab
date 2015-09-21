@@ -213,7 +213,7 @@ void testgridviewfunction (const GV& gv)
     static_assert(std::is_same<LocalFunction, typename DiscreteFunction::LocalFunction>::value,"LocalFunction typedef in DiscreteGridViewFunction is broken");
     static_assert(std::is_same<LocalFunction, decltype(localf)>::value,"localFunction return type of DiscreteGridViewFunction is broken");
     // evaluate local function and it's derivatives
-    static const int maxDiffOrder = LocalFunction::Traits::maxDiffOrder;
+    static const int maxDiffOrder = DiscreteFunction::Traits::maxDiffOrder;
     std::cout << "max diff order: " << maxDiffOrder << std::endl;
     std::cout << "checking for:\n";
     std::cout << "\tevaluate\n";
