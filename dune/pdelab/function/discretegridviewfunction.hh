@@ -456,6 +456,7 @@ public:
     // TODO: we currently only implement the hessian...
     //       a proper implementation will require TMP magic.
     static const unsigned int dim = Base::Traits::GridView::dimensionworld;
+    if (N > 2) DUNE_THROW(RangeError, "We currently support only derivatives of degree up to 2 of scalar functions");
     // static_assert(
     //   isHessian<Range>::value,
     //   "We currently only higher order derivative we support is the Hessian of scalar functions");
