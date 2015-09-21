@@ -68,8 +68,10 @@ namespace PDELab {
 
       //! domain type (aka. coordinate type of the world dimensions)
       using Domain = typename EntitySet::GlobalCoordinate;
+      //! range type of the underlying local function
+      using LocalFiniteElementRange = typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType;
       //! range type of the initial function
-      using BasicRange = typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType;
+      using BasicRange = LocalFiniteElementRange; // LocalFiniteElementRange
       //! data type of the vector container
       using VectorFieldType = F;
       //! type of the vector container
@@ -411,13 +413,13 @@ template<typename GFS, typename V, int N, bool>
 class DiscreteLocalGridViewFunctionDerivative
   : public DiscreteLocalGridViewFunctionBase<
   Imp::DiscreteGridViewFunctionTraits<GFS,V,N>,
-  typename Imp::DiscreteGridViewFunctionTraits<GFS,V,N>::BasicRange
+  typename Imp::DiscreteGridViewFunctionTraits<GFS,V,N>::LocalFiniteElementRange
   >
 {
 
   typedef DiscreteLocalGridViewFunctionBase<
     Imp::DiscreteGridViewFunctionTraits<GFS,V,N>,
-    typename Imp::DiscreteGridViewFunctionTraits<GFS,V,N>::BasicRange
+    typename Imp::DiscreteGridViewFunctionTraits<GFS,V,N>::LocalFiniteElementRange
     > Base;
 
   using Base::lfs_;
@@ -494,13 +496,13 @@ public:
 class DiscreteLocalGridViewFunctionNoDerivative
   : public DiscreteLocalGridViewFunctionBase<
   Imp::DiscreteGridViewFunctionTraits<GFS,V,N>,
-  typename Imp::DiscreteGridViewFunctionTraits<GFS,V,N>::BasicRange
+  typename Imp::DiscreteGridViewFunctionTraits<GFS,V,N>::LocalFiniteElementRange
   >
 {
 
   typedef DiscreteLocalGridViewFunctionBase<
     Imp::DiscreteGridViewFunctionTraits<GFS,V,N>,
-    typename Imp::DiscreteGridViewFunctionTraits<GFS,V,N>::BasicRange
+    typename Imp::DiscreteGridViewFunctionTraits<GFS,V,N>::LocalFiniteElementRange
     > Base;
 
 public:
