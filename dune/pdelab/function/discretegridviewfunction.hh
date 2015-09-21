@@ -92,9 +92,6 @@ class DiscreteLocalGridViewFunctionBase;
 template<typename GFS, typename F>
 class DiscreteLocalGridViewFunction;
 
-template<typename GFS, typename V>
-class DiscreteLocalGridViewFunctionJacobian;
-
 template<typename GFS, typename V, int N,
          bool DerivativeExists = DiscreteGridViewFunctionTraits<GFS,V,N+1>::RangeExists>
 class DiscreteLocalGridViewFunctionDerivative;
@@ -136,8 +133,8 @@ public:
 
   using LocalFunction = LocalFnkt;
 
-  #warning
-  using Derivative = DiscreteGridViewFunctionBase;
+  using LocalDerivative = typename LocalFunction::LocalDerivative;
+  using Derivative = DiscreteGridViewFunctionBase<LocalDerivative>;
 
   friend LocalFunction localFunction(const DiscreteGridViewFunctionBase & f)
   {
@@ -192,8 +189,6 @@ class DiscreteLocalGridViewFunctionBase
 public:
   typedef T Traits;
 
-  #warning
-  // using GlobalFunction = DiscreteGridViewFunction<???>;
   using GlobalFunction = int;
   using Domain = typename Traits::Domain;
   using Range = typename Traits::Range;
@@ -276,7 +271,7 @@ class DiscreteLocalGridViewFunction
 
 public:
 
-  using GlobalFunction = typename Base::GlobalFunction;
+  using GlobalFunction = DiscreteGridViewFunction<GFS,V>;
   using Element = typename Base::Element;
   using Domain = typename Base::Domain;
   using Range = typename Base::Range;
@@ -284,7 +279,8 @@ public:
   using Vector = typename Base::Vector;
   using GridFunctionSpace = typename Base::GridFunctionSpace;
 
-  using LocalDerivative = DiscreteLocalGridViewFunctionJacobian<GFS,V>;
+  #warning to work around buggy dune-localfunctions implementations we force the first derivative to be available
+  using LocalDerivative = DiscreteLocalGridViewFunctionDerivative<GFS,V,1,true>;
 
   DiscreteLocalGridViewFunction(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
     : Base(gfs,v)
@@ -308,8 +304,8 @@ public:
 
 };
 
-template<typename GFS, typename V>
-class DiscreteLocalGridViewFunctionJacobian
+template<typename GFS, typename V, bool DerivativeExists>
+class DiscreteLocalGridViewFunctionDerivative<GFS,V,1,DerivativeExists>
   : public DiscreteLocalGridViewFunctionBase<
   DiscreteGridViewFunctionTraits<GFS,V,1>,
   typename DiscreteGridViewFunctionTraits<GFS,V,1>::Range
@@ -330,7 +326,7 @@ class DiscreteLocalGridViewFunctionJacobian
 
 public:
 
-  using GlobalFunction = typename Base::GlobalFunction;
+  using GlobalFunction = DiscreteGridViewFunctionBase<DiscreteLocalGridViewFunctionDerivative>;
   using Element = typename Base::Element;
   using Domain = typename Base::Domain;
   using Range = typename Base::Range;
@@ -338,7 +334,7 @@ public:
   using Vector = typename Base::Vector;
   using GridFunctionSpace = typename Base::GridFunctionSpace;
 
-  DiscreteLocalGridViewFunctionJacobian(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
+  DiscreteLocalGridViewFunctionDerivative(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
     : Base(gfs,v)
   {}
 
@@ -372,7 +368,7 @@ public:
     return r;
   }
 
-  friend LocalDerivative derivative(const DiscreteLocalGridViewFunctionJacobian & f)
+  friend LocalDerivative derivative(const DiscreteLocalGridViewFunctionDerivative & f)
   {
     return LocalDerivative(f.pgfs_,f.v_);
   }
@@ -413,7 +409,7 @@ public:
     : Base(gfs,v)
   {}
 
-  Range evaluate(const Domain& coord)
+  Range operator()(const Domain& coord) const
   {
     // TODO: we currently require affine geometries.
     if (! element_->geometry().affine())
@@ -462,8 +458,8 @@ public:
 
 };
 
-template<typename GFS, typename V, int N>
-class DiscreteLocalGridViewFunctionDerivative<GFS,V,N,false>
+  template<typename GFS, typename V, int N>
+class DiscreteLocalGridViewFunctionNoDerivative
   : public DiscreteLocalGridViewFunctionBase<
   DiscreteGridViewFunctionTraits<GFS,V,N>,
   typename DiscreteGridViewFunctionTraits<GFS,V,N>::BasicRange
@@ -475,13 +471,6 @@ class DiscreteLocalGridViewFunctionDerivative<GFS,V,N,false>
     typename DiscreteGridViewFunctionTraits<GFS,V,N>::BasicRange
     > Base;
 
-  using Base::lfs_;
-  using Base::yb_;
-  using Base::xl_;
-  using Base::pgfs_;
-  using Base::v_;
-  using Base::element_;
-
 public:
 
   typedef typename Base::Domain Domain;
@@ -490,15 +479,15 @@ public:
   typedef typename Base::Vector Vector;
   typedef typename Base::GridFunctionSpace GridFunctionSpace;
 
-  using LocalDerivative = DiscreteLocalGridViewFunctionDerivative<GFS,V,N+1>;
+  using LocalDerivative = DiscreteLocalGridViewFunctionNoDerivative;
 
-  DiscreteLocalGridViewFunctionDerivative(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
+  DiscreteLocalGridViewFunctionNoDerivative(const shared_ptr<const GridFunctionSpace> gfs, const shared_ptr<const Vector> v)
     : Base(gfs,v)
   {
     DUNE_THROW(InvalidStateException, N << "th derivative not available");
   }
 
-  friend LocalDerivative derivative(const DiscreteLocalGridViewFunctionDerivative &)
+  friend LocalDerivative derivative(const DiscreteLocalGridViewFunctionNoDerivative &)
   {
     DUNE_THROW(InvalidStateException, N << "th derivative not available, thus you can't call any methods.");
   }
@@ -508,6 +497,24 @@ public:
     DUNE_THROW(InvalidStateException, N << "th derivative not available, thus you can't call any methods.");
   }
 
+};
+
+template<typename GFS, typename V, int N>
+class DiscreteLocalGridViewFunctionDerivative<GFS,V,N,false> :
+    public DiscreteLocalGridViewFunctionNoDerivative<GFS,V,N>
+{
+public:
+  using Base = DiscreteLocalGridViewFunctionNoDerivative<GFS,V,N>;
+  using Base::Base;
+};
+
+template<typename GFS, typename V>
+class DiscreteLocalGridViewFunctionDerivative<GFS,V,1,false> :
+    public DiscreteLocalGridViewFunctionNoDerivative<GFS,V,1>
+{
+public:
+  using Base = DiscreteLocalGridViewFunctionNoDerivative<GFS,V,1>;
+  using Base::Base;
 };
 
 } // end of namespace Dune::PDELab
