@@ -144,7 +144,7 @@ public:
     return LocalFunction(f.pgfs_, f.v_);
   }
 
-  friend Derivative derivative()
+  friend Derivative derivative(const DiscreteGridViewFunctionBase & f)
   {
     DUNE_THROW(NotImplemented,"not implemented");
   }
