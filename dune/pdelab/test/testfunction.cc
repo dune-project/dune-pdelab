@@ -203,7 +203,7 @@ void testgridviewfunction (const GV& gv)
     DiscreteFunction dgvf(q1gfs,x);
     // make sure we fulfill the grid-view-function concept
     using Coordinate = typename GV::template Codim<0>::Geometry::GlobalCoordinate;
-    using Signature = RF(Coordinate);
+    using Signature = Dune::FieldVector<RF,1>(Coordinate);
     static_assert(
         Dune::Functions::Concept::isGridViewFunction<DiscreteFunction,Signature,GV>(),
         "DiscreteGridViewFunction does not fulfill the GridViewFunction interface");
