@@ -24,10 +24,6 @@ namespace Dune {
 namespace PDELab {
 
   namespace Imp {
-/**
-   \todo use GridViewTraits
-   \todo fix relation to LocalDerivativeTraits
- */
 
     template<class Signature, int NthDerivative, template<class> class DerivativeTraits>
     struct EvaluateDerivativeTraits;
@@ -70,15 +66,13 @@ namespace PDELab {
       using Domain = typename EntitySet::GlobalCoordinate;
       //! range type of the underlying local function
       using LocalFiniteElementRange = typename GFS::Traits::FiniteElement::Traits::LocalBasisType::Traits::RangeType;
-      //! range type of the initial function
-      using BasicRange = LocalFiniteElementRange; // LocalFiniteElementRange
       //! data type of the vector container
       using VectorFieldType = F;
       //! type of the vector container
       using Vector = typename BackendVectorSelector<GridFunctionSpace,VectorFieldType>::Type;
 
       //! range type of the N'th derivative
-      using Range = typename EvaluateDerivativeTraits<BasicRange(Domain), NthDerivative, DerivativeTraits>::Range;
+      using Range = typename EvaluateDerivativeTraits<LocalFiniteElementRange(Domain), NthDerivative, DerivativeTraits>::Range;
 
       //! Signature of the function
       using Signature = Range(Domain);
@@ -287,13 +281,13 @@ template<typename GFS, typename V>
 class DiscreteLocalGridViewFunction
   : public DiscreteLocalGridViewFunctionBase<
   Imp::DiscreteGridViewFunctionTraits<GFS,V,0>,
-  typename Imp::DiscreteGridViewFunctionTraits<GFS,V,0>::Range
+  typename Imp::DiscreteGridViewFunctionTraits<GFS,V,0>::LocalFiniteElementRange
   >
 {
 
   typedef DiscreteLocalGridViewFunctionBase<
     Imp::DiscreteGridViewFunctionTraits<GFS,V,0>,
-    typename Imp::DiscreteGridViewFunctionTraits<GFS,V,0>::Range
+    typename Imp::DiscreteGridViewFunctionTraits<GFS,V,0>::LocalFiniteElementRange
     > Base;
 
   using Base::lfs_;
