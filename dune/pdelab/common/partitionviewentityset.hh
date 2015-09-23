@@ -130,6 +130,11 @@ namespace Dune {
       template<dim_type codim>
       using Codim = typename Traits::template Codim<codim>;
 
+      constexpr static Partitions partitions()
+      {
+        return {};
+      }
+
       constexpr static CodimMask allCodims()
       {
         return {~0ull};
@@ -486,6 +491,8 @@ namespace Dune {
       using typename Base::size_type;
       using typename Base::dim_type;
 
+      using typename Base::Grid;
+
       using Base::gridView;
       using Base::baseIndexSet;
       using Base::invalidIndex;
@@ -495,15 +502,31 @@ namespace Dune {
 
     private:
 
+      static constexpr bool hasAllEntities(Dune::Dim<Grid::dimension + 1>)
+      {
+        return true;
+      }
+
+      template<dim_type dim = 0>
+      static constexpr bool hasAllEntities(Dune::Dim<dim> = {})
+      {
+        return Capabilities::hasEntity<Grid,dim>::v && hasAllEntities(Dune::Dim<dim+1>{});
+      }
+
       bool update()
       {
         if (!Base::update())
           return false;
         _indices.assign(_gt_offsets.back(),invalidIndex());
         _mapped_gt_offsets[0] = 0;
-        update_codim(Dune::Codim<0>());
+        update_codims(std::integral_constant<bool,hasAllEntities()>{});
         std::partial_sum(_mapped_gt_offsets.begin(),_mapped_gt_offsets.end(),_mapped_gt_offsets.begin());
         return true;
+      }
+
+      void update_codims(std::true_type)
+      {
+        update_codim(Dune::Codim<0>{});
       }
 
       void update_codim(Dune::Codim<GV::dimension+1>)
@@ -520,8 +543,41 @@ namespace Dune {
               if (Partitions::contains(e.partitionType()))
                 _indices[_gt_offsets[gt_index] + baseIndexSet().index(e)] = _mapped_gt_offsets[gt_index + 1]++;
             }
-        update_codim(Dune::Codim<cd+1>());
+        update_codim(Dune::Codim<cd+1>{});
       }
+
+
+      void update_codims(std::false_type)
+      {
+        std::fill(_indices.begin(),_indices.end(),invalidIndex());
+
+        auto& index_set = baseIndexSet();
+
+        for (const auto& e : elements(gridView(),Dune::Partitions::all))
+          {
+            if (!Partitions::contains(e.partitionType()))
+              continue;
+
+            auto& ref_el = ReferenceElements<typename Base::Traits::CoordinateField,GV::dimension>::general(e.type());
+            for (dim_type codim = 0; codim <= Grid::dimension; ++codim)
+              {
+                if (!_active_codims.test(codim))
+                  continue;
+
+                size_type sub_entity_count = ref_el.size(codim);
+
+                for(size_type i = 0; i < sub_entity_count; ++i)
+                  {
+                    auto gt = ref_el.type(i,codim);
+                    auto gt_index = GlobalGeometryTypeIndex::index(gt);
+                    auto index = index_set.subIndex(e,i,codim);
+                    if (_indices[_gt_offsets[gt_index] + index] == invalidIndex())
+                      _indices[_gt_offsets[gt_index] + index] = _mapped_gt_offsets[gt_index + 1]++;
+                  }
+              }
+          }
+      }
+
 
     public:
 
