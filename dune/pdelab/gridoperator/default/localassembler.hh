@@ -37,7 +37,7 @@ namespace Dune{
       // The GridOperator has to be a friend to modify the do{Pre,Post}Processing flags
       template<typename, typename, typename,
                typename, typename, typename, typename,
-               typename, typename, bool>
+               typename, typename, int>
       friend class GridOperator;
 
     public:
