@@ -285,7 +285,7 @@ namespace Dune {
       template<typename MessageBuffer, typename Entity, typename LocalView>
       bool scatter(MessageBuffer& buff, size_type n, const Entity& e, LocalView& local_view) const
       {
-        if (local_view.cache().gridFunctionSpace().containsPartition(e.partitionType()))
+        if (local_view.cache().gridFunctionSpace().entitySet().partitions().contains(e.partitionType()))
           {
             if (local_view.size() != n)
               DUNE_THROW(Exception,"size mismatch in GridFunctionSpace data handle, have " << local_view.size() << "DOFs, but received " << n);
@@ -312,7 +312,7 @@ namespace Dune {
       template<typename MessageBuffer, typename Offsets, typename Entity, typename LocalView>
       bool scatter(MessageBuffer& buff, const Offsets& remote_offsets, const Offsets& local_offsets, const Entity& e, LocalView& local_view) const
       {
-        if (local_view.cache().gridFunctionSpace().containsPartition(e.partitionType()))
+        if (local_view.cache().gridFunctionSpace().entitySet().partitions().contains(e.partitionType()))
           {
             // the idea here is this:
             // the compile time structure of the overall function space (and its ordering) will be identical on both sides
@@ -400,7 +400,7 @@ namespace Dune {
       template<typename MessageBuffer, typename Entity, typename LocalView>
       bool scatter(MessageBuffer& buff, size_type n, const Entity& e, LocalView& local_view) const
       {
-        if (local_view.cache().gridFunctionSpace().containsPartition(e.partitionType()))
+        if (local_view.cache().gridFunctionSpace().entitySet().partitions().contains(e.partitionType()))
           {
             if (local_view.size() != n)
               DUNE_THROW(Exception,"size mismatch in GridFunctionSpace data handle, have " << local_view.size() << "DOFs, but received " << n);
@@ -427,7 +427,7 @@ namespace Dune {
       template<typename MessageBuffer, typename Offsets, typename Entity, typename LocalView>
       bool scatter(MessageBuffer& buff, const Offsets& remote_offsets, const Offsets& local_offsets, const Entity& e, LocalView& local_view) const
       {
-        if (local_view.cache().gridFunctionSpace().containsPartition(e.partitionType()))
+        if (local_view.cache().gridFunctionSpace().entitySet().partitions().contains(e.partitionType()))
           {
             size_type remote_i = 0;
             size_type local_i = 0;
@@ -509,7 +509,7 @@ namespace Dune {
       template<typename MessageBuffer, typename Entity, typename LocalView>
       bool scatter(MessageBuffer& buff, size_type n, const Entity& e, LocalView& local_view) const
       {
-        if (local_view.cache().gridFunctionSpace().containsPartition(e.partitionType()))
+        if (local_view.cache().gridFunctionSpace().entitySet().partitions().contains(e.partitionType()))
           {
             if (local_view.size() != n)
               DUNE_THROW(Exception,"size mismatch in GridFunctionSpace data handle, have " << local_view.size() << "DOFs, but received " << n);
@@ -537,7 +537,7 @@ namespace Dune {
       template<typename MessageBuffer, typename Offsets, typename Entity, typename LocalView>
       bool scatter(MessageBuffer& buff, const Offsets& remote_offsets, const Offsets& local_offsets, const Entity& e, LocalView& local_view) const
       {
-        if (local_view.cache().gridFunctionSpace().containsPartition(e.partitionType()))
+        if (local_view.cache().gridFunctionSpace().entitySet().partitions().contains(e.partitionType()))
           {
             size_type remote_i = 0;
             size_type local_i = 0;
