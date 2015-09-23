@@ -695,8 +695,10 @@ namespace Dune {
       template<typename E>
       Index subIndex(const E& e, size_type i, dim_type codim) const
       {
+#ifndef NDEBUG
         auto gt = ReferenceElements<typename Base::Traits::CoordinateField,GV::dimension>::general(e.type()).type(i,codim);
         assert(contains(gt));
+#endif
         return baseIndexSet().subIndex(e,i,codim);
       }
 
