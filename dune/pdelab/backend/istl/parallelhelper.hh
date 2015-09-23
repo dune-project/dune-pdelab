@@ -68,7 +68,8 @@ namespace Dune {
 
           // Let's try to be clever and reduce the communication overhead by picking the smallest
           // possible communication interface depending on the overlap structure of the GFS.
-          if (gfs.ordering().containedPartitions() == NonOverlappingPartitionSelector::partition_mask)
+          // FIXME: Switch to simple comparison as soon as dune-grid:1b3e83ec0 is reliably available!
+          if (gfs.entitySet().partitions().value == Partitions::interiorBorder.value)
             {
               // The GFS only spans the interior and border partitions, so we can skip sending or
               // receiving anything else.
