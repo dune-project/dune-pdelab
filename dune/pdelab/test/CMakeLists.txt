@@ -49,6 +49,7 @@ endforeach()
 
 if (UG_FOUND)
   pdelab_add_test(NAME testadaptivity)
+  pdelab_add_test(NAME testnonoverlapping MPIRANKS 2)
 endif (UG_FOUND)
 
 set_tests_properties(

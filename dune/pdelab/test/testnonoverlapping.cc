@@ -5,10 +5,10 @@
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/uggrid.hh>
 #include <dune/grid/io/file/vtk/vtkwriter.hh>
-#include <dune/grid/io/file/dgfparser/gridptr.hh>
-#include <dune/grid/io/file/dgfparser/dgfug.hh>
+#include <dune/grid/utility/structuredgridfactory.hh>
 
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include <dune/pdelab/finiteelementmap/pkfem.hh>
 #include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/backend/istl.hh>
@@ -48,77 +48,158 @@ public:
 
 };
 
+
+template<typename GV, typename FEM>
+void run_test(const GV& gv, const FEM& fem, std::string suffix)
+{
+
+  using EntitySet = Dune::PDELab::NonOverlappingEntitySet<GV>;
+  auto entity_set = EntitySet(gv);
+
+  using RF = double;
+
+  using VBE = Dune::PDELab::istl::VectorBackend<>;
+  using NoConstraints = Dune::PDELab::NoConstraints;
+
+  using GFS = Dune::PDELab::GridFunctionSpace<EntitySet,FEM,NoConstraints,VBE>;
+  GFS gfs(entity_set,fem);
+  gfs.name("x");
+
+  using LOP = AssigningLOP;
+  LOP lop;
+
+  using CC = Dune::PDELab::EmptyTransformation;
+
+  using MBE = Dune::PDELab::istl::BCRSMatrixBackend<>;
+
+  using GridOperator = Dune::PDELab::GridOperator<
+    GFS,GFS,
+    LOP,
+    MBE,
+    RF,RF,RF,CC,CC
+    >;
+
+  GridOperator grid_operator(gfs,gfs,lop,MBE(9));
+
+  typename GridOperator::Traits::Range x(gfs,0.0);
+
+  typename GridOperator::Traits::Jacobian A(grid_operator,0.0);
+
+  grid_operator.jacobian(x,A);
+  grid_operator.make_consistent(A);
+
+  auto& comm = gv.grid().comm();
+
+  std::cout << comm.rank() << ": Starting VTK output" << std::endl;
+
+  Dune::VTKWriter<GV> vtk_writer(gv);
+  vtk_writer.write("nononverlapping_" + suffix);
+
+  for (int r = 0; r < comm.size(); ++r)
+    {
+      if (r == comm.rank())
+        {
+          std::cout << "rank: " << r << std::endl;
+          for (const auto& vertex : vertices(entity_set))
+            {
+              std::cout << std::setw(3) << entity_set.indexSet().index(vertex) << " "
+                        << "(" << vertex.geometry().center() << ") "
+                        << gv.grid().globalIdSet().id(vertex)
+                        << std::endl;
+            }
+          std::cout << std::endl;
+
+          Dune::printmatrix(std::cout,Dune::PDELab::Backend::native(A),"","");
+
+        }
+
+      comm.barrier();
+    }
+}
+
+
 int main(int argc, char** argv)
 {
   try {
     Dune::MPIHelper& mpi_helper = Dune::MPIHelper::instance(argc,argv);
 
-    typedef Dune::UGGrid<2> Grid;
+    {
 
-    Dune::GridPtr<Grid> grid_ptr("nonoverlapping1.dgf");
-    Grid& grid = *grid_ptr;
+      using Grid = Dune::UGGrid<2>;
+      auto grid_ptr = Dune::StructuredGridFactory<Grid>::createSimplexGrid({{0.0,0.0}},{{1.0,1.0}},{{4,4}});
+      Grid& grid = *grid_ptr;
 
-    grid.loadBalance();
+      grid.loadBalance();
 
-    typedef Grid::Partition<Dune::InteriorBorder_Partition>::LeafGridView GV;
-    GV gv = grid.leafGridView<Dune::InteriorBorder_Partition>();
+      using GV = Grid::LeafGridView;
+      auto gv = grid.leafGridView();
 
-    typedef GV::ctype DF;
-    typedef double RF;
+      using DF = Grid::ctype;
+      using RF = double;
 
-    typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,RF,1> FEM;
-    FEM fem(gv);
+      using FEM = Dune::PDELab::PkLocalFiniteElementMap<GV,DF,RF,1>;
+      FEM fem(gv);
 
-    typedef Dune::PDELab::istl::VectorBackend<> VBE;
-    typedef Dune::PDELab::NoConstraints NoConstraints;
+      run_test(gv,fem,"structured_simplex");
 
-    typedef Dune::PDELab::GridFunctionSpace<GV,FEM,NoConstraints,VBE,Dune::PDELab::NonOverlappingLeafOrderingTag> GFS;
-    GFS gfs(gv,fem);
-    gfs.name("x");
+    }
 
-    typedef AssigningLOP LOP;
-    LOP lop;
+    {
 
-    typedef Dune::PDELab::EmptyTransformation CC;
+      using Grid = Dune::UGGrid<2>;
 
-    typedef Dune::PDELab::GridOperator<
-      GFS,GFS,
-      LOP,Dune::PDELab::ISTLMatrixBackend,
-      RF,RF,RF,CC,CC,true
-      > GridOperator;
+      Dune::GridFactory<Grid> factory;
 
-    GridOperator grid_operator(gfs,gfs,lop);
+      // The following code builds a 2D grid with 5x3 cubes. On 2 MPI ranks, UG will by default
+      // partition that grid in a way that introduces a concave corner on each rank, allowing us
+      // to test the pattern extender algorithm in the GridOperator.
+      if (mpi_helper.getCollectiveCommunication().rank() == 0)
+        {
 
-    GridOperator::Traits::Range x(gfs,0.0);
+          const std::size_t nx = 5;
+          const std::size_t ny = 3;
 
-    GridOperator::Traits::Jacobian A(grid_operator,0.0);
+          std::size_t idx = 0;
 
-    grid_operator.jacobian(x,A);
-    grid_operator.make_consistent(A);
-
-    Dune::VTKWriter<GV> vtk_writer(gv);
-    vtk_writer.write("nononverlapping1");
-
-    for (int r = 0; r < mpi_helper.getCollectiveCommunication().size(); ++r)
-      {
-        if (r == mpi_helper.getCollectiveCommunication().rank())
-          {
-            std::cout << "rank: " << r << std::endl;
-            for (GV::Codim<2>::Iterator it = gv.begin<2>(); it != gv.end<2>(); ++it)
+          for (std::size_t j = 0; j < ny + 1; ++j)
+            for (std::size_t i = 0; i < nx + 1; ++i, ++idx)
               {
-                std::cout << std::setw(3) << gv.indexSet().index(*it) << " "
-                          << "(" << it->geometry().center() << ") "
-                          << gv.grid().globalIdSet().id(*it)
-                          << std::endl;
+                factory.insertVertex({static_cast<double>(i),static_cast<double>(j)});
+                std::cout << idx << ": (" << i << "," << j << ")" << std::endl;
               }
-            std::cout << std::endl;
 
-            Dune::printmatrix(std::cout,Dune::PDELab::Backend::native(A),"","");
+          std::vector<unsigned int> corners(4);
 
-          }
+          for (std::size_t j = 0; j < ny; ++j)
+            for (std::size_t i = 0; i < nx; ++i)
+              {
+                corners[0] = (nx+1)*j       + i;
+                corners[1] = (nx+1)*j       + i + 1;
+                corners[2] = (nx+1)*(j + 1) + i;
+                corners[3] = (nx+1)*(j + 1) + i + 1;
+                factory.insertElement(Dune::GeometryType(Dune::GeometryType::cube,2),corners);
+              }
+        }
 
-        mpi_helper.getCollectiveCommunication().barrier();
-      }
+      // need to explicitly wrap in a shared_ptr here
+      auto grid_ptr = std::shared_ptr<Grid>(factory.createGrid());
+
+      Grid& grid = *grid_ptr;
+
+      grid.loadBalance();
+
+      using GV = Grid::LeafGridView;
+      auto gv = grid.leafGridView();
+
+      using DF = Grid::ctype;
+      using RF = double;
+
+      using FEM = Dune::PDELab::QkLocalFiniteElementMap<GV,DF,RF,1>;
+      FEM fem(gv);
+
+      run_test(gv,fem,"structured_cube_concave_corner");
+
+    }
 
     return 0;
   }
