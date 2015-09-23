@@ -55,10 +55,7 @@ namespace Dune {
       LeafOrderingBase(const typename NodeT::NodeStorage& local_ordering, bool container_blocked, typename BaseT::GFSData* gfs_data)
         : NodeT(local_ordering)
         , BaseT(*this,container_blocked,gfs_data,this)
-      {
-        // copy grid partition information from local ordering.
-        this->setPartitionSet(localOrdering());
-      }
+      {}
 
 #ifndef DOXYGEN
 

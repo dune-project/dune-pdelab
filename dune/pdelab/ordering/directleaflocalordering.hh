@@ -10,7 +10,6 @@
 #include <dune/geometry/referenceelements.hh>
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
-#include <dune/pdelab/common/partitioninfoprovider.hh>
 #include <dune/pdelab/ordering/utility.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspacebase.hh>
 
@@ -26,7 +25,6 @@ namespace Dune {
     template<typename OrderingTag, typename FEM, typename ES, typename DI, typename CI>
     class DirectLeafLocalOrdering
       : public TypeTree::LeafNode
-      , public PartitionInfoProvider
     {
 
       template<typename>
@@ -119,10 +117,7 @@ namespace Dune {
         , _fixed_size(false)
         , _container_blocked(false)
         , _gfs_data(nullptr)
-      {
-        // Extract contained grid PartitionTypes from OrderingTag.
-        this->setPartitionSet(OrderingTag::partition_mask);
-      }
+      {}
 
       const typename Traits::EntitySet& entitySet() const
       {

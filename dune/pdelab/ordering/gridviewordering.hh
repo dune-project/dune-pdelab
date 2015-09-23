@@ -466,9 +466,6 @@ namespace Dune {
         // make sure to switch off container blocking handling in the local ordering,
         // we already handle it in the GridViewOrdering
         localOrdering().disable_container_blocking();
-        // manually copy grid partition information from the local ordering, as this isn't handled
-        // automatically by LocalOrdering in this case
-        this->setPartitionSet(localOrdering());
       }
 
 #ifndef DOXYGEN

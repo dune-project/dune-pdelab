@@ -39,10 +39,7 @@ namespace Dune {
         : BaseT(*this,backend_blocked,gfs_data)
         , _fem(fem)
         , _es(es)
-      {
-        // Extract contained grid PartitionTypes from OrderingTag.
-        this->setPartitionSet(OrderingTag::partition_mask);
-      }
+      {}
 
       const typename Traits::EntitySet& entitySet() const
       {
