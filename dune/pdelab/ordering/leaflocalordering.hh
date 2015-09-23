@@ -71,7 +71,7 @@ namespace Dune {
 
       void setup_fixed_size_possible()
       {
-        this->_fixed_size_possible =  !OrderingTag::no_const_ordering_size;
+        this->_fixed_size_possible = true;
       }
 
     private:

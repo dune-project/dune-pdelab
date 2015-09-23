@@ -138,7 +138,7 @@ namespace Dune {
 
       void update_a_priori_fixed_size()
       {
-        _fixed_size = (!OrderingTag::no_const_ordering_size) && _fem->fixedSize();
+        _fixed_size = _fem->fixedSize();
       }
 
       template<typename CodimMask>
@@ -183,7 +183,7 @@ namespace Dune {
         _gt_dof_sizes.assign(GlobalGeometryTypeIndex::size(dim),0);
         _local_gt_dof_sizes.resize(GlobalGeometryTypeIndex::size(dim));
         _max_local_size = 0;
-        _fixed_size_possible = !OrderingTag::no_const_ordering_size;
+        _fixed_size_possible = true;
       }
 
 
