@@ -42,6 +42,8 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
+#ifndef DOXYGEN
+
     namespace impl {
 
       // Helper structs to avoid compilation failures in the
@@ -70,7 +72,26 @@ namespace Dune {
         };
       };
 
+      // Returns a GridView, regardless of whether GV_or_ES is a GridView or an EntitySet
+      template<typename GV_or_ES>
+      using GridView = typename std::conditional<
+        isEntitySet<GV_or_ES>::value,
+        impl::_lazy_extract_gridview,
+        impl::_lazy_identity
+        >::type::template evaluate<GV_or_ES>::type;
+
+
+      // Returns an EntitySet, regardless of whether GV_or_ES is a GridView or an EntitySet
+      template<typename GV_or_ES>
+      using EntitySet = typename std::conditional<
+        isEntitySet<GV_or_ES>::value,
+        GV_or_ES,
+        AllEntitySet<GV_or_ES>
+        >::type;
+
     }
+
+#endif // DOXYGEN
 
     //=======================================
     // grid function space : single component case
@@ -87,17 +108,10 @@ namespace Dune {
       static const bool isComposite = false;
 
       //! the grid view where grid function is defined upon
-      using GridView = typename std::conditional<
-        isEntitySet<G>::value,
-        impl::_lazy_extract_gridview,
-        impl::_lazy_identity
-        >::type::template evaluate<G>::type;
+      using GridView = impl::GridView<G>;
 
-      using EntitySet = typename std::conditional<
-        isEntitySet<G>::value,
-        G,
-        AllEntitySet<G>
-        >::type;
+      //! the entity set of this function space.
+      using EntitySet = impl::EntitySet<G>;
 
       using GridViewType = GridView;
 
