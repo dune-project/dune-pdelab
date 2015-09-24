@@ -68,7 +68,6 @@ public:
   typename Traits::RangeFieldType
   f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-    typename Traits::DomainType xglobal = e.geometry().global(x);
     return 0.0;
   }
 
@@ -76,7 +75,6 @@ public:
   BCType
   bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
-    typename Traits::DomainType xglobal = is.geometry().global(x);
     return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
   }
 

@@ -597,7 +597,7 @@ namespace Dune {
           _vtk_writer.addCellData(
             std::make_shared<VTKGridFunctionAdapter<DGF> >(
               std::make_shared<DGF>(
-                _data->_lfs.child(tp)
+                TypeTree::child(_data->_lfs,tp)
                 ),
                 _data,
                 std::forward<Params>(params)...
@@ -623,7 +623,7 @@ namespace Dune {
           _vtk_writer.addVertexData(
             std::make_shared<VTKGridFunctionAdapter<DGF> >(
               std::make_shared<DGF>(
-                _data->_lfs.child(tp)
+                TypeTree::child(_data->_lfs,tp)
                 ),
                 _data,
                 std::forward<Params>(params)...

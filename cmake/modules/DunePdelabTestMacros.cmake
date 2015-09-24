@@ -79,7 +79,7 @@ function(pdelab_add_test)
     endif()
 
     if(MPI_FOUND)
-      set(PDELABTEST_COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PDELABTEST_MPIRANKS} ${MPIEXEC_PREFLAGS} ${PDELABTEST_COMMAND} ${MPIEXEC_POSTFLAGS})
+      set(PDELABTEST_COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${PDELABTEST_MPIRANKS} ${MPIEXEC_PREFLAGS} "${CMAKE_CURRENT_BINARY_DIR}/${PDELABTEST_COMMAND}" ${MPIEXEC_POSTFLAGS})
     else()
       message(WARNING "Test '$PDELABTEST_NAME' requires MPI, but MPI was not found. Test will be built, but not run")
       set(register_test FALSE)

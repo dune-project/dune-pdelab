@@ -170,10 +170,10 @@ namespace Dune {
         : gv(gv_), orient(gv_.size(0))
       {
         typedef typename GV::Grid::ctype ct;
-        const ReferenceElement<ct, dim> &refElem =
+        auto& refElem =
           ReferenceElements<ct, dim>::general(FE().type());
 
-        const typename GV::Grid::GlobalIdSet &idSet = gv.grid().globalIdSet();
+        auto &idSet = gv.grid().globalIdSet();
 
         // create all variants
         variant.resize(1 << refElem.size(dim-1));
@@ -181,19 +181,17 @@ namespace Dune {
           variant[i] = FE(i);
 
         // compute orientation for all elements
-        typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
-
-        const typename GV::IndexSet& indexSet = gv.indexSet();
+        auto& indexSet = gv.indexSet();
 
         // loop once over the grid
-        for (ElementIterator it = gv.template begin<0>(); it!=gv.template end<0>(); ++it)
+        for (const auto& element : elements(gv))
           {
-            unsigned int elemid = indexSet.template index<0>(*it);
+            auto elemid = indexSet.index(element);
             orient[elemid] = 0;
 
             std::vector<typename GV::Grid::GlobalIdSet::IdType> vid(refElem.size(dim));
             for(unsigned int i = 0; i < vid.size(); ++i)
-              vid[i] = idSet.subId(*it, i, dim);
+              vid[i] = idSet.subId(element, i, dim);
 
             // loop over all edges of the element
             for(int i = 0; i < refElem.size(dim-1); ++i) {
