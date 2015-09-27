@@ -8,6 +8,7 @@
 #include <utility>
 
 #include <dune/common/exceptions.hh>
+#include <dune/common/typetraits.hh>
 
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/virtualinterface.hh>
@@ -23,6 +24,10 @@
 
 namespace Dune {
   namespace PDELab {
+
+    namespace Imp {
+      struct EmptyStruct {};
+    }
 
     //! \addtogroup GridFunctionSpace
     //! \ingroup PDELab
@@ -94,7 +99,7 @@ namespace Dune {
           // call interpolate for the basis
           auto f = [&](const Domain& x) -> RangeField { return lf(x)[index]; };
 
-          using LocalFunction = typename Dune::Functions::FunctionFromCallable<RangeField(Domain), decltype(f), TypeTree::EmptyNode>;
+          using LocalFunction = typename Dune::Functions::FunctionFromCallable<RangeField(Domain), decltype(f), Dune::Empty>;
           LocalFunction fnkt(f);
 
           ib.interpolate(lfs.finiteElement(), fnkt, xl);
@@ -135,7 +140,7 @@ namespace Dune {
           // call interpolate for the basis
           using Domain = typename Functions::SignatureTraits<F>::Domain;
           using Range = typename Functions::SignatureTraits<F>::Range;
-          using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F, TypeTree::EmptyNode>;
+          using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F, Dune::Empty>;
           LocalFunction lf(f);
           ib.interpolate(lfs.finiteElement(), lf, xl);
 
@@ -153,7 +158,7 @@ namespace Dune {
         {
           // call interpolate for the basis
           using Domain = typename Functions::SignatureTraits<F>::Domain;
-          using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F, TypeTree::EmptyNode>;
+          using LocalFunction = typename Dune::Functions::FunctionFromCallable<Range(Domain), F, Dune::Empty>;
           LocalFunction lf(f);
 
           TypeTree::applyToTree(lfs,InterpolateLeafFromScalarVisitor<IB,LocalFunction,XG>(ib,lf,xg));
