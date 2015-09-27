@@ -48,7 +48,7 @@ namespace Dune{
       /**
          \brief Constructor
 
-         \param [in] local_assembler_ The local assembler object which
+         \param [in] la_ The local assembler object which
          creates this engine
       */
       OneStepLocalPatternAssemblerEngine(const LocalAssembler & la_)

@@ -234,7 +234,7 @@ namespace Dune {
      * by applying the standard logic that every location on the boundary is either Neumann or
      * Dirichlet constrained.
      *
-     * \warning This adapter will only work for the standard case of \f$\partial \Omega = \Gamma_D \cup \Gamma_N$\f.
+     * \warning This adapter will only work for the standard case of \f$\partial \Omega = \Gamma_D \cup \Gamma_N\f$.
      *          Do not try to use it for more advanced problems such as flow with flux, outflow and Dirichlet constraints!
      *
      * \tparam FluxConstraintsParameters The type of the underlying Neumann constraints parameters implementation.
@@ -280,6 +280,17 @@ namespace Dune {
       FluxConstraintsParameters& _fluxConstraintsParameters;
 
     };
+
+    /**
+     * Empty parameters to allow running the assembler for NoConstraints
+     *
+     * \note This class does not do anything. It only works, because the
+     *       NoConstraints don't even try to assemble anything.
+     *
+     * \remark it is also used internally for the
+     *       Dune::PDELab::constraints assembler TMP without any parameters
+     */
+    class NoConstraintsParameters : public TypeTree::LeafNode {};
 
     //! \}
 

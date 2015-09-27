@@ -4,6 +4,7 @@
 #ifndef DUNE_PDELAB_VECTORGRIDFUNCTIONSPACE_HH
 #define DUNE_PDELAB_VECTORGRIDFUNCTIONSPACE_HH
 
+#include <algorithm>
 #include <cstddef>
 
 #include <dune/common/shared_ptr.hh>

@@ -1,19 +1,12 @@
 PDELab
 ======
 
-This is the 3.0-dev version of PDELab, a PDE discretization toolkit built
+This is the 2.4-dev version of PDELab, a PDE discretization toolkit built
 on top of the DUNE framework [0]. License information can be found in the file
 COPYING.
 
-PDELab 2.0 is a major release containing a large number of new features and improvements.
-Most importantly, the DOF handling and the interface to linear algebra have been completely
-rewritten, bringing improvements like faster and more memory-efficient matrix pattern
-construction, easier iteration over DOF vectors, built-in support for applying arbitrary
-permutations to the DOF order, among others. Another important new feature is the ability
-to do computations on non-overlapping grids without storing the ghost DOFs, reducing both
-the parallelization overhead and the complexity of the underlying code, in particular when
-using AMG. Finally, it is now possible to do adaptive calculations with nested function spaces.
-For details and an overview of the bug fixes in this release, see the changelog below.
+PDELab 2.4 is a minor release. For details and an overview of the bug fixes in this release,
+see the changelog below.
 
 If you need help, please ask on our mailinglist [1]. Bugs can also be submitted
 to the PDELab bugtracker at [2] instead.
@@ -21,16 +14,24 @@ to the PDELab bugtracker at [2] instead.
 Changes
 =======
 
-PDELab 3.0
+PDELab 2.4
 ----------
 
 - PDELab has updated its minimum compiler requirements. You now need a compiler that is at
-  least compatible with GCC 4.5 in C++11 mode.
+  least compatible with GCC 4.7 in C++11 mode.
 
-- PDELab 3.0-dev requires at least version 2.4-dev of the core modules.
+- The PDELab build system now uses the dune_enable_all_packages() feature and thus requires
+  at least CMake 2.8.12 to build.
+
+- PDELab 2.4-dev requires at least version 2.4-dev of the core modules.
 
 - In stride with the changes to the core modules, a lot of backwards compatibility code for
   older compilers was removed.
+
+- The method g() in the parameter class for the convection diffusion operators now expects
+  an unwrapped entity (that means you have to call it with `eg.entity()` instead of just `eg()`.
+  The version of g() that can be called with an intersection has been deprecated, please always
+  call the version taking an entity.
 
 PDELab 2.0
 ----------

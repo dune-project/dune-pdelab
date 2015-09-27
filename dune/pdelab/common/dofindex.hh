@@ -10,17 +10,151 @@ namespace Dune {
 
   namespace PDELab {
 
+    //! A multi-index representing a degree of freedom in a GridFunctionSpace.
+    /**
+     * A DOFIndex provides a way for identifying degrees of freedom in a (possibly
+     * nested) GridFunctionSpace without imposing any kind of ordering. For that
+     * purpose, a DOFIndex identifies a degree of freedom by recording
+     *
+     * - the geometry type of the grid entity associated with the DOF,
+     * - an index value uniquely identifying the grid entity among all grid entities
+     *   of its geometry type (usually just the index value of some Grid IndexSet),
+     * - a tuple of entity-local indices.
+     *
+     * The length of this index tuple is limited by the template parameter \p tree_n, which will
+     * usually be equal to the maximum depth of the current GridFunctionSpace tree. Moreover,
+     * there will never be two identical index tuples associated with the same grid entity.
+     *
+     * The index tuple is oriented from left to right when traversing up the tree (i.e.
+     * towards the root node) and from right to left when drilling down from the root node
+     * towards a leaf. For non-leaf nodes, the associated index entry identifies the child
+     * GridFunctionSpace that the degree of freedom is associated with, while for leafs, it
+     * provides a way to provide multiple degrees of freedom for a single grid entity (usually,
+     * the index value for a leaf space will correspond to the LocalKey::index() value from
+     * the finite element).
+     *
+     * Note that in general, the length of the index tuple will not be the same for all degrees
+     * of freedom in a GridFunctionSpace. Consider the following example of a Taylor-Hood element
+     * (P<sub>2</sub>-P<sub>1</sub>):
+     * \dot
+     * graph taylor_hood {
+     * node [shape=record, style=rounded, fontname=Helvetica, fontsize=8, height=0.2, width=0.4];
+     * TH [ label="Taylor-Hood"];
+     * TH -- V;
+     * V [ label="Velocity"];
+     * TH -- P;
+     * P [ label="Pressure"];
+     * V -- Vx;
+     * Vx [ label="x Velocity" ];
+     * V -- Vy;
+     * Vy [ label="y Velocity" ];
+     * }
+     * \enddot
+     * In this case, degrees of freedom for the velocity components will have an index tuple of length
+     * 3, while those related to pressure will only have an index tuple of length 2. For the Taylor-Hood
+     * space given above, the DOFIndex associated with a triangle with vertex and edge indices in the
+     * range {0,1,2} are
+     *
+     * <table>
+     *  <tr>
+     *   <th>GeometryType</th>
+     *   <th>grid entity index</th>
+     *   <th>entity-local index tuple</th>
+     *  </tr>
+     *  <tr>
+     *   <td>Point</td>
+     *   <td>0</td>
+     *   <td align="right">0, 0, 0</td>
+     *  </tr>
+     *  <tr>
+     *   <td>Point</td>
+     *   <td>1</td>
+     *   <td align="right">0, 0, 0</td>
+     *  </tr>
+     *  <tr>
+     *   <td>Point</td>
+     *   <td>2</td>
+     *   <td align="right">0, 0, 0</td>
+     *  </tr>
+     *  <tr>
+     *   <td>Line</td>
+     *   <td>0</td>
+     *   <td align="right">0, 0, 0</td>
+     *  </tr>
+     *  <tr>
+     *   <td>Line</td>
+     *   <td>1</td>
+     *   <td align="right">0, 0, 0</td>
+     *  </tr>
+     *  <tr>
+     *   <td>Line</td>
+     *   <td>2</td>
+     *   <td align="right">0, 0, 0</td>
+     *  </tr>
+     *  <tr>
+     *   <td>Point</td>
+     *   <td>0</td>
+     *   <td align="right">0, 1, 0</td>
+     *  </tr>
+     *  <tr>
+     *   <td>Point</td>
+     *   <td>1</td>
+     *   <td align="right">0, 1, 0</td>
+     *  </tr>
+     *  <tr>
+     *   <td>Point</td>
+     *   <td>2</td>
+     *   <td align="right">0, 1, 0</td>
+     *  </tr>
+     *  <tr>
+     *   <td>Line</td>
+     *   <td>0</td>
+     *   <td align="right">0, 1, 0</td>
+     *  </tr>
+     *  <tr>
+     *   <td>Line</td>
+     *   <td>1</td>
+     *   <td align="right">0, 1, 0</td>
+     *  </tr>
+     *  <tr>
+     *   <td>Line</td>
+     *   <td>2</td>
+     *   <td align="right">0, 1, 0</td>
+     *  </tr>
+     *  <tr>
+     *   <td>Point</td>
+     *   <td>0</td>
+     *   <td align="right">0, 1</td>
+     *  </tr>
+     *  <tr>
+     *   <td>Point</td>
+     *   <td>1</td>
+     *   <td align="right">0, 1</td>
+     *  </tr>
+     *  <tr>
+     *   <td>Point</td>
+     *   <td>2</td>
+     *   <td align="right">0, 1</td>
+     *  </tr>
+     * </table>
+     *
+     * \tparam T         the type of the index entries.
+     * \tparam tree_n    the maximum length of the tuple of entity-local indices.
+     * \tparam entity_n  the maximum length of a tuple which represents the entity index.
+     */
     template<typename T, std::size_t tree_n, std::size_t entity_n = 1>
     class DOFIndex
     {
 
     public:
 
-      //! The maximum possible depth of the MultiIndex.
-      static const std::size_t max_depth = tree_n;
+      //! The maximum possible length of a tuple which represents the entity index.
       static const std::size_t entity_capacity = entity_n;
 
-      typedef array<T,entity_capacity> EntityIndex;
+      //! The maximum possible length of the tuple of entity-local indices.
+      static const std::size_t max_depth = tree_n;
+
+      typedef std::array<T,entity_capacity> EntityIndex;
       typedef MultiIndex<T,max_depth> TreeIndex;
 
       typedef typename TreeIndex::size_type size_type;
@@ -36,7 +170,7 @@ namespace Dune {
         static const std::size_t max_depth = tree_n;
         static const std::size_t entity_capacity = entity_n;
 
-        typedef const array<T,entity_n>& EntityIndex;
+        typedef const std::array<T,entity_n>& EntityIndex;
         typedef typename MultiIndex<T,tree_n>::View TreeIndex;
 
         EntityIndex& entityIndex() const
@@ -125,22 +259,25 @@ namespace Dune {
         return _entity_index;
       }
 
+      //! Returns the index of the grid entity associated with the DOF.
       const EntityIndex& entityIndex() const
       {
         return _entity_index;
       }
 
+      //! Returns the tuple of entity-local indices associated with the DOF.
       TreeIndex& treeIndex()
       {
         return _tree_index;
       }
 
+      //! Returns the tuple of entity-local indices associated with the DOF.
       const TreeIndex& treeIndex() const
       {
         return _tree_index;
       }
 
-      //! Writes a pretty representation of the MultiIndex to the given std::ostream.
+      //! Writes a pretty representation of the DOFIndex to the given std::ostream.
       friend std::ostream& operator<< (std::ostream& s, const DOFIndex& di)
       {
         s << "(";
@@ -154,9 +291,9 @@ namespace Dune {
         return s;
       }
 
-      //! Tests whether two MultiIndices are equal.
+      //! Tests whether two DOFIndices are equal.
       /**
-       * \note Only MultiIndices of identical max_depth are comparable
+       * \note Only DOFIndices of identical max_depth are comparable.
        */
       bool operator== (const DOFIndex& r) const
       {
@@ -165,7 +302,7 @@ namespace Dune {
           _tree_index == r._tree_index;
       }
 
-      //! Tests whether two MultiIndices are not equal.
+      //! Tests whether two DOFIndices are not equal.
       bool operator!= (const DOFIndex& r) const
       {
         return !(*this == r);

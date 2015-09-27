@@ -22,7 +22,7 @@
 
 #include <dune/typetree/typetree.hh>
 
-#include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
 #include <dune/pdelab/constraints/noconstraints.hh>
 #include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
@@ -104,7 +104,7 @@ namespace Dune {
      * entity, known at compile-time)
      */
     template<typename GV, typename FEM, typename CE=NoConstraints,
-             typename B=ISTLVectorBackend<>, typename P=DefaultLeafOrderingTag>
+             typename B=istl::VectorBackend<>, typename P=DefaultLeafOrderingTag>
     class GridFunctionSpace
       : public TypeTree::LeafNode
       , public GridFunctionSpaceBase<
@@ -168,16 +168,6 @@ namespace Dune {
         , _pce(stackobject_to_shared_ptr(ce))
       {
       }
-
-      //! constructor
-      GridFunctionSpace (const GV& gridview, const std::shared_ptr<const FEM>& fem, const CE& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
-      DUNE_DEPRECATED_MSG("Use either a constructor that passes both FiniteElementMap and ConstraintsEngine as const reference \
-(for objects with externally controlled lifetime) or as shared_ptr (this GridFunctionSpace will assume shared ownership of both objects).")
-        : BaseT(backend,ordering_tag)
-        , gv(gridview)
-        , pfem(fem)
-        , _pce(stackobject_to_shared_ptr(ce))
-      {}
 
       //! constructor
       GridFunctionSpace (const GV& gridview, const std::shared_ptr<const FEM>& fem, const std::shared_ptr<const CE>& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())

@@ -9,7 +9,7 @@
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/localvector.hh>
@@ -34,21 +34,21 @@ void test (const GV& gv)
 
   // power grid function space
   typedef Dune::PDELab::PowerGridFunctionSpace<Q2GFS,2,
-    Dune::PDELab::ISTLVectorBackend<>, Dune::PDELab::LexicographicOrderingTag> PowerGFS;
+    Dune::PDELab::istl::VectorBackend<>, Dune::PDELab::LexicographicOrderingTag> PowerGFS;
   PowerGFS powergfs(q2gfs);
 
   // composite grid function space
-  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::ISTLVectorBackend<>,
+  typedef Dune::PDELab::CompositeGridFunctionSpace<Dune::PDELab::istl::VectorBackend<>,
       Dune::PDELab::LexicographicOrderingTag,PowerGFS,Q1GFS> CompositeGFS;
   CompositeGFS compositegfs(powergfs,q1gfs);
 
   // make coefficent Vectors - we need to make copies of the spaces because we stuck
   // them in a hierarchy
-  typedef typename Dune::PDELab::BackendVectorSelector<Q2GFS,double>::Type V;
+  using V = Dune::PDELab::Backend::Vector<Q2GFS,double>;
   Q2GFS q2gfs2(gv,q22dfem);
   V x(q2gfs2);
   x = 0.0;
-  typedef typename Dune::PDELab::BackendVectorSelector<PowerGFS,double>::Type VP;
+  using VP = Dune::PDELab::Backend::Vector<PowerGFS,double>;
   Q2GFS q2gfs_pc(gv,q22dfem);
   PowerGFS powergfs2(q2gfs_pc);
   VP xp(powergfs2);

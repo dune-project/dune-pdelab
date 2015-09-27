@@ -17,9 +17,15 @@ namespace Dune {
     namespace PDELab {
 
         namespace {
+
+            /** \brief Construct LocalFiniteElement with a given run-time order
+             *
+             * \tparam k Loop variable in a static loop
+             */
             template<class D, class R, int d, int k>
             struct InitPkQkLocalFiniteElementMap
             {
+                /** \brief Set up LocalFiniteElement with order 'order' */
                 template<typename C>
                 static void init(C & c, unsigned int order)
                 {
@@ -46,8 +52,16 @@ namespace Dune {
             };
         }
 
-        //! FiniteElementMap which provides PkQkLocalFiniteElement instances, depending on the geometry type
-        //! \ingroup FiniteElementMap
+        /** \brief FiniteElementMap which provides PkQkLocalFiniteElement instances, depending on the geometry type
+         * \ingroup FiniteElementMap
+         *
+         * \tparam D Type used for coordinates
+         * \tparam R Type used for shape function values
+         * \tparam d Grid dimension
+         * \tparam maxP Approximation order: if you construct an object of this class with its default constructor,
+         *    then this number is the approximation order that you get.  If you construct an object giving an order
+         *    at run-time, then maxP is the maximal order that you can request.
+         */
         template<class D, class R, int d, int maxP=6>
         class PkQkLocalFiniteElementMap
         {
@@ -56,11 +70,15 @@ namespace Dune {
         public:
             typedef FiniteElementMapTraits<FiniteElementType> Traits;
 
+            /** \brief Default constructor.  Constructs a space of order maxP */
             PkQkLocalFiniteElementMap ()
             {
                 InitPkQkLocalFiniteElementMap<D,R,d,maxP>::init(finiteElements_,maxP);
             }
 
+            /** \brief Construct a space with a given order
+             * \throw Dune::Exception if the requested order is larger than maxP
+             */
             PkQkLocalFiniteElementMap (unsigned int order)
             {
                 InitPkQkLocalFiniteElementMap<D,R,d,maxP>::init(finiteElements_,order);
@@ -104,7 +122,7 @@ namespace Dune {
             }
 
         private:
-            Dune::array< std::shared_ptr<FiniteElementType>, 2 > finiteElements_;
+            std::array< std::shared_ptr<FiniteElementType>, 2 > finiteElements_;
         };
     }
 }

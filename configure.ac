@@ -42,8 +42,6 @@ AC_CONFIG_FILES([
   dune/pdelab/common/Makefile
   dune/pdelab/constraints/Makefile
   dune/pdelab/constraints/common/Makefile
-  dune/pdelab/experimental/common/Makefile
-  dune/pdelab/experimental/Makefile
   dune/pdelab/finiteelement/Makefile
   dune/pdelab/finiteelementmap/Makefile
   dune/pdelab/function/Makefile
@@ -56,7 +54,6 @@ AC_CONFIG_FILES([
   dune/pdelab/linearsolver/Makefile
   dune/pdelab/localoperator/Makefile
   dune/pdelab/Makefile
-  dune/pdelab/multistep/Makefile
   dune/pdelab/newton/Makefile
   dune/pdelab/ordering/Makefile
   dune/pdelab/stationary/Makefile

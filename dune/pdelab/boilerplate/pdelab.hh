@@ -27,7 +27,7 @@
 #include <dune/geometry/quadraturerules.hh>
 
 #include <dune/grid/onedgrid.hh>
-#include <dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
+#include <dune/grid/io/file/vtk.hh>
 #include <dune/grid/yaspgrid.hh>
 #if HAVE_UG
 #include <dune/grid/uggrid.hh>
@@ -39,8 +39,8 @@
 #if HAVE_UG
 #include<dune/grid/uggrid.hh>
 #endif
-#if HAVE_ALUGRID
-#include<dune/grid/alugrid.hh>
+#if HAVE_DUNE_ALUGRID
+#include<dune/alugrid/grid.hh>
 #include<dune/grid/io/file/dgfparser/dgfalu.hh>
 #include<dune/grid/io/file/dgfparser/dgfparser.hh>
 #endif
@@ -58,9 +58,7 @@
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/common/functionutilities.hh>
 #include <dune/pdelab/common/vtkexport.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
-#include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
-#include <dune/pdelab/backend/istlsolverbackend.hh>
+#include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/constraints/conforming.hh>
 #include <dune/pdelab/constraints/hangingnode.hh>
 #include <dune/pdelab/constraints/p0.hh>
@@ -80,6 +78,7 @@
 #include <dune/pdelab/finiteelementmap/qkdggl.hh>
 #include <dune/pdelab/adaptivity/adaptivity.hh>
 #include <dune/pdelab/instationary/onestep.hh>
+#include <dune/pdelab/common/instationaryfilenamehelper.hh>
 #include <dune/pdelab/newton/newton.hh>
 
 namespace Dune {
@@ -216,11 +215,7 @@ namespace Dune {
                 std::bitset<dimworld> B(false);
 
                 // instantiate the grid
-#if HAVE_MPI
-                gridp = std::shared_ptr<Grid>(new Grid(Dune::MPIHelper::getCommunicator(),L,N,B,overlap));
-#else
-                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap));
-#endif
+                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap,Dune::MPIHelper::getCollectiveCommunication()));
             }
 
             // constructor with sizes given
@@ -250,11 +245,7 @@ namespace Dune {
                     }
 
                 // instantiate the grid
-#if HAVE_MPI
-                gridp = std::shared_ptr<Grid>(new Grid(Dune::MPIHelper::getCommunicator(),L,N,B,overlap));
-#else
-                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap));
-#endif
+                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap,Dune::MPIHelper::getCollectiveCommunication()));
             }
 
             // constructor with periodicity argument
@@ -285,11 +276,7 @@ namespace Dune {
                     }
 
                 // instantiate the grid
-#if HAVE_MPI
-                gridp = std::shared_ptr<Grid>(new Grid(Dune::MPIHelper::getCommunicator(),L,N,B,overlap));
-#else
-                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap));
-#endif
+                gridp = std::shared_ptr<Grid>(new Grid(L,N,B,overlap,Dune::MPIHelper::getCollectiveCommunication()));
             }
 
             // return shared pointer
@@ -557,7 +544,7 @@ namespace Dune {
             {
                 // make vector consistent; this is needed for all overlapping solvers
                 istl::ParallelHelper<GFS> helper(gfs);
-                helper.maskForeignDOFs(istl::raw(x));
+                helper.maskForeignDOFs(Backend::native(x));
                 Dune::PDELab::AddDataHandle<GFS,DOF> adddh(gfs,x);
                 if (gfs.gridView().comm().size()>1)
                     gfs.gridView().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
@@ -596,7 +583,7 @@ namespace Dune {
         // continuous Lagrange finite elements
         template<typename T, typename N, unsigned int degree, typename BCType,
                  Dune::GeometryType::BasicType gt, MeshType mt, SolverCategory::Category st = SolverCategory::sequential,
-                 typename VBET=ISTLVectorBackend<> >
+                 typename VBET=istl::VectorBackend<> >
         class CGSpace {
         public:
 
@@ -617,7 +604,7 @@ namespace Dune {
             typedef GridFunctionSpace<GV,FEM,CON,VBE> GFS;
 
             typedef N NT;
-            typedef typename BackendVectorSelector<GFS,N>::Type DOF;
+            using DOF = Backend::Vector<GFS,N>;
             typedef Dune::PDELab::DiscreteGridFunction<GFS,DOF> DGF;
             typedef typename GFS::template ConstraintsContainer<N>::Type CC;
             typedef VTKGridFunctionAdapter<DGF> VTKF;
@@ -771,7 +758,7 @@ namespace Dune {
             {
                 // make vector consistent; this is needed for all overlapping solvers
                 istl::ParallelHelper<GFS> helper(gfs);
-                helper.maskForeignDOFs(istl::raw(x));
+                helper.maskForeignDOFs(Backend::native(x));
                 Dune::PDELab::AddDataHandle<GFS,DOF> adddh(gfs,x);
                 if (gfs.gridView().comm().size()>1)
                     gfs.gridView().communicate(adddh,Dune::InteriorBorder_All_Interface,Dune::ForwardCommunication);
@@ -784,7 +771,7 @@ namespace Dune {
         // default implementation, use only specializations below
         template<typename T, typename N, unsigned int degree,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 typename VBET=ISTLVectorBackend<ISTLParameters::static_blocking,Dune::PB::PkSize<degree,T::dimension>::value> >
+                 typename VBET=istl::VectorBackend<istl::Blocking::fixed,Dune::PB::PkSize<degree,T::dimension>::value> >
         class DGPkSpace
         {
         public:
@@ -805,7 +792,7 @@ namespace Dune {
             typedef typename CONB::CON CON;
             typedef VBET VBE;
             typedef GridFunctionSpace<GV,FEM,CON,VBE> GFS;
-            typedef typename BackendVectorSelector<GFS,N>::Type DOF;
+            using DOF = Backend::Vector<GFS,N>;
             typedef Dune::PDELab::DiscreteGridFunction<GFS,DOF> DGF;
             typedef typename GFS::template ConstraintsContainer<N>::Type CC;
             typedef VTKGridFunctionAdapter<DGF> VTKF;
@@ -883,8 +870,8 @@ namespace Dune {
         // default implementation, use only specializations below
         template<typename T, typename N, unsigned int degree,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 //typename VBET=ISTLVectorBackend<ISTLParameters::static_blocking,Dune::PB::PkSize<degree,T::dimension>::value> >
-                 typename VBET=ISTLVectorBackend<> >
+                 //typename VBET=istl::VectorBackend<istl::Blocking::fixed,Dune::PB::PkSize<degree,T::dimension>::value> >
+                 typename VBET=istl::VectorBackend<> >
         class DGQkOPBSpace
         {
         public:
@@ -905,7 +892,7 @@ namespace Dune {
             typedef typename CONB::CON CON;
             typedef VBET VBE;
             typedef GridFunctionSpace<GV,FEM,CON,VBE> GFS;
-            typedef typename BackendVectorSelector<GFS,N>::Type DOF;
+            using DOF = Backend::Vector<GFS,N>;
             typedef Dune::PDELab::DiscreteGridFunction<GFS,DOF> DGF;
             typedef typename GFS::template ConstraintsContainer<N>::Type CC;
             typedef VTKGridFunctionAdapter<DGF> VTKF;
@@ -983,7 +970,7 @@ namespace Dune {
         // default implementation, use only specializations below
         template<typename T, typename N, unsigned int degree,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 typename VBET=ISTLVectorBackend<ISTLParameters::static_blocking,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
+                 typename VBET=istl::VectorBackend<istl::Blocking::fixed,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
         class DGQkSpace
         {
         public:
@@ -1000,7 +987,7 @@ namespace Dune {
             typedef typename CONB::CON CON;
             typedef VBET VBE;
             typedef GridFunctionSpace<GV,FEM,CON,VBE> GFS;
-            typedef typename BackendVectorSelector<GFS,N>::Type DOF;
+            using DOF = Backend::Vector<GFS,N>;
             typedef Dune::PDELab::DiscreteGridFunction<GFS,DOF> DGF;
             typedef typename GFS::template ConstraintsContainer<N>::Type CC;
             typedef VTKGridFunctionAdapter<DGF> VTKF;
@@ -1078,8 +1065,8 @@ namespace Dune {
         // Discontinuous space using QK with Gauss Lobatto points (use only for cube elements)
         template<typename T, typename N, unsigned int degree,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 //typename VBET=ISTLVectorBackend<ISTLParameters::static_blocking,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
-                 typename VBET=ISTLVectorBackend<> >
+                 //typename VBET=istl::VectorBackend<istl::Blocking::fixed,Dune::QkStuff::QkSize<degree,T::dimension>::value> >
+                 typename VBET=istl::VectorBackend<> >
         class DGQkGLSpace
         {
         public:
@@ -1096,7 +1083,7 @@ namespace Dune {
             typedef typename CONB::CON CON;
             typedef VBET VBE;
             typedef GridFunctionSpace<GV,FEM,CON,VBE> GFS;
-            typedef typename BackendVectorSelector<GFS,N>::Type DOF;
+            using DOF = Backend::Vector<GFS,N>;
             typedef Dune::PDELab::DiscreteGridFunction<GFS,DOF> DGF;
             typedef typename GFS::template ConstraintsContainer<N>::Type CC;
             typedef VTKGridFunctionAdapter<DGF> VTKF;
@@ -1175,7 +1162,7 @@ namespace Dune {
         // Discontinuous P0 space
         template<typename T, typename N,
                  Dune::GeometryType::BasicType gt, SolverCategory::Category st = SolverCategory::sequential,
-                 typename VBET=ISTLVectorBackend<> >
+                 typename VBET=istl::VectorBackend<> >
         class P0Space
         {
         public:
@@ -1192,7 +1179,7 @@ namespace Dune {
             typedef typename CONB::CON CON;
             typedef VBET VBE;
             typedef GridFunctionSpace<GV,FEM,CON,VBE> GFS;
-            typedef typename BackendVectorSelector<GFS,N>::Type DOF;
+            using DOF = Backend::Vector<GFS,N>;
             typedef Dune::PDELab::DiscreteGridFunction<GFS,DOF> DGF;
             typedef typename GFS::template ConstraintsContainer<N>::Type CC;
             typedef VTKGridFunctionAdapter<DGF> VTKF;

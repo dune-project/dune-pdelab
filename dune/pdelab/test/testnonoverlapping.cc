@@ -11,8 +11,7 @@
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/finiteelementmap/qkfem.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
-#include <dune/pdelab/backend/istlmatrixbackend.hh>
+#include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/localoperator/l2.hh>
 
 #include <dune/pdelab/gridoperator/gridoperator.hh>
@@ -70,7 +69,7 @@ int main(int argc, char** argv)
     typedef Dune::PDELab::QkLocalFiniteElementMap<GV,DF,RF,1> FEM;
     FEM fem(gv);
 
-    typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+    typedef Dune::PDELab::istl::VectorBackend<> VBE;
     typedef Dune::PDELab::NoConstraints NoConstraints;
 
     typedef Dune::PDELab::GridFunctionSpace<GV,FEM,NoConstraints,VBE,Dune::PDELab::NonOverlappingLeafOrderingTag> GFS;
@@ -114,7 +113,7 @@ int main(int argc, char** argv)
               }
             std::cout << std::endl;
 
-            Dune::printmatrix(std::cout,A.base(),"","");
+            Dune::printmatrix(std::cout,Dune::PDELab::Backend::native(A),"","");
 
           }
 

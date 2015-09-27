@@ -129,7 +129,7 @@ namespace Dune {
         }
 
       private:
-        array<FE,6> _variant;
+        std::array<FE,6> _variant;
         GV _gv;
 
       };
@@ -239,50 +239,24 @@ namespace Dune {
           return vertexmap[0] + (vertexmap[1]<<2) + (vertexmap[2]<<4) + (vertexmap[3]<<6);
         }
 
-        array<FE,24> _variant;
-        array<unsigned int,256> _perm_index;
+        std::array<FE,24> _variant;
+        std::array<unsigned int,256> _perm_index;
         GV _gv;
 
       };
 
-
-#ifndef DOXYGEN
-
-      template<unsigned int d>
-      struct DUNE_DEPRECATED_MSG("The fifth template parameter for PkLocalFiniteElementMap (the dimension) is deprecated") warn_deprecated_pk_interface
-      {
-        warn_deprecated_pk_interface() DUNE_DEPRECATED_MSG("The fifth template parameter for PkLocalFiniteElementMap (the dimension) is deprecated")
-          {}
-      };
-
-      template<>
-      struct warn_deprecated_pk_interface<0>
-      {
-        warn_deprecated_pk_interface()
-        {}
-      };
-
-#endif // DOXYGEN
-
-
     } // namespace fem
 
 
-    template<typename GV, typename D, typename R, unsigned int k, unsigned int d = 0>
+    template<typename GV, typename D, typename R, unsigned int k>
     class PkLocalFiniteElementMap
       : public fem::PkLocalFiniteElementMapBase<GV,D,R,k,GV::dimension>
-#ifndef DOXYGEN
-      , public fem::warn_deprecated_pk_interface<d>
-#endif
     {
 
     public:
 
       PkLocalFiniteElementMap(const GV& gv)
         : fem::PkLocalFiniteElementMapBase<GV,D,R,k,GV::dimension>(gv)
-#ifndef DOXYGEN
-        , fem::warn_deprecated_pk_interface<d>()
-#endif
       {}
 
     };

@@ -23,7 +23,7 @@
 #include <dune/pdelab/backend/simple.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/localoperator/laplacedirichletp12d.hh>
-#include <dune/pdelab/localoperator/poisson.hh>
+#include <dune/pdelab/localoperator/convectiondiffusionfem.hh>
 #include <dune/pdelab/gridfunctionspace/vtk.hh>
 
 #include "gridexamples.hh"
@@ -41,106 +41,95 @@
 // Define parameter functions f,g,j and \partial\Omega_D/N
 //===============================================================
 
-// function for defining the source term
 template<typename GV, typename RF>
-class F
-  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  F<GV,RF> >
+class PoissonModelProblem
 {
-public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,F<GV,RF> > BaseT;
+  typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
 
-  F (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x,
-                              typename Traits::RangeType& y) const
+public:
+  typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
+
+  //! tensor diffusion coefficient
+  typename Traits::PermTensorType
+  A (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-    if (x[0]>0.25 && x[0]<0.375 && x[1]>0.25 && x[1]<0.375)
-      y = 50.0;
+    typename Traits::PermTensorType I;
+    for (std::size_t i=0; i<Traits::dimDomain; i++)
+      for (std::size_t j=0; j<Traits::dimDomain; j++)
+        I[i][j] = (i==j) ? 1 : 0;
+    return I;
+  }
+
+  //! velocity field
+  typename Traits::RangeType
+  b (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    typename Traits::RangeType v(0.0);
+    return v;
+  }
+
+  //! sink term
+  typename Traits::RangeFieldType
+  c (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    return 0.0;
+  }
+
+  //! source term
+  typename Traits::RangeFieldType
+  f (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
+  {
+    const auto& xglobal = e.geometry().global(x);
+    if (xglobal[0]>0.25 && xglobal[0]<0.375 && xglobal[1]>0.25 && xglobal[1]<0.375)
+      return 50.0;
     else
-      y = 0.0;
-  }
-};
-
-
-// boundary grid function selecting boundary conditions
-class ConstraintsParameters
-  : public Dune::PDELab::DirichletConstraintsParameters
-{
-
-public:
-
-  template<typename I>
-  bool isDirichlet(const I & ig, const Dune::FieldVector<typename I::ctype, I::dimension-1> & x) const
-  {
-    Dune::FieldVector<typename I::ctype,I::dimension>
-      xg = ig.geometry().global(x);
-
-    if (xg[1]<1E-6 || xg[1]>1.0-1E-6)
-      {
-        return false;
-      }
-    if (xg[0]>1.0-1E-6 && xg[1]>0.5+1E-6)
-      {
-        return false;
-      }
-    return true;
+      return 0.0;
   }
 
-  template<typename I>
-  bool isNeumann(const I & ig, const Dune::FieldVector<typename I::ctype, I::dimension-1> & x) const
+  //! boundary condition type function
+  BCType
+  bctype (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
-    return !isDirichlet(ig,x);
+    typename Traits::DomainType xglobal = is.geometry().global(x);
+
+    if (xglobal[1]<1E-6 || xglobal[1]>1.0-1E-6)
+      {
+        return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
+      }
+    if (xglobal[0]>1.0-1E-6 && xglobal[1]>0.5+1E-6)
+      {
+        return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Neumann;
+      }
+    return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
   }
 
-};
-
-
-// function for Dirichlet boundary conditions and initialization
-template<typename GV, typename RF>
-class G
-  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  G<GV,RF> >
-{
-public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,G<GV,RF> > BaseT;
-
-  G (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x,
-                              typename Traits::RangeType& y) const
+  //! Dirichlet boundary condition value
+  typename Traits::RangeFieldType
+  g (const typename Traits::ElementType& e, const typename Traits::DomainType& x) const
   {
-    typename Traits::DomainType center;
-    for (int i=0; i<GV::dimension; i++) center[i] = 0.5;
-    center -= x;
-    y = exp(-center.two_norm2());
+    typename Traits::DomainType xglobal = e.geometry().global(x);
+    xglobal -= 0.5;
+    return exp(-xglobal.two_norm2());
   }
-};
 
-// function for defining the flux boundary condition
-template<typename GV, typename RF>
-class J
-  : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1>,
-                                                  J<GV,RF> >
-{
-public:
-  typedef Dune::PDELab::AnalyticGridFunctionTraits<GV,RF,1> Traits;
-  typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,J<GV,RF> > BaseT;
-
-  J (const GV& gv) : BaseT(gv) {}
-  inline void evaluateGlobal (const typename Traits::DomainType& x,
-                              typename Traits::RangeType& y) const
+  //! Neumann boundary condition
+  typename Traits::RangeFieldType
+  j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
   {
-    if (x[1]<1E-6 || x[1]>1.0-1E-6)
-      {
-        y = 0;
-        return;
-      }
-    if (x[0]>1.0-1E-6 && x[1]>0.5+1E-6)
-      {
-        y = -5.0;
-        return;
-      }
+    typename Traits::DomainType xglobal = is.geometry().global(x);
+
+    if (xglobal[0] > 1.0 - 1E-6 && xglobal[1] > 0.5 + 1E-6) {
+      return -5.0;
+    } else {
+      return 0.0;
+    }
+  }
+
+  //! outflow boundary condition
+  typename Traits::RangeFieldType
+  o (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& x) const
+  {
+    return 0.0;
   }
 };
 
@@ -166,22 +155,20 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   GFS gfs(gv,fem);
   gfs.name("solution");
 
+  // make model problem
+  typedef PoissonModelProblem<GV,R> Problem;
+  Problem problem;
+
   // make constraints map and initialize it from a function
   typedef typename GFS::template ConstraintsContainer<R>::Type C;
   C cg;
   cg.clear();
-  ConstraintsParameters constraintsparameters;
-  Dune::PDELab::constraints(constraintsparameters,gfs,cg);
+  Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<Problem> bctype(gv,problem);
+  Dune::PDELab::constraints(bctype,gfs,cg);
 
   // make local operator
-  typedef G<GV,R> GType;
-  GType g(gv);
-  typedef F<GV,R> FType;
-  FType f(gv);
-  typedef J<GV,R> JType;
-  JType j(gv);
-  typedef Dune::PDELab::Poisson<FType,ConstraintsParameters,JType> LOP;
-  LOP lop(f,constraintsparameters,j,q);
+  typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,FEM> LOP;
+  LOP lop(problem);
 
   // make grid operator
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,
@@ -195,7 +182,7 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
   // it's there to test the copy constructor and assignment operator of the
   // matrix wrapper
   typedef typename GridOperator::Traits::Domain DV;
-  DV x0(gfs,Dune::PDELab::tags::unattached_container());
+  DV x0(gfs,Dune::PDELab::Backend::unattached_container());
   {
     DV x1(gfs);
     DV x2(x1);
@@ -204,6 +191,9 @@ void poisson (const GV& gv, const FEM& fem, std::string filename, int q)
     x0 = x2;
   }
 
+  // initialize DOFs from Dirichlet extension
+  typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<Problem> G;
+  G g(gv,problem);
   Dune::PDELab::interpolate(g,gfs,x0);
   Dune::PDELab::set_nonconstrained_dofs(cg,0.0,x0);
 

@@ -13,9 +13,7 @@
 #include <dune/grid/albertagrid.hh>
 #include <dune/grid/albertagrid/gridfactory.hh>
 #endif
-#if HAVE_ALUGRID
-#include <dune/grid/alugrid.hh>
-#elif  HAVE_DUNE_ALUGRID
+#if HAVE_DUNE_ALUGRID
 #include <dune/alugrid/grid.hh>
 #endif
 #if HAVE_UG
@@ -23,9 +21,7 @@
 #include <dune/grid/uggrid/uggridfactory.hh>
 #endif
 
-#include <dune/pdelab/backend/backendselector.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
-#include <dune/pdelab/backend/istl/utility.hh>
+#include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/common/vtkexport.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
@@ -49,9 +45,9 @@ void rt02DGridFunctionSpace (const GV& gv, const std::string &suffix = "")
     > GFS;
   GFS gfs(gv,fem);                    // make grid function space
 
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS, R>::Type X;
+  using X = Dune::PDELab::Backend::Vector<GFS, R>;
   X x(gfs,0.0);                       // make coefficient vector
-  Dune::PDELab::istl::raw(x)[2] = 1.0;                         // set a component
+  Dune::PDELab::Backend::native(x)[2] = 1.0;                         // set a component
 
   typedef Dune::PDELab::DiscreteGridFunctionPiola<GFS,X> DGF;
   DGF dgf(gfs,x);                     // make a grid function
@@ -102,7 +98,7 @@ int main(int argc, char** argv)
 #endif // HAVE_ALBERTA
 
 
-#if HAVE_ALUGRID || HAVE_DUNE_ALUGRID
+#if HAVE_DUNE_ALUGRID
     std::cout << "ALU" << std::endl;
     {
       typedef Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> Grid;
@@ -113,7 +109,7 @@ int main(int argc, char** argv)
       rt02DGridFunctionSpace(grid.leafGridView(), "alu");
     }
     result = 0;
-#endif // HAVE_ALUGRID || HAVE_DUNE_ALUGRID
+#endif // HAVE_DUNE_ALUGRID
 
 #if HAVE_UG
     std::cout << "UG" << std::endl;

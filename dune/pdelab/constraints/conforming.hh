@@ -59,9 +59,9 @@ namespace Dune {
         const int face = ig.indexInInside();
 
         // find all local indices of this face
-        Dune::GeometryType gt = ig.inside()->type();
+        Dune::GeometryType gt = ig.inside().type();
         typedef typename IG::ctype DT;
-        const int dim = IG::Entity::Geometry::dimension;
+        const int dim = IG::Entity::dimension;
         const Dune::ReferenceElement<DT,dim>& refelem = Dune::ReferenceElements<DT,dim>::general(gt);
 
         const Dune::ReferenceElement<DT,dim-1> &
@@ -120,9 +120,9 @@ namespace Dune {
         const int face = ig.indexInInside();
 
         // find all local indices of this face
-        Dune::GeometryType gt = ig.inside()->type();
+        Dune::GeometryType gt = ig.inside().type();
         typedef typename IG::ctype DT;
-        const int dim = IG::Entity::Geometry::dimension;
+        const int dim = IG::Entity::dimension;
 
         const Dune::ReferenceElement<DT,dim>& refelem = Dune::ReferenceElements<DT,dim>::general(gt);
 
@@ -160,15 +160,17 @@ namespace Dune {
        * \tparam LFS local function space
        * \tparam T   TransformationType
        */
-      template<typename EG, typename LFS, typename T>
-      void volume (const EG& eg, const LFS& lfs, T& trafo) const
+      template<typename P, typename EG, typename LFS, typename T>
+      void volume (const P& param, const EG& eg, const LFS& lfs, T& trafo) const
       {
         typedef FiniteElementInterfaceSwitch<
-        typename LFS::Traits::FiniteElementType
+          typename LFS::Traits::FiniteElementType
           > FESwitch;
 
+        auto entity = eg.entity();
+
         // nothing to do for interior entities
-        if (eg.entity().partitionType()==Dune::InteriorEntity)
+        if (entity.partitionType()==Dune::InteriorEntity)
           return;
 
         typedef typename FESwitch::Coefficients Coefficients;
@@ -178,7 +180,7 @@ namespace Dune {
         typename T::RowType empty;
 
         const ReferenceElement<typename GV::ctype,GV::dimension>& ref_el =
-          ReferenceElements<typename GV::ctype,GV::dimension>::general(eg.entity().type());
+          ReferenceElements<typename GV::ctype,GV::dimension>::general(entity.type());
 
         // loop over all degrees of freedom and check if it is not owned by this processor
         for (size_t i = 0; i < coeffs.size(); ++i)
@@ -186,7 +188,7 @@ namespace Dune {
             size_t codim = coeffs.localKey(i).codim();
             size_t sub_entity = coeffs.localKey(i).subEntity();
 
-            size_t entity_index = _gv.indexSet().subIndex(eg.entity(),sub_entity,codim);
+            size_t entity_index = _gv.indexSet().subIndex(entity,sub_entity,codim);
             size_t gt_index = GlobalGeometryTypeIndex::index(ref_el.type(sub_entity,codim));
 
             size_t index = _gt_offsets[gt_index] + entity_index;
@@ -224,15 +226,17 @@ namespace Dune {
             it != end;
             ++it)
           {
+            auto entity = *it;
+
             const ReferenceElement<typename GV::ctype,GV::dimension>& ref_el =
-              ReferenceElements<typename GV::ctype,GV::dimension>::general(it->type());
+              ReferenceElements<typename GV::ctype,GV::dimension>::general(entity.type());
 
             for (size_t codim = 0; codim <= GV::dimension; ++codim)
               if (gfs.ordering().contains(codim))
                 {
                   for (int i = 0; i < ref_el.size(codim); ++i)
                     {
-                      size_t entity_index = _gv.indexSet().subIndex(*it,i,codim);
+                      size_t entity_index = _gv.indexSet().subIndex(entity,i,codim);
                       size_t gt_index = GlobalGeometryTypeIndex::index(ref_el.type(i,codim));
                       size_t index = _gt_offsets[gt_index] + entity_index;
 

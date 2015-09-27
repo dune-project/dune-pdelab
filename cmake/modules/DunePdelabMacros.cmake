@@ -1,6 +1,6 @@
+include(DunePdelabTestMacros)
 include(UsePETSc)
-
-find_package(Eigen3)
+include(UseEigen)
 
 function(add_dune_petsc_flags)
   if(PETSC_FOUND)

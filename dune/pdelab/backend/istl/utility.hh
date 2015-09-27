@@ -4,6 +4,7 @@
 #define DUNE_PDELAB_BACKEND_ISTL_UTILITY_HH
 
 #include <dune/common/typetraits.hh>
+#include <dune/common/deprecated.hh>
 
 #include <dune/pdelab/backend/istl/tags.hh>
 
@@ -23,6 +24,7 @@ namespace Dune {
 
       //! Returns the raw ISTL object associated with v, or v itself it is already an ISTL object.
       template<typename V>
+      DUNE_DEPRECATED_MSG("raw() is deprecated and will be removed after PDELab 2.4. Use Backend::native() instead")
       V& raw(V& v)
       {
         return v;
@@ -30,6 +32,7 @@ namespace Dune {
 
       //! Returns the raw ISTL object associated with v, or v itself it is already an ISTL object.
       template<typename V>
+      DUNE_DEPRECATED_MSG("raw() is deprecated and will be removed after PDELab 2.4. Use Backend::native() instead")
       const V& raw(const V& v)
       {
         return v;
@@ -37,53 +40,63 @@ namespace Dune {
 
       //! Returns the raw ISTL type associated with C, or C itself it is already an ISTL type.
       template<typename C>
-      struct raw_type
+      struct
+      DUNE_DEPRECATED_MSG("raw_type<> is deprecated and will be removed after PDELab 2.4. Use Backend::Native<> instead")
+      raw_type
       {
         typedef C type;
       };
 
 #ifndef DOXYGEN
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
       template<typename GFS, typename C>
-      typename ISTLBlockVectorContainer<GFS,C>::Container&
-      raw(ISTLBlockVectorContainer<GFS,C>& v)
+      DUNE_DEPRECATED_MSG("raw() is deprecated and will be removed after PDELab 2.4. Use Backend::native() instead")
+      typename BlockVector<GFS,C>::Container&
+      raw(BlockVector<GFS,C>& v)
       {
         return v.base();
       }
 
       template<typename GFS, typename C>
-      const typename ISTLBlockVectorContainer<GFS,C>::Container&
-      raw(const ISTLBlockVectorContainer<GFS,C>& v)
+      DUNE_DEPRECATED_MSG("raw() is deprecated and will be removed after PDELab 2.4. Use Backend::native() instead")
+      const typename BlockVector<GFS,C>::Container&
+      raw(const BlockVector<GFS,C>& v)
       {
         return v.base();
       }
 
       template<typename GFSU, typename GFSV, typename C, typename Stats>
-      typename ISTLMatrixContainer<GFSU,GFSV,C,Stats>::Container&
-      raw(ISTLMatrixContainer<GFSU,GFSV,C,Stats>& m)
+      DUNE_DEPRECATED_MSG("raw() is deprecated and will be removed after PDELab 2.4. Use Backend::native() instead")
+      typename BCRSMatrix<GFSU,GFSV,C,Stats>::Container&
+      raw(BCRSMatrix<GFSU,GFSV,C,Stats>& m)
       {
         return m.base();
       }
 
       template<typename GFSU, typename GFSV, typename C, typename Stats>
-      const typename ISTLMatrixContainer<GFSU,GFSV,C,Stats>::Container&
-      raw(const ISTLMatrixContainer<GFSU,GFSV,C,Stats>& m)
+      DUNE_DEPRECATED_MSG("raw() is deprecated and will be removed after PDELab 2.4. Use Backend::native() instead")
+      const typename BCRSMatrix<GFSU,GFSV,C,Stats>::Container&
+      raw(const BCRSMatrix<GFSU,GFSV,C,Stats>& m)
       {
         return m.base();
       }
 
       template<typename GFS, typename C>
-      struct raw_type<ISTLBlockVectorContainer<GFS,C> >
+      struct raw_type<BlockVector<GFS,C> >
       {
         typedef C type;
       };
 
       template<typename GFSU, typename GFSV, typename C, typename Stats>
-      struct raw_type<ISTLMatrixContainer<GFSU,GFSV,C,Stats> >
+      struct raw_type<BCRSMatrix<GFSU,GFSV,C,Stats> >
       {
         typedef C type;
       };
 
+#pragma GCC diagnostic pop
 
       // ********************************************************************************
       // Helpers for the nesting_depth TMP

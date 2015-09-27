@@ -136,7 +136,7 @@ namespace Dune {
       struct leaf_vector_descriptor
       {
 
-        static_assert(Backend::Traits::block_type != ISTLParameters::dynamic_blocking,
+        static_assert(Backend::Traits::block_type != Blocking::bcrs,
                       "Dynamically blocked leaf spaces are not supported by this backend.");
 
         // flag for sibling reduction - always true in the leaf case
@@ -148,11 +148,11 @@ namespace Dune {
         // the hierarchy, so we only support cascading if we don't already do static
         // blocking at the current level.
         static const bool support_cascaded_blocking =
-          Backend::Traits::block_type == ISTLParameters::no_blocking; // FIXME
+          Backend::Traits::block_type == Blocking::none; // FIXME
 
         // The static block size of the associated vector
         static const std::size_t block_size =
-          Backend::Traits::block_type == ISTLParameters::static_blocking
+          Backend::Traits::block_type == Blocking::fixed
           ? Backend::Traits::block_size
           : 1;
 
@@ -166,7 +166,7 @@ namespace Dune {
         typedef E element_type;
 
         // The ISTL vector type associated with the current subtree.
-        typedef BlockVector<FieldVector<E,block_size> > vector_type;
+        typedef Dune::BlockVector<FieldVector<E,block_size> > vector_type;
 
       };
 
@@ -230,7 +230,7 @@ namespace Dune {
           Sibling::cumulative_block_size + Child::cumulative_block_size;
 
         // The ISTL vector type associated with the current subtree.
-        typedef BlockVector<FieldVector<element_type,block_size> > vector_type;
+        typedef Dune::BlockVector<FieldVector<element_type,block_size> > vector_type;
 
       };
 
@@ -275,18 +275,18 @@ namespace Dune {
         // children are blocked yet.
         static const bool support_cascaded_blocking =
           Child::support_cascaded_blocking &&
-          Backend::Traits::block_type == ISTLParameters::no_blocking;
+          Backend::Traits::block_type == Blocking::none;
 
         // Throw an assertion if the user requests static blocking at this level,
         // but we cannot support it.
-        static_assert((Backend::Traits::block_type != ISTLParameters::static_blocking) ||
+        static_assert((Backend::Traits::block_type != Blocking::fixed) ||
                       Child::support_cascaded_blocking,
                       "invalid blocking structure.");
 
         // If we block statically, we create bigger blocks, otherwise the
         // block size doesn't change.
         static const std::size_t block_size =
-          Backend::Traits::block_type == ISTLParameters::static_blocking
+          Backend::Traits::block_type == Blocking::fixed
           ? Child::cumulative_block_size
           : Child::block_size;
 
@@ -303,14 +303,14 @@ namespace Dune {
       };
 
       // dispatch switch on blocking type - prototype
-      template<typename Data, ISTLParameters::Blocking>
+      template<typename Data, Blocking>
       struct parent_child_vector_descriptor;
 
       // dispatch switch on blocking type - no blocking case
       template<typename Data>
       struct parent_child_vector_descriptor<
         Data,
-        ISTLParameters::no_blocking
+        Blocking::none
         >
         : public Data
       {
@@ -326,7 +326,7 @@ namespace Dune {
       template<typename Data>
       struct parent_child_vector_descriptor<
         Data,
-        ISTLParameters::dynamic_blocking
+        Blocking::bcrs
         >
         : public Data
       {
@@ -335,19 +335,19 @@ namespace Dune {
                       "Did you want to apply static blocking at this level?");
 
         // Wrap the child vector type in another BlockVector
-        typedef BlockVector<typename Data::child_vector_type> vector_type;
+        typedef Dune::BlockVector<typename Data::child_vector_type> vector_type;
       };
 
       // dispatch switch on blocking type - static blocking case
       template<typename Data>
       struct parent_child_vector_descriptor<
         Data,
-        ISTLParameters::static_blocking
+        Blocking::fixed
         >
         : public Data
       {
         // build new block vector with large field block size
-        typedef BlockVector<
+        typedef Dune::BlockVector<
           FieldVector<
             typename Data::element_type,
             Data::block_size

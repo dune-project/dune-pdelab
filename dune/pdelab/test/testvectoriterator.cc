@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <numeric>
 
 #include <dune/common/fvector.hh>
 #include <dune/common/dynvector.hh>

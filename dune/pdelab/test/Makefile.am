@@ -20,14 +20,14 @@ check_PROGRAMS = $(NORMALTESTS)
 AM_CPPFLAGS = @AM_CPPFLAGS@				\
 	-DGRIDSDIR="\"$(srcdir)/grids\""			\
 	$(UG_CPPFLAGS)					\
-	$(ALUGRID_CPPFLAGS)				\
+	$(DUNE_ALUGRID_CPPFLAGS)				\
 	$(AMIRAMESH_CPPFLAGS)				\
 	$(DUNE_CPPFLAGS)				\
 	$(DUNEMPICPPFLAGS)				\
 	$(PARMETIS_CPPFLAGS)
 AM_LDFLAGS = @AM_LDFLAGS@			\
 	$(UG_LDFLAGS)				\
-	$(ALUGRID_LDFLAGS)			\
+	$(DUNE_ALUGRID_LDFLAGS)			\
 	$(AMIRAMESH_LDFLAGS)			\
 	$(DUNE_LDFLAGS)				\
 	$(DUNEMPILDFLAGS)			\
@@ -35,7 +35,7 @@ AM_LDFLAGS = @AM_LDFLAGS@			\
 LDADD =						\
 	@LDADD@                                 \
 	$(PARMETIS_LIBS)			\
-	$(ALUGRID_LIBS)				\
+	$(DUNE_ALUGRID_LIBS)				\
 	$(AMIRAMESH_LIBS)			\
 	$(DUNEMPILIBS)				\
 	$(UG_LIBS)
@@ -76,12 +76,6 @@ testclock_SOURCES = testclock.cc
 testclock_CPPFLAGS = @AM_CPPFLAGS@
 testclock_LDFLAGS = @AM_LDFLAGS@
 testclock_LDADD = @LDADD@
-
-# disable IntersectionIndexSet test for now, we know it's broken
-# if ALUGRID
-# NORMALTESTS += test-composed-iis-gfs
-# test_composed_iis_gfs_SOURCES = test-composed-iis-gfs.cc
-# endif ALUGRID
 
 NORMALTESTS += testconstraints
 testconstraints_SOURCES = testconstraints.cc
@@ -255,14 +249,6 @@ MOSTLYCLEANFILES += edger.vtu interpolated.vtu q1.vtu taylorhood.vtu
 check_PROGRAMS += testinterpolate
 testinterpolate_SOURCES = testinterpolate.cc
 
-if PETSC
-check_PROGRAMS += testpoisson-petsc
-testpoisson_petsc_SOURCES = testpoisson-petsc.cc
-testpoisson_petsc_CPPFLAGS = @AM_CPPFLAGS@ $(PETSC_CPPFLAGS)
-testpoisson_petsc_LDFLAGS = $(AM_LDFLAGS) $(PETSC_LDFLAGS)
-testpoisson_petsc_LDADD = $(LDADD) $(PETSC_LIBS)
-endif
-
 if GMP
 check_PROGRAMS += testopbfem
 testopbfem_SOURCES = testopbfem.cc
@@ -271,10 +257,10 @@ testopbfem_LDFLAGS = $(AM_LDFLAGS) $(GMP_LDFLAGS)
 testopbfem_LDADD = $(LDADD) $(GMP_LIBS)
 endif
 
-if ALUGRID
+if HAVE_DUNE_ALUGRID
 check_PROGRAMS += testordering
 testordering_SOURCES = testordering.cc
-endif
+endif HAVE_DUNE_ALUGRID
 
 check_PROGRAMS += testpermutedordering
 testpermutedordering_SOURCES = testpermutedordering.cc
@@ -287,8 +273,6 @@ testrtfem_SOURCES = testrtfem.cc
 
 check_PROGRAMS += testbdmfem
 testbdmfem_SOURCES = testbdmfem.cc
-
-MOSTLYCLEANFILES += poisson_petsc_*.vtu
 
 if UG
 check_PROGRAMS += testnonoverlapping

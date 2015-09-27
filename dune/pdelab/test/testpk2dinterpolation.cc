@@ -16,17 +16,14 @@
 #if HAVE_ALBERTA
 #include <dune/grid/albertagrid.hh>
 #endif
-#if HAVE_ALUGRID
-#include <dune/grid/alugrid.hh>
-#elif HAVE_DUNE_ALUGRID
+#if HAVE_DUNE_ALUGRID
 #include <dune/alugrid/grid.hh>
 #endif
 #if HAVE_UG
 #include <dune/grid/uggrid.hh>
 #endif
 
-#include <dune/pdelab/backend/backendselector.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/common/function.hh>
 #include <dune/pdelab/finiteelementmap/pkfem.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
@@ -69,7 +66,7 @@ double interpolationerror (const GV& gv, const FEM &fem)
   typedef Dune::PDELab::GridFunctionSpace<GV, FEM> GFS;
   GFS gfs(gv,fem);                    // make grid function space
 
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS, R>::Type X;
+  using X = Dune::PDELab::Backend::Vector<GFS, R>;
   X x(gfs,0.0);                       // make coefficient vector
 
   U<GV,R> u(gv);                      // make analytic function object
@@ -150,12 +147,12 @@ int main(int argc, char** argv)
          result, 250000, "alberta-square");
 #endif // HAVE_ALBERTA
 
-#if HAVE_ALUGRID || HAVE_DUNE_ALUGRID
+#if HAVE_DUNE_ALUGRID
     test(UnitTriangleMaker          <Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> >(),
          result, 250000, "alu-triangle");
     test(TriangulatedUnitSquareMaker<Dune::ALUGrid<2,2,Dune::simplex,Dune::nonconforming> >(),
          result, 250000, "alu-square");
-#endif // HAVE_ALUGRID || HAVE_DUNE_ALUGRID
+#endif // HAVE_DUNE_ALUGRID
 
 #if HAVE_UG
     test(UnitTriangleMaker          <Dune::UGGrid<2>            >(),

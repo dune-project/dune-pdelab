@@ -26,7 +26,7 @@
 #include <dune/pdelab/gridfunctionspace/compositegridfunctionspace.hh>
 #include <dune/pdelab/ordering/interleavedordering.hh>
 
-#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl.hh>
 
 #include <dune/pdelab/constraints/common/constraints.hh>
 
@@ -61,7 +61,7 @@ void check_ordering(const GFS& gfs)
       }
     }
 
-    typedef typename Dune::PDELab::BackendVectorSelector<GFS,double>::Type V;
+    using V = Dune::PDELab::Backend::Vector<GFS,double>;
     V x(gfs);
     x = 0.0;
     std::cout << std::endl;
@@ -93,7 +93,7 @@ struct test<2,true> {
 
     typedef Dune::PDELab::NoConstraints CON;
 
-    typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+    typedef Dune::PDELab::istl::VectorBackend<> VBE;
 
     // make a grid function space
     typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,CON,VBE> P0GFS;
@@ -116,7 +116,7 @@ struct test<2,true> {
 
     P1GFS p1gfs(gfs1,gfs1,gfs1,VBE(),{{1,1,1}});
 
-    typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::static_blocking,6> NVBE;
+    typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::fixed,6> NVBE;
 
     typedef Dune::PDELab::PowerGridFunctionSpace<P1GFS,2,NVBE,Dune::PDELab::InterleavedOrderingTag> PGFS;
     std::vector<std::size_t> p_gfs_block_sizes(2);
@@ -168,7 +168,7 @@ struct test<2,false> {
 
     typedef Dune::PDELab::NoConstraints CON;
 
-    typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+    typedef Dune::PDELab::istl::VectorBackend<> VBE;
 
     // make a grid function space
     typedef Dune::PDELab::GridFunctionSpace<GV,MonomFEM,CON,VBE> GFS3;
@@ -222,7 +222,7 @@ int main(int argc, char** argv)
       typedef Dune::ALUGrid<2,2,Dune::cube,Dune::nonconforming> Grid;
       Dune::FieldVector<double,2> l(0.0);
       Dune::FieldVector<double,2> u(1.0);
-      Dune::array<unsigned int,2> N = {{1,1}};
+      std::array<unsigned int,2> N = {{1,1}};
       std::shared_ptr<Grid> grid = Dune::StructuredGridFactory<Grid>::createCubeGrid(l,u,N);
       grid->globalRefine(1);
 

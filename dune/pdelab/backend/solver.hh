@@ -4,7 +4,7 @@
 #define DUNE_PDELAB_BACKEND_SOLVER_HH
 
 #include <dune/common/fvector.hh>
-#include <dune/pdelab/backend/istl/utility.hh>
+#include <dune/pdelab/backend/interface.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -21,7 +21,7 @@ namespace Dune {
       template<class V>
       typename Dune::template FieldTraits<typename V::ElementType >::real_type norm(const V& v) const
       {
-        return istl::raw(v).two_norm();
+        return Backend::native(v).two_norm();
       }
     };
 

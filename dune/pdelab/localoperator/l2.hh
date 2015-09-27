@@ -67,18 +67,19 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         // select quadrature rule
-        Dune::GeometryType gt = eg.geometry().type();
+        const auto& geometry = eg.geometry();
+        Dune::GeometryType gt = geometry.type();
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
 
         // loop over quadrature points
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& qp : rule)
           {
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
-            FESwitch::basis(lfsu.finiteElement()).evaluateFunction(it->position(),phi);
+            FESwitch::basis(lfsu.finiteElement()).evaluateFunction(qp.position(),phi);
 
             // evaluate u
             RF u=0.0;
@@ -86,7 +87,7 @@ namespace Dune {
               u += RF(x(lfsu,i)*phi[i]);
 
             // u*phi_i
-            RF factor = _scaling * it->weight() * eg.geometry().integrationElement(it->position());
+            RF factor = _scaling * qp.weight() * geometry.integrationElement(qp.position());
             for (size_type i=0; i<lfsu.size(); i++)
               r.accumulate(lfsv,i, u*phi[i]*factor);
           }
@@ -112,21 +113,22 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         // select quadrature rule
-        Dune::GeometryType gt = eg.geometry().type();
+        const auto& geometry = eg.geometry();
+        Dune::GeometryType gt = geometry.type();
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
 
         // loop over quadrature points
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+        for (const auto& qp : rule)
           {
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
-            FESwitch::basis(lfsu.finiteElement()).evaluateFunction(it->position(),phi);
+            FESwitch::basis(lfsu.finiteElement()).evaluateFunction(qp.position(),phi);
 
             // integrate phi_j*phi_i
-            RF factor = _scaling * it->weight() * eg.geometry().integrationElement(it->position());
+            RF factor = _scaling * qp.weight() * geometry.integrationElement(qp.position());
             for (size_type j=0; j<lfsu.size(); j++)
               for (size_type i=0; i<lfsu.size(); i++)
                 mat.accumulate(lfsv,i,lfsu,j, phi[j]*phi[i]*factor);

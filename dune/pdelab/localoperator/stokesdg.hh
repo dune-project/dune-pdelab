@@ -2,6 +2,8 @@
 #ifndef DUNE_PDELAB_STOKESDG_HH
 #define DUNE_PDELAB_STOKESDG_HH
 
+#warning This file is deprecated, include the header dune/pdelab/localoperator/dgnavierstokes.hh instead!
+
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
 #include <dune/common/parametertreeparser.hh>
@@ -31,7 +33,7 @@ namespace Dune {
                                         full tensor for the viscous stress
          */
         template<typename PRM, bool full_tensor = true>
-        class StokesDG :
+        class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokes instead!") StokesDG :
             public LocalOperatorDefaultFlags,
             public FullSkeletonPattern, public FullVolumePattern
             //
@@ -74,16 +76,23 @@ namespace Dune {
                                                         have the same order as the corresponding
                                                         finite element.
              */
+            DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokes instead!")
             StokesDG (PRM & _prm, int _superintegration_order=0) :
               prm(_prm), superintegration_order(_superintegration_order),
               current_dt(1.0)
             {}
 
             // Store current dt
-            void preStep (RealType time, RealType dt, int )
+            void preStep (RealType , RealType dt, int )
             {
               current_dt = dt;
-              prm.setTime(time+dt);
+            }
+
+            // set time in parameter class
+            void setTime(Real t)
+            {
+                InstatBase::setTime(t);
+                prm.setTime(t);
             }
 
             // volume integral depending only on test functions,
@@ -131,9 +140,9 @@ namespace Dune {
                 const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
                 // loop over quadrature points
-                for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+                for (const auto& ip : rule)
                 {
-                    const Dune::FieldVector<DF,dim> local = it->position();
+                    const Dune::FieldVector<DF,dim> local = ip.position();
                     //const Dune::FieldVector<DF,dimw> global = eg.geometry().global(local);
 
                     // values of velocity shape functions
@@ -144,7 +153,7 @@ namespace Dune {
                     std::vector<RT> phi_p(psize);
                     FESwitch_P::basis(lfsv_p.finiteElement()).evaluateFunction(local,phi_p);
 
-                    const RF weight = it->weight() * eg.geometry().integrationElement(it->position());
+                    const RF weight = ip.weight() * eg.geometry().integrationElement(ip.position());
 
                     // evaluate source term
                     typename PRM::Traits::VelocityRange fval(prm.f(eg,local));
@@ -161,11 +170,11 @@ namespace Dune {
                         for (size_type i=0; i<vsize; i++)
                         {
                             RF val = phi_v[i]*factor;
-                            r.accumulate(lfsv_v,i, fval[d] * val);
+                            r.accumulate(lfsv_v,i, -fval[d] * val);
                         }
                     }
 
-                    const RF g2 = prm.g2(eg,it->position());
+                    const RF g2 = prm.g2(eg,ip.position());
 
                     // integrate div u * psi_i
                     for (size_t i=0; i<lfsv_p.size(); i++)
@@ -210,6 +219,9 @@ namespace Dune {
                 typedef typename BasisSwitch_V::RangeField RF;
                 typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
 
+                // make copy of inside cell w.r.t. the boundary
+                auto inside_cell = ig.inside();
+
                 // select quadrature rule
                 Dune::GeometryType gtface = ig.geometry().type();
                 const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
@@ -222,10 +234,10 @@ namespace Dune {
                 const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
 
                 // loop over quadrature points and integrate normal flux
-                for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+                for (const auto& ip : rule)
                 {
                     // position of quadrature point in local coordinates of element
-                    Dune::FieldVector<DF,dim-1> flocal = it->position();
+                    Dune::FieldVector<DF,dim-1> flocal = ip.position();
                     Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(flocal);
                     //Dune::FieldVector<DF,dimw> global = ig.geometry().global(flocal);
 
@@ -240,10 +252,10 @@ namespace Dune {
 
                     std::vector<Dune::FieldMatrix<RF,1,dim> > grad_phi_v(vsize);
                     BasisSwitch_V::gradient(FESwitch_V::basis(lfsv_v.finiteElement()),
-                                          ig.inside()->geometry(), local, grad_phi_v);
+                                          inside_cell.geometry(), local, grad_phi_v);
 
-                    const Dune::FieldVector<DF,dim> normal = ig.unitOuterNormal(it->position());
-                    const RF weight = it->weight()*ig.geometry().integrationElement(it->position());
+                    const Dune::FieldVector<DF,dim> normal = ig.unitOuterNormal(ip.position());
+                    const RF weight = ip.weight()*ig.geometry().integrationElement(ip.position());
                     const RF mu = prm.mu(ig,flocal);
 
                     // evaluate boundary condition type
@@ -251,7 +263,7 @@ namespace Dune {
 
                     if (bctype == BC::VelocityDirichlet)
                     {
-                        typename PRM::Traits::VelocityRange u0(prm.g(ig,flocal));
+                        typename PRM::Traits::VelocityRange u0(prm.g(inside_cell,local));
 
                         //================================================//
                         // \mu \int \nabla v \cdot u_0 \cdot n
@@ -365,9 +377,9 @@ namespace Dune {
                 const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
 
                 // loop over quadrature points
-                for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+                for (const auto& ip : rule)
                 {
-                    const Dune::FieldVector<DF,dim> local = it->position();
+                    const Dune::FieldVector<DF,dim> local = ip.position();
                     const RF mu = prm.mu(eg,local);
 
                     // and value of pressure shape functions
@@ -379,8 +391,8 @@ namespace Dune {
                     BasisSwitch_V::gradient(FESwitch_V::basis(lfsv_v.finiteElement()),
                                             eg.geometry(), local, grad_phi_v);
 
-                    const RF detj = eg.geometry().integrationElement(it->position());
-                    const RF weight = it->weight() * detj;
+                    const RF detj = eg.geometry().integrationElement(ip.position());
+                    const RF weight = ip.weight() * detj;
 
                     //================================================//
                     // \int (mu*grad_u*grad_v)
@@ -474,6 +486,10 @@ namespace Dune {
                 typedef typename BasisSwitch_V::RangeField RF;
                 typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
 
+                // make copy of inside and outside cell w.r.t. the intersection
+                auto inside_cell = ig.inside();
+                auto outside_cell = ig.outside();
+
                 // select quadrature rule
                 Dune::GeometryType gtface = ig.geometry().type();
                 const int v_order = FESwitch_V::basis(lfsv_s_v.finiteElement()).order();
@@ -485,14 +501,14 @@ namespace Dune {
                 const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
 
                 // loop over quadrature points and integrate normal flux
-                for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+                for (const auto& ip : rule)
                 {
 
                     // position of quadrature point in local coordinates of element
-                    Dune::FieldVector<DF,dim> local_s = ig.geometryInInside().global(it->position());
-                    Dune::FieldVector<DF,dim> local_n = ig.geometryInOutside().global(it->position());
+                    Dune::FieldVector<DF,dim> local_s = ig.geometryInInside().global(ip.position());
+                    Dune::FieldVector<DF,dim> local_n = ig.geometryInOutside().global(ip.position());
 
-                    const RF penalty_factor = prm.getFaceIP(ig,it->position());
+                    const RF penalty_factor = prm.getFaceIP(ig,ip.position());
 
                     // value of velocity shape functions
                     std::vector<RT> phi_v_s(vsize_s);
@@ -508,15 +524,15 @@ namespace Dune {
                     // compute gradients
                     std::vector<Dune::FieldMatrix<RF,1,dim> > grad_phi_v_s(vsize_s);
                     BasisSwitch_V::gradient(FESwitch_V::basis(lfsv_s_v.finiteElement()),
-                                            ig.inside()->geometry(), local_s, grad_phi_v_s);
+                                            inside_cell.geometry(), local_s, grad_phi_v_s);
 
                     std::vector<Dune::FieldMatrix<RF,1,dim> > grad_phi_v_n(vsize_n);
                     BasisSwitch_V::gradient(FESwitch_V::basis(lfsv_n_v.finiteElement()),
-                                            ig.outside()->geometry(), local_n, grad_phi_v_n);
+                                            outside_cell.geometry(), local_n, grad_phi_v_n);
 
-                    const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(it->position());
-                    const RF weight = it->weight()*ig.geometry().integrationElement(it->position());
-                    const RF mu = prm.mu(ig,it->position());
+                    const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(ip.position());
+                    const RF weight = ip.weight()*ig.geometry().integrationElement(ip.position());
+                    const RF mu = prm.mu(ig,ip.position());
 
                     //================================================//
                     // - (\mu \int < \nabla u > . normal . [v])
@@ -762,6 +778,9 @@ namespace Dune {
                 typedef typename BasisSwitch_V::RangeField RF;
                 typedef FiniteElementInterfaceSwitch<typename LFSV_P::Traits::FiniteElementType > FESwitch_P;
 
+                // make copy of inside cell w.r.t. the boundary
+                auto inside_cell = ig.inside();
+
                 // select quadrature rule
                 const int v_order = FESwitch_V::basis(lfsv_v.finiteElement()).order();
                 Dune::GeometryType gtface = ig.geometry().type();
@@ -776,12 +795,12 @@ namespace Dune {
                 const RF incomp_scaling = prm.incompressibilityScaling(current_dt);
 
                 // loop over quadrature points and integrate normal flux
-                for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+                for (const auto& ip : rule)
                 {
                     // position of quadrature point in local coordinates of element
-                    Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(it->position());
+                    Dune::FieldVector<DF,dim> local = ig.geometryInInside().global(ip.position());
 
-                    const RF penalty_factor = prm.getFaceIP(ig,it->position() );
+                    const RF penalty_factor = prm.getFaceIP(ig,ip.position() );
 
                     // value of velocity shape functions
                     std::vector<RT> phi_v(vsize);
@@ -792,11 +811,11 @@ namespace Dune {
 
                     std::vector<Dune::FieldMatrix<RF,1,dim> > grad_phi_v(vsize);
                     BasisSwitch_V::gradient(FESwitch_V::basis(lfsv_v.finiteElement()),
-                                          ig.inside()->geometry(), local, grad_phi_v);
+                                          inside_cell.geometry(), local, grad_phi_v);
 
-                    const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(it->position());
-                    const RF weight = it->weight()*ig.geometry().integrationElement(it->position());
-                    const RF mu = prm.mu(ig,it->position());
+                    const Dune::FieldVector<DF,dimw> normal = ig.unitOuterNormal(ip.position());
+                    const RF weight = ip.weight()*ig.geometry().integrationElement(ip.position());
+                    const RF mu = prm.mu(ig,ip.position());
 
                     // Slip factor smoothly switching between slip and no slip conditions.
                     RF slip_factor = 0.0;
@@ -806,7 +825,7 @@ namespace Dune {
                       // class if available, i.e. if
                       // enable_variable_slip is defined. Otherwise
                       // returns 1.0;
-                      slip_factor = BoundarySlipSwitch::boundarySlip(prm,ig,it->position());
+                      slip_factor = BoundarySlipSwitch::boundarySlip(prm,ig,ip.position());
 
                     // velocity boundary condition
                     if (bctype == BC::VelocityDirichlet || bctype == BC::SlipVelocity)
@@ -951,7 +970,7 @@ namespace Dune {
                                         full tensor for the viscous stress
          */
         template<typename PRM, bool full_tensor = true>
-        class NavierStokesDG : public StokesDG<PRM,full_tensor>
+        class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokes instead!") NavierStokesDG : public StokesDG<PRM,full_tensor>
         {
         public:
             //! Boundary condition indicator type
@@ -966,6 +985,7 @@ namespace Dune {
             using StokesLocalOperator::prm;
             using StokesLocalOperator::superintegration_order;
 
+            DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use DGNavierStokes instead!")
             NavierStokesDG (PRM & prm_, int superintegration_order_=0)
                 : StokesLocalOperator(prm_ ,superintegration_order_)
             {}
@@ -1010,9 +1030,9 @@ namespace Dune {
                 const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
                 // loop over quadrature points
-                for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+                for (const auto& ip : rule)
                     {
-                        const Dune::FieldVector<DF,dim> local = it->position();
+                        const Dune::FieldVector<DF,dim> local = ip.position();
 
                         // Get density at point
                         const RF rho = prm.rho(eg,local);
@@ -1027,7 +1047,7 @@ namespace Dune {
                         BasisSwitch_V::gradient(FESwitch_V::basis(lfsv_v.finiteElement()),
                                                 eg.geometry(), local, grad_phi_v);
 
-                        const RF weight = it->weight() * eg.geometry().integrationElement(it->position());
+                        const RF weight = ip.weight() * eg.geometry().integrationElement(ip.position());
 
                         // compute u (if Navier term enabled)
                         Dune::FieldVector<RF,dim> vu(0.0);
@@ -1106,9 +1126,9 @@ namespace Dune {
                 const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
                 // loop over quadrature points
-                for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+                for (const auto& ip : rule)
                     {
-                        const Dune::FieldVector<DF,dim> local = it->position();
+                        const Dune::FieldVector<DF,dim> local = ip.position();
 
                         // Get density at point
                         const RF rho = prm.rho(eg,local);
@@ -1123,7 +1143,7 @@ namespace Dune {
                         BasisSwitch_V::gradient(FESwitch_V::basis(lfsv_v.finiteElement()),
                                                 eg.geometry(), local, grad_phi_v);
 
-                        const RF weight = it->weight() * eg.geometry().integrationElement(it->position());
+                        const RF weight = ip.weight() * eg.geometry().integrationElement(ip.position());
 
                         // compute u (if Navier term enabled)
                         Dune::FieldVector<RF,dim> vu(0.0);
@@ -1158,7 +1178,7 @@ namespace Dune {
             \tparam PRM Parameter class for this local operator
          */
         template<typename PRM>
-        class StokesMassDG :
+        class DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use NavierStokesMass instead!") StokesMassDG :
             public LocalOperatorDefaultFlags,
             public FullVolumePattern,
             public JacobianBasedAlphaVolume< StokesMassDG<PRM> >,
@@ -1187,6 +1207,7 @@ namespace Dune {
                                                         have the same order as the corresponding
                                                         finite element.
              */
+            DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use NavierStokesMass instead!")
             StokesMassDG (PRM & _prm, int _superintegration_order=0) :
                 prm(_prm), superintegration_order(_superintegration_order)
             {}
@@ -1227,16 +1248,16 @@ namespace Dune {
                 const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
                 // loop over quadrature points
-                for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+                for (const auto& ip : rule)
                 {
-                    const Dune::FieldVector<DF,dim> local = it->position();
+                    const Dune::FieldVector<DF,dim> local = ip.position();
 
                     // and value of pressure shape functions
                     std::vector<RT> psi_v(vsize);
                     FESwitch_V::basis(lfsv_v.finiteElement()).evaluateFunction(local,psi_v);
 
                     const RF rho = prm.rho(eg,local);
-                    const RF weight = it->weight() * eg.geometry().integrationElement(it->position());
+                    const RF weight = ip.weight() * eg.geometry().integrationElement(ip.position());
 
                     //================================================//
                     // \int (rho*u*v)

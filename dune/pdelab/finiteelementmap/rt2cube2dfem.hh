@@ -34,23 +34,18 @@ namespace Dune {
           variant[i] = FE(i);
         }
 
-        // compute orientation for all elements
-        typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
-        typedef typename GV::IntersectionIterator IntersectionIterator;
-
         // loop once over the grid
-        for (ElementIterator it = gv.template begin<0>(); it != gv.template end<0>(); ++it)
+        for (const auto& element : elements(gv))
         {
-          unsigned int myId = is.template index<0>(*it);
+          unsigned int myId = is.index(element);
           orient[myId] = 0;
 
-          IntersectionIterator endit = gv.iend(*it);
-          for (IntersectionIterator iit = gv.ibegin(*it); iit != endit; ++iit)
+          for (const auto& intersection : intersections(gv,element))
           {
-            if (iit->neighbor()
-                && is.template index<0>(*(iit->outside())) > myId)
+            if (intersection.neighbor()
+                && is.index(intersection.outside()) > myId)
             {
-              orient[myId] |= 1 << iit->indexInInside();
+              orient[myId] |= 1 << intersection.indexInInside();
             }
           }
         }
@@ -60,7 +55,7 @@ namespace Dune {
       template<class EntityType>
       const typename Traits::FiniteElementType& find (const EntityType& e) const
       {
-        return variant[orient[is.template index<0>(e)]];
+        return variant[orient[is.index(e)]];
       }
 
       bool fixedSize() const

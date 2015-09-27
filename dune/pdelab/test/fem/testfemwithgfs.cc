@@ -100,7 +100,7 @@ template<typename RF, typename Constraints, typename VBE>
 void test_2d_simplex(const Constraints& constraints, const VBE& vbe)
 {
 
-#if HAVE_ALUGRID || HAVE_DUNE_ALUGRID
+#if HAVE_DUNE_ALUGRID
 
     {
       // make grid
@@ -136,7 +136,7 @@ template<typename RF, typename Constraints, typename VBE>
 void test_3d_simplex(const Constraints& constraints, const VBE& vbe)
 {
 
-#if HAVE_ALUGRID || HAVE_DUNE_ALUGRID
+#if HAVE_DUNE_ALUGRID
 
     {
       // make grid
@@ -177,7 +177,7 @@ int main(int argc, char** argv)
     typedef Dune::PDELab::NoConstraints Constraints;
     Constraints constraints;
 
-    typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+    typedef Dune::PDELab::istl::VectorBackend<> VBE;
     VBE vbe;
 
     typedef double RF;

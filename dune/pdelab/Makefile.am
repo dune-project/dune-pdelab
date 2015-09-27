@@ -5,7 +5,6 @@ SUBDIRS =					\
 	boilerplate				\
 	common					\
 	constraints				\
-	experimental				\
 	finiteelement			\
 	finiteelementmap		\
 	function				\
@@ -14,7 +13,6 @@ SUBDIRS =					\
 	instationary				\
 	linearsolver			\
 	localoperator			\
-	multistep				\
 	newton					\
 	ordering				\
 	stationary				\

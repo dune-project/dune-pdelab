@@ -36,7 +36,7 @@ namespace Dune {
       };
     }
 
-    //! FiniteElementMap which provides MonomLocalFiniteElement instances, depending on the local polynomial degree
+    //! FiniteElementMap which provides MonomialLocalFiniteElement instances, depending on the local polynomial degree
     //! \ingroup FiniteElementMap
     template<class M, class D, class R, int d, int maxP=6>
     class VariableMonomLocalFiniteElementMap

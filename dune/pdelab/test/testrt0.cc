@@ -9,8 +9,7 @@
 #include <dune/common/parallel/mpihelper.hh>
 #include <dune/grid/yaspgrid.hh>
 
-#include <dune/pdelab/backend/backendselector.hh>
-#include <dune/pdelab/backend/istlvectorbackend.hh>
+#include <dune/pdelab/backend/istl.hh>
 #include <dune/pdelab/finiteelementmap/p0fem.hh>
 #include <dune/pdelab/finiteelementmap/raviartthomasfem.hh>
 #include <dune/pdelab/finiteelementmap/rt0cube2dfem.hh>
@@ -93,12 +92,10 @@ void testrt0 (const GV& gv)
   RT0GFS rt0gfs(gv,rt0fem);
 
   // make coefficent Vectors
-  typedef typename Dune::PDELab::BackendVectorSelector<P0GFS, double>::Type
-    P0V;
+  using P0V = Dune::PDELab::Backend::Vector<P0GFS, double>;
   P0V p0xg(p0gfs);
   p0xg = 0.0;
-  typedef typename Dune::PDELab::BackendVectorSelector<RT0GFS, double>::Type
-    RT0V;
+  using RT0V = Dune::PDELab::Backend::Vector<RT0GFS, double>;
   RT0V rt0xg(rt0gfs);
   rt0xg = 0.0;
 
@@ -155,7 +152,7 @@ int main(int argc, char** argv)
     testrt0(albertagrid.leafGridView());
 #endif
 
-#if HAVE_ALUGRID || HAVE_DUNE_ALUGRID
+#if HAVE_DUNE_ALUGRID
  	ALUUnitSquare alugrid;
   	alugrid.globalRefine(5);
     testrt0(alugrid.leafGridView());

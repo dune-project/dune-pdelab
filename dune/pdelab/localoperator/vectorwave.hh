@@ -4,7 +4,6 @@
 #ifndef DUNE_PDELAB_LOCALOPERATOR_VECTORWAVE_HH
 #define DUNE_PDELAB_LOCALOPERATOR_VECTORWAVE_HH
 
-#include <algorithm>
 #include <cstddef>
 #include <vector>
 
@@ -18,7 +17,6 @@
 #include <dune/pdelab/localoperator/flags.hh>
 #include <dune/pdelab/localoperator/idefault.hh>
 #include <dune/pdelab/localoperator/pattern.hh>
-#include <dune/pdelab/multistep/cache.hh>
 
 namespace Dune {
   namespace PDELab {
@@ -417,63 +415,6 @@ RangeField mu(const Domain& xg) const;
         void setTime(typename Params::Time time) {
           params.setTime(time);
           IBase::setTime(time);
-        }
-      };
-
-      //! MultiStepCachePolicy for VectorWave operators
-      template<class Params, class Step = int, class Time = double>
-      class CachePolicy :
-        public MultiStepCachePolicy<Step, Time>
-      {
-        typedef MultiStepCachePolicy<Step, Time> Base;
-        const Params &params;
-
-      protected:
-        using Base::currentStep;
-        using Base::endTime;
-        using Base::dt;
-
-      public:
-        //! construct a CachePolicy object
-        CachePolicy(const Params &params_) : params(params_) { }
-
-        //! All component operators are affine
-        virtual bool isAffine(std::size_t order, Step step) const
-        { return true; }
-        //! The composed operator is affine
-        virtual bool isComposedAffine(Step step) const
-        { return true; }
-        //! All local operators have pure linear alpha_*()
-        virtual bool hasPureLinearAlpha(std::size_t order, Step step) const
-        { return true; }
-        virtual bool canReuseJacobian(std::size_t order,
-                                      Step requested, Step available) const
-        {
-          Time t1 = endTime - dt*(currentStep-requested);
-          Time t2 = endTime - dt*(currentStep-available);
-          if(t1 > t2) std::swap(t1, t2);
-
-          switch(order) {
-          case 0: return !params.muChanged(t1, t2);
-          case 1: return true;
-          case 2: return !params.epsilonChanged(t1, t2);
-          }
-
-          DUNE_THROW(InvalidStateException,
-                     "VectorWave::CachePolicy::canReuseJacobian(): Invalid "
-                     "temporal derivative order=" << order);
-        }
-        virtual bool canReuseZeroResidual(std::size_t order,
-                                          Step requested, Step available) const
-        { return true; }
-        virtual bool canReuseComposedJacobian(Step requested,
-                                              Step available) const
-        {
-          Time t1 = endTime - dt*(currentStep-requested);
-          Time t2 = endTime - dt*(currentStep-available);
-          if(t1 > t2) std::swap(t1, t2);
-
-          return !params.muChanged(t1, t2) && !params.epsilonChanged(t1, t2);
         }
       };
 

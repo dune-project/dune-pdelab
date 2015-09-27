@@ -1,13 +1,16 @@
 #ifndef DUNE_PDELAB_SEQ_AMG_DG_BACKEND_HH
 #define DUNE_PDELAB_SEQ_AMG_DG_BACKEND_HH
 
+#include <dune/common/power.hh>
+#include <dune/common/parametertree.hh>
+
 #include <dune/istl/matrixmatrix.hh>
 
 #include <dune/grid/common/datahandleif.hh>
 
-#include <dune/pdelab/backend/istlvectorbackend.hh>
-#include <dune/pdelab/backend/istlmatrixbackend.hh>
-#include <dune/pdelab/backend/ovlpistlsolverbackend.hh>
+#include <dune/pdelab/backend/istl/vector.hh>
+#include <dune/pdelab/backend/istl/bcrsmatrix.hh>
+#include <dune/pdelab/backend/istl/ovlpistlsolverbackend.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 
 namespace Dune {
@@ -153,11 +156,11 @@ namespace Dune {
       typedef typename Vector::field_type field_type;
 
       // vectors and matrices on CG level
-      typedef typename Dune::PDELab::BackendVectorSelector<CGGFS,field_type>::Type CGV; // wrapped istl CG vector
+      using CGV = Dune::PDELab::Backend::Vector<CGGFS,field_type>; // wrapped istl CG vector
       typedef typename CGV::BaseT CGVector;                               // istl CG vector
 
       // prolongation matrix
-      typedef Dune::PDELab::ISTLMatrixBackend MBE;
+      typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
       typedef Dune::PDELab::EmptyTransformation CC;
       typedef TransferLOP CGTODGLOP; // local operator
       typedef Dune::PDELab::GridOperator<CGGFS,GFS,CGTODGLOP,MBE,field_type,field_type,field_type,CC,CC> PGO;
@@ -174,6 +177,7 @@ namespace Dune {
       unsigned maxiter;
       int verbose;
       bool usesuperlu;
+      std::size_t low_order_space_entries_per_row;
 
       CGTODGLOP cgtodglop;  // local operator to assemble prolongation matrix
       PGO pgo;              // grid operator to assemble prolongation matrix
@@ -181,8 +185,15 @@ namespace Dune {
 
     public:
       ISTLBackend_SEQ_AMG_4_DG(DGGO& dggo_, CGGFS& cggfs_, unsigned maxiter_=5000, int verbose_=1, bool usesuperlu_=true)
-        : dggo(dggo_), cggfs(cggfs_), maxiter(maxiter_), verbose(verbose_), usesuperlu(usesuperlu_),
-          cgtodglop(), pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop), pmatrix(pgo)
+        : dggo(dggo_)
+        , cggfs(cggfs_)
+        , maxiter(maxiter_)
+        , verbose(verbose_)
+        , usesuperlu(usesuperlu_)
+        , low_order_space_entries_per_row(StaticPower<3,GFS::Traits::GridView::dimension>::power)
+        , cgtodglop()
+        , pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop,MBE(low_order_space_entries_per_row))
+        , pmatrix(pgo)
       {
 #if !HAVE_SUPERLU
         if (usesuperlu == true)
@@ -201,13 +212,42 @@ namespace Dune {
         pgo.jacobian(cgx,pmatrix);
       }
 
+      ISTLBackend_SEQ_AMG_4_DG(DGGO& dggo_, CGGFS& cggfs_, const ParameterTree& params)//unsigned maxiter_=5000, int verbose_=1, bool usesuperlu_=true)
+        : dggo(dggo_)
+        , cggfs(cggfs_)
+        , maxiter(params.get<int>("max_iterations",5000))
+        , verbose(params.get<int>("verbose",1))
+        , usesuperlu(params.get<bool>("use_superlu",true))
+        , low_order_space_entries_per_row(params.get<std::size_t>("low_order_space.entries_per_row",StaticPower<3,GFS::Traits::GridView::dimension>::power))
+        , cgtodglop()
+        , pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop,MBE(low_order_space_entries_per_row))
+        , pmatrix(pgo)
+      {
+#if !HAVE_SUPERLU
+        if (usesuperlu == true)
+          {
+            std::cout << "WARNING: You are using AMG without SuperLU!"
+                      << " Please consider installing SuperLU,"
+                      << " or set the usesuperlu flag to false"
+                      << " to suppress this warning." << std::endl;
+          }
+#endif
+
+
+        // assemble prolongation matrix; this will not change from one apply to the next
+        pmatrix = 0.0;
+        if (verbose>0) std::cout << "allocated prolongation matrix of size " << pmatrix.N() << " x " << pmatrix.M() << std::endl;
+        CGV cgx(cggfs,0.0);         // need vector to call jacobian
+        pgo.jacobian(cgx,pmatrix);
+      }
+
       /*! \brief compute global norm of a vector
 
         \param[in] v the given vector
       */
       typename V::ElementType norm (const V& v) const
       {
-        return Dune::PDELab::istl::raw(v).two_norm();
+        return Backend::native(v).two_norm();
       }
 
       /*! \brief solve the given linear system
@@ -219,14 +259,15 @@ namespace Dune {
       */
       void apply (M& A, V& z, V& r, typename V::ElementType reduction)
       {
+        using Backend::native;
         // do triple matrix product ACG = P^T ADG P
         Dune::Timer watch;
         watch.reset();
         ACG acg;
         {
           PTADG ptadg;
-          Dune::transposeMatMultMat(ptadg,Dune::PDELab::istl::raw(pmatrix),Dune::PDELab::istl::raw(A));
-          Dune::matMultMat(acg,ptadg,Dune::PDELab::istl::raw(pmatrix));
+          Dune::transposeMatMultMat(ptadg,native(pmatrix),native(A));
+          Dune::matMultMat(acg,ptadg,native(pmatrix));
         }
         double triple_product_time = watch.elapsed();
         if (verbose>0) std::cout << "=== triple matrix product " << triple_product_time << " s" << std::endl;
@@ -261,10 +302,10 @@ namespace Dune {
         if (verbose>0) std::cout << "=== AMG setup " <<amg_setup_time << " s" << std::endl;
 
         // set up hybrid DG/CG preconditioner
-        Dune::MatrixAdapter<Matrix,Vector,Vector> op(Dune::PDELab::istl::raw(A));
-        DGPrec<Matrix,Vector,Vector,1> dgprec(Dune::PDELab::istl::raw(A),1,1);
+        Dune::MatrixAdapter<Matrix,Vector,Vector> op(native(A));
+        DGPrec<Matrix,Vector,Vector,1> dgprec(native(A),1,1);
         typedef SeqDGAMGPrec<Matrix,DGPrec<Matrix,Vector,Vector,1>,AMG,P> HybridPrec;
-        HybridPrec hybridprec(Dune::PDELab::istl::raw(A),dgprec,amg,Dune::PDELab::istl::raw(pmatrix),2,2);
+        HybridPrec hybridprec(native(A),dgprec,amg,native(pmatrix),2,2);
 
         // set up solver
         Solver<Vector> solver(op,hybridprec,reduction,maxiter,verbose);
@@ -272,7 +313,7 @@ namespace Dune {
         // solve
         Dune::InverseOperatorResult stat;
         watch.reset();
-        solver.apply(Dune::PDELab::istl::raw(z),Dune::PDELab::istl::raw(r),stat);
+        solver.apply(native(z),native(r),stat);
         double amg_solve_time = watch.elapsed();
         if (verbose>0) std::cout << "=== Hybrid total solve time " << amg_solve_time+amg_setup_time+triple_product_time << " s" << std::endl;
         res.converged  = stat.converged;

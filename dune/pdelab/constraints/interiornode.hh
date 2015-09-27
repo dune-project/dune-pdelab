@@ -33,8 +33,8 @@ namespace Dune {
        * \tparam T   TransformationType
        */
 
-      template<typename EG, typename LFS, typename T>
-      void volume (const EG& eg, const LFS& lfs, T& trafo) const
+      template<typename P, typename EG, typename LFS, typename T>
+      void volume (const P& param, const EG& eg, const LFS& lfs, T& trafo) const
       {
         typedef typename EG::Entity Entity;
         enum { dim = Entity::dimension, dimw = Entity::dimensionworld };
@@ -49,10 +49,11 @@ namespace Dune {
           const LocalKey& key = FESwitch::coefficients(lfs.finiteElement()).localKey(i);
           assert(key.codim() == dim && "InteriorNodeConstraints only work for vertex DOFs");
           assert(key.index() == 0   && "InteriorNodeConstraints only work for P1 shape functions");
+
           // subentity index
           unsigned int local_idx = key.subEntity();
-          // global idx
 
+          // global idx
           unsigned int idx = lfs.gridFunctionSpace().gridView().indexSet().subIndex(eg.entity(), local_idx, dim);
 
           // update constraints
@@ -73,29 +74,20 @@ namespace Dune {
         const int dim = GV::dimension;
         typedef typename GV::Grid::ctype ctype;
 
-
         interior.resize(gv.indexSet().size(dim));
         for(int i=0; i< interior.size(); i++)
           interior[i] = true;
 
-        typedef typename GV::template Codim<0>::Iterator ElementIterator;
-        typedef typename ElementIterator::Entity Entity;
-
         // loop over all cells
-        for(ElementIterator it = gv.template begin<0>(); it != gv.template end<0>(); ++it)
+        for(const auto& entity : cells(gv))
         {
-          const Entity &entity = *it;
-
           // find boundary faces & associated vertices
-          typedef typename GV::IntersectionIterator IntersectionIterator;
-          IntersectionIterator iit = gv.ibegin(entity);
-          const IntersectionIterator iend = gv.iend(entity);
-          for (; iit != iend; ++iit)
+          for (const auto& intersection : intersection(gv,entity))
           {
-            if (iit->boundary())
+            if (intersection.boundary())
             {
               // boundary face
-              unsigned int f = iit->indexInInside();
+              unsigned int f = intersection.indexInInside();
               // remember associated vertices
               const ReferenceElement<ctype,dim> & refelem =
                 ReferenceElements<ctype,dim>::simplex();

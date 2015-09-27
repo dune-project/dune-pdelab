@@ -162,7 +162,9 @@ namespace Dune {
     */
     template<typename T>
     class ConvectionDiffusionBoundaryConditionAdapter
-      : public Dune::PDELab::DirichletConstraintsParameters   /*@\label{bcp:base}@*/
+      :
+      public Dune::PDELab::FluxConstraintsParameters,
+      public Dune::PDELab::DirichletConstraintsParameters   /*@\label{bcp:base}@*/
     {
       const T& t;
 
@@ -186,7 +188,75 @@ namespace Dune {
                 == ConvectionDiffusionBoundaryConditions::Dirichlet );
       }
 
+      template<typename I>
+      bool isNeumann(const I & ig,   /*@\label{bcp:name}@*/
+                     const Dune::FieldVector<typename I::ctype, I::dimension-1> & coord
+                     ) const
+      {
+        return !isDirichlet( ig, coord );
+      }
+
     };
+
+
+
+
+
+    /*! Adapter that extracts the flux boundary conditions from the parameter class
+
+      \tparam T  model of ConvectionDiffusionParameterInterface
+    */
+    template<typename T>
+    class ConvectionDiffusionVelocityExtensionAdapter
+      : public Dune::PDELab::AnalyticGridFunctionBase<Dune::PDELab::AnalyticGridFunctionTraits
+                                                      <typename T::Traits::GridViewType,
+                                                       typename T::Traits::RangeFieldType,
+                                                       T::Traits::GridViewType::dimension>,
+                                                      ConvectionDiffusionVelocityExtensionAdapter<T> >
+    {
+    public:
+      typedef Dune::PDELab::AnalyticGridFunctionTraits<typename T::Traits::GridViewType,
+                                                       typename T::Traits::RangeFieldType,
+                                                       T::Traits::GridViewType::dimension> Traits;
+      typedef Dune::PDELab::AnalyticGridFunctionBase<Traits,ConvectionDiffusionVelocityExtensionAdapter<T> > BaseT;
+
+
+      //! constructor
+      ConvectionDiffusionVelocityExtensionAdapter (const typename Traits::GridViewType& gv_, T& t_)
+        : BaseT(gv_), gv(gv_), t(t_)
+      {}
+
+      inline void evaluateGlobal (const typename Traits::DomainType& x,
+                                  typename Traits::RangeType& y) const
+      {
+        y = t.b(x);
+      }
+
+      //! \copydoc GridFunctionBase::evaluate()
+      inline void evaluate (const typename Traits::ElementType& e,
+                            const typename Traits::DomainType& x,
+                            typename Traits::RangeType& y) const
+      {
+        y = t.b(e,x);
+      }
+
+      inline const typename Traits::GridViewType& getGridView () const
+      {
+        return gv;
+      }
+
+      inline void setTime(double time_)
+      {
+        t.setTime(time_);
+      }
+
+    private:
+      const typename Traits::GridViewType gv;
+      T& t;
+    };
+
+
+
 
 
   /*! Adapter that extracts Dirichlet boundary conditions from parameter class
@@ -232,7 +302,6 @@ namespace Dune {
     const typename Traits::GridViewType g;
     T& t;
   };
-
 
 
 /*! Adapter that extracts gradient of exact solution from parameter class

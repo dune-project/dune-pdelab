@@ -8,9 +8,7 @@
 #include <dune/pdelab/localoperator/convectiondiffusiondg.hh>
 #include <dune/pdelab/localoperator/l2.hh>
 
-#include <dune/pdelab/backend/istl/cg_to_dg_prolongation.hh>
-#include <dune/pdelab/backend/istl/seq_amg_dg_backend.hh>
-#include <dune/pdelab/backend/istl/ovlp_amg_dg_backend.hh>
+#include <dune/pdelab/backend/istl.hh>
 
 /** Parameter class for the stationary convection-diffusion equation of the following form:
  *
@@ -189,13 +187,13 @@ int main(int argc, char **argv)
   // assembler for finite elemenent problem
   typedef Dune::PDELab::ConvectionDiffusionDG<Problem,typename FS::FEM> LOP;
   LOP lop(problem,Dune::PDELab::ConvectionDiffusionDGMethod::SIPG,Dune::PDELab::ConvectionDiffusionDGWeights::weightsOn,2.0);
-  typedef Dune::PDELab::GalerkinGlobalAssembler<FS,LOP,solvertype> ASSEMBLER;
-  ASSEMBLER assembler(fs,lop);
+  typedef Dune::PDELab::GalerkinGlobalAssemblerNewBackend<FS,LOP,solvertype> ASSEMBLER;
+  ASSEMBLER assembler(fs,lop,ASSEMBLER::MBE(5)); // 5 entries per row with cartesian mesh in 2D and blocked DG space
 
   // allocate solution vector; DG has no essential boundary conditions
   typedef FS::DOF V;
   V x(fs.getGFS(),0.0);
-  std::cout << "number of elements is " << x.base().N() << std::endl;
+  std::cout << "number of elements is " << Dune::PDELab::Backend::native(x).N() << std::endl;
 
   // CG space
   typedef AuxilliaryBoundaryCondition<GM::LeafGridView,NumberType> AuxilliaryProblem;
@@ -210,9 +208,9 @@ int main(int argc, char **argv)
   typedef typename FS::GFS GFS;
   typedef typename FS::CC DGCC2;
   DGCC2 dgcc2; // empty: no constraints!
-  typedef Dune::PDELab::ISTLMatrixBackend MBE;
+  typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,NumberType,NumberType,NumberType,DGCC2,DGCC2> DGGO2;
-  DGGO2 dggo2(fs.getGFS(),dgcc2,fs.getGFS(),dgcc2,lop);
+  DGGO2 dggo2(fs.getGFS(),dgcc2,fs.getGFS(),dgcc2,lop,MBE(5));
 
   /////////////////// SEQUENTIAL
   // make linear solver and solve problem
@@ -228,6 +226,7 @@ int main(int argc, char **argv)
 
   /////////////////// OVERLAPPING
   // make linear solver and solve problem
+#if HAVE_MPI
   {
       typedef Dune::PDELab::ISTLBackend_OVLP_AMG_4_DG<ASSEMBLER::GO,FS::CC,CGFS::GFS,CGFS::CC,
                                                       Dune::PDELab::CG2DGProlongation,Dune::SeqSSOR,Dune::CGSolver> LS;
@@ -237,6 +236,7 @@ int main(int argc, char **argv)
       slp.setHangingNodeModifications(false);
       slp.apply();
   }
+#endif // HAVE_MPI
 
   // done
   return 0;

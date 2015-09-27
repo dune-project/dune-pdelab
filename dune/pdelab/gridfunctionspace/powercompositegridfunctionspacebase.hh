@@ -3,6 +3,7 @@
 #ifndef DUNE_PDELAB_POWERCOMPOSITEGRIDFUNCTIONSPACEBASE_HH
 #define DUNE_PDELAB_POWERCOMPOSITEGRIDFUNCTIONSPACEBASE_HH
 
+#include <algorithm>
 #include <cstddef>
 #include <functional>
 #include <vector>

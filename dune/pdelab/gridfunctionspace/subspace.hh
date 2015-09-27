@@ -27,8 +27,6 @@ namespace Dune {
 
 #ifndef DOXYGEN
 
-#if HAVE_TEMPLATE_ALIASES
-
     // Specialization of DOFIndex type deduction TMP - the DOFIndex
     // of a subspace must be large enough to contain DOFIndex values
     // for the complete tree rooted in the base space.
@@ -37,27 +35,6 @@ namespace Dune {
     {
       typedef typename GFS::Ordering::Traits::DOFIndex type;
     };
-
-#else // HAVE_TEMPLATE_ALIASES
-
-    // without template aliases, the visible type of GridFunctionSubSpace is directly
-    // contained in the PDELab namespace, so we have to forward declare and  specialize
-    // build_dof_index_type for the interface class as well.
-
-    // forward declaration
-    template<typename GFS, typename TreePath>
-    class GridFunctionSubSpace;
-
-    // Specialization of DOFIndex type deduction TMP - the DOFIndex
-    // of a subspace must be large enough to contain DOFIndex values
-    // for the complete tree rooted in the base space.
-    template<typename GFS, typename TP>
-    struct build_dof_index_type<GridFunctionSubSpace<GFS,TP> >
-    {
-      typedef typename GFS::Ordering::Traits::DOFIndex type;
-    };
-
-#endif // HAVE_TEMPLATE_ALIASES
 
 #endif // DOXYGEN
 
@@ -87,7 +64,7 @@ namespace Dune {
         {
 
           // Get the ordering at the current subtree position.
-          typedef typename TypeTree::extract_child_type<Ordering,OrderingTP>::type SubOrdering;
+          using SubOrdering = TypeTree::ChildForTreePath<Ordering,OrderingTP>;
 
           // Only descend in the GFS tree if the current ordering child consumes a tree index entry.
           typedef typename conditional<
@@ -164,7 +141,7 @@ namespace Dune {
         typedef GFS BaseGridFunctionSpace;
 
         //! The type of the original GridFunctionSpace that is the root of this GridFunctionSpace.
-        typedef typename TypeTree::extract_child_type<GFS,TreePath>::type ChildGridFunctionSpace;
+        using ChildGridFunctionSpace = TypeTree::ChildForTreePath<GFS,TreePath>;
 
         //! Re-exported Traits from the original GridFunctionSpace.
         typedef typename ChildGridFunctionSpace::Traits Traits;
@@ -173,21 +150,9 @@ namespace Dune {
         typedef typename ChildGridFunctionSpace::OrderingTag OrderingTag;
 
 
-#if HAVE_TEMPLATE_ALIASES
-
         //! Re-exported constraints container from the original GridFunctionSpace.
         template<typename E>
         using Constraintscontainer = typename GFS::template ConstraintsContainer<E>;
-
-#else // HAVE_TEMPLATE_ALIASES
-
-        //! Re-exported constraints container from the original GridFunctionSpace.
-        template<typename E>
-        struct ConstraintsContainer
-          : public GFS::template ConstraintsContainer<E>
-        {};
-
-#endif // HAVE_TEMPLATE_ALIASES
 
         //! The ordering used by this GridFunctionSubSpace.
         typedef SubOrdering<
@@ -273,7 +238,7 @@ namespace Dune {
       public:
 
         //! The type of the original GridFunctionSpace that is the root of this GridFunctionSpace.
-        typedef typename TypeTree::extract_child_type<GFS,TreePath>::type ChildGridFunctionSpace;
+        using ChildGridFunctionSpace = TypeTree::ChildForTreePath<GFS,TreePath>;
 
         //! Re-exported Traits from the original GridFunctionSpace.
         typedef typename ChildGridFunctionSpace::Traits Traits;
@@ -361,7 +326,26 @@ namespace Dune {
 
 #endif // DOXYGEN
 
+      //! Mixin class which inherits from GridFunctionOutputParameters iff T inherits from GridFunctionOutputParameters
+      template<class T, bool Enable = std::is_base_of<GridFunctionOutputParameters, T>::value>
+      class GridFunctionSubSpaceOutputParameters
+      {
+      public:
+        void inheritDataSetType(const T & t) {}
+      };
 
+#ifndef DOXYGEN
+      template<class T>
+      class GridFunctionSubSpaceOutputParameters<T,true> :
+        public GridFunctionOutputParameters
+      {
+      public:
+        void inheritDataSetType(const T & t)
+        {
+          setDataSetType(t.dataSetType());
+        }
+      };
+#endif
 
       // ********************************************************************************
       // GridFunctionSubSpace implementation
@@ -392,47 +376,29 @@ namespace Dune {
        */
       template<typename GFS, typename TreePath>
       class GridFunctionSubSpace
-        : public TypeTree::ProxyNode<const typename TypeTree::extract_child_type<GFS,TreePath>::type>
-        , public SubSpaceFeatureProvider<GFS,TreePath,typename TypeTree::extract_child_type<
-                                                        GFS,
-                                                        TreePath
-                                                        >::type::ImplementationTag
-                                         >
+        : public TypeTree::ProxyNode<const TypeTree::ChildForTreePath<GFS,TreePath>>
+        , public SubSpaceFeatureProvider<GFS,TreePath,typename TypeTree::ChildForTreePath<GFS,TreePath>::ImplementationTag>
+        , public GridFunctionSubSpaceOutputParameters<TypeTree::ChildForTreePath<GFS,TreePath>>
       {
 
-        typedef TypeTree::ProxyNode<
-          const typename TypeTree::extract_child_type<
-            GFS,
-            TreePath
-            >::type
-          > NodeT;
+        using NodeT = TypeTree::ProxyNode<const TypeTree::ChildForTreePath<GFS,TreePath>>;
 
-        typedef SubSpaceFeatureProvider<
+        using FeatureT = SubSpaceFeatureProvider<
           GFS,
           TreePath,
-          typename TypeTree::extract_child_type<
-            GFS,
-            TreePath
-            >::type::ImplementationTag
-          > FeatureT;
+          typename TypeTree::ChildForTreePath<GFS,TreePath>::ImplementationTag
+          >;
 
-#if HAVE_TEMPLATE_ALIASES
       public:
-#else
-      protected:
-#endif
-        // If we don't have template aliases, force the user to use the wrapper class
-        // by making the constructors protected.
-
 
         //! Construct a GridFunctionSubSpace from the storage object of a root space.
         explicit GridFunctionSubSpace(std::shared_ptr<const GFS> gfs_storage)
           : NodeT(TypeTree::extract_child_storage(*gfs_storage,TreePath()))
           , FeatureT(*gfs_storage)
           , _base_gfs(gfs_storage)
-        {}
-
-#if HAVE_TEMPLATE_ALIASES
+        {
+          this->inheritDataSetType(childGridFunctionSpace());
+        }
 
         // We can mask out the following constructors if we don't have template aliases,
         // as we perform the necessary reference <-> shared_ptr conversions in the derived
@@ -443,7 +409,9 @@ namespace Dune {
           : NodeT(TypeTree::extract_child_storage(gfs,TreePath()))
           , FeatureT(gfs)
           , _base_gfs(stackobject_to_shared_ptr(gfs))
-        {}
+        {
+          this->inheritDataSetType(childGridFunctionSpace());
+        }
 
         //! Construct a GridFunctionSubSpace from the storage of another GridFunctionSubSpace.
         /**
@@ -461,11 +429,11 @@ namespace Dune {
           : NodeT(TypeTree::extract_child_storage(gfs_storage->baseGridFunctionSpace(),TreePath()))
           , FeatureT(gfs_storage->baseGridFunctionSpace())
           , _base_gfs(gfs_storage->baseGridFunctionSpaceStorage())
-        {}
+        {
+          setDataSetType(childGridFunctionSpace().dataSetType());
+        }
 
-#endif // HAVE_TEMPLATE_ALIASES
-
-        //! Construct a GridFunctionSubSpace another GridFunctionSubSpace.
+        //! Construct a GridFunctionSubSpace from another GridFunctionSubSpace.
         /**
          * This constructor is used to implement the non-nesting behavior by extracting the
          * original root space from the GridFunctionSubSpace and using that space for initialization.
@@ -481,7 +449,9 @@ namespace Dune {
           : NodeT(TypeTree::extract_child_storage(gfs.baseGridFunctionSpace(),TreePath()))
           , FeatureT(gfs.baseGridFunctionSpace())
           , _base_gfs(gfs.baseGridFunctionSpaceStorage())
-        {}
+        {
+          this->inheritDataSetType(childGridFunctionSpace());
+        }
 
       public:
 
@@ -489,7 +459,7 @@ namespace Dune {
         typedef GFS BaseGridFunctionSpace;
 
         //! The type of the original GridFunctionSpace that is the root of this GridFunctionSpace.
-        typedef typename TypeTree::extract_child_type<GFS,TreePath>::type ChildGridFunctionSpace;
+        using ChildGridFunctionSpace = TypeTree::ChildForTreePath<GFS,TreePath>;
 
         //! Re-exported Traits from the original GridFunctionSpace.
         typedef typename ChildGridFunctionSpace::Traits Traits;
@@ -533,13 +503,23 @@ namespace Dune {
           return this->proxiedNodeStorage();
         }
 
+        std::string name() const
+        {
+          return childGridFunctionSpace().name();
+        }
+
+        void name(const std::string& name)
+        {
+          childGridFunctionSpace().name(name);
+        }
+
       private:
 
         std::shared_ptr<const GFS> _base_gfs;
 
       };
 
-#if HAVE_TEMPLATE_ALIASES && !DOXYGEN
+#ifndef DOXYGEN
 
 
       //! Helper TMP to construct non-nested GridFunctionSubSpaces - default case.
@@ -570,12 +550,10 @@ namespace Dune {
           > type;
       };
 
-#endif // HAVE_TEMPLATE_ALIASES && !DOXYGEN
+#endif // DOXYGEN
 
     } // namespace gfs
 
-
-#if HAVE_TEMPLATE_ALIASES
 
 #if DOXYGEN
 
@@ -590,86 +568,6 @@ namespace Dune {
     using GridFunctionSubSpace = typename gfs::construct_sub_space<GFS,TreePath>::type;
 
 #endif // DOXYGEN
-
-#else // HAVE_TEMPLATE_ALIASES
-
-
-    //! \copydoc Dune::PDELab::gfs::GridFunctionSubSpace
-    /**
-     * Without template alias support, this interface class inherits from the actual, de-nested
-     * implementation.
-     */
-    template<typename GFS, typename TreePath>
-    class GridFunctionSubSpace
-      : public gfs::GridFunctionSubSpace<GFS,TreePath>
-    {
-
-      typedef gfs::GridFunctionSubSpace<
-        GFS,
-        TreePath
-        > BaseT;
-
-    public:
-
-      explicit GridFunctionSubSpace(std::shared_ptr<const GFS> gfs_storage)
-        : BaseT(gfs_storage)
-      {}
-
-      explicit GridFunctionSubSpace(const GFS& gfs)
-        : BaseT(stackobject_to_shared_ptr(gfs))
-      {}
-
-    };
-
-
-#ifndef DOXYGEN
-
-    //! \copydoc Dune::PDELab::gfs::GridFunctionSubSpace
-    /**
-     * Without template alias support, this interface class inherits from the actual, de-nested
-     * implementation.
-     */
-    template<typename BaseGFS, typename SubSpaceTreePath, typename TreePath>
-    class GridFunctionSubSpace<GridFunctionSubSpace<BaseGFS,SubSpaceTreePath>,TreePath>
-      : public gfs::GridFunctionSubSpace<typename GridFunctionSubSpace<
-                                           BaseGFS,
-                                           SubSpaceTreePath
-                                           >::BaseGridFunctionSpace,
-                                         typename TypeTree::TreePathConcat<
-                                           SubSpaceTreePath,
-                                           TreePath
-                                           >::type
-                                         >
-    {
-
-      typedef gfs::GridFunctionSubSpace<
-        typename GridFunctionSubSpace<
-          BaseGFS,
-          SubSpaceTreePath
-          >::BaseGridFunctionSpace,
-        typename TypeTree::TreePathConcat<
-          SubSpaceTreePath,
-          TreePath
-          >::type
-        > BaseT;
-
-      typedef GridFunctionSubSpace<BaseGFS,SubSpaceTreePath> SubSpace;
-
-    public:
-
-      explicit GridFunctionSubSpace(std::shared_ptr<const SubSpace> gfs_storage)
-        : BaseT(gfs_storage->baseGridFunctionSpaceStorage())
-      {}
-
-      explicit GridFunctionSubSpace(const SubSpace& gfs)
-        : BaseT(gfs.baseGridFunctionSpaceStorage())
-      {}
-
-    };
-
-#endif // DOXYGEN
-
-#endif // HAVE_TEMPLATE_ALIASES
 
     //! \}
 

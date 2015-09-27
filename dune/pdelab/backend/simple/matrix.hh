@@ -9,8 +9,8 @@
 #include <numeric>
 
 #include <dune/common/typetraits.hh>
-#include <dune/pdelab/backend/tags.hh>
-#include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/backend/common/tags.hh>
+#include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
 #include <dune/pdelab/backend/simple/descriptors.hh>
 
@@ -20,7 +20,10 @@ namespace Dune {
 
       template<typename GFSV, typename GFSU, typename C>
       class MatrixContainer
+        : public Backend::impl::Wrapper<C>
       {
+
+        friend Backend::impl::Wrapper<C>;
 
       public:
 
@@ -59,13 +62,13 @@ namespace Dune {
         {}
 
         //! Creates an ISTLMatrixContainer without allocating an underlying ISTL matrix.
-        explicit MatrixContainer(tags::unattached_container = tags::unattached_container())
+        explicit MatrixContainer(Backend::unattached_container = Backend::unattached_container())
           : _rows(0)
           , _cols(0)
         {}
 
         //! Creates an ISTLMatrixContainer with an empty underlying ISTL matrix.
-        explicit MatrixContainer(tags::attached_container)
+        explicit MatrixContainer(Backend::attached_container)
           : _rows(0)
           , _cols(0)
           , _container(std::make_shared<Container>())
@@ -181,6 +184,20 @@ namespace Dune {
         {
           return *_container;
         }
+
+      private:
+
+        const Container& native() const
+        {
+          return *_container;
+        }
+
+        Container& native()
+        {
+          return *_container;
+        }
+
+      public:
 
         void flush()
         {}

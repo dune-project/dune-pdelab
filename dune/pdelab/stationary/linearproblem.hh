@@ -4,10 +4,9 @@
 #include <iostream>
 
 #include <dune/common/timer.hh>
-#include <dune/common/deprecated.hh>
 #include <dune/common/parametertree.hh>
 
-#include <dune/pdelab/backend/backendselector.hh>
+#include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/constraints/common/constraints.hh>
 #include <dune/pdelab/backend/solver.hh>
 
@@ -47,22 +46,11 @@ namespace Dune {
       typedef typename V::ElementType Real;
       typedef typename GO::Traits::Jacobian M;
       typedef typename GO::Traits::TrialGridFunctionSpace TrialGridFunctionSpace;
-      typedef typename Dune::PDELab::BackendVectorSelector<TrialGridFunctionSpace,Real>::Type W;
+      using W = Dune::PDELab::Backend::Vector<TrialGridFunctionSpace,Real>;
       typedef GO GridOperator;
 
     public:
       typedef StationaryLinearProblemSolverResult<double> Result;
-
-      StationaryLinearProblemSolver(const GO& go, V& x, LS& ls, typename V::ElementType reduction, typename V::ElementType min_defect = 1e-99, int verbose=1) DUNE_DEPRECATED_MSG("Use StationaryLinearProblemSolver(const GO&, LS&, V&, ...) instead.")
-        : _go(go)
-        , _ls(ls)
-        , _x(&x)
-        , _reduction(reduction)
-        , _min_defect(min_defect)
-        , _hanging_node_modifications(false)
-        , _keep_matrix(true)
-        , _verbose(verbose)
-      {}
 
       StationaryLinearProblemSolver(const GO& go, LS& ls, V& x, typename V::ElementType reduction, typename V::ElementType min_defect = 1e-99, int verbose=1)
         : _go(go)
@@ -242,7 +230,7 @@ namespace Dune {
         V z(_go.trialGridFunctionSpace(),0.0);
         typename V::ElementType red = std::max(_reduction,_min_defect/defect);
         if (_go.trialGridFunctionSpace().gridView().comm().rank()==0)
-          std::cout << "=== solving (reduction: " << red << ") ";
+          std::cout << "=== solving (reduction: " << red << ") " << std::endl;
         _ls.apply(*_jacobian,z,r,red); // solver makes right hand side consistent
         _linear_solver_result = _ls.result();
         timing = watch.elapsed();

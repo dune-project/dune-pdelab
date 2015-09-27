@@ -8,7 +8,7 @@
 #if HAVE_EIGEN
 
 #include <dune/pdelab/backend/common/uncachedmatrixview.hh>
-#include <dune/pdelab/backend/tags.hh>
+#include <dune/pdelab/backend/common/tags.hh>
 #include <dune/pdelab/ordering/orderingbase.hh>
 #include <Eigen/Sparse>
 
@@ -37,11 +37,19 @@ namespace Dune
 
       template<typename GFSV, typename GFSU, typename ET, int _Options>
       class MatrixContainer
+        : public Backend::impl::Wrapper<Eigen::SparseMatrix<ET,_Options>>
       {
 
       public:
 
         typedef Eigen::SparseMatrix<ET,_Options> Container;
+
+      private:
+
+        friend Backend::impl::Wrapper<Container>;
+
+      public:
+
         typedef ET ElementType;
 
         typedef ElementType field_type;
@@ -87,11 +95,11 @@ namespace Dune
         }
 
         //! Creates an MatrixContainer without allocating an underlying Eigen matrix.
-        explicit MatrixContainer(tags::unattached_container = tags::unattached_container())
+        explicit MatrixContainer(Backend::unattached_container = Backend::unattached_container())
         {}
 
         //! Creates an MatrixContainer with an empty underlying Eigen matrix.
-        explicit MatrixContainer(tags::attached_container)
+        explicit MatrixContainer(Backend::attached_container)
         : _container(std::make_shared<Container>())
         {}
 
@@ -191,6 +199,20 @@ namespace Dune
         {
           return *_container;
         }
+
+      private:
+
+        const Container& native() const
+        {
+          return *_container;
+        }
+
+        Container& native()
+        {
+          return *_container;
+        }
+
+      public:
 
         void flush()
         {}

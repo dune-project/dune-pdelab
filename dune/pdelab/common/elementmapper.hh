@@ -147,8 +147,8 @@ namespace Dune {
        * zero-based, consecutive and unique across all codim 0 entities
        * of the GridView.
        *
-       * \param cell  The codim 0 entity for which to calculate an index.
-       * \return      The index of the entity.
+       * \param e  The codim 0 entity for which to calculate an index.
+       * \return   The index of the entity.
        */
       size_type map(const Element& e) const
       {

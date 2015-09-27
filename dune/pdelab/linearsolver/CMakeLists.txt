@@ -1,9 +1,1 @@
-set(mydir  ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/linearsolver)
-
-set(my_HEADERS                                     
-        stationarymatrix.hh)
-
-# include not needed for CMake
-# include $(top_srcdir)/am/global-rules
-
-install(FILES ${my_HEADERS} DESTINATION ${mydir})
+install(FILES stationarymatrix.hh DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/linearsolver)

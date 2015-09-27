@@ -8,7 +8,7 @@
 
 #include <dune/geometry/type.hh>
 
-#include<dune/localfunctions/monom.hh>
+#include<dune/localfunctions/monomial.hh>
 
 #include"finiteelementmap.hh"
 #include <dune/pdelab/finiteelementmap/global.hh>
@@ -20,12 +20,12 @@ namespace Dune {
     //! \ingroup FiniteElementMap
 	template<class D, class R, int d, int p>
 	class MonomLocalFiniteElementMap
-	  : public SimpleLocalFiniteElementMap< Dune::MonomLocalFiniteElement<D,R,d,p> >
+    : public SimpleLocalFiniteElementMap< Dune::MonomialLocalFiniteElement<D,R,d,p> >
 	{
     public:
 
       MonomLocalFiniteElementMap (const Dune::GeometryType& type)
-        : SimpleLocalFiniteElementMap< Dune::MonomLocalFiniteElement<D,R,d,p> >(Dune::MonomLocalFiniteElement<D,R,d,p>(type)), _gt(type)
+        : SimpleLocalFiniteElementMap< Dune::MonomialLocalFiniteElement<D,R,d,p> >(Dune::MonomialLocalFiniteElement<D,R,d,p>(type)), _gt(type)
       {
       }
 
@@ -60,10 +60,10 @@ namespace Dune {
     template<class Geometry, class RF, std::size_t p>
     class MonomFiniteElementMap
       : public GeometryFiniteElementMap<
-          MonomFiniteElementFactory<Geometry, RF, p>
+          MonomialFiniteElementFactory<Geometry, RF, p>
           >
     {
-      typedef MonomFiniteElementFactory<Geometry, RF, p> FEFactory;
+      typedef MonomialFiniteElementFactory<Geometry, RF, p> FEFactory;
       typedef GeometryFiniteElementMap<FEFactory> Base;
 
       static FEFactory feFactory;

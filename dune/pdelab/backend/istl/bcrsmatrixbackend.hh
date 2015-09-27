@@ -2,7 +2,7 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_BCRSMATRIXBACKEND_HH
 #define DUNE_PDELAB_BACKEND_ISTL_BCRSMATRIXBACKEND_HH
 
-#include <dune/pdelab/backend/istlmatrixbackend.hh>
+#include <dune/pdelab/backend/istl/bcrsmatrix.hh>
 #include <dune/pdelab/backend/istl/bcrspattern.hh>
 #include <dune/pdelab/backend/istl/patternstatistics.hh>
 
@@ -193,8 +193,6 @@ namespace Dune {
         //! The type of the object holding the statistics generated during pattern construction.
         typedef PatternStatistics<size_type> Statistics;
 
-#if HAVE_TEMPLATE_ALIASES || DOXYGEN
-
         //! The type of the pattern object passed to the GridOperator for pattern construction.
         template<typename Matrix, typename GFSV, typename GFSU>
         using Pattern = typename build_bcrs_pattern_type<
@@ -204,47 +202,10 @@ namespace Dune {
           typename GFSV::Ordering::ContainerAllocationTag
           >::type;
 
-#else // HAVE_TEMPLATE_ALIASES
-
-        template<typename Matrix, typename GFSV, typename GFSU>
-        struct Pattern
-          : public build_bcrs_pattern_type<typename Matrix::Container,
-                                           GFSV,
-                                           GFSU,
-                                           typename GFSV::Ordering::ContainerAllocationTag
-                                           >::type
-        {
-
-          typedef OrderingBase<
-            typename GFSV::Ordering::Traits::DOFIndex,
-            typename GFSV::Ordering::Traits::ContainerIndex
-            > RowOrdering;
-
-          typedef OrderingBase<
-            typename GFSU::Ordering::Traits::DOFIndex,
-            typename GFSU::Ordering::Traits::ContainerIndex
-            > ColOrdering;
-
-          typedef typename build_bcrs_pattern_type<
-            typename Matrix::Container,
-            GFSV,
-            GFSU,
-            typename GFSV::Ordering::ContainerAllocationTag
-            >::type BaseT;
-
-          template<typename EntriesPerRow_>
-          Pattern(const RowOrdering& row_ordering, const ColOrdering& col_ordering, const EntriesPerRow_& entries_per_row)
-            : BaseT(row_ordering,col_ordering,entries_per_row)
-          {}
-
-        };
-
-#endif // HAVE_TEMPLATE_ALIASES
-
         template<typename VV, typename VU, typename E>
         struct MatrixHelper
         {
-          typedef ISTLMatrixContainer<
+          typedef BCRSMatrix<
             typename VV::GridFunctionSpace,
             typename VU::GridFunctionSpace,
             typename build_matrix_type<
@@ -273,7 +234,7 @@ namespace Dune {
           allocate_bcrs_matrix(grid_operator.testGridFunctionSpace().ordering(),
                                grid_operator.trialGridFunctionSpace().ordering(),
                                pattern,
-                               istl::raw(matrix),
+                               Backend::native(matrix),
                                stats
                                );
           return std::move(stats);

@@ -4,6 +4,9 @@
 #ifndef DUNE_PDELAB_ASSEMBLERUTILITIES_HH
 #define DUNE_PDELAB_ASSEMBLERUTILITIES_HH
 
+#include <algorithm>
+#include <tuple>
+
 #include <dune/pdelab/constraints/common/constraintstransformation.hh>
 #include <dune/pdelab/gridoperator/common/localmatrix.hh>
 
@@ -113,7 +116,7 @@ namespace Dune{
 
        \nosubgrouping
     */
-    class SparsityLink : public Dune::tuple<int,int>
+    class SparsityLink : public std::tuple<int,int>
     {
     public:
       //! \brief Standard constructor for uninitialized local index
@@ -122,26 +125,26 @@ namespace Dune{
 
       //! \brief Initialize all components
       SparsityLink (int i, int j)
-        : Dune::tuple<int,int>(i,j)
+        : std::tuple<int,int>(i,j)
       {}
 
       //! \brief Return first component
       inline int i () const
       {
-        return Dune::get<0>(*this);
+        return std::get<0>(*this);
       }
 
       //! \brief Return second component
       inline int j () const
       {
-        return Dune::get<1>(*this);
+        return std::get<1>(*this);
       }
 
       //! \brief Set both components
       void set (int i, int j)
       {
-        Dune::get<0>(*this) = i;
-        Dune::get<1>(*this) = j;
+        std::get<0>(*this) = i;
+        std::get<1>(*this) = j;
       }
     };
 
@@ -155,13 +158,10 @@ namespace Dune{
       : public std::vector<SparsityLink>
     {
 
-    public:
+      // make push_back() inaccessible
+      using std::vector<SparsityLink>::push_back;
 
-      void push_back(const SparsityLink& link)
-        DUNE_DEPRECATED_MSG("The std::vector-like interface to LocalSparsityPattern is deprecated, use addLink() instead.")
-      {
-        std::vector<SparsityLink>::push_back(link);
-      }
+    public:
 
       //! Adds a link between DOF i of lfsv and DOF j of lfsu.
       /**
