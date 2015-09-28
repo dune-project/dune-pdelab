@@ -479,6 +479,9 @@ public:
   typedef typename Dune::TransposedMatMultMatResult<P,Matrix>::type PTADG;
   typedef typename Dune::MatMultMatResult<PTADG,P>::type CGMatrix; // istl coarse space matrix
 
+  // AMG parameters
+  typedef Dune::Amg::Parameters Parameters;
+
 private:
 
   const GFS& gfs;
@@ -486,6 +489,7 @@ private:
   const DGCC& dgcc;
   CGGFS& cggfs;
   const CGCC& cgcc;
+  Parameters amg_parameters;
   unsigned maxiter;
   int verbose;
   bool usesuperlu;
@@ -512,6 +516,27 @@ public:
     return pmatrix;
   }
 
+  /*! \brief set AMG parameters
+
+    \param[in] amg_parameters_ a parameter object of Type Dune::Amg::Parameters
+  */
+  void setParameters(const Parameters& amg_parameters_)
+  {
+    amg_parameters = amg_parameters_;
+  }
+
+  /**
+   * @brief Get the parameters describing the behaviuour of AMG.
+   *
+   * The returned object can be adjusted to ones needs and then can be
+   * reset using setParameters.
+   * @return The object holding the parameters of AMG.
+   */
+  const Parameters& parameters() const
+  {
+    return amg_parameters;
+  }
+
   /** make backend object
    */
   ISTLBackend_OVLP_AMG_4_DG(DGGO& dggo_, const DGCC& dgcc_, CGGFS& cggfs_, const CGCC& cgcc_,
@@ -522,6 +547,7 @@ public:
     , dgcc(dgcc_)
     , cggfs(cggfs_)
     , cgcc(cgcc_)
+    , amg_parameters(15,2000)
     , maxiter(maxiter_)
     , verbose(verbose_)
     , usesuperlu(usesuperlu_)
@@ -530,6 +556,8 @@ public:
     , pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop,MBE(low_order_space_entries_per_row))
     , pmatrix(pgo)
   {
+    amg_parameters.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
+    amg_parameters.setDebugLevel(verbose_);
 #if !HAVE_SUPERLU
     if (usesuperlu == true)
       {
@@ -560,6 +588,7 @@ public:
     , cggfs(cggfs_)
     , cgcc(cgcc_)
     , maxiter(params.get<int>("max_iterations",5000))
+    , amg_parameters(15,2000)
     , verbose(params.get<int>("verbose",1))
     , usesuperlu(params.get<bool>("use_superlu",true))
     , low_order_space_entries_per_row(params.get<std::size_t>("low_order_space.entries_per_row",StaticPower<3,GFS::Traits::GridView::dimension>::power))
@@ -567,6 +596,8 @@ public:
     , pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop,MBE(low_order_space_entries_per_row))
     , pmatrix(pgo)
   {
+    amg_parameters.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
+    amg_parameters.setDebugLevel(params.get<int>("verbose",1));
 #if !HAVE_SUPERLU
     if (usesuperlu == true)
       {
@@ -644,26 +675,14 @@ public:
     typedef Dune::OverlappingSchwarzOperator<CGMatrix,CGVector,CGVector,Comm> ParCGOperator;
     ParCGOperator paroop(native(acg),oocc);
     Dune::OverlappingSchwarzScalarProduct<CGVector,Comm> sp(oocc);
-    typedef Dune::Amg::Parameters Parameters; // AMG parameters (might be nice to change from outside)
-    Parameters params(15,2000);
-    params.setDefaultValuesIsotropic(CGGFS::Traits::GridViewType::Traits::Grid::dimension);
-    params.setDebugLevel(verbose);
-    params.setCoarsenTarget(2000);
-    params.setMaxLevel(20);
-    params.setProlongationDampingFactor(1.6);
-    params.setNoPreSmoothSteps(3);
-    params.setNoPostSmoothSteps(3);
-    params.setGamma(1);
-    params.setAdditive(false);
-    //params.setAccumulate(Dune::Amg::AccumulationMode::noAccu); // atOnceAccu results in deadlock
     typedef Dune::SeqSSOR<CGMatrix,CGVector,CGVector,1> Smoother;
     typedef Dune::BlockPreconditioner<CGVector,CGVector,Comm,Smoother> ParSmoother;
     typedef typename Dune::Amg::SmootherTraits<ParSmoother>::Arguments SmootherArgs;
     SmootherArgs smootherArgs;
-    smootherArgs.iterations = 2;
-    smootherArgs.relaxationFactor = 0.92;
+    smootherArgs.iterations = 1;
+    smootherArgs.relaxationFactor = 1.0;
     typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<CGMatrix,Dune::Amg::FirstDiagonal> > Criterion;
-    Criterion criterion(params);
+    Criterion criterion(amg_parameters);
     typedef Dune::Amg::AMG<ParCGOperator,CGVector,ParSmoother,Comm> AMG;
     watch.reset();
     AMG amg(paroop,criterion,smootherArgs,oocc);
