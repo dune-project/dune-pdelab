@@ -459,13 +459,13 @@ public:
   // vectors and matrices on DG level
   typedef typename DGGO::Traits::Jacobian M; // wrapped istl DG matrix
   typedef typename DGGO::Traits::Domain V;   // wrapped istl DG vector
-  typedef typename M::BaseT Matrix;          // istl DG matrix
-  typedef typename V::BaseT Vector;          // istl DG vector
+  typedef Backend::Native<M> Matrix;         // istl DG matrix
+  typedef Backend::Native<V> Vector;         // istl DG vector
   typedef typename Vector::field_type field_type;
 
   // vectors and matrices on CG level
   using CGV = Dune::PDELab::Backend::Vector<CGGFS,field_type>; // wrapped istl CG vector
-  typedef typename CGV::BaseT CGVector;                               // istl CG vector
+  typedef Backend::Native<CGV> CGVector;                       // istl CG vector
 
   // prolongation matrix
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
@@ -473,13 +473,18 @@ public:
   typedef TransferLOP CGTODGLOP; // local operator
   typedef Dune::PDELab::GridOperator<CGGFS,GFS,CGTODGLOP,MBE,field_type,field_type,field_type,CC,CC> PGO;
   typedef typename PGO::Jacobian PMatrix; // wrapped ISTL prolongation matrix
-  typedef typename PMatrix::BaseT P;      // ISTL prolongation matrix
+  typedef Backend::Native<PMatrix> P;     // ISTL prolongation matrix
 
   // CG subspace matrix
   typedef typename Dune::TransposedMatMultMatResult<P,Matrix>::type PTADG;
   typedef typename Dune::MatMultMatResult<PTADG,P>::type CGMatrix; // istl coarse space matrix
 
-  // AMG parameters
+  // AMG in CG-subspace
+  typedef typename Dune::PDELab::istl::CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
+  typedef Dune::OverlappingSchwarzOperator<CGMatrix,CGVector,CGVector,Comm> ParCGOperator;
+  typedef Dune::SeqSSOR<CGMatrix,CGVector,CGVector,1> Smoother;
+  typedef Dune::BlockPreconditioner<CGVector,CGVector,Comm,Smoother> ParSmoother;
+  typedef Dune::Amg::AMG<ParCGOperator,CGVector,ParSmoother,Comm> AMG;
   typedef Dune::Amg::Parameters Parameters;
 
 private:
@@ -489,9 +494,12 @@ private:
   const DGCC& dgcc;
   CGGFS& cggfs;
   const CGCC& cgcc;
+  std::shared_ptr<AMG> amg;
   Parameters amg_parameters;
   unsigned maxiter;
   int verbose;
+  bool reuse;
+  bool firstapply;
   bool usesuperlu;
   std::size_t low_order_space_entries_per_row;
 
@@ -507,6 +515,12 @@ private:
                    public Dune::PDELab::InstationaryLocalOperatorDefaultMethods<double>
   {
   };
+
+  // grid operator with empty local operator for constraints assembly in parallel
+  typedef Dune::PDELab::GridOperator<CGGFS,CGGFS,EmptyLop,MBE,field_type,field_type,field_type,CGCC,CGCC> CGGO;
+  // CG-subspace matrix
+  typedef typename CGGO::Jacobian CGM;
+  CGM acg;
 
 public:
 
@@ -537,10 +551,23 @@ public:
     return amg_parameters;
   }
 
+  //! Set whether the AMG should be reused again during call to apply().
+  void setReuse(bool reuse_)
+  {
+    reuse = reuse_;
+  }
+
+  //! Return whether the AMG is reused during call to apply()
+  bool getReuse() const
+  {
+    return reuse;
+  }
+
   /** make backend object
    */
   ISTLBackend_OVLP_AMG_4_DG(DGGO& dggo_, const DGCC& dgcc_, CGGFS& cggfs_, const CGCC& cgcc_,
-                            unsigned maxiter_=5000, int verbose_=1, bool usesuperlu_=true)
+                            unsigned maxiter_=5000, int verbose_=1, bool reuse_=false,
+                            bool usesuperlu_=true)
     : Dune::PDELab::OVLPScalarProductImplementation<typename DGGO::Traits::TrialGridFunctionSpace>(dggo_.trialGridFunctionSpace())
     , gfs(dggo_.trialGridFunctionSpace())
     , dggo(dggo_)
@@ -550,11 +577,14 @@ public:
     , amg_parameters(15,2000)
     , maxiter(maxiter_)
     , verbose(verbose_)
+    , reuse(reuse_)
+    , firstapply(true)
     , usesuperlu(usesuperlu_)
     , low_order_space_entries_per_row(StaticPower<3,GFS::Traits::GridView::dimension>::power)
     , cgtodglop()
     , pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop,MBE(low_order_space_entries_per_row))
     , pmatrix(pgo)
+    , acg(Backend::attached_container())
   {
     amg_parameters.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
     amg_parameters.setDebugLevel(verbose_);
@@ -590,11 +620,14 @@ public:
     , maxiter(params.get<int>("max_iterations",5000))
     , amg_parameters(15,2000)
     , verbose(params.get<int>("verbose",1))
+    , reuse(params.get<bool>("reuse",false))
+    , firstapply(true)
     , usesuperlu(params.get<bool>("use_superlu",true))
     , low_order_space_entries_per_row(params.get<std::size_t>("low_order_space.entries_per_row",StaticPower<3,GFS::Traits::GridView::dimension>::power))
     , cgtodglop()
     , pgo(cggfs,dggo.trialGridFunctionSpace(),cgtodglop,MBE(low_order_space_entries_per_row))
     , pmatrix(pgo)
+    , acg(Backend::attached_container())
   {
     amg_parameters.setDefaultValuesIsotropic(GFS::Traits::GridViewType::Traits::Grid::dimension);
     amg_parameters.setDebugLevel(params.get<int>("verbose",1));
@@ -636,27 +669,29 @@ public:
     // compute CG matrix
     // make grid operator with empty local operator => matrix data type and constraints assembly
     EmptyLop emptylop;
-    typedef Dune::PDELab::GridOperator<CGGFS,CGGFS,EmptyLop,MBE,field_type,field_type,field_type,CGCC,CGCC> CGGO;
     CGGO cggo(cggfs,cgcc,cggfs,cgcc,emptylop,MBE(low_order_space_entries_per_row));
-    typedef typename CGGO::Jacobian CGM;
 
     // do triple matrix product ACG = P^T ADG P; this is purely local
     Dune::Timer watch;
     watch.reset();
-    Backend::attached_container attached_container;
-    CGM acg(attached_container);
-    {
+    // only do triple matrix product if the matrix changes
+    double triple_product_time = 0.0;
+    // no need to set acg here back to zero, this is done in matMultmat
+    if(reuse == false || firstapply == true) {
       PTADG ptadg;
       Dune::transposeMatMultMat(ptadg,native(pmatrix),native(A)); // 1a
       //Dune::transposeMatMultMat(ptadg,native(pmatrix),native(A2));   // 1b
       Dune::matMultMat(native(acg),ptadg,native(pmatrix));
+      triple_product_time = watch.elapsed();
+      if (verbose>0 && gfs.gridView().comm().rank()==0)
+        std::cout << "=== triple matrix product " << triple_product_time << " s" << std::endl;
+      //Dune::printmatrix(std::cout,native(acg),"triple product matrix","row",10,2);
+      CGV cgx(cggfs,0.0);     // need vector to call jacobian
+      cggo.jacobian(cgx,acg); // insert trivial rows at processor boundaries
+      //std::cout << "CG constraints: " << cgcc.size() << " out of " << cggfs.globalSize() << std::endl;
     }
-    double triple_product_time = watch.elapsed();
-    if (verbose>0 && gfs.gridView().comm().rank()==0) std::cout << "=== triple matrix product " << triple_product_time << " s" << std::endl;
-    //Dune::printmatrix(std::cout,native(acg),"triple product matrix","row",10,2);
-    CGV cgx(cggfs,0.0);     // need vector to call jacobian
-    cggo.jacobian(cgx,acg); // insert trivial rows at processor boundaries
-    //std::cout << "CG constraints: " << cgcc.size() << " out of " << cggfs.globalSize() << std::endl;
+    else if(verbose>0 && gfs.gridView().comm().rank()==0)
+      std::cout << "=== reuse CG matrix, SKIPPING triple matrix product " << std::endl;
 
     // NOW we need to insert the processor boundary conditions in DG matrix
     typedef Dune::PDELab::GridOperator<GFS,GFS,EmptyLop,MBE,field_type,field_type,field_type,DGCC,DGCC> DGGOEmpty;
@@ -667,27 +702,32 @@ public:
     Dune::PDELab::set_constrained_dofs(dgcc,0.0,r);
 
     // now set up parallel AMG solver for the CG subspace
-    typedef typename Dune::PDELab::istl::CommSelector<s,Dune::MPIHelper::isFake>::type Comm;
     Comm oocc(gfs.gridView().comm());
     typedef Dune::PDELab::istl::ParallelHelper<CGGFS> CGHELPER;
     CGHELPER cghelper(cggfs,2);
     cghelper.createIndexSetAndProjectForAMG(acg,oocc);
-    typedef Dune::OverlappingSchwarzOperator<CGMatrix,CGVector,CGVector,Comm> ParCGOperator;
     ParCGOperator paroop(native(acg),oocc);
     Dune::OverlappingSchwarzScalarProduct<CGVector,Comm> sp(oocc);
-    typedef Dune::SeqSSOR<CGMatrix,CGVector,CGVector,1> Smoother;
-    typedef Dune::BlockPreconditioner<CGVector,CGVector,Comm,Smoother> ParSmoother;
+
     typedef typename Dune::Amg::SmootherTraits<ParSmoother>::Arguments SmootherArgs;
     SmootherArgs smootherArgs;
     smootherArgs.iterations = 1;
     smootherArgs.relaxationFactor = 1.0;
     typedef Dune::Amg::CoarsenCriterion<Dune::Amg::SymmetricCriterion<CGMatrix,Dune::Amg::FirstDiagonal> > Criterion;
     Criterion criterion(amg_parameters);
-    typedef Dune::Amg::AMG<ParCGOperator,CGVector,ParSmoother,Comm> AMG;
     watch.reset();
-    AMG amg(paroop,criterion,smootherArgs,oocc);
-    double amg_setup_time = watch.elapsed();
-    if (verbose>0 && gfs.gridView().comm().rank()==0) std::cout << "=== AMG setup " <<amg_setup_time << " s" << std::endl;
+
+    // only construct a new AMG for the CG-subspace if the matrix changes
+    double amg_setup_time = 0.0;
+    if(reuse == false || firstapply == true) {
+      amg.reset(new AMG(paroop,criterion,smootherArgs,oocc));
+      firstapply = false;
+      amg_setup_time = watch.elapsed();
+      if (verbose>0 && gfs.gridView().comm().rank()==0)
+        std::cout << "=== AMG setup " <<amg_setup_time << " s" << std::endl;
+    }
+    else if (verbose>0 && gfs.gridView().comm().rank()==0)
+      std::cout << "=== reuse CG matrix, SKIPPING AMG setup " << std::endl;
 
     // set up hybrid DG/CG preconditioner
     typedef DGPrec<Matrix,Vector,Vector,1> DGPrecType;
@@ -695,7 +735,7 @@ public:
     //DGPrecType dgprec(native(A),0.92);
     typedef Dune::PDELab::istl::ParallelHelper<GFS> DGHELPER;
     typedef OvlpDGAMGPrec<GFS,Matrix,DGPrecType,DGCC,CGGFS,AMG,CGCC,P,DGHELPER,Comm> HybridPrec;
-    HybridPrec hybridprec(gfs,native(A),dgprec,dgcc,cggfs,amg,cgcc,native(pmatrix),
+    HybridPrec hybridprec(gfs,native(A),dgprec,dgcc,cggfs,*amg,cgcc,native(pmatrix),
                           this->parallelHelper(),oocc,3,3);
 
     // /********/
