@@ -1298,15 +1298,21 @@ namespace Dune {
         {
         public:
             // export types
-            typedef ISTLMatrixBackend MBE;
+            typedef istl::BCRSMatrixBackend<> MBE;
             typedef Dune::PDELab::GridOperator<typename FS::GFS,typename FS::GFS,LOP,MBE,
                                                typename FS::NT,typename FS::NT,typename FS::NT,
                                                typename FS::CC,typename FS::CC> GO;
             typedef typename GO::Jacobian MAT;
 
+            DUNE_DEPRECATED_MSG("This constructor is deprecated and will removed after the release of PDELab 2.4. Use GalerkinGlobalAssembler(const FS& fs, LOP& lop, const std::size_t nonzeros) instead! The number of nonzeros can be determined with patternStatistics()!")
             GalerkinGlobalAssembler (const FS& fs, LOP& lop)
             {
-                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop));
+                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,MBE(1)));
+            }
+
+            GalerkinGlobalAssembler (const FS& fs, LOP& lop, const std::size_t nonzeros)
+            {
+                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,MBE(nonzeros)));
             }
 
             // return grid reference
@@ -1351,15 +1357,21 @@ namespace Dune {
         {
         public:
             // export types
-            typedef ISTLMatrixBackend MBE;
+            typedef istl::BCRSMatrixBackend<> MBE;
             typedef Dune::PDELab::GridOperator<typename FS::GFS,typename FS::GFS,LOP,MBE,
                                                typename FS::NT,typename FS::NT,typename FS::NT,
                                                typename FS::CC,typename FS::CC,true> GO;
             typedef typename GO::Jacobian MAT;
 
+            DUNE_DEPRECATED_MSG("This constructor is deprecated and will removed after the release of PDELab 2.4. Use GalerkinGlobalAssembler(const FS& fs, LOP& lop, const std::size_t nonzeros) instead! The number of nonzeros can be determined with patternStatistics()!")
             GalerkinGlobalAssembler (const FS& fs, LOP& lop)
             {
-                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop));
+                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,MBE(1)));
+            }
+
+            GalerkinGlobalAssembler (const FS& fs, LOP& lop, const std::size_t nonzeros)
+            {
+                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,MBE(nonzeros)));
             }
 
             // return grid reference
@@ -1513,15 +1525,21 @@ namespace Dune {
         {
         public:
             // export types
-            typedef ISTLMatrixBackend MBE;
+            typedef istl::BCRSMatrixBackend<> MBE;
             typedef Dune::PDELab::GridOperator<typename FSU::GFS,typename FSV::GFS,LOP,MBE,
                                                typename FSU::NT,typename FSU::NT,typename FSU::NT,
                                                typename FSU::CC,typename FSV::CC> GO;
             typedef typename GO::Jacobian MAT;
 
+            DUNE_DEPRECATED_MSG("This constructor is deprecated and will removed after the release of PDELab 2.4. Use GalerkinGlobalAssembler(const FSU& fsu, const FSV& fsv, LOP& lop, const std::size_t nonzeros) instead! The number of nonzeros can be determined with patternStatistics()!")
             GlobalAssembler (const FSU& fsu, const FSV& fsv, LOP& lop)
             {
-                gop = std::shared_ptr<GO>(new GO(fsu.getGFS(),fsu.getCC(),fsv.getGFS(),fsv.getCC(),lop));
+                gop = std::shared_ptr<GO>(new GO(fsu.getGFS(),fsu.getCC(),fsv.getGFS(),fsv.getCC(),lop,MBE(1)));
+            }
+
+            GlobalAssembler (const FSU& fsu, const FSV& fsv, LOP& lop, const std::size_t nonzeros)
+            {
+                gop = std::shared_ptr<GO>(new GO(fsu.getGFS(),fsu.getCC(),fsv.getGFS(),fsv.getCC(),lop,MBE(nonzeros)));
             }
 
             // return grid reference
@@ -1566,15 +1584,21 @@ namespace Dune {
         {
         public:
             // export types
-            typedef ISTLMatrixBackend MBE;
+            typedef istl::BCRSMatrixBackend<> MBE;
             typedef Dune::PDELab::GridOperator<typename FSU::GFS,typename FSV::GFS,LOP,MBE,
                                                typename FSU::NT,typename FSU::NT,typename FSU::NT,
                                                typename FSU::CC,typename FSV::CC,true> GO;
             typedef typename GO::Jacobian MAT;
 
+            DUNE_DEPRECATED_MSG("This constructor is deprecated and will removed after the release of PDELab 2.4. Use GalerkinGlobalAssembler(const FSU& fsu, const FSV& fsv, LOP& lop, const std::size_t nonzeros) instead! The number of nonzeros can be determined with patternStatistics()!")
             GlobalAssembler (const FSU& fsu, const FSV& fsv, LOP& lop)
             {
-                gop = std::shared_ptr<GO>(new GO(fsu.getGFS(),fsu.getCC(),fsv.getGFS(),fsv.getCC(),lop));
+                gop = std::shared_ptr<GO>(new GO(fsu.getGFS(),fsu.getCC(),fsv.getGFS(),fsv.getCC(),lop,MBE(1)));
+            }
+
+            GlobalAssembler (const FSU& fsu, const FSV& fsv, LOP& lop, const std::size_t nonzeros)
+            {
+                gop = std::shared_ptr<GO>(new GO(fsu.getGFS(),fsu.getCC(),fsv.getGFS(),fsv.getCC(),lop,MBE(nonzeros)));
             }
 
             // return grid reference
@@ -1620,7 +1644,7 @@ namespace Dune {
         {
         public:
             // export types
-            typedef ISTLMatrixBackend MBE;
+            typedef istl::BCRSMatrixBackend<> MBE;
             typedef Dune::PDELab::OneStepGridOperator<typename GO1::GO,typename GO2::GO,implicit> GO;
             typedef typename GO::Jacobian MAT;
 
