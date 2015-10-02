@@ -1,6 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_DIFFUSIONDG_HH
 #define DUNE_PDELAB_DIFFUSIONDG_HH
+#warning This file is deprecated and will be removed after the Dune-PDELab 2.4 release! Use the ConvectionDiffusionDG local operator from dune/pdelab/localoperator/convectiondiffusiondg.hh instead!
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
@@ -61,6 +62,7 @@ namespace Dune {
       enum { doLambdaSkeleton = false };
       enum { doLambdaBoundary = true };
 
+      DUNE_DEPRECATED_MSG("Deprecated in Dune-PDELab 2.4, use the local operator ConvectionDiffusionDG instead!")
       DiffusionDG (const K& k_, const F& f_, const B& bctype_, const G& g_, const J& j_, int dg_method, int _superintegration_order = 0) :
         k(k_), f(f_), bctype(bctype_), g(g_), j(j_), superintegration_order(_superintegration_order)
       {
