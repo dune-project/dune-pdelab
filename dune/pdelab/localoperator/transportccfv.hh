@@ -1,6 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_TRANSPORTCCFV_HH
 #define DUNE_PDELAB_TRANSPORTCCFV_HH
+#warning This file is deprecated and will be removed after the Dune-PDELab 2.4 release! Use the local operators from dune/pdelab/localoperator/convectiondiffusionccfv.hh instead!
 
 #include<dune/common/fvector.hh>
 #include<dune/geometry/referenceelements.hh>
@@ -224,6 +225,7 @@ namespace Dune {
 
       enum { doSkeletonTwoSided = true }; // need to see face from both sides for CFL calculation
 
+      DUNE_DEPRECATED_MSG("Deprecated in Dune-PDELab 2.4, use the local operator ConvectionDiffusionCCFV instead!")
       CCFVSpatialTransportOperator (TP& tp_)
         : tp(tp_)
       {
@@ -483,6 +485,7 @@ namespace Dune {
       // residual assembly flags
       enum { doAlphaVolume = true };
 
+      DUNE_DEPRECATED_MSG("Deprecated in Dune-PDELab 2.4, use the local operator ConvectionDiffusionCCFVTemporalOperator instead!")
       CCFVTemporalOperator (TP& tp_)
         : tp(tp_)
       {
