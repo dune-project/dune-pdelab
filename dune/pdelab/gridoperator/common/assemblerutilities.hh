@@ -72,34 +72,6 @@ namespace Dune{
 
     };
 
-    //! Translation helper from intersection method return values to intersection type.
-    /**
-     * This struct can be used to query an intersection for its type in a convenient way.
-     * Classification occurs in accordance with the specification for the return values
-     * of Intersection::neighbor() and Intersection::boundary() given in the documentation
-     * of the Intersection class.
-     */
-    struct IntersectionType
-    {
-
-      enum Type {
-        processor = 0, //!< processor boundary intersection (neighbor() == false && boundary() == false)
-        skeleton = 1,  //!< skeleton intersection (neighbor() == true && boundary() == false)
-        boundary = 2,  //!< domain boundary intersection (neighbor() == false && boundary() == true)
-        periodic = 3   //!< periodic boundary intersection (neighbor() == true && boundary() == true)
-      };
-
-      //! Returns the type of the intersection.
-      template<typename Intersection>
-      static Type get(const Intersection& is)
-      {
-        return static_cast<Type>(1*is.neighbor() + 2*is.boundary());
-      }
-
-    };
-
-
-
     // ********************************************************************************
     // default local pattern implementation
     // ********************************************************************************
