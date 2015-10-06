@@ -12,6 +12,7 @@ install(FILES benchmarkhelper.hh
               globaldofindex.hh
               hostname.hh
               instationaryfilenamehelper.hh
+              intersectiontype.hh
               jacobiantocurl.hh
               logtag.hh
               multiindex.hh
