@@ -123,6 +123,8 @@ namespace Dune {
       using size_type = typename Traits::size_type;
       using dim_type = typename Traits::dim_type;
 
+      using ctype = CoordinateField;
+
       static const bool conforming = Traits::conforming;
       static const dim_type dimension = Traits::dimension;
       static const dim_type dimensionworld = Traits::dimensionworld;
