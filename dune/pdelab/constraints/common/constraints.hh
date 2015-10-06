@@ -10,6 +10,7 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/common/typetraits.hh>
+#include<dune/pdelab/common/intersectiontype.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include"constraintstransformation.hh"
 #include"constraintsparameters.hh"
@@ -628,38 +629,44 @@ namespace Dune {
           unsigned int intersection_index = 0;
           for (const auto& intersection : intersections(es,element))
           {
-            if (intersection.boundary())
-            {
-              TypeTree::applyToTreePair(p,lfs_e,BoundaryConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self));
-            }
 
-            // ParallelStuff: BEGIN support for processor boundaries.
-            if ((!intersection.boundary()) && (!intersection.neighbor()))
-            {
-              TypeTree::applyToTree(lfs_e,ProcessorConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self));
-            }
-            // END support for processor boundaries.
+            auto intersection_data = classifyIntersection(es,intersection);
+            auto intersection_type = std::get<0>(intersection_data);
+            auto& outside_element = std::get<1>(intersection_data);
 
-            if (intersection.neighbor()){
+            switch (intersection_type) {
 
-              auto outside_element = intersection.outside();
-              auto idn = is.uniqueIndex(outside_element);
+            case IntersectionType::skeleton:
+            case IntersectionType::periodic:
+              {
+                auto idn = is.uniqueIndex(outside_element);
 
-              if(id > idn){
-                // bind local function space to element in neighbor
-                lfs_f.bind(outside_element);
+                if(id > idn){
+                  // bind local function space to element in neighbor
+                  lfs_f.bind(outside_element);
 
-                CL cl_neighbor;
+                  CL cl_neighbor;
 
-                TypeTree::applyToTreePair(lfs_e,lfs_f,SkeletonConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self,cl_neighbor));
+                  TypeTree::applyToTreePair(lfs_e,lfs_f,SkeletonConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self,cl_neighbor));
 
-                if (!cl_neighbor.empty())
-                  {
-                    lfs_cache_f.update();
-                    cg.import_local_transformation(cl_neighbor,lfs_cache_f);
-                  }
+                  if (!cl_neighbor.empty())
+                    {
+                      lfs_cache_f.update();
+                      cg.import_local_transformation(cl_neighbor,lfs_cache_f);
+                    }
 
+                }
+                break;
               }
+
+            case IntersectionType::boundary:
+              TypeTree::applyToTreePair(p,lfs_e,BoundaryConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self));
+              break;
+
+            case IntersectionType::processor:
+              TypeTree::applyToTree(lfs_e,ProcessorConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self));
+              break;
+
             }
             ++intersection_index;
           }
