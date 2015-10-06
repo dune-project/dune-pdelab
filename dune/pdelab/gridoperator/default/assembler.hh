@@ -6,6 +6,7 @@
 #include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
 #include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
 #include <dune/pdelab/common/geometrywrapper.hh>
+#include <dune/pdelab/common/intersectiontype.hh>
 
 namespace Dune{
   namespace PDELab{
@@ -158,7 +159,11 @@ namespace Dune{
 
                     IntersectionGeometry<Intersection> ig(intersection,intersection_index);
 
-                    switch (IntersectionType::get(intersection))
+                    auto intersection_data = classifyIntersection(entity_set,intersection);
+                    auto intersection_type = std::get<0>(intersection_data);
+                    auto& outside_element = std::get<1>(intersection_data);
+
+                    switch (intersection_type)
                       {
                       case IntersectionType::skeleton:
                         // the specific ordering of the if-statements in the old code caused periodic
@@ -167,8 +172,6 @@ namespace Dune{
                         if (require_uv_skeleton || require_v_skeleton)
                           {
                             // compute unique id for neighbor
-
-                            auto outside_element = intersection.outside();
 
                             auto idn = index_set.uniqueIndex(outside_element);
 
