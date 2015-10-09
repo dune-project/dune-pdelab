@@ -1,5 +1,6 @@
 set(modules
   DunePdelabMacros.cmake
+  DunePdelabTestMacros.cmake
   FindPackageMultipass.cmake
   FindPETSc.cmake
   ResolveCompilerPaths.cmake
