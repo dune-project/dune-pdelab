@@ -55,12 +55,12 @@ public:
    * \param x_  The coefficients vector
    */
   DarcyVelocityFromHeadFEM (const P& p, const GFS& gfs, X& x_)
-    : pp(stackobject_to_shared_ptr(p)),
-      pgfs(stackobject_to_shared_ptr(gfs)),
-      pxg(stackobject_to_shared_ptr(x_)),
-      lfs(pgfs),
-      lfs_cache(lfs),
-      lview(*pxg)
+    : pgfs(stackobject_to_shared_ptr(gfs))
+    , pxg(stackobject_to_shared_ptr(x_))
+    , pp(stackobject_to_shared_ptr(p))
+    , lfs(pgfs)
+    , lfs_cache(lfs)
+    , lview(*pxg)
   {}
 
   // Evaluate
