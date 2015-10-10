@@ -4,7 +4,7 @@ template<typename GV, typename RF>
 class BCExtension
   : public Dune::PDELab::GridFunctionBase<Dune::PDELab::
            GridFunctionTraits<GV,RF,1,Dune::FieldVector<RF,1> >, BCExtension<GV,RF> > {
-  const GV& gv;
+  GV gv;
 public:
   typedef Dune::PDELab::GridFunctionTraits<GV,RF,1,Dune::FieldVector<RF,1> > Traits;
 

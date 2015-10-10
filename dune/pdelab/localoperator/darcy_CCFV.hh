@@ -25,7 +25,7 @@ class VectorExchange
   typedef typename GV::IndexSet IndexSet;
   typedef typename IndexSet::IndexType IndexType;
 
-  const GV& gv;
+  GV gv;
   V& c;
   const IndexSet& indexSet;
 
