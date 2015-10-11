@@ -1,5 +1,6 @@
-#ifndef DarcyVelocityFromHeadFEM_HH
-#define DarcyVelocityFromHeadFEM_HH
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
+#ifndef DUNE_PDELAB_LOCALOPERATOR_DARCY_FEM_HH
+#define DUNE_PDELAB_LOCALOPERATOR_DARCY_FEM_HH
 
 //! \brief Provide Darcy velocity as a vector-valued grid function
 /**

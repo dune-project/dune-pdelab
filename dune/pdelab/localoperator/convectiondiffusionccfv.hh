@@ -1,6 +1,6 @@
 // -*- tab-width: 2; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_CONVECTIONDIFFUSIONCCFV_HH
-#define DUNE_PDELAB_CONVECTIONDIFFUSIONCCFV_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSIONCCFV_HH
+#define DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSIONCCFV_HH
 
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
