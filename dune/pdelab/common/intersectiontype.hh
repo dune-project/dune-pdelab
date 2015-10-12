@@ -4,6 +4,7 @@
 #include <utility>
 #include <tuple>
 
+#include <dune/common/version.hh>
 #include <dune/grid/common/partitionset.hh>
 
 namespace Dune {
@@ -37,7 +38,11 @@ namespace Dune {
     {
       auto type = static_cast<IntersectionType>(1* is.neighbor() + 2*is.boundary());
       if (type == IntersectionType::skeleton)
+#if DUNE_VERSION_NEWER_REV(DUNE_GRID,2,4,1)
+        if (entity_set.partitions() == Partitions::all)
+#else
         if (entity_set.partitions().partitionIterator() == Partitions::all.partitionIterator())
+#endif
           return std::make_tuple(type,is.outside());
         else
           {
