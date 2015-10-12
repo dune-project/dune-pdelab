@@ -302,7 +302,7 @@ namespace Dune {
         Ordering::Traits::DOFIndexAccessor::GeometryIndex::store(
           ei,
           e.type(),
-          gfs().gridView().indexSet().index(e)
+          gfs().entitySet().indexSet().index(e)
         );
 
         get_leaf_offsets_for_entity<EntityIndex,OffsetIterator> get_offsets(ei,oit);
