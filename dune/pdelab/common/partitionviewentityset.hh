@@ -402,7 +402,7 @@ namespace Dune {
       template<typename Entity>
       bool contains(const Entity& e) const
       {
-        return Partitions::contains(e.type()) ? baseIndexSet().contains(e) : false;
+        return Partitions::contains(e.partitionType()) ? baseIndexSet().contains(e) : false;
       }
 
       bool contains(dim_type codim) const
