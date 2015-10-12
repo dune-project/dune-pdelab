@@ -263,14 +263,6 @@ namespace Dune {
           return Backend::native(_ranks)[i][0] == _rank;
         }
 
-        // Checks whether a matrix block is associated with a ghost entity. Used for the AMG
-        // construction and thus assumes a single level of blocking and blocks with ownership
-        // restricted to a single DOF.
-        bool is_ghost_for_amg(std::size_t i) const
-        {
-          return Backend::native(_ghosts)[i][0];
-        }
-
 #endif // HAVE_MPI
 
       private:
@@ -386,11 +378,6 @@ namespace Dune {
                   {
                     // This dof is managed by us.
                     attr = Dune::OwnerOverlapCopyAttributeSet::owner;
-                  }
-                else if (is_ghost_for_amg(i) && c.getSolverCategory() == static_cast<int>(SolverCategory::nonoverlapping))
-                  {
-                    //use attribute overlap for ghosts in novlp grids
-                    attr = Dune::OwnerOverlapCopyAttributeSet::overlap;
                   }
                 else
                   {
