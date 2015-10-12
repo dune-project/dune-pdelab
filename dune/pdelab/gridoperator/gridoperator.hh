@@ -54,6 +54,11 @@ namespace Dune{
     {
     public:
 
+      static_assert(nonoverlapping_mode == -1 ||
+                    nonoverlapping_mode == 0 ||
+                    nonoverlapping_mode == 1,
+                    "invalid value for nonoverlapping_mode! This parameter is also deprecated in PDELab 2.4, so please remove it from your typedefs!");
+
       //! The global assembler type
       typedef DefaultAssembler<GFSU,GFSV,CU,CV,nonoverlapping_mode> Assembler;
 
