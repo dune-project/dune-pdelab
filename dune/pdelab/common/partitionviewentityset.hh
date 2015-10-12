@@ -388,8 +388,9 @@ namespace Dune {
       size_type size(dim_type codim) const
       {
         assert(!needsUpdate());
-        return _mapped_gt_offsets[GlobalGeometryTypeIndex::base(codim+1)] -
-          _mapped_gt_offsets[GlobalGeometryTypeIndex::base(codim)];
+        auto dim = GV::dimension;
+        return _mapped_gt_offsets[GlobalGeometryTypeIndex::offset(dim-codim+1)] -
+          _mapped_gt_offsets[GlobalGeometryTypeIndex::offfset(dim-codim)];
       }
 
       template<typename Entity>
