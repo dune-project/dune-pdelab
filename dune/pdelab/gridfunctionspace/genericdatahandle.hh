@@ -82,7 +82,7 @@ namespace Dune {
       template<typename GFS, typename Entity>
       std::size_t size(const GFS& gfs, const Entity& e) const
       {
-        return gfs.dataHandleContains(Entity::codimension) ? _count : 0;
+        return gfs.dataHandleContains(Entity::codimension) && gfs.entitySet().contains(e) ? _count : 0;
       }
 
       explicit EntityDataCommunicationDescriptor(std::size_t count = 1)
