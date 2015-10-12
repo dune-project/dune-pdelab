@@ -32,7 +32,7 @@ namespace Dune {
     {
       auto type = static_cast<IntersectionType>(1* is.neighbor() + 2*is.boundary());
       if (type == IntersectionType::skeleton)
-        if (entity_set.partitions() == Partitions::all)
+        if (entity_set.partitions().partitionIterator() == Partitions::all.partitionIterator())
           return std::make_tuple(type,is.outside());
         else
           {
