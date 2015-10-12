@@ -60,7 +60,7 @@ namespace Dune{
                     "invalid value for nonoverlapping_mode! This parameter is also deprecated in PDELab 2.4, so please remove it from your typedefs!");
 
       //! The global assembler type
-      typedef DefaultAssembler<GFSU,GFSV,CU,CV,nonoverlapping_mode> Assembler;
+      typedef DefaultAssembler<GFSU,GFSV,CU,CV,static_cast<bool>(nonoverlapping_mode)> Assembler;
 
       //! The type of the domain (solution).
       using Domain = Dune::PDELab::Backend::Vector<GFSU,DF>;
