@@ -1,6 +1,11 @@
 #ifndef DUNE_PDELAB_COMMON_INTERSECTIONTYPE_HH
 #define DUNE_PDELAB_COMMON_INTERSECTIONTYPE_HH
 
+#include <utility>
+#include <tuple>
+
+#include <dune/grid/common/partitionset.hh>
+
 namespace Dune {
   namespace PDELab {
 
