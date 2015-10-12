@@ -204,6 +204,8 @@ namespace Dune {
         template<typename Entity>
         size_type size(const Entity& e) const
         {
+          if (!_gfsu.entitySet().contains(e))
+            return 0;
           _entity_cache.update(e);
           size_type n = 0;
           for (size_type i = 0; i < _entity_cache.size(); ++i)
@@ -220,6 +222,8 @@ namespace Dune {
         template<typename Buffer, typename Entity>
         void gather_pattern(Buffer& buf, const Entity& e) const
         {
+          if (!_gfsu.entitySet().contains(e))
+            return;
           _entity_cache.update(e);
           for (size_type i = 0; i < _entity_cache.size(); ++i)
             {
@@ -237,6 +241,8 @@ namespace Dune {
         template<typename Buffer, typename Entity>
         void gather_data(Buffer& buf, const Entity& e, const M& matrix) const
         {
+          if (!_gfsu.entitySet().contains(e))
+            return;
           _entity_cache.update(e);
           for (size_type i = 0; i < _entity_cache.size(); ++i)
             {
