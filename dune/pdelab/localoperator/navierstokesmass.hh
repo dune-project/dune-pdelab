@@ -87,7 +87,7 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -137,7 +137,7 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
@@ -196,7 +196,7 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         // subspaces
         typedef typename LFSV::template Child<0>::Type LFSV_V;
@@ -247,7 +247,7 @@ namespace Dune {
                             M& mat) const
       {
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         // subspaces
         typedef typename LFSV::template Child<0>::Type LFSV_V;

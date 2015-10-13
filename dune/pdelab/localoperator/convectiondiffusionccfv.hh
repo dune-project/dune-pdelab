@@ -1,6 +1,6 @@
 // -*- tab-width: 2; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_CONVECTIONDIFFUSIONCCFV_HH
-#define DUNE_PDELAB_CONVECTIONDIFFUSIONCCFV_HH
+#ifndef DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSIONCCFV_HH
+#define DUNE_PDELAB_LOCALOPERATOR_CONVECTIONDIFFUSIONCCFV_HH
 
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
@@ -68,12 +68,6 @@ namespace Dune {
         // domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::JacobianType JacobianType;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
 
         // dimensions
         const int dim = EG::Geometry::mydimension;
@@ -97,13 +91,6 @@ namespace Dune {
         // domain and range field type
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::JacobianType JacobianType;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
-        typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
         const int dim = EG::Geometry::mydimension;

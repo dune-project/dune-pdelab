@@ -1,6 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
 #ifndef DUNE_PDELAB_LAPLACEDIRICHLETCCFV_HH
 #define DUNE_PDELAB_LAPLACEDIRICHLETCCFV_HH
+#warning This file is deprecated and will be removed after the Dune-PDELab 2.4 release! Use the ConvectionDiffusionCCFV local operator from dune/pdelab/localoperator/convectiondiffusionccfv.hh instead!
 
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
@@ -38,6 +39,7 @@ namespace Dune {
       enum { doAlphaSkeleton  = true };
       enum { doAlphaBoundary  = true };
 
+      DUNE_DEPRECATED_MSG("Deprecated in Dune-PDELab 2.4, use the local operator ConvectionDiffusionCCFV instead!")
       LaplaceDirichletCCFV (const G& g_) : g(g_) {}
 
       // skeleton integral depending on test and ansatz functions

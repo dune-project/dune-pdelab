@@ -1,6 +1,6 @@
-// -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DarcyVelocityFromHeadCCFV_HH
-#define DarcyVelocityFromHeadCCFV_HH
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
+#ifndef DUNE_PDELAB_LOCALOPERATOR_DARCY_CCFV_HH
+#define DUNE_PDELAB_LOCALOPERATOR_DARCY_CCFV_HH
 
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
@@ -25,7 +25,7 @@ class VectorExchange
   typedef typename GV::IndexSet IndexSet;
   typedef typename IndexSet::IndexType IndexType;
 
-  const GV& gv;
+  GV gv;
   V& c;
   const IndexSet& indexSet;
 

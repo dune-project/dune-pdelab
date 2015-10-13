@@ -1,5 +1,6 @@
-#ifndef DarcyVelocityFromHeadFEM_HH
-#define DarcyVelocityFromHeadFEM_HH
+// -*- tab-width: 2; indent-tabs-mode: nil -*-
+#ifndef DUNE_PDELAB_LOCALOPERATOR_DARCY_FEM_HH
+#define DUNE_PDELAB_LOCALOPERATOR_DARCY_FEM_HH
 
 //! \brief Provide Darcy velocity as a vector-valued grid function
 /**
@@ -55,12 +56,12 @@ public:
    * \param x_  The coefficients vector
    */
   DarcyVelocityFromHeadFEM (const P& p, const GFS& gfs, X& x_)
-    : pp(stackobject_to_shared_ptr(p)),
-      pgfs(stackobject_to_shared_ptr(gfs)),
-      pxg(stackobject_to_shared_ptr(x_)),
-      lfs(pgfs),
-      lfs_cache(lfs),
-      lview(*pxg)
+    : pgfs(stackobject_to_shared_ptr(gfs))
+    , pxg(stackobject_to_shared_ptr(x_))
+    , pp(stackobject_to_shared_ptr(p))
+    , lfs(pgfs)
+    , lfs_cache(lfs)
+    , lview(*pxg)
   {}
 
   // Evaluate

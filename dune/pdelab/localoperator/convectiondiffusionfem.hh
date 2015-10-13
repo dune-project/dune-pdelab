@@ -405,7 +405,7 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
         const int intorder = 2*lfsu.finiteElement().localBasis().order();
 
         // select quadrature rule
@@ -692,7 +692,7 @@ namespace Dune {
         typedef typename LFSU::Traits::SizeType size_type;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
         const int intorder = 2*lfsu.finiteElement().localBasis().order();
 
         // select quadrature rule
@@ -852,7 +852,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::JacobianType JacobianType;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
         const int intorder = 2*lfsu.finiteElement().localBasis().order();
 
         // select quadrature rule

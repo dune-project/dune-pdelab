@@ -161,7 +161,7 @@ namespace Dune {
       template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
-        const unsigned int dim = EG::Geometry::dimension;
+        const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
         static_assert
@@ -284,7 +284,7 @@ namespace Dune {
       void jacobian_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv,
                             LocalMatrix& mat) const
       {
-        const unsigned int dim = EG::Geometry::dimension;
+        const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
        static_assert
@@ -408,8 +408,8 @@ namespace Dune {
                            R& r_s, R& r_n) const
       {
         // dimensions
-        const unsigned int dim = IG::Geometry::dimension;
-        const unsigned int dimw = IG::Geometry::dimensionworld;
+        const unsigned int dim = IG::dimension;
+        const unsigned int dimw = IG::coorddimension;
 
         // subspaces
         static_assert
@@ -594,8 +594,8 @@ namespace Dune {
                               LocalMatrix& mat_ns, LocalMatrix& mat_nn) const
       {
         // dimensions
-        const unsigned int dim = IG::Geometry::dimension;
-        const unsigned int dimw = IG::Geometry::dimensionworld;
+        const unsigned int dim = IG::dimension;
+        const unsigned int dimw = IG::coorddimension;
 
         // subspaces
         static_assert
@@ -792,8 +792,8 @@ namespace Dune {
                            R& r) const
       {
         // dimensions
-        const unsigned int dim = IG::Geometry::dimension;
-        const unsigned int dimw = IG::Geometry::dimensionworld;
+        const unsigned int dim = IG::dimension;
+        const unsigned int dimw = IG::coorddimension;
 
         // subspaces
         static_assert
@@ -933,8 +933,8 @@ namespace Dune {
                               LocalMatrix& mat) const
       {
         // dimensions
-        const unsigned int dim = IG::Geometry::dimension;
-        const unsigned int dimw = IG::Geometry::dimensionworld;
+        const unsigned int dim = IG::dimension;
+        const unsigned int dimw = IG::coorddimension;
 
         // subspaces
         static_assert
@@ -1052,7 +1052,7 @@ namespace Dune {
       template<typename EG, typename LFSV, typename R>
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
-        const unsigned int dim = EG::Geometry::dimension;
+        const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
         static_assert
@@ -1064,7 +1064,6 @@ namespace Dune {
         // domain and range field type
         typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
         typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef VectorBasisInterfaceSwitch<typename FESwitch_V::Basis > VectorBasisSwitch_V;
         typedef typename BasisSwitch_V::DomainField DF;
         typedef typename BasisSwitch_V::RangeField RF;
         typedef typename BasisSwitch_V::Range Range_V;

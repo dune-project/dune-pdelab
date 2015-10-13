@@ -85,7 +85,7 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         // extract local function spaces
         typedef typename LFSU::template Child<0>::Type LFSU_V_PFS;
@@ -219,7 +219,7 @@ namespace Dune {
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         // extract local function spaces
         typedef typename LFSV::template Child<0>::Type LFSV_V_PFS;
@@ -294,8 +294,8 @@ namespace Dune {
       void lambda_boundary (const IG& ig, const LFSV& lfsv, R& r) const
       {
         // dimensions
-        static const unsigned int dim = IG::Geometry::dimension;
-        static const unsigned int dimw = IG::Geometry::dimensionworld;
+        static const unsigned int dim = IG::dimension;
+        static const unsigned int dimw = IG::coorddimension;
 
         // extract local velocity function spaces
         typedef typename LFSV::template Child<0>::Type LFSV_V_PFS;
@@ -366,7 +366,7 @@ namespace Dune {
                             M& mat) const
       {
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
 
         // extract local function spaces

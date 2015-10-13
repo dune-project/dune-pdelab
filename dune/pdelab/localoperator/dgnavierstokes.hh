@@ -98,7 +98,7 @@ namespace Dune {
       void alpha_volume (const EG& eg, const LFSU& lfsu, const X& x, const LFSV& lfsv, R& r) const
       {
         // dimensions
-        const unsigned int dim = EG::Geometry::dimension;
+        const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
         static_assert
@@ -230,7 +230,7 @@ namespace Dune {
                             LocalMatrix& mat) const
       {
         // dimensions
-        const unsigned int dim = EG::Geometry::dimension;
+        const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
         static_assert
@@ -366,8 +366,8 @@ namespace Dune {
                            R& r_s, R& r_n) const
       {
         // dimensions
-        const unsigned int dim = IG::Geometry::dimension;
-        const unsigned int dimw = IG::Geometry::dimensionworld;
+        const unsigned int dim = IG::dimension;
+        const unsigned int dimw = IG::coorddimension;
 
         // subspaces
         static_assert
@@ -558,8 +558,8 @@ namespace Dune {
                               LocalMatrix& mat_ns, LocalMatrix& mat_nn) const
       {
         // dimensions
-        const unsigned int dim = IG::Geometry::dimension;
-        const unsigned int dimw = IG::Geometry::dimensionworld;
+        const unsigned int dim = IG::dimension;
+        const unsigned int dimw = IG::coorddimension;
 
         // subspaces
         static_assert
@@ -764,8 +764,8 @@ namespace Dune {
                            R& r) const
       {
         // dimensions
-        const unsigned int dim = IG::Geometry::dimension;
-        const unsigned int dimw = IG::Geometry::dimensionworld;
+        const unsigned int dim = IG::dimension;
+        const unsigned int dimw = IG::coorddimension;
 
         // subspaces
         static_assert
@@ -946,8 +946,8 @@ namespace Dune {
                               LocalMatrix& mat) const
       {
         // dimensions
-        const unsigned int dim = IG::Geometry::dimension;
-        const unsigned int dimw = IG::Geometry::dimensionworld;
+        const unsigned int dim = IG::dimension;
+        const unsigned int dimw = IG::coorddimension;
 
         // subspaces
         static_assert
@@ -1135,7 +1135,7 @@ namespace Dune {
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
       {
         // dimensions
-        static const unsigned int dim = EG::Geometry::dimension;
+        static const unsigned int dim = EG::Geometry::mydimension;
 
         // subspaces
         static_assert
@@ -1221,7 +1221,7 @@ namespace Dune {
       void lambda_boundary (const IG& ig, const LFSV& lfsv, R& r) const
       {
         // dimensions
-        static const unsigned int dim = IG::Geometry::dimension;
+        static const unsigned int dim = IG::dimension;
 
         // subspaces
         static_assert

@@ -82,7 +82,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType PressureRangeType;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         // evaluate transformation which must be linear
         Dune::FieldVector<DF,dim> pos; pos = 0.0;
@@ -194,7 +194,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeType PressureRangeType;
 
         // dimensions
-        const int dim = EG::Geometry::dimension;
+        const int dim = EG::Geometry::mydimension;
 
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();

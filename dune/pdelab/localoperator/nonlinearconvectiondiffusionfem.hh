@@ -1,7 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_CONVECTIONDIFFUSION_HH
-#define DUNE_PDELAB_CONVECTIONDIFFUSION_HH
-#warning This file is deprecated and will be removed after the Dune-PDELab 2.4 release! Include the header dune/pdelab/localoperator/nonlinearconvectiondiffusionfem.hh instead!
+#ifndef DUNE_PDELAB_LOCALOPERATOR_NONLINEARCONVECTIONDIFFUSIONFEM_HH
+#define DUNE_PDELAB_LOCALOPERATOR_NONLINEARCONVECTIONDIFFUSIONFEM_HH
 
 #include<vector>
 
@@ -222,11 +221,11 @@ namespace Dune {
      * \tparam T model of ConvectionDiffusionParameterInterface
      */
     template<typename T>
-    class DUNE_DEPRECATED_MSG("Deprecated in Dune-PDELab 2.4, use the local operator NonLinearConvectionDiffusionFEM instead!") ConvectionDiffusion :
-      public NumericalJacobianApplyVolume<ConvectionDiffusion<T> >,
-      public NumericalJacobianApplyBoundary<ConvectionDiffusion<T> >,
-      public NumericalJacobianVolume<ConvectionDiffusion<T> >,
-      public NumericalJacobianBoundary<ConvectionDiffusion<T> >,
+    class NonLinearConvectionDiffusionFEM :
+      public NumericalJacobianApplyVolume<NonLinearConvectionDiffusionFEM<T> >,
+      public NumericalJacobianApplyBoundary<NonLinearConvectionDiffusionFEM<T> >,
+      public NumericalJacobianVolume<NonLinearConvectionDiffusionFEM<T> >,
+      public NumericalJacobianBoundary<NonLinearConvectionDiffusionFEM<T> >,
       public FullVolumePattern,
       public LocalOperatorDefaultFlags,
       public InstationaryLocalOperatorDefaultMethods<double>
@@ -239,8 +238,7 @@ namespace Dune {
       enum { doAlphaVolume = true };
       enum { doAlphaBoundary = true };
 
-      DUNE_DEPRECATED_MSG("Deprecated in Dune-PDELab 2.4, use the local operator NonLinearConvectionDiffusionFEM instead!")
-      ConvectionDiffusion (T& param_, int intorder_=2)
+      NonLinearConvectionDiffusionFEM (T& param_, int intorder_=2)
         : param(param_), intorder(intorder_)
       {}
 
