@@ -73,9 +73,6 @@ namespace Dune {
       MassMatrixTest<double,5,1,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
       MassMatrixTest<double,6,1,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
       MassMatrixTest<double,7,1,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
-      MassMatrixTest<double,8,1,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
-      MassMatrixTest<double,9,1,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
-      MassMatrixTest<double,10,1,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
 
       MassMatrixTest<double,1,2,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
       MassMatrixTest<double,2,2,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
@@ -84,9 +81,6 @@ namespace Dune {
       MassMatrixTest<double,5,2,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
       MassMatrixTest<double,6,2,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
       MassMatrixTest<double,7,2,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
-      MassMatrixTest<double,8,2,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
-      MassMatrixTest<double,9,2,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
-      MassMatrixTest<double,10,2,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
 
       MassMatrixTest<double,1,3,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
       MassMatrixTest<double,2,3,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
@@ -95,9 +89,6 @@ namespace Dune {
       MassMatrixTest<double,5,3,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
       MassMatrixTest<double,6,3,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
       MassMatrixTest<double,7,3,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
-      MassMatrixTest<double,8,3,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
-      MassMatrixTest<double,9,3,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
-      MassMatrixTest<double,10,3,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Pk >::compute();
 
       MassMatrixTest<double,1,2,Dune::GeometryType::simplex,Dune::GMPField<512>,BasisType::Pk >::compute();
       MassMatrixTest<double,2,2,Dune::GeometryType::simplex,Dune::GMPField<512>,BasisType::Pk >::compute();
@@ -106,8 +97,6 @@ namespace Dune {
       MassMatrixTest<double,5,2,Dune::GeometryType::simplex,Dune::GMPField<512>,BasisType::Pk >::compute();
       MassMatrixTest<double,6,2,Dune::GeometryType::simplex,Dune::GMPField<512>,BasisType::Pk >::compute();
       MassMatrixTest<double,7,2,Dune::GeometryType::simplex,Dune::GMPField<512>,BasisType::Pk >::compute();
-      MassMatrixTest<double,8,2,Dune::GeometryType::simplex,Dune::GMPField<512>,BasisType::Pk >::compute();
-      MassMatrixTest<double,9,2,Dune::GeometryType::simplex,Dune::GMPField<512>,BasisType::Pk >::compute();
 
       MassMatrixTest<double,1,3,Dune::GeometryType::simplex,Dune::GMPField<512>,BasisType::Pk >::compute();
       MassMatrixTest<double,2,3,Dune::GeometryType::simplex,Dune::GMPField<512>,BasisType::Pk >::compute();
@@ -116,6 +105,7 @@ namespace Dune {
       MassMatrixTest<double,5,3,Dune::GeometryType::simplex,Dune::GMPField<512>,BasisType::Pk >::compute();
       MassMatrixTest<double,6,3,Dune::GeometryType::simplex,Dune::GMPField<512>,BasisType::Pk >::compute();
       MassMatrixTest<double,7,3,Dune::GeometryType::simplex,Dune::GMPField<512>,BasisType::Pk >::compute();
+
       std::cout << "testing qk basis\n";
       MassMatrixTest<double,1,1,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
       MassMatrixTest<double,2,1,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
@@ -124,9 +114,6 @@ namespace Dune {
       MassMatrixTest<double,5,1,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
       MassMatrixTest<double,6,1,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
       MassMatrixTest<double,7,1,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
-      MassMatrixTest<double,8,1,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
-      MassMatrixTest<double,9,1,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
-      MassMatrixTest<double,10,1,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
 
       MassMatrixTest<double,1,2,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
       MassMatrixTest<double,2,2,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
@@ -135,9 +122,6 @@ namespace Dune {
       MassMatrixTest<double,5,2,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
       MassMatrixTest<double,6,2,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
       MassMatrixTest<double,7,2,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
-      MassMatrixTest<double,8,2,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
-      MassMatrixTest<double,9,2,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
-      MassMatrixTest<double,10,2,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
 
       MassMatrixTest<double,1,3,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
       MassMatrixTest<double,2,3,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
@@ -146,7 +130,6 @@ namespace Dune {
       MassMatrixTest<double,5,3,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
       MassMatrixTest<double,6,3,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
       MassMatrixTest<double,7,3,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
-      MassMatrixTest<double,8,3,Dune::GeometryType::cube,Dune::GMPField<512>,BasisType::Qk >::compute();
     }
 
   } // namespace PB
