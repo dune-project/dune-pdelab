@@ -43,7 +43,6 @@ install(FILES callswitch.hh
               taylorhoodnavierstokes.hh
               transportccfv.hh
               twophaseccfv.hh
-              vectorwave.hh
               weightedsum.hh
               zero.hh
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/localoperator)

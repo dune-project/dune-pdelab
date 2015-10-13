@@ -45,7 +45,6 @@ common_HEADERS =				\
 	taylorhoodnavierstokes.hh  		\
 	transportccfv.hh			\
 	twophaseccfv.hh				\
-	vectorwave.hh				\
 	weightedsum.hh				\
 	zero.hh
 
