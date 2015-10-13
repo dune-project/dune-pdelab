@@ -14,10 +14,10 @@ common_HEADERS =				\
 	globaldofindex.hh			\
 	hostname.hh				\
 	instationaryfilenamehelper.hh		\
+	intersectiontype.hh			\
 	jacobiantocurl.hh			\
 	logtag.hh				\
 	multiindex.hh				\
-	partitioninfoprovider.hh		\
 	polymorphicbufferwrapper.hh		\
 	range.hh				\
 	simpledofindex.hh			\

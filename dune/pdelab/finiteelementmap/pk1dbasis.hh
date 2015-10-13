@@ -202,6 +202,17 @@ namespace Dune {
         return true;
       }
 
+      bool hasDOFs(int codim) const
+      {
+        switch (codim)
+          {
+          case 0:
+            return k != 1;
+          case 1:
+            return k > 0;
+          }
+      }
+
       std::size_t size(GeometryType gt) const
       {
         if (gt.isVertex())

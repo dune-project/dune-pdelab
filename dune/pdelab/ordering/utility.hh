@@ -204,20 +204,21 @@ namespace Dune {
     };
 
 
-    template<typename GV, typename DI, typename CI>
+    template<typename ES, typename DI, typename CI>
     struct LocalOrderingTraits
       : public OrderingTraits<DI,
                               CI
                               >
     {
 
-      typedef GV GridView;
+      using EntitySet = ES;
+      using GridView = typename ES::GridView;
 
     };
 
-    template<typename GV, typename DI, typename CI>
+    template<typename ES, typename DI, typename CI>
     struct GridViewOrderingTraits
-      : public LocalOrderingTraits<GV,DI,CI>
+      : public LocalOrderingTraits<ES,DI,CI>
     {
 
       typedef typename DI::EntityIndex EntityIndex;

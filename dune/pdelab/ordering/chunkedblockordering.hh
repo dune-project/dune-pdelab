@@ -147,10 +147,7 @@ namespace Dune {
         : NodeT(ordering)
         , BaseT(*this,true,nullptr,this)
         , _tag(tag)
-      {
-        // copy grid partition information from local ordering.
-        this->setPartitionSet(this->ordering());
-      }
+      {}
 
       ChunkedBlockOrdering(const ChunkedBlockOrdering& r)
         : NodeT(r.nodeStorage())

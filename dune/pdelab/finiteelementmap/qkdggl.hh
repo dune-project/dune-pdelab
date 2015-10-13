@@ -361,6 +361,11 @@ namespace Dune {
         return true;
       }
 
+      bool hasDOFs(int codim) const
+      {
+        return codim == 0;
+      }
+
       std::size_t size(GeometryType gt) const
       {
         if (gt == GeometryType(GeometryType::cube,d))

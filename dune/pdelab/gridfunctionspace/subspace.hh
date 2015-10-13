@@ -175,6 +175,12 @@ namespace Dune {
           return _ordering;
         }
 
+        //! Returns the underlying EntitySet.
+        const typename Traits::EntitySet& entitySet() const
+        {
+          return subSpace().childGridFunctionSpace().entitySet();
+        }
+
         //! Returns the underlying GridView.
         const typename Traits::GridViewType& gridView() const
         {

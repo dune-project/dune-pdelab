@@ -201,6 +201,9 @@ namespace Dune {
 
     };
 
+    struct EmptyParams
+    {};
+
     //! Tag indicating a standard ordering for a leaf GridfunctionSpace.
     /**
      * Any additional policies regarding the ordering should be passed via
@@ -217,50 +220,7 @@ namespace Dune {
       : public Params
     {};
 
-#ifndef DOXYGEN
-
-    typedef PartitionSelector<
-      InteriorEntity,
-      BorderEntity,
-      OverlapEntity,
-      FrontEntity,
-      GhostEntity
-      > AllPartitionSelector;
-
-    typedef PartitionSelector<
-      InteriorEntity,
-      BorderEntity
-      > NonOverlappingPartitionSelector;
-
-#endif // DOXYGEN
-
-    //! Leaf ordering parameters for standard function spaces.
-    struct DefaultLeafOrderingParams
-      : public NoConstOrderingSize<false>
-      , public AllPartitionSelector
-    {};
-
-    //! Leaf ordering parameters for non-overlapping function spaces.
-    struct NonOverlappingLeafOrderingParams
-      : public NoConstOrderingSize<true>
-      , public NonOverlappingPartitionSelector
-    {};
-
-    //! Default ordering tag for a MultiIndex-based ordering with standard behavior.
-    typedef LeafOrderingTag<
-      DefaultLeafOrderingParams
-      > DefaultLeafOrderingTag;
-
-    //! GridFunctionGeneralMapper is deprecated, use DefaultLeafOrderingTag instead.
-    /**
-     * \deprecated  Use DefaultLeafOrdering instead.
-     */
-    typedef DefaultLeafOrderingTag GridFunctionGeneralMapper;
-
-    //! Ordering tag for a MultiIndex-based ordering on nonoverlapping grids with standard behavior.
-    typedef LeafOrderingTag<
-      NonOverlappingLeafOrderingParams
-      > NonOverlappingLeafOrderingTag;
+    using DefaultLeafOrderingTag = LeafOrderingTag<EmptyParams>;
 
     //! Tag indicating a function space with a single unknown attached to every
     //! entity of a exactly one single codimension.

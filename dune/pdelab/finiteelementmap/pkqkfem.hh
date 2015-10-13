@@ -111,6 +111,19 @@ namespace Dune {
                 return false;
             }
 
+            bool hasDOFs(int codim) const
+            {
+              switch (codim)
+                {
+                case 0:
+                  return k == 0 || k > 1;
+                case d:
+                  return k > 0;
+                default:
+                  return k > 1;
+                }
+            }
+
             std::size_t size(GeometryType gt) const
             {
                 assert(false && "this method should never be called");

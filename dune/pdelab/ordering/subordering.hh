@@ -14,7 +14,6 @@
 #include <dune/typetree/proxynode.hh>
 #include <dune/typetree/childextraction.hh>
 
-#include <dune/pdelab/common/partitioninfoprovider.hh>
 #include <dune/pdelab/ordering/utility.hh>
 
 namespace Dune {
@@ -49,7 +48,6 @@ namespace Dune {
     template<typename BaseOrdering_, typename TreePath>
     class SubOrdering
       : public TypeTree::ProxyNode<const TypeTree::ChildForTreePath<BaseOrdering_,TreePath>>
-      , public PartitionInfoProvider
     {
 
       using NodeT = TypeTree::ProxyNode<const TypeTree::ChildForTreePath<BaseOrdering_,TreePath>>;
@@ -101,9 +99,7 @@ namespace Dune {
 
       //! Updates this SubOrdering.
       void update()
-      {
-        setPartitionSet(*_base_ordering);
-      }
+      {}
 
 
       template<typename ItIn, typename ItOut>

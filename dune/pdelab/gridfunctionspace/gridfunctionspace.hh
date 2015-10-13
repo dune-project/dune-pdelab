@@ -22,6 +22,7 @@
 
 #include <dune/typetree/typetree.hh>
 
+#include <dune/pdelab/common/partitionviewentityset.hh>
 #include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/istl/descriptors.hh>
 #include <dune/pdelab/constraints/noconstraints.hh>
@@ -41,6 +42,57 @@ namespace Dune {
     //! \ingroup PDELab
     //! \{
 
+#ifndef DOXYGEN
+
+    namespace impl {
+
+      // Helper structs to avoid compilation failures in the
+      // backwards compatibility mode where users stuff a
+      // GridView into a GridFunctionSpace.
+      // In that case, we cannot extract the GridView type from
+      // the GridView itself, so we use a std::conditional in the
+      // Traits class to pick either one of the following structs
+      // and then use the correct class to do the lookup.
+
+      struct _lazy_identity
+      {
+        template<typename T>
+        struct evaluate
+        {
+          using type = T;
+        };
+      };
+
+      struct _lazy_extract_gridview
+      {
+        template<typename T>
+        struct evaluate
+        {
+          using type = typename T::GridView;
+        };
+      };
+
+      // Returns a GridView, regardless of whether GV_or_ES is a GridView or an EntitySet
+      template<typename GV_or_ES>
+      using GridView = typename std::conditional<
+        isEntitySet<GV_or_ES>::value,
+        impl::_lazy_extract_gridview,
+        impl::_lazy_identity
+        >::type::template evaluate<GV_or_ES>::type;
+
+
+      // Returns an EntitySet, regardless of whether GV_or_ES is a GridView or an EntitySet
+      template<typename GV_or_ES>
+      using EntitySet = typename std::conditional<
+        isEntitySet<GV_or_ES>::value,
+        GV_or_ES,
+        AllEntitySet<GV_or_ES>
+        >::type;
+
+    }
+
+#endif // DOXYGEN
+
     //=======================================
     // grid function space : single component case
     //=======================================
@@ -56,9 +108,12 @@ namespace Dune {
       static const bool isComposite = false;
 
       //! the grid view where grid function is defined upon
-      typedef G GridViewType;
+      using GridView = impl::GridView<G>;
 
-      typedef G GridView;
+      //! the entity set of this function space.
+      using EntitySet = impl::EntitySet<G>;
+
+      using GridViewType = GridView;
 
       //! vector backend
       typedef B BackendType;
@@ -160,43 +215,93 @@ namespace Dune {
         ConstraintsContainer () {}
       };
 
+      // ****************************************************************************************************
+      // Construct from GridView
+      // ****************************************************************************************************
+
       //! constructor
-      GridFunctionSpace (const GV& gridview, const FEM& fem, const CE& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
+      GridFunctionSpace (const typename Traits::GridView& gridview, const FEM& fem, const CE& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
         : BaseT(backend,ordering_tag)
-        , gv(gridview)
+        , _es(gridview)
         , pfem(stackobject_to_shared_ptr(fem))
         , _pce(stackobject_to_shared_ptr(ce))
       {
       }
 
       //! constructor
-      GridFunctionSpace (const GV& gridview, const std::shared_ptr<const FEM>& fem, const std::shared_ptr<const CE>& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
+      GridFunctionSpace (const typename Traits::GridView& gridview, const std::shared_ptr<const FEM>& fem, const std::shared_ptr<const CE>& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
         : BaseT(backend,ordering_tag)
-        , gv(gridview)
+        , _es(gridview)
         , pfem(fem)
         , _pce(ce)
       {}
 
       //! constructor
-      GridFunctionSpace (const GV& gridview, const FEM& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
+      GridFunctionSpace (const typename Traits::GridView& gridview, const FEM& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
         : BaseT(backend,ordering_tag)
-        , gv(gridview)
+        , _es(gridview)
         , pfem(stackobject_to_shared_ptr(fem))
         , _pce(std::make_shared<CE>())
       {}
 
       //! constructor
-      GridFunctionSpace (const GV& gridview, const std::shared_ptr<const FEM>& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
+      GridFunctionSpace (const typename Traits::GridView& gridview, const std::shared_ptr<const FEM>& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
         : BaseT(backend,ordering_tag)
-        , gv(gridview)
+        , _es(gridview)
         , pfem(fem)
         , _pce(std::make_shared<CE>())
       {}
 
-      //! get grid view
-      const GV& gridView () const
+
+      // ****************************************************************************************************
+      // Construct from EntitySet
+      // ****************************************************************************************************
+
+
+      //! constructor
+      GridFunctionSpace (const typename Traits::EntitySet& entitySet, const FEM& fem, const CE& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
+        : BaseT(backend,ordering_tag)
+        , _es(entitySet)
+        , pfem(stackobject_to_shared_ptr(fem))
+        , _pce(stackobject_to_shared_ptr(ce))
       {
-        return gv;
+      }
+
+      //! constructor
+      GridFunctionSpace (const typename Traits::EntitySet& entitySet, const std::shared_ptr<const FEM>& fem, const std::shared_ptr<const CE>& ce, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
+        : BaseT(backend,ordering_tag)
+        , _es(entitySet)
+        , pfem(fem)
+        , _pce(ce)
+      {}
+
+      //! constructor
+      GridFunctionSpace (const typename Traits::EntitySet& entitySet, const FEM& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
+        : BaseT(backend,ordering_tag)
+        , _es(entitySet)
+        , pfem(stackobject_to_shared_ptr(fem))
+        , _pce(std::make_shared<CE>())
+      {}
+
+      //! constructor
+      GridFunctionSpace (const typename Traits::EntitySet& entitySet, const std::shared_ptr<const FEM>& fem, const B& backend = B(), const OrderingTag& ordering_tag = OrderingTag())
+        : BaseT(backend,ordering_tag)
+        , _es(entitySet)
+        , pfem(fem)
+        , _pce(std::make_shared<CE>())
+      {}
+
+
+      //! get grid view
+      const typename Traits::GridView& gridView () const
+      {
+        return _es.gridView();
+      }
+
+      //! get EntitySet
+      const typename Traits::EntitySet& entitySet () const
+      {
+        return _es;
       }
 
       //! get finite element map
@@ -298,7 +403,7 @@ namespace Dune {
         _ordering = std::make_shared<Ordering>(ordering_transformation::transform(*this));
       }
 
-      GV gv;
+      typename Traits::EntitySet _es;
       std::shared_ptr<FEM const> pfem;
       std::shared_ptr<CE const> _pce;
 

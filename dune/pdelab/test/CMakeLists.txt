@@ -47,8 +47,17 @@ foreach(degree IN ITEMS 1 2)
   endforeach()
 endforeach()
 
+pdelab_add_test(NAME testnonoverlappingsinglephaseflow-yasp SOURCES testnonoverlappingsinglephaseflow.cc)
+pdelab_add_test(NAME testnonoverlappingsinglephaseflow-yasp-parallel SOURCES testnonoverlappingsinglephaseflow.cc MPIRANKS 2)
+if (UG_FOUND)
+  pdelab_add_test(NAME testnonoverlappingsinglephaseflow-ug SOURCES testnonoverlappingsinglephaseflow.cc COMPILE_DEFINITIONS "GRID_UG")
+  pdelab_add_test(NAME testnonoverlappingsinglephaseflow-ug-parallel SOURCES testnonoverlappingsinglephaseflow.cc COMPILE_DEFINITIONS "GRID_UG" MPIRANKS 2)
+endif (UG_FOUND)
+
+
 if (UG_FOUND)
   pdelab_add_test(NAME testadaptivity)
+  pdelab_add_test(NAME testnonoverlapping MPIRANKS 2)
 endif (UG_FOUND)
 
 set_tests_properties(

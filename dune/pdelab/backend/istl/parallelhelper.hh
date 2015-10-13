@@ -68,7 +68,8 @@ namespace Dune {
 
           // Let's try to be clever and reduce the communication overhead by picking the smallest
           // possible communication interface depending on the overlap structure of the GFS.
-          if (gfs.ordering().containedPartitions() == NonOverlappingPartitionSelector::partition_mask)
+          // FIXME: Switch to simple comparison as soon as dune-grid:1b3e83ec0 is reliably available!
+          if (gfs.entitySet().partitions().value == Partitions::interiorBorder.value)
             {
               // The GFS only spans the interior and border partitions, so we can skip sending or
               // receiving anything else.
@@ -262,14 +263,6 @@ namespace Dune {
           return Backend::native(_ranks)[i][0] == _rank;
         }
 
-        // Checks whether a matrix block is associated with a ghost entity. Used for the AMG
-        // construction and thus assumes a single level of blocking and blocks with ownership
-        // restricted to a single DOF.
-        bool is_ghost_for_amg(std::size_t i) const
-        {
-          return Backend::native(_ghosts)[i][0];
-        }
-
 #endif // HAVE_MPI
 
       private:
@@ -385,11 +378,6 @@ namespace Dune {
                   {
                     // This dof is managed by us.
                     attr = Dune::OwnerOverlapCopyAttributeSet::owner;
-                  }
-                else if (is_ghost_for_amg(i) && c.getSolverCategory() == static_cast<int>(SolverCategory::nonoverlapping))
-                  {
-                    //use attribute overlap for ghosts in novlp grids
-                    attr = Dune::OwnerOverlapCopyAttributeSet::overlap;
                   }
                 else
                   {

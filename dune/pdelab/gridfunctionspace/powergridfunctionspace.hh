@@ -41,7 +41,7 @@ namespace Dune {
       : public TypeTree::PowerNode<T,k>
       , public PowerCompositeGridFunctionSpaceBase<
           PowerGridFunctionSpace<T, k, Backend, OrderingTag>,
-          typename T::Traits::GridViewType,
+          typename T::Traits::EntitySet,
           Backend,
           OrderingTag,
           k>
@@ -58,7 +58,7 @@ namespace Dune {
 
       typedef PowerCompositeGridFunctionSpaceBase<
         PowerGridFunctionSpace,
-        typename T::Traits::GridViewType,
+        typename T::Traits::EntitySet,
         Backend,
         OrderingTag,
         k
@@ -66,7 +66,7 @@ namespace Dune {
 
       friend class PowerCompositeGridFunctionSpaceBase<
         PowerGridFunctionSpace,
-        typename T::Traits::GridViewType,
+        typename T::Traits::EntitySet,
         Backend,
         OrderingTag,
         k>;

@@ -26,11 +26,12 @@ namespace Dune {
     {
 
       typedef GFS GridFunctionSpace;
+      using EntitySet = typename GridFunctionSpace::Traits::EntitySet;
       typedef typename GFS::Traits::GridView GridView;
       typedef typename GridView::Grid Grid;
 
       typedef std::size_t size_type;
-      typedef typename GFS::Traits::GridView::IndexSet::IndexType index_type;
+      using index_type = typename EntitySet::Traits::Index;
       typedef typename GFS::Traits::GridView::Grid::GlobalIdSet::IdType id_type;
 
 
@@ -80,7 +81,7 @@ namespace Dune {
 
       BorderIndexIdCache(const GFS& gfs)
         : _gfs(gfs)
-        , _grid_view(gfs.gridView())
+        , _entity_set(gfs.entitySet())
       {
         update();
       }
@@ -90,7 +91,7 @@ namespace Dune {
         _border_entities.resize(GlobalGeometryTypeIndex::size(Grid::dimension));
         _index_to_id.resize(GlobalGeometryTypeIndex::size(Grid::dimension));
 
-        const typename GridView::IndexSet& index_set = _grid_view.indexSet();
+        auto& index_set = _entity_set.indexSet();
 
         // Skip codim 0 - cells can't ever be border entities
         for (int codim = 1; codim <= Grid::dimension; ++codim)
@@ -144,7 +145,7 @@ namespace Dune {
     private:
 
       const GFS& _gfs;
-      GridView _grid_view;
+      EntitySet _entity_set;
       BorderEntitySet _border_entities;
       IndexToIdMap _index_to_id;
       IdToIndexMap _id_to_index;
@@ -155,12 +156,12 @@ namespace Dune {
         >::type
       create_for_codim()
       {
-        const typename GridView::IndexSet& index_set = _grid_view.indexSet();
-        const typename Grid::GlobalIdSet& id_set = _grid_view.grid().globalIdSet();
+        auto& index_set = _entity_set.indexSet();
+        auto& id_set = _entity_set.gridView().grid().globalIdSet();
 
         if (_gfs.ordering().contains(codim))
           {
-            for (const auto& e : entities(_grid_view,Codim<codim>{},Partitions::interiorBorder))
+            for (const auto& e : entities(_entity_set,Codim<codim>{},Partitions::interiorBorder))
               {
                 index_type index = index_set.index(e);
                 size_type gt_index = GlobalGeometryTypeIndex::index(e.type());

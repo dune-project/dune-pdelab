@@ -167,7 +167,7 @@ namespace Dune {
           typename LFS::Traits::FiniteElementType
           > FESwitch;
 
-        auto entity = eg.entity();
+        auto& entity = eg.entity();
 
         // nothing to do for interior entities
         if (entity.partitionType()==Dune::InteriorEntity)
@@ -179,8 +179,7 @@ namespace Dune {
         // empty map means Dirichlet constraint
         typename T::RowType empty;
 
-        const ReferenceElement<typename GV::ctype,GV::dimension>& ref_el =
-          ReferenceElements<typename GV::ctype,GV::dimension>::general(entity.type());
+        auto& ref_el = ReferenceElements<typename GV::ctype,GV::dimension>::general(entity.type());
 
         // loop over all degrees of freedom and check if it is not owned by this processor
         for (size_t i = 0; i < coeffs.size(); ++i)

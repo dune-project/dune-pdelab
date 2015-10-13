@@ -10,6 +10,7 @@
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/common/typetraits.hh>
+#include<dune/pdelab/common/intersectiontype.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include"constraintstransformation.hh"
 #include"constraintsparameters.hh"
@@ -568,7 +569,7 @@ namespace Dune {
      *             GridFunctionSpace::ConstraintsContainer::Type
      * \tparam isFunction bool to identify old-style parameters, which were implemented the Dune::PDELab::FunctionInterface
      */
-    template<typename P, typename GFS, typename GV, typename CG, bool isFunction>
+    template<typename P, typename GFS, typename CG, bool isFunction>
     struct ConstraintsAssemblerHelper
     {
       //! construct constraints from given boundary condition function
@@ -587,89 +588,85 @@ namespace Dune {
        * \param verbose Print information about the constaints at the end
        */
       static void
-      assemble(const P& p, const GFS& gfs, const GV& gv, CG& cg, const bool verbose)
+      assemble(const P& p, const GFS& gfs, CG& cg, const bool verbose)
       {
         // get some types
-        typedef typename GV::Traits::template Codim<0>::Entity Element;
-        typedef typename GV::Intersection Intersection;
+        using ES = typename GFS::Traits::EntitySet;
+        using Element = typename ES::Traits::Element;
+        using Intersection = typename ES::Traits::Intersection;
+
+        ES es = gfs.entitySet();
 
         // make local function space
-        typedef LocalFunctionSpace<GFS> LFS;
+        using LFS = LocalFunctionSpace<GFS>;
         LFS lfs_e(gfs);
         LFSIndexCache<LFS> lfs_cache_e(lfs_e);
         LFS lfs_f(gfs);
         LFSIndexCache<LFS> lfs_cache_f(lfs_f);
 
         // get index set
-        const typename GV::IndexSet& is=gv.indexSet();
-
-        // helper to compute offset dependent on geometry type
-        const int chunk=1<<28;
-        int offset = 0;
-        std::map<Dune::GeometryType,int> gtoffset;
+        auto& is = es.indexSet();
 
         // loop once over the grid
-        for (const auto& cell : elements(gv))
+        for (const auto& element : elements(es))
         {
-          // assign offset for geometry type;
-          if (gtoffset.find(cell.type())==gtoffset.end())
-          {
-            gtoffset[cell.type()] = offset;
-            offset += chunk;
-          }
 
-          const typename GV::IndexSet::IndexType id = is.index(cell)+gtoffset[cell.type()];
+          auto id = is.uniqueIndex(element);
 
           // bind local function space to element
-          lfs_e.bind(cell);
+          lfs_e.bind(element);
 
-          typedef typename CG::LocalTransformation CL;
+          using CL = typename CG::LocalTransformation;
 
           CL cl_self;
 
-          typedef ElementGeometry<Element> ElementWrapper;
-          TypeTree::applyToTreePair(p,lfs_e,VolumeConstraints<ElementWrapper,CL>(ElementWrapper(cell),cl_self));
+          using ElementWrapper = ElementGeometry<Element>;
+          using IntersectionWrapper = IntersectionGeometry<Intersection>;
+
+          TypeTree::applyToTreePair(p,lfs_e,VolumeConstraints<ElementWrapper,CL>(ElementWrapper(element),cl_self));
 
           // iterate over intersections and call metaprogram
           unsigned int intersection_index = 0;
-          for (const auto& intersection : intersections(gv,cell))
+          for (const auto& intersection : intersections(es,element))
           {
-            if (intersection.boundary())
-            {
-              typedef IntersectionGeometry<Intersection> IntersectionWrapper;
-              TypeTree::applyToTreePair(p,lfs_e,BoundaryConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self));
-            }
 
-            // ParallelStuff: BEGIN support for processor boundaries.
-            if ((!intersection.boundary()) && (!intersection.neighbor()))
-            {
-              typedef IntersectionGeometry<Intersection> IntersectionWrapper;
-              TypeTree::applyToTree(lfs_e,ProcessorConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self));
-            }
-            // END support for processor boundaries.
+            auto intersection_data = classifyIntersection(es,intersection);
+            auto intersection_type = std::get<0>(intersection_data);
+            auto& outside_element = std::get<1>(intersection_data);
 
-            if (intersection.neighbor()){
+            switch (intersection_type) {
 
-              auto outside_cell = intersection.outside();
-              Dune::GeometryType gtn = outside_cell.type();
-              const typename GV::IndexSet::IndexType idn = is.index(outside_cell)+gtoffset[gtn];
+            case IntersectionType::skeleton:
+            case IntersectionType::periodic:
+              {
+                auto idn = is.uniqueIndex(outside_element);
 
-              if(id>idn){
-                // bind local function space to element in neighbor
-                lfs_f.bind(outside_cell);
+                if(id > idn){
+                  // bind local function space to element in neighbor
+                  lfs_f.bind(outside_element);
 
-                CL cl_neighbor;
+                  CL cl_neighbor;
 
-                typedef IntersectionGeometry<Intersection> IntersectionWrapper;
-                TypeTree::applyToTreePair(lfs_e,lfs_f,SkeletonConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self,cl_neighbor));
+                  TypeTree::applyToTreePair(lfs_e,lfs_f,SkeletonConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self,cl_neighbor));
 
-                if (!cl_neighbor.empty())
-                  {
-                    lfs_cache_f.update();
-                    cg.import_local_transformation(cl_neighbor,lfs_cache_f);
-                  }
+                  if (!cl_neighbor.empty())
+                    {
+                      lfs_cache_f.update();
+                      cg.import_local_transformation(cl_neighbor,lfs_cache_f);
+                    }
 
+                }
+                break;
               }
+
+            case IntersectionType::boundary:
+              TypeTree::applyToTreePair(p,lfs_e,BoundaryConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self));
+              break;
+
+            case IntersectionType::processor:
+              TypeTree::applyToTree(lfs_e,ProcessorConstraints<IntersectionWrapper,CL>(IntersectionWrapper(intersection,intersection_index),cl_self));
+              break;
+
             }
             ++intersection_index;
           }
@@ -702,29 +699,29 @@ namespace Dune {
 
 
     // Disable constraints assembly for empty transformation
-    template<typename F, typename GFS, typename GV>
-    struct ConstraintsAssemblerHelper<F, GFS, GV, EmptyTransformation, true>
+    template<typename F, typename GFS>
+    struct ConstraintsAssemblerHelper<F, GFS, EmptyTransformation, true>
     {
-      static void assemble(const F& f, const GFS& gfs, const GV& gv, EmptyTransformation& cg, const bool verbose)
+      static void assemble(const F& f, const GFS& gfs, EmptyTransformation& cg, const bool verbose)
       {}
     };
 
     // Disable constraints assembly for empty transformation
-    template<typename F, typename GFS, typename GV>
-    struct ConstraintsAssemblerHelper<F, GFS, GV, EmptyTransformation, false>
+    template<typename F, typename GFS>
+    struct ConstraintsAssemblerHelper<F, GFS, EmptyTransformation, false>
     {
-      static void assemble(const F& f, const GFS& gfs, const GV& gv, EmptyTransformation& cg, const bool verbose)
+      static void assemble(const F& f, const GFS& gfs, EmptyTransformation& cg, const bool verbose)
       {}
     };
 
 
 
     // Backwards compatibility shim
-    template<typename F, typename GFS, typename GV, typename CG>
-    struct ConstraintsAssemblerHelper<F, GFS, GV, CG, true>
+    template<typename F, typename GFS, typename CG>
+    struct ConstraintsAssemblerHelper<F, GFS, CG, true>
     {
       static void
-      assemble(const F& f, const GFS& gfs, const GV& gv, CG& cg, const bool verbose)
+      assemble(const F& f, const GFS& gfs, CG& cg, const bool verbose)
       {
         // type of transformed tree
         typedef typename TypeTree::TransformTree<F,gf_to_constraints> Transformation;
@@ -732,7 +729,7 @@ namespace Dune {
         // transform tree
         P p = Transformation::transform(f);
         // call parameter based implementation
-        ConstraintsAssemblerHelper<P, GFS, GV, CG, IsGridFunction<P>::value>::assemble(p,gfs,gv,cg,verbose);
+        ConstraintsAssemblerHelper<P, GFS, CG, IsGridFunction<P>::value>::assemble(p,gfs,cg,verbose);
       }
     };
 #endif
@@ -754,9 +751,8 @@ namespace Dune {
     void constraints(const GFS& gfs, CG& cg,
                      const bool verbose = false)
     {
-      typedef typename GFS::Traits::GridViewType GV;
       NoConstraintsParameters p;
-      ConstraintsAssemblerHelper<NoConstraintsParameters, GFS, GV, CG, false>::assemble(p,gfs,gfs.gridView(),cg,verbose);
+      ConstraintsAssemblerHelper<NoConstraintsParameters, GFS, CG, false>::assemble(p,gfs,cg,verbose);
     }
 
     //! construct constraints from given constraints parameter tree
@@ -781,10 +777,9 @@ namespace Dune {
     void constraints(const P& p, const GFS& gfs, CG& cg,
                      const bool verbose = false)
     {
-      typedef typename GFS::Traits::GridViewType GV;
       // clear global constraints
       cg.clear();
-      ConstraintsAssemblerHelper<P, GFS, GV, CG, IsGridFunction<P>::value>::assemble(p,gfs,gfs.gridView(),cg,verbose);
+      ConstraintsAssemblerHelper<P, GFS, CG, IsGridFunction<P>::value>::assemble(p,gfs,cg,verbose);
     }
 
     //! construct constraints from given boundary condition function

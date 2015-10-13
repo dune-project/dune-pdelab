@@ -56,7 +56,7 @@ int main(int argc, char** argv)
       typedef Dune::PDELab::istl::VectorBackend<> P_Backend;
       typedef Dune::PDELab::istl::VectorBackend<Dune::PDELab::istl::Blocking::bcrs> TH_Backend;
 
-      typedef Dune::PDELab::NonOverlappingLeafOrderingTag V_Component_Ordering;
+      typedef Dune::PDELab::DefaultLeafOrderingTag V_Component_Ordering;
       typedef Dune::PDELab::ordering::Chunked<Dune::PDELab::EntityBlockedOrderingTag> V_Ordering;
       typedef Dune::PDELab::DefaultLeafOrderingTag P_Ordering;
       typedef Dune::PDELab::LexicographicOrderingTag TH_Ordering;

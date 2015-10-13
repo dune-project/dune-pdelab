@@ -34,6 +34,11 @@ namespace Dune {
         return true;
       }
 
+      bool hasDOFs(int codim) const
+      {
+        return codim == 0;
+      }
+
       std::size_t size(GeometryType gt) const
       {
         return gt == _gt ? Dune::MonomImp::Size<d,p>::val : 0;

@@ -5,7 +5,6 @@
 #define DUNE_PDELAB_ORDERING_ORDERINGBASE_HH
 
 #include <dune/pdelab/common/exceptions.hh>
-#include <dune/pdelab/common/partitioninfoprovider.hh>
 #include <dune/pdelab/ordering/utility.hh>
 #include <dune/pdelab/gridfunctionspace/gridfunctionspacebase.hh>
 
@@ -19,7 +18,6 @@ namespace Dune {
 
     template<typename DI, typename CI>
     class OrderingBase
-      : public PartitionInfoProvider
     {
 
       template<typename size_type>
@@ -157,8 +155,6 @@ namespace Dune {
         , _gfs_data(gfs_data)
       {
         TypeTree::applyToTree(node,extract_child_bases<OrderingBase>(_children));
-        // We contain all grid PartitionTypes that any of our children contain.
-        mergePartitionSets(_children.begin(),_children.end());
       }
 
       template<typename Node>
@@ -182,8 +178,6 @@ namespace Dune {
         , _gfs_data(gfs_data)
       {
         TypeTree::applyToTree(node,extract_child_bases<OrderingBase>(_children));
-        // We contain all grid PartitionTypes that any of our children contain.
-        mergePartitionSets(_children.begin(),_children.end());
       }
 
 
