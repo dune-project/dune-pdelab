@@ -3,8 +3,8 @@ PDELab
 
 This is version 2.4.0-rc1 of the PDELab library.
 
-PDELab[0] is a PDE solver toolbox built on top of DUNE, the Distributed and Unified
-Numerics Environment [1].
+[PDELab][0] is a PDE solver toolbox built on top of DUNE, the [Distributed and Unified
+Numerics Environment][1].
 
 The main intention is to provide a good set of high-level abstractions to allow
 for a reasonably quick development of simulation codes, while at the same time
@@ -19,8 +19,8 @@ API documentation in doc/doxygen/html. Otherwise, you can build this documentati
 yourself by calling "make doc". Note that you need Doxygen and GraphViz available at
 configure time to be able to build the documentation.
 
-If you need help, please ask on our mailinglist [8]. Bugs can also be submitted
-to the PDELab bugtracker at [9] instead.
+If you need help, please ask on our [mailinglist][8]. Bugs can also be submitted
+to the PDELab [bugtracker][9] instead.
 
 Dependencies
 ------------
@@ -30,8 +30,8 @@ PDELab depends on the following software packages:
 * DUNE core libraries (dune-common, dune-geometry, dune-grid, dune-istl,
   dune-localfunctions) version 2.4.0, and their respective dependencies.
 
-* The dune-typetree library, version 2.4.0. You can obtain a source package from [0] or
-  clone the repository at [10].
+* The dune-typetree library, version 2.4.0. You can obtain a [source package][0] or
+  clone the [repository][10].
 
 * PDELab's compiler requirements differ slightly from the underlying DUNE
   libraries: We require at least GCC 4.7 in C++11 mode. PDELab should also work
@@ -39,15 +39,15 @@ PDELab depends on the following software packages:
 
 The following software is optional:
 
-* PETSc 3.3 [5] - there is an experimental backend for PETSc vectors and
-  matrices. See CHANGELOG.md for details. WARNING: The PETSC backend is
+* [PETSc 3.3][5] - there is an experimental backend for PETSc vectors and
+  matrices. See [CHANGELOG.md][11] for details. WARNING: The PETSC backend is
   currently broken.
 
-* Eigen 3.1.0 [6] - there is an experimental backend for Eigen vectors and
-  matrices as well as some solvers. See CHANGELOG.md for details.
+* [Eigen 3.1.0][6] - there is an experimental backend for Eigen vectors and
+  matrices as well as some solvers. See [CHANGELOG.md][11] for details.
 
 For a full explanation of the DUNE installation process please read
-the installation notes [2].
+the [installation notes][2].
 
 License
 -------
@@ -56,22 +56,24 @@ The PDELab library, headers and test programs are free open-source software,
 dual-licensed under version 3 or later of the GNU Lesser General Public License
 and version 2 of the GNU General Public License with a special run-time exception.
 
-See the file LICENSE.md for full copying permissions.
+See the file [LICENSE.md][12] for full copying permissions.
 
 Installation
 ------------
 
-For installation instructions please see [1].
+For installation instructions please see the [DUNE website][1].
 
 Links
 -----
 
- 0. http://www.dune-project.org/pdelab/
- 1  http://www.dune-project.org
- 2. http://www.dune-project.org/doc/installation-notes.html
- 4. http://gcc.gnu.org/onlinedocs/libstdc++/faq.html#faq.license
- 5. http://www.mcs.anl.gov/petsc/
- 6. http://eigen.tuxfamily.org
- 8. http://lists.dune-project.org/mailman/listinfo/dune-pdelab
- 9. http://gitlab.dune-project.org/pdelab/dune-pdelab/issues
-10. http://gitlab.dune-project.org/pdelab/dune-typetree
+ [0]: http://www.dune-project.org/pdelab/
+ [1]: http://www.dune-project.org
+ [2]: http://www.dune-project.org/doc/installation-notes.html
+ [4]: http://gcc.gnu.org/onlinedocs/libstdc++/faq.html#faq.license
+ [5]: http://www.mcs.anl.gov/petsc/
+ [6]: http://eigen.tuxfamily.org
+ [8]: http://lists.dune-project.org/mailman/listinfo/dune-pdelab
+ [9]: http://gitlab.dune-project.org/pdelab/dune-pdelab/issues
+[10]: http://gitlab.dune-project.org/pdelab/dune-typetree
+[11]: CHANGELOG.md
+[12]: LICENSE.md
