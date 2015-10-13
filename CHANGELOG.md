@@ -47,7 +47,7 @@ PDELab 2.4
     -   There has been a massive reorganization of the (Navier-)Stokes code. All implementations now use a common
         parameter class, and we now have three implementations: one based on standard Taylor-Hood elements (in
         [taylorhoodnavierstokes.hh][], renamed from [cg_stokes.hh][]), a similar implementation using a DG
-        discretization (in [dgnavierstokes.hh][]) and a continuous Galerkin discretization that uses a vector-valued
+        discretization (in [dgnavierstokes.hh][]) and a discontinuous Galerkin discretization that uses a vector-valued
         finite element for the velocity (in [dgnavierstokesvelvecfem.hh][]). All of these implementations now also
         have fully analytic jacobians.
 
@@ -190,7 +190,7 @@ PDELab 2.4
     significantly speed up the solver in many cases. If this setting is problematic for your program, it can be overridden
     using either a method on the `Newton` class and the `ParameterTree` interface.
 
--   (Hopefully) all of the APIs deprecated in PDELab 2.4 have been removed.
+-   (Hopefully) all of the APIs deprecated in PDELab 2.0 have been removed.
 
 -   There are probably some additional APIs that have been deprecated for removal after the release of PDELab 2.4.
 
