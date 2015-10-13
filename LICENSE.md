@@ -1,34 +1,44 @@
-Copyright holders:
+Licensing Information
+=====================
 
-2009--2014    Peter Bastian
-2009--2014    Markus Blatt
-2013          Andreas Buhr
-2014          Ansgar Burchardt
-2011          Martin Drohmann
-2009--2014    Christian Engwer
-2009--2013    Jorrit Fahlke
-2012--2014    Christoph Grüninger
-2009--2012    Felix Heimann
-2014          René Heß
-2013--2014    Pavel Hron
-2010--2011    Ole Klein
-2009--2010    Sven Marnach
-2010--2014    Steffen Müthing
-2010--2013    Rebecca Neumann
-2011--2013    Adrian Ngo
-2013          Andreas Nüßing
-2014          Marian Piatkowski
-2012--2013    Jurgis Pods
-2011          Hanna Remmel
-2012          Human Rezaijafari
-2014          Oliver Sander
-2012          Nicolas Schwenck
-2013          Bård Skaflestad
-2012          Christian Waluga
-2013          Sebastian Westerheide
-2012          Matthias Wohlmuth
+Copyright holders
+-----------------
 
+| Year       | Name                       |
+|------------|----------------------------|
+| 2009--2015 | Peter Bastian              |
+| 2009--2014 | Markus Blatt               |
+| 2013--2014 | Andreas Buhr               |
+| 2014--2015 | Ansgar Burchardt           |
+| 2011       | Martin Drohmann            |
+| 2009--2015 | Christian Engwer           |
+| 2009--2015 | Jorrit Fahlke              |
+| 2012--2015 | Christoph Grüninger        |
+| 2009--2012 | Felix Heimann              |
+| 2014       | René Heß                   |
+| 2013--2014 | Pavel Hron                 |
+| 2014--2015 | Dominic Kempf              |
+| 2010--2011 | Ole Klein                  |
+| 2009--2010 | Sven Marnach               |
+| 2015       | René Milk                  |
+| 2010--2015 | Steffen Müthing            |
+| 2010--2014 | Rebecca Neumann            |
+| 2011--2015 | Adrian Ngo                 |
+| 2013--2015 | Andreas Nüßing             |
+| 2014--2015 | Marian Piatkowski          |
+| 2012--2013 | Jurgis Pods                |
+| 2011       | Hanna Remmel               |
+| 2012       | Human Rezaijafari          |
+| 2014--2015 | Oliver Sander              |
+| 2015       | Linus Seelinger            |
+| 2012       | Nicolas Schwenck           |
+| 2013       | Bård Skaflestad            |
+| 2012       | Christian Waluga           |
+| 2013--2015 | Sebastian Westerheide      |
+| 2012       | Matthias Wohlmuth          |
 
+License
+-------
 
 The PDELab library, headers and test programs are copyrighted free software. You
 can use, modify and/or redistribute it under the terms of either one of the two
@@ -37,7 +47,7 @@ following licenses:
 * The GNU Lesser General Public License as published by the Free Software
   Foundation, either Version 3 of the license or (at your option) any later
   version. You can find a copy of the GNU Lesser General Public License, Version
-  3, in the files GPL-3 and LGPL-3 or at <http://www.gnu.org/licenses/lgpl-3.0>.
+  3, in the files GPL-3 and LGPL-3 or at http://www.gnu.org/licenses/lgpl-3.0.
 
 * Version 2 of the GNU General Public License as published by the Free Software
   Foundation, with the following special exception for linking and compiling
@@ -56,4 +66,4 @@ following licenses:
   This license is intended to be similar to the GNU Lesser General Public
   License, Version 2, which by itself isn't suitable for a template library. You
   can find a copy of the GNU General Public License, Version 2, in the file
-  GPL-2 or at <http://www.gnu.org/licenses/gpl-2.0>.
+  GPL-2 or at http://www.gnu.org/licenses/gpl-2.0.
