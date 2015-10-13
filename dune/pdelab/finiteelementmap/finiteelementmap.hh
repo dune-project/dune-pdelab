@@ -217,6 +217,66 @@ namespace Dune {
       std::vector<unsigned char> orient;
     };
 
+    //! wrap up element from local functions
+    //! \ingroup FiniteElementMap
+    template<typename GV, typename FE, typename Imp, std::size_t Variants>
+    class RTLocalFiniteElementMap :
+      public LocalFiniteElementMapInterface<
+        LocalFiniteElementMapTraits<FE>,
+        Imp >
+    {
+      typedef FE FiniteElement;
+      typedef typename GV::IndexSet IndexSet;
+
+    public:
+      //! \brief export type of the signature
+      typedef LocalFiniteElementMapTraits<FE> Traits;
+
+      //! \brief Use when Imp has a standard constructor
+      RTLocalFiniteElementMap(const GV& gv_)
+        : gv(gv_), is(gv_.indexSet()), orient(gv_.size(0))
+      {
+        // create all variants
+        for (int i = 0; i < Variants; i++)
+        {
+          variant[i] = FiniteElement(i);
+        }
+
+        // compute orientation for all elements
+        typedef typename GV::Traits::template Codim<0>::Iterator ElementIterator;
+        typedef typename GV::IntersectionIterator IntersectionIterator;
+
+        // loop once over the grid
+        for(const auto& cell : elements(gv))
+        {
+          unsigned int myId = is.template index<0>(cell);
+          orient[myId] = 0;
+
+          for (const auto& intersection : intersections(gv,cell))
+          {
+            if (intersection.neighbor()
+                && is.template index<0>(intersection.outside()) > myId)
+            {
+              orient[myId] |= 1 << intersection.indexInInside();
+            }
+          }
+        }
+      }
+
+      //! \brief get local basis functions for entity
+      template<class EntityType>
+      const typename Traits::FiniteElementType& find(const EntityType& e) const
+      {
+        return variant[orient[is.template index<0>(e)]];
+      }
+
+    private:
+      GV gv;
+      std::array<FiniteElement,Variants> variant;
+      const IndexSet& is;
+      std::vector<unsigned char> orient;
+    };
+
     //! \} group FiniteElementMap
 
   } // namespace PDELab
