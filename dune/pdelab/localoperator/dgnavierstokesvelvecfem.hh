@@ -1064,7 +1064,6 @@ namespace Dune {
         // domain and range field type
         typedef FiniteElementInterfaceSwitch<typename LFSV_V::Traits::FiniteElementType > FESwitch_V;
         typedef BasisInterfaceSwitch<typename FESwitch_V::Basis > BasisSwitch_V;
-        typedef VectorBasisInterfaceSwitch<typename FESwitch_V::Basis > VectorBasisSwitch_V;
         typedef typename BasisSwitch_V::DomainField DF;
         typedef typename BasisSwitch_V::RangeField RF;
         typedef typename BasisSwitch_V::Range Range_V;
