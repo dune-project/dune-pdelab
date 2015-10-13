@@ -392,7 +392,7 @@ namespace Dune {
         auto dim = GV::dimension;
 #if DUNE_VERSION_NEWER_REV(DUNE_GEOMETRY,2,4,1)
         return _mapped_gt_offsets[GlobalGeometryTypeIndex::offset(dim-codim+1)] -
-          _mapped_gt_offsets[GlobalGeometryTypeIndex::offfset(dim-codim)];
+          _mapped_gt_offsets[GlobalGeometryTypeIndex::offset(dim-codim)];
 #else
         return codim < dim ? _mapped_gt_offsets[GlobalGeometryTypeIndex::size(dim-codim)] -
           _mapped_gt_offsets[GlobalGeometryTypeIndex::size(dim-codim-1)] : 0;
