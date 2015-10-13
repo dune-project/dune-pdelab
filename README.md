@@ -1,7 +1,7 @@
 PDELab
 ======
 
-This is version 2.4-dev of the PDELab library.
+This is version 2.4.0-rc1 of the PDELab library.
 
 PDELab[0] is a PDE solver toolbox built on top of DUNE, the Distributed and Unified
 Numerics Environment [1].
@@ -28,26 +28,26 @@ Dependencies
 PDELab depends on the following software packages:
 
 * DUNE core libraries (dune-common, dune-geometry, dune-grid, dune-istl,
-  dune-localfunctions) version 2.4-dev, and their respective dependencies.
+  dune-localfunctions) version 2.4.0, and their respective dependencies.
 
-* The dune-typetree library, version 2.4-dev. You can obtain a source package from [0] or
+* The dune-typetree library, version 2.4.0. You can obtain a source package from [0] or
   clone the repository at [10].
 
 * PDELab's compiler requirements differ slightly from the underlying DUNE
   libraries: We require at least GCC 4.7 in C++11 mode. PDELab should also work
   with very recent versions of ICC (icpc 15.0.1+) and current clang (3.4+).
 
-The following software is optional
+The following software is optional:
 
 * PETSc 3.3 [5] - there is an experimental backend for PETSc vectors and
-  matrices. See RELEASE_NOTES for details. WARNING: The PETSC backend is
+  matrices. See CHANGELOG.md for details. WARNING: The PETSC backend is
   currently broken.
 
 * Eigen 3.1.0 [6] - there is an experimental backend for Eigen vectors and
-  matrices as well as some solvers. See RELEASE_NOTES for details.
+  matrices as well as some solvers. See CHANGELOG.md for details.
 
 For a full explanation of the DUNE installation process please read
-the installation notes [2] or the build system HOWTO [3].
+the installation notes [2].
 
 License
 -------
@@ -56,13 +56,12 @@ The PDELab library, headers and test programs are free open-source software,
 dual-licensed under version 3 or later of the GNU Lesser General Public License
 and version 2 of the GNU General Public License with a special run-time exception.
 
-See the file COPYING for full copying permissions.
+See the file LICENSE.md for full copying permissions.
 
 Installation
 ------------
 
-Short installation instructions can be found in file INSTALL. For the
-full instructions please see [1].
+For installation instructions please see [1].
 
 Links
 -----
@@ -70,10 +69,9 @@ Links
  0. http://www.dune-project.org/pdelab/
  1  http://www.dune-project.org
  2. http://www.dune-project.org/doc/installation-notes.html
- 3. http://dune-project.org/doc/buildsystem/buildsystem.pdf
  4. http://gcc.gnu.org/onlinedocs/libstdc++/faq.html#faq.license
  5. http://www.mcs.anl.gov/petsc/
  6. http://eigen.tuxfamily.org
  8. http://lists.dune-project.org/mailman/listinfo/dune-pdelab
- 9. http://users.dune-project.org/projects/dune-pdelab/issues
-10. http://git.dune-project.org/repositories/dune-typetree.
+ 9. http://gitlab.dune-project.org/pdelab/dune-pdelab/issues
+10. http://gitlab.dune-project.org/pdelab/dune-typetree
