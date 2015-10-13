@@ -208,7 +208,7 @@ namespace Dune {
       template<class EntityType>
       const typename Traits::FiniteElementType& find (const EntityType& e) const
       {
-        return variant[orient[gv.indexSet().template index<0>(e)]];
+        return variant[orient[gv.indexSet().index(e)]];
       }
 
     private:
@@ -249,13 +249,13 @@ namespace Dune {
         // loop once over the grid
         for(const auto& cell : elements(gv))
         {
-          unsigned int myId = is.template index<0>(cell);
+          unsigned int myId = is.index(cell);
           orient[myId] = 0;
 
           for (const auto& intersection : intersections(gv,cell))
           {
             if (intersection.neighbor()
-                && is.template index<0>(intersection.outside()) > myId)
+                && is.index(intersection.outside()) > myId)
             {
               orient[myId] |= 1 << intersection.indexInInside();
             }
@@ -267,7 +267,7 @@ namespace Dune {
       template<class EntityType>
       const typename Traits::FiniteElementType& find(const EntityType& e) const
       {
-        return variant[orient[is.template index<0>(e)]];
+        return variant[orient[is.index(e)]];
       }
 
     private:
