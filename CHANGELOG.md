@@ -17,21 +17,195 @@ Changes
 PDELab 2.4
 ----------
 
-- PDELab has updated its minimum compiler requirements. You now need a compiler that is at
-  least compatible with GCC 4.7 in C++11 mode.
+-   PDELab has updated its minimum compiler requirements. You now need a compiler that is at
+    least compatible with GCC 4.7 in C++11 mode.
 
-- The PDELab build system now uses the dune_enable_all_packages() feature and thus requires
-  at least CMake 2.8.12 to build.
+-   The PDELab build system now uses the dune_enable_all_packages() feature and thus requires
+    at least CMake 2.8.12 to build.
 
-- PDELab 2.4-dev requires at least version 2.4-dev of the core modules.
+-   PDELab 2.4.0 requires at least version 2.4.0 of the core modules.
 
-- In stride with the changes to the core modules, a lot of backwards compatibility code for
-  older compilers was removed.
+-   In stride with the changes to the core modules, a lot of backwards compatibility code for
+    older compilers was removed.
 
-- The method g() in the parameter class for the convection diffusion operators now expects
-  an unwrapped entity (that means you have to call it with `eg.entity()` instead of just `eg()`.
-  The version of g() that can be called with an intersection has been deprecated, please always
-  call the version taking an entity.
+-   There has been a **major** cleanup of the local operators included in PDELab. There were lots of
+    duplicate implementations that had similar features, but often used very different interfaces. A lot
+    of the older, badly maintained operators have been deprecated or removed, and there is now a much smaller
+    set of operators that you should use. Moreover, different operators for the same type of problem (e.g.
+    versions for Continuous Galerkin, DG and Finite Volumes) now typically use the same parameter interfaces,
+    making it much easier to test different discretizations. In particular:
+
+    -   For convection-diffusion-reaction problems, there are now three files [convectiondiffusionfem.hh][],
+        [convectiondiffusiondg.hh][] and [convectiondiffusionccfv.hh][], with a unified parameter interface in
+        [convectiondiffusionparameter.hh][]. Except for [convectiondiffusion.hh][], which has been renamed to
+        [nonlinearconvectiondiffusionfem.hh][], and [diffusionmixed.hh][], all other diffusion-type operators have
+        been deprecated and will be removed after PDELab 2.4.
+
+    -   New Darcy velocity adapters in [darcy_CCFV.hh][] and [darcy_FEM.hh][] as well as a permeability adapter in
+        [permeability_adapter.hh][].
+
+    -   There has been a massive reorganization of the (Navier-)Stokes code. All implementations now use a common
+        parameter class, and we now have three implementations: one based on standard Taylor-Hood elements (in
+        [taylorhoodnavierstokes.hh][], renamed from [cg_stokes.hh][]), a similar implementation using a DG
+        discretization (in [dgnavierstokes.hh][]) and a continuous Galerkin discretization that uses a vector-valued
+        finite element for the velocity (in [dgnavierstokesvelvecfem.hh][]). All of these implementations now also
+        have fully analytic jacobians.
+
+    -   `vectorwave.hh` has been broken for a long time, and as we could not identify any users, it was removed
+        without a deprecation period.
+
+    -   The method `g()` in the parameter class for the convection diffusion operators now expects an unwrapped entity
+        (that means you have to call it with `eg.entity()` instead of just `eg()`. The version of `g()` that can be
+            called with an intersection has been deprecated, please always call the version taking an entity.
+
+    -   All of the operators were updated to new standards in the 2.4 release of the core modules (copyable entities and
+        intersections, renamed dimension constants, range-based for loops etc.).
+
+    -   All remaining traces of mimetic finite differences support (which has been broken since at least PDELab 1.1)
+        have been removed.
+
+    -   The header [instationary/onestep.hh][] has been split into separate headers for the implicit and explicit one
+        step methods and the parameter classes with the Butcher tableaus.
+
+-   The linear algebra backends have also seen a large cleanup:
+
+    -   The code for the different backends has been moved into separate subdirectories like [backend/istl][],
+        [backend/eigen][] etc. As part of this change, many files have had their naming improved. As an example,
+        [istlvectorbackend.hh][] is now simply [istl/vector.hh][].
+
+    -   Similarly, all of the classes have been moved to corresponding subnamespaces of `Dune::PDELab`. The old classes
+        in the namespace `Dune::PDELab` have all been deprecated. Note that when you switch from
+        `Dune::PDELab::ISTLVectorBackend` to `Dune::PDELab::istl::VectorBackend`, the type of the `enum` used to describe
+        the desired blocking also changes to `Dune::PDELab::istl::Blocking`. The values of the old and the new `enum` can
+        be mapped using the following table:
+
+        |`Dune::PDELab::ISTLParameters::Blocking`|`Dune::PDELab::istl::Blocking`|
+        |----------------------------------------|------------------------------|
+        | `no_blocking`                          | `none`                       |
+        | `dynamic_blocking`                     | `bcrs`                       |
+        | `static_blocking`                      | `fixed`                      |
+
+        The new identifiers are hopefully better at conveying the actual result of choosing a particular type of
+        blocking.
+
+    -   There are now alias templates that provide a much more readable way of extracting vector and matrix types from
+        function spaces that feels a lot more like simply using a class template:
+
+        -   Vectors
+
+            ```c++
+            // old
+            typedef typename Dune::PDELab::BackendVectorSelector<GFS,Field>::Type Vec;
+            // new
+            using Vec = Dune::PDELab::Backend::Vector<GFS,Field>;
+            ```
+
+        -   Matrices
+
+            ```c++
+            // old
+            typedef typename Dune::PDELab::BackendMatrixSelector<Backend,ColumnVector,RowVector,Field>::Type Mat;
+            // new
+            using Mat = Dune::PDELab::Backend::Matrix<Backend,ColumnVector,RowVector,Field>;
+            ```
+
+    -   The backend infrastructure now has a common method for extracting the native vectors and matrices for all backends
+        from the PDELab-specific wrappers. In PDELab 2.0, you could use the `raw()` functions and `raw_type` metafunctions
+        for the ISTL backends, but the other backends didn't have any comparable feature. In 2.4, there is now a
+        function `native()` and an alias template `Native<>` for this purpose:
+
+        -   Types
+
+            ```c++
+            using NativeVector = Dune::PDELab::Backend::Native<Vec>; // a native ISTL BlockVector
+            using IdemPotentVector = Dune::PDELab::Backend::Native<NativeVector>; // the functionality is idempotent
+            ```
+
+        -   Objects
+
+            ```c++
+            auto& native_vector = native(vec);
+            ```
+
+        The `native()` function can typically be found using ADL, so you don't have to specify a namespace (like the
+        entity iteration functions in `dune-grid`).
+
+    -   The older, ISTL-specific mechanism using `raw()` and `raw_type<>` has been deprecated and will be removed after
+        PDELab 2.4.
+
+    -   The old `ISTLMatrixBackend` has been deprecated and will be removed after PDELab 2.4. Please switch to the new
+        `istl::BCRSMatrixBackend`, which is much faster during pattern construction. Note, however, that the new
+        construction method requires you to provide an approximate guess for the average number of non-zero matrix entries
+        per row. A wrong guess will slow down the program, but it will not cause any fatal errors. After matrix
+        construction, the matrix provides you with some statistics about the quality of your guess through the member
+        function `BCRSMatrix::patternStatistics()`.
+
+-   Tests for PDELab are now created using a new CMake function `pdelab_add_test()`, which makes it possible to have
+    tests that run on multiple MPI ranks as well as a number of other interesting features. If you are interested, you
+    can also use this function in your own modules -- take a look at `cmake/modules/DunePdelabTestMacros.cmake` for
+    the documentation. DUNE 3.0 will contain a similar feature in the core modules. Moreover, `make test` will **not**
+    build the PDELab tests anymore before running them, you have to explicitly build them using `make build_tests`.
+    The manual approach avoids lots of dark CMake magic and makes it possible to build multiple tests in parallel.
+
+-   The support for nonoverlapping parallel computations has been completely rewritten due to changes in the upstream
+    modules and is now much more robust. This rewrite does, however, fundamentally change a number of PDELab internals:
+
+    -   `GridFunctionSpace`s and everything built on top of them (`GridOperator`s, constraints etc.) are now defined on an
+    `EntitySet` instead of a `GridView`. This `EntitySet` can span a set of parallel partitions that is smaller than
+    `Partitions::all`. Its interface is very similar to that of a `GridView`. The most important difference is that it
+    provides an `IndexSet` that is restricted to the underlying parallel partition set, i.e. the indices of that set are
+    consecutive on that partition set. Users can still create a `GridFunctionSpace` on top of a `GridView`, which will
+    automatically be wrapped during construction of the space, but internally, all of PDELab now expects an `EntitySet`.
+
+    -   For nonoverlapping computations, users now **must** manually construct a correct `NonOverlappingEntitySet` and
+        pass it to the `GridFunctionSpace`. The `EntitySet` has value semantics, but it is important to only create it
+        once and then copy it afterwards, as all copies will share a single `IndexSet`, and this index set can be
+        expensive in terms of both setup time and memory usage.
+
+    -   Nonoverlapping computations should now use `ConformingDirichletConstraints` instead of
+        `NonoverlappingConformingDirichletConstraints`, as there are no ghost DOFs that need to be constrained anymore.
+
+    -   The template parameter `nonoverlapping_mode` of the `GridOperator` is deprecated, the correct parallelization
+        model is extracted from the function spaces and their `EntitySet`.
+
+    -   Take a look at `test/testnonoverlappingsinglephaseflow.cc` for an example of how to port your existing programs.
+
+    -   The `FiniteElementMap` API has been extended with a method `bool hasDOFs(int codim)`. All `FiniteElementMap`
+        implementations must support this method, which has to return `true` if it is possible that DOFs might be attached
+        to the given codimension.
+
+-   The `StationaryMatrixLinearSolver` has been deprecated. Please use the `StationaryLinearProblemSolver` instead.
+
+-   The `PermutationOrdering` has been deprecated. Please use `PermutedOrdering` instead.
+
+-   There is a new ordering decorator that chunks the index spaces of its children according to a simple list of chunk
+    sizes. Take a look at `test/testchunkedblockordering.cc` for an example of how to use this decorator.
+
+-   The deprecated and broken support for multi step methods has been removed.
+
+-   [gridfunctionspace/gridfunctionspaceutilities.hh][] now contains grid functions for the divergence and curl of a
+    vector field.
+
+-   The Newton solver implementation now defaults to **not** reallocating the matrix for each iteration, which will
+    significantly speed up the solver in many cases. If this setting is problematic for your program, it can be overridden
+    using either a method on the `Newton` class and the `ParameterTree` interface.
+
+-   (Hopefully) all of the APIs deprecated in PDELab 2.4 have been removed.
+
+-   There are probably some additional APIs that have been deprecated for removal after the release of PDELab 2.4.
+
+-   We have added a few additional tests and fixed some of the existing ones by either removing clearly broken tests or
+    updating them to work again.
+
+-   A lot of existing code has been updated to take advantage of C++11 features like range-based for loops and `auto`.
+
+-   Lots and lots of bug fixes.
+
+### Release history
+
+###### PDELab 2.4.0-rc1 ######
+
+-   Initial release candidate
 
 PDELab 2.0
 ----------
