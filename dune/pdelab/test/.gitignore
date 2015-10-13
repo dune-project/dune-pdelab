@@ -41,9 +41,6 @@ testsimplebackend
 testutilities
 test-composed-iis-gfs
 test-dg-amg
-testmultistepcached
-testvectorwavecached
-testvectorwave
 testinterpolate
 testpoisson-globalfe
 testopbfem
