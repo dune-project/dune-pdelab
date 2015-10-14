@@ -557,20 +557,13 @@ namespace Dune {
         class CGCONBase<Grid,degree,gt,MeshType::conforming,SolverCategory::nonoverlapping,BCType,GV>
         {
         public:
-            typedef NonoverlappingConformingDirichletConstraints<GV> CON;
-
-            CGCONBase (Grid& grid, const BCType& bctype, const GV& gv)
-            {
-                conp = std::shared_ptr<CON>(new CON(gv));
-            }
-
+            using CON = Dune::PDELab::ConformingDirichletConstraints;
             CGCONBase (Grid& grid, const BCType& bctype)
             {
-                conp = std::shared_ptr<CON>(new CON(grid.leafGridView()));
+                conp = std::shared_ptr<CON>(new CON);
             }
 
             template<typename GFS>
-            void postGFSHook (const GFS& gfs) { conp->compute_ghosts(gfs); }
             CON& getCON() {return *conp;}
             const CON& getCON() const {return *conp;}
             template<typename GFS, typename DOF>
@@ -697,6 +690,127 @@ namespace Dune {
             std::shared_ptr<GFS> gfsp;
             std::shared_ptr<CC> ccp;
         };
+
+        // template specialization for nonoverlapping case
+        template<typename T, typename N, unsigned int degree, typename BCType,
+                 Dune::GeometryType::BasicType gt, MeshType mt,
+                 typename VBET>
+        class CGSpace<T, N, degree, BCType, gt, mt, SolverCategory::nonoverlapping, VBET> {
+        public:
+
+            // export types
+            typedef T Grid;
+            typedef typename T::LeafGridView GV;
+            typedef typename T::ctype ctype;
+            typedef typename Dune::PDELab::NonOverlappingEntitySet<GV> ES;
+            static const int dim = T::dimension;
+            static const int dimworld = T::dimensionworld;
+
+            typedef CGFEMBase<ES,ctype,N,degree,dim,gt> FEMB;
+            typedef CGCONBase<Grid,degree,gt,mt,SolverCategory::nonoverlapping,BCType> CONB;
+
+            typedef typename FEMB::FEM FEM;
+            typedef typename CONB::CON CON;
+
+            typedef VBET VBE;
+            typedef GridFunctionSpace<ES,FEM,CON,VBE> GFS;
+
+            typedef N NT;
+            using DOF = Backend::Vector<GFS,N>;
+            typedef Dune::PDELab::DiscreteGridFunction<GFS,DOF> DGF;
+            typedef typename GFS::template ConstraintsContainer<N>::Type CC;
+            typedef VTKGridFunctionAdapter<DGF> VTKF;
+
+            // constructor making the grid function space an all that is needed
+            CGSpace (Grid& grid, const BCType& bctype)
+                : gv(grid.leafGridView()), es(gv), femb(es), conb(grid,bctype)
+            {
+                gfsp = std::shared_ptr<GFS>(new GFS(es,femb.getFEM(),conb.getCON()));
+                gfsp->name("cgspace");
+                // initialize ordering
+                gfsp->update();
+                // conb.postGFSHook(*gfsp);
+                ccp = std::shared_ptr<CC>(new CC());
+            }
+
+            FEM& getFEM()
+            {
+                return femb.getFEM();
+            }
+
+            const FEM& getFEM() const
+            {
+                return femb.getFEM();
+            }
+
+            // return gfs reference
+            GFS& getGFS ()
+            {
+                return *gfsp;
+            }
+
+            // return gfs reference const version
+            const GFS& getGFS () const
+            {
+                return *gfsp;
+            }
+
+            // return gfs reference
+            CC& getCC ()
+            {
+                return *ccp;
+            }
+
+            // return gfs reference const version
+            const CC& getCC () const
+            {
+                return *ccp;
+            }
+
+            void assembleConstraints (const BCType& bctype)
+            {
+                ccp->clear();
+                constraints(bctype,*gfsp,*ccp);
+            }
+
+            void clearConstraints ()
+            {
+                ccp->clear();
+            }
+
+            void setConstrainedDOFS (DOF& x, NT nt) const
+            {
+                set_constrained_dofs(*ccp,nt,x);
+                conb.make_consistent(*gfsp,x);
+            }
+
+            void setNonConstrainedDOFS (DOF& x, NT nt) const
+            {
+                set_nonconstrained_dofs(*ccp,nt,x);
+                conb.make_consistent(*gfsp,x);
+            }
+
+            void copyConstrainedDOFS (const DOF& xin, DOF& xout) const
+            {
+                copy_constrained_dofs(*ccp,xin,xout);
+                conb.make_consistent(*gfsp,xout);
+            }
+
+            void copyNonConstrainedDOFS (const DOF& xin, DOF& xout) const
+            {
+                copy_nonconstrained_dofs(*ccp,xin,xout);
+                conb.make_consistent(*gfsp,xout);
+            }
+
+        private:
+            GV gv; // need this object here because FEM and GFS store a const reference !!
+            ES es;
+            FEMB femb;
+            CONB conb;
+            std::shared_ptr<GFS> gfsp;
+            std::shared_ptr<CC> ccp;
+        };
+
 
 
         //============================================================================
@@ -1298,80 +1412,15 @@ namespace Dune {
         {
         public:
             // export types
-            typedef istl::BCRSMatrixBackend<> MBE;
+            typedef ISTLMatrixBackend MBE;
             typedef Dune::PDELab::GridOperator<typename FS::GFS,typename FS::GFS,LOP,MBE,
                                                typename FS::NT,typename FS::NT,typename FS::NT,
                                                typename FS::CC,typename FS::CC> GO;
             typedef typename GO::Jacobian MAT;
 
-            DUNE_DEPRECATED_MSG("This constructor is deprecated and will removed after the release of PDELab 2.4. Use GalerkinGlobalAssembler(const FS& fs, LOP& lop, const std::size_t nonzeros) instead! The number of nonzeros can be determined with patternStatistics()!")
             GalerkinGlobalAssembler (const FS& fs, LOP& lop)
             {
-                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,MBE(1)));
-            }
-
-            GalerkinGlobalAssembler (const FS& fs, LOP& lop, const std::size_t nonzeros)
-            {
-                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,MBE(nonzeros)));
-            }
-
-            // return grid reference
-            GO& getGO ()
-            {
-                return *gop;
-            }
-
-            // return grid reference const version
-            const GO& getGO () const
-            {
-                return *gop;
-            }
-
-            GO& operator*()
-            {
-                return *gop;
-            }
-
-            GO* operator->()
-            {
-                return gop.operator->();
-            }
-
-            const GO& operator*() const
-            {
-                return *gop;
-            }
-
-            const GO* operator->() const
-            {
-                return gop.operator->();
-            }
-
-        private:
-            std::shared_ptr<GO> gop;
-        };
-
-        // nonoverlapping variant
-        template<typename FS, typename LOP>
-        class GalerkinGlobalAssembler<FS,LOP,SolverCategory::nonoverlapping>
-        {
-        public:
-            // export types
-            typedef istl::BCRSMatrixBackend<> MBE;
-            typedef Dune::PDELab::GridOperator<typename FS::GFS,typename FS::GFS,LOP,MBE,
-                                               typename FS::NT,typename FS::NT,typename FS::NT,
-                                               typename FS::CC,typename FS::CC,true> GO;
-            typedef typename GO::Jacobian MAT;
-
-            DUNE_DEPRECATED_MSG("This constructor is deprecated and will removed after the release of PDELab 2.4. Use GalerkinGlobalAssembler(const FS& fs, LOP& lop, const std::size_t nonzeros) instead! The number of nonzeros can be determined with patternStatistics()!")
-            GalerkinGlobalAssembler (const FS& fs, LOP& lop)
-            {
-                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,MBE(1)));
-            }
-
-            GalerkinGlobalAssembler (const FS& fs, LOP& lop, const std::size_t nonzeros)
-            {
-                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,MBE(nonzeros)));
+                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop));
             }
 
             // return grid reference
@@ -1463,61 +1512,6 @@ namespace Dune {
             std::shared_ptr<GO> gop;
         };
 
-        // nonoverlapping variant
-        template<typename FS, typename LOP>
-        class GalerkinGlobalAssemblerNewBackend<FS,LOP,SolverCategory::nonoverlapping>
-        {
-        public:
-            // export types
-            typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
-            typedef Dune::PDELab::GridOperator<typename FS::GFS,typename FS::GFS,LOP,MBE,
-                                               typename FS::NT,typename FS::NT,typename FS::NT,
-                                               typename FS::CC,typename FS::CC,true> GO;
-            typedef typename GO::Jacobian MAT;
-
-            GalerkinGlobalAssemblerNewBackend (const FS& fs, LOP& lop, const MBE& mbe)
-            {
-                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,mbe));
-            }
-
-            // return grid reference
-            GO& getGO ()
-            {
-                return *gop;
-            }
-
-            // return grid reference const version
-            const GO& getGO () const
-            {
-                return *gop;
-            }
-
-            GO& operator*()
-            {
-                return *gop;
-            }
-
-            GO* operator->()
-            {
-                return gop.operator->();
-            }
-
-            const GO& operator*() const
-            {
-                return *gop;
-            }
-
-            const GO* operator->() const
-            {
-                return gop.operator->();
-            }
-
-        private:
-            std::shared_ptr<GO> gop;
-        };
-
-
-
 
         // variant with two different function spaces
         template<typename FSU, typename FSV, typename LOP, SolverCategory::Category st>
@@ -1525,21 +1519,15 @@ namespace Dune {
         {
         public:
             // export types
-            typedef istl::BCRSMatrixBackend<> MBE;
+            typedef ISTLMatrixBackend MBE;
             typedef Dune::PDELab::GridOperator<typename FSU::GFS,typename FSV::GFS,LOP,MBE,
                                                typename FSU::NT,typename FSU::NT,typename FSU::NT,
                                                typename FSU::CC,typename FSV::CC> GO;
             typedef typename GO::Jacobian MAT;
 
-            DUNE_DEPRECATED_MSG("This constructor is deprecated and will removed after the release of PDELab 2.4. Use GalerkinGlobalAssembler(const FSU& fsu, const FSV& fsv, LOP& lop, const std::size_t nonzeros) instead! The number of nonzeros can be determined with patternStatistics()!")
             GlobalAssembler (const FSU& fsu, const FSV& fsv, LOP& lop)
             {
-                gop = std::shared_ptr<GO>(new GO(fsu.getGFS(),fsu.getCC(),fsv.getGFS(),fsv.getCC(),lop,MBE(1)));
-            }
-
-            GlobalAssembler (const FSU& fsu, const FSV& fsv, LOP& lop, const std::size_t nonzeros)
-            {
-                gop = std::shared_ptr<GO>(new GO(fsu.getGFS(),fsu.getCC(),fsv.getGFS(),fsv.getCC(),lop,MBE(nonzeros)));
+                gop = std::shared_ptr<GO>(new GO(fsu.getGFS(),fsu.getCC(),fsv.getGFS(),fsv.getCC(),lop));
             }
 
             // return grid reference
@@ -1577,66 +1565,6 @@ namespace Dune {
         private:
             std::shared_ptr<GO> gop;
         };
-
-        // nonoverlapping variant
-        template<typename FSU, typename FSV, typename LOP>
-        class GlobalAssembler<FSU,FSV,LOP,SolverCategory::nonoverlapping>
-        {
-        public:
-            // export types
-            typedef istl::BCRSMatrixBackend<> MBE;
-            typedef Dune::PDELab::GridOperator<typename FSU::GFS,typename FSV::GFS,LOP,MBE,
-                                               typename FSU::NT,typename FSU::NT,typename FSU::NT,
-                                               typename FSU::CC,typename FSV::CC,true> GO;
-            typedef typename GO::Jacobian MAT;
-
-            DUNE_DEPRECATED_MSG("This constructor is deprecated and will removed after the release of PDELab 2.4. Use GalerkinGlobalAssembler(const FSU& fsu, const FSV& fsv, LOP& lop, const std::size_t nonzeros) instead! The number of nonzeros can be determined with patternStatistics()!")
-            GlobalAssembler (const FSU& fsu, const FSV& fsv, LOP& lop)
-            {
-                gop = std::shared_ptr<GO>(new GO(fsu.getGFS(),fsu.getCC(),fsv.getGFS(),fsv.getCC(),lop,MBE(1)));
-            }
-
-            GlobalAssembler (const FSU& fsu, const FSV& fsv, LOP& lop, const std::size_t nonzeros)
-            {
-                gop = std::shared_ptr<GO>(new GO(fsu.getGFS(),fsu.getCC(),fsv.getGFS(),fsv.getCC(),lop,MBE(nonzeros)));
-            }
-
-            // return grid reference
-            GO& getGO ()
-            {
-                return *gop;
-            }
-
-            // return grid reference const version
-            const GO& getGO () const
-            {
-                return *gop;
-            }
-
-            GO& operator*()
-            {
-                return *gop;
-            }
-
-            GO* operator->()
-            {
-                return gop.operator->();
-            }
-
-            const GO& operator*() const
-            {
-                return *gop;
-            }
-
-            const GO* operator->() const
-            {
-                return gop.operator->();
-            }
-
-        private:
-            std::shared_ptr<GO> gop;
-        };
-
 
 
         template<typename GO1, typename GO2, bool implicit = true>
@@ -1644,7 +1572,7 @@ namespace Dune {
         {
         public:
             // export types
-            typedef istl::BCRSMatrixBackend<> MBE;
+            typedef ISTLMatrixBackend MBE;
             typedef Dune::PDELab::OneStepGridOperator<typename GO1::GO,typename GO2::GO,implicit> GO;
             typedef typename GO::Jacobian MAT;
 
@@ -1866,17 +1794,17 @@ namespace Dune {
             std::shared_ptr<LS> lsp;
         };
 
-        // in the nonoverlapping case : BCGS Jacobi
+        // in the nonoverlapping case : BCGS SSORk
         template<typename FS, typename ASS>
         class ISTLSolverBackend_IterativeDefault<FS,ASS,SolverCategory::nonoverlapping>
         {
         public:
             // types exported
-            typedef ISTLBackend_NOVLP_BCGS_Jacobi<typename FS::GFS> LS;
+            typedef Dune::PDELab::ISTLBackend_NOVLP_BCGS_SSORk<typename ASS::GO> LS;
 
             ISTLSolverBackend_IterativeDefault (const FS& fs, const ASS& ass, unsigned maxiter_=5000, int verbose_=1)
             {
-                lsp = std::shared_ptr<LS>(new LS(fs.getGFS(),maxiter_,verbose_));
+                lsp = std::shared_ptr<LS>(new LS(ass.getGO(),maxiter_,3,verbose_));
             }
 
             LS& getLS () {return *lsp;}
