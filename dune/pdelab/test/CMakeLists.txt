@@ -69,4 +69,15 @@ set_tests_properties(
   PROPERTIES SKIP_RETURN_CODE 77
 )
 
+exclude_from_headercheck(
+  gridexamples.hh
+  testadaptivity-adaptivity.hh
+  testadaptivity-bcextension.hh
+  testadaptivity-bctype.hh
+  testadaptivity-error-indicator.hh
+  testadaptivity-operator.hh
+  testnonoverlappingsinglephaseflow-problem.hh
+  testpoisson-periodic.hh
+)
+
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vtk)

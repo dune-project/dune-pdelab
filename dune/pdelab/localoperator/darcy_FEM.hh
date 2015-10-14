@@ -2,6 +2,13 @@
 #ifndef DUNE_PDELAB_LOCALOPERATOR_DARCY_FEM_HH
 #define DUNE_PDELAB_LOCALOPERATOR_DARCY_FEM_HH
 
+#include <dune/common/fvector.hh>
+#include <dune/geometry/referenceelements.hh>
+
+#include <dune/pdelab/common/function.hh>
+#include <dune/pdelab/gridfunctionspace/lfsindexcache.hh>
+#include <dune/pdelab/gridfunctionspace/localfunctionspace.hh>
+
 //! \brief Provide Darcy velocity as a vector-valued grid function
 /**
  * The function values should be single-component vectors.  The Gradient
