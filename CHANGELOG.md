@@ -152,40 +152,40 @@ PDELab 2.4
         is in the most cases even exact. Considering the simplest case of a continuous Galerkin discretization of a
         scalar valued quantity with polynomial degree *deg* in *dim* dimensions the number of non-zeros can be set to
         *(2*deg+1)^dim* which corresponds to the stencil of a discretization with cubic elements.
-        The number of non-zeros also depends on the blocking on the unknowns. For a discontinuous Galerkin discretization
+        The number of non-zeros also depends on the blocking of the unknowns. For a discontinuous Galerkin discretization
         with `Dune::PDELab::istl::Blocking` set to `fixed` this number is independent on the polynomial degree.
-        It only depends on the number of faces the mesh elements have which is *2*dim+1* on cubic grids and
+        It only depends on the number of faces the mesh elements have which leads to *2*dim+1* on cubic grids and
         *dim+2* on simplicial grids. When considering discretizations involving vector-valued quantities
-        the number of unknowns depends both on the blocking and on the ordering of the unknows. The following table
+        the number of non-zeros depend both on the blocking and on the ordering of the unknows. The following table
         summarizes a reasonable choice for the pattern construction in common cases:
 
         -   scalar valued quantities
 
             |Discretization                            |Number of non-zeros|
             |------------------------------------------|-------------------|
-            | Continuous Galerkin                      |                   |
-            | DG on cubic grids, blocking enabled      |                   |
-            | DG on simplicial grids, blocking enabled |                   |
-            | DG, blocking enabled, mass matrix        |                   |
+            | Continuous Galerkin                      | (2 deg + 1)^dim   |
+            | DG on cubic grids, blocking enabled      | 2 dim + 1         |
+            | DG on simplicial grids, blocking enabled | dim + 2           |
+            | DG, blocking enabled, mass matrix        | 1                 |
 
         -   vector valued quantities, using the ordering `Dune::PDELab::EntityBlockedOrderingTag`
 
             |Discretization                            |Number of non-zeros|
             |------------------------------------------|-------------------|
-            | DG on cubic grids, blocking enabled      |                   |
-            | DG on simplicial grids, blocking enabled |                   |
-            | DG, blocking enabled, mass matrix        |                   |
+            | DG on cubic grids, blocking enabled      | 2 dim + 1         |
+            | DG on simplicial grids, blocking enabled | dim + 2           |
+            | DG, blocking enabled, mass matrix        | 1                 |
 
 
-            Note that the number of unknowns is equal to the scalar case.
+            Note that the number of non-zeros is equal to the scalar case.
 
         -   vector valued quantities, using the ordering `Dune::PDELab::LexicographicOrderingTag`
 
-            |Discretization                            |Number of non-zeros|
-            |------------------------------------------|-------------------|
-            | DG on cubic grids, blocking enabled      |                   |
-            | DG on simplicial grids, blocking enabled |                   |
-            | DG, blocking enabled, mass matrix        |                   |
+            |Discretization                            |Number of non-zeros     |
+            |------------------------------------------|------------------------|
+            | DG on cubic grids, blocking enabled      | # Childs * (2 dim + 1) |
+            | DG on simplicial grids, blocking enabled | # Childs * (dim + 2)   |
+            | DG, blocking enabled, mass matrix        | # Childs               |
 
 -   Tests for PDELab are now created using a new CMake function `pdelab_add_test()`, which makes it possible to have
     tests that run on multiple MPI ranks as well as a number of other interesting features. If you are interested, you
