@@ -37,9 +37,16 @@ PDELab 2.4
 
     -   For convection-diffusion-reaction problems, there are now three files [convectiondiffusionfem.hh][],
         [convectiondiffusiondg.hh][] and [convectiondiffusionccfv.hh][], with a unified parameter interface in
-        [convectiondiffusionparameter.hh][]. Except for [convectiondiffusion.hh][], which has been renamed to
-        [nonlinearconvectiondiffusionfem.hh][], and [diffusionmixed.hh][], all other diffusion-type operators have
-        been deprecated and will be removed after PDELab 2.4.
+        [convectiondiffusionparameter.hh][]. The implementation in [diffusionmixed.hh][] also uses this parameter
+        interface whereas [convectiondiffusion.hh][] which has been renamed to [nonlinearconvectiondiffusionfem.hh][]
+        uses its own parameter interface. All other diffusion-type and convection-type operators have been
+        deprecated and will be removed after PDELab 2.4.
+
+    -   The parameter class `ConvectionDiffusion_Diffusion_Adapter` has been deprecated and moved from
+        [convectiondiffusionparameter.hh][] to the deprecated parameter interface in [diffusionparam.hh][].
+        **Note** that the usage of this old parameter interface is now strongly discouraged since it leads
+        to a hard **compile error** in order to avoid a deprecation warning whenever [convectiondiffusionparameter.hh][]
+        is being included.
 
     -   New Darcy velocity adapters in [darcy_CCFV.hh][] and [darcy_FEM.hh][] as well as a permeability adapter in
         [permeability_adapter.hh][].
@@ -65,7 +72,8 @@ PDELab 2.4
         have been removed.
 
     -   The header [instationary/onestep.hh][] has been split into separate headers for the implicit and explicit one
-        step methods and the parameter classes with the Butcher tableaus.
+        step methods and the parameter classes with the Butcher tableaus. The implementation of the class `FilenameHelper`
+        has been moved to [common/instationaryfilenamehelper.hh][].
 
 -   The linear algebra backends have also seen a large cleanup:
 
@@ -140,6 +148,46 @@ PDELab 2.4
         construction, the matrix provides you with some statistics about the quality of your guess through the member
         function `BCRSMatrix::patternStatistics()`.
 
+        In the case of structured grids it is possible to derive a reasonable estimate for the number of non-zeros that
+        is in the most cases even exact. Considering the simplest case of a continuous Galerkin discretization of a
+        scalar valued quantity with polynomial degree *deg* in *dim* dimensions the number of non-zeros can be set to
+        *(2*deg+1)^dim* which corresponds to the stencil of a discretization with cubic elements.
+
+        The number of non-zeros also depends on the blocking of the unknowns. For a discontinuous Galerkin discretization
+        with `Dune::PDELab::istl::Blocking` set to `fixed` this number is independent on the polynomial degree.
+        It only depends on the number of faces the mesh elements have which leads to *2*dim+1* on cubic grids and
+        *dim+2* on simplicial grids. When considering discretizations involving vector-valued quantities
+        the number of non-zeros depend both on the blocking and on the ordering of the unknows. The following table
+        summarizes a reasonable choice for the pattern construction in common cases:
+
+        -   Scalar valued quantities
+
+            |Discretization                            |Number of non-zeros|
+            |------------------------------------------|-------------------|
+            | Continuous Galerkin                      | (2 deg + 1)^dim   |
+            | DG on cubic grids, blocking enabled      | 2 dim + 1         |
+            | DG on simplicial grids, blocking enabled | dim + 2           |
+            | DG, blocking enabled, mass matrix        | 1                 |
+
+        -   Vector valued quantities, using the ordering `Dune::PDELab::EntityBlockedOrderingTag`
+
+            |Discretization                            |Number of non-zeros|
+            |------------------------------------------|-------------------|
+            | DG on cubic grids, blocking enabled      | 2 dim + 1         |
+            | DG on simplicial grids, blocking enabled | dim + 2           |
+            | DG, blocking enabled, mass matrix        | 1                 |
+
+
+            Note that the number of non-zeros is equal to the scalar case.
+
+        -   Vector valued quantities, using the ordering `Dune::PDELab::LexicographicOrderingTag`
+
+            |Discretization                            |Number of non-zeros     |
+            |------------------------------------------|------------------------|
+            | DG on cubic grids, blocking enabled      | # Childs * (2 dim + 1) |
+            | DG on simplicial grids, blocking enabled | # Childs * (dim + 2)   |
+            | DG, blocking enabled, mass matrix        | # Childs               |
+
 -   Tests for PDELab are now created using a new CMake function `pdelab_add_test()`, which makes it possible to have
     tests that run on multiple MPI ranks as well as a number of other interesting features. If you are interested, you
     can also use this function in your own modules -- take a look at `cmake/modules/DunePdelabTestMacros.cmake` for
@@ -184,7 +232,7 @@ PDELab 2.4
 -   The deprecated and broken support for multi step methods has been removed.
 
 -   [gridfunctionspace/gridfunctionspaceutilities.hh][] now contains grid functions for the divergence and curl of a
-    vector field.
+    vector field, even for `VectorGridFunctionSpace`s as in the Taylor-Hood case.
 
 -   The Newton solver implementation now defaults to **not** reallocating the matrix for each iteration, which will
     significantly speed up the solver in many cases. If this setting is problematic for your program, it can be overridden
@@ -432,6 +480,7 @@ Links
 [convectiondiffusiondg.hh]: dune/pdelab/localoperator/convectiondiffusiondg.hh
 [convectiondiffusionccfv.hh]: dune/pdelab/localoperator/convectiondiffusionccfv.hh
 [convectiondiffusionparameter.hh]: dune/pdelab/localoperator/convectiondiffusionparameter.hh
+[diffusionparam.hh]: dune/pdelab/localoperator/diffusionparam.hh
 [convectiondiffusion.hh]: dune/pdelab/localoperator/convectiondiffusion.hh
 [nonlinearconvectiondiffusionfem.hh]: dune/pdelab/localoperator/nonlinearconvectiondiffusionfem.hh
 [diffusionmixed.hh]: dune/pdelab/localoperator/diffusionmixed.hh
@@ -443,6 +492,7 @@ Links
 [dgnavierstokes.hh]: dune/pdelab/localoperator/dgnavierstokes.hh
 [dgnavierstokesvelvecfem.hh]: dune/pdelab/localoperator/dgnavierstokesvelvecfem.hh
 [instationary/onestep.hh]: dune/pdelab/instationary/onestep.hh
+[common/instationaryfilenamehelper.hh]: dune/pdelab/common/instationaryfilenamehelper.hh
 [backend/istl]: dune/pdelab/backend/istl
 [backend/eigen]: dune/pdelab/backend/eigen
 [istlvectorbackend.hh]: dune/pdelab/backend/istlvectorbackend.hh
