@@ -1,6 +1,8 @@
 #ifndef PERMEABILITY_ADAPTER_HH
 #define PERMEABILITY_ADAPTER_HH
 
+#include <dune/pdelab/common/function.hh>
+
 /*! Adapter that extracts permeability from parameter class
 
   \tparam T  model of ConvectionDiffusionParameterInterface

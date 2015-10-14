@@ -8,9 +8,11 @@
 #include <unordered_map>
 
 #include <dune/common/typetraits.hh>
+#include <dune/geometry/dimension.hh>
 #include <dune/geometry/typeindex.hh>
 #include <dune/grid/common/gridenums.hh>
 #include <dune/grid/common/capabilities.hh>
+#include <dune/grid/common/partitionset.hh>
 
 namespace Dune {
   namespace PDELab {

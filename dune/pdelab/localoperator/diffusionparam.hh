@@ -5,6 +5,8 @@
 #include <iostream>
 #include <dune/common/deprecated.hh>
 
+#include "convectiondiffusionparameter.hh"
+
 namespace Dune {
   namespace PDELab {
     //! \addtogroup LocalOperator
