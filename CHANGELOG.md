@@ -152,6 +152,7 @@ PDELab 2.4
         is in the most cases even exact. Considering the simplest case of a continuous Galerkin discretization of a
         scalar valued quantity with polynomial degree *deg* in *dim* dimensions the number of non-zeros can be set to
         *(2*deg+1)^dim* which corresponds to the stencil of a discretization with cubic elements.
+
         The number of non-zeros also depends on the blocking of the unknowns. For a discontinuous Galerkin discretization
         with `Dune::PDELab::istl::Blocking` set to `fixed` this number is independent on the polynomial degree.
         It only depends on the number of faces the mesh elements have which leads to *2*dim+1* on cubic grids and
@@ -159,7 +160,7 @@ PDELab 2.4
         the number of non-zeros depend both on the blocking and on the ordering of the unknows. The following table
         summarizes a reasonable choice for the pattern construction in common cases:
 
-        -   scalar valued quantities
+        -   Scalar valued quantities
 
             |Discretization                            |Number of non-zeros|
             |------------------------------------------|-------------------|
@@ -168,7 +169,7 @@ PDELab 2.4
             | DG on simplicial grids, blocking enabled | dim + 2           |
             | DG, blocking enabled, mass matrix        | 1                 |
 
-        -   vector valued quantities, using the ordering `Dune::PDELab::EntityBlockedOrderingTag`
+        -   Vector valued quantities, using the ordering `Dune::PDELab::EntityBlockedOrderingTag`
 
             |Discretization                            |Number of non-zeros|
             |------------------------------------------|-------------------|
@@ -179,7 +180,7 @@ PDELab 2.4
 
             Note that the number of non-zeros is equal to the scalar case.
 
-        -   vector valued quantities, using the ordering `Dune::PDELab::LexicographicOrderingTag`
+        -   Vector valued quantities, using the ordering `Dune::PDELab::LexicographicOrderingTag`
 
             |Discretization                            |Number of non-zeros     |
             |------------------------------------------|------------------------|
