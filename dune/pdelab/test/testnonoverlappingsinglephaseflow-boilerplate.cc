@@ -72,7 +72,7 @@ int main(int argc, char **argv)
     typedef Dune::PDELab::ConvectionDiffusionFEM<Problem,typename FS::FEM> LOP;
     LOP lop(problem);
     typedef Dune::PDELab::GalerkinGlobalAssembler<FS,LOP,solvertype> ASSEMBLER;
-    ASSEMBLER assembler(fs,lop);
+    ASSEMBLER assembler(fs,lop,std::pow(2*degree+1,dim));
 
     // make linear solver and solve problem
     typedef Dune::PDELab::ISTLSolverBackend_IterativeDefault<FS,ASSEMBLER,solvertype> SBE;
