@@ -54,6 +54,9 @@ if (UG_FOUND)
   pdelab_add_test(NAME testnonoverlappingsinglephaseflow-ug-parallel SOURCES testnonoverlappingsinglephaseflow.cc COMPILE_DEFINITIONS "GRID_UG" MPIRANKS 2)
 endif (UG_FOUND)
 
+if (UG_FOUND)
+  pdelab_add_test(NAME testnonoverlappingsinglephaseflow-boilerplate SOURCES testnonoverlappingsinglephaseflow-boilerplate.cc COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"" MPIRANKS 2)
+endif (UG_FOUND)
 
 if (UG_FOUND)
   pdelab_add_test(NAME testadaptivity)
