@@ -82,25 +82,6 @@ namespace Dune {
 
     }
 
-    namespace ISTLParameters {
-
-      enum
-      DUNE_DEPRECATED_MSG("ISTLParameters::blocking is deprecated and will be removed after PDELab 2.4. Use the new istl::VectorBackend and istl::Blocking instead. Note that the enum values of istl::Blocking are named differently!")
-      Blocking
-        {
-          no_blocking,
-          dynamic_blocking,
-          static_blocking
-        };
-    }
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-
-    template<ISTLParameters::Blocking blocking = ISTLParameters::no_blocking, std::size_t block_size = 1>
-    using ISTLVectorBackend DUNE_DEPRECATED_MSG("ISTLVectorBackend is deprecated and will be removed after PDELab 2.4. Use istl::VectorBackend instead") = istl::VectorBackend<static_cast<istl::Blocking>(blocking),block_size>;
-
-#pragma GCC diagnostic pop
 
     //! Backend using ISTL matrices.
     /**
