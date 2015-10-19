@@ -13,16 +13,7 @@ endif()
 
 install(FILES backendselector.hh
               eigen.hh
-              eigenmatrixbackend.hh
-              eigensolverbackend.hh
-              eigenvectorbackend.hh
               istl.hh
-              istlmatrixbackend.hh
-              istlsolverbackend.hh
-              istlvectorbackend.hh
-              novlpistlsolverbackend.hh
-              ovlpistlsolverbackend.hh
-              seqistlsolverbackend.hh
               simple.hh
               solver.hh
               tags.hh
