@@ -11,10 +11,9 @@ if(NOT HAVE_EIGEN)
     eigenvectorbackend.hh)
 endif()
 
-install(FILES backendselector.hh
-              eigen.hh
-              istl.hh
-              simple.hh
-              solver.hh
-              tags.hh
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/backend)
+install(FILES
+  eigen.hh
+  istl.hh
+  simple.hh
+  solver.hh
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dune/pdelab/backend)
