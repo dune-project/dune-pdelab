@@ -31,13 +31,6 @@ namespace Dune {
 
     }
 
-    namespace tags {
-
-      using unattached_container DUNE_DEPRECATED_MSG("unattached_containers was moved to the namespace Dune::PDELab::Backend for PDELab 2.4. Please update your code accordingly.") = Backend::unattached_container;
-      using attached_container DUNE_DEPRECATED_MSG("unattached_containers was moved to the namespace Dune::PDELab::Backend for PDELab 2.4. Please update your code accordingly.") = Backend::attached_container;
-
-    }
-
   } // namespace PDELab
 
 } // namespace Dune
