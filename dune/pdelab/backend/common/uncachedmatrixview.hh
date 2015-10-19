@@ -3,7 +3,6 @@
 #define DUNE_PDELAB_BACKEND_COMMON_UNCACHEDMATRIXVIEW_HH
 
 #include <dune/common/typetraits.hh>
-#include <dune/common/nullptr.hh>
 
 namespace Dune {
   namespace PDELab {

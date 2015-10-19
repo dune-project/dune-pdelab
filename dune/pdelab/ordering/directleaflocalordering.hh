@@ -6,7 +6,6 @@
 
 #include <dune/typetree/leafnode.hh>
 
-#include <dune/common/nullptr.hh>
 #include <dune/geometry/referenceelements.hh>
 #include <dune/localfunctions/common/interfaceswitch.hh>
 #include <dune/localfunctions/common/localkey.hh>
