@@ -25,7 +25,6 @@ namespace Dune {
         typedef typename C::field_type ElementType;
         typedef ElementType E;
         typedef C Container;
-        typedef C BaseT;
         typedef typename C::field_type field_type;
         typedef typename C::block_type block_type;
         typedef typename C::size_type size_type;
@@ -197,20 +196,6 @@ namespace Dune {
         const E& operator()(const RowIndex& ri, const ColIndex& ci) const
         {
           return istl::access_matrix_element(istl::container_tag(*_container),*_container,ri,ci,ri.size()-1,ci.size()-1);
-        }
-
-        const Container&
-        DUNE_DEPRECATED_MSG("base() is deprecated and will be removed after PDELab 2.4. Use Backend::native() instead.")
-        base() const
-        {
-          return *_container;
-        }
-
-        Container&
-        DUNE_DEPRECATED_MSG("base() is deprecated and will be removed after PDELab 2.4. Use Backend::native() instead.")
-        base()
-        {
-          return *_container;
         }
 
       private:
