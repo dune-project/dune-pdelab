@@ -83,65 +83,6 @@ namespace Dune {
     }
 
 
-    //! Backend using ISTL matrices.
-    /**
-     * ISTLMatrixBackend is a matrix backend descriptor for ISTL matrices. It expects that
-     * both the ansatz and the test function space use ISTL vectors and automatically deduces
-     * the correct matrix type from those two vector backends.
-     */
-    struct
-    DUNE_DEPRECATED_MSG("ISTLMatrixBackend has been deprecated and will be removed after the release of PDELab 2.4. Use istl::BCRSMatrixBackend with the newer pattern construction method instead")
-    ISTLMatrixBackend
-    {
-
-      typedef std::size_t size_type;
-
-      // The default matrix construction method does not collect statistics, so provide a dummy type here.
-      typedef int Statistics;
-
-      //! The type of the pattern object passed to the GridOperator for pattern construction.
-      template<typename Matrix, typename GFSV, typename GFSU>
-      using Pattern = typename istl::build_pattern_type<
-        typename Matrix::Container,
-        GFSV,
-        GFSU,
-        typename GFSV::Ordering::ContainerAllocationTag
-        >::type;
-
-      template<typename VV, typename VU, typename E>
-      struct MatrixHelper
-      {
-        typedef istl::BCRSMatrix<
-          typename VV::GridFunctionSpace,
-          typename VU::GridFunctionSpace,
-          typename istl::build_matrix_type<
-            E,
-            typename VV::Container,
-            typename VU::Container
-            >::type,
-          Statistics
-          > type;
-      };
-
-      template<typename GridOperator, typename Matrix>
-      std::vector<Statistics> buildPattern(const GridOperator& grid_operator, Matrix& matrix) const
-      {
-        Pattern<
-          Matrix,
-          typename GridOperator::Traits::TestGridFunctionSpace,
-          typename GridOperator::Traits::TrialGridFunctionSpace
-          > pattern(grid_operator.testGridFunctionSpace().ordering(),grid_operator.trialGridFunctionSpace().ordering());
-        grid_operator.fill_pattern(pattern);
-        allocate_matrix(grid_operator.testGridFunctionSpace().ordering(),
-                        grid_operator.trialGridFunctionSpace().ordering(),
-                        pattern,
-                        Backend::native(matrix)
-                        );
-        return std::vector<Statistics>();
-      }
-
-    };
-
   } // namespace PDELab
 } // namespace Dune
 
