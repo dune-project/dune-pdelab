@@ -240,6 +240,9 @@ PDELab 2.4
 
 -   (Hopefully) all of the APIs deprecated in PDELab 2.0 have been removed.
 
+-   The `PermutationOrderingTag` and its implementation have been deprecated. If you need to permute an ordering, apply
+    the `Permuted<>` decorator instead.
+
 -   There are probably some additional APIs that have been deprecated for removal after the release of PDELab 2.4.
 
 -   We have added a few additional tests and fixed some of the existing ones by either removing clearly broken tests or

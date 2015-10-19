@@ -131,7 +131,9 @@ namespace Dune {
      * as handed over in the constructor.
      *
      */
-    struct PermutationOrderingTag
+    struct
+    DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4. Please use Permuted<> instead!")
+    PermutationOrderingTag
     {
 
       //! Constructs n PermutationOrderingTag using the permutation given by std::vector perm.
