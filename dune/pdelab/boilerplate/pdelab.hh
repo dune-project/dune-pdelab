@@ -1418,12 +1418,6 @@ namespace Dune {
                                                typename FS::CC,typename FS::CC> GO;
             typedef typename GO::Jacobian MAT;
 
-            DUNE_DEPRECATED_MSG("This constructor is deprecated and will removed after the release of PDELab 2.4. Use GalerkinGlobalAssembler(const FS& fs, LOP& lop, const std::size_t nonzeros) instead! The number of nonzeros can be determined with patternStatistics()!")
-            GalerkinGlobalAssembler (const FS& fs, LOP& lop)
-            {
-                gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,MBE(1)));
-            }
-
             GalerkinGlobalAssembler (const FS& fs, LOP& lop, const std::size_t nonzeros)
             {
                 gop = std::shared_ptr<GO>(new GO(fs.getGFS(),fs.getCC(),fs.getGFS(),fs.getCC(),lop,MBE(nonzeros)));
@@ -1530,12 +1524,6 @@ namespace Dune {
                                                typename FSU::NT,typename FSU::NT,typename FSU::NT,
                                                typename FSU::CC,typename FSV::CC> GO;
             typedef typename GO::Jacobian MAT;
-
-            DUNE_DEPRECATED_MSG("This constructor is deprecated and will removed after the release of PDELab 2.4. Use GalerkinGlobalAssembler(const FSU& fsu, const FSV& fsv, LOP& lop, const std::size_t nonzeros) instead! The number of nonzeros can be determined with patternStatistics()!")
-            GlobalAssembler (const FSU& fsu, const FSV& fsv, LOP& lop)
-            {
-                gop = std::shared_ptr<GO>(new GO(fsu.getGFS(),fsu.getCC(),fsv.getGFS(),fsv.getCC(),lop,MBE(1)));
-            }
 
             GlobalAssembler (const FSU& fsu, const FSV& fsv, LOP& lop, const std::size_t nonzeros)
             {
