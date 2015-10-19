@@ -419,7 +419,7 @@ namespace Dune {
         \param[in] reduction to be achieved
       */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
       {
         using Backend::Native;
         using Backend::native;
@@ -481,7 +481,7 @@ namespace Dune {
         \param[in] reduction to be achieved
       */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
       {
         using Backend::Native;
         using Backend::native;
@@ -544,7 +544,7 @@ namespace Dune {
         \param[in] reduction to be achieved
       */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
       {
         using Backend::Native;
         using Backend::native;
@@ -704,7 +704,7 @@ namespace Dune {
         \param[in] reduction to be achieved
       */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
       {
         using Backend::Native;
         using Backend::native;
@@ -769,7 +769,7 @@ namespace Dune {
         \param[in] reduction to be achieved
       */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
       {
         typedef OverlappingOperator<C,M,V,W> POP;
         POP pop(c,A);
@@ -895,7 +895,7 @@ namespace Dune {
         \param[in] reduction to be achieved
       */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename W::ElementType reduction)
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType >::real_type reduction)
       {
         using Backend::Native;
         using Backend::native;
@@ -1032,7 +1032,7 @@ namespace Dune {
         \param[in] r right hand side
         \param[in] reduction to be achieved
       */
-      void apply(M& A, V& z, V& r, typename V::ElementType reduction)
+      void apply(M& A, V& z, V& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
       {
         Timer watch;
         Comm oocc(gfs.gridView().comm());
