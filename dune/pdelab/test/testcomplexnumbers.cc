@@ -95,13 +95,15 @@
 template<int k, class GV, class PARAM>
 void helmholtz_Qk (const GV& gv, PARAM& param, std::string& errornorm, std::string solver)
 {
+  using Dune::PDELab::Backend::native;
+  using Dune::PDELab::Backend::Native;
+
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
+  const int dim = GV::dimension;
   typedef double R;
   typedef std::complex<R> C;
   typedef C RF;
-
-
 
   // <<<2>>> Make grid function space
   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,C,k> FEM;
@@ -123,21 +125,10 @@ void helmholtz_Qk (const GV& gv, PARAM& param, std::string& errornorm, std::stri
   // <<<3>>> Make grid operator
   typedef HelmholtzLocalOperator<PARAM > LOP;
 
-  LOP lop( param, 2*k );
+  LOP lop(param, 2*k);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
-  // Structured 2D grid, Q1 finite elements => 9-point stencil / Q2 => 25
-  MBE mbe(k == 1 ? 9 : 25);
-
   typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,C,C,C,CC,CC> GO;
-  //GO go(gfs,gfs,lop,mbe);
-  GO go(gfs,cc,gfs,cc,lop,mbe);
-
-  // How well did we estimate the number of entries per matrix row?
-  // => print Jacobian pattern statistics
-  //typename GO::Traits::Jacobian jac(go);
-  //std::cout << jac.patternStatistics() << std::endl;
-
-
+  GO go(gfs,cc,gfs,cc,lop,MBE(std::pow(2*k+1,dim)));
 
   typedef typename GO::Traits::Domain U;
   C zero(0.);
@@ -160,15 +151,17 @@ void helmholtz_Qk (const GV& gv, PARAM& param, std::string& errornorm, std::stri
   // we do not use the backend, we call solver directly instead
 
 
-  typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type V;
+  using V = Dune::PDELab::Backend::Vector<GFS,RF>;
   typedef typename GO::Jacobian M;
-
-  typedef typename M::BaseT ISTLM;
-  typedef typename V::BaseT ISTLV;
+  using ISTLM = Native<M>;
+  using ISTLV = Native<V>;
 
 
   M m(go,0.);
-  //std::cout << m.patternStatistics() << std::endl;
+  // How well did we estimate the number of entries per matrix row?
+  // => print Jacobian pattern statistics
+  // std::cout << m.patternStatistics() << std::endl;
+  // return;
   go.jacobian(u,m);
   V r(gfs);
   r = 0.0;
@@ -179,20 +172,20 @@ void helmholtz_Qk (const GV& gv, PARAM& param, std::string& errornorm, std::stri
 
 
     if(solver == "UMFPACK") {
-      Dune::UMFPack<ISTLM> solver(m.base(), 0);
+      Dune::UMFPack<ISTLM> solver(native(m), 0);
       r *= -1.0; // need -residual
       //u = r;
       // u = 0;
       Dune::InverseOperatorResult stat;
-      solver.apply(u.base(),r.base(),stat);
+      solver.apply(native(u),native(r),stat);
     }
     if(solver == "SuperLU") {
-      Dune::SuperLU<ISTLM> solver(m.base(), 0);
+      Dune::SuperLU<ISTLM> solver(native(m), 0);
       r *= -1.0; // need -residual
       //u = r;
       // u = 0;
       Dune::InverseOperatorResult stat;
-      solver.apply(u.base(),r.base(),stat);
+      solver.apply(native(u),native(r),stat);
     }
 
 
@@ -200,72 +193,72 @@ void helmholtz_Qk (const GV& gv, PARAM& param, std::string& errornorm, std::stri
     Dune::InverseOperatorResult stat;
 
     if (solver == "GMRESILU0") {
-      Dune::SeqILU0<ISTLM,ISTLV,ISTLV> ilu0(m.base(),1.0);
-      Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());
+      Dune::SeqILU0<ISTLM,ISTLV,ISTLV> ilu0(native(m),1.0);
+      Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(native(m));
       Dune::RestartedGMResSolver<ISTLV> solver(opa, ilu0, 1E-7, 5000, 5000, 0);
       r *= -1.0; // need -residual
       //u = r;
       // u = 0;
-      solver.apply(u.base(),r.base(),stat);
+      solver.apply(native(u),native(r),stat);
       std::cout<<"Iterations: "<< stat.iterations<<std::endl;
       std::cout<<"Time: "<<  stat.elapsed<< std::endl;
     }
     if (solver == "GMRESILU1") {
-      Dune::SeqILUn<ISTLM,ISTLV,ISTLV> ilun(m.base(), 1, 1.0);
-      Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());
+      Dune::SeqILUn<ISTLM,ISTLV,ISTLV> ilun(native(m), 1, 1.0);
+      Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(native(m));
       Dune::RestartedGMResSolver<ISTLV> solver(opa, ilun, 1E-7, 5000, 5000, 0);
       r *= -1.0; // need -residual
       //u = r;
       // u = 0;
-      solver.apply(u.base(),r.base(),stat);
+      solver.apply(native(u),native(r),stat);
       std::cout<<"Iterations: "<< stat.iterations<<std::endl;
       std::cout<<"Time: "<<  stat.elapsed<< std::endl;
     }
     if (solver == "GMRESSGS") {
-      Dune::SeqSSOR<ISTLM,ISTLV,ISTLV> ssor(m.base(), 3, 1.); //ssor with \omega = 1 is SGS (symmetric gauss seidel)
-      Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());
+      Dune::SeqSSOR<ISTLM,ISTLV,ISTLV> ssor(native(m), 3, 1.); //ssor with \omega = 1 is SGS (symmetric gauss seidel)
+      Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(native(m));
       Dune::RestartedGMResSolver<ISTLV> solver(opa, ssor, 1E-7, 5000, 5000, 0);
       r *= -1.0; // need -residual
       //u = r;
       // u = 0;
-      solver.apply(u.base(),r.base(),stat);
+      solver.apply(native(u),native(r),stat);
       std::cout<<"Iterations: "<< stat.iterations<<std::endl;
       std::cout<<"Time: "<<  stat.elapsed<< std::endl;
     }
     if (solver == "BiCGSILU0") {
-      Dune::SeqILU0<ISTLM,ISTLV,ISTLV> ilu0(m.base(),1.0);
-      Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());
+      Dune::SeqILU0<ISTLM,ISTLV,ISTLV> ilu0(native(m),1.0);
+      Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(native(m));
       Dune::BiCGSTABSolver<ISTLV> solver(opa,ilu0,1E-7,20000, 0);
       // solve the jacobian system
       r *= -1.0; // need -residual
       //u = r;
       // u = 0;
-      solver.apply(u.base(),r.base(),stat);
+      solver.apply(native(u),native(r),stat);
       std::cout<<"Iterations: "<< stat.iterations<<std::endl;
       std::cout<<"Time: "<<  stat.elapsed<< std::endl;
     }
 
     //this solver breaks down at 4000 DOFs by solving the helmholtz eq
     if (solver == "BiCGSILU1") {
-      Dune::SeqILUn<ISTLM,ISTLV,ISTLV> ilun(m.base(), 1, 1.0);
-      Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());
+      Dune::SeqILUn<ISTLM,ISTLV,ISTLV> ilun(native(m), 1, 1.0);
+      Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(native(m));
       Dune::BiCGSTABSolver<ISTLV> solver(opa,ilun,1E-7,20000, 0);
       // solve the jacobian system
       r *= -1.0; // need -residual
       // //u = r;
       // u = 0;
-      solver.apply(u.base(),r.base(),stat);
+      solver.apply(native(u),native(r),stat);
       std::cout<<"Iterations: "<< stat.iterations<<std::endl;
       std::cout<<"Time: "<<  stat.elapsed<< std::endl;
     }
     if (solver == "BiCGSSGS") {
-      Dune::SeqSSOR<ISTLM,ISTLV,ISTLV> ssor(m.base(), 3, 1.); //ssor with \omega = 1 is SGS (symmetric gauss seidel)
-      Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(m.base());
+      Dune::SeqSSOR<ISTLM,ISTLV,ISTLV> ssor(native(m), 3, 1.); //ssor with \omega = 1 is SGS (symmetric gauss seidel)
+      Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(native(m));
       Dune::BiCGSTABSolver<ISTLV> solver(opa,ssor,1E-7,20000, 0);
       r *= -1.0; // need -residual
       // //u = r;
       // u = 0;
-      solver.apply(u.base(),r.base(),stat);
+      solver.apply(native(u),native(r),stat);
       std::cout<<"Iterations: "<< stat.iterations<<std::endl;
       std::cout<<"Time: "<<  stat.elapsed<< std::endl;
     }
