@@ -3,6 +3,8 @@
 #ifndef DUNE_PDELAB_BACKEND_TAGS_HH
 #define DUNE_PDELAB_BACKEND_TAGS_HH
 
+#include <dune/common/deprecated.hh>
+
 /** \file
  * \brief Various tags for influencing backend behavior.
  * \ingroup Backend
