@@ -344,9 +344,10 @@ namespace Dune {
       /*! \brief Norm of a right-hand side vector.
         The vector must be consistent on the interior+border partition
       */
-       template<typename X>
-      typename X::ElementType norm (const X& x) const
+      template<typename X>
+      typename Dune::template FieldTraits<typename X::ElementType >::real_type norm (const X& x) const
       {
+        using namespace std;
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
 
@@ -384,6 +385,7 @@ namespace Dune {
 
       virtual typename X::BaseT::field_type norm (const X& x)
       {
+        using namespace std;
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
 
