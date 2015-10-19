@@ -43,7 +43,7 @@ namespace Dune {
     template<typename GO, typename LS, typename V>
     class StationaryLinearProblemSolver
     {
-      typedef typename V::ElementType Real;
+      typedef typename Dune::template FieldTraits<typename V::ElementType >::real_type Real;
       typedef typename GO::Traits::Jacobian M;
       typedef typename GO::Traits::TrialGridFunctionSpace TrialGridFunctionSpace;
       using W = Dune::PDELab::Backend::Vector<TrialGridFunctionSpace,Real>;
@@ -52,7 +52,7 @@ namespace Dune {
     public:
       typedef StationaryLinearProblemSolverResult<double> Result;
 
-      StationaryLinearProblemSolver(const GO& go, LS& ls, V& x, typename V::ElementType reduction, typename V::ElementType min_defect = 1e-99, int verbose=1)
+      StationaryLinearProblemSolver(const GO& go, LS& ls, V& x, Real reduction, Real min_defect = 1e-99, int verbose=1)
         : _go(go)
         , _ls(ls)
         , _x(&x)
@@ -63,7 +63,7 @@ namespace Dune {
         , _verbose(verbose)
       {}
 
-      StationaryLinearProblemSolver (const GO& go, LS& ls, typename V::ElementType reduction, typename V::ElementType min_defect = 1e-99, int verbose=1)
+      StationaryLinearProblemSolver (const GO& go, LS& ls, Real reduction, Real min_defect = 1e-99, int verbose=1)
         : _go(go)
         , _ls(ls)
         , _x()
@@ -96,8 +96,8 @@ namespace Dune {
         : _go(go)
         , _ls(ls)
         , _x(&x)
-        , _reduction(params.get<typename V::ElementType>("reduction"))
-        , _min_defect(params.get<typename V::ElementType>("min_defect",1e-99))
+        , _reduction(params.get<Real>("reduction"))
+        , _min_defect(params.get<Real>("min_defect",1e-99))
         , _hanging_node_modifications(params.get<bool>("hanging_node_modifications",false))
         , _keep_matrix(params.get<bool>("keep_matrix",true))
         , _verbose(params.get<int>("verbosity",1))
@@ -125,8 +125,8 @@ namespace Dune {
         : _go(go)
         , _ls(ls)
         , _x()
-        , _reduction(params.get<typename V::ElementType>("reduction"))
-        , _min_defect(params.get<typename V::ElementType>("min_defect",1e-99))
+        , _reduction(params.get<Real>("reduction"))
+        , _min_defect(params.get<Real>("min_defect",1e-99))
         , _hanging_node_modifications(params.get<bool>("hanging_node_modifications",false))
         , _keep_matrix(params.get<bool>("keep_matrix",true))
         , _verbose(params.get<int>("verbosity",1))
@@ -223,12 +223,12 @@ namespace Dune {
         assembler_time += timing;
         _res.assembler_time = assembler_time;
 
-        typename V::ElementType defect = _ls.norm(r);
+        auto defect = _ls.norm(r);
 
         // compute correction
         watch.reset();
         V z(_go.trialGridFunctionSpace(),0.0);
-        typename V::ElementType red = std::max(_reduction,_min_defect/defect);
+        auto red = std::max(_reduction,_min_defect/defect);
         if (_go.trialGridFunctionSpace().gridView().comm().rank()==0)
           std::cout << "=== solving (reduction: " << red << ") " << std::endl;
         _ls.apply(*_jacobian,z,r,red); // solver makes right hand side consistent
@@ -270,12 +270,12 @@ namespace Dune {
         return _linear_solver_result;
       }
 
-      typename V::ElementType reduction() const
+      Real reduction() const
       {
         return _reduction;
       }
 
-      void setReduction(typename V::ElementType reduction)
+      void setReduction(Real reduction)
       {
         _reduction = reduction;
       }
@@ -286,8 +286,8 @@ namespace Dune {
       LS& _ls;
       V* _x;
       shared_ptr<M> _jacobian;
-      typename V::ElementType _reduction;
-      typename V::ElementType _min_defect;
+      Real _reduction;
+      Real _min_defect;
       Dune::PDELab::LinearSolverResult<double> _linear_solver_result;
       Result _res;
       bool _hanging_node_modifications;

@@ -344,9 +344,10 @@ namespace Dune {
       /*! \brief Norm of a right-hand side vector.
         The vector must be consistent on the interior+border partition
       */
-       template<typename X>
-      typename X::ElementType norm (const X& x) const
+      template<typename X>
+      typename Dune::template FieldTraits<typename X::ElementType >::real_type norm (const X& x) const
       {
+        using namespace std;
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
 
@@ -384,6 +385,7 @@ namespace Dune {
 
       virtual typename X::BaseT::field_type norm (const X& x)
       {
+        using namespace std;
         return sqrt(static_cast<double>(this->dot(x,x)));
       }
 
@@ -419,7 +421,7 @@ namespace Dune {
         \param[in] reduction to be achieved
       */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
       {
         using Backend::Native;
         using Backend::native;
@@ -481,7 +483,7 @@ namespace Dune {
         \param[in] reduction to be achieved
       */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
       {
         using Backend::Native;
         using Backend::native;
@@ -544,7 +546,7 @@ namespace Dune {
         \param[in] reduction to be achieved
       */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
       {
         using Backend::Native;
         using Backend::native;
@@ -704,7 +706,7 @@ namespace Dune {
         \param[in] reduction to be achieved
       */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
       {
         using Backend::Native;
         using Backend::native;
@@ -769,7 +771,7 @@ namespace Dune {
         \param[in] reduction to be achieved
       */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
       {
         typedef OverlappingOperator<C,M,V,W> POP;
         POP pop(c,A);
@@ -895,7 +897,7 @@ namespace Dune {
         \param[in] reduction to be achieved
       */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename W::ElementType reduction)
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType >::real_type reduction)
       {
         using Backend::Native;
         using Backend::native;
@@ -1032,7 +1034,7 @@ namespace Dune {
         \param[in] r right hand side
         \param[in] reduction to be achieved
       */
-      void apply(M& A, V& z, V& r, typename V::ElementType reduction)
+      void apply(M& A, V& z, V& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
       {
         Timer watch;
         Comm oocc(gfs.gridView().comm());

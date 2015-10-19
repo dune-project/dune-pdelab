@@ -657,7 +657,7 @@ public:
     \param[in] r right hand side
     \param[in] reduction to be achieved
   */
-  void apply (M& A, V& z, V& r, typename V::ElementType reduction)
+  void apply (M& A, V& z, V& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
   {
     using Backend::native;
     // make operator and scalar product for overlapping solver

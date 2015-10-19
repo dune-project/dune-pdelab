@@ -360,7 +360,7 @@ namespace Dune {
         \param[in] reduction to be achieved
       */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
       {
         typedef Dune::PDELab::NonoverlappingOperator<GFS,M,V,W> POP;
         POP pop(gfs,A);
@@ -449,7 +449,7 @@ namespace Dune {
        * z.
        */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
       {
         typedef NonoverlappingOperator<GFS,M,V,W> POP;
         POP pop(gfs,A);
@@ -515,7 +515,7 @@ namespace Dune {
         \param[in] reduction to be achieved
       */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
       {
         typedef Dune::PDELab::NonoverlappingOperator<GFS,M,V,W> POP;
         POP pop(gfs,A);
@@ -589,7 +589,7 @@ namespace Dune {
         \param[in] reduction to be achieved
       */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename V::ElementType reduction)
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
       {
         typedef Dune::PDELab::NonoverlappingOperator<GFS,M,V,W> POP;
         POP pop(gfs,A);
@@ -667,7 +667,7 @@ namespace Dune {
         \param[in] reduction to be achieved
       */
       template<class M, class V, class W>
-      void apply(M& A, V& z, W& r, typename W::ElementType reduction)
+      void apply(M& A, V& z, W& r, typename Dune::template FieldTraits<typename W::ElementType >::real_type reduction)
       {
         Dune::SeqJac<M,V,W> jac(A,1,1.0);
         jac.pre(z,r);
@@ -949,7 +949,7 @@ namespace Dune {
         return psp.norm(x);
       }
 
-      void apply(M& A, V& z, V& r, typename V::ElementType reduction)
+      void apply(M& A, V& z, V& r, typename Dune::template FieldTraits<typename V::ElementType >::real_type reduction)
       {
         Timer watch;
         MatrixType& mat = Backend::native(A);
