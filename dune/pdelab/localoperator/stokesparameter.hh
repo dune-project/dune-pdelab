@@ -241,18 +241,6 @@ namespace Dune {
         return y;
       }
 
-      //! Dirichlet boundary condition value from local intersection coordinate
-      template<typename IG>
-      typename Traits::VelocityRange
-      DUNE_DEPRECATED_MSG("Deprecated in DUNE-PDELab 2.4, use entity-based version instead!")
-      g(const IG& ig, const typename Traits::IntersectionDomain& x) const
-      {
-        auto e = ig.inside();
-        typename V::Traits::RangeType y;
-        _v.evaluate(e,ig.geometryInInside().global(x),y);
-        return y;
-      }
-
       //! pressure source term
       template<typename EG>
       typename Traits::RangeField
