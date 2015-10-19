@@ -12,25 +12,6 @@
 namespace Dune{
   namespace PDELab{
 
-    namespace impl {
-
-      template<int i>
-      struct warn_on_deprecated_nonoverlapping_mode_parameter
-      {
-
-        warn_on_deprecated_nonoverlapping_mode_parameter() DUNE_DEPRECATED_MSG(
-"the nonoverlapping_mode parameter on the GridOperator has been deprecated and will be removed after PDELab 2.4."
-"The correct mode is now automatically deduced from the EntitySet of the function space.")
-        {}
-
-      };
-
-      template<>
-      struct warn_on_deprecated_nonoverlapping_mode_parameter<-1>
-      {};
-
-    }
-
     /**
        \brief Standard grid operator implementation
 
@@ -47,20 +28,16 @@ namespace Dune{
     template<typename GFSU, typename GFSV, typename LOP,
              typename MB, typename DF, typename RF, typename JF,
              typename CU=Dune::PDELab::EmptyTransformation,
-             typename CV=Dune::PDELab::EmptyTransformation,
-             int nonoverlapping_mode = -1>
+             typename CV=Dune::PDELab::EmptyTransformation
     class GridOperator
       : public impl::warn_on_deprecated_nonoverlapping_mode_parameter<nonoverlapping_mode>
     {
     public:
 
-      static_assert(nonoverlapping_mode == -1 ||
-                    nonoverlapping_mode == 0 ||
-                    nonoverlapping_mode == 1,
-                    "invalid value for nonoverlapping_mode! This parameter is also deprecated in PDELab 2.4, so please remove it from your typedefs!");
+      static const bool nonoverlapping_mode = GFSU::Traits::EntitySet::Partitions::partitionIterator() == InteriorBorder_Partition;
 
       //! The global assembler type
-      typedef DefaultAssembler<GFSU,GFSV,CU,CV,static_cast<bool>(nonoverlapping_mode)> Assembler;
+      typedef DefaultAssembler<GFSU,GFSV,CU,CV,nonoverlapping_mode> Assembler;
 
       //! The type of the domain (solution).
       using Domain = Dune::PDELab::Backend::Vector<GFSU,DF>;
@@ -76,12 +53,12 @@ namespace Dune{
       typedef DefaultLocalAssembler<
         GridOperator,
         LOP,
-        GFSU::Traits::EntitySet::Partitions::partitionIterator() == InteriorBorder_Partition
+        nonoverlapping_mode
         > LocalAssembler;
 
       // Fix this as soon as the default Partitions are constexpr
       typedef typename conditional<
-        GFSU::Traits::EntitySet::Partitions::partitionIterator() == InteriorBorder_Partition,
+        nonoverlapping_mode,
         NonOverlappingBorderDOFExchanger<GridOperator>,
         OverlappingBorderDOFExchanger<GridOperator>
         >::type BorderDOFExchanger;
