@@ -72,6 +72,7 @@ namespace Dune {
 
             /** \brief Default constructor.  Constructs a space of order maxP */
             PkQkLocalFiniteElementMap ()
+              : order_(maxP)
             {
                 InitPkQkLocalFiniteElementMap<D,R,d,maxP>::init(finiteElements_,maxP);
             }
@@ -80,6 +81,7 @@ namespace Dune {
              * \throw Dune::Exception if the requested order is larger than maxP
              */
             PkQkLocalFiniteElementMap (unsigned int order)
+              : order_(order)
             {
                 InitPkQkLocalFiniteElementMap<D,R,d,maxP>::init(finiteElements_,order);
             }
@@ -116,11 +118,11 @@ namespace Dune {
               switch (codim)
                 {
                 case 0:
-                  return k == 0 || k > 1;
+                  return order_ == 0 || order_ > 1;
                 case d:
-                  return k > 0;
+                  return order_ > 0;
                 default:
-                  return k > 1;
+                  return order_ > 1;
                 }
             }
 
@@ -136,6 +138,7 @@ namespace Dune {
 
         private:
             std::array< std::shared_ptr<FiniteElementType>, 2 > finiteElements_;
+            const std::size_t order_;
         };
     }
 }
