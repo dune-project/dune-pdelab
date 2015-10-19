@@ -10,6 +10,7 @@
 
 #include <dune/pdelab/backend/istl/vector.hh>
 #include <dune/pdelab/backend/istl/bcrsmatrix.hh>
+#include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include <dune/pdelab/backend/istl/ovlpistlsolverbackend.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 

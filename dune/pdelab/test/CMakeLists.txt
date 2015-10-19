@@ -76,6 +76,7 @@ exclude_from_headercheck(
   testadaptivity-bctype.hh
   testadaptivity-error-indicator.hh
   testadaptivity-operator.hh
+  testnonoverlappingsinglephaseflow-boilerplate-problem.hh
   testnonoverlappingsinglephaseflow-problem.hh
   testpoisson-periodic.hh
 )

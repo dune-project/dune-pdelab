@@ -3,6 +3,7 @@
 #ifndef DUNE_PDELAB_BACKEND_ISTL_DESCRIPTORS_HH
 #define DUNE_PDELAB_BACKEND_ISTL_DESCRIPTORS_HH
 
+#include <dune/pdelab/backend/interface.hh>
 #include <dune/pdelab/backend/istl/forwarddeclarations.hh>
 #include <dune/pdelab/backend/istl/matrixhelpers.hh>
 #include <dune/pdelab/backend/istl/utility.hh>

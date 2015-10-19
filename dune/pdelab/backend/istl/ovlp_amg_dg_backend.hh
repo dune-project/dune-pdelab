@@ -1,12 +1,15 @@
 #ifndef DUNE_PDELAB_OVLP_AMG_DG_BACKEND_HH
 #define DUNE_PDELAB_OVLP_AMG_DG_BACKEND_HH
 
+#include <dune/common/parametertree.hh>
+#include <dune/common/power.hh>
+
 #include <dune/istl/matrixmatrix.hh>
 
 #include <dune/grid/common/datahandleif.hh>
-
 #include <dune/pdelab/backend/istl/vector.hh>
 #include <dune/pdelab/backend/istl/bcrsmatrix.hh>
+#include <dune/pdelab/backend/istl/bcrsmatrixbackend.hh>
 #include <dune/pdelab/backend/istl/ovlpistlsolverbackend.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
 #include <dune/pdelab/localoperator/flags.hh>
