@@ -284,16 +284,14 @@ int main(int argc, char** argv)
       Dune::YaspGrid<2> grid(L,N,periodic,overlap);
       typedef Dune::YaspGrid<2>::LeafGridView GV;
 
-      // refine grid
-      // grid.globalRefine(level);
       // get leafGridView
       GV gv = grid.leafGridView();
 
       //define problem
-      typedef ParametersPlaneWave<GV, C, R> PARAM;
+      typedef ParametersSphericalWave<GV,C,R> PARAM;
 
-      const double omega = 20.0;
-      PARAM param(omega,M_PI/2);
+      const double omega = 40.0;
+      PARAM param(omega);
 
       helmholtz_Qk<1,GV,PARAM>(gv,param);
 

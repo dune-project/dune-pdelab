@@ -2,23 +2,22 @@
 #ifndef DUNE_PDELAB_TEST_TESTCOMPLEXNUMBERS_PROBLEM_HH
 #define DUNE_PDELAB_TEST_TESTCOMPLEXNUMBERS_PROBLEM_HH
 
+#include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
 
 /** \file
 
-    \brief Parameters for plane wave problem.
-    \author Philipp Stekl, Marian Piatkowski.
+    \brief Parameters for spherical wave problem
+    \author Philipp Stekl, Marian Piatkowski
 */
-
 template<typename GV, typename RF, typename DF>
-class ParametersPlaneWave  : public Dune::PDELab::DirichletConstraintsParameters
+class ParametersSphericalWave  : public Dune::PDELab::DirichletConstraintsParameters
 {
 public:
 
-  typedef Dune::PDELab::GridFunctionTraits<GV,RF,1,Dune::FieldVector<RF,1> > Traits;
-  // typedef DiffusionParameterTraits<GV,RF> Traits;
+  typedef Dune::PDELab::ConvectionDiffusionParameterTraits<GV,RF> Traits;
 
-  ParametersPlaneWave (double omega_, double theta_)
-    : theta(theta_), omega(omega_)
+  ParametersSphericalWave (double omega_)
+    : omega(omega_)
   {
   }
 
@@ -40,83 +39,73 @@ public:
   //! Dirichlet boundary condition value
   RF g (const typename Traits::ElementType& e, const typename Traits::DomainType& xlocal ) const
   {
-      return RF(0.,0.);
+    return RF(0.,0.);
   }
 
   //! Neumann boundary condition value
-  template <typename IG>
-  RF j (const IG& ig, const Dune::FieldVector<typename IG::ctype, IG::dimension-1>& xlocal, RF u) const
+  RF j (const typename Traits::IntersectionType& is, const typename Traits::IntersectionDomainType& xlocal, RF u) const
   {
-    const int dim = Traits::GridViewType::Grid::dimension;
-    typedef typename Traits::GridViewType::Grid::ctype ctype;
-    Dune::FieldVector<ctype,dim> xglobal = ig.geometry().global(xlocal);
     RF i(0., 1.);
-    RF x,y;
-    x = xglobal[0];
-    y = xglobal[1];
-    // get the outer normal vector at the face center
-    const Dune::FieldVector<RF, dim> normal = ig.centerUnitOuterNormal();
-    Dune::FieldVector<RF, dim> gradu;
-    gradu[0] = i*omega*cos(theta)*std::exp( i*omega*(x*cos(theta) + y *sin(theta)) );
-    gradu[1] = i*omega*sin(theta)*std::exp( i*omega*(x*cos(theta) + y *sin(theta)) );
-    RF res = gradu * normal;
-    res *= -1;
-    return res;
+    return -i*omega*u;
   }
 
 
 
   //! source term
-  template <typename EG>
-  RF f (const EG& eg,  const Dune::FieldVector<typename EG::Geometry::ctype, EG::Geometry::mydimension>& position) const
+  RF f (const typename Traits::ElementType& e, const typename Traits::DomainType& position) const
   {
+    auto xg = e.geometry().global(position);
+    Dune::FieldVector<DF,Traits::dimDomain> midpoint(0.5);
+
+    xg -= midpoint;
+
     RF res(0.,0.);
+
+    auto r = 0.2;
+    auto tmp = xg.two_norm();
+    if(tmp < r)
+      res = RF(25,0.0);
+
     return res;
   }
 
 
+#if 0
   //! exact solution / analytic solution
   RF ua (const typename Traits::ElementType& e, const typename Traits::DomainType& xlocal ) const
   {
 
-    const int dim = Traits::GridViewType::Grid::dimension;
-    typedef typename Traits::GridViewType::Grid::ctype ctype;
-    Dune::FieldVector<ctype,dim> xglobal = e.geometry().global(xlocal);
+    // const int dim = Traits::GridViewType::Grid::dimension;
+    // typedef typename Traits::GridViewType::Grid::ctype ctype;
+    // Dune::FieldVector<ctype,dim> xglobal = e.geometry().global(xlocal);
 
-    RF i(0., 1.);
-    RF x,y;
-    x = xglobal[0];
-    y = xglobal[1];
+    std::cout<<"Error: Analytical Solution has not been implemented"<<std::endl;
 
-    return std::exp( i*omega*(x*cos(theta) + y *sin(theta)) );
+    return RF(0.,0.);
 
   }
 
-#if 0
-  static const int dim = Traits::GridViewType::Grid::dimension;
+  const static int dim = Traits::GridViewType::Grid::dimension;
 
   //! exact grad of solution / analytic grad of solution
   Dune::FieldVector<RF,dim> ugrada (const typename Traits::ElementType& e, const typename Traits::DomainType& xlocal ) const
   {
 
-    typedef typename Traits::GridViewType::Grid::ctype ctype;
-    Dune::FieldVector<ctype,dim> xglobal = e.geometry().global(xlocal);
-    RF i(0., 1.);
-    RF x,y;
-    x = xglobal[0];
-    y = xglobal[1];
-    Dune::FieldVector<RF,dim> res;
-    res[0] = i*omega*cos(theta)*std::exp( i*omega*(x*cos(theta) + y *sin(theta)) );
-    res[1] = i*omega*sin(theta)*std::exp( i*omega*(x*cos(theta) + y *sin(theta)) );
 
+    // typedef typename Traits::GridViewType::Grid::ctype ctype;
+    // Dune::FieldVector<ctype,dim> xglobal = e.geometry().global(xlocal);
+
+    std::cout<<"Error: Analytical Solution has not been implemented"<<std::endl;
+    Dune::FieldVector<RF,dim> res;
+    res[0] = 0.;
+    res[1] = 0.;
     return res;
 
   }
 #endif
 
-
-  const double theta;
   const double omega;
 
 };
+
 #endif

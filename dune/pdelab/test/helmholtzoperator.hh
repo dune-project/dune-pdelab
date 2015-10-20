@@ -92,7 +92,7 @@ public:
         gradu.axpy(x(lfsu,i),gradphi[i]);
 
       // evaluate parameters
-      RF f(param.f(eg,qp.position()));
+      RF f(param.f(eg.entity(),qp.position()));
 
       // integrate grad u * grad phi_i - omega*omega*u*phi_i - f phi_i
       RF factor = qp.weight()*eg.geometry().integrationElement(qp.position());
@@ -149,7 +149,7 @@ public:
       if ( param.isNeumann( ig.intersection(), qp.position() ) )
         {
           // evaluate flux boundary condition
-          RF j = param.j(ig, qp.position(), u);
+          RF j = param.j(ig.intersection(), qp.position(), u);
 
           // integrate j
           RF factor = qp.weight()*ig.geometry().integrationElement(qp.position());
