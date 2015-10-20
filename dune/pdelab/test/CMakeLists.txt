@@ -2,7 +2,8 @@ add_subdirectory(fem EXCLUDE_FROM_ALL)
 
 pdelab_add_test(NAME testanalytic)
 pdelab_add_test(NAME testclock)
-pdelab_add_test(NAME testcomplexnumbers)
+pdelab_add_test(NAME testcomplexnumbers-istl SOURCES testcomplexnumbers.cc COMPILE_DEFINITIONS SUPERLU_NTYPE=3 USE_ISTL) # needed for complex SuperLU
+pdelab_add_test(NAME testcomplexnumbers-istlbackend SOURCES testcomplexnumbers.cc COMPILE_DEFINITIONS SUPERLU_NTYPE=3 USE_ISTL_BACKEND) # needed for complex SuperLU
 pdelab_add_test(NAME testconstraints COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"")
 pdelab_add_test(NAME testfunction)
 pdelab_add_test(NAME testgridfunctionspace)

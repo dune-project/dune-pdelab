@@ -13,6 +13,7 @@
 #include<vector>
 #include<map>
 #include<string>
+#include<complex>
 
 #include<dune/common/parallel/mpihelper.hh>
 #include<dune/common/exceptions.hh>
@@ -33,24 +34,24 @@
 #include<dune/istl/solvers.hh>
 #include<dune/istl/preconditioners.hh>
 #include<dune/istl/io.hh>
-
-#include<complex>
-#define SUPERLU_NTYPE 3 // needed for complex superlu, because superlu is in c where there are no templates
 #include<dune/istl/superlu.hh>
+// set number type for SuperLU via preprocessor macro because SuperLU is in C where there are no templates
+// here is the summary
+// -------------------
 // SUPERLU_NTYPE==0 float
 // SUPERLU_NTYPE==1 double
 // SUPERLU_NTYPE==2 std::complex<float>
 // SUPERLU_NTYPE==3 std::complex<double>
-
 #include <dune/istl/umfpack.hh>
 
 #include<dune/pdelab/finiteelementmap/qkfem.hh>
 #include<dune/pdelab/constraints/common/constraints.hh>
 #include<dune/pdelab/constraints/conforming.hh>
-#include <dune/pdelab/gridoperator/gridoperator.hh>
+#include<dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
-#include <dune/pdelab/backend/istl.hh>
+#include<dune/pdelab/backend/istl.hh>
 #include<dune/pdelab/gridfunctionspace/vtk.hh>
+#include<dune/pdelab/stationary/linearproblem.hh>
 
 #include"testcomplexnumbers-problem.hh"
 #include"helmholtzoperator.hh"
@@ -68,12 +69,11 @@ void helmholtz_Qk (const GV& gv, PARAM& param)
   // <<<1>>> Choose domain and range field type
   typedef typename GV::Grid::ctype Coord;
   const int dim = GV::dimension;
-  typedef double R;
-  typedef std::complex<R> C;
-  typedef C RF;
+  typedef double Real;
+  typedef std::complex<Real> RF;
 
   // <<<2>>> Make grid function space
-  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,C,k> FEM;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,RF,k> FEM;
   FEM fem(gv);
   typedef Dune::PDELab::ConformingDirichletConstraints CON; // constraints class
   typedef Dune::PDELab::istl::VectorBackend<> VBE;
@@ -82,7 +82,7 @@ void helmholtz_Qk (const GV& gv, PARAM& param)
   gfs.name("solution");
   //BCTypeParam bctype; // boundary condition type
 
-  typedef typename GFS::template ConstraintsContainer<C>::Type CC;
+  typedef typename GFS::template ConstraintsContainer<RF>::Type CC;
   CC cc;
   Dune::PDELab::constraints( param, gfs, cc ); // assemble constraints
   gfs.update();
@@ -94,26 +94,48 @@ void helmholtz_Qk (const GV& gv, PARAM& param)
 
   LOP lop(param, 2*k);
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
-  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,C,C,C,CC,CC> GO;
+  typedef Dune::PDELab::GridOperator<GFS,GFS,LOP,MBE,RF,RF,RF,CC,CC> GO;
   GO go(gfs,cc,gfs,cc,lop,MBE(std::pow(2*k+1,dim)));
 
   typedef typename GO::Traits::Domain U;
-  C zero(0.);
+  RF zero(0.);
   U u(gfs,zero);                                      // initial value
 
-
-
-
+#ifdef USE_ISTL_BACKEND
   // <<<4>>> Select a linear solver backend
-  // typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR LS;
-  //typedef Dune::PDELab::ISTLBackend_SEQ_SuperLU LS ;
-  //typedef Dune::PDELab::ISTLBackend_SEQ_CG_SSOR LS;
-  // typedef Dune::PDELab::ISTLBackend_SEQ_UMFPack LS;
-  // LS ls(5000,0);
-  // typedef Dune::PDELab::StationaryLinearProblemSolver<GO,LS,U> SLP;
-  // SLP slp(go,ls,u,1e-10);
-  // slp.apply();
+  // <<<4.1>>> BCGS SSOR
+  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_SSOR BCGS_SSOR;
+  BCGS_SSOR bcgs_ssor;
+  typedef Dune::PDELab::StationaryLinearProblemSolver<GO,BCGS_SSOR,U> BCGS_SSOR_SLP;
+  BCGS_SSOR_SLP bcgs_ssor_slp(go,bcgs_ssor,u,1e-7);
+  bcgs_ssor_slp.apply();
 
+  // <<<4.2>>> BCGS ILUn
+  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILUn BCGS_ILUn;
+  BCGS_ILUn bcgs_ilun(1);
+  typedef Dune::PDELab::StationaryLinearProblemSolver<GO,BCGS_ILUn,U> BCGS_ILUn_SLP;
+  BCGS_ILUn_SLP bcgs_ilun_slp(go,bcgs_ilun,1e-7);
+  u = 0.0;
+  bcgs_ilun_slp.apply(u);
+
+  // <<<4.3>>> BCGS ILU0
+  typedef Dune::PDELab::ISTLBackend_SEQ_BCGS_ILU0 BCGS_ILU0;
+  BCGS_ILU0 bcgs_ilu0;
+  typedef Dune::PDELab::StationaryLinearProblemSolver<GO,BCGS_ILU0,U> BCGS_ILU0_SLP;
+  BCGS_ILU0_SLP bcgs_ilu0_slp(go,bcgs_ilu0,1e-7);
+  u = 0.0;
+  bcgs_ilu0_slp.apply(u);
+
+  // <<<4.4>>> GMRes ILU0
+  typedef Dune::PDELab::ISTLBackend_SEQ_GMRES_ILU0 GMRES_ILU0;
+  GMRES_ILU0 gmres_ilu0(5000,5000);
+  typedef Dune::PDELab::StationaryLinearProblemSolver<GO,GMRES_ILU0,U> GMRES_ILU0_SLP;
+  GMRES_ILU0_SLP gmres_ilu0_slp(go,gmres_ilu0,1e-7);
+  u = 0.0;
+  gmres_ilu0_slp.apply(u);
+#endif // USE_ISTL_BACKEND
+
+#ifdef USE_ISTL
   //-------------------------------------------------------
   // we do not use the backend, we call solver directly instead
 
@@ -196,15 +218,16 @@ void helmholtz_Qk (const GV& gv, PARAM& param)
   u = 0;
   b = r;
   bcgs_ssor.apply(native(u),native(b),stat);
+#endif // USE_ISTL
 
   // Make a real-valued grid function space
-  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,R,k> FEMr;
+  typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,Real,k> FEMr;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEMr,CON,VBE> GFSr;
   FEMr femr(gv);
   GFSr gfsr(gv,femr);
 
   //create real-valued analytic solution vectors
-  using Vr = Dune::PDELab::Backend::Vector<GFSr,R>;
+  using Vr = Dune::PDELab::Backend::Vector<GFSr,Real>;
   Vr reu(gfsr, 0.0);  // real part u_h
   Vr imu(gfsr, 0.0);  // imag part u_h
 
