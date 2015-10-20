@@ -58,7 +58,9 @@
 #include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
+#endif
 #include<dune/pdelab/gridfunctionspace/vtk.hh>
+#if 0
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/common/vtkexport.hh>
 #include<dune/pdelab/stationary/linearproblem.hh>
@@ -271,6 +273,7 @@ void helmholtz_Qk (const GV& gv, PARAM& param, std::string& errornorm, std::stri
   typedef BCAnalytic<PARAM> Ga;                      // boundary value = extension
   Ga ga(gv, param);
   Dune::PDELab::interpolate(ga,gfs,ua);                // interpolate coefficient vector
+#endif
 
 
   // // Make a real grid function space
@@ -280,8 +283,22 @@ void helmholtz_Qk (const GV& gv, PARAM& param, std::string& errornorm, std::stri
   GFSr gfsr(gv,femr);
 
   //create real analytic solution vectors
-  typename Dune::PDELab::BackendVectorSelector<GFSr,R>::Type reu(gfsr, 0.);  // real part u_h
-  typename Dune::PDELab::BackendVectorSelector<GFSr,R>::Type imu(gfsr, 0.);  // imag part u_h
+  using Vr = Dune::PDELab::Backend::Vector<GFSr,R>;
+  Vr reu(gfsr, 0.0);  // real part u_h
+  Vr imu(gfsr, 0.0);  // imag part u_h
+
+  // treat real part and imaginary part separately
+  auto reut = reu.begin();
+  auto imut = imu.begin();
+
+  for(const auto& x : u) {
+    *reut = std::real(x);
+    *imut = std::imag(x);
+
+    ++reut;
+    ++imut;
+  }
+#if 0
   typename Dune::PDELab::BackendVectorSelector<GFSr,R>::Type reua(gfsr, 0.); // real part analytic solution
   typename Dune::PDELab::BackendVectorSelector<GFSr,R>::Type imua(gfsr, 0.); // imega part analytic solution
   // typename Dune::PDELab::BackendVectorSelector<GFSr,R>::Type reue(gfsr, 0.); // real part error
@@ -325,13 +342,8 @@ void helmholtz_Qk (const GV& gv, PARAM& param, std::string& errornorm, std::stri
 #endif
 
 
-#if 0
   //<<<7>>> graphical output
-
-  // output u_h
-  //Dune::SubsamplingVTKWriter<GV> vtkwriter(gv,k == 1 ? 0 : 3);
-  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv, 0);
-
+  Dune::SubsamplingVTKWriter<GV> vtkwriter(gv, k-1);
 
   gfsr.name("real");
   Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfsr,reu);
@@ -339,10 +351,12 @@ void helmholtz_Qk (const GV& gv, PARAM& param, std::string& errornorm, std::stri
   gfsr.name("imaginary");
   Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfsr,imu);
 
+#if 0
   gfsr.name("real_analytic");
   Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfsr,reua);
   gfsr.name("imaginary_analytic");
   Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfsr,imua);
+#endif
 
 
   // gfsr.name("real_error");
@@ -350,11 +364,9 @@ void helmholtz_Qk (const GV& gv, PARAM& param, std::string& errornorm, std::stri
   // gfsr.name("imaginary_error");
   // Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfsr,imue);
 
-
   std::stringstream basename;
   basename << "solvers01_Q" << k;
   vtkwriter.write(basename.str(),Dune::VTK::appendedraw);
-#endif
 
 
 
@@ -535,7 +547,7 @@ int main(int argc, char** argv)
       typedef ParametersPlaneWave<GV, C, R> PARAM;
       //typedef ParametersSphericalWave<GV, C, R> PARAM;
 
-      const double omega = 80.0;
+      const double omega = 20.0;
       PARAM param(omega);
 
 
