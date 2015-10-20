@@ -14,7 +14,7 @@ namespace Dune {
 
     public:
 
-      typedef typename remove_const<M_>::type Container;
+      typedef typename std::remove_const<M_>::type Container;
 
       static_assert(
         (std::is_same<

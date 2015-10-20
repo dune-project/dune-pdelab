@@ -207,9 +207,9 @@ namespace Dune {
         switch (codim)
           {
           case 0:
-            return k != 1;
+            return _k != 1;
           case 1:
-            return k > 0;
+            return _k > 0;
           }
       }
 
