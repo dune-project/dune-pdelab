@@ -293,9 +293,9 @@ int main(int argc, char** argv)
       typedef ParametersPlaneWave<GV, C, R> PARAM;
 
       const double omega = 20.0;
-      PARAM param(omega);
+      PARAM param(omega,M_PI/2);
 
-      helmholtz_Qk<1,GV,PARAM>(gv,param,errornorm,solver);
+      helmholtz_Qk<1,GV,PARAM>(gv,param);
 
     }
   }

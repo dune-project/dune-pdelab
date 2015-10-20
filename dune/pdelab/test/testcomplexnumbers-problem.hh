@@ -17,8 +17,8 @@ public:
   typedef Dune::PDELab::GridFunctionTraits<GV,RF,1,Dune::FieldVector<RF,1> > Traits;
   // typedef DiffusionParameterTraits<GV,RF> Traits;
 
-  ParametersPlaneWave (double omega_)
-     : omega(omega_)
+  ParametersPlaneWave (double omega_, double theta_)
+    : theta(theta_), omega(omega_)
   {
   }
 
@@ -115,7 +115,7 @@ public:
 #endif
 
 
-  const double theta = M_PI/2.;
+  const double theta;
   const double omega;
 
 };
