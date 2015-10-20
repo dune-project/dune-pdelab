@@ -60,7 +60,7 @@
 //===============================================================
 
 template<int k, class GV, class PARAM>
-void helmholtz_Qk (const GV& gv, PARAM& param, std::string& errornorm, std::string solver)
+void helmholtz_Qk (const GV& gv, PARAM& param)
 {
   using Dune::PDELab::Backend::native;
   using Dune::PDELab::Backend::Native;
@@ -133,112 +133,77 @@ void helmholtz_Qk (const GV& gv, PARAM& param, std::string& errornorm, std::stri
   V r(gfs);
   r = 0.0;
   go.residual(u,r);
+  r *= -1.0; // need -residual
+  V b(r);
 
+  // <<<4>>> Select linear solver
+  Dune::InverseOperatorResult stat;
+  Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(native(m));
 
+  // <<<4.1>>> UMFPack
+  std::cout << "=== Using UMFPack as a direct solver" << std::endl;
+  Dune::UMFPack<ISTLM> umfpack(native(m), 1);
+  umfpack.apply(native(u),native(b),stat);
 
+  // <<<4.2>> SuperLU
+  std::cout << "=== Using SuperLU as a direct solver" << std::endl;
+  Dune::SuperLU<ISTLM> superlu(native(m), 1);
+  u = 0;
+  b = r;
+  superlu.apply(native(u),native(b),stat);
 
+  // <<<4.3>>> GMRes ILU0
+  std::cout << "=== Using GMRes ILU0" << std::endl;
+  Dune::SeqILU0<ISTLM,ISTLV,ISTLV> ilu0(native(m),1.0);
+  Dune::RestartedGMResSolver<ISTLV> gmres_ilu0(opa, ilu0, 1E-7, 5000, 5000, 1);
+  u = 0;
+  b = r;
+  gmres_ilu0.apply(native(u),native(b),stat);
 
-    if(solver == "UMFPACK") {
-      Dune::UMFPack<ISTLM> solver(native(m), 0);
-      r *= -1.0; // need -residual
-      //u = r;
-      // u = 0;
-      Dune::InverseOperatorResult stat;
-      solver.apply(native(u),native(r),stat);
-    }
-    if(solver == "SuperLU") {
-      Dune::SuperLU<ISTLM> solver(native(m), 0);
-      r *= -1.0; // need -residual
-      //u = r;
-      // u = 0;
-      Dune::InverseOperatorResult stat;
-      solver.apply(native(u),native(r),stat);
-    }
+  // <<<4.4>>> GMRes ILUn
+  std::cout << "=== Using GMRes ILUn" << std::endl;
+  Dune::SeqILUn<ISTLM,ISTLV,ISTLV> ilun(native(m), 1, 1.0);
+  Dune::RestartedGMResSolver<ISTLV> gmres_ilun(opa, ilun, 1E-7, 5000, 5000, 1);
+  u = 0;
+  b = r;
+  gmres_ilun.apply(native(u),native(b),stat);
 
+  // <<<4.5>>> GMRes SSOR
+  std::cout << "=== Using GMRes SSOR" << std::endl;
+  Dune::SeqSSOR<ISTLM,ISTLV,ISTLV> ssor(native(m), 3, 1.); //ssor with \omega = 1 is SGS (symmetric gauss seidel)
+  Dune::RestartedGMResSolver<ISTLV> gmres_ssor(opa, ssor, 1E-7, 5000, 5000, 1);
+  u = 0;
+  b = r;
+  gmres_ssor.apply(native(u),native(b),stat);
 
+  // <<<4.6>>> BCGS ILU0
+  std::cout << "=== Using BiCGSTAB ILU0" << std::endl;
+  Dune::BiCGSTABSolver<ISTLV> bcgs_ilu0(opa,ilu0,1E-7,20000, 1);
+  u = 0;
+  b = r;
+  bcgs_ilu0.apply(native(u),native(b),stat);
 
-    Dune::InverseOperatorResult stat;
+  // <<<4.7>>> BCGS ILUn
+  std::cout << "=== Using BiCGSTAB ILUn" << std::endl;
+  Dune::BiCGSTABSolver<ISTLV> bcgs_ilun(opa,ilun,1E-7,20000, 1);
+  u = 0;
+  b = r;
+  bcgs_ilun.apply(native(u),native(b),stat);
 
-    if (solver == "GMRESILU0") {
-      Dune::SeqILU0<ISTLM,ISTLV,ISTLV> ilu0(native(m),1.0);
-      Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(native(m));
-      Dune::RestartedGMResSolver<ISTLV> solver(opa, ilu0, 1E-7, 5000, 5000, 0);
-      r *= -1.0; // need -residual
-      //u = r;
-      // u = 0;
-      solver.apply(native(u),native(r),stat);
-      std::cout<<"Iterations: "<< stat.iterations<<std::endl;
-      std::cout<<"Time: "<<  stat.elapsed<< std::endl;
-    }
-    if (solver == "GMRESILU1") {
-      Dune::SeqILUn<ISTLM,ISTLV,ISTLV> ilun(native(m), 1, 1.0);
-      Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(native(m));
-      Dune::RestartedGMResSolver<ISTLV> solver(opa, ilun, 1E-7, 5000, 5000, 0);
-      r *= -1.0; // need -residual
-      //u = r;
-      // u = 0;
-      solver.apply(native(u),native(r),stat);
-      std::cout<<"Iterations: "<< stat.iterations<<std::endl;
-      std::cout<<"Time: "<<  stat.elapsed<< std::endl;
-    }
-    if (solver == "GMRESSGS") {
-      Dune::SeqSSOR<ISTLM,ISTLV,ISTLV> ssor(native(m), 3, 1.); //ssor with \omega = 1 is SGS (symmetric gauss seidel)
-      Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(native(m));
-      Dune::RestartedGMResSolver<ISTLV> solver(opa, ssor, 1E-7, 5000, 5000, 0);
-      r *= -1.0; // need -residual
-      //u = r;
-      // u = 0;
-      solver.apply(native(u),native(r),stat);
-      std::cout<<"Iterations: "<< stat.iterations<<std::endl;
-      std::cout<<"Time: "<<  stat.elapsed<< std::endl;
-    }
-    if (solver == "BiCGSILU0") {
-      Dune::SeqILU0<ISTLM,ISTLV,ISTLV> ilu0(native(m),1.0);
-      Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(native(m));
-      Dune::BiCGSTABSolver<ISTLV> solver(opa,ilu0,1E-7,20000, 0);
-      // solve the jacobian system
-      r *= -1.0; // need -residual
-      //u = r;
-      // u = 0;
-      solver.apply(native(u),native(r),stat);
-      std::cout<<"Iterations: "<< stat.iterations<<std::endl;
-      std::cout<<"Time: "<<  stat.elapsed<< std::endl;
-    }
+  // <<<4.8>>> BCGS SSOR
+  std::cout << "=== Using BiCGSTAB SSOR" << std::endl;
+  Dune::BiCGSTABSolver<ISTLV> bcgs_ssor(opa,ssor,1E-7,20000, 1);
+  u = 0;
+  b = r;
+  bcgs_ssor.apply(native(u),native(b),stat);
 
-    //this solver breaks down at 4000 DOFs by solving the helmholtz eq
-    if (solver == "BiCGSILU1") {
-      Dune::SeqILUn<ISTLM,ISTLV,ISTLV> ilun(native(m), 1, 1.0);
-      Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(native(m));
-      Dune::BiCGSTABSolver<ISTLV> solver(opa,ilun,1E-7,20000, 0);
-      // solve the jacobian system
-      r *= -1.0; // need -residual
-      // //u = r;
-      // u = 0;
-      solver.apply(native(u),native(r),stat);
-      std::cout<<"Iterations: "<< stat.iterations<<std::endl;
-      std::cout<<"Time: "<<  stat.elapsed<< std::endl;
-    }
-    if (solver == "BiCGSSGS") {
-      Dune::SeqSSOR<ISTLM,ISTLV,ISTLV> ssor(native(m), 3, 1.); //ssor with \omega = 1 is SGS (symmetric gauss seidel)
-      Dune::MatrixAdapter<ISTLM,ISTLV,ISTLV> opa(native(m));
-      Dune::BiCGSTABSolver<ISTLV> solver(opa,ssor,1E-7,20000, 0);
-      r *= -1.0; // need -residual
-      // //u = r;
-      // u = 0;
-      solver.apply(native(u),native(r),stat);
-      std::cout<<"Iterations: "<< stat.iterations<<std::endl;
-      std::cout<<"Time: "<<  stat.elapsed<< std::endl;
-    }
-
-
-
-  // // Make a real grid function space
+  // Make a real-valued grid function space
   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,R,k> FEMr;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEMr,CON,VBE> GFSr;
   FEMr femr(gv);
   GFSr gfsr(gv,femr);
 
-  //create real analytic solution vectors
+  //create real-valued analytic solution vectors
   using Vr = Dune::PDELab::Backend::Vector<GFSr,R>;
   Vr reu(gfsr, 0.0);  // real part u_h
   Vr imu(gfsr, 0.0);  // imag part u_h
@@ -255,7 +220,7 @@ void helmholtz_Qk (const GV& gv, PARAM& param, std::string& errornorm, std::stri
     ++imut;
   }
 
-  //<<<7>>> graphical output
+  //<<<5>>> graphical output
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv, k-1);
 
   gfsr.name("real");
@@ -264,9 +229,7 @@ void helmholtz_Qk (const GV& gv, PARAM& param, std::string& errornorm, std::stri
   gfsr.name("imaginary");
   Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfsr,imu);
 
-  std::stringstream basename;
-  basename << "solvers01_Q" << k;
-  vtkwriter.write(basename.str(),Dune::VTK::appendedraw);
+  vtkwriter.write("testcomplexnumbers",Dune::VTK::appendedraw);
 }
 
 //===============================================================
@@ -286,14 +249,8 @@ int main(int argc, char** argv)
           std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
       }
 
-    std::string errornorm = "L2";
-    std::string solver = "SuperLU";
-
     // sequential version
     if (helper.size()==1) {
-      std::vector<double> dof;
-      std::vector<double> tsolve; // number of iterations + solver time
-
       typedef double R;
       typedef std::complex<R> C;
 
@@ -311,7 +268,6 @@ int main(int argc, char** argv)
 
       //define problem
       typedef ParametersPlaneWave<GV, C, R> PARAM;
-      //typedef ParametersSphericalWave<GV, C, R> PARAM;
 
       const double omega = 20.0;
       PARAM param(omega);
