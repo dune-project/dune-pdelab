@@ -6,7 +6,7 @@
 
 /** \file
 
-    \brief Parameters for spherical wave problem
+    \brief Parameters for spherical wave problem.
     \author Philipp Stekl, Marian Piatkowski
 */
 template<typename GV, typename RF, typename DF>

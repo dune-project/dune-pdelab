@@ -9,12 +9,16 @@
 #include<dune/pdelab/localoperator/flags.hh>
 #include<dune/pdelab/localoperator/pattern.hh>
 
-/** A local operator for solving the equation
- *
- *   - \Delta u - \omega^2 u   = f   in \Omega
- *    \nabla u \cdot n - i \omega u  = 0   on \partial\Omega
+/** A local operator for solving the complex-valued Helmholtz equation
+ *  \f{align*}{
+ *          - \Delta u - \omega^2 u &=& f \mbox{in} \Omega \\
+ *                                u &=& g \mbox{on} \Gamma_D \\
+ *    \nabla u \cdot n - i \omega u &=& 0 \mbox{on} \Gamma_R
+ *  \f}
  *
  * with conforming finite elements on all types of grids in any dimension
+ *
+ * \tparam PARAM Parameter class for this local operator.
  *
  * \author Philipp Stekl, Marian Piatkowski
  *
@@ -120,9 +124,7 @@ public:
     // dimensions
     const int dim = IG::dimension;
 
-
     Dune::GeometryType gtface = ig.geometryInInside().type();
-
 
     // select quadrature rule for face
     const auto& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
@@ -130,7 +132,7 @@ public:
     // loop over quadrature points and integrate normal flux
     for (const auto& qp : rule) {
       // skip rest if we are on Dirichlet boundary
-      if ( param.isDirichlet( ig, qp.position() ) )
+      if ( param.isDirichlet(ig, qp.position()))
         continue;
 
       // position of quadrature point in local coordinates of element
@@ -145,8 +147,12 @@ public:
       for (size_type i=0; i<lfsu_s.size(); ++i)
         u = u + x_s(lfsu_s,i)*phi[i];
 
-
-      if ( param.isNeumann( ig.intersection(), qp.position() ) )
+      //============================================
+      // NOTE
+      // We treat Robin boundary conditions as Neumann boundary conditions
+      // by making the flux also depend on u.
+      //============================================
+      if ( param.isNeumann(ig.intersection(), qp.position()))
         {
           // evaluate flux boundary condition
           RF j = param.j(ig.intersection(), qp.position(), u);

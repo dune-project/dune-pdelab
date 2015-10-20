@@ -73,11 +73,13 @@ set_tests_properties(
 
 exclude_from_headercheck(
   gridexamples.hh
+  helmholtzoperator.hh
   testadaptivity-adaptivity.hh
   testadaptivity-bcextension.hh
   testadaptivity-bctype.hh
   testadaptivity-error-indicator.hh
   testadaptivity-operator.hh
+  testcomplexnumbers-problem.hh
   testnonoverlappingsinglephaseflow-boilerplate-problem.hh
   testnonoverlappingsinglephaseflow-problem.hh
   testpoisson-periodic.hh

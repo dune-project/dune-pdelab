@@ -3,7 +3,29 @@
 
     \brief Solve complex-valued Helmholtz equation.
     \author Philipp Stekl, Marian Piatkowski
-*/
+
+    * This test checks the support for computations with complex field types
+    * by solving a complex-valued PDE. The problem arises from the time-harmonic
+    * treatment of the wave equation which has been studied in the master thesis
+    * by Philipp Stekl.
+    * This test uses a slim version of one of the test problems used in this work.
+    * It solves the stationary complex-valued Helmholtz equation
+    * \f[
+    * -\Delta u - \omega^2 u = f
+    *  \f]
+    * with Robin boundary conditions
+    * \f[
+    * \nabla u \cdot n - \mathrm{i}\omega u = 0
+    * \f]
+    * as a first order approximation to the Sommerfeld radiation condition.
+    * Thus we also have an example on imposing Robin boundary conditions which are
+    * treated as Neumann boundary conditions by allowing the flux also to depend
+    * on the solution u.
+    *
+    * In this test we employ a broad collection of linear solvers which are called
+    * either directly from dune-istl or from the backends in dune-pdelab to solve
+    * the same problem again and again.
+    */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -42,7 +64,7 @@
 // SUPERLU_NTYPE==1 double
 // SUPERLU_NTYPE==2 std::complex<float>
 // SUPERLU_NTYPE==3 std::complex<double>
-#include <dune/istl/umfpack.hh>
+#include<dune/istl/umfpack.hh>
 
 #include<dune/pdelab/finiteelementmap/qkfem.hh>
 #include<dune/pdelab/constraints/common/constraints.hh>
@@ -136,15 +158,13 @@ void helmholtz_Qk (const GV& gv, PARAM& param)
 #endif // USE_ISTL_BACKEND
 
 #ifdef USE_ISTL
-  //-------------------------------------------------------
-  // we do not use the backend, we call solver directly instead
 
-
+  // do it the manual way by creating all the objects explicitly
+  // and calling the linear solver directly instead
   using V = Dune::PDELab::Backend::Vector<GFS,RF>;
   typedef typename GO::Jacobian M;
   using ISTLM = Native<M>;
   using ISTLV = Native<V>;
-
 
   M m(go,0.);
   // How well did we estimate the number of entries per matrix row?
@@ -252,7 +272,13 @@ void helmholtz_Qk (const GV& gv, PARAM& param)
   gfsr.name("imaginary");
   Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfsr,imu);
 
-  vtkwriter.write("testcomplexnumbers",Dune::VTK::appendedraw);
+#ifdef USE_ISTL
+  std::string filename = "vtk/testcomplexnumbers_istl";
+#endif
+#ifdef USE_ISTL_BACKEND
+  std::string filename = "vtk/testcomplexnumber_istlbackend";
+#endif
+  vtkwriter.write(filename,Dune::VTK::appendedraw);
 }
 
 //===============================================================
