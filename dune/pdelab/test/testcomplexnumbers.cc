@@ -44,48 +44,13 @@
 
 #include <dune/istl/umfpack.hh>
 
-#if 0
-#include<dune/pdelab/newton/newton.hh>
-#include<dune/pdelab/finiteelementmap/p0fem.hh>
-#include<dune/pdelab/finiteelementmap/pkfem.hh>
-#endif
 #include<dune/pdelab/finiteelementmap/qkfem.hh>
 #include<dune/pdelab/constraints/common/constraints.hh>
 #include<dune/pdelab/constraints/conforming.hh>
+#include <dune/pdelab/gridoperator/gridoperator.hh>
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include <dune/pdelab/backend/istl.hh>
-#if 0
-#include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
-#include<dune/pdelab/gridfunctionspace/genericdatahandle.hh>
-#include<dune/pdelab/gridfunctionspace/interpolate.hh>
-#endif
 #include<dune/pdelab/gridfunctionspace/vtk.hh>
-#if 0
-#include<dune/pdelab/common/function.hh>
-#include<dune/pdelab/common/vtkexport.hh>
-#include<dune/pdelab/stationary/linearproblem.hh>
-#include<dune/pdelab/gridoperator/gridoperator.hh>
-#include<dune/pdelab/instationary/onestep.hh> //Filename helper
-#include <dune/common/parametertreeparser.hh>
-#endif
-
-#if 0
-#include<dune/geometry/referenceelements.hh>
-#include<dune/geometry/quadraturerules.hh>
-#include<dune/pdelab/common/geometrywrapper.hh>
-#include<dune/pdelab/localoperator/defaultimp.hh>
-#include<dune/pdelab/localoperator/pattern.hh>
-#include<dune/pdelab/localoperator/flags.hh>
-#include <dune/pdelab/boilerplate/pdelab.hh>
-#endif
-
-
-#if 0
-#include"parameters_planewave.hh"
-#include"parameters_sphericalwave.hh"
-#include"helmholtz_bcextension.hh"
-#include"helmholtz_bcanalytic.hh"
-#endif
 
 #include"testcomplexnumbers-problem.hh"
 #include"helmholtzoperator.hh"
@@ -267,15 +232,6 @@ void helmholtz_Qk (const GV& gv, PARAM& param, std::string& errornorm, std::stri
 
 
 
-#if 0
-  // // // compare helmholtz solution to analytic helmholtz solution
-  U ua(gfs, zero);                                      // initial value
-  typedef BCAnalytic<PARAM> Ga;                      // boundary value = extension
-  Ga ga(gv, param);
-  Dune::PDELab::interpolate(ga,gfs,ua);                // interpolate coefficient vector
-#endif
-
-
   // // Make a real grid function space
   typedef Dune::PDELab::QkLocalFiniteElementMap<GV,Coord,R,k> FEMr;
   typedef Dune::PDELab::GridFunctionSpace<GV,FEMr,CON,VBE> GFSr;
@@ -298,49 +254,6 @@ void helmholtz_Qk (const GV& gv, PARAM& param, std::string& errornorm, std::stri
     ++reut;
     ++imut;
   }
-#if 0
-  typename Dune::PDELab::BackendVectorSelector<GFSr,R>::Type reua(gfsr, 0.); // real part analytic solution
-  typename Dune::PDELab::BackendVectorSelector<GFSr,R>::Type imua(gfsr, 0.); // imega part analytic solution
-  // typename Dune::PDELab::BackendVectorSelector<GFSr,R>::Type reue(gfsr, 0.); // real part error
-  // typename Dune::PDELab::BackendVectorSelector<GFSr,R>::Type imue(gfsr, 0.); // imag part error
-
-  typename Dune::PDELab::BackendVectorSelector<GFSr,R>::Type::iterator reut = reu.begin();
-  typename Dune::PDELab::BackendVectorSelector<GFSr,R>::Type::iterator imut = imu.begin();
-  typename Dune::PDELab::BackendVectorSelector<GFSr,R>::Type::iterator reuat = reua.begin();
-  typename Dune::PDELab::BackendVectorSelector<GFSr,R>::Type::iterator imuat = imua.begin();
-  // typename Dune::PDELab::BackendVectorSelector<GFSr,R>::Type::iterator reuet = reue.begin();
-  // typename Dune::PDELab::BackendVectorSelector<GFSr,R>::Type::iterator imuet = imue.begin();
-
-
-  typename U::const_iterator ut = u.begin();
-  typename U::const_iterator uat = ua.begin();
-
-  // //compute error i.e. |ua - u| separated into real and imag part
-  while( ut != u.end() ) {
-
-    *reut = std::real(*ut);
-    *imut = std::imag(*ut);
-    *reuat = std::real(*uat);
-    *imuat = std::imag(*uat);
-    // *reuet = std::abs(*reut - *reuat) ;
-    // *imuet = std::abs(*imut - *imuat) ;
-
-    // std::cout<<h<<"\t"<<*reut - (*reuat)<<std::endl;
-    //   ++h;
-
-    ++ut;
-    ++uat;
-
-    ++reut;
-    ++imut;
-    ++reuat;
-    ++imuat;
-    // ++reuet;
-    // ++imuet;
-
-  }
-#endif
-
 
   //<<<7>>> graphical output
   Dune::SubsamplingVTKWriter<GV> vtkwriter(gv, k-1);
@@ -351,126 +264,9 @@ void helmholtz_Qk (const GV& gv, PARAM& param, std::string& errornorm, std::stri
   gfsr.name("imaginary");
   Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfsr,imu);
 
-#if 0
-  gfsr.name("real_analytic");
-  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfsr,reua);
-  gfsr.name("imaginary_analytic");
-  Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfsr,imua);
-#endif
-
-
-  // gfsr.name("real_error");
-  // Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfsr,reue);
-  // gfsr.name("imaginary_error");
-  // Dune::PDELab::addSolutionToVTKWriter(vtkwriter,gfsr,imue);
-
   std::stringstream basename;
   basename << "solvers01_Q" << k;
   vtkwriter.write(basename.str(),Dune::VTK::appendedraw);
-
-
-
-
-
- // //  // compute  DISCRETIZATION L2 error
- // //  /* solution */
- //  if(errornorm == "L2") {
- //    // define discrete grid function for solution
- //    typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
- //    // DGF udgf(gfs, u);
-
- //    typedef BCAnalytic<PARAM> ES;
- //    ES es(gv, param);
- //    U esh(gfs, zero);
- //    Dune::PDELab::interpolate(es,gfs,esh);
- //    DGF esdgf(gfs, esh);
-
- //    typedef DifferenceSquaredAdapter<DGF,ES> DifferenceSquared;
- //    DifferenceSquared difference(esdgf, es);
-
- //    typename DifferenceSquared::Traits::RangeType l2normsquared(0.0);
- //    Dune::PDELab::integrateGridFunction(difference,l2normsquared,10);
-
- //    std::cout<<"L2DiscrError: "<<std::sqrt(std::abs(l2normsquared[0]))<<std::endl;
- //  }
-
-
-
- // //  // compute  POLLUTION L2 error
- // //  /* solution */
- //  if(errornorm == "L2") {
- //    // define discrete grid function for solution
- //    typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
- //    DGF udgf(gfs, u);
-
- //    typedef BCAnalytic<PARAM> ES;
- //    ES es(gv, param);
- //    U esh(gfs, zero);
- //    Dune::PDELab::interpolate(es,gfs,esh);
- //    DGF esdgf(gfs, esh);
-
-
- //    typedef DifferenceSquaredAdapter<DGF,DGF> DifferenceSquared;
- //    DifferenceSquared difference(udgf,esdgf);
-
- //    typename DifferenceSquared::Traits::RangeType l2normsquared(0.0);
- //    Dune::PDELab::integrateGridFunction(difference,l2normsquared,10);
-
- //    std::cout<<"L2PolError: "<<std::sqrt(std::abs(l2normsquared[0]))<<std::endl;
-
- //  }
-
-
-
-
-#if 0
- //  // compute L2 error
- //  /* solution */
-  if(errornorm == "L2") {
-    // define discrete grid function for solution
-    typedef Dune::PDELab::DiscreteGridFunction<GFS,U> DGF;
-    DGF udgf(gfs, u);
-
-    typedef BCAnalytic<PARAM> ES;
-    ES es(gv, param);
-
-    typedef DifferenceSquaredAdapter<DGF,ES> DifferenceSquared;
-    DifferenceSquared difference(udgf,es);
-
-    typename DifferenceSquared::Traits::RangeType l2normsquared(0.0);
-    Dune::PDELab::integrateGridFunction(difference,l2normsquared,10);
-
-    std::cout<<"L2Error: "<<std::sqrt(std::abs(l2normsquared[0]))<<std::endl;
-  }
-
-
-
-  // compute H1 semi norm error
-  /* solution */
-  if(errornorm == "H1") {
-    //discrete function gradient
-    typedef Dune::PDELab::DiscreteGridFunctionGradient<GFS,U> DGFG;
-    DGFG udgfg(gfs, u);
-
-    //gradient of exact solution
-    typedef BCAnalyticGrad<PARAM> ESG;
-    ESG esg(gv, param);
-
-    // difference of gradient
-    typedef DifferenceSquaredAdapter<DGFG,ESG> DifferenceSquaredAdapterg;
-    DifferenceSquaredAdapterg differenceg(udgfg,esg);
-
-    typename DifferenceSquaredAdapterg::Traits::RangeType l2normsquared(0.0);
-    typename DifferenceSquaredAdapter<DGFG,ESG>::Traits::RangeType normsquared(0.0);
-    Dune::PDELab::integrateGridFunction(differenceg,normsquared,10);
-
-    std::cout<<"H1Error: "<<std::sqrt(std::abs(l2normsquared[0]))<<std::endl;
-
-  }
-#endif
-
-
-
 }
 
 //===============================================================
@@ -490,36 +286,6 @@ int main(int argc, char** argv)
           std::cout << "parallel run on " << helper.size() << " process(es)" << std::endl;
       }
 
-#if 0
-    if (argc!=2)
-      {
-        if (helper.rank()==0)
-          std::cout << "usage: ./error <cfg-file>" << std::endl;
-        return 1;
-      }
-#endif
-
-#if 0
-    // Parse configuration file.
-    std::string config_file(argv[1]);
-    Dune::ParameterTree configuration;
-    Dune::ParameterTreeParser parser;
-
-    try{
-      parser.readINITree( config_file, configuration );
-    }
-    catch(...){
-      std::cerr << "Could not read config file \""
-                << config_file << "\"!" << std::endl;
-      exit(1);
-    }
-
-    int level = configuration.get<int>("grid.level");
-    int polynomialdegree = configuration.get<int>("problem_parameter.polynomialdegree");
-    double omega = configuration.get<double>("problem_parameter.omega") ;
-    std::string errornorm = configuration.get<std::string>("norm.errornorm");
-    std::string solver = configuration.get<std::string>("solvers.solver");
-#endif
     std::string errornorm = "L2";
     std::string solver = "SuperLU";
 
@@ -550,16 +316,6 @@ int main(int argc, char** argv)
       const double omega = 20.0;
       PARAM param(omega);
 
-
-#if 0
-      if(polynomialdegree == 1) {
-        helmholtz_Qk<1,GV,PARAM>(gv, param,  errornorm, solver);
-      }
-
-      if(polynomialdegree == 2) {
-        helmholtz_Qk<2,GV,PARAM>(gv, param, errornorm, solver);
-      }
-#endif
       helmholtz_Qk<1,GV,PARAM>(gv,param,errornorm,solver);
 
     }
