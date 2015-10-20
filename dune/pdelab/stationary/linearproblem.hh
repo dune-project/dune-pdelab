@@ -46,7 +46,7 @@ namespace Dune {
       typedef typename Dune::template FieldTraits<typename V::ElementType >::real_type Real;
       typedef typename GO::Traits::Jacobian M;
       typedef typename GO::Traits::TrialGridFunctionSpace TrialGridFunctionSpace;
-      using W = Dune::PDELab::Backend::Vector<TrialGridFunctionSpace,Real>;
+      using W = Dune::PDELab::Backend::Vector<TrialGridFunctionSpace,typename V::ElementType>;
       typedef GO GridOperator;
 
     public:
