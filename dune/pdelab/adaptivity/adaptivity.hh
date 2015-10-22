@@ -630,7 +630,7 @@ namespace Dune {
       grid.adapt();
 
       // update the function spaces
-      gfs.update();
+      gfs.update(true);
 
       // reset u
       x1 = X(gfs,0.0);
