@@ -288,11 +288,16 @@ namespace Dune {
 
       //! Update the internal state of this EntitySet.
       /**
+       *
+       * \param force   If true, forces an update even if the EntitySet parameters have not
+       *                changed. This is e.g. required if the underlying grid has changed due
+       *                to adaptivity.
+       *
        * \return  Returns true if the state of the EntitySet was changed by this method.
        */
-      bool update()
+      bool update(bool force = false)
       {
-        return _index_set->update();
+        return _index_set->update(force);
       }
 
     private:
@@ -338,9 +343,9 @@ namespace Dune {
 
     protected:
 
-      bool update()
+      bool update(bool force)
       {
-        if (!_needs_update)
+        if (!(_needs_update || force))
           return false;
         std::fill(_gt_offsets.begin(),_gt_offsets.end(),0);
         std::fill(_mapped_gt_offsets.begin(),_mapped_gt_offsets.end(),0);
@@ -537,9 +542,9 @@ namespace Dune {
         return Capabilities::hasEntity<Grid,dim>::v && hasAllEntities(Dune::Dim<dim+1>{});
       }
 
-      bool update()
+      bool update(bool force)
       {
-        if (!Base::update())
+        if (!Base::update(force))
           return false;
         _indices.assign(_gt_offsets.back(),invalidIndex());
         _mapped_gt_offsets[0] = 0;
@@ -653,7 +658,7 @@ namespace Dune {
         : Base(gv,wanted_codims)
       {
         if (initialize)
-          update();
+          update(true);
       }
 
     private:
@@ -689,9 +694,9 @@ namespace Dune {
 
     private:
 
-      bool update()
+      bool update(bool force)
       {
-        if (!Base::update())
+        if (!Base::update(force))
           return false;
         _mapped_gt_offsets[0] = 0;
         for (const auto& gt : Base::types())
@@ -738,7 +743,7 @@ namespace Dune {
         : Base(gv,wanted_codims)
       {
         if (initialize)
-          update();
+          update(true);
       }
 
     private:

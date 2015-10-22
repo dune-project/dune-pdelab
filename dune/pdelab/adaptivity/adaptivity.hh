@@ -544,7 +544,7 @@ namespace Dune {
         Visitor visitor(gfsu,projection,u,_leaf_offset_cache,transfer_map);
 
         // iterate over all elems
-        for(const auto& cell : elements(grid.leafGridView(),Partitions::interior))
+        for(const auto& cell : elements(gfsu.entitySet(),Partitions::interior))
           visitor(cell);
       }
 
@@ -555,7 +555,7 @@ namespace Dune {
        */
       void replayData(Grid& grid, GFSU& gfsu, Projection& projection, U& u, const MapType& transfer_map)
       {
-        const IDSet& id_set = grid.globalIdSet();
+        const IDSet& id_set = grid.localIdSet();
 
         using CountVector = Backend::Vector<GFSU,int>;
         CountVector uc(gfsu,0);
@@ -564,8 +564,7 @@ namespace Dune {
         Visitor visitor(gfsu,u,uc,_leaf_offset_cache);
 
         // iterate over all elems
-        LeafGridView leafView = grid.leafGridView();
-        for (const auto& cell : elements(leafView,Partitions::interior))
+        for (const auto& cell : elements(gfsu.entitySet(),Partitions::interior))
           {
             Element ancestor = cell;
 
@@ -583,12 +582,12 @@ namespace Dune {
 
         typedef Dune::PDELab::AddDataHandle<GFSU,U> DOFHandle;
         DOFHandle addHandle1(gfsu,u);
-        leafView.communicate (addHandle1,
-                              Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
+        gfsu.entitySet().gridView().communicate(addHandle1,
+                                                Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
         typedef Dune::PDELab::AddDataHandle<GFSU,CountVector> CountHandle;
         CountHandle addHandle2(gfsu,uc);
-        leafView.communicate (addHandle2,
-                              Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
+        gfsu.entitySet().gridView().communicate(addHandle2,
+                                                Dune::InteriorBorder_InteriorBorder_Interface,Dune::ForwardCommunication);
 
         // normalize multiple-interpolated DOFs by taking the arithmetic average
         typename CountVector::iterator ucit = uc.begin();
@@ -631,7 +630,7 @@ namespace Dune {
       grid.adapt();
 
       // update the function spaces
-      gfs.update();
+      gfs.update(true);
 
       // reset u
       x1 = X(gfs,0.0);
