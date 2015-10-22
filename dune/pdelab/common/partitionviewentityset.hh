@@ -496,18 +496,32 @@ namespace Dune {
 
     public:
 
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 5 && __GNUC_MINOR__ < 8
+
+      using Index = typename Base::Index;
+      using Partitions = typename Base::Partitions;
+      using size_type = typename Base::size_type;
+      using dim_type = typename Base::dim_type;
+
+      using Grid = typename Base::Grid;
+      using CodimMask = typename Base::CodimMask;
+
+#else
+
       using typename Base::Index;
       using typename Base::Partitions;
       using typename Base::size_type;
       using typename Base::dim_type;
 
       using typename Base::Grid;
+      using typename Base::CodimMask;
+
+#endif
 
       using Base::gridView;
       using Base::baseIndexSet;
       using Base::invalidIndex;
       using Base::contains;
-      using typename Base::CodimMask;
       using Base::needsUpdate;
 
     private:
