@@ -555,7 +555,7 @@ namespace Dune {
        */
       void replayData(Grid& grid, GFSU& gfsu, Projection& projection, U& u, const MapType& transfer_map)
       {
-        const IDSet& id_set = grid.globalIdSet();
+        const IDSet& id_set = grid.localIdSet();
 
         using CountVector = Backend::Vector<GFSU,int>;
         CountVector uc(gfsu,0);
