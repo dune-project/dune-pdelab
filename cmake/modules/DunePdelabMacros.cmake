@@ -1,4 +1,3 @@
-include(DunePdelabTestMacros)
 include(UsePETSc)
 include(UseEigen)
 
