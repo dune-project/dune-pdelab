@@ -453,9 +453,9 @@ namespace Dune {
             // convection term
             RF term1 = (omegaup_s*u_s + omegaup_n*u_n) * normalflux *factor;
             for (size_type i=0; i<lfsv_s.size(); i++)
-              r_s.accumulate(lfsu_s,i,term1 * psi_s[i]);
+              r_s.accumulate(lfsv_s,i,term1 * psi_s[i]);
             for (size_type i=0; i<lfsv_n.size(); i++)
-              r_n.accumulate(lfsu_n,i,-term1 * psi_n[i]);
+              r_n.accumulate(lfsv_n,i,-term1 * psi_n[i]);
 
             // diffusion term
             RF term2 =  -(omega_s*(An_F_s*gradu_s) + omega_n*(An_F_n*gradu_n)) * factor;
