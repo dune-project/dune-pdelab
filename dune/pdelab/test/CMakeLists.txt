@@ -2,6 +2,8 @@ add_subdirectory(fem EXCLUDE_FROM_ALL)
 
 pdelab_add_test(NAME testanalytic)
 pdelab_add_test(NAME testclock)
+pdelab_add_test(NAME testcomplexnumbers-istl SOURCES testcomplexnumbers.cc COMPILE_DEFINITIONS SUPERLU_NTYPE=3 USE_ISTL) # needed for complex SuperLU
+pdelab_add_test(NAME testcomplexnumbers-istlbackend SOURCES testcomplexnumbers.cc COMPILE_DEFINITIONS SUPERLU_NTYPE=3 USE_ISTL_BACKEND) # needed for complex SuperLU
 pdelab_add_test(NAME testconstraints COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"")
 pdelab_add_test(NAME testfunction)
 pdelab_add_test(NAME testgridfunctionspace)
@@ -71,11 +73,13 @@ set_tests_properties(
 
 exclude_from_headercheck(
   gridexamples.hh
+  helmholtzoperator.hh
   testadaptivity-adaptivity.hh
   testadaptivity-bcextension.hh
   testadaptivity-bctype.hh
   testadaptivity-error-indicator.hh
   testadaptivity-operator.hh
+  testcomplexnumbers-problem.hh
   testnonoverlappingsinglephaseflow-boilerplate-problem.hh
   testnonoverlappingsinglephaseflow-problem.hh
   testpoisson-periodic.hh
