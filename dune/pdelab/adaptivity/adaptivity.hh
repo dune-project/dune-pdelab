@@ -672,7 +672,7 @@ namespace Dune {
       grid.adapt();
 
       // update the function spaces
-      gfs.update();
+      gfs.update(true);
 
       // interpolate solution
       x1 = X(gfs,0.0);
