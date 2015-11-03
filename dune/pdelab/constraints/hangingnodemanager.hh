@@ -107,21 +107,18 @@ namespace Dune {
 
         node_info = std::vector<NodeInfo>(indexSet.size(dim));
 
-        const GridView & gv = grid.leafGridView();
-
-        Iterator it = gv.template begin<0>();
-        Iterator eit = gv.template end<0>();
+        GridView gv = grid.leafGridView();
 
         // loop over all codim<0> leaf elements of the partially refined grid
-        for(;it!=eit;++it){
+        for(const auto& cell : elements(gv)) {
 
           const Dune::ReferenceElement<double,dim> &
             reference_element =
-            Dune::ReferenceElements<double,dim>::general(it->geometry().type());
+            Dune::ReferenceElements<double,dim>::general(cell.geometry().type());
 
 
           // level of this element
-          const unsigned short level = it->level();
+          const unsigned short level = cell.level();
 
           // number of vertices in this element
           const IndexType v_size = reference_element.size(dim);
@@ -130,13 +127,13 @@ namespace Dune {
           // cell
           // loop over all vertices of the element
           for(IndexType i=0; i<v_size; ++i){
-            const IndexType v_globalindex = indexSet.subIndex(*it,i,dim);
+            const IndexType v_globalindex = indexSet.subIndex(cell,i,dim);
             NodeInfo& ni = node_info[v_globalindex];
             ni.addLevel(level);
 
             if(verbosity>10){
               // This will produce a lot of output on the screen!
-              std::cout << "   cell-id=" << cell_mapper.map(*it);
+              std::cout << "   cell-id=" << cell_mapper.index(cell);
               std::cout << "   level=" << level;
               std::cout << "   v_size=" << v_size;
               std::cout << "   v_globalindex = " << v_globalindex;
@@ -150,30 +147,29 @@ namespace Dune {
           // Now we still have to update minimum_touching_level for this
           // cell
 
-          unsigned int intersection_index = 0;
-          IntersectionIterator fit = gv.ibegin(*it);
-          IntersectionIterator efit = gv.iend(*it);
           typedef typename IntersectionIterator::Intersection Intersection;
 
           // Loop over faces
-          for(;fit!=efit;++fit,++intersection_index){
+          unsigned int intersection_index = 0;
+          for(const auto& intersection : intersections(gv,cell)) {
+            ++intersection_index;
 
             const Dune::ReferenceElement<double,dim-1> &
               reference_face_element =
-              Dune::ReferenceElements<double,dim-1>::general(fit->geometry().type());
+              Dune::ReferenceElements<double,dim-1>::general(intersection.geometry().type());
 
-            const int eLocalIndex =  fit->indexInInside();
-            const int e_level = fit->inside()->level();
+            const int eLocalIndex =  intersection.indexInInside();
+            const int e_level = intersection.inside().level();
 
             // number of vertices on the face
             const int e_v_size = reference_element.size(eLocalIndex,1,dim);
 
-            if((*fit).boundary()) {
+            if(intersection.boundary()) {
 
               // loop over vertices on the face
               for(int i=0; i<e_v_size;++i){
                 const int e_v_index = reference_element.subEntity(eLocalIndex,1,i,dim);
-                const IndexType v_globalindex = indexSet.subIndex(*it,e_v_index,dim);
+                const IndexType v_globalindex = indexSet.subIndex(cell,e_v_index,dim);
 
                 const FacePoint facelocal_position = reference_face_element.position(i,dim-1);
 
@@ -188,7 +184,7 @@ namespace Dune {
                 */
 
                 NodeInfo& ni = node_info[v_globalindex];
-                ni.is_boundary = boundaryFunction.isDirichlet(IntersectionGeometry<Intersection>(*fit,intersection_index),facelocal_position);
+                ni.is_boundary = boundaryFunction.isDirichlet(IntersectionGeometry<Intersection>(intersection,intersection_index),facelocal_position);
                 ni.addTouchingLevel(e_level);
               }
 
@@ -196,10 +192,10 @@ namespace Dune {
               continue;
             }
 
-            const int f_level = fit->outside()->level();
+            const int f_level = intersection.outside().level();
 
             // a conforming face has no hanging nodes
-            if(fit->conforming())
+            if(intersection.conforming())
               continue;
 
             // so far no support for initially non conforming grids
@@ -213,14 +209,14 @@ namespace Dune {
             // loop over vertices on the face
             for(int i=0; i<e_v_size;++i){
               const int e_v_index = reference_element.subEntity(eLocalIndex,1,i,dim);
-              const IndexType v_globalindex = indexSet.subIndex(*it,e_v_index,dim);
+              const IndexType v_globalindex = indexSet.subIndex(cell,e_v_index,dim);
 
               node_info[v_globalindex].addTouchingLevel(f_level);
             }
 
           } // end of loop over faces
 
-        }
+        } // end loop over codim<0> leaf elements
       }
 
       HangingNodeManager(Grid & _grid, const BoundaryFunction & _boundaryFunction)
@@ -291,22 +287,19 @@ namespace Dune {
           size_t refinements(0);
           reiterate = false;
 
-          const GridView & gv = grid.leafGridView();
-
-          Iterator it = gv.template begin<0>();
-          Iterator eit = gv.template end<0>();
+          GridView gv = grid.leafGridView();
 
           // loop over all codim<0> leaf elements of the partially refined grid
-          for(;it!=eit;++it){
+          for(const auto& cell : elements(gv)) {
 
             const Dune::ReferenceElement<double,dim> &
               reference_element =
-              Dune::ReferenceElements<double,dim>::general(it->geometry().type());
+              Dune::ReferenceElements<double,dim>::general(cell.geometry().type());
 
             //std::cout << "cell center = " << it->geometry().center() << std::endl;
 
             // get the refinement level of the element
-            const unsigned short level = it->level();
+            const unsigned short level = cell.level();
 
             //std::cout << "level = " << level << std::endl;
 
@@ -318,7 +311,7 @@ namespace Dune {
             // loop over vertices of the element
             for(IndexType i=0; i<v_size; ++i){
 
-              const IndexType v_globalindex = indexSet.subIndex(*it,i,dim);
+              const IndexType v_globalindex = indexSet.subIndex(cell,i,dim);
 
               const NodeInfo & v_info = node_info[v_globalindex];
 
@@ -326,18 +319,18 @@ namespace Dune {
 
               const unsigned short level_diff = v_info.maximum_level - level;
               if( level_diff > 1){
-                grid.mark(1, *it);   // Mark this element for an extra refinement if it has a hanging node belonging to a neighbouring element of a refinement level + 2 or more
+                grid.mark(1, cell);   // Mark this element for an extra refinement if it has a hanging node belonging to a neighbouring element of a refinement level + 2 or more
                 reiterate = true;    // Once an element has to be refined, the procedure needs to be repeated!
                 refinements++;       // Count the number of refinements.
 
                 if(verbosity>10){
                   // This will produce a lot of output on the screen!
-                  std::cout << "   cell-id=" << cell_mapper.map(*it);
+                  std::cout << "   cell-id=" << cell_mapper.index(cell);
                   std::cout << "   level=" << level;
                   std::cout << "   v_size=" << v_size;
                   std::cout << "   v_globalindex = " << v_globalindex;
                   std::cout << std::endl;
-                  std::cout << "Refining element nr " << cell_mapper.map(*it)
+                  std::cout << "Refining element nr " << cell_mapper.index(cell)
                             << " to isolate hanging nodes. Level diff = "
                             << v_info.maximum_level << " - " << level<< std::endl;
                 }
@@ -346,7 +339,7 @@ namespace Dune {
             } // end of loop over vertices
 
 
-            if( it->geometry().type().isSimplex() ){
+            if( cell.geometry().type().isSimplex() ){
               //
               // SPECIAL CASE for SIMPLICES:
               // Add extra check to find out "neighbouring" elements of level +2 or more
@@ -358,19 +351,18 @@ namespace Dune {
                 //std::cout << "Extra check for SIMPLICES:" << std::endl;
 
                 unsigned int intersection_index = 0;
-                IntersectionIterator fit = gv.ibegin(*it);
-                IntersectionIterator efit = gv.iend(*it);
 
                 bool bJumpOut = false;
 
                 // Loop over faces
-                for(;fit!=efit;++fit,++intersection_index){
+                for(const auto& intersection : intersections(gv,cell)) {
+                  ++intersection_index;
 
                   // only internal faces need to be taken care of
-                  if(!(*fit).boundary()) {
+                  if(!intersection.boundary()) {
 
-                    const int e_level = fit->inside()->level();
-                    const int f_level = fit->outside()->level();
+                    const int e_level = intersection.inside().level();
+                    const int f_level = intersection.outside().level();
 
                     if( f_level > e_level ){
 
@@ -378,7 +370,7 @@ namespace Dune {
                       // for which we do the extra Check.
 
                       // get element-local index of the intersection
-                      const int eLocalIndex =  fit->indexInInside();
+                      const int eLocalIndex =  intersection.indexInInside();
 
                       // Number of vertices on the face:
                       // A face(=edge) in a triangle has two vertices.
@@ -418,14 +410,12 @@ namespace Dune {
                         const int e_v_index_2 =
                           reference_element.subEntity(eLocalIndex,1,cornerIndex2,dim);
 
-                        const VertexEntityPointer vertex1 =
-                          it->template subEntity<dim>(e_v_index_1);
+                        auto vertex1 = cell.template subEntity<dim>(e_v_index_1);
 
-                        const VertexEntityPointer vertex2 =
-                          it->template subEntity<dim>(e_v_index_2);
+                        auto vertex2 = cell.template subEntity<dim>(e_v_index_2);
 
-                        edgecenter[counter] += vertex1->geometry().center();
-                        edgecenter[counter] += vertex2->geometry().center();
+                        edgecenter[counter] += vertex1.geometry().center();
+                        edgecenter[counter] += vertex2.geometry().center();
                         edgecenter[counter] /= ctype( 2 );
                         //std::cout << " edgecenter = " << edgecenter << std::endl;
 
@@ -435,7 +425,7 @@ namespace Dune {
                         //
                         const Dune::ReferenceElement<double,dim> &
                           nb_reference_element =
-                          Dune::ReferenceElements<double,dim>::general( fit->outside()->geometry().type() );
+                          Dune::ReferenceElements<double,dim>::general( intersection.outside().geometry().type() );
 
                         // number of vertices in that neigbouring element
                         const IndexType nb_v_size = nb_reference_element.size(dim);
@@ -443,14 +433,13 @@ namespace Dune {
                         // loop over vertices of the neigbouring element
                         for(IndexType i=0; i<nb_v_size; ++i){
 
-                          const VertexEntityPointer & nb_vertex =
-                            fit->outside()->template subEntity<dim>(i);
+                          auto nb_vertex = intersection.outside().template subEntity<dim>(i);
 
                           bool doExtraCheck = false;
 
                           Dune::FieldVector<ctype,dim> center_diff ( edgecenter[counter] );
 
-                          center_diff -= nb_vertex->geometry().center();
+                          center_diff -= nb_vertex.geometry().center();
 
                           //std::cout << "nb_vertex = " << nb_vertex->geometry().center() << std::endl;
 
@@ -464,7 +453,7 @@ namespace Dune {
                             //std::cout << "doExtraCheck for node at "
                             // << nb_vertex->geometry().center() << std::endl;
 
-                            const IndexType nb_v_globalindex = indexSet.index(*nb_vertex);
+                            const IndexType nb_v_globalindex = indexSet.index(nb_vertex);
 
                             const NodeInfo & nb_v_info = node_info[nb_v_globalindex];
 
@@ -472,17 +461,17 @@ namespace Dune {
 
                             if( level_diff > 1){
                               bJumpOut = true;
-                              grid.mark(1, *it);   // Mark this element for an extra refinement if it has a hanging node belonging to a neighbouring element of a refinement level + 2 or more
+                              grid.mark(1, cell);   // Mark this element for an extra refinement if it has a hanging node belonging to a neighbouring element of a refinement level + 2 or more
                               reiterate = true;    // Once an element has to be refined, the procedure needs to be repeated!
                               refinements++;       // Count the number of refinements.
 
                               if(verbosity>10){
                                 // This will produce a lot of output on the screen!
-                                std::cout << "   cell-id=" << cell_mapper.map(*it);
+                                std::cout << "   cell-id=" << cell_mapper.index(cell);
                                 std::cout << "   level=" << level;
                                 std::cout << "   v_size=" << v_size;
                                 std::cout << std::endl;
-                                std::cout << "   Extra refining for element nr " << cell_mapper.map(*it)
+                                std::cout << "   Extra refining for element nr " << cell_mapper.index(cell)
                                           << " to isolate hanging nodes. Level diff = "
                                           << nb_v_info.maximum_level << " - " << level<< std::endl;
                               }
@@ -525,8 +514,8 @@ namespace Dune {
         }while(reiterate);
       }
 
-    };
+    }; // end class HangingNodeManager
 
-  }
-}
+  } // end namespace PDELab
+} // end namespace Dune
 #endif
