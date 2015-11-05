@@ -122,9 +122,9 @@ public:
   }
 
 private:
-  Dune::shared_ptr<const GFS> pgfs;
-  Dune::shared_ptr<X> pxg;
-  Dune::shared_ptr<const P> pp;
+  std::shared_ptr<const GFS> pgfs;
+  std::shared_ptr<X> pxg;
+  std::shared_ptr<const P> pp;
   mutable LFS lfs;
   mutable LFSCache lfs_cache;
   mutable LView lview;
