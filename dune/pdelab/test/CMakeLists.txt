@@ -1,126 +1,75 @@
-add_subdirectory(fem)
+add_subdirectory(fem EXCLUDE_FROM_ALL)
 
-dune_add_test(SOURCES testanalytic.cc)
-
-dune_add_test(SOURCES testclock.cc)
-
-dune_add_test(NAME testcomplexnumbers-istl
-              SOURCES testcomplexnumbers.cc
-              COMPILE_DEFINITIONS SUPERLU_NTYPE=3
-                                  USE_ISTL)
-
-dune_add_test(NAME testcomplexnumbers-istlbackend
-              SOURCES testcomplexnumbers.cc
-              COMPILE_DEFINITIONS SUPERLU_NTYPE=3
-                                  USE_ISTL_BACKEND)
-
-dune_add_test(SOURCES testconstraints.cc
-              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
-
-dune_add_test(SOURCES testfunction.cc)
-
-dune_add_test(SOURCES testgridfunctionspace.cc)
-
-dune_add_test(SOURCES testheat-instationary-periodic.cc)
-
-dune_add_test(SOURCES testlaplacedirichletccfv.cc
-              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
-
-dune_add_test(SOURCES testelasticity.cc)
-
-dune_add_test(SOURCES testlocalfunctionspace.cc)
-
-dune_add_test(SOURCES testpk2dinterpolation.cc
-              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
-              SKIP_ON_77)
-add_dune_alberta_flags(testpk2dinterpolation)
-
-dune_add_test(SOURCES testpk.cc
-              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
-add_dune_alberta_flags(testpk)
-
-dune_add_test(SOURCES testpoisson.cc
-              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
-add_dune_alberta_flags(testpoisson)
-
-dune_add_test(SOURCES testchunkedblockordering.cc)
-
-dune_add_test(SOURCES testrt0.cc
-              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
-add_dune_alberta_flags(testrt0)
-
-dune_add_test(SOURCES testrt02dgridfunctionspace.cc
-              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
-              SKIP_ON_77)
-add_dune_alberta_flags(testrt02dgridfunctionspace)
-
-dune_add_test(SOURCES testutilities.cc)
-
-dune_add_test(SOURCES testinterpolate.cc)
-
-dune_add_test(SOURCES testrtfem.cc
-              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
-
-dune_add_test(SOURCES testbdmfem.cc
-              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
-
-dune_add_test(SOURCES testvectoriterator.cc)
-
-dune_add_test(SOURCES testpermutedordering.cc)
-
-dune_add_test(SOURCES testsimplebackend.cc
-              COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
-
-dune_add_test(SOURCES test-transport-ccfv.cc)
+pdelab_add_test(NAME testanalytic)
+pdelab_add_test(NAME testclock)
+pdelab_add_test(NAME testcomplexnumbers-istl SOURCES testcomplexnumbers.cc COMPILE_DEFINITIONS SUPERLU_NTYPE=3 USE_ISTL) # needed for complex SuperLU
+pdelab_add_test(NAME testcomplexnumbers-istlbackend SOURCES testcomplexnumbers.cc COMPILE_DEFINITIONS SUPERLU_NTYPE=3 USE_ISTL_BACKEND) # needed for complex SuperLU
+pdelab_add_test(NAME testconstraints COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"")
+pdelab_add_test(NAME testfunction)
+pdelab_add_test(NAME testgridfunctionspace)
+pdelab_add_test(NAME testheat-instationary-periodic)
+pdelab_add_test(NAME testlaplacedirichletccfv COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"")
+pdelab_add_test(NAME testelasticity)
+pdelab_add_test(NAME testlocalfunctionspace)
+pdelab_add_test(NAME testpk2dinterpolation COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"" ALBERTA_GRIDDIM 2)
+pdelab_add_test(NAME testpk COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"" ALBERTA_GRIDDIM 2)
+pdelab_add_test(NAME testpoisson COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"" ALBERTA_GRIDDIM 2)
+pdelab_add_test(NAME testchunkedblockordering)
+pdelab_add_test(NAME testrt0 COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"" ALBERTA_GRIDDIM 2)
+pdelab_add_test(NAME testrt02dgridfunctionspace COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"" ALBERTA_GRIDDIM 2)
+pdelab_add_test(NAME testutilities)
+pdelab_add_test(NAME testinterpolate)
+pdelab_add_test(NAME testrtfem COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"")
+pdelab_add_test(NAME testbdmfem COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"")
+pdelab_add_test(NAME testvectoriterator)
+pdelab_add_test(NAME testpermutedordering)
+pdelab_add_test(NAME testsimplebackend COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"")
+pdelab_add_test(NAME test-transport-ccfv)
 
 if(EIGEN3_FOUND)
-  dune_add_test(SOURCES testeigenbackend.cc
-               COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\")
+  pdelab_add_test(NAME testeigenbackend COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"")
 endif(EIGEN3_FOUND)
 
 if(dune-alugrid_FOUND)
-  dune_add_test(SOURCES testordering.cc)
+  pdelab_add_test(NAME testordering)
 endif(dune-alugrid_FOUND)
 
 if(GMP_FOUND)
-  dune_add_test(SOURCES testopbfem.cc)
-  dune_add_test(SOURCES test-dg-amg.cc)
+  pdelab_add_test(NAME testopbfem)
+  pdelab_add_test(NAME test-dg-amg)
 endif(GMP_FOUND)
 
 # Include periodic tests. Must run in parallel.
 foreach(degree IN ITEMS 1 2)
   foreach(dg IN ITEMS 0 1)
-    dune_add_test(NAME testpoisson-periodic-2d-deg${degree}-dg${dg}-parallel
-                  SOURCES testpoisson-periodic-2d.cc
-                  MPI_RANKS 1 2
-                  COMPILE_DEFINITIONS DEGREE=${degree} DG=${dg})
-
-    dune_add_test(NAME testpoisson-periodic-3d-deg${degree}-dg${dg}-parallel
-                  SOURCES testpoisson-periodic-3d.cc
-                  MPI_RANKS 1 4
-                  COMPILE_DEFINITIONS DEGREE=${degree} DG=${dg})
+    pdelab_add_test(NAME testpoisson-periodic-2d-deg${degree}-dg${dg}-parallel SOURCES testpoisson-periodic-2d.cc MPIRANKS 2 COMPILE_DEFINITIONS "DEGREE=${degree}" "DG=${dg}")
+    pdelab_add_test(NAME testpoisson-periodic-2d-deg${degree}-dg${dg}-sequential SOURCES testpoisson-periodic-2d.cc COMPILE_DEFINITIONS "DEGREE=${degree}" "DG=${dg}")
+    pdelab_add_test(NAME testpoisson-periodic-3d-deg${degree}-dg${dg}-parallel SOURCES testpoisson-periodic-3d.cc MPIRANKS 4 COMPILE_DEFINITIONS "DEGREE=${degree}" "DG=${dg}")
+    pdelab_add_test(NAME testpoisson-periodic-3d-deg${degree}-dg${dg}-sequential SOURCES testpoisson-periodic-3d.cc COMPILE_DEFINITIONS "DEGREE=${degree}" "DG=${dg}")
   endforeach()
 endforeach()
 
-dune_add_test(NAME testnonoverlappingsinglephaseflow-yasp
-              SOURCES testnonoverlappingsinglephaseflow.cc
-              MPI_RANKS 1 2)
-
-if(UG_FOUND)
-  dune_add_test(NAME testnonoverlappingsinglephaseflow-ug
-                SOURCES testnonoverlappingsinglephaseflow.cc
-                COMPILE_DEFINITIONS GRID_UG
-                MPI_RANKS 1 2)
-
-  dune_add_test(SOURCES testnonoverlappingsinglephaseflow-boilerplate.cc
-                COMPILE_DEFINITIONS GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"
-                MPI_RANKS 2)
-
-  dune_add_test(SOURCES testadaptivity.cc)
-
-  dune_add_test(SOURCES testnonoverlapping.cc
-                MPI_RANKS 2)
+pdelab_add_test(NAME testnonoverlappingsinglephaseflow-yasp SOURCES testnonoverlappingsinglephaseflow.cc)
+pdelab_add_test(NAME testnonoverlappingsinglephaseflow-yasp-parallel SOURCES testnonoverlappingsinglephaseflow.cc MPIRANKS 2)
+if (UG_FOUND)
+  pdelab_add_test(NAME testnonoverlappingsinglephaseflow-ug SOURCES testnonoverlappingsinglephaseflow.cc COMPILE_DEFINITIONS "GRID_UG")
+  pdelab_add_test(NAME testnonoverlappingsinglephaseflow-ug-parallel SOURCES testnonoverlappingsinglephaseflow.cc COMPILE_DEFINITIONS "GRID_UG" MPIRANKS 2)
 endif (UG_FOUND)
+
+if (UG_FOUND)
+  pdelab_add_test(NAME testnonoverlappingsinglephaseflow-boilerplate SOURCES testnonoverlappingsinglephaseflow-boilerplate.cc COMPILE_DEFINITIONS "GRIDSDIR=\"${CMAKE_CURRENT_SOURCE_DIR}/grids\"" MPIRANKS 2)
+endif (UG_FOUND)
+
+if (UG_FOUND)
+  pdelab_add_test(NAME testadaptivity)
+  pdelab_add_test(NAME testnonoverlapping MPIRANKS 2)
+endif (UG_FOUND)
+
+set_tests_properties(
+  testpk2dinterpolation
+  testrt02dgridfunctionspace
+  PROPERTIES SKIP_RETURN_CODE 77
+)
 
 exclude_from_headercheck(
   gridexamples.hh
