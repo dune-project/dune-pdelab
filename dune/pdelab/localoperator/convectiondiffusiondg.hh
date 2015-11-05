@@ -1080,6 +1080,10 @@ namespace Dune {
       void alpha_process_boundary_gather (const IG& ig, const LFSU& lfsu_s, const X& x_s,
                                            const LFSV& lfsv_s, R& r_s, Buf& buf) const
       {
+        if(lfsu_s.gridFunctionSpace().entitySet().gridView().comm().rank()==0){
+          std::cout << "palpo alpha process boundary gather" << std::endl;
+        }
+
         // domain and range field type
         typedef typename LFSV::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
@@ -1192,6 +1196,10 @@ namespace Dune {
       void alpha_process_boundary_scatter (const IG& ig, const LFSU& lfsu_s, const X& x_s,
                                            const LFSV& lfsv_s, R& r_s, Buf& buf) const
       {
+        if(lfsu_s.gridFunctionSpace().entitySet().gridView().comm().rank()==0){
+          std::cout << "palpo alpha process boundary scatter" << std::endl;
+        }
+
         // domain and range field type
         typedef typename LFSV::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::DomainFieldType DF;
