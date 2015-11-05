@@ -77,8 +77,6 @@ namespace Dune{
         , lfsv_(gfsv)
         , lfsuCache_(lfsu_)
         , lfsvCache_(lfsv_)
-        , doAlpha_(doAlpha)
-        , doLambda_(doLambda)
       {}
 
       //! returns true if data for this codim should be communicated

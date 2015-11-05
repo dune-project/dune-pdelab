@@ -178,7 +178,20 @@ namespace Dune {
       {
         la.alpha_boundary(ig,lfsu_s,x_s,lfsv_s,r_s);
       }
-
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename R, typename Buf>
+      static void alpha_process_boundary_gather (const LA& la, const IG& ig,
+                                  const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                  R& r_s, Buf& buf)
+      {
+        la.alpha_process_boundary_gather(ig,lfsu_s,x_s,lfsv_s,r_s,buf);
+      }
+      template<typename IG, typename LFSU, typename X, typename LFSV, typename R, typename Buf>
+      static void alpha_process_boundary_scatter (const LA& la, const IG& ig,
+                                  const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
+                                  R& r_s, Buf& buf)
+      {
+        la.alpha_process_boundary_scatter(ig,lfsu_s,x_s,lfsv_s,r_s,buf);
+      }
       template<typename EG, typename LFSV, typename R>
       static void lambda_volume (const LA& la, const EG& eg, const LFSV& lfsv, R& r)
       {

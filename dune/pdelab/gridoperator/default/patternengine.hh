@@ -209,6 +209,16 @@ namespace Dune{
           pattern_boundary(lop,lfsu_s_cache.localFunctionSpace(),lfsv_s_cache.localFunctionSpace(),localpattern);
       }
 
+      template<typename IG, typename LFSUC, typename LFSVC, typename Buf>
+      void assembleUVProcessBoundaryGather(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache, Buf& buf)
+      {
+      }
+
+      template<typename IG, typename LFSUC, typename LFSVC, typename Buf>
+      void assembleUVProcessBoundaryScatter(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache, Buf& buf)
+      {
+      }
+
       template<typename IG, typename LFSUC, typename LFSVC>
       static void assembleUVEnrichedCoupling(const IG & ig,
                                              const LFSUC & lfsu_s_cache, const LFSVC & lfsv_s_cache,
@@ -261,6 +271,16 @@ namespace Dune{
 
       //! @}
 
+      // needed for DG nonoverlapping communication
+      bool communicationFixedSize() const
+      {
+        return true;
+      }
+      template <typename IG, typename LFSUC, typename LFSVC>
+      size_t communicationSize(const IG& ig, const LFSUC& lfsu_s_cache, const LFSVC& lfsv_s_cache) const
+      {
+        return 0;
+      }
 
     private:
 
